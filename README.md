@@ -25,3 +25,4 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 
         $ git clone https://github.com/aferrero2707/PhotoFlow.git
 
+2. 
