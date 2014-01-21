@@ -17,4 +17,10 @@ Here is the general feature (whish)list:
 Downloading and compiling
 =========================
 
-The pixel rendering angine of PhotoFlow is based on VIPS (http://www.vips.ecs.soton.ac.uk). You have to install a recent version of VIPS in order to compile PhotoFlow.
+The pixel rendering engine of PhotoFlow is based on VIPS (http://www.vips.ecs.soton.ac.uk). You have to install a recent version of VIPS in order to compile PhotoFlow.
+
+Once VIPS is set up and running, follow these steps to download and compile PhotoFlow:
+
+1. get master branch from GitHub:
+    git clone https://github.com/aferrero2707/PhotoFlow.git
+
