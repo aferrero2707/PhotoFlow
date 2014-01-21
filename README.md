@@ -22,5 +22,5 @@ The pixel rendering engine of PhotoFlow is based on VIPS (http://www.vips.ecs.so
 Once VIPS is set up and running, follow these steps to download and compile PhotoFlow:
 
 1. get master branch from GitHub:
-    git clone https://github.com/aferrero2707/PhotoFlow.git
+        $ git clone https://github.com/aferrero2707/PhotoFlow.git
 
