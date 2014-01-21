@@ -25,4 +25,8 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 
         $ git clone https://github.com/aferrero2707/PhotoFlow.git
 
-2. 
+2. PhotoFlow provides an helper script to simplify the building process.
+   In order to use it you have to go into the "build" subdirectory and run the "build.sh" script:
+
+        $ cd PhotoFlow/build
+        $ bash ./build.sh
