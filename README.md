@@ -32,6 +32,12 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
         $ bash ./build.sh
    
    If you have installed VIPS in an unusual place, you can edit the build script and set the PKG_CONFIG_PATH variable accordingly
+
+   To compile the code in debug mode, use
+   
+        $ bash ./build.sh debug
+   
+   instead.
    
 3. If all goes well, you can now open an image file with PhotoFlow:
 
