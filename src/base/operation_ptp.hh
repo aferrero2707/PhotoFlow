@@ -59,7 +59,7 @@ namespace PF
   {
     PEL_PROC proc(par);
 
-    //BLENDER blender;
+    BLENDER blender;
     
     float intensity = par->get_intensity();
     
@@ -83,14 +83,15 @@ namespace PF
     T* p[NMAX+1];
     T* pout;
     T* pimap;
-    T* pomap;
+    //T* pomap;
 
     //return;
     
     if(n > NMAX) n = NMAX;
     
     //std::cout<<"sz: "<<sz<<std::endl;
-    int x, y, ximap, xomap, ni;
+    int x, y; 
+    int ximap, xomap, ni;
     
     for( y = 0; y < r->height; y++ ) {
       
@@ -100,14 +101,17 @@ namespace PF
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
       //pout = (T*)IM_REGION_ADDR(oreg,y,le);
       if(has_imap) pimap = (T*)VIPS_REGION_ADDR( imap, r->left, r->top + y );
-      if(has_omap) pomap = (T*)VIPS_REGION_ADDR( omap, r->left, r->top + y );
+      //if(has_omap) pomap = (T*)VIPS_REGION_ADDR( omap, r->left, r->top + y );
+      blender.init_line( omap, r->left, r->top + y );
       
+      //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  intensity="<<intensity/*<<"  real="<<intensity_real*/<<std::endl;
+
       for( x=0, ximap=0, xomap=0; x < line_size; ) {
 
 	//continue;
-	float intensity_real = this->get_intensity( intensity, pimap, ximap );
-	//std::cout<<"  y="<<r->top+y<<" ("<<y<<")  intensity="<<intensity_real<<std::endl;
+	float intensity_real = get_intensity( intensity, pimap, ximap );
 	proc.process( p, n, in_first, sz, x, intensity_real/*get_intensity( intensity, pimap, ximap )*/, pout );
+	blender.blend( p[0], pout, x, xomap );
 	//for( int ni = 0; ni < n; ni++) 
 	//  p[ni] += sz;
 	//pout += sz;

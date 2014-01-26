@@ -32,6 +32,11 @@
 
 PF::Layer::Layer(int32_t i): id(i)
 {
+  // A layer is always dirty when created, as it is by definition not included in the
+  // VIPS rendering chain yet
+  dirty = true;
+
+  visible = true;
 }
 
 

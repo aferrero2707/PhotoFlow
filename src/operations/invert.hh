@@ -55,7 +55,6 @@ namespace PF
     void process(T**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, T* pout) 
     {
       pout[x] = (T)(FormatInfo<T>::RANGE - p[first][x]); 
-      //std::cout<<"x="<<x<<"  range="<<(int32_t)FormatInfo<T>::RANGE<<"  p["<<first<<"]["<<x<<"]="<<(int32_t)p[first][x]<<"  pout["<<x<<"]="<<(int32_t)pout[x]<<std::endl;
       x+= 1;
     }
   };

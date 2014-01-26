@@ -41,34 +41,31 @@ namespace PF
 
   class ProcessorBase
   {
-  protected:
+    OpParBase* op_par_base;
   public:
-    ProcessorBase() {}
-    virtual OpParBase* get_base_params() = 0;
+    ProcessorBase(OpParBase* p): op_par_base(p) {}
+    virtual ~ProcessorBase() 
+    {
+      //std::cout<<"Deleting "<<(void*)op_par_base<<std::endl;
+      //delete op_par_base;
+    }
+
+
+    OpParBase* get_par() { return op_par_base; }
 
     virtual void process(VipsRegion** in, int n, int in_first,
 			 VipsRegion* imap, VipsRegion* omap, 
 			 VipsRegion* out) = 0;  
   };
 
-  template<typename T, colorspace_t colorspace, bool has_omap>
-  class BlendPassthrough
-  {
-  public:
-    void blend(T* in, T* omap, T* out) {}
-  };
-
-
-
   template< template < OP_TEMPLATE_DEF > class OP, class OPPAR >
   class Processor: public ProcessorBase
   {
-    OPPAR op_params;
+    OPPAR op_par;
 
   public:
-    Processor(): ProcessorBase() { op_params.set_processor(this); }
-    OpParBase* get_base_params() { return &op_params; }
-    OPPAR* get_params() { return &op_params; }
+    Processor(): ProcessorBase(&op_par) { op_par.set_processor(this); }
+    OPPAR* get_par() { return &op_par; }
     //virtual OpParBase* get_params() { return &op_params; };
     virtual void process(VipsRegion** in, int n, int in_first,
 			 VipsRegion* imap, VipsRegion* omap, 
@@ -82,37 +79,37 @@ namespace PF
         case 0:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
 	    OP< TYPE, BLENDER< TYPE, CS, false >, CS, false, false, false > op; \
-	    op.render(in,n,in_first,imap,omap,out,&op_params);		\
+	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
 	    OP< TYPE, BLENDER< TYPE, CS, false >, CS, false, false, true > op; \
-	    op.render(in,n,in_first,imap,omap,out,&op_params);		\
+	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         case 1:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
 	    OP< TYPE, BLENDER< TYPE, CS, false >, CS, true, false, false > op; \
-	    op.render(in,n,in_first,imap,omap,out,&op_params);		\
+	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
 	    OP< TYPE, BLENDER< TYPE, CS, false >, CS, true, false, true > op; \
-	    op.render(in,n,in_first,imap,omap,out,&op_params);		\
+	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         case 2:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
 	    OP< TYPE, BLENDER< TYPE, CS, true >, CS, false, true, false > op; \
-	    op.render(in,n,in_first,imap,omap,out,&op_params);		\
+	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
 	    OP< TYPE, BLENDER< TYPE, CS, true >, CS, false, true, true > op; \
-	    op.render(in,n,in_first,imap,omap,out,&op_params);		\
+	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         case 3:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
 	    OP< TYPE, BLENDER< TYPE, CS, true >, CS, true, true, false > op; \
-	    op.render(in,n,in_first,imap,omap,out,&op_params);		\
+	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
 	    OP< TYPE, BLENDER< TYPE, CS, true >, CS, true, true, true > op; \
-	    op.render(in,n,in_first,imap,omap,out,&op_params);		\
+	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         }						\
@@ -120,7 +117,7 @@ namespace PF
 
 
 #define BLENDER_SWITCH( TYPE, CS ) {			\
-        switch(op_params.get_blend_mode()) {		\
+        switch(op_par.get_blend_mode()) {		\
         case PF_BLEND_PASSTHROUGH:				\
           MAPFLAG_SWITCH( TYPE, CS, BlendPassthrough );		\
           break;							\

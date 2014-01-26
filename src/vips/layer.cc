@@ -150,7 +150,7 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   
   /* Area of input we need.
    */
-  layer->processor->get_base_params()->transform_inv(r,&s);
+  layer->processor->get_par()->transform_inv(r,&s);
 
   /* Prepare the input images
    */
@@ -300,7 +300,7 @@ vips_layer_build( VipsObject *object )
 			    in0->Bands, in0->BandFmt,
 			    in0->Coding,in0->Type,1.0, 1.0);
   } else {
-    PF::OpParBase* par = layer->processor->get_base_params();
+    PF::OpParBase* par = layer->processor->get_par();
     vips_image_init_fields( layer->out,
 			    par->get_xsize(), par->get_ysize(), 
 			    par->get_nbands(), par->get_format(),

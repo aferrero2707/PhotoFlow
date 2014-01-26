@@ -33,7 +33,6 @@
 #include <iostream>
 
 #include "../base/format_info.hh"
-#include "../base/operation_ptp.hh"
 
 namespace PF 
 {
@@ -42,6 +41,7 @@ namespace PF
   {
   public:
     GradientPar(): OpParBase() {}
+    bool needs_input() { return false; }
   };
 
   
@@ -62,12 +62,12 @@ namespace PF
 	 VipsRegion* imap, VipsRegion* omap, 
 	 VipsRegion* oreg, GradientPar* par)
   {
-    //BLENDER blender;
+    BLENDER blender;
     
-    double intensity = par->get_intensity();
+    //double intensity = par->get_intensity();
     
     Rect *r = &oreg->valid;
-    int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
+    //int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
 
 
@@ -85,26 +85,29 @@ namespace PF
 
     T* p;    
     T* pout;
-    T* pimap;
-    T* pomap;
+    //T* pimap;
+    //T* pomap;
+    int x, xomap, y;
 
     int height = oreg->im->Ysize - oreg->im->Yoffset;
 
     //std::cout<<"Gradient::render: height="<<height<<std::endl;
     
-    for( int y = 0; y < r->height; y++ ) {
+    for( y = 0; y < r->height; y++ ) {
       
       p = ir ? (T*)VIPS_REGION_ADDR( ir[0], r->left, r->top + y ) : NULL; 
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
       //if(has_imap) pimap = (T*)IM_REGION_ADDR(imap,y,le);
       //if(has_omap) pomap = (T*)IM_REGION_ADDR(omap,y,le);
+      blender.init_line( omap, r->left, r->top + y );
 
       T val = (T)((float)FormatInfo<T>::RANGE*((float)height - r->top - y)/height + FormatInfo<T>::MIN);
 
       //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
       
-      for( int x = 0; x < line_size; ++x) {
+      for( x = 0, xomap = 0; x < line_size; ++x) {
 	pout[x] = val;
+	blender.blend( p, pout, x, xomap );
       }
     }
   };

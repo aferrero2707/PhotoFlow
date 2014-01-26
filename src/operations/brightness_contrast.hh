@@ -36,12 +36,6 @@
 namespace PF 
 {
 
-
-
-
-
-
-
 #include "brightness_contrast_par.hh"
   
 #include "brightness_contrast_proc.hh"

@@ -46,9 +46,19 @@
 
 
 
-#define OP_TEMPLATE_DEF typename T, class BLENDER, colorspace_t CS, bool has_imap, bool has_omap, bool PREVIEW
-#define OP_TEMPLATE_IMP T, BLENDER, CS, has_imap, has_omap, PREVIEW
+#define OP_TEMPLATE_DEF \
+  typename T, class BLENDER, colorspace_t CS,	\
+    bool has_imap, bool has_omap, bool PREVIEW
 
+#define OP_TEMPLATE_IMP \
+  T, BLENDER, CS, has_imap, has_omap, PREVIEW
+
+#define OP_TEMPLATE_DEF_BLENDER_SPEC \
+  typename T, colorspace_t CS,			\
+    bool has_imap, bool has_omap, bool PREVIEW
+
+#define OP_TEMPLATE_IMP_BLENDER_SPEC(BLENDER_SPEC) \
+  T, BLENDER_SPEC< T, CS, has_omap >, CS, has_imap, has_omap, PREVIEW
 
 
 
@@ -79,6 +89,11 @@ namespace PF
     
   public:
     OpParBase();
+
+    virtual ~OpParBase()
+    {
+      if(out) g_object_unref( out );
+    }
 
     void set_processor(ProcessorBase* p) { processor = p; }
     ProcessorBase* get_processor() { return processor; }
@@ -119,10 +134,15 @@ namespace PF
 
     virtual bool has_intensity() { return true; }
     virtual bool has_opacity() { return true; }
+    virtual bool needs_input() { return true; }
 
     virtual void build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
 
     VipsImage* get_image() { return out; }
+    void set_image(VipsImage* img) { 
+      if(out) g_object_unref( out );
+      out = img; 
+    }
 
     int get_xsize() { return xsize; }
     int get_ysize() { return ysize; }
@@ -131,33 +151,34 @@ namespace PF
     VipsBandFormat get_format() { return format; }
     VipsCoding get_coding() { return coding; }
     
+    void set_image_hints(int w, int h, colorspace_t cs, VipsBandFormat fmt);
 
     void grayscale_image(int w, int h, VipsBandFormat fmt)
     {
       xsize = w; ysize = h;
       bands = 1; interpretation = VIPS_INTERPRETATION_B_W;
-      format = fmt, coding = VIPS_CODING_NONE;
+      format = fmt; coding = VIPS_CODING_NONE;
     }
 
     void rgb_image(int w, int h, VipsBandFormat fmt)
     {
       xsize = w; ysize = h;
       bands = 3; interpretation = VIPS_INTERPRETATION_RGB;
-      format = fmt, coding = VIPS_CODING_NONE;
+      format = fmt; coding = VIPS_CODING_NONE;
     }
 
     void lab_image(int w, int h, VipsBandFormat fmt)
     {
       xsize = w; ysize = h;
       bands = 3; interpretation = VIPS_INTERPRETATION_LAB;
-      format = fmt, coding = VIPS_CODING_NONE;
+      format = fmt; coding = VIPS_CODING_NONE;
     }
 
     void cmyk_image(int w, int h, VipsBandFormat fmt)
     {
       xsize = w; ysize = h;
       bands = 4; interpretation = VIPS_INTERPRETATION_CMYK;
-      format = fmt, coding = VIPS_CODING_NONE;
+      format = fmt; coding = VIPS_CODING_NONE;
     }
   };
 
@@ -200,6 +221,32 @@ namespace PF
     }
   };
 
+
+
+  template<typename T, colorspace_t colorspace, bool has_omap>
+  class BlendBase
+  {
+  public:
+    T* pmap;
+    void init_line(VipsRegion* omap, int left, int top) { pmap = (T*)VIPS_REGION_ADDR( omap, left, top ); }
+  };
+
+
+  template<typename T, colorspace_t colorspace>
+  class BlendBase<T, colorspace, false>
+  {
+  public:
+    T* pmap;
+    void init_line(VipsRegion* omap, int left, int top) { }
+  };
+
+
+  template<typename T, colorspace_t colorspace, bool has_omap>
+  class BlendPassthrough: public BlendBase<T, colorspace, has_omap>
+  {
+  public:
+    void blend(T* in, T* out, const int& x, int& xomap) {}
+  };
 
 
 };
