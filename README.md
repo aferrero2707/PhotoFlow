@@ -46,7 +46,9 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 
 # Current status
 
-PhotoFlow is in a early development stage. The present code provides a proof-of-concept of the planned functionalities: it opens an image file and applies a brightness-contrast adjustment whose strength is controlled by a vertical linear gradient (no effect at the bottom and maximum at the top).
+PhotoFlow is in a early development stage. The present code provides a proof-of-concept of the planned functionalities: it opens an image file and applies a brightness-contrast adjustment whose strength is controlled by a vertical linear gradient (no effect at the bottom and maximum at the top), followed by two "invert" operations.
 
-However, the program will hopefully evolve to a fully-functional preliminary version rather quickly.
+The individual layers can be activated and de-activated using the radio buttons on the right of the image.
+
+The program will hopefully evolve to a fully-functional preliminary version rather soon.
 
