@@ -109,7 +109,7 @@ namespace PF
       for( x=0, ximap=0, xomap=0; x < line_size; ) {
 
 	//continue;
-	float intensity_real = get_intensity( intensity, pimap, ximap );
+	float intensity_real = this->get_intensity( intensity, pimap, ximap );
 	proc.process( p, n, in_first, sz, x, intensity_real/*get_intensity( intensity, pimap, ximap )*/, pout );
 	blender.blend( p[0], pout, x, xomap );
 	//for( int ni = 0; ni < n; ni++) 
