@@ -28,7 +28,7 @@
  */
 
 #include "image_reader.hh"
-#include "../vips/vips_layer.h"
+//#include "../vips/vips_layer.h"
 
 void PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first, 
 			       VipsImage* imap, VipsImage* omap)
