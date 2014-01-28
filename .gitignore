@@ -1,0 +1,11 @@
+# vim stuff
+.*.swp
+
+# hide build system files
+build/CMakeCache.txt
+build/CMakeFiles/
+build/Makefile
+build/cmake_install.cmake
+build/src/
+
+
