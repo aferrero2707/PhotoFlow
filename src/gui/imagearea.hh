@@ -68,6 +68,11 @@ private:
    */
   VipsRegion * region;
 
+  /* Set if a background repaint has happened and the display_image needs
+   * invalidating.
+   */
+  bool invalidate;
+
   PF::LayerManager* layer_manager;
 
   /* We send this packet of data from the bg worker thread to the main GUI
@@ -83,10 +88,15 @@ private:
    */
   static gboolean render_cb (Update * update)
   {
+    /* There a background thread has changed display_image ... we must
+     * invalidate caches before we get pixels from it.
+     */
+    update->image_area->invalidate = true; 
+
     update->image_area->queue_draw_area (update->rect.left, 
-		                         update->rect.top,
-					 update->rect.width,
-					 update->rect.height);
+                                         update->rect.top,
+                                         update->rect.width,
+                                         update->rect.height);
 
     g_free (update);
 
@@ -143,7 +153,7 @@ private:
     vips_area_unref( area );
 
     if (vips_sink_screen (out, display_image.image (), NULL,
-    			  64, 64, 1000, 0, sink_notify, this))
+            64, 64, 1000, 0, sink_notify, this))
       verror ();
 
     g_object_ref ( out );
@@ -166,9 +176,9 @@ private:
 
     if (edge_detect)
       {
-	VIMask m (3, 3, 1, 0, -1, -1, -1, -1, 8, -1, -1, -1, -1);
+  VIMask m (3, 3, 1, 0, -1, -1, -1, -1, 8, -1, -1, -1, -1);
 
-	t = t.conv (m);
+  t = t.conv (m);
       }
     */
 
@@ -179,7 +189,7 @@ private:
      * 1920 x 1200 screen, plus a bit.
      */
     //if (vips_sink_screen (t.image (), display_image.image (), NULL,
-    //			  64, 64, 1000, 0, sink_notify, this))
+    //        64, 64, 1000, 0, sink_notify, this))
     //  verror ();
 
     /* display_image depends on t .. we need to keep t alive as long
@@ -202,6 +212,12 @@ private:
     vips_rect_intersectrect (&image, &area, &clip);
     if (vips_rect_isempty (&clip))
       return;
+    
+    if (invalidate)
+      {
+        vips_image_invalidate_all (display_image);
+        invalidate = true;
+      }
 
     /* Calculate pixels. If this area is not in cache, we will see black
      * pixels, a background thread will start calculating stuff, and we will
@@ -218,8 +234,8 @@ private:
     int lsk = VIPS_REGION_LSKIP (region);
 
     get_window ()->draw_rgb_image (get_style ()->get_white_gc (),
-				   clip.left, clip.top, clip.width, clip.height,
-				   Gdk::RGB_DITHER_MAX, buf, lsk);
+           clip.left, clip.top, clip.width, clip.height,
+           Gdk::RGB_DITHER_MAX, buf, lsk);
   }
 
   virtual bool on_expose_event (GdkEventExpose * event)
@@ -247,7 +263,7 @@ bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cairo_rectangle_t *rect = &list->rectangles[i];
     
     std::cout<<"ImageArea::on_draw(): rectangle = "<<rect->x<<","<<rect->y
-	     <<" -> "<<rect->width<<","<<rect->height<<std::endl;
+       <<" -> "<<rect->width<<","<<rect->height<<std::endl;
   }
   std::cout<<std::endl;
 
@@ -266,13 +282,14 @@ public:
   ImageArea ()
   {
     region = NULL;
+    invalidate = false;
   }
 
   virtual ~ ImageArea ()
   {
     if (region)
       {
-	g_object_unref (region);
+        g_object_unref (region);
         region = NULL;
       }
   }
@@ -290,8 +307,8 @@ public:
     display_image = null;
     if (region)
       {
-	g_object_unref (region);
-	region = NULL;
+  g_object_unref (region);
+  region = NULL;
       }
 
     build_display_image ();
@@ -354,8 +371,8 @@ public:
     VipsImage* out = layer_manager->get_output();
     if(out) {
       if (vips_sink_screen (out, display_image, NULL,
-			    64, 64, (2000/64)*(2000/64), 0, sink_notify, this))
-	verror ();
+          64, 64, (2000/64)*(2000/64), 0, sink_notify, this))
+  verror ();
       
       
       region = vips_region_new (display_image);
@@ -371,7 +388,7 @@ public:
     display_image = im_open( "display_image", "p" );
 
     if (vips_sink_screen (layer_manager->get_output(), display_image, NULL,
-			  64, 64, (2000/64)*(2000/64), 0, sink_notify, this))
+        64, 64, (2000/64)*(2000/64), 0, sink_notify, this))
       verror ();
     
     
