@@ -121,26 +121,14 @@ private:
   }
 
   void
-  expose_rect (GdkRectangle * expose)
+  expose_image( VipsRect *clip )
   {
-    /* Clip against the image size ... we don't want to try painting outside the
-     * image area.
-     */
-    VipsRect image = {0, 0, display_image->Xsize, display_image->Ysize};
-    VipsRect area = {expose->x, expose->y, expose->width, expose->height};
-
-    VipsRect clip;
-
-    vips_rect_intersectrect (&image, &area, &clip);
-    if (vips_rect_isempty (&clip))
-      return;
-
     /* Request from the mask first to get an idea of what pixels are
      * available.
      */
-    if (vips_region_prepare (mask_region, &clip))
+    if (vips_region_prepare (mask_region, clip))
       return;
-    if (vips_region_prepare (region, &clip))
+    if (vips_region_prepare (region, clip))
       return;
 
     /* If the mask is all zero, skip the paint.
@@ -149,11 +137,11 @@ private:
     int x, y;
 
     guchar *p = (guchar *) 
-      VIPS_REGION_ADDR( mask_region, clip.left, clip.top );
+      VIPS_REGION_ADDR( mask_region, clip->left, clip->top );
     int lsk = VIPS_REGION_LSKIP( mask_region );
     found_painted = false; 
-    for( y = 0; y < clip.height; y++ ) {
-      for( x = 0; x < clip.width; x++ ) 
+    for( y = 0; y < clip->height; y++ ) {
+      for( x = 0; x < clip->width; x++ ) 
         if( p[x] ) {
           found_painted = true;
           break;
@@ -165,13 +153,20 @@ private:
     }
 
     if( found_painted ) { 
-      guchar *p = (guchar *) VIPS_REGION_ADDR( region, clip.left, clip.top );
+      guchar *p = (guchar *) VIPS_REGION_ADDR( region, clip->left, clip->top );
       int lsk = VIPS_REGION_LSKIP( region );
 
       get_window()->draw_rgb_image( get_style()->get_white_gc(),
-             clip.left, clip.top, clip.width, clip.height,
+             clip->left, clip->top, clip->width, clip->height,
              Gdk::RGB_DITHER_MAX, p, lsk);
     }
+  }
+
+  void
+  expose_background( VipsRect *clip )
+  {
+    get_window()->draw_rectangle( get_style()->get_black_gc(), TRUE,
+             clip->left, clip->top, clip->width, clip->height ); 
   }
 
   virtual bool on_expose_event (GdkEventExpose * event)
@@ -181,9 +176,31 @@ private:
 
     //std::cout<<"ImageArea::on_expose_event() called."<<std::endl;
 
-    gdk_region_get_rectangles (event->region, &expose, &n);
-    for (i = 0; i < n; i++)
-      expose_rect (&expose[i]);
+    VipsRect image = {0, 0, display_image->Xsize, display_image->Ysize};
+    VipsRect right = {display_image->Xsize, 0, 10000, display_image->Ysize};
+    VipsRect below = {0, display_image->Ysize, 10000, 10000}; 
+
+    gdk_region_get_rectangles(event->region, &expose, &n);
+
+    for( i = 0; i < n; i++ ) {
+      VipsRect dirty = {expose[i].x, expose[i].y, 
+                        expose[i].width, expose[i].height};
+
+      VipsRect clip;
+
+      vips_rect_intersectrect (&image, &dirty, &clip);
+      if (!vips_rect_isempty (&clip))
+        expose_image (&clip);
+
+      vips_rect_intersectrect (&right, &dirty, &clip);
+      if (!vips_rect_isempty (&clip))
+        expose_background (&clip);
+
+      vips_rect_intersectrect (&below, &dirty, &clip);
+      if (!vips_rect_isempty (&clip))
+        expose_background (&clip);
+    }
+
     g_free (expose);
 
     return TRUE;
