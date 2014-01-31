@@ -34,19 +34,21 @@
 namespace PF
 {
 
+  class OpParBase;
+
   class PropertyBase
   {
     std::string name;
   public:
-    PropertyBase(std::string n): name(n) {}
+    PropertyBase(std::string n, OpParBase* par);//: name(n) {}
 
     std::string get_name() { return name; }
 
-    virtual void set(const std::string& val);
-    virtual std::string get();
+    virtual void set_str(const std::string& val);
+    virtual std::string get_str();
 
-    virtual void set(std::istream& str) = 0;
-    virtual void get(std::ostream& str) = 0;
+    virtual void set_str(std::istream& str) = 0;
+    virtual void get_str(std::ostream& str) = 0;
   };
 
   std::istream& operator >>(std::istream& str, PropertyBase& p);
@@ -56,16 +58,19 @@ namespace PF
   template< typename T >
   class Property: public PropertyBase
   {
-    T* ptr;
+    T value;
   public:
-    Property(std::string name, T* p): PropertyBase(name), ptr(p) {}
-    void set(std::istream& str)
+    Property(std::string name, OpParBase* par): PropertyBase(name, par), value() {}
+    Property(std::string name, OpParBase* par, const T& v): PropertyBase(name, par), value(v) {}
+    void set(const T& newval) { value = newval; }
+    T& get() { return value; }
+    void set_str(std::istream& str)
     {
-      str>>(*ptr);
+      str>>value;
     }
-    void get(std::ostream& str)
+    void get_str(std::ostream& str)
     {
-      str<<(*ptr);
+      str<<value;
     }
   };
 

@@ -30,8 +30,8 @@
 #include "image_reader.hh"
 //#include "../vips/vips_layer.h"
 
-void PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first, 
-			       VipsImage* imap, VipsImage* omap)
+VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first, 
+				     VipsImage* imap, VipsImage* omap)
 {
   //VipsImage* outnew;
 
@@ -49,8 +49,8 @@ void PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
   std::cout<<"out: "<<(void*)image<<std::endl<<std::endl;
 
-  set_image( image );
-  return;
+  //set_image( image );
+  return image;
 
   // Prepare the blending step between the new image (in in2[1]) and the underlying image
   // if existing (in in2[0]).

@@ -55,7 +55,7 @@ namespace PF
     bool has_intensity() { return false; }
     bool needs_input() { return false; }
 
-    void build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
+    VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
   };
 
   
@@ -72,7 +72,8 @@ namespace PF
 	return;
       }
 
-      BLENDER blender( par->get_opacity() );
+      BLENDER blender;
+      float opacity = par->get_opacity();
     
       Rect *r = &oreg->valid;
       int line_size = r->width * ireg[0]->im->Bands;
@@ -91,7 +92,7 @@ namespace PF
 	blender.init_line( omap, r->left, r->top + y );
       
 	for( x=0, xomap=0; x < line_size; ) {
-	  blender.blend( p, pout, x, xomap );
+	  //blender.blend( opacity, p, pout, x, xomap );
 	}
       }
     }

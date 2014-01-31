@@ -16,7 +16,7 @@
   public:
     BrightnessContrastProc(BrightnessContrastPar* p): par(p) {}
 
-    void process(T**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, T*& pout) {}
+    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T*& pout) {}
   };
 
   

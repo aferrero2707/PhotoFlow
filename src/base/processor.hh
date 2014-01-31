@@ -121,6 +121,9 @@ namespace PF
         case PF_BLEND_PASSTHROUGH:				\
           MAPFLAG_SWITCH( TYPE, CS, BlendPassthrough );		\
           break;							\
+        case PF_BLEND_NORMAL:				\
+          MAPFLAG_SWITCH( TYPE, CS, BlendNormal );		\
+          break;							\
         case PF_BLEND_UNKNOWN:					\
           break;						\
 	}							\

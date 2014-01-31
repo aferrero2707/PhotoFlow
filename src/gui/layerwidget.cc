@@ -31,7 +31,7 @@
 #include "layerwidget.hh"
 
 
-PF::LayerWidget::LayerWidget(): Gtk::Notebook(), layer_manager( NULL )
+PF::LayerWidget::LayerWidget(): Gtk::Notebook(), image( NULL )
 {
   set_tab_pos(Gtk::POS_LEFT);
   Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
@@ -48,10 +48,12 @@ PF::LayerWidget::LayerWidget(): Gtk::Notebook(), layer_manager( NULL )
 
   Gtk::CellRendererToggle* cell = 
     dynamic_cast<Gtk::CellRendererToggle*>( view->get_column_cell_renderer(0) );
-  cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_cell_toggled)); 
+  cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_cell_toggled) ); 
 
   layer_frames.push_back( frame );
   layer_views.push_back( view );
+
+  view->signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
 }
 
 
@@ -72,10 +74,26 @@ void PF::LayerWidget::on_cell_toggled( const Glib::ustring& path )
     std::cout<<"Toggled visibility of layer \""<<l->get_name()<<"\": "<<visible<<std::endl;
     l->set_visible( visible );
     l->set_dirty( true );
-    layer_manager->rebuild( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
+    //layer_manager->rebuild( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
+    image->update();
+  }
+}
 
-    signal_redraw.emit();
-    std::cout<<"signal_redraw() emitted."<<std::endl;
+
+
+void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column )
+{
+  int page = get_current_page();
+  if( page < 0 ) return;
+  Gtk::TreeModel::iterator iter = layer_views[page]->get_model()->get_iter( path );
+  if (iter) {
+    PF::LayerTreeColumns& columns = layer_views[page]->get_columns();
+    bool visible = (*iter)[columns.col_visible];
+    PF::Layer* l = (*iter)[columns.col_layer];
+    std::cout<<"Activated row "<<l->get_name()<<std::endl;
+
+    PF::OperationConfigUI* dialog = l->get_processor()->get_par()->get_config_ui();
+    if(dialog) dialog->open();
   }
 }
 

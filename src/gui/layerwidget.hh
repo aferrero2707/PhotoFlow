@@ -32,7 +32,11 @@
 
 #include <gtkmm.h>
 
+#include "../base/image.hh"
+
 #include "layertree.hh"
+
+#include "operation_config_dialog.hh"
 
 namespace PF {
 
@@ -40,23 +44,22 @@ class LayerWidget : public Gtk::Notebook
 {
   std::vector<Gtk::ScrolledWindow*> layer_frames;
   std::vector<LayerTree*> layer_views;
-  std::vector<LayerTree*> layer_trees;
 
-  LayerManager* layer_manager;
+  Image* image;
 
 public:
   LayerWidget(  );
   virtual ~LayerWidget( );
 
-  sigc::signal<void> signal_redraw;
-
-  LayerManager* get_layer_manager() { return layer_manager; }
-  void set_layer_manager( LayerManager* lm ) { 
-    layer_manager = lm; 
-    layer_views[0]->set_layers( &(layer_manager->get_layers()) );
+  Image* get_image() { return image; }
+  void set_image( Image* img ) { 
+    image = img; 
+    layer_views[0]->set_layers( &(image->get_layer_manager().get_layers()) );
   }
 
   void on_cell_toggled(const Glib::ustring& path);
+
+  void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
 };
 
 }

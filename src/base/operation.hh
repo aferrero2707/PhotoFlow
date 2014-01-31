@@ -66,6 +66,26 @@ namespace PF
 {
 
   class ProcessorBase;
+  class Layer;
+  class Image;
+
+  class OperationConfigUI
+  {
+    std::list<std::string> initial_params;
+
+    Layer* layer;
+    Image* image;
+
+  public:
+
+    Layer* get_layer() { return layer; }
+    void set_layer( Layer* l ) { layer = l; }
+    
+    Image* get_image() { return image; }
+    void set_image( Image* img ) { image = img; }
+
+    virtual void open() = 0;
+  };
 
   /* Base class for all operation parameter implementations
    */
@@ -73,11 +93,13 @@ namespace PF
   {
     VipsDemandStyle demand_hint;
     blendmode_t blend_mode;
-    float intensity;
-    float opacity;
+    Property<float> intensity;
+    Property<float> opacity;
 
     VipsImage* out;
     ProcessorBase* processor;
+
+    OperationConfigUI* config_ui;
 
     // Requested image fields
     int xsize;
@@ -86,6 +108,8 @@ namespace PF
     VipsBandFormat format;
     VipsCoding coding;
     VipsInterpretation interpretation;
+
+    std::list<PropertyBase*> properties;
     
   public:
     OpParBase();
@@ -94,6 +118,9 @@ namespace PF
     {
       if(out) g_object_unref( out );
     }
+
+    void add_property( PropertyBase* p ) { properties.push_back(p); }
+    void save_properties(std::list<std::string>& plist);
 
     void set_processor(ProcessorBase* p) { processor = p; }
     ProcessorBase* get_processor() { return processor; }
@@ -104,11 +131,11 @@ namespace PF
     blendmode_t get_blend_mode() { return blend_mode; }
     void set_blend_mode(blendmode_t mode) { blend_mode = mode; }
 
-    void set_intensity(float val) { intensity = val; }
-    float get_intensity() { return intensity; }
+    void set_intensity(float val) { intensity.set(val); }
+    float get_intensity() { return intensity.get(); }
 
-    void set_opacity(float val) { opacity = val; }
-    float get_opacity() { return opacity; }
+    void set_opacity(float val) { opacity.set(val); }
+    float get_opacity() { return opacity.get(); }
 
     /* Function to derive the output area from the input area
     */
@@ -136,13 +163,16 @@ namespace PF
     virtual bool has_opacity() { return true; }
     virtual bool needs_input() { return true; }
 
-    virtual void build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
+    virtual VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
 
     VipsImage* get_image() { return out; }
     void set_image(VipsImage* img) { 
       if(out) g_object_unref( out );
       out = img; 
     }
+
+    OperationConfigUI* get_config_ui() { return config_ui; }
+    void set_config_ui( OperationConfigUI* ui ) { config_ui = ui; }
 
     int get_xsize() { return xsize; }
     int get_ysize() { return ysize; }
@@ -204,7 +234,7 @@ namespace PF
     float get_intensity(float& intensity, T*& p, int& x)
     {
       //std::cout<<"IntensityProc<T,true>::get_intensity(): "<<(intensity*p[x]/(FormatInfo<T>::MAX-FormatInfo<T>::MIN))<<std::endl;
-      return(intensity*p[x++]/(FormatInfo<T>::MAX-FormatInfo<T>::MIN));
+      return(intensity*(p[x++]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE));
     }
   };
 
@@ -241,13 +271,8 @@ namespace PF
   };
 
 
-  template<typename T, colorspace_t colorspace, bool has_omap>
-  class BlendPassthrough: public BlendBase<T, colorspace, has_omap>
-  {
-  public:
-    void blend(T* in, T* out, const int& x, int& xomap) {}
-  };
-
+  #include "blend_passthrough.hh"
+  #include "blend_normal.hh"
 
 };
 

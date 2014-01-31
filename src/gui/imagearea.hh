@@ -31,6 +31,9 @@
 
  */
 
+#ifndef IMAGE_AREA_HH
+#define IMAGE_AREA_HH
+
 #include <stdio.h>
 #include <iostream>
 
@@ -38,12 +41,14 @@
 
 #include <vips/vips>
 
-#include "../base/layermanager.hh"
+#include "../base/image.hh"
 
 #include "../operations/image_reader.hh"
 #include "../operations/brightness_contrast.hh"
 #include "../operations/invert.hh"
 #include "../operations/gradient.hh"
+
+#include "../gui/operations/brightness_contrast_config.hh"
 
 using namespace vips;
 
@@ -76,7 +81,8 @@ private:
    */
   VipsRegion* mask_region;
 
-  PF::LayerManager* layer_manager;
+  //PF::LayerManager* layer_manager;
+  PF::Image* pf_image;
 
   /* We send this packet of data from the bg worker thread to the main GUI
    * thread when a tile has been calculated.
@@ -120,6 +126,7 @@ private:
     g_idle_add ((GSourceFunc) render_cb, update);
   }
 
+#ifdef GTKMM_2
   void
   expose_rect (GdkRectangle * expose)
   {
@@ -128,7 +135,6 @@ private:
      */
     VipsRect image = {0, 0, display_image->Xsize, display_image->Ysize};
     VipsRect area = {expose->x, expose->y, expose->width, expose->height};
-
     VipsRect clip;
 
     vips_rect_intersectrect (&image, &area, &clip);
@@ -188,6 +194,31 @@ private:
 
     return TRUE;
   }
+#endif
+
+
+#ifdef GTKMM_3
+  bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+  {
+    cairo_rectangle_list_t *list =  cairo_copy_clip_rectangle_list (cr->cobj());
+    for (int i = list->num_rectangles - 1; i >= 0; --i) {
+      cairo_rectangle_t *rect = &list->rectangles[i];
+      
+      std::cout<<"ImageArea::on_draw(): rectangle = "<<rect->x<<","<<rect->y
+	       <<" -> "<<rect->width<<","<<rect->height<<std::endl;
+    }
+    std::cout<<std::endl;
+    
+    // Draw the image in the middle of the drawing area, or (if the image is
+    // larger than the drawing area) draw the middle part of the image.
+    //Gdk::Cairo::set_source_pixbuf(cr, m_image,
+    //  (width - m_image->get_width())/2, (height - m_image->get_height())/2);
+    cr->paint();
+    
+    return true;
+  }
+#endif
+
 
   virtual void on_realize() 
   {
@@ -216,7 +247,8 @@ public:
     VIPS_UNREF( image );
   }
 
-  PF::LayerManager* get_layer_manager() { return layer_manager; }
+  //PF::LayerManager* get_layer_manager() { return layer_manager; }
+  PF::Image* get_image() { return pf_image; }
 
   void
   set_image (char* filename)
@@ -233,75 +265,110 @@ public:
     PF::Processor<PF::BrightnessContrast,PF::BrightnessContrastPar>* bc = 
       new PF::Processor<PF::BrightnessContrast,PF::BrightnessContrastPar>();
     bc->get_par()->set_brightness(0.2);
-    bc->get_par()->set_contrast(2.5);
+    //bc->get_par()->set_contrast(0.5);
+    bc->get_par()->set_opacity(0.5);
+    bc->get_par()->set_blend_mode(PF::PF_BLEND_NORMAL);
 
     PF::Processor<PF::Gradient,PF::GradientPar>* gradient = 
       new PF::Processor<PF::Gradient,PF::GradientPar>();
 
     /**/
     //PF::LayerManager* lm 
-    layer_manager = new PF::LayerManager();
+    //layer_manager = new PF::LayerManager();
+    pf_image = new PF::Image();
+    pf_image->add_view( VIPS_FORMAT_UCHAR, 0 );
+    PF::LayerManager& layer_manager = pf_image->get_layer_manager();
 
-    PF::Layer* limg = layer_manager->new_layer();
+    PF::Layer* limg = layer_manager.new_layer();
     limg->set_processor( imgread );
     limg->set_name( "input image" );
 
-    PF::Layer* lbc = layer_manager->new_layer();
+    PF::Layer* lbc = layer_manager.new_layer();
     lbc->set_processor( bc );
     lbc->set_name( "brightness/contrast" );
 
-    PF::Layer* lgrad = layer_manager->new_layer();
+    PF::BrightnessContrastConfigDialog* bc_config = 
+      new PF::BrightnessContrastConfigDialog();
+    bc->get_par()->set_config_ui( bc_config );
+    bc_config->set_layer( lbc );
+    bc_config->set_image( pf_image );
+
+    PF::Layer* lgrad = layer_manager.new_layer();
     lgrad->set_processor( gradient );
     lgrad->set_name( "vertical gradient" );
 
-    PF::Layer* linv1 = layer_manager->new_layer();
+    PF::Layer* linv1 = layer_manager.new_layer();
     linv1->set_processor( new PF::Processor<PF::Invert,PF::InvertPar>() );
     linv1->set_name( "invert 1" );
 
-    PF::Layer* linv2 = layer_manager->new_layer();
+    PF::Layer* linv2 = layer_manager.new_layer();
     linv2->set_processor( new PF::Processor<PF::Invert,PF::InvertPar>() );
     linv2->set_name( "invert 2" );
 
-    layer_manager->get_layers().push_back( limg );
-    lbc->imap_insert( lgrad );
-    layer_manager->get_layers().push_back( lbc );
-    layer_manager->get_layers().push_back( linv1 );
-    layer_manager->get_layers().push_back( linv2 );
+    layer_manager.get_layers().push_back( limg );
+    //lbc->imap_insert( lgrad );
+    layer_manager.get_layers().push_back( lbc );
+    layer_manager.get_layers().push_back( linv1 );
+    layer_manager.get_layers().push_back( linv2 );
 
+
+    pf_image->signal_modified.connect( sigc::mem_fun(this, &ImageArea::update_image) );
+
+
+    pf_image->update();
     //layer_manager->build_chain( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
 
-    layer_manager->rebuild_all( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
+    //layer_manager->rebuild_all( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
+    //update_image();
+    /*
+    display_image = im_open( "display_image", "p" );
 
-    update_image();
+    VipsImage* out = layer_manager->get_output();
+    if(out) {
+      if (vips_sink_screen (out, display_image, NULL,
+          64, 64, (2000/64)*(2000/64), 0, sink_notify, this))
+  verror ();
+      
+      
+      region = vips_region_new (display_image);
+      std::cout<<"Image size: "<<display_image->Xsize<<","<<display_image->Ysize<<std::endl;
+      set_size_request (display_image->Xsize, display_image->Ysize);
+    }
+    */
   }
 
   void update_image() {
-    if( !layer_manager->get_output() ) 
-	    return;
+    PF::View* view = pf_image->get_view(0);
 
-    VIPS_UNREF( image ); 
-    image = layer_manager->get_output();
-    g_object_ref( image ); 
+    if( !view || !view->get_output() ) return;
+
+    VIPS_UNREF( image );
+    image = view->get_output();
+    g_object_ref( image );
 
     VIPS_UNREF( display_image ); 
     VIPS_UNREF( mask ); 
 
-    display_image = vips_image_new();
+    display_image = im_open( "display_image", "p" );
     mask = vips_image_new();
 
     if (vips_sink_screen (image, display_image, mask,
         64, 64, (2000/64)*(2000/64), 0, sink_notify, this))
       verror ();
-
+    
+    
     VIPS_UNREF( region ); 
-    region = vips_region_new( display_image );
-    std::cout << "Image size: " << display_image->Xsize << "," <<
-	    display_image->Ysize << std::endl;
+    region = vips_region_new (display_image);
+    std::cout<<"Image size: "<<display_image->Xsize<<","
+	     <<display_image->Ysize<<std::endl;
 
     VIPS_UNREF( mask_region ); 
     mask_region = vips_region_new( mask );
 
-    set_size_request( display_image->Xsize, display_image->Ysize );
+    set_size_request (display_image->Xsize, display_image->Ysize);
     queue_draw();
   }
 };
+
+
+#endif

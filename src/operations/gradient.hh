@@ -91,6 +91,8 @@ namespace PF
 
     int height = oreg->im->Ysize - oreg->im->Yoffset;
 
+    float opacity = par->get_opacity();
+
     //std::cout<<"Gradient::render: height="<<height<<std::endl;
     
     for( y = 0; y < r->height; y++ ) {
@@ -107,7 +109,7 @@ namespace PF
       
       for( x = 0, xomap = 0; x < line_size; ++x) {
 	pout[x] = val;
-	blender.blend( p, pout, x, xomap );
+	blender.blend( opacity, p, pout, x, xomap );
       }
     }
   };

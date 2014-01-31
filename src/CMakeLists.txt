@@ -41,8 +41,8 @@ include_directories(${VIPS_INCLUDE_DIRS})
 include_directories(${VIPSCC_INCLUDE_DIRS})
 
 
-FILE(GLOB GuiIncludes gui/*.hh)
-FILE(GLOB GuiSources gui/*.cc)
+FILE(GLOB GuiIncludes gui/*.hh gui/operations/*.hh)
+FILE(GLOB GuiSources gui/*.cc gui/operations/*.cc)
 
 FILE(GLOB BaseIncludes base/*.hh)
 FILE(GLOB BaseSources base/*.cc)
@@ -83,7 +83,19 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
   )
 
 
+add_executable(invert # name of the executable on Windows will be example.exe 
+  benchmarks/invert.cc 
+  )
+SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
+
+
 target_link_libraries(photoflow ${LIBS} pfbase pfoperations pfvips ${SIGC2_LIBRARIES}
+  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}  dl
+  )
+
+
+target_link_libraries(invert ${LIBS} pfbase pfoperations pfvips ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}  dl
   )

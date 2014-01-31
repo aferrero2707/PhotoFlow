@@ -85,9 +85,8 @@ namespace PF {
 
   controlBox.pack_start(layersWidget);
 
-  layersWidget.set_layer_manager( imageArea.get_layer_manager() );
-
-  layersWidget.signal_redraw.connect( sigc::mem_fun(&imageArea, &ImageArea::update_image) );
+  //layersWidget.set_layer_manager( imageArea.get_layer_manager() );
+  layersWidget.set_image( imageArea.get_image() );
 
   /*
   controlBox.pack_start(treeNotebook);

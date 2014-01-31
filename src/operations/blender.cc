@@ -36,15 +36,15 @@ vips_layer( VipsImage **in, int n, VipsImage **out, int first,
             VipsImage* imap, VipsImage* omap, 
             VipsDemandStyle demand_hint);
 
-void PF::BlenderPar::build(std::vector<VipsImage*>& in, int first, 
-			   VipsImage* imap, VipsImage* omap)
+VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first, 
+				 VipsImage* imap, VipsImage* omap)
 {
   VipsImage* outnew;
 
   if( in.size() != 2 ) {
     std::cerr<<"PF::BlenderPar::build(): wrong number of input images: "
 	     <<in.size()<<" (should be 2)"<<std::endl;
-    return;
+    return NULL;
   } 
 
   // Prepare the blending step between the new image (in invec[1]) and the underlying image
@@ -62,8 +62,9 @@ void PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     vips_copy( in[1], &outnew, NULL );
   } else {
     std::cerr<<"PF::BlenderPar::build(): unsupported input pattern and blend mode combination!"<<std::endl;
-    return;
+    return NULL;
   }
 
-  set_image( outnew );
+  //set_image( outnew );
+  return outnew;
 }

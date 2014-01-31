@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "layer.hh"
+#include "view.hh"
 
 namespace PF
 {
@@ -43,14 +44,14 @@ namespace PF
     std::vector<Layer*> layers_pool;
     std::list<Layer*> layers;
 
-    VipsImage* output;
+    //VipsImage* output;
 
     // Walk through the given layer chain and set the "dirty" flag of all layers starting from "layer_id" to "true"
     void update_dirty( std::list<Layer*>& list, bool& dirty );
 
     void reset_dirty( std::list<Layer*>& list );
 
-    VipsImage* rebuild_chain(colorspace_t cs, VipsBandFormat fmt, 
+    VipsImage* rebuild_chain(View& view, colorspace_t cs, 
 			     int width, int height, 
 			     std::list<Layer*>& list, VipsImage* previous);
   public:
@@ -63,10 +64,10 @@ namespace PF
 
     Layer* get_layer(int id);
 
-    VipsImage* get_output() { return output; }
+    //VipsImage* get_output() { return output; }
 
-    bool rebuild(colorspace_t cs, VipsBandFormat fmt, int width, int height);
-    bool rebuild_all(colorspace_t cs, VipsBandFormat fmt, int width, int height);
+    bool rebuild(View& view, colorspace_t cs, int width, int height);
+    bool rebuild_all(View& view, colorspace_t cs, int width, int height);
 
   };
 

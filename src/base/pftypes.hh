@@ -78,7 +78,7 @@ namespace PF
 
   enum blendmode_t {
     PF_BLEND_PASSTHROUGH,
-    //PF_BLEND_NORMAL,
+    PF_BLEND_NORMAL,
     //PF_BLEND_OVERLAY,
     PF_BLEND_UNKNOWN
   };

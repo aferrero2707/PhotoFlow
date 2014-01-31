@@ -62,6 +62,7 @@ namespace PF
     BLENDER blender;
     
     float intensity = par->get_intensity();
+    float opacity = par->get_opacity();
     
     Rect *r = &oreg->valid;
     int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
@@ -111,7 +112,8 @@ namespace PF
 	//continue;
 	float intensity_real = this->get_intensity( intensity, pimap, ximap );
 	proc.process( p, n, in_first, sz, x, intensity_real/*get_intensity( intensity, pimap, ximap )*/, pout );
-	blender.blend( p[0], pout, x, xomap );
+	blender.blend( opacity, p[0], pout, x, xomap );
+	x += sz;
 	//for( int ni = 0; ni < n; ni++) 
 	//  p[ni] += sz;
 	//pout += sz;

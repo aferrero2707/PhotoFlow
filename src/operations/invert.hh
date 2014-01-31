@@ -52,10 +52,79 @@ namespace PF
   public:
     InvertProc(InvertPar* p): par(p) {}
 
-    void process(T**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, T* pout) 
+    void process(T**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, T* pout) {}
+  };
+
+  
+  template < typename T, bool PREVIEW, class OP_PAR >
+  class InvertProc<T, PF_COLORSPACE_GRAYSCALE, PREVIEW, OP_PAR>
+  {
+    InvertPar* par;
+  public:
+    InvertProc(InvertPar* p): par(p) {}
+
+    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
     {
       pout[x] = (T)(FormatInfo<T>::RANGE - p[first][x]); 
-      x+= 1;
+    }
+  };
+
+  
+  template < typename T, bool PREVIEW, class OP_PAR >
+  class InvertProc<T, PF_COLORSPACE_RGB, PREVIEW, OP_PAR>
+  {
+    InvertPar* par;
+  public:
+    InvertProc(InvertPar* p): par(p) {}
+
+    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
+    {
+      int i = x;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+    }
+  };
+
+  
+  template < typename T, bool PREVIEW, class OP_PAR >
+  class InvertProc<T, PF_COLORSPACE_LAB, PREVIEW, OP_PAR>
+  {
+    InvertPar* par;
+  public:
+    InvertProc(InvertPar* p): par(p) {}
+
+    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
+    {
+      int i = x;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+    }
+  };
+
+  
+  template < typename T, bool PREVIEW, class OP_PAR >
+  class InvertProc<T, PF_COLORSPACE_CMYK, PREVIEW, OP_PAR>
+  {
+    InvertPar* par;
+  public:
+    InvertProc(InvertPar* p): par(p) {}
+
+    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
+    {
+      int i = x;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
     }
   };
 

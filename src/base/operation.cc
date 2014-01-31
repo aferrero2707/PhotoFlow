@@ -28,6 +28,7 @@
  */
 
 #include "operation.hh"
+#include "layer.hh"
 //#include "../vips/vips_layer.h"
 
 int
@@ -36,19 +37,42 @@ vips_layer( VipsImage **in, int n, VipsImage **out, int first,
             VipsImage* imap, VipsImage* omap, 
             VipsDemandStyle demand_hint);
 
-PF::OpParBase::OpParBase()
+
+
+
+
+void PF::OperationConfigUI::open()
+{
+  get_layer()->get_processor()->get_par()->save_properties(initial_params);
+}
+
+
+
+
+PF::OpParBase::OpParBase():
+  intensity("intensity",this,1),
+  opacity("opacity",this,1)
 {
   processor = NULL;
   out = NULL;
+  config_ui = NULL;
   blend_mode = PF_BLEND_PASSTHROUGH;
-  intensity = 1;
-  opacity = 1;
   demand_hint = VIPS_DEMAND_STYLE_THINSTRIP;
   bands = 1;
   xsize = 100; ysize = 100;
 
   //PF::PropertyBase* prop;
   //prop = new PF::Property<float>("intensity",&intensity);
+}
+
+
+void PF::OpParBase::save_properties(std::list<std::string>& plist)
+{
+  std::list<PropertyBase*>::iterator pi;
+  for(pi = properties.begin(); pi != properties.end(); pi++) {
+    std::string str = (*pi)->get_str();
+    plist.push_back(str);
+  }
 }
 
 
@@ -74,7 +98,7 @@ void PF::OpParBase::set_image_hints(int w, int h, colorspace_t cs, VipsBandForma
 
 
 
-void PF::OpParBase::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
+VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
 {
   VipsImage* outnew;
 
@@ -111,5 +135,6 @@ void PF::OpParBase::build(std::vector<VipsImage*>& in, int first, VipsImage* ima
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
   std::cout<<"out: "<<(void*)outnew<<std::endl<<std::endl;
 
-  set_image( outnew );
+  //set_image( outnew );
+  return outnew;
 }

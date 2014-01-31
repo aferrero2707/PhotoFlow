@@ -34,7 +34,7 @@ PF::LayerTree::LayerTree( ): layers( NULL )//: image(NULL)
   treeModel = Gtk::TreeStore::create(columns);
   set_model(treeModel);
   append_column_editable("V", get_columns().col_visible);
-  append_column_editable("Name", get_columns().col_name);
+  append_column("Name", get_columns().col_name);
 
   /*
   Gtk::TreeModel::Row row = *(treeModel->append());

@@ -30,7 +30,7 @@
 #include "layermanager.hh"
 
 
-PF::LayerManager::LayerManager(): output( NULL )
+PF::LayerManager::LayerManager()
 {
 }
 
@@ -136,7 +136,7 @@ void PF::LayerManager::reset_dirty( std::list<Layer*>& list )
 
 
 
-VipsImage* PF::LayerManager::rebuild_chain(colorspace_t cs, VipsBandFormat fmt, 
+VipsImage* PF::LayerManager::rebuild_chain(View& view, colorspace_t cs, 
 					   int width, int height, 
 					   std::list<PF::Layer*>& list, VipsImage* previous)
 {  
@@ -157,8 +157,8 @@ VipsImage* PF::LayerManager::rebuild_chain(colorspace_t cs, VipsBandFormat fmt,
 	     <<"  omap_layers.size()="<<l->omap_layers.size()
 	     <<std::endl;
     if( previous && !l->imap_layers.empty() ) {
-      imap = rebuild_chain( PF_COLORSPACE_GRAYSCALE, 
-			    previous->BandFmt, previous->Xsize, previous->Ysize, 
+      imap = rebuild_chain( view, PF_COLORSPACE_GRAYSCALE, 
+			    previous->Xsize, previous->Ysize, 
 			    l->imap_layers, NULL );
       if( !imap )
 	return false;
@@ -168,8 +168,8 @@ VipsImage* PF::LayerManager::rebuild_chain(colorspace_t cs, VipsBandFormat fmt,
     }
     VipsImage* omap = NULL;
     if( previous && !l->omap_layers.empty() ) {
-      omap = rebuild_chain( PF_COLORSPACE_GRAYSCALE, 
-			    previous->BandFmt, previous->Xsize, previous->Ysize, 
+      omap = rebuild_chain( view, PF_COLORSPACE_GRAYSCALE, 
+			    previous->Xsize, previous->Ysize, 
 			    l->omap_layers, NULL );
       if( !omap )
 	return false;
@@ -179,11 +179,12 @@ VipsImage* PF::LayerManager::rebuild_chain(colorspace_t cs, VipsBandFormat fmt,
     }
 
     /* At this point there are two possibilities:
-       1. the layer has no sub-layers, in which case is get combined with the output
+       1. the layer has no sub-layers, in which case it is combined with the output
           of the previous layer plus any extra inputs it might have
        2. the layer has sub-layers, in which case we first build the sub-layers chain
           and then we combine it with the output of the previous layer
     */
+    VipsImage* newimg = NULL;
     if( l->sublayers.empty() ) {
       std::vector<VipsImage*> in;
       if( par->needs_input() && !previous ) {
@@ -217,18 +218,22 @@ VipsImage* PF::LayerManager::rebuild_chain(colorspace_t cs, VipsBandFormat fmt,
       // On the other hand, the pixel format hint should be strictly respected by all 
       // operators, as it defined the accuracy at which the final image is rendered.
       if( li == list.begin() )
-	par->set_image_hints( width, height, cs, fmt );
-      par->build( in, 0, imap, omap);
+	par->set_image_hints( width, height, cs, view.get_format() );
+      newimg = par->build( in, 0, imap, omap);
     }
 
-    previous = par->get_image();
-    out = previous;
+    if( newimg ) {
+      view.set_image( newimg, l->get_id() );
+      //view.set_output( newimg );
+      out = newimg;
+      previous = newimg;
+    }
   }
   return out;
 }
 
 
-bool PF::LayerManager::rebuild(colorspace_t cs, VipsBandFormat fmt, int width, int height)
+bool PF::LayerManager::rebuild(View& view, colorspace_t cs, int width, int height)
 {
   bool result;
   bool dirty = false;
@@ -238,7 +243,8 @@ bool PF::LayerManager::rebuild(colorspace_t cs, VipsBandFormat fmt, int width, i
     return false;
   }
 
-  output = rebuild_chain( cs, fmt, width, height, layers, NULL );
+  VipsImage* output = rebuild_chain( view, cs, width, height, layers, NULL );
+  view.set_output( output );
 
   reset_dirty( layers );
 
@@ -246,7 +252,7 @@ bool PF::LayerManager::rebuild(colorspace_t cs, VipsBandFormat fmt, int width, i
 }
 
 
-bool PF::LayerManager::rebuild_all(colorspace_t cs, VipsBandFormat fmt, int width, int height)
+bool PF::LayerManager::rebuild_all(View& view, colorspace_t cs, int width, int height)
 {
   if( layers.empty() )
     return true;
@@ -273,7 +279,8 @@ bool PF::LayerManager::rebuild_all(colorspace_t cs, VipsBandFormat fmt, int widt
     return false;
   }
 
-  output  = rebuild_chain( cs, fmt, width, height, layers, NULL );
+  VipsImage* output  = rebuild_chain( view, cs, width, height, layers, NULL );
+  view.set_output( output );
 
   reset_dirty( layers );
 

@@ -32,7 +32,7 @@
 
 #include <gtkmm.h>
 
-#include "../base/layermanager.hh"
+#include "../base/layer.hh"
 
 namespace PF {
 
