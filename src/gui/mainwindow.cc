@@ -59,7 +59,7 @@ namespace PF {
   mainBox.pack_start(editorBox);
 
   editorBox.pack1(viewBox);
-  editorBox.pack2(controlBox,true,true);
+  editorBox.pack2(controlBox,false,true);
 
   viewBox.pack_start(topButtonBox, Gtk::PACK_SHRINK);
   viewBox.pack_start(viewerNotebook);

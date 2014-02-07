@@ -27,41 +27,31 @@
 
  */
 
-#ifndef VIPS_PHOTOFLOW_H
-#define VIPS_PHOTOFLOW_H
+#ifndef TEXTBOX_HH
+#define TEXTBOX_HH
 
-#include "pftypes.hh"
+#include <gtkmm.h>
 
-//#include "image.hh"
+#include "pfwidget.hh"
 
+namespace PF {
 
-namespace PF
-{
-
-  class Image;
-
-  class PhotoFlow
+  class TextBox: public Gtk::HBox, public PFWidget
   {
-    rendermode_t render_mode;
+    Gtk::Label label;
+    Gtk::Entry entry;
 
-    Image* active_image;
-
-    static PhotoFlow* instance;
   public:
-    PhotoFlow(): render_mode(PF_RENDER_PREVIEW) {}
+    TextBox(OperationConfigUI* dialog, std::string pname, std::string l, std::string val);
+    TextBox(OperationConfigUI* dialog, std::string pname, std::string l, double val);
 
-    static PhotoFlow& Instance();
+    ~TextBox() {}
 
-    rendermode_t get_render_mode() { return render_mode; }
-    void set_render_mode(rendermode_t m) { render_mode = m; }
-
-    Image* get_image() { return active_image; }
-    void set_image(Image* i) { active_image = i; }
+    void get_value();
+    void set_value();
   };
+
 
 }
 
-
-#endif 
-
-
+#endif

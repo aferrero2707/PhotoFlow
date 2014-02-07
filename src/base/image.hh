@@ -28,8 +28,8 @@
 
  */
 
-#ifndef IMAGE_H
-#define IMAGE_H
+#ifndef PF_IMAGE_HH
+#define PF_IMAGE_HH
 
 #include <sigc++/sigc++.h>
 
@@ -47,7 +47,10 @@ namespace PF
     std::vector<View> views;
 
   public:
-    Image() {}
+    Image(): layer_manager( this ) 
+    {
+      layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update) );
+    }
 
     sigc::signal<void> signal_modified;
 

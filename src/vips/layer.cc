@@ -293,12 +293,14 @@ vips_layer_build( VipsObject *object )
   */
 
   if(ninput > 0) {
+    /*
     VipsImage** array = layer->in->data;
     VipsImage* in0 = array[0];
     vips_image_init_fields( layer->out,
 			    in0->Xsize, in0->Ysize, 
 			    in0->Bands, in0->BandFmt,
 			    in0->Coding,in0->Type,1.0, 1.0);
+    */
   } else {
     PF::OpParBase* par = layer->processor->get_par();
     vips_image_init_fields( layer->out,

@@ -30,7 +30,7 @@
 #include "layermanager.hh"
 
 
-PF::LayerManager::LayerManager()
+PF::LayerManager::LayerManager( PF::Image* img ): image( img )
 {
 }
 
@@ -51,11 +51,13 @@ PF::Layer* PF::LayerManager::new_layer()
   for(i = 0; i < layers_pool.size(); i++) {
     if(layers_pool[i] == NULL) {
       PF::Layer* l = new PF::Layer(i);
+      l->set_image( image );
       layers_pool[i] = l;
       return l;
     }
   }
   PF::Layer* l = new PF::Layer(layers_pool.size());
+  l->set_image( image );
   layers_pool.push_back(l);
   return l;
 }

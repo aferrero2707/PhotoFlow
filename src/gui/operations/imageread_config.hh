@@ -27,41 +27,35 @@
 
  */
 
-#ifndef VIPS_PHOTOFLOW_H
-#define VIPS_PHOTOFLOW_H
+#ifndef IMAGE_READ_CONFIG_DIALOG_HH
+#define IMAGE_READ_CONFIG_DIALOG_HH
 
-#include "pftypes.hh"
+#include <gtkmm.h>
 
-//#include "image.hh"
+#include "../operation_config_dialog.hh"
+#include "../../operations/image_reader.hh"
 
 
-namespace PF
+namespace PF {
+
+  class ImageReadConfigDialog: public OperationConfigDialog
 {
+#ifdef GTKMM_2
+  Gtk::VBox controlsBox;
 
-  class Image;
+  Gtk::Label label;
+  Gtk::Alignment lcontrastAl, lbrightnessAl;
+  Gtk::Entry fileEntry;
+#endif
 
-  class PhotoFlow
-  {
-    rendermode_t render_mode;
+public:
+  ImageReadConfigDialog();
 
-    Image* active_image;
+  void on_filename_changed();
 
-    static PhotoFlow* instance;
-  public:
-    PhotoFlow(): render_mode(PF_RENDER_PREVIEW) {}
-
-    static PhotoFlow& Instance();
-
-    rendermode_t get_render_mode() { return render_mode; }
-    void set_render_mode(rendermode_t m) { render_mode = m; }
-
-    Image* get_image() { return active_image; }
-    void set_image(Image* i) { active_image = i; }
-  };
+  void open();
+};
 
 }
 
-
-#endif 
-
-
+#endif

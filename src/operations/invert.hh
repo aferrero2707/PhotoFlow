@@ -79,12 +79,20 @@ namespace PF
 
     void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
     {
+      /**/
       int i = x;
       pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
       i += 1;
       pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
       i += 1;
       pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      /**/
+      /*
+      T* pp = p[first];
+      for(int i = 0; i < 3; i++) {
+	pout[x+i] = (T)(FormatInfo<T>::RANGE - pp[x+i]); 
+      }
+      */
     }
   };
 

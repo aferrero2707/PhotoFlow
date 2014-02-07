@@ -1,6 +1,8 @@
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g ")
 #SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}  "-Wall -O0 -g") 
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p") 
+#SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops") 
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG") 
 
 if(GTKMM2_FOUND)
   
@@ -41,8 +43,8 @@ include_directories(${VIPS_INCLUDE_DIRS})
 include_directories(${VIPSCC_INCLUDE_DIRS})
 
 
-FILE(GLOB GuiIncludes gui/*.hh gui/operations/*.hh)
-FILE(GLOB GuiSources gui/*.cc gui/operations/*.cc)
+FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh)
+FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc)
 
 FILE(GLOB BaseIncludes base/*.hh)
 FILE(GLOB BaseSources base/*.cc)
@@ -71,7 +73,7 @@ add_library (pfoperations
 )
 
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_CFLAGS "-fPIC -DPIC")
-SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-fpermissive -fPIC -DPIC")
+SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-fpermissive")
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES PREFIX "")
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES SUFFIX ".plg")
 
@@ -101,3 +103,9 @@ target_link_libraries(invert ${LIBS} pfbase pfoperations pfvips ${SIGC2_LIBRARIE
   )
 
 
+add_executable(introspect # name of the executable on Windows will be example.exe 
+  vips/introspect.c 
+  )
+
+target_link_libraries(introspect ${VIPS_LIBRARIES}
+  )

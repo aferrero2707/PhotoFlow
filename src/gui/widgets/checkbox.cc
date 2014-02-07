@@ -27,41 +27,39 @@
 
  */
 
-#ifndef VIPS_PHOTOFLOW_H
-#define VIPS_PHOTOFLOW_H
-
-#include "pftypes.hh"
-
-//#include "image.hh"
+#include "checkbox.hh"
 
 
-namespace PF
+PF::CheckBox::CheckBox( OperationConfigUI* dialog, std::string pname, std::string l, int val ):
+  Gtk::HBox(),
+  PF::PFWidget( dialog, pname )
 {
+  label.set_text( l.c_str() );
 
-  class Image;
+  pack_start( label );
+  pack_start( check );
 
-  class PhotoFlow
-  {
-    rendermode_t render_mode;
+  check.set_active( val!=0 );
 
-    Image* active_image;
+  check.signal_toggled().
+    connect(sigc::mem_fun(*this,
+			  &PFWidget::changed));
 
-    static PhotoFlow* instance;
-  public:
-    PhotoFlow(): render_mode(PF_RENDER_PREVIEW) {}
-
-    static PhotoFlow& Instance();
-
-    rendermode_t get_render_mode() { return render_mode; }
-    void set_render_mode(rendermode_t m) { render_mode = m; }
-
-    Image* get_image() { return active_image; }
-    void set_image(Image* i) { active_image = i; }
-  };
-
+  show_all_children();
 }
 
 
-#endif 
+void PF::CheckBox::get_value()
+{
+  if( !get_prop() ) return;
+  std::string str = get_prop()->get_str().c_str();
+  check.set_active( str=="true" );
+}
 
 
+void PF::CheckBox::set_value()
+{
+  if( !get_prop() ) return;
+  //std::string str = entry.get_text().c_str();
+  //get_prop()->update(str);
+}

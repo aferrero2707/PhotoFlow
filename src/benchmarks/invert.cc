@@ -1,5 +1,15 @@
+#include <string.h>
 #include <vips/vips.h>
 #include <gtkmm/main.h>
+
+#include "../base/image.hh"
+
+#include "../operations/image_reader.hh"
+#include "../operations/invert.hh"
+#include "../operations/brightness_contrast.hh"
+#include "../operations/gradient.hh"
+
+//#include "../gui/operations/brightness_contrast_config.hh"
 
 /* Create a tiny VipsOperator ... photographic negative of a uchar image. 
  */
@@ -48,6 +58,7 @@ negative_generate( VipsRegion *oreg,
 	int line_size = r->width * negative->in->Bands; 
 
 	int x, y;
+	int max = negative->image_max;
 
 	/* Request matching part of input region.
 	 */
@@ -61,7 +72,7 @@ negative_generate( VipsRegion *oreg,
 			VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 
 		for( x = 0; x < line_size; x++ ) 
-			q[x] = negative->image_max - p[x];
+			q[x] = max - p[x];
 	}
 
 	return( 0 );
@@ -175,6 +186,18 @@ negative( VipsImage *in, VipsImage **out, ... )
 	return( result );
 }
 
+/* We need C linkage for this.
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
+  extern GType vips_layer_get_type( void ); 
+
+#ifdef __cplusplus
+}
+#endif /*__cplusplus*/
+
 int 
 main( int argc, char **argv )
 {
@@ -188,50 +211,94 @@ main( int argc, char **argv )
   if( vips_init( argv[0] ) )
     vips_error_exit( "unable to init" ); 
 
+  im_concurrency_set( 1 );
 
   /* Add negative to the class hierarchy. You'll now be able to use it
    * exactly like any built-in vips operation and it'll appear in
    * Python, nip2, C, C++ etc etc. 
    */
   negative_get_type();
+  vips_layer_get_type();
 
-  if( argc != 3 )
-    vips_error_exit( "usage: %s infile outfile", argv[0] ); 
+  if( argc != 4 )
+    vips_error_exit( "usage: %s vips/pf infile outfile", argv[0] ); 
 
-  if( !(in = vips_image_new_from_file( argv[1] )) )
-    vips_error_exit( "unable to open" ); 
+  bool check_vips = true;
+  if(!strcmp(argv[1],"pf")) check_vips = false;
 
-  temp = in;
+  if( check_vips ) {
+    if( !(in = vips_image_new_from_file( argv[2] )) )
+      vips_error_exit( "unable to open" ); 
 
-  for(int i = 0; i < 20; i++) {
+    temp = in;
+
+    for(int i = 0; i < 1000; i++) {
     
-    if( negative( temp, &out, "image_max", 128, NULL ) ) {
+      if( negative( temp, &out, "image_max", 128, NULL ) ) {
+	g_object_unref( temp );
+	vips_error_exit( "unable to invert" ); 
+      }
+
+      /* We have a ref to out, out holds a ref to the negative operation,
+       * and the operation holds a ref to in. We can safely unref in and
+       * it'll be unreffed when we unref out.
+       */
       g_object_unref( temp );
-      vips_error_exit( "unable to invert" ); 
+
+      temp = out;
+
     }
 
-    /* We have a ref to out, out holds a ref to the negative operation,
-     * and the operation holds a ref to in. We can safely unref in and
-     * it'll be unreffed when we unref out.
-     */
-    //g_object_unref( temp );
+    printf("Writing output image...\n");
 
-    temp = out;
+    if( vips_image_write_to_file( out, argv[3] ) ) { 
+      g_object_unref( out );
+      vips_error_exit( "unable to write" ); 
+    }
 
-  }
+    printf("...done\n");
 
-  printf("Writing output image...\n");
-
-  if( vips_image_write_to_file( out, argv[2] ) ) { 
     g_object_unref( out );
-    vips_error_exit( "unable to write" ); 
+  } else {
+
+    std::vector<VipsImage*> in;
+
+    PF::Processor<PF::ImageReader,PF::ImageReaderPar>* imgread = 
+      new PF::Processor<PF::ImageReader,PF::ImageReaderPar>();
+    imgread->get_par()->set_file_name( argv[2] );
+
+    PF::Image* pf_image = new PF::Image();
+    pf_image->add_view( VIPS_FORMAT_UCHAR, 0 );
+    PF::LayerManager& layer_manager = pf_image->get_layer_manager();
+
+    PF::Layer* limg = layer_manager.new_layer();
+    limg->set_processor( imgread );
+    limg->set_name( "input image" );
+    layer_manager.get_layers().push_back( limg );
+
+    for(int i = 0; i < 1000; i++) {    
+      PF::Layer* linv1 = layer_manager.new_layer();
+      linv1->set_processor( new PF::Processor<PF::Invert,PF::InvertPar>() );
+      linv1->set_name( "invert" );
+      layer_manager.get_layers().push_back( linv1 );
+    }
+
+    pf_image->update();
+
+    PF::View* view = pf_image->get_view( 0 );
+
+    VipsImage* image = view->get_output();
+
+    printf("Writing output image...\n");
+
+    if( vips_image_write_to_file( view->get_output(), argv[3] ) ) { 
+      //g_object_unref( out );
+      vips_error_exit( "unable to write" ); 
+    }
+
+    printf("...done\n");
+
   }
-
-  printf("...done\n");
-
-  //g_object_unref( out );
-
-  im_close_plugins();
 
   return( 0 ); 
 }

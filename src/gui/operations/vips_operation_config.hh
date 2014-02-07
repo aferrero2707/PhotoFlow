@@ -27,41 +27,32 @@
 
  */
 
-#ifndef VIPS_PHOTOFLOW_H
-#define VIPS_PHOTOFLOW_H
+#ifndef VIPS_OPERATION_CONFIG_DIALOG_HH
+#define VIPS_OPERATION_CONFIG_DIALOG_HH
 
-#include "pftypes.hh"
+#include <gtkmm.h>
 
-//#include "image.hh"
+#include <vips/vips.h>
+
+#include "../operation_config_dialog.hh"
 
 
-namespace PF
-{
+namespace PF {
 
-  class Image;
-
-  class PhotoFlow
+  class VipsOperationConfigDialog: public OperationConfigDialog
   {
-    rendermode_t render_mode;
+#ifdef GTKMM_2
+    Gtk::VBox controlsBox;    
+#endif
 
-    Image* active_image;
-
-    static PhotoFlow* instance;
+    std::string op_name;
   public:
-    PhotoFlow(): render_mode(PF_RENDER_PREVIEW) {}
-
-    static PhotoFlow& Instance();
-
-    rendermode_t get_render_mode() { return render_mode; }
-    void set_render_mode(rendermode_t m) { render_mode = m; }
-
-    Image* get_image() { return active_image; }
-    void set_image(Image* i) { active_image = i; }
+    VipsOperationConfigDialog();
+    void add_argument( GParamSpec *pspec, VipsArgumentClass *argument_class );
+    void set_op(std::string name);
   };
 
 }
 
 
-#endif 
-
-
+#endif

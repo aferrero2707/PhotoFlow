@@ -33,16 +33,22 @@
 #include <list>
 #include <vector>
 
+#include <sigc++/sigc++.h>
+
 #include "layer.hh"
 #include "view.hh"
 
 namespace PF
 {
 
+  class Image;
+
   class LayerManager
   {
     std::vector<Layer*> layers_pool;
     std::list<Layer*> layers;
+
+    Image* image;
 
     //VipsImage* output;
 
@@ -55,10 +61,13 @@ namespace PF
 			     int width, int height, 
 			     std::list<Layer*>& list, VipsImage* previous);
   public:
-    LayerManager();
+    LayerManager(Image* image);
     ~LayerManager();
 
     Layer* new_layer();
+
+    Image* get_image() { return image; }
+    void set_image( Image* img ) { image = img; }
 
     std::list<Layer*>& get_layers() { return layers; }
 
@@ -69,6 +78,8 @@ namespace PF
     bool rebuild(View& view, colorspace_t cs, int width, int height);
     bool rebuild_all(View& view, colorspace_t cs, int width, int height);
 
+    sigc::signal<void> signal_modified;
+    void modified() { signal_modified.emit(); }
   };
 
 };

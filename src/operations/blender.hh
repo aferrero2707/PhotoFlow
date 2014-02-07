@@ -74,8 +74,13 @@ namespace PF
 
       BLENDER blender;
       float opacity = par->get_opacity();
+#ifndef NDEBUG
+      usleep(10000);
+      //std::cout<<"opacity: "<<opacity<<std::endl;
+#endif
     
       Rect *r = &oreg->valid;
+      int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
       int line_size = r->width * ireg[0]->im->Bands;
 
 
@@ -92,7 +97,10 @@ namespace PF
 	blender.init_line( omap, r->left, r->top + y );
       
 	for( x=0, xomap=0; x < line_size; ) {
-	  //blender.blend( opacity, p, pout, x, xomap );
+	  for( int i = 0; i < sz; i++ )
+	    pout[x+i] = p[1][x+i];
+	  blender.blend( opacity, p[0], pout, x, xomap );
+	  x += sz;
 	}
       }
     }

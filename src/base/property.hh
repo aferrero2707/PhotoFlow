@@ -30,6 +30,9 @@
 #ifndef PF_PROPERTY_H
 #define PF_PROPERTY_H
 
+#include <iostream>
+#include <map>
+#include <glib-object.h>
 
 namespace PF
 {
@@ -39,16 +42,69 @@ namespace PF
   class PropertyBase
   {
     std::string name;
+
+    // Values for enum types:
+    // first -> integer representation
+    // second.first -> literal representation
+    // second.second -> human-readable representation
+    std::pair< int, std::pair<std::string,std::string> > enum_value;
+    std::map< int, std::pair<std::string,std::string> > enum_values;
+
   public:
     PropertyBase(std::string n, OpParBase* par);//: name(n) {}
+    PropertyBase(std::string n, OpParBase* par, int val, std::string strval, std::string valname);//: name(n) {}
 
     std::string get_name() { return name; }
+
+    bool is_enum() { return( !enum_values.empty() ); }
+
+    std::map< int, std::pair<std::string,std::string> > get_enum_values() { return enum_values; }
+    std::pair< int, std::pair<std::string,std::string> > get_enum_value() { return enum_value; }
+    void set_enum_value(int val, std::string valstr, std::string nickname)
+    {
+      std::map< int, std::pair<std::string,std::string> >::iterator i = 
+	enum_values.find( val );
+      if( i == enum_values.end() ) {
+	enum_values.insert( make_pair( val, make_pair( valstr, nickname ) ) );
+      } else {
+	(*i).second.first = valstr;
+	(*i).second.second = nickname;
+      }
+    }
 
     virtual void set_str(const std::string& val);
     virtual std::string get_str();
 
-    virtual void set_str(std::istream& str) = 0;
-    virtual void get_str(std::ostream& str) = 0;
+    virtual void set_from_stream(std::istream& str);
+    virtual void get_from_stream(std::ostream& str);
+
+    virtual void set_gobject(gpointer object);
+
+    void update(const std::string& val) { set_str( val ); }
+
+    template<typename T> void get(T& val)
+    {
+      std::istringstream istr( get_str() );
+      istr>>val;
+    }
+
+    template<typename T> void update(const T& newval)
+    {
+      std::ostringstream ostr;
+      ostr<<newval;
+      std::cout<<"PropertyBase::update(): newval="<<ostr.str()<<std::endl;
+      //std::istringstream str( ostr.str() );
+      //set_from_stream(str);
+      set_str( ostr.str() );
+    }
+
+    template<typename T> void update(std::string str)
+    {
+      std::cout<<"PropertyBase::update(): newval="<<str<<std::endl;
+      //std::istringstream str( ostr.str() );
+      //set_from_stream(str);
+      set_str( str );
+    }
   };
 
   std::istream& operator >>(std::istream& str, PropertyBase& p);
@@ -64,15 +120,22 @@ namespace PF
     Property(std::string name, OpParBase* par, const T& v): PropertyBase(name, par), value(v) {}
     void set(const T& newval) { value = newval; }
     T& get() { return value; }
-    void set_str(std::istream& str)
+    void set_from_stream(std::istream& str)
     {
       str>>value;
     }
-    void get_str(std::ostream& str)
+    void get_from_stream(std::ostream& str)
     {
       str<<value;
     }
-  };
+
+    void set_gobject(gpointer object)
+    {
+      g_object_set( object, get_name().c_str(), value, NULL );
+    }
+   };
+
+
 
 }
 

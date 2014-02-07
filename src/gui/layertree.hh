@@ -61,9 +61,6 @@ class LayerTree : public Gtk::TreeView
   //LayerManager* layer_manager;
   std::list<Layer*>* layers;
 
-  // Updates the tree model with the layers from the associated image
-  void update_model();
-
 public:
   LayerTree( );
   virtual ~LayerTree();
@@ -73,6 +70,9 @@ public:
 
   //Image* get_image() { return image; }
   //void set_image(Image* img) { image = img; update_model(); }
+
+  // Updates the tree model with the layers from the associated image
+  void update_model();
 
   std::list<Layer*>* get_layers() { return layers; }
   void set_layers( std::list<Layer*>* l ) {

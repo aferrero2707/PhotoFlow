@@ -40,6 +40,8 @@
 namespace PF
 {
 
+  class Image;
+
   class Layer
   {
     friend class LayerManager;
@@ -58,6 +60,8 @@ namespace PF
     bool visible;
 
     ProcessorBase* processor;
+
+    Image* image;
 
     bool insert(std::list<PF::Layer*>& list, Layer* l, int32_t lid);
     bool insert_before(std::list<PF::Layer*>& list, Layer* l, int32_t lid);
@@ -87,6 +91,9 @@ namespace PF
 
     ProcessorBase* get_processor() { return processor; }
     void set_processor(ProcessorBase* p) { processor = p; }
+
+    Image* get_image() { return image; }
+    void set_image( Image* img ) { image = img; }
 
     void add_input(int32_t lid) { extra_inputs.push_back(lid); }
 

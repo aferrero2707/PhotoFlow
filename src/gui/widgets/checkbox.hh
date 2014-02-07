@@ -27,41 +27,30 @@
 
  */
 
-#ifndef VIPS_PHOTOFLOW_H
-#define VIPS_PHOTOFLOW_H
+#ifndef CHECKBOX_HH
+#define CHECKBOX_HH
 
-#include "pftypes.hh"
+#include <gtkmm.h>
 
-//#include "image.hh"
+#include "pfwidget.hh"
 
+namespace PF {
 
-namespace PF
-{
-
-  class Image;
-
-  class PhotoFlow
+  class CheckBox: public Gtk::HBox, public PFWidget
   {
-    rendermode_t render_mode;
+    Gtk::Label label;
+    Gtk::CheckButton check;
 
-    Image* active_image;
-
-    static PhotoFlow* instance;
   public:
-    PhotoFlow(): render_mode(PF_RENDER_PREVIEW) {}
+    CheckBox(OperationConfigUI* dialog, std::string pname, std::string l, int val);
 
-    static PhotoFlow& Instance();
+    ~CheckBox() {}
 
-    rendermode_t get_render_mode() { return render_mode; }
-    void set_render_mode(rendermode_t m) { render_mode = m; }
-
-    Image* get_image() { return active_image; }
-    void set_image(Image* i) { active_image = i; }
+    void get_value();
+    void set_value();
   };
+
 
 }
 
-
-#endif 
-
-
+#endif

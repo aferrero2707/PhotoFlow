@@ -34,6 +34,10 @@
 
 #include "../base/image.hh"
 
+#include "widgets/textbox.hh"
+#include "widgets/slider.hh"
+#include "widgets/selector.hh"
+
 namespace PF {
 
   class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
@@ -47,16 +51,22 @@ namespace PF {
   Gtk::VBox controlsBoxRight;
 
   Gtk::Entry nameEntry;
-  Gtk::Label lname, lblendmode, lopacity, lintensity, controlsLabel;
-  Gtk::Alignment lintensityAl, lopacityAl;
+  Gtk::Label lname, lblendmode;
+  Gtk::Label lopacity, lintensity;
+  Gtk::Label controlsLabel;
+  //Gtk::Alignment lintensityAl, lopacityAl;
   Gtk::ComboBoxText blendmodeCombo;
 
-  Gtk::Adjustment intensityAdj, opacityAdj;
-  Gtk::HScale intensityScale, opacityScale;
+  //Gtk::Adjustment intensityAdj, opacityAdj;
+  //Gtk::HScale intensityScale, opacityScale;
 #endif
 #ifdef GTKMM_3
   Gtk::Box mainBox;
 #endif
+
+  Slider intensitySlider, opacitySlider;
+
+  std::list<std::string> values_save;
 
   //virtual OpParBase* get_par() = 0;
   //virtual ProcessorBase* get_processor() = 0;
@@ -64,12 +74,14 @@ public:
   OperationConfigDialog(const Glib::ustring& title);
   virtual ~OperationConfigDialog();
 
+  Gtk::VBox& get_main_box() { return mainBox; }
+
   void add_widget( Gtk::Widget& widget );
 
   void on_button_clicked(int id);
 
-  void on_intensity_value_changed();
-  void on_opacity_value_changed();
+  //void on_intensity_value_changed();
+  //void on_opacity_value_changed();
 
   virtual void open();
 };

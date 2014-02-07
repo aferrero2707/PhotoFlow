@@ -30,7 +30,7 @@
 #include "layer.hh"
 
 
-PF::Layer::Layer(int32_t i): id(i)
+PF::Layer::Layer(int32_t i): id(i), processor( NULL ), image( NULL )
 {
   // A layer is always dirty when created, as it is by definition not included in the
   // VIPS rendering chain yet

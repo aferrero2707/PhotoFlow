@@ -31,9 +31,13 @@
 #include "layerwidget.hh"
 
 
-PF::LayerWidget::LayerWidget(): Gtk::Notebook(), image( NULL )
+PF::LayerWidget::LayerWidget(): 
+  Gtk::VBox(), 
+  buttonAdd("+"),
+  buttonDel("-"),
+  image( NULL )
 {
-  set_tab_pos(Gtk::POS_LEFT);
+  notebook.set_tab_pos(Gtk::POS_LEFT);
   Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 
   LayerTree* view = new LayerTree( );
@@ -41,10 +45,18 @@ PF::LayerWidget::LayerWidget(): Gtk::Notebook(), image( NULL )
   
   view->set_reorderable();
 
-  append_page(*frame,"Layers");
-  Widget* page = get_nth_page(-1);
-  Gtk::Label* label = (Gtk::Label*)get_tab_label(*page);
+  notebook.append_page(*frame,"Layers");
+  Widget* page = notebook.get_nth_page(-1);
+  Gtk::Label* label = (Gtk::Label*)notebook.get_tab_label(*page);
   label->set_angle(90);
+
+  pack_start(notebook);
+
+  buttonbox.pack_start(buttonAdd/*, Gtk::PACK_SHRINK*/);
+  buttonbox.pack_start(buttonDel/*, Gtk::PACK_SHRINK*/);
+  buttonbox.set_layout(Gtk::BUTTONBOX_START);
+
+  pack_start(buttonbox, Gtk::PACK_SHRINK);
 
   Gtk::CellRendererToggle* cell = 
     dynamic_cast<Gtk::CellRendererToggle*>( view->get_column_cell_renderer(0) );
@@ -54,6 +66,11 @@ PF::LayerWidget::LayerWidget(): Gtk::Notebook(), image( NULL )
   layer_views.push_back( view );
 
   view->signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
+
+  buttonAdd.signal_clicked().connect( sigc::mem_fun(*this,
+						    &PF::LayerWidget::on_button_add) );
+  buttonDel.signal_clicked().connect( sigc::mem_fun(*this,
+						    &PF::LayerWidget::on_button_del) );
 }
 
 
@@ -64,7 +81,7 @@ PF::LayerWidget::~LayerWidget()
 
 void PF::LayerWidget::on_cell_toggled( const Glib::ustring& path )
 {
-  int page = get_current_page();
+  int page = notebook.get_current_page();
   if( page < 0 ) return;
   Gtk::TreeModel::iterator iter = layer_views[page]->get_model()->get_iter( path );
   if (iter) {
@@ -83,7 +100,7 @@ void PF::LayerWidget::on_cell_toggled( const Glib::ustring& path )
 
 void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column )
 {
-  int page = get_current_page();
+  int page = notebook.get_current_page();
   if( page < 0 ) return;
   Gtk::TreeModel::iterator iter = layer_views[page]->get_model()->get_iter( path );
   if (iter) {
@@ -97,3 +114,15 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
   }
 }
 
+
+
+void PF::LayerWidget::on_button_add()
+{
+  operationsDialog.open();
+}
+
+
+
+void PF::LayerWidget::on_button_del()
+{
+}

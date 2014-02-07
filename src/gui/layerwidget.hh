@@ -35,13 +35,21 @@
 #include "../base/image.hh"
 
 #include "layertree.hh"
+#include "operationstree.hh"
 
 #include "operation_config_dialog.hh"
+#include "operationstree.hh"
 
 namespace PF {
 
-class LayerWidget : public Gtk::Notebook
+class LayerWidget : public Gtk::VBox
 {
+  Gtk::Notebook notebook;
+  Gtk::HButtonBox buttonbox;
+  Gtk::Button buttonAdd, buttonDel;
+  Gtk::Dialog layersDialog;
+  OperationsTreeDialog operationsDialog;
+
   std::vector<Gtk::ScrolledWindow*> layer_frames;
   std::vector<LayerTree*> layer_views;
 
@@ -55,7 +63,16 @@ public:
   void set_image( Image* img ) { 
     image = img; 
     layer_views[0]->set_layers( &(image->get_layer_manager().get_layers()) );
+    image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
   }
+
+  void update() {
+    for(int i = 0; i < layer_views.size(); i++) 
+      layer_views[i]->update_model();
+  }
+
+  void on_button_add();
+  void on_button_del();
 
   void on_cell_toggled(const Glib::ustring& path);
 

@@ -41,14 +41,18 @@
 
 #include <vips/vips>
 
+#include "../base/photoflow.hh"
 #include "../base/image.hh"
 
+#include "../operations/vips_operation.hh"
 #include "../operations/image_reader.hh"
 #include "../operations/brightness_contrast.hh"
 #include "../operations/invert.hh"
 #include "../operations/gradient.hh"
 
 #include "../gui/operations/brightness_contrast_config.hh"
+#include "../gui/operations/imageread_config.hh"
+#include "../gui/operations/vips_operation_config.hh"
 
 using namespace vips;
 
@@ -255,10 +259,34 @@ public:
   {
     std::vector<VipsImage*> in;
 
+    /**/
+    //PF::LayerManager* lm 
+    //layer_manager = new PF::LayerManager();
+    pf_image = new PF::Image();
+    PF::PhotoFlow::Instance().set_image( pf_image );
+
+    pf_image->add_view( VIPS_FORMAT_UCHAR, 0 );
+    PF::LayerManager& layer_manager = pf_image->get_layer_manager();
+
+
     PF::Processor<PF::ImageReader,PF::ImageReaderPar>* imgread = 
       new PF::Processor<PF::ImageReader,PF::ImageReaderPar>();
     imgread->get_par()->set_file_name( filename );
 
+    PF::Layer* limg = layer_manager.new_layer();
+    limg->set_processor( imgread );
+    limg->set_name( "input image" );
+
+    PF::ImageReadConfigDialog* img_config = 
+      new PF::ImageReadConfigDialog();
+    imgread->get_par()->set_config_ui( img_config );
+    img_config->set_layer( limg );
+    //img_config->set_image( pf_image );
+
+    layer_manager.get_layers().push_back( limg );
+
+
+    /*
     //PF::ProcessorBase* invert = 
     //  new PF::Processor<PF::Invert,PF::InvertPar>();
 
@@ -272,16 +300,9 @@ public:
     PF::Processor<PF::Gradient,PF::GradientPar>* gradient = 
       new PF::Processor<PF::Gradient,PF::GradientPar>();
 
-    /**/
-    //PF::LayerManager* lm 
-    //layer_manager = new PF::LayerManager();
-    pf_image = new PF::Image();
-    pf_image->add_view( VIPS_FORMAT_UCHAR, 0 );
-    PF::LayerManager& layer_manager = pf_image->get_layer_manager();
-
-    PF::Layer* limg = layer_manager.new_layer();
-    limg->set_processor( imgread );
-    limg->set_name( "input image" );
+    PF::Processor<PF::VipsOperationProc,PF::VipsOperationPar>* vips_op = 
+      new PF::Processor<PF::VipsOperationProc,PF::VipsOperationPar>();
+    vips_op->get_par()->set_op( "gamma" );
 
     PF::Layer* lbc = layer_manager.new_layer();
     lbc->set_processor( bc );
@@ -291,7 +312,7 @@ public:
       new PF::BrightnessContrastConfigDialog();
     bc->get_par()->set_config_ui( bc_config );
     bc_config->set_layer( lbc );
-    bc_config->set_image( pf_image );
+    //bc_config->set_image( pf_image );
 
     PF::Layer* lgrad = layer_manager.new_layer();
     lgrad->set_processor( gradient );
@@ -301,15 +322,23 @@ public:
     linv1->set_processor( new PF::Processor<PF::Invert,PF::InvertPar>() );
     linv1->set_name( "invert 1" );
 
-    PF::Layer* linv2 = layer_manager.new_layer();
-    linv2->set_processor( new PF::Processor<PF::Invert,PF::InvertPar>() );
-    linv2->set_name( "invert 2" );
+    PF::Layer* lvips = layer_manager.new_layer();
+    lvips->set_processor( vips_op );
+    lvips->set_name( "VIPS gamma adjustment" );
 
-    layer_manager.get_layers().push_back( limg );
+    PF::VipsOperationConfigDialog* vips_config = 
+      new PF::VipsOperationConfigDialog();
+    vips_op->get_par()->set_config_ui( vips_config );
+    vips_config->set_layer( lvips );
+    //vips_config->set_image( pf_image );
+    vips_config->set_op( "gamma" );
+    */
+
+
     //lbc->imap_insert( lgrad );
-    layer_manager.get_layers().push_back( lbc );
-    layer_manager.get_layers().push_back( linv1 );
-    layer_manager.get_layers().push_back( linv2 );
+    //layer_manager.get_layers().push_back( lbc );
+    //layer_manager.get_layers().push_back( linv1 );
+    //layer_manager.get_layers().push_back( lvips );
 
 
     pf_image->signal_modified.connect( sigc::mem_fun(this, &ImageArea::update_image) );

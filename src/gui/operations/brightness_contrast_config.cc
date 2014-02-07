@@ -34,11 +34,14 @@
 
 PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog():
   OperationConfigDialog(" Brightness/Contrast Adjustment" ),
-  brightnessAdj( 0, -1, 1, 0.05, 0.2, 0),
-  contrastAdj( 0, -1, 1, 0.05, 0.2, 0),
-  brightnessScale(brightnessAdj),
-  contrastScale(contrastAdj)
+  //brightnessAdj( 0, -1, 1, 0.05, 0.2, 0),
+  //contrastAdj( 0, -1, 1, 0.05, 0.2, 0),
+  //brightnessScale(brightnessAdj),
+  //contrastScale(contrastAdj)
+  brightnessSlider( this, "brightness", "Brightness", 0, -1, 1, 0.05, 0.2, 1),
+  contrastSlider( this, "contrast", "Contrast", 0, -1, 1, 0.05, 0.2, 1)
 {
+  /*
   lbrightness.set_text( "brightness" );
   brightnessScale.set_size_request(200, 30);
   brightnessScale.set_digits(2);
@@ -57,9 +60,14 @@ PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog():
   controlsBox.pack_start( brightnessScale );
   controlsBox.pack_start( lcontrastAl );
   controlsBox.pack_start( contrastScale );
+  */
+  controlsBox.pack_start( brightnessSlider );
+  controlsBox.pack_start( contrastSlider );
+  
   
   add_widget( controlsBox );
 
+  /*
   brightnessAdj.signal_value_changed().
     connect(sigc::mem_fun(*this,
 			  &BrightnessContrastConfigDialog::on_brightness_value_changed));
@@ -67,14 +75,16 @@ PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog():
   contrastAdj.signal_value_changed().
     connect(sigc::mem_fun(*this,
 			  &BrightnessContrastConfigDialog::on_contrast_value_changed));
+  */
 }
 
 
+/*
 void PF::BrightnessContrastConfigDialog::on_brightness_value_changed()
 {
   double val = brightnessAdj.get_value();
   std::cout<<"New brightness value: "<<val<<std::endl;
-  if( get_image() && get_layer() && 
+  if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     PF::BrightnessContrastPar* par = 
@@ -83,7 +93,7 @@ void PF::BrightnessContrastConfigDialog::on_brightness_value_changed()
       par->set_brightness( val );
       get_layer()->set_dirty( true );
       std::cout<<"  updating image"<<std::endl;
-      get_image()->update();
+      get_layer()->get_image()->update();
     }
   }
 }
@@ -93,7 +103,7 @@ void PF::BrightnessContrastConfigDialog::on_contrast_value_changed()
 {
   double val = contrastAdj.get_value();
   std::cout<<"New contrast value: "<<val<<std::endl;
-  if( get_image() && get_layer() && 
+  if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     PF::BrightnessContrastPar* par = 
@@ -102,23 +112,28 @@ void PF::BrightnessContrastConfigDialog::on_contrast_value_changed()
       par->set_contrast( val );
       get_layer()->set_dirty( true );
       std::cout<<"  updating image"<<std::endl;
-      get_image()->update();
+      get_layer()->get_image()->update();
     }
   }
 }
+*/
 
 
 void PF::BrightnessContrastConfigDialog::open()
 {
-  if( get_image() && get_layer() && 
+  if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     PF::BrightnessContrastPar* par = 
       dynamic_cast<PF::BrightnessContrastPar*>(get_layer()->get_processor()->get_par());
+    brightnessSlider.init();
+    contrastSlider.init();
+    /*
     if( par ) {
       brightnessAdj.set_value( par->get_brightness() );
       contrastAdj.set_value( par->get_contrast() );
     }
+    */
   }
   OperationConfigDialog::open();
 }

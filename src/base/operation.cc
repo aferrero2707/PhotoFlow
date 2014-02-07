@@ -56,7 +56,8 @@ PF::OpParBase::OpParBase():
   processor = NULL;
   out = NULL;
   config_ui = NULL;
-  blend_mode = PF_BLEND_PASSTHROUGH;
+  //blend_mode = PF_BLEND_PASSTHROUGH;
+  blend_mode = PF_BLEND_NORMAL;
   demand_hint = VIPS_DEMAND_STYLE_THINSTRIP;
   bands = 1;
   xsize = 100; ysize = 100;
@@ -66,12 +67,43 @@ PF::OpParBase::OpParBase():
 }
 
 
+PF::PropertyBase* PF::OpParBase::get_property(std::string name)
+{
+  std::list<PropertyBase*>::iterator pi;
+
+  // Look into mapped properties first
+  for(pi = mapped_properties.begin(); pi != mapped_properties.end(); pi++) {
+    std::cout<<"(*pi)->get_name(): "<<(*pi)->get_name()<<"    name: "<<name<<std::endl;
+    if( (*pi)->get_name() == name ) return( *pi );
+  }
+  
+  // If nothing is found, look into our own properties
+  for(pi = properties.begin(); pi != properties.end(); pi++) {
+    std::cout<<"(*pi)->get_name(): "<<(*pi)->get_name()<<"    name: "<<name<<std::endl;
+    if( (*pi)->get_name() == name ) return( *pi );
+  }
+  return NULL;
+}
+
+
 void PF::OpParBase::save_properties(std::list<std::string>& plist)
 {
   std::list<PropertyBase*>::iterator pi;
   for(pi = properties.begin(); pi != properties.end(); pi++) {
     std::string str = (*pi)->get_str();
     plist.push_back(str);
+  }
+}
+
+
+void PF::OpParBase::restore_properties(const std::list<std::string>& plist)
+{
+  std::list<PropertyBase*>::iterator pi;
+  std::list<std::string>::const_iterator si;
+  for(pi = properties.begin(), si = plist.begin(); 
+      (pi != properties.end()) && (si != plist.end()); 
+      pi++, si++) {
+    (*pi)->set_str(*si);
   }
 }
 

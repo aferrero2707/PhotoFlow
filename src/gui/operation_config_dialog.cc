@@ -32,10 +32,12 @@
 
 PF::OperationConfigDialog::OperationConfigDialog(const Glib::ustring&  	title):
   Gtk::Dialog(title, false, false),
-  intensityAdj( 100, 0, 100, 1, 10, 0),
-  opacityAdj( 100, 0, 100, 1, 10, 0),
-  intensityScale(intensityAdj),
-  opacityScale(opacityAdj)
+  //intensityAdj( 100, 0, 100, 1, 10, 0),
+  //opacityAdj( 100, 0, 100, 1, 10, 0),
+  //intensityScale(intensityAdj),
+  //opacityScale(opacityAdj),
+  intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
+  opacitySlider( this, "opacity", "Opacity", 100, 0, 100, 1, 10, 100)
 {
   set_keep_above(true);
   add_button("OK",1);
@@ -62,6 +64,7 @@ PF::OperationConfigDialog::OperationConfigDialog(const Glib::ustring&  	title):
 
   topBox.pack_start( nameBox );
 
+  /*
   lintensity.set_text( "intensity" );
   intensityScale.set_size_request(200, 30);
   intensityScale.set_digits(0);
@@ -80,14 +83,17 @@ PF::OperationConfigDialog::OperationConfigDialog(const Glib::ustring&  	title):
   controlsBoxLeft.pack_start( intensityScale );
   controlsBoxLeft.pack_start( lopacityAl );
   controlsBoxLeft.pack_start( opacityScale );
+  */
+  controlsBoxLeft.pack_start( intensitySlider );
+  controlsBoxLeft.pack_start( opacitySlider );
   controlsBox.pack_start( controlsBoxLeft, Gtk::PACK_SHRINK );
   topBox.pack_start( controlsBox );
 
   mainBox.pack_start( topBox );
 
-  get_vbox()->pack_start( mainBox );
+  get_vbox()->pack_start( mainBox, Gtk::PACK_SHRINK );
 
-
+  /*
   intensityAdj.signal_value_changed().
     connect(sigc::mem_fun(*this,
 			  &OperationConfigDialog::on_intensity_value_changed));
@@ -95,7 +101,7 @@ PF::OperationConfigDialog::OperationConfigDialog(const Glib::ustring&  	title):
   opacityAdj.signal_value_changed().
     connect(sigc::mem_fun(*this,
 			  &OperationConfigDialog::on_opacity_value_changed));
-
+  */
 
   // nameEntry.show();
   // nameBox.show();
@@ -121,12 +127,23 @@ void PF::OperationConfigDialog::add_widget( Gtk::Widget& widget )
 
 void PF::OperationConfigDialog::open()
 {
-  if( get_image() && get_layer() && 
+  if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     PF::OpParBase* par = get_layer()->get_processor()->get_par();
-    intensityAdj.set_value( par->get_intensity()*100 );
-    opacityAdj.set_value( par->get_opacity()*100 );
+    //intensityAdj.set_value( par->get_intensity()*100 );
+    //opacityAdj.set_value( par->get_opacity()*100 );
+    intensitySlider.init();
+    opacitySlider.init();
+    nameEntry.set_text( get_layer()->get_name().c_str() );
+    
+    values_save.clear();
+    par->save_properties( values_save );
+    std::cout<<"Saved property values:"<<std::endl;
+    for( std::list<std::string>::iterator i = values_save.begin();
+	 i != values_save.end(); i++ ) {
+      std::cout<<"  "<<(*i)<<std::endl;
+    }
   }
   PF::OperationConfigUI::open();
   show_all();
@@ -137,15 +154,28 @@ void PF::OperationConfigDialog::on_button_clicked(int id)
 {
   switch(id) {
   case 0:
+    if( get_layer() && get_layer()->get_image() && 
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+      PF::OpParBase* par = get_layer()->get_processor()->get_par();
+      std::cout<<"  restoring original values"<<std::endl;
+      par->restore_properties( values_save );
+      get_layer()->set_dirty( true );
+      std::cout<<"  updating image"<<std::endl;
+      get_layer()->get_image()->update();
+    }
     hide_all();
     break;
   case 1:
+    if( get_layer() ) 
+      get_layer()->set_name( nameEntry.get_text().c_str() );
     hide_all();
     break;
   }
 }
 
 
+/*
 void PF::OperationConfigDialog::on_intensity_value_changed()
 {
   double val = intensityAdj.get_value();
@@ -174,3 +204,4 @@ void PF::OperationConfigDialog::on_opacity_value_changed()
     get_image()->update();
   }
 }
+*/

@@ -43,13 +43,14 @@ namespace PF {
 #ifdef GTKMM_2
   Gtk::VBox controlsBox;
 
-  Gtk::Label lbrightness, lcontrast;
-  Gtk::Alignment lcontrastAl, lbrightnessAl;
-  Gtk::ComboBoxText blendmodeCombo;
+  //Gtk::Label lbrightness, lcontrast;
+  //Gtk::Alignment lcontrastAl, lbrightnessAl;
 
-  Gtk::Adjustment contrastAdj, brightnessAdj;
-  Gtk::HScale contrastScale, brightnessScale;
+  //Gtk::Adjustment contrastAdj, brightnessAdj;
+  //Gtk::HScale contrastScale, brightnessScale;
 #endif
+
+  Slider brightnessSlider, contrastSlider;
 
 public:
   BrightnessContrastConfigDialog();

@@ -67,23 +67,18 @@ namespace PF
 
   class ProcessorBase;
   class Layer;
-  class Image;
 
   class OperationConfigUI
   {
     std::list<std::string> initial_params;
 
     Layer* layer;
-    Image* image;
 
   public:
 
     Layer* get_layer() { return layer; }
     void set_layer( Layer* l ) { layer = l; }
     
-    Image* get_image() { return image; }
-    void set_image( Image* img ) { image = img; }
-
     virtual void open() = 0;
   };
 
@@ -93,8 +88,6 @@ namespace PF
   {
     VipsDemandStyle demand_hint;
     blendmode_t blend_mode;
-    Property<float> intensity;
-    Property<float> opacity;
 
     VipsImage* out;
     ProcessorBase* processor;
@@ -109,7 +102,10 @@ namespace PF
     VipsCoding coding;
     VipsInterpretation interpretation;
 
+    std::list<PropertyBase*> mapped_properties;
     std::list<PropertyBase*> properties;
+    Property<float> intensity;
+    Property<float> opacity;
     
   public:
     OpParBase();
@@ -120,7 +116,9 @@ namespace PF
     }
 
     void add_property( PropertyBase* p ) { properties.push_back(p); }
+    void map_property( PropertyBase* p ) { mapped_properties.push_back(p); }
     void save_properties(std::list<std::string>& plist);
+    void restore_properties(const std::list<std::string>& plist);
 
     void set_processor(ProcessorBase* p) { processor = p; }
     ProcessorBase* get_processor() { return processor; }
@@ -170,6 +168,8 @@ namespace PF
       if(out) g_object_unref( out );
       out = img; 
     }
+
+    PropertyBase* get_property(std::string name);
 
     OperationConfigUI* get_config_ui() { return config_ui; }
     void set_config_ui( OperationConfigUI* ui ) { config_ui = ui; }
