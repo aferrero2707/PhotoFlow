@@ -155,7 +155,7 @@ VipsImage* PF::Convert2RGBPar::build(std::vector<VipsImage*>& in, int first, Vip
     cmsCloseProfile( profile_in );
   profile_in  = NULL;
 
-  /*
+
   if( profile_out && 
       !vips_image_get_blob( in[0], VIPS_META_ICC_NAME, 
 			    &data, &data_length ) ) {
@@ -177,6 +177,6 @@ VipsImage* PF::Convert2RGBPar::build(std::vector<VipsImage*>& in, int first, Vip
 				      INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
     }
   }
-  */
+
   return OpParBase::build( in, first, NULL, NULL );
 }
