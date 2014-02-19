@@ -41,15 +41,17 @@ namespace PF {
   class ImageReadConfigDialog: public OperationConfigDialog
 {
 #ifdef GTKMM_2
-  Gtk::VBox controlsBox;
+  Gtk::HBox controlsBox;
 
   Gtk::Label label;
-  Gtk::Alignment lcontrastAl, lbrightnessAl;
   Gtk::Entry fileEntry;
+  Gtk::Button openButton;
 #endif
 
 public:
-  ImageReadConfigDialog();
+  ImageReadConfigDialog( Layer* l );
+
+  void on_button_open_clicked();
 
   void on_filename_changed();
 

@@ -52,3 +52,33 @@ The individual layers can be activated and de-activated using the radio buttons 
 
 The program will hopefully evolve to a fully-functional preliminary version rather soon.
 
+
+# Roadmap and development plans
+
+- Add possibility to restrict the processing to a sngle channel
+
+- Support colorpsace conversions based on ICC profiles
+
+- Support for loading RAW images
+
+- Add support for group layers
+
+- File loading/saving
+
+- Convert image to sRGB and 8bits before display
+
+- Clone layers
+
+- Curves adjustment
+
+- Support for layer maps in the gui
+
+- Image pyramids
+
+- Drawing layers
+
+- Additional blending modes
+
+- Update configuration dialogs each time the chain is rebuilt
+
+

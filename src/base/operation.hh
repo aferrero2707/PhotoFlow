@@ -34,6 +34,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
+
 
 #include <vips/vips.h>
 #include <vips/vips>
@@ -48,17 +50,18 @@
 
 #define OP_TEMPLATE_DEF \
   typename T, class BLENDER, colorspace_t CS,	\
+    int CHMIN, int CHMAX, \
     bool has_imap, bool has_omap, bool PREVIEW
 
 #define OP_TEMPLATE_IMP \
-  T, BLENDER, CS, has_imap, has_omap, PREVIEW
+  T, BLENDER, CS, CHMIN, CHMAX, has_imap, has_omap, PREVIEW
 
 #define OP_TEMPLATE_DEF_BLENDER_SPEC \
-  typename T, colorspace_t CS,			\
+  typename T, colorspace_t CS,	int CHMIN, int CHMAX,		\
     bool has_imap, bool has_omap, bool PREVIEW
 
 #define OP_TEMPLATE_IMP_BLENDER_SPEC(BLENDER_SPEC) \
-  T, BLENDER_SPEC< T, CS, has_omap >, CS, has_imap, has_omap, PREVIEW
+  T, BLENDER_SPEC< T, CS, CHMIN, CHMAX, has_omap >, CS, CHMIN, CHMAX, has_imap, has_omap, PREVIEW
 
 
 
@@ -76,10 +79,14 @@ namespace PF
 
   public:
 
+    OperationConfigUI( Layer* l ): layer( l ) {}
+    virtual ~OperationConfigUI() {}
+
     Layer* get_layer() { return layer; }
-    void set_layer( Layer* l ) { layer = l; }
+    //void set_layer( Layer* l ) { layer = l; }
     
     virtual void open() = 0;
+    virtual void update() = 0;
   };
 
   /* Base class for all operation parameter implementations
@@ -87,7 +94,8 @@ namespace PF
   class OpParBase
   {
     VipsDemandStyle demand_hint;
-    blendmode_t blend_mode;
+
+    std::string type;
 
     VipsImage* out;
     ProcessorBase* processor;
@@ -104,16 +112,30 @@ namespace PF
 
     std::list<PropertyBase*> mapped_properties;
     std::list<PropertyBase*> properties;
+
+    Property<blendmode_t> blend_mode;
     Property<float> intensity;
     Property<float> opacity;
-    
+
+    PropertyBase grey_target_channel;
+    PropertyBase rgb_target_channel;
+    PropertyBase lab_target_channel;
+    PropertyBase cmyk_target_channel;
+
   public:
     OpParBase();
 
     virtual ~OpParBase()
     {
-      if(out) g_object_unref( out );
+      std::cout<<"~OpParBase(): deleting operation "<<(void*)this<<std::endl;
+      if(out) {
+	std::cout<<"              calling g_object_unref( "<<(void*)out<<" );"<<std::endl;
+	g_object_unref( out );
+      }
     }
+
+    std::string get_type() { return type; }
+    void set_type( std::string str ) { type = str; }
 
     void add_property( PropertyBase* p ) { properties.push_back(p); }
     void map_property( PropertyBase* p ) { mapped_properties.push_back(p); }
@@ -126,14 +148,42 @@ namespace PF
     void set_demand_hint(VipsDemandStyle val) { demand_hint = val; }
     VipsDemandStyle get_demand_hint() { return demand_hint; }
 
-    blendmode_t get_blend_mode() { return blend_mode; }
-    void set_blend_mode(blendmode_t mode) { blend_mode = mode; }
+    blendmode_t get_blend_mode() { 
+      return( (blendmode_t)blend_mode.get_enum_value().first ); 
+    }
+    void set_blend_mode(blendmode_t mode) { 
+      blend_mode.set_enum_value( (int)mode ); 
+    }
 
     void set_intensity(float val) { intensity.set(val); }
     float get_intensity() { return intensity.get(); }
 
     void set_opacity(float val) { opacity.set(val); }
     float get_opacity() { return opacity.get(); }
+
+    int get_rgb_target_channel() 
+    {
+      if( !(rgb_target_channel.get_enum_value().second.first.empty()) )
+	return( rgb_target_channel.get_enum_value().first );
+      else 
+	return -1;
+    } 
+
+    int get_lab_target_channel() 
+    {
+      if( !(lab_target_channel.get_enum_value().second.first.empty()) )
+	return( lab_target_channel.get_enum_value().first );
+      else 
+	return -1;
+    } 
+
+    int get_cmyk_target_channel() 
+    {
+      if( !(cmyk_target_channel.get_enum_value().second.first.empty()) )
+	return( cmyk_target_channel.get_enum_value().first );
+      else 
+	return -1;
+    } 
 
     /* Function to derive the output area from the input area
     */
@@ -181,6 +231,16 @@ namespace PF
     VipsBandFormat get_format() { return format; }
     VipsCoding get_coding() { return coding; }
     
+    virtual void set_image_hints( VipsImage* img )
+    {
+      if( !img ) return;
+      set_image_hints( img->Xsize, img->Ysize,
+		       img->Type, img->BandFmt );
+      bands = img->Bands;
+		       
+    }
+
+    void set_image_hints(int w, int h, VipsInterpretation interpr, VipsBandFormat fmt);
     void set_image_hints(int w, int h, colorspace_t cs, VipsBandFormat fmt);
 
     void grayscale_image(int w, int h, VipsBandFormat fmt)
@@ -210,6 +270,9 @@ namespace PF
       bands = 4; interpretation = VIPS_INTERPRETATION_CMYK;
       format = fmt; coding = VIPS_CODING_NONE;
     }
+
+
+    bool save( std::ostream& ostr, int level );
   };
 
 
@@ -253,7 +316,7 @@ namespace PF
 
 
 
-  template<typename T, colorspace_t colorspace, bool has_omap>
+  template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_omap>
   class BlendBase
   {
   public:
@@ -262,8 +325,8 @@ namespace PF
   };
 
 
-  template<typename T, colorspace_t colorspace>
-  class BlendBase<T, colorspace, false>
+  template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX >
+  class BlendBase<T, colorspace, CHMIN, CHMAX, false>
   {
   public:
     T* pmap;
@@ -273,6 +336,8 @@ namespace PF
 
   #include "blend_passthrough.hh"
   #include "blend_normal.hh"
+  #include "blend_multiply.hh"
+  #include "blend_screen.hh"
 
 };
 

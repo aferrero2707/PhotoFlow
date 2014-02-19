@@ -33,12 +33,22 @@
 #include <iostream>
 
 #include "processor.hh"
+#include "layer.hh"
 
 namespace PF
 {
 
+#define PIXELPROC_TEMPLATE_DEF \
+  typename T, colorspace_t CS,	\
+    int CHMIN, int CHMAX, \
+    bool PREVIEW, typename OP_PAR
 
-  template < OP_TEMPLATE_DEF, class PEL_PROC, class OP_PAR > 
+#define PIXELPROC_TEMPLATE_IMP \
+  T, CS, CHMIN, CHMAX, PREVIEW, OP_PAR
+
+
+
+  template < OP_TEMPLATE_DEF, class OP_PAR, template < PIXELPROC_TEMPLATE_DEF > class PEL_PROC > 
   class OperationPTP: public IntensityProc<T, has_imap>
   {
     typedef OP_PAR OpParams;
@@ -49,15 +59,13 @@ namespace PF
   };
 
 
-  template< OP_TEMPLATE_DEF, class PEL_PROC, class OP_PAR >
-  void OperationPTP<OP_TEMPLATE_IMP, 
-		    PEL_PROC/*<T,CS,PREVIEW,OP_PAR>*/, 
-		    OP_PAR>::
+  template< OP_TEMPLATE_DEF, class OP_PAR, template < PIXELPROC_TEMPLATE_DEF > class PEL_PROC >
+  void OperationPTP< OP_TEMPLATE_IMP, OP_PAR, PEL_PROC >::
   render(VipsRegion** ir, int n, int in_first,
 	 VipsRegion* imap, VipsRegion* omap, 
-	 VipsRegion* oreg, OpParams* par)
+	 VipsRegion* oreg, OP_PAR* par)
   {
-    PEL_PROC proc(par);
+    PEL_PROC<PIXELPROC_TEMPLATE_IMP> proc(par);
 
     BLENDER blender;
     
@@ -68,8 +76,9 @@ namespace PF
     int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
 
-    //std::cout<<"OperationPTP::render(): "<<std::endl;
-    /*
+#ifndef NDEBUG
+    std::cout<<"OperationPTP::render(): "<<std::endl
+	     <<"  name: "<<par->get_config_ui()->get_layer()->get_name()<<std::endl
 	     <<"  input region:  top="<<ir[in_first]->valid.top
 	     <<" left="<<ir[in_first]->valid.left
 	     <<" width="<<ir[in_first]->valid.width
@@ -78,7 +87,7 @@ namespace PF
 	     <<" left="<<oreg->valid.left
 	     <<" width="<<oreg->valid.width
 	     <<" height="<<oreg->valid.height<<std::endl;
-    */
+#endif    
     
     const int NMAX = 100;
     T* p[NMAX+1];
@@ -91,7 +100,7 @@ namespace PF
     if(n > NMAX) n = NMAX;
     
     //std::cout<<"sz: "<<sz<<std::endl;
-    int x, y; 
+    int x, y, ch, dx=CHMAX-CHMIN+1, CHMAXplus1=CHMAX+1;
     int ximap, xomap, ni;
     
     for( y = 0; y < r->height; y++ ) {
@@ -111,9 +120,12 @@ namespace PF
 
 	//continue;
 	float intensity_real = this->get_intensity( intensity, pimap, ximap );
+	for( ch=0; ch<CHMIN; ch++, x++ ) pout[x] = p[0][x];
 	proc.process( p, n, in_first, sz, x, intensity_real/*get_intensity( intensity, pimap, ximap )*/, pout );
-	blender.blend( opacity, p[0], pout, x, xomap );
-	x += sz;
+	blender.blend( opacity, p[0], pout, pout, x, xomap );
+	x += dx;
+	for( ch=CHMAXplus1; ch<PF::ColorspaceInfo<CS>::NCH; ch++, x++ ) pout[x] = p[0][x];
+	//x += sz;
 	//for( int ni = 0; ni < n; ni++) 
 	//  p[ni] += sz;
 	//pout += sz;

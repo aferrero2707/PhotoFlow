@@ -41,19 +41,23 @@ namespace PF
 
   class ImageReaderPar: public OpParBase
   {
-    std::string file_name;
+    Property<std::string> file_name;
     VipsImage* image;
-    PF::Processor<PF::BlenderProc,PF::BlenderPar>* blender;
+    PF::Processor<PF::BlenderPar,PF::BlenderProc>* blender;
 
   public:
-    ImageReaderPar(): OpParBase(), image(NULL) 
+    ImageReaderPar(): 
+      OpParBase(), 
+      file_name("file_name", this),
+      image(NULL) 
     {
       set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
-      blender = new PF::Processor<PF::BlenderProc,PF::BlenderPar>();
+      blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+      set_type("imageread" );
     }
 
-    std::string get_file_name() { return file_name; }
-    void set_file_name( const std::string& name ) { file_name = name; }
+    std::string get_file_name() { return file_name.get_str(); }
+    void set_file_name( const std::string& name ) { file_name.set_str( name ); }
     void set_file_name( const char* name ) { set_file_name( std::string( name ) ); }
 
     /* Set processing hints:

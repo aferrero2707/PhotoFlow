@@ -30,6 +30,18 @@
 #include "image_reader.hh"
 //#include "../vips/vips_layer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
+int
+vips_cast( VipsImage *in, VipsImage **out, VipsBandFormat format, ... );
+
+#ifdef __cplusplus
+}
+#endif /*__cplusplus*/
+
+
 VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first, 
 				     VipsImage* imap, VipsImage* omap)
 {
@@ -37,7 +49,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
   // Create VipsImage from given file; unref previously opened image if any
   //if( image ) g_object_unref( image );
-  image = vips_image_new_from_file( file_name.c_str() );
+  image = vips_image_new_from_file( file_name.get().c_str() );
   //g_object_ref( image );
   
 
@@ -47,10 +59,53 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     std::cout<<"  "<<(void*)in[i]<<std::endl;
   }
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
-  std::cout<<"out: "<<(void*)image<<std::endl<<std::endl;
 
-  //set_image( image );
-  return image;
+
+
+  void *data;
+  size_t data_length;
+  if( !vips_image_get_blob( image, VIPS_META_ICC_NAME, 
+			    &data, &data_length ) ) {
+    cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
+    if( profile_in ) {  
+      char tstr[1024];
+      cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"ImageReader: Embedded profile found: "<<tstr<<std::endl;
+      cmsCloseProfile( profile_in );
+    }
+  }
+
+
+  VipsImage* out = image;
+
+  //if( get_format() != image->BandFmt ) {
+    //vips_call( "cast", image, &out, "format", get_format(), NULL );
+  vips_cast( image, &out, get_format(), NULL );
+    //VIPS_UNREF( image );
+    g_object_unref( image );
+    //}
+  /*
+  if( vips_image_get_typeof(out, VIPS_META_ICC_NAME) )
+    return NULL;
+  vips_image_set_blob( out, VIPS_META_ICC_NAME, 
+		       NULL, data, data_length );
+  */
+  if( !vips_image_get_blob( out, VIPS_META_ICC_NAME, 
+			    &data, &data_length ) ) {
+    
+    cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
+    if( profile_in ) {  
+      char tstr[1024];
+      cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"ImageReader: Embedded profile found: "<<tstr<<std::endl;
+      cmsCloseProfile( profile_in );
+    }
+  }
+  /**/
+
+  set_image( out );
+  std::cout<<"out: "<<(void*)out<<std::endl<<std::endl;
+  return out;
 
   // Prepare the blending step between the new image (in in2[1]) and the underlying image
   // if existing (in in2[0]).

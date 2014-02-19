@@ -29,6 +29,8 @@
 
 #include "layer.hh"
 
+#include "image.hh"
+
 
 PF::Layer::Layer(int32_t i): id(i), processor( NULL ), image( NULL )
 {
@@ -37,6 +39,8 @@ PF::Layer::Layer(int32_t i): id(i), processor( NULL ), image( NULL )
   dirty = true;
 
   visible = true;
+
+  normal = true;
 }
 
 
@@ -54,7 +58,8 @@ bool PF::Layer::insert(std::list<PF::Layer*>& list, PF::Layer* l, int32_t lid)
 
   if( it == list.end() ) return false;
 
-  //list.insert( l, it );
+  it++;
+  list.insert( it, l );
   return true;
 }
 
@@ -68,7 +73,7 @@ bool PF::Layer::insert_before(std::list<PF::Layer*>& list, PF::Layer* l, int32_t
 
   if( it == list.end() ) return false;
 
-  //list.insert( l, it );
+  list.insert( it, l );
   return true;
 }
 
@@ -104,4 +109,57 @@ bool PF::Layer::omap_insert(PF::Layer* l, int32_t lid)
 bool PF::Layer::omap_insert_before(PF::Layer* l, int32_t lid)
 {
   return insert_before(omap_layers,l,lid);
+}
+
+
+
+bool PF::Layer::save( std::ostream& ostr, int level )
+{
+  for(int i = 0; i < level; i++) ostr<<"  ";
+  ostr<<"<layer name=\""<<name<<"\" id=\""<<id<<"\" visible=\""<<visible<<"\" normal=\""<<normal<<"\" extra_inputs=\"";
+  int n;
+  for( int i=0, n=0; i < extra_inputs.size(); i++ ) {
+    int32_t id = extra_inputs[i];
+    if( id < 0 ) continue;
+    PF::Layer* l = image->get_layer_manager().get_layer( id );
+    if( !l ) continue;
+    if( n>0 ) ostr<<" ";
+    ostr<<l->get_id();
+    n++;
+  }
+  ostr<<"\">"<<std::endl;
+  if( processor && processor->get_par() )
+    processor->get_par()->save( ostr, level+1 );
+
+  for(int i = 0; i < level+1; i++) ostr<<"  ";
+  ostr<<"<sublayers type=\"imap\">"<<std::endl;
+  for( std::list<Layer*>::iterator li = imap_layers.begin();
+       li != imap_layers.end(); li++ ) {
+    (*li)->save( ostr, level+2 );
+  }
+  for(int i = 0; i < level+1; i++) ostr<<"  ";
+  ostr<<"</sublayers>"<<std::endl;
+
+  for(int i = 0; i < level+1; i++) ostr<<"  ";
+  ostr<<"<sublayers type=\"omap\">"<<std::endl;
+  for( std::list<Layer*>::iterator li = omap_layers.begin();
+       li != omap_layers.end(); li++ ) {
+    (*li)->save( ostr, level+2 );
+  }
+  for(int i = 0; i < level+1; i++) ostr<<"  ";
+  ostr<<"</sublayers>"<<std::endl;
+
+  for(int i = 0; i < level+1; i++) ostr<<"  ";
+  ostr<<"<sublayers type=\"child\">"<<std::endl;
+  for( std::list<Layer*>::iterator li = sublayers.begin();
+       li != sublayers.end(); li++ ) {
+    (*li)->save( ostr, level+2 );
+  }
+  for(int i = 0; i < level+1; i++) ostr<<"  ";
+  ostr<<"</sublayers>"<<std::endl;
+
+  for(int i = 0; i < level; i++) ostr<<"  ";
+  ostr<<"</layer>"<<std::endl;
+
+  return true;
 }

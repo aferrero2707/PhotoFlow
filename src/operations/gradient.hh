@@ -40,7 +40,10 @@ namespace PF
   class GradientPar: public OpParBase
   {
   public:
-    GradientPar(): OpParBase() {}
+    GradientPar(): OpParBase() 
+    {
+      set_type( "gradient" );
+    }
     bool needs_input() { return false; }
   };
 

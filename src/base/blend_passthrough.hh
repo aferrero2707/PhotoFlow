@@ -29,9 +29,12 @@
 
 
 
-template<typename T, colorspace_t colorspace, bool has_omap>
-class BlendPassthrough: public BlendBase<T, colorspace, has_omap>
+template<typename T, colorspace_t CS, int CHMIN, int CHMAX, bool has_omap>
+class BlendPassthrough: public BlendBase<T, CS, CHMIN, CHMAX, has_omap>
 {
+  int ch;
 public:
-  void blend(const float& opacity, T* in, T* out, const int& x, int& xomap) {}
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  {
+  }
 };

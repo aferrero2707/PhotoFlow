@@ -47,6 +47,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   } 
 
+  /*
   // Prepare the blending step between the new image (in invec[1]) and the underlying image
   // if existing (in invec[0]).
   // The blending code will simply force the mode to "passthrough" and copy invec[1] to outnew
@@ -60,11 +61,17 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   } else if( (in[1] != NULL) && (get_blend_mode() == PF_BLEND_PASSTHROUGH) ) {
     // mode is set to PASSTHROUGH, simply copy in[1] to output
     vips_copy( in[1], &outnew, NULL );
+    g_object_unref( in[1] );
   } else {
     std::cerr<<"PF::BlenderPar::build(): unsupported input pattern and blend mode combination!"<<std::endl;
     return NULL;
   }
+  */
 
-  //set_image( outnew );
+  VipsImage* invec[2] = {in[0], in[1]};
+  vips_layer( invec, 2, &outnew, 0, get_processor(), NULL, omap, get_demand_hint() );
+  std::cout<<"PF::BlenderPar::build(): input: "<<in[0]<<" "<<in[1]<<"   output: "<<outnew<<std::endl;
+
+  set_image( outnew );
   return outnew;
 }

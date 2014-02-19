@@ -135,8 +135,8 @@ static int usage( const char *operation_name, PF::VipsOperationConfigDialog* dia
 
 
 
-PF::VipsOperationConfigDialog::VipsOperationConfigDialog():
-  OperationConfigDialog("Vips Operation" )
+PF::VipsOperationConfigDialog::VipsOperationConfigDialog( PF::Layer* layer ):
+  OperationConfigDialog( layer, "Vips Operation" )
 {
 }
 
@@ -172,7 +172,7 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
    * description of each one, and a default value.
    */
  
-  PropertyBase* prop = NULL;
+  //PropertyBase* prop = NULL;
 
   if( g_type_is_a( otype, VIPS_TYPE_IMAGE ) ) {
     // Images are handled separately, because the value can only be set at build time
@@ -216,6 +216,7 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
 					   1, 5, 1);
       slider->init();
       get_main_box().pack_start( *slider, Gtk::PACK_SHRINK );
+      add_control( slider );
       /*
     } else {
       PF::TextBox* txtbox = new PF::TextBox( this, g_param_spec_get_name( pspec ),
@@ -243,6 +244,7 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
 					   pspec_uint64->default_value);
     txtbox->init();
     get_main_box().pack_start( *txtbox, Gtk::PACK_SHRINK );
+    add_control( txtbox );
   }
   else if( G_IS_PARAM_SPEC_DOUBLE( pspec ) ) {
     GParamSpecDouble *pspec_double = G_PARAM_SPEC_DOUBLE( pspec ); 
@@ -263,6 +265,7 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
 					   0.1, 0.5, 1);
       slider->init();
       get_main_box().pack_start( *slider, Gtk::PACK_SHRINK );
+      add_control( slider );
       /*
     } else {
       PF::TextBox* txtbox = new PF::TextBox( this, g_param_spec_get_name( pspec ),
@@ -275,7 +278,7 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
   }
   else if( G_IS_PARAM_SPEC_ENUM( pspec ) ) {
     GParamSpecEnum *pspec_enum = G_PARAM_SPEC_ENUM( pspec ); 
-    int i;
+    unsigned int i;
  
     /* Map to an option menu?
      */
@@ -290,6 +293,7 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
 					     g_param_spec_get_nick( pspec ), 1);
     selector->init();
     get_main_box().pack_start( *selector, Gtk::PACK_SHRINK );
+    add_control( selector );
   }
   else if( G_IS_PARAM_SPEC_BOXED( pspec ) ) {
     if( g_type_is_a( otype, VIPS_TYPE_ARRAY_INT ) ) {

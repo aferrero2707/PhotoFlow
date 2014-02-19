@@ -85,21 +85,28 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
   )
 
 
-add_executable(invert # name of the executable on Windows will be example.exe 
-  benchmarks/invert.cc 
-  )
-SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
-
-
 target_link_libraries(photoflow ${LIBS} pfbase pfoperations pfvips ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}  dl
   )
 
 
+add_executable(invert # name of the executable on Windows will be example.exe 
+  benchmarks/invert.cc 
+  )
+SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
+
 target_link_libraries(invert ${LIBS} pfbase pfoperations pfvips ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}  dl
+  )
+
+
+add_executable(cast # name of the executable on Windows will be example.exe 
+  tests/cast.c
+  )
+
+target_link_libraries(cast ${VIPS_LIBRARIES}
   )
 
 

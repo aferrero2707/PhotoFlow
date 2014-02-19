@@ -46,7 +46,7 @@ class LayerWidget : public Gtk::VBox
 {
   Gtk::Notebook notebook;
   Gtk::HButtonBox buttonbox;
-  Gtk::Button buttonAdd, buttonDel;
+  Gtk::Button buttonAdd, buttonAddGroup, buttonDel;
   Gtk::Dialog layersDialog;
   OperationsTreeDialog operationsDialog;
 
@@ -66,12 +66,15 @@ public:
     image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
   }
 
+  void add_layer( Layer* layer );
+
   void update() {
-    for(int i = 0; i < layer_views.size(); i++) 
+    for(unsigned int i = 0; i < layer_views.size(); i++) 
       layer_views[i]->update_model();
   }
 
   void on_button_add();
+  void on_button_add_group();
   void on_button_del();
 
   void on_cell_toggled(const Glib::ustring& path);

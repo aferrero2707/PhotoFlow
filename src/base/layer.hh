@@ -34,6 +34,8 @@
 #include <vector>
 #include <set>
 
+#include <sigc++/sigc++.h>
+
 #include "pftypes.hh"
 #include "processor.hh"
 
@@ -59,6 +61,8 @@ namespace PF
 
     bool visible;
 
+    bool normal;
+
     ProcessorBase* processor;
 
     Image* image;
@@ -70,12 +74,12 @@ namespace PF
     Layer(int32_t id);
     virtual ~Layer()
     {
-      std::cout<<"\""<<name<<"\" destructor called."<<std::endl;
+      std::cout<<"~Layer(): \""<<name<<"\" destructor called."<<std::endl;
       if( processor ) delete (processor );
     }
 
     std::string get_name() { return name; }
-    void set_name( std::string n ) { name = n; }
+    void set_name( std::string n ) { name = n; modified(); }
 
     int32_t get_id() { return id; }
 
@@ -88,6 +92,10 @@ namespace PF
     void set_visible( bool d ) { visible = d; }
     void clear_visible( ) { visible = false; }
     
+    bool is_group() { return( !normal ); }
+    bool is_normal() { return normal; }
+    void set_normal( bool d ) { normal = d; }
+    
 
     ProcessorBase* get_processor() { return processor; }
     void set_processor(ProcessorBase* p) { processor = p; }
@@ -95,9 +103,16 @@ namespace PF
     Image* get_image() { return image; }
     void set_image( Image* img ) { image = img; }
 
+    void set_input(int n, int32_t lid) { 
+      for( int i = extra_inputs.size(); i <= n; i++ ) extra_inputs.push_back( -1 );
+      extra_inputs[n] = lid; 
+    }
     void add_input(int32_t lid) { extra_inputs.push_back(lid); }
+    std::vector<int32_t> get_extra_inputs() { return extra_inputs; }
 
-    std::list<Layer*> get_sublayers() { return sublayers; }
+    std::list<Layer*>& get_sublayers() { return sublayers; }
+    std::list<Layer*>& get_imap_layers() { return imap_layers; }
+    std::list<Layer*>& get_omap_layers() { return omap_layers; }
 
     bool sublayers_insert(Layer* l, int32_t lid=-1);
     bool sublayers_insert_before(Layer* l, int32_t lid);
@@ -107,6 +122,11 @@ namespace PF
 
     bool omap_insert(Layer* l, int32_t lid=-1);
     bool omap_insert_before(Layer* l, int32_t lid);
+
+    sigc::signal<void> signal_modified;
+    void modified() { signal_modified.emit(); }
+
+    bool save( std::ostream& ostr, int level );
   };
 
 };

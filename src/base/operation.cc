@@ -50,17 +50,36 @@ void PF::OperationConfigUI::open()
 
 
 PF::OpParBase::OpParBase():
+  blend_mode("blend_mode",this),
   intensity("intensity",this,1),
-  opacity("opacity",this,1)
+  opacity("opacity",this,1),
+  grey_target_channel("grey_target_channel",this,-1,"Grey","Grey"),
+  rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
+  lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
+  cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK")
 {
   processor = NULL;
   out = NULL;
   config_ui = NULL;
   //blend_mode = PF_BLEND_PASSTHROUGH;
-  blend_mode = PF_BLEND_NORMAL;
+  //blend_mode = PF_BLEND_NORMAL;
+  blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
   demand_hint = VIPS_DEMAND_STYLE_THINSTRIP;
   bands = 1;
   xsize = 100; ysize = 100;
+
+  rgb_target_channel.add_enum_value(0,"R","R");
+  rgb_target_channel.add_enum_value(1,"G","G");
+  rgb_target_channel.add_enum_value(2,"B","B");
+
+  lab_target_channel.add_enum_value(0,"L","L");
+  lab_target_channel.add_enum_value(1,"a","a");
+  lab_target_channel.add_enum_value(2,"b","b");
+
+  cmyk_target_channel.add_enum_value(0,"C","C");
+  cmyk_target_channel.add_enum_value(1,"M","M");
+  cmyk_target_channel.add_enum_value(2,"Y","Y");
+  cmyk_target_channel.add_enum_value(3,"K","K");
 
   //PF::PropertyBase* prop;
   //prop = new PF::Property<float>("intensity",&intensity);
@@ -106,6 +125,17 @@ void PF::OpParBase::restore_properties(const std::list<std::string>& plist)
     (*pi)->set_str(*si);
   }
 }
+
+
+void PF::OpParBase::set_image_hints(int w, int h, VipsInterpretation interpr, VipsBandFormat fmt)
+{
+  xsize = w;
+  ysize = h;
+  format = fmt;
+  coding = VIPS_CODING_NONE;
+  interpretation = interpr;
+}
+
 
 
 void PF::OpParBase::set_image_hints(int w, int h, colorspace_t cs, VipsBandFormat fmt)
@@ -167,6 +197,29 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first, VipsImag
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
   std::cout<<"out: "<<(void*)outnew<<std::endl<<std::endl;
 
-  //set_image( outnew );
+  set_image( outnew );
   return outnew;
+}
+
+
+
+bool PF::OpParBase::save( std::ostream& ostr, int level )
+{
+  for(int i = 0; i < level; i++) ostr<<"  ";
+  ostr<<"<operation type=\""<<get_type()<<"\">"<<std::endl;
+
+  for( std::list<PropertyBase*>::iterator pi = properties.begin();
+       pi != properties.end(); pi++ ) {
+    for(int i = 0; i < level+1; i++) ostr<<"  ";
+    ostr<<"<property name=\""<<(*pi)->get_name()<<"\" value=\"";
+    (*pi)->to_stream( ostr );
+    ostr<<"\">"<<std::endl;
+    for(int i = 0; i < level+1; i++) ostr<<"  ";
+    ostr<<"</property>"<<std::endl;
+  }
+  
+  for(int i = 0; i < level; i++) ostr<<"  ";
+  ostr<<"</operation>"<<std::endl;
+
+  return true;
 }

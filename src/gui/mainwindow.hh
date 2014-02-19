@@ -30,6 +30,8 @@
 #ifndef GTKMM_EXAMPLE_HELLOWORLD_H
 #define GTKMM_EXAMPLE_HELLOWORLD_H
 
+#include <string>
+
 #include <gtkmm.h>
 
 #include "imagearea.hh"
@@ -40,11 +42,6 @@ namespace PF {
 
 class MainWindow : public Gtk::Window
 {
-
-public:
-  MainWindow( char* filename );
-  virtual ~MainWindow();
-
 protected:
   //Signal handlers:
   void on_button_clicked();
@@ -71,6 +68,18 @@ protected:
   //Gtk::TreeView layerTree;
   Gtk::ScrolledWindow imageArea_scrolledWindow;
   ImageArea imageArea;
+
+  PF::Image* pf_image;
+
+public:
+  MainWindow( char* filename );
+  virtual ~MainWindow();
+
+  LayerWidget& get_layer_widget() { return layersWidget; }
+
+  void on_button_save_clicked();
+
+  void set_image(std::string filename);
 };
 
 }

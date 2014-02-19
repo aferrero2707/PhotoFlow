@@ -68,6 +68,10 @@ namespace PF
     }
 
     void update();
+
+    bool open( std::string filename );
+
+    bool save( std::string filename );
   };
 
 }

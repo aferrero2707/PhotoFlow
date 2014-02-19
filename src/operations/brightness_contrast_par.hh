@@ -7,6 +7,7 @@
       brightness("brightness",this,0), 
       contrast("contrast",this,0) 
     {
+      set_type( "brightness_contrast" );
     }
     float get_brightness() { return brightness.get(); }
     float get_contrast() { return contrast.get(); }

@@ -60,6 +60,33 @@ PF::LayerTree::~LayerTree()
 }
 
 
+void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
+{
+  PF::Layer* parent_layer = parent_row[columns.col_layer];
+  if( !parent_layer ) return;
+
+  Gtk::TreeModel::Row row = *(treeModel->append(parent_row.children()));
+  row[columns.col_visible] = false;
+  row[columns.col_name] = std::string( "" );
+  row[columns.col_layer] = NULL;
+
+  std::list<Layer*> sublayers = parent_layer->get_sublayers();
+  for( std::list<Layer*>::iterator li = sublayers.begin();
+       li != sublayers.end(); li++ ) {
+    PF::Layer* l = *li;
+    row = *(treeModel->prepend(parent_row.children()));
+    row[columns.col_visible] = l->is_visible();
+    row[columns.col_name] = l->get_name();
+    row[columns.col_layer] = l;
+
+    if( l->is_group() ) {
+      update_model( row );
+    }
+  }
+}
+
+
+
 void PF::LayerTree::update_model()
 {
   treeModel->clear();
@@ -70,7 +97,12 @@ void PF::LayerTree::update_model()
     row[columns.col_visible] = l->is_visible();
     row[columns.col_name] = l->get_name();
     row[columns.col_layer] = l;
+
+    if( l->is_group() ) {
+      update_model( row );
+    }
   }
+  expand_all();
 
   /*
   if (!image) {

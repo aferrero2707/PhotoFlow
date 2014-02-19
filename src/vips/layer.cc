@@ -49,6 +49,7 @@
 #include <vips/dispatch.h>
 
 #include "../base/processor.hh"
+#include "../base/layer.hh"
 
 /**/
 #define VIPS_TYPE_LAYER (vips_layer_get_type())
@@ -162,8 +163,11 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   }
 
   /*
-  std::cout<<"vips_layer_gen(): "<<std::endl
-	   <<"  input region:  top="<<ir[layer->in_first]->valid.top
+#ifndef NDEBUG
+  std::cout<<"vips_layer_gen(): "<<std::endl;
+  if( layer->processor->get_par()->get_config_ui() )
+    std::cout<<"  name: "<<layer->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
+  std::cout<<"  input region:  top="<<ir[layer->in_first]->valid.top
 	   <<" left="<<ir[layer->in_first]->valid.left
 	   <<" width="<<ir[layer->in_first]->valid.width
 	   <<" height="<<ir[layer->in_first]->valid.height<<std::endl
@@ -171,7 +175,8 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
 	   <<" left="<<oreg->valid.left
 	   <<" width="<<oreg->valid.width
 	   <<" height="<<oreg->valid.height<<std::endl;
-    */
+#endif
+  */
     
   /* Do the actual processing
    */
@@ -212,7 +217,13 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   }
 
   //pf_process(pflayer->processor,r,&s,pflayer);
+#ifndef NDEBUG
+  //std::cout<<"Calling processor function..."<<std::endl;
+#endif
   layer->processor->process(ir, ninput, layer->in_first, rimap, romap, oreg);
+#ifndef NDEBUG
+  //std::cout<<"...done"<<std::endl;
+#endif
   return( 0 );
 }
 
@@ -259,13 +270,14 @@ vips_layer_build( VipsObject *object )
   }
 
   /* We only work for uchar images.
-   */
+   
   if(nimg > 0) {
     if( vips_check_uncoded( klass->nickname, layer->in_all[0] ) ||
 	vips_check_format( klass->nickname, 
 			   layer->in_all[0], VIPS_FORMAT_UCHAR ) )
       return( -1 );
   }
+  */
 
   /* Get ready to write to @out. @out must be set via g_object_set() so
    * that vips can see the assignment. It'll complain that @out hasn't
@@ -292,24 +304,26 @@ vips_layer_build( VipsObject *object )
   layer->out->Ysize = rout.height;
   */
 
+
+
+  PF::OpParBase* par = layer->processor->get_par();
   if(ninput > 0) {
-    /*
     VipsImage** array = layer->in->data;
     VipsImage* in0 = array[0];
+    par->set_image_hints( in0 );
+    /*
     vips_image_init_fields( layer->out,
 			    in0->Xsize, in0->Ysize, 
 			    in0->Bands, in0->BandFmt,
 			    in0->Coding,in0->Type,1.0, 1.0);
     */
-  } else {
-    PF::OpParBase* par = layer->processor->get_par();
-    vips_image_init_fields( layer->out,
-			    par->get_xsize(), par->get_ysize(), 
-			    par->get_nbands(), par->get_format(),
-			    par->get_coding(),
-			    par->get_interpretation(),
-			    1.0, 1.0);
   }
+  vips_image_init_fields( layer->out,
+			  par->get_xsize(), par->get_ysize(), 
+			  par->get_nbands(), par->get_format(),
+			  par->get_coding(),
+			  par->get_interpretation(),
+			  1.0, 1.0);
 
   if(nimg > 0) {
     if( vips_image_generate( layer->out,

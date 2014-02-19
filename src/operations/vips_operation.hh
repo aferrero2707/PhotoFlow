@@ -34,15 +34,14 @@
 
 #include "../base/processor.hh"
 
-#include "../operations/blender.hh"
+#include "blender.hh"
 
 namespace PF 
 {
 
-  class VipsOperationPar: public OpParBase
+  class VipsOperationPar: public BlenderPar
   {
     std::string op_name;
-    PF::Processor<PF::BlenderProc,PF::BlenderPar> blender;
 
   public:
     VipsOperationPar();
@@ -67,14 +66,8 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class VipsOperationProc
+  class VipsOperationProc: public BlenderProc<OP_TEMPLATE_IMP>
   {
-  public: 
-    void render(VipsRegion** ireg, int n, int in_first,
-		VipsRegion* imap, VipsRegion* omap, 
-		VipsRegion* oreg, OpParBase* par)
-    {
-    }
   };
 
 }

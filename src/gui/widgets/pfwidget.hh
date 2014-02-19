@@ -42,44 +42,19 @@ namespace PF {
     PropertyBase* property;
 
   public:
-    PFWidget(OperationConfigUI* d, std::string n): 
-      inhibit(false), dialog( d ), pname( n ), property( NULL )
-    {
-    }
+    PFWidget(OperationConfigUI* d, std::string n);
 
     void set_inhibit( bool val ) { inhibit = val; }
 
     PropertyBase* get_prop() { return property; }
 
-    void init()
-    {
-      Layer* layer = dialog->get_layer();
-      Image* image = layer ? layer->get_image() : NULL;
-      ProcessorBase* processor = layer ? layer->get_processor() : NULL;
-      if( dialog && dialog->get_layer() && dialog->get_layer()->get_image() && 
-	  dialog->get_layer()->get_processor() &&
-	  dialog->get_layer()->get_processor()->get_par() ) {
-	OpParBase* par = dialog->get_layer()->get_processor()->get_par();
-	property = par->get_property( pname );
-	inhibit = true;
-	get_value();
-	inhibit = false;
-      }
-    }
+    void init();
 
     virtual void get_value() = 0;
     virtual void set_value() = 0;
 
-    void changed()
-    {
-      if( property && !inhibit ) {
-	set_value();
-	dialog->get_layer()->set_dirty( true );
-	std::cout<<"  updating image"<<std::endl;
-	dialog->get_layer()->get_image()->update();
-      }
-    }
-  };
+    void changed();
+ };
 
 
 }

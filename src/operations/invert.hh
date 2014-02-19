@@ -41,11 +41,15 @@ namespace PF
   class InvertPar: public OpParBase
   {
   public:
-    InvertPar(): OpParBase() {}
+    InvertPar(): OpParBase() 
+    {
+      set_type( "invert" );
+    }
   };
 
   
-  template < typename T, colorspace_t CS, bool PREVIEW, class OP_PAR >
+
+  template < typename T, colorspace_t CS, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
   class InvertProc
   {
     InvertPar* par;
@@ -56,8 +60,8 @@ namespace PF
   };
 
   
-  template < typename T, bool PREVIEW, class OP_PAR >
-  class InvertProc<T, PF_COLORSPACE_GRAYSCALE, PREVIEW, OP_PAR>
+  template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
+  class InvertProc<T, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, PREVIEW, OP_PAR>
   {
     InvertPar* par;
   public:
@@ -70,8 +74,8 @@ namespace PF
   };
 
   
-  template < typename T, bool PREVIEW, class OP_PAR >
-  class InvertProc<T, PF_COLORSPACE_RGB, PREVIEW, OP_PAR>
+  template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
+  class InvertProc<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, PREVIEW, OP_PAR>
   {
     InvertPar* par;
   public:
@@ -79,69 +83,92 @@ namespace PF
 
     void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
     {
-      /**/
+      /*
       int i = x;
       pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
       i += 1;
       pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
       i += 1;
       pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      */
       /**/
-      /*
       T* pp = p[first];
-      for(int i = 0; i < 3; i++) {
+      for(int i = CHMIN; i <= CHMAX; i++) {
+	pout[x+i] = FormatInfo<T>::MAX + FormatInfo<T>::MIN - pp[x+i]; 
+      }
+      /**/
+    }
+  };
+
+  
+  template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
+  class InvertProc<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, PREVIEW, OP_PAR>
+  {
+    InvertPar* par;
+  public:
+    InvertProc(InvertPar* p): par(p) {}
+
+    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
+    {
+      /*
+      int i = x;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      */
+      /**/
+      T* pp = p[first];
+      for(int i = CHMIN; i <= CHMAX; i++) {
 	pout[x+i] = (T)(FormatInfo<T>::RANGE - pp[x+i]); 
       }
+      /**/
+    }
+  };
+
+  
+  template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
+  class InvertProc<T, PF_COLORSPACE_CMYK, CHMIN, CHMAX, PREVIEW, OP_PAR>
+  {
+    InvertPar* par;
+  public:
+    InvertProc(InvertPar* p): par(p) {}
+
+    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
+    {
+      /*
+      int i = x;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      i += 1;
+      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
       */
-    }
-  };
-
-  
-  template < typename T, bool PREVIEW, class OP_PAR >
-  class InvertProc<T, PF_COLORSPACE_LAB, PREVIEW, OP_PAR>
-  {
-    InvertPar* par;
-  public:
-    InvertProc(InvertPar* p): par(p) {}
-
-    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
-    {
-      int i = x;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
-      i += 1;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
-      i += 1;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
-    }
-  };
-
-  
-  template < typename T, bool PREVIEW, class OP_PAR >
-  class InvertProc<T, PF_COLORSPACE_CMYK, PREVIEW, OP_PAR>
-  {
-    InvertPar* par;
-  public:
-    InvertProc(InvertPar* p): par(p) {}
-
-    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
-    {
-      int i = x;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
-      i += 1;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
-      i += 1;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
-      i += 1;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
+      /**/
+      T* pp = p[first];
+      for(int i = CHMIN; i <= CHMAX; i++) {
+	pout[x+i] = (T)(FormatInfo<T>::RANGE - pp[x+i]); 
+      }
+      /**/
     }
   };
 
   
 
+  /*
   template < OP_TEMPLATE_DEF > 
   class Invert: public OperationPTP< OP_TEMPLATE_IMP, 
 				     InvertProc<T,CS,PREVIEW,InvertPar>, 
 				     InvertPar >
+  {
+  };
+  */
+
+  template < OP_TEMPLATE_DEF > 
+  class Invert: public OperationPTP< OP_TEMPLATE_IMP, InvertPar, InvertProc >
   {
   };
 

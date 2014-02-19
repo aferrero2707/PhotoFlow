@@ -30,14 +30,20 @@
 #include "operation_config_dialog.hh"
 
 
-PF::OperationConfigDialog::OperationConfigDialog(const Glib::ustring&  	title):
+PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::ustring& title):
+  PF::OperationConfigUI(layer),
   Gtk::Dialog(title, false, false),
   //intensityAdj( 100, 0, 100, 1, 10, 0),
   //opacityAdj( 100, 0, 100, 1, 10, 0),
   //intensityScale(intensityAdj),
   //opacityScale(opacityAdj),
   intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
-  opacitySlider( this, "opacity", "Opacity", 100, 0, 100, 1, 10, 100)
+  opacitySlider( this, "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
+  blendSelector( this, "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
+  greychSelector( this, "grey_target_channel", "Target channel: ", -1 ),
+  rgbchSelector( this, "rgb_target_channel", "Target channel: ", -1 ),
+  labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
+  cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 )
 {
   set_keep_above(true);
   add_button("OK",1);
@@ -51,18 +57,24 @@ PF::OperationConfigDialog::OperationConfigDialog(const Glib::ustring&  	title):
 
   nameEntry.set_text( "New Layer" );
   nameBox.pack_start( nameEntry, Gtk::PACK_SHRINK );
+  //nameBox.pack_start( nameEntry, Gtk::PACK_EXPAND_PADDING, 10 );
 
   blendmodeCombo.append("passthrough");
   blendmodeCombo.append("normal");
   blendmodeCombo.append("-----------");
   blendmodeCombo.append("overlay");
   blendmodeCombo.set_active( 1 );
-  nameBox.pack_end( blendmodeCombo, Gtk::PACK_SHRINK );
+  //nameBox.pack_end( blendmodeCombo, Gtk::PACK_SHRINK );
+  //nameBox.pack_end( blendmodeCombo, Gtk::PACK_EXPAND_PADDING, 10 );
 
   lblendmode.set_text( "blend mode:" );
-  nameBox.pack_end( lblendmode, Gtk::PACK_SHRINK );
+  //nameBox.pack_end( lblendmode, Gtk::PACK_SHRINK );
+  //nameBox.pack_end( lblendmode, Gtk::PACK_EXPAND_PADDING, 10 );
 
-  topBox.pack_start( nameBox );
+  blendSelector.init();
+  nameBox.pack_end( blendSelector );
+
+  topBox.pack_start( nameBox, Gtk::PACK_SHRINK );
 
   /*
   lintensity.set_text( "intensity" );
@@ -84,14 +96,32 @@ PF::OperationConfigDialog::OperationConfigDialog(const Glib::ustring&  	title):
   controlsBoxLeft.pack_start( lopacityAl );
   controlsBoxLeft.pack_start( opacityScale );
   */
-  controlsBoxLeft.pack_start( intensitySlider );
-  controlsBoxLeft.pack_start( opacitySlider );
+  controlsBoxLeft.pack_start( intensitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
+  controlsBoxLeft.pack_start( opacitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
   controlsBox.pack_start( controlsBoxLeft, Gtk::PACK_SHRINK );
   topBox.pack_start( controlsBox );
 
-  mainBox.pack_start( topBox );
+  greychSelector.init(); 
+  chselBox.pack_start( greychSelector, Gtk::PACK_SHRINK );
+  rgbchSelector.init(); 
+  chselBox.pack_start( rgbchSelector, Gtk::PACK_SHRINK );
+  labchSelector.init(); 
+  chselBox.pack_start( labchSelector, Gtk::PACK_SHRINK );
+  cmykchSelector.init(); 
+  chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
 
-  get_vbox()->pack_start( mainBox, Gtk::PACK_SHRINK );
+  topBox.pack_start( chselBox );
+
+  //topFrame.set_label( "layer options" );
+  topFrame.set_shadow_type(Gtk::SHADOW_ETCHED_OUT);
+
+  topFrame.add( topBox );
+
+  get_vbox()->pack_start( topFrame );
+
+  mainHBox.pack_start( mainBox, Gtk::PACK_SHRINK );
+
+  get_vbox()->pack_start( mainHBox, Gtk::PACK_SHRINK );
 
   /*
   intensityAdj.signal_value_changed().
@@ -107,6 +137,15 @@ PF::OperationConfigDialog::OperationConfigDialog(const Glib::ustring&  	title):
   // nameBox.show();
   // topBox.show();
   // mainBox.show();
+
+  add_control( &intensitySlider );
+  add_control( &opacitySlider );
+  add_control( &blendSelector );
+  add_control( &greychSelector );
+  add_control( &rgbchSelector );
+  add_control( &labchSelector );
+  add_control( &cmykchSelector );
+
 
   show_all_children();
 }
@@ -127,6 +166,9 @@ void PF::OperationConfigDialog::add_widget( Gtk::Widget& widget )
 
 void PF::OperationConfigDialog::open()
 {
+  for( int i = 0; i < controls.size(); i++ )
+    controls[i]->init();
+
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
@@ -147,6 +189,59 @@ void PF::OperationConfigDialog::open()
   }
   PF::OperationConfigUI::open();
   show_all();
+  //show();
+}
+
+
+void PF::OperationConfigDialog::update()
+{
+  //std::vector<Widget*> wl = chselBox.get_children();
+  //wl.clear();
+  if( get_layer() && get_layer()->get_image() && 
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+
+    std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
+    chselBox.remove( greychSelector );
+    chselBox.remove( rgbchSelector );
+    chselBox.remove( labchSelector );
+    chselBox.remove( cmykchSelector );
+    //greychSelector.hide();
+    //rgbchSelector.hide();
+    //labchSelector.hide();
+    //cmykchSelector.hide();
+    PF::OpParBase* par = get_layer()->get_processor()->get_par();
+    PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+    switch( cs ) {
+    case PF_COLORSPACE_GRAYSCALE:
+      chselBox.pack_start( greychSelector, Gtk::PACK_SHRINK );
+      //greychSelector.show();
+      break;
+    case PF_COLORSPACE_RGB:
+      chselBox.pack_start( rgbchSelector, Gtk::PACK_SHRINK );
+      //rgbchSelector.show();
+      break;
+    case PF_COLORSPACE_LAB:
+      chselBox.pack_start( labchSelector, Gtk::PACK_SHRINK );
+      //labchSelector.show();
+      break;
+    case PF_COLORSPACE_CMYK:
+      chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
+      //cmykchSelector.show();
+      break;
+    default:
+      break;
+    }
+  }
+
+  // force our program to redraw the entire clock.
+  Glib::RefPtr<Gdk::Window> win = get_window();
+  if (win) {
+    Gdk::Rectangle r(0, 0, get_allocation().get_width(),
+		     get_allocation().get_height());
+    win->invalidate_rect(r, false);
+  }
+  queue_draw();
 }
 
 

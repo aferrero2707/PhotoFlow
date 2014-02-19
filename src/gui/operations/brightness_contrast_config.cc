@@ -32,8 +32,8 @@
 #include "brightness_contrast_config.hh"
 
 
-PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog():
-  OperationConfigDialog(" Brightness/Contrast Adjustment" ),
+PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog( PF::Layer* layer ):
+  OperationConfigDialog( layer, "Brightness/Contrast Adjustment" ),
   //brightnessAdj( 0, -1, 1, 0.05, 0.2, 0),
   //contrastAdj( 0, -1, 1, 0.05, 0.2, 0),
   //brightnessScale(brightnessAdj),
@@ -124,16 +124,8 @@ void PF::BrightnessContrastConfigDialog::open()
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
-    PF::BrightnessContrastPar* par = 
-      dynamic_cast<PF::BrightnessContrastPar*>(get_layer()->get_processor()->get_par());
     brightnessSlider.init();
     contrastSlider.init();
-    /*
-    if( par ) {
-      brightnessAdj.set_value( par->get_brightness() );
-      contrastAdj.set_value( par->get_contrast() );
-    }
-    */
   }
   OperationConfigDialog::open();
 }

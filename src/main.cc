@@ -56,7 +56,9 @@ int main (int argc, char *argv[])
 
   vips_layer_get_type();
 
-  //im_concurrency_set( 1 );
+#ifndef NDEBUG
+  im_concurrency_set( 1 );
+#endif
 
   //im_package* result = im_load_plugin("src/pfvips.plg");
   //if(!result) verror ();

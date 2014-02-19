@@ -46,7 +46,7 @@ namespace PF
     ProcessorBase(OpParBase* p): op_par_base(p) {}
     virtual ~ProcessorBase() 
     {
-      //std::cout<<"Deleting "<<(void*)op_par_base<<std::endl;
+      std::cout<<"~ProcessorBase(): deleting "<<(void*)op_par_base<<std::endl;
       //delete op_par_base;
     }
 
@@ -58,7 +58,7 @@ namespace PF
 			 VipsRegion* out) = 0;  
   };
 
-  template< template < OP_TEMPLATE_DEF > class OP, class OPPAR >
+  template< class OPPAR, template < OP_TEMPLATE_DEF > class OP >
   class Processor: public ProcessorBase
   {
     OPPAR op_par;
@@ -74,41 +74,41 @@ namespace PF
 
 
 
-#define MAPFLAG_SWITCH( TYPE, CS, BLENDER ) {	\
+#define MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BLENDER ) {	\
         switch(mapflag) { \
         case 0:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
-	    OP< TYPE, BLENDER< TYPE, CS, false >, CS, false, false, false > op; \
+	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, false, false, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
-	    OP< TYPE, BLENDER< TYPE, CS, false >, CS, false, false, true > op; \
+	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, false, false, true > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         case 1:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
-	    OP< TYPE, BLENDER< TYPE, CS, false >, CS, true, false, false > op; \
+	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, true, false, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
-	    OP< TYPE, BLENDER< TYPE, CS, false >, CS, true, false, true > op; \
+	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, true, false, true > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         case 2:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
-	    OP< TYPE, BLENDER< TYPE, CS, true >, CS, false, true, false > op; \
+	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, false, true, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
-	    OP< TYPE, BLENDER< TYPE, CS, true >, CS, false, true, true > op; \
+	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, false, true, true > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         case 3:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
-	    OP< TYPE, BLENDER< TYPE, CS, true >, CS, true, true, false > op; \
+	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, true, true, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
-	    OP< TYPE, BLENDER< TYPE, CS, true >, CS, true, true, true > op; \
+	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, true, true, true > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
@@ -116,14 +116,22 @@ namespace PF
 }					
 
 
-#define BLENDER_SWITCH( TYPE, CS ) {			\
+#define BLENDER_SWITCH( TYPE, CS, CHMIN, CHMAX ) {		\
         switch(op_par.get_blend_mode()) {		\
         case PF_BLEND_PASSTHROUGH:				\
-          MAPFLAG_SWITCH( TYPE, CS, BlendPassthrough );		\
+          MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BlendPassthrough );		\
           break;							\
         case PF_BLEND_NORMAL:				\
-          MAPFLAG_SWITCH( TYPE, CS, BlendNormal );		\
+          MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BlendNormal );	\
           break;							\
+        case PF_BLEND_MULTIPLY:				\
+          MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BlendMultiply );	\
+          break;							\
+        case PF_BLEND_SCREEN:				\
+          MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BlendScreen );	\
+          break;							\
+        case PF_BLEND_OVERLAY:					\
+          break;						\
         case PF_BLEND_UNKNOWN:					\
           break;						\
 	}							\
@@ -131,28 +139,70 @@ namespace PF
 
 
 #define CS_SWITCH( TYPE ) {			\
-        switch(colorspace) {				\
-        case PF_COLORSPACE_GRAYSCALE:					\
-          BLENDER_SWITCH( TYPE, PF_COLORSPACE_GRAYSCALE );		\
-          break;								\
-        case PF_COLORSPACE_RGB:					\
-          BLENDER_SWITCH( TYPE, PF_COLORSPACE_RGB );			\
-          break;								\
-        case PF_COLORSPACE_RAW:					\
-        case PF_COLORSPACE_LAB:					\
-          BLENDER_SWITCH( TYPE, PF_COLORSPACE_LAB );			\
-          break;								\
-        case PF_COLORSPACE_CMYK:					\
-          BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK );			\
-          break;								\
-        case PF_COLORSPACE_UNKNOWN:					\
-          break;							\
-        }								\
+  switch(colorspace) {							\
+  case PF_COLORSPACE_RAW:						\
+  case PF_COLORSPACE_GRAYSCALE:						\
+    BLENDER_SWITCH( TYPE, PF_COLORSPACE_GRAYSCALE, 0, 0 );		\
+    break;								\
+  case PF_COLORSPACE_RGB:						\
+    switch( op_par.get_rgb_target_channel() ) {				\
+    case 0:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 0 );			\
+      break;								\
+    case 1:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_RGB, 1, 1 );			\
+      break;								\
+    case 2:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_RGB, 2, 2 );			\
+      break;								\
+    default:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 2 );			\
+      break;								\
+    }									\
+    break;								\
+  case PF_COLORSPACE_LAB:						\
+    switch( op_par.get_lab_target_channel() ) {				\
+    case 0:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 0 );			\
+      break;								\
+    case 1:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_LAB, 1, 1 );			\
+      break;								\
+    case 2:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_LAB, 2, 2 );			\
+      break;								\
+    default:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 2 );			\
+      break;								\
+    }									\
+    break;								\
+  case PF_COLORSPACE_CMYK:						\
+    switch( op_par.get_cmyk_target_channel() ) {				\
+    case 0:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 0 );			\
+      break;								\
+    case 1:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 1, 1 );			\
+      break;								\
+    case 2:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 2, 2 );			\
+      break;								\
+    case 3:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 3, 3 );			\
+      break;								\
+    default:								\
+      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 3 );			\
+      break;								\
+    }									\
+    break;								\
+  case PF_COLORSPACE_UNKNOWN:						\
+    break;								\
+  }									\
 }
 
 
-  template< template < OP_TEMPLATE_DEF > class OP, class OPPAR >
-  void Processor<OP,OPPAR>::process(VipsRegion** in, int n, int in_first,
+  template< class OPPAR, template < OP_TEMPLATE_DEF > class OP >
+  void Processor<OPPAR,OP>::process(VipsRegion** in, int n, int in_first,
 			      VipsRegion* imap, VipsRegion* omap, 
 			      VipsRegion* out)
   {

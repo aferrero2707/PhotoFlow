@@ -32,6 +32,6 @@
 
 PF::ProcessorBase* new_op()
 {
-  return ( new PF::Processor<PF::BrightnessContrast,PF::BrightnessContrastPar>() );
+  return ( new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>() );
 }
 

@@ -5,12 +5,12 @@
 
 std::istream& operator >>(std::istream& str, PF::PropertyBase& p)
 {
-  p.set_from_stream(str);
+  p.from_stream(str);
   return str;
 }
 std::ostream& operator <<(std::ostream& str, PF::PropertyBase& p)
 {
-  p.get_from_stream(str);
+  p.to_stream(str);
   return str;
 }
 
@@ -25,7 +25,7 @@ PF::PropertyBase::PropertyBase(std::string n, OpParBase* par,
 			       int val, std::string strval, std::string valname): name(n) 
 {
   par->add_property(this);
-  set_enum_value( val, strval, valname );
+  add_enum_value( val, strval, valname );
   enum_value.first = val;
   enum_value.second.first = strval;
   enum_value.second.second = valname;
@@ -35,18 +35,18 @@ PF::PropertyBase::PropertyBase(std::string n, OpParBase* par,
 void PF::PropertyBase::set_str(const std::string& val)
 {
   std::istringstream str(val);
-  set_from_stream(str);
+  from_stream(str);
 }
 
 std::string PF::PropertyBase::get_str()
 {
   std::ostringstream str;
-  get_from_stream(str);
+  to_stream(str);
   return str.str();
 }
 
 
-void PF::PropertyBase::set_from_stream(std::istream& str)
+void PF::PropertyBase::from_stream(std::istream& str)
 {
   if( !is_enum() ) return;
   std::string s;
@@ -61,7 +61,7 @@ void PF::PropertyBase::set_from_stream(std::istream& str)
 }
 
 
-void PF::PropertyBase::get_from_stream(std::ostream& str)
+void PF::PropertyBase::to_stream(std::ostream& str)
 {
   if( !is_enum() ) return;
   if( enum_value.second.first.empty() ) return;
@@ -76,4 +76,13 @@ void PF::PropertyBase::set_gobject(gpointer object)
   if( enum_value.second.first.empty() ) return;
   g_object_set( object, get_name().c_str(), enum_value.first, NULL );
 }
+
+
+
+template<>
+void PF::set_gobject_property<std::string>(gpointer object, const std::string name, const std::string& value)
+{
+  g_object_set( object, name.c_str(), value.c_str(), NULL );
+}
+
 

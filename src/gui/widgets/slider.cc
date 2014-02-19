@@ -44,8 +44,8 @@ PF::Slider::Slider( OperationConfigUI* dialog, std::string pname, std::string l,
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( 200, -1 );
-  spinButton.set_size_request( 50, -1 );
+  scale.set_size_request( 300, -1 );
+  spinButton.set_size_request( 70, -1 );
 
   if( (max-min) < 500 ) {
     // Full widget with slider and spin button

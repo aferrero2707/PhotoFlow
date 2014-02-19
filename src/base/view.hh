@@ -59,13 +59,13 @@ namespace PF
 
     void set_level( int l ) { level = l; }
 
-    void set_image( VipsImage* img, int id )
+    void set_image( VipsImage* img, unsigned int id )
     {
       while( vips_images.size() <= (id+1) ) vips_images.push_back(NULL);
       vips_images[id] = img;
     }
 
-    VipsImage* get_image(int id) 
+    VipsImage* get_image(unsigned int id) 
     {
       if( id >= vips_images.size() ) return NULL;
       return vips_images[id];

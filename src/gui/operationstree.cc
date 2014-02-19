@@ -33,16 +33,20 @@
 #include "../base/photoflow.hh"
 
 #include "operationstree.hh"
+#include "layerwidget.hh"
 
 #include "../operations/vips_operation.hh"
 #include "../operations/image_reader.hh"
 #include "../operations/brightness_contrast.hh"
 #include "../operations/invert.hh"
 #include "../operations/gradient.hh"
+#include "../operations/convert2lab.hh"
+#include "../operations/clone.hh"
 
 #include "../gui/operations/brightness_contrast_config.hh"
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
+#include "../gui/operations/clone_config.hh"
 
 PF::OperationsTree::OperationsTree( )
 {
@@ -139,12 +143,20 @@ void PF::OperationsTree::update_model()
   row[columns.col_nickname] = "imageread";
 
   row = *(treeModel->append());
+  row[columns.col_name] = "Clone layer";
+  row[columns.col_nickname] = "clone";
+
+  row = *(treeModel->append());
   row[columns.col_name] = "Invert";
   row[columns.col_nickname] = "invert";
 
   row = *(treeModel->append());
   row[columns.col_name] = "Brightness/Contrast";
   row[columns.col_nickname] = "brightness_contrast";
+
+  row = *(treeModel->append());
+  row[columns.col_name] = "Lab conversion";
+  row[columns.col_nickname] = "convert2lab";
 
   row = *(treeModel->append());
   row[columns.col_name] = "-------------------";
@@ -174,8 +186,9 @@ void PF::OperationsTree::update_model()
 
 
 
-PF::OperationsTreeDialog::OperationsTreeDialog():
-  Gtk::Dialog("New Layer")
+PF::OperationsTreeDialog::OperationsTreeDialog(LayerWidget* lw):
+  Gtk::Dialog("New Layer"),
+  layer_widget( lw )
 {
   set_default_size(300,600);
 
@@ -265,43 +278,55 @@ void PF::OperationsTreeDialog::add_layer()
 
   if( (*iter)[columns.col_nickname] == "imageread" ) { 
 
-    processor = new PF::Processor<PF::ImageReader,PF::ImageReaderPar>();
+    processor = new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
     layer->set_processor( processor );
-    dialog = new PF::ImageReadConfigDialog();
-    dialog->set_layer( layer );
+    dialog = new PF::ImageReadConfigDialog( layer );
+
+  } else if( (*iter)[columns.col_nickname] == "clone" ) {
+
+    processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    layer->set_processor( processor );
+    dialog = new PF::CloneConfigDialog( layer );
 
   } else if( (*iter)[columns.col_nickname] == "invert" ) {
 
-    processor = new PF::Processor<PF::Invert,PF::InvertPar>();
+    processor = new PF::Processor<PF::InvertPar,PF::Invert>();
     layer->set_processor( processor );
+    dialog = new PF::OperationConfigDialog( layer, "Invert Image" );
 
   } else if( (*iter)[columns.col_nickname] == "brightness_contrast" ) {
 
-    processor = new PF::Processor<PF::BrightnessContrast,PF::BrightnessContrastPar>();
+    processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
     layer->set_processor( processor );
-    dialog = new PF::BrightnessContrastConfigDialog();
-    dialog->set_layer( layer );
+    dialog = new PF::BrightnessContrastConfigDialog( layer );
+
+  } else if( (*iter)[columns.col_nickname] == "convert2lab" ) {
+
+    processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
+    layer->set_processor( processor );
+    //dialog = new PF::BrightnessContrastConfigDialog( layer );
 
   } else { // it must be a VIPS operation...
 
-    PF::Processor<PF::VipsOperationProc,PF::VipsOperationPar>* vips_op = 
-      new PF::Processor<PF::VipsOperationProc,PF::VipsOperationPar>();
+    PF::Processor<PF::VipsOperationPar,PF::VipsOperationProc>* vips_op = 
+      new PF::Processor<PF::VipsOperationPar,PF::VipsOperationProc>();
     Glib::ustring str = (*iter)[columns.col_nickname];
     vips_op->get_par()->set_op( str.c_str() );
     processor = vips_op;
     layer->set_processor( processor );
 
     PF::VipsOperationConfigDialog* vips_config = 
-      new PF::VipsOperationConfigDialog();
-    vips_config->set_layer( layer );
+      new PF::VipsOperationConfigDialog( layer );
     vips_config->set_op( str.c_str() );
     dialog = vips_config;
   }
   if( processor ) {
-    layer_manager.get_layers().push_back( layer );
-    layer_manager.modified();
+    layer_widget->add_layer( layer );
+    //layer_manager.get_layers().push_back( layer );
+    //layer_manager.modified();
     if( dialog ) {
       processor->get_par()->set_config_ui( dialog );
+      dialog->update();
       dialog->open();
     }
   }

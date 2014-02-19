@@ -1,5 +1,5 @@
-  template < typename T, bool PREVIEW, class OP_PAR >
-  class BrightnessContrastProc<T,PF_COLORSPACE_RGB,PREVIEW,OP_PAR>
+  template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
+  class BrightnessContrastProc<T,PF_COLORSPACE_RGB,CHMIN,CHMAX,PREVIEW,OP_PAR>
   {
     BrightnessContrastPar* par;
   public:

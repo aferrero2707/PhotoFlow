@@ -35,6 +35,8 @@
 
 namespace PF {
 
+  class LayerWidget;
+
   // Definition of the calumns in the operations list
   class OperationsTreeColumns : public Gtk::TreeModel::ColumnRecord
   {
@@ -77,8 +79,10 @@ namespace PF {
     Gtk::ScrolledWindow op_tree_box;
     OperationsTree op_tree;
 
+    LayerWidget* layer_widget;
+
   public:
-    OperationsTreeDialog();
+    OperationsTreeDialog(LayerWidget* layer_widget);
     virtual ~OperationsTreeDialog();
 
     void on_button_clicked(int id);

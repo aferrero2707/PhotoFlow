@@ -42,6 +42,7 @@ namespace PF
   public:
     BlenderPar(): OpParBase()
     {
+      set_type( "blender" );
       set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
     }
 
@@ -83,10 +84,13 @@ namespace PF
       int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
       int line_size = r->width * ireg[0]->im->Bands;
 
+#ifndef NDEBUG
+      std::cout<<std::endl<<std::endl<<"BlenderProc::render(): blending region "
+	       <<r->left<<","<<r->top<<" x "<<r->width<<","<<r->height<<std::endl;
+#endif
 
       T* p[2];    
       T* pout;
-      T* pomap;
       int x, xomap, y;
 
       for( y = 0; y < r->height; y++ ) {
@@ -97,9 +101,7 @@ namespace PF
 	blender.init_line( omap, r->left, r->top + y );
       
 	for( x=0, xomap=0; x < line_size; ) {
-	  for( int i = 0; i < sz; i++ )
-	    pout[x+i] = p[1][x+i];
-	  blender.blend( opacity, p[0], pout, x, xomap );
+	  blender.blend( opacity, p[0], p[1], pout, x, xomap );
 	  x += sz;
 	}
       }

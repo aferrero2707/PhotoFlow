@@ -44,11 +44,14 @@ namespace PF {
 {
 #ifdef GTKMM_2
   Gtk::VBox mainBox;
+  Gtk::HBox mainHBox;
+  Gtk::HBox chselBox;
   Gtk::VBox topBox;
   Gtk::HBox nameBox;
   Gtk::HBox controlsBox;
   Gtk::VBox controlsBoxLeft;
   Gtk::VBox controlsBoxRight;
+  Gtk::Frame topFrame;
 
   Gtk::Entry nameEntry;
   Gtk::Label lname, lblendmode;
@@ -65,25 +68,33 @@ namespace PF {
 #endif
 
   Slider intensitySlider, opacitySlider;
+  Selector blendSelector;
+  Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
+
+  std::vector<PFWidget*> controls;
 
   std::list<std::string> values_save;
 
   //virtual OpParBase* get_par() = 0;
   //virtual ProcessorBase* get_processor() = 0;
 public:
-  OperationConfigDialog(const Glib::ustring& title);
+  OperationConfigDialog(Layer* layer, const Glib::ustring& title);
   virtual ~OperationConfigDialog();
 
   Gtk::VBox& get_main_box() { return mainBox; }
 
   void add_widget( Gtk::Widget& widget );
 
+  void add_control( PFWidget* control ) { controls.push_back( control ); }
+
   void on_button_clicked(int id);
 
   //void on_intensity_value_changed();
   //void on_opacity_value_changed();
 
-  virtual void open();
+  void open();
+
+  void update();
 };
 
 }

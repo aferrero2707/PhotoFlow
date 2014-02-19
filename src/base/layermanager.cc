@@ -70,6 +70,49 @@ PF::Layer* PF::LayerManager::get_layer(int id)
 }
 
 
+
+bool PF::LayerManager::get_parent_layers(Layer* layer, 
+					 std::list< std::pair<std::string,Layer*> >& plist,
+					 std::string parent_name, std::list<Layer*>& list)
+{  
+  std::cout<<"Collecting parents of layer \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
+  std::list<PF::Layer*>::iterator li = list.begin();
+  for(li = list.begin(); li != list.end(); ++li) {
+    PF::Layer* l = *li;
+    std::string name;
+    if( !parent_name.empty() ) name = parent_name + "/";
+    name = name + l->get_name();
+    std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
+    if( l->get_id() != layer->get_id() ) {
+      plist.push_back( make_pair( name, l ) );
+      std::cout<<"    added."<<std::endl;
+    }
+
+    if( get_parent_layers( layer, plist, name, l->sublayers ) )
+      return true;
+
+    if( get_parent_layers( layer, plist, name+"/IMap/", l->imap_layers ) )
+      return true;
+
+    if( get_parent_layers( layer, plist, name+"/OMap/", l->omap_layers ) )
+      return true;
+
+    if( l->get_id() == layer->get_id() ) 
+      return true;
+  }
+  return false;
+}
+
+
+void PF::LayerManager::get_parent_layers(Layer* layer, 
+					 std::list< std::pair<std::string,Layer*> >& plist)
+{
+  get_parent_layers( layer, plist, std::string(""), layers );
+}
+
+
+
+
 void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
 {  
   std::list<PF::Layer*>::iterator li = list.begin();
@@ -138,6 +181,27 @@ void PF::LayerManager::reset_dirty( std::list<Layer*>& list )
 
 
 
+bool PF::LayerManager::insert_layer( Layer* layer, int32_t lid )
+{  
+  if( lid < 0 ) {
+    layers.push_back( layer );
+    return true;
+  }
+
+  std::list<Layer*>::iterator it;
+  for( it = layers.begin(); it != layers.end(); ++it )
+    if( (*it)->get_id() == lid ) break;
+
+  if( it == layers.end() ) return false;
+  it++;
+  layers.insert( it, layer );
+
+  return true;
+}
+
+
+
+
 VipsImage* PF::LayerManager::rebuild_chain(View& view, colorspace_t cs, 
 					   int width, int height, 
 					   std::list<PF::Layer*>& list, VipsImage* previous)
@@ -154,7 +218,7 @@ VipsImage* PF::LayerManager::rebuild_chain(View& view, colorspace_t cs,
 
     // first we build the chains for the intensity and opacity maps
     VipsImage* imap = NULL;
-    std::cout<<"Layer "<<l->get_name()
+    std::cout<<"Layer \""<<l->get_name()<<"\""
 	     <<"  imap_layers.size()="<<l->imap_layers.size()
 	     <<"  omap_layers.size()="<<l->omap_layers.size()
 	     <<std::endl;
@@ -221,7 +285,33 @@ VipsImage* PF::LayerManager::rebuild_chain(View& view, colorspace_t cs,
       // operators, as it defined the accuracy at which the final image is rendered.
       if( li == list.begin() )
 	par->set_image_hints( width, height, cs, view.get_format() );
+      std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
       newimg = par->build( in, 0, imap, omap);
+      std::cout<<"... done."<<std::endl;
+      if( par->get_config_ui() ) par->get_config_ui()->update();
+    } else {
+      std::vector<VipsImage*> in;
+
+      // we add the previous image to the list of inputs, even if it is NULL
+      in.push_back( previous );
+
+      // Then we build the chain for the sub-layers, passing the previous image as the
+      // initial input
+      VipsImage* isub = NULL;
+      if( previous ) 
+	isub = rebuild_chain( view, cs, 
+			      previous->Xsize, previous->Ysize, 
+			      l->sublayers, previous );
+      else
+	isub = rebuild_chain( view, cs, 
+			      previous->Xsize, previous->Ysize, 
+			      l->sublayers, NULL );
+
+      // we add the output of the sub-layers chain to the list of inputs, even if it is NULL
+      in.push_back( isub );
+      
+      newimg = par->build( in, 0, imap, omap);
+      if( par->get_config_ui() ) par->get_config_ui()->update();
     }
 
     if( newimg ) {
@@ -286,5 +376,18 @@ bool PF::LayerManager::rebuild_all(View& view, colorspace_t cs, int width, int h
 
   reset_dirty( layers );
 
+  return true;
+}
+
+
+
+bool PF::LayerManager::save( std::ostream& ostr )
+{
+  int level = 1;
+  std::list<PF::Layer*>::iterator li;
+  for(li = layers.begin(); li != layers.end(); ++li) {
+    PF::Layer* l = *li;
+    if( !l->save( ostr, level ) ) return false;
+  }
   return true;
 }

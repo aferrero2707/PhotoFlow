@@ -28,13 +28,16 @@
  */
 
 
+#include "../operations/blender.hh"
 #include "layerwidget.hh"
 
 
 PF::LayerWidget::LayerWidget(): 
   Gtk::VBox(), 
   buttonAdd("+"),
+  buttonAddGroup("G+"),
   buttonDel("-"),
+  operationsDialog( this ),
   image( NULL )
 {
   notebook.set_tab_pos(Gtk::POS_LEFT);
@@ -53,6 +56,7 @@ PF::LayerWidget::LayerWidget():
   pack_start(notebook);
 
   buttonbox.pack_start(buttonAdd/*, Gtk::PACK_SHRINK*/);
+  buttonbox.pack_start(buttonAddGroup/*, Gtk::PACK_SHRINK*/);
   buttonbox.pack_start(buttonDel/*, Gtk::PACK_SHRINK*/);
   buttonbox.set_layout(Gtk::BUTTONBOX_START);
 
@@ -69,6 +73,8 @@ PF::LayerWidget::LayerWidget():
 
   buttonAdd.signal_clicked().connect( sigc::mem_fun(*this,
 						    &PF::LayerWidget::on_button_add) );
+  buttonAddGroup.signal_clicked().connect( sigc::mem_fun(*this,
+							 &PF::LayerWidget::on_button_add_group) );
   buttonDel.signal_clicked().connect( sigc::mem_fun(*this,
 						    &PF::LayerWidget::on_button_del) );
 }
@@ -88,6 +94,7 @@ void PF::LayerWidget::on_cell_toggled( const Glib::ustring& path )
     PF::LayerTreeColumns& columns = layer_views[page]->get_columns();
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
+    if( !l ) return;
     std::cout<<"Toggled visibility of layer \""<<l->get_name()<<"\": "<<visible<<std::endl;
     l->set_visible( visible );
     l->set_dirty( true );
@@ -107,6 +114,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     PF::LayerTreeColumns& columns = layer_views[page]->get_columns();
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
+    if( !l ) return;
     std::cout<<"Activated row "<<l->get_name()<<std::endl;
 
     PF::OperationConfigUI* dialog = l->get_processor()->get_par()->get_config_ui();
@@ -119,6 +127,72 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
 void PF::LayerWidget::on_button_add()
 {
   operationsDialog.open();
+}
+
+
+
+void PF::LayerWidget::add_layer( PF::Layer* layer )
+{
+  int page = notebook.get_current_page();
+  if( page < 0 ) page = 0;
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+    layer_views[page]->get_selection();
+  Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
+  if(iter) {//If anything is selected
+    Gtk::TreeModel::Row row = *iter;
+    PF::LayerTreeColumns& columns = layer_views[page]->get_columns();
+    PF::Layer* l = (*iter)[columns.col_layer];
+
+    Gtk::TreeModel::iterator parent = row.parent();
+    if( parent ) {
+      // this is a sub-layer of a group layer
+      PF::Layer* pl = (*parent)[columns.col_layer];
+      if( !pl ) return;
+      pl->sublayers_insert( layer, l ? l->get_id() : -1 );
+      image->get_layer_manager().modified();
+    } else {
+      
+      std::cout<<"Adding layer \""<<layer->get_name()
+	       <<" above layer \""<<l->get_name()<<"\""<<std::endl;
+      
+      image->get_layer_manager().insert_layer( layer, l->get_id() );
+      image->get_layer_manager().modified();
+    }
+  } else {
+    // Nothing selected, we add the layer on top of the stack
+    image->get_layer_manager().insert_layer( layer );
+    image->get_layer_manager().modified();
+  }
+
+  layer->signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
+
+
+  update();
+}
+
+
+
+void PF::LayerWidget::on_button_add_group()
+{
+  int page = notebook.get_current_page();
+  if( page < 0 ) return;
+  
+  PF::LayerManager& layer_manager = image->get_layer_manager();
+  PF::Layer* layer = layer_manager.new_layer();
+  if( !layer ) return;
+  layer->set_name( "New Group Layer" );
+  layer->set_normal( false );
+
+  PF::ProcessorBase* processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+  layer->set_processor( processor );
+
+  add_layer( layer );
+
+  PF::OperationConfigDialog* dialog = 
+    new PF::OperationConfigDialog( layer, Glib::ustring("Group Layer Config") );
+  processor->get_par()->set_config_ui( dialog );
+  dialog->update();
+  dialog->open();
 }
 
 

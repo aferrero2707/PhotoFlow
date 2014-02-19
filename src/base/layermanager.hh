@@ -52,6 +52,9 @@ namespace PF
 
     //VipsImage* output;
 
+    bool get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist, 
+			   std::string parent_name, std::list<Layer*>& list);
+
     // Walk through the given layer chain and set the "dirty" flag of all layers starting from "layer_id" to "true"
     void update_dirty( std::list<Layer*>& list, bool& dirty );
 
@@ -71,15 +74,21 @@ namespace PF
 
     std::list<Layer*>& get_layers() { return layers; }
 
+    void get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist);
+
     Layer* get_layer(int id);
 
     //VipsImage* get_output() { return output; }
+
+    bool insert_layer( Layer* layer, int32_t lid=-1 );
 
     bool rebuild(View& view, colorspace_t cs, int width, int height);
     bool rebuild_all(View& view, colorspace_t cs, int width, int height);
 
     sigc::signal<void> signal_modified;
     void modified() { signal_modified.emit(); }
+
+    bool save( std::ostream& ostr );
   };
 
 };

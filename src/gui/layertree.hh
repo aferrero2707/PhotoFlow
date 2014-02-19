@@ -61,6 +61,8 @@ class LayerTree : public Gtk::TreeView
   //LayerManager* layer_manager;
   std::list<Layer*>* layers;
 
+  void update_model(Gtk::TreeModel::Row parent_row);
+
 public:
   LayerTree( );
   virtual ~LayerTree();

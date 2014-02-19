@@ -263,8 +263,8 @@ main( int argc, char **argv )
 
     std::vector<VipsImage*> in;
 
-    PF::Processor<PF::ImageReader,PF::ImageReaderPar>* imgread = 
-      new PF::Processor<PF::ImageReader,PF::ImageReaderPar>();
+    PF::Processor<PF::ImageReaderPar,PF::ImageReader>* imgread = 
+      new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
     imgread->get_par()->set_file_name( argv[2] );
 
     PF::Image* pf_image = new PF::Image();
@@ -276,9 +276,9 @@ main( int argc, char **argv )
     limg->set_name( "input image" );
     layer_manager.get_layers().push_back( limg );
 
-    for(int i = 0; i < 1000; i++) {    
+    for(int i = 0; i < 0; i++) {    
       PF::Layer* linv1 = layer_manager.new_layer();
-      linv1->set_processor( new PF::Processor<PF::Invert,PF::InvertPar>() );
+      linv1->set_processor( new PF::Processor<PF::InvertPar,PF::Invert>() );
       linv1->set_name( "invert" );
       layer_manager.get_layers().push_back( linv1 );
     }
@@ -297,6 +297,8 @@ main( int argc, char **argv )
     }
 
     printf("...done\n");
+
+    delete pf_image;
 
   }
 

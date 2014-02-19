@@ -33,6 +33,8 @@
 #include <lcms2.h>
 #include <vips/vips.h>
 
+#include "property.hh"
+
 typedef cmsInt8Number int8_t;
 typedef cmsUInt8Number uint8_t;
 
@@ -76,10 +78,18 @@ namespace PF
     PF_COLORSPACE_UNKNOWN
   };
 
+  template<colorspace_t CS>
+  struct ColorspaceInfo
+  {
+    static int NCH;
+  };
+
   enum blendmode_t {
     PF_BLEND_PASSTHROUGH,
     PF_BLEND_NORMAL,
-    //PF_BLEND_OVERLAY,
+    PF_BLEND_OVERLAY,
+    PF_BLEND_MULTIPLY,
+    PF_BLEND_SCREEN,
     PF_BLEND_UNKNOWN
   };
 
@@ -91,6 +101,26 @@ namespace PF
 
 
   colorspace_t convert_colorspace(VipsInterpretation interpretation);
+
+
+
+  template<>
+  class Property<blendmode_t>: public PropertyBase
+  {
+  public:
+    Property(std::string name, OpParBase* par): PropertyBase(name, par)
+    {
+      add_enum_value(PF_BLEND_PASSTHROUGH,"PF_BLEND_PASSTHROUGH","Passthrough");
+      add_enum_value(PF_BLEND_NORMAL,"PF_BLEND_NORMAL","Normal");
+      add_enum_value(PF_BLEND_OVERLAY,"PF_BLEND_OVERLAY","Overlay");
+      add_enum_value(PF_BLEND_MULTIPLY,"PF_BLEND_MULTIPLY","Multiply");
+      add_enum_value(PF_BLEND_SCREEN,"PF_BLEND_SCREEN","Screen");
+      //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
+      //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
+      //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
+    }
+  };
+
 
 }
 

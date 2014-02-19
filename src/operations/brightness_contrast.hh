@@ -41,10 +41,17 @@ namespace PF
 #include "brightness_contrast_proc.hh"
 
 
+  /*
   template < OP_TEMPLATE_DEF > 
   class BrightnessContrast: public OperationPTP< OP_TEMPLATE_IMP, 
 						 BrightnessContrastProc<T,CS,PREVIEW,BrightnessContrastPar>, 
 						 BrightnessContrastPar >
+  {
+  };
+  */
+
+  template < OP_TEMPLATE_DEF > 
+  class BrightnessContrast: public OperationPTP< OP_TEMPLATE_IMP, BrightnessContrastPar, BrightnessContrastProc >
   {
   };
 

@@ -28,8 +28,9 @@
 
  */
 
-#include "image.hh"
+#include <fstream>
 
+#include "image.hh"
 
 void PF::Image::update()
 {
@@ -39,5 +40,21 @@ void PF::Image::update()
   }
 
   signal_modified.emit();
-  std::cout<<"signal_redraw() emitted."<<std::endl;
+  std::cout<<"PF::Image::update(): signal_modified() emitted."<<std::endl;
+}
+
+
+bool PF::Image::open( std::string filename )
+{
+}
+
+
+bool PF::Image::save( std::string filename )
+{
+  std::ofstream of;
+  of.open( filename.c_str() );
+  if( !of ) return false;
+  of<<"<image>"<<std::endl;
+  layer_manager.save( of );
+  of<<"</image>"<<std::endl;
 }

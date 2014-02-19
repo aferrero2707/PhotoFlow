@@ -31,6 +31,7 @@
 #define PF_PROPERTY_H
 
 #include <iostream>
+#include <sstream>
 #include <map>
 #include <glib-object.h>
 
@@ -60,7 +61,7 @@ namespace PF
 
     std::map< int, std::pair<std::string,std::string> > get_enum_values() { return enum_values; }
     std::pair< int, std::pair<std::string,std::string> > get_enum_value() { return enum_value; }
-    void set_enum_value(int val, std::string valstr, std::string nickname)
+    void add_enum_value(int val, std::string valstr, std::string nickname)
     {
       std::map< int, std::pair<std::string,std::string> >::iterator i = 
 	enum_values.find( val );
@@ -72,11 +73,20 @@ namespace PF
       }
     }
 
+    void set_enum_value(int val)
+    {
+      std::map< int, std::pair<std::string,std::string> >::iterator i = 
+	enum_values.find( val );
+      if( i != enum_values.end() ) {
+	enum_value = (*i);
+      }
+    }
+
     virtual void set_str(const std::string& val);
     virtual std::string get_str();
 
-    virtual void set_from_stream(std::istream& str);
-    virtual void get_from_stream(std::ostream& str);
+    virtual void from_stream(std::istream& str);
+    virtual void to_stream(std::ostream& str);
 
     virtual void set_gobject(gpointer object);
 
@@ -111,6 +121,16 @@ namespace PF
   std::ostream& operator <<(std::ostream& str, PropertyBase& p);
 
 
+  template<typename T>
+  void set_gobject_property(gpointer object, const std::string name, const T& value)
+  {
+    g_object_set( object, name.c_str(), value, NULL );
+  }
+
+
+  template<>
+  void set_gobject_property<std::string>(gpointer object, const std::string name, const std::string& value);
+
   template< typename T >
   class Property: public PropertyBase
   {
@@ -120,23 +140,21 @@ namespace PF
     Property(std::string name, OpParBase* par, const T& v): PropertyBase(name, par), value(v) {}
     void set(const T& newval) { value = newval; }
     T& get() { return value; }
-    void set_from_stream(std::istream& str)
+    void from_stream(std::istream& str)
     {
       str>>value;
     }
-    void get_from_stream(std::ostream& str)
+    void to_stream(std::ostream& str)
     {
       str<<value;
     }
 
     void set_gobject(gpointer object)
     {
-      g_object_set( object, get_name().c_str(), value, NULL );
+      //g_object_set( object, get_name().c_str(), value, NULL );
+      set_gobject_property( object, get_name(), value );
     }
    };
-
-
-
 }
 
 

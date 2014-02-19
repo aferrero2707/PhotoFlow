@@ -49,6 +49,7 @@
 #include "../operations/brightness_contrast.hh"
 #include "../operations/invert.hh"
 #include "../operations/gradient.hh"
+#include "../operations/convert2rgb.hh"
 
 #include "../gui/operations/brightness_contrast_config.hh"
 #include "../gui/operations/imageread_config.hh"
@@ -59,6 +60,19 @@ using namespace vips;
 /* We need the C API as well for the region stuff.
  */
 #include <vips/vips.h>
+
+static int
+image_posteval_test( VipsImage *image, VipsProgress *progress )
+{
+  /* Spaces at end help to erase the %complete message we overwrite.
+   */
+  printf( "%s %s: done in %.3gs          \n" , 
+	  g_get_prgname(), image->filename, 
+	  g_timer_elapsed( progress->start, NULL ) );
+
+  return( 0 );
+}
+
 
 /* Subclass DrawingArea to make a widget that displays a VImage.
  */
@@ -85,8 +99,11 @@ private:
    */
   VipsRegion* mask_region;
 
+  PF::ProcessorBase* convert2srgb;
+
   //PF::LayerManager* layer_manager;
-  PF::Image* pf_image;
+  //PF::Image* pf_image;
+  PF::View* view;
 
   /* We send this packet of data from the bg worker thread to the main GUI
    * thread when a tile has been calculated.
@@ -230,162 +247,100 @@ private:
 
     get_window()->set_back_pixmap( Glib::RefPtr<Gdk::Pixmap>(), FALSE );
     set_double_buffered( FALSE );
+
+    Gtk::Allocation allocation = get_allocation();
+    std::cout<<"DrawingArea size: "<<allocation.get_width()<<","
+	     <<allocation.get_height()<<std::endl;
+
   }
 
 public:
   ImageArea ()
   {
     image = NULL;
+    view = NULL;
     display_image = NULL;
     region = NULL;
     mask = NULL;
     mask_region = NULL;
+    convert2srgb = new PF::Processor<PF::Convert2RGBPar,PF::Convert2RGBProc>();
   }
 
   virtual ~ ImageArea ()
   {
+    std::cout<<"Deleting image area"<<std::endl;
     VIPS_UNREF( mask_region );
     VIPS_UNREF( mask );
     VIPS_UNREF( region );
     VIPS_UNREF( display_image );
-    VIPS_UNREF( image );
+    //VIPS_UNREF( image );
+    delete convert2srgb;
+    //delete pf_image;
   }
 
   //PF::LayerManager* get_layer_manager() { return layer_manager; }
-  PF::Image* get_image() { return pf_image; }
+  //PF::Image* get_image() { return pf_image; }
 
-  void
-  set_image (char* filename)
+  void set_view( PF::View* v ) { view = v; }
+
+  bool on_resize(GdkEventConfigure* event) 
   {
-    std::vector<VipsImage*> in;
+    Gtk::Allocation allocation = get_allocation();
+    std::cout<<"on_resize(): DrawingArea size =    "<<allocation.get_width()<<","
+	     <<allocation.get_height()<<std::endl;
+    std::cout<<"             ScrolledWindow size = "<<get_parent()->get_allocation().get_width()<<","
+	     <<get_parent()->get_allocation().get_height()<<std::endl;
 
-    /**/
-    //PF::LayerManager* lm 
-    //layer_manager = new PF::LayerManager();
-    pf_image = new PF::Image();
-    PF::PhotoFlow::Instance().set_image( pf_image );
+    update_image();
 
-    pf_image->add_view( VIPS_FORMAT_UCHAR, 0 );
-    PF::LayerManager& layer_manager = pf_image->get_layer_manager();
-
-
-    PF::Processor<PF::ImageReader,PF::ImageReaderPar>* imgread = 
-      new PF::Processor<PF::ImageReader,PF::ImageReaderPar>();
-    imgread->get_par()->set_file_name( filename );
-
-    PF::Layer* limg = layer_manager.new_layer();
-    limg->set_processor( imgread );
-    limg->set_name( "input image" );
-
-    PF::ImageReadConfigDialog* img_config = 
-      new PF::ImageReadConfigDialog();
-    imgread->get_par()->set_config_ui( img_config );
-    img_config->set_layer( limg );
-    //img_config->set_image( pf_image );
-
-    layer_manager.get_layers().push_back( limg );
-
-
-    /*
-    //PF::ProcessorBase* invert = 
-    //  new PF::Processor<PF::Invert,PF::InvertPar>();
-
-    PF::Processor<PF::BrightnessContrast,PF::BrightnessContrastPar>* bc = 
-      new PF::Processor<PF::BrightnessContrast,PF::BrightnessContrastPar>();
-    bc->get_par()->set_brightness(0.2);
-    //bc->get_par()->set_contrast(0.5);
-    bc->get_par()->set_opacity(0.5);
-    bc->get_par()->set_blend_mode(PF::PF_BLEND_NORMAL);
-
-    PF::Processor<PF::Gradient,PF::GradientPar>* gradient = 
-      new PF::Processor<PF::Gradient,PF::GradientPar>();
-
-    PF::Processor<PF::VipsOperationProc,PF::VipsOperationPar>* vips_op = 
-      new PF::Processor<PF::VipsOperationProc,PF::VipsOperationPar>();
-    vips_op->get_par()->set_op( "gamma" );
-
-    PF::Layer* lbc = layer_manager.new_layer();
-    lbc->set_processor( bc );
-    lbc->set_name( "brightness/contrast" );
-
-    PF::BrightnessContrastConfigDialog* bc_config = 
-      new PF::BrightnessContrastConfigDialog();
-    bc->get_par()->set_config_ui( bc_config );
-    bc_config->set_layer( lbc );
-    //bc_config->set_image( pf_image );
-
-    PF::Layer* lgrad = layer_manager.new_layer();
-    lgrad->set_processor( gradient );
-    lgrad->set_name( "vertical gradient" );
-
-    PF::Layer* linv1 = layer_manager.new_layer();
-    linv1->set_processor( new PF::Processor<PF::Invert,PF::InvertPar>() );
-    linv1->set_name( "invert 1" );
-
-    PF::Layer* lvips = layer_manager.new_layer();
-    lvips->set_processor( vips_op );
-    lvips->set_name( "VIPS gamma adjustment" );
-
-    PF::VipsOperationConfigDialog* vips_config = 
-      new PF::VipsOperationConfigDialog();
-    vips_op->get_par()->set_config_ui( vips_config );
-    vips_config->set_layer( lvips );
-    //vips_config->set_image( pf_image );
-    vips_config->set_op( "gamma" );
-    */
-
-
-    //lbc->imap_insert( lgrad );
-    //layer_manager.get_layers().push_back( lbc );
-    //layer_manager.get_layers().push_back( linv1 );
-    //layer_manager.get_layers().push_back( lvips );
-
-
-    pf_image->signal_modified.connect( sigc::mem_fun(this, &ImageArea::update_image) );
-
-
-    pf_image->update();
-    //layer_manager->build_chain( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
-
-    //layer_manager->rebuild_all( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
-    //update_image();
-    /*
-    display_image = im_open( "display_image", "p" );
-
-    VipsImage* out = layer_manager->get_output();
-    if(out) {
-      if (vips_sink_screen (out, display_image, NULL,
-          64, 64, (2000/64)*(2000/64), 0, sink_notify, this))
-  verror ();
-      
-      
-      region = vips_region_new (display_image);
-      std::cout<<"Image size: "<<display_image->Xsize<<","<<display_image->Ysize<<std::endl;
-      set_size_request (display_image->Xsize, display_image->Ysize);
-    }
-    */
+    return false;
   }
 
   void update_image() {
-    PF::View* view = pf_image->get_view(0);
+    //PF::View* view = pf_image->get_view(0);
 
     if( !view || !view->get_output() ) return;
 
-    VIPS_UNREF( image );
+    VipsImage* outimg;
     image = view->get_output();
-    g_object_ref( image );
+    outimg = image;
 
     VIPS_UNREF( display_image ); 
     VIPS_UNREF( mask ); 
 
+    /**/
+    std::vector<VipsImage*> in; in.push_back( image );
+    VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL );
+    //g_object_unref( image );
+    outimg = srgbimg;
+    /**/
+
+    /*
+    VipsImage* srgbimg2;
+    vips_cast( srgbimg, &srgbimg2, VIPS_FORMAT_UCHAR, NULL );
+    g_object_unref( srgbimg );
+
+    outimg = srgbimg2;
+
+    */
+    
+
     display_image = im_open( "display_image", "p" );
+
+
     mask = vips_image_new();
 
-    if (vips_sink_screen (image, display_image, mask,
+    /**/
+    if (vips_sink_screen (outimg, display_image, mask,
         64, 64, (2000/64)*(2000/64), 0, sink_notify, this))
       verror ();
-    
-    
+    /*
+    if (vips_sink_screen (srgbimg, display_image, mask,
+			  64, 64, (2000/64)*(2000/64), 0, NULL, this))
+      verror ();
+    */
+    g_object_unref( outimg );
+  
     VIPS_UNREF( region ); 
     region = vips_region_new (display_image);
     std::cout<<"Image size: "<<display_image->Xsize<<","

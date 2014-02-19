@@ -53,7 +53,7 @@ namespace PF {
   Slider brightnessSlider, contrastSlider;
 
 public:
-  BrightnessContrastConfigDialog();
+  BrightnessContrastConfigDialog( Layer* l );
 
   void on_brightness_value_changed();
   void on_contrast_value_changed();

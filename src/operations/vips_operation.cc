@@ -136,13 +136,13 @@ static int usage( const char *operation_name, PF::VipsOperationPar* par )
 
 
 PF::VipsOperationPar::VipsOperationPar(): 
-  PF::OpParBase()
+  PF::BlenderPar()
 {
   set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
   //blender = new PF::Processor<PF::BlenderProc,PF::BlenderPar>();
   //set_opacity(0.5);
-  PF::PropertyBase* p = blender.get_par()->get_property( "opacity" );
-  if(p) map_property( p );
+  //PF::PropertyBase* p = blender.get_par()->get_property( "opacity" );
+  //if(p) map_property( p );
 }
 
 
@@ -150,6 +150,8 @@ void PF::VipsOperationPar::set_op(std::string name)
 {
   op_name = name;
   usage( op_name.c_str(), this );
+  
+  set_type( std::string("vips-")+name );
 }
 
 
@@ -256,7 +258,7 @@ void PF::VipsOperationPar::add_argument( GParamSpec *pspec, VipsArgumentClass *a
 	      i, 
 	      pspec_enum->enum_class->values[i].value_nick,
 	      pspec_enum->enum_class->values[i].value_name );
-      prop->set_enum_value( i, pspec_enum->enum_class->values[i].value_name,
+      prop->add_enum_value( i, pspec_enum->enum_class->values[i].value_name,
 			    pspec_enum->enum_class->values[i].value_nick );
     }
     printf( "\t\tdefault = %d\n", pspec_enum->default_value ); 
@@ -360,7 +362,9 @@ VipsImage* PF::VipsOperationPar::build(std::vector<VipsImage*>& in, int first,
   in2.push_back( in[first] );
   in2.push_back( out );
   
-  out = blender.get_par()->build( in2, 0, imap, omap );
+  VipsImage* out2 = PF::BlenderPar::build( in2, 0, NULL, omap );
+  VIPS_UNREF( in[first] );
+  VIPS_UNREF( out );
 
-  return out;
+  return out2;
 }

@@ -47,7 +47,7 @@ namespace PF {
 
     std::string op_name;
   public:
-    VipsOperationConfigDialog();
+    VipsOperationConfigDialog( Layer* layer );
     void add_argument( GParamSpec *pspec, VipsArgumentClass *argument_class );
     void set_op(std::string name);
   };
