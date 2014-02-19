@@ -1,0 +1,180 @@
+<image>
+  <layer name="input image" id="0" visible="1" normal="1" extra_inputs="">
+    <operation type="imageread">
+      <property name="blend_mode" value="PF_BLEND_PASSTHROUGH">
+      </property>
+      <property name="intensity" value="1">
+      </property>
+      <property name="opacity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="file_name" value="lena512color.jpg">
+      </property>
+    </operation>
+    <sublayers type="imap">
+    </sublayers>
+    <sublayers type="omap">
+    </sublayers>
+    <sublayers type="child">
+    </sublayers>
+  </layer>
+  <layer name="Orton effect" id="1" visible="1" normal="0" extra_inputs="">
+    <operation type="blender">
+      <property name="blend_mode" value="PF_BLEND_NORMAL">
+      </property>
+      <property name="intensity" value="1">
+      </property>
+      <property name="opacity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+    </operation>
+    <sublayers type="imap">
+    </sublayers>
+    <sublayers type="omap">
+    </sublayers>
+    <sublayers type="child">
+      <layer name="screen blend" id="2" visible="1" normal="1" extra_inputs="0">
+        <operation type="clone">
+          <property name="blend_mode" value="PF_BLEND_SCREEN">
+          </property>
+          <property name="intensity" value="1">
+          </property>
+          <property name="opacity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+        </operation>
+        <sublayers type="imap">
+        </sublayers>
+        <sublayers type="omap">
+        </sublayers>
+        <sublayers type="child">
+        </sublayers>
+      </layer>
+      <layer name="Blurred" id="3" visible="1" normal="0" extra_inputs="">
+        <operation type="blender">
+          <property name="blend_mode" value="PF_BLEND_MULTIPLY">
+          </property>
+          <property name="intensity" value="1">
+          </property>
+          <property name="opacity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+        </operation>
+        <sublayers type="imap">
+        </sublayers>
+        <sublayers type="omap">
+        </sublayers>
+        <sublayers type="child">
+          <layer name="background copy" id="4" visible="1" normal="1" extra_inputs="0">
+            <operation type="clone">
+              <property name="blend_mode" value="PF_BLEND_PASSTHROUGH">
+              </property>
+              <property name="intensity" value="1">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+            </operation>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+            </sublayers>
+            <sublayers type="child">
+            </sublayers>
+          </layer>
+          <layer name="gassian blur" id="5" visible="1" normal="1" extra_inputs="">
+            <operation type="vips-gaussblur">
+              <property name="blend_mode" value="PF_BLEND_PASSTHROUGH">
+              </property>
+              <property name="intensity" value="1">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="radius" value="10">
+              </property>
+              <property name="precision" value="VIPS_PRECISION_INTEGER">
+              </property>
+            </operation>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+            </sublayers>
+            <sublayers type="child">
+            </sublayers>
+          </layer>
+          <layer name="brightness adjustment" id="6" visible="1" normal="1" extra_inputs="">
+            <operation type="brightness_contrast">
+              <property name="blend_mode" value="PF_BLEND_PASSTHROUGH">
+              </property>
+              <property name="intensity" value="1">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="brightness" value="0.2">
+              </property>
+              <property name="contrast" value="0">
+              </property>
+            </operation>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+            </sublayers>
+            <sublayers type="child">
+            </sublayers>
+          </layer>
+        </sublayers>
+      </layer>
+    </sublayers>
+  </layer>
+</image>
