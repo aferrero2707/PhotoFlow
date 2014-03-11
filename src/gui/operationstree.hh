@@ -79,10 +79,12 @@ namespace PF {
     Gtk::ScrolledWindow op_tree_box;
     OperationsTree op_tree;
 
+    Image* image;
+
     LayerWidget* layer_widget;
 
   public:
-    OperationsTreeDialog(LayerWidget* layer_widget);
+    OperationsTreeDialog(Image* image, LayerWidget* layer_widget);
     virtual ~OperationsTreeDialog();
 
     void on_button_clicked(int id);

@@ -27,37 +27,41 @@
 
  */
 
-#ifndef PF_WIDGET_HH
-#define PF_WIDGET_HH
+#ifndef CURVES_CONFIG_DIALOG_HH
+#define CURVES_CONFIG_DIALOG_HH
 
-#include "../../base/image.hh"
+#include "../operation_config_dialog.hh"
+#include "../../operations/curves.hh"
+#include "../widgets/curveeditor.hh"
 
 namespace PF {
 
-  class PFWidget
-  {
-    bool inhibit;
-    OperationConfigUI* dialog;
-    std::string pname;
-    PropertyBase* property;
+  class CurvesConfigDialog: public OperationConfigDialog
+{
+ #ifdef GTKMM_2
+  Gtk::HBox curvesBox;
+  Gtk::HBox selectorsBox;
+#endif
 
-  public:
-    PFWidget(OperationConfigUI* d, std::string n);
+ Gtk::ComboBoxText rgbCurveSelector, labCurveSelector, cmykCurveSelector;
 
-    sigc::signal<void> value_changed;
+  CurveEditor rgbCurveEditor;
+  CurveEditor RCurveEditor;
+  CurveEditor GCurveEditor;
+  CurveEditor BCurveEditor;
 
-    void set_inhibit( bool val ) { inhibit = val; }
+  CurveEditor LCurveEditor;
+  CurveEditor aCurveEditor;
+  CurveEditor bCurveEditor;
 
-    PropertyBase* get_prop() { return property; }
+public:
+  CurvesConfigDialog(Layer* layer);
+  virtual ~CurvesConfigDialog();
 
-    void init();
+  void switch_curve();
 
-    virtual void get_value() = 0;
-    virtual void set_value() = 0;
-
-    void changed();
- };
-
+  void update();
+};
 
 }
 

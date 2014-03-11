@@ -214,9 +214,9 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
 					   pspec_int->minimum,
 					   pspec_int->maximum,
 					   1, 5, 1);
-      slider->init();
+      //slider->init();
       get_main_box().pack_start( *slider, Gtk::PACK_SHRINK );
-      add_control( slider );
+      //add_control( slider );
       /*
     } else {
       PF::TextBox* txtbox = new PF::TextBox( this, g_param_spec_get_name( pspec ),
@@ -242,9 +242,9 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
     PF::TextBox* txtbox = new PF::TextBox( this, g_param_spec_get_name( pspec ),
 					   g_param_spec_get_nick( pspec ), 
 					   pspec_uint64->default_value);
-    txtbox->init();
+    //txtbox->init();
     get_main_box().pack_start( *txtbox, Gtk::PACK_SHRINK );
-    add_control( txtbox );
+    //add_control( txtbox );
   }
   else if( G_IS_PARAM_SPEC_DOUBLE( pspec ) ) {
     GParamSpecDouble *pspec_double = G_PARAM_SPEC_DOUBLE( pspec ); 
@@ -263,9 +263,9 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
 					   pspec_double->minimum,
 					   pspec_double->maximum,
 					   0.1, 0.5, 1);
-      slider->init();
+      //slider->init();
       get_main_box().pack_start( *slider, Gtk::PACK_SHRINK );
-      add_control( slider );
+      //add_control( slider );
       /*
     } else {
       PF::TextBox* txtbox = new PF::TextBox( this, g_param_spec_get_name( pspec ),
@@ -291,9 +291,9 @@ void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumen
     printf( "\t\tdefault = %d\n", pspec_enum->default_value ); 
     PF::Selector* selector = new PF::Selector( this, g_param_spec_get_name( pspec ),
 					     g_param_spec_get_nick( pspec ), 1);
-    selector->init();
+    //selector->init();
     get_main_box().pack_start( *selector, Gtk::PACK_SHRINK );
-    add_control( selector );
+    //add_control( selector );
   }
   else if( G_IS_PARAM_SPEC_BOXED( pspec ) ) {
     if( g_type_is_a( otype, VIPS_TYPE_ARRAY_INT ) ) {

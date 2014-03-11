@@ -58,7 +58,7 @@ namespace PF
     {
       if( !img ) return;
       OpParBase::set_image_hints( img );
-      lab_image( get_xsize(), get_ysize(), get_format() );
+      lab_image( get_xsize(), get_ysize() );
     }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);

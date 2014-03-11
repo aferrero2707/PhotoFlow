@@ -44,6 +44,8 @@ namespace PF {
 
 class LayerWidget : public Gtk::VBox
 {
+  Image* image;
+
   Gtk::Notebook notebook;
   Gtk::HButtonBox buttonbox;
   Gtk::Button buttonAdd, buttonAddGroup, buttonDel;
@@ -53,18 +55,18 @@ class LayerWidget : public Gtk::VBox
   std::vector<Gtk::ScrolledWindow*> layer_frames;
   std::vector<LayerTree*> layer_views;
 
-  Image* image;
-
 public:
-  LayerWidget(  );
+  LayerWidget( Image* image );
   virtual ~LayerWidget( );
 
   Image* get_image() { return image; }
+  /*
   void set_image( Image* img ) { 
     image = img; 
     layer_views[0]->set_layers( &(image->get_layer_manager().get_layers()) );
     image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
   }
+  */
 
   void add_layer( Layer* layer );
 

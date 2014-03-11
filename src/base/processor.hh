@@ -203,12 +203,17 @@ namespace PF
 
   template< class OPPAR, template < OP_TEMPLATE_DEF > class OP >
   void Processor<OPPAR,OP>::process(VipsRegion** in, int n, int in_first,
-			      VipsRegion* imap, VipsRegion* omap, 
-			      VipsRegion* out)
+				    VipsRegion* imap, VipsRegion* omap, 
+				    VipsRegion* out)
   {
     BandFormat fmt = PF_BANDFMT_UNKNOWN;
     colorspace_t colorspace = PF_COLORSPACE_UNKNOWN;
-    
+
+    fmt = (PF::BandFormat)op_par.get_format();
+    //std::cout<<"Processor<OPPAR,OP>::process(): format = "<<fmt<<std::endl;
+    colorspace = PF::convert_colorspace( op_par.get_interpretation() );
+
+    /*    
     if(out) {
       fmt = (BandFormat)out->im->BandFmt;
       colorspace = PF::convert_colorspace(out->im->Type);
@@ -219,6 +224,7 @@ namespace PF
 	//interpret = in[0]->image->Type;
       }
     }
+    */
 
     int mapflag = 0;
     if(imap) mapflag += 1;
@@ -248,7 +254,6 @@ namespace PF
       break;
     }
   }
-
 
 }
 

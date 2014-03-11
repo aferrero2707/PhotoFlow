@@ -202,10 +202,14 @@ bool PF::LayerManager::insert_layer( Layer* layer, int32_t lid )
 
 
 
-VipsImage* PF::LayerManager::rebuild_chain(View& view, colorspace_t cs, 
-					   int width, int height, 
-					   std::list<PF::Layer*>& list, VipsImage* previous)
-{  
+VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs, 
+					    int width, int height, 
+					    std::list<PF::Layer*>& list, 
+					    PF::Layer* previous_layer )
+{ 
+  ViewNode* previous_node = NULL;
+  VipsImage* previous = NULL;
+
   VipsImage* out = NULL;
   std::list<PF::Layer*>::iterator li = list.begin();
   for(li = list.begin(); li != list.end(); ++li) {
@@ -213,7 +217,18 @@ VipsImage* PF::LayerManager::rebuild_chain(View& view, colorspace_t cs,
     if( !l->is_visible() ) 
       continue;
 
+    if( previous_layer ) {
+      previous_node = view->get_node( previous_layer->get_id() );
+      if( previous_node ) previous = previous_node->image;
+    }
+
     OpParBase* par = l->get_processor()->get_par();
+    if( par ) {
+      std::cout<<"PF::LayerManager::rebuild_chain(): setting format for layer "<<l->get_name()
+	       <<" to "<<view->get_format()<<std::endl;
+      par->set_format( view->get_format() );
+    }
+
     char* name = (char*)l->get_name().c_str();
 
     // first we build the chains for the intensity and opacity maps
@@ -268,23 +283,32 @@ VipsImage* PF::LayerManager::rebuild_chain(View& view, colorspace_t cs,
 	// If the extra input layer is not found we have a problem, better to give up
 	// with an error.
 	if( !lextra ) return false;
-	VipsImage* extra_img = lextra->get_processor()->get_par()->get_image();
+	PF::ViewNode* extra_node = view->get_node( lextra->get_id() );
+	if( !extra_node ) return false;
+	VipsImage* extra_img = extra_node->image;
+	//VipsImage* extra_img = lextra->get_processor()->get_par()->get_image();
 	// Similarly, if the extra input layer has no valid image associated to it
 	// we have a problem and we gve up
 	if( !extra_img ) return false;
 	in.push_back( extra_img );
       }
 
-      // If the layer is at the beginning of the chain, we set some useful hints about
-      // how to generate the image (colorspace and pixel format)
       // If the layer is at the beginning of the chain, we set hints about the desired
-      // colorspace and pixel format. The size and colorspace hints might be ignored by
+      // colorspace and pixel format using default values. 
+      // The size and colorspace hints might be ignored by
       // the operation (for example in the case of an image from a file, where the
       // size and colorspace are dictated by the file content).
       // On the other hand, the pixel format hint should be strictly respected by all 
       // operators, as it defined the accuracy at which the final image is rendered.
+      // If a previous image has been created already, hints are copied from it.
       if( li == list.begin() )
-	par->set_image_hints( width, height, cs, view.get_format() );
+	par->set_image_hints( width, height, cs );
+      /* Not needed, already called by vips_layer_build() from src/vips/layer.cc
+      else if( previous )
+	par->set_image_hints( previous );
+      */
+
+      if( par->get_config_ui() ) par->get_config_ui()->update_properties();
       std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
       newimg = par->build( in, 0, imap, omap);
       std::cout<<"... done."<<std::endl;
@@ -301,7 +325,7 @@ VipsImage* PF::LayerManager::rebuild_chain(View& view, colorspace_t cs,
       if( previous ) 
 	isub = rebuild_chain( view, cs, 
 			      previous->Xsize, previous->Ysize, 
-			      l->sublayers, previous );
+			      l->sublayers, previous_layer );
       else
 	isub = rebuild_chain( view, cs, 
 			      previous->Xsize, previous->Ysize, 
@@ -310,41 +334,60 @@ VipsImage* PF::LayerManager::rebuild_chain(View& view, colorspace_t cs,
       // we add the output of the sub-layers chain to the list of inputs, even if it is NULL
       in.push_back( isub );
       
+      if( par->get_config_ui() ) par->get_config_ui()->update_properties();
+      std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
       newimg = par->build( in, 0, imap, omap);
+      std::cout<<"... done."<<std::endl;
       if( par->get_config_ui() ) par->get_config_ui()->update();
     }
 
     if( newimg ) {
-      view.set_image( newimg, l->get_id() );
+      if( previous_layer )
+	view->set_node( newimg, l->get_id(), previous_layer->get_id() );
+      else
+	view->set_node( newimg, l->get_id(), -1 );
       //view.set_output( newimg );
       out = newimg;
-      previous = newimg;
+      //previous = newimg;
+      previous_layer = l;
     }
   }
   return out;
 }
 
 
-bool PF::LayerManager::rebuild(View& view, colorspace_t cs, int width, int height)
+bool PF::LayerManager::rebuild_prepare()
 {
-  bool result;
+  std::cout<<"PF::LayerManager::rebuild_prepare(): layers.size()="<<layers.size()<<std::endl;
   bool dirty = false;
   update_dirty( layers, dirty );
 
   if( !dirty ) {
     return false;
   }
-
-  VipsImage* output = rebuild_chain( view, cs, width, height, layers, NULL );
-  view.set_output( output );
-
-  reset_dirty( layers );
-
   return true;
 }
 
 
-bool PF::LayerManager::rebuild_all(View& view, colorspace_t cs, int width, int height)
+bool PF::LayerManager::rebuild(View* view, colorspace_t cs, int width, int height)
+{
+  VipsImage* output = rebuild_chain( view, cs, width, height, layers, NULL );
+  view->set_output( output );
+  view->update();
+  return true;
+}
+
+
+bool PF::LayerManager::rebuild_finalize()
+{
+  reset_dirty( layers );
+  return true;
+}
+
+
+
+
+bool PF::LayerManager::rebuild_all(View* view, colorspace_t cs, int width, int height)
 {
   if( layers.empty() )
     return true;
@@ -372,7 +415,7 @@ bool PF::LayerManager::rebuild_all(View& view, colorspace_t cs, int width, int h
   }
 
   VipsImage* output  = rebuild_chain( view, cs, width, height, layers, NULL );
-  view.set_output( output );
+  view->set_output( output );
 
   reset_dirty( layers );
 

@@ -29,6 +29,15 @@
 
 #include "operation_config_dialog.hh"
 
+#include "../base/new_operation.hh"
+
+#include "../gui/operations/brightness_contrast_config.hh"
+#include "../gui/operations/imageread_config.hh"
+#include "../gui/operations/vips_operation_config.hh"
+#include "../gui/operations/clone_config.hh"
+#include "../gui/operations/curves_config.hh"
+
+
 
 PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::ustring& title):
   PF::OperationConfigUI(layer),
@@ -71,7 +80,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   //nameBox.pack_end( lblendmode, Gtk::PACK_SHRINK );
   //nameBox.pack_end( lblendmode, Gtk::PACK_EXPAND_PADDING, 10 );
 
-  blendSelector.init();
+  //blendSelector.init();
   nameBox.pack_end( blendSelector );
 
   topBox.pack_start( nameBox, Gtk::PACK_SHRINK );
@@ -101,13 +110,13 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   controlsBox.pack_start( controlsBoxLeft, Gtk::PACK_SHRINK );
   topBox.pack_start( controlsBox );
 
-  greychSelector.init(); 
+  //greychSelector.init(); 
   chselBox.pack_start( greychSelector, Gtk::PACK_SHRINK );
-  rgbchSelector.init(); 
+  //rgbchSelector.init(); 
   chselBox.pack_start( rgbchSelector, Gtk::PACK_SHRINK );
-  labchSelector.init(); 
+  //labchSelector.init(); 
   chselBox.pack_start( labchSelector, Gtk::PACK_SHRINK );
-  cmykchSelector.init(); 
+  //cmykchSelector.init(); 
   chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
 
   topBox.pack_start( chselBox );
@@ -138,6 +147,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   // topBox.show();
   // mainBox.show();
 
+  /*
   add_control( &intensitySlider );
   add_control( &opacitySlider );
   add_control( &blendSelector );
@@ -145,7 +155,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   add_control( &rgbchSelector );
   add_control( &labchSelector );
   add_control( &cmykchSelector );
-
+  */
 
   show_all_children();
 }
@@ -164,6 +174,13 @@ void PF::OperationConfigDialog::add_widget( Gtk::Widget& widget )
 }
 
 
+void PF::OperationConfigDialog::init()
+{
+  for( int i = 0; i < controls.size(); i++ )
+    controls[i]->init();
+}
+
+
 void PF::OperationConfigDialog::open()
 {
   for( int i = 0; i < controls.size(); i++ )
@@ -172,15 +189,11 @@ void PF::OperationConfigDialog::open()
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
-    PF::OpParBase* par = get_layer()->get_processor()->get_par();
-    //intensityAdj.set_value( par->get_intensity()*100 );
-    //opacityAdj.set_value( par->get_opacity()*100 );
-    intensitySlider.init();
-    opacitySlider.init();
+
     nameEntry.set_text( get_layer()->get_name().c_str() );
     
     values_save.clear();
-    par->save_properties( values_save );
+    get_layer()->get_processor()->get_par()->save_properties( values_save );
     std::cout<<"Saved property values:"<<std::endl;
     for( std::list<std::string>::iterator i = values_save.begin();
 	 i != values_save.end(); i++ ) {
@@ -215,25 +228,26 @@ void PF::OperationConfigDialog::update()
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
       chselBox.pack_start( greychSelector, Gtk::PACK_SHRINK );
-      //greychSelector.show();
+      greychSelector.show();
       break;
     case PF_COLORSPACE_RGB:
       chselBox.pack_start( rgbchSelector, Gtk::PACK_SHRINK );
-      //rgbchSelector.show();
+      rgbchSelector.show();
       break;
     case PF_COLORSPACE_LAB:
       chselBox.pack_start( labchSelector, Gtk::PACK_SHRINK );
-      //labchSelector.show();
+      labchSelector.show();
       break;
     case PF_COLORSPACE_CMYK:
       chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
-      //cmykchSelector.show();
+      cmykchSelector.show();
       break;
     default:
       break;
     }
   }
 
+  /*
   // force our program to redraw the entire clock.
   Glib::RefPtr<Gdk::Window> win = get_window();
   if (win) {
@@ -242,6 +256,15 @@ void PF::OperationConfigDialog::update()
     win->invalidate_rect(r, false);
   }
   queue_draw();
+  */
+}
+
+
+void PF::OperationConfigDialog::update_properties()
+{
+  for( unsigned int i = 0; i < controls.size(); i++ ) {
+    controls[i]->set_value();
+  }
 }
 
 
@@ -300,3 +323,63 @@ void PF::OperationConfigDialog::on_opacity_value_changed()
   }
 }
 */
+
+
+
+PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* current_layer )
+{
+  if( !current_layer ) return NULL;
+  PF::ProcessorBase* processor = PF::new_operation( op_type, current_layer );
+  if( !processor ) return NULL;
+
+  PF::OperationConfigDialog* dialog;
+
+  if( op_type == "imageread" ) { 
+
+    dialog = new PF::ImageReadConfigDialog( current_layer );
+
+  } else if( op_type == "blender" ) {
+
+    dialog = new PF::OperationConfigDialog( current_layer, "Layer Group" );
+
+  } else if( op_type == "clone" ) {
+
+    dialog = new PF::CloneConfigDialog( current_layer );
+
+  } else if( op_type == "invert" ) {
+
+    dialog = new PF::OperationConfigDialog( current_layer, "Invert Image" );
+
+  } else if( op_type == "brightness_contrast" ) {
+
+    dialog = new PF::BrightnessContrastConfigDialog( current_layer );
+
+  } else if( op_type == "curves" ) {
+      
+    dialog = new PF::CurvesConfigDialog( current_layer );
+
+  } else if( op_type == "convert2lab" ) {
+
+    dialog = new PF::OperationConfigDialog( current_layer, "Convert to Lab colororspace" );
+
+  } else { // it must be a VIPS operation...
+
+    int pos = op_type.find( "vips-" );
+    if( pos != 0 ) return NULL;
+    std::string vips_op_type;
+    vips_op_type.append(op_type.begin()+5,op_type.end());
+
+    PF::VipsOperationConfigDialog* vips_config = 
+      new PF::VipsOperationConfigDialog( current_layer );
+    vips_config->set_op( vips_op_type.c_str() );
+    dialog = vips_config;
+  }
+
+  if( processor ) {
+    PF::OpParBase* current_op = processor->get_par();
+    if( current_op && dialog )
+      current_op->set_config_ui( dialog );
+  }
+
+  return processor;
+}

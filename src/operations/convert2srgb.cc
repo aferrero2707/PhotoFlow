@@ -28,7 +28,7 @@
  */
 
 
-#include "convert2rgb.hh"
+#include "convert2srgb.hh"
 
 
 static cmsUInt32Number vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE pin )
@@ -127,20 +127,20 @@ static void lcms2ErrorLogger(cmsContext ContextID, cmsUInt32Number ErrorCode, co
 }
 
 
-PF::Convert2RGBPar::Convert2RGBPar(): 
+PF::Convert2sRGBPar::Convert2sRGBPar(): 
   OpParBase(),
   profile_in( NULL ),
   profile_out( NULL ),
   transform( NULL )
 {
-  profile_out = cmsOpenProfileFromFile( "/usr/share/color/icc/sRGB.icc", "r" );
+  profile_out = cmsCreate_sRGBProfile();
   cmsSetLogErrorHandler( lcms2ErrorLogger );
 
-  set_type( "convert2rgb" );
+  set_type( "convert2srgb" );
 }
 
 
-VipsImage* PF::Convert2RGBPar::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
+VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
 {
   void *data;
   size_t data_length;

@@ -31,6 +31,7 @@
 #define VIPS_PHOTOFLOW_H
 
 #include "pftypes.hh"
+//#include "processor.hh"
 
 //#include "image.hh"
 
@@ -38,13 +39,19 @@
 namespace PF
 {
 
+  class ProcessorBase;
+  class Layer;
   class Image;
 
   class PhotoFlow
   {
+    typedef ProcessorBase* (*new_op_func_t)(std::string opname, Layer* current_layer);
+
     rendermode_t render_mode;
 
     Image* active_image;
+
+    new_op_func_t new_op_func;
 
     static PhotoFlow* instance;
   public:
@@ -57,6 +64,14 @@ namespace PF
 
     Image* get_image() { return active_image; }
     void set_image(Image* i) { active_image = i; }
+
+    void set_new_op_func( new_op_func_t f ) { new_op_func = f; }
+
+    ProcessorBase* new_operation(std::string opname, Layer* current_layer)
+    {
+      if( new_op_func ) return new_op_func( opname, current_layer );
+      else return NULL;
+    }
   };
 
 }

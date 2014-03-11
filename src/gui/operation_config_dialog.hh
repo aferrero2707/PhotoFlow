@@ -42,6 +42,8 @@ namespace PF {
 
   class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
 {
+  std::vector<PFWidget*> controls;
+
 #ifdef GTKMM_2
   Gtk::VBox mainBox;
   Gtk::HBox mainHBox;
@@ -71,8 +73,6 @@ namespace PF {
   Selector blendSelector;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
 
-  std::vector<PFWidget*> controls;
-
   std::list<std::string> values_save;
 
   //virtual OpParBase* get_par() = 0;
@@ -94,9 +94,16 @@ public:
 
   void open();
 
+  virtual void init();
+
   void update();
+
+  void update_properties();
 };
 
+
+
+  ProcessorBase* new_operation_with_gui( std::string op_type, Layer* current_layer );
 }
 
 #endif

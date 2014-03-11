@@ -32,6 +32,9 @@
 PF::PFWidget::PFWidget(OperationConfigUI* d, std::string n): 
   inhibit(false), dialog( d ), pname( n ), property( NULL )
 {
+  PF::OperationConfigDialog* ocd = dynamic_cast<PF::OperationConfigDialog*>( dialog );
+  if( ocd ) 
+    ocd->add_control( this );
 }
 
 
@@ -41,6 +44,10 @@ void PF::PFWidget::init()
   Layer* layer = dialog->get_layer();
   Image* image = layer ? layer->get_image() : NULL;
   ProcessorBase* processor = layer ? layer->get_processor() : NULL;
+#ifndef NDEBUG
+  std::cout<<"PF::PFWidget::init(): called for property \""<<pname<<"\" of layer \""
+	   <<layer->get_name()<<"\""<<std::endl;
+#endif
   if( dialog && layer && image && 
       processor &&
       processor->get_par() ) {
@@ -58,6 +65,7 @@ void PF::PFWidget::changed()
 {
   if( property && !inhibit ) {
     set_value();
+    value_changed.emit();
     dialog->get_layer()->set_dirty( true );
     std::cout<<"  updating image"<<std::endl;
     dialog->get_layer()->get_image()->update();

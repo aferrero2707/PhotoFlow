@@ -310,7 +310,8 @@ vips_layer_build( VipsObject *object )
   if(ninput > 0) {
     VipsImage** array = layer->in->data;
     VipsImage* in0 = array[0];
-    par->set_image_hints( in0 );
+    if( in0 ) 
+      par->set_image_hints( in0 );
     /*
     vips_image_init_fields( layer->out,
 			    in0->Xsize, in0->Ysize, 

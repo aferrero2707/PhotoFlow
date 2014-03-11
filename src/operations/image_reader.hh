@@ -34,6 +34,7 @@
 
 #include "../base/processor.hh"
 
+#include "../operations/convertformat.hh"
 #include "../operations/blender.hh"
 
 namespace PF 
@@ -43,6 +44,7 @@ namespace PF
   {
     Property<std::string> file_name;
     VipsImage* image;
+    PF::ProcessorBase* convert_format;
     PF::Processor<PF::BlenderPar,PF::BlenderProc>* blender;
 
   public:
@@ -52,6 +54,7 @@ namespace PF
       image(NULL) 
     {
       set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
+      convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
       blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
       set_type("imageread" );
     }

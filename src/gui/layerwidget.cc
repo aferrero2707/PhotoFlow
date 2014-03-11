@@ -32,13 +32,13 @@
 #include "layerwidget.hh"
 
 
-PF::LayerWidget::LayerWidget(): 
+PF::LayerWidget::LayerWidget( Image* img ): 
+  image( img ),
   Gtk::VBox(), 
   buttonAdd("+"),
   buttonAddGroup("G+"),
   buttonDel("-"),
-  operationsDialog( this ),
-  image( NULL )
+  operationsDialog( image, this )
 {
   notebook.set_tab_pos(Gtk::POS_LEFT);
   Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
@@ -68,6 +68,9 @@ PF::LayerWidget::LayerWidget():
 
   layer_frames.push_back( frame );
   layer_views.push_back( view );
+
+  layer_views[0]->set_layers( &(image->get_layer_manager().get_layers()) );
+  image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
 
   view->signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
 
@@ -127,6 +130,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
 void PF::LayerWidget::on_button_add()
 {
   operationsDialog.open();
+  //operationsDialog.set_transient_for( (get_window()) );
 }
 
 

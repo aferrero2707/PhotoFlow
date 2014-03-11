@@ -76,7 +76,8 @@ namespace PF
     int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
 
-#ifndef NDEBUG
+    //#ifndef NDEBUG
+#ifdef _NDEBUG
     std::cout<<"OperationPTP::render(): "<<std::endl
 	     <<"  name: "<<par->get_config_ui()->get_layer()->get_name()<<std::endl
 	     <<"  input region:  top="<<ir[in_first]->valid.top

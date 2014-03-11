@@ -34,8 +34,7 @@
 
 #include <gtkmm.h>
 
-#include "imagearea.hh"
-#include "layerwidget.hh"
+#include "imageeditor.hh"
 
 
 namespace PF {
@@ -50,8 +49,7 @@ protected:
   //Member widgets:
 #ifdef GTKMM_2
   Gtk::VBox mainBox;
-  Gtk::HPaned editorBox;
-  Gtk::VBox viewBox;
+  Gtk::VBox editorBox;
   Gtk::VBox controlBox;
   Gtk::HButtonBox topButtonBox;
 #endif
@@ -62,24 +60,22 @@ protected:
   Gtk::ButtonBox topButtonBox;
 #endif
   Gtk::Notebook viewerNotebook;
-  Gtk::Button buttonOpen, buttonSave, buttonExit;
-  LayerWidget layersWidget;
+  Gtk::Button buttonOpen, buttonSave, buttonExit, buttonTest;
+
+  std::vector<ImageEditor*> image_editors;
+
   //Gtk::ScrolledWindow treeFrame;
   //Gtk::TreeView layerTree;
-  Gtk::ScrolledWindow imageArea_scrolledWindow;
-  ImageArea imageArea;
-
-  PF::Image* pf_image;
 
 public:
-  MainWindow( char* filename );
+  MainWindow();
   virtual ~MainWindow();
 
-  LayerWidget& get_layer_widget() { return layersWidget; }
+  void on_button_open_clicked();
 
   void on_button_save_clicked();
 
-  void set_image(std::string filename);
+  void open_image(std::string filename);
 };
 
 }

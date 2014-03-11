@@ -76,7 +76,7 @@ namespace PF
       BLENDER blender;
       float opacity = par->get_opacity();
 #ifndef NDEBUG
-      usleep(10000);
+      usleep(1000);
       //std::cout<<"opacity: "<<opacity<<std::endl;
 #endif
     
@@ -84,11 +84,15 @@ namespace PF
       int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
       int line_size = r->width * ireg[0]->im->Bands;
 
+      /*
 #ifndef NDEBUG
       std::cout<<std::endl<<std::endl<<"BlenderProc::render(): blending region "
-	       <<r->left<<","<<r->top<<" x "<<r->width<<","<<r->height<<std::endl;
+             <<r->left<<","<<r->top<<" x "<<r->width<<","<<r->height<<std::endl;
 #endif
-
+      if( par->get_blend_mode() == PF_BLEND_SCREEN)
+	std::cout<<std::endl<<std::endl<<"BlenderProc::render(): blending region "
+		 <<r->left<<","<<r->top<<" x "<<r->width<<","<<r->height<<std::endl;
+      */
       T* p[2];    
       T* pout;
       int x, xomap, y;

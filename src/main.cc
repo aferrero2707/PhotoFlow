@@ -52,7 +52,7 @@ int main (int argc, char *argv[])
   if (argc != 2)
     error_exit ("usage: %s <filename>", argv[0]);
   if (vips_init (argv[0]))
-    verror ();
+    vips::verror ();
 
   vips_layer_get_type();
 
@@ -63,9 +63,11 @@ int main (int argc, char *argv[])
   //im_package* result = im_load_plugin("src/pfvips.plg");
   //if(!result) verror ();
   //std::cout<<result->name<<" loaded."<<std::endl;
-  
 
-  PF::MainWindow mainWindow( argv[1] );
+  PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
+
+  PF::MainWindow mainWindow;
+  mainWindow.open_image( argv[1] );
   //Shows the window and returns when it is closed.
   Gtk::Main::run(mainWindow);
 

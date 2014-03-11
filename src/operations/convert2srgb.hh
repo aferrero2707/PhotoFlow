@@ -27,8 +27,8 @@
 
  */
 
-#ifndef CONVERT_2_RGB_H
-#define CONVERT_2_RGB_H
+#ifndef CONVERT_2_SRGB_H
+#define CONVERT_2_SRGB_H
 
 #include <iostream>
 
@@ -40,14 +40,14 @@
 namespace PF 
 {
 
-  class Convert2RGBPar: public OpParBase
+  class Convert2sRGBPar: public OpParBase
   {
     cmsHPROFILE profile_in;
     cmsHPROFILE profile_out;
     cmsHTRANSFORM transform;
 
   public:
-    Convert2RGBPar();
+    Convert2sRGBPar();
     bool has_imap() { return false; }
     bool has_omap() { return false; }
     bool needs_input() { return true; }
@@ -67,20 +67,20 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class Convert2RGBProc
+  class Convert2sRGBProc
   {
   public: 
     void render(VipsRegion** in, int n, int in_first,
 		VipsRegion* imap, VipsRegion* omap, 
-		VipsRegion* out, Convert2RGBPar* par);
+		VipsRegion* out, Convert2sRGBPar* par);
   };
 
 
   template< OP_TEMPLATE_DEF >
-  void Convert2RGBProc< OP_TEMPLATE_IMP >::
+  void Convert2sRGBProc< OP_TEMPLATE_IMP >::
   render(VipsRegion** ir, int n, int in_first,
 	 VipsRegion* imap, VipsRegion* omap, 
-	 VipsRegion* oreg, Convert2RGBPar* par)
+	 VipsRegion* oreg, Convert2sRGBPar* par)
   {
     Rect *r = &oreg->valid;
     int width = r->width;

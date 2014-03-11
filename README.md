@@ -1,14 +1,14 @@
 PhotoFlow
 =========
 
-The aim of the project is to implement a fully non-destructive photo retouching program that provides a complete workflow from RAW image development to high-quality printing.
+The aim of the project is to provide a fully non-destructive photo retouching program that includes a complete workflow from RAW image development to high-quality printing.
 
 Here is the general feature (whish)list:
 
 - Fully non-destructive, layer-based photo editing workflow with realtime preview of the final image
 - Support for 8-bits and 16-bits integer as well as 32-bits and 64-bits floating point precision, selectable at runtime and on a per-image basis
-- Plugin-based architecture: most of the tools are implemented as separate modules that are loaded at runtime
-- Tile-based image caching to limit the memory footprint and allow loading images of arbitrary size
+- Plugin-based architecture: new tools can be implemented as separate modules that are loaded at runtime
+- Allows to load and edit images of arbitrary size, thanks to the underlying rendering engine based on the VIPS library
 - Fully color managed workflow: user-defined input, work and output profiles, soft-proofing, etc...
 - Support for layer grouping and layer masks
 - Support for common photo editing tools: levels, curves, brightness-contrast control, blurring, sharpening, cropping, resizing, colorspace conversions, etc..., all implemented in the form of image layers
@@ -42,43 +42,35 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 3. If all goes well, you can now open an image file with PhotoFlow:
 
         $ ./src/photoflow image_file_name
+
+   There are some test images available:
+
+        $ ./src/photoflow ../testimages/Lab_curves.pfi
+   or
+
+        $ ./src/photoflow ../testimages/orton.pfi
         
 
 # Current status
 
-PhotoFlow is in a early development stage. The present code provides a proof-of-concept of the planned functionalities: it opens an image file and applies a brightness-contrast adjustment whose strength is controlled by a vertical linear gradient (no effect at the bottom and maximum at the top), followed by two "invert" operations.
-
-The individual layers can be activated and de-activated using the radio buttons on the right of the image.
-
-The program will hopefully evolve to a fully-functional preliminary version rather soon.
-
+PhotoFlow is in a early development stage. The present version allows to open an image file and apply basic editing filters via non-destructive adjustment layers. The individual layers can be activated and de-activated using the radio buttons on the right of the image. Moreover, the layers structure can be saved to disk and re-opened again via the command line.
 
 # Roadmap and development plans
 
-- Add possibility to restrict the processing to a sngle channel
-
-- Support colorpsace conversions based on ICC profiles
-
-- Support for loading RAW images
-
-- Add support for group layers
-
-- File loading/saving
-
-- Convert image to sRGB and 8bits before display
-
-- Clone layers
-
-- Curves adjustment
+The following list shows what features are currently planned or being implemented, in a kind of priority order:
 
 - Support for layer maps in the gui
 
-- Image pyramids
+- Implement colorpsace conversions based on ICC profiles (partly implemented already)
 
-- Drawing layers
+- Allow re-ordering of existing layers via drag&drop
 
-- Additional blending modes
+- Complete the list of supported blending modes
 
-- Update configuration dialogs each time the chain is rebuilt
+- Image pyramids and image zooming
+
+- Loading and processing of RAW images (demosaicing, white balance, exposure adjustment, etc.)
+
+- Pencil tool for simple hand drawing
 
 

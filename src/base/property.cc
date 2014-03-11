@@ -34,6 +34,9 @@ PF::PropertyBase::PropertyBase(std::string n, OpParBase* par,
 
 void PF::PropertyBase::set_str(const std::string& val)
 {
+#ifndef NDEBUG
+  std::cout<<"PF::PropertyBase::set_str(): setting property \""<<name<<"\" to value \""<<val<<"\""<<std::endl;
+#endif
   std::istringstream str(val);
   from_stream(str);
 }
@@ -48,6 +51,9 @@ std::string PF::PropertyBase::get_str()
 
 void PF::PropertyBase::from_stream(std::istream& str)
 {
+#ifndef NDEBUG
+  std::cout<<"PF::PropertyBase::from_stream(): is_enum()="<<is_enum()<<std::endl;
+#endif
   if( !is_enum() ) return;
   std::string s;
   str>>s;

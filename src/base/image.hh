@@ -33,6 +33,8 @@
 
 #include <sigc++/sigc++.h>
 
+#include <glibmm/threads.h>
+
 #include "layermanager.hh"
 #include "view.hh"
 
@@ -44,28 +46,54 @@ namespace PF
   class Image: public sigc::trackable
   {
     LayerManager layer_manager;
-    std::vector<View> views;
+    std::vector<View*> views;
+
+    // Flag indicating whether the update should be preformed asynchronously
+    bool async;
+
+    // Flag indicating whether the views have to be re-built
+    bool modified;
+
+    // Flag indicating whether there is a re-building ongoing
+    bool rebuilding;
+
+    Glib::Threads::Mutex rebuild_mutex;
+
+    void update_sync();
+    void update_async();
 
   public:
-    Image(): layer_manager( this ) 
-    {
-      layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update) );
-    }
+    Image();
 
-    sigc::signal<void> signal_modified;
+    ~Image();
+
+    //sigc::signal<void> signal_modified;
 
     LayerManager& get_layer_manager() { return layer_manager; }
 
     void add_view( VipsBandFormat fmt, int level )
     {
-      views.push_back( View( fmt, level ) );
+      views.push_back( new View( this, fmt, level ) );
     }
+
+    unsigned int get_nviews() { return views.size(); }
 
     View* get_view(unsigned int n) 
     {
       if( n >= views.size() ) return NULL;
-      return(&views[n]);
+      return(views[n]);
     }
+
+    bool is_async() { return async; }
+    void set_async( bool flag ) { async = flag; }
+
+    bool is_modified() { return modified; }
+    void set_modified( bool flag ) { modified = flag; }
+
+    bool is_rebuilding() { return rebuilding; }
+    void set_rebuilding( bool flag ) { rebuilding = flag; }
+
+    Glib::Threads::Mutex& get_rebuild_mutex() { return rebuild_mutex; }
 
     void update();
 
@@ -73,6 +101,8 @@ namespace PF
 
     bool save( std::string filename );
   };
+
+  gint image_rebuild_callback( gpointer data );
 
 }
 

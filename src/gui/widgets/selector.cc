@@ -62,6 +62,9 @@ void PF::Selector::get_value()
 
   std::pair< int, std::pair<std::string,std::string> > def = 
     get_prop()->get_enum_value();
+#ifndef NDEBUG
+  std::cout<<"PF::Selector::get_value(): current value=\""<<def.second.second<<"\""<<std::endl;
+#endif
   std::map< int, std::pair<std::string,std::string> > values = 
     get_prop()->get_enum_values();
   std::map< int, std::pair<std::string,std::string> >::iterator iter;

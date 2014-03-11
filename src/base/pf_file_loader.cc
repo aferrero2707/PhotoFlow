@@ -42,11 +42,13 @@
 #include "../operations/gradient.hh"
 #include "../operations/convert2lab.hh"
 #include "../operations/clone.hh"
+#include "../operations/curves.hh"
 
 #include "../gui/operations/brightness_contrast_config.hh"
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
+#include "../gui/operations/curves_config.hh"
 
 
 #include "pf_file_loader.hh"
@@ -200,70 +202,15 @@ void start_element (GMarkupParseContext *context,
       value_cursor++;
     }
 
+    std::cout<<"PF::pf_file_loader(): creating operation of type "<<op_type<<std::endl;
+
     if( !current_layer ) return;
 
-    PF::ProcessorBase* processor = NULL;
-    PF::OperationConfigUI* dialog = NULL;
-
-    if( op_type == "imageread" ) { 
-
-      processor = new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
-      current_layer->set_processor( processor );
-      dialog = new PF::ImageReadConfigDialog( current_layer );
-
-    } else if( op_type == "blender" ) {
-
-      processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
-      current_layer->set_processor( processor );
-      dialog = new PF::OperationConfigDialog( current_layer, "Layer Group" );
-
-    } else if( op_type == "clone" ) {
-
-      processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
-      current_layer->set_processor( processor );
-      dialog = new PF::CloneConfigDialog( current_layer );
-
-    } else if( op_type == "invert" ) {
-
-      processor = new PF::Processor<PF::InvertPar,PF::Invert>();
-      current_layer->set_processor( processor );
-      dialog = new PF::OperationConfigDialog( current_layer, "Invert Image" );
-
-    } else if( op_type == "brightness_contrast" ) {
-
-      processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
-      current_layer->set_processor( processor );
-      dialog = new PF::BrightnessContrastConfigDialog( current_layer );
-
-    } else if( op_type == "convert2lab" ) {
-
-      processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
-      current_layer->set_processor( processor );
-      //dialog = new PF::BrightnessContrastConfigDialog( current_layer );
-
-    } else { // it must be a VIPS operation...
-
-      int pos = op_type.find( "vips-" );
-      if( pos != 0 ) return;
-      std::string vips_op_type;
-      vips_op_type.append(op_type.begin()+5,op_type.end());
-
-      PF::Processor<PF::VipsOperationPar,PF::VipsOperationProc>* vips_op = 
-	new PF::Processor<PF::VipsOperationPar,PF::VipsOperationProc>();
-      vips_op->get_par()->set_op( vips_op_type.c_str() );
-      processor = vips_op;
-      current_layer->set_processor( processor );
-
-      PF::VipsOperationConfigDialog* vips_config = 
-	new PF::VipsOperationConfigDialog( current_layer );
-      vips_config->set_op( vips_op_type.c_str() );
-      dialog = vips_config;
-    }
+    PF::ProcessorBase* processor = PF::PhotoFlow::Instance().new_operation( op_type, current_layer );
 
     if( processor ) {
+      std::cout<<"PF::pf_file_loader(): operation created."<<std::endl;
       current_op = processor->get_par();
-      if( current_op && dialog )
-	current_op->set_config_ui( dialog );
     }
 
   } else if( strcmp (element_name, "property") == 0 ) {
@@ -282,6 +229,9 @@ void start_element (GMarkupParseContext *context,
       name_cursor++;
       value_cursor++;
     }
+
+    std::cout<<"PF::pf_file_loader(): setting property \""<<pname<<"\" to \""<<pvalue<<"\""<<std::endl;
+
     if( !pname.empty() && !pvalue.empty() ) {
       PF::PropertyBase* p = current_op->get_property( pname );
       if( p ) {
@@ -337,8 +287,10 @@ void end_element (GMarkupParseContext *context,
 
   } else if( strcmp (element_name, "operation") == 0 ) {
 
-    if( current_op && current_op->get_config_ui() )
+    if( current_op && current_op->get_config_ui() ) {
+      current_op->get_config_ui()->init();
       current_op->get_config_ui()->update();
+    }
     current_op = NULL;
 
   }

@@ -27,38 +27,31 @@
 
  */
 
-#ifndef PF_WIDGET_HH
-#define PF_WIDGET_HH
 
-#include "../../base/image.hh"
+#ifndef CURVE_H
+#define CURVE_H
 
-namespace PF {
+#include <map>
+#include <vector>
 
-  class PFWidget
+
+namespace PF
+{
+
+  class Curve
   {
-    bool inhibit;
-    OperationConfigUI* dialog;
-    std::string pname;
-    PropertyBase* property;
-
   public:
-    PFWidget(OperationConfigUI* d, std::string n);
+    Curve();
+    virtual ~Curve();
 
-    sigc::signal<void> value_changed;
+    // Get the output value corresponding to an input value x (normalized to the [0,1] range)
+    virtual float get_value( float x ) = 0;
 
-    void set_inhibit( bool val ) { inhibit = val; }
-
-    PropertyBase* get_prop() { return property; }
-
-    void init();
-
-    virtual void get_value() = 0;
-    virtual void set_value() = 0;
-
-    void changed();
- };
-
+    // Fill a vector of equally-spaced npoints with input-output value pairs
+    virtual void get_values( std::vector< std::pair<float,float> >& vec ) = 0;
+  };
 
 }
+
 
 #endif

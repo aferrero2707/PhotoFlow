@@ -27,38 +27,28 @@
 
  */
 
-#ifndef PF_WIDGET_HH
-#define PF_WIDGET_HH
 
-#include "../../base/image.hh"
-
-namespace PF {
-
-  class PFWidget
-  {
-    bool inhibit;
-    OperationConfigUI* dialog;
-    std::string pname;
-    PropertyBase* property;
-
-  public:
-    PFWidget(OperationConfigUI* d, std::string n);
-
-    sigc::signal<void> value_changed;
-
-    void set_inhibit( bool val ) { inhibit = val; }
-
-    PropertyBase* get_prop() { return property; }
-
-    void init();
-
-    virtual void get_value() = 0;
-    virtual void set_value() = 0;
-
-    void changed();
- };
+#include "convertformat.hh"
 
 
+PF::ConvertFormatPar::ConvertFormatPar(): 
+  OpParBase()
+{
+  set_type( "convert_format" );
 }
 
-#endif
+
+VipsImage* PF::ConvertFormatPar::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
+{
+  void *data;
+  size_t data_length;
+  
+  if( in.size()<1 || in[first]==NULL ) return NULL;
+
+  if( in[first]->BandFmt == get_format() ) {
+    g_object_ref( in[first] );
+    return in[first];
+  }
+
+  return OpParBase::build( in, first, NULL, NULL );
+}

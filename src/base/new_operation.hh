@@ -27,37 +27,17 @@
 
  */
 
-#ifndef PF_WIDGET_HH
-#define PF_WIDGET_HH
+#ifndef NEW_OPERATION_H
+#define NEW_OPERATION_H
 
-#include "../../base/image.hh"
+#include "processor.hh"
 
-namespace PF {
+namespace PF
+{
 
-  class PFWidget
-  {
-    bool inhibit;
-    OperationConfigUI* dialog;
-    std::string pname;
-    PropertyBase* property;
+  class Layer;
 
-  public:
-    PFWidget(OperationConfigUI* d, std::string n);
-
-    sigc::signal<void> value_changed;
-
-    void set_inhibit( bool val ) { inhibit = val; }
-
-    PropertyBase* get_prop() { return property; }
-
-    void init();
-
-    virtual void get_value() = 0;
-    virtual void set_value() = 0;
-
-    void changed();
- };
-
+  ProcessorBase* new_operation( std::string op_type, Layer* current_layer );
 
 }
 

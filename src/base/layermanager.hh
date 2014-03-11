@@ -35,8 +35,8 @@
 
 #include <sigc++/sigc++.h>
 
-#include "layer.hh"
 #include "view.hh"
+#include "layer.hh"
 
 namespace PF
 {
@@ -59,10 +59,12 @@ namespace PF
     void update_dirty( std::list<Layer*>& list, bool& dirty );
 
     void reset_dirty( std::list<Layer*>& list );
-
-    VipsImage* rebuild_chain(View& view, colorspace_t cs, 
+    
+    VipsImage* rebuild_chain(View* view, colorspace_t cs, 
 			     int width, int height, 
-			     std::list<Layer*>& list, VipsImage* previous);
+			     std::list<Layer*>& list, 
+			     Layer* previous_layer);
+    
   public:
     LayerManager(Image* image);
     ~LayerManager();
@@ -82,8 +84,11 @@ namespace PF
 
     bool insert_layer( Layer* layer, int32_t lid=-1 );
 
-    bool rebuild(View& view, colorspace_t cs, int width, int height);
-    bool rebuild_all(View& view, colorspace_t cs, int width, int height);
+    bool rebuild_prepare();
+    bool rebuild(View* view, colorspace_t cs, int width, int height);
+    bool rebuild_finalize();
+
+    bool rebuild_all(View* view, colorspace_t cs, int width, int height);
 
     sigc::signal<void> signal_modified;
     void modified() { signal_modified.emit(); }

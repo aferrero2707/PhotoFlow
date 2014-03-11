@@ -59,7 +59,7 @@ PF::OpParBase::OpParBase():
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK")
 {
   processor = NULL;
-  out = NULL;
+  //out = NULL;
   config_ui = NULL;
   //blend_mode = PF_BLEND_PASSTHROUGH;
   //blend_mode = PF_BLEND_NORMAL;
@@ -92,13 +92,13 @@ PF::PropertyBase* PF::OpParBase::get_property(std::string name)
 
   // Look into mapped properties first
   for(pi = mapped_properties.begin(); pi != mapped_properties.end(); pi++) {
-    std::cout<<"(*pi)->get_name(): "<<(*pi)->get_name()<<"    name: "<<name<<std::endl;
+    //std::cout<<"(*pi)->get_name(): "<<(*pi)->get_name()<<"    name: "<<name<<std::endl;
     if( (*pi)->get_name() == name ) return( *pi );
   }
   
   // If nothing is found, look into our own properties
   for(pi = properties.begin(); pi != properties.end(); pi++) {
-    std::cout<<"(*pi)->get_name(): "<<(*pi)->get_name()<<"    name: "<<name<<std::endl;
+    //std::cout<<"(*pi)->get_name(): "<<(*pi)->get_name()<<"    name: "<<name<<std::endl;
     if( (*pi)->get_name() == name ) return( *pi );
   }
   return NULL;
@@ -127,22 +127,20 @@ void PF::OpParBase::restore_properties(const std::list<std::string>& plist)
 }
 
 
-void PF::OpParBase::set_image_hints(int w, int h, VipsInterpretation interpr, VipsBandFormat fmt)
+void PF::OpParBase::set_image_hints(int w, int h, VipsInterpretation interpr)
 {
   xsize = w;
   ysize = h;
-  format = fmt;
   coding = VIPS_CODING_NONE;
   interpretation = interpr;
 }
 
 
 
-void PF::OpParBase::set_image_hints(int w, int h, colorspace_t cs, VipsBandFormat fmt)
+void PF::OpParBase::set_image_hints(int w, int h, colorspace_t cs)
 {
   xsize = w;
   ysize = h;
-  format = fmt;
   coding = VIPS_CODING_NONE;
   switch(cs) {
   case PF_COLORSPACE_GRAYSCALE:
@@ -189,7 +187,7 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first, VipsImag
 	      get_demand_hint() );
   /**/
 
-  std::cout<<"OpParBase::build(): "<<std::endl
+  std::cout<<"OpParBase::build(): format = "<<get_format()<<std::endl
 	   <<"input images:"<<std::endl;
   for(int i = 0; i < n; i++) {
     std::cout<<"  "<<(void*)invec[i]<<std::endl;
@@ -197,7 +195,7 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first, VipsImag
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
   std::cout<<"out: "<<(void*)outnew<<std::endl<<std::endl;
 
-  set_image( outnew );
+  //set_image( outnew );
   return outnew;
 }
 

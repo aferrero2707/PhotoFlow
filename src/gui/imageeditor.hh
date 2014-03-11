@@ -27,37 +27,36 @@
 
  */
 
-#ifndef PF_WIDGET_HH
-#define PF_WIDGET_HH
+#ifndef IMAGE_EDITOR_H
+#define IMAGE_EDITOR_H
 
-#include "../../base/image.hh"
+#include <string>
+
+#include <gtkmm.h>
+
+#include "imagearea.hh"
+#include "layerwidget.hh"
+
 
 namespace PF {
 
-  class PFWidget
+  class ImageEditor: public Gtk::Paned
   {
-    bool inhibit;
-    OperationConfigUI* dialog;
-    std::string pname;
-    PropertyBase* property;
+    Image* image;
+
+    ImageArea imageArea;
+    Gtk::ScrolledWindow imageArea_scrolledWindow;
+    LayerWidget layersWidget;
 
   public:
-    PFWidget(OperationConfigUI* d, std::string n);
+    ImageEditor( Image* image );
+    ~ImageEditor();
 
-    sigc::signal<void> value_changed;
+    Image* get_image() { return image; }
 
-    void set_inhibit( bool val ) { inhibit = val; }
+    LayerWidget& get_layer_widget() { return layersWidget; }
 
-    PropertyBase* get_prop() { return property; }
-
-    void init();
-
-    virtual void get_value() = 0;
-    virtual void set_value() = 0;
-
-    void changed();
- };
-
+  };
 
 }
 

@@ -27,38 +27,25 @@
 
  */
 
-#ifndef PF_WIDGET_HH
-#define PF_WIDGET_HH
-
-#include "../../base/image.hh"
-
-namespace PF {
-
-  class PFWidget
-  {
-    bool inhibit;
-    OperationConfigUI* dialog;
-    std::string pname;
-    PropertyBase* property;
-
-  public:
-    PFWidget(OperationConfigUI* d, std::string n);
-
-    sigc::signal<void> value_changed;
-
-    void set_inhibit( bool val ) { inhibit = val; }
-
-    PropertyBase* get_prop() { return property; }
-
-    void init();
-
-    virtual void get_value() = 0;
-    virtual void set_value() = 0;
-
-    void changed();
- };
+#include "imageeditor.hh"
 
 
+PF::ImageEditor::ImageEditor( Image* img ):
+  image( img ),
+  imageArea( image->get_view(0) ),
+  layersWidget( image )
+{
+  imageArea_scrolledWindow.add( imageArea );
+  pack1( imageArea_scrolledWindow, true, false );
+
+  pack2( layersWidget, false, false );
+
+  //set_position( get_allocation().get_width()-200 );
+
+  show_all_children();
 }
 
-#endif
+
+PF::ImageEditor::~ImageEditor()
+{
+}

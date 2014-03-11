@@ -42,11 +42,13 @@
 #include "../operations/gradient.hh"
 #include "../operations/convert2lab.hh"
 #include "../operations/clone.hh"
+#include "../operations/curves.hh"
 
 #include "../gui/operations/brightness_contrast_config.hh"
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
+#include "../gui/operations/curves_config.hh"
 
 PF::OperationsTree::OperationsTree( )
 {
@@ -155,6 +157,10 @@ void PF::OperationsTree::update_model()
   row[columns.col_nickname] = "brightness_contrast";
 
   row = *(treeModel->append());
+  row[columns.col_name] = "Curves";
+  row[columns.col_nickname] = "curves";
+
+  row = *(treeModel->append());
   row[columns.col_name] = "Lab conversion";
   row[columns.col_nickname] = "convert2lab";
 
@@ -186,8 +192,9 @@ void PF::OperationsTree::update_model()
 
 
 
-PF::OperationsTreeDialog::OperationsTreeDialog(LayerWidget* lw):
-  Gtk::Dialog("New Layer"),
+PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
+  Gtk::Dialog("New Layer",true),
+  image( img ),
   layer_widget( lw )
 {
   set_default_size(300,600);
@@ -265,7 +272,6 @@ void PF::OperationsTreeDialog::add_layer()
   std::cout<<"Adding layer of type \""<<(*iter)[columns.col_name]<<"\""
 	   <<" ("<<(*iter)[columns.col_nickname]<<")"<<std::endl;
   
-  Image* image = PF::PhotoFlow::Instance().get_image();
   if( !image ) return;
 
   PF::LayerManager& layer_manager = image->get_layer_manager();
@@ -273,9 +279,13 @@ void PF::OperationsTreeDialog::add_layer()
   if( !layer ) return;
   layer->set_name( "New Layer" );
 
-  PF::ProcessorBase* processor = NULL;
-  PF::OperationConfigUI* dialog = NULL;
+  Glib::ustring op_type = (*iter)[columns.col_nickname];
+  PF::ProcessorBase* processor = 
+    PF::PhotoFlow::Instance().new_operation( op_type.c_str(), layer );
+  if( !processor || !processor->get_par() ) return;
+  PF::OperationConfigUI* dialog = dynamic_cast<PF::OperationConfigUI*>( processor->get_par()->get_config_ui() );
 
+  /*
   if( (*iter)[columns.col_nickname] == "imageread" ) { 
 
     processor = new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
@@ -300,6 +310,12 @@ void PF::OperationsTreeDialog::add_layer()
     layer->set_processor( processor );
     dialog = new PF::BrightnessContrastConfigDialog( layer );
 
+  } else if( (*iter)[columns.col_nickname] == "curves" ) {
+
+    processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
+    layer->set_processor( processor );
+    dialog = new PF::CurvesConfigDialog( layer );
+
   } else if( (*iter)[columns.col_nickname] == "convert2lab" ) {
 
     processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
@@ -320,12 +336,14 @@ void PF::OperationsTreeDialog::add_layer()
     vips_config->set_op( str.c_str() );
     dialog = vips_config;
   }
+  */
+
   if( processor ) {
     layer_widget->add_layer( layer );
     //layer_manager.get_layers().push_back( layer );
     //layer_manager.modified();
     if( dialog ) {
-      processor->get_par()->set_config_ui( dialog );
+      //processor->get_par()->set_config_ui( dialog );
       dialog->update();
       dialog->open();
     }

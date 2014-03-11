@@ -58,6 +58,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   for(int i = 0; i < in.size(); i++) {
     std::cout<<"  "<<(void*)in[i]<<std::endl;
   }
+  std::cout<<"image->Interpretation: "<<image->Type<<std::endl;
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
 
 
@@ -78,12 +79,14 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
   VipsImage* out = image;
 
-  //if( get_format() != image->BandFmt ) {
+  if( get_format() != image->BandFmt ) {
     //vips_call( "cast", image, &out, "format", get_format(), NULL );
-  vips_cast( image, &out, get_format(), NULL );
-    //VIPS_UNREF( image );
+    //vips_cast( image, &out, get_format(), NULL );
+    std::vector<VipsImage*> in2;
+    in2.push_back( image );
+    out = convert_format->get_par()->build( in2, 0, NULL, NULL );
     g_object_unref( image );
-    //}
+  }
   /*
   if( vips_image_get_typeof(out, VIPS_META_ICC_NAME) )
     return NULL;
@@ -103,10 +106,13 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   }
   /**/
 
-  set_image( out );
+  set_image_hints( out );
+
+  //set_image( out );
   std::cout<<"out: "<<(void*)out<<std::endl<<std::endl;
   return out;
 
+  /*
   // Prepare the blending step between the new image (in in2[1]) and the underlying image
   // if existing (in in2[0]).
   // The blending code will simply force the mode to "passthrough" and copy in2[1] to outnew
@@ -119,4 +125,5 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   blender->get_par()->build( in2, 0, imap, omap);
 
   set_image( blender->get_par()->get_image() );
+  */
 }

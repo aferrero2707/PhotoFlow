@@ -34,8 +34,11 @@
 #ifndef VIEW_H
 #define VIEW_H
 
+#include <glibmm/threads.h>
+
 
 #include "operation.hh"
+//#include "image.hh"
 #include "photoflow.hh"
 
 
@@ -43,36 +46,82 @@ namespace PF
 {
 
 
+  struct ViewNode
+  {
+    VipsImage* image;
+    int input_id;
+  };
+
+
+  class ViewSink;
+  class Image;
+
   class View
   {
-    std::vector<VipsImage*> vips_images;
+    bool modified;
+    Image* image;
+    std::vector<ViewNode*> nodes;
     VipsImage* output;
+    std::vector<ViewSink*> sinks;
     VipsBandFormat format;
     int level;
 
+    Glib::Threads::Mutex processing_mutex;
+
   public:
-    View(): output(NULL), format(VIPS_FORMAT_UCHAR), level(0) {}
-    View( VipsBandFormat fmt, int l ): output(NULL), format(fmt), level(l) {}
+    View(): modified(false), image(NULL), output(NULL), format(VIPS_FORMAT_UCHAR), level(0) {}
+    View( Image* img, VipsBandFormat fmt, int l ): image(img), output(NULL), format(fmt), level(l) {}
+
+    ~View();
+
+    bool is_modified() { return modified; }
+    void set_modified( bool flag ) { modified = flag; }
+
+    Image* get_image() { return image; }
 
     void set_format( VipsBandFormat fmt ) { format = fmt; }
     VipsBandFormat get_format() { return format; }
 
     void set_level( int l ) { level = l; }
 
-    void set_image( VipsImage* img, unsigned int id )
-    {
-      while( vips_images.size() <= (id+1) ) vips_images.push_back(NULL);
-      vips_images[id] = img;
-    }
+    void set_node( VipsImage* img, unsigned int id, int input_id );
 
-    VipsImage* get_image(unsigned int id) 
+    ViewNode* get_node( int id ) 
     {
-      if( id >= vips_images.size() ) return NULL;
-      return vips_images[id];
+      if( (id<0) || (id>=nodes.size()) ) return NULL;
+      return nodes[id];
     }
 
     VipsImage* get_output() { return output; }
     void set_output( VipsImage* img ) { output = img; }
+
+    bool processing();
+
+    Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
+
+    void add_sink( ViewSink* sink ) { sinks.push_back( sink ); }
+
+    void update();
+  };
+
+
+  class ViewSink
+  {
+    View* view;
+    bool processing;
+    
+  public:
+    ViewSink( View* v ): view(v), processing( false )
+    {
+      view->add_sink( this );
+    }
+
+    View* get_view() { return view; }
+
+    bool is_processing() { return processing; }
+    void set_processing( bool flag ) { processing = flag; }
+    
+    virtual void update() = 0;
   };
 
 }

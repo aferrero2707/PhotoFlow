@@ -28,8 +28,8 @@
  */
 
 
-#ifndef VIPS_PFLAYER_H
-#define VIPS_PFLAYER_H
+#ifndef OPERATION_H
+#define OPERATION_H
 
 #include <string>
 #include <vector>
@@ -86,7 +86,9 @@ namespace PF
     //void set_layer( Layer* l ) { layer = l; }
     
     virtual void open() = 0;
+    virtual void init() = 0;
     virtual void update() = 0;
+    virtual void update_properties() = 0;
   };
 
   /* Base class for all operation parameter implementations
@@ -97,7 +99,6 @@ namespace PF
 
     std::string type;
 
-    VipsImage* out;
     ProcessorBase* processor;
 
     OperationConfigUI* config_ui;
@@ -128,10 +129,12 @@ namespace PF
     virtual ~OpParBase()
     {
       std::cout<<"~OpParBase(): deleting operation "<<(void*)this<<std::endl;
+      /*
       if(out) {
 	std::cout<<"              calling g_object_unref( "<<(void*)out<<" );"<<std::endl;
 	g_object_unref( out );
       }
+      */
     }
 
     std::string get_type() { return type; }
@@ -213,11 +216,13 @@ namespace PF
 
     virtual VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
 
+    /*
     VipsImage* get_image() { return out; }
     void set_image(VipsImage* img) { 
       if(out) g_object_unref( out );
       out = img; 
     }
+    */
 
     PropertyBase* get_property(std::string name);
 
@@ -229,46 +234,47 @@ namespace PF
     int get_nbands() { return bands; }
     VipsInterpretation get_interpretation() { return interpretation; }
     VipsBandFormat get_format() { return format; }
+    void set_format( VipsBandFormat fmt ) { format = fmt; }
     VipsCoding get_coding() { return coding; }
     
     virtual void set_image_hints( VipsImage* img )
     {
       if( !img ) return;
       set_image_hints( img->Xsize, img->Ysize,
-		       img->Type, img->BandFmt );
+		       img->Type );
       bands = img->Bands;
 		       
     }
 
-    void set_image_hints(int w, int h, VipsInterpretation interpr, VipsBandFormat fmt);
-    void set_image_hints(int w, int h, colorspace_t cs, VipsBandFormat fmt);
+    void set_image_hints(int w, int h, VipsInterpretation interpr);
+    void set_image_hints(int w, int h, colorspace_t cs);
 
-    void grayscale_image(int w, int h, VipsBandFormat fmt)
+    void grayscale_image(int w, int h)
     {
       xsize = w; ysize = h;
       bands = 1; interpretation = VIPS_INTERPRETATION_B_W;
-      format = fmt; coding = VIPS_CODING_NONE;
+      coding = VIPS_CODING_NONE;
     }
 
-    void rgb_image(int w, int h, VipsBandFormat fmt)
+    void rgb_image(int w, int h)
     {
       xsize = w; ysize = h;
       bands = 3; interpretation = VIPS_INTERPRETATION_RGB;
-      format = fmt; coding = VIPS_CODING_NONE;
+      coding = VIPS_CODING_NONE;
     }
 
-    void lab_image(int w, int h, VipsBandFormat fmt)
+    void lab_image(int w, int h)
     {
       xsize = w; ysize = h;
       bands = 3; interpretation = VIPS_INTERPRETATION_LAB;
-      format = fmt; coding = VIPS_CODING_NONE;
+      coding = VIPS_CODING_NONE;
     }
 
-    void cmyk_image(int w, int h, VipsBandFormat fmt)
+    void cmyk_image(int w, int h)
     {
       xsize = w; ysize = h;
       bands = 4; interpretation = VIPS_INTERPRETATION_CMYK;
-      format = fmt; coding = VIPS_CODING_NONE;
+      coding = VIPS_CODING_NONE;
     }
 
 
@@ -338,6 +344,7 @@ namespace PF
   #include "blend_normal.hh"
   #include "blend_multiply.hh"
   #include "blend_screen.hh"
+
 
 };
 
