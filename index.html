@@ -41,20 +41,61 @@
         <h1>
 <a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>PhotoFlow</h1>
 
-<p>The aim of the project is to implement a fully non-destructive photo retouching program that provides a complete workflow from RAW image development to high-quality printing.</p>
+<p>The aim of the project is to provide a fully non-destructive photo retouching program that includes a complete workflow from RAW image development to high-quality printing.</p>
 
 <p>Here is the general feature (whish)list:</p>
 
 <ul>
 <li>Fully non-destructive, layer-based photo editing workflow with realtime preview of the final image</li>
 <li>Support for 8-bits and 16-bits integer as well as 32-bits and 64-bits floating point precision, selectable at runtime and on a per-image basis</li>
-<li>Plugin-based architecture: most of the tools are implemented as separate modules that are loaded at runtime</li>
-<li>Tile-based image caching to limit the memory footprint and allow loading images of arbitrary size</li>
+<li>Plugin-based architecture: new tools can be implemented as separate modules that are loaded at runtime</li>
+<li>Allows to load and edit images of arbitrary size, thanks to the underlying rendering engine based on the VIPS library</li>
 <li>Fully color managed workflow: user-defined input, work and output profiles, soft-proofing, etc...</li>
 <li>Support for layer grouping and layer masks</li>
 <li>Support for common photo editing tools: levels, curves, brightness-contrast control, blurring, sharpening, cropping, resizing, colorspace conversions, etc..., all implemented in the form of image layers</li>
 <li>User-friendly interface to develop new tools and image filters as external plugins</li>
 </ul>
+
+<h2><a name="compiling_testing" class="anchor" href="#compilingtesting"><span class="octicon octicon-link"></span></a>Downloading, compiling and testing</h2>
+<p>The pixel rendering engine of PhotoFlow is based on <a HREF="http://www.vips.ecs.soton.ac.uk">VIPS</a>. You have to install a recent version of VIPS in order to compile PhotoFlow.</p>
+
+<p>Once VIPS is set up and running, follow these steps to download and compile PhotoFlow:</p>
+<ol>
+<li>
+<p>get master branch from GitHub:</p>
+<pre><code>$ git clone https://github.com/aferrero2707/PhotoFlow.git
+</code></pre>
+</li>
+
+<li>
+<p>The build system is based on CMake, so you have to have it installed in your system.
+PhotoFlow provides an helper script to simplify the building process;
+in order to use it you have to go into the "build" subdirectory and run the "build.sh" script:</p>
+<pre><code>$ cd PhotoFlow/build
+$ bash ./build.sh
+</code></pre>
+<p>If you have installed VIPS in an unusual place, you can edit the build script and set the PKG_CONFIG_PATH variable accordingly</p>
+<p>To compile the code in debug mode, use</p>
+<pre><code>$ bash ./build.sh debug
+</code></pre>
+<p>instead.</p>
+</li>
+
+<li>
+<p>If all goes well, you can now open an image file with PhotoFlow:</p>
+<pre><code>$ ./src/photoflow image_file_name
+</code></pre>
+<p>There are some test images available:</p>
+<pre><code>$ ./src/photoflow ../testimages/Lab_curves.pfi
+</code></pre>
+<p>or</p>
+<pre><code>$ ./src/photoflow ../testimages/orton.pfi
+</code></pre>
+</li>
+
+<h2><a name="screenshots" class="anchor" href="#screenshots"><span class="octicon octicon-link"></span></a>Screenshots</h2>
+<p>Here is a screenshot showing the Curves tool applied to an image converted to Lab colorspace:</p>
+<A HREF="images/screenshot_Lab_curves.png"><img src="images/screenshot_Lab_curves.png" alt="screenshot_Lab_curves.png"></a>
       </section>
 
     </div>
