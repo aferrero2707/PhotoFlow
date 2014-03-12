@@ -19,7 +19,7 @@ pkg_check_modules(VIPS REQUIRED vips)
 pkg_check_modules(VIPSCC REQUIRED vipsCC)
 
 #pkg_check_modules(GTKMM REQUIRED gtkmm) 
-pkg_check_modules(GTKMM2 gtkmm-2.4) 
+pkg_check_modules(GTKMM2 REQUIRED gtkmm-2.4) 
 #pkg_check_modules(GTKMM3 gtkmm-3.0) 
 
   
