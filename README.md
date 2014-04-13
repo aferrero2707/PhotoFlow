@@ -18,6 +18,8 @@ Here is the general feature (whish)list:
 
 The pixel rendering engine of PhotoFlow is based on VIPS (http://www.vips.ecs.soton.ac.uk). You have to install a recent version of VIPS in order to compile PhotoFlow.
 
+Currently only gtk 2.x is supported. Support for gtk 3.x will be soon available.
+
 Once VIPS is set up and running, follow these steps to download and compile PhotoFlow:
 
 1. get master branch from GitHub:
