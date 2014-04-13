@@ -67,7 +67,8 @@ namespace PF
     CurvesPar();
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
-		     VipsImage* imap, VipsImage* omap);
+		     VipsImage* imap, VipsImage* omap, 
+		     unsigned int& level);
   };
 
   
@@ -107,7 +108,7 @@ namespace PF
     }
   };
 
-  
+  /*
   template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
   class CurvesProc<T, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, PREVIEW, OP_PAR>
   {
@@ -120,7 +121,7 @@ namespace PF
       pout[x] = (T)(FormatInfo<T>::RANGE - p[first][x]); 
     }
   };
-
+  */
   
 
   template < OP_TEMPLATE_DEF > 
@@ -128,6 +129,8 @@ namespace PF
   {
   };
 
+
+  ProcessorBase* new_curves();
 }
 
 #endif 

@@ -59,6 +59,13 @@ namespace PF
 
     Glib::Threads::Mutex rebuild_mutex;
 
+    ProcessorBase* convert2srgb;
+    ProcessorBase* convert_format;
+
+    void remove_from_inputs( PF::Layer* layer );
+    void remove_from_inputs( PF::Layer* layer, std::list<Layer*>& list );
+    void remove_layer( PF::Layer* layer, std::list<Layer*>& list );
+
     void update_sync();
     void update_async();
 
@@ -70,6 +77,8 @@ namespace PF
     //sigc::signal<void> signal_modified;
 
     LayerManager& get_layer_manager() { return layer_manager; }
+
+    void remove_layer( PF::Layer* layer );
 
     void add_view( VipsBandFormat fmt, int level )
     {
@@ -100,6 +109,7 @@ namespace PF
     bool open( std::string filename );
 
     bool save( std::string filename );
+    bool export_merged( std::string filename );
   };
 
   gint image_rebuild_callback( gpointer data );

@@ -43,6 +43,7 @@ namespace PF {
   class CloneConfigDialog: public OperationConfigDialog
 {
   LayerList layer_list;
+  Selector sourceSelector;
 
 public:
   CloneConfigDialog( Layer* l );

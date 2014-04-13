@@ -111,6 +111,8 @@ namespace PF
     VipsCoding coding;
     VipsInterpretation interpretation;
 
+    bool map_flag;
+
     std::list<PropertyBase*> mapped_properties;
     std::list<PropertyBase*> properties;
 
@@ -140,10 +142,13 @@ namespace PF
     std::string get_type() { return type; }
     void set_type( std::string str ) { type = str; }
 
+    std::list<PropertyBase*>& get_properties() { return properties; }
     void add_property( PropertyBase* p ) { properties.push_back(p); }
     void map_property( PropertyBase* p ) { mapped_properties.push_back(p); }
     void save_properties(std::list<std::string>& plist);
     void restore_properties(const std::list<std::string>& plist);
+
+    virtual bool import_settings( OpParBase* pin );
 
     void set_processor(ProcessorBase* p) { processor = p; }
     ProcessorBase* get_processor() { return processor; }
@@ -163,6 +168,9 @@ namespace PF
 
     void set_opacity(float val) { opacity.set(val); }
     float get_opacity() { return opacity.get(); }
+
+    bool is_map() { return map_flag; }
+    void set_map_flag( bool flag ) { map_flag = flag; }
 
     int get_rgb_target_channel() 
     {
@@ -214,7 +222,8 @@ namespace PF
     virtual bool has_opacity() { return true; }
     virtual bool needs_input() { return true; }
 
-    virtual VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
+    virtual VipsImage* build(std::vector<VipsImage*>& in, int first, 
+			     VipsImage* imap, VipsImage* omap, unsigned int& level);
 
     /*
     VipsImage* get_image() { return out; }
@@ -232,10 +241,13 @@ namespace PF
     int get_xsize() { return xsize; }
     int get_ysize() { return ysize; }
     int get_nbands() { return bands; }
+    void set_nbands( int n ) { bands = n; }
     VipsInterpretation get_interpretation() { return interpretation; }
+    colorspace_t get_colorspace() { return( PF::convert_colorspace( get_interpretation() ) ); }
     VipsBandFormat get_format() { return format; }
     void set_format( VipsBandFormat fmt ) { format = fmt; }
     VipsCoding get_coding() { return coding; }
+    void set_coding( VipsCoding c ) { coding = c; }
     
     virtual void set_image_hints( VipsImage* img )
     {
@@ -243,7 +255,6 @@ namespace PF
       set_image_hints( img->Xsize, img->Ysize,
 		       img->Type );
       bands = img->Bands;
-		       
     }
 
     void set_image_hints(int w, int h, VipsInterpretation interpr);
@@ -344,6 +355,8 @@ namespace PF
   #include "blend_normal.hh"
   #include "blend_multiply.hh"
   #include "blend_screen.hh"
+  #include "blend_lighten.hh"
+  #include "blend_darken.hh"
 
 
 };

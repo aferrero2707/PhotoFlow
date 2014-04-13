@@ -35,11 +35,19 @@ PF::Slider::Slider( OperationConfigUI* dialog, std::string pname, std::string l,
 		    double mult ):
   Gtk::VBox(),
   PF::PFWidget( dialog, pname ),
+#ifdef GTKMM_2
   adjustment( val, min, max, sincr, pincr, 0),
   scale(adjustment),
   spinButton(adjustment),
+#endif
   multiplier(mult)
 {
+#ifdef GTKMM_3
+  adjustment = Gtk::Adjustment::create( val, min, max, sincr, pincr, 0 );
+  scale.set_adjustment( adjustment );
+  spinButton.set_adjustment( adjustment );
+#endif
+
   label.set_text( l.c_str() );
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
@@ -65,9 +73,16 @@ PF::Slider::Slider( OperationConfigUI* dialog, std::string pname, std::string l,
 
   pack_start( hbox );
 
+#ifdef GTKMM_2
   adjustment.signal_value_changed().
     connect(sigc::mem_fun(*this,
 			  &PFWidget::changed));
+#endif
+#ifdef GTKMM_3
+  adjustment->signal_value_changed().
+    connect(sigc::mem_fun(*this,
+			  &PFWidget::changed));
+#endif
 
   show_all_children();
 }
@@ -78,13 +93,23 @@ void PF::Slider::get_value()
   if( !get_prop() ) return;
   double val;
   get_prop()->get(val);
+#ifdef GTKMM_2
   adjustment.set_value( val*multiplier );
+#endif
+#ifdef GTKMM_3
+  adjustment->set_value( val*multiplier );
+#endif
 }
 
 
 void PF::Slider::set_value()
 {
   if( !get_prop() ) return;
+#ifdef GTKMM_2
   double val = adjustment.get_value()/multiplier;
+#endif
+#ifdef GTKMM_3
+  double val = adjustment->get_value()/multiplier;
+#endif
   get_prop()->update(val);
 }

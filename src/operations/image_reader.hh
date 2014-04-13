@@ -33,6 +33,7 @@
 #include <string>
 
 #include "../base/processor.hh"
+#include "../base/imagepyramid.hh"
 
 #include "../operations/convertformat.hh"
 #include "../operations/blender.hh"
@@ -47,11 +48,17 @@ namespace PF
     PF::ProcessorBase* convert_format;
     PF::Processor<PF::BlenderPar,PF::BlenderProc>* blender;
 
+    std::string current_file;
+    VipsBandFormat current_format;
+
+    ImagePyramid pyramid;
+
   public:
     ImageReaderPar(): 
       OpParBase(), 
       file_name("file_name", this),
-      image(NULL) 
+      image(NULL),
+      current_format(VIPS_FORMAT_NOTSET)
     {
       set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
       convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
@@ -73,7 +80,8 @@ namespace PF
     bool has_intensity() { return false; }
     bool needs_input() { return false; }
 
-    VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
+    VipsImage* build(std::vector<VipsImage*>& in, int first, 
+		     VipsImage* imap, VipsImage* omap, unsigned int& level);
   };
 
   
@@ -89,6 +97,10 @@ namespace PF
     }
   };
 
+
+
+
+  ProcessorBase* new_image_reader();
 }
 
 #endif 

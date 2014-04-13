@@ -112,6 +112,21 @@ bool PF::Layer::omap_insert_before(PF::Layer* l, int32_t lid)
 }
 
 
+void PF::Layer::remove_input(int32_t lid)
+{
+  bool found = false;
+  do {
+    for( unsigned int i = 0; i < extra_inputs.size(); i++) {
+      if( extra_inputs[i] == lid ) {
+	extra_inputs.erase( extra_inputs.begin()+i );
+	found = true;
+	break;
+      }
+    }
+  } while( found );
+}
+
+
 
 bool PF::Layer::save( std::ostream& ostr, int level )
 {

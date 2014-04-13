@@ -27,10 +27,15 @@
 
  */
 
+#include <limits.h>
+#include <stdlib.h>
+
 #include <gtkmm/main.h>
 #include <vips/vips>
 #include <vips/vips.h>
 #include "gui/mainwindow.hh"
+
+#include "base/new_operation.hh"
 
 
 /* We need C linkage for this.
@@ -58,6 +63,7 @@ int main (int argc, char *argv[])
 
 #ifndef NDEBUG
   im_concurrency_set( 1 );
+  vips_cache_set_trace( true );
 #endif
 
   //im_package* result = im_load_plugin("src/pfvips.plg");
@@ -65,9 +71,14 @@ int main (int argc, char *argv[])
   //std::cout<<result->name<<" loaded."<<std::endl;
 
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
+  PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
 
   PF::MainWindow mainWindow;
-  mainWindow.open_image( argv[1] );
+  char* fullpath = realpath( argv[1], NULL );
+  if(!fullpath)
+    return 1;
+  mainWindow.open_image( fullpath );
+  free(fullpath);
   //Shows the window and returns when it is closed.
   Gtk::Main::run(mainWindow);
 

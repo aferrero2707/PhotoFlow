@@ -49,14 +49,19 @@ class BlendScreen<T, CS, CHMIN, CHMAX, false>:
   typename FormatInfo<T>::PROMOTED ptop, screen;
   typename FormatInfo<T>::PROMOTED psum;
 public:
+  BlendScreen(): BlendBase<T, CS, CHMIN, CHMAX, false>(), psum(FormatInfo<T>::MAX + FormatInfo<T>::MIN) {}
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     pos = x;
-    psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
+    //psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
       //ptop = psum - top[pos];
       //ibottom = psum - bottom[pos];
       screen = psum - ((psum-top[pos])*(psum-bottom[pos])/FormatInfo<T>::RANGE);
+      //std::cout<<"bottom="<<(int)bottom[pos]<<"  top="<<(int)top[pos]<<"  psum="<<(int)psum<<"  screen="<<(int)screen<<std::endl;
+      //std::cout<<"  (psum-top[pos])="<<(int)(psum-top[pos])<<"  (psum-bottom[pos])="<<(int)(psum-bottom[pos])
+      //       <<"  range="<<(int)FormatInfo<T>::RANGE<<"    ((psum-top[pos])*(psum-bottom[pos])/FormatInfo<T>::RANGE)="
+      //       <<(int)((psum-top[pos])*(psum-bottom[pos])/FormatInfo<T>::RANGE)<<std::endl;
       clip( opacity*screen + (1.0f-opacity)*bottom[pos], out[pos] );
     }
   }

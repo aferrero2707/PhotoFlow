@@ -35,17 +35,34 @@
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
+#include "../gui/operations/gradient_config.hh"
 #include "../gui/operations/curves_config.hh"
+#include "../gui/operations/gaussblur_config.hh"
 
 
 
 PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::ustring& title):
   PF::OperationConfigUI(layer),
+#ifdef GTKMM_2
   Gtk::Dialog(title, false, false),
+#endif
+#ifdef GTKMM_3
+  Gtk::Dialog(title, false),
+#endif
   //intensityAdj( 100, 0, 100, 1, 10, 0),
   //opacityAdj( 100, 0, 100, 1, 10, 0),
   //intensityScale(intensityAdj),
   //opacityScale(opacityAdj),
+#ifdef GTKMM_3
+  mainBox(Gtk::ORIENTATION_VERTICAL),
+  mainHBox(Gtk::ORIENTATION_HORIZONTAL),
+  chselBox(Gtk::ORIENTATION_HORIZONTAL),
+  topBox(Gtk::ORIENTATION_VERTICAL),
+  nameBox(Gtk::ORIENTATION_HORIZONTAL),
+  controlsBox(Gtk::ORIENTATION_HORIZONTAL),
+  controlsBoxLeft(Gtk::ORIENTATION_VERTICAL),
+  controlsBoxRight(Gtk::ORIENTATION_VERTICAL),
+#endif
   intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
   opacitySlider( this, "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
   blendSelector( this, "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
@@ -213,12 +230,17 @@ void PF::OperationConfigDialog::update()
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
-
+#ifndef NDEBUG
     std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
-    chselBox.remove( greychSelector );
-    chselBox.remove( rgbchSelector );
-    chselBox.remove( labchSelector );
-    chselBox.remove( cmykchSelector );
+#endif
+    if( greychSelector.get_parent() == &chselBox )
+      chselBox.remove( greychSelector );
+    if( rgbchSelector.get_parent() == &chselBox )
+      chselBox.remove( rgbchSelector );
+    if( labchSelector.get_parent() == &chselBox )
+      chselBox.remove( labchSelector );
+    if( cmykchSelector.get_parent() == &chselBox )
+      chselBox.remove( cmykchSelector );
     //greychSelector.hide();
     //rgbchSelector.hide();
     //labchSelector.hide();
@@ -278,16 +300,19 @@ void PF::OperationConfigDialog::on_button_clicked(int id)
       PF::OpParBase* par = get_layer()->get_processor()->get_par();
       std::cout<<"  restoring original values"<<std::endl;
       par->restore_properties( values_save );
+      init();
       get_layer()->set_dirty( true );
       std::cout<<"  updating image"<<std::endl;
       get_layer()->get_image()->update();
     }
-    hide_all();
+    //hide_all();
+    hide();
     break;
   case 1:
     if( get_layer() ) 
       get_layer()->set_name( nameEntry.get_text().c_str() );
-    hide_all();
+    //hide_all();
+    hide();
     break;
   }
 }
@@ -338,6 +363,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::ImageReadConfigDialog( current_layer );
 
+  } else if( op_type == "buffer" ) {
+
+    dialog = new PF::OperationConfigDialog( current_layer, "Buffer" );
+
   } else if( op_type == "blender" ) {
 
     dialog = new PF::OperationConfigDialog( current_layer, "Layer Group" );
@@ -350,6 +379,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::OperationConfigDialog( current_layer, "Invert Image" );
 
+  } else if( op_type == "gradient" ) {
+
+    dialog = new PF::GradientConfigDialog( current_layer );
+
   } else if( op_type == "brightness_contrast" ) {
 
     dialog = new PF::BrightnessContrastConfigDialog( current_layer );
@@ -357,6 +390,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "curves" ) {
       
     dialog = new PF::CurvesConfigDialog( current_layer );
+
+  } else if( op_type == "gaussblur" ) {
+      
+    dialog = new PF::GaussBlurConfigDialog( current_layer );
 
   } else if( op_type == "convert2lab" ) {
 

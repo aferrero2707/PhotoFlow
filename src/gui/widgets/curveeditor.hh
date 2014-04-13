@@ -45,7 +45,12 @@ namespace PF {
 
     int selected_point;
 
+#ifdef GTKMM_2
     bool on_expose_event(GdkEventExpose* event);
+#endif
+#ifdef GTKMM_3
+    bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+#endif
   public:    
     CurveArea();
 
@@ -63,10 +68,15 @@ namespace PF {
     Gtk::VBox box;
     Gtk::Label xlabel, ylabel;
     Gtk::Alignment xalign, yalign;
+#ifdef GTKMM_2
     Gtk::Adjustment xadjustment, yadjustment;
+#endif
+#ifdef GTKMM_3
+    Glib::RefPtr<Gtk::Adjustment> xadjustment, yadjustment;
+#endif
     Gtk::SpinButton xspinButton, yspinButton;
 
-   CurveArea curveArea;
+    CurveArea curveArea;
 
     int grabbed_point;
 

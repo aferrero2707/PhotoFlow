@@ -27,6 +27,8 @@
 
  */
 
+#include <string.h>
+
 #include "layermanager.hh"
 
 
@@ -63,6 +65,21 @@ PF::Layer* PF::LayerManager::new_layer()
 }
 
 
+void PF::LayerManager::delete_layer( PF::Layer* layer )
+{
+  if( layer->get_id() < 0 ) {
+    std::cout<<"ERROR: LayerManager::delete_layer(): layer->get_id() < 0"<<std::endl;
+    return;
+  }
+  if( layer->get_id() >= layers_pool.size() ) {
+    std::cout<<"ERROR: LayerManager::delete_layer(): layer->get_id() >= layers_pool.size()"<<std::endl;
+    return;
+  }
+  layers_pool[layer->get_id()] = NULL;
+  delete layer;
+}
+
+
 PF::Layer* PF::LayerManager::get_layer(int id)
 {
   if(id < 0 || id >= (int)layers_pool.size()) return NULL;
@@ -75,17 +92,23 @@ bool PF::LayerManager::get_parent_layers(Layer* layer,
 					 std::list< std::pair<std::string,Layer*> >& plist,
 					 std::string parent_name, std::list<Layer*>& list)
 {  
+#ifndef NDEBUG
   std::cout<<"Collecting parents of layer \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
+#endif
   std::list<PF::Layer*>::iterator li = list.begin();
   for(li = list.begin(); li != list.end(); ++li) {
     PF::Layer* l = *li;
     std::string name;
     if( !parent_name.empty() ) name = parent_name + "/";
     name = name + l->get_name();
+#ifndef NDEBUG
     std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
+#endif
     if( l->get_id() != layer->get_id() ) {
       plist.push_back( make_pair( name, l ) );
+#ifndef NDEBUG
       std::cout<<"    added."<<std::endl;
+#endif
     }
 
     if( get_parent_layers( layer, plist, name, l->sublayers ) )
@@ -104,10 +127,46 @@ bool PF::LayerManager::get_parent_layers(Layer* layer,
 }
 
 
-void PF::LayerManager::get_parent_layers(Layer* layer, 
-					 std::list< std::pair<std::string,Layer*> >& plist)
+void PF::LayerManager::get_parent_layers(PF::Layer* layer, 
+					 std::list< std::pair<std::string,PF::Layer*> >& plist)
 {
   get_parent_layers( layer, plist, std::string(""), layers );
+}
+
+
+
+std::list<PF::Layer*>* PF::LayerManager::get_list( PF::Layer* layer, std::list<PF::Layer*>& list)
+{
+  std::list<PF::Layer*>::iterator li = list.begin();
+  for(li = list.begin(); li != list.end(); ++li) {
+    PF::Layer* l = *li;
+    if( l->get_id() == layer->get_id() ) {
+      return( &list );
+    }
+  }
+
+  // The layer is not contained in the current list, then we look into sub-lists
+  for(li = list.begin(); li != list.end(); ++li) {
+    PF::Layer* l = *li;
+    std::list<PF::Layer*>* result;
+    result = get_list( layer, l->sublayers );
+    if( result ) 
+      return result;
+    result = get_list( layer, l->imap_layers );
+    if( result ) 
+      return result;
+    result = get_list( layer, l->omap_layers );
+    if( result ) 
+      return result;
+  }
+
+  return NULL;
+}
+
+
+std::list<PF::Layer*>* PF::LayerManager::get_list(PF::Layer* layer)
+{
+  return get_list( layer, layers );
 }
 
 
@@ -181,7 +240,7 @@ void PF::LayerManager::reset_dirty( std::list<Layer*>& list )
 
 
 
-bool PF::LayerManager::insert_layer( Layer* layer, int32_t lid )
+bool PF::insert_layer( std::list<Layer*>& layers, Layer* layer, int32_t lid )
 {  
   if( lid < 0 ) {
     layers.push_back( layer );
@@ -202,6 +261,14 @@ bool PF::LayerManager::insert_layer( Layer* layer, int32_t lid )
 
 
 
+bool PF::LayerManager::insert_layer( Layer* layer, int32_t lid )
+{  
+  return PF::insert_layer( layers, layer, lid );
+}
+
+
+
+
 VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs, 
 					    int width, int height, 
 					    std::list<PF::Layer*>& list, 
@@ -214,29 +281,109 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs,
   std::list<PF::Layer*>::iterator li = list.begin();
   for(li = list.begin(); li != list.end(); ++li) {
     PF::Layer* l = *li;
-    if( !l->is_visible() ) 
-      continue;
-
-    if( previous_layer ) {
-      previous_node = view->get_node( previous_layer->get_id() );
-      if( previous_node ) previous = previous_node->image;
-    }
-
-    OpParBase* par = l->get_processor()->get_par();
-    if( par ) {
-      std::cout<<"PF::LayerManager::rebuild_chain(): setting format for layer "<<l->get_name()
-	       <<" to "<<view->get_format()<<std::endl;
-      par->set_format( view->get_format() );
-    }
 
     char* name = (char*)l->get_name().c_str();
 
+    //if(!strcmp(name,"Red channel mask")) {
+#ifndef NDEBUG
+    if(!strcmp(name,"before-after")) {
+      std::cout<<"Rebuilding layer "<<name<<std::endl;
+    }
+#endif
+
+    if( !l->is_visible() ) 
+      continue;
+
+#ifndef NDEBUG
+    std::cout<<"PF::LayerManager::rebuild_chain(): rebuilding layer \""<<name<<"\""<<std::endl;
+#endif
+    if( previous_layer ) {
+      previous_node = view->get_node( previous_layer->get_id() );
+      if( previous_node ) previous = previous_node->image;
+#ifndef NDEBUG
+      std::cout<<"  Previous layer: \""<<previous_layer->get_name()<<"\""<<std::endl;
+      if( previous ) {
+	void *data;
+	size_t data_length;
+	if( vips_image_get_blob( previous, VIPS_META_ICC_NAME, 
+				 &data, &data_length ) ) {
+	  std::cout<<"  WARNING: missing ICC profile from previous layer \""<<previous_layer->get_name()<<"\""<<std::endl;
+	} else {
+	  cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
+	  if( profile_in ) {
+	    char tstr[1024];
+	    cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+	    std::cout<<"  Embedded profile found in previous layer \""<<previous_layer->get_name()<<"\": "<<tstr<<std::endl;
+	  }
+	}
+      } else {
+	std::cout<<"  WARNING: NULL image previous layer \""<<previous_layer->get_name()<<"\""<<std::endl;
+      }
+#endif
+    }
+
+    PF::ViewNode* node = view->set_node( l, previous_layer );
+    PF::OpParBase* par = NULL;
+    if( (l->get_processor() != NULL) &&
+	(l->get_processor()->get_par() != NULL) )
+      par = l->get_processor()->get_par();
+    PF::OpParBase* viewpar = NULL;
+    if( (node != NULL) &&
+	(node->processor != NULL) &&
+	(node->processor->get_par() != NULL) )
+      viewpar = node->processor->get_par();
+
+    g_assert( viewpar != NULL );
+
+    if( par ) {
+#ifndef NDEBUG
+      std::cout<<"PF::LayerManager::rebuild_chain(): setting format for layer "<<l->get_name()
+	       <<" to "<<view->get_format()<<std::endl;
+#endif
+      par->set_format( view->get_format() );
+    }
+
+    // If the layer is at the beginning of the chain, we set hints about the desired
+    // colorspace and pixel format using default values. 
+    // The size and colorspace hints might be ignored by
+    // the operation (for example in the case of an image from a file, where the
+    // size and colorspace are dictated by the file content).
+    // On the other hand, the pixel format hint should be strictly respected by all 
+    // operators, as it defined the accuracy at which the final image is rendered.
+    // If a previous image has been created already, hints are copied from it.
+    //if( li == list.begin() || !previous )
+    if( !previous )
+      par->set_image_hints( width, height, cs );
+    else if( previous )
+      par->set_image_hints( previous );
+    
+    // If a node exists already for this layer, we simply take the associated image,
+    // otherwise it means that the layer has never been processed before
+    if( node ) {
+      if( node->image ) {
+	bool ldirty = l->is_dirty();
+	if( false && !l->is_dirty() &&
+	    node->image->Xsize == par->get_xsize() &&
+	    node->image->Ysize == par->get_ysize() &&
+	    node->image->BandFmt == par->get_format() &&
+	    node->image->Bands == par->get_nbands() ) {
+	  out = node->image;
+	  previous_layer = l;
+	  continue;
+	} else {
+	  //vips_image_invalidate_all( node->image );
+	}
+      }
+    }
+
     // first we build the chains for the intensity and opacity maps
     VipsImage* imap = NULL;
+#ifndef NDEBUG
     std::cout<<"Layer \""<<l->get_name()<<"\""
 	     <<"  imap_layers.size()="<<l->imap_layers.size()
 	     <<"  omap_layers.size()="<<l->omap_layers.size()
 	     <<std::endl;
+#endif
     if( previous && !l->imap_layers.empty() ) {
       imap = rebuild_chain( view, PF_COLORSPACE_GRAYSCALE, 
 			    previous->Xsize, previous->Ysize, 
@@ -273,8 +420,10 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs,
 	// a primary input image, but there is no previous image available... we give up
 	return false;
       }
-      if(previous)
-	in.push_back(previous);
+
+      // we add the previous image to the list of inputs, even if it is NULL
+      //if(previous)
+      in.push_back(previous);
 
       // Now we loop on the vector of extra inputs, and we include the corresponding
       // images in the input vector
@@ -293,25 +442,34 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs,
 	in.push_back( extra_img );
       }
 
-      // If the layer is at the beginning of the chain, we set hints about the desired
-      // colorspace and pixel format using default values. 
-      // The size and colorspace hints might be ignored by
-      // the operation (for example in the case of an image from a file, where the
-      // size and colorspace are dictated by the file content).
-      // On the other hand, the pixel format hint should be strictly respected by all 
-      // operators, as it defined the accuracy at which the final image is rendered.
-      // If a previous image has been created already, hints are copied from it.
-      if( li == list.begin() )
-	par->set_image_hints( width, height, cs );
-      /* Not needed, already called by vips_layer_build() from src/vips/layer.cc
-      else if( previous )
-	par->set_image_hints( previous );
-      */
-
       if( par->get_config_ui() ) par->get_config_ui()->update_properties();
+#ifndef NDEBUG
       std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
-      newimg = par->build( in, 0, imap, omap);
+#endif
+      unsigned int level = view->get_level();
+      viewpar->import_settings( par );
+      newimg = viewpar->build( in, 0, imap, omap, level );
+      view->set_level( level );
+#ifndef NDEBUG
+      if( !newimg ) {
+	std::cout<<"WARNING: NULL image from layer \""<<name<<"\""<<std::endl;
+      } else {
+	void *data;
+	size_t data_length;
+	if( vips_image_get_blob( newimg, VIPS_META_ICC_NAME, 
+				 &data, &data_length ) ) {
+	  std::cout<<"WARNING: missing ICC profile from layer \""<<name<<"\""<<std::endl;
+	} else {
+	  cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
+	  if( profile_in ) {
+	    char tstr[1024];
+	    cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+	    std::cout<<"  Embedded profile found in layer \""<<name<<"\": "<<tstr<<std::endl;
+	  }
+	}
+      }
       std::cout<<"... done."<<std::endl;
+#endif
       if( par->get_config_ui() ) par->get_config_ui()->update();
     } else {
       std::vector<VipsImage*> in;
@@ -335,17 +493,38 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs,
       in.push_back( isub );
       
       if( par->get_config_ui() ) par->get_config_ui()->update_properties();
+#ifndef NDEBUG
       std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
-      newimg = par->build( in, 0, imap, omap);
+#endif
+      unsigned int level = view->get_level();
+      viewpar->import_settings( par );
+      newimg = viewpar->build( in, 0, imap, omap, level );
+      view->set_level( level );
+#ifndef NDEBUG
+      if( !newimg ) {
+	std::cout<<"WARNING: NULL image from layer \""<<name<<"\""<<std::endl;
+      } else {
+	void *data;
+	size_t data_length;
+	if( vips_image_get_blob( newimg, VIPS_META_ICC_NAME, 
+				 &data, &data_length ) ) {
+	  std::cout<<"WARNING: missing ICC profile from layer \""<<name<<"\""<<std::endl;
+	} else {
+	  cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
+	  if( profile_in ) {
+	    char tstr[1024];
+	    cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+	    std::cout<<"  Embedded profile found in layer \""<<name<<"\": "<<tstr<<std::endl;
+	  }
+	}
+      }
       std::cout<<"... done."<<std::endl;
+#endif
       if( par->get_config_ui() ) par->get_config_ui()->update();
     }
 
     if( newimg ) {
-      if( previous_layer )
-	view->set_node( newimg, l->get_id(), previous_layer->get_id() );
-      else
-	view->set_node( newimg, l->get_id(), -1 );
+      view->set_image( newimg, l->get_id() );
       //view.set_output( newimg );
       out = newimg;
       //previous = newimg;
@@ -358,7 +537,9 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs,
 
 bool PF::LayerManager::rebuild_prepare()
 {
+#ifndef NDEBUG
   std::cout<<"PF::LayerManager::rebuild_prepare(): layers.size()="<<layers.size()<<std::endl;
+#endif
   bool dirty = false;
   update_dirty( layers, dirty );
 

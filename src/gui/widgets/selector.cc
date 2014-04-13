@@ -91,7 +91,9 @@ void PF::Selector::set_value()
       //model:
       Glib::ustring value = row[columns.col_value];
 
+#ifndef NDEBUG
       std::cout << "selected value=" << value << std::endl;
+#endif
       std::string str = value.c_str();
       get_prop()->update(str);
     }

@@ -108,7 +108,8 @@ namespace PF
       extra_inputs[n] = lid; 
     }
     void add_input(int32_t lid) { extra_inputs.push_back(lid); }
-    std::vector<int32_t> get_extra_inputs() { return extra_inputs; }
+    void remove_input(int32_t lid);
+    std::vector<int32_t>& get_extra_inputs() { return extra_inputs; }
 
     std::list<Layer*>& get_sublayers() { return sublayers; }
     std::list<Layer*>& get_imap_layers() { return imap_layers; }

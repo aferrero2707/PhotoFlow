@@ -102,6 +102,7 @@ bool PF::SplineCurve::set_point( unsigned int id, float& x, float& y )
 void PF::SplineCurve::update_spline() 
 {
   unsigned int N = points.size();
+  if( N < 2) return;
   double* u = new double[N-1];
   if( ypp ) delete [] ypp;
   ypp = new double [N];

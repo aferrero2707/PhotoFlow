@@ -48,8 +48,11 @@ namespace PF
 
   struct ViewNode
   {
+    ProcessorBase* processor;
     VipsImage* image;
     int input_id;
+
+    ViewNode(): processor( NULL ), image( NULL ), input_id( -1 ) {}
   };
 
 
@@ -64,9 +67,9 @@ namespace PF
     VipsImage* output;
     std::vector<ViewSink*> sinks;
     VipsBandFormat format;
-    int level;
+    unsigned int level;
 
-    Glib::Threads::Mutex processing_mutex;
+    //Glib::Threads::Mutex processing_mutex;
 
   public:
     View(): modified(false), image(NULL), output(NULL), format(VIPS_FORMAT_UCHAR), level(0) {}
@@ -82,13 +85,16 @@ namespace PF
     void set_format( VipsBandFormat fmt ) { format = fmt; }
     VipsBandFormat get_format() { return format; }
 
-    void set_level( int l ) { level = l; }
+    void set_level( unsigned int l ) { level = l; }
+    unsigned int get_level() { return level; }
 
-    void set_node( VipsImage* img, unsigned int id, int input_id );
+    ViewNode* set_node( Layer* layer, Layer* input_layer );
+    void set_image( VipsImage* img, unsigned int id );
+    void remove_node( unsigned int id );
 
     ViewNode* get_node( int id ) 
     {
-      if( (id<0) || (id>=nodes.size()) ) return NULL;
+      if( (id<0) || (id>=(int)nodes.size()) ) return NULL;
       return nodes[id];
     }
 
@@ -97,9 +103,12 @@ namespace PF
 
     bool processing();
 
-    Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
+    //Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
 
     void add_sink( ViewSink* sink ) { sinks.push_back( sink ); }
+
+    void lock_processing();
+    void unlock_processing();
 
     void update();
   };
@@ -110,8 +119,11 @@ namespace PF
     View* view;
     bool processing;
     
+    Glib::Threads::Mutex processing_mutex;
+    int processing_count;
+
   public:
-    ViewSink( View* v ): view(v), processing( false )
+    ViewSink( View* v ): view(v), processing( false ), processing_count( 0 )
     {
       view->add_sink( this );
     }
@@ -121,7 +133,12 @@ namespace PF
     bool is_processing() { return processing; }
     void set_processing( bool flag ) { processing = flag; }
     
-    virtual void update() = 0;
+    void processing_count_increase() { processing_count += 1; }
+    void processing_count_decrease() { processing_count -= 1; }
+    int get_processing_count() { return processing_count; }
+    Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
+
+   virtual void update() = 0;
   };
 
 }

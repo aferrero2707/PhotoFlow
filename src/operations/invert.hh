@@ -172,6 +172,11 @@ namespace PF
   {
   };
 
+
+  ProcessorBase* new_invert()
+  {
+    return( new PF::Processor<PF::InvertPar,PF::Invert>() );
+  }
 }
 
 #endif 

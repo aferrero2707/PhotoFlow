@@ -48,8 +48,8 @@ namespace PF
 
   public:
     Convert2LabPar();
-    bool has_imap() { return false; }
-    bool has_omap() { return false; }
+    bool has_intensity() { return false; }
+    bool has_opacity() { return false; }
     bool needs_input() { return true; }
 
     cmsHTRANSFORM get_transform() { return transform; }
@@ -61,7 +61,9 @@ namespace PF
       lab_image( get_xsize(), get_ysize() );
     }
 
-    VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
+    VipsImage* build(std::vector<VipsImage*>& in, int first, 
+		     VipsImage* imap, VipsImage* omap, 
+		     unsigned int& level);
   };
 
   
@@ -98,10 +100,22 @@ namespace PF
       p = ir ? (T*)VIPS_REGION_ADDR( ir[0], r->left, r->top + y ) : NULL; 
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
       cmsDoTransform( transform, p, pout, width );
+#ifndef NDEBUG
+      if( y == 0 && r->top==0 && r->left == 0 ) {
+	std::cout<<"Convert2LabProc::render()"<<std::endl;
+	for( int i = 0; i < 12; i++ )
+	  std::cout<<(int)p[i]<<" ";
+	std::cout<<std::endl;
+	for( int i = 0; i < 12; i++ )
+	  std::cout<<(int)pout[i]<<" ";
+	std::cout<<std::endl;
+      }
+#endif
     }
   };
 
 
+  ProcessorBase* new_convert2lab();
 }
 
 #endif 

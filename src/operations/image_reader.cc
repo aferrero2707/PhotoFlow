@@ -43,16 +43,29 @@ vips_cast( VipsImage *in, VipsImage **out, VipsBandFormat format, ... );
 
 
 VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first, 
-				     VipsImage* imap, VipsImage* omap)
+				     VipsImage* imap, VipsImage* omap, 
+				     unsigned int& level)
 {
-  //VipsImage* outnew;
+  bool modified = false;
 
-  // Create VipsImage from given file; unref previously opened image if any
-  //if( image ) g_object_unref( image );
-  image = vips_image_new_from_file( file_name.get().c_str() );
-  //g_object_ref( image );
+  if( file_name.get().empty() )
+    return NULL;
+
+  if( file_name.get() != current_file ) {
+    /*
+    char* fullpath = realpath( file_name.get().c_str(), NULL );
+    if( fullpath ) {
+      file_name.set( fullpath );
+      free( fullpath );
+    }
+    */
+    // Create VipsImage from given file
+    image = vips_image_new_from_file( file_name.get().c_str() );
+    if( !image ) return NULL;
+    modified = true;
+  }
   
-
+#ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): "<<std::endl
 	   <<"input images:"<<std::endl;
   for(int i = 0; i < in.size(); i++) {
@@ -60,6 +73,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   }
   std::cout<<"image->Interpretation: "<<image->Type<<std::endl;
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
+#endif
 
 
 
@@ -67,6 +81,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   size_t data_length;
   if( !vips_image_get_blob( image, VIPS_META_ICC_NAME, 
 			    &data, &data_length ) ) {
+#ifndef NDEBUG
     cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
     if( profile_in ) {  
       char tstr[1024];
@@ -74,43 +89,41 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"ImageReader: Embedded profile found: "<<tstr<<std::endl;
       cmsCloseProfile( profile_in );
     }
+#endif
   }
 
 
-  VipsImage* out = image;
+  // If the requested format has changed the pyramid has to be re-built
+  if( current_format != get_format() )
+    modified = true;
 
-  if( get_format() != image->BandFmt ) {
-    //vips_call( "cast", image, &out, "format", get_format(), NULL );
-    //vips_cast( image, &out, get_format(), NULL );
+#ifndef NDEBUG
+  std::cout<<"ImageReaderPar::build(): get_format()="<<get_format()<<"  image->BandFmt="<<image->BandFmt<<std::endl;
+#endif
+  VipsImage* out = image;
+  if( modified && (get_format() != image->BandFmt) ) {
     std::vector<VipsImage*> in2;
     in2.push_back( image );
-    out = convert_format->get_par()->build( in2, 0, NULL, NULL );
+    convert_format->get_par()->set_image_hints( image );
+    convert_format->get_par()->set_format( get_format() );
+    out = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
     g_object_unref( image );
   }
-  /*
-  if( vips_image_get_typeof(out, VIPS_META_ICC_NAME) )
-    return NULL;
-  vips_image_set_blob( out, VIPS_META_ICC_NAME, 
-		       NULL, data, data_length );
-  */
-  if( !vips_image_get_blob( out, VIPS_META_ICC_NAME, 
-			    &data, &data_length ) ) {
-    
-    cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
-    if( profile_in ) {  
-      char tstr[1024];
-      cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
-      std::cout<<"ImageReader: Embedded profile found: "<<tstr<<std::endl;
-      cmsCloseProfile( profile_in );
-    }
+
+  // The pyramid is re-built if the input file or the format have changed
+  if( modified )
+    pyramid.init( out );
+
+  current_file = file_name.get();
+  current_format = get_format();
+
+  PF::PyramidLevel* plevel = pyramid.get_level( level );
+  if( plevel ) {
+    set_image_hints( plevel->image );
+    return plevel->image;
   }
-  /**/
 
-  set_image_hints( out );
-
-  //set_image( out );
-  std::cout<<"out: "<<(void*)out<<std::endl<<std::endl;
-  return out;
+  return NULL;
 
   /*
   // Prepare the blending step between the new image (in in2[1]) and the underlying image
@@ -126,4 +139,10 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
   set_image( blender->get_par()->get_image() );
   */
+}
+
+
+PF::ProcessorBase* PF::new_image_reader()
+{
+  return new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
 }

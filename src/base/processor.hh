@@ -32,6 +32,7 @@
 
 
 #include "operation.hh"
+#include "blender.hh"
 #include "photoflow.hh"
 
 
@@ -74,41 +75,41 @@ namespace PF
 
 
 
-#define MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BLENDER ) {	\
+#define MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX ) {	\
         switch(mapflag) { \
         case 0:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
-	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, false, false, false > op; \
+	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, false, false, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
-	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, false, false, true > op; \
+	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, false, false, true > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         case 1:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
-	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, true, false, false > op; \
+	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, true, false, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
-	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, true, false, true > op; \
+	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, true, false, true > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         case 2:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
-	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, false, true, false > op; \
+	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, false, true, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
-	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, false, true, true > op; \
+	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, false, true, true > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
         case 3:								\
 	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
-	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, true, true, false > op; \
+	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, true, true, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
-	    OP< TYPE, BLENDER< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, true, true, true > op; \
+	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, true, true, true > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  }								\
 	  break; \
@@ -116,82 +117,60 @@ namespace PF
 }					
 
 
-#define BLENDER_SWITCH( TYPE, CS, CHMIN, CHMAX ) {		\
-        switch(op_par.get_blend_mode()) {		\
-        case PF_BLEND_PASSTHROUGH:				\
-          MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BlendPassthrough );		\
-          break;							\
-        case PF_BLEND_NORMAL:				\
-          MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BlendNormal );	\
-          break;							\
-        case PF_BLEND_MULTIPLY:				\
-          MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BlendMultiply );	\
-          break;							\
-        case PF_BLEND_SCREEN:				\
-          MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX, BlendScreen );	\
-          break;							\
-        case PF_BLEND_OVERLAY:					\
-          break;						\
-        case PF_BLEND_UNKNOWN:					\
-          break;						\
-	}							\
-}
-
-
 #define CS_SWITCH( TYPE ) {			\
   switch(colorspace) {							\
   case PF_COLORSPACE_RAW:						\
   case PF_COLORSPACE_GRAYSCALE:						\
-    BLENDER_SWITCH( TYPE, PF_COLORSPACE_GRAYSCALE, 0, 0 );		\
+    MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_GRAYSCALE, 0, 0 );		\
     break;								\
   case PF_COLORSPACE_RGB:						\
     switch( op_par.get_rgb_target_channel() ) {				\
     case 0:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 0 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 0 );			\
       break;								\
     case 1:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_RGB, 1, 1 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 1, 1 );			\
       break;								\
     case 2:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_RGB, 2, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 2, 2 );			\
       break;								\
     default:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 2 );			\
       break;								\
     }									\
     break;								\
   case PF_COLORSPACE_LAB:						\
     switch( op_par.get_lab_target_channel() ) {				\
     case 0:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 0 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 0 );			\
       break;								\
     case 1:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_LAB, 1, 1 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 1, 1 );			\
       break;								\
     case 2:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_LAB, 2, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 2, 2 );			\
       break;								\
     default:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 2 );			\
       break;								\
     }									\
     break;								\
   case PF_COLORSPACE_CMYK:						\
-    switch( op_par.get_cmyk_target_channel() ) {				\
+    switch( op_par.get_cmyk_target_channel() ) {			\
     case 0:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 0 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 0 );			\
       break;								\
     case 1:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 1, 1 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 1, 1 );			\
       break;								\
     case 2:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 2, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 2, 2 );			\
       break;								\
     case 3:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 3, 3 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 3, 3 );			\
       break;								\
     default:								\
-      BLENDER_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 3 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 3 );			\
       break;								\
     }									\
     break;								\
@@ -243,14 +222,19 @@ namespace PF
     case PF_BANDFMT_UCHAR:
       CS_SWITCH( uint8_t );
       break;
-    case PF_BANDFMT_CHAR:
     case PF_BANDFMT_USHORT:
+      CS_SWITCH( unsigned short int );
+      break;
+    case PF_BANDFMT_FLOAT:
+      CS_SWITCH( float );
+      break;
+    case PF_BANDFMT_CHAR:
     case PF_BANDFMT_SHORT:
     case PF_BANDFMT_UINT:
     case PF_BANDFMT_INT:
-    case PF_BANDFMT_FLOAT:
     case PF_BANDFMT_DOUBLE:
     case PF_BANDFMT_UNKNOWN:
+      std::cout<<"Processor::process(): unhandled band format"<<std::endl;
       break;
     }
   }

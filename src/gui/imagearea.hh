@@ -49,6 +49,7 @@
 
 #include "../operations/image_reader.hh"
 #include "../operations/convert2srgb.hh"
+#include "../operations/convertformat.hh"
 
 #include "../gui/operations/imageread_config.hh"
 
@@ -86,6 +87,8 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
   VipsRegion* mask_region;
 
   PF::ProcessorBase* convert2srgb;
+
+  PF::ProcessorBase* convert_format;
 
   long int pending_pixels;
 
@@ -137,8 +140,13 @@ public:
   virtual ~ImageArea();
 
 #ifdef GTKMM_2
-  void expose_rect (GdkRectangle * expose);
+  void expose_rect (const VipsRect& area);
   bool on_expose_event (GdkEventExpose * event);
+#endif
+
+#ifdef GTKMM_3
+    void expose_rect (const VipsRect& area, const Cairo::RefPtr<Cairo::Context>& cr);
+    bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 #endif
 
   void update();
@@ -147,13 +155,14 @@ public:
   {
     Gtk::DrawingArea::on_realize();
 
-    get_window()->set_back_pixmap( Glib::RefPtr<Gdk::Pixmap>(), FALSE );
-    set_double_buffered( FALSE );
+    //get_window()->set_back_pixmap( Glib::RefPtr<Gdk::Pixmap>(), FALSE );
+    //set_double_buffered( FALSE );
 
     Gtk::Allocation allocation = get_allocation();
+#ifndef NDEBUG
     std::cout<<"DrawingArea size: "<<allocation.get_width()<<","
 	     <<allocation.get_height()<<std::endl;
-
+#endif
   }
 };
 

@@ -29,6 +29,7 @@
 
 
 #include "convertformat.hh"
+#include "../base/processor.hh"
 
 
 PF::ConvertFormatPar::ConvertFormatPar(): 
@@ -38,17 +39,36 @@ PF::ConvertFormatPar::ConvertFormatPar():
 }
 
 
-VipsImage* PF::ConvertFormatPar::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
+VipsImage* PF::ConvertFormatPar::build(std::vector<VipsImage*>& in, int first, 
+				       VipsImage* imap, VipsImage* omap, 
+				       unsigned int& level)
 {
   void *data;
   size_t data_length;
   
   if( in.size()<1 || in[first]==NULL ) return NULL;
+  VipsBandFormat fmtin = in[first]->BandFmt;
+  VipsBandFormat fmtout = get_format();
+
+#ifndef NDEBUG
+  std::cout<<"PF::ConvertFormatPar::build(): fmtin="<<fmtin<<"  fmtout="<<fmtout<<std::endl;
+#endif
 
   if( in[first]->BandFmt == get_format() ) {
     g_object_ref( in[first] );
     return in[first];
   }
 
-  return OpParBase::build( in, first, NULL, NULL );
+  VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
+ 
+  return out;
+}
+
+
+
+
+
+PF::ProcessorBase* PF::new_convert_format()
+{
+  return new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 }

@@ -75,11 +75,15 @@ PF::CurvesPar::CurvesPar():
 
 
 VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first, 
-				VipsImage* imap, VipsImage* omap)
+				VipsImage* imap, VipsImage* omap, 
+				unsigned int& level)
 {
-  VipsImage* out = PF::OpParBase::build( in, first, imap, omap );
+  VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
 
   Greyvec.clear();
+  for( int i = 0; i <= 1000; i++ ) {
+    Greyvec.push_back( std::make_pair( float(i)/1000, float(0) ) );
+  }
   grey_curve.get().get_deltas( Greyvec );
 
   for( int j = 0; j < 4; j++ ) {
@@ -129,4 +133,11 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   return out;
+}
+
+
+
+PF::ProcessorBase* PF::new_curves()
+{
+  return( new PF::Processor<PF::CurvesPar,PF::Curves>() );
 }

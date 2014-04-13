@@ -60,7 +60,9 @@ namespace PF
     bool has_intensity() { return false; }
     bool needs_input() { return false; } /* to be fixed... */
 
-    VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
+    VipsImage* build(std::vector<VipsImage*>& in, int first, 
+		     VipsImage* imap, VipsImage* omap, 
+		     unsigned int& level);
   };
 
   
@@ -70,6 +72,8 @@ namespace PF
   {
   };
 
+
+  ProcessorBase* new_vips_operation();
 }
 
 #endif 

@@ -90,6 +90,8 @@ namespace PF
     PF_BLEND_OVERLAY,
     PF_BLEND_MULTIPLY,
     PF_BLEND_SCREEN,
+    PF_BLEND_LIGHTEN,
+    PF_BLEND_DARKEN,
     PF_BLEND_UNKNOWN
   };
 
@@ -115,6 +117,8 @@ namespace PF
       add_enum_value(PF_BLEND_OVERLAY,"PF_BLEND_OVERLAY","Overlay");
       add_enum_value(PF_BLEND_MULTIPLY,"PF_BLEND_MULTIPLY","Multiply");
       add_enum_value(PF_BLEND_SCREEN,"PF_BLEND_SCREEN","Screen");
+      add_enum_value(PF_BLEND_LIGHTEN,"PF_BLEND_LIGHTEN","Lighten");
+      add_enum_value(PF_BLEND_DARKEN,"PF_BLEND_DARKEN","Darken");
       //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
       //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
       //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");

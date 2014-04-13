@@ -30,7 +30,7 @@
 #include "brightness_contrast.hh"
 
 
-PF::ProcessorBase* new_op()
+PF::ProcessorBase* PF::new_brightness_contrast()
 {
   return ( new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>() );
 }

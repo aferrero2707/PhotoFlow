@@ -44,9 +44,14 @@ namespace PF {
   {
     Image* image;
 
+    Gtk::VBox imageBox;
     ImageArea imageArea;
     Gtk::ScrolledWindow imageArea_scrolledWindow;
     LayerWidget layersWidget;
+    Gtk::HBox controlsBox;
+    Gtk::Button buttonZoomIn, buttonZoomOut;
+    Gtk::VBox radioBox;
+    Gtk::RadioButton buttonShowMerged, buttonShowActive;
 
   public:
     ImageEditor( Image* image );
@@ -56,6 +61,8 @@ namespace PF {
 
     LayerWidget& get_layer_widget() { return layersWidget; }
 
+    void zoom_in();
+    void zoom_out();
   };
 
 }

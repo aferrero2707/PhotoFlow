@@ -55,6 +55,9 @@ namespace PF
   {
   };
 
+
+  ProcessorBase* new_brightness_contrast();
+
 }
 
 #endif 

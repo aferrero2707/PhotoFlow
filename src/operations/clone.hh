@@ -39,13 +39,35 @@
 namespace PF 
 {
 
+  enum clone_channel {
+    CLONE_CHANNEL_GREY,
+    CLONE_CHANNEL_RGB,
+    CLONE_CHANNEL_R,
+    CLONE_CHANNEL_G,
+    CLONE_CHANNEL_B,
+    CLONE_CHANNEL_Lab,
+    CLONE_CHANNEL_L,
+    CLONE_CHANNEL_a,
+    CLONE_CHANNEL_b,
+    CLONE_CHANNEL_CMYK,
+    CLONE_CHANNEL_C,
+    CLONE_CHANNEL_M,
+    CLONE_CHANNEL_Y,
+    CLONE_CHANNEL_K
+  }; 
+
   class ClonePar: public BlenderPar
   {
+    PropertyBase source_channel;
+
+    ProcessorBase* convert_format;
+    ProcessorBase* convert2lab;
+
+    VipsImage* Lab2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
+    VipsImage* rgb2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
+
   public:
-    ClonePar(): BlenderPar() 
-    {
-      set_type( "clone" );
-    }
+    ClonePar();
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 
@@ -53,7 +75,9 @@ namespace PF
      */
     bool has_intensity() { return false; }
 
-    VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
+    VipsImage* build(std::vector<VipsImage*>& in, int first, 
+		     VipsImage* imap, VipsImage* omap, 
+		     unsigned int& level);
   };
 
   
@@ -63,6 +87,7 @@ namespace PF
   {
   };
 
+  ProcessorBase* new_clone();
 }
 
 #endif 

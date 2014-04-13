@@ -52,6 +52,7 @@ namespace PF
 
     //VipsImage* output;
 
+    std::list<Layer*>* get_list( PF::Layer* layer, std::list<PF::Layer*>& list);
     bool get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist, 
 			   std::string parent_name, std::list<Layer*>& list);
 
@@ -70,11 +71,14 @@ namespace PF
     ~LayerManager();
 
     Layer* new_layer();
+    void delete_layer( Layer* layer );
 
     Image* get_image() { return image; }
     void set_image( Image* img ) { image = img; }
 
     std::list<Layer*>& get_layers() { return layers; }
+
+    std::list<Layer*>* get_list(PF::Layer* layer);
 
     void get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist);
 
@@ -96,6 +100,8 @@ namespace PF
     bool save( std::ostream& ostr );
   };
 
+
+  bool insert_layer( std::list<Layer*>& layers, Layer* layer, int32_t lid );
 };
 
 

@@ -30,6 +30,8 @@
 #ifndef CONVERT_2_SRGB_H
 #define CONVERT_2_SRGB_H
 
+#include <string.h>
+
 #include <iostream>
 
 #include <lcms2.h>
@@ -61,7 +63,9 @@ namespace PF
       rgb_image( get_xsize(), get_ysize() );
     }
 
-    VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
+    VipsImage* build(std::vector<VipsImage*>& in, int first, 
+		     VipsImage* imap, VipsImage* omap, 
+		     unsigned int& level);
   };
 
   
@@ -102,6 +106,7 @@ namespace PF
   };
 
 
+  ProcessorBase* new_convert2srgb();
 }
 
 #endif 

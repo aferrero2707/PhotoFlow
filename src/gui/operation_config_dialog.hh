@@ -53,6 +53,18 @@ namespace PF {
   Gtk::HBox controlsBox;
   Gtk::VBox controlsBoxLeft;
   Gtk::VBox controlsBoxRight;
+#endif
+#ifdef GTKMM_3
+  Gtk::Box mainBox;
+  Gtk::Box mainHBox;
+  Gtk::Box chselBox;
+  Gtk::Box topBox;
+  Gtk::Box nameBox;
+  Gtk::Box controlsBox;
+  Gtk::Box controlsBoxLeft;
+  Gtk::Box controlsBoxRight;
+#endif
+
   Gtk::Frame topFrame;
 
   Gtk::Entry nameEntry;
@@ -64,10 +76,6 @@ namespace PF {
 
   //Gtk::Adjustment intensityAdj, opacityAdj;
   //Gtk::HScale intensityScale, opacityScale;
-#endif
-#ifdef GTKMM_3
-  Gtk::Box mainBox;
-#endif
 
   Slider intensitySlider, opacitySlider;
   Selector blendSelector;
@@ -81,7 +89,12 @@ public:
   OperationConfigDialog(Layer* layer, const Glib::ustring& title);
   virtual ~OperationConfigDialog();
 
+#ifdef GTKMM_2
   Gtk::VBox& get_main_box() { return mainBox; }
+#endif
+#ifdef GTKMM_3
+  Gtk::Box& get_main_box() { return mainBox; }
+#endif
 
   void add_widget( Gtk::Widget& widget );
 

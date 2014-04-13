@@ -29,16 +29,9 @@
 
 
 #include "new_operation.hh"
-
+#include "layer.hh"
+#include "../operations/operations.hh"
 #include "../operations/vips_operation.hh"
-#include "../operations/image_reader.hh"
-#include "../operations/brightness_contrast.hh"
-#include "../operations/invert.hh"
-#include "../operations/gradient.hh"
-#include "../operations/convert2lab.hh"
-#include "../operations/clone.hh"
-#include "../operations/curves.hh"
-
 
 PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_layer )
 {
@@ -46,31 +39,53 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   if( op_type == "imageread" ) { 
 
-    processor = new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
+    //processor = new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
+    processor = new_image_reader();
+
+  } else if( op_type == "buffer" ) {
+
+    //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    processor = new_buffer();
 
   } else if( op_type == "blender" ) {
 
-    processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    processor = new_blender();
 
   } else if( op_type == "clone" ) {
 
-    processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    processor = new_clone();
 
   } else if( op_type == "invert" ) {
 
-    processor = new PF::Processor<PF::InvertPar,PF::Invert>();
+    //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
+    processor = new_invert();
+
+  } else if( op_type == "gradient" ) {
+
+    //processor = new PF::Processor<PF::GradientPar,PF::Gradient>();
+    processor = new_gradient();
 
   } else if( op_type == "brightness_contrast" ) {
 
-    processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
+    //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
+    processor = new_brightness_contrast();
 
   } else if( op_type == "curves" ) {
       
-    processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
+    //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
+    processor = new_curves();
+
+  } else if( op_type == "gaussblur" ) {
+      
+    //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
+    processor = new_gaussblur();
 
   } else if( op_type == "convert2lab" ) {
 
-    processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
+    //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
+    processor = new_convert2lab();
 
   } else { // it must be a VIPS operation...
 
@@ -81,6 +96,7 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     PF::Processor<PF::VipsOperationPar,PF::VipsOperationProc>* vips_op = 
       new PF::Processor<PF::VipsOperationPar,PF::VipsOperationProc>();
+    //ProcessorBase* vips_op = new_vips_operation();
     vips_op->get_par()->set_op( vips_op_type.c_str() );
     processor = vips_op;
   }

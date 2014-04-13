@@ -92,3 +92,28 @@ void PF::set_gobject_property<std::string>(gpointer object, const std::string na
 }
 
 
+
+bool PF::PropertyBase::import(PF::PropertyBase* pin)
+{
+  if( !pin ) 
+    return false;
+
+  if( is_enum() ) {
+    std::pair< int, std::pair<std::string,std::string> > val = pin->get_enum_value();
+    std::map< int, std::pair<std::string,std::string> >::iterator mi = 
+      enum_values.find( val.first );
+    if( mi == enum_values.end() ) 
+      return false;
+    std::pair< int, std::pair<std::string,std::string> > val2 = *mi;
+    if( (mi->second.first == val2.second.first) &&
+	(mi->second.second == val2.second.second) ) {
+      enum_value = val;
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    set_str( pin->get_str() );
+    return true;
+  }
+}

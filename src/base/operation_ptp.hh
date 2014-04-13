@@ -67,10 +67,10 @@ namespace PF
   {
     PEL_PROC<PIXELPROC_TEMPLATE_IMP> proc(par);
 
-    BLENDER blender;
-    
     float intensity = par->get_intensity();
     float opacity = par->get_opacity();
+    
+    BLENDER blender( par->get_blend_mode(), opacity );
     
     Rect *r = &oreg->valid;
     int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
@@ -102,28 +102,23 @@ namespace PF
     
     //std::cout<<"sz: "<<sz<<std::endl;
     int x, y, ch, dx=CHMAX-CHMIN+1, CHMAXplus1=CHMAX+1;
-    int ximap, xomap, ni;
+    int ximap, ni;
     
     for( y = 0; y < r->height; y++ ) {
       
       for( ni = 0; ni < n; ni++) 
 	p[ni] = (T*)VIPS_REGION_ADDR( ir[ni], r->left, r->top + y ); 
-      //p[ni] = (T*)IM_REGION_ADDR(ir[ni],y,le);
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
-      //pout = (T*)IM_REGION_ADDR(oreg,y,le);
       if(has_imap) pimap = (T*)VIPS_REGION_ADDR( imap, r->left, r->top + y );
-      //if(has_omap) pomap = (T*)VIPS_REGION_ADDR( omap, r->left, r->top + y );
-      blender.init_line( omap, r->left, r->top + y );
       
       //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  intensity="<<intensity/*<<"  real="<<intensity_real*/<<std::endl;
 
-      for( x=0, ximap=0, xomap=0; x < line_size; ) {
+      for( x=0, ximap=0; x < line_size; ) {
 
 	//continue;
 	float intensity_real = this->get_intensity( intensity, pimap, ximap );
 	for( ch=0; ch<CHMIN; ch++, x++ ) pout[x] = p[0][x];
 	proc.process( p, n, in_first, sz, x, intensity_real/*get_intensity( intensity, pimap, ximap )*/, pout );
-	blender.blend( opacity, p[0], pout, pout, x, xomap );
 	x += dx;
 	for( ch=CHMAXplus1; ch<PF::ColorspaceInfo<CS>::NCH; ch++, x++ ) pout[x] = p[0][x];
 	//x += sz;
@@ -134,6 +129,9 @@ namespace PF
 	
       }
     }
+
+    VipsRegion* ireg = ir ? ir[0] : NULL;
+    blender.blend( ireg, oreg, oreg, omap );
   };
 
 }

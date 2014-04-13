@@ -69,8 +69,11 @@ public:
   */
 
   void add_layer( Layer* layer );
+  void remove_layers();
 
   void update() {
+    if( layer_views.size() > 0 )
+      std::cout<<"layer_views.size() > 0"<<std::endl;
     for(unsigned int i = 0; i < layer_views.size(); i++) 
       layer_views[i]->update_model();
   }
@@ -79,9 +82,9 @@ public:
   void on_button_add_group();
   void on_button_del();
 
-  void on_cell_toggled(const Glib::ustring& path);
-
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
+
+  void remove_tab( Gtk::Widget* widget );
 };
 
 }

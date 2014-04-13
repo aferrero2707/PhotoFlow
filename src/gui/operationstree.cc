@@ -35,6 +35,7 @@
 #include "operationstree.hh"
 #include "layerwidget.hh"
 
+/*
 #include "../operations/vips_operation.hh"
 #include "../operations/image_reader.hh"
 #include "../operations/brightness_contrast.hh"
@@ -49,6 +50,7 @@
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/curves_config.hh"
+*/
 
 PF::OperationsTree::OperationsTree( )
 {
@@ -145,6 +147,10 @@ void PF::OperationsTree::update_model()
   row[columns.col_nickname] = "imageread";
 
   row = *(treeModel->append());
+  row[columns.col_name] = "Buffer layer";
+  row[columns.col_nickname] = "buffer";
+
+  row = *(treeModel->append());
   row[columns.col_name] = "Clone layer";
   row[columns.col_nickname] = "clone";
 
@@ -153,12 +159,20 @@ void PF::OperationsTree::update_model()
   row[columns.col_nickname] = "invert";
 
   row = *(treeModel->append());
+  row[columns.col_name] = "Gradient";
+  row[columns.col_nickname] = "gradient";
+
+  row = *(treeModel->append());
   row[columns.col_name] = "Brightness/Contrast";
   row[columns.col_nickname] = "brightness_contrast";
 
   row = *(treeModel->append());
   row[columns.col_name] = "Curves";
   row[columns.col_nickname] = "curves";
+
+  row = *(treeModel->append());
+  row[columns.col_name] = "Gaussian blur";
+  row[columns.col_nickname] = "gaussblur";
 
   row = *(treeModel->append());
   row[columns.col_name] = "Lab conversion";
@@ -178,7 +192,7 @@ void PF::OperationsTree::update_model()
     for( j = i->second.begin(); j != i->second.end(); j++ ) {
       row = *(treeModel->append(group.children()));
       row[columns.col_name] = (*j).c_str();
-      row[columns.col_nickname] = (*j).c_str();
+      row[columns.col_nickname] = Glib::ustring("vips-")+(*j).c_str();
     }
   }
 
@@ -197,7 +211,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   image( img ),
   layer_widget( lw )
 {
-  set_default_size(300,600);
+  set_default_size(300,300);
 
   add_button("OK",1);
   add_button("Cancel",0);
@@ -230,11 +244,13 @@ void PF::OperationsTreeDialog::on_button_clicked(int id)
 {
   switch(id) {
   case 0:
-    hide_all();
+    //hide_all();
+    hide();
     break;
   case 1:
     add_layer();
-    hide_all();
+    //hide_all();
+    hide();
     break;
   }
 }
@@ -243,7 +259,8 @@ void PF::OperationsTreeDialog::on_button_clicked(int id)
 void PF::OperationsTreeDialog::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column )
 {
   add_layer();
-  hide_all();
+  //hide_all();
+  hide();
   /*
   Gtk::TreeModel::iterator iter = op_tree.get_model()->get_iter( path );
   if (iter) {

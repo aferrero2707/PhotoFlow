@@ -29,6 +29,7 @@
 
 
 #include "convert2rgb.hh"
+#include "../base/processor.hh"
 
 
 static cmsUInt32Number vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE pin )
@@ -140,7 +141,9 @@ PF::Convert2RGBPar::Convert2RGBPar():
 }
 
 
-VipsImage* PF::Convert2RGBPar::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
+VipsImage* PF::Convert2RGBPar::build(std::vector<VipsImage*>& in, int first, 
+				     VipsImage* imap, VipsImage* omap, 
+				     unsigned int& level)
 {
   void *data;
   size_t data_length;
@@ -177,5 +180,12 @@ VipsImage* PF::Convert2RGBPar::build(std::vector<VipsImage*>& in, int first, Vip
     }
   }
 
-  return OpParBase::build( in, first, NULL, NULL );
+  return OpParBase::build( in, first, NULL, NULL, level );
+}
+
+
+
+PF::ProcessorBase* PF::new_convert2rgb()
+{
+  return( new PF::Processor<PF::Convert2RGBPar,PF::Convert2RGBProc>() );
 }

@@ -32,7 +32,8 @@
 
 PF::LayerList::LayerList( OperationConfigUI* d, std::string l ):
   Gtk::VBox(),
-  dialog (d )
+  dialog (d ),
+  inhibit( false )
 {
   label.set_text( l.c_str() );
 
@@ -58,26 +59,69 @@ void PF::LayerList::update_model()
   if( !dialog ) return;
   PF::Layer* layer = dialog->get_layer();
   if(! layer ) return;
+#ifndef NDEBUG
+  const char* layer_name = layer->get_name().c_str();
+#endif
   PF::Image* image = layer->get_image();
   if( !image ) return;
   std::list< std::pair<std::string,Layer*> > list;
   image->get_layer_manager().get_parent_layers( layer, list );
 
+  int lid_prev = -1;
+  Gtk::TreeModel::iterator active_iter = cbox.get_active();
+  if( active_iter ) {
+    Gtk::TreeModel::Row row = *active_iter;
+    if( row ) {
+      PF::Layer* active_layer = row[columns.col_layer];
+      if( active_layer )
+	lid_prev = active_layer->get_id();
+    }
+  }
+
+  inhibit = true;
   model->clear();
 
+  int lid = -1;
+  if( layer->get_extra_inputs().size() > 0 )
+    lid = layer->get_extra_inputs()[0];
+
+  int active_lid = -1;
+  int last_lid = -1;
   std::list< std::pair<std::string,Layer*> >::reverse_iterator iter;
   for( iter = list.rbegin(); iter != list.rend(); iter++ ) {
     Gtk::TreeModel::iterator ri = model->append();
     Gtk::TreeModel::Row row = *(ri);
     row[columns.col_name] = (*iter).first;
     row[columns.col_layer] = (*iter).second;
-    //if( def.first == (*iter).first) cbox.set_active( ri );
+    if( (*iter).second ) {
+      if( (*iter).second->get_id() == lid) {
+	cbox.set_active( model->children().size()-1 );
+	active_lid = (*iter).second->get_id();
+      }
+      last_lid = (*iter).second->get_id();
+    }
+  }
+  if( active_lid < 0 ) {
+    // No layer matching any of the extra inputs has been found.
+    // Either there are no extra inputs yet defined, or the list of layers has changed
+    if( last_lid >= 0 ) {
+      // There are however some layers that have been inserted in the list of potential
+      // sources, therefore we pick the first one
+      cbox.set_active( model->children().size()-1 );
+      active_lid = last_lid;
+    }
+  }
+
+  inhibit = false;
+  if( lid_prev != active_lid ){
+    changed();
   }
 }
 
 
 void PF::LayerList::changed()
 {
+  if( inhibit ) return;
   if( !dialog ) return;
   PF::Layer* layer = dialog->get_layer();
   if(! layer ) return;

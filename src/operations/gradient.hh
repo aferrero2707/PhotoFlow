@@ -33,17 +33,41 @@
 #include <iostream>
 
 #include "../base/format_info.hh"
+#include "../base/processor.hh"
 
 namespace PF 
 {
 
+  enum gradient_type_t {
+    GRADIENT_VERTICAL,
+    GRADIENT_HORIZONTAL,
+    GRADIENT_RADIAL
+  };
+
   class GradientPar: public OpParBase
   {
+    PropertyBase gradient_type;
+    Property<float> gradient_center_x;
+    Property<float> gradient_center_y;
+
   public:
-    GradientPar(): OpParBase() 
+    GradientPar(): 
+      OpParBase(),
+      gradient_type("gradient_type",this,GRADIENT_VERTICAL,"vertical","Vertical"),
+      gradient_center_x("gradient_center_x",this,0.5),
+      gradient_center_y("gradient_center_y",this,0.5)
     {
+      gradient_type.add_enum_value(GRADIENT_VERTICAL,"vertical","Vertical");
+      gradient_type.add_enum_value(GRADIENT_HORIZONTAL,"horizontal","Horizontal");
+      gradient_type.add_enum_value(GRADIENT_RADIAL,"radial","Radial");
       set_type( "gradient" );
     }
+
+    gradient_type_t get_gradient_type() { 
+      gradient_type_t result = gradient_type_t(gradient_type.get_enum_value().first);
+      return( result ); 
+    }
+
     bool needs_input() { return false; }
   };
 
@@ -65,59 +89,69 @@ namespace PF
 	 VipsRegion* imap, VipsRegion* omap, 
 	 VipsRegion* oreg, GradientPar* par)
   {
-    BLENDER blender;
-    
-    //double intensity = par->get_intensity();
+    BLENDER blender( par->get_blend_mode(), par->get_opacity() );
     
     Rect *r = &oreg->valid;
-    //int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
-    int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
+    int bands = oreg->im->Bands;
+    int line_size = r->width * bands; //layer->in_all[0]->Bands; 
 
-
-      /*
-    std::cout<<"OperationPTP::render(): "<<std::endl
-	     <<"  input region:  top="<<ir[in_first]->valid.top
-	     <<" left="<<ir[in_first]->valid.left
-	     <<" width="<<ir[in_first]->valid.width
-	     <<" height="<<ir[in_first]->valid.height<<std::endl
-	     <<"  output region: top="<<oreg->valid.top
-	     <<" left="<<oreg->valid.left
-	     <<" width="<<oreg->valid.width
-	     <<" height="<<oreg->valid.height<<std::endl;
-      */
-
-    T* p;    
     T* pout;
-    //T* pimap;
-    //T* pomap;
-    int x, xomap, y;
+    int x, y;
 
+    int width = oreg->im->Xsize - oreg->im->Xoffset;
     int height = oreg->im->Ysize - oreg->im->Yoffset;
-
-    float opacity = par->get_opacity();
 
     //std::cout<<"Gradient::render: height="<<height<<std::endl;
     
-    for( y = 0; y < r->height; y++ ) {
-      
-      p = ir ? (T*)VIPS_REGION_ADDR( ir[0], r->left, r->top + y ) : NULL; 
-      pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
-      //if(has_imap) pimap = (T*)IM_REGION_ADDR(imap,y,le);
-      //if(has_omap) pomap = (T*)IM_REGION_ADDR(omap,y,le);
-      blender.init_line( omap, r->left, r->top + y );
-
-      T val = (T)((float)FormatInfo<T>::RANGE*((float)height - r->top - y)/height + FormatInfo<T>::MIN);
-
-      //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
-      
-      for( x = 0, xomap = 0; x < line_size; ++x) {
-	pout[x] = val;
-	blender.blend( opacity, p, pout, x, xomap );
+    switch( par->get_gradient_type() ) {
+    case GRADIENT_VERTICAL: 
+      {
+	for( y = 0; y < r->height; y++ ) {      
+	  pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+	  T val = (T)((float)FormatInfo<T>::RANGE*((float)height - r->top - y)/height + FormatInfo<T>::MIN);
+	  //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
+	  for( x = 0; x < line_size; ++x) {
+	    pout[x] = val;
+	  }
+	}
+	break;
       }
+    case GRADIENT_HORIZONTAL: 
+      {
+	T* valvec = new T[line_size];
+	T val;
+	if( valvec == NULL )
+	  break;
+	int px, b;
+	for( x = 0, px = 0; x < r->width; ++x) {
+	  val = (T)((float)FormatInfo<T>::RANGE*((float)r->left + x)/width + FormatInfo<T>::MIN);
+	  for( b = 0; b < bands; ++b, ++px) {
+	    valvec[px] = val;
+	  }
+	}
+	for( y = 0; y < r->height; y++ ) {      
+	  pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+	  //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
+	  for( x = 0; x < line_size; ++x) {
+	    pout[x] = valvec[x];
+	  }
+	}
+	break;
+      }
+    case GRADIENT_RADIAL:
+      {
+	break;
+      } 
     }
+
+    VipsRegion* ireg = ir ? ir[0] : NULL;
+    blender.blend( ireg, oreg, oreg, omap );
   };
 
 
+
+
+  ProcessorBase* new_gradient();
 }
 
 #endif 

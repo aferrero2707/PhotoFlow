@@ -41,17 +41,22 @@ PF::MainWindow::MainWindow():
   controlBox(),
 #endif
 #ifdef GTKMM_3
-  mainBox(Gtk::ORIENTATION_HORIZONTAL),
-  viewBox(Gtk::ORIENTATION_VERTICAL),
+  mainBox(Gtk::ORIENTATION_VERTICAL),
+  editorBox(Gtk::ORIENTATION_VERTICAL),
   controlBox(Gtk::ORIENTATION_VERTICAL),
+  topButtonBox(Gtk::ORIENTATION_HORIZONTAL),
 #endif
-  buttonOpen("Open"), buttonSave("Save"), buttonExit("Exit"), buttonTest("Test")
+  buttonOpen("Open"), 
+  buttonSave("Save"), 
+  buttonExport("Export"), 
+  buttonExit("Exit"), 
+  buttonTest("Test")
 {
   set_title("Photo Flow");
   // Sets the border width of the window.
   set_border_width(0);
   //set_default_size(120,80);
-  set_default_size(800,600);
+  set_default_size(1200,700);
   
   add(mainBox);
 
@@ -70,6 +75,7 @@ PF::MainWindow::MainWindow():
 
   topButtonBox.pack_start(buttonOpen, Gtk::PACK_SHRINK);
   topButtonBox.pack_start(buttonSave, Gtk::PACK_SHRINK);
+  topButtonBox.pack_start(buttonExport, Gtk::PACK_SHRINK);
   topButtonBox.pack_start(buttonExit, Gtk::PACK_SHRINK);
   topButtonBox.set_border_width(5);
   topButtonBox.set_layout(Gtk::BUTTONBOX_START);
@@ -79,6 +85,9 @@ PF::MainWindow::MainWindow():
 
   buttonSave.signal_clicked().connect( sigc::mem_fun(*this,
 						     &MainWindow::on_button_save_clicked) );
+
+  buttonExport.signal_clicked().connect( sigc::mem_fun(*this,
+						       &MainWindow::on_button_export_clicked) );
 
   buttonExit.signal_clicked().connect( sigc::mem_fun(*this,
 						     &MainWindow::on_button_exit) );
@@ -126,6 +135,10 @@ PF::MainWindow::MainWindow():
 PF::MainWindow::~MainWindow()
 {
   std::cout<<"~MainWindow(): deleting images"<<std::endl;
+  for( unsigned int i = 0; i < image_editors.size(); i++ ) {
+    if( image_editors[i] )
+      delete( image_editors[i] );
+  }
   //delete pf_image;
 }
 
@@ -149,6 +162,7 @@ PF::MainWindow::open_image( std::string filename )
   image->set_async( true );
   image->open( filename );
   PF::ImageEditor* editor = new PF::ImageEditor( image );
+  image_editors.push_back( editor );
   viewerNotebook.append_page( *editor, filename.c_str() );
   image->update();
   editor->show();
@@ -279,6 +293,8 @@ PF::MainWindow::open_image( std::string filename )
 
 void PF::MainWindow::on_button_open_clicked()
 {
+  return;
+
   Gtk::FileChooserDialog dialog("Open image",
 				Gtk::FILE_CHOOSER_ACTION_OPEN);
   dialog.set_transient_for(*this);
@@ -343,6 +359,51 @@ void PF::MainWindow::on_button_save_clicked()
 	PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
 	if( editor && editor->get_image() )
 	  editor->get_image()->save( filename );
+      }
+      break;
+    }
+  case(Gtk::RESPONSE_CANCEL): 
+    {
+      std::cout << "Cancel clicked." << std::endl;
+      break;
+    }
+  default: 
+    {
+      std::cout << "Unexpected button clicked." << std::endl;
+      break;
+    }
+  }
+}
+
+
+void PF::MainWindow::on_button_export_clicked()
+{
+  Gtk::FileChooserDialog dialog("Export image as...",
+				Gtk::FILE_CHOOSER_ACTION_SAVE);
+  dialog.set_transient_for(*this);
+  
+  //Add response buttons the the dialog:
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+
+  //Show the dialog and wait for a user response:
+  int result = dialog.run();
+
+  //Handle the response:
+  switch(result) {
+  case(Gtk::RESPONSE_OK): 
+    {
+      std::cout << "Export clicked." << std::endl;
+
+      //Notice that this is a std::string, not a Glib::ustring.
+      std::string filename = dialog.get_filename();
+      std::cout << "File selected: " <<  filename << std::endl;
+      int page = viewerNotebook.get_current_page();
+      Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
+      if( widget ) {
+	PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+	if( editor && editor->get_image() )
+	  editor->get_image()->export_merged( filename );
       }
       break;
     }

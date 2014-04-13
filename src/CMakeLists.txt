@@ -60,6 +60,8 @@ FILE(GLOB OpSources operations/*.cc)
 add_library (pfbase
   ${BaseIncludes}
   ${BaseSources}
+  ${OpIncludes}
+  ${OpSources}
 )
 
 add_library (pfvips #SHARED
@@ -67,10 +69,10 @@ add_library (pfvips #SHARED
   ${VipsSources}
 )
 
-add_library (pfoperations
-  ${OpIncludes}
-  ${OpSources}
-)
+#add_library (pfoperations
+#  ${OpIncludes}
+#  ${OpSources}
+#)
 
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_CFLAGS "-fPIC -DPIC")
 SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-fpermissive")
@@ -85,21 +87,21 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
   )
 
 
-target_link_libraries(photoflow ${LIBS} pfbase pfoperations pfvips ${SIGC2_LIBRARIES}
+target_link_libraries(photoflow ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}  dl
   )
 
 
-add_executable(invert # name of the executable on Windows will be example.exe 
-  benchmarks/invert.cc 
-  )
-SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
+#add_executable(invert # name of the executable on Windows will be example.exe 
+#  benchmarks/invert.cc 
+#  )
+#SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
 
-target_link_libraries(invert ${LIBS} pfbase pfoperations pfvips ${SIGC2_LIBRARIES}
-  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}  dl
-  )
+#target_link_libraries(invert ${LIBS} pfbase pfoperations pfvips ${SIGC2_LIBRARIES}
+#  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
+#  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}  dl
+#  )
 
 
 add_executable(cast # name of the executable on Windows will be example.exe 
@@ -107,6 +109,14 @@ add_executable(cast # name of the executable on Windows will be example.exe
   )
 
 target_link_libraries(cast ${VIPS_LIBRARIES}
+  )
+
+
+add_executable(rawsave # name of the executable on Windows will be example.exe 
+  tests/rawsave.c
+  )
+
+target_link_libraries(rawsave ${VIPS_LIBRARIES}
   )
 
 

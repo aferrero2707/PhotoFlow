@@ -52,6 +52,7 @@ namespace PF
     Image* active_image;
 
     new_op_func_t new_op_func;
+    new_op_func_t new_op_func_nogui;
 
     static PhotoFlow* instance;
   public:
@@ -66,10 +67,16 @@ namespace PF
     void set_image(Image* i) { active_image = i; }
 
     void set_new_op_func( new_op_func_t f ) { new_op_func = f; }
+    void set_new_op_func_nogui( new_op_func_t f ) { new_op_func_nogui = f; }
 
     ProcessorBase* new_operation(std::string opname, Layer* current_layer)
     {
       if( new_op_func ) return new_op_func( opname, current_layer );
+      else return NULL;
+    }
+    ProcessorBase* new_operation_nogui(std::string opname, Layer* current_layer)
+    {
+      if( new_op_func_nogui ) return new_op_func_nogui( opname, current_layer );
       else return NULL;
     }
   };

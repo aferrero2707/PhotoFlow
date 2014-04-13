@@ -34,6 +34,7 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
   //rgbCurveSelector( this, "RGB_active_curve", "Channel: ", 1 ),
   //labCurveSelector( this, "Lab_active_curve", "Channel: ", 5 ),
   //cmykCurveSelector( this, "CMYK_active_curve", "Channel: ", 8 ),
+  greyCurveEditor( this, "grey_curve" ),
   rgbCurveEditor( this, "RGB_curve" ),
   RCurveEditor( this, "R_curve" ),
   GCurveEditor( this, "G_curve" ),
@@ -96,6 +97,9 @@ void PF::CurvesConfigDialog::switch_curve()
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
 
+    if( greyCurveEditor.get_parent() == (&curvesBox) )
+      curvesBox.remove( greyCurveEditor );
+
     if( rgbCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( rgbCurveEditor );
     if( RCurveEditor.get_parent() == (&curvesBox) )
@@ -117,8 +121,8 @@ void PF::CurvesConfigDialog::switch_curve()
     PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
-      //curvesBox.pack_start( grayCurveEditor, Gtk::PACK_SHRINK );
-      //grayCurveEditor.show();
+      curvesBox.pack_start( greyCurveEditor, Gtk::PACK_SHRINK );
+      greyCurveEditor.show();
       break;
     case PF_COLORSPACE_RGB:
       switch( rgbCurveSelector.get_active_row_number() ) {
@@ -181,7 +185,9 @@ void PF::CurvesConfigDialog::update()
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
 
+#ifndef NDEBUG
     std::cout<<"CurvesConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
+#endif
     if( rgbCurveSelector.get_parent() == &selectorsBox )
       selectorsBox.remove( rgbCurveSelector );
     if( labCurveSelector.get_parent() == &selectorsBox )

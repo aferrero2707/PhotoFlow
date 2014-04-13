@@ -38,12 +38,14 @@ namespace PF {
 
   class CurvesConfigDialog: public OperationConfigDialog
 {
- #ifdef GTKMM_2
+  //#ifdef GTKMM_2
   Gtk::HBox curvesBox;
   Gtk::HBox selectorsBox;
-#endif
+  //#endif
 
  Gtk::ComboBoxText rgbCurveSelector, labCurveSelector, cmykCurveSelector;
+
+  CurveEditor greyCurveEditor;
 
   CurveEditor rgbCurveEditor;
   CurveEditor RCurveEditor;

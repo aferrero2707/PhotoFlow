@@ -71,7 +71,7 @@ namespace PF
   template<> 
   struct FormatInfo<uint8_t>
   {
-    typedef int16_t PROMOTED;
+    typedef uint16_t PROMOTED;
     static uint8_t MIN, MAX, HALF;
     static PROMOTED RANGE;
   };
@@ -89,7 +89,7 @@ namespace PF
   template<> 
   struct FormatInfo<uint16_t>
   {
-    typedef int32_t PROMOTED;
+    typedef uint32_t PROMOTED;
     static uint16_t MIN, MAX, HALF;
     static PROMOTED RANGE;
   };
@@ -107,7 +107,7 @@ namespace PF
   template<> 
   struct FormatInfo<uint32_t>
   {
-    typedef int64_t PROMOTED;
+    typedef uint64_t PROMOTED;
     static uint32_t MIN, MAX, HALF;
     static PROMOTED RANGE;
   };

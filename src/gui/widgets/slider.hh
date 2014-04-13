@@ -41,7 +41,12 @@ namespace PF {
     Gtk::HBox hbox;
     Gtk::Label label;
     Gtk::Alignment align;
+#ifdef GTKMM_2
     Gtk::Adjustment adjustment;
+#endif
+#ifdef GTKMM_3
+    Glib::RefPtr<Gtk::Adjustment> adjustment;
+#endif
     Gtk::HScale scale;
     Gtk::SpinButton spinButton;
 

@@ -56,7 +56,9 @@ namespace PF
     bool has_intensity() { return false; }
     bool needs_input() { return false; }
 
-    VipsImage* build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap);
+    VipsImage* build(std::vector<VipsImage*>& in, int first, 
+		     VipsImage* imap, VipsImage* omap, 
+		     unsigned int& level);
   };
 
   
@@ -73,69 +75,25 @@ namespace PF
 	return;
       }
 
-      BLENDER blender;
-      float opacity = par->get_opacity();
+      if( par->get_blend_mode() == PF_BLEND_PASSTHROUGH ) {
+	/* In passthrough mode, we simply attach oreg to ireg[1]; ireg[0] is ignored.
+	 */
+	Rect *r = &oreg->valid;
+	vips_region_region( oreg, ireg[1], r, r->left, r->top );
+      } else {
+	float opacity = par->get_opacity();
+	BLENDER blender( par->get_blend_mode(), opacity );
 #ifndef NDEBUG
-      usleep(1000);
-      //std::cout<<"opacity: "<<opacity<<std::endl;
+	usleep(1000);
+	//std::cout<<"opacity: "<<opacity<<std::endl;
 #endif
-    
-      Rect *r = &oreg->valid;
-      int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
-      int line_size = r->width * ireg[0]->im->Bands;
-
-      /*
-#ifndef NDEBUG
-      std::cout<<std::endl<<std::endl<<"BlenderProc::render(): blending region "
-             <<r->left<<","<<r->top<<" x "<<r->width<<","<<r->height<<std::endl;
-#endif
-      if( par->get_blend_mode() == PF_BLEND_SCREEN)
-	std::cout<<std::endl<<std::endl<<"BlenderProc::render(): blending region "
-		 <<r->left<<","<<r->top<<" x "<<r->width<<","<<r->height<<std::endl;
-      */
-      T* p[2];    
-      T* pout;
-      int x, xomap, y;
-
-      for( y = 0; y < r->height; y++ ) {
-      
-	p[0] = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y ); 
-	p[1] = (T*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y ); 
-	pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
-	blender.init_line( omap, r->left, r->top + y );
-      
-	for( x=0, xomap=0; x < line_size; ) {
-	  blender.blend( opacity, p[0], p[1], pout, x, xomap );
-	  x += sz;
-	}
+	blender.blend( ireg[0], ireg[1], oreg, omap );
       }
     }
   };
 
 
-  template < OP_TEMPLATE_DEF_BLENDER_SPEC > 
-  class BlenderProc< OP_TEMPLATE_IMP_BLENDER_SPEC(BlendPassthrough) >
-  {
-  public: 
-    void render(VipsRegion** ireg, int n, int in_first,
-		VipsRegion* imap, VipsRegion* omap, 
-		VipsRegion* oreg, OpParBase* par)
-    {
-      if( (n != 2) || (ireg[1] == NULL) ) {
-	std::cerr<<"BlenderProc<BlenderPassthrough>::render(): wrong number of input images"<<std::endl;
-	return;
-      }
-
-      Rect *r = &oreg->valid;
-
-      /* In passthrough mode, we simply attach oreg to ireg[1]; ireg[0] is ignored.
-       */
-      vips_region_region( oreg, ireg[1], r, r->left, r->top );
-    }
-  };
-
-
-
+  ProcessorBase* new_blender();
 }
 
 

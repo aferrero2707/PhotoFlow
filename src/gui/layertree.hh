@@ -42,47 +42,61 @@ namespace PF {
   public:
     
     LayerTreeColumns()
-    { add(col_visible); add(col_name); add(col_layer); }
+    { add(col_visible); add(col_name); add(col_imap); add(col_omap); add(col_layer); }
     
     Gtk::TreeModelColumn<bool> col_visible;
     Gtk::TreeModelColumn<Glib::ustring> col_name;
     Gtk::TreeModelColumn<Layer*> col_layer;
+    Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> > col_imap;
+    Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> > col_omap;
   };
 
-class LayerTree : public Gtk::TreeView
-{
+  class LayerTree : public Gtk::ScrolledWindow
+  {
 
-  LayerTreeColumns columns;
+    LayerTreeColumns columns;
 
-  // Tree model to be filled with individial layers informations
-  Glib::RefPtr<Gtk::TreeStore> treeModel;
+    // Tree model to be filled with individial layers informations
+    Glib::RefPtr<Gtk::TreeStore> treeModel;
 
-  //Image* image;
-  //LayerManager* layer_manager;
-  std::list<Layer*>* layers;
+    Gtk::TreeView treeView;
 
-  void update_model(Gtk::TreeModel::Row parent_row);
+    //Image* image;
+    //LayerManager* layer_manager;
+    std::list<Layer*>* layers;
 
-public:
-  LayerTree( );
-  virtual ~LayerTree();
+    bool map_flag;
 
-  Glib::RefPtr<Gtk::TreeStore> get_model() { return treeModel; }
-  LayerTreeColumns& get_columns() { return columns; }
+    void update_model(Gtk::TreeModel::Row parent_row);
 
-  //Image* get_image() { return image; }
-  //void set_image(Image* img) { image = img; update_model(); }
+  public:
+    LayerTree( bool is_map=false );
+    virtual ~LayerTree();
 
-  // Updates the tree model with the layers from the associated image
-  void update_model();
+    Glib::RefPtr<Gtk::TreeStore> get_model() { return treeModel; }
+    LayerTreeColumns& get_columns() { return columns; }
 
-  std::list<Layer*>* get_layers() { return layers; }
-  void set_layers( std::list<Layer*>* l ) {
-    layers = l;
-    update_model();
-  }
+    Gtk::TreeView& get_tree() { return treeView; }
 
-};
+    bool is_map() { return map_flag; }
+
+    bool on_button_event( GdkEventButton* button );
+
+    //Image* get_image() { return image; }
+    //void set_image(Image* img) { image = img; update_model(); }
+
+    void on_cell_toggled(const Glib::ustring& path);
+
+    // Updates the tree model with the layers from the associated image
+    void update_model();
+
+    std::list<Layer*>* get_layers() { return layers; }
+    void set_layers( std::list<Layer*>* l ) {
+      layers = l;
+      update_model();
+    }
+
+  };
 
 }
 

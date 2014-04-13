@@ -92,6 +92,8 @@ namespace PF
 
     void update(const std::string& val) { set_str( val ); }
 
+    virtual bool import(PropertyBase* pin);
+
     template<typename T> void get(T& val)
     {
       std::istringstream istr( get_str() );
@@ -102,12 +104,13 @@ namespace PF
     {
       std::ostringstream ostr;
       ostr<<newval;
-      std::cout<<"PropertyBase::update(): newval="<<ostr.str()<<std::endl;
+      //std::cout<<"PropertyBase::update(): newval="<<ostr.str()<<std::endl;
       //std::istringstream str( ostr.str() );
       //set_from_stream(str);
       set_str( ostr.str() );
     }
 
+    /*
     template<typename T> void update(std::string str)
     {
       std::cout<<"PropertyBase::update(): newval="<<str<<std::endl;
@@ -115,6 +118,7 @@ namespace PF
       //set_from_stream(str);
       set_str( str );
     }
+    */
   };
 
   std::istream& operator >>(std::istream& str, PropertyBase& p);
@@ -153,6 +157,21 @@ namespace PF
     {
       //g_object_set( object, get_name().c_str(), value, NULL );
       set_gobject_property( object, get_name(), value );
+    }
+
+    bool import(PropertyBase* pin)
+    {
+      if( is_enum() ) {
+	return PropertyBase::import( pin );
+      } else {
+	Property<T>* pin2 = dynamic_cast< Property<T>* >( pin );
+	if( pin2 ) {
+	  set( pin2->get() );
+	} else {
+	  set_str( pin->get_str() );
+	}
+	return true;
+      }
     }
    };
 }

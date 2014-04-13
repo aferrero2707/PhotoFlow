@@ -29,6 +29,7 @@
 
 
 #include "convert2srgb.hh"
+#include "../base/processor.hh"
 
 
 static cmsUInt32Number vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE pin )
@@ -140,7 +141,9 @@ PF::Convert2sRGBPar::Convert2sRGBPar():
 }
 
 
-VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
+VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first, 
+				      VipsImage* imap, VipsImage* omap, 
+				      unsigned int& level)
 {
   void *data;
   size_t data_length;
@@ -162,9 +165,11 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first, Vi
     profile_in = cmsOpenProfileFromMem( data, data_length );
     if( profile_in ) {
   
+#ifndef NDEBUG    
       char tstr[1024];
       cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
       std::cout<<"convert2rgb: Embedded profile found: "<<tstr<<std::endl;
+#endif
       
       cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, profile_in );
       cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, profile_out );
@@ -177,5 +182,13 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first, Vi
     }
   }
 
-  return OpParBase::build( in, first, NULL, NULL );
+  return OpParBase::build( in, first, NULL, NULL, level );
+}
+
+
+
+PF::ProcessorBase* PF::new_convert2srgb()
+{
+  return( new PF::Processor<PF::Convert2sRGBPar,
+			    PF::Convert2sRGBProc>() );
 }

@@ -40,7 +40,7 @@ namespace PF {
 
   class BrightnessContrastConfigDialog: public OperationConfigDialog
 {
-#ifdef GTKMM_2
+  //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
 
   //Gtk::Label lbrightness, lcontrast;
@@ -48,7 +48,7 @@ namespace PF {
 
   //Gtk::Adjustment contrastAdj, brightnessAdj;
   //Gtk::HScale contrastScale, brightnessScale;
-#endif
+  //#endif
 
   Slider brightnessSlider, contrastSlider;
 

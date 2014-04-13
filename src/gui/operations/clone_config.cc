@@ -34,9 +34,11 @@
 
 PF::CloneConfigDialog::CloneConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Clone layer" ),
-  layer_list( this, "Layer name:")
+  layer_list( this, "Layer name:"),
+  sourceSelector( this, "source_channel", "Source channel: ", 1 )
 {
   add_widget( layer_list );
+  add_widget( sourceSelector );
 
   //fileEntry.signal_activate().
   //  connect(sigc::mem_fun(*this,

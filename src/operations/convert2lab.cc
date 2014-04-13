@@ -30,6 +30,7 @@
 #include <stdlib.h>
 
 #include "convert2lab.hh"
+#include "../base/processor.hh"
 
 
 static cmsUInt32Number vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE pin )
@@ -143,7 +144,9 @@ PF::Convert2LabPar::Convert2LabPar():
 }
 
 
-VipsImage* PF::Convert2LabPar::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
+VipsImage* PF::Convert2LabPar::build(std::vector<VipsImage*>& in, int first, 
+				     VipsImage* imap, VipsImage* omap, 
+				     unsigned int& level)
 {
   void *data;
   size_t data_length;
@@ -166,7 +169,9 @@ VipsImage* PF::Convert2LabPar::build(std::vector<VipsImage*>& in, int first, Vip
   
   char tstr[1024];
   cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+#ifndef NDEBUG
   std::cout<<"convert2lab: Embedded profile found: "<<tstr<<std::endl;
+#endif
 
   if( transform )
     cmsDeleteTransform( transform );
@@ -182,7 +187,7 @@ VipsImage* PF::Convert2LabPar::build(std::vector<VipsImage*>& in, int first, Vip
   if( !transform )
     return NULL;
 
-  VipsImage* out = OpParBase::build( in, first, NULL, NULL );
+  VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
   cmsUInt32Number out_length;
   cmsSaveProfileToMem( profile_out, NULL, &out_length);
   void* buf = malloc( out_length );
@@ -191,4 +196,11 @@ VipsImage* PF::Convert2LabPar::build(std::vector<VipsImage*>& in, int first, Vip
 		       (VipsCallbackFn) g_free, buf, out_length );
   
   return out;
+}
+
+
+
+PF::ProcessorBase* PF::new_convert2lab()
+{
+  return( new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>() );
 }

@@ -28,43 +28,47 @@
  */
 
 #include "blender.hh"
+#include "../base/processor.hh"
 
 //#include "../vips/vips_layer.h"
 int
 vips_layer( VipsImage **in, int n, VipsImage **out, int first, 
             PF::ProcessorBase* proc,
             VipsImage* imap, VipsImage* omap, 
-            VipsDemandStyle demand_hint);
+            VipsDemandStyle demand_hint,
+	    int width, int height, int nbands);
 
 VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first, 
-				 VipsImage* imap, VipsImage* omap)
+				 VipsImage* imap, VipsImage* omap, 
+				 unsigned int& level)
 {
   VipsImage* outnew;
+  VipsImage* in1 = NULL;
+  VipsImage* in2 = NULL;
 
-  if( in.size() != 2 ) {
-    std::cerr<<"PF::BlenderPar::build(): wrong number of input images: "
-	     <<in.size()<<" (should be 2)"<<std::endl;
-    return NULL;
-  } 
+  if( in.empty() ) return NULL;
+  if( in.size() > 0 ) in1 = in[0];
+  if( in.size() > 1 ) in2 = in[1];
 
   /**/
   // Prepare the blending step between the new image (in invec[1]) and the underlying image
   // if existing (in invec[0]).
   // The blending code will simply force the mode to "passthrough" and copy invec[1] to outnew
   // if invec[0] is NULL
-  if( (in[0] != NULL) && (in[1] != NULL) && (get_blend_mode() != PF_BLEND_PASSTHROUGH) ) {
-    VipsImage* invec[2] = {in[0], in[1]};
-    vips_layer( invec, 2, &outnew, 0, get_processor(), NULL, omap, get_demand_hint() );
-  } else if( (in[0] != NULL) && (in[1] != NULL) && (get_blend_mode() == PF_BLEND_PASSTHROUGH) ) {
-    outnew = in[1];
+  if( (in1 != NULL) && (in2 != NULL) && (get_blend_mode() != PF_BLEND_PASSTHROUGH) ) {
+    VipsImage* invec[2] = {in1, in2};
+    vips_layer( invec, 2, &outnew, 0, get_processor(), NULL, omap, get_demand_hint(),
+		get_xsize(), get_ysize(), get_nbands() );
+  } else if( (in1 != NULL) && (in2 != NULL) && (get_blend_mode() == PF_BLEND_PASSTHROUGH) ) {
+    outnew = in2;
     g_object_ref( outnew );
-  } else if( (in[0] == NULL) && (in[1] != NULL) ) {
-    // in[0] is NULL, force mode to PASSTHROUGH and copy in[1] to output
-    outnew = in[1];
+  } else if( (in1 == NULL) && (in2 != NULL) ) {
+    // in1 is NULL, force mode to PASSTHROUGH and copy in2 to output
+    outnew = in2;
     g_object_ref( outnew );
-  } else if( (in[1] == NULL) && (in[0] != NULL) ) {
-    // in[0] is NULL, force mode to PASSTHROUGH and copy in[1] to output
-    outnew = in[0];
+  } else if( (in2 == NULL) && (in1 != NULL) ) {
+    // in1 is NULL, force mode to PASSTHROUGH and copy in1 to output
+    outnew = in1;
     g_object_ref( outnew );
   } else {
     std::cerr<<"PF::BlenderPar::build(): unsupported input pattern and blend mode combination!"<<std::endl;
@@ -72,10 +76,20 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   }
   /**/
 
-  //VipsImage* invec[2] = {in[0], in[1]};
+  //VipsImage* invec[2] = {in1, in2};
   //vips_layer( invec, 2, &outnew, 0, get_processor(), NULL, omap, get_demand_hint() );
-  std::cout<<"PF::BlenderPar::build(): input: "<<in[0]<<" "<<in[1]<<"   output: "<<outnew<<std::endl;
-
+#ifndef NDEBUG
+  std::cout<<"PF::BlenderPar::build(): input: "<<in1<<" "<<in2<<"   output: "<<outnew<<std::endl;
+#endif
   //set_image( outnew );
   return outnew;
+}
+
+
+
+
+
+PF::ProcessorBase* PF::new_blender()
+{
+  return( new PF::Processor<PF::BlenderPar,PF::BlenderProc>() );
 }

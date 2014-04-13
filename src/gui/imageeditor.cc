@@ -33,13 +33,35 @@
 PF::ImageEditor::ImageEditor( Image* img ):
   image( img ),
   imageArea( image->get_view(0) ),
-  layersWidget( image )
+  layersWidget( image ),
+  buttonZoomIn( "Zoom +" ),
+  buttonZoomOut( "Zoom -" ),
+  buttonShowMerged( "show merged layers" ),
+  buttonShowActive( "show active layer" )
 {
   imageArea_scrolledWindow.add( imageArea );
-  pack1( imageArea_scrolledWindow, true, false );
+
+  radioBox.pack_start( buttonShowMerged );
+  radioBox.pack_start( buttonShowActive );
+
+  Gtk::RadioButton::Group group = buttonShowMerged.get_group();
+  buttonShowActive.set_group(group);
+
+  controlsBox.pack_end( radioBox, Gtk::PACK_SHRINK );
+  controlsBox.pack_end( buttonZoomOut, Gtk::PACK_SHRINK );
+  controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
+
+  imageBox.pack_start( imageArea_scrolledWindow );
+  imageBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
+
+  pack1( imageBox, true, false );
 
   pack2( layersWidget, false, false );
 
+  buttonZoomIn.signal_clicked().connect( sigc::mem_fun(*this,
+						       &PF::ImageEditor::zoom_in) );
+  buttonZoomOut.signal_clicked().connect( sigc::mem_fun(*this,
+							&PF::ImageEditor::zoom_out) );
   //set_position( get_allocation().get_width()-200 );
 
   show_all_children();
@@ -48,4 +70,29 @@ PF::ImageEditor::ImageEditor( Image* img ):
 
 PF::ImageEditor::~ImageEditor()
 {
+  if( image )
+    delete image;
+}
+
+
+
+void PF::ImageEditor::zoom_out()
+{
+  PF::View* view = image->get_view(0);
+  if( !view ) return;
+  int level = view->get_level();
+  view->set_level( level + 1 );
+  image->update();
+}
+
+
+void PF::ImageEditor::zoom_in()
+{
+  PF::View* view = image->get_view(0);
+  if( !view ) return;
+  int level = view->get_level();
+  if( level > 0 ) {
+    view->set_level( level - 1 );
+    image->update();
+  }
 }

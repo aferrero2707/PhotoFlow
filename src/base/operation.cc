@@ -35,7 +35,8 @@ int
 vips_layer( VipsImage **in, int n, VipsImage **out, int first, 
             PF::ProcessorBase* proc,
             VipsImage* imap, VipsImage* omap, 
-            VipsDemandStyle demand_hint);
+            VipsDemandStyle demand_hint,
+	    int width, int height, int nbands);
 
 
 
@@ -50,6 +51,7 @@ void PF::OperationConfigUI::open()
 
 
 PF::OpParBase::OpParBase():
+  map_flag( false ),
   blend_mode("blend_mode",this),
   intensity("intensity",this,1),
   opacity("opacity",this,1),
@@ -157,8 +159,30 @@ void PF::OpParBase::set_image_hints(int w, int h, colorspace_t cs)
 }
 
 
+bool PF::OpParBase::import_settings( OpParBase* pin )
+{
+  if( !pin )
+    return false;
 
-VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first, VipsImage* imap, VipsImage* omap)
+  std::list<PropertyBase*>& propin = pin->get_properties();
+  std::list<PropertyBase*>::iterator pi=propin.begin(), pj=properties.begin();
+  for( ; pi != propin.end(); pi++, pj++ ) {
+    if( !(*pj)->import( *pi ) )
+      return false;
+  }
+  set_demand_hint( pin->get_demand_hint() );
+  set_map_flag( pin->is_map() );
+  set_image_hints( pin->get_xsize(), pin->get_ysize(), 
+		   pin->get_interpretation() );
+  set_nbands( pin->get_nbands() );
+  set_coding( pin->get_coding() );
+  set_format( pin->get_format() );
+  return true;
+}
+
+
+VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first, 
+				VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
   VipsImage* outnew;
 
@@ -179,21 +203,26 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first, VipsImag
   */
   /**/
   VipsImage* invec[100];
-  int n = in.size(); if(n >100) n = 100;
-  for(int i = 0; i < n; i++) {
-    invec[i] = in[i];
+  int n = 0;
+  for(int i = 0; i < in.size(); i++) {
+    if( !in[i] ) continue;
+    invec[n] = in[i];
+    n++;
   }
+  if(n >100) n = 100;
   vips_layer( invec, n, &outnew, first, processor, imap, omap, 
-	      get_demand_hint() );
+	      get_demand_hint(), get_xsize(), get_ysize(), get_nbands() );
   /**/
 
-  std::cout<<"OpParBase::build(): format = "<<get_format()<<std::endl
+#ifndef NDEBUG    
+  std::cout<<"OpParBase::build(): type="<<type<<"  format="<<get_format()<<std::endl
 	   <<"input images:"<<std::endl;
   for(int i = 0; i < n; i++) {
-    std::cout<<"  "<<(void*)invec[i]<<std::endl;
+    std::cout<<"  "<<(void*)invec[i]<<"   ref_count="<<G_OBJECT( invec[i] )->ref_count<<std::endl;
   }
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
   std::cout<<"out: "<<(void*)outnew<<std::endl<<std::endl;
+#endif
 
   //set_image( outnew );
   return outnew;

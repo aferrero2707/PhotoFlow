@@ -59,6 +59,8 @@ namespace PF {
     Gtk::ComboBox cbox;
     Glib::RefPtr<Gtk::ListStore> model;
 
+    bool inhibit;
+
   public:
     LayerList(OperationConfigUI* dialog, std::string label);
 

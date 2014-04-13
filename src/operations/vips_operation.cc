@@ -289,7 +289,8 @@ void PF::VipsOperationPar::add_argument( GParamSpec *pspec, VipsArgumentClass *a
 
 
 VipsImage* PF::VipsOperationPar::build(std::vector<VipsImage*>& in, int first, 
-				       VipsImage* imap, VipsImage* omap)
+				       VipsImage* imap, VipsImage* omap, 
+				       unsigned int& level)
 {
   int in_img_id = first;
   VipsOperation* operation;
@@ -362,9 +363,16 @@ VipsImage* PF::VipsOperationPar::build(std::vector<VipsImage*>& in, int first,
   in2.push_back( in[first] );
   in2.push_back( out );
   
-  VipsImage* out2 = PF::BlenderPar::build( in2, 0, NULL, omap );
+  VipsImage* out2 = PF::BlenderPar::build( in2, 0, NULL, omap, level );
   VIPS_UNREF( in[first] );
   VIPS_UNREF( out );
 
   return out2;
+}
+
+
+
+PF::ProcessorBase* PF::new_vips_operation()
+{
+  return( new PF::Processor<PF::VipsOperationPar,PF::VipsOperationProc>() );
 }

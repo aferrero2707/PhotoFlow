@@ -54,13 +54,13 @@ protected:
   Gtk::HButtonBox topButtonBox;
 #endif
 #ifdef GTKMM_3
-  Gtk::Paned mainBox;
-  Gtk::Box viewBox;
+  Gtk::Box mainBox;
+  Gtk::Box editorBox;
   Gtk::Box controlBox;
   Gtk::ButtonBox topButtonBox;
 #endif
   Gtk::Notebook viewerNotebook;
-  Gtk::Button buttonOpen, buttonSave, buttonExit, buttonTest;
+  Gtk::Button buttonOpen, buttonSave, buttonExport, buttonExit, buttonTest;
 
   std::vector<ImageEditor*> image_editors;
 
@@ -74,6 +74,8 @@ public:
   void on_button_open_clicked();
 
   void on_button_save_clicked();
+
+  void on_button_export_clicked();
 
   void open_image(std::string filename);
 };
