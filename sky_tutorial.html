@@ -38,11 +38,77 @@
           <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
         </div>
 
-        <h1>
+<h3><a name="back_to_main" class="anchor" href="index.html">Back to main page</a></h3>
+<h1>
 <a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>Sky Enhancement Tutorial</h1>
 <p>In this tutorial we will see how it is possible to apply selective adjustments using specific color channels as masks.</p>
 <p>Here the technique is used to darken the sky in a landscape image, without touching the clouds and the ground. As the mask will be derived directly from the image itself, the sky adjustment will blend seamlessly with the rest of the image.</p>
+<p>The final result will look like this:</p>
+<a href="images/tutorials/sky/sky_final.png"><img src="images/tutorials/sky/small/sky_final.png" alt="sky_final.png"></a>
 
+<h2>
+<a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>Step #1: open your image</h2>
+<p>First of all you need to open a suitable image. The one that is used in this tutorial is available <a href="data/testimages.zip">here</a>, and is called landscape1.tif.</p>
+<p>Assuming that you have followed the instructions for building photoflow from sources (otherwise please see <a href="index.html#downloading-and-compiling">here</a>) and that you extracted the testimages.zip file in your home directory, you can open the landscape1.tif image in photoflow like that:</p>
+<pre><code>$ ./src/photoflow $HOME/TestImages/landscape1.tif
+</code></pre>
+<p>Once the image is opened, the first thing we have to do is to change the name of the bottom layer: double-click on the name of the layer ("background" in this case) in the list at the right of the image and change the name to "landscape 1" as shown below, then press the "OK" button to close the dialog.</p>
+<a href="images/tutorials/sky/sky_step_1.png"><img src="images/tutorials/sky/small/sky_step_1.png" alt="sky_step_1.png"></a>
+
+<h2>
+<a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>Step #2: clone the bottom layer</h2>
+<p>In the next step we will create a "buffer" layer, which we will call "background". This type of layer does not perform any processing, and is simply used to define a "label" to a given point in the editing workflow, so that we can refer to it at a later point.</p>
+<p>To add a new layer, you have to click on the "+" button at the bottom of the layer list and choose the desired type of layer in the dialog that pops-up. You should get something like in the image below. Click OK to confirm and close the dialog. </p>
+<a href="images/tutorials/sky/sky_step_2a.png"><img src="images/tutorials/sky/small/sky_step_2a.png" alt="sky_step_2a.png"></a>
+<p>When the new layer is created, a configuration dialog is immediately opened in order to set the initial values of the various parameters. In this case, since the buffer layer does not do any processing, there are few parameters that can be confgured. For the moment, we set the name of the layer to "background" and we make sure that the target channel is set to "RGB" and the blend mode to "Passthrough", like in the screenshot below. Press the "OK" button to confirm the changes and close the dialog.</p>
+<a href="images/tutorials/sky/sky_step_2b.png"><img src="images/tutorials/sky/small/sky_step_2b.png" alt="sky_step_2b.png"></a>
+
+<h2>
+<a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>Step #3: Darken the image with the "curves" tool</h2>
+<p>At this point we are ready to add a "Curves" adjustment to selectively darken the sky in the image.</p>
+<p>Add again a new layer, this time selecting the "Curves" tool in the tool selection dialog (see screenshot below). </p>
+<a href="images/tutorials/sky/sky_step_3a.png"><img src="images/tutorials/sky/small/sky_step_3a.png" alt="sky_step_3a.png"></a>
+<p>In the "curves" configuration dialog, click on the diagonal line of the "RGB" curves to create a new control point, and then drag the point downwards like in the screenshot below. You can also set the control point position precisely by putting the X and Y coordinates in the numerical fields below the graph.</p>
+<p>The picture will most likely be too dark. Instead of moving the control point up again until you find the best result, it is much easier to tune the overall intensity of the adjustment using the correspoinding slider in the top part of the dialog. You can also set the desired intensity value directly in the numerical field near the slider.</p>
+<a href="images/tutorials/sky/sky_step_3b.png"><img src="images/tutorials/sky/small/sky_step_3b.png" alt="sky_step_3b.png"></a>
+<p>At this point, the sky looks approximately as we would like, however the rest of the image also got darker, which is not what we would like to obtain. The goal is to selectively darken the portions of the image that are predominantly blue, and leave the rest untouched.</p>
+
+<h2>
+<a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>Step #4: Add an "intensity map" to an existing layer</h2>
+<p>Most of the image adjustment tools in photofow have an "intensity" parameter that can be varied in order to adjust the "strength" of the result, like in the case of the Curves tool that we are using to edit the sky. The "intensity" parameter directly influences the processing step, in a way that is generally tool-specific. In the case of the Curves tool, an intensity of 50% brings each control point halfway between the position which is set in the graph and the diagonal line. Therefore, setting the intensity to zero would effectively bring all the control points along the diagonal line, and hence the output would be identical to the input (i.e. no effect).</p>
+<p>Moreover, the intensity value can also be defined pixel-by-pixel by associating a greyscale "intensity map" to a given layer. In this case, the intensity will be maximal wherever the greyscale value in the map is white and zero where the map is black; intermediate intensity values are computed according to the greyscale value in the map. The maximum intensity corresponds to the value defined in the tool configuration dialog (50% in the case of the sky darkening).</p>
+<p>In this specific case, we want to isolate the portions of the image that are predominantly blue, therefore we need to create a greyscale map that is mostly white wherever the image is blue, and mostly black elsewhere. Moreover, we will try to produce smooth transitions so that the darker sky will merge seamelessly with the clouds and the landscape.</p>
+<p>Whenever it is necessary to isolate a given color in the image, the "a" and "b" channels of the Lab colorspace are a good starting point. For example, the pixel values in the "b" channel are below 50% wherever the image contains a blue component, and above 50% wherever there is a yellow component; the higher the deviation from 50%, the higher the color saturation of the image.</p>
+<p>The steps to create the sky intensity map will therefore be the following:</p>
+<ul>
+<li>Clone the "b" channel of the "background" layer</li>
+<li>Apply a Curves adjustment that sets all the pixels of the "b" channel to black if they are above 50% and to white if they are below 40%, with a smooth transition in between</li>
+</ul>
+<p>Double-click on the small icon immediately at the right of the "sky adjustment" label in the layer list to start editing the intensity map associated to the "sky adjustment" layer (as sown in the screenshot below).</p>
+<a href="images/tutorials/sky/sky_step_4a.png"><img src="images/tutorials/sky/small/sky_step_4a.png" alt="sky_step_4a.png"></a>
+<p>This will create a new layer list, called "intensity (sky adjustment)" and that is associated to the intensity map of the "sky adjustment" layer. Now let's add a "Clone" layer to the intensity map, a shown below:</p>
+<a href="images/tutorials/sky/sky_step_4b.png"><img src="images/tutorials/sky/small/sky_step_4b.png" alt="sky_step_4b.png"></a>
+<p>In the configuration dialog that will pop up, you need to select the "background" layer and the "b" channel as the source channel; set also the layer name to "b channel" so that it is easier to identify.</p>
+<a href="images/tutorials/sky/sky_step_4c.png"><img src="images/tutorials/sky/small/sky_step_4c.png" alt="sky_step_4c.png"></a>
+<p>Now we have to add a "Curves" adjustment in order to set the blue portion of the image to white and the rest to black. First of all we need to create a new "Curves" layer above the "b channel", as show below:</p>
+<a href="images/tutorials/sky/sky_step_4d.png"><img src="images/tutorials/sky/small/sky_step_4d.png" alt="sky_step_4d.png"></a>
+<p>Now you have to drag the two extreme control points like shown below, in order to create a linear transition between (40.0,100.0) and (50.0,0.0). Use the numerical fields to set the values precisely. The optimal value for the upper point might change from image to image, so take it as a first guess.</p>
+<a href="images/tutorials/sky/sky_step_4e.png"><img src="images/tutorials/sky/small/sky_step_4e.png" alt="sky_step_4e.png"></a>
+
+<h2>
+<a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>Step #5: saving your work</h2>
+<p>The sky in your image should now look significantly darker, while the clouds and the landscape should be mostly unmodified. As all the adjustments that we have applied are non-destructive, you can tweak the result as much as you like without ever modifying your original image.</p>
+<p>You can now save your work to disk, either in the native photoflow format (with extension ".pfi") or in any raster image format supported by VIPS on your system (like Jpeg, TIFF, PNG...). Saving into a ".pfi" file has the advantage that the layer structure gets stored to disk in XML format, so that you can resume your editing exactly from where you stopped, for example for further tweaking some settings. It is important to note that no image data is saved with the ".pfi" file, therefore the original image file is also needed in order to re-open the image correctly. On the other hand, the size of the ".pfi" file is very small and it gets saved almost instantly, therefore you can frequently save the intermediate steps of your work while editing an image, as well as several versions with different settings, without any risk to fill-up your hard disk!</p>
+<a href="images/tutorials/sky/sky_step_save.png"><img src="images/tutorials/sky/small/sky_step_save.png" alt="sky_step_save.png"></a>
+
+<h2>
+<a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>The bottom line</h2>
+<p>Last but not least, all the adjustments that we have applied did not involve any copy-and-paste operation: for example, the layer cloning operation is applied dynamically on the imge data while it is being processed. This means that if you now change the input image the result will be updated immediately and automatically (for example the "b channel" layer will copy the data from the new image).</p>
+<p>To change the input image, just double click on the name of the bottom "landscape 1" layer to pop-up the corresponding configuration dialog, and then choose a different image like shown below:</p>
+<a href="images/tutorials/sky/sky_step_saveb.png"><img src="images/tutorials/sky/small/sky_step_saveb.png" alt="sky_step_saveb.png"></a>
+<p>The image you choose does not need to be in the same format or of the same size as the old one: everything will be updated accordingly. However, for best results I suggest you to choose an image with at least 16-bits per channel, as otherwise you are very likely to get some banding in the sky region due to the darkening technique used here.</p>
+
+<h3><a name="back_to_main" class="anchor" href="index.html">Back to main page</a></h3>
       </section>
 
     </div>
