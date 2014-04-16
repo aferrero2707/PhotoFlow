@@ -35,9 +35,9 @@
 #define IMAGE_PYRAMID_H
 
 
-#include "operation.hh"
-//#include "image.hh"
-#include "photoflow.hh"
+#include <vector>
+#include <string>
+#include <vips/vips.h>
 
 
 namespace PF
