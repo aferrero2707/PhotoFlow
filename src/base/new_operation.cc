@@ -62,6 +62,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
     processor = new_invert();
 
+  } else if( op_type == "uniform" ) {
+
+    //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
+    processor = new_uniform();
+
   } else if( op_type == "gradient" ) {
 
     //processor = new PF::Processor<PF::GradientPar,PF::Gradient>();
@@ -86,6 +91,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
     processor = new_convert2lab();
+
+  } else if( op_type == "draw" ) {
+
+    //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
+    processor = new_draw();
 
   } else { // it must be a VIPS operation...
 

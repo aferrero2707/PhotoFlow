@@ -135,6 +135,88 @@ void PF::LayerManager::get_parent_layers(PF::Layer* layer,
 
 
 
+PF::Layer* PF::LayerManager::get_container_layer( Layer* layer, std::list<Layer*>& list )
+{
+  if( !layer )
+    return NULL;
+
+  bool is_map = false;
+  if( layer && layer->get_processor() &&
+      layer->get_processor()->get_par() )
+    is_map = layer->get_processor()->get_par()->is_map();
+
+  // Walk through the list and, for each layer in the list, search for the target layer in the 
+  // lists (imaps, omaps and sublayers)
+  std::list<PF::Layer*>::iterator li;
+  for(li = list.begin(); li != list.end(); ++li) {
+    PF::Layer* l = *li;
+    if( is_map ) {
+      // If the target layer is a layer map, then we only look into the 
+      // intensity and opacity maps
+      std::list<PF::Layer*>::iterator lj;
+      for( lj = l->get_imap_layers().begin(); 
+	   lj != l->get_imap_layers().end(); ++lj ) {
+	int id1 = layer->get_id();
+	int id2 = ( (*lj)!=NULL ) ? (*lj)->get_id() : -1;
+	if( (*lj) && ((*lj)->get_id() == layer->get_id()) ) {
+	  // We found it, no need to continue...
+	  return( l );
+	}
+      }
+      for( lj = l->get_omap_layers().begin(); 
+	   lj != l->get_omap_layers().end(); ++lj ) {
+	int id1 = layer->get_id();
+	int id2 = ( (*lj)!=NULL ) ? (*lj)->get_id() : -1;
+	if( (*lj) && ((*lj)->get_id() == layer->get_id()) ) {
+	  // We found it, no need to continue...
+	  return( l );
+	}
+      }
+    } else {
+      // If the target layer is a normal one, we only look in the sublayers list
+      std::list<PF::Layer*>::iterator lj;
+      for( lj = l->get_sublayers().begin(); 
+	   lj != l->get_sublayers().end(); ++lj ) {
+	int id1 = layer->get_id();
+	int id2 = ( (*lj)!=NULL ) ? (*lj)->get_id() : -1;
+	if( (*lj) && ((*lj)->get_id() == layer->get_id()) ) {
+	  // We found it, no need to continue...
+	  return( l );
+	}
+      }
+    }
+  }
+
+  // If we got here it means that the layer was not found yet, so we
+  // recursively search it in all the sub-layers in the list
+  for(li = list.begin(); li != list.end(); ++li) {
+    PF::Layer* l = *li;
+    PF::Layer* result;    
+    result = get_container_layer( layer, l->get_imap_layers() );
+    if( result ) 
+      return( result );
+    result = get_container_layer( layer, l->get_omap_layers() );
+    if( result ) 
+      return( result );
+    result = get_container_layer( layer, l->get_sublayers() );
+    if( result ) 
+      return( result );
+  }
+
+  // If we reach this point, it means that the layer could not be found...
+  return( NULL );
+}
+
+PF::Layer* PF::LayerManager::get_container_layer( int id )
+{
+  PF::Layer* layer = get_layer( id );
+  if( !layer ) 
+    return( NULL );
+  return( get_container_layer( layer, layers ) );
+}
+
+
+
 std::list<PF::Layer*>* PF::LayerManager::get_list( PF::Layer* layer, std::list<PF::Layer*>& list)
 {
   std::list<PF::Layer*>::iterator li = list.begin();
@@ -162,7 +244,6 @@ std::list<PF::Layer*>* PF::LayerManager::get_list( PF::Layer* layer, std::list<P
 
   return NULL;
 }
-
 
 std::list<PF::Layer*>* PF::LayerManager::get_list(PF::Layer* layer)
 {

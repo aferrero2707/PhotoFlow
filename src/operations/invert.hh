@@ -41,10 +41,7 @@ namespace PF
   class InvertPar: public OpParBase
   {
   public:
-    InvertPar(): OpParBase() 
-    {
-      set_type( "invert" );
-    }
+    InvertPar();
   };
 
   
@@ -173,10 +170,7 @@ namespace PF
   };
 
 
-  ProcessorBase* new_invert()
-  {
-    return( new PF::Processor<PF::InvertPar,PF::Invert>() );
-  }
+  ProcessorBase* new_invert();
 }
 
 #endif 

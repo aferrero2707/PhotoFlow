@@ -49,6 +49,8 @@
 
 #include "../operations/image_reader.hh"
 #include "../operations/convert2srgb.hh"
+#include "../operations/uniform.hh"
+#include "../operations/invert.hh"
 #include "../operations/convertformat.hh"
 
 #include "../gui/operations/imageread_config.hh"
@@ -70,9 +72,21 @@ namespace PF
 class ImageArea : public ViewSink, public Gtk::DrawingArea
 {
 
+#ifdef GTKMM_2
+  Gtk::Adjustment* hadj;
+  Gtk::Adjustment* vadj;
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::Adjustment> hadj;
+  Glib::RefPtr<Gtk::Adjustment> vadj;
+#endif
+
   /* The derived image we paint to the screen.
    */
   VipsImage* display_image;
+  VipsImage* outimg;
+
+  unsigned int xoffset, yoffset;
 
   /* The region we prepare from to draw the pixels,
    */
@@ -88,7 +102,14 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
 
   PF::ProcessorBase* convert2srgb;
 
+  PF::Processor<PF::UniformPar,PF::Uniform>* uniform;
+
+  PF::ProcessorBase* invert;
+
   PF::ProcessorBase* convert_format;
+
+  bool display_merged;
+  int active_layer;
 
   long int pending_pixels;
 
@@ -105,8 +126,8 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
    */
   static gboolean render_cb (Update * update)
   {
-    update->image_area->queue_draw_area (update->rect.left, 
-                                         update->rect.top,
+    update->image_area->queue_draw_area (update->rect.left+update->image_area->get_xoffset(), 
+                                         update->rect.top+update->image_area->get_yoffset(),
                                          update->rect.width,
                                          update->rect.height);
 
@@ -139,6 +160,9 @@ public:
   ImageArea( View* v );
   virtual ~ImageArea();
 
+  unsigned int get_xoffset() { return xoffset; }
+  unsigned int get_yoffset() { return yoffset; }
+
 #ifdef GTKMM_2
   void expose_rect (const VipsRect& area);
   bool on_expose_event (GdkEventExpose * event);
@@ -149,7 +173,40 @@ public:
     bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 #endif
 
+  void set_adjustments( 
+#ifdef GTKMM_2
+		       Gtk::Adjustment* h, Gtk::Adjustment* v
+#endif
+#ifdef GTKMM_3
+		       Glib::RefPtr<Gtk::Adjustment> h,
+		       Glib::RefPtr<Gtk::Adjustment> v
+#endif
+			)
+  {
+    hadj = h; vadj = v;
+  }
+
+
   void update();
+
+  void update( const VipsRect& area );
+
+  void set_active_layer( int id ) { 
+    int old_id = active_layer;
+    active_layer = id; 
+    if( !display_merged &&
+	(old_id != active_layer) )
+      update();
+  }
+  int get_active_layer() { return active_layer; }
+
+  void set_display_merged( bool val )
+  {
+    bool old_val = display_merged;
+    display_merged = val;
+    if( display_merged != old_val )
+      update();
+  }
 
   virtual void on_realize() 
   {

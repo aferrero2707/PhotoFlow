@@ -105,6 +105,13 @@ namespace PF
   colorspace_t convert_colorspace(VipsInterpretation interpretation);
 
 
+  enum mod_key_t {
+    MOD_KEY_NONE = 0,
+    MOD_KEY_CTRL = 1,
+    MOD_KEY_ALT = 2,
+    MOD_KEY_SHIFT = 4
+  };
+
 
   template<>
   class Property<blendmode_t>: public PropertyBase

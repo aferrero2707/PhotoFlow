@@ -33,6 +33,7 @@
 #include <string>
 #include <stack>
 #include <vector>
+#include <map>
 
 
 #include "../operations/vips_operation.hh"
@@ -55,9 +56,10 @@
 
 static PF::Image* image = NULL;
 static std::deque<PF::Layer*> layers_stack;
-static std::deque< std::list<PF::Layer*>* > containers_stack;
+static std::deque< std::pair<std::list<PF::Layer*>*,bool> > containers_stack;
 static PF::Layer* current_layer = NULL;
 static std::list<PF::Layer*>* current_container = NULL;
+static bool current_container_map_flag = false;
 static PF::OpParBase* current_op = NULL;
 
 static std::vector<PF::Layer*> layer_id_mapper;
@@ -176,13 +178,16 @@ void start_element (GMarkupParseContext *context,
 
     if( type == "imap" ) {
       current_container = &(current_layer->get_imap_layers());
-      containers_stack.push_back( current_container );
+      current_container_map_flag = true;
+      containers_stack.push_back( make_pair(current_container,true) );
     } else if( type == "omap" ) {
       current_container = &(current_layer->get_omap_layers());
-      containers_stack.push_back( current_container );
+      current_container_map_flag = true;
+      containers_stack.push_back( make_pair(current_container,true) );
     } else if( type == "child" ) {
       current_container = &(current_layer->get_sublayers());
-      containers_stack.push_back( current_container );
+      current_container_map_flag = false;
+      containers_stack.push_back( make_pair(current_container,false) );
     }
 
     // At this point we set the current_layer pointer to NULL,
@@ -212,6 +217,9 @@ void start_element (GMarkupParseContext *context,
       std::cout<<"PF::pf_file_loader(): operation created."<<std::endl;
       current_op = processor->get_par();
     }
+
+    if( current_op )
+      current_op->set_map_flag( current_container_map_flag );
 
   } else if( strcmp (element_name, "property") == 0 ) {
 
@@ -276,8 +284,10 @@ void end_element (GMarkupParseContext *context,
     containers_stack.pop_back();
     current_container = NULL;
     std::cout<<"\""<<element_name<<"\" end: containers_stack.size()="<<containers_stack.size()<<std::endl;
-    if( !containers_stack.empty() ) 
-      current_container = containers_stack.back();
+    if( !containers_stack.empty() ) {
+      current_container = containers_stack.back().first;
+      current_container_map_flag = containers_stack.back().second;
+    }
 
     // We also restore the current_layer pointer to the top element of the stack (if present)
     current_layer = NULL;
@@ -324,7 +334,8 @@ void PF::load_pf_image( std::string filename, PF::Image* img ) {
   layer_id_mapper.clear();
 
   current_container = &(image->get_layer_manager().get_layers());
-  containers_stack.push_back( current_container );
+  containers_stack.push_back( make_pair(current_container,false) );
+  current_container_map_flag = false;
 
   /* seriously crummy error checking */
 

@@ -44,8 +44,11 @@ namespace PF {
   {
     Image* image;
 
+    Layer* active_layer;
+
     Gtk::VBox imageBox;
     ImageArea imageArea;
+    Gtk::EventBox imageArea_eventBox;
     Gtk::ScrolledWindow imageArea_scrolledWindow;
     LayerWidget layersWidget;
     Gtk::HBox controlsBox;
@@ -60,6 +63,30 @@ namespace PF {
     Image* get_image() { return image; }
 
     LayerWidget& get_layer_widget() { return layersWidget; }
+
+    void set_active_layer( int id ) 
+    {
+      if( image )
+	active_layer = image->get_layer_manager().get_layer( id );
+    }
+
+    // Handlers for the mouse events inside the image area
+    bool on_button_press_event( GdkEventButton* button );
+    bool on_button_release_event( GdkEventButton* button );
+    bool on_motion_notify_event( GdkEventMotion* button );
+
+    float get_zoom_factor()
+    {
+      PF::View* view = image->get_view(0);
+      if( !view ) return 1.0f;
+      int level = view->get_level();
+      float fact = 1.0f;
+      for( unsigned int i = 0; i < level; i++ )
+	fact /= 2.0f;
+      return fact;
+    }
+
+    void screen2image( gdouble& x, gdouble& y );
 
     void zoom_in();
     void zoom_out();

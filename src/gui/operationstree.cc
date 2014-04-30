@@ -179,6 +179,10 @@ void PF::OperationsTree::update_model()
   row[columns.col_nickname] = "convert2lab";
 
   row = *(treeModel->append());
+  row[columns.col_name] = "Draw";
+  row[columns.col_nickname] = "draw";
+
+  row = *(treeModel->append());
   row[columns.col_name] = "-------------------";
 
   row_vips =  *(treeModel->append());

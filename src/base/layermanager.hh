@@ -56,6 +56,8 @@ namespace PF
     bool get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist, 
 			   std::string parent_name, std::list<Layer*>& list);
 
+    Layer* get_container_layer( Layer* layer, std::list<Layer*>& list );
+
     // Walk through the given layer chain and set the "dirty" flag of all layers starting from "layer_id" to "true"
     void update_dirty( std::list<Layer*>& list, bool& dirty );
 
@@ -81,6 +83,8 @@ namespace PF
     std::list<Layer*>* get_list(PF::Layer* layer);
 
     void get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist);
+
+    Layer* get_container_layer( int id );
 
     Layer* get_layer(int id);
 

@@ -70,6 +70,7 @@ namespace PF
       BlendScreen<T,colorspace,CHMIN,CHMAX,has_omap> blend_screen;
       BlendLighten<T,colorspace,CHMIN,CHMAX,has_omap> blend_lighten;
       BlendDarken<T,colorspace,CHMIN,CHMAX,has_omap> blend_darken;
+      BlendOverlay<T,colorspace,CHMIN,CHMAX,has_omap> blend_overlay;
       Rect *r = &oreg->valid;
       int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN;
       int line_size = r->width * oreg->im->Bands;
@@ -88,6 +89,7 @@ namespace PF
 	  BLEND_LOOP(blend_normal);
 	  break;
 	case PF_BLEND_OVERLAY:
+	  BLEND_LOOP(blend_overlay);
 	  break;
 	case PF_BLEND_MULTIPLY:
 	  BLEND_LOOP(blend_multiply);

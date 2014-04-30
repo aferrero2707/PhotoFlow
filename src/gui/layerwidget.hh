@@ -55,6 +55,8 @@ class LayerWidget : public Gtk::VBox
   std::vector<Gtk::ScrolledWindow*> layer_frames;
   std::vector<LayerTree*> layer_views;
 
+  int get_selected_layer_id();
+
 public:
   LayerWidget( Image* image );
   virtual ~LayerWidget( );
@@ -78,13 +80,19 @@ public:
       layer_views[i]->update_model();
   }
 
+  bool on_button_event( GdkEventButton* button );
+
   void on_button_add();
   void on_button_add_group();
   void on_button_del();
 
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
 
+  void on_switch_page(Widget* page, guint page_num);
+
   void remove_tab( Gtk::Widget* widget );
+
+  sigc::signal<void,int> signal_active_layer_changed;
 };
 
 }

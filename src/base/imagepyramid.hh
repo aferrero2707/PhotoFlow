@@ -49,6 +49,7 @@ namespace PF
   struct PyramidLevel
   {
     std::string raw_file_name;
+    int fd;
     VipsImage* image;
   };
 
@@ -62,7 +63,11 @@ namespace PF
 
     ~ImagePyramid();
 
-    void init( VipsImage* image );
+    void init( VipsImage* image, int fd = -1 );
+
+    void reset();
+
+    void update( const VipsRect& area );
 
     PyramidLevel* get_level( unsigned int& level );
   };

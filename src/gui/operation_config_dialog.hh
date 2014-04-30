@@ -40,7 +40,7 @@
 
 namespace PF {
 
-  class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
+class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
 {
   std::vector<PFWidget*> controls;
 
@@ -101,6 +101,32 @@ public:
   void add_control( PFWidget* control ) { controls.push_back( control ); }
 
   void on_button_clicked(int id);
+
+  bool focus_in_cb(GdkEventFocus *focus)
+  {
+    on_focus_in( focus );
+    return true;
+  }
+  virtual void on_focus_in(GdkEventFocus *focus) 
+  {
+    std::cout<<"OperationConfigDialog: on_focus_in() called."<<std::endl;
+  }
+
+
+  bool focus_out_cb(GdkEventFocus *focus)
+  {
+    on_focus_out( focus );
+    return true;
+  }
+  virtual void on_focus_out(GdkEventFocus *focus) 
+  {
+    std::cout<<"OperationConfigDialog: on_focus_out() called."<<std::endl;
+  }
+
+
+  virtual void pointer_press_event( int button, double x, double y, int mod_key ) {}
+  virtual void pointer_release_event( int button, double x, double y, int mod_key ) {}
+  virtual void pointer_motion_event( int button, double x, double y, int mod_key ) {}
 
   //void on_intensity_value_changed();
   //void on_opacity_value_changed();

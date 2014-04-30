@@ -33,8 +33,8 @@
 
 
 PF::ClonePar::ClonePar(): 
-  source_channel("source_channel",this,PF::CLONE_CHANNEL_RGB,"RGB","RGB"),  
-  PF::BlenderPar() 
+  PF::BlenderPar(),
+  source_channel("source_channel",this,PF::CLONE_CHANNEL_RGB,"RGB","RGB")
 {
   source_channel.add_enum_value(PF::CLONE_CHANNEL_GREY,"Grey","Grey");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_R,"R","R");

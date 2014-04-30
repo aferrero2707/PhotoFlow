@@ -138,11 +138,11 @@ void PF::View::lock_processing()
 {
   for( unsigned int i = 0; i < sinks.size(); i++) {
 #ifndef NDEBUG
-    std::cout<<"PF::View::update(): locking sink #"<<i<<std::endl;
+    //std::cout<<"PF::View::update(): locking sink #"<<i<<std::endl;
 #endif
     sinks[i]->get_processing_mutex().lock();
 #ifndef NDEBUG
-    std::cout<<"PF::View::update(): sink #"<<i<<" locked"<<std::endl;
+    //std::cout<<"PF::View::update(): sink #"<<i<<" locked"<<std::endl;
 #endif
   }
 }
@@ -152,11 +152,11 @@ void PF::View::unlock_processing()
 {
   for( unsigned int i = 0; i < sinks.size(); i++) {
 #ifndef NDEBUG
-    std::cout<<"PF::View::update(): unlocking sink #"<<i<<std::endl;
+    //std::cout<<"PF::View::update(): unlocking sink #"<<i<<std::endl;
 #endif
     sinks[i]->get_processing_mutex().unlock();
 #ifndef NDEBUG
-    std::cout<<"PF::View::update(): sink #"<<i<<" unlocked"<<std::endl;
+    //std::cout<<"PF::View::update(): sink #"<<i<<" unlocked"<<std::endl;
 #endif
   }
 }
@@ -174,6 +174,23 @@ void PF::View::update()
     sinks[i]->update();
 #ifndef NDEBUG
     std::cout<<"PF::View::update(): sink #"<<i<<" updated"<<std::endl;
+#endif
+  }
+}
+
+
+void PF::View::update( const VipsRect& area )
+{
+#ifndef NDEBUG
+  std::cout<<"PF::View::update(const VipsRect& area): called"<<std::endl;
+#endif
+  for( unsigned int i = 0; i < sinks.size(); i++) {
+#ifndef NDEBUG
+    std::cout<<"PF::View::update(const VipsRect& area): updating sink #"<<i<<std::endl;
+#endif
+    sinks[i]->update( area );
+#ifndef NDEBUG
+    std::cout<<"PF::View::update(const VipsRect& area): sink #"<<i<<" updated"<<std::endl;
 #endif
   }
 }

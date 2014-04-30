@@ -166,8 +166,6 @@ PF::LayerTree::LayerTree( bool is_map ):
   treeView.append_column("map1", columns.col_imap);
   treeView.append_column("map2", columns.col_omap);
 
-  treeView.signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerTree::on_button_event) ); 
-
   Gtk::CellRendererToggle* cell = 
     dynamic_cast<Gtk::CellRendererToggle*>( treeView.get_column_cell_renderer(0) );
   cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerTree::on_cell_toggled) ); 
@@ -195,14 +193,6 @@ PF::LayerTree::LayerTree( bool is_map ):
 
 PF::LayerTree::~LayerTree()
 {
-}
-
-
-bool PF::LayerTree::on_button_event( GdkEventButton* button )
-{
-#ifndef NDEBUG
-  std::cout<<"PF::LayerTree::on_button_event(): button "<<button->button<<" clicked."<<std::endl;
-#endif
 }
 
 

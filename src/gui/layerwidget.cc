@@ -109,6 +109,10 @@ PF::LayerWidget::LayerWidget( Image* img ):
 
   view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
 
+  view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) ); 
+
+  notebook.signal_switch_page().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_switch_page) ); 
+
   //layer_frames.push_back( frame );
   layer_views.push_back( view );
 
@@ -129,6 +133,21 @@ PF::LayerWidget::~LayerWidget()
 }
 
 
+bool PF::LayerWidget::on_button_event( GdkEventButton* button )
+{
+  //#ifndef NDEBUG
+  std::cout<<"PF::LayerWidget::on_button_event(): button "<<button->button<<" clicked."<<std::endl;
+  //#endif
+  if( button->button == 1 ) {
+    int layer_id = get_selected_layer_id();
+    std::cout<<"Selected layer id: "<<layer_id<<std::endl;
+    if( layer_id >= 0 )
+      signal_active_layer_changed.emit( layer_id );
+  }
+  return true;
+}
+
+
 void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column )
 {
   int page = notebook.get_current_page();
@@ -146,12 +165,14 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       std::cout<<"Activated IMap column of row "<<l->get_name()<<std::endl;
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
-      LayerTree* view = new LayerTree( );
+      LayerTree* view = new LayerTree( true );
       //frame->add( *view );
       
       //view->set_reorderable();
       
       view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
+
+      view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) ); 
 
       /*
       Gtk::CellRendererToggle* cell = 
@@ -184,12 +205,14 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       std::cout<<"Activated OMap column of row "<<l->get_name()<<std::endl;
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
-      LayerTree* view = new LayerTree( );
+      LayerTree* view = new LayerTree( true );
       //frame->add( *view );
       
       //view->set_reorderable();
       
       view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
+
+      view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) ); 
 
       /*
       Gtk::CellRendererToggle* cell = 
@@ -220,6 +243,28 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     PF::OperationConfigUI* dialog = l->get_processor()->get_par()->get_config_ui();
     if(dialog) dialog->open();
   }
+}
+
+
+
+int PF::LayerWidget::get_selected_layer_id()
+{
+  int result = -1;
+
+  int page = notebook.get_current_page();
+  if( page < 0 ) page = 0;
+
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+    layer_views[page]->get_tree().get_selection();
+  Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
+  if(iter) {//If anything is selected
+    Gtk::TreeModel::Row row = *iter;
+    PF::LayerTreeColumns& columns = layer_views[page]->get_columns();
+    PF::Layer* l = (*iter)[columns.col_layer];
+    result = l->get_id();
+  }
+
+  return( result );
 }
 
 
@@ -365,3 +410,15 @@ void PF::LayerWidget::on_button_del()
 {
   remove_layers();
 }
+
+
+
+void PF::LayerWidget::on_switch_page(Widget* page, guint page_num)
+{
+  std::cout<<"LayerWidget::on_switch_page( "<<page_num<<" ) called."<<std::endl;
+  int layer_id = get_selected_layer_id();
+  std::cout<<"Selected layer id: "<<layer_id<<std::endl;
+  if( layer_id >= 0 )
+    signal_active_layer_changed.emit( layer_id );
+}
+

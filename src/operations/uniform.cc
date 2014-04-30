@@ -27,28 +27,28 @@
 
  */
 
-#ifndef OPERATIONS_H
-#define OPERATIONS_H
+#include "uniform.hh"
 
-namespace PF
+PF::UniformPar::UniformPar(): 
+  OpParBase(),
+  grey( "grey", this, 0 ),
+  R( "R", this, 0 ),
+  G( "G", this, 0 ),
+  B( "B", this, 0 ),
+  L( "L", this, 0 ),
+  a( "a", this, 0 ),
+  b( "b", this, 0 ),
+  C( "C", this, 0 ),
+  M( "M", this, 0 ),
+  Y( "Y", this, 0 ),
+  K( "K", this, 0 )
 {
-
-  ProcessorBase* new_convert_format();
-  ProcessorBase* new_image_reader();
-  ProcessorBase* new_buffer();
-  ProcessorBase* new_blender();
-  ProcessorBase* new_brightness_contrast();
-  ProcessorBase* new_clone();
-  ProcessorBase* new_convert2rgb();
-  ProcessorBase* new_convert2srgb();
-  ProcessorBase* new_convert2lab();
-  ProcessorBase* new_curves();
-  ProcessorBase* new_gradient();
-  ProcessorBase* new_gaussblur();
-  ProcessorBase* new_invert();
-  ProcessorBase* new_uniform();
-  ProcessorBase* new_draw();
-  //ProcessorBase* new_vips_operation( std::string op_type );
+  set_type( "uniform" );
 }
 
-#endif
+
+
+PF::ProcessorBase* PF::new_uniform()
+{
+  return( new PF::Processor<PF::UniformPar,PF::Uniform>() );
+}

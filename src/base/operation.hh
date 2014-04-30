@@ -357,6 +357,7 @@ namespace PF
   #include "blend_screen.hh"
   #include "blend_lighten.hh"
   #include "blend_darken.hh"
+  #include "blend_overlay.hh"
 
 
 };

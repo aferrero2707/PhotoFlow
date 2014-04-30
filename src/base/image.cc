@@ -58,7 +58,7 @@ gint PF::image_rebuild_callback( gpointer data )
 {
   PF::Image* image = (PF::Image*)data;
 #ifndef NDEBUG
-  std::cout<<"PF::image_rebuild_callback(): called, image->is_modified()="<<image->is_modified()<<std::endl;
+  //std::cout<<"PF::image_rebuild_callback(): called, image->is_modified()="<<image->is_modified()<<std::endl;
 #endif
   if( image->is_modified() ) {
 
@@ -280,8 +280,8 @@ bool PF::Image::open( std::string filename )
     PF::load_pf_image( filename, this );
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
-    add_view( VIPS_FORMAT_UCHAR, 0 );
-    //add_view( VIPS_FORMAT_USHORT, 1 );
+    //add_view( VIPS_FORMAT_UCHAR, 0 );
+    add_view( VIPS_FORMAT_USHORT, 0 );
 
   } else {
 

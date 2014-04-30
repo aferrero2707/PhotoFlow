@@ -24,6 +24,10 @@
 
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
@@ -37,28 +41,157 @@ GObject* PF::pyramid_test_obj = NULL;
 
 PF::ImagePyramid::~ImagePyramid()
 {
-  for( unsigned int i = 0; i < levels.size(); i++ ) {
+  for( unsigned int i = 1; i < levels.size(); i++ ) {
     g_object_unref( levels[i].image );
+    //if( i < 1 ) continue;
+    if( levels[i].fd >= 0 ) 
+      close( levels[i].fd );
     unlink( levels[i].raw_file_name.c_str() );
+    std::cout<<"PF::ImagePyramid::~ImagePyramid(): "<<levels[i].raw_file_name<<" removed."<<std::endl;
   }
 }
 
 
-void PF::ImagePyramid::init( VipsImage* img )
+void PF::ImagePyramid::init( VipsImage* img, int fd )
 {
   for( unsigned int i = 1; i < levels.size(); i++ ) {
     g_object_unref( levels[i].image );
+    if( levels[i].fd >= 0 ) 
+      close( levels[i].fd );
     unlink( levels[i].raw_file_name.c_str() );
   }
   levels.clear();
 
   PF::PyramidLevel level;
   level.image = img;
+  level.fd = fd;
   levels.push_back( level );
 
 #ifndef NDEBUG
   std::cout<<"ImagePyramid::init(): full-scale image="<<img<<std::endl;
 #endif
+}
+
+
+void PF::ImagePyramid::reset()
+{
+  if( levels.size() < 1 ) 
+    return;
+
+  PF::PyramidLevel level = levels[0];
+
+  for( unsigned int i = 1; i < levels.size(); i++ ) {
+    g_object_unref( levels[i].image );
+    if( levels[i].fd >= 0 ) 
+      close( levels[i].fd );
+    unlink( levels[i].raw_file_name.c_str() );
+  }
+  levels.clear();
+
+  levels.push_back( level );
+}
+
+
+void PF::ImagePyramid::update( const VipsRect& area )
+{  
+  if( levels.empty() ) 
+    return;
+
+  if( levels[0].fd < 0 ) return;
+
+  VipsImage* in = levels.back().image;
+  if( !in )
+    return;
+
+  VipsRect area_in;
+  area_in.left = area.left;
+  area_in.top = area.top;
+  area_in.width = area.width;
+  area_in.height = area.height;
+  VipsRect area_out;
+
+  int nbands = in->Bands;
+
+  int pelsz = VIPS_IMAGE_SIZEOF_PEL( in );
+
+  for( unsigned int li = 1; li < levels.size(); li++ ) {
+
+    if( levels[li].fd < 0 ) break;
+    if( !levels[li].image ) break;
+
+    int in_fd = levels[li-1].fd;
+    int out_fd = levels[li].fd;
+
+    VipsImage* in = levels[li-1].image;
+    VipsImage* out = levels[li].image;
+
+    int in_width = in->Xsize;
+    int in_height = in->Ysize;
+    int out_width = in_width/2;
+    int out_height = in_height/2;
+
+    area_out.left = area_in.left/2;
+    area_out.top = area_in.top/2;
+    area_out.width = area_in.width/2 + 1;
+    area_out.height = area_in.height/2 + 1;
+
+    unsigned int out_right = area_out.left + area_out.width - 1;
+    if( out_right >= out_width ) {
+      area_out.width -= (out_right-out_width-1);
+      out_right = area_out.left + area_out.width - 1;
+    }
+
+    unsigned int out_bottom = area_out.top + area_out.height - 1;
+    if( out_bottom >= out_height ) {
+      area_out.height -= (out_bottom-out_height-1);
+      out_bottom = area_out.top + area_out.height - 1;
+    }
+
+#ifndef NDEBUG
+    std::cout<<"PF::ImagePyramid::update():"<<std::endl
+	     <<"  level="<<li<<std::endl
+	     <<"  in="<<in<<"  out="<<out<<std::endl
+	     <<"  area in: "<<area_in.width<<"x"<<area_in.height<<"+"<<area_in.left<<"+"<<area_in.top<<std::endl
+	     <<"  area out: "<<area_out.width<<"x"<<area_out.height<<"+"<<area_out.left<<"+"<<area_out.top<<std::endl
+	     <<"  out right="<<out_right<<"  out bottom="<<out_bottom<<std::endl;
+#endif
+    area_in.left = area_out.left*2;
+    area_in.top = area_out.top*2;
+    area_in.width = area_out.width*2;
+    area_in.height = area_out.height*2;
+
+    unsigned int x, x2, y, in_linesz = area_in.width*pelsz, out_linesz = area_out.width*pelsz;
+
+    unsigned char* buf_in = new unsigned char[in_linesz];
+    if( !buf_in ) break;
+    unsigned char* buf_out = new unsigned char[out_linesz];
+    if( !buf_out ) { delete( buf_in ); break; }
+
+    for( y = area_out.top; y <= out_bottom; y++ ) {
+
+      off_t in_offset = (off_t(in_width)*y*2+area_in.left)*pelsz;
+      lseek( in_fd, in_offset, SEEK_SET );
+
+      read( in_fd, buf_in, in_linesz );
+
+      for( x = 0, x2 = 0; x < out_linesz; x += pelsz, x2 += pelsz*2 ) {
+	memcpy( &(buf_out[x]), &(buf_in[x2]), pelsz );
+      }
+      
+      off_t out_offset = (off_t(out_width)*y+area_out.left)*pelsz;
+      lseek( out_fd, out_offset, SEEK_SET );
+      
+      write( out_fd, buf_out, out_linesz );
+    }
+
+    area_in.left = area_out.left;
+    area_in.top = area_out.top;
+    area_in.width = area_out.width;
+    area_in.height = area_out.height;
+
+    delete( buf_in );
+    delete( buf_out );
+  }  
 }
 
 
@@ -117,7 +250,10 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     char* fname = tempnam( NULL, "pfraw" );
     if( !fname ) 
       return NULL;
-    vips_rawsave( out, fname, NULL );
+    int fd = open( fname, O_CREAT|O_RDWR|O_TRUNC, S_IRWXU );
+    if( fd < 0 )
+      return NULL;
+    vips_rawsave_fd( out, fd, NULL );
     //char tifname[500];
     //sprintf(tifname,"/tmp/level_%d-1.tif",(int)levels.size());
     //vips_image_write_to_file( out, tifname );
@@ -147,6 +283,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     }
 
     newlevel.image = out;
+    newlevel.fd = fd;
     newlevel.raw_file_name = fname;
     levels.push_back( newlevel );
 

@@ -27,28 +27,17 @@
 
  */
 
-#ifndef OPERATIONS_H
-#define OPERATIONS_H
+#include "invert.hh"
 
-namespace PF
+PF::InvertPar::InvertPar(): 
+  OpParBase()
 {
-
-  ProcessorBase* new_convert_format();
-  ProcessorBase* new_image_reader();
-  ProcessorBase* new_buffer();
-  ProcessorBase* new_blender();
-  ProcessorBase* new_brightness_contrast();
-  ProcessorBase* new_clone();
-  ProcessorBase* new_convert2rgb();
-  ProcessorBase* new_convert2srgb();
-  ProcessorBase* new_convert2lab();
-  ProcessorBase* new_curves();
-  ProcessorBase* new_gradient();
-  ProcessorBase* new_gaussblur();
-  ProcessorBase* new_invert();
-  ProcessorBase* new_uniform();
-  ProcessorBase* new_draw();
-  //ProcessorBase* new_vips_operation( std::string op_type );
+  set_type( "invert" );
 }
 
-#endif
+
+
+PF::ProcessorBase* PF::new_invert()
+{
+  return( new PF::Processor<PF::InvertPar,PF::Invert>() );
+}

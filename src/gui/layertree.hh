@@ -80,8 +80,6 @@ namespace PF {
 
     bool is_map() { return map_flag; }
 
-    bool on_button_event( GdkEventButton* button );
-
     //Image* get_image() { return image; }
     //void set_image(Image* img) { image = img; update_model(); }
 

@@ -38,6 +38,7 @@
 #include "../gui/operations/gradient_config.hh"
 #include "../gui/operations/curves_config.hh"
 #include "../gui/operations/gaussblur_config.hh"
+#include "../gui/operations/draw_config.hh"
 
 
 
@@ -148,6 +149,11 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   mainHBox.pack_start( mainBox, Gtk::PACK_SHRINK );
 
   get_vbox()->pack_start( mainHBox, Gtk::PACK_SHRINK );
+
+  signal_focus_in_event().connect( sigc::mem_fun(*this,
+						 &OperationConfigDialog::focus_in_cb) );
+  signal_focus_out_event().connect( sigc::mem_fun(*this,
+					     &OperationConfigDialog::focus_out_cb) );
 
   /*
   intensityAdj.signal_value_changed().
@@ -398,6 +404,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "convert2lab" ) {
 
     dialog = new PF::OperationConfigDialog( current_layer, "Convert to Lab colororspace" );
+
+  } else if( op_type == "draw" ) {
+
+    dialog = new PF::DrawConfigDialog( current_layer );
 
   } else { // it must be a VIPS operation...
 

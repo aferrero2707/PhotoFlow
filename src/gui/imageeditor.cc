@@ -32,6 +32,7 @@
 
 PF::ImageEditor::ImageEditor( Image* img ):
   image( img ),
+  active_layer( NULL ),
   imageArea( image->get_view(0) ),
   layersWidget( image ),
   buttonZoomIn( "Zoom +" ),
@@ -39,7 +40,11 @@ PF::ImageEditor::ImageEditor( Image* img ):
   buttonShowMerged( "show merged layers" ),
   buttonShowActive( "show active layer" )
 {
+  imageArea.set_adjustments( imageArea_scrolledWindow.get_hadjustment(),
+			     imageArea_scrolledWindow.get_vadjustment() );
+
   imageArea_scrolledWindow.add( imageArea );
+  imageArea_eventBox.add( imageArea_scrolledWindow );
 
   radioBox.pack_start( buttonShowMerged );
   radioBox.pack_start( buttonShowActive );
@@ -51,7 +56,7 @@ PF::ImageEditor::ImageEditor( Image* img ):
   controlsBox.pack_end( buttonZoomOut, Gtk::PACK_SHRINK );
   controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
 
-  imageBox.pack_start( imageArea_scrolledWindow );
+  imageBox.pack_start( imageArea_eventBox );
   imageBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
 
   pack1( imageBox, true, false );
@@ -62,7 +67,29 @@ PF::ImageEditor::ImageEditor( Image* img ):
 						       &PF::ImageEditor::zoom_in) );
   buttonZoomOut.signal_clicked().connect( sigc::mem_fun(*this,
 							&PF::ImageEditor::zoom_out) );
+
+  buttonShowMerged.signal_clicked().connect( sigc::bind( sigc::mem_fun(&imageArea,
+								       &PF::ImageArea::set_display_merged),
+							 true) );
+  buttonShowActive.signal_clicked().connect( sigc::bind( sigc::mem_fun(&imageArea,
+								       &PF::ImageArea::set_display_merged),
+							 false) );
   //set_position( get_allocation().get_width()-200 );
+
+  layersWidget.signal_active_layer_changed.connect( sigc::mem_fun(&imageArea,
+								  &PF::ImageArea::set_active_layer) );
+
+  layersWidget.signal_active_layer_changed.connect( sigc::mem_fun(this,
+								  &PF::ImageEditor::set_active_layer) );
+
+  /*
+  imageArea_eventBox.signal_button_press_event().
+    connect( sigc::mem_fun(*this, &PF::ImageEditor::on_button_press_event) ); 
+  imageArea_eventBox.signal_button_release_event().
+    connect( sigc::mem_fun(*this, &PF::ImageEditor::on_button_release_event) ); 
+  imageArea_eventBox.signal_motion_notify_event().
+    connect( sigc::mem_fun(*this, &PF::ImageEditor::on_motion_notify_event) ); 
+  */
 
   show_all_children();
 }
@@ -83,6 +110,12 @@ void PF::ImageEditor::zoom_out()
   int level = view->get_level();
   view->set_level( level + 1 );
   image->update();
+
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::zoom_out(): area size:"
+	   <<"  h="<<imageArea_scrolledWindow.get_hadjustment()->get_page_size()
+	   <<"  v="<<imageArea_scrolledWindow.get_vadjustment()->get_page_size()<<std::endl;
+#endif
 }
 
 
@@ -95,4 +128,137 @@ void PF::ImageEditor::zoom_in()
     view->set_level( level - 1 );
     image->update();
   }
+
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::zoom_in(): area size:"
+	   <<"  h="<<imageArea_scrolledWindow.get_hadjustment()->get_page_size()
+	   <<"  v="<<imageArea_scrolledWindow.get_vadjustment()->get_page_size()<<std::endl;
+#endif
+
 }
+
+
+void PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
+{
+  /*
+  std::cout<<"PF::ImageEditor::screen2image(): adjustments:"
+	   <<"  h="<<imageArea_scrolledWindow.get_hadjustment()->get_value()
+	   <<"  v="<<imageArea_scrolledWindow.get_vadjustment()->get_value()<<std::endl;
+  */
+  x += imageArea_scrolledWindow.get_hadjustment()->get_value();
+  y += imageArea_scrolledWindow.get_vadjustment()->get_value();
+  x -= imageArea.get_xoffset();
+  y -= imageArea.get_yoffset();
+  float zoom_fact = get_zoom_factor();
+  x /= zoom_fact;
+  y /= zoom_fact;
+}
+
+
+bool PF::ImageEditor::on_button_press_event( GdkEventButton* button )
+{
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::on_button_press_event(): button "<<button->button<<" pressed."<<std::endl;
+#endif
+  if( button->button == 1 ) {
+    gdouble x = button->x;
+    gdouble y = button->y;
+    screen2image( x, y );
+#ifndef NDEBUG
+    std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
+#endif
+    if( active_layer &&
+	active_layer->get_processor() &&
+	active_layer->get_processor()->get_par() ) {
+      PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
+      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      if( dialog && dialog->get_visible() ) {
+#ifndef NDEBUG
+	std::cout<<"  sending button press event to dialog"<<std::endl;
+#endif
+	int mod_key = PF::MOD_KEY_NONE;
+	if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+	if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+	dialog->pointer_press_event( button->button, x, y, mod_key );
+      }
+    }
+  }
+}
+
+
+bool PF::ImageEditor::on_button_release_event( GdkEventButton* button )
+{
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::on_button_release_event(): button "<<button->button<<" released."<<std::endl;
+#endif
+  if( button->button == 1 ) {
+    gdouble x = button->x;
+    gdouble y = button->y;
+    screen2image( x, y );
+#ifndef NDEBUG
+    std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
+#endif
+    if( active_layer &&
+	active_layer->get_processor() &&
+	active_layer->get_processor()->get_par() ) {
+      PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
+      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      if( dialog && dialog->get_visible() ) {
+#ifndef NDEBUG
+	std::cout<<"  sending button release event to dialog"<<std::endl;
+#endif
+	int mod_key = PF::MOD_KEY_NONE;
+	if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+	if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+	dialog->pointer_release_event( button->button, x, y, mod_key );
+      }
+    }
+  }
+}
+
+
+bool PF::ImageEditor::on_motion_notify_event( GdkEventMotion* event )
+{
+  /*
+  GDK_SHIFT_MASK    = 1 << 0,
+  GDK_LOCK_MASK     = 1 << 1,
+  GDK_CONTROL_MASK  = 1 << 2,
+  GDK_MOD1_MASK     = 1 << 3,
+  GDK_MOD2_MASK     = 1 << 4,
+  GDK_MOD3_MASK     = 1 << 5,
+  GDK_MOD4_MASK     = 1 << 6,
+  GDK_MOD5_MASK     = 1 << 7,
+  GDK_BUTTON1_MASK  = 1 << 8,
+  GDK_BUTTON2_MASK  = 1 << 9,
+  GDK_BUTTON3_MASK  = 1 << 10,
+  GDK_BUTTON4_MASK  = 1 << 11,
+  GDK_BUTTON5_MASK  = 1 << 12,
+  */
+  if( event->state & GDK_BUTTON1_MASK ) {
+    gdouble x = event->x;
+    gdouble y = event->y;
+    screen2image( x, y );
+#ifndef NDEBUG
+    std::cout<<"PF::ImageEditor::on_motion_notify_event(): pointer @ "<<x<<","<<y
+	     <<"  hint: "<<event->is_hint<<"  state: "<<event->state
+	     <<std::endl;
+#endif
+    if( active_layer &&
+	active_layer->get_processor() &&
+	active_layer->get_processor()->get_par() ) {
+      PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
+      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      if( dialog && dialog->get_visible() ) {
+#ifndef NDEBUG
+	std::cout<<"  sending motion event to dialog"<<std::endl;
+#endif
+	int mod_key = PF::MOD_KEY_NONE;
+	if( event->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+	if( event->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+	dialog->pointer_motion_event( 1, x, y, mod_key );
+      }
+    }
+  }
+}
+
+
