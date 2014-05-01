@@ -34,6 +34,14 @@
 extern "C" {
 #endif /*__cplusplus*/
 
+  
+  extern int
+  vips_sink_screen2( VipsImage *in, VipsImage *out, VipsImage *mask, 
+		     int tile_width, int tile_height, 
+		     int max_tiles, 
+		     int priority,
+		     VipsSinkNotify notify, void *a );
+  
   extern void vips_invalidate_area( VipsImage *image, VipsRect* r  );
 
 #ifdef __cplusplus
@@ -347,9 +355,9 @@ void PF::ImageArea::update()
   display_image = im_open( "display_image", "p" );
   mask = vips_image_new();
 
-  if (vips_sink_screen (outimg, display_image, mask,
-			64, 64, (2000/64)*(2000/64), 
-			0, sink_notify, this))
+  if (vips_sink_screen2 (outimg, display_image, mask,
+			 64, 64, (2000/64)*(2000/64), 
+			 0, sink_notify, this))
   
     vips::verror ();
   g_object_unref( outimg );
