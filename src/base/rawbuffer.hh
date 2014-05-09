@@ -31,11 +31,12 @@
 #ifndef RAW_BUFFER_H
 #define RAW_BUFFER_H
 
+#include <unistd.h>
+
 #include <string>
 #include <vector>
 #include <iostream>
 #include <fstream>
-
 
 #include <vips/vips.h>
 #include <vips/vips>
