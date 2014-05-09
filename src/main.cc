@@ -54,8 +54,11 @@ int main (int argc, char *argv[])
 {
   Gtk::Main kit(argc, argv);
 
-  if (argc != 2)
-    error_exit ("usage: %s <filename>", argv[0]);
+  if (argc != 2) {
+    printf ("usage: %s <filename>", argv[0]);
+    exit(1);
+  }
+
   if (vips_init (argv[0]))
     vips::verror ();
 
