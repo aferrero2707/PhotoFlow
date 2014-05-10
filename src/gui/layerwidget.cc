@@ -261,7 +261,7 @@ int PF::LayerWidget::get_selected_layer_id()
     Gtk::TreeModel::Row row = *iter;
     PF::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*iter)[columns.col_layer];
-    result = l->get_id();
+    if(l) result = l->get_id();
   }
 
   return( result );
