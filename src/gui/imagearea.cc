@@ -357,6 +357,7 @@ void PF::ImageArea::update()
 
   if (vips_sink_screen2 (outimg, display_image, mask,
 			 64, 64, (2000/64)*(2000/64), 
+			 //6400, 64, (2000/64), 
 			 0, sink_notify, this))
   
     vips::verror ();

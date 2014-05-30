@@ -30,8 +30,6 @@
 #ifndef VIPS_BLENDER_H
 #define VIPS_BLENDER_H
 
-#include <unistd.h>
-
 #include <string>
 
 #include "../base/operation.hh"

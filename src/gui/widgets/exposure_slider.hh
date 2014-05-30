@@ -27,44 +27,22 @@
 
  */
 
-#ifndef SLIDER_HH
-#define SLIDER_HH
+#ifndef EXPOSURE_SLIDER_HH
+#define EXPOSURE_SLIDER_HH
 
 #include <gtkmm.h>
 
-#include "pfwidget.hh"
+#include "slider.hh"
 
 namespace PF {
 
-  class Slider: public Gtk::VBox, public PFWidget
+  class ExposureSlider: public Slider
   {
-    Gtk::HBox hbox;
-    Gtk::Label label;
-    Gtk::Alignment align;
-#ifdef GTKMM_2
-    Gtk::Adjustment adjustment;
-#endif
-#ifdef GTKMM_3
-    Glib::RefPtr<Gtk::Adjustment> adjustment;
-#endif
-    Gtk::HScale scale;
-    Gtk::SpinButton spinButton;
-
-    double multiplier;
-    
   public:
-    Slider(OperationConfigUI* dialog, std::string pname, std::string l,
-	   double val, double min, double max, double sincr, double pincr, double mult);
+    ExposureSlider(OperationConfigUI* dialog, std::string pname, std::string l,
+	   double val, double min, double max, double sincr, double pincr);
 
-    ~Slider() {}
-
-#ifdef GTKMM_2
-    Gtk::Adjustment& get_adjustment() { return adjustment; }
-#endif
-#ifdef GTKMM_3
-    Glib::RefPtr<Gtk::Adjustment> get_adjustment() { return adjustment; }
-#endif
-
+    ~ExposureSlider() {}
 
     void get_value();
     void set_value();

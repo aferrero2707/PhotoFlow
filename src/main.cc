@@ -27,6 +27,9 @@
 
  */
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
 
@@ -75,6 +78,26 @@ int main (int argc, char *argv[])
 
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
   PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
+
+  // Create the cache directory if possible
+  char fname[500];
+  if( getenv("HOME") ) {
+    sprintf( fname,"%s/.photoflow", getenv("HOME") );
+    int result = mkdir(fname, 0755);
+    if( (result == 0) || (errno == EEXIST) ) {
+      sprintf( fname,"%s/.photoflow/cache", getenv("HOME") );
+      result = mkdir(fname, 0755);
+      if( (result != 0) && (errno != EEXIST) ) {
+	perror("mkdir");
+	std::cout<<"Cannot create "<<fname<<"    exiting."<<std::endl;
+	exit( 1 );
+      }
+    } else {
+      perror("mkdir");
+      std::cout<<"Cannot create "<<fname<<" (result="<<result<<")   exiting."<<std::endl;
+      exit( 1 );
+    }
+  }
 
   PF::MainWindow mainWindow;
   char* fullpath = realpath( argv[1], NULL );

@@ -28,6 +28,8 @@
  */
 
 
+#include <stdlib.h>
+
 #include "convert2srgb.hh"
 #include "../base/processor.hh"
 
@@ -187,7 +189,16 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first,
     return( in[0] );
   }
 
-  return OpParBase::build( in, first, NULL, NULL, level );
+  VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
+  /**/
+  cmsUInt32Number out_length;
+  cmsSaveProfileToMem( profile_out, NULL, &out_length);
+  void* buf = malloc( out_length );
+  cmsSaveProfileToMem( profile_out, buf, &out_length);
+  vips_image_set_blob( out, VIPS_META_ICC_NAME, 
+		       (VipsCallbackFn) g_free, buf, out_length );
+  /**/
+  return out;
 }
 
 

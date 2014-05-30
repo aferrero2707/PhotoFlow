@@ -35,6 +35,9 @@ namespace PF
 
   ProcessorBase* new_convert_format();
   ProcessorBase* new_image_reader();
+  ProcessorBase* new_raw_loader();
+  ProcessorBase* new_raw_developer();
+  ProcessorBase* new_raw_output();
   ProcessorBase* new_buffer();
   ProcessorBase* new_blender();
   ProcessorBase* new_brightness_contrast();

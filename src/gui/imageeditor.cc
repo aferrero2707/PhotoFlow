@@ -30,10 +30,13 @@
 #include "imageeditor.hh"
 
 
+#define PIPELINE_ID 1
+
+
 PF::ImageEditor::ImageEditor( Image* img ):
   image( img ),
   active_layer( NULL ),
-  imageArea( image->get_view(0) ),
+  imageArea( image->get_view(PIPELINE_ID) ),
   layersWidget( image ),
   buttonZoomIn( "Zoom +" ),
   buttonZoomOut( "Zoom -" ),
@@ -105,7 +108,7 @@ PF::ImageEditor::~ImageEditor()
 
 void PF::ImageEditor::zoom_out()
 {
-  PF::View* view = image->get_view(0);
+  PF::View* view = image->get_view( PIPELINE_ID );
   if( !view ) return;
   int level = view->get_level();
   view->set_level( level + 1 );
@@ -121,7 +124,7 @@ void PF::ImageEditor::zoom_out()
 
 void PF::ImageEditor::zoom_in()
 {
-  PF::View* view = image->get_view(0);
+  PF::View* view = image->get_view( PIPELINE_ID );
   if( !view ) return;
   int level = view->get_level();
   if( level > 0 ) {

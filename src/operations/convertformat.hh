@@ -107,7 +107,9 @@ namespace PF
       
 #ifndef NDEBUG
     if( r->top==0 && r->left==0 ) {
-      std::cout<<"ConvertFormatProc::render(): input format="<<ir[in_first]->im->BandFmt<<std::endl;
+      std::cout<<"ConvertFormatProc::render(): input format="<<ir[in_first]->im->BandFmt
+	       <<"  output format="<<oreg->im->BandFmt
+	       <<std::endl;
     }
 #endif
     switch( ir[in_first]->im->BandFmt ) {
@@ -123,7 +125,7 @@ namespace PF
 	  //std::cout<<"p[x]="<<(int)p[x]<<"  norm="<<norm<<"  pout[x]="<<pout[x]<<std::endl;
 	}
 #ifndef NDEBUG
-	if( y==0 && r->top==0 && r->left==0 ) {
+	if( y==10 && r->top==0 && r->left==0 ) {
 	  std::cout<<"ConvertFormatProc::render()"<<std::endl;
 	  for( int i = 0; i < 12; i++ )
 	    std::cout<<(int)p[i]<<" ";
@@ -147,10 +149,14 @@ namespace PF
 	for( x=0; x < line_size; x++) {
 	  norm = (double(p[x]) + FormatInfo<unsigned short>::MIN)/FormatInfo<unsigned short>::RANGE;
 	  pout[x] = (T)(norm*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
+	  int xx = x+r->left;
+	  if(false && (xx < 64*6) && ((y+r->top) == 8) ) {
+	    std::cout<<"convert_format(ushort): p["<<xx<<"]="<<p[x]<<"  pout["<<xx<<"]="<<(float)pout[x]<<std::endl;
+	  }
 	  //std::cout<<"p[x]="<<(int)p[x]<<"  norm="<<norm<<"  pout[x]="<<pout[x]<<std::endl;
 	}
 #ifndef NDEBUG
-	if( y==0 && r->top==0 && r->left==0 ) {
+	if(false && y==0 && r->top==0 && r->left==0 ) {
 	  std::cout<<"ConvertFormatProc::render()"<<std::endl;
 	  for( int i = 0; i < 12; i++ )
 	    std::cout<<(int)p[i]<<" ";
@@ -177,7 +183,11 @@ namespace PF
 	float* p = (float*)VIPS_REGION_ADDR( ir[in_first], r->left, r->top + y ); 
 	pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 	for( x=0; x < line_size; x++) {
+	  int xx = x+r->left;
 	  pout[x] = (T)(p[x]*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
+	  if(false && (xx < 64*6) && ((y+r->top) == 8) ) {
+	    std::cout<<"convert_format(float): p["<<xx<<"]="<<p[x]<<"  pout["<<xx<<"]="<<(float)pout[x]<<std::endl;
+	  }
 	}
       }
       break;    

@@ -100,8 +100,19 @@ namespace PF
       
       p = ir ? (T*)VIPS_REGION_ADDR( ir[0], r->left, r->top + y ) : NULL; 
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
-      if(transform) cmsDoTransform( transform, p, pout, width );
-      else memcpy( pout, p, sizeof(T)*line_size );
+      if(transform) {
+	cmsDoTransform( transform, p, pout, width );
+	if( false && (r->left==0) && (r->top==0) && (y==0) ) {
+	  for(int xx  = 0; xx < line_size; xx++)
+	    std::cout<<"Convert2sRGB/cmsDoTransform(): p["<<xx<<"]="<<p[xx]<<"  pout["<<xx<<"]="<<pout[xx]<<std::endl;
+	}
+      } else {
+	memcpy( pout, p, sizeof(T)*line_size );
+	if( false && (r->left==0) && (r->top==0) && (y==0) ) {
+	  for(int xx  = 0; xx < line_size; xx++)
+	    std::cout<<"Convert2sRGB/memcpy(): p["<<xx<<"]="<<p[xx]<<"  pout["<<xx<<"]="<<pout[xx]<<std::endl;
+	}
+      }
     }
   };
 

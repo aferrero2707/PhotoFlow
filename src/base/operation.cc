@@ -110,6 +110,10 @@ PF::PropertyBase* PF::OpParBase::get_property(std::string name)
 void PF::OpParBase::save_properties(std::list<std::string>& plist)
 {
   std::list<PropertyBase*>::iterator pi;
+  for(pi = mapped_properties.begin(); pi != mapped_properties.end(); pi++) {
+    std::string str = (*pi)->get_str();
+    plist.push_back(str);
+  }
   for(pi = properties.begin(); pi != properties.end(); pi++) {
     std::string str = (*pi)->get_str();
     plist.push_back(str);
@@ -121,7 +125,12 @@ void PF::OpParBase::restore_properties(const std::list<std::string>& plist)
 {
   std::list<PropertyBase*>::iterator pi;
   std::list<std::string>::const_iterator si;
-  for(pi = properties.begin(), si = plist.begin(); 
+  for(pi = mapped_properties.begin(), si = plist.begin(); 
+      (pi != mapped_properties.end()) && (si != plist.end()); 
+      pi++, si++) {
+    (*pi)->set_str(*si);
+  }
+  for(pi = properties.begin(); 
       (pi != properties.end()) && (si != plist.end()); 
       pi++, si++) {
     (*pi)->set_str(*si);
@@ -170,6 +179,14 @@ bool PF::OpParBase::import_settings( OpParBase* pin )
     if( !(*pj)->import( *pi ) )
       return false;
   }
+
+  std::list<PropertyBase*>& mpropin = pin->get_mapped_properties();
+  std::list<PropertyBase*>::iterator mpi=mpropin.begin(), mpj=mapped_properties.begin();
+  for( ; mpi != mpropin.end(); mpi++, mpj++ ) {
+    if( !(*mpj)->import( *mpi ) )
+      return false;
+  }
+
   set_demand_hint( pin->get_demand_hint() );
   set_map_flag( pin->is_map() );
   set_image_hints( pin->get_xsize(), pin->get_ysize(), 
@@ -237,6 +254,16 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
 
   for( std::list<PropertyBase*>::iterator pi = properties.begin();
        pi != properties.end(); pi++ ) {
+    for(int i = 0; i < level+1; i++) ostr<<"  ";
+    ostr<<"<property name=\""<<(*pi)->get_name()<<"\" value=\"";
+    (*pi)->to_stream( ostr );
+    ostr<<"\">"<<std::endl;
+    for(int i = 0; i < level+1; i++) ostr<<"  ";
+    ostr<<"</property>"<<std::endl;
+  }
+  
+  for( std::list<PropertyBase*>::iterator pi = mapped_properties.begin();
+       pi != mapped_properties.end(); pi++ ) {
     for(int i = 0; i < level+1; i++) ostr<<"  ";
     ostr<<"<property name=\""<<(*pi)->get_name()<<"\" value=\"";
     (*pi)->to_stream( ostr );

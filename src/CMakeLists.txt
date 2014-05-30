@@ -37,6 +37,7 @@ include_directories(${LIBXML_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${LIBXML_LIBRARIES})
 
 
+link_directories(${LIBRAW_LIBRARY_DIRS}  )
 link_directories(${VIPS_LIBRARY_DIRS}  )
 link_directories(${VIPSCC_LIBRARY_DIRS}  )
 include_directories(${VIPS_INCLUDE_DIRS})
@@ -49,6 +50,12 @@ FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc)
 FILE(GLOB BaseIncludes base/*.hh)
 FILE(GLOB BaseSources base/*.cc)
 
+FILE(GLOB DTIncludes dt/common/*.h)
+FILE(GLOB DTSources dt/common/*.c dt/external/*.c)
+
+FILE(GLOB RTIncludes rt/*.h)
+FILE(GLOB RTSources rt/*.cc)
+
 #FILE(GLOB VipsIncludes vips/plugin/*.h vips/plugin/*.hh)
 #FILE(GLOB VipsSources vips/plugin/*.c vips/plugin/*.cc)
 FILE(GLOB VipsIncludes vips/*.h vips/*.hh)
@@ -60,9 +67,15 @@ FILE(GLOB OpSources operations/*.cc)
 add_library (pfbase
   ${BaseIncludes}
   ${BaseSources}
+  ${DTIncludes}
+  ${DTSources}
+  ${RTIncludes}
+  ${RTSources}
   ${OpIncludes}
   ${OpSources}
 )
+
+SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-std=c99")
 
 add_library (pfvips #SHARED
   ${VipsIncludes}
@@ -89,7 +102,7 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 
 target_link_libraries(photoflow ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}  dl
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} ${LIBRAW_LIBRARIES}  dl
   )
 
 
@@ -126,3 +139,37 @@ add_executable(introspect # name of the executable on Windows will be example.ex
 
 target_link_libraries(introspect ${VIPS_LIBRARIES}
   )
+
+
+add_executable(draw # name of the executable on Windows will be example.exe 
+  tests/draw.cc
+  )
+
+target_link_libraries(draw ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
+  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} ${LIBRAW_LIBRARIES}  dl
+  )
+
+
+add_executable(draw2 # name of the executable on Windows will be example.exe 
+  tests/draw2.cc
+  )
+
+target_link_libraries(draw2 ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
+  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} ${LIBRAW_LIBRARIES}  dl
+  )
+
+
+add_executable(unprocessed_raw # name of the executable on Windows will be example.exe 
+  tests/unprocessed_raw.cc
+  )
+
+SET_TARGET_PROPERTIES(unprocessed_raw PROPERTIES COMPILE_FLAGS "-fopenmp")
+SET_TARGET_PROPERTIES(unprocessed_raw PROPERTIES LINK_FLAGS "-fopenmp")
+
+target_link_libraries(unprocessed_raw ${LIBS} ${SIGC2_LIBRARIES}
+  ${TIFF_LIBRARIES} ${LIBRAW_LIBRARIES} ${LCMS2_LIBRARIES} dl 
+  )
+
+

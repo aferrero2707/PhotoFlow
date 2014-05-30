@@ -31,6 +31,7 @@
 
 #include "../base/new_operation.hh"
 
+#include "../gui/operations/raw_developer_config.hh"
 #include "../gui/operations/brightness_contrast_config.hh"
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
@@ -79,52 +80,26 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   signal_response().connect(sigc::mem_fun(*this,
 					  &OperationConfigDialog::on_button_clicked) );
 
+  OpParBase* par = NULL;
+  if( get_layer() && get_layer()->get_image() && 
+      get_layer()->get_processor() )
+    par = get_layer()->get_processor()->get_par();
+
   lname.set_text( "name:" );
   nameBox.pack_start( lname, Gtk::PACK_SHRINK );
 
   nameEntry.set_text( "New Layer" );
   nameBox.pack_start( nameEntry, Gtk::PACK_SHRINK );
-  //nameBox.pack_start( nameEntry, Gtk::PACK_EXPAND_PADDING, 10 );
 
-  blendmodeCombo.append("passthrough");
-  blendmodeCombo.append("normal");
-  blendmodeCombo.append("-----------");
-  blendmodeCombo.append("overlay");
-  blendmodeCombo.set_active( 1 );
-  //nameBox.pack_end( blendmodeCombo, Gtk::PACK_SHRINK );
-  //nameBox.pack_end( blendmodeCombo, Gtk::PACK_EXPAND_PADDING, 10 );
-
-  lblendmode.set_text( "blend mode:" );
-  //nameBox.pack_end( lblendmode, Gtk::PACK_SHRINK );
-  //nameBox.pack_end( lblendmode, Gtk::PACK_EXPAND_PADDING, 10 );
-
-  //blendSelector.init();
-  nameBox.pack_end( blendSelector );
+  if(par && par->has_opacity() )
+    nameBox.pack_end( blendSelector );
 
   topBox.pack_start( nameBox, Gtk::PACK_SHRINK );
 
-  /*
-  lintensity.set_text( "intensity" );
-  intensityScale.set_size_request(200, 30);
-  intensityScale.set_digits(0);
-  intensityScale.set_value_pos(Gtk::POS_RIGHT);
-  lopacity.set_text( "opacity" );
-  opacityScale.set_size_request(200, 30);
-  opacityScale.set_digits(0);
-  opacityScale.set_value_pos(Gtk::POS_RIGHT);
-
-  lintensityAl.set(0,0.5,0,1);
-  lintensityAl.add( lintensity );
-  lopacityAl.set(0,0.5,0,1);
-  lopacityAl.add( lopacity );
-
-  controlsBoxLeft.pack_start( lintensityAl );
-  controlsBoxLeft.pack_start( intensityScale );
-  controlsBoxLeft.pack_start( lopacityAl );
-  controlsBoxLeft.pack_start( opacityScale );
-  */
-  controlsBoxLeft.pack_start( intensitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
-  controlsBoxLeft.pack_start( opacitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
+  if(par && par->has_intensity() )
+    controlsBoxLeft.pack_start( intensitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
+  if(par && par->has_opacity() )
+    controlsBoxLeft.pack_start( opacitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
   controlsBox.pack_start( controlsBoxLeft, Gtk::PACK_SHRINK );
   topBox.pack_start( controlsBox );
 
@@ -137,7 +112,8 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   //cmykchSelector.init(); 
   chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
 
-  topBox.pack_start( chselBox );
+  if(par && par->has_opacity() )
+    topBox.pack_start( chselBox );
 
   //topFrame.set_label( "layer options" );
   topFrame.set_shadow_type(Gtk::SHADOW_ETCHED_OUT);
@@ -368,6 +344,18 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   if( op_type == "imageread" ) { 
 
     dialog = new PF::ImageReadConfigDialog( current_layer );
+
+  } else if( op_type == "raw_loader" ) {
+
+    dialog = new PF::OperationConfigDialog( current_layer, "RAW loader" );
+
+  } else if( op_type == "raw_developer" ) {
+
+    dialog = new PF::RawDeveloperConfigDialog( current_layer );
+
+  } else if( op_type == "raw_output" ) {
+
+    dialog = new PF::OperationConfigDialog( current_layer, "RAW output" );
 
   } else if( op_type == "buffer" ) {
 

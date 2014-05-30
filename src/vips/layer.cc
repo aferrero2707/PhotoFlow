@@ -159,31 +159,38 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
    */
   layer->processor->get_par()->transform_inv(r,&s);
 
-  /* Prepare the input images
-   */
-  if(ir) {
-    for( i = 0; ir[i]; i++ ) {
-      if( vips_region_prepare( ir[i], &s ) )
-	return( -1 );
-    }
-  }
-
   /*
 #ifndef NDEBUG
   std::cout<<"vips_layer_gen(): "<<std::endl;
   if( layer->processor->get_par()->get_config_ui() )
     std::cout<<"  name: "<<layer->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
-  std::cout<<"  input region:  top="<<ir[layer->in_first]->valid.top
-	   <<" left="<<ir[layer->in_first]->valid.left
-	   <<" width="<<ir[layer->in_first]->valid.width
-	   <<" height="<<ir[layer->in_first]->valid.height<<std::endl
+  std::cout<<"  input region:  top="<<s.top
+	   <<" left="<<s.left
+	   <<" width="<<s.width
+	   <<" height="<<s.height<<std::endl
 	   <<"  output region: top="<<oreg->valid.top
 	   <<" left="<<oreg->valid.left
 	   <<" width="<<oreg->valid.width
 	   <<" height="<<oreg->valid.height<<std::endl;
 #endif
   */
-    
+  /* Prepare the input images
+   */
+  if(ir) {
+    for( i = 0; ir[i]; i++ ) {
+      /*
+#ifndef NDEBUG
+      std::cout<<"  preparing region ir["<<i<<"]:  top="<<s.top
+	       <<" left="<<s.left
+	       <<" width="<<s.width
+	       <<" height="<<s.height<<std::endl;
+#endif
+      */
+      if( vips_region_prepare( ir[i], &s ) )
+	return( -1 );
+    }
+  }
+
   /* Do the actual processing
    */
   /*
@@ -481,7 +488,7 @@ vips_layer_class_init( VipsLayerClass *klass )
 		  _( "Number of channels" ),
 		  VIPS_ARGUMENT_REQUIRED_INPUT, 
 		G_STRUCT_OFFSET( VipsLayer, nbands ),
-		1, 4, 3);
+		1, 1000, 3);
 }
 
 static void

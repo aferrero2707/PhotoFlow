@@ -42,6 +42,21 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
     processor = new_image_reader();
 
+  } else if( op_type == "raw_loader" ) {
+
+    //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    processor = new_raw_loader();
+
+  } else if( op_type == "raw_developer" ) {
+
+    //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    processor = new_raw_developer();
+
+  } else if( op_type == "raw_output" ) {
+
+    //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    processor = new_raw_output();
+
   } else if( op_type == "buffer" ) {
 
     //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();

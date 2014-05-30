@@ -27,50 +27,41 @@
 
  */
 
-#ifndef SLIDER_HH
-#define SLIDER_HH
-
-#include <gtkmm.h>
-
-#include "pfwidget.hh"
-
-namespace PF {
-
-  class Slider: public Gtk::VBox, public PFWidget
-  {
-    Gtk::HBox hbox;
-    Gtk::Label label;
-    Gtk::Alignment align;
-#ifdef GTKMM_2
-    Gtk::Adjustment adjustment;
-#endif
-#ifdef GTKMM_3
-    Glib::RefPtr<Gtk::Adjustment> adjustment;
-#endif
-    Gtk::HScale scale;
-    Gtk::SpinButton spinButton;
-
-    double multiplier;
-    
-  public:
-    Slider(OperationConfigUI* dialog, std::string pname, std::string l,
-	   double val, double min, double max, double sincr, double pincr, double mult);
-
-    ~Slider() {}
-
-#ifdef GTKMM_2
-    Gtk::Adjustment& get_adjustment() { return adjustment; }
-#endif
-#ifdef GTKMM_3
-    Glib::RefPtr<Gtk::Adjustment> get_adjustment() { return adjustment; }
-#endif
+#include "exposure_slider.hh"
 
 
-    void get_value();
-    void set_value();
-  };
-
-
+PF::ExposureSlider::ExposureSlider( OperationConfigUI* dialog, std::string pname, std::string l, 
+				    double val, double min, double max, double sincr, double pincr):
+  PF::Slider( dialog, pname, l, val, min, max, sincr, pincr, 1 )
+{
 }
 
+
+void PF::ExposureSlider::get_value()
+{
+  if( !get_prop() ) return;
+  float val;
+  get_prop()->get(val);
+  float exp = log2f( val );
+#ifdef GTKMM_2
+  get_adjustment().set_value( exp );
 #endif
+#ifdef GTKMM_3
+  get_adjustment()->set_value( exp );
+#endif
+}
+
+
+void PF::ExposureSlider::set_value()
+{
+  if( !get_prop() ) return;
+#ifdef GTKMM_2
+  float exp = get_adjustment().get_value();
+#endif
+#ifdef GTKMM_3
+  float exp = get_adjustment()->get_value();
+#endif
+  float val = powf( 2.0f, exp );
+  std::cout<<"PF::ExposureSlider::set_value(): val="<<val<<std::endl;
+  get_prop()->update(val);
+}

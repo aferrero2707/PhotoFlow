@@ -64,6 +64,14 @@
   T, BLENDER_SPEC< T, CS, CHMIN, CHMAX, has_omap >, CS, CHMIN, CHMAX, has_imap, has_omap, PREVIEW
 
 
+#define OP_TEMPLATE_DEF_TYPE_SPEC \
+  class BLENDER, colorspace_t CS, int CHMIN, int CHMAX,		\
+    bool has_imap, bool has_omap, bool PREVIEW
+
+#define OP_TEMPLATE_IMP_TYPE_SPEC(TYPE_SPEC) \
+  TYPE_SPEC, BLENDER, CS, CHMIN, CHMAX, has_imap, has_omap, PREVIEW
+
+
 
 namespace PF 
 {
@@ -143,8 +151,14 @@ namespace PF
     void set_type( std::string str ) { type = str; }
 
     std::list<PropertyBase*>& get_properties() { return properties; }
+    std::list<PropertyBase*>& get_mapped_properties() { return mapped_properties; }
     void add_property( PropertyBase* p ) { properties.push_back(p); }
     void map_property( PropertyBase* p ) { mapped_properties.push_back(p); }
+    void map_properties( std::list<PropertyBase*> pl ) 
+    { 
+      mapped_properties.insert( mapped_properties.end(),
+				pl.begin(), pl.end() ); 
+    }
     void save_properties(std::list<std::string>& plist);
     void restore_properties(const std::list<std::string>& plist);
 
@@ -245,7 +259,7 @@ namespace PF
     VipsInterpretation get_interpretation() { return interpretation; }
     colorspace_t get_colorspace() { return( PF::convert_colorspace( get_interpretation() ) ); }
     VipsBandFormat get_format() { return format; }
-    void set_format( VipsBandFormat fmt ) { format = fmt; }
+    virtual void set_format( VipsBandFormat fmt ) { format = fmt; }
     VipsCoding get_coding() { return coding; }
     void set_coding( VipsCoding c ) { coding = c; }
     

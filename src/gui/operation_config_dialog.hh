@@ -37,6 +37,7 @@
 #include "widgets/textbox.hh"
 #include "widgets/slider.hh"
 #include "widgets/selector.hh"
+#include "widgets/exposure_slider.hh"
 
 namespace PF {
 

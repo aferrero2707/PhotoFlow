@@ -29,6 +29,7 @@
  */
 
 #include <fstream>
+#include <algorithm>
 
 #include <gtk/gtk.h>
 
@@ -46,6 +47,7 @@ static bool getFileExtension(const char * dir_separator, const std::string & fil
     if(ext_pos>dir_pos+1)
     {
         ext.append(file.begin()+ext_pos+1,file.end());
+	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
         return true;
     }
 
@@ -274,21 +276,23 @@ void PF::Image::remove_layer( PF::Layer* layer, std::list<Layer*>& list )
 bool PF::Image::open( std::string filename )
 {
   std::string ext;
-  if( getFileExtension( "/", filename, ext ) &&
-      ext == "pfi" ) {
+  if( !getFileExtension( "/", filename, ext ) ) return false;
+  if( ext == "pfi" ) {
 
     PF::load_pf_image( filename, this );
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
     //add_view( VIPS_FORMAT_UCHAR, 0 );
+    add_view( VIPS_FORMAT_FLOAT, 0 );
     add_view( VIPS_FORMAT_USHORT, 0 );
 
-  } else {
+  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" ) {
 
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
 
     //add_view( VIPS_FORMAT_UCHAR, 0 );
+    add_view( VIPS_FORMAT_FLOAT, 0 );
     add_view( VIPS_FORMAT_USHORT, 0 );
 
     PF::Layer* limg = layer_manager.new_layer();
@@ -316,6 +320,31 @@ bool PF::Image::open( std::string filename )
 
     //layer_manager.get_layers().push_back( limg );
     layersWidget.add_layer( limg );
+    */
+  } else {
+    
+    add_view( VIPS_FORMAT_FLOAT, 0 );
+    add_view( VIPS_FORMAT_USHORT, 0 );
+
+    PF::Layer* limg = layer_manager.new_layer();
+    PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "raw_loader", limg );
+    if( proc->get_par() && proc->get_par()->get_property( "file_name" ) )
+      proc->get_par()->get_property( "file_name" )->set_str( filename );
+    limg->set_processor( proc );
+    limg->set_name( "RAW loader" );
+    layer_manager.get_layers().push_back( limg );
+
+    limg = layer_manager.new_layer();
+    proc = PF::PhotoFlow::Instance().new_operation( "raw_developer", limg );
+    limg->set_processor( proc );
+    limg->set_name( "RAW developer" );
+    layer_manager.get_layers().push_back( limg );
+    /*
+    limg = layer_manager.new_layer();
+    proc = PF::PhotoFlow::Instance().new_operation( "raw_output", limg );
+    limg->set_processor( proc );
+    limg->set_name( "RAW output" );
+    layer_manager.get_layers().push_back( limg );
     */
   }
 
@@ -357,11 +386,15 @@ bool PF::Image::export_merged( std::string filename )
     VipsImage* image = view->get_output();
     VipsImage* outimg = image;
 
+    std::vector<VipsImage*> in;
+    /**/
     convert2srgb->get_par()->set_image_hints( image );
     convert2srgb->get_par()->set_format( view->get_format() );
-    std::vector<VipsImage*> in; in.push_back( image );
+    in.clear(); in.push_back( image );
     VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
     g_object_unref( image );
+    /**/
+    //VipsImage* srgbimg = image;
 
     in.clear();
     in.push_back( srgbimg );

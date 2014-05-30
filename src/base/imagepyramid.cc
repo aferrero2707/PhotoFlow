@@ -27,7 +27,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -85,7 +84,7 @@ void PF::ImagePyramid::reset()
     g_object_unref( levels[i].image );
     if( levels[i].fd >= 0 ) 
       close( levels[i].fd );
-    unlink( levels[i].raw_file_name.c_str() );
+    //unlink( levels[i].raw_file_name.c_str() );
   }
   levels.clear();
 
@@ -226,6 +225,13 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 			   &profile_data, &profile_length ) )
     profile_data = NULL;
   
+  size_t blobsz;
+  void* image_data;
+  if( vips_image_get_blob( img, "raw_image_data",
+			   &image_data, 
+			   &blobsz ) )
+    image_data = NULL;
+
   VipsImage* in = levels.back().image;
   if( !in )
     return NULL;
@@ -248,12 +254,15 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     height = out->Ysize;
     size = (width>height) ? width : height;
    
-    char* fname = tempnam( NULL, "pfraw" );
-    if( !fname ) 
-      return NULL;
-    int fd = open( fname, O_CREAT|O_RDWR|O_TRUNC, S_IRWXU );
+    char fname[500];
+    if( getenv("HOME") )
+      sprintf( fname,"%s/.photoflow/cache/raw-XXXXXX", getenv("HOME") );
+    else
+      sprintf( fname,"/tmp/pfraw-XXXXXX", getenv("HOME") );
+    int fd = mkstemp( fname );
     if( fd < 0 )
       return NULL;
+
     vips_rawsave_fd( out, fd, NULL );
     //char tifname[500];
     //sprintf(tifname,"/tmp/level_%d-1.tif",(int)levels.size());
@@ -261,6 +270,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     g_object_unref( out );
     
     vips_rawload( fname, &in, width, height, VIPS_IMAGE_SIZEOF_PEL( img ), NULL );
+    unlink( fname );
     vips_copy( in, &out, 
 	       "format", img->BandFmt,
 	       "bands", img->Bands,
@@ -280,6 +290,16 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 	vips_image_set_blob( out, VIPS_META_ICC_NAME, 
 			     (VipsCallbackFn) g_free, 
 			     profile_data2, profile_length );
+      }
+    }
+
+    if( image_data ) {
+      void* image_data2 = malloc( blobsz );
+      if( image_data2 ) {
+	memcpy( image_data2, image_data, blobsz );
+	vips_image_set_blob( out, "raw_image_data", 
+			     (VipsCallbackFn) g_free, 
+			     image_data2, blobsz );
       }
     }
 
