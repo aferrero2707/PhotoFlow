@@ -42,6 +42,9 @@
 <a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>PhotoFlow</h1>
 <ul>
 <li><h3><a href="#downloading-and-compiling">Downloading and compiling</a></h3></li>
+<ul>
+<li><h2><a href="#downloading-and-compiling-windows">Windows 32-bit installer</a></h2></li>
+</ul>
 <li><h3><a href="#current-status">Current status</a></h3></li>
 <li><h3><a href="#screenshots">Screenshots</a></h3></li>
 <li><h3><a href="#tutorials">Tutorials</a></h3></li>
@@ -61,8 +64,13 @@
 <li>Support for layer grouping and layer masks</li>
 <li>Support for common photo editing tools: levels, curves, brightness-contrast control, blurring, sharpening, cropping, resizing, colorspace conversions, etc..., all implemented in the form of image layers</li>
 <li>User-friendly interface to develop new tools and image filters as external plugins</li>
-</ul><h1>
+</ul>
+
+<h1>
 <a name="downloading-and-compiling" class="anchor" href="#downloading-and-compiling"><span class="octicon octicon-link"></span></a>Downloading and compiling</h1>
+
+<h2>
+<a name="downloading-and-compiling-windows" class="anchor" href="#downloading-and-compiling-windows"><span class="octicon octicon-link"></span></a>Installation from sources under Linux</h2>
 
 <p>The pixel rendering engine of PhotoFlow is based on VIPS (<a href="http://www.vips.ecs.soton.ac.uk">http://www.vips.ecs.soton.ac.uk</a>). You have to install a recent version of VIPS in order to compile PhotoFlow.</p>
 
@@ -109,7 +117,15 @@ $ bash ./build.sh
 <pre><code>$ ./src/photoflow ../testimages/orton.pfi
 </code></pre>
 </li>
-</ol><h1>
+</ol>
+
+<h2>
+<a name="downloading-and-compiling-windows" class="anchor" href="#downloading-and-compiling-windows"><span class="octicon octicon-link"></span></a>Windows installer</h2>
+
+<p>An installer for windows can be found<a href="http://www.vips.ecs.soton.ac.uk">here</a>.</p>
+
+
+<h1>
 <a name="current-status" class="anchor" href="#current-status"><span class="octicon octicon-link"></span></a>Current status</h1>
 
 <p>PhotoFlow is in a early development stage. The present version allows to open an image file and apply basic editing filters via non-destructive adjustment layers. The individual layers can be activated and de-activated using the radio buttons on the right of the image. Moreover, the layers structure can be saved to disk and re-opened again via the command line.</p>
