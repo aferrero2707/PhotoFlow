@@ -30,24 +30,28 @@
 #ifndef PF_RAW_MATRIX_H
 #define PF_RAW_MATRIX_H
 
+#include <glibmm.h>
 #include "array2d.hh"
 
 namespace PF {
 
 
+	typedef guint8 raw_pixel_t[sizeof(float)/sizeof(guint8)+1];
+
+	/*
   struct RawPixel
   {
     float data;
     unsigned char color;
     //float color;
   };
-
+	*/
 
   class RawMatrixRow
   {
-    RawPixel* pixels;
+    raw_pixel_t* pixels;
   public:
-    RawMatrixRow( RawPixel* px ): pixels ( px )
+    RawMatrixRow( raw_pixel_t* px ): pixels ( px )
     {
       //std::cout<<"RawMatrixRow::RawMatrixRow(): pixels="<<pixels<<std::endl;
     }
@@ -57,15 +61,16 @@ namespace PF {
       //std::cout<<"RawMatrixRow::RawMatrixRow( const RawMatrixRow& row ): pixels="<<pixels<<std::endl;
     }
 
-    RawPixel* get_pixels() const { return pixels; }
+    raw_pixel_t* get_pixels() const { return pixels; }
 
-    float operator[](int c) {
+    float& operator[](int c) {
       //std::cout<<"RawMatrixRow::operator[]: pixels="<<pixels<<std::endl;
-      return pixels[c].data;
+      return *((float*)&(pixels[c]));
     }
 
-    unsigned short int color(int c) {
-      return pixels[c].color;
+    guint8& color(int c) {
+			return *((guint8*)&(pixels[c])+sizeof(float));
+      //return pixels[c].color;
     }
   };
 
@@ -74,8 +79,8 @@ namespace PF {
   {
     unsigned int width, height;
     unsigned int r_offset, c_offset;
-    RawPixel **buf;
-    RawPixel **rows;
+    raw_pixel_t **buf;
+    raw_pixel_t **rows;
 
   public:
     RawMatrix(): 
@@ -95,14 +100,14 @@ namespace PF {
       height = h;
       r_offset = r_offs;
       c_offset = c_offs;
-      buf = (RawPixel**)realloc( buf, sizeof(RawPixel*)*height );
+      buf = (raw_pixel_t**)realloc( buf, sizeof(raw_pixel_t*)*height );
       rows = buf - r_offset;
       for( unsigned int i = 0; i < height; i++ )
 	buf[i] = NULL;
     }
 
 
-    void set_row( unsigned int row, RawPixel* ptr )
+    void set_row( unsigned int row, raw_pixel_t* ptr )
     {
       rows[row] = ptr - c_offset;
       //std::cout<<"RawMatrix::set_row("<<row<<","<<(void*)ptr<<": rows["<<row<<"]="<<rows[row]<<"  c_offset="<<c_offset<<std::endl;

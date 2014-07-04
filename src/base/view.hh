@@ -34,11 +34,14 @@
 #ifndef VIEW_H
 #define VIEW_H
 
+#ifdef GTKMM_2
+#include <glibmm/thread.h>
+#endif
+#ifdef GTKMM_3
 #include <glibmm/threads.h>
-
+#endif
 
 #include "operation.hh"
-//#include "image.hh"
 #include "photoflow.hh"
 
 
@@ -92,6 +95,7 @@ namespace PF
     void set_image( VipsImage* img, unsigned int id );
     void remove_node( unsigned int id );
 
+    std::vector<ViewNode*>& get_nodes(){ return nodes; } 
     ViewNode* get_node( int id ) 
     {
       if( (id<0) || (id>=(int)nodes.size()) ) return NULL;
@@ -120,13 +124,13 @@ namespace PF
     View* view;
     bool processing;
     
-    Glib::Threads::Mutex processing_mutex;
+    //Glib::Threads::Mutex processing_mutex;
     int processing_count;
 
   public:
     ViewSink( View* v ): view(v), processing( false ), processing_count( 0 )
     {
-      view->add_sink( this );
+      if(view) view->add_sink( this );
     }
 
     View* get_view() { return view; }
@@ -137,10 +141,14 @@ namespace PF
     void processing_count_increase() { processing_count += 1; }
     void processing_count_decrease() { processing_count -= 1; }
     int get_processing_count() { return processing_count; }
-    Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
+    //Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
 
     virtual void update() = 0;
     virtual void update( const VipsRect& area ) { update(); }
+
+    virtual void process_area( const VipsRect& area ) {}
+    virtual void process_start( const VipsRect& area ) {}
+    virtual void process_end( const VipsRect& area ) {}
   };
 
 }

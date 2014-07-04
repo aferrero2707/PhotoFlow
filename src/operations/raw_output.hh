@@ -38,8 +38,10 @@
 
 #include "../base/processor.hh"
 
-#include "../rt/iccmatrices.hh"
+//#include "../rt/iccmatrices.hh"
 #include "../dt/common/srgb_tone_curve_values.h"
+
+#include "raw_image.hh"
 
 namespace PF 
 {
@@ -83,7 +85,7 @@ namespace PF
 
   class RawOutputPar: public OpParBase
   {
-    libraw_data_t* image_data;
+    dcraw_data_t* image_data;
 
     // Conversion matrix from camera colorspace to xyz
     // Initialized as xyz_sRGB * rgb_cam

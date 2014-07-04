@@ -66,9 +66,11 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
       result = vips_convsep( srcimg, &blurred, mask, 
 			     "precision", VIPS_PRECISION_INTEGER,
 			     NULL );
-      g_object_unref( mask );
+      //g_object_unref( mask );
+      PF_UNREF( mask, "PF::GaussBlurPar::build(): mask unref" );
       if( !result ) {
-	g_object_unref( srcimg );
+	//g_object_unref( srcimg );
+	PF_UNREF( srcimg, "PF::GaussBlurPar::build(): srcimg unref" );
       }
     }
   }
@@ -81,7 +83,8 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
       convert_format->get_par()->set_image_hints( blurred );
       convert_format->get_par()->set_format( get_format() );
       converted = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
-      g_object_unref( blurred );
+      //g_object_unref( blurred );
+      PF_UNREF( blurred, "PF::GaussBlurPar::build(): blurred unref" );
     }
   }
 
@@ -95,7 +98,8 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   // 	   <<std::endl;
 #endif
   VipsImage* out = PF::BlenderPar::build( in2, 0, NULL, omap, level );
-  g_object_unref( converted );
+  //g_object_unref( converted );
+  PF_UNREF( converted, "PF::GaussBlurPar::build(): converted unref" );
   return out;
 }
 

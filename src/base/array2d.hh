@@ -34,7 +34,7 @@
 #include <string>
 #include <iostream>
 
-//#define DEBUG 1
+//#define ARRAY2D_DEBUG 1
 //#include "pixelmatrix.hh"
 
 namespace PF {
@@ -102,8 +102,11 @@ namespace PF {
   template<class T>
   Array2D<T>::~Array2D()
   {
-    delete matrix;
-    delete buf;
+#ifdef ARRAY2D_DEBUG
+		std::cout<<"Array2D<T>::~Array2D(): matrix="<<(void*)matrix<<"  buf="<<(void*)buf<<std::endl;
+#endif
+    free( matrix );
+    free( buf );
   }
 
 
@@ -120,7 +123,7 @@ namespace PF {
     // Step 1: check if global buffer needs to be (re)allocated
     unsigned int offs = c_offset;
     unsigned int size_new = sizeof(T)*w*h;
-#ifdef DEBUG
+#ifdef ARRAY2D_DEBUG
     std::cout<<"Array2D<T>::Init("<<w<<","<<h<<","<<r_offset<<","<<c_offset<<"): size_allocated="
 	     <<size_allocated<<"  size_new="<<size_new<<std::endl;
 #endif
@@ -128,7 +131,7 @@ namespace PF {
       //Array2DManager::Ref().Allocate(size_new);
       buf = (T*)realloc(buf,size_new);
       size_allocated = size_new;
-#ifdef DEBUG
+#ifdef ARRAY2D_DEBUG
       std::cout<<"  reallocated buffer"<<std::endl;
 #endif
     }
@@ -139,7 +142,7 @@ namespace PF {
     // Step 2: check if the row vector of the pixel matrix needs to be (re)allocated
     if(GetHeight() != h) {
       matrix = (T**)realloc(matrix, sizeof(T*)*h*2);
-#ifdef DEBUG
+#ifdef ARRAY2D_DEBUG
       std::cout<<"  matrix reallocated."<<std::endl;
 #endif
     }
@@ -148,7 +151,7 @@ namespace PF {
     if(GetWidth() != w || GetHeight() != h) {
       for(int j = 0; j < h; j++) {
 	matrix[j] = &(buf[j*w]);
-#ifdef DEBUG
+#ifdef ARRAY2D_DEBUG
 	//std::cout<<"  matrix["<<j<<"] = &(buf["<<j<<"*"<<w<<"])"
 	//	       <<std::endl;
 #endif
@@ -156,7 +159,7 @@ namespace PF {
     }
 
 
-#ifdef DEBUG
+#ifdef ARRAY2D_DEBUG
     std::cout<<"  r_offset="<<r_offset<<"  c_offset="<<c_offset<<std::endl;
     std::cout<<"  GetRowOffset()="<<GetRowOffset()<<"  GetColOffset()="<<GetColOffset()<<std::endl;
 #endif
@@ -164,18 +167,18 @@ namespace PF {
     if(GetHeight() != h || r_offset != GetRowOffset()) {
       matrix_shifted = (&(matrix[h])) - r_offset;
       //matrix_shifted = matrix - r_offset;
-#ifdef DEBUG
+#ifdef ARRAY2D_DEBUG
       std::cout<<"  matrix_shifted updated"<<std::endl;
 #endif
     }
     if(GetHeight() != h || c_offset != GetColOffset()) {
       for(int j = 0; j < h; j++) {
 	matrix_shifted[j+r_offset] = matrix[j] - c_offset;
-#ifdef DEBUG
+#ifdef ARRAY2D_DEBUG
 	//std::cout<<"  matrix_shifted["<<j+r_offset<<"] = matrix["<<j<<"-"<<c_offset<<std::endl;
 #endif
       }
-#ifdef DEBUG
+#ifdef ARRAY2D_DEBUG
       std::cout<<"  matrix_shifted rows updated"<<std::endl;
 #endif
     }
@@ -185,7 +188,7 @@ namespace PF {
     SetHeight(h);
     SetRowOffset(r_offset);
     SetColOffset(c_offset);
-#ifdef DEBUG
+#ifdef ARRAY2D_DEBUG
     std::cout<<"Array2D initialization ended."
 	     <<std::endl;
 #endif

@@ -32,46 +32,17 @@
 
 #include <string>
 
-#include <libraw/libraw.h>
+#include "raw_image.hh"
 
+#include "../base/operation.hh"
 #include "../base/processor.hh"
 #include "../base/imagepyramid.hh"
 
 #include "../operations/convertformat.hh"
 #include "fast_demosaic.hh"
 
-namespace PF 
+namespace PF
 {
-
-  class RawImage
-  {
-    int nref;
-    std::string file_name;
-    VipsImage* image;
-    VipsImage* demo_image;
-
-    PF::ImagePyramid pyramid;
-
-  public:
-    RawImage( std::string fname );
-    ~RawImage();
-
-    void ref() { nref += 1; }
-    void unref() { nref -= 1; }
-    int get_nref() { return nref; }
-
-    VipsImage* get_image(unsigned int& level) 
-    { 
-      if( level == 0 )
-	return image;
-    
-      PF::PyramidLevel* plevel = pyramid.get_level( level );
-      if( plevel ) {
-	return plevel->image;
-      }
-    }
-  };
-
 
   class RawLoaderPar: public OpParBase
   {
@@ -82,7 +53,6 @@ namespace PF
     int temp_fd;
     VipsImage* image;
     VipsImage* demo_image;
-    LibRaw* raw_loader;
     PF::ProcessorBase* convert_format;
     PF::ProcessorBase* fast_demosaic;
 

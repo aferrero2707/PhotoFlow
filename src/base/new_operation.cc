@@ -97,6 +97,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
     processor = new_curves();
 
+  } else if( op_type == "channel_mixer" ) {
+      
+    //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
+    processor = new_channel_mixer();
+
   } else if( op_type == "gaussblur" ) {
       
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();

@@ -27,7 +27,7 @@
 
  */
 
-#include <arpa/inet.h>
+//#include <arpa/inet.h>
 
 #include "raw_output.hh"
 
@@ -51,6 +51,7 @@ PF::RawOutputPar::RawOutputPar():
   OpParBase(),
   image_data( NULL ),
   profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
+  //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
   current_profile_mode( IN_PROF_MATRIX ),
   gamma_curve( NULL ),
   cam_profile_name("cam_profile_name", this),
@@ -103,7 +104,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
 			   (void**)&image_data, 
 			   &blobsz ) )
     return NULL;
-  if( blobsz != sizeof(libraw_data_t) )
+  if( blobsz != sizeof(dcraw_data_t) )
     return NULL;
 
   bool mode_changed = false;

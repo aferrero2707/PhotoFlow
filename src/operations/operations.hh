@@ -46,6 +46,7 @@ namespace PF
   ProcessorBase* new_convert2srgb();
   ProcessorBase* new_convert2lab();
   ProcessorBase* new_curves();
+  ProcessorBase* new_channel_mixer();
   ProcessorBase* new_gradient();
   ProcessorBase* new_gaussblur();
   ProcessorBase* new_invert();

@@ -30,6 +30,14 @@
 #ifndef GTKMM_EXAMPLE_HELLOWORLD_H
 #define GTKMM_EXAMPLE_HELLOWORLD_H
 
+#if defined(__MINGW32__) || defined(__MINGW64__)
+
+#define realpath(N,R) _fullpath((R),(N),_MAX_PATH)
+
+#endif
+
+
+
 #include <string>
 
 #include <gtkmm.h>

@@ -53,6 +53,10 @@
 #include "../base/processor.hh"
 #include "../base/layer.hh"
 
+#define PF_MAX_INPUT_IMAGES 10
+
+static GObject* object_in;
+
 /**/
 #define VIPS_TYPE_LAYER (vips_layer_get_type())
 #define VIPS_LAYER( obj ) \
@@ -74,11 +78,12 @@ typedef struct _VipsLayer {
   
   /* The vector of input images.
    */
-  VipsArea *in;
+  VipsImage* in[PF_MAX_INPUT_IMAGES];
+  int ninput;
 
   /* The vector of input images.
    */
-  VipsImage *out;
+  VipsImage* out;
 
   /* The index at which input images start
    * in[0] always corresponds to the lower layer of the blending step,
@@ -108,6 +113,8 @@ typedef struct _VipsLayer {
   int width;
   int height;
   int nbands;
+
+  //int rand;
   
   /* All the imput images, including the intensity 
      and opacity masks
@@ -153,7 +160,7 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   VipsRect s;
   int i;
   int x, y;
-  int ninput = layer->in ? layer->in->n : 0;
+  int ninput = layer->ninput;
   
   /* Area of input we need.
    */
@@ -217,7 +224,6 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   */
 
   // Get pointers to imap and omap regions
-  VipsImage** array = layer->in ? layer->in->data : NULL;
   VipsRegion* rimap = NULL;
   VipsRegion* romap = NULL;
   if(ir) {
@@ -252,9 +258,10 @@ vips_layer_build( VipsObject *object )
   if( VIPS_OBJECT_CLASS( vips_layer_parent_class )->build( object ) )
     return( -1 );
 
+  //layer->rand = 0;/*random();*/
+
   // Count total number of input images
-  int ninput = layer->in ? layer->in->n : 0;
-  int nimg = ninput;
+  int nimg = layer->ninput;
   if(layer->imap) {
     nimg++;
   }
@@ -265,9 +272,8 @@ vips_layer_build( VipsObject *object )
   layer->in_all = (VipsImage**)im_malloc( layer->out, sizeof(VipsImage*)*(nimg+1) );
   if( !layer->in_all ) return( -1 );
 
-  for( i = 0; i < ninput; i++ ) {
-    VipsImage** array = layer->in->data;
-    layer->in_all[i] = array[i];
+  for( i = 0; i < layer->ninput; i++ ) {
+    layer->in_all[i] = layer->in[i];
   }
   if( layer->imap ) { layer->in_all[i] = layer->imap; i+= 1; }
   if( layer->omap ) { layer->in_all[i] = layer->omap; i+= 1; }
@@ -282,16 +288,6 @@ vips_layer_build( VipsObject *object )
       return( -1 );
   }
 
-  /* We only work for uchar images.
-   
-  if(nimg > 0) {
-    if( vips_check_uncoded( klass->nickname, layer->in_all[0] ) ||
-	vips_check_format( klass->nickname, 
-			   layer->in_all[0], VIPS_FORMAT_UCHAR ) )
-      return( -1 );
-  }
-  */
-
   /* Get ready to write to @out. @out must be set via g_object_set() so
    * that vips can see the assignment. It'll complain that @out hasn't
    * been set otherwise.
@@ -299,95 +295,33 @@ vips_layer_build( VipsObject *object )
   g_object_set( layer, "out", vips_image_new(), NULL ); 
 
   /* Set demand hints. 
-   
-  for( i = 0; i < nimg; i++ ) {
-    if( vips_image_pipelinev( layer->out, 
-			      layer->demand_hint, layer->in_all[i], NULL ) )
-      return( -1 );
-  }
   */
   if( vips_image_pipeline_array( layer->out, 
 				 layer->demand_hint, 
 				 layer->in_all ) )
     return( -1 );
 
-#ifndef NDEBUG    
-  void *data;
-  size_t data_length;  
-  if( !vips_image_get_blob( layer->out, VIPS_META_ICC_NAME, 
-			    &data, &data_length ) ) {
-    
-    cmsHPROFILE profile_in;
-    profile_in = cmsOpenProfileFromMem( data, data_length );
-    if( profile_in ) {
-      
-      char tstr[1024];
-      cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
-      std::cout<<"vips_layer_build(): Embedded profile found in layer->out: "<<tstr<<std::endl;
-    }
-  }
-#endif
-
-
-  /*
-  VipsRect rin, rout;
-  rin.left = array[0]->Xoffset;
-  rin.top = array[0]->Yoffset;
-  rin.width = array[0]->Xsize;
-  rin.height = array[0]->Ysize;
-  layer->processor->get_params()->transform(&rin,&rout);
-  layer->out->Xsize = rout.width;
-  layer->out->Ysize = rout.height;
-  */
-
-
-
   PF::OpParBase* par = layer->processor->get_par();
 
 #ifndef NDEBUG
-  std::cout<<"vips_layer_build(): layer ninput="<<ninput<<std::endl;
+  std::cout<<"vips_layer_build(): layer->ninput="<<layer->ninput<<std::endl;
 #endif
-  if(ninput > 0) {
-    VipsImage** array = layer->in->data;
-    VipsImage* in0 = array[0];
-    if( false && in0 ) {
-#ifndef NDEBUG
-      std::cout<<"vips_layer_build(): setting image hints from input #0"<<std::endl;
-#endif
-      par->set_image_hints( in0 );
-    }
-    /*
-    vips_image_init_fields( layer->out,
-			    in0->Xsize, in0->Ysize, 
-			    in0->Bands, in0->BandFmt,
-			    in0->Coding,in0->Type,1.0, 1.0);
-    */
-  }
 
 #ifndef NDEBUG
   std::cout<<"vips_layer_build(): output format = "<<par->get_format()<<std::endl;
 #endif
+  vips_image_init_fields( layer->out,
+			  par->get_xsize(), par->get_ysize(), 
+			  par->get_nbands(), par->get_format(),
+			  par->get_coding(),
+			  par->get_interpretation(),
+			  1.0, 1.0);
   if(nimg > 0) {
-    vips_image_init_fields( layer->out,
-			    par->get_xsize(), par->get_ysize(), 
-			    par->get_nbands(), par->get_format(),
-			    par->get_coding(),
-			    par->get_interpretation(),
-			    1.0, 1.0);
     if( vips_image_generate( layer->out,
 			     vips_start_many, vips_layer_gen, vips_stop_many, 
 			     layer->in_all, layer ) )
       return( -1 );
   } else {
-    vips_image_pipelinev( layer->out, 
-			  layer->demand_hint, NULL );
-
-    vips_image_init_fields( layer->out,
-			    par->get_xsize(), par->get_ysize(), 
-			    par->get_nbands(), par->get_format(),
-			    par->get_coding(),
-			    par->get_interpretation(),
-			    1.0, 1.0);
     if( vips_image_generate( layer->out, 
 			     NULL, vips_layer_gen, NULL, NULL, layer ) )
       return( -1 );
@@ -415,12 +349,12 @@ vips_layer_class_init( VipsLayerClass *klass )
 
   int argid = 0;
 
-  VIPS_ARG_BOXED( klass, "in", argid, 
-		  _( "Input" ), 
-		  _( "Array of input images" ),
-		  (VipsArgumentFlags)VIPS_ARGUMENT_REQUIRED_INPUT,
-		  G_STRUCT_OFFSET( VipsLayer, in ),
-		  VIPS_TYPE_ARRAY_IMAGE );
+  VIPS_ARG_INT( klass, "ninput", argid, 
+		_( "NInput" ), 
+		_( "Number of input images" ),
+		VIPS_ARGUMENT_REQUIRED_INPUT, 
+		G_STRUCT_OFFSET( VipsLayer, ninput ),
+		0, PF_MAX_INPUT_IMAGES, 0);
   argid += 1;
 
   VIPS_ARG_IMAGE( klass, "out", argid, 
@@ -428,14 +362,6 @@ vips_layer_class_init( VipsLayerClass *klass )
 		  _( "Output image" ),
 		  VIPS_ARGUMENT_REQUIRED_OUTPUT, 
 		  G_STRUCT_OFFSET( VipsLayer, out ) );
-  argid += 1;
-
-  VIPS_ARG_INT( klass, "in_first", argid, 
-		  _( "In First" ), 
-		  _( "Index of first input image" ),
-		  VIPS_ARGUMENT_REQUIRED_INPUT, 
-		G_STRUCT_OFFSET( VipsLayer, in_first ),
-		0, 1000, 0);
   argid += 1;
 
   VIPS_ARG_POINTER( klass, "processor", argid, 
@@ -489,11 +415,28 @@ vips_layer_class_init( VipsLayerClass *klass )
 		  VIPS_ARGUMENT_REQUIRED_INPUT, 
 		G_STRUCT_OFFSET( VipsLayer, nbands ),
 		1, 1000, 3);
+  argid += 1;
+
+  char tstr[100];
+  char tstr2[100];
+  char tstr3[100];
+  for( int imgid = 0; imgid < PF_MAX_INPUT_IMAGES; imgid++ ) {
+    snprintf(tstr,99,"in%d",imgid);
+    snprintf(tstr2,99,"Input%d",imgid);
+    snprintf(tstr3,99,"Input image %d",imgid);
+    VIPS_ARG_IMAGE( klass, tstr, argid, 
+		    _( tstr2 ), 
+		    _( tstr3 ),
+		    VIPS_ARGUMENT_OPTIONAL_INPUT,
+		    G_STRUCT_OFFSET( VipsLayer, in )+sizeof(VipsImage*)*imgid );
+    argid += 1;
+  }
 }
 
 static void
 vips_layer_init( VipsLayer *layer )
 {
+  layer->in[0] = NULL;
 }
 
 /**
@@ -505,31 +448,16 @@ vips_layer_init( VipsLayer *layer )
  * Returns: 0 on success, -1 on error.
  */
 int
-vips_layer( VipsImage **in, int n, VipsImage **out, int first, PF::ProcessorBase* proc, 
+vips_layer( int n, VipsImage **out, PF::ProcessorBase* proc, 
 	    VipsImage* imap, VipsImage* omap, VipsDemandStyle demand_hint,
-	    int width, int height, int nbands)
+	    int width, int height, int nbands, ...)
 {
-
-  VipsArea *area = NULL;
-  VipsImage **array; 
-  int i;
   va_list ap;
   int result;
 
-  if(n > 0) {
-    area = vips_area_new_array_object( n );
-    array = (VipsImage **) area->data;
-    for( i = 0; i < n; i++ ) {
-      array[i] = in[i];
-      g_object_ref( array[i] );
-    }
-  }
-
-  //va_start( ap, demand_hint );
-  result = vips_call( "layer", area, out, first, proc, imap, omap, demand_hint, width, height, nbands, NULL );
-  //va_end( ap );
-
-  if(area) vips_area_unref( area );
+  va_start( ap, nbands );
+  result = vips_call_split( "layer", ap, n, out, proc, imap, omap, demand_hint, width, height, nbands );
+  va_end( ap );
 
   return( result );
 }

@@ -32,6 +32,8 @@
 #include <string.h>
 #include <iostream>
 
+#include "pf_mkstemp.hh"
+#include "photoflow.hh"
 #include "imagepyramid.hh"
 
 VipsImage* PF::pyramid_test_image = NULL;
@@ -41,12 +43,15 @@ GObject* PF::pyramid_test_obj = NULL;
 
 PF::ImagePyramid::~ImagePyramid()
 {
-  for( unsigned int i = 1; i < levels.size(); i++ ) {
-    g_object_unref( levels[i].image );
+  char tstr[500];
+  for( unsigned int i = 0; i < levels.size(); i++ ) {
+    //g_object_unref( levels[i].image );
+    snprintf(tstr, 499, "PF::ImagePyramid::~ImagePyramid() levels[%d].image",i);
+    PF_UNREF( levels[i].image, tstr );
     //if( i < 1 ) continue;
     if( levels[i].fd >= 0 ) 
       close( levels[i].fd );
-    unlink( levels[i].raw_file_name.c_str() );
+    //unlink( levels[i].raw_file_name.c_str() );
     std::cout<<"PF::ImagePyramid::~ImagePyramid(): "<<levels[i].raw_file_name<<" removed."<<std::endl;
   }
 }
@@ -54,11 +59,18 @@ PF::ImagePyramid::~ImagePyramid()
 
 void PF::ImagePyramid::init( VipsImage* img, int fd )
 {
-  for( unsigned int i = 1; i < levels.size(); i++ ) {
-    g_object_unref( levels[i].image );
+  // The input image mght be the same, therefore we reference it 
+  // before unreferencing the old ones
+  g_object_ref( img );
+
+  char tstr[500];
+  for( unsigned int i = 0; i < levels.size(); i++ ) {
+    //g_object_unref( levels[i].image );
+    snprintf(tstr, 499, "PF::ImagePyramid::init() levels[%d].image",i);
+    PF_UNREF( levels[i].image, tstr );
     if( levels[i].fd >= 0 ) 
       close( levels[i].fd );
-    unlink( levels[i].raw_file_name.c_str() );
+    //unlink( levels[i].raw_file_name.c_str() );
   }
   levels.clear();
 
@@ -80,8 +92,11 @@ void PF::ImagePyramid::reset()
 
   PF::PyramidLevel level = levels[0];
 
+  char tstr[500];
   for( unsigned int i = 1; i < levels.size(); i++ ) {
-    g_object_unref( levels[i].image );
+    //g_object_unref( levels[i].image );
+    snprintf(tstr, 499, "PF::ImagePyramid::reset() levels[%d].image",i);
+    PF_UNREF( levels[i].image, tstr );
     if( levels[i].fd >= 0 ) 
       close( levels[i].fd );
     //unlink( levels[i].raw_file_name.c_str() );
@@ -232,6 +247,8 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 			   &blobsz ) )
     image_data = NULL;
 
+	std::cout<<"ImagePyramid::get_level(): blobsz="<<blobsz<<"  image_data="<<image_data<<std::endl;
+
   VipsImage* in = levels.back().image;
   if( !in )
     return NULL;
@@ -255,10 +272,8 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     size = (width>height) ? width : height;
    
     char fname[500];
-    if( getenv("HOME") )
-      sprintf( fname,"%s/.photoflow/cache/raw-XXXXXX", getenv("HOME") );
-    else
-      sprintf( fname,"/tmp/pfraw-XXXXXX", getenv("HOME") );
+    sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
+    std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
     int fd = mkstemp( fname );
     if( fd < 0 )
       return NULL;
@@ -267,8 +282,10 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     //char tifname[500];
     //sprintf(tifname,"/tmp/level_%d-1.tif",(int)levels.size());
     //vips_image_write_to_file( out, tifname );
-    g_object_unref( out );
-    
+    //g_object_unref( out );
+    snprintf(tstr,499,"PF::ImagePyramid::get_level(%d) level #%d (after rawsave)",level, (int)levels.size());
+    PF_UNREF( out, tstr );
+
     vips_rawload( fname, &in, width, height, VIPS_IMAGE_SIZEOF_PEL( img ), NULL );
     unlink( fname );
     vips_copy( in, &out, 
@@ -282,7 +299,10 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 #endif
     //sprintf(tifname,"/tmp/level_%d-2.tif",(int)levels.size());
     //vips_image_write_to_file( out, tifname );
-    g_object_unref( in );
+    //g_object_unref( in );
+    snprintf(tstr,499,"PF::ImagePyramid::get_level(%d) level #%d (after vips_copy)",level, (int)levels.size());
+    PF_UNREF( in, tstr );
+
     if( profile_data ) {
       void* profile_data2 = malloc( profile_length );
       if( profile_data2 ) {

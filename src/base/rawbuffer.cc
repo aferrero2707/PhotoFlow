@@ -37,6 +37,7 @@
 
 #include <iostream>
 
+#include "photoflow.hh"
 #include "rawbuffer.hh"
 
 
@@ -127,8 +128,10 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
   }
   pxmask = NULL;
   
-  if( image )
-    g_object_unref( image );
+  if( image ) {
+    //g_object_unref( image );
+    PF_UNREF( image, "PF::RawBuffer::init()" );
+  }
   VipsImage* tempimg;
   vips_rawload( file_name.c_str(), &tempimg, xsize, ysize, sizeofpel, NULL );
   vips_copy( tempimg, &image, 
@@ -138,6 +141,7 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
 	     "interpretation", interpretation,
 	     NULL );
 
+  PF_UNREF( tempimg, "PF::RawBuffer::init() after rawload()" );
   pyramid.init( image, fd );
 
   //unsigned int level = 4;

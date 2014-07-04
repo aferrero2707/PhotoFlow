@@ -45,6 +45,20 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
 {
 
   //rgbCurveSelector.init(); 
+#ifdef GTKMM_2
+  rgbCurveSelector.append_text("RGB");
+  rgbCurveSelector.append_text("Red");
+  rgbCurveSelector.append_text("Green");
+  rgbCurveSelector.append_text("Blue");
+  rgbCurveSelector.set_active( 0 );
+
+  labCurveSelector.append_text("L");
+  labCurveSelector.append_text("a");
+  labCurveSelector.append_text("b");
+  labCurveSelector.set_active( 0 );
+#endif
+
+#ifdef GTKMM_3
   rgbCurveSelector.append("RGB");
   rgbCurveSelector.append("Red");
   rgbCurveSelector.append("Green");
@@ -55,6 +69,7 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
   labCurveSelector.append("a");
   labCurveSelector.append("b");
   labCurveSelector.set_active( 0 );
+#endif
 
   add_widget( selectorsBox );
 

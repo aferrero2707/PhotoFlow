@@ -77,12 +77,15 @@ namespace PF {
 
     float get_zoom_factor()
     {
-      PF::View* view = image->get_view(0);
+      PF::View* view = image->get_view(1);
       if( !view ) return 1.0f;
       int level = view->get_level();
       float fact = 1.0f;
       for( unsigned int i = 0; i < level; i++ )
 	fact /= 2.0f;
+#ifndef NDEBUG
+      std::cout<<"get_zoom_factor(): level="<<level<<"  fact="<<fact<<std::endl;
+#endif
       return fact;
     }
 

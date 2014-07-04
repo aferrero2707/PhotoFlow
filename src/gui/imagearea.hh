@@ -55,6 +55,8 @@
 
 #include "../gui/operations/imageread_config.hh"
 
+#include "doublebuffer.hh"
+
 
 /*
   The ImageArea performs the image update aynchronously, inside a dedicated thread.
@@ -92,6 +94,13 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
    */
   VipsRegion* region;
 
+  DoubleBuffer double_buffer;
+
+  GCond* draw_done;
+  GMutex* draw_mutex;
+
+  Glib::Dispatcher signal_queue_draw;
+
   /* The cache mask. 
    */
   VipsImage* mask;
@@ -119,18 +128,36 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
   typedef struct {
     ImageArea * image_area;
     VipsRect rect;
+    guchar* buf;
+    int lsk;
   } Update;
+
+  /* The main GUI thread runs this when it's idle and there are tiles that need
+   * painting. 
+   */
+  static gboolean queue_draw_cb (Update * update)
+  {
+    if( update->rect.width == 0 || update->rect.height == 0 )
+      update->image_area->queue_draw();
+    else
+      update->image_area->queue_draw_area( update->rect.left, update->rect.top, 
+					   update->rect.width, update->rect.height );
+    g_free (update);
+    return FALSE;
+  }
 
   /* The main GUI thread runs this when it's idle and there are tiles that need
    * painting. 
    */
   static gboolean render_cb (Update * update)
   {
+    update->image_area->draw_area();
+    /*
     update->image_area->queue_draw_area (update->rect.left+update->image_area->get_xoffset(), 
                                          update->rect.top+update->image_area->get_yoffset(),
                                          update->rect.width,
                                          update->rect.height);
-
+    */
     g_free (update);
 
     return FALSE;
@@ -163,15 +190,22 @@ public:
   unsigned int get_xoffset() { return xoffset; }
   unsigned int get_yoffset() { return yoffset; }
 
+  DoubleBuffer& get_double_buffer() { return double_buffer; }
+
 #ifdef GTKMM_2
-  void expose_rect (const VipsRect& area);
+  //void expose_rect (const VipsRect& area);
   bool on_expose_event (GdkEventExpose * event);
 #endif
 
 #ifdef GTKMM_3
-    void expose_rect (const VipsRect& area, const Cairo::RefPtr<Cairo::Context>& cr);
-    bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+  //void expose_rect (const VipsRect& area, const Cairo::RefPtr<Cairo::Context>& cr);
+  bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 #endif
+  void submit_area( const VipsRect& area );
+  void process_start( const VipsRect& area );
+  void process_area( const VipsRect& area );
+  void process_end( const VipsRect& area );
+  void draw_area();
 
   void set_adjustments( 
 #ifdef GTKMM_2
@@ -213,7 +247,7 @@ public:
     Gtk::DrawingArea::on_realize();
 
     //get_window()->set_back_pixmap( Glib::RefPtr<Gdk::Pixmap>(), FALSE );
-    //set_double_buffered( FALSE );
+    //set_double_buffered( TRUE );
 
     Gtk::Allocation allocation = get_allocation();
 #ifndef NDEBUG

@@ -30,6 +30,8 @@
 #ifndef PF_LAYER_H
 #define PF_LAYER_H
 
+#include <stdlib.h>
+
 #include <list>
 #include <vector>
 #include <set>

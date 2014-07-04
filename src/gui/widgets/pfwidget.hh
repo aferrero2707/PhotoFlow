@@ -37,6 +37,7 @@ namespace PF {
   class PFWidget
   {
     bool inhibit;
+    bool passive;
     OperationConfigUI* dialog;
     std::string pname;
     PropertyBase* property;
@@ -47,6 +48,7 @@ namespace PF {
     sigc::signal<void> value_changed;
 
     void set_inhibit( bool val ) { inhibit = val; }
+    void set_passive( bool val ) { passive = val; }
 
     PropertyBase* get_prop() { return property; }
 

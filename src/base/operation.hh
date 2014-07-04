@@ -46,6 +46,8 @@
 
 #include "property.hh"
 
+#include "photoflow.hh"
+
 
 
 #define OP_TEMPLATE_DEF \
@@ -72,6 +74,14 @@
   TYPE_SPEC, BLENDER, CS, CHMIN, CHMAX, has_imap, has_omap, PREVIEW
 
 
+#define OP_TEMPLATE_DEF_CS_SPEC \
+  typename T, class BLENDER, int CHMIN, int CHMAX,	\
+    bool has_imap, bool has_omap, bool PREVIEW
+
+#define OP_TEMPLATE_IMP_CS_SPEC(CS_SPEC) \
+  T, BLENDER, CS_SPEC, CHMIN, CHMAX, has_imap, has_omap, PREVIEW
+
+
 
 namespace PF 
 {
@@ -96,6 +106,7 @@ namespace PF
     virtual void open() = 0;
     virtual void init() = 0;
     virtual void update() = 0;
+    virtual void do_update() { update(); }
     virtual void update_properties() = 0;
   };
 
@@ -139,12 +150,6 @@ namespace PF
     virtual ~OpParBase()
     {
       std::cout<<"~OpParBase(): deleting operation "<<(void*)this<<std::endl;
-      /*
-      if(out) {
-	std::cout<<"              calling g_object_unref( "<<(void*)out<<" );"<<std::endl;
-	g_object_unref( out );
-      }
-      */
     }
 
     std::string get_type() { return type; }
@@ -238,14 +243,6 @@ namespace PF
 
     virtual VipsImage* build(std::vector<VipsImage*>& in, int first, 
 			     VipsImage* imap, VipsImage* omap, unsigned int& level);
-
-    /*
-    VipsImage* get_image() { return out; }
-    void set_image(VipsImage* img) { 
-      if(out) g_object_unref( out );
-      out = img; 
-    }
-    */
 
     PropertyBase* get_property(std::string name);
 
@@ -372,8 +369,6 @@ namespace PF
   #include "blend_lighten.hh"
   #include "blend_darken.hh"
   #include "blend_overlay.hh"
-
-
 };
 
 

@@ -321,3 +321,52 @@ void PF::LayerTree::update_model()
   }
   */
 }
+
+
+
+PF::Layer* PF::LayerTree::get_selected_layer()
+{
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+    get_tree().get_selection();
+  Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
+  if(iter) {//If anything is selected
+    Gtk::TreeModel::Row row = *iter;
+    PF::LayerTreeColumns& columns = get_columns();
+    PF::Layer* l = (*iter)[columns.col_layer];
+    return l;
+  }
+  return NULL;
+}
+
+
+
+bool PF::LayerTree::select_layer( int id, Gtk::TreeModel::Row& parent_row )
+{
+  if( parent_row.children().empty() )
+    return false;
+  Gtk::TreeModel::iterator iter = parent_row.children().begin();
+  for( ; iter != treeModel->children().end(); iter++ ) {
+    Gtk::TreeModel::Row row = *iter;
+    PF::LayerTreeColumns& columns = get_columns();
+    PF::Layer* l = (*iter)[columns.col_layer];
+  }
+}
+
+
+
+bool PF::LayerTree::select_layer( int id )
+{
+  Gtk::TreeModel::iterator iter = treeModel->children().begin();
+  for( ; iter != treeModel->children().end(); iter++ ) {
+    Gtk::TreeModel::Row row = *iter;
+    PF::LayerTreeColumns& columns = get_columns();
+    PF::Layer* l = (*iter)[columns.col_layer];
+
+    if( l && (l->get_id()==id) ) {
+      Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+	get_tree().get_selection();
+      refTreeSelection->select( iter );
+      return true;
+    }
+  }
+}

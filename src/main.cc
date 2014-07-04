@@ -33,13 +33,25 @@
 #include <limits.h>
 #include <stdlib.h>
 
+#include <stdio.h>  /* defines FILENAME_MAX */
+#ifdef WINDOWS
+    #include <direct.h>
+    #define GetCurrentDir _getcwd
+#else
+    #include <unistd.h>
+    #define GetCurrentDir getcwd
+ #endif
+
 #include <gtkmm/main.h>
 #include <vips/vips>
 #include <vips/vips.h>
+
+#include "base/imageprocessor.hh"
 #include "gui/mainwindow.hh"
 
 #include "base/new_operation.hh"
 
+extern int vips__leak;
 
 /* We need C linkage for this.
  */
@@ -57,10 +69,12 @@ int main (int argc, char *argv[])
 {
   Gtk::Main kit(argc, argv);
 
+  /*
   if (argc != 2) {
     printf ("usage: %s <filename>", argv[0]);
     exit(1);
   }
+  */
 
   if (vips_init (argv[0]))
     vips::verror ();
@@ -72,39 +86,48 @@ int main (int argc, char *argv[])
   vips_cache_set_trace( true );
 #endif
 
+  if(!Glib::thread_supported()) 
+    Glib::thread_init();
+
   //im_package* result = im_load_plugin("src/pfvips.plg");
   //if(!result) verror ();
   //std::cout<<result->name<<" loaded."<<std::endl;
 
+	char cCurrentPath[FILENAME_MAX];
+	
+	if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
+		return errno;
+	}
+	
+	cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
+
+	char* fullpath = realpath( cCurrentPath, NULL );
+	if(!fullpath)
+		return 1;
+  PF::PhotoFlow::Instance().set_base_dir( fullpath );
+	free( fullpath );
+
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
   PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
+  PF::PhotoFlow::Instance().set_batch( false );
 
-  // Create the cache directory if possible
-  char fname[500];
-  if( getenv("HOME") ) {
-    sprintf( fname,"%s/.photoflow", getenv("HOME") );
-    int result = mkdir(fname, 0755);
-    if( (result == 0) || (errno == EEXIST) ) {
-      sprintf( fname,"%s/.photoflow/cache", getenv("HOME") );
-      result = mkdir(fname, 0755);
-      if( (result != 0) && (errno != EEXIST) ) {
-	perror("mkdir");
-	std::cout<<"Cannot create "<<fname<<"    exiting."<<std::endl;
-	exit( 1 );
-      }
-    } else {
-      perror("mkdir");
-      std::cout<<"Cannot create "<<fname<<" (result="<<result<<")   exiting."<<std::endl;
-      exit( 1 );
-    }
+  PF::ImageProcessor::Instance();
+
+  if( PF::PhotoFlow::Instance().get_cache_dir().empty() ) {
+    std::cout<<"FATAL: Cannot create cache dir."<<std::endl;
+    return 1;
   }
 
+  //vips__leak = 1;
+
   PF::MainWindow mainWindow;
-  char* fullpath = realpath( argv[1], NULL );
-  if(!fullpath)
-    return 1;
-  mainWindow.open_image( fullpath );
-  free(fullpath);
+  if( argc > 1 ) {
+    fullpath = realpath( argv[1], NULL );
+    if(!fullpath)
+      return 1;
+    mainWindow.open_image( fullpath );
+    free(fullpath);
+  }
   //Shows the window and returns when it is closed.
   Gtk::Main::run(mainWindow);
 

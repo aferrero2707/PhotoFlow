@@ -38,9 +38,18 @@
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/gradient_config.hh"
 #include "../gui/operations/curves_config.hh"
+#include "../gui/operations/channel_mixer_config.hh"
 #include "../gui/operations/gaussblur_config.hh"
 #include "../gui/operations/draw_config.hh"
 
+
+
+static gboolean dialog_update_cb (PF::OperationConfigDialog * dialog)
+{
+  if( dialog ) 
+    dialog->update();
+  return FALSE;
+}
 
 
 PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::ustring& title):
@@ -193,11 +202,13 @@ void PF::OperationConfigDialog::open()
     
     values_save.clear();
     get_layer()->get_processor()->get_par()->save_properties( values_save );
+#ifndef NDEBUG
     std::cout<<"Saved property values:"<<std::endl;
     for( std::list<std::string>::iterator i = values_save.begin();
 	 i != values_save.end(); i++ ) {
       std::cout<<"  "<<(*i)<<std::endl;
     }
+#endif
   }
   PF::OperationConfigUI::open();
   show_all();
@@ -262,6 +273,14 @@ void PF::OperationConfigDialog::update()
   queue_draw();
   */
 }
+
+
+
+void PF::OperationConfigDialog::do_update()
+{
+  gdk_threads_add_idle ((GSourceFunc) dialog_update_cb, this);
+}
+
 
 
 void PF::OperationConfigDialog::update_properties()
@@ -384,6 +403,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "curves" ) {
       
     dialog = new PF::CurvesConfigDialog( current_layer );
+
+  } else if( op_type == "channel_mixer" ) {
+      
+    dialog = new PF::ChannelMixerConfigDialog( current_layer );
 
   } else if( op_type == "gaussblur" ) {
       

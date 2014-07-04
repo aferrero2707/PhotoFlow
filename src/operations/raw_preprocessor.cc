@@ -40,6 +40,9 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_red("wb_red",this,1), 
   wb_green("wb_green",this,1), 
   wb_blue("wb_blue",this,1), 
+  wb_target_L("wb_target_L",this,50), 
+  wb_target_a("wb_target_a",this,0), 
+  wb_target_b("wb_target_b",this,0), 
   exposure("exposure",this,1)
 {
   wb_mode.add_enum_value(PF::WB_CAMERA,"CAMERA","CAMERA");
@@ -61,7 +64,7 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
 			   (void**)&image_data, 
 			   &blobsz ) )
     return NULL;
-  if( blobsz != sizeof(libraw_data_t) )
+  if( blobsz != sizeof(dcraw_data_t) )
     return NULL;
 
   VipsImage* image = OpParBase::build( in, first, NULL, NULL, level );

@@ -110,7 +110,7 @@ public:
   }
   virtual void on_focus_in(GdkEventFocus *focus) 
   {
-    std::cout<<"OperationConfigDialog: on_focus_in() called."<<std::endl;
+    //std::cout<<"OperationConfigDialog: on_focus_in() called."<<std::endl;
   }
 
 
@@ -121,7 +121,7 @@ public:
   }
   virtual void on_focus_out(GdkEventFocus *focus) 
   {
-    std::cout<<"OperationConfigDialog: on_focus_out() called."<<std::endl;
+    //std::cout<<"OperationConfigDialog: on_focus_out() called."<<std::endl;
   }
 
 
@@ -137,6 +137,8 @@ public:
   virtual void init();
 
   void update();
+
+  void do_update();
 
   void update_properties();
 };

@@ -37,12 +37,16 @@
 
 #include <stdlib.h>
 
+#define RT_EMU
+
 #include "fast_demosaic.hh"
+
+
 void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
 		       VipsRegion* imap, VipsRegion* omap, 
 		       VipsRegion* oreg, PF::FastDemosaicPar* par)
 {
-  LUTf& invGrad = par->get_inv_grad();
+  PF_LUTf& invGrad = par->get_inv_grad();
 
   Rect *r = &oreg->valid;
   int width = r->width;
@@ -124,9 +128,12 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
   PF::RawMatrix rawData;
   rawData.init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
   for( y = 0; y < r_raw.height; y++ ) {
-    PF::RawPixel* ptr = ir ? (PF::RawPixel*)VIPS_REGION_ADDR( ir[0], r_raw.left, y+r_raw.top ) : NULL; 
+    PF::raw_pixel_t* ptr = ir ? (PF::raw_pixel_t*)VIPS_REGION_ADDR( ir[0], r_raw.left, y+r_raw.top ) : NULL; 
     rawData.set_row( y+r_raw.top, ptr );
   }
+	if( r_raw.left==0 && r_raw.top==0 ) {
+		std::cout<<"rawData[0][0] = "<<rawData[0][0]<<"  c="<<(int)rawData[0].color(0)<<std::endl;
+	}
   PF::Array2D<float> red, green, blue;
   red.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
   green.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
@@ -389,7 +396,7 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
     }
   }
 
-  int xx;
+  int xx = 0;
   for( y = 0; y < r->height; y++ ) {
     float* ptr = (float*)VIPS_REGION_ADDR( oreg, r->left, y+r->top ); 
     for( x = 0, xx = 0; x < width; x++, xx+=3 ) {

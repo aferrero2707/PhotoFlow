@@ -31,9 +31,8 @@
 #ifndef PF_IMAGE_HH
 #define PF_IMAGE_HH
 
+#include <stdlib.h>
 #include <sigc++/sigc++.h>
-
-#include <glibmm/threads.h>
 
 #include "layermanager.hh"
 #include "view.hh"
@@ -57,7 +56,8 @@ namespace PF
     // Flag indicating whether there is a re-building ongoing
     bool rebuilding;
 
-    Glib::Threads::Mutex rebuild_mutex;
+    GMutex* rebuild_mutex;
+    GCond* rebuild_done;
 
     ProcessorBase* convert2srgb;
     ProcessorBase* convert_format;
@@ -66,7 +66,6 @@ namespace PF
     void remove_from_inputs( PF::Layer* layer, std::list<Layer*>& list );
     void remove_layer( PF::Layer* layer, std::list<Layer*>& list );
 
-    void update_sync();
     void update_async();
 
   public:
@@ -102,9 +101,14 @@ namespace PF
     bool is_rebuilding() { return rebuilding; }
     void set_rebuilding( bool flag ) { rebuilding = flag; }
 
-    Glib::Threads::Mutex& get_rebuild_mutex() { return rebuild_mutex; }
+    //Glib::Threads::Mutex& get_rebuild_mutex() { return rebuild_mutex; }
+
+    void lock() { g_mutex_lock( rebuild_mutex); }
+    void unlock() { g_mutex_unlock( rebuild_mutex); }
+    void rebuild_done_signal() { g_cond_signal( rebuild_done ); }
 
     void update();
+    void do_update();
 
     bool open( std::string filename );
 

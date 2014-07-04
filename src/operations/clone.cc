@@ -27,9 +27,10 @@
 
  */
 
-#include "clone.hh"
+#include "../base/photoflow.hh"
 #include "../base/new_operation.hh"
 #include "../operations/convertformat.hh"
+#include "clone.hh"
 
 
 PF::ClonePar::ClonePar(): 
@@ -67,14 +68,16 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
     VipsImage* tempimg = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
     if( !tempimg ) 
       return NULL;
-    g_object_unref( srcimg );
+    //g_object_unref( srcimg );
+    PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (csin != PF::PF_COLORSPACE_LAB)" );
     srcimg = tempimg;
   }
   switch( ch ) {
   case PF::CLONE_CHANNEL_L:
     if( vips_extract_band( srcimg, &out, 0, NULL ) )
       return NULL;
-    g_object_unref( srcimg );
+    //g_object_unref( srcimg );
+    PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (PF::CLONE_CHANNEL_L)" );
     vips_image_init_fields( out,
 			    get_xsize(), get_ysize(), 
 			    1, get_format(),
@@ -85,7 +88,8 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   case PF::CLONE_CHANNEL_a:
     if( vips_extract_band( srcimg, &out, 1, NULL ) )
       return NULL;
-    g_object_unref( srcimg );
+    //g_object_unref( srcimg );
+    PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (PF::CLONE_CHANNEL_a)" );
     vips_image_init_fields( out,
 			    get_xsize(), get_ysize(), 
 			    1, get_format(),
@@ -96,7 +100,8 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   case PF::CLONE_CHANNEL_b:
     if( vips_extract_band( srcimg, &out, 2, NULL ) )
       return NULL;
-    g_object_unref( srcimg );
+    //g_object_unref( srcimg );
+    PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (PF::CLONE_CHANNEL_b)" );
     vips_image_init_fields( out,
 			    get_xsize(), get_ysize(), 
 			    1, get_format(),
@@ -124,7 +129,8 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   case PF::CLONE_CHANNEL_R:
     if( vips_extract_band( srcimg, &out, 0, NULL ) )
       return NULL;
-    g_object_unref( srcimg );
+    //g_object_unref( srcimg );
+    PF_UNREF( srcimg, "PF::ClonePar::rgb2grayscale(): srcimg unref (PF::CLONE_CHANNEL_R)" );
     vips_image_init_fields( out,
 			    get_xsize(), get_ysize(), 
 			    1, get_format(),
@@ -135,7 +141,8 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   case PF::CLONE_CHANNEL_G:
     if( vips_extract_band( srcimg, &out, 1, NULL ) )
       return NULL;
-    g_object_unref( srcimg );
+    //g_object_unref( srcimg );
+    PF_UNREF( srcimg, "PF::ClonePar::rgb2grayscale(): srcimg unref (PF::CLONE_CHANNEL_G)" );
     vips_image_init_fields( out,
 			    get_xsize(), get_ysize(), 
 			    1, get_format(),
@@ -146,7 +153,8 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   case PF::CLONE_CHANNEL_B:
     if( vips_extract_band( srcimg, &out, 2, NULL ) )
       return NULL;
-    g_object_unref( srcimg );
+    //g_object_unref( srcimg );
+    PF_UNREF( srcimg, "PF::ClonePar::rgb2grayscale(): srcimg unref (PF::CLONE_CHANNEL_B)" );
     vips_image_init_fields( out,
 			    get_xsize(), get_ysize(), 
 			    1, get_format(),
@@ -193,7 +201,7 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
     }
 
     if( !out ) {
-      // image cannot be created, we revert to a ablack image of the correct size
+      // image cannot be created, we revert to a black image of the correct size
       if( vips_black( &out, get_xsize(), get_ysize(), NULL ) ) {
 	if( in[0] )
 	  g_object_ref( in[0] );
@@ -207,7 +215,8 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
 	convert_format->get_par()->set_image_hints( tmpimg );
 	convert_format->get_par()->set_format( get_format() );
 	out = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
-	g_object_unref( tmpimg );
+	//g_object_unref( tmpimg );
+	PF_UNREF( tmpimg, "PF::ClonePar::build(): tmpimg unref (get_format() != out->BandFmt)" );
       }
     }
   }
@@ -252,7 +261,8 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
   std::cout<<std::endl;
 #endif
   VipsImage* out2 = PF::BlenderPar::build( in2, 0, NULL, omap, level );
-  g_object_unref( out );
+  //g_object_unref( out );
+  PF_UNREF( out, "PF::ClonePar::build(): out unref" );
   return out2;
 }
 

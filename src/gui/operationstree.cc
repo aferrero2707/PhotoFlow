@@ -136,8 +136,10 @@ void PF::OperationsTree::update_model()
   treeModel->clear();
   vips_operations.clear();
 
+  /*
   vips_type_map_all( g_type_from_name( "VipsOperation" ), 
 		     (VipsTypeMapFn) collect_class, NULL );
+  */
 
   Gtk::TreeModel::Row row;
   Gtk::TreeModel::Row group;
@@ -171,6 +173,10 @@ void PF::OperationsTree::update_model()
   row[columns.col_nickname] = "curves";
 
   row = *(treeModel->append());
+  row[columns.col_name] = "Channel Mixer";
+  row[columns.col_nickname] = "channel_mixer";
+
+  row = *(treeModel->append());
   row[columns.col_name] = "Gaussian blur";
   row[columns.col_nickname] = "gaussblur";
 
@@ -181,6 +187,8 @@ void PF::OperationsTree::update_model()
   row = *(treeModel->append());
   row[columns.col_name] = "Draw";
   row[columns.col_nickname] = "draw";
+
+  return;
 
   row = *(treeModel->append());
   row[columns.col_name] = "-------------------";
@@ -365,7 +373,7 @@ void PF::OperationsTreeDialog::add_layer()
     //layer_manager.modified();
     if( dialog ) {
       //processor->get_par()->set_config_ui( dialog );
-      dialog->update();
+      //dialog->update();
       dialog->open();
     }
   }

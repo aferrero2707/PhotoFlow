@@ -60,9 +60,19 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     }
     */
     // Create VipsImage from given file
+#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
     image = vips_image_new_from_file( file_name.get().c_str() );
+#else
+    image = vips_image_new_from_file( file_name.get().c_str(), NULL );
+#endif
     if( !image ) return NULL;
+    std::string msg = std::string("ImageReaderPar::build(): image refcount after new_from_file");
+    PF_PRINT_REF( image, msg );
     modified = true;
+    //} else {
+    //g_object_ref( image );
+    //std::string msg = std::string("ImageReaderPar::build(): image refcount after ref");
+    //PF_PRINT_REF( image, msg );
   }
   
 #ifndef NDEBUG
@@ -107,19 +117,29 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     convert_format->get_par()->set_image_hints( image );
     convert_format->get_par()->set_format( get_format() );
     out = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
-    g_object_unref( image );
+    std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after convert_format: "<<G_OBJECT(out)->ref_count<<std::endl;
+    //g_object_unref( image );
+    PF_UNREF( image, "ImageReaderPar::build(): image unref after convert_format" );
   }
-
-  // The pyramid is re-built if the input file or the format have changed
-  if( modified )
-    pyramid.init( out );
 
   current_file = file_name.get();
   current_format = get_format();
 
+  //return out;
+
+  // The pyramid is re-built if the input file or the format have changed
+  if( modified ) {
+    pyramid.init( out );
+    PF_UNREF( out, "ImageReaderPar::build(): out unref after pyramid.init()" );
+    std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after pyramid.init(): "<<G_OBJECT(out)->ref_count<<std::endl;
+  }
+
   PF::PyramidLevel* plevel = pyramid.get_level( level );
   if( plevel ) {
     set_image_hints( plevel->image );
+    std::cout<<"ImageReaderPar::build(): image refcount ("<<(void*)image<<") = "<<G_OBJECT(image)->ref_count<<std::endl;
+    std::cout<<"                         out refcount ("<<(void*)out<<") = "<<G_OBJECT(out)->ref_count<<std::endl;
+    std::cout<<"                         plevel->image refcount ("<<(void*)plevel->image<<") = "<<G_OBJECT(plevel->image)->ref_count<<std::endl;
     return plevel->image;
   }
 

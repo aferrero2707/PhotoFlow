@@ -11,10 +11,10 @@ pkg_check_modules(LCMS2 REQUIRED lcms2)
 find_package (TIFF REQUIRED)
 
 #FIND_PACKAGE(LibRaw 0.13 REQUIRED)
-pkg_check_modules(LIBRAW REQUIRED libraw)
+#pkg_check_modules(LIBRAW REQUIRED libraw)
 
 #find_package (LibXML++ REQUIRED)
-pkg_check_modules(LIBXML REQUIRED libxml++-2.6) 
+#pkg_check_modules(LIBXML REQUIRED libxml++-2.6) 
 
 pkg_check_modules(SIGC2 REQUIRED sigc++-2.0)
 

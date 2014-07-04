@@ -38,6 +38,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   OpParBase(), output_format( VIPS_FORMAT_NOTSET )
 {
   set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
+  amaze_demosaic = new_amaze_demosaic();
   fast_demosaic = new_fast_demosaic();
   raw_preprocessor = new_raw_preprocessor();
   raw_output = new_raw_output();
@@ -65,11 +66,13 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
 			   (void**)&image_data, 
 			   &blobsz ) )
     return NULL;
-  if( blobsz != sizeof(libraw_data_t) )
+	std::cout<<"RawDeveloperPar::build(): blobsz="<<blobsz<<std::endl;
+  if( blobsz != sizeof(dcraw_data_t) )
     return NULL;
   
   
   VipsImage* input_img = in[0];
+	std::cout<<"RawDeveloperPar::build(): input_img->Bands="<<input_img->Bands<<std::endl;
   if( input_img->Bands != 3 ) {
     raw_preprocessor->get_par()->set_image_hints( in[0] );
     raw_preprocessor->get_par()->set_format( VIPS_FORMAT_UCHAR );
@@ -77,10 +80,12 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
     if( !image )
       return NULL;
   
-    fast_demosaic->get_par()->set_image_hints( image );
-    fast_demosaic->get_par()->set_format( VIPS_FORMAT_FLOAT );
     in2.push_back( image );
-    out_demo = fast_demosaic->get_par()->build( in2, 0, NULL, NULL, level );
+		PF::ProcessorBase* demo = amaze_demosaic;
+		//PF::ProcessorBase* demo = fast_demosaic;
+    demo->get_par()->set_image_hints( image );
+    demo->get_par()->set_format( VIPS_FORMAT_FLOAT );
+    out_demo = demo->get_par()->build( in2, 0, NULL, NULL, level );
     g_object_unref( image );
   } else {
     raw_preprocessor->get_par()->set_image_hints( in[0] );

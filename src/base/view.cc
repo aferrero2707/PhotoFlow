@@ -27,17 +27,26 @@
 
 #include "view.hh"
 #include "processor.hh"
+#include "image.hh"
 #include "layer.hh"
 #include "photoflow.hh"
 
 
 PF::View::~View()
 {
+  char tstr[500];
   for( unsigned int i = 0; i < nodes.size(); i++ ) {
     if( nodes[i] != NULL ) {
       if( nodes[i]->image != NULL ) {
 	g_assert( G_OBJECT( nodes[i]->image )->ref_count > 0 );
-	g_object_unref( nodes[i]->image );
+	//g_object_unref( nodes[i]->image );
+	PF::Layer* l = image->get_layer_manager().get_layer( i );
+	if( l )
+	  snprintf( tstr, 499, "PF::View::~View() unref image of layer %s",
+		    l->get_name().c_str() );
+	else
+	  snprintf( tstr, 499, "PF::View::~View() unref image (NULL layer)" );
+	PF_UNREF( nodes[i]->image, tstr );
       }
       if( nodes[i]->processor != NULL )
 	delete( nodes[i]->processor );
@@ -95,12 +104,20 @@ void PF::View::set_image( VipsImage* img, unsigned int id )
   if( id >= nodes.size() ) 
     return;
   
+  char tstr[500];
   if( nodes[id] != NULL ) {
     if( nodes[id]->image != NULL ) {
-      if( G_OBJECT( nodes[id]->image )->ref_count < 1 )
-	std::cout<<"!!! View::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->image<<std::endl;
-      g_assert( G_OBJECT( nodes[id]->image )->ref_count > 0 );
-      g_object_unref( nodes[id]->image );
+      //if( G_OBJECT( nodes[id]->image )->ref_count < 1 )
+      //	std::cout<<"!!! View::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->image<<std::endl;
+      //g_assert( G_OBJECT( nodes[id]->image )->ref_count > 0 );
+      //g_object_unref( nodes[id]->image );
+      PF::Layer* l = image->get_layer_manager().get_layer( id );
+      if( l )
+	snprintf( tstr, 499, "PF::View::set_image() unref image of layer %s",
+		  l->get_name().c_str() );
+      else
+	snprintf( tstr, 499, "PF::View::set_image() unref image (NULL layer)" );
+      PF_UNREF( nodes[id]->image, tstr );
     }
     nodes[id]->image = img;
   }
@@ -111,9 +128,18 @@ void PF::View::remove_node( unsigned int id )
 {
   if( id >= nodes.size() ) return;
 
+  char tstr[500];
   if( nodes[id] != NULL ) {
-    if( nodes[id]->image != NULL )
-      g_object_unref( nodes[id]->image );
+    if( nodes[id]->image != NULL ) {
+      //g_object_unref( nodes[id]->image );
+      PF::Layer* l = image->get_layer_manager().get_layer( id );
+      if( l )
+	snprintf( tstr, 499, "PF::View::remove_node() unref image of layer %s",
+		  l->get_name().c_str() );
+      else
+	snprintf( tstr, 499, "PF::View::remove_node() unref image (NULL layer)" );
+      PF_UNREF( nodes[id]->image, tstr );
+    }
     if( nodes[id]->processor != NULL )
       delete( nodes[id]->processor );
     delete nodes[id];
@@ -140,7 +166,7 @@ void PF::View::lock_processing()
 #ifndef NDEBUG
     //std::cout<<"PF::View::update(): locking sink #"<<i<<std::endl;
 #endif
-    sinks[i]->get_processing_mutex().lock();
+    //sinks[i]->get_processing_mutex().lock();
 #ifndef NDEBUG
     //std::cout<<"PF::View::update(): sink #"<<i<<" locked"<<std::endl;
 #endif
@@ -154,7 +180,7 @@ void PF::View::unlock_processing()
 #ifndef NDEBUG
     //std::cout<<"PF::View::update(): unlocking sink #"<<i<<std::endl;
 #endif
-    sinks[i]->get_processing_mutex().unlock();
+    //sinks[i]->get_processing_mutex().unlock();
 #ifndef NDEBUG
     //std::cout<<"PF::View::update(): sink #"<<i<<" unlocked"<<std::endl;
 #endif

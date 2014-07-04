@@ -71,7 +71,8 @@ VipsImage* PF::FastDemosaicPar::build(std::vector<VipsImage*>& in, int first,
 	     NULL );
   //sprintf(tifname,"/tmp/level_%d-2.tif",(int)levels.size());
   //vips_image_write_to_file( out, tifname );
-  g_object_unref( img );
+  //g_object_unref( img );
+  PF_UNREF( img, "PF::FastDemosaicPar::build(): img unref" );
 
   return out;
 }

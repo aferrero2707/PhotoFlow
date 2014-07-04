@@ -179,7 +179,8 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
       in2.push_back( l->image );
     }
     VipsImage* out = PF::BlenderPar::build( in2, 0, NULL, omap, level );
-    g_object_unref( l->image );
+    //g_object_unref( l->image );
+    PF_UNREF( l->image, "PF::DrawPar::build(): l->image unref" );
     return out;
   }
   return NULL;

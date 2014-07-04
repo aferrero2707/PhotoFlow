@@ -299,7 +299,7 @@ void end_element (GMarkupParseContext *context,
 
     if( current_op && current_op->get_config_ui() ) {
       current_op->get_config_ui()->init();
-      current_op->get_config_ui()->update();
+      //current_op->get_config_ui()->update();
     }
     current_op = NULL;
 

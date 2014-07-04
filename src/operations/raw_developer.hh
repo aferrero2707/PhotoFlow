@@ -40,7 +40,9 @@
 
 #include "convertformat.hh"
 
+#include "raw_image.hh"
 #include "raw_preprocessor.hh"
+#include "amaze_demosaic.hh"
 #include "fast_demosaic.hh"
 #include "raw_output.hh"
 
@@ -50,7 +52,8 @@ namespace PF
   class RawDeveloperPar: public OpParBase
   {
     VipsBandFormat output_format;
-    libraw_data_t* image_data;
+    dcraw_data_t* image_data;
+    PF::ProcessorBase* amaze_demosaic;
     PF::ProcessorBase* fast_demosaic;
     PF::ProcessorBase* raw_preprocessor;
     PF::ProcessorBase* raw_output;
@@ -70,7 +73,7 @@ namespace PF
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
 
-    libraw_data_t* get_image_data() {return image_data; }
+    dcraw_data_t* get_image_data() {return image_data; }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, unsigned int& level);
@@ -86,15 +89,16 @@ namespace PF
 		VipsRegion* imap, VipsRegion* omap, 
 		VipsRegion* oreg, OpParBase* par)
     {
+			/*
       RawDeveloperPar* rdpar = dynamic_cast<RawDeveloperPar*>(par);
       if( !rdpar ) return;
-      libraw_data_t* image_data = rdpar->get_image_data();
+      dcraw_data_t* image_data = rdpar->get_image_data();
       Rect *r = &oreg->valid;
       //int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
       //int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
     
-      PF::RawPixel* p;
-      PF::RawPixel* pout;
+      PF::raw_pixel_t* p;
+      PF::raw_pixel_t* pout;
       int x, y;
       float range = image_data->color.maximum - image_data->color.black;
       float min_mul = image_data->color.cam_mul[0];
@@ -113,19 +117,22 @@ namespace PF
       }
 #endif
       std::cout<<"range="<<range<<"  min_mul="<<min_mul<<"  new range="<<range*min_mul<<std::endl;
-      /* RawTherapee emulation
-      range *= max_mul;
-      */
+      // RawTherapee emulation
+      //range *= max_mul;
+      
       range *= min_mul;
     
       for( y = 0; y < r->height; y++ ) {
-	p = (PF::RawPixel*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
-	pout = (PF::RawPixel*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+	p = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
+	pout = (PF::raw_pixel_t*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+		PF::RawMatrixRow rp( p );
+		PF::RawMatrixRow rpout( pout );
 	for( x=0; x < r->width; x++) {
 	  //std::cout<<"x: "<<x<<"  y: "<<y<<"  color: "<<(int)p[x].color<<std::endl;
-	  pout[x].color = p[x].color;
-	  pout[x].data = p[x].data * image_data->color.cam_mul[ (int)p[x].color ];
-	  pout[x].data /= range;
+	  rpout.color(x) = rp.color(x);
+	  rpout[x] = rp[x] * image_data->color.cam_mul[ rp.color(x) ];
+	  rpout[x] /= range;
+			*/
 	  /* RawTherapee emulation
 	  pout[x].data *= 65535;
 	  */
@@ -134,10 +141,12 @@ namespace PF
 		   <<"  cam_mul="<<image_data->color.cam_mul[ p[x].color ]
 		   <<"  range="<<range<<std::endl;
 	  */
+			/*
+		}
 	}
-      }
-    }
-  };
+			*/
+		}
+	};
 
 
 

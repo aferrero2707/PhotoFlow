@@ -400,7 +400,7 @@ void PF::LayerWidget::on_button_add_group()
   PF::OperationConfigDialog* dialog = 
     new PF::OperationConfigDialog( layer, Glib::ustring("Group Layer Config") );
   processor->get_par()->set_config_ui( dialog );
-  dialog->update();
+  //dialog->update();
   dialog->open();
 }
 
@@ -413,11 +413,18 @@ void PF::LayerWidget::on_button_del()
 
 
 
+#ifdef GTKMM_2
+void PF::LayerWidget::on_switch_page(_GtkNotebookPage* page, guint page_num)
+#endif
+#ifdef GTKMM_3
 void PF::LayerWidget::on_switch_page(Widget* page, guint page_num)
+#endif
 {
-  std::cout<<"LayerWidget::on_switch_page( "<<page_num<<" ) called."<<std::endl;
   int layer_id = get_selected_layer_id();
+#ifndef NDEBUG
+  std::cout<<"LayerWidget::on_switch_page( "<<page_num<<" ) called."<<std::endl;
   std::cout<<"Selected layer id: "<<layer_id<<std::endl;
+#endif
   if( layer_id >= 0 )
     signal_active_layer_changed.emit( layer_id );
 }

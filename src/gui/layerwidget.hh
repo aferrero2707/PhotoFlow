@@ -74,8 +74,10 @@ public:
   void remove_layers();
 
   void update() {
+#ifndef NDEBUG
     if( layer_views.size() > 0 )
       std::cout<<"layer_views.size() > 0"<<std::endl;
+#endif
     for(unsigned int i = 0; i < layer_views.size(); i++) 
       layer_views[i]->update_model();
   }
@@ -88,7 +90,12 @@ public:
 
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
 
+#ifdef GTKMM_3
   void on_switch_page(Widget* page, guint page_num);
+#endif
+#ifdef GTKMM_2
+  void on_switch_page(_GtkNotebookPage* page, guint page_num);
+#endif
 
   void remove_tab( Gtk::Widget* widget );
 

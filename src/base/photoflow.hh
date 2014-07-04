@@ -54,9 +54,14 @@ namespace PF
     new_op_func_t new_op_func;
     new_op_func_t new_op_func_nogui;
 
+    std::string cache_dir;
+    std::string base_dir;
+
+    bool batch;
+
     static PhotoFlow* instance;
   public:
-    PhotoFlow(): render_mode(PF_RENDER_PREVIEW) {}
+    PhotoFlow();
 
     static PhotoFlow& Instance();
 
@@ -69,6 +74,9 @@ namespace PF
     void set_new_op_func( new_op_func_t f ) { new_op_func = f; }
     void set_new_op_func_nogui( new_op_func_t f ) { new_op_func_nogui = f; }
 
+    void set_batch( bool val ) { batch = val; }
+    bool is_batch() { return batch; }
+
     ProcessorBase* new_operation(std::string opname, Layer* current_layer)
     {
       if( new_op_func ) return new_op_func( opname, current_layer );
@@ -79,8 +87,17 @@ namespace PF
       if( new_op_func_nogui ) return new_op_func_nogui( opname, current_layer );
       else return NULL;
     }
+
+    void set_base_dir(std::string dir) { base_dir = dir; }
+    std::string get_base_dir() { return base_dir; }
+
+    std::string get_cache_dir() { return cache_dir; }
   };
 
+
+  void pf_object_unref(GObject* object, const char* msg);
+#define PF_UNREF( object, msg ) pf_object_unref( G_OBJECT(object), msg );
+#define PF_PRINT_REF( object, msg ) std::cout<<msg<<" ref_count: "<<G_OBJECT(object)<<"->"<<G_OBJECT(object)->ref_count<<std::endl;
 }
 
 

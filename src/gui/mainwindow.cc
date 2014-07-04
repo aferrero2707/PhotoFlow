@@ -293,7 +293,7 @@ PF::MainWindow::open_image( std::string filename )
 
 void PF::MainWindow::on_button_open_clicked()
 {
-  return;
+  //return;
 
   Gtk::FileChooserDialog dialog("Open image",
 				Gtk::FILE_CHOOSER_ACTION_OPEN);
@@ -315,6 +315,11 @@ void PF::MainWindow::on_button_open_clicked()
       //Notice that this is a std::string, not a Glib::ustring.
       std::string filename = dialog.get_filename();
       std::cout << "File selected: " <<  filename << std::endl;
+      char* fullpath = realpath( filename.c_str(), NULL );
+      if(!fullpath)
+	return;
+      open_image( fullpath );
+      free(fullpath);
       break;
     }
   case(Gtk::RESPONSE_CANCEL): 

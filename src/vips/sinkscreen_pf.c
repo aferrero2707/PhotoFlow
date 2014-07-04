@@ -152,13 +152,13 @@ typedef struct _RenderThreadStateClass {
 
 } RenderThreadStateClass;
 
-G_DEFINE_TYPE( RenderThreadState, render_thread_state, VIPS_TYPE_THREAD_STATE );
+G_DEFINE_TYPE( RenderThreadState, pfrender_thread_state, VIPS_TYPE_THREAD_STATE );
 
 /* The BG thread which sits waiting to do some calculations.
  */
-static GThread *render_thread = NULL;
+static GThread *pfrender_thread = NULL;
 
-/* Number of renders with dirty tiles. render_thread queues up on this.
+/* Number of renders with dirty tiles. pfrender_thread queues up on this.
  */
 static VipsSemaphore render_dirty_sem;
 
@@ -176,7 +176,7 @@ static GSList *render_dirty_all = NULL;
 static gboolean render_reschedule = FALSE;
 
 static void
-render_thread_state_class_init( RenderThreadStateClass *class )
+pfrender_thread_state_class_init( RenderThreadStateClass *class )
 {
 	VipsObjectClass *object_class = VIPS_OBJECT_CLASS( class );
 
@@ -185,16 +185,16 @@ render_thread_state_class_init( RenderThreadStateClass *class )
 }
 
 static void
-render_thread_state_init( RenderThreadState *state )
+pfrender_thread_state_init( RenderThreadState *state )
 {
 	state->tile = NULL;
 }
 
 static VipsThreadState *
-render_thread_state_new( VipsImage *im, void *a )
+pfrender_thread_state_new( VipsImage *im, void *a )
 {
 	return( VIPS_THREAD_STATE( vips_object_new( 
-		render_thread_state_get_type(), 
+		pfrender_thread_state_get_type(), 
 		vips_thread_state_set, im, a ) ) );
 }
 
@@ -482,26 +482,26 @@ render_dirty_put( Render *render )
 /* Main loop for RenderThreads.
  */
 static void *
-render_thread_main( void *client )
+pfrender_thread_main( void *client )
 {
 	Render *render;
 
 	while( (render = render_dirty_get()) &&
 		!render_kill ) {
-		VIPS_DEBUG_MSG_GREEN( "render_thread_main: "
+		VIPS_DEBUG_MSG_GREEN( "pfrender_thread_main: "
 			"threadpool start\n" );
 
 		render_reschedule = FALSE;
 		if( vips_threadpool_run( render->in,
-			render_thread_state_new,
+			pfrender_thread_state_new,
 			render_allocate,
 			render_work,
 			NULL,
 			render ) )
-			VIPS_DEBUG_MSG_RED( "render_thread_main: "
+			VIPS_DEBUG_MSG_RED( "pfrender_thread_main: "
 				"threadpool_run failed\n" );
 
-		VIPS_DEBUG_MSG_GREEN( "render_thread_main: "
+		VIPS_DEBUG_MSG_GREEN( "pfrender_thread_main: "
 			"threadpool return\n" );
 
 		/* Add back to the jobs list, if we need to.
@@ -519,7 +519,7 @@ render_thread_main( void *client )
 }
 
 void
-vips__render_shutdown( void )
+vips__render_shutdown2( void )
 {
 	/* We may come here without having inited.
 	 */
@@ -528,11 +528,11 @@ vips__render_shutdown( void )
 
 	g_mutex_lock( render_dirty_lock );
 
-	if( render_thread ) { 
+	if( pfrender_thread ) { 
 		GThread *thread;
 
-		thread = render_thread;
-		render_thread = NULL; 
+		thread = pfrender_thread;
+		pfrender_thread = NULL; 
 
 		g_mutex_unlock( render_dirty_lock );
 
@@ -548,16 +548,16 @@ vips__render_shutdown( void )
 /* Create our set of RenderThread. Assume we're single-threaded here.
  */
 static int
-render_thread_create( void )
+pfrender_thread_create( void )
 {
 	if( !render_dirty_lock ) {
 		render_dirty_lock = vips_g_mutex_new();
 		vips_semaphore_init( &render_dirty_sem, 0, "render_dirty_sem" );
 	}
 
-	if( !render_thread ) {
-		if( !(render_thread = vips_g_thread_new( "sink_screen",
-			render_thread_main, NULL )) ) 
+	if( !pfrender_thread ) {
+		if( !(pfrender_thread = vips_g_thread_new( "sink_screen",
+			pfrender_thread_main, NULL )) ) 
 			return( -1 );
 	}
 
@@ -1099,7 +1099,7 @@ vips_sink_screen2( VipsImage *in, VipsImage *out, VipsImage *mask,
 
 	/* Make sure the bg work threads are ready.
 	 */
-	if( render_thread_create() )
+	if( pfrender_thread_create() )
 		return( -1 );
 
 	if( tile_width <= 0 || tile_height <= 0 || 
@@ -1142,7 +1142,7 @@ vips_sink_screen2( VipsImage *in, VipsImage *out, VipsImage *mask,
 }
 
 void
-vips__print_renders( void )
+vips__print_renders2( void )
 {
 #ifdef VIPS_DEBUG_AMBER
 	printf( "%d active renders\n", render_num_renders );

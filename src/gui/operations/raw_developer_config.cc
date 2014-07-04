@@ -38,6 +38,9 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   wbRedSlider( this, "wb_red", "Red WB mult.", 1, 0, 10, 0.05, 0.1, 1),
   wbGreenSlider( this, "wb_green", "Green WB mult.", 1, 0, 10, 0.05, 0.1, 1),
   wbBlueSlider( this, "wb_blue", "Blue WB mult.", 1, 0, 10, 0.05, 0.1, 1),
+  wb_target_L_slider( this, "wb_target_L", "Spot WB L", 50, 0, 1000000, 0.05, 0.1, 1),
+  wb_target_a_slider( this, "wb_target_a", "", 0, -1000000, 1000000, 0.05, 0.1, 1),
+  wb_target_b_slider( this, "wb_target_b", "", 0, -1000000, 1000000, 0.05, 0.1, 1),
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
   profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
@@ -48,8 +51,18 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   outProfOpenButton(Gtk::Stock::OPEN)
 {
   wbControlsBox.pack_start( wbModeSelector );
+
+  wb_target_L_slider.set_passive( true );
+  wb_target_a_slider.set_passive( true );
+  wb_target_b_slider.set_passive( true );
+  wbTargetBox.pack_start( wb_target_L_slider, Gtk::PACK_SHRINK );
+  wbTargetBox.pack_start( wb_target_a_slider, Gtk::PACK_SHRINK );
+  wbTargetBox.pack_start( wb_target_b_slider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbTargetBox );
+  wbControlsBox.pack_start( wb_best_match_label, Gtk::PACK_SHRINK );
+
   wbControlsBox.pack_start( wbRedSlider );
-  //controlsBox.pack_start( wbGreenSlider );
+  wbControlsBox.pack_start( wbGreenSlider );
   wbControlsBox.pack_start( wbBlueSlider );
 
   exposureControlsBox.pack_start( exposureSlider );
@@ -204,9 +217,9 @@ void PF::RawDeveloperConfigDialog::pointer_release_event( int button, double x, 
     return;
   
 #ifndef NDEBUG
-  char tstr[1024];
-  cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
-  std::cout<<"raw_developer: embedded profile found: "<<tstr<<std::endl;
+  char tstr2[1024];
+  cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr2, 1024);
+  std::cout<<"raw_developer: embedded profile found: "<<tstr2<<std::endl;
 #endif
 
   cmsCIExyY white;
@@ -233,181 +246,283 @@ void PF::RawDeveloperConfigDialog::pointer_release_event( int button, double x, 
     return;
 
   
-  // Now we have to process a small portion of the image 
-  // to get the corresponding Lab values
-  VipsImage* spot;
-  int left = (int)x-3;
-  int top = (int)y-3;
-  int width = 7;
-  int height = 7;
+  float Lab_check[3] = { 0, 0, 0 };
+  float Lab_prev[3] = { 0, 1000, 1000 };
+  for( int i = 0; i < 100; i++ ) {
+    // Now we have to process a small portion of the image 
+    // to get the corresponding Lab values
+    VipsImage* spot;
+    int left = (int)x-3;
+    int top = (int)y-3;
+    int width = 7;
+    int height = 7;
 
-  VipsRect crop = {left, top, width, height};
-  VipsRect all = {0 ,0, image->Xsize, image->Ysize};
-  VipsRect clipped;
-  vips_rect_intersectrect( &crop, &all, &clipped );
+    VipsRect crop = {left, top, width, height};
+    VipsRect all = {0 ,0, image->Xsize, image->Ysize};
+    VipsRect clipped;
+    vips_rect_intersectrect( &crop, &all, &clipped );
   
-  if( vips_crop( image, &spot, 
-		 clipped.left, clipped.top, 
-		 clipped.width, clipped.height, 
-		 NULL ) )
-    return;
+    if( vips_crop( image, &spot, 
+		   clipped.left, clipped.top, 
+		   clipped.width, clipped.height, 
+		   NULL ) )
+      return;
 
-  VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
+    VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
 
-  VipsImage* outimg = im_open( "spot_wb_img", "p" );
-  if (vips_sink_screen (spot, outimg, NULL,
-			 64, 64, 1, 
-			 0, NULL, this))
-    return;
-  VipsRegion* region = vips_region_new( outimg );
-  if (vips_region_prepare (region, &rspot))
-    return;
+    VipsImage* outimg = im_open( "spot_wb_img", "p" );
+    if (vips_sink_screen (spot, outimg, NULL,
+			  64, 64, 1, 
+			  0, NULL, this))
+      return;
+    VipsRegion* region = vips_region_new( outimg );
+    if (vips_region_prepare (region, &rspot))
+      return;
   
-  //if( vips_sink_memory( spot ) )
-  //  return;
+    //if( vips_sink_memory( spot ) )
+    //  return;
 
-  int row, col;
-  int line_size = clipped.width*3;
-  float* p;
-  float red, green, blue;
-  float rgb_avg[3] = {0, 0, 0};
-  float rgb_out[3] = {0, 0, 0};
-  float Lab_in[3] = {0, 0, 0};
-  float Lab_out[3] = {0, 0, 0};
-  float Lab_wb[3] = {50, 0, 0};
-  //float Lab_wb[3] = {70, 15, 10};
-  std::cout<<"RawDeveloperConfigDialog: getting spot WB"<<std::endl;
-  for( row = 0; row < rspot.height; row++ ) {
-    p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
-    for( col = 0; col < line_size; col += 3 ) {
-      red = p[col];      rgb_avg[0] += red;
-      green = p[col+1];  rgb_avg[1] += green;
-      blue = p[col+2];   rgb_avg[2] += blue;
-      std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
+    int row, col;
+    int line_size = clipped.width*3;
+    float* p;
+    float red, green, blue;
+    float rgb_avg[3] = {0, 0, 0};
+    float rgb_out[3] = {0, 0, 0};
+    float Lab_in[3] = {0, 0, 0};
+    float Lab_out[3] = {0, 0, 0};
+    float Lab_wb[3] = {
+#ifdef GTKMM_2
+      wb_target_L_slider.get_adjustment().get_value(),
+      wb_target_a_slider.get_adjustment().get_value(),
+      wb_target_b_slider.get_adjustment().get_value()
+#endif
+#ifdef GTKMM_3
+      wb_target_L_slider.get_adjustment()->get_value(),
+      wb_target_a_slider.get_adjustment()->get_value(),
+      wb_target_b_slider.get_adjustment()->get_value()
+#endif
+    };
+    //float Lab_wb[3] = {70, 15, 10};
+    std::cout<<"RawDeveloperConfigDialog: getting spot WB"<<std::endl;
+    for( row = 0; row < rspot.height; row++ ) {
+      p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
+      for( col = 0; col < line_size; col += 3 ) {
+	red = p[col];      rgb_avg[0] += red;
+	green = p[col+1];  rgb_avg[1] += green;
+	blue = p[col+2];   rgb_avg[2] += blue;
+	//std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
+      }
     }
-  }
-  rgb_avg[0] /= rspot.width*rspot.height;
-  rgb_avg[1] /= rspot.width*rspot.height;
-  rgb_avg[2] /= rspot.width*rspot.height;
+    rgb_avg[0] /= rspot.width*rspot.height;
+    rgb_avg[1] /= rspot.width*rspot.height;
+    rgb_avg[2] /= rspot.width*rspot.height;
 
-  // Now we convert the average RGB values in the WB spot region to Lab
-  cmsDoTransform( transform, rgb_avg, Lab_in, 1 );
+    // Now we convert the average RGB values in the WB spot region to Lab
+    cmsDoTransform( transform, rgb_avg, Lab_in, 1 );
 
-  const float epsilon = 1.0e-5;
-  float ab_zero = 0;
-  //float ab_zero = 0.5;
-  float delta1 = Lab_in[1] - ab_zero;
-  float delta2 = Lab_in[2] - ab_zero;
+    std::cout<<" Lab in: "<<Lab_in[0]<<" "<<Lab_in[1]<<" "<<Lab_in[2]<<std::endl;
 
-  float wb_delta1 = Lab_wb[1] - ab_zero;
-  float wb_delta2 = Lab_wb[2] - ab_zero;
+    const float epsilon = 1.0e-5;
+    float ab_zero = 0;
+    //float ab_zero = 0.5;
+    float delta1 = Lab_in[1] - ab_zero;
+    float delta2 = Lab_in[2] - ab_zero;
 
-  float wb_red_mul;
-  float wb_green_mul;
-  float wb_blue_mul;
+    float wb_delta1 = Lab_wb[1] - ab_zero;
+    float wb_delta2 = Lab_wb[2] - ab_zero;
 
-  if( (fabs(wb_delta1) < epsilon) &&
-      (fabs(wb_delta2) < epsilon) ) {
+    float wb_red_mul;
+    float wb_green_mul;
+    float wb_blue_mul;
 
-    // The target color is gray, so we simply neutralize the spot value
-    // The green channel is kept fixed and the other two are scaled to 
-    // the green value
-    wb_red_mul = rgb_avg[1]/rgb_avg[0];
-    wb_blue_mul = rgb_avg[1]/rgb_avg[2];
-    wb_green_mul = 1;
+    if( (fabs(wb_delta1) < epsilon) &&
+	(fabs(wb_delta2) < epsilon) ) {
 
-  } else if( fabs(wb_delta1) < epsilon ) {
+      // The target color is gray, so we simply neutralize the spot value
+      // The green channel is kept fixed and the other two are scaled to 
+      // the green value
+      wb_red_mul = rgb_avg[1]/rgb_avg[0];
+      wb_blue_mul = rgb_avg[1]/rgb_avg[2];
+      wb_green_mul = 1;
 
-    // The target "a" channel is very close to the neutral value,
-    // in this case we set the ouput "a" channel equal to the target one
-    // and we eventually invert the "b" channel if the input sign is opposite
-    // to the target one, without applying any scaling
-    Lab_out[0] = Lab_in[0];
-    Lab_out[1] = Lab_wb[1];
-    Lab_out[2] = Lab_in[2];
-    if( delta2*wb_delta2 < 0 )
-      Lab_out[2] = -Lab_in[2];
+    } else if( fabs(wb_delta1) < epsilon ) {
 
-    // Now we convert back to RGB and we compute the multiplicative
-    // factors that bring from the current WB to the target one
-    cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
-    wb_red_mul = rgb_out[0]/rgb_avg[0];
-    wb_green_mul = rgb_out[1]/rgb_avg[1];
-    wb_blue_mul = rgb_out[2]/rgb_avg[2];
+      // The target "a" channel is very close to the neutral value,
+      // in this case we set the ouput "a" channel equal to the target one
+      // and we eventually invert the "b" channel if the input sign is opposite
+      // to the target one, without applying any scaling
+      Lab_out[0] = Lab_in[0];
+      Lab_out[1] = Lab_wb[1];
+      Lab_out[2] = Lab_in[2];
+      if( delta2*wb_delta2 < 0 )
+	Lab_out[2] = -Lab_in[2];
 
-  } else if( fabs(wb_delta2) < epsilon ) {
+      // Now we convert back to RGB and we compute the multiplicative
+      // factors that bring from the current WB to the target one
+      cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
+      wb_red_mul = rgb_out[0]/rgb_avg[0];
+      wb_green_mul = rgb_out[1]/rgb_avg[1];
+      wb_blue_mul = rgb_out[2]/rgb_avg[2];
 
-    // The target "b" channel is very close to the neutral value,
-    // in this case we set the ouput "b" channel equal to the target one
-    // and we eventually invert the "a" channel if the input sign is opposite
-    // to the target one, without applying any scaling
-    Lab_out[0] = Lab_in[0];
-    Lab_out[1] = Lab_in[1];
-    Lab_out[2] = Lab_wb[2];
-    if( delta1*wb_delta1 < 0 )
-      Lab_out[1] = -Lab_in[1];
+    } else if( fabs(wb_delta2) < epsilon ) {
 
-    // Now we convert back to RGB and we compute the multiplicative
-    // factors that bring from the current WB to the target one
-    cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
-    wb_red_mul = rgb_out[0]/rgb_avg[0];
-    wb_green_mul = rgb_out[1]/rgb_avg[1];
-    wb_blue_mul = rgb_out[2]/rgb_avg[2];
+      // The target "b" channel is very close to the neutral value,
+      // in this case we set the ouput "b" channel equal to the target one
+      // and we eventually invert the "a" channel if the input sign is opposite
+      // to the target one, without applying any scaling
+      Lab_out[0] = Lab_in[0];
+      Lab_out[1] = Lab_in[1];
+      Lab_out[2] = Lab_wb[2];
+      if( delta1*wb_delta1 < 0 )
+	Lab_out[1] = -Lab_in[1];
 
-  } else {
+      // Now we convert back to RGB and we compute the multiplicative
+      // factors that bring from the current WB to the target one
+      cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
+      wb_red_mul = rgb_out[0]/rgb_avg[0];
+      wb_green_mul = rgb_out[1]/rgb_avg[1];
+      wb_blue_mul = rgb_out[2]/rgb_avg[2];
 
-    // Both "a" and "b" target channels are different from zero, so we try to 
-    // preserve the target a/b ratio
-    float sign1 = (delta1*wb_delta1 < 0) ? -1 : 1;
-    float sign2 = (delta2*wb_delta2 < 0) ? -1 : 1;
-    float ab_ratio = (sign1*delta1)/(sign2*delta2);
-    float wb_ab_ratio = wb_delta1/wb_delta2;
-
-    Lab_out[0] = Lab_in[0];
-    if( fabs(wb_delta1) > fabs(wb_delta2) ) {
-      Lab_out[1] = sign1*delta1 + ab_zero;
-      Lab_out[2] = sign2*delta2*ab_ratio/wb_ab_ratio + ab_zero;
     } else {
-      Lab_out[1] = sign1*delta1*wb_ab_ratio/ab_ratio + ab_zero;
-      Lab_out[2] = sign2*delta2 + ab_zero;
+
+      // Both "a" and "b" target channels are different from zero, so we try to 
+      // preserve the target a/b ratio
+      float sign1 = (delta1*wb_delta1 < 0) ? -1 : 1;
+      float sign2 = (delta2*wb_delta2 < 0) ? -1 : 1;
+      float ab_ratio = (sign1*delta1)/(sign2*delta2);
+      float wb_ab_ratio = wb_delta1/wb_delta2;
+
+      Lab_out[0] = Lab_in[0];
+      if( fabs(wb_delta1) > fabs(wb_delta2) ) {
+	Lab_out[1] = sign1*delta1 + ab_zero;
+	Lab_out[2] = sign2*delta2*ab_ratio/wb_ab_ratio + ab_zero;
+      } else {
+	Lab_out[1] = sign1*delta1*wb_ab_ratio/ab_ratio + ab_zero;
+	Lab_out[2] = sign2*delta2 + ab_zero;
+      }
+      Lab_out[1] = Lab_wb[1];
+      Lab_out[2] = Lab_wb[2];
+      std::cout<<" Lab out: "<<Lab_out[0]<<" "<<Lab_out[1]<<" "<<Lab_out[2]<<std::endl;
+      // Now we convert back to RGB and we compute the multiplicative
+      // factors that bring from the current WB to the target one
+      cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
+      wb_red_mul = rgb_out[0]/rgb_avg[0];
+      wb_green_mul = rgb_out[1]/rgb_avg[1];
+      wb_blue_mul = rgb_out[2]/rgb_avg[2];
+    
     }
-    
-    // Now we convert back to RGB and we compute the multiplicative
-    // factors that bring from the current WB to the target one
-    cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
-    wb_red_mul = rgb_out[0]/rgb_avg[0];
-    wb_green_mul = rgb_out[1]/rgb_avg[1];
-    wb_blue_mul = rgb_out[2]/rgb_avg[2];
-    
+
+    /*
+    // The WB multiplicative factors are scaled so that their product is equal to 1
+    float scale = wb_red_mul*wb_green_mul*wb_blue_mul;
+    //float scale = wb_green_mul;
+    wb_red_mul /= scale;
+    wb_green_mul /= scale;
+    wb_blue_mul /= scale;
+    */
+
+    PropertyBase* wb_red_prop = wbRedSlider.get_prop();
+    PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
+    PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
+    if( wb_red_prop && wb_green_prop && wb_blue_prop ) {
+      float wb_red_in;
+      float wb_green_in;
+      float wb_blue_in;
+      wb_red_prop->get( wb_red_in );
+      wb_green_prop->get( wb_green_in );
+      wb_blue_prop->get( wb_blue_in );
+      float wb_red_out = wb_red_mul*wb_red_in;
+      float wb_green_out = wb_green_mul*wb_green_in;
+      float wb_blue_out = wb_blue_mul*wb_blue_in;
+      float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
+      //scale = 1;
+      std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+	       <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+	       <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      std::cout<<"  scale: "<<scale<<std::endl;
+      //float scale = wb_green_mul;
+      wb_red_out /= scale;
+      wb_green_out /= scale;
+      wb_blue_out /= scale;
+      wb_red_prop->update( wb_red_out );
+      wb_green_prop->update( wb_green_out );
+      wb_blue_prop->update( wb_blue_out );
+
+      std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+	       <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+	       <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+
+      wbRedSlider.init();
+      wbGreenSlider.init();
+      wbBlueSlider.init();
+
+      bool async = img->is_async();
+      img->set_async( false );
+      img->update();
+      img->set_async( async );
+    }
+
+    g_object_unref( spot );
+    g_object_unref( outimg );
+    g_object_unref( region );
+
+    if( vips_crop( image, &spot, 
+		   clipped.left, clipped.top, 
+		   clipped.width, clipped.height, 
+		   NULL ) )
+      return;
+
+    outimg = im_open( "spot_wb_img", "p" );
+    if (vips_sink_screen (spot, outimg, NULL,
+			  64, 64, 1, 
+			  0, NULL, this))
+      return;
+    region = vips_region_new( outimg );
+    if (vips_region_prepare (region, &rspot))
+      return;
+  
+    std::cout<<"RawDeveloperConfigDialog: checking spot WB"<<std::endl;
+    rgb_avg[0] = rgb_avg[1] = rgb_avg[2] = 0;
+    for( row = 0; row < rspot.height; row++ ) {
+      p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
+      for( col = 0; col < line_size; col += 3 ) {
+	red = p[col];      rgb_avg[0] += red;
+	green = p[col+1];  rgb_avg[1] += green;
+	blue = p[col+2];   rgb_avg[2] += blue;
+	//std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
+      }
+    }
+    rgb_avg[0] /= rspot.width*rspot.height;
+    rgb_avg[1] /= rspot.width*rspot.height;
+    rgb_avg[2] /= rspot.width*rspot.height;
+
+    // Now we convert the average RGB values in the WB spot region to Lab
+    cmsDoTransform( transform, rgb_avg, Lab_check, 1 );
+    std::cout<<" Lab check("<<i<<"): "<<Lab_check[0]<<" "<<Lab_check[1]<<" "<<Lab_check[2]<<std::endl;
+
+    g_object_unref( spot );
+    g_object_unref( outimg );
+    g_object_unref( region );
+
+    if( i == 0 ) continue;
+    float delta_a = Lab_check[1] - Lab_prev[1];
+    float delta_b = Lab_check[2] - Lab_prev[2];
+    if( (fabs(delta_a) < 0.005) && (fabs(delta_b) < 0.005) )
+      break;
+    Lab_prev[0] = Lab_check[0];
+    Lab_prev[1] = Lab_check[1];
+    Lab_prev[2] = Lab_check[2];
   }
 
-  // The WB multiplicative factors are scaled so that their product is equal to 1
-  //float scale = wb_red_mul*wb_green_mul*wb_blue_mul;
-  float scale = wb_green_mul;
-  wb_red_mul /= scale;
-  wb_green_mul /= scale;
-  wb_blue_mul /= scale;
+  char tstr[500];
+  snprintf( tstr, 499, "Best match: L=%0.2f a=%0.2f b=%0.2f",
+	    Lab_check[0], Lab_check[1], Lab_check[2] );
+  wb_best_match_label.set_text( tstr );
 
-  PropertyBase* wb_red_prop = wbRedSlider.get_prop();
-  PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
-  PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
-  if( wb_red_prop && wb_green_prop && wb_blue_prop ) {
-    float wb_red_in;
-    wb_red_prop->get( wb_red_in );
-    wb_red_prop->update( wb_red_mul*wb_red_in );
-    //float wb_green_in;
-    //wb_green_prop->get( wb_green_in );
-    //wb_green_prop->update( wb_green_mul*wb_green_in );
-    float wb_blue_in;
-    wb_blue_prop->get( wb_blue_in );
-    wb_blue_prop->update( wb_blue_mul*wb_blue_in );
-
-    wbRedSlider.init();
-    //wbGreenSlider.init();
-    wbBlueSlider.init();
-
-    img->update();
-  }
+  cmsDeleteTransform( transform );
+  cmsDeleteTransform( transform_inv );
+  cmsCloseProfile( profile_in );
+  cmsCloseProfile( profile_out );
 }
 
 

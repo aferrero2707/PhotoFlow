@@ -523,7 +523,9 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs,
 	in.push_back( extra_img );
       }
 
-      if( par->get_config_ui() ) par->get_config_ui()->update_properties();
+      if( par->get_config_ui() ) {
+	par->get_config_ui()->update_properties();
+      }
 #ifndef NDEBUG
       std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
 #endif
@@ -551,7 +553,9 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs,
       }
       std::cout<<"... done."<<std::endl;
 #endif
-      if( par->get_config_ui() ) par->get_config_ui()->update();
+      if( par->get_config_ui() ) {
+	par->get_config_ui()->update();
+      }
     } else {
       std::vector<VipsImage*> in;
 

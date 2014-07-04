@@ -144,18 +144,12 @@ namespace PF
 
     virtual ~RawBuffer()
     {
-      std::cout<<"~OpParBase(): deleting operation "<<(void*)this<<std::endl;
+      std::cout<<"PF::RawBuffer::~RawBuffer(): deleting "<<(void*)this<<std::endl;
       if( fd >= 0 ) {
 	close( fd );
 	unlink( file_name.c_str() );
 	std::cout<<"PF::RawBuffer::~RawBuffer(): "<<file_name<<" removed."<<std::endl;
       }
-      /*
-      if(out) {
-	std::cout<<"              calling g_object_unref( "<<(void*)out<<" );"<<std::endl;
-	g_object_unref( out );
-      }
-      */
     }
 
     std::string get_file_name() { return file_name; }

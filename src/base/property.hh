@@ -30,6 +30,8 @@
 #ifndef PF_PROPERTY_H
 #define PF_PROPERTY_H
 
+#include <stdlib.h>
+
 #include <iostream>
 #include <sstream>
 #include <map>

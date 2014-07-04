@@ -42,10 +42,10 @@
 #define LUT_CLIP_BELOW 1
 #define LUT_CLIP_ABOVE 2
 
-#define LUTf PF::LUT<float>
-#define LUTi PF::LUT<int>
-#define LUTu PF::LUT<unsigned int>
-#define LUTd PF::LUT<double>
+#define PF_LUTf PF::LUT<float>
+#define PF_LUTi PF::LUT<int>
+#define PF_LUTu PF::LUT<unsigned int>
+#define PF_LUTd PF::LUT<double>
 
 #include <cstring>
 
@@ -241,7 +241,7 @@ namespace PF
 
   class FastDemosaicPar: public OpParBase
   {
-    LUTf invGrad;
+    PF_LUTf invGrad;
 
   public:
     FastDemosaicPar();
@@ -249,7 +249,7 @@ namespace PF
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
 
-    LUTf& get_inv_grad() { return invGrad; }
+    PF_LUTf& get_inv_grad() { return invGrad; }
 
     void set_image_hints( VipsImage* img )
     {

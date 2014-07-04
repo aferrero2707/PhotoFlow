@@ -30,7 +30,7 @@
 #include "../operation_config_dialog.hh"
 
 PF::PFWidget::PFWidget(OperationConfigUI* d, std::string n): 
-  inhibit(false), dialog( d ), pname( n ), property( NULL )
+  inhibit(false), passive(false), dialog( d ), pname( n ), property( NULL )
 {
   PF::OperationConfigDialog* ocd = dynamic_cast<PF::OperationConfigDialog*>( dialog );
   if( ocd ) 
@@ -65,10 +65,12 @@ void PF::PFWidget::changed()
 {
   if( property && !inhibit ) {
     set_value();
-    value_changed.emit();
-    dialog->get_layer()->set_dirty( true );
-    std::cout<<"  updating image"<<std::endl;
-    dialog->get_layer()->get_image()->update();
+    if( !passive ) {
+      value_changed.emit();
+      dialog->get_layer()->set_dirty( true );
+      std::cout<<"  updating image"<<std::endl;
+      dialog->get_layer()->get_image()->update();
+    }
   }
 }
  

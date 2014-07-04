@@ -34,6 +34,7 @@
 #include <gtk/gtk.h>
 
 #include "image.hh"
+#include "imageprocessor.hh"
 #include "pf_file_loader.hh"
 #include "../operations/convert2srgb.hh"
 #include "../operations/convertformat.hh"
@@ -64,41 +65,6 @@ gint PF::image_rebuild_callback( gpointer data )
 #endif
   if( image->is_modified() ) {
 
-    // In order to check if there are sinks still being processed, we first
-    // acquire all the associated locks
-    // If any of the sinks is found in a processing state, all locks
-    // are released and the update is postponed, assuming that this
-    // same idle callback will be re-installed by the processing sink
-    // when it ends.
-    for( unsigned int i = 0; i < image->get_nviews(); i++ ) {
-      PF::View* view = image->get_view( i );
-      if( !view ) continue;
-      view->lock_processing();
-    }
-
-    bool pending = false;
-    for( unsigned int i = 0; i < image->get_nviews(); i++ ) {
-      PF::View* view = image->get_view( i );
-      if( !view ) continue;
-      if( view->processing() ) { pending = true; break; }
-    }
-
-#ifndef NDEBUG
-    std::cout<<"PF::image_rebuild_callback(): pending="<<pending<<std::endl;
-#endif
-    // If there are sinks still processing data, we release all the locks
-    // and postpone the update.
-    // If not, we keep the locks in order to prevent any background
-    // processing to be started while thevips chain is being updated.
-    if( pending ) {
-      for( unsigned int i = 0; i < image->get_nviews(); i++ ) {
-	PF::View* view = image->get_view( i );
-	if( !view ) continue;
-	view->unlock_processing();
-      }
-      return false;
-    }
-
     bool result = image->get_layer_manager().rebuild_prepare();
     /*
 #ifndef NDEBUG
@@ -128,18 +94,10 @@ gint PF::image_rebuild_callback( gpointer data )
 #endif
       //vips_cache_drop_all();
       image->get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100 );
-      //view->update();
+      view->update();
     }
 
     image->get_layer_manager().rebuild_finalize();
-    image->set_rebuilding( false );
-  }
-
-  // Updating is finished, we can release the locks
-  for( unsigned int i = 0; i < image->get_nviews(); i++ ) {
-    PF::View* view = image->get_view( i );
-    if( !view ) continue;
-    view->unlock_processing();
   }
   return false;
 }
@@ -151,6 +109,9 @@ PF::Image::Image():
   modified( false ), 
   rebuilding( false ) 
 {
+  rebuild_mutex = vips_g_mutex_new();
+  g_mutex_lock( rebuild_mutex );
+  rebuild_done = vips_g_cond_new();
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update) );
   convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
@@ -167,46 +128,78 @@ PF::Image::~Image()
 
 void PF::Image::update()
 {
+  if( PF::PhotoFlow::Instance().is_batch() ) {
+    do_update();
+  } else {
+    ProcessRequestInfo request;
+    request.image = this;
+    request.request = PF::IMAGE_REBUILD;
+    
+#ifndef NDEBUG
+    std::cout<<"PF::Image::update(): submitting rebuild request."<<std::endl;
+#endif
+    PF::ImageProcessor::Instance().submit_request( request );
+
+    g_cond_wait( rebuild_done, rebuild_mutex );
+  }
+
+  /*
   if( is_async() )
     update_async();
   else
     update_sync();
+  */
 }
 
 
-void PF::Image::update_sync()
+void PF::Image::do_update()
 {
-  layer_manager.rebuild_prepare();
-  std::vector<View*>::iterator vi;
-  for( vi = views.begin(); vi != views.end(); vi++ ) {
-    layer_manager.rebuild( (*vi), PF::PF_COLORSPACE_RGB, 100, 100 );
+  //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
+  //if( !is_modified() ) return;
+
+  std::cout<<std::endl<<"============================================"<<std::endl;
+  //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
+  bool result = get_layer_manager().rebuild_prepare();
+  /*
+    #ifndef NDEBUG
+    std::cout<<"PF::image_rebuild_callback(): rebuild prepare "<<(result?"OK":"failed")<<std::endl;
+    #endif
+    if( !result ) {
+    // something wrong here, we stop the update
+    // in fact, this should never happen...
+    return false;
+    }
+  */
+    
+  set_modified( false );
+
+  // Loop on views, re-build and update
+  for( unsigned int i = 0; i < get_nviews(); i++ ) {
+    PF::View* view = get_view( i );
+    if( !view ) continue;
+
+    //#ifndef NDEBUG
+    std::cout<<"PF::Image::do_update(): updating view #"<<i<<std::endl;
+    //#endif
+    get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100 );
+    //view->update();
   }
-  layer_manager.rebuild_finalize();
 
-  //signal_modified.emit();
-  //std::cout<<"PF::Image::update(): signal_modified() emitted."<<std::endl;
+  get_layer_manager().rebuild_finalize();
+
+  for( unsigned int i = 0; i < get_nviews(); i++ ) {
+    PF::View* view = get_view( i );
+    if( !view ) continue;
+    std::cout<<"PF::Image::do_update(): ref_counts of view #"<<i<<std::endl;
+    for(int ni = 0; ni < view->get_nodes().size(); ni++ ) {
+      PF::ViewNode* node = view->get_nodes()[ni];
+      if( !node ) continue;
+      std::cout<<"  node #"<<ni<<" ("<<(void*)node->image<<") = "<<G_OBJECT(node->image)->ref_count<<std::endl;
+    }
+  }
+  std::cout<<std::endl<<"============================================"<<std::endl<<std::endl<<std::endl;
 }
 
-
-void PF::Image::update_async()
-{
-#ifndef NDEBUG
-  std::cout<<"PF::Image::update_async(): called, rebuilding="<<rebuilding<<std::endl;
-#endif
-  Glib::Threads::Mutex::Lock lock( rebuild_mutex );
-  modified = true;
-
-#ifndef NDEBUG
-  std::cout<<"PF::Image::update_async(): installing idle callback"<<std::endl;
-#endif
-  // Install idle callback to handle the re-building of the associated views
-#ifdef GTKMM_2
-  gtk_idle_add( PF::image_rebuild_callback, (gpointer)this );  
-#endif
-#ifdef GTKMM_3
-  g_idle_add( PF::image_rebuild_callback, (gpointer)this );  
-#endif
-}
 
 
 void PF::Image::remove_layer( PF::Layer* layer )
@@ -291,8 +284,7 @@ bool PF::Image::open( std::string filename )
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
 
-    //add_view( VIPS_FORMAT_UCHAR, 0 );
-    add_view( VIPS_FORMAT_FLOAT, 0 );
+    add_view( VIPS_FORMAT_USHORT, 0 );
     add_view( VIPS_FORMAT_USHORT, 0 );
 
     PF::Layer* limg = layer_manager.new_layer();
@@ -350,6 +342,7 @@ bool PF::Image::open( std::string filename )
 
   //imageArea.set_view( pf_image->get_view(0) );
   //pf_image->signal_modified.connect( sigc::mem_fun(&imageArea, &ImageArea::update_image) );
+  //sleep(5);
   update();
 }
 
@@ -379,7 +372,7 @@ bool PF::Image::export_merged( std::string filename )
   std::string ext;
   if( getFileExtension( "/", filename, ext ) &&
       ext != "pfi" ) {
-    Glib::Threads::Mutex::Lock lock( rebuild_mutex );
+    //Glib::Threads::Mutex::Lock lock( rebuild_mutex );
     unsigned int level = 0;
     PF::View* view = new PF::View( this, VIPS_FORMAT_USHORT, 0 );
     layer_manager.rebuild_all( view, PF::PF_COLORSPACE_RGB, 100, 100 );
@@ -392,7 +385,9 @@ bool PF::Image::export_merged( std::string filename )
     convert2srgb->get_par()->set_format( view->get_format() );
     in.clear(); in.push_back( image );
     VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
-    g_object_unref( image );
+    //g_object_unref( image );
+    std::string msg = std::string("PF::Image::export_merged(") + filename + "), image";
+    PF_UNREF( image, msg.c_str() );
     /**/
     //VipsImage* srgbimg = image;
 
@@ -401,10 +396,14 @@ bool PF::Image::export_merged( std::string filename )
     convert_format->get_par()->set_image_hints( srgbimg );
     convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
     outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
-    g_object_unref( srgbimg );
+    //g_object_unref( srgbimg );
+    msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
+    PF_UNREF( srgbimg, msg.c_str() );
     
     vips_image_write_to_file( outimg, filename.c_str() );
-    g_object_unref( outimg );
+    //g_object_unref( outimg );
+    msg = std::string("PF::Image::export_merged(") + filename + "), outimg";
+    PF_UNREF( outimg, msg.c_str() );
     delete view;
     return true;
   } else {

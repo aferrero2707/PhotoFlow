@@ -27,7 +27,66 @@
 
  */
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdlib.h>
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+  #include<windows.h>
+#endif
+
 #include "photoflow.hh"
+
+PF::PhotoFlow::PhotoFlow(): render_mode(PF_RENDER_PREVIEW), batch(true)
+{
+  // Create the cache directory if possible
+  char fname[500];
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+  char fname2[500];
+  DWORD check = GetTempPath(499, fname);
+  if (0 != check) {
+    sprintf( fname2,"%s\\photoflow", fname );
+    int result = mkdir(fname2);
+    if( (result != 0) && (errno != EEXIST) ) {
+      perror("mkdir");
+      std::cout<<"Cannot create "<<fname2<<"    exiting."<<std::endl;
+      exit( 1 );
+    }
+    sprintf( fname2,"%s\\photoflow\\cache\\", fname );
+    result = mkdir(fname2);
+    if( (result != 0) && (errno != EEXIST) ) {
+      perror("mkdir");
+      std::cout<<"Cannot create "<<fname2<<"    exiting."<<std::endl;
+      exit( 1 );
+    }
+    cache_dir = fname2;
+  }
+#else
+  if( getenv("HOME") ) {
+    sprintf( fname,"%s/.photoflow", getenv("HOME") );
+    int result = mkdir(fname, 0755);
+    if( (result == 0) || (errno == EEXIST) ) {
+      sprintf( fname,"%s/.photoflow/cache/", getenv("HOME") );
+      result = mkdir(fname, 0755);
+      if( (result != 0) && (errno != EEXIST) ) {
+	perror("mkdir");
+	std::cout<<"Cannot create "<<fname<<"    exiting."<<std::endl;
+	exit( 1 );
+      }
+    } else {
+      perror("mkdir");
+      std::cout<<"Cannot create "<<fname<<" (result="<<result<<")   exiting."<<std::endl;
+      exit( 1 );
+    }
+    cache_dir = fname;
+  }
+#endif
+}
+
+
 
 PF::PhotoFlow* PF::PhotoFlow::instance = NULL;
 
@@ -37,3 +96,27 @@ PF::PhotoFlow& PF::PhotoFlow::Instance() {
   return( *instance );
 };
 
+
+
+
+void PF::pf_object_unref(GObject* object, const char* msg)
+{
+#ifdef PF_VERBOSE_UNREF
+  std::cout<<"pf_object_unref(): "<<msg<<std::endl;
+  std::cout<<"                   object="<<object<<std::endl;
+#endif
+  if( !object ) {
+#ifdef PF_VERBOSE_UNREF
+    std::cout<<"                   NULL object!!!"<<std::endl;
+#endif
+    return;
+  }
+#ifdef PF_VERBOSE_UNREF
+  std::cout<<"                   ref_count before: "<<object->ref_count<<std::endl;
+#endif
+  g_assert( object->ref_count > 0 );
+  g_object_unref( object );
+#ifdef PF_VERBOSE_UNREF
+  std::cout<<"                   ref_count after:  "<<object->ref_count<<std::endl;
+#endif
+}

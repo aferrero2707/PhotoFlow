@@ -32,11 +32,11 @@
 //#include "../vips/vips_layer.h"
 
 int
-vips_layer( VipsImage **in, int n, VipsImage **out, int first, 
+vips_layer( int n, VipsImage **out, 
             PF::ProcessorBase* proc,
             VipsImage* imap, VipsImage* omap, 
             VipsDemandStyle demand_hint,
-	    int width, int height, int nbands);
+	    int width, int height, int nbands, ... );
 
 
 
@@ -65,7 +65,8 @@ PF::OpParBase::OpParBase():
   config_ui = NULL;
   //blend_mode = PF_BLEND_PASSTHROUGH;
   //blend_mode = PF_BLEND_NORMAL;
-  blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
+  //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
+  blend_mode.set_enum_value( PF_BLEND_NORMAL );
   demand_hint = VIPS_DEMAND_STYLE_THINSTRIP;
   bands = 1;
   xsize = 100; ysize = 100;
@@ -201,24 +202,7 @@ bool PF::OpParBase::import_settings( OpParBase* pin )
 VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first, 
 				VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
-  VipsImage* outnew;
-
-  /*
-  VipsArea *area = NULL;
-  if( !in.empty() ) {
-    VipsImage **array; 
-    area = vips_area_new_array_object( in.size() );
-    array = (VipsImage **) area->data;
-    for( int i = 0; i < in.size(); i++ ) {
-      array[i] = in[i];
-      g_object_ref( array[i] );
-    }
-  }
-  if (vips_call("layer", area, &outnew, first, processor, imap, omap, get_demand_hint() ))
-    verror ();
-  if(area) vips_area_unref( area );
-  */
-  /**/
+  VipsImage* outnew = NULL;
   VipsImage* invec[100];
   int n = 0;
   for(int i = 0; i < in.size(); i++) {
@@ -226,10 +210,26 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
     invec[n] = in[i];
     n++;
   }
-  if(n >100) n = 100;
-  vips_layer( invec, n, &outnew, first, processor, imap, omap, 
-	      get_demand_hint(), get_xsize(), get_ysize(), get_nbands() );
-  /**/
+  if(n > 100) n = 100;
+  switch( n ) {
+  case 0:
+    vips_layer( n, &outnew, processor, imap, omap, 
+		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+		NULL );
+    break;
+  case 1:
+    vips_layer( n, &outnew, processor, imap, omap, 
+		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+		"in0", invec[0], NULL );
+    break;
+  case 2:
+    vips_layer( n, &outnew, processor, imap, omap, 
+		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+		"in0", invec[0], "in1", invec[1], NULL );
+    break;
+  default:
+    break;
+  }
 
 #ifndef NDEBUG    
   std::cout<<"OpParBase::build(): type="<<type<<"  format="<<get_format()<<std::endl
@@ -242,6 +242,9 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
 #endif
 
   //set_image( outnew );
+#ifndef NDEBUG    
+  std::cout<<"OpParBase::build(): outnew refcount ("<<(void*)outnew<<") = "<<G_OBJECT(outnew)->ref_count<<std::endl;
+#endif
   return outnew;
 }
 

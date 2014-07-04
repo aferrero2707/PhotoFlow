@@ -25,6 +25,7 @@
  */
 
 
+#include "../base/imageprocessor.hh"
 #include "imagearea.hh"
 
 
@@ -63,6 +64,7 @@ PF::ImageArea::ImageArea( View* v ):
   display_merged( true ),
   active_layer( -1 )
 {
+  outimg = NULL;
   display_image = NULL;
   region = NULL;
   mask = NULL;
@@ -77,13 +79,16 @@ PF::ImageArea::ImageArea( View* v ):
   invert = new PF::Processor<PF::InvertPar,PF::Invert>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   set_size_request( 100, 100 );
+
+  draw_done = vips_g_cond_new();
+  draw_mutex = vips_g_mutex_new();
+
+  signal_queue_draw.connect(sigc::mem_fun(*this, &ImageArea::queue_draw));
 }
 
 PF::ImageArea::~ImageArea ()
 {
   std::cout<<"Deleting image area"<<std::endl;
-  VIPS_UNREF( mask_region );
-  VIPS_UNREF( mask );
   VIPS_UNREF( region );
   VIPS_UNREF( display_image );
   //VIPS_UNREF( image );
@@ -93,18 +98,16 @@ PF::ImageArea::~ImageArea ()
 
 
 
-#ifdef GTKMM_2
-void PF::ImageArea::expose_rect (const VipsRect& area)
-#endif
-#ifdef GTKMM_3
-void PF::ImageArea::expose_rect (const VipsRect& area, const Cairo::RefPtr<Cairo::Context>& cr)
-#endif
+// Submit the given area to the image processor
+void PF::ImageArea::submit_area( const VipsRect& area )
 {
 #ifdef DEBUG_DISPLAY
-  std::cout<<"PF::ImageArea::expose_rect(): called"<<std::endl;
-  std::cout<<"PF::ImageArea::expose_rect(): display_image="<<display_image<<std::endl;
-  std::cout<<"PF::ImageArea::expose_rect(): xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
+  std::cout<<"PF::ImageArea::submit_area(): called"<<std::endl;
+  std::cout<<"                              display_image="<<display_image<<std::endl;
+  std::cout<<"                              xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
 #endif
+
+  // Submit request to re-process the area
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return;
 
@@ -113,93 +116,169 @@ void PF::ImageArea::expose_rect (const VipsRect& area, const Cairo::RefPtr<Cairo
   VipsRect clip, area_clip;
   
   vips_rect_intersectrect (&image, &area, &area_clip);
-  if( (area_clip.width > 0) &&
-      (area_clip.height > 0) ) { 
+  if( (area_clip.width <= 0) ||
+      (area_clip.height <= 0) ) 
+    return;
 
-    clip.left = area_clip.left - xoffset;
-    clip.top = area_clip.top - yoffset;
-    clip.width = area_clip.width;
-    clip.height = area_clip.height;
+  clip.left = area_clip.left - xoffset;
+  clip.top = area_clip.top - yoffset;
+  clip.width = area_clip.width;
+  clip.height = area_clip.height;
   
-  
-    /* Request from the mask first to get an idea of what pixels are
-     * available.
-     */
-    if (vips_region_prepare (mask_region, &clip))
-      return;
-    if (vips_region_prepare (region, &clip))
-      return;
-  
-    /* If the mask is all zero, skip the paint.
-     */
-    bool found_painted;
-    int x, y;
-  
-    guchar *p = (guchar *) 
-      VIPS_REGION_ADDR( mask_region, clip.left, clip.top );
-    int lsk = VIPS_REGION_LSKIP( mask_region );
-    found_painted = false; 
-    for( y = 0; y < clip.height; y++ ) {
-      for( x = 0; x < clip.width; x++ ) 
-	if( p[x] ) {
-	  found_painted = true;
-#ifdef DEBUG_DISPLAY
-	  std::cout<<"PF::ImageArea::expose_rect(): found paointed pixel @ "<<x+clip.left<<","<<y+clip.top<<std::endl;
-#endif
-	  break;
-	}
-      if( found_painted )
-	break;
-      else
-	p += lsk;
-    }
+  ProcessRequestInfo request;
+  request.sink = this;
+  request.area = clip;
+  request.request = PF::IMAGE_REDRAW;
+  //request.done = drawing_done;
+  //request.mutex = drawing_mutex;
 
-    if( found_painted ) { 
-#ifdef GTKMM_2
-      guchar *p = (guchar *) VIPS_REGION_ADDR( region, clip.left, clip.top );
-      int lsk = VIPS_REGION_LSKIP( region );
-      
-      get_window()->draw_rgb_image( get_style()->get_white_gc(),
-				    area_clip.left, area_clip.top, area_clip.width, area_clip.height,
-				    Gdk::RGB_DITHER_MAX, p, lsk);
-#endif
-#ifdef GTKMM_3
-      int x, y;
-      int line_size = clip.width*3;
-      Glib::RefPtr<Gdk::Pixbuf> pixbuf = 
-	Gdk::Pixbuf::create( Gdk::COLORSPACE_RGB,
-			     false, 8, clip.width, clip.height );
-      for( y = 0; y < clip.height; y++ ) {
-	guchar *p = (guchar *) VIPS_REGION_ADDR( region, clip.left, clip.top+y );
-	guchar *pout = &(pixbuf->get_pixels()[pixbuf->get_rowstride()*y]);
-	memcpy( pout, p, line_size );
-      }
-      Gdk::Cairo::set_source_pixbuf( cr, pixbuf, area_clip.left, area_clip.top );
-      cr->rectangle( area_clip.left, area_clip.top, area_clip.width, area_clip.height );
-      cr->fill();
-#endif
-      pending_pixels -= clip.width*clip.height;
-#ifdef DEBUG_DISPLAY
-      std::cout<<"PF::ImageArea::expose_rect(): rectangle done ("<<clip.width*clip.height<<")"<<std::endl;
-      //std::cout<<"PF::ImageArea::expose_rect(): pending_pixels="<<pending_pixels<<std::endl;
-#endif
-    } else {
-      pending_pixels += clip.width*clip.height;
-    }
-  }
+  //std::cout<<"PF::ImageArea::submit_area(): submitting redraw request."<<std::endl;
+  PF::ImageProcessor::Instance().submit_request( request );
+  //std::cout<<"PF::ImageArea::submit_area(): redraw request submitted."<<std::endl;
 }
+
+
+/* Prepare the inactive buffer for the next drawing operations
+   The main thread never uses the inactive buffer, therefore there is
+   no need to protect this part of code with a mutex
+*/
+void PF::ImageArea::process_start( const VipsRect& area )
+{
+  // Resize the inactive buffer to match the size of the image portion being displayed
+  double_buffer.get_inactive().resize( area.left, area.top, area.width, area.height );
+
+  // Copy the active buffer into the inactive one
+  // The regions that are not in common should be filled by the
+  // subsequent draw operations
+  double_buffer.get_inactive().copy( double_buffer.get_active() );
+}
+
+
+/* Terminate a drawing sequence. The buffers get swapped and an idle callback is installed
+   to copy the active buffer to screen. As we are modifying the active buffer we need
+   to protect the code with the double buffer mutex
+*/
+void PF::ImageArea::process_end( const VipsRect& area )
+{
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::process_end(): called"<<std::endl;
+  std::cout<<"                               display_image="<<display_image<<std::endl;
+  std::cout<<"                               xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
+#endif
+  double_buffer.lock();
+  double_buffer.swap();
+
+  Update * update = g_new (Update, 1);
+  update->image_area = this;
+  //std::cout<<"PF::ImageArea::process_end(): installing idle callback."<<std::endl;
+  gdk_threads_add_idle ((GSourceFunc) render_cb, update);
+  double_buffer.unlock();
+}
+
+
+// Process the given area and stores the resulting vips buffer
+// The function installs an idle callback that copies the buffer to screen.
+// Processing of any other area is blocked until the buffer is copied to the screen.
+void PF::ImageArea::process_area( const VipsRect& area )
+{
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::process_area(): called"<<std::endl;
+  std::cout<<"                               display_image="<<display_image<<std::endl;
+  std::cout<<"                               xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
+#endif
+
+  VipsRect* parea = (VipsRect*)(&area);
+  if (vips_region_prepare (region, parea))
+    return;
+
+  double_buffer.get_inactive().copy( region, area );
+}
+
+
+// Copy the given buffer to screen
+void PF::ImageArea::draw_area()
+{
+  //std::cout<<"PF::ImageArea::draw_area(): before drawing pixbuf"<<std::endl;
+  //getchar();
+  double_buffer.lock();
+
+  if( !(double_buffer.get_active().get_pxbuf()) ) {
+    double_buffer.unlock();
+    return;
+  }
+
+  //std::cout<<"PF::ImageArea::draw_area(): drawing area "
+  //	   <<double_buffer.get_active().get_rect().width<<","<<double_buffer.get_active().get_rect().height
+  //	   <<"+"<<double_buffer.get_active().get_rect().left<<"+"<<double_buffer.get_active().get_rect().top
+  //	   <<std::endl;
+  Glib::RefPtr<Gdk::Window> window = get_window();
+  if( !window ) return;
+  Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
+  cr->rectangle( double_buffer.get_active().get_rect().left,
+  		 double_buffer.get_active().get_rect().top,
+  		 double_buffer.get_active().get_rect().width*3,
+  		 double_buffer.get_active().get_rect().height*3 );
+  cr->clip();
+  Gdk::Cairo::set_source_pixbuf( cr, double_buffer.get_active().get_pxbuf(), 
+				 double_buffer.get_active().get_rect().left,
+				 double_buffer.get_active().get_rect().top );
+  cr->rectangle( double_buffer.get_active().get_rect().left,
+  		 double_buffer.get_active().get_rect().top,
+  		 double_buffer.get_active().get_rect().width,
+  		 double_buffer.get_active().get_rect().height );
+  cr->fill();
+  //cr->paint();
+  double_buffer.unlock();
+  //std::cout<<"PF::ImageArea::draw_area(): after drawing pixbuf"<<std::endl;
+  //getchar();
+}
+
 
 
 #ifdef GTKMM_2
 bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
 {
+  //return true;
+
   GdkRectangle *expose;
   int i, n;
 
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::on_expose_event(): called."<<std::endl;
 #endif
+  //getchar();
+  draw_area();
   gdk_region_get_rectangles (event->region, &expose, &n);
+  int xmin=1000000, xmax=0, ymin=1000000, ymax=0;
+  for (i = 0; i < n; i++) {
+    //#ifdef DEBUG_DISPLAY
+    std::cout<<"PF::ImageArea::on_expose_event(): region #"<<i<<": ("
+	     <<expose[i].x<<","<<expose[i].y<<") ("
+	     <<expose[i].width<<","<<expose[i].height<<")"<<std::endl;
+    //#endif
+    if( expose[i].x < xmin ) xmin = expose[i].x;
+    if( expose[i].x > xmax ) xmax = expose[i].x;
+    if( expose[i].y < ymin ) ymin = expose[i].y;
+    if( expose[i].y > ymax ) ymax = expose[i].y;
+  }
+  //VipsRect area_tot = {xmin, ymin, xmax-xmin+1, ymax-ymin+1};
+  VipsRect area_tot = {
+    hadj->get_value(), vadj->get_value(),
+    hadj->get_page_size(), vadj->get_page_size()
+  };
+  ProcessRequestInfo request;
+  request.sink = this;
+  request.area = area_tot;
+  request.request = PF::IMAGE_REDRAW_START;
+  //std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_start request."<<std::endl;
+  PF::ImageProcessor::Instance().submit_request( request );
+  //std::cout<<"PF::ImageArea::on_expose_event(): redraw_start request submitted."<<std::endl;
+
+
+  area_tot = {event->area.x, event->area.y, event->area.width, event->area.height};
+  submit_area( area_tot );
+
+  //getchar();
   for (i = 0; i < n; i++) {
 #ifdef DEBUG_DISPLAY
     std::cout<<"PF::ImageArea::on_expose_event(): processing region ("
@@ -208,10 +287,16 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
 #endif
     //expose_rect (&expose[i]);
     VipsRect area = {expose[i].x, expose[i].y, expose[i].width, expose[i].height};
-    expose_rect( area );
+    //submit_area( area );
   }
   g_free( expose );
 
+  request.sink = this;
+  request.area = area_tot;
+  request.request = PF::IMAGE_REDRAW_END;
+  //std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_end request."<<std::endl;
+  PF::ImageProcessor::Instance().submit_request( request );
+  //std::cout<<"PF::ImageArea::on_expose_event(): redraw_end request submitted."<<std::endl;
   return TRUE;
 }
 #endif
@@ -222,6 +307,29 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return true;
 
+  draw_area();
+  VipsRect area_tot = {
+    hadj->get_value(), vadj->get_value(),
+    hadj->get_page_size(), vadj->get_page_size()
+  };
+
+  ProcessRequestInfo request;
+  request.sink = this;
+  request.area = area_tot;
+  request.request = PF::IMAGE_REDRAW_START;
+  //std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_start request."<<std::endl;
+  PF::ImageProcessor::Instance().submit_request( request );
+  //std::cout<<"PF::ImageArea::on_expose_event(): redraw_start request submitted."<<std::endl;
+
+	double x1, y1, x2, y2;
+	cr->get_clip_extents( x1, y1, x2, y2 );
+	int ix1=x1, iy1=y1, ix2=x2, iy2=y2;
+  area_tot.left = ix1;
+	area_tot.top = iy1;
+	area_tot.width = ix2+1-ix1;
+	area_tot.height = iy2+1-iy1;
+  submit_area( area_tot );
+
   cairo_rectangle_list_t *list =  cairo_copy_clip_rectangle_list (cr->cobj());
   for (int i = list->num_rectangles - 1; i >= 0; --i) {
     cairo_rectangle_t *rect = &list->rectangles[i];
@@ -231,17 +339,18 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	     <<" -> "<<rect->width<<","<<rect->height<<std::endl;
 #endif
     VipsRect area = {rect->x, rect->y, rect->width, rect->height};
-    expose_rect( area, cr );
+    //submit_area( area );
   }
+
+  request.sink = this;
+  request.area = area_tot;
+  request.request = PF::IMAGE_REDRAW_END;
+  //std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_end request."<<std::endl;
+  PF::ImageProcessor::Instance().submit_request( request );
+  //std::cout<<"PF::ImageArea::on_expose_event(): redraw_end request submitted."<<std::endl;
 #ifdef DEBUG_DISPLAY    
   std::cout<<std::endl;
 #endif
-  
-  // Draw the image in the middle of the drawing area, or (if the image is
-  // larger than the drawing area) draw the middle part of the image.
-  //Gdk::Cairo::set_source_pixbuf(cr, m_image,
-  //  (width - m_image->get_width())/2, (height - m_image->get_height())/2);
-  cr->paint();
   
   return true;
 }
@@ -257,6 +366,8 @@ void PF::ImageArea::update()
   std::cout<<"PF::ImageArea::update(): called"<<std::endl;
 #endif
   if( !get_view() || !get_view()->get_output() ) return;
+
+  //return;
 
   VipsImage* image = NULL;
   if( display_merged || (active_layer<0) ) {
@@ -299,16 +410,25 @@ void PF::ImageArea::update()
   unsigned int level = get_view()->get_level();
   outimg = image;
 
-  VIPS_UNREF( region ); 
-  VIPS_UNREF( mask_region ); 
-  VIPS_UNREF( display_image ); 
-  VIPS_UNREF( mask ); 
+  //VIPS_UNREF( region ); 
+  //VIPS_UNREF( display_image ); 
+  //PF_UNREF( outimg, "ImageArea::update() outimg unref" );
+  PF_UNREF( region, "ImageArea::update() region unref" );
+  PF_UNREF( display_image, "ImageArea::update() display_image unref" );
 
   convert2srgb->get_par()->set_image_hints( image );
   convert2srgb->get_par()->set_format( get_view()->get_format() );
   std::vector<VipsImage*> in; in.push_back( image );
   VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
-  g_object_unref( image );
+  //PF_UNREF( image, "ImageArea::update() image unref" );
+  // "image" is managed by photoflow, therefore it is not necessary to unref it
+  // after the call to convert2srgb: the additional reference is owned by
+  // "srgbimg" and will be removed when "srgbimg" is deleted.
+  // This works also in the case when "image" and "srgbimg" are the same object,
+  // as the additional reference will be removed when calling 
+  // g_object_unref(srgbimg) later on
+
+  PF_PRINT_REF( srgbimg, "ImageArea::update(): srgbimg after convert2srgb: " );
 #ifndef NDEBUG
   std::cout<<"ImageArea::update(): image="<<image<<"   ref_count="<<G_OBJECT( image )->ref_count<<std::endl;
 #endif
@@ -327,7 +447,8 @@ void PF::ImageArea::update()
       invert->get_par()->set_format( get_view()->get_format() );
       in.clear(); in.push_back( node->image );
       VipsImage* mapinverted = invert->get_par()->build(in, 0, NULL, NULL, level );
-      g_object_unref( node->image );
+      //g_object_unref( node->image );
+      PF_UNREF( node->image, "ImageArea::update() node->image unref" );
 
       uniform->get_par()->set_image_hints( srgbimg );
       uniform->get_par()->set_format( get_view()->get_format() );
@@ -335,8 +456,10 @@ void PF::ImageArea::update()
       uniform->get_par()->set_opacity( 0.8 );
       in.clear(); in.push_back( srgbimg );
       VipsImage* mapimage = uniform->get_par()->build(in, 0, NULL, mapinverted, level );
-      g_object_unref( srgbimg );
-      g_object_unref( mapinverted );
+      //g_object_unref( srgbimg );
+      PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
+      //g_object_unref( mapinverted );
+      PF_UNREF( mapinverted, "ImageArea::update() mapinverted unref" );
       srgbimg = mapimage;
     }
   }
@@ -347,23 +470,24 @@ void PF::ImageArea::update()
   convert_format->get_par()->set_image_hints( srgbimg );
   convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
   outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
-  g_object_unref( srgbimg );
+  //g_object_unref( srgbimg );
+  PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
 #ifndef NDEBUG
   std::cout<<"ImageArea::update(): srgbimg="<<srgbimg<<"   ref_count="<<G_OBJECT( srgbimg )->ref_count<<std::endl;
 #endif
 
   display_image = im_open( "display_image", "p" );
-  mask = vips_image_new();
 
-  if (vips_sink_screen2 (outimg, display_image, mask,
+  if (vips_sink_screen2 (outimg, display_image, NULL,
 			 64, 64, (2000/64)*(2000/64), 
 			 //6400, 64, (2000/64), 
-			 0, sink_notify, this))
+			 0, NULL, this))
   
     vips::verror ();
-  g_object_unref( outimg );
+  //g_object_unref( outimg );
+  //PF_UNREF( outimg, "ImageArea::update() outimg unref" );
 #ifndef NDEBUG
-  std::cout<<"ImageArea::update(): srgbimg="<<outimg<<"   ref_count="<<G_OBJECT( outimg )->ref_count<<std::endl;
+  std::cout<<"ImageArea::update(): outimg="<<outimg<<"   ref_count="<<G_OBJECT( outimg )->ref_count<<std::endl;
 #endif
   
 #ifdef DEBUG_DISPLAY
@@ -375,8 +499,6 @@ void PF::ImageArea::update()
   std::cout<<"Image size: "<<display_image->Xsize<<","
 	   <<display_image->Ysize<<std::endl;
 #endif
-
-  mask_region = vips_region_new( mask );
 
   set_size_request (display_image->Xsize, display_image->Ysize);
 
@@ -404,7 +526,14 @@ void PF::ImageArea::update()
 
   // Request a complete redraw of the image area. 
   //set_processing( true );
-  queue_draw();
+  //signal_queue_draw.emit();
+  Update * update = g_new (Update, 1);
+  update->image_area = this;
+  update->rect.width = update->rect.height = 0;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::update(): installing idle callback."<<std::endl;
+#endif
+  gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): queue_draw() called"<<std::endl;
 #endif
@@ -431,10 +560,23 @@ void PF::ImageArea::update( const VipsRect& area )
   scaled_area.width = area.width * fact;
   scaled_area.height = area.height * fact;
 
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::update( area ): called"<<std::endl;
+  std::cout<<"                               display_image="<<display_image<<std::endl;
+  std::cout<<"                               xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
+#endif
+
   vips_invalidate_area( display_image, &scaled_area );
-  // display_image->kill = 1;
-  // update(); return;
-  // vips_image_write_to_file( outimg, "/tmp/test.tif" );
-  // vips_image_invalidate_all( display_image );
-  queue_draw_area( scaled_area.left, scaled_area.top, scaled_area.width, scaled_area.height );
+
+  VipsRect* parea = (VipsRect*)(&scaled_area);
+  if (vips_region_prepare (region, parea))
+    return;
+
+  double_buffer.lock();
+  double_buffer.get_active().copy( region, area );
+  Update * update = g_new (Update, 1);
+  update->image_area = this;
+  std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
+  gdk_threads_add_idle ((GSourceFunc) render_cb, update);
+  double_buffer.unlock();
 }

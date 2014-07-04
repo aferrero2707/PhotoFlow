@@ -6,8 +6,8 @@
 
 #include "../operations/image_reader.hh"
 #include "../operations/invert.hh"
-#include "../operations/brightness_contrast.hh"
-#include "../operations/gradient.hh"
+//#include "../operations/brightness_contrast.hh"
+//#include "../operations/gradient.hh"
 
 //#include "../gui/operations/brightness_contrast_config.hh"
 
@@ -230,27 +230,38 @@ main( int argc, char **argv )
     if( !(in = vips_image_new_from_file( argv[2] )) )
       vips_error_exit( "unable to open" ); 
 
+    std::cout<<"in refcount after new_from_file:  "<<G_OBJECT(in)->ref_count<<std::endl;
+
     temp = in;
 
-    for(int i = 0; i < 1000; i++) {
+    for(int i = 0; i < 4; i++) {
     
+      std::cout<<std::endl;
+      std::cout<<"refcount before negative("<<i<<"): in("<<temp<<")="<<G_OBJECT(temp)->ref_count<<std::endl;
       if( negative( temp, &out, "image_max", 128, NULL ) ) {
 	g_object_unref( temp );
 	vips_error_exit( "unable to invert" ); 
       }
+      std::cout<<"refcount after negative("<<i<<"):  in("<<temp<<")="<<G_OBJECT(temp)->ref_count
+	       <<"  out("<<out<<")="<<G_OBJECT(out)->ref_count<<std::endl;
 
       /* We have a ref to out, out holds a ref to the negative operation,
        * and the operation holds a ref to in. We can safely unref in and
        * it'll be unreffed when we unref out.
        */
       g_object_unref( temp );
-
+      std::cout<<std::endl;
+      std::cout<<"refcount after unref(in):  in("<<temp<<")="<<G_OBJECT(temp)->ref_count
+	       <<"  out("<<out<<")="<<G_OBJECT(out)->ref_count<<std::endl;
+      std::cout<<"-----------------------------------"<<std::endl;
       temp = out;
 
     }
 
     printf("Writing output image...\n");
 
+    std::cout<<"refcount before write_to_file:  in("<<in<<")="<<G_OBJECT(in)->ref_count
+	       <<"  out("<<out<<")="<<G_OBJECT(out)->ref_count<<std::endl;
     if( vips_image_write_to_file( out, argv[3] ) ) { 
       g_object_unref( out );
       vips_error_exit( "unable to write" ); 
@@ -258,7 +269,11 @@ main( int argc, char **argv )
 
     printf("...done\n");
 
+    std::cout<<"refcount after write_to_file:  in("<<in<<")="<<G_OBJECT(in)->ref_count
+	       <<"  out("<<out<<")="<<G_OBJECT(out)->ref_count<<std::endl;
     g_object_unref( out );
+    std::cout<<"refcount after unref(out):  in("<<in<<")="<<G_OBJECT(in)->ref_count
+	       <<"  out("<<out<<")="<<G_OBJECT(out)->ref_count<<std::endl;
   } else {
 
     std::vector<VipsImage*> in;
@@ -276,14 +291,14 @@ main( int argc, char **argv )
     limg->set_name( "input image" );
     layer_manager.get_layers().push_back( limg );
 
-    for(int i = 0; i < 0; i++) {    
+    for(int i = 0; i < 4; i++) {    
       PF::Layer* linv1 = layer_manager.new_layer();
       linv1->set_processor( new PF::Processor<PF::InvertPar,PF::Invert>() );
       linv1->set_name( "invert" );
       layer_manager.get_layers().push_back( linv1 );
     }
 
-    pf_image->update();
+    pf_image->do_update();
 
     PF::View* view = pf_image->get_view( 0 );
 

@@ -27,6 +27,7 @@
 
  */
 
+#include "../../base/imageprocessor.hh"
 #include "../../operations/draw.hh"
 
 #include "draw_config.hh"
@@ -36,8 +37,14 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Draw" ),
   pen_color_label("Pen color:              "),
   bgd_color_label("Background color: "),
+#ifdef GTKMM_2
+  pen_color_button( Gdk::Color("white") ),
+  bgd_color_button( Gdk::Color("black") ),
+#endif
+#ifdef GTKMM_3
   pen_color_button( Gdk::RGBA("white") ),
   bgd_color_button( Gdk::RGBA("black") ),
+#endif
   pen_size( this, "pen_size", "Pen size: ", 5, 0, 1000000, 1, 10, 1),
   pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100)
 {
@@ -109,9 +116,20 @@ void PF::DrawConfigDialog::on_pen_color_changed()
   PF::DrawPar* par = dynamic_cast<PF::DrawPar*>( processor->get_par() );
   if( !par ) return;
   
+#ifdef GTKMM_2
+  float value = pen_color_button.get_color().get_red();
+  par->get_pen_color().get().r = value/65535;
+  value = pen_color_button.get_color().get_green();
+  par->get_pen_color().get().g = value/65535;
+  value = pen_color_button.get_color().get_blue();
+  par->get_pen_color().get().b = value/65535;
+#endif
+
+#ifdef GTKMM_3
   par->get_pen_color().get().r = pen_color_button.get_rgba().get_red();
   par->get_pen_color().get().g = pen_color_button.get_rgba().get_green();
   par->get_pen_color().get().b = pen_color_button.get_rgba().get_blue();
+#endif
 
   if( layer->get_image() )
     layer->get_image()->update();
@@ -131,9 +149,20 @@ void PF::DrawConfigDialog::on_bgd_color_changed()
   PF::DrawPar* par = dynamic_cast<PF::DrawPar*>( processor->get_par() );
   if( !par ) return;
   
+#ifdef GTKMM_2
+  float value = pen_color_button.get_color().get_red();
+  par->get_pen_color().get().r = value/65535;
+  value = pen_color_button.get_color().get_green();
+  par->get_pen_color().get().g = value/65535;
+  value = pen_color_button.get_color().get_blue();
+  par->get_pen_color().get().b = value/65535;
+#endif
+
+#ifdef GTKMM_3
   par->get_bgd_color().get().r = bgd_color_button.get_rgba().get_red();
   par->get_bgd_color().get().g = bgd_color_button.get_rgba().get_green();
   par->get_bgd_color().get().b = bgd_color_button.get_rgba().get_blue();
+#endif
 
   if( layer->get_image() )
     layer->get_image()->update();
@@ -219,8 +248,23 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
     par->draw_point( x, y, update );
 
     if( (update.width > 0) &&
-	(update.height > 0) )
-      view->update( update );
+	(update.height > 0) ) {
+      if( PF::PhotoFlow::Instance().is_batch() ) {
+	view->update( update );	
+      } else {
+	ProcessRequestInfo request;
+	request.view = view;
+	request.request = PF::IMAGE_UPDATE;
+	request.area.left = update.left;
+	request.area.top = update.top;
+	request.area.width = update.width;
+	request.area.height = update.height;
+	//#ifndef NDEBUG
+	std::cout<<"PF::DrawConfigDialog::draw_point(): submitting rebuild request."<<std::endl;
+	//#endif
+	PF::ImageProcessor::Instance().submit_request( request );
+      }
+    }
   }
 }
 

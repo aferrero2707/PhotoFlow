@@ -69,6 +69,8 @@ namespace PF {
 
     void update_model(Gtk::TreeModel::Row parent_row);
 
+    bool select_layer( int id, Gtk::TreeModel::Row& parent_row );
+
   public:
     LayerTree( bool is_map=false );
     virtual ~LayerTree();
@@ -77,6 +79,10 @@ namespace PF {
     LayerTreeColumns& get_columns() { return columns; }
 
     Gtk::TreeView& get_tree() { return treeView; }
+
+    PF::Layer* get_selected_layer();
+
+    bool select_layer( int id );
 
     bool is_map() { return map_flag; }
 

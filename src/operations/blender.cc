@@ -56,9 +56,10 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   // The blending code will simply force the mode to "passthrough" and copy invec[1] to outnew
   // if invec[0] is NULL
   if( (in1 != NULL) && (in2 != NULL) && (get_blend_mode() != PF_BLEND_PASSTHROUGH) ) {
-    VipsImage* invec[2] = {in1, in2};
-    vips_layer( invec, 2, &outnew, 0, get_processor(), NULL, omap, get_demand_hint(),
-		get_xsize(), get_ysize(), get_nbands() );
+    std::vector<VipsImage*> in_;
+    in_.push_back( in1 );
+    in_.push_back( in2 );
+    outnew = PF::OpParBase::build( in_, first, NULL, omap, level );
   } else if( (in1 != NULL) && (in2 != NULL) && (get_blend_mode() == PF_BLEND_PASSTHROUGH) ) {
     outnew = in2;
     g_object_ref( outnew );
@@ -67,7 +68,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     outnew = in2;
     g_object_ref( outnew );
   } else if( (in2 == NULL) && (in1 != NULL) ) {
-    // in1 is NULL, force mode to PASSTHROUGH and copy in1 to output
+    // in2 is NULL, force mode to PASSTHROUGH and copy in1 to output
     outnew = in1;
     g_object_ref( outnew );
   } else {

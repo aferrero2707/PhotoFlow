@@ -94,6 +94,10 @@ PF::ImageEditor::ImageEditor( Image* img ):
     connect( sigc::mem_fun(*this, &PF::ImageEditor::on_motion_notify_event) ); 
   */
 
+  imageArea.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK );
+  //imageArea_scrolledWindow.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK );
+  //add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK );
+
   show_all_children();
 }
 
@@ -143,13 +147,15 @@ void PF::ImageEditor::zoom_in()
 
 void PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
 {
-  /*
-  std::cout<<"PF::ImageEditor::screen2image(): adjustments:"
+#ifndef NDEBUG
+  /**/
+  std::cout<<"PF::ImageEditor::screen2image(): x+"<<x<<"  y="<<y<<"  adjustments:"
 	   <<"  h="<<imageArea_scrolledWindow.get_hadjustment()->get_value()
 	   <<"  v="<<imageArea_scrolledWindow.get_vadjustment()->get_value()<<std::endl;
-  */
-  x += imageArea_scrolledWindow.get_hadjustment()->get_value();
-  y += imageArea_scrolledWindow.get_vadjustment()->get_value();
+  /**/
+#endif
+  //x += imageArea_scrolledWindow.get_hadjustment()->get_value();
+  //y += imageArea_scrolledWindow.get_vadjustment()->get_value();
   x -= imageArea.get_xoffset();
   y -= imageArea.get_yoffset();
   float zoom_fact = get_zoom_factor();

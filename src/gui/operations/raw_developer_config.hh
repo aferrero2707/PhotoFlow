@@ -50,6 +50,12 @@ namespace PF {
     Slider wbGreenSlider;
     Slider wbBlueSlider;
 
+    Slider wb_target_L_slider;
+    Slider wb_target_a_slider;
+    Slider wb_target_b_slider;
+    Gtk::Label wb_best_match_label;
+    Gtk::HBox wbTargetBox;
+
     ExposureSlider exposureSlider;
 
     Selector profileModeSelector;
