@@ -43,7 +43,7 @@
  #endif
 
 #include <gtkmm/main.h>
-#include <vips/vips>
+//#include <vips/vips>
 #include <vips/vips.h>
 
 #include "base/imageprocessor.hh"
@@ -77,7 +77,8 @@ int main (int argc, char *argv[])
   */
 
   if (vips_init (argv[0]))
-    vips::verror ();
+    //vips::verror ();
+		return 1;
 
   vips_layer_get_type();
 

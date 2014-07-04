@@ -19,7 +19,7 @@ find_package (TIFF REQUIRED)
 pkg_check_modules(SIGC2 REQUIRED sigc++-2.0)
 
 pkg_check_modules(VIPS REQUIRED vips)
-pkg_check_modules(VIPSCC REQUIRED vipsCC)
+#pkg_check_modules(VIPSCC REQUIRED vipsCC)
 
 #pkg_check_modules(GTKMM REQUIRED gtkmm) 
 pkg_check_modules(GTKMM3 gtkmm-3.0) 

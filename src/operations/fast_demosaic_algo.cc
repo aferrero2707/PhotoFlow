@@ -36,6 +36,7 @@
  */
 
 #include <stdlib.h>
+#include <math.h>
 
 #define RT_EMU
 

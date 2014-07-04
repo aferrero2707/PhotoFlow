@@ -32,13 +32,14 @@
 #define OPERATION_H
 
 #include <string>
+#include <list>
 #include <vector>
 #include <iostream>
 #include <fstream>
 
 
 #include <vips/vips.h>
-#include <vips/vips>
+//#include <vips/vips>
 
 #include "pftypes.hh"
 

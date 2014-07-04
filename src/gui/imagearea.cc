@@ -482,8 +482,9 @@ void PF::ImageArea::update()
 			 64, 64, (2000/64)*(2000/64), 
 			 //6400, 64, (2000/64), 
 			 0, NULL, this))
-  
-    vips::verror ();
+		return;
+    //vips::verror ();
+
   //g_object_unref( outimg );
   //PF_UNREF( outimg, "ImageArea::update() outimg unref" );
 #ifndef NDEBUG

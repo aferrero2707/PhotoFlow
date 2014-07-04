@@ -41,7 +41,7 @@
 
 #include <gtkmm.h>
 
-#include <vips/vips>
+//#include <vips/vips>
 
 #include "../base/photoflow.hh"
 #include "../base/view.hh"
