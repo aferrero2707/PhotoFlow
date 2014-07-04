@@ -41,6 +41,13 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
    
    instead.
    
+   If you do not already have a very recent version of VIPS installed in your system, a second helper script is provided 
+   which will download, configure and compile libvips for you, and link it against photoflow:
+   
+        $ cd PhotoFlow/build
+        $ bash ./build_all.sh
+   
+
 3. If all goes well, you can now open an image file with PhotoFlow:
 
         $ ./src/photoflow image_file_name
