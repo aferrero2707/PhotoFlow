@@ -31,6 +31,8 @@
 #ifndef OPERATION_H
 #define OPERATION_H
 
+#include <unistd.h>
+
 #include <string>
 #include <list>
 #include <vector>

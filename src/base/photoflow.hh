@@ -30,6 +30,8 @@
 #ifndef VIPS_PHOTOFLOW_H
 #define VIPS_PHOTOFLOW_H
 
+#include <unistd.h>
+
 #include "pftypes.hh"
 //#include "processor.hh"
 
