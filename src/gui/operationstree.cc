@@ -122,7 +122,11 @@ static void* collect_class( GType type )
 
     g_object_unref( operation ); 
 
-    if( (nout==1) && !(flags & VIPS_OPERATION_DEPRECATED) ) 
+    if( (nout==1) 
+#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
+				&& !(flags & VIPS_OPERATION_DEPRECATED) 
+#endif
+				) 
       i->second.push_back( klass->nickname );
   }
 
