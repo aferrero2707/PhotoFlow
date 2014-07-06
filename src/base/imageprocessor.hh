@@ -45,7 +45,9 @@ namespace PF
     IMAGE_UPDATE,
     IMAGE_REDRAW_START,
     IMAGE_REDRAW_END,
-    IMAGE_REDRAW
+    IMAGE_REDRAW,
+    IMAGE_DESTROY,
+    PROCESSOR_END
   };
   
   struct ProcessRequestInfo
@@ -83,6 +85,13 @@ namespace PF
     void run();
 
     void submit_request( ProcessRequestInfo request );
+
+		void join()
+		{
+			if( thread )
+				g_thread_join( thread );
+			thread = NULL;
+		}
 
     //void add_image( Image* img );
     //void remove_image( Image* img );

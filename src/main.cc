@@ -132,6 +132,8 @@ int main (int argc, char *argv[])
   //Shows the window and returns when it is closed.
   Gtk::Main::run(mainWindow);
 
+	//PF::ImageProcessor::Instance().join();
+
   im_close_plugins();
 
   return 0;

@@ -48,7 +48,8 @@ PF::ImageProcessor::ImageProcessor()
 
 void PF::ImageProcessor::run()
 {
-  while( true ) {
+	bool running = true;
+  while( running ) {
     g_mutex_lock( requests_mutex );
     if( requests.empty() ) {
       //std::cout<<"PF::ImageProcessor::run(): waiting for new requests..."<<std::endl;
@@ -115,6 +116,15 @@ void PF::ImageProcessor::run()
       // Notify that the processing is finished
       //g_cond_signal( request.done );
       //g_mutex_unlock( request.mutex );
+      break;
+    case IMAGE_DESTROY:
+      if( !request.image ) continue;
+      delete request.image;
+      std::cout<<"PF::ImageProcessor::run(): image destroyed."<<std::endl;
+      break;
+    case PROCESSOR_END:
+			running = false;
+      std::cout<<"PF::ImageProcessor::run(): processing ended."<<std::endl;
       break;
     default:
       break;
