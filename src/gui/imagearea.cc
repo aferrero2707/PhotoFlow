@@ -83,16 +83,19 @@ PF::ImageArea::ImageArea( View* v ):
   draw_done = vips_g_cond_new();
   draw_mutex = vips_g_mutex_new();
 
-  signal_queue_draw.connect(sigc::mem_fun(*this, &ImageArea::queue_draw));
+  //signal_queue_draw.connect(sigc::mem_fun(*this, &ImageArea::queue_draw));
 }
 
 PF::ImageArea::~ImageArea ()
 {
   std::cout<<"Deleting image area"<<std::endl;
-  VIPS_UNREF( region );
-  VIPS_UNREF( display_image );
-  //VIPS_UNREF( image );
+  PF_UNREF( region, "ImageArea::~ImageArea()" );
+  PF_UNREF( display_image, "ImageArea::~ImageArea()" );
+  PF_UNREF( outimg, "ImageArea::~ImageArea()" );
   delete convert2srgb;
+  delete convert_format;
+  delete invert;
+  delete uniform;
   //delete pf_image;
 }
 
@@ -378,27 +381,27 @@ void PF::ImageArea::update()
     if( !(node->image) ) return;
 
     if( node->processor &&
-	node->processor->get_par() &&
-	!(node->processor->get_par()->is_map()) ) {
+				node->processor->get_par() &&
+				!(node->processor->get_par()->is_map()) ) {
       image = node->image;
     } else {
       PF::Layer* container_layer = 
-	get_view()->get_image()->get_layer_manager().
-	get_container_layer( active_layer );
+				get_view()->get_image()->get_layer_manager().
+				get_container_layer( active_layer );
       if( !container_layer ) return;
 
       PF::ViewNode* container_node = 
-	get_view()->get_node( container_layer->get_id() );
+				get_view()->get_node( container_layer->get_id() );
       if( !container_node ) return;
       if( container_node->input_id < 0 ) return;
 
       PF::Layer* input_layer = 
-	get_view()->get_image()->get_layer_manager().
-	get_layer( container_node->input_id );
+				get_view()->get_image()->get_layer_manager().
+				get_layer( container_node->input_id );
       if( !input_layer ) return;
 
       PF::ViewNode* input_node = 
-	get_view()->get_node( input_layer->get_id() );
+				get_view()->get_node( input_layer->get_id() );
       if( !input_node ) return;
       if( !(input_node->image) ) return;
 
@@ -408,11 +411,11 @@ void PF::ImageArea::update()
   if( !image ) return;
 
   unsigned int level = get_view()->get_level();
-  outimg = image;
+  //outimg = image;
 
   //VIPS_UNREF( region ); 
   //VIPS_UNREF( display_image ); 
-  //PF_UNREF( outimg, "ImageArea::update() outimg unref" );
+  PF_UNREF( outimg, "ImageArea::update() outimg unref" );
   PF_UNREF( region, "ImageArea::update() region unref" );
   PF_UNREF( display_image, "ImageArea::update() display_image unref" );
 

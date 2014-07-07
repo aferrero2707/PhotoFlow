@@ -55,7 +55,7 @@ VipsImage* PF::ConvertFormatPar::build(std::vector<VipsImage*>& in, int first,
 #endif
 
   if( in[first]->BandFmt == get_format() ) {
-    g_object_ref( in[first] );
+    PF_REF( in[first], "ConvertFormatPar::build(): BandFmt == get_format()" );
     return in[first];
   }
 

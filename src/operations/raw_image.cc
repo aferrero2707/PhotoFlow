@@ -59,7 +59,8 @@ PF::RawImage::RawImage( const Glib::ustring f ):
     return;
 
   raw_loader->raw2image();
-#warning "TODO: add a custom subtract_black() function that works in unbounded mode"
+
+  #warning "TODO: add a custom subtract_black() function that works in unbounded mode"
   raw_loader->subtract_black();
 
 	int iwidth = raw_loader->imgdata.sizes.iwidth;
@@ -71,6 +72,9 @@ PF::RawImage::RawImage( const Glib::ustring f ):
 	if( !rtengine::CameraConstantsStore::getInstance() )
 		rtengine::CameraConstantsStore::initCameraConstants(PF::PhotoFlow::Instance().get_base_dir(),"");
 	int result = loadRaw( true, true, NULL, 1 );
+	if( iwidth == 0 || iheight == 0 )
+		return;
+
 	compress_image();
 	if ((this->get_cblack(4)+1)/2 == 1 && (this->get_cblack(5)+1)/2 == 1) {
 		for (int c = 0; c < 4; c++){
@@ -251,8 +255,9 @@ PF::RawImage::RawImage( const Glib::ustring f ):
 
 PF::RawImage::~RawImage()
 {
-  if( image ) g_object_unref( image );
-  if( demo_image ) g_object_unref( demo_image );
+  if( image ) PF_UNREF( image, "RawImage::~RawImage() image" );
+  if( demo_image ) PF_UNREF( demo_image, "RawImage::~RawImage() demo_image" );
+	std::cout<<"RawImage::~RawImage() called."<<std::endl;
 }
 
 

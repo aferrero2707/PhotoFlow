@@ -49,14 +49,17 @@ PF::RawLoaderPar::RawLoaderPar():
 
 PF::RawLoaderPar::~RawLoaderPar()
 {
+	std::cout<<"RawLoaderPar::~RawLoaderPar(): raw_image="<<(void*)raw_image<<std::endl;
   if( raw_image ) {
     raw_image->unref();
+		std::cout<<"RawLoaderPar::~RawLoaderPar(): raw_image->get_nref()="<<raw_image->get_nref()<<std::endl;
     if( raw_image->get_nref() == 0 ) {
       std::map<Glib::ustring, RawImage*>::iterator i = 
-	raw_images.find( file_name.get() );
+				raw_images.find( file_name.get() );
       if( i != raw_images.end() ) 
-	raw_images.erase( i );
+				raw_images.erase( i );
       delete raw_image;
+			std::cout<<"RawLoaderPar::~RawLoaderPar(): raw_image deleted"<<std::endl;
 			raw_image = 0;
     }
   }
@@ -71,6 +74,9 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
 
   if( file_name.get().empty() )
     return NULL;
+
+	if( raw_image )
+		raw_image->unref();
 
   std::map<Glib::ustring, RawImage*>::iterator i = 
     raw_images.find( file_name.get() );
@@ -93,7 +99,7 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
 
 
   if( image ) {
-    g_object_ref( image );
+    PF_REF( image, "RawLoaderPar::build()" );
     set_image_hints( image );
   }
   return image;

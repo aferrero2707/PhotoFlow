@@ -99,6 +99,30 @@ PF::PhotoFlow& PF::PhotoFlow::Instance() {
 
 
 
+void PF::pf_object_ref(GObject* object, const char* msg)
+{
+#ifdef PF_VERBOSE_UNREF
+  std::cout<<"pf_object_ref(): "<<msg<<std::endl;
+  std::cout<<"                   object="<<object<<std::endl;
+#endif
+  if( !object ) {
+#ifdef PF_VERBOSE_UNREF
+    std::cout<<"                   NULL object!!!"<<std::endl;
+#endif
+    return;
+  }
+#ifdef PF_VERBOSE_UNREF
+  std::cout<<"                   ref_count before: "<<object->ref_count<<std::endl;
+#endif
+  g_object_ref( object );
+#ifdef PF_VERBOSE_UNREF
+  std::cout<<"                   ref_count after:  "<<object->ref_count<<std::endl;
+#endif
+}
+
+
+
+
 void PF::pf_object_unref(GObject* object, const char* msg)
 {
 #ifdef PF_VERBOSE_UNREF

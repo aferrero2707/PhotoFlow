@@ -99,7 +99,7 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
   GCond* draw_done;
   GMutex* draw_mutex;
 
-  Glib::Dispatcher signal_queue_draw;
+  //Glib::Dispatcher signal_queue_draw;
 
   /* The cache mask. 
    */

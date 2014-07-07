@@ -53,7 +53,7 @@ PF::ImagePyramid::~ImagePyramid()
     if( levels[i].fd >= 0 ) 
       close( levels[i].fd );
     //unlink( levels[i].raw_file_name.c_str() );
-    std::cout<<"PF::ImagePyramid::~ImagePyramid(): "<<levels[i].raw_file_name<<" removed."<<std::endl;
+    //std::cout<<"PF::ImagePyramid::~ImagePyramid(): "<<levels[i].raw_file_name<<" removed."<<std::endl;
   }
 }
 
