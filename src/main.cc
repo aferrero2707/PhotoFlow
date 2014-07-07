@@ -121,18 +121,20 @@ int main (int argc, char *argv[])
 
   //vips__leak = 1;
 
-  PF::MainWindow mainWindow;
+  PF::MainWindow* mainWindow = new PF::MainWindow();
   if( argc > 1 ) {
     fullpath = realpath( argv[1], NULL );
     if(!fullpath)
       return 1;
-    mainWindow.open_image( fullpath );
+    mainWindow->open_image( fullpath );
     free(fullpath);
   }
   //Shows the window and returns when it is closed.
-  Gtk::Main::run(mainWindow);
+  Gtk::Main::run(*mainWindow);
 
-	//PF::ImageProcessor::Instance().join();
+	delete mainWindow;
+
+	PF::ImageProcessor::Instance().join();
 
   im_close_plugins();
 

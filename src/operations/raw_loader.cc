@@ -34,6 +34,7 @@
 PF::RawLoaderPar::RawLoaderPar(): 
   OpParBase(), 
   file_name("file_name", this),
+  raw_image(NULL),
   image(NULL),
   demo_image(NULL),
   current_format(VIPS_FORMAT_NOTSET)
@@ -56,6 +57,7 @@ PF::RawLoaderPar::~RawLoaderPar()
       if( i != raw_images.end() ) 
 	raw_images.erase( i );
       delete raw_image;
+			raw_image = 0;
     }
   }
 }

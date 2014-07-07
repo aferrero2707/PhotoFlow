@@ -38,21 +38,25 @@ PF::View::~View()
   for( unsigned int i = 0; i < nodes.size(); i++ ) {
     if( nodes[i] != NULL ) {
       if( nodes[i]->image != NULL ) {
-	g_assert( G_OBJECT( nodes[i]->image )->ref_count > 0 );
-	//g_object_unref( nodes[i]->image );
-	PF::Layer* l = image->get_layer_manager().get_layer( i );
-	if( l )
-	  snprintf( tstr, 499, "PF::View::~View() unref image of layer %s",
-		    l->get_name().c_str() );
-	else
-	  snprintf( tstr, 499, "PF::View::~View() unref image (NULL layer)" );
-	PF_UNREF( nodes[i]->image, tstr );
+				g_assert( G_OBJECT( nodes[i]->image )->ref_count > 0 );
+				//g_object_unref( nodes[i]->image );
+				PF::Layer* l = image->get_layer_manager().get_layer( i );
+				if( l )
+					snprintf( tstr, 499, "PF::View::~View() unref image of layer %s",
+										l->get_name().c_str() );
+				else
+					snprintf( tstr, 499, "PF::View::~View() unref image (NULL layer)" );
+				PF_UNREF( nodes[i]->image, tstr );
       }
       if( nodes[i]->processor != NULL )
-	delete( nodes[i]->processor );
+				delete( nodes[i]->processor );
       delete nodes[i];
     }
   }
+  for( unsigned int i = 0; i < sinks.size(); i++ ) {
+    if( sinks[i] == NULL ) continue;
+		delete( sinks[i] );
+	}
 }
 
 

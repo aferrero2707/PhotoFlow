@@ -27,6 +27,7 @@
 
  */
 
+#include "../base/imageprocessor.hh"
 #include "imageeditor.hh"
 
 
@@ -36,17 +37,19 @@
 PF::ImageEditor::ImageEditor( Image* img ):
   image( img ),
   active_layer( NULL ),
-  imageArea( image->get_view(PIPELINE_ID) ),
+  //imageArea( image->get_view(PIPELINE_ID) ),
   layersWidget( image ),
   buttonZoomIn( "Zoom +" ),
   buttonZoomOut( "Zoom -" ),
   buttonShowMerged( "show merged layers" ),
   buttonShowActive( "show active layer" )
 {
-  imageArea.set_adjustments( imageArea_scrolledWindow.get_hadjustment(),
+	imageArea = new PF::ImageArea( image->get_view(PIPELINE_ID) );
+
+  imageArea->set_adjustments( imageArea_scrolledWindow.get_hadjustment(),
 			     imageArea_scrolledWindow.get_vadjustment() );
 
-  imageArea_scrolledWindow.add( imageArea );
+  imageArea_scrolledWindow.add( *imageArea );
   imageArea_eventBox.add( imageArea_scrolledWindow );
 
   radioBox.pack_start( buttonShowMerged );
@@ -71,15 +74,15 @@ PF::ImageEditor::ImageEditor( Image* img ):
   buttonZoomOut.signal_clicked().connect( sigc::mem_fun(*this,
 							&PF::ImageEditor::zoom_out) );
 
-  buttonShowMerged.signal_clicked().connect( sigc::bind( sigc::mem_fun(&imageArea,
+  buttonShowMerged.signal_clicked().connect( sigc::bind( sigc::mem_fun(imageArea,
 								       &PF::ImageArea::set_display_merged),
 							 true) );
-  buttonShowActive.signal_clicked().connect( sigc::bind( sigc::mem_fun(&imageArea,
+  buttonShowActive.signal_clicked().connect( sigc::bind( sigc::mem_fun(imageArea,
 								       &PF::ImageArea::set_display_merged),
 							 false) );
   //set_position( get_allocation().get_width()-200 );
 
-  layersWidget.signal_active_layer_changed.connect( sigc::mem_fun(&imageArea,
+  layersWidget.signal_active_layer_changed.connect( sigc::mem_fun(imageArea,
 								  &PF::ImageArea::set_active_layer) );
 
   layersWidget.signal_active_layer_changed.connect( sigc::mem_fun(this,
@@ -94,7 +97,7 @@ PF::ImageEditor::ImageEditor( Image* img ):
     connect( sigc::mem_fun(*this, &PF::ImageEditor::on_motion_notify_event) ); 
   */
 
-  imageArea.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK );
+  imageArea->add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK );
   //imageArea_scrolledWindow.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK );
   //add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK );
 
@@ -104,8 +107,14 @@ PF::ImageEditor::ImageEditor( Image* img ):
 
 PF::ImageEditor::~ImageEditor()
 {
+	/*
   if( image )
     delete image;
+	*/
+  ProcessRequestInfo request;
+  request.image = image;
+  request.request = PF::IMAGE_DESTROY;
+  PF::ImageProcessor::Instance().submit_request( request );	
 }
 
 
@@ -156,8 +165,8 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
 #endif
   //x += imageArea_scrolledWindow.get_hadjustment()->get_value();
   //y += imageArea_scrolledWindow.get_vadjustment()->get_value();
-  x -= imageArea.get_xoffset();
-  y -= imageArea.get_yoffset();
+  x -= imageArea->get_xoffset();
+  y -= imageArea->get_yoffset();
   float zoom_fact = get_zoom_factor();
   x /= zoom_fact;
   y /= zoom_fact;

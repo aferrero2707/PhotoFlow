@@ -47,7 +47,7 @@ namespace PF {
     Layer* active_layer;
 
     Gtk::VBox imageBox;
-    ImageArea imageArea;
+    ImageArea* imageArea;
     Gtk::EventBox imageArea_eventBox;
     Gtk::ScrolledWindow imageArea_scrolledWindow;
     LayerWidget layersWidget;

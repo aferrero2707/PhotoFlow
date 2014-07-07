@@ -27,11 +27,12 @@
 
  */
 
-#include "mainwindow.hh"
 #include <iostream>
 
-#include "layertree.hh"
+#include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
+#include "layertree.hh"
+#include "mainwindow.hh"
 
 
 PF::MainWindow::MainWindow():
@@ -139,6 +140,9 @@ PF::MainWindow::~MainWindow()
     if( image_editors[i] )
       delete( image_editors[i] );
   }
+  ProcessRequestInfo request;
+  request.request = PF::PROCESSOR_END;
+  PF::ImageProcessor::Instance().submit_request( request );	
   //delete pf_image;
 }
 

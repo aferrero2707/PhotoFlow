@@ -132,6 +132,7 @@ namespace PF
     {
       if(view) view->add_sink( this );
     }
+		virtual ~ViewSink() {}
 
     View* get_view() { return view; }
 
