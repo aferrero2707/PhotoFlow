@@ -66,6 +66,7 @@ namespace PF {
 
     ~LayerList() {}
 
+    void set_inhibit( bool val ) { inhibit = val; }
     void update_model();
 
     void changed();

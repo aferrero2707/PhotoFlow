@@ -149,9 +149,12 @@ void PF::Image::update( VipsRect* area )
 		}
     
 #ifndef NDEBUG
-    std::cout<<"PF::Image::update(): submitting rebuild request."<<std::endl;
+    std::cout<<"PF::Image::update(): submitting rebuild request..."<<std::endl;
 #endif
     PF::ImageProcessor::Instance().submit_request( request );
+#ifndef NDEBUG
+    std::cout<<"PF::Image::update(): request submitted."<<std::endl;
+#endif
 
     g_cond_wait( rebuild_done, rebuild_mutex );
   }
@@ -200,10 +203,19 @@ void PF::Image::do_update( VipsRect* area )
     std::cout<<"PF::Image::do_update(): updating view #"<<i<<std::endl;
 #endif
     get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100, area );
+#ifndef NDEBUG
+    std::cout<<"PF::Image::do_update(): view #"<<i<<" updated."<<std::endl;
+#endif
     //view->update();
   }
 
+#ifndef NDEBUG
+	std::cout<<"PF::Image::do_update(): finalizing..."<<std::endl;
+#endif
   get_layer_manager().rebuild_finalize();
+#ifndef NDEBUG
+	std::cout<<"PF::Image::do_update(): finalizing done."<<std::endl;
+#endif
 
 #ifndef NDEBUG
   for( unsigned int i = 0; i < get_nviews(); i++ ) {
@@ -213,6 +225,10 @@ void PF::Image::do_update( VipsRect* area )
     for(int ni = 0; ni < view->get_nodes().size(); ni++ ) {
       PF::ViewNode* node = view->get_nodes()[ni];
       if( !node ) continue;
+      if( !(node->image) ) {
+      std::cout<<"  node #"<<ni<<" ("<<(void*)node->image<<")"<<std::endl;
+				continue;
+			}
       std::cout<<"  node #"<<ni<<" ("<<(void*)node->image<<") = "<<G_OBJECT(node->image)->ref_count<<std::endl;
     }
   }
@@ -292,12 +308,12 @@ bool PF::Image::open( std::string filename )
   if( !getFileExtension( "/", filename, ext ) ) return false;
   if( ext == "pfi" ) {
 
+    add_view( VIPS_FORMAT_USHORT, 0 );
+    add_view( VIPS_FORMAT_USHORT, 0 );
     PF::load_pf_image( filename, this );
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
     //add_view( VIPS_FORMAT_UCHAR, 0 );
-    add_view( VIPS_FORMAT_FLOAT, 0 );
-    add_view( VIPS_FORMAT_USHORT, 0 );
 
   } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" ) {
 
@@ -335,7 +351,7 @@ bool PF::Image::open( std::string filename )
     */
   } else {
     
-    add_view( VIPS_FORMAT_FLOAT, 0 );
+    add_view( VIPS_FORMAT_USHORT, 0 );
     add_view( VIPS_FORMAT_USHORT, 0 );
 
     PF::Layer* limg = layer_manager.new_layer();
@@ -363,7 +379,7 @@ bool PF::Image::open( std::string filename )
   //imageArea.set_view( pf_image->get_view(0) );
   //pf_image->signal_modified.connect( sigc::mem_fun(&imageArea, &ImageArea::update_image) );
   //sleep(5);
-  update();
+  //update();
 }
 
 

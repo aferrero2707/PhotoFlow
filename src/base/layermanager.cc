@@ -638,8 +638,10 @@ bool PF::LayerManager::rebuild_prepare()
 bool PF::LayerManager::rebuild( View* view, colorspace_t cs, int width, int height, VipsRect* area )
 {
   VipsImage* output = rebuild_chain( view, cs, width, height, layers, NULL );
+	//std::cout<<"LayerManager::rebuild(): chain rebuild finished."<<std::endl;
   view->set_output( output );
   view->update( area );
+	//std::cout<<"LayerManager::rebuild(): view updated."<<std::endl;
   return true;
 }
 

@@ -839,10 +839,15 @@ render_tile_request( Render *render, VipsRegion *reg, VipsRect *area )
 	VIPS_DEBUG_MSG( "render_tile_request: asking for %dx%d\n",
 		area->left, area->top );
 
+	//printf("render_tile_request: asking for %dx%d\n",
+	//			 area->left, area->top );
+
 	if( (tile = render_tile_lookup( render, area )) ) {
 		/* We already have a tile at this position. If it's invalid,
 		 * ask for a repaint.
 		 */
+		//printf("render_tile_request:  tile->region->invalid=%d\n",
+		//			 (int)tile->region->invalid );
 		if( tile->region->invalid ) 
 			tile_queue( tile, reg );
 		else

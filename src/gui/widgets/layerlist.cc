@@ -86,6 +86,7 @@ void PF::LayerList::update_model()
     lid = layer->get_extra_inputs()[0];
 
   int active_lid = -1;
+  int first_lid = -1;
   int last_lid = -1;
   std::list< std::pair<std::string,Layer*> >::reverse_iterator iter;
   for( iter = list.rbegin(); iter != list.rend(); iter++ ) {
@@ -95,33 +96,37 @@ void PF::LayerList::update_model()
     row[columns.col_layer] = (*iter).second;
     if( (*iter).second ) {
       if( (*iter).second->get_id() == lid) {
-	cbox.set_active( model->children().size()-1 );
-	active_lid = (*iter).second->get_id();
+				cbox.set_active( model->children().size()-1 );
+				active_lid = (*iter).second->get_id();
       }
       last_lid = (*iter).second->get_id();
+			if( first_lid < 0 )
+				first_lid = (*iter).second->get_id();
     }
   }
   if( active_lid < 0 ) {
     // No layer matching any of the extra inputs has been found.
     // Either there are no extra inputs yet defined, or the list of layers has changed
-    if( last_lid >= 0 ) {
+    if( first_lid >= 0 ) {
       // There are however some layers that have been inserted in the list of potential
       // sources, therefore we pick the first one
-      cbox.set_active( model->children().size()-1 );
-      active_lid = last_lid;
+      cbox.set_active( 0 );
+      active_lid = first_lid;
+      //cbox.set_active( model->children().size()-1 );
+      //active_lid = last_lid;
     }
   }
 
-  inhibit = false;
   if( lid_prev != active_lid ){
     changed();
   }
+  inhibit = false;
 }
 
 
 void PF::LayerList::changed()
 {
-  if( inhibit ) return;
+  //if( inhibit ) return;
   if( !dialog ) return;
   PF::Layer* layer = dialog->get_layer();
   if(! layer ) return;
@@ -140,8 +145,10 @@ void PF::LayerList::changed()
 	       <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
       layer->set_input( 0, l->get_id() );
       layer->set_dirty( true );
-      std::cout<<"  updating image"<<std::endl;
-      image->update();
+			if( !inhibit ) {
+				std::cout<<"  updating image"<<std::endl;
+				image->update();
+			}
     }
   }
 }
