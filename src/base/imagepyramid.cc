@@ -110,6 +110,9 @@ void PF::ImagePyramid::reset()
 
 void PF::ImagePyramid::update( const VipsRect& area )
 {  
+#ifndef NDEBUG
+	std::cout<<"PF::ImagePyramid::update() called."<<std::endl;
+#endif
   if( levels.empty() ) 
     return;
 
@@ -135,6 +138,9 @@ void PF::ImagePyramid::update( const VipsRect& area )
     if( levels[li].fd < 0 ) break;
     if( !levels[li].image ) break;
 
+#ifndef NDEBUG
+		std::cout<<"PF::ImagePyramid::update(): processing level #"<<li<<std::endl;
+#endif
     int in_fd = levels[li-1].fd;
     int out_fd = levels[li].fd;
 

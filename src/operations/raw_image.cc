@@ -72,6 +72,10 @@ PF::RawImage::RawImage( const Glib::ustring f ):
 	if( !rtengine::CameraConstantsStore::getInstance() )
 		rtengine::CameraConstantsStore::initCameraConstants(PF::PhotoFlow::Instance().get_base_dir(),"");
 	int result = loadRaw( true, true, NULL, 1 );
+	if( result != 0 ) {
+		std::cout<<"RawImage::RawImage("<<f <<"): loadRaw() result="<<result<<std::endl;
+		return;
+	}
 	if( iwidth == 0 || iheight == 0 )
 		return;
 

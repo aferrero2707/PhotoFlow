@@ -107,8 +107,9 @@ namespace PF
     void unlock() { g_mutex_unlock( rebuild_mutex); }
     void rebuild_done_signal() { g_cond_signal( rebuild_done ); }
 
-    void update();
-    void do_update();
+    void update( VipsRect* area=NULL );
+    void update_all() { update( NULL ); }
+    void do_update( VipsRect* area );
 
     bool open( std::string filename );
 

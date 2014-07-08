@@ -351,9 +351,9 @@ bool PF::LayerManager::insert_layer( Layer* layer, int32_t lid )
 
 
 VipsImage* PF::LayerManager::rebuild_chain( PF::View* view, colorspace_t cs, 
-					    int width, int height, 
-					    std::list<PF::Layer*>& list, 
-					    PF::Layer* previous_layer )
+																						int width, int height, 
+																						std::list<PF::Layer*>& list, 
+																						PF::Layer* previous_layer )
 { 
   ViewNode* previous_node = NULL;
   VipsImage* previous = NULL;
@@ -635,11 +635,11 @@ bool PF::LayerManager::rebuild_prepare()
 }
 
 
-bool PF::LayerManager::rebuild(View* view, colorspace_t cs, int width, int height)
+bool PF::LayerManager::rebuild( View* view, colorspace_t cs, int width, int height, VipsRect* area )
 {
   VipsImage* output = rebuild_chain( view, cs, width, height, layers, NULL );
   view->set_output( output );
-  view->update();
+  view->update( area );
   return true;
 }
 

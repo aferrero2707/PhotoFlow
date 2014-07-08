@@ -93,8 +93,8 @@ gint PF::image_rebuild_callback( gpointer data )
       std::cout<<"PF::image_rebuild_callback(): updating view #"<<i<<std::endl;
 #endif
       //vips_cache_drop_all();
-      image->get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100 );
-      view->update();
+      image->get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
+      //view->update();
     }
 
     image->get_layer_manager().rebuild_finalize();
@@ -112,7 +112,7 @@ PF::Image::Image():
   rebuild_mutex = vips_g_mutex_new();
   g_mutex_lock( rebuild_mutex );
   rebuild_done = vips_g_cond_new();
-  layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update) );
+  layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update_all) );
   convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 }
@@ -126,14 +126,27 @@ PF::Image::~Image()
 }
 
 
-void PF::Image::update()
+// The area parameter represents the region of the image that was actually
+// modified and that needs to be re-computed. This allows certain sinks
+// to reduce the amount of computations in case only part of the image
+// needs to be updated. If area is NULL, it means that the whole image 
+// was changed.
+void PF::Image::update( VipsRect* area )
 {
   if( PF::PhotoFlow::Instance().is_batch() ) {
-    do_update();
+    do_update( area );
   } else {
     ProcessRequestInfo request;
     request.image = this;
     request.request = PF::IMAGE_REBUILD;
+		if(area) {
+			request.area.left = area->left;
+			request.area.top = area->top;
+			request.area.width = area->width;
+			request.area.height = area->height;
+		} else {
+			request.area.width = request.area.height = 0;
+		}
     
 #ifndef NDEBUG
     std::cout<<"PF::Image::update(): submitting rebuild request."<<std::endl;
@@ -152,12 +165,14 @@ void PF::Image::update()
 }
 
 
-void PF::Image::do_update()
+void PF::Image::do_update( VipsRect* area )
 {
   //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
   //if( !is_modified() ) return;
 
+#ifndef NDEBUG
   std::cout<<std::endl<<"============================================"<<std::endl;
+#endif
   //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
   bool result = get_layer_manager().rebuild_prepare();
   /*
@@ -177,16 +192,20 @@ void PF::Image::do_update()
   for( unsigned int i = 0; i < get_nviews(); i++ ) {
     PF::View* view = get_view( i );
     if( !view ) continue;
+		// For the sake of performance, we only rebuild views that have
+		// sinks attached to them, as otherwise the view can be considered inactive
+		if( !(view->has_sinks()) ) continue;
 
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): updating view #"<<i<<std::endl;
-    //#endif
-    get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100 );
+#endif
+    get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100, area );
     //view->update();
   }
 
   get_layer_manager().rebuild_finalize();
 
+#ifndef NDEBUG
   for( unsigned int i = 0; i < get_nviews(); i++ ) {
     PF::View* view = get_view( i );
     if( !view ) continue;
@@ -198,6 +217,7 @@ void PF::Image::do_update()
     }
   }
   std::cout<<std::endl<<"============================================"<<std::endl<<std::endl<<std::endl;
+#endif
 }
 
 
@@ -400,7 +420,11 @@ bool PF::Image::export_merged( std::string filename )
     msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
     PF_UNREF( srgbimg, msg.c_str() );
     
+#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
     vips_image_write_to_file( outimg, filename.c_str() );
+#else
+    vips_image_write_to_file( outimg, filename.c_str(), NULL );
+#endif
     //g_object_unref( outimg );
     msg = std::string("PF::Image::export_merged(") + filename + "), outimg";
     PF_UNREF( outimg, msg.c_str() );

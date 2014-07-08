@@ -247,25 +247,33 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 
     par->draw_point( x, y, update );
 
+		/*
     if( (update.width > 0) &&
-	(update.height > 0) ) {
+				(update.height > 0) ) {
       if( PF::PhotoFlow::Instance().is_batch() ) {
-	view->update( update );	
+				view->update( update );	
       } else {
-	ProcessRequestInfo request;
-	request.view = view;
-	request.request = PF::IMAGE_UPDATE;
-	request.area.left = update.left;
-	request.area.top = update.top;
-	request.area.width = update.width;
-	request.area.height = update.height;
-	//#ifndef NDEBUG
-	std::cout<<"PF::DrawConfigDialog::draw_point(): submitting rebuild request."<<std::endl;
-	//#endif
-	PF::ImageProcessor::Instance().submit_request( request );
+				ProcessRequestInfo request;
+				request.view = view;
+				request.request = PF::IMAGE_UPDATE;
+				request.area.left = update.left;
+				request.area.top = update.top;
+				request.area.width = update.width;
+				request.area.height = update.height;
+				//#ifndef NDEBUG
+				std::cout<<"PF::DrawConfigDialog::draw_point(): submitting rebuild request."<<std::endl;
+				//#endif
+				PF::ImageProcessor::Instance().submit_request( request );
       }
     }
+		*/
   }
+
+	std::cout<<"DrawConfigDialog::draw_point("<<x<<","<<y<<"): area = "
+					 <<update.width<<","<<update.height<<"+"<<update.left<<","<<update.top<<std::endl;
+	image->update( &update );
+	//image->update_all();
+	return;
 }
 
 

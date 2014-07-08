@@ -361,7 +361,7 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 
 
-void PF::ImageArea::update() 
+void PF::ImageArea::update( VipsRect* area ) 
 {
   //PF::View* view = pf_image->get_view(0);
 
@@ -431,8 +431,8 @@ void PF::ImageArea::update()
   // as the additional reference will be removed when calling 
   // g_object_unref(srgbimg) later on
 
-  PF_PRINT_REF( srgbimg, "ImageArea::update(): srgbimg after convert2srgb: " );
 #ifndef NDEBUG
+  PF_PRINT_REF( srgbimg, "ImageArea::update(): srgbimg after convert2srgb: " );
   std::cout<<"ImageArea::update(): image="<<image<<"   ref_count="<<G_OBJECT( image )->ref_count<<std::endl;
 #endif
   //outimg = srgbimg;
@@ -443,15 +443,15 @@ void PF::ImageArea::update()
     if( !(node->image) ) return;
 
     if( node->processor &&
-	node->processor->get_par() &&
-	node->processor->get_par()->is_map() ) {
+				node->processor->get_par() &&
+				node->processor->get_par()->is_map() ) {
 
       invert->get_par()->set_image_hints( node->image );
       invert->get_par()->set_format( get_view()->get_format() );
       in.clear(); in.push_back( node->image );
       VipsImage* mapinverted = invert->get_par()->build(in, 0, NULL, NULL, level );
       //g_object_unref( node->image );
-      PF_UNREF( node->image, "ImageArea::update() node->image unref" );
+      //PF_UNREF( node->image, "ImageArea::update() node->image unref" );
 
       uniform->get_par()->set_image_hints( srgbimg );
       uniform->get_par()->set_format( get_view()->get_format() );
@@ -482,11 +482,11 @@ void PF::ImageArea::update()
   display_image = im_open( "display_image", "p" );
 
   if (vips_sink_screen2 (outimg, display_image, NULL,
-			 64, 64, (2000/64)*(2000/64), 
-			 //6400, 64, (2000/64), 
-			 0, NULL, this))
+												 64, 64, (2000/64)*(2000/64), 
+												 //6400, 64, (2000/64), 
+												 0, NULL, this))
 		return;
-    //vips::verror ();
+	//vips::verror ();
 
   //g_object_unref( outimg );
   //PF_UNREF( outimg, "ImageArea::update() outimg unref" );
@@ -501,7 +501,7 @@ void PF::ImageArea::update()
 
 #ifdef DEBUG_DISPLAY
   std::cout<<"Image size: "<<display_image->Xsize<<","
-	   <<display_image->Ysize<<std::endl;
+					 <<display_image->Ysize<<std::endl;
 #endif
 
   set_size_request (display_image->Xsize, display_image->Ysize);
@@ -528,6 +528,28 @@ void PF::ImageArea::update()
     xoffset = yoffset = 0;
   }
 
+	if( area ) {
+		vips_invalidate_area( display_image, area );
+		process_start( *area );
+		process_area( *area );
+		process_end( *area );
+	} else {
+		// The whole image was modified, in this case 
+		// we process the visible protion
+		VipsRect clip;
+		clip.left = hadj->get_value();
+		clip.top = vadj->get_value();
+		clip.width = hadj->get_page_size();
+		clip.height = vadj->get_page_size();
+		VipsRect img_area = {0, 0, display_image->Xsize, display_image->Ysize};
+		vips_rect_intersectrect( &img_area, &clip, &clip );
+		process_start( clip );
+		process_area( clip );
+		process_end( clip );
+	}
+
+	return;
+
   // Request a complete redraw of the image area. 
   //set_processing( true );
   //signal_queue_draw.emit();
@@ -547,9 +569,9 @@ void PF::ImageArea::update()
 
 void PF::ImageArea::update( const VipsRect& area ) 
 {
-#ifndef NDEBUG
+	//#ifndef NDEBUG
   std::cout<<"PF::ImageArea::update( const VipsRect& area ) called"<<std::endl;
-#endif
+	//#endif
 
   PF::View* view = get_view();
   if( !view ) return;
@@ -576,11 +598,46 @@ void PF::ImageArea::update( const VipsRect& area )
   if (vips_region_prepare (region, parea))
     return;
 
-  double_buffer.lock();
-  double_buffer.get_active().copy( region, area );
+	std::cout<<"Plotting scaled area "<<scaled_area.width<<","<<scaled_area.height
+					 <<"+"<<scaled_area.left<<","<<scaled_area.top<<std::endl;
+	guint8 *px1 = (guint8 *) VIPS_REGION_ADDR( region, scaled_area.left, scaled_area.top );
+	int rs1 = VIPS_REGION_LSKIP( region );
+	int bl1 = 3; /*buf->get_byte_length();*/
+	for( int y = 0; y < scaled_area.height; y++ ) {
+		guint8* p1 = px1 + rs1*y;
+		for( int x = 0; x < scaled_area.width*bl1; x+=bl1 ) {
+			printf("%03d ",(int)p1[x]);
+		}
+		printf("\n");
+	}
+
+
+  // Request a redraw of the modified area. 
   Update * update = g_new (Update, 1);
   update->image_area = this;
+	update->rect.left = scaled_area.left;
+	update->rect.top = scaled_area.top;
+  update->rect.width = scaled_area.width;
+	update->rect.height = scaled_area.height;
+#ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
-  gdk_threads_add_idle ((GSourceFunc) render_cb, update);
-  double_buffer.unlock();
+#endif
+  gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::update( const VipsRect& area ): queue_draw() called"<<std::endl;
+#endif
+	/*
+		VipsRect* parea = (VipsRect*)(&scaled_area);
+		if (vips_region_prepare (region, parea))
+    return;
+
+		double_buffer.lock();
+		double_buffer.get_active().copy( region, area );
+		Update * update = g_new (Update, 1);
+		update->image_area = this;
+		update->rect.width = update->rect.height = 0;
+		std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
+		gdk_threads_add_idle ((GSourceFunc) render_cb, update);
+		double_buffer.unlock();
+	*/
 }

@@ -298,7 +298,7 @@ main( int argc, char **argv )
       layer_manager.get_layers().push_back( linv1 );
     }
 
-    pf_image->do_update();
+    pf_image->do_update(NULL);
 
     PF::View* view = pf_image->get_view( 0 );
 

@@ -1179,7 +1179,8 @@ vips_invalidate_area( VipsImage *image, VipsRect* r  )
       
       tile = render_tile_lookup( render, &area );
       if( tile ) {
-	tile->region->invalid = 1;
+				tile->region->invalid = 1;
+				printf("vips_invalidate_area(): tile invalidated\n");
       }
     }
   }

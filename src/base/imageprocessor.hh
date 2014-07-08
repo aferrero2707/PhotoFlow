@@ -47,11 +47,13 @@ namespace PF
     IMAGE_REDRAW_END,
     IMAGE_REDRAW,
     IMAGE_DESTROY,
+    OBJECT_UNREF,
     PROCESSOR_END
   };
   
   struct ProcessRequestInfo
   {
+    GObject* obj;
     Image* image;
     View* view;
     ViewSink* sink;

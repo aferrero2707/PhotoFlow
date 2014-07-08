@@ -192,7 +192,7 @@ void PF::View::unlock_processing()
 }
 
 
-void PF::View::update()
+void PF::View::update( VipsRect* area )
 {
 #ifndef NDEBUG
   std::cout<<"PF::View::update(): called"<<std::endl;
@@ -201,7 +201,7 @@ void PF::View::update()
 #ifndef NDEBUG
     std::cout<<"PF::View::update(): updating sink #"<<i<<std::endl;
 #endif
-    sinks[i]->update();
+    sinks[i]->update( area );
 #ifndef NDEBUG
     std::cout<<"PF::View::update(): sink #"<<i<<" updated"<<std::endl;
 #endif
@@ -209,6 +209,7 @@ void PF::View::update()
 }
 
 
+/*
 void PF::View::update( const VipsRect& area )
 {
 #ifndef NDEBUG
@@ -218,9 +219,10 @@ void PF::View::update( const VipsRect& area )
 #ifndef NDEBUG
     std::cout<<"PF::View::update(const VipsRect& area): updating sink #"<<i<<std::endl;
 #endif
-    sinks[i]->update( area );
+    //sinks[i]->update( area );
 #ifndef NDEBUG
     std::cout<<"PF::View::update(const VipsRect& area): sink #"<<i<<" updated"<<std::endl;
 #endif
   }
 }
+*/

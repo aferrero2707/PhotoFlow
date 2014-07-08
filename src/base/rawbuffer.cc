@@ -3,29 +3,29 @@
 
 /*
 
-    Copyright (C) 2014 Ferrero Andrea
+	Copyright (C) 2014 Ferrero Andrea
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
- */
+*/
 
 /*
 
-    These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
+	These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
- */
+*/
 
 
 #include <sys/types.h>
@@ -53,25 +53,25 @@ PF::RawBuffer::RawBuffer(std::string fname):
 }
 
 
-#define INIT_BUF( TYPE ) {			\
+#define INIT_BUF( TYPE ) {											\
   sizeofpel = sizeof(TYPE)*bands;\ 
-  buf = malloc( sizeofpel*xsize );	\
-  if( !buf ) break;				\
-  TYPE val[16];			\
-  for( int ch = 0; ch < bands; ch++ ) {					\
-    val[ch] = (TYPE)(bgd_color[ch]*FormatInfo<TYPE>::RANGE + FormatInfo<TYPE>::MIN); \
-  }									\
-  TYPE* tbuf = (TYPE*)buf;						\
-  for( unsigned int x  = 0; x < xsize; x++ ) {					\
-    for( unsigned int ch = 0; ch < bands; ch++ ) {					\
-      tbuf[x*bands+ch] = val[ch];						\
-    }									\
-  }									\
-  for( unsigned int y = 0; y < ysize; y++ ) {				\
-    write( fd, buf, sizeof(TYPE)*xsize*bands );				\
-  }									\
-  free( buf );								\
-  buf = NULL;								\
+buf = malloc( sizeofpel*xsize );	\
+if( !buf ) break;				\
+TYPE val[16];			\
+for( int ch = 0; ch < bands; ch++ ) {					\
+	val[ch] = (TYPE)(bgd_color[ch]*FormatInfo<TYPE>::RANGE + FormatInfo<TYPE>::MIN); \
+ }									\
+TYPE* tbuf = (TYPE*)buf;						\
+for( unsigned int x  = 0; x < xsize; x++ ) {					\
+	for( unsigned int ch = 0; ch < bands; ch++ ) {					\
+		tbuf[x*bands+ch] = val[ch];						\
+	}									\
+ }									\
+for( unsigned int y = 0; y < ysize; y++ ) {				\
+	write( fd, buf, sizeof(TYPE)*xsize*bands );				\
+ }									\
+free( buf );								\
+buf = NULL;								\
 }									
 
 
@@ -104,16 +104,16 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
       if( !buf ) break;
       unsigned short int val[16];
       for( int ch = 0; ch < bands; ch++ ) {
-	val[ch] = (unsigned short int)(bgd_color[ch]*FormatInfo<unsigned short int>::RANGE + FormatInfo<unsigned short int>::MIN);
+				val[ch] = (unsigned short int)(bgd_color[ch]*FormatInfo<unsigned short int>::RANGE + FormatInfo<unsigned short int>::MIN);
       }
       unsigned short int* tbuf = (unsigned short int*)buf;
       for( unsigned int x  = 0; x < xsize; x++ ) {
-	for( unsigned int ch = 0; ch < bands; ch++ ) {
-	  tbuf[x*bands+ch] = val[ch];
-	}
+				for( unsigned int ch = 0; ch < bands; ch++ ) {
+					tbuf[x*bands+ch] = val[ch];
+				}
       }
       for( unsigned int y = 0; y < ysize; y++ ) {
-	write( fd, buf, sizeof(unsigned short int)*xsize*bands );
+				write( fd, buf, sizeof(unsigned short int)*xsize*bands );
       }
       free( buf );
       buf = NULL;
@@ -135,11 +135,11 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
   VipsImage* tempimg;
   vips_rawload( file_name.c_str(), &tempimg, xsize, ysize, sizeofpel, NULL );
   vips_copy( tempimg, &image, 
-	     "format", format,
-	     "bands", bands,
-	     "coding", coding,
-	     "interpretation", interpretation,
-	     NULL );
+						 "format", format,
+						 "bands", bands,
+						 "coding", coding,
+						 "interpretation", interpretation,
+						 NULL );
 
   PF_UNREF( tempimg, "PF::RawBuffer::init() after rawload()" );
   pyramid.init( image, fd );
@@ -155,50 +155,50 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
 
 
 
-#define DRAW_ROW( TYPE ) {	\
-  TYPE val[16];								\
-  for( int ch = 0; ch < bands; ch++ ) {					\
+#define DRAW_ROW( TYPE ) {																							\
+  TYPE val[16];																													\
+  for( int ch = 0; ch < bands; ch++ ) {																	\
     val[ch] = (TYPE)(pen.get_channel(ch)*FormatInfo<TYPE>::RANGE + FormatInfo<TYPE>::MIN); \
-  }									\
-  unsigned int x;						\
-  TYPE* tbuf = (TYPE*)buf;						\
-  off_t offset = (off_t(xsize)*row+startcol)*sizeof(TYPE)*bands;	\
-  lseek( fd, offset, SEEK_SET );					\
-  unsigned int col, col2;						\
-  unsigned int npx = endcol-startcol+1;					\
-  if( pen.get_opacity() < 1 ) {				\
-    read( fd, buf, sizeof(TYPE)*bands*(endcol-startcol+1) );	\
-    TYPE oldval;						\
-    float transparency = 1.0f - pen.get_opacity();		\
-    for( col = 0, col2 = startcol; col < npx; col++, col2++ ) {		\
-      if( pxmask[col2] == 0 ) {						\
-	continue;							\
-      }									\
-      for( int ch = 0; ch < bands; ch++ ) {					\
-	x = col*bands + ch;				\
-	oldval = tbuf[x];						\
-	tbuf[x] = (TYPE)(pen.get_opacity()*val[ch] + transparency*oldval); \
-      }									\
-    }									\
-  } else {								\
-    for( col = 0, col2 = startcol; col < npx; col++, col2++ ) {		\
-      if( pxmask[col2] == 0 ) {						\
-	continue;							\
-      }									\
-      for( int ch = 0; ch < bands; ch++ ) {					\
-	x = col*bands + ch;						\
-	tbuf[x] = val[ch];						\
-      }									\
-    }									\    
-  } \
-  lseek( fd, offset, SEEK_SET );					\
-  size_t bufsize = sizeof(unsigned short int)*bands*(endcol-startcol+1);	\
-  write( fd, buf, bufsize );						\
+  }																																			\
+  unsigned int x;																												\
+  TYPE* tbuf = (TYPE*)buf;																							\
+  off_t offset = (off_t(xsize)*row+startcol)*sizeof(TYPE)*bands;				\
+  lseek( fd, offset, SEEK_SET );																				\
+  unsigned int col, col2;																								\
+  unsigned int npx = endcol-startcol+1;																	\
+  if( pen.get_opacity() < 1 ) {																					\
+    read( fd, buf, sizeof(TYPE)*bands*(endcol-startcol+1) );						\
+    TYPE oldval;																												\
+    float transparency = 1.0f - pen.get_opacity();											\
+    for( col = 0, col2 = startcol; col < npx; col++, col2++ ) {					\
+      if( pxmask[col2] == 0 ) {																					\
+				continue;																												\
+      }																																	\
+      for( int ch = 0; ch < bands; ch++ ) {															\
+				x = col*bands + ch;																							\
+				oldval = tbuf[x];																								\
+				tbuf[x] = (TYPE)(pen.get_opacity()*val[ch] + transparency*oldval); \
+      }																																	\
+    }																																		\
+  } else {																															\
+	for( col = 0, col2 = startcol; col < npx; col++, col2++ ) {						\
+		if( pxmask[col2] == 0 ) {																						\
+			continue;																													\
+		}																																		\
+		for( int ch = 0; ch < bands; ch++ ) {																\
+			x = col*bands + ch;																								\
+			tbuf[x] = val[ch];																								\
+		}																																		\
+	}									\    
+} \
+lseek( fd, offset, SEEK_SET );					\
+size_t bufsize = sizeof(unsigned short int)*bands*(endcol-startcol+1);	\
+write( fd, buf, bufsize );						\
 }
 
 
 void PF::RawBuffer::draw_row( Pen& pen, unsigned int row, 
-			      unsigned int startcol, unsigned int endcol )
+															unsigned int startcol, unsigned int endcol )
 {
   if( fd < 0 )
     return;
@@ -206,6 +206,7 @@ void PF::RawBuffer::draw_row( Pen& pen, unsigned int row,
   if( pen.get_color().size() < bands )
     return;
 
+	//std::cout<<"RawBuffer::draw_row("<<row<<","<<startcol<<","<<endcol<<")"<<std::endl;
   int npixels = endcol-startcol+1;
   memset( &(pxmask[startcol]), 0xFF, npixels );
   
@@ -227,10 +228,10 @@ void PF::RawBuffer::draw_row( Pen& pen, unsigned int row,
   case VIPS_FORMAT_USHORT:
     DRAW_ROW( unsigned short int );
     /*
-    {
+			{
       unsigned short int val[16];								
       for( int ch = 0; ch < bands; ch++ ) {					
-	val[ch] = (unsigned short int)(pen.get_channel(ch)*FormatInfo<unsigned short int>::RANGE + FormatInfo<unsigned short int>::MIN); 
+			val[ch] = (unsigned short int)(pen.get_channel(ch)*FormatInfo<unsigned short int>::RANGE + FormatInfo<unsigned short int>::MIN); 
       }									
       unsigned int x;						
       unsigned short int* tbuf = (unsigned short int*)buf;						
@@ -239,24 +240,24 @@ void PF::RawBuffer::draw_row( Pen& pen, unsigned int row,
       lseek( fd, offset, SEEK_SET );					
       unsigned int npx = endcol-startcol+1;
       if( pen.get_opacity() < 1 ) {				
-	read( fd, buf, sizeof(unsigned short int)*bands*(endcol-startcol+1) );	
-	unsigned short int oldval;						
-	float transparency = 1.0f - pen.get_opacity();		
-	for( unsigned int col = startcol; col <= endcol; col++ ) {	
-	  //for( unsigned int col = 0; col <= npx; col++ ) {	
-	  for( int ch = 0; ch < bands; ch++ ) {					
+			read( fd, buf, sizeof(unsigned short int)*bands*(endcol-startcol+1) );	
+			unsigned short int oldval;						
+			float transparency = 1.0f - pen.get_opacity();		
+			for( unsigned int col = startcol; col <= endcol; col++ ) {	
+			//for( unsigned int col = 0; col <= npx; col++ ) {	
+			for( int ch = 0; ch < bands; ch++ ) {					
 	    x = col*bands + ch;				
 	    oldval = tbuf[x];						
 	    tbuf[x] = (unsigned short int)(pen.get_opacity()*val[ch] + transparency*oldval); 
-	  }									
-	}									
+			}									
+			}									
       } else {
-	for( unsigned int col = 0; col <= npx; col++ ) {	
-	  for( int ch = 0; ch < bands; ch++ ) {					
+			for( unsigned int col = 0; col <= npx; col++ ) {	
+			for( int ch = 0; ch < bands; ch++ ) {					
 	    x = col*bands + ch;						
 	    tbuf[x] = val[ch];						
-	  }									
-	}									    
+			}									
+			}									    
       } 
       lseek( fd, offset, SEEK_SET );					
       size_t bufsize = sizeof(unsigned short int)*bands*(endcol-startcol+1);
@@ -264,7 +265,7 @@ void PF::RawBuffer::draw_row( Pen& pen, unsigned int row,
       //write( fd, buf, bufsize );	
       write( fd, &(tbuf[startcol*bands]), bufsize );
       //write( fd, &(tbuf[startcol*bands]), sizeof(TYPE)*bands*(endcol-startcol+1) ); \
-    }
+			}
     */
     break;
   case VIPS_FORMAT_FLOAT:
@@ -282,11 +283,11 @@ void PF::RawBuffer::draw_row( Pen& pen, unsigned int row,
     bool inserted = false;
     for( ri = stroke_ranges[row].begin(); ri != stroke_ranges[row].end(); ++ri ) {
       if( startcol < ri->first ) {
-	// The new range is just after the current one, it's time to include the
-	// new range in the list
-	stroke_ranges[row].insert( ri, std::make_pair(startcol,endcol) );
-	inserted = true;
-	break;
+				// The new range is just after the current one, it's time to include the
+				// new range in the list
+				stroke_ranges[row].insert( ri, std::make_pair(startcol,endcol) );
+				inserted = true;
+				break;
       }
     }
     if( !inserted )
@@ -297,8 +298,9 @@ void PF::RawBuffer::draw_row( Pen& pen, unsigned int row,
 
 
 void PF::RawBuffer::draw_point( Pen& pen, unsigned int x0, unsigned int y0,
-				VipsRect& update, bool update_pyramid )
+																VipsRect& update, bool update_pyramid )
 {
+	std::cout<<"RawBuffer::draw_point("<<x0<<","<<y0<<"): fd="<<fd<<std::endl;
   if( fd < 0 )
     return;
 
@@ -320,6 +322,7 @@ void PF::RawBuffer::draw_point( Pen& pen, unsigned int x0, unsigned int y0,
     if( (row2 != row1) && (row2 < ysize) )
       draw_row( pen, row2, startcol, endcol );
   }
+	//fsync( fd );
 
   VipsRect area;
   area.left = x0 - pen.get_size();
@@ -359,16 +362,16 @@ void PF::RawBuffer::draw_segment( Pen& pen, Segment& segment )
       int D = (int)sqrt( pen.get_size()*pen.get_size() - y*y );
       int startcol = x0[i] - D;
       if( startcol < 0 ) 
-	startcol = 0;
+				startcol = 0;
       int endcol = x0[i] + D;
       if( endcol >= xsize ) 
-	endcol = xsize - 1;
+				endcol = xsize - 1;
 
 
       if( row1 >= 0 )
-	draw_row( pen, row1, startcol, endcol );
+				draw_row( pen, row1, startcol, endcol );
       if( (row2 != row1) && (row2 < ysize) )
-	draw_row( pen, row2, startcol, endcol );
+				draw_row( pen, row2, startcol, endcol );
 
       //if( i==1 ) break;
     }

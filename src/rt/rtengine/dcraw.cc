@@ -7670,6 +7670,7 @@ void CLASS identify()
   fread (head, 1, 32, ifp);
   fseek (ifp, 0, SEEK_END);
   flen = fsize = ftell(ifp);
+	printf("DCraw::identify(): fsize=%d\n",fsize);
   /*RT*/ if (fsize<100000) {
         is_raw = 0;
         return;

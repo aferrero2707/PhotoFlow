@@ -221,16 +221,18 @@ public:
   }
 
 
-  void update();
+  void update( VipsRect* area );
 
   void update( const VipsRect& area );
 
   void set_active_layer( int id ) { 
     int old_id = active_layer;
     active_layer = id; 
-    if( !display_merged &&
-	(old_id != active_layer) )
-      update();
+    if( !display_merged && (old_id != active_layer) ) {
+      //update( NULL );
+			if( get_view() && get_view()->get_image() )
+				get_view()->get_image()->update_all();
+		}
   }
   int get_active_layer() { return active_layer; }
 
@@ -238,8 +240,11 @@ public:
   {
     bool old_val = display_merged;
     display_merged = val;
-    if( display_merged != old_val )
-      update();
+    if( display_merged != old_val ) {
+      //update( NULL );
+			if( get_view() && get_view()->get_image() )
+				get_view()->get_image()->update_all();
+		}
   }
 
   virtual void on_realize() 

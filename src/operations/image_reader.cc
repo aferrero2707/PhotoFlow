@@ -66,8 +66,10 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     image = vips_image_new_from_file( file_name.get().c_str(), NULL );
 #endif
     if( !image ) return NULL;
+#ifndef NDEBUG
     std::string msg = std::string("ImageReaderPar::build(): image refcount after new_from_file");
     PF_PRINT_REF( image, msg );
+#endif
     modified = true;
     //} else {
     //g_object_ref( image );
@@ -137,9 +139,11 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   PF::PyramidLevel* plevel = pyramid.get_level( level );
   if( plevel ) {
     set_image_hints( plevel->image );
+#ifndef NDEBUG
     std::cout<<"ImageReaderPar::build(): image refcount ("<<(void*)image<<") = "<<G_OBJECT(image)->ref_count<<std::endl;
     std::cout<<"                         out refcount ("<<(void*)out<<") = "<<G_OBJECT(out)->ref_count<<std::endl;
     std::cout<<"                         plevel->image refcount ("<<(void*)plevel->image<<") = "<<G_OBJECT(plevel->image)->ref_count<<std::endl;
+#endif
     return plevel->image;
   }
 

@@ -64,9 +64,9 @@ namespace PF
     void reset_dirty( std::list<Layer*>& list );
     
     VipsImage* rebuild_chain(View* view, colorspace_t cs, 
-			     int width, int height, 
-			     std::list<Layer*>& list, 
-			     Layer* previous_layer);
+														 int width, int height, 
+														 std::list<Layer*>& list, 
+														 Layer* previous_layer);
     
   public:
     LayerManager(Image* image);
@@ -93,7 +93,7 @@ namespace PF
     bool insert_layer( Layer* layer, int32_t lid=-1 );
 
     bool rebuild_prepare();
-    bool rebuild(View* view, colorspace_t cs, int width, int height);
+    bool rebuild(View* view, colorspace_t cs, int width, int height, VipsRect* area );
     bool rebuild_finalize();
 
     bool rebuild_all(View* view, colorspace_t cs, int width, int height);

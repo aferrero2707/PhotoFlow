@@ -37,6 +37,7 @@
   #include<windows.h>
 #endif
 
+#include "imageprocessor.hh"
 #include "photoflow.hh"
 
 PF::PhotoFlow::PhotoFlow(): render_mode(PF_RENDER_PREVIEW), batch(true)
@@ -98,11 +99,25 @@ PF::PhotoFlow& PF::PhotoFlow::Instance() {
 
 
 
+void PF::PhotoFlow::obj_unref( GObject* obj, char* msg )
+{
+	if( PF::PhotoFlow::Instance().is_batch() ){
+		PF_UNREF( obj, msg );
+	} else {
+		ProcessRequestInfo request;
+		request.obj = obj;
+		request.request = PF::OBJECT_UNREF;
+		PF::ImageProcessor::Instance().submit_request( request );
+	}
+}
+    
 
 void PF::pf_object_ref(GObject* object, const char* msg)
 {
 #ifdef PF_VERBOSE_UNREF
-  std::cout<<"pf_object_ref(): "<<msg<<std::endl;
+  std::cout<<"pf_object_ref()";
+	if(msg) std::cout<<": "<<msg;
+	std::cout<<std::endl;
   std::cout<<"                   object="<<object<<std::endl;
 #endif
   if( !object ) {
@@ -126,7 +141,9 @@ void PF::pf_object_ref(GObject* object, const char* msg)
 void PF::pf_object_unref(GObject* object, const char* msg)
 {
 #ifdef PF_VERBOSE_UNREF
-  std::cout<<"pf_object_unref(): "<<msg<<std::endl;
+  std::cout<<"pf_object_unref()";
+	if(msg) std::cout<<": "<<msg;
+	std::cout<<std::endl;
   std::cout<<"                   object="<<object<<std::endl;
 #endif
   if( !object ) {

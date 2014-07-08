@@ -56,9 +56,9 @@ void PF::ImageProcessor::run()
       g_cond_wait( requests_pending, requests_mutex );
       //std::cout<<"PF::ImageProcessor::run(): resuming."<<std::endl;
       if( requests.empty() ) {
-	std::cout<<"PF::ImageProcessor::run(): WARNING: empty requests queue after resuming!!!"<<std::endl;
-	g_mutex_unlock( requests_mutex );
-	continue;
+				std::cout<<"PF::ImageProcessor::run(): WARNING: empty requests queue after resuming!!!"<<std::endl;
+				g_mutex_unlock( requests_mutex );
+				continue;
       }
     }
     PF::ProcessRequestInfo request = requests.front();
@@ -83,17 +83,20 @@ void PF::ImageProcessor::run()
       if( !request.image ) continue;
       //std::cout<<"PF::ImageProcessor::run(): updating image."<<std::endl;
       request.image->lock();
-      request.image->do_update();
+			if( (request.area.width!=0) && (request.area.height!=0) )
+				request.image->do_update( &(request.area) );
+			else
+				request.image->do_update( NULL );
       request.image->unlock();
       request.image->rebuild_done_signal();
       //std::cout<<"PF::ImageProcessor::run(): updating image done."<<std::endl;
       break;
-    case IMAGE_UPDATE:
-      if( !request.view ) continue;
-      std::cout<<"PF::ImageProcessor::run(): updating area."<<std::endl;
-      request.view->update( request.area );
-      std::cout<<"PF::ImageProcessor::run(): updating area done."<<std::endl;
-      break;
+			//case IMAGE_UPDATE:
+      //if( !request.view ) continue;
+      //std::cout<<"PF::ImageProcessor::run(): updating area."<<std::endl;
+      //request.view->update( request.area );
+      //std::cout<<"PF::ImageProcessor::run(): updating area done."<<std::endl;
+      //break;
     case IMAGE_REDRAW_START:
       request.sink->process_start( request.area );
       break;

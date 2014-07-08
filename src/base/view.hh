@@ -110,12 +110,13 @@ namespace PF
     //Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
 
     void add_sink( ViewSink* sink ) { sinks.push_back( sink ); }
+		bool has_sinks() { return( !sinks.empty() ); }
 
     void lock_processing();
     void unlock_processing();
 
-    void update();
-    void update( const VipsRect& area );
+    void update( VipsRect* area );
+    //void update( const VipsRect& area );
   };
 
 
@@ -144,8 +145,8 @@ namespace PF
     int get_processing_count() { return processing_count; }
     //Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
 
-    virtual void update() = 0;
-    virtual void update( const VipsRect& area ) { update(); }
+    virtual void update( VipsRect* area ) = 0;
+    //virtual void update( const VipsRect& area ) { update( NULL ); }
 
     virtual void process_area( const VipsRect& area ) {}
     virtual void process_start( const VipsRect& area ) {}
