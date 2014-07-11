@@ -33,6 +33,11 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#include <string>
+#include <list>
+
+extern std::list<std::string> cache_files;
+
 #ifndef _O_BINARY
 #define _O_BINARY 0
 #endif
@@ -52,3 +57,5 @@
 int mkstemp (char *tmpl);
 
 #endif
+
+int pf_mkstemp(char *tmpl);

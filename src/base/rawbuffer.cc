@@ -93,7 +93,7 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
 		char fname[500];
 		sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
 		//fd = mkostemp( fname, O_CREAT|O_RDWR|O_TRUNC );
-		fd = mkstemp( fname );
+		fd = pf_mkstemp( fname );
 		if( fd >= 0 )
 			file_name = fname;
 	}

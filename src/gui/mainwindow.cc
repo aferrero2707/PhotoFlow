@@ -89,6 +89,9 @@ PF::MainWindow::MainWindow():
   buttonSave.signal_clicked().connect( sigc::mem_fun(*this,
 						     &MainWindow::on_button_save_clicked) );
 
+  buttonSaveAs.signal_clicked().connect( sigc::mem_fun(*this,
+																											 &MainWindow::on_button_saveas_clicked) );
+
   buttonExport.signal_clicked().connect( sigc::mem_fun(*this,
 						       &MainWindow::on_button_export_clicked) );
 

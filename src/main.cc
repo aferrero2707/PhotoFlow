@@ -34,10 +34,13 @@
 #include <stdlib.h>
 
 #include <stdio.h>  /* defines FILENAME_MAX */
-#ifdef WINDOWS
+//#ifdef WINDOWS
+#if defined(__MINGW32__) || defined(__MINGW64__)
     #include <direct.h>
     #define GetCurrentDir _getcwd
 #else
+    #include <sys/time.h>
+    #include <sys/resource.h>
     #include <unistd.h>
     #define GetCurrentDir getcwd
  #endif
@@ -46,6 +49,7 @@
 //#include <vips/vips>
 #include <vips/vips.h>
 
+#include "base/pf_mkstemp.hh"
 #include "base/imageprocessor.hh"
 #include "gui/mainwindow.hh"
 
@@ -137,6 +141,18 @@ int main (int argc, char *argv[])
 	PF::ImageProcessor::Instance().join();
 
   im_close_plugins();
+
+	
+#if defined(__MINGW32__) || defined(__MINGW64__)
+	for (int i = 0; i < _getmaxstdio(); ++i) close (i);
+#else
+	rlimit rlim;
+	getrlimit(RLIMIT_NOFILE, &rlim);
+	for (int i = 0; i < rlim.rlim_max; ++i) close (i);
+#endif
+	std::list<std::string>::iterator fi;
+	for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
+		unlink( fi->c_str() );
 
   return 0;
 }

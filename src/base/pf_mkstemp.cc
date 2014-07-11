@@ -29,6 +29,8 @@
 
 #include "pf_mkstemp.hh"
 
+std::list<std::string> cache_files;
+
 #if defined(__MINGW32__) || defined(__MINGW64__)
 
 /* mkstemp extracted from libc/sysdeps/posix/tempname.c.  Copyright
@@ -133,3 +135,11 @@ int mkstemp (char *tmpl)
   return -1;
 }
 #endif
+
+
+int pf_mkstemp(char *tmpl)
+{
+	int fd = mkstemp(tmpl);
+	if(fd >= 0) cache_files.push_back(tmpl);
+	return fd;
+}

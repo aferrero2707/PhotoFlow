@@ -109,7 +109,7 @@ PF::RawImage::RawImage( const Glib::ustring f ):
 	// using the default black and white levels.
   char fname[500];
   sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
-  int temp_fd = mkstemp( fname );
+  int temp_fd = pf_mkstemp( fname );
   if( temp_fd < 0 ) return;
   std::cout<<"RawLoader: cache file: "<<fname<<std::endl;
 	cache_file_name = fname;
@@ -223,7 +223,7 @@ PF::RawImage::RawImage( const Glib::ustring f ):
   //g_object_unref( image );
   
   sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
-  int fd = mkstemp( fname );
+  int fd = pf_mkstemp( fname );
   if( fd < 0 )
     return;
   std::cout<<"RawLoader: cache file: "<<fname<<std::endl;

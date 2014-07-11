@@ -280,7 +280,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
    
     char fname[500];
     sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
-    int fd = mkstemp( fname );
+    int fd = pf_mkstemp( fname );
     if( fd < 0 )
       return NULL;
     std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
