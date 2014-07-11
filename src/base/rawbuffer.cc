@@ -37,6 +37,7 @@
 
 #include <iostream>
 
+#include "pf_mkstemp.hh"
 #include "photoflow.hh"
 #include "rawbuffer.hh"
 
@@ -91,8 +92,8 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
   if( fd < 0 ) {
 		char fname[500];
 		sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
-		fd = mkostemp( fname, O_CREAT|O_RDWR|O_TRUNC );
-		//fd = mkstemp( fname );
+		//fd = mkostemp( fname, O_CREAT|O_RDWR|O_TRUNC );
+		fd = mkstemp( fname );
 		if( fd >= 0 )
 			file_name = fname;
 	}
