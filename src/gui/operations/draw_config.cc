@@ -166,6 +166,7 @@ void PF::DrawConfigDialog::on_bgd_color_changed()
 
   if( layer->get_image() )
     layer->get_image()->update();
+	std::cout<<"DrawConfigDialog::on_bgd_color_changed(): image updated"<<std::endl;
 }
 
 
@@ -232,6 +233,9 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
   PF::Image* image = layer->get_image();
   if( !image ) return;
 
+#ifndef NDEBUG
+	std::cout<<"PF::DrawConfigDialog::draw_point(): nviews="<<image->get_nviews()<<std::endl;
+#endif
   for( unsigned int vi = 0; vi < image->get_nviews(); vi++ ) {
     PF::View* view = image->get_view( vi );
     if( !view ) continue;
@@ -246,12 +250,13 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
     if( !par ) continue;
 
     par->draw_point( x, y, update );
+		//continue;
 
-		/*
+		/**/
     if( (update.width > 0) &&
 				(update.height > 0) ) {
-      if( PF::PhotoFlow::Instance().is_batch() ) {
-				view->update( update );	
+      if( true || PF::PhotoFlow::Instance().is_batch() ) {
+				view->sink( update );	
       } else {
 				ProcessRequestInfo request;
 				request.view = view;
@@ -260,19 +265,22 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 				request.area.top = update.top;
 				request.area.width = update.width;
 				request.area.height = update.height;
-				//#ifndef NDEBUG
+#ifndef NDEBUG
 				std::cout<<"PF::DrawConfigDialog::draw_point(): submitting rebuild request."<<std::endl;
-				//#endif
+#endif
 				PF::ImageProcessor::Instance().submit_request( request );
       }
     }
-		*/
+		/**/
   }
+	//exit(1);
 
+	/*
 	std::cout<<"DrawConfigDialog::draw_point("<<x<<","<<y<<"): area = "
 					 <<update.width<<","<<update.height<<"+"<<update.left<<","<<update.top<<std::endl;
 	image->update( &update );
 	//image->update_all();
+	*/
 	return;
 }
 

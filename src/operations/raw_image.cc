@@ -112,6 +112,7 @@ PF::RawImage::RawImage( const Glib::ustring f ):
   int temp_fd = mkstemp( fname );
   if( temp_fd < 0 ) return;
   std::cout<<"RawLoader: cache file: "<<fname<<std::endl;
+	cache_file_name = fname;
   
 #ifndef NDEBUG
   std::cout<<"Saving raw data to buffer..."<<std::endl;
@@ -153,11 +154,13 @@ PF::RawImage::RawImage( const Glib::ustring f ):
     write( temp_fd, rowbuf, pxsize*iwidth );
 #ifndef NDEBUG
     if( (row%100) == 0 ) std::cout<<"  row "<<row<<" saved."<<std::endl;
+#ifdef PF_USE_DCRAW_RT
 		if( row==0 ) {
 			for(col=0; col<10; col++) {
 				std::cout<<"  val="<<data[row][col]<<"  c="<<(unsigned int)FC(row,col)<<std::endl;
 			}
 		}
+#endif
 #endif
   }
 #ifndef NDEBUG
@@ -177,7 +180,7 @@ PF::RawImage::RawImage( const Glib::ustring f ):
   if( vips_rawload( fname, &in, iwidth, 
 										iheight, pxsize, NULL ) )
     return;
-  unlink( fname );
+  //unlink( fname );
   
   VipsCoding coding = VIPS_CODING_NONE;
   VipsInterpretation interpretation = VIPS_INTERPRETATION_MULTIBAND;
@@ -224,6 +227,7 @@ PF::RawImage::RawImage( const Glib::ustring f ):
   if( fd < 0 )
     return;
   std::cout<<"RawLoader: cache file: "<<fname<<std::endl;
+	cache_file_name2 = fname;
   
   vips_rawsave_fd( out_demo, fd, NULL );
   g_object_unref( out_demo );
@@ -234,7 +238,7 @@ PF::RawImage::RawImage( const Glib::ustring f ):
     unlink( fname );
     return;
   }
-  unlink( fname );
+  //unlink( fname );
 
   vips_copy( out_demo, &demo_image, 
 	     "format", VIPS_FORMAT_FLOAT,
@@ -262,6 +266,10 @@ PF::RawImage::~RawImage()
   if( image ) PF_UNREF( image, "RawImage::~RawImage() image" );
   if( demo_image ) PF_UNREF( demo_image, "RawImage::~RawImage() demo_image" );
 	std::cout<<"RawImage::~RawImage() called."<<std::endl;
+	if( !(cache_file_name.empty()) )
+		unlink( cache_file_name.c_str() );
+	if( !(cache_file_name2.empty()) )
+		unlink( cache_file_name2.c_str() );
 }
 
 

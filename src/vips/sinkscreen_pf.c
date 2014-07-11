@@ -39,6 +39,9 @@
 /* Verbose debugging output.
 #define VIPS_DEBUG
  */
+#ifndef NDEBUG
+#define VIPS_DEBUG
+#endif
 
 /* Trace allocate/free.
 #define VIPS_DEBUG_AMBER
@@ -950,8 +953,8 @@ image_fill( VipsRegion *out, void *seq, void *a, void *b, gboolean *stop )
 	int ys = (r->top / tile_height) * tile_height;
 
 	VIPS_DEBUG_MSG( "image_fill: left = %d, top = %d, "
-		"width = %d, height = %d\n",
-                r->left, r->top, r->width, r->height );
+									"width = %d, height = %d\n",
+									r->left, r->top, r->width, r->height );
 
 	g_mutex_lock( render->lock );
 
@@ -1170,6 +1173,10 @@ vips_invalidate_area( VipsImage *image, VipsRect* r  )
   int xs = (r->left / tile_width) * tile_width;
   int ys = (r->top / tile_height) * tile_height;
 
+	VIPS_DEBUG_MSG( "vips_invalidate_area: left = %d, top = %d, "
+									"width = %d, height = %d\n",
+									r->left, r->top, r->width, r->height );
+
   g_mutex_lock( render->lock );
 
   for( y = ys; y < VIPS_RECT_BOTTOM( r ); y += tile_height ) {
@@ -1185,7 +1192,7 @@ vips_invalidate_area( VipsImage *image, VipsRect* r  )
       tile = render_tile_lookup( render, &area );
       if( tile ) {
 				tile->region->invalid = 1;
-				printf("vips_invalidate_area(): tile invalidated\n");
+				VIPS_DEBUG_MSG( "vips_invalidate_area(): tile invalidated\n" );
       }
     }
   }

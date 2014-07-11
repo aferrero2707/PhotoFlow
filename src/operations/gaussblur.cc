@@ -55,9 +55,9 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 
   if( srcimg ) {
     int size = (srcimg->Xsize > srcimg->Ysize) ? srcimg->Xsize : srcimg->Ysize;
-    float pxradius = radius.get()*size/1000;
+    float pxradius = radius.get();//*size/1000;
   
-    int result = vips_gaussmat( &mask, pxradius / 2, 0.1, 
+    int result = vips_gaussmat( &mask, pxradius / 2, 0.2, 
 				"separable", TRUE,
 				"integer", FALSE,
 				NULL );
@@ -69,8 +69,9 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
       //g_object_unref( mask );
       PF_UNREF( mask, "PF::GaussBlurPar::build(): mask unref" );
       if( !result ) {
-	//g_object_unref( srcimg );
-	PF_UNREF( srcimg, "PF::GaussBlurPar::build(): srcimg unref" );
+				//g_object_unref( srcimg );
+				//PF_UNREF( srcimg, "PF::GaussBlurPar::build(): srcimg unref" );
+				//return NULL;
       }
     }
   }

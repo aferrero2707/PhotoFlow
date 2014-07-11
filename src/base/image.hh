@@ -56,6 +56,9 @@ namespace PF
     // Flag indicating whether there is a re-building ongoing
     bool rebuilding;
 
+		// Current "pfi" file name associated to this image
+		std::string file_name;
+
     GMutex* rebuild_mutex;
     GCond* rebuild_done;
 
@@ -113,6 +116,7 @@ namespace PF
 
     bool open( std::string filename );
 
+		std::string get_filename() { return file_name; }
     bool save( std::string filename );
     bool export_merged( std::string filename );
   };

@@ -41,6 +41,17 @@
 #include "rawbuffer.hh"
 
 
+PF::RawBuffer::RawBuffer():
+  image( NULL ),
+	fd(-1)
+{
+  bands = 1;
+  xsize = 100; ysize = 100;
+  format = VIPS_FORMAT_NOTSET;
+  coding = VIPS_CODING_NONE;
+}
+
+
 PF::RawBuffer::RawBuffer(std::string fname):
   file_name( fname ),
   image( NULL )
@@ -77,6 +88,15 @@ buf = NULL;								\
 
 void PF::RawBuffer::init( const std::vector<float>& bgdcol)
 {
+  if( fd < 0 ) {
+		char fname[500];
+		sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
+		fd = mkostemp( fname, O_CREAT|O_RDWR|O_TRUNC );
+		//fd = mkstemp( fname );
+		if( fd >= 0 )
+			file_name = fname;
+	}
+
   if( fd < 0 )
     return;
 
@@ -90,7 +110,7 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
 
   bgd_color = bgdcol;
 
-  lseek( fd, 0, SEEK_SET );
+  off_t seek_result = lseek( fd, 0, SEEK_SET );
 
   switch( get_format() ) {
   case VIPS_FORMAT_UCHAR:
@@ -113,7 +133,9 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
 				}
       }
       for( unsigned int y = 0; y < ysize; y++ ) {
-				write( fd, buf, sizeof(unsigned short int)*xsize*bands );
+				ssize_t write_res = write( fd, buf, sizeof(unsigned short int)*xsize*bands );
+				if( write_res != sizeof(unsigned short int)*xsize*bands )
+					break;
       }
       free( buf );
       buf = NULL;
@@ -127,11 +149,18 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
     break;
   }
   pxmask = NULL;
+
+  stroke_ranges.clear();
+  for( unsigned int y = 0; y < ysize; y++ )
+    stroke_ranges.push_back( std::list< std::pair<unsigned int, unsigned int> >() );
+
+	//return;
   
   if( image ) {
     //g_object_unref( image );
     PF_UNREF( image, "PF::RawBuffer::init()" );
   }
+	//close(fd);
   VipsImage* tempimg;
   vips_rawload( file_name.c_str(), &tempimg, xsize, ysize, sizeofpel, NULL );
   vips_copy( tempimg, &image, 
@@ -146,10 +175,6 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
 
   //unsigned int level = 4;
   //PF::PyramidLevel* l = pyramid.get_level( level );
-
-  stroke_ranges.clear();
-  for( unsigned int y = 0; y < ysize; y++ )
-    stroke_ranges.push_back( std::list< std::pair<unsigned int, unsigned int> >() );
 }
 
 
@@ -191,8 +216,9 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
 		}																																		\
 	}									\    
 } \
-lseek( fd, offset, SEEK_SET );					\
-size_t bufsize = sizeof(unsigned short int)*bands*(endcol-startcol+1);	\
+off_t result = lseek( fd, offset, SEEK_SET );					\
+if(result<0) perror("draw_row(): lseek failed");					\
+size_t bufsize = sizeof(TYPE)*bands*(endcol-startcol+1);	\
 write( fd, buf, bufsize );						\
 }
 
@@ -300,10 +326,17 @@ void PF::RawBuffer::draw_row( Pen& pen, unsigned int row,
 void PF::RawBuffer::draw_point( Pen& pen, unsigned int x0, unsigned int y0,
 																VipsRect& update, bool update_pyramid )
 {
-	std::cout<<"RawBuffer::draw_point("<<x0<<","<<y0<<"): fd="<<fd<<std::endl;
   if( fd < 0 )
     return;
 
+	//std::cout<<"RawBuffer::draw_point("<<x0<<","<<y0<<"): fd="<<fd<<std::endl;
+	//std::cout<<"Pen color: ";
+  for( int ch = 0; ch < bands; ch++ ) {
+		std::cout<<pen.get_channel(ch)<<"  ";
+  }
+	std::cout<<std::endl;
+	//x0 = pen.get_size() - 1;
+	//y0 = pen.get_size() - 1;
   for(int y = 0; y <= pen.get_size(); y++ ) {
     int row1 = y0 - y;
     int row2 = y0 + y;
@@ -315,6 +348,8 @@ void PF::RawBuffer::draw_point( Pen& pen, unsigned int x0, unsigned int y0,
     int endcol = x0 + D;
     if( endcol >= xsize ) 
       endcol = xsize - 1;
+
+		//endcol = x0;
 
 
     if( row1 >= 0 )
@@ -335,6 +370,8 @@ void PF::RawBuffer::draw_point( Pen& pen, unsigned int x0, unsigned int y0,
   img.height = ysize;
 
   vips_rect_intersectrect (&img, &area, &update);
+
+	//return;
 
   if( update_pyramid ) 
     pyramid.update( update );
@@ -385,15 +422,19 @@ void PF::RawBuffer::start_stroke()
   switch( get_format() ) {
   case VIPS_FORMAT_UCHAR:
     buf = malloc( sizeof(unsigned char)*xsize*bands );
+		memset(buf, 0, sizeof(unsigned char)*xsize*bands );
     break;
   case VIPS_FORMAT_USHORT:
     buf = malloc( sizeof(unsigned short int)*xsize*bands );
+		memset(buf, 0, sizeof(unsigned short int)*xsize*bands );
     break;
   case VIPS_FORMAT_FLOAT:
     buf = malloc( sizeof(float)*xsize*bands );
+		memset(buf, 0, sizeof(float)*xsize*bands );
     break;
   case VIPS_FORMAT_DOUBLE:
     buf = malloc( sizeof(double)*xsize*bands );
+		memset(buf, 0, sizeof(double)*xsize*bands );
     break;
   }
   if( !buf ) return;

@@ -116,7 +116,7 @@ namespace PF
     void unlock_processing();
 
     void update( VipsRect* area );
-    //void update( const VipsRect& area );
+    void sink( const VipsRect& area );
   };
 
 
@@ -146,7 +146,7 @@ namespace PF
     //Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
 
     virtual void update( VipsRect* area ) = 0;
-    //virtual void update( const VipsRect& area ) { update( NULL ); }
+    virtual void sink( const VipsRect& area ) { }
 
     virtual void process_area( const VipsRect& area ) {}
     virtual void process_start( const VipsRect& area ) {}

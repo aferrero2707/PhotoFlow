@@ -209,8 +209,8 @@ void PF::View::update( VipsRect* area )
 }
 
 
-/*
-void PF::View::update( const VipsRect& area )
+/**/
+void PF::View::sink( const VipsRect& area )
 {
 #ifndef NDEBUG
   std::cout<<"PF::View::update(const VipsRect& area): called"<<std::endl;
@@ -219,10 +219,10 @@ void PF::View::update( const VipsRect& area )
 #ifndef NDEBUG
     std::cout<<"PF::View::update(const VipsRect& area): updating sink #"<<i<<std::endl;
 #endif
-    //sinks[i]->update( area );
+    sinks[i]->sink( area );
 #ifndef NDEBUG
     std::cout<<"PF::View::update(const VipsRect& area): sink #"<<i<<" updated"<<std::endl;
 #endif
   }
 }
-*/
+/**/

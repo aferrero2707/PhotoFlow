@@ -43,8 +43,8 @@
 
 #include "fast_demosaic.hh"
 
-//#define PF_USE_LIBRAW
-#define PF_USE_DCRAW_RT
+#define PF_USE_LIBRAW
+//#define PF_USE_DCRAW_RT
 
 #ifdef PF_USE_LIBRAW
 #include <libraw/libraw.h>
@@ -80,6 +80,8 @@ namespace PF
   {
     int nref;
     Glib::ustring file_name;
+		std::string cache_file_name;
+		std::string cache_file_name2;
 
 		float c_black[4];
 

@@ -49,6 +49,7 @@ PF::MainWindow::MainWindow():
 #endif
   buttonOpen("Open"), 
   buttonSave("Save"), 
+  buttonSaveAs("Save as"), 
   buttonExport("Export"), 
   buttonExit("Exit"), 
   buttonTest("Test")
@@ -76,6 +77,7 @@ PF::MainWindow::MainWindow():
 
   topButtonBox.pack_start(buttonOpen, Gtk::PACK_SHRINK);
   topButtonBox.pack_start(buttonSave, Gtk::PACK_SHRINK);
+  topButtonBox.pack_start(buttonSaveAs, Gtk::PACK_SHRINK);
   topButtonBox.pack_start(buttonExport, Gtk::PACK_SHRINK);
   topButtonBox.pack_start(buttonExit, Gtk::PACK_SHRINK);
   topButtonBox.set_border_width(5);
@@ -341,6 +343,22 @@ void PF::MainWindow::on_button_open_clicked()
 
 
 void PF::MainWindow::on_button_save_clicked()
+{
+	int page = viewerNotebook.get_current_page();
+	Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
+	if( widget ) {
+		PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+		if( editor && editor->get_image() ) {
+			if( !(editor->get_image()->get_filename().empty()) )
+				editor->get_image()->save( editor->get_image()->get_filename() );
+			else
+				on_button_saveas_clicked();
+		}
+	}
+}
+
+
+void PF::MainWindow::on_button_saveas_clicked()
 {
   Gtk::FileChooserDialog dialog("Save image as...",
 				Gtk::FILE_CHOOSER_ACTION_SAVE);

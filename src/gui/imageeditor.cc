@@ -27,6 +27,8 @@
 
  */
 
+#include <gdk/gdk.h>
+
 #include "../base/imageprocessor.hh"
 #include "imageeditor.hh"
 
@@ -97,7 +99,7 @@ PF::ImageEditor::ImageEditor( Image* img ):
     connect( sigc::mem_fun(*this, &PF::ImageEditor::on_motion_notify_event) ); 
   */
 
-  imageArea->add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK );
+  imageArea->add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK);
   //imageArea_scrolledWindow.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK );
   //add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK );
 
@@ -186,18 +188,18 @@ bool PF::ImageEditor::on_button_press_event( GdkEventButton* button )
     std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
 #endif
     if( active_layer &&
-	active_layer->get_processor() &&
-	active_layer->get_processor()->get_par() ) {
+				active_layer->get_processor() &&
+				active_layer->get_processor()->get_par() ) {
       PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
       if( dialog && dialog->get_visible() ) {
 #ifndef NDEBUG
-	std::cout<<"  sending button press event to dialog"<<std::endl;
+				std::cout<<"  sending button press event to dialog"<<std::endl;
 #endif
-	int mod_key = PF::MOD_KEY_NONE;
-	if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-	if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
-	dialog->pointer_press_event( button->button, x, y, mod_key );
+				int mod_key = PF::MOD_KEY_NONE;
+				if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+				if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+				dialog->pointer_press_event( button->button, x, y, mod_key );
       }
     }
   }
@@ -217,18 +219,18 @@ bool PF::ImageEditor::on_button_release_event( GdkEventButton* button )
     std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
 #endif
     if( active_layer &&
-	active_layer->get_processor() &&
-	active_layer->get_processor()->get_par() ) {
+				active_layer->get_processor() &&
+				active_layer->get_processor()->get_par() ) {
       PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
       if( dialog && dialog->get_visible() ) {
 #ifndef NDEBUG
-	std::cout<<"  sending button release event to dialog"<<std::endl;
+				std::cout<<"  sending button release event to dialog"<<std::endl;
 #endif
-	int mod_key = PF::MOD_KEY_NONE;
-	if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-	if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
-	dialog->pointer_release_event( button->button, x, y, mod_key );
+				int mod_key = PF::MOD_KEY_NONE;
+				if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+				if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+				dialog->pointer_release_event( button->button, x, y, mod_key );
       }
     }
   }
@@ -252,9 +254,28 @@ bool PF::ImageEditor::on_motion_notify_event( GdkEventMotion* event )
   GDK_BUTTON4_MASK  = 1 << 11,
   GDK_BUTTON5_MASK  = 1 << 12,
   */
-  if( event->state & GDK_BUTTON1_MASK ) {
-    gdouble x = event->x;
-    gdouble y = event->y;
+
+	int ix, iy;
+	gdouble x, y;
+	guint state;
+	if (event->is_hint) {
+		//event->window->get_pointer(&ix, &iy, &state);
+		/*
+		x = ix;
+		y = iy;
+		return true;
+		*/
+		x = event->x;
+		y = event->y;
+		state = event->state;	
+	} else {
+		x = event->x;
+		y = event->y;
+		state = event->state;	
+	}
+  if( state & GDK_BUTTON1_MASK ) {
+    //gdouble x = event->x;
+    //gdouble y = event->y;
     screen2image( x, y );
 #ifndef NDEBUG
     std::cout<<"PF::ImageEditor::on_motion_notify_event(): pointer @ "<<x<<","<<y
@@ -277,6 +298,7 @@ bool PF::ImageEditor::on_motion_notify_event( GdkEventMotion* event )
       }
     }
   }
+	return true;
 }
 
 

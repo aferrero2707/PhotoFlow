@@ -3,27 +3,27 @@
 
 /*
 
-    Copyright (C) 2014 Ferrero Andrea
+	Copyright (C) 2014 Ferrero Andrea
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
- */
+*/
 
 /*
 
-    These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
+	These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
 */
 
@@ -58,9 +58,11 @@ PF::DrawPar::DrawPar():
   pen_size( "pen_size", this, 5 ),
   pen_opacity( "pen_opacity", this, 1 ),
   strokes( "strokes", this ),
-  rawbuf(NULL)
+  rawbuf(NULL),
+  diskbuf(NULL)
 {
   set_type( "draw" );
+	//diskbuf = new_diskbuffer();
 }
 
 
@@ -104,8 +106,8 @@ void PF::DrawPar::init_buffer( unsigned int level )
   if( bgd_match ) {
     for( unsigned int i = 0; i < bgdcol.size(); i++ ) {
       if( rawbuf->get_bgd_color()[i] != bgdcol[i] ) {
-	bgd_match = false;
-	break;
+				bgd_match = false;
+				break;
       }
     }
   }
@@ -142,7 +144,7 @@ void PF::DrawPar::init_buffer( unsigned int level )
       rawbuf->start_stroke();
       std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
       for( pi = stroke.get_points().begin(); pi != stroke.get_points().end(); pi++ ) {
-	rawbuf->draw_point( pen, pi->first, pi->second, update, false );
+				rawbuf->draw_point( pen, pi->first, pi->second, update, false );
       }
       rawbuf->end_stroke();
     }
@@ -154,19 +156,31 @@ void PF::DrawPar::init_buffer( unsigned int level )
 
 
 VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first, 
-			      VipsImage* imap, VipsImage* omap, 
-			      unsigned int& level)
+															VipsImage* imap, VipsImage* omap, 
+															unsigned int& level)
 {
   if( !rawbuf ) {
-    char* fname = tempnam( NULL, "pfraw" );
-    if( fname ) {
-      rawbuf = new PF::RawBuffer( fname );
-    }
+		rawbuf = new PF::RawBuffer();
   }
   if( !rawbuf ) 
     return NULL;
 
   init_buffer( level );
+	if(rawbuf->get_fd() < 0)
+		return NULL;
+
+	/*
+	PF::DiskBufferPar* diskbufpar = dynamic_cast<PF::DiskBufferPar*>(diskbuf->get_par());
+	diskbufpar->set_descriptor( rawbuf->get_fd() );
+	diskbufpar->set_width( get_xsize() );
+	diskbufpar->set_height( get_ysize() );
+	diskbufpar->set_image_hints( get_xsize(), get_ysize(), get_interpretation() );
+	diskbufpar->set_format( get_format() );
+	diskbufpar->set_coding( get_coding() );
+	diskbufpar->set_nbands( get_nbands() );
+	VipsImage* out = diskbufpar->build( in, first, imap, omap, level );
+	return out;
+	*/
 
   PF::PyramidLevel* l = rawbuf->get_pyramid().get_level( level );
   if( l ) {
@@ -240,7 +254,7 @@ void PF::DrawPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
 
   if( !stroke.get_points().empty() ) {
     if( (stroke.get_points().back().first == x ) &&
-	(stroke.get_points().back().second == y ) )
+				(stroke.get_points().back().second == y ) )
       return;
   }
 

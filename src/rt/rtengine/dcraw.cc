@@ -5173,6 +5173,7 @@ int CLASS parse_tiff_ifd (int base)
   if (entries > 512) return 1;
   while (entries--) {
     tiff_get (base, &tag, &type, &len, &save);
+		printf("parse_tiff_ifd(%d): tag=%d\n",(int)base,(int)tag);
     switch (tag) {
       case 5:   width  = get2();  break;
       case 6:   height = get2();  break;
@@ -7670,7 +7671,8 @@ void CLASS identify()
   fread (head, 1, 32, ifp);
   fseek (ifp, 0, SEEK_END);
   flen = fsize = ftell(ifp);
-	printf("DCraw::identify(): fsize=%d\n",fsize);
+	printf("DCraw::identify(): head=%s  order=0x%X  hlen=%d  fsize=%d\n",
+				 head,(int)order,(int)hlen,(int)fsize);
   /*RT*/ if (fsize<100000) {
         is_raw = 0;
         return;

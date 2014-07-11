@@ -143,6 +143,7 @@ namespace PF
     std::vector< std::list< std::pair<unsigned int, unsigned int> > > stroke_ranges;
 
   public:
+    RawBuffer();
     RawBuffer( std::string file_name );
 
     virtual ~RawBuffer()
@@ -156,6 +157,7 @@ namespace PF
     }
 
     std::string get_file_name() { return file_name; }
+		int get_fd() { return fd; }
 
     int get_xsize() { return xsize; }
     int get_ysize() { return ysize; }

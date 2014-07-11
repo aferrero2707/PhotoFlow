@@ -68,7 +68,7 @@ protected:
   Gtk::ButtonBox topButtonBox;
 #endif
   Gtk::Notebook viewerNotebook;
-  Gtk::Button buttonOpen, buttonSave, buttonExport, buttonExit, buttonTest;
+  Gtk::Button buttonOpen, buttonSave, buttonSaveAs, buttonExport, buttonExit, buttonTest;
 
   std::vector<ImageEditor*> image_editors;
 
@@ -82,6 +82,7 @@ public:
   void on_button_open_clicked();
 
   void on_button_save_clicked();
+  void on_button_saveas_clicked();
 
   void on_button_export_clicked();
 

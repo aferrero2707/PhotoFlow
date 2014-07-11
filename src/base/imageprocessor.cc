@@ -92,12 +92,12 @@ void PF::ImageProcessor::run()
       request.image->rebuild_done_signal();
       //std::cout<<"PF::ImageProcessor::run(): updating image done."<<std::endl;
       break;
-			//case IMAGE_UPDATE:
-      //if( !request.view ) continue;
+			case IMAGE_UPDATE:
+      if( !request.view ) continue;
       //std::cout<<"PF::ImageProcessor::run(): updating area."<<std::endl;
-      //request.view->update( request.area );
+      request.view->sink( request.area );
       //std::cout<<"PF::ImageProcessor::run(): updating area done."<<std::endl;
-      //break;
+      break;
     case IMAGE_REDRAW_START:
       request.sink->process_start( request.area );
       break;

@@ -45,14 +45,14 @@ GObject* PF::pyramid_test_obj = NULL;
 PF::ImagePyramid::~ImagePyramid()
 {
   char tstr[500];
-  for( unsigned int i = 0; i < levels.size(); i++ ) {
+  for( unsigned int i = 1; i < levels.size(); i++ ) {
     //g_object_unref( levels[i].image );
     snprintf(tstr, 499, "PF::ImagePyramid::~ImagePyramid() levels[%d].image",i);
     PF_UNREF( levels[i].image, tstr );
     //if( i < 1 ) continue;
     if( levels[i].fd >= 0 ) 
       close( levels[i].fd );
-    //unlink( levels[i].raw_file_name.c_str() );
+    unlink( levels[i].raw_file_name.c_str() );
     //std::cout<<"PF::ImagePyramid::~ImagePyramid(): "<<levels[i].raw_file_name<<" removed."<<std::endl;
   }
 }
@@ -60,18 +60,18 @@ PF::ImagePyramid::~ImagePyramid()
 
 void PF::ImagePyramid::init( VipsImage* img, int fd )
 {
-  // The input image mght be the same, therefore we reference it 
+  // The input image might be the same, therefore we reference it 
   // before unreferencing the old ones
   g_object_ref( img );
 
   char tstr[500];
-  for( unsigned int i = 0; i < levels.size(); i++ ) {
+  for( unsigned int i = 1; i < levels.size(); i++ ) {
     //g_object_unref( levels[i].image );
     snprintf(tstr, 499, "PF::ImagePyramid::init() levels[%d].image",i);
     PF_UNREF( levels[i].image, tstr );
     if( levels[i].fd >= 0 ) 
       close( levels[i].fd );
-    //unlink( levels[i].raw_file_name.c_str() );
+    unlink( levels[i].raw_file_name.c_str() );
   }
   levels.clear();
 
@@ -100,7 +100,7 @@ void PF::ImagePyramid::reset()
     PF_UNREF( levels[i].image, tstr );
     if( levels[i].fd >= 0 ) 
       close( levels[i].fd );
-    //unlink( levels[i].raw_file_name.c_str() );
+    unlink( levels[i].raw_file_name.c_str() );
   }
   levels.clear();
 
@@ -294,7 +294,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     PF_UNREF( out, tstr );
 
     vips_rawload( fname, &in, width, height, VIPS_IMAGE_SIZEOF_PEL( img ), NULL );
-    unlink( fname );
+    //unlink( fname );
     vips_copy( in, &out, 
 	       "format", img->BandFmt,
 	       "bands", img->Bands,

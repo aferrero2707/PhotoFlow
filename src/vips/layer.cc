@@ -166,7 +166,7 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
    */
   layer->processor->get_par()->transform_inv(r,&s);
 
-  /*
+  /**/
 #ifndef NDEBUG
   std::cout<<"vips_layer_gen(): "<<std::endl;
   if( layer->processor->get_par()->get_config_ui() )
@@ -180,19 +180,19 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
 	   <<" width="<<oreg->valid.width
 	   <<" height="<<oreg->valid.height<<std::endl;
 #endif
-  */
+  /**/
   /* Prepare the input images
    */
   if(ir) {
     for( i = 0; ir[i]; i++ ) {
-      /*
+      /**/
 #ifndef NDEBUG
       std::cout<<"  preparing region ir["<<i<<"]:  top="<<s.top
 	       <<" left="<<s.left
 	       <<" width="<<s.width
 	       <<" height="<<s.height<<std::endl;
 #endif
-      */
+      /**/
       if( vips_region_prepare( ir[i], &s ) )
 	return( -1 );
     }
@@ -215,13 +215,15 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
 
   }
   */
-  /*
+  /**/
+#ifndef NDEBUG
   std::cout<<"vips_layer_gen(): "<<std::endl
 	   <<"  bands = "<<oreg->im->Bands<<std::endl
 	   <<"  fmt = "<<oreg->im->BandFmt<<std::endl
 	   <<"  colorspace = "<<oreg->im->Type<<std::endl
 	   <<"  imap = "<<layer->imap<<"  omap = "<<layer->omap<<std::endl;
-  */
+#endif
+  /**/
 
   // Get pointers to imap and omap regions
   VipsRegion* rimap = NULL;
@@ -237,11 +239,11 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
 
   //pf_process(pflayer->processor,r,&s,pflayer);
 #ifndef NDEBUG
-  //std::cout<<"Calling processor function..."<<std::endl;
+  std::cout<<"Calling processor function..."<<std::endl;
 #endif
   layer->processor->process(ir, ninput, layer->in_first, rimap, romap, oreg);
 #ifndef NDEBUG
-  //std::cout<<"...done"<<std::endl;
+  std::cout<<"...done"<<std::endl;
 #endif
   return( 0 );
 }

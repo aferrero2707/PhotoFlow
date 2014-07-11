@@ -223,7 +223,7 @@ public:
 
   void update( VipsRect* area );
 
-  void update( const VipsRect& area );
+  void sink( const VipsRect& area );
 
   void set_active_layer( int id ) { 
     int old_id = active_layer;

@@ -314,6 +314,7 @@ bool PF::Image::open( std::string filename )
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
     //add_view( VIPS_FORMAT_UCHAR, 0 );
+		file_name = filename;
 
   } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" ) {
 
@@ -395,6 +396,7 @@ bool PF::Image::save( std::string filename )
     of<<"<image>"<<std::endl;
     layer_manager.save( of );
     of<<"</image>"<<std::endl;
+		file_name = filename;
     return true;
   } else {
     return false;

@@ -191,6 +191,7 @@ void PF::ImageArea::process_area( const VipsRect& area )
 #endif
 
   VipsRect* parea = (VipsRect*)(&area);
+  //vips_invalidate_area( display_image, parea );
   if (vips_region_prepare (region, parea))
     return;
 
@@ -528,6 +529,7 @@ void PF::ImageArea::update( VipsRect* area )
     xoffset = yoffset = 0;
   }
 
+	/*
 	if( area ) {
 		vips_invalidate_area( display_image, area );
 		process_start( *area );
@@ -543,12 +545,15 @@ void PF::ImageArea::update( VipsRect* area )
 		clip.height = vadj->get_page_size();
 		VipsRect img_area = {0, 0, display_image->Xsize, display_image->Ysize};
 		vips_rect_intersectrect( &img_area, &clip, &clip );
+		vips_invalidate_area( display_image, &img_area );
+		vips_region_invalidate( region );
 		process_start( clip );
 		process_area( clip );
 		process_end( clip );
 	}
 
 	return;
+	*/
 
   // Request a complete redraw of the image area. 
   //set_processing( true );
@@ -567,11 +572,11 @@ void PF::ImageArea::update( VipsRect* area )
 
 
 
-void PF::ImageArea::update( const VipsRect& area ) 
+void PF::ImageArea::sink( const VipsRect& area ) 
 {
-	//#ifndef NDEBUG
-  std::cout<<"PF::ImageArea::update( const VipsRect& area ) called"<<std::endl;
-	//#endif
+#ifndef NDEBUG
+  std::cout<<"PF::ImageArea::sink( const VipsRect& area ) called"<<std::endl;
+#endif
 
   PF::View* view = get_view();
   if( !view ) return;
@@ -592,17 +597,28 @@ void PF::ImageArea::update( const VipsRect& area )
   std::cout<<"                               xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
 #endif
 
+	//update( NULL );
+	/*
+  VipsImage* display_image2 = im_open( "display_image2", "p" );
+  if (vips_sink_screen2 (outimg, display_image2, NULL,
+												 64, 64, (2000/64)*(2000/64), 
+												 //6400, 64, (2000/64), 
+												 0, NULL, this))
+		return;
+	*/
+  VipsRegion* region2 = vips_region_new (display_image);
   vips_invalidate_area( display_image, &scaled_area );
+	//vips_region_invalidate( region );
 
   VipsRect* parea = (VipsRect*)(&scaled_area);
-  if (vips_region_prepare (region, parea))
+  if (vips_region_prepare (region2, parea))
     return;
-
+	/*
 	std::cout<<"Plotting scaled area "<<scaled_area.width<<","<<scaled_area.height
 					 <<"+"<<scaled_area.left<<","<<scaled_area.top<<std::endl;
 	guint8 *px1 = (guint8 *) VIPS_REGION_ADDR( region, scaled_area.left, scaled_area.top );
 	int rs1 = VIPS_REGION_LSKIP( region );
-	int bl1 = 3; /*buf->get_byte_length();*/
+	int bl1 = 3; 
 	for( int y = 0; y < scaled_area.height; y++ ) {
 		guint8* p1 = px1 + rs1*y;
 		for( int x = 0; x < scaled_area.width*bl1; x+=bl1 ) {
@@ -610,8 +626,9 @@ void PF::ImageArea::update( const VipsRect& area )
 		}
 		printf("\n");
 	}
+	*/
 
-
+	/*
   // Request a redraw of the modified area. 
   Update * update = g_new (Update, 1);
   update->image_area = this;
@@ -626,18 +643,25 @@ void PF::ImageArea::update( const VipsRect& area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update( const VipsRect& area ): queue_draw() called"<<std::endl;
 #endif
-	/*
-		VipsRect* parea = (VipsRect*)(&scaled_area);
-		if (vips_region_prepare (region, parea))
-    return;
+	*/
 
-		double_buffer.lock();
-		double_buffer.get_active().copy( region, area );
-		Update * update = g_new (Update, 1);
-		update->image_area = this;
-		update->rect.width = update->rect.height = 0;
-		std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
-		gdk_threads_add_idle ((GSourceFunc) render_cb, update);
-		double_buffer.unlock();
+	/**/
+	double_buffer.lock();
+	double_buffer.get_active().copy( region2, scaled_area );
+	Update * update = g_new (Update, 1);
+	update->image_area = this;
+	update->rect.width = update->rect.height = 0;
+	//std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
+	gdk_threads_add_idle ((GSourceFunc) render_cb, update);
+	double_buffer.unlock();
+	PF_UNREF( region2, "ImageArea::sink(): region2" );
+	//PF_UNREF( display_image2, "ImageArea::sink(): display_image2" );
+	/**/
+
+	/*
+	double_buffer.lock();
+	double_buffer.get_active().copy( region, area );
+	double_buffer.unlock();
+	draw_area();
 	*/
 }

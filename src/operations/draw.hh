@@ -37,6 +37,7 @@
 #include "../base/processor.hh"
 #include "../base/rawbuffer.hh"
 
+#include "diskbuffer.hh"
 #include "blender.hh"
 
 namespace PF 
@@ -185,7 +186,7 @@ namespace PF
     Property<float> pen_opacity;
     Property< std::list<Stroke> > strokes;
 
-
+		ProcessorBase* diskbuf;
     RawBuffer* rawbuf;
 
     Pen pen;
