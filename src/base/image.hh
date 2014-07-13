@@ -62,12 +62,18 @@ namespace PF
     GMutex* rebuild_mutex;
     GCond* rebuild_done;
 
+    GMutex* sample_mutex;
+    GCond* sample_done;
+
     ProcessorBase* convert2srgb;
     ProcessorBase* convert_format;
 
     void remove_from_inputs( PF::Layer* layer );
     void remove_from_inputs( PF::Layer* layer, std::list<Layer*>& list );
     void remove_layer( PF::Layer* layer, std::list<Layer*>& list );
+
+		VipsImage* sampler_image;
+		std::vector<float> sampler_values;
 
     void update_async();
 
@@ -108,11 +114,19 @@ namespace PF
 
     void lock() { g_mutex_lock( rebuild_mutex); }
     void unlock() { g_mutex_unlock( rebuild_mutex); }
+    void sample_lock() { g_mutex_lock( sample_mutex); }
+    void sample_unlock() { g_mutex_unlock( sample_mutex); }
     void rebuild_done_signal() { g_cond_signal( rebuild_done ); }
+    void sample_done_signal() { g_cond_signal( sample_done ); }
 
-    void update( VipsRect* area=NULL );
+    void update( PF::View* view=NULL );
     void update_all() { update( NULL ); }
-    void do_update( VipsRect* area );
+    void do_update( PF::View* view=NULL );
+
+
+		void sample( int layer_id, int x, int y, int size, 
+								 VipsImage** image, std::vector<float>& values );
+		void do_sample( int layer_id, VipsRect& area); 
 
     bool open( std::string filename );
 

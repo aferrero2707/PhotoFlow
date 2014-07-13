@@ -309,15 +309,20 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 							 <<"  bottom="<<bottom<<"  right="<<right<<"  rrmin="<<rrmin
 							 <<"  ccmin="<<ccmin<<"  rr1="<<rr1<<"  cc1="<<cc1<<"  rrmax="<<rrmax<<"  ccmax="<<ccmax<<std::endl;
 			*/
-#ifdef __SSE2__
+#ifdef __SSE2___
 			const __m128 c65535v = _mm_set1_ps( 65535.0f );
 			__m128	tempv;
+			const __m128 epsv = _mm_set1_ps( eps );
 			for (rr=rrmin; rr < rrmax; rr++){
 				for (row=rr+top, cc=ccmin; cc < ccmax-3; cc+=4) {
 					indx1=rr*TS+cc;
 					tempv = LVFU(rawData[row][cc+left]) / c65535v;
 					_mm_store_ps( &cfa[indx1], tempv );
 					_mm_store_ps( &rgbgreen[indx1], tempv );
+					if(true && top==0 && left==0 && rr<10 && cc<10) {
+						for(int tempi = 0; tempi<4; tempi++)
+							std::cout<<"rr="<<rr<<"  cc="<<cc+tempi<<"    cfa["<<indx1+tempi<<"] = "<<cfa[indx1+tempi]<<"    c="<<FC(rr,cc+tempi)<<std::endl;
+					}
 				}
 				for (; cc < ccmax; cc++) {
 					indx1=rr*TS+cc;
@@ -406,7 +411,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 				for (row=rr+top, cc=ccmin; cc < ccmax; cc++) {
 					indx1=rr*TS+cc;
 					cfa[indx1] = (rawData[row][cc+left])/65535.0f;
-					if(false && top==0 && left==0 && rr<10 && cc<10) {
+					if(true && top==0 && left==0 && rr<10 && cc<10) {
 						std::cout<<"rr="<<rr<<"  cc="<<cc<<"    cfa["<<indx1<<"] = "<<cfa[indx1]<<"    c="<<FC(rr,cc)<<std::endl;
 					}
 					if(FC(rr,cc)==1)
@@ -486,7 +491,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
 			//end of border fill
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#ifdef __SSE2__
+#ifdef __SSE2___
 			__m128 delhv,delvv;
 			const __m128 epsv = _mm_set1_ps( eps );
 
@@ -514,7 +519,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 				}
 #endif
 
-#ifdef __SSE2__
+#ifdef __SSE2___
 			__m128	Dgrbsq1pv, Dgrbsq1mv,temp2v;
 			for (rr=6; rr < rr1-6; rr++){
 				if((FC(rr,2)&1)==0) {
@@ -566,7 +571,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
 			//interpolate vertical and horizontal color differences
 
-#ifdef __SSE2__
+#ifdef __SSE2___
 			__m128	sgnv,cruv,crdv,crlv,crrv,guhav,gdhav,glhav,grhav,hwtv,vwtv,Gintvhav,Ginthhav,guarv,gdarv,glarv,grarv;
 			vmask	clipmask;
 			if( !(FC(4,4)&1) )
@@ -681,7 +686,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 			}
 #endif
 
-#ifdef __SSE2__
+#ifdef __SSE2___
 			__m128  hcdvarv, vcdvarv;
 			__m128	hcdaltvarv,vcdaltvarv,hcdv,vcdv,hcdaltv,vcdaltv,sgn3v,Ginthv,Gintvv,hcdoldv,vcdoldv;
 			__m128	threev = _mm_set1_ps( 3.0f );
@@ -809,7 +814,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 			}
 #endif
 
-#ifdef __SSE2__
+#ifdef __SSE2___
 			__m128	uavev,davev,lavev,ravev,Dgrbvvaruv,Dgrbvvardv,Dgrbhvarlv,Dgrbhvarrv,varwtv,diffwtv,vcdvar1v,hcdvar1v;
 			__m128	epssqv = _mm_set1_ps( epssq );
 			vmask	decmask;
@@ -1041,7 +1046,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
 			// diagonal interpolation correction
 
-#ifdef __SSE2__
+#ifdef __SSE2___
 			__m128 rbsev,rbnwv,rbnev,rbswv,cfav,rbmv,rbpv,temp1v,wtv;
 			__m128 wtsev, wtnwv, wtnev, wtswv, rbvarmv;
 			__m128 gausseven0v = _mm_set1_ps(gausseven[0]);
@@ -1049,7 +1054,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 			__m128 twov = _mm_set1_ps(2.0f);
 #endif
 			for (rr=8; rr<rr1-8; rr++) {
-#ifdef __SSE2__
+#ifdef __SSE2___
 				for (cc=8+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-8; cc+=8,indx+=8,indx1+=4) {
 
 					//diagonal color ratios
@@ -1193,12 +1198,12 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 #endif
 			}
 
-#ifdef __SSE2__
+#ifdef __SSE2___
 			__m128 pmwtaltv;
 			__m128 zd25v = _mm_set1_ps(0.25f);
 #endif
 			for (rr=10; rr<rr1-10; rr++)
-#ifdef __SSE2__
+#ifdef __SSE2___
 				for (cc=10+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-10; cc+=8,indx+=8,indx1+=4) {
 
 					//first ask if one gets more directional discrimination from nearby B/R sites
@@ -1296,14 +1301,14 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 					Dgrb[1][indx1]=Dgrb[0][indx1];//split out G-B from G-R
 					Dgrb[0][indx1]=0;
 				}
-#ifdef __SSE2__
+#ifdef __SSE2___
 //			__m128 wtnwv,wtnev,wtswv,wtsev;
 			__m128 oned325v = _mm_set1_ps( 1.325f );
 			__m128 zd175v = _mm_set1_ps( 0.175f );
 			__m128 zd075v = _mm_set1_ps( 0.075f );
 #endif
 			for (rr=14; rr<rr1-14; rr++)
-#ifdef __SSE2__
+#ifdef __SSE2___
 				for (cc=14+(FC(rr,2)&1),indx=rr*TS+cc,c=1-FC(rr,cc)/2; cc<cc1-14; cc+=8,indx+=8) {
 					wtnwv=onev/(epsv+vabsf(LVFU(Dgrb[c][(indx-m1)>>1])-LVFU(Dgrb[c][(indx+m1)>>1]))+vabsf(LVFU(Dgrb[c][(indx-m1)>>1])-LVFU(Dgrb[c][(indx-m3)>>1]))+vabsf(LVFU(Dgrb[c][(indx+m1)>>1])-LVFU(Dgrb[c][(indx-m3)>>1])));
 					wtnev=onev/(epsv+vabsf(LVFU(Dgrb[c][(indx+p1)>>1])-LVFU(Dgrb[c][(indx-p1)>>1]))+vabsf(LVFU(Dgrb[c][(indx+p1)>>1])-LVFU(Dgrb[c][(indx+p3)>>1]))+vabsf(LVFU(Dgrb[c][(indx-p1)>>1])-LVFU(Dgrb[c][(indx+p3)>>1])));
@@ -1385,7 +1390,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
 			// copy smoothed results back to image matrix
 			for (rr=16; rr < rr1-16; rr++){
-#ifdef __SSE2__
+#ifdef __SSE2___
 				for (row=rr+top, cc=16; cc < cc1-19; cc+=4) {
 					_mm_storeu_ps(&green[row][cc + left], LVF(rgbgreen[rr*TS+cc]) * c65535v);
 				}

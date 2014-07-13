@@ -84,15 +84,29 @@ void PF::ImageProcessor::run()
       //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
       request.image->lock();
       //std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
+			/*
 			if( (request.area.width!=0) && (request.area.height!=0) )
 				request.image->do_update( &(request.area) );
 			else
 				request.image->do_update( NULL );
+			*/
+			request.image->do_update( request.view );
       request.image->unlock();
       request.image->rebuild_done_signal();
       //std::cout<<"PF::ImageProcessor::run(): updating image done."<<std::endl;
       break;
-			case IMAGE_UPDATE:
+    case IMAGE_SAMPLE:
+      if( !request.image ) continue;
+      //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
+      request.image->sample_lock();
+      std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): image locked."<<std::endl;
+			if( (request.area.width!=0) && (request.area.height!=0) )
+				request.image->do_sample( request.layer_id, request.area );
+      request.image->sample_unlock();
+      request.image->sample_done_signal();
+      std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
+      break;
+		case IMAGE_UPDATE:
       if( !request.view ) continue;
       //std::cout<<"PF::ImageProcessor::run(): updating area."<<std::endl;
       request.view->sink( request.area );

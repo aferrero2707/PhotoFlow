@@ -41,6 +41,7 @@ namespace PF {
   class RawDeveloperConfigDialog: public OperationConfigDialog
   {
     Gtk::Notebook notebook;
+    Gtk::HBox wbHBox;
     Gtk::VBox wbControlsBox;
     Gtk::VBox exposureControlsBox;
     Gtk::VBox outputControlsBox;
@@ -93,6 +94,8 @@ namespace PF {
     void on_out_button_open_clicked();
     void on_out_filename_changed();
 
+    void spot_wb( double x, double y );
+    void color_spot_wb( double x, double y );
     
     void pointer_press_event( int button, double x, double y, int mod_key );
     void pointer_release_event( int button, double x, double y, int mod_key );

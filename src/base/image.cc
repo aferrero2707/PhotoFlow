@@ -112,6 +112,9 @@ PF::Image::Image():
   rebuild_mutex = vips_g_mutex_new();
   g_mutex_lock( rebuild_mutex );
   rebuild_done = vips_g_cond_new();
+  sample_mutex = vips_g_mutex_new();
+  g_mutex_lock( sample_mutex );
+  sample_done = vips_g_cond_new();
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update_all) );
   convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
@@ -131,22 +134,25 @@ PF::Image::~Image()
 // to reduce the amount of computations in case only part of the image
 // needs to be updated. If area is NULL, it means that the whole image 
 // was changed.
-void PF::Image::update( VipsRect* area )
+void PF::Image::update( PF::View* target_view )
 {
   if( PF::PhotoFlow::Instance().is_batch() ) {
-    do_update( area );
+    do_update( target_view );
   } else {
     ProcessRequestInfo request;
     request.image = this;
+    request.view = target_view;
     request.request = PF::IMAGE_REBUILD;
+		/*
 		if(area) {
 			request.area.left = area->left;
 			request.area.top = area->top;
 			request.area.width = area->width;
 			request.area.height = area->height;
 		} else {
-			request.area.width = request.area.height = 0;
-		}
+		*/
+		request.area.width = request.area.height = 0;
+		//}
     
 #ifndef NDEBUG
     std::cout<<"PF::Image::update(): submitting rebuild request..."<<std::endl;
@@ -168,7 +174,7 @@ void PF::Image::update( VipsRect* area )
 }
 
 
-void PF::Image::do_update( VipsRect* area )
+void PF::Image::do_update( PF::View* target_view )
 {
   //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
   //if( !is_modified() ) return;
@@ -195,14 +201,22 @@ void PF::Image::do_update( VipsRect* area )
   for( unsigned int i = 0; i < get_nviews(); i++ ) {
     PF::View* view = get_view( i );
     if( !view ) continue;
-		// For the sake of performance, we only rebuild views that have
-		// sinks attached to them, as otherwise the view can be considered inactive
-		if( !(view->has_sinks()) ) continue;
+
+		if( !target_view) {
+			// We do not target a specific view
+			// For the sake of performance, we only rebuild views that have
+			// sinks attached to them, as otherwise the view can be considered inactive
+			if( !(view->has_sinks()) ) continue;
+		} else {
+			// We only rebuild the target view
+			if( view != target_view ) continue;
+		}
 
 #ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): updating view #"<<i<<std::endl;
 #endif
-    get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100, area );
+    //get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100, area );
+    get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
 #ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): view #"<<i<<" updated."<<std::endl;
 #endif
@@ -234,6 +248,121 @@ void PF::Image::do_update( VipsRect* area )
   }
   std::cout<<std::endl<<"============================================"<<std::endl<<std::endl<<std::endl;
 #endif
+}
+
+
+
+void PF::Image::sample( int layer_id, int x, int y, int size, 
+												VipsImage** image, std::vector<float>& values )
+{
+	int left = (int)x-size/2;
+	int top = (int)y-size/2;
+	int width = size;
+	int height = size;
+	VipsRect area = {left, top, width, height};
+
+  if( PF::PhotoFlow::Instance().is_batch() ) {
+    do_sample( layer_id, area );
+  } else {
+    ProcessRequestInfo request;
+    request.image = this;
+		request.layer_id = layer_id;
+    request.request = PF::IMAGE_SAMPLE;
+		request.area.left = area.left;
+		request.area.top = area.top;
+		request.area.width = area.width;
+		request.area.height = area.height;
+    
+#ifndef NDEBUG
+    std::cout<<"PF::Image::sample(): submitting rebuild request..."<<std::endl;
+#endif
+    PF::ImageProcessor::Instance().submit_request( request );
+#ifndef NDEBUG
+    std::cout<<"PF::Image::sample(): request submitted."<<std::endl;
+#endif
+
+    g_cond_wait( sample_done, sample_mutex );
+
+		if(image)
+			*image = sampler_image;
+		values = sampler_values;
+  }
+
+  /*
+  if( is_async() )
+    update_async();
+  else
+    update_sync();
+  */
+}
+
+
+void PF::Image::do_sample( int layer_id, VipsRect& area )
+{
+  // Get the default view of the image 
+  // (it is supposed to be at 1:1 zoom level 
+  // and floating point accuracy)
+  PF::View* view = get_view( 0 );
+  if( !view ) return;
+
+  // Get the node associated to the layer
+  PF::ViewNode* node = view->get_node( layer_id );
+  if( !node ) return;
+
+  // Finally, get the underlying VIPS image associated to the layer
+  VipsImage* image = node->image;
+  if( !image ) return;
+
+	// Now we have to process a small portion of the image 
+	// to get the corresponding Lab values
+	VipsImage* spot;
+	VipsRect all = {0 ,0, image->Xsize, image->Ysize};
+	VipsRect clipped;
+	vips_rect_intersectrect( &area, &all, &clipped );
+  
+	if( vips_crop( image, &spot, 
+								 clipped.left, clipped.top, 
+								 clipped.width, clipped.height, 
+								 NULL ) )
+		return;
+
+	VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
+
+	VipsImage* outimg = im_open( "spot_wb_img", "p" );
+	if (vips_sink_screen (spot, outimg, NULL,
+												64, 64, 1, 
+												0, NULL, this))
+		return;
+	VipsRegion* region = vips_region_new( outimg );
+	if (vips_region_prepare (region, &rspot))
+		return;
+  
+	//if( vips_sink_memory( spot ) )
+	//  return;
+
+	int row, col, b;
+	int line_size = clipped.width*image->Bands;
+	float* p;
+	float avg[16] = {0, 0, 0};
+	for( row = 0; row < rspot.height; row++ ) {
+		p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
+		for( col = 0; col < line_size; col += image->Bands ) {
+			for( b = 0; b < image->Bands; b++ ) {
+				avg[b] += p[col+b];
+			}
+		}
+	}
+
+	sampler_values.clear();
+	for( b = 0; b < image->Bands; b++ ) {
+		avg[b] /= rspot.width*rspot.height;
+		sampler_values.push_back( avg[b] );
+	}
+	sampler_image = image;
+
+	g_object_unref( spot );
+	g_object_unref( outimg );
+	g_object_unref( region );
 }
 
 
@@ -308,7 +437,7 @@ bool PF::Image::open( std::string filename )
   if( !getFileExtension( "/", filename, ext ) ) return false;
   if( ext == "pfi" ) {
 
-    add_view( VIPS_FORMAT_USHORT, 0 );
+    add_view( VIPS_FORMAT_FLOAT, 0 );
     add_view( VIPS_FORMAT_USHORT, 0 );
     PF::load_pf_image( filename, this );
     //PF::PhotoFlow::Instance().set_image( pf_image );
@@ -321,7 +450,7 @@ bool PF::Image::open( std::string filename )
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
 
-    add_view( VIPS_FORMAT_USHORT, 0 );
+    add_view( VIPS_FORMAT_FLOAT, 0 );
     add_view( VIPS_FORMAT_USHORT, 0 );
 
     PF::Layer* limg = layer_manager.new_layer();
@@ -352,7 +481,7 @@ bool PF::Image::open( std::string filename )
     */
   } else {
     
-    add_view( VIPS_FORMAT_USHORT, 0 );
+    add_view( VIPS_FORMAT_FLOAT, 0 );
     add_view( VIPS_FORMAT_USHORT, 0 );
 
     PF::Layer* limg = layer_manager.new_layer();

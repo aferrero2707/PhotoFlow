@@ -45,7 +45,8 @@ namespace PF
 
   enum wb_mode_t {
     WB_CAMERA,
-    WB_SPOT
+    WB_SPOT,
+    WB_COLOR_SPOT
   }; 
 
   class RawPreprocessorPar: public OpParBase
@@ -276,6 +277,7 @@ namespace PF
 				//std::cout<<"render_camwb() called"<<std::endl;
 				break;
       case WB_SPOT:
+      case WB_COLOR_SPOT:
 				render_spotwb(ireg, n, in_first, imap, omap, oreg, rdpar);
 				//std::cout<<"render_spotwb() called"<<std::endl;
 				break;

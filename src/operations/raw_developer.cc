@@ -81,8 +81,8 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
       return NULL;
   
     in2.push_back( image );
-		//PF::ProcessorBase* demo = amaze_demosaic;
-		PF::ProcessorBase* demo = fast_demosaic;
+		PF::ProcessorBase* demo = amaze_demosaic;
+		//PF::ProcessorBase* demo = fast_demosaic;
     demo->get_par()->set_image_hints( image );
     demo->get_par()->set_format( VIPS_FORMAT_FLOAT );
     out_demo = demo->get_par()->build( in2, 0, NULL, NULL, level );
