@@ -14,6 +14,8 @@ Here is the general feature (whish)list:
 - Support for common photo editing tools: levels, curves, brightness-contrast control, blurring, sharpening, cropping, resizing, colorspace conversions, etc..., all implemented in the form of image layers
 - User-friendly interface to develop new tools and image filters as external plugins
 
+You can follow the development of photoflow and learn about its usage in the dedicated blog: http://photoflowblog.blogspot.fr/
+
 # Downloading and compiling
 
 The pixel rendering engine of PhotoFlow is based on VIPS (http://www.vips.ecs.soton.ac.uk). You have to install a recent version of VIPS in order to compile PhotoFlow.
