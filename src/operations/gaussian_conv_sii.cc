@@ -2,6 +2,13 @@
  * \file gaussian_conv_sii.c
  * \brief Gaussian convolution using stacked integral images
  * \author Pascal Getreuer <getreuer@cmla.ens-cachan.fr>
+ * http://www.ipol.im/pub/art/2013/87/
+ *
+ * This code implements stacked integral images Gaussian convolution approximation 
+ * introduced by Bhatia, Snyder, and Bilbro (http://dx.doi.org/10.1109/ROBOT.2010.5509400)
+ * and refined by Elboher and Werman (http://arxiv.org/abs/1107.4958).
+ *
+ * Modified for integration into PhotoFlow
  *
  * Copyright (c) 2012-2013, Pascal Getreuer
  * All rights reserved.
