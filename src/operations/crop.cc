@@ -27,30 +27,39 @@
 
  */
 
-#include "../../operations/gaussblur.hh"
+#include "crop.hh"
+#include "../base/new_operation.hh"
 
-#include "gaussblur_config.hh"
 
-
-PF::GaussBlurConfigDialog::GaussBlurConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gaussian Blur" ),
-	modeSelector( this, "preview_mode", "Preview mode: ", PF_BLUR_FAST ),
-  radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1)
+PF::CropPar::CropPar(): 
+  OpParBase(),
+  crop_left("crop_left",this,0),
+  crop_top("crop_top",this,0),
+  crop_width("crop_width",this,0),
+  crop_height("crop_height",this,0)
 {
-  controlsBox.pack_start( modeSelector );
-  controlsBox.pack_start( radiusSlider );
-  
-  add_widget( controlsBox );
+  set_type( "crop" );
 }
 
 
 
-void PF::GaussBlurConfigDialog::open()
+VipsImage* PF::CropPar::build(std::vector<VipsImage*>& in, int first, 
+				   VipsImage* imap, VipsImage* omap, 
+				   unsigned int& level)
 {
-  if( get_layer() && get_layer()->get_image() && 
-      get_layer()->get_processor() &&
-      get_layer()->get_processor()->get_par() ) {
-    radiusSlider.init();
-  }
-  OperationConfigDialog::open();
+  VipsImage* srcimg = NULL;
+  if( in.size() > 0 ) srcimg = in[0];
+	if( srcimg == NULL ) return NULL;
+	VipsImage* out;
+
+	if( vips_crop( srcimg, &out, crop_left.get(), crop_top.get(),
+								 crop_width.get(), crop_height.get(), NULL ) )
+		return NULL;
+  return out;
+}
+
+
+PF::ProcessorBase* PF::new_crop()
+{
+  return( new PF::Processor<PF::CropPar,PF::CropProc>() );
 }

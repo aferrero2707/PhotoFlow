@@ -35,8 +35,12 @@
 
 PF::GaussBlurPar::GaussBlurPar(): 
   BlenderPar(),
-  radius("radius",this,1)
+  radius("radius",this,5),
+	preview_mode("preview_mode",this,PF_BLUR_FAST,"FAST","Fast")
 {
+	preview_mode.add_enum_value(PF_BLUR_FAST,"FAST","Fast");
+	preview_mode.add_enum_value(PF_BLUR_EXACT,"ACCURATE","Accurate");
+	
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 
   set_type( "gaussblur" );
@@ -53,32 +57,54 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* mask;
   VipsImage* blurred = srcimg;
 
+	double radius2 = radius.get();
+	for( int l = 1; l <= level; l++ )
+		radius2 /= 2;
+
+	if( (get_render_mode() == PF_RENDER_PREVIEW) &&
+			radius2 < 0.5 ) {
+		PF_REF( blurred, "PF::GaussBlurPar::build(): blurred ref" );
+		return blurred;
+	}
+
+	sii_precomp( &coeffs, radius2, 3 );
+
+	if( (get_render_mode() == PF_RENDER_PREVIEW) &&
+			(preview_mode.get_enum_value().first == PF_BLUR_FAST) &&
+			(radius2 > 2) ){
+		VipsImage* outnew = PF::OpParBase::build( in, first, NULL, omap, level );
+		return outnew;
+	}
+
   if( srcimg ) {
     int size = (srcimg->Xsize > srcimg->Ysize) ? srcimg->Xsize : srcimg->Ysize;
-    float pxradius = radius.get();//*size/1000;
   
-    int result = vips_gaussmat( &mask, pxradius / 2, 0.2, 
+		float accuracy = 0.05;
+		if( get_render_mode() == PF_RENDER_PREVIEW ) accuracy = 0.2;
+    int result = vips_gaussmat( &mask, radius2, accuracy, 
 				"separable", TRUE,
 				"integer", FALSE,
 				NULL );
 
     if( !result ) {
-      result = vips_convsep( srcimg, &blurred, mask, 
-			     "precision", VIPS_PRECISION_INTEGER,
+			VipsImage* tmp;
+      result = vips_convsep( srcimg, &tmp, mask, 
+			     "precision", VIPS_PRECISION_FLOAT,
 			     NULL );
       //g_object_unref( mask );
       PF_UNREF( mask, "PF::GaussBlurPar::build(): mask unref" );
       if( !result ) {
-				//g_object_unref( srcimg );
-				//PF_UNREF( srcimg, "PF::GaussBlurPar::build(): srcimg unref" );
-				//return NULL;
-      }
+				if( vips_cast( tmp, &blurred, get_format(), NULL ) ) {
+					PF_UNREF( tmp, "PF::GaussBlurPar::build(): tmp unref" );
+					return NULL;
+				}
+			}
     }
   }
 
   std::vector<VipsImage*> in2;
   VipsImage* converted = blurred;
-  if( blurred ) {
+  if( false && blurred ) {
     if( get_format() != blurred->BandFmt ) {
       in2.clear(); in2.push_back( blurred );
       convert_format->get_par()->set_image_hints( blurred );
@@ -88,6 +114,8 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
       PF_UNREF( blurred, "PF::GaussBlurPar::build(): blurred unref" );
     }
   }
+
+	return converted;
 
   in2.clear();
   in2.push_back( srcimg );

@@ -51,6 +51,7 @@ void PF::OperationConfigUI::open()
 
 
 PF::OpParBase::OpParBase():
+	render_mode(PF_RENDER_PREVIEW), 
   map_flag( false ),
   blend_mode("blend_mode",this),
   intensity("intensity",this,1),

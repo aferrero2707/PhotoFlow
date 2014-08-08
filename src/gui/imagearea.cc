@@ -482,8 +482,9 @@ void PF::ImageArea::update( VipsRect* area )
 
   display_image = im_open( "display_image", "p" );
 
+	int tile_size = 128;
   if (vips_sink_screen2 (outimg, display_image, NULL,
-												 64, 64, (2000/64)*(2000/64), 
+												 tile_size, tile_size, (2000/tile_size)*(2000/tile_size), 
 												 //6400, 64, (2000/64), 
 												 0, NULL, this))
 		return;

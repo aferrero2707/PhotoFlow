@@ -78,8 +78,8 @@ namespace PF
 #define MAPFLAG_SWITCH( TYPE, CS, CHMIN, CHMAX ) {	\
         switch(mapflag) { \
         case 0:								\
-	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
-	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, false, false, false > op; \
+					if(get_par()->get_render_mode() == PF_RENDER_NORMAL) {					\
+						OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, false, false, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
 	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, false, false, true > op; \
@@ -87,7 +87,7 @@ namespace PF
 	  }								\
 	  break; \
         case 1:								\
-	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
+					if(get_par()->get_render_mode() == PF_RENDER_NORMAL) {					\
 	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, false >, CS, CHMIN, CHMAX, true, false, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
@@ -96,7 +96,7 @@ namespace PF
 	  }								\
 	  break; \
         case 2:								\
-	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
+					if(get_par()->get_render_mode() == PF_RENDER_NORMAL) {					\
 	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, false, true, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
@@ -105,7 +105,7 @@ namespace PF
 	  }								\
 	  break; \
         case 3:								\
-	  if(PF::PhotoFlow::Instance().get_render_mode() == PF_RENDER_NORMAL) { \
+					if(get_par()->get_render_mode() == PF_RENDER_NORMAL) {					\
 	    OP< TYPE, Blender< TYPE, CS, CHMIN, CHMAX, true >, CS, CHMIN, CHMAX, true, true, false > op; \
 	    op.render(in,n,in_first,imap,omap,out,&op_par);		\
 	  } else {							\
@@ -121,56 +121,56 @@ namespace PF
   switch(colorspace) {							\
   case PF_COLORSPACE_RAW:						\
   case PF_COLORSPACE_GRAYSCALE:						\
-    MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_GRAYSCALE, 0, 0 );		\
+    MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_GRAYSCALE, 0, 0 );	\
     break;								\
   case PF_COLORSPACE_RGB:						\
     switch( op_par.get_rgb_target_channel() ) {				\
     case 0:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 0 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 0 );	\
       break;								\
     case 1:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 1, 1 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 1, 1 );	\
       break;								\
     case 2:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 2, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 2, 2 );	\
       break;								\
     default:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_RGB, 0, 2 );	\
       break;								\
     }									\
     break;								\
   case PF_COLORSPACE_LAB:						\
     switch( op_par.get_lab_target_channel() ) {				\
     case 0:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 0 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 0 );	\
       break;								\
     case 1:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 1, 1 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 1, 1 );	\
       break;								\
     case 2:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 2, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 2, 2 );	\
       break;								\
     default:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_LAB, 0, 2 );	\
       break;								\
     }									\
     break;								\
   case PF_COLORSPACE_CMYK:						\
     switch( op_par.get_cmyk_target_channel() ) {			\
     case 0:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 0 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 0 );	\
       break;								\
     case 1:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 1, 1 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 1, 1 );	\
       break;								\
     case 2:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 2, 2 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 2, 2 );	\
       break;								\
     case 3:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 3, 3 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 3, 3 );	\
       break;								\
     default:								\
-      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 3 );			\
+      MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_CMYK, 0, 3 );	\
       break;								\
     }									\
     break;								\

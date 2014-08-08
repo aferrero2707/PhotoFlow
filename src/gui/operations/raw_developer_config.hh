@@ -44,6 +44,7 @@ namespace PF {
     Gtk::HBox wbHBox;
     Gtk::VBox wbControlsBox;
     Gtk::VBox exposureControlsBox;
+    Gtk::VBox demoControlsBox;
     Gtk::VBox outputControlsBox;
     
     Selector wbModeSelector;
@@ -56,6 +57,11 @@ namespace PF {
     Slider wb_target_b_slider;
     Gtk::Label wb_best_match_label;
     Gtk::HBox wbTargetBox;
+
+		// Demosaicing method selector
+		Selector demoMethodSelector;
+		// False color suppression steps slider
+    Slider fcsSlider;
 
     ExposureSlider exposureSlider;
 

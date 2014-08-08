@@ -40,7 +40,7 @@
 #include "imageprocessor.hh"
 #include "photoflow.hh"
 
-PF::PhotoFlow::PhotoFlow(): render_mode(PF_RENDER_PREVIEW), batch(true)
+PF::PhotoFlow::PhotoFlow(): batch(true)
 {
   // Create the cache directory if possible
   char fname[500];

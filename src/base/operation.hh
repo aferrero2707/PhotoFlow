@@ -55,7 +55,7 @@
 
 #define OP_TEMPLATE_DEF \
   typename T, class BLENDER, colorspace_t CS,	\
-    int CHMIN, int CHMAX, \
+    int CHMIN, int CHMAX,								\
     bool has_imap, bool has_omap, bool PREVIEW
 
 #define OP_TEMPLATE_IMP \
@@ -83,6 +83,15 @@
 
 #define OP_TEMPLATE_IMP_CS_SPEC(CS_SPEC) \
   T, BLENDER, CS_SPEC, CHMIN, CHMAX, has_imap, has_omap, PREVIEW
+
+
+
+#define OP_TEMPLATE_DEF_PREVIEW_SPEC \
+  typename T, class BLENDER, colorspace_t CS,	int CHMIN, int CHMAX,	\
+    bool has_imap, bool has_omap
+
+#define OP_TEMPLATE_IMP_PREVIEW_SPEC(PREVIEW_SPEC) \
+  T, BLENDER, CS, CHMIN, CHMAX, has_imap, has_omap, PREVIEW_SPEC
 
 
 
@@ -132,6 +141,8 @@ namespace PF
     VipsBandFormat format;
     VipsCoding coding;
     VipsInterpretation interpretation;
+
+    rendermode_t render_mode;
 
     bool map_flag;
 
@@ -197,9 +208,9 @@ namespace PF
     int get_rgb_target_channel() 
     {
       if( !(rgb_target_channel.get_enum_value().second.first.empty()) )
-	return( rgb_target_channel.get_enum_value().first );
+				return( rgb_target_channel.get_enum_value().first );
       else 
-	return -1;
+				return -1;
     } 
 
     int get_lab_target_channel() 
@@ -213,9 +224,9 @@ namespace PF
     int get_cmyk_target_channel() 
     {
       if( !(cmyk_target_channel.get_enum_value().second.first.empty()) )
-	return( cmyk_target_channel.get_enum_value().first );
+				return( cmyk_target_channel.get_enum_value().first );
       else 
-	return -1;
+				return -1;
     } 
 
     /* Function to derive the output area from the input area
@@ -244,6 +255,9 @@ namespace PF
     virtual bool has_opacity() { return true; }
     virtual bool needs_input() { return true; }
 
+    rendermode_t get_render_mode() { return render_mode; }
+    void set_render_mode(rendermode_t m) { render_mode = m; }
+
     virtual VipsImage* build(std::vector<VipsImage*>& in, int first, 
 			     VipsImage* imap, VipsImage* omap, unsigned int& level);
 
@@ -263,6 +277,22 @@ namespace PF
     VipsCoding get_coding() { return coding; }
     void set_coding( VipsCoding c ) { coding = c; }
     
+		virtual void set_image_hints( OpParBase* op )
+		{
+			if( !op ) return;
+			set_image_hints( op->get_xsize(), op->get_ysize(),
+											 op->get_interpretation() );
+			bands = op->get_nbands();
+			rgb_target_channel.set_enum_value(op->get_rgb_target_channel());
+			lab_target_channel.set_enum_value(op->get_lab_target_channel());
+			cmyk_target_channel.set_enum_value(op->get_cmyk_target_channel());
+			set_demand_hint( op->get_demand_hint() );
+			set_map_flag( op->is_map() );
+			set_coding( op->get_coding() );
+			set_format( op->get_format() );
+			set_render_mode( op->get_render_mode() );
+		}
+
     virtual void set_image_hints( VipsImage* img )
     {
       if( !img ) return;

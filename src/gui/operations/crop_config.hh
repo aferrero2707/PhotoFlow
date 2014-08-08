@@ -27,30 +27,32 @@
 
  */
 
-#include "../../operations/gaussblur.hh"
+#ifndef CROP_CONFIG_DIALOG_HH
+#define CROP_CONFIG_DIALOG_HH
 
-#include "gaussblur_config.hh"
+#include <gtkmm.h>
+
+#include "../operation_config_dialog.hh"
+#include "../../operations/crop.hh"
 
 
-PF::GaussBlurConfigDialog::GaussBlurConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gaussian Blur" ),
-	modeSelector( this, "preview_mode", "Preview mode: ", PF_BLUR_FAST ),
-  radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1)
+namespace PF {
+
+  class CropConfigDialog: public OperationConfigDialog
 {
-  controlsBox.pack_start( modeSelector );
-  controlsBox.pack_start( radiusSlider );
-  
-  add_widget( controlsBox );
+  Gtk::VBox controlsBox;
+
+  Slider cropLeftSlider;
+  Slider cropTopSlider;
+  Slider cropWidthSlider;
+  Slider cropHeightSlider;
+
+public:
+  CropConfigDialog( Layer* l );
+
+  void open();
+};
+
 }
 
-
-
-void PF::GaussBlurConfigDialog::open()
-{
-  if( get_layer() && get_layer()->get_image() && 
-      get_layer()->get_processor() &&
-      get_layer()->get_processor()->get_par() ) {
-    radiusSlider.init();
-  }
-  OperationConfigDialog::open();
-}
+#endif

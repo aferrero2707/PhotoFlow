@@ -27,6 +27,8 @@
 
  */
 
+#include "../../operations/raw_preprocessor.hh"
+#include "../../operations/raw_output.hh"
 #include "../../operations/raw_developer.hh"
 
 #include "raw_developer_config.hh"
@@ -41,8 +43,10 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
   wb_target_a_slider( this, "wb_target_a", "", 0, -1000000, 1000000, 0.05, 0.1, 1),
   wb_target_b_slider( this, "wb_target_b", "", 0, -1000000, 1000000, 0.05, 0.1, 1),
-  exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
-  profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
+  demoMethodSelector( this, "demo_method", "Demosaicing method: ", PF::PF_DEMO_AMAZE ),
+  fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
+	exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
+	profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
   gammaModeSelector( this, "gamma_mode", "Raw gamma: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
@@ -66,6 +70,9 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   wbControlsBox.pack_start( wbBlueSlider );
 
   exposureControlsBox.pack_start( exposureSlider );
+
+  demoControlsBox.pack_start( demoMethodSelector );
+  demoControlsBox.pack_start( fcsSlider );
 
   profileModeSelectorBox.pack_start( profileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK );
@@ -96,6 +103,7 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
 
   notebook.append_page( wbControlsBox, "White balance" );
   notebook.append_page( exposureControlsBox, "Exposure" );
+  notebook.append_page( demoControlsBox, "Demosaicing" );
   notebook.append_page( outputControlsBox, "Output" );
     
   add_widget( notebook );

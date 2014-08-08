@@ -27,30 +27,31 @@
 
  */
 
-#include "../../operations/gaussblur.hh"
+#include "../../operations/unsharp_mask.hh"
 
-#include "gaussblur_config.hh"
+#include "unsharp_mask_config.hh"
 
 
-PF::GaussBlurConfigDialog::GaussBlurConfigDialog( PF::Layer* layer ):
+PF::UnsharpMaskConfigDialog::UnsharpMaskConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Gaussian Blur" ),
-	modeSelector( this, "preview_mode", "Preview mode: ", PF_BLUR_FAST ),
-  radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1)
+  radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1),
+  amountSlider( this, "amount", "Amount", 100, 0, 500, 1, 10, 1)
 {
-  controlsBox.pack_start( modeSelector );
   controlsBox.pack_start( radiusSlider );
+  controlsBox.pack_start( amountSlider );
   
   add_widget( controlsBox );
 }
 
 
 
-void PF::GaussBlurConfigDialog::open()
+void PF::UnsharpMaskConfigDialog::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
-    radiusSlider.init();
+    //amountSlider.init();
+    //radiusSlider.init();
   }
   OperationConfigDialog::open();
 }

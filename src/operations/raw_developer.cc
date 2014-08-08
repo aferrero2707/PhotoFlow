@@ -31,18 +31,35 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "convertformat.hh"
+#include "raw_preprocessor.hh"
+#include "amaze_demosaic.hh"
+#include "igv_demosaic.hh"
+#include "fast_demosaic.hh"
+#include "false_color_correction.hh"
+#include "raw_output.hh"
+
 #include "raw_developer.hh"
 
 
 PF::RawDeveloperPar::RawDeveloperPar(): 
-  OpParBase(), output_format( VIPS_FORMAT_NOTSET )
+  OpParBase(), output_format( VIPS_FORMAT_NOTSET ),
+  demo_method("demo_method",this,PF::PF_DEMO_AMAZE,"AMAZE","Amaze"),
+	fcs_steps("fcs_steps",this,1)
 {
+	demo_method.add_enum_value(PF::PF_DEMO_AMAZE,"AMAZE","Amaze");
+	demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
+	demo_method.add_enum_value(PF::PF_DEMO_IGV,"IGV","Igv");
+
   set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
   amaze_demosaic = new_amaze_demosaic();
+  igv_demosaic = new_igv_demosaic();
   fast_demosaic = new_fast_demosaic();
   raw_preprocessor = new_raw_preprocessor();
   raw_output = new_raw_output();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+	for(int ifcs = 0; ifcs < 4; ifcs++) 
+		fcs[ifcs] = new_false_color_correction();
 
   map_properties( raw_preprocessor->get_par()->get_properties() );
   map_properties( raw_output->get_par()->get_properties() );
@@ -81,12 +98,30 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
       return NULL;
   
     in2.push_back( image );
-		PF::ProcessorBase* demo = amaze_demosaic;
+		PF::ProcessorBase* demo = NULL;
+		switch( demo_method.get_enum_value().first ) {
+		case PF::PF_DEMO_FAST: demo = fast_demosaic; break;
+		case PF::PF_DEMO_AMAZE: demo = amaze_demosaic; break;
+		case PF::PF_DEMO_IGV: demo = igv_demosaic; break;
+		defualt: break;
+		}
+		//PF::ProcessorBase* demo = amaze_demosaic;
+		//PF::ProcessorBase* demo = igv_demosaic;
 		//PF::ProcessorBase* demo = fast_demosaic;
+		if( !demo ) return NULL;
     demo->get_par()->set_image_hints( image );
     demo->get_par()->set_format( VIPS_FORMAT_FLOAT );
     out_demo = demo->get_par()->build( in2, 0, NULL, NULL, level );
     g_object_unref( image );
+
+		for(int ifcs = 0; ifcs < VIPS_MIN(fcs_steps.get(),4); ifcs++) {
+			VipsImage* temp = out_demo;
+			in2.clear(); in2.push_back( temp );
+			fcs[ifcs]->get_par()->set_image_hints( temp );
+			fcs[ifcs]->get_par()->set_format( VIPS_FORMAT_FLOAT );
+			out_demo = fcs[ifcs]->get_par()->build( in2, 0, NULL, NULL, level );
+			PF_UNREF( temp, "RawDeveloperPar::build(): temp unref");
+		}
   } else {
     raw_preprocessor->get_par()->set_image_hints( in[0] );
     raw_preprocessor->get_par()->set_format( VIPS_FORMAT_FLOAT );

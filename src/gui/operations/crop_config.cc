@@ -27,30 +27,37 @@
 
  */
 
-#include "../../operations/gaussblur.hh"
+#include "../../operations/crop.hh"
 
-#include "gaussblur_config.hh"
+#include "crop_config.hh"
 
 
-PF::GaussBlurConfigDialog::GaussBlurConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gaussian Blur" ),
-	modeSelector( this, "preview_mode", "Preview mode: ", PF_BLUR_FAST ),
-  radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1)
+PF::CropConfigDialog::CropConfigDialog( PF::Layer* layer ):
+  OperationConfigDialog( layer, "Crop" ),
+  cropLeftSlider( this, "crop_left", "Crop left", 0, 0, 10000000, 1, 10, 1),
+  cropTopSlider( this, "crop_top", "Crop top", 0, 0, 10000000, 1, 10, 1),
+  cropWidthSlider( this, "crop_width", "Crop width", 0, 0, 10000000, 1, 10, 1),
+  cropHeightSlider( this, "crop_height", "Crop height", 0, 0, 10000000, 1, 10, 1)
 {
-  controlsBox.pack_start( modeSelector );
-  controlsBox.pack_start( radiusSlider );
+  controlsBox.pack_start( cropLeftSlider );
+  controlsBox.pack_start( cropTopSlider );
+  controlsBox.pack_start( cropWidthSlider );
+  controlsBox.pack_start( cropHeightSlider );
   
   add_widget( controlsBox );
 }
 
 
 
-void PF::GaussBlurConfigDialog::open()
+void PF::CropConfigDialog::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
-    radiusSlider.init();
+    cropLeftSlider.init();
+    cropTopSlider.init();
+    cropWidthSlider.init();
+    cropHeightSlider.init();
   }
   OperationConfigDialog::open();
 }

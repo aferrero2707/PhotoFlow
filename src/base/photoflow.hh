@@ -49,8 +49,6 @@ namespace PF
   {
     typedef ProcessorBase* (*new_op_func_t)(std::string opname, Layer* current_layer);
 
-    rendermode_t render_mode;
-
     Image* active_image;
 
     new_op_func_t new_op_func;
@@ -66,9 +64,6 @@ namespace PF
     PhotoFlow();
 
     static PhotoFlow& Instance();
-
-    rendermode_t get_render_mode() { return render_mode; }
-    void set_render_mode(rendermode_t m) { render_mode = m; }
 
     Image* get_image() { return active_image; }
     void set_image(Image* i) { active_image = i; }

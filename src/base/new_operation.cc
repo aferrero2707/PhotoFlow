@@ -72,6 +72,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
     processor = new_clone();
 
+  } else if( op_type == "crop" ) {
+
+    //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    processor = new_crop();
+
   } else if( op_type == "invert" ) {
 
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
@@ -106,6 +111,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
       
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
     processor = new_gaussblur();
+
+  } else if( op_type == "unsharp_mask" ) {
+      
+    //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
+    processor = new_unsharp_mask();
 
   } else if( op_type == "convert2lab" ) {
 

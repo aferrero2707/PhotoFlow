@@ -38,26 +38,33 @@
 #include "../base/imagepyramid.hh"
 #include "../base/rawmatrix.hh"
 
-#include "convertformat.hh"
-
 #include "raw_image.hh"
-#include "raw_preprocessor.hh"
-#include "amaze_demosaic.hh"
-#include "fast_demosaic.hh"
-#include "raw_output.hh"
 
 namespace PF 
 {
+
+	enum demo_method_t {
+		PF_DEMO_FAST,
+		PF_DEMO_AMAZE,
+		PF_DEMO_IGV
+	};
 
   class RawDeveloperPar: public OpParBase
   {
     VipsBandFormat output_format;
     dcraw_data_t* image_data;
     PF::ProcessorBase* amaze_demosaic;
+    PF::ProcessorBase* igv_demosaic;
     PF::ProcessorBase* fast_demosaic;
     PF::ProcessorBase* raw_preprocessor;
     PF::ProcessorBase* raw_output;
     PF::ProcessorBase* convert_format;
+    PF::ProcessorBase* fcs[4];
+
+		// False color suppression steps
+		PropertyBase demo_method;
+		// False color suppression steps
+		Property<int> fcs_steps;
 
   public:
     RawDeveloperPar();

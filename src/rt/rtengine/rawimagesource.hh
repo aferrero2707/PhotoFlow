@@ -44,17 +44,23 @@ namespace rtengine {
 
 		void amaze_demosaic_RT(int winx, int winy, int winw, int winh,
 													 int tilex, int tiley, int tilew, int tileh);//Emil's code for AMaZE
+		void igv_demosaic_RT(int winx, int winy, int winw, int winh,
+													 int tilex, int tiley, int tilew, int tileh);
 	public:
 
 		int FC(int r, int c)
 		{
 			int color = rawData[r+tile_top].color(c+tile_left);
+			if( color<0 || color>3)
+				return 0;
 			if( color == 3 ) color = 1;
 			return color;
 		}
 
 		// Interface layer between Photoflow and RT code
 		void amaze_demosaic(VipsRegion* ir, VipsRegion* oreg);
+		void igv_demosaic(VipsRegion* ir, VipsRegion* oreg);
+		void false_color_correction(VipsRegion* ir, VipsRegion* oreg);
 	};
 }
 

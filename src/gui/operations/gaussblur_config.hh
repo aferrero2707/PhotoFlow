@@ -50,6 +50,7 @@ namespace PF {
   //Gtk::HScale contrastScale, brightnessScale;
   //#endif
 
+  Selector modeSelector;
   Slider radiusSlider;
 
 public:

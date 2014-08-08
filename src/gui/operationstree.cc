@@ -161,6 +161,10 @@ void PF::OperationsTree::update_model()
   row[columns.col_nickname] = "clone";
 
   row = *(treeModel->append());
+  row[columns.col_name] = "Crop image";
+  row[columns.col_nickname] = "crop";
+
+  row = *(treeModel->append());
   row[columns.col_name] = "Invert";
   row[columns.col_nickname] = "invert";
 
@@ -183,6 +187,10 @@ void PF::OperationsTree::update_model()
   row = *(treeModel->append());
   row[columns.col_name] = "Gaussian blur";
   row[columns.col_nickname] = "gaussblur";
+
+  row = *(treeModel->append());
+  row[columns.col_name] = "Unsharp mask";
+  row[columns.col_nickname] = "unsharp_mask";
 
   row = *(treeModel->append());
   row[columns.col_name] = "Lab conversion";

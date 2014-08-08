@@ -42,6 +42,7 @@ namespace PF
   ProcessorBase* new_blender();
   ProcessorBase* new_brightness_contrast();
   ProcessorBase* new_clone();
+  ProcessorBase* new_crop();
   ProcessorBase* new_convert2rgb();
   ProcessorBase* new_convert2srgb();
   ProcessorBase* new_convert2lab();
@@ -49,6 +50,7 @@ namespace PF
   ProcessorBase* new_channel_mixer();
   ProcessorBase* new_gradient();
   ProcessorBase* new_gaussblur();
+  ProcessorBase* new_unsharp_mask();
   ProcessorBase* new_invert();
   ProcessorBase* new_uniform();
   ProcessorBase* new_draw();

@@ -27,30 +27,49 @@
 
  */
 
-#include "../../operations/gaussblur.hh"
+#ifndef PF_CROP_H
+#define PF_CROP_H
 
-#include "gaussblur_config.hh"
+#include <string>
 
+#include "../base/property.hh"
+#include "../base/operation.hh"
+#include "../base/processor.hh"
 
-PF::GaussBlurConfigDialog::GaussBlurConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gaussian Blur" ),
-	modeSelector( this, "preview_mode", "Preview mode: ", PF_BLUR_FAST ),
-  radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1)
+namespace PF 
 {
-  controlsBox.pack_start( modeSelector );
-  controlsBox.pack_start( radiusSlider );
+
+  class CropPar: public OpParBase
+  {
+    Property<int> crop_left, crop_top, crop_width, crop_height;
+
+  public:
+    CropPar();
+
+    bool has_opacity() { return false; }
+    bool has_intensity() { return false; }
+
+    VipsImage* build(std::vector<VipsImage*>& in, int first, 
+										 VipsImage* imap, VipsImage* omap, 
+										 unsigned int& level);
+  };
+
   
-  add_widget( controlsBox );
+
+  template < OP_TEMPLATE_DEF > 
+  class CropProc
+  {
+  public: 
+    void render(VipsRegion** ireg, int n, int in_first,
+		VipsRegion* imap, VipsRegion* omap, 
+		VipsRegion* oreg, OpParBase* par)
+    {
+    }
+  };
+
+  ProcessorBase* new_crop();
 }
 
+#endif 
 
 
-void PF::GaussBlurConfigDialog::open()
-{
-  if( get_layer() && get_layer()->get_image() && 
-      get_layer()->get_processor() &&
-      get_layer()->get_processor()->get_par() ) {
-    radiusSlider.init();
-  }
-  OperationConfigDialog::open();
-}

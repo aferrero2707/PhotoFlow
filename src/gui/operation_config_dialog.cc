@@ -36,10 +36,12 @@
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
+#include "../gui/operations/crop_config.hh"
 #include "../gui/operations/gradient_config.hh"
 #include "../gui/operations/curves_config.hh"
 #include "../gui/operations/channel_mixer_config.hh"
 #include "../gui/operations/gaussblur_config.hh"
+#include "../gui/operations/unsharp_mask_config.hh"
 #include "../gui/operations/draw_config.hh"
 
 
@@ -388,6 +390,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::CloneConfigDialog( current_layer );
 
+  } else if( op_type == "crop" ) {
+
+    dialog = new PF::CropConfigDialog( current_layer );
+
   } else if( op_type == "invert" ) {
 
     dialog = new PF::OperationConfigDialog( current_layer, "Invert Image" );
@@ -411,6 +417,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "gaussblur" ) {
       
     dialog = new PF::GaussBlurConfigDialog( current_layer );
+
+  } else if( op_type == "unsharp_mask" ) {
+      
+    dialog = new PF::UnsharpMaskConfigDialog( current_layer );
 
   } else if( op_type == "convert2lab" ) {
 

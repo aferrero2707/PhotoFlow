@@ -40,6 +40,7 @@ namespace PF
   struct FormatInfo
   {
     typedef T PROMOTED;
+    typedef T SIGNED;
     static T MIN, MAX, HALF;
     static PROMOTED RANGE;
   };
@@ -63,6 +64,7 @@ namespace PF
   struct FormatInfo<int8_t>
   {
     typedef int16_t PROMOTED;
+    typedef int16_t SIGNED;
     static int8_t MIN, MAX, HALF;
     static PROMOTED RANGE;
   };
@@ -72,6 +74,7 @@ namespace PF
   struct FormatInfo<uint8_t>
   {
     typedef uint16_t PROMOTED;
+    typedef int32_t SIGNED;
     static uint8_t MIN, MAX, HALF;
     static PROMOTED RANGE;
   };
@@ -81,6 +84,7 @@ namespace PF
   struct FormatInfo<int16_t>
   {
     typedef int32_t PROMOTED;
+    typedef int32_t SIGNED;
     static int16_t MIN, MAX, HALF;
     static PROMOTED RANGE;
   };
@@ -90,6 +94,7 @@ namespace PF
   struct FormatInfo<uint16_t>
   {
     typedef uint32_t PROMOTED;
+    typedef int64_t SIGNED;
     static uint16_t MIN, MAX, HALF;
     static PROMOTED RANGE;
   };
@@ -99,6 +104,7 @@ namespace PF
   struct FormatInfo<int32_t>
   {
     typedef int64_t PROMOTED;
+    typedef int32_t SIGNED;
     static int32_t MIN, MAX, HALF;
     static PROMOTED RANGE;
   };
@@ -108,6 +114,7 @@ namespace PF
   struct FormatInfo<uint32_t>
   {
     typedef uint64_t PROMOTED;
+    typedef int64_t SIGNED;
     static uint32_t MIN, MAX, HALF;
     static PROMOTED RANGE;
   };
