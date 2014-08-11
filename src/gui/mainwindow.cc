@@ -27,6 +27,9 @@
 
  */
 
+#include <libgen.h>
+#include <string.h>
+
 #include <iostream>
 
 #include "../base/imageprocessor.hh"
@@ -172,7 +175,10 @@ PF::MainWindow::open_image( std::string filename )
   image->open( filename );
   PF::ImageEditor* editor = new PF::ImageEditor( image );
   image_editors.push_back( editor );
-  viewerNotebook.append_page( *editor, filename.c_str() );
+	char* fullpath = strdup( filename.c_str() );
+	char* fname = basename( fullpath );
+  viewerNotebook.append_page( *editor, fname );
+	free(fullpath);
   image->update();
   editor->show();
   /*

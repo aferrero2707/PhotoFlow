@@ -79,7 +79,7 @@ namespace PF
 #endif
   {
     int nref;
-    Glib::ustring file_name;
+		std::string file_name;
 		std::string cache_file_name;
 		std::string cache_file_name2;
 
@@ -98,7 +98,7 @@ namespace PF
     PF::ImagePyramid pyramid;
 
   public:
-    RawImage( const Glib::ustring name );
+    RawImage( const std::string name );
     ~RawImage();
 
     void ref() { nref += 1; }

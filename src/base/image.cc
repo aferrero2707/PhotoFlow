@@ -558,6 +558,9 @@ bool PF::Image::export_merged( std::string filename )
     /**/
     //VipsImage* srgbimg = image;
 
+		outimg = srgbimg;
+
+		/*
     in.clear();
     in.push_back( srgbimg );
     convert_format->get_par()->set_image_hints( srgbimg );
@@ -566,6 +569,7 @@ bool PF::Image::export_merged( std::string filename )
     //g_object_unref( srgbimg );
     msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
     PF_UNREF( srgbimg, msg.c_str() );
+		*/
     
 #if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
     vips_image_write_to_file( outimg, filename.c_str() );

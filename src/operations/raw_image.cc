@@ -35,7 +35,7 @@
 
 
 
-PF::RawImage::RawImage( const Glib::ustring f ):
+PF::RawImage::RawImage( const std::string f ):
 #ifdef PF_USE_DCRAW_RT
   rtengine::RawImage(f), 
 #endif
