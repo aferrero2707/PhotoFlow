@@ -18,9 +18,9 @@ You can follow the development of photoflow and learn about its usage in the ded
 
 # Downloading and compiling
 
-The pixel rendering engine of PhotoFlow is based on VIPS (http://www.vips.ecs.soton.ac.uk). You have to install a recent version of VIPS in order to compile PhotoFlow.
+Photoflow can be compiled under both gtk 2.x and gtk 3.x.
 
-Currently only gtk 2.x is supported. Support for gtk 3.x will be soon available.
+The pixel rendering engine of PhotoFlow is based on VIPS (http://www.vips.ecs.soton.ac.uk). You have to install a recent version of VIPS in order to compile PhotoFlow.
 
 Once VIPS is set up and running, follow these steps to download and compile PhotoFlow:
 
@@ -52,14 +52,14 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 
 3. If all goes well, you can now open an image file with PhotoFlow:
 
-        $ ./src/photoflow image_file_name
+        $ ./Release/photoflow image_file_name
 
    There are some test images available:
 
-        $ ./src/photoflow ../testimages/Lab_curves.pfi
+        $ ./Release/photoflow ../testimages/Lab_curves.pfi
    or
 
-        $ ./src/photoflow ../testimages/orton.pfi
+        $ ./Release/photoflow ../testimages/orton.pfi
         
 
 # Current status
@@ -72,8 +72,6 @@ Loading and processing of RAW images (demosaicing, white balance, exposure adjus
 The following list shows what features are currently planned or being implemented, in a kind of priority order:
 
 - Implement colorpsace conversions based on ICC profiles (partly implemented already)
-
-- Allow re-ordering of existing layers via drag&drop
 
 - Complete the list of supported blending modes
 
