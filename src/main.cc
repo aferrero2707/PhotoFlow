@@ -160,29 +160,35 @@ int main (int argc, char *argv[])
   }
 
   //vips__leak = 1;
-
+  struct stat buffer;   
 #ifdef GTKMM_2
-	std::vector<Glib::ustring> files;
-	files.push_back (exePath + "/themes/photoflow-dark.gtkrc");
-	Gtk::RC::set_default_files (files);
-  Gtk::RC::reparse_all (Gtk::Settings::get_default());
-  GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
-  gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
+  int stat_result = stat((exePath + "/themes/photoflow-dark.gtkrc").c_str(), &buffer);
+  if( stat_result == 0 ) {
+    std::vector<Glib::ustring> files;
+    files.push_back (exePath + "/themes/photoflow-dark.gtkrc");
+    Gtk::RC::set_default_files (files);
+    Gtk::RC::reparse_all (Gtk::Settings::get_default());
+    GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
+    gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
+  }
 #endif
 
   PF::MainWindow* mainWindow = new PF::MainWindow();
 #ifdef GTKMM_3
-  Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
-  //Glib::RefPtr<Gtk::StyleContext> cntx = mainWindow->get_style_context();
-  Glib::RefPtr<Gtk::StyleContext> cntx = Gtk::StyleContext::create();
-  Glib::RefPtr<Gdk::Screen> screen = Gdk::Screen::get_default();
-  //cntx->set_screen( screen );
-  //cntx->set_path( mainWindow->get_path() );
-  //cntx->add_provider(css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  cntx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  //cntx->invalidate();
-  css->load_from_path(exePath + "/themes/photoflow-dark.css");
-  //css->load_from_path("themes/photoflow-dark/gtk.css");
+  int stat_result = stat((exePath + "/themes/photoflow-dark.css").c_str(), &buffer);
+  if( stat_result == 0 ) {
+    Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
+    //Glib::RefPtr<Gtk::StyleContext> cntx = mainWindow->get_style_context();
+    Glib::RefPtr<Gtk::StyleContext> cntx = Gtk::StyleContext::create();
+    Glib::RefPtr<Gdk::Screen> screen = Gdk::Screen::get_default();
+    //cntx->set_screen( screen );
+    //cntx->set_path( mainWindow->get_path() );
+    //cntx->add_provider(css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    cntx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    //cntx->invalidate();
+    css->load_from_path(exePath + "/themes/photoflow-dark.css");
+    //css->load_from_path("themes/photoflow-dark/gtk.css");
+  }
 #endif
 
   if( argc > 1 ) {
