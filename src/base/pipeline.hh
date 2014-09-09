@@ -1,4 +1,4 @@
-/* The PF::View class represents a particular "realization" of a given layer structure,
+/* The PF::Pipeline class represents a particular "realization" of a given layer structure,
    for a specific pixel format and zoom level.
    It provides the connection between the layers and their associated VipsImage objects
    for this particular realization.
@@ -31,8 +31,8 @@
 
  */
 
-#ifndef VIEW_H
-#define VIEW_H
+#ifndef PIPELINE_H
+#define PIPELINE_H
 
 #ifdef GTKMM_2
 #include <glibmm/thread.h>
@@ -49,36 +49,39 @@ namespace PF
 {
 
 
-  struct ViewNode
+  struct PipelineNode
   {
     ProcessorBase* processor;
+    ProcessorBase* blender;
     VipsImage* image;
+    VipsImage* blended;
     int input_id;
 
-    ViewNode(): processor( NULL ), image( NULL ), input_id( -1 ) {}
+    PipelineNode(): processor( NULL ), blender( NULL ), image( NULL ), blended( NULL ), input_id( -1 ) {}
   };
 
 
-  class ViewSink;
+  class PipelineSink;
   class Image;
 
-  class View
+  class Pipeline
   {
     bool modified;
     Image* image;
-    std::vector<ViewNode*> nodes;
+    std::vector<PipelineNode*> nodes;
     VipsImage* output;
-    std::vector<ViewSink*> sinks;
+    std::vector<PipelineSink*> sinks;
     VipsBandFormat format;
     unsigned int level;
+    rendermode_t render_mode;
 
     //Glib::Threads::Mutex processing_mutex;
 
   public:
-    View(): modified(false), image(NULL), output(NULL), format(VIPS_FORMAT_UCHAR), level(0) {}
-    View( Image* img, VipsBandFormat fmt, int l ): image(img), output(NULL), format(fmt), level(l) {}
+    Pipeline(): modified(false), image(NULL), output(NULL), format(VIPS_FORMAT_UCHAR), level(0), render_mode(PF_RENDER_PREVIEW) {}
+    Pipeline( Image* img, VipsBandFormat fmt, int l, rendermode_t m ): image(img), output(NULL), format(fmt), level(l), render_mode(m) {}
 
-    ~View();
+    ~Pipeline();
 
     bool is_modified() { return modified; }
     void set_modified( bool flag ) { modified = flag; }
@@ -91,12 +94,16 @@ namespace PF
     void set_level( unsigned int l ) { level = l; }
     unsigned int get_level() { return level; }
 
-    ViewNode* set_node( Layer* layer, Layer* input_layer );
+    rendermode_t get_render_mode() { return render_mode; }
+    void set_render_mode(rendermode_t m) { render_mode = m; }
+
+    PipelineNode* set_node( Layer* layer, Layer* input_layer );
     void set_image( VipsImage* img, unsigned int id );
+    void set_blended( VipsImage* img, unsigned int id );
     void remove_node( unsigned int id );
 
-    std::vector<ViewNode*>& get_nodes(){ return nodes; } 
-    ViewNode* get_node( int id ) 
+    std::vector<PipelineNode*>& get_nodes(){ return nodes; } 
+    PipelineNode* get_node( int id ) 
     {
       if( (id<0) || (id>=(int)nodes.size()) ) return NULL;
       return nodes[id];
@@ -109,7 +116,7 @@ namespace PF
 
     //Glib::Threads::Mutex& get_processing_mutex() { return processing_mutex; }
 
-    void add_sink( ViewSink* sink ) { sinks.push_back( sink ); }
+    void add_sink( PipelineSink* sink ) { sinks.push_back( sink ); }
 		bool has_sinks() { return( !sinks.empty() ); }
 
     void lock_processing();
@@ -120,22 +127,22 @@ namespace PF
   };
 
 
-  class ViewSink
+  class PipelineSink
   {
-    View* view;
+    Pipeline* pipeline;
     bool processing;
     
     //Glib::Threads::Mutex processing_mutex;
     int processing_count;
 
   public:
-    ViewSink( View* v ): view(v), processing( false ), processing_count( 0 )
+    PipelineSink( Pipeline* v ): pipeline(v), processing( false ), processing_count( 0 )
     {
-      if(view) view->add_sink( this );
+      if(pipeline) pipeline->add_sink( this );
     }
-		virtual ~ViewSink() {}
+		virtual ~PipelineSink() {}
 
-    View* get_view() { return view; }
+    Pipeline* get_pipeline() { return pipeline; }
 
     bool is_processing() { return processing; }
     void set_processing( bool flag ) { processing = flag; }

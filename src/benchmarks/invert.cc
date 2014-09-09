@@ -283,7 +283,7 @@ main( int argc, char **argv )
     imgread->get_par()->set_file_name( argv[2] );
 
     PF::Image* pf_image = new PF::Image();
-    pf_image->add_view( VIPS_FORMAT_UCHAR, 0 );
+    pf_image->add_pipeline( VIPS_FORMAT_UCHAR, 0 );
     PF::LayerManager& layer_manager = pf_image->get_layer_manager();
 
     PF::Layer* limg = layer_manager.new_layer();
@@ -300,13 +300,13 @@ main( int argc, char **argv )
 
     pf_image->do_update(NULL);
 
-    PF::View* view = pf_image->get_view( 0 );
+    PF::Pipeline* pipeline = pf_image->get_pipeline( 0 );
 
-    VipsImage* image = view->get_output();
+    VipsImage* image = pipeline->get_output();
 
     printf("Writing output image...\n");
 
-    if( vips_image_write_to_file( view->get_output(), argv[3] ) ) { 
+    if( vips_image_write_to_file( pipeline->get_output(), argv[3] ) ) { 
       //g_object_unref( out );
       vips_error_exit( "unable to write" ); 
     }

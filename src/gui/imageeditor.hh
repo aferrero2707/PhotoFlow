@@ -42,6 +42,7 @@ namespace PF {
 
   class ImageEditor: public Gtk::Paned
   {
+    std::string filename;
     Image* image;
 
     Layer* active_layer;
@@ -52,12 +53,12 @@ namespace PF {
     Gtk::ScrolledWindow imageArea_scrolledWindow;
     LayerWidget layersWidget;
     Gtk::HBox controlsBox;
-    Gtk::Button buttonZoomIn, buttonZoomOut;
+    Gtk::Button buttonZoomIn, buttonZoomOut, buttonZoom100, buttonZoomFit;
     Gtk::VBox radioBox;
     Gtk::RadioButton buttonShowMerged, buttonShowActive;
 
   public:
-    ImageEditor( Image* image );
+    ImageEditor( std::string filename );
     ~ImageEditor();
 
     Image* get_image() { return image; }
@@ -70,16 +71,21 @@ namespace PF {
 	active_layer = image->get_layer_manager().get_layer( id );
     }
 
+    void on_map();
+
     // Handlers for the mouse events inside the image area
     bool on_button_press_event( GdkEventButton* button );
     bool on_button_release_event( GdkEventButton* button );
     bool on_motion_notify_event( GdkEventMotion* button );
 
+		// Handler for the widget size change
+		bool on_configure_event( GdkEventConfigure* event );
+
     float get_zoom_factor()
     {
-      PF::View* view = image->get_view(1);
-      if( !view ) return 1.0f;
-      int level = view->get_level();
+      PF::Pipeline* pipeline = image->get_pipeline(1);
+      if( !pipeline ) return 1.0f;
+      int level = pipeline->get_level();
       float fact = 1.0f;
       for( unsigned int i = 0; i < level; i++ )
 	fact /= 2.0f;
@@ -93,6 +99,8 @@ namespace PF {
 
     void zoom_in();
     void zoom_out();
+    void zoom_fit();
+    void zoom_actual_size();
   };
 
 }

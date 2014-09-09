@@ -188,15 +188,15 @@ void PF::DrawConfigDialog::start_stroke()
 
 
   // Then we loop over all the operations associated to the 
-  // layer in the different views and we let them record the stroke as well
+  // layer in the different pipelines and we let them record the stroke as well
   PF::Image* image = layer->get_image();
   if( !image ) return;
 
-  for( unsigned int vi = 0; vi < image->get_nviews(); vi++ ) {
-    PF::View* view = image->get_view( vi );
-    if( !view ) continue;
+  for( unsigned int vi = 0; vi < image->get_npipelines(); vi++ ) {
+    PF::Pipeline* pipeline = image->get_pipeline( vi );
+    if( !pipeline ) continue;
 
-    PF::ViewNode* node = view->get_node( layer->get_id() );
+    PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
     if( !node ) continue;
 
     processor = node->processor;
@@ -229,18 +229,18 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 
 
   // Then we loop over all the operations associated to the 
-  // layer in the different views and we let them record the stroke as well
+  // layer in the different pipelines and we let them record the stroke as well
   PF::Image* image = layer->get_image();
   if( !image ) return;
 
 #ifndef NDEBUG
-	std::cout<<"PF::DrawConfigDialog::draw_point(): nviews="<<image->get_nviews()<<std::endl;
+	std::cout<<"PF::DrawConfigDialog::draw_point(): npipelines="<<image->get_npipelines()<<std::endl;
 #endif
-  for( unsigned int vi = 0; vi < image->get_nviews(); vi++ ) {
-    PF::View* view = image->get_view( vi );
-    if( !view ) continue;
+  for( unsigned int vi = 0; vi < image->get_npipelines(); vi++ ) {
+    PF::Pipeline* pipeline = image->get_pipeline( vi );
+    if( !pipeline ) continue;
 
-    PF::ViewNode* node = view->get_node( layer->get_id() );
+    PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
     if( !node ) continue;
 
     processor = node->processor;
@@ -256,10 +256,10 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
     if( (update.width > 0) &&
 				(update.height > 0) ) {
       if( true || PF::PhotoFlow::Instance().is_batch() ) {
-				view->sink( update );	
+				pipeline->sink( update );	
       } else {
 				ProcessRequestInfo request;
-				request.view = view;
+				request.pipeline = pipeline;
 				request.request = PF::IMAGE_UPDATE;
 				request.area.left = update.left;
 				request.area.top = update.top;

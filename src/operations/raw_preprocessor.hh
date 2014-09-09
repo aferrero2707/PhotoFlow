@@ -59,6 +59,10 @@ namespace PF
     Property<float> wb_green;
     Property<float> wb_blue;
 
+    Property<float> camwb_corr_red;
+    Property<float> camwb_corr_green;
+    Property<float> camwb_corr_blue;
+
     Property<float> wb_target_L;
     Property<float> wb_target_a;
     Property<float> wb_target_b;
@@ -86,6 +90,10 @@ namespace PF
     float get_wb_green() { return wb_green.get(); }
     float get_wb_blue() { return wb_blue.get(); }
 
+    float get_camwb_corr_red() { return camwb_corr_red.get(); }
+    float get_camwb_corr_green() { return camwb_corr_green.get(); }
+    float get_camwb_corr_blue() { return camwb_corr_blue.get(); }
+
     float get_exposure() { return exposure.get(); }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
@@ -110,18 +118,24 @@ namespace PF
       int x, y;
       //float range = image_data->color.maximum - image_data->color.black;
       float range = 1;
-      float min_mul = image_data->color.cam_mul[0];
-      float max_mul = image_data->color.cam_mul[0];
+			float mul[4] = {
+				image_data->color.cam_mul[0]*par->get_camwb_corr_red(),
+				image_data->color.cam_mul[1]*par->get_camwb_corr_green(),
+				image_data->color.cam_mul[2]*par->get_camwb_corr_blue(),
+				image_data->color.cam_mul[3]*par->get_camwb_corr_green()
+			};
+      float min_mul = mul[0];
+      float max_mul = mul[0];
 			/*
       for(int i = 0; i < 4; i++) {
 				std::cout<<"cam_mu["<<i<<"] = "<<image_data->color.cam_mul[i]<<std::endl;
       }
 			*/
       for(int i = 1; i < 4; i++) {
-				if( image_data->color.cam_mul[i] < min_mul )
-					min_mul = image_data->color.cam_mul[i];
-				if( image_data->color.cam_mul[i] > max_mul )
-					max_mul = image_data->color.cam_mul[i];
+				if( mul[i] < min_mul )
+					min_mul = mul[i];
+				if( mul[i] > max_mul )
+					max_mul = mul[i];
       }
       //std::cout<<"range="<<range<<"  min_mul="<<min_mul<<"  new range="<<range*min_mul<<std::endl;
 #ifdef RT_EMU
@@ -132,14 +146,10 @@ namespace PF
       //range *= max_mul;
 #endif
     
-      float mul[4] = { 
-				image_data->color.cam_mul[0] * exposure / range,
-				image_data->color.cam_mul[1] * exposure / range,
-				image_data->color.cam_mul[2] * exposure / range,
-				image_data->color.cam_mul[3] * exposure / range
-      };
+      for(int i = 0; i < 4; i++) 
+				mul[i] = mul[i] * exposure / range;
     
-      if(r->left==0 && r->top==0) std::cout<<"RawPreprocessor::render_camwb(): nbands="<<nbands<<std::endl;
+      //if(r->left==0 && r->top==0) std::cout<<"RawPreprocessor::render_camwb(): nbands="<<nbands<<std::endl;
       if( nbands == 3 ) {
 				float* p;
 				float* pout;

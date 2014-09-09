@@ -89,7 +89,7 @@ namespace PF
 	 VipsRegion* imap, VipsRegion* omap, 
 	 VipsRegion* oreg, GradientPar* par)
   {
-    BLENDER blender( par->get_blend_mode(), par->get_opacity() );
+    //BLENDER blender( par->get_blend_mode(), par->get_opacity() );
     
     Rect *r = &oreg->valid;
     int bands = oreg->im->Bands;
@@ -144,8 +144,8 @@ namespace PF
       } 
     }
 
-    VipsRegion* ireg = ir ? ir[0] : NULL;
-    blender.blend( ireg, oreg, oreg, omap );
+    //VipsRegion* ireg = ir ? ir[0] : NULL;
+    //blender.blend( ireg, oreg, oreg, omap );
   };
 
 

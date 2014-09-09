@@ -30,7 +30,7 @@
 #include "checkbox.hh"
 
 
-PF::CheckBox::CheckBox( OperationConfigUI* dialog, std::string pname, std::string l, int val ):
+PF::CheckBox::CheckBox( OperationConfigDialog* dialog, std::string pname, std::string l, int val ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname )
 {

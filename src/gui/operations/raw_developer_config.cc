@@ -40,6 +40,9 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   wbRedSlider( this, "wb_red", "Red WB mult.", 1, 0, 10, 0.05, 0.1, 1),
   wbGreenSlider( this, "wb_green", "Green WB mult.", 1, 0, 10, 0.05, 0.1, 1),
   wbBlueSlider( this, "wb_blue", "Blue WB mult.", 1, 0, 10, 0.05, 0.1, 1),
+  wbRedCorrSlider( this, "camwb_corr_red", "Red WB correction", 1, 0, 10, 0.05, 0.1, 1),
+  wbGreenCorrSlider( this, "camwb_corr_green", "Green WB correction", 1, 0, 10, 0.05, 0.1, 1),
+  wbBlueCorrSlider( this, "camwb_corr_blue", "Blue WB correction", 1, 0, 10, 0.05, 0.1, 1),
   wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
   wb_target_a_slider( this, "wb_target_a", "", 0, -1000000, 1000000, 0.05, 0.1, 1),
   wb_target_b_slider( this, "wb_target_b", "", 0, -1000000, 1000000, 0.05, 0.1, 1),
@@ -68,6 +71,9 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   wbControlsBox.pack_start( wbRedSlider );
   wbControlsBox.pack_start( wbGreenSlider );
   wbControlsBox.pack_start( wbBlueSlider );
+  wbControlsBox.pack_start( wbRedCorrSlider );
+  wbControlsBox.pack_start( wbGreenCorrSlider );
+  wbControlsBox.pack_start( wbBlueCorrSlider );
 
   exposureControlsBox.pack_start( exposureSlider );
 
@@ -127,7 +133,7 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::RawDeveloperConfigDialog::update()
+void PF::RawDeveloperConfigDialog::do_update()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -139,18 +145,35 @@ void PF::RawDeveloperConfigDialog::update()
     PropertyBase* prop = par->get_property( "wb_mode" );
     if( !prop )  return;
 
+    //std::cout<<"PF::RawDeveloperConfigDialog::do_update() called."<<std::endl;
+
 		if( wbTargetBox.get_parent() == &wbControlsBox )
 			wbControlsBox.remove( wbTargetBox );
 		if( wb_best_match_label.get_parent() == &wbControlsBox )
 			wbControlsBox.remove( wb_best_match_label );
+
 		if( wbRedSlider.get_parent() == &wbControlsBox )
 			wbControlsBox.remove( wbRedSlider );
 		if( wbGreenSlider.get_parent() == &wbControlsBox )
 			wbControlsBox.remove( wbGreenSlider );
 		if( wbBlueSlider.get_parent() == &wbControlsBox )
 			wbControlsBox.remove( wbBlueSlider );
+
+		if( wbRedCorrSlider.get_parent() == &wbControlsBox )
+			wbControlsBox.remove( wbRedCorrSlider );
+		if( wbGreenCorrSlider.get_parent() == &wbControlsBox )
+			wbControlsBox.remove( wbGreenCorrSlider );
+		if( wbBlueCorrSlider.get_parent() == &wbControlsBox )
+			wbControlsBox.remove( wbBlueCorrSlider );
+
     switch( prop->get_enum_value().first ) {
     case PF::WB_CAMERA:
+			if( wbRedCorrSlider.get_parent() != &wbControlsBox )
+				wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
+			if( wbGreenCorrSlider.get_parent() != &wbControlsBox )
+				wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
+			if( wbBlueCorrSlider.get_parent() != &wbControlsBox )
+				wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
 			break;
     case PF::WB_SPOT:
 			if( wbTargetBox.get_parent() == &wbControlsBox )
@@ -214,7 +237,7 @@ void PF::RawDeveloperConfigDialog::update()
       break;
     }
   }
-  OperationConfigDialog::update();
+  OperationConfigDialog::do_update();
 }
 
 
@@ -252,17 +275,17 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
   PF::Image* img = l->get_image();
   if( !img ) return;
   
-  // Get the default view of the image 
+  // Get the default pipeline of the image 
   // (it is supposed to be at 1:1 zoom level 
   // and floating point accuracy)
-  PF::View* view = img->get_view( 0 );
-  if( !view ) return;
+  PF::Pipeline* pipeline = img->get_pipeline( 0 );
+  if( !pipeline ) return;
 
-	// Make sure the first view is up-to-date
-	img->update( view );
+	// Make sure the first pipeline is up-to-date
+	img->update( pipeline );
 
   // Get the node associated to the layer
-  PF::ViewNode* node = view->get_node( l->get_id() );
+  PF::PipelineNode* node = pipeline->get_node( l->get_id() );
   if( !node ) return;
 
   // Finally, get the underlying VIPS image associated to the layer
@@ -359,7 +382,7 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
       wbGreenSlider.init();
       wbBlueSlider.init();
 
-      img->update( view );
+      img->update( pipeline );
     }
 
     std::cout<<"RawDeveloperConfigDialog: checking spot WB"<<std::endl;
@@ -386,7 +409,7 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
     rgb_prev[2] = rgb_check[2];
   }
 
-	// Update the preview to reflect the new settings
+	// Update the prepipeline to reflect the new settings
 	img->update();
 }
 
@@ -402,17 +425,17 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
   PF::Image* img = l->get_image();
   if( !img ) return;
   
-  // Get the default view of the image 
+  // Get the default pipeline of the image 
   // (it is supposed to be at 1:1 zoom level 
   // and floating point accuracy)
-  PF::View* view = img->get_view( 0 );
-  if( !view ) return;
+  PF::Pipeline* pipeline = img->get_pipeline( 0 );
+  if( !pipeline ) return;
 
-	// Make sure the first view is up-to-date
-	img->update( view );
+	// Make sure the first pipeline is up-to-date
+	img->update( pipeline );
 
   // Get the node associated to the layer
-  PF::ViewNode* node = view->get_node( l->get_id() );
+  PF::PipelineNode* node = pipeline->get_node( l->get_id() );
   if( !node ) return;
 
   // Finally, get the underlying VIPS image associated to the layer
@@ -687,7 +710,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 
       //bool async = img->is_async();
       //img->set_async( false );
-      img->update( view );
+      img->update( pipeline );
       //img->set_async( async );
     }
 

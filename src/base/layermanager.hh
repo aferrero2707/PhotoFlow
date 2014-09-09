@@ -35,7 +35,7 @@
 
 #include <sigc++/sigc++.h>
 
-#include "view.hh"
+#include "pipeline.hh"
 #include "layer.hh"
 
 namespace PF
@@ -53,17 +53,23 @@ namespace PF
     //VipsImage* output;
 
     std::list<Layer*>* get_list( PF::Layer* layer, std::list<PF::Layer*>& list);
+
+    void get_input_layers( Layer* layer, std::list<PF::Layer*>& container,
+                           std::list<Layer*>& inputs );
+
     bool get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist, 
 			   std::string parent_name, std::list<Layer*>& list);
 
     Layer* get_container_layer( Layer* layer, std::list<Layer*>& list );
+
+    PF::CacheBuffer* get_cache_buffer( std::list<Layer*>& list );
 
     // Walk through the given layer chain and set the "dirty" flag of all layers starting from "layer_id" to "true"
     void update_dirty( std::list<Layer*>& list, bool& dirty );
 
     void reset_dirty( std::list<Layer*>& list );
     
-    VipsImage* rebuild_chain(View* view, colorspace_t cs, 
+    VipsImage* rebuild_chain(Pipeline* pipeline, colorspace_t cs, 
 														 int width, int height, 
 														 std::list<Layer*>& list, 
 														 Layer* previous_layer);
@@ -82,8 +88,13 @@ namespace PF
 
     std::list<Layer*>* get_list(PF::Layer* layer);
 
+    void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
+
+    void get_input_layers( Layer* layer, std::list<Layer*>& inputs );
+
     void get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist);
 
+    Layer* get_container_layer( Layer* layer );
     Layer* get_container_layer( int id );
 
     Layer* get_layer(int id);
@@ -92,11 +103,15 @@ namespace PF
 
     bool insert_layer( Layer* layer, int32_t lid=-1 );
 
+    bool remove_layer( Layer* layer );
+
+    PF::CacheBuffer* get_cache_buffer();
+
     bool rebuild_prepare();
-    bool rebuild(View* view, colorspace_t cs, int width, int height, VipsRect* area );
+    bool rebuild(Pipeline* pipeline, colorspace_t cs, int width, int height, VipsRect* area );
     bool rebuild_finalize();
 
-    bool rebuild_all(View* view, colorspace_t cs, int width, int height);
+    bool rebuild_all(Pipeline* pipeline, colorspace_t cs, int width, int height);
 
     sigc::signal<void> signal_modified;
     void modified() { signal_modified.emit(); }

@@ -3,20 +3,20 @@
 
 /*
 
-    Copyright (C) 2014 Ferrero Andrea
+  Copyright (C) 2014 Ferrero Andrea
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
 */
@@ -74,14 +74,14 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
   add_widget( selectorsBox );
 
   /*
-  rgbCurveEditor.init();
-  RCurveEditor.init();
-  GCurveEditor.init();
-  BCurveEditor.init();
+    rgbCurveEditor.init();
+    RCurveEditor.init();
+    GCurveEditor.init();
+    BCurveEditor.init();
 
-  LCurveEditor.init();
-  aCurveEditor.init();
-  bCurveEditor.init();
+    LCurveEditor.init();
+    aCurveEditor.init();
+    bCurveEditor.init();
   */
 
   add_widget( curvesBox );
@@ -89,10 +89,10 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
 
   rgbCurveSelector.signal_changed().
     connect(sigc::mem_fun(*this,
-			  &CurvesConfigDialog::update));
+                          &CurvesConfigDialog::update));
   labCurveSelector.signal_changed().
     connect(sigc::mem_fun(*this,
-			  &CurvesConfigDialog::update));
+                          &CurvesConfigDialog::update));
   //add_control( &rgbCurveSelector );
   //add_control( &labCurveSelector );
   //add_control( &cmykCurveSelector );
@@ -142,37 +142,37 @@ void PF::CurvesConfigDialog::switch_curve()
     case PF_COLORSPACE_RGB:
       switch( rgbCurveSelector.get_active_row_number() ) {
       case 0:
-	curvesBox.pack_start( rgbCurveEditor, Gtk::PACK_SHRINK );
-	rgbCurveEditor.show();
-	break;
+        curvesBox.pack_start( rgbCurveEditor, Gtk::PACK_SHRINK );
+        rgbCurveEditor.show();
+        break;
       case 1:
-	curvesBox.pack_start( RCurveEditor, Gtk::PACK_SHRINK );
-	RCurveEditor.show();
-	break;
+        curvesBox.pack_start( RCurveEditor, Gtk::PACK_SHRINK );
+        RCurveEditor.show();
+        break;
       case 2:
-	curvesBox.pack_start( GCurveEditor, Gtk::PACK_SHRINK );
-	GCurveEditor.show();
-	break;
+        curvesBox.pack_start( GCurveEditor, Gtk::PACK_SHRINK );
+        GCurveEditor.show();
+        break;
       case 3:
-	curvesBox.pack_start( BCurveEditor, Gtk::PACK_SHRINK );
-	BCurveEditor.show();
-	break;
+        curvesBox.pack_start( BCurveEditor, Gtk::PACK_SHRINK );
+        BCurveEditor.show();
+        break;
       }
       break;
     case PF_COLORSPACE_LAB:
       switch( labCurveSelector.get_active_row_number() ) {
       case 0:
-	curvesBox.pack_start( LCurveEditor, Gtk::PACK_SHRINK );
-	LCurveEditor.show();
-	break;
+        curvesBox.pack_start( LCurveEditor, Gtk::PACK_SHRINK );
+        LCurveEditor.show();
+        break;
       case 1:
-	curvesBox.pack_start( aCurveEditor, Gtk::PACK_SHRINK );
-	aCurveEditor.show();
-	break;
+        curvesBox.pack_start( aCurveEditor, Gtk::PACK_SHRINK );
+        aCurveEditor.show();
+        break;
       case 2:
-	curvesBox.pack_start( bCurveEditor, Gtk::PACK_SHRINK );
-	bCurveEditor.show();
-	break;
+        curvesBox.pack_start( bCurveEditor, Gtk::PACK_SHRINK );
+        bCurveEditor.show();
+        break;
       }
       break;
       //chselBox.pack_start( labchSelector, Gtk::PACK_SHRINK );
@@ -191,7 +191,7 @@ void PF::CurvesConfigDialog::switch_curve()
 }
 
 
-void PF::CurvesConfigDialog::update()
+void PF::CurvesConfigDialog::do_update()
 {
   switch_curve();
   //std::vector<Widget*> wl = chselBox.get_children();
@@ -201,7 +201,7 @@ void PF::CurvesConfigDialog::update()
       get_layer()->get_processor()->get_par() ) {
 
 #ifndef NDEBUG
-    std::cout<<"CurvesConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
+    std::cout<<"CurvesConfigDialog::do_update() for "<<get_layer()->get_name()<<" called"<<std::endl;
 #endif
     if( rgbCurveSelector.get_parent() == &selectorsBox )
       selectorsBox.remove( rgbCurveSelector );
@@ -232,5 +232,96 @@ void PF::CurvesConfigDialog::update()
     }
   }
 
-  PF::OperationConfigDialog::update();
+  PF::OperationConfigDialog::do_update();
+}
+
+
+void PF::CurvesConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+{
+  if( button != 1 ) return;
+}
+
+
+void PF::CurvesConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+{
+  if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return;
+  std::cout<<"CurvesConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
+
+  // Retrieve the layer associated to the filter 
+  PF::Layer* layer = get_layer();
+  if( !layer ) return;
+
+  // Retrieve the image the layer belongs to
+  PF::Image* image = layer->get_image();
+  if( !image ) return;
+
+  // Retrieve the pipeline #0 (full resolution preview)
+  PF::Pipeline* pipeline = image->get_pipeline( 0 );
+  if( !pipeline ) return;
+
+  // Find the pipeline node associated to the current layer
+  PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
+  if( !node ) return;
+
+  // Find the input layer of the current filter
+  if( node->input_id < 0 ) return;
+  PF::Layer* lin = image->get_layer_manager().get_layer( node->input_id );
+  if( !lin ) return;
+
+  // Sample a 5x5 pixels region of the input layer
+  std::vector<float> values;
+  image->sample( lin->get_id(), x, y, 5, NULL, values );
+
+  std::cout<<"CurvesConfigDialog::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
+
+  PF::OpParBase* par = get_layer()->get_processor()->get_par();
+  PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+  switch( cs ) {
+  case PF_COLORSPACE_GRAYSCALE:
+    if( values.empty() ) return;
+    greyCurveEditor.add_point( values[0] );
+    break;
+  case PF_COLORSPACE_RGB:
+    if( values.size() != 3 ) return;
+    switch( rgbCurveSelector.get_active_row_number() ) {
+    case 0:
+      rgbCurveEditor.add_point( (values[0]+values[1]+values[2])/3.0f );
+      break;
+    case 1:
+      RCurveEditor.add_point( values[0] );
+      break;
+    case 2:
+      GCurveEditor.add_point( values[1] );
+      break;
+    case 3:
+      BCurveEditor.add_point( values[2] );
+      break;
+    }
+    break;
+  case PF_COLORSPACE_LAB:
+    if( values.size() != 3 ) return;
+    switch( labCurveSelector.get_active_row_number() ) {
+    case 0:
+      LCurveEditor.add_point( values[0] );
+      break;
+    case 1:
+      aCurveEditor.add_point( values[1] );
+      break;
+    case 2:
+      bCurveEditor.add_point( values[2] );
+      break;
+    }
+    break;
+    break;
+  case PF_COLORSPACE_CMYK:
+    break;
+  default:
+    break;
+  }
+}
+
+
+void PF::CurvesConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+{
+  if( button != 1 ) return;
 }

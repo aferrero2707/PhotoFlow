@@ -159,6 +159,12 @@ float PF::SplineCurve::get_value( float x )
 }
 
 
+float PF::SplineCurve::get_delta( float x )
+{ 
+  return( get_value(x) - x );
+}
+
+
 void PF::SplineCurve::get_values( std::vector< std::pair<float,float> >& vec )
 { 
   for (unsigned int i=0; i<vec.size(); i++)

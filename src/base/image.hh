@@ -35,7 +35,7 @@
 #include <sigc++/sigc++.h>
 
 #include "layermanager.hh"
-#include "view.hh"
+#include "pipeline.hh"
 
 
 namespace PF
@@ -45,12 +45,12 @@ namespace PF
   class Image: public sigc::trackable
   {
     LayerManager layer_manager;
-    std::vector<View*> views;
+    std::vector<Pipeline*> pipelines;
 
     // Flag indicating whether the update should be preformed asynchronously
     bool async;
 
-    // Flag indicating whether the views have to be re-built
+    // Flag indicating whether the pipelines have to be re-built
     bool modified;
 
     // Flag indicating whether there is a re-building ongoing
@@ -59,11 +59,16 @@ namespace PF
 		// Current "pfi" file name associated to this image
 		std::string file_name;
 
+    bool disable_update;
+
     GMutex* rebuild_mutex;
     GCond* rebuild_done;
 
     GMutex* sample_mutex;
     GCond* sample_done;
+
+    GMutex* remove_layer_mutex;
+    GCond* remove_layer_done;
 
     ProcessorBase* convert2srgb;
     ProcessorBase* convert_format;
@@ -86,26 +91,28 @@ namespace PF
 
     LayerManager& get_layer_manager() { return layer_manager; }
 
+    void do_remove_layer( PF::Layer* layer );
     void remove_layer( PF::Layer* layer );
 
-    void add_view( VipsBandFormat fmt, int level )
+    void add_pipeline( VipsBandFormat fmt, int level, rendermode_t mode=PF_RENDER_PREVIEW )
     {
-      views.push_back( new View( this, fmt, level ) );
+      pipelines.push_back( new Pipeline( this, fmt, level, mode ) );
     }
 
-    unsigned int get_nviews() { return views.size(); }
+    unsigned int get_npipelines() { return pipelines.size(); }
 
-    View* get_view(unsigned int n) 
+    Pipeline* get_pipeline(unsigned int n) 
     {
-      if( n >= views.size() ) return NULL;
-      return(views[n]);
+      if( n >= pipelines.size() ) return NULL;
+      return(pipelines[n]);
     }
 
     bool is_async() { return async; }
     void set_async( bool flag ) { async = flag; }
 
     bool is_modified() { return modified; }
-    void set_modified( bool flag ) { modified = flag; }
+    void set_modified() { modified = true; }
+    void clear_modified() { modified = false; }
 
     bool is_rebuilding() { return rebuilding; }
     void set_rebuilding( bool flag ) { rebuilding = flag; }
@@ -116,12 +123,15 @@ namespace PF
     void unlock() { g_mutex_unlock( rebuild_mutex); }
     void sample_lock() { g_mutex_lock( sample_mutex); }
     void sample_unlock() { g_mutex_unlock( sample_mutex); }
+    void remove_layer_lock() { g_mutex_lock( remove_layer_mutex); }
+    void remove_layer_unlock() { g_mutex_unlock( remove_layer_mutex); }
     void rebuild_done_signal() { g_cond_signal( rebuild_done ); }
     void sample_done_signal() { g_cond_signal( sample_done ); }
+    void remove_layer_done_signal() { g_cond_signal( remove_layer_done ); }
 
-    void update( PF::View* view=NULL );
+    void update( PF::Pipeline* pipeline=NULL, bool sync=false );
     void update_all() { update( NULL ); }
-    void do_update( PF::View* view=NULL );
+    void do_update( PF::Pipeline* pipeline=NULL );
 
 
 		void sample( int layer_id, int x, int y, int size, 

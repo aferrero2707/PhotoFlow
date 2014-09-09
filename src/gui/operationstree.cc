@@ -134,72 +134,17 @@ static void* collect_class( GType type )
   
 }
 
-void PF::OperationsTree::update_model()
+
+void PF::OperationsTree::add_op( Glib::ustring name, const std::string nik)
 {
-  std::cout<<"PF::OperationsTree::update_model(): clearing tree"<<std::endl;
-  treeModel->clear();
-  vips_operations.clear();
-
-  /*
-  vips_type_map_all( g_type_from_name( "VipsOperation" ), 
-		     (VipsTypeMapFn) collect_class, NULL );
-  */
-
   Gtk::TreeModel::Row row;
-  Gtk::TreeModel::Row group;
 
   row = *(treeModel->append());
-  row[columns.col_name] = "Open image";
-  row[columns.col_nickname] = "imageread";
+  row[columns.col_name] = name;
+  row[columns.col_nickname] = nik;
+}
 
-  row = *(treeModel->append());
-  row[columns.col_name] = "Buffer layer";
-  row[columns.col_nickname] = "buffer";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Clone layer";
-  row[columns.col_nickname] = "clone";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Crop image";
-  row[columns.col_nickname] = "crop";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Invert";
-  row[columns.col_nickname] = "invert";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Gradient";
-  row[columns.col_nickname] = "gradient";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Brightness/Contrast";
-  row[columns.col_nickname] = "brightness_contrast";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Curves";
-  row[columns.col_nickname] = "curves";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Channel Mixer";
-  row[columns.col_nickname] = "channel_mixer";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Gaussian blur";
-  row[columns.col_nickname] = "gaussblur";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Unsharp mask";
-  row[columns.col_nickname] = "unsharp_mask";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Lab conversion";
-  row[columns.col_nickname] = "convert2lab";
-
-  row = *(treeModel->append());
-  row[columns.col_name] = "Draw";
-  row[columns.col_nickname] = "draw";
-
+/*
   return;
 
   row = *(treeModel->append());
@@ -224,7 +169,7 @@ void PF::OperationsTree::update_model()
 
   //expand_all();
 }
-
+*/
 
 
 
@@ -243,10 +188,60 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   signal_response().connect(sigc::mem_fun(*this,
 					  &OperationsTreeDialog::on_button_clicked) );
 
-  op_tree_box.add( op_tree );
-  get_vbox()->pack_start( op_tree_box );
+  op_load_box.add( op_load );
+  notebook.append_page( op_load_box, "load" );
 
-  op_tree.signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  op_raw_box.add( op_raw );
+  notebook.append_page( op_raw_box, "raw" );
+
+  op_conv_box.add( op_conv );
+  notebook.append_page( op_conv_box, "conv" );
+
+  op_color_box.add( op_color );
+  notebook.append_page( op_color_box, "color" );
+
+  op_detail_box.add( op_detail );
+  notebook.append_page( op_detail_box, "detail" );
+
+  op_geom_box.add( op_geom );
+  notebook.append_page( op_geom_box, "geom" );
+
+  op_misc_box.add( op_misc );
+  notebook.append_page( op_misc_box, "misc" );
+
+  op_load.signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  op_raw.signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  op_conv.signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  op_color.signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  op_detail.signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  op_geom.signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  op_misc.signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+
+
+  op_load.add_op( "Open image", "imageread" );
+  op_load.add_op( "Open RAW image", "raw_loader" );
+
+  op_raw.add_op( "RAW developer", "raw_developer" );
+
+  op_conv.add_op( "Lab conversion", "convert2lab" );
+
+  op_color.add_op( "Invert", "invert" );
+  op_color.add_op( "Gradient", "gradient");
+  op_color.add_op( "Brightness/Contrast", "brightness_contrast" );
+  op_color.add_op( "Curves", "curves" );
+  op_color.add_op( "Channel Mixer", "channel_mixer" );
+
+  op_detail.add_op( "Gaussian blur", "gaussblur" );
+  op_detail.add_op( "Noise reduction", "denoise" );
+  op_detail.add_op( "Unsharp mask", "unsharp_mask" );
+
+  op_geom.add_op( "Crop image", "crop" );
+
+  op_misc.add_op( "Buffer layer", "buffer" );
+  op_misc.add_op( "Clone layer", "clone" );
+  op_misc.add_op( "Draw", "draw" );
+
+  get_vbox()->pack_start( notebook );
 
   show_all_children();
 }
@@ -259,7 +254,7 @@ PF::OperationsTreeDialog::~OperationsTreeDialog()
 
 void PF::OperationsTreeDialog::open()
 {
-  op_tree.update_model();
+  //op_tree.update_model();
   show_all();
 }
 
@@ -304,14 +299,46 @@ void PF::OperationsTreeDialog::on_row_activated( const Gtk::TreeModel::Path& pat
 
 void PF::OperationsTreeDialog::add_layer()
 {
-  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
-    op_tree.get_selection();
+  int page = notebook.get_current_page();
+  if( page < 0 ) return;
+
+  PF::OperationsTree* op_tree = NULL;
+
+  switch( page ) {
+  case 0:
+    op_tree = &op_load;
+    break;
+  case 1:
+    op_tree = &op_raw;
+    break;
+  case 2:
+    op_tree = &op_conv;
+    break;
+  case 3:
+    op_tree = &op_color;
+    break;
+  case 4:
+    op_tree = &op_detail;
+    break;
+  case 5:
+    op_tree = &op_geom;
+    break;
+  case 6:
+    op_tree = &op_misc;
+    break;
+  default:
+    return;
+  }
+
+  if( !op_tree ) return;
+
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = op_tree->get_selection();
   Gtk::TreeStore::iterator iter = refTreeSelection->get_selected();
   if( !iter ) return;
 
-  PF::OperationsTreeColumns& columns = op_tree.get_columns();
-  std::cout<<"Adding layer of type \""<<(*iter)[columns.col_name]<<"\""
-	   <<" ("<<(*iter)[columns.col_nickname]<<")"<<std::endl;
+  PF::OperationsTreeColumns& columns = op_tree->get_columns();
+  //std::cout<<"Adding layer of type \""<<(*iter)[columns.col_name]<<"\""
+	//   <<" ("<<(*iter)[columns.col_nickname]<<")"<<std::endl;
   
   if( !image ) return;
 
@@ -320,7 +347,7 @@ void PF::OperationsTreeDialog::add_layer()
   if( !layer ) return;
   layer->set_name( "New Layer" );
 
-  Glib::ustring op_type = (*iter)[columns.col_nickname];
+  std::string op_type = (*iter)[columns.col_nickname];
   PF::ProcessorBase* processor = 
     PF::PhotoFlow::Instance().new_operation( op_type.c_str(), layer );
   if( !processor || !processor->get_par() ) return;

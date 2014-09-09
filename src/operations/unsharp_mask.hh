@@ -47,6 +47,8 @@ namespace PF
     UnsharpMaskPar();
     float get_radius() { return radius.get(); }
     float get_amount() { return amount.get(); }
+
+    bool needs_caching() { return true; }
       
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 

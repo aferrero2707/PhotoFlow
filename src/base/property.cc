@@ -15,14 +15,17 @@ std::ostream& operator <<(std::ostream& str, PF::PropertyBase& p)
 }
 
 
-PF::PropertyBase::PropertyBase(std::string n, OpParBase* par): name(n) 
+PF::PropertyBase::PropertyBase(std::string n, OpParBase* par): 
+  name(n), internal(false), modified_flag(true)
 {
   par->add_property(this);
 }
 
 
 PF::PropertyBase::PropertyBase(std::string n, OpParBase* par, 
-			       int val, std::string strval, std::string valname): name(n) 
+                               int val, std::string strval, 
+                               std::string valname): 
+  name(n), internal(false), modified_flag(true)
 {
   par->add_property(this);
   add_enum_value( val, strval, valname );
@@ -61,6 +64,8 @@ void PF::PropertyBase::from_stream(std::istream& str)
   for( iter = enum_values.begin(); iter != enum_values.end(); iter++ ) {
     if( (*iter).second.first != s ) 
       continue;
+    if(enum_value.first != (*iter).first)
+      modified();
     enum_value = (*iter);
     break;
   }
@@ -95,6 +100,10 @@ void PF::set_gobject_property<std::string>(gpointer object, const std::string na
 
 bool PF::PropertyBase::import(PF::PropertyBase* pin)
 {
+#ifndef NDEBUG
+  if( name == "out_profile_mode" )
+    std::cout<<"PropertyBase::import(): importing property \""<<name<<"\""<<std::endl;
+#endif
   if( !pin ) 
     return false;
 
@@ -105,15 +114,23 @@ bool PF::PropertyBase::import(PF::PropertyBase* pin)
     if( mi == enum_values.end() ) 
       return false;
     std::pair< int, std::pair<std::string,std::string> > val2 = *mi;
-    if( (mi->second.first == val2.second.first) &&
-	(mi->second.second == val2.second.second) ) {
+    if( (val.second.first == val2.second.first) &&
+        (val.second.second == val2.second.second) ) {
+      if(enum_value.first != val.first)
+        modified();
       enum_value = val;
+#ifndef NDEBUG
+      std::cout<<"PropertyBase::import(): property \""<<name<<"\" imported"<<std::endl;
+#endif
       return true;
     } else {
       return false;
     }
   } else {
     set_str( pin->get_str() );
+#ifndef NDEBUG
+    std::cout<<"PropertyBase::import(): property \""<<name<<"\" imported"<<std::endl;
+#endif
     return true;
   }
 }

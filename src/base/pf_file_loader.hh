@@ -74,6 +74,7 @@ namespace PF
   */
 
   void load_pf_image( std::string filename, Image* image );
+  void insert_pf_preset( std::string filename, PF::Image* img, PF::Layer* previous, std::list<PF::Layer*>* list, bool map_flag );
 
 
 }

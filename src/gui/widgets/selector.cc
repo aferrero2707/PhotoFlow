@@ -30,9 +30,32 @@
 #include "selector.hh"
 
 
-PF::Selector::Selector( OperationConfigUI* dialog, std::string pname, std::string l, int val ):
+PF::Selector::Selector( OperationConfigDialog* dialog, std::string pname, std::string l, int val ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname )
+{
+  label.set_text( l.c_str() );
+
+  model = Gtk::ListStore::create(columns);
+  cbox.set_model( model );
+  cbox.pack_start(columns.col_name);
+
+  pack_start( label, Gtk::PACK_SHRINK );
+  pack_start( cbox, Gtk::PACK_SHRINK );
+
+  //pack_start( vbox, Gtk::PACK_SHRINK );
+
+  cbox.signal_changed().
+    connect(sigc::mem_fun(*this,
+			  &PFWidget::changed));
+
+  show_all_children();
+}
+
+
+PF::Selector::Selector( OperationConfigDialog* dialog, PF::ProcessorBase* processor, std::string pname, std::string l, int val ):
+  Gtk::HBox(),
+  PF::PFWidget( dialog, processor, pname )
 {
   label.set_text( l.c_str() );
 

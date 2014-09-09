@@ -32,17 +32,43 @@
 #include "image.hh"
 
 
-PF::Layer::Layer(int32_t i): id(i), processor( NULL ), image( NULL )
+PF::Layer::Layer(int32_t i, bool c): 
+  id(i), 
+  processor( NULL ), 
+  blender( NULL ), 
+  cached( c ), 
+  cache_buffer( NULL ),
+  image( NULL )
 {
   // A layer is always dirty when created, as it is by definition not included in the
   // VIPS rendering chain yet
   dirty = true;
+  modified_flag = true;
 
   visible = true;
 
   normal = true;
+
+  if( cached )
+    cache_buffer = new CacheBuffer();
 }
 
+
+
+void PF::Layer::set_processor(ProcessorBase* p) 
+{ 
+  processor = p; 
+  //processor->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::set_modified) );
+  //processor->get_par()->signal_modified.connect(sigc::mem_fun(image, &PF::Image::set_modified) );
+}
+
+
+void PF::Layer::set_blender(ProcessorBase* p) 
+{ 
+  blender = p; 
+  //blender->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::set_modified) );
+  //blender->get_par()->signal_modified.connect(sigc::mem_fun(image, &PF::Image::set_modified) );
+}
 
 
 bool PF::Layer::insert(std::list<PF::Layer*>& list, PF::Layer* l, int32_t lid)
@@ -143,8 +169,12 @@ bool PF::Layer::save( std::ostream& ostr, int level )
     n++;
   }
   ostr<<"\">"<<std::endl;
+
   if( processor && processor->get_par() )
     processor->get_par()->save( ostr, level+1 );
+
+  if( blender && blender->get_par() )
+    blender->get_par()->save( ostr, level+1 );
 
   for(int i = 0; i < level+1; i++) ostr<<"  ";
   ostr<<"<sublayers type=\"imap\">"<<std::endl;

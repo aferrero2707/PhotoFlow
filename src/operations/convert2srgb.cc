@@ -185,7 +185,7 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   if( !transform ) {
-		std::cout<<"Convert2sRGBPar::build(): null transform"<<std::endl;
+		//std::cout<<"Convert2sRGBPar::build(): null transform"<<std::endl;
     PF_REF( in[0], "Convert2sRGBPar::build(): null transform" );
     return( in[0] );
   }

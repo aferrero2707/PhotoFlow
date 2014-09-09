@@ -36,28 +36,55 @@
 
 namespace PF {
 
-  // Definition of the calumns in the layer list
-  class LayerTreeColumns : public Gtk::TreeModel::ColumnRecord
+  class LayerTreeModel: public Gtk::TreeStore
   {
-  public:
-    
-    LayerTreeColumns()
-    { add(col_visible); add(col_name); add(col_imap); add(col_omap); add(col_layer); }
-    
-    Gtk::TreeModelColumn<bool> col_visible;
-    Gtk::TreeModelColumn<Glib::ustring> col_name;
-    Gtk::TreeModelColumn<Layer*> col_layer;
-    Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> > col_imap;
-    Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> > col_omap;
-  };
+  protected:
+    LayerTreeModel();
 
-  class LayerTree : public Gtk::ScrolledWindow
-  {
+  public:
+    // Definition of the calumns in the layer list
+    class LayerTreeColumns : public Gtk::TreeModel::ColumnRecord
+    {
+    public:
+      
+      LayerTreeColumns()
+      { add(col_visible); add(col_name); add(col_imap); add(col_omap); add(col_layer); }
+      
+      Gtk::TreeModelColumn<bool> col_visible;
+      Gtk::TreeModelColumn<Glib::ustring> col_name;
+      Gtk::TreeModelColumn<Layer*> col_layer;
+      Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> > col_imap;
+      Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> > col_omap;
+    };
+
 
     LayerTreeColumns columns;
 
+    sigc::signal<void> signal_dnd_done;
+
+    //PF::Layer* src_layer;
+    //PF::Layer* dest_layer;
+    //PF::Layer* group_layer;
+
+    static Glib::RefPtr<LayerTreeModel> create();
+
+  protected:
+    Layer* get_dest_layer(const Gtk::TreeModel::Path& dest,
+                          bool& drop_into) const;
+    Layer* get_parent_layer(const Gtk::TreeModel::Path& dest) const;
+    virtual bool row_draggable_vfunc( const Gtk::TreeModel::Path& path ) const;
+    virtual bool row_drop_possible_vfunc( const Gtk::TreeModel::Path& dest,
+                                          const Gtk::SelectionData& selection_data) const;
+    virtual bool drag_data_received_vfunc( const Gtk::TreeModel::Path& dest,
+                                           const Gtk::SelectionData& selection_data);
+  };
+
+
+
+  class LayerTree : public Gtk::ScrolledWindow
+  {
     // Tree model to be filled with individial layers informations
-    Glib::RefPtr<Gtk::TreeStore> treeModel;
+    Glib::RefPtr<PF::LayerTreeModel> treeModel;
 
     Gtk::TreeView treeView;
 
@@ -69,20 +96,25 @@ namespace PF {
 
     void update_model(Gtk::TreeModel::Row parent_row);
 
-    bool select_layer( int id, Gtk::TreeModel::Row& parent_row );
+    bool get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::TreeModel::iterator& iter);
+    bool get_row(int id, Gtk::TreeModel::iterator& iter);
 
   public:
     LayerTree( bool is_map=false );
     virtual ~LayerTree();
 
     Glib::RefPtr<Gtk::TreeStore> get_model() { return treeModel; }
-    LayerTreeColumns& get_columns() { return columns; }
+    LayerTreeModel::LayerTreeColumns& get_columns() { return treeModel->columns; }
 
     Gtk::TreeView& get_tree() { return treeView; }
 
     PF::Layer* get_selected_layer();
-
-    bool select_layer( int id );
+    int get_selected_layer_id();
+    void unselect_all()
+    {
+      get_tree().get_selection()->unselect_all();
+    }
+    void select_row(int id);
 
     bool is_map() { return map_flag; }
 
@@ -93,6 +125,7 @@ namespace PF {
 
     // Updates the tree model with the layers from the associated image
     void update_model();
+    void update_model_cb() { update_model(); }
 
     std::list<Layer*>* get_layers() { return layers; }
     void set_layers( std::list<Layer*>* l ) {

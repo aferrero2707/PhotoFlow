@@ -73,28 +73,28 @@ gint PF::image_rebuild_callback( gpointer data )
     if( !result ) {
       // something wrong here, we release all the locks and stop the update
       // in fact, this should never happen...
-      for( unsigned int i = 0; i < image->get_nviews(); i++ ) {
-	PF::View* view = image->get_view( i );
-	if( !view ) continue;
-	view->unlock_processing();
+      for( unsigned int i = 0; i < image->get_npipelines(); i++ ) {
+	PF::Pipeline* pipeline = image->get_pipeline( i );
+	if( !pipeline ) continue;
+	pipeline->unlock_processing();
       }
       return false;
     }
     */
     
-    image->set_modified( false );
+    image->clear_modified();
 
-    // Loop on views, re-build and update
-    for( unsigned int i = 0; i < image->get_nviews(); i++ ) {
-      PF::View* view = image->get_view( i );
-      if( !view ) continue;
+    // Loop on pipelines, re-build and update
+    for( unsigned int i = 0; i < image->get_npipelines(); i++ ) {
+      PF::Pipeline* pipeline = image->get_pipeline( i );
+      if( !pipeline ) continue;
 
 #ifndef NDEBUG
-      std::cout<<"PF::image_rebuild_callback(): updating view #"<<i<<std::endl;
+      std::cout<<"PF::image_rebuild_callback(): updating pipeline #"<<i<<std::endl;
 #endif
       //vips_cache_drop_all();
-      image->get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
-      //view->update();
+      image->get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
+      //pipeline->update();
     }
 
     image->get_layer_manager().rebuild_finalize();
@@ -107,24 +107,34 @@ PF::Image::Image():
   layer_manager( this ), 
   async( false ), 
   modified( false ), 
-  rebuilding( false ) 
+  rebuilding( false ), 
+  disable_update( false )
 {
   rebuild_mutex = vips_g_mutex_new();
-  g_mutex_lock( rebuild_mutex );
+  //g_mutex_lock( rebuild_mutex );
   rebuild_done = vips_g_cond_new();
+
   sample_mutex = vips_g_mutex_new();
-  g_mutex_lock( sample_mutex );
+  //g_mutex_lock( sample_mutex );
   sample_done = vips_g_cond_new();
+
+  remove_layer_mutex = vips_g_mutex_new();
+  //g_mutex_lock( remove_layer_mutex );
+  remove_layer_done = vips_g_cond_new();
+
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update_all) );
   convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+
+  add_pipeline( VIPS_FORMAT_USHORT, 0 );
+  add_pipeline( VIPS_FORMAT_USHORT, 0 );
 }
 
 PF::Image::~Image()
 {
-  for( unsigned int vi = 0; vi < views.size(); vi++ ) {
-    if( views[vi] != NULL )
-      delete views[vi];
+  for( unsigned int vi = 0; vi < pipelines.size(); vi++ ) {
+    if( pipelines[vi] != NULL )
+      delete pipelines[vi];
   }
 }
 
@@ -134,14 +144,16 @@ PF::Image::~Image()
 // to reduce the amount of computations in case only part of the image
 // needs to be updated. If area is NULL, it means that the whole image 
 // was changed.
-void PF::Image::update( PF::View* target_view )
+void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 {
+  if( disable_update ) return;
+
   if( PF::PhotoFlow::Instance().is_batch() ) {
-    do_update( target_view );
+    do_update( target_pipeline );
   } else {
     ProcessRequestInfo request;
     request.image = this;
-    request.view = target_view;
+    request.pipeline = target_pipeline;
     request.request = PF::IMAGE_REBUILD;
 		/*
 		if(area) {
@@ -154,6 +166,7 @@ void PF::Image::update( PF::View* target_view )
 		request.area.width = request.area.height = 0;
 		//}
     
+    if( sync ) g_mutex_lock( rebuild_mutex );
 #ifndef NDEBUG
     std::cout<<"PF::Image::update(): submitting rebuild request..."<<std::endl;
 #endif
@@ -162,7 +175,8 @@ void PF::Image::update( PF::View* target_view )
     std::cout<<"PF::Image::update(): request submitted."<<std::endl;
 #endif
 
-    g_cond_wait( rebuild_done, rebuild_mutex );
+    if( sync ) g_cond_wait( rebuild_done, rebuild_mutex );
+    if( sync ) g_mutex_unlock( rebuild_mutex );
   }
 
   /*
@@ -174,7 +188,7 @@ void PF::Image::update( PF::View* target_view )
 }
 
 
-void PF::Image::do_update( PF::View* target_view )
+void PF::Image::do_update( PF::Pipeline* target_pipeline )
 {
   //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
   //if( !is_modified() ) return;
@@ -195,32 +209,32 @@ void PF::Image::do_update( PF::View* target_view )
     }
   */
     
-  set_modified( false );
+  clear_modified();
 
-  // Loop on views, re-build and update
-  for( unsigned int i = 0; i < get_nviews(); i++ ) {
-    PF::View* view = get_view( i );
-    if( !view ) continue;
+  // Loop on pipelines, re-build and update
+  for( unsigned int i = 0; i < get_npipelines(); i++ ) {
+    PF::Pipeline* pipeline = get_pipeline( i );
+    if( !pipeline ) continue;
 
-		if( !target_view) {
-			// We do not target a specific view
-			// For the sake of performance, we only rebuild views that have
-			// sinks attached to them, as otherwise the view can be considered inactive
-			if( !(view->has_sinks()) ) continue;
+		if( !target_pipeline) {
+			// We do not target a specific pipeline
+			// For the sake of performance, we only rebuild pipelines that have
+			// sinks attached to them, as otherwise the pipeline can be considered inactive
+			//if( !(pipeline->has_sinks()) ) continue;
 		} else {
-			// We only rebuild the target view
-			if( view != target_view ) continue;
+			// We only rebuild the target pipeline
+			if( pipeline != target_pipeline ) continue;
 		}
 
 #ifndef NDEBUG
-    std::cout<<"PF::Image::do_update(): updating view #"<<i<<std::endl;
+    std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<std::endl;
 #endif
-    //get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100, area );
-    get_layer_manager().rebuild( view, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
+    //get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, area );
+    get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
 #ifndef NDEBUG
-    std::cout<<"PF::Image::do_update(): view #"<<i<<" updated."<<std::endl;
+    std::cout<<"PF::Image::do_update(): pipeline #"<<i<<" updated."<<std::endl;
 #endif
-    //view->update();
+    //pipeline->update();
   }
 
 #ifndef NDEBUG
@@ -232,12 +246,12 @@ void PF::Image::do_update( PF::View* target_view )
 #endif
 
 #ifndef NDEBUG
-  for( unsigned int i = 0; i < get_nviews(); i++ ) {
-    PF::View* view = get_view( i );
-    if( !view ) continue;
-    std::cout<<"PF::Image::do_update(): ref_counts of view #"<<i<<std::endl;
-    for(int ni = 0; ni < view->get_nodes().size(); ni++ ) {
-      PF::ViewNode* node = view->get_nodes()[ni];
+  for( unsigned int i = 0; i < get_npipelines(); i++ ) {
+    PF::Pipeline* pipeline = get_pipeline( i );
+    if( !pipeline ) continue;
+    std::cout<<"PF::Image::do_update(): ref_counts of pipeline #"<<i<<std::endl;
+    for(int ni = 0; ni < pipeline->get_nodes().size(); ni++ ) {
+      PF::PipelineNode* node = pipeline->get_nodes()[ni];
       if( !node ) continue;
       if( !(node->image) ) {
       std::cout<<"  node #"<<ni<<" ("<<(void*)node->image<<")"<<std::endl;
@@ -273,8 +287,9 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
 		request.area.width = area.width;
 		request.area.height = area.height;
     
+    g_mutex_lock( sample_mutex );
 #ifndef NDEBUG
-    std::cout<<"PF::Image::sample(): submitting rebuild request..."<<std::endl;
+    std::cout<<"PF::Image::sample(): submitting sample request..."<<std::endl;
 #endif
     PF::ImageProcessor::Instance().submit_request( request );
 #ifndef NDEBUG
@@ -282,6 +297,7 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
 #endif
 
     g_cond_wait( sample_done, sample_mutex );
+    g_mutex_unlock( sample_mutex );
 
 		if(image)
 			*image = sampler_image;
@@ -299,14 +315,14 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
 
 void PF::Image::do_sample( int layer_id, VipsRect& area )
 {
-  // Get the default view of the image 
+  // Get the default pipeline of the image 
   // (it is supposed to be at 1:1 zoom level 
   // and floating point accuracy)
-  PF::View* view = get_view( 0 );
-  if( !view ) return;
+  PF::Pipeline* pipeline = get_pipeline( 0 );
+  if( !pipeline ) return;
 
   // Get the node associated to the layer
-  PF::ViewNode* node = view->get_node( layer_id );
+  PF::PipelineNode* node = pipeline->get_node( layer_id );
   if( !node ) return;
 
   // Finally, get the underlying VIPS image associated to the layer
@@ -328,22 +344,33 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 
 	VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
 
-	VipsImage* outimg = im_open( "spot_wb_img", "p" );
-	if (vips_sink_screen (spot, outimg, NULL,
-												64, 64, 1, 
-												0, NULL, this))
-		return;
+	//VipsImage* outimg = im_open( "spot_wb_img", "p" );
+	//if (vips_sink_screen (spot, outimg, NULL,
+	//											64, 64, 1, 
+  //												0, NULL, this))
+	//	return;
+  
+  PF::ProcessorBase* convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  std::vector<VipsImage*> in;
+  in.push_back( spot );
+  convert_format->get_par()->set_image_hints( spot );
+  convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
+  unsigned int level = 0;
+  VipsImage* outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+  if( outimg == NULL ) return;
+  PF_UNREF( spot, "Image::do_sample() spot unref" )
+	//if( vips_sink_memory( spot ) )
+	//  return;
+
 	VipsRegion* region = vips_region_new( outimg );
 	if (vips_region_prepare (region, &rspot))
 		return;
-  
-	//if( vips_sink_memory( spot ) )
-	//  return;
 
 	int row, col, b;
 	int line_size = clipped.width*image->Bands;
 	float* p;
-	float avg[16] = {0, 0, 0};
+	float avg[16];
+  for( int i = 0; i < 16; i++ ) avg[i] = 0;
 	for( row = 0; row < rspot.height; row++ ) {
 		p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
 		for( col = 0; col < line_size; col += image->Bands ) {
@@ -360,14 +387,36 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 	}
 	sampler_image = image;
 
-	g_object_unref( spot );
+	//g_object_unref( spot );
 	g_object_unref( outimg );
 	g_object_unref( region );
 }
 
 
 
+// The area parameter represents the region of the image that was actually
+// modified and that needs to be re-computed. This allows certain sinks
+// to reduce the amount of computations in case only part of the image
+// needs to be updated. If area is NULL, it means that the whole image 
+// was changed.
 void PF::Image::remove_layer( PF::Layer* layer )
+{
+  if( PF::PhotoFlow::Instance().is_batch() ) {
+    do_remove_layer( layer );
+  } else {
+    ProcessRequestInfo request;
+    request.image = this;
+    request.layer = layer;
+    request.request = PF::IMAGE_REMOVE_LAYER;
+    g_mutex_lock( remove_layer_mutex );
+    PF::ImageProcessor::Instance().submit_request( request );
+    g_cond_wait( remove_layer_done, remove_layer_mutex );
+    g_mutex_unlock( remove_layer_mutex );
+  }
+}
+
+
+void PF::Image::do_remove_layer( PF::Layer* layer )
 {
   remove_from_inputs( layer );
   std::list<Layer*>* list = layer_manager.get_list( layer );
@@ -397,8 +446,8 @@ void PF::Image::remove_from_inputs( PF::Layer* layer, std::list<Layer*>& list )
 
 void PF::Image::remove_layer( PF::Layer* layer, std::list<Layer*>& list )
 {
-  std::vector<View*>::iterator vi;
-  for( vi = views.begin(); vi != views.end(); vi++ ) {
+  std::vector<Pipeline*>::iterator vi;
+  for( vi = pipelines.begin(); vi != pipelines.end(); vi++ ) {
     (*vi)->remove_node( layer->get_id() );
   }  
 
@@ -435,23 +484,19 @@ bool PF::Image::open( std::string filename )
 {
   std::string ext;
   if( !getFileExtension( "/", filename, ext ) ) return false;
+  disable_update = true;
   if( ext == "pfi" ) {
 
-    add_view( VIPS_FORMAT_FLOAT, 0 );
-    add_view( VIPS_FORMAT_USHORT, 0 );
     PF::load_pf_image( filename, this );
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
-    //add_view( VIPS_FORMAT_UCHAR, 0 );
+    //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
 		file_name = filename;
 
   } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" ) {
 
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
-
-    add_view( VIPS_FORMAT_FLOAT, 0 );
-    add_view( VIPS_FORMAT_USHORT, 0 );
 
     PF::Layer* limg = layer_manager.new_layer();
     PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "imageread", limg );
@@ -481,9 +526,6 @@ bool PF::Image::open( std::string filename )
     */
   } else {
     
-    add_view( VIPS_FORMAT_FLOAT, 0 );
-    add_view( VIPS_FORMAT_USHORT, 0 );
-
     PF::Layer* limg = layer_manager.new_layer();
     PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "raw_loader", limg );
     if( proc->get_par() && proc->get_par()->get_property( "file_name" ) )
@@ -492,11 +534,14 @@ bool PF::Image::open( std::string filename )
     limg->set_name( "RAW loader" );
     layer_manager.get_layers().push_back( limg );
 
+		/*
     limg = layer_manager.new_layer();
     proc = PF::PhotoFlow::Instance().new_operation( "raw_developer", limg );
     limg->set_processor( proc );
     limg->set_name( "RAW developer" );
     layer_manager.get_layers().push_back( limg );
+		*/
+
     /*
     limg = layer_manager.new_layer();
     proc = PF::PhotoFlow::Instance().new_operation( "raw_output", limg );
@@ -505,8 +550,9 @@ bool PF::Image::open( std::string filename )
     layer_manager.get_layers().push_back( limg );
     */
   }
+  disable_update = false;
 
-  //imageArea.set_view( pf_image->get_view(0) );
+  //imageArea.set_pipeline( pf_image->get_pipeline(0) );
   //pf_image->signal_modified.connect( sigc::mem_fun(&imageArea, &ImageArea::update_image) );
   //sleep(5);
   //update();
@@ -522,7 +568,7 @@ bool PF::Image::save( std::string filename )
     std::ofstream of;
     of.open( filename.c_str() );
     if( !of ) return false;
-    of<<"<image>"<<std::endl;
+    of<<"<image version=\"2\">"<<std::endl;
     layer_manager.save( of );
     of<<"</image>"<<std::endl;
 		file_name = filename;
@@ -541,22 +587,22 @@ bool PF::Image::export_merged( std::string filename )
       ext != "pfi" ) {
     //Glib::Threads::Mutex::Lock lock( rebuild_mutex );
     unsigned int level = 0;
-    PF::View* view = new PF::View( this, VIPS_FORMAT_USHORT, 0 );
-    layer_manager.rebuild_all( view, PF::PF_COLORSPACE_RGB, 100, 100 );
-    VipsImage* image = view->get_output();
+    PF::Pipeline* pipeline = new PF::Pipeline( this, VIPS_FORMAT_USHORT, 0, PF_RENDER_NORMAL );
+    layer_manager.rebuild_all( pipeline, PF::PF_COLORSPACE_RGB, 100, 100 );
+    VipsImage* image = pipeline->get_output();
     VipsImage* outimg = image;
 
     std::vector<VipsImage*> in;
-    /**/
+    /*
     convert2srgb->get_par()->set_image_hints( image );
-    convert2srgb->get_par()->set_format( view->get_format() );
+    convert2srgb->get_par()->set_format( pipeline->get_format() );
     in.clear(); in.push_back( image );
     VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
     //g_object_unref( image );
     std::string msg = std::string("PF::Image::export_merged(") + filename + "), image";
     PF_UNREF( image, msg.c_str() );
-    /**/
-    //VipsImage* srgbimg = image;
+    */
+    VipsImage* srgbimg = image;
 
 		outimg = srgbimg;
 
@@ -577,9 +623,9 @@ bool PF::Image::export_merged( std::string filename )
     vips_image_write_to_file( outimg, filename.c_str(), NULL );
 #endif
     //g_object_unref( outimg );
-    msg = std::string("PF::Image::export_merged(") + filename + "), outimg";
+    std::string msg = std::string("PF::Image::export_merged(") + filename + "), outimg";
     PF_UNREF( outimg, msg.c_str() );
-    delete view;
+    delete pipeline;
     return true;
   } else {
     return false;

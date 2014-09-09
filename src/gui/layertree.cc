@@ -154,21 +154,40 @@ static const struct {
 };
 
 
+PF::LayerTreeModel::LayerTreeModel()
+{
+  set_column_types( columns );
+}
+
+
+Glib::RefPtr<PF::LayerTreeModel> PF::LayerTreeModel::create()
+{
+  return Glib::RefPtr<LayerTreeModel>( new PF::LayerTreeModel() );
+}
+
 
 PF::LayerTree::LayerTree( bool is_map ): 
   layers( NULL ),
   map_flag( is_map )
 {
-  treeModel = Gtk::TreeStore::create(columns);
+  treeModel = PF::LayerTreeModel::create();
   treeView.set_model(treeModel);
-  treeView.append_column_editable("V", columns.col_visible);
-  treeView.append_column("Name", columns.col_name);
-  treeView.append_column("map1", columns.col_imap);
-  treeView.append_column("map2", columns.col_omap);
+  treeView.append_column_editable("V", treeModel->columns.col_visible);
+  treeView.append_column("Name", treeModel->columns.col_name);
+  treeView.append_column("map1", treeModel->columns.col_imap);
+  treeView.append_column("map2", treeModel->columns.col_omap);
+
+  treeView.enable_model_drag_source();
+  treeView.enable_model_drag_dest();
+
+  treeView.get_selection()->set_mode(Gtk::SELECTION_MULTIPLE);
 
   Gtk::CellRendererToggle* cell = 
     dynamic_cast<Gtk::CellRendererToggle*>( treeView.get_column_cell_renderer(0) );
   cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerTree::on_cell_toggled) ); 
+
+  treeModel->signal_dnd_done.
+    connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_cb) ); 
 
   add( treeView );
 
@@ -202,8 +221,8 @@ void PF::LayerTree::on_cell_toggled( const Glib::ustring& path )
   if (iter) {
     Gtk::TreeModel::Row row = *iter;
     //PF::LayerTreeColumns& columns = columns;
-    bool visible = (*iter)[columns.col_visible];
-    PF::Layer* l = (*iter)[columns.col_layer];
+    bool visible = (*iter)[treeModel->columns.col_visible];
+    PF::Layer* l = (*iter)[treeModel->columns.col_layer];
     if( !l ) return;
 #ifndef NDEBUG
     std::cout<<"Toggled visibility of layer \""<<l->get_name()<<"\": "<<visible<<std::endl;
@@ -220,30 +239,30 @@ void PF::LayerTree::on_cell_toggled( const Glib::ustring& path )
 void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
 {
   //PF::LayerTreeColumns& columns = columns;
-  PF::Layer* parent_layer = parent_row[columns.col_layer];
+  PF::Layer* parent_layer = parent_row[treeModel->columns.col_layer];
   if( !parent_layer ) return;
 
   Gtk::TreeModel::Row row = *(treeModel->append(parent_row.children()));
-  row[columns.col_visible] = false;
-  row[columns.col_name] = std::string( "" );
-  row[columns.col_layer] = NULL;
+  row[treeModel->columns.col_visible] = false;
+  row[treeModel->columns.col_name] = std::string( "" );
+  row[treeModel->columns.col_layer] = NULL;
 
   std::list<Layer*> sublayers = parent_layer->get_sublayers();
   for( std::list<Layer*>::iterator li = sublayers.begin();
        li != sublayers.end(); li++ ) {
     PF::Layer* l = *li;
     row = *(treeModel->prepend(parent_row.children()));
-    row[columns.col_visible] = l->is_visible();
-    row[columns.col_name] = l->get_name();
-    row[columns.col_layer] = l;
+    row[treeModel->columns.col_visible] = l->is_visible();
+    row[treeModel->columns.col_name] = l->get_name();
+    row[treeModel->columns.col_layer] = l;
     if( l->get_processor()->get_par()->has_intensity() )
       //row[columns.col_imap] = Gdk::Pixbuf::create_from_file("/home/aferrero/Projects/PhotoFlow/PhotoFlow_VIPS/build/icons/meter.png");
-      row[columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_meter.pixel_data,Gdk::COLORSPACE_RGB, 
+      row[treeModel->columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_meter.pixel_data,Gdk::COLORSPACE_RGB, 
 							    false, 8, icon_meter.width, icon_meter.height, 
 							    icon_meter.width*3);
     if( l->get_processor()->get_par()->has_opacity() )
       //row[columns.col_omap] = Gdk::Pixbuf::create_from_file("/home/aferrero/Projects/PhotoFlow/PhotoFlow_VIPS/build/icons/gradient.png");
-      row[columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_gradient.pixel_data,Gdk::COLORSPACE_RGB, 
+      row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_gradient.pixel_data,Gdk::COLORSPACE_RGB, 
 							    false, 8, icon_gradient.width, icon_gradient.height, 
 							    icon_gradient.width*3);
 
@@ -261,18 +280,27 @@ void PF::LayerTree::update_model()
   std::list<PF::Layer*>::iterator li;
   for( li = layers->begin(); li != layers->end(); li++ ) {
     PF::Layer* l = *li;
+    if( !l ) continue;
+    if( !l->get_processor() ) {
+      std::cout<<"LayerTree::update_model(): NULL processor for layer \""<<l->get_name()<<"\""<<std::endl;
+      continue;
+    }
+    if( !l->get_processor()->get_par() ) {
+      std::cout<<"LayerTree::update_model(): NULL operation for layer \""<<l->get_name()<<"\""<<std::endl;
+      continue;
+    }
     Gtk::TreeModel::Row row = *(treeModel->prepend());
-    row[columns.col_visible] = l->is_visible();
-    row[columns.col_name] = l->get_name();
-    row[columns.col_layer] = l;
+    row[treeModel->columns.col_visible] = l->is_visible();
+    row[treeModel->columns.col_name] = l->get_name();
+    row[treeModel->columns.col_layer] = l;
     if( l->get_processor()->get_par()->has_intensity() )
       //row[columns.col_imap] = Gdk::Pixbuf::create_from_file("/home/aferrero/Projects/PhotoFlow/PhotoFlow_VIPS/build/icons/meter.png");
-      row[columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_meter.pixel_data,Gdk::COLORSPACE_RGB, 
+      row[treeModel->columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_meter.pixel_data,Gdk::COLORSPACE_RGB, 
 							    false, 8, icon_meter.width, icon_meter.height, 
 							    icon_meter.width*3);
     if( l->get_processor()->get_par()->has_opacity() )
       //row[columns.col_omap] = Gdk::Pixbuf::create_from_file("/home/aferrero/Projects/PhotoFlow/PhotoFlow_VIPS/build/icons/gradient.png");
-      row[columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_gradient.pixel_data,Gdk::COLORSPACE_RGB, 
+      row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_gradient.pixel_data,Gdk::COLORSPACE_RGB, 
 							    false, 8, icon_gradient.width, icon_gradient.height, 
 							    icon_gradient.width*3);
 
@@ -328,11 +356,16 @@ PF::Layer* PF::LayerTree::get_selected_layer()
 {
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
     get_tree().get_selection();
-  Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
+  std::vector<Gtk::TreeModel::Path> sel_rows = 
+    refTreeSelection->get_selected_rows();
+  Gtk::TreeModel::iterator iter;
+  if( !sel_rows.empty() ) {
+    iter = get_model()->get_iter( sel_rows[0] );
+  }
+  //Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
   if(iter) {//If anything is selected
     Gtk::TreeModel::Row row = *iter;
-    PF::LayerTreeColumns& columns = get_columns();
-    PF::Layer* l = (*iter)[columns.col_layer];
+    PF::Layer* l = (*iter)[treeModel->columns.col_layer];
     return l;
   }
   return NULL;
@@ -340,33 +373,66 @@ PF::Layer* PF::LayerTree::get_selected_layer()
 
 
 
-bool PF::LayerTree::select_layer( int id, Gtk::TreeModel::Row& parent_row )
+int PF::LayerTree::get_selected_layer_id()
 {
-  if( parent_row.children().empty() )
-    return false;
-  Gtk::TreeModel::iterator iter = parent_row.children().begin();
-  for( ; iter != treeModel->children().end(); iter++ ) {
-    Gtk::TreeModel::Row row = *iter;
-    PF::LayerTreeColumns& columns = get_columns();
-    PF::Layer* l = (*iter)[columns.col_layer];
+  int result = -1;
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+    get_tree().get_selection();
+  std::vector<Gtk::TreeModel::Path> sel_rows = 
+    refTreeSelection->get_selected_rows();
+  Gtk::TreeModel::iterator iter;
+  if( !sel_rows.empty() ) {
+    iter = get_model()->get_iter( sel_rows[0] );
   }
+  //Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
+  if(iter) {//If anything is selected
+    Gtk::TreeModel::Row row = *iter;
+    PF::Layer* l = (*iter)[treeModel->columns.col_layer];
+    if(l) result = l->get_id();
+  }
+
+  return( result );
 }
 
 
 
-bool PF::LayerTree::select_layer( int id )
+bool PF::LayerTree::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::TreeModel::iterator& iter)
 {
-  Gtk::TreeModel::iterator iter = treeModel->children().begin();
-  for( ; iter != treeModel->children().end(); iter++ ) {
-    Gtk::TreeModel::Row row = *iter;
-    PF::LayerTreeColumns& columns = get_columns();
-    PF::Layer* l = (*iter)[columns.col_layer];
-
-    if( l && (l->get_id()==id) ) {
-      Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
-	get_tree().get_selection();
-      refTreeSelection->select( iter );
+  for(  Gtk::TreeModel::iterator it = rows.begin();
+        it != rows.end(); it++ ) {
+    //Gtk::TreeModel::Row row = *it;
+    PF::Layer* l = (*it)[treeModel->columns.col_layer];
+    if(l && (l->get_id()==id)) {
+      iter = it;
       return true;
+    }
+    Gtk::TreeModel::Children children = it->children();
+    if( !children.empty() ) {
+      if( get_row( id, children, iter ) )
+        return true;
     }
   }
 }
+
+
+
+bool PF::LayerTree::get_row(int id, Gtk::TreeModel::iterator& iter)
+{
+  Glib::RefPtr<Gtk::TreeStore> model = get_model();
+  const Gtk::TreeModel::Children rows = model->children();
+  return get_row( id, rows, iter );
+}
+
+
+void PF::LayerTree::select_row(int id)
+{
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+    get_tree().get_selection();
+  Gtk::TreeModel::iterator iter;
+  if( get_row( id, iter ) ) {
+    refTreeSelection->select( iter );
+  }
+}
+
+
+

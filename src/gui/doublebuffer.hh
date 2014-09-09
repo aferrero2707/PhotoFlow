@@ -88,7 +88,7 @@ namespace PF
       }
     }
 
-    void copy( VipsRegion* region, const VipsRect& src_rect )
+    void copy( VipsRegion* region, VipsRect src_rect, int xoffs=0, int yoffs=0 )
     {
       guint8 *px1 = (guchar *) VIPS_REGION_ADDR( region, src_rect.left, src_rect.top );
       int rs1 = VIPS_REGION_LSKIP( region );
@@ -98,8 +98,13 @@ namespace PF
       int rs2 = buf->get_rowstride();
       int bl2 = 3; /*buf->get_byte_length();*/
 
-      VipsRect clip;
+			// We add the offset of the image relative to the buffer to src_rect
+			src_rect.left += xoffs;
+			src_rect.top += yoffs;
+			VipsRect clip;
       vips_rect_intersectrect (&src_rect, &rect, &clip);
+			if( clip.width <= 0 ||
+					clip.height <= 0 ) return;
       int xstart = clip.left;
       int ystart = clip.top;
       int xend = clip.left+clip.width-1;
@@ -116,6 +121,68 @@ namespace PF
 				guint8* p2 = px2 + rs2*dy2 + dx2*bl2;
 
 				memcpy( p2, p1, clip.width*bl2 );
+      }
+    }
+
+    void fill( const VipsRect& area, guint8 val )
+    {
+      guint8* px2 = buf->get_pixels();
+      int rs2 = buf->get_rowstride();
+      int bl2 = 3; /*buf->get_byte_length();*/
+
+			// We add the offset of the image relative to the buffer to src_rect
+			VipsRect clip;
+      vips_rect_intersectrect (&area, &rect, &clip);
+			if( clip.width <= 0 ||
+					clip.height <= 0 ) return;
+      int xstart = clip.left;
+      int ystart = clip.top;
+      int xend = clip.left+clip.width-1;
+      int yend = clip.top+clip.height-1;
+			int x, y;
+
+      for( y = ystart; y <= yend; y++ ) {
+				int dy2 = y - rect.top;
+
+				int dx2 = xstart - rect.left;
+	
+				guint8* p2 = px2 + rs2*dy2 + dx2*bl2;
+
+				memset( p2, val, clip.width*bl2 );
+      }
+    }
+
+    void fill( const VipsRect& area, guint8 r, guint8 g, guint8 b )
+    {
+      guint8* px2 = buf->get_pixels();
+      int rs2 = buf->get_rowstride();
+      int bl2 = 3; /*buf->get_byte_length();*/
+
+			// We add the offset of the image relative to the buffer to src_rect
+			VipsRect clip;
+      vips_rect_intersectrect (&area, &rect, &clip);
+			if( clip.width <= 0 ||
+					clip.height <= 0 ) return;
+      int xstart = clip.left;
+      int ystart = clip.top;
+      int xend = clip.left+clip.width-1;
+      int yend = clip.top+clip.height-1;
+			int x, y;
+
+      for( y = ystart; y <= yend; y++ ) {
+				int dy2 = y - rect.top;
+
+				int dx2 = xstart - rect.left;
+	
+				guint8* p2 = px2 + rs2*dy2 + dx2*bl2;
+
+				for( x = xstart; x <= xend; x+=bl2 ) {
+					p2[0] = r;
+					p2[1] = g;
+					p2[2] = b;
+					p2 += bl2;
+				}
+				//memcpy( p2, p1, clip.width*bl2 );
       }
     }
   };

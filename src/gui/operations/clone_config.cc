@@ -55,15 +55,15 @@ void PF::CloneConfigDialog::on_layer_changed()
 }
 
 
-void PF::CloneConfigDialog::update()
+void PF::CloneConfigDialog::do_update()
 {
   layer_list.update_model();
-  OperationConfigDialog::update();
+  OperationConfigDialog::do_update();
 }
 
 
-void PF::CloneConfigDialog::open()
+void PF::CloneConfigDialog::init()
 {
-  //layer_list.update_model();
-  OperationConfigDialog::open();
+  layer_list.update_model();
+  OperationConfigDialog::init();
 }

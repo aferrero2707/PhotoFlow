@@ -59,7 +59,7 @@ PF::RawOutputPar::RawOutputPar():
   gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","None"),
   gamma_lin("gamma_lin", this, 0),
   gamma_exp("gamma_exp", this, 2.2),
-  out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","sRGB"),
+  out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
   current_out_profile_mode( OUT_PROF_sRGB ),
   out_profile_name("out_profile_name", this),
   out_profile( NULL ),
@@ -70,9 +70,10 @@ PF::RawOutputPar::RawOutputPar():
   profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC");
 
   out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
   out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
   out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
   gamma_mode.add_enum_value(PF::IN_GAMMA_NONE,"NONE","None");
@@ -162,6 +163,9 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       break;
     case OUT_PROF_ADOBE:
       out_profile = dt_colorspaces_create_adobergb_profile();
+      break;
+    case OUT_PROF_PROPHOTO:
+      out_profile = dt_colorspaces_create_prophotorgb_profile();
       break;
     case OUT_PROF_LAB:
       out_profile = dt_colorspaces_create_lab_profile();

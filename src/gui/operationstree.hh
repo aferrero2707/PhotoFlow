@@ -49,7 +49,7 @@ namespace PF {
     }
     
     Gtk::TreeModelColumn<Glib::ustring> col_name;
-    Gtk::TreeModelColumn<Glib::ustring> col_nickname;
+    Gtk::TreeModelColumn<std::string> col_nickname;
   };
 
   class OperationsTree : public Gtk::TreeView
@@ -67,7 +67,7 @@ namespace PF {
     virtual ~OperationsTree();
 
     // Updates the tree model with the layers from the associated image
-    void update_model();
+    void add_op( Glib::ustring name, const std::string nik);
 
     Glib::RefPtr<Gtk::TreeStore> get_model() { return treeModel; }
     OperationsTreeColumns& get_columns() { return columns; }
@@ -76,8 +76,28 @@ namespace PF {
 
   class OperationsTreeDialog: public Gtk::Dialog
   {
-    Gtk::ScrolledWindow op_tree_box;
-    OperationsTree op_tree;
+    Gtk::Notebook notebook;
+
+    Gtk::ScrolledWindow op_load_box;
+    OperationsTree op_load;
+
+    Gtk::ScrolledWindow op_raw_box;
+    OperationsTree op_raw;
+
+    Gtk::ScrolledWindow op_conv_box;
+    OperationsTree op_conv;
+
+    Gtk::ScrolledWindow op_color_box;
+    OperationsTree op_color;
+
+    Gtk::ScrolledWindow op_detail_box;
+    OperationsTree op_detail;
+
+    Gtk::ScrolledWindow op_geom_box;
+    OperationsTree op_geom;
+
+    Gtk::ScrolledWindow op_misc_box;
+    OperationsTree op_misc;
 
     Image* image;
 

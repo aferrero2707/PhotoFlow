@@ -32,6 +32,10 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include <stdio.h>  /* defines FILENAME_MAX */
 //#ifdef WINDOWS
@@ -46,6 +50,9 @@
  #endif
 
 #include <gtkmm/main.h>
+#ifdef GTKMM_3
+#include <gtkmm/cssprovider.h>
+#endif
 //#include <vips/vips>
 #include <vips/vips.h>
 
@@ -69,9 +76,22 @@ extern "C" {
 }
 #endif /*__cplusplus*/
 
+void handler(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+
 int main (int argc, char *argv[])
 {
-  Gtk::Main kit(argc, argv);
+  Gtk::Main app(argc, argv);
 
   /*
   if (argc != 2) {
@@ -79,6 +99,8 @@ int main (int argc, char *argv[])
     exit(1);
   }
   */
+
+  signal(SIGSEGV, handler);   // install our handler
 
   if (vips_init (argv[0]))
     //vips::verror ();
@@ -94,6 +116,20 @@ int main (int argc, char *argv[])
   if(!Glib::thread_supported()) 
     Glib::thread_init();
 
+  char exname[512] = {0};
+  Glib::ustring exePath;
+  // get the path where the rawtherapee executable is stored
+#ifdef WIN32
+  WCHAR exnameU[512] = {0};
+  GetModuleFileNameW (NULL, exnameU, 512);
+  WideCharToMultiByte(CP_UTF8,0,exnameU,-1,exname,512,0,0 );
+#else
+  if (readlink("/proc/self/exe", exname, 512) < 0) {
+    strncpy(exname, argv[0], 512);
+  }
+#endif
+  exePath = Glib::path_get_dirname(exname);
+  
   //im_package* result = im_load_plugin("src/pfvips.plg");
   //if(!result) verror ();
   //std::cout<<result->name<<" loaded."<<std::endl;
@@ -125,7 +161,30 @@ int main (int argc, char *argv[])
 
   //vips__leak = 1;
 
+#ifdef GTKMM_2
+	std::vector<Glib::ustring> files;
+	files.push_back (exePath + "/themes/photoflow-dark.gtkrc");
+	Gtk::RC::set_default_files (files);
+  Gtk::RC::reparse_all (Gtk::Settings::get_default());
+  GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
+  gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
+#endif
+
   PF::MainWindow* mainWindow = new PF::MainWindow();
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
+  //Glib::RefPtr<Gtk::StyleContext> cntx = mainWindow->get_style_context();
+  Glib::RefPtr<Gtk::StyleContext> cntx = Gtk::StyleContext::create();
+  Glib::RefPtr<Gdk::Screen> screen = Gdk::Screen::get_default();
+  //cntx->set_screen( screen );
+  //cntx->set_path( mainWindow->get_path() );
+  //cntx->add_provider(css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  cntx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  //cntx->invalidate();
+  css->load_from_path(exePath + "/themes/photoflow-dark.css");
+  //css->load_from_path("themes/photoflow-dark/gtk.css");
+#endif
+
   if( argc > 1 ) {
     fullpath = realpath( argv[1], NULL );
     if(!fullpath)
@@ -134,7 +193,8 @@ int main (int argc, char *argv[])
     free(fullpath);
   }
   //Shows the window and returns when it is closed.
-  Gtk::Main::run(*mainWindow);
+  mainWindow->show_all();
+  app.run(*mainWindow);
 
 	delete mainWindow;
 

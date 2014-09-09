@@ -40,6 +40,7 @@
 
 #include "pftypes.hh"
 #include "processor.hh"
+#include "cachebuffer.hh"
 
 namespace PF
 {
@@ -57,15 +58,21 @@ namespace PF
     std::list<Layer*> omap_layers;
     std::vector<int32_t> extra_inputs;
 
-    // Flag indicating that the layer hs been directly or indirectly
+    // Flag indicating that the layer has been directly or indirectly
     // modified, and therefore that re-building is needed
     bool dirty;
+
+    bool modified_flag;
 
     bool visible;
 
     bool normal;
 
     ProcessorBase* processor;
+    ProcessorBase* blender;
+
+    bool cached;
+    CacheBuffer* cache_buffer;
 
     Image* image;
 
@@ -73,17 +80,22 @@ namespace PF
     bool insert_before(std::list<PF::Layer*>& list, Layer* l, int32_t lid);
 
   public:
-    Layer(int32_t id);
+    Layer(int32_t id, bool cached=false);
     virtual ~Layer()
     {
       std::cout<<"~Layer(): \""<<name<<"\" destructor called."<<std::endl;
-      if( processor ) delete (processor );
+      if( processor ) delete( processor );
+      if( blender ) delete( blender );
     }
 
     std::string get_name() { return name; }
     void set_name( std::string n ) { name = n; modified(); }
 
     int32_t get_id() { return id; }
+
+    bool is_modified() { return modified_flag; }
+    void set_modified() { modified_flag = true; }
+    void clear_modified() { modified_flag = false; }
 
     bool is_dirty() { return dirty; }
     void set_dirty( bool d ) { dirty = d; }
@@ -98,9 +110,21 @@ namespace PF
     bool is_normal() { return normal; }
     void set_normal( bool d ) { normal = d; }
     
+    bool is_cached() { return cached; }
+    void set_cached( bool c ) 
+    {
+      cached = c;
+      if( cached && !cache_buffer )
+        cache_buffer = new CacheBuffer();
+    }
+    CacheBuffer* get_cache_buffer() { return cache_buffer; }
+
 
     ProcessorBase* get_processor() { return processor; }
-    void set_processor(ProcessorBase* p) { processor = p; }
+    void set_processor(ProcessorBase* p);
+
+    ProcessorBase* get_blender() { return blender; }
+    void set_blender(ProcessorBase* b);
 
     Image* get_image() { return image; }
     void set_image( Image* img ) { image = img; }
@@ -127,7 +151,7 @@ namespace PF
     bool omap_insert_before(Layer* l, int32_t lid);
 
     sigc::signal<void> signal_modified;
-    void modified() { signal_modified.emit(); }
+    void modified() { set_modified(); signal_modified.emit(); }
 
     bool save( std::ostream& ostr, int level );
   };

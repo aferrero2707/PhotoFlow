@@ -62,6 +62,16 @@ namespace PF
     }
   };
 
+  inline bool operator==(const RGBColor& lhs, const RGBColor& rhs)
+  {
+    return( (lhs.r==rhs.r) && (lhs.g==rhs.g) && (lhs.b==rhs.b) );
+  }
+
+  inline bool operator!=(const RGBColor& lhs, const RGBColor& rhs)
+  {
+    return( !(lhs == rhs) );
+  }
+
   inline std::istream& operator >>( std::istream& str, RGBColor& color )
   {
     str>>color.r>>color.g>>color.b;

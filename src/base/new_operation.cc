@@ -112,7 +112,12 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
     processor = new_gaussblur();
 
-  } else if( op_type == "unsharp_mask" ) {
+   } else if( op_type == "denoise" ) {
+      
+    //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
+    processor = new_denoise();
+
+ } else if( op_type == "unsharp_mask" ) {
       
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
     processor = new_unsharp_mask();
@@ -141,8 +146,13 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     processor = vips_op;
   }
 
-  if( processor && current_layer )
+  if( processor && current_layer ) {
     current_layer->set_processor( processor );
+    //if( processor->get_par() && processor->get_par()->has_opacity() )
+    current_layer->set_blender( new_blender() );
+    if( processor->get_par() )
+      current_layer->set_cached( processor->get_par()->needs_caching() );
+  }
 
   return processor;
 }

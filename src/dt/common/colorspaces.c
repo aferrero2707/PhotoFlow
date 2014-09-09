@@ -303,6 +303,66 @@ dt_colorspaces_create_adobergb_profile(void)
   return hAdobeRGB;
 }
 
+// Create the ICC virtual profile for prophoto rgb space
+cmsHPROFILE
+dt_colorspaces_create_prophotorgb_profile(void)
+{
+  cmsHPROFILE  hProphotoRGB;
+
+  cmsCIEXYZTRIPLE Colorants = {
+    {0.7976749, 0.2880402, 0.0000000},
+    {0.1351917, 0.7118741, 0.0000000},
+    {0.0313534, 0.0000857, 0.8252100}
+  };
+
+  cmsCIEXYZ black = { 0, 0, 0 };
+  cmsCIEXYZ D50 = { 0.9642, 1.0, 0.8249 };
+
+  cmsToneCurve* transferFunction;
+
+  // ProphotoRGB's "1.8" gamma
+  transferFunction = cmsBuildGamma(NULL, 1.8);
+
+  hProphotoRGB = cmsCreateProfilePlaceholder(0);
+
+  cmsSetProfileVersion(hProphotoRGB, 2.1);
+
+  cmsMLU *mlu0 = cmsMLUalloc(NULL, 1);
+  cmsMLUsetASCII(mlu0, "en", "US", "Public Domain");
+  cmsMLU *mlu1 = cmsMLUalloc(NULL, 1);
+  cmsMLUsetASCII(mlu1, "en", "US", "Prophoto RGB (compatible)");
+  cmsMLU *mlu2 = cmsMLUalloc(NULL, 1);
+  cmsMLUsetASCII(mlu2, "en", "US", "Darktable");
+  cmsMLU *mlu3 = cmsMLUalloc(NULL, 1);
+  cmsMLUsetASCII(mlu3, "en", "US", "Prophoto RGB");
+  // this will only be displayed when the embedded profile is read by for example GIMP
+  cmsWriteTag(hProphotoRGB, cmsSigCopyrightTag,          mlu0);
+  cmsWriteTag(hProphotoRGB, cmsSigProfileDescriptionTag, mlu1);
+  cmsWriteTag(hProphotoRGB, cmsSigDeviceMfgDescTag,      mlu2);
+  cmsWriteTag(hProphotoRGB, cmsSigDeviceModelDescTag,    mlu3);
+  cmsMLUfree(mlu0);
+  cmsMLUfree(mlu1);
+  cmsMLUfree(mlu2);
+  cmsMLUfree(mlu3);
+
+  cmsSetDeviceClass(hProphotoRGB, cmsSigDisplayClass);
+  cmsSetColorSpace(hProphotoRGB, cmsSigRgbData);
+  cmsSetPCS(hProphotoRGB, cmsSigXYZData);
+
+  cmsWriteTag(hProphotoRGB, cmsSigMediaWhitePointTag, &D50);
+  cmsWriteTag(hProphotoRGB, cmsSigMediaBlackPointTag, &black);
+
+  cmsWriteTag(hProphotoRGB, cmsSigRedColorantTag, (void*) &Colorants.Red);
+  cmsWriteTag(hProphotoRGB, cmsSigGreenColorantTag, (void*) &Colorants.Green);
+  cmsWriteTag(hProphotoRGB, cmsSigBlueColorantTag, (void*) &Colorants.Blue);
+
+  cmsWriteTag(hProphotoRGB, cmsSigRedTRCTag, (void*) transferFunction);
+  cmsLinkTag(hProphotoRGB, cmsSigGreenTRCTag, cmsSigRedTRCTag );
+  cmsLinkTag(hProphotoRGB, cmsSigBlueTRCTag, cmsSigRedTRCTag );
+
+  return hProphotoRGB;
+}
+
 // Create the ICC virtual profile for adobe rgb space
 cmsHPROFILE
 dt_colorspaces_create_betargb_profile(void)

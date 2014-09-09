@@ -30,7 +30,7 @@
 #include "slider.hh"
 
 
-PF::Slider::Slider( OperationConfigUI* dialog, std::string pname, std::string l, 
+PF::Slider::Slider( OperationConfigDialog* dialog, std::string pname, std::string l, 
 		    double val, double min, double max, double sincr, double pincr,
 		    double mult ):
   Gtk::VBox(),
@@ -88,11 +88,71 @@ PF::Slider::Slider( OperationConfigUI* dialog, std::string pname, std::string l,
 }
 
 
+PF::Slider::Slider( OperationConfigDialog* dialog, PF::ProcessorBase* processor, std::string pname, std::string l, 
+		    double val, double min, double max, double sincr, double pincr,
+		    double mult ):
+  Gtk::VBox(),
+  PF::PFWidget( dialog, processor, pname ),
+#ifdef GTKMM_2
+  adjustment( val, min, max, sincr, pincr, 0),
+  scale(adjustment),
+  spinButton(adjustment),
+#endif
+  multiplier(mult)
+{
+#ifdef GTKMM_3
+  adjustment = Gtk::Adjustment::create( val, min, max, sincr, pincr, 0 );
+  scale.set_adjustment( adjustment );
+  spinButton.set_adjustment( adjustment );
+#endif
+
+  label.set_text( l.c_str() );
+  scale.set_digits(0);
+  if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
+  if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
+  scale.set_size_request( 300, -1 );
+  spinButton.set_size_request( 70, -1 );
+
+  if( (max-min) < 500 ) {
+    // Full widget with slider and spin button
+    scale.set_value_pos(Gtk::POS_LEFT);
+    scale.set_draw_value( false );
+    align.set(0,0.5,0,1);
+    align.add( label );
+
+    hbox.pack_start( scale );
+    hbox.pack_start( spinButton );
+
+    pack_start( align );
+  } else {
+    hbox.pack_start( label );
+    hbox.pack_start( spinButton );
+  }
+
+  pack_start( hbox );
+
+#ifdef GTKMM_2
+  adjustment.signal_value_changed().
+    connect(sigc::mem_fun(*this,
+			  &PFWidget::changed));
+#endif
+#ifdef GTKMM_3
+  adjustment->signal_value_changed().
+    connect(sigc::mem_fun(*this,
+			  &PFWidget::changed));
+#endif
+
+  show_all_children();
+}
+
+
 void PF::Slider::get_value()
 {
+  //std::cout<<"PF::Slider::get_value(): property=\""<<get_prop_name()<<"\"(0x"<<get_prop()<<")"<<std::endl;
   if( !get_prop() ) return;
   double val;
   get_prop()->get(val);
+  //std::cout<<"PF::Slider::get_value(): value="<<val<<std::endl;
 #ifdef GTKMM_2
   adjustment.set_value( val*multiplier );
 #endif

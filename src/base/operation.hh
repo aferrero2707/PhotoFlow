@@ -124,7 +124,7 @@ namespace PF
 
   /* Base class for all operation parameter implementations
    */
-  class OpParBase
+  class OpParBase: public sigc::trackable
   {
     VipsDemandStyle demand_hint;
 
@@ -146,12 +146,12 @@ namespace PF
 
     bool map_flag;
 
+    bool modified_flag;
+
     std::list<PropertyBase*> mapped_properties;
     std::list<PropertyBase*> properties;
 
-    Property<blendmode_t> blend_mode;
     Property<float> intensity;
-    Property<float> opacity;
 
     PropertyBase grey_target_channel;
     PropertyBase rgb_target_channel;
@@ -159,6 +159,8 @@ namespace PF
     PropertyBase cmyk_target_channel;
 
   public:
+    sigc::signal<void> signal_modified;
+
     OpParBase();
 
     virtual ~OpParBase()
@@ -171,12 +173,24 @@ namespace PF
 
     std::list<PropertyBase*>& get_properties() { return properties; }
     std::list<PropertyBase*>& get_mapped_properties() { return mapped_properties; }
-    void add_property( PropertyBase* p ) { properties.push_back(p); }
-    void map_property( PropertyBase* p ) { mapped_properties.push_back(p); }
+    void add_property( PropertyBase* p ) 
+    { 
+      properties.push_back(p); 
+      p->signal_modified.connect(sigc::mem_fun(this, &OpParBase::modified) );
+    }
+    void map_property( PropertyBase* p ) { 
+      if( p->is_internal() ) 
+        return;
+      mapped_properties.push_back(p); 
+      p->signal_modified.connect(sigc::mem_fun(this, &OpParBase::modified) );
+    }
     void map_properties( std::list<PropertyBase*> pl ) 
     { 
       mapped_properties.insert( mapped_properties.end(),
 				pl.begin(), pl.end() ); 
+      for( std::list<PropertyBase*>::iterator i = pl.begin();
+           i != pl.end(); i++ )
+        (*i)->signal_modified.connect(sigc::mem_fun(this, &OpParBase::modified) );
     }
     void save_properties(std::list<std::string>& plist);
     void restore_properties(const std::list<std::string>& plist);
@@ -189,21 +203,15 @@ namespace PF
     void set_demand_hint(VipsDemandStyle val) { demand_hint = val; }
     VipsDemandStyle get_demand_hint() { return demand_hint; }
 
-    blendmode_t get_blend_mode() { 
-      return( (blendmode_t)blend_mode.get_enum_value().first ); 
-    }
-    void set_blend_mode(blendmode_t mode) { 
-      blend_mode.set_enum_value( (int)mode ); 
-    }
-
     void set_intensity(float val) { intensity.set(val); }
     float get_intensity() { return intensity.get(); }
 
-    void set_opacity(float val) { opacity.set(val); }
-    float get_opacity() { return opacity.get(); }
-
     bool is_map() { return map_flag; }
     void set_map_flag( bool flag ) { map_flag = flag; }
+
+    bool is_modified() { return modified_flag; }
+    void set_modified() { modified_flag = true; }
+    void clear_modified();
 
     int get_rgb_target_channel() 
     {
@@ -254,6 +262,7 @@ namespace PF
     virtual bool has_intensity() { return true; }
     virtual bool has_opacity() { return true; }
     virtual bool needs_input() { return true; }
+    virtual bool needs_caching() { return false; }
 
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }
@@ -332,6 +341,8 @@ namespace PF
       coding = VIPS_CODING_NONE;
     }
 
+
+    virtual void modified() { set_modified(); signal_modified.emit(); }
 
     bool save( std::ostream& ostr, int level );
   };

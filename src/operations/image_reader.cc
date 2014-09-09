@@ -119,7 +119,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     convert_format->get_par()->set_image_hints( image );
     convert_format->get_par()->set_format( get_format() );
     out = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
-    std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after convert_format: "<<G_OBJECT(out)->ref_count<<std::endl;
+    //std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after convert_format: "<<G_OBJECT(out)->ref_count<<std::endl;
     //g_object_unref( image );
     PF_UNREF( image, "ImageReaderPar::build(): image unref after convert_format" );
   }
@@ -133,7 +133,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   if( modified ) {
     pyramid.init( out );
     PF_UNREF( out, "ImageReaderPar::build(): out unref after pyramid.init()" );
-    std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after pyramid.init(): "<<G_OBJECT(out)->ref_count<<std::endl;
+    //std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after pyramid.init(): "<<G_OBJECT(out)->ref_count<<std::endl;
   }
 
   PF::PyramidLevel* plevel = pyramid.get_level( level );

@@ -83,13 +83,13 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
 			   (void**)&image_data, 
 			   &blobsz ) )
     return NULL;
-	std::cout<<"RawDeveloperPar::build(): blobsz="<<blobsz<<std::endl;
+	//std::cout<<"RawDeveloperPar::build(): blobsz="<<blobsz<<std::endl;
   if( blobsz != sizeof(dcraw_data_t) )
     return NULL;
   
   
   VipsImage* input_img = in[0];
-	std::cout<<"RawDeveloperPar::build(): input_img->Bands="<<input_img->Bands<<std::endl;
+	//std::cout<<"RawDeveloperPar::build(): input_img->Bands="<<input_img->Bands<<std::endl;
   if( input_img->Bands != 3 ) {
     raw_preprocessor->get_par()->set_image_hints( in[0] );
     raw_preprocessor->get_par()->set_format( VIPS_FORMAT_UCHAR );

@@ -43,6 +43,9 @@ namespace PF {
 
 class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
 {
+  ProcessorBase* op;
+  ProcessorBase* blender;
+
   std::vector<PFWidget*> controls;
 
 #ifdef GTKMM_2
@@ -83,6 +86,8 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
 
   std::list<std::string> values_save;
+
+  void reset_ch_selector();
 
   //virtual OpParBase* get_par() = 0;
   //virtual ProcessorBase* get_processor() = 0;

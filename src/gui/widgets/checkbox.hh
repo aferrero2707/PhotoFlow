@@ -42,7 +42,7 @@ namespace PF {
     Gtk::CheckButton check;
 
   public:
-    CheckBox(OperationConfigUI* dialog, std::string pname, std::string l, int val);
+    CheckBox(OperationConfigDialog* dialog, std::string pname, std::string l, int val);
 
     ~CheckBox() {}
 

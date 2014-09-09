@@ -65,8 +65,8 @@ namespace PF
 
     static PhotoFlow& Instance();
 
-    Image* get_image() { return active_image; }
-    void set_image(Image* i) { active_image = i; }
+    Image* get_active_image() { return active_image; }
+    void set_active_image(Image* i) { active_image = i; }
 
     void set_new_op_func( new_op_func_t f ) { new_op_func = f; }
     void set_new_op_func_nogui( new_op_func_t f ) { new_op_func_nogui = f; }

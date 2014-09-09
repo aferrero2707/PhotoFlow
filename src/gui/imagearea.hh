@@ -44,13 +44,14 @@
 //#include <vips/vips>
 
 #include "../base/photoflow.hh"
-#include "../base/view.hh"
+#include "../base/pipeline.hh"
 #include "../base/image.hh"
 
 #include "../operations/image_reader.hh"
 #include "../operations/convert2srgb.hh"
 #include "../operations/uniform.hh"
 #include "../operations/invert.hh"
+#include "../operations/blender.hh"
 #include "../operations/convertformat.hh"
 
 #include "../gui/operations/imageread_config.hh"
@@ -71,7 +72,7 @@
 namespace PF
 {
 
-class ImageArea : public ViewSink, public Gtk::DrawingArea
+class ImageArea : public PipelineSink, public Gtk::DrawingArea
 {
 
 #ifdef GTKMM_2
@@ -112,6 +113,7 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
   PF::ProcessorBase* convert2srgb;
 
   PF::Processor<PF::UniformPar,PF::Uniform>* uniform;
+  PF::Processor<PF::BlenderPar,PF::BlenderProc>* maskblend;
 
   PF::ProcessorBase* invert;
 
@@ -119,6 +121,8 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
 
   bool display_merged;
   int active_layer;
+
+	float shrink_factor;
 
   long int pending_pixels;
 
@@ -135,8 +139,20 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
   /* The main GUI thread runs this when it's idle and there are tiles that need
    * painting. 
    */
+  static gboolean set_size_cb (Update * update)
+  {
+    //std::cout<<"set_size_cb() called."<<std::endl;
+    update->image_area->set_size_request(update->rect.width,update->rect.height);
+    g_free (update);
+    return FALSE;
+  }
+
+  /* The main GUI thread runs this when it's idle and there are tiles that need
+   * painting. 
+   */
   static gboolean queue_draw_cb (Update * update)
   {
+    //std::cout<<"queue_draw_cb() called."<<std::endl;
     if( update->rect.width == 0 || update->rect.height == 0 )
       update->image_area->queue_draw();
     else
@@ -184,11 +200,13 @@ class ImageArea : public ViewSink, public Gtk::DrawingArea
 
 public:
 
-  ImageArea( View* v );
+  ImageArea( Pipeline* v );
   virtual ~ImageArea();
 
   unsigned int get_xoffset() { return xoffset; }
   unsigned int get_yoffset() { return yoffset; }
+
+	VipsImage* get_display_image() { return display_image; }
 
   DoubleBuffer& get_double_buffer() { return double_buffer; }
 
@@ -206,6 +224,9 @@ public:
   void process_area( const VipsRect& area );
   void process_end( const VipsRect& area );
   void draw_area();
+
+	float get_shrink_factor() { return shrink_factor; }
+	void set_shrink_factor( float val ) { shrink_factor = val; }
 
   void set_adjustments( 
 #ifdef GTKMM_2
@@ -230,8 +251,8 @@ public:
     active_layer = id; 
     if( !display_merged && (old_id != active_layer) ) {
       //update( NULL );
-			if( get_view() && get_view()->get_image() )
-				get_view()->get_image()->update_all();
+			if( get_pipeline() && get_pipeline()->get_image() )
+				get_pipeline()->get_image()->update_all();
 		}
   }
   int get_active_layer() { return active_layer; }
@@ -242,8 +263,8 @@ public:
     display_merged = val;
     if( display_merged != old_val ) {
       //update( NULL );
-			if( get_view() && get_view()->get_image() )
-				get_view()->get_image()->update_all();
+			if( get_pipeline() && get_pipeline()->get_image() )
+				get_pipeline()->get_image()->update_all();
 		}
   }
 

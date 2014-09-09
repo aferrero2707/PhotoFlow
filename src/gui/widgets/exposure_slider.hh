@@ -39,7 +39,7 @@ namespace PF {
   class ExposureSlider: public Slider
   {
   public:
-    ExposureSlider(OperationConfigUI* dialog, std::string pname, std::string l,
+    ExposureSlider(OperationConfigDialog* dialog, std::string pname, std::string l,
 	   double val, double min, double max, double sincr, double pincr);
 
     ~ExposureSlider() {}

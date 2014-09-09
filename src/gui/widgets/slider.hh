@@ -53,7 +53,9 @@ namespace PF {
     double multiplier;
     
   public:
-    Slider(OperationConfigUI* dialog, std::string pname, std::string l,
+    Slider(OperationConfigDialog* dialog, std::string pname, std::string l,
+	   double val, double min, double max, double sincr, double pincr, double mult);
+    Slider(OperationConfigDialog* dialog, ProcessorBase* processor, std::string pname, std::string l,
 	   double val, double min, double max, double sincr, double pincr, double mult);
 
     ~Slider() {}

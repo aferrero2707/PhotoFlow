@@ -34,15 +34,57 @@
 
 #include <iostream>
 #include <sstream>
+#include <list>
+#include <vector>
 #include <map>
 #include <glib-object.h>
+#include <sigc++/sigc++.h>
 
 namespace PF
 {
 
   class OpParBase;
 
-  class PropertyBase
+
+  template<class T>
+  bool operator==(const std::list<T>& lhs, const std::list<T>& rhs)
+  {
+    if( lhs.size() != rhs.size() ) return false;
+    for( typename std::list<T>::const_iterator i1=lhs.begin(), i2=rhs.begin();
+         i1!=lhs.end() && i2!=rhs.end(); i1++,i2++ ) {
+      if( (*i1) != (*i2) ) return false;
+    }
+    return true;
+  }
+
+  template<class T>
+  bool operator!=(const std::list<T>& lhs, const std::list<T>& rhs)
+  {
+    return( !(lhs == rhs) );
+  }
+
+
+
+  template<class T>
+  bool operator==(const std::vector<T>& lhs, const std::vector<T>& rhs)
+  {
+    if( lhs.size() != rhs.size() ) return false;
+    for( typename std::vector<T>::const_iterator i1=lhs.begin(), i2=rhs.begin();
+         i1!=lhs.end() && i2!=rhs.end(); i1++,i2++ ) {
+      if( (*i1) != (*i2) ) return false;
+    }
+    return true;
+  }
+
+  template<class T>
+  bool operator!=(const std::vector<T>& lhs, const std::vector<T>& rhs)
+  {
+    return( !(lhs == rhs) );
+  }
+
+
+
+  class PropertyBase: public sigc::trackable
   {
     std::string name;
 
@@ -53,13 +95,26 @@ namespace PF
     std::pair< int, std::pair<std::string,std::string> > enum_value;
     std::map< int, std::pair<std::string,std::string> > enum_values;
 
+    bool internal;
+
+    bool modified_flag;
+
   public:
+    sigc::signal<void> signal_modified;
+
     PropertyBase(std::string n, OpParBase* par);//: name(n) {}
     PropertyBase(std::string n, OpParBase* par, int val, std::string strval, std::string valname);//: name(n) {}
 
     std::string get_name() { return name; }
 
     bool is_enum() { return( !enum_values.empty() ); }
+
+    bool is_internal() { return internal; }
+    void set_internal(bool i) { internal = i; }
+
+    bool is_modified() { return modified_flag; }
+    void set_modified() { modified_flag = true; }
+    void clear_modified() { modified_flag = false; }
 
     std::map< int, std::pair<std::string,std::string> > get_enum_values() { return enum_values; }
     std::pair< int, std::pair<std::string,std::string> > get_enum_value() { return enum_value; }
@@ -77,10 +132,18 @@ namespace PF
 
     void set_enum_value(int val)
     {
+#ifndef NDEBUG
+      std::cout<<"Property \""<<name<<"\": setting enum value to "<<val<<std::endl;
+#endif
       std::map< int, std::pair<std::string,std::string> >::iterator i = 
 				enum_values.find( val );
       if( i != enum_values.end() ) {
+        if(enum_value.first != (*i).first)
+          modified();
 				enum_value = (*i);
+#ifndef NDEBUG
+        std::cout<<"... done (\""<<enum_value.second.first<<"\")."<<std::endl;
+#endif
       }
     }
 
@@ -121,6 +184,8 @@ namespace PF
       set_str( str );
 			}
     */
+
+    virtual void modified() { set_modified(); signal_modified.emit(); }
   };
 
   std::istream& operator >>(std::istream& str, PropertyBase& p);
@@ -146,11 +211,19 @@ namespace PF
   public:
     Property(std::string name, OpParBase* par): PropertyBase(name, par), value() {}
     Property(std::string name, OpParBase* par, const T& v): PropertyBase(name, par), value(v) {}
-    void set(const T& newval) { value = newval; }
+    void set(const T& newval) 
+    { 
+      if( value != newval )
+        modified();
+      value = newval; 
+    }
     T& get() { return value; }
     void from_stream(std::istream& str)
     {
+      T oldvalue = value;
       str>>value;
+      if( value != oldvalue )
+        modified();
     }
     void to_stream(std::ostream& str)
     {
@@ -187,11 +260,19 @@ namespace PF
   public:
     Property(std::string name, OpParBase* par): PropertyBase(name, par), value() {}
     Property(std::string name, OpParBase* par, const std::string& v): PropertyBase(name, par), value(v) {}
-    void set(const std::string& newval) { value = newval; }
+    void set(const std::string& newval) 
+    { 
+      if( value != newval )
+        modified();
+      value = newval; 
+    }
     std::string& get() { return value; }
     void from_stream(std::istream& str)
     {
+      std::string old = value;
 			getline( str, value );
+      if( value != old )
+        modified();
       //str>>value;
     }
     void to_stream(std::ostream& str)

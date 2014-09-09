@@ -50,9 +50,9 @@ public:
 
   void on_layer_changed();
 
-  void open();
+  void init();
 
-  void update();
+  void do_update();
 };
 
 }

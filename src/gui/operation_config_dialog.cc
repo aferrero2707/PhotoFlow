@@ -41,6 +41,7 @@
 #include "../gui/operations/curves_config.hh"
 #include "../gui/operations/channel_mixer_config.hh"
 #include "../gui/operations/gaussblur_config.hh"
+#include "../gui/operations/denoise_config.hh"
 #include "../gui/operations/unsharp_mask_config.hh"
 #include "../gui/operations/draw_config.hh"
 
@@ -49,7 +50,7 @@
 static gboolean dialog_update_cb (PF::OperationConfigDialog * dialog)
 {
   if( dialog ) 
-    dialog->update();
+    dialog->do_update();
   return FALSE;
 }
 
@@ -77,8 +78,8 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   controlsBoxRight(Gtk::ORIENTATION_VERTICAL),
 #endif
   intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
-  opacitySlider( this, "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
-  blendSelector( this, "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
+  opacitySlider( this, layer->get_blender(), "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
+  blendSelector( this, layer->get_blender(), "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
   greychSelector( this, "grey_target_channel", "Target channel: ", -1 ),
   rgbchSelector( this, "rgb_target_channel", "Target channel: ", -1 ),
   labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
@@ -115,13 +116,13 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   topBox.pack_start( controlsBox );
 
   //greychSelector.init(); 
-  chselBox.pack_start( greychSelector, Gtk::PACK_SHRINK );
+  //chselBox.pack_start( greychSelector, Gtk::PACK_SHRINK );
   //rgbchSelector.init(); 
-  chselBox.pack_start( rgbchSelector, Gtk::PACK_SHRINK );
+  //chselBox.pack_start( rgbchSelector, Gtk::PACK_SHRINK );
   //labchSelector.init(); 
-  chselBox.pack_start( labchSelector, Gtk::PACK_SHRINK );
+  //chselBox.pack_start( labchSelector, Gtk::PACK_SHRINK );
   //cmykchSelector.init(); 
-  chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
+  //chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
 
   if(par && par->has_opacity() )
     topBox.pack_start( chselBox );
@@ -193,8 +194,11 @@ void PF::OperationConfigDialog::init()
 
 void PF::OperationConfigDialog::open()
 {
+  init();
+  /*
   for( int i = 0; i < controls.size(); i++ )
     controls[i]->init();
+  */
 
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -218,7 +222,21 @@ void PF::OperationConfigDialog::open()
 }
 
 
-void PF::OperationConfigDialog::update()
+
+void PF::OperationConfigDialog::reset_ch_selector()
+{
+  if( greychSelector.get_parent() == &chselBox )
+    chselBox.remove( greychSelector );
+  if( rgbchSelector.get_parent() == &chselBox )
+    chselBox.remove( rgbchSelector );
+  if( labchSelector.get_parent() == &chselBox )
+    chselBox.remove( labchSelector );
+  if( cmykchSelector.get_parent() == &chselBox )
+    chselBox.remove( cmykchSelector );
+}
+
+
+void PF::OperationConfigDialog::do_update()
 {
   //std::vector<Widget*> wl = chselBox.get_children();
   //wl.clear();
@@ -228,6 +246,7 @@ void PF::OperationConfigDialog::update()
 #ifndef NDEBUG
     std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
 #endif
+    /*
     if( greychSelector.get_parent() == &chselBox )
       chselBox.remove( greychSelector );
     if( rgbchSelector.get_parent() == &chselBox )
@@ -236,6 +255,7 @@ void PF::OperationConfigDialog::update()
       chselBox.remove( labchSelector );
     if( cmykchSelector.get_parent() == &chselBox )
       chselBox.remove( cmykchSelector );
+    */
     //greychSelector.hide();
     //rgbchSelector.hide();
     //labchSelector.hide();
@@ -244,20 +264,32 @@ void PF::OperationConfigDialog::update()
     PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
-      chselBox.pack_start( greychSelector, Gtk::PACK_SHRINK );
-      greychSelector.show();
+      if( greychSelector.get_parent() != &chselBox ) {
+        reset_ch_selector();
+        chselBox.pack_start( greychSelector, Gtk::PACK_SHRINK );
+        greychSelector.show();
+      }
       break;
     case PF_COLORSPACE_RGB:
-      chselBox.pack_start( rgbchSelector, Gtk::PACK_SHRINK );
-      rgbchSelector.show();
+      if( rgbchSelector.get_parent() != &chselBox ) {
+        reset_ch_selector();
+        chselBox.pack_start( rgbchSelector, Gtk::PACK_SHRINK );
+        rgbchSelector.show();
+      }
       break;
     case PF_COLORSPACE_LAB:
-      chselBox.pack_start( labchSelector, Gtk::PACK_SHRINK );
-      labchSelector.show();
+      if( labchSelector.get_parent() != &chselBox ) {
+        reset_ch_selector();
+        chselBox.pack_start( labchSelector, Gtk::PACK_SHRINK );
+        labchSelector.show();
+      }
       break;
     case PF_COLORSPACE_CMYK:
-      chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
-      cmykchSelector.show();
+      if( cmykchSelector.get_parent() != &chselBox ) {
+        reset_ch_selector();
+        chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
+        cmykchSelector.show();
+      }
       break;
     default:
       break;
@@ -278,8 +310,9 @@ void PF::OperationConfigDialog::update()
 
 
 
-void PF::OperationConfigDialog::do_update()
+void PF::OperationConfigDialog::update()
 {
+  //std::cout<<"PF::OperationConfigDialog::update() called."<<std::endl;
   gdk_threads_add_idle ((GSourceFunc) dialog_update_cb, this);
 }
 
@@ -417,6 +450,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "gaussblur" ) {
       
     dialog = new PF::GaussBlurConfigDialog( current_layer );
+
+  } else if( op_type == "denoise" ) {
+      
+    dialog = new PF::DenoiseConfigDialog( current_layer );
 
   } else if( op_type == "unsharp_mask" ) {
       

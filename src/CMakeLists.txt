@@ -3,7 +3,8 @@
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DPF_VERBOSE_UNREF -DLIBRAW_NODLL") 
 SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg") 
 #SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DLIBRAW_NODLL") 
+SET(CMAKE_CXX_FLAGS_OPTDBG "-O3 -g -DNDEBUG -DLIBRAW_NODLL") 
+SET(CMAKE_CXX_FLAGS_RELEASE "-O0 -g -DNDEBUG -DLIBRAW_NODLL") 
 #SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG -DLIBRAW_NODLL") 
 
 if(GTKMM2_FOUND)
@@ -141,6 +142,8 @@ target_link_libraries(photoflow ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
   #gmon
   )
 
+INSTALL(TARGETS photoflow RUNTIME DESTINATION .)
+INSTALL(DIRECTORY ../themes DESTINATION .)
 
 add_executable(invert # name of the executable on Windows will be example.exe 
   benchmarks/invert.cc 

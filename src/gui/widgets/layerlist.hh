@@ -52,7 +52,7 @@ namespace PF {
 
     ModelColumns columns;
 
-    OperationConfigUI* dialog;
+    OperationConfigDialog* dialog;
 
     Gtk::VBox vbox;
     Gtk::Label label;
@@ -62,7 +62,7 @@ namespace PF {
     bool inhibit;
 
   public:
-    LayerList(OperationConfigUI* dialog, std::string label);
+    LayerList(OperationConfigDialog* dialog, std::string label);
 
     ~LayerList() {}
 

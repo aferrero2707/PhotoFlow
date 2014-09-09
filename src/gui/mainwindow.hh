@@ -72,6 +72,8 @@ protected:
 
   std::vector<ImageEditor*> image_editors;
 
+  std::string last_dir;
+
   //Gtk::ScrolledWindow treeFrame;
   //Gtk::TreeView layerTree;
 
@@ -87,6 +89,17 @@ public:
   void on_button_export_clicked();
 
   void open_image(std::string filename);
+
+  void remove_tab( Gtk::Widget* widget );
+
+  void on_my_switch_page(
+#ifdef GTKMM_2
+                         GtkNotebookPage* 	page,
+#endif
+#ifdef GTKMM_3
+                         Widget* page,
+#endif
+                         guint page_num);
 };
 
 }

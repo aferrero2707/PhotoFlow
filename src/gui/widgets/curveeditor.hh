@@ -87,9 +87,17 @@ namespace PF {
     bool handle_curve_events(GdkEvent* event);
 
   public:
-    CurveEditor(OperationConfigUI* dialog, std::string pname );
+    CurveEditor(OperationConfigDialog* dialog, std::string pname );
 
     ~CurveEditor() {}
+
+    void add_point( float x )
+    {
+      SplineCurve* curve = curveArea.get_curve();
+      float ycurve = curve->get_value( x );
+      add_point( x, ycurve );
+    }
+    void add_point( float x, float y );
 
     void update_point();
 

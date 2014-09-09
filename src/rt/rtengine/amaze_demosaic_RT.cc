@@ -319,7 +319,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 					tempv = LVFU(rawData[row][cc+left]) / c65535v;
 					_mm_store_ps( &cfa[indx1], tempv );
 					_mm_store_ps( &rgbgreen[indx1], tempv );
-					if(true && top==0 && left==0 && rr<10 && cc<10) {
+					if(false && top==0 && left==0 && rr<10 && cc<10) {
 						for(int tempi = 0; tempi<4; tempi++)
 							std::cout<<"rr="<<rr<<"  cc="<<cc+tempi<<"    cfa["<<indx1+tempi<<"] = "<<cfa[indx1+tempi]<<"    c="<<FC(rr,cc+tempi)<<std::endl;
 					}
@@ -411,7 +411,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 				for (row=rr+top, cc=ccmin; cc < ccmax; cc++) {
 					indx1=rr*TS+cc;
 					cfa[indx1] = (rawData[row][cc+left])/65535.0f;
-					if(true && top==0 && left==0 && rr<10 && cc<10) {
+					if(false && top==0 && left==0 && rr<10 && cc<10) {
 						std::cout<<"rr="<<rr<<"  cc="<<cc<<"    cfa["<<indx1<<"] = "<<cfa[indx1]<<"    c="<<FC(rr,cc)<<std::endl;
 					}
 					if(FC(rr,cc)==1)

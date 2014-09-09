@@ -34,6 +34,7 @@
 
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
+#include "tablabelwidget.hh"
 #include "layertree.hh"
 #include "mainwindow.hh"
 
@@ -92,14 +93,19 @@ PF::MainWindow::MainWindow():
   buttonSave.signal_clicked().connect( sigc::mem_fun(*this,
 						     &MainWindow::on_button_save_clicked) );
 
-  buttonSaveAs.signal_clicked().connect( sigc::mem_fun(*this,
-																											 &MainWindow::on_button_saveas_clicked) );
+  buttonSaveAs.signal_clicked().
+    connect( sigc::mem_fun(*this,
+                           &MainWindow::on_button_saveas_clicked) );
 
   buttonExport.signal_clicked().connect( sigc::mem_fun(*this,
 						       &MainWindow::on_button_export_clicked) );
 
   buttonExit.signal_clicked().connect( sigc::mem_fun(*this,
 						     &MainWindow::on_button_exit) );
+
+  viewerNotebook.signal_switch_page().
+    connect( sigc::mem_fun(*this,
+                           &MainWindow::on_my_switch_page) );
 
 
   //imageArea.signal_configure_event().connect(sigc::mem_fun(imageArea,
@@ -143,6 +149,7 @@ PF::MainWindow::MainWindow():
 
 PF::MainWindow::~MainWindow()
 {
+  PF::PhotoFlow::Instance().set_active_image( NULL );
   std::cout<<"~MainWindow(): deleting images"<<std::endl;
   for( unsigned int i = 0; i < image_editors.size(); i++ ) {
     if( image_editors[i] )
@@ -170,17 +177,23 @@ void PF::MainWindow::on_button_exit()
 void
 PF::MainWindow::open_image( std::string filename )
 {
-  PF::Image* image = new PF::Image();
-  image->set_async( true );
-  image->open( filename );
-  PF::ImageEditor* editor = new PF::ImageEditor( image );
-  image_editors.push_back( editor );
 	char* fullpath = strdup( filename.c_str() );
+  PF::ImageEditor* editor = new PF::ImageEditor( fullpath );
+  image_editors.push_back( editor );
+
 	char* fname = basename( fullpath );
-  viewerNotebook.append_page( *editor, fname );
+
+  HTabLabelWidget* tabwidget = 
+    new HTabLabelWidget( std::string(fname),
+                        editor );
+  tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::MainWindow::remove_tab) ); 
+  viewerNotebook.append_page( *editor, *tabwidget );
 	free(fullpath);
-  image->update();
   editor->show();
+  //editor->open();
+  viewerNotebook.set_current_page( -1 );
+  //image->update();
+
   /*
   std::vector<VipsImage*> in;
 
@@ -318,6 +331,29 @@ void PF::MainWindow::on_button_open_clicked()
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
+  //Glib::RefPtr<Gtk::FileFilter> filter_pfi = Gtk::FileFilter::create();
+  //filter_pfi->set_name("Photoflow files");
+  //filter_pfi->add_pattern("*.pfi");
+  //dialog.add_filter(filter_pfi);
+
+#ifdef GTKMM_2
+  Gtk::FileFilter filter_tiff;
+  filter_tiff.set_name("Image files");
+  filter_tiff.add_mime_type("image/tiff");
+  filter_tiff.add_mime_type("image/jpeg");
+  filter_tiff.add_pattern("*.pfi");
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
+  filter_tiff->set_name("Image files");
+  filter_tiff->add_mime_type("image/tiff");
+  filter_tiff->add_mime_type("image/jpeg");
+  filter_tiff->add_pattern("*.pfi");
+#endif
+  dialog.add_filter(filter_tiff);
+
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -329,10 +365,11 @@ void PF::MainWindow::on_button_open_clicked()
 
       //Notice that this is a std::string, not a Glib::ustring.
       std::string filename = dialog.get_filename();
+      last_dir = dialog.get_current_folder();
       std::cout << "File selected: " <<  filename << std::endl;
       char* fullpath = realpath( filename.c_str(), NULL );
       if(!fullpath)
-	return;
+        return;
       open_image( fullpath );
       free(fullpath);
       break;
@@ -377,6 +414,20 @@ void PF::MainWindow::on_button_saveas_clicked()
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
 
+#ifdef GTKMM_2
+  Gtk::FileFilter filter_pfi;
+  filter_pfi.set_name("Photoflow files");
+  filter_pfi.add_pattern("*.pfi");
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::FileFilter> filter_pfi = Gtk::FileFilter::create();
+  filter_pfi->set_name("Photoflow files");
+  filter_pfi->add_pattern("*.pfi");
+#endif
+  dialog.add_filter(filter_pfi);
+
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -387,6 +438,7 @@ void PF::MainWindow::on_button_saveas_clicked()
       std::cout << "Save clicked." << std::endl;
 
       //Notice that this is a std::string, not a Glib::ustring.
+      last_dir = dialog.get_current_folder();
       std::string filename = dialog.get_filename();
       std::cout << "File selected: " <<  filename << std::endl;
       int page = viewerNotebook.get_current_page();
@@ -422,6 +474,32 @@ void PF::MainWindow::on_button_export_clicked()
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
 
+#ifdef GTKMM_2
+  Gtk::FileFilter filter_tiff;
+  filter_tiff.set_name("TIFF files");
+  filter_tiff.add_mime_type("image/tiff");
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
+  filter_tiff->set_name("TIFF files");
+  filter_tiff->add_mime_type("image/tiff");
+#endif
+  dialog.add_filter(filter_tiff);
+
+#ifdef GTKMM_2
+  Gtk::FileFilter filter_jpeg;
+  filter_jpeg.set_name("JPEG files");
+  filter_jpeg.add_mime_type("image/jpeg");
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::FileFilter> filter_jpeg = Gtk::FileFilter::create();
+  filter_jpeg->set_name("JPEG files");
+  filter_jpeg->add_mime_type("image/jpeg");
+#endif
+  dialog.add_filter(filter_jpeg);
+
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -432,6 +510,7 @@ void PF::MainWindow::on_button_export_clicked()
       std::cout << "Export clicked." << std::endl;
 
       //Notice that this is a std::string, not a Glib::ustring.
+      last_dir = dialog.get_current_folder();
       std::string filename = dialog.get_filename();
       std::cout << "File selected: " <<  filename << std::endl;
       int page = viewerNotebook.get_current_page();
@@ -457,3 +536,52 @@ void PF::MainWindow::on_button_export_clicked()
 }
 
 
+
+void PF::MainWindow::remove_tab( Gtk::Widget* widget )
+{
+#ifndef NDEBUG
+  std::cout<<"PF::MainWindow::remove_tab() called."<<std::endl;
+#endif
+  int page = viewerNotebook.page_num( *widget );
+  if( page < 0 ) return;
+  if( page >= viewerNotebook.get_n_pages() ) return;
+
+  Gtk::Widget* tabwidget = viewerNotebook.get_tab_label( *widget );
+
+  Gtk::Widget* widget2 = viewerNotebook.get_nth_page( page );
+  if( widget != widget2 ) return;
+
+  for( unsigned int i = 0; i < image_editors.size(); i++ ) {
+    if( image_editors[i] != widget ) continue;
+    image_editors.erase( image_editors.begin()+i );
+    break;
+  }
+
+  viewerNotebook.remove_page( page );
+  delete( widget );
+  if( tabwidget )
+    delete( tabwidget );
+#ifndef NDEBUG
+  std::cout<<"PF::MainWindow::remove_tab() page #"<<page<<" removed."<<std::endl;
+#endif
+}
+
+
+void PF::MainWindow::on_my_switch_page(
+#ifdef GTKMM_2
+                                       GtkNotebookPage* 	page,
+#endif
+#ifdef GTKMM_3
+                                       Widget* page,
+#endif
+                                       guint page_num)
+{
+  Gtk::Widget* widget = viewerNotebook.get_nth_page( page_num );
+  if( widget ) {
+    PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+    if( editor && editor->get_image() ) {
+      PF::PhotoFlow::Instance().set_active_image( editor->get_image() );
+      std::cout<<"MainWindow: image #"<<page_num<<" activated"<<std::endl;
+    }
+  }
+}

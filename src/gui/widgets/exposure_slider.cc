@@ -30,7 +30,7 @@
 #include "exposure_slider.hh"
 
 
-PF::ExposureSlider::ExposureSlider( OperationConfigUI* dialog, std::string pname, std::string l, 
+PF::ExposureSlider::ExposureSlider( OperationConfigDialog* dialog, std::string pname, std::string l, 
 				    double val, double min, double max, double sincr, double pincr):
   PF::Slider( dialog, pname, l, val, min, max, sincr, pincr, 1 )
 {
@@ -62,6 +62,6 @@ void PF::ExposureSlider::set_value()
   float exp = get_adjustment()->get_value();
 #endif
   float val = powf( 2.0f, exp );
-  std::cout<<"PF::ExposureSlider::set_value(): val="<<val<<std::endl;
+  //std::cout<<"PF::ExposureSlider::set_value(): val="<<val<<std::endl;
   get_prop()->update(val);
 }

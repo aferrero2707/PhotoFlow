@@ -51,6 +51,9 @@ namespace PF {
     Slider wbRedSlider;
     Slider wbGreenSlider;
     Slider wbBlueSlider;
+    Slider wbRedCorrSlider;
+    Slider wbGreenCorrSlider;
+    Slider wbBlueCorrSlider;
 
     Slider wb_target_L_slider;
     Slider wb_target_a_slider;
@@ -93,7 +96,7 @@ namespace PF {
   public:
     RawDeveloperConfigDialog( Layer* l );
     
-    void update();
+    void do_update();
 
     void on_cam_button_open_clicked();
     void on_cam_filename_changed();

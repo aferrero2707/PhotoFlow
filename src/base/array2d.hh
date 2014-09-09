@@ -105,8 +105,8 @@ namespace PF {
 #ifdef ARRAY2D_DEBUG
 		std::cout<<"Array2D<T>::~Array2D(): matrix="<<(void*)matrix<<"  buf="<<(void*)buf<<std::endl;
 #endif
-    free( matrix );
-    free( buf );
+    if( matrix ) free( matrix );
+    if( buf ) free( buf );
   }
 
 

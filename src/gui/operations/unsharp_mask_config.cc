@@ -33,7 +33,7 @@
 
 
 PF::UnsharpMaskConfigDialog::UnsharpMaskConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gaussian Blur" ),
+  OperationConfigDialog( layer, "Unsharp Mask" ),
   radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1),
   amountSlider( this, "amount", "Amount", 100, 0, 500, 1, 10, 1)
 {

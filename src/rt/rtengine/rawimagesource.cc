@@ -78,9 +78,9 @@ void rtengine::RawImageSource::amaze_demosaic(VipsRegion* ir, VipsRegion* oreg)
     for( x = 0, xx = 0; x < r_out.width; x++, xx+=3 ) {
 #ifdef RT_EMU
       /* RawTherapee emulation */
-      ptr[x*3] = red[y+r_out.top][x+r_out.left]/65535;
-      ptr[x*3+1] = green[y+r_out.top][x+r_out.left]/65535;
-      ptr[x*3+2] = blue[y+r_out.top][x+r_out.left]/65535;
+      ptr[x*3] = CLAMP( red[y+r_out.top][x+r_out.left]/65535, 0, 95 );
+      ptr[x*3+1] = CLAMP( green[y+r_out.top][x+r_out.left]/65535, 0, 95 );
+      ptr[x*3+2] = CLAMP( blue[y+r_out.top][x+r_out.left]/65535, 0, 95 );
 #else
       ptr[xx] = CLAMP( red[y+r_out.top][x+r_out.left], 0, 1 );
       ptr[xx+1] = CLAMP( green[y+r_out.top][x+r_out.left], 0, 1 );

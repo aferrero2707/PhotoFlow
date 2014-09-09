@@ -49,6 +49,7 @@ class LayerWidget : public Gtk::VBox
   Gtk::Notebook notebook;
   Gtk::HButtonBox buttonbox;
   Gtk::Button buttonAdd, buttonAddGroup, buttonDel;
+  Gtk::Button buttonPresetLoad, buttonPresetSave;
   Gtk::Dialog layersDialog;
   OperationsTreeDialog operationsDialog;
 
@@ -56,6 +57,9 @@ class LayerWidget : public Gtk::VBox
   std::vector<LayerTree*> layer_views;
 
   int get_selected_layer_id();
+  bool get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::TreeModel::iterator& iter);
+  bool get_row(int id, Gtk::TreeModel::iterator& iter);
+  void select_row(int id);
 
 public:
   LayerWidget( Image* image );
@@ -71,15 +75,23 @@ public:
   */
 
   void add_layer( Layer* layer );
+  void insert_preset( std::string filename );
   void remove_layers();
 
   void update() {
 #ifndef NDEBUG
+    std::cout<<"LayerWidget::update() called."<<std::endl;
     if( layer_views.size() > 0 )
       std::cout<<"layer_views.size() > 0"<<std::endl;
 #endif
-    for(unsigned int i = 0; i < layer_views.size(); i++) 
+    for(unsigned int i = 0; i < layer_views.size(); i++) {
+      int id = layer_views[i]->get_selected_layer_id();
+#ifndef NDEBUG
+      std::cout<<"LayerWidget::update() view #"<<i<<"  selected layer id="<<id<<std::endl;
+#endif
       layer_views[i]->update_model();
+      layer_views[i]->select_row( id );
+    }
   }
 
   bool on_button_event( GdkEventButton* button );
@@ -87,6 +99,9 @@ public:
   void on_button_add();
   void on_button_add_group();
   void on_button_del();
+
+  void on_button_load();
+  void on_button_save();
 
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
 

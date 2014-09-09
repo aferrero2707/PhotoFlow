@@ -3,29 +3,29 @@
 
 /*
 
-    Copyright (C) 2014 Ferrero Andrea
+  Copyright (C) 2014 Ferrero Andrea
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
- */
+*/
 
 /*
 
-    These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
+  These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
- */
+*/
 
 #ifndef RAW_OUTPUT_H
 #define RAW_OUTPUT_H
@@ -57,6 +57,7 @@ namespace PF
     OUT_PROF_NONE,
     OUT_PROF_sRGB,
     OUT_PROF_ADOBE,
+    OUT_PROF_PROPHOTO,
     OUT_PROF_LAB,
     OUT_PROF_CUSTOM
   }; 
@@ -136,11 +137,11 @@ namespace PF
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 
-          creation of an intensity map is not allowed
+       creation of an intensity map is not allowed
        2. the operation can work without an input image;
-          the blending will be set in this case to "passthrough" and the image
-	  data will be simply linked to the output
-     */
+       the blending will be set in this case to "passthrough" and the image
+       data will be simply linked to the output
+    */
     bool has_intensity() { return false; }
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
@@ -148,7 +149,7 @@ namespace PF
     //cmsHPROFILE create_profile_from_matrix (const double matrix[3][3], bool gamma, Glib::ustring name);
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
-		     VipsImage* imap, VipsImage* omap, unsigned int& level);
+                     VipsImage* imap, VipsImage* omap, unsigned int& level);
   };
 
   
@@ -158,8 +159,8 @@ namespace PF
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
-		VipsRegion* imap, VipsRegion* omap, 
-		VipsRegion* oreg, OpParBase* par)
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, OpParBase* par)
     {
       RawOutputPar* opar = dynamic_cast<RawOutputPar*>(par);
       if( !opar ) return;
@@ -171,11 +172,11 @@ namespace PF
       cmsToneCurve* srgb_curve = opar->get_srgb_curve();
       cmsToneCurve* gamma_curve = opar->get_gamma_curve();
 
-      if( r->top==0 && r->left==0 ) {
-	std::cout<<"RawOutput::render(): ireg[in_first]->im->Bands="<<ireg[in_first]->im->Bands
-		 <<"  oreg->im->Bands="<<oreg->im->Bands<<std::endl;
-	std::cout<<"RawOutput::render(): ireg[in_first]->im->BandFmt="<<ireg[in_first]->im->BandFmt
-		 <<"  oreg->im->BandFmt="<<oreg->im->BandFmt<<std::endl;
+      if( false && r->top==0 && r->left==0 ) {
+        std::cout<<"RawOutput::render(): ireg[in_first]->im->Bands="<<ireg[in_first]->im->Bands
+                 <<"  oreg->im->Bands="<<oreg->im->Bands<<std::endl;
+        std::cout<<"RawOutput::render(): ireg[in_first]->im->BandFmt="<<ireg[in_first]->im->BandFmt
+                 <<"  oreg->im->BandFmt="<<oreg->im->BandFmt<<std::endl;
       }
     
       T* p;
@@ -187,51 +188,64 @@ namespace PF
 
       //std::cout<<"opar->get_transform(): "<<opar->get_transform()<<std::endl;
     
+      /*
+      float max[3] = {0,0,0};
       for( y = 0; y < height; y++ ) {
-	p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
-	pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+        p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
+        for( x = 0; x < width; x+=3 ) {
+          if(p[x] > max[0]) max[0] = p[x];
+          if(p[x+1] > max[1]) max[1] = p[x+1];
+          if(p[x+2] > max[2]) max[2] = p[x+2];
+        }
+      }
+      std::cout<<"("<<r->left<<","<<r->top<<"): max = "<<max[0]<<"  "<<max[1]<<"  "<<max[2]<<std::endl;
+      */
 
-	if( opar->get_camera_profile_mode() == IN_PROF_ICC ) {
+      for( y = 0; y < height; y++ ) {
+        p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
+        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 
-	  pin = p;
-	  if( opar->get_gamma_mode() == IN_GAMMA_sRGB ) {
-	    for( x = 0; x < line_size; x++ ) {
-	      line[x] = cmsEvalToneCurveFloat( srgb_curve, p[x] );
-	    }
-	    pin = line;
-	  } else if( opar->get_gamma_mode() == IN_GAMMA_CUSTOM ) {
-	    for( x = 0; x < line_size; x++ ) {
-	      line[x] = cmsEvalToneCurveFloat( gamma_curve, p[x] );
-	    }
-	    pin = line;
-	  }
-	  if(opar->get_transform()) 
-	    cmsDoTransform( opar->get_transform(), pin, pout, width );
-	  else 
-	    memcpy( pout, pin, sizeof(T)*line_size );
+        if( opar->get_camera_profile_mode() == IN_PROF_ICC ) {
 
-	} else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ) {
-	  if(opar->get_transform()) 
-	    cmsDoTransform( opar->get_transform(), p, pout, width );
-	  else 
-	    memcpy( pout, p, sizeof(T)*line_size );
-	} else {
+          pin = p;
+          if( opar->get_gamma_mode() == IN_GAMMA_sRGB ) {
+            for( x = 0; x < line_size; x++ ) {
+              line[x] = cmsEvalToneCurveFloat( srgb_curve, p[x] );
+            }
+            pin = line;
+          } else if( opar->get_gamma_mode() == IN_GAMMA_CUSTOM ) {
+            for( x = 0; x < line_size; x++ ) {
+              line[x] = cmsEvalToneCurveFloat( gamma_curve, p[x] );
+            }
+            pin = line;
+          }
+          if(opar->get_transform()) 
+            cmsDoTransform( opar->get_transform(), pin, pout, width );
+          else 
+            memcpy( pout, pin, sizeof(T)*line_size );
 
-	  pin = p;
-	  if( opar->get_gamma_mode() == IN_GAMMA_sRGB ) {
-	    for( x = 0; x < line_size; x++ ) {
-	      line[x] = cmsEvalToneCurveFloat( srgb_curve, p[x] );
-	    }
-	    pin = line;
-	  } else if( opar->get_gamma_mode() == IN_GAMMA_CUSTOM ) {
-	    for( x = 0; x < line_size; x++ ) {
-	      line[x] = cmsEvalToneCurveFloat( gamma_curve, p[x] );
-	    }
-	    pin = line;
-	  }
-	  memcpy( pout, pin, sizeof(T)*line_size );
+        } else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ) {
+          if(opar->get_transform()) 
+            cmsDoTransform( opar->get_transform(), p, pout, width );
+          else 
+            memcpy( pout, p, sizeof(T)*line_size );
+        } else {
 
-	}
+          pin = p;
+          if( opar->get_gamma_mode() == IN_GAMMA_sRGB ) {
+            for( x = 0; x < line_size; x++ ) {
+              line[x] = cmsEvalToneCurveFloat( srgb_curve, p[x] );
+            }
+            pin = line;
+          } else if( opar->get_gamma_mode() == IN_GAMMA_CUSTOM ) {
+            for( x = 0; x < line_size; x++ ) {
+              line[x] = cmsEvalToneCurveFloat( gamma_curve, p[x] );
+            }
+            pin = line;
+          }
+          memcpy( pout, pin, sizeof(T)*line_size );
+
+        }
       }
       delete line;
     }

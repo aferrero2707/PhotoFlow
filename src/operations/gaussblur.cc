@@ -69,18 +69,37 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 
 	sii_precomp( &coeffs, radius2, 3 );
 
+	
 	if( (get_render_mode() == PF_RENDER_PREVIEW) &&
 			(preview_mode.get_enum_value().first == PF_BLUR_FAST) &&
-			(radius2 > 2) ){
+			(radius2 > 5) ){
 		VipsImage* outnew = PF::OpParBase::build( in, first, NULL, omap, level );
 		return outnew;
 	}
+	
 
   if( srcimg ) {
     int size = (srcimg->Xsize > srcimg->Ysize) ? srcimg->Xsize : srcimg->Ysize;
   
 		float accuracy = 0.05;
-		if( get_render_mode() == PF_RENDER_PREVIEW ) accuracy = 0.2;
+		VipsPrecision precision = VIPS_PRECISION_FLOAT;
+		if( get_render_mode() == PF_RENDER_PREVIEW &&
+				(preview_mode.get_enum_value().first == PF_BLUR_FAST) ) {
+			accuracy = 0.2;
+			//if( radius2 > 2 )
+			//	precision = VIPS_PRECISION_APPROXIMATE;
+		}
+
+    /*
+		VipsImage* tmp;
+		if( vips_gaussblur(srcimg, &tmp, radius2*2, "precision", precision, NULL) )
+			return NULL;
+		if( vips_cast( tmp, &blurred, get_format(), NULL ) ) {
+			PF_UNREF( tmp, "PF::GaussBlurPar::build(): tmp unref" );
+			return NULL;
+		}
+    */
+		
     int result = vips_gaussmat( &mask, radius2, accuracy, 
 				"separable", TRUE,
 				"integer", FALSE,
@@ -89,17 +108,22 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
     if( !result ) {
 			VipsImage* tmp;
       result = vips_convsep( srcimg, &tmp, mask, 
-			     "precision", VIPS_PRECISION_FLOAT,
+			     "precision", precision,
 			     NULL );
       //g_object_unref( mask );
       PF_UNREF( mask, "PF::GaussBlurPar::build(): mask unref" );
+		
+			
       if( !result ) {
 				if( vips_cast( tmp, &blurred, get_format(), NULL ) ) {
 					PF_UNREF( tmp, "PF::GaussBlurPar::build(): tmp unref" );
 					return NULL;
 				}
+        PF_UNREF( tmp, "PF::GaussBlurPar::build(): tmp unref" );
 			}
+			//blurred = tmp;
     }
+		
   }
 
   std::vector<VipsImage*> in2;

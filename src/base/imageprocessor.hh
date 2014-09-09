@@ -47,6 +47,7 @@ namespace PF
     IMAGE_REDRAW_START,
     IMAGE_REDRAW_END,
     IMAGE_REDRAW,
+    IMAGE_REMOVE_LAYER,
     IMAGE_DESTROY,
     OBJECT_UNREF,
     PROCESSOR_END
@@ -56,8 +57,9 @@ namespace PF
   {
     GObject* obj;
     Image* image;
-    View* view;
-    ViewSink* sink;
+    Pipeline* pipeline;
+    PipelineSink* sink;
+    Layer* layer;
 		int layer_id;
     VipsRect area;
     unsigned char* buf;
@@ -77,9 +79,11 @@ namespace PF
     GMutex* processing_mutex;
 
     // Handling of requests queue
-    std::queue<ProcessRequestInfo> requests;
+    std::deque<ProcessRequestInfo> requests;
     GCond* requests_pending;
     GMutex* requests_mutex;
+
+    void optimize_requests();
 
   public:
     ImageProcessor();

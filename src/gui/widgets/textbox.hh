@@ -42,8 +42,8 @@ namespace PF {
     Gtk::Entry entry;
 
   public:
-    TextBox(OperationConfigUI* dialog, std::string pname, std::string l, std::string val);
-    TextBox(OperationConfigUI* dialog, std::string pname, std::string l, double val);
+    TextBox(OperationConfigDialog* dialog, std::string pname, std::string l, std::string val);
+    TextBox(OperationConfigDialog* dialog, std::string pname, std::string l, double val);
 
     ~TextBox() {}
 

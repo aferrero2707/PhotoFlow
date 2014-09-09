@@ -44,6 +44,7 @@ namespace PF {
   uint8_t FormatInfo<uint8_t>::HALF = UCHAR_MAX/2;
   FormatInfo<uint8_t>::PROMOTED FormatInfo<uint8_t>::RANGE = FormatInfo<uint8_t>::MAX;
 
+
   // 16-bit base types
 #if (USHRT_MAX == 65535U)
 #define PF_USHRT_MAX USHRT_MAX
@@ -75,7 +76,7 @@ namespace PF {
 #define PF_UINT_MAX UINT_MAX
 #define PF_INT_MIN INT_MIN
 #define PF_INT_MAX INT_MAX
-#elif (ULONG_MAX == 65535U)
+#elif (ULONG_MAX == 4294967295U)
 #define PF_UINT_MAX ULONG_MAX
 #define PF_INT_MIN LONG_MIN
 #define PF_INT_MAX LONG_MAX

@@ -29,18 +29,32 @@
 
 #include "../operation_config_dialog.hh"
 
-PF::PFWidget::PFWidget(OperationConfigUI* d, std::string n): 
-  inhibit(false), passive(false), dialog( d ), pname( n ), property( NULL )
+PF::PFWidget::PFWidget(OperationConfigDialog* d, std::string n): 
+  inhibit(false), passive(false), dialog( d ), processor( dialog->get_layer()->get_processor() ), pname( n ), property( NULL )
 {
-  PF::OperationConfigDialog* ocd = dynamic_cast<PF::OperationConfigDialog*>( dialog );
-  if( ocd ) 
-    ocd->add_control( this );
+  dialog->add_control( this );
+}
+
+
+
+PF::PFWidget::PFWidget(OperationConfigDialog* d, ProcessorBase* p, std::string n): 
+  inhibit(false), passive(false), dialog( d ), processor( p ), pname( n ), property( NULL )
+{
+  dialog->add_control( this );
 }
 
 
 
 void PF::PFWidget::init()
 {
+  if( processor && processor->get_par() ) {
+    property = processor->get_par()->get_property( pname );
+    inhibit = true;
+    get_value();
+    inhibit = false;
+  }
+  return;
+
   Layer* layer = dialog->get_layer();
   Image* image = layer ? layer->get_image() : NULL;
   ProcessorBase* processor = layer ? layer->get_processor() : NULL;
@@ -67,9 +81,11 @@ void PF::PFWidget::changed()
     set_value();
     if( !passive ) {
       value_changed.emit();
-      dialog->get_layer()->set_dirty( true );
+      //dialog->get_layer()->set_dirty( true );
+      dialog->get_layer()->get_image()->lock();
       std::cout<<"  updating image"<<std::endl;
       dialog->get_layer()->get_image()->update();
+      dialog->get_layer()->get_image()->unlock();
     }
   }
 }

@@ -30,7 +30,7 @@
 #include "textbox.hh"
 
 
-PF::TextBox::TextBox( OperationConfigUI* dialog, std::string pname, std::string l, double val ):
+PF::TextBox::TextBox( OperationConfigDialog* dialog, std::string pname, std::string l, double val ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname )
 {
@@ -52,7 +52,7 @@ PF::TextBox::TextBox( OperationConfigUI* dialog, std::string pname, std::string 
 }
 
 
-PF::TextBox::TextBox( OperationConfigUI* dialog, std::string pname, std::string l, std::string val ):
+PF::TextBox::TextBox( OperationConfigDialog* dialog, std::string pname, std::string l, std::string val ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname )
 {

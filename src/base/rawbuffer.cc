@@ -332,10 +332,10 @@ void PF::RawBuffer::draw_point( Pen& pen, unsigned int x0, unsigned int y0,
 
 	//std::cout<<"RawBuffer::draw_point("<<x0<<","<<y0<<"): fd="<<fd<<std::endl;
 	//std::cout<<"Pen color: ";
-  for( int ch = 0; ch < bands; ch++ ) {
-		std::cout<<pen.get_channel(ch)<<"  ";
-  }
-	std::cout<<std::endl;
+  //for( int ch = 0; ch < bands; ch++ ) {
+	//	std::cout<<pen.get_channel(ch)<<"  ";
+  //}
+	//std::cout<<std::endl;
 	//x0 = pen.get_size() - 1;
 	//y0 = pen.get_size() - 1;
   for(int y = 0; y <= pen.get_size(); y++ ) {

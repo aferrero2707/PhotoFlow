@@ -25,14 +25,14 @@
  */
 
 
-#include "view.hh"
+#include "pipeline.hh"
 #include "processor.hh"
 #include "image.hh"
 #include "layer.hh"
 #include "photoflow.hh"
 
 
-PF::View::~View()
+PF::Pipeline::~Pipeline()
 {
   char tstr[500];
   for( unsigned int i = 0; i < nodes.size(); i++ ) {
@@ -42,10 +42,10 @@ PF::View::~View()
 				//g_object_unref( nodes[i]->image );
 				PF::Layer* l = image->get_layer_manager().get_layer( i );
 				if( l )
-					snprintf( tstr, 499, "PF::View::~View() unref image of layer %s",
+					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref image of layer %s",
 										l->get_name().c_str() );
 				else
-					snprintf( tstr, 499, "PF::View::~View() unref image (NULL layer)" );
+					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref image (NULL layer)" );
 				PF_UNREF( nodes[i]->image, tstr );
       }
       if( nodes[i]->processor != NULL )
@@ -60,7 +60,7 @@ PF::View::~View()
 }
 
 
-PF::ViewNode* PF::View::set_node( Layer* layer, Layer* input_layer )
+PF::PipelineNode* PF::Pipeline::set_node( Layer* layer, Layer* input_layer )
 {
   if( !layer )
     return NULL;
@@ -68,12 +68,12 @@ PF::ViewNode* PF::View::set_node( Layer* layer, Layer* input_layer )
   int id = layer->get_id();
   if( id >= nodes.size() ) {
     while( nodes.size() <= (id+1) ) nodes.push_back(NULL);
-    nodes[id] = new PF::ViewNode;
+    nodes[id] = new PF::PipelineNode;
   }
   if( nodes[id] == NULL )
-    nodes[id] = new PF::ViewNode;
+    nodes[id] = new PF::PipelineNode;
 
-  PF::ViewNode* node = nodes[id];
+  PF::PipelineNode* node = nodes[id];
   if( node == NULL )
     return NULL;
 
@@ -85,17 +85,34 @@ PF::ViewNode* PF::View::set_node( Layer* layer, Layer* input_layer )
 
   if( (srcpar != NULL ) ) {
     if( (node->processor == NULL) ||
-	(node->processor->get_par() == NULL) ||
-	(node->processor->get_par()->get_type() != srcpar->get_type()) ) {
+        (node->processor->get_par() == NULL) ||
+        (node->processor->get_par()->get_type() != srcpar->get_type()) ) {
       if( node->processor != NULL )
-	delete( node->processor );
+        delete( node->processor );
       node->processor = PF::PhotoFlow::Instance().
-	new_operation_nogui( srcpar->get_type(), NULL );
+        new_operation_nogui( srcpar->get_type(), NULL );
     }
 
     if( (node->processor != NULL) &&
-	(node->processor->get_par() != NULL) ) {
-      g_assert( node->processor->get_par()->import_settings( srcpar ) != false );
+        (node->processor->get_par() != NULL) ) {
+      bool result = node->processor->get_par()->import_settings( srcpar );
+      g_assert( result != false );
+    }
+  }
+
+
+  PF::OpParBase* srcblender = NULL;
+  if( layer->get_blender() != NULL )
+    srcblender = layer->get_blender()->get_par();
+
+  if( srcblender != NULL ) {
+    if( node->blender == NULL )
+      node->blender = PF::PhotoFlow::Instance().
+        new_operation_nogui( "blender", NULL );
+    if( (node->blender != NULL) &&
+        (node->blender->get_par() != NULL) ) {
+      bool result = node->blender->get_par()->import_settings( srcblender );
+      g_assert( result != false );
     }
   }
 
@@ -103,7 +120,7 @@ PF::ViewNode* PF::View::set_node( Layer* layer, Layer* input_layer )
 }
 
 
-void PF::View::set_image( VipsImage* img, unsigned int id )
+void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
 {
   if( id >= nodes.size() ) 
     return;
@@ -112,15 +129,15 @@ void PF::View::set_image( VipsImage* img, unsigned int id )
   if( nodes[id] != NULL ) {
     if( nodes[id]->image != NULL ) {
       //if( G_OBJECT( nodes[id]->image )->ref_count < 1 )
-      //	std::cout<<"!!! View::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->image<<std::endl;
+      //	std::cout<<"!!! Pipeline::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->image<<std::endl;
       //g_assert( G_OBJECT( nodes[id]->image )->ref_count > 0 );
       //g_object_unref( nodes[id]->image );
       PF::Layer* l = image->get_layer_manager().get_layer( id );
       if( l )
-	snprintf( tstr, 499, "PF::View::set_image() unref image of layer %s",
+	snprintf( tstr, 499, "PF::Pipeline::set_image() unref image of layer %s",
 		  l->get_name().c_str() );
       else
-	snprintf( tstr, 499, "PF::View::set_image() unref image (NULL layer)" );
+	snprintf( tstr, 499, "PF::Pipeline::set_image() unref image (NULL layer)" );
       PF_UNREF( nodes[id]->image, tstr );
     }
     nodes[id]->image = img;
@@ -128,7 +145,32 @@ void PF::View::set_image( VipsImage* img, unsigned int id )
 }
 
 
-void PF::View::remove_node( unsigned int id )
+void PF::Pipeline::set_blended( VipsImage* img, unsigned int id )
+{
+  if( id >= nodes.size() ) 
+    return;
+  
+  char tstr[500];
+  if( nodes[id] != NULL ) {
+    if( nodes[id]->blended != NULL ) {
+      //if( G_OBJECT( nodes[id]->blended )->ref_count < 1 )
+      //	std::cout<<"!!! Pipeline::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->blended<<std::endl;
+      //g_assert( G_OBJECT( nodes[id]->blended )->ref_count > 0 );
+      //g_object_unref( nodes[id]->blended );
+      PF::Layer* l = image->get_layer_manager().get_layer( id );
+      if( l )
+        snprintf( tstr, 499, "PF::Pipeline::set_image() unref image of layer %s",
+                  l->get_name().c_str() );
+      else
+        snprintf( tstr, 499, "PF::Pipeline::set_image() unref image (NULL layer)" );
+      PF_UNREF( nodes[id]->blended, tstr );
+    }
+    nodes[id]->blended = img;
+  }
+}
+
+
+void PF::Pipeline::remove_node( unsigned int id )
 {
   if( id >= nodes.size() ) return;
 
@@ -138,10 +180,10 @@ void PF::View::remove_node( unsigned int id )
       //g_object_unref( nodes[id]->image );
       PF::Layer* l = image->get_layer_manager().get_layer( id );
       if( l )
-	snprintf( tstr, 499, "PF::View::remove_node() unref image of layer %s",
+	snprintf( tstr, 499, "PF::Pipeline::remove_node() unref image of layer %s",
 		  l->get_name().c_str() );
       else
-	snprintf( tstr, 499, "PF::View::remove_node() unref image (NULL layer)" );
+	snprintf( tstr, 499, "PF::Pipeline::remove_node() unref image (NULL layer)" );
       PF_UNREF( nodes[id]->image, tstr );
     }
     if( nodes[id]->processor != NULL )
@@ -152,11 +194,11 @@ void PF::View::remove_node( unsigned int id )
 }
 
 
-bool PF::View::processing()
+bool PF::Pipeline::processing()
 {
   for( unsigned int i = 0; i < sinks.size(); i++) {
 #ifndef NDEBUG
-    std::cout<<"PF::View::update(): sink #"<<i<<" -> processing="<<sinks[i]->is_processing()<<std::endl;
+    std::cout<<"PF::Pipeline::update(): sink #"<<i<<" -> processing="<<sinks[i]->is_processing()<<std::endl;
 #endif
     if( sinks[i]->is_processing() ) return true;
   }
@@ -164,64 +206,64 @@ bool PF::View::processing()
 }
 
 
-void PF::View::lock_processing()
+void PF::Pipeline::lock_processing()
 {
   for( unsigned int i = 0; i < sinks.size(); i++) {
 #ifndef NDEBUG
-    //std::cout<<"PF::View::update(): locking sink #"<<i<<std::endl;
+    //std::cout<<"PF::Pipeline::update(): locking sink #"<<i<<std::endl;
 #endif
     //sinks[i]->get_processing_mutex().lock();
 #ifndef NDEBUG
-    //std::cout<<"PF::View::update(): sink #"<<i<<" locked"<<std::endl;
+    //std::cout<<"PF::Pipeline::update(): sink #"<<i<<" locked"<<std::endl;
 #endif
   }
 }
 
 
-void PF::View::unlock_processing()
+void PF::Pipeline::unlock_processing()
 {
   for( unsigned int i = 0; i < sinks.size(); i++) {
 #ifndef NDEBUG
-    //std::cout<<"PF::View::update(): unlocking sink #"<<i<<std::endl;
+    //std::cout<<"PF::Pipeline::update(): unlocking sink #"<<i<<std::endl;
 #endif
     //sinks[i]->get_processing_mutex().unlock();
 #ifndef NDEBUG
-    //std::cout<<"PF::View::update(): sink #"<<i<<" unlocked"<<std::endl;
+    //std::cout<<"PF::Pipeline::update(): sink #"<<i<<" unlocked"<<std::endl;
 #endif
   }
 }
 
 
-void PF::View::update( VipsRect* area )
+void PF::Pipeline::update( VipsRect* area )
 {
 #ifndef NDEBUG
-  std::cout<<"PF::View::update(): called"<<std::endl;
+  std::cout<<"PF::Pipeline::update(): called"<<std::endl;
 #endif
   for( unsigned int i = 0; i < sinks.size(); i++) {
 #ifndef NDEBUG
-    std::cout<<"PF::View::update(): updating sink #"<<i<<std::endl;
+    std::cout<<"PF::Pipeline::update(): updating sink #"<<i<<std::endl;
 #endif
     sinks[i]->update( area );
 #ifndef NDEBUG
-    std::cout<<"PF::View::update(): sink #"<<i<<" updated"<<std::endl;
+    std::cout<<"PF::Pipeline::update(): sink #"<<i<<" updated"<<std::endl;
 #endif
   }
 }
 
 
 /**/
-void PF::View::sink( const VipsRect& area )
+void PF::Pipeline::sink( const VipsRect& area )
 {
 #ifndef NDEBUG
-  std::cout<<"PF::View::update(const VipsRect& area): called"<<std::endl;
+  std::cout<<"PF::Pipeline::update(const VipsRect& area): called"<<std::endl;
 #endif
   for( unsigned int i = 0; i < sinks.size(); i++) {
 #ifndef NDEBUG
-    std::cout<<"PF::View::update(const VipsRect& area): updating sink #"<<i<<std::endl;
+    std::cout<<"PF::Pipeline::update(const VipsRect& area): updating sink #"<<i<<std::endl;
 #endif
     sinks[i]->sink( area );
 #ifndef NDEBUG
-    std::cout<<"PF::View::update(const VipsRect& area): sink #"<<i<<" updated"<<std::endl;
+    std::cout<<"PF::Pipeline::update(const VipsRect& area): sink #"<<i<<" updated"<<std::endl;
 #endif
   }
 }

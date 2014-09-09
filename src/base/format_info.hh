@@ -120,8 +120,19 @@ namespace PF
   };
 
 
+  /*
   template < typename T > 
   void clip(const typename FormatInfo<T>::PROMOTED& val, T& clipped)
+  {
+    if(val > FormatInfo<T>::MAX) clipped = FormatInfo<T>::MAX;
+    else if(val < FormatInfo<T>::MIN) clipped = FormatInfo<T>::MIN;
+    else clipped = (T)val;
+    //std::cout<<"val="<<(int)val<<"  max="<<(int)FormatInfo<T>::MAX<<"  min="<<(int)FormatInfo<T>::MIN<<"  clipped="<<(int)clipped<<std::endl;
+  }
+  */
+
+  template < typename T > 
+  void clip(const typename FormatInfo<T>::SIGNED& val, T& clipped)
   {
     if(val > FormatInfo<T>::MAX) clipped = FormatInfo<T>::MAX;
     else if(val < FormatInfo<T>::MIN) clipped = FormatInfo<T>::MIN;

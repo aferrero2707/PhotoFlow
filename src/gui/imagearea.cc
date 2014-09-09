@@ -54,15 +54,16 @@ extern "C" {
 #define DEBUG_DISPLAY
 #endif
 
-PF::ImageArea::ImageArea( View* v ):
-  ViewSink( v ),
+PF::ImageArea::ImageArea( Pipeline* v ):
+  PipelineSink( v ),
   hadj( NULL ),
   vadj( NULL ),
   xoffset( 0 ),
   yoffset( 0 ),
   pending_pixels( 0 ),
   display_merged( true ),
-  active_layer( -1 )
+  active_layer( -1 ),
+	shrink_factor( 1 )
 {
   outimg = NULL;
   display_image = NULL;
@@ -76,6 +77,7 @@ PF::ImageArea::ImageArea( View* v ):
     uniform->get_par()->get_G().set( 0 );
     uniform->get_par()->get_B().set( 0 );
   }
+  maskblend = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
   invert = new PF::Processor<PF::InvertPar,PF::Invert>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   set_size_request( 100, 100 );
@@ -114,7 +116,8 @@ void PF::ImageArea::submit_area( const VipsRect& area )
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return;
 
-  VipsRect image = {xoffset, yoffset, display_image->Xsize, display_image->Ysize};
+  //VipsRect image = {xoffset, yoffset, display_image->Xsize, display_image->Ysize};
+  VipsRect image = {0, 0, display_image->Xsize, display_image->Ysize};
   //VipsRect area = {expose->x, expose->y, expose->width, expose->height};
   VipsRect clip, area_clip;
   
@@ -123,8 +126,8 @@ void PF::ImageArea::submit_area( const VipsRect& area )
       (area_clip.height <= 0) ) 
     return;
 
-  clip.left = area_clip.left - xoffset;
-  clip.top = area_clip.top - yoffset;
+  clip.left = area_clip.left;// - xoffset;
+  clip.top = area_clip.top;// - yoffset;
   clip.width = area_clip.width;
   clip.height = area_clip.height;
   
@@ -154,6 +157,18 @@ void PF::ImageArea::process_start( const VipsRect& area )
   // The regions that are not in common should be filled by the
   // subsequent draw operations
   double_buffer.get_inactive().copy( double_buffer.get_active() );
+
+	// Fill borders with black
+	int right_border = area.width - display_image->Ysize - xoffset;
+	int bottom_border = area.height - display_image->Ysize - yoffset;
+	VipsRect top = {0, 0, area.width, yoffset };
+	VipsRect bottom = {0, area.height-bottom_border-1, area.width, bottom_border };
+	VipsRect left = {0, yoffset, xoffset, display_image->Ysize };
+	VipsRect right = {area.width-right_border-1, yoffset, right_border, display_image->Ysize };
+	double_buffer.get_inactive().fill( top, 0 );
+	double_buffer.get_inactive().fill( bottom, 0 );
+	double_buffer.get_inactive().fill( left, 0 );
+	double_buffer.get_inactive().fill( right, 0 );
 }
 
 
@@ -195,7 +210,7 @@ void PF::ImageArea::process_area( const VipsRect& area )
   if (vips_region_prepare (region, parea))
     return;
 
-  double_buffer.get_inactive().copy( region, area );
+  double_buffer.get_inactive().copy( region, area, xoffset, yoffset );
 }
 
 
@@ -311,12 +326,28 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return true;
 
+	// Immediately draw the buffered image, to avoid flickering
   draw_area();
+
   VipsRect area_tot = {
     hadj->get_value(), vadj->get_value(),
     hadj->get_page_size(), vadj->get_page_size()
   };
+	//std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot.width<<","<<area_tot.height
+	//				 <<"+"<<area_tot.left<<","<<area_tot.top<<std::endl;
 
+	if( display_image->Xsize < hadj->get_page_size() ) {
+		xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
+	} else {
+		xoffset = 0;
+	}
+	if( display_image->Ysize < vadj->get_page_size() ) {
+		yoffset = (vadj->get_page_size()-display_image->Ysize)/2;
+	} else {
+		yoffset = 0;
+	}
+
+	// Submit the re-computation of the requested area
   ProcessRequestInfo request;
   request.sink = this;
   request.area = area_tot;
@@ -332,7 +363,7 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	area_tot.top = iy1;
 	area_tot.width = ix2+1-ix1;
 	area_tot.height = iy2+1-iy1;
-  submit_area( area_tot );
+  //submit_area( area_tot );
 
   cairo_rectangle_list_t *list =  cairo_copy_clip_rectangle_list (cr->cobj());
   for (int i = list->num_rectangles - 1; i >= 0; --i) {
@@ -343,7 +374,7 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	     <<" -> "<<rect->width<<","<<rect->height<<std::endl;
 #endif
     VipsRect area = {rect->x, rect->y, rect->width, rect->height};
-    //submit_area( area );
+    submit_area( area );
   }
 
   request.sink = this;
@@ -364,20 +395,20 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 void PF::ImageArea::update( VipsRect* area ) 
 {
-  //PF::View* view = pf_image->get_view(0);
+  //PF::Pipeline* pipeline = pf_image->get_pipeline(0);
 
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): called"<<std::endl;
 #endif
-  if( !get_view() || !get_view()->get_output() ) return;
+  if( !get_pipeline() || !get_pipeline()->get_output() ) return;
 
   //return;
 
   VipsImage* image = NULL;
   if( display_merged || (active_layer<0) ) {
-    image = get_view()->get_output();
+    image = get_pipeline()->get_output();
   } else {
-    PF::ViewNode* node = get_view()->get_node( active_layer );
+    PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
     if( !node ) return;
     if( !(node->image) ) return;
 
@@ -387,22 +418,22 @@ void PF::ImageArea::update( VipsRect* area )
       image = node->image;
     } else {
       PF::Layer* container_layer = 
-				get_view()->get_image()->get_layer_manager().
+				get_pipeline()->get_image()->get_layer_manager().
 				get_container_layer( active_layer );
       if( !container_layer ) return;
 
-      PF::ViewNode* container_node = 
-				get_view()->get_node( container_layer->get_id() );
+      PF::PipelineNode* container_node = 
+				get_pipeline()->get_node( container_layer->get_id() );
       if( !container_node ) return;
       if( container_node->input_id < 0 ) return;
 
       PF::Layer* input_layer = 
-				get_view()->get_image()->get_layer_manager().
+				get_pipeline()->get_image()->get_layer_manager().
 				get_layer( container_node->input_id );
       if( !input_layer ) return;
 
-      PF::ViewNode* input_node = 
-				get_view()->get_node( input_layer->get_id() );
+      PF::PipelineNode* input_node = 
+				get_pipeline()->get_node( input_layer->get_id() );
       if( !input_node ) return;
       if( !(input_node->image) ) return;
 
@@ -411,7 +442,7 @@ void PF::ImageArea::update( VipsRect* area )
   }
   if( !image ) return;
 
-  unsigned int level = get_view()->get_level();
+  unsigned int level = get_pipeline()->get_level();
   //outimg = image;
 
   //VIPS_UNREF( region ); 
@@ -421,7 +452,7 @@ void PF::ImageArea::update( VipsRect* area )
   PF_UNREF( display_image, "ImageArea::update() display_image unref" );
 
   convert2srgb->get_par()->set_image_hints( image );
-  convert2srgb->get_par()->set_format( get_view()->get_format() );
+  convert2srgb->get_par()->set_format( get_pipeline()->get_format() );
   std::vector<VipsImage*> in; in.push_back( image );
   VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
   //PF_UNREF( image, "ImageArea::update() image unref" );
@@ -439,7 +470,7 @@ void PF::ImageArea::update( VipsRect* area )
   //outimg = srgbimg;
     
   if( !display_merged && (active_layer>=0) ) {
-    PF::ViewNode* node = get_view()->get_node( active_layer );
+    PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
     if( !node ) return;
     if( !(node->image) ) return;
 
@@ -448,23 +479,30 @@ void PF::ImageArea::update( VipsRect* area )
 				node->processor->get_par()->is_map() ) {
 
       invert->get_par()->set_image_hints( node->image );
-      invert->get_par()->set_format( get_view()->get_format() );
+      invert->get_par()->set_format( get_pipeline()->get_format() );
       in.clear(); in.push_back( node->image );
       VipsImage* mapinverted = invert->get_par()->build(in, 0, NULL, NULL, level );
       //g_object_unref( node->image );
       //PF_UNREF( node->image, "ImageArea::update() node->image unref" );
 
       uniform->get_par()->set_image_hints( srgbimg );
-      uniform->get_par()->set_format( get_view()->get_format() );
-      uniform->get_par()->set_blend_mode( PF::PF_BLEND_NORMAL );
-      uniform->get_par()->set_opacity( 0.8 );
+      uniform->get_par()->set_format( get_pipeline()->get_format() );
       in.clear(); in.push_back( srgbimg );
       VipsImage* mapimage = uniform->get_par()->build(in, 0, NULL, mapinverted, level );
       //g_object_unref( srgbimg );
       PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
       //g_object_unref( mapinverted );
       PF_UNREF( mapinverted, "ImageArea::update() mapinverted unref" );
-      srgbimg = mapimage;
+
+      maskblend->get_par()->set_image_hints( srgbimg );
+      maskblend->get_par()->set_format( get_pipeline()->get_format() );
+      maskblend->get_par()->set_blend_mode( PF::PF_BLEND_NORMAL );
+      maskblend->get_par()->set_opacity( 0.8 );
+      in.clear(); in.push_back( mapimage );
+      VipsImage* blendimage = maskblend->get_par()->build(in, 0, NULL, mapinverted, level );
+      PF_UNREF( mapimage, "ImageArea::update() mapimage unref" );
+
+      srgbimg = blendimage;
     }
   }
 
@@ -480,16 +518,6 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"ImageArea::update(): srgbimg="<<srgbimg<<"   ref_count="<<G_OBJECT( srgbimg )->ref_count<<std::endl;
 #endif
 
-  display_image = im_open( "display_image", "p" );
-
-	int tile_size = 128;
-  if (vips_sink_screen2 (outimg, display_image, NULL,
-												 tile_size, tile_size, (2000/tile_size)*(2000/tile_size), 
-												 //6400, 64, (2000/64), 
-												 0, NULL, this))
-		return;
-	//vips::verror ();
-
   //g_object_unref( outimg );
   //PF_UNREF( outimg, "ImageArea::update() outimg unref" );
 #ifndef NDEBUG
@@ -499,36 +527,75 @@ void PF::ImageArea::update( VipsRect* area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): vips_sink_screen() called"<<std::endl;
 #endif
-  region = vips_region_new (display_image);
-
 #ifdef DEBUG_DISPLAY
-  std::cout<<"Image size: "<<display_image->Xsize<<","
-					 <<display_image->Ysize<<std::endl;
+  std::cout<<"Image size: "<<outimg->Xsize<<","
+					 <<outimg->Ysize<<std::endl;
+  std::cout<<"Shrink factor: "<<shrink_factor<<std::endl;
 #endif
 
-  set_size_request (display_image->Xsize, display_image->Ysize);
+	if( shrink_factor != 1 ) {
+		VipsImage* outimg2;
+		//if( vips_shrink( outimg, &outimg2, 
+		//										 1.0d/shrink_factor, 1.0d/shrink_factor, NULL ) )
+//	return;
+			if( vips_affine( outimg, &outimg2, 
+											 shrink_factor, 0, 0, shrink_factor, NULL ) )
+				return;
+			//std::cout<<"outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
+			PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
+			outimg = outimg2;
+	}
 
+	/*
   if( hadj && vadj ) {
-    unsigned int display_width = display_image->Xsize, 
-      display_height = display_image->Ysize;
-    if( display_image->Xsize < hadj->get_page_size() ) {
-      xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
-      xoffset = 0;
+    unsigned int display_width = outimg->Xsize, 
+      display_height = outimg->Ysize;
+    if( outimg->Xsize < hadj->get_page_size() ) {
+      xoffset = (hadj->get_page_size()-outimg->Xsize)/2;
+      //xoffset = 0;
       display_width = hadj->get_page_size();
     } else {
       xoffset = 0;
     }
-    if( display_image->Ysize < vadj->get_page_size() ) {
-      yoffset = (vadj->get_page_size()-display_image->Ysize)/2;
-      yoffset = 0;
+    if( outimg->Ysize < vadj->get_page_size() ) {
+      yoffset = (vadj->get_page_size()-outimg->Ysize)/2;
+      //yoffset = 0;
       display_height = vadj->get_page_size();
     } else {
       yoffset = 0;
     }
     set_size_request (display_width, display_height);
+		std::cout<<"display_width: "<<display_width<<"  display_height: "<<display_height
+						 <<"  xoffset: "<<xoffset<<"  yoffset: "<<yoffset<<std::endl;
+
+		
+		if( xoffset>0 || yoffset>0 ) {
+			VipsImage* outimg2;
+			if( vips_embed( outimg, &outimg2, 
+											xoffset, yoffset, 
+											display_width, display_height, 
+											"extend", VIPS_EXTEND_BLACK, NULL ) )
+				return;
+			std::cout<<"outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
+			PF_UNREF( outimg, "ImageArea::update() outimg unref after embed" );
+			outimg = outimg2;
+		}
   } else {
     xoffset = yoffset = 0;
   }
+	*/
+
+  display_image = im_open( "display_image", "p" );
+
+  region = vips_region_new (display_image);
+
+	int tile_size = 128;
+  if (vips_sink_screen2 (outimg, display_image, NULL,
+												 tile_size, tile_size, (2000/tile_size)*(2000/tile_size), 
+												 //6400, 64, (2000/64), 
+												 0, NULL, this))
+		return;
+	//vips::verror ();
 
 	/*
 	if( area ) {
@@ -561,9 +628,21 @@ void PF::ImageArea::update( VipsRect* area )
   //signal_queue_draw.emit();
   Update * update = g_new (Update, 1);
   update->image_area = this;
+  update->rect.width = outimg->Xsize;
+  update->rect.height = outimg->Ysize;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::update(): installing set_size callback."<<std::endl;
+#endif
+  gdk_threads_add_idle ((GSourceFunc) set_size_cb, update);
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::update(): set_size() called"<<std::endl;
+#endif
+
+  update = g_new (Update, 1);
+  update->image_area = this;
   update->rect.width = update->rect.height = 0;
 #ifdef DEBUG_DISPLAY
-  std::cout<<"PF::ImageArea::update(): installing idle callback."<<std::endl;
+  std::cout<<"PF::ImageArea::update(): installing queue_draw callback."<<std::endl;
 #endif
   gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
 #ifdef DEBUG_DISPLAY
@@ -579,9 +658,9 @@ void PF::ImageArea::sink( const VipsRect& area )
   std::cout<<"PF::ImageArea::sink( const VipsRect& area ) called"<<std::endl;
 #endif
 
-  PF::View* view = get_view();
-  if( !view ) return;
-  int level = view->get_level();
+  PF::Pipeline* pipeline = get_pipeline();
+  if( !pipeline ) return;
+  int level = pipeline->get_level();
   float fact = 1.0f;
   for( unsigned int i = 0; i < level; i++ )
     fact /= 2.0f;

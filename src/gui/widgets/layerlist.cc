@@ -29,10 +29,12 @@
 
 #include "layerlist.hh"
 
+#include "../operation_config_dialog.hh"
 
-PF::LayerList::LayerList( OperationConfigUI* d, std::string l ):
+
+PF::LayerList::LayerList( OperationConfigDialog* d, std::string l ):
   Gtk::VBox(),
-  dialog (d ),
+  dialog( d ),
   inhibit( false )
 {
   label.set_text( l.c_str() );
@@ -56,6 +58,7 @@ PF::LayerList::LayerList( OperationConfigUI* d, std::string l ):
 
 void PF::LayerList::update_model()
 {
+  //std::cout<<"LayerList::update_model() called"<<std::endl;
   if( !dialog ) return;
   PF::Layer* layer = dialog->get_layer();
   if(! layer ) return;
@@ -141,12 +144,12 @@ void PF::LayerList::changed()
       //model:
       PF::Layer* l = row[columns.col_layer];
 
-      std::cout<<"Setting extra input of layer \""<<layer->get_name()
-	       <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
+      //std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
+	    //   <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
       layer->set_input( 0, l->get_id() );
       layer->set_dirty( true );
 			if( !inhibit ) {
-				std::cout<<"  updating image"<<std::endl;
+				//std::cout<<"LayerList::changed(): updating image"<<std::endl;
 				image->update();
 			}
     }

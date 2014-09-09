@@ -112,6 +112,15 @@ void PF::DrawPar::init_buffer( unsigned int level )
     }
   }
 
+  unsigned int buf_xsize = rawbuf->get_xsize();
+  unsigned int buf_ysize = rawbuf->get_ysize();
+  unsigned int img_xsize = get_xsize();
+  unsigned int img_ysize = get_ysize();
+#ifndef NDEBUG
+  std::cout<<"DrawPar::init_buffer(): level="<<level<<"  buf. size: "<<buf_xsize<<","<<buf_ysize
+           <<"  img. size: "<<img_xsize<<","<<img_ysize<<std::endl;
+#endif
+
   unsigned int cur_xsize = rawbuf->get_xsize();
   unsigned int cur_ysize = rawbuf->get_ysize();
   unsigned int new_xsize = get_xsize();
@@ -128,6 +137,9 @@ void PF::DrawPar::init_buffer( unsigned int level )
       (cur_ysize != get_ysize()) ||
       (rawbuf->get_nbands() != get_nbands()) ||
       (rawbuf->get_format() != get_format()) ) {
+#ifndef NDEBUG
+    std::cout<<"DrawPar::init_buffer(): reinitializing buffer, new size: "<<new_xsize<<","<<new_ysize<<std::endl;
+#endif
     rawbuf->set_xsize( new_xsize );
     rawbuf->set_ysize( new_ysize );
     rawbuf->set_nbands( get_nbands() );

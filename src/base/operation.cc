@@ -53,21 +53,27 @@ void PF::OperationConfigUI::open()
 PF::OpParBase::OpParBase():
 	render_mode(PF_RENDER_PREVIEW), 
   map_flag( false ),
-  blend_mode("blend_mode",this),
+  modified_flag(false),
   intensity("intensity",this,1),
-  opacity("opacity",this,1),
   grey_target_channel("grey_target_channel",this,-1,"Grey","Grey"),
   rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
   lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK")
 {
+  //blend_mode.set_internal(true);
+  intensity.set_internal(true);
+  //opacity.set_internal(true);
+  grey_target_channel.set_internal(true);
+  rgb_target_channel.set_internal(true);
+  lab_target_channel.set_internal(true);
+  cmyk_target_channel.set_internal(true);
+  
   processor = NULL;
   //out = NULL;
   config_ui = NULL;
   //blend_mode = PF_BLEND_PASSTHROUGH;
   //blend_mode = PF_BLEND_NORMAL;
   //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
-  blend_mode.set_enum_value( PF_BLEND_NORMAL );
   demand_hint = VIPS_DEMAND_STYLE_THINSTRIP;
   bands = 1;
   xsize = 100; ysize = 100;
@@ -139,6 +145,22 @@ void PF::OpParBase::restore_properties(const std::list<std::string>& plist)
   }
 }
 
+
+void PF::OpParBase::clear_modified() 
+{ 
+  modified_flag = false; 
+  std::list<PropertyBase*>::iterator pi;
+  for(pi = mapped_properties.begin();
+      pi != mapped_properties.end(); 
+      pi++) {
+    (*pi)->clear_modified();
+  }
+  for(pi = properties.begin(); 
+      pi != properties.end(); 
+      pi++) {
+    (*pi)->clear_modified();
+  }
+}
 
 void PF::OpParBase::set_image_hints(int w, int h, VipsInterpretation interpr)
 {

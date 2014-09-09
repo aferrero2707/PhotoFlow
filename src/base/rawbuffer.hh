@@ -69,7 +69,7 @@ namespace PF
     void set_channel( unsigned int ch, float val )
     {
       if( color.size() <= ch )
-	color.resize( ch+1 );
+        color.resize( ch+1 );
       color[ch] = val;
     }
     float get_channel( unsigned int ch ) const
@@ -85,13 +85,27 @@ namespace PF
   };
 
 
+  inline bool operator ==(const Pen& l, const Pen& r)
+  {
+    if( l.get_color() != r.get_color() ) return false;
+    if( l.get_opacity() != r.get_opacity() ) return false;
+    if( l.get_size() != r.get_size() ) return false;
+    return true;
+  }
+
+  inline bool operator !=(const Pen& l, const Pen& r)
+  {
+    return( !(l==r) );
+  }
+
+
   class Segment
   {
     unsigned int x1, y1, x2, y2;
   public:
     Segment(): x1(0), y1(0), x2(0), y2(0) {}
     void set( unsigned int _x1, unsigned int _y1,
-	      unsigned int _x2, unsigned int _y2 )
+              unsigned int _x2, unsigned int _y2 )
     {
       x1 = _x1; y1 = _y1; x2 = _x2; y2 = _y2;
     }
@@ -100,6 +114,8 @@ namespace PF
     unsigned int get_x2() { return x2; }
     unsigned int get_y2() { return y2; }
   };
+
+
 
 
   class Stroke
@@ -117,6 +133,19 @@ namespace PF
     const std::list< std::pair<unsigned int, unsigned int> >& get_points() const { return points; }
     std::list< Segment >& get_segments() { return segments; }
   };
+
+
+  inline bool operator ==(const Stroke& l, const Stroke& r)
+  {
+    if( l.get_pen() != r.get_pen() ) return false;
+    if( l.get_points() != r.get_points() ) return false;
+    return true;
+  }
+
+  inline bool operator !=(const Stroke& l, const Stroke& r)
+  {
+    return( !(l==r) );
+  }
 
 
   class RawBuffer
@@ -150,9 +179,9 @@ namespace PF
     {
       std::cout<<"PF::RawBuffer::~RawBuffer(): deleting "<<(void*)this<<std::endl;
       if( fd >= 0 ) {
-	close( fd );
-	unlink( file_name.c_str() );
-	std::cout<<"PF::RawBuffer::~RawBuffer(): "<<file_name<<" removed."<<std::endl;
+        close( fd );
+        unlink( file_name.c_str() );
+        std::cout<<"PF::RawBuffer::~RawBuffer(): "<<file_name<<" removed."<<std::endl;
       }
     }
 
@@ -185,7 +214,7 @@ namespace PF
     void init( const std::vector<float>& bgd_color );
 
     void draw_row( Pen& pen, unsigned int row, 
-		   unsigned int startcol, unsigned int endcol );
+                   unsigned int startcol, unsigned int endcol );
     void draw_point( Pen& pen, unsigned int x, unsigned int y, VipsRect& update, bool update_pyramid );
     void draw_segment( Pen& pen, Segment& segment );
 

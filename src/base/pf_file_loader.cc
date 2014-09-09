@@ -4,29 +4,29 @@
 
 /*
 
-    Copyright (C) 2014 Ferrero Andrea
+  Copyright (C) 2014 Ferrero Andrea
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
- */
+*/
 
 /*
 
-    These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
+  These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
- */
+*/
 
 #include <libgen.h>
 
@@ -62,6 +62,8 @@ static std::list<PF::Layer*>* current_container = NULL;
 static bool current_container_map_flag = false;
 static PF::OpParBase* current_op = NULL;
 
+static int version = 1;
+
 static std::vector<PF::Layer*> layer_id_mapper;
 
 
@@ -91,16 +93,36 @@ void append_layer( PF::Layer* layer, PF::Layer* previous, std::list<PF::Layer*>&
 /* The handler functions. */
 
 void start_element (GMarkupParseContext *context,
-		    const gchar         *element_name,
-		    const gchar        **attribute_names,
-		    const gchar        **attribute_values,
-		    gpointer             user_data,
-		    GError             **error) {
+                    const gchar         *element_name,
+                    const gchar        **attribute_names,
+                    const gchar        **attribute_values,
+                    gpointer             user_data,
+                    GError             **error) {
 
   const gchar **name_cursor = attribute_names;
   const gchar **value_cursor = attribute_values;
 
-  if( strcmp (element_name, "layer") == 0 ) {
+  if( strcmp (element_name, "image") == 0 ) {
+    while (*name_cursor) {
+      if (strcmp (*name_cursor, "version") == 0) {
+        version = atoi(*value_cursor);
+      }
+	
+      name_cursor++;
+      value_cursor++;
+    }
+
+  } else if( strcmp (element_name, "preset") == 0 ) {
+    while (*name_cursor) {
+      if (strcmp (*name_cursor, "version") == 0) {
+        version = atoi(*value_cursor);
+      }
+	
+      name_cursor++;
+      value_cursor++;
+    }
+
+  } else if( strcmp (element_name, "layer") == 0 ) {
 
     // Create a new layer
     PF::Layer* layer = image->get_layer_manager().new_layer();
@@ -121,27 +143,27 @@ void start_element (GMarkupParseContext *context,
 
     while (*name_cursor) {
       if (strcmp (*name_cursor, "id") == 0) {
-	old_id = atoi( *value_cursor );
+        old_id = atoi( *value_cursor );
       } else if (strcmp (*name_cursor, "name") == 0) {
-	name = *value_cursor;
+        name = *value_cursor;
       } else if (strcmp (*name_cursor, "visible") == 0) {
-	visible = atoi( *value_cursor );
+        visible = atoi( *value_cursor );
       } else if (strcmp (*name_cursor, "normal") == 0) {
-	normal = atoi( *value_cursor );
+        normal = atoi( *value_cursor );
       } else if (strcmp (*name_cursor, "extra_inputs") == 0) {
-	std::string idstr = *value_cursor;
-	std::istringstream idstream( idstr );
-	int ninput = 0;
-	while ( !idstream.eof() ) {
-	  int id;
-	  idstream>>id;
-	  if( !idstream ) 
-	    break;
-	  if( id < layer_id_mapper.size() &&
-	      layer_id_mapper[id] )
-	    layer->set_input( ninput, layer_id_mapper[id]->get_id() );
-	  ninput++;
-	}
+        std::string idstr = *value_cursor;
+        std::istringstream idstream( idstr );
+        int ninput = 0;
+        while ( !idstream.eof() ) {
+          int id;
+          idstream>>id;
+          if( !idstream ) 
+            break;
+          if( id < layer_id_mapper.size() &&
+              layer_id_mapper[id] )
+            layer->set_input( ninput, layer_id_mapper[id]->get_id() );
+          ninput++;
+        }
       }
 	
       name_cursor++;
@@ -156,6 +178,17 @@ void start_element (GMarkupParseContext *context,
     layer->set_visible( visible );
     layer->set_normal( normal );
 
+    if( (version<2) && (normal==0) ) {
+      std::cout<<"PF::pf_file_loader(): setting group layer operation to \"buffer\""<<std::endl;
+      PF::ProcessorBase* processor = PF::PhotoFlow::Instance().new_operation( "buffer", current_layer );
+      if( processor ) {
+        std::cout<<"PF::pf_file_loader(): operation created."<<std::endl;
+        current_op = processor->get_par();
+      }
+      if( current_op )
+        current_op->set_map_flag( current_container_map_flag );
+    } 
+
     std::cout<<"Layer \""<<layer->get_name()<<"\" extra inputs: ";
     for(unsigned int i = 0; i < layer->get_extra_inputs().size(); i++)
       std::cout<<layer->get_extra_inputs()[i]<<" ";
@@ -169,7 +202,7 @@ void start_element (GMarkupParseContext *context,
 
     while (*name_cursor) {
       if (strcmp (*name_cursor, "type") == 0) {
-	type = *value_cursor;
+        type = *value_cursor;
       }
 	
       name_cursor++;
@@ -200,22 +233,29 @@ void start_element (GMarkupParseContext *context,
     std::string op_type;
     while (*name_cursor) {
       if (strcmp (*name_cursor, "type") == 0) {
-	op_type = *value_cursor;
+        op_type = *value_cursor;
       }
 	
       name_cursor++;
       value_cursor++;
     }
 
-    std::cout<<"PF::pf_file_loader(): creating operation of type "<<op_type<<std::endl;
-
     if( !current_layer ) return;
 
-    PF::ProcessorBase* processor = PF::PhotoFlow::Instance().new_operation( op_type, current_layer );
-
-    if( processor ) {
-      std::cout<<"PF::pf_file_loader(): operation created."<<std::endl;
-      current_op = processor->get_par();
+    if( op_type == "blender" ) {
+      std::cout<<"PF::pf_file_loader(): setting blender operation"<<std::endl;
+      current_op = NULL;
+      if( current_layer->get_blender() ) {
+        current_op = current_layer->get_blender()->get_par();
+        std::cout<<"PF::pf_file_loader(): blender operation set to "<<current_op<<std::endl;
+      }
+    } else {
+      std::cout<<"PF::pf_file_loader(): creating operation of type "<<op_type<<std::endl;
+      PF::ProcessorBase* processor = PF::PhotoFlow::Instance().new_operation( op_type, current_layer );
+      if( processor ) {
+        std::cout<<"PF::pf_file_loader(): operation created."<<std::endl;
+        current_op = processor->get_par();
+      }
     }
 
     if( current_op )
@@ -229,9 +269,9 @@ void start_element (GMarkupParseContext *context,
     std::string pvalue;
     while (*name_cursor) {
       if (strcmp (*name_cursor, "name") == 0) {
-	pname = *value_cursor;
+        pname = *value_cursor;
       } else if (strcmp (*name_cursor, "value") == 0) {
-	pvalue = *value_cursor;
+        pvalue = *value_cursor;
       }
 	
       name_cursor++;
@@ -241,9 +281,17 @@ void start_element (GMarkupParseContext *context,
     std::cout<<"PF::pf_file_loader(): setting property \""<<pname<<"\" to \""<<pvalue<<"\""<<std::endl;
 
     if( !pname.empty() && !pvalue.empty() ) {
-      PF::PropertyBase* p = current_op->get_property( pname );
-      if( p ) {
-	p->set_str( pvalue );
+      if( version < 2 &&
+          ( (pname=="opacity") || (pname=="blend_mode") ) ) {
+        if( current_layer &&
+            current_layer->get_blender() &&
+            current_layer->get_blender()->get_par() ) {
+          PF::PropertyBase* p = current_layer->get_blender()->get_par()->get_property( pname );
+          if( p ) p->set_str( pvalue );
+        }
+      } else {
+        PF::PropertyBase* p = current_op->get_property( pname );
+        if( p ) p->set_str( pvalue );
       }
     }
 
@@ -251,10 +299,10 @@ void start_element (GMarkupParseContext *context,
 }
 
 void text(GMarkupParseContext *context,
-	  const gchar         *text,
-	  gsize                text_len,
-	  gpointer             user_data,
-	  GError             **error)
+          const gchar         *text,
+          gsize                text_len,
+          gpointer             user_data,
+          GError             **error)
 {
   /* Note that "text" is not a regular C string: it is
    * not null-terminated. This is the reason for the
@@ -264,13 +312,21 @@ void text(GMarkupParseContext *context,
 }
 
 void end_element (GMarkupParseContext *context,
-		  const gchar         *element_name,
-		  gpointer             user_data,
-		  GError             **error)
+                  const gchar         *element_name,
+                  gpointer             user_data,
+                  GError             **error)
 {
   // If element is a layer, pop it from the stack
   if( strcmp (element_name, "layer") == 0 ) {
 
+    if( current_layer && current_layer->get_processor() &&
+        current_layer->get_processor()->get_par() &&
+        current_layer->get_processor()->get_par()->get_config_ui() ) {
+      // Load initial values into config UI.
+      // Called after operation and blender have been loaded.
+      current_layer->get_processor()->get_par()->get_config_ui()->init();
+      //current_op->get_config_ui()->update();
+    }
     // The current layer is removed from the stack, and the current_layer pointer
     // is set to the top element of the stack if present, or to NULL otherwise
     layers_stack.pop_back();
@@ -297,10 +353,6 @@ void end_element (GMarkupParseContext *context,
 
   } else if( strcmp (element_name, "operation") == 0 ) {
 
-    if( current_op && current_op->get_config_ui() ) {
-      current_op->get_config_ui()->init();
-      //current_op->get_config_ui()->update();
-    }
     current_op = NULL;
 
   }
@@ -320,11 +372,10 @@ static GMarkupParser parser = {
 void PF::load_pf_image( std::string filename, PF::Image* img ) {
   char *text;
   gsize length;
-  GMarkupParseContext *context = g_markup_parse_context_new (
-      &parser,
-      (GMarkupParseFlags)0,
-      NULL,
-      NULL);
+  GMarkupParseContext *context = g_markup_parse_context_new (&parser,
+                                                             (GMarkupParseFlags)0,
+                                                             NULL,
+                                                             NULL);
 
   image = img;
   current_layer = NULL;
@@ -336,6 +387,48 @@ void PF::load_pf_image( std::string filename, PF::Image* img ) {
   current_container = &(image->get_layer_manager().get_layers());
   containers_stack.push_back( make_pair(current_container,false) );
   current_container_map_flag = false;
+
+  /* seriously crummy error checking */
+
+  if (g_file_get_contents (filename.c_str(), &text, &length, NULL) == FALSE) {
+    printf("Couldn't load XML\n");
+    exit(255);
+  }
+
+  char* fname = strdup(filename.c_str());
+  char* dname = dirname( fname );
+  if( dname ) chdir( dname ); 
+  free( fname );
+
+  if (g_markup_parse_context_parse (context, text, length, NULL) == FALSE) {
+    printf("Parse failed\n");
+    exit(255);
+  }
+
+  g_free(text);
+  g_markup_parse_context_free (context);
+}
+
+
+
+void PF::insert_pf_preset( std::string filename, PF::Image* img, PF::Layer* previous, std::list<PF::Layer*>* list, bool map_flag ) {
+  char *text;
+  gsize length;
+  GMarkupParseContext *context = g_markup_parse_context_new (&parser,
+                                                             (GMarkupParseFlags)0,
+                                                             NULL,
+                                                             NULL);
+
+  layers_stack.clear();
+  containers_stack.clear();
+  layer_id_mapper.clear();
+
+  image = img;
+  current_layer = previous;
+  current_container = list;
+  if(current_container) containers_stack.push_back( make_pair(current_container,false) );
+
+  current_container_map_flag = map_flag;
 
   /* seriously crummy error checking */
 

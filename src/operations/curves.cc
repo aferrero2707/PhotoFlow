@@ -73,6 +73,30 @@ PF::CurvesPar::CurvesPar():
 }
 
 
+void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
+                                  char* vec8, short int* vec16 )
+{
+  /*
+    Greyvec.clear();
+    for( int i = 0; i <= 1000; i++ ) {
+    Greyvec.push_back( std::make_pair( float(i)/1000, float(0) ) );
+    }
+    grey_curve.get().get_deltas( Greyvec );
+  */
+  for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
+    float x = ((float)i)/FormatInfo<unsigned char>::RANGE;
+    float y = curve.get().get_delta( x );
+    vec8[i] = (char)(y*FormatInfo<unsigned char>::RANGE);
+  }
+  for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
+    float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
+    float y = curve.get().get_delta( x );
+    vec16[i] = y*FormatInfo<unsigned short int>::RANGE;
+    //if(i%1000 == 0) std::cout<<"i="<<i<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<std::endl;
+  }
+}
+
+
 
 VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first, 
 				VipsImage* imap, VipsImage* omap, 
@@ -80,12 +104,43 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
 {
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
 
-  Greyvec.clear();
-  for( int i = 0; i <= 1000; i++ ) {
-    Greyvec.push_back( std::make_pair( float(i)/1000, float(0) ) );
-  }
-  grey_curve.get().get_deltas( Greyvec );
+  if( grey_curve.is_modified() )
+    update_curve( grey_curve, Greyvec8, Greyvec16 );
 
+  if( R_curve.is_modified() || G_curve.is_modified() || 
+      B_curve.is_modified() || RGB_curve.is_modified() ) {
+    update_curve( R_curve, RGBvec8[0], RGBvec16[0] );
+    update_curve( G_curve, RGBvec8[1], RGBvec16[1] );
+    update_curve( B_curve, RGBvec8[2], RGBvec16[2] );
+    update_curve( RGB_curve, RGBvec8[3], RGBvec16[3] );
+    for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
+      for(int j = 0; j < 3; j++) RGBvec8[j][i] += RGBvec8[3][i];
+    }
+    for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
+      for(int j = 0; j < 3; j++) {
+        RGBvec16[j][i] += RGBvec16[3][i];
+        //if(i%1000 == 0) std::cout<<"i="<<i<<"  RGBvec16["<<j<<"][i]="<<RGBvec16[j][i]<<std::endl;
+      }
+    }
+  }
+
+  if( L_curve.is_modified() )
+    update_curve( L_curve, Labvec8[0], Labvec16[0] );
+  if( a_curve.is_modified() )
+    update_curve( a_curve, Labvec8[1], Labvec16[1] );
+  if( b_curve.is_modified() )
+    update_curve( b_curve, Labvec8[2], Labvec16[2] );
+
+  if( C_curve.is_modified() )
+    update_curve( C_curve, CMYKvec8[0], CMYKvec16[0] );
+  if( M_curve.is_modified() )
+    update_curve( M_curve, CMYKvec8[1], CMYKvec16[1] );
+  if( Y_curve.is_modified() )
+    update_curve( Y_curve, CMYKvec8[2], CMYKvec16[2] );
+  if( K_curve.is_modified() )
+    update_curve( K_curve, CMYKvec8[3], CMYKvec16[3] );
+
+  /*
   for( int j = 0; j < 4; j++ ) {
     RGBvec[j].clear();
     for( int i = 0; i <= 1000; i++ ) {
@@ -111,21 +166,39 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
   L_curve.get().get_deltas( Labvec[0] );
   a_curve.get().get_deltas( Labvec[1] );
   b_curve.get().get_deltas( Labvec[2] );
+  */
 
   if( in[first] ) {
     PF::colorspace_t cs = PF::convert_colorspace( get_interpretation() );
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
+      scvec[0] = &grey_curve;
       cvec = &Greyvec;
+      cvec8[0] = Greyvec8;
+      cvec16[0] = Greyvec16;
       break;
     case PF_COLORSPACE_RGB:
+      scvec[0] = &R_curve;
+      scvec[1] = &G_curve;
+      scvec[2] = &B_curve;
+      scvec[3] = &RGB_curve;
       cvec = RGBvec;
+      for(int i=0; i<4; i++ ) {cvec8[i] = RGBvec8[i];cvec16[i] = RGBvec16[i];}
       break;
     case PF_COLORSPACE_LAB:
+      scvec[0] = &L_curve;
+      scvec[1] = &a_curve;
+      scvec[2] = &b_curve;
       cvec = Labvec;
+      for(int i=0; i<3; i++ ) {cvec8[i] = Labvec8[i];cvec16[i] = Labvec16[i];}
       break;
     case PF_COLORSPACE_CMYK:
+      scvec[0] = &C_curve;
+      scvec[1] = &M_curve;
+      scvec[2] = &Y_curve;
+      scvec[3] = &K_curve;
       cvec = CMYKvec;
+      for(int i=0; i<4; i++ ) {cvec8[i] = CMYKvec8[i];cvec16[i] = CMYKvec16[i];}
       break;
     default:
       break;

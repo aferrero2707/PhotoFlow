@@ -46,13 +46,40 @@ PF::ImageProcessor::ImageProcessor()
 }
 
 
+void PF::ImageProcessor::optimize_requests()
+{
+  for( std::deque<ProcessRequestInfo>::iterator i = requests.begin();
+       i != requests.end(); i++ ) {
+    if( i->request != IMAGE_REBUILD ) continue;
+    i++;
+    requests.erase( i, requests.end() );
+    break;
+  }
+}
+
+
 void PF::ImageProcessor::run()
 {
 	bool running = true;
   while( running ) {
     g_mutex_lock( requests_mutex );
-    if( requests.empty() ) {
-      //std::cout<<"PF::ImageProcessor::run(): waiting for new requests..."<<std::endl;
+    if( requests.empty() ) {      
+      g_mutex_unlock( requests_mutex );
+      PF::Image* image = PF::PhotoFlow::Instance().get_active_image();
+      if( image ) {
+        PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer();
+        //std::cout<<"ImageProcessor::run(): buf="<<buf<<std::endl;
+        if( buf ) {
+          buf->step();
+          if( buf->is_completed() ) {
+            image->lock();
+            image->do_update();
+            image->unlock();
+          }
+          continue;
+        }
+      }
+      std::cout<<"ImageProcessor::run(): waiting for new requests..."<<std::endl;
       g_cond_wait( requests_pending, requests_mutex );
       //std::cout<<"PF::ImageProcessor::run(): resuming."<<std::endl;
       if( requests.empty() ) {
@@ -61,8 +88,9 @@ void PF::ImageProcessor::run()
 				continue;
       }
     }
+    optimize_requests();
     PF::ProcessRequestInfo request = requests.front();
-    requests.pop();
+    requests.pop_front();
     /*
     std::cout<<"PF::ImageProcessor::run(): processing new request: ";
     switch( request.request ) {
@@ -90,7 +118,7 @@ void PF::ImageProcessor::run()
 			else
 				request.image->do_update( NULL );
 			*/
-			request.image->do_update( request.view );
+			request.image->do_update( request.pipeline );
       request.image->unlock();
       request.image->rebuild_done_signal();
       //std::cout<<"PF::ImageProcessor::run(): updating image done."<<std::endl;
@@ -99,17 +127,17 @@ void PF::ImageProcessor::run()
       if( !request.image ) continue;
       //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
       request.image->sample_lock();
-      std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): image locked."<<std::endl;
+      //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): image locked."<<std::endl;
 			if( (request.area.width!=0) && (request.area.height!=0) )
 				request.image->do_sample( request.layer_id, request.area );
       request.image->sample_unlock();
       request.image->sample_done_signal();
-      std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
+      //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
       break;
 		case IMAGE_UPDATE:
-      if( !request.view ) continue;
+      if( !request.pipeline ) continue;
       //std::cout<<"PF::ImageProcessor::run(): updating area."<<std::endl;
-      request.view->sink( request.area );
+      request.pipeline->sink( request.area );
       //std::cout<<"PF::ImageProcessor::run(): updating area done."<<std::endl;
       break;
     case IMAGE_REDRAW_START:
@@ -135,6 +163,14 @@ void PF::ImageProcessor::run()
       //g_cond_signal( request.done );
       //g_mutex_unlock( request.mutex );
       break;
+    case IMAGE_REMOVE_LAYER:
+      if( !request.image ) break;
+      if( !request.layer ) break;
+      request.image->remove_layer_lock();
+      request.image->do_remove_layer( request.layer );
+      request.image->remove_layer_unlock();
+      request.image->remove_layer_done_signal();
+      break;
     case IMAGE_DESTROY:
       if( !request.image ) continue;
       delete request.image;
@@ -156,7 +192,7 @@ void  PF::ImageProcessor::submit_request( PF::ProcessRequestInfo request )
   //std::cout<<"PF::ImageProcessor::submit_request(): locking mutex."<<std::endl;
   g_mutex_lock( requests_mutex );
   //std::cout<<"PF::ImageProcessor::submit_request(): pushing request."<<std::endl;
-  requests.push( request );
+  requests.push_back( request );
   //std::cout<<"PF::ImageProcessor::submit_request(): unlocking mutex."<<std::endl;
   g_mutex_unlock( requests_mutex );
   //std::cout<<"PF::ImageProcessor::submit_request(): signaling condition."<<std::endl;
