@@ -44,8 +44,8 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   wbGreenCorrSlider( this, "camwb_corr_green", "Green WB correction", 1, 0, 10, 0.05, 0.1, 1),
   wbBlueCorrSlider( this, "camwb_corr_blue", "Blue WB correction", 1, 0, 10, 0.05, 0.1, 1),
   wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
-  wb_target_a_slider( this, "wb_target_a", "", 0, -1000000, 1000000, 0.05, 0.1, 1),
-  wb_target_b_slider( this, "wb_target_b", "", 0, -1000000, 1000000, 0.05, 0.1, 1),
+  wb_target_a_slider( this, "wb_target_a", "", 10, -1000000, 1000000, 0.05, 0.1, 1),
+  wb_target_b_slider( this, "wb_target_b", "", 12, -1000000, 1000000, 0.05, 0.1, 1),
   demoMethodSelector( this, "demo_method", "Demosaicing method: ", PF::PF_DEMO_AMAZE ),
   fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
 	exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
@@ -282,7 +282,8 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
   if( !pipeline ) return;
 
 	// Make sure the first pipeline is up-to-date
-	img->update( pipeline );
+	img->update( pipeline, true );
+  img->unlock();
 
   // Get the node associated to the layer
   PF::PipelineNode* node = pipeline->get_node( l->get_id() );
@@ -307,7 +308,7 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
     float rgb_avg[3] = {0, 0, 0};
 		std::vector<float> values;
 
-    std::cout<<"RawDeveloperConfigDialog: getting spot WB"<<std::endl;
+    std::cout<<"RawDeveloperConfigDialog: getting spot WB ("<<x<<","<<y<<")"<<std::endl;
 		img->sample( l->get_id(), x, y, 7, NULL, values );
 		if( values.size() != 3 ) {
 			std::cout<<"RawDeveloperConfigDialog::pointer_relese_event(): values.size() "
@@ -382,7 +383,8 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
       wbGreenSlider.init();
       wbBlueSlider.init();
 
-      img->update( pipeline );
+      img->update( pipeline, true );
+      img->unlock();
     }
 
     std::cout<<"RawDeveloperConfigDialog: checking spot WB"<<std::endl;
@@ -427,12 +429,14 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
   
   // Get the default pipeline of the image 
   // (it is supposed to be at 1:1 zoom level 
-  // and floating point accuracy)
+  // and same accuracy as the preview one)
   PF::Pipeline* pipeline = img->get_pipeline( 0 );
   if( !pipeline ) return;
 
 	// Make sure the first pipeline is up-to-date
-	img->update( pipeline );
+	img->update( pipeline, true );
+	//img->update( NULL, true );
+  img->unlock();
 
   // Get the node associated to the layer
   PF::PipelineNode* node = pipeline->get_node( l->get_id() );
@@ -453,15 +457,16 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
   if( !profile_in ) 
     return;
   
-#ifndef NDEBUG
+  //#ifndef NDEBUG
   char tstr2[1024];
   cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr2, 1024);
   std::cout<<"raw_developer: embedded profile found: "<<tstr2<<std::endl;
-#endif
+  //#endif
 
   cmsCIExyY white;
   cmsWhitePointFromTemp( &white, 6500 );
-  cmsHPROFILE profile_out = cmsCreateLab4Profile( &white );
+  //cmsHPROFILE profile_out = cmsCreateLab4Profile( &white );
+  cmsHPROFILE profile_out = cmsCreateLab4Profile( NULL );
 
   cmsUInt32Number infmt = TYPE_RGB_FLT;
   cmsUInt32Number outfmt = TYPE_Lab_FLT;
@@ -520,6 +525,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     //if( vips_sink_memory( spot ) )
     //  return;
 
+    int sample_size = 15;
     int row, col;
     float* p;
     float red, green, blue;
@@ -542,7 +548,8 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     rgb_avg[1] /= rspot.width*rspot.height;
     rgb_avg[2] /= rspot.width*rspot.height;
 		*/
-		img->sample( l->get_id(), x, y, 7, NULL, values );
+    std::cout<<"RawDeveloperConfigDialog: getting color spot WB ("<<x<<","<<y<<")"<<std::endl;
+		img->sample( l->get_id(), x, y, sample_size, NULL, values );
 		if( values.size() != 3 ) {
 			std::cout<<"RawDeveloperConfigDialog::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;
@@ -552,6 +559,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 		rgb_avg[1] = values[1];
 		rgb_avg[2] = values[2];
 
+    std::cout<<" RGB in: "<<rgb_avg[0]*255<<" "<<rgb_avg[1]*255<<" "<<rgb_avg[2]*255<<std::endl;
 
     float rgb_out[3] = {0, 0, 0};
     float Lab_in[3] = {0, 0, 0};
@@ -573,6 +581,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     cmsDoTransform( transform, rgb_avg, Lab_in, 1 );
 
     std::cout<<" Lab in: "<<Lab_in[0]<<" "<<Lab_in[1]<<" "<<Lab_in[2]<<std::endl;
+    //return;
 
     const float epsilon = 1.0e-5;
     float ab_zero = 0;
@@ -658,6 +667,8 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
       // Now we convert back to RGB and we compute the multiplicative
       // factors that bring from the current WB to the target one
       cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
+      std::cout<<" RGB out: "<<rgb_out[0]*255<<" "<<rgb_out[1]*255<<" "<<rgb_out[2]*255<<std::endl;
+
       wb_red_mul = rgb_out[0]/rgb_avg[0];
       wb_green_mul = rgb_out[1]/rgb_avg[1];
       wb_blue_mul = rgb_out[2]/rgb_avg[2];
@@ -710,7 +721,8 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 
       //bool async = img->is_async();
       //img->set_async( false );
-      img->update( pipeline );
+      img->update( pipeline, true );
+      img->unlock();
       //img->set_async( async );
     }
 
@@ -751,7 +763,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     rgb_avg[2] /= rspot.width*rspot.height;
 		*/
     std::cout<<"RawDeveloperConfigDialog: checking spot WB"<<std::endl;
-		img->sample( l->get_id(), x, y, 7, NULL, values );
+		img->sample( l->get_id(), x, y, sample_size, NULL, values );
 		if( values.size() != 3 ) {
 			std::cout<<"RawDeveloperConfigDialog::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;

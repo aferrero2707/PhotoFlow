@@ -232,6 +232,8 @@ namespace PF
 				par->get_wb_blue() * exposure / range, 
 				par->get_wb_green() * exposure / range
       };
+
+      //std::cout<<"render_spotwb(): mult="<<mul[0]<<","<<mul[1]<<","<<mul[2]<<","<<mul[3]<<std::endl;
     
       if( nbands == 3 ) {
 				float* p;

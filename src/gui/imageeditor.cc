@@ -135,11 +135,17 @@ PF::ImageEditor::~ImageEditor()
 
 void PF::ImageEditor::on_map()
 {
+  std::cout<<"ImageEditor::on_map(): opening image..."<<std::endl;
   image->open( filename );
-  image->update( 0, true );
-  zoom_fit();
-  image->update();
+  std::cout<<"ImageEditor::on_map(): ... done."<<std::endl;
+  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  if( !pipeline ) return;
+  int level = 2;
+  pipeline->set_level( level );
+	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
+  std::cout<<"ImageEditor::on_map(): updating image"<<std::endl;
+  image->update();
   Gtk::Paned::on_map();
 }
 
@@ -204,10 +210,12 @@ void PF::ImageEditor::zoom_fit()
 		target_level++;
 		shrink_min *= 2;
 	}
+  /*
   if( shrink_min < 0.75 ) {
     target_level++;
     shrink_min *= 2;
   }
+  */
 
   std::cout<<"ImageEditor::zoom_fit(): image area size="
            <<imageArea_scrolledWindow.get_hadjustment()->get_page_size()<<","

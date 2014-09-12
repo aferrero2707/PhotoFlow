@@ -122,7 +122,7 @@ namespace PF
 
     RawOutputPar();
 
-    input_profile_mode_t get_camera_profile_mode() { return current_profile_mode; }
+    input_profile_mode_t get_camera_profile_mode() { return (input_profile_mode_t)profile_mode.get_enum_value().first; }
     input_gamma_mode_t get_gamma_mode() { return (input_gamma_mode_t)gamma_mode.get_enum_value().first; }
     cmsToneCurve* get_gamma_curve() { return gamma_curve; }
     cmsToneCurve* get_srgb_curve() { return srgb_curve; }
@@ -205,6 +205,9 @@ namespace PF
         p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 
+          if( false && r->top==0 && r->left==0 ) {
+            std::cout<<"RawOutput::render(): camera_profile_mode="<<opar->get_camera_profile_mode()<<std::endl;
+          }
         if( opar->get_camera_profile_mode() == IN_PROF_ICC ) {
 
           pin = p;
@@ -231,6 +234,9 @@ namespace PF
             memcpy( pout, p, sizeof(T)*line_size );
         } else {
 
+          if( false && r->top==0 && r->left==0 ) {
+            std::cout<<"RawOutput::render(): gamma_mode="<<opar->get_gamma_mode()<<std::endl;
+          }
           pin = p;
           if( opar->get_gamma_mode() == IN_GAMMA_sRGB ) {
             for( x = 0; x < line_size; x++ ) {

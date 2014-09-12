@@ -57,10 +57,27 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* outnew;
   VipsImage* in1 = NULL;
   VipsImage* in2 = NULL;
+  void *data;
+  size_t data_length;
+  cmsHPROFILE profile_in;
 
   if( in.empty() ) return NULL;
   if( in.size() > 0 ) in1 = in[0];
   if( in.size() > 1 ) in2 = in[1];
+
+  if( in1 ) {
+    if( !vips_image_get_blob( in1, VIPS_META_ICC_NAME, 
+                              &data, &data_length ) ) {
+    
+      profile_in = cmsOpenProfileFromMem( data, data_length );
+      if( profile_in ) {
+        char tstr[1024];
+        cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+        std::cout<<"BlenderPar::build(): Input profile: "<<tstr<<std::endl;
+        cmsCloseProfile( profile_in );
+      }
+    }  
+  }
 
   //std::cout<<"BlenderPar::build(): opacity="<<get_opacity()<<std::endl;
 
@@ -110,6 +127,20 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   std::cout<<"PF::BlenderPar::build(): input: "<<in1<<" "<<in2<<"   output: "<<outnew<<std::endl;
 #endif
   //set_image( outnew );
+  if( outnew ) {
+    if( !vips_image_get_blob( outnew, VIPS_META_ICC_NAME, 
+                              &data, &data_length ) ) {
+    
+      profile_in = cmsOpenProfileFromMem( data, data_length );
+      if( profile_in ) {
+        char tstr[1024];
+        cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+        std::cout<<"BlenderPar::build(): Output profile: "<<tstr<<std::endl;
+        cmsCloseProfile( profile_in );
+      }
+    }  
+  }
+
   return outnew;
 }
 

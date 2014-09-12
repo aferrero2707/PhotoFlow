@@ -146,6 +146,7 @@ PF::Image::~Image()
 // was changed.
 void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 {
+  std::cout<<"Image::update( "<<target_pipeline<<", "<<sync<<" ) called."<<std::endl;
   if( disable_update ) return;
 
   if( PF::PhotoFlow::Instance().is_batch() ) {
@@ -175,8 +176,16 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     std::cout<<"PF::Image::update(): request submitted."<<std::endl;
 #endif
 
-    if( sync ) g_cond_wait( rebuild_done, rebuild_mutex );
-    if( sync ) g_mutex_unlock( rebuild_mutex );
+    if( sync ) {
+      std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
+      g_cond_wait( rebuild_done, rebuild_mutex );
+      std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
+    }
+
+    // In sync mode, the image is left in a locked state to allow further 
+    // actions to be taken before any subsequent rebuild and reprocessing 
+    // takes place
+    //if( sync ) g_mutex_unlock( rebuild_mutex );
   }
 
   /*
@@ -288,19 +297,20 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
 		request.area.height = area.height;
     
     g_mutex_lock( sample_mutex );
-#ifndef NDEBUG
+    //#ifndef NDEBUG
     std::cout<<"PF::Image::sample(): submitting sample request..."<<std::endl;
-#endif
+    //#endif
     PF::ImageProcessor::Instance().submit_request( request );
-#ifndef NDEBUG
+    //#ifndef NDEBUG
     std::cout<<"PF::Image::sample(): request submitted."<<std::endl;
-#endif
-
+    //#endif
+    
     g_cond_wait( sample_done, sample_mutex );
     g_mutex_unlock( sample_mutex );
 
 		if(image)
 			*image = sampler_image;
+    values.clear();
 		values = sampler_values;
   }
 
@@ -319,15 +329,24 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   // (it is supposed to be at 1:1 zoom level 
   // and floating point accuracy)
   PF::Pipeline* pipeline = get_pipeline( 0 );
-  if( !pipeline ) return;
+  if( !pipeline ) {
+    std::cout<<"Image::do_sample(): NULL pipeline"<<std::endl;
+    return;
+  }
 
   // Get the node associated to the layer
   PF::PipelineNode* node = pipeline->get_node( layer_id );
-  if( !node ) return;
+  if( !node ) {
+    std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+    return;
+  }
 
   // Finally, get the underlying VIPS image associated to the layer
   VipsImage* image = node->image;
-  if( !image ) return;
+  if( !image ) {
+    std::cout<<"Image::do_sample(): NULL image"<<std::endl;
+    return;
+  }
 
 	// Now we have to process a small portion of the image 
 	// to get the corresponding Lab values
@@ -339,8 +358,10 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 	if( vips_crop( image, &spot, 
 								 clipped.left, clipped.top, 
 								 clipped.width, clipped.height, 
-								 NULL ) )
+								 NULL ) ) {
+    std::cout<<"Image::do_sample(): vips_crop() failed"<<std::endl;
 		return;
+  }
 
 	VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
 
@@ -357,14 +378,19 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
   unsigned int level = 0;
   VipsImage* outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
-  if( outimg == NULL ) return;
+  if( outimg == NULL ) {
+    std::cout<<"Image::do_sample(): NULL image after convert_format"<<std::endl;
+    return;
+  }
   PF_UNREF( spot, "Image::do_sample() spot unref" )
 	//if( vips_sink_memory( spot ) )
 	//  return;
 
 	VipsRegion* region = vips_region_new( outimg );
-	if (vips_region_prepare (region, &rspot))
+	if (vips_region_prepare (region, &rspot)) {
+    std::cout<<"Image::do_sample(): vips_region_prepare() failed"<<std::endl;
 		return;
+  }
 
 	int row, col, b;
 	int line_size = clipped.width*image->Bands;

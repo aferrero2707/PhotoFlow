@@ -33,7 +33,9 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef WIN32
 #include <execinfo.h>
+#endif
 #include <signal.h>
 #include <unistd.h>
 
@@ -76,6 +78,8 @@ extern "C" {
 }
 #endif /*__cplusplus*/
 
+
+#ifndef WIN32
 void handler(int sig) {
   void *array[10];
   size_t size;
@@ -88,6 +92,8 @@ void handler(int sig) {
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);
 }
+#endif
+
 
 int main (int argc, char *argv[])
 {
@@ -100,7 +106,9 @@ int main (int argc, char *argv[])
   }
   */
 
+#ifndef WIN32
   signal(SIGSEGV, handler);   // install our handler
+#endif
 
   if (vips_init (argv[0]))
     //vips::verror ();
@@ -112,6 +120,8 @@ int main (int argc, char *argv[])
   im_concurrency_set( 1 );
   vips_cache_set_trace( true );
 #endif
+
+  //vips__leak = 1;
 
   if(!Glib::thread_supported()) 
     Glib::thread_init();
@@ -159,8 +169,9 @@ int main (int argc, char *argv[])
     return 1;
   }
 
-  //vips__leak = 1;
+  vips__leak = 1;
   struct stat buffer;   
+  //#ifndef WIN32
 #ifdef GTKMM_2
   int stat_result = stat((exePath + "/themes/photoflow-dark.gtkrc").c_str(), &buffer);
   if( stat_result == 0 ) {
@@ -172,6 +183,7 @@ int main (int argc, char *argv[])
     gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
   }
 #endif
+  //#endif
 
   PF::MainWindow* mainWindow = new PF::MainWindow();
 #ifdef GTKMM_3
@@ -192,7 +204,7 @@ int main (int argc, char *argv[])
 #endif
 
   if( argc > 1 ) {
-    fullpath = realpath( argv[1], NULL );
+    fullpath = realpath( argv[argc-1], NULL );
     if(!fullpath)
       return 1;
     mainWindow->open_image( fullpath );
@@ -206,7 +218,8 @@ int main (int argc, char *argv[])
 
 	PF::ImageProcessor::Instance().join();
 
-  im_close_plugins();
+  //im_close_plugins();
+  vips_shutdown();
 
 	
 #if defined(__MINGW32__) || defined(__MINGW64__)

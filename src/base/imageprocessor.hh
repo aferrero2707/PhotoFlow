@@ -79,9 +79,10 @@ namespace PF
     GMutex* processing_mutex;
 
     // Handling of requests queue
-    std::deque<ProcessRequestInfo> requests;
-    GCond* requests_pending;
-    GMutex* requests_mutex;
+    std::deque<ProcessRequestInfo> optimized_requests;
+    //GCond* requests_pending;
+    //GMutex* requests_mutex;
+    GAsyncQueue* requests;
 
     void optimize_requests();
 

@@ -240,8 +240,10 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
   //if( !dest_layer && parent_layer ) return false;
   if( dest_layer )
     std::cout<<std::endl<<"Dest layer: \""<<dest_layer->get_name()<<"\"  drop_into="<<drop_into<<std::endl;
-  else if( parent_layer )
+  else if( parent_layer ) {
     std::cout<<std::endl<<"Parent layer: \""<<parent_layer->get_name()<<"\""<<std::endl;
+    dest_layer = parent_layer;
+  }
 
   PF::Layer* src_layer = NULL;
   PF::Layer* group_layer = NULL;
@@ -363,6 +365,8 @@ bool PF::LayerTreeModel::drag_data_received_vfunc( const Gtk::TreeModel::Path& d
   if( l != NULL ) {
     std::cout<<"Drag end: destination layer: \""<<l->get_name()<<"\""<<std::endl;
     //std::cout<<"  is_child="<<is_child<<std::endl;
+  } else {
+    group_layer = get_parent_layer( dest  );
   }
  
 

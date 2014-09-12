@@ -35,7 +35,7 @@
 
 
 * {
-  padding: 1;
+  padding: 1px;
   -GtkButton-child-displacement-x: 1;
   -GtkButton-child-displacement-y: 1;
   -GtkCheckButton-indicator-size: 14;
@@ -65,14 +65,14 @@
 }
 
 .tooltip {
-  padding: 4;
+  padding: 4px;
 
   background-color: @tooltip_bg_color;
   color: @tooltip_fg_color;
 }
 
 .button {
-  padding: 3;
+  padding: 3px;
   background-color: shade (@bg_color, 1.04);
 }
 
@@ -85,7 +85,7 @@
 }
 
 .entry {
-  padding: 3;
+  padding: 3px;
 
   background-color: @base_color;
   color: @text_color;

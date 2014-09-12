@@ -188,10 +188,13 @@ PF::MainWindow::open_image( std::string filename )
                         editor );
   tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::MainWindow::remove_tab) ); 
   viewerNotebook.append_page( *editor, *tabwidget );
+  std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
 	free(fullpath);
   editor->show();
+  std::cout<<"MainWindow::open_image(): editor shown"<<std::endl;
   //editor->open();
   viewerNotebook.set_current_page( -1 );
+  std::cout<<"MainWindow::open_image(): current notebook page selected"<<std::endl;
   //image->update();
 
   /*
