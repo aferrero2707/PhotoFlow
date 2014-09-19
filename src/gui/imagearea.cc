@@ -400,7 +400,14 @@ void PF::ImageArea::update( VipsRect* area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): called"<<std::endl;
 #endif
-  if( !get_pipeline() || !get_pipeline()->get_output() ) return;
+  if( !get_pipeline() ) {
+    std::cout<<"ImageArea::update(): error: NULL pipeline"<<std::endl;
+    return;
+  }
+  if( !get_pipeline()->get_output() ) {
+    std::cout<<"ImageArea::update(): error: NULL image"<<std::endl;
+    return;
+  }
 
   //return;
 
@@ -410,12 +417,12 @@ void PF::ImageArea::update( VipsRect* area )
   } else {
     PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
     if( !node ) return;
-    if( !(node->image) ) return;
+    if( !(node->blended) ) return;
 
     if( node->processor &&
 				node->processor->get_par() &&
 				!(node->processor->get_par()->is_map()) ) {
-      image = node->image;
+      image = node->blended;
     } else {
       PF::Layer* container_layer = 
 				get_pipeline()->get_image()->get_layer_manager().
@@ -435,9 +442,9 @@ void PF::ImageArea::update( VipsRect* area )
       PF::PipelineNode* input_node = 
 				get_pipeline()->get_node( input_layer->get_id() );
       if( !input_node ) return;
-      if( !(input_node->image) ) return;
+      if( !(input_node->blended) ) return;
 
-      image = input_node->image;
+      image = input_node->blended;
     }
   }
   if( !image ) return;
@@ -472,35 +479,37 @@ void PF::ImageArea::update( VipsRect* area )
   if( !display_merged && (active_layer>=0) ) {
     PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
     if( !node ) return;
-    if( !(node->image) ) return;
+    if( !(node->blended) ) return;
 
     if( node->processor &&
 				node->processor->get_par() &&
 				node->processor->get_par()->is_map() ) {
 
-      invert->get_par()->set_image_hints( node->image );
+      invert->get_par()->set_image_hints( node->blended );
       invert->get_par()->set_format( get_pipeline()->get_format() );
-      in.clear(); in.push_back( node->image );
+      in.clear(); in.push_back( node->blended );
       VipsImage* mapinverted = invert->get_par()->build(in, 0, NULL, NULL, level );
       //g_object_unref( node->image );
       //PF_UNREF( node->image, "ImageArea::update() node->image unref" );
 
       uniform->get_par()->set_image_hints( srgbimg );
       uniform->get_par()->set_format( get_pipeline()->get_format() );
-      in.clear(); in.push_back( srgbimg );
-      VipsImage* mapimage = uniform->get_par()->build(in, 0, NULL, mapinverted, level );
+      //in.clear(); in.push_back( srgbimg );
+      VipsImage* redimage = uniform->get_par()->build(in, 0, NULL, NULL, level );
       //g_object_unref( srgbimg );
-      PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
       //g_object_unref( mapinverted );
-      PF_UNREF( mapinverted, "ImageArea::update() mapinverted unref" );
 
       maskblend->get_par()->set_image_hints( srgbimg );
       maskblend->get_par()->set_format( get_pipeline()->get_format() );
       maskblend->get_par()->set_blend_mode( PF::PF_BLEND_NORMAL );
       maskblend->get_par()->set_opacity( 0.8 );
-      in.clear(); in.push_back( mapimage );
+      in.clear(); 
+      in.push_back( srgbimg );
+      in.push_back( redimage );
       VipsImage* blendimage = maskblend->get_par()->build(in, 0, NULL, mapinverted, level );
-      PF_UNREF( mapimage, "ImageArea::update() mapimage unref" );
+      PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
+      PF_UNREF( mapinverted, "ImageArea::update() mapinverted unref" );
+      PF_UNREF( redimage, "ImageArea::update() redimage unref" );
 
       srgbimg = blendimage;
     }
