@@ -677,10 +677,11 @@ void PF::LayerWidget::on_button_save()
       }
       if( selected ) {
         PF::Layer* pl = (*parent)[columns.col_layer];
-        std::cout<<"PF::LayerWidget::on_button_save(): container of layer \""<<l->get_name()<<"\" is selected... skipped."<<std::endl;
+        if(l) std::cout<<"PF::LayerWidget::on_button_save(): container of layer \""<<l->get_name()<<"\" is selected... skipped."<<std::endl;
         continue;
       }
     }
+    if( !l ) continue;
 
     int level = 1;
     if( !l->save( of, level ) ) return;      
