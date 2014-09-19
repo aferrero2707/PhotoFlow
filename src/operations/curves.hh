@@ -58,7 +58,7 @@ namespace PF
     PropertyBase CMYK_active_curve;
 
     void update_curve( Property<SplineCurve>& grey_curve,
-                       char* vec8, short int* vec16 );
+                       short int* vec8, int* vec16 );
 
   public:
     std::vector< std::pair<float,float> > Greyvec;
@@ -69,17 +69,17 @@ namespace PF
 
     Property<SplineCurve>* scvec[4];
 
-    char Greyvec8[UCHAR_MAX+1];
-    char RGBvec8[4][UCHAR_MAX+1];
-    char Labvec8[3][UCHAR_MAX+1];
-    char CMYKvec8[4][UCHAR_MAX+1];
-    char * cvec8[4];
+    short int Greyvec8[UCHAR_MAX+1];
+    short int RGBvec8[4][UCHAR_MAX+1];
+    short int Labvec8[3][UCHAR_MAX+1];
+    short int CMYKvec8[4][UCHAR_MAX+1];
+    short int * cvec8[4];
 
-    short int Greyvec16[USHRT_MAX+1];
-    short int RGBvec16[4][USHRT_MAX+1];
-    short int Labvec16[3][USHRT_MAX+1];
-    short int CMYKvec16[4][USHRT_MAX+1];
-    short int * cvec16[4];
+    int Greyvec16[USHRT_MAX+1];
+    int RGBvec16[4][USHRT_MAX+1];
+    int Labvec16[3][USHRT_MAX+1];
+    int CMYKvec16[4][USHRT_MAX+1];
+    int * cvec16[4];
 
     CurvesPar();
 
@@ -171,6 +171,7 @@ namespace PF
       pos = x;
       for(int i = CHMIN; i <= CHMAX; i++, pos++) {
         pout[pos] = (unsigned short int)(intensity*par->cvec16[i][pp[pos]] + pp[pos]);
+        //if(x==128) std::cout<<"pp[pos]="<<pp[pos]<<"  cvec16[i][pp[pos]]="<<par->cvec16[i][pp[pos]]<<"  pout[pos]="<<pout[pos]<<std::endl;
       }
     }
   };

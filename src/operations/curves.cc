@@ -74,7 +74,7 @@ PF::CurvesPar::CurvesPar():
 
 
 void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
-                                  char* vec8, short int* vec16 )
+                                  short int* vec8, int* vec16 )
 {
   /*
     Greyvec.clear();
@@ -86,12 +86,12 @@ void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
   for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned char>::RANGE;
     float y = curve.get().get_delta( x );
-    vec8[i] = (char)(y*FormatInfo<unsigned char>::RANGE);
+    vec8[i] = (short int)(y*FormatInfo<unsigned char>::RANGE);
   }
   for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
     float y = curve.get().get_delta( x );
-    vec16[i] = y*FormatInfo<unsigned short int>::RANGE;
+    vec16[i] = (int)(y*FormatInfo<unsigned short int>::RANGE);
     //if(i%1000 == 0) std::cout<<"i="<<i<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<std::endl;
   }
 }

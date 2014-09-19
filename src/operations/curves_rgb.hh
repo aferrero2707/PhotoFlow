@@ -112,6 +112,7 @@
       for(int i = CHMIN; i <= CHMAX; i++, pos++) {
         //if(false&&x==0) std::cout<<"CurvesProc::process(): cvec16["<<i<<"]["<<pp[pos]<<"]="<<par->cvec16[i][pp[pos]]<<std::endl;
         pout[pos] = (unsigned short int)(intensity*par->cvec16[i][pp[pos]] + pp[pos]);
+        //std::cout<<"pp[pos]="<<pp[pos]<<"  cvec16[i][pp[pos]]="<<par->cvec16[i][pp[pos]]<<"  pout[pos]="<<pout[pos]<<std::endl;
       }
     }
   };
