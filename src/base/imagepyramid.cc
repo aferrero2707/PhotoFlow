@@ -62,7 +62,7 @@ void PF::ImagePyramid::init( VipsImage* img, int fd )
 {
   // The input image might be the same, therefore we reference it 
   // before unreferencing the old ones
-  g_object_ref( img );
+  //PF_REF( img, "ImagePyramid::init() img ref" );
 
   char tstr[500];
   for( unsigned int i = 1; i < levels.size(); i++ ) {
@@ -219,6 +219,7 @@ void PF::ImagePyramid::update( const VipsRect& area )
 
 PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 {  
+  char tstr[500];
   if( levels.size() > 1 ) {
     pyramid_test_image = levels[1].image;
     pyramid_test_obj = G_OBJECT( pyramid_test_image );
@@ -233,7 +234,12 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 #ifndef NDEBUG
     std::cout<<"ImagePyramid::get_level("<<level<<") cached="<<levels[level].image<<std::endl;
 #endif
-    g_object_ref( levels[level].image );
+    if( levels[level].raw_file_name.empty() )
+      snprintf(tstr,499,"ImagePyramid::get_level(): levels[%d].image ref",(int)level);
+    else
+      snprintf(tstr,499,"ImagePyramid::get_level(): levels[%d].image ref (%s)",
+               (int)level,levels[level].raw_file_name.c_str());
+    PF_REF( levels[level].image, tstr );
     return( &(levels[level]) );
   }
   
@@ -265,7 +271,6 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   int size = (width>height) ? width : height;
   int nbands = in->Bands;
 
-  char tstr[500];
   while( size > 256 ) {
     VipsImage* out;
     if( vips_subsample( in, &out, 2, 2, NULL ) )
@@ -351,6 +356,11 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 
   // We add a reference to the returned pyramid level, since it must be kept alive until
   // the pyramid is re-built, in which case it will be unreff'd by the pyramid itself
-  g_object_ref( levels[level].image );
+  if( levels[level].raw_file_name.empty() )
+    snprintf(tstr,499,"ImagePyramid::get_level(): levels[%d].image ref",(int)level);
+  else
+    snprintf(tstr,499,"ImagePyramid::get_level(): levels[%d].image ref (%s)",
+             (int)level,levels[level].raw_file_name.c_str());
+  PF_REF( levels[level].image, tstr );
   return( &(levels[level]) );
 }

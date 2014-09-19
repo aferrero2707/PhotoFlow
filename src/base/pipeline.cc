@@ -34,6 +34,7 @@
 
 PF::Pipeline::~Pipeline()
 {
+  std::cout<<"Pipeline::~Pipeline() called."<<std::endl;
   char tstr[500];
   for( unsigned int i = 0; i < nodes.size(); i++ ) {
     if( nodes[i] != NULL ) {
@@ -47,6 +48,17 @@ PF::Pipeline::~Pipeline()
 				else
 					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref image (NULL layer)" );
 				PF_UNREF( nodes[i]->image, tstr );
+      }
+      if( nodes[i]->blended != NULL ) {
+				g_assert( G_OBJECT( nodes[i]->blended )->ref_count > 0 );
+				//g_object_unref( nodes[i]->image );
+				PF::Layer* l = image->get_layer_manager().get_layer( i );
+				if( l )
+					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref blended image of layer %s",
+										l->get_name().c_str() );
+				else
+					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref blended image (NULL layer)" );
+				PF_UNREF( nodes[i]->blended, tstr );
       }
       if( nodes[i]->processor != NULL )
 				delete( nodes[i]->processor );

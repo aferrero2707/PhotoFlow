@@ -107,8 +107,10 @@ namespace PF
 
     VipsImage* get_image(unsigned int& level) 
     { 
-      if( level == 0 )
+      if( level == 0 ) {
+        PF_REF( image, "RawImage()::get_image(): level 0 ref");
 				return image;
+      }
     
       PF::PyramidLevel* plevel = pyramid.get_level( level );
       if( plevel ) {

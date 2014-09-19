@@ -106,15 +106,15 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     outnew = PF::OpParBase::build( in_, first, NULL, omap, level );
   } else if( (in1 != NULL) && (in2 != NULL) && is_passthrough ) {
     outnew = in2;
-    g_object_ref( outnew );
+    PF_REF( outnew, "BlenderPar::build() in2 ref" );
   } else if( (in1 == NULL) && (in2 != NULL) ) {
     // in1 is NULL, force mode to PASSTHROUGH and copy in2 to output
     outnew = in2;
-    g_object_ref( outnew );
+    PF_REF( outnew, "BlenderPar::build() in2 ref" );
   } else if( (in2 == NULL) && (in1 != NULL) ) {
     // in2 is NULL, force mode to PASSTHROUGH and copy in1 to output
     outnew = in1;
-    g_object_ref( outnew );
+    PF_REF( outnew, "BlenderPar::build() in1 ref" );
   } else {
     std::cerr<<"PF::BlenderPar::build(): unsupported input pattern and blend mode combination!"<<std::endl;
     return NULL;

@@ -140,7 +140,7 @@ void PF::ImageEditor::on_map()
   std::cout<<"ImageEditor::on_map(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
   if( !pipeline ) return;
-  int level = 2;
+  int level = 1;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();

@@ -30,6 +30,8 @@
 #ifndef VIPS_GRADIENT_H
 #define VIPS_GRADIENT_H
 
+#include <math.h>
+
 #include <iostream>
 
 #include "../base/format_info.hh"
@@ -86,8 +88,8 @@ namespace PF
   template< OP_TEMPLATE_DEF >
   void Gradient< OP_TEMPLATE_IMP >::
   render(VipsRegion** ir, int n, int in_first,
-	 VipsRegion* imap, VipsRegion* omap, 
-	 VipsRegion* oreg, GradientPar* par)
+         VipsRegion* imap, VipsRegion* omap, 
+         VipsRegion* oreg, GradientPar* par)
   {
     //BLENDER blender( par->get_blend_mode(), par->get_opacity() );
     
@@ -106,41 +108,59 @@ namespace PF
     switch( par->get_gradient_type() ) {
     case GRADIENT_VERTICAL: 
       {
-	for( y = 0; y < r->height; y++ ) {      
-	  pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
-	  T val = (T)((float)FormatInfo<T>::RANGE*((float)height - r->top - y)/height + FormatInfo<T>::MIN);
-	  //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
-	  for( x = 0; x < line_size; ++x) {
-	    pout[x] = val;
-	  }
-	}
-	break;
+        for( y = 0; y < r->height; y++ ) {      
+          pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+          T val = (T)((float)FormatInfo<T>::RANGE*((float)height - r->top - y)/height + FormatInfo<T>::MIN);
+          //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
+          for( x = 0; x < line_size; ++x) {
+            pout[x] = val;
+          }
+        }
+        break;
       }
     case GRADIENT_HORIZONTAL: 
       {
-	T* valvec = new T[line_size];
-	T val;
-	if( valvec == NULL )
-	  break;
-	int px, b;
-	for( x = 0, px = 0; x < r->width; ++x) {
-	  val = (T)((float)FormatInfo<T>::RANGE*((float)r->left + x)/width + FormatInfo<T>::MIN);
-	  for( b = 0; b < bands; ++b, ++px) {
-	    valvec[px] = val;
-	  }
-	}
-	for( y = 0; y < r->height; y++ ) {      
-	  pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
-	  //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
-	  for( x = 0; x < line_size; ++x) {
-	    pout[x] = valvec[x];
-	  }
-	}
-	break;
+        T* valvec = new T[line_size];
+        T val;
+        if( valvec == NULL )
+          break;
+        int px, b;
+        for( x = 0, px = 0; x < r->width; ++x) {
+          val = (T)((float)FormatInfo<T>::RANGE*((float)r->left + x)/width + FormatInfo<T>::MIN);
+          for( b = 0; b < bands; ++b, ++px) {
+            valvec[px] = val;
+          }
+        }
+        for( y = 0; y < r->height; y++ ) {      
+          pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+          //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
+          for( x = 0; x < line_size; ++x) {
+            pout[x] = valvec[x];
+          }
+        }
+        break;
       }
     case GRADIENT_RADIAL:
       {
-	break;
+        int px, b;
+        int width2 = width/2;
+        int height2 = height/2;
+        float diag = sqrtf( width2*width2 + height2*height2);
+        T val;
+        
+        for( y = 0; y < r->height; y++ ) {      
+          int dy = r->top + y - height2;
+          pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+          for( x = 0, px = 0; x < r->width; ++x) {
+            int dx = r->left + x - width2;
+            float R = sqrtf( dx*dx + dy*dy );
+            val = (T)((float)FormatInfo<T>::RANGE*(R/diag) + FormatInfo<T>::MIN);
+            for( b = 0; b < bands; ++b, ++px) {
+              pout[px] = val;
+            }
+          }
+        }
+        break;
       } 
     }
 

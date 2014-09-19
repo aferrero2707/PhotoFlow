@@ -99,7 +99,7 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
 
 
   if( image ) {
-    PF_REF( image, "RawLoaderPar::build()" );
+    //PF_REF( image, "RawLoaderPar::build()" );
     set_image_hints( image );
   }
   return image;
