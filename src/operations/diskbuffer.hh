@@ -33,7 +33,7 @@
 #include <iostream>
 
 #include "../base/format_info.hh"
-#include "../base/operation_ptp.hh"
+//#include "../base/pixel_processor.hh"
 #include "../base/splinecurve.hh"
 
 namespace PF 

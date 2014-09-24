@@ -1,9 +1,9 @@
-  class BrightnessContrastPar: public OpParBase
+  class BrightnessContrastPar: public PixelProcessorPar
   {
     Property<float> brightness, contrast;
   public:
     BrightnessContrastPar(): 
-      OpParBase(), 
+      PixelProcessorPar(), 
       brightness("brightness",this,0), 
       contrast("contrast",this,0) 
     {

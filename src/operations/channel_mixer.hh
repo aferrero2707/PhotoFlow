@@ -31,17 +31,17 @@
 #define VIPS_CHANNEL_MIXER_H
 
 #include "../base/format_info.hh"
-#include "../base/operation_ptp.hh"
+#include "../base/pixel_processor.hh"
 
 namespace PF 
 {
 
-  class ChannelMixerPar: public OpParBase
+  class ChannelMixerPar: public PixelProcessorPar
   {
     Property<float> red_mix, green_mix, blue_mix;
   public:
     ChannelMixerPar(): 
-      OpParBase(), 
+      PixelProcessorPar(), 
       red_mix("red_mix",this,0), 
       green_mix("green_mix",this,0), 
       blue_mix("blue_mix",this,0)
@@ -95,7 +95,7 @@ namespace PF
 
   
   template < OP_TEMPLATE_DEF > 
-  class ChannelMixer: public OperationPTP< OP_TEMPLATE_IMP, ChannelMixerPar, ChannelMixerProc >
+  class ChannelMixer: public PixelProcessor< OP_TEMPLATE_IMP, ChannelMixerPar, ChannelMixerProc >
   {
   };
 

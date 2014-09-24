@@ -37,6 +37,7 @@
 
 #include <iostream>
 
+#include "../base/processor.hh"
 #include "diskbuffer.hh"
 
 

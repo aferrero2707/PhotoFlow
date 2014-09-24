@@ -87,6 +87,8 @@ namespace PF
 
     virtual ~CacheBuffer()
     {
+      if( cached )
+        PF_UNREF( cached, "~CacheBuffer() cached image unref" );
     }
 
     VipsImage* get_image() { return image; }

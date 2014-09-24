@@ -83,6 +83,7 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
 
   Slider intensitySlider, opacitySlider;
   Selector blendSelector;
+  bool has_ch_sel;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
 
   std::list<std::string> values_save;
@@ -92,7 +93,7 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
   //virtual OpParBase* get_par() = 0;
   //virtual ProcessorBase* get_processor() = 0;
 public:
-  OperationConfigDialog(Layer* layer, const Glib::ustring& title);
+  OperationConfigDialog(Layer* layer, const Glib::ustring& title, bool has_ch_sel=true);
   virtual ~OperationConfigDialog();
 
 #ifdef GTKMM_2

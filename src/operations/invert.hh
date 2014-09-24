@@ -33,12 +33,12 @@
 #include <iostream>
 
 #include "../base/format_info.hh"
-#include "../base/operation_ptp.hh"
+#include "../base/pixel_processor.hh"
 
 namespace PF 
 {
 
-  class InvertPar: public OpParBase
+  class InvertPar: public PixelProcessorPar
   {
   public:
     InvertPar();
@@ -165,7 +165,7 @@ namespace PF
   */
 
   template < OP_TEMPLATE_DEF > 
-  class Invert: public OperationPTP< OP_TEMPLATE_IMP, InvertPar, InvertProc >
+  class Invert: public PixelProcessor< OP_TEMPLATE_IMP, InvertPar, InvertProc >
   {
   };
 

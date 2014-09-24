@@ -33,13 +33,13 @@
 #include <iostream>
 
 #include "../base/format_info.hh"
-#include "../base/operation_ptp.hh"
+#include "../base/pixel_processor.hh"
 #include "../base/splinecurve.hh"
 
 namespace PF 
 {
 
-  class CurvesPar: public OpParBase
+  class CurvesPar: public PixelProcessorPar
   {
     Property<SplineCurve> grey_curve;
     Property<SplineCurve> RGB_curve;
@@ -196,7 +196,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class Curves: public OperationPTP< OP_TEMPLATE_IMP, CurvesPar, CurvesProc >
+  class Curves: public PixelProcessor< OP_TEMPLATE_IMP, CurvesPar, CurvesProc >
   {
   };
 

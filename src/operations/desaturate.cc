@@ -27,10 +27,11 @@
 
  */
 
+#include "../base/processor.hh"
 #include "desaturate.hh"
 
 PF::DesaturatePar::DesaturatePar(): 
-  OpParBase()
+  PixelProcessorPar()
 {
   set_type( "desaturate" );
 }

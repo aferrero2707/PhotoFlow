@@ -29,10 +29,11 @@
 
 #include <iostream>
 
+#include "../base/processor.hh"
 #include "curves.hh"
 
 PF::CurvesPar::CurvesPar(): 
-  PF::OpParBase() ,
+  PF::PixelProcessorPar() ,
   grey_curve( "grey_curve", this ), // 0
   RGB_curve( "RGB_curve", this ),   // 1
   R_curve( "R_curve", this ),       // 2

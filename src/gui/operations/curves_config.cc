@@ -30,7 +30,7 @@
 #include "curves_config.hh"
 
 PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
-  PF::OperationConfigDialog( layer, "Curves Configuration" ),
+  PF::OperationConfigDialog( layer, "Curves Configuration", false ),
   //rgbCurveSelector( this, "RGB_active_curve", "Channel: ", 1 ),
   //labCurveSelector( this, "Lab_active_curve", "Channel: ", 5 ),
   //cmykCurveSelector( this, "CMYK_active_curve", "Channel: ", 8 ),
@@ -41,7 +41,8 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
   BCurveEditor( this, "B_curve" ),
   LCurveEditor( this, "L_curve" ),
   aCurveEditor( this, "a_curve" ),
-  bCurveEditor( this, "b_curve" )
+  bCurveEditor( this, "b_curve" ),
+  outputModeSlider( this, "color_blend", "Output mode", 0, -1, 1, 0.05, 0.2, 1)
 {
 
   //rgbCurveSelector.init(); 
@@ -86,6 +87,15 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
 
   add_widget( curvesBox );
   switch_curve();
+
+  padding1.set_size_request( 2, 10 );
+  padding2.set_size_request( 2, 10 );
+
+  add_widget( padding1 );
+  add_widget( hline );
+  add_widget( padding2 );
+
+  add_widget( outputModeSlider );
 
   rgbCurveSelector.signal_changed().
     connect(sigc::mem_fun(*this,

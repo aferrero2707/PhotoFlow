@@ -27,6 +27,7 @@
 
  */
 
+#include "../base/processor.hh"
 #include "brightness_contrast.hh"
 
 

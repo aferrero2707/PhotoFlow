@@ -55,7 +55,7 @@ static gboolean dialog_update_cb (PF::OperationConfigDialog * dialog)
 }
 
 
-PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::ustring& title):
+PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::ustring& title, bool chsel):
   PF::OperationConfigUI(layer),
 #ifdef GTKMM_2
   Gtk::Dialog(title, false, false),
@@ -80,6 +80,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
   opacitySlider( this, layer->get_blender(), "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
   blendSelector( this, layer->get_blender(), "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
+  has_ch_sel(chsel),
   greychSelector( this, "grey_target_channel", "Target channel: ", -1 ),
   rgbchSelector( this, "rgb_target_channel", "Target channel: ", -1 ),
   labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
@@ -124,7 +125,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   //cmykchSelector.init(); 
   //chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
 
-  if(par && par->has_opacity() )
+  if(has_ch_sel && par && par->has_opacity() )
     topBox.pack_start( chselBox );
 
   //topFrame.set_label( "layer options" );
@@ -134,9 +135,9 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
 
   get_vbox()->pack_start( topFrame );
 
-  mainHBox.pack_start( mainBox, Gtk::PACK_SHRINK );
+  mainHBox.pack_start( mainBox, Gtk::PACK_SHRINK, false, false );
 
-  get_vbox()->pack_start( mainHBox, Gtk::PACK_SHRINK );
+  get_vbox()->pack_start( mainHBox, Gtk::PACK_SHRINK, false, false );
 
   signal_focus_in_event().connect( sigc::mem_fun(*this,
 						 &OperationConfigDialog::focus_in_cb) );

@@ -27,10 +27,11 @@
 
  */
 
+#include "../base/processor.hh"
 #include "uniform.hh"
 
 PF::UniformPar::UniformPar(): 
-  OpParBase(),
+  PixelProcessorPar(),
   grey( "grey", this, 0 ),
   R( "R", this, 0 ),
   G( "G", this, 0 ),

@@ -33,12 +33,12 @@
 #include <iostream>
 
 #include "../base/format_info.hh"
-#include "../base/operation_ptp.hh"
+#include "../base/pixel_processor.hh"
 
 namespace PF 
 {
 
-  class DesaturatePar: public OpParBase
+  class DesaturatePar: public PixelProcessorPar
   {
   public:
     DesaturatePar();
@@ -94,7 +94,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class Desaturate: public OperationPTP< OP_TEMPLATE_IMP, DesaturatePar, DesaturateProc >
+  class Desaturate: public PixelProcessor< OP_TEMPLATE_IMP, DesaturatePar, DesaturateProc >
   {
   };
 

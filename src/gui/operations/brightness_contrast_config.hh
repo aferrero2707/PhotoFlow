@@ -33,6 +33,7 @@
 #include <gtkmm.h>
 
 #include "../operation_config_dialog.hh"
+#include "../widgets/outmode_slider.hh"
 #include "../../operations/brightness_contrast.hh"
 
 
@@ -43,14 +44,21 @@ namespace PF {
   //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
 
+  Gtk::Frame frame;
+
+  Gtk::HSeparator hline;
+
   //Gtk::Label lbrightness, lcontrast;
-  //Gtk::Alignment lcontrastAl, lbrightnessAl;
+  Gtk::Alignment padding1, padding2, padding3, padding4;
 
   //Gtk::Adjustment contrastAdj, brightnessAdj;
   //Gtk::HScale contrastScale, brightnessScale;
   //#endif
 
   Slider brightnessSlider, contrastSlider;
+
+  Gtk::HBox outputModeBox;
+  OutModeSlider outputModeSlider;
 
 public:
   BrightnessContrastConfigDialog( Layer* l );

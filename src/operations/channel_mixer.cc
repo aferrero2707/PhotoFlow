@@ -27,6 +27,7 @@
 
  */
 
+#include "../base/processor.hh"
 #include "channel_mixer.hh"
 
 

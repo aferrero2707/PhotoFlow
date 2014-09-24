@@ -39,7 +39,8 @@ PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog( PF::Layer* l
   //brightnessScale(brightnessAdj),
   //contrastScale(contrastAdj)
   brightnessSlider( this, "brightness", "Brightness", 0, -1, 1, 0.05, 0.2, 1),
-  contrastSlider( this, "contrast", "Contrast", 0, -1, 1, 0.05, 0.2, 1)
+  contrastSlider( this, "contrast", "Contrast", 0, -1, 1, 0.05, 0.2, 1),
+  outputModeSlider( this, "color_blend", "Output mode", 0, -1, 1, 0.05, 0.2, 1)
 {
   /*
   lbrightness.set_text( "brightness" );
@@ -64,8 +65,24 @@ PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog( PF::Layer* l
   controlsBox.pack_start( brightnessSlider );
   controlsBox.pack_start( contrastSlider );
   
+  //frame.add( controlsBox );
   
+  padding1.set_size_request( 2, 20 );
+  padding2.set_size_request( 2, 10 );
+  padding3.set_size_request( 2, 10 );
+
+  add_widget( padding1 );
+
   add_widget( controlsBox );
+
+  add_widget( padding2 );
+  add_widget( hline );
+  add_widget( padding3 );
+
+  padding4.set_size_request( 10, 2 );
+  outputModeBox.pack_start( outputModeSlider, Gtk::PACK_SHRINK );
+  outputModeBox.pack_start( padding4, Gtk::PACK_EXPAND_WIDGET  );
+  add_widget( outputModeBox );
 
   /*
   brightnessAdj.signal_value_changed().

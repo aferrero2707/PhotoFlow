@@ -84,6 +84,7 @@ namespace PF
     virtual ~Layer()
     {
       std::cout<<"~Layer(): \""<<name<<"\" destructor called."<<std::endl;
+      if( cache_buffer ) delete( cache_buffer );
       if( processor ) delete( processor );
       if( blender ) delete( blender );
     }

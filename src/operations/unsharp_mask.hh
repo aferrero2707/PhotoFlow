@@ -31,7 +31,7 @@
 #define PF_UNSHARP_MASK_H
 
 #include "../base/format_info.hh"
-#include "../base/operation_ptp.hh"
+#include "../base/pixel_processor.hh"
 #include "gaussblur.hh"
 
 #define CLIP_T(T,VAL) (T)( MIN(MAX(VAL,FormatInfo<T>::MIN),FormatInfo<T>::MAX) )
@@ -39,7 +39,7 @@
 namespace PF 
 {
 
-  class UnsharpMaskPar: public OpParBase
+  class UnsharpMaskPar: public PixelProcessorPar
   {
     Property<float> radius, amount;
 		ProcessorBase* blur;
@@ -85,7 +85,7 @@ namespace PF
 
 
   template < OP_TEMPLATE_DEF > 
-  class UnsharpMask: public OperationPTP< OP_TEMPLATE_IMP, UnsharpMaskPar, UnsharpMaskProc >
+  class UnsharpMask: public PixelProcessor< OP_TEMPLATE_IMP, UnsharpMaskPar, UnsharpMaskProc >
   {
   };
 

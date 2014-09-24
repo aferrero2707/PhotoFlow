@@ -27,10 +27,11 @@
 
  */
 
+#include "../base/processor.hh"
 #include "invert.hh"
 
 PF::InvertPar::InvertPar(): 
-  OpParBase()
+  PixelProcessorPar()
 {
   set_type( "invert" );
 }

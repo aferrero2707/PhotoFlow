@@ -413,6 +413,7 @@ namespace PF
   #include "blend_lighten.hh"
   #include "blend_darken.hh"
   #include "blend_overlay.hh"
+  //#include "blend_luminosity.hh"
 };
 
 

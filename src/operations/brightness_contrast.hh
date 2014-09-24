@@ -31,7 +31,7 @@
 #define VIPS_BRIGHTNESS_CONTRAST_H
 
 #include "../base/format_info.hh"
-#include "../base/operation_ptp.hh"
+#include "../base/pixel_processor.hh"
 
 namespace PF 
 {
@@ -51,7 +51,7 @@ namespace PF
   */
 
   template < OP_TEMPLATE_DEF > 
-  class BrightnessContrast: public OperationPTP< OP_TEMPLATE_IMP, BrightnessContrastPar, BrightnessContrastProc >
+  class BrightnessContrast: public PixelProcessor< OP_TEMPLATE_IMP, BrightnessContrastPar, BrightnessContrastProc >
   {
   };
 

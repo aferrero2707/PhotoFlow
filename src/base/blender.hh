@@ -25,7 +25,7 @@
 
     These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
- */
+*/
 
 
 #ifndef BLENDER_HH
@@ -39,14 +39,23 @@ namespace PF
 {
 
 
-#define BLEND_LOOP( theblender ) {					\
-  theblender.init_line( omap, r->left, y0 );			\
-  for( x=0, xomap=0; x < line_size; ) {				\
-    x += dx1;							\
-    theblender.blend( opacity, pbottom, ptop, pout, x, xomap );		\
-    x += dx2;							\
-  }								\
-}
+#define BLEND_LOOP( theblender ) {                                \
+    theblender.init_line( omap, r->left, y0 );                    \
+    for( x=0, xomap=0; x < line_size; ) {                         \
+      x += dx1;                                                   \
+      theblender.blend( opacity, pbottom, ptop, pout, x, xomap ); \
+      x += dx2;                                                   \
+    }                                                             \
+  }
+
+
+#define BLEND_LOOP2( theblender ) {                               \
+    theblender.init_line( omap, r->left, y0 );                    \
+    for( x=0, xomap=0; x < line_size; ) {                         \
+      theblender.blend( opacity, pbottom, ptop, pout, x, xomap ); \
+      x += PF::ColorspaceInfo<colorspace>::NCH;                   \
+    }                                                             \
+  }
 
 
   
@@ -71,6 +80,7 @@ namespace PF
       BlendLighten<T,colorspace,CHMIN,CHMAX,has_omap> blend_lighten;
       BlendDarken<T,colorspace,CHMIN,CHMAX,has_omap> blend_darken;
       BlendOverlay<T,colorspace,CHMIN,CHMAX,has_omap> blend_overlay;
+      //BlendLuminosity<T,colorspace,CHMIN,CHMAX,has_omap> blend_lumi;
       Rect *r = &oreg->valid;
       int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN;
       int line_size = r->width * oreg->im->Bands;
@@ -78,34 +88,37 @@ namespace PF
       T* ptop;
       T* pout;
       for( y = 0; y < r->height; y++ ) {      
-	y0 = r->top + y;
-	pbottom = (T*)VIPS_REGION_ADDR( bottom, r->left, y0 ); 
-	ptop = (T*)VIPS_REGION_ADDR( top, r->left, y0 ); 
-	pout = (T*)VIPS_REGION_ADDR( oreg, r->left, y0 ); 
-	switch(mode) {
-	case PF_BLEND_PASSTHROUGH:
-	  break;
-	case PF_BLEND_NORMAL:
-	  BLEND_LOOP(blend_normal);
-	  break;
-	case PF_BLEND_OVERLAY:
-	  BLEND_LOOP(blend_overlay);
-	  break;
-	case PF_BLEND_MULTIPLY:
-	  BLEND_LOOP(blend_multiply);
-	  break;
-	case PF_BLEND_SCREEN:
-	  BLEND_LOOP(blend_screen);
-	  break;
-	case PF_BLEND_LIGHTEN:
-	  BLEND_LOOP(blend_lighten);
-	  break;
-	case PF_BLEND_DARKEN:
-	  BLEND_LOOP(blend_darken);
-	  break;
-	case PF_BLEND_UNKNOWN:
-	  break;
-	}
+        y0 = r->top + y;
+        pbottom = (T*)VIPS_REGION_ADDR( bottom, r->left, y0 ); 
+        ptop = (T*)VIPS_REGION_ADDR( top, r->left, y0 ); 
+        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, y0 ); 
+        switch(mode) {
+        case PF_BLEND_PASSTHROUGH:
+          break;
+        case PF_BLEND_NORMAL:
+          BLEND_LOOP(blend_normal);
+          break;
+        case PF_BLEND_OVERLAY:
+          BLEND_LOOP(blend_overlay);
+          break;
+        case PF_BLEND_MULTIPLY:
+          BLEND_LOOP(blend_multiply);
+          break;
+        case PF_BLEND_SCREEN:
+          BLEND_LOOP(blend_screen);
+          break;
+        case PF_BLEND_LIGHTEN:
+          BLEND_LOOP(blend_lighten);
+          break;
+        case PF_BLEND_DARKEN:
+          BLEND_LOOP(blend_darken);
+          break;
+        case PF_BLEND_LUMI:
+          //BLEND_LOOP2(blend_lumi);
+          break;
+        case PF_BLEND_UNKNOWN:
+          break;
+        }
       }  
     }
   };

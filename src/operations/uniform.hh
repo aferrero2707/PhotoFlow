@@ -33,12 +33,12 @@
 #include <iostream>
 
 #include "../base/format_info.hh"
-#include "../base/operation_ptp.hh"
+#include "../base/pixel_processor.hh"
 
 namespace PF 
 {
 
-  class UniformPar: public OpParBase
+  class UniformPar: public PixelProcessorPar
   {
     Property<float> grey, R, G, B, L, a, b, C, M, Y, K;
 
@@ -163,7 +163,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class Uniform: public OperationPTP< OP_TEMPLATE_IMP, UniformPar, UniformProc >
+  class Uniform: public PixelProcessor< OP_TEMPLATE_IMP, UniformPar, UniformProc >
   {
   };
 

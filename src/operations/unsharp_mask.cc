@@ -31,7 +31,7 @@
 
 
 PF::UnsharpMaskPar::UnsharpMaskPar(): 
-	OpParBase(), 
+	PixelProcessorPar(), 
 	radius("radius",this,1), 
 	amount("amount",this,100)
 {

@@ -33,6 +33,7 @@
 #include "../operation_config_dialog.hh"
 #include "../../operations/curves.hh"
 #include "../widgets/curveeditor.hh"
+#include "../widgets/outmode_slider.hh"
 
 namespace PF {
 
@@ -55,6 +56,11 @@ namespace PF {
   CurveEditor LCurveEditor;
   CurveEditor aCurveEditor;
   CurveEditor bCurveEditor;
+
+  Gtk::Alignment padding1, padding2, padding3;
+  Gtk::HSeparator hline;
+  Gtk::HBox outputModeBox;
+  OutModeSlider outputModeSlider;
 
 public:
   CurvesConfigDialog(Layer* layer);
