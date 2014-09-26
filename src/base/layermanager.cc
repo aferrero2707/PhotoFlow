@@ -625,6 +625,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
                <<" to "<<pipeline->get_format()<<std::endl;
 #endif
       par->set_format( pipeline->get_format() );
+      l->set_cached( par->needs_caching() );
     }
 
     PF::OpParBase* blender = NULL;
@@ -667,7 +668,8 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
     }
     
     if( (pipeline->get_render_mode() == PF::PF_RENDER_PREVIEW) &&
-        l->is_cached() && (l->get_cache_buffer() != NULL) &&
+        l->is_cached() && 
+        (l->get_cache_buffer() != NULL) &&
         l->get_cache_buffer()->is_completed() ) {
       // The layer is cached, no need to process the underlying layers
       // We only need to associate the cached image with the blender

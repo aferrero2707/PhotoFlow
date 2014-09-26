@@ -82,6 +82,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
     processor = new_invert();
 
+  } else if( op_type == "desaturate" ) {
+
+    //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
+    processor = new_desaturate();
+
   } else if( op_type == "uniform" ) {
 
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
@@ -117,10 +122,10 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
     processor = new_denoise();
 
- } else if( op_type == "unsharp_mask" ) {
+ } else if( op_type == "sharpen" ) {
       
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
-    processor = new_unsharp_mask();
+    processor = new_sharpen();
 
   } else if( op_type == "convert2lab" ) {
 

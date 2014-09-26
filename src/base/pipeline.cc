@@ -156,11 +156,14 @@ void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
       //g_assert( G_OBJECT( nodes[id]->image )->ref_count > 0 );
       //g_object_unref( nodes[id]->image );
       PF::Layer* l = image->get_layer_manager().get_layer( id );
-      if( l )
-	snprintf( tstr, 499, "PF::Pipeline::set_image() unref image of layer %s",
-		  l->get_name().c_str() );
-      else
-	snprintf( tstr, 499, "PF::Pipeline::set_image() unref image (NULL layer)" );
+      if( l ) {
+        snprintf( tstr, 499, "PF::Pipeline::set_image() unref image of layer %s",
+                  l->get_name().c_str() );
+        if( l->get_name() == "Raw developer" )
+          std::cout<<"BINGO!!!"<<std::endl;
+      } else {
+        snprintf( tstr, 499, "PF::Pipeline::set_image() unref image (NULL layer)" );
+      }
       PF_UNREF( nodes[id]->image, tstr );
     }
     nodes[id]->image = img;

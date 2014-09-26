@@ -54,6 +54,13 @@ namespace PF
     bool has_omap() { return false; }
     bool needs_input() { return true; }
 
+    void set_output_profile(cmsHPROFILE p) 
+    {
+      if( profile_out )
+        cmsCloseProfile( profile_out );
+      profile_out = p; 
+    }
+
     cmsHTRANSFORM get_transform() { return transform; }
 
     void set_image_hints( VipsImage* img )

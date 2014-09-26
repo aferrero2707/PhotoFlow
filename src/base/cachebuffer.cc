@@ -50,7 +50,9 @@ PF::CacheBuffer::CacheBuffer():
 
 void PF::CacheBuffer::reset()
 {
-  if( cached ) PF_UNREF( cached, "CacheBuffer::reset(): cached image unref" );
+  if( cached ) 
+    PF_UNREF( cached, "CacheBuffer::reset(): cached image unref" );
+  cached = NULL;
   image = NULL;
   completed = false;
   step_x = step_y = 0;

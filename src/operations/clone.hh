@@ -62,10 +62,15 @@ namespace PF
 
     ProcessorBase* convert_format;
     ProcessorBase* convert2lab;
+    ProcessorBase* convert2rgb;
     ProcessorBase* desaturate;
 
     VipsImage* Lab2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* rgb2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
+    VipsImage* rgb2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
+    VipsImage* Lab2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
+    VipsImage* L2rgb(VipsImage* in, unsigned int& level);
+    VipsImage* ab2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
 
   public:
     ClonePar();

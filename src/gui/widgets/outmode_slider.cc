@@ -51,11 +51,14 @@ PF::OutModeSlider::OutModeSlider( OperationConfigDialog* dialog, std::string pna
   //label1.set_size_request(100,-1);
   //label2.set_size_request(100,-1);
   //label3.set_size_request(100,-1);
+
+#ifdef GTKMM_3
   label1.set_halign( Gtk::ALIGN_START );
-  label1.set_text( "preserve luminance" );
   label2.set_halign( Gtk::ALIGN_CENTER );
-  label2.set_text( "normal" );
   label3.set_halign( Gtk::ALIGN_END );
+#endif
+  label1.set_text( "preserve luminance" );
+  label2.set_text( "normal" );
   label3.set_text( "preserve colors" );
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
