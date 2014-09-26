@@ -114,9 +114,12 @@ namespace PF
     bool is_cached() { return cached; }
     void set_cached( bool c ) 
     {
+      bool changed = (cached != c);
       cached = c;
       if( cached && !cache_buffer )
         cache_buffer = new CacheBuffer();
+      if( cached && changed && cache_buffer )
+        cache_buffer->reset();
     }
     CacheBuffer* get_cache_buffer() { return cache_buffer; }
 

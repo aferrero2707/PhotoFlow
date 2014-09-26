@@ -434,9 +434,9 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
   if( !pipeline ) return;
 
 	// Make sure the first pipeline is up-to-date
-	img->update( pipeline, true );
+	//img->update( pipeline, true );
 	//img->update( NULL, true );
-  img->unlock();
+  //img->unlock();
 
   // Get the node associated to the layer
   PF::PipelineNode* node = pipeline->get_node( l->get_id() );
@@ -721,7 +721,8 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 
       //bool async = img->is_async();
       //img->set_async( false );
-      img->update( pipeline, true );
+      //img->update( pipeline, true );
+      img->update( NULL, true );
       img->unlock();
       //img->set_async( async );
     }

@@ -45,6 +45,7 @@ namespace PF
 		ProcessorBase* blur;
   public:
     UnsharpMaskPar();
+    void set_radius( float r ) { radius.set( r ); }
     float get_radius() { return radius.get(); }
     float get_amount() { return amount.get(); }
 

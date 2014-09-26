@@ -226,6 +226,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_conv.add_op( "Lab conversion", "convert2lab" );
 
   op_color.add_op( "Invert", "invert" );
+  op_color.add_op( "Desaturate", "desaturate" );
   op_color.add_op( "Gradient", "gradient");
   op_color.add_op( "Brightness/Contrast", "brightness_contrast" );
   op_color.add_op( "Curves", "curves" );
@@ -233,7 +234,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   op_detail.add_op( "Gaussian blur", "gaussblur" );
   op_detail.add_op( "Noise reduction", "denoise" );
-  op_detail.add_op( "Unsharp mask", "unsharp_mask" );
+  op_detail.add_op( "Sharpen", "sharpen" );
 
   op_geom.add_op( "Crop image", "crop" );
 

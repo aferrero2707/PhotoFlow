@@ -386,11 +386,13 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 	//if( vips_sink_memory( spot ) )
 	//  return;
 
+  //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount before vips_region_new()" )
 	VipsRegion* region = vips_region_new( outimg );
 	if (vips_region_prepare (region, &rspot)) {
     std::cout<<"Image::do_sample(): vips_region_prepare() failed"<<std::endl;
 		return;
   }
+  //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after vips_region_new()" )
 
 	int row, col, b;
 	int line_size = clipped.width*image->Bands;
@@ -414,8 +416,10 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 	sampler_image = image;
 
 	//g_object_unref( spot );
-	g_object_unref( outimg );
-	g_object_unref( region );
+  //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount before region unref" );
+	PF_UNREF( region, "Image::do_sample(): region unref" );
+  //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after region unref" );
+  PF_UNREF( outimg, "Image::do_sample(): outimg unref" );
 }
 
 

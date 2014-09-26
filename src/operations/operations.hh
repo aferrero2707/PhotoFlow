@@ -52,8 +52,10 @@ namespace PF
   ProcessorBase* new_gaussblur();
   ProcessorBase* new_denoise();
   ProcessorBase* new_unsharp_mask();
+  ProcessorBase* new_sharpen();
   ProcessorBase* new_invert();
   ProcessorBase* new_uniform();
+  ProcessorBase* new_desaturate();
   ProcessorBase* new_draw();
   //ProcessorBase* new_vips_operation( std::string op_type );
 }

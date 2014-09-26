@@ -42,7 +42,7 @@
 #include "../gui/operations/channel_mixer_config.hh"
 #include "../gui/operations/gaussblur_config.hh"
 #include "../gui/operations/denoise_config.hh"
-#include "../gui/operations/unsharp_mask_config.hh"
+#include "../gui/operations/sharpen_config.hh"
 #include "../gui/operations/draw_config.hh"
 
 
@@ -432,6 +432,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::OperationConfigDialog( current_layer, "Invert Image" );
 
+  } else if( op_type == "desaturate" ) {
+
+    dialog = new PF::OperationConfigDialog( current_layer, "Desaturate Image" );
+
   } else if( op_type == "gradient" ) {
 
     dialog = new PF::GradientConfigDialog( current_layer );
@@ -456,9 +460,9 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
       
     dialog = new PF::DenoiseConfigDialog( current_layer );
 
-  } else if( op_type == "unsharp_mask" ) {
+  } else if( op_type == "sharpen" ) {
       
-    dialog = new PF::UnsharpMaskConfigDialog( current_layer );
+    dialog = new PF::SharpenConfigDialog( current_layer );
 
   } else if( op_type == "convert2lab" ) {
 
