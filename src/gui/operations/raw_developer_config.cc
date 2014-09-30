@@ -34,6 +34,17 @@
 #include "raw_developer_config.hh"
 
 
+#ifndef MIN
+#define MIN( a, b ) ((a<b) ? a : b)
+#endif
+#define MIN3( a, b, c ) MIN(a,MIN(b,c))
+
+#ifndef MAX
+#define MAX( a, b ) ((a>b) ? a : b)
+#endif
+#define MAX3( a, b, c ) MAX(a,MAX(b,c))
+
+
 PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Raw Developer" ),
   wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
@@ -446,6 +457,12 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
   VipsImage* image = node->image;
   if( !image ) return;
 
+  PropertyBase* wb_red_prop = wbRedSlider.get_prop();
+  PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
+  PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
+  if( !wb_red_prop || !wb_green_prop || !wb_blue_prop ) 
+    return;
+
   // We need to retrieve the input ICC profile for the Lab conversion later on
   void *data;
   size_t data_length;
@@ -487,7 +504,19 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
   if( !transform_inv )
     return;
 
+  x = 2800; y = 654;
+
+  PF::raw_preproc_sample_x = x;
+  PF::raw_preproc_sample_y = y;
+
   
+  float wb_red_mul = 1;
+  float wb_green_mul = 1;
+  float wb_blue_mul = 1;
+  float wb_red_mul_prev = 1;
+  float wb_green_mul_prev = 1;
+  float wb_blue_mul_prev = 1;
+
   float Lab_check[3] = { 0, 0, 0 };
   float Lab_prev[3] = { 0, 1000, 1000 };
   for( int i = 0; i < 100; i++ ) {
@@ -498,6 +527,21 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     int top = (int)y-3;
     int width = 7;
     int height = 7;
+
+    float wb_red_in;
+    float wb_green_in;
+    float wb_blue_in;
+    wb_red_prop->get( wb_red_in );
+    wb_green_prop->get( wb_green_in );
+    wb_blue_prop->get( wb_blue_in );
+    float norm_in = MIN3(wb_red_in,wb_green_in,wb_blue_in);
+    //wb_red_in /= norm_in;
+    //wb_green_in /= norm_in;
+    //wb_blue_in /= norm_in;
+
+    float wb_red_out;
+    float wb_green_out;
+    float wb_blue_out;
 
 		/*
     VipsRect crop = {left, top, width, height};
@@ -525,14 +569,15 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     //if( vips_sink_memory( spot ) )
     //  return;
 
-    int sample_size = 15;
+    int sample_size = 3;
     int row, col;
     float* p;
     float red, green, blue;
     float rgb_avg[3] = {0, 0, 0};
 		std::vector<float> values;
 
-    std::cout<<"RawDeveloperConfigDialog: getting spot WB"<<std::endl;
+    std::cout<<std::endl<<std::endl<<"==============================================="<<std::endl;
+   std::cout<<"RawDeveloperConfigDialog: getting spot WB"<<std::endl;
 		/*
     int line_size = clipped.width*3;
     for( row = 0; row < rspot.height; row++ ) {
@@ -550,6 +595,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 		*/
     std::cout<<"RawDeveloperConfigDialog: getting color spot WB ("<<x<<","<<y<<")"<<std::endl;
 		img->sample( l->get_id(), x, y, sample_size, NULL, values );
+		values.clear(); img->sample( l->get_id(), x, y, sample_size, NULL, values );
 		if( values.size() != 3 ) {
 			std::cout<<"RawDeveloperConfigDialog::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;
@@ -591,10 +637,6 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 
     float wb_delta1 = Lab_wb[1] - ab_zero;
     float wb_delta2 = Lab_wb[2] - ab_zero;
-
-    float wb_red_mul;
-    float wb_green_mul;
-    float wb_blue_mul;
 
     if( (fabs(wb_delta1) < epsilon) &&
 				(fabs(wb_delta2) < epsilon) ) {
@@ -673,8 +715,49 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
       wb_green_mul = rgb_out[1]/rgb_avg[1];
       wb_blue_mul = rgb_out[2]/rgb_avg[2];
     
+      float f = 0.5;
+      wb_red_out = (f*wb_red_mul+1-f)*wb_red_in;
+      wb_green_out = (f*wb_green_mul+1-f)*wb_green_in;
+      wb_blue_out = (f*wb_blue_mul+1-f)*wb_blue_in;
+      //float norm_out = MIN3(wb_red_out,wb_green_out,wb_blue_out);
+
+      /*
+      // Scale target L channel according to norm_out
+      Lab_out[0] /= norm_out*1.01;
+      std::cout<<" Lab out #2: "<<Lab_out[0]<<" "<<Lab_out[1]<<" "<<Lab_out[2]<<std::endl;
+
+      // Repeat the transform with the new luminosity
+      cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
+      std::cout<<" RGB out #2: "<<rgb_out[0]*255<<" "<<rgb_out[1]*255<<" "<<rgb_out[2]*255<<std::endl;
+
+      wb_red_mul = rgb_out[0]/rgb_avg[0];
+      wb_green_mul = rgb_out[1]/rgb_avg[1];
+      wb_blue_mul = rgb_out[2]/rgb_avg[2];
+    
+      wb_red_out = wb_red_mul*wb_red_in;
+      wb_green_out = wb_green_mul*wb_green_in;
+      wb_blue_out = wb_blue_mul*wb_blue_in;
+      */
     }
 
+    /*
+    float wb_min = MIN3( wb_red_mul, wb_green_mul, wb_blue_mul );
+    wb_red_mul /= wb_min;
+    wb_green_mul /= wb_min;
+    wb_blue_mul /= wb_min;
+
+    float wb_red_d = wb_red_mul - wb_red_mul_prev;
+    float wb_green_d = wb_green_mul - wb_green_mul_prev;
+    float wb_blue_d = wb_blue_mul - wb_blue_mul_prev;
+
+    wb_red_mul = wb_red_mul_prev + 1.00001*wb_red_d;
+    wb_green_mul = wb_green_mul_prev + 1.00001*wb_green_d;
+    wb_blue_mul = wb_blue_mul_prev + 1.00001*wb_blue_d;
+
+    wb_red_mul_prev = wb_red_mul;
+    wb_green_mul_prev = wb_green_mul;
+    wb_blue_mul_prev = wb_blue_mul;
+    */
     /*
     // The WB multiplicative factors are scaled so that their product is equal to 1
     float scale = wb_red_mul*wb_green_mul*wb_blue_mul;
@@ -684,48 +767,37 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     wb_blue_mul /= scale;
     */
 
-    PropertyBase* wb_red_prop = wbRedSlider.get_prop();
-    PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
-    PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
-    if( wb_red_prop && wb_green_prop && wb_blue_prop ) {
-      float wb_red_in;
-      float wb_green_in;
-      float wb_blue_in;
-      wb_red_prop->get( wb_red_in );
-      wb_green_prop->get( wb_green_in );
-      wb_blue_prop->get( wb_blue_in );
-      float wb_red_out = wb_red_mul*wb_red_in;
-      float wb_green_out = wb_green_mul*wb_green_in;
-      float wb_blue_out = wb_blue_mul*wb_blue_in;
-      float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
-      //scale = 1;
-      std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-							 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-							 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
-      std::cout<<"  scale: "<<scale<<std::endl;
-      //float scale = wb_green_mul;
-      wb_red_out /= scale;
-      wb_green_out /= scale;
-      wb_blue_out /= scale;
-      wb_red_prop->update( wb_red_out );
-      wb_green_prop->update( wb_green_out );
-      wb_blue_prop->update( wb_blue_out );
+    //float wb_red_out = wb_red_mul*wb_red_in;
+    // float wb_green_out = wb_green_mul*wb_green_in;
+    //float wb_blue_out = wb_blue_mul*wb_blue_in;
+    float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
+    //scale = 1;
+    std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+             <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+             <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+    std::cout<<"  scale: "<<scale<<std::endl;
+    //float scale = wb_green_mul;
+    wb_red_out /= scale;
+    wb_green_out /= scale;
+    wb_blue_out /= scale;
+    wb_red_prop->update( wb_red_out );
+    wb_green_prop->update( wb_green_out );
+    wb_blue_prop->update( wb_blue_out );
 
-      std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-							 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-							 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+    std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+             <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+             <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
-      wbRedSlider.init();
-      wbGreenSlider.init();
-      wbBlueSlider.init();
+    wbRedSlider.init();
+    wbGreenSlider.init();
+    wbBlueSlider.init();
 
-      //bool async = img->is_async();
-      //img->set_async( false );
-      //img->update( pipeline, true );
-      img->update( NULL, true );
-      img->unlock();
-      //img->set_async( async );
-    }
+    //bool async = img->is_async();
+    //img->set_async( false );
+    //img->update( pipeline, true );
+    img->update( NULL, true );
+    img->unlock();
+    //img->set_async( async );
 
 
 		/*
@@ -774,6 +846,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 		rgb_avg[1] = values[1];
 		rgb_avg[2] = values[2];
 
+    std::cout<<" RGB check: "<<rgb_avg[0]*255<<" "<<rgb_avg[1]*255<<" "<<rgb_avg[2]*255<<std::endl;
     // Now we convert the average RGB values in the WB spot region to Lab
     cmsDoTransform( transform, rgb_avg, Lab_check, 1 );
     std::cout<<" Lab check("<<i<<"): "<<Lab_check[0]<<" "<<Lab_check[1]<<" "<<Lab_check[2]<<std::endl;
@@ -793,6 +866,9 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     Lab_prev[1] = Lab_check[1];
     Lab_prev[2] = Lab_check[2];
   }
+
+  PF::raw_preproc_sample_x = 0;
+  PF::raw_preproc_sample_y = 0;
 
   char tstr[500];
   snprintf( tstr, 499, "Best match: L=%0.2f a=%0.2f b=%0.2f",

@@ -141,6 +141,7 @@ namespace PF
   }
 
 
+  cmsUInt32Number vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE pin );
 }
 
 

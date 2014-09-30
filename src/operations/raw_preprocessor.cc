@@ -33,6 +33,8 @@
 
 #include "raw_preprocessor.hh"
 
+int PF::raw_preproc_sample_x = 0;
+int PF::raw_preproc_sample_y = 0;
 
 PF::RawPreprocessorPar::RawPreprocessorPar(): 
   OpParBase(), image_data( NULL ),

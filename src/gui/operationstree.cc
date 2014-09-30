@@ -223,6 +223,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   op_raw.add_op( "RAW developer", "raw_developer" );
 
+  op_conv.add_op( "Color profile conversion", "convert_colorspace" );
   op_conv.add_op( "Lab conversion", "convert2lab" );
 
   op_color.add_op( "Invert", "invert" );

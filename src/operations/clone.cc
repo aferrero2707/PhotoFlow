@@ -33,6 +33,7 @@
 #include "../base/new_operation.hh"
 #include "../operations/convertformat.hh"
 #include "../operations/convert2rgb.hh"
+#include "../operations/convert2srgb.hh"
 #include "../operations/desaturate.hh"
 #include "clone.hh"
 
@@ -273,6 +274,10 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
 {
   if( !srcimg ) return NULL;
 
+  if( ch == PF::CLONE_CHANNEL_L )
+    return L2rgb( srcimg, level );
+
+
   VipsImage* out = NULL;
   colorspace_t csin = PF::PF_COLORSPACE_UNKNOWN;
   if( srcimg ) 
@@ -362,19 +367,22 @@ VipsImage* PF::ClonePar::L2rgb(VipsImage* srcimg, unsigned int& level)
     return NULL;
 
   in.clear(); in.push_back( labimg );
-  desaturate->get_par()->set_image_hints( srcimg );
+  desaturate->get_par()->set_image_hints( labimg );
   desaturate->get_par()->set_format( get_format() );
   VipsImage* greyimg = desaturate->get_par()->build( in, 0, NULL, NULL, level );
   PF_UNREF( labimg, "ClonePar::L2rgb(): labimg unref" );
+  //VipsImage* greyimg = labimg;
 
   in.clear(); in.push_back( greyimg );
-  convert2rgb->get_par()->set_image_hints( srcimg );
+  convert2rgb->get_par()->set_image_hints( greyimg );
   convert2rgb->get_par()->set_format( get_format() );
+  
   PF::Convert2RGBPar* c2rgbpar = dynamic_cast<PF::Convert2RGBPar*>(convert2rgb->get_par());
-  g_assert(c2rgbpar);
-  cmsHPROFILE profile_out = cmsOpenProfileFromMem( profile_data, profile_length );
-  if( !profile_out ) return NULL;
-  c2rgbpar->set_output_profile( profile_out );
+  if(c2rgbpar) {
+    cmsHPROFILE profile_out = cmsOpenProfileFromMem( profile_data, profile_length );
+    if( !profile_out ) return NULL;
+    c2rgbpar->set_output_profile( profile_out );
+  }
   out = convert2rgb->get_par()->build( in, 0, NULL, NULL, level );
   PF_UNREF( greyimg, "ClonePar::L2rgb(): greyimg unref" );
 

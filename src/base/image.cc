@@ -357,7 +357,7 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   
 	if( vips_crop( image, &spot, 
 								 clipped.left, clipped.top, 
-								 clipped.width, clipped.height, 
+								 clipped.width+1, clipped.height+1, 
 								 NULL ) ) {
     std::cout<<"Image::do_sample(): vips_crop() failed"<<std::endl;
 		return;
@@ -399,18 +399,19 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 	float* p;
 	float avg[16];
   for( int i = 0; i < 16; i++ ) avg[i] = 0;
-	for( row = 0; row < rspot.height; row++ ) {
+	for( row = 0; row < clipped.height; row++ ) {
 		p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
 		for( col = 0; col < line_size; col += image->Bands ) {
 			for( b = 0; b < image->Bands; b++ ) {
 				avg[b] += p[col+b];
+        std::cout<<"do_sample(): p["<<row<<"]["<<col+b<<"]="<<p[col+b]<<std::endl;
 			}
 		}
 	}
 
 	sampler_values.clear();
 	for( b = 0; b < image->Bands; b++ ) {
-		avg[b] /= rspot.width*rspot.height;
+		avg[b] /= clipped.width*clipped.height;
 		sampler_values.push_back( avg[b] );
 	}
 	sampler_image = image;

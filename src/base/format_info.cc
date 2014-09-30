@@ -98,3 +98,95 @@ namespace PF {
 
 
 }
+
+
+cmsUInt32Number PF::vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE pin )
+{
+  cmsUInt32Number result;
+  switch( vipsFmt ) {
+  case VIPS_FORMAT_UCHAR:
+  case VIPS_FORMAT_CHAR:
+    switch( cmsGetColorSpace( pin ) ) {
+    case cmsSigRgbData:
+      result = TYPE_RGB_8;
+      break;
+    case cmsSigLabData:
+      result = TYPE_Lab_8;
+      break;
+    case cmsSigCmykData:
+      result = TYPE_CMYK_8;
+      break;
+    default: break;
+    }
+    break;
+  case VIPS_FORMAT_USHORT:
+  case VIPS_FORMAT_SHORT:
+    // short int is 16-bit
+#if (USHRT_MAX == 65535U)
+    switch( cmsGetColorSpace( pin ) ) {
+    case cmsSigRgbData:
+      result = TYPE_RGB_16;
+      break;
+    case cmsSigLabData:
+      result = TYPE_Lab_16;
+      break;
+    case cmsSigCmykData:
+      result = TYPE_CMYK_16;
+      break;
+    default: break;
+    }
+#endif
+    break;
+  case VIPS_FORMAT_UINT:
+  case VIPS_FORMAT_INT:
+#if (UINT_MAX == 65535U)
+    switch( cmsGetColorSpace( pin ) ) {
+    case cmsSigRgbData:
+      result = TYPE_RGB_16;
+      break;
+    case cmsSigLabData:
+      result = TYPE_Lab_16;
+      break;
+    case cmsSigCmykData:
+      result = TYPE_CMYK_16;
+      break;
+    default: break;
+    }
+#endif
+    break;
+  case VIPS_FORMAT_FLOAT:
+    switch( cmsGetColorSpace( pin ) ) {
+    case cmsSigRgbData:
+      result = TYPE_RGB_FLT;
+      break;
+    case cmsSigLabData:
+      result = TYPE_Lab_FLT;
+      break;
+    case cmsSigCmykData:
+      result = TYPE_CMYK_FLT;
+      break;
+    default: break;
+    }
+    break;    
+  case VIPS_FORMAT_DOUBLE:
+    switch( cmsGetColorSpace( pin ) ) {
+    case cmsSigRgbData:
+      result = TYPE_RGB_DBL;
+      break;
+    case cmsSigLabData:
+      result = TYPE_Lab_DBL;
+      break;
+    case cmsSigCmykData:
+      result = TYPE_CMYK_DBL;
+      break;
+    default: break;
+    }
+    break;    
+  default:
+    break;
+  }
+  return result;
+}
+
+
+

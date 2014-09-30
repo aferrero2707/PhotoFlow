@@ -44,6 +44,7 @@
 #include "../gui/operations/denoise_config.hh"
 #include "../gui/operations/sharpen_config.hh"
 #include "../gui/operations/draw_config.hh"
+#include "../gui/operations/convert_colorspace_config.hh"
 
 
 
@@ -467,6 +468,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "convert2lab" ) {
 
     dialog = new PF::OperationConfigDialog( current_layer, "Convert to Lab colororspace" );
+
+  } else if( op_type == "convert_colorspace" ) {
+
+    dialog = new PF::ConvertColorspaceConfigDialog( current_layer );
 
   } else if( op_type == "draw" ) {
 

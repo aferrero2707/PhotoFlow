@@ -304,11 +304,11 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 			if (left<winx) {ccmin=16;} else {ccmin=0;}
 			if (bottom>(winy+height)) {rrmax=winy+height-top;} else {rrmax=rr1;}
 			if (right>(winx+width)) {ccmax=winx+width-left;} else {ccmax=cc1;}
-			/*
+			/**/
 			std::cout<<"tiley="<<tiley<<"  tilex="<<tilex<<"  top="<<top<<"  left="<<left
 							 <<"  bottom="<<bottom<<"  right="<<right<<"  rrmin="<<rrmin
 							 <<"  ccmin="<<ccmin<<"  rr1="<<rr1<<"  cc1="<<cc1<<"  rrmax="<<rrmax<<"  ccmax="<<ccmax<<std::endl;
-			*/
+			/**/
 #ifdef __SSE2___
 			const __m128 c65535v = _mm_set1_ps( 65535.0f );
 			__m128	tempv;

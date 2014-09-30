@@ -43,6 +43,9 @@
 namespace PF 
 {
 
+  extern int raw_preproc_sample_x;
+  extern int raw_preproc_sample_y;
+
   enum wb_mode_t {
     WB_CAMERA,
     WB_SPOT,
@@ -233,7 +236,9 @@ namespace PF
 				par->get_wb_green() * exposure / range
       };
 
-      //std::cout<<"render_spotwb(): mult="<<mul[0]<<","<<mul[1]<<","<<mul[2]<<","<<mul[3]<<std::endl;
+      //std::cout<<"render_spotwb(): region left/top="<<r->left<<","<<r->top<<"+"<<r->width<<"+"<<r->height<<std::endl;
+      //std::cout<<"  raw_preproc_sample_x="<<raw_preproc_sample_x<<std::endl;
+      //std::cout<<"  raw_preproc_sample_y="<<raw_preproc_sample_y<<std::endl;
     
       if( nbands == 3 ) {
 				float* p;
@@ -246,7 +251,6 @@ namespace PF
 						pout[x] = p[x] * mul[0];
 						pout[x+1] = p[x+1] * mul[1];
 						pout[x+2] = p[x+2] * mul[2];
-						//if(r->left==0 && r->top==0) std::cout<<"  p["<<x<<"]="<<p[x]<<"  pout["<<x<<"]="<<pout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */
 						pout[x] *= 65535;
@@ -266,6 +270,15 @@ namespace PF
 					for( x=0; x < r->width; x++) {
 						rpout.color(x) = rp.color(x);
 						rpout[x] = rp[x] * mul[ rp.color(x) ];
+            
+            int dx = r->left+x-raw_preproc_sample_x;
+            int dy = r->top+y-raw_preproc_sample_y;
+            //if( raw_preproc_sample_x > 0 && raw_preproc_sample_y > 0 )
+            //  std::cout<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
+						if( abs(dx)<2 && abs(dy)<1 ) 
+              std::cout<<"  rp["<<x<<"]="<<rp[x]
+                       <<"  mul["<<(int)rp.color(x)<<"]="<<mul[ rp.color(x) ]
+                       <<"  rpout["<<x<<"]="<<rpout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */
 						rpout[x] *= 65535;
