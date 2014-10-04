@@ -1,7 +1,7 @@
 #! /bin/bash
 
 vips_install=$(pwd)/VIPS/build
-rebuild_VIPS=0
+rebuild_VIPS=1
 update_VIPS=1
 if [ ${rebuild_VIPS} -eq 1 ]; then
 		rm -rf ${vips_install}
