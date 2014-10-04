@@ -18,7 +18,7 @@ find_package (TIFF REQUIRED)
 
 pkg_check_modules(SIGC2 REQUIRED sigc++-2.0)
 
-pkg_check_modules(VIPS REQUIRED vips)
+pkg_check_modules(VIPS REQUIRED vips>=7.40.8)
 #pkg_check_modules(VIPSCC REQUIRED vipsCC)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
