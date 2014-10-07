@@ -19,13 +19,13 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
- */
+*/
 
 /*
 
-    These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
+  These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
- */
+*/
 
 #ifndef CONVERT_2_LAB_H
 #define CONVERT_2_LAB_H
@@ -62,8 +62,8 @@ namespace PF
     }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
-		     VipsImage* imap, VipsImage* omap, 
-		     unsigned int& level);
+                     VipsImage* imap, VipsImage* omap, 
+                     unsigned int& level);
   };
 
   
@@ -73,46 +73,122 @@ namespace PF
   {
   public: 
     void render(VipsRegion** in, int n, int in_first,
-		VipsRegion* imap, VipsRegion* omap, 
-		VipsRegion* out, Convert2LabPar* par);
-  };
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* out, Convert2LabPar* par)
+    {
+      Rect *r = &out->valid;
+      int width = r->width;
+      int height = r->height;
+      //int line_size = width * out->im->Bands; //layer->in_all[0]->Bands; 
+      cmsHTRANSFORM transform = par->get_transform();
 
 
-  template< OP_TEMPLATE_DEF >
-  void Convert2LabProc< OP_TEMPLATE_IMP >::
-  render(VipsRegion** ir, int n, int in_first,
-	 VipsRegion* imap, VipsRegion* omap, 
-	 VipsRegion* oreg, Convert2LabPar* par)
-  {
-    Rect *r = &oreg->valid;
-    int width = r->width;
-    int height = r->height;
-    //int line_size = width * oreg->im->Bands; //layer->in_all[0]->Bands; 
-    cmsHTRANSFORM transform = par->get_transform();
+      T* p;    
+      T* pout;
+      int y;
 
-
-    T* p;    
-    T* pout;
-    int y;
-
-    for( y = 0; y < height; y++ ) {
+      for( y = 0; y < height; y++ ) {
       
-      p = ir ? (T*)VIPS_REGION_ADDR( ir[0], r->left, r->top + y ) : NULL; 
-      pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
-      cmsDoTransform( transform, p, pout, width );
+        p = in ? (T*)VIPS_REGION_ADDR( in[0], r->left, r->top + y ) : NULL; 
+        pout = (T*)VIPS_REGION_ADDR( out, r->left, r->top + y ); 
+        cmsDoTransform( transform, p, pout, width );
 #ifndef NDEBUG
-      if( y == 0 && r->top==0 && r->left == 0 ) {
-	std::cout<<"Convert2LabProc::render()"<<std::endl;
-	for( int i = 0; i < 12; i++ )
-	  std::cout<<(int)p[i]<<" ";
-	std::cout<<std::endl;
-	for( int i = 0; i < 12; i++ )
-	  std::cout<<(int)pout[i]<<" ";
-	std::cout<<std::endl;
-      }
+        if( y == 0 && r->top==0 && r->left == 0 ) {
+          std::cout<<"Convert2LabProc::render()"<<std::endl;
+          for( int i = 0; i < 12; i++ )
+            std::cout<<(int)p[i]<<" ";
+          std::cout<<std::endl;
+          for( int i = 0; i < 12; i++ )
+            std::cout<<(int)pout[i]<<" ";
+          std::cout<<std::endl;
+        }
 #endif
+      }
     }
   };
+
+
+
+
+  template < OP_TEMPLATE_DEF_TYPE_SPEC > 
+  class Convert2LabProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
+  {
+  public: 
+    void render(VipsRegion** in, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* out, Convert2LabPar* par)
+    {
+      Rect *r = &out->valid;
+      int width = r->width;
+      int height = r->height;
+      int line_size = width * out->im->Bands; //layer->in_all[0]->Bands; 
+      cmsHTRANSFORM transform = par->get_transform();
+
+
+      float* p;    
+      float* pout;
+      int x, y;
+
+      for( y = 0; y < height; y++ ) {
+      
+        p = in ? (float*)VIPS_REGION_ADDR( in[0], r->left, r->top + y ) : NULL; 
+        pout = (float*)VIPS_REGION_ADDR( out, r->left, r->top + y ); 
+        if( r->left==0 && r->top==0 && y==0 ) {
+          std::cout<<"Convert2LabProc::render(): p="<<p[x]<<" "<<p[x+1]<<" "<<p[x+2]<<std::endl;
+        }
+        cmsDoTransform( transform, p, pout, width );
+
+        for( x = 0; x < line_size; x+= 3 ) {
+          pout[x] = (cmsFloat32Number) (pout[x] / 100.0); 
+          pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0) / 255.0); 
+          pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 255.0);
+
+          if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+            std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
+          }
+        }
+      }
+    }
+  };
+
+
+
+
+  template < OP_TEMPLATE_DEF_TYPE_SPEC > 
+  class Convert2LabProc< OP_TEMPLATE_IMP_TYPE_SPEC(double) >
+  {
+  public: 
+    void render(VipsRegion** in, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* out, Convert2LabPar* par)
+    {
+      Rect *r = &out->valid;
+      int width = r->width;
+      int height = r->height;
+      int line_size = width * out->im->Bands; //layer->in_all[0]->Bands; 
+      cmsHTRANSFORM transform = par->get_transform();
+
+
+      double* p;    
+      double* pout;
+      int x, y;
+
+      for( y = 0; y < height; y++ ) {
+      
+        p = in ? (double*)VIPS_REGION_ADDR( in[0], r->left, r->top + y ) : NULL; 
+        pout = (double*)VIPS_REGION_ADDR( out, r->left, r->top + y ); 
+        cmsDoTransform( transform, p, pout, width );
+
+        for( x = 0; x < line_size; x+= 3 ) {
+          pout[x] = (cmsFloat64Number) (pout[x] / 100.0); 
+          pout[x+1] = (cmsFloat64Number) ((pout[x+1] + 128.0) / 255.0); 
+          pout[x+2] = (cmsFloat64Number) ((pout[x+2] + 128.0) / 255.0);
+        }
+      }
+    }
+  };
+
+
 
 
   ProcessorBase* new_convert2lab();

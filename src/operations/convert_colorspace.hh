@@ -66,6 +66,9 @@ namespace PF
 
     ProcessorBase* convert2lab;
 
+    cmsColorSpaceSignature input_cs_type;
+    cmsColorSpaceSignature output_cs_type;
+
   public:
 
     ConvertColorspacePar();
@@ -78,6 +81,9 @@ namespace PF
       OpParBase::set_image_hints( img );
       rgb_image( get_xsize(), get_ysize() );
     }
+
+    cmsColorSpaceSignature get_input_cs_type() { return input_cs_type; }
+    cmsColorSpaceSignature get_output_cs_type() { return output_cs_type; }
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 
@@ -118,8 +124,6 @@ namespace PF
       T* pout;
       int x, y;
 
-      T* line = new T[line_size];
-
       for( y = 0; y < height; y++ ) {
         p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
@@ -129,6 +133,131 @@ namespace PF
           cmsDoTransform( opar->get_transform(), pin, pout, width );
         else 
           memcpy( pout, pin, sizeof(T)*line_size );
+      }
+    }
+  };
+
+
+
+
+  template < OP_TEMPLATE_DEF_TYPE_SPEC > 
+  class ConvertColorspace< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
+  {
+  public: 
+    void render(VipsRegion** ireg, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, OpParBase* par)
+    {
+      ConvertColorspacePar* opar = dynamic_cast<ConvertColorspacePar*>(par);
+      if( !opar ) return;
+      Rect *r = &oreg->valid;
+      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
+      int width = r->width;
+      int height = r->height;
+
+      float* p;
+      float* pin;
+      float* pout;
+      int x, y;
+
+      float* line = NULL;
+      if( opar->get_input_cs_type() == cmsSigLabData ) {
+        line = new float[line_size];
+      }
+
+      for( y = 0; y < height; y++ ) {
+        p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
+        pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+
+        if(opar->get_transform()) {
+          if( opar->get_input_cs_type() == cmsSigLabData ) {
+            for( x = 0; x < line_size; x+= 3 ) {
+              line[x] = (cmsFloat32Number) (p[x] * 100.0); 
+              line[x+1] = (cmsFloat32Number) (p[x+1]*255.0 - 128.0); 
+              line[x+2] = (cmsFloat32Number) (p[x+2]*255.0 - 128.0); 
+              if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ConvertColorspace::render(): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<std::endl;
+              }
+            }
+            cmsDoTransform( opar->get_transform(), line, pout, width );
+            if( r->left==0 && r->top==0 && y==0 ) {
+              std::cout<<"ConvertColorspace::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+            }
+          } else {
+            cmsDoTransform( opar->get_transform(), p, pout, width );
+            if( opar->get_output_cs_type() == cmsSigLabData ) {
+              for( x = 0; x < line_size; x+= 3 ) {
+                pout[x] = (cmsFloat32Number) (pout[x] / 100.0); 
+                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0) / 255.0); 
+                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 255.0);
+                
+                if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+                  std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
+                }
+              }
+            }
+          }
+        } else {
+          memcpy( pout, p, sizeof(float)*line_size );
+        }
+      }
+
+      if( opar->get_input_cs_type() == cmsSigLabData && line ) {
+        delete( line );
+      }
+    }
+  };
+
+
+
+
+  template < OP_TEMPLATE_DEF_TYPE_SPEC > 
+  class ConvertColorspace< OP_TEMPLATE_IMP_TYPE_SPEC(double) >
+  {
+  public: 
+    void render(VipsRegion** ireg, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, OpParBase* par)
+    {
+      ConvertColorspacePar* opar = dynamic_cast<ConvertColorspacePar*>(par);
+      if( !opar ) return;
+      Rect *r = &oreg->valid;
+      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
+      int width = r->width;
+      int height = r->height;
+
+      double* p;
+      double* pin;
+      double* pout;
+      int x, y;
+
+      double* line = NULL;
+      if( opar->get_input_cs_type() == cmsSigLabData ) {
+        line = new double[line_size];
+      }
+
+      for( y = 0; y < height; y++ ) {
+        p = (double*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
+        pout = (double*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+
+        if(opar->get_transform()) {
+          if( opar->get_input_cs_type() == cmsSigLabData ) {
+            for( x = 0; x < line_size; x+= 3 ) {
+              line[x] = (cmsFloat64Number) (pin[x] * 100.0); 
+              line[x+1] = (cmsFloat64Number) (pin[x+1]*255.0 - 128.0); 
+              line[x+2] = (cmsFloat64Number) (pin[x+2]*255.0 - 128.0); 
+            }
+            cmsDoTransform( opar->get_transform(), line, pout, width );
+          } else {
+            cmsDoTransform( opar->get_transform(), pin, pout, width );
+          }
+        } else {
+          memcpy( pout, pin, sizeof(double)*line_size );
+        }
+      }
+
+      if( opar->get_input_cs_type() == cmsSigLabData && line ) {
+        delete( line );
       }
     }
   };

@@ -100,6 +100,7 @@ namespace PF
 
     void process(T**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, T* pout)
     {
+      //std::cout<<"CurvesProc::process() called in non_preview mode"<<std::endl;
       T* pp = p[first];
       float nin, nout;
       //int id;

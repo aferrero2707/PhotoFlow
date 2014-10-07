@@ -177,6 +177,15 @@ bool PF::Layer::save( std::ostream& ostr, int level )
     blender->get_par()->save( ostr, level+1 );
 
   for(int i = 0; i < level+1; i++) ostr<<"  ";
+  ostr<<"<sublayers type=\"child\">"<<std::endl;
+  for( std::list<Layer*>::iterator li = sublayers.begin();
+       li != sublayers.end(); li++ ) {
+    (*li)->save( ostr, level+2 );
+  }
+  for(int i = 0; i < level+1; i++) ostr<<"  ";
+  ostr<<"</sublayers>"<<std::endl;
+
+  for(int i = 0; i < level+1; i++) ostr<<"  ";
   ostr<<"<sublayers type=\"imap\">"<<std::endl;
   for( std::list<Layer*>::iterator li = imap_layers.begin();
        li != imap_layers.end(); li++ ) {
@@ -189,15 +198,6 @@ bool PF::Layer::save( std::ostream& ostr, int level )
   ostr<<"<sublayers type=\"omap\">"<<std::endl;
   for( std::list<Layer*>::iterator li = omap_layers.begin();
        li != omap_layers.end(); li++ ) {
-    (*li)->save( ostr, level+2 );
-  }
-  for(int i = 0; i < level+1; i++) ostr<<"  ";
-  ostr<<"</sublayers>"<<std::endl;
-
-  for(int i = 0; i < level+1; i++) ostr<<"  ";
-  ostr<<"<sublayers type=\"child\">"<<std::endl;
-  for( std::list<Layer*>::iterator li = sublayers.begin();
-       li != sublayers.end(); li++ ) {
     (*li)->save( ostr, level+2 );
   }
   for(int i = 0; i < level+1; i++) ostr<<"  ";

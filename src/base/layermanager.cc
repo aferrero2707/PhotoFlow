@@ -619,6 +619,9 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
     g_assert( pipelinepar != NULL );
 
+    pipelinepar->set_render_mode( pipeline->get_render_mode() );
+    //std::cout<<"pipelinepar->set_render_mode( "<<pipeline->get_render_mode()<<" );"<<std::endl;
+
     if( par ) {
 #ifndef NDEBUG
       std::cout<<"PF::LayerManager::rebuild_chain(): setting format for layer "<<l->get_name()
@@ -639,6 +642,8 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       pipelineblender = node->blender->get_par();
 
     g_assert( pipelineblender != NULL );
+
+    pipelineblender->set_render_mode( pipeline->get_render_mode() );
 
     if( blender ) {
 #ifndef NDEBUG
@@ -726,36 +731,6 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       }
     }
 
-    // first we build the chains for the intensity and opacity maps
-    VipsImage* imap = NULL;
-#ifndef NDEBUG
-    std::cout<<"Layer \""<<l->get_name()<<"\""
-             <<"  imap_layers.size()="<<l->imap_layers.size()
-             <<"  omap_layers.size()="<<l->omap_layers.size()
-             <<std::endl;
-#endif
-    if( previous && !l->imap_layers.empty() ) {
-      imap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
-                            previous->Xsize, previous->Ysize, 
-                            l->imap_layers, NULL );
-      if( !imap )
-        return false;
-      //std::list<PF::Layer*>::reverse_iterator map_i = l->imap_layers.rbegin();
-      //if(map_i != l->imap_layers.rend()) 
-      //imap = (*map_i)->get_processor()->get_par()->get_image();
-    }
-    VipsImage* omap = NULL;
-    if( previous && !l->omap_layers.empty() ) {
-      omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
-                            previous->Xsize, previous->Ysize, 
-                            l->omap_layers, NULL );
-      if( !omap )
-        return false;
-      //std::list<PF::Layer*>::reverse_iterator map_i = l->omap_layers.rbegin();
-      //if(map_i != l->omap_layers.rend()) 
-      //omap = (*map_i)->get_processor()->get_par()->get_image();
-    }
-
     /* At this point there are two possibilities:
        1. the layer has no sub-layers, in which case it is combined with the output
        of the previous layer plus any extra inputs it might have
@@ -763,6 +738,8 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
        and then we combine it with the output of the previous layer
     */
     VipsImage* newimg = NULL;
+    VipsImage* imap = NULL;
+    VipsImage* omap = NULL;
     if( l->sublayers.empty() ) {
       std::vector<VipsImage*> in;
       if( par->needs_input() && !previous ) {
@@ -771,6 +748,34 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         return false;
       }
 
+      // We build the chains for the intensity and opacity maps
+#ifndef NDEBUG
+      std::cout<<"Layer \""<<l->get_name()<<"\""
+               <<"  imap_layers.size()="<<l->imap_layers.size()
+               <<"  omap_layers.size()="<<l->omap_layers.size()
+               <<std::endl;
+#endif
+      if( previous && !l->imap_layers.empty() ) {
+        imap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
+                              previous->Xsize, previous->Ysize, 
+                              l->imap_layers, NULL );
+        if( !imap )
+          return false;
+        //std::list<PF::Layer*>::reverse_iterator map_i = l->imap_layers.rbegin();
+        //if(map_i != l->imap_layers.rend()) 
+        //imap = (*map_i)->get_processor()->get_par()->get_image();
+      }
+      if( previous && !l->omap_layers.empty() ) {
+        omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
+                              previous->Xsize, previous->Ysize, 
+                              l->omap_layers, NULL );
+        if( !omap )
+          return false;
+        //std::list<PF::Layer*>::reverse_iterator map_i = l->omap_layers.rbegin();
+        //if(map_i != l->omap_layers.rend()) 
+        //omap = (*map_i)->get_processor()->get_par()->get_image();
+      }
+      
       // we add the previous image to the list of inputs, even if it is NULL
       //if(previous)
       in.push_back(previous);
@@ -866,6 +871,34 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
       // we add the output of the sub-layers chain to the list of inputs, even if it is NULL
       in.push_back( isub );
+      
+      // Then we build the chains for the intensity and opacity maps
+#ifndef NDEBUG
+      std::cout<<"Layer \""<<l->get_name()<<"\""
+               <<"  imap_layers.size()="<<l->imap_layers.size()
+               <<"  omap_layers.size()="<<l->omap_layers.size()
+               <<std::endl;
+#endif
+      if( previous && !l->imap_layers.empty() ) {
+        imap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
+                              previous->Xsize, previous->Ysize, 
+                              l->imap_layers, NULL );
+        if( !imap )
+          return false;
+        //std::list<PF::Layer*>::reverse_iterator map_i = l->imap_layers.rbegin();
+        //if(map_i != l->imap_layers.rend()) 
+        //imap = (*map_i)->get_processor()->get_par()->get_image();
+      }
+      if( previous && !l->omap_layers.empty() ) {
+        omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
+                              previous->Xsize, previous->Ysize, 
+                              l->omap_layers, NULL );
+        if( !omap )
+          return false;
+        //std::list<PF::Layer*>::reverse_iterator map_i = l->omap_layers.rbegin();
+        //if(map_i != l->omap_layers.rend()) 
+        //omap = (*map_i)->get_processor()->get_par()->get_image();
+      }
       
       if( par->get_config_ui() ) par->get_config_ui()->update_properties();
 #ifndef NDEBUG

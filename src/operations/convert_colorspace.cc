@@ -51,7 +51,9 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   OpParBase(),
   out_profile_mode("profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
   out_profile_name("profile_name", this),
-  transform( NULL )
+  transform( NULL ),
+  input_cs_type( cmsSigRgbData ),
+  output_cs_type( cmsSigRgbData )
 {
   convert2lab = PF::new_convert2lab();
 
@@ -98,6 +100,8 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     if( in_profile_name != tstr ) {
       in_changed = true;
     }
+
+    input_cs_type = cmsGetColorSpace(in_profile);
   }
 
   bool out_mode_changed = out_profile_mode.is_modified();
@@ -152,8 +156,8 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     }
 
     if( out_profile) {
-      cmsColorSpaceSignature cs = cmsGetColorSpace(out_profile);
-      switch( cs ) {
+      output_cs_type = cmsGetColorSpace(out_profile);
+      switch( output_cs_type ) {
       case cmsSigGrayData:
         grayscale_image( get_xsize(), get_ysize() );
         break;

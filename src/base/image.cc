@@ -128,6 +128,9 @@ PF::Image::Image():
 
   add_pipeline( VIPS_FORMAT_USHORT, 0 );
   add_pipeline( VIPS_FORMAT_USHORT, 0 );
+
+  pipelines[0]->set_render_mode( PF_RENDER_PREVIEW );
+  pipelines[1]->set_render_mode( PF_RENDER_PREVIEW );
 }
 
 PF::Image::~Image()
@@ -618,7 +621,8 @@ bool PF::Image::export_merged( std::string filename )
       ext != "pfi" ) {
     //Glib::Threads::Mutex::Lock lock( rebuild_mutex );
     unsigned int level = 0;
-    PF::Pipeline* pipeline = new PF::Pipeline( this, VIPS_FORMAT_USHORT, 0, PF_RENDER_NORMAL );
+    //PF::Pipeline* pipeline = new PF::Pipeline( this, VIPS_FORMAT_USHORT, 0, PF_RENDER_NORMAL );
+    PF::Pipeline* pipeline = new PF::Pipeline( this, VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
     layer_manager.rebuild_all( pipeline, PF::PF_COLORSPACE_RGB, 100, 100 );
     VipsImage* image = pipeline->get_output();
     VipsImage* outimg = image;
@@ -636,17 +640,28 @@ bool PF::Image::export_merged( std::string filename )
     VipsImage* srgbimg = image;
 
 		outimg = srgbimg;
-
-		/*
-    in.clear();
-    in.push_back( srgbimg );
-    convert_format->get_par()->set_image_hints( srgbimg );
-    convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
-    outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
-    //g_object_unref( srgbimg );
-    msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
-    PF_UNREF( srgbimg, msg.c_str() );
-		*/
+    std::string msg;
+		if( ext == "jpg" || ext == "jpeg" ) {
+      in.clear();
+      in.push_back( srgbimg );
+      convert_format->get_par()->set_image_hints( srgbimg );
+      convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
+      outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+      //g_object_unref( srgbimg );
+      // msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
+      //PF_UNREF( srgbimg, msg.c_str() );
+		}
+    
+		if( ext == "tif" || ext == "tiff" ) {
+      in.clear();
+      in.push_back( srgbimg );
+      convert_format->get_par()->set_image_hints( srgbimg );
+      convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
+      outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+      //g_object_unref( srgbimg );
+      //msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
+      //PF_UNREF( srgbimg, msg.c_str() );
+		}
     
 #if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
     vips_image_write_to_file( outimg, filename.c_str() );
@@ -654,7 +669,7 @@ bool PF::Image::export_merged( std::string filename )
     vips_image_write_to_file( outimg, filename.c_str(), NULL );
 #endif
     //g_object_unref( outimg );
-    std::string msg = std::string("PF::Image::export_merged(") + filename + "), outimg";
+    msg = std::string("PF::Image::export_merged(") + filename + "), outimg";
     PF_UNREF( outimg, msg.c_str() );
     delete pipeline;
     return true;
