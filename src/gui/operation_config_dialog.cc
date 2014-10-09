@@ -46,6 +46,9 @@
 #include "../gui/operations/draw_config.hh"
 #include "../gui/operations/convert_colorspace_config.hh"
 
+#include "../gui/operations/gmic/gmic_config.hh"
+#include "../gui/operations/gmic/blur_bilateral_config.hh"
+
 
 
 static gboolean dialog_update_cb (PF::OperationConfigDialog * dialog)
@@ -476,6 +479,14 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "draw" ) {
 
     dialog = new PF::DrawConfigDialog( current_layer );
+
+  } else if( op_type == "gmic_blur_bilateral" ) {
+    
+    dialog = new PF::BlurBilateralConfigDialog( current_layer );
+
+  } else if( op_type == "gmic" ) {
+    
+    dialog = new PF::GMicConfigDialog( current_layer );
 
   } else { // it must be a VIPS operation...
 

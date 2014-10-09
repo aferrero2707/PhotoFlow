@@ -206,6 +206,9 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_geom_box.add( op_geom );
   notebook.append_page( op_geom_box, "geom" );
 
+  op_gmic_box.add( op_gmic );
+  notebook.append_page( op_gmic_box, "G'MIC" );
+
   op_misc_box.add( op_misc );
   notebook.append_page( op_misc_box, "misc" );
 
@@ -239,9 +242,12 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   op_geom.add_op( "Crop image", "crop" );
 
+  op_gmic.add_op( "G'MIC interpreter", "gmic" );
+  op_gmic.add_op( "Smooth [bilateral]", "gmic_blur_bilateral" );
+
   op_misc.add_op( "Buffer layer", "buffer" );
   op_misc.add_op( "Clone layer", "clone" );
-  op_misc.add_op( "Draw", "draw" );
+  //op_misc.add_op( "Draw", "draw" );
 
   get_vbox()->pack_start( notebook );
 
@@ -326,6 +332,9 @@ void PF::OperationsTreeDialog::add_layer()
     op_tree = &op_geom;
     break;
   case 6:
+    op_tree = &op_gmic;
+    break;
+  case 7:
     op_tree = &op_misc;
     break;
   default:

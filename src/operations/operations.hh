@@ -58,6 +58,10 @@ namespace PF
   ProcessorBase* new_uniform();
   ProcessorBase* new_desaturate();
   ProcessorBase* new_draw();
+
+  ProcessorBase* new_gmic();
+  ProcessorBase* new_gmic_blur_bilateral();
+
   //ProcessorBase* new_vips_operation( std::string op_type );
 }
 
