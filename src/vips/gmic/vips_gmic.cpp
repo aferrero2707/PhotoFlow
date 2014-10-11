@@ -1,82 +1,83 @@
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif /*HAVE_CONFIG_H*/
+/* Pass VIPS images through gmic
+ *
+ * AF, 6/10/14
+ */
 
-#define _(String) (String)
-//#include <vips/intl.h>
+/*
 
-//#include <vips/internal.h>
+    This file is part of VIPS.
+    
+    VIPS is free software; you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301  USA
+
+ */
+
+/*
+
+    These files are distributed with VIPS - http://www.vips.ecs.soton.ac.uk
+
+ */
+
+#define _(S) (S)
+
 #include <vips/vips.h>
 #include <vips/dispatch.h>
-
 
 #include <limits.h>
 
 #include <iostream>
 
-/* CImg needs to call pthread directly, this is the preproc magic they
- * prefer.
- */
-#if defined(sun)         || defined(__sun)      || defined(linux)       || defined(__linux) \
-  || defined(__linux__)   || defined(__CYGWIN__) || defined(BSD)         || defined(__FreeBSD__) \
-  || defined(__OPENBSD__) || defined(__MACOSX__) || defined(__APPLE__)   || defined(sgi) \
-  || defined(__sgi)
-#include <pthread.h>
-#endif
-
+//#include "CImg.h"
 #include "gmic/src/gmic.h"
-//#include "gmic/src/CImg.h"
+//#include "gmic.h"
+
 using namespace cimg_library;
 
-//#define gmic_image cimg_library::CImg
-
-
-#define GMIC_MAX_INPUT_IMAGES 10
-
 typedef struct _VipsGMic {
-  VipsOperation parent_instance;
-  VipsImage* in[GMIC_MAX_INPUT_IMAGES];
-  int ninput;
-  VipsImage* out;
-  char* command;
-  int padding;
-  double x_scale;
-  double y_scale;
+	VipsOperation parent_instance;
+
+	VipsArrayImage *in;
+	VipsImage *out;
+	char *command;
+	int padding;
+	double x_scale;
+	double y_scale;
 } VipsGMic;
 
 typedef VipsOperationClass VipsGMicClass;
 
-
 #define VIPS_TYPE_GMIC (vips_gmic_get_type())
-#define VIPS_GMIC( obj )                                    \
-	(G_TYPE_CHECK_INSTANCE_CAST( (obj),                       \
-                               VIPS_TYPE_GMIC, VipsGMic ))
-#define VIPS_LAYER_CLASS( klass )                           \
-	(G_TYPE_CHECK_CLASS_CAST( (klass),                        \
-                            VIPS_TYPE_GMIC, VipsGMicClass))
-#define VIPS_IS_LAYER( obj )                            \
+#define VIPS_GMIC( obj ) \
+	(G_TYPE_CHECK_INSTANCE_CAST( (obj), VIPS_TYPE_GMIC, VipsGMic ))
+#define VIPS_GMIC_CLASS( klass ) \
+	(G_TYPE_CHECK_CLASS_CAST( (klass), VIPS_TYPE_GMIC, VipsGMicClass))
+#define VIPS_IS_GMIC( obj ) \
 	(G_TYPE_CHECK_INSTANCE_TYPE( (obj), VIPS_TYPE_GMIC ))
-#define VIPS_IS_LAYER_CLASS( klass )                    \
+#define VIPS_IS_GMIC_CLASS( klass ) \
 	(G_TYPE_CHECK_CLASS_TYPE( (klass), VIPS_TYPE_GMIC ))
-#define VIPS_LAYER_GET_CLASS( obj )                             \
-	(G_TYPE_INSTANCE_GET_CLASS( (obj),                            \
-                              VIPS_TYPE_GMIC, VipsGMicClass ))
+#define VIPS_GMIC_GET_CLASS( obj ) \
+	(G_TYPE_INSTANCE_GET_CLASS( (obj), VIPS_TYPE_GMIC, VipsGMicClass ))
 
-
-#ifdef __cplusplus
 extern "C" {
-#endif /*__cplusplus*/
-
-  G_DEFINE_TYPE( VipsGMic, vips_gmic, VIPS_TYPE_OPERATION );
-
-#ifdef __cplusplus
+	G_DEFINE_TYPE( VipsGMic, vips_gmic, VIPS_TYPE_OPERATION );
 }
-#endif /*__cplusplus*/
 
-
-static int gmic_get_tile_border( VipsGMic* vipsgmic )
+static int 
+vips_gmic_get_tile_border( VipsGMic *vipsgmic )
 {
-  return vipsgmic->padding;
+	return( vipsgmic->padding );
 }
 
 
@@ -114,320 +115,379 @@ template<> void vips_from_gmic(const float& val, unsigned short& out)
 }
 
 
+#define INDEX( IMG, X, Y, Z ) \
+	((*(IMG))( (guint) (X), (guint) (Y), (guint) (Z), 0 ))
+
 // copy part of a vips region into a cimg
 template<typename T> static void
-vips_to_gmic( VipsRegion *in, VipsRect *area, CImg<float>* img )
+vips_to_gmic( VipsRegion *in, VipsRect *area, CImg<float> *img )
 {
-  VipsImage *im = in->im;
+	VipsImage *im = in->im;
 
-  for( int y = 0; y < area->height; y++ ) {
-    T *p = (T *) VIPS_REGION_ADDR( in, area->left, area->top + y );
+	for( int y = 0; y < area->height; y++ ) {
+		T *p = (T *) VIPS_REGION_ADDR( in, area->left, area->top + y );
 
-    for( int x = 0; x < area->width; x++ ) {
-      for( int z = 0; z < im->Bands; z++ ) {
-        //const unsigned long off = (unsigned long)img->offset(x,y,z,c);
-        (*img)( (unsigned int)x, (unsigned int)y, (unsigned int)z, 0 ) = vips_to_gmic( p[z] );
-      }
-      p += im->Bands;
-    }
-  }
+		for( int x = 0; x < area->width; x++ ) {
+			for( int z = 0; z < im->Bands; z++ ) 
+				INDEX( img, x, y, z ) = vips_to_gmic( p[z] );
+
+			p += im->Bands;
+		}
+	}
 }
-
 
 // write a CImg to a vips region
 // fill out->valid, img has pixels in img_rect
-template<typename T> static void 
+template<typename T> static void
 vips_from_gmic( gmic_image<float> *img, VipsRect *img_rect, VipsRegion *out )
 {
-  VipsImage *im = out->im;
-  VipsRect *valid = &out->valid;
+	VipsImage *im = out->im;
+	VipsRect *valid = &out->valid;
 
-  g_assert( vips_rect_includesrect( img_rect, valid ) );
-	
-  int x_off = valid->left - img_rect->left;
-  int y_off = valid->top - img_rect->top;
+	g_assert( vips_rect_includesrect( img_rect, valid ) );
 
-  for( int y = 0; y < valid->height; y++ ) {
-    T *p = (T *) VIPS_REGION_ADDR( out, valid->left, valid->top + y );
+	int x_off = valid->left - img_rect->left;
+	int y_off = valid->top - img_rect->top;
 
-    for( int x = 0; x < valid->width; x++ ) {
-      for( int z = 0; z < im->Bands; z++ )
-        vips_from_gmic( (*img)((unsigned int)(x + x_off), (unsigned int)(y + y_off), (unsigned int)z, 0),
-                        p[z] );
-      //p[z] = static_cast<T>( (*img)((unsigned int)(x + x_off), (unsigned int)(y + y_off), (unsigned int)z, 0) );
+	for( int y = 0; y < valid->height; y++ ) {
+		T *p = (T *) \
+			   VIPS_REGION_ADDR( out, valid->left, valid->top + y );
 
-      p += im->Bands;
-    }
-  }
+		for( int x = 0; x < valid->width; x++ ) {
+			for( int z = 0; z < im->Bands; z++ )
+				vips_from_gmic( INDEX( img, x + x_off, y + y_off, z ), p[z] );
+
+			p += im->Bands;
+		}
+	}
 }
 
-template<typename T> static int
-_gmic_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
+/* One of these for each thread.
+ */
+struct VipsGMicSequence { 
+	VipsRegion **ir;
+	gmic *gmic_instance;
+};
+
+static int
+vips_gmic_stop( void *vseq, void *a, void *b )
 {
-  VipsRegion **ir = (VipsRegion **) seq;
-  VipsGMic *vipsgmic = (VipsGMic *) b;
-  
-  const int tile_border = gmic_get_tile_border( vipsgmic );
+	VipsGMicSequence *seq = (VipsGMicSequence *) vseq;
 
-  const VipsRect *r = &oreg->valid;
-  VipsRect* need = vips_rect_dup( r );
-  //std::cout<<"_gmic_gen(): need before adjust="<<need->left<<","<<need->top<<"+"<<need->width<<"+"<<need->height<<std::endl;
-  //std::cout<<"_gmic_gen(): tile_border="<<tile_border<<std::endl;
-  vips_rect_marginadjust( need, tile_border );
-  //std::cout<<"_gmic_gen(): need after adjust="<<need->left<<","<<need->top<<"+"<<need->width<<"+"<<need->height<<std::endl;
-  need->left *= vipsgmic->x_scale;
-  need->width *= vipsgmic->x_scale; need->width += 1;
-  need->top *= vipsgmic->y_scale;
-  need->height *= vipsgmic->y_scale; need->height += 1;
-  //std::cout<<"_gmic_gen(): need after scale="<<need->left<<","<<need->top<<"+"<<need->width<<"+"<<need->height<<std::endl;
-  VipsRect image;
+        if( seq->ir ) {
+		int i;
 
-  if( !ir ) return -1;
+		for( i = 0; seq->ir[i]; i++ )
+			g_object_unref( seq->ir[i] );
+		VIPS_FREE( seq->ir );
+	}
 
-  image.left = 0;
-  image.top = 0;
-  image.width = ir[0]->im->Xsize;
-  image.height = ir[0]->im->Ysize;
-  vips_rect_intersectrect( need, &image, need );
-  //std::cout<<"_gmic_gen(): need after intersect="<<need->left<<","<<need->top<<"+"<<need->width<<"+"<<need->height<<std::endl;
-  for( int i = 0; ir[i]; i++ ) {
-    if( vips_region_prepare( ir[i], need ) ) {
-      vips_free( need );
-      return( -1 );
-    }
-  }
+	delete seq->gmic_instance;
 
-  //CImg<T> img;
-  //vips_to_gmic<T>( ir[0], need, &img );
-  /**/
-  gmic gmic_instance;   // Construct first an empty 'gmic' instance.
-  gmic_list<float> images;          // List of images, will contain all images pixel data.
-  gmic_list<char> images_names; // List of images names. Can be left empty if no names are associated to images.
-  try {
-    images.assign( (unsigned int)vipsgmic->ninput );
-    for( int i = 0; ir[i]; i++ ) {
-      gmic_image<float>& img = images._data[i];
-      img.assign(need->width,need->height,1,ir[i]->im->Bands);
-      vips_to_gmic<T>( ir[0], need, &img );
-    }
-
-    //printf("G'MIC command: %s\n",vipsgmic->command);
-    //std::cout<<"  ninput="<<vipsgmic->ninput
-    //         <<std::endl;
-    //std::cout<<"  padding="<<vipsgmic->padding
-    //         <<"  x scale="<<vipsgmic->x_scale<<std::endl;
-
-    std::string cmd = std::string("-verbose - ")+vipsgmic->command;
-    gmic_instance.run(cmd.c_str(),images,images_names);
-		vips_from_gmic<T>( &images._data[0], need, oreg );
-  }
-  catch( gmic_exception e ) { 
-    images.assign((unsigned int)0);
-
-		vips_error( "VipsGMic", "%s", e.what() );
-    vips_free( need );
-
-		return( -1 );
-  }
-  images.assign((unsigned int)0);
-  vips_free( need );
-  /**/
+	VIPS_FREE( seq );
 
 	return( 0 );
 }
 
+static void *
+vips_gmic_start( VipsImage *out, void *a, void *b )
+{
+	VipsImage **in = (VipsImage **) a;
+
+	VipsGMicSequence *seq;
+	int i, n;
+
+	if( !(seq = VIPS_NEW( NULL, VipsGMicSequence )) )
+		return( NULL ); 
+
+  //printf("vips_gmic_start(): in[0]=%p\n",in[0]);
+
+	/* Make a region for each input image. 
+	 */
+	for( n = 0; in[n]; n++ )
+		;
+
+	if( !(seq->ir = VIPS_ARRAY( NULL, n + 1, VipsRegion * )) ) {
+		vips_gmic_stop( seq, NULL, NULL );
+		return( NULL );
+	}
+
+	for( i = 0; i < n; i++ )
+		if( !(seq->ir[i] = vips_region_new( in[i] )) ) {
+			vips_gmic_stop( seq, NULL, NULL );
+			return( NULL );
+		}
+	seq->ir[n] = NULL;
+
+	/* Make a gmic for this thread.
+	 */
+	seq->gmic_instance = new gmic; 
+
+	return( (void *) seq );
+}
+
+template<typename T> static int
+vips_gmic_gen_template( VipsRegion *oreg, 
+	VipsGMicSequence *seq, void *a, void *b, gboolean *stop )
+{
+	VipsGMic *vipsgmic = (VipsGMic *) b;
+	int ninput = VIPS_AREA( vipsgmic->in )->n;
+	const int tile_border = vips_gmic_get_tile_border( vipsgmic );
+	const VipsRect *r = &oreg->valid;
+
+	VipsRect need;
+	VipsRect image;
+
+	need = *r;
+	vips_rect_marginadjust( &need, tile_border );
+	image.left = 0;
+	image.top = 0;
+	image.width = seq->ir[0]->im->Xsize;
+	image.height = seq->ir[0]->im->Ysize;
+	vips_rect_intersectrect( &need, &image, &need );
+
+  //return 0;
+
+	for( int i = 0; seq->ir[i]; i++ ) 
+		if( vips_region_prepare( seq->ir[i], &need ) ) 
+			return( -1 );
+
+	gmic_list<float> images;
+	gmic_list<char> images_names;
+
+	try {
+		images.assign( (guint) ninput );
+
+		for( int i = 0; seq->ir[i]; i++ ) {
+			gmic_image<float> &img = images._data[i];
+			img.assign( need.width, need.height, 
+				1, seq->ir[i]->im->Bands );
+			vips_to_gmic<T>( seq->ir[0], &need, &img );
+		}
+
+		seq->gmic_instance->run( vipsgmic->command, 
+			images, images_names );
+		vips_from_gmic<T>( &images._data[0], &need, oreg );
+	}
+	catch( gmic_exception e ) { 
+		images.assign( (guint) 0 );
+
+		vips_error( "VipsGMic", "%s", e.what() );
+
+		return( -1 );
+	}
+	images.assign( (guint) 0 );
+
+	return( 0 );
+}
 
 static int
-gmic_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
+vips_gmic_gen( VipsRegion *oreg, void *vseq, void *a, void *b, gboolean *stop )
 {
-  VipsRegion **ir = (VipsRegion **) seq;
-  
-  if( !ir ) return -1;
+	VipsGMicSequence *seq = (VipsGMicSequence *) vseq;
 
-  //std::cout<<"ir[0]->im->BandFmt: "<<ir[0]->im->BandFmt<<std::endl;
-  switch( ir[0]->im->BandFmt ) {
-  case VIPS_FORMAT_UCHAR:
-    //return _gmic_gen<unsigned char>(oreg, seq, a, b, stop);
-    break;
+	switch( seq->ir[0]->im->BandFmt ) {
+	case VIPS_FORMAT_UCHAR:
+		return( vips_gmic_gen_template<unsigned char>( oreg, 
+			seq, a, b, stop ) );
+		break;
 
-  case VIPS_FORMAT_CHAR:
-    break;
+	case VIPS_FORMAT_USHORT:
+		return( vips_gmic_gen_template<unsigned short int>( oreg, 
+			seq, a, b, stop ) );
+		break;
 
-  case VIPS_FORMAT_USHORT:
-    //return _gmic_gen<unsigned short int>(oreg, seq, a, b, stop);
-    break;
+	case VIPS_FORMAT_FLOAT:
+		return( vips_gmic_gen_template<float>( oreg, 
+			seq, a, b, stop ) );
+		break;
 
-  case VIPS_FORMAT_SHORT:
-    break;
+	default:
+		g_assert( 0 );
+		break;
+	}
 
-  case VIPS_FORMAT_UINT:
-    break;
-
-  case VIPS_FORMAT_INT:
-    break;
-
-  case VIPS_FORMAT_FLOAT:
-    return _gmic_gen<float>(oreg, seq, a, b, stop);
-    break;
-
-  case VIPS_FORMAT_DOUBLE:
-    break;
-
-  default:
-    g_assert( 0 );
-    break;
-  }
-
-  return 0;
+	return( 0 );
 }
 
+/* Save a bit of typing.
+ */
+#define UC VIPS_FORMAT_UCHAR
+#define C VIPS_FORMAT_CHAR
+#define US VIPS_FORMAT_USHORT
+#define S VIPS_FORMAT_SHORT
+#define UI VIPS_FORMAT_UINT
+#define I VIPS_FORMAT_INT
+#define F VIPS_FORMAT_FLOAT
+#define X VIPS_FORMAT_COMPLEX
+#define D VIPS_FORMAT_DOUBLE
+#define DX VIPS_FORMAT_DPCOMPLEX
 
-static int _gmic_build( VipsObject *object )
+/* Type promotion. 
+ */
+static const VipsBandFormat vips_gmic_format_table[10] = {
+/* UC   C  US  S   UI  I   F   X   D   DX */
+   UC,  F, US, F,  F,  F,  F,  F,  F,  F
+};
+
+static int 
+vips_gmic_build( VipsObject *object )
 {
-  VipsObjectClass *klass = VIPS_OBJECT_GET_CLASS( object );
-  VipsOperation *operation = VIPS_OPERATION( object );
-  VipsGMic *vipsgmic = (VipsGMic *) object;
-  int i;
+	VipsObjectClass *klass = VIPS_OBJECT_GET_CLASS( object );
+	VipsGMic *vipsgmic = (VipsGMic *) object;
 
-  if( vipsgmic->ninput < 1 ) return -1;
-  if( !(vipsgmic->in[0]) ) return -1;
+	VipsImage **in;
+	VipsImage **t;
+	int ninput;
+	VipsBandFormat format;
 
-  if( VIPS_OBJECT_CLASS( vips_gmic_parent_class )->build( object ) )
-    return( -1 );
+	if( VIPS_OBJECT_CLASS( vips_gmic_parent_class )->build( object ) )
+		return( -1 );
 
-  for( i = 0; i < vipsgmic->ninput; i++ ) {
-    if( vips_image_pio_input( vipsgmic->in[i] ) || 
-        vips_check_coding_known( klass->nickname, vipsgmic->in[i] ) )  
-      return( -1 );
-  }
-  
-  /* Get ready to write to @out. @out must be set via g_object_set() so
-   * that vips can see the assignment. It'll complain that @out hasn't
-   * been set otherwise.
-   */
-  g_object_set( vipsgmic, "out", vips_image_new(), NULL ); 
+	in = vips_array_image_get( vipsgmic->in, &ninput );
 
-  VipsImage** in = (VipsImage**)im_malloc( vipsgmic->out, sizeof(VipsImage*)*(vipsgmic->ninput+1) );
-  if( !in ) return( -1 );
+	for( int i = 0; i < ninput; i++ ) 
+		if( vips_image_pio_input( in[i] ) || 
+			vips_check_coding_known( klass->nickname, in[i] ) )  
+			return( -1 );
 
-  for( i = 0; i < vipsgmic->ninput; i++ ) {
-    in[i] = vipsgmic->in[i];
-  }
-  in[vipsgmic->ninput] = NULL;
+	/* Cast all inputs up to the largest common supported format.
+	 */
+	format = VIPS_FORMAT_UCHAR;
+	for( int i = 0; i < ninput; i++ ) 
+		format = VIPS_MAX( format, in[i]->BandFmt ); 
+	format = vips_gmic_format_table[format];
+	t = (VipsImage **) vips_object_local_array( object, ninput );
+	for( int i = 0; i < ninput; i++ )
+		if( vips_cast( in[i], &t[i], format, NULL ) )
+			return( -1 );
+	in = t;
 
-  /* Set demand hints. 
-   */
-  if( vips_image_pipeline_array( vipsgmic->out, 
-                                 VIPS_DEMAND_STYLE_ANY,
-                                 in ) )
-    return( -1 );
+	g_object_set( vipsgmic, "out", vips_image_new(), NULL ); 
 
-  vips_image_init_fields( vipsgmic->out,
-                          in[0]->Xsize, in[0]->Ysize, 
-                          in[0]->Bands, in[0]->BandFmt,
-                          in[0]->Coding, in[0]->Type,
-                          1.0, 1.0);
+	if( vips_image_pipeline_array( vipsgmic->out, 
+		VIPS_DEMAND_STYLE_SMALLTILE, in ) )
+		return( -1 );
 
-  if(vipsgmic->ninput > 0) {
-    if( vips_image_generate( vipsgmic->out,
-                             vips_start_many, gmic_gen, vips_stop_many, 
-                             in, vipsgmic ) )
-      return( -1 );
-  } else {
-    if( vips_image_generate( vipsgmic->out, 
-                             NULL, gmic_gen, NULL, NULL, vipsgmic ) )
-      return( -1 );
-  }
+	if( vips_image_generate( vipsgmic->out,
+		vips_gmic_start, vips_gmic_gen, vips_gmic_stop, 
+		in, vipsgmic ) )
+		return( -1 );
 
-  return( 0 );
+	return( 0 );
 }
-
 
 static void
 vips_gmic_class_init( VipsGMicClass *klass )
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS( klass );
-  VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( klass );
-  VipsOperationClass *operation_class = VIPS_OPERATION_CLASS( klass );
-  gobject_class->set_property = vips_object_set_property;
-  gobject_class->get_property = vips_object_get_property;
-  vobject_class->nickname = "vips_gmic";
-  vobject_class->description = _( "Vips G'MIC" );
-  vobject_class->build = _gmic_build;
-  operation_class->flags = VIPS_OPERATION_SEQUENTIAL_UNBUFFERED;
+	GObjectClass *gobject_class = G_OBJECT_CLASS( klass );
+	VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( klass );
+	VipsOperationClass *operation_class = VIPS_OPERATION_CLASS( klass );
 
+	gobject_class->set_property = vips_object_set_property;
+	gobject_class->get_property = vips_object_get_property;
 
-  VIPS_ARG_INT( klass, "ninput", 0, 
-                _( "NInput" ), 
-                _( "Number of input images" ),
-                VIPS_ARGUMENT_REQUIRED_INPUT, 
-                G_STRUCT_OFFSET( VipsGMic, ninput ),
-                0, GMIC_MAX_INPUT_IMAGES, 0);
+	vobject_class->nickname = "gmic";
+	vobject_class->description = _( "Vips G'MIC" );
+	vobject_class->build = vips_gmic_build;
 
-  VIPS_ARG_IMAGE( klass, "out", 1,
-                  _( "Output" ), 
-                  _( "Output image" ),
-                  VIPS_ARGUMENT_REQUIRED_OUTPUT, 
-                  G_STRUCT_OFFSET( VipsGMic, out ) );
+	operation_class->flags = VIPS_OPERATION_SEQUENTIAL_UNBUFFERED;
 
-  VIPS_ARG_INT( klass, "padding", 3,
-                _( "padding" ), 
-                _( "Tile overlap" ),
-                VIPS_ARGUMENT_REQUIRED_INPUT, 
-                G_STRUCT_OFFSET( VipsGMic, padding ),
-                0, INT_MAX, 0);
+	VIPS_ARG_BOXED( klass, "in", 0, 
+		_( "Input" ), 
+		_( "Array of input images" ),
+		VIPS_ARGUMENT_REQUIRED_INPUT,
+		G_STRUCT_OFFSET( VipsGMic, in ),
+		VIPS_TYPE_ARRAY_IMAGE );
 
-  VIPS_ARG_DOUBLE( klass, "x_scale", 4,
-                   _( "x_scale" ), 
-                   _( "X Scale" ),
-                   VIPS_ARGUMENT_REQUIRED_INPUT, 
-                   G_STRUCT_OFFSET( VipsGMic, x_scale ),
-                   0, 100000000, 1);
+	VIPS_ARG_IMAGE( klass, "out", 1,
+		_( "Output" ), 
+		_( "Output image" ),
+		VIPS_ARGUMENT_REQUIRED_OUTPUT, 
+		G_STRUCT_OFFSET( VipsGMic, out ) );
 
-  VIPS_ARG_DOUBLE( klass, "y_scale", 5,
-                   _( "y_scale" ), 
-                   _( "Y Scale" ),
-                   VIPS_ARGUMENT_REQUIRED_INPUT, 
-                   G_STRUCT_OFFSET( VipsGMic, y_scale ),
-                   0, 100000000, 1);
+	VIPS_ARG_INT( klass, "padding", 3,
+		_( "padding" ), 
+		_( "Tile overlap" ),
+		VIPS_ARGUMENT_REQUIRED_INPUT, 
+		G_STRUCT_OFFSET( VipsGMic, padding ),
+		0, INT_MAX, 0);
+
+	VIPS_ARG_DOUBLE( klass, "x_scale", 4,
+		_( "x_scale" ), 
+		_( "X Scale" ),
+		VIPS_ARGUMENT_REQUIRED_INPUT, 
+		G_STRUCT_OFFSET( VipsGMic, x_scale ),
+		0, 100000000, 1);
+
+	VIPS_ARG_DOUBLE( klass, "y_scale", 5,
+		_( "y_scale" ), 
+		_( "Y Scale" ),
+		VIPS_ARGUMENT_REQUIRED_INPUT, 
+		G_STRUCT_OFFSET( VipsGMic, y_scale ),
+		0, 100000000, 1);
 
 	VIPS_ARG_STRING( klass, "command", 10, 
-                   _( "command" ),
-                   _( "G'MIC command string" ),
-                   VIPS_ARGUMENT_REQUIRED_INPUT, 
-                   G_STRUCT_OFFSET( VipsGMic, command ),
-                   NULL );
-
-  char tstr[100];
-  char tstr2[100];
-  char tstr3[100];
-  for( int imgid = 0; imgid < GMIC_MAX_INPUT_IMAGES; imgid++ ) {
-    snprintf(tstr,99,"in%d",imgid);
-    snprintf(tstr2,99,"Input%d",imgid);
-    snprintf(tstr3,99,"Input image %d",imgid);
-    VIPS_ARG_IMAGE( klass, tstr, imgid+11, 
-                    _( tstr2 ), 
-                    _( tstr3 ),
-                    VIPS_ARGUMENT_OPTIONAL_INPUT,
-                    G_STRUCT_OFFSET( VipsGMic, in )+sizeof(VipsImage*)*imgid );
-  }
+		_( "command" ),
+		_( "G'MIC command string" ),
+		VIPS_ARGUMENT_REQUIRED_INPUT, 
+		G_STRUCT_OFFSET( VipsGMic, command ),
+		NULL );
 }
-
 
 static void
 vips_gmic_init( VipsGMic *vipsgmic )
 {
 }
 
-
-int
-vips_gmic(int n, VipsImage** out, const char* command, int padding, float x_scale, float y_scale,...)
+extern "C" {
+/**
+ * vips_gmic:
+ * @in: (array length=n) (transfer none): array of input images
+ * @out: output image
+ * @n: number of input images
+ * @padding: overlap tiles by this much
+ * @x_scale: 
+ * @y_scale: 
+ * @command: command to execute
+ *
+ * Returns: 0 on success, -1 on failure. 
+ */
+G_MODULE_EXPORT int
+vips_gmic( VipsImage **in, VipsImage **out, int n, 
+	int padding, double x_scale, double y_scale, const char *command, ... )
 {
-  va_list ap;
-  int result;
-  va_start( ap, y_scale );
-  //result = vips_call_split( "vips_gmic", ap, n, out, command, padding, x_scale, y_scale );
-  result = vips_call_split( "vips_gmic", ap, n, out, padding, x_scale, y_scale, command );
-  va_end( ap );
-  return( result );
+	VipsArrayImage *array; 
+	va_list ap;
+	int result;
+
+	array = vips_array_image_new( in, n ); 
+	va_start( ap, command );
+	result = vips_call_split( "gmic", ap, array, out, 
+		padding, x_scale, y_scale, command );
+	va_end( ap );
+	vips_area_unref( VIPS_AREA( array ) );
+
+	return( result );
+}
+}
+
+extern "C" {
+/* This is called on module load.
+ */
+const gchar *
+g_module_check_init( GModule *module )
+{
+#ifdef DEBUG
+	printf( "vips_gmic: module init\n" ); 
+#endif /*DEBUG*/
+
+	vips_gmic_get_type();
+
+	/* We can't be unloaded, there would be chaos.
+	 */
+	g_module_make_resident( module );
+
+	return( NULL ); 
+}
 }

@@ -32,7 +32,7 @@
 #include "../convertformat.hh"
 #include "gmic.hh"
 
-int vips_gmic(int n, VipsImage** out, const char* command, int padding, float x_scale, float y_scale,...);
+int vips_gmic(VipsImage **in, VipsImage** out, int n, int padding, double x_scale, double y_scale, const char* command, ...);
 
 
 PF::GMicPar::GMicPar(): 
@@ -88,10 +88,11 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* iter_in = convimg;
   VipsImage* iter_out = NULL;
   for( int i = 0; i < iterations.get(); i++ ) {
-    if( vips_gmic( 1, &iter_out, command.get().c_str(),
+    VipsImage* inv[2] = { iter_in, NULL };
+    if( vips_gmic( inv, &iter_out, 1,
                    padding.get(), x_scale.get(),
-                   y_scale.get(), 
-                   "in0", iter_in, NULL ) ) {
+                   y_scale.get(),  
+                   command.get().c_str(), NULL ) ) {
       std::cout<<"vips_gmic() failed!!!!!!!"<<std::endl;
       PF_UNREF( iter_in, "GMicPar::build(): vips_gmic() failed, iter_in unref" );
       return NULL;
