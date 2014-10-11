@@ -67,8 +67,8 @@ set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/
 FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
 #FILE(GLOB LibRawSources external/LibRaw/src/*.cpp external/LibRaw/internal/*.cpp)
 
-FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh)
-FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc)
+FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
+FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc)
 
 FILE(GLOB BaseIncludes base/*.hh)
 FILE(GLOB BaseSources base/*.cc)
@@ -83,11 +83,14 @@ FILE(GLOB RTSources rt/*.cc rt/rtengine/*.c rt/rtengine/*.cc rt/rtexif/*.cc rt/r
 
 #FILE(GLOB VipsIncludes vips/plugin/*.h vips/plugin/*.hh)
 #FILE(GLOB VipsSources vips/plugin/*.c vips/plugin/*.cc)
-FILE(GLOB VipsIncludes vips/*.h vips/*.hh)
-FILE(GLOB VipsSources vips/*.c vips/*.cc)
+FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)
+FILE(GLOB VipsSources vips/*.c vips/*.cc vips/gmic/*.c vips/gmic/*.cpp)
 
-FILE(GLOB OpIncludes operations/*.hh)
-FILE(GLOB OpSources operations/*.cc)
+FILE(GLOB GMicIncludes vips/gmic/gmic/src/*.h)
+FILE(GLOB GMicSources vips/gmic/gmic/src/gmic.cpp)
+
+FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh)
+FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 
 add_library (pfbase
   ${BaseIncludes}
@@ -109,13 +112,20 @@ add_library (pfvips #SHARED
   ${VipsSources}
 )
 
+add_library (pfgmic
+  ${GMicIncludes}
+  ${GMicSources}
+)
+
+SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -I/usr/include -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
+
 #add_library (pfoperations
 #  ${OpIncludes}
 #  ${OpSources}
 #)
 
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_CFLAGS "-fPIC -DPIC")
-SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-fpermissive")
+SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES PREFIX "")
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES SUFFIX ".plg")
 
@@ -132,38 +142,43 @@ IF(MINGW)
 list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
 ENDIF(MINGW)
 
-target_link_libraries(photoflow ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
+target_link_libraries(photoflow ${LIBS} 
+  pfbase 
+  pfvips 
+  pfgmic 
+  ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
   ${ADDITIONAL_LIBS}
+  fftw3 fftw3_threads 
   #gmon
   )
 
 INSTALL(TARGETS photoflow RUNTIME DESTINATION .)
 INSTALL(DIRECTORY ../themes DESTINATION .)
 
-add_executable(invert # name of the executable on Windows will be example.exe 
-  benchmarks/invert.cc 
-  )
-SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
+#add_executable(invert # name of the executable on Windows will be example.exe 
+#  benchmarks/invert.cc 
+#  )
+#SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
 
-target_link_libraries(invert ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
-  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
-  )
+#target_link_libraries(invert ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
+#  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
+#  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
+#  )
 
 
-add_executable(refcount # name of the executable on Windows will be example.exe 
-  tests/refcount.cc 
-  )
-SET_TARGET_PROPERTIES(refcount PROPERTIES COMPILE_FLAGS "-fpermissive")
+#add_executable(refcount # name of the executable on Windows will be example.exe 
+#  tests/refcount.cc 
+#  )
+#SET_TARGET_PROPERTIES(refcount PROPERTIES COMPILE_FLAGS "-fpermissive")
 
-target_link_libraries(refcount ${LIBS}   ${SIGC2_LIBRARIES}
-  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
-  )
+#target_link_libraries(refcount ${LIBS}   ${SIGC2_LIBRARIES}
+#  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
+#  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
+#  )
 
 
 #add_executable(cast tests/cast.c)

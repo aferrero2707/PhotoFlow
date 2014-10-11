@@ -73,7 +73,10 @@ extern "C" {
 #endif /*__cplusplus*/
 
   extern GType vips_layer_get_type( void ); 
-
+  extern GType vips_gmic_get_type( void ); 
+  extern GType vips_cimg_blur_anisotropic_get_type( void );
+  extern GType vips_cimg_blur_bilateral_get_type( void );
+  extern void vips_cimg_operation_init( void );
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
@@ -115,6 +118,10 @@ int main (int argc, char *argv[])
 		return 1;
 
   vips_layer_get_type();
+  vips_gmic_get_type();
+  //vips_cimg_blur_anisotropic_get_type();
+  //vips_cimg_blur_bilateral_get_type();
+  //vips_cimg_operation_init();
 
 #ifndef NDEBUG
   im_concurrency_set( 1 );
