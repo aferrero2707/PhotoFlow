@@ -10,6 +10,8 @@ pkg_check_modules(LCMS2 REQUIRED lcms2)
 
 find_package (TIFF REQUIRED)
 
+pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
+
 #FIND_PACKAGE(LibRaw 0.13 REQUIRED)
 #pkg_check_modules(LIBRAW REQUIRED libraw)
 
@@ -18,7 +20,7 @@ find_package (TIFF REQUIRED)
 
 pkg_check_modules(SIGC2 REQUIRED sigc++-2.0)
 
-pkg_check_modules(VIPS REQUIRED vips>=7.40.8)
+pkg_check_modules(VIPS REQUIRED vips>=7.41.0)
 #pkg_check_modules(VIPSCC REQUIRED vipsCC)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
