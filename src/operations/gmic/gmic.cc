@@ -87,12 +87,13 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
   /**/
   VipsImage* iter_in = convimg;
   VipsImage* iter_out = NULL;
+  std::string cmd = std::string("-verbose - ")+command.get();
   for( int i = 0; i < iterations.get(); i++ ) {
     VipsImage* inv[2] = { iter_in, NULL };
     if( vips_gmic( inv, &iter_out, 1,
                    padding.get(), x_scale.get(),
                    y_scale.get(),  
-                   command.get().c_str(), NULL ) ) {
+                   cmd.c_str(), NULL ) ) {
       std::cout<<"vips_gmic() failed!!!!!!!"<<std::endl;
       PF_UNREF( iter_in, "GMicPar::build(): vips_gmic() failed, iter_in unref" );
       return NULL;
