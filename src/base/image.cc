@@ -29,31 +29,15 @@
  */
 
 #include <fstream>
-#include <algorithm>
 
 #include <gtk/gtk.h>
 
+#include "fileutils.hh"
 #include "image.hh"
 #include "imageprocessor.hh"
 #include "pf_file_loader.hh"
 #include "../operations/convert2srgb.hh"
 #include "../operations/convertformat.hh"
-
-
-static bool getFileExtension(const char * dir_separator, const std::string & file, std::string & ext)
-{
-    std::size_t ext_pos = file.rfind(".");
-    std::size_t dir_pos = file.rfind(dir_separator);
-
-    if(ext_pos>dir_pos+1)
-    {
-        ext.append(file.begin()+ext_pos+1,file.end());
-	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-        return true;
-    }
-
-    return false;
-}
 
 
 
@@ -517,7 +501,7 @@ void PF::Image::remove_layer( PF::Layer* layer, std::list<Layer*>& list )
 bool PF::Image::open( std::string filename )
 {
   std::string ext;
-  if( !getFileExtension( "/", filename, ext ) ) return false;
+  if( !getFileExtensionLowcase( "/", filename, ext ) ) return false;
   disable_update = true;
   if( ext == "pfi" ) {
 

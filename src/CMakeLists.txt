@@ -33,6 +33,7 @@ if(GTKMM3_FOUND)
   
 endif()
 
+include_directories(    ${GLIB_INCLUDE_DIRS}  )
 include_directories(${SIGC2_INCLUDE_DIRS})
 
 
@@ -156,7 +157,29 @@ target_link_libraries(photoflow ${LIBS}
   #gmon
   )
 
+
+
+add_executable(pfbatch pfbatch.cc)
+
+#add_dependencies(photoflow ${LIB_DEPS})
+
+target_link_libraries(pfbatch ${LIBS} 
+  pfbase 
+  pfvips 
+  pfgmic 
+  ${SIGC2_LIBRARIES}
+  ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${GLIB_LIBRARIES} 
+  #${LIBRAW_LIBRARIES}  
+  ${STATIC_LIBS}
+  ${ADDITIONAL_LIBS}
+  fftw3 fftw3_threads 
+  #gmon
+  )
+
 INSTALL(TARGETS photoflow RUNTIME DESTINATION .)
+INSTALL(TARGETS pfbatch RUNTIME DESTINATION .)
 INSTALL(DIRECTORY ../themes DESTINATION .)
 
 #add_executable(invert # name of the executable on Windows will be example.exe 
