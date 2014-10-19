@@ -52,14 +52,19 @@ PF::CheckBox::CheckBox( OperationConfigDialog* dialog, std::string pname, std::s
 void PF::CheckBox::get_value()
 {
   if( !get_prop() ) return;
-  std::string str = get_prop()->get_str().c_str();
-  check.set_active( str=="true" );
+  int val;
+  get_prop()->get( val );
+  check.set_active( val != 0 );
+  //std::string str = get_prop()->get_str().c_str();
+  //check.set_active( str=="true" );
 }
 
 
 void PF::CheckBox::set_value()
 {
   if( !get_prop() ) return;
+  if( check.get_active() ) get_prop()->update( (int)1 );
+  else get_prop()->update( (int)0 );
   //std::string str = entry.get_text().c_str();
   //get_prop()->update(str);
 }

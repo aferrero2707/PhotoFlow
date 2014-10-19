@@ -243,7 +243,11 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_geom.add_op( "Crop image", "crop" );
 
   op_gmic.add_op( "G'MIC interpreter", "gmic" );
+  op_gmic.add_op( "Smooth [anisotropic]", "gmic_smooth_anisotropic" );
   op_gmic.add_op( "Smooth [bilateral]", "gmic_blur_bilateral" );
+  op_gmic.add_op( "Smooth [diffusion]", "gmic_smooth_diffusion" );
+  op_gmic.add_op( "Smooth [mean-curvature]", "gmic_smooth_mean_curvature" );
+  op_gmic.add_op( "Patch-based denoise", "gmic_denoise" );
 
   op_misc.add_op( "Buffer layer", "buffer" );
   op_misc.add_op( "Clone layer", "clone" );
