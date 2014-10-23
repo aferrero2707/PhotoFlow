@@ -663,22 +663,26 @@ void PF::ImageArea::update( VipsRect* area )
 
 void PF::ImageArea::sink( const VipsRect& area ) 
 {
-#ifndef NDEBUG
+#ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::sink( const VipsRect& area ) called"<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = get_pipeline();
   if( !pipeline ) return;
+  if( !outimg ) return;
   int level = pipeline->get_level();
   float fact = 1.0f;
   for( unsigned int i = 0; i < level; i++ )
     fact /= 2.0f;
+  fact *= shrink_factor;
 
   VipsRect scaled_area;
   scaled_area.left = area.left * fact;
   scaled_area.top = area.top * fact;
-  scaled_area.width = area.width * fact;
-  scaled_area.height = area.height * fact;
+  scaled_area.width = area.width * fact + 1;
+  scaled_area.height = area.height * fact + 1;
+
+  //vips_image_invalidate_all( pipeline->get_output() );
 
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update( area ): called"<<std::endl;
@@ -695,13 +699,20 @@ void PF::ImageArea::sink( const VipsRect& area )
 												 0, NULL, this))
 		return;
 	*/
-  VipsRegion* region2 = vips_region_new (display_image);
-  vips_invalidate_area( display_image, &scaled_area );
-	//vips_region_invalidate( region );
+  //VipsRegion* region2 = vips_region_new (display_image);
+  VipsRegion* region2 = vips_region_new( outimg );
+  //vips_invalidate_area( display_image, &scaled_area );
+	//vips_region_invalidate( region2 );
 
   VipsRect* parea = (VipsRect*)(&scaled_area);
-  if (vips_region_prepare (region2, parea))
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Preparing area "<<scaled_area.left<<","<<scaled_area.top<<"+"<<scaled_area.width<<"+"<<scaled_area.height<<std::endl;
+#endif
+  if (vips_region_prepare (region2, parea)) {
+    std::cout<<"ImageArea::sink(): vips_region_prepare() failed."<<std::endl;
     return;
+  }
+  unsigned char* pout = (unsigned char*)VIPS_REGION_ADDR( region2, parea->left, parea->top ); 
 	/*
 	std::cout<<"Plotting scaled area "<<scaled_area.width<<","<<scaled_area.height
 					 <<"+"<<scaled_area.left<<","<<scaled_area.top<<std::endl;
@@ -736,7 +747,7 @@ void PF::ImageArea::sink( const VipsRect& area )
 
 	/**/
 	double_buffer.lock();
-	double_buffer.get_active().copy( region2, scaled_area );
+	double_buffer.get_active().copy( region2, scaled_area, xoffset, yoffset );
 	Update * update = g_new (Update, 1);
 	update->image_area = this;
 	update->rect.width = update->rect.height = 0;

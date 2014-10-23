@@ -30,7 +30,7 @@
 #include "draw.hh"
 
 PF::DrawPar::DrawPar(): 
-  BlenderPar(),
+  OpParBase(),
   pen_grey( "pen_grey", this, 0 ),
   pen_R( "pen_R", this, 1 ),
   pen_G( "pen_G", this, 1 ),
@@ -171,6 +171,12 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
 															VipsImage* imap, VipsImage* omap, 
 															unsigned int& level)
 {
+  scale_factor = 1;
+  for(unsigned int l = 0; l < level; l++ ) {
+    scale_factor *= 2;
+  }
+  return OpParBase::build( in, first, imap, omap, level );
+  /*
   if( !rawbuf ) {
 		rawbuf = new PF::RawBuffer();
   }
@@ -180,7 +186,7 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
   init_buffer( level );
 	if(rawbuf->get_fd() < 0)
 		return NULL;
-
+  */
 	/*
 	PF::DiskBufferPar* diskbufpar = dynamic_cast<PF::DiskBufferPar*>(diskbuf->get_par());
 	diskbufpar->set_descriptor( rawbuf->get_fd() );
@@ -204,7 +210,7 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
       in2.push_back( NULL );
       in2.push_back( l->image );
     }
-    VipsImage* out = PF::BlenderPar::build( in2, 0, NULL, omap, level );
+    VipsImage* out = PF::OpParBase::build( in2, 0, NULL, omap, level );
     //g_object_unref( l->image );
     PF_UNREF( l->image, "PF::DrawPar::build(): l->image unref" );
     return out;
@@ -276,6 +282,11 @@ void PF::DrawPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
 
   if( rawbuf )
     rawbuf->draw_point( pen, x, y, update, true );
+  else {
+    update.left = x - pen.get_size();
+    update.top = y - pen.get_size();
+    update.width = update.height = pen.get_size()*2 + 1;
+  }
 }
 
 
