@@ -73,7 +73,7 @@ VipsImage* PF::GmicSmoothMeanCurvaturePar::build(std::vector<VipsImage*>& in, in
   std::string command = "-meancurvature_flow  ";
   command = command + prop_iterations.get_str();
   command = command + std::string(",") + prop_time_step.get_str();
-  command = command + std::string(",0 -c 0,255");
+  command = command + std::string(",0");
   gpar->set_command( command.c_str() );
   //gpar->set_iterations( iterations.get() );
   gpar->set_iterations( 1 );
