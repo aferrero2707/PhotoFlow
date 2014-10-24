@@ -101,17 +101,32 @@ template<> float vips_to_gmic(const unsigned short& val)
 // Convert floating point data from gmic to output VIPS format
 template <typename T>  void vips_from_gmic(const float& in, T& out)
 {
-  out = static_cast<T>(in);
+  // clip values to [0..255]
+  if( in >= 0 && in <= 255 )
+    out = static_cast<T>(in);
+  else if( in < 0 )
+    out = 0;
+  else out = 255;
 }
 
 template<> void vips_from_gmic(const float& val, float& out)
 {
-  out = val/255;
+  // clip values to [0..255]
+  if( val >= 0 && val <= 255 )
+    out = val/255;
+  else if( val < 0 )
+    out = 0;
+  else out = 1;
 }
 
 template<> void vips_from_gmic(const float& val, unsigned short& out)
 {
-  out = static_cast<unsigned short>(val*257);
+  // clip values to [0..255]
+  if( val >= 0 && val <= 255 )
+    out = static_cast<unsigned short>(val*257);
+  else if( val < 0 )
+    out = 0;
+  else out = 65535;
 }
 
 

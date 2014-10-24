@@ -39,6 +39,7 @@ PF::GMicPar::GMicPar():
   OpParBase(),
   iterations("iterations",this,1),
   command("command",this,""),
+  post_command("post_command",this,""),
   padding("padding",this,0),
   x_scale("x_scale",this,1), 
   y_scale("y_scale",this,1)
@@ -87,7 +88,8 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
   /**/
   VipsImage* iter_in = convimg;
   VipsImage* iter_out = NULL;
-  std::string cmd = std::string("-verbose - ")+command.get();
+  //std::string cmd = std::string("-verbose - ")+command.get();
+  std::string cmd = command.get();
   for( int i = 0; i < iterations.get(); i++ ) {
     VipsImage* inv[2] = { iter_in, NULL };
     if( vips_gmic( inv, &iter_out, 1,

@@ -142,16 +142,13 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
     processor = new_draw();
 
-  } else if( op_type == "gmic" ) {
+  }
 
-    //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
-    processor = new_gmic();
-
-  } else if( op_type == "gmic_blur_bilateral" ) {
-
-    //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
-    processor = new_gmic_blur_bilateral();
-
+  if( !processor ) {
+    // Try with G'MIC
+    processor = PF::new_gmic_operation( op_type );
+  }
+  /*
   } else { // it must be a VIPS operation...
 
     int pos = op_type.find( "vips-" );
@@ -165,6 +162,7 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     vips_op->get_par()->set_op( vips_op_type.c_str() );
     processor = vips_op;
   }
+  */
 
   if( processor && current_layer ) {
     current_layer->set_processor( processor );

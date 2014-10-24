@@ -27,11 +27,9 @@
 
  */
 
-#ifndef CIMG_BLUR_BILATERAL_H
-#define CIMG_BLUR_BILATERAL_H
+#ifndef GMIC_DENOISE_H
+#define GMIC_DENOISE_H
 
-#include <assert.h>
-#include <string>
 
 #include "../base/processor.hh"
 
@@ -39,56 +37,48 @@
 namespace PF 
 {
 
-  class GMicPar: public OpParBase
+  class GmicDenoisePar: public OpParBase
   {
-    ProcessorBase* convert_format;
-    ProcessorBase* convert_format2;
-
     Property<int> iterations;
-    Property<std::string> command; 
-    Property<std::string> post_command; 
-    Property<int> padding;
-    Property<float> x_scale;
-    Property<float> y_scale; 
+    Property<float> prop_sigma_s;
+    Property<float> prop_sigma_r;
+    Property<float> prop_psize;
+    Property<float> prop_rsize;
+    Property<float> prop_smoothness;
+    Property<int> prop_is_fast;
+    ProcessorBase* gmic;
 
   public:
-    GMicPar();
+    GmicDenoisePar();
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
-
-    void set_command( std::string cmd ) { command.set( cmd ); }
-    void set_post_command( std::string cmd ) { post_command.set( cmd ); }
-    void set_iterations( int it ) { iterations.set( it ); };
-    void set_padding( int p ) { padding.set( p ); };
-    void set_x_scale(float xs ) { x_scale.set( xs ); }
-    void set_y_scale(float ys ) { x_scale.set( ys ); }
+    bool needs_caching() { return false; }
 
       
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
-		     VipsImage* imap, VipsImage* omap, 
-		     unsigned int& level);
+                     VipsImage* imap, VipsImage* omap, 
+                     unsigned int& level);
   };
 
   
 
   template < OP_TEMPLATE_DEF > 
-  class GMicProc
+  class GmicDenoiseProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
-		VipsRegion* imap, VipsRegion* omap, 
-		VipsRegion* oreg, OpParBase* par)
-    {
-			
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, OpParBase* par)
+    {	
     }
   };
 
 
 
 
-  ProcessorBase* new_gmic();
+  ProcessorBase* new_gmic_denoise();
 }
 
 #endif 

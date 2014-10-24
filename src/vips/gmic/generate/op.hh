@@ -27,11 +27,9 @@
 
  */
 
-#ifndef CIMG_BLUR_BILATERAL_H
-#define CIMG_BLUR_BILATERAL_H
+#ifndef GMIC_%op_name_uc%_H
+#define GMIC_%op_name_uc%_H
 
-#include <assert.h>
-#include <string>
 
 #include "../base/processor.hh"
 
@@ -39,56 +37,45 @@
 namespace PF 
 {
 
-  class GMicPar: public OpParBase
+  class Gmic%op_name2%Par: public OpParBase
   {
-    ProcessorBase* convert_format;
-    ProcessorBase* convert_format2;
-
     Property<int> iterations;
-    Property<std::string> command; 
-    Property<std::string> post_command; 
-    Property<int> padding;
-    Property<float> x_scale;
-    Property<float> y_scale; 
+    %par_def%
+    ProcessorBase* gmic;
 
   public:
-    GMicPar();
+    Gmic%op_name2%Par();
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
+    bool needs_caching() { return false; }
 
-    void set_command( std::string cmd ) { command.set( cmd ); }
-    void set_post_command( std::string cmd ) { post_command.set( cmd ); }
-    void set_iterations( int it ) { iterations.set( it ); };
-    void set_padding( int p ) { padding.set( p ); };
-    void set_x_scale(float xs ) { x_scale.set( xs ); }
-    void set_y_scale(float ys ) { x_scale.set( ys ); }
 
-      
+    int get_padding( int level );      
+
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
-		     VipsImage* imap, VipsImage* omap, 
-		     unsigned int& level);
+                     VipsImage* imap, VipsImage* omap, 
+                     unsigned int& level);
   };
 
   
 
   template < OP_TEMPLATE_DEF > 
-  class GMicProc
+  class Gmic%op_name2%Proc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
-		VipsRegion* imap, VipsRegion* omap, 
-		VipsRegion* oreg, OpParBase* par)
-    {
-			
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, OpParBase* par)
+    {	
     }
   };
 
 
 
 
-  ProcessorBase* new_gmic();
+  ProcessorBase* new_gmic_%op_name%();
 }
 
 #endif 

@@ -46,9 +46,7 @@
 #include "../gui/operations/draw_config.hh"
 #include "../gui/operations/convert_colorspace_config.hh"
 
-#include "../gui/operations/gmic/gmic_config.hh"
-#include "../gui/operations/gmic/blur_bilateral_config.hh"
-
+#include "operations/gmic/new_gmic_operation_config.hh"
 
 
 static gboolean dialog_update_cb (PF::OperationConfigDialog * dialog)
@@ -398,7 +396,7 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   PF::ProcessorBase* processor = PF::new_operation( op_type, current_layer );
   if( !processor ) return NULL;
 
-  PF::OperationConfigDialog* dialog;
+  PF::OperationConfigDialog* dialog = NULL;
 
   if( op_type == "imageread" ) { 
 
@@ -479,15 +477,13 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "draw" ) {
 
     dialog = new PF::DrawConfigDialog( current_layer );
+  }
 
-  } else if( op_type == "gmic_blur_bilateral" ) {
-    
-    dialog = new PF::BlurBilateralConfigDialog( current_layer );
-
-  } else if( op_type == "gmic" ) {
-    
-    dialog = new PF::GMicConfigDialog( current_layer );
-
+  if( !dialog ) {
+    // Try with G'MIC
+    dialog = PF::new_gmic_operation_config( op_type, current_layer );
+  }
+    /*
   } else { // it must be a VIPS operation...
 
     int pos = op_type.find( "vips-" );
@@ -500,6 +496,7 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
     vips_config->set_op( vips_op_type.c_str() );
     dialog = vips_config;
   }
+    */
 
   if( processor ) {
     PF::OpParBase* current_op = processor->get_par();
