@@ -39,6 +39,7 @@ PF::GMicPar::GMicPar():
   OpParBase(),
   iterations("iterations",this,1),
   command("command",this,""),
+  post_command("post_command",this,""),
   padding("padding",this,0),
   x_scale("x_scale",this,1), 
   y_scale("y_scale",this,1)

@@ -53,6 +53,12 @@ OpParBase(),
 
 
 
+int PF::GmicSmoothAnisotropicPar::get_padding( int level )
+{
+  return 0;
+}
+
+
 VipsImage* PF::GmicSmoothAnisotropicPar::build(std::vector<VipsImage*>& in, int first, 
                                         VipsImage* imap, VipsImage* omap, 
                                         unsigned int& level)
@@ -68,6 +74,10 @@ VipsImage* PF::GmicSmoothAnisotropicPar::build(std::vector<VipsImage*>& in, int 
   PF::GMicPar* gpar = dynamic_cast<PF::GMicPar*>( gmic->get_par() );
   if( !gpar ) return NULL;
 
+  float scalefac = 1;
+	for( int l = 1; l <= level; l++ )
+		scalefac *= 2;
+
   std::string command = "-smooth  ";
   command = command + prop_amplitude.get_str();
   command = command + std::string(",") + prop_sharpness.get_str();
@@ -81,6 +91,7 @@ VipsImage* PF::GmicSmoothAnisotropicPar::build(std::vector<VipsImage*>& in, int 
   command = command + std::string(",") + prop_fast_approximation.get_str();
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
+  gpar->set_padding( get_padding( level ) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 

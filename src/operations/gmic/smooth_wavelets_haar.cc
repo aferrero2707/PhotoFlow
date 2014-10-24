@@ -29,33 +29,36 @@
 
 
 #include "gmic.hh"
-#include "smooth_diffusion.hh"
+#include "smooth_wavelets_haar.hh"
 
 
 
-PF::GmicSmoothDiffusionPar::GmicSmoothDiffusionPar(): 
+PF::GmicSmoothWaveletsHaarPar::GmicSmoothWaveletsHaarPar(): 
 OpParBase(),
 //iterations("iterations",this,1),
-  prop_iterations("iterations",this,8),
-  prop_sharpness("sharpness",this,0.7),
-  prop_anisotropy("anisotropy",this,0.3),
-  prop_gradient_smoothness("gradient_smoothness",this,0.6),
-  prop_tensor_smoothness("tensor_smoothness",this,1.1),
-  prop_time_step("time_step",this,15)
+  prop_threshold("threshold",this,1),
+  prop_iterations("iterations",this,1),
+  prop_scales("scales",this,2)
 {	
   gmic = PF::new_gmic();
-  set_type( "gmic_smooth_diffusion" );
+  set_type( "gmic_smooth_wavelets_haar" );
 }
 
 
 
-int PF::GmicSmoothDiffusionPar::get_padding( int level )
+int PF::GmicSmoothWaveletsHaarPar::get_padding()
 {
-  return 0;
+  int scalefac = 1;
+	for( int l = 1; l <= prop_scales.get(); l++ )
+		scalefac *= 2;
+  scalefac *= prop_iterations.get();
+
+  std::cout<<"scalefac: "<<scalefac<<std::endl;
+  return scalefac;
 }
 
 
-VipsImage* PF::GmicSmoothDiffusionPar::build(std::vector<VipsImage*>& in, int first, 
+VipsImage* PF::GmicSmoothWaveletsHaarPar::build(std::vector<VipsImage*>& in, int first, 
                                         VipsImage* imap, VipsImage* omap, 
                                         unsigned int& level)
 {
@@ -74,17 +77,14 @@ VipsImage* PF::GmicSmoothDiffusionPar::build(std::vector<VipsImage*>& in, int fi
 	for( int l = 1; l <= level; l++ )
 		scalefac *= 2;
 
-  std::string command = "-smooth  ";
-  command = command + prop_iterations.get_str();
-  command = command + std::string(",") + prop_sharpness.get_str();
-  command = command + std::string(",") + prop_anisotropy.get_str();
-  command = command + std::string(",") + prop_gradient_smoothness.get_str();
-  command = command + std::string(",") + prop_tensor_smoothness.get_str();
-  command = command + std::string(",") + prop_time_step.get_str();
-  command = command + std::string(",0 -c 0,255");
+  std::string command = "-denoise_haar  ";
+  command = command + prop_threshold.get_str();
+  command = command + std::string(",") + prop_scales.get_str();
+  command = command + std::string(",") + prop_iterations.get_str();
   gpar->set_command( command.c_str() );
   //gpar->set_iterations( iterations.get() );
-  gpar->set_iterations( 1 );
+  gpar->set_iterations( (int)1 );
+  gpar->set_padding( get_padding() );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 
@@ -100,7 +100,7 @@ VipsImage* PF::GmicSmoothDiffusionPar::build(std::vector<VipsImage*>& in, int fi
 }
 
 
-PF::ProcessorBase* PF::new_gmic_smooth_diffusion()
+PF::ProcessorBase* PF::new_gmic_smooth_wavelets_haar()
 {
-  return( new PF::Processor<PF::GmicSmoothDiffusionPar,PF::GmicSmoothDiffusionProc>() );
+  return( new PF::Processor<PF::GmicSmoothWaveletsHaarPar,PF::GmicSmoothWaveletsHaarProc>() );
 }

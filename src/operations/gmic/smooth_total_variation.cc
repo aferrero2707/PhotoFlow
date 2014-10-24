@@ -29,33 +29,28 @@
 
 
 #include "gmic.hh"
-#include "smooth_diffusion.hh"
+#include "smooth_total_variation.hh"
 
 
 
-PF::GmicSmoothDiffusionPar::GmicSmoothDiffusionPar(): 
+PF::GmicSmoothTotalVariationPar::GmicSmoothTotalVariationPar(): 
 OpParBase(),
 //iterations("iterations",this,1),
-  prop_iterations("iterations",this,8),
-  prop_sharpness("sharpness",this,0.7),
-  prop_anisotropy("anisotropy",this,0.3),
-  prop_gradient_smoothness("gradient_smoothness",this,0.6),
-  prop_tensor_smoothness("tensor_smoothness",this,1.1),
-  prop_time_step("time_step",this,15)
+  prop_iterations("iterations",this,10),
+  prop_time_step("time_step",this,30)
 {	
   gmic = PF::new_gmic();
-  set_type( "gmic_smooth_diffusion" );
+  set_type( "gmic_smooth_total_variation" );
 }
 
 
-
-int PF::GmicSmoothDiffusionPar::get_padding( int level )
+int PF::GmicSmoothTotalVariationPar::get_padding( int level )
 {
   return 0;
 }
 
 
-VipsImage* PF::GmicSmoothDiffusionPar::build(std::vector<VipsImage*>& in, int first, 
+VipsImage* PF::GmicSmoothTotalVariationPar::build(std::vector<VipsImage*>& in, int first, 
                                         VipsImage* imap, VipsImage* omap, 
                                         unsigned int& level)
 {
@@ -74,17 +69,12 @@ VipsImage* PF::GmicSmoothDiffusionPar::build(std::vector<VipsImage*>& in, int fi
 	for( int l = 1; l <= level; l++ )
 		scalefac *= 2;
 
-  std::string command = "-smooth  ";
+  std::string command = "-tv_flow  ";
   command = command + prop_iterations.get_str();
-  command = command + std::string(",") + prop_sharpness.get_str();
-  command = command + std::string(",") + prop_anisotropy.get_str();
-  command = command + std::string(",") + prop_gradient_smoothness.get_str();
-  command = command + std::string(",") + prop_tensor_smoothness.get_str();
   command = command + std::string(",") + prop_time_step.get_str();
-  command = command + std::string(",0 -c 0,255");
   gpar->set_command( command.c_str() );
   //gpar->set_iterations( iterations.get() );
-  gpar->set_iterations( 1 );
+  gpar->set_padding( get_padding( level ) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 
@@ -100,7 +90,7 @@ VipsImage* PF::GmicSmoothDiffusionPar::build(std::vector<VipsImage*>& in, int fi
 }
 
 
-PF::ProcessorBase* PF::new_gmic_smooth_diffusion()
+PF::ProcessorBase* PF::new_gmic_smooth_total_variation()
 {
-  return( new PF::Processor<PF::GmicSmoothDiffusionPar,PF::GmicSmoothDiffusionProc>() );
+  return( new PF::Processor<PF::GmicSmoothTotalVariationPar,PF::GmicSmoothTotalVariationProc>() );
 }

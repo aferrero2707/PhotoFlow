@@ -45,6 +45,12 @@ OpParBase(),
 
 
 
+int PF::GmicSmoothMeanCurvaturePar::get_padding( int level )
+{
+  return 0;
+}
+
+
 VipsImage* PF::GmicSmoothMeanCurvaturePar::build(std::vector<VipsImage*>& in, int first, 
                                         VipsImage* imap, VipsImage* omap, 
                                         unsigned int& level)
@@ -59,6 +65,10 @@ VipsImage* PF::GmicSmoothMeanCurvaturePar::build(std::vector<VipsImage*>& in, in
   if( !(gmic->get_par()) ) return NULL;
   PF::GMicPar* gpar = dynamic_cast<PF::GMicPar*>( gmic->get_par() );
   if( !gpar ) return NULL;
+
+  float scalefac = 1;
+	for( int l = 1; l <= level; l++ )
+		scalefac *= 2;
 
   std::string command = "-meancurvature_flow  ";
   command = command + prop_iterations.get_str();

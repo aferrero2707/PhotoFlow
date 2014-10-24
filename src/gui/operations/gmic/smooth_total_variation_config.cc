@@ -27,16 +27,27 @@
 
  */
 
-//#ifndef GMIC_OPERATION_CONFIGS__HH
-//#define GMIC_OPERATION_CONFIGS__HH
+//#include "../../../operations/gmic/smooth_total_variation.hh"
 
-#include "gmic_config.hh"
-#include "blur_bilateral_config.hh"
-#include "denoise_config.hh"
-#include "smooth_anisotropic_config.hh"
-#include "smooth_diffusion_config.hh"
-#include "smooth_mean_curvature_config.hh"
-#include "smooth_wavelets_haar_config.hh"
-#include "smooth_median_config.hh"
-#include "smooth_selective_gaussian_config.hh"
 #include "smooth_total_variation_config.hh"
+
+
+PF::GmicSmoothTotalVariationConfigDialog::GmicSmoothTotalVariationConfigDialog( PF::Layer* layer ):
+  OperationConfigDialog( layer, "Smooth [total variation] (G'MIC)"  ),
+  //iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
+  prop_iterations_slider( this, "iterations", "iterations", 10, 1, 40, 1, 5, 1),
+  prop_time_step_slider( this, "time_step", "time_step", 30, 5, 100, 1, 10, 1)
+{
+  //controlsBox.pack_start( iterations_slider );
+  controlsBox.pack_start( prop_iterations_slider );
+  controlsBox.pack_start( prop_time_step_slider );
+  
+  add_widget( controlsBox );
+}
+
+
+
+void PF::GmicSmoothTotalVariationConfigDialog::open()
+{
+  OperationConfigDialog::open();
+}

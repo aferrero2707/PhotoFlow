@@ -27,16 +27,27 @@
 
  */
 
-//#ifndef GMIC_OPERATION_CONFIGS__HH
-//#define GMIC_OPERATION_CONFIGS__HH
+//#include "../../../operations/gmic/smooth_median.hh"
 
-#include "gmic_config.hh"
-#include "blur_bilateral_config.hh"
-#include "denoise_config.hh"
-#include "smooth_anisotropic_config.hh"
-#include "smooth_diffusion_config.hh"
-#include "smooth_mean_curvature_config.hh"
-#include "smooth_wavelets_haar_config.hh"
 #include "smooth_median_config.hh"
-#include "smooth_selective_gaussian_config.hh"
-#include "smooth_total_variation_config.hh"
+
+
+PF::GmicSmoothMedianConfigDialog::GmicSmoothMedianConfigDialog( PF::Layer* layer ):
+  OperationConfigDialog( layer, "Smooth [median] (G'MIC)"  ),
+  iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
+  prop_radius_slider( this, "radius", "radius", 3, 1, 20, .19, 1.9, 1),
+  prop_threshold_slider( this, "threshold", "threshold", 255, 0, 255, 2.55, 25.5, 1)
+{
+  controlsBox.pack_start( iterations_slider );
+  controlsBox.pack_start( prop_radius_slider );
+  controlsBox.pack_start( prop_threshold_slider );
+  
+  add_widget( controlsBox );
+}
+
+
+
+void PF::GmicSmoothMedianConfigDialog::open()
+{
+  OperationConfigDialog::open();
+}

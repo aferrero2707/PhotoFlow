@@ -49,6 +49,14 @@ PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, P
     dialog = new PF::GmicSmoothDiffusionConfigDialog( current_layer );
   } else if( op_type == "gmic_smooth_mean_curvature" ) {
     dialog = new PF::GmicSmoothMeanCurvatureConfigDialog( current_layer );
+  } else if( op_type == "gmic_smooth_wavelets_haar" ) {
+    dialog = new PF::GmicSmoothWaveletsHaarConfigDialog( current_layer );
+  } else if( op_type == "gmic_smooth_median" ) {
+    dialog = new PF::GmicSmoothMedianConfigDialog( current_layer );
+  } else if( op_type == "gmic_smooth_selective_gaussian" ) {
+    dialog = new PF::GmicSmoothSelectiveGaussianConfigDialog( current_layer );
+  } else if( op_type == "gmic_smooth_total_variation" ) {
+    dialog = new PF::GmicSmoothTotalVariationConfigDialog( current_layer );
     //insert new operations here
   }
 

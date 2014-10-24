@@ -27,16 +27,30 @@
 
  */
 
-//#ifndef GMIC_OPERATION_CONFIGS__HH
-//#define GMIC_OPERATION_CONFIGS__HH
+#ifndef GMIC_SMOOTH_TOTAL_VARIATION_CONFIG_DIALOG_HH
+#define GMIC_SMOOTH_TOTAL_VARIATION_CONFIG_DIALOG_HH
 
-#include "gmic_config.hh"
-#include "blur_bilateral_config.hh"
-#include "denoise_config.hh"
-#include "smooth_anisotropic_config.hh"
-#include "smooth_diffusion_config.hh"
-#include "smooth_mean_curvature_config.hh"
-#include "smooth_wavelets_haar_config.hh"
-#include "smooth_median_config.hh"
-#include "smooth_selective_gaussian_config.hh"
-#include "smooth_total_variation_config.hh"
+#include <gtkmm.h>
+
+#include "../../operation_config_dialog.hh"
+
+
+namespace PF {
+
+  class GmicSmoothTotalVariationConfigDialog: public OperationConfigDialog
+  {
+    Gtk::VBox controlsBox;
+    
+    //Slider iterations_slider;
+    Slider prop_iterations_slider;
+    Slider prop_time_step_slider;
+       
+  public:
+    GmicSmoothTotalVariationConfigDialog( Layer* l );
+    
+    void open();
+  };
+
+}
+
+#endif

@@ -27,8 +27,8 @@
 
  */
 
-#ifndef GMIC_%op_name_uc%_H
-#define GMIC_%op_name_uc%_H
+#ifndef GMIC_SMOOTH_WAVELETS_HAAR_H
+#define GMIC_SMOOTH_WAVELETS_HAAR_H
 
 
 #include "../base/processor.hh"
@@ -37,21 +37,47 @@
 namespace PF 
 {
 
-  class Gmic%op_name2%Par: public OpParBase
+  class GmicSmoothWaveletsHaarPar: public OpParBase
   {
-    Property<int> iterations;
-    %par_def%
+    //Property<int> iterations;
+    Property<float> prop_threshold;
+    Property<int> prop_iterations;
+    Property<int> prop_scales;
     ProcessorBase* gmic;
 
   public:
-    Gmic%op_name2%Par();
+    GmicSmoothWaveletsHaarPar();
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool needs_caching() { return false; }
 
+      
+    int get_padding();      
 
-    int get_padding( int level );      
+    /* Function to derive the output area from the input area
+     */
+    virtual void transform(const Rect* rin, Rect* rout)
+    {
+      int pad = get_padding();
+      rout->left = rin->left+pad;
+      rout->top = rin->top+pad;
+      rout->width = rin->width-pad*2;
+      rout->height = rin->height-pad*2;
+    }
+       
+    /* Function to derive the area to be read from input images,
+       based on the requested output area
+    */
+    virtual void transform_inv(const Rect* rout, Rect* rin)
+    {
+      int pad = get_padding();
+      rin->left = rout->left-pad;
+      rin->top = rout->top-pad;
+      rin->width = rout->width+pad*2;
+      rin->height = rout->height+pad*2;
+    }
+      
 
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
@@ -62,7 +88,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class Gmic%op_name2%Proc
+  class GmicSmoothWaveletsHaarProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -75,7 +101,7 @@ namespace PF
 
 
 
-  ProcessorBase* new_gmic_%op_name%();
+  ProcessorBase* new_gmic_smooth_wavelets_haar();
 }
 
 #endif 

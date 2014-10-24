@@ -39,6 +39,10 @@ namespace PF
   ProcessorBase* new_gmic_smooth_anisotropic();
   ProcessorBase* new_gmic_smooth_diffusion();
   ProcessorBase* new_gmic_smooth_mean_curvature();
+  ProcessorBase* new_gmic_smooth_wavelets_haar();
+  ProcessorBase* new_gmic_smooth_median();
+  ProcessorBase* new_gmic_smooth_selective_gaussian();
+  ProcessorBase* new_gmic_smooth_total_variation();
   //insert new operations here
 
   ProcessorBase* new_gmic_operation( std::string op_type );

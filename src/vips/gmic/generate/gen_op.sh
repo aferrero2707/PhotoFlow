@@ -86,9 +86,13 @@ for i in $(seq 1 $nl); do
             pdef=$(echo "$value" | tr -s " " | cut -d" " -f 5)
             echo "$type $pname $pmin $pmax $pdef"
             echo -n "  prop_${pname}(\"$pname\",this,${pdef})" >> par_imp.cpp
-            pdelta1=$(echo "scale=1; ($pmax-$pmin)/10" | bc -l)
-            pdelta2=$(echo "scale=2; ($pmax-$pmin)/100" | bc -l)
-            echo -n "  prop_${pname}_slider( this, \"$pname\", \"$pname\", ${pdef}, ${pmin}, ${pmax}, ${pdelta2}, ${pdelta1}, 1)" >> widgets_imp.cpp
+            if [ x"$type" = "xint" ]; then
+                echo -n "  prop_${pname}_slider( this, \"$pname\", \"$pname\", ${pdef}, ${pmin}, ${pmax}, 1, 5, 1)" >> widgets_imp.cpp
+            else
+                pdelta1=$(echo "scale=1; ($pmax-$pmin)/10" | bc -l)
+                pdelta2=$(echo "scale=2; ($pmax-$pmin)/100" | bc -l)
+                echo -n "  prop_${pname}_slider( this, \"$pname\", \"$pname\", ${pdef}, ${pmin}, ${pmax}, ${pdelta2}, ${pdelta1}, 1)" >> widgets_imp.cpp
+            fi
             echo "  controlsBox.pack_start( prop_${pname}_slider );" >> widgets_imp2.cpp
 
         fi

@@ -47,6 +47,14 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_smooth_diffusion();
   } else if( op_type == "gmic_smooth_mean_curvature" ) {
     processor = new_gmic_smooth_mean_curvature();
+  } else if( op_type == "gmic_smooth_wavelets_haar" ) {
+    processor = new_gmic_smooth_wavelets_haar();
+  } else if( op_type == "gmic_smooth_median" ) {
+    processor = new_gmic_smooth_median();
+  } else if( op_type == "gmic_smooth_selective_gaussian" ) {
+    processor = new_gmic_smooth_selective_gaussian();
+  } else if( op_type == "gmic_smooth_total_variation" ) {
+    processor = new_gmic_smooth_total_variation();
     //insert new operations here
   }
 

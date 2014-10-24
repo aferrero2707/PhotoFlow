@@ -27,8 +27,8 @@
 
  */
 
-#ifndef GMIC_%op_name_uc%_H
-#define GMIC_%op_name_uc%_H
+#ifndef GMIC_SMOOTH_MEDIAN_H
+#define GMIC_SMOOTH_MEDIAN_H
 
 
 #include "../base/processor.hh"
@@ -37,21 +37,24 @@
 namespace PF 
 {
 
-  class Gmic%op_name2%Par: public OpParBase
+  class GmicSmoothMedianPar: public OpParBase
   {
     Property<int> iterations;
-    %par_def%
+    Property<float> prop_radius;
+    Property<float> prop_threshold;
     ProcessorBase* gmic;
 
+    float current_radius;
+
   public:
-    Gmic%op_name2%Par();
+    GmicSmoothMedianPar();
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool needs_caching() { return false; }
 
 
-    int get_padding( int level );      
+    int get_padding( int level );
 
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
@@ -62,7 +65,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class Gmic%op_name2%Proc
+  class GmicSmoothMedianProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -75,7 +78,7 @@ namespace PF
 
 
 
-  ProcessorBase* new_gmic_%op_name%();
+  ProcessorBase* new_gmic_smooth_median();
 }
 
 #endif 

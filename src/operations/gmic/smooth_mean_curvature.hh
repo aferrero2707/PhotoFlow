@@ -40,7 +40,7 @@ namespace PF
   class GmicSmoothMeanCurvaturePar: public OpParBase
   {
     //Property<int> iterations;
-    Property<float> prop_iterations;
+    Property<int> prop_iterations;
     Property<float> prop_time_step;
     ProcessorBase* gmic;
 
@@ -52,6 +52,8 @@ namespace PF
     bool needs_caching() { return false; }
 
       
+    int get_padding( int level );      
+
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
                      VipsImage* imap, VipsImage* omap, 

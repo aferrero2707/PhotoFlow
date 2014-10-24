@@ -60,6 +60,8 @@ namespace PF
     bool needs_caching() { return false; }
 
       
+    int get_padding( int level );      
+
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
                      VipsImage* imap, VipsImage* omap, 

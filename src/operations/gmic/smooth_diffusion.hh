@@ -40,7 +40,7 @@ namespace PF
   class GmicSmoothDiffusionPar: public OpParBase
   {
     //Property<int> iterations;
-    Property<float> prop_iterations;
+    Property<int> prop_iterations;
     Property<float> prop_sharpness;
     Property<float> prop_anisotropy;
     Property<float> prop_gradient_smoothness;
@@ -56,6 +56,8 @@ namespace PF
     bool needs_caching() { return false; }
 
       
+    int get_padding( int level );
+
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
                      VipsImage* imap, VipsImage* omap, 

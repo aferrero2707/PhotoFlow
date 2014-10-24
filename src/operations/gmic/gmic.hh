@@ -46,6 +46,7 @@ namespace PF
 
     Property<int> iterations;
     Property<std::string> command; 
+    Property<std::string> post_command; 
     Property<int> padding;
     Property<float> x_scale;
     Property<float> y_scale; 
@@ -57,6 +58,7 @@ namespace PF
     bool has_opacity() { return true; }
 
     void set_command( std::string cmd ) { command.set( cmd ); }
+    void set_post_command( std::string cmd ) { post_command.set( cmd ); }
     void set_iterations( int it ) { iterations.set( it ); };
     void set_padding( int p ) { padding.set( p ); };
     void set_x_scale(float xs ) { x_scale.set( xs ); }

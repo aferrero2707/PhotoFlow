@@ -27,8 +27,8 @@
 
  */
 
-#ifndef GMIC_%op_name_uc%_H
-#define GMIC_%op_name_uc%_H
+#ifndef GMIC_SMOOTH_TOTAL_VARIATION_H
+#define GMIC_SMOOTH_TOTAL_VARIATION_H
 
 
 #include "../base/processor.hh"
@@ -37,14 +37,15 @@
 namespace PF 
 {
 
-  class Gmic%op_name2%Par: public OpParBase
+  class GmicSmoothTotalVariationPar: public OpParBase
   {
-    Property<int> iterations;
-    %par_def%
+    //Property<int> iterations;
+    Property<int> prop_iterations;
+    Property<float> prop_time_step;
     ProcessorBase* gmic;
 
   public:
-    Gmic%op_name2%Par();
+    GmicSmoothTotalVariationPar();
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
@@ -62,7 +63,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class Gmic%op_name2%Proc
+  class GmicSmoothTotalVariationProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -75,7 +76,7 @@ namespace PF
 
 
 
-  ProcessorBase* new_gmic_%op_name%();
+  ProcessorBase* new_gmic_smooth_total_variation();
 }
 
 #endif 
