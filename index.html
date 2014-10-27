@@ -89,6 +89,10 @@
 
 <pre><code>$ git clone https://github.com/aferrero2707/PhotoFlow.git
 </code></pre>
+<p>or the development branch:</p>
+
+<pre><code>$ git clone -b develop https://github.com/aferrero2707/PhotoFlow.git
+</code></pre>
 </li>
 <li>
 <p>The build system is based on CMake, so you have to have it installed in your system.
@@ -96,35 +100,19 @@ PhotoFlow provides an helper script to simplify the building process;
 in order to use it you have to go into the "build" subdirectory and run the "build.sh" script:</p>
 
 <pre><code>$ cd PhotoFlow/build
-$ bash ./build.sh
+$ bash ./build_all.sh
 </code></pre>
 
-<p>If you have installed VIPS in an unusual place, you can edit the build script and set the PKG_CONFIG_PATH variable accordingly</p>
+<p>This will not only compile photoflow, but also fetch and compile the right version of VIPS automatically.</p>
 
-<p>To compile the code in debug mode, use</p>
-
-<pre><code>$ bash ./build.sh debug
-</code></pre>
-
-<p>instead.</p>
 </li>
 <li>
 <p>If all goes well, you can now open an image file with PhotoFlow:</p>
 
-<pre><code>$ ./src/photoflow image_file_name
+<pre><code>$ ./Release/photoflow image_file_name
 </code></pre>
-
-<p>There are some test images available:</p>
-
-<pre><code>$ ./src/photoflow ../testimages/Lab_curves.pfi
-</code></pre>
-
-<p>or</p>
 
 <a name="downloading-and-compiling-windows" class="anchor" href="#downloading-and-compiling-windows">
-
-<pre><code>$ ./src/photoflow ../testimages/orton.pfi
-</code></pre>
 </li>
 </ol>
 
