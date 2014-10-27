@@ -255,7 +255,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   op_misc.add_op( "Buffer layer", "buffer" );
   op_misc.add_op( "Clone layer", "clone" );
-  //op_misc.add_op( "Draw", "draw" );
+  op_misc.add_op( "Draw", "draw" );
 
   get_vbox()->pack_start( notebook );
 
