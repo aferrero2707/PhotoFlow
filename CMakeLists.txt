@@ -20,7 +20,7 @@ pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
 
 pkg_check_modules(SIGC2 REQUIRED sigc++-2.0)
 
-pkg_check_modules(VIPS REQUIRED vips>=7.41.0)
+pkg_check_modules(VIPS REQUIRED vips>=7.40.11)
 #pkg_check_modules(VIPSCC REQUIRED vipsCC)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
