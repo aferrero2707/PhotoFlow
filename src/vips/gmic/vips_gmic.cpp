@@ -303,13 +303,13 @@ vips_gmic_gen( VipsRegion *oreg, void *vseq, void *a, void *b, gboolean *stop )
 
 	switch( seq->ir[0]->im->BandFmt ) {
 	case VIPS_FORMAT_UCHAR:
-		return( vips_gmic_gen_template<unsigned char>( oreg, 
-			seq, a, b, stop ) );
+		//return( vips_gmic_gen_template<unsigned char>( oreg, 
+		//	seq, a, b, stop ) );
 		break;
 
 	case VIPS_FORMAT_USHORT:
-		return( vips_gmic_gen_template<unsigned short int>( oreg, 
-			seq, a, b, stop ) );
+		//return( vips_gmic_gen_template<unsigned short int>( oreg, 
+		//	seq, a, b, stop ) );
 		break;
 
 	case VIPS_FORMAT_FLOAT:
