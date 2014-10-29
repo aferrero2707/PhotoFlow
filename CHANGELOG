@@ -1,0 +1,17 @@
+2014/02/19
+
+- Added new operations:
+
+  + Image cloning
+  + Conversion to RGB (only sRGB for the moment)
+  + Conversion to Lab
+
+- Added Multiply and Screen blending modes
+
+- Added layers grouping functionality
+
+- Added support for file opening/saving
+
+  The layers structure is saved in XML format and read via GMarkup
+
+- Added an example of orton effect in the testimages directory
