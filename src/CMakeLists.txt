@@ -117,7 +117,7 @@ add_library (pfgmic
   ${GMicSources}
 )
 
-SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -I/usr/include -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
+SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
 
 #add_library (pfoperations
 #  ${OpIncludes}
