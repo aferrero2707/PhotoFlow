@@ -117,7 +117,7 @@ add_library (pfgmic
   ${GMicSources}
 )
 
-SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -I/usr/include -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
+SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
 
 #add_library (pfoperations
 #  ${OpIncludes}
@@ -140,6 +140,8 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 
 IF(MINGW)
 list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
+ELSE(MINGW)
+list(APPEND ADDITIONAL_LIBS fftw3_threads)
 ENDIF(MINGW)
 
 target_link_libraries(photoflow ${LIBS} 
@@ -151,8 +153,8 @@ target_link_libraries(photoflow ${LIBS}
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
+  fftw3
   ${ADDITIONAL_LIBS}
-  fftw3 fftw3_threads 
   #gmon
   )
 
