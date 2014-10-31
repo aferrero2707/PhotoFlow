@@ -50,6 +50,7 @@ namespace PF
     Property<float> prop_value_precision;
     PropertyBase prop_interpolation;
     Property<int> prop_fast_approximation;
+    Property<int> prop_padding;
     ProcessorBase* gmic;
 
   public:
