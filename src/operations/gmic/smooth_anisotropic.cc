@@ -44,10 +44,13 @@ OpParBase(),
   prop_spatial_precision("spatial_precision",this,0.8),
   prop_angular_precision("angular_precision",this,30),
   prop_value_precision("value_precision",this,2),
-  prop_interpolation("interpolation", this, 0, "", ""),
-  prop_fast_approximation("fast_approximation",this,0)
+  prop_interpolation("interpolation", this, 0, "NEAREST_NEIGHBOR", "Nearest neighbor"),
+prop_fast_approximation("fast_approximation",this,1),
+  prop_padding("padding",this,1)
 {	
   gmic = PF::new_gmic();
+  prop_interpolation.add_enum_value(1, "LINEAR", "Linear"),
+  prop_interpolation.add_enum_value(2, "RUNGE_KUTTA", "Runge-Kutta"),
   set_type( "gmic_smooth_anisotropic" );
 }
 
@@ -55,7 +58,7 @@ OpParBase(),
 
 int PF::GmicSmoothAnisotropicPar::get_padding( int level )
 {
-  return 0;
+  return( prop_padding.get() );
 }
 
 
@@ -78,6 +81,9 @@ VipsImage* PF::GmicSmoothAnisotropicPar::build(std::vector<VipsImage*>& in, int 
 	for( int l = 1; l <= level; l++ )
 		scalefac *= 2;
 
+  char interp_val[10];
+  snprintf( interp_val, 9, "%d", prop_interpolation.get_enum_value().first );
+
   std::string command = "-smooth  ";
   command = command + prop_amplitude.get_str();
   command = command + std::string(",") + prop_sharpness.get_str();
@@ -87,7 +93,8 @@ VipsImage* PF::GmicSmoothAnisotropicPar::build(std::vector<VipsImage*>& in, int 
   command = command + std::string(",") + prop_spatial_precision.get_str();
   command = command + std::string(",") + prop_angular_precision.get_str();
   command = command + std::string(",") + prop_value_precision.get_str();
-  command = command + std::string(",") + prop_interpolation.get_str();
+  //command = command + std::string(",") + prop_interpolation.get_str();
+  command = command + std::string(",") + interp_val;
   command = command + std::string(",") + prop_fast_approximation.get_str();
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );

@@ -44,7 +44,8 @@ PF::GmicSmoothAnisotropicConfigDialog::GmicSmoothAnisotropicConfigDialog( PF::La
   prop_angular_precision_slider( this, "angular_precision", "angular_precision", 30, 1, 180, 1.79, 17.9, 1),
   prop_value_precision_slider( this, "value_precision", "value_precision", 2, 0.1, 5, .04, .4, 1),
   prop_interpolation_selector( this, "interpolation", "interpolation", 0),
-  prop_fast_approximation_slider( this, "fast_approximation", "fast_approximation", 0, 0, 1, .01, .1, 1)
+  prop_fast_approximation_slider( this, "fast_approximation", "fast_approximation", 0, 0, 1, 1, 1, 1),
+  prop_padding_slider( this, "padding", "padding", 0, 0, 512, 1, 10, 1)
 {
   controlsBox.pack_start( iterations_slider );
   controlsBox.pack_start( prop_amplitude_slider );
@@ -57,6 +58,7 @@ PF::GmicSmoothAnisotropicConfigDialog::GmicSmoothAnisotropicConfigDialog( PF::La
   controlsBox.pack_start( prop_value_precision_slider );
   controlsBox.pack_start( prop_interpolation_selector );
   controlsBox.pack_start( prop_fast_approximation_slider );
+  controlsBox.pack_start( prop_padding_slider );
   
   add_widget( controlsBox );
 }

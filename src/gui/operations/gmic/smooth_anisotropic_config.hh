@@ -52,6 +52,7 @@ namespace PF {
     Slider prop_value_precision_slider;
     Selector prop_interpolation_selector;
     Slider prop_fast_approximation_slider;
+    Slider prop_padding_slider;
        
   public:
     GmicSmoothAnisotropicConfigDialog( Layer* l );
