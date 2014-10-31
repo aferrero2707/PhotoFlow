@@ -43,4 +43,4 @@ mkdir -p Release
 cd Release
 
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:${vips_install}/lib/pkgconfig"
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd) ../../ && make install
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd) -DINSTALL_PREFIX=$(pwd) ../../ && make install
