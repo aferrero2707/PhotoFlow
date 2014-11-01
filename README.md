@@ -52,14 +52,7 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 
 3. If all goes well, you can now open an image file with PhotoFlow:
 
-        $ ./Release/photoflow image_file_name
-
-   There are some test images available:
-
-        $ ./Release/photoflow ../testimages/Lab_curves.pfi
-   or
-
-        $ ./Release/photoflow ../testimages/orton.pfi
+        $ ./Release/bin/photoflow image_file_name
         
 
 # Current status
