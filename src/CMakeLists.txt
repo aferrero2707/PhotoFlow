@@ -3,7 +3,7 @@
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DPF_VERBOSE_UNREF -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg") 
 #SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops") 
-SET(CMAKE_CXX_FLAGS_TEST "-O0 -g -DNDEBUG -DLIBRAW_NODLL -DPF_VERBOSE_UNREF ") 
+SET(CMAKE_CXX_FLAGS_TEST "-O0 -g -DNDEBUG -DLIBRAW_NODLL -DPF_VERBOSE_UNREF -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 
 if(GTKMM2_FOUND)
@@ -117,7 +117,7 @@ add_library (pfgmic
   ${GMicSources}
 )
 
-SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
+SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_jpeg -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
 
 #add_library (pfoperations
 #  ${OpIncludes}
@@ -141,7 +141,7 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 IF(MINGW)
 list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
 ELSE(MINGW)
-list(APPEND ADDITIONAL_LIBS fftw3_threads)
+list(APPEND ADDITIONAL_LIBS fftw3_threads z)
 ENDIF(MINGW)
 
 target_link_libraries(photoflow ${LIBS} 

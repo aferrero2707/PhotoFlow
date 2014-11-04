@@ -52,6 +52,16 @@ std::string PF::PropertyBase::get_str()
 }
 
 
+std::string PF::PropertyBase::get_enum_value_str()
+{
+  std::ostringstream str;
+  if( is_enum() && !enum_value.second.first.empty() ) {
+    str<<enum_value.first;
+  }
+  return str.str();
+}
+
+
 void PF::PropertyBase::from_stream(std::istream& str)
 {
 #ifndef NDEBUG

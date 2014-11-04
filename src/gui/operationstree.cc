@@ -252,6 +252,15 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.add_op( "Smooth [selective gaussian]", "gmic_smooth_selective_gaussian" );
   op_gmic.add_op( "Smooth [total variation]", "gmic_smooth_total_variation" );
   op_gmic.add_op( "Smooth [wavelets]", "gmic_smooth_wavelets_haar" );
+  op_gmic.add_op( "Emulate film [color slide]", "gmic_emulate_film_colorslide" );
+  op_gmic.add_op( "Emulate film [B&W]", "gmic_emulate_film_bw" );
+  op_gmic.add_op( "Emulate film [instant consumer]", "gmic_emulate_film_instant_consumer" );
+  op_gmic.add_op( "Emulate film [instant pro]", "gmic_emulate_film_instant_pro" );
+  op_gmic.add_op( "Emulate film [negative color]", "gmic_emulate_film_negative_color" );
+  op_gmic.add_op( "Emulate film [negative new]", "gmic_emulate_film_negative_new" );
+  op_gmic.add_op( "Emulate film [negative old]", "gmic_emulate_film_negative_old" );
+  op_gmic.add_op( "Emulate film [print films]", "gmic_emulate_film_print_films" );
+  op_gmic.add_op( "Emulate film [various]", "gmic_emulate_film_various" );
 
   op_misc.add_op( "Buffer layer", "buffer" );
   op_misc.add_op( "Clone layer", "clone" );

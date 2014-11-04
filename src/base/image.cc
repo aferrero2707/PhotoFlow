@@ -114,6 +114,10 @@ PF::Image::Image():
   //g_mutex_lock( rebuild_mutex );
   rebuild_done = vips_g_cond_new();
 
+  export_mutex = vips_g_mutex_new();
+  //g_mutex_lock( export_mutex );
+  export_done = vips_g_cond_new();
+
   sample_mutex = vips_g_mutex_new();
   //g_mutex_lock( sample_mutex );
   sample_done = vips_g_cond_new();
@@ -616,11 +620,44 @@ bool PF::Image::save( std::string filename )
 
 
 
-bool PF::Image::export_merged( std::string filename )
+void PF::Image::export_merged( std::string filename )
+{
+  if( PF::PhotoFlow::Instance().is_batch() ) {
+    do_export_merged( filename );
+  } else {
+    ProcessRequestInfo request;
+    request.image = this;
+    request.request = PF::IMAGE_EXPORT;
+		request.area.width = request.area.height = 0;
+    request.filename = filename;
+    
+    //#ifndef NDEBUG
+    std::cout<<"PF::Image::export_merged(): locking mutex..."<<std::endl;
+    //#endif
+    g_mutex_lock( export_mutex );
+    //#ifndef NDEBUG
+    std::cout<<"PF::Image::export_merged(): submitting export request..."<<std::endl;
+    //#endif
+    PF::ImageProcessor::Instance().submit_request( request );
+    //#ifndef NDEBUG
+    std::cout<<"PF::Image::export_merged(): request submitted."<<std::endl;
+    //#endif
+
+    std::cout<<"PF::Image::export_merged(): waiting for export_done...."<<std::endl;
+    g_cond_wait( export_done, export_mutex );
+    std::cout<<"PF::Image::export_merged(): ... export_done received."<<std::endl;
+
+    g_mutex_unlock( export_mutex );
+  }
+}
+
+
+void PF::Image::do_export_merged( std::string filename )
 {
   std::string ext;
   if( getFileExtension( "/", filename, ext ) &&
       ext != "pfi" ) {
+    std::cout<<"Saving image to file "<<filename<<"..."<<std::endl;
     //Glib::Threads::Mutex::Lock lock( rebuild_mutex );
     unsigned int level = 0;
     //PF::Pipeline* pipeline = new PF::Pipeline( this, VIPS_FORMAT_USHORT, 0, PF_RENDER_NORMAL );
@@ -674,8 +711,6 @@ bool PF::Image::export_merged( std::string filename )
     msg = std::string("PF::Image::export_merged(") + filename + "), outimg";
     PF_UNREF( outimg, msg.c_str() );
     delete pipeline;
-    return true;
-  } else {
-    return false;
+    std::cout<<"Image saved to file "<<filename<<std::endl;
   }
 }

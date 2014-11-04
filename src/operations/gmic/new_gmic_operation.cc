@@ -55,6 +55,24 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_smooth_selective_gaussian();
   } else if( op_type == "gmic_smooth_total_variation" ) {
     processor = new_gmic_smooth_total_variation();
+  } else if( op_type == "gmic_emulate_film_colorslide" ) {
+    processor = new_gmic_emulate_film_colorslide();
+  } else if( op_type == "gmic_emulate_film_bw" ) {
+    processor = new_gmic_emulate_film_bw();
+  } else if( op_type == "gmic_emulate_film_instant_consumer" ) {
+    processor = new_gmic_emulate_film_instant_consumer();
+  } else if( op_type == "gmic_emulate_film_instant_pro" ) {
+    processor = new_gmic_emulate_film_instant_pro();
+  } else if( op_type == "gmic_emulate_film_negative_color" ) {
+    processor = new_gmic_emulate_film_negative_color();
+  } else if( op_type == "gmic_emulate_film_negative_new" ) {
+    processor = new_gmic_emulate_film_negative_new();
+  } else if( op_type == "gmic_emulate_film_negative_old" ) {
+    processor = new_gmic_emulate_film_negative_old();
+  } else if( op_type == "gmic_emulate_film_print_films" ) {
+    processor = new_gmic_emulate_film_print_films();
+  } else if( op_type == "gmic_emulate_film_various" ) {
+    processor = new_gmic_emulate_film_various();
     //insert new operations here
   }
 

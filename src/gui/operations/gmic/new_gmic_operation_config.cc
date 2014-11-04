@@ -57,6 +57,24 @@ PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, P
     dialog = new PF::GmicSmoothSelectiveGaussianConfigDialog( current_layer );
   } else if( op_type == "gmic_smooth_total_variation" ) {
     dialog = new PF::GmicSmoothTotalVariationConfigDialog( current_layer );
+  } else if( op_type == "gmic_emulate_film_colorslide" ) {
+    dialog = new PF::GmicEmulateFilmColorslideConfigDialog( current_layer );
+  } else if( op_type == "gmic_emulate_film_bw" ) {
+    dialog = new PF::GmicEmulateFilmBEConfigDialog( current_layer );
+  } else if( op_type == "gmic_emulate_film_instant_consumer" ) {
+    dialog = new PF::GmicEmulateFilmInstantConsumerConfigDialog( current_layer );
+  } else if( op_type == "gmic_emulate_film_instant_pro" ) {
+    dialog = new PF::GmicEmulateFilmInstantProConfigDialog( current_layer );
+  } else if( op_type == "gmic_emulate_film_negative_color" ) {
+    dialog = new PF::GmicEmulateFilmNegativeColorConfigDialog( current_layer );
+  } else if( op_type == "gmic_emulate_film_negative_new" ) {
+    dialog = new PF::GmicEmulateFilmNegativeNewConfigDialog( current_layer );
+  } else if( op_type == "gmic_emulate_film_negative_old" ) {
+    dialog = new PF::GmicEmulateFilmNegativeOldConfigDialog( current_layer );
+  } else if( op_type == "gmic_emulate_film_print_films" ) {
+    dialog = new PF::GmicEmulateFilmPrintFilmsConfigDialog( current_layer );
+  } else if( op_type == "gmic_emulate_film_various" ) {
+    dialog = new PF::GmicEmulateFilmVariousConfigDialog( current_layer );
     //insert new operations here
   }
 

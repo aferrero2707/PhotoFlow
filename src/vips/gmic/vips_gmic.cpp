@@ -38,10 +38,13 @@
 #include <limits.h>
 
 #include <iostream>
+#include <fstream>
 
 //#include "CImg.h"
 #include "gmic/src/gmic.h"
 //#include "gmic.h"
+
+static char* custom_gmic_commands = 0;
 
 using namespace cimg_library;
 
@@ -234,9 +237,38 @@ vips_gmic_start( VipsImage *out, void *a, void *b )
 		}
 	seq->ir[n] = NULL;
 
+  if( !custom_gmic_commands ) {
+    std::cout<<"Loading G'MIC custom commands..."<<std::endl;
+    char fname[500]; fname[0] = 0;
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#else
+    if( getenv("HOME") ) {
+      snprintf( fname, 499, "%s/.photoflow/gmic_update.gmic", getenv("HOME") );
+      std::cout<<"G'MIC custom commands file: "<<fname<<std::endl;
+      struct stat buffer;   
+      int stat_result = stat( fname, &buffer );
+      if( stat_result != 0 ) {
+        fname[0] = 0;
+      }
+    }
+#endif
+    if( strlen( fname ) > 0 ) {
+      std::ifstream t;
+      int length;
+      t.open(fname);      // open input file
+      t.seekg(0, std::ios::end);    // go to the end
+      length = t.tellg();           // report location (this is the length)
+      t.seekg(0, std::ios::beg);    // go back to the beginning
+      custom_gmic_commands = new char[length];    // allocate memory for a buffer of appropriate dimension
+      t.read(custom_gmic_commands, length);       // read the whole file into the buffer
+      t.close();                    // close file handle
+      std::cout<<"G'MIC custom commands loaded"<<std::endl;
+    }
+  }
+
 	/* Make a gmic for this thread.
 	 */
-	seq->gmic_instance = new gmic; 
+	seq->gmic_instance = new gmic( 0, custom_gmic_commands, false, 0, 0 ); 
 
 	return( (void *) seq );
 }

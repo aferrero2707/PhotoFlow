@@ -43,6 +43,7 @@ namespace PF
   enum process_request_t {
     IMAGE_REBUILD,
     IMAGE_UPDATE,
+    IMAGE_EXPORT,
     IMAGE_SAMPLE,
     IMAGE_REDRAW_START,
     IMAGE_REDRAW_END,
@@ -59,6 +60,7 @@ namespace PF
     Image* image;
     Pipeline* pipeline;
     PipelineSink* sink;
+    std::string filename;
     Layer* layer;
 		int layer_id;
     VipsRect area;

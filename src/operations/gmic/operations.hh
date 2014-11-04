@@ -43,6 +43,15 @@ namespace PF
   ProcessorBase* new_gmic_smooth_median();
   ProcessorBase* new_gmic_smooth_selective_gaussian();
   ProcessorBase* new_gmic_smooth_total_variation();
+  ProcessorBase* new_gmic_emulate_film_colorslide();
+  ProcessorBase* new_gmic_emulate_film_bw();
+  ProcessorBase* new_gmic_emulate_film_instant_consumer();
+  ProcessorBase* new_gmic_emulate_film_instant_pro();
+  ProcessorBase* new_gmic_emulate_film_negative_color();
+  ProcessorBase* new_gmic_emulate_film_negative_new();
+  ProcessorBase* new_gmic_emulate_film_negative_old();
+  ProcessorBase* new_gmic_emulate_film_print_films();
+  ProcessorBase* new_gmic_emulate_film_various();
   //insert new operations here
 
   ProcessorBase* new_gmic_operation( std::string op_type );

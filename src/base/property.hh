@@ -149,6 +149,7 @@ namespace PF
 
     virtual void set_str(const std::string& val);
     virtual std::string get_str();
+    std::string get_enum_value_str();
 
     virtual void from_stream(std::istream& str);
     virtual void to_stream(std::ostream& str);
