@@ -243,7 +243,8 @@ vips_gmic_start( VipsImage *out, void *a, void *b )
 #if defined(__MINGW32__) || defined(__MINGW64__)
 #else
     if( getenv("HOME") ) {
-      snprintf( fname, 499, "%s/.photoflow/gmic_update.gmic", getenv("HOME") );
+      //snprintf( fname, 499, "%s/.photoflow/gmic_update.gmic", getenv("HOME") );
+      snprintf( fname, 499, "%s/share/photoflow/gmic_def.gmic", INSTALL_PREFIX );
       std::cout<<"G'MIC custom commands file: "<<fname<<std::endl;
       struct stat buffer;   
       int stat_result = stat( fname, &buffer );

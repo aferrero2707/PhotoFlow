@@ -55,7 +55,7 @@ PF::Slider::Slider( OperationConfigDialog* dialog, std::string pname, std::strin
   scale.set_size_request( 300, -1 );
   spinButton.set_size_request( 70, -1 );
 
-  if( (max-min) < 500 ) {
+  if( (max-min) < 1000000 ) {
     // Full widget with slider and spin button
     scale.set_value_pos(Gtk::POS_LEFT);
     scale.set_draw_value( false );
