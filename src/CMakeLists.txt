@@ -35,6 +35,9 @@ endif()
 
 include_directories(${SIGC2_INCLUDE_DIRS})
 
+include_directories(${ZLIB_INCLUDE_DIRS})
+link_directories(${ZLIB_LIBRARY_DIRS}  )
+
 
 #include_directories(${LIBXML_INCLUDE_DIRS})
 #set(LIBS ${LIBS} ${LIBXML_LIBRARIES})
@@ -141,7 +144,7 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 IF(MINGW)
 list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
 ELSE(MINGW)
-list(APPEND ADDITIONAL_LIBS fftw3_threads z)
+list(APPEND ADDITIONAL_LIBS fftw3_threads)
 ENDIF(MINGW)
 
 target_link_libraries(photoflow ${LIBS} 
@@ -151,6 +154,7 @@ target_link_libraries(photoflow ${LIBS}
   ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
   fftw3

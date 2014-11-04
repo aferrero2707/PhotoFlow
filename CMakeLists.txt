@@ -10,6 +10,8 @@ pkg_check_modules(LCMS2 REQUIRED lcms2)
 
 find_package (TIFF REQUIRED)
 
+find_package (ZLIB REQUIRED)
+
 pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
 
 #FIND_PACKAGE(LibRaw 0.13 REQUIRED)
