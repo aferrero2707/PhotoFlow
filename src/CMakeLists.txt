@@ -160,6 +160,7 @@ target_link_libraries(photoflow ${LIBS}
 
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
+INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 #add_executable(invert # name of the executable on Windows will be example.exe 
 #  benchmarks/invert.cc 
