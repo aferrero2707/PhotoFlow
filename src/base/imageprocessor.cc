@@ -157,6 +157,13 @@ void PF::ImageProcessor::run()
         request.image->rebuild_done_signal();
         //std::cout<<"PF::ImageProcessor::run(): updating image done."<<std::endl;
         break;
+      case IMAGE_EXPORT:
+        if( !request.image ) continue;
+        request.image->lock();
+        request.image->do_export_merged( request.filename );
+        request.image->unlock();
+        request.image->export_done_signal();
+        break;
       case IMAGE_SAMPLE:
         if( !request.image ) continue;
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;

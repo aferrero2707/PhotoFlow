@@ -49,6 +49,8 @@
 
 #include "property.hh"
 
+#include "color.hh"
+
 #include "photoflow.hh"
 
 
@@ -414,7 +416,8 @@ namespace PF
   #include "blend_darken.hh"
   #include "blend_overlay.hh"
   #include "blend_vivid_light.hh"
-  //#include "blend_luminosity.hh"
+  #include "blend_luminosity.hh"
+  #include "blend_color.hh"
 };
 
 

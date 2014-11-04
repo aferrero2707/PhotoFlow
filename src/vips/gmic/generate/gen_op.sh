@@ -55,25 +55,28 @@ for i in $(seq 1 $nl); do
 
             echo "    PropertyBase prop_${pname};" >> par_def.cpp
             echo "    Selector prop_${pname}_selector;" >> widgets_def.cpp
-            pdef=$(echo "$value" | tr -s " " | cut -d" " -f 3)
-            enumvalues=$(echo "$value" | tr -s " " | cut -d" " -f 2 | cut -d"[" -f 2 | cut -d"]" -f 1)
+            pdef=$(echo "$value" | cut -d"]" -f 2 | tail -c +2)
+            echo "pdef: $pdef"
+            enumvalues=$(echo "$value" | cut -d"[" -f 2 | cut -d"]" -f 1)
             echo "$type $pname [${enumvalues}] $pdef"
             nval=$(echo "$enumvalues" | tr "," "\n" | wc -l)
+            echo "nval: $nval"
             jdef=0
             defval=""
             defval2=""
             for j in $(seq 1 $nval); do
                 enumval=$(echo "$enumvalues" | cut -d"," -f $j)
-                enumval2=$(echo "$enumval" | tr "-" "_")
+                enumval2=$(echo "$enumval" | tr "-" "_" | tr " " "_")
+                echo "enumval: $enumval    enumval2: $enumval2"
                 if [ "$enumval" = "$pdef" ]; then 
-                    jdef=$j; 
+                    jdef=$((j-1)); 
                     defval="$enumval"
                     defval2="$enumval2"
                 else
-                    echo "  prop_${pname}.add_enum_value( $j, \"$enumval\", \"$enumval\" );" >> par_imp2.cpp
+                    echo "  prop_${pname}.add_enum_value( $((j-1)), \"$enumval2\", \"$enumval\" );" >> par_imp2.cpp
                 fi
             done
-            echo -n "  prop_${pname}(\"$pname\", this, $jdef, \"$defval\", \"$defval\")" >> par_imp.cpp
+            echo -n "  prop_${pname}(\"$pname\", this, $jdef, \"$defval2\", \"$defval\")" >> par_imp.cpp
             echo -n "  prop_${pname}_selector( this, \"$pname\", \"$pname\", ${jdef})" >> widgets_imp.cpp
             echo "  controlsBox.pack_start( prop_${pname}_selector );" >> widgets_imp2.cpp
 
@@ -89,18 +92,26 @@ for i in $(seq 1 $nl); do
             if [ x"$type" = "xint" ]; then
                 echo -n "  prop_${pname}_slider( this, \"$pname\", \"$pname\", ${pdef}, ${pmin}, ${pmax}, 1, 5, 1)" >> widgets_imp.cpp
             else
-                pdelta1=$(echo "scale=1; ($pmax-$pmin)/10" | bc -l)
-                pdelta2=$(echo "scale=2; ($pmax-$pmin)/100" | bc -l)
+                pdelta1=$(echo "scale=1; ($pmax-($pmin))/10" | bc -l)
+                pdelta2=$(echo "scale=2; ($pmax-($pmin))/100" | bc -l)
                 echo -n "  prop_${pname}_slider( this, \"$pname\", \"$pname\", ${pdef}, ${pmin}, ${pmax}, ${pdelta2}, ${pdelta1}, 1)" >> widgets_imp.cpp
             fi
             echo "  controlsBox.pack_start( prop_${pname}_slider );" >> widgets_imp2.cpp
 
         fi
 
-        if [ $npar -gt 0 ]; then
-            echo "  command = command + std::string(\",\") + prop_${pname}.get_str();" >> command.cpp
+        if [ x"$type" = "xenum" ]; then
+            if [ $npar -gt 0 ]; then
+                echo "  command = command + std::string(\",\") + prop_${pname}.get_enum_value_str();" >> command.cpp
+            else
+                echo "  command = command + prop_${pname}.get_enum_value_str();" >> command.cpp
+            fi
         else
-            echo "  command = command + prop_${pname}.get_str();" >> command.cpp
+            if [ $npar -gt 0 ]; then
+                echo "  command = command + std::string(\",\") + prop_${pname}.get_str();" >> command.cpp
+            else
+                echo "  command = command + prop_${pname}.get_str();" >> command.cpp
+            fi
         fi
 
         npar=$((npar+1))

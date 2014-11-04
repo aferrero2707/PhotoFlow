@@ -135,6 +135,7 @@ int main (int argc, char *argv[])
 
   char exname[512] = {0};
   Glib::ustring exePath;
+  Glib::ustring themesPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow/themes";
   // get the path where the rawtherapee executable is stored
 #ifdef WIN32
   WCHAR exnameU[512] = {0};
@@ -180,10 +181,10 @@ int main (int argc, char *argv[])
   struct stat buffer;   
   //#ifndef WIN32
 #ifdef GTKMM_2
-  int stat_result = stat((exePath + "/themes/photoflow-dark.gtkrc").c_str(), &buffer);
+  int stat_result = stat((themesPath + "/photoflow-dark.gtkrc").c_str(), &buffer);
   if( stat_result == 0 ) {
     std::vector<Glib::ustring> files;
-    files.push_back (exePath + "/themes/photoflow-dark.gtkrc");
+    files.push_back (themesPath + "/photoflow-dark.gtkrc");
     Gtk::RC::set_default_files (files);
     Gtk::RC::reparse_all (Gtk::Settings::get_default());
     GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
@@ -194,7 +195,7 @@ int main (int argc, char *argv[])
 
   PF::MainWindow* mainWindow = new PF::MainWindow();
 #ifdef GTKMM_3
-  int stat_result = stat((exePath + "/themes/photoflow-dark.css").c_str(), &buffer);
+  int stat_result = stat((themesPath + "/photoflow-dark.css").c_str(), &buffer);
   if( stat_result == 0 ) {
     Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
     //Glib::RefPtr<Gtk::StyleContext> cntx = mainWindow->get_style_context();
@@ -205,7 +206,7 @@ int main (int argc, char *argv[])
     //cntx->add_provider(css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     cntx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     //cntx->invalidate();
-    css->load_from_path(exePath + "/themes/photoflow-dark.css");
+    css->load_from_path(themesPath + "/photoflow-dark.css");
     //css->load_from_path("themes/photoflow-dark/gtk.css");
   }
 #endif

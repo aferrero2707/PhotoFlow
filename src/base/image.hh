@@ -64,6 +64,9 @@ namespace PF
     GMutex* rebuild_mutex;
     GCond* rebuild_done;
 
+    GMutex* export_mutex;
+    GCond* export_done;
+
     GMutex* sample_mutex;
     GCond* sample_done;
 
@@ -126,6 +129,7 @@ namespace PF
     void remove_layer_lock() { g_mutex_lock( remove_layer_mutex); }
     void remove_layer_unlock() { g_mutex_unlock( remove_layer_mutex); }
     void rebuild_done_signal() { g_cond_signal( rebuild_done ); }
+    void export_done_signal() { g_cond_signal( export_done ); }
     void sample_done_signal() { g_cond_signal( sample_done ); }
     void remove_layer_done_signal() { g_cond_signal( remove_layer_done ); }
 
@@ -142,7 +146,8 @@ namespace PF
 
 		std::string get_filename() { return file_name; }
     bool save( std::string filename );
-    bool export_merged( std::string filename );
+    void export_merged( std::string filename );
+    void do_export_merged( std::string filename );
   };
 
   gint image_rebuild_callback( gpointer data );

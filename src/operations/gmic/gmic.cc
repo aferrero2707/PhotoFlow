@@ -72,24 +72,54 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
 	}
   */
 
+  int target_ch = 0;
+  PF::colorspace_t cs = PF::convert_colorspace( get_interpretation() );
+  switch( cs ) {
+  case PF_COLORSPACE_GRAYSCALE: break;
+  case PF_COLORSPACE_RGB:
+    target_ch = get_rgb_target_channel();
+    break;
+  case PF_COLORSPACE_LAB:
+    target_ch = get_lab_target_channel();
+    break;
+  case PF_COLORSPACE_CMYK:
+    target_ch = get_cmyk_target_channel();
+    break;
+  }
+
+  VipsImage* srcimg2 = srcimg;
+  if( (target_ch>=0) && (target_ch<srcimg->Bands) ) {
+    if( vips_extract_band( srcimg, &srcimg2, target_ch, NULL ) )
+      return NULL;
+    vips_image_init_fields( srcimg2,
+                            get_xsize(), get_ysize(), 
+                            1, get_format(),
+                            get_coding(),
+                            get_interpretation(),
+                            1.0, 1.0);
+  } else {
+    PF_REF( srcimg2, "GMicPar::build(): srcimg2 ref" );
+  }
+
   /**/
   std::vector<VipsImage*> in2;
-  in2.push_back( srcimg );
-  convert_format->get_par()->set_image_hints( srcimg );
+  in2.push_back( srcimg2 );
+  convert_format->get_par()->set_image_hints( srcimg2 );
   convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
   VipsImage* convimg = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
   if( !convimg ) return NULL;
+  PF_UNREF( srcimg2, "GMicPar::build(): srcimg2 unref" );
   /**/
   //convimg = srcimg;
-  //PF_REF( srcimg, "GMicPar::build(): srcimg ref" );
+  //
 
   //return convimg;
 
   /**/
   VipsImage* iter_in = convimg;
   VipsImage* iter_out = NULL;
+  std::cout<<"G'MIC command: "<<command.get()<<std::endl;
   std::string cmd = std::string("-verbose - ")+command.get();
-  //std::string cmd = command.get();
   for( int i = 0; i < iterations.get(); i++ ) {
     VipsImage* inv[2] = { iter_in, NULL };
     if( vips_gmic( inv, &iter_out, 1,
@@ -114,7 +144,39 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = convert_format2->get_par()->build( in2, 0, NULL, NULL, level );
   PF_UNREF( iter_out, "GMicPar::build(): iter_out unref" );
 
-	return out;
+  VipsImage* out2 = out;
+  //std::cout<<"target_ch="<<target_ch<<"  srcimg->Bands="<<srcimg->Bands<<std::endl;
+  if( (target_ch>=0) && (target_ch<(srcimg->Bands)) ) {
+    //std::cout<<"Joining bands..."<<std::endl;
+    VipsImage* bandv[4] = {NULL, NULL, NULL, NULL};
+    bandv[target_ch] = out;
+    for( int i = 0; i < srcimg->Bands; i++ ) {
+      //std::cout<<"Processing band #"<<i<<std::endl;
+      if( i==target_ch ) continue;
+      VipsImage* band;
+      if( vips_extract_band( srcimg, &band, i, NULL ) ) {
+        std::cout<<"vips_extract_band( srcimg, &band, "<<i<<", NULL ) failed"<<std::endl;
+        return NULL;
+      }
+      vips_image_init_fields( band,
+                              get_xsize(), get_ysize(), 
+                              1, get_format(),
+                              get_coding(),
+                              get_interpretation(),
+                              1.0, 1.0);
+      //std::cout<<"Extracted band #"<<i<<std::endl;
+      bandv[i] = band;
+    }
+    if( vips_bandjoin( bandv, &out2, srcimg->Bands, NULL ) ) {
+      //PF_UNREF( band, "ClonePar::rgb2rgb(): band unref after bandjoin failure" );
+      return NULL;
+    }
+    for( int i = 0; i < srcimg->Bands; i++ ) {
+      PF_UNREF( bandv[i], "GMicPar::build(): bandv[i] unref after bandjoin" );
+    }
+  }
+
+	return out2;
 }
 
 

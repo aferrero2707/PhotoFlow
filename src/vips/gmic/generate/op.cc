@@ -38,6 +38,7 @@ OpParBase(),
   %par_imp%
 {	
   gmic = PF::new_gmic();
+  %par_imp2%
   set_type( "gmic_%op_name%" );
 }
 
