@@ -44,6 +44,8 @@
 #include "gmic/src/gmic.h"
 //#include "gmic.h"
 
+#include "../../base/photoflow.hh"
+
 static char* custom_gmic_commands = 0;
 
 using namespace cimg_library;
@@ -240,7 +242,13 @@ vips_gmic_start( VipsImage *out, void *a, void *b )
   if( !custom_gmic_commands ) {
     std::cout<<"Loading G'MIC custom commands..."<<std::endl;
     char fname[500]; fname[0] = 0;
-#if defined(__MINGW32__) || defined(__MINGW64__)
+#if defined(WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
+    snprintf( fname, 499, "%s\gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+    struct stat buffer;   
+    int stat_result = stat( fname, &buffer );
+    if( stat_result != 0 ) {
+      fname[0] = 0;
+    }
 #else
     if( getenv("HOME") ) {
       //snprintf( fname, 499, "%s/.photoflow/gmic_update.gmic", getenv("HOME") );
@@ -249,7 +257,11 @@ vips_gmic_start( VipsImage *out, void *a, void *b )
       struct stat buffer;   
       int stat_result = stat( fname, &buffer );
       if( stat_result != 0 ) {
-        fname[0] = 0;
+        //snprintf( fname, 499, "%s/gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+        //stat_result = stat( fname, &buffer );
+        //if( stat_result != 0 ) {
+          fname[0] = 0;
+          //}
       }
     }
 #endif
