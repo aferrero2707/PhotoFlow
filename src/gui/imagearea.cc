@@ -50,9 +50,11 @@ extern "C" {
 #endif /*__cplusplus*/
 
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
 #define DEBUG_DISPLAY
-#endif
+//#endif
+
+#define OPTIMIZE_SCROLLING
 
 PF::ImageArea::ImageArea( Pipeline* v ):
   PipelineSink( v ),
@@ -84,6 +86,9 @@ PF::ImageArea::ImageArea( Pipeline* v ):
 
   draw_done = vips_g_cond_new();
   draw_mutex = vips_g_mutex_new();
+
+  //get_window()->set_back_pixmap( Glib::RefPtr<Gdk::Pixmap>(), FALSE );
+  //set_double_buffered( TRUE );
 
   //signal_queue_draw.connect(sigc::mem_fun(*this, &ImageArea::queue_draw));
 }
@@ -226,10 +231,10 @@ void PF::ImageArea::draw_area()
     return;
   }
 
-  //std::cout<<"PF::ImageArea::draw_area(): drawing area "
-  //	   <<double_buffer.get_active().get_rect().width<<","<<double_buffer.get_active().get_rect().height
-  //	   <<"+"<<double_buffer.get_active().get_rect().left<<"+"<<double_buffer.get_active().get_rect().top
-  //	   <<std::endl;
+  std::cout<<"PF::ImageArea::draw_area(): drawing area "
+  	   <<double_buffer.get_active().get_rect().width<<","<<double_buffer.get_active().get_rect().height
+  	   <<"+"<<double_buffer.get_active().get_rect().left<<"+"<<double_buffer.get_active().get_rect().top
+  	   <<std::endl;
   Glib::RefPtr<Gdk::Window> window = get_window();
   if( !window ) return;
   Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
@@ -238,6 +243,7 @@ void PF::ImageArea::draw_area()
   		 double_buffer.get_active().get_rect().width*3,
   		 double_buffer.get_active().get_rect().height*3 );
   cr->clip();
+  /**/
   Gdk::Cairo::set_source_pixbuf( cr, double_buffer.get_active().get_pxbuf(), 
 				 double_buffer.get_active().get_rect().left,
 				 double_buffer.get_active().get_rect().top );
@@ -246,7 +252,8 @@ void PF::ImageArea::draw_area()
   		 double_buffer.get_active().get_rect().width,
   		 double_buffer.get_active().get_rect().height );
   cr->fill();
-  //cr->paint();
+  /**/
+  cr->paint();
   double_buffer.unlock();
   //std::cout<<"PF::ImageArea::draw_area(): after drawing pixbuf"<<std::endl;
   //getchar();
@@ -323,18 +330,21 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
 #ifdef GTKMM_3
 bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
+  std::cout<<"ImageArea::on_draw() called."<<std::endl;
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return true;
 
 	// Immediately draw the buffered image, to avoid flickering
   draw_area();
 
+  //return true;
+
   VipsRect area_tot = {
     hadj->get_value(), vadj->get_value(),
     hadj->get_page_size(), vadj->get_page_size()
   };
-	//std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot.width<<","<<area_tot.height
-	//				 <<"+"<<area_tot.left<<","<<area_tot.top<<std::endl;
+	std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot.width<<","<<area_tot.height
+					 <<"+"<<area_tot.left<<","<<area_tot.top<<std::endl;
 
 	if( display_image->Xsize < hadj->get_page_size() ) {
 		xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
@@ -356,6 +366,7 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   PF::ImageProcessor::Instance().submit_request( request );
   //std::cout<<"PF::ImageArea::on_expose_event(): redraw_start request submitted."<<std::endl;
 
+#ifdef OPTIMIZE_SCROLLING
 	double x1, y1, x2, y2;
 	cr->get_clip_extents( x1, y1, x2, y2 );
 	int ix1=x1, iy1=y1, ix2=x2, iy2=y2;
@@ -363,19 +374,24 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	area_tot.top = iy1;
 	area_tot.width = ix2+1-ix1;
 	area_tot.height = iy2+1-iy1;
-  //submit_area( area_tot );
+	std::cout<<"ImageArea::on_draw(): area_tot2="<<area_tot.width<<","<<area_tot.height
+					 <<"+"<<area_tot.left<<","<<area_tot.top<<std::endl;
 
   cairo_rectangle_list_t *list =  cairo_copy_clip_rectangle_list (cr->cobj());
   for (int i = list->num_rectangles - 1; i >= 0; --i) {
     cairo_rectangle_t *rect = &list->rectangles[i];
 
 #ifdef DEBUG_DISPLAY    
-    std::cout<<"ImageArea::on_draw(): rectangle = "<<rect->x<<","<<rect->y
-	     <<" -> "<<rect->width<<","<<rect->height<<std::endl;
+    std::cout<<"ImageArea::on_draw(): rectangle = "<<rect->width<<","<<rect->height
+	     <<"+"<<rect->x<<","<<rect->y<<std::endl;
 #endif
     VipsRect area = {rect->x, rect->y, rect->width, rect->height};
     submit_area( area );
   }
+#else
+  submit_area( area_tot );
+#endif
+
 
   request.sink = this;
   request.area = area_tot;
