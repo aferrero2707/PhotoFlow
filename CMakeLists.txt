@@ -29,6 +29,9 @@ pkg_check_modules(VIPS REQUIRED vips>=7.40.11)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
 
+pkg_check_modules(GLIB glib-2.0) 
+pkg_check_modules(GLIBMM glibmm-2.4) 
+
 pkg_check_modules(GTKMM3 gtkmm-3.0<=3.4.0) 
 if(NOT GTKMM3_FOUND)
   pkg_check_modules(GTKMM2 REQUIRED gtkmm-2.4) 

@@ -42,10 +42,11 @@ namespace PF
 #define BLEND_LOOP( theblender ) {                                \
     theblender.init_line( omap, r->left, y0 );                    \
     for( x=0, xomap=0; x < line_size; ) {                         \
-      x += dx1;                                                   \
-      theblender.blend( opacity, pbottom, ptop, pout, x, xomap ); \
-      x += dx2;                                                   \
-    }                                                             \
+      for( ch=0; ch<CHMIN; ch++, x++ ) pout[x] = pbottom[x];      \
+      theblender.blend( opacity, pbottom, ptop, pout, x, xomap );       \
+      x += dx;                                                         \
+      for( ch=CHMAX+1; ch<PF::ColorspaceInfo<colorspace>::NCH; ch++, x++ ) pout[x] = pbottom[x]; \
+    }                                                                   \
   }
 
 
@@ -84,7 +85,8 @@ namespace PF
       BlendLuminosity<T,colorspace,CHMIN,CHMAX,has_omap> blend_lumi;
       BlendColor<T,colorspace,CHMIN,CHMAX,has_omap> blend_color;
       Rect *r = &oreg->valid;
-      int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN;
+      //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
+      int x, y, xomap, y0, dx=CHMAX-CHMIN+1, ch;
       int line_size = r->width * oreg->im->Bands;
       T* pbottom;
       T* ptop;

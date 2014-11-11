@@ -633,8 +633,26 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
     PF::OpParBase* blender = NULL;
     if( (l->get_blender() != NULL) &&
-        (l->get_blender()->get_par() != NULL) )
+        (l->get_blender()->get_par() != NULL) ) {
       blender = l->get_blender()->get_par();
+      if( par && blender ) {
+        PF::PropertyBase* p_rgb_target_ch =  blender->get_property( "rgb_target_channel" );
+        std::cout<<"Layer "<<name<<"<< p_rgb_target_ch="<<p_rgb_target_ch
+                 <<"  par->get_rgb_target_channel()="<<par->get_rgb_target_channel()<<std::endl;
+        if( p_rgb_target_ch ) 
+          p_rgb_target_ch->set_enum_value( par->get_rgb_target_channel() );
+        PF::PropertyBase* p_lab_target_ch =  blender->get_property( "lab_target_channel" );
+        std::cout<<"Layer "<<name<<"<< p_lab_target_ch="<<p_lab_target_ch
+                 <<"  par->get_lab_target_channel()="<<par->get_lab_target_channel()<<std::endl;
+        if( p_lab_target_ch )
+          p_lab_target_ch->set_enum_value( par->get_lab_target_channel() );
+        PF::PropertyBase* p_cmyk_target_ch = blender->get_property( "cmyk_target_channel" );
+        std::cout<<"Layer "<<name<<"<< p_cmyk_target_ch="<<p_cmyk_target_ch
+                 <<"  par->get_cmyk_target_channel()="<<par->get_cmyk_target_channel()<<std::endl;
+        if( p_cmyk_target_ch )
+          p_cmyk_target_ch->set_enum_value( par->get_cmyk_target_channel() );
+      }
+    }
     PF::OpParBase* pipelineblender = NULL;
     if( (node != NULL) &&
         (node->blender != NULL) &&
@@ -802,6 +820,9 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         // we have a problem and we gve up
         if( !extra_img ) return false;
         in.push_back( extra_img );
+
+        par->set_image_hints( extra_img );
+        blender->set_image_hints( extra_img );
 #ifndef NDEBUG
         std::cout<<" ...added."<<std::endl;
 #endif
@@ -948,7 +969,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       if( par->has_opacity() && blender && pipelineblender) {
         unsigned int level = pipeline->get_level();
         pipelineblender->import_settings( blender );
-        
+
         std::vector<VipsImage*> in;
         // we add the previous image to the list of inputs, even if it is NULL
         in.push_back( previous );

@@ -91,6 +91,7 @@ namespace PF
 #ifndef NDEBUG
       //usleep(1000);
       std::cout<<"BlenderProc::render(): opacity="<<opacity<<std::endl;
+      std::cout<<"BlenderProc::render(): CS="<<CS<<"  CHMIN="<<CHMIN<<"  CHMAX="<<CHMAX<<std::endl;
 #endif
       blender.blend( ireg[0], ireg[1], oreg, omap );
     }

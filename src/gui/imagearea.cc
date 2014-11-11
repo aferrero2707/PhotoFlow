@@ -50,9 +50,9 @@ extern "C" {
 #endif /*__cplusplus*/
 
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
 #define DEBUG_DISPLAY
-//#endif
+#endif
 
 #define OPTIMIZE_SCROLLING
 
@@ -231,10 +231,10 @@ void PF::ImageArea::draw_area()
     return;
   }
 
-  std::cout<<"PF::ImageArea::draw_area(): drawing area "
-  	   <<double_buffer.get_active().get_rect().width<<","<<double_buffer.get_active().get_rect().height
-  	   <<"+"<<double_buffer.get_active().get_rect().left<<"+"<<double_buffer.get_active().get_rect().top
-  	   <<std::endl;
+  //std::cout<<"PF::ImageArea::draw_area(): drawing area "
+  //	   <<double_buffer.get_active().get_rect().width<<","<<double_buffer.get_active().get_rect().height
+  //	   <<"+"<<double_buffer.get_active().get_rect().left<<"+"<<double_buffer.get_active().get_rect().top
+  //	   <<std::endl;
   Glib::RefPtr<Gdk::Window> window = get_window();
   if( !window ) return;
   Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
@@ -330,7 +330,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
 #ifdef GTKMM_3
 bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
-  std::cout<<"ImageArea::on_draw() called."<<std::endl;
+  //std::cout<<"ImageArea::on_draw() called."<<std::endl;
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return true;
 
@@ -343,8 +343,8 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     hadj->get_value(), vadj->get_value(),
     hadj->get_page_size(), vadj->get_page_size()
   };
-	std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot.width<<","<<area_tot.height
-					 <<"+"<<area_tot.left<<","<<area_tot.top<<std::endl;
+	//std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot.width<<","<<area_tot.height
+	//				 <<"+"<<area_tot.left<<","<<area_tot.top<<std::endl;
 
 	if( display_image->Xsize < hadj->get_page_size() ) {
 		xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
@@ -374,8 +374,8 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	area_tot.top = iy1;
 	area_tot.width = ix2+1-ix1;
 	area_tot.height = iy2+1-iy1;
-	std::cout<<"ImageArea::on_draw(): area_tot2="<<area_tot.width<<","<<area_tot.height
-					 <<"+"<<area_tot.left<<","<<area_tot.top<<std::endl;
+	//std::cout<<"ImageArea::on_draw(): area_tot2="<<area_tot.width<<","<<area_tot.height
+	//				 <<"+"<<area_tot.left<<","<<area_tot.top<<std::endl;
 
   cairo_rectangle_list_t *list =  cairo_copy_clip_rectangle_list (cr->cobj());
   for (int i = list->num_rectangles - 1; i >= 0; --i) {
