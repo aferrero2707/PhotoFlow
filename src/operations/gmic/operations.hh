@@ -52,6 +52,8 @@ namespace PF
   ProcessorBase* new_gmic_emulate_film_negative_old();
   ProcessorBase* new_gmic_emulate_film_print_films();
   ProcessorBase* new_gmic_emulate_film_various();
+  ProcessorBase* new_gmic_gcd_despeckle();
+  ProcessorBase* new_gmic_smooth_guided();
   //insert new operations here
 
   ProcessorBase* new_gmic_operation( std::string op_type );
