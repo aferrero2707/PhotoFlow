@@ -55,7 +55,7 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
   colorButtonsBox2.pack_start( pen_size, Gtk::PACK_SHRINK );
   controlsBox.pack_start( colorButtonsBox1 );
   controlsBox.pack_start( colorButtonsBox2 );
-  penBox.pack_start( pen_opacity );
+  //penBox.pack_start( pen_opacity );
   controlsBox.pack_start( penBox );
 
   /*
@@ -255,7 +255,7 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 		/**/
     if( (update.width > 0) &&
 				(update.height > 0) ) {
-      if( true || PF::PhotoFlow::Instance().is_batch() ) {
+      if( PF::PhotoFlow::Instance().is_batch() ) {
 				pipeline->sink( update );	
       } else {
 				ProcessRequestInfo request;
@@ -266,7 +266,7 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 				request.area.width = update.width;
 				request.area.height = update.height;
 #ifndef NDEBUG
-				std::cout<<"PF::DrawConfigDialog::draw_point(): submitting rebuild request."<<std::endl;
+				std::cout<<"PF::DrawConfigDialog::draw_point(): submitting rebuild request with area."<<std::endl;
 #endif
 				PF::ImageProcessor::Instance().submit_request( request );
       }

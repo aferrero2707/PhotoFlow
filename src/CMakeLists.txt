@@ -6,6 +6,11 @@ SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg")
 SET(CMAKE_CXX_FLAGS_TEST "-O0 -g -DNDEBUG -DLIBRAW_NODLL -DPF_VERBOSE_UNREF -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 
+include_directories(${GLIB_INCLUDE_DIRS})
+include_directories(${GLIBMM_INCLUDE_DIRS})
+link_directories(${GLIB_LIBRARY_DIRS})
+link_directories(${GLIBMM_LIBRARY_DIRS})
+  
 if(GTKMM2_FOUND)
   
   link_directories(
@@ -27,13 +32,17 @@ if(GTKMM3_FOUND)
   
   include_directories(    ${GTKMM3_INCLUDE_DIRS}  )
   
-  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-DGTKMM_3")
+  #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-DGTKMM_3")
+  set(CMAKE_CXX_FLAGS "-DGTKMM_3 ${CMAKE_CXX_FLAGS}")
   
   set(GTKMM_LIBRARIES ${GTKMM3_LIBRARIES})
   
 endif()
 
 include_directories(${SIGC2_INCLUDE_DIRS})
+
+include_directories(${ZLIB_INCLUDE_DIRS})
+link_directories(${ZLIB_LIBRARY_DIRS}  )
 
 
 #include_directories(${LIBXML_INCLUDE_DIRS})
@@ -141,16 +150,20 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 IF(MINGW)
 list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
 ELSE(MINGW)
-list(APPEND ADDITIONAL_LIBS fftw3_threads z)
+list(APPEND ADDITIONAL_LIBS fftw3_threads)
 ENDIF(MINGW)
 
 target_link_libraries(photoflow ${LIBS} 
   pfbase 
   pfvips 
   pfgmic 
-  ${SIGC2_LIBRARIES}
-  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${SIGC2_LIBRARIES}
+  ${GTKMM_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
   fftw3

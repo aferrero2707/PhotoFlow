@@ -54,6 +54,8 @@ extern "C" {
 #define DEBUG_DISPLAY
 #endif
 
+#define OPTIMIZE_SCROLLING
+
 PF::ImageArea::ImageArea( Pipeline* v ):
   PipelineSink( v ),
   hadj( NULL ),
@@ -84,6 +86,9 @@ PF::ImageArea::ImageArea( Pipeline* v ):
 
   draw_done = vips_g_cond_new();
   draw_mutex = vips_g_mutex_new();
+
+  //get_window()->set_back_pixmap( Glib::RefPtr<Gdk::Pixmap>(), FALSE );
+  //set_double_buffered( TRUE );
 
   //signal_queue_draw.connect(sigc::mem_fun(*this, &ImageArea::queue_draw));
 }
@@ -238,6 +243,7 @@ void PF::ImageArea::draw_area()
   		 double_buffer.get_active().get_rect().width*3,
   		 double_buffer.get_active().get_rect().height*3 );
   cr->clip();
+  /**/
   Gdk::Cairo::set_source_pixbuf( cr, double_buffer.get_active().get_pxbuf(), 
 				 double_buffer.get_active().get_rect().left,
 				 double_buffer.get_active().get_rect().top );
@@ -246,7 +252,8 @@ void PF::ImageArea::draw_area()
   		 double_buffer.get_active().get_rect().width,
   		 double_buffer.get_active().get_rect().height );
   cr->fill();
-  //cr->paint();
+  /**/
+  cr->paint();
   double_buffer.unlock();
   //std::cout<<"PF::ImageArea::draw_area(): after drawing pixbuf"<<std::endl;
   //getchar();
@@ -323,11 +330,14 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
 #ifdef GTKMM_3
 bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
+  //std::cout<<"ImageArea::on_draw() called."<<std::endl;
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return true;
 
 	// Immediately draw the buffered image, to avoid flickering
   draw_area();
+
+  //return true;
 
   VipsRect area_tot = {
     hadj->get_value(), vadj->get_value(),
@@ -356,6 +366,7 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   PF::ImageProcessor::Instance().submit_request( request );
   //std::cout<<"PF::ImageArea::on_expose_event(): redraw_start request submitted."<<std::endl;
 
+#ifdef OPTIMIZE_SCROLLING
 	double x1, y1, x2, y2;
 	cr->get_clip_extents( x1, y1, x2, y2 );
 	int ix1=x1, iy1=y1, ix2=x2, iy2=y2;
@@ -363,19 +374,24 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	area_tot.top = iy1;
 	area_tot.width = ix2+1-ix1;
 	area_tot.height = iy2+1-iy1;
-  //submit_area( area_tot );
+	//std::cout<<"ImageArea::on_draw(): area_tot2="<<area_tot.width<<","<<area_tot.height
+	//				 <<"+"<<area_tot.left<<","<<area_tot.top<<std::endl;
 
   cairo_rectangle_list_t *list =  cairo_copy_clip_rectangle_list (cr->cobj());
   for (int i = list->num_rectangles - 1; i >= 0; --i) {
     cairo_rectangle_t *rect = &list->rectangles[i];
 
 #ifdef DEBUG_DISPLAY    
-    std::cout<<"ImageArea::on_draw(): rectangle = "<<rect->x<<","<<rect->y
-	     <<" -> "<<rect->width<<","<<rect->height<<std::endl;
+    std::cout<<"ImageArea::on_draw(): rectangle = "<<rect->width<<","<<rect->height
+	     <<"+"<<rect->x<<","<<rect->y<<std::endl;
 #endif
     VipsRect area = {rect->x, rect->y, rect->width, rect->height};
     submit_area( area );
   }
+#else
+  submit_area( area_tot );
+#endif
+
 
   request.sink = this;
   request.area = area_tot;
@@ -663,22 +679,26 @@ void PF::ImageArea::update( VipsRect* area )
 
 void PF::ImageArea::sink( const VipsRect& area ) 
 {
-#ifndef NDEBUG
+#ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::sink( const VipsRect& area ) called"<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = get_pipeline();
   if( !pipeline ) return;
+  if( !outimg ) return;
   int level = pipeline->get_level();
   float fact = 1.0f;
   for( unsigned int i = 0; i < level; i++ )
     fact /= 2.0f;
+  fact *= shrink_factor;
 
   VipsRect scaled_area;
   scaled_area.left = area.left * fact;
   scaled_area.top = area.top * fact;
-  scaled_area.width = area.width * fact;
-  scaled_area.height = area.height * fact;
+  scaled_area.width = area.width * fact + 1;
+  scaled_area.height = area.height * fact + 1;
+
+  //vips_image_invalidate_all( pipeline->get_output() );
 
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update( area ): called"<<std::endl;
@@ -695,13 +715,20 @@ void PF::ImageArea::sink( const VipsRect& area )
 												 0, NULL, this))
 		return;
 	*/
-  VipsRegion* region2 = vips_region_new (display_image);
-  vips_invalidate_area( display_image, &scaled_area );
-	//vips_region_invalidate( region );
+  //VipsRegion* region2 = vips_region_new (display_image);
+  VipsRegion* region2 = vips_region_new( outimg );
+  //vips_invalidate_area( display_image, &scaled_area );
+	//vips_region_invalidate( region2 );
 
   VipsRect* parea = (VipsRect*)(&scaled_area);
-  if (vips_region_prepare (region2, parea))
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Preparing area "<<scaled_area.left<<","<<scaled_area.top<<"+"<<scaled_area.width<<"+"<<scaled_area.height<<std::endl;
+#endif
+  if (vips_region_prepare (region2, parea)) {
+    std::cout<<"ImageArea::sink(): vips_region_prepare() failed."<<std::endl;
     return;
+  }
+  unsigned char* pout = (unsigned char*)VIPS_REGION_ADDR( region2, parea->left, parea->top ); 
 	/*
 	std::cout<<"Plotting scaled area "<<scaled_area.width<<","<<scaled_area.height
 					 <<"+"<<scaled_area.left<<","<<scaled_area.top<<std::endl;
@@ -736,7 +763,7 @@ void PF::ImageArea::sink( const VipsRect& area )
 
 	/**/
 	double_buffer.lock();
-	double_buffer.get_active().copy( region2, scaled_area );
+	double_buffer.get_active().copy( region2, scaled_area, xoffset, yoffset );
 	Update * update = g_new (Update, 1);
 	update->image_area = this;
 	update->rect.width = update->rect.height = 0;

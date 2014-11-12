@@ -130,6 +130,8 @@ PF::Image::Image():
   convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 
+  //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
+  //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
   add_pipeline( VIPS_FORMAT_USHORT, 0 );
   add_pipeline( VIPS_FORMAT_USHORT, 0 );
 
