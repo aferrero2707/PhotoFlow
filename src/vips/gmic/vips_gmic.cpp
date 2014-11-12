@@ -546,7 +546,7 @@ g_module_check_init( GModule *module )
 
 	/* We can't be unloaded, there would be chaos.
 	 */
-	g_module_make_resident( module );
+	//g_module_make_resident( module );
 
 	return( NULL ); 
 }
