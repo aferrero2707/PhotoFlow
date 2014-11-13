@@ -49,3 +49,6 @@
 #include "emulate_film_negative_old_config.hh"
 #include "emulate_film_print_films_config.hh"
 #include "emulate_film_various_config.hh"
+#include "gcd_despeckle_config.hh"
+#include "smooth_guided_config.hh"
+#include "iain_denoise_config.hh"

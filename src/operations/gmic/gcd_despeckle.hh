@@ -27,11 +27,9 @@
 
  */
 
-#ifndef GMIC_BLUR_BILATERAL_H
-#define GMIC_BLUR_BILATERAL_H
+#ifndef GMIC_GCD_DESPECKLE_H
+#define GMIC_GCD_DESPECKLE_H
 
-#include <assert.h>
-#include <string>
 
 #include "../base/processor.hh"
 
@@ -39,48 +37,46 @@
 namespace PF 
 {
 
-  class GmicBlurBilateralPar: public OpParBase
+  class GmicGcdDespecklePar: public OpParBase
   {
     Property<int> iterations;
-    Property<float> sigma_s;
-    Property<float> sigma_r; 
-    Property<int> bgrid_s;
-    Property<int> bgrid_r; 
-
+    Property<int> prop_tolerance;
+    Property<int> prop_max_area;
     ProcessorBase* gmic;
 
   public:
-    GmicBlurBilateralPar();
+    GmicGcdDespecklePar();
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool needs_caching() { return false; }
 
-      
+
+    int get_padding( int level );      
+
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
-		     VipsImage* imap, VipsImage* omap, 
-		     unsigned int& level);
+                     VipsImage* imap, VipsImage* omap, 
+                     unsigned int& level);
   };
 
   
 
   template < OP_TEMPLATE_DEF > 
-  class GmicBlurBilateralProc
+  class GmicGcdDespeckleProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
-		VipsRegion* imap, VipsRegion* omap, 
-		VipsRegion* oreg, OpParBase* par)
-    {
-			
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, OpParBase* par)
+    {	
     }
   };
 
 
 
 
-  ProcessorBase* new_gmic_blur_bilateral();
+  ProcessorBase* new_gmic_gcd_despeckle();
 }
 
 #endif 

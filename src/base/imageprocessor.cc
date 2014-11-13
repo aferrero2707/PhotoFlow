@@ -56,7 +56,7 @@ void PF::ImageProcessor::optimize_requests()
   PF::ProcessRequestInfo* req = (PF::ProcessRequestInfo*)g_async_queue_pop( requests );
   //std::cout<<"ImageProcessor::optimize_requests(): ... done."<<std::endl;
   optimized_requests.push_back( *req );
-  free( req );
+  delete( req );
 
   // Add any further request in the queue
   int length = g_async_queue_length( requests );
@@ -231,9 +231,8 @@ void PF::ImageProcessor::run()
 
 void  PF::ImageProcessor::submit_request( PF::ProcessRequestInfo request )
 {
-  gpointer data = malloc( sizeof(PF::ProcessRequestInfo) );
-  memcpy( data, &request, sizeof(PF::ProcessRequestInfo) );
-  g_async_queue_push( requests, data );
+  PF::ProcessRequestInfo* req_copy = new PF::ProcessRequestInfo( request );
+  g_async_queue_push( requests, req_copy );
 
   /*
   std::cout<<"PF::ImageProcessor::submit_request(): locking mutex."<<std::endl;

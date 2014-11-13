@@ -242,6 +242,8 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   op_geom.add_op( "Crop image", "crop" );
 
+  op_gmic.add_op( "Despeckle", "gmic_gcd_despeckle" );
+  op_gmic.add_op( "Iain's Noise Reduction", "gmic_iain_denoise" );
   op_gmic.add_op( "Smooth [anisotropic]", "gmic_smooth_anisotropic" );
   op_gmic.add_op( "Smooth [bilateral]", "gmic_blur_bilateral" );
   op_gmic.add_op( "Smooth [diffusion]", "gmic_smooth_diffusion" );
@@ -251,6 +253,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.add_op( "Smooth [selective gaussian]", "gmic_smooth_selective_gaussian" );
   op_gmic.add_op( "Smooth [total variation]", "gmic_smooth_total_variation" );
   op_gmic.add_op( "Smooth [wavelets]", "gmic_smooth_wavelets_haar" );
+  op_gmic.add_op( "Smooth [guided]", "gmic_smooth_guided" );
   op_gmic.add_op( "Emulate film [color slide]", "gmic_emulate_film_colorslide" );
   op_gmic.add_op( "Emulate film [B&W]", "gmic_emulate_film_bw" );
   op_gmic.add_op( "Emulate film [instant consumer]", "gmic_emulate_film_instant_consumer" );

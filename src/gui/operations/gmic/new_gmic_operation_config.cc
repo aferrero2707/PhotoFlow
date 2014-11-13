@@ -75,6 +75,12 @@ PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, P
     dialog = new PF::GmicEmulateFilmPrintFilmsConfigDialog( current_layer );
   } else if( op_type == "gmic_emulate_film_various" ) {
     dialog = new PF::GmicEmulateFilmVariousConfigDialog( current_layer );
+  } else if( op_type == "gmic_gcd_despeckle" ) {
+    dialog = new PF::GmicGcdDespeckleConfigDialog( current_layer );
+  } else if( op_type == "gmic_smooth_guided" ) {
+    dialog = new PF::GmicSmoothGuidedConfigDialog( current_layer );
+  } else if( op_type == "gmic_iain_denoise" ) {
+    dialog = new PF::GmicIainDenoiseConfigDialog( current_layer );
     //insert new operations here
   }
 

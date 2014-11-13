@@ -95,6 +95,25 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       (get_opacity() > 0.999f) &&
       (omap == NULL) ) is_passthrough = true;
 
+  if( is_passthrough && (get_blend_mode() != PF_BLEND_PASSTHROUGH) ) {
+    switch( get_colorspace() ) {
+    case PF_COLORSPACE_RGB:
+      if( get_rgb_target_channel()>= 0 )
+        is_passthrough = false;
+      break;
+    case PF_COLORSPACE_LAB:
+      if( get_lab_target_channel()>= 0 )
+        is_passthrough = false;
+      break;
+    case PF_COLORSPACE_CMYK:
+      if( get_cmyk_target_channel()>= 0 )
+        is_passthrough = false;
+      break;
+    default:
+      break;
+  }
+}
+
   // If both images are not NULL and the blending mode is not "passthrough-equivalent",
   // we activate the blending code.
   // In all other cases, one of the input images is copied to the output
