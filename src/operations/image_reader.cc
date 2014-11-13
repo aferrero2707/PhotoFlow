@@ -132,7 +132,8 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   // The pyramid is re-built if the input file or the format have changed
   if( modified ) {
     pyramid.init( out );
-    PF_UNREF( out, "ImageReaderPar::build(): out unref after pyramid.init()" );
+#warning Need to unreference image after pyramid init, but this leads to crashes when exporting
+    //PF_UNREF( out, "ImageReaderPar::build(): out unref after pyramid.init()" );
     //std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after pyramid.init(): "<<G_OBJECT(out)->ref_count<<std::endl;
   }
 
