@@ -68,7 +68,7 @@ void PF::ImageProcessor::optimize_requests()
     //std::cout<<"ImageProcessor::optimize_requests(): residual queue length="
     //         <<g_async_queue_length( requests )<<std::endl;
     optimized_requests.push_back( *req );
-    free( req );
+    delete( req );
   }
 
   // Optimize the requests by removing all requests preceding a "rebuild" one.
