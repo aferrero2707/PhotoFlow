@@ -243,6 +243,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_geom.add_op( "Crop image", "crop" );
 
   op_gmic.add_op( "Despeckle", "gmic_gcd_despeckle" );
+  op_gmic.add_op( "Iain's Noise Reduction", "gmic_iain_denoise" );
   op_gmic.add_op( "Smooth [anisotropic]", "gmic_smooth_anisotropic" );
   op_gmic.add_op( "Smooth [bilateral]", "gmic_blur_bilateral" );
   op_gmic.add_op( "Smooth [diffusion]", "gmic_smooth_diffusion" );

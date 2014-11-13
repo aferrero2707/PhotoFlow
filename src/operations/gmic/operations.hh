@@ -54,6 +54,7 @@ namespace PF
   ProcessorBase* new_gmic_emulate_film_various();
   ProcessorBase* new_gmic_gcd_despeckle();
   ProcessorBase* new_gmic_smooth_guided();
+  ProcessorBase* new_gmic_iain_denoise();
   //insert new operations here
 
   ProcessorBase* new_gmic_operation( std::string op_type );

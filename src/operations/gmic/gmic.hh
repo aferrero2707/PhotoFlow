@@ -33,6 +33,11 @@
 #include <assert.h>
 #include <string>
 
+#include <sstream>
+#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
+
+
 #include "../base/processor.hh"
 
 

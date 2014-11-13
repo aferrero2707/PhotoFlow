@@ -27,10 +27,10 @@
 
  */
 
+#include <math.h>
 
 #include "gmic.hh"
 #include "gcd_despeckle.hh"
-
 
 
 PF::GmicGcdDespecklePar::GmicGcdDespecklePar(): 
@@ -46,7 +46,11 @@ OpParBase(),
 
 int PF::GmicGcdDespecklePar::get_padding( int level )
 {
-  return 0;
+  float scalefac2 = 1;
+	for( int l = 1; l <= level; l++ ) {
+		scalefac2 *= 4;
+  }
+  return( sqrt(prop_max_area.get()*10./scalefac2) );
 }
 
 
@@ -66,12 +70,16 @@ VipsImage* PF::GmicGcdDespecklePar::build(std::vector<VipsImage*>& in, int first
   if( !gpar ) return NULL;
 
   float scalefac = 1;
-	for( int l = 1; l <= level; l++ )
+  float scalefac2 = 1;
+	for( int l = 1; l <= level; l++ ) {
 		scalefac *= 2;
+		scalefac2 *= 4;
+  }
 
   std::string command = "-gcd_despeckle  ";
   command = command + prop_tolerance.get_str();
-  command = command + std::string(",") + prop_max_area.get_str();
+  //command = command + std::string(",") + prop_max_area.get_str();
+  command = command + std::string(",") + SSTR( prop_max_area.get()/scalefac2 );
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
   gpar->set_padding( get_padding( level ) );

@@ -69,12 +69,13 @@ VipsImage* PF::GmicSmoothGuidedPar::build(std::vector<VipsImage*>& in, int first
 	for( int l = 1; l <= level; l++ )
 		scalefac *= 2;
 
-  std::string command = "-gimp_blur_guided  ";
-  command = command + prop_radius.get_str();
+  std::string command = "-guided  ";
+  //command = command + prop_radius.get_str();
+  command = command + SSTR( prop_radius.get()/scalefac );
   command = command + std::string(",") + prop_smoothness.get_str();
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
-  gpar->set_padding( get_padding( level ) );
+  gpar->set_padding( get_padding( prop_radius.get()*2./scalefac ) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 
