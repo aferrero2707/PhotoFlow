@@ -147,6 +147,8 @@ int main (int argc, char *argv[])
   }
 #endif
   exePath = Glib::path_get_dirname(exname);
+
+  std::cout<<"exePath: "<<exePath<<std::endl;
   
   //im_package* result = im_load_plugin("src/pfvips.plg");
   //if(!result) verror ();
@@ -163,7 +165,8 @@ int main (int argc, char *argv[])
 	char* fullpath = realpath( cCurrentPath, NULL );
 	if(!fullpath)
 		return 1;
-  PF::PhotoFlow::Instance().set_base_dir( fullpath );
+  //PF::PhotoFlow::Instance().set_base_dir( fullpath );
+  PF::PhotoFlow::Instance().set_base_dir( exePath );
 	free( fullpath );
 
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );

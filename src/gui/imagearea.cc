@@ -273,15 +273,21 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   std::cout<<"PF::ImageArea::on_expose_event(): called."<<std::endl;
 #endif
   //getchar();
+
+  // We draw only if there is already a VipsImage attached to this display
+  if( !display_image ) return true;
+
+	// Immediately draw the buffered image, to avoid flickering
   draw_area();
+
   gdk_region_get_rectangles (event->region, &expose, &n);
   int xmin=1000000, xmax=0, ymin=1000000, ymax=0;
   for (i = 0; i < n; i++) {
-    //#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
     std::cout<<"PF::ImageArea::on_expose_event(): region #"<<i<<": ("
 	     <<expose[i].x<<","<<expose[i].y<<") ("
 	     <<expose[i].width<<","<<expose[i].height<<")"<<std::endl;
-    //#endif
+#endif
     if( expose[i].x < xmin ) xmin = expose[i].x;
     if( expose[i].x > xmax ) xmax = expose[i].x;
     if( expose[i].y < ymin ) ymin = expose[i].y;
@@ -292,6 +298,18 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
     hadj->get_value(), vadj->get_value(),
     hadj->get_page_size(), vadj->get_page_size()
   };
+
+	if( display_image->Xsize < hadj->get_page_size() ) {
+		xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
+	} else {
+		xoffset = 0;
+	}
+	if( display_image->Ysize < vadj->get_page_size() ) {
+		yoffset = (vadj->get_page_size()-display_image->Ysize)/2;
+	} else {
+		yoffset = 0;
+	}
+
   ProcessRequestInfo request;
   request.sink = this;
   request.area = area_tot;
@@ -301,7 +319,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   //std::cout<<"PF::ImageArea::on_expose_event(): redraw_start request submitted."<<std::endl;
 
 
-  area_tot = {event->area.x, event->area.y, event->area.width, event->area.height};
+  //area_tot = {event->area.x, event->area.y, event->area.width, event->area.height};
   submit_area( area_tot );
 
   //getchar();
