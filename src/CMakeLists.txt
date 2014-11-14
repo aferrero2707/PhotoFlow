@@ -166,7 +166,7 @@ target_link_libraries(photoflow ${LIBS}
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
-  fftw3
+  fftw3 pthread
   ${ADDITIONAL_LIBS}
   #gmon
   )
