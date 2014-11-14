@@ -229,9 +229,10 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_conv.add_op( "Color profile conversion", "convert_colorspace" );
   op_conv.add_op( "Lab conversion", "convert2lab" );
 
+  op_color.add_op( "Uniform Fill", "uniform");
+  op_color.add_op( "Gradient", "gradient");
   op_color.add_op( "Invert", "invert" );
   op_color.add_op( "Desaturate", "desaturate" );
-  op_color.add_op( "Gradient", "gradient");
   op_color.add_op( "Brightness/Contrast", "brightness_contrast" );
   op_color.add_op( "Curves", "curves" );
   op_color.add_op( "Channel Mixer", "channel_mixer" );

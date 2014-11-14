@@ -38,6 +38,7 @@
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/crop_config.hh"
 #include "../gui/operations/gradient_config.hh"
+#include "../gui/operations/uniform_config.hh"
 #include "../gui/operations/curves_config.hh"
 #include "../gui/operations/channel_mixer_config.hh"
 #include "../gui/operations/gaussblur_config.hh"
@@ -437,6 +438,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "desaturate" ) {
 
     dialog = new PF::OperationConfigDialog( current_layer, "Desaturate Image" );
+
+  } else if( op_type == "uniform" ) {
+
+    dialog = new PF::UniformConfigDialog( current_layer );
 
   } else if( op_type == "gradient" ) {
 
