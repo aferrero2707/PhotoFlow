@@ -39,6 +39,7 @@
 PF::ImageEditor::ImageEditor( std::string fname ):
   filename( fname ),
   image( new PF::Image() ),
+  image_opened( false ),
   active_layer( NULL ),
   //imageArea( image->get_pipeline(PIPELINE_ID) ),
   layersWidget( image ),
@@ -115,6 +116,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK );
 	//add_events( Gdk::STRUCTURE_MASK );
 
+  //open_image();
+
   show_all_children();
 }
 
@@ -133,20 +136,37 @@ PF::ImageEditor::~ImageEditor()
 
 
 
-void PF::ImageEditor::on_map()
+void PF::ImageEditor::open_image()
 {
-  std::cout<<"ImageEditor::on_map(): opening image..."<<std::endl;
+  if( image_opened ) return;
+  std::cout<<"ImageEditor::open_image(): opening image..."<<std::endl;
   image->open( filename );
-  std::cout<<"ImageEditor::on_map(): ... done."<<std::endl;
+  std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
   if( !pipeline ) return;
   int level = 1;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
-  std::cout<<"ImageEditor::on_map(): updating image"<<std::endl;
+  std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
   image->update();
+  image_opened = true;
+  //Gtk::Paned::on_map();
+}
+
+
+void PF::ImageEditor::on_map()
+{
+  std::cout<<"ImageEditor::on_map() called."<<std::endl;
+  //open_image();
   Gtk::Paned::on_map();
+}
+
+void PF::ImageEditor::on_realize()
+{
+  std::cout<<"ImageEditor::on_realize() called."<<std::endl;
+  open_image();
+  Gtk::Paned::on_realize();
 }
 
 void PF::ImageEditor::zoom_out()
