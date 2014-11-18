@@ -99,3 +99,42 @@ public:
 };
 
 
+
+
+/*
+  Lab colorspace
+ */
+template<typename T, int CHMIN, int CHMAX>
+class BlendLuminosity<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false>: 
+  public BlendBase<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false>
+{
+  int pos, ch;
+  double temp_top;
+  double rgb[3];
+public:
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  {
+    pos = x;
+    for( ch=CHMIN; ch<=0; ch++, pos++ ) 
+      out[pos] = top[pos];
+    for( ; ch<=CHMAX; ch++, pos++ ) 
+      out[pos] = bottom[pos];
+  }
+};
+
+template<typename T, int CHMIN, int CHMAX>
+class BlendLuminosity<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, true>: 
+  public BlendBase<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, true>
+{
+  BlendLuminosity<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false> blender;
+  float opacity_real;
+public:
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  {
+    float opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);
+    xomap += 1;
+    blender.blend( opacity_real, bottom, top, out, x, xomap );
+  }
+};
+
+

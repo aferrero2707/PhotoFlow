@@ -30,7 +30,7 @@
 
 
 template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_omap>
-class BlendOverlay: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
+class BlendHardLight: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
 public:
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) {}
@@ -38,57 +38,33 @@ public:
 
 
 /*
-  Default
+  Hard light blending is equivalent to Overlay with bottom and top layers swapped
  */
 template<typename T, colorspace_t CS, int CHMIN, int CHMAX>
-class BlendOverlay<T, CS, CHMIN, CHMAX, false>: 
+class BlendHardLight<T, CS, CHMIN, CHMAX, false>: 
   public BlendBase<T, CS, CHMIN, CHMAX, false>
 {
-  int ch, pos;
-  T ibottom;
-  typename FormatInfo<T>::PROMOTED ptop, overlay;
-  typename FormatInfo<T>::PROMOTED psum;
+  BlendOverlay<T, CS, CHMIN, CHMAX, false> blender;
 public:
-  BlendOverlay(): BlendBase<T, CS, CHMIN, CHMAX, false>(), psum(FormatInfo<T>::MAX + FormatInfo<T>::MIN) {}
+  BlendHardLight(): BlendBase<T, CS, CHMIN, CHMAX, false>() {}
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
-    pos = x;
-    //psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
-    for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      if( bottom[pos] < FormatInfo<T>::HALF )
-	overlay = (((typename FormatInfo<T>::PROMOTED)top[pos])*bottom[pos]/FormatInfo<T>::MAX)*2;	
-      else
-	overlay = psum - ((psum-top[pos])*(psum-bottom[pos])/FormatInfo<T>::RANGE)*2;
-      clip( opacity*overlay + (1.0f-opacity)*bottom[pos], out[pos] );
-    }
+    blender.blend( opacity, top, bottom, out, x, xomap );
   }
 };
 
 template<typename T, colorspace_t CS, int CHMIN, int CHMAX>
-class BlendOverlay<T, CS, CHMIN, CHMAX, true>: 
+class BlendHardLight<T, CS, CHMIN, CHMAX, true>: 
   public BlendBase<T, CS, CHMIN, CHMAX, true>
 {
-  int ch, pos;
-  T ibottom;
-  typename FormatInfo<T>::PROMOTED ptop, overlay;
-  typename FormatInfo<T>::PROMOTED psum;
+  BlendOverlay<T, CS, CHMIN, CHMAX, false> blender;
   float opacity_real;
 public:
-  BlendOverlay(): BlendBase<T, CS, CHMIN, CHMAX, true>(), psum(FormatInfo<T>::MAX + FormatInfo<T>::MIN) {}
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     //int i = x;
     opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);
     xomap += 1;
-
-    pos = x;
-    //psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
-    for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      if( bottom[pos] < FormatInfo<T>::HALF )
-	overlay = (((typename FormatInfo<T>::PROMOTED)top[pos])*bottom[pos]/FormatInfo<T>::MAX)*2;	
-      else
-	overlay = psum - ((psum-top[pos])*(psum-bottom[pos])/FormatInfo<T>::RANGE)*2;
-      clip( opacity_real*overlay + (1.0f-opacity_real)*bottom[pos], out[pos] );
-    }
+    blender.blend( opacity_real, top, bottom, out, x, xomap );
   }
 };

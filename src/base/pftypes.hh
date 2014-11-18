@@ -87,7 +87,11 @@ namespace PF
   enum blendmode_t {
     PF_BLEND_PASSTHROUGH,
     PF_BLEND_NORMAL,
+    PF_BLEND_GRAIN_EXTRACT,
+    PF_BLEND_GRAIN_MERGE,
     PF_BLEND_OVERLAY,
+    PF_BLEND_SOFT_LIGHT,
+    PF_BLEND_HARD_LIGHT,
     PF_BLEND_VIVID_LIGHT,
     PF_BLEND_MULTIPLY,
     PF_BLEND_SCREEN,
@@ -124,7 +128,11 @@ namespace PF
     {
       add_enum_value(PF_BLEND_PASSTHROUGH,"PF_BLEND_PASSTHROUGH","Passthrough");
       add_enum_value(PF_BLEND_NORMAL,"PF_BLEND_NORMAL","Normal");
+      add_enum_value(PF_BLEND_GRAIN_EXTRACT,"PF_BLEND_GRAIN_EXTRACT","Grain extract");
+      add_enum_value(PF_BLEND_GRAIN_MERGE,"PF_BLEND_GRAIN_MERGE","Grain merge");
       add_enum_value(PF_BLEND_OVERLAY,"PF_BLEND_OVERLAY","Overlay");
+      add_enum_value(PF_BLEND_SOFT_LIGHT,"PF_BLEND_SOFT_LIGHT","Soft light");
+      add_enum_value(PF_BLEND_HARD_LIGHT,"PF_BLEND_HARD_LIGHT","Hard light");
       add_enum_value(PF_BLEND_VIVID_LIGHT,"PF_BLEND_VIVID_LIGHT","Vivid light");
       add_enum_value(PF_BLEND_MULTIPLY,"PF_BLEND_MULTIPLY","Multiply");
       add_enum_value(PF_BLEND_SCREEN,"PF_BLEND_SCREEN","Screen");
