@@ -452,7 +452,7 @@ float** RawImage::compress_image()
 
     // copy pixel raw data: the compressed format earns space
 	if (filters != 0) {
-        #pragma omp parallel for
+    #pragma omp parallel for
 		for (int row = 0; row < height; row++)
 			for (int col = 0; col < width; col++)
 				this->data[row][col] = image[row * width + col][FC(row, col)];
