@@ -186,7 +186,7 @@ namespace PF
 
 
 
-  class DrawPar: public BlenderPar
+  class DrawPar: public OpParBase
   {
     Property<float> pen_grey, pen_R, pen_G, pen_B, pen_L, pen_a, pen_b, pen_C, pen_M, pen_Y, pen_K;
     Property<float> bgd_grey, bgd_R, bgd_G, bgd_B, bgd_L, bgd_a, bgd_b, bgd_C, bgd_M, bgd_Y, bgd_K;
@@ -198,6 +198,8 @@ namespace PF
 
 		ProcessorBase* diskbuf;
     RawBuffer* rawbuf;
+
+    unsigned int scale_factor;
 
     Pen pen;
 
@@ -232,11 +234,16 @@ namespace PF
     Property<RGBColor>& get_pen_color() { return pen_color; }
     Property<RGBColor>& get_bgd_color() { return bgd_color; }
 
+    bool has_intensity() { return false; }
+    bool needs_input() { return false; }
+
     Pen& get_pen() { return pen; }
 
     RawBuffer* get_rawbuf() { return rawbuf; }
 
     void init_buffer( unsigned int level );
+
+    unsigned int get_scale_factor() { return scale_factor; }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 
@@ -249,14 +256,146 @@ namespace PF
     void start_stroke( unsigned int pen_size, float opacity );
     void end_stroke();
 
+    Property< std::list<Stroke> >& get_strokes() { return strokes; }
+
     void draw_point( unsigned int x, unsigned int y, VipsRect& update );
   };
 
   
 
   template < OP_TEMPLATE_DEF > 
-  class DrawProc: public BlenderProc<OP_TEMPLATE_IMP>
+  class DrawProc
   {
+  public:
+    void render(VipsRegion** ireg, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, DrawPar* par)
+    {
+      //std::cout<<"DrawProc::render() called"<<std::endl;
+      DrawPar* opar = par;//dynamic_cast<DrawPar*>(par);
+      if( !opar ) return;
+      std::list<Stroke>& strokes = opar->get_strokes().get();
+      VipsRect *r = &oreg->valid;
+      //std::cout<<"nbands: "<<oreg->im->Bands<<std::endl;
+      //std::cout<<"r->left="<<r->left<<"  r->top="<<r->top
+      //         <<"  r->width="<<r->width<<"  r->height="<<r->height<<std::endl;
+      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
+      //int width = r->width;
+      //int height = r->height;
+
+      //T* p;
+      //T* pin;
+      T* pout;
+      int x, x0, y, y0, ch, row1, row2;
+      int point_clip_right, point_clip_bottom;
+
+      pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top ); 
+      //std::cout<<"pout="<<(void*)pout<<std::endl;
+
+      T val[16];
+      val[0] = (T)(opar->get_bgd_color().get().r*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+      val[1] = (T)(opar->get_bgd_color().get().g*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+      val[2] = (T)(opar->get_bgd_color().get().b*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+      //val[0] = (T)(1*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+      //val[1] = (T)(0*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+      //val[2] = (T)(0*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+      for( y = 0; y < r->height; y++ ) {
+        //p = (T*)VIPS_REGION_ADDR( ireg[in_first], point_clip.left, point_clip.top + y ); 
+        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+        for( x = 0; x < line_size; x += oreg->im->Bands ) {
+          for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+            pout[x+ch] = val[ch];
+          }
+        }
+      }
+
+      std::list<Stroke>::iterator si;
+      std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
+      VipsRect point_area;
+      VipsRect point_clip;
+      for( si = strokes.begin(); si != strokes.end(); ++si ) {
+        Pen& pen = si->get_pen();
+        int pen_size = pen.get_size()/opar->get_scale_factor();
+        int pen_size2 = pen_size*pen_size;
+        for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+          val[ch] = (T)(pen.get_channel(ch)*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+        }
+        point_area.width = point_area.height = pen_size*2 + 1;
+        std::list< std::pair<unsigned int, unsigned int> >& points = si->get_points();
+        for( pi = points.begin(); pi != points.end(); ++pi ) {
+          point_area.left = pi->first/opar->get_scale_factor() - pen_size;
+          point_area.top = pi->second/opar->get_scale_factor() - pen_size;
+          vips_rect_intersectrect( r, &point_area, &point_clip );
+          point_clip_right = point_clip.left + point_clip.width - 1;
+          point_clip_bottom = point_clip.top + point_clip.height - 1;
+
+          x0 = pi->first/opar->get_scale_factor();
+          y0 = pi->second/opar->get_scale_factor();
+          for( y = 0; y <= pen_size; y++ ) {
+            row1 = y0 - y;
+            row2 = y0 + y;
+            //int L = pen.get_size() - y;
+            int D = (int)sqrt( pen_size2 - y*y );
+            int startcol = x0 - D;
+            if( startcol < point_clip.left ) 
+              startcol = point_clip.left;
+            int endcol = x0 + D;
+            if( endcol >= point_clip_right ) 
+              endcol = point_clip_right;
+            int colspan = (endcol + 1 - startcol)*oreg->im->Bands;
+            
+            //endcol = x0;
+
+            //std::cout<<"row1="<<row1<<"  row2="<<row2<<"  startcol="<<startcol<<"  endcol="<<endcol<<"  colspan="<<colspan<<std::endl;
+            //std::cout<<"point_clip.left="<<point_clip.left<<"  point_clip.top="<<point_clip.top
+            //         <<"  point_clip.width="<<point_clip.width<<"  point_clip.height="<<point_clip.height<<std::endl;
+            
+            /**/
+            if( (row1 >= point_clip.top) && (row1 <= point_clip_bottom) ) {
+              pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row1 ); 
+              for( x = 0; x < colspan; x += oreg->im->Bands ) {
+                for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+                  pout[x+ch] = val[ch];
+                }
+                //std::cout<<"x="<<x<<"+"<<point_clip.left<<"="<<x+point_clip.left<<std::endl;
+              }
+            }
+            if( (row2 != row1) && (row2 >= point_clip.top) && (row2 <= point_clip_bottom) ) {
+              pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row2 ); 
+              for( x = 0; x < colspan; x += oreg->im->Bands ) {
+                for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+                  pout[x+ch] = val[ch];
+                }
+              }
+            }
+            /**/
+          }
+          /*
+          for( y = 0; y < point_clip.height; y++ ) {
+            //p = (T*)VIPS_REGION_ADDR( ireg[in_first], point_clip.left, point_clip.top + y ); 
+            pout = (T*)VIPS_REGION_ADDR( oreg, point_clip.left, point_clip.top + y ); 
+            for( x = 0; x < line_size; x += oreg->im->Bands ) {
+              for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+                pout[x+ch] = val[ch];
+              }
+            }
+          }
+          */
+        }
+      }
+      /*
+      for( y = 0; y < height; y++ ) {
+        p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
+        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+
+        pin = p;
+        if(opar->get_transform()) 
+          cmsDoTransform( opar->get_transform(), pin, pout, width );
+        else 
+          memcpy( pout, pin, sizeof(T)*line_size );
+      }
+      */
+    }
   };
 
 
