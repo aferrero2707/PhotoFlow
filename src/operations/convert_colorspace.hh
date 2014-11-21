@@ -79,7 +79,7 @@ namespace PF
     {
       if( !img ) return;
       OpParBase::set_image_hints( img );
-      rgb_image( get_xsize(), get_ysize() );
+      //rgb_image( get_xsize(), get_ysize() );
     }
 
     cmsColorSpaceSignature get_input_cs_type() { return input_cs_type; }

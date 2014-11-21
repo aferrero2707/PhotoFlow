@@ -234,6 +234,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.add_op( "Invert", "invert" );
   op_color.add_op( "Desaturate", "desaturate" );
   op_color.add_op( "Brightness/Contrast", "brightness_contrast" );
+  op_color.add_op( "Hue/Saturation", "hue_saturation" );
   op_color.add_op( "Curves", "curves" );
   op_color.add_op( "Channel Mixer", "channel_mixer" );
 

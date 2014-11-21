@@ -102,6 +102,10 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
     processor = new_brightness_contrast();
 
+  } else if( op_type == "hue_saturation" ) {
+
+    processor = new_hue_saturation();
+
   } else if( op_type == "curves" ) {
       
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
