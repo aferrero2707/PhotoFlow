@@ -10,6 +10,12 @@ pkg_check_modules(LCMS2 REQUIRED lcms2)
 
 find_package (TIFF REQUIRED)
 
+find_package (JPEG REQUIRED)
+
+find_package (ZLIB REQUIRED)
+
+pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
+
 #FIND_PACKAGE(LibRaw 0.13 REQUIRED)
 #pkg_check_modules(LIBRAW REQUIRED libraw)
 
@@ -18,14 +24,19 @@ find_package (TIFF REQUIRED)
 
 pkg_check_modules(SIGC2 REQUIRED sigc++-2.0)
 
-pkg_check_modules(VIPS REQUIRED vips>=7.40.8)
+pkg_check_modules(VIPS REQUIRED vips>=7.40.11)
 #pkg_check_modules(VIPSCC REQUIRED vipsCC)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
 
-pkg_check_modules(GTKMM3 gtkmm-3.0) 
+pkg_check_modules(GLIB glib-2.0) 
+pkg_check_modules(GLIBMM glibmm-2.4) 
+
+pkg_check_modules(GTKMM3 gtkmm-3.0<=3.4.0) 
 if(NOT GTKMM3_FOUND)
   pkg_check_modules(GTKMM2 REQUIRED gtkmm-2.4) 
+  MESSAGE( STATUS "GTKMM2_INCLUDE_DIRS:         " ${GTKMM2_INCLUDE_DIRS} )
+  MESSAGE( STATUS "GTKMM2_LIBRARY_DIRS:         " ${GTKMM2_LIBRARY_DIRS} )
 endif()
 
   

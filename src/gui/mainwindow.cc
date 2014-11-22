@@ -554,6 +554,12 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
   Gtk::Widget* widget2 = viewerNotebook.get_nth_page( page );
   if( widget != widget2 ) return;
 
+  PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+  if( !editor ) return;
+
+  if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() )
+    PF::PhotoFlow::Instance().set_active_image( NULL );
+
   for( unsigned int i = 0; i < image_editors.size(); i++ ) {
     if( image_editors[i] != widget ) continue;
     image_editors.erase( image_editors.begin()+i );

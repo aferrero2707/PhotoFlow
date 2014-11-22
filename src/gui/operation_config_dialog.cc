@@ -47,6 +47,20 @@
 #include "../gui/operations/convert_colorspace_config.hh"
 
 
+static bool is_blend_mode_row_separator(const Glib::RefPtr<Gtk::TreeModel>& model, const Gtk::TreeModel::iterator& iter)
+{
+  if( iter ) {
+    Gtk::TreeModel::Row row = *iter;
+    if( row ) {
+      //Get the data for the selected row, using our knowledge of the tree
+      //model:
+      //Glib::ustring value = row[2];
+      //if( value > 1000 ) return true;
+    }
+  }
+  return false;
+}
+
 
 static gboolean dialog_update_cb (PF::OperationConfigDialog * dialog)
 {
@@ -105,6 +119,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   nameEntry.set_text( "New Layer" );
   nameBox.pack_start( nameEntry, Gtk::PACK_SHRINK );
 
+  //blendSelector.set_row_separator_func( is_blend_mode_row_separator );
   if(par && par->has_opacity() )
     nameBox.pack_end( blendSelector );
 

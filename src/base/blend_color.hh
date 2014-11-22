@@ -31,7 +31,7 @@
 
 
 template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_omap>
-class BlendLuminosity: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
+class BlendColor: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
   int pos, ch;
 public:
@@ -50,7 +50,7 @@ public:
   RGB colorspace
  */
 template<typename T, int CHMIN, int CHMAX>
-class BlendLuminosity<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>: 
+class BlendColor<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>: 
   public BlendBase<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>
 {
   int pos, ch;
@@ -63,17 +63,17 @@ public:
     double ired = (double(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
     double igreen = (double(bottom[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
     double iblue = (double(bottom[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    // Luminance value of the bottom layer
+    double lumi = PF::luminance( ired, igreen, iblue );
 
     // RGB values of the top layer
     double ored = (double(top[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
     double ogreen = (double(top[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
     double oblue = (double(top[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-    // Luminance value of the top layer
-    double lumi = PF::luminance( ored, ogreen, oblue );
 
-    // Luminosity blend: the color of the bottom layer is mixed with
-    // the luminance of the top one
-    rgb[0] = ired; rgb[1] = igreen; rgb[2] = iblue;
+    // Color blend: the color of the top layer is mixed with
+    // the luminance of the bottom one
+    rgb[0] = ored; rgb[1] = ogreen; rgb[2] = oblue;
     PF::lc_blend( rgb[0], rgb[1], rgb[2], lumi );
 
     pos = x;
@@ -84,10 +84,10 @@ public:
 };
 
 template<typename T, int CHMIN, int CHMAX>
-class BlendLuminosity<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, true>: 
+class BlendColor<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, true>: 
   public BlendBase<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, true>
 {
-  BlendLuminosity<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false> blender;
+  BlendColor<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false> blender;
   float opacity_real;
 public:
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
