@@ -92,100 +92,6 @@ namespace PF
 
 
 
-  inline std::istream& operator >>( std::istream& str, Pen& pen )
-  {
-    unsigned int nch;
-    str>>nch;
-    std::vector<float>& color = pen.get_color();
-    color.clear();
-    for( int i = 0; i < nch; i++ ) {
-      float val;
-      str>>val;
-      color.push_back( val );
-    }
-    unsigned int size;
-    float opacity;
-    str>>size>>opacity;
-    pen.set_size( size );
-    pen.set_opacity( opacity );
-    return str;
-  }
-
-  inline std::ostream& operator <<( std::ostream& str, const Pen& pen )
-  {
-    const std::vector<float>& color = pen.get_color();
-    str<<color.size()<<" ";
-    std::list< std::pair<unsigned int, unsigned int> >::iterator i;
-    for( unsigned int i = 0; i < color.size(); i++ ) {
-      str<<color[i]<<" ";
-    }
-    str<<pen.get_size()<<" "<<pen.get_opacity()<<" ";
-    return str;
-  }
-
-
-
-  inline std::istream& operator >>( std::istream& str, Stroke& stroke )
-  {
-    str>>stroke.get_pen();
-    std::list< std::pair<unsigned int, unsigned int> >& points = stroke.get_points();
-    points.clear();
-    int npoints;
-    str>>npoints;
-    for( int i = 0; i < npoints; i++ ) {
-      unsigned int a, b;
-      str>>a>>b;
-      points.push_back( std::make_pair(a,b) );
-    }
-    return str;
-  }
-
-  inline std::ostream& operator <<( std::ostream& str, const Stroke& stroke )
-  {
-    str<<stroke.get_pen();
-    const std::list< std::pair<unsigned int, unsigned int> >& points = stroke.get_points();
-    str<<points.size()<<" ";
-    std::list< std::pair<unsigned int, unsigned int> >::const_iterator i;
-    for( i = points.begin(); i != points.end(); i++ ) {
-      str<<i->first<<" "<<i->second<<" ";
-    }
-    return str;
-  }
-
-
-
-  inline std::istream& operator >>( std::istream& str, std::list<Stroke>& strokes )
-  {
-    strokes.clear();
-    int nstrokes;
-    str>>nstrokes;
-    for( int i = 0; i < nstrokes; i++ ) {
-      strokes.push_back( Stroke() );
-      Stroke& stroke = strokes.back();
-      str>>stroke;
-    }
-    return str;
-  }
-
-  inline std::ostream& operator <<( std::ostream& str, const std::list<Stroke>& strokes )
-  {
-    str<<strokes.size()<<" ";
-    std::list<Stroke>::const_iterator i;
-    for( i = strokes.begin(); i != strokes.end(); i++ ) {
-      str<<(*i);
-    }
-    return str;
-  }
-
-  template<> inline
-  void set_gobject_property< std::list<Stroke> >(gpointer object, const std::string name, 
-						 const std::list<Stroke>& value)
-  {
-  }
-
-
-
-
   class DrawPar: public OpParBase
   {
     Property<float> pen_grey, pen_R, pen_G, pen_B, pen_L, pen_a, pen_b, pen_C, pen_M, pen_Y, pen_K;
@@ -194,14 +100,14 @@ namespace PF
     Property<RGBColor> bgd_color;
     Property<int> pen_size;
     Property<float> pen_opacity;
-    Property< std::list<Stroke> > strokes;
+    Property< std::list< Stroke<Pencil> > > strokes;
 
 		ProcessorBase* diskbuf;
     RawBuffer* rawbuf;
 
     unsigned int scale_factor;
 
-    Pen pen;
+    Pencil pen;
 
   public:
     DrawPar();
@@ -237,7 +143,7 @@ namespace PF
     bool has_intensity() { return false; }
     bool needs_input() { return false; }
 
-    Pen& get_pen() { return pen; }
+    Pencil& get_pen() { return pen; }
 
     RawBuffer* get_rawbuf() { return rawbuf; }
 
@@ -256,7 +162,7 @@ namespace PF
     void start_stroke( unsigned int pen_size, float opacity );
     void end_stroke();
 
-    Property< std::list<Stroke> >& get_strokes() { return strokes; }
+    Property< std::list< Stroke<Pencil> > >& get_strokes() { return strokes; }
 
     void draw_point( unsigned int x, unsigned int y, VipsRect& update );
   };
@@ -274,7 +180,7 @@ namespace PF
       //std::cout<<"DrawProc::render() called"<<std::endl;
       DrawPar* opar = par;//dynamic_cast<DrawPar*>(par);
       if( !opar ) return;
-      std::list<Stroke>& strokes = opar->get_strokes().get();
+      std::list< Stroke<Pencil> >& strokes = opar->get_strokes().get();
       VipsRect *r = &oreg->valid;
       //std::cout<<"nbands: "<<oreg->im->Bands<<std::endl;
       //std::cout<<"r->left="<<r->left<<"  r->top="<<r->top
@@ -309,12 +215,12 @@ namespace PF
         }
       }
 
-      std::list<Stroke>::iterator si;
+      std::list< Stroke<Pencil> >::iterator si;
       std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
       VipsRect point_area;
       VipsRect point_clip;
       for( si = strokes.begin(); si != strokes.end(); ++si ) {
-        Pen& pen = si->get_pen();
+        Pencil& pen = si->get_pen();
         int pen_size = pen.get_size()/opar->get_scale_factor();
         int pen_size2 = pen_size*pen_size;
         for( ch = 0; ch < oreg->im->Bands; ch++ ) {
