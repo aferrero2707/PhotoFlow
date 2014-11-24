@@ -181,6 +181,8 @@ namespace PF
 		     VipsImage* imap, VipsImage* omap, 
 		     unsigned int& level);
 
+    void new_group( int dr, int dc );
+
     void start_stroke()
     {
       start_stroke( stamp_size.get(), stamp_opacity.get(), stamp_smoothness.get() );

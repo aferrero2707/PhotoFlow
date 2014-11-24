@@ -37,11 +37,12 @@ PF::CloneStampConfigDialog::CloneStampConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "CloneStamp" ),
   stamp_size( this, "stamp_size", "Stamp size: ", 5, 0, 1000000, 1, 10, 1),
   stamp_opacity( this, "stamp_opacity", "Stamp opacity: ", 100, 0, 100, 0.1, 1, 100),
-  stamp_smoothness( this, "stamp_smoothness", "Stamp opacity: ", 100, 0, 100, 0.1, 1, 100)
+  stamp_smoothness( this, "stamp_smoothness", "Stamp smoothness: ", 100, 0, 100, 0.1, 1, 100),
+  srcpt_row( 0 ), srcpt_col( 0 ), srcpt_ready( false ), srcpt_changed( false )
 {
   controlsBox.pack_start( stamp_size, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( stamp_opacity, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( stamp_smoothness, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( stamp_opacity, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( stamp_smoothness, Gtk::PACK_SHRINK );
 
   add_widget( controlsBox );
 }
@@ -58,7 +59,7 @@ void PF::CloneStampConfigDialog::open()
 }
 
 
-void PF::CloneStampConfigDialog::start_stroke()
+void PF::CloneStampConfigDialog::start_stroke( double x, double y )
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -70,10 +71,17 @@ void PF::CloneStampConfigDialog::start_stroke()
   
   PF::CloneStampPar* par = dynamic_cast<PF::CloneStampPar*>( processor->get_par() );
   if( !par ) return;
-  
+
+  // The source point needs to be set before we can do anything...
+  if( !srcpt_ready ) return;
+
+  if( srcpt_changed ) {
+    // A new source point was defined, so we need to start a new strokes group
+    par->new_group( (int)(y-srcpt_row), (int)(x-srcpt_col) );
+  }
+
   //par->start_stroke( get_pen_size(), get_pen_opacity() );
   par->start_stroke();
-
 
   // Then we loop over all the operations associated to the 
   // layer in the different pipelines and we let them record the stroke as well
@@ -92,6 +100,11 @@ void PF::CloneStampConfigDialog::start_stroke()
 
     par = dynamic_cast<PF::CloneStampPar*>( processor->get_par() );
     if( !par ) continue;
+
+    if( srcpt_changed ) {
+      // A new source point was defined, so we need to start a new strokes group
+      par->new_group( (int)(y-srcpt_row), (int)(x-srcpt_col) );
+    }
 
     //par->start_stroke( get_pen_size(), get_pen_opacity() );
     par->start_stroke();
@@ -112,6 +125,9 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
   PF::CloneStampPar* par = dynamic_cast<PF::CloneStampPar*>( processor->get_par() );
   if( !par ) return;
   
+  // The source point needs to be set before we can do anything...
+  if( !srcpt_ready ) return;
+
   VipsRect update;
   par->draw_point( x, y, update );
 
@@ -176,7 +192,8 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
 void PF::CloneStampConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return;
-  start_stroke();
+  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return;
+  start_stroke( x, y );
   draw_point( x, y );
 }
 
@@ -184,13 +201,19 @@ void PF::CloneStampConfigDialog::pointer_press_event( int button, double x, doub
 void PF::CloneStampConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return;
-  //draw_point( x, y );
+  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) {
+    srcpt_row = y;
+    srcpt_col = x;
+    srcpt_ready = true;
+    srcpt_changed = true;
+  }
 }
 
 
 void PF::CloneStampConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return;
+  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return;
 #ifndef NDEBUG
   std::cout<<"PF::CloneStampConfigDialog::pointer_motion_event() called."<<std::endl;
 #endif

@@ -51,6 +51,7 @@
 #include <vips/dispatch.h>
 
 #include "../base/processor.hh"
+#include "../base/layer.hh"
 #include "../operations/clone_stamp.hh"
 
 #define PF_MAX_INPUT_IMAGES 10
@@ -142,10 +143,9 @@ G_DEFINE_TYPE( VipsCloneStamp, vips_clone_stamp, VIPS_TYPE_OPERATION );
 
 
 
-/* Run the PhotoFlow image editing code
- */
+template<class T>
 static int
-vips_clone_stamp_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
+vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
 {
   VipsRegion **ir = (VipsRegion **) seq;
   VipsCloneStamp *clone_stamp = (VipsCloneStamp *) b;
@@ -156,26 +156,47 @@ vips_clone_stamp_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *s
 
   /* Output area we are building.
    */
-  const VipsRect *r = &oreg->valid;
-  VipsRect s;
+  VipsRect *r = &oreg->valid;
+  VipsRect in_area, out_area;
   int i;
-  int x, y;
   int ninput = clone_stamp->ninput;
+  VipsRect point_area;
+  VipsRect point_clip;
+  int point_clip_right, point_clip_bottom;
+  int x, x0, y, y0, ch, row1, row2;
+  int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
+
+  VipsRect image_area = {0, 0, ir[0]->im->Xsize, ir[0]->im->Ysize};
 
   if( !clone_stamp->processor ) return 1;
   if( !clone_stamp->processor->get_par() ) return 1;
 
   PF::CloneStampPar* par = dynamic_cast<PF::CloneStampPar*>( clone_stamp->processor->get_par() );
-  
-  /* Area of input we need.
-   */
-  par->transform_inv(r,&s);
+  if( !par ) return 1;
 
-  /**/
+  T *p, *pout;
+  
+  if( vips_region_prepare( ir[0], r ) )
+    return( -1 );
+
+  for( y = 0; y < r->height; y++ ) {
+    p = (T*)VIPS_REGION_ADDR( ir[0], r->left, r->top + y );
+    pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+    memcpy( pout, p, sizeof(T)*line_size );
+    /*
+    for( x = 0; x < line_size; x += oreg->im->Bands ) {
+      for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+        pout[x+ch] = p[x+ch];
+      }
+    }
+    */
+  }
+
+  /*
 #ifndef NDEBUG
   std::cout<<"vips_clone_stamp_gen(): "<<std::endl;
   if( clone_stamp->processor->get_par()->get_config_ui() )
-    std::cout<<"  name: "<<clone_stamp->processor->get_par()->get_config_ui()->get_clone_stamp()->get_name()<<std::endl;
+    std::cout<<"  name: "<<clone_stamp->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
   std::cout<<"  input region:  top="<<s.top
 	   <<" left="<<s.left
 	   <<" width="<<s.width
@@ -185,38 +206,111 @@ vips_clone_stamp_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *s
 	   <<" width="<<oreg->valid.width
 	   <<" height="<<oreg->valid.height<<std::endl;
 #endif
+  */
 
   PF::Property< std::list<PF::StrokesGroup> >& groups = par->get_strokes();
   std::list<PF::StrokesGroup>::iterator gi;
   std::list< PF::Stroke<PF::Stamp> >::iterator si;
   std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
-  VipsRect point_area;
-  VipsRect point_clip;
 
   for( gi = groups.get().begin(); gi != groups.get().end(); ++gi ) {
 
     PF::StrokesGroup& group = *gi;
+    //std::cout<<"vips_clone_stamp_gen(): starting group"<<std::endl;
+    //std::cout<<"  n. of strokes: "<<group.get_strokes().size()<<std::endl;
+
     bool prepared = false;
+    int delta_row = group.get_delta_row();
+    int delta_col = group.get_delta_col();
+
+    // Input area = oreg area translated by (delta_row, delta_col) 
+    // and intersected with the image area
+    in_area.width = r->width;
+    in_area.height = r->height;
+    in_area.top = r->top - delta_row;
+    in_area.left = r->left - delta_col;
+    vips_rect_intersectrect( &in_area, &image_area, &in_area );
+
+    // Output area: input area translated by (delta_row, delta_col) 
+    out_area.left = in_area.left + delta_col;
+    out_area.top = in_area.top + delta_row;
+    out_area.width = in_area.width;
+    out_area.height = in_area.height;
+
     for( si = group.get_strokes().begin(); si != group.get_strokes().end(); ++si ) {
  
+      std::list< std::pair<unsigned int, unsigned int> >& points = si->get_points();
+      //std::cout<<"vips_clone_stamp_gen(): starting stroke"<<std::endl;
+      //std::cout<<"  n. of points: "<<points.size()<<std::endl;
+    
       PF::Stamp& pen = si->get_pen();
       int pen_size = pen.get_size()/par->get_scale_factor();
       int pen_size2 = pen_size*pen_size;
 
+      //std::cout<<"  pen size="<<pen.get_size()<<"  opacity="<<pen.get_opacity()
+      //         <<"  smoothness="<<pen.get_smoothness()<<std::endl;
+
       point_area.width = point_area.height = pen_size*2 + 1;
-      std::list< std::pair<unsigned int, unsigned int> >& points = si->get_points();
       for( pi = points.begin(); pi != points.end(); ++pi ) {
         point_area.left = pi->first/par->get_scale_factor() - pen_size;
         point_area.top = pi->second/par->get_scale_factor() - pen_size;
-        vips_rect_intersectrect( r, &point_area, &point_clip );
-        //point_clip_right = point_clip.left + point_clip.width - 1;
-        //point_clip_bottom = point_clip.top + point_clip.height - 1;
-
+        // The area covered by the current point is intersected with the output area.
+        // If the point is completely outside of the output area, it is skipped.
+        vips_rect_intersectrect( &out_area, &point_area, &point_clip );
         if( point_clip.width<1 || point_clip.height<1 ) continue;
+
+        point_clip_right = point_clip.left + point_clip.width - 1;
+        point_clip_bottom = point_clip.top + point_clip.height - 1;
         
+        // We have at least one point to process, so we need to process the inout pixels
         if( !prepared ) {
-          //if( vips_region_prepare( ir, &s ) )
-          //  return( -1 );
+          if( vips_region_prepare( ir[0], &in_area ) )
+            return( -1 );
+          prepared = true;
+        }
+
+        x0 = pi->first/par->get_scale_factor();
+        y0 = pi->second/par->get_scale_factor();
+        //std::cout<<"x0="<<x0<<"  y0="<<y0<<std::endl;
+        for( y = 0; y <= pen_size; y++ ) {
+          row1 = y0 - y;
+          row2 = y0 + y;
+          //int L = pen.get_size() - y;
+          int D = (int)sqrt( pen_size2 - y*y );
+          int startcol = x0 - D;
+          if( startcol < point_clip.left ) 
+            startcol = point_clip.left;
+          int endcol = x0 + D;
+          if( endcol >= point_clip_right ) 
+            endcol = point_clip_right;
+          int colspan = (endcol + 1 - startcol)*oreg->im->Bands;
+            
+          //endcol = x0;
+
+          //std::cout<<"row1="<<row1<<"  row2="<<row2<<"  startcol="<<startcol<<"  endcol="<<endcol<<"  colspan="<<colspan<<std::endl;
+          //std::cout<<"point_clip.left="<<point_clip.left<<"  point_clip.top="<<point_clip.top
+          //         <<"  point_clip.width="<<point_clip.width<<"  point_clip.height="<<point_clip.height<<std::endl;
+            
+          /**/
+          if( (row1 >= point_clip.top) && (row1 <= point_clip_bottom) ) {
+            p =    (T*)VIPS_REGION_ADDR( ir[0], startcol-delta_col, row1-delta_row ); 
+            pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row1 ); 
+            for( x = 0; x < colspan; x += oreg->im->Bands ) {
+              for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+                pout[x+ch] = p[x+ch];
+              }
+              //std::cout<<"x="<<x<<"+"<<point_clip.left<<"="<<x+point_clip.left<<std::endl;
+            }
+          }
+          if( (row2 != row1) && (row2 >= point_clip.top) && (row2 <= point_clip_bottom) ) {
+            p =    (T*)VIPS_REGION_ADDR( ir[0], startcol-delta_col, row2-delta_row ); 
+            pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row2 ); 
+            for( x = 0; x < colspan; x += oreg->im->Bands ) {
+              for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+                pout[x+ch] = p[x+ch];
+              }
+            }
+          }
         }
       }
     }
@@ -226,6 +320,33 @@ vips_clone_stamp_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *s
 }
 
 
+static int
+vips_clone_stamp_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
+{
+  VipsRegion **ir = (VipsRegion **) seq;
+  if( !ir || !ir[0] ) return 1;
+
+  int result = 0;
+
+  switch( ir[0]->im->BandFmt ) {
+  case VIPS_FORMAT_UCHAR:
+    result = vips_clone_stamp_gen_template<unsigned char>( oreg, seq, a, b, stop );
+    break;
+  case VIPS_FORMAT_USHORT:
+    result = vips_clone_stamp_gen_template<unsigned short int>( oreg, seq, a, b, stop );
+    break;
+  case VIPS_FORMAT_FLOAT:
+    result = vips_clone_stamp_gen_template<float>( oreg, seq, a, b, stop );
+    break;
+  case VIPS_FORMAT_DOUBLE:
+    result = vips_clone_stamp_gen_template<double>( oreg, seq, a, b, stop );
+    break;
+  }
+
+  return result;
+}
+
+  
 static int
 vips_clone_stamp_build( VipsObject *object )
 {

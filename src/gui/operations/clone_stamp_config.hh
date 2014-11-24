@@ -39,12 +39,15 @@ namespace PF {
 
   class CloneStampConfigDialog: public OperationConfigDialog
 {
-  //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
 
   Slider stamp_size;
   Slider stamp_opacity;
   Slider stamp_smoothness;
+
+  double srcpt_row, srcpt_col;
+  bool srcpt_ready;
+  bool srcpt_changed;
 
 public:
   CloneStampConfigDialog( Layer* l );
@@ -54,7 +57,7 @@ public:
   unsigned int get_pen_size() { return 100; };
   float get_pen_opacity() { return 0.5; }
 
-  void start_stroke();
+  void start_stroke( double x, double y );
   void draw_point( double x, double y );
 
   void pointer_press_event( int button, double x, double y, int mod_key );

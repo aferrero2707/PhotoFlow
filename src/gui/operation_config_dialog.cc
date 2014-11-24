@@ -44,6 +44,7 @@
 #include "../gui/operations/denoise_config.hh"
 #include "../gui/operations/sharpen_config.hh"
 #include "../gui/operations/draw_config.hh"
+#include "../gui/operations/clone_stamp_config.hh"
 #include "../gui/operations/convert_colorspace_config.hh"
 
 
@@ -491,6 +492,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "draw" ) {
 
     dialog = new PF::DrawConfigDialog( current_layer );
+
+  } else if( op_type == "clone_stamp" ) {
+
+    dialog = new PF::CloneStampConfigDialog( current_layer );
 
   } else { // it must be a VIPS operation...
 

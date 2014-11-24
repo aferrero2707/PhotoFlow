@@ -73,6 +73,7 @@ extern "C" {
 #endif /*__cplusplus*/
 
   extern GType vips_layer_get_type( void ); 
+  extern GType vips_clone_stamp_get_type( void ); 
 
 #ifdef __cplusplus
 }
@@ -115,6 +116,7 @@ int main (int argc, char *argv[])
 		return 1;
 
   vips_layer_get_type();
+  vips_clone_stamp_get_type();
 
 #ifndef NDEBUG
   im_concurrency_set( 1 );
