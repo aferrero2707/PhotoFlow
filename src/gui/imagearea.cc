@@ -221,7 +221,7 @@ void PF::ImageArea::process_area( const VipsRect& area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"Preparing area "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" for display"<<std::endl;
 #endif
-  if( region && region->buffer ) region->buffer->done = 0;
+  //if( region && region->buffer ) region->buffer->done = 0;
   if (vips_region_prepare (region, parea))
     return;
 
