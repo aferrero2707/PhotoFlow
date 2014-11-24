@@ -46,6 +46,7 @@
 #include "../gui/operations/denoise_config.hh"
 #include "../gui/operations/sharpen_config.hh"
 #include "../gui/operations/draw_config.hh"
+#include "../gui/operations/clone_stamp_config.hh"
 #include "../gui/operations/convert_colorspace_config.hh"
 
 #include "operations/gmic/new_gmic_operation_config.hh"
@@ -502,13 +503,18 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "draw" ) {
 
     dialog = new PF::DrawConfigDialog( current_layer );
+
+  } else if( op_type == "clone_stamp" ) {
+
+    dialog = new PF::CloneStampConfigDialog( current_layer );
+
   }
 
   if( !dialog ) {
     // Try with G'MIC
     dialog = PF::new_gmic_operation_config( op_type, current_layer );
   }
-    /*
+  /*
   } else { // it must be a VIPS operation...
 
     int pos = op_type.find( "vips-" );
@@ -521,7 +527,7 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
     vips_config->set_op( vips_op_type.c_str() );
     dialog = vips_config;
   }
-    */
+  */
 
   if( processor ) {
     PF::OpParBase* current_op = processor->get_par();

@@ -146,6 +146,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
     processor = new_draw();
 
+  } else if( op_type == "clone_stamp" ) {
+
+    //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
+    processor = new_clone_stamp();
+
   }
 
   if( !processor ) {

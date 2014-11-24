@@ -149,10 +149,10 @@ void PF::DrawPar::init_buffer( unsigned int level )
     rawbuf->init( bgdcol );
 
     VipsRect update;
-    std::list<Stroke>::iterator si;
+    std::list< PF::Stroke<PF::Pencil> >::iterator si;
     for( si = strokes.get().begin(); si != strokes.get().end(); si++ ) {
-      Stroke& stroke = *si;
-      Pen& pen = stroke.get_pen();
+      PF::Stroke<PF::Pencil>& stroke = *si;
+      PF::Pencil& pen = stroke.get_pen();
       rawbuf->start_stroke();
       std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
       for( pi = stroke.get_points().begin(); pi != stroke.get_points().end(); pi++ ) {
@@ -222,11 +222,11 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
 
 void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity )
 {
-  strokes.get().push_back( PF::Stroke() );
+  strokes.get().push_back( PF::Stroke<PF::Pencil>() );
 
-  PF::Stroke& stroke = strokes.get().back();
+  PF::Stroke<PF::Pencil>& stroke = strokes.get().back();
 
-  PF::Pen& pen = stroke.get_pen();
+  PF::Pencil& pen = stroke.get_pen();
   pen.set_size( pen_size );
   pen.set_opacity( opacity );
 
@@ -268,7 +268,7 @@ void PF::DrawPar::end_stroke()
 
 void PF::DrawPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
 {
-  PF::Stroke& stroke = strokes.get().back();
+  PF::Stroke<PF::Pencil>& stroke = strokes.get().back();
 
   if( !stroke.get_points().empty() ) {
     if( (stroke.get_points().back().first == x ) &&
@@ -278,7 +278,7 @@ void PF::DrawPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
 
   stroke.get_points().push_back( std::make_pair(x, y) );
 
-  PF::Pen& pen = stroke.get_pen();
+  PF::Pencil& pen = stroke.get_pen();
 
   if( rawbuf )
     rawbuf->draw_point( pen, x, y, update, true );
