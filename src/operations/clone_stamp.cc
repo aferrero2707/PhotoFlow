@@ -123,7 +123,7 @@ void PF::CloneStampPar::new_group( int drow, int dcol )
 
   group.set_delta_row( drow );
   group.set_delta_col( dcol );
-  //std::cout<<"CloneStampPar::new_group(): Drow="<<drow<<"  Dcol="<<dcol<<std::endl;
+  std::cout<<"CloneStampPar::new_group(): Drow="<<drow<<"  Dcol="<<dcol<<std::endl;
 }
 
 

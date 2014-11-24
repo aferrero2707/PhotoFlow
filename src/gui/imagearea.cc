@@ -157,6 +157,9 @@ void PF::ImageArea::process_start( const VipsRect& area )
   // The regions that are not in common should be filled by the
   // subsequent draw operations
   double_buffer.get_inactive().copy( double_buffer.get_active() );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Active buffer copied into inactive one"<<std::endl;
+#endif
 
 	// Fill borders with black
 	int right_border = area.width - display_image->Ysize - xoffset;
@@ -185,6 +188,9 @@ void PF::ImageArea::process_end( const VipsRect& area )
 #endif
   double_buffer.lock();
   double_buffer.swap();
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Buffer swapped"<<std::endl;
+#endif
 
   Update * update = g_new (Update, 1);
   update->image_area = this;
@@ -207,10 +213,17 @@ void PF::ImageArea::process_area( const VipsRect& area )
 
   VipsRect* parea = (VipsRect*)(&area);
   //vips_invalidate_area( display_image, parea );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Preparing area "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" for display"<<std::endl;
+#endif
+  if( region && region->buffer ) region->buffer->done = 0;
   if (vips_region_prepare (region, parea))
     return;
 
   double_buffer.get_inactive().copy( region, area, xoffset, yoffset );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into inactive buffer"<<std::endl;
+#endif
 }
 
 
@@ -241,6 +254,9 @@ void PF::ImageArea::draw_area()
   Gdk::Cairo::set_source_pixbuf( cr, double_buffer.get_active().get_pxbuf(), 
 				 double_buffer.get_active().get_rect().left,
 				 double_buffer.get_active().get_rect().top );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Active buffer copied to screen"<<std::endl;
+#endif
   cr->rectangle( double_buffer.get_active().get_rect().left,
   		 double_buffer.get_active().get_rect().top,
   		 double_buffer.get_active().get_rect().width,
@@ -701,7 +717,7 @@ void PF::ImageArea::sink( const VipsRect& area )
 	*/
   //VipsRegion* region2 = vips_region_new (display_image);
   VipsRegion* region2 = vips_region_new( outimg );
-  //vips_invalidate_area( display_image, &scaled_area );
+  vips_invalidate_area( display_image, &scaled_area );
 	//vips_region_invalidate( region2 );
 
   VipsRect* parea = (VipsRect*)(&scaled_area);
@@ -748,6 +764,9 @@ void PF::ImageArea::sink( const VipsRect& area )
 	/**/
 	double_buffer.lock();
 	double_buffer.get_active().copy( region2, scaled_area, xoffset, yoffset );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into active buffer"<<std::endl;
+#endif
 	Update * update = g_new (Update, 1);
 	update->image_area = this;
 	update->rect.width = update->rect.height = 0;
