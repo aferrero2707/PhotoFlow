@@ -162,7 +162,7 @@ namespace PF
     Property<float> stamp_smoothness;
     Property< std::list<StrokesGroup> > strokes;
 
-    unsigned int scale_factor;
+    int scale_factor;
 
     Stamp pen;
 
@@ -175,7 +175,7 @@ namespace PF
 
     Stamp& get_pen() { return pen; }
 
-    unsigned int get_scale_factor() { return scale_factor; }
+    int get_scale_factor() { return scale_factor; }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 

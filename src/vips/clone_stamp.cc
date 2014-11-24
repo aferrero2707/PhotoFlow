@@ -58,6 +58,8 @@
 
 static GObject* object_in;
 
+//#undef NDEBUG
+
 /**/
 #define VIPS_TYPE_CLONE_STAMP (vips_clone_stamp_get_type())
 #define VIPS_CLONE_STAMP( obj ) \
@@ -192,36 +194,38 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
     */
   }
 
-  /*
+  /**/
 #ifndef NDEBUG
   std::cout<<"vips_clone_stamp_gen(): "<<std::endl;
   if( clone_stamp->processor->get_par()->get_config_ui() )
     std::cout<<"  name: "<<clone_stamp->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
-  std::cout<<"  input region:  top="<<s.top
-	   <<" left="<<s.left
-	   <<" width="<<s.width
-	   <<" height="<<s.height<<std::endl
-	   <<"  output region: top="<<oreg->valid.top
+  std::cout<<"  output region: top="<<oreg->valid.top
 	   <<" left="<<oreg->valid.left
 	   <<" width="<<oreg->valid.width
 	   <<" height="<<oreg->valid.height<<std::endl;
 #endif
-  */
+  /**/
 
   PF::Property< std::list<PF::StrokesGroup> >& groups = par->get_strokes();
   std::list<PF::StrokesGroup>::iterator gi;
   std::list< PF::Stroke<PF::Stamp> >::iterator si;
   std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
 
-  for( gi = groups.get().begin(); gi != groups.get().end(); ++gi ) {
-
-    PF::StrokesGroup& group = *gi;
-    //std::cout<<"vips_clone_stamp_gen(): starting group"<<std::endl;
-    //std::cout<<"  n. of strokes: "<<group.get_strokes().size()<<std::endl;
+  int ng = 0;
+#ifndef NDEBUG
+  std::cout<<"vips_clone_stamp_gen(): n. of groups: "<<groups.get().size()<<std::endl;
+#endif
+  for( gi = groups.get().begin(); gi != groups.get().end(); ++gi, ng++ ) {
 
     bool prepared = false;
-    int delta_row = group.get_delta_row();
-    int delta_col = group.get_delta_col();
+    PF::StrokesGroup& group = *gi;
+    int delta_row = group.get_delta_row()/par->get_scale_factor();
+    int delta_col = group.get_delta_col()/par->get_scale_factor();
+#ifndef NDEBUG
+    std::cout<<"vips_clone_stamp_gen(): starting group #"<<ng<<std::endl;
+    std::cout<<"  n. of strokes: "<<group.get_strokes().size()<<std::endl;
+    std::cout<<"  Drow: "<<delta_row<<"  Dcol: "<<delta_col<<std::endl;
+#endif
 
     // Input area = oreg area translated by (delta_row, delta_col) 
     // and intersected with the image area
@@ -240,8 +244,10 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
     for( si = group.get_strokes().begin(); si != group.get_strokes().end(); ++si ) {
  
       std::list< std::pair<unsigned int, unsigned int> >& points = si->get_points();
-      //std::cout<<"vips_clone_stamp_gen(): starting stroke"<<std::endl;
-      //std::cout<<"  n. of points: "<<points.size()<<std::endl;
+#ifndef NDEBUG
+      std::cout<<"vips_clone_stamp_gen(): starting stroke"<<std::endl;
+      std::cout<<"  n. of points: "<<points.size()<<std::endl;
+#endif
     
       PF::Stamp& pen = si->get_pen();
       int pen_size = pen.get_size()/par->get_scale_factor();
@@ -252,8 +258,14 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
 
       point_area.width = point_area.height = pen_size*2 + 1;
       for( pi = points.begin(); pi != points.end(); ++pi ) {
-        point_area.left = pi->first/par->get_scale_factor() - pen_size;
-        point_area.top = pi->second/par->get_scale_factor() - pen_size;
+        x0 = pi->first/par->get_scale_factor();
+        y0 = pi->second/par->get_scale_factor();
+#ifndef NDEBUG
+        std::cout<<"x0="<<x0<<"  y0="<<y0<<std::endl;
+#endif
+
+        point_area.left = x0 - pen_size;
+        point_area.top = y0 - pen_size;
         // The area covered by the current point is intersected with the output area.
         // If the point is completely outside of the output area, it is skipped.
         vips_rect_intersectrect( &out_area, &point_area, &point_clip );
@@ -264,14 +276,17 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
         
         // We have at least one point to process, so we need to process the inout pixels
         if( !prepared ) {
+#ifndef NDEBUG
+          std::cout<<"  preparing region ir[0]:  top="<<in_area.top
+                   <<" left="<<in_area.left
+                   <<" width="<<in_area.width
+                   <<" height="<<in_area.height<<std::endl;
+#endif
           if( vips_region_prepare( ir[0], &in_area ) )
             return( -1 );
           prepared = true;
         }
 
-        x0 = pi->first/par->get_scale_factor();
-        y0 = pi->second/par->get_scale_factor();
-        //std::cout<<"x0="<<x0<<"  y0="<<y0<<std::endl;
         for( y = 0; y <= pen_size; y++ ) {
           row1 = y0 - y;
           row2 = y0 + y;

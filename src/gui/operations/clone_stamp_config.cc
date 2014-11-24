@@ -65,6 +65,11 @@ void PF::CloneStampConfigDialog::start_stroke( double x, double y )
   PF::Layer* layer = get_layer();
   if( !layer ) return;
 
+  // Then we loop over all the operations associated to the 
+  // layer in the different pipelines and we let them record the stroke as well
+  PF::Image* image = layer->get_image();
+  if( !image ) return;
+
   // First of all, the new stroke is recorded by the "master" operation
   PF::ProcessorBase* processor = layer->get_processor();
   if( !processor || !(processor->get_par()) ) return;
@@ -75,6 +80,7 @@ void PF::CloneStampConfigDialog::start_stroke( double x, double y )
   // The source point needs to be set before we can do anything...
   if( !srcpt_ready ) return;
 
+  std::cout<<"CloneStampConfigDialog::start_stroke(): srcpt_changed="<<srcpt_changed<<std::endl;
   if( srcpt_changed ) {
     // A new source point was defined, so we need to start a new strokes group
     par->new_group( (int)(y-srcpt_row), (int)(x-srcpt_col) );
@@ -82,11 +88,6 @@ void PF::CloneStampConfigDialog::start_stroke( double x, double y )
 
   //par->start_stroke( get_pen_size(), get_pen_opacity() );
   par->start_stroke();
-
-  // Then we loop over all the operations associated to the 
-  // layer in the different pipelines and we let them record the stroke as well
-  PF::Image* image = layer->get_image();
-  if( !image ) return;
 
   for( unsigned int vi = 0; vi < image->get_npipelines(); vi++ ) {
     PF::Pipeline* pipeline = image->get_pipeline( vi );
@@ -109,6 +110,7 @@ void PF::CloneStampConfigDialog::start_stroke( double x, double y )
     //par->start_stroke( get_pen_size(), get_pen_opacity() );
     par->start_stroke();
   }
+  srcpt_changed = false;
 }
 
 
@@ -170,7 +172,7 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
 				request.area.width = update.width;
 				request.area.height = update.height;
 #ifndef NDEBUG
-				std::cout<<"PF::CloneStampConfigDialog::draw_point(): submitting rebuild request with area."<<std::endl;
+				std::cout<<"PF::CloneStampConfigDialog::draw_point(): submitting image update request with area."<<std::endl;
 #endif
 				PF::ImageProcessor::Instance().submit_request( request );
       }
@@ -206,6 +208,8 @@ void PF::CloneStampConfigDialog::pointer_release_event( int button, double x, do
     srcpt_col = x;
     srcpt_ready = true;
     srcpt_changed = true;
+  } else {
+    //draw_point( x, y );
   }
 }
 
