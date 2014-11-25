@@ -232,6 +232,7 @@ namespace PF
           point_area.left = pi->first/opar->get_scale_factor() - pen_size;
           point_area.top = pi->second/opar->get_scale_factor() - pen_size;
           vips_rect_intersectrect( r, &point_area, &point_clip );
+          if( (point_clip.width<1) || (point_clip.height<1) ) continue;
           point_clip_right = point_clip.left + point_clip.width - 1;
           point_clip_bottom = point_clip.top + point_clip.height - 1;
 
@@ -252,23 +253,26 @@ namespace PF
             
             //endcol = x0;
 
-            //std::cout<<"row1="<<row1<<"  row2="<<row2<<"  startcol="<<startcol<<"  endcol="<<endcol<<"  colspan="<<colspan<<std::endl;
-            //std::cout<<"point_clip.left="<<point_clip.left<<"  point_clip.top="<<point_clip.top
-            //         <<"  point_clip.width="<<point_clip.width<<"  point_clip.height="<<point_clip.height<<std::endl;
-            
+            /*
+            std::cout<<"x0="<<x0<<"  y0="<<y0<<"  D="<<D<<std::endl;
+            std::cout<<"row1="<<row1<<"  row2="<<row2<<"  startcol="<<startcol<<"  endcol="<<endcol<<"  colspan="<<colspan<<std::endl;
+            std::cout<<"point_clip.left="<<point_clip.left<<"  point_clip.top="<<point_clip.top
+                     <<"  point_clip.width="<<point_clip.width<<"  point_clip.height="<<point_clip.height<<std::endl;
+            */
             /**/
             if( (row1 >= point_clip.top) && (row1 <= point_clip_bottom) ) {
               pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row1 ); 
               for( x = 0; x < colspan; x += oreg->im->Bands ) {
+                //std::cout<<"x="<<x<<"+"<<point_clip.left<<"="<<x+point_clip.left<<std::endl;
                 for( ch = 0; ch < oreg->im->Bands; ch++ ) {
                   pout[x+ch] = val[ch];
                 }
-                //std::cout<<"x="<<x<<"+"<<point_clip.left<<"="<<x+point_clip.left<<std::endl;
               }
             }
             if( (row2 != row1) && (row2 >= point_clip.top) && (row2 <= point_clip_bottom) ) {
               pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row2 ); 
               for( x = 0; x < colspan; x += oreg->im->Bands ) {
+                //std::cout<<"x="<<x<<"+"<<point_clip.left<<"="<<x+point_clip.left<<std::endl;
                 for( ch = 0; ch < oreg->im->Bands; ch++ ) {
                   pout[x+ch] = val[ch];
                 }

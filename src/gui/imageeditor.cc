@@ -294,7 +294,7 @@ void PF::ImageEditor::zoom_actual_size()
 }
 
 
-void PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
+bool PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
 {
 #ifndef NDEBUG
   /**/
@@ -312,6 +312,14 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
 #endif
   x -= imageArea->get_xoffset();
   y -= imageArea->get_yoffset();
+  if( (x<0) || (y<0) ) return false;
+  if( imageArea->get_display_image() ) {
+    if( x >= imageArea->get_display_image()->Xsize ) 
+      return false;
+    if( y >= imageArea->get_display_image()->Ysize ) 
+      return false;
+  }
+
   float zoom_fact = get_zoom_factor();
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::screen2image(): zoom_factor="<<zoom_fact<<std::endl;
@@ -323,6 +331,7 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::screen2image(): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
+  return true;
 }
 
 
@@ -334,7 +343,8 @@ bool PF::ImageEditor::on_button_press_event( GdkEventButton* button )
   if( button->button == 1 ) {
     gdouble x = button->x;
     gdouble y = button->y;
-    screen2image( x, y );
+    if( !screen2image( x, y ) )
+      return true;
 #ifndef NDEBUG
     std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
     std::cout<<"  active_layer: "<<active_layer<<std::endl;
@@ -366,7 +376,8 @@ bool PF::ImageEditor::on_button_release_event( GdkEventButton* button )
   if( button->button == 1 ) {
     gdouble x = button->x;
     gdouble y = button->y;
-    screen2image( x, y );
+    if( !screen2image( x, y ) )
+      return true;
 #ifndef NDEBUG
     std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
 #endif
@@ -413,9 +424,9 @@ bool PF::ImageEditor::on_motion_notify_event( GdkEventMotion* event )
 	if (event->is_hint) {
 		//event->window->get_pointer(&ix, &iy, &state);
 		/*
-		x = ix;
-		y = iy;
-		return true;
+      x = ix;
+      y = iy;
+      return true;
 		*/
 		x = event->x;
 		y = event->y;
@@ -428,25 +439,26 @@ bool PF::ImageEditor::on_motion_notify_event( GdkEventMotion* event )
   if( state & GDK_BUTTON1_MASK ) {
     //gdouble x = event->x;
     //gdouble y = event->y;
-    screen2image( x, y );
+    if( !screen2image( x, y ) )
+      return true;
 #ifndef NDEBUG
     std::cout<<"PF::ImageEditor::on_motion_notify_event(): pointer @ "<<x<<","<<y
-	     <<"  hint: "<<event->is_hint<<"  state: "<<event->state
-	     <<std::endl;
+             <<"  hint: "<<event->is_hint<<"  state: "<<event->state
+             <<std::endl;
 #endif
     if( active_layer &&
-	active_layer->get_processor() &&
-	active_layer->get_processor()->get_par() ) {
+        active_layer->get_processor() &&
+        active_layer->get_processor()->get_par() ) {
       PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
       if( dialog && dialog->get_visible() ) {
 #ifndef NDEBUG
-	std::cout<<"  sending motion event to dialog"<<std::endl;
+        std::cout<<"  sending motion event to dialog"<<std::endl;
 #endif
-	int mod_key = PF::MOD_KEY_NONE;
-	if( event->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-	if( event->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
-	dialog->pointer_motion_event( 1, x, y, mod_key );
+        int mod_key = PF::MOD_KEY_NONE;
+        if( event->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+        if( event->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+        dialog->pointer_motion_event( 1, x, y, mod_key );
       }
     }
   }

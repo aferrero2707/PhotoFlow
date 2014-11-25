@@ -99,7 +99,7 @@ namespace PF {
       return fact;
     }
 
-    void screen2image( gdouble& x, gdouble& y );
+    bool screen2image( gdouble& x, gdouble& y );
 
     void zoom_in();
     void zoom_out();
