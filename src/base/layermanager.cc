@@ -821,8 +821,10 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         if( !extra_img ) return false;
         in.push_back( extra_img );
 
-        par->set_image_hints( extra_img );
-        blender->set_image_hints( extra_img );
+        if( !par->is_map() ) {
+          par->set_image_hints( extra_img );
+          blender->set_image_hints( extra_img );
+        }
 #ifndef NDEBUG
         std::cout<<" ...added."<<std::endl;
 #endif
