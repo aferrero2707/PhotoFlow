@@ -16,6 +16,15 @@ Here is the general feature (whish)list:
 
 You can follow the development of photoflow and learn about its usage in the dedicated blog: http://photoflowblog.blogspot.fr/
 
+# Installing from PPA (Ubuntu Linux and derivate distributions)
+
+There are up-to-date packages available for Ubuntu 14.04/14.10 and Mint 17/17.1 in Dariusz Duma's PPA.
+To add the PPA and install photoflow, do the following:
+
+        sudo add-apt-repository ppa:dhor/myway
+        sudo apt-get update
+        sudo apt-get install photoflow
+
 # Downloading and compiling
 
 Photoflow can be compiled under both gtk 2.x and gtk 3.x.
