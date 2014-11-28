@@ -44,6 +44,7 @@
 #include "../gui/operations/channel_mixer_config.hh"
 #include "../gui/operations/gaussblur_config.hh"
 #include "../gui/operations/denoise_config.hh"
+#include "../gui/operations/desaturate_config.hh"
 #include "../gui/operations/sharpen_config.hh"
 #include "../gui/operations/draw_config.hh"
 #include "../gui/operations/clone_stamp_config.hh"
@@ -454,7 +455,7 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   } else if( op_type == "desaturate" ) {
 
-    dialog = new PF::OperationConfigDialog( current_layer, "Desaturate Image" );
+    dialog = new PF::DesaturateConfigDialog( current_layer );
 
   } else if( op_type == "uniform" ) {
 

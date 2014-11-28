@@ -45,17 +45,23 @@ namespace PF
   public:
     UniformPar();
 
+    bool needs_input() { return false; }
+
     Property<float>& get_grey() { return grey; }
     Property<float>& get_R() { return R; }
     Property<float>& get_G() { return G; }
     Property<float>& get_B() { return B; }
     Property<float>& get_L() { return L; }
     Property<float>& get_a() { return a; }
-    Property<float>& get_b() { return a; }
+    Property<float>& get_b() { return b; }
     Property<float>& get_C() { return C; }
     Property<float>& get_M() { return M; }
     Property<float>& get_Y() { return Y; }
     Property<float>& get_K() { return K; }
+
+    VipsImage* build(std::vector<VipsImage*>& in, int first, 
+                     VipsImage* imap, VipsImage* omap, 
+                     unsigned int& level);
   };
 
   

@@ -219,8 +219,9 @@ void start_element (GMarkupParseContext *context,
       containers_stack.push_back( make_pair(current_container,true) );
     } else if( type == "child" ) {
       current_container = &(current_layer->get_sublayers());
-      current_container_map_flag = false;
-      containers_stack.push_back( make_pair(current_container,false) );
+      // Child layers inherit the map flag of their parent
+      //current_container_map_flag = false;
+      containers_stack.push_back( make_pair(current_container,current_container_map_flag) );
     }
 
     // At this point we set the current_layer pointer to NULL,

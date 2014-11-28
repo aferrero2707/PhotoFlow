@@ -347,8 +347,9 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   int page = notebook.get_current_page();
   if( page < 0 ) page = 0;
 
+  bool is_map = layer_views[page]->is_map();
   layer->get_processor()->get_par()->
-    set_map_flag( layer_views[page]->is_map() );
+    set_map_flag( is_map );
     
 #ifndef NDEBUG
   std::cout<<"LayerWidget::add_layer(): layer_views.size()="<<layer_views.size()<<std::endl;

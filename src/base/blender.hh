@@ -128,6 +128,8 @@ namespace PF
           break;
         case PF_BLEND_UNKNOWN:
           break;
+        default:
+          break;
         }
       }  
     }

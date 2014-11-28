@@ -32,7 +32,7 @@
 #include "../base/photoflow.hh"
 #include "../base/new_operation.hh"
 #include "../operations/convertformat.hh"
-#include "../operations/convert2rgb.hh"
+#include "../operations/convert_colorspace.hh"
 #include "../operations/convert2srgb.hh"
 #include "../operations/desaturate.hh"
 #include "clone.hh"
@@ -51,8 +51,10 @@ PF::ClonePar::ClonePar():
   source_channel.add_enum_value(PF::CLONE_CHANNEL_a,"a","a");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_b,"b","b");
 
+  source_channel.set_enum_value(PF::CLONE_CHANNEL_R);
+
   convert2lab = PF::new_operation( "convert2lab", NULL );
-  convert2rgb = PF::new_convert2rgb();
+  convert_cs = PF::new_convert_colorspace();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   desaturate = PF::new_desaturate();
 
@@ -374,16 +376,15 @@ VipsImage* PF::ClonePar::L2rgb(VipsImage* srcimg, unsigned int& level)
   //VipsImage* greyimg = labimg;
 
   in.clear(); in.push_back( greyimg );
-  convert2rgb->get_par()->set_image_hints( greyimg );
-  convert2rgb->get_par()->set_format( get_format() );
+  convert_cs->get_par()->set_image_hints( greyimg );
+  convert_cs->get_par()->set_format( get_format() );
   
-  PF::Convert2RGBPar* c2rgbpar = dynamic_cast<PF::Convert2RGBPar*>(convert2rgb->get_par());
-  if(c2rgbpar) {
-    cmsHPROFILE profile_out = cmsOpenProfileFromMem( profile_data, profile_length );
-    if( !profile_out ) return NULL;
-    c2rgbpar->set_output_profile( profile_out );
+  PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert_cs->get_par());
+  if(csconvpar) {
+    csconvpar->set_out_profile_mode( PF::OUT_PROF_CUSTOM );
+    csconvpar->set_out_profile_data( profile_data, profile_length );
   }
-  out = convert2rgb->get_par()->build( in, 0, NULL, NULL, level );
+  out = convert_cs->get_par()->build( in, 0, NULL, NULL, level );
   PF_UNREF( greyimg, "ClonePar::L2rgb(): greyimg unref" );
 
   return out;

@@ -474,10 +474,20 @@ void PF::ImageArea::update( VipsRect* area )
 				!(node->processor->get_par()->is_map()) ) {
       image = node->blended;
     } else {
-      PF::Layer* container_layer = 
-				get_pipeline()->get_image()->get_layer_manager().
-				get_container_layer( active_layer );
-      if( !container_layer ) return;
+      // We need to find the first non-mask layer that contains the active mask layer
+      PF::Layer* container_layer = NULL;
+      int temp_id = active_layer;
+      while( !container_layer ) {
+				container_layer = 
+          get_pipeline()->get_image()->get_layer_manager().
+          get_container_layer( temp_id );
+        if( !container_layer ) return;
+        if( !container_layer->get_processor() ) return;
+        if( !container_layer->get_processor()->get_par() ) return;
+        if( container_layer->get_processor()->get_par()->is_map() == false ) break;
+        temp_id = container_layer->get_id();
+        container_layer = NULL;
+      }
 
       PF::PipelineNode* container_node = 
 				get_pipeline()->get_node( container_layer->get_id() );

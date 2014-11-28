@@ -133,9 +133,6 @@ namespace PF
       
         p = in ? (float*)VIPS_REGION_ADDR( in[0], r->left, r->top + y ) : NULL; 
         pout = (float*)VIPS_REGION_ADDR( out, r->left, r->top + y ); 
-        if( r->left==0 && r->top==0 && y==0 ) {
-          std::cout<<"Convert2LabProc::render(): p="<<p[x]<<" "<<p[x+1]<<" "<<p[x+2]<<std::endl;
-        }
         cmsDoTransform( transform, p, pout, width );
 
         for( x = 0; x < line_size; x+= 3 ) {
