@@ -150,7 +150,7 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 IF(MINGW)
 list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
 ELSE(MINGW)
-list(APPEND ADDITIONAL_LIBS fftw3_threads)
+list(APPEND ADDITIONAL_LIBS fftw3_threads pthread)
 ENDIF(MINGW)
 
 target_link_libraries(photoflow ${LIBS} 
@@ -166,7 +166,7 @@ target_link_libraries(photoflow ${LIBS}
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
-  fftw3 pthread
+  fftw3
   ${ADDITIONAL_LIBS}
   #gmon
   )
