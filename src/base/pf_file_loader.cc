@@ -256,6 +256,8 @@ void start_element (GMarkupParseContext *context,
       if( processor ) {
         std::cout<<"PF::pf_file_loader(): operation created."<<std::endl;
         current_op = processor->get_par();
+        if( !PF::PhotoFlow::Instance().is_batch() && current_op->init_hidden() )
+          current_layer->set_visible( false );
       }
     }
 

@@ -27,35 +27,37 @@
 
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdlib.h>
+#include "../base/pf_mkstemp.hh"
+#include "raster_image.hh"
 
-#include <string>
-#include <list>
 
-extern std::list<std::string> cache_files;
 
-#ifndef _O_BINARY
-#define _O_BINARY 0
+PF::RasterImage::RasterImage( const std::string f ):
+	nref(1), file_name( f ),
+  image( NULL )
+{
+  if( file_name.empty() ) return;
+  // Create VipsImage from given file
+#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
+  image = vips_image_new_from_file( file_name.c_str() );
+#else
+  image = vips_image_new_from_file( file_name.c_str(), NULL );
 #endif
+  if( !image ) return;
+  
+  pyramid.init( image );
+}
 
-#ifndef O_BINARY
-#define O_BINARY _O_BINARY
-#endif
 
-#if defined(__MINGW32__) || defined(__MINGW64__)
+PF::RasterImage::~RasterImage()
+{
+  if( image ) PF_UNREF( image, "RasterImage::~RasterImage() image" );
+	std::cout<<"RasterImage::~RasterImage() called."<<std::endl;
+	if( !(cache_file_name.empty()) )
+		unlink( cache_file_name.c_str() );
+}
 
-#include <windows.h>
 
-/* Generate a temporary file name based on TMPL.  TMPL must match the
-   rules for mk[s]temp (i.e. end in "XXXXXX").  The name constructed
-   does not exist at the time of the call to mkstemp.  TMPL is
-   overwritten with the result.  */
-int mkstemp (char *tmpl);
+std::map<Glib::ustring, PF::RasterImage*> PF::raster_images;
 
-#endif
 
-int pf_mkstemp(char *tmpl, int suffixlen=0);

@@ -137,9 +137,9 @@ int mkstemp (char *tmpl)
 #endif
 
 
-int pf_mkstemp(char *tmpl)
+int pf_mkstemp(char *tmpl, int suffixlen)
 {
-	int fd = mkstemp(tmpl);
+	int fd = mkstemps(tmpl, suffixlen);
 	if(fd >= 0) cache_files.push_back(tmpl);
 	return fd;
 }

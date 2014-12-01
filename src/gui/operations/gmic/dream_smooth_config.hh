@@ -27,35 +27,37 @@
 
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdlib.h>
+#ifndef GMIC_DREAM_SMOOTH_CONFIG_DIALOG_HH
+#define GMIC_DREAM_SMOOTH_CONFIG_DIALOG_HH
 
-#include <string>
-#include <list>
+#include <gtkmm.h>
 
-extern std::list<std::string> cache_files;
+#include "../../operation_config_dialog.hh"
 
-#ifndef _O_BINARY
-#define _O_BINARY 0
+
+namespace PF {
+
+  class GmicDreamSmoothConfigDialog: public OperationConfigDialog
+  {
+    Gtk::Button updateButton;
+    Gtk::VBox controlsBox;
+    
+    Slider iterations_slider;
+    Slider prop_interations_slider;
+    Slider prop_equalize_slider;
+    Selector prop_merging_option_selector;
+    Slider prop_opacity_slider;
+    Slider prop_reverse_slider;
+    Slider prop_smoothness_slider;
+    Slider paddingSlider;
+       
+  public:
+    GmicDreamSmoothConfigDialog( Layer* l );
+    
+    void on_update();
+    void open();
+  };
+
+}
+
 #endif
-
-#ifndef O_BINARY
-#define O_BINARY _O_BINARY
-#endif
-
-#if defined(__MINGW32__) || defined(__MINGW64__)
-
-#include <windows.h>
-
-/* Generate a temporary file name based on TMPL.  TMPL must match the
-   rules for mk[s]temp (i.e. end in "XXXXXX").  The name constructed
-   does not exist at the time of the call to mkstemp.  TMPL is
-   overwritten with the result.  */
-int mkstemp (char *tmpl);
-
-#endif
-
-int pf_mkstemp(char *tmpl, int suffixlen=0);

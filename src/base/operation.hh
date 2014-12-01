@@ -31,6 +31,7 @@
 #ifndef OPERATION_H
 #define OPERATION_H
 
+#include <math.h>
 #include <unistd.h>
 
 #include <string>
@@ -265,9 +266,12 @@ namespace PF
     virtual bool has_opacity() { return true; }
     virtual bool needs_input() { return true; }
     virtual bool needs_caching() { return false; }
+    virtual bool init_hidden() { return false; }
 
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }
+
+    virtual void pre_build( rendermode_t mode ) {}
 
     virtual VipsImage* build(std::vector<VipsImage*>& in, int first, 
 			     VipsImage* imap, VipsImage* omap, unsigned int& level);
@@ -410,11 +414,15 @@ namespace PF
 
   #include "blend_passthrough.hh"
   #include "blend_normal.hh"
+  #include "blend_grain_extract.hh"
+  #include "blend_grain_merge.hh"
   #include "blend_multiply.hh"
   #include "blend_screen.hh"
   #include "blend_lighten.hh"
   #include "blend_darken.hh"
   #include "blend_overlay.hh"
+  #include "blend_soft_light.hh"
+  #include "blend_hard_light.hh"
   #include "blend_vivid_light.hh"
   #include "blend_luminosity.hh"
   #include "blend_color.hh"

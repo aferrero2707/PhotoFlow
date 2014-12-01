@@ -85,8 +85,8 @@ namespace rtengine {
 					int c=FC(row,col);
 					float val = rawData[row2][col2];
 					rgb[c][indx]=CLIP( val );
-					//if( row<16 && col<16)
-					//std::cout<<"row,col="<<row<<","<<col<<"  rgb["<<c<<"]["<<indx<<"]="<<rgb[c][indx]<<std::endl;
+					if( false && row2<16 && col2<16)
+            std::cout<<"row,col="<<row2<<","<<col2<<"  rgb["<<c<<"]["<<indx<<"]="<<rgb[c][indx]<<std::endl;
 				}
 			}
 			//	border_interpolate2(7, rgb);

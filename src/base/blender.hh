@@ -76,11 +76,15 @@ namespace PF
     {
       if( !bottom || !top ) return;
       BlendNormal<T,colorspace,CHMIN,CHMAX,has_omap> blend_normal;
+      BlendGrainExtract<T,colorspace,CHMIN,CHMAX,has_omap> blend_grain_extract;
+      BlendGrainMerge<T,colorspace,CHMIN,CHMAX,has_omap> blend_grain_merge;
       BlendMultiply<T,colorspace,CHMIN,CHMAX,has_omap> blend_multiply;
       BlendScreen<T,colorspace,CHMIN,CHMAX,has_omap> blend_screen;
       BlendLighten<T,colorspace,CHMIN,CHMAX,has_omap> blend_lighten;
       BlendDarken<T,colorspace,CHMIN,CHMAX,has_omap> blend_darken;
       BlendOverlay<T,colorspace,CHMIN,CHMAX,has_omap> blend_overlay;
+      BlendSoftLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_soft_light;
+      BlendHardLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_hard_light;
       BlendVividLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_vivid_light;
       BlendLuminosity<T,colorspace,CHMIN,CHMAX,has_omap> blend_lumi;
       BlendColor<T,colorspace,CHMIN,CHMAX,has_omap> blend_color;
@@ -102,8 +106,20 @@ namespace PF
         case PF_BLEND_NORMAL:
           BLEND_LOOP(blend_normal);
           break;
+        case PF_BLEND_GRAIN_EXTRACT:
+          BLEND_LOOP(blend_grain_extract);
+          break;
+        case PF_BLEND_GRAIN_MERGE:
+          BLEND_LOOP(blend_grain_merge);
+          break;
         case PF_BLEND_OVERLAY:
           BLEND_LOOP(blend_overlay);
+          break;
+        case PF_BLEND_SOFT_LIGHT:
+          BLEND_LOOP(blend_soft_light);
+          break;
+        case PF_BLEND_HARD_LIGHT:
+          BLEND_LOOP(blend_hard_light);
           break;
         case PF_BLEND_VIVID_LIGHT:
           BLEND_LOOP(blend_vivid_light);

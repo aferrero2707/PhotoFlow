@@ -311,28 +311,6 @@ extern "C" {
 #include "minc_1_simple_rw.h"
 #endif
 
-// Configure FFMPEG support.
-// (http://www.ffmpeg.org)
-//
-// Define 'cimg_use_ffmpeg' to enable FFMPEG lib support.
-//
-// Avcodec and Avformat libraries from FFMPEG may be used
-// to get a native support of various video file formats.
-// (see methods 'CImg[List]<T>::load_ffmpeg()').
-#ifdef cimg_use_ffmpeg
-#if (defined(_STDINT_H) || defined(_STDINT_H_)) && !defined(UINT64_C)
-#warning "__STDC_CONSTANT_MACROS has to be defined before including <stdint.h>, this file will probably not compile."
-#endif
-#ifndef __STDC_CONSTANT_MACROS
-#define __STDC_CONSTANT_MACROS // ...or stdint.h wont' define UINT64_C, needed by libavutil
-#endif
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libswscale/swscale.h>
-}
-#endif
-
 // Configure Zlib support.
 // (http://www.zlib.net)
 //
@@ -2622,7 +2600,7 @@ namespace cimg_library_suffixed {
           pthread_cancel(*events_thread);
           delete events_thread;
         }
-        if (display) {} // XCloseDisplay(display);
+        if (display) { XLockDisplay(display); XCloseDisplay(display); }
         pthread_cond_destroy(&wait_event);
         pthread_mutex_unlock(&wait_event_mutex);
         pthread_mutex_destroy(&wait_event_mutex);
@@ -3820,16 +3798,16 @@ namespace cimg_library_suffixed {
       123,123,0,6,255,255,0,1,0,0,0,2,123,123,123,18,200,200,200,1,123,123,0,7,255,255,0,1,189,189,189,3,0,0,0,1,189,
       189,189,6,255,255,0,1,189,189,189,1,0,0,0,2,123,123,123,17,200,200,200,1,123,123,0,8,255,255,0,3,0,0,0,8,255,255,
       0,1,0,0,0,2,123,123,123,16,200,200,200,1,123,123,0,9,255,255,0,1,123,123,0,1,0,0,0,1,123,123,0,8,255,255,0,1,189,
-      189,189,1,0,0,0,2,123,123,123,15,200,200,200,1,123,123,0,9,255,255,0,1,189,189,189,1,0,0,0,1,189,189,189,9,255,255,
-      0,1,0,0,0,2,123,123,123,14,200,200,200,1,123,123,0,11,255,255,0,1,0,0,0,10,255,255,0,1,189,189,189,1,0,0,0,2,123,
-      123,123,13,200,200,200,1,123,123,0,23,255,255,0,1,0,0,0,2,123,123,123,12,200,200,200,1,123,123,0,11,255,255,0,1,189,
-      189,189,2,0,0,0,1,189,189,189,9,255,255,0,1,189,189,189,1,0,0,0,2,123,123,123,11,200,200,200,1,123,123,0,11,255,255,
-      0,4,0,0,0,10,255,255,0,1,0,0,0,2,123,123,123,10,200,200,200,1,123,123,0,12,255,255,0,4,0,0,0,10,255,255,0,1,189,189,
-      189,1,0,0,0,2,123,123,123,9,200,200,200,1,123,123,0,12,255,255,0,1,189,189,189,2,0,0,0,1,189,189,189,11,255,255,0,1,
-      0,0,0,2,123,123,123,9,200,200,200,1,123,123,0,27,255,255,0,1,0,0,0,3,123,123,123,8,200,200,200,1,123,123,0,26,255,
-      255,0,1,189,189,189,1,0,0,0,3,123,123,123,9,200,200,200,1,123,123,0,24,255,255,0,1,189,189,189,1,0,0,0,4,123,123,
-      123,10,200,200,200,1,123,123,0,24,0,0,0,5,123,123,123,12,200,200,200,27,123,123,123,14,200,200,200,25,123,123,123,86,
-      200,200,200,91,49,124,118,124,71,32,124,95,49,56,114,52,82,121,0};
+      189,189,1,0,0,0,2,123,123,123,15,200,200,200,1,123,123,0,9,255,255,0,1,189,189,189,1,0,0,0,1,189,189,189,9,255,
+      255,0,1,0,0,0,2,123,123,123,14,200,200,200,1,123,123,0,11,255,255,0,1,0,0,0,10,255,255,0,1,189,189,189,1,0,0,0,2,
+      123,123,123,13,200,200,200,1,123,123,0,23,255,255,0,1,0,0,0,2,123,123,123,12,200,200,200,1,123,123,0,11,255,255,0,
+      1,189,189,189,2,0,0,0,1,189,189,189,9,255,255,0,1,189,189,189,1,0,0,0,2,123,123,123,11,200,200,200,1,123,123,0,11,
+      255,255,0,4,0,0,0,10,255,255,0,1,0,0,0,2,123,123,123,10,200,200,200,1,123,123,0,12,255,255,0,4,0,0,0,10,255,255,0,
+      1,189,189,189,1,0,0,0,2,123,123,123,9,200,200,200,1,123,123,0,12,255,255,0,1,189,189,189,2,0,0,0,1,189,189,189,11,
+      255,255,0,1,0,0,0,2,123,123,123,9,200,200,200,1,123,123,0,27,255,255,0,1,0,0,0,3,123,123,123,8,200,200,200,1,123,
+      123,0,26,255,255,0,1,189,189,189,1,0,0,0,3,123,123,123,9,200,200,200,1,123,123,0,24,255,255,0,1,189,189,189,1,0,0,
+      0,4,123,123,123,10,200,200,200,1,123,123,0,24,0,0,0,5,123,123,123,12,200,200,200,27,123,123,123,14,200,200,200,25,
+      123,123,123,86,200,200,200,91,49,124,118,124,71,32,124,95,49,56,114,52,82,121,0 };
 
     //! Get/set default output stream for the \CImg library messages.
     /**
@@ -8296,64 +8274,82 @@ namespace cimg_library_suffixed {
         switch (cimg::X11_attr().nb_bits) {
         case 8 : { // 256 colormap, no normalization
           _set_colormap(_colormap,img._spectrum);
-          unsigned char *const ndata = (img._width==_width && img._height==_height)?(unsigned char*)_data:new unsigned char[(unsigned long)img._width*img._height];
-          unsigned char *ptrd = (unsigned char*)ndata;
+          unsigned char
+            *const ndata = (img._width==_width && img._height==_height)?(unsigned char*)_data:
+            new unsigned char[(unsigned long)img._width*img._height],
+            *ptrd = (unsigned char*)ndata;
           switch (img._spectrum) {
-          case 1 : for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) (*ptrd++) = (unsigned char)*(data1++);
+          case 1 :
+            for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy)
+              (*ptrd++) = (unsigned char)*(data1++);
             break;
           case 2 : for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
 	      const unsigned char R = (unsigned char)*(data1++), G = (unsigned char)*(data2++);
 	      (*ptrd++) = (R&0xf0) | (G>>4);
 	    } break;
           default : for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-	      const unsigned char R = (unsigned char)*(data1++), G = (unsigned char)*(data2++), B = (unsigned char)*(data3++);
+	      const unsigned char
+                R = (unsigned char)*(data1++),
+                G = (unsigned char)*(data2++),
+                B = (unsigned char)*(data3++);
 	      (*ptrd++) = (R&0xe0) | ((G>>5)<<2) | (B>>6);
 	    }
           }
-          if (ndata!=_data) { _render_resize(ndata,img._width,img._height,(unsigned char*)_data,_width,_height); delete[] ndata; }
+          if (ndata!=_data) {
+            _render_resize(ndata,img._width,img._height,(unsigned char*)_data,_width,_height);
+            delete[] ndata;
+          }
         } break;
         case 16 : { // 16 bits colors, no normalization
-          unsigned short *const ndata = (img._width==_width && img._height==_height)?(unsigned short*)_data:new unsigned short[(unsigned long)img._width*img._height];
+          unsigned short *const ndata = (img._width==_width && img._height==_height)?(unsigned short*)_data:
+            new unsigned short[(unsigned long)img._width*img._height];
           unsigned char *ptrd = (unsigned char*)ndata;
           const unsigned int M = 248;
           switch (img._spectrum) {
           case 1 :
-            if (cimg::X11_attr().byte_order) for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char val = (unsigned char)*(data1++), G = val>>2;
-              *(ptrd++) = (val&M) | (G>>3);
-              *(ptrd++) = (G<<5) | (G>>1);
+            if (cimg::X11_attr().byte_order)
+              for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
+                const unsigned char val = (unsigned char)*(data1++), G = val>>2;
+                *(ptrd++) = (val&M) | (G>>3);
+                *(ptrd++) = (G<<5) | (G>>1);
               } else for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char val = (unsigned char)*(data1++), G = val>>2;
-              *(ptrd++) = (G<<5) | (G>>1);
-              *(ptrd++) = (val&M) | (G>>3);
-            }
+                const unsigned char val = (unsigned char)*(data1++), G = val>>2;
+                *(ptrd++) = (G<<5) | (G>>1);
+                *(ptrd++) = (val&M) | (G>>3);
+              }
             break;
           case 2 :
-            if (cimg::X11_attr().byte_order) for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char G = (unsigned char)*(data2++)>>2;
-              *(ptrd++) = ((unsigned char)*(data1++)&M) | (G>>3);
-              *(ptrd++) = (G<<5);
+            if (cimg::X11_attr().byte_order)
+              for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
+                const unsigned char G = (unsigned char)*(data2++)>>2;
+                *(ptrd++) = ((unsigned char)*(data1++)&M) | (G>>3);
+                *(ptrd++) = (G<<5);
               } else for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char G = (unsigned char)*(data2++)>>2;
-              *(ptrd++) = (G<<5);
-              *(ptrd++) = ((unsigned char)*(data1++)&M) | (G>>3);
-            }
+                const unsigned char G = (unsigned char)*(data2++)>>2;
+                *(ptrd++) = (G<<5);
+                *(ptrd++) = ((unsigned char)*(data1++)&M) | (G>>3);
+              }
             break;
           default :
-            if (cimg::X11_attr().byte_order) for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char G = (unsigned char)*(data2++)>>2;
-              *(ptrd++) = ((unsigned char)*(data1++)&M) | (G>>3);
-              *(ptrd++) = (G<<5) | ((unsigned char)*(data3++)>>3);
+            if (cimg::X11_attr().byte_order)
+              for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
+                const unsigned char G = (unsigned char)*(data2++)>>2;
+                *(ptrd++) = ((unsigned char)*(data1++)&M) | (G>>3);
+                *(ptrd++) = (G<<5) | ((unsigned char)*(data3++)>>3);
               } else for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char G = (unsigned char)*(data2++)>>2;
-              *(ptrd++) = (G<<5) | ((unsigned char)*(data3++)>>3);
-              *(ptrd++) = ((unsigned char)*(data1++)&M) | (G>>3);
-            }
+                const unsigned char G = (unsigned char)*(data2++)>>2;
+                *(ptrd++) = (G<<5) | ((unsigned char)*(data3++)>>3);
+                *(ptrd++) = ((unsigned char)*(data1++)&M) | (G>>3);
+              }
           }
-          if (ndata!=_data) { _render_resize(ndata,img._width,img._height,(unsigned short*)_data,_width,_height); delete[] ndata; }
+          if (ndata!=_data) {
+            _render_resize(ndata,img._width,img._height,(unsigned short*)_data,_width,_height);
+            delete[] ndata;
+          }
         } break;
         default : { // 24 bits colors, no normalization
-          unsigned int *const ndata = (img._width==_width && img._height==_height)?(unsigned int*)_data:new unsigned int[(unsigned long)img._width*img._height];
+          unsigned int *const ndata = (img._width==_width && img._height==_height)?(unsigned int*)_data:
+            new unsigned int[(unsigned long)img._width*img._height];
           if (sizeof(int)==4) { // 32 bits int uses optimized version
             unsigned int *ptrd = ndata;
             switch (img._spectrum) {
@@ -8380,26 +8376,29 @@ namespace cimg_library_suffixed {
             default :
               if (cimg::X11_attr().byte_order==cimg::endianness())
                 for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy)
-                  *(ptrd++) = ((unsigned char)*(data1++)<<16) | ((unsigned char)*(data2++)<<8) | (unsigned char)*(data3++);
+                  *(ptrd++) = ((unsigned char)*(data1++)<<16) | ((unsigned char)*(data2++)<<8) |
+                    (unsigned char)*(data3++);
               else
                 for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy)
-                  *(ptrd++) = ((unsigned char)*(data3++)<<24) | ((unsigned char)*(data2++)<<16) | ((unsigned char)*(data1++)<<8);
+                  *(ptrd++) = ((unsigned char)*(data3++)<<24) | ((unsigned char)*(data2++)<<16) |
+                    ((unsigned char)*(data1++)<<8);
             }
           } else {
             unsigned char *ptrd = (unsigned char*)ndata;
             switch (img._spectrum) {
             case 1 :
-              if (cimg::X11_attr().byte_order) for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-                *(ptrd++) = 0;
-                *(ptrd++) = (unsigned char)*(data1++);
-                *(ptrd++) = 0;
-                *(ptrd++) = 0;
+              if (cimg::X11_attr().byte_order)
+                for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
+                  *(ptrd++) = 0;
+                  *(ptrd++) = (unsigned char)*(data1++);
+                  *(ptrd++) = 0;
+                  *(ptrd++) = 0;
                 } else for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-                *(ptrd++) = 0;
-                *(ptrd++) = 0;
-                *(ptrd++) = (unsigned char)*(data1++);
-                *(ptrd++) = 0;
-              }
+                  *(ptrd++) = 0;
+                  *(ptrd++) = 0;
+                  *(ptrd++) = (unsigned char)*(data1++);
+                  *(ptrd++) = 0;
+                }
               break;
             case 2 :
               if (cimg::X11_attr().byte_order) cimg::swap(data1,data2);
@@ -8411,20 +8410,24 @@ namespace cimg_library_suffixed {
               }
               break;
             default :
-              if (cimg::X11_attr().byte_order) for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-                *(ptrd++) = 0;
-                *(ptrd++) = (unsigned char)*(data1++);
-                *(ptrd++) = (unsigned char)*(data2++);
-                *(ptrd++) = (unsigned char)*(data3++);
+              if (cimg::X11_attr().byte_order)
+                for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
+                  *(ptrd++) = 0;
+                  *(ptrd++) = (unsigned char)*(data1++);
+                  *(ptrd++) = (unsigned char)*(data2++);
+                  *(ptrd++) = (unsigned char)*(data3++);
                 } else for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-                *(ptrd++) = (unsigned char)*(data3++);
-                *(ptrd++) = (unsigned char)*(data2++);
-                *(ptrd++) = (unsigned char)*(data1++);
-                *(ptrd++) = 0;
-              }
+                  *(ptrd++) = (unsigned char)*(data3++);
+                  *(ptrd++) = (unsigned char)*(data2++);
+                  *(ptrd++) = (unsigned char)*(data1++);
+                  *(ptrd++) = 0;
+                }
             }
           }
-          if (ndata!=_data) { _render_resize(ndata,img._width,img._height,(unsigned int*)_data,_width,_height); delete[] ndata; }
+          if (ndata!=_data) {
+            _render_resize(ndata,img._width,img._height,(unsigned int*)_data,_width,_height);
+            delete[] ndata;
+          }
         }
         }
       } else {
@@ -8436,7 +8439,8 @@ namespace cimg_library_suffixed {
         switch (cimg::X11_attr().nb_bits) {
         case 8 : { // 256 colormap, with normalization
           _set_colormap(_colormap,img._spectrum);
-          unsigned char *const ndata = (img._width==_width && img._height==_height)?(unsigned char*)_data:new unsigned char[(unsigned long)img._width*img._height];
+          unsigned char *const ndata = (img._width==_width && img._height==_height)?(unsigned char*)_data:
+            new unsigned char[(unsigned long)img._width*img._height];
           unsigned char *ptrd = (unsigned char*)ndata;
           switch (img._spectrum) {
           case 1 : for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
@@ -8458,50 +8462,61 @@ namespace cimg_library_suffixed {
               *(ptrd++) = (R&0xe0) | ((G>>5)<<2) | (B>>6);
             }
           }
-          if (ndata!=_data) { _render_resize(ndata,img._width,img._height,(unsigned char*)_data,_width,_height); delete[] ndata; }
+          if (ndata!=_data) {
+            _render_resize(ndata,img._width,img._height,(unsigned char*)_data,_width,_height);
+            delete[] ndata;
+          }
         } break;
         case 16 : { // 16 bits colors, with normalization
-          unsigned short *const ndata = (img._width==_width && img._height==_height)?(unsigned short*)_data:new unsigned short[(unsigned long)img._width*img._height];
+          unsigned short *const ndata = (img._width==_width && img._height==_height)?(unsigned short*)_data:
+            new unsigned short[(unsigned long)img._width*img._height];
           unsigned char *ptrd = (unsigned char*)ndata;
           const unsigned int M = 248;
           switch (img._spectrum) {
           case 1 :
-            if (cimg::X11_attr().byte_order) for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char val = (unsigned char)((*(data1++)-_min)*mm), G = val>>2;
-              *(ptrd++) = (val&M) | (G>>3);
-              *(ptrd++) = (G<<5) | (val>>3);
+            if (cimg::X11_attr().byte_order)
+              for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
+                const unsigned char val = (unsigned char)((*(data1++)-_min)*mm), G = val>>2;
+                *(ptrd++) = (val&M) | (G>>3);
+                *(ptrd++) = (G<<5) | (val>>3);
               } else for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char val = (unsigned char)((*(data1++)-_min)*mm), G = val>>2;
-              *(ptrd++) = (G<<5) | (val>>3);
-              *(ptrd++) = (val&M) | (G>>3);
-            }
+                const unsigned char val = (unsigned char)((*(data1++)-_min)*mm), G = val>>2;
+                *(ptrd++) = (G<<5) | (val>>3);
+                *(ptrd++) = (val&M) | (G>>3);
+              }
             break;
           case 2 :
-            if (cimg::X11_attr().byte_order) for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char G = (unsigned char)((*(data2++)-_min)*mm)>>2;
-              *(ptrd++) = ((unsigned char)((*(data1++)-_min)*mm)&M) | (G>>3);
-              *(ptrd++) = (G<<5);
+            if (cimg::X11_attr().byte_order)
+              for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
+                const unsigned char G = (unsigned char)((*(data2++)-_min)*mm)>>2;
+                *(ptrd++) = ((unsigned char)((*(data1++)-_min)*mm)&M) | (G>>3);
+                *(ptrd++) = (G<<5);
               } else for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char G = (unsigned char)((*(data2++)-_min)*mm)>>2;
-              *(ptrd++) = (G<<5);
-              *(ptrd++) = ((unsigned char)((*(data1++)-_min)*mm)&M) | (G>>3);
-            }
+                const unsigned char G = (unsigned char)((*(data2++)-_min)*mm)>>2;
+                *(ptrd++) = (G<<5);
+                *(ptrd++) = ((unsigned char)((*(data1++)-_min)*mm)&M) | (G>>3);
+              }
             break;
           default :
-            if (cimg::X11_attr().byte_order) for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char G = (unsigned char)((*(data2++)-_min)*mm)>>2;
-              *(ptrd++) = ((unsigned char)((*(data1++)-_min)*mm)&M) | (G>>3);
-              *(ptrd++) = (G<<5) | ((unsigned char)((*(data3++)-_min)*mm)>>3);
+            if (cimg::X11_attr().byte_order)
+              for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
+                const unsigned char G = (unsigned char)((*(data2++)-_min)*mm)>>2;
+                *(ptrd++) = ((unsigned char)((*(data1++)-_min)*mm)&M) | (G>>3);
+                *(ptrd++) = (G<<5) | ((unsigned char)((*(data3++)-_min)*mm)>>3);
               } else for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-              const unsigned char G = (unsigned char)((*(data2++)-_min)*mm)>>2;
-              *(ptrd++) = (G<<5) | ((unsigned char)((*(data3++)-_min)*mm)>>3);
-              *(ptrd++) = ((unsigned char)((*(data1++)-_min)*mm)&M) | (G>>3);
-            }
+                const unsigned char G = (unsigned char)((*(data2++)-_min)*mm)>>2;
+                *(ptrd++) = (G<<5) | ((unsigned char)((*(data3++)-_min)*mm)>>3);
+                *(ptrd++) = ((unsigned char)((*(data1++)-_min)*mm)&M) | (G>>3);
+              }
           }
-          if (ndata!=_data) { _render_resize(ndata,img._width,img._height,(unsigned short*)_data,_width,_height); delete[] ndata; }
+          if (ndata!=_data) {
+            _render_resize(ndata,img._width,img._height,(unsigned short*)_data,_width,_height);
+            delete[] ndata;
+          }
         } break;
         default : { // 24 bits colors, with normalization
-          unsigned int *const ndata = (img._width==_width && img._height==_height)?(unsigned int*)_data:new unsigned int[(unsigned long)img._width*img._height];
+          unsigned int *const ndata = (img._width==_width && img._height==_height)?(unsigned int*)_data:
+            new unsigned int[(unsigned long)img._width*img._height];
           if (sizeof(int)==4) { // 32 bits int uses optimized version
             unsigned int *ptrd = ndata;
             switch (img._spectrum) {
@@ -8547,19 +8562,20 @@ namespace cimg_library_suffixed {
             unsigned char *ptrd = (unsigned char*)ndata;
             switch (img._spectrum) {
             case 1 :
-              if (cimg::X11_attr().byte_order) for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-                const unsigned char val = (unsigned char)((*(data1++)-_min)*mm);
-                (*ptrd++) = 0;
-                (*ptrd++) = val;
-                (*ptrd++) = val;
-                (*ptrd++) = val;
+              if (cimg::X11_attr().byte_order)
+                for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
+                  const unsigned char val = (unsigned char)((*(data1++)-_min)*mm);
+                  (*ptrd++) = 0;
+                  (*ptrd++) = val;
+                  (*ptrd++) = val;
+                  (*ptrd++) = val;
                 } else for (unsigned long xy = (unsigned long)img._width*img._height; xy>0; --xy) {
-                const unsigned char val = (unsigned char)((*(data1++)-_min)*mm);
-                (*ptrd++) = val;
-                (*ptrd++) = val;
-                (*ptrd++) = val;
-                (*ptrd++) = 0;
-              }
+                  const unsigned char val = (unsigned char)((*(data1++)-_min)*mm);
+                  (*ptrd++) = val;
+                  (*ptrd++) = val;
+                  (*ptrd++) = val;
+                  (*ptrd++) = 0;
+                }
               break;
             case 2 :
               if (cimg::X11_attr().byte_order) cimg::swap(data1,data2);
@@ -8586,7 +8602,8 @@ namespace cimg_library_suffixed {
             }
           }
           if (ndata!=_data) {
-            _render_resize(ndata,img._width,img._height,(unsigned int*)_data,_width,_height); delete[] ndata;
+            _render_resize(ndata,img._width,img._height,(unsigned int*)_data,_width,_height);
+            delete[] ndata;
           }
 	}
         }
@@ -10210,14 +10227,7 @@ namespace cimg_library_suffixed {
     CImg<T>& assign(const T *const values, const unsigned int size_x, const unsigned int size_y,
                     const unsigned int size_z, const unsigned int size_c, const bool is_shared) {
       const unsigned long siz = (unsigned long)size_x*size_y*size_z*size_c;
-      if (!values || !siz) {
-        if (is_shared)
-          throw CImgArgumentException(_cimg_instance
-                                      "assign(): Invalid assignment request of shared instance from (null) or "
-                                      "empty buffer.",
-                                      cimg_instance);
-        else return assign();
-      }
+      if (!values || !siz) return assign();
       if (!is_shared) { if (_is_shared) assign(); assign(values,size_x,size_y,size_z,size_c); }
       else {
 	if (!_is_shared) {
@@ -14873,61 +14883,73 @@ namespace cimg_library_suffixed {
         const int i = (int)mp.mem[mp.opcode(6)], b = (int)mp.mem[mp.opcode(7)];
         if (i==0) { // Nearest neighbor interpolation.
           if (b==2) return (double)mp.reference.atXYZC(cimg::mod((int)mp.mem[mp.opcode(2)],mp.reference.width()),
-                                                    cimg::mod((int)mp.mem[mp.opcode(3)],mp.reference.height()),
-                                                    cimg::mod((int)mp.mem[mp.opcode(4)],mp.reference.depth()),
-                                                    cimg::mod((int)mp.mem[mp.opcode(5)],mp.reference.spectrum()));
+                                                       cimg::mod((int)mp.mem[mp.opcode(3)],mp.reference.height()),
+                                                       cimg::mod((int)mp.mem[mp.opcode(4)],mp.reference.depth()),
+                                                       cimg::mod((int)mp.mem[mp.opcode(5)],mp.reference.spectrum()));
           if (b==1) return (double)mp.reference.atXYZC((int)mp.mem[mp.opcode(2)],
-                                                    (int)mp.mem[mp.opcode(3)],
-                                                    (int)mp.mem[mp.opcode(4)],
-                                                    (int)mp.mem[mp.opcode(5)]);
+                                                       (int)mp.mem[mp.opcode(3)],
+                                                       (int)mp.mem[mp.opcode(4)],
+                                                       (int)mp.mem[mp.opcode(5)]);
           return (double)mp.reference.atXYZC((int)mp.mem[mp.opcode(2)],
-                                          (int)mp.mem[mp.opcode(3)],
-                                          (int)mp.mem[mp.opcode(4)],
-                                          (int)mp.mem[mp.opcode(5)],0);
+                                             (int)mp.mem[mp.opcode(3)],
+                                             (int)mp.mem[mp.opcode(4)],
+                                             (int)mp.mem[mp.opcode(5)],0);
         } else { // Linear interpolation.
-          if (b==2) return (double)mp.reference.linear_atXYZC(cimg::mod((float)mp.mem[mp.opcode(2)],(float)mp.reference.width()),
-                                                           cimg::mod((float)mp.mem[mp.opcode(3)],(float)mp.reference.height()),
-                                                           cimg::mod((float)mp.mem[mp.opcode(4)],(float)mp.reference.depth()),
-                                                           cimg::mod((float)mp.mem[mp.opcode(5)],(float)mp.reference.spectrum()));
+          if (b==2) return (double)mp.reference.linear_atXYZC(cimg::mod((float)mp.mem[mp.opcode(2)],
+                                                                        (float)mp.reference.width()),
+                                                              cimg::mod((float)mp.mem[mp.opcode(3)],
+                                                                        (float)mp.reference.height()),
+                                                              cimg::mod((float)mp.mem[mp.opcode(4)],
+                                                                        (float)mp.reference.depth()),
+                                                              cimg::mod((float)mp.mem[mp.opcode(5)],
+                                                                        (float)mp.reference.spectrum()));
           if (b==1) return (double)mp.reference.linear_atXYZC((float)mp.mem[mp.opcode(2)],
-                                                           (float)mp.mem[mp.opcode(3)],
-                                                           (float)mp.mem[mp.opcode(4)],
-                                                           (float)mp.mem[mp.opcode(5)]);
+                                                              (float)mp.mem[mp.opcode(3)],
+                                                              (float)mp.mem[mp.opcode(4)],
+                                                              (float)mp.mem[mp.opcode(5)]);
           return (double)mp.reference.linear_atXYZC((float)mp.mem[mp.opcode(2)],
-                                                 (float)mp.mem[mp.opcode(3)],
-                                                 (float)mp.mem[mp.opcode(4)],
-                                                 (float)mp.mem[mp.opcode(5)],0);
+                                                    (float)mp.mem[mp.opcode(3)],
+                                                    (float)mp.mem[mp.opcode(4)],
+                                                    (float)mp.mem[mp.opcode(5)],0);
         }
       }
       static double mp_jxyzc(_cimg_math_parser& mp) {
         const double x = mp.mem[9], y = mp.mem[10], z = mp.mem[11], c = mp.mem[12];
         const int i = (int)mp.mem[mp.opcode(6)], b = (int)mp.mem[mp.opcode(7)];
         if (i==0) { // Nearest neighbor interpolation.
-          if (b==2) return (double)mp.reference.atXYZC(cimg::mod((int)(x+mp.mem[mp.opcode(2)]),mp.reference.width()),
-                                                    cimg::mod((int)(y+mp.mem[mp.opcode(3)]),mp.reference.height()),
-                                                    cimg::mod((int)(z+mp.mem[mp.opcode(4)]),mp.reference.depth()),
-                                                    cimg::mod((int)(c+mp.mem[mp.opcode(5)]),mp.reference.spectrum()));
+          if (b==2) return (double)mp.reference.atXYZC(cimg::mod((int)(x+mp.mem[mp.opcode(2)]),
+                                                                 mp.reference.width()),
+                                                       cimg::mod((int)(y+mp.mem[mp.opcode(3)]),
+                                                                 mp.reference.height()),
+                                                       cimg::mod((int)(z+mp.mem[mp.opcode(4)]),
+                                                                 mp.reference.depth()),
+                                                       cimg::mod((int)(c+mp.mem[mp.opcode(5)]),
+                                                                 mp.reference.spectrum()));
           if (b==1) return (double)mp.reference.atXYZC((int)(x+mp.mem[mp.opcode(2)]),
-                                                    (int)(y+mp.mem[mp.opcode(3)]),
-                                                    (int)(z+mp.mem[mp.opcode(4)]),
-                                                    (int)(c+mp.mem[mp.opcode(5)]));
+                                                       (int)(y+mp.mem[mp.opcode(3)]),
+                                                       (int)(z+mp.mem[mp.opcode(4)]),
+                                                       (int)(c+mp.mem[mp.opcode(5)]));
           return (double)mp.reference.atXYZC((int)(x+mp.mem[mp.opcode(2)]),
-                                          (int)(y+mp.mem[mp.opcode(3)]),
-                                          (int)(z+mp.mem[mp.opcode(4)]),
-                                          (int)(c+mp.mem[mp.opcode(5)]),0);
+                                             (int)(y+mp.mem[mp.opcode(3)]),
+                                             (int)(z+mp.mem[mp.opcode(4)]),
+                                             (int)(c+mp.mem[mp.opcode(5)]),0);
         } else { // Linear interpolation.
-          if (b==2) return (double)mp.reference.linear_atXYZC(cimg::mod((float)(x+mp.mem[mp.opcode(2)]),(float)mp.reference.width()),
-                                                           cimg::mod((float)(y+mp.mem[mp.opcode(3)]),(float)mp.reference.height()),
-                                                           cimg::mod((float)(z+mp.mem[mp.opcode(4)]),(float)mp.reference.depth()),
-                                                           cimg::mod((float)(c+mp.mem[mp.opcode(5)]),(float)mp.reference.spectrum()));
+          if (b==2) return (double)mp.reference.linear_atXYZC(cimg::mod((float)(x+mp.mem[mp.opcode(2)]),
+                                                                        (float)mp.reference.width()),
+                                                              cimg::mod((float)(y+mp.mem[mp.opcode(3)]),
+                                                                        (float)mp.reference.height()),
+                                                              cimg::mod((float)(z+mp.mem[mp.opcode(4)]),
+                                                                        (float)mp.reference.depth()),
+                                                              cimg::mod((float)(c+mp.mem[mp.opcode(5)]),
+                                                                        (float)mp.reference.spectrum()));
           if (b==1) return (double)mp.reference.linear_atXYZC((float)(x+mp.mem[mp.opcode(2)]),
-                                                           (float)(y+mp.mem[mp.opcode(3)]),
-                                                           (float)(z+mp.mem[mp.opcode(4)]),
-                                                           (float)(c+mp.mem[mp.opcode(5)]));
+                                                              (float)(y+mp.mem[mp.opcode(3)]),
+                                                              (float)(z+mp.mem[mp.opcode(4)]),
+                                                              (float)(c+mp.mem[mp.opcode(5)]));
           return (double)mp.reference.linear_atXYZC((float)(x+mp.mem[mp.opcode(2)]),
-                                                 (float)(y+mp.mem[mp.opcode(3)]),
-                                                 (float)(z+mp.mem[mp.opcode(4)]),
-                                                 (float)(c+mp.mem[mp.opcode(5)]),0);
+                                                    (float)(y+mp.mem[mp.opcode(3)]),
+                                                    (float)(z+mp.mem[mp.opcode(4)]),
+                                                    (float)(c+mp.mem[mp.opcode(5)]),0);
         }
       }
       static double mp_min(_cimg_math_parser& mp) {
@@ -20802,172 +20824,6 @@ namespace cimg_library_suffixed {
       return CImg<Tuchar>(*this,false).CMYKtoRGB();
     }
 
-    //! Convert RGB color image to a Bayer-coded scalar image.
-    /**
-       \note First (upper-left) pixel if the red component of the pixel color.
-    **/
-    CImg<T>& RGBtoBayer() {
-      return get_RGBtoBayer().move_to(*this);
-    }
-
-    //! Convert RGB color image to a Bayer-coded scalar image \newinstance.
-    CImg<T> get_RGBtoBayer() const {
-      if (_spectrum!=3)
-        throw CImgInstanceException(_cimg_instance
-                                    "RGBtoBayer(): Instance is not a RGB image.",
-                                    cimg_instance);
-
-      CImg<T> res(_width,_height,_depth,1);
-      const T *ptr_r = data(0,0,0,0), *ptr_g = data(0,0,0,1), *ptr_b = data(0,0,0,2);
-      T *ptrd = res._data;
-      cimg_forXYZ(*this,x,y,z) {
-        if (y%2) {
-          if (x%2) *(ptrd++) = *ptr_b;
-          else *(ptrd++) = *ptr_g;
-        } else {
-          if (x%2) *(ptrd++) = *ptr_g;
-          else *(ptrd++) = *ptr_r;
-        }
-        ++ptr_r; ++ptr_g; ++ptr_b;
-      }
-      return res;
-    }
-
-    //! Convert Bayer-coded scalar image to a RGB color image.
-    CImg<T>& BayertoRGB(const unsigned int interpolation_type=3) {
-      return get_BayertoRGB(interpolation_type).move_to(*this);
-    }
-
-    //! Convert Bayer-coded scalar image to a RGB color image \newinstance.
-    CImg<Tuchar> get_BayertoRGB(const unsigned int interpolation_type=3) const {
-      if (_spectrum!=1)
-        throw CImgInstanceException(_cimg_instance
-                                    "BayertoRGB(): Instance is not a Bayer image.",
-                                    cimg_instance);
-
-      CImg<Tuchar> res(_width,_height,_depth,3);
-      CImg_3x3(I,T);
-      Tuchar *ptr_r = res.data(0,0,0,0), *ptr_g = res.data(0,0,0,1), *ptr_b = res.data(0,0,0,2);
-      switch (interpolation_type) {
-      case 3 : { // Edge-directed
-        CImg_3x3(R,T);
-        CImg_3x3(G,T);
-        CImg_3x3(B,T);
-        cimg_forXYZ(*this,x,y,z) {
-          const int _p1x = x?x-1:1, _p1y = y?y-1:1, _n1x = x<width()-1?x+1:x-1, _n1y = y<height()-1?y+1:y-1;
-          cimg_get3x3(*this,x,y,z,0,I,T);
-          if (y%2) {
-            if (x%2) {
-              const Tfloat
-                alpha = cimg::sqr((Tfloat)Inc - Ipc),
-                beta = cimg::sqr((Tfloat)Icn - Icp),
-                cx = 1/(1+alpha), cy = 1/(1+beta);
-              *ptr_g = (Tuchar)((cx*(Inc+Ipc) + cy*(Icn+Icp))/(2*(cx+cy)));
-            } else *ptr_g = (Tuchar)Icc;
-          } else {
-            if (x%2) *ptr_g = (Tuchar)Icc;
-            else {
-              const Tfloat
-                alpha = cimg::sqr((Tfloat)Inc - Ipc),
-                beta = cimg::sqr((Tfloat)Icn - Icp),
-                cx = 1/(1+alpha), cy = 1/(1+beta);
-              *ptr_g = (Tuchar)((cx*(Inc+Ipc) + cy*(Icn+Icp))/(2*(cx+cy)));
-            }
-          }
-          ++ptr_g;
-        }
-        cimg_forXYZ(*this,x,y,z) {
-          const int _p1x = x?x-1:1, _p1y = y?y-1:1, _n1x = x<width()-1?x+1:x-1, _n1y = y<height()-1?y+1:y-1;
-          cimg_get3x3(*this,x,y,z,0,I,T);
-          cimg_get3x3(res,x,y,z,1,G,T);
-          if (y%2) {
-            if (x%2) *ptr_b = (Tuchar)Icc;
-            else { *ptr_r = (Tuchar)((Icn+Icp)/2); *ptr_b = (Tuchar)((Inc+Ipc)/2); }
-          } else {
-            if (x%2) { *ptr_r = (Tuchar)((Inc+Ipc)/2); *ptr_b = (Tuchar)((Icn+Icp)/2); }
-            else *ptr_r = (Tuchar)Icc;
-          }
-          ++ptr_r; ++ptr_b;
-        }
-        ptr_r = res.data(0,0,0,0);
-        ptr_g = res.data(0,0,0,1);
-        ptr_b = res.data(0,0,0,2);
-        cimg_forXYZ(*this,x,y,z) {
-          const int _p1x = x?x-1:1, _p1y = y?y-1:1, _n1x = x<width()-1?x+1:x-1, _n1y = y<height()-1?y+1:y-1;
-          cimg_get3x3(res,x,y,z,0,R,T);
-          cimg_get3x3(res,x,y,z,1,G,T);
-          cimg_get3x3(res,x,y,z,2,B,T);
-          if (y%2) {
-            if (x%2) {
-              const float
-                alpha = (float)cimg::sqr(Rnc-Rpc),
-                beta = (float)cimg::sqr(Rcn-Rcp),
-                cx = 1/(1+alpha), cy = 1/(1+beta);
-              *ptr_r = (Tuchar)((cx*(Rnc+Rpc) + cy*(Rcn+Rcp))/(2*(cx+cy)));
-            }
-          } else {
-            if (!(x%2)) {
-              const float
-                alpha = (float)cimg::sqr(Bnc-Bpc),
-                beta = (float)cimg::sqr(Bcn-Bcp),
-                cx = 1/(1+alpha), cy = 1/(1+beta);
-              *ptr_b = (Tuchar)((cx*(Bnc+Bpc) + cy*(Bcn+Bcp))/(2*(cx+cy)));
-            }
-          }
-          ++ptr_r; ++ptr_g; ++ptr_b;
-        }
-      } break;
-      case 2 : { // Linear interpolation
-        cimg_forXYZ(*this,x,y,z) {
-          const int _p1x = x?x-1:1, _p1y = y?y-1:1, _n1x = x<width()-1?x+1:x-1, _n1y = y<height()-1?y+1:y-1;
-          cimg_get3x3(*this,x,y,z,0,I,T);
-          if (y%2) {
-            if (x%2) {
-              *ptr_r = (Tuchar)((Ipp+Inn+Ipn+Inp)/4); *ptr_g = (Tuchar)((Inc+Ipc+Icn+Icp)/4); *ptr_b = (Tuchar)Icc;
-            } else { *ptr_r = (Tuchar)((Icp+Icn)/2); *ptr_g = (Tuchar)Icc; *ptr_b = (Tuchar)((Inc+Ipc)/2); }
-          } else {
-            if (x%2) { *ptr_r = (Tuchar)((Ipc+Inc)/2); *ptr_g = (Tuchar)Icc; *ptr_b = (Tuchar)((Icn+Icp)/2); }
-            else {
-              *ptr_r = (Tuchar)Icc; *ptr_g = (Tuchar)((Inc+Ipc+Icn+Icp)/4); *ptr_b = (Tuchar)((Ipp+Inn+Ipn+Inp)/4);
-            }
-          }
-          ++ptr_r; ++ptr_g; ++ptr_b;
-        }
-      } break;
-      case 1 : { // Nearest neighbor interpolation
-        cimg_forXYZ(*this,x,y,z) {
-          const int _p1x = x?x-1:1, _p1y = y?y-1:1, _n1x = x<width()-1?x+1:x-1, _n1y = y<height()-1?y+1:y-1;
-          cimg_get3x3(*this,x,y,z,0,I,T);
-          if (y%2) {
-            if (x%2) {
-              *ptr_r = (Tuchar)cimg::min(Ipp,Inn,Ipn,Inp);
-              *ptr_g = (Tuchar)cimg::min(Inc,Ipc,Icn,Icp);
-              *ptr_b = (Tuchar)Icc;
-            } else { *ptr_r = (Tuchar)cimg::min(Icn,Icp); *ptr_g = (Tuchar)Icc; *ptr_b = (Tuchar)cimg::min(Inc,Ipc); }
-          } else {
-            if (x%2) { *ptr_r = (Tuchar)cimg::min(Inc,Ipc); *ptr_g = (Tuchar)Icc; *ptr_b = (Tuchar)cimg::min(Icn,Icp); }
-            else {
-              *ptr_r = (Tuchar)Icc;
-              *ptr_g = (Tuchar)cimg::min(Inc,Ipc,Icn,Icp);
-              *ptr_b = (Tuchar)cimg::min(Ipp,Inn,Ipn,Inp);
-            }
-          }
-          ++ptr_r; ++ptr_g; ++ptr_b;
-        }
-      } break;
-      default : { // 0-filling interpolation
-        const T *ptrs = _data;
-        res.fill(0);
-        cimg_forXYZ(*this,x,y,z) {
-          const T val = *(ptrs++);
-          if (y%2) { if (x%2) *ptr_b = val; else *ptr_g = val; } else { if (x%2) *ptr_g = val; else *ptr_r = val; }
-          ++ptr_r; ++ptr_g; ++ptr_b;
-        }
-      }
-      }
-      return res;
-    }
-
     //@}
     //------------------------------------------
     //
@@ -24552,26 +24408,35 @@ namespace cimg_library_suffixed {
               if (is_normalized) {
                 const Ttfloat _M = (Ttfloat)_mask.magnitude(2), M = _M*_M;
                 cimg_forZ(_img,z) cimg_for6x6(_img,x,y,z,0,I,T) {
-                  const Ttfloat N = M*(I[ 0]*I[ 0] + I[ 1]*I[ 1] + I[ 2]*I[ 2] + I[ 3]*I[ 3] + I[ 4]*I[ 4] + I[ 5]*I[ 5] +
-                                       I[ 6]*I[ 6] + I[ 7]*I[ 7] + I[ 8]*I[ 8] + I[ 9]*I[ 9] + I[10]*I[10] + I[11]*I[11] +
-                                       I[12]*I[12] + I[13]*I[13] + I[14]*I[14] + I[15]*I[15] + I[16]*I[16] + I[17]*I[17] +
-                                       I[18]*I[18] + I[19]*I[19] + I[20]*I[20] + I[21]*I[21] + I[22]*I[22] + I[23]*I[23] +
-                                       I[24]*I[24] + I[25]*I[25] + I[26]*I[26] + I[27]*I[27] + I[28]*I[28] + I[29]*I[29] +
-                                       I[30]*I[30] + I[31]*I[31] + I[32]*I[32] + I[33]*I[33] + I[34]*I[34] + I[35]*I[35]);
-                  *(ptrd++) = (Ttfloat)(N?(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] + I[ 4]*_mask[ 4] + I[ 5]*_mask[ 5] +
-                                           I[ 6]*_mask[ 6] + I[ 7]*_mask[ 7] + I[ 8]*_mask[ 8] + I[ 9]*_mask[ 9] + I[10]*_mask[10] + I[11]*_mask[11] +
-                                           I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] + I[15]*_mask[15] + I[16]*_mask[16] + I[17]*_mask[17] +
-                                           I[18]*_mask[18] + I[19]*_mask[19] + I[20]*_mask[20] + I[21]*_mask[21] + I[22]*_mask[22] + I[23]*_mask[23] +
-                                           I[24]*_mask[24] + I[25]*_mask[25] + I[26]*_mask[26] + I[27]*_mask[27] + I[28]*_mask[28] + I[29]*_mask[29] +
-                                           I[30]*_mask[30] + I[31]*_mask[31] + I[32]*_mask[32] + I[33]*_mask[33] + I[34]*_mask[34] + I[35]*_mask[35])/std::sqrt(N):0);
+                  const Ttfloat N = M*(I[ 0]*I[ 0] + I[ 1]*I[ 1] + I[ 2]*I[ 2] + I[ 3]*I[ 3] + I[ 4]*I[ 4] +
+                                       I[ 5]*I[ 5] + I[ 6]*I[ 6] + I[ 7]*I[ 7] + I[ 8]*I[ 8] + I[ 9]*I[ 9] +
+                                       I[10]*I[10] + I[11]*I[11] + I[12]*I[12] + I[13]*I[13] + I[14]*I[14] +
+                                       I[15]*I[15] + I[16]*I[16] + I[17]*I[17] + I[18]*I[18] + I[19]*I[19] +
+                                       I[20]*I[20] + I[21]*I[21] + I[22]*I[22] + I[23]*I[23] + I[24]*I[24] +
+                                       I[25]*I[25] + I[26]*I[26] + I[27]*I[27] + I[28]*I[28] + I[29]*I[29] +
+                                       I[30]*I[30] + I[31]*I[31] + I[32]*I[32] + I[33]*I[33] + I[34]*I[34] +
+                                       I[35]*I[35]);
+                  *(ptrd++) = (Ttfloat)(N?(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] +
+                                           I[ 4]*_mask[ 4] + I[ 5]*_mask[ 5] + I[ 6]*_mask[ 6] + I[ 7]*_mask[ 7] +
+                                           I[ 8]*_mask[ 8] + I[ 9]*_mask[ 9] + I[10]*_mask[10] + I[11]*_mask[11] +
+                                           I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] + I[15]*_mask[15] +
+                                           I[16]*_mask[16] + I[17]*_mask[17] + I[18]*_mask[18] + I[19]*_mask[19] +
+                                           I[20]*_mask[20] + I[21]*_mask[21] + I[22]*_mask[22] + I[23]*_mask[23] +
+                                           I[24]*_mask[24] + I[25]*_mask[25] + I[26]*_mask[26] + I[27]*_mask[27] +
+                                           I[28]*_mask[28] + I[29]*_mask[29] + I[30]*_mask[30] + I[31]*_mask[31] +
+                                           I[32]*_mask[32] + I[33]*_mask[33] + I[34]*_mask[34] + I[35]*_mask[35])/
+                                        std::sqrt(N):0);
                 }
               } else cimg_forZ(_img,z) cimg_for6x6(_img,x,y,z,0,I,T)
-                       *(ptrd++) = (Ttfloat)(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] + I[ 4]*_mask[ 4] + I[ 5]*_mask[ 5] +
-                                             I[ 6]*_mask[ 6] + I[ 7]*_mask[ 7] + I[ 8]*_mask[ 8] + I[ 9]*_mask[ 9] + I[10]*_mask[10] + I[11]*_mask[11] +
-                                             I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] + I[15]*_mask[15] + I[16]*_mask[16] + I[17]*_mask[17] +
-                                             I[18]*_mask[18] + I[19]*_mask[19] + I[20]*_mask[20] + I[21]*_mask[21] + I[22]*_mask[22] + I[23]*_mask[23] +
-                                             I[24]*_mask[24] + I[25]*_mask[25] + I[26]*_mask[26] + I[27]*_mask[27] + I[28]*_mask[28] + I[29]*_mask[29] +
-                                             I[30]*_mask[30] + I[31]*_mask[31] + I[32]*_mask[32] + I[33]*_mask[33] + I[34]*_mask[34] + I[35]*_mask[35]);
+                       *(ptrd++) = (Ttfloat)(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] +
+                                             I[ 4]*_mask[ 4] + I[ 5]*_mask[ 5] + I[ 6]*_mask[ 6] + I[ 7]*_mask[ 7] +
+                                             I[ 8]*_mask[ 8] + I[ 9]*_mask[ 9] + I[10]*_mask[10] + I[11]*_mask[11] +
+                                             I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] + I[15]*_mask[15] +
+                                             I[16]*_mask[16] + I[17]*_mask[17] + I[18]*_mask[18] + I[19]*_mask[19] +
+                                             I[20]*_mask[20] + I[21]*_mask[21] + I[22]*_mask[22] + I[23]*_mask[23] +
+                                             I[24]*_mask[24] + I[25]*_mask[25] + I[26]*_mask[26] + I[27]*_mask[27] +
+                                             I[28]*_mask[28] + I[29]*_mask[29] + I[30]*_mask[30] + I[31]*_mask[31] +
+                                             I[32]*_mask[32] + I[33]*_mask[33] + I[34]*_mask[34] + I[35]*_mask[35]);
             }
           } break;
           case 5 : {
@@ -24587,18 +24452,22 @@ namespace cimg_library_suffixed {
                                        I[10]*I[10] + I[11]*I[11] + I[12]*I[12] + I[13]*I[13] + I[14]*I[14] +
                                        I[15]*I[15] + I[16]*I[16] + I[17]*I[17] + I[18]*I[18] + I[19]*I[19] +
                                        I[20]*I[20] + I[21]*I[21] + I[22]*I[22] + I[23]*I[23] + I[24]*I[24]);
-                  *(ptrd++) = (Ttfloat)(N?(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] + I[ 4]*_mask[ 4] +
-                                           I[ 5]*_mask[ 5] + I[ 6]*_mask[ 6] + I[ 7]*_mask[ 7] + I[ 8]*_mask[ 8] + I[ 9]*_mask[ 9] +
-                                           I[10]*_mask[10] + I[11]*_mask[11] + I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] +
-                                           I[15]*_mask[15] + I[16]*_mask[16] + I[17]*_mask[17] + I[18]*_mask[18] + I[19]*_mask[19] +
-                                           I[20]*_mask[20] + I[21]*_mask[21] + I[22]*_mask[22] + I[23]*_mask[23] + I[24]*_mask[24])/std::sqrt(N):0);
+                  *(ptrd++) = (Ttfloat)(N?(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] +
+                                           I[ 4]*_mask[ 4] + I[ 5]*_mask[ 5] + I[ 6]*_mask[ 6] + I[ 7]*_mask[ 7] +
+                                           I[ 8]*_mask[ 8] + I[ 9]*_mask[ 9] + I[10]*_mask[10] + I[11]*_mask[11] +
+                                           I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] + I[15]*_mask[15] +
+                                           I[16]*_mask[16] + I[17]*_mask[17] + I[18]*_mask[18] + I[19]*_mask[19] +
+                                           I[20]*_mask[20] + I[21]*_mask[21] + I[22]*_mask[22] + I[23]*_mask[23] +
+                                           I[24]*_mask[24])/std::sqrt(N):0);
                 }
               } else cimg_forZ(_img,z) cimg_for5x5(_img,x,y,z,0,I,T)
-                       *(ptrd++) = (Ttfloat)(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] + I[ 4]*_mask[ 4] +
-                                             I[ 5]*_mask[ 5] + I[ 6]*_mask[ 6] + I[ 7]*_mask[ 7] + I[ 8]*_mask[ 8] + I[ 9]*_mask[ 9] +
-                                             I[10]*_mask[10] + I[11]*_mask[11] + I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] +
-                                             I[15]*_mask[15] + I[16]*_mask[16] + I[17]*_mask[17] + I[18]*_mask[18] + I[19]*_mask[19] +
-                                             I[20]*_mask[20] + I[21]*_mask[21] + I[22]*_mask[22] + I[23]*_mask[23] + I[24]*_mask[24]);
+                       *(ptrd++) = (Ttfloat)(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] +
+                                             I[ 4]*_mask[ 4] + I[ 5]*_mask[ 5] + I[ 6]*_mask[ 6] + I[ 7]*_mask[ 7] +
+                                             I[ 8]*_mask[ 8] + I[ 9]*_mask[ 9] + I[10]*_mask[10] + I[11]*_mask[11] +
+                                             I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] + I[15]*_mask[15] +
+                                             I[16]*_mask[16] + I[17]*_mask[17] + I[18]*_mask[18] + I[19]*_mask[19] +
+                                             I[20]*_mask[20] + I[21]*_mask[21] + I[22]*_mask[22] + I[23]*_mask[23] +
+                                             I[24]*_mask[24]);
             }
           } break;
           case 4 : {
@@ -24616,7 +24485,8 @@ namespace cimg_library_suffixed {
                   *(ptrd++) = (Ttfloat)(N?(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] +
                                            I[ 4]*_mask[ 4] + I[ 5]*_mask[ 5] + I[ 6]*_mask[ 6] + I[ 7]*_mask[ 7] +
                                            I[ 8]*_mask[ 8] + I[ 9]*_mask[ 9] + I[10]*_mask[10] + I[11]*_mask[11] +
-                                           I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] + I[15]*_mask[15])/std::sqrt(N):0);
+                                           I[12]*_mask[12] + I[13]*_mask[13] + I[14]*_mask[14] + I[15]*_mask[15])/
+                                        std::sqrt(N):0);
                 }
               } else cimg_forZ(_img,z) cimg_for4x4(_img,x,y,z,0,I,T)
                        *(ptrd++) = (Ttfloat)(I[ 0]*_mask[ 0] + I[ 1]*_mask[ 1] + I[ 2]*_mask[ 2] + I[ 3]*_mask[ 3] +
@@ -26240,11 +26110,11 @@ namespace cimg_library_suffixed {
 
     //! Blur image anisotropically, directed by a field of diffusion tensors \newinstance.
     template<typename t>
-    CImg<T> get_blur_anisotropic(const CImg<t>& G,
-                                 const float amplitude=60, const float dl=0.8f, const float da=30,
-                                 const float gauss_prec=2, const unsigned int interpolation_type=0,
-                                 const bool is_fast_approx=true) const {
-      return (+*this).blur_anisotropic(G,amplitude,dl,da,gauss_prec,interpolation_type,is_fast_approx);
+    CImg<Tfloat> get_blur_anisotropic(const CImg<t>& G,
+                                      const float amplitude=60, const float dl=0.8f, const float da=30,
+                                      const float gauss_prec=2, const unsigned int interpolation_type=0,
+                                      const bool is_fast_approx=true) const {
+      return CImg<Tfloat>(*this,false).blur_anisotropic(G,amplitude,dl,da,gauss_prec,interpolation_type,is_fast_approx);
     }
 
     //! Blur image anisotropically, in an edge-preserving way.
@@ -26270,12 +26140,13 @@ namespace cimg_library_suffixed {
     }
 
     //! Blur image anisotropically, in an edge-preserving way \newinstance.
-    CImg<T> get_blur_anisotropic(const float amplitude, const float sharpness=0.7f, const float anisotropy=0.6f,
-                                 const float alpha=0.6f, const float sigma=1.1f, const float dl=0.8f,
-                                 const float da=30, const float gauss_prec=2, const unsigned int interpolation_type=0,
-                                 const bool is_fast_approx=true) const {
-      return (+*this).blur_anisotropic(amplitude,sharpness,anisotropy,alpha,sigma,dl,da,gauss_prec,interpolation_type,
-                                       is_fast_approx);
+    CImg<Tfloat> get_blur_anisotropic(const float amplitude, const float sharpness=0.7f, const float anisotropy=0.6f,
+                                      const float alpha=0.6f, const float sigma=1.1f, const float dl=0.8f,
+                                      const float da=30, const float gauss_prec=2,
+                                      const unsigned int interpolation_type=0,
+                                      const bool is_fast_approx=true) const {
+      return CImg<Tfloat>(*this,false).blur_anisotropic(amplitude,sharpness,anisotropy,alpha,sigma,dl,da,gauss_prec,
+                                                        interpolation_type,is_fast_approx);
     }
 
     //! Blur image, with the joint bilateral filter.
@@ -26285,10 +26156,14 @@ namespace cimg_library_suffixed {
        \param sigma_y Amount of blur along the Y-axis.
        \param sigma_z Amount of blur along the Z-axis.
        \param sigma_r Amount of blur along the value axis.
-       \param sampling_x Amount of downsampling along the X-axis used for the approximation. Defaults (0) to sigma_x.
-       \param sampling_y Amount of downsampling along the Y-axis used for the approximation. Defaults (0) to sigma_y.
-       \param sampling_z Amount of downsampling along the Z-axis used for the approximation. Defaults (0) to sigma_z.
-       \param sampling_r Amount of downsampling along the value axis used for the approximation. Defaults (0) to sigma_r.
+       \param sampling_x Amount of downsampling along the X-axis used for the approximation.
+         Defaults (0) to sigma_x.
+       \param sampling_y Amount of downsampling along the Y-axis used for the approximation.
+         Defaults (0) to sigma_y.
+       \param sampling_z Amount of downsampling along the Z-axis used for the approximation.
+         Defaults (0) to sigma_z.
+       \param sampling_r Amount of downsampling along the value axis used for the approximation.
+         Defaults (0) to sigma_r.
        \note This algorithm uses the optimisation technique proposed by S. Paris and F. Durand, in ECCV'2006
        (extended for 3d volumetric images).
        It is based on the reference implementation http://people.csail.mit.edu/jiawen/software/bilateralFilter.m
@@ -26395,12 +26270,13 @@ namespace cimg_library_suffixed {
 
     //! Blur image, with the joint bilateral filter \newinstance.
     template<typename t>
-    CImg<T> get_blur_bilateral(const CImg<t>& guide,
-                               const float sigma_x, const float sigma_y,
-                               const float sigma_z, const float sigma_r,
-                               const float sampling_x, const float sampling_y,
-                               const float sampling_z, const float sampling_r) const {
-      return (+*this).blur_bilateral(guide,sigma_x,sigma_y,sigma_z,sigma_r,sampling_x,sampling_y,sampling_z,sampling_r);
+    CImg<Tfloat> get_blur_bilateral(const CImg<t>& guide,
+                                    const float sigma_x, const float sigma_y,
+                                    const float sigma_z, const float sigma_r,
+                                    const float sampling_x, const float sampling_y,
+                                    const float sampling_z, const float sampling_r) const {
+      return CImg<Tfloat>(*this,false).blur_bilateral(guide,sigma_x,sigma_y,sigma_z,sigma_r,
+                                                      sampling_x,sampling_y,sampling_z,sampling_r);
     }
 
     //! Blur image using the joint bilateral filter.
@@ -26421,10 +26297,10 @@ namespace cimg_library_suffixed {
 
     //! Blur image using the bilateral filter \newinstance.
     template<typename t>
-    CImg<T> get_blur_bilateral(const CImg<t>& guide,
-                               const float sigma_s, const float sigma_r,
-                               const float sampling_s=0, const float sampling_r=0) const {
-      return (+*this).blur_bilateral(guide,sigma_s,sigma_r,sampling_s,sampling_r);
+    CImg<Tfloat> get_blur_bilateral(const CImg<t>& guide,
+                                    const float sigma_s, const float sigma_r,
+                                    const float sampling_s=0, const float sampling_r=0) const {
+      return CImg<Tfloat>(*this,false).blur_bilateral(guide,sigma_s,sigma_r,sampling_s,sampling_r);
     }
 
     //! Blur image, with the image guided filter.
@@ -26500,9 +26376,9 @@ namespace cimg_library_suffixed {
     }
 
     //! Blur image using patch-based space \newinstance.
-    CImg<T> get_blur_patch(const float sigma_s, const float sigma_p, const unsigned int patch_size=3,
-                           const unsigned int lookup_size=4, const float smoothness=0,
-                           const bool is_fast_approx=true) const {
+    CImg<Tfloat> get_blur_patch(const float sigma_s, const float sigma_p, const unsigned int patch_size=3,
+                                const unsigned int lookup_size=4, const float smoothness=0,
+                                const bool is_fast_approx=true) const {
 
 #define _cimg_blur_patch3d_fast(N) \
       cimg_for##N##XYZ(res,x,y,z) { \
@@ -28736,27 +28612,12 @@ namespace cimg_library_suffixed {
           else cimg_forZ(real,z) { ptrr-=off; ptri-=off; *ptri = (T)*(--ptrd); *ptrr = (T)*(--ptrd); }
         }
       } break;
-      default : { // Fourier along C, using FFTW library.
-        data_in = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * real._spectrum);
-        if (!data_in) throw CImgInstanceException("CImgList<%s>::FFT(): Failed to allocate memory (%s) "
-                                                  "for computing FFT of image (%u,%u,%u,%u) along the C-axis.",
-                                                  pixel_type(),
-                                                  cimg::strbuffersize(sizeof(fftw_complex)*real._spectrum),
-                                                  real._width,real._height,real._depth,real._spectrum);
-
-        data_plan = fftw_plan_dft_1d(real._spectrum,data_in,data_in,is_invert?FFTW_BACKWARD:FFTW_FORWARD,FFTW_ESTIMATE);
-        const unsigned long off = (unsigned long)real._width*real._height*real._depth;
-        cimg_forXYZ(real,x,y,z) {
-          T *ptrr = real.data(x,y,z,0), *ptri = imag.data(x,y,z,0);
-          double *ptrd = (double*)data_in;
-          cimg_forC(real,c) { *(ptrd++) = (double)*ptrr; *(ptrd++) = (double)*ptri; ptrr+=off; ptri+=off; }
-          fftw_execute(data_plan);
-          const unsigned int fact = real._spectrum;
-          if (is_invert)
-            cimg_forC(real,c) { ptrr-=off; ptri-=off; *ptri = (T)(*(--ptrd)/fact); *ptrr = (T)(*(--ptrd)/fact); }
-          else cimg_forC(real,c) { ptrr-=off; ptri-=off; *ptri = (T)*(--ptrd); *ptrr = (T)*(--ptrd); }
-        }
-      }
+      default :
+        throw CImgArgumentException("CImgList<%s>::FFT(): Invalid specified axis '%c' for real and imaginary parts "
+                                    "(%u,%u,%u,%u) "
+                                    "(should be { x | y | z }).",
+                                    pixel_type(),axis,
+                                    real._width,real._height,real._depth,real._spectrum);
       }
       fftw_destroy_plan(data_plan);
       fftw_free(data_in);
@@ -38215,7 +38076,7 @@ namespace cimg_library_suffixed {
                  !cimg::strcasecmp(ext,"vob") ||
                  !cimg::strcasecmp(ext,"wmv") ||
                  !cimg::strcasecmp(ext,"xvid") ||
-                 !cimg::strcasecmp(ext,"mpeg")) load_ffmpeg(filename);
+                 !cimg::strcasecmp(ext,"mpeg")) load_video(filename);
         else throw CImgIOException("CImg<%s>::load()",
                                    pixel_type());
       } catch (CImgIOException&) {
@@ -40474,34 +40335,6 @@ namespace cimg_library_suffixed {
       return *this;
     }
 
-    //! Load image sequence using FFMPEG av's libraries.
-    /**
-      \param filename Filename, as a C-string.
-      \param first_frame Index of the first frame to read.
-      \param last_frame Index of the last frame to read.
-      \param step_frame Step value for frame reading.
-      \param pixel_format To be documented.
-      \param resume To be documented.
-      \param axis Appending axis, if file contains multiple images. Can be <tt>{ 'x' | 'y' | 'z' | 'c' }</tt>.
-      \param align Appending alignment.
-    **/
-    CImg<T>& load_ffmpeg(const char *const filename,
-                         const unsigned int first_frame=0, const unsigned int last_frame=~0U,
-			 const unsigned int step_frame=1, const bool pixel_format=true, const bool resume=false,
-			 const char axis='z', const float align=0) {
-      return get_load_ffmpeg(filename,first_frame,last_frame,step_frame,pixel_format,resume,axis,align).move_to(*this);
-    }
-
-    //! Load image sequence using FFMPEG av's libraries \newinstance.
-    static CImg<T> get_load_ffmpeg(const char *const filename,
-                                   const unsigned int first_frame=0, const unsigned int last_frame=~0U,
-				   const unsigned int step_frame=1, const bool pixel_format=true,
-                                   const bool resume=false,
-				   const char axis='z', const float align=0) {
-      return CImgList<T>().load_ffmpeg(filename,first_frame,last_frame,step_frame,pixel_format,resume).
-        get_append(axis,align);
-    }
-
     //! Load image sequence from a YUV file.
     /**
       \param filename Filename, as a C-string.
@@ -40770,6 +40603,28 @@ namespace cimg_library_suffixed {
                    cimg_instance,
                    primitives._width,nb_primitives,filename?filename:"(FILE*)");
       return *this;
+    }
+
+    //! Load image sequence from a video file, using OpenCV library.
+    /**
+      \param filename Filename, as a C-string.
+      \param first_frame Index of the first frame to read.
+      \param last_frame Index of the last frame to read.
+      \param step_frame Step value for frame reading.
+    **/
+    CImg<T>& load_video(const char *const filename,
+                        const unsigned int first_frame=0, const unsigned int last_frame=~0U,
+                        const unsigned int step_frame=1,
+                        const char axis='z', const float align=0) {
+      return get_load_video(filename,first_frame,last_frame,step_frame,axis,align).move_to(*this);
+    }
+
+    //! Load image sequence from a video file, using OpenCV library \newinstance.
+    static CImg<T> get_load_video(const char *const filename,
+                                  const unsigned int first_frame=0, const unsigned int last_frame=~0U,
+                                  const unsigned int step_frame=1,
+                                  const char axis='z', const float align=0) {
+      return CImgList<T>().load_video(filename,first_frame,last_frame,step_frame).get_append(axis,align);
     }
 
     //! Load image sequence using FFMPEG's external tool 'ffmpeg'.
@@ -41106,12 +40961,16 @@ namespace cimg_library_suffixed {
                                     camera_index);
       static CvCapture *capture[256] = { 0 };
       if (release_camera) {
+        cimg::mutex(9);
         if (capture[camera_index]) cvReleaseCapture(&(capture[camera_index]));
         capture[camera_index] = 0;
+        cimg::mutex(9,0);
         return *this;
       }
       if (!capture[camera_index]) {
+        cimg::mutex(9);
         capture[camera_index] = cvCreateCameraCapture(camera_index);
+        cimg::mutex(9,0);
         if (!capture[camera_index]) {
           throw CImgIOException(_cimg_instance
                                 "load_camera(): Failed to initialize camera #%u.",
@@ -41119,6 +40978,7 @@ namespace cimg_library_suffixed {
                                 camera_index);
         }
       }
+      cimg::mutex(9);
       if (capture_width) cvSetCaptureProperty(capture[camera_index],CV_CAP_PROP_FRAME_WIDTH,capture_width);
       if (capture_height) cvSetCaptureProperty(capture[camera_index],CV_CAP_PROP_FRAME_HEIGHT,capture_height);
       const IplImage *img = 0;
@@ -41136,6 +40996,7 @@ namespace cimg_library_suffixed {
             *(ptr_b++) = (T)*(ptrs++); *(ptr_g++) = (T)*(ptrs++); *(ptr_r++) = (T)*(ptrs++);
           }
       }
+      cimg::mutex(9,0);
       return *this;
 #else
       cimg::unused(camera_index,skip_frames,release_camera,capture_width,capture_height);
@@ -42363,7 +42224,7 @@ namespace cimg_library_suffixed {
                !cimg::strcasecmp(ext,"vob") ||
                !cimg::strcasecmp(ext,"wmv") ||
                !cimg::strcasecmp(ext,"xvid") ||
-               !cimg::strcasecmp(ext,"mpeg")) return save_ffmpeg(fn);
+               !cimg::strcasecmp(ext,"mpeg")) return save_video(fn);
       return save_other(fn);
     }
 
@@ -44094,41 +43955,6 @@ namespace cimg_library_suffixed {
       return *this;
     }
 
-    //! Save image as a video file, using the FFmpeg library.
-    /**
-      \param filename Filename, as a C-string.
-      \param fps Video framerate.
-      \param bitrate Video bitrate.
-      \note
-      - Each slice of the instance image is considered to be a single frame of the output video file.
-      - This method uses functions provided by the <a href="http://www.ffmpeg.org">FFmpeg</a> library.
-      Configuration macro \c cimg_use_ffmpeg must be set for the method to succeed natively.
-      Otherwise, the method calls
-      save_ffmpeg_external(const char*,unsigned int,unsigned int,const char*,unsigned int,unsigned int) const.
-    **/
-    const CImg<T>& save_ffmpeg(const char *const filename, const unsigned int fps=25,
-                               const unsigned int bitrate=2048) const {
-      if (!filename)
-        throw CImgArgumentException(_cimg_instance
-                                    "save_ffmpeg(): Specified filename is (null).",
-                                    cimg_instance);
-      if (!fps)
-        throw CImgArgumentException(_cimg_instance
-                                    "save_ffmpeg(): Invalid specified framerate 0, for file '%s'.",
-                                    cimg_instance,
-                                    filename);
-      if (is_empty()) { cimg::fempty(0,filename); return *this; }
-
-#ifndef cimg_use_ffmpeg
-      return save_ffmpeg_external(filename,0,fps,bitrate);
-#else
-      CImgList<T> list;
-      get_split('z').move_to(list);
-      list.save_ffmpeg(filename,fps,bitrate);
-      return *this;
-#endif
-    }
-
     //! Save image as a .yuv video file.
     /**
        \param filename Filename, as a C-string.
@@ -44258,11 +44084,28 @@ namespace cimg_library_suffixed {
       return *this;
     }
 
+    //! Save volumetric image as a video, using the OpenCV library.
+    /**
+      \param filename Filename to write data to.
+      \param fps Number of frames per second.
+      \param codec Type of compression (See http://www.fourcc.org/codecs.php to see available codecs).
+      \param keep_open Tells if the video writer associated to the specified filename
+        must be kept open or not (to allow frames to be added in the same file afterwards).
+    **/
+    const CImg<T>& save_video(const char *const filename, const unsigned int fps=25,
+                              const char *codec=0, const bool keep_open=false) const {
+      if (is_empty()) { CImgList<T>().save_video(filename,fps,codec,keep_open); return *this; }
+      CImgList<T> list;
+      get_split('z').move_to(list);
+      list.save_video(filename,fps,codec,keep_open);
+      return *this;
+    }
+
     //! Save volumetric image as a video, using ffmpeg external binary.
     /**
        \param filename Filename, as a C-string.
-       \param codec Video codec, as a C-string.
        \param fps Video framerate.
+       \param codec Video codec, as a C-string.
        \param bitrate Video bitrate.
        \note
        - Each slice of the instance image is considered to be a single frame of the output video file.
@@ -44270,8 +44113,8 @@ namespace cimg_library_suffixed {
          <a href="http://www.ffmpeg.org">FFmpeg</a>.
        It must be installed for the method to succeed.
     **/
-    const CImg<T>& save_ffmpeg_external(const char *const filename, const char *const codec=0,
-                                        const unsigned int fps=25, const unsigned int bitrate=2048) const {
+    const CImg<T>& save_ffmpeg_external(const char *const filename, const unsigned int fps=25,
+                                        const char *const codec=0, const unsigned int bitrate=2048) const {
       if (!filename)
         throw CImgArgumentException(_cimg_instance
                                     "save_ffmpeg_external(): Specified filename is (null).",
@@ -44280,7 +44123,7 @@ namespace cimg_library_suffixed {
 
       CImgList<T> list;
       get_split('z').move_to(list);
-      list.save_ffmpeg_external(filename,codec,fps,bitrate);
+      list.save_ffmpeg_external(filename,fps,codec,bitrate);
       return *this;
     }
 
@@ -46334,7 +46177,8 @@ namespace cimg_library_suffixed {
           _data = new_data;
         } else if (npos!=_width-1)
           std::memmove(_data+npos+1,_data+npos,sizeof(CImg<T>)*(_width-1-npos)); // Insert without re-allocation.
-        _data[npos]._width = _data[npos]._height = _data[npos]._depth = _data[npos]._spectrum = 0; _data[npos]._data = 0;
+        _data[npos]._width = _data[npos]._height = _data[npos]._depth = _data[npos]._spectrum = 0;
+        _data[npos]._data = 0;
         _data[npos] = img;
       }
       return *this;
@@ -47142,7 +46986,7 @@ namespace cimg_library_suffixed {
                  !cimg::strcasecmp(ext,"vob") ||
                  !cimg::strcasecmp(ext,"wmv") ||
                  !cimg::strcasecmp(ext,"xvid") ||
-                 !cimg::strcasecmp(ext,"mpeg")) load_ffmpeg(filename);
+                 !cimg::strcasecmp(ext,"mpeg")) load_video(filename);
         else if (!cimg::strcasecmp(ext,"gz")) load_gzip_external(filename);
         else throw CImgIOException("CImgList<%s>::load()",
                                    pixel_type());
@@ -47725,173 +47569,163 @@ namespace cimg_library_suffixed {
       return *this;
     }
 
-    //! Load an image from a video file, using ffmpeg libraries.
+    //! Load an image from a video file, using OpenCV library.
     /**
       \param filename Filename, as a C-string.
       \param first_frame Index of the first frame to read.
       \param last_frame Index of the last frame to read.
       \param step_frame Step value for frame reading.
-      \param pixel_format To be documented.
-      \param resume To be documented.
+      \note If step_frame==0, the current video stream is open or released without any frames read.
     **/
-    // This piece of code has been firstly created by David Starweather (starkdg(at)users(dot)sourceforge(dot)net)
-    // I modified it afterwards for direct inclusion in the library core.
-    CImgList<T>& load_ffmpeg(const char *const filename,
-                             const unsigned int first_frame=0, const unsigned int last_frame=~0U,
-			     const unsigned int step_frame=1, const bool pixel_format=true, const bool resume=false) {
-      if (!filename)
+    CImgList<T>& load_video(const char *const filename,
+                            const unsigned int first_frame=0, const unsigned int last_frame=~0U,
+                            const unsigned int step_frame=1) {
+#ifndef cimg_use_opencv
+      if (first_frame || last_frame!=~0U || step_frame>1)
         throw CImgArgumentException(_cimglist_instance
-                                    "load_ffmpeg(): Specified filename is (null).",
-                                    cimglist_instance);
-
-      const unsigned int
-	nfirst_frame = first_frame<last_frame?first_frame:last_frame,
-	nlast_frame = first_frame<last_frame?last_frame:first_frame,
-	nstep_frame = step_frame?step_frame:1;
-      assign();
-
-#ifndef cimg_use_ffmpeg
-      if ((nfirst_frame || nlast_frame!=~0U || nstep_frame>1) || (resume && (pixel_format || !pixel_format)))
-        throw CImgArgumentException(_cimglist_instance
-                                    "load_ffmpeg(): Unable to load sub-frames from file '%s' unless libffmpeg "
-                                    "is enabled.",
-                                    cimglist_instance,
-                                    filename);
-
+                                    "load_video() : File '%s', arguments 'first_frame', 'last_frame' "
+                                    "and 'step_frame' can be only set when using OpenCV "
+                                    "(-Dcimg_use_opencv must be enabled).",
+                                    cimglist_instance,filename);
       return load_ffmpeg_external(filename);
 #else
-      const PixelFormat ffmpeg_pixfmt = pixel_format?PIX_FMT_RGB24:PIX_FMT_GRAY8;
-      avcodec_register_all();
-      av_register_all();
-      static AVFormatContext *format_ctx = 0;
-      static AVCodecContext *codec_ctx = 0;
-      static AVCodec *codec = 0;
-      static AVFrame *avframe = avcodec_alloc_frame(), *converted_frame = avcodec_alloc_frame();
-      static int vstream = 0;
+      static CvCapture *captures[32] = { 0 };
+      static CImgList<charT> filenames(32);
+      static CImg<uintT> positions(32,1,1,1,0);
+      static int last_used_index = -1;
 
-      if (resume) {
-        if (!format_ctx || !codec_ctx || !codec || !avframe || !converted_frame)
-          throw CImgArgumentException(_cimglist_instance
-                                      "load_ffmpeg(): Failed to resume loading of file '%s', "
-                                      "due to unallocated FFMPEG structures.",
-                                      cimglist_instance,
-                                      filename);
-      } else {
-        // Open video file, find main video stream and codec.
-        if (format_ctx) avformat_close_input(&format_ctx);
-        if (avformat_open_input(&format_ctx,filename,0,0)!=0)
-          throw CImgIOException(_cimglist_instance
-                                "load_ffmpeg(): Failed to open file '%s'.",
-                                cimglist_instance,
-                                filename);
-
-        if (!avframe || !converted_frame || avformat_find_stream_info(format_ctx,NULL)<0) {
-          avformat_close_input(&format_ctx); format_ctx = 0;
-          return load_ffmpeg_external(filename);
-        }
-#if cimg_verbosity>=3
-        dump_format(format_ctx,0,0,0);
-#endif
-
-        // Special command: Return informations on main video stream.
-        // as a vector 1x4 containing: (nb_frames,width,height,fps).
-        if (!first_frame && !last_frame && !step_frame) {
-          for (vstream = 0; vstream<(int)(format_ctx->nb_streams); ++vstream)
-            if (format_ctx->streams[vstream]->codec->codec_type==AVMEDIA_TYPE_VIDEO) break;
-          if (vstream==(int)format_ctx->nb_streams) assign();
-          else {
-            CImgList<doubleT> timestamps;
-            int nb_frames;
-            AVPacket packet;
-            // Count frames and store timestamps.
-            for (nb_frames = 0; av_read_frame(format_ctx,&packet)>=0; av_free_packet(&packet))
-              if (packet.stream_index==vstream) {
-                CImg<doubleT>::vector((double)packet.pts).move_to(timestamps);
-                ++nb_frames;
-              }
-            // Get frame with, height and fps.
-            const int
-              framew = format_ctx->streams[vstream]->codec->width,
-              frameh = format_ctx->streams[vstream]->codec->height;
-            const float
-              num = (float)(format_ctx->streams[vstream]->r_frame_rate).num,
-              den = (float)(format_ctx->streams[vstream]->r_frame_rate).den,
-              fps = num/den;
-            // Return infos as a list.
-            assign(2);
-            (*this)[0].assign(1,4).fill((T)nb_frames,(T)framew,(T)frameh,(T)fps);
-            (*this)[1] = (timestamps>'y');
+      // Dtect if a video capture already exists for the specified filename.
+      cimg::mutex(9);
+      int index = -1;
+      if (filename) {
+        if (last_used_index>=0 && !std::strcmp(filename,filenames[last_used_index])) {
+          index = last_used_index;
+        } else cimglist_for(filenames,l) if (filenames[l] && !std::strcmp(filename,filenames[l])) {
+            index = l; break;
           }
-          avformat_close_input(&format_ctx); format_ctx = 0;
-          return *this;
-        }
+      } else index = last_used_index;
+      cimg::mutex(9,0);
 
-        for (vstream = 0; vstream<(int)(format_ctx->nb_streams) &&
-               format_ctx->streams[vstream]->codec->codec_type!=AVMEDIA_TYPE_VIDEO; ) ++vstream;
-        if (vstream==(int)format_ctx->nb_streams) {
-          avformat_close_input(&format_ctx); format_ctx = 0;
-          return load_ffmpeg_external(filename);
-        }
-        codec_ctx = format_ctx->streams[vstream]->codec;
-        codec = avcodec_find_decoder(codec_ctx->codec_id);
-        if (!codec) {
-          return load_ffmpeg_external(filename);
-        }
-        if (avcodec_open2(codec_ctx,codec,NULL)<0) { // Open codec
-          return load_ffmpeg_external(filename);
+      // Release stream if needed.
+      if (!step_frame || (index>=0 && positions[index]>first_frame)) {
+        if (index>=0) {
+          cimg::mutex(9);
+          cvReleaseCapture(&captures[index]);
+          captures[index] = 0; filenames[index].assign(); positions[index] = 0;
+          if (last_used_index==index) last_used_index = -1;
+          index = -1;
+          cimg::mutex(9,0);
+        } else
+          if (filename)
+            cimg::warn(_cimglist_instance
+                       "load_video() : File '%s', opened video stream associated with filename not found.",
+                       cimglist_instance,filename);
+          else
+            cimg::warn(_cimglist_instance
+                       "load_video() : No opened video stream found.",
+                       cimglist_instance,filename);
+        if (!step_frame) return *this;
+      }
+
+      // Find empty slot for capturing video stream.
+      if (index<0) {
+        if (!filename)
+          throw CImgArgumentException(_cimglist_instance
+                                      "load_video(): No already open video reader found. You must specify a "
+                                      "non-(null) filename argument for the first call.",
+                                      cimglist_instance);
+        else { cimg::mutex(9); cimglist_for(filenames,l) if (!filenames[l]) { index = l; break; } cimg::mutex(9,0); }
+        if (index<0)
+          throw CImgIOException(_cimglist_instance
+                                "load_video(): File '%s', no video reader slots available. "
+                                "You have to release some of your previously opened videos.",
+                                cimglist_instance,filename);
+        cimg::mutex(9);
+        captures[index] = cvCaptureFromFile(filename);
+        CImg<charT>::string(filename).move_to(filenames[index]);
+        positions[index] = 0;
+        cimg::mutex(9,0);
+        if (!captures[index]) {
+          filenames[index].assign();
+          std::fclose(cimg::fopen(filename,"rb"));  // Check file availability.
+          throw CImgIOException(_cimglist_instance
+                                "load_video(): File '%s', unable to detect format of video file.",
+                                cimglist_instance,filename);
         }
       }
 
-      // Read video frames
-      const unsigned int numBytes = avpicture_get_size(ffmpeg_pixfmt,codec_ctx->width,codec_ctx->height);
-      uint8_t *const buffer = new uint8_t[numBytes];
-      avpicture_fill((AVPicture *)converted_frame,buffer,ffmpeg_pixfmt,codec_ctx->width,codec_ctx->height);
-      const T foo = (T)0;
-      AVPacket packet;
-      for (unsigned int frame = 0, next_frame = nfirst_frame;
-           frame<=nlast_frame && av_read_frame(format_ctx,&packet)>=0; ) {
-	if (packet.stream_index==(int)vstream) {
-          int decoded = 0;
-#if defined(AV_VERSION_INT)
-#if LIBAVCODEC_VERSION_INT<AV_VERSION_INT(52,26,0)
-          avcodec_decode_video(codec_ctx,avframe,&decoded,packet.data, packet.size);
-#else
-          avcodec_decode_video2(codec_ctx,avframe,&decoded,&packet);
-#endif
-#else
-          avcodec_decode_video(codec_ctx,avframe,&decoded,packet.data, packet.size);
-#endif
-	  if (decoded) {
-	    if (frame==next_frame) {
-	      SwsContext *c = sws_getContext(codec_ctx->width,codec_ctx->height,codec_ctx->pix_fmt,codec_ctx->width,
-                                             codec_ctx->height,ffmpeg_pixfmt,1,0,0,0);
-	      sws_scale(c,avframe->data,avframe->linesize,0,codec_ctx->height,
-                        converted_frame->data,converted_frame->linesize);
-	      if (ffmpeg_pixfmt==PIX_FMT_RGB24) {
-		CImg<ucharT> next_image(*converted_frame->data,3,codec_ctx->width,codec_ctx->height,1,true);
-		next_image._get_permute_axes("yzcx",foo).move_to(*this);
-	      } else {
-		CImg<ucharT> next_image(*converted_frame->data,1,codec_ctx->width,codec_ctx->height,1,true);
-		next_image._get_permute_axes("yzcx",foo).move_to(*this);
-	      }
-	      next_frame+=nstep_frame;
-	    }
-	    ++frame;
-	  }
-	  av_free_packet(&packet);
-	  if (next_frame>nlast_frame) break;
-	}
+      cimg::mutex(9);
+      const unsigned int nb_frames = (unsigned int)cimg::max(0.,cvGetCaptureProperty(captures[index],
+                                                                                     CV_CAP_PROP_FRAME_COUNT));
+      cimg::mutex(9,0);
+      assign();
+
+      // Skip frames if necessary.
+      unsigned int &pos = positions[index];
+      while (pos<first_frame) {
+        cimg::mutex(9);
+        if (!cvGrabFrame(captures[index])) {
+          cimg::mutex(9,0);
+          throw CImgIOException(_cimglist_instance
+                                "load_video(): File '%s', unable to locate frame %u.",
+                                cimglist_instance,filename,first_frame);
+        }
+        cimg::mutex(9,0);
+        ++pos;
       }
-      delete[] buffer;
+
+      // Read and convert frames.
+      const unsigned int _last_frame = cimg::min(nb_frames?nb_frames-1:~0U,last_frame);
+      const IplImage *src = 0;
+      while (pos<=_last_frame) {
+        cimg::mutex(9);
+        src = cvQueryFrame(captures[index]);
+        if (src) {
+          CImg<T> frame(src->width,src->height,1,3);
+          const int step = (int)(src->widthStep - 3*src->width);
+          const unsigned char* ptrs = (unsigned char*)src->imageData;
+          T *ptr_r = frame.data(0,0,0,0), *ptr_g = frame.data(0,0,0,1), *ptr_b = frame.data(0,0,0,2);
+          if (step>0) cimg_forY(frame,y) {
+              cimg_forX(frame,x) { *(ptr_b++) = (T)*(ptrs++); *(ptr_g++) = (T)*(ptrs++); *(ptr_r++) = (T)*(ptrs++); }
+              ptrs+=step;
+            } else for (unsigned long siz = (unsigned long)src->width*src->height; siz; --siz) {
+              *(ptr_b++) = (T)*(ptrs++); *(ptr_g++) = (T)*(ptrs++); *(ptr_r++) = (T)*(ptrs++);
+            }
+          frame.move_to(*this);
+          ++pos;
+
+          bool skip_failed = false;
+          for (unsigned int i = 1; i<step_frame && pos<=_last_frame; ++i, ++pos)
+            if (!cvGrabFrame(captures[index])) { skip_failed = true; break; }
+          if (skip_failed) break;
+
+        }
+        cimg::mutex(9,0);
+        if (!src) break;
+      }
+
+      if (!src || (nb_frames && pos>=nb_frames)) { // Close video stream when necessary.
+        cimg::mutex(9);
+        cvReleaseCapture(&captures[index]);
+        captures[index] = 0;
+        filenames[index].assign();
+        positions[index] = 0;
+        index = -1;
+        cimg::mutex(9,0);
+      }
+
+      cimg::mutex(9);
+      last_used_index = index;
+      cimg::mutex(9,0);
       return *this;
 #endif
     }
 
-    //! Load an image from a video file, using ffmpeg libraries \newinstance.
-    static CImgList<T> get_load_ffmpeg(const char *const filename,
-                                       const unsigned int first_frame=0, const unsigned int last_frame=~0U,
-				       const unsigned int step_frame=1, const bool pixel_format=true) {
-      return CImgList<T>().load_ffmpeg(filename,first_frame,last_frame,step_frame,pixel_format);
+    //! Load an image from a video file, using OpenCV library \newinstance.
+    static CImgList<T> get_load_video(const char *const filename,
+                           const unsigned int first_frame=0, const unsigned int last_frame=~0U,
+                           const unsigned int step_frame=1) {
+      return CImgList<T>().load_video(filename,first_frame,last_frame,step_frame);
     }
 
     //! Load an image from a video file using the external tool 'ffmpeg'.
@@ -48396,7 +48230,7 @@ namespace cimg_library_suffixed {
                !cimg::strcasecmp(ext,"vob") ||
                !cimg::strcasecmp(ext,"wmv") ||
                !cimg::strcasecmp(ext,"xvid") ||
-               !cimg::strcasecmp(ext,"mpeg")) return save_ffmpeg(fn);
+               !cimg::strcasecmp(ext,"mpeg")) return save_video(fn);
 #ifdef cimg_use_tiff
       else if (!cimg::strcasecmp(ext,"tif") ||
           !cimg::strcasecmp(ext,"tiff")) return save_tiff(fn);
@@ -48507,308 +48341,6 @@ namespace cimg_library_suffixed {
       else cimg::fclose(file);
       cimglist_for_in(*this,1,filenames._width-1,l) std::remove(filenames[l]);
       return *this;
-    }
-
-    //! Save image sequence, using FFMPEG library.
-    /**
-      \param filename Filename to write data to.
-      \param fps Desired framerate (in frames per seconds) if chosen format supports it.
-      \param bitrate Desired bitrate (in bits per seconds) if chosen format supports it.
-    **/
-    // This piece of code has been originally written by David. G. Starkweather.
-    const CImgList<T>& save_ffmpeg(const char *const filename, const unsigned int fps=25,
-                                   const unsigned int bitrate=2048) const {
-      if (!filename)
-        throw CImgArgumentException(_cimglist_instance
-                                    "save_ffmpeg(): Specified filename is (null).",
-                                    cimglist_instance);
-      if (!fps)
-        throw CImgArgumentException(_cimglist_instance
-                                    "save_ffmpeg(): Invalid specified framerate 0, for file '%s'.",
-                                    cimglist_instance,
-                                    filename);
-      if (is_empty()) { cimg::fempty(0,filename); return *this; }
-
-      cimglist_for(*this,l) if (!_data[l].is_sameXYZ(_data[0]))
-        throw CImgInstanceException(_cimglist_instance
-                                    "save_ffmpeg(): Invalid instance dimensions, for file '%s'.",
-                                    cimglist_instance,
-                                    filename);
-
-#ifndef cimg_use_ffmpeg
-      return save_ffmpeg_external(filename,0,fps,bitrate);
-#else
-      avcodec_register_all();
-      av_register_all();
-      const int
-        frame_dimx = _data[0].width(),
-        frame_dimy = _data[0].height(),
-        frame_dimv = _data[0].spectrum();
-      if (frame_dimv!=1 && frame_dimv!=3)
-	throw CImgInstanceException(_cimglist_instance
-                                    "save_ffmpeg(): Image[0] (%u,%u,%u,%u,%p) has not 1 or 3 channels, for file '%s'.",
-                                    cimglist_instance,
-                                    _data[0]._width,_data[0]._height,_data[0]._depth,_data[0]._spectrum,_data,filename);
-
-      PixelFormat dest_pxl_fmt = PIX_FMT_YUV420P;
-      PixelFormat src_pxl_fmt  = (frame_dimv==3)?PIX_FMT_RGB24:PIX_FMT_GRAY8;
-
-      int sws_flags = SWS_FAST_BILINEAR; // Interpolation method (keeping same size images for now).
-      AVOutputFormat *fmt = 0;
-#if defined(AV_VERSION_INT)
-#if LIBAVFORMAT_VERSION_INT<AV_VERSION_INT(52,45,0)
-      fmt = guess_format(0,filename,0);
-      if (!fmt) fmt = guess_format("mpeg",0,0); // Default format "mpeg".
-#else
-      fmt = av_guess_format(0,filename,0);
-      if (!fmt) fmt = av_guess_format("mpeg",0,0); // Default format "mpeg".
-#endif
-#else
-      fmt = guess_format(0,filename,0);
-      if (!fmt) fmt = guess_format("mpeg",0,0); // Default format "mpeg".
-#endif
-
-      if (!fmt)
-        throw CImgArgumentException(_cimglist_instance
-                                    "save_ffmpeg(): Unable to determine codec for file '%s'.",
-                                    cimglist_instance,
-                                    filename);
-
-      AVFormatContext *oc = 0;
-#if defined(AV_VERSION_INT)
-#if LIBAVFORMAT_VERSION_INT<AV_VERSION_INT(52,36,0)
-      oc = av_alloc_format_context();
-#else
-      oc = avformat_alloc_context();
-#endif
-#else
-      oc = av_alloc_format_context();
-#endif
-      if (!oc) // Failed to allocate format context.
-        throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to allocate FFMPEG structure for format context, for file '%s'.",
-                              cimglist_instance,
-                              filename);
-
-      AVCodec *codec = 0;
-      AVFrame *picture = 0;
-      AVFrame *tmp_pict = 0;
-      oc->oformat = fmt;
-      std::sprintf(oc->filename,"%s",filename);
-
-      // Add video stream.
-      AVStream *video_str = 0;
-      if (fmt->video_codec!=CODEC_ID_NONE) {
-	video_str = avformat_new_stream(oc,NULL);
-	if (!video_str) { // Failed to allocate stream.
-          av_free(oc);
-          throw CImgIOException(_cimglist_instance
-                                "save_ffmpeg(): Failed to allocate FFMPEG structure for video stream, for file '%s'.",
-                                cimglist_instance,
-                                filename);
-	}
-      } else { // No codec identified.
-        av_free(oc);
-	throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to identify proper codec, for file '%s'.",
-                              cimglist_instance,
-                              filename);
-      }
-
-      AVCodecContext *c = video_str->codec;
-      c->codec_id = fmt->video_codec;
-      c->codec_type = AVMEDIA_TYPE_VIDEO;
-      c->bit_rate = 1024*bitrate;
-      c->width = frame_dimx;
-      c->height = frame_dimy;
-      c->time_base.num = 1;
-      c->time_base.den = fps;
-      c->gop_size = 12;
-      c->pix_fmt = dest_pxl_fmt;
-      if (c->codec_id==CODEC_ID_MPEG2VIDEO) c->max_b_frames = 2;
-      if (c->codec_id==CODEC_ID_MPEG1VIDEO) c->mb_decision = 2;
-
-      // Open codecs and alloc buffers.
-      codec = avcodec_find_encoder(c->codec_id);
-      if (!codec) { // Failed to find codec.
-        av_free(oc);
-        throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): No valid codec found for file '%s'.",
-                              cimglist_instance,
-                              filename);
-      }
-      if (avcodec_open2(c,codec,NULL)<0) // Failed to open codec.
-	throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to open codec for file '%s'.",
-                              cimglist_instance,
-                              filename);
-
-      tmp_pict = avcodec_alloc_frame();
-      if (!tmp_pict) { // Failed to allocate memory for tmp_pict frame.
-        avcodec_close(video_str->codec);
-        av_free(oc);
-        throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to allocate memory for file '%s'.",
-                              cimglist_instance,
-                              filename);
-      }
-      tmp_pict->linesize[0] = (src_pxl_fmt==PIX_FMT_RGB24)?3*frame_dimx:frame_dimx;
-      //      tmp_pict->type = FF_BUFFER_TYPE_USER;
-      int tmp_size = avpicture_get_size(src_pxl_fmt,frame_dimx,frame_dimy);
-      uint8_t *tmp_buffer = (uint8_t*)av_malloc(tmp_size);
-      if (!tmp_buffer) { // Failed to allocate memory for tmp buffer.
-        av_free(tmp_pict);
-        avcodec_close(video_str->codec);
-        av_free(oc);
-        throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to allocate memory for file '%s'.",
-                              cimglist_instance,
-                              filename);
-      }
-
-      // Associate buffer with tmp_pict.
-      avpicture_fill((AVPicture*)tmp_pict,tmp_buffer,src_pxl_fmt,frame_dimx,frame_dimy);
-      picture = avcodec_alloc_frame();
-      if (!picture) { // Failed to allocate picture frame.
-        av_free(tmp_pict->data[0]);
-        av_free(tmp_pict);
-        avcodec_close(video_str->codec);
-        av_free(oc);
-        throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to allocate memory for file '%s'.",
-                              cimglist_instance,
-                              filename);
-      }
-
-      int size = avpicture_get_size(c->pix_fmt,frame_dimx,frame_dimy);
-      uint8_t *buffer = (uint8_t*)av_malloc(size);
-      if (!buffer) { // Failed to allocate picture frame buffer.
-        av_free(picture);
-        av_free(tmp_pict->data[0]);
-        av_free(tmp_pict);
-        avcodec_close(video_str->codec);
-        av_free(oc);
-        throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to allocate memory for file '%s'.",
-                              cimglist_instance,
-                              filename);
-      }
-
-      // Associate the buffer with picture.
-      avpicture_fill((AVPicture*)picture,buffer,c->pix_fmt,frame_dimx,frame_dimy);
-
-      // Open file.
-      if (!(fmt->flags&AVFMT_NOFILE)) {
-	if (avio_open(&oc->pb,filename,AVIO_FLAG_WRITE)<0)
-          throw CImgIOException(_cimglist_instance
-                                "save_ffmpeg(): Failed to open file '%s'.",
-                                cimglist_instance,
-                                filename);
-      }
-
-      if (avformat_write_header(oc,NULL)<0)
-	throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to write header in file '%s'.",
-                              cimglist_instance,
-                              filename);
-
-      SwsContext *img_convert_context = 0;
-      img_convert_context = sws_getContext(frame_dimx,frame_dimy,src_pxl_fmt,
-                                           c->width,c->height,c->pix_fmt,sws_flags,0,0,0);
-      if (!img_convert_context) { // Failed to get swscale context.
-        // if (!(fmt->flags & AVFMT_NOFILE)) url_fclose(&oc->pb);
-        av_free(picture->data);
-        av_free(picture);
-        av_free(tmp_pict->data[0]);
-        av_free(tmp_pict);
-        avcodec_close(video_str->codec);
-        av_free(oc);
-        throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to get conversion context for file '%s'.",
-                              cimglist_instance,
-                              filename);
-      }
-      int ret = 0, out_size;
-      uint8_t *video_outbuf = 0;
-      int video_outbuf_size = 1000000;
-      video_outbuf = (uint8_t*)av_malloc(video_outbuf_size);
-      if (!video_outbuf) {
-	// if (!(fmt->flags & AVFMT_NOFILE)) url_fclose(&oc->pb);
-	av_free(picture->data);
-        av_free(picture);
-        av_free(tmp_pict->data[0]);
-        av_free(tmp_pict);
-        avcodec_close(video_str->codec);
-        av_free(oc);
-        throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to allocate memory, for file '%s'.",
-                              cimglist_instance,
-                              filename);
-      }
-
-      // Loop through each desired image in list.
-      cimglist_for(*this,i) {
-        CImg<uint8_t> currentIm = _data[i], red, green, blue, gray;
-        if (src_pxl_fmt==PIX_FMT_RGB24) {
-          red = currentIm.get_shared_channel(0);
-          green = currentIm.get_shared_channel(1);
-          blue = currentIm.get_shared_channel(2);
-          cimg_forXY(currentIm,X,Y) { // Assign pizel values to data buffer in interlaced RGBRGB ... format.
-            tmp_pict->data[0][Y*tmp_pict->linesize[0] + 3*X] = red(X,Y);
-            tmp_pict->data[0][Y*tmp_pict->linesize[0] + 3*X + 1] = green(X,Y);
-            tmp_pict->data[0][Y*tmp_pict->linesize[0] + 3*X + 2] = blue(X,Y);
-          }
-        } else {
-          gray = currentIm.get_shared_channel(0);
-          cimg_forXY(currentIm,X,Y) tmp_pict->data[0][Y*tmp_pict->linesize[0] + X] = gray(X,Y);
-        }
-        if (!video_str) break;
-        if (sws_scale(img_convert_context,tmp_pict->data,tmp_pict->linesize,0,
-                      c->height,picture->data,picture->linesize)<0) break;
-
-        AVPacket pkt;
-        int got_packet;
-        av_init_packet(&pkt);
-        out_size = avcodec_encode_video2(c,&pkt,picture,&got_packet);
-        if (got_packet) {
-          pkt.pts = av_rescale_q(c->coded_frame->pts,c->time_base,video_str->time_base);
-          if (c->coded_frame->key_frame) pkt.flags|=AV_PKT_FLAG_KEY;
-          pkt.stream_index = video_str->index;
-          pkt.data = video_outbuf;
-          pkt.size = out_size;
-          ret = av_write_frame(oc,&pkt);
-        } else if (out_size<0) break;
-        if (ret) break; // Error occured in writing frame.
-      }
-
-      // Close codec.
-      if (video_str) {
-	avcodec_close(video_str->codec);
-        av_free(picture->data[0]);
-        av_free(picture);
-        av_free(tmp_pict->data[0]);
-        av_free(tmp_pict);
-      }
-      if (av_write_trailer(oc)<0)
-	throw CImgIOException(_cimglist_instance
-                              "save_ffmpeg(): Failed to write trailer for file '%s'.",
-                              cimglist_instance,
-                              filename);
-
-      av_freep(&oc->streams[0]->codec);
-      av_freep(&oc->streams[0]);
-      if (!(fmt->flags&AVFMT_NOFILE)) {
-        /*if (url_fclose(oc->pb)<0)
-          throw CImgIOException(_cimglist_instance
-                                "save_ffmpeg(): File '%s', failed to close file.",
-                                cimglist_instance,
-                                filename);
-        */
-      }
-      av_free(oc);
-      av_free(video_outbuf);
-      return *this;
-#endif
     }
 
     const CImgList<T>& _save_yuv(std::FILE *const file, const char *const filename, const bool is_rgb) const {
@@ -49214,15 +48746,139 @@ namespace cimg_library_suffixed {
       return *this;
     }
 
+    //! Save image sequence, using the OpenCV library.
+    /**
+       \param filename Filename to write data to.
+       \param fps Number of frames per second.
+       \param codec Type of compression (See http://www.fourcc.org/codecs.php to see available codecs).
+       \param keep_open Tells if the video writer associated to the specified filename
+       must be kept open or not (to allow frames to be added in the same file afterwards).
+    **/
+    const CImgList<T>& save_video(const char *const filename, const unsigned int fps=25,
+                                  const char *codec=0, const bool keep_open=false) const {
+#ifndef cimg_use_opencv
+      cimg::unused(codec,keep_open);
+      return save_ffmpeg_external(filename,fps);
+#else
+      static CvVideoWriter *writers[32] = { 0 };
+      static CImgList<charT> filenames(32);
+      static CImg<intT> sizes(32,2,1,1,0);
+      static int last_used_index = -1;
+
+      // Detect if a video writer already exists for the specified filename.
+      cimg::mutex(9);
+      int index = -1;
+      if (filename) {
+        if (last_used_index>=0 && !std::strcmp(filename,filenames[last_used_index])) {
+          index = last_used_index;
+        } else cimglist_for(filenames,l) if (filenames[l] && !std::strcmp(filename,filenames[l])) {
+            index = l; break;
+          }
+      } else index = last_used_index;
+      cimg::mutex(9,0);
+
+      // Find empty slot for capturing video stream.
+      if (index<0) {
+        if (!filename)
+          throw CImgArgumentException(_cimglist_instance
+                                      "save_video(): No already open video writer found. You must specify a "
+                                      "non-(null) filename argument for the first call.",
+                                      cimglist_instance);
+        else { cimg::mutex(9); cimglist_for(filenames,l) if (!filenames[l]) { index = l; break; } cimg::mutex(9,0); }
+        if (index<0)
+          throw CImgIOException(_cimglist_instance
+                                "save_video(): File '%s', no video writer slots available. "
+                                "You have to release some of your previously opened videos.",
+                                cimglist_instance,filename);
+        if (is_empty())
+          throw CImgInstanceException(_cimglist_instance
+                                      "save_video(): Instance list is empty.",
+                                      cimglist_instance);
+        const unsigned int W = _data?_data[0]._width:0, H = _data?_data[0]._height:0;
+        if (!W || !H)
+          throw CImgInstanceException(_cimglist_instance
+                                      "save_video(): Frame [0] is an empty image.",
+                                      cimglist_instance);
+
+#define _cimg_docase(x) ((x)>='a'&&(x)<='z'?(x)+'A'-'a':(x))
+        const char
+          *const _codec = codec?codec:"mp4v",
+          codec0 = _cimg_docase(_codec[0]),
+          codec1 = _codec[0]?_cimg_docase(_codec[1]):0,
+          codec2 = _codec[1]?_cimg_docase(_codec[2]):0,
+          codec3 = _codec[2]?_cimg_docase(_codec[3]):0;
+
+        cimg::mutex(9);
+        writers[index] = cvCreateVideoWriter(filename,CV_FOURCC(codec0,codec1,codec2,codec3),
+                                             fps,cvSize(W,H));
+        CImg<charT>::string(filename).move_to(filenames[index]);
+        sizes(index,0) = W; sizes(index,1) = H;
+        cimg::mutex(9,0);
+        if (!writers[index])
+          throw CImgIOException(_cimglist_instance
+                                "save_video(): File '%s', unable to initialize video writer with codec '%s'.",
+                                cimglist_instance,filename,codec);
+      }
+
+      if (!is_empty()) {
+        const unsigned int W = sizes(index,0), H = sizes(index,1);
+        cimg::mutex(9);
+        IplImage *ipl = cvCreateImage(cvSize(W,H),8,3);
+        cimglist_for(*this,l) {
+          CImg<T> &src = _data[l];
+          if (src.is_empty())
+            cimg::warn(_cimglist_instance
+                       "save_video(): Skip empty frame %d for file '%s'.",
+                       cimglist_instance,l,filename);
+          if (src._depth>1 || src._spectrum>3)
+            cimg::warn(_cimglist_instance
+                       "save_video(): Frame %u has incompatible dimension (%u,%u,%u,%u). "
+                       "Some image data may be ignored when writing frame into video file '%s'.",
+                       cimglist_instance,l,src._width,src._height,src._depth,src._spectrum,filename);
+          if (src._width==W && src._height==H && src._spectrum==3) {
+            const T *ptr_r = src.data(0,0,0,0), *ptr_g = src.data(0,0,0,1), *ptr_b = src.data(0,0,0,2);
+            char *ptrd = ipl->imageData;
+            cimg_forXY(src,x,y) {
+              *(ptrd++) = (char)*(ptr_b++); *(ptrd++) = (char)*(ptr_g++); *(ptrd++) = (char)*(ptr_r++);
+            }
+          } else {
+            CImg<unsigned char> _src(src,false);
+            _src.channels(0,cimg::min(_src._spectrum-1,2U)).resize(W,H);
+            const unsigned char *ptr_r = _src.data(0,0,0,0), *ptr_g = _src.data(0,0,0,1), *ptr_b = _src.data(0,0,0,2);
+            char *ptrd = ipl->imageData;
+            cimg_forXY(_src,x,y) {
+              *(ptrd++) = (char)*(ptr_b++); *(ptrd++) = (char)*(ptr_g++); *(ptrd++) = (char)*(ptr_r++);
+            }
+          }
+          cvWriteFrame(writers[index],ipl);
+        }
+        cvReleaseImage(&ipl);
+        cimg::mutex(9,0);
+      }
+
+      cimg::mutex(9);
+      if (!keep_open) {
+        cvReleaseVideoWriter(&writers[index]);
+        writers[index] = 0;
+        filenames[index].assign();
+        sizes(index,0) = sizes(index,1) = 0;
+        last_used_index = -1;
+      } else last_used_index = index;
+      cimg::mutex(9,0);
+
+      return *this;
+#endif
+    }
+
     //! Save image sequence, using the external tool 'ffmpeg'.
     /**
       \param filename Filename to write data to.
-      \param codec Type of compression.
       \param fps Number of frames per second.
+      \param codec Type of compression.
       \param bitrate Output bitrate
     **/
-    const CImgList<T>& save_ffmpeg_external(const char *const filename, const char *const codec=0,
-                                            const unsigned int fps=25, const unsigned int bitrate=2048) const {
+    const CImgList<T>& save_ffmpeg_external(const char *const filename, const unsigned int fps=25,
+                                            const char *const codec=0, const unsigned int bitrate=2048) const {
       if (!filename)
         throw CImgArgumentException(_cimglist_instance
                                     "save_ffmpeg_external(): Specified filename is (null).",
