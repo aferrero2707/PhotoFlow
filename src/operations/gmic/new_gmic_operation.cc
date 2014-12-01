@@ -79,6 +79,8 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_smooth_guided();
   } else if( op_type == "gmic_iain_denoise" ) {
     processor = new_gmic_iain_denoise();
+  } else if( op_type == "gmic_dream_smooth" ) {
+    processor = new_gmic_dream_smooth();
     //insert new operations here
   }
 

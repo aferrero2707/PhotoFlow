@@ -266,9 +266,12 @@ namespace PF
     virtual bool has_opacity() { return true; }
     virtual bool needs_input() { return true; }
     virtual bool needs_caching() { return false; }
+    virtual bool init_hidden() { return false; }
 
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }
+
+    virtual void pre_build( rendermode_t mode ) {}
 
     virtual VipsImage* build(std::vector<VipsImage*>& in, int first, 
 			     VipsImage* imap, VipsImage* omap, unsigned int& level);

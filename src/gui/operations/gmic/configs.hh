@@ -52,3 +52,4 @@
 #include "gcd_despeckle_config.hh"
 #include "smooth_guided_config.hh"
 #include "iain_denoise_config.hh"
+#include "dream_smooth_config.hh"

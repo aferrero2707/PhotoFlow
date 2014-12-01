@@ -81,6 +81,8 @@ PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, P
     dialog = new PF::GmicSmoothGuidedConfigDialog( current_layer );
   } else if( op_type == "gmic_iain_denoise" ) {
     dialog = new PF::GmicIainDenoiseConfigDialog( current_layer );
+  } else if( op_type == "gmic_dream_smooth" ) {
+    dialog = new PF::GmicDreamSmoothConfigDialog( current_layer );
     //insert new operations here
   }
 

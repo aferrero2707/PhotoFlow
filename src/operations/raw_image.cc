@@ -66,6 +66,10 @@ PF::RawImage::RawImage( const std::string f ):
 	int iwidth = raw_loader->imgdata.sizes.iwidth;
 	int iheight = raw_loader->imgdata.sizes.iheight;
 	pdata = &(raw_loader->imgdata);
+	std::cout<<"LibRAW camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]
+					 <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
+	if(pdata->color.cam_mul[3] < 0.00000001) 
+		pdata->color.cam_mul[3] = pdata->color.cam_mul[1];
 #endif
   
 #ifdef PF_USE_DCRAW_RT
@@ -94,10 +98,10 @@ PF::RawImage::RawImage( const std::string f ):
 	dcraw_data.color.cam_mul[1] = get_cam_mul(1);
 	dcraw_data.color.cam_mul[2] = get_cam_mul(2);
 	dcraw_data.color.cam_mul[3] = get_cam_mul(3);
+	std::cout<<"DCRAW camera WB multipliers: "<<get_cam_mul(0)<<" "<<get_cam_mul(1)
+					 <<" "<<get_cam_mul(2)<<" "<<get_cam_mul(3)<<std::endl;
 	if(dcraw_data.color.cam_mul[3] < 0.00000001) 
 		dcraw_data.color.cam_mul[3] = dcraw_data.color.cam_mul[1];
-	std::cout<<"Camera WB multipliers: "<<get_cam_mul(0)<<" "<<get_cam_mul(1)
-					 <<" "<<get_cam_mul(2)<<" "<<get_cam_mul(3)<<std::endl;
 	for(int i = 0; i < 4; i++)
 		for(int j = 0; j < 3; j++)
 			dcraw_data.color.cam_xyz[i][j] = get_cam_xyz(i,j);

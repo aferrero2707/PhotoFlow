@@ -629,6 +629,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 #endif
       par->set_format( pipeline->get_format() );
       l->set_cached( par->needs_caching() );
+      par->pre_build( pipeline->get_render_mode() );
     }
 
     PF::OpParBase* blender = NULL;
