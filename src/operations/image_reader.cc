@@ -42,6 +42,25 @@ vips_cast( VipsImage *in, VipsImage **out, VipsBandFormat format, ... );
 #endif /*__cplusplus*/
 
 
+PF::ImageReaderPar::~ImageReaderPar()
+{
+	std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image="<<(void*)raster_image<<std::endl;
+  if( raster_image ) {
+    raster_image->unref();
+		std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
+    if( raster_image->get_nref() == 0 ) {
+      std::map<Glib::ustring, RasterImage*>::iterator i = 
+				raster_images.find( raster_image->get_file_name() );
+      if( i != raster_images.end() ) 
+				raster_images.erase( i );
+      delete raster_image;
+			std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image deleted"<<std::endl;
+			raster_image = 0;
+    }
+  }
+}
+
+
 VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first, 
 				     VipsImage* imap, VipsImage* omap, 
 				     unsigned int& level)
@@ -51,32 +70,41 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   if( file_name.get().empty() )
     return NULL;
 
-  if( file_name.get() != current_file ) {
-    /*
-    char* fullpath = realpath( file_name.get().c_str(), NULL );
-    if( fullpath ) {
-      file_name.set( fullpath );
-      free( fullpath );
-    }
-    */
-    // Create VipsImage from given file
-#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
-    image = vips_image_new_from_file( file_name.get().c_str() );
-#else
-    image = vips_image_new_from_file( file_name.get().c_str(), NULL );
-#endif
-    if( !image ) return NULL;
-#ifndef NDEBUG
-    std::string msg = std::string("ImageReaderPar::build(): image refcount after new_from_file");
-    PF_PRINT_REF( image, msg );
-#endif
-    modified = true;
-    //} else {
-    //g_object_ref( image );
-    //std::string msg = std::string("ImageReaderPar::build(): image refcount after ref");
-    //PF_PRINT_REF( image, msg );
-  }
   
+  std::map<Glib::ustring, RasterImage*>::iterator i = 
+    raster_images.find( file_name.get() );
+  
+  if( i == raster_images.end() ) {
+
+    std::cout<<"ImageReaderPar::build(): raster_image="<<(void*)raster_image<<std::endl;
+    if( raster_image ) {
+      raster_image->unref();
+      std::cout<<"ImageReaderPar::build(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
+      if( raster_image->get_nref() == 0 ) {
+        std::map<Glib::ustring, RasterImage*>::iterator i = 
+          raster_images.find( file_name.get() );
+        if( i != raster_images.end() ) 
+          raster_images.erase( i );
+        delete raster_image;
+			std::cout<<"ImageReaderPar::build(): raster_image deleted"<<std::endl;
+			raster_image = 0;
+      }
+    }
+
+    raster_image = new RasterImage( file_name.get() );
+    raster_images.insert( make_pair(file_name.get(), raster_image) );
+  } else {
+    std::cout<<"ImageReaderPar::build(): raster_image found ("<<file_name.get()<<")"<<std::endl;
+    raster_image = i->second;
+    raster_image->ref();
+  }
+  if( !raster_image )
+    return NULL;
+  
+  VipsImage* image = raster_image->get_image( level );
+  
+  if( !image ) return NULL;
+
 #ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): "<<std::endl
 	   <<"input images:"<<std::endl;
@@ -105,65 +133,26 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   }
 
 
-  // If the requested format has changed the pyramid has to be re-built
-  if( current_format != get_format() )
-    modified = true;
-
 #ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): get_format()="<<get_format()<<"  image->BandFmt="<<image->BandFmt<<std::endl;
 #endif
   VipsImage* out = image;
-  if( modified && (get_format() != image->BandFmt) ) {
-    std::vector<VipsImage*> in2;
-    in2.push_back( image );
-    convert_format->get_par()->set_image_hints( image );
-    convert_format->get_par()->set_format( get_format() );
-    out = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
-    //std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after convert_format: "<<G_OBJECT(out)->ref_count<<std::endl;
-    //g_object_unref( image );
-    PF_UNREF( image, "ImageReaderPar::build(): image unref after convert_format" );
-  }
-
-  current_file = file_name.get();
-  current_format = get_format();
-
-  //return out;
-
-  // The pyramid is re-built if the input file or the format have changed
-  if( modified ) {
-    pyramid.init( out );
-#warning Need to unreference image after pyramid init, but this leads to crashes when exporting
-    //PF_UNREF( out, "ImageReaderPar::build(): out unref after pyramid.init()" );
-    //std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after pyramid.init(): "<<G_OBJECT(out)->ref_count<<std::endl;
-  }
-
-  PF::PyramidLevel* plevel = pyramid.get_level( level );
-  if( plevel ) {
-    set_image_hints( plevel->image );
-#ifndef NDEBUG
-    std::cout<<"ImageReaderPar::build(): image refcount ("<<(void*)image<<") = "<<G_OBJECT(image)->ref_count<<std::endl;
-    std::cout<<"                         out refcount ("<<(void*)out<<") = "<<G_OBJECT(out)->ref_count<<std::endl;
-    std::cout<<"                         plevel->image refcount ("<<(void*)plevel->image<<") = "<<G_OBJECT(plevel->image)->ref_count<<std::endl;
-#endif
-    return plevel->image;
-  }
-
-  return NULL;
-
-  /*
-  // Prepare the blending step between the new image (in in2[1]) and the underlying image
-  // if existing (in in2[0]).
-  // The blending code will simply force the mode to "passthrough" and copy in2[1] to outnew
-  // if in2[0] is NULL
   std::vector<VipsImage*> in2;
-  if( !in.empty() ) in2.push_back( in[0] );
-  else in2.push_back( NULL );
   in2.push_back( image );
+  convert_format->get_par()->set_image_hints( image );
+  convert_format->get_par()->set_format( get_format() );
+  out = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
 
-  blender->get_par()->build( in2, 0, imap, omap);
+  if( !out ) return NULL;
+  PF_UNREF( image, "ImageReaderPar::build(): image unref after convert_format" );
 
-  set_image( blender->get_par()->get_image() );
-  */
+  set_image_hints( out );
+#ifndef NDEBUG
+  std::cout<<"ImageReaderPar::build(): image refcount ("<<(void*)image<<") = "<<G_OBJECT(image)->ref_count<<std::endl;
+  std::cout<<"                         out refcount ("<<(void*)out<<") = "<<G_OBJECT(out)->ref_count<<std::endl;
+#endif
+
+  return out;
 }
 
 

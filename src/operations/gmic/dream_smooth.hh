@@ -31,12 +31,12 @@
 #define GMIC_DREAM_SMOOTH_H
 
 
-#include "../base/processor.hh"
+#include "../../base/processor.hh"
 
-#include "../vips/gmic/gmic/src/gmic.h"
+#include "../../vips/gmic/gmic/src/gmic.h"
 
-#include "../operations/convertformat.hh"
-#include "../operations/raster_image.hh"
+#include "../convertformat.hh"
+#include "../raster_image.hh"
 
 
 namespace PF 

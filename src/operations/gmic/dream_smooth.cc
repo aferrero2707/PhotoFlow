@@ -30,8 +30,6 @@
 
 #include "../base/pf_mkstemp.hh"
 
-#include "../raster_image.hh"
-
 #include "gmic.hh"
 #include "dream_smooth.hh"
 
