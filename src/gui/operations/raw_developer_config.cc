@@ -73,7 +73,7 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   wb_target_L_slider.set_passive( true );
   wb_target_a_slider.set_passive( true );
   wb_target_b_slider.set_passive( true );
-  wbTargetBox.pack_start( wb_target_L_slider, Gtk::PACK_SHRINK );
+  //wbTargetBox.pack_start( wb_target_L_slider, Gtk::PACK_SHRINK );
   wbTargetBox.pack_start( wb_target_a_slider, Gtk::PACK_SHRINK );
   wbTargetBox.pack_start( wb_target_b_slider, Gtk::PACK_SHRINK );
   wbControlsBox.pack_start( wbTargetBox );

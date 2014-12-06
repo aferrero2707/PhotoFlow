@@ -65,6 +65,10 @@ PF::RawImage::RawImage( const std::string f ):
 
 	int iwidth = raw_loader->imgdata.sizes.iwidth;
 	int iheight = raw_loader->imgdata.sizes.iheight;
+  std::cout<<"LibRAW dimensions: raw width="<<raw_loader->imgdata.sizes.raw_width<<",height="<<raw_loader->imgdata.sizes.raw_height
+           <<"    width="<<raw_loader->imgdata.sizes.width<<",height="<<raw_loader->imgdata.sizes.height
+           <<"    iwidth="<<raw_loader->imgdata.sizes.iwidth<<",iheight="<<raw_loader->imgdata.sizes.iheight
+           <<"    flip="<<raw_loader->imgdata.sizes.flip<<std::endl;
 	pdata = &(raw_loader->imgdata);
 	std::cout<<"LibRAW camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]
 					 <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
