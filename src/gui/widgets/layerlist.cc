@@ -110,7 +110,8 @@ void PF::LayerList::update_model()
   if( active_lid < 0 ) {
     // No layer matching any of the extra inputs has been found.
     // Either there are no extra inputs yet defined, or the list of layers has changed
-    if( first_lid >= 0 ) {
+    cbox.set_active( -1 );
+    if( false && first_lid >= 0 ) {
       // There are however some layers that have been inserted in the list of potential
       // sources, therefore we pick the first one
       cbox.set_active( 0 );
