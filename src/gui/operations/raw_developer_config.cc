@@ -504,7 +504,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
   if( !transform_inv )
     return;
 
-  x = 2800; y = 654;
+  //x = 2800; y = 654;
 
   PF::raw_preproc_sample_x = x;
   PF::raw_preproc_sample_y = y;
@@ -569,7 +569,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     //if( vips_sink_memory( spot ) )
     //  return;
 
-    int sample_size = 3;
+    int sample_size = 15;
     int row, col;
     float* p;
     float red, green, blue;
@@ -577,7 +577,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 		std::vector<float> values;
 
     std::cout<<std::endl<<std::endl<<"==============================================="<<std::endl;
-   std::cout<<"RawDeveloperConfigDialog: getting spot WB"<<std::endl;
+   std::cout<<"RawDeveloperConfigDialog: getting color spot WB"<<std::endl;
 		/*
     int line_size = clipped.width*3;
     for( row = 0; row < rspot.height; row++ ) {
@@ -595,7 +595,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 		*/
     std::cout<<"RawDeveloperConfigDialog: getting color spot WB ("<<x<<","<<y<<")"<<std::endl;
 		img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		values.clear(); img->sample( l->get_id(), x, y, sample_size, NULL, values );
+		//values.clear(); img->sample( l->get_id(), x, y, sample_size, NULL, values );
 		if( values.size() != 3 ) {
 			std::cout<<"RawDeveloperConfigDialog::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;
@@ -706,21 +706,60 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
       Lab_out[1] = Lab_wb[1];
       Lab_out[2] = Lab_wb[2];
       std::cout<<" Lab out: "<<Lab_out[0]<<" "<<Lab_out[1]<<" "<<Lab_out[2]<<std::endl;
-      // Now we convert back to RGB and we compute the multiplicative
-      // factors that bring from the current WB to the target one
-      cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
-      std::cout<<" RGB out: "<<rgb_out[0]*255<<" "<<rgb_out[1]*255<<" "<<rgb_out[2]*255<<std::endl;
 
-      wb_red_mul = rgb_out[0]/rgb_avg[0];
-      wb_green_mul = rgb_out[1]/rgb_avg[1];
-      wb_blue_mul = rgb_out[2]/rgb_avg[2];
-    
-      float f = 0.5;
-      wb_red_out = (f*wb_red_mul+1-f)*wb_red_in;
-      wb_green_out = (f*wb_green_mul+1-f)*wb_green_in;
-      wb_blue_out = (f*wb_blue_mul+1-f)*wb_blue_in;
+      float delta_a = Lab_out[1] - Lab_in[1];
+      float delta_b = Lab_out[2] - Lab_in[2];
+      float wb_red_out1 = wb_red_in;
+      float wb_red_out2 = wb_red_in;
+      float wb_green_out1 = wb_green_in;
+      float wb_green_out2 = wb_green_in;
+      float wb_blue_out1 = wb_blue_in;
+      float wb_blue_out2 = wb_blue_in;
+
+      if( Lab_out[1] >= 0 ) {
+        // Target "a" is positive, therefore we have to act 
+        // on the red and blue multipliers simultaneously
+        wb_red_out1 += wb_red_in * (delta_a*0.1/Lab_out[1]);
+        wb_blue_out1 += wb_blue_in * (delta_a*0.1/Lab_out[1]);
+      } else {
+        // Target "a" is negative, therefore we have to act 
+        // on the green channel only
+        wb_green_out1 += wb_green_in * (delta_a*0.1/Lab_out[1]);
+      }
+
+      if( Lab_out[2] >= 0 ) {
+        // Target "b" is positive, therefore we have to act 
+        // on the red and green multipliers simultaneously
+        wb_red_out2 += wb_red_in * (delta_b*0.1/Lab_out[2]);
+        wb_green_out2 += wb_green_in * (delta_b*0.1/Lab_out[2]);
+      } else {
+        // Target "b" is negative, therefore we have to act 
+        // on the blue channel only
+        wb_blue_out2 += wb_blue_in * (delta_b*0.1/Lab_out[2]);
+      }
+
+      wb_red_out = (wb_red_out1 + wb_red_out2)/2.0f;
+      wb_green_out = (wb_green_out1 + wb_green_out2)/2.0f;
+      wb_blue_out = (wb_blue_out1 + wb_blue_out2)/2.0f;
+
+      /*
+        // Now we convert back to RGB and we compute the multiplicative
+        // factors that bring from the current WB to the target one
+        cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
+        std::cout<<" RGB out: "<<rgb_out[0]*255<<" "<<rgb_out[1]*255<<" "<<rgb_out[2]*255<<std::endl;
+        
+        wb_red_mul = rgb_out[0]/rgb_avg[0];
+        wb_green_mul = rgb_out[1]/rgb_avg[1];
+        wb_blue_mul = rgb_out[2]/rgb_avg[2];
+        
+        float f = 1.5;
+        wb_red_out = (f*wb_red_mul+1-f)*wb_red_in;
+        wb_green_out = (f*wb_green_mul+1-f)*wb_green_in;
+        wb_blue_out = (f*wb_blue_mul+1-f)*wb_blue_in;
+        float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
+        std::cout<<" scale: "<<scale<<std::endl;
       //float norm_out = MIN3(wb_red_out,wb_green_out,wb_blue_out);
-
+      */
       /*
       // Scale target L channel according to norm_out
       Lab_out[0] /= norm_out*1.01;
@@ -770,7 +809,9 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     //float wb_red_out = wb_red_mul*wb_red_in;
     // float wb_green_out = wb_green_mul*wb_green_in;
     //float wb_blue_out = wb_blue_mul*wb_blue_in;
-    float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
+    //float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
+    //float scale = MIN3(wb_red_out,wb_green_out,wb_blue_out);
+    float scale = MIN3(wb_red_out,wb_green_out,wb_blue_out);
     //scale = 1;
     std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
              <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl

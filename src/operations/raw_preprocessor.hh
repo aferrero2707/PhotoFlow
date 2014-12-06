@@ -221,6 +221,7 @@ namespace PF
       if( par->get_wb_blue() > max_mul )
 				max_mul = par->get_wb_blue();
 
+      //std::cout<<"WB mult: "<<par->get_wb_red()<<" "<<par->get_wb_green()<<" "<<par->get_wb_blue()<<std::endl;
       //std::cout<<"range="<<range<<"  min_mul="<<min_mul<<"  new range="<<range*min_mul<<std::endl;
 #ifdef RT_EMU
       /* RawTherapee emulation */
@@ -275,7 +276,7 @@ namespace PF
             int dy = r->top+y-raw_preproc_sample_y;
             //if( raw_preproc_sample_x > 0 && raw_preproc_sample_y > 0 )
             //  std::cout<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
-						if( abs(dx)<2 && abs(dy)<1 ) 
+						if( false && abs(dx)<2 && abs(dy)<1 ) 
               std::cout<<"  rp["<<x<<"]="<<rp[x]
                        <<"  mul["<<(int)rp.color(x)<<"]="<<mul[ rp.color(x) ]
                        <<"  rpout["<<x<<"]="<<rpout[x]<<std::endl;
