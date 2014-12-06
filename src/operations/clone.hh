@@ -56,7 +56,7 @@ namespace PF
     CLONE_CHANNEL_K
   }; 
 
-  class ClonePar: public BlenderPar
+  class ClonePar: public OpParBase
   {
     PropertyBase source_channel;
 

@@ -39,7 +39,7 @@
 
 
 PF::ClonePar::ClonePar(): 
-  PF::BlenderPar(),
+  PF::OpParBase(),
   source_channel("source_channel",this,PF::CLONE_CHANNEL_RGB,"RGB","RGB")
 {
   source_channel.add_enum_value(PF::CLONE_CHANNEL_GREY,"Grey","Grey");
@@ -219,15 +219,19 @@ VipsImage* PF::ClonePar::rgb2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
   case PF::CLONE_CHANNEL_RGB:
     out = srcimg;
     g_object_ref( out );
+    std::cout<<"ClonePar::rgb2rgb(): cloning RGB channels"<<std::endl;
     break;
   case PF::CLONE_CHANNEL_R:
     bandid = 0;
+    std::cout<<"ClonePar::rgb2rgb(): cloning R channel"<<std::endl;
     break;
   case PF::CLONE_CHANNEL_G:
     bandid = 1;
+    std::cout<<"ClonePar::rgb2rgb(): cloning G channel"<<std::endl;
     break;
   case PF::CLONE_CHANNEL_B:
     bandid = 2;
+    std::cout<<"ClonePar::rgb2rgb(): cloning B channel"<<std::endl;
     break;
   default: break;
   }
@@ -251,6 +255,7 @@ VipsImage* PF::ClonePar::rgb2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
     PF_UNREF( band, "ClonePar::rgb2rgb(): band unref after bandjoin failure" );
     return NULL;
   }
+  PF_UNREF( band, "ClonePar::rgb2rgb(): band unref after bandjoin" );
 
   void *profile_data;
   size_t profile_length;
@@ -281,6 +286,7 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
 
 
   VipsImage* out = NULL;
+  VipsImage* band = NULL;
   colorspace_t csin = PF::PF_COLORSPACE_UNKNOWN;
   if( srcimg ) 
     csin = PF::convert_colorspace( srcimg->Type );
@@ -292,7 +298,7 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
 			   &profile_data, &profile_length ) )
     profile_data = NULL;
 
-  
+
   if( csin != PF::PF_COLORSPACE_LAB ) {
     convert2lab->get_par()->set_image_hints( srcimg );
     convert2lab->get_par()->set_format( get_format() );
@@ -311,31 +317,46 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
     out = L2rgb( srcimg, level );
     break;
   case PF::CLONE_CHANNEL_a:
-    if( vips_extract_band( srcimg, &out, 1, NULL ) )
+    if( vips_extract_band( srcimg, &band, 1, NULL ) )
       return NULL;
     //g_object_unref( srcimg );
-    //PF_UNREF( srcimg, "PF::ClonePar::Lab2rgb(): srcimg unref (PF::CLONE_CHANNEL_a)" );
-    vips_image_init_fields( out,
-                            get_xsize(), get_ysize(), 
-                            1, get_format(),
-                            get_coding(),
-                            get_interpretation(),
-                            1.0, 1.0);
+    PF_UNREF( srcimg, "PF::ClonePar::Lab2rgb(): srcimg unref (PF::CLONE_CHANNEL_a)" );
     break;
   case PF::CLONE_CHANNEL_b:
-    if( vips_extract_band( srcimg, &out, 2, NULL ) )
+    if( vips_extract_band( srcimg, &band, 2, NULL ) )
       return NULL;
     //g_object_unref( srcimg );
-    //PF_UNREF( srcimg, "PF::ClonePar::Lab2rgb(): srcimg unref (PF::CLONE_CHANNEL_b)" );
-    vips_image_init_fields( out,
-                            get_xsize(), get_ysize(), 
-                            1, get_format(),
-                            get_coding(),
-                            get_interpretation(),
-                            1.0, 1.0);
+    PF_UNREF( srcimg, "PF::ClonePar::Lab2rgb(): srcimg unref (PF::CLONE_CHANNEL_b)" );
     break;
+  default: return srcimg;
   }
 
+  vips_image_init_fields( band,
+                          get_xsize(), get_ysize(), 
+                          1, get_format(),
+                          get_coding(),
+                          get_interpretation(),
+                          1.0, 1.0);
+
+  VipsImage* bandv[3];
+  bandv[0] = band;
+  bandv[1] = band;
+  bandv[2] = band;
+  if( vips_bandjoin( bandv, &out, 3, NULL ) ) {
+    PF_UNREF( band, "ClonePar::rgb2rgb(): band unref after bandjoin failure" );
+    return NULL;
+  }
+  PF_UNREF( band, "ClonePar::rgb2rgb(): band unref" );
+  rgb_image( out->Xsize, out->Ysize );
+
+  if( profile_data ) {
+    void* buf = malloc( profile_length );
+    if( buf ) {
+      memcpy( buf, profile_data, profile_length );
+      vips_image_set_blob( out, VIPS_META_ICC_NAME, 
+                           (VipsCallbackFn) g_free, buf, profile_length );
+    }
+  }
   return out;
 }
 
@@ -357,7 +378,7 @@ VipsImage* PF::ClonePar::L2rgb(VipsImage* srcimg, unsigned int& level)
     profile_data = NULL;
 
   // No Lab conversion possible if the input image has no ICC profile
-  if( !profile_data ) return NULL;
+  if( !profile_data ) return srcimg;
   
   std::vector<VipsImage*> in; 
 
@@ -367,6 +388,7 @@ VipsImage* PF::ClonePar::L2rgb(VipsImage* srcimg, unsigned int& level)
   VipsImage* labimg = convert2lab->get_par()->build( in, 0, NULL, NULL, level );
   if( !labimg ) 
     return NULL;
+  //PF_UNREF( srcimg, "ClonePar::L2rgb(): srcimg unref" );
 
   in.clear(); in.push_back( labimg );
   desaturate->get_par()->set_image_hints( labimg );
@@ -401,6 +423,19 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = NULL;
 
   colorspace_t cs = get_colorspace();
+
+  std::cout<<"ClonePar::build(): in.size()="<<in.size()<<"  srcimg="<<srcimg<<std::endl;
+  std::cout<<"ClonePar::build(): colorspace="<<cs<<std::endl;
+
+  if( !srcimg ) {
+    if( in.size() > 0 ) {
+      PF_REF( in[0], "ClonePar::bluild(): in[0] ref" );
+      return in[0];
+    } else {
+      return NULL;
+    }
+  }
+
 
   if( cs == PF::PF_COLORSPACE_GRAYSCALE ) {
     if( srcimg ) {
@@ -449,11 +484,13 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
       // The target colorspace is greyscale, therefore we either pick one channel from the source image
       // or we apply the appropriate conversion to grayscale
       clone_channel ch = (clone_channel)source_channel.get_enum_value().first;
+      std::cout<<"ClonePar::build(): source_channel="<<ch<<std::endl;
       if( ch==PF::CLONE_CHANNEL_RGB ||
           ch==PF::CLONE_CHANNEL_R ||
           ch==PF::CLONE_CHANNEL_G ||
           ch==PF::CLONE_CHANNEL_B ) {
         unsigned int level2 = level;
+        std::cout<<"ClonePar::build(): calling rgb2rgb()"<<std::endl;
         out = rgb2rgb( srcimg, ch, level2 );
       }
       if( ch==PF::CLONE_CHANNEL_L ||
@@ -478,26 +515,6 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   return out;
-
-  std::vector<VipsImage*> in2;
-  if( in.size() > 1 ) {
-    in2.push_back( in[0] );
-    in2.push_back( out );
-  } else {
-    in2.push_back( NULL );
-    in2.push_back( out );
-  }
-#ifndef NDEBUG
-  std::cout<<"PF::ClonePar::build(): source channel="<<source_channel.get_enum_value().second.first
-           <<"    target colorspace="<<cs;
-  if( out )
-    std::cout<<"    output colorspace="<<PF::convert_colorspace( out->Type );
-  std::cout<<std::endl;
-#endif
-  VipsImage* out2 = PF::BlenderPar::build( in2, 0, NULL, omap, level );
-  //g_object_unref( out );
-  PF_UNREF( out, "PF::ClonePar::build(): out unref" );
-  return out2;
 }
 
 
