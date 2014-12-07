@@ -54,7 +54,7 @@ extern "C" {
 #define DEBUG_DISPLAY
 #endif
 
-#define OPTIMIZE_SCROLLING
+//#define OPTIMIZE_SCROLLING
 
 PF::ImageArea::ImageArea( Pipeline* v ):
   PipelineSink( v ),
