@@ -143,10 +143,10 @@ void PF::Layer::remove_input(int32_t lid)
   bool found = false;
   do {
     for( unsigned int i = 0; i < extra_inputs.size(); i++) {
-      if( extra_inputs[i] == lid ) {
-	extra_inputs.erase( extra_inputs.begin()+i );
-	found = true;
-	break;
+      if( extra_inputs[i].first == lid ) {
+        extra_inputs.erase( extra_inputs.begin()+i );
+        found = true;
+        break;
       }
     }
   } while( found );
@@ -160,12 +160,12 @@ bool PF::Layer::save( std::ostream& ostr, int level )
   ostr<<"<layer name=\""<<name<<"\" id=\""<<id<<"\" visible=\""<<visible<<"\" normal=\""<<normal<<"\" extra_inputs=\"";
   int n;
   for( int i=0, n=0; i < extra_inputs.size(); i++ ) {
-    int32_t id = extra_inputs[i];
+    int32_t id = extra_inputs[i].first;
     if( id < 0 ) continue;
     PF::Layer* l = image->get_layer_manager().get_layer( id );
     if( !l ) continue;
     if( n>0 ) ostr<<" ";
-    ostr<<l->get_id();
+    ostr<<l->get_id()<<" "<<extra_inputs[i].second;
     n++;
   }
   ostr<<"\">"<<std::endl;

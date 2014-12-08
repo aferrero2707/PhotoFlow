@@ -81,6 +81,8 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_iain_denoise();
   } else if( op_type == "gmic_dream_smooth" ) {
     processor = new_gmic_dream_smooth();
+  } else if( op_type == "gmic_extract_foreground" ) {
+    processor = new_gmic_extract_foreground();
     //insert new operations here
   }
 

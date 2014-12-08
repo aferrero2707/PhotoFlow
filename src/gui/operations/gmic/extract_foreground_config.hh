@@ -27,52 +27,38 @@
 
  */
 
-#ifndef LAYER_LIST_HH
-#define LAYER_LIST_HH
+#ifndef GMIC_EXTRACT_FOREGROUND_CONFIG_DIALOG_HH
+#define GMIC_EXTRACT_FOREGROUND_CONFIG_DIALOG_HH
 
 #include <gtkmm.h>
 
-#include "pfwidget.hh"
+#include "../../../operations/gmic/extract_foreground.hh"
+
+#include "../../operation_config_dialog.hh"
+
 
 namespace PF {
 
-  class LayerList: public Gtk::VBox
+  class GmicExtractForegroundConfigDialog: public OperationConfigDialog
   {
-    //Tree model columns:
-    class ModelColumns : public Gtk::TreeModel::ColumnRecord
-    {
-    public:
-      
-      Gtk::TreeModelColumn<std::string> col_name;
-      Gtk::TreeModelColumn<Layer*> col_layer;
-      Gtk::TreeModelColumn<bool> col_blended;
-      
-      ModelColumns()
-      { add(col_name); add(col_layer); add(col_blended); }
-    };
-
-    ModelColumns columns;
-
-    OperationConfigDialog* dialog;
-
-    Gtk::VBox vbox;
-    Gtk::Label label;
-    Gtk::ComboBox cbox;
-    Glib::RefPtr<Gtk::ListStore> model;
-
-    bool inhibit;
-
+    Gtk::Button updateButton;
+    Gtk::VBox controlsBox;
+    
+    GmicExtractForegroundPar* get_par();
+       
   public:
-    LayerList(OperationConfigDialog* dialog, std::string label);
+    GmicExtractForegroundConfigDialog( Layer* l );
+    
+    void on_update();
+    void open();
 
-    ~LayerList() {}
+    //bool pointer_press_event( int button, double x, double y, int mod_key );
+    bool pointer_release_event( int button, double x, double y, int mod_key );
+    //bool pointer_motion_event( int button, double x, double y, int mod_key );
 
-    void set_inhibit( bool val ) { inhibit = val; }
-    void update_model();
-
-    void changed();
+    virtual bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
+                                 float scale, int xoffset, int yoffset );
   };
-
 
 }
 

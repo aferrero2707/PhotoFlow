@@ -285,28 +285,31 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 }
 
 
-void PF::DrawConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::DrawConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  if( button != 1 ) return false;
   start_stroke();
   draw_point( x, y );
+  return false;
 }
 
 
-void PF::DrawConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::DrawConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  if( button != 1 ) return false;
   //draw_point( x, y );
+  return false;
 }
 
 
-void PF::DrawConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::DrawConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  if( button != 1 ) return false;
 #ifndef NDEBUG
   std::cout<<"PF::DrawConfigDialog::pointer_motion_event() called."<<std::endl;
 #endif
   draw_point( x, y );
+  return false;
 }
 
 

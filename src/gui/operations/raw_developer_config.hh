@@ -106,8 +106,8 @@ namespace PF {
     void spot_wb( double x, double y );
     void color_spot_wb( double x, double y );
     
-    void pointer_press_event( int button, double x, double y, int mod_key );
-    void pointer_release_event( int button, double x, double y, int mod_key );
+    //bool pointer_press_event( int button, double x, double y, int mod_key );
+    bool pointer_release_event( int button, double x, double y, int mod_key );
   };
 
 }

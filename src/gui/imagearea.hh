@@ -96,6 +96,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   VipsRegion* region;
 
   DoubleBuffer double_buffer;
+  PixelBuffer temp_buffer;
 
   GCond* draw_done;
   GMutex* draw_mutex;

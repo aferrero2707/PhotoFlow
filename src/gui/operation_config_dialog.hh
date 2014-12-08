@@ -39,6 +39,8 @@
 #include "widgets/selector.hh"
 #include "widgets/exposure_slider.hh"
 
+#include "doublebuffer.hh"
+
 namespace PF {
 
 class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
@@ -131,12 +133,15 @@ public:
   }
 
 
-  virtual void pointer_press_event( int button, double x, double y, int mod_key ) {}
-  virtual void pointer_release_event( int button, double x, double y, int mod_key ) {}
-  virtual void pointer_motion_event( int button, double x, double y, int mod_key ) {}
+  virtual bool pointer_press_event( int button, double x, double y, int mod_key ) { return false; }
+  virtual bool pointer_release_event( int button, double x, double y, int mod_key ) { return false; }
+  virtual bool pointer_motion_event( int button, double x, double y, int mod_key ) { return false; }
 
   //void on_intensity_value_changed();
   //void on_opacity_value_changed();
+
+  virtual bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
+                               float scale, int xoffset, int yoffset ) { return false; }
 
   void open();
 

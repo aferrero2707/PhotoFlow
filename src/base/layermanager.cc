@@ -338,7 +338,7 @@ PF::CacheBuffer* PF::LayerManager::get_cache_buffer( std::list<Layer*>& list )
 
     PF::CacheBuffer* buf = NULL;
     for( unsigned int i = 0; i < l->extra_inputs.size(); i++ ) {
-      Layer* lextra = get_layer( l->extra_inputs[i] );
+      Layer* lextra = get_layer( l->extra_inputs[i].first );
       if( lextra && lextra->is_visible() && lextra->is_cached() && lextra->get_cache_buffer() &&
           !lextra->get_cache_buffer()->is_completed() ) {
         buf = lextra->get_cache_buffer();
@@ -426,7 +426,7 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     // if the current layer is not qualified as "dirty", but one of the extra input layers is,
     // then we set the dirty flag to true as well
     for( unsigned int i = 0; i < l->extra_inputs.size(); i++ ) {
-      Layer* lextra = get_layer( l->extra_inputs[i] );
+      Layer* lextra = get_layer( l->extra_inputs[i].first );
       if( lextra && lextra->is_dirty() ) {
         input_dirty = true;
         break;
@@ -807,15 +807,16 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       // images in the input vector
       for(uint32_t iextra = 0; iextra < l->extra_inputs.size(); iextra++) {
 #ifndef NDEBUG
-        std::cout<<"Layer \""<<l->get_name()<<"\": adding extra input layer id="<<l->extra_inputs[iextra]<<"..."<<std::endl;
+        std::cout<<"Layer \""<<l->get_name()<<"\": adding extra input layer id="<<l->extra_inputs[iextra].first
+                 <<" (blended="<<l->extra_inputs[iextra].second<<")..."<<std::endl;
 #endif
-        PF::Layer* lextra = get_layer( l->extra_inputs[iextra] );
+        PF::Layer* lextra = get_layer( l->extra_inputs[iextra].first );
         // If the extra input layer is not found we have a problem, better to give up
         // with an error.
         if( !lextra ) return false;
         PF::PipelineNode* extra_node = pipeline->get_node( lextra->get_id() );
         if( !extra_node ) return false;
-        VipsImage* extra_img = extra_node->image;
+        VipsImage* extra_img = (l->extra_inputs[iextra].second == true) ? extra_node->blended : extra_node->image;
         //VipsImage* extra_img = lextra->get_processor()->get_par()->get_image();
         // Similarly, if the extra input layer has no valid image associated to it
         // we have a problem and we gve up

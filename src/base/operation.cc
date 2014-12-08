@@ -53,6 +53,7 @@ void PF::OperationConfigUI::open()
 PF::OpParBase::OpParBase():
 	render_mode(PF_RENDER_PREVIEW), 
   map_flag( false ),
+  editing_flag( false ),
   modified_flag(false),
   intensity("intensity",this,1),
   grey_target_channel("grey_target_channel",this,-1,"Grey","Grey"),

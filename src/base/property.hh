@@ -46,6 +46,39 @@ namespace PF
   class OpParBase;
 
 
+  /*
+  template<class T1, class T2>
+  bool operator==(const std::pair<T1,T2>& lhs, const std::pair<T1,T2>& rhs)
+  {
+    if( lhs.first != rhs.first ) return false;
+    if( lhs.second != rhs.second ) return false;
+    return true;
+  }
+
+  template<class T1, class T2>
+  bool operator!=(const std::pair<T1,T2>& lhs, const std::pair<T1,T2>& rhs)
+  {
+    return( !(lhs == rhs) );
+  }
+  */
+
+
+  template<class T1, class T2>
+  std::istream& operator >>( std::istream& str, std::pair<T1,T2>& pair )
+  {
+    str>>pair.first>>pair.second;
+    return str;
+  }
+
+  template<class T1, class T2>
+  std::ostream& operator <<( std::ostream& str, const std::pair<T1,T2>& pair )
+  {
+    str<<pair.first<<" "<<pair.second<<" ";
+    return str;
+  }
+
+
+
   template<class T>
   bool operator==(const std::list<T>& lhs, const std::list<T>& rhs)
   {
@@ -63,6 +96,32 @@ namespace PF
     return( !(lhs == rhs) );
   }
 
+
+
+  template<class T>
+  std::istream& operator >>( std::istream& str, std::list<T>& list )
+  {
+    list.clear();
+    int nelt;
+    str>>nelt;
+    for( int i = 0; i < nelt; i++ ) {
+      list.push_back( T() );
+      T& val = list.back();
+      str>>val;
+    }
+    return str;
+  }
+
+  template<class T>
+  std::ostream& operator <<( std::ostream& str, const std::list<T>& list )
+  {
+    str<<list.size()<<" ";
+    typename std::list<T>::const_iterator i;
+    for( i = list.begin(); i != list.end(); i++ ) {
+      str<<(*i);
+    }
+    return str;
+  }
 
 
   template<class T>
@@ -197,6 +256,13 @@ namespace PF
   void set_gobject_property(gpointer object, const std::string name, const T& value)
   {
     g_object_set( object, name.c_str(), value, NULL );
+  }
+
+
+  template<typename T>
+  void set_gobject_property(gpointer object, const std::string name, const std::list<T>& value)
+  {
+    //g_object_set( object, name.c_str(), value, NULL );
   }
 
 
