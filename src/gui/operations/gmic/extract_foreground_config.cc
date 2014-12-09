@@ -32,14 +32,32 @@
 
 PF::GmicExtractForegroundConfigDialog::GmicExtractForegroundConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Dream Smoothing (G'MIC)"  ),
-  updateButton( "Update" )
+  updateButton( "Update" ),
+  editPointsButton( "edit control points" ),
+  showMaskButton( "show mask" ),
+  showBlendButton( "show blend" ),
+  layer_list( this, "Foreground layer:")
 {
   //controlsBox.pack_start( iterations_slider );
   controlsBox.pack_start( updateButton );
 
+  Gtk::RadioButton::Group group = editPointsButton.get_group();
+  showMaskButton.set_group( group );
+  showBlendButton.set_group( group );
+
+  controlsBox.pack_start( editPointsButton );
+  controlsBox.pack_start( showMaskButton );
+  controlsBox.pack_start( showBlendButton );
+  editPointsButton.set_active();
+
   updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_update) );
   
+  editPointsButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_edit_points) );
+  showMaskButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_show_mask) );
+  showBlendButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_show_blend) );
+  
   add_widget( controlsBox );
+  add_widget( layer_list );
 }
 
 
@@ -62,6 +80,68 @@ void PF::GmicExtractForegroundConfigDialog::on_update()
   if( !par ) return;
 
   par->refresh();
+  get_layer()->get_image()->lock();
+  std::cout<<"  updating image"<<std::endl;
+  get_layer()->get_image()->update();
+  get_layer()->get_image()->unlock();
+}
+
+
+void PF::GmicExtractForegroundConfigDialog::on_map()
+{
+  OperationConfigDialog::on_map();
+  PF::GmicExtractForegroundPar* par = get_par();
+  if( !par ) return;
+  par->set_editing_flag( true );
+  get_layer()->get_image()->lock();
+  std::cout<<"  updating image"<<std::endl;
+  get_layer()->get_image()->update();
+  get_layer()->get_image()->unlock();
+}
+
+
+void PF::GmicExtractForegroundConfigDialog::on_unmap()
+{
+  OperationConfigDialog::on_unmap();
+  PF::GmicExtractForegroundPar* par = get_par();
+  if( !par ) return;
+  par->set_editing_flag( false );
+  get_layer()->get_image()->lock();
+  std::cout<<"  updating image"<<std::endl;
+  get_layer()->get_image()->update();
+  get_layer()->get_image()->unlock();
+}
+
+
+void PF::GmicExtractForegroundConfigDialog::on_edit_points()
+{
+  PF::GmicExtractForegroundPar* par = get_par();
+  if( !par ) return;
+  par->set_preview_mode( EXTRACT_FG_PREVIEW_POINTS );
+  get_layer()->get_image()->lock();
+  std::cout<<"  updating image"<<std::endl;
+  get_layer()->get_image()->update();
+  get_layer()->get_image()->unlock();
+}
+
+
+void PF::GmicExtractForegroundConfigDialog::on_show_mask()
+{
+  PF::GmicExtractForegroundPar* par = get_par();
+  if( !par ) return;
+  par->set_preview_mode( EXTRACT_FG_PREVIEW_MASK );
+  get_layer()->get_image()->lock();
+  std::cout<<"  updating image"<<std::endl;
+  get_layer()->get_image()->update();
+  get_layer()->get_image()->unlock();
+}
+
+
+void PF::GmicExtractForegroundConfigDialog::on_show_blend()
+{
+  PF::GmicExtractForegroundPar* par = get_par();
+  if( !par ) return;
+  par->set_preview_mode( EXTRACT_FG_PREVIEW_BLEND );
   get_layer()->get_image()->lock();
   std::cout<<"  updating image"<<std::endl;
   get_layer()->get_image()->update();
@@ -97,8 +177,27 @@ bool PF::GmicExtractForegroundConfigDialog::pointer_release_event( int button, d
 
   if( button == 2 ) {
     // Remove control point
-    par->get_bg_points().get().push_back( std::make_pair((int)x, (int)y) );
-    return true;
+    std::list< std::pair<int,int> >::iterator i;
+    bool found = false;
+    for(i = par->get_fg_points().get().begin(); i != par->get_fg_points().get().end(); i++ ) {
+      double dx = x - i->first;
+      double dy = y - i->second;
+      if( (fabs(dx) > 10) || (fabs(dy) > 10) ) continue;
+      found = true;
+      par->get_fg_points().get().erase( i );
+      break;
+    }
+    if( found ) return true;
+    for(i = par->get_bg_points().get().begin(); i != par->get_bg_points().get().end(); i++ ) {
+      double dx = x - i->first;
+      double dy = y - i->second;
+      if( (fabs(dx) > 10) || (fabs(dy) > 10) ) continue;
+      found = true;
+      par->get_bg_points().get().erase( i );
+      break;
+    }
+    if( found ) return true;
+    return false;
   }
 
   return false;

@@ -32,6 +32,9 @@
 
 #include "../raster_image.hh"
 
+#include "../operations/convertformat.hh"
+#include "../operations/blender.hh"
+
 #include "gmic.hh"
 #include "extract_foreground.hh"
 
@@ -115,6 +118,7 @@ PF::GmicExtractForegroundPar::GmicExtractForegroundPar():
 {	
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   convert_format2 = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  blender = PF::new_blender();
 
   PF::Processor<GmicExtractForegroundMaskPar,GmicExtractForegroundMaskProc>* proc = 
     new PF::Processor<GmicExtractForegroundMaskPar,GmicExtractForegroundMaskProc>();
@@ -192,6 +196,7 @@ bool PF::GmicExtractForegroundPar::import_settings( OpParBase* pin )
   if( !par ) return false;
   preview_cache_file_name = par->get_preview_cache_file_name();
   render_cache_file_name = par->get_render_cache_file_name();
+  preview_mode = par->get_preview_mode();
 
   return( PF::OpParBase::import_settings(pin) );
 }
@@ -231,9 +236,12 @@ VipsImage* PF::GmicExtractForegroundPar::build(std::vector<VipsImage*>& in, int 
                                         VipsImage* imap, VipsImage* omap, 
                                         unsigned int& level)
 {
-  VipsImage* srcimg = NULL;
-  if( in.size() > 0 ) srcimg = in[0];
+  VipsImage* bgdimg = NULL;
+  if( in.size() > 0 ) bgdimg = in[0];
+  if( !bgdimg ) return NULL;
 
+  VipsImage* srcimg = NULL;
+  if( in.size() > 1 ) srcimg = in[1];
   if( !srcimg ) return NULL;
 
   //PF_REF( srcimg, "GmicExtractForegroundPar::build(): srcimg ref (temporary)" );
@@ -310,9 +318,9 @@ VipsImage* PF::GmicExtractForegroundPar::build(std::vector<VipsImage*>& in, int 
     gmic_list<float> images;
     gmic_list<char> images_names;
 
-    std::string command = std::string("-verbose + -input ") + fname2 + " -n 0,255 -input " + fname;
-    command = command + " –blur[0] 0.2% -gradient_norm[-1] -fill[-1] '1/(1+i^2)' -watershed[1] [2] -reverse[-2,-1] "
-      + " -output " + cache_file_name + ",float,lzw";
+    std::string command = std::string("-verbose + -verbose + -verbose + -input ") + fname2 + " -n 0,255 -input " + fname;
+    command = command + " --blur[0] 0.2% -gradient_norm[-1] -fill[-1] '1/(1+i^2)'" + " -watershed[1] [2] -reverse[-2,-1]"
+      + " -n[2] 0,1 -output[2] " + cache_file_name + ",float,lzw";
     std::cout<<"foreground extract command: "<<command<<std::endl;
 
     gmic_instance->run( command.c_str() );
@@ -335,21 +343,43 @@ VipsImage* PF::GmicExtractForegroundPar::build(std::vector<VipsImage*>& in, int 
   
   if( !image ) return NULL;
 
-  VipsImage* out = image;
+  VipsImage* mask = image;
   if( (get_format() != image->BandFmt) ) {
     std::vector<VipsImage*> in2;
     in2.push_back( image );
     convert_format2->get_par()->set_image_hints( image );
     convert_format2->get_par()->set_format( get_format() );
-    out = convert_format2->get_par()->build( in2, 0, NULL, NULL, level );
+    mask = convert_format2->get_par()->build( in2, 0, NULL, NULL, level );
     //std::cout<<"ImageReaderPar::build(): out ("<<(void*)out<<") refcount after convert_format: "<<G_OBJECT(out)->ref_count<<std::endl;
     //g_object_unref( image );
     PF_UNREF( image, "ImageReaderPar::build(): image unref after convert_format" );
   }
 
-  if( out ) {
+  if( mask ) {
     //PF_REF( image, "GmicExtractForegroundPar::build()" );
-    set_image_hints( out );
+    set_image_hints( mask );
+  }
+
+  VipsImage* out = NULL;
+  if( !is_editing() || (preview_mode == EXTRACT_FG_PREVIEW_BLEND) ) {
+    blender->get_par()->set_image_hints( bgdimg );
+    blender->get_par()->set_format( get_format() );
+    std::vector<VipsImage*> in2;
+    in2.push_back( bgdimg );
+    in2.push_back( srcimg );
+    out = blender->get_par()->build( in2, 0, NULL, mask, level );
+  }
+  if( is_editing() && (preview_mode == EXTRACT_FG_PREVIEW_POINTS) ) {
+    PF_REF( srcimg, "GmicExtractForegroundPar::build(): srcimg ref (EXTRACT_FG_PREVIEW_POINTS)" );
+    out = srcimg;
+  }
+  if( is_editing() && (preview_mode == EXTRACT_FG_PREVIEW_MASK) ) {
+    VipsImage* bandv[10];
+    for( int bi = 0; bi < bgdimg->Bands; bi++ )
+      bandv[bi] = mask;
+    if( vips_bandjoin( bandv, &out, bgdimg->Bands, NULL ) ) {
+      return NULL;
+    }
   }
   return out;
 

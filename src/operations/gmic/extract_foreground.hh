@@ -35,12 +35,17 @@
 
 #include "../vips/gmic/gmic/src/gmic.h"
 
-#include "../operations/convertformat.hh"
 #include "../operations/raster_image.hh"
 
 
 namespace PF 
 {
+
+  enum extract_fg_preview_mode_t {
+    EXTRACT_FG_PREVIEW_POINTS,
+    EXTRACT_FG_PREVIEW_MASK,
+    EXTRACT_FG_PREVIEW_BLEND
+  };
 
   class GmicExtractForegroundPar: public OpParBase
   {
@@ -49,12 +54,16 @@ namespace PF
 
     PF::ProcessorBase* convert_format;
     PF::ProcessorBase* convert_format2;
+    PF::ProcessorBase* blender;
+
     char* custom_gmic_commands;
     gmic* gmic_instance;
 
     bool do_update;
     std::string preview_cache_file_name;
     std::string render_cache_file_name;
+
+    extract_fg_preview_mode_t preview_mode;
 
     RasterImage* raster_image;
 
@@ -74,6 +83,9 @@ namespace PF
 
     Property< std::list< std::pair<int,int> > >& get_fg_points() { return fg_points; }
     Property< std::list< std::pair<int,int> > >& get_bg_points() { return bg_points; }
+
+    extract_fg_preview_mode_t get_preview_mode() { return preview_mode; }
+    void set_preview_mode( extract_fg_preview_mode_t mode ) { preview_mode = mode; }
 
     void refresh() { do_update = true; }
 

@@ -36,20 +36,43 @@
 
 #include "../../operation_config_dialog.hh"
 
+#include "../../widgets/layerlist.hh"
+
 
 namespace PF {
 
   class GmicExtractForegroundConfigDialog: public OperationConfigDialog
   {
     Gtk::Button updateButton;
+    Gtk::RadioButton editPointsButton, showMaskButton, showBlendButton;
     Gtk::VBox controlsBox;
     
+    LayerList layer_list;
+
     GmicExtractForegroundPar* get_par();
        
   public:
     GmicExtractForegroundConfigDialog( Layer* l );
     
+    void do_update()
+    {
+      layer_list.update_model();
+      OperationConfigDialog::do_update();
+    }
+
+    void init()
+    {
+      layer_list.update_model();
+      OperationConfigDialog::init();
+    }
+
+    void on_map();
+    void on_unmap();
+
     void on_update();
+    void on_edit_points();
+    void on_show_mask();
+    void on_show_blend();
     void open();
 
     //bool pointer_press_event( int button, double x, double y, int mod_key );
