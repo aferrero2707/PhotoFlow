@@ -27,21 +27,29 @@
 
  */
 
-#include "../../operations/channel_mixer.hh"
+#ifndef DESATURATE_CONFIG_DIALOG_HH
+#define DESATURATE_CONFIG_DIALOG_HH
 
-#include "channel_mixer_config.hh"
+#include <gtkmm.h>
+
+#include "../operation_config_dialog.hh"
+#include "../../operations/desaturate.hh"
 
 
-PF::ChannelMixerConfigDialog::ChannelMixerConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Channel Mixer" ),
-  red_mix_slider( this, "red_mix", "Red %", 33, -200, 200, 5, 20, 100),
-  green_mix_slider( this, "green_mix", "Green %", 34, -200, 200, 5, 20, 100),
-  blue_mix_slider( this, "blue_mix", "Blue %", 33, -200, 200, 5, 20, 100)
-{
-  controlsBox.pack_start( red_mix_slider );
-  controlsBox.pack_start( green_mix_slider );
-  controlsBox.pack_start( blue_mix_slider );
-  
-  
-  add_widget( controlsBox );
+namespace PF {
+
+  class DesaturateConfigDialog: public OperationConfigDialog
+  {
+    Gtk::VBox controlsBox;
+    
+    Selector modeSelector;
+
+  public:
+    DesaturateConfigDialog( Layer* l );
+    
+    void do_update();
+  };
+
 }
+
+#endif

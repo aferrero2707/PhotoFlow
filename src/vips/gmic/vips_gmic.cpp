@@ -243,7 +243,8 @@ vips_gmic_start( VipsImage *out, void *a, void *b )
     std::cout<<"Loading G'MIC custom commands..."<<std::endl;
     char fname[500]; fname[0] = 0;
 #if defined(WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
-    snprintf( fname, 499, "%s\gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+    snprintf( fname, 499, "%s\\gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+    std::cout<<"G'MIC commands definition file: "<<fname<<std::endl;
     struct stat buffer;   
     int stat_result = stat( fname, &buffer );
     if( stat_result != 0 ) {
@@ -546,7 +547,7 @@ g_module_check_init( GModule *module )
 
 	/* We can't be unloaded, there would be chaos.
 	 */
-	g_module_make_resident( module );
+	//g_module_make_resident( module );
 
 	return( NULL ); 
 }

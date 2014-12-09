@@ -102,6 +102,10 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
     processor = new_brightness_contrast();
 
+  } else if( op_type == "hue_saturation" ) {
+
+    processor = new_hue_saturation();
+
   } else if( op_type == "curves" ) {
       
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
@@ -141,6 +145,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
     processor = new_draw();
+
+  } else if( op_type == "clone_stamp" ) {
+
+    //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
+    processor = new_clone_stamp();
 
   }
 

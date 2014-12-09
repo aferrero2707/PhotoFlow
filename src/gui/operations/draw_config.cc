@@ -225,6 +225,7 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
   if( !par ) return;
   
   VipsRect update;
+  //std::cout<<"DrawConfigDialog::draw_point( "<<x<<", "<<y<<" )"<<std::endl;
   par->draw_point( x, y, update );
 
 

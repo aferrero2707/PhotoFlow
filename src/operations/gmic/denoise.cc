@@ -36,12 +36,12 @@
 PF::GmicDenoisePar::GmicDenoisePar(): 
 OpParBase(),
   iterations("iterations",this,1),
-  prop_sigma_s("sigma_s",this,1),
-  prop_sigma_r("sigma_r",this,1),
-  prop_psize("psize",this,1),
-  prop_rsize("rsize",this,1),
-  prop_smoothness("smoothness",this,1),
-  prop_is_fast("is_fast",this,0)
+  prop_sigma_s("sigma_s",this,10),
+  prop_sigma_r("sigma_r",this,10),
+  prop_psize("psize",this,3),
+  prop_rsize("rsize",this,5),
+  prop_smoothness("smoothness",this,0),
+  prop_is_fast("is_fast",this,1)
 {	
   gmic = PF::new_gmic();
   set_type( "gmic_denoise" );

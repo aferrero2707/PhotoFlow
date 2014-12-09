@@ -44,6 +44,7 @@ namespace PF {
   {
     std::string filename;
     Image* image;
+    bool image_opened;
 
     Layer* active_layer;
 
@@ -71,7 +72,10 @@ namespace PF {
 	active_layer = image->get_layer_manager().get_layer( id );
     }
 
+    void open_image();
+
     void on_map();
+    void on_realize();
 
     // Handlers for the mouse events inside the image area
     bool on_button_press_event( GdkEventButton* button );
@@ -95,7 +99,7 @@ namespace PF {
       return fact;
     }
 
-    void screen2image( gdouble& x, gdouble& y );
+    bool screen2image( gdouble& x, gdouble& y );
 
     void zoom_in();
     void zoom_out();

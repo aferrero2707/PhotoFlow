@@ -27,21 +27,42 @@
 
  */
 
-#include "../../operations/channel_mixer.hh"
+#ifndef HUE_SATURATION_CONFIG_DIALOG_HH
+#define HUE_SATURATION_CONFIG_DIALOG_HH
 
-#include "channel_mixer_config.hh"
+#include <gtkmm.h>
+
+#include "../operation_config_dialog.hh"
+//#include "../widgets/outmode_slider.hh"
+#include "../../operations/brightness_contrast.hh"
 
 
-PF::ChannelMixerConfigDialog::ChannelMixerConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Channel Mixer" ),
-  red_mix_slider( this, "red_mix", "Red %", 33, -200, 200, 5, 20, 100),
-  green_mix_slider( this, "green_mix", "Green %", 34, -200, 200, 5, 20, 100),
-  blue_mix_slider( this, "blue_mix", "Blue %", 33, -200, 200, 5, 20, 100)
+namespace PF {
+
+  class HueSaturationConfigDialog: public OperationConfigDialog
 {
-  controlsBox.pack_start( red_mix_slider );
-  controlsBox.pack_start( green_mix_slider );
-  controlsBox.pack_start( blue_mix_slider );
-  
-  
-  add_widget( controlsBox );
+  Gtk::VBox controlsBox;
+
+  Gtk::Frame frame;
+
+  Gtk::HSeparator hline;
+
+  Gtk::Alignment padding1, padding2, padding3, padding4;
+
+  Slider hueSlider, saturationSlider;
+
+  //Gtk::HBox outputModeBox;
+  //OutModeSlider outputModeSlider;
+
+public:
+  HueSaturationConfigDialog( Layer* l );
+
+  void on_hue_value_changed();
+  void on_saturation_value_changed();
+
+  void open();
+};
+
 }
+
+#endif

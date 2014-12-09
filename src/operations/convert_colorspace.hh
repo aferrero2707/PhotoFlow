@@ -62,6 +62,9 @@ namespace PF
     PropertyBase out_profile_mode;
     Property<std::string> out_profile_name;
 
+    void* out_profile_data;
+    int out_profile_data_length;
+
     cmsHTRANSFORM transform;
 
     ProcessorBase* convert2lab;
@@ -75,11 +78,18 @@ namespace PF
 
     cmsHTRANSFORM get_transform() { return transform; }
 
+    int get_out_profile_mode() { return out_profile_mode.get_enum_value().first; }
+    void set_out_profile_mode( output_profile_t mode ) { out_profile_mode.set_enum_value( mode ); }
+    void set_out_profile_data( void* data, int length ) { 
+      out_profile_data = data; 
+      out_profile_data_length = length; 
+    }
+
     void set_image_hints( VipsImage* img )
     {
       if( !img ) return;
       OpParBase::set_image_hints( img );
-      rgb_image( get_xsize(), get_ysize() );
+      //rgb_image( get_xsize(), get_ysize() );
     }
 
     cmsColorSpaceSignature get_input_cs_type() { return input_cs_type; }

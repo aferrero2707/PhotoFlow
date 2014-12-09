@@ -38,64 +38,54 @@
 namespace PF 
 {
 
-  class DesaturatePar: public PixelProcessorPar
+
+  enum desaturate_method_t {
+    DESAT_LUMINOSITY,
+    DESAT_LIGHTNESS,
+    DESAT_AVERAGE,
+    DESAT_LAB
+  };
+
+
+  class DesaturatePar: public OpParBase
   {
+    PropertyBase method;
+
+    ProcessorBase* proc_luminosity;
+    ProcessorBase* proc_lightness;
+    ProcessorBase* proc_average;
+    ProcessorBase* convert2lab;
+    ProcessorBase* convert_cs;
+
   public:
     DesaturatePar();
-  };
 
-  
+    bool has_intensity() { return false; }
 
-  template < typename T, colorspace_t CS, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
-  class DesaturateProc
-  {
-    DesaturatePar* par;
-  public:
-    DesaturateProc(DesaturatePar* p): par(p) {}
-
-    void process(T**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, T* pout) {}
-  };
-
-  
-  template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
-  class DesaturateProc<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, PREVIEW, OP_PAR>
-  {
-    DesaturatePar* par;
-  public:
-    DesaturateProc(DesaturatePar* p): par(p) {}
-
-    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
-    {
-      T* pp = p[first];
-      T val = 0.21f*pp[x] + 0.72f*pp[x+1] + 0.07f*pp[x+2];
-      for(int i = CHMIN; i <= CHMAX; i++) {
-        pout[x+i] = val;
-      }
+    desaturate_method_t get_method() 
+    { 
+      return( static_cast<desaturate_method_t>(method.get_enum_value().first) );
     }
+
+    VipsImage* build(std::vector<VipsImage*>& in, int first, 
+                     VipsImage* imap, VipsImage* omap, 
+                     unsigned int& level);
   };
 
   
-  template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
-  class DesaturateProc<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, PREVIEW, OP_PAR>
-  {
-    DesaturatePar* par;
-  public:
-    DesaturateProc(DesaturatePar* p): par(p) {}
-
-    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
-    {
-      T* pp = p[first];
-      for(int i = CHMIN; i <= CHMAX; i++) {
-        pout[x+i] = ( (i==0) ? pp[x] : FormatInfo<T>::HALF );
-      }
-    }
-  };
-
-  
+#include "desaturate_luminosity.hh"
+#include "desaturate_lightness.hh"
+#include "desaturate_average.hh"
 
   template < OP_TEMPLATE_DEF > 
-  class Desaturate: public PixelProcessor< OP_TEMPLATE_IMP, DesaturatePar, DesaturateProc >
+  class DesaturateProc
   {
+  public:
+    void render(VipsRegion** ireg, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, DesaturatePar* par)
+    {
+    }
   };
 
 

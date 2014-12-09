@@ -364,6 +364,7 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 	VipsRect clipped;
 	vips_rect_intersectrect( &area, &all, &clipped );
   
+  /*
 	if( vips_crop( image, &spot, 
 								 clipped.left, clipped.top, 
 								 clipped.width+1, clipped.height+1, 
@@ -371,8 +372,11 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
     std::cout<<"Image::do_sample(): vips_crop() failed"<<std::endl;
 		return;
   }
-
 	VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
+  */
+  spot = image;
+
+	VipsRect rspot = {clipped.left, clipped.top, clipped.width, clipped.height};
 
 	//VipsImage* outimg = im_open( "spot_wb_img", "p" );
 	//if (vips_sink_screen (spot, outimg, NULL,
@@ -391,7 +395,7 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
     std::cout<<"Image::do_sample(): NULL image after convert_format"<<std::endl;
     return;
   }
-  PF_UNREF( spot, "Image::do_sample() spot unref" )
+  //PF_UNREF( spot, "Image::do_sample() spot unref" )
 	//if( vips_sink_memory( spot ) )
 	//  return;
 
@@ -409,7 +413,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 	float avg[16];
   for( int i = 0; i < 16; i++ ) avg[i] = 0;
 	for( row = 0; row < clipped.height; row++ ) {
-		p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
+		p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top+row );
+    std::cout<<"do_sample(): rspot.left="<<rspot.left<<"  rspot.top+row="<<rspot.top+row<<std::endl;
 		for( col = 0; col < line_size; col += image->Bands ) {
 			for( b = 0; b < image->Bands; b++ ) {
 				avg[b] += p[col+b];

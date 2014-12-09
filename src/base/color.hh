@@ -41,11 +41,175 @@
 #endif
 #define MAX3( a, b, c ) MAX(a,MAX(b,c))
 
+#include <math.h>
 
 #include "format_info.hh"
 
 namespace PF
 {
+
+
+  template<class T>
+  void to_float( const T& in, float& out )
+  {
+    float f = static_cast<float>(in);
+    out= (f+FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+  }
+
+  template<class T>
+  void from_float( const float& in, T& out )
+  {
+    out = static_cast<T>( (in*FormatInfo<T>::RANGE)-FormatInfo<T>::MIN );
+  }
+
+  // 
+  template<class T>
+  void rgb2hsv(const T& r, const T& g, const T& b, float& h, float& s, float& v)
+  {
+    T min = MIN3(r, g, b);
+    T max = MAX3(r, g, b);
+    typename FormatInfo<T>::SIGNED c = static_cast<typename FormatInfo<T>::SIGNED>(max) - min;
+
+    to_float( max, v );
+    s = h = 0;
+
+    if( c == 0 ) return;
+
+    s = static_cast<float>(c)/max;
+    float fr = static_cast<float>(r);
+    float fg = static_cast<float>(g);
+    float fb = static_cast<float>(b);
+
+    if( r == max ) h = (fg-fb)/c;
+    else if( g == max ) h = (fb-fr)/c + 2.0f;
+    else if( b == max ) h = (fr-fg)/c + 4.0f;
+    h *= 60;
+    if( h < 0 ) h += 360;
+  }
+
+
+  // 
+  template<class T>
+  void hsv2rgb( const float& h, const float& s, const float& v, T& r, T& g, T& b )
+  {
+    int i;
+    float sect, f, p, q, t, c;
+
+    if( s == 0 ) {
+      // achromatic (grey)
+      from_float( v, r );
+      g = b =r;
+      return;
+    }
+
+    c = v * s;
+    sect = h/60;			// sector 0 to 5
+    i = floor( sect );
+    f = sect - i;			// factorial part of h
+    p = v * ( 1 - s );
+    q = v * ( 1 - s * f );
+    t = v * ( 1 - s * ( 1 - f ) );
+
+    switch( i ) {
+		case 0:
+			from_float( v, r );
+			from_float( t, g );
+			from_float( p, b );
+			break;
+		case 1:
+			from_float( q, r );
+			from_float( v, g );
+			from_float( p, b );
+			break;
+		case 2:
+			from_float( p, r );
+			from_float( v, g );
+			from_float( t, b );
+			break;
+		case 3:
+			from_float( p, r );
+			from_float( q, g );
+			from_float( v, b );
+			break;
+		case 4:
+			from_float( t, r );
+			from_float( p, g );
+			from_float( v, b );
+			break;
+		default:		// case 5:
+			from_float( v, r );
+			from_float( p, g );
+			from_float( q, b );
+			break;
+    }
+  }
+
+
+
+  //
+  // Converts an HSV color to an RGB color, according to the algorithm described at http://en.wikipedia.org/wiki/HSL_and_HSV
+  // Code taken from here: http://wiki.beyondunreal.com/HSV-RGB_Conversion
+  template<class T>
+  void hsv2rgb2( const float& h, const float& s, const float& v, T& r, T& g, T& b )
+  {
+    float Min;
+    float Chroma;
+    float Hdash;
+    float X;
+    float R, G, B;
+    int i;
+ 
+    if( s == 0 ) {
+      // achromatic (grey)
+      from_float( v, r );
+      g = b = r;
+      return;
+    }
+
+    R = G = B = 0;
+    Chroma = s * v;
+    Hdash = h / 60.0;
+    X = Chroma * (1.0f - fabs(fmod(Hdash,2) - 1.0f));
+    i = floor( Hdash );
+ 
+    switch( i ) {
+		case 0:
+      R = Chroma;
+      G = X;
+      break;
+    case 1:
+      R = X;
+      G = Chroma;
+      break;
+    case 2:
+      G = Chroma;
+      B = X;
+      break;
+    case 3:
+      G = X;
+      B = Chroma;
+      break;
+    case 4:
+      R = X;
+      B = Chroma;
+      break;
+    default:
+      R = Chroma;
+      B = X;
+      break;
+    }
+    
+    Min = v - Chroma;
+ 
+    R += Min;
+    G += Min;
+    B += Min;
+    from_float(R, r);
+    from_float(G, g);
+    from_float(B, b);
+  }
+
+
 
 
   // Computes the luminance value of a given RGB triplet

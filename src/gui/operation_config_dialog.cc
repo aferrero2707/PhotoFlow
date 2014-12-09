@@ -33,20 +33,38 @@
 
 #include "../gui/operations/raw_developer_config.hh"
 #include "../gui/operations/brightness_contrast_config.hh"
+#include "../gui/operations/hue_saturation_config.hh"
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/crop_config.hh"
 #include "../gui/operations/gradient_config.hh"
+#include "../gui/operations/uniform_config.hh"
 #include "../gui/operations/curves_config.hh"
 #include "../gui/operations/channel_mixer_config.hh"
 #include "../gui/operations/gaussblur_config.hh"
 #include "../gui/operations/denoise_config.hh"
+#include "../gui/operations/desaturate_config.hh"
 #include "../gui/operations/sharpen_config.hh"
 #include "../gui/operations/draw_config.hh"
+#include "../gui/operations/clone_stamp_config.hh"
 #include "../gui/operations/convert_colorspace_config.hh"
 
 #include "operations/gmic/new_gmic_operation_config.hh"
+
+static bool is_blend_mode_row_separator(const Glib::RefPtr<Gtk::TreeModel>& model, const Gtk::TreeModel::iterator& iter)
+{
+  if( iter ) {
+    Gtk::TreeModel::Row row = *iter;
+    if( row ) {
+      //Get the data for the selected row, using our knowledge of the tree
+      //model:
+      //Glib::ustring value = row[2];
+      //if( value > 1000 ) return true;
+    }
+  }
+  return false;
+}
 
 
 static gboolean dialog_update_cb (PF::OperationConfigDialog * dialog)
@@ -106,6 +124,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   nameEntry.set_text( "New Layer" );
   nameBox.pack_start( nameEntry, Gtk::PACK_SHRINK );
 
+  //blendSelector.set_row_separator_func( is_blend_mode_row_separator );
   if(par && par->has_opacity() )
     nameBox.pack_end( blendSelector );
 
@@ -436,7 +455,11 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   } else if( op_type == "desaturate" ) {
 
-    dialog = new PF::OperationConfigDialog( current_layer, "Desaturate Image" );
+    dialog = new PF::DesaturateConfigDialog( current_layer );
+
+  } else if( op_type == "uniform" ) {
+
+    dialog = new PF::UniformConfigDialog( current_layer );
 
   } else if( op_type == "gradient" ) {
 
@@ -445,6 +468,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "brightness_contrast" ) {
 
     dialog = new PF::BrightnessContrastConfigDialog( current_layer );
+
+  } else if( op_type == "hue_saturation" ) {
+
+    dialog = new PF::HueSaturationConfigDialog( current_layer );
 
   } else if( op_type == "curves" ) {
       
@@ -477,13 +504,18 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "draw" ) {
 
     dialog = new PF::DrawConfigDialog( current_layer );
+
+  } else if( op_type == "clone_stamp" ) {
+
+    dialog = new PF::CloneStampConfigDialog( current_layer );
+
   }
 
   if( !dialog ) {
     // Try with G'MIC
     dialog = PF::new_gmic_operation_config( op_type, current_layer );
   }
-    /*
+  /*
   } else { // it must be a VIPS operation...
 
     int pos = op_type.find( "vips-" );
@@ -496,7 +528,7 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
     vips_config->set_op( vips_op_type.c_str() );
     dialog = vips_config;
   }
-    */
+  */
 
   if( processor ) {
     PF::OpParBase* current_op = processor->get_par();

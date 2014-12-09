@@ -211,8 +211,19 @@ PF::Layer* PF::LayerManager::get_container_layer( Layer* layer, std::list<Layer*
   std::list<PF::Layer*>::iterator li;
   for(li = list.begin(); li != list.end(); ++li) {
     PF::Layer* l = *li;
+    // We first look in the sublayers list
+    std::list<PF::Layer*>::iterator lj;
+    for( lj = l->get_sublayers().begin(); 
+         lj != l->get_sublayers().end(); ++lj ) {
+      int id1 = layer->get_id();
+      int id2 = ( (*lj)!=NULL ) ? (*lj)->get_id() : -1;
+      if( (*lj) && ((*lj)->get_id() == layer->get_id()) ) {
+        // We found it, no need to continue...
+        return( l );
+      }
+    }
     if( is_map ) {
-      // If the target layer is a layer map, then we only look into the 
+      // If the target layer is a layer map, then we also look into the 
       // intensity and opacity maps
       std::list<PF::Layer*>::iterator lj;
       for( lj = l->get_imap_layers().begin(); 
@@ -226,18 +237,6 @@ PF::Layer* PF::LayerManager::get_container_layer( Layer* layer, std::list<Layer*
       }
       for( lj = l->get_omap_layers().begin(); 
            lj != l->get_omap_layers().end(); ++lj ) {
-        int id1 = layer->get_id();
-        int id2 = ( (*lj)!=NULL ) ? (*lj)->get_id() : -1;
-        if( (*lj) && ((*lj)->get_id() == layer->get_id()) ) {
-          // We found it, no need to continue...
-          return( l );
-        }
-      }
-    } else {
-      // If the target layer is a normal one, we only look in the sublayers list
-      std::list<PF::Layer*>::iterator lj;
-      for( lj = l->get_sublayers().begin(); 
-           lj != l->get_sublayers().end(); ++lj ) {
         int id1 = layer->get_id();
         int id2 = ( (*lj)!=NULL ) ? (*lj)->get_id() : -1;
         if( (*lj) && ((*lj)->get_id() == layer->get_id()) ) {
@@ -638,18 +637,18 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       blender = l->get_blender()->get_par();
       if( par && blender ) {
         PF::PropertyBase* p_rgb_target_ch =  blender->get_property( "rgb_target_channel" );
-        std::cout<<"Layer "<<name<<"<< p_rgb_target_ch="<<p_rgb_target_ch
-                 <<"  par->get_rgb_target_channel()="<<par->get_rgb_target_channel()<<std::endl;
+        //std::cout<<"Layer "<<name<<"<< p_rgb_target_ch="<<p_rgb_target_ch
+        //         <<"  par->get_rgb_target_channel()="<<par->get_rgb_target_channel()<<std::endl;
         if( p_rgb_target_ch ) 
           p_rgb_target_ch->set_enum_value( par->get_rgb_target_channel() );
         PF::PropertyBase* p_lab_target_ch =  blender->get_property( "lab_target_channel" );
-        std::cout<<"Layer "<<name<<"<< p_lab_target_ch="<<p_lab_target_ch
-                 <<"  par->get_lab_target_channel()="<<par->get_lab_target_channel()<<std::endl;
+        //std::cout<<"Layer "<<name<<"<< p_lab_target_ch="<<p_lab_target_ch
+        //         <<"  par->get_lab_target_channel()="<<par->get_lab_target_channel()<<std::endl;
         if( p_lab_target_ch )
           p_lab_target_ch->set_enum_value( par->get_lab_target_channel() );
         PF::PropertyBase* p_cmyk_target_ch = blender->get_property( "cmyk_target_channel" );
-        std::cout<<"Layer "<<name<<"<< p_cmyk_target_ch="<<p_cmyk_target_ch
-                 <<"  par->get_cmyk_target_channel()="<<par->get_cmyk_target_channel()<<std::endl;
+        //std::cout<<"Layer "<<name<<"<< p_cmyk_target_ch="<<p_cmyk_target_ch
+        //         <<"  par->get_cmyk_target_channel()="<<par->get_cmyk_target_channel()<<std::endl;
         if( p_cmyk_target_ch )
           p_cmyk_target_ch->set_enum_value( par->get_cmyk_target_channel() );
       }
@@ -685,10 +684,8 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       par->set_image_hints( width, height, cs );
       blender->set_image_hints( width, height, cs );
     } else {
-      if( previous ) {
-        par->set_image_hints( previous );
-        blender->set_image_hints( previous );
-      }
+      par->set_image_hints( previous );
+      blender->set_image_hints( previous );
     }
     
     if( (pipeline->get_render_mode() == PF::PF_RENDER_PREVIEW) &&
@@ -825,6 +822,11 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
         par->set_image_hints( extra_img );
         blender->set_image_hints( extra_img );
+        if( par->is_map() ) {
+          // If the layer is a mask, we force the output image colorspace to grayscale
+          par->grayscale_image( par->get_xsize(), par->get_ysize() );
+          blender->grayscale_image( par->get_xsize(), par->get_ysize() );
+        }
 #ifndef NDEBUG
         std::cout<<" ...added."<<std::endl;
 #endif
@@ -889,7 +891,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
                               l->sublayers, previous_layer );
       else
         isub = rebuild_chain( pipeline, cs, 
-                              previous->Xsize, previous->Ysize, 
+                              width, height, 
                               l->sublayers, NULL );
 
       // we add the output of the sub-layers chain to the list of inputs, even if it is NULL

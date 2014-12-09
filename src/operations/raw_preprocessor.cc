@@ -45,7 +45,7 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   camwb_corr_red("camwb_corr_red",this,1), 
   camwb_corr_green("camwb_corr_green",this,1), 
   camwb_corr_blue("camwb_corr_blue",this,1), 
-  wb_target_L("wb_target_L",this,50), 
+  wb_target_L("wb_target_L",this,-100), 
   wb_target_a("wb_target_a",this,10), 
   wb_target_b("wb_target_b",this,12), 
   exposure("exposure",this,1)

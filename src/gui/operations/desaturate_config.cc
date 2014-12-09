@@ -27,21 +27,34 @@
 
  */
 
-#include "../../operations/channel_mixer.hh"
-
-#include "channel_mixer_config.hh"
+#include "desaturate_config.hh"
 
 
-PF::ChannelMixerConfigDialog::ChannelMixerConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Channel Mixer" ),
-  red_mix_slider( this, "red_mix", "Red %", 33, -200, 200, 5, 20, 100),
-  green_mix_slider( this, "green_mix", "Green %", 34, -200, 200, 5, 20, 100),
-  blue_mix_slider( this, "blue_mix", "Blue %", 33, -200, 200, 5, 20, 100)
+PF::DesaturateConfigDialog::DesaturateConfigDialog( PF::Layer* layer ):
+  OperationConfigDialog( layer, "Desaturate" ),
+  modeSelector( this, "method", "Desaturate method: ", 0 )
 {
-  controlsBox.pack_start( red_mix_slider );
-  controlsBox.pack_start( green_mix_slider );
-  controlsBox.pack_start( blue_mix_slider );
-  
-  
+  controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK );
   add_widget( controlsBox );
+
+  show_all_children();
 }
+
+
+
+
+void PF::DesaturateConfigDialog::do_update()
+{
+  if( get_layer() && get_layer()->get_image() && 
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+
+    OpParBase* par = get_layer()->get_processor()->get_par();
+    PropertyBase* prop = par->get_property( "method" );
+    if( !prop )  return;
+  }
+  controlsBox.show_all_children();
+
+  OperationConfigDialog::do_update();
+}
+

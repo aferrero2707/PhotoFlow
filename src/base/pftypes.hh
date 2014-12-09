@@ -99,6 +99,15 @@ namespace PF
     PF_BLEND_DARKEN,
     PF_BLEND_LUMI,
     PF_BLEND_COLOR,
+    PF_BLEND_SEP1=1001,
+    PF_BLEND_SEP2=1002,
+    PF_BLEND_SEP3=1003,
+    PF_BLEND_SEP4=1004,
+    PF_BLEND_SEP5=1005,
+    PF_BLEND_SEP6=1006,
+    PF_BLEND_SEP7=1007,
+    PF_BLEND_SEP8=1008,
+    PF_BLEND_SEP9=1009,
     PF_BLEND_UNKNOWN
   };
 
@@ -124,26 +133,7 @@ namespace PF
   class Property<blendmode_t>: public PropertyBase
   {
   public:
-    Property(std::string name, OpParBase* par): PropertyBase(name, par)
-    {
-      add_enum_value(PF_BLEND_PASSTHROUGH,"PF_BLEND_PASSTHROUGH","Passthrough");
-      add_enum_value(PF_BLEND_NORMAL,"PF_BLEND_NORMAL","Normal");
-      add_enum_value(PF_BLEND_GRAIN_EXTRACT,"PF_BLEND_GRAIN_EXTRACT","Grain extract");
-      add_enum_value(PF_BLEND_GRAIN_MERGE,"PF_BLEND_GRAIN_MERGE","Grain merge");
-      add_enum_value(PF_BLEND_OVERLAY,"PF_BLEND_OVERLAY","Overlay");
-      add_enum_value(PF_BLEND_SOFT_LIGHT,"PF_BLEND_SOFT_LIGHT","Soft light");
-      add_enum_value(PF_BLEND_HARD_LIGHT,"PF_BLEND_HARD_LIGHT","Hard light");
-      add_enum_value(PF_BLEND_VIVID_LIGHT,"PF_BLEND_VIVID_LIGHT","Vivid light");
-      add_enum_value(PF_BLEND_MULTIPLY,"PF_BLEND_MULTIPLY","Multiply");
-      add_enum_value(PF_BLEND_SCREEN,"PF_BLEND_SCREEN","Screen");
-      add_enum_value(PF_BLEND_LIGHTEN,"PF_BLEND_LIGHTEN","Lighten");
-      add_enum_value(PF_BLEND_DARKEN,"PF_BLEND_DARKEN","Darken");
-      add_enum_value(PF_BLEND_LUMI,"PF_BLEND_LUMI","Luminosity");
-      add_enum_value(PF_BLEND_COLOR,"PF_BLEND_COLOR","Color");
-      //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
-      //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
-      //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
-    }
+    Property(std::string name, OpParBase* par);
   };
 
 

@@ -35,12 +35,12 @@
 PF::GmicDenoiseConfigDialog::GmicDenoiseConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Patch-based Denoise (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
-  prop_sigma_s_slider( this, "sigma_s", "sigma_s", 1, 0, 1000000, 10000.00, 100000.0, 1),
-  prop_sigma_r_slider( this, "sigma_r", "sigma_r", 1, 0, 1000000, 10000.00, 100000.0, 1),
-  prop_psize_slider( this, "psize", "psize", 1, 0, 1000000, 10000.00, 100000.0, 1),
-  prop_rsize_slider( this, "rsize", "rsize", 1, 0, 1000000, 10000.00, 100000.0, 1),
-  prop_smoothness_slider( this, "smoothness", "smoothness", 1, 0, 1000000, 10000.00, 100000.0, 1),
-  prop_is_fast_slider( this, "is_fast", "is_fast", 0, 0, 1, .01, .1, 1)
+  prop_sigma_s_slider( this, "sigma_s", "Spatial variance", 1, 0.1, 200, 1, 10, 1),
+  prop_sigma_r_slider( this, "sigma_r", "Patch variance", 1, 0.1, 200, 1, 10, 1),
+  prop_psize_slider( this, "psize", "Patch size", 1, 2, 21, 1, 5, 1),
+  prop_rsize_slider( this, "rsize", "Lookup size", 1, 2, 21, 1, 5, 1),
+  prop_smoothness_slider( this, "smoothness", "Patch smoothness", 1, 0, 4, 0.2, 1, 1),
+  prop_is_fast_slider( this, "is_fast", "Fast approximation", 0, 0, 1, 1, 1, 1)
 {
   controlsBox.pack_start( iterations_slider );
   controlsBox.pack_start( prop_sigma_s_slider );

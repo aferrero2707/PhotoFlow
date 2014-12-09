@@ -30,8 +30,6 @@
 
 #include "../base/pf_mkstemp.hh"
 
-#include "../raster_image.hh"
-
 #include "gmic.hh"
 #include "dream_smooth.hh"
 
@@ -266,7 +264,7 @@ VipsImage* PF::GmicDreamSmoothPar::build(std::vector<VipsImage*>& in, int first,
     gmic_list<float> images;
     gmic_list<char> images_names;
 
-    std::string command = "-input ";
+    std::string command = "-verbose - -input ";
     command = command + std::string(fname) + std::string(" -n 0,255 -gimp_dreamsmooth ");
     command = command + prop_interations.get_str();
     command = command + std::string(",") + prop_equalize.get_str();

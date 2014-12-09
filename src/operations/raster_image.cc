@@ -43,7 +43,10 @@ PF::RasterImage::RasterImage( const std::string f ):
 #else
   image = vips_image_new_from_file( file_name.c_str(), NULL );
 #endif
-  if( !image ) return;
+  if( !image ) {
+    std::cout<<"Failed to load "<<file_name<<std::endl;
+    return;
+  }
   
   pyramid.init( image );
 }

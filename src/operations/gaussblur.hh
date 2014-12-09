@@ -60,6 +60,7 @@ namespace PF
     GaussBlurPar();
 
     bool has_intensity() { return false; }
+    bool needs_caching() { return( radius.get() >= 50 ); }
 
 		sii_coeffs& get_coeffs() { return coeffs; }
 

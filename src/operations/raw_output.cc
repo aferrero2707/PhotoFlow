@@ -215,7 +215,34 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   float gamma = gamma_exp.get();
   gamma_curve = cmsBuildGamma( NULL, 1.0f/gamma );
 
-  VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
+  VipsImage* rotated = image;
+  switch( image_data->sizes.flip ) {
+  case 6:
+    if( vips_rot(image, &rotated, VIPS_ANGLE_D90, NULL) )
+      return NULL;
+    break;
+  case 3:
+    if( vips_rot(image, &rotated, VIPS_ANGLE_D180, NULL) )
+      return NULL;
+    break;
+  case 5:
+    if( vips_rot(image, &rotated, VIPS_ANGLE_D270, NULL) )
+      return NULL;
+    break;
+  default: 
+    PF_REF( rotated, "RawOutputPar::build(): rotated ref" );
+    break;
+  }
+  if( !rotated ) return NULL;
+  set_image_hints( rotated );
+
+  std::vector<VipsImage*> in2;
+  in2.push_back( rotated );
+
+  VipsImage* out = OpParBase::build( in2, first, NULL, NULL, level );
+  if( out ) {
+    PF_UNREF( rotated, "RawOutputPar::build(): rotated unref" );
+  }
   /**/
   if( out_profile ) {
     cmsUInt32Number out_length;

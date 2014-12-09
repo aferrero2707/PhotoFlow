@@ -27,21 +27,23 @@
 
  */
 
-#include "../../operations/channel_mixer.hh"
+//#include <arpa/inet.h>
 
-#include "channel_mixer_config.hh"
+#include "hue_saturation.hh"
 
 
-PF::ChannelMixerConfigDialog::ChannelMixerConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Channel Mixer" ),
-  red_mix_slider( this, "red_mix", "Red %", 33, -200, 200, 5, 20, 100),
-  green_mix_slider( this, "green_mix", "Green %", 34, -200, 200, 5, 20, 100),
-  blue_mix_slider( this, "blue_mix", "Blue %", 33, -200, 200, 5, 20, 100)
+
+PF::HueSaturationPar::HueSaturationPar(): 
+  OpParBase(),
+  hue("hue",this,0),
+  saturation("saturation",this,0)
 {
-  controlsBox.pack_start( red_mix_slider );
-  controlsBox.pack_start( green_mix_slider );
-  controlsBox.pack_start( blue_mix_slider );
-  
-  
-  add_widget( controlsBox );
+  set_type("hue_saturation" );
+}
+
+
+
+PF::ProcessorBase* PF::new_hue_saturation()
+{
+  return new PF::Processor<PF::HueSaturationPar,PF::HueSaturation>();
 }

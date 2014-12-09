@@ -54,7 +54,7 @@ extern "C" {
 #define DEBUG_DISPLAY
 #endif
 
-#define OPTIMIZE_SCROLLING
+//#define OPTIMIZE_SCROLLING
 
 PF::ImageArea::ImageArea( Pipeline* v ):
   PipelineSink( v ),
@@ -162,6 +162,9 @@ void PF::ImageArea::process_start( const VipsRect& area )
   // The regions that are not in common should be filled by the
   // subsequent draw operations
   double_buffer.get_inactive().copy( double_buffer.get_active() );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Active buffer copied into inactive one"<<std::endl;
+#endif
 
 	// Fill borders with black
 	int right_border = area.width - display_image->Ysize - xoffset;
@@ -190,6 +193,9 @@ void PF::ImageArea::process_end( const VipsRect& area )
 #endif
   double_buffer.lock();
   double_buffer.swap();
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Buffer swapped"<<std::endl;
+#endif
 
   Update * update = g_new (Update, 1);
   update->image_area = this;
@@ -212,10 +218,17 @@ void PF::ImageArea::process_area( const VipsRect& area )
 
   VipsRect* parea = (VipsRect*)(&area);
   //vips_invalidate_area( display_image, parea );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Preparing area "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" for display"<<std::endl;
+#endif
+  //if( region && region->buffer ) region->buffer->done = 0;
   if (vips_region_prepare (region, parea))
     return;
 
   double_buffer.get_inactive().copy( region, area, xoffset, yoffset );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into inactive buffer"<<std::endl;
+#endif
 }
 
 
@@ -270,6 +283,9 @@ void PF::ImageArea::draw_area()
   Gdk::Cairo::set_source_pixbuf( cr, current_pxbuf, 
 				 double_buffer.get_active().get_rect().left,
 				 double_buffer.get_active().get_rect().top );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Active buffer copied to screen"<<std::endl;
+#endif
   cr->rectangle( double_buffer.get_active().get_rect().left,
   		 double_buffer.get_active().get_rect().top,
   		 double_buffer.get_active().get_rect().width,
@@ -296,15 +312,21 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   std::cout<<"PF::ImageArea::on_expose_event(): called."<<std::endl;
 #endif
   //getchar();
+
+  // We draw only if there is already a VipsImage attached to this display
+  if( !display_image ) return true;
+
+	// Immediately draw the buffered image, to avoid flickering
   draw_area();
+
   gdk_region_get_rectangles (event->region, &expose, &n);
   int xmin=1000000, xmax=0, ymin=1000000, ymax=0;
   for (i = 0; i < n; i++) {
-    //#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
     std::cout<<"PF::ImageArea::on_expose_event(): region #"<<i<<": ("
 	     <<expose[i].x<<","<<expose[i].y<<") ("
 	     <<expose[i].width<<","<<expose[i].height<<")"<<std::endl;
-    //#endif
+#endif
     if( expose[i].x < xmin ) xmin = expose[i].x;
     if( expose[i].x > xmax ) xmax = expose[i].x;
     if( expose[i].y < ymin ) ymin = expose[i].y;
@@ -315,6 +337,18 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
     hadj->get_value(), vadj->get_value(),
     hadj->get_page_size(), vadj->get_page_size()
   };
+
+	if( display_image->Xsize < hadj->get_page_size() ) {
+		xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
+	} else {
+		xoffset = 0;
+	}
+	if( display_image->Ysize < vadj->get_page_size() ) {
+		yoffset = (vadj->get_page_size()-display_image->Ysize)/2;
+	} else {
+		yoffset = 0;
+	}
+
   ProcessRequestInfo request;
   request.sink = this;
   request.area = area_tot;
@@ -324,7 +358,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   //std::cout<<"PF::ImageArea::on_expose_event(): redraw_start request submitted."<<std::endl;
 
 
-  area_tot = {event->area.x, event->area.y, event->area.width, event->area.height};
+  //area_tot = {event->area.x, event->area.y, event->area.width, event->area.height};
   submit_area( area_tot );
 
   //getchar();
@@ -463,10 +497,20 @@ void PF::ImageArea::update( VipsRect* area )
 				!(node->processor->get_par()->is_map()) ) {
       image = node->blended;
     } else {
-      PF::Layer* container_layer = 
-				get_pipeline()->get_image()->get_layer_manager().
-				get_container_layer( active_layer );
-      if( !container_layer ) return;
+      // We need to find the first non-mask layer that contains the active mask layer
+      PF::Layer* container_layer = NULL;
+      int temp_id = active_layer;
+      while( !container_layer ) {
+				container_layer = 
+          get_pipeline()->get_image()->get_layer_manager().
+          get_container_layer( temp_id );
+        if( !container_layer ) return;
+        if( !container_layer->get_processor() ) return;
+        if( !container_layer->get_processor()->get_par() ) return;
+        if( container_layer->get_processor()->get_par()->is_map() == false ) break;
+        temp_id = container_layer->get_id();
+        container_layer = NULL;
+      }
 
       PF::PipelineNode* container_node = 
 				get_pipeline()->get_node( container_layer->get_id() );
@@ -740,7 +784,7 @@ void PF::ImageArea::sink( const VipsRect& area )
 	*/
   //VipsRegion* region2 = vips_region_new (display_image);
   VipsRegion* region2 = vips_region_new( outimg );
-  //vips_invalidate_area( display_image, &scaled_area );
+  vips_invalidate_area( display_image, &scaled_area );
 	//vips_region_invalidate( region2 );
 
   VipsRect* parea = (VipsRect*)(&scaled_area);
@@ -787,6 +831,9 @@ void PF::ImageArea::sink( const VipsRect& area )
 	/**/
 	double_buffer.lock();
 	double_buffer.get_active().copy( region2, scaled_area, xoffset, yoffset );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into active buffer"<<std::endl;
+#endif
 	Update * update = g_new (Update, 1);
 	update->image_area = this;
 	update->rect.width = update->rect.height = 0;

@@ -64,6 +64,11 @@ namespace PF {
 
     ~Selector() {}
 
+    void set_row_separator_func( const Gtk::ComboBox::SlotRowSeparator& slot )
+    {
+      cbox.set_row_separator_func( slot );
+    }
+
     void get_value();
     void set_value();
   };

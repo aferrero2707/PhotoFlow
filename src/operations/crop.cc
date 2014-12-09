@@ -52,8 +52,13 @@ VipsImage* PF::CropPar::build(std::vector<VipsImage*>& in, int first,
 	if( srcimg == NULL ) return NULL;
 	VipsImage* out;
 
-	if( vips_crop( srcimg, &out, crop_left.get(), crop_top.get(),
-								 crop_width.get(), crop_height.get(), NULL ) )
+  int scale_factor = 1;
+  for(unsigned int l = 0; l < level; l++ ) {
+    scale_factor *= 2;
+  }
+
+	if( vips_crop( srcimg, &out, crop_left.get()/scale_factor, crop_top.get()/scale_factor,
+								 crop_width.get()/scale_factor, crop_height.get()/scale_factor, NULL ) )
 		return NULL;
   return out;
 }

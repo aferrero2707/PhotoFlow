@@ -77,6 +77,7 @@ extern "C" {
   extern GType vips_cimg_blur_anisotropic_get_type( void );
   extern GType vips_cimg_blur_bilateral_get_type( void );
   extern void vips_cimg_operation_init( void );
+  extern GType vips_clone_stamp_get_type( void ); 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
@@ -122,6 +123,7 @@ int main (int argc, char *argv[])
   //vips_cimg_blur_anisotropic_get_type();
   //vips_cimg_blur_bilateral_get_type();
   //vips_cimg_operation_init();
+  vips_clone_stamp_get_type();
 
 #ifndef NDEBUG
   im_concurrency_set( 1 );
@@ -147,6 +149,8 @@ int main (int argc, char *argv[])
   }
 #endif
   exePath = Glib::path_get_dirname(exname);
+
+  std::cout<<"exePath: "<<exePath<<std::endl;
   
   //im_package* result = im_load_plugin("src/pfvips.plg");
   //if(!result) verror ();
@@ -163,7 +167,8 @@ int main (int argc, char *argv[])
 	char* fullpath = realpath( cCurrentPath, NULL );
 	if(!fullpath)
 		return 1;
-  PF::PhotoFlow::Instance().set_base_dir( fullpath );
+  //PF::PhotoFlow::Instance().set_base_dir( fullpath );
+  PF::PhotoFlow::Instance().set_base_dir( exePath );
 	free( fullpath );
 
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
