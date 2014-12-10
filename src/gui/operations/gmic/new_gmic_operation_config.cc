@@ -85,6 +85,8 @@ PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, P
     dialog = new PF::GmicDreamSmoothConfigDialog( current_layer );
   } else if( op_type == "gmic_extract_foreground" ) {
     dialog = new PF::GmicExtractForegroundConfigDialog( current_layer );
+  } else if( op_type == "gmic_tone_mapping" ) {
+    dialog = new PF::GmicToneMappingConfigDialog( current_layer );
     //insert new operations here
   }
 

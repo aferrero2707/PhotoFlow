@@ -54,3 +54,4 @@
 #include "iain_denoise_config.hh"
 #include "dream_smooth_config.hh"
 #include "extract_foreground_config.hh"
+#include "tone_mapping_config.hh"

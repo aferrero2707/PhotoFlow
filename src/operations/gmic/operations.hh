@@ -57,6 +57,7 @@ namespace PF
   ProcessorBase* new_gmic_iain_denoise();
   ProcessorBase* new_gmic_dream_smooth();
   ProcessorBase* new_gmic_extract_foreground();
+  ProcessorBase* new_gmic_tone_mapping();
   //insert new operations here
 
   ProcessorBase* new_gmic_operation( std::string op_type );
