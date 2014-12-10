@@ -267,6 +267,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.add_op( "Emulate film [negative old]", "gmic_emulate_film_negative_old" );
   op_gmic.add_op( "Emulate film [print films]", "gmic_emulate_film_print_films" );
   op_gmic.add_op( "Emulate film [various]", "gmic_emulate_film_various" );
+  op_gmic.add_op( "Tone mapping", "gmic_tone_mapping" );
 
   op_misc.add_op( "Buffer layer", "buffer" );
   op_misc.add_op( "Clone layer", "clone" );
