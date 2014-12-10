@@ -69,6 +69,8 @@ namespace PF
 
     ProcessorBase* mask_proc;
 
+    gmic* new_gmic();
+
   public:
     GmicExtractForegroundPar();
     ~GmicExtractForegroundPar();

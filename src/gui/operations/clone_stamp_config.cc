@@ -191,18 +191,19 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
 }
 
 
-void PF::CloneStampConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::CloneStampConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
-  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return;
+  if( button != 1 ) return false;
+  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return false;
   start_stroke( x, y );
   draw_point( x, y );
+  return false;
 }
 
 
-void PF::CloneStampConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::CloneStampConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  if( button != 1 ) return false;
   if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) {
     srcpt_row = y;
     srcpt_col = x;
@@ -211,17 +212,19 @@ void PF::CloneStampConfigDialog::pointer_release_event( int button, double x, do
   } else {
     //draw_point( x, y );
   }
+  return false;
 }
 
 
-void PF::CloneStampConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::CloneStampConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
-  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return;
+  if( button != 1 ) return false;
+  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return false;
 #ifndef NDEBUG
   std::cout<<"PF::CloneStampConfigDialog::pointer_motion_event() called."<<std::endl;
 #endif
   draw_point( x, y );
+  return false;
 }
 
 

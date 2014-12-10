@@ -113,6 +113,8 @@ PF::GmicExtractForegroundPar::GmicExtractForegroundPar():
   OpParBase(),
   fg_points( "fg_points", this ),
   bg_points( "bg_points", this ),
+  custom_gmic_commands( NULL ),
+  gmic_instance( NULL ),
   do_update( true ),
   raster_image( NULL )
 {	
@@ -124,6 +126,34 @@ PF::GmicExtractForegroundPar::GmicExtractForegroundPar():
     new PF::Processor<GmicExtractForegroundMaskPar,GmicExtractForegroundMaskProc>();
   proc->get_par()->set_par( this );
   mask_proc = proc;
+
+  set_type( "gmic_extract_foreground" );
+}
+
+
+PF::GmicExtractForegroundPar::~GmicExtractForegroundPar()
+{
+	std::cout<<"GmicExtractForegroundPar::~GmicExtractForegroundPar(): raster_image="<<(void*)raster_image<<std::endl;
+  if( raster_image ) {
+    raster_image->unref();
+		std::cout<<"GmicExtractForegroundPar::~GmicExtractForegroundPar(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
+    if( raster_image->get_nref() == 0 ) {
+      std::map<Glib::ustring, RasterImage*>::iterator i = 
+				raster_images.find( raster_image->get_file_name() );
+      if( i != raster_images.end() ) 
+				raster_images.erase( i );
+      delete raster_image;
+			std::cout<<"GmicExtractForegroundPar::~GmicExtractForegroundPar(): raster_image deleted"<<std::endl;
+			raster_image = 0;
+    }
+  }
+}
+
+
+gmic* PF::GmicExtractForegroundPar::new_gmic()
+{
+  if( custom_gmic_commands ) delete [] custom_gmic_commands;
+  if( gmic_instance ) delete gmic_instance;
 
   std::cout<<"Loading G'MIC custom commands..."<<std::endl;
   char fname[500]; fname[0] = 0;
@@ -166,27 +196,7 @@ PF::GmicExtractForegroundPar::GmicExtractForegroundPar():
   /* Make a gmic for this thread.
    */
   gmic_instance = new gmic( 0, custom_gmic_commands, false, 0, 0 ); 
-
-  set_type( "gmic_extract_foreground" );
-}
-
-
-PF::GmicExtractForegroundPar::~GmicExtractForegroundPar()
-{
-	std::cout<<"GmicExtractForegroundPar::~GmicExtractForegroundPar(): raster_image="<<(void*)raster_image<<std::endl;
-  if( raster_image ) {
-    raster_image->unref();
-		std::cout<<"GmicExtractForegroundPar::~GmicExtractForegroundPar(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
-    if( raster_image->get_nref() == 0 ) {
-      std::map<Glib::ustring, RasterImage*>::iterator i = 
-				raster_images.find( raster_image->get_file_name() );
-      if( i != raster_images.end() ) 
-				raster_images.erase( i );
-      delete raster_image;
-			std::cout<<"GmicExtractForegroundPar::~GmicExtractForegroundPar(): raster_image deleted"<<std::endl;
-			raster_image = 0;
-    }
-  }
+  return gmic_instance;
 }
 
 
@@ -323,14 +333,23 @@ VipsImage* PF::GmicExtractForegroundPar::build(std::vector<VipsImage*>& in, int 
       + " -n[2] 0,1 -output[2] " + cache_file_name + ",float,lzw";
     std::cout<<"foreground extract command: "<<command<<std::endl;
 
-    gmic_instance->run( command.c_str() );
+    if( new_gmic() ) {
+      gmic_instance->run( command.c_str() );
+      //delete gmic_instance;
+      //gmic_instance = NULL;
+    }
     close( temp_fd );
-    unlink( fname );
     close( temp_fd2 );
-    unlink( fname2 );
 
     raster_image = new RasterImage( cache_file_name );
     raster_images.insert( make_pair(cache_file_name, raster_image) );
+
+    if( gmic_instance ) {
+      delete gmic_instance;
+      gmic_instance = NULL;
+    }
+    unlink( fname );
+    unlink( fname2 );
   } else {
     std::cout<<"GmicExtractForegroundPar::build(): raster_image found ("<<cache_file_name<<")"<<std::endl;
     raster_image = i->second;
@@ -368,9 +387,11 @@ VipsImage* PF::GmicExtractForegroundPar::build(std::vector<VipsImage*>& in, int 
     in2.push_back( bgdimg );
     in2.push_back( srcimg );
     out = blender->get_par()->build( in2, 0, NULL, mask, level );
+    PF_UNREF( mask, "GmicExtractForegroundPar::build(): mask unref (EXTRACT_FG_PREVIEW_BLEND)" );
   }
   if( is_editing() && (preview_mode == EXTRACT_FG_PREVIEW_POINTS) ) {
     PF_REF( srcimg, "GmicExtractForegroundPar::build(): srcimg ref (EXTRACT_FG_PREVIEW_POINTS)" );
+    PF_UNREF( mask, "GmicExtractForegroundPar::build(): mask unref (EXTRACT_FG_PREVIEW_POINTS)" );
     out = srcimg;
   }
   if( is_editing() && (preview_mode == EXTRACT_FG_PREVIEW_MASK) ) {
@@ -380,6 +401,7 @@ VipsImage* PF::GmicExtractForegroundPar::build(std::vector<VipsImage*>& in, int 
     if( vips_bandjoin( bandv, &out, bgdimg->Bands, NULL ) ) {
       return NULL;
     }
+    PF_UNREF( mask, "GmicExtractForegroundPar::build(): mask unref (EXTRACT_FG_PREVIEW_MASK)" );
   }
   return out;
 
