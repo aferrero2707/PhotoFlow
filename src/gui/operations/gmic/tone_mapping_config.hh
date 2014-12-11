@@ -39,9 +39,9 @@ namespace PF {
 
   class GmicToneMappingConfigDialog: public OperationConfigDialog
   {
+    Gtk::Button updateButton;
     Gtk::VBox controlsBox;
     
-    Slider iterations_slider;
     Slider prop_threshold_slider;
     Slider prop_gamma_slider;
     Slider prop_smoothness_slider;
@@ -52,6 +52,7 @@ namespace PF {
   public:
     GmicToneMappingConfigDialog( Layer* l );
     
+    void on_update();
     void open();
   };
 

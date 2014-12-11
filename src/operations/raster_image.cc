@@ -56,8 +56,6 @@ PF::RasterImage::~RasterImage()
 {
   if( image ) PF_UNREF( image, "RasterImage::~RasterImage() image" );
 	std::cout<<"RasterImage::~RasterImage() called."<<std::endl;
-	if( !(cache_file_name.empty()) )
-		unlink( cache_file_name.c_str() );
 }
 
 

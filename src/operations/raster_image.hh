@@ -54,7 +54,6 @@ namespace PF
   {
     int nref;
 		std::string file_name;
-		std::string cache_file_name;
 
 		// VipsImage storing the raster data 
     VipsImage* image;
@@ -82,6 +81,7 @@ namespace PF
       if( plevel ) {
 				return plevel->image;
       }
+      return NULL;
     }
   };
 

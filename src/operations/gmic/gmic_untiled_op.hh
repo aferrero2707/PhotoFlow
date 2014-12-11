@@ -53,7 +53,10 @@ namespace PF
     std::string preview_cache_file_name;
     std::string render_cache_file_name;
 
+  protected:
+
     RasterImage* raster_image;
+    gmic* new_gmic();
 
   public:
     GmicUntiledOperationPar();
@@ -73,9 +76,18 @@ namespace PF
 
     bool import_settings( OpParBase* pin );
 
+    std::string get_cache_file_name();
+    void update_raster_image();
+    RasterImage* get_raster_image();
+    void raster_image_detach();
+    void raster_image_attach();
+
     void pre_build( rendermode_t mode );
 
-    bool run_gmic( std::vector< std::pair<VipsImage*,bool> >& in );
+    std::string save_image( VipsImage* image, VipsBandFmt format );
+
+    bool run_gmic( std::string command );
+    VipsImage* get_output( unsigned int& level );
   };
 
   

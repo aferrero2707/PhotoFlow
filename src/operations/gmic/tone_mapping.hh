@@ -33,30 +33,23 @@
 
 #include "../base/processor.hh"
 
+#include "gmic_untiled_op.hh"
+
 
 namespace PF 
 {
 
-  class GmicToneMappingPar: public OpParBase
+  class GmicToneMappingPar: public GmicUntiledOperationPar
   {
     Property<float> prop_threshold;
     Property<float> prop_gamma;
     Property<float> prop_smoothness;
     Property<int> prop_iterations;
     PropertyBase prop_channels;
-    Property<int> prop_padding;
-    ProcessorBase* gmic;
 
   public:
     GmicToneMappingPar();
-
-    bool has_intensity() { return false; }
-    bool has_opacity() { return true; }
-    bool needs_caching() { return false; }
-
-
-    int get_padding( int level );      
-
+    ~GmicToneMappingPar() { std::cout<<"~GmicToneMappingPar() called."<<std::endl; }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
                      VipsImage* imap, VipsImage* omap, 
