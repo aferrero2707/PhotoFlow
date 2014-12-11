@@ -73,9 +73,9 @@ public:
   void start_stroke();
   void draw_point( double x, double y );
 
-  void pointer_press_event( int button, double x, double y, int mod_key );
-  void pointer_release_event( int button, double x, double y, int mod_key );
-  void pointer_motion_event( int button, double x, double y, int mod_key );
+  bool pointer_press_event( int button, double x, double y, int mod_key );
+  bool pointer_release_event( int button, double x, double y, int mod_key );
+  bool pointer_motion_event( int button, double x, double y, int mod_key );
 };
 
 }

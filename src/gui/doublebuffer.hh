@@ -40,16 +40,29 @@ namespace PF
     VipsRect rect;
   public:
 
+    static void pixbuf_cleanup(const guint8* data) { if( data ) delete [] data; }
+
     Glib::RefPtr< Gdk::Pixbuf > get_pxbuf() { return buf; }
     VipsRect get_rect() { return rect; }
+
+    void resize( const VipsRect& rect )
+    {
+      resize( rect.left, rect.top, rect.width, rect.height );
+    }
 
     void resize(int x, int y, int w, int h)
     {
       if( !(buf) ||
 					buf->get_width() != w ||
-					buf->get_height() != h )
-				buf = Gdk::Pixbuf::create( Gdk::COLORSPACE_RGB,
-																	 false, 8, w, h );
+					buf->get_height() != h ) {
+        // Set rowstride so that it is compatible with Cairo
+        int stride = Cairo::ImageSurface::format_stride_for_width( Cairo::FORMAT_RGB24, w );
+        guint8* data = new guint8[stride*h*3];
+        if( !data ) return;
+				buf = Gdk::Pixbuf::create_from_data( data, Gdk::COLORSPACE_RGB,
+                                             false, 8, w, h, stride, 
+                                             &PixelBuffer::pixbuf_cleanup );
+      }
       rect.left = x;
 			rect.top = y;
 			rect.width = w;
@@ -165,7 +178,8 @@ namespace PF
 					clip.height <= 0 ) return;
       int xstart = clip.left;
       int ystart = clip.top;
-      int xend = clip.left+clip.width-1;
+      int xend = (clip.left+clip.width-1);
+      int dx = clip.width*bl2;
       int yend = clip.top+clip.height-1;
 			int x, y;
 
@@ -176,7 +190,7 @@ namespace PF
 	
 				guint8* p2 = px2 + rs2*dy2 + dx2*bl2;
 
-				for( x = xstart; x <= xend; x+=bl2 ) {
+				for( x = 0; x <= dx; x+=bl2 ) {
 					p2[0] = r;
 					p2[1] = g;
 					p2[2] = b;

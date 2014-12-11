@@ -56,6 +56,7 @@ namespace PF
   ProcessorBase* new_gmic_smooth_guided();
   ProcessorBase* new_gmic_iain_denoise();
   ProcessorBase* new_gmic_dream_smooth();
+  ProcessorBase* new_gmic_extract_foreground();
   ProcessorBase* new_gmic_tone_mapping();
   //insert new operations here
 

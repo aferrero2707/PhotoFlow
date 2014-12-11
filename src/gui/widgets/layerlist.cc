@@ -77,7 +77,7 @@ void PF::LayerList::update_model()
     if( row ) {
       PF::Layer* active_layer = row[columns.col_layer];
       if( active_layer )
-	lid_prev = active_layer->get_id();
+        lid_prev = active_layer->get_id();
     }
   }
 
@@ -85,8 +85,11 @@ void PF::LayerList::update_model()
   model->clear();
 
   int lid = -1;
-  if( layer->get_extra_inputs().size() > 0 )
-    lid = layer->get_extra_inputs()[0];
+  bool blended = false;
+  if( layer->get_extra_inputs().size() > 0 ) {
+    lid = layer->get_extra_inputs()[0].first;
+    blended = layer->get_extra_inputs()[0].second;
+  }
 
   int active_lid = -1;
   int first_lid = -1;
@@ -95,10 +98,25 @@ void PF::LayerList::update_model()
   for( iter = list.rbegin(); iter != list.rend(); iter++ ) {
     Gtk::TreeModel::iterator ri = model->append();
     Gtk::TreeModel::Row row = *(ri);
+    row[columns.col_name] = (*iter).first + " (blended)";
+    row[columns.col_layer] = (*iter).second;
+    row[columns.col_blended] = true;
+    if( (*iter).second ) {
+      if( ((*iter).second->get_id() == lid) && (blended == true) ) {
+				cbox.set_active( model->children().size()-1 );
+				active_lid = (*iter).second->get_id();
+      }
+      last_lid = (*iter).second->get_id();
+			if( first_lid < 0 )
+				first_lid = (*iter).second->get_id();
+    }
+    ri = model->append();
+    row = *(ri);
     row[columns.col_name] = (*iter).first;
     row[columns.col_layer] = (*iter).second;
+    row[columns.col_blended] = false;
     if( (*iter).second ) {
-      if( (*iter).second->get_id() == lid) {
+      if( ((*iter).second->get_id() == lid) && (blended == false) ) {
 				cbox.set_active( model->children().size()-1 );
 				active_lid = (*iter).second->get_id();
       }
@@ -147,7 +165,7 @@ void PF::LayerList::changed()
 
       //std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
 	    //   <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
-      layer->set_input( 0, l->get_id() );
+      layer->set_input( 0, l->get_id(), row[columns.col_blended] );
       layer->set_dirty( true );
 			if( !inhibit ) {
 				//std::cout<<"LayerList::changed(): updating image"<<std::endl;

@@ -37,6 +37,7 @@
 
 PF::GmicUntiledOperationPar::GmicUntiledOperationPar(): 
   OpParBase(),
+  gmic_instance( NULL ),
   do_update( true ),
   raster_image( NULL )
 {	
@@ -47,6 +48,9 @@ PF::GmicUntiledOperationPar::GmicUntiledOperationPar():
 
 PF::GmicUntiledOperationPar::~GmicUntiledOperationPar()
 {
+	std::cout<<"GmicUntiledOperationPar::~GmicUntiledOperationPar(): raster_image="<<(void*)raster_image<<std::endl;
+  raster_image_detach();
+  /*
 	std::cout<<"GmicUntiledOperationPar::~GmicUntiledOperationPar(): raster_image="<<(void*)raster_image<<std::endl;
   if( raster_image ) {
     raster_image->unref();
@@ -61,6 +65,57 @@ PF::GmicUntiledOperationPar::~GmicUntiledOperationPar()
 			raster_image = 0;
     }
   }
+  */
+}
+
+
+gmic* PF::GmicUntiledOperationPar::new_gmic()
+{
+  //if( custom_gmic_commands ) delete [] custom_gmic_commands;
+  if( gmic_instance ) delete gmic_instance;
+
+  std::cout<<"Loading G'MIC custom commands..."<<std::endl;
+  char fname[500]; fname[0] = 0;
+#if defined(WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
+  snprintf( fname, 499, "%s\gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+  struct stat buffer;   
+  int stat_result = stat( fname, &buffer );
+  if( stat_result != 0 ) {
+    fname[0] = 0;
+  }
+#else
+  if( getenv("HOME") ) {
+    //snprintf( fname, 499, "%s/.photoflow/gmic_update.gmic", getenv("HOME") );
+    snprintf( fname, 499, "%s/share/photoflow/gmic_def.gmic", INSTALL_PREFIX );
+    std::cout<<"G'MIC custom commands file: "<<fname<<std::endl;
+    struct stat buffer;   
+    int stat_result = stat( fname, &buffer );
+    if( stat_result != 0 ) {
+      //snprintf( fname, 499, "%s/gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+      //stat_result = stat( fname, &buffer );
+      //if( stat_result != 0 ) {
+      fname[0] = 0;
+      //}
+    }
+  }
+#endif
+  if( strlen( fname ) > 0 ) {
+    std::ifstream t;
+    int length;
+    t.open(fname);      // open input file
+    t.seekg(0, std::ios::end);    // go to the end
+    length = t.tellg();           // report location (this is the length)
+    t.seekg(0, std::ios::beg);    // go back to the beginning
+    custom_gmic_commands = new char[length];    // allocate memory for a buffer of appropriate dimension
+    t.read(custom_gmic_commands, length);       // read the whole file into the buffer
+    t.close();                    // close file handle
+    std::cout<<"G'MIC custom commands loaded"<<std::endl;
+  }
+
+  /* Make a gmic for this thread.
+   */
+  gmic_instance = new gmic( 0, custom_gmic_commands, false, 0, 0 ); 
+  return gmic_instance;
 }
 
 
@@ -99,81 +154,172 @@ void PF::GmicUntiledOperationPar::pre_build( rendermode_t mode )
 }
 
 
-bool PF::GmicUntiledOperationPar::run_gmic( std::vector< std::pair<VipsImage*,bool> >& in )
+std::string PF::GmicUntiledOperationPar::get_cache_file_name()
 {
   std::string cache_file_name;
   if( get_render_mode() == PF_RENDER_PREVIEW ) {
-    std::cout<<"GmicUntiledOperationPar::build() setting cache file name to preview_cache_file_name ("
+    std::cout<<"GmicUntiledOperationPar: setting cache file name to preview_cache_file_name ("
              <<preview_cache_file_name<<")"<<std::endl;
     cache_file_name = preview_cache_file_name;
   } else { 
-    std::cout<<"GmicUntiledOperationPar::build() setting cache file name to render_cache_file_name ("
+    std::cout<<"GmicUntiledOperationPar: setting cache file name to render_cache_file_name ("
              <<render_cache_file_name<<")"<<std::endl;
     cache_file_name = render_cache_file_name;
   }
-  std::cout<<"GmicUntiledOperationPar::build() render_mode="<<get_render_mode()<<"  cache_file_name="<<cache_file_name<<std::endl;
+  std::cout<<"GmicUntiledOperationPar: render_mode="<<get_render_mode()<<"  cache_file_name="<<cache_file_name<<std::endl;
 
-  std::map<Glib::ustring, RasterImage*>::iterator i = 
-    raster_images.find( cache_file_name );
-  if( i == raster_images.end() ) {
+  return cache_file_name;
+}
 
-    std::cout<<"GmicUntiledOperationPar::build(): raster_image="<<(void*)raster_image<<std::endl;
-    if( raster_image ) {
-      raster_image->unref();
-      std::cout<<"GmicUntiledOperationPar::build(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
-      if( raster_image->get_nref() == 0 ) {
-        std::map<Glib::ustring, RasterImage*>::iterator i = 
-          raster_images.find( cache_file_name );
-        if( i != raster_images.end() ) 
-          raster_images.erase( i );
-        delete raster_image;
-			std::cout<<"GmicUntiledOperationPar::build(): raster_image deleted"<<std::endl;
-			raster_image = 0;
-      }
-    }
 
-    char fname[500];
-    sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
-    int temp_fd = pf_mkstemp( fname, 4 );
-    std::cout<<"GmicUntiledOperationPar: temp file: "<<fname<<"  fd="<<temp_fd<<std::endl;
-    if( temp_fd < 0 ) return NULL;
+std::string PF::GmicUntiledOperationPar::save_image( VipsImage* image, VipsBandFmt format )
+{
+  char fname[500];
+  sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
+  int temp_fd = pf_mkstemp( fname, 4 );
+  std::cout<<"GmicExtractForegroundPar: temp file: "<<fname<<"  fd="<<temp_fd<<std::endl;
+  if( temp_fd < 0 ) return NULL;
 
-    std::vector<VipsImage*> in2;
-    in2.push_back( srcimg );
-    convert_format->get_par()->set_image_hints( srcimg );
-    convert_format->get_par()->set_format( IM_BANDFMT_FLOAT );
-    VipsImage* floatimg = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
-    if( !floatimg ) return NULL;
-
-#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
-    vips_image_write_to_file( floatimg, fname );
-#else
-    vips_image_write_to_file( floatimg, fname, NULL );
-#endif
-    PF_UNREF( floatimg, "GmicUntiledOperationPar::build(): after write_to_file" );
-
-    gmic_list<float> images;
-    gmic_list<char> images_names;
-
-    std::string command = "-verbose - -input ";
-    command = command + std::string(fname) + std::string(" -n 0,255 -gimp_dreamsmooth ");
-    command = command + prop_interations.get_str();
-    command = command + std::string(",") + prop_equalize.get_str();
-    command = command + std::string(",") + prop_merging_option.get_enum_value_str();
-    command = command + std::string(",") + prop_opacity.get_str();
-    command = command + std::string(",") + prop_reverse.get_str();
-    command = command + std::string(",") + prop_smoothness.get_str() + ",1,0 -n 0,1 -output " + cache_file_name + ",float,lzw";
-    std::cout<<"dream smooth command: "<<command<<std::endl;
-
-    gmic_instance->run( command.c_str() );
+  unsigned int level = 0;
+  std::vector<VipsImage*> in;
+  in.push_back( image );
+  convert_format_in->get_par()->set_image_hints( image );
+  convert_format_in->get_par()->set_format( format );
+  VipsImage* out = convert_format_in->get_par()->build( in, 0, NULL, NULL, level );
+  if( !out ) {
     close( temp_fd );
     unlink( fname );
-
-    raster_image = new RasterImage( cache_file_name );
-    raster_images.insert( make_pair(cache_file_name, raster_image) );
-  } else {
-    std::cout<<"GmicUntiledOperationPar::build(): raster_image found ("<<cache_file_name<<")"<<std::endl;
-    raster_image = i->second;
-    raster_image->ref();
+    return( std::string("") );
   }
+
+#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
+  vips_image_write_to_file( out, fname );
+#else
+  vips_image_write_to_file( out, fname, NULL );
+#endif
+  PF_UNREF( out, "GmicUntiledOperationPar::save_image(): after write_to_file" );
+  close( temp_fd );
+  return( std::string(fname) );
+}
+
+
+
+void PF::GmicUntiledOperationPar::update_raster_image()
+{
+  RasterImage* new_raster_image = NULL;
+  
+  std::string cache_file_name = get_cache_file_name();
+  std::map<Glib::ustring, RasterImage*>::iterator i = 
+    raster_images.find( cache_file_name );
+  if( i != raster_images.end() && i->second ) {
+    //i->second->ref();
+    new_raster_image = i->second;
+  }
+
+  if( new_raster_image != raster_image ) {
+    raster_image_detach();
+    if( new_raster_image ) 
+      new_raster_image->ref();
+  }
+  raster_image = new_raster_image;
+}
+
+
+PF::RasterImage* PF::GmicUntiledOperationPar::get_raster_image()
+{
+  return raster_image;
+  
+  std::string cache_file_name = get_cache_file_name();
+  std::map<Glib::ustring, RasterImage*>::iterator i = 
+    raster_images.find( cache_file_name );
+  if( i != raster_images.end() && i->second ) {
+    //i->second->ref();
+    return( i->second );
+  }
+  return NULL;
+}
+
+
+void PF::GmicUntiledOperationPar::raster_image_detach()
+{
+  std::cout<<"GmicUntiledOperationPar::raster_image_unref(): raster_image="<<(void*)raster_image<<std::endl;
+  if( raster_image ) {
+    std::cout<<"GmicUntiledOperationPar::raster_image_unref(): raster_image->get_nref()="
+             <<raster_image->get_nref()<<" -> "<<raster_image->get_nref()-1<<std::endl;
+    raster_image->unref();
+    if( raster_image->get_nref() == 0 ) {
+      std::string cache_file_name = raster_image->get_file_name();
+      std::map<Glib::ustring, RasterImage*>::iterator i = 
+        raster_images.find( cache_file_name );
+      if( i != raster_images.end() ) 
+          raster_images.erase( i );
+      delete raster_image;
+      unlink( cache_file_name.c_str() );
+			std::cout<<"GmicUntiledOperationPar::raster_image_unref(): raster_image deleted"<<std::endl;
+    }
+  }
+  raster_image = 0;
+}
+
+
+void PF::GmicUntiledOperationPar::raster_image_attach()
+{
+  std::cout<<"GmicUntiledOperationPar::update_raster_image()"<<std::endl;
+  raster_image_detach();
+  std::string cache_file_name = get_cache_file_name();
+  raster_image = new RasterImage( cache_file_name );
+  raster_images.insert( make_pair(cache_file_name, raster_image) );  
+  std::cout<<"GmicUntiledOperationPar::update_raster_image(): cache_file_name="<<cache_file_name
+           <<"  raster_image="<<raster_image<<std::endl;
+}
+
+
+
+bool PF::GmicUntiledOperationPar::run_gmic( std::string command )
+{
+  if( command.empty() ) 
+    return false;
+  std::cout<<"g'mic command: "<<command<<std::endl;
+  if( !new_gmic() ) 
+    return false;
+  gmic_instance->run( command.c_str() );
+  
+  if( gmic_instance ) {
+    delete gmic_instance;
+    gmic_instance = NULL;
+  }
+  
+  raster_image_attach();
+  
+  return true;
+}
+
+
+VipsImage* PF::GmicUntiledOperationPar::get_output( unsigned int& level )
+{
+  std::cout<<"GmicUntiledOperationPar::get_output(): raster_image="<<raster_image;
+  if( raster_image) std::cout<<"  get_nref()="<<raster_image->get_nref();
+  std::cout<<std::endl;
+  if( !raster_image ) return NULL;
+
+  VipsImage* image = raster_image->get_image( level );
+  
+  std::cout<<"GmicUntiledOperationPar::get_output(): image="<<image<<std::endl;
+  if( !image ) return NULL;
+
+  VipsImage* out = image;
+  if( (get_format() != image->BandFmt) ) {
+    std::vector<VipsImage*> in;
+    in.push_back( image );
+    convert_format_out->get_par()->set_image_hints( image );
+    convert_format_out->get_par()->set_format( get_format() );
+    out = convert_format_out->get_par()->build( in, 0, NULL, NULL, level );
+    PF_UNREF( image, "GmicUntiledOperationPar::get_output(): image unref after convert_format" );
+  }
+
+  std::cout<<"GmicUntiledOperationPar::get_output(): out="<<out<<std::endl;
+  if( out ) {
+    set_image_hints( out );
+  }
+  return out;  
 }

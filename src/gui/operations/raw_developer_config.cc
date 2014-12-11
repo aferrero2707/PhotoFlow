@@ -252,16 +252,16 @@ void PF::RawDeveloperConfigDialog::do_update()
 }
 
 
-
+/*
 void PF::RawDeveloperConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return;
 }
+*/
 
-
-void PF::RawDeveloperConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::RawDeveloperConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  if( button != 1 ) return false;
 
   if( wbModeSelector.get_prop() &&
       wbModeSelector.get_prop()->is_enum() &&
@@ -272,6 +272,8 @@ void PF::RawDeveloperConfigDialog::pointer_release_event( int button, double x, 
       wbModeSelector.get_prop()->is_enum() &&
       (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_COLOR_SPOT) )
     color_spot_wb( x, y );
+
+  return false;
 }
 
 

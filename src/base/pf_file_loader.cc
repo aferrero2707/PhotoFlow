@@ -159,9 +159,15 @@ void start_element (GMarkupParseContext *context,
           idstream>>id;
           if( !idstream ) 
             break;
+          bool blended = true;
+          if( (version>=3) ) {
+            idstream>>blended;
+            if( !idstream ) 
+              break;
+          }
           if( id < layer_id_mapper.size() &&
               layer_id_mapper[id] )
-            layer->set_input( ninput, layer_id_mapper[id]->get_id() );
+            layer->set_input( ninput, layer_id_mapper[id]->get_id(), blended );
           ninput++;
         }
       }
@@ -191,7 +197,8 @@ void start_element (GMarkupParseContext *context,
 
     std::cout<<"Layer \""<<layer->get_name()<<"\" extra inputs: ";
     for(unsigned int i = 0; i < layer->get_extra_inputs().size(); i++)
-      std::cout<<layer->get_extra_inputs()[i]<<" ";
+      std::cout<<layer->get_extra_inputs()[i].first
+               <<" (blended="<<layer->get_extra_inputs()[i].second<<")";
     std::cout<<std::endl;
 
   } else if( strcmp (element_name, "sublayers") == 0 ) {

@@ -149,6 +149,8 @@ namespace PF
 
     bool map_flag;
 
+    bool editing_flag;
+
     bool modified_flag;
 
     std::list<PropertyBase*> mapped_properties;
@@ -211,6 +213,9 @@ namespace PF
 
     bool is_map() { return map_flag; }
     void set_map_flag( bool flag ) { map_flag = flag; }
+
+    bool is_editing() { return editing_flag; }
+    void set_editing_flag( bool flag ) { editing_flag = flag; }
 
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }

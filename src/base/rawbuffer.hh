@@ -260,7 +260,7 @@ namespace PF
   }
   */
 
-
+  /*
   template <class T>
   inline std::istream& operator >>( std::istream& str, std::list<T>& list )
   {
@@ -285,6 +285,8 @@ namespace PF
     }
     return str;
   }
+  */
+
 
   template<> inline
   void set_gobject_property< std::list< Stroke<Pencil> > >(gpointer object, const std::string name, 

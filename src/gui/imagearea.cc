@@ -244,6 +244,29 @@ void PF::ImageArea::draw_area()
     return;
   }
 
+  Glib::RefPtr< Gdk::Pixbuf > current_pxbuf = double_buffer.get_active().get_pxbuf();
+  if( active_layer >= 0 ) {
+    PF::Image* image = get_pipeline()->get_image();
+    if( image ) {
+      PF::Layer* layer = image->get_layer_manager().get_layer( active_layer );
+      if( layer &&
+          layer->get_processor() &&
+          layer->get_processor()->get_par() ) {
+        PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
+        PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+        if( dialog && dialog->get_visible() ) {
+          int level = get_pipeline()->get_level();
+          float zoom_fact = 1.0f;
+          for( unsigned int i = 0; i < level; i++ )
+            zoom_fact /= 2.0f;
+          zoom_fact *= get_shrink_factor();
+          if( dialog->modify_preview(double_buffer.get_active(), temp_buffer, zoom_fact, xoffset, yoffset) )
+            current_pxbuf = temp_buffer.get_pxbuf();
+        }
+      }
+    }
+  }
+
   //std::cout<<"PF::ImageArea::draw_area(): drawing area "
   //	   <<double_buffer.get_active().get_rect().width<<","<<double_buffer.get_active().get_rect().height
   //	   <<"+"<<double_buffer.get_active().get_rect().left<<"+"<<double_buffer.get_active().get_rect().top
@@ -257,7 +280,7 @@ void PF::ImageArea::draw_area()
   		 double_buffer.get_active().get_rect().height*3 );
   cr->clip();
   /**/
-  Gdk::Cairo::set_source_pixbuf( cr, double_buffer.get_active().get_pxbuf(), 
+  Gdk::Cairo::set_source_pixbuf( cr, current_pxbuf, 
 				 double_buffer.get_active().get_rect().left,
 				 double_buffer.get_active().get_rect().top );
 #ifdef DEBUG_DISPLAY

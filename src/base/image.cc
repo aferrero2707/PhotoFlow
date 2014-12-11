@@ -613,7 +613,7 @@ bool PF::Image::save( std::string filename )
     std::ofstream of;
     of.open( filename.c_str() );
     if( !of ) return false;
-    of<<"<image version=\"2\">"<<std::endl;
+    of<<"<image version=\"3\">"<<std::endl;
     layer_manager.save( of );
     of<<"</image>"<<std::endl;
 		file_name = filename;

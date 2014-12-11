@@ -53,6 +53,7 @@ void PF::OperationConfigUI::open()
 PF::OpParBase::OpParBase():
 	render_mode(PF_RENDER_PREVIEW), 
   map_flag( false ),
+  editing_flag( false ),
   modified_flag(false),
   intensity("intensity",this,1),
   grey_target_channel("grey_target_channel",this,-1,"Grey","Grey"),
@@ -213,6 +214,7 @@ bool PF::OpParBase::import_settings( OpParBase* pin )
 
   set_demand_hint( pin->get_demand_hint() );
   set_map_flag( pin->is_map() );
+  set_editing_flag( pin->is_editing() );
   set_image_hints( pin->get_xsize(), pin->get_ysize(), 
 		   pin->get_interpretation() );
   set_nbands( pin->get_nbands() );

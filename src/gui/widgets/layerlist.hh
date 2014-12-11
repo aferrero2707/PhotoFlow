@@ -45,9 +45,10 @@ namespace PF {
       
       Gtk::TreeModelColumn<std::string> col_name;
       Gtk::TreeModelColumn<Layer*> col_layer;
+      Gtk::TreeModelColumn<bool> col_blended;
       
       ModelColumns()
-      { add(col_name); add(col_layer); }
+      { add(col_name); add(col_layer); add(col_blended); }
     };
 
     ModelColumns columns;

@@ -56,7 +56,7 @@ namespace PF
     std::list<Layer*> sublayers;
     std::list<Layer*> imap_layers;
     std::list<Layer*> omap_layers;
-    std::vector<int32_t> extra_inputs;
+    std::vector< std::pair<int32_t,bool> > extra_inputs;
 
     // Flag indicating that the layer has been directly or indirectly
     // modified, and therefore that re-building is needed
@@ -133,13 +133,14 @@ namespace PF
     Image* get_image() { return image; }
     void set_image( Image* img ) { image = img; }
 
-    void set_input(int n, int32_t lid) { 
-      for( int i = extra_inputs.size(); i <= n; i++ ) extra_inputs.push_back( -1 );
-      extra_inputs[n] = lid; 
+    void set_input(int n, int32_t lid, bool blended=true) { 
+      for( int i = extra_inputs.size(); i <= n; i++ ) extra_inputs.push_back( std::make_pair((int32_t)-1,(bool)true) );
+      extra_inputs[n].first = lid; 
+      extra_inputs[n].second = blended; 
     }
-    void add_input(int32_t lid) { extra_inputs.push_back(lid); }
+    void add_input(int32_t lid, bool blended=true) { extra_inputs.push_back( std::make_pair(lid, blended) ); }
     void remove_input(int32_t lid);
-    std::vector<int32_t>& get_extra_inputs() { return extra_inputs; }
+    std::vector< std::pair<int32_t,bool> >& get_extra_inputs() { return extra_inputs; }
 
     std::list<Layer*>& get_sublayers() { return sublayers; }
     std::list<Layer*>& get_imap_layers() { return imap_layers; }

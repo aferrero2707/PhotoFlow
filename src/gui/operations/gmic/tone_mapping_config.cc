@@ -27,14 +27,14 @@
 
  */
 
-//#include "../../../operations/gmic/tone_mapping.hh"
+#include "../../../operations/gmic/tone_mapping.hh"
 
 #include "tone_mapping_config.hh"
 
 
 PF::GmicToneMappingConfigDialog::GmicToneMappingConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Tone mapping (G'MIC)"  ),
-  iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
+  updateButton( "Update" ),
   prop_threshold_slider( this, "threshold", "threshold", 0.5, 0, 1, .01, .1, 1),
   prop_gamma_slider( this, "gamma", "gamma", 0.7, 0, 1, .01, .1, 1),
   prop_smoothness_slider( this, "smoothness", "smoothness", 0.1, 0, 10, .10, 1.0, 1),
@@ -42,16 +42,34 @@ PF::GmicToneMappingConfigDialog::GmicToneMappingConfigDialog( PF::Layer* layer )
   prop_channels_selector( this, "channels", "channels", 3),
   prop_padding_slider( this, "padding", "padding", 20, 0, 500, 1, 5, 1)
 {
-  controlsBox.pack_start( iterations_slider );
+  controlsBox.pack_start( updateButton );
   controlsBox.pack_start( prop_threshold_slider );
   controlsBox.pack_start( prop_gamma_slider );
   controlsBox.pack_start( prop_smoothness_slider );
   controlsBox.pack_start( prop_iterations_slider );
   controlsBox.pack_start( prop_channels_selector );
   
+  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicToneMappingConfigDialog::on_update) );
+  
   add_widget( controlsBox );
 }
 
+
+
+void PF::GmicToneMappingConfigDialog::on_update()
+{
+  if( get_layer() && get_layer()->get_image() && 
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+    GmicToneMappingPar* par = dynamic_cast<GmicToneMappingPar*>( get_layer()->get_processor()->get_par() );
+    if( !par ) return;
+    par->refresh();
+    get_layer()->get_image()->lock();
+    std::cout<<"  updating image"<<std::endl;
+    get_layer()->get_image()->update();
+    get_layer()->get_image()->unlock();
+  }
+}
 
 
 void PF::GmicToneMappingConfigDialog::open()

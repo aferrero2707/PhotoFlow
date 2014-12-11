@@ -246,37 +246,38 @@ void PF::CurvesConfigDialog::do_update()
 }
 
 
-void PF::CurvesConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::CurvesConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  if( button != 1 ) return false;
+  return false;
 }
 
 
-void PF::CurvesConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::CurvesConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return;
+  if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
   std::cout<<"CurvesConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
 
   // Retrieve the layer associated to the filter 
   PF::Layer* layer = get_layer();
-  if( !layer ) return;
+  if( !layer ) return false;
 
   // Retrieve the image the layer belongs to
   PF::Image* image = layer->get_image();
-  if( !image ) return;
+  if( !image ) return false;
 
   // Retrieve the pipeline #0 (full resolution preview)
   PF::Pipeline* pipeline = image->get_pipeline( 0 );
-  if( !pipeline ) return;
+  if( !pipeline ) return false;
 
   // Find the pipeline node associated to the current layer
   PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
-  if( !node ) return;
+  if( !node ) return false;
 
   // Find the input layer of the current filter
-  if( node->input_id < 0 ) return;
+  if( node->input_id < 0 ) return false;
   PF::Layer* lin = image->get_layer_manager().get_layer( node->input_id );
-  if( !lin ) return;
+  if( !lin ) return false;
 
   // Sample a 5x5 pixels region of the input layer
   std::vector<float> values;
@@ -288,11 +289,11 @@ void PF::CurvesConfigDialog::pointer_release_event( int button, double x, double
   PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
   switch( cs ) {
   case PF_COLORSPACE_GRAYSCALE:
-    if( values.empty() ) return;
+    if( values.empty() ) return false;
     greyCurveEditor.add_point( values[0] );
     break;
   case PF_COLORSPACE_RGB:
-    if( values.size() != 3 ) return;
+    if( values.size() != 3 ) return false;
     switch( rgbCurveSelector.get_active_row_number() ) {
     case 0:
       rgbCurveEditor.add_point( (values[0]+values[1]+values[2])/3.0f );
@@ -309,7 +310,7 @@ void PF::CurvesConfigDialog::pointer_release_event( int button, double x, double
     }
     break;
   case PF_COLORSPACE_LAB:
-    if( values.size() != 3 ) return;
+    if( values.size() != 3 ) return false;
     switch( labCurveSelector.get_active_row_number() ) {
     case 0:
       LCurveEditor.add_point( values[0] );
@@ -328,10 +329,13 @@ void PF::CurvesConfigDialog::pointer_release_event( int button, double x, double
   default:
     break;
   }
+
+  return false;
 }
 
 
-void PF::CurvesConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::CurvesConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  if( button != 1 ) return false;
+  return false;
 }
