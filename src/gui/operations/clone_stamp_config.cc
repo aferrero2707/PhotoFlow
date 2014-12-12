@@ -133,6 +133,11 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
   VipsRect update;
   par->draw_point( x, y, update );
 
+  if( (update.width < 1) || (update.height < 1) )  
+    return;
+
+  std::cout<<"PF::CloneStampConfigDialog::draw_point(): area="<<update.width<<","<<update.height
+           <<"+"<<update.left<<"+"<<update.top<<std::endl;
 
   // Then we loop over all the operations associated to the 
   // layer in the different pipelines and we let them record the stroke as well
