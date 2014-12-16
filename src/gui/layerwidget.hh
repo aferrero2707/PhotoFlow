@@ -47,7 +47,8 @@ class LayerWidget : public Gtk::VBox
   Image* image;
 
   Gtk::Notebook notebook;
-  Gtk::HButtonBox buttonbox;
+  //Gtk::HButtonBox buttonbox;
+  Gtk::HBox buttonbox;
   Gtk::Button buttonAdd, buttonAddGroup, buttonDel;
   Gtk::Button buttonPresetLoad, buttonPresetSave;
   Gtk::Dialog layersDialog;

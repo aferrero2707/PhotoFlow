@@ -62,12 +62,16 @@ PF::LayerWidget::LayerWidget( Image* img ):
 
   pack_start(notebook);
 
-  buttonbox.pack_start(buttonAdd/*, Gtk::PACK_SHRINK*/);
-  buttonbox.pack_start(buttonAddGroup/*, Gtk::PACK_SHRINK*/);
-  buttonbox.pack_start(buttonDel/*, Gtk::PACK_SHRINK*/);
+  buttonAdd.set_size_request(40,0);
+  buttonAddGroup.set_size_request(40,0);
+  buttonDel.set_size_request(40,0);
+
+  buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
+  buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
+  buttonbox.pack_start(buttonDel, Gtk::PACK_SHRINK);
   buttonbox.pack_start(buttonPresetLoad/*, Gtk::PACK_SHRINK*/);
   buttonbox.pack_start(buttonPresetSave/*, Gtk::PACK_SHRINK*/);
-  buttonbox.set_layout(Gtk::BUTTONBOX_START);
+  //buttonbox.set_layout(Gtk::BUTTONBOX_START);
 
   pack_start(buttonbox, Gtk::PACK_SHRINK);
 
