@@ -46,7 +46,7 @@ PF::LayerWidget::LayerWidget( Image* img ):
   buttonPresetSave("Save"),
   operationsDialog( image, this )
 {
-  set_size_request(300,0);
+  //set_size_request(250,0);
   notebook.set_tab_pos(Gtk::POS_LEFT);
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 

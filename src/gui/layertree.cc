@@ -191,6 +191,7 @@ PF::LayerTree::LayerTree( bool is_map ):
 
   add( treeView );
 
+  set_size_request(280,0);
   /*
   Gtk::TreeModel::Row row = *(treeModel->append());
   row[columns.col_visible] = true;
