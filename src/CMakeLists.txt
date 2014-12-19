@@ -41,6 +41,14 @@ endif()
 
 include_directories(${SIGC2_INCLUDE_DIRS})
 
+include_directories(${OPENEXR_INCLUDE_DIRS})
+
+include_directories(${XML2_INCLUDE_DIRS})
+
+include_directories(${EXIF_INCLUDE_DIRS})
+
+include_directories(${ORC_INCLUDE_DIRS})
+
 include_directories(${ZLIB_INCLUDE_DIRS})
 link_directories(${ZLIB_LIBRARY_DIRS}  )
 
@@ -159,6 +167,10 @@ target_link_libraries(photoflow ${LIBS}
   pfgmic 
   ${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
@@ -166,6 +178,7 @@ target_link_libraries(photoflow ${LIBS}
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
+  ${ORC_LIBRARIES}
   fftw3 gomp
   ${ADDITIONAL_LIBS}
   #gmon
