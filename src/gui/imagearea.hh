@@ -101,6 +101,8 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   GCond* draw_done;
   GMutex* draw_mutex;
 
+  bool draw_requested;
+
   //Glib::Dispatcher signal_queue_draw;
 
   /* The cache mask. 

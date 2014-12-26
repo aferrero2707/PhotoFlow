@@ -63,6 +63,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   xoffset( 0 ),
   yoffset( 0 ),
   pending_pixels( 0 ),
+  draw_requested( false ),
   display_merged( true ),
   active_layer( -1 ),
 	shrink_factor( 1 )
@@ -240,6 +241,7 @@ void PF::ImageArea::draw_area()
   double_buffer.lock();
 
   if( !(double_buffer.get_active().get_pxbuf()) ) {
+    draw_requested = false;
     double_buffer.unlock();
     return;
   }
@@ -272,7 +274,11 @@ void PF::ImageArea::draw_area()
   //	   <<"+"<<double_buffer.get_active().get_rect().left<<"+"<<double_buffer.get_active().get_rect().top
   //	   <<std::endl;
   Glib::RefPtr<Gdk::Window> window = get_window();
-  if( !window ) return;
+  if( !window ) {
+    draw_requested = false;
+    double_buffer.unlock();
+    return;
+  }
   Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
   cr->rectangle( double_buffer.get_active().get_rect().left,
   		 double_buffer.get_active().get_rect().top,
@@ -293,6 +299,7 @@ void PF::ImageArea::draw_area()
   cr->fill();
   /**/
   cr->paint();
+  draw_requested = false;
   double_buffer.unlock();
   //std::cout<<"PF::ImageArea::draw_area(): after drawing pixbuf"<<std::endl;
   //getchar();
@@ -834,11 +841,14 @@ void PF::ImageArea::sink( const VipsRect& area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into active buffer"<<std::endl;
 #endif
-	Update * update = g_new (Update, 1);
-	update->image_area = this;
-	update->rect.width = update->rect.height = 0;
-	//std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
-	gdk_threads_add_idle ((GSourceFunc) render_cb, update);
+  if( !draw_requested ) {
+    Update * update = g_new (Update, 1);
+    update->image_area = this;
+    update->rect.width = update->rect.height = 0;
+    //std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
+    draw_requested = true;
+    gdk_threads_add_idle ((GSourceFunc) render_cb, update);
+  }
 	double_buffer.unlock();
 	PF_UNREF( region2, "ImageArea::sink(): region2" );
 	//PF_UNREF( display_image2, "ImageArea::sink(): display_image2" );
