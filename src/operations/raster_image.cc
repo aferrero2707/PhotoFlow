@@ -48,6 +48,42 @@ PF::RasterImage::RasterImage( const std::string f ):
     return;
   }
   
+  std::cout<<"RasterImage::RasterImage(): # of bands="<<image->Bands<<std::endl;
+
+  int out_nbands = 0;
+  if( (convert_colorspace(image->Type) == PF_COLORSPACE_GRAYSCALE) &&
+      (image->Bands > 1) ) {
+    out_nbands = 1;
+  }
+  if( (convert_colorspace(image->Type) == PF_COLORSPACE_RGB) &&
+      (image->Bands > 3) ) {
+    out_nbands = 3;
+  }
+  if( (convert_colorspace(image->Type) == PF_COLORSPACE_LAB) &&
+      (image->Bands > 3) ) {
+    out_nbands = 3;
+  }
+  if( (convert_colorspace(image->Type) == PF_COLORSPACE_CMYK) &&
+      (image->Bands > 4) ) {
+    out_nbands = 4;
+  }
+
+  if( out_nbands > 0 ) {
+    VipsImage* out;
+    if( vips_extract_band( image, &out, 0, "n", out_nbands, NULL ) )
+      return;
+    std::cout<<"ClonePar::Lab2grayscale(): extract_band OK"<<std::endl;
+
+    PF_UNREF( image, "RasterImage::RasterImage(): image unref" );
+    vips_image_init_fields( out,
+                            image->Xsize, image->Ysize, 
+                            out_nbands, image->BandFmt,
+                            image->Coding,
+                            image->Type,
+                            1.0, 1.0);
+    image = out;
+  }
+
   pyramid.init( image );
 }
 
