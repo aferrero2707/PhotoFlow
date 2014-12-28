@@ -130,7 +130,7 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
   // The source point needs to be set before we can do anything...
   if( !srcpt_ready ) return;
 
-  VipsRect update;
+  VipsRect update = {0,0,0,0};
   par->draw_point( x, y, update );
 
   if( (update.width < 1) || (update.height < 1) )  

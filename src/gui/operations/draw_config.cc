@@ -224,10 +224,12 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
   PF::DrawPar* par = dynamic_cast<PF::DrawPar*>( processor->get_par() );
   if( !par ) return;
   
-  VipsRect update;
+  VipsRect update = {0,0,0,0};
   //std::cout<<"DrawConfigDialog::draw_point( "<<x<<", "<<y<<" )"<<std::endl;
   par->draw_point( x, y, update );
 
+  if( (update.width < 1) || (update.height < 1) )  
+    return;
 
   // Then we loop over all the operations associated to the 
   // layer in the different pipelines and we let them record the stroke as well
