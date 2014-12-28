@@ -22,9 +22,9 @@ pkg_check_modules(XML2 REQUIRED libxml-2.0)
 
 pkg_check_modules(EXIF REQUIRED libexif)
 
-IF(!MINGW)
+IF(NOT MINGW)
 pkg_check_modules(ORC REQUIRED orc-0.4)
-ENDIF(MINGW)
+ENDIF(NOT MINGW)
 
 #FIND_PACKAGE(LibRaw 0.13 REQUIRED)
 #pkg_check_modules(LIBRAW REQUIRED libraw)
