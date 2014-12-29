@@ -32,6 +32,7 @@
 
 #include <iostream>
 
+#include "../base/file_util.hh"
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
 #include "tablabelwidget.hh"
@@ -443,13 +444,18 @@ void PF::MainWindow::on_button_saveas_clicked()
       //Notice that this is a std::string, not a Glib::ustring.
       last_dir = dialog.get_current_folder();
       std::string filename = dialog.get_filename();
+      std::string extension;
+      if( get_file_extension(filename, extension) ) {
+        if( extension != "pfi" )
+          filename += ".pfi";
+      }
       std::cout << "File selected: " <<  filename << std::endl;
       int page = viewerNotebook.get_current_page();
       Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
       if( widget ) {
-	PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
-	if( editor && editor->get_image() )
-	  editor->get_image()->save( filename );
+        PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+        if( editor && editor->get_image() )
+          editor->get_image()->save( filename );
       }
       break;
     }

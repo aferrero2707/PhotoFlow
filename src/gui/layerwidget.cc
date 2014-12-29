@@ -28,6 +28,7 @@
 */
 
 
+#include "../base/file_util.hh"
 #include "../base/pf_file_loader.hh"
 #include "../operations/buffer.hh"
 #include "../operations/blender.hh"
@@ -643,6 +644,11 @@ void PF::LayerWidget::on_button_save()
 
       //Notice that this is a std::string, not a Glib::ustring.
       filename = dialog.get_filename();
+      std::string extension;
+      if( get_file_extension(filename, extension) ) {
+        if( extension != "pfp" )
+          filename += ".pfp";
+      }
       std::cout << "File selected: " <<  filename << std::endl;
       break;
     }
