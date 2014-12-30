@@ -16,13 +16,12 @@ find_package (ZLIB REQUIRED)
 
 pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
 
-pkg_check_modules(OPENEXR REQUIRED OpenEXR)
-
 pkg_check_modules(XML2 REQUIRED libxml-2.0)
 
 pkg_check_modules(EXIF REQUIRED libexif)
 
 IF(NOT MINGW)
+pkg_check_modules(OPENEXR REQUIRED OpenEXR)
 pkg_check_modules(ORC REQUIRED orc-0.4)
 ENDIF(NOT MINGW)
 
