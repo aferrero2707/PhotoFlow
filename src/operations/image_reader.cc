@@ -121,13 +121,30 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
 #endif
 
+  if( is_map() && image->Bands > 1 ) {
+    VipsImage* out;
+    int nbands = 1;
+    if( vips_extract_band( image, &out, 0, "n", nbands, NULL ) )
+      return NULL;
+    std::cout<<"ClonePar::Lab2grayscale(): extract_band OK"<<std::endl;
+
+    vips_image_init_fields( out,
+                            image->Xsize, image->Ysize, 
+                            nbands, image->BandFmt,
+                            image->Coding,
+                            image->Type,
+                            1.0, 1.0);
+    PF_UNREF( image, "ImageReaderPar::build(): image unref after extract_band" );
+    image = out;
+  }
 
 
+
+#ifndef NDEBUG
   void *data;
   size_t data_length;
   if( !vips_image_get_blob( image, VIPS_META_ICC_NAME, 
 			    &data, &data_length ) ) {
-#ifndef NDEBUG
     cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
     if( profile_in ) {  
       char tstr[1024];
@@ -135,8 +152,8 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"ImageReader: Embedded profile found: "<<tstr<<std::endl;
       cmsCloseProfile( profile_in );
     }
-#endif
   }
+#endif
 
 
 #ifndef NDEBUG
