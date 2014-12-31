@@ -445,11 +445,12 @@ bool PF::LayerTreeModel::drag_data_received_vfunc( const Gtk::TreeModel::Path& d
     // Otherwise, if the group layer is defined we insert the dragged
     // layer on top of the group's sublayers
     if( group_layer ) {
-      if( !(insert_layer(group_layer->get_sublayers(), 
-                         src_layer, -1)) ) {
-    image->unlock();
-        return false;
-      }
+      group_layer->get_sublayers().push_front( src_layer );
+      //if( !(insert_layer(group_layer->get_sublayers(), 
+      //                   src_layer, -1)) ) {
+      //image->unlock();
+      //  return false;
+      //}
     } else {
     image->unlock();
       return false;
