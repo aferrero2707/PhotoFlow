@@ -44,7 +44,7 @@ PF::GmicToneMappingPar::GmicToneMappingPar():
   prop_channels.add_enum_value( 0, "All", "All" );
   prop_channels.add_enum_value( 1, "RGBA", "RGBA" );
   prop_channels.add_enum_value( 2, "RGB", "RGB" );
-  prop_channels.add_enum_value( 4, "Blue/red_chrominances", "Blue/red chrominances" );
+  prop_channels.add_enum_value( 4, "Blue_red_chrominances", "Blue/red chrominances" );
   prop_channels.add_enum_value( 5, "Blue_chrominance", "Blue chrominance" );
   prop_channels.add_enum_value( 6, "Red_chrominance", "Red chrominance" );
   prop_channels.add_enum_value( 7, "Lightness", "Lightness" );

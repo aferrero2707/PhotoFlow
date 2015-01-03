@@ -58,6 +58,7 @@ namespace PF
   ProcessorBase* new_gmic_dream_smooth();
   ProcessorBase* new_gmic_extract_foreground();
   ProcessorBase* new_gmic_tone_mapping();
+  ProcessorBase* new_gmic_inpaint();
   //insert new operations here
 
   ProcessorBase* new_gmic_operation( std::string op_type );

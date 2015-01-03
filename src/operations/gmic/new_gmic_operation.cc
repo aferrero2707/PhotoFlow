@@ -85,6 +85,8 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_extract_foreground();
   } else if( op_type == "gmic_tone_mapping" ) {
     processor = new_gmic_tone_mapping();
+  } else if( op_type == "gmic_inpaint" ) {
+    processor = new_gmic_inpaint();
     //insert new operations here
   }
 
