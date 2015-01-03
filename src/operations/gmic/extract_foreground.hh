@@ -43,8 +43,8 @@ namespace PF
 
   enum extract_fg_preview_mode_t {
     EXTRACT_FG_PREVIEW_POINTS,
-    EXTRACT_FG_PREVIEW_MASK,
-    EXTRACT_FG_PREVIEW_BLEND
+    EXTRACT_FG_PREVIEW_MASK
+    //EXTRACT_FG_PREVIEW_BLEND
   };
 
   class GmicExtractForegroundPar: public OpParBase

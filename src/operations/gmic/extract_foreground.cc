@@ -246,12 +246,13 @@ VipsImage* PF::GmicExtractForegroundPar::build(std::vector<VipsImage*>& in, int 
                                         VipsImage* imap, VipsImage* omap, 
                                         unsigned int& level)
 {
+  /*
   VipsImage* bgdimg = NULL;
   if( in.size() > 0 ) bgdimg = in[0];
   if( !bgdimg ) return NULL;
-
+  */
   VipsImage* srcimg = NULL;
-  if( in.size() > 1 ) srcimg = in[1];
+  if( in.size() > 0 ) srcimg = in[0];
   if( !srcimg ) return NULL;
 
   //PF_REF( srcimg, "GmicExtractForegroundPar::build(): srcimg ref (temporary)" );
@@ -380,6 +381,7 @@ VipsImage* PF::GmicExtractForegroundPar::build(std::vector<VipsImage*>& in, int 
   }
 
   VipsImage* out = NULL;
+  /*
   if( !is_editing() || (preview_mode == EXTRACT_FG_PREVIEW_BLEND) ) {
     blender->get_par()->set_image_hints( bgdimg );
     blender->get_par()->set_format( get_format() );
@@ -389,20 +391,31 @@ VipsImage* PF::GmicExtractForegroundPar::build(std::vector<VipsImage*>& in, int 
     out = blender->get_par()->build( in2, 0, NULL, mask, level );
     PF_UNREF( mask, "GmicExtractForegroundPar::build(): mask unref (EXTRACT_FG_PREVIEW_BLEND)" );
   }
+  */
   if( is_editing() && (preview_mode == EXTRACT_FG_PREVIEW_POINTS) ) {
     PF_REF( srcimg, "GmicExtractForegroundPar::build(): srcimg ref (EXTRACT_FG_PREVIEW_POINTS)" );
     PF_UNREF( mask, "GmicExtractForegroundPar::build(): mask unref (EXTRACT_FG_PREVIEW_POINTS)" );
     out = srcimg;
   }
-  if( is_editing() && (preview_mode == EXTRACT_FG_PREVIEW_MASK) ) {
+  if( !is_editing() || (preview_mode == EXTRACT_FG_PREVIEW_MASK) ) {
     VipsImage* bandv[10];
-    for( int bi = 0; bi < bgdimg->Bands; bi++ )
+    VipsImage* joined;
+    for( int bi = 0; bi < srcimg->Bands; bi++ )
       bandv[bi] = mask;
-    if( vips_bandjoin( bandv, &out, bgdimg->Bands, NULL ) ) {
+    if( vips_bandjoin( bandv, &joined, srcimg->Bands, NULL ) ) {
       return NULL;
     }
+    vips_copy( joined, &out, 
+	       "format", srcimg->BandFmt,
+	       "bands", srcimg->Bands,
+	       "coding", srcimg->Coding,
+	       "interpretation", srcimg->Type,
+	       NULL );    
+    //rgb_image( out->Xsize, out->Ysize );
+    set_image_hints( srcimg );
     PF_UNREF( mask, "GmicExtractForegroundPar::build(): mask unref (EXTRACT_FG_PREVIEW_MASK)" );
   }
+  std::cout<<"GmicExtractForegroundPar::build(): out="<<out<<std::endl;
   return out;
 
   /*
