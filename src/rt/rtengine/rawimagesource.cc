@@ -46,7 +46,9 @@ void rtengine::RawImageSource::amaze_demosaic(VipsRegion* ir, VipsRegion* oreg)
 
 	// Output region aligned to Bayer pattern and with 16 pixels border excluded
   VipsRect r_raw = {raw_left, raw_top, raw_right-raw_left+1, raw_bottom-raw_top+1};
+  //std::cout<<"r_raw(1): "<<r_raw.width<<","<<r_raw.height<<"+"<<r_raw.left<<"+"<<r_raw.top<<std::endl;
   vips_rect_intersectrect (&r_raw, &r_img, &r_raw);
+  //std::cout<<"r_raw(2): "<<r_raw.width<<","<<r_raw.height<<"+"<<r_raw.left<<"+"<<r_raw.top<<std::endl;
 
 #ifndef NDEBUG
 	//std::cout<<"rawData.init( "<<ir->valid.width<<", "<<ir->valid.height<<", "
