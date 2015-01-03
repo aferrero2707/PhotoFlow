@@ -1,4 +1,5 @@
 /* 
+   
  */
 
 /*
@@ -27,27 +28,26 @@
 
  */
 
-#ifndef GRADIENT_CONFIG_DIALOG_HH
-#define GRADIENT_CONFIG_DIALOG_HH
+#include <algorithm>
 
-#include <gtkmm.h>
+#include "file_util.hh"
 
-#include "../operation_config_dialog.hh"
-#include "../../operations/gradient.hh"
-
-#include "../widgets/selector.hh"
-
-
-namespace PF {
-
-  class GradientConfigDialog: public OperationConfigDialog
-  {
-    Selector typeSelector;
-    Slider center_x, center_y;
-  public:
-    GradientConfigDialog( Layer* l );
-  };
-
-}
-
+bool PF::get_file_extension(const std::string & file, std::string & ext)
+{
+#ifdef WIN32
+  const char * dir_separator = "\\";
+#else
+  const char * dir_separator = "/";
 #endif
+    std::size_t ext_pos = file.rfind(".");
+    std::size_t dir_pos = file.rfind(dir_separator);
+
+    if(ext_pos>dir_pos+1)
+    {
+        ext.append(file.begin()+ext_pos+1,file.end());
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        return true;
+    }
+
+    return false;
+}

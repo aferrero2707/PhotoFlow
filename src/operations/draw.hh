@@ -219,8 +219,10 @@ namespace PF
       std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
       VipsRect point_area;
       VipsRect point_clip;
+      //std::cout<<"DrawProc::render(): strokes.size()="<<strokes.size()<<std::endl;
       for( si = strokes.begin(); si != strokes.end(); ++si ) {
         Pencil& pen = si->get_pen();
+        //std::cout<<"  pen color: "<<pen.get_channel(0)<<std::endl;
         int pen_size = pen.get_size()/opar->get_scale_factor();
         int pen_size2 = pen_size*pen_size;
         for( ch = 0; ch < oreg->im->Bands; ch++ ) {

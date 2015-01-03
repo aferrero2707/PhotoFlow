@@ -43,6 +43,14 @@ namespace PF
   {
     Property<blendmode_t> blend_mode;
     Property<float> opacity;
+    Property<int> shift_x;
+    Property<int> shift_y;
+
+    ProcessorBase* white;
+
+    bool adjust_geom( VipsImage* in, VipsImage** out,
+                      int width, int height, unsigned int level );
+
   public:
     BlenderPar();
 

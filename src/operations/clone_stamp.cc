@@ -156,6 +156,8 @@ void PF::CloneStampPar::end_stroke()
 
 void PF::CloneStampPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
 {
+  update.width = update.height = update.left = update.top = 0;
+
   if( strokes.get().empty() ) return;
 
   PF::StrokesGroup& group = strokes.get().back();

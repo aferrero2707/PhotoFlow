@@ -28,6 +28,7 @@
 */
 
 
+#include "../base/file_util.hh"
 #include "../base/pf_file_loader.hh"
 #include "../operations/buffer.hh"
 #include "../operations/blender.hh"
@@ -46,7 +47,7 @@ PF::LayerWidget::LayerWidget( Image* img ):
   buttonPresetSave("Save"),
   operationsDialog( image, this )
 {
-  set_size_request(300,0);
+  //set_size_request(250,0);
   notebook.set_tab_pos(Gtk::POS_LEFT);
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 
@@ -62,12 +63,16 @@ PF::LayerWidget::LayerWidget( Image* img ):
 
   pack_start(notebook);
 
-  buttonbox.pack_start(buttonAdd/*, Gtk::PACK_SHRINK*/);
-  buttonbox.pack_start(buttonAddGroup/*, Gtk::PACK_SHRINK*/);
-  buttonbox.pack_start(buttonDel/*, Gtk::PACK_SHRINK*/);
+  buttonAdd.set_size_request(40,0);
+  buttonAddGroup.set_size_request(40,0);
+  buttonDel.set_size_request(40,0);
+
+  buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
+  buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
+  buttonbox.pack_start(buttonDel, Gtk::PACK_SHRINK);
   buttonbox.pack_start(buttonPresetLoad/*, Gtk::PACK_SHRINK*/);
   buttonbox.pack_start(buttonPresetSave/*, Gtk::PACK_SHRINK*/);
-  buttonbox.set_layout(Gtk::BUTTONBOX_START);
+  //buttonbox.set_layout(Gtk::BUTTONBOX_START);
 
   pack_start(buttonbox, Gtk::PACK_SHRINK);
 
@@ -639,6 +644,11 @@ void PF::LayerWidget::on_button_save()
 
       //Notice that this is a std::string, not a Glib::ustring.
       filename = dialog.get_filename();
+      std::string extension;
+      if( get_file_extension(filename, extension) ) {
+        if( extension != "pfp" )
+          filename += ".pfp";
+      }
       std::cout << "File selected: " <<  filename << std::endl;
       break;
     }

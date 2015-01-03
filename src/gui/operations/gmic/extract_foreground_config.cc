@@ -43,11 +43,11 @@ PF::GmicExtractForegroundConfigDialog::GmicExtractForegroundConfigDialog( PF::La
 
   Gtk::RadioButton::Group group = editPointsButton.get_group();
   showMaskButton.set_group( group );
-  showBlendButton.set_group( group );
+  //showBlendButton.set_group( group );
 
   controlsBox.pack_start( editPointsButton );
   controlsBox.pack_start( showMaskButton );
-  controlsBox.pack_start( showBlendButton );
+  //controlsBox.pack_start( showBlendButton );
   editPointsButton.set_active();
 
   updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_update) );
@@ -57,7 +57,7 @@ PF::GmicExtractForegroundConfigDialog::GmicExtractForegroundConfigDialog( PF::La
   showBlendButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_show_blend) );
   
   add_widget( controlsBox );
-  add_widget( layer_list );
+  //add_widget( layer_list );
 }
 
 
@@ -139,6 +139,7 @@ void PF::GmicExtractForegroundConfigDialog::on_show_mask()
 
 void PF::GmicExtractForegroundConfigDialog::on_show_blend()
 {
+  /*
   PF::GmicExtractForegroundPar* par = get_par();
   if( !par ) return;
   par->set_preview_mode( EXTRACT_FG_PREVIEW_BLEND );
@@ -146,6 +147,7 @@ void PF::GmicExtractForegroundConfigDialog::on_show_blend()
   std::cout<<"  updating image"<<std::endl;
   get_layer()->get_image()->update();
   get_layer()->get_image()->unlock();
+  */
 }
 
 

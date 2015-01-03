@@ -188,6 +188,7 @@ PF::Layer* PF::LayerTreeModel::get_dest_layer(const Gtk::TreeModel::Path& dest,
       if( (parent_row_iter) ) {
         PF::Layer* pl = (*parent_row_iter)[columns.col_layer];
         if( pl ) {
+          std::cout<<"get_dest_layer(): pl=\""<<pl->get_name()<<"\""<<std::endl;
           drop_into = true;
           return pl;
         }
@@ -196,6 +197,19 @@ PF::Layer* PF::LayerTreeModel::get_dest_layer(const Gtk::TreeModel::Path& dest,
   } else {
     Row row = *dest_row_iter;
     PF::Layer* l = row[columns.col_layer];
+    if( l ) std::cout<<"get_dest_layer(): l=\""<<l->get_name()<<"\""<<std::endl;
+    else std::cout<<"get_dest_layer(): l=NULL"<<std::endl;
+    Gtk::TreeModel::Path dest_parent = dest;
+    dest_parent.up();
+    if( !dest_parent.empty() ) {
+      const_iterator parent_row_iter = this2->get_iter( dest_parent );
+      if( (parent_row_iter) ) {
+        PF::Layer* pl = (*parent_row_iter)[columns.col_layer];
+        if( pl ) {
+          std::cout<<"get_dest_layer(): pl=\""<<pl->get_name()<<"\""<<std::endl;
+        }
+      }
+    }
     return l;
   }
 
@@ -227,6 +241,7 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
 {
   /* Destination layer
    */
+  std::cout<<"row_drop_possible_vfunc()"<<std::endl;
   bool drop_into;
   PF::Layer* dest_layer = get_dest_layer( dest, drop_into );
   if( drop_into ) {
@@ -276,6 +291,8 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
 
   if( (src_layer == NULL) || (dest_layer == NULL) ) return false;
 
+  if( src_layer->get_id() == dest_layer->get_id() )
+    return false;
 
   // The drop operation is only possible if two conditions are fulfilled:
   // 1. all the extra inputs of the dragged layer remain below it
@@ -284,6 +301,24 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
   bool can_drop = true;
   PF::Image* image = src_layer->get_image();
   g_assert( image != NULL );
+  /*
+  std::list<PF::Layer*>* clist = image->get_layer_manager().get_list( src_layer );
+  std::list<PF::Layer*>::iterator li;
+  PF::Layer* previous_layer = NULL;
+  for(li = clist->begin(); li != clist->end(); ++li) {
+    PF::Layer* l = *li;
+    if( l->get_id() == src_layer->get_id() ) break;
+    previous_layer = l;
+  }
+  if( previous_layer ) {
+    std::cout<<"Layer below dragged: \""<<previous_layer->get_name()<<"\""<<std::endl;
+    if( previous_layer->get_id() == dest_layer->get_id() ) 
+      return false;
+  } else {
+    std::cout<<"Layer below dragged: NULL"<<std::endl;
+  }
+  */
+
   std::list<PF::Layer*> plist;
   image->get_layer_manager().get_input_layers( dest_layer, plist );
   /**/
@@ -410,11 +445,12 @@ bool PF::LayerTreeModel::drag_data_received_vfunc( const Gtk::TreeModel::Path& d
     // Otherwise, if the group layer is defined we insert the dragged
     // layer on top of the group's sublayers
     if( group_layer ) {
-      if( !(insert_layer(group_layer->get_sublayers(), 
-                         src_layer, -1)) ) {
-    image->unlock();
-        return false;
-      }
+      group_layer->get_sublayers().push_front( src_layer );
+      //if( !(insert_layer(group_layer->get_sublayers(), 
+      //                   src_layer, -1)) ) {
+      //image->unlock();
+      //  return false;
+      //}
     } else {
     image->unlock();
       return false;

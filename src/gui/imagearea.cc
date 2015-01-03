@@ -63,6 +63,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   xoffset( 0 ),
   yoffset( 0 ),
   pending_pixels( 0 ),
+  draw_requested( false ),
   display_merged( true ),
   active_layer( -1 ),
 	shrink_factor( 1 )
@@ -240,6 +241,7 @@ void PF::ImageArea::draw_area()
   double_buffer.lock();
 
   if( !(double_buffer.get_active().get_pxbuf()) ) {
+    draw_requested = false;
     double_buffer.unlock();
     return;
   }
@@ -272,7 +274,11 @@ void PF::ImageArea::draw_area()
   //	   <<"+"<<double_buffer.get_active().get_rect().left<<"+"<<double_buffer.get_active().get_rect().top
   //	   <<std::endl;
   Glib::RefPtr<Gdk::Window> window = get_window();
-  if( !window ) return;
+  if( !window ) {
+    draw_requested = false;
+    double_buffer.unlock();
+    return;
+  }
   Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
   cr->rectangle( double_buffer.get_active().get_rect().left,
   		 double_buffer.get_active().get_rect().top,
@@ -293,6 +299,7 @@ void PF::ImageArea::draw_area()
   cr->fill();
   /**/
   cr->paint();
+  draw_requested = false;
   double_buffer.unlock();
   //std::cout<<"PF::ImageArea::draw_area(): after drawing pixbuf"<<std::endl;
   //getchar();
@@ -496,6 +503,12 @@ void PF::ImageArea::update( VipsRect* area )
 				node->processor->get_par() &&
 				!(node->processor->get_par()->is_map()) ) {
       image = node->blended;
+#ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): node->image("<<node->image<<")->Xsize="<<node->image->Xsize
+               <<"    node->image->Ysize="<<node->image->Ysize<<std::endl;    
+      std::cout<<"ImageArea::update(): node->blended("<<node->blended<<")->Xsize="<<node->blended->Xsize
+               <<"    node->blended->Ysize="<<image->Ysize<<std::endl;    
+#endif
     } else {
       // We need to find the first non-mask layer that contains the active mask layer
       PF::Layer* container_layer = NULL;
@@ -515,19 +528,31 @@ void PF::ImageArea::update( VipsRect* area )
       PF::PipelineNode* container_node = 
 				get_pipeline()->get_node( container_layer->get_id() );
       if( !container_node ) return;
-      if( container_node->input_id < 0 ) return;
+      if( container_layer->get_processor()->get_par()->needs_input() ) {
+        if( container_node->input_id < 0 ) return;
 
-      PF::Layer* input_layer = 
-				get_pipeline()->get_image()->get_layer_manager().
-				get_layer( container_node->input_id );
-      if( !input_layer ) return;
+        PF::Layer* input_layer = 
+          get_pipeline()->get_image()->get_layer_manager().
+          get_layer( container_node->input_id );
+        if( !input_layer ) return;
+        
+        PF::PipelineNode* input_node = 
+          get_pipeline()->get_node( input_layer->get_id() );
+        if( !input_node ) return;
+        if( !(input_node->image) ) return;
+        
+        image = input_node->image;
+      } else {
+        if( !container_node->image ) return;
 
-      PF::PipelineNode* input_node = 
-				get_pipeline()->get_node( input_layer->get_id() );
-      if( !input_node ) return;
-      if( !(input_node->blended) ) return;
+        image = container_node->image;
+      }
 
-      image = input_node->blended;
+      /*
+      */
+#ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): image("<<image<<")->Xsize="<<image->Xsize<<"    image->Ysize="<<image->Ysize<<std::endl;    
+#endif
     }
   }
   if( !image ) return;
@@ -568,6 +593,10 @@ void PF::ImageArea::update( VipsRect* area )
 				node->processor->get_par() &&
 				node->processor->get_par()->is_map() ) {
 
+#ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): node->blended("<<node->blended<<")->Xsize="<<node->blended->Xsize
+               <<"    node->blended->Ysize="<<node->blended->Ysize<<std::endl;    
+#endif
       invert->get_par()->set_image_hints( node->blended );
       invert->get_par()->set_format( get_pipeline()->get_format() );
       in.clear(); in.push_back( node->blended );
@@ -589,6 +618,10 @@ void PF::ImageArea::update( VipsRect* area )
       in.clear(); 
       in.push_back( srgbimg );
       in.push_back( redimage );
+#ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): srgbimg->Xsize="<<srgbimg->Xsize<<"    srgbimg->Ysize="<<srgbimg->Ysize<<std::endl;    
+      std::cout<<"ImageArea::update(): redimage->Xsize="<<redimage->Xsize<<"    redimage->Ysize="<<redimage->Ysize<<std::endl;    
+#endif      
       VipsImage* blendimage = maskblend->get_par()->build(in, 0, NULL, mapinverted, level );
       PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
       PF_UNREF( mapinverted, "ImageArea::update() mapinverted unref" );
@@ -834,11 +867,14 @@ void PF::ImageArea::sink( const VipsRect& area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into active buffer"<<std::endl;
 #endif
-	Update * update = g_new (Update, 1);
-	update->image_area = this;
-	update->rect.width = update->rect.height = 0;
-	//std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
-	gdk_threads_add_idle ((GSourceFunc) render_cb, update);
+  if( !draw_requested ) {
+    Update * update = g_new (Update, 1);
+    update->image_area = this;
+    update->rect.width = update->rect.height = 0;
+    //std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
+    draw_requested = true;
+    gdk_threads_add_idle ((GSourceFunc) render_cb, update);
+  }
 	double_buffer.unlock();
 	PF_UNREF( region2, "ImageArea::sink(): region2" );
 	//PF_UNREF( display_image2, "ImageArea::sink(): display_image2" );

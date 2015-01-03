@@ -85,6 +85,7 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
 
   Slider intensitySlider, opacitySlider;
   Selector blendSelector;
+  Slider shift_x, shift_y;
   bool has_ch_sel;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
 

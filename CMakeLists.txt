@@ -16,6 +16,15 @@ find_package (ZLIB REQUIRED)
 
 pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
 
+pkg_check_modules(XML2 REQUIRED libxml-2.0)
+
+pkg_check_modules(EXIF REQUIRED libexif)
+
+IF(NOT MINGW)
+pkg_check_modules(OPENEXR REQUIRED OpenEXR)
+pkg_check_modules(ORC REQUIRED orc-0.4)
+ENDIF(NOT MINGW)
+
 #FIND_PACKAGE(LibRaw 0.13 REQUIRED)
 #pkg_check_modules(LIBRAW REQUIRED libraw)
 
@@ -31,7 +40,6 @@ MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
 
 pkg_check_modules(GLIB glib-2.0) 
 pkg_check_modules(GLIBMM glibmm-2.4) 
-
 pkg_check_modules(GTKMM3 gtkmm-3.0<=3.4.0) 
 if(NOT GTKMM3_FOUND)
   pkg_check_modules(GTKMM2 REQUIRED gtkmm-2.4) 

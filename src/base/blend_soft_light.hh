@@ -46,24 +46,30 @@ class BlendSoftLight<T, CS, CHMIN, CHMAX, false>:
 {
   int ch, pos;
   T ibottom;
-  typename FormatInfo<T>::PROMOTED ptop, pbottom, sqrttop, overlay;
-  typename FormatInfo<T>::PROMOTED psum;
+  typename FormatInfo<T>::PROMOTED ptop, pbottom, overlay;
+  typename FormatInfo<T>::PROMOTED psum, MAX2;
+  float nbottom, sqrtbot;
+  float sqrtMAX;
 public:
-  BlendSoftLight(): BlendBase<T, CS, CHMIN, CHMAX, false>(), psum(FormatInfo<T>::MAX + FormatInfo<T>::MIN) {}
+  BlendSoftLight(): BlendBase<T, CS, CHMIN, CHMAX, false>(), 
+                    psum((typename FormatInfo<T>::PROMOTED)(FormatInfo<T>::MAX) + FormatInfo<T>::MIN), 
+                    MAX2((typename FormatInfo<T>::PROMOTED)(FormatInfo<T>::MAX)*FormatInfo<T>::MAX),
+                    sqrtMAX( sqrt(FormatInfo<T>::MAX) ) {}
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     pos = x;
     //psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      ptop = (typename FormatInfo<T>::PROMOTED)top[pos];
-      pbottom = (typename FormatInfo<T>::PROMOTED)bottom[pos];
-      if( bottom[pos] < FormatInfo<T>::HALF )
-        overlay = (ptop*bottom[pos]/FormatInfo<T>::MAX)*2 +
-          (ptop*ptop/FormatInfo<T>::MAX)*(psum - pbottom*2);	
-      else {
-        sqrttop = (typename FormatInfo<T>::PROMOTED)(sqrt(top[pos]));
-        overlay = ((psum-bottom[pos])*top[pos]/FormatInfo<T>::MAX)*2 +
-          sqrttop*(pbottom*2-psum)/FormatInfo<T>::MAX;
+      if( top[pos] <= FormatInfo<T>::HALF ) {
+        pbottom = (typename FormatInfo<T>::PROMOTED)bottom[pos];
+        overlay = ((pbottom*top[pos])/FormatInfo<T>::MAX)*2 +
+          ((pbottom*pbottom)/FormatInfo<T>::MAX)*(psum - top[pos]*2)/FormatInfo<T>::MAX;	
+      } else {
+        ptop = (typename FormatInfo<T>::PROMOTED)top[pos];
+        nbottom = static_cast<float>(bottom[pos])/FormatInfo<T>::MAX;
+        sqrtbot = sqrt(nbottom);
+        overlay = ((psum-top[pos])*bottom[pos]/FormatInfo<T>::MAX)*2 +
+          (typename FormatInfo<T>::PROMOTED)(sqrtbot*(ptop*2-psum));        
       }
       clip( opacity*overlay + (1.0f-opacity)*bottom[pos], out[pos] );
     }

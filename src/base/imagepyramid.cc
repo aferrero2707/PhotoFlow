@@ -272,9 +272,13 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   int nbands = in->Bands;
 
   while( size > 256 ) {
-    VipsImage* out;
-    if( vips_subsample( in, &out, 2, 2, NULL ) )
+    VipsImage* blurred;
+    if( vips_gaussblur( in, &blurred, 0.7, NULL ) )
       return NULL;
+    VipsImage* out;
+    if( vips_subsample( blurred, &out, 2, 2, NULL ) )
+      return NULL;
+    PF_UNREF( blurred, "ImagePyramid::get_level(): blurred unref" );
 #ifndef NDEBUG
     std::cout<<"ImagePyramid::get_level("<<level<<") subsample in="<<in<<"  out="<<out<<std::endl;
 #endif

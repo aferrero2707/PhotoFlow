@@ -100,6 +100,8 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
   opacitySlider( this, layer->get_blender(), "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
   blendSelector( this, layer->get_blender(), "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
+  shift_x( this, layer->get_blender(), "shift_x", "X shift", 0, -1000000, 1000000, 1, 10, 1),
+  shift_y( this, layer->get_blender(), "shift_y", "Y shift", 0, -1000000, 1000000, 1, 10, 1),
   has_ch_sel(chsel),
   greychSelector( this, "grey_target_channel", "Target channel: ", -1 ),
   rgbchSelector( this, "rgb_target_channel", "Target channel: ", -1 ),
@@ -134,6 +136,8 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
     controlsBoxLeft.pack_start( intensitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
   if(par && par->has_opacity() )
     controlsBoxLeft.pack_start( opacitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
+  controlsBoxLeft.pack_start( shift_x, Gtk::PACK_EXPAND_PADDING, 10 );
+  controlsBoxLeft.pack_start( shift_y, Gtk::PACK_EXPAND_PADDING, 10 );
   controlsBox.pack_start( controlsBoxLeft, Gtk::PACK_SHRINK );
   topBox.pack_start( controlsBox );
 

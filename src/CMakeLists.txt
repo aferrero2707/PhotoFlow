@@ -41,6 +41,14 @@ endif()
 
 include_directories(${SIGC2_INCLUDE_DIRS})
 
+include_directories(${OPENEXR_INCLUDE_DIRS})
+
+include_directories(${XML2_INCLUDE_DIRS})
+
+include_directories(${EXIF_INCLUDE_DIRS})
+
+include_directories(${ORC_INCLUDE_DIRS})
+
 include_directories(${ZLIB_INCLUDE_DIRS})
 link_directories(${ZLIB_LIBRARY_DIRS}  )
 
@@ -134,7 +142,13 @@ SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_u
 #)
 
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_CFLAGS "-fPIC -DPIC")
-SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic -fpermissive")
+IF(MINGW)
+  SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
+  SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
+ELSE(MINGW)
+  SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic")
+  SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic -fpermissive")
+ENDIF(MINGW)
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES PREFIX "")
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES SUFFIX ".plg")
 
@@ -148,9 +162,9 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 #add_dependencies(photoflow ${LIB_DEPS})
 
 IF(MINGW)
-list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
 ELSE(MINGW)
-list(APPEND ADDITIONAL_LIBS fftw3_threads pthread)
+  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
 ENDIF(MINGW)
 
 target_link_libraries(photoflow ${LIBS} 
@@ -159,6 +173,10 @@ target_link_libraries(photoflow ${LIBS}
   pfgmic 
   ${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
@@ -166,7 +184,8 @@ target_link_libraries(photoflow ${LIBS}
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
-  fftw3 gomp
+  ${ORC_LIBRARIES}
+  fftw3
   ${ADDITIONAL_LIBS}
   #gmon
   )
@@ -174,17 +193,6 @@ target_link_libraries(photoflow ${LIBS}
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
-
-#add_executable(invert # name of the executable on Windows will be example.exe 
-#  benchmarks/invert.cc 
-#  )
-#SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
-
-#target_link_libraries(invert ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
-#  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-#  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
-#  )
-
 
 #add_executable(refcount # name of the executable on Windows will be example.exe 
 #  tests/refcount.cc 

@@ -442,6 +442,10 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
       // The target colorspace is greyscale, therefore we either pick one channel from the source image
       // or we apply the appropriate conversion to grayscale
       clone_channel ch = (clone_channel)source_channel.get_enum_value().first;
+      if( ch==PF::CLONE_CHANNEL_GREY ) {
+        out = srcimg;
+        PF_REF( out, "ClonePar::build(): srcimg ref" );
+      }
       if( ch==PF::CLONE_CHANNEL_Lab ||
           ch==PF::CLONE_CHANNEL_L ||
           ch==PF::CLONE_CHANNEL_a ||
