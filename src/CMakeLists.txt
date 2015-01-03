@@ -194,17 +194,6 @@ INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
-#add_executable(invert # name of the executable on Windows will be example.exe 
-#  benchmarks/invert.cc 
-#  )
-#SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
-
-#target_link_libraries(invert ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
-#  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-#  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
-#  )
-
-
 #add_executable(refcount # name of the executable on Windows will be example.exe 
 #  tests/refcount.cc 
 #  )
