@@ -66,11 +66,7 @@ namespace PF {
 
     LayerWidget& get_layer_widget() { return layersWidget; }
 
-    void set_active_layer( int id ) 
-    {
-      if( image )
-	active_layer = image->get_layer_manager().get_layer( id );
-    }
+    void set_active_layer( int id );
 
     void open_image();
 

@@ -87,32 +87,6 @@ void PF::GmicExtractForegroundConfigDialog::on_update()
 }
 
 
-void PF::GmicExtractForegroundConfigDialog::on_map()
-{
-  OperationConfigDialog::on_map();
-  PF::GmicExtractForegroundPar* par = get_par();
-  if( !par ) return;
-  par->set_editing_flag( true );
-  get_layer()->get_image()->lock();
-  std::cout<<"  updating image"<<std::endl;
-  get_layer()->get_image()->update();
-  get_layer()->get_image()->unlock();
-}
-
-
-void PF::GmicExtractForegroundConfigDialog::on_unmap()
-{
-  OperationConfigDialog::on_unmap();
-  PF::GmicExtractForegroundPar* par = get_par();
-  if( !par ) return;
-  par->set_editing_flag( false );
-  get_layer()->get_image()->lock();
-  std::cout<<"  updating image"<<std::endl;
-  get_layer()->get_image()->update();
-  get_layer()->get_image()->unlock();
-}
-
-
 void PF::GmicExtractForegroundConfigDialog::on_edit_points()
 {
   PF::GmicExtractForegroundPar* par = get_par();

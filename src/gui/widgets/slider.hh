@@ -61,7 +61,7 @@ namespace PF {
     ~Slider() {}
 
 #ifdef GTKMM_2
-    Gtk::Adjustment& get_adjustment() { return adjustment; }
+    Gtk::Adjustment* get_adjustment() { return( &adjustment ); }
 #endif
 #ifdef GTKMM_3
     Glib::RefPtr<Gtk::Adjustment> get_adjustment() { return adjustment; }

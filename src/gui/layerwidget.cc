@@ -122,9 +122,9 @@ bool PF::LayerWidget::on_button_event( GdkEventButton* button )
 #endif
   if( button->button == 1 ) {
     int layer_id = get_selected_layer_id();
-#ifndef NDEBUG
-    std::cout<<"LayerWidget::on_button_event(): elected layer id="<<layer_id<<std::endl;
-#endif
+    //#ifndef NDEBUG
+    std::cout<<"LayerWidget::on_button_event(): selected layer id="<<layer_id<<std::endl;
+    //#endif
     if( layer_id >= 0 )
       signal_active_layer_changed.emit( layer_id );
   }
@@ -224,8 +224,14 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       return;
     }
 
-    PF::OperationConfigUI* dialog = l->get_processor()->get_par()->get_config_ui();
-    if(dialog) dialog->open();
+    PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+    if( ui ) {
+      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      if(dialog) {
+        dialog->open();
+        dialog->enable_editing();
+      }
+    }
   }
 }
 

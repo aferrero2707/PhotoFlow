@@ -388,7 +388,7 @@ void PF::OperationsTreeDialog::add_layer()
   PF::ProcessorBase* processor = 
     PF::PhotoFlow::Instance().new_operation( op_type.c_str(), layer );
   if( !processor || !processor->get_par() ) return;
-  PF::OperationConfigUI* dialog = dynamic_cast<PF::OperationConfigUI*>( processor->get_par()->get_config_ui() );
+  PF::OperationConfigUI* ui = dynamic_cast<PF::OperationConfigUI*>( processor->get_par()->get_config_ui() );
 
   /*
   if( (*iter)[columns.col_nickname] == "imageread" ) { 
@@ -447,10 +447,16 @@ void PF::OperationsTreeDialog::add_layer()
     layer_widget->add_layer( layer );
     //layer_manager.get_layers().push_back( layer );
     //layer_manager.modified();
-    if( dialog ) {
-      //processor->get_par()->set_config_ui( dialog );
-      //dialog->update();
-      dialog->open();
+    if( ui ) {
+      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      if(dialog) {
+        if( dialog ) {
+          //processor->get_par()->set_config_ui( dialog );
+          //dialog->update();
+          dialog->open();
+          dialog->enable_editing();
+        }
+      }
     }
   }
 }

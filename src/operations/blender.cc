@@ -121,7 +121,7 @@ PF::BlenderPar::BlenderPar():
   PropertyBase* B = white->get_par()->get_property( "B" );
   if( B ) B->update( (float)1 );
 
-  blend_mode.set_enum_value( PF_BLEND_NORMAL );
+  blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
   set_type( "blender" );
   set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
 }

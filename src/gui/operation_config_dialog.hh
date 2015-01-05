@@ -134,6 +134,14 @@ public:
   }
 
 
+  void on_map();
+  void on_unmap();
+
+
+  virtual void enable_editing();
+  virtual void disable_editing();
+
+
   virtual bool pointer_press_event( int button, double x, double y, int mod_key ) { return false; }
   virtual bool pointer_release_event( int button, double x, double y, int mod_key ) { return false; }
   virtual bool pointer_motion_event( int button, double x, double y, int mod_key ) { return false; }

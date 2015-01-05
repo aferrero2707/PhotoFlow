@@ -37,6 +37,9 @@
 #include "layermanager.hh"
 #include "pipeline.hh"
 
+#define PREVIEW_PIPELINE_ID 1
+
+
 
 namespace PF
 {
