@@ -145,6 +145,12 @@ bool PF::CropConfigDialog::pointer_press_event( int button, double x, double y, 
 bool PF::CropConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
+
+  cropLeftSlider.set_value();
+  cropTopSlider.set_value();
+  cropWidthSlider.set_value();
+  cropHeightSlider.set_value();
+
   cropLeftSlider.set_inhibit( false );
   cropTopSlider.set_inhibit( false );
   cropWidthSlider.set_inhibit( false );
