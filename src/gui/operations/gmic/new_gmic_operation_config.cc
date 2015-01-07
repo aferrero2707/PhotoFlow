@@ -89,6 +89,10 @@ PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, P
     dialog = new PF::GmicToneMappingConfigDialog( current_layer );
   } else if( op_type == "gmic_inpaint" ) {
     dialog = new PF::GmicInpaintConfigDialog( current_layer );
+  } else if( op_type == "gmic_convolve" ) {
+    dialog = new PF::GmicConvolveConfigDialog( current_layer );
+  } else if( op_type == "gmic_gradient_norm" ) {
+    dialog = new PF::GmicGradientNormConfigDialog( current_layer );
     //insert new operations here
   }
 

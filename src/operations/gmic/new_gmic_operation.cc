@@ -87,6 +87,10 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_tone_mapping();
   } else if( op_type == "gmic_inpaint" ) {
     processor = new_gmic_inpaint();
+  } else if( op_type == "gmic_convolve" ) {
+    processor = new_gmic_convolve();
+  } else if( op_type == "gmic_gradient_norm" ) {
+    processor = new_gmic_gradient_norm();
     //insert new operations here
   }
 

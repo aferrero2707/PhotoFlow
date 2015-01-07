@@ -246,6 +246,8 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   //op_gmic.add_op( "G'MIC Interpreter", "gmic" );
   op_gmic.add_op( "Dream Smoothing", "gmic_dream_smooth" );
+  op_gmic.add_op( "Gradient Norm", "gmic_gradient_norm" );
+  op_gmic.add_op( "Convolve", "gmic_convolve" );
   op_gmic.add_op( "Extract Foreground", "gmic_extract_foreground" );
   op_gmic.add_op( "Inpaint [patch-based]", "gmic_inpaint" );
   op_gmic.add_op( "Despeckle", "gmic_gcd_despeckle" );

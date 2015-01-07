@@ -56,3 +56,5 @@
 #include "extract_foreground_config.hh"
 #include "tone_mapping_config.hh"
 #include "inpaint_config.hh"
+#include "convolve_config.hh"
+#include "gradient_norm_config.hh"
