@@ -235,7 +235,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     std::cout<<"foreground("<<foreground<<")->Xsize="<<foreground->Xsize<<"    foreground->Ysize="<<foreground->Ysize<<std::endl;
     std::cout<<"foreground2("<<foreground2<<")->Xsize="<<foreground2->Xsize<<"    foreground2->Ysize="<<foreground2->Ysize<<std::endl;
     if( omap ) std::cout<<"omap("<<omap<<")->Xsize="<<omap->Xsize<<"    omap->Ysize="<<omap->Ysize<<std::endl;
-    std::cout<<"omap2("<<omap2<<")->Xsize="<<omap2->Xsize<<"    omap2->Ysize="<<omap2->Ysize<<std::endl;
+    if( omap2 ) std::cout<<"omap2("<<omap2<<")->Xsize="<<omap2->Xsize<<"    omap2->Ysize="<<omap2->Ysize<<std::endl;
 
     set_image_hints( background );
     outnew = PF::OpParBase::build( in_, first, NULL, omap2, level );
