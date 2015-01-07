@@ -52,9 +52,20 @@ VipsImage* PF::CropPar::build(std::vector<VipsImage*>& in, int first,
 	if( srcimg == NULL ) return NULL;
 	VipsImage* out;
 
+  if( is_editing() ) {
+    PF_REF( srcimg, "CropPar::build(): srcimg ref (editing mode)" );
+    return srcimg;
+  }
+
   int scale_factor = 1;
   for(unsigned int l = 0; l < level; l++ ) {
     scale_factor *= 2;
+  }
+
+  if( ((crop_width.get()/scale_factor) < 1) ||
+      ((crop_height.get()/scale_factor) < 1) ) {
+    PF_REF( srcimg, "CropPar::build(): srcimg ref (editing mode)" );
+    return srcimg;
   }
 
 	if( vips_crop( srcimg, &out, crop_left.get()/scale_factor, crop_top.get()/scale_factor,

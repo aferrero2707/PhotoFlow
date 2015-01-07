@@ -59,8 +59,8 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
   wb_target_b_slider( this, "wb_target_b", "b: ", 12, -1000000, 1000000, 0.05, 0.1, 1),
   demoMethodSelector( this, "demo_method", "Demosaicing method: ", PF::PF_DEMO_AMAZE ),
   fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
-	exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
-	profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
+  exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
+  profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
   gammaModeSelector( this, "gamma_mode", "Raw gamma: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
@@ -337,16 +337,16 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
     float Lab_in[3] = {0, 0, 0};
     float Lab_out[3] = {0, 0, 0};
     float Lab_wb[3] = {
-#ifdef GTKMM_2
-      wb_target_L_slider.get_adjustment().get_value(),
-      wb_target_a_slider.get_adjustment().get_value(),
-      wb_target_b_slider.get_adjustment().get_value()
-#endif
-#ifdef GTKMM_3
+//#ifdef GTKMM_2
+      //wb_target_L_slider.get_adjustment().get_value(),
+      //wb_target_a_slider.get_adjustment().get_value(),
+      //wb_target_b_slider.get_adjustment().get_value()
+//#endif
+//#ifdef GTKMM_3
       wb_target_L_slider.get_adjustment()->get_value(),
       wb_target_a_slider.get_adjustment()->get_value(),
       wb_target_b_slider.get_adjustment()->get_value()
-#endif
+//#endif
     };
 
     const float epsilon = 1.0e-5;
@@ -613,16 +613,16 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     float Lab_in[3] = {0, 0, 0};
     float Lab_out[3] = {0, 0, 0};
     float Lab_wb[3] = {
-#ifdef GTKMM_2
-      wb_target_L_slider.get_adjustment().get_value(),
-      wb_target_a_slider.get_adjustment().get_value(),
-      wb_target_b_slider.get_adjustment().get_value()
-#endif
-#ifdef GTKMM_3
+//#ifdef GTKMM_2
+      //wb_target_L_slider.get_adjustment().get_value(),
+      //wb_target_a_slider.get_adjustment().get_value(),
+      //wb_target_b_slider.get_adjustment().get_value()
+//#endif
+//#ifdef GTKMM_3
       wb_target_L_slider.get_adjustment()->get_value(),
       wb_target_a_slider.get_adjustment()->get_value(),
       wb_target_b_slider.get_adjustment()->get_value()
-#endif
+//#endif
     };
     //float Lab_wb[3] = {70, 15, 10};
     // Now we convert the average RGB values in the WB spot region to Lab

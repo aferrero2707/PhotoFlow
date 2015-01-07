@@ -249,6 +249,45 @@ void PF::OperationConfigDialog::open()
 
 
 
+void PF::OperationConfigDialog::on_map()
+{
+  Gtk::Dialog::on_map();
+}
+
+
+void PF::OperationConfigDialog::on_unmap()
+{
+  Gtk::Dialog::on_unmap();
+  disable_editing();
+}
+
+
+void PF::OperationConfigDialog::enable_editing()
+{
+  if( get_layer() && get_layer()->get_image() && 
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+    get_layer()->get_processor()->get_par()->set_editing_flag( true );
+    std::cout<<"  Editing flag set to true"<<std::endl;
+    std::cout<<"  updating image"<<std::endl;
+    get_layer()->get_image()->update();
+  }
+}
+
+
+void PF::OperationConfigDialog::disable_editing()
+{
+  if( get_layer() && get_layer()->get_image() && 
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+    get_layer()->get_processor()->get_par()->set_editing_flag( false );
+    std::cout<<"  Editing flag set to false"<<std::endl;
+    std::cout<<"  updating image"<<std::endl;
+    get_layer()->get_image()->update();
+  }
+}
+
+
 void PF::OperationConfigDialog::reset_ch_selector()
 {
   if( greychSelector.get_parent() == &chselBox )

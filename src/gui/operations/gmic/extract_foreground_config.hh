@@ -66,9 +66,6 @@ namespace PF {
       OperationConfigDialog::init();
     }
 
-    void on_map();
-    void on_unmap();
-
     void on_update();
     void on_edit_points();
     void on_show_mask();

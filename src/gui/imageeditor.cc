@@ -294,6 +294,39 @@ void PF::ImageEditor::zoom_actual_size()
 }
 
 
+void PF::ImageEditor::set_active_layer( int id ) 
+{
+  PF::Layer* old_active = active_layer;
+  active_layer = NULL;
+  if( image )
+    active_layer = image->get_layer_manager().get_layer( id );
+  std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
+  if( old_active != active_layer ) {
+    if( old_active &&
+        old_active->get_processor() &&
+        old_active->get_processor()->get_par() &&
+        old_active->get_processor()->get_par()->get_config_ui() ) {
+      PF::OperationConfigUI* ui = old_active->get_processor()->get_par()->get_config_ui();
+      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      if( dialog && dialog->get_visible() ) {
+        dialog->disable_editing();
+      }
+    }
+    
+    if( active_layer &&
+        active_layer->get_processor() &&
+        active_layer->get_processor()->get_par() &&
+        active_layer->get_processor()->get_par()->get_config_ui() ) {
+      PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
+      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      if( dialog && dialog->get_visible() ) {
+        dialog->enable_editing();
+      }
+    }
+  }
+}
+
+
 bool PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
 {
 #ifndef NDEBUG

@@ -43,24 +43,24 @@ void PF::ExposureSlider::get_value()
   float val;
   get_prop()->get(val);
   float exp = log2f( val );
-#ifdef GTKMM_2
-  get_adjustment().set_value( exp );
-#endif
-#ifdef GTKMM_3
+  //#ifdef GTKMM_2
+  //get_adjustment().set_value( exp );
+  //#endif
+  //#ifdef GTKMM_3
   get_adjustment()->set_value( exp );
-#endif
+  //#endif
 }
 
 
 void PF::ExposureSlider::set_value()
 {
   if( !get_prop() ) return;
-#ifdef GTKMM_2
-  float exp = get_adjustment().get_value();
-#endif
-#ifdef GTKMM_3
+  //#ifdef GTKMM_2
+  //float exp = get_adjustment().get_value();
+  //#endif
+  //#ifdef GTKMM_3
   float exp = get_adjustment()->get_value();
-#endif
+  //#endif
   float val = powf( 2.0f, exp );
   //std::cout<<"PF::ExposureSlider::set_value(): val="<<val<<std::endl;
   get_prop()->update(val);

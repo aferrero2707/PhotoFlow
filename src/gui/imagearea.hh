@@ -255,7 +255,7 @@ public:
     if( !display_merged && (old_id != active_layer) ) {
       //update( NULL );
 			if( get_pipeline() && get_pipeline()->get_image() )
-				get_pipeline()->get_image()->update_all();
+				get_pipeline()->get_image()->update();
 		}
   }
   int get_active_layer() { return active_layer; }
@@ -267,7 +267,7 @@ public:
     if( display_merged != old_val ) {
       //update( NULL );
 			if( get_pipeline() && get_pipeline()->get_image() )
-				get_pipeline()->get_image()->update_all();
+				get_pipeline()->get_image()->update();
 		}
   }
 
