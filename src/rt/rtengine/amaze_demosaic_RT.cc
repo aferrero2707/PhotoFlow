@@ -1379,7 +1379,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 					}
 					if(cc1&1) { // width of tile is odd
 						col = cc + left;
-            std::cout<<"cc="<<cc<<"  left="<<left<<"  col="<<col<<"  row="<<row<<"  indx="<<indx<<"  indx>>1="<<(indx>>1)<<std::endl;
+            //std::cout<<"cc="<<cc<<"  left="<<left<<"  col="<<col<<"  row="<<row<<"  indx="<<indx<<"  indx>>1="<<(indx>>1)<<std::endl;
 						red[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]);
 						blue[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]);
 					}

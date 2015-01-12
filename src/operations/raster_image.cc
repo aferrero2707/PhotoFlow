@@ -26,7 +26,7 @@
     These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
  */
-
+#include <string.h>
 #include "../base/pf_mkstemp.hh"
 #include "raster_image.hh"
 
@@ -44,7 +44,7 @@ PF::RasterImage::RasterImage( const std::string f ):
   image = vips_image_new_from_file( file_name.c_str(), NULL );
 #endif
   if( !image ) {
-    std::cout<<"Failed to load "<<file_name<<std::endl;
+    std::cout<<"RasterImage::RasterImage(): Failed to load "<<file_name<<std::endl;
     return;
   }
   
@@ -70,9 +70,10 @@ PF::RasterImage::RasterImage( const std::string f ):
 
   if( out_nbands > 0 ) {
     VipsImage* out;
-    if( vips_extract_band( image, &out, 0, "n", out_nbands, NULL ) )
+    if( vips_extract_band( image, &out, 0, "n", out_nbands, NULL ) ) {
+      std::cout<<"RasterImage::RasterImage(): vips_extract_band() failed"<<std::endl;
       return;
-    std::cout<<"ClonePar::Lab2grayscale(): extract_band OK"<<std::endl;
+    }
 
     PF_UNREF( image, "RasterImage::RasterImage(): image unref" );
     vips_image_init_fields( out,
@@ -84,6 +85,28 @@ PF::RasterImage::RasterImage( const std::string f ):
     image = out;
   }
 
+  PF::exif_read( &exif_data, file_name.c_str() );
+  void* buf = malloc( sizeof(PF::exif_data_t) );
+  if( !buf ) return;
+  memcpy( buf, &exif_data, sizeof(PF::exif_data_t) );
+  vips_image_set_blob( image, PF_META_EXIF_NAME,
+           (VipsCallbackFn) PF::exif_free, buf,
+           sizeof(PF::exif_data_t) );
+
+  print_exif();
+  print_exif( (PF::exif_data_t*)buf );
+
+  {
+    size_t bufsz;
+    void* buf;
+    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
+        &buf,&bufsz ) ) {
+      //std::cout<<"RasterImage::RasterImage(): exif_custom_data found in image("<<image<<")"<<std::endl;
+    } else {
+      std::cout<<"RasterImage::RasterImage(): exif_custom_data not found in image("<<image<<")"<<std::endl;
+    }
+  }
+
   pyramid.init( image );
 }
 
@@ -92,6 +115,84 @@ PF::RasterImage::~RasterImage()
 {
   if( image ) PF_UNREF( image, "RasterImage::~RasterImage() image" );
 	std::cout<<"RasterImage::~RasterImage() called."<<std::endl;
+}
+
+
+VipsImage* PF::RasterImage::get_image(unsigned int& level)
+{
+  {
+    size_t bufsz;
+    void* buf;
+    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
+        &buf,&bufsz ) ) {
+      //std::cout<<"RasterImage::get_image(): exif_custom_data found in image("<<image<<") before set_blob"<<std::endl;
+    } else {
+      std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<") before set_blob"<<std::endl;
+    }
+  }
+
+#warning "RasterImage::get_image(): refreshing of exif metadata needed. This is not normal!"
+  void* buf = malloc( sizeof(exif_data_t) );
+  if( !buf ) return NULL;
+  memcpy( buf, &exif_data, sizeof(exif_data_t) );
+  vips_image_set_blob( image, PF_META_EXIF_NAME,
+           (VipsCallbackFn) PF::exif_free, buf,
+           sizeof(exif_data_t) );
+
+  print_exif();
+  {
+    size_t bufsz;
+    void* buf;
+    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
+        &buf,&bufsz ) ) {
+      //std::cout<<"RasterImage::get_image(): exif_custom_data found in image("<<image<<") after set_blob"<<std::endl;
+    } else {
+      std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<") after set_blob"<<std::endl;
+    }
+  }
+/*
+  if( level == 0 ) {
+    PF_REF( image, "RasterImage()::get_image(): level 0 ref");
+    return image;
+  }
+*/
+  PF::PyramidLevel* plevel = pyramid.get_level( level );
+  if( plevel ) {
+    return plevel->image;
+  }
+  return NULL;
+}
+
+
+void PF::RasterImage::print_exif(  PF::exif_data_t* data )
+{
+  std::cout<<"RasterImage: (data)"<<std::endl
+        <<"      camera maker: "<<data->exif_maker<<std::endl
+        <<"      model: "<<data->exif_model<<std::endl
+        <<"      lens: "<<data->exif_lens<<std::endl;
+}
+
+void PF::RasterImage::print_exif()
+{
+  std::cout<<"RasterImage:"<<std::endl
+      <<"      camera maker: "<<exif_data.exif_maker<<std::endl
+      <<"      model: "<<exif_data.exif_model<<std::endl
+      <<"      lens: "<<exif_data.exif_lens<<std::endl;
+  size_t bufsz;
+  PF::exif_data_t* buf;
+  if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
+      (void**)&buf,&bufsz ) ) {
+    if( bufsz == sizeof(PF::exif_data_t) ) {
+      std::cout<<"RasterImage: (embedded)"<<std::endl
+          <<"      camera maker: "<<buf->exif_maker<<std::endl
+          <<"      model: "<<buf->exif_model<<std::endl
+          <<"      lens: "<<buf->exif_lens<<std::endl;
+    } else {
+      std::cout<<"RasterImage: wrong exif_custom_data size in image("<<image<<") before set_blob"<<std::endl;
+    }
+  } else {
+    std::cout<<"RasterImage: exif_custom_data not found in image("<<image<<") before set_blob"<<std::endl;
+  }
 }
 
 

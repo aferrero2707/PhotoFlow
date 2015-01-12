@@ -30,11 +30,7 @@
 #include "clone_stamp.hh"
 
 int
-vips_clone_stamp( int n, VipsImage **out, 
-                  PF::ProcessorBase* proc,
-                  VipsImage* imap, VipsImage* omap, 
-                  VipsDemandStyle demand_hint,
-                  int width, int height, int nbands, ... );
+vips_clone_stamp( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, int group_num, int stroke_num, ...);
 
 
 
@@ -65,33 +61,22 @@ VipsImage* PF::CloneStampPar::build(std::vector<VipsImage*>& in, int first,
 
   //std::cout<<"CloneStampPar::build(): stamp_size="<<stamp_size.get()<<std::endl;
 
-  VipsImage* outnew = NULL;
-  VipsImage* invec[100];
-  int n = 0;
-  for(int i = 0; i < in.size(); i++) {
-    if( !in[i] ) continue;
-    invec[n] = in[i];
-    n++;
-  }
-  if(n > 100) n = 100;
-  switch( n ) {
-  case 0:
-    vips_clone_stamp( n, &outnew, get_processor(), imap, omap, 
-                      get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
-		NULL );
-    break;
-  case 1:
-    vips_clone_stamp( n, &outnew, get_processor(), imap, omap, 
-                      get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
-                      "in0", invec[0], NULL );
-    break;
-  case 2:
-    vips_clone_stamp( n, &outnew, get_processor(), imap, omap, 
-                      get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
-                      "in0", invec[0], "in1", invec[1], NULL );
-    break;
-  default:
-    break;
+  if( (in.size() < 1) || (in[0] == NULL) )
+    return NULL;
+
+  VipsImage* outnew = in[0];
+  PF_REF( outnew, "CloneStampPar::build(): initial outnew ref" );
+
+  for( int i = 0; i < strokes.get().size(); i++) {
+    PF::StrokesGroup& group = strokes.get()[i];
+    for( int j = 0; j < group.get_strokes().size(); j++ ) {
+      //PF::Stroke<PF::Stamp>& stroke = group.get_strokes()[j];
+      VipsImage* tempimg = outnew;
+      if( vips_clone_stamp( tempimg, &outnew, get_processor(), i, j,NULL ) )
+        return NULL;
+      PF_UNREF( tempimg, "CloneStampPar::build(): tempimg unref" );
+      std::cout<<"CloneStampPar::build(): stroke "<<i<<","<<j<<" built"<<std::endl;
+    }
   }
 
   /*

@@ -40,6 +40,7 @@
 #include "pf_mkstemp.hh"
 #include "photoflow.hh"
 #include "cachebuffer.hh"
+#include "exif_data.hh"
 
 
 PF::CacheBuffer::CacheBuffer():
@@ -131,6 +132,13 @@ void PF::CacheBuffer::step()
                              &blobsz ) )
       image_data = NULL;
 
+    size_t exifsz;
+    void* exif_data;
+    if( vips_image_get_blob( image, PF_META_EXIF_NAME,
+        &exif_data,&exifsz ) ) {
+      exif_data = NULL;
+    }
+
     int width = image->Xsize;
     int height = image->Ysize;
     int size = (width>height) ? width : height;
@@ -163,8 +171,18 @@ void PF::CacheBuffer::step()
       if( image_data2 ) {
         memcpy( image_data2, image_data, blobsz );
         vips_image_set_blob( cached, "raw_image_data", 
-                             (VipsCallbackFn) g_free, 
-                             image_data2, blobsz );
+            (VipsCallbackFn) g_free,
+            image_data2, blobsz );
+      }
+    }
+
+    if( exif_data ) {
+      void* exif_data2 = malloc( exifsz );
+      if( exif_data2 ) {
+        memcpy( exif_data2, exif_data, exifsz );
+        vips_image_set_blob( cached, PF_META_EXIF_NAME,
+            (VipsCallbackFn) PF::exif_free,
+            exif_data2, exifsz );
       }
     }
 

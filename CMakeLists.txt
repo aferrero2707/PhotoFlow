@@ -19,6 +19,13 @@ pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
 pkg_check_modules(XML2 REQUIRED libxml-2.0)
 
 pkg_check_modules(EXIF REQUIRED libexif)
+pkg_check_modules(EXIV2 REQUIRED exiv2)
+
+pkg_check_modules(LENSFUN REQUIRED lensfun)
+MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
+MESSAGE( STATUS "LENSFUN_LIBRARY_DIRS:         " ${LENSFUN_LIBRARY_DIRS} )
+MESSAGE( STATUS "LENSFUN_LIBRARIES:         " ${LENSFUN_LIBRARIES})
+
 
 IF(NOT MINGW)
 pkg_check_modules(OPENEXR REQUIRED OpenEXR)

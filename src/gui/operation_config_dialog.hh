@@ -154,7 +154,7 @@ public:
 
   void open();
 
-  virtual void init();
+  void init();
 
   void update();
 
