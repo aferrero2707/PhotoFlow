@@ -98,7 +98,7 @@ namespace PF
   class StrokesGroup
   {
     int delta_row, delta_col;
-    std::list< Stroke<Stamp> > strokes;
+    std::vector< Stroke<Stamp> > strokes;
   public:
     StrokesGroup(): delta_row(0), delta_col(0)
     {
@@ -108,8 +108,8 @@ namespace PF
     int set_delta_row( int d ) { delta_row = d; }
     int get_delta_col() const { return delta_col; }
     int set_delta_col( int d ) { delta_col = d; }
-    std::list< Stroke<Stamp> >& get_strokes() { return strokes; }
-    const std::list< Stroke<Stamp> >& get_strokes() const { return strokes; }
+    std::vector< Stroke<Stamp> >& get_strokes() { return strokes; }
+    const std::vector< Stroke<Stamp> >& get_strokes() const { return strokes; }
   };
 
 
@@ -148,8 +148,8 @@ namespace PF
 
 
   template<> inline
-  void set_gobject_property< std::list<StrokesGroup> >(gpointer object, const std::string name, 
-                                                       const std::list<StrokesGroup>& value)
+  void set_gobject_property< std::vector<StrokesGroup> >(gpointer object, const std::string name,
+                                                       const std::vector<StrokesGroup>& value)
   {
   }
 
@@ -160,7 +160,7 @@ namespace PF
     Property<int> stamp_size;
     Property<float> stamp_opacity;
     Property<float> stamp_smoothness;
-    Property< std::list<StrokesGroup> > strokes;
+    Property< std::vector<StrokesGroup> > strokes;
 
     int scale_factor;
 
@@ -190,7 +190,7 @@ namespace PF
     void start_stroke( unsigned int pen_size, float opacity, float smoothness );
     void end_stroke();
 
-    Property< std::list<StrokesGroup> >& get_strokes() { return strokes; }
+    std::vector<StrokesGroup>& get_strokes() { return strokes.get(); }
 
     void draw_point( unsigned int x, unsigned int y, VipsRect& update );
   };

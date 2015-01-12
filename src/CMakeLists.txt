@@ -46,6 +46,10 @@ include_directories(${OPENEXR_INCLUDE_DIRS})
 include_directories(${XML2_INCLUDE_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
+include_directories(${EXIV2_INCLUDE_DIRS})
+
+include_directories(${LENSFUN_INCLUDE_DIRS})
+link_directories(${LENSFUN_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 
@@ -177,6 +181,8 @@ target_link_libraries(photoflow ${LIBS}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 

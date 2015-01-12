@@ -78,6 +78,7 @@ extern "C" {
   extern GType vips_cimg_blur_bilateral_get_type( void );
   extern void vips_cimg_operation_init( void );
   extern GType vips_clone_stamp_get_type( void ); 
+  extern GType vips_lensfun_get_type( void );
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
@@ -124,6 +125,7 @@ int main (int argc, char *argv[])
   //vips_cimg_blur_bilateral_get_type();
   //vips_cimg_operation_init();
   vips_clone_stamp_get_type();
+  vips_lensfun_get_type();
 
 #ifndef NDEBUG
   im_concurrency_set( 1 );

@@ -40,6 +40,7 @@
 #include "../base/processor.hh"
 #include "../base/imagepyramid.hh"
 #include "../base/photoflow.hh"
+#include "../base/exif_data.hh"
 
 #include "fast_demosaic.hh"
 
@@ -95,6 +96,8 @@ namespace PF
 		// Demosaiced image
     VipsImage* demo_image;
 
+    exif_data_t exif_data;
+
     PF::ImagePyramid pyramid;
 
   public:
@@ -105,18 +108,10 @@ namespace PF
     void unref() { nref -= 1; }
     int get_nref() { return nref; }
 
-    VipsImage* get_image(unsigned int& level) 
-    { 
-      if( level == 0 ) {
-        PF_REF( image, "RawImage()::get_image(): level 0 ref");
-				return image;
-      }
-    
-      PF::PyramidLevel* plevel = pyramid.get_level( level );
-      if( plevel ) {
-				return plevel->image;
-      }
-    }
+    VipsImage* get_image(unsigned int& level);
+
+    void print_exif( PF::exif_data_t* data );
+    void print_exif();
   };
 
 	extern std::map<Glib::ustring, PF::RawImage*> raw_images;

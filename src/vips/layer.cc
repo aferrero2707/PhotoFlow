@@ -150,7 +150,6 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   VipsRegion **ir = (VipsRegion **) seq;
   VipsLayer *layer = (VipsLayer *) b;
   
-
   /* Do the actual processing
    */
 
@@ -187,7 +186,8 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
     for( i = 0; ir[i]; i++ ) {
       /**/
 #ifndef NDEBUG
-      std::cout<<"  preparing region ir["<<i<<"]:  top="<<s.top
+      std::cout<<"  preparing region ir["<<i<<"]:  im="<<ir[0]->im
+          <<"  top="<<s.top
 	       <<" left="<<s.left
 	       <<" width="<<s.width
 	       <<" height="<<s.height<<std::endl;

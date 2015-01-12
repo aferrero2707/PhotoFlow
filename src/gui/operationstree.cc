@@ -243,6 +243,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.add_op( "Sharpen", "sharpen" );
 
   op_geom.add_op( "Crop image", "crop" );
+  op_geom.add_op( "Optical corrections (experimental)", "lensfun" );
 
   op_gmic.add_op( "G'MIC Interpreter", "gmic" );
   op_gmic.add_op( "Dream Smoothing", "gmic_dream_smooth" );

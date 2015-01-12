@@ -142,6 +142,32 @@ namespace PF
   }
 
 
+  template<class T>
+  std::istream& operator >>( std::istream& str, std::vector<T>& vector )
+  {
+    vector.clear();
+    int nelt;
+    str>>nelt;
+    for( int i = 0; i < nelt; i++ ) {
+      vector.push_back( T() );
+      T& val = vector.back();
+      str>>val;
+    }
+    return str;
+  }
+
+  template<class T>
+  std::ostream& operator <<( std::ostream& str, const std::vector<T>& vector )
+  {
+    str<<vector.size()<<" ";
+    typename std::vector<T>::const_iterator i;
+    for( i = vector.begin(); i != vector.end(); i++ ) {
+      str<<(*i);
+    }
+    return str;
+  }
+
+
 
   class PropertyBase: public sigc::trackable
   {

@@ -27,8 +27,8 @@
 
  */
 
+#include "../base/exif_data.hh"
 #include "image_reader.hh"
-//#include "../vips/vips_layer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,6 +111,16 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   
   if( !image ) return NULL;
 
+  {
+    size_t exifsz;
+    PF::exif_data_t* exif_data;
+    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
+        (void**)&exif_data,&exifsz ) ) {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data found in image("<<image<<")"<<std::endl;
+    } else {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data not found in image("<<image<<")"<<std::endl;
+    }
+  }
 #ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): "<<std::endl
 	   <<"input images:"<<std::endl;
@@ -169,11 +179,32 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   if( !out ) return NULL;
   PF_UNREF( image, "ImageReaderPar::build(): image unref after convert_format" );
 
+  {
+    size_t exifsz;
+    PF::exif_data_t* exif_data;
+    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
+        (void**)&exif_data,&exifsz ) ) {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data found in converted image("<<image<<")"<<std::endl;
+    } else {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data not found in converted image("<<image<<")"<<std::endl;
+    }
+  }
+  {
+    size_t exifsz;
+    PF::exif_data_t* exif_data;
+    if( !vips_image_get_blob( out, PF_META_EXIF_NAME,
+        (void**)&exif_data,&exifsz ) ) {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data found in out("<<out<<")"<<std::endl;
+    } else {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data not found in out("<<out<<")"<<std::endl;
+    }
+  }
+
   set_image_hints( out );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): image refcount ("<<(void*)image<<") = "<<G_OBJECT(image)->ref_count<<std::endl;
   std::cout<<"                         out refcount ("<<(void*)out<<") = "<<G_OBJECT(out)->ref_count<<std::endl;
-#endif
+//#endif
 
   return out;
 }
