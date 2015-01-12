@@ -1,4 +1,5 @@
-/* 
+/* Exif metadata utilities.
+ * Derived from Darktable (http://www.darktable.org/)
  */
 
 /*
