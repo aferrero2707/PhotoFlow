@@ -55,7 +55,6 @@ namespace PF
       if( !img ) return;
       OpParBase::set_image_hints( img );
       rgb_image( get_xsize(), get_ysize() );
-      set_demand_hint( VIPS_DEMAND_STYLE_ANY );
     }
 
     /* Function to derive the output area from the input area

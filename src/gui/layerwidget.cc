@@ -122,9 +122,9 @@ bool PF::LayerWidget::on_button_event( GdkEventButton* button )
 #endif
   if( button->button == 1 ) {
     int layer_id = get_selected_layer_id();
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_button_event(): selected layer id="<<layer_id<<std::endl;
-    //#endif
+#endif
     if( layer_id >= 0 )
       signal_active_layer_changed.emit( layer_id );
   }

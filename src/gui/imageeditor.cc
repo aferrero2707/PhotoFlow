@@ -144,12 +144,16 @@ void PF::ImageEditor::open_image()
   std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
   if( !pipeline ) return;
-  int level = 1;
+  int level = 0;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
   std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
+  image->set_loaded( false );
   image->update();
+  //getchar();
+  PF::ImageProcessor::Instance().wait_for_caching();
+  image->set_loaded( true );
   image_opened = true;
   //Gtk::Paned::on_map();
 }
@@ -300,7 +304,7 @@ void PF::ImageEditor::set_active_layer( int id )
   active_layer = NULL;
   if( image )
     active_layer = image->get_layer_manager().get_layer( id );
-  std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
+  //std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
   if( old_active != active_layer ) {
     if( old_active &&
         old_active->get_processor() &&

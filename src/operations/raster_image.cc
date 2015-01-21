@@ -48,7 +48,9 @@ PF::RasterImage::RasterImage( const std::string f ):
     return;
   }
   
+#ifndef NDEBUG
   std::cout<<"RasterImage::RasterImage(): # of bands="<<image->Bands<<std::endl;
+#endif
 
   int out_nbands = 0;
   if( (convert_colorspace(image->Type) == PF_COLORSPACE_GRAYSCALE) &&
@@ -93,6 +95,7 @@ PF::RasterImage::RasterImage( const std::string f ):
            (VipsCallbackFn) PF::exif_free, buf,
            sizeof(PF::exif_data_t) );
 
+#ifndef NDEBUG
   print_exif();
   print_exif( (PF::exif_data_t*)buf );
 
@@ -106,6 +109,7 @@ PF::RasterImage::RasterImage( const std::string f ):
       std::cout<<"RasterImage::RasterImage(): exif_custom_data not found in image("<<image<<")"<<std::endl;
     }
   }
+#endif
 
   pyramid.init( image );
 }
@@ -126,8 +130,10 @@ VipsImage* PF::RasterImage::get_image(unsigned int& level)
     if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
         &buf,&bufsz ) ) {
       //std::cout<<"RasterImage::get_image(): exif_custom_data found in image("<<image<<") before set_blob"<<std::endl;
+#ifndef NDEBUG
     } else {
       std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<") before set_blob"<<std::endl;
+#endif
     }
   }
 
@@ -139,7 +145,8 @@ VipsImage* PF::RasterImage::get_image(unsigned int& level)
            (VipsCallbackFn) PF::exif_free, buf,
            sizeof(exif_data_t) );
 
-  print_exif();
+#ifndef NDEBUG
+ print_exif();
   {
     size_t bufsz;
     void* buf;
@@ -150,6 +157,7 @@ VipsImage* PF::RasterImage::get_image(unsigned int& level)
       std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<") after set_blob"<<std::endl;
     }
   }
+#endif
 /*
   if( level == 0 ) {
     PF_REF( image, "RasterImage()::get_image(): level 0 ref");

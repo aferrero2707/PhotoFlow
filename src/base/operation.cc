@@ -75,7 +75,7 @@ PF::OpParBase::OpParBase():
   //blend_mode = PF_BLEND_PASSTHROUGH;
   //blend_mode = PF_BLEND_NORMAL;
   //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
-  demand_hint = VIPS_DEMAND_STYLE_THINSTRIP;
+  demand_hint = VIPS_DEMAND_STYLE_ANY;
   bands = 1;
   xsize = 100; ysize = 100;
 

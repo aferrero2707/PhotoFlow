@@ -46,6 +46,7 @@ namespace PF
   ProcessorBase* new_hue_saturation();
   ProcessorBase* new_clone();
   ProcessorBase* new_crop();
+  ProcessorBase* new_scale();
   ProcessorBase* new_convert2rgb();
   ProcessorBase* new_convert2srgb();
   ProcessorBase* new_convert2lab();

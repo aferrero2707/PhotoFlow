@@ -161,23 +161,15 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   int x, y;
   int ninput = layer->ninput;
   
-  /* Area of input we need.
-   */
-  layer->processor->get_par()->transform_inv(r,&s);
-
   /**/
 #ifndef NDEBUG
   std::cout<<"vips_layer_gen(): "<<std::endl;
   if( layer->processor->get_par()->get_config_ui() )
     std::cout<<"  name: "<<layer->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
-  std::cout<<"  input region:  top="<<s.top
-	   <<" left="<<s.left
-	   <<" width="<<s.width
-	   <<" height="<<s.height<<std::endl
-	   <<"  output region: top="<<oreg->valid.top
-	   <<" left="<<oreg->valid.left
-	   <<" width="<<oreg->valid.width
-	   <<" height="<<oreg->valid.height<<std::endl;
+  std::cout<<"  output region: top="<<oreg->valid.top
+      <<" left="<<oreg->valid.left
+      <<" width="<<oreg->valid.width
+      <<" height="<<oreg->valid.height<<std::endl;
 #endif
   /**/
   /* Prepare the input images
@@ -185,8 +177,14 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   if(ir) {
     for( i = 0; ir[i]; i++ ) {
       /**/
+      /* Area of input we need.
+       */
+      layer->processor->get_par()->transform_inv(r,&s);
+
+      VipsRect r_img = {0, 0, ir[i]->im->Xsize, ir[i]->im->Ysize};
+      vips_rect_intersectrect (&s, &r_img, &s);
 #ifndef NDEBUG
-      std::cout<<"  preparing region ir["<<i<<"]:  im="<<ir[0]->im
+      std::cout<<"  preparing region ir["<<i<<"]:  im="<<ir[i]->im
           <<"  top="<<s.top
 	       <<" left="<<s.left
 	       <<" width="<<s.width

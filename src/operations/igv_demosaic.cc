@@ -38,7 +38,6 @@
 PF::IgvDemosaicPar::IgvDemosaicPar(): 
   OpParBase()
 {
-  set_demand_hint( VIPS_DEMAND_STYLE_ANY );
   set_type( "igv_demosaic" );
 }
 
