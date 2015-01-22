@@ -152,7 +152,7 @@ void PF::ImageEditor::open_image()
   image->set_loaded( false );
   image->update();
   //getchar();
-  PF::ImageProcessor::Instance().wait_for_caching();
+  //PF::ImageProcessor::Instance().wait_for_caching();
   image->set_loaded( true );
   image_opened = true;
   //Gtk::Paned::on_map();
