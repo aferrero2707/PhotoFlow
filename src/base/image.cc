@@ -108,6 +108,7 @@ PF::Image::Image():
   async( false ), 
   modified( false ), 
   rebuilding( false ), 
+  loaded( false ),
   disable_update( false )
 {
   rebuild_mutex = vips_g_mutex_new();
@@ -155,7 +156,9 @@ PF::Image::~Image()
 // was changed.
 void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 {
+#ifndef NDEBUG
   std::cout<<"Image::update( "<<target_pipeline<<", "<<sync<<" ) called."<<std::endl;
+#endif
   if( disable_update ) return;
 
   if( PF::PhotoFlow::Instance().is_batch() ) {
@@ -532,6 +535,7 @@ bool PF::Image::open( std::string filename )
   disable_update = true;
   if( ext == "pfi" ) {
 
+    loaded = false;
     PF::load_pf_image( filename, this );
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
@@ -665,9 +669,18 @@ void PF::Image::do_export_merged( std::string filename )
     std::cout<<"Saving image to file "<<filename<<"..."<<std::endl;
     //Glib::Threads::Mutex::Lock lock( rebuild_mutex );
     unsigned int level = 0;
-    //PF::Pipeline* pipeline = new PF::Pipeline( this, VIPS_FORMAT_USHORT, 0, PF_RENDER_NORMAL );
-    PF::Pipeline* pipeline = new PF::Pipeline( this, VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
-    layer_manager.rebuild_all( pipeline, PF::PF_COLORSPACE_RGB, 100, 100 );
+    PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+    do_update();
+    /*
+    while( true ) {
+      PF::CacheBuffer* buf = layer_manager.get_cache_buffer( PF_RENDER_NORMAL );
+      //std::cout<<"ImageProcessor::run(): buf="<<buf<<std::endl;
+      if( !buf ) break;
+      buf->write();
+#warning "TODO: check if one can update only the export pipeline"
+      do_update();
+    }
+    */
     VipsImage* image = pipeline->get_output();
     VipsImage* outimg = image;
 
@@ -715,7 +728,9 @@ void PF::Image::do_export_merged( std::string filename )
     //g_object_unref( outimg );
     msg = std::string("PF::Image::export_merged(") + filename + "), outimg";
     PF_UNREF( outimg, msg.c_str() );
+    remove_pipeline( pipeline );
     delete pipeline;
+    layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
     std::cout<<"Image saved to file "<<filename<<std::endl;
   }
 }

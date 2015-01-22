@@ -70,7 +70,7 @@ void PF::ImagePyramid::init( VipsImage* img, int fd )
     void* exif_data;
     if( !vips_image_get_blob( img, PF_META_EXIF_NAME,
         &exif_data,&exifsz ) ) {
-      std::cout<<"ImagePyramid::init(): exif_custom_data found in img("<<img<<")"<<std::endl;
+      //std::cout<<"ImagePyramid::init(): exif_custom_data found in img("<<img<<")"<<std::endl;
     } else {
       std::cout<<"ImagePyramid::init(): exif_custom_data not found in img("<<img<<")"<<std::endl;
     }
@@ -248,7 +248,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   void* exif_data;
   if( !vips_image_get_blob( img, PF_META_EXIF_NAME,
       &exif_data,&exifsz ) ) {
-    std::cout<<"ImagePyramid::get_level(): exif_custom_data found in img("<<img<<")"<<std::endl;
+    //std::cout<<"ImagePyramid::get_level(): exif_custom_data found in img("<<img<<")"<<std::endl;
   } else {
     std::cout<<"ImagePyramid::get_level(): exif_custom_data not found in img("<<img<<")"<<std::endl;
     exif_data = NULL;
@@ -315,7 +315,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     int fd = pf_mkstemp( fname );
     if( fd < 0 )
       return NULL;
-    std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
+    //std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
 
     vips_rawsave_fd( out, fd, NULL );
     //char tifname[500];

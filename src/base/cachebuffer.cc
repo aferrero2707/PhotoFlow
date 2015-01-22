@@ -44,12 +44,13 @@
 
 
 PF::CacheBuffer::CacheBuffer():
-  image( NULL ), cached( NULL ), fd(-1), completed( false ), step_x(0), step_y(0)
+  image( NULL ), cached( NULL ), fd(-1),
+  initialized( false ), completed( false ), step_x(0), step_y(0)
 {
 }
 
 
-void PF::CacheBuffer::reset()
+void PF::CacheBuffer::reset( bool reinitialize )
 {
   if( cached ) 
     PF_UNREF( cached, "CacheBuffer::reset(): cached image unref" );
@@ -64,6 +65,8 @@ void PF::CacheBuffer::reset()
     fd = -1;
     filename.clear();
   }
+
+  if( reinitialize ) set_initialized( false );
 }
 
 
@@ -103,7 +106,7 @@ void PF::CacheBuffer::step()
   for( int y = 0; y < tile_area.height; y++ ) {
     lseek( fd, offset, SEEK_SET );
     p = VIPS_REGION_ADDR( reg, tile_area.left, tile_area.top+y );
-    ssize_t n = write( fd, p, VIPS_REGION_SIZEOF_LINE(reg) );
+    ssize_t n = ::write( fd, p, VIPS_REGION_SIZEOF_LINE(reg) );
     if( n != VIPS_REGION_SIZEOF_LINE(reg) )
       break;
     offset += VIPS_IMAGE_SIZEOF_LINE(image);
@@ -190,6 +193,111 @@ void PF::CacheBuffer::step()
     std::cout<<"CacheBuffer: caching completed"<<std::endl;
     result = true;
   }
+
+  return;
+}
+
+
+void PF::CacheBuffer::write()
+{
+  std::cout<<"CacheBuffer::write(): complete="<<completed<<"  image="<<image<<std::endl;
+  if( completed ) return;
+  if( !image ) return;
+
+  bool result = false;
+
+  // Copy the image into the disk buffer. Create the disk buffer if not yet done.
+  if( fd < 0 ) {
+    char fname[500];
+    sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
+    //fd = mkostemp( fname, O_CREAT|O_RDWR|O_TRUNC );
+    fd = pf_mkstemp( fname );
+    if( fd >= 0 )
+      filename = fname;
+  }
+  if( fd < 0 ) return;
+
+  std::cout<<"CacheBuffer::write(): saving image data into "<<filename<<std::endl;
+
+  int fail = vips_rawsave_fd( image, fd, NULL );
+  if( fail ) {
+    std::cout<<"CacheBuffer: vips_rawsave_fd() failed"<<std::endl;
+    return;
+  }
+  close( fd );
+
+
+    completed = true;
+    void *profile_data;
+    size_t profile_length;
+    if( vips_image_get_blob( image, VIPS_META_ICC_NAME,
+                             &profile_data, &profile_length ) )
+      profile_data = NULL;
+
+    size_t blobsz;
+    void* image_data;
+    if( vips_image_get_blob( image, "raw_image_data",
+                             &image_data,
+                             &blobsz ) )
+      image_data = NULL;
+
+    size_t exifsz;
+    void* exif_data;
+    if( vips_image_get_blob( image, PF_META_EXIF_NAME,
+        &exif_data,&exifsz ) ) {
+      exif_data = NULL;
+    }
+
+    int width = image->Xsize;
+    int height = image->Ysize;
+    int size = (width>height) ? width : height;
+    int nbands = image->Bands;
+
+    VipsImage* rawimg;
+
+    vips_rawload( filename.c_str(), &rawimg, width, height,
+                  VIPS_IMAGE_SIZEOF_PEL( image ), NULL );
+    vips_copy( rawimg, &cached,
+         "format", image->BandFmt,
+         "bands", image->Bands,
+         "coding", image->Coding,
+         "interpretation", image->Type,
+         NULL );
+    PF_UNREF( rawimg, "CacheBuffer::step() completed" );
+
+    if( profile_data ) {
+      void* profile_data2 = malloc( profile_length );
+      if( profile_data2 ) {
+        memcpy( profile_data2, profile_data, profile_length );
+        vips_image_set_blob( cached, VIPS_META_ICC_NAME,
+                             (VipsCallbackFn) g_free,
+                             profile_data2, profile_length );
+      }
+    }
+
+    if( image_data ) {
+      void* image_data2 = malloc( blobsz );
+      if( image_data2 ) {
+        memcpy( image_data2, image_data, blobsz );
+        vips_image_set_blob( cached, "raw_image_data",
+            (VipsCallbackFn) g_free,
+            image_data2, blobsz );
+      }
+    }
+
+    if( exif_data ) {
+      void* exif_data2 = malloc( exifsz );
+      if( exif_data2 ) {
+        memcpy( exif_data2, exif_data, exifsz );
+        vips_image_set_blob( cached, PF_META_EXIF_NAME,
+            (VipsCallbackFn) PF::exif_free,
+            exif_data2, exifsz );
+      }
+    }
+
+    pyramid.init( cached );
+    std::cout<<"CacheBuffer: caching completed"<<std::endl;
+    result = true;
 
   return;
 }

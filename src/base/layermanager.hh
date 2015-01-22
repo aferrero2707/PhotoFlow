@@ -62,7 +62,7 @@ namespace PF
 
     Layer* get_container_layer( Layer* layer, std::list<Layer*>& list );
 
-    PF::CacheBuffer* get_cache_buffer( std::list<Layer*>& list );
+    PF::CacheBuffer* get_cache_buffer( rendermode_t mode, std::list<Layer*>& list );
 
     // Walk through the given layer chain and set the "dirty" flag of all layers starting from "layer_id" to "true"
     void update_dirty( std::list<Layer*>& list, bool& dirty );
@@ -105,7 +105,9 @@ namespace PF
 
     bool remove_layer( Layer* layer );
 
-    PF::CacheBuffer* get_cache_buffer();
+    PF::CacheBuffer* get_cache_buffer( rendermode_t mode );
+    void reset_cache_buffers( rendermode_t mode, bool reinit );
+
 
     bool rebuild_prepare();
     bool rebuild(Pipeline* pipeline, colorspace_t cs, int width, int height, VipsRect* area );

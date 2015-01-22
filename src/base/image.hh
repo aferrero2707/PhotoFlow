@@ -59,6 +59,8 @@ namespace PF
     // Flag indicating whether there is a re-building ongoing
     bool rebuilding;
 
+    bool loaded;
+
 		// Current "pfi" file name associated to this image
 		std::string file_name;
 
@@ -100,9 +102,22 @@ namespace PF
     void do_remove_layer( PF::Layer* layer );
     void remove_layer( PF::Layer* layer );
 
-    void add_pipeline( VipsBandFormat fmt, int level, rendermode_t mode=PF_RENDER_PREVIEW )
+    Pipeline* add_pipeline( VipsBandFormat fmt, int level, rendermode_t mode=PF_RENDER_PREVIEW )
     {
-      pipelines.push_back( new Pipeline( this, fmt, level, mode ) );
+      Pipeline* pipeline = new Pipeline( this, fmt, level, mode );
+      pipelines.push_back( pipeline);
+      return pipeline;
+    }
+
+    void remove_pipeline( Pipeline* pipeline )
+    {
+      std::vector<Pipeline*>::iterator i;
+      for( i = pipelines.begin(); i != pipelines.end(); i++) {
+        if( *i == pipeline) {
+          pipelines.erase( i );
+          break;
+        }
+      }
     }
 
     unsigned int get_npipelines() { return pipelines.size(); }
@@ -122,6 +137,9 @@ namespace PF
 
     bool is_rebuilding() { return rebuilding; }
     void set_rebuilding( bool flag ) { rebuilding = flag; }
+
+    bool is_loaded() { return loaded; }
+    void set_loaded( bool flag ) { loaded = flag; }
 
     //Glib::Threads::Mutex& get_rebuild_mutex() { return rebuild_mutex; }
 

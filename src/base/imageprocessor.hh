@@ -82,8 +82,11 @@ namespace PF
 
     // Handling of requests queue
     std::deque<ProcessRequestInfo> optimized_requests;
-    //GCond* requests_pending;
-    //GMutex* requests_mutex;
+
+    bool caching_completed;
+    GCond* caching_completed_cond;
+    GMutex* caching_completed_mutex;
+
     GAsyncQueue* requests;
 
     void optimize_requests();
@@ -94,6 +97,8 @@ namespace PF
     static ImageProcessor& Instance();
 
     void run();
+
+    void wait_for_caching();
 
     void submit_request( ProcessRequestInfo request );
 

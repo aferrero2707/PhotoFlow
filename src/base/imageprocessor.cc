@@ -39,11 +39,13 @@ static gpointer run_image_processor( gpointer data )
 }
 
 
-PF::ImageProcessor::ImageProcessor()
+PF::ImageProcessor::ImageProcessor(): caching_completed( false )
 {
   processing_mutex = vips_g_mutex_new();
-  //requests_mutex = vips_g_mutex_new();
-  //requests_pending = vips_g_cond_new();
+
+  caching_completed_mutex = vips_g_mutex_new();
+  caching_completed_cond = vips_g_cond_new();
+
   requests = g_async_queue_new();
   thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
 }
@@ -85,6 +87,7 @@ void PF::ImageProcessor::optimize_requests()
 
 void PF::ImageProcessor::run()
 {
+  std::cout<<"ImageProcessor started."<<std::endl;
 	bool running = true;
   while( running ) {
     /*
@@ -96,17 +99,29 @@ void PF::ImageProcessor::run()
     */
     if( g_async_queue_length( requests ) == 0 ) {
       PF::Image* image = PF::PhotoFlow::Instance().get_active_image();
+      //std::cout<<"ImageProcessor::run(): image="<<image<<std::endl;
       if( image ) {
-        PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer();
+        // Only cache buffers for PREVIEW pipelines are updated automatically
+        PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer( PF_RENDER_PREVIEW );
         //std::cout<<"ImageProcessor::run(): buf="<<buf<<std::endl;
         if( buf ) {
+          g_mutex_lock( caching_completed_mutex );
+          caching_completed = false;
+          g_mutex_unlock( caching_completed_mutex );
+
           buf->step();
+          //buf->write();
           if( buf->is_completed() ) {
             image->lock();
             image->do_update();
             image->unlock();
           }
           continue;
+        } else {
+          g_mutex_lock( caching_completed_mutex );
+          caching_completed = true;
+          g_cond_signal( caching_completed_cond );
+          g_mutex_unlock( caching_completed_mutex );
         }
       }
       /*
@@ -244,6 +259,15 @@ void  PF::ImageProcessor::submit_request( PF::ProcessRequestInfo request )
   std::cout<<"PF::ImageProcessor::submit_request(): signaling condition."<<std::endl;
   g_cond_signal( requests_pending );
   */
+}
+
+
+void PF::ImageProcessor::wait_for_caching()
+{
+  g_mutex_lock( caching_completed_mutex );
+  while( !caching_completed )
+    g_cond_wait( caching_completed_cond, caching_completed_mutex );
+  g_mutex_unlock( caching_completed_mutex );
 }
 
 
