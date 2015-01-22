@@ -127,7 +127,8 @@ PF::RawImage::RawImage( const std::string f ):
 #endif
   int row, col, col2;
   //size_t pxsize = sizeof(PF::RawPixel);
-  size_t pxsize = sizeof(float)+sizeof(guint8);
+  //size_t pxsize = sizeof(float)+sizeof(guint8);
+  size_t pxsize = sizeof(float)*2;
   guint8* rowbuf = (guint8*)malloc( iwidth*pxsize );
 #ifndef NDEBUG
   std::cout<<"Row buffer allocated: "<<(void*)rowbuf<<std::endl;
@@ -154,8 +155,10 @@ PF::RawImage::RawImage( const std::string f ):
       float val = (data[row][col]-c_black[color])*65535/(this->get_white(color)-c_black[color]);
 #endif
 			fptr = (float*)ptr;
-			*fptr = val;
-			ptr[sizeof(float)] = color;
+      //*fptr = val;
+      //ptr[sizeof(float)] = color;
+      fptr[0] = val;
+      fptr[1] = color;
 			ptr += pxsize;
     }
 		/**/
@@ -192,11 +195,12 @@ PF::RawImage::RawImage( const std::string f ):
   
   VipsCoding coding = VIPS_CODING_NONE;
   VipsInterpretation interpretation = VIPS_INTERPRETATION_MULTIBAND;
-  VipsBandFormat format = VIPS_FORMAT_UCHAR;
+  //VipsBandFormat format = VIPS_FORMAT_UCHAR;
+  VipsBandFormat format = VIPS_FORMAT_FLOAT;
   int nbands = 2;
   vips_copy( in, &image, 
 	     "format", format,
-	     //"bands", nbands,
+	     "bands", nbands,
 	     "coding", coding,
 	     "interpretation", interpretation,
 	     NULL );

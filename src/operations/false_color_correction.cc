@@ -57,7 +57,6 @@
 PF::FalseColorCorrectionPar::FalseColorCorrectionPar(): 
   OpParBase()
 {
-  set_demand_hint( VIPS_DEMAND_STYLE_ANY );
   set_type( "false_color_correction" );
 }
 
@@ -68,8 +67,27 @@ VipsImage* PF::FalseColorCorrectionPar::build(std::vector<VipsImage*>& in, int f
 {
   if( in.size()<1 || in[0]==NULL ) return NULL;
   
-  VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
-  return out;
+  VipsImage* extended;
+  if( vips_embed(in[0], &extended, 2, 2, in[0]->Xsize+4, in[0]->Ysize+4, "extend", VIPS_EXTEND_MIRROR, NULL) ) {
+    std::cout<<"FalseColorCorrectionPar::build(): vips_embed() failed."<<std::endl;
+    return NULL;
+  }
+  set_image_hints( extended );
+
+  std::vector<VipsImage*> in2; in2.push_back(extended);
+  VipsImage* out = OpParBase::build( in2, first, NULL, NULL, level );
+  PF_UNREF( extended, "FalseColorCorrectionPar::build(): extended unref" )
+
+  VipsImage* cropped = out;
+  int result;
+  result = vips_crop(out, &cropped, 2, 2, in[0]->Xsize, in[0]->Ysize, NULL);
+  PF_UNREF( out, "FalseColorCorrectionPar::build(): out unref" )
+  if( result ) {
+    std::cout<<"FalseColorCorrectionPar::build(): vip_crop() failed"<<std::endl;
+    return NULL;
+  }
+
+  return cropped;
 }
 
 

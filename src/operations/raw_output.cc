@@ -84,7 +84,6 @@ PF::RawOutputPar::RawOutputPar():
   srgb_curve = cmsReverseToneCurve( curve );
   cmsFreeToneCurve( curve );
 
-  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type("raw_output" );
 }
 

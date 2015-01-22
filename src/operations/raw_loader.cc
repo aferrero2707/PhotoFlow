@@ -39,7 +39,6 @@ PF::RawLoaderPar::RawLoaderPar():
   demo_image(NULL),
   current_format(VIPS_FORMAT_NOTSET)
 {
-  set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
   //convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   //blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
   fast_demosaic = new_fast_demosaic();
@@ -92,13 +91,13 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
 
   VipsImage* image = raw_image->get_image( level );
   
-#ifndef NDEBUG
-  std::cout<<"RawLoaderPar::build(): "<<std::endl;
-  std::cout<<"image->Interpretation: "<<image->Type<<std::endl;
-#endif
-
 
   if( image ) {
+#ifndef NDEBUG
+    std::cout<<"RawLoaderPar::build(): "<<std::endl;
+    std::cout<<"image->Interpretation: "<<image->Type<<std::endl;
+#endif
+
     //PF_REF( image, "RawLoaderPar::build()" );
     set_image_hints( image );
   }
