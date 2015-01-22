@@ -256,9 +256,9 @@ bool PF::exif_read(exif_data_t* data, const char* path)
       dt_strlcpy_to_utf8(data->exif_maker, sizeof(data->exif_maker), pos, exifData);
     }
 
-    for(char *c=data->exif_maker+sizeof(data->exif_maker)-1; c > data->exif_maker; c--) {
+    for(char *c=data->exif_maker+sizeof(data->exif_maker)-2; c >= data->exif_maker; c--) {
       if(*c != ' ' && *c != '\0') {
-        *c = '\0';
+        *(c+1) = '\0';
         break;
       }
     }
@@ -275,9 +275,9 @@ bool PF::exif_read(exif_data_t* data, const char* path)
     }
 
     g_print("read_exif(): model=%s\n",data->exif_model);
-    for(char *c=data->exif_model+sizeof(data->exif_model)-1; c > data->exif_model; c--) {
+    for(char *c=data->exif_model+sizeof(data->exif_model)-2; c >= data->exif_model; c--) {
       if(*c != ' ' && *c != '\0') {
-        *c = '\0';
+        *(c+1) = '\0';
         break;
       }
     }
@@ -331,7 +331,9 @@ bool PF::exif_read(exif_data_t* data, const char* path)
 
 void PF::exif_free (gpointer mem)
 {
+#ifndef NDEBUG
   std::cout<<"Freeing exif data structure"<<std::endl;
+#endif
   g_free( mem );
 }
 
