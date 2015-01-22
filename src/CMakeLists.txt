@@ -56,6 +56,15 @@ include_directories(${ORC_INCLUDE_DIRS})
 include_directories(${ZLIB_INCLUDE_DIRS})
 link_directories(${ZLIB_LIBRARY_DIRS}  )
 
+#include_directories(${GLIB_INCLUDE_DIRS})
+#link_directories(${GLIB_LIBRARY_DIRS}  )
+#include_directories(${GMODULE_INCLUDE_DIRS})
+#link_directories(${GMODULE_LIBRARY_DIRS}  )
+#include_directories(${GOBJECT_INCLUDE_DIRS})
+#link_directories(${GOBJECT_LIBRARY_DIRS}  )
+#include_directories(${GTHREAD_INCLUDE_DIRS})
+#link_directories(${GTHREAD_LIBRARY_DIRS}  )
+
 
 #include_directories(${LIBXML_INCLUDE_DIRS})
 #set(LIBS ${LIBS} ${LIBXML_LIBRARIES})
@@ -166,7 +175,7 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 #add_dependencies(photoflow ${LIB_DEPS})
 
 IF(MINGW)
-  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
 ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
 ENDIF(MINGW)
@@ -187,6 +196,9 @@ target_link_libraries(photoflow ${LIBS}
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
   ${GLIB_LIBRARIES} 
+  #${GMODULE_LIBRARIES} 
+  #${GOBJECT_LIBRARIES} 
+  #${GTHREAD_LIBRARIES} 
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
