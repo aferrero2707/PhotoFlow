@@ -102,7 +102,8 @@ std::cout<<"LensFunPar::build() called."<<std::endl;
 
   if( vips_lensfun(in[0], &outnew, get_processor(), NULL) ) {
     std::cout<<"vips_lensfun() failed."<<std::endl;
-    return NULL;
+    PF_REF( in[0], "LensFunPar::build(): in[0] ref (exif data wrong size)")
+    return in[0];
   }
 
   //outnew = in[0];
