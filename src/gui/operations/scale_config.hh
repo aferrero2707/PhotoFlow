@@ -42,6 +42,8 @@ namespace PF {
 {
   Gtk::VBox controlsBox;
 
+  Slider rotate_angle_slider;
+
   Selector scale_mode;
   Selector scale_unit;
 

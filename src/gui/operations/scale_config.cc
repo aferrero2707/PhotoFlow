@@ -33,8 +33,9 @@
 
 
 PF::ScaleConfigDialog::ScaleConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Scale" ),
-  scale_mode( this, "scale_mode", "Mode: ", 0 ),
+  OperationConfigDialog( layer, "Scale/Rotate" ),
+  rotate_angle_slider( this, "rotate_angle", "Rotation angle: ", 0, -360, 360, 0.001, 10, 1 ),
+  scale_mode( this, "scale_mode", "Scale mode: ", 0 ),
   scale_unit( this, "scale_unit", "", 0 ),
   scale_width_pixels_slider( this, "scale_width_pixels", "width: ", 0, 0, 10000000, 1, 10, 1 ),
   scale_height_pixels_slider( this, "scale_height_pixels", "height: ", 0, 0, 10000000, 1, 10, 1 ),
@@ -48,6 +49,8 @@ PF::ScaleConfigDialog::ScaleConfigDialog( PF::Layer* layer ):
   scale_height_inches_slider( this, "scale_height_inches", "height: ", 0, 0, 10000000, 1, 10, 1 ),
   scale_resolution_slider( this, "scale_resolution", "resolution: ", 0, 0, 10000000, 1, 10, 1 )
 {
+  controlsBox.pack_start( rotate_angle_slider );
+
   controlsBox.pack_start( scale_mode );
   
   scale_controls_box.pack_end( scale_unit );

@@ -33,12 +33,13 @@
 
 PF::ScalePar::ScalePar():
   OpParBase(),
+  rotate_angle("rotate_angle",this,0),
   scale_mode("scale_mode",this, SCALE_MODE_FIT, "SCALE_MODE_FIT", "Fit"),
-  scale_unit("scale_unit", this, SCALE_UNIT_PX, "SCALE_UNIT_PX", "pixels"),
+  scale_unit("scale_unit", this, SCALE_UNIT_PERCENT, "SCALE_UNIT_PERCENT", "percent"),
   scale_width_pixels("scale_width_pixels",this,0),
   scale_height_pixels("scale_height_pixels",this,0),
-  scale_width_percent("scale_width_percent",this,0),
-  scale_height_percent("scale_height_percent",this,0),
+  scale_width_percent("scale_width_percent",this,100),
+  scale_height_percent("scale_height_percent",this,100),
   scale_width_mm("scale_width_mm",this,0),
   scale_height_mm("scale_height_mm",this,0),
   scale_width_cm("scale_width_cm",this,0),
@@ -50,7 +51,7 @@ PF::ScalePar::ScalePar():
   //scale_mode.add_enum_value( SCALE_MODE_FILL, "SCALE_MODE_FILL", "Fill" );
   //scale_mode.add_enum_value( SCALE_MODE_RESIZE, "SCALE_MODE_RESIZE", "Resize" );
 
-  scale_unit.add_enum_value( SCALE_UNIT_PERCENT, "SCALE_UNIT_PERCENT", "percent" );
+  scale_unit.add_enum_value( SCALE_UNIT_PX, "SCALE_UNIT_PX", "pixels" );
   scale_unit.add_enum_value( SCALE_UNIT_MM, "SCALE_UNIT_MM", "mm" );
   scale_unit.add_enum_value( SCALE_UNIT_CM, "SCALE_UNIT_CM", "cm" );
   scale_unit.add_enum_value( SCALE_UNIT_INCHES, "SCALE_UNIT_INCHES", "inches" );
@@ -68,6 +69,21 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   if( in.size() > 0 ) srcimg = in[0];
 	if( srcimg == NULL ) return NULL;
 	VipsImage* out;
+
+	if( rotate_angle.get() != 0 ) {
+	  if( vips_similarity(srcimg, &out, "angle", rotate_angle.get(),
+	      //"idx", (double)-1*srcimg->Xsize/4,
+	      //"idy", (double)-1*srcimg->Ysize/2,
+	      //"odx", (double)srcimg->Xsize/4,
+	      //"ody", (double)srcimg->Ysize/2,
+	      NULL) ) {
+	    return NULL;
+	  }
+	  set_image_hints( out );
+	  srcimg = out;
+	} else {
+	  PF_REF( srcimg, "ScalePar::build(): srcimg ref for angle=0" );
+	}
 
   int scale_factor = 1;
   for(unsigned int l = 0; l < level; l++ ) {
@@ -111,16 +127,18 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   if( scale_mode.get_enum_value().first == PF::SCALE_MODE_FIT ) {
-    if( scale_width==0 || scale_height==0 ) {
-      PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
+    if( level!=0 || scale_width==0 || scale_height==0 ||
+        scale_width==1 || scale_height==1 ) {
+      //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
       return srcimg;
     }
     float scale = MIN( scale_width, scale_height );
     if( vips_resize(srcimg, &out, scale, NULL) ) {
-      return NULL;
+      return srcimg;
     }
+    PF_UNREF( srcimg, "ScalePar::build(): srcimg unref after vips_resize()" );
   } else {
-    PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
+    //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
     return srcimg;
   }
 

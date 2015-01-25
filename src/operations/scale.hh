@@ -59,6 +59,7 @@ enum scale_unit_t
 
   class ScalePar: public OpParBase
   {
+    Property<float> rotate_angle;
     PropertyBase scale_mode;
     PropertyBase scale_unit;
     Property<int> scale_width_pixels, scale_height_pixels;
