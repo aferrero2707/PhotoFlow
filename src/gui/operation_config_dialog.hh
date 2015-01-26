@@ -35,6 +35,7 @@
 #include "../base/image.hh"
 
 #include "widgets/textbox.hh"
+#include "widgets/checkbox.hh"
 #include "widgets/slider.hh"
 #include "widgets/selector.hh"
 #include "widgets/exposure_slider.hh"

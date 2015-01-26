@@ -42,6 +42,8 @@ namespace PF
   class CropPar: public OpParBase
   {
     Property<int> crop_left, crop_top, crop_width, crop_height;
+    Property<bool> keep_ar;
+    Property<float> ar_width, ar_height;
 
   public:
     CropPar();
