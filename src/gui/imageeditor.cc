@@ -50,7 +50,10 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonShowMerged( "show merged layers" ),
   buttonShowActive( "show active layer" )
 {
-	imageArea = new PF::ImageArea( image->get_pipeline(PIPELINE_ID) );
+  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+
+  imageArea = new PF::ImageArea( image->get_pipeline(PIPELINE_ID) );
 
   imageArea->set_adjustments( imageArea_scrolledWindow.get_hadjustment(),
 			     imageArea_scrolledWindow.get_vadjustment() );

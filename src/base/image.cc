@@ -117,11 +117,11 @@ PF::Image::Image():
 
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
-  add_pipeline( VIPS_FORMAT_USHORT, 0 );
-  add_pipeline( VIPS_FORMAT_USHORT, 0 );
+  //add_pipeline( VIPS_FORMAT_USHORT, 0 );
+  //add_pipeline( VIPS_FORMAT_USHORT, 0 );
 
-  pipelines[0]->set_render_mode( PF_RENDER_PREVIEW );
-  pipelines[1]->set_render_mode( PF_RENDER_PREVIEW );
+  //pipelines[0]->set_render_mode( PF_RENDER_PREVIEW );
+  //pipelines[1]->set_render_mode( PF_RENDER_PREVIEW );
 }
 
 PF::Image::~Image()
