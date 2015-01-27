@@ -133,9 +133,19 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
       return srcimg;
     }
     float scale = MIN( scale_width, scale_height );
-    if( vips_resize(srcimg, &out, scale, NULL) ) {
+
+    VipsInterpolate* interpolate = vips_interpolate_new( "nohalo" );
+    if( !interpolate )
+      interpolate = vips_interpolate_new( "bicubic" );
+    if( !interpolate )
+      interpolate = vips_interpolate_new( "bilinear" );
+
+    if( vips_resize(srcimg, &out, scale, "interpolate", interpolate, NULL) ) {
+      std::cout<<"ScalePar::build(): vips_resize() failed."<<std::endl;
+      PF_UNREF( interpolate, "ScalePar::build(): interpolate unref" );
       return srcimg;
     }
+    PF_UNREF( interpolate, "ScalePar::build(): interpolate unref" );
     PF_UNREF( srcimg, "ScalePar::build(): srcimg unref after vips_resize()" );
   } else {
     //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
