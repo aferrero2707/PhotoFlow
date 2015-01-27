@@ -110,7 +110,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
   cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 )
 {
-  set_keep_above(true);
+  //set_keep_above(true);
   add_button("OK",1);
   add_button("Cancel",0);
 
