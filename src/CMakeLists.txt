@@ -70,14 +70,14 @@ link_directories(${PANGO_LIBRARY_DIRS}  )
 include_directories(${PANGOFT2_INCLUDE_DIRS})
 link_directories(${PANGOFT2_LIBRARY_DIRS}  )
 
-#include_directories(${GLIB_INCLUDE_DIRS})
-#link_directories(${GLIB_LIBRARY_DIRS}  )
-#include_directories(${GMODULE_INCLUDE_DIRS})
-#link_directories(${GMODULE_LIBRARY_DIRS}  )
-#include_directories(${GOBJECT_INCLUDE_DIRS})
-#link_directories(${GOBJECT_LIBRARY_DIRS}  )
-#include_directories(${GTHREAD_INCLUDE_DIRS})
-#link_directories(${GTHREAD_LIBRARY_DIRS}  )
+include_directories(${GLIB_INCLUDE_DIRS})
+link_directories(${GLIB_LIBRARY_DIRS}  )
+include_directories(${GMODULE_INCLUDE_DIRS})
+link_directories(${GMODULE_LIBRARY_DIRS}  )
+include_directories(${GOBJECT_INCLUDE_DIRS})
+link_directories(${GOBJECT_LIBRARY_DIRS}  )
+include_directories(${GTHREAD_INCLUDE_DIRS})
+link_directories(${GTHREAD_LIBRARY_DIRS}  )
 
 
 #include_directories(${LIBXML_INCLUDE_DIRS})
@@ -211,9 +211,9 @@ target_link_libraries(photoflow ${LIBS}
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
   ${GLIB_LIBRARIES} 
-  #${GMODULE_LIBRARIES} 
-  #${GOBJECT_LIBRARIES} 
-  #${GTHREAD_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
@@ -244,9 +244,9 @@ target_link_libraries(pfbatch ${LIBS}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
   ${GLIB_LIBRARIES} 
-  #${GMODULE_LIBRARIES} 
-  #${GOBJECT_LIBRARIES} 
-  #${GTHREAD_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
@@ -260,6 +260,7 @@ INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
+
 
 #add_executable(invert # name of the executable on Windows will be example.exe 
 #  benchmarks/invert.cc 
