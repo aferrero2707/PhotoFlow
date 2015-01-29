@@ -9,14 +9,17 @@ if [ ${rebuild_VIPS} -eq 1 ]; then
 		cd VIPS
 
 		if [ ${update_VIPS} -eq 1 ]; then
-        #rm -rf vips-*
-        #wget http://www.vips.ecs.soton.ac.uk/supported/current/vips-7.40.8.tar.gz
-        #tar xzvf vips-7.40.8.tar.gz
-        #cd vips-7.40.8
-				rm -rf libvips
-				git clone https://github.com/jcupitt/libvips.git
+        if [ -e libvips ]; then
+            cd libvips
+            git pull
+				    ./bootstrap.sh
+        else
+				    git clone https://github.com/jcupitt/libvips.git
+				    cd libvips
+				    ./bootstrap.sh
+        fi
+    else
 				cd libvips
-				./bootstrap.sh
 		fi
 
 		FLAGS="-O2 -msse4.2 -ffast-math"
@@ -24,11 +27,12 @@ if [ ${rebuild_VIPS} -eq 1 ]; then
 		CFLAGS="$FLAGS" CXXFLAGS="$FLAGS -fpermissive" \
 				./configure --prefix=${vips_install} --disable-gtk-doc --disable-gtk-doc-html \
 				--disable-introspection --enable-debug=no --without-python  --without-magick\
-				--enable-shared=no --enable-static=yes
+				--enable-pyvips8=no --enable-shared=no --enable-static=yes
 		if [ $? -ne 0 ]; then
 				echo "VIPS configure failed"
 				exit 1
 		fi
+    make clean depclean
 		make install
 		if [ $? -ne 0 ]; then
 				echo "VIPS compilation failed"
