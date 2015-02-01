@@ -202,18 +202,31 @@ void PF::Pipeline::remove_node( unsigned int id )
 
   char tstr[500];
   if( nodes[id] != NULL ) {
+    PF::Layer* l = image->get_layer_manager().get_layer( id );
+    if( nodes[id]->blended != NULL ) {
+      //g_object_unref( nodes[id]->image );
+      if( l )
+        snprintf( tstr, 499, "PF::Pipeline::remove_node() unref blended image of layer %s",
+            l->get_name().c_str() );
+      else
+        snprintf( tstr, 499, "PF::Pipeline::remove_node() unref blended image (NULL layer)" );
+      PF_UNREF( nodes[id]->blended, tstr );
+    }
+    if( nodes[id]->blender != NULL )
+      delete( nodes[id]->blender );
+
     if( nodes[id]->image != NULL ) {
       //g_object_unref( nodes[id]->image );
-      PF::Layer* l = image->get_layer_manager().get_layer( id );
       if( l )
-	snprintf( tstr, 499, "PF::Pipeline::remove_node() unref image of layer %s",
-		  l->get_name().c_str() );
+        snprintf( tstr, 499, "PF::Pipeline::remove_node() unref image of layer %s",
+            l->get_name().c_str() );
       else
-	snprintf( tstr, 499, "PF::Pipeline::remove_node() unref image (NULL layer)" );
+        snprintf( tstr, 499, "PF::Pipeline::remove_node() unref image (NULL layer)" );
       PF_UNREF( nodes[id]->image, tstr );
     }
     if( nodes[id]->processor != NULL )
       delete( nodes[id]->processor );
+
     delete nodes[id];
     nodes[id] = NULL;
   }
