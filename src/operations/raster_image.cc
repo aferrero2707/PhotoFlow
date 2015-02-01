@@ -137,7 +137,9 @@ VipsImage* PF::RasterImage::get_image(unsigned int& level)
     }
   }
 
+#ifdef DO_WARNINGS
 #warning "RasterImage::get_image(): refreshing of exif metadata needed. This is not normal!"
+#endif
   void* buf = malloc( sizeof(exif_data_t) );
   if( !buf ) return NULL;
   memcpy( buf, &exif_data, sizeof(exif_data_t) );

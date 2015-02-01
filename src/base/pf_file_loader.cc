@@ -407,7 +407,10 @@ void PF::load_pf_image( std::string filename, PF::Image* img ) {
 
   char* fname = strdup(filename.c_str());
   char* dname = dirname( fname );
-  if( dname ) chdir( dname ); 
+  if( dname ) {
+    if( chdir( dname ) != 0 )
+      std::cout<<"Cannot change current directory to \""<<dname<<"\""<<std::endl;
+  }
   free( fname );
 
   if (g_markup_parse_context_parse (context, text, length, NULL) == FALSE) {
@@ -449,7 +452,10 @@ void PF::insert_pf_preset( std::string filename, PF::Image* img, PF::Layer* prev
 
   char* fname = strdup(filename.c_str());
   char* dname = dirname( fname );
-  if( dname ) chdir( dname ); 
+  if( dname ) {
+    if( chdir( dname ) != 0 )
+      std::cout<<"Cannot change current directory to \""<<dname<<"\""<<std::endl;
+  }
   free( fname );
 
   if (g_markup_parse_context_parse (context, text, length, NULL) == FALSE) {

@@ -60,7 +60,9 @@ PF::RawImage::RawImage( const std::string f ):
 
   raw_loader->raw2image();
 
-  #warning "TODO: add a custom subtract_black() function that works in unbounded mode"
+#ifdef DO_WARNINGS
+#warning "TODO: add a custom subtract_black() function that works in unbounded mode"
+#endif
   raw_loader->subtract_black();
 
 	int iwidth = raw_loader->imgdata.sizes.iwidth;
@@ -162,7 +164,8 @@ PF::RawImage::RawImage( const std::string f ):
 			ptr += pxsize;
     }
 		/**/
-    write( temp_fd, rowbuf, pxsize*iwidth );
+    if( write( temp_fd, rowbuf, pxsize*iwidth ) != (pxsize*iwidth) )
+      break;
 #ifndef NDEBUG
     if( (row%100) == 0 ) std::cout<<"  row "<<row<<" saved."<<std::endl;
 #ifdef PF_USE_DCRAW_RT
@@ -307,7 +310,9 @@ PF::RawImage::~RawImage()
 VipsImage* PF::RawImage::get_image(unsigned int& level)
 {
   if( level == 0 ) {
+#ifdef DO_WARNINGS
 #warning "RawImage::get_image(): refreshing of exif metadata needed. This is not normal!"
+#endif
     void* buf = malloc( sizeof(exif_data_t) );
     if( !buf ) return NULL;
     memcpy( buf, &exif_data, sizeof(exif_data_t) );

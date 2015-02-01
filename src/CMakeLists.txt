@@ -1,6 +1,6 @@
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g ")
 #SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}  "-Wall -O0 -g") 
-SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DPF_VERBOSE_UNREF -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
+SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DDO_WARNINGS -DPF_VERBOSE_UNREF -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg") 
 #SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops") 
 SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG -DLIBRAW_NODLL -DPF_VERBOSE_UNREF -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
@@ -139,8 +139,6 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 add_library (pfbase
   ${BaseIncludes}
   ${BaseSources}
-  ${DTIncludes}
-  ${DTSources}
   ${RTIncludes}
   ${RTSources}
   ${OpIncludes}
@@ -149,7 +147,12 @@ add_library (pfbase
   ${LibRawSources}
 )
 
-SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-std=gnu99")
+add_library (pfdt
+  ${DTIncludes}
+  ${DTSources}
+)
+
+SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-std=gnu99")
 
 add_library (pfvips #SHARED
   ${VipsIncludes}
@@ -196,6 +199,7 @@ ENDIF(MINGW)
 
 target_link_libraries(photoflow ${LIBS} 
   pfbase 
+  pfdt
   pfvips 
   pfgmic 
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
@@ -230,6 +234,7 @@ add_executable(pfbatch pfbatch.cc)
 
 target_link_libraries(pfbatch ${LIBS} 
   pfbase 
+  pfdt
   pfvips 
   pfgmic 
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
