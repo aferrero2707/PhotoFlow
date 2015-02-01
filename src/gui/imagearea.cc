@@ -565,6 +565,8 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   //std::cout<<"  get_hadj()->get_value()="<<get_hadj()->get_value()<<std::endl;
   //std::cout<<"  get_vadj()->get_value()="<<get_vadj()->get_value()<<std::endl;
 
+  draw_requested = false;
+
   // Total area requested for drawing
   double x1, y1, x2, y2;
   cr->get_clip_extents( x1, y1, x2, y2 );
@@ -1112,7 +1114,7 @@ void PF::ImageArea::sink( const VipsRect& area )
     Update * update = g_new (Update, 1);
     update->image_area = this;
     update->rect.width = update->rect.height = 0;
-    //std::cout<<"PF::ImageArea::update( const VipsRect& area ): installing idle callback."<<std::endl;
+    //std::cout<<"PF::ImageArea::sink(): installing idle callback."<<std::endl;
     draw_requested = true;
     gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
   }

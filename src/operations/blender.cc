@@ -121,7 +121,8 @@ PF::BlenderPar::BlenderPar():
   PropertyBase* B = white->get_par()->get_property( "B" );
   if( B ) B->update( (float)1 );
 
-  blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
+  //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
+  blend_mode.set_enum_value( PF_BLEND_NORMAL );
   set_type( "blender" );
 }
 
