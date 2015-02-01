@@ -439,8 +439,8 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   // If the requested area is fully contained witin the current preview buffer,
   // we do not submit any further redraw request
   double_buffer.lock();
-  std::cout<<"  draw_area: "<<draw_area<<std::endl;
-  std::cout<<"  buffer_area: "<<double_buffer.get_active().get_rect()<<std::endl;
+  //std::cout<<"  draw_area: "<<draw_area<<std::endl;
+  //std::cout<<"  buffer_area: "<<double_buffer.get_active().get_rect()<<std::endl;
   if( double_buffer.get_active().get_rect().width > 0 &&
       double_buffer.get_active().get_rect().height > 0 ) {
     Glib::RefPtr< Gdk::Pixbuf > pixbuf = modify_preview();
@@ -459,7 +459,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   if( double_buffer.get_active().is_dirty() )
     repaint_needed = true;
   double_buffer.unlock();
-  std::cout<<"  repaint_needed="<<repaint_needed<<std::endl;
+  //std::cout<<"  repaint_needed="<<repaint_needed<<std::endl;
   if( !repaint_needed )
     return true;
 
@@ -479,7 +479,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   area_tot.top = MIN( draw_area.top, preview_area.top );
   area_tot.width = MAX( draw_area_right, preview_area_right ) - area_tot.left + 1;
   area_tot.height = MAX( draw_area_bottom, preview_area_bottom ) - area_tot.top + 1;
-  std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot<<std::endl;
+  //std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot<<std::endl;
 
   if( display_image->Xsize < hadj->get_page_size() ) {
     xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
@@ -499,7 +499,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   request.request = PF::IMAGE_REDRAW_START;
   //std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_start request."<<std::endl;
   PF::ImageProcessor::Instance().submit_request( request );
-  std::cout<<"PF::ImageArea::on_draw(): redraw_start request submitted."<<std::endl;
+  //std::cout<<"PF::ImageArea::on_draw(): redraw_start request submitted."<<std::endl;
 
 #ifdef OPTIMIZE_SCROLLING
   GdkRectangle *expose;
