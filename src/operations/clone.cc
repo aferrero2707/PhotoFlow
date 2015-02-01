@@ -92,7 +92,7 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
     //std::cout<<"ClonePar::Lab2grayscale(): extract_band OK"<<std::endl;
 
     //g_object_unref( srcimg );
-    //PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (PF::CLONE_CHANNEL_L)" );
+    PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (PF::CLONE_CHANNEL_L)" );
     vips_image_init_fields( out,
                             get_xsize(), get_ysize(), 
                             1, get_format(),
@@ -104,7 +104,7 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
     if( vips_extract_band( srcimg, &out, 1, NULL ) )
       return NULL;
     //g_object_unref( srcimg );
-    //PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (PF::CLONE_CHANNEL_a)" );
+    PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (PF::CLONE_CHANNEL_a)" );
     vips_image_init_fields( out,
                             get_xsize(), get_ysize(), 
                             1, get_format(),
@@ -116,7 +116,7 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
     if( vips_extract_band( srcimg, &out, 2, NULL ) )
       return NULL;
     //g_object_unref( srcimg );
-    //PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (PF::CLONE_CHANNEL_b)" );
+    PF_UNREF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg unref (PF::CLONE_CHANNEL_b)" );
     vips_image_init_fields( out,
                             get_xsize(), get_ysize(), 
                             1, get_format(),
