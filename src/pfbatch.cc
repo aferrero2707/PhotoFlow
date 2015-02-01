@@ -46,6 +46,7 @@
 #if defined(__MINGW32__) || defined(__MINGW64__)
     #include <direct.h>
     #define GetCurrentDir _getcwd
+    #define realpath(N,R) _fullpath((R),(N),_MAX_PATH)
 #else
     #include <sys/time.h>
     #include <sys/resource.h>
