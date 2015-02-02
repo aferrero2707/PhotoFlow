@@ -58,3 +58,4 @@
 #include "inpaint_config.hh"
 #include "convolve_config.hh"
 #include "gradient_norm_config.hh"
+#include "sharpen_rl_config.hh"

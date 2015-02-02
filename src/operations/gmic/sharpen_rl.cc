@@ -29,30 +29,31 @@
 
 
 #include "gmic.hh"
-#include "gradient_norm.hh"
+#include "sharpen_rl.hh"
 
 
 
-PF::GmicGradientNormPar::GmicGradientNormPar(): 
+PF::GmicSharpenRLPar::GmicSharpenRLPar(): 
 OpParBase(),
   iterations("iterations",this,1),
-  prop_smoothness("smoothness",this,0),
-  prop_linearity("linearity",this,0.5),
-  prop_min_threshold("min_threshold",this,0),
-  prop_max_threshold("max_threshold",this,10)
+  prop_sigma("sigma",this,1),
+  prop_iterations("rl_iterations",this,10),
+  prop_blur("blur", this, 1, "Gaussian", "Gaussian"),
+  padding(0)
 {	
   gmic = PF::new_gmic();
-  set_type( "gmic_gradient_norm" );
+  prop_blur.add_enum_value( 0, "Exponential", "Exponential" );
+  set_type( "gmic_sharpen_rl" );
 }
 
 
-int PF::GmicGradientNormPar::get_padding( int level )
+int PF::GmicSharpenRLPar::get_padding( int level )
 {
-  return 20;
+  return(padding);
 }
 
 
-VipsImage* PF::GmicGradientNormPar::build(std::vector<VipsImage*>& in, int first, 
+VipsImage* PF::GmicSharpenRLPar::build(std::vector<VipsImage*>& in, int first, 
                                         VipsImage* imap, VipsImage* omap, 
                                         unsigned int& level)
 {
@@ -71,12 +72,12 @@ VipsImage* PF::GmicGradientNormPar::build(std::vector<VipsImage*>& in, int first
 	for( int l = 1; l <= level; l++ )
 		scalefac *= 2;
 
-  std::string command = "-b ";
-  command = command + prop_smoothness.get_str();
-  //command = command + std::string(",") + prop_linearity.get_str();
-  command = command + std::string(" -gradient_norm -^ ") + prop_linearity.get_str();
-  command = command + std::string(" -mul 5 -sub ") + prop_min_threshold.get_str() + std::string("");
-  command = command + std::string(" -mul ") + prop_max_threshold.get_str();
+	padding = prop_sigma.get()*2.0*prop_iterations.get()/scalefac;
+
+  std::string command = "-deblur_richardsonlucy ";
+  command = command + prop_sigma.get_str();
+  command = command + std::string(",") + prop_iterations.get_str();
+  command = command + std::string(",") + prop_blur.get_enum_value_str();
   command = command + std::string(" -cut 0,255");
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
@@ -91,13 +92,12 @@ VipsImage* PF::GmicGradientNormPar::build(std::vector<VipsImage*>& in, int first
   if( !out ) {
     std::cout<<"gmic.build() failed!!!!!!!"<<std::endl;
   }
-  std::cout<<"gradient_norm: bands="<<out->Bands<<std::endl;
 
 	return out;
 }
 
 
-PF::ProcessorBase* PF::new_gmic_gradient_norm()
+PF::ProcessorBase* PF::new_gmic_sharpen_rl()
 {
-  return( new PF::Processor<PF::GmicGradientNormPar,PF::GmicGradientNormProc>() );
+  return( new PF::Processor<PF::GmicSharpenRLPar,PF::GmicSharpenRLProc>() );
 }

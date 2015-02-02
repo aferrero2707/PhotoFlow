@@ -91,6 +91,8 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_convolve();
   } else if( op_type == "gmic_gradient_norm" ) {
     processor = new_gmic_gradient_norm();
+  } else if( op_type == "gmic_sharpen_rl" ) {
+    processor = new_gmic_sharpen_rl();
     //insert new operations here
   }
 

@@ -61,6 +61,7 @@ namespace PF
   ProcessorBase* new_gmic_inpaint();
   ProcessorBase* new_gmic_convolve();
   ProcessorBase* new_gmic_gradient_norm();
+  ProcessorBase* new_gmic_sharpen_rl();
   //insert new operations here
 
   ProcessorBase* new_gmic_operation( std::string op_type );

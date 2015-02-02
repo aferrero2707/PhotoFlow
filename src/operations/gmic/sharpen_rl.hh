@@ -27,8 +27,8 @@
 
  */
 
-#ifndef GMIC_GRADIENT_NORM_H
-#define GMIC_GRADIENT_NORM_H
+#ifndef GMIC_SHARPEN_RL_H
+#define GMIC_SHARPEN_RL_H
 
 
 #include "../base/processor.hh"
@@ -37,17 +37,18 @@
 namespace PF 
 {
 
-  class GmicGradientNormPar: public OpParBase
+  class GmicSharpenRLPar: public OpParBase
   {
     Property<int> iterations;
-    Property<float> prop_smoothness;
-    Property<float> prop_linearity;
-    Property<float> prop_min_threshold;
-    Property<float> prop_max_threshold;
+    Property<float> prop_sigma;
+    Property<int> prop_iterations;
+    PropertyBase prop_blur;
     ProcessorBase* gmic;
 
+    float padding;
+
   public:
-    GmicGradientNormPar();
+    GmicSharpenRLPar();
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
@@ -65,7 +66,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class GmicGradientNormProc
+  class GmicSharpenRLProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -78,7 +79,7 @@ namespace PF
 
 
 
-  ProcessorBase* new_gmic_gradient_norm();
+  ProcessorBase* new_gmic_sharpen_rl();
 }
 
 #endif 

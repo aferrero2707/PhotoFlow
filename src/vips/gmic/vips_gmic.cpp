@@ -135,8 +135,8 @@ template<> void vips_from_gmic(const float& val, unsigned short& out)
 }
 
 
-#define INDEX( IMG, X, Y, Z ) \
-	((*(IMG))( (guint) (X), (guint) (Y), (guint) (Z), 0 ))
+#define INDEX( IMG, X, Y, Z, C ) \
+	((*(IMG))( (guint) (X), (guint) (Y), (guint) (Z), C ))
 
 // copy part of a vips region into a cimg
 template<typename T> static void
@@ -144,12 +144,14 @@ vips_to_gmic( VipsRegion *in, VipsRect *area, CImg<float> *img )
 {
 	VipsImage *im = in->im;
 
+  //std::cout<<"vips_to_gmic():  im->Bands="<<im->Bands<<"  img->spectrum()="<<img->spectrum()<<std::endl;
+
 	for( int y = 0; y < area->height; y++ ) {
 		T *p = (T *) VIPS_REGION_ADDR( in, area->left, area->top + y );
 
 		for( int x = 0; x < area->width; x++ ) {
-			for( int z = 0; z < im->Bands; z++ ) 
-				INDEX( img, x, y, z ) = vips_to_gmic( p[z] );
+			for( int c = 0; c < im->Bands; c++ )
+				INDEX( img, x, y, 0, c ) = vips_to_gmic( p[c] );
 
 			p += im->Bands;
 		}
@@ -164,7 +166,9 @@ vips_from_gmic( gmic_image<float> *img, VipsRect *img_rect, VipsRegion *out )
 	VipsImage *im = out->im;
 	VipsRect *valid = &out->valid;
 
-	g_assert( vips_rect_includesrect( img_rect, valid ) );
+  //std::cout<<"vips_from_gmic():  im->Bands="<<im->Bands<<"  img->spectrum()="<<img->spectrum()<<std::endl;
+
+  g_assert( vips_rect_includesrect( img_rect, valid ) );
 
 	int x_off = valid->left - img_rect->left;
 	int y_off = valid->top - img_rect->top;
@@ -174,9 +178,13 @@ vips_from_gmic( gmic_image<float> *img, VipsRect *img_rect, VipsRegion *out )
 			   VIPS_REGION_ADDR( out, valid->left, valid->top + y );
 
 		for( int x = 0; x < valid->width; x++ ) {
-			for( int z = 0; z < im->Bands; z++ )
-				vips_from_gmic( INDEX( img, x + x_off, y + y_off, z ), p[z] );
-
+		  if( img->spectrum() < im->Bands ) {
+		    for( int c = 0; c < im->Bands; c++ )
+		      vips_from_gmic( INDEX( img, x + x_off, y + y_off, 0, 0 ), p[c] );
+		  } else {
+		    for( int c = 0; c < im->Bands; c++ )
+		      vips_from_gmic( INDEX( img, x + x_off, y + y_off, 0, c ), p[c] );
+		  }
 			p += im->Bands;
 		}
 	}
@@ -325,7 +333,7 @@ vips_gmic_gen_template( VipsRegion *oreg,
 				1, seq->ir[i]->im->Bands );
 			vips_to_gmic<T>( seq->ir[0], &need, &img );
 		}
-
+		//std::cout<<"Running G'MIC command: "<<vipsgmic->command<<std::endl;
 		seq->gmic_instance->run( vipsgmic->command, 
 			images, images_names );
 		vips_from_gmic<T>( &images._data[0], &need, oreg );

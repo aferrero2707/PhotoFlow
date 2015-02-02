@@ -27,8 +27,8 @@
 
  */
 
-#ifndef GMIC_GRADIENT_NORM_CONFIG_DIALOG_HH
-#define GMIC_GRADIENT_NORM_CONFIG_DIALOG_HH
+#ifndef GMIC_SHARPEN_RL_CONFIG_DIALOG_HH
+#define GMIC_SHARPEN_RL_CONFIG_DIALOG_HH
 
 #include <gtkmm.h>
 
@@ -37,18 +37,17 @@
 
 namespace PF {
 
-  class GmicGradientNormConfigDialog: public OperationConfigDialog
+  class GmicSharpenRLConfigDialog: public OperationConfigDialog
   {
     Gtk::VBox controlsBox;
     
     //Slider iterations_slider;
-    Slider prop_smoothness_slider;
-    Slider prop_linearity_slider;
-    Slider prop_min_threshold_slider;
-    Slider prop_max_threshold_slider;
+    Slider prop_sigma_slider;
+    Slider prop_iterations_slider;
+    Selector prop_blur_selector;
        
   public:
-    GmicGradientNormConfigDialog( Layer* l );
+    GmicSharpenRLConfigDialog( Layer* l );
     
     void open();
   };

@@ -27,31 +27,29 @@
 
  */
 
-//#include "../../../operations/gmic/gradient_norm.hh"
+//#include "../../../operations/gmic/sharpen_rl.hh"
 
-#include "gradient_norm_config.hh"
+#include "sharpen_rl_config.hh"
 
 
-PF::GmicGradientNormConfigDialog::GmicGradientNormConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gradient Norm (G'MIC)"  ),
+PF::GmicSharpenRLConfigDialog::GmicSharpenRLConfigDialog( PF::Layer* layer ):
+  OperationConfigDialog( layer, "Sharpen [richardson-lucy] (G'MIC)"  ),
   //iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
-  prop_smoothness_slider( this, "smoothness", "Smoothness", 0, 0, 10, .10, 1.0, 1),
-  prop_linearity_slider( this, "linearity", "linearity", 0.5, 0, 1.5, .01, .1, 1),
-  prop_min_threshold_slider( this, "min_threshold", "Threshold", 0, 0, 100, 1.00, 10.0, 1),
-  prop_max_threshold_slider( this, "max_threshold", "Multiplier", 100, 0, 100, 1.00, 10.0, 1)
+  prop_sigma_slider( this, "sigma", "sigma", 1, 0.5, 10, .09, .9, 1),
+  prop_iterations_slider( this, "rl_iterations", "iterations", 10, 1, 100, 1, 5, 1),
+  prop_blur_selector( this, "blur", "blur", 1)
 {
   //controlsBox.pack_start( iterations_slider );
-  controlsBox.pack_start( prop_smoothness_slider );
-  controlsBox.pack_start( prop_linearity_slider );
-  controlsBox.pack_start( prop_min_threshold_slider );
-  controlsBox.pack_start( prop_max_threshold_slider );
+  controlsBox.pack_start( prop_sigma_slider );
+  controlsBox.pack_start( prop_iterations_slider );
+  controlsBox.pack_start( prop_blur_selector );
   
   add_widget( controlsBox );
 }
 
 
 
-void PF::GmicGradientNormConfigDialog::open()
+void PF::GmicSharpenRLConfigDialog::open()
 {
   OperationConfigDialog::open();
 }
