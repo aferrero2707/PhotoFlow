@@ -320,13 +320,13 @@ std::list<PF::Layer*>* PF::LayerManager::get_list(PF::Layer* layer)
 
 
 
-PF::CacheBuffer* PF::LayerManager::get_cache_buffer()
+PF::CacheBuffer* PF::LayerManager::get_cache_buffer( rendermode_t mode )
 {  
-  return( get_cache_buffer(layers) );
+  return( get_cache_buffer(mode, layers) );
 }
 
 
-PF::CacheBuffer* PF::LayerManager::get_cache_buffer( std::list<Layer*>& list )
+PF::CacheBuffer* PF::LayerManager::get_cache_buffer( rendermode_t mode, std::list<Layer*>& list )
 {  
   std::list<PF::Layer*>::iterator li = list.begin();
   for(li = list.begin(); li != list.end(); ++li) {
@@ -334,50 +334,75 @@ PF::CacheBuffer* PF::LayerManager::get_cache_buffer( std::list<Layer*>& list )
 
     if( !l ) continue;
     if( !l->is_visible() ) continue;
+    //std::cout<<"LayerManager::get_cache_buffer(): checking layer "<<l->get_name()<<std::endl;
 
     PF::CacheBuffer* buf = NULL;
+    /*
     for( unsigned int i = 0; i < l->extra_inputs.size(); i++ ) {
       Layer* lextra = get_layer( l->extra_inputs[i].first );
-      if( lextra && lextra->is_visible() && lextra->is_cached() && lextra->get_cache_buffer() &&
-          !lextra->get_cache_buffer()->is_completed() ) {
-        buf = lextra->get_cache_buffer();
+      if( lextra && lextra->is_visible() && lextra->is_cached() && lextra->get_cache_buffer(mode) &&
+          !lextra->get_cache_buffer(mode)->is_completed() ) {
+        buf = lextra->get_cache_buffer( mode );
 #ifndef NDEBUG
         std::cout<<"Extra layer #"<<i<<"(\""<<lextra->get_name()<<"\"): pending cache buffer "<<buf<<std::endl;
 #endif
         break;
       }
     }
-    if( buf ) return buf;
+    if( buf ) {
+      std::cout<<"Found pending cache buffer for layer "<<l->get_name<<std::endl;
+      return buf;
+    }
+    */
 
     // Now we walk through the intensity and opacity maps to see if they contain a pending buffer
-    buf = get_cache_buffer( l->imap_layers );
+    buf = get_cache_buffer( mode, l->imap_layers );
     if( buf ) return buf;
 
-    buf = get_cache_buffer( l->omap_layers );
+    buf = get_cache_buffer( mode, l->omap_layers );
     if( buf ) return buf;
 
     // Finally we walk through the sub-layers; again, if re-building is needed 
     // we mark this layer "dirty" as well
-    buf = get_cache_buffer( l->sublayers );
+    buf = get_cache_buffer( mode, l->sublayers );
     if( buf ) return buf;
 
     // If the current layer is cached and the cache buffer is not completed, we return it.
-    if( l->is_cached() && l->get_cache_buffer() &&
-        !l->get_cache_buffer()->is_completed() ) {
-      buf = l->get_cache_buffer();
-#ifndef NDEBUG
+    if( l->get_image() && l->is_cached() && l->get_cache_buffer(mode) &&
+        !l->get_cache_buffer(mode)->is_completed() ) {
+      buf = l->get_cache_buffer( mode );
+//#ifndef NDEBUG
       std::cout<<"Layer \""<<l->get_name()<<"\": pending cache buffer "<<buf<<std::endl;
-#endif
-      if( l->get_image() && l->get_image()->get_pipeline(0) &&
-          l->get_image()->get_pipeline(0)->get_node(l->get_id()) ) {
-        PF::PipelineNode* node = l->get_image()->get_pipeline(0)->get_node(l->get_id());
-        buf->set_image( node->image );
-        //std::cout<<"Caching layer \""<<l->get_name()<<"\""<<std::endl;
+      std::cout<<"  l->get_image()->get_npipelines()="<<l->get_image()->get_npipelines()<<std::endl;
+      //#endif
+      for( int pi = 0; pi < l->get_image()->get_npipelines(); pi++ ) {
+        PF::Pipeline* pipeline = l->get_image()->get_pipeline(pi);
+        std::cout<<"    l->get_image()->get_pipeline("<<pi<<")->get_render_mode()="
+            <<pipeline->get_render_mode()<<std::endl;
+        if( pipeline && pipeline->get_render_mode() == mode &&
+            pipeline->get_node(l->get_id()) ) {
+          PF::PipelineNode* node = pipeline->get_node(l->get_id());
+          buf->set_image( node->image );
+          std::cout<<"Caching layer \""<<l->get_name()<<"\"  image="<<node->image<<std::endl;
+          return( buf );
+        }
       }
-      return( buf );
     }
   }
   return NULL;
+}
+
+
+
+
+void PF::LayerManager::reset_cache_buffers( rendermode_t mode, bool reinit )
+{
+  for(unsigned int i = 0; i < layers_pool.size(); i++) {
+    if(layers_pool[i] == NULL)
+      continue;
+    PF::CacheBuffer* buf = layers_pool[i]->get_cache_buffer( mode );
+    if( buf ) buf->reset( reinit );
+  }
 }
 
 
@@ -462,9 +487,9 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     // If the current layer is cached, we reset the corresponding cache buffer
     // so that the computation will restart from scratch at the next idle loop
     if( input_dirty || filter_dirty ) {
-      if( l->is_cached() && l->get_cache_buffer() ) {
-        l->get_cache_buffer()->reset();
-      }
+      if( l->is_cached() )
+        l->reset_cache_buffers();
+      //if( l->is_cached() && l->get_cache_buffer() ) l->get_cache_buffer()->reset();
     }
   }
 }
@@ -688,14 +713,13 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       blender->set_image_hints( previous );
     }
     
-    if( (pipeline->get_render_mode() == PF::PF_RENDER_PREVIEW) &&
-        l->is_cached() && 
-        (l->get_cache_buffer() != NULL) &&
-        l->get_cache_buffer()->is_completed() ) {
+    if( l->is_cached() &&
+        (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
+        l->get_cache_buffer(pipeline->get_render_mode())->is_completed() ) {
       // The layer is cached, no need to process the underlying layers
       // We only need to associate the cached image with the blender
       unsigned int level = pipeline->get_level();
-      PF::PyramidLevel* pl = l->get_cache_buffer()->get_pyramid().get_level( level );
+      PF::PyramidLevel* pl = l->get_cache_buffer(pipeline->get_render_mode())->get_pyramid().get_level( level );
       if( pl && pl->image ) {
         pipeline->set_level( level );
         VipsImage* newimg = pl->image;
@@ -781,6 +805,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         //if(map_i != l->imap_layers.rend()) 
         //imap = (*map_i)->get_processor()->get_par()->get_image();
       }
+
       if( previous && !l->omap_layers.empty() ) {
         omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
@@ -841,6 +866,30 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       unsigned int level = pipeline->get_level();
       pipelinepar->import_settings( par );
       newimg = pipelinepar->build( in, 0, imap, omap, level );
+
+      if( newimg != NULL && l->is_cached() &&
+          (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
+          (l->get_cache_buffer(pipeline->get_render_mode())->is_initialized() == false) ) {
+        // The image is being loaded, and the current layer needs to be cached
+        // In this case we cache the data immediately and we use the cached
+        // image instead of the newly built one
+        PF::CacheBuffer* buf = l->get_cache_buffer(pipeline->get_render_mode());
+        buf->set_image( newimg );
+        std::cout<<"Writing cache buffer for layer "<<l->get_name()<<std::endl;
+        double time1 = g_get_real_time();
+        buf->write();
+        buf->set_initialized( true );
+        double time2 = g_get_real_time();
+        std::cout<<"Buffer saved in "<<(time2-time1)/1000000<<" seconds."<<std::endl;
+        PF_UNREF( newimg, "rebuild_chain(): newimg unref after cache buffer filling" );
+
+        PF::PyramidLevel* pl = buf->get_pyramid().get_level( level );
+        if( pl && pl->image ) {
+          pipeline->set_level( level );
+          newimg = pl->image;
+        }
+      }
+
       pipelinepar->clear_modified();
       pipeline->set_level( level );
 #ifndef NDEBUG
@@ -932,6 +981,29 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       unsigned int level = pipeline->get_level();
       pipelinepar->import_settings( par );
       newimg = pipelinepar->build( in, 0, imap, omap, level );
+
+      if( newimg != NULL && !image->is_loaded() && l->is_cached() &&
+          (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
+          (l->get_cache_buffer(pipeline->get_render_mode())->is_completed() == false) ) {
+        // The image is being loaded, and the current layer needs to be cached
+        // In this case we cache the data immediately and we use the cached
+        // image instead of the newly built one
+        PF::CacheBuffer* buf = l->get_cache_buffer(pipeline->get_render_mode());
+        buf->set_image( newimg );
+        std::cout<<"Writing cache buffer for layer "<<l->get_name()<<std::endl;
+        gint64 time1 = g_get_real_time();
+        buf->write();
+        gint64 time2 = g_get_real_time();
+        std::cout<<"Buffer saved in "<<(time2-time1)/1000000<<" seconds."<<std::endl;
+        PF_UNREF( newimg, "rebuild_chain(): newimg unref after cache buffer filling" );
+
+        PF::PyramidLevel* pl = buf->get_pyramid().get_level( level );
+        if( pl && pl->image ) {
+          pipeline->set_level( level );
+          newimg = pl->image;
+        }
+      }
+
       pipelinepar->clear_modified();
       pipeline->set_level( level );
 #ifndef NDEBUG
@@ -1071,6 +1143,8 @@ bool PF::LayerManager::rebuild_all(Pipeline* pipeline, colorspace_t cs, int widt
   pipeline->set_output( output );
 
   reset_dirty( layers );
+
+
 
   return true;
 }

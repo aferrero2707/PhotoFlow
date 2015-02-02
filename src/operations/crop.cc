@@ -36,7 +36,10 @@ PF::CropPar::CropPar():
   crop_left("crop_left",this,0),
   crop_top("crop_top",this,0),
   crop_width("crop_width",this,0),
-  crop_height("crop_height",this,0)
+  crop_height("crop_height",this,0),
+  keep_ar("keep_ar",this,0),
+  ar_width("ar_width",this,100),
+  ar_height("ar_height",this,100)
 {
   set_type( "crop" );
 }

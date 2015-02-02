@@ -76,6 +76,10 @@ namespace PF
     std::string filename;
     int fd;
 
+    // Flag indicating if the cache buffer has already been initialized
+    // Used by the layer manager to write buffers upon image loading/exporting
+    bool initialized;
+
     //Flag indicating if the processing is completed
     bool completed;
 
@@ -91,15 +95,22 @@ namespace PF
         PF_UNREF( cached, "~CacheBuffer() cached image unref" );
     }
 
+    bool is_initialized() { return initialized; }
+    void set_initialized( bool flag ) { initialized = flag; }
+
     VipsImage* get_image() { return image; }
     void set_image( VipsImage* img ) { image = img; }
 
     ImagePyramid& get_pyramid() { return pyramid; }
 
-    void reset();
+    void reset( bool reinitialize=false );
     bool is_completed() { return completed; }
 
+    // Save data tile-by-tile
     void step();
+
+    // Save all data to file
+    void write();
   };
 
 

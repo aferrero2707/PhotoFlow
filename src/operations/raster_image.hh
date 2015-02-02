@@ -43,8 +43,7 @@
 #include "../base/processor.hh"
 #include "../base/imagepyramid.hh"
 #include "../base/photoflow.hh"
-
-#include "fast_demosaic.hh"
+#include "../base/exif_data.hh"
 
 
 namespace PF 
@@ -58,7 +57,9 @@ namespace PF
 		// VipsImage storing the raster data 
     VipsImage* image;
 
-    PF::ImagePyramid pyramid;
+    exif_data_t exif_data;
+
+    ImagePyramid pyramid;
 
   public:
     RasterImage( const std::string name );
@@ -69,20 +70,10 @@ namespace PF
     int get_nref() { return nref; }
 
     std::string get_file_name() { return file_name; }
+    VipsImage* get_image(unsigned int& level);
 
-    VipsImage* get_image(unsigned int& level) 
-    { 
-      if( level == 0 ) {
-        PF_REF( image, "RasterImage()::get_image(): level 0 ref");
-				return image;
-      }
-    
-      PF::PyramidLevel* plevel = pyramid.get_level( level );
-      if( plevel ) {
-				return plevel->image;
-      }
-      return NULL;
-    }
+    void print_exif( PF::exif_data_t* data );
+    void print_exif();
   };
 
 	extern std::map<Glib::ustring, PF::RasterImage*> raster_images;

@@ -1,6 +1,6 @@
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g ")
 #SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}  "-Wall -O0 -g") 
-SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DPF_VERBOSE_UNREF -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
+SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DDO_WARNINGS -DPF_VERBOSE_UNREF -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg") 
 #SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops") 
 SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG -DLIBRAW_NODLL -DPF_VERBOSE_UNREF -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
@@ -39,18 +39,45 @@ if(GTKMM3_FOUND)
   
 endif()
 
+include_directories(    ${GLIB_INCLUDE_DIRS}  )
 include_directories(${SIGC2_INCLUDE_DIRS})
 
 include_directories(${OPENEXR_INCLUDE_DIRS})
+include_directories(${TIFF_INCLUDE_DIRS})
+include_directories(${JPEG_INCLUDE_DIRS})
+include_directories(${PNG_INCLUDE_DIRS})
+
+link_directories(${OPENEXR_LIBRARY_DIRS})
+link_directories(${TIFF_LIBRARY_DIRS})
+link_directories(${JPEG_LIBRARY_DIRS})
+link_directories(${PNG_LIBRARY_DIRS})
 
 include_directories(${XML2_INCLUDE_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
+include_directories(${EXIV2_INCLUDE_DIRS})
+
+include_directories(${LENSFUN_INCLUDE_DIRS})
+link_directories(${LENSFUN_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 
 include_directories(${ZLIB_INCLUDE_DIRS})
 link_directories(${ZLIB_LIBRARY_DIRS}  )
+
+include_directories(${PANGO_INCLUDE_DIRS})
+link_directories(${PANGO_LIBRARY_DIRS}  )
+include_directories(${PANGOFT2_INCLUDE_DIRS})
+link_directories(${PANGOFT2_LIBRARY_DIRS}  )
+
+include_directories(${GLIB_INCLUDE_DIRS})
+link_directories(${GLIB_LIBRARY_DIRS}  )
+include_directories(${GMODULE_INCLUDE_DIRS})
+link_directories(${GMODULE_LIBRARY_DIRS}  )
+include_directories(${GOBJECT_INCLUDE_DIRS})
+link_directories(${GOBJECT_LIBRARY_DIRS}  )
+include_directories(${GTHREAD_INCLUDE_DIRS})
+link_directories(${GTHREAD_LIBRARY_DIRS}  )
 
 
 #include_directories(${LIBXML_INCLUDE_DIRS})
@@ -112,8 +139,6 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 add_library (pfbase
   ${BaseIncludes}
   ${BaseSources}
-  ${DTIncludes}
-  ${DTSources}
   ${RTIncludes}
   ${RTSources}
   ${OpIncludes}
@@ -122,7 +147,12 @@ add_library (pfbase
   ${LibRawSources}
 )
 
-SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-std=gnu99")
+add_library (pfdt
+  ${DTIncludes}
+  ${DTSources}
+)
+
+SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-std=gnu99")
 
 add_library (pfvips #SHARED
   ${VipsIncludes}
@@ -162,25 +192,66 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 #add_dependencies(photoflow ${LIB_DEPS})
 
 IF(MINGW)
-  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
 ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
 ENDIF(MINGW)
 
 target_link_libraries(photoflow ${LIBS} 
   pfbase 
+  pfdt
   pfvips 
   pfgmic 
-  ${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-  ${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
   ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  #${LIBRAW_LIBRARIES}  
+  ${STATIC_LIBS}
+  ${ORC_LIBRARIES}
+  fftw3
+  ${ADDITIONAL_LIBS}
+  #gmon
+  )
+
+
+add_executable(pfbatch pfbatch.cc)
+
+#add_dependencies(photoflow ${LIB_DEPS})
+
+target_link_libraries(pfbatch ${LIBS} 
+  pfbase 
+  pfdt
+  pfvips 
+  pfgmic 
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
+  ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
@@ -191,8 +262,21 @@ target_link_libraries(photoflow ${LIBS}
   )
 
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
+INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
+INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
+
+
+#add_executable(invert # name of the executable on Windows will be example.exe 
+#  benchmarks/invert.cc 
+#  )
+#SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
+
+#target_link_libraries(invert ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
+#  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
+#  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
+#  )
 
 #add_executable(refcount # name of the executable on Windows will be example.exe 
 #  tests/refcount.cc 

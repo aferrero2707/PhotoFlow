@@ -37,7 +37,6 @@ PF::Layer::Layer(int32_t i, bool c):
   processor( NULL ), 
   blender( NULL ), 
   cached( c ), 
-  cache_buffer( NULL ),
   image( NULL )
 {
   // A layer is always dirty when created, as it is by definition not included in the
@@ -49,8 +48,7 @@ PF::Layer::Layer(int32_t i, bool c):
 
   normal = true;
 
-  if( cached )
-    cache_buffer = new CacheBuffer();
+  set_cached( c );
 }
 
 

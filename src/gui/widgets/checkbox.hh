@@ -48,6 +48,8 @@ namespace PF {
 
     void get_value();
     void set_value();
+
+    bool get_active() { return check.get_active(); }
   };
 
 

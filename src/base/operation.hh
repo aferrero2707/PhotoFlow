@@ -40,7 +40,6 @@
 #include <iostream>
 #include <fstream>
 
-
 #include <vips/vips.h>
 //#include <vips/vips>
 

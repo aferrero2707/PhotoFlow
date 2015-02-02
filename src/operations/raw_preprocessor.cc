@@ -53,7 +53,6 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_mode.add_enum_value(PF::WB_CAMERA,"CAMERA","CAMERA");
   wb_mode.add_enum_value(PF::WB_SPOT,"SPOT","Spot");
   wb_mode.add_enum_value(PF::WB_COLOR_SPOT,"COLOR_SPOT","Color spot");
-  set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
   set_type("raw_preprocessor" );
 }
 

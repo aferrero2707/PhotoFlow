@@ -200,7 +200,13 @@ bool PF::CloneStampConfigDialog::pointer_press_event( int button, double x, doub
 {
   if( button != 1 ) return false;
   if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return false;
+
   start_stroke( x, y );
+
+  PF::Image* image = get_layer()->get_image();
+  if( !image ) return false;
+  image->update();
+
   draw_point( x, y );
   return false;
 }

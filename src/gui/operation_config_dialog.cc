@@ -38,6 +38,7 @@
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/crop_config.hh"
+#include "../gui/operations/scale_config.hh"
 #include "../gui/operations/gradient_config.hh"
 #include "../gui/operations/uniform_config.hh"
 #include "../gui/operations/curves_config.hh"
@@ -49,6 +50,7 @@
 #include "../gui/operations/draw_config.hh"
 #include "../gui/operations/clone_stamp_config.hh"
 #include "../gui/operations/convert_colorspace_config.hh"
+#include "../gui/operations/lensfun_config.hh"
 
 #include "operations/gmic/new_gmic_operation_config.hh"
 
@@ -108,7 +110,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
   cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 )
 {
-  set_keep_above(true);
+  //set_keep_above(true);
   add_button("OK",1);
   add_button("Cancel",0);
 
@@ -492,6 +494,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::CropConfigDialog( current_layer );
 
+  } else if( op_type == "scale" ) {
+
+    dialog = new PF::ScaleConfigDialog( current_layer );
+
   } else if( op_type == "invert" ) {
 
     dialog = new PF::OperationConfigDialog( current_layer, "Invert Image" );
@@ -551,6 +557,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "clone_stamp" ) {
 
     dialog = new PF::CloneStampConfigDialog( current_layer );
+
+  } else if( op_type == "lensfun" ) {
+
+    dialog = new PF::LensFunConfigDialog( current_layer );
 
   }
 

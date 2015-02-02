@@ -65,7 +65,6 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
   out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
-  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type("convert_colorspace" );
 }
 
@@ -187,7 +186,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       }
     }
   }
-  std::cout<<"ConvertColorspacePar::build(): transform="<<transform<<std::endl;
+  //std::cout<<"ConvertColorspacePar::build(): transform="<<transform<<std::endl;
 
   if( !in_profile && out_profile ) {
     // The input profile was not specified, so we simply assign the output
@@ -213,7 +212,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 			 (VipsCallbackFn) g_free, buf, out_length );
     char tstr[1024];
     cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-    std::cout<<"ConvertColorspacePar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
   }
   /**/
 
