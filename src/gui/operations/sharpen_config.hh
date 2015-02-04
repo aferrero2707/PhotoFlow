@@ -41,10 +41,15 @@ namespace PF {
   class SharpenConfigDialog: public OperationConfigDialog
   {
     Gtk::VBox controlsBox;
-    Gtk::VBox usmControlsBox;
     
     Selector modeSelector;
+
+    Gtk::VBox usmControlsBox;
     Slider usmRadiusSlider;
+
+    Gtk::VBox rlControlsBox;
+    Slider rlSigmaSlider;
+    Slider rlIterationsSlider;
 
   public:
     SharpenConfigDialog( Layer* l );

@@ -54,6 +54,9 @@ namespace PF
     bool has_opacity() { return true; }
     bool needs_caching() { return true; }
 
+    void set_sigma( float s ) { prop_sigma.set( s ); }
+    void set_iterations( int i ) { prop_iterations.set( i ); }
+
 
     int get_padding( int level );      
 
