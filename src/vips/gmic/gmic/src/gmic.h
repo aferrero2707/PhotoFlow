@@ -4,7 +4,7 @@
  #                ( C++ header file )
  #
  #  Description : GREYC's Magic for Image Computing
- #                ( http://gmic.sourceforge.net )
+ #                ( http://gmic.eu )
  #                This file is also a part of the CImg Library project.
  #                ( http://cimg.sourceforge.net )
  #
@@ -46,7 +46,7 @@
 */
 #include <locale>
 #ifndef gmic_version
-#define gmic_version 1602
+#define gmic_version 1603
 
 // Define environment variables.
 #ifndef gmic_is_beta

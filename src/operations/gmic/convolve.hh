@@ -27,55 +27,59 @@
 
  */
 
-#ifndef PF_SHARPEN_H
-#define PF_SHARPEN_H
+#ifndef GMIC_CONVOLVE_H
+#define GMIC_CONVOLVE_H
+
+
+#include "../base/processor.hh"
 
 
 namespace PF 
 {
 
-  enum sharpen_method_t
+  class GmicConvolvePar: public OpParBase
   {
-    SHARPEN_USM,
-    SHARPEN_DECONV,
-    SHARPEN_MICRO
-  };
+    Property<int> iterations;
+    PropertyBase prop_kernel;
+    PropertyBase prop_boundary;
+    Property<std::string> prop_custom_kernel;
+    PropertyBase prop_value_range;
+    Property<float> prop_kernel_mul;
+    ProcessorBase* gmic;
 
-  class SharpenPar: public OpParBase
-  {
-    PropertyBase method;
-    Property<float> usm_radius;
-    Property<float> rl_sigma;
-    Property<int> rl_iterations;
-    ProcessorBase* usm;
-    ProcessorBase* rl;
   public:
-    SharpenPar();
+    GmicConvolvePar();
 
-    bool needs_caching() { return true; }
-      
+    bool has_intensity() { return false; }
+    bool has_opacity() { return true; }
+    bool needs_caching() { return false; }
+
+
+    int get_padding( int level );      
+
+
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
-		     VipsImage* imap, VipsImage* omap, 
-		     unsigned int& level);
+                     VipsImage* imap, VipsImage* omap, 
+                     unsigned int& level);
   };
 
   
 
   template < OP_TEMPLATE_DEF > 
-  class SharpenProc
+  class GmicConvolveProc
   {
   public: 
-    void render(VipsRegion** in, int n, int in_first,
-								VipsRegion* imap, VipsRegion* omap, 
-								VipsRegion* out, OpParBase* par) 
-    {
+    void render(VipsRegion** ireg, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, OpParBase* par)
+    {	
     }
   };
 
 
 
-  ProcessorBase* new_sharpen();
 
+  ProcessorBase* new_gmic_convolve();
 }
 
 #endif 

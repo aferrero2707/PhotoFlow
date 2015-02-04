@@ -27,34 +27,30 @@
 
  */
 
-#ifndef SHARPEN_CONFIG_DIALOG_HH
-#define SHARPEN_CONFIG_DIALOG_HH
+#ifndef GMIC_GRADIENT_NORM_CONFIG_DIALOG_HH
+#define GMIC_GRADIENT_NORM_CONFIG_DIALOG_HH
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
-#include "../../operations/sharpen.hh"
+#include "../../operation_config_dialog.hh"
 
 
 namespace PF {
 
-  class SharpenConfigDialog: public OperationConfigDialog
+  class GmicGradientNormConfigDialog: public OperationConfigDialog
   {
     Gtk::VBox controlsBox;
     
-    Selector modeSelector;
-
-    Gtk::VBox usmControlsBox;
-    Slider usmRadiusSlider;
-
-    Gtk::VBox rlControlsBox;
-    Slider rlSigmaSlider;
-    Slider rlIterationsSlider;
-
+    //Slider iterations_slider;
+    Slider prop_smoothness_slider;
+    Slider prop_linearity_slider;
+    Slider prop_min_threshold_slider;
+    Slider prop_max_threshold_slider;
+       
   public:
-    SharpenConfigDialog( Layer* l );
+    GmicGradientNormConfigDialog( Layer* l );
     
-    void do_update();
+    void open();
   };
 
 }

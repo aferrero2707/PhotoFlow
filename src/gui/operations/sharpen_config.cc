@@ -33,11 +33,16 @@
 PF::SharpenConfigDialog::SharpenConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Sharpen" ),
   modeSelector( this, "method", "Sharpen method: ", 0 ),
-  usmRadiusSlider( this, "usm_radius", "Radius", 1, 0, 100, 0.05, 0.1, 1)
+  usmRadiusSlider( this, "usm_radius", "Radius", 1, 0, 100, 0.05, 0.1, 1),
+rlSigmaSlider( this, "rl_sigma", "Sigma", 1, 0, 100, 0.05, 0.1, 1),
+rlIterationsSlider( this, "rl_iterations", "Iterations", 10, 1, 100, 1, 5, 1)
 {
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK );
 
   usmControlsBox.pack_start( usmRadiusSlider, Gtk::PACK_SHRINK );
+
+  rlControlsBox.pack_start( rlSigmaSlider, Gtk::PACK_SHRINK );
+  rlControlsBox.pack_start( rlIterationsSlider, Gtk::PACK_SHRINK );
 
   add_widget( controlsBox );
 
@@ -59,19 +64,21 @@ void PF::SharpenConfigDialog::do_update()
 
     //std::cout<<"PF::SharpenConfigDialog::do_update() called."<<std::endl;
 
+    if( usmControlsBox.get_parent() == &controlsBox )
+      controlsBox.remove( usmControlsBox );
+    if( rlControlsBox.get_parent() == &controlsBox )
+      controlsBox.remove( rlControlsBox );
+
     switch( prop->get_enum_value().first ) {
     case PF::SHARPEN_USM:
-			if( usmControlsBox.get_parent() != &controlsBox )
-				controlsBox.pack_start( usmControlsBox, Gtk::PACK_SHRINK );
+      controlsBox.pack_start( usmControlsBox, Gtk::PACK_SHRINK );
       usmControlsBox.show();
 			break;
     case PF::SHARPEN_DECONV:
-			if( usmControlsBox.get_parent() == &controlsBox )
-				controlsBox.remove( usmControlsBox );
+      controlsBox.pack_start( rlControlsBox, Gtk::PACK_SHRINK );
+      rlControlsBox.show();
 			break;
     case PF::SHARPEN_MICRO:
-			if( usmControlsBox.get_parent() == &controlsBox )
-				controlsBox.remove( usmControlsBox );
 			break;
 		}
   }

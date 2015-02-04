@@ -27,34 +27,44 @@
 
  */
 
-#ifndef SHARPEN_CONFIG_DIALOG_HH
-#define SHARPEN_CONFIG_DIALOG_HH
+#ifndef GMIC_INPAINT_CONFIG_DIALOG_HH
+#define GMIC_INPAINT_CONFIG_DIALOG_HH
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
-#include "../../operations/sharpen.hh"
+#include "../../operation_config_dialog.hh"
 
 
 namespace PF {
 
-  class SharpenConfigDialog: public OperationConfigDialog
+  class GmicInpaintConfigDialog: public OperationConfigDialog
   {
+    Gtk::Button updateButton;
     Gtk::VBox controlsBox;
     
-    Selector modeSelector;
-
-    Gtk::VBox usmControlsBox;
-    Slider usmRadiusSlider;
-
-    Gtk::VBox rlControlsBox;
-    Slider rlSigmaSlider;
-    Slider rlIterationsSlider;
+    Slider patch_size;
+    Slider lookup_size;
+    Slider lookup_factor;
+    Slider blend_size;
+    Slider blend_threshold;
+    Slider blend_decay;
+    Slider blend_scales;
+    Slider allow_outer_blending;
+    Slider pen_size;
+    Selector display_mode_selector;
 
   public:
-    SharpenConfigDialog( Layer* l );
+    GmicInpaintConfigDialog( Layer* l );
     
-    void do_update();
+    void on_update();
+    void open();
+
+    void start_stroke();
+    void draw_point( double x, double y );
+
+  bool pointer_press_event( int button, double x, double y, int mod_key );
+  bool pointer_release_event( int button, double x, double y, int mod_key );
+  bool pointer_motion_event( int button, double x, double y, int mod_key );
   };
 
 }

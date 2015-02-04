@@ -27,34 +27,29 @@
 
  */
 
-#ifndef SHARPEN_CONFIG_DIALOG_HH
-#define SHARPEN_CONFIG_DIALOG_HH
+#ifndef GMIC_CONVOLVE_CONFIG_DIALOG_HH
+#define GMIC_CONVOLVE_CONFIG_DIALOG_HH
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
-#include "../../operations/sharpen.hh"
+#include "../../operation_config_dialog.hh"
 
 
 namespace PF {
 
-  class SharpenConfigDialog: public OperationConfigDialog
+  class GmicConvolveConfigDialog: public OperationConfigDialog
   {
     Gtk::VBox controlsBox;
     
-    Selector modeSelector;
-
-    Gtk::VBox usmControlsBox;
-    Slider usmRadiusSlider;
-
-    Gtk::VBox rlControlsBox;
-    Slider rlSigmaSlider;
-    Slider rlIterationsSlider;
-
+    Slider iterations_slider;
+    Selector prop_kernel_selector;
+    Selector prop_boundary_selector;
+    Slider prop_kernel_mul;
+       
   public:
-    SharpenConfigDialog( Layer* l );
+    GmicConvolveConfigDialog( Layer* l );
     
-    void do_update();
+    void open();
   };
 
 }

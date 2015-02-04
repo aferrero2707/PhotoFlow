@@ -2600,7 +2600,7 @@ namespace cimg_library_suffixed {
           pthread_cancel(*events_thread);
           delete events_thread;
         }
-        if (display) { XLockDisplay(display); XCloseDisplay(display); }
+        if (display) { } // XLockDisplay(display); XCloseDisplay(display); }
         pthread_cond_destroy(&wait_event);
         pthread_mutex_unlock(&wait_event_mutex);
         pthread_mutex_destroy(&wait_event_mutex);
@@ -4510,7 +4510,7 @@ namespace cimg_library_suffixed {
        \param[in,out] str C-string to work with (modified at output).
      **/
     inline void strunescape(char *const str) {
-#define cimg_strunescape(ci,co) case ci: *nd = co; ++ns; break;
+#define cimg_strunescape(ci,co) case ci : *nd = co; ++ns; break;
       unsigned int val = 0;
       for (char *ns = str, *nd = str; *ns || (bool)(*nd=0); ++nd) if (*ns=='\\') switch (*(++ns)) {
             cimg_strunescape('n','\n');
@@ -4528,7 +4528,7 @@ namespace cimg_library_suffixed {
           case '0' : case '1' : case '2' : case '3' : case '4' : case '5' : case '6' : case '7' :
             std::sscanf(ns,"%o",&val); while (*ns>='0' && *ns<='7') ++ns;
             *nd = val; break;
-          case 'x':
+          case 'x' :
             std::sscanf(++ns,"%x",&val);
             while ((*ns>='0' && *ns<='7') || (*ns>='a' && *ns<='f') || (*ns>='A' && *ns<='F')) ++ns;
             *nd = val; break;
@@ -16375,7 +16375,7 @@ namespace cimg_library_suffixed {
       Tdouble variance = 0, average = 0;
       const unsigned long siz = size();
       switch (variance_method) {
-      case 0 :{ // Least mean square (standard definition)
+      case 0 : { // Least mean square (standard definition)
         Tdouble S = 0, S2 = 0;
         cimg_for(*this,ptrs,T) { const Tdouble val = (Tdouble)*ptrs; S+=val; S2+=val*val; }
         variance = (S2 - S*S/siz)/siz;
@@ -17336,7 +17336,9 @@ namespace cimg_library_suffixed {
           return *this;
         }
         CImg<t> V(_width,_width);
-        SVD(vec,val,V,false);
+        Tfloat M = 0, m = (Tfloat)min_max(M), maxabs = cimg::max((Tfloat)1.0f,cimg::abs(m),cimg::abs(M));
+        (CImg<Tfloat>(*this,false)/=maxabs).SVD(vec,val,V,false);
+        if (maxabs!=1) val*=maxabs;
 
 	bool is_ambiguous = false;
 	float eig = 0;
@@ -18653,9 +18655,9 @@ namespace cimg_library_suffixed {
     //! Fill sequentially pixel values according to a given expression.
     /**
        \param expression C-string describing a math formula, or a list of values.
-       \param repeat_flag In case a list of values is provided, tells if this list must be repeated for the filling.
+       \param repeat_values In case a list of values is provided, tells if this list must be repeated for the filling.
     **/
-    CImg<T>& fill(const char *const expression, const bool repeat_flag) {
+    CImg<T>& fill(const char *const expression, const bool repeat_values) {
       if (is_empty() || !expression || !*expression) return *this;
       const unsigned int omode = cimg::exception_mode();
       cimg::exception_mode() = 0;
@@ -18690,7 +18692,7 @@ namespace cimg_library_suffixed {
         for (double val = 0; *nexpression && nb<siz; ++nb) {
           sep = 0;
           const int err = std::sscanf(nexpression,"%4095[ \n\t0-9.e+-]%c",item,&sep);
-          if (err>0 && std::sscanf(item,"%lf",&val)==1) {
+          if (err>0 && std::sscanf(item,"%lf",&val)==1 && (sep==',' || sep==';' || err==1)) {
             nexpression+=std::strlen(item) + (err>1?1:0);
             *(ptrd++) = (T)val;
           } else break;
@@ -18698,7 +18700,7 @@ namespace cimg_library_suffixed {
         cimg::exception_mode() = omode;
         if (nb<siz && (sep || *nexpression))
           throw CImgArgumentException(e.what(),pixel_type(),expression);
-        if (repeat_flag && nb && nb<siz)
+        if (repeat_values && nb && nb<siz)
           for (T *ptrs = _data, *const ptre = _data + siz; ptrd<ptre; ++ptrs) *(ptrd++) = *ptrs;
       }
       cimg::exception_mode() = omode;
@@ -18813,57 +18815,135 @@ namespace cimg_library_suffixed {
       return *this;
     }
 
-    //! Discard specified value in the image buffer.
-    /**
-       \param value Value to discard.
-       \note Discarded values will change the image geometry, so the resulting image
-       is returned as a one-column vector.
-    **/
-    CImg<T>& discard(const T value) {
-      return get_discard(value).move_to(*this);
-    }
-
-    //! Discard specified value in the image buffer \newinstance.
-    CImg<T> get_discard(const T value) const {
-      CImg<T> res(1,size());
-      T *pd = res._data;
-      for (const T *ps = _data, *const pse = end(); ps<pse; ++ps)
-        if (*ps!=value) *(pd++) = *ps;
-      if (pd==res._data) return CImg<T>();
-      return res.resize(1,pd-res._data,1,1,-1);
-    }
-
-    //! Discard specified sequence of values in the image buffer.
+    //! Discard specified sequence of values in the image buffer, along a specific axis.
     /**
        \param values Sequence of values to discard.
+       \param axis Axis along which the values are discarded. If set to \c 0 (default value)
+         the method does it for all the buffer values and returns a one-column vector.
        \note Discarded values will change the image geometry, so the resulting image
        is returned as a one-column vector.
     **/
     template<typename t>
-    CImg<T>& discard(const CImg<t>& values) {
-      return get_discard(values).move_to(*this);
+    CImg<T>& discard(const CImg<t>& values, const char axis=0) {
+      if (is_empty() || !values) return *this;
+      return get_discard(values,axis).move_to(*this);
     }
 
-    //! Discard specified sequence of values in the image buffer \newinstance.
     template<typename t>
-    CImg<T> get_discard(const CImg<t>& values) const {
-      if (!values) return *this;
-      if (values.size()==1) return get_discard(*values);
-      CImg<T> res(1,size());
-      T *pd = res._data;
-      const t *const pve = values.end();
-      for (const T *ps = _data, *const pse = end(); ps<pse; ) {
-        const T *_ps = ps;
-        const t *pv = values._data;
-        while (_ps<pse && pv<pve) { if (*(_ps++)!=(T)*pv) break; ++pv; }
-        if (pv!=pve) {
-          const unsigned int l = _ps - ps;
-          if (l==1) *(pd++) = *ps; else { std::memcpy(pd,ps,sizeof(T)*l); pd+=l; }
+    CImg<T> get_discard(const CImg<t>& values, const char axis=0) const {
+      CImg<T> res;
+      if (!values) return +*this;
+      if (is_empty()) return res;
+      const unsigned long vsiz = values.size();
+      const char _axis = cimg::uncase(axis);
+      unsigned long j = 0;
+      unsigned int k = 0;
+      int i0 = 0;
+      res.assign(width(),height(),depth(),spectrum());
+      switch (_axis) {
+      case 'x' : {
+        cimg_forX(*this,i) {
+          if ((*this)(i)!=(T)values[j]) {
+            if (j) --i;
+            res.draw_image(k,get_columns(i0,i));
+            k+=i-i0+1; i0 = i+1; j = 0;
+          } else { ++j; if (j>=vsiz) { j = 0; i0 = i+1; } }
         }
-        ps = _ps;
+        if (i0<width()) { res.draw_image(k,get_columns(i0,width()-1)); k+=width()-i0; }
+        res.resize(k,-100,-100,-100,0);
+      } break;
+      case 'y' : {
+        cimg_forY(*this,i) {
+          if ((*this)(0,i)!=(T)values[j]) {
+            if (j) --i;
+            res.draw_image(0,k,get_rows(i0,i));
+            k+=i-i0+1; i0 = i+1; j = 0;
+          } else { ++j; if (j>=vsiz) { j = 0; i0 = i+1; } }
+        }
+        if (i0<height()) { res.draw_image(0,k,get_rows(i0,height()-1)); k+=height()-i0; }
+        res.resize(-100,k,-100,-100,0);
+      } break;
+      case 'z' : {
+        cimg_forZ(*this,i) {
+          if ((*this)(0,0,i)!=(T)values[j]) {
+            if (j) --i;
+            res.draw_image(0,0,k,get_slices(i0,i));
+            k+=i-i0+1; i0 = i+1; j = 0;
+          } else { ++j; if (j>=vsiz) { j = 0; i0 = i+1; } }
+        }
+        if (i0<depth()) { res.draw_image(0,0,k,get_slices(i0,height()-1)); k+=depth()-i0; }
+        res.resize(-100,-100,k,-100,0);
+      } break;
+      case 'c' : {
+        cimg_forC(*this,i) {
+          if ((*this)(0,0,0,i)!=(T)values[j]) {
+            if (j) --i;
+            res.draw_image(0,0,0,k,get_channels(i0,i));
+            k+=i-i0+1; i0 = i+1; j = 0;
+          } else { ++j; if (j>=vsiz) { j = 0; i0 = i+1; } }
+        }
+        if (i0<spectrum()) { res.draw_image(0,0,k,get_channels(i0,height()-1)); k+=spectrum()-i0; }
+        res.resize(-100,-100,-100,k,0);
+      } break;
+      default : {
+        res.unroll('y');
+        cimg_foroff(*this,i) {
+          if ((*this)[i]!=(T)values[j]) {
+            if (j) --i;
+            std::memcpy(res._data+k,_data+i0,(i-i0+1)*sizeof(T));
+            k+=i-i0+1; i0 = i+1; j = 0;
+          } else { ++j; if (j>=vsiz) { j = 0; i0 = i+1; } }
+        }
+        const unsigned long siz = size();
+        if ((unsigned long)i0<siz) { std::memcpy(res._data+k,_data+i0,(siz-i0)*sizeof(T)); k+=siz-i0; }
+        res.resize(1,k,1,1,0);
       }
-      if (pd==res._data) return CImg<T>();
-      return res.resize(1,pd-res._data,1,1,-1);
+      }
+      return res;
+    }
+
+    //! Discard neighboring duplicates in the image buffer, along the specified axis.
+    CImg<T>& discard(const char axis=0) {
+      return get_discard(axis).move_to(*this);
+    }
+
+    //! Discard neighboring duplicates in the image buffer, along the specified axis \newinstance.
+    CImg<T> get_discard(const char axis=0) const {
+      CImg<T> res;
+      if (is_empty()) return res;
+      const char _axis = cimg::uncase(axis);
+      T current = *_data?0:(T)1;
+      int j = 0;
+      res.assign(width(),height(),depth(),spectrum());
+      switch (_axis) {
+      case 'x' : {
+        cimg_forX(*this,i)
+          if ((*this)(i)!=current) { res.draw_image(j++,get_column(i)); current = (*this)(i); }
+        res.resize(j,-100,-100,-100,0);
+      } break;
+      case 'y' : {
+        cimg_forY(*this,i)
+          if ((*this)(0,i)!=current) { res.draw_image(0,j++,get_row(i)); current = (*this)(0,i); }
+        res.resize(-100,j,-100,-100,0);
+      } break;
+      case 'z' : {
+        cimg_forZ(*this,i)
+          if ((*this)(0,0,i)!=current) { res.draw_image(0,0,j++,get_slice(i)); current = (*this)(0,0,i); }
+        res.resize(-100,-100,j,-100,0);
+      } break;
+      case 'c' : {
+        cimg_forC(*this,i)
+          if ((*this)(0,0,0,i)!=current) { res.draw_image(0,0,0,j++,get_channel(i)); current = (*this)(0,0,0,i); }
+        res.resize(-100,-100,-100,j,0);
+      } break;
+      default : {
+        res.unroll('y');
+        cimg_foroff(*this,i)
+          if ((*this)[i]!=current) res[j++] = current = (*this)[i];
+        res.resize(-100,j,-100,-100,0);
+      }
+      }
+      return res;
     }
 
     //! Invert endianness of all pixel values.
@@ -19799,24 +19879,24 @@ namespace cimg_library_suffixed {
 
       // Create neighborhood tables.
       int dx[13], dy[13], dz[13], nb = 0;
-      dx[nb]=1; dy[nb] = 0; dz[nb++]=0;
-      dx[nb]=0; dy[nb] = 1; dz[nb++]=0;
+      dx[nb] = 1; dy[nb] = 0; dz[nb++] = 0;
+      dx[nb] = 0; dy[nb] = 1; dz[nb++] = 0;
       if (is_high_connectivity) {
-        dx[nb]=1; dy[nb] = 1; dz[nb++]=0;
-        dx[nb]=1; dy[nb] = -1; dz[nb++]=0;
+        dx[nb] = 1; dy[nb] = 1; dz[nb++] = 0;
+        dx[nb] = 1; dy[nb] = -1; dz[nb++] = 0;
       }
       if (_depth>1) { // 3d version.
-        dx[nb]=0; dy[nb] = 0; dz[nb++]=1;
+        dx[nb] = 0; dy[nb] = 0; dz[nb++]=1;
         if (is_high_connectivity) {
-          dx[nb]=1; dy[nb] = 1; dz[nb++]=-1;
-          dx[nb]=1; dy[nb] = 0; dz[nb++]=-1;
-          dx[nb]=1; dy[nb] = -1; dz[nb++]=-1;
-          dx[nb]=0; dy[nb] = 1; dz[nb++]=-1;
+          dx[nb] = 1; dy[nb] = 1; dz[nb++] = -1;
+          dx[nb] = 1; dy[nb] = 0; dz[nb++] = -1;
+          dx[nb] = 1; dy[nb] = -1; dz[nb++] = -1;
+          dx[nb] = 0; dy[nb] = 1; dz[nb++] = -1;
 
-          dx[nb]=0; dy[nb] = 1; dz[nb++]=1;
-          dx[nb]=1; dy[nb] = -1; dz[nb++]=1;
-          dx[nb]=1; dy[nb] = 0; dz[nb++]=1;
-          dx[nb]=1; dy[nb] = 1; dz[nb++]=1;
+          dx[nb] = 0; dy[nb] = 1; dz[nb++] = 1;
+          dx[nb] = 1; dy[nb] = -1; dz[nb++] = 1;
+          dx[nb] = 1; dy[nb] = 0; dz[nb++] = 1;
+          dx[nb] = 1; dy[nb] = 1; dz[nb++] = 1;
         }
       }
       return _get_label(nb,dx,dy,dz,tolerance);
@@ -19869,11 +19949,11 @@ namespace cimg_library_suffixed {
               y1 = _dy<0?_height:_height - _dy,
               z0 = _dz<0?-_dz:0,
               z1 = _dz<0?_depth:_depth - _dz;
-            const long wh = (long)_width*_height, offset = (long)_dz*wh + (long)_dy*_width + _dx;
+            const long wh = (long)_width*_height, whd = (long)_width*_height*_depth, offset = (long)_dz*wh + (long)_dy*_width + _dx;
             for (long z = z0, nz = z0 + _dz, pz = z0*wh; z<z1; ++z, ++nz, pz+=wh) {
               for (long y = y0, ny = y0 + _dy, py = y0*_width + pz; y<y1; ++y, ++ny, py+=_width) {
                 for (long x = x0, nx = x0 + _dx, p = x0 + py; x<x1; ++x, ++nx, ++p) {
-                  if ((Tfloat)cimg::abs((*this)(x,y,z,c,wh)-(*this)(nx,ny,nz,c,wh))<=tolerance) {
+                  if ((Tfloat)cimg::abs((*this)(x,y,z,c,wh,whd)-(*this)(nx,ny,nz,c,wh,whd))<=tolerance) {
                     const long q = p + offset;
                     unsigned long x, y;
                     for (x = p<q?q:p, y = p<q?p:q; x!=y && _res[x]!=x; ) { x = _res[x]; if (x<y) cimg::swap(x,y); }
@@ -24077,16 +24157,16 @@ namespace cimg_library_suffixed {
        \param axis Splitting axis. Can be <tt>{ 'x' | 'y' | 'z' | 'c' }</tt>.
        \param nb Number of splitted parts.
        \note
-       - If \c nb==0, there are as much splitted parts as the image size along the specified axis.
+       - If \c nb==0, instance image is splitted into blocs of egal values along the specified axis.
        - If \c nb<=0, instance image is splitted into blocs of -\c nb pixel wide.
        - If \c nb>0, instance image is splitted into \c nb blocs.
     **/
-    CImgList<T> get_split(const char axis, const int nb=0) const {
+    CImgList<T> get_split(const char axis, const int nb=-1) const {
       CImgList<T> res;
       if (is_empty()) return res;
       const char _axis = cimg::uncase(axis);
 
-      if (nb<=0) { // Split by bloc size.
+      if (nb<0) { // Split by bloc size.
         const unsigned int dp = (unsigned int)(nb?-nb:1);
         switch (_axis) {
         case 'x': {
@@ -24125,7 +24205,7 @@ namespace cimg_library_suffixed {
             get_crop(0,0,(res._width-1)*dp,0,_width-1,_height-1,_depth-1,_spectrum-1).move_to(res.back());
           } else res.assign(*this);
         } break;
-        default : {
+        case 'c' : {
           if (_spectrum>dp) {
             res.assign(_spectrum/dp+(_spectrum%dp?1:0),1,1);
             const unsigned int pe = _spectrum - dp;
@@ -24138,7 +24218,7 @@ namespace cimg_library_suffixed {
           } else res.assign(*this);
         }
         }
-      } else { // Split by number of (non-homogeneous) blocs.
+      } else if (nb>0) { // Split by number of (non-homogeneous) blocs.
         const unsigned int siz = _axis=='x'?_width:_axis=='y'?_height:_axis=='z'?_depth:_axis=='c'?_spectrum:0;
         if ((unsigned int)nb>siz)
           throw CImgArgumentException(_cimg_instance
@@ -24171,7 +24251,7 @@ namespace cimg_library_suffixed {
               _p=p+1;
             }
           } break;
-          default : {
+          case 'c' : {
             cimg_forC(*this,p) if ((err-=nb)<=0) {
               get_crop(0,0,0,_p,_width-1,_height-1,_depth-1,p).move_to(res);
               err+=(int)siz;
@@ -24180,88 +24260,189 @@ namespace cimg_library_suffixed {
           }
           }
         }
+      } else { // Split by egal values according to specified axis.
+        T current = *_data;
+        int i0 = 0;
+        switch (_axis) {
+        case 'x' : {
+          cimg_forX(*this,i)
+            if ((*this)(i)!=current) { get_columns(i0,i-1).move_to(res); i0 = i; current = (*this)(i); }
+          get_columns(i0,width()-1).move_to(res);
+        } break;
+        case 'y' : {
+          cimg_forY(*this,i)
+            if ((*this)(0,i)!=current) { get_rows(i0,i-1).move_to(res); i0 = i; current = (*this)(0,i); }
+          get_rows(i0,height()-1).move_to(res);
+        } break;
+        case 'z' : {
+          cimg_forZ(*this,i)
+            if ((*this)(0,0,i)!=current) { get_slices(i0,i-1).move_to(res); i0 = i; current = (*this)(0,0,i); }
+          get_slices(i0,depth()-1).move_to(res);
+        } break;
+        case 'c' : {
+          cimg_forC(*this,i)
+            if ((*this)(0,0,0,i)!=current) { get_channels(i0,i-1).move_to(res); i0 = i; current = (*this)(0,0,0,i); }
+          get_channels(i0,spectrum()-1).move_to(res);
+        } break;
+        default : {
+          cimg_foroff(*this,i)
+            if ((*this)[i]!=current) { CImg<T>(_data+i0,1,i-i0).move_to(res); i0 = i; current = (*this)[i]; }
+          CImg<T>(_data+i0,1,size()-i0).move_to(res);
+        }
+        }
       }
       return res;
     }
 
-    //! Split image into a list of one-column vectors, according to a specified splitting value.
-    /**
-       \param value Splitting value.
-       \param keep_values Tells if the splitting value must be kept in the splitted blocs.
-       \param is_shared Tells if the splitted blocs have shared memory buffers.
-    **/
-    CImgList<T> get_split(const T value, const bool keep_values, const bool is_shared) const {
-      CImgList<T> res;
-      if (is_empty()) return res;
-      for (const T *ps = _data, *_ps = ps, *const pe = end(); ps<pe; ) {
-        while (_ps<pe && *_ps==value) ++_ps;
-        unsigned int siz = _ps - ps;
-        if (siz && keep_values) res.insert(CImg<T>(ps,1,siz,1,1,is_shared),~0U,is_shared);
-        ps = _ps;
-        while (_ps<pe && *_ps!=value) ++_ps;
-        siz = _ps - ps;
-        if (siz) res.insert(CImg<T>(ps,1,siz,1,1,is_shared),~0U,is_shared);
-        ps = _ps;
-      }
-      return res;
-    }
-
-    //! Split image into a list of one-column vectors, according to a specified splitting value sequence.
+    //! Split image into a list of sub-images, according to a specified splitting value sequence and optionnally axis.
     /**
        \param values Splitting value sequence.
+       \param axis Axis along which the splitting is performed. Can be '0' to ignore axis.
        \param keep_values Tells if the splitting sequence must be kept in the splitted blocs.
-       \param is_shared Tells if the splitted blocs have shared memory buffers.
      **/
     template<typename t>
-    CImgList<T> get_split(const CImg<t>& values, const bool keep_values, const bool is_shared) const {
+    CImgList<T> get_split(const CImg<t>& values, const char axis=0, const bool keep_values=true) const {
       CImgList<T> res;
       if (is_empty()) return res;
-      if (!values) return CImgList<T>(*this);
-      if (values.size()==1) return get_split(*values,keep_values,is_shared);
-      const t *pve = values.end();
-      for (const T *ps = _data, *_ps = ps, *const pe = end(); ps<pe; ) {
-
-        // Try to find match from current position.
-        const t *pv = 0;
-        do {
-          pv = values._data;
-          const T *__ps = _ps;
-          while (__ps<pe && pv<pve && *__ps==(T)*pv) { ++__ps; ++pv; }
-          if (pv==pve) _ps = __ps;
-        } while (pv==pve);
-        unsigned int siz = _ps - ps;
-        if (siz && keep_values) res.insert(CImg<T>(ps,1,siz,1,1,is_shared),~0U,is_shared); // If match found.
-        ps = _ps;
-
-        // Try to find non-match from current position.
-        do {
-          pv = values._data;
-          while (_ps<pe && *_ps!=(T)*pv) ++_ps;
-          if (_ps<pe) {
-            const T *__ps = _ps + 1;
-            ++pv;
-            while (__ps<pe && pv<pve && *__ps==(T)*pv) { ++__ps; ++pv; }
-            if (pv!=pve) _ps = __ps;
-          }
-        } while (_ps<pe && pv!=pve);
-
-        // Here, EOF of match found.
-        siz = _ps - ps;
-        if (siz) res.insert(CImg<T>(ps,1,siz,1,1,is_shared),~0U,is_shared);
-        ps = _ps;
+      const unsigned long vsiz = values.size();
+      const char _axis = cimg::uncase(axis);
+      if (!vsiz) return CImgList<T>(*this);
+      if (vsiz==1) { // Split according to a single value.
+        const T value = *values;
+        switch (_axis) {
+        case 'x' : {
+          unsigned int i0 = 0, i = 0;
+          do {
+            while (i<_width && (*this)(i)==value) ++i;
+            if (i>i0) { if (keep_values) get_columns(i0,i-1).move_to(res); i0 = i; }
+            while (i<_width && (*this)(i)!=value) ++i;
+            if (i>i0) { get_columns(i0,i-1).move_to(res); i0 = i; }
+          } while (i<_width);
+        } break;
+        case 'y' : {
+          unsigned int i0 = 0, i = 0;
+          do {
+            while (i<_height && (*this)(0,i)==value) ++i;
+            if (i>i0) { if (keep_values) get_rows(i0,i-1).move_to(res); i0 = i; }
+            while (i<_height && (*this)(0,i)!=value) ++i;
+            if (i>i0) { get_rows(i0,i-1).move_to(res); i0 = i; }
+          } while (i<_height);
+        } break;
+        case 'z' : {
+          unsigned int i0 = 0, i = 0;
+          do {
+            while (i<_depth && (*this)(0,0,i)==value) ++i;
+            if (i>i0) { if (keep_values) get_slices(i0,i-1).move_to(res); i0 = i; }
+            while (i<_depth && (*this)(0,0,i)!=value) ++i;
+            if (i>i0) { get_slices(i0,i-1).move_to(res); i0 = i; }
+          } while (i<_depth);
+        } break;
+        case 'c' : {
+          unsigned int i0 = 0, i = 0;
+          do {
+            while (i<_spectrum && (*this)(0,0,0,i)==value) ++i;
+            if (i>i0) { if (keep_values) get_channels(i0,i-1).move_to(res); i0 = i; }
+            while (i<_spectrum && (*this)(0,0,0,i)!=value) ++i;
+            if (i>i0) { get_channels(i0,i-1).move_to(res); i0 = i; }
+          } while (i<_spectrum);
+        } break;
+        default : {
+          const unsigned long siz = size();
+          unsigned long i0 = 0, i = 0;
+          do {
+            while (i<siz && (*this)[i]==value) ++i;
+            if (i>i0) { if (keep_values) CImg<T>(_data+i0,1,i-i0).move_to(res); i0 = i; }
+            while (i<siz && (*this)[i]!=value) ++i;
+            if (i>i0) { CImg<T>(_data+i0,1,i-i0).move_to(res); i0 = i; }
+          } while (i<siz);
+        }
+        }
+      } else { // Split according to multiple values.
+        unsigned long j = 0;
+        switch (_axis) {
+        case 'x' : {
+          unsigned int i0 = 0, i1 = 0, i = 0;
+          do {
+            if ((*this)(i)==*values) {
+              i1 = i; j = 0;
+              while (i<_width && (*this)(i)==values[j]) { ++i; if (++j>=vsiz) j = 0; }
+              i-=j;
+              if (i>i1) {
+                if (i1>i0) get_columns(i0,i1-1).move_to(res);
+                if (keep_values) get_columns(i1,i-1).move_to(res);
+                i0 = i;
+              } else ++i;
+            } else ++i;
+          } while (i<_width);
+          if (i0<_width) get_columns(i0,width()-1).move_to(res);
+        } break;
+        case 'y' : {
+          unsigned int i0 = 0, i1 = 0, i = 0;
+          do {
+            if ((*this)(0,i)==*values) {
+              i1 = i; j = 0;
+              while (i<_height && (*this)(0,i)==values[j]) { ++i; if (++j>=vsiz) j = 0; }
+              i-=j;
+              if (i>i1) {
+                if (i1>i0) get_rows(i0,i1-1).move_to(res);
+                if (keep_values) get_rows(i1,i-1).move_to(res);
+                i0 = i;
+              } else ++i;
+            } else ++i;
+          } while (i<_height);
+          if (i0<_height) get_rows(i0,height()-1).move_to(res);
+        } break;
+        case 'z' : {
+          unsigned int i0 = 0, i1 = 0, i = 0;
+          do {
+            if ((*this)(0,0,i)==*values) {
+              i1 = i; j = 0;
+              while (i<_depth && (*this)(0,0,i)==values[j]) { ++i; if (++j>=vsiz) j = 0; }
+              i-=j;
+              if (i>i1) {
+                if (i1>i0) get_slices(i0,i1-1).move_to(res);
+                if (keep_values) get_slices(i1,i-1).move_to(res);
+                i0 = i;
+              } else ++i;
+            } else ++i;
+          } while (i<_depth);
+          if (i0<_depth) get_slices(i0,depth()-1).move_to(res);
+        } break;
+        case 'c' : {
+          unsigned int i0 = 0, i1 = 0, i = 0;
+          do {
+            if ((*this)(0,0,0,i)==*values) {
+              i1 = i; j = 0;
+              while (i<_spectrum && (*this)(0,0,0,i)==values[j]) { ++i; if (++j>=vsiz) j = 0; }
+              i-=j;
+              if (i>i1) {
+                if (i1>i0) get_channels(i0,i1-1).move_to(res);
+                if (keep_values) get_channels(i1,i-1).move_to(res);
+                i0 = i;
+              } else ++i;
+            } else ++i;
+          } while (i<_spectrum);
+          if (i0<_spectrum) get_channels(i0,spectrum()-1).move_to(res);
+        } break;
+        default : {
+          unsigned long i0 = 0, i1 = 0, i = 0;
+          const unsigned long siz = size();
+          do {
+            if ((*this)[i]==*values) {
+              i1 = i; j = 0;
+              while (i<siz && (*this)[i]==values[j]) { ++i; if (++j>=vsiz) j = 0; }
+              i-=j;
+              if (i>i1) {
+                if (i1>i0) CImg<T>(_data+i0,1,i1-i0).move_to(res);
+                if (keep_values) CImg<T>(_data+i1,1,i-i1).move_to(res);
+                i0 = i;
+              } else ++i;
+            } else ++i;
+          } while (i<siz);
+          if (i0<siz) CImg<T>(_data+i0,1,siz-i0).move_to(res);
+        } break;
+        }
       }
-      return res;
-    }
-
-    //! Split the image into a list of one-column vectors each having same values.
-    CImgList<T> get_split(const bool is_shared) const {
-      CImgList<T> res;
-      if (is_empty()) return res;
-      T *p0 = _data, current = *p0;
-      cimg_for(*this,p,T) if (*p!=current) {
-        res.insert(CImg<T>(p0,1,p-p0,1,1,is_shared),~0U,is_shared); p0 = p; current = *p;
-      }
-      res.insert(CImg<T>(p0,1,end()-p0,1,1,is_shared),~0U,is_shared);
       return res;
     }
 
@@ -25641,81 +25822,144 @@ namespace cimg_library_suffixed {
        \param off the offset between two data point
        \param order the order of the filter 0 (smoothing), 1st derivtive, 2nd derivative, 3rd derivative
        \param boundary_conditions Boundary conditions. Can be <tt>{ 0=dirichlet | 1=neumann }</tt>.
-       \note dirichlet boundary conditions have a strange behavior. And
-       boundary condition should be corrected using Bill Triggs method (IEEE trans on Sig Proc 2005).
+       \note Boundary condition using B. Triggs method (IEEE trans on Sig Proc 2005).
     **/
-    template <int K>
-    static void _cimg_recursive_apply(T *data, const Tfloat filter[], const int N, const unsigned long off,
-                                      const int order, const bool boundary_conditions) {
-      Tfloat val[K];  // res[n,n-1,n-2,n-3,..] or res[n,n+1,n+2,n+3,..]
+    static void _cimg_recursive_apply(T *data, const double filter[], const int N, const unsigned long off,
+				      const int order, const bool boundary_conditions) {
+      double val[4];  // res[n,n-1,n-2,n-3,..] or res[n,n+1,n+2,n+3,..]
+      const double
+	sumsq = filter[0], sum = sumsq * sumsq,
+	a1 = filter[1], a2 = filter[2], a3 = filter[3],
+	scaleM = 1.0 / ( (1.0 + a1 - a2 + a3) * (1.0 - a1 - a2 - a3) * (1.0 + a2 + (a1 - a3) * a3) );
+      double M[9]; // Triggs matrix
+      M[0] = scaleM * (-a3 * a1 + 1.0 - a3 * a3 - a2);
+      M[1] = scaleM * (a3 + a1) * (a2 + a3 * a1);
+      M[2] = scaleM * a3 * (a1 + a3 * a2);
+      M[3] = scaleM * (a1 + a3 * a2);
+      M[4] = -scaleM * (a2 - 1.0) * (a2 + a3 * a1);
+      M[5] = -scaleM * a3 * (a3 * a1 + a3 * a3 + a2 - 1.0);
+      M[6] = scaleM * (a3 * a1 + a2 + a1 * a1 - a2 * a2);
+      M[7] = scaleM * (a1 * a2 + a3 * a2 * a2 - a1 * a3 * a3 - a3 * a3 * a3 - a3 * a2 + a3);
+      M[8] = scaleM * a3 * (a1 + a3 * a2);
       switch (order) {
       case 0 : {
-        for (int pass = 0; pass<2; ++pass) {
-          for (int k = 1; k<K; ++k) val[k] = (Tfloat)(boundary_conditions?*data:0);
-          for (int n = 0; n<N; ++n) {
-            val[0] = (Tfloat)(*data)*filter[0];
-            for (int k = 1; k<K; ++k) val[0]+=val[k]*filter[k];
-            *data = (T)val[0];
-            if (!pass) data+=off; else data-=off;
-            for (int k = K-1; k>0; --k) val[k] = val[k-1];
-          }
-          if (!pass) data-=off;
-        }
+	const double iplus = (boundary_conditions?data[(N-1)*off]:0);
+	for (int pass = 0; pass < 2; ++pass) {
+	  if (!pass) {
+	    for (int k = 1; k < 4; ++k) val[k] = (boundary_conditions?*data/sumsq:0);
+	  } else {
+	    /* apply Triggs border condition */
+	    const double
+	      uplus = iplus / (1.0 - a1 - a2 - a3), vplus = uplus / (1.0 - a1 - a2 - a3),
+	      unp  = val[1] - uplus, unp1 = val[2] - uplus, unp2 = val[3] - uplus;
+	    val[0] = (M[0] * unp + M[1] * unp1 + M[2] * unp2 + vplus) * sum;
+	    val[1] = (M[3] * unp + M[4] * unp1 + M[5] * unp2 + vplus) * sum;
+	    val[2] = (M[6] * unp + M[7] * unp1 + M[8] * unp2 + vplus) * sum;
+	    *data = (T)val[0];
+	    data -= off;
+	    for (int k = 3; k > 0; --k) val[k] = val[k-1];
+	  }
+	  for (int n = pass; n < N; ++n) {
+	    val[0] = (*data);
+	    if (pass) val[0] *= sum;
+	    for (int k = 1; k < 4; ++k) val[0] += val[k] * filter[k];
+	    *data = (T)val[0];
+	    if (!pass) data += off; else data -= off;
+	    for (int k = 3; k > 0; --k) val[k] = val[k-1];
+	  }
+	  if (!pass) data -= off;
+	}
       } break;
       case 1 : {
-        Tfloat x[3]; // [front,center,back]
-        for (int pass = 0; pass<2; ++pass) {
-          for (int k = 0; k<3; ++k) x[k] = (Tfloat)(boundary_conditions?*data:0);
-          for (int k = 0; k<K; ++k) val[k] = 0;
-          for (int n = 0; n<N-1; ++n) {
-            if (!pass) {
-              x[0] = (Tfloat)*(data+off);
-              val[0] = 0.5f * (x[0] - x[2])*filter[0];
-            } else val[0] = (Tfloat)(*data)*filter[0];
-            for (int k = 1; k<K; ++k) val[0]+=val[k]*filter[k];
-            *data = (T)val[0];
-            if (!pass) {
-              data+=off;
-              for (int k = 2; k>0; --k) x[k] = x[k-1];
-            } else data-=off;
-            for (int k = K-1; k>0; --k) val[k] = val[k-1];
-          }
-          *data = (T)0;
-        }
+	double x[3]; // [front,center,back]
+	for (int pass = 0; pass < 2; ++pass) {
+	  if (!pass) {
+	    for (int k = 0; k < 3; ++k) x[k] = (boundary_conditions?*data:0);
+	    for (int k = 0; k < 4; ++k) val[k] = 0;
+	  } else {
+	    /* apply Triggs border condition */
+	    const double
+	      unp  = val[1], unp1 = val[2], unp2 = val[3];
+	    val[0] = (M[0] * unp + M[1] * unp1 + M[2] * unp2) * sum;
+	    val[1] = (M[3] * unp + M[4] * unp1 + M[5] * unp2) * sum;
+	    val[2] = (M[6] * unp + M[7] * unp1 + M[8] * unp2) * sum;
+	    *data = (T)val[0];
+	    data -= off;
+	    for (int k = 3; k > 0; --k) val[k] = val[k-1];
+	  }
+	  for (int n = pass; n < N - 1; ++n) {
+	    if (!pass) {
+	      x[0] = *(data+off);
+	      val[0] = 0.5f * (x[0] - x[2]);
+	    } else val[0] = (*data) * sum;
+	    for (int k = 1; k < 4; ++k) val[0] += val[k] * filter[k];
+	    *data = (T)val[0];
+	    if (!pass) {
+	      data += off;
+	      for (int k = 2; k > 0; --k) x[k] = x[k-1];
+	    } else { data-=off;}
+	    for (int k = 3; k > 0; --k) val[k] = val[k-1];
+	  }
+	  *data = (T)0;
+	}
       } break;
       case 2: {
-        Tfloat x[3]; // [front,center,back]
-        for (int pass = 0; pass<2; ++pass) {
-          for (int k = 0; k<3; ++k) x[k] = (Tfloat)(boundary_conditions?*data:0);
-          for (int k = 0; k<K; ++k) val[k] = 0;
-          for (int n = 0; n<N-1; ++n) {
-            if (!pass) { x[0] = (Tfloat)*(data+off); val[0] = (x[1] - x[2])*filter[0]; }
-            else { x[0] = (Tfloat)*(data-off); val[0] = (x[2] - x[1])*filter[0]; }
-            for (int k = 1; k<K; ++k) val[0]+=val[k]*filter[k];
-            *data = (T)val[0];
-            if (!pass) data+=off; else data-=off;
-            for (int k = 2; k>0; --k) x[k] = x[k-1];
-            for (int k = K-1; k>0; --k) val[k] = val[k-1];
-          }
-          *data = (T)0;
-        }
+	double x[3]; // [front,center,back]
+	for (int pass = 0; pass < 2; ++pass) {
+	  if (!pass) {
+	    for (int k = 0; k < 3; ++k) x[k] = (boundary_conditions?*data:0);
+	    for (int k = 0; k < 4; ++k) val[k] = 0;
+	  } else {
+	    /* apply Triggs border condition */
+	    const double
+	      unp  = val[1], unp1 = val[2], unp2 = val[3];
+	    val[0] = (M[0] * unp + M[1] * unp1 + M[2] * unp2) * sum;
+	    val[1] = (M[3] * unp + M[4] * unp1 + M[5] * unp2) * sum;
+	    val[2] = (M[6] * unp + M[7] * unp1 + M[8] * unp2) * sum;
+	    *data = (T)val[0];
+	    data -= off;
+	    for (int k = 3; k > 0; --k) val[k] = val[k-1];
+	  }
+	  for (int n = pass; n < N - 1; ++n) {
+	    if (!pass) { x[0] = *(data+off); val[0] = (x[1] - x[2]); }
+	    else { x[0] = *(data-off); val[0] = (x[2] - x[1]) * sum; }
+	    for (int k = 1; k < 4; ++k) val[0] += val[k]*filter[k];
+	    *data = (T)val[0];
+	    if (!pass) data += off; else data -= off;
+	    for (int k = 2; k > 0; --k)   x[k] =   x[k-1];
+	    for (int k = 3; k > 0; --k) val[k] = val[k-1];
+	  }
+	  *data = (T)0;
+	}
       } break;
       case 3: {
-        Tfloat x[3]; // [front,center,back]
-        for (int pass = 0; pass<2; ++pass) {
-          for (int k = 0; k<3; ++k) x[k] = (Tfloat)(boundary_conditions?*data:0);
-          for (int k = 0; k<K; ++k) val[k] = 0;
-          for (int n = 0; n<N-1; ++n) {
-            if (!pass) { x[0] = (Tfloat)*(data+off); val[0] = (x[0] - 2*x[1] + x[2])*filter[0]; }
-            else { x[0] = (Tfloat)*(data-off); val[0] = 0.5f*(x[2] - x[0])*filter[0]; }
-            for (int k = 1; k<K; ++k) val[0]+=val[k]*filter[k];
-            *data = (T)val[0];
-            if (!pass) data+=off; else data-=off;
-            for (int k = 2; k>0; --k) x[k] = x[k-1];
-            for (int k = K-1; k>0; --k) val[k] = val[k-1];
-          }
-          *data = (T)0;
-        }
+	double x[3]; // [front,center,back]
+	for (int pass = 0; pass<2; ++pass) {
+	  if (!pass) {
+	    for (int k = 0; k < 3; ++k) x[k] = (boundary_conditions?*data:0);
+	    for (int k = 0; k < 4; ++k) val[k] = 0;
+	  } else {
+	    /* apply Triggs border condition */
+	    const double
+	      unp = val[1], unp1 = val[2], unp2 = val[3];
+	    val[0] = (M[0] * unp + M[1] * unp1 + M[2] * unp2) * sum;
+	    val[1] = (M[3] * unp + M[4] * unp1 + M[5] * unp2) * sum;
+	    val[2] = (M[6] * unp + M[7] * unp1 + M[8] * unp2) * sum;
+	    *data = (T)val[0];
+	    data -= off;
+	    for (int k = 3; k > 0; --k) val[k] = val[k-1];
+	  }
+	  for (int n = pass; n < N - 1; ++n) {
+	    if (!pass) { x[0] = *(data+off); val[0] = (x[0] - 2*x[1] + x[2]); }
+	    else { x[0] = *(data-off); val[0] = 0.5f * (x[2] - x[0]) * sum; }
+	    for (int k = 1; k < 4; ++k) val[0] += val[k] * filter[k];
+	    *data = (T)val[0];
+	    if (!pass) data += off; else data -= off;
+	    for (int k = 2; k > 0; --k)   x[k] =   x[k-1];
+	    for (int k = 3; k > 0; --k) val[k] = val[k-1];
+	  }
+	  *data = (T)0;
+	}
       } break;
       }
     }
@@ -25728,56 +25972,64 @@ namespace cimg_library_suffixed {
        \param boundary_conditions Boundary conditions. Can be <tt>{ 0=dirichlet | 1=neumann }</tt>.
        \note dirichlet boundary condition has a strange behavior
 
-       Ian T. Young, Lucas J. van Vliet, Recursive implementation of the
-       Gaussian filter, Signal Processing, Volume 44, Issue 2, June 1995,
-       Pages 139-151,
+       I.T. Young, L.J. van Vliet, M. van Ginkel, Recursive Gabor filtering.
+       IEEE Trans. Sig. Proc., vol. 50, pp. 2799-2805, 2002.
+
+       (this is an improvement over Young-Van Vliet, Sig. Proc. 44, 1995)
+
+       Boundary conditions (only for order 0) using Triggs matrix, from
+       B. Triggs and M. Sdika. Boundary conditions for Young-van Vliet
+       recursive filtering. IEEE Trans. Signal Processing,
+       vol. 54, pp. 2365-2367, 2006.
     **/
     CImg<T>& vanvliet(const float sigma, const int order, const char axis='x', const bool boundary_conditions=true) {
       if (is_empty()) return *this;
       const char naxis = cimg::uncase(axis);
       const float nsigma = sigma>=0?sigma:-sigma*(naxis=='x'?_width:naxis=='y'?_height:naxis=='z'?_depth:_spectrum)/100;
       if (is_empty() || (nsigma<0.1f && !order)) return *this;
-      const Tfloat
-        nnsigma = nsigma<0.1f?0.1f:nsigma,
-        q = (Tfloat)(nnsigma<2.5?3.97156-4.14554*std::sqrt(1-0.2689*nnsigma):0.98711*nnsigma-0.96330),
-        b0 = 1.57825f + 2.44413f*q + 1.4281f*q*q + 0.422205f*q*q*q,
-        b1 = (2.44413f*q + 2.85619f*q*q + 1.26661f*q*q*q),
-        b2 = -(1.4281f*q*q + 1.26661f*q*q*q),
-        b3 = 0.422205f*q*q*q,
-        B = 1.f - (b1 + b2 + b3)/b0;
-      Tfloat filter[4];
-      filter[0] = B; filter[1] = b1/b0; filter[2] = b2/b0; filter[3] = b3/b0;
-
+      const double
+	nnsigma = nsigma<0.1f?0.1f:nsigma,
+			 m0 = 1.16680, m1 = 1.10783, m2 = 1.40586,
+			 m1sq = m1 * m1, m2sq = m2 * m2,
+			 q = (nnsigma<3.556?-0.2568+0.5784*nnsigma+0.0561*nnsigma*nnsigma:2.5091+0.9804*(nnsigma-3.556)),
+	qsq = q * q,
+	scale = (m0 + q) * (m1sq + m2sq + 2 * m1 * q + qsq),
+	b1 = -q * (2 * m0 * m1 + m1sq + m2sq + (2 * m0 + 4 * m1) * q + 3 * qsq) / scale,
+	b2 = qsq * (m0 + 2 * m1 + 3 * q) / scale,
+	b3 = -qsq * q / scale,
+	B = ( m0 * (m1sq + m2sq) ) / scale;
+      double filter[4];
+      filter[0] = B; filter[1] = -b1; filter[2] = -b2; filter[3] = -b3;
       switch (naxis) {
       case 'x' : {
 #ifdef cimg_use_openmp
 #pragma omp parallel for collapse(3) if (_width>=256 && _height*_depth*_spectrum>=16)
 #endif
-        cimg_forYZC(*this,y,z,c)
-          _cimg_recursive_apply<4>(data(0,y,z,c),filter,_width,1U,order,boundary_conditions);
+	cimg_forYZC(*this,y,z,c)
+	  _cimg_recursive_apply(data(0,y,z,c),filter,_width,1U,order,boundary_conditions);
       } break;
       case 'y' : {
 #ifdef cimg_use_openmp
 #pragma omp parallel for collapse(3) if (_width>=256 && _height*_depth*_spectrum>=16)
 #endif
-        cimg_forXZC(*this,x,z,c)
-          _cimg_recursive_apply<4>(data(x,0,z,c),filter,_height,(unsigned long)_width,order,boundary_conditions);
+	cimg_forXZC(*this,x,z,c)
+	  _cimg_recursive_apply(data(x,0,z,c),filter,_height,(unsigned long)_width,order,boundary_conditions);
       } break;
       case 'z' : {
 #ifdef cimg_use_openmp
 #pragma omp parallel for collapse(3) if (_width>=256 && _height*_depth*_spectrum>=16)
 #endif
-        cimg_forXYC(*this,x,y,c)
-          _cimg_recursive_apply<4>(data(x,y,0,c),filter,_depth,(unsigned long)(_width*_height),
-                                   order,boundary_conditions);
+	cimg_forXYC(*this,x,y,c)
+	  _cimg_recursive_apply(data(x,y,0,c),filter,_depth,(unsigned long)(_width*_height),
+				order,boundary_conditions);
       } break;
       default : {
 #ifdef cimg_use_openmp
 #pragma omp parallel for collapse(3) if (_width>=256 && _height*_depth*_spectrum>=16)
 #endif
-        cimg_forXYZ(*this,x,y,z)
-          _cimg_recursive_apply<4>(data(x,y,z,0),filter,_spectrum,(unsigned long)(_width*_height*_depth),
-                                   order,boundary_conditions);
+	cimg_forXYZ(*this,x,y,z)
+	  _cimg_recursive_apply(data(x,y,z,0),filter,_spectrum,(unsigned long)(_width*_height*_depth),
+				order,boundary_conditions);
       }
       }
       return *this;
@@ -27561,114 +27813,144 @@ namespace cimg_library_suffixed {
         for (unsigned int iteration = 0; iteration<iteration_max; ++iteration) {
           float _energy = 0;
           if (is_3d) { // 3d version.
-            if (smoothness>=0) cimg_for3XYZ(U,x,y,z) { // Isotropic regularization.
-                const float
-                  X = is_backward?x - U(x,y,z,0):x + U(x,y,z,0),
-                  Y = is_backward?y - U(x,y,z,1):y + U(x,y,z,1),
-                  Z = is_backward?z - U(x,y,z,2):z + U(x,y,z,2);
-                float delta_I = 0, _energy_regul = 0;
-                if (is_backward) cimg_forC(I2,c) delta_I+=(float)(I1.linear_atXYZ(X,Y,Z,c) - I2(x,y,z,c));
-                else cimg_forC(I2,c) delta_I+=(float)(I1(x,y,z,c) - I2.linear_atXYZ(X,Y,Z,c));
-                cimg_forC(U,c) {
+            if (smoothness>=0) // Isotropic regularization.
+#ifdef cimg_use_openmp
+#pragma omp parallel for collapse(2) if (_height*_depth>=8 && _width>=16) reduction(+:_energy)
+#endif
+              cimg_forYZ(U,y,z) {
+                const int
+                  _p1y = y?y-1:0, _n1y = y<U.height()-1?y+1:y,
+                  _p1z = z?z-1:0, _n1z = z<U.depth()-1?z+1:z;
+                cimg_for3X(U,x) {
                   const float
-                    Ux = 0.5f*(U(_n1x,y,z,c) - U(_p1x,y,z,c)),
-                    Uy = 0.5f*(U(x,_n1y,z,c) - U(x,_p1y,z,c)),
-                    Uz = 0.5f*(U(x,y,_n1z,c) - U(x,y,_p1z,c)),
-                    Uxx = U(_n1x,y,z,c) + U(_p1x,y,z,c),
-                    Uyy = U(x,_n1y,z,c) + U(x,_p1y,z,c),
-                    Uzz = U(x,y,_n1z,c) + U(x,y,_p1z,c);
-                  U(x,y,z,c) = (float)(U(x,y,z,c) + dt*(delta_I*dI[c].linear_atXYZ(X,Y,Z) +
-                                                        smoothness* ( Uxx + Uyy + Uzz)))/(1+6*smoothness*dt);
-                  _energy_regul+=Ux*Ux + Uy*Uy + Uz*Uz;
+                    X = is_backward?x - U(x,y,z,0):x + U(x,y,z,0),
+                    Y = is_backward?y - U(x,y,z,1):y + U(x,y,z,1),
+                    Z = is_backward?z - U(x,y,z,2):z + U(x,y,z,2);
+                  float delta_I = 0, _energy_regul = 0;
+                  if (is_backward) cimg_forC(I2,c) delta_I+=(float)(I1.linear_atXYZ(X,Y,Z,c) - I2(x,y,z,c));
+                  else cimg_forC(I2,c) delta_I+=(float)(I1(x,y,z,c) - I2.linear_atXYZ(X,Y,Z,c));
+                  cimg_forC(U,c) {
+                    const float
+                      Ux = 0.5f*(U(_n1x,y,z,c) - U(_p1x,y,z,c)),
+                      Uy = 0.5f*(U(x,_n1y,z,c) - U(x,_p1y,z,c)),
+                      Uz = 0.5f*(U(x,y,_n1z,c) - U(x,y,_p1z,c)),
+                      Uxx = U(_n1x,y,z,c) + U(_p1x,y,z,c),
+                      Uyy = U(x,_n1y,z,c) + U(x,_p1y,z,c),
+                      Uzz = U(x,y,_n1z,c) + U(x,y,_p1z,c);
+                    U(x,y,z,c) = (float)(U(x,y,z,c) + dt*(delta_I*dI[c].linear_atXYZ(X,Y,Z) +
+                                                          smoothness* ( Uxx + Uyy + Uzz)))/(1+6*smoothness*dt);
+                    _energy_regul+=Ux*Ux + Uy*Uy + Uz*Uz;
+                  }
+                  _energy+=delta_I*delta_I + smoothness*_energy_regul;
                 }
-                _energy+=delta_I*delta_I + smoothness*_energy_regul;
-              } else {
+              } else { // Anisotropic regularization.
               const float nsmoothness = -smoothness;
-              cimg_for3XYZ(U,x,y,z) { // Anisotropic regularization.
-                const float
-                  X = is_backward?x - U(x,y,z,0):x + U(x,y,z,0),
-                  Y = is_backward?y - U(x,y,z,1):y + U(x,y,z,1),
-                  Z = is_backward?z - U(x,y,z,2):z + U(x,y,z,2);
-                float delta_I = 0, _energy_regul = 0;
-                if (is_backward) cimg_forC(I2,c) delta_I+=(float)(I1.linear_atXYZ(X,Y,Z,c) - I2(x,y,z,c));
-                else cimg_forC(I2,c) delta_I+=(float)(I1(x,y,z,c) - I2.linear_atXYZ(X,Y,Z,c));
-                cimg_forC(U,c) {
+#ifdef cimg_use_openmp
+#pragma omp parallel for collapse(2) if (_height*_depth>=8 && _width>=16) reduction(+:_energy)
+#endif
+              cimg_forYZ(U,y,z) {
+                const int
+                  _p1y = y?y-1:0, _n1y = y<U.height()-1?y+1:y,
+                  _p1z = z?z-1:0, _n1z = z<U.depth()-1?z+1:z;
+                cimg_for3X(U,x) {
                   const float
-                    Ux = 0.5f*(U(_n1x,y,z,c) - U(_p1x,y,z,c)),
-                    Uy = 0.5f*(U(x,_n1y,z,c) - U(x,_p1y,z,c)),
-                    Uz = 0.5f*(U(x,y,_n1z,c) - U(x,y,_p1z,c)),
-                    N2 = Ux*Ux + Uy*Uy + Uz*Uz,
-                    N = std::sqrt(N2),
-                    N3 = 1e-5f + N2*N,
-                    coef_a = (1 - Ux*Ux/N2)/N,
-                    coef_b = -2*Ux*Uy/N3,
-                    coef_c = -2*Ux*Uz/N3,
-                    coef_d = (1 - Uy*Uy/N2)/N,
-                    coef_e = -2*Uy*Uz/N3,
-                    coef_f = (1 - Uz*Uz/N2)/N,
-                    Uxx = U(_n1x,y,z,c) + U(_p1x,y,z,c),
-                    Uyy = U(x,_n1y,z,c) + U(x,_p1y,z,c),
-                    Uzz = U(x,y,_n1z,c) + U(x,y,_p1z,c),
-                    Uxy = 0.25f*(U(_n1x,_n1y,z,c) + U(_p1x,_p1y,z,c) - U(_n1x,_p1y,z,c) - U(_n1x,_p1y,z,c)),
-                    Uxz = 0.25f*(U(_n1x,y,_n1z,c) + U(_p1x,y,_p1z,c) - U(_n1x,y,_p1z,c) - U(_n1x,y,_p1z,c)),
-                    Uyz = 0.25f*(U(x,_n1y,_n1z,c) + U(x,_p1y,_p1z,c) - U(x,_n1y,_p1z,c) - U(x,_n1y,_p1z,c));
-                  U(x,y,z,c) = (float)(U(x,y,z,c) + dt*(delta_I*dI[c].linear_atXYZ(X,Y,Z) +
-                                                        nsmoothness* ( coef_a*Uxx + coef_b*Uxy +
-                                                                       coef_c*Uxz + coef_d*Uyy +
-                                                                       coef_e*Uyz + coef_f*Uzz ))
-                                       )/(1+2*(coef_a+coef_d+coef_f)*nsmoothness*dt);
-                  _energy_regul+=N;
+                    X = is_backward?x - U(x,y,z,0):x + U(x,y,z,0),
+                    Y = is_backward?y - U(x,y,z,1):y + U(x,y,z,1),
+                    Z = is_backward?z - U(x,y,z,2):z + U(x,y,z,2);
+                  float delta_I = 0, _energy_regul = 0;
+                  if (is_backward) cimg_forC(I2,c) delta_I+=(float)(I1.linear_atXYZ(X,Y,Z,c) - I2(x,y,z,c));
+                  else cimg_forC(I2,c) delta_I+=(float)(I1(x,y,z,c) - I2.linear_atXYZ(X,Y,Z,c));
+                  cimg_forC(U,c) {
+                    const float
+                      Ux = 0.5f*(U(_n1x,y,z,c) - U(_p1x,y,z,c)),
+                      Uy = 0.5f*(U(x,_n1y,z,c) - U(x,_p1y,z,c)),
+                      Uz = 0.5f*(U(x,y,_n1z,c) - U(x,y,_p1z,c)),
+                      N2 = Ux*Ux + Uy*Uy + Uz*Uz,
+                      N = std::sqrt(N2),
+                      N3 = 1e-5f + N2*N,
+                      coef_a = (1 - Ux*Ux/N2)/N,
+                      coef_b = -2*Ux*Uy/N3,
+                      coef_c = -2*Ux*Uz/N3,
+                      coef_d = (1 - Uy*Uy/N2)/N,
+                      coef_e = -2*Uy*Uz/N3,
+                      coef_f = (1 - Uz*Uz/N2)/N,
+                      Uxx = U(_n1x,y,z,c) + U(_p1x,y,z,c),
+                      Uyy = U(x,_n1y,z,c) + U(x,_p1y,z,c),
+                      Uzz = U(x,y,_n1z,c) + U(x,y,_p1z,c),
+                      Uxy = 0.25f*(U(_n1x,_n1y,z,c) + U(_p1x,_p1y,z,c) - U(_n1x,_p1y,z,c) - U(_n1x,_p1y,z,c)),
+                      Uxz = 0.25f*(U(_n1x,y,_n1z,c) + U(_p1x,y,_p1z,c) - U(_n1x,y,_p1z,c) - U(_n1x,y,_p1z,c)),
+                      Uyz = 0.25f*(U(x,_n1y,_n1z,c) + U(x,_p1y,_p1z,c) - U(x,_n1y,_p1z,c) - U(x,_n1y,_p1z,c));
+                    U(x,y,z,c) = (float)(U(x,y,z,c) + dt*(delta_I*dI[c].linear_atXYZ(X,Y,Z) +
+                                                          nsmoothness* ( coef_a*Uxx + coef_b*Uxy +
+                                                                         coef_c*Uxz + coef_d*Uyy +
+                                                                         coef_e*Uyz + coef_f*Uzz ))
+                                         )/(1+2*(coef_a+coef_d+coef_f)*nsmoothness*dt);
+                    _energy_regul+=N;
+                  }
+                  _energy+=delta_I*delta_I + nsmoothness*_energy_regul;
                 }
-                _energy+=delta_I*delta_I + nsmoothness*_energy_regul;
               }
             }
           } else { // 2d version.
-            if (smoothness>=0) cimg_for3XY(U,x,y) { // Isotropic regularization.
-                const float
-                  X = is_backward?x - U(x,y,0):x + U(x,y,0),
-                  Y = is_backward?y - U(x,y,1):y + U(x,y,1);
-                float delta_I = 0, _energy_regul = 0;
-                if (is_backward) cimg_forC(I2,c) delta_I+=(float)(I1.linear_atXY(X,Y,c) - I2(x,y,c));
-                else cimg_forC(I2,c) delta_I+=(float)(I1(x,y,c) - I2.linear_atXY(X,Y,c));
-                cimg_forC(U,c) {
+            if (smoothness>=0) // Isotropic regularization.
+#ifdef cimg_use_openmp
+#pragma omp parallel for if (_height>=8 && _width>=16) reduction(+:_energy)
+#endif
+              cimg_forY(U,y) {
+                const int _p1y = y?y-1:0, _n1y = y<U.height()-1?y+1:y;
+                cimg_for3X(U,x) {
                   const float
-                    Ux = 0.5f*(U(_n1x,y,c) - U(_p1x,y,c)),
-                    Uy = 0.5f*(U(x,_n1y,c) - U(x,_p1y,c)),
-                    Uxx = U(_n1x,y,c) + U(_p1x,y,c),
-                    Uyy = U(x,_n1y,c) + U(x,_p1y,c);
-                  U(x,y,c) = (float)(U(x,y,c) + dt*(delta_I*dI[c].linear_atXY(X,Y) +
-                                                    smoothness*( Uxx + Uyy )))/(1+4*smoothness*dt);
-                  _energy_regul+=Ux*Ux + Uy*Uy;
+                    X = is_backward?x - U(x,y,0):x + U(x,y,0),
+                    Y = is_backward?y - U(x,y,1):y + U(x,y,1);
+                  float delta_I = 0, _energy_regul = 0;
+                  if (is_backward) cimg_forC(I2,c) delta_I+=(float)(I1.linear_atXY(X,Y,c) - I2(x,y,c));
+                  else cimg_forC(I2,c) delta_I+=(float)(I1(x,y,c) - I2.linear_atXY(X,Y,c));
+                  cimg_forC(U,c) {
+                    const float
+                      Ux = 0.5f*(U(_n1x,y,c) - U(_p1x,y,c)),
+                      Uy = 0.5f*(U(x,_n1y,c) - U(x,_p1y,c)),
+                      Uxx = U(_n1x,y,c) + U(_p1x,y,c),
+                      Uyy = U(x,_n1y,c) + U(x,_p1y,c);
+                    U(x,y,c) = (float)(U(x,y,c) + dt*(delta_I*dI[c].linear_atXY(X,Y) +
+                                                      smoothness*( Uxx + Uyy )))/(1+4*smoothness*dt);
+                    _energy_regul+=Ux*Ux + Uy*Uy;
+                  }
+                  _energy+=delta_I*delta_I + smoothness*_energy_regul;
                 }
-                _energy+=delta_I*delta_I + smoothness*_energy_regul;
-              } else {
+              } else { // Anisotropic regularization.
               const float nsmoothness = -smoothness;
-              cimg_for3XY(U,x,y) { // Anisotropic regularization.
-                const float
-                  X = is_backward?x - U(x,y,0):x + U(x,y,0),
-                  Y = is_backward?y - U(x,y,1):y + U(x,y,1);
-                float delta_I = 0, _energy_regul = 0;
-                if (is_backward) cimg_forC(I2,c) delta_I+=(float)(I1.linear_atXY(X,Y,c) - I2(x,y,c));
-                else cimg_forC(I2,c) delta_I+=(float)(I1(x,y,c) - I2.linear_atXY(X,Y,c));
-                cimg_forC(U,c) {
+#ifdef cimg_use_openmp
+#pragma omp parallel for if (_height>=8 && _width>=16) reduction(+:_energy)
+#endif
+              cimg_forY(U,y) {
+                const int _p1y = y?y-1:0, _n1y = y<U.height()-1?y+1:y;
+                cimg_for3X(U,x) {
                   const float
-                    Ux = 0.5f*(U(_n1x,y,c) - U(_p1x,y,c)),
-                    Uy = 0.5f*(U(x,_n1y,c) - U(x,_p1y,c)),
-                    N2 = Ux*Ux + Uy*Uy,
-                    N = std::sqrt(N2),
-                    N3 = 1e-5f + N2*N,
-                    coef_a = Uy*Uy/N3,
-                    coef_b = -2*Ux*Uy/N3,
-                    coef_c = Ux*Ux/N3,
-                    Uxx = U(_n1x,y,c) + U(_p1x,y,c),
-                    Uyy = U(x,_n1y,c) + U(x,_p1y,c),
-                    Uxy = 0.25f*(U(_n1x,_n1y,c) + U(_p1x,_p1y,c) - U(_n1x,_p1y,c) - U(_n1x,_p1y,c));
-                  U(x,y,c) = (float)(U(x,y,c) + dt*(delta_I*dI[c].linear_atXY(X,Y) +
-                                                    nsmoothness*( coef_a*Uxx + coef_b*Uxy + coef_c*Uyy )))/
-                    (1+2*(coef_a+coef_c)*nsmoothness*dt);
-                  _energy_regul+=N;
+                    X = is_backward?x - U(x,y,0):x + U(x,y,0),
+                    Y = is_backward?y - U(x,y,1):y + U(x,y,1);
+                  float delta_I = 0, _energy_regul = 0;
+                  if (is_backward) cimg_forC(I2,c) delta_I+=(float)(I1.linear_atXY(X,Y,c) - I2(x,y,c));
+                  else cimg_forC(I2,c) delta_I+=(float)(I1(x,y,c) - I2.linear_atXY(X,Y,c));
+                  cimg_forC(U,c) {
+                    const float
+                      Ux = 0.5f*(U(_n1x,y,c) - U(_p1x,y,c)),
+                      Uy = 0.5f*(U(x,_n1y,c) - U(x,_p1y,c)),
+                      N2 = Ux*Ux + Uy*Uy,
+                      N = std::sqrt(N2),
+                      N3 = 1e-5f + N2*N,
+                      coef_a = Uy*Uy/N3,
+                      coef_b = -2*Ux*Uy/N3,
+                      coef_c = Ux*Ux/N3,
+                      Uxx = U(_n1x,y,c) + U(_p1x,y,c),
+                      Uyy = U(x,_n1y,c) + U(x,_p1y,c),
+                      Uxy = 0.25f*(U(_n1x,_n1y,c) + U(_p1x,_p1y,c) - U(_n1x,_p1y,c) - U(_n1x,_p1y,c));
+                    U(x,y,c) = (float)(U(x,y,c) + dt*(delta_I*dI[c].linear_atXY(X,Y) +
+                                                      nsmoothness*( coef_a*Uxx + coef_b*Uxy + coef_c*Uyy )))/
+                      (1+2*(coef_a+coef_c)*nsmoothness*dt);
+                    _energy_regul+=N;
+                  }
+                  _energy+=delta_I*delta_I + nsmoothness*_energy_regul;
                 }
-                _energy+=delta_I*delta_I + nsmoothness*_energy_regul;
               }
             }
           }
@@ -40070,15 +40352,15 @@ namespace cimg_library_suffixed {
       cimg::fread(header,20,nfile);
 
       switch (imageid) {
-      case 2: _cimg_load_pandore_case(2,dims[1],1,1,1,unsigned char,unsigned char,unsigned char,1); break;
-      case 3: _cimg_load_pandore_case(2,dims[1],1,1,1,long,int,short,4); break;
-      case 4: _cimg_load_pandore_case(2,dims[1],1,1,1,double,float,float,4); break;
-      case 5: _cimg_load_pandore_case(3,dims[2],dims[1],1,1,unsigned char,unsigned char,unsigned char,1); break;
-      case 6: _cimg_load_pandore_case(3,dims[2],dims[1],1,1,long,int,short,4); break;
-      case 7: _cimg_load_pandore_case(3,dims[2],dims[1],1,1,double,float,float,4); break;
-      case 8: _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],1,unsigned char,unsigned char,unsigned char,1); break;
-      case 9: _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],1,long,int,short,4); break;
-      case 10: _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],1,double,float,float,4); break;
+      case 2 : _cimg_load_pandore_case(2,dims[1],1,1,1,unsigned char,unsigned char,unsigned char,1); break;
+      case 3 : _cimg_load_pandore_case(2,dims[1],1,1,1,long,int,short,4); break;
+      case 4 : _cimg_load_pandore_case(2,dims[1],1,1,1,double,float,float,4); break;
+      case 5 : _cimg_load_pandore_case(3,dims[2],dims[1],1,1,unsigned char,unsigned char,unsigned char,1); break;
+      case 6 : _cimg_load_pandore_case(3,dims[2],dims[1],1,1,long,int,short,4); break;
+      case 7 : _cimg_load_pandore_case(3,dims[2],dims[1],1,1,double,float,float,4); break;
+      case 8 : _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],1,unsigned char,unsigned char,unsigned char,1); break;
+      case 9 : _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],1,long,int,short,4); break;
+      case 10 : _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],1,double,float,float,4); break;
       case 11 : { // Region 1d
         cimg::fread(dims,3,nfile);
         if (endian) cimg::invert_endianness(dims,3);
@@ -40178,26 +40460,26 @@ namespace cimg_library_suffixed {
         }
       }
         break;
-      case 16: _cimg_load_pandore_case(4,dims[2],dims[1],1,3,unsigned char,unsigned char,unsigned char,1); break;
-      case 17: _cimg_load_pandore_case(4,dims[2],dims[1],1,3,long,int,short,4); break;
-      case 18: _cimg_load_pandore_case(4,dims[2],dims[1],1,3,double,float,float,4); break;
-      case 19: _cimg_load_pandore_case(5,dims[3],dims[2],dims[1],3,unsigned char,unsigned char,unsigned char,1); break;
-      case 20: _cimg_load_pandore_case(5,dims[3],dims[2],dims[1],3,long,int,short,4); break;
-      case 21: _cimg_load_pandore_case(5,dims[3],dims[2],dims[1],3,double,float,float,4); break;
-      case 22: _cimg_load_pandore_case(2,dims[1],1,1,dims[0],unsigned char,unsigned char,unsigned char,1); break;
-      case 23: _cimg_load_pandore_case(2,dims[1],1,1,dims[0],long,int,short,4);
-      case 24: _cimg_load_pandore_case(2,dims[1],1,1,dims[0],unsigned long,unsigned int,unsigned short,4); break;
-      case 25: _cimg_load_pandore_case(2,dims[1],1,1,dims[0],double,float,float,4); break;
-      case 26: _cimg_load_pandore_case(3,dims[2],dims[1],1,dims[0],unsigned char,unsigned char,unsigned char,1); break;
-      case 27: _cimg_load_pandore_case(3,dims[2],dims[1],1,dims[0],long,int,short,4); break;
-      case 28: _cimg_load_pandore_case(3,dims[2],dims[1],1,dims[0],unsigned long,unsigned int,unsigned short,4); break;
-      case 29: _cimg_load_pandore_case(3,dims[2],dims[1],1,dims[0],double,float,float,4); break;
-      case 30: _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],dims[0],unsigned char,unsigned char,unsigned char,1);
+      case 16 : _cimg_load_pandore_case(4,dims[2],dims[1],1,3,unsigned char,unsigned char,unsigned char,1); break;
+      case 17 : _cimg_load_pandore_case(4,dims[2],dims[1],1,3,long,int,short,4); break;
+      case 18 : _cimg_load_pandore_case(4,dims[2],dims[1],1,3,double,float,float,4); break;
+      case 19 : _cimg_load_pandore_case(5,dims[3],dims[2],dims[1],3,unsigned char,unsigned char,unsigned char,1); break;
+      case 20 : _cimg_load_pandore_case(5,dims[3],dims[2],dims[1],3,long,int,short,4); break;
+      case 21 : _cimg_load_pandore_case(5,dims[3],dims[2],dims[1],3,double,float,float,4); break;
+      case 22 : _cimg_load_pandore_case(2,dims[1],1,1,dims[0],unsigned char,unsigned char,unsigned char,1); break;
+      case 23 : _cimg_load_pandore_case(2,dims[1],1,1,dims[0],long,int,short,4);
+      case 24 : _cimg_load_pandore_case(2,dims[1],1,1,dims[0],unsigned long,unsigned int,unsigned short,4); break;
+      case 25 : _cimg_load_pandore_case(2,dims[1],1,1,dims[0],double,float,float,4); break;
+      case 26 : _cimg_load_pandore_case(3,dims[2],dims[1],1,dims[0],unsigned char,unsigned char,unsigned char,1); break;
+      case 27 : _cimg_load_pandore_case(3,dims[2],dims[1],1,dims[0],long,int,short,4); break;
+      case 28 : _cimg_load_pandore_case(3,dims[2],dims[1],1,dims[0],unsigned long,unsigned int,unsigned short,4); break;
+      case 29 : _cimg_load_pandore_case(3,dims[2],dims[1],1,dims[0],double,float,float,4); break;
+      case 30 : _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],dims[0],unsigned char,unsigned char,unsigned char,1);
         break;
-      case 31: _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],dims[0],long,int,short,4); break;
-      case 32: _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],dims[0],unsigned long,unsigned int,unsigned short,4);
+      case 31 : _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],dims[0],long,int,short,4); break;
+      case 32 : _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],dims[0],unsigned long,unsigned int,unsigned short,4);
         break;
-      case 33: _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],dims[0],double,float,float,4); break;
+      case 33 : _cimg_load_pandore_case(4,dims[3],dims[2],dims[1],dims[0],double,float,float,4); break;
       case 34 : { // Points 1d
         int ptbuf[4] = { 0 };
         cimg::fread(ptbuf,1,nfile);
@@ -43045,12 +43327,14 @@ namespace cimg_library_suffixed {
       \param filename Filename, as a C-string.
     **/
     const CImg<T>& save_pfm(const char *const filename) const {
-      return get_mirror('y')._save_pfm(0,filename);
+      get_mirror('y')._save_pfm(0,filename);
+      return *this;
     }
 
     //! Save image as a PFM file \overloading.
     const CImg<T>& save_pfm(std::FILE *const file) const {
-      return get_mirror('y')._save_pfm(file,0);
+      get_mirror('y')._save_pfm(file,0);
+      return *this;
     }
 
     const CImg<T>& _save_pfm(std::FILE *const file, const char *const filename) const {
@@ -46572,12 +46856,12 @@ namespace cimg_library_suffixed {
         \param axis Axis to split images along.
         \param nb Number of spliting parts for each image.
     **/
-    CImgList<T>& split(const char axis, const int nb=0) {
+    CImgList<T>& split(const char axis, const int nb=-1) {
       return get_split(axis,nb).move_to(*this);
     }
 
     //! Return a list where each image has been split along the specified axis \newinstance.
-    CImgList<T> get_split(const char axis, const int nb=0) const {
+    CImgList<T> get_split(const char axis, const int nb=-1) const {
       CImgList<T> res;
       cimglist_for(*this,l) _data[l].get_split(axis,nb).move_to(res,~0U);
       return res;
@@ -48807,7 +49091,6 @@ namespace cimg_library_suffixed {
           codec1 = _codec[0]?_cimg_docase(_codec[1]):0,
           codec2 = _codec[1]?_cimg_docase(_codec[2]):0,
           codec3 = _codec[2]?_cimg_docase(_codec[3]):0;
-
         cimg::mutex(9);
         writers[index] = cvCreateVideoWriter(filename,CV_FOURCC(codec0,codec1,codec2,codec3),
                                              fps,cvSize(W,H));
@@ -48816,8 +49099,9 @@ namespace cimg_library_suffixed {
         cimg::mutex(9,0);
         if (!writers[index])
           throw CImgIOException(_cimglist_instance
-                                "save_video(): File '%s', unable to initialize video writer with codec '%s'.",
-                                cimglist_instance,filename,codec);
+                                "save_video(): File '%s', unable to initialize video writer with codec '%c%c%c%c'.",
+                                cimglist_instance,filename,
+                                codec0,codec1,codec2,codec3);
       }
 
       if (!is_empty()) {
@@ -49089,11 +49373,11 @@ namespace cimg_library_suffixed {
       cimglist_for(*this,l) {
         CImg<T>& p = _data[l];
         switch (p.size()) {
-        case 2: case 3: cimg::swap(p[0],p[1]); break;
-        case 6: cimg::swap(p[0],p[1],p[2],p[4],p[3],p[5]); break;
-        case 9: cimg::swap(p[0],p[1],p[3],p[5],p[4],p[6]); break;
-        case 4: cimg::swap(p[0],p[1],p[2],p[3]); break;
-        case 12: cimg::swap(p[0],p[1],p[2],p[3],p[4],p[6],p[5],p[7],p[8],p[10],p[9],p[11]); break;
+        case 2 : case 3: cimg::swap(p[0],p[1]); break;
+        case 6 : cimg::swap(p[0],p[1],p[2],p[4],p[3],p[5]); break;
+        case 9 : cimg::swap(p[0],p[1],p[3],p[5],p[4],p[6]); break;
+        case 4 : cimg::swap(p[0],p[1],p[2],p[3]); break;
+        case 12 : cimg::swap(p[0],p[1],p[2],p[3],p[4],p[6],p[5],p[7],p[8],p[10],p[9],p[11]); break;
         }
       }
       return *this;

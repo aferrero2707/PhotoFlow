@@ -27,36 +27,29 @@
 
  */
 
-#ifndef SHARPEN_CONFIG_DIALOG_HH
-#define SHARPEN_CONFIG_DIALOG_HH
+//#include "../../../operations/gmic/convolve.hh"
 
-#include <gtkmm.h>
-
-#include "../operation_config_dialog.hh"
-#include "../../operations/sharpen.hh"
+#include "convolve_config.hh"
 
 
-namespace PF {
-
-  class SharpenConfigDialog: public OperationConfigDialog
-  {
-    Gtk::VBox controlsBox;
-    
-    Selector modeSelector;
-
-    Gtk::VBox usmControlsBox;
-    Slider usmRadiusSlider;
-
-    Gtk::VBox rlControlsBox;
-    Slider rlSigmaSlider;
-    Slider rlIterationsSlider;
-
-  public:
-    SharpenConfigDialog( Layer* l );
-    
-    void do_update();
-  };
-
+PF::GmicConvolveConfigDialog::GmicConvolveConfigDialog( PF::Layer* layer ):
+  OperationConfigDialog( layer, "Convolve (G'MIC)"  ),
+  iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
+  prop_kernel_selector( this, "kernel", "kernel", 0),
+  prop_boundary_selector( this, "boundary", "boundary", 1),
+  prop_kernel_mul( this, "kernel_mul", "Kernel mult.", 1, 1, 10, 1, 1, 1)
+{
+  controlsBox.pack_start( iterations_slider );
+  controlsBox.pack_start( prop_kernel_selector );
+  controlsBox.pack_start( prop_boundary_selector );
+  controlsBox.pack_start( prop_kernel_mul );
+  
+  add_widget( controlsBox );
 }
 
-#endif
+
+
+void PF::GmicConvolveConfigDialog::open()
+{
+  OperationConfigDialog::open();
+}

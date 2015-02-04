@@ -315,9 +315,13 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   op_gmic.get_tree().add_op( "G'MIC Interpreter", "gmic" );
   op_gmic.get_tree().add_op( "Dream Smoothing", "gmic_dream_smooth" );
+  op_gmic.get_tree().add_op( "Gradient Norm", "gmic_gradient_norm" );
+  op_gmic.get_tree().add_op( "Convolve", "gmic_convolve" );
   op_gmic.get_tree().add_op( "Extract Foreground", "gmic_extract_foreground" );
+  op_gmic.get_tree().add_op( "Inpaint [patch-based]", "gmic_inpaint" );
   op_gmic.get_tree().add_op( "Despeckle", "gmic_gcd_despeckle" );
   op_gmic.get_tree().add_op( "Iain's Noise Reduction", "gmic_iain_denoise" );
+  op_gmic.get_tree().add_op( "Sharpen [richardson-lucy]", "gmic_sharpen_rl" );
   op_gmic.get_tree().add_op( "Smooth [anisotropic]", "gmic_smooth_anisotropic" );
   op_gmic.get_tree().add_op( "Smooth [bilateral]", "gmic_blur_bilateral" );
   op_gmic.get_tree().add_op( "Smooth [diffusion]", "gmic_smooth_diffusion" );

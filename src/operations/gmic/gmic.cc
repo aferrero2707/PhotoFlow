@@ -118,7 +118,7 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
   /**/
   VipsImage* iter_in = convimg;
   VipsImage* iter_out = NULL;
-  std::cout<<"G'MIC command: "<<command.get()<<std::endl;
+  //std::cout<<"G'MIC command: "<<command.get()<<std::endl;
   std::string cmd = std::string("-verbose - ")+command.get();
   for( int i = 0; i < iterations.get(); i++ ) {
     VipsImage* inv[2] = { iter_in, NULL };
