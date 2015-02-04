@@ -496,7 +496,8 @@ void PF::LayerWidget::remove_layers()
   Gtk::TreeModel::iterator iter;
   if( !sel_rows.empty() ) {
     std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
-    iter = model->get_iter( sel_rows[0] );
+    //iter = model->get_iter( sel_rows[0] );
+    signal_active_layer_changed.emit(-1);
   }
   /*
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
