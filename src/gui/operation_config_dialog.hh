@@ -72,6 +72,8 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
   Gtk::Box controlsBoxRight;
 #endif
 
+  Gtk::HBox shiftBox;
+
   Gtk::Frame topFrame;
 
   Gtk::Entry nameEntry;
