@@ -315,7 +315,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     int fd = pf_mkstemp( fname );
     if( fd < 0 )
       return NULL;
-    //std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
+    std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
 
     vips_rawsave_fd( out, fd, NULL );
     //char tifname[500];
