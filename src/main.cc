@@ -177,7 +177,9 @@ int main (int argc, char *argv[])
   PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
   PF::PhotoFlow::Instance().set_batch( false );
 
+  std::cout<<"Starting image processor..."<<std::endl;
   PF::ImageProcessor::Instance();
+  std::cout<<"Image processor started."<<std::endl;
 
   if( PF::PhotoFlow::Instance().get_cache_dir().empty() ) {
     std::cout<<"FATAL: Cannot create cache dir."<<std::endl;
