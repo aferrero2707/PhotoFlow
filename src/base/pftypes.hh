@@ -45,9 +45,11 @@ typedef cmsInt32Number int32_t;
 typedef cmsUInt32Number uint32_t;
 
 // 64-bit base types
+#if !defined(__APPLE__) && !defined(__MACH__)
 #ifndef CMS_DONT_USE_INT64
 typedef cmsInt64Number int64_t;
 typedef cmsUInt64Number uint64_t;
+#endif
 #endif
 
 typedef cmsFloat32Number float32_t;
