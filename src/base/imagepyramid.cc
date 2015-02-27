@@ -317,6 +317,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
       return NULL;
     std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
 
+    std::cout<<"ImagePyramid: saving cache file..."<<std::endl;
     vips_rawsave_fd( out, fd, NULL );
     std::cout<<"ImagePyramid: cache file saved."<<std::endl;
     //char tifname[500];
