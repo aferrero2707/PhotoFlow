@@ -318,6 +318,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
 
     vips_rawsave_fd( out, fd, NULL );
+    std::cout<<"ImagePyramid: cache file saved."<<std::endl;
     //char tifname[500];
     //sprintf(tifname,"/tmp/level_%d-1.tif",(int)levels.size());
     //vips_image_write_to_file( out, tifname );
@@ -326,6 +327,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     PF_UNREF( out, tstr );
 
     vips_rawload( fname, &in, width, height, VIPS_IMAGE_SIZEOF_PEL( img ), NULL );
+    std::cout<<"ImagePyramid: cache file loaded."<<std::endl;
     //unlink( fname );
     vips_copy( in, &out,
 	       "format", img->BandFmt,
