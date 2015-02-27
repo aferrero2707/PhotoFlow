@@ -51,7 +51,7 @@ PF::ImageProcessor::ImageProcessor(): caching_completed( false )
 }
 
 
-PF::ImageProcessor::start()
+void PF::ImageProcessor::start()
 {
   std::cout<<"ImageProcessor::ImageProcessor(): starting thread"<<std::endl;
   thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
