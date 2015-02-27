@@ -35,6 +35,7 @@
 
 static gpointer run_image_processor( gpointer data )
 {
+	std::cout<<"Calling ImageProcessor::instance().run()"<<std::endl;
   PF::ImageProcessor::Instance().run();
 }
 
@@ -47,7 +48,9 @@ PF::ImageProcessor::ImageProcessor(): caching_completed( false )
   caching_completed_cond = vips_g_cond_new();
 
   requests = g_async_queue_new();
+  std::cout<<"ImageProcessor::ImageProcessor(): starting thread"<<std::endl;
   thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
+  std::cout<<"ImageProcessor::ImageProcessor(): thread started"<<std::endl;
 }
 
 
