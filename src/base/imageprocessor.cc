@@ -48,6 +48,11 @@ PF::ImageProcessor::ImageProcessor(): caching_completed( false )
   caching_completed_cond = vips_g_cond_new();
 
   requests = g_async_queue_new();
+}
+
+
+PF::ImageProcessor::start()
+{
   std::cout<<"ImageProcessor::ImageProcessor(): starting thread"<<std::endl;
   thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
   std::cout<<"ImageProcessor::ImageProcessor(): thread started"<<std::endl;

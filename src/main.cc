@@ -178,7 +178,7 @@ int main (int argc, char *argv[])
   PF::PhotoFlow::Instance().set_batch( false );
 
   std::cout<<"Starting image processor..."<<std::endl;
-  PF::ImageProcessor::Instance();
+  PF::ImageProcessor::Instance().start();
   std::cout<<"Image processor started."<<std::endl;
 
   if( PF::PhotoFlow::Instance().get_cache_dir().empty() ) {
