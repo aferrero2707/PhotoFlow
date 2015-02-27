@@ -196,6 +196,8 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 
 IF(MINGW)
   list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+ELSEIF(APPLE)
+  list(APPEND ADDITIONAL_LIBS pthread gomp)
 ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
 ENDIF(MINGW)
