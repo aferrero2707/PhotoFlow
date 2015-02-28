@@ -145,8 +145,8 @@ float PF::SplineCurve::get_value( float x )
       k_lo = k;
   }
   
-  std::cout<<"points.size()="<<points.size()<<"  h="<<"points["<<k_hi<<"].first - points["<<k_lo<<"].first = "<<h<<std::endl;
   double h = points[k_hi].first - points[k_lo].first;
+  std::cout<<"points.size()="<<points.size()<<"  h="<<"points["<<k_hi<<"].first - points["<<k_lo<<"].first = "<<h<<std::endl;
   // linear
   if( points.size() == 2)
     return points[k_lo].second + (x - points[k_lo].first) * ( points[k_hi].second - points[k_lo].second ) / h;
