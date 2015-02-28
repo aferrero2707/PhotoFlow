@@ -123,7 +123,7 @@ namespace PF
 
     void to_stream(std::ostream& str)
     {
-      std::vector<std::pair<float, float> > point = curve.get_points();
+      std::vector<std::pair<float, float> > points = curve.get_points();
       str<<points.size();
       for( unsigned int i = 0; i < points.size(); i++ )
     		str<<" "<<points[i].first<<" "<<points[i].second;
