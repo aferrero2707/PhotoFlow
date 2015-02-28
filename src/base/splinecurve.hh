@@ -123,10 +123,11 @@ namespace PF
 
     void to_stream(std::ostream& str)
     {
-      str<<curve.get_points().size();
-      for( unsigned int i = 0; i < curve.get_points().size(); i++ )
-        str<<" "<<curve.get_points()[i].first<<" "<<curve.get_points()[i].second;
-      //str<<value;
+      std::vector<std::pair<float, float> point = curve.get_points();
+      str<<points.size();
+      for( unsigned int i = 0; i < points.size(); i++ )
+    		str<<" "<<points[i].first<<" "<<points[i].second;
+    	//str<<value;
     }
 
     bool import(PropertyBase* pin)
