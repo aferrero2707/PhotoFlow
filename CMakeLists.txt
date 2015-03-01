@@ -30,7 +30,7 @@ MESSAGE( STATUS "LENSFUN_LIBRARIES:         " ${LENSFUN_LIBRARIES})
 
 
 IF(NOT MINGW)
-pkg_check_modules(OPENEXR REQUIRED OpenEXR)
+pkg_check_modules(OPENEXR OpenEXR)
 pkg_check_modules(ORC REQUIRED orc-0.4)
 ENDIF(NOT MINGW)
 
