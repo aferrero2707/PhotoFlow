@@ -149,21 +149,19 @@ int main (int argc, char *argv[])
   WCHAR exnameU[512] = {0};
   GetModuleFileNameW (NULL, exnameU, 512);
   WideCharToMultiByte(CP_UTF8,0,exnameU,-1,exname,512,0,0 );
-  exePath = Glib::path_get_dirname(exname);
 #elif defined(__APPLE__) && defined (__MACH__)
   char path[1024];
-  uint32_t size = sizeof(path);
-  if (_NSGetExecutablePath(path, &size) == 0)
-      printf("executable path is %s\n", path);
+  uint32_t size = sizeof(exname);
+  if (_NSGetExecutablePath(exname, &size) == 0)
+      printf("executable path is %s\n", exname);
   else
       printf("buffer too small; need size %u\n", size);
-  exePath = path;
 #else
   if (readlink("/proc/self/exe", exname, 512) < 0) {
     strncpy(exname, argv[0], 512);
   }
-  exePath = Glib::path_get_dirname(exname);
 #endif
+  exePath = Glib::path_get_dirname(exname);
 
   std::cout<<"exePath: "<<exePath<<std::endl;
   
