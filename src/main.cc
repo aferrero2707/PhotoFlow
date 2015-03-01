@@ -156,7 +156,6 @@ int main (int argc, char *argv[])
       printf("executable path is %s\n", exname);
   else
       printf("buffer too small; need size %u\n", size);
-  themesPath = exePath + "/../share/photoflow/themes";
 #else
   if (readlink("/proc/self/exe", exname, 512) < 0) {
     strncpy(exname, argv[0], 512);
@@ -164,6 +163,9 @@ int main (int argc, char *argv[])
 #endif
   exePath = Glib::path_get_dirname(exname);
 
+#if defined(__APPLE__) && defined (__MACH__)
+  themesPath = exePath + "/../share/photoflow/themes";
+#endif
   std::cout<<"exePath: "<<exePath<<std::endl;
   std::cout<<"themesPath: "<<themesPath<<std::endl;
   
