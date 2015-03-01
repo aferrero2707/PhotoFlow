@@ -165,6 +165,7 @@ int main (int argc, char *argv[])
   exePath = Glib::path_get_dirname(exname);
 
   std::cout<<"exePath: "<<exePath<<std::endl;
+  std::cout<<"themesPath: "<<themesPath<<std::endl;
   
   //im_package* result = im_load_plugin("src/pfvips.plg");
   //if(!result) verror ();
@@ -203,6 +204,7 @@ int main (int argc, char *argv[])
   //#ifndef WIN32
 #ifdef GTKMM_2
   int stat_result = stat((themesPath + "/photoflow-dark.gtkrc").c_str(), &buffer);
+  std::cout<<"stat_result="<<stat_result<<std::endl;
   if( stat_result == 0 ) {
     std::vector<Glib::ustring> files;
     files.push_back (themesPath + "/photoflow-dark.gtkrc");
