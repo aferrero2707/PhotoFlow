@@ -93,7 +93,7 @@ void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
     float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
     float y = curve.get().get_delta( x );
     vec16[i] = (int)(y*FormatInfo<unsigned short int>::RANGE);
-   if(i%1000 == 0) std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<std::endl;
+   //if(i%1000 == 0) std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<std::endl;
   }
 }
 
