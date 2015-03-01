@@ -51,6 +51,10 @@
     #define GetCurrentDir getcwd
  #endif
 
+#if defined(__APPLE__) && defined (__MACH__)
+  #include <mach-o/dyld.h>
+#endif
+
 #include <gtkmm/main.h>
 #ifdef GTKMM_3
 #include <gtkmm/cssprovider.h>
@@ -145,12 +149,21 @@ int main (int argc, char *argv[])
   WCHAR exnameU[512] = {0};
   GetModuleFileNameW (NULL, exnameU, 512);
   WideCharToMultiByte(CP_UTF8,0,exnameU,-1,exname,512,0,0 );
+  exePath = Glib::path_get_dirname(exname);
+#elif defined(__APPLE__) && defined (__MACH__)
+  char path[1024];
+  uint32_t size = sizeof(path);
+  if (_NSGetExecutablePath(path, &size) == 0)
+      printf("executable path is %s\n", path);
+  else
+      printf("buffer too small; need size %u\n", size);
+  exePath = path;
 #else
   if (readlink("/proc/self/exe", exname, 512) < 0) {
     strncpy(exname, argv[0], 512);
   }
-#endif
   exePath = Glib::path_get_dirname(exname);
+#endif
 
   std::cout<<"exePath: "<<exePath<<std::endl;
   
