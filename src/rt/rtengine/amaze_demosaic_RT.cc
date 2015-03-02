@@ -1376,16 +1376,14 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
               indx++;
               col++;
               temp = 	1.0f/((hvwt[(indx-v1)>>1])+(1.0f-hvwt[(indx+1)>>1])+(1.0f-hvwt[(indx-1)>>1])+(hvwt[(indx+v1)>>1]));
-              red[row][col]=65535.0f*(rgbgreen[indx]-	((hvwt[(indx-v1)>>1])*Dgrb[0][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[0][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[0][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[0][(indx+v1)>>1])*
-                  temp);
-              blue[row][col]=65535.0f*(rgbgreen[indx]- ((hvwt[(indx-v1)>>1])*Dgrb[1][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[1][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[1][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[1][(indx+v1)>>1])*
-                  temp);
+              red[row][col]=CLIP(65535.0f*(rgbgreen[indx]-	((hvwt[(indx-v1)>>1])*Dgrb[0][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[0][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[0][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[0][(indx+v1)>>1])*temp));
+              blue[row][col]=CLIP(65535.0f*(rgbgreen[indx]- ((hvwt[(indx-v1)>>1])*Dgrb[1][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[1][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[1][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[1][(indx+v1)>>1])*temp));
             }
             if(cc1&1) { // width of tile is odd
               col = cc + left;
               //std::cout<<"cc="<<cc<<"  left="<<left<<"  col="<<col<<"  row="<<row<<"  indx="<<indx<<"  indx>>1="<<(indx>>1)<<std::endl;
-              red[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]);
-              blue[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]);
+              red[row][col]=CLIP(65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]));
+              blue[row][col]=CLIP(65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]));
             }
           }
         }
@@ -1405,7 +1403,11 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
             //if( top==0 && left==0 ) std::cout<<"top="<<top<<"  bottom="<<bottom<<"  rr1="<<rr1<<"  rr="<<rr<<"  row="<<row<<"  col="<<col<<std::endl;
             indx=rr*TS+cc;
             //std::cout<<"top="<<top<<"  rr1="<<rr1<<"  rr="<<rr<<"  cc="<<cc<<"  left="<<left<<"  row="<<row<<"  col="<<col<<"  indx="<<indx<<std::endl;
-            green[row][col] = ((65535.0f*rgbgreen[indx]));
+            green[row][col] = CLIP(65535.0f*rgbgreen[indx]);
+            if( 65535.0f*rgbgreen[indx] >= 65535 ) {
+              std::cout<<"65535.0f*rgbgreen[indx]="<<65535.0f*rgbgreen[indx]
+                       <<"    green[row][col]="<<green[row][col]<<std::endl;
+            }
             //std::cout<<"  green["<<row<<"]["<<col<<"]="<<green[row][col]<<std::endl;
 
             //for dcraw implementation
