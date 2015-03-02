@@ -150,10 +150,12 @@ float PF::SplineCurve::get_value( float x )
   //std::cout<<"points.size()="<<points.size()<<"  h="<<"points["<<k_hi<<"].first - points["<<k_lo<<"].first = "<<h<<std::endl;
 //std::cout<<"  points[k_hi].second="<<points[k_hi].second<<"  points[k_lo].second="<<points[k_lo].second<<std::endl;
   // linear
-  if( points.size() == 2)
-    return points[k_lo].second + (x - points[k_lo].first) * ( points[k_hi].second - points[k_lo].second ) / h;
+  if( points.size() == 2) {
+    float result = points[k_lo].second + (x - points[k_lo].first) * ( points[k_hi].second - points[k_lo].second ) / h;
+    std::cout<<"result = "<<result<<std::endl;
+    return result;
   // spline curve
-  else { // if (kind==Spline) {
+  } else { // if (kind==Spline) {
     double a = (points[k_hi].first - x) / h;
     double b = (x - points[k_lo].first) / h;
     double r = a*points[k_lo].second + b*points[k_hi].second + ((a*a*a - a)*ypp[k_lo] + (b*b*b - b)*ypp[k_hi]) * (h*h)/6.0;
