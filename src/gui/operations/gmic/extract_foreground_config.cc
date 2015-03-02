@@ -132,12 +132,15 @@ void PF::GmicExtractForegroundConfigDialog::open()
 
 
 
-bool PF::GmicExtractForegroundConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::GmicExtractForegroundConfigDialog::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
   PF::GmicExtractForegroundPar* par = get_par();
   if( !par ) return false;
 
   std::cout<<"GmicExtractForegroundConfigDialog::pointer_release_event(): button="<<button<<std::endl;
+
+  double x = sx, y = sy, w = 1, h = 1;
+  screen2layer( x, y, w, h );
 
   if( button == 1 ) {
     // Add foreground control point
@@ -201,23 +204,41 @@ bool PF::GmicExtractForegroundConfigDialog::modify_preview( PixelBuffer& buf_in,
 
   std::list< std::pair<int,int> >::iterator i;
   for(i = par->get_fg_points().get().begin(); i != par->get_fg_points().get().end(); i++ ) {
-    
+/*
     VipsRect point = { i->first*scale-point_size-1+xoffset, 
                        i->second*scale-point_size-1+yoffset,
                        point_size*2+3, point_size*2+3};
     VipsRect point2 = { i->first*scale-point_size+xoffset, 
                         i->second*scale-point_size+yoffset,
                         point_size*2+1, point_size*2+1};
+*/
+    double px=i->first, py=i->second, pw=1, ph=1;
+    layer2screen( px, py, pw, ph );
+    VipsRect point = { (int)px-point_size-1,
+                       (int)py-point_size-1,
+                       point_size*2+3, point_size*2+3};
+    VipsRect point2 = { (int)px-point_size,
+                        (int)py-point_size,
+                        point_size*2+1, point_size*2+1};
     buf_out.fill( point, 0, 0, 0 );
     buf_out.fill( point2, 0, 255, 0 );
   }
   for(i = par->get_bg_points().get().begin(); i != par->get_bg_points().get().end(); i++ ) {
-    
+/*
     VipsRect point = { i->first*scale-point_size-1+xoffset, 
                        i->second*scale-point_size-1+yoffset,
                        point_size*2+3, point_size*2+3};
     VipsRect point2 = { i->first*scale-point_size+xoffset, 
                         i->second*scale-point_size+yoffset,
+                        point_size*2+1, point_size*2+1};
+*/
+    double px=i->first, py=i->second, pw=1, ph=1;
+    layer2screen( px, py, pw, ph );
+    VipsRect point = { (int)px-point_size-1,
+                       (int)py-point_size-1,
+                       point_size*2+3, point_size*2+3};
+    VipsRect point2 = { (int)px-point_size,
+                        (int)py-point_size,
                         point_size*2+1, point_size*2+1};
     buf_out.fill( point, 0, 0, 0 );
     buf_out.fill( point2, 255, 0, 0 );

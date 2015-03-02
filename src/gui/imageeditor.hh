@@ -47,6 +47,7 @@ namespace PF {
     bool image_opened;
 
     Layer* active_layer;
+    std::list<PF::Layer*> active_layer_children;
 
     Gtk::VBox imageBox;
     ImageArea* imageArea;
@@ -57,6 +58,11 @@ namespace PF {
     Gtk::Button buttonZoomIn, buttonZoomOut, buttonZoom100, buttonZoomFit;
     Gtk::VBox radioBox;
     Gtk::RadioButton buttonShowMerged, buttonShowActive;
+
+    void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
+    void get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
+                           std::list<Layer*>& children );
+    void get_child_layers();
 
   public:
     ImageEditor( std::string filename );
@@ -95,7 +101,21 @@ namespace PF {
       return fact;
     }
 
-    bool screen2image( gdouble& x, gdouble& y );
+    void screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h );
+    void image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h );
+    void screen2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+    {
+      screen2image( x, y, w, h );
+      image2layer( x, y, w, h );
+    }
+
+    void image2screen( gdouble& x, gdouble& y, gdouble& w, gdouble& h );
+    void layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h );
+    void layer2screen( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+    {
+      layer2image( x, y, w, h );
+      image2screen( x, y, w, h );
+    }
 
     void zoom_in();
     void zoom_out();

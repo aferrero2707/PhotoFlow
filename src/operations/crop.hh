@@ -51,6 +51,28 @@ namespace PF
     bool has_opacity() { return false; }
     bool has_intensity() { return false; }
 
+    /* Function to derive the output area from the input area
+    */
+    virtual void transform(const Rect* rin, Rect* rout)
+    {
+      rout->left = rin->left - crop_left.get();
+      rout->top = rin->top - crop_top.get();
+      rout->width = rin->width;
+      rout->height = rin->height;
+    }
+
+    /* Function to derive the area to be read from input images,
+       based on the requested output area
+    */
+    virtual void transform_inv(const Rect* rout, Rect* rin)
+    {
+      rin->left = rout->left + crop_left.get();
+      rin->top = rout->top + crop_top.get();
+      rin->width = rout->width;
+      rin->height = rout->height;
+    }
+
+
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 										 VipsImage* imap, VipsImage* omap, 
 										 unsigned int& level);

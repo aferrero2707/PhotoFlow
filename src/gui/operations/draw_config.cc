@@ -225,8 +225,13 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
   if( !par ) return;
   
   VipsRect update = {0,0,0,0};
-  //std::cout<<"DrawConfigDialog::draw_point( "<<x<<", "<<y<<" )"<<std::endl;
-  par->draw_point( x, y, update );
+  double lx = x, ly = y, lw = 1, lh = 1;
+  screen2layer( lx, ly, lw, lh );
+  //std::cout<<"DrawConfigDialog::draw_point( "<<lx<<", "<<ly<<" )  x="<<x<<" y="<<y<<std::endl;
+  par->draw_point( lx, ly, update );
+  //double ix = lx, iy = ly, iw = 1, ih = 1;
+  //layer2image( ix, iy, iw, ih );
+  //std::cout<<"DrawConfigDialog::draw_point(): ix="<<ix<<"  iy="<<iy<<std::endl;
 
   if( (update.width < 1) || (update.height < 1) )  
     return;
@@ -252,8 +257,14 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
     par = dynamic_cast<PF::DrawPar*>( processor->get_par() );
     if( !par ) continue;
 
-    par->draw_point( x, y, update );
+    par->draw_point( lx, ly, update );
 		//continue;
+    //update.left -= dx;
+    //update.top -= dy;
+    //std::cout<<"lx="<<lx<<"  ly="<<ly<<std::endl;
+    //std::cout<<"update(1): "<<update.width<<","<<update.height<<"+"<<update.left<<"+"<<update.top<<std::endl;
+    layer2image( update );
+    //std::cout<<"update(2): "<<update.width<<","<<update.height<<"+"<<update.left<<"+"<<update.top<<std::endl;
 
 		/**/
     if( (update.width > 0) &&
@@ -346,11 +357,15 @@ bool PF::DrawConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf
   int buf_top = buf_out.get_rect().top;
   int buf_bottom = buf_out.get_rect().top+buf_out.get_rect().height-1;
 
-  int pensize = pen_size.get_adjustment()->get_value()*scale;
+  int pensize = pen_size.get_adjustment()->get_value();//*scale;
+  double tx = 0, ty = 0, tw = pensize, th = pensize;
+  layer2screen( tx, ty, tw, th );
+  pensize = tw;
   int pen_size2 = pensize*pensize;
 
-  int x0 = mouse_x*scale + xoffset;
-  int y0 = mouse_y*scale + yoffset;
+
+  int x0 = mouse_x;//*scale + xoffset;
+  int y0 = mouse_y;//*scale + yoffset;
 
   for( int y = 0; y <= pensize; y++ ) {
     int row1 = y0 - y;

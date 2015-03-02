@@ -34,12 +34,13 @@
 #include "../operations/blender.hh"
 #include "tablabelwidget.hh"
 #include "layerwidget.hh"
+#include "imageeditor.hh"
 
 
 
-PF::LayerWidget::LayerWidget( Image* img ): 
+PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   Gtk::VBox(), 
-  image( img ),
+  image( img ), editor( ed ),
   buttonAdd("+"),
   buttonAddGroup("G+"),
   buttonDel("-"),
@@ -415,6 +416,12 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   }
 
   layer->signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
+/*
+  if( layer->get_processor() && layer->get_processor()->get_par() ) {
+    PF::OperationConfigDialog* ui = dynamic_cast<PF::OperationConfigDialog*>( layer->get_processor()->get_par()->get_config_ui() );
+    if( ui ) ui->set_editor( editor );
+  }
+*/
 
 
   update();

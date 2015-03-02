@@ -72,7 +72,7 @@ void PF::CropConfigDialog::open()
 }
 
 
-bool PF::CropConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::CropConfigDialog::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
   if( button != 1 ) return false;
   handle = CROP_HANDLE_NONE;
@@ -105,6 +105,9 @@ bool PF::CropConfigDialog::pointer_press_event( int button, double x, double y, 
   cropTopSlider.set_inhibit( true );
   cropWidthSlider.set_inhibit( true );
   cropHeightSlider.set_inhibit( true );
+
+  double x = sx, y = sy, w = 1, h = 1;
+  screen2layer( x, y, w, h );
 
   if( (crop_width == 0) || (crop_height == 0) ) {
     // No cropping area defined yet
@@ -258,9 +261,12 @@ void PF::CropConfigDialog::move_handle( int x, int y )
 
 
 
-bool PF::CropConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::CropConfigDialog::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
   if( button != 1 ) return false;
+
+  double x = sx, y = sy, w = 1, h = 1;
+  screen2layer( x, y, w, h );
 
   int ix = x;
   int iy = y;
@@ -297,10 +303,15 @@ bool PF::CropConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf
   int crop_width; crop_width_p->get(crop_width); crop_width *= scale; 
   int crop_height; crop_height_p->get(crop_height); crop_height *= scale;
   */
-  int crop_left = cropLeftSlider.get_adjustment()->get_value(); crop_left *= scale; crop_left += xoffset;
-  int crop_top = cropTopSlider.get_adjustment()->get_value(); crop_top *= scale; crop_top += yoffset;
-  int crop_width = cropWidthSlider.get_adjustment()->get_value(); crop_width *= scale; 
-  int crop_height = cropHeightSlider.get_adjustment()->get_value(); crop_height *= scale;
+  int crop_left = cropLeftSlider.get_adjustment()->get_value();// crop_left *= scale; crop_left += xoffset;
+  int crop_top = cropTopSlider.get_adjustment()->get_value();// crop_top *= scale; crop_top += yoffset;
+  int crop_width = cropWidthSlider.get_adjustment()->get_value();// crop_width *= scale;
+  int crop_height = cropHeightSlider.get_adjustment()->get_value();// crop_height *= scale;
+
+  double tx = crop_left, ty = crop_top, tw = crop_width, th = crop_height;
+  layer2screen( tx, ty, tw, th );
+  crop_left = tx; crop_top = ty; crop_width = tw; crop_height = th;
+
   int crop_bottom = crop_top + crop_height - 1;
   int crop_right = crop_left + crop_width - 1;
   

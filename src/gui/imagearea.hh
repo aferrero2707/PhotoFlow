@@ -248,6 +248,7 @@ public:
 				get_pipeline()->get_image()->update();
 		}
   }
+  bool get_display_merged() { return display_merged; }
 
   virtual void on_realize() 
   {

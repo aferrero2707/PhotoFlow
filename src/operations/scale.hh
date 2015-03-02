@@ -69,11 +69,55 @@ enum scale_unit_t
     Property<float> scale_width_inches, scale_height_inches;
     Property<float> scale_resolution;
 
+    int in_width, in_height;
+    int out_width, out_height;
+    float sin_angle, cos_angle;
+    float scale_mult;
+
   public:
     ScalePar();
 
     bool has_opacity() { return false; }
     bool has_intensity() { return false; }
+
+    /* Function to derive the output area from the input area
+    */
+    virtual void transform(const Rect* rin, Rect* rout)
+    {
+      int in_w2 = in_width/2;
+      int in_h2 = in_height/2;
+      int out_w2 = out_width/2;
+      int out_h2 = out_height/2;
+      float xout = cos_angle*(rin->left-in_w2) - sin_angle*(rin->top-in_h2) + out_w2;
+      float yout = sin_angle*(rin->left-in_w2) + cos_angle*(rin->top-in_h2) + out_h2;
+      //std::cout<<"xout="<<xout<<" = "<<cos_angle<<"*("<<rin->left<<"-"<<in_w2<<") - "<<sin_angle<<"*("<<rin->top<<"-"<<in_h2<<") + "<<out_w2<<std::endl;
+      //std::cout<<"sin_angle="<<sin_angle<<" cos_angle="<<cos_angle<<"  xout="<<xout<<" yout="<<yout<<std::endl;
+      rout->left = xout*scale_mult;
+      rout->top = yout*scale_mult;
+      rout->width = rin->width*scale_mult;
+      rout->height = rin->height*scale_mult;
+    }
+
+    /* Function to derive the area to be read from input images,
+       based on the requested output area
+    */
+    virtual void transform_inv(const Rect* rout, Rect* rin)
+    {
+      float minus = -1.0;
+      int in_w2 = in_width/2;
+      int in_h2 = in_height/2;
+      int out_w2 = out_width/2;
+      int out_h2 = out_height/2;
+      float xin = cos_angle*(rout->left-out_w2) + sin_angle*(rout->top-out_h2) + in_w2;
+      float yin = minus*sin_angle*(rout->left-out_w2) + cos_angle*(rout->top-out_h2) + in_h2;
+      //std::cout<<"xin="<<xin<<" = "<<cos_angle<<"*("<<rout->left<<"-"<<out_w2<<") - "<<sin_angle<<"*("<<rout->top<<"-"<<out_h2<<") + "<<in_w2<<std::endl;
+      //std::cout<<"sin_angle="<<sin_angle<<" cos_angle="<<cos_angle<<"  xin="<<xin<<" yin="<<yin<<std::endl;
+      rin->left = xin/scale_mult;
+      rin->top = yin/scale_mult;
+      rin->width = rout->width/scale_mult;
+      rin->height = rout->height/scale_mult;
+    }
+
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 										 VipsImage* imap, VipsImage* omap, 

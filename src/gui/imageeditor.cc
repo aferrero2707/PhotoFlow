@@ -42,7 +42,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   image_opened( false ),
   active_layer( NULL ),
   //imageArea( image->get_pipeline(PIPELINE_ID) ),
-  layersWidget( image ),
+  layersWidget( image, this ),
   buttonZoomIn( "Zoom +" ),
   buttonZoomOut( "Zoom -" ),
   buttonZoom100( "1:1" ),
@@ -137,6 +137,116 @@ PF::ImageEditor::~ImageEditor()
   PF::ImageProcessor::Instance().submit_request( request );	
 }
 
+
+
+// Fills a list with all children of the current layer
+void PF::ImageEditor::expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list )
+{
+  if( !layer ) return;
+  // Sublayers
+  for( std::list<PF::Layer*>::reverse_iterator li = layer->get_sublayers().rbegin();
+       li != layer->get_sublayers().rend(); li++ ) {
+    PF::Layer* l = *li;
+    if( !l ) continue;
+    //#ifndef NDEBUG
+    std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
+    //#endif
+    if( !l->is_visible() ) continue;
+    if( l->get_processor() == NULL ) continue;
+    if( l->get_processor()->get_par() == NULL ) continue;
+    PF::OpParBase* par = l->get_processor()->get_par();
+    PF::BlenderPar* blender = NULL;
+    if( l->get_blender() ) {
+      blender = dynamic_cast<BlenderPar*>( l->get_blender() );
+    }
+
+    if( l->is_group() ) {
+      // Group layers do not need to be added, as they do not directly modify
+      // the image geometry. However, if the blend mode is "passthrough"
+      // the geometry might be indirectly modified by one of the child layers,
+      //therefore we add them to the list
+      if( blender && (blender->get_blend_mode() != PF::PF_BLEND_PASSTHROUGH) )
+        continue;
+      expand_layer( l, list );
+    } else {
+      // Add layer to the temporary list
+      list.push_front( l );
+      //#ifndef NDEBUG
+      std::cout<<"    added."<<std::endl;
+      //#endif
+    }
+  }
+}
+
+
+void PF::ImageEditor::get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
+    std::list<Layer*>& children )
+{
+  //#ifndef NDEBUG
+  std::cout<<"Collecting children of layer \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
+  //#endif
+  std::list<PF::Layer*> tmplist;
+  std::list<PF::Layer*>::reverse_iterator li;
+  // Loop over layers in reverse order and fill a temporary list,
+  // until either the target layer is found or the end of the
+  // container list is reached
+  for(li = container.rbegin(); li != container.rend(); ++li) {
+    PF::Layer* l = *li;
+    if( !l ) continue;
+    //#ifndef NDEBUG
+    std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
+    //#endif
+    if( (layer != NULL) && (layer->get_id() == l->get_id()) ) break;
+    if( !l->is_visible() ) continue;
+    if( l->get_processor() == NULL ) continue;
+    if( l->get_processor()->get_par() == NULL ) continue;
+    PF::OpParBase* par = l->get_processor()->get_par();
+    PF::BlenderPar* blender = NULL;
+    if( l->get_blender() ) {
+      blender = dynamic_cast<BlenderPar*>( l->get_blender() );
+    }
+
+    if( l->is_group() ) {
+      // Group layers do not need to be added, as they do not directly modify
+      // the image geometry. However, if the blend mode is "passthrough"
+      // the geometry might be indirectly modified by one of the child layers,
+      //therefore we add them to the list
+      if( blender && (blender->get_blend_mode() != PF::PF_BLEND_PASSTHROUGH) )
+        continue;
+      expand_layer( l, tmplist );
+    } else {
+      // Add layer to the temporary list
+      tmplist.push_front( l );
+      //#ifndef NDEBUG
+      std::cout<<"    added."<<std::endl;
+      //#endif
+    }
+  }
+
+  // Append the temporary list to the childrens one
+  children.insert( children.end(), tmplist.begin(), tmplist.end() );
+
+  PF::Layer* container_layer = image->get_layer_manager().get_container_layer( layer );
+  if( !container_layer ) return;
+
+  // Add the container layer to the list of children
+  children.push_back( container_layer );
+
+  std::list<PF::Layer*>* clist = image->get_layer_manager().get_list( container_layer );
+  if( !clist ) return;
+
+  // Add all the children of the container layer to the children list
+  get_child_layers( container_layer, *clist, children );
+}
+
+
+void PF::ImageEditor::get_child_layers()
+{
+  if( !active_layer ) return;
+  std::list<PF::Layer*>* clist = image->get_layer_manager().get_list( active_layer );
+  if( !clist ) return;
+  get_child_layers( active_layer, *clist, active_layer_children );
+}
 
 
 void PF::ImageEditor::open_image()
@@ -326,21 +436,27 @@ void PF::ImageEditor::set_active_layer( int id )
         active_layer->get_processor()->get_par()->get_config_ui() ) {
       PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
-      if( dialog && dialog->get_visible() ) {
-        dialog->enable_editing();
+      if( dialog ) {
+        dialog->set_editor( this );
+        if( dialog->get_visible() ) {
+          dialog->enable_editing();
+        }
       }
+      active_layer_children.clear();
+      //image->get_layer_manager().get_child_layers( active_layer, active_layer_children );
+      get_child_layers();
     }
   }
 }
 
 
-bool PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
+void PF::ImageEditor::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
 {
 #ifndef NDEBUG
   /**/
   std::cout<<"PF::ImageEditor::screen2image(): x="<<x<<"  y="<<y<<"  adjustments:"
-	   <<"  h="<<imageArea_scrolledWindow.get_hadjustment()->get_value()
-	   <<"  v="<<imageArea_scrolledWindow.get_vadjustment()->get_value()<<std::endl;
+     <<"  h="<<imageArea_scrolledWindow.get_hadjustment()->get_value()
+     <<"  v="<<imageArea_scrolledWindow.get_vadjustment()->get_value()<<std::endl;
   /**/
 #endif
   //x += imageArea_scrolledWindow.get_hadjustment()->get_value();
@@ -352,12 +468,12 @@ bool PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
 #endif
   x -= imageArea->get_xoffset();
   y -= imageArea->get_yoffset();
-  if( (x<0) || (y<0) ) return false;
+  if( (x<0) || (y<0) ) return;
   if( imageArea->get_display_image() ) {
     if( x >= imageArea->get_display_image()->Xsize ) 
-      return false;
+      return;
     if( y >= imageArea->get_display_image()->Ysize ) 
-      return false;
+      return;
   }
 
   float zoom_fact = get_zoom_factor();
@@ -368,10 +484,158 @@ bool PF::ImageEditor::screen2image( gdouble& x, gdouble& y )
   zoom_fact *= imageArea->get_shrink_factor();
   x /= zoom_fact;
   y /= zoom_fact;
+  w /= zoom_fact;
+  h /= zoom_fact;
+
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::screen2image(): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
-  return true;
+  //return true;
+}
+
+
+void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if( !image ) return;
+  if( !imageArea->get_display_merged() ) return;
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::image2layer(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+#endif
+
+  PF::Pipeline* pipeline = image->get_pipeline( 0 );
+  if( !pipeline ) {
+    std::cout<<"ImageEditor::image2layer(): NULL pipeline"<<std::endl;
+    return;
+  }
+
+  std::list<PF::Layer*>::reverse_iterator li;
+  for(li = active_layer_children.rbegin(); li != active_layer_children.rend(); ++li) {
+    PF::Layer* l = *li;
+    if( l && l->is_visible() ) {
+      // Get the node associated to the layer
+      PF::PipelineNode* node = pipeline->get_node( l->get_id() );
+      if( !node ) {
+        std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+        continue;
+      }
+      if( !node->processor ) {
+        std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
+        continue;
+      }
+
+      PF::OpParBase* par = node->processor->get_par();
+      VipsRect rin, rout;
+      rout.left = x;
+      rout.top = y;
+      rout.width = w;
+      rout.height = h;
+      par->transform_inv( &rout, &rin );
+
+      x = rin.left;
+      y = rin.top;
+      w = rin.width;
+      h = rin.height;
+#ifndef NDEBUG
+      std::cout<<"PF::ImageEditor::image2layer(): after \""<<l->get_name()
+          <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
+#endif
+    }
+  }
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::image2layer(): x'="<<x<<"  y'="<<y<<std::endl;
+#endif
+  //return true;
+}
+
+
+void PF::ImageEditor::image2screen( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  float zoom_fact = get_zoom_factor();
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::image2screen(): zoom_factor="<<zoom_fact<<std::endl;
+  std::cout<<"PF::ImageEditor::image2screen(): shrink_factor="<<imageArea->get_shrink_factor()<<std::endl;
+#endif
+  zoom_fact *= imageArea->get_shrink_factor();
+  x *= zoom_fact;
+  y *= zoom_fact;
+  w *= zoom_fact;
+  h *= zoom_fact;
+
+#ifndef NDEBUG
+  /**/
+  std::cout<<"PF::ImageEditor::image2screen(): x="<<x<<"  y="<<y<<"  adjustments:"
+     <<"  h="<<imageArea_scrolledWindow.get_hadjustment()->get_value()
+     <<"  v="<<imageArea_scrolledWindow.get_vadjustment()->get_value()<<std::endl;
+  /**/
+#endif
+  //x += imageArea_scrolledWindow.get_hadjustment()->get_value();
+  //y += imageArea_scrolledWindow.get_vadjustment()->get_value();
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::image2screen(): offsets: "
+           <<imageArea->get_xoffset()<<" "
+           <<imageArea->get_yoffset()<<std::endl;
+#endif
+  x += imageArea->get_xoffset();
+  y += imageArea->get_yoffset();
+
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::image2screen(): x'="<<x<<"  y'="<<y<<std::endl;
+#endif
+  //return true;
+}
+
+
+void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if( !image ) return;
+  if( !imageArea->get_display_merged() ) return;
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::layer2image(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+#endif
+
+  PF::Pipeline* pipeline = image->get_pipeline( 0 );
+  if( !pipeline ) {
+    std::cout<<"ImageEditor::layer2image(): NULL pipeline"<<std::endl;
+    return;
+  }
+
+  std::list<PF::Layer*>::iterator li;
+  for(li = active_layer_children.begin(); li != active_layer_children.end(); ++li) {
+    PF::Layer* l = *li;
+    if( l && l->is_visible() ) {
+      // Get the node associated to the layer
+      PF::PipelineNode* node = pipeline->get_node( l->get_id() );
+      if( !node ) {
+        std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+        continue;
+      }
+      if( !node->processor ) {
+        std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
+        continue;
+      }
+
+      PF::OpParBase* par = node->processor->get_par();
+      VipsRect rin, rout;
+      rin.left = x;
+      rin.top = y;
+      rin.width = w;
+      rin.height = h;
+      par->transform( &rin, &rout );
+
+      x = rout.left;
+      y = rout.top;
+      w = rout.width;
+      h = rout.height;
+#ifndef NDEBUG
+      std::cout<<"PF::ImageEditor::layer2image(): after \""<<l->get_name()
+          <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
+#endif
+    }
+  }
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::layer2image(): x'="<<x<<"  y'="<<y<<std::endl;
+#endif
+  //return true;
 }
 
 
@@ -382,7 +646,7 @@ bool PF::ImageEditor::on_button_press_event( GdkEventButton* button )
 #endif
   gdouble x = button->x;
   gdouble y = button->y;
-  screen2image( x, y );
+
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
   std::cout<<"  active_layer: "<<active_layer<<std::endl;
@@ -411,15 +675,15 @@ bool PF::ImageEditor::on_button_press_event( GdkEventButton* button )
 
 bool PF::ImageEditor::on_button_release_event( GdkEventButton* button )
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::ImageEditor::on_button_release_event(): button "<<button->button<<" released."<<std::endl;
-#endif
+//#endif
   gdouble x = button->x;
   gdouble y = button->y;
-  screen2image( x, y );
-#ifndef NDEBUG
+
+//#ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
-#endif
+//#endif
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {
@@ -485,10 +749,7 @@ bool PF::ImageEditor::on_motion_notify_event( GdkEventMotion* event )
   if(state & GDK_BUTTON4_MASK) button = 4;
   if(state & GDK_BUTTON5_MASK) button = 5;
   if( true || (state & GDK_BUTTON1_MASK) ) {
-    //gdouble x = event->x;
-    //gdouble y = event->y;
-    if( !screen2image( x, y ) )
-      return true;
+
 #ifndef NDEBUG
     std::cout<<"PF::ImageEditor::on_motion_notify_event(): pointer @ "<<x<<","<<y
              <<"  hint: "<<event->is_hint<<"  state: "<<event->state

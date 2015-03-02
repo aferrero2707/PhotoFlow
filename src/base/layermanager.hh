@@ -57,6 +57,9 @@ namespace PF
     void get_input_layers( Layer* layer, std::list<PF::Layer*>& container,
                            std::list<Layer*>& inputs );
 
+    void get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
+                           std::list<Layer*>& children );
+
     bool get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist, 
 			   std::string parent_name, std::list<Layer*>& list);
 
@@ -91,6 +94,8 @@ namespace PF
     void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
 
     void get_input_layers( Layer* layer, std::list<Layer*>& inputs );
+
+    void get_child_layers( Layer* layer, std::list<Layer*>& children );
 
     void get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist);
 

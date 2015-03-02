@@ -172,6 +172,7 @@ void PF::GmicInpaintConfigDialog::draw_point( double x, double y )
 
     par->draw_point( x, y, update );
 		//continue;
+    layer2image( update );
 
 		/**/
     if( (update.width > 0) &&
@@ -209,8 +210,10 @@ void PF::GmicInpaintConfigDialog::draw_point( double x, double y )
 bool PF::GmicInpaintConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
+  double lx = x, ly = y, lw = 1, lh = 1;
+  screen2layer( lx, ly, lw, lh );
   start_stroke();
-  draw_point( x, y );
+  draw_point( lx, ly );
   return false;
 }
 
@@ -229,7 +232,9 @@ bool PF::GmicInpaintConfigDialog::pointer_motion_event( int button, double x, do
 #ifndef NDEBUG
   std::cout<<"PF::GmicInpaintConfigDialog::pointer_motion_event() called."<<std::endl;
 #endif
-  draw_point( x, y );
+  double lx = x, ly = y, lw = 1, lh = 1;
+  screen2layer( lx, ly, lw, lh );
+  draw_point( lx, ly );
   return false;
 }
 

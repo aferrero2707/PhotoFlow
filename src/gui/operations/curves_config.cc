@@ -281,7 +281,10 @@ bool PF::CurvesConfigDialog::pointer_release_event( int button, double x, double
 
   // Sample a 5x5 pixels region of the input layer
   std::vector<float> values;
-  image->sample( lin->get_id(), x, y, 5, NULL, values );
+  double lx = x, ly = y, lw = 1, lh = 1;
+  screen2layer( lx, ly, lw, lh );
+  std::cout<<"image->sample( lin->get_id(), "<<lx<<", "<<ly<<", 5, NULL, values );"<<std::endl;
+  image->sample( lin->get_id(), lx, ly, 5, NULL, values );
 
   std::cout<<"CurvesConfigDialog::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
 
