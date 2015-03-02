@@ -131,6 +131,7 @@ void PF::SplineCurve::update_spline()
 
 float PF::SplineCurve::get_value( float x )
 {
+  int size = points.size();
   if( x <= points[0].first ) return points[0].second;
   if( x >= points[points.size()-1].first ) return points[points.size()-1].second;
 
