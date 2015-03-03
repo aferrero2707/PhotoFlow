@@ -175,7 +175,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   SplineCurve* curve = curveArea.get_curve();
   
   if( !curve ) return false;
-  curve->lock();
+  //curve->lock();
   
   switch( event->type ) {
 
@@ -304,7 +304,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   default:
     break;
   }
-  curve->unlock();
+  //curve->unlock();
 
   return false;
 }
