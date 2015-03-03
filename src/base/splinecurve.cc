@@ -56,26 +56,39 @@ PF::SplineCurve::~SplineCurve()
 
 int PF::SplineCurve::add_point( float x, float y )
 {
-  //if( (points.size()>0) && (x<=points[0].first) ) return -1;
-  //if( x >= points[points.size()-1].first ) return -1;
-  return -1;
+  if( (get_npoints()>0) && (x<=points[0].first) ) return -1;
+  if( x >= points[get_npoints()-1].first ) return -1;
+  //return -1;
   lock();
+  npoints += 1;
+  std::pair<float,float>* points_new = new std::pair<float,float>[npoints];
 #ifndef NDEBUG
   //std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): points.size()="<<points.size()<<std::endl;
   std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): npoints="<<npoints<<std::endl;
 #endif
   //for( unsigned int i = 0; i < points.size(); i++ ) {
-  for( unsigned int i = 0; i < npoints; i++ ) {
-    if( points[i].first <= x ) continue;
+  for( unsigned int i = 0; i < npoints-1; i++ ) {
+    if( points[i].first <= x ) {
+      points_new[i] = points[i];
+      continue;
+    }
 #ifndef NDEBUG
     std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): adding point before "<<points[i].first<<std::endl;
 #endif
     //points.insert( points.begin()+i, std::make_pair(x,y) );
+    for( size_t j = i; j < npoints-1; j++)
+      points_new[j+1] = points[j];
+    points_new[i] = std::make_pair(x,y);
+    delete[] points;
+    points = points_new;
     update_spline();
     unlock();
     return i;
   }
   //points.push_back( std::make_pair(x,y) );
+  points_new[npoints-1] = std::make_pair(x,y);
+  delete[] points;
+  points = points_new;
   update_spline();
   unlock();
   //return( points.size()-1 );
