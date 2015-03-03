@@ -146,7 +146,8 @@ void PF::SplineCurve::update_spline()
 float PF::SplineCurve::get_value( float x )
 {
   //int size = points.size();
-  unsigned int N = points.size();
+  //unsigned int N = points.size();
+  unsigned int N = npoints;
   //std::cout<<"size = "<<size<<std::endl;
   //return x;
 
