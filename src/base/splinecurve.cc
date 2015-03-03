@@ -159,7 +159,7 @@ float PF::SplineCurve::get_value( float x )
   // linear
   if( points.size() == 2) {
     float result = points[k_lo].second + (x - points[k_lo].first) * ( points[k_hi].second - points[k_lo].second ) / h;
-    //std::cout<<"result = "<<result<<std::endl;
+    std::cout<<"result = "<<result<<std::endl;
     return result;
   // spline curve
   } else { // if (kind==Spline) {
