@@ -61,7 +61,8 @@ int PF::SplineCurve::add_point( float x, float y )
   return -1;
   lock();
 #ifndef NDEBUG
-  std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): points.size()="<<points.size()<<std::endl;
+  //std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): points.size()="<<points.size()<<std::endl;
+  std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): npoints="<<npoints<<std::endl;
 #endif
   //for( unsigned int i = 0; i < points.size(); i++ ) {
   for( unsigned int i = 0; i < npoints; i++ ) {
