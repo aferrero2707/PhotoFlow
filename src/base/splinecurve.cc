@@ -139,6 +139,8 @@ float PF::SplineCurve::get_value( float x )
   //std::cout<<"size = "<<size<<std::endl;
   if( x <= points[0].first ) return points[0].second;
   if( x >= points[size-1].first ) return points[size-1].second;
+  
+  return x;
 
   unsigned int N = points.size();
   //std::cout<<"N = "<<N<<std::endl;
