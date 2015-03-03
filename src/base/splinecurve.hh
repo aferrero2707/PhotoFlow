@@ -56,7 +56,9 @@ namespace PF
 
     bool set_point( unsigned int id, float& x, float& y );
 
-    std::vector< std::pair<float,float> > get_points() const { return points; }
+    //std::vector< std::pair<float,float> > get_points() const { return points; }
+    size_t get_npoints() const { return points.size(); }
+    std::pair<float,float> get_point(int n) const { return points[n]; }
 
     void update_spline();
 
