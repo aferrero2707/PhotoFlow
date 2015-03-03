@@ -58,10 +58,10 @@ int PF::SplineCurve::add_point( float x, float y )
 #endif
   for( unsigned int i = 0; i < points.size(); i++ ) {
     if( points[i].first <= x ) continue;
-    points.insert( points.begin()+i, std::make_pair(x,y) );
 #ifndef NDEBUG
-    std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): point added before "<<points[i].first<<std::endl;
+    std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): adding point before "<<points[i].first<<std::endl;
 #endif
+    points.insert( points.begin()+i, std::make_pair(x,y) );
     update_spline();
     return i;
   }
