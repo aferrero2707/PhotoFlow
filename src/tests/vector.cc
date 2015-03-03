@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "../base/splinecurve.hh"
+#include "../base/format_info.hh"
 
 int 
 main( int argc, char **argv )
