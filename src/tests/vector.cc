@@ -8,7 +8,7 @@
 int 
 main( int argc, char **argv )
 {
-	PF::SplineCurve curve;
+  PF::SplineCurve curve;
   std::vector< std::pair<float,float> > points;
   float x1=0,y1=0,x2=1,y2=1;
   points.push_back( std::make_pair(x1,y1) );
