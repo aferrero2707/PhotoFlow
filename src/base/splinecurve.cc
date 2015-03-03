@@ -28,6 +28,7 @@
  */
 
 #include <stdlib.h>
+#include <vips/vips.h>
 
 #include "splinecurve.hh"
 
