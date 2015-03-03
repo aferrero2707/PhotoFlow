@@ -93,7 +93,7 @@ namespace PF
       vips_rect_intersectrect( &src_rect, &rect, &clip );
       int xstart = clip.left;
       int ystart = clip.top;
-      int xend = clip.left+clip.width-1;
+      //int xend = clip.left+clip.width-1;
       int yend = clip.top+clip.height-1;
 
       for( int y = ystart; y <= yend; y++ ) {
@@ -129,7 +129,7 @@ namespace PF
 					clip.height <= 0 ) return;
       int xstart = clip.left;
       int ystart = clip.top;
-      int xend = clip.left+clip.width-1;
+      //int xend = clip.left+clip.width-1;
       int yend = clip.top+clip.height-1;
 
       for( int y = ystart; y <= yend; y++ ) {
@@ -159,9 +159,9 @@ namespace PF
 					clip.height <= 0 ) return;
       int xstart = clip.left;
       int ystart = clip.top;
-      int xend = clip.left+clip.width-1;
+      //int xend = clip.left+clip.width-1;
       int yend = clip.top+clip.height-1;
-			int x, y;
+      int y, /*x*/;
 
       for( y = ystart; y <= yend; y++ ) {
 				int dy2 = y - rect.top;
@@ -187,7 +187,7 @@ namespace PF
 					clip.height <= 0 ) return;
       int xstart = clip.left;
       int ystart = clip.top;
-      int xend = (clip.left+clip.width-1);
+      //int xend = (clip.left+clip.width-1);
       int dx = clip.width*bl2;
       int yend = clip.top+clip.height-1;
 			int x, y;

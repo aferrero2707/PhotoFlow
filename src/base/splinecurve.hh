@@ -140,7 +140,7 @@ namespace PF
     {
       //std::vector<std::pair<float, float> > points = curve.get_points();
       str<<curve.get_npoints();
-      for( unsigned int i = 0; i < curve.get_npoints; i++ )
+      for( unsigned int i = 0; i < curve.get_npoints(); i++ )
     		str<<" "<<curve.get_point(i).first<<" "<<curve.get_point(i).second;
     	//str<<value;
     }
