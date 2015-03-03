@@ -59,7 +59,12 @@ namespace PF
 
     bool remove_point( unsigned int id );
 
-    void clear_points() { points.clear(); }
+    void clear_points() { 
+      //points.clear();
+      delete[] points;
+      points = NULL;
+      npoints = 0;
+    }
 
     bool set_point( unsigned int id, float& x, float& y );
 
@@ -84,14 +89,23 @@ namespace PF
     void get_deltas( std::vector< std::pair<float,float> >& vec );
     SplineCurve& operator=(const SplineCurve& b)
     {
-      points = b.get_points();
+      //points = b.get_points();
+      if( points ) delete[] points;
+      npoints = b.get_npoints();
+      points = new std::pair<float,float>[npoints];
+      for(size_t i = 0; i < npoints; i++) 
+        points[i] = b.get_point(i);
     }
   };
 
 
   inline bool operator ==(const SplineCurve& l, const SplineCurve& r)
   {
-    if( l.get_points() != r.get_points() ) return false;
+    //if( l.get_points() != r.get_points() ) return false;
+    if( l.get_npoints() != r.get_npoints() ) return false;
+    for( size_t i = 0; i < l.get_npoints(); i++ ) {
+      if( l.get_point(i) != r.get_point(i) ) return false;
+    }
     return true;
   }
 
