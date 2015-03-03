@@ -37,8 +37,12 @@ PF::SplineCurve::SplineCurve():
   ypp( NULL )
 {
   points_mutex = vips_g_mutex_new();
-  points.push_back( std::make_pair(float(0),float(0)) );
-  points.push_back( std::make_pair(float(1),float(1)) );
+  points = new std::pair<float,float>[2];
+  points[0] = std::make_pair(float(0),float(0));
+  points[1] = std::make_pair(float(1),float(1));
+  npoints = 2;
+  //points.push_back( std::make_pair(float(0),float(0)) );
+  //points.push_back( std::make_pair(float(1),float(1)) );
   update_spline();
 }
 
@@ -54,24 +58,26 @@ int PF::SplineCurve::add_point( float x, float y )
 {
   //if( (points.size()>0) && (x<=points[0].first) ) return -1;
   //if( x >= points[points.size()-1].first ) return -1;
+  return -1;
   lock();
 #ifndef NDEBUG
   std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): points.size()="<<points.size()<<std::endl;
 #endif
-  for( unsigned int i = 0; i < points.size(); i++ ) {
+  //for( unsigned int i = 0; i < points.size(); i++ ) {
+  for( unsigned int i = 0; i < npoints; i++ ) {
     if( points[i].first <= x ) continue;
 #ifndef NDEBUG
     std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): adding point before "<<points[i].first<<std::endl;
 #endif
-    points.insert( points.begin()+i, std::make_pair(x,y) );
+    //points.insert( points.begin()+i, std::make_pair(x,y) );
     update_spline();
     unlock();
     return i;
   }
-  points.push_back( std::make_pair(x,y) );
+  //points.push_back( std::make_pair(x,y) );
   update_spline();
   unlock();
-  return( points.size()-1 );
+  //return( points.size()-1 );
   return -1;
 }
 
@@ -79,8 +85,8 @@ int PF::SplineCurve::add_point( float x, float y )
 bool PF::SplineCurve::remove_point( unsigned int id )
 {
   if( id == 0 ) return false;
-  if( id >= (points.size()-1) ) return false;
-  points.erase( points.begin() + id );
+  //if( id >= (points.size()-1) ) return false;
+  //points.erase( points.begin() + id );
   update_spline();
   return true;
 }
@@ -88,7 +94,8 @@ bool PF::SplineCurve::remove_point( unsigned int id )
 
 bool PF::SplineCurve::set_point( unsigned int id, float& x, float& y )
 {
-  if( id >= points.size() ) return false;
+  //if( id >= points.size() ) return false;
+  if( id >= npoints ) return false;
 
   if( x < 0 ) x = 0;
   if( y < 0 ) y = 0;
@@ -105,7 +112,8 @@ bool PF::SplineCurve::set_point( unsigned int id, float& x, float& y )
 
 void PF::SplineCurve::update_spline() 
 {
-  unsigned int N = points.size();
+  //unsigned int N = points.size();
+  unsigned int N = npoints;
   if( N < 2) return;
   double* u = new double[N-1];
   if( ypp ) delete [] ypp;

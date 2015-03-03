@@ -40,7 +40,9 @@ namespace PF
 
   class SplineCurve: public Curve
   {
-    std::vector< std::pair<float,float> > points;
+    //std::vector< std::pair<float,float> > points;
+    std::pair<float,float>* points;
+    size_t npoints;
 
     GMutex* points_mutex;
     
@@ -61,8 +63,10 @@ namespace PF
 
     bool set_point( unsigned int id, float& x, float& y );
 
-    const std::vector< std::pair<float,float> >& get_points() const { return points; }
-    size_t get_npoints() const { return points.size(); }
+    //const std::vector< std::pair<float,float> >& get_points() const { return points; }
+    //size_t get_npoints() const { return points.size(); }
+    const std::pair<float,float>* get_points() const { return points; }
+    size_t get_npoints() const { return npoints; }
     std::pair<float,float> get_point(int n) const { return points[n]; }
 
     void update_spline();
