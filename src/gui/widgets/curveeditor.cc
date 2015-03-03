@@ -125,6 +125,9 @@ void PF::CurveEditor::get_value()
   curveArea.set_curve( &prop->get() );
   curveArea.set_selected_point( 0 );
   inhibit_value_changed = true;
+  PF::SplineCurve* curve = &(prop->get());
+  std::vector<std::pair<float, float> >* points = &(prop->get().get_points());
+  std::cout<<"curve="<<curve<<"  points="<<points<<std::endl;
 #ifdef GTKMM_2
   xadjustment.set_value( prop->get().get_points()[0].first*100 );
   yadjustment.set_value( prop->get().get_points()[0].second*100 );
