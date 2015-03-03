@@ -191,7 +191,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       double xpt = double(event->button.x-1)/(width-3);
       double ypt = double(width-event->button.y-1)/(width-3);
       //std::vector< std::pair<float,float> > points = curve->get_points();
-      std::pair<float,float>* points = curve->get_points();
+      //std::pair<float,float>* points = curve->get_points();
       bool found = false;
       int ipt = -1;
       for( unsigned int i = 0; i < curve->get_npoints(); i++ ) {
