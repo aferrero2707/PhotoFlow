@@ -426,10 +426,10 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
       }
       cr->stroke ();
 
-      std::vector< std::pair<float,float> > points = curve->get_points();
-      for( unsigned int i = 0; i < points.size(); i++ ) {
-        double x = double(points[i].first)*width+x0;
-        double y = double(1.0f-points[i].second)*height+y0;
+      //std::vector< std::pair<float,float> > points = curve->get_points();
+      for( unsigned int i = 0; i < curve->get_npoints(); i++ ) {
+        double x = double(curve->get_point(i).first)*width+x0;
+        double y = double(1.0f-curve->get_point(i).second)*height+y0;
         cr->set_source_rgb( 0.9, 0.9, 0.9 );
         cr->arc (x, y, 3.5, 0, 2*M_PI);
         cr->fill ();
