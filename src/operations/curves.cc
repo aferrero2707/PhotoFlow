@@ -106,8 +106,10 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
 {
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
 
-  if( grey_curve.is_modified() )
-    update_curve( grey_curve, Greyvec8, Greyvec16 );
+  if( grey_curve.is_modified() ) {
+	  std::cout<<"update_curve( grey_curve, Greyvec8, Greyvec16 );"<<std::endl;
+	    update_curve( grey_curve, Greyvec8, Greyvec16 );
+  }
 
   if( R_curve.is_modified() || G_curve.is_modified() || 
       B_curve.is_modified() || RGB_curve.is_modified() ) {
