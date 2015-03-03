@@ -273,8 +273,8 @@ INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
-add_executable(vector 
-  tests/vector.cc
+add_executable(vector tests/vector.cc)
+target_link_libraries(vector ${LIBS} 
   pfbase 
   pfdt
   pfvips 
