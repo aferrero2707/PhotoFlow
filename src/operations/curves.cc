@@ -90,12 +90,14 @@ void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
     float x = ((float)i)/FormatInfo<unsigned char>::RANGE;
     float y = curve.get().get_delta( x );
     vec8[i] = (short int)(y*FormatInfo<unsigned char>::RANGE);
+    std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec8[i]="<<vec8[i]<<std::endl;
   }
   for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
     float y = curve.get().get_delta( x );
     vec16[i] = (int)(y*FormatInfo<unsigned short int>::RANGE);
-   //if(i%1000 == 0) std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<std::endl;
+   //if(i%1000 == 0) 
+    std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<std::endl;
   }
   curve.get().unlock();
 }
