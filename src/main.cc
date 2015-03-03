@@ -68,6 +68,9 @@
 
 #include "base/new_operation.hh"
 
+#include "base/splinecurve.hh"
+#include "base/format_info.hh"
+
 extern int vips__leak;
 
 /* We need C linkage for this.
