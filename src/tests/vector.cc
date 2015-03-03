@@ -18,7 +18,7 @@ main( int argc, char **argv )
     float y = points[0].second;
     x = points[1].first;
     y = points[1].second;
-    x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
+    x = ((float)i)/PF::FormatInfo<unsigned short int>::RANGE;
     y = curve.get_delta( x );
   }
   return( 0 ); 
