@@ -101,18 +101,18 @@ bool PF::SplineCurve::remove_point( unsigned int id )
   if( id == 0 ) return false;
   if( id >= (npoints-1) ) return false;
   
+  //points.erase( points.begin() + id );
+
   npoints -= 1;
   std::pair<float,float>* points_new = new std::pair<float,float>[npoints];
   
   for( unsigned int i = 0; i < id; i++ ) {
     points_new[i] = points[i];
   }
-  //points.insert( points.begin()+i, std::make_pair(x,y) );
-  for( size_t i = id+1; i <= npoints; i++)
+  for( size_t i = id; i < npoints; i++)
     points_new[i] = points[i+1];
   delete[] points;
   points = points_new;
-  //points.erase( points.begin() + id );
   update_spline();
   return true;
 }
