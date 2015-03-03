@@ -135,10 +135,10 @@ void PF::SplineCurve::update_spline()
 
 float PF::SplineCurve::get_value( float x )
 {
-	  return x;
-
   int size = points.size();
   //std::cout<<"size = "<<size<<std::endl;
+  return x;
+
   if( x <= points[0].first ) return points[0].second;
   if( x >= points[size-1].first ) return points[size-1].second;
   

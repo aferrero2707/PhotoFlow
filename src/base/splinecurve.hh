@@ -78,6 +78,10 @@ namespace PF
 
     // Fill a vector of equally-spaced points with input-output value deltas
     void get_deltas( std::vector< std::pair<float,float> >& vec );
+    SplineCurve& operator=(const SplineCurve& b)
+    {
+      points = b.get_points();
+    }
   };
 
 
