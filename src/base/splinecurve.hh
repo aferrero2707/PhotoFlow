@@ -96,6 +96,7 @@ namespace PF
       for(size_t i = 0; i < npoints; i++) 
         points[i] = b.get_point(i);
     }
+    return *this;
   };
 
 
