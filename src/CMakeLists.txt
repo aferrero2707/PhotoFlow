@@ -164,6 +164,11 @@ add_library (pfgmic
   ${GMicSources}
 )
 
+add_library (pfgui
+  ${GuiIncludes}
+  ${GuiSources}
+)
+
 #SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic")
 
 #add_library (pfoperations
@@ -188,8 +193,8 @@ ENDIF(MINGW)
 
 add_executable(photoflow # name of the executable on Windows will be example.exe 
   main.cc 
-  ${GuiIncludes}
-  ${GuiSources}
+  #${GuiIncludes}
+  #${GuiSources}
   )
 
 #add_dependencies(photoflow ${LIB_DEPS})
@@ -207,6 +212,7 @@ target_link_libraries(photoflow ${LIBS}
   pfdt
   pfvips 
   pfgmic 
+  pfgui
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
@@ -273,12 +279,13 @@ INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
-add_executable(vector tests/vector.cc   ${GuiIncludes} ${GuiSources})
+add_executable(vector tests/vector.cc)
 target_link_libraries(vector ${LIBS} 
   pfbase 
   pfdt
   pfvips 
   pfgmic 
+  pfgui
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
