@@ -195,8 +195,8 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       bool found = false;
       int ipt = -1;
       for( unsigned int i = 0; i < curve->get_npoints(); i++ ) {
-        double dx = fabs( xpt - points[i].first);
-        double dy = fabs( ypt - points[i].second);
+        double dx = fabs( xpt - curve->get_point(i).first);
+        double dy = fabs( ypt - curve->get_point(i).second);
 #ifndef NDEBUG
         std::cout<<"  point #"<<i<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
 #endif
@@ -216,12 +216,12 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 #endif
           inhibit_value_changed = true;
 #ifdef GTKMM_2
-          xadjustment.set_value( curve->get_points()[ipt].first*100 );
-          yadjustment.set_value( curve->get_points()[ipt].second*100 );
+          xadjustment.set_value( curve->get_point(ipt).first*100 );
+          yadjustment.set_value( curve->get_point(ipt).second*100 );
 #endif
 #ifdef GTKMM_3
-          xadjustment->set_value( curve->get_points()[ipt].first*100 );
-          yadjustment->set_value( curve->get_points()[ipt].second*100 );
+          xadjustment->set_value( curve->get_point(ipt).first*100 );
+          yadjustment->set_value( curve->get_point(ipt).second*100 );
 #endif
           inhibit_value_changed = false;
           curveArea.queue_draw();
