@@ -406,6 +406,7 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
     
 
     if( curve ) {
+      curve->lock();
       cr->set_source_rgb( 0.9, 0.9, 0.9 );
       curve->update_spline();
       std::vector< std::pair<float,float> > vec;
@@ -437,6 +438,7 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
           cr->fill ();
         }
       }
+      curve->unlock();
     }
   
     return true;
