@@ -2,9 +2,12 @@
 #include <map>
 #include <iostream>
 
+#include "../base/splinecurve.hh"
+
 int 
 main( int argc, char **argv )
 {
+	PF::SplineCurve curve;
   std::vector< std::pair<float,float> > points;
   float x1=0,y1=0,x2=1,y2=1;
   points.push_back( std::make_pair(x1,y1) );
@@ -15,6 +18,8 @@ main( int argc, char **argv )
     float y = points[0].second;
     x = points[1].first;
     y = points[1].second;
+    x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
+    y = curve.get_delta( x );
   }
   return( 0 ); 
 }
