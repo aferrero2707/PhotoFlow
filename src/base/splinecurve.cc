@@ -104,7 +104,8 @@ bool PF::SplineCurve::set_point( unsigned int id, float& x, float& y )
   if( y > 1 ) y = 1;
 
   if( (id>0) && (x<=points[id-1].first) ) x = points[id].first;
-  if( (id<(points.size()-1)) && (x>=points[id+1].first) ) x = points[id].first;
+  //if( (id<(points.size()-1)) && (x>=points[id+1].first) ) x = points[id].first;
+  if( (id<(npoints-1)) && (x>=points[id+1].first) ) x = points[id].first;
   points[id] = std::make_pair( x, y );
   update_spline();
   return true;
