@@ -98,7 +98,7 @@ void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
     vec16[i] = (int)(y*FormatInfo<unsigned short int>::RANGE);
    //if(i%1000 == 0) 
     if(curve.get().get_points().size()>100) 
-    	std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<"  points="<<curve.get().get_points().size()<<std::endl;
+    	 std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<"  points="<<curve.get().get_points().size()<<std::endl;
   }
   curve.get().unlock();
 }
