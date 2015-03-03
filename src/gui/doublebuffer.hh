@@ -161,7 +161,7 @@ namespace PF
       int ystart = clip.top;
       //int xend = clip.left+clip.width-1;
       int yend = clip.top+clip.height-1;
-      int y, /*x*/;
+      int y; /*x*/;
 
       for( y = ystart; y <= yend; y++ ) {
 				int dy2 = y - rect.top;
