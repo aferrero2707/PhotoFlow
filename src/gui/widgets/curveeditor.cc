@@ -88,7 +88,7 @@ void PF::CurveEditor::update_point()
   if( inhibit_value_changed ) return;
   std::cout<<"PF::CurveEditor::update_point() called."<<std::endl;
   int ipt = curveArea.get_selected_point();
-  if( (ipt >= 0) && (ipt < curveArea.get_curve()->get_points().size()) ) {
+  if( (ipt >= 0) && (ipt < curveArea.get_curve()->get_npoints()) ) {
 #ifdef GTKMM_2
     float px = xadjustment.get_value()/100;
     float py = yadjustment.get_value()/100;
@@ -190,10 +190,11 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       // Look for a point close to the mouse click
       double xpt = double(event->button.x-1)/(width-3);
       double ypt = double(width-event->button.y-1)/(width-3);
-      std::vector< std::pair<float,float> > points = curve->get_points();
+      //std::vector< std::pair<float,float> > points = curve->get_points();
+      std::pair<float,float>* points = curve->get_points();
       bool found = false;
       int ipt = -1;
-      for( unsigned int i = 0; i < points.size(); i++ ) {
+      for( unsigned int i = 0; i < curve->get_npoints(); i++ ) {
         double dx = fabs( xpt - points[i].first);
         double dy = fabs( ypt - points[i].second);
 #ifndef NDEBUG
