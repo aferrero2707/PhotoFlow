@@ -174,6 +174,9 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 
   SplineCurve* curve = curveArea.get_curve();
   
+  if( !curve ) return false;
+  curve->lock();
+  
   switch( event->type ) {
 
   case Gdk::BUTTON_PRESS: 
@@ -183,8 +186,6 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
                <<event->button.x<<","<<event->button.y<<std::endl;
 #endif
       button_pressed = true;
-      
-      if( !curve ) break;
       
       // Look for a point close to the mouse click
       double xpt = double(event->button.x-1)/(width-3);
@@ -303,6 +304,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   default:
     break;
   }
+  curve->unlock();
 
   return false;
 }

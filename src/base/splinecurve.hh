@@ -42,11 +42,16 @@ namespace PF
   {
     std::vector< std::pair<float,float> > points;
 
+    GMutex* points_mutex;
+    
     double* ypp;
 
   public:
     SplineCurve();
     ~SplineCurve();
+
+    void lock() { g_mutex_lock( points_mutex); }
+    void unlock() { g_mutex_unlock( points_mutex); }
 
     int add_point( float x, float y );
 

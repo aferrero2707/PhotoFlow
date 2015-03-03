@@ -35,6 +35,7 @@ PF::SplineCurve::SplineCurve():
   PF::Curve(),
   ypp( NULL )
 {
+  points_mutex = vips_g_mutex_new();
   points.push_back( std::make_pair(float(0),float(0)) );
   points.push_back( std::make_pair(float(1),float(1)) );
   update_spline();
@@ -52,7 +53,7 @@ int PF::SplineCurve::add_point( float x, float y )
 {
   //if( (points.size()>0) && (x<=points[0].first) ) return -1;
   //if( x >= points[points.size()-1].first ) return -1;
-
+  lock();
 #ifndef NDEBUG
   std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): points.size()="<<points.size()<<std::endl;
 #endif
@@ -63,10 +64,12 @@ int PF::SplineCurve::add_point( float x, float y )
 #endif
     points.insert( points.begin()+i, std::make_pair(x,y) );
     update_spline();
+    unlock();
     return i;
   }
   points.push_back( std::make_pair(x,y) );
   update_spline();
+  unlock();
   return( points.size()-1 );
   return -1;
 }
