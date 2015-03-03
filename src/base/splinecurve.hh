@@ -138,10 +138,10 @@ namespace PF
 
     void to_stream(std::ostream& str)
     {
-      std::vector<std::pair<float, float> > points = curve.get_points();
-      str<<points.size();
-      for( unsigned int i = 0; i < points.size(); i++ )
-    		str<<" "<<points[i].first<<" "<<points[i].second;
+      //std::vector<std::pair<float, float> > points = curve.get_points();
+      str<<curve.get_npoints();
+      for( unsigned int i = 0; i < curve.get_npoints; i++ )
+    		str<<" "<<curve.get_point(i).first<<" "<<curve.get_point(i).second;
     	//str<<value;
     }
 
