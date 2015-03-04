@@ -38,12 +38,21 @@ namespace PF
   {
     Glib::RefPtr< Gdk::Pixbuf > buf;
     VipsRect rect;
+    bool dirty;
   public:
 
     static void pixbuf_cleanup(const guint8* data) { if( data ) delete [] data; }
 
+    PixelBuffer(): dirty(true)
+    {
+      rect.left = rect.top = rect.width = rect.height = 0;
+    }
+
+    bool is_dirty() { return dirty; }
+    void set_dirty( bool d ) { dirty = d; }
+
     Glib::RefPtr< Gdk::Pixbuf > get_pxbuf() { return buf; }
-    VipsRect get_rect() { return rect; }
+    VipsRect& get_rect() { return rect; }
 
     void resize( const VipsRect& rect )
     {

@@ -43,6 +43,7 @@ PF::GaussBlurPar::GaussBlurPar():
 	
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 
+  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type( "gaussblur" );
 }
 

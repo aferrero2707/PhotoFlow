@@ -43,7 +43,6 @@ namespace PF
     BufferPar(): OpParBase()
     {
       set_type( "buffer" );
-      set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
     }
 
     /* Set processing hints:

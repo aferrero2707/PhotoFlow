@@ -77,6 +77,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
     processor = new_crop();
 
+  } else if( op_type == "scale" ) {
+
+    //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    processor = new_scale();
+
   } else if( op_type == "invert" ) {
 
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
@@ -151,6 +156,8 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
     processor = new_clone_stamp();
 
+  } else if( op_type == "lensfun" ) {
+    processor = new_lensfun();
   }
 
   if( !processor ) {

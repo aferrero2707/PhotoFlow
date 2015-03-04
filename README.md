@@ -38,6 +38,7 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
         $ git clone https://github.com/aferrero2707/PhotoFlow.git
 
 2. The build system is based on CMake, so you have to have it installed in your system.
+   You need the following dependencies to build Photoflow: gettext, glib-2.x, libxml-2.0, pkg-config, swig, gtk-doc-tools, automake, gobject-introspection, gnu make, cmake, libtiff, libjpeg, libfftw3, exiv2, lensfun and gtkmm-2.x or gtkmm-3.x.
    PhotoFlow provides an helper script to simplify the building process;
    in order to use it you have to go into the "build" subdirectory and run the "build.sh" script:
 

@@ -210,7 +210,6 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
 }
 
 
-
 PF::ProcessorBase* PF::new_curves()
 {
   return( new PF::Processor<PF::CurvesPar,PF::Curves>() );

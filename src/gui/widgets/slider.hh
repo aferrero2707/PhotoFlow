@@ -67,6 +67,10 @@ namespace PF {
     Glib::RefPtr<Gtk::Adjustment> get_adjustment() { return adjustment; }
 #endif
 
+    void set_editable( bool flag )
+    {
+      spinButton.set_editable( flag );
+    }
 
     void get_value();
     void set_value();

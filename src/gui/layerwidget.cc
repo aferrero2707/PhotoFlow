@@ -64,8 +64,14 @@ PF::LayerWidget::LayerWidget( Image* img ):
   pack_start(notebook);
 
   buttonAdd.set_size_request(40,0);
+  buttonAdd.set_tooltip_text("Add a new layer");
   buttonAddGroup.set_size_request(40,0);
+  buttonAddGroup.set_tooltip_text("Add a new layer group");
   buttonDel.set_size_request(40,0);
+  buttonDel.set_tooltip_text("Remove selected layers");
+
+  buttonPresetLoad.set_tooltip_text("Load an existing preset");
+  buttonPresetSave.set_tooltip_text("Save the selected layers as a preset");
 
   buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
   buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
@@ -122,9 +128,9 @@ bool PF::LayerWidget::on_button_event( GdkEventButton* button )
 #endif
   if( button->button == 1 ) {
     int layer_id = get_selected_layer_id();
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_button_event(): selected layer id="<<layer_id<<std::endl;
-    //#endif
+#endif
     if( layer_id >= 0 )
       signal_active_layer_changed.emit( layer_id );
   }
@@ -228,6 +234,9 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     if( ui ) {
       PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
       if(dialog) {
+        Gtk::Window* toplevel = dynamic_cast<Gtk::Window*>(get_toplevel());
+        if( toplevel )
+            dialog->set_transient_for( *toplevel );
         dialog->open();
         dialog->enable_editing();
       }
@@ -487,7 +496,8 @@ void PF::LayerWidget::remove_layers()
   Gtk::TreeModel::iterator iter;
   if( !sel_rows.empty() ) {
     std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
-    iter = model->get_iter( sel_rows[0] );
+    //iter = model->get_iter( sel_rows[0] );
+    signal_active_layer_changed.emit(-1);
   }
   /*
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =

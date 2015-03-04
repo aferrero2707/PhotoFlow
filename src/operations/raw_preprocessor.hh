@@ -131,8 +131,9 @@ namespace PF
       float max_mul = mul[0];
 			/*
       for(int i = 0; i < 4; i++) {
-				std::cout<<"cam_mu["<<i<<"] = "<<image_data->color.cam_mul[i]<<std::endl;
+				std::cout<<"cam_mu["<<i<<"]="<<image_data->color.cam_mul[i]<<"  ";
       }
+      std::cout<<std::endl;
 			*/
       for(int i = 1; i < 4; i++) {
 				if( mul[i] < min_mul )
@@ -182,8 +183,14 @@ namespace PF
 					PF::RawMatrixRow rp( p );
 					PF::RawMatrixRow rpout( pout );
 					for( x=0; x < r->width; x++) {
+					  //std::cout<<"RawPreprocessor: x="<<x<<"  r->width="<<r->width
+					  //      <<"  size of pel="<<VIPS_IMAGE_SIZEOF_PEL(ireg[in_first]->im)
+					  //      <<","<<VIPS_IMAGE_SIZEOF_PEL(oreg->im)<<std::endl;
 						rpout.color(x) = rp.color(x);
-						rpout[x] = rp[x] * mul[ rp.color(x) ];
+						rpout[x] = rp[x] * mul[ rp.icolor(x) ];
+            //std::cout<<"  rp.color(x)="<<rp.color(x)
+            //    <<"  rp[x]="<<rp[x]<<"  mul[ rp.icolor(x) ]="
+            //    <<mul[ rp.icolor(x) ]<<"  rpout[x]="<<rpout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */
 						rpout[x] *= 65535;
@@ -270,7 +277,7 @@ namespace PF
 					PF::RawMatrixRow rpout( pout );
 					for( x=0; x < r->width; x++) {
 						rpout.color(x) = rp.color(x);
-						rpout[x] = rp[x] * mul[ rp.color(x) ];
+						rpout[x] = rp[x] * mul[ rp.icolor(x) ];
             
             int dx = r->left+x-raw_preproc_sample_x;
             int dy = r->top+y-raw_preproc_sample_y;
@@ -278,7 +285,7 @@ namespace PF
             //  std::cout<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
 						if( false && abs(dx)<2 && abs(dy)<1 ) 
               std::cout<<"  rp["<<x<<"]="<<rp[x]
-                       <<"  mul["<<(int)rp.color(x)<<"]="<<mul[ rp.color(x) ]
+                       <<"  mul["<<(int)rp.color(x)<<"]="<<mul[ rp.icolor(x) ]
                        <<"  rpout["<<x<<"]="<<rpout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */

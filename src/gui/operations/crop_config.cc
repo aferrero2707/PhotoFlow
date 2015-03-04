@@ -38,13 +38,21 @@ PF::CropConfigDialog::CropConfigDialog( PF::Layer* layer ):
   cropLeftSlider( this, "crop_left", "Crop left", 0, 0, 10000000, 1, 10, 1),
   cropTopSlider( this, "crop_top", "Crop top", 0, 0, 10000000, 1, 10, 1),
   cropWidthSlider( this, "crop_width", "Crop width", 0, 0, 10000000, 1, 10, 1),
-  cropHeightSlider( this, "crop_height", "Crop height", 0, 0, 10000000, 1, 10, 1)
+  cropHeightSlider( this, "crop_height", "Crop height", 0, 0, 10000000, 1, 10, 1),
+  keepARCheckBox( this, "keep_ar", "Keep aspect ratio", 0 ),
+  cropARWidthSlider( this, "ar_width", "Aspect ratio: W=", 0, 0, 10000000, 1, 10, 1),
+  cropARHeightSlider( this, "ar_height", "/H=", 0, 0, 10000000, 1, 10, 1)
 {
   controlsBox.pack_start( cropLeftSlider );
   controlsBox.pack_start( cropTopSlider );
   controlsBox.pack_start( cropWidthSlider );
   controlsBox.pack_start( cropHeightSlider );
   
+  controlsBox.pack_start( keepARCheckBox );
+  arControlsBox.pack_start( cropARWidthSlider );
+  arControlsBox.pack_start( cropARHeightSlider );
+  controlsBox.pack_start( arControlsBox );
+
   add_widget( controlsBox );
 }
 
@@ -165,10 +173,18 @@ void PF::CropConfigDialog::move_handle( int x, int y )
   case CROP_HANDLE_BOTTOMRIGHT: {
     int x0 = cropLeftSlider.get_adjustment()->get_value();
     int y0 = cropTopSlider.get_adjustment()->get_value();
-    if( x >= x0 ) cropWidthSlider.get_adjustment()->set_value( x+1-x0 );
-    else cropWidthSlider.get_adjustment()->set_value( 1 );
-    if( y >= y0 ) cropHeightSlider.get_adjustment()->set_value( y+1-y0 );
-    else cropHeightSlider.get_adjustment()->set_value( 1 );
+    int new_w = (x >= x0) ? x+1-x0 : 1;
+    int new_h = (y >= y0) ? y+1-y0 : 1;
+    if( keepARCheckBox.get_active() ) {
+      int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+          cropARHeightSlider.get_adjustment()->get_value();
+      int ar_h = new_w * cropARHeightSlider.get_adjustment()->get_value()/
+          cropARWidthSlider.get_adjustment()->get_value();
+      if( ar_w>new_w ) new_w = ar_w;
+      if( ar_h>new_h ) new_h = ar_h;
+    }
+    cropWidthSlider.get_adjustment()->set_value( new_w );
+    cropHeightSlider.get_adjustment()->set_value( new_h );
     break;
   }
   case CROP_HANDLE_RIGHT: {

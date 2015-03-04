@@ -64,7 +64,6 @@ namespace PF
       current_format(VIPS_FORMAT_NOTSET),
       raster_image( NULL )
     {
-      set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
       convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
       blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
       set_type("imageread" );

@@ -35,6 +35,7 @@
 #include "../base/image.hh"
 
 #include "widgets/textbox.hh"
+#include "widgets/checkbox.hh"
 #include "widgets/slider.hh"
 #include "widgets/selector.hh"
 #include "widgets/exposure_slider.hh"
@@ -70,6 +71,8 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
   Gtk::Box controlsBoxLeft;
   Gtk::Box controlsBoxRight;
 #endif
+
+  Gtk::HBox shiftBox;
 
   Gtk::Frame topFrame;
 
@@ -154,7 +157,7 @@ public:
 
   void open();
 
-  virtual void init();
+  void init();
 
   void update();
 

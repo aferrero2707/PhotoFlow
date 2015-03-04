@@ -55,3 +55,7 @@
 #include "dream_smooth_config.hh"
 #include "extract_foreground_config.hh"
 #include "tone_mapping_config.hh"
+#include "inpaint_config.hh"
+#include "convolve_config.hh"
+#include "gradient_norm_config.hh"
+#include "sharpen_rl_config.hh"

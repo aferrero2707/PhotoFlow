@@ -86,7 +86,7 @@ namespace PF
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
                      VipsImage* imap, VipsImage* omap, 
                      unsigned int& level);
-  };
+};
 
   
 

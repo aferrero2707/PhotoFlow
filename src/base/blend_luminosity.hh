@@ -55,14 +55,15 @@ class BlendLuminosity<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>:
 {
   int pos, ch;
   double temp_top;
+  double irgb[3];
   double rgb[3];
 public:
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     // RGB values of the bottom layer
-    double ired = (double(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-    double igreen = (double(bottom[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-    double iblue = (double(bottom[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    irgb[0] = (double(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    irgb[1] = (double(bottom[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    irgb[2] = (double(bottom[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
 
     // RGB values of the top layer
     double ored = (double(top[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
@@ -73,12 +74,12 @@ public:
 
     // Luminosity blend: the color of the bottom layer is mixed with
     // the luminance of the top one
-    rgb[0] = ired; rgb[1] = igreen; rgb[2] = iblue;
+    rgb[0] = irgb[0]; rgb[1] = irgb[1]; rgb[2] = irgb[2];
     PF::lc_blend( rgb[0], rgb[1], rgb[2], lumi );
 
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      out[pos] = (T)(( (rgb[ch]*opacity)+(rgb[ch]*(1.0f-opacity)) )*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
+      out[pos] = (T)(( (rgb[ch]*opacity)+(irgb[ch]*(1.0f-opacity)) )*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
     }
   }
 };

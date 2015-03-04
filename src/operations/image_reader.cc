@@ -27,8 +27,8 @@
 
  */
 
+#include "../base/exif_data.hh"
 #include "image_reader.hh"
-//#include "../vips/vips_layer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,15 +82,15 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     if( new_raster_image ) 
       raster_images.insert( make_pair(file_name.get(), new_raster_image) );
   } else {
-    std::cout<<"ImageReaderPar::build(): raster_image found ("<<file_name.get()<<")"<<std::endl;
+    //std::cout<<"ImageReaderPar::build(): raster_image found ("<<file_name.get()<<")"<<std::endl;
     new_raster_image = i->second;
     new_raster_image->ref();
   }
 
-  std::cout<<"ImageReaderPar::build(): raster_image="<<(void*)raster_image<<std::endl;
+  //std::cout<<"ImageReaderPar::build(): raster_image="<<(void*)raster_image<<std::endl;
   if( raster_image ) {
     raster_image->unref();
-    std::cout<<"ImageReaderPar::build(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
+    //std::cout<<"ImageReaderPar::build(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
     if( raster_image->get_nref() == 0 ) {
       std::map<Glib::ustring, RasterImage*>::iterator i = 
         raster_images.find( file_name.get() );
@@ -111,6 +111,16 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   
   if( !image ) return NULL;
 
+  {
+    size_t exifsz;
+    PF::exif_data_t* exif_data;
+    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
+        (void**)&exif_data,&exifsz ) ) {
+      //std::cout<<"ImageReaderPar::build(): exif_custom_data found in image("<<image<<")"<<std::endl;
+    } else {
+      //std::cout<<"ImageReaderPar::build(): exif_custom_data not found in image("<<image<<")"<<std::endl;
+    }
+  }
 #ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): "<<std::endl
 	   <<"input images:"<<std::endl;
@@ -124,9 +134,10 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   if( is_map() && image->Bands > 1 ) {
     VipsImage* out;
     int nbands = 1;
-    if( vips_extract_band( image, &out, 0, "n", nbands, NULL ) )
+    if( vips_extract_band( image, &out, 0, "n", nbands, NULL ) ) {
+      std::cout<<"ImageReaderPar::build(): vips_extract_band() failed"<<std::endl;
       return NULL;
-    std::cout<<"ClonePar::Lab2grayscale(): extract_band OK"<<std::endl;
+    }
 
     vips_image_init_fields( out,
                             image->Xsize, image->Ysize, 
@@ -168,6 +179,29 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
   if( !out ) return NULL;
   PF_UNREF( image, "ImageReaderPar::build(): image unref after convert_format" );
+
+#ifndef NDEBUG
+  {
+    size_t exifsz;
+    PF::exif_data_t* exif_data;
+    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
+        (void**)&exif_data,&exifsz ) ) {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data found in converted image("<<image<<")"<<std::endl;
+    } else {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data not found in converted image("<<image<<")"<<std::endl;
+    }
+  }
+  {
+    size_t exifsz;
+    PF::exif_data_t* exif_data;
+    if( !vips_image_get_blob( out, PF_META_EXIF_NAME,
+        (void**)&exif_data,&exifsz ) ) {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data found in out("<<out<<")"<<std::endl;
+    } else {
+      std::cout<<"ImageReaderPar::build(): exif_custom_data not found in out("<<out<<")"<<std::endl;
+    }
+  }
+#endif
 
   set_image_hints( out );
 #ifndef NDEBUG

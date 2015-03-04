@@ -196,7 +196,9 @@ PF::MainWindow::open_image( std::string filename )
   //editor->open();
   viewerNotebook.set_current_page( -1 );
   std::cout<<"MainWindow::open_image(): current notebook page selected"<<std::endl;
-  //image->update();
+  //if( editor->get_image() )
+  //    editor->get_image()->update();
+  //getchar();
 
   /*
   std::vector<VipsImage*> in;

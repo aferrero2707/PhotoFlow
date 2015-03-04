@@ -39,11 +39,13 @@ static gpointer run_image_processor( gpointer data )
 }
 
 
-PF::ImageProcessor::ImageProcessor()
+PF::ImageProcessor::ImageProcessor(): caching_completed( false )
 {
   processing_mutex = vips_g_mutex_new();
-  //requests_mutex = vips_g_mutex_new();
-  //requests_pending = vips_g_cond_new();
+
+  caching_completed_mutex = vips_g_mutex_new();
+  caching_completed_cond = vips_g_cond_new();
+
   requests = g_async_queue_new();
   thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
 }
@@ -51,11 +53,16 @@ PF::ImageProcessor::ImageProcessor()
 
 void PF::ImageProcessor::optimize_requests()
 {
+  // Remove redundant requests to minimize pixel reprocessing
+
+  // Temporary queue to hold current requests.
+  // We need that to be able to walk through the requests in reverse order
+  std::deque<ProcessRequestInfo> temp_queue;
   // Wait for new request
   //std::cout<<"ImageProcessor::optimize_requests(): popping queue..."<<std::endl;
   PF::ProcessRequestInfo* req = (PF::ProcessRequestInfo*)g_async_queue_pop( requests );
   //std::cout<<"ImageProcessor::optimize_requests(): ... done."<<std::endl;
-  optimized_requests.push_back( *req );
+  temp_queue.push_back( *req );
   delete( req );
 
   // Add any further request in the queue
@@ -67,24 +74,41 @@ void PF::ImageProcessor::optimize_requests()
     //std::cout<<"ImageProcessor::optimize_requests(): ... done."<<std::endl;
     //std::cout<<"ImageProcessor::optimize_requests(): residual queue length="
     //         <<g_async_queue_length( requests )<<std::endl;
-    optimized_requests.push_back( *req );
+    temp_queue.push_back( *req );
     delete( req );
   }
 
-  // Optimize the requests by removing all requests preceding a "rebuild" one.
-  //std::cout<<"ImageProcessor::optimize_requests(): optimizing queue"<<std::endl;
-  for( std::deque<ProcessRequestInfo>::iterator i = optimized_requests.begin();
-       i != optimized_requests.end(); i++ ) {
-    if( i->request != IMAGE_REBUILD ) continue;
-    i++;
-    optimized_requests.erase( i, optimized_requests.end() );
-    break;
+  bool rebuild_found = false;
+  PF::ProcessRequestInfo* info = NULL;
+  std::deque<ProcessRequestInfo>::reverse_iterator ri;
+  for( ri = temp_queue.rbegin(); ri != temp_queue.rend(); ri++ ) {
+    bool do_push = true;
+    if( ri->request == IMAGE_REBUILD ) {
+      if( rebuild_found ) do_push = false;
+      rebuild_found = true;
+    }
+    if( ri->request == IMAGE_UPDATE ) {
+      if( rebuild_found ) {
+        do_push = false;
+      }
+      if( do_push && info != NULL ) {
+        vips_rect_unionrect( &(info->area), &(ri->area), &(info->area) );
+        do_push = false;
+      }
+    }
+    if( do_push ) {
+      optimized_requests.push_front( *ri );
+      if( info == NULL ) {
+        info = &(optimized_requests.front());
+      }
+    }
   }
 }
 
 
 void PF::ImageProcessor::run()
 {
+  std::cout<<"ImageProcessor started."<<std::endl;
 	bool running = true;
   while( running ) {
     /*
@@ -96,17 +120,29 @@ void PF::ImageProcessor::run()
     */
     if( g_async_queue_length( requests ) == 0 ) {
       PF::Image* image = PF::PhotoFlow::Instance().get_active_image();
+      //std::cout<<"ImageProcessor::run(): image="<<image<<std::endl;
       if( image ) {
-        PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer();
+        // Only cache buffers for PREVIEW pipelines are updated automatically
+        PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer( PF_RENDER_PREVIEW );
         //std::cout<<"ImageProcessor::run(): buf="<<buf<<std::endl;
         if( buf ) {
+          g_mutex_lock( caching_completed_mutex );
+          caching_completed = false;
+          g_mutex_unlock( caching_completed_mutex );
+
           buf->step();
+          //buf->write();
           if( buf->is_completed() ) {
             image->lock();
             image->do_update();
             image->unlock();
           }
           continue;
+        } else {
+          g_mutex_lock( caching_completed_mutex );
+          caching_completed = true;
+          g_cond_signal( caching_completed_cond );
+          g_mutex_unlock( caching_completed_mutex );
         }
       }
       /*
@@ -244,6 +280,15 @@ void  PF::ImageProcessor::submit_request( PF::ProcessRequestInfo request )
   std::cout<<"PF::ImageProcessor::submit_request(): signaling condition."<<std::endl;
   g_cond_signal( requests_pending );
   */
+}
+
+
+void PF::ImageProcessor::wait_for_caching()
+{
+  g_mutex_lock( caching_completed_mutex );
+  while( !caching_completed )
+    g_cond_wait( caching_completed_cond, caching_completed_mutex );
+  g_mutex_unlock( caching_completed_mutex );
 }
 
 

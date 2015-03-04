@@ -56,11 +56,15 @@ namespace PF {
   crop_handle_t handle;
 
   Gtk::VBox controlsBox;
+  Gtk::HBox arControlsBox;
 
   Slider cropLeftSlider;
   Slider cropTopSlider;
   Slider cropWidthSlider;
   Slider cropHeightSlider;
+  CheckBox keepARCheckBox;
+  Slider cropARWidthSlider;
+  Slider cropARHeightSlider;
 
   int crop_center_dx, crop_center_dy;
 

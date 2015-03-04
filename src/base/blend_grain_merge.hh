@@ -45,13 +45,13 @@ class BlendGrainMerge<T, CS, CHMIN, CHMAX, false>:
   public BlendBase<T, CS, CHMIN, CHMAX, false>
 {
   int ch, pos;
-  typename FormatInfo<T>::PROMOTED ptop;
+  typename FormatInfo<T>::SIGNED ptop;
 public:
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      ptop = ( (typename FormatInfo<T>::PROMOTED)top[pos]+bottom[pos]-FormatInfo<T>::HALF );
+      ptop = ( (typename FormatInfo<T>::SIGNED)top[pos]+bottom[pos]-FormatInfo<T>::HALF );
       clip( opacity*ptop + (1.0f-opacity)*bottom[pos], out[pos] );
       //std::cout<<"  out="<<(int)out[pos]<<std::endl;
     }
@@ -65,7 +65,7 @@ class BlendGrainMerge<T, CS, CHMIN, CHMAX, true>:
   public BlendBase<T, CS, CHMIN, CHMAX, true>
 {
   int ch, pos;
-  typename FormatInfo<T>::PROMOTED ptop;
+  typename FormatInfo<T>::SIGNED ptop;
   float opacity_real;
 public:
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
@@ -75,7 +75,7 @@ public:
 
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      ptop = ( (typename FormatInfo<T>::PROMOTED)top[pos]+bottom[pos]-FormatInfo<T>::HALF );
+      ptop = ( (typename FormatInfo<T>::SIGNED)top[pos]+bottom[pos]-FormatInfo<T>::HALF );
       clip( opacity_real*ptop + (1.0f-opacity_real)*bottom[pos], out[pos] );
       //std::cout<<"  out="<<(int)out[pos]<<std::endl;
     }

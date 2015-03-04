@@ -72,7 +72,7 @@ namespace PF
     ProcessorBase* blender;
 
     bool cached;
-    CacheBuffer* cache_buffer;
+    std::map<rendermode_t,CacheBuffer*> cache_buffers;
 
     Image* image;
 
@@ -84,7 +84,12 @@ namespace PF
     virtual ~Layer()
     {
       std::cout<<"~Layer(): \""<<name<<"\" destructor called."<<std::endl;
-      if( cache_buffer ) delete( cache_buffer );
+      std::map<rendermode_t,CacheBuffer*>::iterator i;
+      for(i = cache_buffers.begin(); i != cache_buffers.end(); i++ ) {
+        if( i->second )
+          delete( i->second );
+      }
+      //if( cache_buffer ) delete( cache_buffer );
       if( processor ) delete( processor );
       if( blender ) delete( blender );
     }
@@ -116,12 +121,27 @@ namespace PF
     {
       bool changed = (cached != c);
       cached = c;
-      if( cached && !cache_buffer )
-        cache_buffer = new CacheBuffer();
-      if( cached && changed && cache_buffer )
-        cache_buffer->reset();
+      if( cached && cache_buffers.empty() ) {
+        cache_buffers.insert( std::make_pair(PF_RENDER_PREVIEW, new CacheBuffer()) );
+        cache_buffers.insert( std::make_pair(PF_RENDER_NORMAL, new CacheBuffer()) );
+      }
+      if( cached && changed )
+        reset_cache_buffers();
     }
-    CacheBuffer* get_cache_buffer() { return cache_buffer; }
+    CacheBuffer* get_cache_buffer( rendermode_t mode )
+    {
+      std::map<rendermode_t,CacheBuffer*>::iterator i = cache_buffers.find( mode );
+      if( i != cache_buffers.end() ) return i->second;
+      return NULL;
+    }
+    void reset_cache_buffers()
+    {
+      std::map<rendermode_t,CacheBuffer*>::iterator i;
+      for(i = cache_buffers.begin(); i != cache_buffers.end(); i++ ) {
+        if( i->second )
+          i->second->reset();
+      }
+    }
 
 
     ProcessorBase* get_processor() { return processor; }

@@ -307,12 +307,119 @@ bool PF::DrawConfigDialog::pointer_release_event( int button, double x, double y
 
 bool PF::DrawConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return false;
+  mouse_x = x; mouse_y = y;
+  if( button != 1 ) return true;
 #ifndef NDEBUG
   std::cout<<"PF::DrawConfigDialog::pointer_motion_event() called."<<std::endl;
 #endif
   draw_point( x, y );
-  return false;
+  return true;
 }
 
 
+
+
+bool PF::DrawConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+                                           float scale, int xoffset, int yoffset )
+{
+  if( !get_mapped() )
+    return false;
+
+  if( !get_layer() ) return false;
+  if( !get_layer()->get_image() ) return false;
+  if( !get_layer()->get_processor() ) return false;
+  if( !get_layer()->get_processor()->get_par() ) return false;
+
+  PF::OpParBase* par = get_layer()->get_processor()->get_par();
+
+  // Resize the output buffer to match the input one
+  buf_out.resize( buf_in.get_rect() );
+  // Copy pixel data from input to output
+  buf_out.copy( buf_in );
+
+  guint8* px = buf_out.get_pxbuf()->get_pixels();
+  const int rs = buf_out.get_pxbuf()->get_rowstride();
+  const int bl = 3; /*buf->get_byte_length();*/
+
+  int buf_left = buf_out.get_rect().left;
+  int buf_right = buf_out.get_rect().left+buf_out.get_rect().width-1;
+  int buf_top = buf_out.get_rect().top;
+  int buf_bottom = buf_out.get_rect().top+buf_out.get_rect().height-1;
+
+  int pensize = pen_size.get_adjustment()->get_value()*scale;
+  int pen_size2 = pensize*pensize;
+
+  int x0 = mouse_x*scale + xoffset;
+  int y0 = mouse_y*scale + yoffset;
+
+  for( int y = 0; y <= pensize; y++ ) {
+    int row1 = y0 - y;
+    int row2 = y0 + y;
+    //int L = pen.get_size() - y;
+    int D = (int)(sqrt( pen_size2 - y*y )-0.00);
+    int left = x0 - D;
+    if( left < buf_left )
+      left = buf_left;
+    int right = x0 + D;
+    if( right >= buf_right )
+      right = buf_right;
+    int colspan = (right + 1 - left)*3;
+
+    int left2 = right+1;
+    int right2 = left-1;
+    if( y < pensize ) {
+      int D2 = (int)(sqrt( pen_size2 - (y+1)*(y+1) )-0.00);
+      left2 = x0 - D2;
+      if( left2 < buf_left )
+        left2 = buf_left;
+      right2 = x0 + D2;
+      if( right2 >= buf_right )
+        right2 = buf_right;
+    }
+
+
+    //endcol = x0;
+
+    /*
+      std::cout<<"x0="<<x0<<"  y0="<<y0<<"  D="<<D<<std::endl;
+      std::cout<<"row1="<<row1<<"  row2="<<row2<<"  startcol="<<startcol<<"  endcol="<<endcol<<"  colspan="<<colspan<<std::endl;
+      std::cout<<"point_clip.left="<<point_clip.left<<"  point_clip.top="<<point_clip.top
+               <<"  point_clip.width="<<point_clip.width<<"  point_clip.height="<<point_clip.height<<std::endl;
+     */
+    /**/
+    if( (row1 >= buf_top) && (row1 <= buf_bottom) ) {
+      guint8* p = px + rs*(row1-buf_top) + (left-buf_left)*bl;
+      if( left2 <= right ) {
+        for( int x = left; x <= left2; x++, p += bl ) {
+          p[0] = 255-p[0]; p[1] = 255-p[1]; p[2] = 255-p[2];
+        }
+        p = px + rs*(row1-buf_top) + (right2+1-buf_left)*bl;
+        for( int x = right2; x <= right; x++, p += bl ) {
+          p[0] = 255-p[0]; p[1] = 255-p[1]; p[2] = 255-p[2];
+        }
+      } else {
+        for( int x = left; x <= right; x++, p += bl ) {
+          p[0] = 255-p[0]; p[1] = 255-p[1]; p[2] = 255-p[2];
+        }
+      }
+    }
+    if( (row2 != row1) && (row2 >= buf_top) && (row2 <= buf_bottom) ) {
+      guint8* p = px + rs*(row2-buf_top) + (left-buf_left)*bl;
+      if( left2 <= right ) {
+        for( int x = left; x <= left2; x++, p += bl ) {
+          p[0] = 255-p[0]; p[1] = 255-p[1]; p[2] = 255-p[2];
+        }
+        p = px + rs*(row2-buf_top) + (right2+1-buf_left)*bl;
+        for( int x = right2; x <= right; x++, p += bl ) {
+          p[0] = 255-p[0]; p[1] = 255-p[1]; p[2] = 255-p[2];
+        }
+      } else {
+        for( int x = left; x <= right; x++, p += bl ) {
+          p[0] = 255-p[0]; p[1] = 255-p[1]; p[2] = 255-p[2];
+        }
+      }
+    }
+  }
+
+  return true;
+}

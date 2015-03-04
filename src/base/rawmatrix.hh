@@ -36,7 +36,8 @@
 namespace PF {
 
 
-	typedef guint8 raw_pixel_t[sizeof(float)/sizeof(guint8)+1];
+	//typedef guint8 raw_pixel_t[sizeof(float)/sizeof(guint8)+1];
+  typedef float raw_pixel_t[2];
 
 	/*
   struct RawPixel
@@ -68,11 +69,17 @@ namespace PF {
       return *((float*)&(pixels[c]));
     }
 
-    guint8& color(int c) {
-			return *((guint8*)&(pixels[c])+sizeof(float));
+    float& color(int c) {
+      //return *((guint8*)&(pixels[c])+sizeof(float));
+      return ( *((float*)&(pixels[c])+1) );
       //return pixels[c].color;
     }
-  };
+    guint8 icolor(int c) {
+      //return *((guint8*)&(pixels[c])+sizeof(float));
+      return( (guint8)color(c) );
+      //return pixels[c].color;
+    }
+ };
 
 
   class RawMatrix

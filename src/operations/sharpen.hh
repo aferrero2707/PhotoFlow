@@ -45,7 +45,10 @@ namespace PF
   {
     PropertyBase method;
     Property<float> usm_radius;
+    Property<float> rl_sigma;
+    Property<int> rl_iterations;
     ProcessorBase* usm;
+    ProcessorBase* rl;
   public:
     SharpenPar();
 

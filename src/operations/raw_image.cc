@@ -60,7 +60,9 @@ PF::RawImage::RawImage( const std::string f ):
 
   raw_loader->raw2image();
 
-  #warning "TODO: add a custom subtract_black() function that works in unbounded mode"
+#ifdef DO_WARNINGS
+#warning "TODO: add a custom subtract_black() function that works in unbounded mode"
+#endif
   raw_loader->subtract_black();
 
 	int iwidth = raw_loader->imgdata.sizes.iwidth;
@@ -127,7 +129,8 @@ PF::RawImage::RawImage( const std::string f ):
 #endif
   int row, col, col2;
   //size_t pxsize = sizeof(PF::RawPixel);
-  size_t pxsize = sizeof(float)+sizeof(guint8);
+  //size_t pxsize = sizeof(float)+sizeof(guint8);
+  size_t pxsize = sizeof(float)*2;
   guint8* rowbuf = (guint8*)malloc( iwidth*pxsize );
 #ifndef NDEBUG
   std::cout<<"Row buffer allocated: "<<(void*)rowbuf<<std::endl;
@@ -154,12 +157,15 @@ PF::RawImage::RawImage( const std::string f ):
       float val = (data[row][col]-c_black[color])*65535/(this->get_white(color)-c_black[color]);
 #endif
 			fptr = (float*)ptr;
-			*fptr = val;
-			ptr[sizeof(float)] = color;
+      //*fptr = val;
+      //ptr[sizeof(float)] = color;
+      fptr[0] = val;
+      fptr[1] = color;
 			ptr += pxsize;
     }
 		/**/
-    write( temp_fd, rowbuf, pxsize*iwidth );
+    if( write( temp_fd, rowbuf, pxsize*iwidth ) != (pxsize*iwidth) )
+      break;
 #ifndef NDEBUG
     if( (row%100) == 0 ) std::cout<<"  row "<<row<<" saved."<<std::endl;
 #ifdef PF_USE_DCRAW_RT
@@ -192,11 +198,12 @@ PF::RawImage::RawImage( const std::string f ):
   
   VipsCoding coding = VIPS_CODING_NONE;
   VipsInterpretation interpretation = VIPS_INTERPRETATION_MULTIBAND;
-  VipsBandFormat format = VIPS_FORMAT_UCHAR;
+  //VipsBandFormat format = VIPS_FORMAT_UCHAR;
+  VipsBandFormat format = VIPS_FORMAT_FLOAT;
   int nbands = 2;
   vips_copy( in, &image, 
 	     "format", format,
-	     //"bands", nbands,
+	     "bands", nbands,
 	     "coding", coding,
 	     "interpretation", interpretation,
 	     NULL );
@@ -211,6 +218,18 @@ PF::RawImage::RawImage( const std::string f ):
   vips_image_set_blob( image, "raw_image_data",
 		       (VipsCallbackFn) g_free, buf, 
 		       sizeof(dcraw_data_t) );
+
+  PF::exif_read( &exif_data, file_name.c_str() );
+/*
+  buf = malloc( sizeof(exif_data_t) );
+  if( !buf ) return;
+  memcpy( buf, &exif_data, sizeof(exif_data_t) );
+  vips_image_set_blob( image, PF_META_EXIF_NAME,
+           (VipsCallbackFn) PF::exif_free, buf,
+           sizeof(exif_data_t) );
+*/
+  print_exif();
+
 #ifdef PF_USE_LIBRAW
   delete raw_loader;
   //return;
@@ -264,7 +283,14 @@ PF::RawImage::RawImage( const std::string f ):
   vips_image_set_blob( demo_image, "raw_image_data",
 		       (VipsCallbackFn) g_free, buf2, 
 		       sizeof(dcraw_data_t) );
-  
+  /**/
+  buf2 = malloc( sizeof(exif_data_t) );
+  if( !buf2 ) return;
+  memcpy( buf2, &exif_data, sizeof(exif_data_t) );
+  vips_image_set_blob( demo_image, PF_META_EXIF_NAME,
+           (VipsCallbackFn) PF::exif_free, buf2,
+           sizeof(exif_data_t) );
+/**/
   pyramid.init( demo_image );
 }
 
@@ -278,6 +304,63 @@ PF::RawImage::~RawImage()
 		unlink( cache_file_name.c_str() );
 	if( !(cache_file_name2.empty()) )
 		unlink( cache_file_name2.c_str() );
+}
+
+
+VipsImage* PF::RawImage::get_image(unsigned int& level)
+{
+  if( level == 0 ) {
+#ifdef DO_WARNINGS
+#warning "RawImage::get_image(): refreshing of exif metadata needed. This is not normal!"
+#endif
+    void* buf = malloc( sizeof(exif_data_t) );
+    if( !buf ) return NULL;
+    memcpy( buf, &exif_data, sizeof(exif_data_t) );
+    vips_image_set_blob( image, PF_META_EXIF_NAME,
+             (VipsCallbackFn) PF::exif_free, buf,
+             sizeof(exif_data_t) );
+
+    PF_REF( image, "RawImage()::get_image(): level 0 ref");
+    return image;
+  }
+
+  PF::PyramidLevel* plevel = pyramid.get_level( level );
+  if( plevel ) {
+    return plevel->image;
+  }
+  return NULL;
+}
+
+
+void PF::RawImage::print_exif(  PF::exif_data_t* data )
+{
+  std::cout<<"RawImage: (data)"<<std::endl
+        <<"      camera maker: "<<data->exif_maker<<std::endl
+        <<"      model: "<<data->exif_model<<std::endl
+        <<"      lens: "<<data->exif_lens<<std::endl;
+}
+
+void PF::RawImage::print_exif()
+{
+  std::cout<<"RawImage:"<<std::endl
+      <<"      camera maker: "<<exif_data.exif_maker<<std::endl
+      <<"      model: "<<exif_data.exif_model<<std::endl
+      <<"      lens: "<<exif_data.exif_lens<<std::endl;
+  size_t bufsz;
+  PF::exif_data_t* buf;
+  if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
+      (void**)&buf,&bufsz ) ) {
+    if( bufsz == sizeof(PF::exif_data_t) ) {
+      std::cout<<"RawImage: (embedded)"<<std::endl
+          <<"      camera maker: "<<buf->exif_maker<<std::endl
+          <<"      model: "<<buf->exif_model<<std::endl
+          <<"      lens: "<<buf->exif_lens<<std::endl;
+    } else {
+      std::cout<<"RawImage: wrong exif_custom_data size in image("<<image<<") before set_blob"<<std::endl;
+    }
+  } else {
+    std::cout<<"RawImage: exif_custom_data not found in image("<<image<<") before set_blob"<<std::endl;
+  }
 }
 
 

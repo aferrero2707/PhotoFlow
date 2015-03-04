@@ -51,7 +51,6 @@ PF::RawDeveloperPar::RawDeveloperPar():
 	demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
 	demo_method.add_enum_value(PF::PF_DEMO_IGV,"IGV","Igv");
 
-  set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
   amaze_demosaic = new_amaze_demosaic();
   igv_demosaic = new_igv_demosaic();
   fast_demosaic = new_fast_demosaic();
@@ -92,7 +91,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
 	//std::cout<<"RawDeveloperPar::build(): input_img->Bands="<<input_img->Bands<<std::endl;
   if( input_img->Bands != 3 ) {
     raw_preprocessor->get_par()->set_image_hints( in[0] );
-    raw_preprocessor->get_par()->set_format( VIPS_FORMAT_UCHAR );
+    raw_preprocessor->get_par()->set_format( VIPS_FORMAT_FLOAT );
     VipsImage* image = raw_preprocessor->get_par()->build( in, 0, NULL, NULL, level );
     if( !image )
       return NULL;
@@ -103,7 +102,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
 		case PF::PF_DEMO_FAST: demo = fast_demosaic; break;
 		case PF::PF_DEMO_AMAZE: demo = amaze_demosaic; break;
 		case PF::PF_DEMO_IGV: demo = igv_demosaic; break;
-		defualt: break;
+		default: break;
 		}
 		//PF::ProcessorBase* demo = amaze_demosaic;
 		//PF::ProcessorBase* demo = igv_demosaic;
@@ -192,6 +191,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   }
   */
 
+std::cout<<"RawDeveloper::build(): output image: "<<out2<<std::endl;
   return out2;
 }
 

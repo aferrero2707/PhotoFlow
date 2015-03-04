@@ -121,9 +121,9 @@ PF::BlenderPar::BlenderPar():
   PropertyBase* B = white->get_par()->get_property( "B" );
   if( B ) B->update( (float)1 );
 
-  blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
+  //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
+  blend_mode.set_enum_value( PF_BLEND_NORMAL );
   set_type( "blender" );
-  set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
 }
 
 
@@ -150,7 +150,9 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       if( profile_in ) {
         char tstr[1024];
         cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+#ifndef NDEBUG
         std::cout<<"BlenderPar::build(): Input profile: "<<tstr<<std::endl;
+#endif
         cmsCloseProfile( profile_in );
       }
     }  
@@ -224,18 +226,22 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
         VipsImage* whitemask = white->get_par()->build( in2, 0, NULL, NULL, level2 );
         omap_in = whitemask;
       }
+#ifndef NDEBUG
       std::cout<<"omap_in->Xsize="<<omap_in->Xsize<<"    omap_in->Ysize="<<omap_in->Ysize<<std::endl;
+#endif
       adjust_geom( omap_in, &omap2,
                    background->Xsize, background->Ysize, level );
     }
     std::vector<VipsImage*> in_;
     in_.push_back( background );
     in_.push_back( foreground2 );
+#ifndef NDEBUG
     std::cout<<"background("<<background<<")->Xsize="<<background->Xsize<<"    background->Ysize="<<background->Ysize<<std::endl;
     std::cout<<"foreground("<<foreground<<")->Xsize="<<foreground->Xsize<<"    foreground->Ysize="<<foreground->Ysize<<std::endl;
     std::cout<<"foreground2("<<foreground2<<")->Xsize="<<foreground2->Xsize<<"    foreground2->Ysize="<<foreground2->Ysize<<std::endl;
     if( omap ) std::cout<<"omap("<<omap<<")->Xsize="<<omap->Xsize<<"    omap->Ysize="<<omap->Ysize<<std::endl;
-    std::cout<<"omap2("<<omap2<<")->Xsize="<<omap2->Xsize<<"    omap2->Ysize="<<omap2->Ysize<<std::endl;
+    if( omap2 ) std::cout<<"omap2("<<omap2<<")->Xsize="<<omap2->Xsize<<"    omap2->Ysize="<<omap2->Ysize<<std::endl;
+#endif
 
     set_image_hints( background );
     outnew = PF::OpParBase::build( in_, first, NULL, omap2, level );
@@ -272,7 +278,9 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       if( profile_in ) {
         char tstr[1024];
         cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
+#ifndef NDEBUG
         std::cout<<"BlenderPar::build(): Output profile: "<<tstr<<std::endl;
+#endif
         cmsCloseProfile( profile_in );
       }
     }  

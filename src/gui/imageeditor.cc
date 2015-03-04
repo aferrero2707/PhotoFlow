@@ -50,7 +50,10 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonShowMerged( "show merged layers" ),
   buttonShowActive( "show active layer" )
 {
-	imageArea = new PF::ImageArea( image->get_pipeline(PIPELINE_ID) );
+  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+
+  imageArea = new PF::ImageArea( image->get_pipeline(PIPELINE_ID) );
 
   imageArea->set_adjustments( imageArea_scrolledWindow.get_hadjustment(),
 			     imageArea_scrolledWindow.get_vadjustment() );
@@ -144,12 +147,16 @@ void PF::ImageEditor::open_image()
   std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
   if( !pipeline ) return;
-  int level = 1;
+  int level = 0;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
   std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
+  image->set_loaded( false );
   image->update();
+  //getchar();
+  //PF::ImageProcessor::Instance().wait_for_caching();
+  image->set_loaded( true );
   image_opened = true;
   //Gtk::Paned::on_map();
 }
@@ -300,7 +307,7 @@ void PF::ImageEditor::set_active_layer( int id )
   active_layer = NULL;
   if( image )
     active_layer = image->get_layer_manager().get_layer( id );
-  std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
+  //std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
   if( old_active != active_layer ) {
     if( old_active &&
         old_active->get_processor() &&
@@ -471,7 +478,13 @@ bool PF::ImageEditor::on_motion_notify_event( GdkEventMotion* event )
 		y = event->y;
 		state = event->state;	
 	}
-  if( state & GDK_BUTTON1_MASK ) {
+	int button = -1;
+  if(state & GDK_BUTTON1_MASK) button = 1;
+  if(state & GDK_BUTTON2_MASK) button = 2;
+  if(state & GDK_BUTTON3_MASK) button = 3;
+  if(state & GDK_BUTTON4_MASK) button = 4;
+  if(state & GDK_BUTTON5_MASK) button = 5;
+  if( true || (state & GDK_BUTTON1_MASK) ) {
     //gdouble x = event->x;
     //gdouble y = event->y;
     if( !screen2image( x, y ) )
@@ -493,10 +506,11 @@ bool PF::ImageEditor::on_motion_notify_event( GdkEventMotion* event )
         int mod_key = PF::MOD_KEY_NONE;
         if( event->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
         if( event->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
-        if( dialog->pointer_motion_event( 1, x, y, mod_key ) ) {
+        if( dialog->pointer_motion_event( button, x, y, mod_key ) ) {
           // The dialog requires to draw on top of the preview image, so we call draw_area() 
           // to refresh the preview
-          imageArea->draw_area();
+          //imageArea->draw_area();
+          imageArea->queue_draw();
         }
       }
     }

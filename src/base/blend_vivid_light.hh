@@ -72,8 +72,10 @@ public:
   BlendVividLight(): BlendBase<T, CS, CHMIN, CHMAX, false>(), psum(FormatInfo<T>::MAX + FormatInfo<T>::MIN) {}
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
+#ifdef DO_WARNINGS
 #warning "TODO: optimize vivid light blend"
 #warning "TODO: handle vivid light blend for Lab and CMYK"
+#endif
     pos = x;
     psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
