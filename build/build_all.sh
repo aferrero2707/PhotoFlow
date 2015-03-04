@@ -26,13 +26,13 @@ if [ ${rebuild_VIPS} -eq 1 ]; then
 		FLAGS="$FLAGS -ftree-vectorize"
 		CFLAGS="$FLAGS" CXXFLAGS="$FLAGS -fpermissive" \
 				./configure --prefix=${vips_install} --disable-gtk-doc --disable-gtk-doc-html \
-				--disable-introspection --enable-debug=no --without-python  --without-magick\
+				--disable-introspection --enable-debug=no --without-python  --without-magick --without-libwebp\
 				--enable-pyvips8=no --enable-shared=no --enable-static=yes
 		if [ $? -ne 0 ]; then
 				echo "VIPS configure failed"
 				exit 1
 		fi
-    make clean depclean
+    #make clean depclean
 		make install
 		if [ $? -ne 0 ]; then
 				echo "VIPS compilation failed"
@@ -42,7 +42,7 @@ if [ ${rebuild_VIPS} -eq 1 ]; then
 		cd ../..
 fi
 
-rm -rf Release
+#rm -rf Release
 mkdir -p Release
 cd Release
 

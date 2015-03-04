@@ -1,6 +1,6 @@
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g ")
 #SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}  "-Wall -O0 -g") 
-SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DDO_WARNINGS -DPF_VERBOSE_UNREF -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
+SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DNDEBUG -DDO_WARNINGS -DPF_VERBOSE_UNREF -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg") 
 #SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops") 
 SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG -DLIBRAW_NODLL -DPF_VERBOSE_UNREF -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
@@ -164,7 +164,12 @@ add_library (pfgmic
   ${GMicSources}
 )
 
-SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic")
+add_library (pfgui
+  ${GuiIncludes}
+  ${GuiSources}
+)
+
+#SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic")
 
 #add_library (pfoperations
 #  ${OpIncludes}
@@ -175,6 +180,9 @@ SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_u
 IF(MINGW)
   SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
   SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
+ELSEIF(APPLE)
+  SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -mtune=generic")
+  SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -mtune=generic -fpermissive")
 ELSE(MINGW)
   SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic")
   SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic -fpermissive")
@@ -183,50 +191,13 @@ ENDIF(MINGW)
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES SUFFIX ".plg")
 
 
-add_executable(photoflow # name of the executable on Windows will be example.exe 
-  main.cc 
-  ${GuiIncludes}
-  ${GuiSources}
-  )
-
-#add_dependencies(photoflow ${LIB_DEPS})
-
 IF(MINGW)
   list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+ELSEIF(APPLE)
+  list(APPEND ADDITIONAL_LIBS)
 ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
 ENDIF(MINGW)
-
-target_link_libraries(photoflow ${LIBS} 
-  pfbase 
-  pfdt
-  pfvips 
-  pfgmic 
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${OPENEXR_LIBRARIES}
-  ${XML2_LIBRARIES}
-  ${EXIF_LIBRARIES}
-  ${EXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
-  ${SIGC2_LIBRARIES}
-  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-  ${GTKMM_LIBRARIES} 
-  ${GLIBMM_LIBRARIES} 
-  ${GLIB_LIBRARIES} 
-  ${GMODULE_LIBRARIES} 
-  ${GOBJECT_LIBRARIES} 
-  ${GTHREAD_LIBRARIES} 
-  ${ZLIB_LIBRARIES}
-  #${LIBRAW_LIBRARIES}  
-  ${STATIC_LIBS}
-  ${ORC_LIBRARIES}
-  fftw3
-  ${ADDITIONAL_LIBS}
-  #gmon
-  )
-
 
 add_executable(pfbatch pfbatch.cc)
 
@@ -261,12 +232,52 @@ target_link_libraries(pfbatch ${LIBS}
   #gmon
   )
 
+
+add_executable(photoflow # name of the executable on Windows will be example.exe 
+  main.cc 
+  #${GuiIncludes}
+  #${GuiSources}
+  )
+
+#add_dependencies(photoflow ${LIB_DEPS})
+
+target_link_libraries(photoflow ${LIBS} 
+  pfbase 
+  pfdt
+  pfvips 
+  pfgmic 
+  pfgui
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
+  ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${GTKMM_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  #${LIBRAW_LIBRARIES}  
+  ${STATIC_LIBS}
+  ${ORC_LIBRARIES}
+  fftw3
+  ${ADDITIONAL_LIBS}
+  #gmon
+  )
+
+
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
-
 
 #add_executable(invert # name of the executable on Windows will be example.exe 
 #  benchmarks/invert.cc 

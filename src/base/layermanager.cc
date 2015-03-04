@@ -149,6 +149,58 @@ void PF::LayerManager::get_input_layers( Layer* layer, std::list<Layer*>& inputs
 }
 
 
+void PF::LayerManager::get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
+                                         std::list<Layer*>& children )
+{
+  //#ifndef NDEBUG
+  std::cout<<"Collecting children of layer \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
+  //#endif
+  std::list<PF::Layer*> tmplist;
+  std::list<PF::Layer*>::reverse_iterator li;
+  // Loop over layers in reverse order and fill a temporary list,
+  // until either the target layer is found or the end of the
+  // container list is reached
+  for(li = container.rbegin(); li != container.rend(); ++li) {
+    PF::Layer* l = *li;
+    //#ifndef NDEBUG
+    std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
+    //#endif
+    if( l->get_id() == layer->get_id() ) break;
+    // Add layer and all its children to the inputs list
+    //expand_layer( l, inputs );
+    // Add layer to the temporary list
+    tmplist.push_front( l );
+    //#ifndef NDEBUG
+    std::cout<<"    added."<<std::endl;
+    //#endif
+  }
+
+  // Append the temporary list to the childrens one
+  children.insert( children.end(), tmplist.begin(), tmplist.end() );
+
+  PF::Layer* container_layer = get_container_layer( layer );
+  if( !container_layer ) return;
+
+  // Add the container layer to the list of children
+  children.push_back( container_layer );
+
+  std::list<PF::Layer*>* clist = get_list( container_layer );
+  if( !clist ) return;
+
+  // Add all the children of the container layer to the children list
+  get_child_layers( container_layer, *clist, children );
+}
+
+
+void PF::LayerManager::get_child_layers( Layer* layer, std::list<Layer*>& children )
+{
+  if( !layer ) return;
+  std::list<PF::Layer*>* clist = get_list( layer );
+  if( !clist ) return;
+  get_child_layers( layer, *clist, children );
+}
+
+
 bool PF::LayerManager::get_parent_layers(Layer* layer, 
                                          std::list< std::pair<std::string,Layer*> >& plist,
                                          std::string parent_name, std::list<Layer*>& list)
@@ -371,19 +423,19 @@ PF::CacheBuffer* PF::LayerManager::get_cache_buffer( rendermode_t mode, std::lis
     if( l->get_image() && l->is_cached() && l->get_cache_buffer(mode) &&
         !l->get_cache_buffer(mode)->is_completed() ) {
       buf = l->get_cache_buffer( mode );
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"Layer \""<<l->get_name()<<"\": pending cache buffer "<<buf<<std::endl;
       std::cout<<"  l->get_image()->get_npipelines()="<<l->get_image()->get_npipelines()<<std::endl;
-      //#endif
+#endif
       for( int pi = 0; pi < l->get_image()->get_npipelines(); pi++ ) {
         PF::Pipeline* pipeline = l->get_image()->get_pipeline(pi);
-        std::cout<<"    l->get_image()->get_pipeline("<<pi<<")->get_render_mode()="
-            <<pipeline->get_render_mode()<<std::endl;
+        //std::cout<<"    l->get_image()->get_pipeline("<<pi<<")->get_render_mode()="
+        //    <<pipeline->get_render_mode()<<std::endl;
         if( pipeline && pipeline->get_render_mode() == mode &&
             pipeline->get_node(l->get_id()) ) {
           PF::PipelineNode* node = pipeline->get_node(l->get_id());
           buf->set_image( node->image );
-          std::cout<<"Caching layer \""<<l->get_name()<<"\"  image="<<node->image<<std::endl;
+          //std::cout<<"Caching layer \""<<l->get_name()<<"\"  image="<<node->image<<std::endl;
           return( buf );
         }
       }

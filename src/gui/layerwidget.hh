@@ -42,9 +42,12 @@
 
 namespace PF {
 
+class ImageEditor;
+
 class LayerWidget : public Gtk::VBox
 {
   Image* image;
+  ImageEditor* editor;
 
   Gtk::Notebook notebook;
   //Gtk::HButtonBox buttonbox;
@@ -63,7 +66,7 @@ class LayerWidget : public Gtk::VBox
   void select_row(int id);
 
 public:
-  LayerWidget( Image* image );
+  LayerWidget( Image* image, ImageEditor* editor );
   virtual ~LayerWidget( );
 
   Image* get_image() { return image; }

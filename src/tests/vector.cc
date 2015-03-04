@@ -62,11 +62,14 @@
 //#include <vips/vips>
 #include <vips/vips.h>
 
-#include "base/pf_mkstemp.hh"
-#include "base/imageprocessor.hh"
-#include "gui/mainwindow.hh"
+#include "../base/pf_mkstemp.hh"
+#include "../base/imageprocessor.hh"
+#include "../gui/mainwindow.hh"
 
-#include "base/new_operation.hh"
+#include "../base/new_operation.hh"
+
+#include "../base/splinecurve.hh"
+#include "../base/format_info.hh"
 
 extern int vips__leak;
 
@@ -266,6 +269,21 @@ int main (int argc, char *argv[])
 	for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
 		unlink( fi->c_str() );
 
+	
+	  PF::SplineCurve curve;
+	  std::vector< std::pair<float,float> > points;
+	  float x1=0,y1=0,x2=1,y2=1;
+	  points.push_back( std::make_pair(x1,y1) );
+	  points.push_back( std::make_pair(x2,y2) );
+	  for(int i = 0; i < 65536; i++) {
+	    size_t size = points.size();
+	    float x = points[0].first;
+	    float y = points[0].second;
+	    x = points[1].first;
+	    y = points[1].second;
+	    x = ((float)i)/PF::FormatInfo<unsigned short int>::RANGE;
+	    y = curve.get_delta( x );
+	  }
   return 0;
 }
 

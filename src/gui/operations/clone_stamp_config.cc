@@ -162,6 +162,7 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
 
     par->draw_point( x, y, update );
 		//continue;
+    layer2image( update );
 
 		/**/
     if( (update.width > 0) &&
@@ -201,13 +202,15 @@ bool PF::CloneStampConfigDialog::pointer_press_event( int button, double x, doub
   if( button != 1 ) return false;
   if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return false;
 
-  start_stroke( x, y );
+  double lx = x, ly = y, lw = 1, lh = 1;
+  screen2layer( lx, ly, lw, lh );
+  start_stroke( lx, ly );
 
   PF::Image* image = get_layer()->get_image();
   if( !image ) return false;
   image->update();
 
-  draw_point( x, y );
+  draw_point( lx, ly );
   return false;
 }
 
@@ -216,8 +219,10 @@ bool PF::CloneStampConfigDialog::pointer_release_event( int button, double x, do
 {
   if( button != 1 ) return false;
   if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) {
-    srcpt_row = y;
-    srcpt_col = x;
+    double lx = x, ly = y, lw = 1, lh = 1;
+    screen2layer( lx, ly, lw, lh );
+    srcpt_row = ly;
+    srcpt_col = lx;
     srcpt_ready = true;
     srcpt_changed = true;
   } else {
@@ -234,7 +239,9 @@ bool PF::CloneStampConfigDialog::pointer_motion_event( int button, double x, dou
 #ifndef NDEBUG
   std::cout<<"PF::CloneStampConfigDialog::pointer_motion_event() called."<<std::endl;
 #endif
-  draw_point( x, y );
+  double lx = x, ly = y, lw = 1, lh = 1;
+  screen2layer( lx, ly, lw, lh );
+  draw_point( lx, ly );
   return false;
 }
 

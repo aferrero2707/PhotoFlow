@@ -70,7 +70,16 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
 	if( srcimg == NULL ) return NULL;
 	VipsImage* out;
 
+  in_width = srcimg->Xsize;
+  in_height = srcimg->Ysize;
+  out_width = in_width;
+  out_height = in_height;
+  sin_angle = 0;
+  cos_angle = 1;
+
 	if( rotate_angle.get() != 0 ) {
+    sin_angle = sin( rotate_angle.get() * 3.141592653589793 / 180.0 );
+    cos_angle = cos( rotate_angle.get() * 3.141592653589793 / 180.0 );
 	  if( vips_similarity(srcimg, &out, "angle", rotate_angle.get(),
 	      //"idx", (double)-1*srcimg->Xsize/4,
 	      //"idy", (double)-1*srcimg->Ysize/2,
@@ -80,11 +89,14 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
 	    return NULL;
 	  }
 	  set_image_hints( out );
+	  out_width = out->Xsize;
+	  out_height = out->Ysize;
 	  srcimg = out;
 	} else {
 	  PF_REF( srcimg, "ScalePar::build(): srcimg ref for angle=0" );
 	}
 
+  scale_mult = 1;
   int scale_factor = 1;
   for(unsigned int l = 0; l < level; l++ ) {
     scale_factor *= 2;
@@ -127,12 +139,13 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   if( scale_mode.get_enum_value().first == PF::SCALE_MODE_FIT ) {
-    if( level!=0 || scale_width==0 || scale_height==0 ||
+    if( /*level!=0 ||*/ scale_width==0 || scale_height==0 ||
         scale_width==1 || scale_height==1 ) {
       //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
       return srcimg;
     }
     float scale = MIN( scale_width, scale_height );
+    scale_mult = scale;
 
     VipsInterpolate* interpolate = vips_interpolate_new( "nohalo" );
     if( !interpolate )

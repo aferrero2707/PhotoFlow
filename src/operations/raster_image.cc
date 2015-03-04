@@ -48,9 +48,10 @@ PF::RasterImage::RasterImage( const std::string f ):
     return;
   }
   
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RasterImage::RasterImage(): # of bands="<<image->Bands<<std::endl;
-#endif
+  std::cout<<"RasterImage::RasterImage(): type="<<image->Type<<std::endl;
+//#endif
 
   int out_nbands = 0;
   if( (convert_colorspace(image->Type) == PF_COLORSPACE_GRAYSCALE) &&
@@ -70,12 +71,18 @@ PF::RasterImage::RasterImage( const std::string f ):
     out_nbands = 4;
   }
 
+  //#ifndef NDEBUG
+    std::cout<<"RasterImage::RasterImage(): out_nbands="<<out_nbands<<std::endl;
+  //#endif
   if( out_nbands > 0 ) {
     VipsImage* out;
     if( vips_extract_band( image, &out, 0, "n", out_nbands, NULL ) ) {
       std::cout<<"RasterImage::RasterImage(): vips_extract_band() failed"<<std::endl;
       return;
     }
+    //#ifndef NDEBUG
+      std::cout<<"RasterImage::RasterImage(): # of output bands="<<out->Bands<<std::endl;
+    //#endif
 
     PF_UNREF( image, "RasterImage::RasterImage(): image unref" );
     vips_image_init_fields( out,
@@ -86,6 +93,9 @@ PF::RasterImage::RasterImage( const std::string f ):
                             1.0, 1.0);
     image = out;
   }
+  //#ifndef NDEBUG
+    std::cout<<"RasterImage::RasterImage(): # of output bands="<<image->Bands<<std::endl;
+  //#endif
 
   PF::exif_read( &exif_data, file_name.c_str() );
   void* buf = malloc( sizeof(PF::exif_data_t) );
