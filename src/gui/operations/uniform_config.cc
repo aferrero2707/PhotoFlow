@@ -82,7 +82,7 @@ void PF::UniformConfigDialog::on_color_changed()
   float value = color_button.get_color().get_red();
   par->get_R().set( value/65535 );
   value = color_button.get_color().get_green();
-  par->get_G().set( value/65535 );
+   par->get_G().set( value/65535 );
   value = color_button.get_color().get_blue();
   par->get_B().set( value/65535 );
 #endif
