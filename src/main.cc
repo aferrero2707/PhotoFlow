@@ -263,7 +263,7 @@ int main (int argc, char *argv[])
     perror("calling getrlimit");
     exit(1);
   }
-  std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<std::endl; 
+  std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<"  OPEN_MAX="<<OPEN_MAX<<std::endl; 
   for (int i = 0; i < OPEN_MAX/*rlim.rlim_max*/; ++i) close (i);
 #endif
   std::list<std::string>::iterator fi;
