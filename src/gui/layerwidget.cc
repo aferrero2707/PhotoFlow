@@ -632,7 +632,7 @@ void PF::LayerWidget::on_button_save()
     refTreeSelection->get_selected_rows();
   if( sel_rows.empty() ) return;
 
-  Gtk::FileChooserDialog dialog("Save image as...",
+  Gtk::FileChooserDialog dialog("Save preset as...",
 				Gtk::FILE_CHOOSER_ACTION_SAVE);
   //dialog.set_transient_for(*this);
   
@@ -691,7 +691,7 @@ void PF::LayerWidget::on_button_save()
   of.open( filename.c_str() );
   if( !of ) return;
 
-  of<<"<preset version=\"2\">"<<std::endl;
+  of<<"<preset version=\""<<PF_FILE_VERSION<<"\">"<<std::endl;
   for( int ri = sel_rows.size()-1; ri >= 0; ri-- ) {
     Gtk::TreeModel::iterator iter = model->get_iter( sel_rows[ri] );
     if( !iter ) continue;

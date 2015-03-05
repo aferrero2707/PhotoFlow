@@ -36,7 +36,7 @@
 
 namespace PF {
 
-  class LayerList: public Gtk::VBox
+  class LayerList: public Gtk::HBox
   {
     //Tree model columns:
     class ModelColumns : public Gtk::TreeModel::ColumnRecord
@@ -58,6 +58,9 @@ namespace PF {
     Gtk::VBox vbox;
     Gtk::Label label;
     Gtk::ComboBox cbox;
+    Gtk::VBox vbox2;
+    Gtk::Label label2;
+    Gtk::SpinButton image_num;
     Glib::RefPtr<Gtk::ListStore> model;
 
     bool inhibit;

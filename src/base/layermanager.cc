@@ -502,7 +502,7 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     // if the current layer is not qualified as "dirty", but one of the extra input layers is,
     // then we set the dirty flag to true as well
     for( unsigned int i = 0; i < l->extra_inputs.size(); i++ ) {
-      Layer* lextra = get_layer( l->extra_inputs[i].first );
+      Layer* lextra = get_layer( l->extra_inputs[i].first.first );
       if( lextra && lextra->is_dirty() ) {
         input_dirty = true;
         break;
@@ -830,6 +830,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
        and then we combine it with the output of the previous layer
     */
     VipsImage* newimg = NULL;
+    std::vector<VipsImage*> newimgvec;
     VipsImage* imap = NULL;
     VipsImage* omap = NULL;
     if( l->sublayers.empty() ) {
@@ -884,13 +885,20 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         std::cout<<"Layer \""<<l->get_name()<<"\": adding extra input layer id="<<l->extra_inputs[iextra].first
                  <<" (blended="<<l->extra_inputs[iextra].second<<")..."<<std::endl;
 #endif
-        PF::Layer* lextra = get_layer( l->extra_inputs[iextra].first );
+        PF::Layer* lextra = get_layer( l->extra_inputs[iextra].first.first );
+        int imgid = l->extra_inputs[iextra].first.second;
         // If the extra input layer is not found we have a problem, better to give up
         // with an error.
         if( !lextra ) return false;
         PF::PipelineNode* extra_node = pipeline->get_node( lextra->get_id() );
         if( !extra_node ) return false;
-        VipsImage* extra_img = (l->extra_inputs[iextra].second == true) ? extra_node->blended : extra_node->image;
+        VipsImage* extra_img = NULL;
+        if( l->extra_inputs[iextra].second == true ) {
+          extra_img = extra_node->blended;
+        } else {
+          if( (imgid>0) && (imgid<extra_node->images.size()) )
+            extra_img = extra_node->images[imgid];
+        }
         //VipsImage* extra_img = lextra->get_processor()->get_par()->get_image();
         // Similarly, if the extra input layer has no valid image associated to it
         // we have a problem and we gve up
@@ -917,7 +925,8 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 #endif
       unsigned int level = pipeline->get_level();
       pipelinepar->import_settings( par );
-      newimg = pipelinepar->build( in, 0, imap, omap, level );
+      newimgvec = pipelinepar->build_many( in, 0, imap, omap, level );
+      newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
 
       if( newimg != NULL && l->is_cached() &&
           (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
@@ -1032,7 +1041,8 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 #endif
       unsigned int level = pipeline->get_level();
       pipelinepar->import_settings( par );
-      newimg = pipelinepar->build( in, 0, imap, omap, level );
+      newimgvec = pipelinepar->build_many( in, 0, imap, omap, level );
+      newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
 
       if( newimg != NULL && !image->is_loaded() && l->is_cached() &&
           (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
@@ -1093,7 +1103,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
     if( newimg ) {
       VipsImage* blendedimg;
-      pipeline->set_image( newimg, l->get_id() );
+      pipeline->set_images( newimgvec, l->get_id() );
       if( par->has_opacity() && blender && pipelineblender) {
         unsigned int level = pipeline->get_level();
         pipelineblender->import_settings( blender );

@@ -40,7 +40,7 @@
 
 namespace PF {
 
-  class CloneConfigDialog: public OperationConfigDialog
+class CloneConfigDialog: public OperationConfigDialog
 {
   LayerList layer_list;
   Selector sourceSelector;

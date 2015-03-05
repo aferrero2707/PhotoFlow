@@ -275,6 +275,16 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
 
 
 
+std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, int first,
+        VipsImage* imap, VipsImage* omap, unsigned int& level)
+{
+  VipsImage* out = build( in, first, imap, omap, level );
+  std::vector<VipsImage*> result;
+  result.push_back( out );
+  return result;
+}
+
+
 bool PF::OpParBase::save( std::ostream& ostr, int level )
 {
   for(int i = 0; i < level; i++) ostr<<"  ";

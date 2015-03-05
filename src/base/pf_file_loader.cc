@@ -155,10 +155,15 @@ void start_element (GMarkupParseContext *context,
         std::istringstream idstream( idstr );
         int ninput = 0;
         while ( !idstream.eof() ) {
-          int id;
+          int id, imgid = 0;
           idstream>>id;
           if( !idstream ) 
             break;
+          if( (version>=4) ) {
+            idstream>>imgid;
+            if( !idstream )
+              break;
+          }
           bool blended = true;
           if( (version>=3) ) {
             idstream>>blended;
@@ -167,7 +172,7 @@ void start_element (GMarkupParseContext *context,
           }
           if( id < layer_id_mapper.size() &&
               layer_id_mapper[id] )
-            layer->set_input( ninput, layer_id_mapper[id]->get_id(), blended );
+            layer->set_input( ninput, layer_id_mapper[id]->get_id(), imgid, blended );
           ninput++;
         }
       }
@@ -197,7 +202,7 @@ void start_element (GMarkupParseContext *context,
 
     std::cout<<"Layer \""<<layer->get_name()<<"\" extra inputs: ";
     for(unsigned int i = 0; i < layer->get_extra_inputs().size(); i++)
-      std::cout<<layer->get_extra_inputs()[i].first
+      std::cout<<layer->get_extra_inputs()[i].first.first<<","<<layer->get_extra_inputs()[i].first.second
                <<" (blended="<<layer->get_extra_inputs()[i].second<<")";
     std::cout<<std::endl;
 

@@ -150,23 +150,55 @@ void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
   
   char tstr[500];
   if( nodes[id] != NULL ) {
-    if( nodes[id]->image != NULL ) {
+    if( !(nodes[id]->images.empty()) ) {
       //if( G_OBJECT( nodes[id]->image )->ref_count < 1 )
-      //	std::cout<<"!!! Pipeline::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->image<<std::endl;
+      //  std::cout<<"!!! Pipeline::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->image<<std::endl;
       //g_assert( G_OBJECT( nodes[id]->image )->ref_count > 0 );
       //g_object_unref( nodes[id]->image );
       PF::Layer* l = image->get_layer_manager().get_layer( id );
       if( l ) {
         snprintf( tstr, 499, "PF::Pipeline::set_image() unref image of layer %s",
                   l->get_name().c_str() );
-        if( l->get_name() == "Raw developer" )
-          std::cout<<"BINGO!!!"<<std::endl;
       } else {
         snprintf( tstr, 499, "PF::Pipeline::set_image() unref image (NULL layer)" );
       }
-      PF_UNREF( nodes[id]->image, tstr );
+      for( size_t i = 0; i < nodes[id]->images.size(); i++ )
+        PF_UNREF( nodes[id]->images[i], tstr );
+      nodes[id]->images.clear();
+      nodes[id]->image = NULL;
     }
     nodes[id]->image = img;
+    if( img ) nodes[id]->images.push_back( img );
+  }
+}
+
+
+void PF::Pipeline::set_images( std::vector<VipsImage*> imgvec, unsigned int id )
+{
+  if( id >= nodes.size() )
+    return;
+
+  char tstr[500];
+  if( nodes[id] != NULL ) {
+    if( !(nodes[id]->images.empty()) ) {
+      //if( G_OBJECT( nodes[id]->image )->ref_count < 1 )
+      //  std::cout<<"!!! Pipeline::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->image<<std::endl;
+      //g_assert( G_OBJECT( nodes[id]->image )->ref_count > 0 );
+      //g_object_unref( nodes[id]->image );
+      PF::Layer* l = image->get_layer_manager().get_layer( id );
+      if( l ) {
+        snprintf( tstr, 499, "PF::Pipeline::set_image() unref image of layer %s",
+                  l->get_name().c_str() );
+      } else {
+        snprintf( tstr, 499, "PF::Pipeline::set_image() unref image (NULL layer)" );
+      }
+      for( size_t i = 0; i < nodes[id]->images.size(); i++ )
+        PF_UNREF( nodes[id]->images[i], tstr );
+      nodes[id]->images.clear();
+      nodes[id]->image = NULL;
+    }
+    nodes[id]->images = imgvec;
+    if( !(imgvec.empty()) ) nodes[id]->image = imgvec[0];
   }
 }
 

@@ -33,20 +33,24 @@
 
 
 PF::LayerList::LayerList( OperationConfigDialog* d, std::string l ):
-  Gtk::VBox(),
+  Gtk::HBox(),
   dialog( d ),
   inhibit( false )
 {
   label.set_text( l.c_str() );
+  label2.set_text( "sub-image" );
 
   model = Gtk::ListStore::create(columns);
   cbox.set_model( model );
   cbox.pack_start(columns.col_name);
 
-  pack_start( label, Gtk::PACK_SHRINK );
-  pack_start( cbox, Gtk::PACK_SHRINK );
+  vbox.pack_start( label, Gtk::PACK_SHRINK );
+  vbox.pack_start( cbox, Gtk::PACK_SHRINK );
+  pack_start( vbox, Gtk::PACK_SHRINK );
 
-  //pack_start( vbox, Gtk::PACK_SHRINK );
+  vbox2.pack_start( label2, Gtk::PACK_SHRINK );
+  vbox2.pack_start( image_num, Gtk::PACK_SHRINK );
+  pack_start( vbox2, Gtk::PACK_SHRINK );
 
   cbox.signal_changed().
     connect(sigc::mem_fun(*this,
@@ -85,9 +89,11 @@ void PF::LayerList::update_model()
   model->clear();
 
   int lid = -1;
+  int imgid = 0;
   bool blended = false;
   if( layer->get_extra_inputs().size() > 0 ) {
-    lid = layer->get_extra_inputs()[0].first;
+    lid = layer->get_extra_inputs()[0].first.first;
+    imgid = layer->get_extra_inputs()[0].first.second;
     blended = layer->get_extra_inputs()[0].second;
   }
 
@@ -104,6 +110,7 @@ void PF::LayerList::update_model()
     if( (*iter).second ) {
       if( ((*iter).second->get_id() == lid) && (blended == true) ) {
 				cbox.set_active( model->children().size()-1 );
+				image_num.set_value( imgid );
 				active_lid = (*iter).second->get_id();
       }
       last_lid = (*iter).second->get_id();
@@ -118,6 +125,7 @@ void PF::LayerList::update_model()
     if( (*iter).second ) {
       if( ((*iter).second->get_id() == lid) && (blended == false) ) {
 				cbox.set_active( model->children().size()-1 );
+        image_num.set_value( imgid );
 				active_lid = (*iter).second->get_id();
       }
       last_lid = (*iter).second->get_id();
@@ -165,7 +173,7 @@ void PF::LayerList::changed()
 
       //std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
 	    //   <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
-      layer->set_input( 0, l->get_id(), row[columns.col_blended] );
+      layer->set_input( 0, l->get_id(), image_num.get_value(), row[columns.col_blended] );
       layer->set_dirty( true );
 			if( !inhibit ) {
 				//std::cout<<"LayerList::changed(): updating image"<<std::endl;
