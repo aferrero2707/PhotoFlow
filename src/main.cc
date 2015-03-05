@@ -264,7 +264,10 @@ int main (int argc, char *argv[])
     exit(1);
   }
   std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<"  OPEN_MAX="<<OPEN_MAX<<std::endl; 
-  for (int i = 0; i < OPEN_MAX/10/*rlim.rlim_max*/; ++i) close (i);
+  for (int i = 0; i < OPEN_MAX/*rlim.rlim_max*/; ++i) {
+    std::cout<<"i="<<i<<std::endl;
+     close (i);
+  }
 #endif
   std::list<std::string>::iterator fi;
   for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
