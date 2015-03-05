@@ -259,7 +259,7 @@ int main (int argc, char *argv[])
 #else
   rlimit rlim;
   //getrlimit(RLIMIT_NOFILE, &rlim);
-  if (getrlimit(RLIMIT_NOFILE, &limit) < 0) {
+  if (getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
     perror("calling getrlimit");
     exit(1);
   }
