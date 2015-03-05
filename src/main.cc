@@ -259,7 +259,7 @@ int main (int argc, char *argv[])
 #else
 	rlimit rlim;
 	getrlimit(RLIMIT_NOFILE, &rlim);
-std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<std::endl;
+std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<std::endl; 
 	for (int i = 0; i < rlim.rlim_max; ++i) close (i);
 #endif
 	std::list<std::string>::iterator fi;
