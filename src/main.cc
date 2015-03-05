@@ -256,17 +256,16 @@ int main (int argc, char *argv[])
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
   for (int i = 0; i < _getmaxstdio(); ++i) close (i);
+#elif defined(__APPLE__) && defined(__MACH__)
 #else
   rlimit rlim;
   //getrlimit(RLIMIT_NOFILE, &rlim);
-  if (getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
-    perror("calling getrlimit");
-    exit(1);
-  }
-  std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<"  OPEN_MAX="<<OPEN_MAX<<std::endl; 
-  for (int i = 0; i < OPEN_MAX/*rlim.rlim_max*/; ++i) {
-    std::cout<<"i="<<i<<std::endl;
-     close (i);
+  if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
+    std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<"  OPEN_MAX="<<OPEN_MAX<<std::endl; 
+    for (int i = 0; i < rlim.rlim_max; ++i) {
+      std::cout<<"i="<<i<<std::endl;
+      close (i);
+    }
   }
 #endif
   std::list<std::string>::iterator fi;
