@@ -254,7 +254,8 @@ int main (int argc, char *argv[])
   //im_close_plugins();
   vips_shutdown();
 
-	
+return 0;
+  
 #if defined(__MINGW32__) || defined(__MINGW64__)
 	for (int i = 0; i < _getmaxstdio(); ++i) close (i);
 #else
