@@ -171,8 +171,8 @@ void PF::LayerList::changed()
       //model:
       PF::Layer* l = row[columns.col_layer];
 
-      //std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
-	    //   <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
+      std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
+	       <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
       layer->set_input( 0, l->get_id(), image_num.get_value(), row[columns.col_blended] );
       layer->set_dirty( true );
 			if( !inhibit ) {
