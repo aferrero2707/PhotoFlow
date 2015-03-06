@@ -881,10 +881,10 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       // Now we loop on the vector of extra inputs, and we include the corresponding
       // images in the input vector
       for(uint32_t iextra = 0; iextra < l->extra_inputs.size(); iextra++) {
-#ifndef NDEBUG
+//#ifndef NDEBUG
         std::cout<<"Layer \""<<l->get_name()<<"\": adding extra input layer id="<<l->extra_inputs[iextra].first
                  <<" (blended="<<l->extra_inputs[iextra].second<<")..."<<std::endl;
-#endif
+//#endif
         PF::Layer* lextra = get_layer( l->extra_inputs[iextra].first.first );
         int imgid = l->extra_inputs[iextra].first.second;
         // If the extra input layer is not found we have a problem, better to give up
@@ -893,6 +893,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         PF::PipelineNode* extra_node = pipeline->get_node( lextra->get_id() );
         if( !extra_node ) return false;
         VipsImage* extra_img = NULL;
+        std::cout<<"  imgid="<<imgid<<"  extra_node->images.size()="<<extra_node->images.size()<<std::endl;
         if( l->extra_inputs[iextra].second == true ) {
           extra_img = extra_node->blended;
         } else {
