@@ -27,47 +27,37 @@
 
  */
 
-#ifndef GMIC_DREAM_SMOOTH_H
-#define GMIC_DREAM_SMOOTH_H
+#ifndef GMIC_SPLIT_DETAILS_H
+#define GMIC_SPLIT_DETAILS_H
 
 
-#include "../../base/processor.hh"
+#include "../base/processor.hh"
 
-#include "../../vips/gmic/gmic/src/gmic.h"
-
-#include "../convertformat.hh"
-#include "../raster_image.hh"
-#include "../untiled_op.hh"
+#include "gmic_untiled_op.hh"
 
 
 namespace PF 
 {
 
-  class GmicUntiledOperationPar: public UntiledOperationPar
+  class GmicSplitDetailsPar: public GmicUntiledOperationPar
   {
-    char* custom_gmic_commands;
-    gmic* gmic_instance;
-
-  protected:
-
-    gmic* new_gmic();
+    Property<int> prop_nscales;
+    Property<float> prop_base_scale;
+    Property<float> prop_detail_scale;
 
   public:
-    GmicUntiledOperationPar();
-    ~GmicUntiledOperationPar();
+    GmicSplitDetailsPar();
+    ~GmicSplitDetailsPar() { std::cout<<"~GmicSplitDetailsPar() called."<<std::endl; }
 
-    bool has_intensity() { return false; }
-    bool has_opacity() { return true; }
-    bool needs_caching() { return false; }
-    bool init_hidden() { return false; }
-
-    bool run_gmic( std::string command );
+    std::vector<VipsImage*> build_many(std::vector<VipsImage*>& in, int first,
+        VipsImage* imap, VipsImage* omap,
+        unsigned int& level);
   };
 
   
 
   template < OP_TEMPLATE_DEF > 
-  class GmicUntiledOperationProc
+  class GmicSplitDetailsProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -80,6 +70,7 @@ namespace PF
 
 
 
+  ProcessorBase* new_gmic_split_details();
 }
 
 #endif 

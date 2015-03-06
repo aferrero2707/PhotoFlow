@@ -149,8 +149,8 @@ VipsImage* PF::GmicInpaintPar::build(std::vector<VipsImage*>& in, int first,
       PF_REF( srcimg, "GmicInpaintPar::build() srcimg ref (strokes.get().size() < 1)" );
       return srcimg;
     }
-    update_raster_image();
-    PF::RasterImage* raster_image = get_raster_image();
+    update_raster_images();
+    PF::RasterImage* raster_image = get_raster_image(0);
     //if( !raster_image || (raster_image->get_file_name () != get_cache_file_name()) ) {
     if( !raster_image ) {
       std::string tempfile = save_image( srcimg, IM_BANDFMT_FLOAT );
@@ -197,14 +197,15 @@ VipsImage* PF::GmicInpaintPar::build(std::vector<VipsImage*>& in, int first,
       command = command + std::string(",") + blend_decay.get_str();
       command = command + std::string(",") + blend_scales.get_str();
       command = command + std::string(",") + allow_outer_blending.get_str();
-      command = command + " -n[0] 0,1 -output[0] " + get_cache_file_name() + ",float,lzw";
+      command = command + " -n[0] 0,1 -output[0] " + get_cache_file_name(0) + ",float,lzw";
       run_gmic( command );
 
       unlink( tempfile.c_str() );
       PF_UNREF( blendimage, "GmicInpaintPar::build() blendimage unref after write" );
       unlink( tempfile2.c_str() );
     }
-    VipsImage* out = get_output( level );
+    std::vector<VipsImage*> outvec = get_output( level );
+    VipsImage* out = (outvec.size()>0) ? outvec[0] : NULL;
 
     return out;
   }

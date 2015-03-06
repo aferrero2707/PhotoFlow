@@ -162,6 +162,7 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   if( !processor ) {
     // Try with G'MIC
+    std::cout<<"PF::new_gmic_operation( "<<op_type<<" );"<<std::endl;
     processor = PF::new_gmic_operation( op_type );
   }
   /*

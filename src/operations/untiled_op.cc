@@ -37,8 +37,9 @@
 PF::UntiledOperationPar::UntiledOperationPar():
   OpParBase(),
   do_update( true ),
-  raster_image( NULL )
+  cache_files_num( 0 )
 {	
+  set_cache_files_num(1);
   convert_format_in = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   convert_format_out = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 }
@@ -46,8 +47,9 @@ PF::UntiledOperationPar::UntiledOperationPar():
 
 PF::UntiledOperationPar::~UntiledOperationPar()
 {
-	std::cout<<"UntiledOperationPar::~UntiledOperationPar(): raster_image="<<(void*)raster_image<<std::endl;
-  raster_image_detach();
+	std::cout<<"UntiledOperationPar::~UntiledOperationPar()"<<std::endl;
+  for( unsigned int i = 0; i < get_cache_files_num(); i++ )
+  raster_image_detach(i);
   /*
 	std::cout<<"UntiledOperationPar::~UntiledOperationPar(): raster_image="<<(void*)raster_image<<std::endl;
   if( raster_image ) {
@@ -71,8 +73,16 @@ bool PF::UntiledOperationPar::import_settings( OpParBase* pin )
 {
   UntiledOperationPar* par = dynamic_cast<UntiledOperationPar*>( pin );
   if( !par ) return false;
-  preview_cache_file_name = par->get_preview_cache_file_name();
-  render_cache_file_name = par->get_render_cache_file_name();
+  set_cache_files_num( par->get_cache_files_num() );
+  preview_cache_file_names.reserve( get_cache_files_num() );
+  render_cache_file_names.reserve( get_cache_files_num() );
+  for( unsigned int i = 0; i < get_cache_files_num(); i++ ) {
+    std::string tstr;
+    tstr = par->get_preview_cache_file_name(i);
+    preview_cache_file_names[i] = tstr;
+    tstr = par->get_render_cache_file_name(i);
+    render_cache_file_names[i] = tstr;
+  }
 
   return( PF::OpParBase::import_settings(pin) );
 }
@@ -82,37 +92,43 @@ void PF::UntiledOperationPar::pre_build( rendermode_t mode )
 {
   if( mode==PF_RENDER_PREVIEW ) {
     if( !do_update ) return;
-    
+
+    preview_cache_file_names.reserve( get_cache_files_num() );
     char fname[500];
-    sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
-    int temp_fd = pf_mkstemp( fname, 4 );
-    if( temp_fd < 0 ) return;
-    std::cout<<"UntiledOperationPar::pre_build(): cache file="<<fname<<std::endl;
-    preview_cache_file_name = fname;
+    for( unsigned int i = 0; i < get_cache_files_num(); i++ ) {
+      sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
+      int temp_fd = pf_mkstemp( fname, 4 );
+      if( temp_fd < 0 ) return;
+      std::cout<<"UntiledOperationPar::pre_build(): cache file="<<fname<<std::endl;
+      preview_cache_file_names[i] = fname;
+    }
   } else {
     char fname[500];
-    sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
-    int temp_fd = pf_mkstemp( fname, 4 );
-    if( temp_fd < 0 ) return;
-    std::cout<<"UntiledOperationPar::pre_build(): cache file="<<fname<<std::endl;
-    render_cache_file_name = fname;
+    render_cache_file_names.reserve( get_cache_files_num() );
+    for( unsigned int i = 0; i < get_cache_files_num(); i++ ) {
+      sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
+      int temp_fd = pf_mkstemp( fname, 4 );
+      if( temp_fd < 0 ) return;
+      std::cout<<"UntiledOperationPar::pre_build(): cache file="<<fname<<std::endl;
+      render_cache_file_names[i] = fname;
+    }
   }
 
   do_update = false;
 }
 
 
-std::string PF::UntiledOperationPar::get_cache_file_name()
+std::string PF::UntiledOperationPar::get_cache_file_name( unsigned int n )
 {
   std::string cache_file_name;
   if( get_render_mode() == PF_RENDER_PREVIEW ) {
+    cache_file_name = get_preview_cache_file_name( n );
     std::cout<<"UntiledOperationPar: setting cache file name to preview_cache_file_name ("
-             <<preview_cache_file_name<<")"<<std::endl;
-    cache_file_name = preview_cache_file_name;
+             <<cache_file_name<<")"<<std::endl;
   } else { 
+    cache_file_name = get_render_cache_file_name( n );
     std::cout<<"UntiledOperationPar: setting cache file name to render_cache_file_name ("
-             <<render_cache_file_name<<")"<<std::endl;
-    cache_file_name = render_cache_file_name;
+             <<cache_file_name<<")"<<std::endl;
   }
   std::cout<<"UntiledOperationPar: render_mode="<<get_render_mode()<<"  cache_file_name="<<cache_file_name<<std::endl;
 
@@ -152,31 +168,40 @@ std::string PF::UntiledOperationPar::save_image( VipsImage* image, VipsBandFmt f
 
 
 
-void PF::UntiledOperationPar::update_raster_image()
+void PF::UntiledOperationPar::update_raster_images()
 {
-  RasterImage* new_raster_image = NULL;
-  
-  std::string cache_file_name = get_cache_file_name();
-  std::map<Glib::ustring, RasterImage*>::iterator i = 
-    raster_images.find( cache_file_name );
-  if( i != raster_images.end() && i->second ) {
-    //i->second->ref();
-    new_raster_image = i->second;
-  }
+  raster_image_vec.reserve( get_cache_files_num() );
+  for( unsigned int id = 0; id < get_cache_files_num(); id++ ) {
+    RasterImage* new_raster_image = NULL;
 
-  if( new_raster_image != raster_image ) {
-    raster_image_detach();
-    if( new_raster_image ) 
-      new_raster_image->ref();
+    std::string cache_file_name = get_cache_file_name( id );
+    if( !(cache_file_name.empty()) ) {
+      std::map<Glib::ustring, RasterImage*>::iterator i =
+          raster_images.find( cache_file_name );
+      if( i != raster_images.end() && i->second ) {
+        //i->second->ref();
+        new_raster_image = i->second;
+      }
+
+      if( new_raster_image != raster_image_vec[id] ) {
+        raster_image_detach(id);
+        if( new_raster_image )
+          new_raster_image->ref();
+      }
+    }
+    raster_image_vec[id] = new_raster_image;
   }
-  raster_image = new_raster_image;
 }
 
 
-PF::RasterImage* PF::UntiledOperationPar::get_raster_image()
+PF::RasterImage* PF::UntiledOperationPar::get_raster_image( unsigned int n)
 {
-  return raster_image;
-  
+  if( n < raster_image_vec.size() )
+    return raster_image_vec[n];
+
+  return NULL;
+
+  /*
   std::string cache_file_name = get_cache_file_name();
   std::map<Glib::ustring, RasterImage*>::iterator i = 
     raster_images.find( cache_file_name );
@@ -185,12 +210,16 @@ PF::RasterImage* PF::UntiledOperationPar::get_raster_image()
     return( i->second );
   }
   return NULL;
+  */
 }
 
 
-void PF::UntiledOperationPar::raster_image_detach()
+void PF::UntiledOperationPar::raster_image_detach( unsigned int n )
 {
-  std::cout<<"UntiledOperationPar::raster_image_unref(): raster_image="<<(void*)raster_image<<std::endl;
+  if( (n<0) || (n>=raster_image_vec.size()) )
+    return;
+  PF::RasterImage* raster_image = raster_image_vec[n];
+  std::cout<<"UntiledOperationPar::raster_image_unref(): raster_image_vec["<<n<<"]="<<(void*)raster_image<<std::endl;
   if( raster_image ) {
     std::cout<<"UntiledOperationPar::raster_image_unref(): raster_image->get_nref()="
              <<raster_image->get_nref()<<" -> "<<raster_image->get_nref()-1<<std::endl;
@@ -206,48 +235,57 @@ void PF::UntiledOperationPar::raster_image_detach()
 			std::cout<<"UntiledOperationPar::raster_image_unref(): raster_image deleted"<<std::endl;
     }
   }
-  raster_image = 0;
+  raster_image_vec[n] = 0;
 }
 
 
-void PF::UntiledOperationPar::raster_image_attach()
+void PF::UntiledOperationPar::raster_image_attach( unsigned int n )
 {
+  raster_image_vec.reserve( n+1 );
   std::cout<<"UntiledOperationPar::update_raster_image()"<<std::endl;
-  raster_image_detach();
-  std::string cache_file_name = get_cache_file_name();
-  raster_image = new RasterImage( cache_file_name );
+  raster_image_detach( n );
+  std::string cache_file_name = get_cache_file_name( n );
+  if( cache_file_name.empty() )
+    return;
+  PF::RasterImage* raster_image = new RasterImage( cache_file_name );
   raster_images.insert( make_pair(cache_file_name, raster_image) );  
+  raster_image_vec[n] = raster_image;
   std::cout<<"UntiledOperationPar::update_raster_image(): cache_file_name="<<cache_file_name
            <<"  raster_image="<<raster_image<<std::endl;
 }
 
 
 
-VipsImage* PF::UntiledOperationPar::get_output( unsigned int& level )
+std::vector<VipsImage*> PF::UntiledOperationPar::get_output( unsigned int& level )
 {
-  std::cout<<"UntiledOperationPar::get_output(): raster_image="<<raster_image;
-  if( raster_image) std::cout<<"  get_nref()="<<raster_image->get_nref();
-  std::cout<<std::endl;
-  if( !raster_image ) return NULL;
+  std::vector<VipsImage*> outvec;
+  for( unsigned int i = 0; i < get_cache_files_num(); i++ ) {
+    PF::RasterImage* raster_image = raster_image_vec[i];
+    std::cout<<"UntiledOperationPar::get_output(): raster_image="<<raster_image;
+    if( raster_image) std::cout<<"  get_nref()="<<raster_image->get_nref();
+    std::cout<<std::endl;
+    if( !raster_image ) continue;
 
-  VipsImage* image = raster_image->get_image( level );
-  
-  std::cout<<"UntiledOperationPar::get_output(): image="<<image<<std::endl;
-  if( !image ) return NULL;
+    VipsImage* image = raster_image->get_image( level );
 
-  VipsImage* out = image;
-  if( (get_format() != image->BandFmt) ) {
-    std::vector<VipsImage*> in;
-    in.push_back( image );
-    convert_format_out->get_par()->set_image_hints( image );
-    convert_format_out->get_par()->set_format( get_format() );
-    out = convert_format_out->get_par()->build( in, 0, NULL, NULL, level );
-    PF_UNREF( image, "UntiledOperationPar::get_output(): image unref after convert_format" );
+    std::cout<<"UntiledOperationPar::get_output(): image="<<image<<std::endl;
+    if( !image ) continue;
+
+    VipsImage* out = image;
+    if( (get_format() != image->BandFmt) ) {
+      std::vector<VipsImage*> in;
+      in.push_back( image );
+      convert_format_out->get_par()->set_image_hints( image );
+      convert_format_out->get_par()->set_format( get_format() );
+      out = convert_format_out->get_par()->build( in, 0, NULL, NULL, level );
+      PF_UNREF( image, "UntiledOperationPar::get_output(): image unref after convert_format" );
+    }
+
+    std::cout<<"UntiledOperationPar::get_output(): out="<<out<<std::endl;
+    if( out ) {
+      set_image_hints( out );
+      outvec.push_back(out);
+    }
   }
-
-  std::cout<<"UntiledOperationPar::get_output(): out="<<out<<std::endl;
-  if( out ) {
-    set_image_hints( out );
-  }
-  return out;  
+  return outvec;
 }

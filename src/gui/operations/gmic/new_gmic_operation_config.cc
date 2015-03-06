@@ -95,6 +95,8 @@ PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, P
     dialog = new PF::GmicGradientNormConfigDialog( current_layer );
   } else if( op_type == "gmic_sharpen_rl" ) {
     dialog = new PF::GmicSharpenRLConfigDialog( current_layer );
+  } else if( op_type == "gmic_split_details" ) {
+    dialog = new PF::GmicSplitDetailsConfigDialog( current_layer );
     //insert new operations here
   }
 

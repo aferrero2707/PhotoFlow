@@ -344,6 +344,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.get_tree().add_op( "Emulate film [various]", "gmic_emulate_film_various" );
   op_gmic.get_tree().add_op( "Tone mapping", "gmic_tone_mapping" );
 #endif
+  op_gmic.get_tree().add_op( "Split details", "gmic_split_details" );
   
   op_misc.get_tree().add_op( "Buffer layer", "buffer" );
   op_misc.get_tree().add_op( "Clone layer", "clone" );

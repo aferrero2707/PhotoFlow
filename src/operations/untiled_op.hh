@@ -46,12 +46,13 @@ namespace PF
     PF::ProcessorBase* convert_format_out;
 
     bool do_update;
-    std::string preview_cache_file_name;
-    std::string render_cache_file_name;
+    std::vector<std::string> preview_cache_file_names;
+    std::vector<std::string> render_cache_file_names;
+    unsigned int cache_files_num;
 
   protected:
 
-    RasterImage* raster_image;
+    std::vector<RasterImage*> raster_image_vec;
 
   public:
     UntiledOperationPar();
@@ -62,8 +63,30 @@ namespace PF
     bool needs_caching() { return false; }
     bool init_hidden() { return false; }
 
-    std::string get_preview_cache_file_name() { return preview_cache_file_name; }
-    std::string get_render_cache_file_name() { return render_cache_file_name; }
+    void set_cache_files_num( unsigned int n )
+    {
+      for( unsigned int i = cache_files_num; i < n; i++ ) {
+        preview_cache_file_names.push_back( std::string() );
+        render_cache_file_names.push_back( std::string() );
+        raster_image_vec.push_back( NULL );
+      }
+      cache_files_num = n;
+    }
+    unsigned int get_cache_files_num() { return cache_files_num; }
+    std::string get_preview_cache_file_name(unsigned int n)
+    {
+      if( (n>=0) && (n<preview_cache_file_names.size()) )
+        return preview_cache_file_names[n];
+      else
+        return std::string();
+    }
+    std::string get_render_cache_file_name(unsigned int n)
+    {
+      if( (n>=0) && (n<render_cache_file_names.size()) )
+        return render_cache_file_names[n];
+      else
+        return std::string();
+    }
 
     void refresh() { do_update = true; }
 
@@ -71,17 +94,22 @@ namespace PF
 
     bool import_settings( OpParBase* pin );
 
-    std::string get_cache_file_name();
-    void update_raster_image();
-    RasterImage* get_raster_image();
-    void raster_image_detach();
-    void raster_image_attach();
+    std::string get_cache_file_name( unsigned int n );
+    void update_raster_images();
+    RasterImage* get_raster_image( unsigned int n );
+    void raster_image_detach( unsigned int n );
+    void raster_image_attach( unsigned int n );
+    void raster_images_attach()
+    {
+      for( unsigned int i = 0; i < get_cache_files_num(); i++ )
+        raster_image_attach(i);
+    }
 
     void pre_build( rendermode_t mode );
 
     std::string save_image( VipsImage* image, VipsBandFmt format );
 
-    VipsImage* get_output( unsigned int& level );
+    std::vector<VipsImage*> get_output( unsigned int& level );
   };
 
   

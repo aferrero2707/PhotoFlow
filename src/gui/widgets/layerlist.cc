@@ -40,6 +40,8 @@ PF::LayerList::LayerList( OperationConfigDialog* d, std::string l ):
   label.set_text( l.c_str() );
   label2.set_text( "sub-image" );
 
+  image_num.set_range(0,99);
+
   model = Gtk::ListStore::create(columns);
   cbox.set_model( model );
   cbox.pack_start(columns.col_name);
@@ -52,9 +54,13 @@ PF::LayerList::LayerList( OperationConfigDialog* d, std::string l ):
   vbox2.pack_start( image_num, Gtk::PACK_SHRINK );
   pack_start( vbox2, Gtk::PACK_SHRINK );
 
+  image_num.signal_changed().
+    connect(sigc::mem_fun(*this,
+        &LayerList::changed));
+
   cbox.signal_changed().
     connect(sigc::mem_fun(*this,
-			  &LayerList::changed));
+        &LayerList::changed));
 
   show_all_children();
 }

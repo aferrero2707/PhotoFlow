@@ -693,6 +693,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         (node->processor->get_par() != NULL) )
       pipelinepar = node->processor->get_par();
 
+    std::cout<<"Layer \""<<l->get_name()<<"\": par="<<par<<"  pipelinepar="<<pipelinepar<<std::endl;
     g_assert( pipelinepar != NULL );
 
     pipelinepar->set_render_mode( pipeline->get_render_mode() );
