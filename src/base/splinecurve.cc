@@ -56,8 +56,8 @@ PF::SplineCurve::~SplineCurve()
 
 int PF::SplineCurve::add_point( float x, float y )
 {
-  if( (get_npoints()>0) && (x<=points[0].first) ) return -1;
-  if( x >= points[get_npoints()-1].first ) return -1;
+  //if( (get_npoints()>0) && (x<=points[0].first) ) return -1;
+  //if( (get_npoints()>1) && (x >= points[get_npoints()-1].first) ) return -1;
   //return -1;
   lock();
   npoints += 1;
