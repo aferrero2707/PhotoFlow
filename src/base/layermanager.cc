@@ -897,8 +897,10 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         if( l->extra_inputs[iextra].second == true ) {
           extra_img = extra_node->blended;
         } else {
-          if( (imgid>0) && (imgid<extra_node->images.size()) )
+          if( (imgid>0) && (imgid<extra_node->images.size()) ) {
             extra_img = extra_node->images[imgid];
+            std::cout<<"  extra_node->images[imgid]="<<extra_node->images[imgid]<<std::endl;
+          }
         }
         //VipsImage* extra_img = lextra->get_processor()->get_par()->get_image();
         // Similarly, if the extra input layer has no valid image associated to it
