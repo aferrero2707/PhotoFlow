@@ -897,7 +897,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         if( l->extra_inputs[iextra].second == true ) {
           extra_img = extra_node->blended;
         } else {
-          if( (imgid>0) && (imgid<extra_node->images.size()) ) {
+          if( (imgid>=0) && (imgid<extra_node->images.size()) ) {
             extra_img = extra_node->images[imgid];
             std::cout<<"  extra_node->images[imgid]="<<extra_node->images[imgid]<<std::endl;
           }
