@@ -259,19 +259,25 @@ void PF::RawDeveloperConfigDialog::pointer_press_event( int button, double x, do
 }
 */
 
-bool PF::RawDeveloperConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::RawDeveloperConfigDialog::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
   if( button != 1 ) return false;
 
   if( wbModeSelector.get_prop() &&
       wbModeSelector.get_prop()->is_enum() &&
-      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_SPOT) )
+      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_SPOT) ) {
+    double x = sx, y = sy, w = 1, h = 1;
+    screen2layer( x, y, w, h );
     spot_wb( x, y );
+  }
 
   if( wbModeSelector.get_prop() &&
       wbModeSelector.get_prop()->is_enum() &&
-      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_COLOR_SPOT) )
+      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_COLOR_SPOT) ) {
+    double x = sx, y = sy, w = 1, h = 1;
+    screen2layer( x, y, w, h );
     color_spot_wb( x, y );
+  }
 
   return false;
 }

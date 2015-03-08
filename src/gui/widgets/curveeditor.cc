@@ -88,7 +88,7 @@ void PF::CurveEditor::update_point()
   if( inhibit_value_changed ) return;
   std::cout<<"PF::CurveEditor::update_point() called."<<std::endl;
   int ipt = curveArea.get_selected_point();
-  if( (ipt >= 0) && (ipt < curveArea.get_curve()->get_points().size()) ) {
+  if( (ipt >= 0) && (ipt < curveArea.get_curve()->get_npoints()) ) {
 #ifdef GTKMM_2
     float px = xadjustment.get_value()/100;
     float py = yadjustment.get_value()/100;
@@ -126,12 +126,12 @@ void PF::CurveEditor::get_value()
   curveArea.set_selected_point( 0 );
   inhibit_value_changed = true;
 #ifdef GTKMM_2
-  xadjustment.set_value( prop->get().get_points()[0].first*100 );
-  yadjustment.set_value( prop->get().get_points()[0].second*100 );
+  xadjustment.set_value( prop->get().get_point(0).first*100 );
+  yadjustment.set_value( prop->get().get_point(0).second*100 );
 #endif
 #ifdef GTKMM_3
-  xadjustment->set_value( prop->get().get_points()[0].first*100 );
-  yadjustment->set_value( prop->get().get_points()[0].second*100 );
+  xadjustment->set_value( prop->get().get_point(0).first*100 );
+  yadjustment->set_value( prop->get().get_point(0).second*100 );
 #endif
   inhibit_value_changed = false;
 }
@@ -174,6 +174,9 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 
   SplineCurve* curve = curveArea.get_curve();
   
+  if( !curve ) return false;
+  //curve->lock();
+  
   switch( event->type ) {
 
   case Gdk::BUTTON_PRESS: 
@@ -184,17 +187,16 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 #endif
       button_pressed = true;
       
-      if( !curve ) break;
-      
       // Look for a point close to the mouse click
       double xpt = double(event->button.x-1)/(width-3);
       double ypt = double(width-event->button.y-1)/(width-3);
-      std::vector< std::pair<float,float> > points = curve->get_points();
+      //std::vector< std::pair<float,float> > points = curve->get_points();
+      //std::pair<float,float>* points = curve->get_points();
       bool found = false;
       int ipt = -1;
-      for( unsigned int i = 0; i < points.size(); i++ ) {
-        double dx = fabs( xpt - points[i].first);
-        double dy = fabs( ypt - points[i].second);
+      for( unsigned int i = 0; i < curve->get_npoints(); i++ ) {
+        double dx = fabs( xpt - curve->get_point(i).first);
+        double dy = fabs( ypt - curve->get_point(i).second);
 #ifndef NDEBUG
         std::cout<<"  point #"<<i<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
 #endif
@@ -214,12 +216,12 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 #endif
           inhibit_value_changed = true;
 #ifdef GTKMM_2
-          xadjustment.set_value( curve->get_points()[ipt].first*100 );
-          yadjustment.set_value( curve->get_points()[ipt].second*100 );
+          xadjustment.set_value( curve->get_point(ipt).first*100 );
+          yadjustment.set_value( curve->get_point(ipt).second*100 );
 #endif
 #ifdef GTKMM_3
-          xadjustment->set_value( curve->get_points()[ipt].first*100 );
-          yadjustment->set_value( curve->get_points()[ipt].second*100 );
+          xadjustment->set_value( curve->get_point(ipt).first*100 );
+          yadjustment->set_value( curve->get_point(ipt).second*100 );
 #endif
           inhibit_value_changed = false;
           curveArea.queue_draw();
@@ -303,6 +305,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   default:
     break;
   }
+  //curve->unlock();
 
   return false;
 }
@@ -404,6 +407,7 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
     
 
     if( curve ) {
+      curve->lock();
       cr->set_source_rgb( 0.9, 0.9, 0.9 );
       curve->update_spline();
       std::vector< std::pair<float,float> > vec;
@@ -422,10 +426,10 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
       }
       cr->stroke ();
 
-      std::vector< std::pair<float,float> > points = curve->get_points();
-      for( unsigned int i = 0; i < points.size(); i++ ) {
-        double x = double(points[i].first)*width+x0;
-        double y = double(1.0f-points[i].second)*height+y0;
+      //std::vector< std::pair<float,float> > points = curve->get_points();
+      for( unsigned int i = 0; i < curve->get_npoints(); i++ ) {
+        double x = double(curve->get_point(i).first)*width+x0;
+        double y = double(1.0f-curve->get_point(i).second)*height+y0;
         cr->set_source_rgb( 0.9, 0.9, 0.9 );
         cr->arc (x, y, 3.5, 0, 2*M_PI);
         cr->fill ();
@@ -435,6 +439,7 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
           cr->fill ();
         }
       }
+      curve->unlock();
     }
   
     return true;

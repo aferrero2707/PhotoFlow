@@ -51,7 +51,7 @@ namespace PF
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
-    bool needs_caching() { return true; }
+    bool needs_caching() { return false; }
 
 
     int get_padding( int level );      

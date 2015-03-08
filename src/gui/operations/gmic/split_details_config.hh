@@ -27,33 +27,31 @@
 
  */
 
-#ifndef CLONE_CONFIG_DIALOG_HH
-#define CLONE_CONFIG_DIALOG_HH
+#ifndef GMIC_SPLIT_DETAILS_CONFIG_DIALOG_HH
+#define GMIC_SPLIT_DETAILS_CONFIG_DIALOG_HH
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
-#include "../../operations/clone.hh"
-
-#include "../widgets/layerlist.hh"
+#include "../../operation_config_dialog.hh"
 
 
 namespace PF {
 
-class CloneConfigDialog: public OperationConfigDialog
-{
-  LayerList layer_list;
-  Selector sourceSelector;
-
-public:
-  CloneConfigDialog( Layer* l );
-
-  void on_layer_changed();
-
-  void init();
-
-  void do_update();
-};
+  class GmicSplitDetailsConfigDialog: public OperationConfigDialog
+  {
+    Gtk::Button updateButton;
+    Gtk::VBox controlsBox;
+    
+    Slider prop_nscales_slider;
+    Slider prop_base_scale_slider;
+    Slider prop_detail_scale_slider;
+       
+  public:
+    GmicSplitDetailsConfigDialog( Layer* l );
+    
+    void on_update();
+    void open();
+  };
 
 }
 

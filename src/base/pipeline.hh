@@ -54,6 +54,7 @@ namespace PF
     ProcessorBase* processor;
     ProcessorBase* blender;
     VipsImage* image;
+    std::vector<VipsImage*> images;
     VipsImage* blended;
     int input_id;
 
@@ -99,6 +100,7 @@ namespace PF
 
     PipelineNode* set_node( Layer* layer, Layer* input_layer );
     void set_image( VipsImage* img, unsigned int id );
+    void set_images( std::vector<VipsImage*> img, unsigned int id );
     void set_blended( VipsImage* img, unsigned int id );
     void remove_node( unsigned int id );
 

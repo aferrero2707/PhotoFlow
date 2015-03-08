@@ -277,8 +277,10 @@ namespace PF
 
     virtual void pre_build( rendermode_t mode ) {}
 
-    virtual VipsImage* build(std::vector<VipsImage*>& in, int first, 
-			     VipsImage* imap, VipsImage* omap, unsigned int& level);
+    virtual VipsImage* build(std::vector<VipsImage*>& in, int first,
+    VipsImage* imap, VipsImage* omap, unsigned int& level);
+    virtual std::vector<VipsImage*> build_many(std::vector<VipsImage*>& in, int first,
+    VipsImage* imap, VipsImage* omap, unsigned int& level);
 
     PropertyBase* get_property(std::string name);
 

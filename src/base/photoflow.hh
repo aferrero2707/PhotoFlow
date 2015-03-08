@@ -37,6 +37,7 @@
 
 //#include "image.hh"
 
+#define PF_FILE_VERSION 4
 
 namespace PF
 {

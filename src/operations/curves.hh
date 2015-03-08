@@ -75,10 +75,10 @@ namespace PF
     short int CMYKvec8[4][UCHAR_MAX+1];
     short int * cvec8[4];
 
-    int Greyvec16[USHRT_MAX+1];
-    int RGBvec16[4][USHRT_MAX+1];
-    int Labvec16[3][USHRT_MAX+1];
-    int CMYKvec16[4][USHRT_MAX+1];
+    int Greyvec16[65536/*USHRT_MAX+1*/];
+    int RGBvec16[4][65536/*USHRT_MAX+1*/];
+    int Labvec16[3][65536/*USHRT_MAX+1*/];
+    int CMYKvec16[4][65536/*USHRT_MAX+1*/];
     int * cvec16[4];
 
     CurvesPar();

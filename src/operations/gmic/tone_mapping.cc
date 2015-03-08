@@ -72,8 +72,8 @@ VipsImage* PF::GmicToneMappingPar::build(std::vector<VipsImage*>& in, int first,
 
   if( !srcimg ) return NULL;
   
-  update_raster_image();
-  PF::RasterImage* raster_image = get_raster_image();
+  update_raster_images();
+  PF::RasterImage* raster_image = get_raster_image(0);
   //if( !raster_image || (raster_image->get_file_name () != get_cache_file_name()) ) {
   if( !raster_image ) {
     std::string tempfile = save_image( srcimg, IM_BANDFMT_FLOAT );
@@ -85,13 +85,14 @@ VipsImage* PF::GmicToneMappingPar::build(std::vector<VipsImage*>& in, int first,
     command = command + std::string(",") + prop_smoothness.get_str();
     command = command + std::string(",") + prop_iterations.get_str();
     command = command + std::string(",") + prop_channels.get_enum_value_str();
-    command = command + " -n 0,1 -output " + get_cache_file_name() + ",float,lzw";
+    command = command + " -n 0,1 -output " + get_cache_file_name(0) + ",float,lzw";
     
     run_gmic( command );
 
     unlink( tempfile.c_str() );
   }
-  VipsImage* out = get_output( level );
+  std::vector<VipsImage*> outvec = get_output( level );
+  VipsImage* out = (outvec.size()>0) ? outvec[0] : NULL;
 
   return out;
 }

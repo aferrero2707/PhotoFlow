@@ -80,7 +80,7 @@
 
 		//return;
     
-		double accum[NCH];
+		double accum[10/*NCH*/];
 		long pad, pad2, N2, n, n2, n3, ch, stride2, x_start = 0, x_end = width-1, x_end2 = x_end*NCH, x0, x1, x2, x3;
 		int k;
 
@@ -162,7 +162,7 @@
 
 		//return;
     
-		double accum[NCH];
+		double accum[10/*NCH*/];
 		long pad, pad2, N2, n, n2, n3, ch, src_stride2, dest_stride2, y_start = 0, y_end = heigth-1, y_end2 = y_end*NCH, y0, y1, y2, y3;
 		int k;
 

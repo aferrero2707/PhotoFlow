@@ -96,6 +96,7 @@ namespace PF
 
     static ImageProcessor& Instance();
 
+    void start();
     void run();
 
     void wait_for_caching();

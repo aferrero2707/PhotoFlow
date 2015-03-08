@@ -72,7 +72,7 @@ void PF::CropConfigDialog::open()
 }
 
 
-bool PF::CropConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::CropConfigDialog::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
   if( button != 1 ) return false;
   handle = CROP_HANDLE_NONE;
@@ -105,6 +105,9 @@ bool PF::CropConfigDialog::pointer_press_event( int button, double x, double y, 
   cropTopSlider.set_inhibit( true );
   cropWidthSlider.set_inhibit( true );
   cropHeightSlider.set_inhibit( true );
+
+  double x = sx, y = sy, w = 1, h = 1;
+  screen2layer( x, y, w, h );
 
   if( (crop_width == 0) || (crop_height == 0) ) {
     // No cropping area defined yet
@@ -169,10 +172,10 @@ bool PF::CropConfigDialog::pointer_release_event( int button, double x, double y
 
 void PF::CropConfigDialog::move_handle( int x, int y )
 {
+  int x0 = cropLeftSlider.get_adjustment()->get_value();
+  int y0 = cropTopSlider.get_adjustment()->get_value();
   switch( handle ) {
   case CROP_HANDLE_BOTTOMRIGHT: {
-    int x0 = cropLeftSlider.get_adjustment()->get_value();
-    int y0 = cropTopSlider.get_adjustment()->get_value();
     int new_w = (x >= x0) ? x+1-x0 : 1;
     int new_h = (y >= y0) ? y+1-y0 : 1;
     if( keepARCheckBox.get_active() ) {
@@ -188,15 +191,39 @@ void PF::CropConfigDialog::move_handle( int x, int y )
     break;
   }
   case CROP_HANDLE_RIGHT: {
-    int x0 = cropLeftSlider.get_adjustment()->get_value();
-    if( x >= x0 ) cropWidthSlider.get_adjustment()->set_value( x+1-x0 );
-    else cropWidthSlider.get_adjustment()->set_value( 1 );
+    //int x0 = cropLeftSlider.get_adjustment()->get_value();
+    int new_w = (x >= x0) ? x+1-x0 : 1;
+    int new_h = cropHeightSlider.get_adjustment()->get_value();
+    if( keepARCheckBox.get_active() ) {
+      //int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+      //    cropARHeightSlider.get_adjustment()->get_value();
+      int ar_h = new_w * cropARHeightSlider.get_adjustment()->get_value()/
+          cropARWidthSlider.get_adjustment()->get_value();
+      //if( ar_w>new_w ) new_w = ar_w;
+      new_h = ar_h;
+    }
+    cropWidthSlider.get_adjustment()->set_value( new_w );
+    cropHeightSlider.get_adjustment()->set_value( new_h );
+    //if( x >= x0 ) cropWidthSlider.get_adjustment()->set_value( x+1-x0 );
+    //else cropWidthSlider.get_adjustment()->set_value( 1 );
     break;
   }
   case CROP_HANDLE_BOTTOM: {
-    int y0 = cropTopSlider.get_adjustment()->get_value();
-    if( y >= y0 ) cropHeightSlider.get_adjustment()->set_value( y+1-y0 );
-    else cropHeightSlider.get_adjustment()->set_value( 1 );
+    //int y0 = cropTopSlider.get_adjustment()->get_value();
+    int new_w = cropWidthSlider.get_adjustment()->get_value();
+    int new_h = (y >= y0) ? y+1-y0 : 1;
+    if( keepARCheckBox.get_active() ) {
+      int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+          cropARHeightSlider.get_adjustment()->get_value();
+      //int ar_h = new_w * cropARHeightSlider.get_adjustment()->get_value()/
+      //    cropARWidthSlider.get_adjustment()->get_value();
+      //if( ar_w>new_w ) new_w = ar_w;
+      new_w = ar_w;
+    }
+    cropWidthSlider.get_adjustment()->set_value( new_w );
+    cropHeightSlider.get_adjustment()->set_value( new_h );
+    //if( y >= y0 ) cropHeightSlider.get_adjustment()->set_value( y+1-y0 );
+    //else cropHeightSlider.get_adjustment()->set_value( 1 );
     break;
   }
   case CROP_HANDLE_CENTER: {
@@ -234,9 +261,12 @@ void PF::CropConfigDialog::move_handle( int x, int y )
 
 
 
-bool PF::CropConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::CropConfigDialog::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
   if( button != 1 ) return false;
+
+  double x = sx, y = sy, w = 1, h = 1;
+  screen2layer( x, y, w, h );
 
   int ix = x;
   int iy = y;
@@ -273,10 +303,15 @@ bool PF::CropConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf
   int crop_width; crop_width_p->get(crop_width); crop_width *= scale; 
   int crop_height; crop_height_p->get(crop_height); crop_height *= scale;
   */
-  int crop_left = cropLeftSlider.get_adjustment()->get_value(); crop_left *= scale; crop_left += xoffset;
-  int crop_top = cropTopSlider.get_adjustment()->get_value(); crop_top *= scale; crop_top += yoffset;
-  int crop_width = cropWidthSlider.get_adjustment()->get_value(); crop_width *= scale; 
-  int crop_height = cropHeightSlider.get_adjustment()->get_value(); crop_height *= scale;
+  int crop_left = cropLeftSlider.get_adjustment()->get_value();// crop_left *= scale; crop_left += xoffset;
+  int crop_top = cropTopSlider.get_adjustment()->get_value();// crop_top *= scale; crop_top += yoffset;
+  int crop_width = cropWidthSlider.get_adjustment()->get_value();// crop_width *= scale;
+  int crop_height = cropHeightSlider.get_adjustment()->get_value();// crop_height *= scale;
+
+  double tx = crop_left, ty = crop_top, tw = crop_width, th = crop_height;
+  layer2screen( tx, ty, tw, th );
+  crop_left = tx; crop_top = ty; crop_width = tw; crop_height = th;
+
   int crop_bottom = crop_top + crop_height - 1;
   int crop_right = crop_left + crop_width - 1;
   

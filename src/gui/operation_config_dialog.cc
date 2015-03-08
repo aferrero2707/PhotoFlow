@@ -28,6 +28,7 @@
  */
 
 #include "operation_config_dialog.hh"
+#include "imageeditor.hh"
 
 #include "../base/new_operation.hh"
 
@@ -85,6 +86,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
 #ifdef GTKMM_3
   Gtk::Dialog(title, false),
 #endif
+  editor( NULL ),
   //intensityAdj( 100, 0, 100, 1, 10, 0),
   //opacityAdj( 100, 0, 100, 1, 10, 0),
   //intensityScale(intensityAdj),
@@ -423,6 +425,31 @@ void PF::OperationConfigDialog::on_button_clicked(int id)
   }
 }
 
+
+void PF::OperationConfigDialog::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->screen2image( x, y, w, h );
+}
+void PF::OperationConfigDialog::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->image2layer( x, y, w, h );
+}
+void PF::OperationConfigDialog::screen2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->screen2layer( x, y, w, h );
+}
+void PF::OperationConfigDialog::image2screen( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->image2screen( x, y, w, h );
+}
+void PF::OperationConfigDialog::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->layer2image( x, y, w, h );
+}
+void PF::OperationConfigDialog::layer2screen( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->layer2screen( x, y, w, h);
+}
 
 /*
 void PF::OperationConfigDialog::on_intensity_value_changed()

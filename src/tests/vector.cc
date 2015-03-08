@@ -42,17 +42,17 @@
 #include <stdio.h>  /* defines FILENAME_MAX */
 //#ifdef WINDOWS
 #if defined(__MINGW32__) || defined(__MINGW64__)
-#include <direct.h>
-#define GetCurrentDir _getcwd
+    #include <direct.h>
+    #define GetCurrentDir _getcwd
 #else
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#define GetCurrentDir getcwd
-#endif
+    #include <sys/time.h>
+    #include <sys/resource.h>
+    #include <unistd.h>
+    #define GetCurrentDir getcwd
+ #endif
 
 #if defined(__APPLE__) && defined (__MACH__)
-#include <mach-o/dyld.h>
+  #include <mach-o/dyld.h>
 #endif
 
 #include <gtkmm/main.h>
@@ -62,11 +62,14 @@
 //#include <vips/vips>
 #include <vips/vips.h>
 
-#include "base/pf_mkstemp.hh"
-#include "base/imageprocessor.hh"
-#include "gui/mainwindow.hh"
+#include "../base/pf_mkstemp.hh"
+#include "../base/imageprocessor.hh"
+#include "../gui/mainwindow.hh"
 
-#include "base/new_operation.hh"
+#include "../base/new_operation.hh"
+
+#include "../base/splinecurve.hh"
+#include "../base/format_info.hh"
 
 extern int vips__leak;
 
@@ -76,13 +79,13 @@ extern int vips__leak;
 extern "C" {
 #endif /*__cplusplus*/
 
-extern GType vips_layer_get_type( void ); 
-extern GType vips_gmic_get_type( void ); 
-extern GType vips_cimg_blur_anisotropic_get_type( void );
-extern GType vips_cimg_blur_bilateral_get_type( void );
-extern void vips_cimg_operation_init( void );
-extern GType vips_clone_stamp_get_type( void ); 
-extern GType vips_lensfun_get_type( void );
+  extern GType vips_layer_get_type( void ); 
+  extern GType vips_gmic_get_type( void ); 
+  extern GType vips_cimg_blur_anisotropic_get_type( void );
+  extern GType vips_cimg_blur_bilateral_get_type( void );
+  extern void vips_cimg_operation_init( void );
+  extern GType vips_clone_stamp_get_type( void ); 
+  extern GType vips_lensfun_get_type( void );
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
@@ -113,7 +116,7 @@ int main (int argc, char *argv[])
     printf ("usage: %s <filename>", argv[0]);
     exit(1);
   }
-   */
+  */
 
 #ifndef WIN32
   signal(SIGSEGV, handler);   // install our handler
@@ -121,7 +124,7 @@ int main (int argc, char *argv[])
 
   if (vips_init (argv[0]))
     //vips::verror ();
-    return 1;
+		return 1;
 
   vips_layer_get_type();
   vips_gmic_get_type();
@@ -153,9 +156,9 @@ int main (int argc, char *argv[])
   char path[1024];
   uint32_t size = sizeof(exname);
   if (_NSGetExecutablePath(exname, &size) == 0)
-    printf("executable path is %s\n", exname);
+      printf("executable path is %s\n", exname);
   else
-    printf("buffer too small; need size %u\n", size);
+      printf("buffer too small; need size %u\n", size);
 #else
   if (readlink("/proc/self/exe", exname, 512) < 0) {
     strncpy(exname, argv[0], 512);
@@ -168,25 +171,25 @@ int main (int argc, char *argv[])
 #endif
   std::cout<<"exePath: "<<exePath<<std::endl;
   std::cout<<"themesPath: "<<themesPath<<std::endl;
-
+  
   //im_package* result = im_load_plugin("src/pfvips.plg");
   //if(!result) verror ();
   //std::cout<<result->name<<" loaded."<<std::endl;
 
-  char cCurrentPath[FILENAME_MAX];
+	char cCurrentPath[FILENAME_MAX];
+	
+	if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
+		return errno;
+	}
+	
+	cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
 
-  if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
-    return errno;
-  }
-
-  cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
-
-  char* fullpath = realpath( cCurrentPath, NULL );
-  if(!fullpath)
-    return 1;
+	char* fullpath = realpath( cCurrentPath, NULL );
+	if(!fullpath)
+		return 1;
   //PF::PhotoFlow::Instance().set_base_dir( fullpath );
   PF::PhotoFlow::Instance().set_base_dir( exePath );
-  free( fullpath );
+	free( fullpath );
 
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
   PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
@@ -247,31 +250,40 @@ int main (int argc, char *argv[])
   mainWindow->show_all();
   app.run(*mainWindow);
 
-  delete mainWindow;
+	delete mainWindow;
 
-  PF::ImageProcessor::Instance().join();
+	PF::ImageProcessor::Instance().join();
 
   //im_close_plugins();
   vips_shutdown();
 
+	
 #if defined(__MINGW32__) || defined(__MINGW64__)
-  for (int i = 0; i < _getmaxstdio(); ++i) close (i);
-#elif defined(__APPLE__) && defined(__MACH__)
+	for (int i = 0; i < _getmaxstdio(); ++i) close (i);
 #else
-  rlimit rlim;
-  //getrlimit(RLIMIT_NOFILE, &rlim);
-  if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
-    std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<std::endl;
-    for (int i = 3; i < rlim.rlim_max; ++i) {
-      //std::cout<<"i="<<i<<std::endl;
-      close (i);
-    }
-  }
+	rlimit rlim;
+	getrlimit(RLIMIT_NOFILE, &rlim);
+	for (int i = 0; i < rlim.rlim_max; ++i) close (i);
 #endif
-  std::list<std::string>::iterator fi;
-  for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
-    unlink( fi->c_str() );
+	std::list<std::string>::iterator fi;
+	for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
+		unlink( fi->c_str() );
 
+	
+	  PF::SplineCurve curve;
+	  std::vector< std::pair<float,float> > points;
+	  float x1=0,y1=0,x2=1,y2=1;
+	  points.push_back( std::make_pair(x1,y1) );
+	  points.push_back( std::make_pair(x2,y2) );
+	  for(int i = 0; i < 65536; i++) {
+	    size_t size = points.size();
+	    float x = points[0].first;
+	    float y = points[0].second;
+	    x = points[1].first;
+	    y = points[1].second;
+	    x = ((float)i)/PF::FormatInfo<unsigned short int>::RANGE;
+	    y = curve.get_delta( x );
+	  }
   return 0;
 }
 
