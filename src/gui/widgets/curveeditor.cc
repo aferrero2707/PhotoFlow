@@ -130,8 +130,8 @@ void PF::CurveEditor::get_value()
   yadjustment.set_value( prop->get().get_point(0).second*100 );
 #endif
 #ifdef GTKMM_3
-  xadjustment->set_value( prop->get().get_points(0).first*100 );
-  yadjustment->set_value( prop->get().get_points(0).second*100 );
+  xadjustment->set_value( prop->get().get_point(0).first*100 );
+  yadjustment->set_value( prop->get().get_point(0).second*100 );
 #endif
   inhibit_value_changed = false;
 }

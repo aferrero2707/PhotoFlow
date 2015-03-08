@@ -242,11 +242,11 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 #add_dependencies(photoflow ${LIB_DEPS})
 
 target_link_libraries(photoflow ${LIBS} 
+  pfgui
   pfbase 
   pfdt
   pfvips 
   pfgmic 
-  pfgui
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 

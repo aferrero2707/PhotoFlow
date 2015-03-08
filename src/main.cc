@@ -261,7 +261,7 @@ int main (int argc, char *argv[])
   rlimit rlim;
   //getrlimit(RLIMIT_NOFILE, &rlim);
   if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
-    std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<"  OPEN_MAX="<<OPEN_MAX<<std::endl; 
+    //  std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<"  OPEN_MAX="<<OPEN_MAX<<std::endl;
     for (int i = 0; i < rlim.rlim_max; ++i) {
       std::cout<<"i="<<i<<std::endl;
       close (i);
