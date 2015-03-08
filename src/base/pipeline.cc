@@ -148,6 +148,15 @@ void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
   if( id >= nodes.size() ) 
     return;
   
+  PF::Layer* l = image->get_layer_manager().get_layer( id );
+  if( l ) {
+    std::cout<<"Pipeline::set_image(): layer \""<<l->get_name()<<"\"";
+    if( nodes[id] != NULL ) {
+      std::cout<<"  old image="<<nodes[id]->image;
+    }
+    std::cout<<"  new image="<<img<<std::endl;
+  }
+
   char tstr[500];
   if( nodes[id] != NULL ) {
     if( nodes[id]->image != NULL ) {
@@ -155,7 +164,6 @@ void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
       //	std::cout<<"!!! Pipeline::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->image<<std::endl;
       //g_assert( G_OBJECT( nodes[id]->image )->ref_count > 0 );
       //g_object_unref( nodes[id]->image );
-      PF::Layer* l = image->get_layer_manager().get_layer( id );
       if( l ) {
         snprintf( tstr, 499, "PF::Pipeline::set_image() unref image of layer %s",
                   l->get_name().c_str() );
