@@ -308,6 +308,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.get_tree().add_op( "Gaussian blur", "gaussblur" );
   op_detail.get_tree().add_op( "Noise reduction", "denoise" );
   op_detail.get_tree().add_op( "Sharpen", "sharpen" );
+  op_detail.get_tree().add_op( "Multi-level decomposition", "gmic_split_details" );
 
   op_geom.get_tree().add_op( "Crop image", "crop" );
   op_geom.get_tree().add_op( "Scale & rotate image", "scale" );
@@ -344,7 +345,6 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.get_tree().add_op( "Emulate film [various]", "gmic_emulate_film_various" );
   op_gmic.get_tree().add_op( "Tone mapping", "gmic_tone_mapping" );
 #endif
-  op_gmic.get_tree().add_op( "Split details", "gmic_split_details" );
   
   op_misc.get_tree().add_op( "Buffer layer", "buffer" );
   op_misc.get_tree().add_op( "Clone layer", "clone" );
