@@ -932,7 +932,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       newimgvec = pipelinepar->build_many( in, 0, imap, omap, level );
       newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
 
-      if( newimg != NULL && l->is_cached() &&
+      if( (newimg != NULL) && (newimgvec.size() == 1) && l->is_cached() &&
           (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
           (l->get_cache_buffer(pipeline->get_render_mode())->is_initialized() == false) ) {
         // The image is being loaded, and the current layer needs to be cached
@@ -952,6 +952,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         if( pl && pl->image ) {
           pipeline->set_level( level );
           newimg = pl->image;
+          newimgvec[0] = pl->image;
         }
       }
 
@@ -1048,7 +1049,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       newimgvec = pipelinepar->build_many( in, 0, imap, omap, level );
       newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
 
-      if( newimg != NULL && !image->is_loaded() && l->is_cached() &&
+      if( (newimg != NULL) && (newimgvec.size() == 1) && !image->is_loaded() && l->is_cached() &&
           (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
           (l->get_cache_buffer(pipeline->get_render_mode())->is_completed() == false) ) {
         // The image is being loaded, and the current layer needs to be cached
@@ -1067,6 +1068,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         if( pl && pl->image ) {
           pipeline->set_level( level );
           newimg = pl->image;
+          newimgvec[0] = pl->image;
         }
       }
 

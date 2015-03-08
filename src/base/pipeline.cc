@@ -149,6 +149,7 @@ void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
     return;
   
   PF::Layer* l = image->get_layer_manager().get_layer( id );
+#ifdef NDEBUG
   if( l ) {
     std::cout<<"Pipeline::set_image(): layer \""<<l->get_name()<<"\"";
     if( nodes[id] != NULL ) {
@@ -156,6 +157,7 @@ void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
     }
     std::cout<<"  new image="<<img<<std::endl;
   }
+#endif
 
   char tstr[500];
   if( nodes[id] != NULL ) {
@@ -188,13 +190,16 @@ void PF::Pipeline::set_images( std::vector<VipsImage*> imgvec, unsigned int id )
     return;
 
   PF::Layer* l = image->get_layer_manager().get_layer( id );
+#ifdef NDEBUG
   if( l ) {
     std::cout<<"Pipeline::set_images(): layer \""<<l->get_name()<<"\"";
     if( nodes[id] != NULL ) {
       std::cout<<"  old image="<<nodes[id]->image;
     }
-    if(imgvec.size() > 1) std::cout<<"  new image="<<imgvec[0]<<std::endl;
+    if(imgvec.size() > 1) std::cout<<"  new image="<<imgvec[0];
+    std::cout<<std::endl;
   }
+#endif
 
   char tstr[500];
   if( nodes[id] != NULL ) {
@@ -203,7 +208,7 @@ void PF::Pipeline::set_images( std::vector<VipsImage*> imgvec, unsigned int id )
       //  std::cout<<"!!! Pipeline::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->image<<std::endl;
       //g_assert( G_OBJECT( nodes[id]->image )->ref_count > 0 );
       //g_object_unref( nodes[id]->image );
-      PF::Layer* l = image->get_layer_manager().get_layer( id );
+      //PF::Layer* l = image->get_layer_manager().get_layer( id );
       if( l ) {
         snprintf( tstr, 499, "PF::Pipeline::set_images() unref image of layer %s",
                   l->get_name().c_str() );
@@ -217,6 +222,7 @@ void PF::Pipeline::set_images( std::vector<VipsImage*> imgvec, unsigned int id )
     }
     nodes[id]->images = imgvec;
     if( !(imgvec.empty()) ) nodes[id]->image = imgvec[0];
+    else nodes[id]->image = NULL;
   }
 }
 
