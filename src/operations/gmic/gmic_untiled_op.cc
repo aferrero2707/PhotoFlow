@@ -107,7 +107,7 @@ gmic* PF::GmicUntiledOperationPar::new_gmic()
 }
 
 
-bool PF::GmicUntiledOperationPar::run_gmic( std::string command )
+bool PF::GmicUntiledOperationPar::run_gmic( VipsImage* in, std::string command )
 {
   if( command.empty() ) 
     return false;
@@ -121,7 +121,7 @@ bool PF::GmicUntiledOperationPar::run_gmic( std::string command )
     gmic_instance = NULL;
   }
   
-  raster_images_attach();
+  raster_images_attach( in );
   
   return true;
 }

@@ -99,7 +99,9 @@ void PF::UntiledOperationPar::pre_build( rendermode_t mode )
       sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
       int temp_fd = pf_mkstemp( fname, 4 );
       if( temp_fd < 0 ) return;
+#ifndef NDEBUG
       std::cout<<"UntiledOperationPar::pre_build(): cache file="<<fname<<std::endl;
+#endif
       preview_cache_file_names[i] = fname;
     }
   } else {
@@ -109,7 +111,9 @@ void PF::UntiledOperationPar::pre_build( rendermode_t mode )
       sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
       int temp_fd = pf_mkstemp( fname, 4 );
       if( temp_fd < 0 ) return;
+#ifndef NDEBUG
       std::cout<<"UntiledOperationPar::pre_build(): cache file="<<fname<<std::endl;
+#endif
       render_cache_file_names[i] = fname;
     }
   }
@@ -123,14 +127,20 @@ std::string PF::UntiledOperationPar::get_cache_file_name( unsigned int n )
   std::string cache_file_name;
   if( get_render_mode() == PF_RENDER_PREVIEW ) {
     cache_file_name = get_preview_cache_file_name( n );
+#ifndef NDEBUG
     std::cout<<"UntiledOperationPar: setting cache file name to preview_cache_file_name ("
              <<cache_file_name<<")"<<std::endl;
+#endif
   } else { 
     cache_file_name = get_render_cache_file_name( n );
+#ifndef NDEBUG
     std::cout<<"UntiledOperationPar: setting cache file name to render_cache_file_name ("
              <<cache_file_name<<")"<<std::endl;
+#endif
   }
+#ifndef NDEBUG
   std::cout<<"UntiledOperationPar: render_mode="<<get_render_mode()<<"  cache_file_name="<<cache_file_name<<std::endl;
+#endif
 
   return cache_file_name;
 }
@@ -141,7 +151,9 @@ std::string PF::UntiledOperationPar::save_image( VipsImage* image, VipsBandFmt f
   char fname[500];
   sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
   int temp_fd = pf_mkstemp( fname, 4 );
+#ifndef NDEBUG
   std::cout<<"UntiledOperationPar::save_image(): temp file: "<<fname<<"  fd="<<temp_fd<<std::endl;
+#endif
   if( temp_fd < 0 ) return NULL;
 
   unsigned int level = 0;
@@ -219,10 +231,14 @@ void PF::UntiledOperationPar::raster_image_detach( unsigned int n )
   if( (n<0) || (n>=raster_image_vec.size()) )
     return;
   PF::RasterImage* raster_image = raster_image_vec[n];
+#ifndef NDEBUG
   std::cout<<"UntiledOperationPar::raster_image_unref(): raster_image_vec["<<n<<"]="<<(void*)raster_image<<std::endl;
+#endif
   if( raster_image ) {
+#ifndef NDEBUG
     std::cout<<"UntiledOperationPar::raster_image_unref(): raster_image->get_nref()="
              <<raster_image->get_nref()<<" -> "<<raster_image->get_nref()-1<<std::endl;
+#endif
     raster_image->unref();
     if( raster_image->get_nref() == 0 ) {
       std::string cache_file_name = raster_image->get_file_name();
@@ -232,26 +248,37 @@ void PF::UntiledOperationPar::raster_image_detach( unsigned int n )
           raster_images.erase( i );
       delete raster_image;
       unlink( cache_file_name.c_str() );
+#ifndef NDEBUG
 			std::cout<<"UntiledOperationPar::raster_image_unref(): raster_image deleted"<<std::endl;
+#endif
     }
   }
   raster_image_vec[n] = 0;
 }
 
 
-void PF::UntiledOperationPar::raster_image_attach( unsigned int n )
+void PF::UntiledOperationPar::raster_image_attach( VipsImage* in, unsigned int n )
 {
   raster_image_vec.reserve( n+1 );
+#ifndef NDEBUG
   std::cout<<"UntiledOperationPar::update_raster_image()"<<std::endl;
+#endif
   raster_image_detach( n );
   std::string cache_file_name = get_cache_file_name( n );
   if( cache_file_name.empty() )
     return;
   PF::RasterImage* raster_image = new RasterImage( cache_file_name );
+  unsigned int level = 0;
+  VipsImage* image = raster_image->get_image( level );
+
+  set_metadata( in, image );
+
   raster_images.insert( make_pair(cache_file_name, raster_image) );  
   raster_image_vec[n] = raster_image;
+#ifndef NDEBUG
   std::cout<<"UntiledOperationPar::update_raster_image(): cache_file_name="<<cache_file_name
            <<"  raster_image="<<raster_image<<std::endl;
+#endif
 }
 
 
@@ -261,14 +288,18 @@ std::vector<VipsImage*> PF::UntiledOperationPar::get_output( unsigned int& level
   std::vector<VipsImage*> outvec;
   for( unsigned int i = 0; i < get_cache_files_num(); i++ ) {
     PF::RasterImage* raster_image = raster_image_vec[i];
+#ifndef NDEBUG
     std::cout<<"UntiledOperationPar::get_output(): raster_image="<<raster_image;
+#endif
     if( raster_image) std::cout<<"  get_nref()="<<raster_image->get_nref();
     std::cout<<std::endl;
     if( !raster_image ) continue;
 
     VipsImage* image = raster_image->get_image( level );
 
+#ifndef NDEBUG
     std::cout<<"UntiledOperationPar::get_output(): image="<<image<<std::endl;
+#endif
     if( !image ) continue;
 
     VipsImage* out = image;
@@ -281,7 +312,9 @@ std::vector<VipsImage*> PF::UntiledOperationPar::get_output( unsigned int& level
       PF_UNREF( image, "UntiledOperationPar::get_output(): image unref after convert_format" );
     }
 
+#ifndef NDEBUG
     std::cout<<"UntiledOperationPar::get_output(): out="<<out<<std::endl;
+#endif
     if( out ) {
       set_image_hints( out );
       outvec.push_back(out);

@@ -87,7 +87,7 @@ VipsImage* PF::GmicToneMappingPar::build(std::vector<VipsImage*>& in, int first,
     command = command + std::string(",") + prop_channels.get_enum_value_str();
     command = command + " -n 0,1 -output " + get_cache_file_name(0) + ",float,lzw";
     
-    run_gmic( command );
+    run_gmic( srcimg, command );
 
     unlink( tempfile.c_str() );
   }

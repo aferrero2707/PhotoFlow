@@ -198,7 +198,7 @@ VipsImage* PF::GmicInpaintPar::build(std::vector<VipsImage*>& in, int first,
       command = command + std::string(",") + blend_scales.get_str();
       command = command + std::string(",") + allow_outer_blending.get_str();
       command = command + " -n[0] 0,1 -output[0] " + get_cache_file_name(0) + ",float,lzw";
-      run_gmic( command );
+      run_gmic( srcimg, command );
 
       unlink( tempfile.c_str() );
       PF_UNREF( blendimage, "GmicInpaintPar::build() blendimage unref after write" );

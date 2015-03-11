@@ -98,11 +98,17 @@ namespace PF
     void update_raster_images();
     RasterImage* get_raster_image( unsigned int n );
     void raster_image_detach( unsigned int n );
-    void raster_image_attach( unsigned int n );
-    void raster_images_attach()
+    void raster_image_attach( VipsImage* in, unsigned int n );
+    void raster_images_attach( VipsImage* in )
     {
       for( unsigned int i = 0; i < get_cache_files_num(); i++ )
-        raster_image_attach(i);
+        raster_image_attach( in, i );
+    }
+
+    virtual void set_metadata( VipsImage* in, VipsImage* out )
+    {
+      VipsImage* invec[2] = {in, NULL};
+      vips__image_copy_fields_array( out, invec );
     }
 
     void pre_build( rendermode_t mode );

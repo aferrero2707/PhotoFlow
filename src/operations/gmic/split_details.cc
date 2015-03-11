@@ -39,8 +39,8 @@ PF::GmicSplitDetailsPar::GmicSplitDetailsPar():
   prop_base_scale("base_scale",this,1),
   prop_detail_scale("detail_scale",this,0.01)
 {	
-  set_cache_files_num(2);
-  set_type( "gmic_split_details" );
+  set_cache_files_num(5);
+  set_type( "gmic_split_details");
 }
 
 
@@ -63,7 +63,7 @@ std::vector<VipsImage*> PF::GmicSplitDetailsPar::build_many(std::vector<VipsImag
     std::string command = "-verbose + ";
     command = command + "-input " + tempfile + " -mul 255 ";
     //command = command + "-split_details 2 ";
-    command = command + "-split_details 2,"+prop_base_scale.get_str()+"%,"+prop_detail_scale.get_str()+"% ";
+    command = command + "-split_details 5,"+prop_base_scale.get_str()+"%,"+prop_detail_scale.get_str()+"% ";
     //command = command + prop_threshold.get_str();
     //command = command + std::string(",") + prop_gamma.get_str();
     //command = command + std::string(",") + prop_smoothness.get_str();
@@ -77,7 +77,7 @@ std::vector<VipsImage*> PF::GmicSplitDetailsPar::build_many(std::vector<VipsImag
       command = command + " -add["+id+"] 127 -c["+id+"] 0,255 -div["+id+"] 255 -output["+id+"] " + get_cache_file_name(i) + ",float,lzw";
     }
     
-    run_gmic( command );
+    run_gmic( srcimg, command );
 
     unlink( tempfile.c_str() );
   }

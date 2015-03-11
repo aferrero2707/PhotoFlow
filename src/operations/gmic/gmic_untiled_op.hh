@@ -61,7 +61,17 @@ namespace PF
     bool needs_caching() { return false; }
     bool init_hidden() { return false; }
 
-    bool run_gmic( std::string command );
+    virtual void set_metadata( VipsImage* in, VipsImage* out )
+    {
+      UntiledOperationPar::set_metadata( in, out );
+      vips_image_init_fields( out,
+          in->Xsize, in->Ysize, in->Bands,
+          IM_BANDFMT_FLOAT,
+          in->Coding, in->Type, in->Xres, in->Yres
+          );
+    }
+
+    bool run_gmic( VipsImage* in, std::string command );
   };
 
   
