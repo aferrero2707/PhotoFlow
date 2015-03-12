@@ -149,7 +149,7 @@ void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
     return;
   
   PF::Layer* l = image->get_layer_manager().get_layer( id );
-#ifdef NDEBUG
+#ifndef NDEBUG
   if( l ) {
     std::cout<<"Pipeline::set_image(): layer \""<<l->get_name()<<"\"";
     if( nodes[id] != NULL ) {
@@ -190,7 +190,7 @@ void PF::Pipeline::set_images( std::vector<VipsImage*> imgvec, unsigned int id )
     return;
 
   PF::Layer* l = image->get_layer_manager().get_layer( id );
-#ifdef NDEBUG
+#ifndef NDEBUG
   if( l ) {
     std::cout<<"Pipeline::set_images(): layer \""<<l->get_name()<<"\"";
     if( nodes[id] != NULL ) {

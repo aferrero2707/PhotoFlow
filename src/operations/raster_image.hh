@@ -74,6 +74,8 @@ namespace PF
 
     void print_exif( PF::exif_data_t* data );
     void print_exif();
+    void print_icc();
+    void print_icc( VipsImage* img );
   };
 
 	extern std::map<Glib::ustring, PF::RasterImage*> raster_images;

@@ -290,17 +290,20 @@ std::vector<VipsImage*> PF::UntiledOperationPar::get_output( unsigned int& level
     PF::RasterImage* raster_image = raster_image_vec[i];
 #ifndef NDEBUG
     std::cout<<"UntiledOperationPar::get_output(): raster_image="<<raster_image;
-#endif
     if( raster_image) std::cout<<"  get_nref()="<<raster_image->get_nref();
     std::cout<<std::endl;
+#endif
     if( !raster_image ) continue;
+
+    //raster_image->print_icc();
 
     VipsImage* image = raster_image->get_image( level );
 
-#ifndef NDEBUG
+    //#ifndef NDEBUG
     std::cout<<"UntiledOperationPar::get_output(): image="<<image<<std::endl;
-#endif
+    //#endif
     if( !image ) continue;
+    raster_image->print_icc( image );
 
     VipsImage* out = image;
     if( (get_format() != image->BandFmt) ) {

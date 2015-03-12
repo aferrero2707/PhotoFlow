@@ -315,3 +315,24 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
 
   return true;
 }
+
+
+int PF::vips_copy_metadata( VipsImage* in, VipsImage* out )
+{
+  if( !out ) return 0;
+  int Xsize = out->Xsize;
+  int Ysize = out->Ysize;
+  int bands = out->Bands;
+  VipsBandFormat fmt = out->BandFmt;
+  VipsCoding coding = out->Coding;
+  VipsInterpretation type = out->Type;
+  gdouble xres = out->Xres;
+  gdouble yres = out->Yres;
+  VipsImage* invec[2] = {in, NULL};
+  vips__image_copy_fields_array( out, invec );
+  vips_image_init_fields( out,
+      Xsize, Ysize, bands, fmt,
+      coding, type, xres, yres
+      );
+return 0;
+}

@@ -216,6 +216,32 @@ void PF::RasterImage::print_exif()
 }
 
 
+void PF::RasterImage::print_icc()
+{
+  size_t bufsz;
+  void* buf;
+  if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
+      (void**)&buf,&bufsz ) ) {
+    std::cout<<"RasterImage: ICC profile found"<<std::endl;
+  } else {
+    std::cout<<"RasterImage: ICC profile not found"<<std::endl;
+  }
+}
+
+
+void PF::RasterImage::print_icc( VipsImage* img)
+{
+  size_t bufsz;
+  void* buf;
+  if( !vips_image_get_blob( img, VIPS_META_ICC_NAME,
+      (void**)&buf,&bufsz ) ) {
+    std::cout<<"RasterImage: ICC profile found in img"<<std::endl;
+  } else {
+    std::cout<<"RasterImage: ICC profile not found in img"<<std::endl;
+  }
+}
+
+
 std::map<Glib::ustring, PF::RasterImage*> PF::raster_images;
 
 

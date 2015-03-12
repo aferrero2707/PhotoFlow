@@ -39,9 +39,9 @@
 /* Verbose debugging output.
 #define VIPS_DEBUG
  */
-#ifndef NDEBUG
-#define VIPS_DEBUG
-#endif
+//#ifndef NDEBUG
+//#define VIPS_DEBUG
+//#endif
 
 /* Trace allocate/free.
 #define VIPS_DEBUG_AMBER
@@ -348,7 +348,7 @@ render_tile_dirty_reuse( Render *render )
 		g_assert( tile->dirty );
 		tile->dirty = FALSE;
 
-		VIPS_DEBUG_MSG( "render_tile_get_dirty_reuse: "
+		VIPS_DEBUG_MSG_AMBER( "render_tile_get_dirty_reuse: "
 			"reusing dirty %p\n", tile );
 	}
 
@@ -421,7 +421,7 @@ render_work( VipsThreadState *state, void *a )
 
 	g_assert( tile );
 
-	VIPS_DEBUG_MSG( "calculating tile %p %dx%d\n", 
+	VIPS_DEBUG_MSG_AMBER( "calculating tile %p %dx%d\n", 
 		tile, tile->area.left, tile->area.top );
 
 	if( vips_region_prepare_to( state->reg, tile->region, 
@@ -765,7 +765,7 @@ tile_queue( Tile *tile, VipsRegion *reg )
 {
 	Render *render = tile->render;
 
-	VIPS_DEBUG_MSG( "tile_queue: adding tile %p %dx%d to dirty\n",
+	VIPS_DEBUG_MSG_RED( "tile_queue: adding tile %p %dx%d to dirty\n",
 		tile, tile->area.left, tile->area.top );
 
 	tile->painted = FALSE;
@@ -784,7 +784,7 @@ tile_queue( Tile *tile, VipsRegion *reg )
 		 * sychronously. No need to notify the client since they'll 
 		 * never see black tiles.
 		 */
-		VIPS_DEBUG_MSG( "tile_queue: "
+		VIPS_DEBUG_MSG_RED( "tile_queue: "
 			"painting tile %p %dx%d synchronously\n",
 			tile, tile->area.left, tile->area.top );
 
@@ -824,7 +824,7 @@ render_tile_get_painted( Render *render )
 		(GHFunc) tile_test_clean_ticks, &tile );
 
 	if( tile ) {
-		VIPS_DEBUG_MSG( "render_tile_get_painted: "
+		VIPS_DEBUG_MSG_RED( "render_tile_get_painted: "
 			"reusing painted %p\n", tile );
 	}
 
@@ -839,7 +839,7 @@ render_tile_request( Render *render, VipsRegion *reg, VipsRect *area )
 {
 	Tile *tile;
 
-	VIPS_DEBUG_MSG( "render_tile_request: asking for %dx%d\n",
+	VIPS_DEBUG_MSG_RED( "render_tile_request: asking for %dx%d\n",
 		area->left, area->top );
 
 	//printf("render_tile_request: asking for %dx%d\n",
@@ -874,7 +874,7 @@ render_tile_request( Render *render, VipsRegion *reg, VipsRect *area )
 		 */
 		if( !(tile = render_tile_get_painted( render )) &&
 			!(tile = render_tile_dirty_reuse( render )) ) {
-			VIPS_DEBUG_MSG( "render_tile_request: "
+			VIPS_DEBUG_MSG_RED( "render_tile_request: "
 				"no tiles to reuse\n" );
 			return( NULL );
 		}
@@ -907,7 +907,7 @@ tile_copy( Tile *tile, VipsRegion *to )
 
 		int y;
 
-		VIPS_DEBUG_MSG( "tile_copy: "
+		VIPS_DEBUG_MSG_RED( "tile_copy: "
 			"copying calculated pixels for %p %dx%d\n",
 			tile, tile->area.left, tile->area.top ); 
 
@@ -920,7 +920,7 @@ tile_copy( Tile *tile, VipsRegion *to )
 		}
 	}
 	else {
-		VIPS_DEBUG_MSG( "tile_copy: zero filling for %p %dx%d\n",
+		VIPS_DEBUG_MSG_RED( "tile_copy: zero filling for %p %dx%d\n",
 			tile, tile->area.left, tile->area.top ); 
 		vips_region_paint( to, &ovlap, 0 );
 	}
@@ -952,7 +952,7 @@ image_fill( VipsRegion *out, void *seq, void *a, void *b, gboolean *stop )
 	int xs = (r->left / tile_width) * tile_width;
 	int ys = (r->top / tile_height) * tile_height;
 
-	VIPS_DEBUG_MSG( "image_fill: left = %d, top = %d, "
+	VIPS_DEBUG_MSG_RED( "image_fill: left = %d, top = %d, "
 									"width = %d, height = %d\n",
 									r->left, r->top, r->width, r->height );
 
@@ -1014,7 +1014,7 @@ mask_fill( VipsRegion *out, void *seq, void *a, void *b, gboolean *stop )
 	int xs = (r->left / tile_width) * tile_width;
 	int ys = (r->top / tile_height) * tile_height;
 
-	VIPS_DEBUG_MSG( "mask_fill: left = %d, top = %d, "
+	VIPS_DEBUG_MSG_RED( "mask_fill: left = %d, top = %d, "
 		"width = %d, height = %d\n",
                 r->left, r->top, r->width, r->height );
 
@@ -1136,7 +1136,7 @@ vips_sink_screen2( VipsImage *in, VipsImage *out, VipsImage *mask,
 		tile_width, tile_height, max_tiles, priority, notify, a )) )
 		return( -1 );
 
-	VIPS_DEBUG_MSG( "vips_sink_screen: max = %d, %p\n", max_tiles, render );
+	VIPS_DEBUG_MSG_RED( "vips_sink_screen: max = %d, %p\n", max_tiles, render );
 
 	if( vips_image_generate( out, 
 		image_start, image_fill, image_stop, render, NULL ) )
@@ -1173,7 +1173,7 @@ vips_invalidate_area( VipsImage *image, VipsRect* r  )
   int xs = (r->left / tile_width) * tile_width;
   int ys = (r->top / tile_height) * tile_height;
 
-	VIPS_DEBUG_MSG( "vips_invalidate_area: left = %d, top = %d, "
+	VIPS_DEBUG_MSG_RED( "vips_invalidate_area: left = %d, top = %d, "
 									"width = %d, height = %d\n",
 									r->left, r->top, r->width, r->height );
 
@@ -1192,7 +1192,7 @@ vips_invalidate_area( VipsImage *image, VipsRect* r  )
       tile = render_tile_lookup( render, &area );
       if( tile ) {
 				tile->region->invalid = 1;
-				VIPS_DEBUG_MSG( "vips_invalidate_area(): tile invalidated\n" );
+				VIPS_DEBUG_MSG_RED( "vips_invalidate_area(): tile invalidated\n" );
       }
     }
   }
