@@ -680,8 +680,8 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
     PF::PipelineNode* node = pipeline->set_node( l, previous_layer );
     if( node != NULL ) {
-      if( node->image ) vips_image_invalidate_all( node->image );
-      if( node->blended ) vips_image_invalidate_all( node->blended );
+      //if( node->image ) vips_image_invalidate_all( node->image );
+      //if( node->blended ) vips_image_invalidate_all( node->blended );
     }
     PF::OpParBase* par = NULL;
     if( (l->get_processor() != NULL) &&
@@ -693,7 +693,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         (node->processor->get_par() != NULL) )
       pipelinepar = node->processor->get_par();
 
-    std::cout<<"Layer \""<<l->get_name()<<"\": par="<<par<<"  pipelinepar="<<pipelinepar<<std::endl;
+    //std::cout<<"Layer \""<<l->get_name()<<"\": par="<<par<<"  pipelinepar="<<pipelinepar<<std::endl;
     g_assert( pipelinepar != NULL );
 
     pipelinepar->set_render_mode( pipeline->get_render_mode() );
@@ -1160,7 +1160,7 @@ bool PF::LayerManager::rebuild_prepare()
 bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, int height, VipsRect* area )
 {
   if( pipeline && pipeline->get_output() ) {
-    vips_image_invalidate_all( pipeline->get_output() );
+    //vips_image_invalidate_all( pipeline->get_output() );
   }
   VipsImage* output = rebuild_chain( pipeline, cs, width, height, layers, NULL );
 	//std::cout<<"LayerManager::rebuild(): chain rebuild finished."<<std::endl;

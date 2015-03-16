@@ -81,7 +81,11 @@ std::vector<VipsImage*> PF::GmicSplitDetailsPar::build_many(std::vector<VipsImag
 
     unlink( tempfile.c_str() );
   }
+  std::cout<<"GmicSplitDetailsPar::build_many(): calling get_output()"<<std::endl;
   outvec = get_output( level );
+
+  for(std::size_t i = 0; i < outvec.size(); i++ )
+    PF::vips_copy_metadata( srcimg, outvec[i] );
 
   return outvec;
 }
