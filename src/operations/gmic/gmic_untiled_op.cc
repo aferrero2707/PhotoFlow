@@ -64,7 +64,8 @@ gmic* PF::GmicUntiledOperationPar::new_gmic()
     fname[0] = 0;
   }
 #elif defined(__APPLE__) && defined (__MACH__)
-  snprintf( fname, 499, "%s/../share/photoflow/gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+  //snprintf( fname, 499, "%s/../share/photoflow/gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+  snprintf( fname, 499, "%s/gmic_def.gmic", PF::PhotoFlow::Instance().get_data_dir().c_str() );
   std::cout<<"G'MIC custom commands file: "<<fname<<std::endl;
   struct stat buffer;
   int stat_result = stat( fname, &buffer );

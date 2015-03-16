@@ -41,18 +41,18 @@ namespace PF
 {
 
 #define PIXELPROC_TEMPLATE_DEF                  \
-  typename T, colorspace_t CS,                  \
-    int CHMIN, int CHMAX,                       \
-    bool PREVIEW, typename OP_PAR
+  typename T_, colorspace_t CS_,                  \
+    int CHMIN_, int CHMAX_,                       \
+    bool PREVIEW_, typename OP_PAR_
 
 #define PIXELPROC_TEMPLATE_IMP                  \
   T, CS, CHMIN, CHMAX, PREVIEW, OP_PAR
 
 
 #define PIXELPROC_TEMPLATE_DEF_CS_SPEC                  \
-  typename T,                                           \
-    int CHMIN, int CHMAX,                               \
-    bool PREVIEW, typename OP_PAR
+  typename T_,                                           \
+    int CHMIN_, int CHMAX_,                               \
+    bool PREVIEW_, typename OP_PAR_
   
 #define PIXELPROC_TEMPLATE_IMP_CS_SPEC(CS_SPEC) \
   T, CS_SPEC, CHMIN, CHMAX, PREVIEW, OP_PAR

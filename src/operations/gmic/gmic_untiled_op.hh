@@ -27,8 +27,8 @@
 
  */
 
-#ifndef GMIC_DREAM_SMOOTH_H
-#define GMIC_DREAM_SMOOTH_H
+#ifndef GMIC_UNTILED_OP__H
+#define GMIC_UNTILED_OP__H
 
 
 #include "../../base/processor.hh"

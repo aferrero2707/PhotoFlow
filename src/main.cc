@@ -143,7 +143,8 @@ int main (int argc, char *argv[])
 
   char exname[512] = {0};
   Glib::ustring exePath;
-  Glib::ustring themesPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow/themes";
+  Glib::ustring dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
+  Glib::ustring themesPath = dataPath + "/themes";
   // get the path where the rawtherapee executable is stored
 #ifdef WIN32
   WCHAR exnameU[512] = {0};
@@ -164,7 +165,13 @@ int main (int argc, char *argv[])
   exePath = Glib::path_get_dirname(exname);
 
 #if defined(__APPLE__) && defined (__MACH__)
-  themesPath = exePath + "/../share/photoflow/themes";
+  char* dataPath_env = getenv("PF_DATA_DIR");
+  if( dataPath_env ) {
+    dataPath = Glib::ustring(dataPath_env) + "/photoflow";
+    themesPath = dataPath + "/themes";
+  } else {
+    themesPath = exePath + "/../share/photoflow/themes";
+  }
 #endif
   std::cout<<"exePath: "<<exePath<<std::endl;
   std::cout<<"themesPath: "<<themesPath<<std::endl;
@@ -186,6 +193,7 @@ int main (int argc, char *argv[])
     return 1;
   //PF::PhotoFlow::Instance().set_base_dir( fullpath );
   PF::PhotoFlow::Instance().set_base_dir( exePath );
+  PF::PhotoFlow::Instance().set_data_dir( dataPath );
   free( fullpath );
 
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );

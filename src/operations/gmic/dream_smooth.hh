@@ -33,16 +33,13 @@
 
 #include "../../base/processor.hh"
 
-#include "../../vips/gmic/gmic/src/gmic.h"
-
-#include "../convertformat.hh"
-#include "../raster_image.hh"
+#include "gmic_untiled_op.hh"
 
 
 namespace PF 
 {
 
-  class GmicDreamSmoothPar: public OpParBase
+  class GmicDreamSmoothPar: public GmicUntiledOperationPar
   {
     Property<int> iterations;
     Property<int> prop_interations;
@@ -54,36 +51,14 @@ namespace PF
     Property<int> padding;
     //ProcessorBase* gmic;
 
-    PF::ProcessorBase* convert_format;
-    PF::ProcessorBase* convert_format2;
-    char* custom_gmic_commands;
-    gmic* gmic_instance;
-
-    bool do_update;
-    std::string preview_cache_file_name;
-    std::string render_cache_file_name;
-
-    RasterImage* raster_image;
-
   public:
     GmicDreamSmoothPar();
-    ~GmicDreamSmoothPar();
+    ~GmicDreamSmoothPar() { std::cout<<"~GmicDreamSmoothPar() called."<<std::endl; }
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool needs_caching() { return false; }
     bool init_hidden() { return true; }
-
-    std::string get_preview_cache_file_name() { return preview_cache_file_name; }
-    std::string get_render_cache_file_name() { return render_cache_file_name; }
-
-    void refresh() { do_update = true; }
-
-    int get_padding( int level );      
-
-    bool import_settings( OpParBase* pin );
-
-    void pre_build( rendermode_t mode );
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
                      VipsImage* imap, VipsImage* omap, 

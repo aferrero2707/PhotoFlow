@@ -34,7 +34,7 @@
 
 
 PF::GmicSplitDetailsPar::GmicSplitDetailsPar():
-  GmicUntiledOperationPar(),
+  PF::GmicUntiledOperationPar(),
   prop_nscales("nscales",this,4),
   prop_base_scale("base_scale",this,1),
   prop_detail_scale("detail_scale",this,0.01)

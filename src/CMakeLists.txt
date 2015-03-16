@@ -139,12 +139,16 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 add_library (pfbase
   ${BaseIncludes}
   ${BaseSources}
+  ${VipsIncludes}
+  ${VipsSources}
   ${RTIncludes}
   ${RTSources}
   ${OpIncludes}
   ${OpSources}
   ${LibRawIncludes}
   ${LibRawSources}
+  ${GMicIncludes}
+  ${GMicSources}
 )
 
 add_library (pfdt
@@ -154,15 +158,15 @@ add_library (pfdt
 
 SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-std=gnu99")
 
-add_library (pfvips #SHARED
-  ${VipsIncludes}
-  ${VipsSources}
-)
+#add_library (pfvips #SHARED
+#  ${VipsIncludes}
+#  ${VipsSources}
+#)
 
-add_library (pfgmic
-  ${GMicIncludes}
-  ${GMicSources}
-)
+#add_library (pfgmic
+#  ${GMicIncludes}
+#  ${GMicSources}
+#)
 
 add_library (pfgui
   ${GuiIncludes}
@@ -181,8 +185,8 @@ IF(MINGW)
   SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
   SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
 ELSEIF(APPLE)
-  SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -mtune=generic")
-  SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -mtune=generic -fpermissive")
+  #SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -mtune=generic")
+   SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -mtune=generic -fpermissive")
 ELSE(MINGW)
   SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic")
   SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic -fpermissive")
@@ -206,8 +210,8 @@ add_executable(pfbatch pfbatch.cc)
 target_link_libraries(pfbatch ${LIBS} 
   pfbase 
   pfdt
-  pfvips 
-  pfgmic 
+  #pfvips 
+  #pfgmic 
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
@@ -245,8 +249,8 @@ target_link_libraries(photoflow ${LIBS}
   pfgui
   pfbase 
   pfdt
-  pfvips 
-  pfgmic 
+  #pfvips 
+  #pfgmic 
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
@@ -281,8 +285,8 @@ SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
 target_link_libraries(invert
   pfbase 
   pfdt
-  pfvips 
-  pfgmic 
+  #pfvips 
+  #pfgmic 
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
