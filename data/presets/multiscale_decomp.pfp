@@ -1,0 +1,1288 @@
+<preset version="4">
+  <layer name="Multi-scale decomp" id="1" visible="1" normal="0" extra_inputs="">
+    <operation type="buffer">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+    </operation>
+    <operation type="blender">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="blend_mode" value="PF_BLEND_NORMAL">
+      </property>
+      <property name="opacity" value="1">
+      </property>
+      <property name="shift_x" value="0">
+      </property>
+      <property name="shift_y" value="0">
+      </property>
+    </operation>
+    <sublayers type="child">
+      <layer name="scale 0" id="2" visible="1" normal="1" extra_inputs="">
+        <operation type="gmic_split_details">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+          <property name="nscales" value="4">
+          </property>
+          <property name="base_scale" value="0.3">
+          </property>
+          <property name="detail_scale" value="0.02">
+          </property>
+        </operation>
+        <operation type="blender">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+          <property name="blend_mode" value="PF_BLEND_NORMAL">
+          </property>
+          <property name="opacity" value="1">
+          </property>
+          <property name="shift_x" value="0">
+          </property>
+          <property name="shift_y" value="0">
+          </property>
+        </operation>
+        <sublayers type="child">
+        </sublayers>
+        <sublayers type="imap">
+        </sublayers>
+        <sublayers type="omap">
+        </sublayers>
+      </layer>
+      <layer name="Scale 1" id="3" visible="1" normal="0" extra_inputs="">
+        <operation type="buffer">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+        </operation>
+        <operation type="blender">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+          <property name="blend_mode" value="PF_BLEND_GRAIN_MERGE">
+          </property>
+          <property name="opacity" value="1">
+          </property>
+          <property name="shift_x" value="0">
+          </property>
+          <property name="shift_y" value="0">
+          </property>
+        </operation>
+        <sublayers type="child">
+          <layer name="scale 1" id="4" visible="1" normal="1" extra_inputs="2 1 0">
+            <operation type="clone">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="source_channel" value="RGB">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+            </sublayers>
+          </layer>
+          <layer name="gray" id="5" visible="0" normal="1" extra_inputs="">
+            <operation type="uniform">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="color_blend" value="0">
+              </property>
+              <property name="grey" value="0">
+              </property>
+              <property name="R" value="0.500008">
+              </property>
+              <property name="G" value="0.500008">
+              </property>
+              <property name="B" value="0.500008">
+              </property>
+              <property name="L" value="0">
+              </property>
+              <property name="a" value="0">
+              </property>
+              <property name="b" value="0">
+              </property>
+              <property name="C" value="0">
+              </property>
+              <property name="M" value="0">
+              </property>
+              <property name="Y" value="0">
+              </property>
+              <property name="K" value="0">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+              <layer name="gray mask" id="6" visible="1" normal="1" extra_inputs="">
+                <operation type="draw">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="pen_grey" value="0">
+                  </property>
+                  <property name="pen_R" value="1">
+                  </property>
+                  <property name="pen_G" value="1">
+                  </property>
+                  <property name="pen_B" value="1">
+                  </property>
+                  <property name="pen_L" value="1">
+                  </property>
+                  <property name="pen_a" value="1">
+                  </property>
+                  <property name="pen_b" value="1">
+                  </property>
+                  <property name="pen_C" value="1">
+                  </property>
+                  <property name="pen_M" value="1">
+                  </property>
+                  <property name="pen_Y" value="1">
+                  </property>
+                  <property name="pen_K" value="1">
+                  </property>
+                  <property name="bgd_grey" value="0">
+                  </property>
+                  <property name="bgd_R" value="0">
+                  </property>
+                  <property name="bgd_G" value="0">
+                  </property>
+                  <property name="bgd_B" value="0">
+                  </property>
+                  <property name="bgd_L" value="0">
+                  </property>
+                  <property name="bgd_a" value="0">
+                  </property>
+                  <property name="bgd_b" value="0">
+                  </property>
+                  <property name="bgd_C" value="0">
+                  </property>
+                  <property name="bgd_M" value="0">
+                  </property>
+                  <property name="bgd_Y" value="0">
+                  </property>
+                  <property name="bgd_K" value="0">
+                  </property>
+                  <property name="pen_color" value="1 1 1 ">
+                  </property>
+                  <property name="bgd_color" value="0 0 0 ">
+                  </property>
+                  <property name="pen_size" value="5">
+                  </property>
+                  <property name="pen_opacity" value="1">
+                  </property>
+                  <property name="strokes" value="0 ">
+                  </property>
+                </operation>
+                <operation type="blender">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="blend_mode" value="PF_BLEND_NORMAL">
+                  </property>
+                  <property name="opacity" value="1">
+                  </property>
+                  <property name="shift_x" value="0">
+                  </property>
+                  <property name="shift_y" value="0">
+                  </property>
+                </operation>
+                <sublayers type="child">
+                </sublayers>
+                <sublayers type="imap">
+                </sublayers>
+                <sublayers type="omap">
+                </sublayers>
+              </layer>
+            </sublayers>
+          </layer>
+        </sublayers>
+        <sublayers type="imap">
+        </sublayers>
+        <sublayers type="omap">
+        </sublayers>
+      </layer>
+      <layer name="Scale 2" id="7" visible="1" normal="0" extra_inputs="">
+        <operation type="buffer">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+        </operation>
+        <operation type="blender">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+          <property name="blend_mode" value="PF_BLEND_GRAIN_MERGE">
+          </property>
+          <property name="opacity" value="1">
+          </property>
+          <property name="shift_x" value="0">
+          </property>
+          <property name="shift_y" value="0">
+          </property>
+        </operation>
+        <sublayers type="child">
+          <layer name="scale 2" id="8" visible="1" normal="1" extra_inputs="2 2 0">
+            <operation type="clone">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="source_channel" value="RGB">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+            </sublayers>
+          </layer>
+          <layer name="gray" id="9" visible="0" normal="1" extra_inputs="">
+            <operation type="uniform">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="color_blend" value="0">
+              </property>
+              <property name="grey" value="0">
+              </property>
+              <property name="R" value="0.500008">
+              </property>
+              <property name="G" value="0.500008">
+              </property>
+              <property name="B" value="0.500008">
+              </property>
+              <property name="L" value="0">
+              </property>
+              <property name="a" value="0">
+              </property>
+              <property name="b" value="0">
+              </property>
+              <property name="C" value="0">
+              </property>
+              <property name="M" value="0">
+              </property>
+              <property name="Y" value="0">
+              </property>
+              <property name="K" value="0">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+              <layer name="gray mask" id="10" visible="1" normal="1" extra_inputs="">
+                <operation type="draw">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="pen_grey" value="0">
+                  </property>
+                  <property name="pen_R" value="1">
+                  </property>
+                  <property name="pen_G" value="1">
+                  </property>
+                  <property name="pen_B" value="1">
+                  </property>
+                  <property name="pen_L" value="1">
+                  </property>
+                  <property name="pen_a" value="1">
+                  </property>
+                  <property name="pen_b" value="1">
+                  </property>
+                  <property name="pen_C" value="1">
+                  </property>
+                  <property name="pen_M" value="1">
+                  </property>
+                  <property name="pen_Y" value="1">
+                  </property>
+                  <property name="pen_K" value="1">
+                  </property>
+                  <property name="bgd_grey" value="0">
+                  </property>
+                  <property name="bgd_R" value="0">
+                  </property>
+                  <property name="bgd_G" value="0">
+                  </property>
+                  <property name="bgd_B" value="0">
+                  </property>
+                  <property name="bgd_L" value="0">
+                  </property>
+                  <property name="bgd_a" value="0">
+                  </property>
+                  <property name="bgd_b" value="0">
+                  </property>
+                  <property name="bgd_C" value="0">
+                  </property>
+                  <property name="bgd_M" value="0">
+                  </property>
+                  <property name="bgd_Y" value="0">
+                  </property>
+                  <property name="bgd_K" value="0">
+                  </property>
+                  <property name="pen_color" value="1 1 1 ">
+                  </property>
+                  <property name="bgd_color" value="0 0 0 ">
+                  </property>
+                  <property name="pen_size" value="5">
+                  </property>
+                  <property name="pen_opacity" value="1">
+                  </property>
+                  <property name="strokes" value="0 ">
+                  </property>
+                </operation>
+                <operation type="blender">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="blend_mode" value="PF_BLEND_NORMAL">
+                  </property>
+                  <property name="opacity" value="1">
+                  </property>
+                  <property name="shift_x" value="0">
+                  </property>
+                  <property name="shift_y" value="0">
+                  </property>
+                </operation>
+                <sublayers type="child">
+                </sublayers>
+                <sublayers type="imap">
+                </sublayers>
+                <sublayers type="omap">
+                </sublayers>
+              </layer>
+            </sublayers>
+          </layer>
+        </sublayers>
+        <sublayers type="imap">
+        </sublayers>
+        <sublayers type="omap">
+        </sublayers>
+      </layer>
+      <layer name="Scale 3" id="11" visible="1" normal="0" extra_inputs="">
+        <operation type="buffer">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+        </operation>
+        <operation type="blender">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+          <property name="blend_mode" value="PF_BLEND_GRAIN_MERGE">
+          </property>
+          <property name="opacity" value="1">
+          </property>
+          <property name="shift_x" value="0">
+          </property>
+          <property name="shift_y" value="0">
+          </property>
+        </operation>
+        <sublayers type="child">
+          <layer name="scale 3" id="12" visible="1" normal="1" extra_inputs="2 3 0">
+            <operation type="clone">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="source_channel" value="RGB">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+            </sublayers>
+          </layer>
+          <layer name="gray" id="13" visible="0" normal="1" extra_inputs="">
+            <operation type="uniform">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="color_blend" value="0">
+              </property>
+              <property name="grey" value="0">
+              </property>
+              <property name="R" value="0.500008">
+              </property>
+              <property name="G" value="0.500008">
+              </property>
+              <property name="B" value="0.500008">
+              </property>
+              <property name="L" value="0">
+              </property>
+              <property name="a" value="0">
+              </property>
+              <property name="b" value="0">
+              </property>
+              <property name="C" value="0">
+              </property>
+              <property name="M" value="0">
+              </property>
+              <property name="Y" value="0">
+              </property>
+              <property name="K" value="0">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+              <layer name="gray mask" id="14" visible="1" normal="1" extra_inputs="">
+                <operation type="draw">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="pen_grey" value="0">
+                  </property>
+                  <property name="pen_R" value="1">
+                  </property>
+                  <property name="pen_G" value="1">
+                  </property>
+                  <property name="pen_B" value="1">
+                  </property>
+                  <property name="pen_L" value="1">
+                  </property>
+                  <property name="pen_a" value="1">
+                  </property>
+                  <property name="pen_b" value="1">
+                  </property>
+                  <property name="pen_C" value="1">
+                  </property>
+                  <property name="pen_M" value="1">
+                  </property>
+                  <property name="pen_Y" value="1">
+                  </property>
+                  <property name="pen_K" value="1">
+                  </property>
+                  <property name="bgd_grey" value="0">
+                  </property>
+                  <property name="bgd_R" value="0">
+                  </property>
+                  <property name="bgd_G" value="0">
+                  </property>
+                  <property name="bgd_B" value="0">
+                  </property>
+                  <property name="bgd_L" value="0">
+                  </property>
+                  <property name="bgd_a" value="0">
+                  </property>
+                  <property name="bgd_b" value="0">
+                  </property>
+                  <property name="bgd_C" value="0">
+                  </property>
+                  <property name="bgd_M" value="0">
+                  </property>
+                  <property name="bgd_Y" value="0">
+                  </property>
+                  <property name="bgd_K" value="0">
+                  </property>
+                  <property name="pen_color" value="1 1 1 ">
+                  </property>
+                  <property name="bgd_color" value="0 0 0 ">
+                  </property>
+                  <property name="pen_size" value="5">
+                  </property>
+                  <property name="pen_opacity" value="1">
+                  </property>
+                  <property name="strokes" value="0 ">
+                  </property>
+                </operation>
+                <operation type="blender">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="blend_mode" value="PF_BLEND_NORMAL">
+                  </property>
+                  <property name="opacity" value="1">
+                  </property>
+                  <property name="shift_x" value="0">
+                  </property>
+                  <property name="shift_y" value="0">
+                  </property>
+                </operation>
+                <sublayers type="child">
+                </sublayers>
+                <sublayers type="imap">
+                </sublayers>
+                <sublayers type="omap">
+                </sublayers>
+              </layer>
+            </sublayers>
+          </layer>
+        </sublayers>
+        <sublayers type="imap">
+        </sublayers>
+        <sublayers type="omap">
+        </sublayers>
+      </layer>
+      <layer name="Scale 4" id="15" visible="1" normal="0" extra_inputs="">
+        <operation type="buffer">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+        </operation>
+        <operation type="blender">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+          <property name="blend_mode" value="PF_BLEND_GRAIN_MERGE">
+          </property>
+          <property name="opacity" value="1">
+          </property>
+          <property name="shift_x" value="0">
+          </property>
+          <property name="shift_y" value="0">
+          </property>
+        </operation>
+        <sublayers type="child">
+          <layer name="scale 4" id="16" visible="1" normal="1" extra_inputs="2 4 0">
+            <operation type="clone">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="source_channel" value="RGB">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+            </sublayers>
+          </layer>
+          <layer name="gray" id="17" visible="0" normal="1" extra_inputs="">
+            <operation type="uniform">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="color_blend" value="0">
+              </property>
+              <property name="grey" value="0">
+              </property>
+              <property name="R" value="0.500008">
+              </property>
+              <property name="G" value="0.500008">
+              </property>
+              <property name="B" value="0.500008">
+              </property>
+              <property name="L" value="0">
+              </property>
+              <property name="a" value="0">
+              </property>
+              <property name="b" value="0">
+              </property>
+              <property name="C" value="0">
+              </property>
+              <property name="M" value="0">
+              </property>
+              <property name="Y" value="0">
+              </property>
+              <property name="K" value="0">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+              <layer name="gray mask" id="18" visible="1" normal="1" extra_inputs="">
+                <operation type="draw">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="pen_grey" value="0">
+                  </property>
+                  <property name="pen_R" value="1">
+                  </property>
+                  <property name="pen_G" value="1">
+                  </property>
+                  <property name="pen_B" value="1">
+                  </property>
+                  <property name="pen_L" value="1">
+                  </property>
+                  <property name="pen_a" value="1">
+                  </property>
+                  <property name="pen_b" value="1">
+                  </property>
+                  <property name="pen_C" value="1">
+                  </property>
+                  <property name="pen_M" value="1">
+                  </property>
+                  <property name="pen_Y" value="1">
+                  </property>
+                  <property name="pen_K" value="1">
+                  </property>
+                  <property name="bgd_grey" value="0">
+                  </property>
+                  <property name="bgd_R" value="0">
+                  </property>
+                  <property name="bgd_G" value="0">
+                  </property>
+                  <property name="bgd_B" value="0">
+                  </property>
+                  <property name="bgd_L" value="0">
+                  </property>
+                  <property name="bgd_a" value="0">
+                  </property>
+                  <property name="bgd_b" value="0">
+                  </property>
+                  <property name="bgd_C" value="0">
+                  </property>
+                  <property name="bgd_M" value="0">
+                  </property>
+                  <property name="bgd_Y" value="0">
+                  </property>
+                  <property name="bgd_K" value="0">
+                  </property>
+                  <property name="pen_color" value="1 1 1 ">
+                  </property>
+                  <property name="bgd_color" value="0 0 0 ">
+                  </property>
+                  <property name="pen_size" value="5">
+                  </property>
+                  <property name="pen_opacity" value="1">
+                  </property>
+                  <property name="strokes" value="0 ">
+                  </property>
+                </operation>
+                <operation type="blender">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="blend_mode" value="PF_BLEND_NORMAL">
+                  </property>
+                  <property name="opacity" value="1">
+                  </property>
+                  <property name="shift_x" value="0">
+                  </property>
+                  <property name="shift_y" value="0">
+                  </property>
+                </operation>
+                <sublayers type="child">
+                </sublayers>
+                <sublayers type="imap">
+                </sublayers>
+                <sublayers type="omap">
+                </sublayers>
+              </layer>
+            </sublayers>
+          </layer>
+        </sublayers>
+        <sublayers type="imap">
+        </sublayers>
+        <sublayers type="omap">
+        </sublayers>
+      </layer>
+      <layer name="Scale 5" id="19" visible="1" normal="0" extra_inputs="">
+        <operation type="buffer">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+        </operation>
+        <operation type="blender">
+          <property name="intensity" value="1">
+          </property>
+          <property name="grey_target_channel" value="Grey">
+          </property>
+          <property name="rgb_target_channel" value="RGB">
+          </property>
+          <property name="lab_target_channel" value="Lab">
+          </property>
+          <property name="cmyk_target_channel" value="CMYK">
+          </property>
+          <property name="blend_mode" value="PF_BLEND_GRAIN_MERGE">
+          </property>
+          <property name="opacity" value="1">
+          </property>
+          <property name="shift_x" value="0">
+          </property>
+          <property name="shift_y" value="0">
+          </property>
+        </operation>
+        <sublayers type="child">
+          <layer name="scale 5" id="20" visible="1" normal="1" extra_inputs="2 5 0">
+            <operation type="clone">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="source_channel" value="RGB">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+            </sublayers>
+          </layer>
+          <layer name="gray" id="21" visible="0" normal="1" extra_inputs="">
+            <operation type="uniform">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="color_blend" value="0">
+              </property>
+              <property name="grey" value="0">
+              </property>
+              <property name="R" value="0.500008">
+              </property>
+              <property name="G" value="0.500008">
+              </property>
+              <property name="B" value="0.500008">
+              </property>
+              <property name="L" value="0">
+              </property>
+              <property name="a" value="0">
+              </property>
+              <property name="b" value="0">
+              </property>
+              <property name="C" value="0">
+              </property>
+              <property name="M" value="0">
+              </property>
+              <property name="Y" value="0">
+              </property>
+              <property name="K" value="0">
+              </property>
+            </operation>
+            <operation type="blender">
+              <property name="intensity" value="1">
+              </property>
+              <property name="grey_target_channel" value="Grey">
+              </property>
+              <property name="rgb_target_channel" value="RGB">
+              </property>
+              <property name="lab_target_channel" value="Lab">
+              </property>
+              <property name="cmyk_target_channel" value="CMYK">
+              </property>
+              <property name="blend_mode" value="PF_BLEND_NORMAL">
+              </property>
+              <property name="opacity" value="1">
+              </property>
+              <property name="shift_x" value="0">
+              </property>
+              <property name="shift_y" value="0">
+              </property>
+            </operation>
+            <sublayers type="child">
+            </sublayers>
+            <sublayers type="imap">
+            </sublayers>
+            <sublayers type="omap">
+              <layer name="gray mask" id="22" visible="1" normal="1" extra_inputs="">
+                <operation type="draw">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="pen_grey" value="0">
+                  </property>
+                  <property name="pen_R" value="1">
+                  </property>
+                  <property name="pen_G" value="1">
+                  </property>
+                  <property name="pen_B" value="1">
+                  </property>
+                  <property name="pen_L" value="1">
+                  </property>
+                  <property name="pen_a" value="1">
+                  </property>
+                  <property name="pen_b" value="1">
+                  </property>
+                  <property name="pen_C" value="1">
+                  </property>
+                  <property name="pen_M" value="1">
+                  </property>
+                  <property name="pen_Y" value="1">
+                  </property>
+                  <property name="pen_K" value="1">
+                  </property>
+                  <property name="bgd_grey" value="0">
+                  </property>
+                  <property name="bgd_R" value="0">
+                  </property>
+                  <property name="bgd_G" value="0">
+                  </property>
+                  <property name="bgd_B" value="0">
+                  </property>
+                  <property name="bgd_L" value="0">
+                  </property>
+                  <property name="bgd_a" value="0">
+                  </property>
+                  <property name="bgd_b" value="0">
+                  </property>
+                  <property name="bgd_C" value="0">
+                  </property>
+                  <property name="bgd_M" value="0">
+                  </property>
+                  <property name="bgd_Y" value="0">
+                  </property>
+                  <property name="bgd_K" value="0">
+                  </property>
+                  <property name="pen_color" value="1 1 1 ">
+                  </property>
+                  <property name="bgd_color" value="0 0 0 ">
+                  </property>
+                  <property name="pen_size" value="5">
+                  </property>
+                  <property name="pen_opacity" value="1">
+                  </property>
+                  <property name="strokes" value="0 ">
+                  </property>
+                </operation>
+                <operation type="blender">
+                  <property name="intensity" value="1">
+                  </property>
+                  <property name="grey_target_channel" value="Grey">
+                  </property>
+                  <property name="rgb_target_channel" value="RGB">
+                  </property>
+                  <property name="lab_target_channel" value="Lab">
+                  </property>
+                  <property name="cmyk_target_channel" value="CMYK">
+                  </property>
+                  <property name="blend_mode" value="PF_BLEND_NORMAL">
+                  </property>
+                  <property name="opacity" value="1">
+                  </property>
+                  <property name="shift_x" value="0">
+                  </property>
+                  <property name="shift_y" value="0">
+                  </property>
+                </operation>
+                <sublayers type="child">
+                </sublayers>
+                <sublayers type="imap">
+                </sublayers>
+                <sublayers type="omap">
+                </sublayers>
+              </layer>
+            </sublayers>
+          </layer>
+        </sublayers>
+        <sublayers type="imap">
+        </sublayers>
+        <sublayers type="omap">
+        </sublayers>
+      </layer>
+    </sublayers>
+    <sublayers type="imap">
+    </sublayers>
+    <sublayers type="omap">
+    </sublayers>
+  </layer>
+</preset>
