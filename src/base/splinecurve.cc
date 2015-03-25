@@ -34,15 +34,19 @@
 
 PF::SplineCurve::SplineCurve(): 
   PF::Curve(),
-  ypp( NULL )
+  ypp( NULL ),
+  ypp_size( 0 )
 {
   points_mutex = vips_g_mutex_new();
+#ifdef SPLINE_USE_STDVEC
+  points.push_back( std::make_pair(float(0),float(0)) );
+  points.push_back( std::make_pair(float(1),float(1)) );
+#else
   points = new std::pair<float,float>[2];
   points[0] = std::make_pair(float(0),float(0));
   points[1] = std::make_pair(float(1),float(1));
   npoints = 2;
-  //points.push_back( std::make_pair(float(0),float(0)) );
-  //points.push_back( std::make_pair(float(1),float(1)) );
+#endif
   update_spline();
 }
 
@@ -60,6 +64,25 @@ int PF::SplineCurve::add_point( float x, float y )
   //if( (get_npoints()>1) && (x >= points[get_npoints()-1].first) ) return -1;
   //return -1;
   lock();
+#ifdef SPLINE_USE_STDVEC
+#ifndef NDEBUG
+  std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): points.size()="<<points.size()<<std::endl;
+#endif
+  for( unsigned int i = 0; i < points.size(); i++ ) {
+    if( points[i].first <= x ) continue;
+    points.insert( points.begin()+i, std::make_pair(x,y) );
+#ifndef NDEBUG
+    std::cout<<"PF::SplineCurve::add_point( "<<x<<", "<<y<<" ): point added before "<<points[i].first<<std::endl;
+#endif
+    update_spline();
+    unlock();
+    return i;
+  }
+  points.push_back( std::make_pair(x,y) );
+  update_spline();
+  unlock();
+  return( points.size()-1 );
+#else
   npoints += 1;
   std::pair<float,float>* points_new = new std::pair<float,float>[npoints];
 #ifndef NDEBUG
@@ -93,16 +116,18 @@ int PF::SplineCurve::add_point( float x, float y )
   unlock();
   //return( points.size()-1 );
   return -1;
+#endif
 }
 
 
 bool PF::SplineCurve::remove_point( unsigned int id )
 {
   if( id == 0 ) return false;
-  if( id >= (npoints-1) ) return false;
+  if( id >= (get_npoints()-1) ) return false;
   
+#ifdef SPLINE_USE_STDVEC
   //points.erase( points.begin() + id );
-
+#else
   npoints -= 1;
   std::pair<float,float>* points_new = new std::pair<float,float>[npoints];
   
@@ -113,6 +138,7 @@ bool PF::SplineCurve::remove_point( unsigned int id )
     points_new[i] = points[i+1];
   delete[] points;
   points = points_new;
+#endif
   update_spline();
   return true;
 }
@@ -121,7 +147,7 @@ bool PF::SplineCurve::remove_point( unsigned int id )
 bool PF::SplineCurve::set_point( unsigned int id, float& x, float& y )
 {
   //if( id >= points.size() ) return false;
-  if( id >= npoints ) return false;
+  if( id >= get_npoints() ) return false;
 
   if( x < 0 ) x = 0;
   if( y < 0 ) y = 0;
@@ -130,7 +156,7 @@ bool PF::SplineCurve::set_point( unsigned int id, float& x, float& y )
 
   if( (id>0) && (x<=points[id-1].first) ) x = points[id].first;
   //if( (id<(points.size()-1)) && (x>=points[id+1].first) ) x = points[id].first;
-  if( (id<(npoints-1)) && (x>=points[id+1].first) ) x = points[id].first;
+  if( (id<(get_npoints()-1)) && (x>=points[id+1].first) ) x = points[id].first;
   points[id] = std::make_pair( x, y );
   update_spline();
   return true;
@@ -140,11 +166,13 @@ bool PF::SplineCurve::set_point( unsigned int id, float& x, float& y )
 void PF::SplineCurve::update_spline() 
 {
   //unsigned int N = points.size();
-  unsigned int N = npoints;
+  unsigned int N = get_npoints();
   if( N < 2) return;
   double* u = new double[N-1];
   if( ypp ) delete [] ypp;
   ypp = new double [N];
+  ypp_size = N;
+  //std::cout<<"SplineCurve::update_spline(): ypp_size="<<ypp_size<<std::endl;
   
   ypp[0] = u[0] = 0.0;	/* set lower boundary condition to "natural" */
   
@@ -172,7 +200,7 @@ float PF::SplineCurve::get_value( float x )
 {
   //int size = points.size();
   //unsigned int N = points.size();
-  unsigned int N = npoints;
+  unsigned int N = get_npoints();
   //std::cout<<"size = "<<size<<std::endl;
   //return x;
 
@@ -203,9 +231,23 @@ float PF::SplineCurve::get_value( float x )
     return result;
   // spline curve
   } else { // if (kind==Spline) {
+    if( k_hi >= ypp_size )
+      std::cout<<"k_lo="<<k_lo<<"  k_hi="<<k_hi<<"  ypp_size="<<ypp_size<<"  N="<<N<<std::endl;
     double a = (points[k_hi].first - x) / h;
     double b = (x - points[k_lo].first) / h;
-    double r = a*points[k_lo].second + b*points[k_hi].second + ((a*a*a - a)*ypp[k_lo] + (b*b*b - b)*ypp[k_hi]) * (h*h)/6.0;
+    double r1 = a*points[k_lo].second;
+    double r2 = b*points[k_hi].second;
+    double r3 = (a*a*a - a)*ypp[k_lo];
+    double r4 = (b*b*b - b)*ypp[k_hi];
+    double r = r1 + r2 +(r3+r4)*(h*h)/6.0;
+/*
+    double r =
+        a*points[k_lo].second +
+        b*points[k_hi].second +
+        ((a*a*a - a)*ypp[k_lo] +
+            (b*b*b - b)*ypp[k_hi]) *
+            (h*h)/6.0;
+ */
     return CLIPD(r);
   }
 }

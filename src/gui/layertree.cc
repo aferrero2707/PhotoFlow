@@ -174,8 +174,8 @@ PF::LayerTree::LayerTree( bool is_map ):
   treeView.set_model(treeModel);
   treeView.append_column_editable("V", treeModel->columns.col_visible);
   treeView.append_column("Name", treeModel->columns.col_name);
-  treeView.append_column("map1", treeModel->columns.col_imap);
-  treeView.append_column("map2", treeModel->columns.col_omap);
+  treeView.append_column("map1", treeModel->columns.col_omap);
+  treeView.append_column("map2", treeModel->columns.col_imap);
 
   treeView.enable_model_drag_source();
   treeView.enable_model_drag_dest();

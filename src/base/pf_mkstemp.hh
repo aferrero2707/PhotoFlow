@@ -54,7 +54,7 @@ extern std::list<std::string> cache_files;
    rules for mk[s]temp (i.e. end in "XXXXXX").  The name constructed
    does not exist at the time of the call to mkstemp.  TMPL is
    overwritten with the result.  */
-int mkstemp (char *tmpl);
+int mkstemps (char *tmpl, int suffixlen);
 
 #endif
 

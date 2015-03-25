@@ -343,16 +343,9 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
     float Lab_in[3] = {0, 0, 0};
     float Lab_out[3] = {0, 0, 0};
     float Lab_wb[3] = {
-//#ifdef GTKMM_2
-      //wb_target_L_slider.get_adjustment().get_value(),
-      //wb_target_a_slider.get_adjustment().get_value(),
-      //wb_target_b_slider.get_adjustment().get_value()
-//#endif
-//#ifdef GTKMM_3
-      wb_target_L_slider.get_adjustment()->get_value(),
-      wb_target_a_slider.get_adjustment()->get_value(),
-      wb_target_b_slider.get_adjustment()->get_value()
-//#endif
+      static_cast<float>(wb_target_L_slider.get_adjustment()->get_value()),
+      static_cast<float>(wb_target_a_slider.get_adjustment()->get_value()),
+      static_cast<float>(wb_target_b_slider.get_adjustment()->get_value())
     };
 
     const float epsilon = 1.0e-5;
@@ -619,16 +612,9 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     float Lab_in[3] = {0, 0, 0};
     float Lab_out[3] = {0, 0, 0};
     float Lab_wb[3] = {
-//#ifdef GTKMM_2
-      //wb_target_L_slider.get_adjustment().get_value(),
-      //wb_target_a_slider.get_adjustment().get_value(),
-      //wb_target_b_slider.get_adjustment().get_value()
-//#endif
-//#ifdef GTKMM_3
-      wb_target_L_slider.get_adjustment()->get_value(),
-      wb_target_a_slider.get_adjustment()->get_value(),
-      wb_target_b_slider.get_adjustment()->get_value()
-//#endif
+      static_cast<float>(wb_target_L_slider.get_adjustment()->get_value()),
+      static_cast<float>(wb_target_a_slider.get_adjustment()->get_value()),
+      static_cast<float>(wb_target_b_slider.get_adjustment()->get_value())
     };
     //float Lab_wb[3] = {70, 15, 10};
     // Now we convert the average RGB values in the WB spot region to Lab

@@ -394,6 +394,13 @@ namespace PF
       }
     }
 	};
+
+  template <class T> std::string to_string( const T& val )
+  {
+	std::ostringstream str;
+	str << std::dec << val;
+	return str.str();
+  }
 }
 
 

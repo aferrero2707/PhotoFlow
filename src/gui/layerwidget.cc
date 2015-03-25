@@ -37,7 +37,6 @@
 #include "imageeditor.hh"
 
 
-
 PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   Gtk::VBox(), 
   image( img ), editor( ed ),
@@ -150,7 +149,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
     std::cout<<"Activated row "<<l->get_name()<<std::endl;
-    if( column == layer_views[page]->get_tree().get_column(2) ) {
+    if( column == layer_views[page]->get_tree().get_column(IMAP_COL_NUM) ) {
       if( !l->get_processor()->get_par()->has_intensity() )
         return;
       std::cout<<"Activated IMap column of row "<<l->get_name()<<std::endl;
@@ -190,7 +189,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
 
       return;
     }
-    if( column == layer_views[page]->get_tree().get_column(3) ) {
+    if( column == layer_views[page]->get_tree().get_column(OMAP_COL_NUM) ) {
       if( !l->get_processor()->get_par()->has_opacity() )
         return;
       std::cout<<"Activated OMap column of row "<<l->get_name()<<std::endl;

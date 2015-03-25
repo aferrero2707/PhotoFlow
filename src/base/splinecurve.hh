@@ -34,19 +34,25 @@
 #include "property.hh"
 #include "curve.hh"
 
+#define SPLINE_USE_STDVEC 1
+
 
 namespace PF
 {
 
   class SplineCurve: public Curve
   {
-    //std::vector< std::pair<float,float> > points;
+#ifdef SPLINE_USE_STDVEC
+    std::vector< std::pair<float,float> > points;
+#else
     std::pair<float,float>* points;
     size_t npoints;
+#endif
 
     GMutex* points_mutex;
     
     double* ypp;
+    unsigned int ypp_size;
 
   public:
     SplineCurve();
@@ -60,18 +66,24 @@ namespace PF
     bool remove_point( unsigned int id );
 
     void clear_points() { 
-      //points.clear();
+#ifdef SPLINE_USE_STDVEC
+      points.clear();
+#else
       delete[] points;
       points = NULL;
       npoints = 0;
+#endif
     }
 
     bool set_point( unsigned int id, float& x, float& y );
 
-    //const std::vector< std::pair<float,float> >& get_points() const { return points; }
-    //size_t get_npoints() const { return points.size(); }
+#ifdef SPLINE_USE_STDVEC
+    const std::vector< std::pair<float,float> >& get_points() const { return points; }
+    size_t get_npoints() const { return points.size(); }
+#else
     const std::pair<float,float>* get_points() const { return points; }
     size_t get_npoints() const { return npoints; }
+#endif
     std::pair<float,float> get_point(int n) const { return points[n]; }
 
     void update_spline();
@@ -89,12 +101,18 @@ namespace PF
     void get_deltas( std::vector< std::pair<float,float> >& vec );
     SplineCurve& operator=(const SplineCurve& b)
     {
-      //points = b.get_points();
+      lock();
+#ifdef SPLINE_USE_STDVEC
+      points = b.get_points();
+#else
       if( points ) delete[] points;
       npoints = b.get_npoints();
       points = new std::pair<float,float>[npoints];
       for(size_t i = 0; i < npoints; i++) 
         points[i] = b.get_point(i);
+#endif
+      update_spline();
+      unlock();
       return *this;
     } 
   };
@@ -102,11 +120,14 @@ namespace PF
 
   inline bool operator ==(const SplineCurve& l, const SplineCurve& r)
   {
-    //if( l.get_points() != r.get_points() ) return false;
+#ifdef SPLINE_USE_STDVEC
+    if( l.get_points() != r.get_points() ) return false;
+#else
     if( l.get_npoints() != r.get_npoints() ) return false;
     for( size_t i = 0; i < l.get_npoints(); i++ ) {
       if( l.get_point(i) != r.get_point(i) ) return false;
     }
+#endif
     return true;
   }
 

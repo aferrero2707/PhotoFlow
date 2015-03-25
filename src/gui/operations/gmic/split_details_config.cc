@@ -33,7 +33,7 @@
 
 
 PF::GmicSplitDetailsConfigDialog::GmicSplitDetailsConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Tone mapping (G'MIC)"  ),
+  OperationConfigDialog( layer, "Multi-Scale Decomposition"  ),
   updateButton( "Update" ),
   prop_nscales_slider( this, "nscales", "nscales", 4, 1, 10, 1, 5, 1),
   prop_base_scale_slider( this, "base_scale", "base scale %", 1, 0, 1000000, .01, 1, 1),

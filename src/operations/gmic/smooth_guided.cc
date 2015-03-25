@@ -71,7 +71,7 @@ VipsImage* PF::GmicSmoothGuidedPar::build(std::vector<VipsImage*>& in, int first
 
   std::string command = "-guided  ";
   //command = command + prop_radius.get_str();
-  command = command + SSTR( prop_radius.get()/scalefac );
+  command = command + PF::to_string( prop_radius.get()/scalefac );
   command = command + std::string(",") + prop_smoothness.get_str();
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );

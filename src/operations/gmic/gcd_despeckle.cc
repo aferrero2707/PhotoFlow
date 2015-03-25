@@ -79,7 +79,7 @@ VipsImage* PF::GmicGcdDespecklePar::build(std::vector<VipsImage*>& in, int first
   std::string command = "-gcd_despeckle  ";
   command = command + prop_tolerance.get_str();
   //command = command + std::string(",") + prop_max_area.get_str();
-  command = command + std::string(",") + SSTR( prop_max_area.get()/scalefac2 );
+  command = command + std::string(",") + PF::to_string( prop_max_area.get()/scalefac2 );
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
   gpar->set_padding( get_padding( level ) );

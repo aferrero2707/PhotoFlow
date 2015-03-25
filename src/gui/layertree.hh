@@ -34,6 +34,9 @@
 
 #include "../base/layer.hh"
 
+#define OMAP_COL_NUM 2
+#define IMAP_COL_NUM 3
+
 namespace PF {
 
   class LayerTreeModel: public Gtk::TreeStore
@@ -48,7 +51,7 @@ namespace PF {
     public:
       
       LayerTreeColumns()
-      { add(col_visible); add(col_name); add(col_imap); add(col_omap); add(col_layer); }
+      { add(col_visible); add(col_name); add(col_omap); add(col_imap); add(col_layer); }
       
       Gtk::TreeModelColumn<bool> col_visible;
       Gtk::TreeModelColumn<Glib::ustring> col_name;

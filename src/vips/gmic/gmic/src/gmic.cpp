@@ -86,7 +86,7 @@ CImg<T>& operator_eq(const t val) {
 
 CImg<T>& operator_eq(const char *const expression) {
   const unsigned int omode = cimg::exception_mode();
-  cimg::exception_mode() = 0;
+  cimg::exception_mode(0);
   try {
     const CImg<T> _base = cimg::_is_self_expr(expression)?+*this:CImg<T>(),
       &base = _base?_base:*this;
@@ -111,12 +111,12 @@ CImg<T>& operator_eq(const char *const expression) {
         cimg_forXYZC(*this,x,y,z,c) { *ptrd = (T)(*ptrd == (T)mp(x,y,z,c)); ++ptrd; }
     }
   } catch (CImgException&) {
-    cimg::exception_mode() = omode;
+    cimg::exception_mode(omode);
     CImg<T> values(_width,_height,_depth,_spectrum);
     values = expression;
     operator_eq(values);
   }
-  cimg::exception_mode() = omode;
+  cimg::exception_mode(omode);
   return *this;
 }
 
@@ -146,7 +146,7 @@ CImg<T>& operator_neq(const t val) {
 
 CImg<T>& operator_neq(const char *const expression) {
   const unsigned int omode = cimg::exception_mode();
-  cimg::exception_mode() = 0;
+  cimg::exception_mode(0);
   try {
     const CImg<T> _base = cimg::_is_self_expr(expression)?+*this:CImg<T>(),
       &base = _base?_base:*this;
@@ -171,12 +171,12 @@ CImg<T>& operator_neq(const char *const expression) {
         cimg_forXYZC(*this,x,y,z,c) { *ptrd = (T)(*ptrd != (T)mp(x,y,z,c)); ++ptrd; }
     }
   } catch (CImgException&) {
-    cimg::exception_mode() = omode;
+    cimg::exception_mode(omode);
     CImg<T> values(_width,_height,_depth,_spectrum);
     values = expression;
     operator_neq(values);
   }
-  cimg::exception_mode() = omode;
+  cimg::exception_mode(omode);
   return *this;
 }
 
@@ -206,7 +206,7 @@ CImg<T>& operator_gt(const t val) {
 
 CImg<T>& operator_gt(const char *const expression) {
   const unsigned int omode = cimg::exception_mode();
-  cimg::exception_mode() = 0;
+  cimg::exception_mode(0);
   try {
     const CImg<T> _base = cimg::_is_self_expr(expression)?+*this:CImg<T>(),
       &base = _base?_base:*this;
@@ -231,12 +231,12 @@ CImg<T>& operator_gt(const char *const expression) {
         cimg_forXYZC(*this,x,y,z,c) { *ptrd = (T)(*ptrd > (T)mp(x,y,z,c)); ++ptrd; }
     }
   } catch (CImgException&) {
-    cimg::exception_mode() = omode;
+    cimg::exception_mode(omode);
     CImg<T> values(_width,_height,_depth,_spectrum);
     values = expression;
     operator_gt(values);
   }
-  cimg::exception_mode() = omode;
+  cimg::exception_mode(omode);
   return *this;
 }
 
@@ -266,7 +266,7 @@ CImg<T>& operator_ge(const t val) {
 
 CImg<T>& operator_ge(const char *const expression) {
   const unsigned int omode = cimg::exception_mode();
-  cimg::exception_mode() = 0;
+  cimg::exception_mode(0);
   try {
     const CImg<T> _base = cimg::_is_self_expr(expression)?+*this:CImg<T>(),
       &base = _base?_base:*this;
@@ -291,12 +291,12 @@ CImg<T>& operator_ge(const char *const expression) {
         cimg_forXYZC(*this,x,y,z,c) { *ptrd = (T)(*ptrd >= (T)mp(x,y,z,c)); ++ptrd; }
     }
   } catch (CImgException&) {
-    cimg::exception_mode() = omode;
+    cimg::exception_mode(omode);
     CImg<T> values(_width,_height,_depth,_spectrum);
     values = expression;
     operator_ge(values);
   }
-  cimg::exception_mode() = omode;
+  cimg::exception_mode(omode);
   return *this;
 }
 
@@ -326,7 +326,7 @@ CImg<T>& operator_lt(const t val) {
 
 CImg<T>& operator_lt(const char *const expression) {
   const unsigned int omode = cimg::exception_mode();
-  cimg::exception_mode() = 0;
+  cimg::exception_mode(0);
   try {
     const CImg<T> _base = cimg::_is_self_expr(expression)?+*this:CImg<T>(),
       &base = _base?_base:*this;
@@ -351,12 +351,12 @@ CImg<T>& operator_lt(const char *const expression) {
         cimg_forXYZC(*this,x,y,z,c) { *ptrd = (T)(*ptrd < (T)mp(x,y,z,c)); ++ptrd; }
     }
   } catch (CImgException&) {
-    cimg::exception_mode() = omode;
+    cimg::exception_mode(omode);
     CImg<T> values(_width,_height,_depth,_spectrum);
     values = expression;
     operator_lt(values);
   }
-  cimg::exception_mode() = omode;
+  cimg::exception_mode(omode);
   return *this;
 }
 
@@ -386,7 +386,7 @@ CImg<T>& operator_le(const t val) {
 
 CImg<T>& operator_le(const char *const expression) {
   const unsigned int omode = cimg::exception_mode();
-  cimg::exception_mode() = 0;
+  cimg::exception_mode(0);
   try {
     const CImg<T> _base = cimg::_is_self_expr(expression)?+*this:CImg<T>(),
       &base = _base?_base:*this;
@@ -411,12 +411,12 @@ CImg<T>& operator_le(const char *const expression) {
         cimg_forXYZC(*this,x,y,z,c) { *ptrd = (T)(*ptrd <= (T)mp(x,y,z,c)); ++ptrd; }
     }
   } catch (CImgException&) {
-    cimg::exception_mode() = omode;
+    cimg::exception_mode(omode);
     CImg<T> values(_width,_height,_depth,_spectrum);
     values = expression;
     operator_le(values);
   }
-  cimg::exception_mode() = omode;
+  cimg::exception_mode(omode);
   return *this;
 }
 
@@ -449,6 +449,27 @@ CImg<T>& div(const char *const expression) {
 
 CImg<T> get_div(const char *const expression) const {
   return (+*this).div(expression);
+}
+
+CImg<T>& gmic_discard(const char *const axes) {
+  for (const char *s = axes; *s; ++s) discard(*s);
+  return *this;
+}
+
+CImg<T> get_gmic_discard(const char *const axes) const {
+  return (+*this).gmic_discard(axes);
+}
+
+template<typename t>
+CImg<T>& gmic_discard(const CImg<t>& values, const char *const axes) {
+  if (is_empty() || !values || !axes || !*axes) return *this;
+  for (const char *s = axes; *s; ++s) discard(values,*s);
+  return *this;
+}
+
+template<typename t>
+CImg<T> get_gmic_discard(const CImg<t>& values, const char *const axes) const {
+  return (+*this).gmic_discard(values,axes);
 }
 
 template<typename t>
@@ -659,24 +680,25 @@ CImg<T> get_draw_object3d(const float x0, const float y0, const float z0,
 // Additional 3d objects operators.
 
 CImgList<T> get_split_CImg3d() const {
-  char error_message[1024] = { 0 };
+  CImg<charT> error_message(1024);
+  *error_message = 0;
   if (!is_CImg3d(false,error_message))
     throw CImgInstanceException(_cimg_instance
                                 "get_split_CImg3d(): image instance is not a CImg3d (%s).",
-                                cimg_instance,error_message);
+                                cimg_instance,error_message.data());
   CImgList<T> res;
   const T *ptr0 = _data, *ptr = ptr0 + 6;
-  CImg<T>(ptr0,1,ptr-ptr0,1,1).move_to(res); // Header.
+  CImg<T>(ptr0,1,(unsigned int)(ptr-ptr0),1,1).move_to(res); // Header.
   ptr0 = ptr;
   const unsigned int
     nbv = cimg::float2uint(*(ptr++)),
     nbp = cimg::float2uint(*(ptr++));
-  CImg<T>(ptr0,1,ptr-ptr0,1,1).move_to(res); // Nb vertices and primitives.
+  CImg<T>(ptr0,1,(unsigned int)(ptr - ptr0),1,1).move_to(res); // Nb vertices and primitives.
   ptr0 = ptr; ptr+=3*nbv;
-  CImg<T>(ptr0,1,ptr-ptr0,1,1).move_to(res); // Vertices.
+  CImg<T>(ptr0,1,(unsigned int)(ptr - ptr0),1,1).move_to(res); // Vertices.
   ptr0 = ptr;
   for (unsigned int i = 0; i<nbp; ++i) ptr+=(unsigned int)(*ptr) + 1;
-  CImg<T>(ptr0,1,ptr-ptr0,1,1).move_to(res); // Primitives.
+  CImg<T>(ptr0,1,(unsigned int)(ptr - ptr0),1,1).move_to(res); // Primitives.
   ptr0 = ptr;
   for (unsigned int i = 0; i<nbp; ++i) {
     const T val = *(ptr++);
@@ -689,7 +711,7 @@ CImgList<T> get_split_CImg3d() const {
       if (w*h*s!=0) ptr+=w*h*s;
     }
   }
-  CImg<T>(ptr0,1,ptr-ptr0,1,1).move_to(res); // Colors/Textures.
+  CImg<T>(ptr0,1,(unsigned int)(ptr - ptr0),1,1).move_to(res); // Colors/Textures.
   ptr0 = ptr;
   for (unsigned int i = 0; i<nbp; ++i) {
     const T val = *(ptr++);
@@ -701,14 +723,15 @@ CImgList<T> get_split_CImg3d() const {
       if (w*h*s!=0) ptr+=w*h*s;
     }
   }
-  CImg<T>(ptr0,1,ptr-ptr0,1,1).move_to(res); // Opacities.
+  CImg<T>(ptr0,1,(unsigned int)(ptr - ptr0),1,1).move_to(res); // Opacities.
   return res;
 }
 
 static CImg<T> append_CImg3d(const CImgList<T>& images) {
   if (!images) return CImg<T>();
   if (images.size()==1) return +images[0];
-  char error_message[1024] = { 0 };
+  CImg<charT> error_message(1024);
+  *error_message = 0;
   unsigned int nbv = 0, nbp = 0;
   unsigned long siz = 0;
   cimglist_for(images,l) {
@@ -717,7 +740,7 @@ static CImg<T> append_CImg3d(const CImgList<T>& images) {
       throw CImgArgumentException("append_CImg3d(): image [%d] (%u,%u,%u,%u,%p) "
                                   "is not a CImg3d (%s).",
                                   l,img._width,img._height,img._depth,img._spectrum,img._data,
-                                  error_message);
+                                  error_message.data());
     siz+=img.size() - 8;
     nbv+=cimg::float2uint((float)img[6]);
     nbp+=cimg::float2uint((float)img[7]);
@@ -799,11 +822,12 @@ static CImg<T> append_CImg3d(const CImgList<T>& images) {
 
 template<typename t>
 CImg<T>& rotate_CImg3d(const CImg<t>& rot) {
-  char error_message[1024] = { 0 };
+  CImg<charT> error_message(1024);
+  *error_message = 0;
   if (!is_CImg3d(false,error_message))
     throw CImgInstanceException(_cimg_instance
                                 "rotate_CImg3d(): image instance is not a CImg3d (%s).",
-                                cimg_instance,error_message);
+                                cimg_instance,error_message.data());
   const unsigned int nbv = cimg::float2uint((float)(*this)[6]);
   const T *ptrs = data() + 8;
   const float
@@ -826,11 +850,12 @@ CImg<T> get_rotate_CImg3d(const CImg<t>& rot) const {
 }
 
 CImg<T>& shift_CImg3d(const float tx, const float ty, const float tz) {
-  char error_message[1024] = { 0 };
+  CImg<charT> error_message(1024);
+  *error_message = 0;
   if (!is_CImg3d(false,error_message))
     throw CImgInstanceException(_cimg_instance
                                 "shift_CImg3d(): image instance is not a CImg3d (%s).",
-                                cimg_instance,error_message);
+                                cimg_instance,error_message.data());
   const unsigned int nbv = cimg::float2uint((float)(*this)[6]);
   T *ptrd = data() + 8;
   for (unsigned int j = 0; j<nbv; ++j) { *(ptrd++)+=(T)tx; *(ptrd++)+=(T)ty; *(ptrd++)+=(T)tz; }
@@ -842,11 +867,12 @@ CImg<T> get_shift_CImg3d(const float tx, const float ty, const float tz) const {
 }
 
 CImg<T>& scale_CImg3d(const float sx, const float sy, const float sz) {
-  char error_message[1024] = { 0 };
+  CImg<charT> error_message(1024);
+  *error_message = 0;
   if (!is_CImg3d(false,error_message))
     throw CImgInstanceException(_cimg_instance
                                 "scale_CImg3d(): image instance is not a CImg3d (%s).",
-                                cimg_instance,error_message);
+                                cimg_instance,error_message.data());
   const unsigned int nbv = cimg::float2uint((float)(*this)[6]);
   T *ptrd = data() + 8;
   for (unsigned int j = 0; j<nbv; ++j) { *(ptrd++)*=(T)sx; *(ptrd++)*=(T)sy; *(ptrd++)*=(T)sz; }
@@ -858,11 +884,12 @@ CImg<T> get_scale_CImg3d(const float sx, const float sy, const float sz) const {
 }
 
 CImg<T>& reverse_CImg3d() {
-  char error_message[1024] = { 0 };
+  CImg<char> error_message(1024);
+  *error_message = 0;
   if (!is_CImg3d(false,error_message))
     throw CImgInstanceException(_cimg_instance
                                 "reverse_CImg3d(): image instance is not a CImg3d (%s).",
-                                cimg_instance,error_message);
+                                cimg_instance,error_message.data());
   T *p = _data + 6;
   const unsigned int
     nbv = cimg::float2uint(*(p++)),
@@ -888,11 +915,12 @@ CImg<T> get_reverse_CImg3d() const {
 
 CImg<T>& color_CImg3d(const float R, const float G, const float B, const float opacity,
                       const bool set_RGB, const bool set_opacity) {
-  char error_message[1024] = { 0 };
+  CImg<char> error_message(1024);
+  *error_message = 0;
   if (!is_CImg3d(false,error_message))
     throw CImgInstanceException(_cimg_instance
                                 "color_CImg3d(): image instance is not a CImg3d (%s).",
-                                cimg_instance,error_message);
+                                cimg_instance,error_message.data());
   T *ptrd = data() + 6;
   const unsigned int
     nbv = cimg::float2uint((float)*(ptrd++)),
@@ -936,16 +964,19 @@ CImg<T> get_texturize_CImg3d(const CImg<T>& texture, const CImg<T>& coords) cons
   CImgList<T> colors;
   CImgList<floatT> opacities;
   const CImg<floatT> points = get_CImg3dtoobject3d(primitives,colors,opacities,false);
-  points.texturize_object3d(primitives,colors,texture,coords);
+  if (coords)
+    points.texturize_object3d(primitives,colors,texture,coords.get_resize(2,coords.size()/2,1,1,-1).transpose());
+  else points.texturize_object3d(primitives,colors,texture,coords);
   return points.get_object3dtoCImg3d(primitives,colors,opacities,false);
 }
 
 CImg<T>& convert_primitives_CImg3d(const unsigned int mode) {
-  char error_message[1024] = { 0 };
+  CImg<char> error_message(1024);
+  *error_message = 0;
   if (!is_CImg3d(false,error_message))
     throw CImgInstanceException(_cimg_instance
                                 "convert_primitives_CImg3d(): image instance is not a CImg3d (%s).",
-                                cimg_instance,error_message);
+                                cimg_instance,error_message.data());
   CImgList<uintT> primitives;
   CImgList<floatT> colors, opacities;
   CImg3dtoobject3d(primitives,colors,opacities,false);
@@ -961,9 +992,9 @@ CImg<T>& convert_primitives_CImg3d(const unsigned int mode) {
       P.move_to(primitives);
       if (mode==2) {
         if (C.size()==3) C.move_to(colors);
-        else C.get_vector_at(C.width()/2,C.height()/2).move_to(colors);
+        else C.get_vector_at(C._width/2,C._height/2).move_to(colors);
         if (O.size()==1) O.move_to(opacities);
-        else O.get_vector_at(O.width()/2,O.height()/2).move_to(opacities);
+        else O.get_vector_at(O._width/2,O._height/2).move_to(opacities);
       } else { C.move_to(colors); O.move_to(opacities); }
       break;
     case 2 : // Colored segment.
@@ -1041,27 +1072,31 @@ CImg<T>& convert_primitives_CImg3d(const unsigned int mode) {
     case 6 : // Textured segment.
       if (mode==2) {
         CImg<uintT>::vector(P[0],P[1]).move_to(primitives);
-        C.get_vector_at(P[2],P[3]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[2],P[3])).move_to(opacities);
+        C.get_vector_at(P[2]>=C._width?C._width-1:P[2],
+                        P[3]>=C._height?C._height-1:P[3]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[2],P[3])).move_to(opacities);
         else O.move_to(opacities);
       } else if (mode==1) {
         P.move_to(primitives); C.move_to(colors); O.move_to(opacities);
       } else {
         CImg<uintT>::vector(P[0]).move_to(primitives);
-        C.get_vector_at(P[2],P[3]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[2],P[3])).move_to(opacities);
+        C.get_vector_at(P[2]>=C._width?C._width-1:P[2],
+                        P[3]>=C._height?C._height-1:P[3]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[2],P[3])).move_to(opacities);
         else opacities.insert(O);
         CImg<uintT>::vector(P[1]).move_to(primitives);
-        C.get_vector_at(P[4],P[5]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[4],P[5])).move_to(opacities);
+        C.get_vector_at(P[4]>=C._width?C._width-1:P[4],
+                        P[5]>=C._height?C._height-1:P[5]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[4],P[5])).move_to(opacities);
         else O.move_to(opacities);
       }
       break;
     case 9 : // Textured triangle.
       if (mode==2) {
         CImg<uintT>::vector(P[0],P[1],P[2]).move_to(primitives);
-        C.get_vector_at(P[3],P[4]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[3],P[4])).move_to(opacities);
+        C.get_vector_at(P[3]>=C._width?C._width-1:P[3],
+                        P[4]>=C._height?C._height-1:P[4]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[3],P[4])).move_to(opacities);
         else O.move_to(opacities);
       } else if (mode==1) {
         CImg<uintT>::vector(P[0],P[1],P[3],P[4],P[5],P[6]).
@@ -1075,24 +1110,28 @@ CImg<T>& convert_primitives_CImg3d(const unsigned int mode) {
         colors.insert(colors.back(),~0U,true); O.move_to(opacities);
       } else {
         CImg<uintT>::vector(P[0]).move_to(primitives);
-        C.get_vector_at(P[3],P[4]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[3],P[4])).move_to(opacities);
+        C.get_vector_at(P[3]>=C._width?C._width-1:P[3],
+                        P[4]>=C._height?C._height-1:P[4]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[3],P[4])).move_to(opacities);
         else opacities.insert(O);
         CImg<uintT>::vector(P[1]).move_to(primitives);
-        C.get_vector_at(P[5],P[6]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[5],P[6])).move_to(opacities);
+        C.get_vector_at(P[5]>=C._width?C._width-1:P[5],
+                        P[6]>=C._height?C._height-1:P[6]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[5],P[6])).move_to(opacities);
         else opacities.insert(O);
         CImg<uintT>::vector(P[2]).move_to(primitives);
-        C.get_vector_at(P[7],P[8]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[7],P[8])).move_to(opacities);
+        C.get_vector_at(P[7]>=C._width?C._width-1:P[7],
+                        P[8]>=C._height?C._height-1:P[8]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[7],P[8])).move_to(opacities);
         else O.move_to(opacities);
       }
       break;
     case 12 : // Textured quadrangle.
       if (mode==2) {
         CImg<uintT>::vector(P[0],P[1],P[2],P[3]).move_to(primitives);
-        C.get_vector_at(P[4],P[5]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[4],P[5])).move_to(opacities);
+        C.get_vector_at(P[4]>=C._width?C._width-1:P[4],
+                        P[5]>=C._height?C._height-1:P[5]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[4],P[5])).move_to(opacities);
         else O.move_to(opacities);
       } else if (mode==1) {
         CImg<uintT>::vector(P[0],P[1],P[4],P[5],P[6],P[7]).
@@ -1109,20 +1148,24 @@ CImg<T>& convert_primitives_CImg3d(const unsigned int mode) {
         colors.insert(colors.back(),~0U,true); O.move_to(opacities);
       } else {
         CImg<uintT>::vector(P[0]).move_to(primitives);
-        C.get_vector_at(P[4],P[5]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[4],P[5])).move_to(opacities);
+        C.get_vector_at(P[4]>=C._width?C._width-1:P[4],
+                        P[5]>=C._height?C._height-1:P[5]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[4],P[5])).move_to(opacities);
         else opacities.insert(O);
         CImg<uintT>::vector(P[1]).move_to(primitives);
-        C.get_vector_at(P[6],P[7]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[6],P[7])).move_to(opacities);
+        C.get_vector_at(P[6]>=C._width?C._width-1:P[6],
+                        P[7]>=C._height?C._height-1:P[7]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[6],P[7])).move_to(opacities);
         else opacities.insert(O);
         CImg<uintT>::vector(P[2]).move_to(primitives);
-        C.get_vector_at(P[8],P[9]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[8],P[9])).move_to(opacities);
+        C.get_vector_at(P[8]>=C._width?C._width-1:P[8],
+                        P[9]>=C._height?C._height-1:P[9]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[8],P[9])).move_to(opacities);
         else opacities.insert(O);
         CImg<uintT>::vector(P[3]).move_to(primitives);
-        C.get_vector_at(P[10],P[11]).move_to(colors);
-        if (O.size()!=1) CImg<floatT>::vector(O(P[10],P[11])).move_to(opacities);
+        C.get_vector_at(P[10]>=C._width?C._width-1:P[10],
+                        P[11]>=C._height?C._height-1:P[11]).move_to(colors);
+        if (O.size()!=1) CImg<floatT>::vector(O._atXY(P[10],P[11])).move_to(opacities);
         else O.move_to(opacities);
       }
       break;
@@ -1169,7 +1212,7 @@ CImg<T>& inpaint(const CImg<t>& mask, const unsigned int method=1) {
       case 0: // Average 2d (low-connectivity).
         cimg_for3x3(_mask,x,y,0,0,M,t) if (Mcc && (!Mcp || !Mpc || !Mnc || !Mcn)) {
           is_pixel = true;
-          const unsigned int wcp = Mcp?0:1, wpc = Mpc?0:1, wnc = Mnc?0:1, wcn = Mcn?0:1,
+          const unsigned int wcp = Mcp?0U:1U, wpc = Mpc?0U:1U, wnc = Mnc?0U:1U, wcn = Mcn?0U:1U,
             sumw = wcp + wpc + wnc + wcn;
           cimg_forC(*this,k) {
             cimg_get3x3(*this,x,y,0,k,I,T);
@@ -1183,9 +1226,9 @@ CImg<T>& inpaint(const CImg<t>& mask, const unsigned int method=1) {
         cimg_for3x3(_mask,x,y,0,0,M,t) if (Mcc && (!Mpp || !Mcp || !Mnp || !Mpc || !Mnc || !Mpn || !Mcn || !Mnn)) {
           is_pixel = true;
           const unsigned int
-            wpp = Mpp?0:1, wcp = Mcp?0:2, wnp = Mnp?0:1,
-            wpc = Mpc?0:2, wnc = Mnc?0:2,
-            wpn = Mpn?0:1, wcn = Mcn?0:2, wnn = Mnn?0:1,
+            wpp = Mpp?0U:1U, wcp = Mcp?0U:2U, wnp = Mnp?0U:1U,
+            wpc = Mpc?0U:2U, wnc = Mnc?0U:2U,
+            wpn = Mpn?0U:1U, wcn = Mcn?0U:2U, wnn = Mnn?0U:1U,
             sumw = wpp + wcp + wnp + wpc + wnc + wpn + wcn + wnn;
           cimg_forC(*this,k) {
             cimg_get3x3(*this,x,y,0,k,I,T);
@@ -1241,8 +1284,8 @@ CImg<T>& inpaint(const CImg<t>& mask, const unsigned int method=1) {
           if (Mccc && (!Mccp || !Mcpc || !Mpcc || !Mncc || !Mcnc || !Mccn)) {
             is_pixel = true;
             const unsigned int
-              wccp = Mccp?0:1, wcpc = Mcpc?0:1, wpcc = Mpcc?0:1,
-              wncc = Mncc?0:1, wcnc = Mcnc?0:1, wccn = Mccn?0:1,
+              wccp = Mccp?0U:1U, wcpc = Mcpc?0U:1U, wpcc = Mpcc?0U:1U,
+              wncc = Mncc?0U:1U, wcnc = Mcnc?0U:1U, wccn = Mccn?0U:1U,
               sumw = wcpc + wpcc + wccp + wncc + wcnc + wccn;
             cimg_forC(*this,k) {
               cimg_get3x3x3(*this,x,y,z,k,I,T);
@@ -1261,15 +1304,15 @@ CImg<T>& inpaint(const CImg<t>& mask, const unsigned int method=1) {
                        !Mcnn || !Mnnn)) {
             is_pixel = true;
             const unsigned int
-              wppp = Mppp?0:1, wcpp = Mcpp?0:2, wnpp = Mnpp?0:1,
-              wpcp = Mpcp?0:2, wccp = Mccp?0:4, wncp = Mncp?0:2,
-              wpnp = Mpnp?0:1, wcnp = Mcnp?0:2, wnnp = Mnnp?0:1,
-              wppc = Mppc?0:2, wcpc = Mcpc?0:4, wnpc = Mnpc?0:2,
-              wpcc = Mpcc?0:4, wncc = Mncc?0:4,
-              wpnc = Mpnc?0:2, wcnc = Mcnc?0:4, wnnc = Mnnc?0:2,
-              wppn = Mppn?0:1, wcpn = Mcpn?0:2, wnpn = Mnpn?0:1,
-              wpcn = Mpcn?0:2, wccn = Mccn?0:4, wncn = Mncn?0:2,
-              wpnn = Mpnn?0:1, wcnn = Mcnn?0:2, wnnn = Mnnn?0:1,
+              wppp = Mppp?0U:1U, wcpp = Mcpp?0U:2U, wnpp = Mnpp?0U:1U,
+              wpcp = Mpcp?0U:2U, wccp = Mccp?0U:4U, wncp = Mncp?0U:2U,
+              wpnp = Mpnp?0U:1U, wcnp = Mcnp?0U:2U, wnnp = Mnnp?0U:1U,
+              wppc = Mppc?0U:2U, wcpc = Mcpc?0U:4U, wnpc = Mnpc?0U:2U,
+              wpcc = Mpcc?0U:4U, wncc = Mncc?0U:4U,
+              wpnc = Mpnc?0U:2U, wcnc = Mcnc?0U:4U, wnnc = Mnnc?0U:2U,
+              wppn = Mppn?0U:1U, wcpn = Mcpn?0U:2U, wnpn = Mnpn?0U:1U,
+              wpcn = Mpcn?0U:2U, wccn = Mccn?0U:4U, wncn = Mncn?0U:2U,
+              wpnn = Mpnn?0U:1U, wcnn = Mcnn?0U:2U, wnnn = Mnnn?0U:1U,
               sumw = wppp + wcpp + wnpp + wpcp + wccp + wncp + wpnp + wcnp + wnnp +
               wppc + wcpc + wnpc + wpcc + wncc + wpnc + wcnc + wnnc +
               wppn + wcpn + wnpn + wpcn + wccn + wncn + wpnn + wcnn + wnnn;
@@ -1403,13 +1446,13 @@ CImg<T>& inpaint_patch(const CImg<t>& mask, const unsigned int patch_size=11,
   ym0 = ym0>2?ym0-2:0;
   xm1 = xm1<_width-3?xm1+2:_width-1;
   ym1 = ym1<_height-3?ym1+2:_height-1;
-  int ox = xm0, oy = ym0;
+  int ox = (int)xm0, oy = (int)ym0;
   unsigned int dx = xm1 - xm0 + 1U, dy = ym1 - ym0 + 1U;
 
   // Construct normalized version of the mask.
   CImg<ucharT> nmask(dx,dy);
   unsigned char *ptrM = nmask.data();
-  cimg_for_inXY(mask,xm0,ym0,xm1,ym1,x,y) *(ptrM++) = mask(x,y)?0:1;
+  cimg_for_inXY(mask,xm0,ym0,xm1,ym1,x,y) *(ptrM++) = mask(x,y)?0U:1U;
   xm0 = ym0 = 0; xm1 = dx - 1; ym1 = dy - 1;
 
   // Start patch filling algorithm.
@@ -1514,7 +1557,7 @@ CImg<T>& inpaint_patch(const CImg<t>& mask, const unsigned int patch_size=11,
         src_x = *(ptr_saved_patches++), src_y = *(ptr_saved_patches++),
         dest_x = *(ptr_saved_patches++), dest_y = *(ptr_saved_patches++);
       if ((int)dest_x>=x0 && (int)dest_y>=y0 && (int)dest_x<=x1 && (int)dest_y<=y1) {
-        const int off_x = target_x - dest_x, off_y = target_y - dest_y;
+        const int off_x = target_x - (int)dest_x, off_y = target_y - (int)dest_y;
         *(ptr_lookup_candidates++) = src_x + off_x;
         *(ptr_lookup_candidates++) = src_y + off_y;
         if (++nb_lookup_candidates>=lookup_candidates._height)
@@ -1522,8 +1565,8 @@ CImg<T>& inpaint_patch(const CImg<t>& mask, const unsigned int patch_size=11,
       }
     }
     // Add also target point as a center for the patch lookup.
-    *(ptr_lookup_candidates++) = target_x;
-    *(ptr_lookup_candidates++) = target_y;
+    *(ptr_lookup_candidates++) = (unsigned int)target_x;
+    *(ptr_lookup_candidates++) = (unsigned int)target_y;
     ++nb_lookup_candidates;
 
     // Divide size of lookup regions if several lookup sources have been detected.
@@ -1616,7 +1659,7 @@ CImg<T>& inpaint_patch(const CImg<t>& mask, const unsigned int patch_size=11,
       _inpaint_patch_crop(best_x-p1,best_y-p1,best_x+p2,best_y+p2,0).move_to(pbest);
       nmask._inpaint_patch_crop(target_x-ox-p1,target_y-oy-p1,target_x-ox+p2,target_y-oy+p2,1).
         move_to(pM);
-      cimg_for(pM,ptr,unsigned char) *ptr=1-*ptr;
+      cimg_for(pM,ptr,unsigned char) *ptr = (unsigned char)(1 - *ptr);
       draw_image(target_x-p1,target_y-p1,pbest,pM,1,1);
       confidences.draw_image(target_x-ox-p1,target_y-oy-p1,pC.fill(target_confidence),pM,1,1);
       nmask.draw_rectangle(target_x-ox-p1,target_y-oy-p1,0,0,target_x-ox+p2,target_y-oy+p2,0,0,1);
@@ -1626,10 +1669,10 @@ CImg<T>& inpaint_patch(const CImg<t>& mask, const unsigned int patch_size=11,
                                 target_y-oy+3*p2/2,0,0,-1);
       // Remember patch positions.
       unsigned int *ptr_saved_patches = saved_patches.data(0,nb_saved_patches);
-      *(ptr_saved_patches++) = best_x;
-      *(ptr_saved_patches++) = best_y;
-      *(ptr_saved_patches++) = target_x;
-      *ptr_saved_patches = target_y;
+      *(ptr_saved_patches++) = (unsigned int)best_x;
+      *(ptr_saved_patches++) = (unsigned int)best_y;
+      *(ptr_saved_patches++) = (unsigned int)target_x;
+      *ptr_saved_patches = (unsigned int)target_y;
       if (++nb_saved_patches>=saved_patches._height) saved_patches.resize(4,-200,1,1,0);
     }
   }
@@ -1649,8 +1692,8 @@ CImg<T>& inpaint_patch(const CImg<t>& mask, const unsigned int patch_size=11,
         b2 = (int)blend_size/2, b1 = (int)blend_size - b2 - 1,
         xb0 = cimg::max(0,ox-b1),
         yb0 = cimg::max(0,oy-b1),
-        xb1 = cimg::min(_width-1,xb0 + dx + b1 + b2),
-        yb1 = cimg::min(_height-1,yb0 + dy + b1 + b2);
+        xb1 = (int)cimg::min(_width - 1,xb0 + dx + b1 + b2),
+        yb1 = (int)cimg::min(_height - 1,yb0 + dy + b1 + b2);
       ox = xb0; oy = yb0; dx = xb1 - xb0 + 1U, dy = yb1 - yb0 + 1U;
     }
 
@@ -1661,7 +1704,7 @@ CImg<T>& inpaint_patch(const CImg<t>& mask, const unsigned int patch_size=11,
       const unsigned int yd = *(--ptr), xd = *(--ptr), ys = *(--ptr), xs = *(--ptr);
       for (int l=-p1; l<=p2; ++l)
         for (int k=-p1; k<=p2; ++k) {
-          const int xdk = xd+k, ydl = yd+l;
+          const int xdk = (int)xd + k, ydl = (int)yd + l;
           if (xdk>=0 && xdk<=width()-1 && ydl>=0 && ydl<=height()-1 && mask(xd+k,yd+l)) {
             offsets(xd-ox+k,yd-oy+l,0) = xs+k;
             offsets(xd-ox+k,yd-oy+l,1) = ys+l;
@@ -1670,7 +1713,7 @@ CImg<T>& inpaint_patch(const CImg<t>& mask, const unsigned int patch_size=11,
     }
     unsigned int *ptrx = offsets.data(0,0,0,0), *ptry = offsets.data(0,0,0,1);
     cimg_forXY(offsets,x,y) {
-      if (!mask(x+ox,y+oy)) { *ptrx = x+ox; *ptry = y+oy; }
+      if (!mask(x+ox,y+oy)) { *ptrx = (unsigned int)(x + ox); *ptry = (unsigned int)(y + oy); }
       ++ptrx; ++ptry;
     }
 
@@ -1786,18 +1829,6 @@ CImg<T> get_inpaint_patch(const CImg<t>& mask, const unsigned int patch_size=11,
 }
 
 // Additional convenience plug-in functions.
-CImg<T>& mark() {
-  unsigned int siz = _width;
-  if (siz<2) assign(siz=2,1,1,1,0); else if (_data[siz-2]) resize(++siz,1,1,1,0);
-  T &last = _data[siz-1];
-  if (last<cimg::type<T>::max()) ++last;
-  return *this;
-}
-
-CImg<T> get_mark() const {
-  return (+*this).mark();
-}
-
 CImg<T>& copymark() {
   return get_copymark().move_to(*this);
 }
@@ -1815,7 +1846,7 @@ CImg<T> get_copymark() const {
     res[l] = '~'; res[l+1] = '.';
     std::memcpy(res._data+l+2,ext,_data+_width-ext);
   } else {
-    const unsigned int l = (int)(ext - _data);
+    const int l = (int)(ext - _data);
     if (_data[l-1]=='~' || (l>1 && _data[l-1]==']' && _data[l-2]=='~')) return +*this;
     std::memcpy(res._data,_data,l);
     res[l] = '~';
@@ -1827,21 +1858,24 @@ CImg<T> get_copymark() const {
 
 const CImg<T>& gmic_print(const char *const title, const bool is_debug,
                           const bool is_valid) const {
+  cimg::mutex(29);
   CImg<doubleT> st;
   if (is_valid && !is_empty()) st = get_stats();
-  const unsigned long siz = size(), msiz = _is_shared?0:siz*sizeof(T), siz1 = siz-1,
-    mdisp = msiz<8*1024?0:(msiz<8*1024*1024?1:2),
+  const unsigned long siz = size(), msiz = siz*sizeof(T), siz1 = siz-1,
+    mdisp = msiz<8*1024?0U:msiz<8*1024*1024?1U:2U,
     wh = _width*_height, whd = _width*_height*_depth,
     w1 = _width-1, wh1 = _width*_height-1, whd1 = _width*_height*_depth-1;
 
-  std::fprintf(cimg::output(),"%s%s%s%s:\n  %ssize%s = (%u,%u,%u,%u) [%lu %s].\n  %sdata%s = %s",
+  std::fprintf(cimg::output(),"%s%s%s%s:\n  %ssize%s = (%u,%u,%u,%u) [%lu %s of %s%ss].\n  %sdata%s = %s",
                cimg::t_magenta,cimg::t_bold,title,cimg::t_normal,
                cimg::t_bold,cimg::t_normal,_width,_height,_depth,_spectrum,
                mdisp==0?msiz:(mdisp==1?(msiz>>10):(msiz>>20)),
                mdisp==0?"b":(mdisp==1?"Kio":"Mio"),
+               _is_shared?"shared ":"",
+               cimg::type<T>::string(),
                cimg::t_bold,cimg::t_normal,
                is_debug?"":"(");
-  if (is_debug) std::fprintf(cimg::output(),"%p = (",_data);
+  if (is_debug) std::fprintf(cimg::output(),"%p = (",(void*)_data);
 
   if (is_valid) {
     if (is_empty()) std::fprintf(cimg::output(),") [%s].\n",
@@ -1853,7 +1887,7 @@ const CImg<T>& gmic_print(const char *const title, const bool is_debug,
                                     off%whd==whd1?"^":
                                     off%wh==wh1?"\\":
                                     off%_width==w1?";":",");
-        if (off==11 && siz>24) { off = siz1-12; std::fprintf(cimg::output(),"... "); }
+        if (off==11 && siz>24) { off = siz1-12; std::fprintf(cimg::output(),"(...),"); }
       }
       std::fprintf(cimg::output(),")%s.\n  %smin%s = %g, %smax%s = %g, %smean%s = %g, "
                    "%sstd%s = %g, %scoords_min%s = (%u,%u,%u,%u), "
@@ -1870,6 +1904,7 @@ const CImg<T>& gmic_print(const char *const title, const bool is_debug,
                       cimg::t_red,cimg::t_bold,cimg::t_normal,
                       pixel_type());
   std::fflush(cimg::output());
+  cimg::mutex(29,0);
   return *this;
 }
 
@@ -1885,9 +1920,6 @@ using namespace cimg_library;
 
 // Define convenience macros, variables and functions.
 //----------------------------------------------------
-
-// Ellipsize a string.
-#define gmic_ellipsize(s,l) { if (l>=5 && s[l-2]) s[l-4] = s[l-3] = s[l-2] = '.'; }
 
 // Return current selection as a selection string.
 #define _gmic_selection selection2string(selection,images_names,0).data()
@@ -1936,23 +1968,11 @@ struct _gmic_mutex {
 };
 inline _gmic_mutex& gmic_mutex() { static _gmic_mutex val; return val; }
 
-// Code for managing argument substitutions from a command.
-inline const char *gmic_ellipsize_arg(const char *const argument, CImg<char>& argument_text) {
-  if (argument_text) return argument_text;
-  const unsigned int l = std::strlen(argument);
-  if (l>=72) {
-    argument_text.assign(72);
-    std::memcpy(argument_text.data(),argument,32);
-    std::memcpy(argument_text.data()+32," ... ",5);
-    std::memcpy(argument_text.data()+37,argument+l-34,35); // Last '\0' is included.
-  }
-  return argument_text?argument_text:argument;
-}
-
+// Macros to manage argument substitutions from a command.
 #define gmic_substitute_args() { \
   const char *const argument0 = argument; \
   substitute_item(argument,images,images_names,parent_images,parent_images_names,variables_sizes).move_to(_argument); \
-  argument_text = gmic_ellipsize_arg(argument=argument_text=_argument,_argument_text); \
+  argument_text = argument = _argument; \
   if (is_debug) { \
     if (std::strcmp(argument,argument0)) debug(images,"Command '%s': arguments = '%s' -> '%s'.", \
                                                command,argument0,argument); \
@@ -1960,25 +1980,23 @@ inline const char *gmic_ellipsize_arg(const char *const argument, CImg<char>& ar
                command,argument0); \
   }}
 
+#define gmic_argument_text() (argument_text = gmic_ellipsize(argument,_argument_text,80,false))
+
 // Code for having 'get' or 'non-get' versions of G'MIC commands.
-#define gmic_apply(instance,function) { \
-  unsigned int posi = 0; \
-  const bool is_inlist = images.contains(gmic_check(instance),posi); \
-  if (is_get_version) { \
-    CImg<T> tmp = instance.get_##function; \
-    tmp.move_to(images); \
-    if (is_inlist) images_names[posi].get_copymark().mark().move_to(images_names); \
-    else CImg<char>::string("[unnamed]").move_to(images_names); \
-  } else { instance.function; images_names[posi].mark(); } \
+#define gmic_apply(function) { \
+    __ind = (unsigned int)selection[l]; \
+    gmic_check(images[__ind]); \
+    if (is_get_version) { \
+      images[__ind].get_##function.move_to(images); \
+      images_names[__ind].get_copymark().move_to(images_names); \
+    } else images[__ind].function; \
   }
 
 // Code for simple commands that has no arguments and act on images.
 #define gmic_simple_item(command_name,function,description) \
   if (!std::strcmp(command_name,command)) { \
     print(images,0,description,gmic_selection); \
-    cimg_forY(selection,l) { \
-      gmic_apply(images[selection[l]],function()); \
-    } \
+    cimg_forY(selection,l) gmic_apply(function()); \
     is_released = false; continue; \
 }
 
@@ -1990,9 +2008,8 @@ inline const char *gmic_ellipsize_arg(const char *const argument, CImg<char>& ar
                              description4) \
  if (!std::strcmp(command_name,command)) { \
    gmic_substitute_args(); \
-   CImg<unsigned int> ind; \
-   double value = 0; \
-   char sep = 0; \
+   value = 0; \
+   sep = 0; \
    *indices = *formula = 0; \
    if (std::sscanf(argument,"%lf%c",&value,&end)==1 || \
        (std::sscanf(argument,"%lf%c%c",&value,&sep,&end)==2 && sep=='%')) { \
@@ -2000,21 +2017,18 @@ inline const char *gmic_ellipsize_arg(const char *const argument, CImg<char>& ar
       print(images,0,description1 ".",arg1_1,arg1_2,arg1_3); \
       cimg_forY(selection,l) { \
        CImg<T>& img = gmic_check(images[selection[l]]); \
-       double nvalue = value; \
+       nvalue = value; \
        if (sep=='%' && img) { \
-         double vmin = 0, vmax = (double)img.max_min(vmin); \
+         vmax = (double)img.max_min(vmin); \
          nvalue = vmin + (vmax-vmin)*value/100; \
        } \
        if (is_get_version) { \
          int back = 0; \
-         images_names.insert(images_names[selection[l]].get_copymark().mark()); \
+         images_names.insert(images_names[selection[l]].get_copymark()); \
          images.insert(img); \
-         back = images.size() - 1; \
+         back = (int)images.size() - 1; \
          images[back].function1((value_type1)nvalue); \
-       } else { \
-         images_names[selection[l]].mark(); \
-         img.function1((value_type1)nvalue); \
-       } \
+       } else img.function1((value_type1)nvalue); \
       } \
       ++position; \
    } else if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep,&end)==2 && \
@@ -2028,13 +2042,11 @@ inline const char *gmic_ellipsize_arg(const char *const argument, CImg<char>& ar
        CImg<T>& img = gmic_check(images[selection[l]]); \
        if (is_get_version) { \
          int back = 0; \
-         images_names.insert(images_names[selection[l]].get_copymark().mark()); \
+         images_names.insert(images_names[selection[l]].get_copymark()); \
          images.insert(img); \
-         back = images.size() - 1; \
+         back = (int)images.size() - 1; \
          images[back].function2(img0); \
-       } else { \
-         images_names[selection[l]].mark(); img.function2(img0); \
-       } \
+       } else img.function2(img0); \
      } \
      ++position; \
    } else if (std::sscanf(argument,"'%4095[^']%c%c",formula,&sep,&end)==2 && sep=='\'') { \
@@ -2043,13 +2055,11 @@ inline const char *gmic_ellipsize_arg(const char *const argument, CImg<char>& ar
        CImg<T>& img = gmic_check(images[selection[l]]); \
        if (is_get_version) { \
          int back = 0; \
-         images_names.insert(images_names[selection[l]].get_copymark().mark()); \
+         images_names.insert(images_names[selection[l]].get_copymark()); \
          images.insert(img); \
-         back = images.size() - 1; \
+         back = (int)images.size() - 1; \
          images[back].function2((const char*)formula); \
-       } else { \
-         images_names[selection[l]].mark(); img.function2((const char*)formula); \
-       } \
+       } else img.function2((const char*)formula); \
      } \
      ++position; \
    } else { \
@@ -2059,14 +2069,13 @@ inline const char *gmic_ellipsize_arg(const char *const argument, CImg<char>& ar
          CImg<T> img0 = CImg<T>(gmic_check(images[selection[0]]),false); \
          for (unsigned int l = 1; l<(unsigned int)selection.height(); ++l) \
            img0.function2(gmic_check(images[selection[l]])); \
-         images_names.insert(images_names[selection[0]].get_copymark().mark()); \
+         images_names.insert(images_names[selection[0]].get_copymark()); \
          img0.move_to(images); \
        } else if (selection.height()>=2) { \
        const unsigned int ind0 = selection[0]; \
        CImg<T>& img0 = gmic_check(images[ind0]); \
        for (unsigned int l = 1; l<(unsigned int)selection.height(); ++l) \
          img0.function2(gmic_check(images[selection[l]])); \
-       images_names[ind0].mark(); \
        remove_images(images,images_names,selection,1,selection.height()-1); \
        }}} is_released = false; continue; \
    }
@@ -2104,17 +2113,6 @@ inline bool gmic_command_has_arguments(const char *const command) {
   return false;
 }
 
-// Compute the basename of a filename.
-//------------------------------------
-inline const char* gmic_basename(const char *const s)  {
-  if (!s) return s;
-  const unsigned int l = (unsigned int)std::strlen(s);
-  if (*s=='[' && (s[l-1]==']' || s[l-1]=='.')) return s;
-  const char *p = 0;
-  for (const char *np = s; np>=s && (p=np); np = std::strchr(np,cimg_file_separator)+1) {}
-  return p;
-}
-
 // Thread structure and routine for command '-parallel'.
 //------------------------------------------------------
 template<typename T>
@@ -2122,17 +2120,21 @@ struct st_gmic_parallel {
   CImgList<char> *images_names, *parent_images_names, commands_line;
   CImgList<st_gmic_parallel<T> > *threads_data;
   CImgList<T> *images, *parent_images;
-  unsigned int variables_sizes[256];
+  CImg<unsigned int> variables_sizes;
   volatile bool is_running;
   gmic_exception exception;
   gmic gmic_instance;
 #ifdef gmic_is_parallel
+#warning "G'MIC using parallel processing"
 #if cimg_OS!=2
   pthread_t thread_id;
 #else // #if cimg_OS!=2
   HANDLE thread_id;
 #endif // #if cimg_OS!=2
+#else
+#warning "G'MIC not using parallel processing"
 #endif // #ifdef gmic_is_parallel
+  st_gmic_parallel() { variables_sizes.assign(256); }
 };
 
 template<typename T>
@@ -2199,7 +2201,7 @@ static int _gmic_levenshtein(const char *const s, const char *const t,
 
 inline int gmic_levenshtein(const char *const s, const char *const t) {
   const char *const ns = s?s:"", *const nt = t?t:"";
-  const int ls = std::strlen(ns), lt = std::strlen(nt);
+  const int ls = (int)std::strlen(ns), lt = (int)std::strlen(nt);
   if (!ls) return lt; else if (!lt) return ls;
   CImg<int> d(1+ls,1+lt,1,1,-1);
   return _gmic_levenshtein(ns,nt,d,0,0);
@@ -2213,7 +2215,7 @@ inline int gmic_levenshtein(const char *const s, const char *const t) {
     variables(new CImgList<char>*[256]), variables_names(new CImgList<char>*[256])
 
 gmic::gmic():gmic_new_attr {
-  CImgList<float> images;
+  CImgList<gmic_pixel_type> images;
   CImgList<char> images_names;
   verbosity = -1;
   _gmic(0,images,images_names,0,true,0,0);
@@ -2224,7 +2226,7 @@ gmic::gmic(const char *const commands_line, const char *const custom_commands,
            const bool include_default_commands,
            float *const p_progress, bool *const p_is_cancel):
   gmic_new_attr {
-  CImgList<float> images;
+  CImgList<gmic_pixel_type> images;
   CImgList<char> images_names;
   _gmic(commands_line,
         images,images_names,
@@ -2233,7 +2235,7 @@ gmic::gmic(const char *const commands_line, const char *const custom_commands,
 }
 
 gmic::~gmic() {
-  cimg::exception_mode() = cimg_exception_mode;
+  cimg::exception_mode(cimg_exception_mode);
   delete[] commands;
   delete[] commands_names;
   delete[] commands_has_arguments;
@@ -2258,7 +2260,7 @@ CImg<char> gmic::scope2string(const CImg<unsigned int> *const scope_selection) c
     res[0].assign(input_scope[0],false);
     res[1].assign(input_scope[1],false);
     res[2].assign(input_scope[2],false);
-    res[3].assign("..",3);
+    res[3].assign("(...)",6);
     res[4].assign(input_scope[siz-4],false);
     res[5].assign(input_scope[siz-3],false);
     res[6].assign(input_scope[siz-2],false);
@@ -2284,7 +2286,7 @@ CImgList<char> gmic::commands_line_to_CImgList(const char *const commands_line) 
   bool is_dquoted = false;
   const char *ptrs0 = commands_line;
   while (*ptrs0==' ') ++ptrs0;  // Remove leading spaces to first item.
-  CImg<char> item(std::strlen(ptrs0)+1);
+  CImg<char> item((unsigned int)std::strlen(ptrs0) + 1);
   CImgList<char> items;
   char *ptrd = item.data(), c = 0;
   for (const char *ptrs = ptrs0; *ptrs; ++ptrs) {
@@ -2309,7 +2311,7 @@ CImgList<char> gmic::commands_line_to_CImgList(const char *const commands_line) 
     } else { // Non-escaped character outside string.
       if (c=='\"') is_dquoted = true;
       else if (c==' ') {
-        *ptrd = 0; CImg<char>(item.data(),ptrd - item.data() + 1).move_to(items);
+        *ptrd = 0; CImg<char>(item.data(),(unsigned int)(ptrd - item.data() + 1)).move_to(items);
         ptrd = item.data();
         ++ptrs; while (*ptrs==' ') ++ptrs; ptrs0 = ptrs--;  // Remove trailing spaces to next item.
       } else *(ptrd++) = c;
@@ -2336,7 +2338,7 @@ CImgList<char> gmic::commands_line_to_CImgList(const char *const commands_line) 
           str.data());
   }
   if (ptrd!=item.data() && c!=' ') {
-    *ptrd = 0; CImg<char>(item.data(),ptrd - item.data() + 1).move_to(items);
+    *ptrd = 0; CImg<char>(item.data(),(unsigned int)(ptrd - item.data() + 1)).move_to(items);
   }
   if (is_debug) {
     debug("Decompose command line into %u items: ",items.size());
@@ -2356,13 +2358,14 @@ gmic& gmic::print(const char *format, ...) {
   if (verbosity<0 && !is_debug) return *this;
   va_list ap;
   va_start(ap,format);
-  CImg<char> message(16384,1,1,1,0);
+  CImg<char> message(65536,1,1,1,0);
   cimg_vsnprintf(message,message.width(),format,ap);
   gmic_strreplace(message);
-  gmic_ellipsize(message,message.width());
+  if (message[message.width()-2]) gmic_ellipsize(message,message.width()-2);
   va_end(ap);
 
   // Display message.
+  cimg::mutex(29);
   if (*message!='\r')
     for (unsigned int i = 0; i<nb_carriages; ++i) std::fputc('\n',cimg::output());
   nb_carriages = 1;
@@ -2370,6 +2373,7 @@ gmic& gmic::print(const char *format, ...) {
                "[gmic]%s %s",
                scope2string().data(),message.data());
   std::fflush(cimg::output());
+  cimg::mutex(29,0);
   return *this;
 }
 
@@ -2381,24 +2385,30 @@ gmic& gmic::error(const char *const format, ...) {
   CImg<char> message(1024,1,1,1,0);
   cimg_vsnprintf(message,message.width(),format,ap);
   gmic_strreplace(message);
-  gmic_ellipsize(message,message.width());
+  if (message[message.width()-2]) gmic_ellipsize(message,message.width()-2);
   va_end(ap);
 
   // Display message.
   if (verbosity>=0 || is_debug) {
+    cimg::mutex(29);
     if (*message!='\r')
       for (unsigned int i = 0; i<nb_carriages; ++i) std::fputc('\n',cimg::output());
     nb_carriages = 1;
-    std::fprintf(cimg::output(),"[gmic]%s %s*** Error *** %s%s",
-                 scope2string().data(),cimg::t_red,message.data(),cimg::t_normal);
+    if (is_debug_infos && debug_filename!=~0U && debug_line!=~0U)
+      std::fprintf(cimg::output(),"[gmic]%s#%u %s*** Error *** %s%s",
+                   scope2string().data(),debug_line,cimg::t_red,message.data(),cimg::t_normal);
+    else
+      std::fprintf(cimg::output(),"[gmic]%s %s*** Error *** %s%s",
+                   scope2string().data(),cimg::t_red,message.data(),cimg::t_normal);
     std::fflush(cimg::output());
+    cimg::mutex(29,0);
   }
 
   // Store detailled error message for interpreter.
   CImg<char> full_message(512+message.width(),1,1,1,0);
   if (debug_filename<commands_files.size() && debug_line!=~0U)
     cimg_snprintf(full_message,full_message.width(),
-                  "*** Error in %s (file '%s', %sline %u) *** %s",
+                  "*** Error in %s (file '%s', %sline #%u) *** %s",
                   scope2string().data(),commands_files[debug_filename].data(),
                   is_debug_infos?"":"call from ",debug_line,message.data());
   else cimg_snprintf(full_message,full_message.width(),
@@ -2418,16 +2428,24 @@ gmic& gmic::debug(const char *format, ...) {
   va_start(ap,format);
   CImg<char> message(1024,1,1,1,0);
   cimg_vsnprintf(message,message.width(),format,ap);
-  gmic_ellipsize(message,message.width());
+  if (message[message.width()-2]) gmic_ellipsize(message,message.width()-2);
   va_end(ap);
 
   // Display message.
+  cimg::mutex(29);
   if (*message!='\r')
     for (unsigned int i = 0; i<nb_carriages; ++i) std::fputc('\n',cimg::output());
   nb_carriages = 1;
-  std::fprintf(cimg::output(),
-               "%s<gmic>%s ",
-               cimg::t_green,scope2string().data());
+
+  if (is_debug_infos && debug_filename!=~0U && debug_line!=~0U)
+    std::fprintf(cimg::output(),
+                 "%s<gmic>%s#%u ",
+                 cimg::t_green,scope2string().data(),debug_line);
+  else
+    std::fprintf(cimg::output(),
+                 "%s<gmic>%s ",
+                 cimg::t_green,scope2string().data());
+
   for (char *s = message; *s; ++s) {
     char c = *s;
     if (c<' ') switch (c) {
@@ -2445,6 +2463,7 @@ gmic& gmic::debug(const char *format, ...) {
                "%s",
                cimg::t_normal);
   std::fflush(cimg::output());
+  cimg::mutex(29,0);
   return *this;
 }
 
@@ -2462,9 +2481,9 @@ gmic& gmic::set_variable(const char *const variable_name, const char *const vari
 gmic& gmic::add_commands(const char *const data_commands,
                          const char *const commands_file) {
   if (!data_commands || !*data_commands) return *this;
-  CImg<char> com(256*1024), line(256*1024);
-  char mac[256] = { 0 }, debug_info[32] = { 0 };
-  unsigned int pos[256] = { 0 }, line_number = 1;
+  CImg<char> com(256*1024), line(256*1024), mac(256), debug_info(32);
+  CImg<unsigned int> pos(256,1,1,1,0);
+  unsigned int line_number = 1;
   bool is_last_slash = false, _is_last_slash = false, is_newline = false;
   int ind = -1, l_debug_info = 0;
   char sep = 0;
@@ -2499,18 +2518,18 @@ gmic& gmic::add_commands(const char *const data_commands,
     *mac = *com = 0;
 
     if (!is_last_slash && std::strchr(lines,':') && // Check for a command definition.
-        std::sscanf(lines,"%255[a-zA-Z0-9_] %c %262143[^\n]",mac,&sep,com.data())>=2 &&
+        std::sscanf(lines,"%255[a-zA-Z0-9_] %c %262143[^\n]",mac.data(),&sep,com.data())>=2 &&
         (*lines<'0' || *lines>'9') && sep==':') {
-      ind = gmic_hashcode(mac,false);
+      ind = (int)gmic_hashcode(mac,false);
       CImg<char>::string(mac).move_to(commands_names[ind],pos[ind]);
       CImg<char> body = CImg<char>::string(com);
       CImg<char>::vector((char)gmic_command_has_arguments(body)).
         move_to(commands_has_arguments[ind],pos[ind]);
       if (commands_file) { // Insert code with debug infos.
         if (commands_files.width()<2)
-          l_debug_info = cimg_snprintf(debug_info+1,sizeof(debug_info)-2,"%x",line_number);
+          l_debug_info = cimg_snprintf(debug_info.data()+1,debug_info.width()-2,"%x",line_number);
         else
-          l_debug_info = cimg_snprintf(debug_info+1,sizeof(debug_info)-2,"%x,%x",
+          l_debug_info = cimg_snprintf(debug_info.data()+1,debug_info.width()-2,"%x,%x",
                                             line_number,commands_files.width()-1);
         debug_info[0] = 1; debug_info[l_debug_info+1] = ' ';
         ((CImg<char>(debug_info,l_debug_info+2,1,1,1,true),body)>'x').
@@ -2521,13 +2540,13 @@ gmic& gmic::add_commands(const char *const data_commands,
       const unsigned int p = pos[ind] - 1;
       if (!is_last_slash) commands[ind][p].back() = ' ';
       else --(commands[ind][p]._width);
-      const CImg<char> body = CImg<char>(lines,linee - lines + 2);
+      const CImg<char> body = CImg<char>(lines,(unsigned int)(linee - lines + 2));
       commands_has_arguments[ind](p,0) |= (char)gmic_command_has_arguments(body);
       if (commands_file && !is_last_slash) { // Insert code with debug infos.
         if (commands_files.width()<2)
-          l_debug_info = cimg_snprintf(debug_info+1,sizeof(debug_info)-2,"%x",line_number);
+          l_debug_info = cimg_snprintf(debug_info.data()+1,debug_info.width()-2,"%x",line_number);
         else
-          l_debug_info = cimg_snprintf(debug_info+1,sizeof(debug_info)-2,"%x,%x",
+          l_debug_info = cimg_snprintf(debug_info.data()+1,debug_info.width()-2,"%x,%x",
                                        line_number,commands_files.width()-1);
         debug_info[0] = 1; debug_info[l_debug_info+1] = ' ';
         ((commands[ind][p],CImg<char>(debug_info,l_debug_info+2,1,1,1,true),body)>'x').
@@ -2582,10 +2601,9 @@ CImg<unsigned int> gmic::selection2cimg(const char *const string, const unsigned
                                         const CImgList<char>& names,
                                         const char *const command, const bool is_selection,
                                         const bool allow_new_name, CImg<char> &new_name) {
-  if (string && !*string) return CImg<unsigned int>(); // Empty selection.
+  if ((string && !*string) || !indice_max) return CImg<unsigned int>(); // Empty selection.
   if (!string || (*string=='^' && !string[1])) { // Whole selection.
-    if (indice_max) return CImg<unsigned int>::sequence(indice_max,0,indice_max-1);
-    else return CImg<unsigned int>();
+    CImg<unsigned int> res(1,indice_max); cimg_forY(res,y) res[y] = (unsigned int)y; return res;
   }
   const char *const stype = is_selection?"selection":"subset";
   const int
@@ -2603,7 +2621,7 @@ CImg<unsigned int> gmic::selection2cimg(const char *const string, const unsigned
     char sep = 0;
 
     const char *const it_comma = std::strchr(it,',');
-    if (it_comma) { item.assign(it,it_comma-it+1); item.back() = 0; it = it_comma + 1; }
+    if (it_comma) { item.assign(it,(unsigned int)(it_comma - it + 1)); item.back() = 0; it = it_comma + 1; }
     else { CImg<char>::string(it).move_to(item); stopflag = true; }
 
     char end, *const it_colon = std::strchr(item,':');
@@ -2654,16 +2672,16 @@ CImg<unsigned int> gmic::selection2cimg(const char *const string, const unsigned
                            command,stype,ctypel,string,ctyper);
     if (!is_label) {
       int
-        uind0 = iind0<0?iind0+indice_max:iind0,
-        uind1 = iind1<0?iind1+indice_max:iind1;
+        uind0 = (int)(iind0<0?iind0+indice_max:iind0),
+        uind1 = (int)(iind1<0?iind1+indice_max:iind1);
       if (uind0>uind1) { cimg::swap(uind0,uind1); cimg::swap(iind0,iind1); }
       if (uind0<0 || uind0>=(int)indice_max)
         error("Command '%s': Invalid %s %c%s%c (contains starting indice '%d', "
-              "not in range -%u..%u).",
+              "not in range -%u...%u).",
               command,stype,ctypel,string,ctyper,iind0,indice_max,indice_max-1);
       if (uind1<0 || uind1>=(int)indice_max)
         error("Command '%s': Invalid %s %c%s%c (contains ending indice '%d', "
-              "not in range -%u..%u).",
+              "not in range -%u...%u).",
               command,stype,ctypel,string,ctyper,iind1,indice_max,indice_max-1);
       const int istep = (int)cimg::round(step);
       for (int l = uind0; l<=uind1; l+=istep) is_selected[l] = true;
@@ -2673,8 +2691,8 @@ CImg<unsigned int> gmic::selection2cimg(const char *const string, const unsigned
   cimg_for(is_selected,p,bool) if (*p) ++indice;
   CImg<unsigned int> selection(1,is_inverse?indice_max-indice:indice);
   indice = 0;
-  if (is_inverse) { cimg_forY(is_selected,l) if (!is_selected[l]) selection[indice++] = l; }
-  else cimg_forY(is_selected,l) if (is_selected[l]) selection[indice++] = l;
+  if (is_inverse) { cimg_forY(is_selected,l) if (!is_selected[l]) selection[indice++] = (unsigned int)l; }
+  else cimg_forY(is_selected,l) if (is_selected[l]) selection[indice++] = (unsigned int)l;
   return selection;
 }
 
@@ -2705,7 +2723,7 @@ CImg<char> gmic::selection2string(const CImg<unsigned int>& selection,
     case 7: cimg_snprintf(res.data(),res.width(),"s %s%u,%u,%u,%u,%u,%u,%u%s",
                           bl,selection[0],selection[1],selection[2],selection[3],
                           selection[4],selection[5],selection[6],br); break;
-    default: cimg_snprintf(res.data(),res.width(),"s %s%u,%u,%u,..,%u,%u,%u%s",
+    default: cimg_snprintf(res.data(),res.width(),"s %s%u,%u,%u,(...),%u,%u,%u%s",
                            bl,selection[0],selection[1],selection[2],
                            selection[selection.height()-3],
                            selection[selection.height()-2],
@@ -2719,43 +2737,31 @@ CImg<char> gmic::selection2string(const CImg<unsigned int>& selection,
     *res = 0;
     break;
   case 1:
-    cimg_snprintf(res.data(),res.width(),"%s%s",
-                  gmic_basename(images_names[selection[0]].data()),
-                  images_names[selection[0]].back()?"*":"");
+    cimg_snprintf(res.data(),res.width(),"%s",
+                  gmic_basename(images_names[selection[0]].data()));
     break;
   case 2:
-    cimg_snprintf(res.data(),res.width(),"%s%s, %s%s",
+    cimg_snprintf(res.data(),res.width(),"%s, %s",
                   gmic_basename(images_names[selection[0]].data()),
-                  images_names[selection[0]].back()?"*":"",
-                  gmic_basename(images_names[selection[1]].data()),
-                  images_names[selection[1]].back()?"*":"");
+                  gmic_basename(images_names[selection[1]].data()));
     break;
   case 3:
-    cimg_snprintf(res.data(),res.width(),"%s%s, %s%s, %s%s",
+    cimg_snprintf(res.data(),res.width(),"%s, %s, %s",
                   gmic_basename(images_names[selection[0]].data()),
-                  images_names[selection[0]].back()?"*":"",
                   gmic_basename(images_names[selection[1]].data()),
-                  images_names[selection[1]].back()?"*":"",
-                  gmic_basename(images_names[selection[2]].data()),
-                  images_names[selection[2]].back()?"*":"");
+                  gmic_basename(images_names[selection[2]].data()));
     break;
   case 4:
-    cimg_snprintf(res.data(),res.width(),"%s%s, %s%s, %s%s, %s%s",
+    cimg_snprintf(res.data(),res.width(),"%s, %s, %s, %s",
                   gmic_basename(images_names[selection[0]].data()),
-                  images_names[selection[0]].back()?"*":"",
                   gmic_basename(images_names[selection[1]].data()),
-                  images_names[selection[1]].back()?"*":"",
                   gmic_basename(images_names[selection[2]].data()),
-                  images_names[selection[2]].back()?"*":"",
-                  gmic_basename(images_names[selection[3]].data()),
-                  images_names[selection[3]].back()?"*":"");
+                  gmic_basename(images_names[selection[3]].data()));
     break;
   default:
-    cimg_snprintf(res.data(),res.width(),"%s%s, .., %s%s",
+    cimg_snprintf(res.data(),res.width(),"%s, (...), %s",
                   gmic_basename(images_names[selection[0]].data()),
-                  images_names[selection[0]].back()?"*":"",
-                  gmic_basename(images_names[selection.back()].data()),
-                  images_names[selection.back()].back()?"*":"");
+                  gmic_basename(images_names[selection.back()].data()));
   }
   return res;
 }
@@ -2768,13 +2774,14 @@ gmic& gmic::print(const CImgList<T>& list, const CImg<unsigned int> *const scope
   if (verbosity<0 && !is_debug) return *this;
   va_list ap;
   va_start(ap,format);
-  CImg<char> message(16384,1,1,1,0);
+  CImg<char> message(65536,1,1,1,0);
   cimg_vsnprintf(message,message.width(),format,ap);
   gmic_strreplace(message);
-  gmic_ellipsize(message,message.width());
+  if (message[message.width()-2]) gmic_ellipsize(message,message.width()-2);
   va_end(ap);
 
   // Display message.
+  cimg::mutex(29);
   if (*message!='\r')
     for (unsigned int i = 0; i<nb_carriages; ++i) std::fputc('\n',cimg::output());
   nb_carriages = 1;
@@ -2784,6 +2791,7 @@ gmic& gmic::print(const CImgList<T>& list, const CImg<unsigned int> *const scope
                  list.size(),scope2string(scope_selection).data(),message.data());
   else std::fprintf(cimg::output(),"%s",message.data());
   std::fflush(cimg::output());
+  cimg::mutex(29,0);
   return *this;
 }
 
@@ -2798,10 +2806,11 @@ gmic& gmic::warn(const CImgList<T>& list, const CImg<unsigned int> *const scope_
   CImg<char> message(1024,1,1,1,0);
   cimg_vsnprintf(message,message.width(),format,ap);
   gmic_strreplace(message);
-  gmic_ellipsize(message,message.width());
+  if (message[message.width()-2]) gmic_ellipsize(message,message.width()-2);
   va_end(ap);
 
   // Display message.
+  cimg::mutex(29);
   if (*message!='\r')
     for (unsigned int i = 0; i<nb_carriages; ++i) std::fputc('\n',cimg::output());
   nb_carriages = 1;
@@ -2814,6 +2823,7 @@ gmic& gmic::warn(const CImgList<T>& list, const CImg<unsigned int> *const scope_
                     "%s*** Warning *** %s%s",
                     cimg::t_red,message.data(),cimg::t_normal);
   std::fflush(cimg::output());
+  cimg::mutex(29,0);
   return *this;
 }
 
@@ -2827,28 +2837,36 @@ gmic& gmic::error(const CImgList<T>& list, const CImg<unsigned int> *const scope
   CImg<char> message(1024,1,1,1,0);
   cimg_vsnprintf(message,message.width(),format,ap);
   gmic_strreplace(message);
-  gmic_ellipsize(message,message.width());
+  if (message[message.width()-2]) gmic_ellipsize(message,message.width()-2);
   va_end(ap);
 
   // Display message.
   if (verbosity>=0 || is_debug) {
+    cimg::mutex(29);
     if (*message!='\r')
       for (unsigned int i = 0; i<nb_carriages; ++i) std::fputc('\n',cimg::output());
     nb_carriages = 1;
-    if (!scope_selection || *scope_selection)
-      std::fprintf(cimg::output(),
-                   "[gmic]-%u%s %s*** Error *** %s%s",
-                   list.size(),scope2string(scope_selection).data(),
-                   cimg::t_red,message.data(),cimg::t_normal);
-    else std::fprintf(cimg::output(),"%s",message.data());
+    if (!scope_selection || *scope_selection) {
+      if (is_debug_infos && debug_filename!=~0U && debug_line!=~0U)
+        std::fprintf(cimg::output(),
+                     "[gmic]-%u%s#%u %s*** Error *** %s%s",
+                     list.size(),scope2string(scope_selection).data(),debug_line,
+                     cimg::t_red,message.data(),cimg::t_normal);
+      else
+        std::fprintf(cimg::output(),
+                     "[gmic]-%u%s %s*** Error *** %s%s",
+                     list.size(),scope2string(scope_selection).data(),
+                     cimg::t_red,message.data(),cimg::t_normal);
+    } else std::fprintf(cimg::output(),"%s",message.data());
     std::fflush(cimg::output());
+    cimg::mutex(29,0);
   }
 
   // Store detailled error message for interpreter.
   CImg<char> full_message(512+message.width(),1,1,1,0);
   if (debug_filename<commands_files.size() && debug_line!=~0U)
     cimg_snprintf(full_message,full_message.width(),
-                  "*** Error in %s (file '%s', %sline %u) *** %s",
+                  "*** Error in %s (file '%s', %sline #%u) *** %s",
                   scope2string().data(),commands_files[debug_filename].data(),
                   is_debug_infos?"":"call from ",debug_line,message.data());
   else cimg_snprintf(full_message,full_message.width(),
@@ -2861,7 +2879,7 @@ gmic& gmic::error(const CImgList<T>& list, const CImg<unsigned int> *const scope
 }
 
 #define arg_error(command) gmic::error(images,0,command,"Command '-%s': Invalid argument '%s'.",\
-                                       command,argument_text)
+                                       command,gmic_argument_text())
 
 // Print debug message.
 //---------------------
@@ -2872,16 +2890,22 @@ gmic& gmic::debug(const CImgList<T>& list, const char *format, ...) {
   va_start(ap,format);
   CImg<char> message(1024,1,1,1,0);
   cimg_vsnprintf(message,message.width(),format,ap);
-  gmic_ellipsize(message,message.width());
+  if (message[message.width()-2]) gmic_ellipsize(message,message.width()-2);
   va_end(ap);
 
   // Display message.
+  cimg::mutex(29);
   if (*message!='\r')
     for (unsigned int i = 0; i<nb_carriages; ++i) std::fputc('\n',cimg::output());
   nb_carriages = 1;
-  std::fprintf(cimg::output(),
-               "%s<gmic>-%u%s ",
-               cimg::t_green,list.size(),scope2string().data());
+  if (is_debug_infos && debug_filename!=~0U && debug_line!=~0U)
+    std::fprintf(cimg::output(),
+                 "%s<gmic>-%u%s#%u ",
+                 cimg::t_green,list.size(),scope2string().data(),debug_line);
+  else
+    std::fprintf(cimg::output(),
+                 "%s<gmic>-%u%s ",
+                 cimg::t_green,list.size(),scope2string().data());
   for (char *s = message; *s; ++s) {
     char c = *s;
     if (c<' ') {
@@ -2900,6 +2924,7 @@ gmic& gmic::debug(const CImgList<T>& list, const char *format, ...) {
                "%s",
                cimg::t_normal);
   std::fflush(cimg::output());
+  cimg::mutex(29,0);
   return *this;
 }
 
@@ -2979,7 +3004,7 @@ void gmic::_gmic(const char *const commands_line,
   // Initialize class variables and default G'MIC environment.
   setlocale(LC_NUMERIC,"C");
   cimg_exception_mode = cimg::exception_mode();
-  cimg::exception_mode() = 0;
+  cimg::exception_mode(0);
   cimg::srand();
   is_debug = false;
   is_double3d = true;
@@ -3005,7 +3030,7 @@ void gmic::_gmic(const char *const commands_line,
     variables_names[l] = &_variables_names[l];
   }
   if (include_default_commands)
-    add_commands(data_gmic_def);
+    add_commands((char*)data_gmic_def);
   add_commands(custom_commands);
 
 #if gmic_is_beta==1
@@ -3035,24 +3060,25 @@ gmic& gmic::print_images(const CImgList<T>& images, const CImgList<char>& images
     if (is_header) print(images,0,"Print image [].");
     return *this;
   }
-  char title[256] = { 0 };
+  CImg<char> title(256);
   if (is_header) {
-    const CImg<char> gmic_names = selection2string(selection,images_names,2);
+    CImg<char> gmic_names = selection2string(selection,images_names,2);
+    gmic_ellipsize(gmic_names,80,false);
     print(images,0,"Print image%s = '%s'.\n",
           gmic_selection,gmic_names.data());
   }
   if (verbosity>=0 || is_debug) cimg_forY(selection,l) {
-      const unsigned int ind = selection[l];
-      const CImg<T>& img = images[ind];
+      const unsigned int uind = selection[l];
+      const CImg<T>& img = images[uind];
       bool is_valid = true;
       int _verbosity = verbosity;
       bool _is_debug = is_debug;
       verbosity = -1; is_debug = false;
       try { gmic_check(img); } catch (gmic_exception&) { is_valid = false; }
       verbosity = _verbosity; is_debug = _is_debug;
-      cimg_snprintf(title,sizeof(title),"[%u] = '%s'",
-                    ind,images_names[ind].data());
-      gmic_ellipsize(title,sizeof(title));
+      cimg_snprintf(title,title.width(),"[%u] = '%s'",
+                    uind,images_names[uind].data());
+      gmic_ellipsize(title,80,false);
       img.gmic_print(title,is_debug,is_valid);
     }
   nb_carriages = 0;
@@ -3070,9 +3096,11 @@ gmic& gmic::display_images(const CImgList<T>& images, const CImgList<char>& imag
 #if cimg_display==0
   print(images,0,"Display image%s",gmic_selection);
   if (verbosity>=0 || is_debug) {
+    cimg::mutex(29);
     if (XYZ) std::fprintf(cimg::output(),", from point (%u,%u,%u)",XYZ[0],XYZ[1],XYZ[2]);
     std::fprintf(cimg::output()," (console output only, no display support).\n");
     std::fflush(cimg::output());
+    cimg::mutex(29,0);
     print_images(images,images_names,selection,false);
   }
 #else // #if cimg_display==0
@@ -3082,9 +3110,11 @@ gmic& gmic::display_images(const CImgList<T>& images, const CImgList<char>& imag
   } catch (CImgDisplayException&) {
     print(images,0,"Display image%s",gmic_selection);
     if (verbosity>=0 || is_debug) {
+      cimg::mutex(29);
       if (XYZ) std::fprintf(cimg::output(),", from point (%u,%u,%u)",XYZ[0],XYZ[1],XYZ[2]);
       std::fprintf(cimg::output()," (console output only, no display available).\n");
       std::fflush(cimg::output());
+      cimg::mutex(29,0);
       print_images(images,images_names,selection,false);
     }
   }
@@ -3102,38 +3132,41 @@ gmic& gmic::display_images(const CImgList<T>& images, const CImgList<char>& imag
   }
 
   cimg_forY(selection,l) {
-    const unsigned int ind = selection[l];
-    const CImg<T>& img = images[ind];
+    const unsigned int uind = selection[l];
+    const CImg<T>& img = images[uind];
     if (img && is_valid[l]) visu.insert(img,~0U,true);
     else visu.insert(1);
   }
-  const CImg<char> _gmic_names = selection2string(selection,images_names,2);
+  CImg<char> _gmic_names = selection2string(selection,images_names,2);
+  gmic_ellipsize(_gmic_names,80,false);
   const char *const gmic_names = _gmic_names.data();
   print(images,0,"Display image%s = '%s'",gmic_selection,gmic_names);
   if (verbosity>=0 || is_debug) {
+    cimg::mutex(29);
     if (XYZ) std::fprintf(cimg::output(),", from point (%u,%u,%u).\n",XYZ[0],XYZ[1],XYZ[2]);
     else std::fprintf(cimg::output(),".\n");
     std::fflush(cimg::output());
+    cimg::mutex(29,0);
   }
   if (visu) {
     CImgDisplay _disp, &disp = instant_window[0]?instant_window[0]:_disp;
-    char title[256] = { 0 };
+    CImg<char> title(256);
     if (visu.size()==1)
-      cimg_snprintf(title,sizeof(title),"%s (%dx%dx%dx%d)",
+      cimg_snprintf(title,title.width(),"%s (%dx%dx%dx%d)",
                     gmic_names,
                     visu[0].width(),visu[0].height(),visu[0].depth(),visu[0].spectrum());
     else
-      cimg_snprintf(title,sizeof(title),"%s (%u)",
+      cimg_snprintf(title,title.width(),"%s (%u)",
                     gmic_names,visu.size());
-    gmic_ellipsize(title,sizeof(title));
+    gmic_ellipsize(title,80,false);
     CImg<bool> is_shared(visu.size());
     cimglist_for(visu,l) {
       is_shared[l] = visu[l].is_shared();
       visu[l]._is_shared = images[selection[l]].is_shared();
     }
     print_images(images,images_names,selection,false);
-    if (disp) visu.display(disp.set_title("%s",title),false,'x',0.5f,XYZ);
-    else visu.display(title,false,'x',0.5f,XYZ);
+    if (disp) visu.display(disp.set_title("%s",title.data()),false,'x',0.5f,XYZ);
+    else visu.display(title.data(),false,'x',0.5f,XYZ);
     nb_carriages = 0;
     cimglist_for(visu,l) visu[l]._is_shared = is_shared(l);
   }
@@ -3176,20 +3209,21 @@ gmic& gmic::display_plots(const CImgList<T>& images, const CImgList<char>& image
 
   CImgDisplay _disp, &disp = instant_window[0]?instant_window[0]:_disp;
   cimg_forY(selection,l) {
-    const unsigned int ind = selection[l];
-    const CImg<T>& img = images[ind];
+    const unsigned int uind = selection[l];
+    const CImg<T>& img = images[uind];
     if (img) {
       print(images,0,"Plot image%s = '%s'.",gmic_selection,
             selection2string(selection,images_names,2).data());
       if (verbosity>=0 || is_debug) {
+        cimg::mutex(29);
         std::fputc('\n',cimg::output());
         std::fflush(cimg::output());
-        img.print(images_names[ind].data());
+        cimg::mutex(29,0);
+        img.print(images_names[uind].data());
       }
       if (!disp) disp.assign(cimg_fitscreen(CImgDisplay::screen_width()/2,CImgDisplay::screen_height()/2,1),0,0);
-      img.display_graph(disp.set_title("%s%s (%dx%dx%dx%d)",
-                                       gmic_basename(images_names[ind].data()),
-                                       images_names[ind].back()?"*":"",
+      img.display_graph(disp.set_title("%s (%dx%dx%dx%d)",
+                                       gmic_basename(images_names[uind].data()),
                                        img.width(),img.height(),img.depth(),img.spectrum()),
                         plot_type,vertex_type,0,xmin,xmax,0,ymin,ymax);
       nb_carriages = 0;
@@ -3209,11 +3243,12 @@ gmic& gmic::display_objects3d(const CImgList<T>& images, const CImgList<char>& i
     print(images,0,"Display 3d object [].");
     return *this;
   }
-  char message[1024] = { 0 };
-  cimg_forY(selection,l) if (!gmic_check(images[selection[l]]).is_CImg3d(true,message))
+  CImg<char> error_message(1024);
+  *error_message = 0;
+  cimg_forY(selection,l) if (!gmic_check(images[selection[l]]).is_CImg3d(true,error_message))
     error(images,0,0,
           "Command '-display3d': Invalid 3d object [%d] in selected image%s (%s).",
-          selection[l],gmic_selection,message);
+          selection[l],gmic_selection,error_message.data());
 #if cimg_display==0
   print(images,0,"Display 3d object%s (skipped, no display support).",gmic_selection);
   cimg::unused(background3d);
@@ -3228,8 +3263,8 @@ gmic& gmic::display_objects3d(const CImgList<T>& images, const CImgList<char>& i
 
   CImgDisplay _disp, &disp = instant_window[0]?instant_window[0]:_disp;
   cimg_forY(selection,l) {
-    const unsigned int ind = selection[l];
-    const CImg<T>& img = images[ind];
+    const unsigned int uind = selection[l];
+    const CImg<T>& img = images[uind];
     if (!disp) {
       if (background3d) disp.assign(cimg_fitscreen(background3d.width(),background3d.height(),1),0,0);
       else disp.assign(cimg_fitscreen(CImgDisplay::screen_width()/2,CImgDisplay::screen_height()/2,1),0,0);
@@ -3247,13 +3282,11 @@ gmic& gmic::display_objects3d(const CImgList<T>& images, const CImgList<char>& i
     CImg<float> vertices(img,false);
     float pose3d[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
     vertices.CImg3dtoobject3d(primitives,colors,opacities,false);
-    print(images,0,"Display 3d object [%u] = '%s%s' (%d vertices, %u primitives).",
-          ind,images_names[ind].data(),
-          images_names[ind].back()?"*":"",
+    print(images,0,"Display 3d object [%u] = '%s' (%d vertices, %u primitives).",
+          uind,images_names[uind].data(),
           vertices.width(),primitives.size());
-    disp.set_title("%s%s (%d vertices, %u primitives)",
-                   gmic_basename(images_names[ind].data()),
-                   images_names[ind].back()?"*":"",
+    disp.set_title("%s (%d vertices, %u primitives)",
+                   gmic_basename(images_names[uind].data()),
                    vertices.width(),primitives.size());
     if (light3d) colors.insert(light3d,~0U,true);
     background.display_object3d(disp,vertices,primitives,colors,opacities,
@@ -3278,7 +3311,7 @@ template<typename T>
 CImg<char> gmic::substitute_item(const char *const source,
                                  CImgList<T>& images, CImgList<char>& images_names,
                                  CImgList<T>& parent_images, CImgList<char>& parent_images_names,
-                                 unsigned int variables_sizes[256]) {
+                                 const unsigned int *const variables_sizes) {
   if (!source) return CImg<char>();
   CImgList<char> substituted_items;
   CImg<char> inbraces;
@@ -3288,14 +3321,14 @@ CImg<char> gmic::substitute_item(const char *const source,
       // If not starting with '@', '{', or '$'.
       const char *const nsource0 = nsource;
       do { ++nsource; } while (*nsource && *nsource!='@' && *nsource!='{' && *nsource!='$');
-      CImg<char>(nsource0,nsource - nsource0).move_to(substituted_items);
+      CImg<char>(nsource0,(unsigned int)(nsource - nsource0)).move_to(substituted_items);
     } else { // '@', '{}' or '$' expression found.
-      CImg<char> substr(256);
+      CImg<char> substr(32);
       CImg<unsigned int> _ind;
-      if (inbraces) *inbraces = 0; else inbraces.assign(1,1,1,1,0);
       int ind = 0, l_inbraces = 0;
       bool is_braces = false;
       char end, sep = 0;
+      if (inbraces) *inbraces = 0; else inbraces.assign(1,1,1,1,0);
 
       // '{}' expression -> Mathematical evaluation, seq. of ascii codes or strings comparison.
       if (*nsource=='{') {
@@ -3303,7 +3336,7 @@ CImg<char> gmic::substitute_item(const char *const source,
         unsigned int p = 0;
         for (p = 1; p>0 && *ptr_end; ++ptr_end) { if (*ptr_end=='{') ++p; if (*ptr_end=='}') --p; }
         if (p) { CImg<char>(nsource++,1).move_to(substituted_items); continue; }
-        l_inbraces = ptr_end - ptr_beg - 1;
+        l_inbraces = (int)(ptr_end - ptr_beg - 1);
         if (l_inbraces>0) {
           inbraces.assign(ptr_beg,l_inbraces + 1).back() = 0;
           substitute_item(inbraces,images,images_names,parent_images,parent_images_names,variables_sizes).
@@ -3336,7 +3369,7 @@ CImg<char> gmic::substitute_item(const char *const source,
               break;
             }
             if (is_substitution_done)
-              CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+              CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
           }
 
           // Sequence of ascii characters.
@@ -3347,7 +3380,7 @@ CImg<char> gmic::substitute_item(const char *const source,
               inbraces[inbraces.width()-2] = 0;
               for (*substr=0, cimg::strunescape(inbraces); *s; ++s) {
                 cimg_snprintf(substr,substr.width(),"%d,",(int)(unsigned char)*s);
-                CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+                CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
               }
               if (*substr) --(substituted_items.back()._width);
             }
@@ -3362,7 +3395,7 @@ CImg<char> gmic::substitute_item(const char *const source,
               cimg_for(inbraces,p,char) if (*p==',') ++nb_values;
               inbraces[inbraces.width()-2] = 0;
               try {
-                CImg<char>(nb_values,1,1,1,inbraces.data()+1,false).move_to(substituted_items);
+                CImg<char>(nb_values,1,1,1).fill(inbraces.data()+1,false,false).move_to(substituted_items);
                 is_substitution_done = true;
               } catch (CImgException &e) {
                 const char *const e_ptr = std::strstr(e.what(),": ");
@@ -3380,14 +3413,14 @@ CImg<char> gmic::substitute_item(const char *const source,
             if (peq) {
               *peq = 0;
               cimg_snprintf(substr,substr.width(),"%d",(int)!std::strcmp(inbraces,peq+4));
-              CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+              CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
               is_substitution_done = true;
             } else {
               char *const pne = std::strstr(inbraces,"'!='");
               if (pne) {
                 *pne = 0;
                 cimg_snprintf(substr,substr.width(),"%d",(int)std::strcmp(inbraces,pne+4));
-                CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+                CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
                 is_substitution_done = true;
               }
             }
@@ -3396,7 +3429,7 @@ CImg<char> gmic::substitute_item(const char *const source,
           // Mathematical expression [truncated output].
           if (!is_substitution_done && inbraces.width()>=3 && *inbraces=='_') try {
               cimg_snprintf(substr,substr.width(),"%g",img.eval(inbraces.data(1)));
-              CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+              CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
               is_substitution_done = true;
             } catch (CImgException& e) {
               const char *const e_ptr = std::strstr(e.what(),": ");
@@ -3408,7 +3441,7 @@ CImg<char> gmic::substitute_item(const char *const source,
           // Mathematical expression [full precision output].
           if (!is_substitution_done) try {
               cimg_snprintf(substr,substr.width(),"%.16g",img.eval(inbraces.data()));
-              CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+              CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
             } catch (CImgException& e) {
               const char *const e_ptr = std::strstr(e.what(),": ");
               error(images,0,0,
@@ -3424,7 +3457,7 @@ CImg<char> gmic::substitute_item(const char *const source,
         const char *const ptr_beg = nsource + 2, *ptr_end = ptr_beg; unsigned int p = 0;
         for (p = 1; p>0 && *ptr_end; ++ptr_end) { if (*ptr_end=='{') ++p; if (*ptr_end=='}') --p; }
         if (p) { CImg<char>(nsource++,1).move_to(substituted_items); continue; }
-        l_inbraces = ptr_end - ptr_beg - 1;
+        l_inbraces = (int)(ptr_end - ptr_beg - 1);
         if (l_inbraces>0) {
           inbraces.assign(ptr_beg,l_inbraces + 1).back() = 0;
           substitute_item(inbraces,images,images_names,parent_images,parent_images_names,variables_sizes).
@@ -3437,25 +3470,25 @@ CImg<char> gmic::substitute_item(const char *const source,
       if (*nsource=='@' && nsource[1]=='#') {
         nsource+=2;
         cimg_snprintf(substr,substr.width(),"%u",images.size());
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
       // Substitute '@*' -> number of available cpus.
       } else if (*nsource=='@' && nsource[1]=='*') {
         nsource+=2;
         cimg_snprintf(substr,substr.width(),"%u",cimg::nb_cpus());
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
       // Substitute '@^' -> current level of verbosity.
       } else if (*nsource=='@' && nsource[1]=='^') {
         nsource+=2;
         cimg_snprintf(substr,substr.width(),"%d",verbosity);
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
         // Substitute '@.' -> current version number of the G'MIC interpreter.
       } else if (*nsource=='@' && nsource[1]=='.') {
         nsource+=2;
         cimg_snprintf(substr,substr.width(),"%u",gmic_version);
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
         // Substitute '@%' -> pid of the current process.
       } else if (*nsource=='@' && nsource[1]=='%') {
@@ -3467,13 +3500,13 @@ CImg<char> gmic::substitute_item(const char *const source,
 #else // #if cimg_OS==1
         cimg_snprintf(substr,substr.width(),"0");
 #endif // #if cimg_OS==1
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
         // Substitute '@|' -> current value of the timer.
       } else if (*nsource=='@' && nsource[1]=='|') {
         nsource+=2;
         cimg_snprintf(substr,substr.width(),"%g",(cimg::time()-reference_time)/1000.);
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
         // Substitute '@!' -> visibility state of the first instant display window.
       } else if (*nsource=='@' && nsource[1]=='!') {
@@ -3484,7 +3517,7 @@ CImg<char> gmic::substitute_item(const char *const source,
         cimg_snprintf(substr,substr.width(),"%d",
                       instant_window[0]?(instant_window[0].is_closed()?0:1):0);
 #endif // #if cimg_display==0
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
         // Substitute '@{!}', @{!1}, '@{!,subset}' and '@{!1,subset}'
         // -> features of an instant display window.
@@ -3501,9 +3534,8 @@ CImg<char> gmic::substitute_item(const char *const source,
         bool is_substitution_done = true;
         const char *ninbraces = inbraces.data() + 1;
         if (*ninbraces>='0' && *ninbraces<='9') wind = (unsigned int)(*(ninbraces++)-'0');
-        if (!*ninbraces)
-          cimg_snprintf(substr,substr.width(),"%d",
-                        instant_window[wind]?(instant_window[wind].is_closed()?0:1):0);
+        if (!*ninbraces) cimg_snprintf(substr,substr.width(),"%d",
+                                       instant_window[wind]?(instant_window[wind].is_closed()?0:1):0);
         else if (*ninbraces==',') {
           bool flush_request = false;
           if (*(++ninbraces)=='-' &&
@@ -3514,8 +3546,8 @@ CImg<char> gmic::substitute_item(const char *const source,
             if (!ninbraces[1])
               cimg_snprintf(substr,substr.width(),"%d",instant_window[wind].width());
             else if (ninbraces[1]=='h' && !ninbraces[2])
-              cimg_snprintf(substr,substr.width(),"%d",
-                            instant_window[wind].width()*instant_window[wind].height());
+              cimg_snprintf(substr,substr.width(),"%ld",
+                            (long)instant_window[wind].width()*instant_window[wind].height());
             else is_substitution_done = false;
             break;
           case 'h' :
@@ -3527,8 +3559,8 @@ CImg<char> gmic::substitute_item(const char *const source,
             if (!ninbraces[1])
               cimg_snprintf(substr,substr.width(),"%d",instant_window[wind].window_width());
             else if (ninbraces[1]=='e' && !ninbraces[2])
-              cimg_snprintf(substr,substr.width(),"%d",
-                            instant_window[wind].window_width()*
+              cimg_snprintf(substr,substr.width(),"%ld",
+                            (long)instant_window[wind].window_width()*
                             instant_window[wind].window_height());
             else is_substitution_done = false;
             break;
@@ -3540,17 +3572,23 @@ CImg<char> gmic::substitute_item(const char *const source,
           case 'u' :
             if (!ninbraces[1]) try {
                 cimg_snprintf(substr,substr.width(),"%d",CImgDisplay::screen_width());
-              } catch (CImgDisplayException&) { std::strcpy(substr,"0"); }
+              } catch (CImgDisplayException&) {
+                std::strcpy(substr,"0");
+              }
             else if (ninbraces[1]=='v' && !ninbraces[2]) try {
-                cimg_snprintf(substr,substr.width(),"%d",
-                              CImgDisplay::screen_width()*CImgDisplay::screen_height());
-              } catch (CImgDisplayException&) { std::strcpy(substr,"0"); }
+                cimg_snprintf(substr,substr.width(),"%ld",
+                              (long)CImgDisplay::screen_width()*CImgDisplay::screen_height());
+              } catch (CImgDisplayException&) {
+                std::strcpy(substr,"0");
+              }
             else is_substitution_done = false;
             break;
           case 'v' :
             if (!ninbraces[1]) try {
                 cimg_snprintf(substr,substr.width(),"%d",CImgDisplay::screen_height());
-              } catch (CImgDisplayException&) { std::strcpy(substr,"0"); }
+              } catch (CImgDisplayException&) {
+                std::strcpy(substr,"0");
+              }
             else is_substitution_done = false;
             break;
           case 'n' :
@@ -3613,15 +3651,17 @@ CImg<char> gmic::substitute_item(const char *const source,
           }
           }
         } else cimg_snprintf(substr,substr.width(),"@{!%s}",inbraces.data());
+
         if (!is_substitution_done) std::strcpy(substr,"0");
+
 #endif // #if cimg_display==0
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
         // Substitute '@/' -> number of levels in current global scope.
       } else if (*nsource=='@' && nsource[1]=='/') {
         nsource+=2;
         cimg_snprintf(substr,substr.width(),"%u",scope.size());
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
         // Substitute '@{/}' and '@{/,subset}' -> content of the global scope.
       } else if (*nsource=='@' && inbraces[0]=='/' &&
@@ -3635,17 +3675,11 @@ CImg<char> gmic::substitute_item(const char *const source,
         if (subset) cimg_foroff(subset,i)
                       substituted_items.insert(scope[subset[i]]).back().back() = '/';
 
-        // Substitute '$/' -> current scope.
-      } else if (*nsource=='$' && nsource[1]=='/') {
-        cimg_snprintf(substr,substr.width(),"%s",scope.back().data());
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
-        nsource+=2;
-
         // Substitute '@>' and '@<' -> current number of nested loops.
       } else if (*nsource=='@' && (nsource[1]=='>' || nsource[1]=='<')) {
         nsource+=2;
         cimg_snprintf(substr,substr.width(),"%u",repeatdones.size());
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
         // Substitute '@{>}', '@{<}', '@{>,subset}' and '@{<,subset}'
         // -> forward/backward indice(s) of current loop(s).
@@ -3677,12 +3711,13 @@ CImg<char> gmic::substitute_item(const char *const source,
                 is_braces?(direction=='>'?"{>}":"{<}"):(direction=='>'?">":"<"));
         cimg_snprintf(substr,substr.width(),"%u",
                       direction=='>'?repeatdones.back()(2):repeatdones.back()(1)-1);
-        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
         nsource+=is_braces?4:2;
 
         // Substitute '$name' and '${name}' -> variable, image indice or environment variable.
       } else if (*nsource=='$' &&
-                 (((is_braces && std::sscanf(inbraces,"%255[a-zA-Z0-9_]",substr.data())==1)) ||
+                 (((is_braces && std::sscanf(inbraces,"%255[a-zA-Z0-9_]",
+                                             substr.assign(cimg::max(substr.width(),256)).data())==1)) ||
                   (std::sscanf(nsource+1,"%255[a-zA-Z0-9_]",substr.data())==1)) &&
                  (*substr<'0' || *substr>'9')) {
         const CImg<char>& name = is_braces?inbraces:substr;
@@ -3712,10 +3747,10 @@ CImg<char> gmic::substitute_item(const char *const source,
           if (is_name_found) {
             char text[64];
             cimg_snprintf(text,sizeof(text),"%d",ind);
-            CImg<char>(text,std::strlen(text)).move_to(substituted_items);
+            CImg<char>(text,(unsigned int)std::strlen(text)).move_to(substituted_items);
           } else {
             const char *const s_env = std::getenv(name);
-            if (s_env) CImg<char>(s_env,std::strlen(s_env)).move_to(substituted_items);
+            if (s_env) CImg<char>(s_env,(unsigned int)std::strlen(s_env)).move_to(substituted_items);
           }
         }
         if (is_thread_global) cimg::mutex(30,0);
@@ -3725,7 +3760,8 @@ CImg<char> gmic::substitute_item(const char *const source,
       } else if (*nsource=='@' && (std::sscanf(nsource+1,"%d",&ind)==1 ||
                                    ((end=0),std::sscanf(inbraces,"%d%c",&ind,&end)==1) ||
                                    ((end=1),std::sscanf(inbraces,"%d,%c",&ind,&sep)==2) ||
-                                   (std::sscanf(nsource+1,"%255[a-zA-Z0-9_]",substr.data())==1 &&
+                                   (std::sscanf(nsource+1,"%255[a-zA-Z0-9_]",
+                                                substr.assign(cimg::max(substr.width(),256)).data())==1 &&
                                     (_ind=selection2cimg(substr,images.size(),images_names,
                                                          "Item substitution '@name'",true,
                                                          false,CImg<char>::empty())).height()>0) ||
@@ -3746,17 +3782,17 @@ CImg<char> gmic::substitute_item(const char *const source,
                   "Item substitution '%s': Selection [%s] specifies %d items.",
                   !*inbraces?"@name":end?"@{name,feature}":"@{name}",
                   substr.data(),_ind.height());
-          ind=*_ind;
+          ind = (int)*_ind;
         }
         const unsigned int
-          l_ind = _ind?std::strlen(substr):cimg_snprintf(substr,substr.width(),"%d",ind);
+          l_ind = (unsigned int)(_ind?std::strlen(substr):cimg_snprintf(substr,substr.width(),"%d",ind));
         nsource+=is_braces?l_inbraces + 3:l_ind + 1;
         int nind = ind;
         if (nind<0) nind+=images.width();
         if (nind<0 || nind>=images.width()) {
           if (images.width())
             error(images,0,0,
-                  "Item substitution '%s': Invalid indice '%d' (not in range -%u..%u).",
+                  "Item substitution '%s': Invalid indice '%d' (not in range -%u...%u).",
                   !*inbraces?"@indice":end?"@{indice,feature}":"@{indice}",
                   ind,images.size(),images.size()-1);
           else
@@ -3765,7 +3801,7 @@ CImg<char> gmic::substitute_item(const char *const source,
                   !*inbraces?"@indice":end?"@{indice,feature}":"@{indice}",ind);
         }
         const CImg<T>& img = gmic_check(images[nind]);
-        char argx[256], argy[256], argz[256], argc[256];
+        CImg<char> argx(256), argy(256), argz(256), argc(256);
         *argx = *argy = *argz = *argc = 0;
         char sepp = 0, sepx = 0, sepy = 0, sepz = 0, sepc = 0;
         float x = 0, y = 0, z = 0, v = 0, bcond = 0;
@@ -3773,7 +3809,7 @@ CImg<char> gmic::substitute_item(const char *const source,
         const char *subset = sep?inbraces.data() + l_ind + 1:&sep;
         *substr = 0;
 
-        // Test for simple arguments '@{ind,arg}' where 'arg' is w,h,d,s,....
+        // Test for simple arguments '@{ind,arg}' where 'arg' is w,h,d,s,...
         if (*subset) {
           is_substitution_done = true;
           switch (*subset) {
@@ -3781,14 +3817,14 @@ CImg<char> gmic::substitute_item(const char *const source,
             if (subset[1]=='h') {
               if (subset[2]=='d') {
                 if (subset[3]=='s' && !subset[4])
-                  cimg_snprintf(substr,substr.width(),"%d",
-                                img.width()*img.height()*img.depth()*img.spectrum());
+                  cimg_snprintf(substr,substr.width(),"%ld",
+                                (long)img.width()*img.height()*img.depth()*img.spectrum());
                 else if (!subset[3])
-                  cimg_snprintf(substr,substr.width(),"%d",
-                                img.width()*img.height()*img.depth());
+                  cimg_snprintf(substr,substr.width(),"%ld",
+                                (long)img.width()*img.height()*img.depth());
                 else is_substitution_done = false;
               } else if (!subset[2])
-                cimg_snprintf(substr,substr.width(),"%d",img.width()*img.height());
+                cimg_snprintf(substr,substr.width(),"%ld",(long)img.width()*img.height());
               else is_substitution_done = false;
             } else if (!subset[1])
               cimg_snprintf(substr,substr.width(),"%d",img.width());
@@ -3812,6 +3848,7 @@ CImg<char> gmic::substitute_item(const char *const source,
             break;
           case 'n' :
             if (!subset[1]) {
+              substr.assign(cimg::max(substr.width(),images_names[nind].width()));
               cimg_snprintf(substr,substr.width(),"%s",images_names[nind].data());
               for (char *ps = substr.data(); *ps; ++ps)
                 *ps = *ps=='$'?_dollar:*ps=='{'?_lbrace:*ps=='}'?_rbrace:
@@ -3821,10 +3858,10 @@ CImg<char> gmic::substitute_item(const char *const source,
             break;
           case 'b' :
             if (!subset[1]) {
+              substr.assign(cimg::max(substr.width(),images_names[nind].width()));
               cimg::split_filename(images_names[nind].data(),substr);
-              const char *const basename = cimg::basename(substr);
-              if (substr.data()!=basename)
-                substr.draw_image(CImg<char>::string(basename));
+              const char *const basename = gmic_basename(substr);
+              std::memmove(substr,basename,std::strlen(basename)+1);
               for (char *ps = substr.data(); *ps; ++ps)
                 *ps = *ps=='$'?_dollar:*ps=='{'?_lbrace:*ps=='}'?_rbrace:
                 *ps==','?_comma:*ps=='\"'?_dquote:*ps=='@'?_arobace:*ps;
@@ -3832,6 +3869,7 @@ CImg<char> gmic::substitute_item(const char *const source,
             break;
           case 'x' :
             if (!subset[1]) {
+              substr.assign(cimg::max(substr.width(),images_names[nind].width()));
               cimg_snprintf(substr,substr.width(),"%s",
                             cimg::split_filename(images_names[nind].data()));
               for (char *ps = substr.data(); *ps; ++ps)
@@ -3842,10 +3880,10 @@ CImg<char> gmic::substitute_item(const char *const source,
             break;
           case 'f' :
             if (!subset[1]) {
-              CImg<char> _substr(images_names[nind]);
-              char *const basename = const_cast<char*>(cimg::basename(_substr));
-              *basename = 0;
-              std::strcpy(substr,_substr);
+              substr.assign(cimg::max(substr.width(),images_names[nind].width()));
+              std::strcpy(substr,images_names[nind]);
+              const char *const basename = gmic_basename(substr);
+              substr[basename-substr.data()] = 0;
               for (char *ps = substr.data(); *ps; ++ps)
                 *ps = *ps=='$'?_dollar:*ps=='{'?_lbrace:*ps=='}'?_rbrace:
                 *ps==','?_comma:*ps=='\"'?_dquote:*ps=='@'?_arobace:*ps;
@@ -3925,6 +3963,7 @@ CImg<char> gmic::substitute_item(const char *const source,
             if (!subset[1]) {
               CImg<unsigned int> st;
               if (img) st = img.get_stats(); else st.assign(8,1,1,1,0);
+              substr.assign(cimg::max(substr.width(),4*16+4));
               cimg_snprintf(substr,substr.width(),"%u,%u,%u,%u",st[4],st[5],st[6],st[7]);
             } else is_substitution_done = false;
             break;
@@ -3932,6 +3971,7 @@ CImg<char> gmic::substitute_item(const char *const source,
             if (!subset[1]) {
               CImg<unsigned int> st;
               if (img) st = img.get_stats(); else st.assign(12,1,1,1,0);
+              substr.assign(cimg::max(substr.width(),4*16+4));
               cimg_snprintf(substr,substr.width(),"%u,%u,%u,%u",st[8],st[9],st[10],st[11]);
             } else is_substitution_done = false;
             break;
@@ -3940,19 +3980,19 @@ CImg<char> gmic::substitute_item(const char *const source,
 
           // Test for access to pixel value '@{ind,(x,y,z,c,boundary)}'.
           if (is_substitution_done) {
-            if (*substr) CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+            if (*substr) CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
           } else if ((std::sscanf(subset,"(%255[0-9.eE%+-]%c%c",
-                                  argx,&sepp,&end)==2 ||
+                                  argx.data(),&sepp,&end)==2 ||
                       std::sscanf(subset,"(%255[0-9.eE%+-],%255[0-9.eE%+-]%c%c",
-                                  argx,argy,&sepp,&end)==3 ||
+                                  argx.data(),argy.data(),&sepp,&end)==3 ||
                       std::sscanf(subset,"(%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-]%c%c",
-                                  argx,argy,argz,&sepp,&end)==4 ||
+                                  argx.data(),argy.data(),argz.data(),&sepp,&end)==4 ||
                       std::sscanf(subset,"(%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
                                   "%255[0-9.eE%+-]%c%c",
-                                  argx,argy,argz,argc,&sepp,&end)==5 ||
+                                  argx.data(),argy.data(),argz.data(),argc.data(),&sepp,&end)==5 ||
                       std::sscanf(subset,"(%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
                                   "%255[0-9.eE%+-],%f%c%c",
-                                  argx,argy,argz,argc,&bcond,&sepp,&end)==6) &&
+                                  argx.data(),argy.data(),argz.data(),argc.data(),&bcond,&sepp,&end)==6) &&
                      sepp==')' &&
                      (std::sscanf(argx,"%f%c",&x,&end)==1 ||
                       (std::sscanf(argx,"%f%c%c",&x,&sepx,&end)==2 && sepx=='%')) &&
@@ -3972,7 +4012,7 @@ CImg<char> gmic::substitute_item(const char *const source,
               nv = (int)cimg::round(sepc=='%'?v*(img.spectrum()-1)/100:v);
             cimg_snprintf(substr,substr.width(),"%.16g",
                           bcond?(double)img.atXYZC(nx,ny,nz,nv):(double)img.atXYZC(nx,ny,nz,nv,0));
-            CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+            CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
             is_substitution_done = true;
           }
         }
@@ -3986,6 +4026,8 @@ CImg<char> gmic::substitute_item(const char *const source,
             int _verbosity = verbosity;
             bool _is_debug = is_debug;
             verbosity = -1; is_debug = false;
+            CImg<char> _status;
+            status.move_to(_status); // Save status because 'selection2cimg' can change it.
             try {
               const CImg<unsigned int>
                 inds = selection2cimg(subset,img.size(),
@@ -3995,6 +4037,7 @@ CImg<char> gmic::substitute_item(const char *const source,
             } catch (gmic_exception&) {
               is_substitution_done = false;
             }
+            _status.move_to(status);
             verbosity = _verbosity; is_debug = _is_debug;
           }
           if (is_substitution_done) {
@@ -4015,7 +4058,7 @@ CImg<char> gmic::substitute_item(const char *const source,
                   "Item substitution '@{%d,%s}': Invalid argument '%s'.",
                   ind,subset,subset);
           }
-          CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+          CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
         }
 
         // Substitute '@' by itself, if no @-pattern matches.
@@ -4029,7 +4072,7 @@ CImg<char> gmic::substitute_item(const char *const source,
             ncommands_line = commands_line_to_CImgList(gmic_strreplace(inbraces));
           unsigned int nposition = 0;
           CImg<char>::string("*substitute").move_to(scope);
-	  unsigned int nvariables_sizes[256];
+          CImg<unsigned int> nvariables_sizes(256);
 	  for (unsigned int l = 0; l<256; ++l) nvariables_sizes[l] = variables[l]->size();
           _run(ncommands_line,nposition,images,images_names,parent_images,parent_images_names,nvariables_sizes,0);
 	  for (unsigned int l = 0; l<254; ++l) if (variables[l]->size()>nvariables_sizes[l]) {
@@ -4040,7 +4083,7 @@ CImg<char> gmic::substitute_item(const char *const source,
           is_return = false;
         }
         if (status.width()>1)
-          CImg<char>(status.data(),std::strlen(status)).move_to(substituted_items);
+          CImg<char>(status.data(),(unsigned int)std::strlen(status)).move_to(substituted_items);
         continue;
       }
     }
@@ -4054,7 +4097,7 @@ template<typename T>
 gmic& gmic::_run(const gmic_list<char>& commands_line,
                  gmic_list<T> &images, gmic_list<char> &images_names,
                  float *const p_progress, bool *const p_is_cancel) {
-  unsigned int variables_sizes[256] = { 0 };
+  CImg<unsigned int> variables_sizes(256,1,1,1,0);
   unsigned int position = 0;
   setlocale(LC_NUMERIC,"C");
   scope.assign(1U);
@@ -4073,7 +4116,6 @@ gmic& gmic::_run(const gmic_list<char>& commands_line,
   is_start = true;
   is_quit = false;
   is_return = false;
-  is_default_type = true;
   check_elif = false;
   if (p_progress) progress = p_progress; else { _progress = -1; progress = &_progress; }
   if (p_is_cancel) is_cancel = p_is_cancel; else { _is_cancel = false; is_cancel = &_is_cancel; }
@@ -4087,7 +4129,7 @@ template<typename T>
 gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                  CImgList<T>& images, CImgList<char>& images_names,
                  CImgList<T>& parent_images, CImgList<char>& parent_images_names,
-                 unsigned int variables_sizes[256],
+                 const unsigned int *const variables_sizes,
                  bool *const is_noarg) {
   if (!commands_line || position>=commands_line._width) {
     if (is_debug) debug(images,"Return from empty scope '%s/'.",
@@ -4097,26 +4139,37 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
   typedef typename cimg::superset<T,float>::type Tfloat;
   typedef typename cimg::superset<T,long>::type Tlong;
   const unsigned int initial_scope_size = scope.size(), initial_debug_line = debug_line;
-  unsigned int next_debug_line = ~0U, next_debug_filename = ~0U;
+
   CImgList<st_gmic_parallel<T> > threads_data;
+  CImg<unsigned int> ind, ind0, ind1;
+  CImg<char> name;
+  CImg<T> col;
+  unsigned int next_debug_line = ~0U, next_debug_filename = ~0U, __ind = 0, boundary = 0, pattern = 0;
+  char end, sep = 0, sep0 = 0, sep1 = 0, sepx = 0, sepy = 0, sepz = 0, sepc = 0, axis = 0;
+  double vmin = 0, vmax = 0, value, value0, value1, nvalue, nvalue0, nvalue1;
   bool is_endlocal = false;
-  char end;
+  float opacity = 0;
 
   // Allocate string variables, widely used afterwards
   // (prevents stack overflow on recursive calls while remaining thread-safe).
-  CImg<char> _formula(4096), _color(4096), _title(256), _indices(256),
-    _argx(256), _argy(256), _argz(256), _argc(256), _current_command(256);
+  CImg<char> _formula(4096), _color(4096), message(1024), _title(256), _indices(256),
+    _argx(256), _argy(256), _argz(256), _argc(256), _current_command(256),
+    _command(256), _restriction(256), _argument_text(81);
 
   char
-    *const formula = _formula.fill(0).data(),
+    *const formula = _formula.data(),
     *const color = _color.data(),
-    *const title = _title.fill(0).data(),
-    *const indices = _indices.fill(0).data(),
-    *const argx = _argx.fill(0).data(),
-    *const argy = _argy.fill(0).data(),
-    *const argz = _argz.fill(0).data(),
-    *const argc = _argc.fill(0).data(),
-    *const current_command = _current_command.data();
+    *const title = _title.data(),
+    *const indices = _indices.data(),
+    *const argx = _argx.data(),
+    *const argy = _argy.data(),
+    *const argz = _argz.data(),
+    *const argc = _argc.data(),
+    *const current_command = _current_command.data(),
+    *const command = _command.data(),
+    *const restriction = _restriction.data();
+  *formula = *color = *title = *indices = *argx = *argy = *argz = *argc =
+    *current_command = *command = *restriction = 0;
 
   try {
 
@@ -4155,11 +4208,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
       // Check consistency of the interpreter environment.
       if (images_names.size()!=images.size())
-        error("G'MIC encountered a fatal error (Images (%u) and images names (%u) have different size). "
+        error("G'MIC encountered a fatal error (images (%u) and images names (%u) have different size). "
                "Please submit a bug report, at: http://sourceforge.net/p/gmic/bugs/.",
               images_names.size(),images.size());
       if (!scope)
-        error("G'MIC encountered a fatal error (Scope is empty). "
+        error("G'MIC encountered a fatal error (scope is empty). "
               "Please submit a bug report, at: http://sourceforge.net/p/gmic/bugs/.");
       if (scope.size()>64)
         error("Scope overflow (infinite recursion ?).");
@@ -4179,29 +4232,30 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
       }
       if (position_argument<commands_line.size()) initial_argument = commands_line[position_argument];
 
-      CImg<char> _item, _argument, _argument_text;
+      CImg<char> _item, _argument;
       substitute_item(initial_item,images,images_names,parent_images,parent_images_names,
                       variables_sizes).move_to(_item);
       char *item = _item.data();
       const char *argument = initial_argument, *argument_text = initial_argument;
 
       // Split command/restriction, if necessary.
-      CImg<char> _command(256), _restriction(256);
-      char *const command = _command.data(), *const restriction = _restriction.data();
-      *command = *restriction = 0;
+      *command = *restriction = *_argument_text = 0;
 
       bool is_get_version = false, is_restriction = false;
       CImg<unsigned int> selection;
       CImg<char> new_name;
-      if (item[0]=='-' && item[1] && item[1]!='.') {
-        char sep0 = 0, sep1 = 0;
+      if (*item=='-' && item[1] && item[1]!='.') {
+        sep0 = sep1 = 0;
         if (item[1]=='-' && item[2] && item[2]!='[' && (item[2]!='3' || item[3]!='d')) {
           ++item; is_get_version = true;
         }
         gmic_strreplace(item);
         const int err = std::sscanf(item,"%255[^[]%c%255[a-zA-Z_0-9.eE%^,:+-]%c%c",
                                     command,&sep0,restriction,&sep1,&end);
-        if (err==1) selection = CImg<unsigned int>::sequence(images.size(),0,images.size()-1);
+        if (err==1) {
+          selection.assign(1,images.size());
+          cimg_forY(selection,y) selection[y] = (unsigned int)y;
+        }
         else if (err==2 && sep0=='[' && item[std::strlen(command)+1]==']') {
           selection.assign(); is_restriction = true;
         } else if (err==4 && sep1==']') {
@@ -4253,7 +4307,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
       // Check for verbosity command, prior to the first output of a log message.
       bool is_verbose_argument = false;
       const int old_verbosity = verbosity;
-      if (!std::strcmp("-v",item) || !std::strcmp("-verbose",item)) {
+      if ((*item=='-' && item[1]=='v') && (!std::strcmp("-v",item) || !std::strcmp("-verbose",item))) {
         // Do a first fast check.
         if (*argument=='-' && !argument[1]) { --verbosity; is_verbose_argument = true; }
         else if (*argument=='+' && !argument[1]) { ++verbosity; is_verbose_argument = true; }
@@ -4294,7 +4348,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
         // Replace some shortcut names whose three first chars are different than correspondent
         // regular names (not all shortcuts are replaced, but it reduces the number of string
         // comparisons afterwards).
-        char _item[16] = { 0 }, command1 = command[1];
+        CImg<char> _item(16); *_item = 0;
+        char command1 = command[1];
         const char
           command2 = command1?command[2]:0, command3 = command2?command[3]:0,
           command4 = command3?command[4]:0, command5 = command4?command[5]:0;
@@ -4410,8 +4465,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-append",command)) {
             gmic_substitute_args();
             float align = 0;
-            char axis = 0, sep = 0;
-            CImg<unsigned int> ind;
+            axis = sep = 0;
             if ((std::sscanf(argument,"%c%c",
                              &axis,&end)==1 ||
                  std::sscanf(argument,"%c,%f%c",
@@ -4425,7 +4479,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 cimg_forY(selection,l) if (gmic_check(images[selection[l]]))
                   subimages.insert(gmic_check(images[selection[l]]),~0U,true);
                 CImg<T> img = subimages.get_append(axis,align);
-                CImg<char> name = images_names[selection[0]].get_mark();
+                name = images_names[selection[0]];
                 if (is_get_version) {
                   img.move_to(images);
                   images_names.insert(name.copymark());
@@ -4446,9 +4500,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               print(images,0,"Append image [%u] to image%s, along the '%c'-axis, with alignment %g.",
                     *ind,gmic_selection,axis,align);
               const CImg<T> img0 = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],append(img0,axis,align));
-              }
+              cimg_forY(selection,l) gmic_apply(append(img0,axis,align));
             } else arg_error("append");
             is_released = false; ++position; continue;
           }
@@ -4456,24 +4508,23 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Autocrop.
           if (!std::strcmp("-autocrop",command)) {
             gmic_substitute_args();
-            CImg<T> is_arg;
-            if (*argument && std::sscanf(argument,"%4095[0-9.,eE+-]%c",formula,&end)==1)
-              try { CImg<T>(1).fill(argument,true).move_to(is_arg); }
-              catch (CImgException&) { is_arg.assign(); }
-            if (is_arg) {
+            col.assign();
+            if (*argument && std::sscanf(argument,"%4095[0-9.,eEinfa+-]%c",formula,&end)==1)
+              try { CImg<T>(1).fill(argument,true,false).move_to(col); }
+              catch (CImgException&) { col.assign(); }
+            if (col) {
               print(images,0,"Auto-crop image%s by vector '%s'.",
                     gmic_selection,
-                    argument_text);
+                    gmic_argument_text());
               ++position;
             } else print(images,0,"Auto-crop image%s.",
                          gmic_selection);
             cimg_forY(selection,l) {
-              CImg<T>& img = images[selection[l]];
-              if (is_arg) {
-                const CImg<T> col = CImg<T>(img.spectrum()).fill(argument,true);
-                gmic_apply(img,gmic_autocrop(col));
-              }
-              else gmic_apply(img,gmic_autocrop());
+              if (col) {
+                CImg<T>& img = images[selection[l]];
+                col.assign(img.spectrum()).fill(argument,true,false);
+                gmic_apply(gmic_autocrop(col));
+              } else gmic_apply(gmic_autocrop());
             }
             is_released = false; continue;
           }
@@ -4487,15 +4538,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Add image [%d] to image%s",
                                ind[0],gmic_selection,
                                "Add expression %s to image%s",
-                               argument_text,gmic_selection,
+                               gmic_argument_text(),gmic_selection,
                                "Add image%s");
 
           // Add 3d objects together, or shift a 3d object.
           if (!std::strcmp("-add3d",command)) {
             gmic_substitute_args();
             float tx = 0, ty = 0, tz = 0;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            sep = 0;
             if (std::sscanf(argument,"%f%c",
                             &tx,&end)==1 ||
                 std::sscanf(argument,"%f,%f%c",
@@ -4506,15 +4556,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     tx,ty,tz);
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                CImg<T>& img = gmic_check(images[ind]);
-                try { gmic_apply(img,shift_CImg3d(tx,ty,tz)); }
+                const unsigned int uind = selection[l];
+                CImg<T>& img = images[uind];
+                try { gmic_apply(shift_CImg3d(tx,ty,tz)); }
                 catch (CImgException &e) {
-                  CImg<char> message(1024);
-                  if (!img.is_CImg3d(true,message))
+                  if (!img.is_CImg3d(true,&(*message=0)))
                     error(images,0,0,
                           "Command '-add3d': Invalid 3d object [%d], in selected image%s (%s).",
-                          ind,gmic_selection,message.data());
+                          uind,gmic_selection,message.data());
                   else throw e;
                 }
               }
@@ -4535,12 +4584,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 CImg<T> res;
                 try { CImg<T>::append_CImg3d(nimages).move_to(res); }
                 catch (CImgException &e) {
-                  CImg<char> message(1024);
-                  if (!img0.is_CImg3d(true,message))
+                  if (!img0.is_CImg3d(true,&(*message=0)))
                     error(images,0,0,
                           "Command '-add3d': Invalid 3d object [%u], in specified "
                           "argument '%s' (%s).",
-                          *ind,argument_text,message.data());
+                          *ind,gmic_argument_text(),message.data());
                   else if (!img.is_CImg3d(true,message))
                     error(images,0,0,
                           "Command '-add3d': Invalid 3d object [%d], in selected image%s (%s).",
@@ -4549,11 +4597,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 }
                 if (is_get_version) {
                   res.move_to(images);
-                  images_names[_ind].get_mark().copymark().move_to(images_names);
-                } else {
-                  res.move_to(images[_ind].assign());
-                  images_names[_ind].mark();
-                }
+                  images_names[_ind].get_copymark().move_to(images_names);
+                } else res.move_to(images[_ind].assign());
               }
               ++position;
             } else {
@@ -4565,17 +4610,16 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 CImg<T> img;
                 try { CImg<T>::append_CImg3d(subimages).move_to(img); }
                 catch (CImgException &e) {
-                  CImg<char> message(1024);
                   cimg_forY(selection,l) {
-                    const unsigned int ind = selection[l];
-                    if (!images[ind].is_CImg3d(true,message))
+                    const unsigned int uind = selection[l];
+                    if (!images[uind].is_CImg3d(true,&(*message=0)))
                       error(images,0,0,
                             "Command '-add3d': Invalid 3d object [%d], in selected image%s (%s).",
-                            ind,gmic_selection,message.data());
+                            uind,gmic_selection,message.data());
                   }
                   throw e;
                 }
-                CImg<char> name = images_names[selection[0]].get_mark();
+                name = images_names[selection[0]];
                 if (is_get_version) {
                   img.move_to(images);
                   images_names.insert(name.copymark());
@@ -4601,14 +4645,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute bitwise AND of image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Compute bitwise AND of image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute sequential bitwise AND of image%s");
 
           // Arc-tangent (two arguments).
           if (!std::strcmp("-atan2",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind;
-            char sep = 0;
+            sep = 0;
             if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                             indices,&sep,&end)==2 && sep==']' &&
                 (ind=selection2cimg(indices,images.size(),images_names,"-atan2",true,
@@ -4618,9 +4661,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     *ind);
               const CImg<T> img0 = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],atan2(img0));
-              }
+              cimg_forY(selection,l) gmic_apply(atan2(img0));
             } else arg_error("atan2");
             is_released = false; ++position; continue;
           }
@@ -4637,10 +4678,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Draw axes.
           if (!std::strcmp("-axes",command)) {
             gmic_substitute_args();
-            float xmin = 0, xmax = 0, ymin = 0, ymax = 0, opacity = 1, siz = 13;
-            unsigned int pattern = ~0U;
-            char seph = 0;
-            *color = 0;
+            float xmin = 0, xmax = 0, ymin = 0, ymax = 0, siz = 13;
+            sep = *color = 0;
+            pattern = ~0U; opacity = 1;
             if (std::sscanf(argument,"%f,%f%c",
                             &xmin,&xmax,&end)==2 ||
                 std::sscanf(argument,"%f,%f,%f,%f%c",
@@ -4650,14 +4690,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 std::sscanf(argument,"%f,%f,%f,%f,%f,%f%c",
                             &xmin,&xmax,&ymin,&ymax,&siz,&opacity,&end)==6 ||
                 (std::sscanf(argument,"%f,%f,%f,%f,%f,%f,0%c%x%c",
-                             &xmin,&xmax,&ymin,&ymax,&siz,&opacity,&seph,&pattern,&end)==8 &&
-                 seph=='x') ||
-                (std::sscanf(argument,"%f,%f,%f,%f,%f,%f,%4095[0-9.eE,+-]%c",
+                             &xmin,&xmax,&ymin,&ymax,&siz,&opacity,&sep,&pattern,&end)==8 &&
+                 sep=='x') ||
+                (std::sscanf(argument,"%f,%f,%f,%f,%f,%f,%4095[0-9.eEinfa,+-]%c",
                              &xmin,&xmax,&ymin,&ymax,&siz,&opacity,color,&end)==7 &&
                  (bool)(pattern=~0U)) ||
-                (*color=0,std::sscanf(argument,"%f,%f,%f,%f,%f,%f,0%c%x,%4095[0-9.eE,+-]%c",
+                (*color=0,std::sscanf(argument,"%f,%f,%f,%f,%f,%f,0%c%x,%4095[0-9.eEinfa,+-]%c",
                                       &xmin,&xmax,&ymin,&ymax,&siz,&opacity,
-                                      &seph,&pattern,color,&end)==9 && seph=='x')) {
+                                      &sep,&pattern,color,&end)==9 && sep=='x')) {
               siz = cimg::round(siz);
               print(images,0,"Draw xy-axes on image%s, with x-range (%g,%g), y-range (%g,%g), "
                     "font height %g, opacity %g, pattern 0x%x and color (%s).",
@@ -4667,10 +4707,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     siz,opacity,pattern,
                     *color?color:"default");
               cimg_forY(selection,l) {
-                CImg<T> &img = images[selection[l]], col(img.spectrum(),1,1,1,0);
-                col.fill(color,true);
-                gmic_apply(img,draw_axes(xmin,xmax,ymin,ymax,col.data(),opacity,
-                                         -60,-60,0,0,pattern,pattern,(unsigned int)siz));
+                CImg<T> &img = images[selection[l]];
+                col.assign(img.spectrum(),1,1,1,0).fill(color,true);
+                gmic_apply(draw_axes(xmin,xmax,ymin,ymax,col.data(),opacity,
+                                     -60,-60,0,0,pattern,pattern,(unsigned int)siz));
               }
             } else arg_error("axes");
             is_released = false; ++position; continue;
@@ -4686,14 +4726,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Blur.
           if (!std::strcmp("-blur",command)) {
             gmic_substitute_args();
-            unsigned int boundary = 1, is_gaussian = 0;
+            unsigned int is_gaussian = 0;
             float sigma = -1;
-            char sep = *argx = 0;
+            sep = *argx = 0;
+            boundary = 1;
 
             const char *_argument = argument;
             if (std::sscanf(argument,"%255[xyz]%c",argx,&sep)==2 && sep==',') {
               _argument+=1 + std::strlen(argx);
-            } else *argx = sep = 0;
+            } else sep = *argx = 0;
 
             if ((std::sscanf(_argument,"%f%c",
                              &sigma,&end)==1 ||
@@ -4721,13 +4762,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               if (*argx) {
                 float sigmas[3] = { 0 };
                 for (const char *s = argx; *s; ++s) sigmas[*s-'x']+=sigma;
-                cimg_forY(selection,l) {
-                  gmic_apply(images[selection[l]],blur(sigmas[0],sigmas[1],sigmas[2],
-                                                       (bool)boundary,(bool)is_gaussian));
-                }
-              } else cimg_forY(selection,l) {
-                  gmic_apply(images[selection[l]],blur(sigma,(bool)boundary,(bool)is_gaussian));
-                }
+                cimg_forY(selection,l) gmic_apply(blur(sigmas[0],sigmas[1],sigmas[2],(bool)boundary,(bool)is_gaussian));
+              } else cimg_forY(selection,l) gmic_apply(blur(sigma,(bool)boundary,(bool)is_gaussian));
             } else arg_error("blur");
             is_released = false; ++position; continue;
           }
@@ -4741,7 +4777,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute bitwise right shift of image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Compute bitwise right shift of image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute sequential bitwise right shift of image%s");
 
           // Bitwise left shift.
@@ -4753,24 +4789,22 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute bitwise left shift of image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Compute bitwise left shift of image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute sequential bitwise left shift of image%s");
 
           // Bilateral filter.
           if (!std::strcmp("-bilateral",command)) {
             gmic_substitute_args();
             float sigma_s = 0, sigma_r = 0, sampling_s = 0, sampling_r = 0;
-            char sep_s =  0, sep_r = 0;
-            CImg<unsigned int> ind;
-            *argz = *argc = 0;
+            sep0 = sep1 = *argz = *argc = 0;
             if ((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
                              indices,argx,argy,&end)==3 ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%255[0-9.eE%+-],%255[0-9.eE%+-],%f,%f%c",
                              indices,argx,argy,&sampling_s,&sampling_r,&end)==5) &&
                 (std::sscanf(argx,"%f%c",&sigma_s,&end)==1 ||
-                 (std::sscanf(argx,"%f%c%c",&sigma_s,&sep_s,&end)==2 && sep_s=='%')) &&
+                 (std::sscanf(argx,"%f%c%c",&sigma_s,&sep0,&end)==2 && sep0=='%')) &&
                 (std::sscanf(argy,"%f%c",&sigma_r,&end)==1 ||
-                 (std::sscanf(argy,"%f%c%c",&sigma_r,&sep_r,&end)==2 && sep_r=='%')) &&
+                 (std::sscanf(argy,"%f%c%c",&sigma_r,&sep1,&end)==2 && sep1=='%')) &&
                 (ind=selection2cimg(indices,images.size(),images_names,"-bilateral",true,
                                     false,CImg<char>::empty())).height()==1 &&
                 sigma_s>=0 && sigma_r>=0 && sampling_s>=0 && sampling_r>=0) {
@@ -4778,36 +4812,32 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     " standard deviations (%g%s,%g%s) and sampling (%g,%g).",
                     gmic_selection,
                     *ind,
-                    sigma_s,sep_s=='%'?"%":"",
-                    sigma_r,sep_r=='%'?"%":"",
+                    sigma_s,sep0=='%'?"%":"",
+                    sigma_r,sep1=='%'?"%":"",
                     sampling_s,sampling_r);
               const CImg<T> guide = gmic_image_arg(*ind);
-              if (sep_s=='%') sigma_s = -sigma_s;
-              if (sep_r=='%') sigma_r = -sigma_r;
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],blur_bilateral(guide,sigma_s,sigma_r,sampling_s,sampling_r));
-              }
+              if (sep0=='%') sigma_s = -sigma_s;
+              if (sep1=='%') sigma_r = -sigma_r;
+              cimg_forY(selection,l) gmic_apply(blur_bilateral(guide,sigma_s,sigma_r,sampling_s,sampling_r));
             } else if ((std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
                                     argx,argy,&end)==2 ||
                         std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%f,%f%c",
                                     argx,argy,&sampling_s,&sampling_r,&end)==4) &&
                        (std::sscanf(argx,"%f%c",&sigma_s,&end)==1 ||
-                        (std::sscanf(argx,"%f%c%c",&sigma_s,&sep_s,&end)==2 && sep_s=='%')) &&
+                        (std::sscanf(argx,"%f%c%c",&sigma_s,&sep0,&end)==2 && sep0=='%')) &&
                        (std::sscanf(argy,"%f%c",&sigma_r,&end)==1 ||
-                        (std::sscanf(argy,"%f%c%c",&sigma_r,&sep_r,&end)==2 && sep_r=='%')) &&
+                        (std::sscanf(argy,"%f%c%c",&sigma_r,&sep1,&end)==2 && sep1=='%')) &&
                        sigma_s>=0 && sigma_r>=0 && sampling_s>=0 && sampling_r>=0) {
               print(images,0,"Apply bilateral filter on image%s, with standard deviations (%g%s,%g%s) and "
                     "sampling (%g,%g).",
                     gmic_selection,
-                    sigma_s,sep_s=='%'?"%":"",
-                    sigma_r,sep_r=='%'?"%":"",
+                    sigma_s,sep0=='%'?"%":"",
+                    sigma_r,sep1=='%'?"%":"",
                     sampling_s,sampling_r);
-              if (sep_s=='%') sigma_s = -sigma_s;
-              if (sep_r=='%') sigma_r = -sigma_r;
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],
-                           blur_bilateral(images[selection[l]],sigma_s,sigma_r,sampling_s,sampling_r));
-              }
+              if (sep0=='%') sigma_s = -sigma_s;
+              if (sep1=='%') sigma_r = -sigma_r;
+              cimg_forY(selection,l)
+                gmic_apply(blur_bilateral(images[selection[l]],sigma_s,sigma_r,sampling_s,sampling_r));
             } else arg_error("bilateral");
             is_released = false; ++position; continue;
           }
@@ -4822,19 +4852,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Check expression or filename.
           if (!std::strcmp("-check",item)) {
             gmic_substitute_args();
-            CImg<char> arg_check(argument,std::strlen(argument)+1);
-            gmic_strreplace(arg_check);
+            name.assign(argument,(unsigned int)std::strlen(argument) + 1);
+            gmic_strreplace(name);
             bool is_cond = false, is_filename = false;
             const CImg<T> &img = images.size()?images.back():CImg<T>::empty();
-            try { if (img.eval(arg_check)) is_cond = true; }
+            try { if (img.eval(name)) is_cond = true; }
             catch (CImgException&) {
               is_filename = true;
-              is_cond = gmic_check_filename(arg_check);
+              is_cond = gmic_check_filename(name);
             }
             if (verbosity>0 || is_debug) {
               print(images,0,"Check %s '%s' -> %s.",
                     is_filename?"file":"expression",
-                    argument_text,
+                    gmic_argument_text(),
                     is_filename?(is_cond?"found":"not found"):(is_cond?"true":"false"));
             }
             if (!is_cond) {
@@ -4842,12 +4872,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 error(images,0,scope.back().data(),
                       "Command '-check': %s '%s' %s.",
                       is_filename?"file":"expression",
-                      argument_text,
+                      gmic_argument_text(),
                       is_filename?"does not exist":"is false");
               else error(images,0,0,
                          "Command '-check': %s '%s' %s.",
                          is_filename?"file":"expression",
-                         argument_text,
+                         gmic_argument_text(),
                          is_filename?"does not exist":"is false");
             }
             ++position; continue;
@@ -4857,10 +4887,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-crop",command)) {
             gmic_substitute_args();
             CImg<char> st0(64), st1(64), st2(64), st3(64), st4(64), st5(64), st6(64), st7(64);
-            char sep0 = 0, sep1 = 0, sep2 = 0, sep3 = 0, sep4 = 0, sep5 = 0, sep6 = 0, sep7 = 0;
+            char sep2 = sep0 = sep1 = 0, sep3 = 0, sep4 = 0, sep5 = 0, sep6 = 0, sep7 = 0;
             float a0 = 0, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0;
             *st0 = *st1 = *st2 = *st3 = *st4 = *st5 = *st6 = *st7 = 0;
-            unsigned int boundary = 0;
+            boundary = 0;
             if ((boundary=0,std::sscanf(argument,"%63[0-9.eE%+-],%63[0-9.eE%+-]%c",
                                         st0.data(),
                                         st1.data(),&end)==2 ||
@@ -4883,7 +4913,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 const int
                   x0 = (int)cimg::round(sep0=='%'?a0*(img.width()-1)/100:a0),
                   x1 = (int)cimg::round(sep1=='%'?a1*(img.width()-1)/100:a1);
-                gmic_apply(img,crop(x0,x1,(bool)boundary));
+                gmic_apply(crop(x0,x1,(bool)boundary));
               }
               ++position;
             } else if ((boundary=0,std::sscanf(argument,
@@ -4921,7 +4951,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   y0 = (int)cimg::round(sep1=='%'?a1*(img.height()-1)/100:a1),
                   x1 = (int)cimg::round(sep2=='%'?a2*(img.width()-1)/100:a2),
                   y1 = (int)cimg::round(sep3=='%'?a3*(img.height()-1)/100:a3);
-                gmic_apply(img,crop(x0,y0,x1,y1,(bool)boundary));
+                gmic_apply(crop(x0,y0,x1,y1,(bool)boundary));
               }
               ++position;
             } else if ((boundary=0,std::sscanf(argument,
@@ -4965,7 +4995,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   x1 = (int)cimg::round(sep3=='%'?a3*(img.width()-1)/100:a3),
                   y1 = (int)cimg::round(sep4=='%'?a4*(img.height()-1)/100:a4),
                   z1 = (int)cimg::round(sep5=='%'?a5*(img.depth()-1)/100:a5);
-                gmic_apply(img,crop(x0,y0,z0,x1,y1,z1,(bool)boundary));
+                gmic_apply(crop(x0,y0,z0,x1,y1,z1,(bool)boundary));
               }
               ++position;
             } else if ((boundary=0,std::sscanf(argument,
@@ -5020,7 +5050,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   y1 = (int)cimg::round(sep5=='%'?a5*(img.height()-1)/100:a5),
                   z1 = (int)cimg::round(sep6=='%'?a6*(img.depth()-1)/100:a6),
                   v1 = (int)cimg::round(sep7=='%'?a7*(img.spectrum()-1)/100:a7);
-                gmic_apply(img,crop(x0,y0,z0,v0,x1,y1,z1,v1,(bool)boundary));
+                gmic_apply(crop(x0,y0,z0,v0,x1,y1,z1,v1,(bool)boundary));
               }
               ++position;
             } else {
@@ -5049,7 +5079,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                         selection[l],
                         s[0],s[1],s[2],
                         s[3],s[4],s[5]);
-                  gmic_apply(img,crop(s[0],s[1],s[2],s[3],s[4],s[5]));
+                  gmic_apply(crop(s[0],s[1],s[2],s[3],s[4],s[5]));
                 }
               }
 #endif // #if cimg_display==0
@@ -5060,10 +5090,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Cut.
           if (!std::strcmp("-cut",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind0, ind1;
-            double value0 = 0, value1 = 0;
-            char sep0 = 0, sep1 = 0;
-            *argx = *argy = 0;
+            ind0.assign(); ind1.assign();
+            sep0 = sep1 = *argx = *argy = 0;
+            value0 = value1 = 0;
             if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-],%255[][a-zA-Z0-9_.eE%+-]%c",
                             argx,argy,&end)==2 &&
                 ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep0,&end)==2 &&
@@ -5085,14 +5114,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     value0,sep0=='%'?"%":"",
                     value1,sep1=='%'?"%":"");
               cimg_forY(selection,l) {
-                CImg<T> &img = gmic_check(images[selection[l]]);
-                double vmin = 0, vmax = 0, nvalue0 = value0, nvalue1 = value1;
+                CImg<T> &img = images[selection[l]];
+                nvalue0 = value0; nvalue1 = value1;
+                vmin = vmax = 0;
                 if (sep0=='%' || sep1=='%') {
                   if (img) vmax = (double)img.max_min(vmin);
                   if (sep0=='%') nvalue0 = vmin + (vmax-vmin)*value0/100;
                   if (sep1=='%') nvalue1 = vmin + (vmax-vmin)*value1/100;
                 }
-                gmic_apply(img,cut((T)nvalue0,(T)nvalue1));
+                gmic_apply(cut((T)nvalue0,(T)nvalue1));
               }
               ++position;
             } else if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep0,&end)==2 &&
@@ -5104,9 +5134,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     value0,
                     value1);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],cut((T)value0,(T)value1));
-              }
+              cimg_forY(selection,l) gmic_apply(cut((T)value0,(T)value1));
               ++position;
             } else {
 #if cimg_display==0
@@ -5136,8 +5164,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       w = CImgDisplay::_fitscreen(visu.width(),visu.height(),1,256,-85,false),
                       h = CImgDisplay::_fitscreen(visu.width(),visu.height(),1,256,-85,true);
                     if (disp) disp.resize(w,h,false); else disp.assign(w,h,0,0);
-                    double vmin = 0, vmax = (double)img.max_min(vmin),
-                      percent0 = 0, percent1 = 100;
+                    double percent0 = 0, percent1 = 100;
+                    vmin = 0, vmax = (double)img.max_min(vmin);
                     bool stopflag = false, is_clicked = false;
                     int omx = -1, omy = -1;
                     CImg<unsigned char> res;
@@ -5186,9 +5214,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                           (double)(vmin + percent0*(vmax-vmin)/100),
                           (double)(vmin + percent1*(vmax-vmin)/100),
                           percent0,percent1);
-                    gmic_apply(img,cut((T)(vmin + percent0*(vmax-vmin)/100),
-                                       (T)(vmin + percent1*(vmax-vmin)/100)));
-                  } else { gmic_apply(img,replace(img)); }
+                    gmic_apply(cut((T)(vmin + percent0*(vmax-vmin)/100),(T)(vmin + percent1*(vmax-vmin)/100)));
+                  } else gmic_apply(replace(img));
                 }
               }
 #endif // #if cimg_display==0
@@ -5199,27 +5226,25 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Keep channels.
           if (!std::strcmp("-channels",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind0, ind1;
-            float value0 = 0, value1 = 0;
-            char sep0 = 0, sep1 = 0;
-            *argx = *argy = 0;
+            ind0.assign(); ind1.assign();
+            value0 = value1 = 0;
+            sep0 = sep1 = *argx = *argy = 0;
             if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-]%c",
                             argx,&end)==1 &&
                 ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c]",indices,&sep0,&end)==2 &&
                   sep0==']' &&
                   (ind0=selection2cimg(indices,images.size(),images_names,"-channels",true,
                                        false,CImg<char>::empty())).height()==1) ||
-                 std::sscanf(argx,"%f%c",&value0,&end)==1 ||
-                 (std::sscanf(argx,"%f%c%c",&value0,&sep0,&end)==2 && sep0=='%'))) {
-              if (ind0) { value0 = images[*ind0].spectrum() - 1.0f; sep0 = 0; }
+                 std::sscanf(argx,"%lf%c",&value0,&end)==1 ||
+                 (std::sscanf(argx,"%lf%c%c",&value0,&sep0,&end)==2 && sep0=='%'))) {
+              if (ind0) { value0 = images[*ind0].spectrum() - 1.; sep0 = 0; }
               print(images,0,"Keep channel %g%s of image%s.",
                     value0,sep0=='%'?"%":"",
                     gmic_selection);
               cimg_forY(selection,l) {
                 CImg<T> &img = images[selection[l]];
-                const int
-                  nvalue0 = (int)cimg::round(sep0=='%'?value0*(img.spectrum()-1)/100:value0);
-                gmic_apply(img,channel(nvalue0));
+                nvalue0 = cimg::round(sep0=='%'?value0*(img.spectrum()-1)/100:value0);
+                gmic_apply(channel((int)nvalue0));
               }
             } else if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-],%255[][a-zA-Z0-9_.eE%+-]%c",
                                    argx,argy,&end)==2 &&
@@ -5227,26 +5252,25 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                          sep0==']' &&
                          (ind0=selection2cimg(indices,images.size(),images_names,"-channels",true,
                                               false,CImg<char>::empty())).height()==1) ||
-                        std::sscanf(argx,"%f%c",&value0,&end)==1 ||
-                        (std::sscanf(argx,"%f%c%c",&value0,&sep0,&end)==2 && sep0=='%')) &&
+                        std::sscanf(argx,"%lf%c",&value0,&end)==1 ||
+                        (std::sscanf(argx,"%lf%c%c",&value0,&sep0,&end)==2 && sep0=='%')) &&
                        ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c",formula,&sep0,&end)==2 &&
                          sep0==']' &&
                          (ind1=selection2cimg(formula,images.size(),images_names,"-channels",true,
                                               false,CImg<char>::empty())).height()==1) ||
-                        std::sscanf(argy,"%f%c",&value1,&end)==1 ||
-                        (std::sscanf(argy,"%f%c%c",&value1,&sep1,&end)==2 && sep1=='%'))) {
-              if (ind0) { value0 = images[*ind0].spectrum() - 1.0f; sep0 = 0; }
-              if (ind1) { value1 = images[*ind1].spectrum() - 1.0f; sep1 = 0; }
-              print(images,0,"Keep channels %g%s..%g%s of image%s.",
+                        std::sscanf(argy,"%lf%c",&value1,&end)==1 ||
+                        (std::sscanf(argy,"%lf%c%c",&value1,&sep1,&end)==2 && sep1=='%'))) {
+              if (ind0) { value0 = images[*ind0].spectrum() - 1.; sep0 = 0; }
+              if (ind1) { value1 = images[*ind1].spectrum() - 1.; sep1 = 0; }
+              print(images,0,"Keep channels %g%s...%g%s of image%s.",
                     value0,sep0=='%'?"%":"",
                     value1,sep1=='%'?"%":"",
                     gmic_selection);
               cimg_forY(selection,l) {
                 CImg<T> &img = images[selection[l]];
-                const int
-                  nvalue0 = (int)cimg::round(sep0=='%'?value0*(img.spectrum()-1)/100:value0),
-                  nvalue1 = (int)cimg::round(sep1=='%'?value1*(img.spectrum()-1)/100:value1);
-                gmic_apply(img,channels(nvalue0,nvalue1));
+                nvalue0 = cimg::round(sep0=='%'?value0*(img.spectrum()-1)/100:value0);
+                nvalue1 = cimg::round(sep1=='%'?value1*(img.spectrum()-1)/100:value1);
+                gmic_apply(channels((int)nvalue0,(int)nvalue1));
               }
             } else arg_error("channels");
             is_released = false; ++position; continue;
@@ -5255,26 +5279,25 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Keep columns.
           if (!std::strcmp("-columns",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind0, ind1;
-            float value0 = 0, value1 = 0;
-            char sep0 = 0, sep1 = 0;
-            *argx = *argy = 0;
+            ind0.assign(); ind1.assign();
+            value0 = value1 = 0;
+            sep0 = sep1 = *argx = *argy = 0;
             if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-]%c",
                             argx,&end)==1 &&
                 ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c]",indices,&sep0,&end)==2 &&
                   sep0==']' &&
                   (ind0=selection2cimg(indices,images.size(),images_names,"-columns",true,
                                        false,CImg<char>::empty())).height()==1) ||
-                 std::sscanf(argx,"%f%c",&value0,&end)==1 ||
-                 (std::sscanf(argx,"%f%c%c",&value0,&sep0,&end)==2 && sep0=='%'))) {
-              if (ind0) { value0 = images[*ind0].width() - 1.0f; sep0 = 0; }
+                 std::sscanf(argx,"%lf%c",&value0,&end)==1 ||
+                 (std::sscanf(argx,"%lf%c%c",&value0,&sep0,&end)==2 && sep0=='%'))) {
+              if (ind0) { value0 = images[*ind0].width() - 1.; sep0 = 0; }
               print(images,0,"Keep column %g%s of image%s.",
                     value0,sep0=='%'?"%":"",
                     gmic_selection);
               cimg_forY(selection,l) {
                 CImg<T> &img = images[selection[l]];
-                const int nvalue0 = (int)cimg::round(sep0=='%'?value0*(img.width()-1)/100:value0);
-                gmic_apply(img,column(nvalue0));
+                nvalue0 = cimg::round(sep0=='%'?value0*(img.width()-1)/100:value0);
+                gmic_apply(column((int)nvalue0));
               }
             } else if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-],%255[][a-zA-Z0-9_.eE%+-]%c",
                                    argx,argy,&end)==2 &&
@@ -5282,26 +5305,25 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                          sep0==']' &&
                          (ind0=selection2cimg(indices,images.size(),images_names,"-columns",true,
                                               false,CImg<char>::empty())).height()==1) ||
-                        std::sscanf(argx,"%f%c",&value0,&end)==1 ||
-                        (std::sscanf(argx,"%f%c%c",&value0,&sep0,&end)==2 && sep0=='%')) &&
+                        std::sscanf(argx,"%lf%c",&value0,&end)==1 ||
+                        (std::sscanf(argx,"%lf%c%c",&value0,&sep0,&end)==2 && sep0=='%')) &&
                        ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c",formula,&sep0,&end)==2 &&
                          sep0==']' &&
                          (ind1=selection2cimg(formula,images.size(),images_names,"-columns",true,
                                               false,CImg<char>::empty())).height()==1) ||
-                        std::sscanf(argy,"%f%c",&value1,&end)==1 ||
-                        (std::sscanf(argy,"%f%c%c",&value1,&sep1,&end)==2 && sep1=='%'))) {
-              if (ind0) { value0 = images[*ind0].width() - 1.0f; sep0 = 0; }
-              if (ind1) { value1 = images[*ind1].width() - 1.0f; sep1 = 0; }
-              print(images,0,"Keep columns %g%s..%g%s of image%s.",
+                        std::sscanf(argy,"%lf%c",&value1,&end)==1 ||
+                        (std::sscanf(argy,"%lf%c%c",&value1,&sep1,&end)==2 && sep1=='%'))) {
+              if (ind0) { value0 = images[*ind0].width() - 1.; sep0 = 0; }
+              if (ind1) { value1 = images[*ind1].width() - 1.; sep1 = 0; }
+              print(images,0,"Keep columns %g%s...%g%s of image%s.",
                     value0,sep0=='%'?"%":"",
                     value1,sep1=='%'?"%":"",
                     gmic_selection);
               cimg_forY(selection,l) {
                 CImg<T> &img = images[selection[l]];
-                const int
-                  nvalue0 = (int)cimg::round(sep0=='%'?value0*(img.width()-1)/100:value0),
-                  nvalue1 = (int)cimg::round(sep1=='%'?value1*(img.width()-1)/100:value1);
-                gmic_apply(img,columns(nvalue0,nvalue1));
+                nvalue0 = cimg::round(sep0=='%'?value0*(img.width()-1)/100:value0);
+                nvalue1 = cimg::round(sep1=='%'?value1*(img.width()-1)/100:value1);
+                gmic_apply(columns((int)nvalue0,(int)nvalue1));
               }
             } else arg_error("columns");
             is_released = false; ++position; continue;
@@ -5310,9 +5332,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Import custom commands.
           if (!std::strcmp("-command",item)) {
             gmic_substitute_args();
-            CImg<char> _arg_command(argument,std::strlen(argument)+1);
-            const char *arg_command_text = argument_text;
-            char *arg_command = _arg_command;
+            name.assign(argument,(unsigned int)std::strlen(argument) + 1);
+            const char *arg_command_text = gmic_argument_text();
+            char *arg_command = name;
             gmic_strreplace(arg_command);
 
             unsigned int siz = 0;
@@ -5336,9 +5358,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               print(images,0,"Import custom commands from URL '%s'%s",
                     arg_command_text,
                     !add_debug_infos?" without debug infos":"");
-              CImg<char> filename_tmp(1024);
+              CImg<char> filename_tmp(256);
               try {
-                file = std::fopen(cimg::load_network_external(arg_command,filename_tmp),"r");
+                file = std::fopen(cimg::load_network(arg_command,filename_tmp),"r");
               } catch (...) {
                 file = 0;
               }
@@ -5360,9 +5382,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               unsigned int nb_added = 0;
               for (unsigned int l = 0; l<256; ++l) nb_added+=commands[l].size();
               nb_added-=siz;
+              cimg::mutex(29);
               std::fprintf(cimg::output()," (added %u command%s, total %u).",
                            nb_added,nb_added>1?"s":"",siz+nb_added);
               std::fflush(cimg::output());
+              cimg::mutex(29,0);
             }
             ++position; continue;
           }
@@ -5380,22 +5404,25 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     is_full_check?"full":"fast");
             cimg_forY(selection,l) {
-              const unsigned int ind = selection[l];
-              CImg<T>& img = gmic_check(images[ind]);
-              CImg<char> message(1024);
-              if (!img.is_CImg3d(is_full_check,message)) {
+              const unsigned int uind = selection[l];
+              CImg<T>& img = gmic_check(images[uind]);
+              if (!img.is_CImg3d(is_full_check,&(*message=0))) {
                 if (verbosity>0 || is_debug) {
+                  cimg::mutex(29);
                   std::fprintf(cimg::output()," -> invalid.");
                   std::fflush(cimg::output());
+                  cimg::mutex(29,0);
                 }
                 error(images,0,0,
                       "Command '-check3d': Invalid 3d object [%d], in selected image%s (%s).",
-                      ind,gmic_selection,message.data());
+                      uind,gmic_selection,message.data());
               }
             }
             if (verbosity>0 || is_debug) {
+              cimg::mutex(29);
               std::fprintf(cimg::output()," -> valid.");
               std::fflush(cimg::output());
+              cimg::mutex(29,0);
             }
             continue;
           }
@@ -5406,9 +5433,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Convolve.
           if (!std::strcmp("-convolve",command)) {
             gmic_substitute_args();
-            unsigned int boundary = 1, is_normalized = 0;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            unsigned int is_normalized = 0;
+            boundary = 1;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u%c",
@@ -5426,9 +5453,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     boundary?"neumann":"dirichlet",
                     is_normalized?"":"out");
               const CImg<T> mask = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],convolve(mask,boundary,(bool)is_normalized));
-              }
+              cimg_forY(selection,l) gmic_apply(convolve(mask,boundary,(bool)is_normalized));
             } else arg_error("convolve");
             is_released = false; ++position; continue;
           }
@@ -5436,9 +5461,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Correlate.
           if (!std::strcmp("-correlate",command)) {
             gmic_substitute_args();
-            unsigned int boundary = 1, is_normalized = 0;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            unsigned int is_normalized = 0;
+            boundary = 1;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u%c",
@@ -5456,9 +5481,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     boundary?"neumann":"dirichlet",
                     is_normalized?"":"out");
               const CImg<T> mask = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],correlate(mask,boundary,(bool)is_normalized));
-              }
+              cimg_forY(selection,l) gmic_apply(correlate(mask,boundary,(bool)is_normalized));
             } else arg_error("correlate");
             is_released = false; ++position; continue;
           }
@@ -5466,7 +5489,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Set 3d object color.
           if (!std::strcmp("-color3d",command) || !std::strcmp("-col3d",command)) {
             gmic_substitute_args();
-            float R = 200, G = 200, B = 200, opacity = -1;
+            float R = 200, G = 200, B = 200;
+            opacity = -1;
             if ((std::sscanf(argument,"%f%c",
                              &R,&end)==1 && ((B=G=R),1)) ||
                 (std::sscanf(argument,"%f,%f%c",
@@ -5486,16 +5510,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       gmic_selection,
                       R,G,B);
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                CImg<T>& img = gmic_check(images[ind]);
-                try { gmic_apply(img,color_CImg3d(R,G,B,opacity,true,set_opacity)); }
+                const unsigned int uind = selection[l];
+                CImg<T>& img = gmic_check(images[uind]);
+                try { gmic_apply(color_CImg3d(R,G,B,opacity,true,set_opacity)); }
                 catch (CImgException &e) {
-                  CImg<char> message(1024);
-                  if (!img.is_CImg3d(true,message))
+                  if (!img.is_CImg3d(true,&(*message=0)))
                     error(images,0,0,
                           "Command '-color3d': Invalid 3d object [%d], "
                           "in selected image%s (%s).",
-                          ind,gmic_selection,message.data());
+                          uind,gmic_selection,message.data());
                   else throw e;
                 }
               }
@@ -5514,18 +5537,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             if (*argument && is_axes_argument) {
               print(images,0,"Cumulate values of image%s along the '%s'-ax%cs.",
                     gmic_selection,
-                    argument_text,
+                    gmic_argument_text(),
                     std::strlen(argument)>1?'e':'i');
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],cumulate(argument));
-              }
+              cimg_forY(selection,l) gmic_apply(cumulate(argument));
               ++position;
             } else {
               print(images,0,"Cumulate values of image%s.",
                     gmic_selection);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],cumulate());
-              }
+              cimg_forY(selection,l) gmic_apply(cumulate());
             }
             is_released = false; continue;
           }
@@ -5570,14 +5589,18 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               cimg_snprintf(title,_title.size(),"[Camera #%g]",cam_index);
               const CImg<char> _title = CImg<char>::string(title);
               if (nb_frames>1) {
+                cimg::mutex(29);
                 std::fputc('\n',cimg::output());
                 std::fflush(cimg::output());
+                cimg::mutex(29,0);
               }
               for (unsigned int k = 0; k<(unsigned int)nb_frames; ++k) {
                 if (nb_frames>1 && (verbosity>=0 || is_debug)) {
+                  cimg::mutex(29);
                   std::fprintf(cimg::output(),"\r  > Image %u/%u        ",
                                k+1,(unsigned int)nb_frames);
                   std::fflush(cimg::output());
+                  cimg::mutex(29,0);
                 }
                 CImg<T>::get_load_camera((unsigned int)cam_index,(unsigned int)skip_frames,false,
                                          (unsigned int)capture_width,(unsigned int)capture_height).
@@ -5593,29 +5616,29 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             if (!is_restriction)
               CImg<unsigned int>::vector(0,1,2,3,4,5,6,7,8,9).move_to(selection);
-            bool value = true;
+            bool state = true;
             if (!argument[1] && (*argument=='0' || *argument=='1')) {
-              value = (*argument=='1'); ++position;
-            } else value = true;
+              state = (*argument=='1'); ++position;
+            } else state = true;
 
 #if cimg_display==0
             print(images,0,"%s mouse cursor for instant window%s (skipped, no display support).",
-                  value?"Show":"Hide",
+                  state?"Show":"Hide",
                   gmic_selection);
 #else // #if cimg_display==0
             try {
-              if (value) cimg_forY(selection,l) {
+              if (state) cimg_forY(selection,l) {
                   if (!instant_window[l].is_closed()) instant_window[selection[l]].show_mouse();
                 }
               else cimg_forY(selection,l) {
                   if (!instant_window[l].is_closed()) instant_window[selection[l]].hide_mouse();
                 }
               print(images,0,"%s mouse cursor for instant window%s.",
-                    value?"Show":"Hide",
+                    state?"Show":"Hide",
                     gmic_selection);
             } catch (CImgDisplayException&) {
               print(images,0,"%s mouse cursor for instant window%s (skipped, no display available).",
-                    value?"Show":"Hide",
+                    state?"Show":"Hide",
                     gmic_selection);
             }
 #endif // #if cimg_display==0
@@ -5658,7 +5681,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Discard value.
           if (!std::strcmp("-discard",command)) {
             gmic_substitute_args();
-            _argx.fill(0);
+            CImg<T> values;
+            *argx = 0;
 
             if (std::sscanf(argument,"%255[xyzc]%c",argx,&end)==1) {
 
@@ -5667,53 +5691,40 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     argx,
                     std::strlen(argx)>1?'e':'i',
                     gmic_selection);
-              cimg_forY(selection,l)
-                for (const char *axis = argx; *axis; ++axis) {
-                  gmic_apply(images[selection[l]],discard(*axis));
-                }
+              cimg_forY(selection,l) gmic_apply(gmic_discard(argx));
               ++position;
 
             } else if (std::sscanf(argument,"%255[xyzc]%c",argx,&end)==2 && end==',') {
 
               // Discard sequence of values along axes.
-              unsigned int nb_values = 1, s_argx = std::strlen(argx) + 1;
+              unsigned int nb_values = 1, s_argx = (unsigned int)std::strlen(argx) + 1;
               for (const char *s = argument + s_argx; *s; ++s) if (*s==',') ++nb_values;
-              CImg<T> values;
-              try { values.assign(nb_values,1,1,1,argument + s_argx,true); }
+              try { values.assign(nb_values,1,1,1).fill(argument + s_argx,true,false); }
               catch (CImgException&) { arg_error("discard"); }
               print(images,0,"Discard sequence of values '%s' along '%s'-ax%cs, in image%s.",
-                    argument_text + s_argx,
+                    gmic_argument_text() + s_argx,
                     argx,
                     std::strlen(argx)>1?'e':'i',
                     gmic_selection);
-              cimg_forY(selection,l)
-                for (const char *axis = argx; *axis; ++axis) {
-                  gmic_apply(images[selection[l]],discard(values,*axis));
-                }
+              cimg_forY(selection,l) gmic_apply(gmic_discard(values,argx));
               ++position;
 
             } else { // Discard sequence of values or neighboring duplicate values.
-
-              unsigned int nb_values = *argument!=0;
+              unsigned int nb_values = *argument?1U:0U;
               for (const char *s = argument; *s; ++s) if (*s==',') ++nb_values;
-              CImg<T> values;
-              try { values.assign(nb_values,1,1,1,argument,true); }
+              try { values.assign(nb_values,1,1,1).fill(argument,true,false); }
               catch (CImgException&) { values.assign(); }
               if (values) {
                 print(images,0,"Discard sequence of values '%s' in image%s.",
-                      argument_text,
+                      gmic_argument_text(),
                       gmic_selection);
-                cimg_forY(selection,l) {
-                  gmic_apply(images[selection[l]],discard(values,0));
-                }
+                cimg_forY(selection,l) gmic_apply(discard(values));
                 ++position;
 
               } else {
                 print(images,0,"Discard neighboring duplicate values in image%s.",
                       gmic_selection);
-                cimg_forY(selection,l) {
-                  gmic_apply(images[selection[l]],discard());
-                }
+                cimg_forY(selection,l) gmic_apply(discard());
               }
             }
             is_released = false; continue;
@@ -5734,50 +5745,49 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Divide image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Divide image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Divide image%s");
 
           // Distance function.
           if (!std::strcmp("-distance",command)) {
             gmic_substitute_args();
             unsigned int algorithm = 0, off = 0;
-            char sep1 = 0, sep2 = 0;
-            CImg<unsigned int> ind;
-            double value = 0;
             int metric = 2;
+            sep0 = sep1 = 0;
+            value = 0;
             if ((std::sscanf(argument,"%lf%c",
                              &value,&end)==1 ||
                  (std::sscanf(argument,"%lf%c%c",
-                              &value,&sep1,&end)==2 && sep1=='%') ||
+                              &value,&sep0,&end)==2 && sep0=='%') ||
                  std::sscanf(argument,"%lf,%d%c",
                              &value,&metric,&end)==2 ||
                  (std::sscanf(argument,"%lf%c,%d%c",
-                              &value,&sep1,&metric,&end)==3 && sep1=='%')) &&
+                              &value,&sep0,&metric,&end)==3 && sep0=='%')) &&
                 metric>=0 && metric<=3) {
               print(images,0,"Compute distance map to isovalue %g%s in image%s, "
                     "with %s metric.",
-                    value,sep1=='%'?"%":"",
+                    value,sep0=='%'?"%":"",
                     gmic_selection,
                     metric==0?"chebyshev":metric==1?"manhattan":metric==2?"euclidean":
                     "squared-euclidean");
               cimg_forY(selection,l) {
                 CImg<T> &img = gmic_check(images[selection[l]]);
-                double nvalue = value;
-                if (sep1=='%' && img) {
-                  double vmin, vmax = (double)img.max_min(vmin);
+                nvalue = value;
+                if (sep0=='%' && img) {
+                  vmax = (double)img.max_min(vmin);
                   nvalue = vmin + value*(vmax-vmin)/100;
                 }
-                gmic_apply(img,distance((T)nvalue,metric));
+                gmic_apply(distance((T)nvalue,metric));
               }
             } else if ((((std::sscanf(argument,"%lf,[%255[a-zA-Z0-9_.%+-]%c%c",
-                                      &value,indices,&sep2,&end)==3 ||
+                                      &value,indices,&sep1,&end)==3 ||
                           (std::sscanf(argument,"%lf%c,[%255[a-zA-Z0-9_.%+-]%c%c",
-                                       &value,&sep1,indices,&sep2,&end)==4 && sep1=='%')) &&
-                         sep2==']') ||
+                                       &value,&sep0,indices,&sep1,&end)==4 && sep0=='%')) &&
+                         sep1==']') ||
                         ((std::sscanf(argument,"%lf,[%255[a-zA-Z0-9_.%+-]],%u%c",
                                      &value,indices,&algorithm,&end)==3 ||
                           (std::sscanf(argument,"%lf%c,[%255[a-zA-Z0-9_.%+-]],%u%c",
-                                       &value,&sep1,indices,&algorithm,&end)==4 && sep1=='%')) &&
+                                       &value,&sep0,indices,&algorithm,&end)==4 && sep0=='%')) &&
                          algorithm<=4)) &&
                        (ind=selection2cimg(indices,images.size(),images_names,"-distance",true,
                                            false,CImg<char>::empty())).height()==1) {
@@ -5785,7 +5795,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     "using %s algorithm, with metric [%u].",
                     selection.height()>1?(algorithm>=3?"s and return paths":"s"):
                     (algorithm>=3?" and return path":""),
-                    value,sep1=='%'?"%":"",
+                    value,sep0=='%'?"%":"",
                     gmic_selection,
                     algorithm==0?"fast-marching":algorithm==1||algorithm==3?
                     "low-connectivity dijkstra":"high-connectivity dijkstra",
@@ -5793,23 +5803,23 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               const CImg<T> custom_metric = gmic_image_arg(*ind);
               if (algorithm<3) cimg_forY(selection,l) {
                   CImg<T> &img = gmic_check(images[selection[l]]);
-                  double nvalue = value;
-                  if (sep1=='%' && img) {
-                    double vmin, vmax = (double)img.max_min(vmin);
+                  nvalue = value;
+                  if (sep0=='%' && img) {
+                    vmax = (double)img.max_min(vmin);
                     nvalue = vmin + value*(vmax-vmin)/100;
                   }
-                  if (!algorithm) { gmic_apply(img,distance_eikonal((T)nvalue,custom_metric)); }
-                  else { gmic_apply(img,distance_dijkstra((T)nvalue,custom_metric,algorithm==2)); }
+                  if (!algorithm) { gmic_apply(distance_eikonal((T)nvalue,custom_metric)); }
+                  else gmic_apply(distance_dijkstra((T)nvalue,custom_metric,algorithm==2));
                 }
               else cimg_forY(selection,l) {
-                  const unsigned int ind = selection[l] + off;
-                  CImg<T>& img = gmic_check(images[ind]);
-                  double nvalue = value;
-                  if (sep1=='%' && img) {
-                    double vmin, vmax = (double)img.max_min(vmin);
+                  const unsigned int uind = selection[l] + off;
+                  CImg<T>& img = gmic_check(images[uind]);
+                  nvalue = value;
+                  if (sep0=='%' && img) {
+                    vmax = (double)img.max_min(vmin);
                     nvalue = vmin + value*(vmax-vmin)/100;
                   }
-                  CImg<char> name = images_names[ind].get_mark();
+                  name = images_names[uind];
                   CImg<T> path(1),
                     dist = img.get_distance_dijkstra((T)nvalue,custom_metric,algorithm==4,path);
                   if (is_get_version) {
@@ -5818,10 +5828,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     path.move_to(images,~0U);
                   } else {
                     off+=1;
-                    dist.move_to(images[ind].assign());
-                    path.move_to(images,ind+1);
-                    images_names[ind] = name;
-                    images_names.insert(name.copymark(),ind+1);
+                    dist.move_to(images[uind].assign());
+                    path.move_to(images,uind+1);
+                    images_names[uind] = name;
+                    images_names.insert(name.copymark(),uind+1);
                   }
                 }
             } else arg_error("distance");
@@ -5832,9 +5842,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-dilate",command)) {
             gmic_substitute_args();
             float sx = 3, sy = 3, sz = 1;
-            unsigned int boundary = 1, is_normalized = 0;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            unsigned int is_normalized = 0;
+            boundary = 1;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u%c",
@@ -5851,10 +5861,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     boundary?"neumann":"dirichlet",
                     is_normalized?"":"out");
               const CImg<T> mask = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],dilate(mask,boundary,
-                                                       (bool)is_normalized));
-              }
+              cimg_forY(selection,l) gmic_apply(dilate(mask,boundary,(bool)is_normalized));
             } else if ((std::sscanf(argument,"%f%c",
                                     &sx,&end)==1) &&
                        sx>=0) {
@@ -5862,9 +5869,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               print(images,0,"Dilate image%s with mask of size %g and neumann boundary conditions.",
                     gmic_selection,
                     sx);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],dilate((unsigned int)sx));
-              }
+              cimg_forY(selection,l) gmic_apply(dilate((unsigned int)sx));
             } else if ((std::sscanf(argument,"%f,%f%c",
                                     &sx,&sy,&end)==2 ||
                         std::sscanf(argument,"%f,%f,%f%c",
@@ -5876,10 +5881,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               print(images,0,"Dilate image%s with %gx%gx%g mask and neumann boundary conditions.",
                     gmic_selection,
                     sx,sy,sz);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],dilate((unsigned int)sx,(unsigned int)sy,
-                                                       (unsigned int)sz));
-              }
+              cimg_forY(selection,l) gmic_apply(dilate((unsigned int)sx,(unsigned int)sy,(unsigned int)sz));
             } else arg_error("dilate");
             is_released = false; ++position; continue;
           }
@@ -5887,12 +5889,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Set double-sided mode for 3d rendering.
           if (!std::strcmp("-double3d",item)) {
             gmic_substitute_args();
-            bool value = true;
+            bool state = true;
             if (!argument[1] && (*argument=='0' || *argument=='1')) {
-              value = (*argument=='1');
+              state = (*argument=='1');
               ++position;
-            } else value = true;
-            is_double3d = value;
+            } else state = true;
+            is_double3d = state;
             print(images,0,"%s double-sided mode for 3d rendering.",
                   is_double3d?"Enable":"Disable");
             continue;
@@ -5929,12 +5931,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     sigma_r,
                     rsize,
                     smoothness);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],blur_patch(sigma_s,sigma_r,
-                                                           (unsigned int)psize,(unsigned int)rsize,
-                                                           smoothness,
-                                                           (bool)is_fast_approximation));
-              }
+              cimg_forY(selection,l)
+                gmic_apply(blur_patch(sigma_s,sigma_r,(unsigned int)psize,(unsigned int)rsize,smoothness,
+                                      (bool)is_fast_approximation));
             } else arg_error("denoise");
             is_released = false; ++position; continue;
           }
@@ -5942,9 +5941,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Deriche filter.
           if (!std::strcmp("-deriche",command)) {
             gmic_substitute_args();
-            unsigned int boundary = 1, order = 0;
-            char sep = 0, axis = 0;
+            unsigned int order = 0;
             float sigma = 0;
+            axis = sep = 0;
+            boundary = 1;
             if ((std::sscanf(argument,"%f,%u,%c%c",&sigma,&order,&axis,&end)==3 ||
                  (std::sscanf(argument,"%f%c,%u,%c%c",&sigma,&sep,&order,&axis,&end)==4 &&
                   sep=='%') ||
@@ -5959,9 +5959,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     sigma,sep=='%'?"%":"",
                     boundary?"neumann":"dirichlet");
               if (sep=='%') sigma = -sigma;
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],deriche(sigma,order,axis,(bool)boundary));
-              }
+              cimg_forY(selection,l) gmic_apply(deriche(sigma,order,axis,(bool)boundary));
             } else arg_error("deriche");
             is_released = false; ++position; continue;
           }
@@ -5979,22 +5977,22 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     selection.height()>1?"ce":"x",gmic_selection);
               unsigned int off = 0;
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l] + off;
-                CImg<char> name = images_names[ind].get_mark();
+                const unsigned int uind = selection[l] + off;
+                name = images_names[uind];
                 if (is_get_version) {
-                  CImg<T> path, dist = gmic_check(images[ind]).get_dijkstra((unsigned int)snode,
-                                                                              (unsigned int)enode,
-                                                                              path);
+                  CImg<T> path, dist = gmic_check(images[uind]).get_dijkstra((unsigned int)snode,
+                                                                             (unsigned int)enode,
+                                                                             path);
                   images_names.insert(name.copymark());
                   name.move_to(images_names);
                   dist.move_to(images);
                   path.move_to(images);
                 } else {
                   CImg<T> path;
-                  gmic_check(images[ind]).dijkstra((unsigned int)snode,(unsigned int)enode,path);
-                  images_names.insert(name.get_copymark(),ind+1);
-                  name.move_to(images_names[ind]);
-                  images.insert(path,ind+1);
+                  gmic_check(images[uind]).dijkstra((unsigned int)snode,(unsigned int)enode,path);
+                  images_names.insert(name.get_copymark(),uind+1);
+                  name.move_to(images_names[uind]);
+                  images.insert(path,uind+1);
                   ++off;
                 }
               }
@@ -6007,8 +6005,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             float nb_scales = 0, nb_iterations = 10000, smoothness = 0.1f, precision = 7.0f;
             unsigned int is_backward = 1;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%f%c",
@@ -6037,12 +6034,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     nb_iterations,
                     is_backward?"backward":"forward");
               const CImg<T> source = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],displacement(source,smoothness,precision,
-                                                             (unsigned int)nb_scales,
-                                                             (unsigned int)nb_iterations,
-                                                             (bool)is_backward));
-              }
+              cimg_forY(selection,l) gmic_apply(displacement(source,smoothness,precision,(unsigned int)nb_scales,
+                                                             (unsigned int)nb_iterations,(bool)is_backward));
             } else arg_error("displacement");
             is_released = false; ++position; continue;
           }
@@ -6063,7 +6056,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-display3d",command) && !is_get_version) {
             gmic_substitute_args();
             CImg<unsigned char> ind, background3d;
-            char sep = 0;
+            sep = 0;
             if ((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                              indices,&sep,&end)==2 && sep==']') &&
                 (ind=selection2cimg(indices,images.size(),images_names,"-display3d",true,
@@ -6125,7 +6118,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-echo",command) && !is_get_version) {
             if (verbosity>=0 || is_debug) {
               gmic_substitute_args();
-              CImg<char> str(argument,std::strlen(argument)+1);
+              CImg<char> str(argument,(unsigned int)std::strlen(argument)+1);
               cimg::strunescape(str);
               if (is_restriction) print(images,&selection,"%s",str.data());
               else print(images,0,"%s",str.data());
@@ -6138,13 +6131,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
 #ifdef gmic_noexec
             print(images,0,"Execute external command '%s' (skipped, no exec allowed).",
-                  argument_text);
+                  gmic_argument_text());
 #else // #ifdef gmic_noexec
             print(images,0,"Execute external command '%s'\n",
-                  argument_text);
-            CImg<char> arg_exec(argument,std::strlen(argument)+1);
-            gmic_strreplace(arg_exec);
+                  gmic_argument_text());
+            CImg<char> arg_exec(argument,(unsigned int)std::strlen(argument)+1);
             cimg::strunescape(arg_exec);
+            gmic_strreplace(arg_exec);
             cimg::mutex(31);
             const int errcode = cimg::system(arg_exec);
             cimg::mutex(31,0);
@@ -6159,7 +6152,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Error.
           if (!std::strcmp("-error",command) && !is_get_version) {
             gmic_substitute_args();
-            CImg<char> str(argument,std::strlen(argument)+1);
+            CImg<char> str(argument,(unsigned int)std::strlen(argument)+1);
             cimg::strunescape(str);
             if (is_restriction) error(images,&selection,0,"%s",str.data());
             else error(images,0,0,"%s",str.data());
@@ -6181,9 +6174,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               ++position;
             } else print(images,0,"Invert data endianness of image%s.",
                          gmic_selection);
-            cimg_forY(selection,l) {
-              gmic_apply(images[selection[l]],gmic_invert_endianness(argument));
-            }
+            cimg_forY(selection,l) gmic_apply(gmic_invert_endianness(argument));
             is_released = false; continue;
           }
 
@@ -6199,17 +6190,16 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute boolean equality between image%s and image [%d]",
                                gmic_selection,ind[0],
                                "Compute boolean equality between image%s and expression %s'",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute boolean equality between image%s");
 
           // Draw ellipse.
           if (!std::strcmp("-ellipse",command)) {
             gmic_substitute_args();
             CImg<char> argR(256), argr(256);
-            *argx = *argy = *argR = *argr = *color = 0;
-            float x = 0, y = 0, R = 0, r = 0, angle = 0, opacity = 1;
-            char sepx = 0, sepy = 0, sepR = 0, sepr = 0, seph = 0;
-            unsigned int pattern = ~0U;
+            float x = 0, y = 0, R = 0, r = 0, angle = 0;
+            sep0 = sep1 = sepx = sepy = *argx = *argy = *argR = *argr = *color = 0;
+            pattern = ~0U; opacity = 1;
             if ((std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
                              argx,argy,argR.data(),&end)==3 ||
                  std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
@@ -6223,56 +6213,56 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                              argx,argy,argR.data(),argr.data(),&angle,&opacity,&end)==6 ||
                  (std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
                               "%255[0-9.eE%+-],%f,%f,0%c%x%c",
-                              argx,argy,argR.data(),argr.data(),&angle,&opacity,&seph,&pattern,
+                              argx,argy,argR.data(),argr.data(),&angle,&opacity,&sep1,&pattern,
                               &end)==8 &&
-                  seph=='x') ||
+                  sep1=='x') ||
                  (std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
-                              "%255[0-9.eE%+-],%f,%f,%4095[0-9.eE,+-]%c",
+                              "%255[0-9.eE%+-],%f,%f,%4095[0-9.eEinfa,+-]%c",
                               argx,argy,argR.data(),argr.data(),&angle,&opacity,color,&end)==7 &&
                   (bool)(pattern=~0U))||
                  (*color=0,std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
-                                       "%255[0-9.eE%+-],%f,%f,0%c%x,%4095[0-9.eE,+-]%c",
-                                       argx,argy,argR.data(),argr.data(),&angle,&opacity,&seph,
+                                       "%255[0-9.eE%+-],%f,%f,0%c%x,%4095[0-9.eEinfa,+-]%c",
+                                       argx,argy,argR.data(),argr.data(),&angle,&opacity,&sep1,
                                        &pattern,color,&end)==9 &&
-                  seph=='x')) &&
+                  sep1=='x')) &&
                 (std::sscanf(argx,"%f%c",&x,&end)==1 ||
                  (std::sscanf(argx,"%f%c%c",&x,&sepx,&end)==2 && sepx=='%')) &&
                 (std::sscanf(argy,"%f%c",&y,&end)==1 ||
                  (std::sscanf(argy,"%f%c%c",&y,&sepy,&end)==2 && sepy=='%')) &&
                 (std::sscanf(argR,"%f%c",&R,&end)==1 ||
-                 (std::sscanf(argR,"%f%c%c",&R,&sepR,&end)==2 && sepR=='%')) &&
+                 (std::sscanf(argR,"%f%c%c",&R,&sep1,&end)==2 && sep1=='%')) &&
                 (!*argr ||
                  std::sscanf(argr,"%f%c",&r,&end)==1 ||
-                 (std::sscanf(argr,"%f%c%c",&r,&sepr,&end)==2 && sepr=='%'))) {
+                 (std::sscanf(argr,"%f%c%c",&r,&sep0,&end)==2 && sep0=='%'))) {
               if (!*argr) r = R;
               print(images,0,"Draw %s ellipse at (%g%s,%g%s) with radii (%g%s,%g%s) on image%s, "
                     "with orientation %g°, opacity %g and color (%s).",
-                    seph=='x'?"outlined":"filled",
+                    sep1=='x'?"outlined":"filled",
                     x,sepx=='%'?"%":"",
                     y,sepy=='%'?"%":"",
-                    R,sepR=='%'?"%":"",
-                    r,sepr=='%'?"%":"",
+                    R,sep1=='%'?"%":"",
+                    r,sep0=='%'?"%":"",
                     gmic_selection,
                     angle,
                     opacity,
                     *color?color:"default");
               cimg_forY(selection,l) {
-                CImg<T> &img = images[selection[l]], col(img.spectrum(),1,1,1,0);
-                col.fill(color,true);
+                CImg<T> &img = images[selection[l]];
+                col.assign(img.spectrum(),1,1,1,0).fill(color,true);
                 const float rmax = std::sqrt((float)cimg::sqr(img.width()) +
                                              cimg::sqr(img.height()));
                 const int
                   nx = (int)cimg::round(sepx=='%'?x*(img.width()-1)/100:x),
                   ny = (int)cimg::round(sepy=='%'?y*(img.height()-1)/100:y);
                 const float
-                  nR = cimg::round(sepR=='%'?R*rmax/100:R),
-                  nr = cimg::round(sepr=='%'?r*rmax/100:r);
-                if (seph=='x') {
-                  if (nR==nr) { gmic_apply(img,draw_circle(nx,ny,(int)nR,col.data(),opacity,~0U));}
-                  else { gmic_apply(img,draw_ellipse(nx,ny,nR,nr,angle,col.data(),opacity,~0U)); }
+                  nR = cimg::round(sep1=='%'?R*rmax/100:R),
+                  nr = cimg::round(sep0=='%'?r*rmax/100:r);
+                if (sep1=='x') {
+                  if (nR==nr) { gmic_apply(draw_circle(nx,ny,(int)nR,col.data(),opacity,~0U)); }
+                  else gmic_apply(draw_ellipse(nx,ny,nR,nr,angle,col.data(),opacity,~0U));
                 } else {
-                  if (nR==nr) { gmic_apply(img,draw_circle(nx,ny,(int)nR,col.data(),opacity)); }
-                  else { gmic_apply(img,draw_ellipse(nx,ny,nR,nr,angle,col.data(),opacity)); }
+                  if (nR==nr) { gmic_apply(draw_circle(nx,ny,(int)nR,col.data(),opacity)); }
+                  else gmic_apply(draw_ellipse(nx,ny,nR,nr,angle,col.data(),opacity));
                 }
               }
             } else arg_error("ellipse");
@@ -6282,10 +6272,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Equalize.
           if (!std::strcmp("-equalize",command)) {
             gmic_substitute_args();
-            char sep = 0, sep0 = 0, sep1 = 0;
-            double value0 = 0, value1 = 0;
             float nb_levels = 256;
             bool no_min_max = false;
+            sep = sep0 = sep1 = 0;
+            value0 = value1 = 0;
             if (((std::sscanf(argument,"%f%c",
                               &nb_levels,&end)==1 && (no_min_max=true)) ||
                  ((std::sscanf(argument,"%f%c%c",
@@ -6320,7 +6310,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   value1,sep1=='%'?"%":"");
             cimg_forY(selection,l) {
               CImg<T>& img = gmic_check(images[selection[l]]);
-              double vmin = 0, vmax = 0, nvalue0 = value0, nvalue1 = value1;
+              nvalue0 = value0; nvalue1 = value1;
+              vmin = vmax = 0;
               if (sep0=='%' || sep1=='%') {
                 if (img) vmax = (double)img.max_min(vmin);
                 if (sep0=='%') nvalue0 = vmin + (vmax-vmin)*value0/100;
@@ -6331,7 +6322,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                        (unsigned int)cimg::round(sep=='%'?
                                                                  nb_levels*(1+nvalue1-nvalue0)/100:
                                                                  nb_levels));
-              gmic_apply(images[selection[l]],equalize(_nb_levels,(T)nvalue0,(T)nvalue1));
+              gmic_apply(equalize(_nb_levels,(T)nvalue0,(T)nvalue1));
             }
             is_released = false; continue;
           }
@@ -6339,10 +6330,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Erode.
           if (!std::strcmp("-erode",command)) {
             gmic_substitute_args();
-            unsigned int boundary = 1, is_normalized = 0;
+            unsigned int is_normalized = 0;
             float sx = 3, sy = 3, sz = 1;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            boundary = 1;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u%c",
@@ -6359,10 +6350,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     boundary?"neumann":"dirichlet",
                     is_normalized?"":"out");
               const CImg<T> mask = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],erode(mask,boundary,
-                                                      (bool)is_normalized));
-              }
+              cimg_forY(selection,l) gmic_apply(erode(mask,boundary,(bool)is_normalized));
             } else if ((std::sscanf(argument,"%f%c",
                                     &sx,&end)==1) &&
                        sx>=0) {
@@ -6370,9 +6358,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               print(images,0,"Erode image%s with mask of size %g and neumann boundary conditions.",
                     gmic_selection,
                     sx);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],erode((unsigned int)sx));
-              }
+              cimg_forY(selection,l) gmic_apply(erode((unsigned int)sx));
             } else if ((std::sscanf(argument,"%f,%f%c",
                                     &sx,&sy,&end)==2 ||
                         std::sscanf(argument,"%f,%f,%f%c",
@@ -6382,12 +6368,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               sy = cimg::round(sy);
               sz = cimg::round(sz);
               print(images,0,"Erode image%s with %gx%gx%g mask and neumann boundary conditions.",
-                      gmic_selection,
+                    gmic_selection,
                     sx,sy,sz);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],erode((unsigned int)sx,(unsigned int)sy,
-                                                      (unsigned int)sz));
-              }
+              cimg_forY(selection,l) gmic_apply(erode((unsigned int)sx,(unsigned int)sy,(unsigned int)sz));
             } else arg_error("erode");
             is_released = false; ++position; continue;
           }
@@ -6395,10 +6378,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Build 3d elevation.
           if (!std::strcmp("-elevation3d",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind;
             float fact = 1;
-            char sep = 0;
-            *formula = 0;
+            sep = *formula = 0;
             if (std::sscanf(argument,"'%4095[^']'%c",formula,&end)==1) {
               print(images,0,"Build 3d elevation of image%s, with elevation formula '%s'.",
                     gmic_selection,
@@ -6410,7 +6391,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 CImgList<float> colors;
                 CImg<float> vertices = img.get_elevation3d(primitives,colors,elev);
                 vertices.object3dtoCImg3d(primitives,colors,false);
-                gmic_apply(img,replace(vertices));
+                gmic_apply(replace(vertices));
               }
               ++position;
             } else if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep,&end)==2 &&
@@ -6429,7 +6410,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 CImgList<float> colors;
                 CImg<float> vertices = img.get_elevation3d(primitives,colors,elev);
                 vertices.object3dtoCImg3d(primitives,colors,false);
-                gmic_apply(img,replace(vertices));
+                gmic_apply(replace(vertices));
               }
               ++position;
             } else {
@@ -6452,7 +6433,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 else (elev = img)*=fact;
                 CImg<float> vertices = img.get_elevation3d(primitives,colors,elev);
                 vertices.object3dtoCImg3d(primitives,colors,false);
-                gmic_apply(img,replace(vertices));
+                gmic_apply(replace(vertices));
               }
             }
             is_released = false; continue;
@@ -6465,17 +6446,17 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             CImg<float> val, vec;
             unsigned int off = 0;
             cimg_forY(selection,l) {
-              const unsigned int ind = selection[l] + off;
-              CImg<char> name = images_names[ind].get_mark();
-              gmic_check(images[ind]).gmic_symmetric_eigen(val,vec);
+              const unsigned int uind = selection[l] + off;
+              name = images_names[uind];
+              gmic_check(images[uind]).gmic_symmetric_eigen(val,vec);
               if (is_get_version) {
                 images_names.insert(name.copymark());
                 name.move_to(images_names);
                 val.move_to(images);
                 vec.move_to(images);
               } else {
-                images_names.insert(name.get_copymark(),ind+1); name.move_to(images_names[ind]);
-                val.move_to(images[ind].assign()); images.insert(vec,ind+1);
+                images_names.insert(name.get_copymark(),uind+1); name.move_to(images_names[uind]);
+                val.move_to(images[uind].assign()); images.insert(vec,uind+1);
                 ++off;
               }
             }
@@ -6492,17 +6473,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Fill.
           if (!std::strcmp("-fill",command)) {
             gmic_substitute_args();
-            double value = 0;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            value = 0;
+            sep = 0;
             if (std::sscanf(argument,"%lf%c",
                             &value,&end)==1) {
               print(images,0,"Fill image%s with %g.",
                     gmic_selection,
                     value);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],fill((T)value));
-              }
+              cimg_forY(selection,l) gmic_apply(fill((T)value));
             } else if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep,&end)==2 &&
                        sep==']' &&
                        (ind=selection2cimg(indices,images.size(),images_names,"-fill",true,
@@ -6511,21 +6489,18 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     *ind);
               const CImg<T> values = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],fill(values));
-              }
+              cimg_forY(selection,l) gmic_apply(fill(values));
             } else {
-              CImg<char> arg_fill_text(argument_text,std::strlen(argument_text)+1);
+              gmic_argument_text();
+              CImg<char> arg_fill_text(argument_text,(unsigned int)std::strlen(argument_text)+1);
               cimg::strpare(arg_fill_text,'\'',true,false);
               print(images,0,"Fill image%s with expression '%s'.",
                     gmic_selection,
                     arg_fill_text.data());
-              CImg<char> arg_fill(argument,std::strlen(argument)+1);
+              CImg<char> arg_fill(argument,(unsigned int)std::strlen(argument)+1);
               cimg::strpare(arg_fill,'\'',true,false);
               gmic_strreplace(arg_fill);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],fill(arg_fill.data(),true));
-              }
+              cimg_forY(selection,l) gmic_apply(fill(arg_fill.data(),true));
             }
             is_released = false; ++position; continue;
           }
@@ -6533,24 +6508,24 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Flood fill.
           if (!std::strcmp("-flood",command)) {
             gmic_substitute_args();
-            float x = 0, y = 0, z = 0, tolerance = 0, opacity = 1;
+            float x = 0, y = 0, z = 0, tolerance = 0;
             unsigned int is_high_connectivity = 0;
-            char sepx = 0, sepy = 0, sepz = 0;
-            *argx = *argy = *argz = *color = 0;
+            sepx = sepy = sepz = *argx = *argy = *argz = *color = 0;
+            opacity = 1;
             if ((std::sscanf(argument,"%255[0-9.eE%+-]%c",
                              argx,&end)==1 ||
                  std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
                              argx,argy,&end)==2 ||
                  std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
                              argx,argy,argz,&end)==3 ||
-                 std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],%f%c",
+                 std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eEinfa%+-],%f%c",
                              argx,argy,argz,&tolerance,&end)==4 ||
-                 std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],%f,%u%c",
+                 std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eEinfa%+-],%f,%u%c",
                              argx,argy,argz,&tolerance,&is_high_connectivity,&end)==5 ||
-                 std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],%f,%u,%f%c",
+                 std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eEinfa%+-],%f,%u,%f%c",
                              argx,argy,argz,&tolerance,&is_high_connectivity,&opacity,&end)==6 ||
-                 std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],%f,%u,%f,"
-                             "%4095[0-9.eE,+-]%c",
+                 std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eEinfa%+-],%f,%u,%f,"
+                             "%4095[0-9.eEinfa,+-]%c",
                              argx,argy,argz,&tolerance,&is_high_connectivity,
                              &opacity,color,&end)==7) &&
                 (std::sscanf(argx,"%f%c",&x,&end)==1 ||
@@ -6574,14 +6549,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     opacity,
                     *color?color:"default");
               cimg_forY(selection,l) {
-                CImg<T> &img = images[selection[l]], col(img.spectrum(),1,1,1,0);
-                col.fill(color,true);
+                CImg<T> &img = images[selection[l]];
+                col.assign(img.spectrum(),1,1,1,0).fill(color,true);
                 const int
                   nx = (int)cimg::round(sepx=='%'?x*(img.width()-1)/100:x),
                   ny = (int)cimg::round(sepy=='%'?y*(img.height()-1)/100:y),
                   nz = (int)cimg::round(sepz=='%'?z*(img.depth()-1)/100:z);
-                gmic_apply(img,draw_fill(nx,ny,nz,col.data(),opacity,tolerance,
-                                         (bool)is_high_connectivity));
+                gmic_apply(draw_fill(nx,ny,nz,col.data(),opacity,tolerance,(bool)is_high_connectivity));
               }
             } else arg_error("flood");
             is_released = false; ++position; continue;
@@ -6590,10 +6564,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Set 3d focale.
           if (!std::strcmp("-focale3d",item)) {
             gmic_substitute_args();
-            float value = 700;
-            if (std::sscanf(argument,"%f%c",&value,&end)==1) ++position;
+            value = 700;
+            if (std::sscanf(argument,"%lf%c",&value,&end)==1) ++position;
             else value = 700;
-            focale3d = value;
+            focale3d = (float)value;
             print(images,0,"Set 3d focale to %g.",
                   focale3d);
             continue;
@@ -6617,7 +6591,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                gmic_selection,ind[0],
                                "Compute boolean 'greater or equal than' between image%s "
                                "and expression %s'",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute boolean 'greater or equal than' between image%s");
 
           // Greater than.
@@ -6629,14 +6603,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute boolean 'greater than' between image%s and image [%d]",
                                gmic_selection,ind[0],
                                "Compute boolean 'greater than' between image%s and expression %s'",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute boolean 'greater than' between image%s");
 
           // Compute gradient.
           if (!std::strcmp("-gradient",command)) {
             gmic_substitute_args();
             int scheme = 3;
-            _argx.fill(0);
+            *argx = 0;
             if ((std::sscanf(argument,"%15[xyz]%c",
                              argx,&end)==1 ||
                  std::sscanf(argument,"%15[xyz],%d%c",
@@ -6653,20 +6627,20 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                          gmic_selection);
             unsigned int off = 0;
             cimg_forY(selection,l) {
-              const unsigned int ind = selection[l] + off;
-              CImg<T>& img = gmic_check(images[ind]);
-              CImg<char> name = images_names[ind].get_mark();
+              const unsigned int uind = selection[l] + off;
+              CImg<T>& img = gmic_check(images[uind]);
               CImgList<T> gradient = img.get_gradient(*argx?argx:0,scheme);
+              name = images_names[uind];
               if (is_get_version) {
                 images_names.insert(gradient.size(),name.copymark());
                 gradient.move_to(images,~0U);
               } else {
                 off+=gradient.size() - 1;
-                gradient[0].move_to(images[ind].assign());
-                for (unsigned int i = 1; i<gradient.size(); ++i) gradient[i].move_to(images,ind+i);
-                images_names[ind] = name;
+                gradient[0].move_to(images[uind].assign());
+                for (unsigned int i = 1; i<gradient.size(); ++i) gradient[i].move_to(images,uind+i);
+                images_names[uind] = name;
                 if (gradient.size()>1)
-                  images_names.insert(gradient.size()-1,name.copymark(),ind+1);
+                  images_names.insert(gradient.size()-1,name.copymark(),uind+1);
               }
             }
             is_released = false; continue;
@@ -6676,9 +6650,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-guided",command)) {
             gmic_substitute_args();
             float radius = 0, regularization = 0;
-            char sep =  0;
-            CImg<unsigned int> ind;
             *argz = *argc = 0;
+            sep =  0;
             if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
                             indices,argx,argy,&end)==3 &&
                 (std::sscanf(argx,"%f%c",&radius,&end)==1 ||
@@ -6695,9 +6668,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     regularization);
               const CImg<T> guide = gmic_image_arg(*ind);
               if (sep=='%') radius = -radius;
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],blur_guided(guide,radius,regularization));
-              }
+              cimg_forY(selection,l) gmic_apply(blur_guided(guide,radius,regularization));
             } else if (std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
                                     argx,argy,&end)==2 &&
                        (std::sscanf(argx,"%f%c",&radius,&end)==1 ||
@@ -6709,10 +6680,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     radius,sep=='%'?"%":"",
                     regularization);
               if (sep=='%') radius = -radius;
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],
-                           blur_guided(images[selection[l]],radius,regularization));
-              }
+              cimg_forY(selection,l) gmic_apply(blur_guided(images[selection[l]],radius,regularization));
             } else arg_error("guided");
             is_released = false; ++position; continue;
           }
@@ -6722,11 +6690,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             double ymin = 0, ymax = 0, xmin = 0, xmax = 0;
             unsigned int plot_type = 1, vertex_type = 1;
-            float resolution = 65536, opacity = 1;
-            unsigned int pattern = ~0U;
-            CImg<unsigned int> ind;
-            char sep = 0, seph = 0;
-            *formula = *color = 0;
+            float resolution = 65536;
+            *formula = *color = sep = sep1 = 0;
+            pattern = ~0U; opacity = 1;
             if (((std::sscanf(argument,"'%1023[^']%c%c",
                               formula,&sep,&end)==2 && sep=='\'') ||
                  std::sscanf(argument,"'%1023[^']',%f%c",
@@ -6745,15 +6711,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                              &xmin,&xmax,&ymin,&ymax,&opacity,&end)==9 ||
                  (std::sscanf(argument,"'%1023[^']',%f,%u,%u,%lf,%lf,%lf,%lf,%f,0%c%x%c",
                               formula,&resolution,&plot_type,&vertex_type,&xmin,&xmax,
-                              &ymin,&ymax,&opacity,&seph,&pattern,&end)==11 && seph=='x') ||
-                 (std::sscanf(argument,"'%1023[^']',%f,%u,%u,%lf,%lf,%lf,%lf,%f,%4095[0-9.eE,+-]%c",
+                              &ymin,&ymax,&opacity,&sep1,&pattern,&end)==11 && sep1=='x') ||
+                 (std::sscanf(argument,"'%1023[^']',%f,%u,%u,%lf,%lf,%lf,%lf,%f,%4095[0-9.eEinfa,+-]%c",
                               formula,&resolution,&plot_type,&vertex_type,&xmin,&xmax,&ymin,&ymax,
                               &opacity,color,&end)==10 && (bool)(pattern=~0U)) ||
                  (*color=0,std::sscanf(argument,"'%1023[^']',%f,%u,%u,%lf,%lf,%lf,%lf,%f,0%c%x,"
-                                       "%4095[0-9.eE,+-]%c",
+                                       "%4095[0-9.eEinfa,+-]%c",
                                        formula,&resolution,&plot_type,&vertex_type,&xmin,&xmax,
-                                       &ymin,&ymax,&opacity,&seph,&pattern,color,&end)==12 &&
-                  seph=='x')) &&
+                                       &ymin,&ymax,&opacity,&sep1,&pattern,color,&end)==12 &&
+                  sep1=='x')) &&
                 resolution>0 && plot_type<=3 && vertex_type<=7) {
               resolution = cimg::round(resolution);
               gmic_strreplace(formula);
@@ -6782,10 +6748,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               cimg::eval(formula,values).move_to(values);
 
               cimg_forY(selection,l) {
-                CImg<T> &img = images[selection[l]], col(img.spectrum(),1,1,1,0);
-                col.fill(color,true);
-                gmic_apply(img,draw_graph(values,col.data(),opacity,plot_type,vertex_type,
-                                          ymin,ymax,pattern));
+                CImg<T> &img = images[selection[l]];
+                col.assign(img.spectrum(),1,1,1,0).fill(color,true);
+                gmic_apply(draw_graph(values,col.data(),opacity,plot_type,vertex_type,ymin,ymax,pattern));
               }
             } else if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                                      indices,&sep,&end)==2 && sep==']') ||
@@ -6798,19 +6763,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                         std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u,%u,%lf,%lf,%f%c",
                                     indices,&plot_type,&vertex_type,&ymin,&ymax,&opacity,&end)==6||
                         (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u,%u,%lf,%lf,%f,0%c%x%c",
-                                     indices,&plot_type,&vertex_type,&ymin,&ymax,&opacity,&seph,
+                                     indices,&plot_type,&vertex_type,&ymin,&ymax,&opacity,&sep1,
                                      &pattern,&end)==8 &&
-                         seph=='x') ||
+                         sep1=='x') ||
                         (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u,%u,%lf,%lf,%f,"
-                                     "%4095[0-9.eE,+-]%c",
+                                     "%4095[0-9.eEinfa,+-]%c",
                                      indices,&plot_type,&vertex_type,&ymin,&ymax,&opacity,
                                      color,&end)==7 &&
                          (bool)(pattern=~0U)) ||
                         (*color=0,std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u,%u,%lf,%lf,"
-                                              "%f,0%c%x,%4095[0-9.eE,+-]%c",
+                                              "%f,0%c%x,%4095[0-9.eEinfa,+-]%c",
                                               indices,&plot_type,&vertex_type,&ymin,&ymax,
-                                              &opacity,&seph,&pattern,color,&end)==9 &&
-                         seph=='x')) &&
+                                              &opacity,&sep1,&pattern,color,&end)==9 &&
+                         sep1=='x')) &&
                        (ind=selection2cimg(indices,images.size(),images_names,"-graph",true,
                                            false,CImg<char>::empty())).height()==1 &&
                        plot_type<=3 && vertex_type<=7) {
@@ -6828,10 +6793,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     *color?color:"default");
               const CImg<T> values = gmic_image_arg(*ind);
               cimg_forY(selection,l) {
-                CImg<T> &img = images[selection[l]], col(img.spectrum(),1,1,1,0);
-                col.fill(color,true);
-                gmic_apply(img,draw_graph(values,col.data(),opacity,plot_type,vertex_type,
-                                          ymin,ymax,pattern));
+                CImg<T> &img = images[selection[l]];
+                col.assign(img.spectrum(),1,1,1,0).fill(color,true);
+                gmic_apply(draw_graph(values,col.data(),opacity,plot_type,vertex_type,ymin,ymax,pattern));
               }
             } else arg_error("graph");
             is_released = false; ++position; continue;
@@ -6847,10 +6811,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Histogram.
           if (!std::strcmp("-histogram",command)) {
             gmic_substitute_args();
-            char sep = 0, sep0 = 0, sep1 = 0;
-            double value0 = 0, value1 = 0;
             float nb_levels = 256;
             bool no_min_max = false;
+            sep = sep0 = sep1 = 0;
+            value0 = value1 = 0;
             if (((std::sscanf(argument,"%f%c",
                               &nb_levels,&end)==1 && (no_min_max=true)) ||
                  ((std::sscanf(argument,"%f%c%c",
@@ -6886,7 +6850,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   value1,sep1=='%'?"%":"");
             cimg_forY(selection,l) {
               CImg<T> &img = gmic_check(images[selection[l]]);
-              double vmin = 0, vmax = 0, nvalue0 = value0, nvalue1 = value1;
+              nvalue0 = value0; nvalue1 = value1;
+              vmin = vmax = 0;
               if (sep0=='%' || sep1=='%') {
                 if (img) vmax = (double)img.max_min(vmin);
                 if (sep0=='%') nvalue0 = vmin + (vmax-vmin)*value0/100;
@@ -6897,7 +6862,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                        (unsigned int)cimg::round(sep=='%'?
                                                                  nb_levels*(1+nvalue1-nvalue0)/100:
                                                                  nb_levels));
-              gmic_apply(images[selection[l]],histogram(_nb_levels,(T)nvalue0,(T)nvalue1));
+              gmic_apply(histogram(_nb_levels,(T)nvalue0,(T)nvalue1));
             }
             is_released = false; continue;
           }
@@ -6914,7 +6879,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Compute Hessian.
           if (!std::strcmp("-hessian",command)) {
             gmic_substitute_args();
-            _argx.fill(0);
+            *argx = 0;
             if (std::sscanf(argument,"%255[xyz]%c",
                             argx,&end)==1) {
               ++position;
@@ -6926,19 +6891,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection);
             unsigned int off = 0;
             cimg_forY(selection,l) {
-              const unsigned int ind = selection[l] + off;
-              CImg<T>& img = gmic_check(images[ind]);
-              CImg<char> name = images_names[ind].get_mark();
+              const unsigned int uind = selection[l] + off;
+              CImg<T>& img = gmic_check(images[uind]);
               CImgList<T> hessian = img.get_hessian(*argx?argx:0);
+              name = images_names[uind];
               if (is_get_version) {
                 images_names.insert(hessian.size(),name.copymark());
                 hessian.move_to(images,~0U);
               } else {
                 off+=hessian.size() - 1;
-                hessian[0].move_to(images[ind].assign());
-                for (unsigned int i = 1; i<hessian.size(); ++i) hessian[i].move_to(images,ind+i);
-                images_names[ind] = name;
-                if (hessian.size()>1) images_names.insert(hessian.size()-1,name.copymark(),ind+1);
+                hessian[0].move_to(images[uind].assign());
+                for (unsigned int i = 1; i<hessian.size(); ++i) hessian[i].move_to(images,uind+i);
+                images_names[uind] = name;
+                if (hessian.size()>1) images_names.insert(hessian.size()-1,name.copymark(),uind+1);
               }
             }
             is_released = false; continue;
@@ -6954,11 +6919,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Draw image.
           if (!std::strcmp("-image",command)) {
             gmic_substitute_args();
-            char sep = 0, sepx = 0, sepy = 0, sepz = 0, sepc = 0;
             CImg<char> indicesm(256);
-            float x = 0, y = 0, z = 0, c = 0, opacity = 1, max_opacity_mask = 1;
+            float x = 0, y = 0, z = 0, c = 0, max_opacity_mask = 1;
             CImg<unsigned int> ind, indm;
-            *indices = *indicesm = *argx = *argy = *argz = *argc = 0;
+            *indices = *indicesm = *argx = *argy = *argz = *argc = sep = sepx = sepy = sepz = sepc = 0;
+            opacity = 1;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%255[0-9.eE%+-]%c",
@@ -7030,11 +6995,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   ny = (int)cimg::round(sepy=='%'?y*(img.height()-1)/100:y),
                   nz = (int)cimg::round(sepz=='%'?z*(img.depth()-1)/100:z),
                   nc = (int)cimg::round(sepc=='%'?c*(img.spectrum()-1)/100:c);
-                if (indm) {
-                  gmic_apply(img,draw_image(nx,ny,nz,nc,sprite,mask,opacity,max_opacity_mask));
-                } else {
-                  gmic_apply(img,draw_image(nx,ny,nz,nc,sprite,opacity));
-                }
+                if (indm) { gmic_apply(draw_image(nx,ny,nz,nc,sprite,mask,opacity,max_opacity_mask)); }
+                else gmic_apply(draw_image(nx,ny,nz,nc,sprite,opacity));
               }
             } else arg_error("image");
             is_released = false; ++position; continue;
@@ -7045,8 +7007,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             unsigned int lut_type = 0, map_indexes = 0;
             float dithering = 0;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                             indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%f%c",
@@ -7062,9 +7023,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     ndithering,
                     map_indexes?" and index mapping":"");
               const CImg<T> palette = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],index(palette,ndithering,(bool)map_indexes));
-              }
+              cimg_forY(selection,l) gmic_apply(index(palette,ndithering,(bool)map_indexes));
             } else if ((std::sscanf(argument,"%u%c",&lut_type,&end)==1 ||
                         std::sscanf(argument,"%u,%f%c",&lut_type,&dithering,&end)==2 ||
                         std::sscanf(argument,"%u,%f,%u%c",
@@ -7081,9 +7040,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 lut_type==2?CImg<T>::lines_LUT256():lut_type==3?CImg<T>::hot_LUT256():
                 lut_type==4?CImg<T>::cool_LUT256():lut_type==5?CImg<T>::jet_LUT256():
                 lut_type==6?CImg<T>::flag_LUT256():CImg<T>::cube_LUT256();
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],index(palette,ndithering,(bool)map_indexes));
-              }
+              cimg_forY(selection,l) gmic_apply(index(palette,ndithering,(bool)map_indexes));
             } else arg_error("index");
             is_released = false; ++position; continue;
           }
@@ -7094,19 +7051,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Extract 3d isoline.
           if (!std::strcmp("-isoline3d",command)) {
             gmic_substitute_args();
-            float x0 = -3, y0 = -3, x1 = 3, y1 = 3, value = 0, dx = 256, dy = 256;
-            char sep = 0, sepx = 0, sepy = 0;
-            *formula = 0;
-            if (std::sscanf(argument,"%f%c",
+            float x0 = -3, y0 = -3, x1 = 3, y1 = 3, dx = 256, dy = 256;
+            sep = sepx = sepy = *formula = 0;
+            value = 0;
+            if (std::sscanf(argument,"%lf%c",
                             &value,&end)==1 ||
-                std::sscanf(argument,"%f%c%c",
+                std::sscanf(argument,"%lf%c%c",
                             &value,&sep,&end)==2) {
               print(images,0,"Extract 3d isolines from image%s, using isovalue %g%s.",
                     gmic_selection,
                     value,sep=='%'?"%":"");
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                CImg<T>& img = gmic_check(images[ind]);
+                const unsigned int uind = selection[l];
+                CImg<T>& img = gmic_check(images[uind]);
                 if (img) {
                   CImg<float> vertices;
                   CImgList<unsigned int> primitives;
@@ -7121,13 +7078,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   }
                   cimg_forC(img,k) {
                     const CImg<T> channel = img.get_shared_channel(k);
-                    float nvalue = value;
+                    nvalue = value;
                     if (sep=='%') {
-                      float vmin = 0, vmax = (float)channel.max_min(vmin);
+                      vmax = (double)channel.max_min(vmin);
                       nvalue = vmin + (vmax-vmin)*value/100;
                     }
                     CImgList<unsigned int> prims;
-                    const CImg<float> pts = img.get_shared_channel(k).get_isoline3d(prims,nvalue);
+                    const CImg<float> pts = img.get_shared_channel(k).get_isoline3d(prims,(float)nvalue);
                     vertices.append_object3d(primitives,pts,prims);
                     colors.insert(prims.size(),CImg<unsigned char>::vector(palette(0,k),
                                                                            palette(1,k),
@@ -7135,24 +7092,24 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   }
                   if (!vertices)
                     warn(images,0,"Command '-isoline3d': Isovalue %g%s not found in image [%u].",
-                         value,sep=='%'?"%":"",ind);
+                         value,sep=='%'?"%":"",uind);
                   vertices.object3dtoCImg3d(primitives,colors,false);
-                  gmic_apply(img,replace(vertices));
-                } else { gmic_apply(img,replace(img)); }
+                  gmic_apply(replace(vertices));
+                } else gmic_apply(replace(img));
               }
-            } else if ((std::sscanf(argument,"'%4095[^']',%f%c",
+            } else if ((std::sscanf(argument,"'%4095[^']',%lf%c",
                                     formula,&value,&end)==2 ||
-                        std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f%c",
+                        std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f%c",
                                     formula,&value,&x0,&y0,&x1,&y1,&end)==6 ||
-                        std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f%c",
+                        std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f%c",
                                     formula,&value,&x0,&y0,&x1,&y1,&dx,&dy,&end)==8 ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f%c,%f%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f%c,%f%c",
                                      formula,&value,&x0,&y0,&x1,&y1,&dx,&sepx,&dy,&end)==9 &&
                          sepx=='%') ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f%c%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f%c%c",
                                      formula,&value,&x0,&y0,&x1,&y1,&dx,&dy,&sepy,&end)==9 &&
                          sepy=='%') ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f%c,%f%c%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f%c,%f%c%c",
                                      formula,&value,&x0,&y0,&x1,&y1,&dx,&sepx,&dy,&sepy,&end)==10&&
                          sepx=='%' && sepy=='%')) &&
                        dx>0 && dy>0) {
@@ -7170,11 +7127,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               if (sepx=='%') dx = -dx;
               if (sepy=='%') dy = -dy;
               CImgList<unsigned int> primitives;
-              CImg<T> vertices = CImg<T>::isoline3d(primitives,(const char*)formula,value,
+              CImg<T> vertices = CImg<T>::isoline3d(primitives,(const char*)formula,(float)value,
                                                     x0,y0,x1,y1,(int)dx,(int)dy);
               vertices.object3dtoCImg3d(primitives,false).move_to(images);
               cimg_snprintf(title,_title.size(),"[3d isoline %g of '%s']",value,formula);
-              gmic_ellipsize(title,_title.size());
               CImg<char>::string(title).move_to(images_names);
             } else arg_error("isoline3d");
             is_released = false; ++position; continue;
@@ -7183,20 +7139,20 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Extract 3d isosurface.
           if (!std::strcmp("-isosurface3d",command)) {
             gmic_substitute_args();
-            float x0 = -3, y0 = -3, z0 = -3, x1 = 3, y1 = 3, z1 = 3, value = 0,
+            float x0 = -3, y0 = -3, z0 = -3, x1 = 3, y1 = 3, z1 = 3,
               dx = 32, dy = 32, dz = 32;
-            char sep = 0, sepx = 0, sepy = 0, sepz = 0;
-            *formula = 0;
-            if (std::sscanf(argument,"%f%c",
+            sep = sepx = sepy = sepz = *formula = 0;
+            value = 0;
+            if (std::sscanf(argument,"%lf%c",
                             &value,&end)==1 ||
-                std::sscanf(argument,"%f%c%c",
+                std::sscanf(argument,"%lf%c%c",
                             &value,&sep,&end)==2) {
               print(images,0,"Extract 3d isosurface from image%s, using isovalue %g%s.",
                     gmic_selection,
                     value,sep=='%'?"%":"");
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                CImg<T>& img = gmic_check(images[ind]);
+                const unsigned int uind = selection[l];
+                CImg<T>& img = gmic_check(images[uind]);
                 if (img) {
                   CImg<float> vertices;
                   CImgList<unsigned int> primitives;
@@ -7211,13 +7167,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   }
                   cimg_forC(img,k) {
                     const CImg<T> channel = img.get_shared_channel(k);
-                    float nvalue = value;
+                    nvalue = value;
                     if (sep=='%') {
-                      float vmin = 0, vmax = (float)channel.max_min(vmin);
+                      vmax = (double)channel.max_min(vmin);
                       nvalue = vmin + (vmax-vmin)*value/100;
                     }
                     CImgList<unsigned int> prims;
-                    const CImg<float> pts = channel.get_isosurface3d(prims,nvalue);
+                    const CImg<float> pts = channel.get_isosurface3d(prims,(float)nvalue);
                     vertices.append_object3d(primitives,pts,prims);
                     colors.insert(prims.size(),CImg<unsigned char>::vector(palette(0,k),
                                                                            palette(1,k),
@@ -7227,48 +7183,48 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     if (img.depth()>1)
                       warn(images,0,
                            "Command '-isosurface3d': Isovalue %g%s not found in image [%u].",
-                           value,sep=='%'?"%":"",ind);
+                           value,sep=='%'?"%":"",uind);
                     else
                       warn(images,0,
                            "Command '-isosurface3d': Image [%u] has a single slice, "
                            "isovalue %g%s not found.",
-                           ind,value,sep=='%'?"%":"");
+                           uind,value,sep=='%'?"%":"");
                   }
                   vertices.object3dtoCImg3d(primitives,colors,false);
-                  gmic_apply(img,replace(vertices));
-                } else { gmic_apply(img,replace(img)); }
+                  gmic_apply(replace(vertices));
+                } else gmic_apply(replace(img));
               }
-            } else if ((std::sscanf(argument,"'%4095[^']',%f%c",
+            } else if ((std::sscanf(argument,"'%4095[^']',%lf%c",
                                     formula,&value,&end)==2 ||
-                        std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f%c",
+                        std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f%c",
                                     formula,&value,&x0,&y0,&z0,&x1,&y1,&z1,&end)==8 ||
-                        std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f,%f,%f,%f%c",
+                        std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f,%f,%f,%f%c",
                                     formula,&value,&x0,&y0,&z0,&x1,&y1,&z1,&dx,&dy,&dz,&end)==11 ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f,%f%c,%f,%f%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f,%f%c,%f,%f%c",
                                      formula,&value,&x0,&y0,&z0,&x1,&y1,&z1,
                                      &dx,&sepx,&dy,&dz,&end)==12 &&
                          sepx=='%') ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f,%f,%f%c,%f%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f,%f,%f%c,%f%c",
                                      formula,&value,&x0,&y0,&z0,&x1,&y1,&z1,
                                      &dx,&dy,&sepy,&dz,&end)==12 &&
                          sepy=='%') ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f,%f,%f,%f%c%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f,%f,%f,%f%c%c",
                                      formula,&value,&x0,&y0,&z0,&x1,&y1,&z1,
                                      &dx,&dy,&dz,&sepz,&end)==12 &&
                          sepz=='%') ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f,%f%c,%f%c,%f%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f,%f%c,%f%c,%f%c",
                                      formula,&value,&x0,&y0,&z0,&x1,&y1,&z1,
                                      &dx,&sepx,&dy,&sepy,&dz,&end)==13 &&
                          sepx=='%' && sepy=='%') ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f,%f%c,%f,%f%c%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f,%f%c,%f,%f%c%c",
                                      formula,&value,&x0,&y0,&z0,&x1,&y1,&z1,
                                      &dx,&sepx,&dy,&dz,&sepz,&end)==13 &&
                          sepx=='%' && sepz=='%') ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f,%f,%f%c,%f%c%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f,%f,%f%c,%f%c%c",
                                      formula,&value,&x0,&y0,&z0,&x1,&y1,&z1,
                                      &dx,&dy,&sepy,&dz,&sepz,&end)==13 &&
                          sepy=='%' && sepz=='%') ||
-                        (std::sscanf(argument,"'%4095[^']',%f,%f,%f,%f,%f,%f,%f,%f%c,%f%c,%f%c%c",
+                        (std::sscanf(argument,"'%4095[^']',%lf,%f,%f,%f,%f,%f,%f,%f%c,%f%c,%f%c%c",
                                      formula,&value,&x0,&y0,&z0,&x1,&y1,&z1,
                                      &dx,&sepx,&dy,&sepy,&dz,&sepz,&end)==14 &&
                          sepx=='%' && sepy=='%' && sepz=='%')) &&
@@ -7290,11 +7246,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               if (sepy=='%') dy = -dy;
               if (sepz=='%') dz = -dz;
               CImgList<unsigned int> primitives;
-              CImg<T> vertices = CImg<T>::isosurface3d(primitives,(const char*)formula,value,
+              CImg<T> vertices = CImg<T>::isosurface3d(primitives,(const char*)formula,(float)value,
                                                        x0,y0,z0,x1,y1,z1,(int)dx,(int)dy,(int)dz);
               vertices.object3dtoCImg3d(primitives,false).move_to(images);
               cimg_snprintf(title,_title.size(),"[3d isosurface %g of '%s']",value,formula);
-              gmic_ellipsize(title,_title.size());
               CImg<char>::string(title).move_to(images_names);
             } else arg_error("isosurface3d");
             is_released = false; ++position; continue;
@@ -7306,8 +7261,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             float patch_size = 11, lookup_size = 22, lookup_factor = 0.5, lookup_increment = 1,
               blend_size = 0, blend_threshold = 0, blend_decay = 0.05f, blend_scales = 10;
             unsigned int is_blend_outer = 1, method = 1;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep,&end)==2 &&
                   sep==']') ||
                  (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%c%c",indices,&sep,&end)==2 &&
@@ -7322,9 +7276,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     method==0?"low-connectivity average":method==1?"high-connectivity average":
                     method==2?"low-connectivity median":"high-connectivity median");
               const CImg<T> mask = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],inpaint(mask,method));
-              }
+              cimg_forY(selection,l) gmic_apply(inpaint(mask,method));
             } else if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                                      indices,&sep,&end)==2 && sep==']') ||
                         std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%f%c",
@@ -7372,15 +7324,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     patch_size,lookup_size,lookup_factor,lookup_increment,
                     blend_size,blend_threshold,blend_decay,blend_scales,blend_scales!=1?"s":"",
                     is_blend_outer?"enabled":"disabled");
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],
-                           inpaint_patch(mask,
+              cimg_forY(selection,l)
+                gmic_apply(inpaint_patch(mask,
                                          (unsigned int)patch_size,(unsigned int)lookup_size,
                                          lookup_factor,
                                          (int)lookup_increment,
                                          (unsigned int)blend_size,blend_threshold,blend_decay,
                                          (unsigned int)blend_scales,(bool)is_blend_outer));
-              }
             } else arg_error("inpaint");
             is_released = false; ++position; continue;
           }
@@ -7400,25 +7350,27 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             CImgList<char> nimages_names(selection.height());
             if (is_get_version) {
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                nimages[l].assign(images[ind]);
-                nimages_names[l].assign(images_names[ind]).copymark();
+                const unsigned int uind = selection[l];
+                nimages[l].assign(images[uind]);
+                nimages_names[l].assign(images_names[uind]).copymark();
               }
               nimages.move_to(images,~0U);
               nimages_names.move_to(images_names,~0U);
             } else {
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                nimages[l].swap(images[ind]);
-                nimages_names[l].swap(images_names[ind]);
+                const unsigned int uind = selection[l];
+                nimages[l].swap(images[uind]);
+                nimages_names[l].swap(images_names[uind]);
               }
               nimages.swap(images);
               nimages_names.swap(images_names);
             }
             if (verbosity>=0 || is_debug) {
+              cimg::mutex(29);
               std::fprintf(cimg::output()," (%u image%s left).",
                            images.size(),images.size()==1?"":"s");
               std::fflush(cimg::output());
+              cimg::mutex(29,0);
             }
             is_released = false; continue;
           }
@@ -7441,19 +7393,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_exception exception;
 
             if (is_get_version) cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                nimages[l].assign(images[ind]);
-                nimages_names[l].assign(images_names[ind]).copymark();
+                const unsigned int uind = selection[l];
+                nimages[l].assign(images[uind]);
+                nimages_names[l].assign(images_names[uind]).copymark();
               } else cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                if (images[ind].is_shared())
-                  nimages[l].assign(images[ind],false);
+                const unsigned int uind = selection[l];
+                if (images[uind].is_shared())
+                  nimages[l].assign(images[uind],false);
                 else {
-                  nimages[l].swap(images[ind]);
+                  nimages[l].swap(images[uind]);
                   // Small hack to be able to track images of the selection passed to the new environment.
-                  std::memcpy(&images[ind]._width,&nimages[l]._data,sizeof(void*));
+                  std::memcpy(&images[uind]._width,&nimages[l]._data,sizeof(void*));
                 }
-                nimages_names[l] = images_names[ind];   // Make a copy to be still able to recognize '-pass[label]'.
+                nimages_names[l] = images_names[uind];   // Make a copy to be still able to recognize '-pass[label]'.
               }
             const unsigned int local_scope_size = scope.size();
             try {
@@ -7494,12 +7446,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               const unsigned int nb = cimg::min((unsigned int)selection.height(),nimages.size());
               if (nb>0) {
                 for (unsigned int i = 0; i<nb; ++i) {
-                  const unsigned int ind = selection[i];
-                  if (images[ind].is_shared()) {
-                    images[ind] = nimages[i];
+                  const unsigned int uind = selection[i];
+                  if (images[uind].is_shared()) {
+                    images[uind] = nimages[i];
                     nimages[i].assign();
-                  } else images[ind].swap(nimages[i]);
-                  images_names[ind].swap(nimages_names[i]);
+                  } else images[uind].swap(nimages[i]);
+                  images_names[uind].swap(nimages_names[i]);
                 }
                 nimages.remove(0,nb-1);
                 nimages_names.remove(0,nb-1);
@@ -7507,9 +7459,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               if (nb<(unsigned int)selection.height())
                 remove_images(images,images_names,selection,nb,selection.height()-1);
               else if (nimages) {
-                const unsigned int ind0 = selection?selection.back()+1:images.size();
-                images.insert(nimages,ind0);
-                nimages_names.move_to(images_names,ind0);
+                const unsigned int uind0 = selection?selection.back()+1:images.size();
+                images.insert(nimages,uind0);
+                nimages_names.move_to(images_names,uind0);
               }
             }
             if (exception._message) throw exception;
@@ -7526,7 +7478,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                gmic_selection,ind[0],
                                "Compute boolean 'less or equal than' between image%s and "
                                "expression %s'",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute boolean 'less or equal than' between image%s");
 
           // Less than.
@@ -7538,7 +7490,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute boolean 'less than' between image%s and image [%d]",
                                gmic_selection,ind[0],
                                "Compute boolean 'less than' between image%s and expression %s'",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute boolean 'less than' between image%s");
 
           // Logarithm, base-e.
@@ -7554,9 +7506,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-line",command)) {
             gmic_substitute_args();
             *argx = *argy = *argz = *argc = *color = 0;
-            float x0 = 0, y0 = 0, x1 = 0, y1 = 0, opacity = 1;
-            char sepx0 = 0, sepy0 = 0, sepx1 = 0, sepy1 = 0, seph = 0;
-            unsigned int pattern = ~0U;
+            float x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+            char sepx0 = 0, sepy0 = 0, sepx1 = 0, sepy1 = 0, sep1 = 0;
+            pattern = ~0U; opacity = 1;
             if ((std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
                              "%255[0-9.eE%+-]%c",
                              argx,argy,argz,argc,&end)==4 ||
@@ -7565,15 +7517,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                              argx,argy,argz,argc,&opacity,&end)==5 ||
                  (std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
                               "%255[0-9.eE%+-],%f,0%c%x%c",
-                              argx,argy,argz,argc,&opacity,&seph,&pattern,&end)==7 &&
-                  seph=='x') ||
+                              argx,argy,argz,argc,&opacity,&sep1,&pattern,&end)==7 &&
+                  sep1=='x') ||
                  (std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
-                              "%255[0-9.eE%+-],%f,%4095[0-9.eE,+-]%c",
+                              "%255[0-9.eE%+-],%f,%4095[0-9.eEinfa,+-]%c",
                               argx,argy,argz,argc,&opacity,color,&end)==6 && (bool)(pattern=~0U)) ||
                  (*color=0,std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],"
-                                       "%255[0-9.eE%+-],%f,0%c%x,%4095[0-9.eE,+-]%c",
-                                       argx,argy,argz,argc,&opacity,&seph,
-                                       &pattern,color,&end)==8 && seph=='x')) &&
+                                       "%255[0-9.eE%+-],%f,0%c%x,%4095[0-9.eEinfa,+-]%c",
+                                       argx,argy,argz,argc,&opacity,&sep1,
+                                       &pattern,color,&end)==8 && sep1=='x')) &&
                 (std::sscanf(argx,"%f%c",&x0,&end)==1 ||
                  (std::sscanf(argx,"%f%c%c",&x0,&sepx0,&end)==2 && sepx0=='%')) &&
                 (std::sscanf(argy,"%f%c",&y0,&end)==1 ||
@@ -7592,14 +7544,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     opacity,pattern,
                     *color?color:"default");
               cimg_forY(selection,l) {
-                CImg<T> &img = images[selection[l]], col(img.spectrum(),1,1,1,0);
-                col.fill(color,true);
+                CImg<T> &img = images[selection[l]];
+                col.assign(img.spectrum(),1,1,1,0).fill(color,true);
                 const int
                   nx0 = (int)cimg::round(sepx0=='%'?x0*(img.width()-1)/100:x0),
                   ny0 = (int)cimg::round(sepy0=='%'?y0*(img.height()-1)/100:y0),
                   nx1 = (int)cimg::round(sepx1=='%'?x1*(img.width()-1)/100:x1),
                   ny1 = (int)cimg::round(sepy1=='%'?y1*(img.height()-1)/100:y1);
-                gmic_apply(img,draw_line(nx0,ny0,nx1,ny1,col.data(),opacity,pattern));
+                gmic_apply(draw_line(nx0,ny0,nx1,ny1,col.data(),opacity,pattern));
               }
             } else arg_error("line");
             is_released = false; ++position; continue;
@@ -7621,9 +7573,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   "Label connected components on image%s, with tolerance %g and "
                   "%s connectivity.",
                   gmic_selection,tolerance,is_high_connectivity?"high":"low");
-            cimg_forY(selection,l) {
-              gmic_apply(images[selection[l]],label((bool)is_high_connectivity,tolerance));
-            }
+            cimg_forY(selection,l) gmic_apply(label((bool)is_high_connectivity,tolerance));
             is_released = false; continue;
           }
 
@@ -7631,8 +7581,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-light3d",item)) {
             gmic_substitute_args();
             float lx = 0, ly = 0, lz = -5e8f;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            sep = 0;
             if (std::sscanf(argument,"%f,%f,%f%c",
                             &lx,&ly,&lz,&end)==3) {
               print(images,0,"Set 3d light position to (%g,%g,%g).",
@@ -7667,19 +7616,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-move",command)) {
             gmic_substitute_args();
             float pos = 0;
-            char sep = 0;
+            sep = 0;
             if (std::sscanf(argument,"%f%c",&pos,&end)==1 ||
                 (std::sscanf(argument,"%f%c%c",&pos,&sep,&end)==2 && sep=='%')) {
               const int
-                _ind0 = (int)cimg::round(sep=='%'?pos*images.size()/100:pos),
-                ind0 = _ind0<0?_ind0+(int)images.size():_ind0;
-              if (ind0<0 || ind0>(int)images.size())
+                _iind0 = (int)cimg::round(sep=='%'?pos*images.size()/100:pos),
+                iind0 = _iind0<0?_iind0+(int)images.size():_iind0;
+              if (iind0<0 || iind0>(int)images.size())
                 error(images,0,0,
-                      "Command '-move': Invalid position '%d' (not in range -%u..%u).",
-                      _ind0,images.size(),images.size()-1);
+                      "Command '-move': Invalid position '%d' (not in range -%u...%u).",
+                      _iind0,images.size(),images.size()-1);
               print(images,0,"Move image%s to position %d.",
                     gmic_selection,
-                    ind0);
+                    iind0);
               CImgList<T> _images, nimages;
               CImgList<char> _images_names, nimages_names;
               if (is_get_version) {
@@ -7690,16 +7639,16 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               }
               nimages.insert(selection.height());
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                if (is_get_version) images[ind].move_to(nimages[l]);
-                else images[ind].swap(nimages[l]);
+                const unsigned int uind = selection[l];
+                if (is_get_version) images[uind].move_to(nimages[l]);
+                else images[uind].swap(nimages[l]);
                 // Empty shared image as a special item to be removed later.
-                images[ind]._is_shared = true;
-                images_names[ind].move_to(nimages_names);
+                images[uind]._is_shared = true;
+                images_names[uind].move_to(nimages_names);
               }
-              images.insert(nimages.size(),ind0);
-              cimglist_for(nimages,l) nimages[l].swap(images[ind0+l]);
-              nimages_names.move_to(images_names,ind0);
+              images.insert(nimages.size(),iind0);
+              cimglist_for(nimages,l) nimages[l].swap(images[iind0+l]);
+              nimages_names.move_to(images_names,iind0);
               cimglist_for(images,l) if (!images[l] && images[l].is_shared()) {
                 images.remove(l); images_names.remove(l--); // Remove special items.
               }
@@ -7727,11 +7676,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             if (is_valid_argument) {
               print(images,0,"Mirror image%s along the '%s'-ax%cs.",
                     gmic_selection,
-                    argument_text,
+                    gmic_argument_text(),
                     std::strlen(argument)>1?'e':'i');
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],mirror(argument));
-              }
+              cimg_forY(selection,l) gmic_apply(mirror(argument));
             } else arg_error("mirror");
             is_released = false; ++position; continue;
           }
@@ -7762,7 +7709,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Multiply image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Multiply image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Multiply image%s");
           // Modulo.
           gmic_arithmetic_item("-mod",
@@ -7773,7 +7720,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute pointwise modulo of image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Compute pointwise modulo of image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute sequential pointwise modulo of image%s");
 
           // Max.
@@ -7785,7 +7732,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute pointwise maximum between image%s and image [%d]",
                                gmic_selection,ind[0],
                                "Compute pointwise maximum between image%s and expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute pointwise maximum of all image%s together");
           // Min.
           gmic_arithmetic_item("-min",
@@ -7796,7 +7743,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute pointwise minimum between image%s and image [%d]",
                                gmic_selection,ind[0],
                                "Compute pointwise minimum between image%s and expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute pointwise minimum of image%s");
 
           // Matrix multiplication.
@@ -7808,18 +7755,18 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Multiply matrix/vector%s by matrix/vector image [%d]",
                                gmic_selection,ind[0],
                                "Multiply matrix/vector%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Multiply matrix/vector%s");
 
           // Set 3d rendering modes.
           if (!std::strcmp("-mode3d",item)) {
             gmic_substitute_args();
-            int value = 4;
+            int mode = 4;
             if (std::sscanf(argument,"%d%c",
-                            &value,&end)==1 &&
-                value>=-1 && value<=5) ++position;
-            else value = 4;
-            render3d = value;
+                            &mode,&end)==1 &&
+                mode>=-1 && mode<=5) ++position;
+            else mode = 4;
+            render3d = mode;
             print(images,0,"Set static 3d rendering mode to %s.",
                   render3d==-1?"bounding-box":
                   render3d==0?"pointwise":render3d==1?"linear":render3d==2?"flat":
@@ -7830,12 +7777,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
           if (!std::strcmp("-moded3d",item)) {
             gmic_substitute_args();
-            int value = -1;
+            int mode = -1;
             if (std::sscanf(argument,"%d%c",
-                            &value,&end)==1 &&
-                value>=-1 && value<=5) ++position;
-            else value = -1;
-            renderd3d = value;
+                            &mode,&end)==1 &&
+                mode>=-1 && mode<=5) ++position;
+            else mode = -1;
+            renderd3d = mode;
             print(images,0,"Set dynamic 3d rendering mode to %s.",
                   renderd3d==-1?"bounding-box":
                   renderd3d==0?"pointwise":renderd3d==1?"linear":renderd3d==2?"flat":
@@ -7847,9 +7794,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Map LUT.
           if (!std::strcmp("-map",command)) {
             gmic_substitute_args();
-            unsigned int lut_type = 0, boundary = 0;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            unsigned int lut_type = 0;
+            boundary = 0;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u%c",indices,&boundary,&end)==2) &&
                 (ind=selection2cimg(indices,images.size(),images_names,"-map",true,
@@ -7860,9 +7807,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     boundary==0?"dirichlet":boundary==1?"neumann":"periodic");
               const CImg<T> palette = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],map(palette,boundary));
-              }
+              cimg_forY(selection,l) gmic_apply(map(palette,boundary));
             } else if ((std::sscanf(argument,"%u%c",&lut_type,&end)==1 ||
                         std::sscanf(argument,"%u,%u%c",&lut_type,&boundary,&end)==2) &&
                        lut_type<=7 && boundary<=2) {
@@ -7876,9 +7821,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 lut_type==2?CImg<T>::lines_LUT256():lut_type==3?CImg<T>::hot_LUT256():
                 lut_type==4?CImg<T>::cool_LUT256():lut_type==5?CImg<T>::jet_LUT256():
                 lut_type==6?CImg<T>::flag_LUT256():CImg<T>::cube_LUT256();
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],map(palette,boundary));
-              }
+              cimg_forY(selection,l) gmic_apply(map(palette,boundary));
             } else arg_error("map");
             is_released = false; ++position; continue;
           }
@@ -7901,9 +7844,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 print(images,0,"Apply median filter of size %g, on image%s.",
                       siz,
                       gmic_selection);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],blur_median((unsigned int)siz,threshold));
-              }
+              cimg_forY(selection,l) gmic_apply(blur_median((unsigned int)siz,threshold));
             } else arg_error("median");
             is_released = false; ++position; continue;
           }
@@ -7917,7 +7858,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Divide matrix/vector%s by matrix/vector image [%d]",
                                gmic_selection,ind[0],
                                "Divide matrix/vector%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Divide matrix/vector%s");
 
           // MSE.
@@ -7930,7 +7871,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               cimg_forY(selection,l) subimages[l].assign(gmic_check(images[selection[l]]),true);
               CImg<T> img(subimages.size(),subimages.size(),1,1,(T)0);
               cimg_forXY(img,x,y) if (x>y) img(x,y) = img(y,x) = (T)subimages[x].MSE(subimages[y]);
-              CImg<char> name = CImg<char>::string("[MSE]");
+              CImg<char>::string("[MSE]").move_to(name);
               if (is_get_version) {
                 img.move_to(images);
                 name.move_to(images_names);
@@ -7948,7 +7889,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             double z0r = -2, z0i = -2, z1r = 2, z1i = 2, paramr = 0, parami = 0;
             unsigned int is_julia = 0;
-            float opacity = 1, itermax = 100;
+            float itermax = 100;
+            opacity = 1;
             if ((std::sscanf(argument,"%lf,%lf,%lf,%lf%c",
                              &z0r,&z0i,&z1r,&z1i,&end)==4 ||
                  std::sscanf(argument,"%lf,%lf,%lf,%lf,%f%c",
@@ -7971,12 +7913,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     z1r,z1i,
                     paramr,parami,
                     itermax);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],draw_mandelbrot(CImg<T>(),opacity,z0r,z0i,z1r,z1i,
-                                                                (unsigned int)itermax,true,
-                                                                (bool)is_julia,
-                                                                paramr,parami));
-              }
+              cimg_forY(selection,l) gmic_apply(draw_mandelbrot(CImg<T>(),opacity,z0r,z0i,z1r,z1i,(unsigned int)itermax,
+                                                                true,(bool)is_julia,paramr,parami));
             } else arg_error("mandelbrot");
             is_released = false; ++position; continue;
           }
@@ -7991,17 +7929,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Set image name.
           if (!std::strcmp("-name",command) && !is_get_version) {
             gmic_substitute_args();
-            const unsigned int l = std::strlen(argument);
-            CImg<char> name(argument,l+1);
-            unsigned int is_modified=0;
-            if (l>=2 && name[l-2]==',' && (name[l-1]=='0' || name[l-1]=='1')) {
-              is_modified = name[l-1]!='0';
-              name[l-2] = 0;
-            }
-            print(images,0,"Set name of image%s to '%s'%s.",
-                  gmic_selection,name.data(),is_modified?" (modified)":"");
+            print(images,0,"Set name of image%s to '%s'.",
+                  gmic_selection,gmic_argument_text());
+            CImg<char>::string(argument).move_to(name);
             gmic_strreplace(name);
-            if (is_modified) name.mark();
             cimg_forY(selection,l) images_names[selection[l]].assign(name);
             ++position; continue;
           }
@@ -8009,10 +7940,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Normalize.
           if (!std::strcmp("-normalize",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind0, ind1;
-            double value0 = 0, value1 = 0;
-            char sep0 = 0, sep1 = 0;
-            *argx = *argy = 0;
+            ind0.assign(); ind1.assign();
+            sep0 = sep1 = *argx = *argy = 0;
+            value0 = value1 = 0;
             if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-],%255[][a-zA-Z0-9_.eE%+-]%c",
                             argx,argy,&end)==2 &&
                 ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep0,&end)==2 &&
@@ -8035,13 +7965,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     value1,sep1=='%'?"%":"");
               cimg_forY(selection,l) {
                 CImg<T>& img = gmic_check(images[selection[l]]);
-                double vmin = 0, vmax = 0, nvalue0 = value0, nvalue1 = value1;
+                nvalue0 = value0; nvalue1 = value1;
+                vmin = vmax = 0;
                 if (sep0=='%' || sep1=='%') {
                   if (img) vmax = (double)img.max_min(vmin);
                   if (sep0=='%') nvalue0 = vmin + (vmax-vmin)*value0/100;
                   if (sep1=='%') nvalue1 = vmin + (vmax-vmin)*value1/100;
                 }
-                gmic_apply(img,normalize((T)nvalue0,(T)nvalue1));
+                gmic_apply(normalize((T)nvalue0,(T)nvalue1));
               }
             } else if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep0,&end)==2 &&
                        sep0==']' &&
@@ -8052,9 +7983,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     value0,
                     value1);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],normalize((T)value0,(T)value1));
-              }
+              cimg_forY(selection,l) gmic_apply(normalize((T)value0,(T)value1));
             } else arg_error("normalize");
             is_released = false; ++position; continue;
           }
@@ -8068,7 +7997,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute boolean inequality between image%s and image [%d]",
                                gmic_selection,ind[0],
                                "Compute boolean inequality between image%s and expression %s'",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute boolean inequality between image%s");
 
           // Discard custom command arguments.
@@ -8083,7 +8012,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             int noise_type = 0;
             float sigma = 0;
-            char sep = 0;
+            sep = 0;
             if ((std::sscanf(argument,"%f%c",
                              &sigma,&end)==1 ||
                  (std::sscanf(argument,"%f%c%c",
@@ -8102,9 +8031,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     s_type,
                     gmic_selection,
                     cimg::abs(sigma),sep=='%'?"%":"");
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],noise(sigma,noise_type));
-              }
+              cimg_forY(selection,l) gmic_apply(noise(sigma,noise_type));
             } else arg_error("noise");
             is_released = false; ++position; continue;
           }
@@ -8139,12 +8066,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Draw 3d object.
           if (!std::strcmp("-object3d",command)) {
             gmic_substitute_args();
-            float x = 0, y = 0, z = 0, opacity = 1;
-            char sep = 0, sepx = 0, sepy = 0;
+            float x = 0, y = 0, z = 0;
             unsigned int
               is_zbuffer = 1,
               _render3d = (unsigned int)cimg::max(0,render3d),
-              _is_double3d = is_double3d?1:0;
+              _is_double3d = is_double3d?1U:0U;
             float
               _focale3d = focale3d,
               _light3d_x = light3d_x,
@@ -8152,8 +8078,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               _light3d_z = light3d_z,
               _specular_lightness3d = specular_lightness3d,
               _specular_shininess3d = specular_shininess3d;
-            CImg<unsigned int> ind;
-            *argx = *argy = 0;
+            sep = sepx = sepy = *argx = *argy = 0;
+            opacity = 1;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%255[0-9.eE%+-]%c",
@@ -8224,14 +8150,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   vertices.CImg3dtoobject3d(primitives,_colors,opacities,false);
                   if (light3d) _colors.insert(light3d,~0U,true);
                 } else vertices.CImg3dtoobject3d(primitives,colors,opacities,false);
-              }
-              catch (CImgException &e) {
-                CImg<char> message(1024);
-                if (!vertices.is_CImg3d(true,message))
+              } catch (CImgException &e) {
+                if (!vertices.is_CImg3d(true,&(*message=0)))
                   error(images,0,0,
                         "Command '-object3d': Invalid 3d object [%u], specified "
                         "in argument '%s' (%s).",
-                        *ind,argument_text,message.data());
+                        *ind,gmic_argument_text(),message.data());
                 else throw e;
               }
               cimglist_for(opacities,o) if (!opacities[o].is_shared()) opacities[o]*=opacity;
@@ -8243,17 +8167,17 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   ny = sepy=='%'?y*(img.height()-1)/100:y;
                 CImg<float> zbuffer(is_zbuffer?img.width():0,is_zbuffer?img.height():0,1,1,0);
                 if (colors) {
-                  gmic_apply(img,draw_object3d(nx,ny,z,vertices,primitives,colors,opacities,
-                                               _render3d,_is_double3d,_focale3d,
-                                               _light3d_x,_light3d_y,_light3d_z,
-                                               _specular_lightness3d,_specular_shininess3d,
-                                               zbuffer));
+                  gmic_apply(draw_object3d(nx,ny,z,vertices,primitives,colors,opacities,
+                                           _render3d,_is_double3d,_focale3d,
+                                           _light3d_x,_light3d_y,_light3d_z,
+                                           _specular_lightness3d,_specular_shininess3d,
+                                           zbuffer));
                 } else {
-                  gmic_apply(img,draw_object3d(nx,ny,z,vertices,primitives,_colors,opacities,
-                                               _render3d,_is_double3d,_focale3d,
-                                               _light3d_x,_light3d_y,_light3d_z,
-                                               _specular_lightness3d,_specular_shininess3d,
-                                               zbuffer));
+                  gmic_apply(draw_object3d(nx,ny,z,vertices,primitives,_colors,opacities,
+                                           _render3d,_is_double3d,_focale3d,
+                                           _light3d_x,_light3d_y,_light3d_z,
+                                           _specular_lightness3d,_specular_shininess3d,
+                                           zbuffer));
                 }
               }
             } else arg_error("object3d");
@@ -8269,30 +8193,29 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute bitwise OR of image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Compute bitwise OR of image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute sequential bitwise OR of image%s");
 
           // Set 3d object opacity.
           if (!std::strcmp("-opacity3d",command)) {
             gmic_substitute_args();
-            float value = 1;
-            if (std::sscanf(argument,"%f%c",
+            value = 1;
+            if (std::sscanf(argument,"%lf%c",
                             &value,&end)==1) ++position;
             else value = 1;
             print(images,0,"Set opacity of 3d object%s to %g.",
                   gmic_selection,
                   value);
             cimg_forY(selection,l) {
-              const unsigned int ind = selection[l];
-              CImg<T>& img = gmic_check(images[ind]);
-              try { gmic_apply(img,color_CImg3d(0,0,0,value,false,true)); }
+              const unsigned int uind = selection[l];
+              CImg<T>& img = images[uind];
+              try { gmic_apply(color_CImg3d(0,0,0,(float)value,false,true)); }
               catch (CImgException &e) {
-                CImg<char> message(1024);
-                if (!img.is_CImg3d(true,message))
+                if (!img.is_CImg3d(true,&(*message=0)))
                   error(images,0,0,
                         "Command '-opacity3d': Invalid 3d object [%d], "
                         "in selected image%s (%s).",
-                        ind,gmic_selection,message.data());
+                        uind,gmic_selection,message.data());
                 else throw e;
               }
             }
@@ -8302,7 +8225,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Output.
           if (!std::strcmp("-output",command) && !is_get_version) {
             gmic_substitute_args();
-            CImg<char> _filename(4096), filename_tmp(1024), options(256);
+            CImg<char> _filename(4096), filename_tmp(256), options(256);
             char cext[8];
             *cext = *_filename = *filename_tmp = *options = 0;
 
@@ -8336,6 +8259,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             const char
               *const filename = *cext?filename_tmp:_filename,
               *const ext = cimg::split_filename(filename);
+            CImg<char> uext = CImg<char>::string(ext);
+            cimg::uncase(uext);
 
             if (!cimg::strcasecmp(ext,"off")) {
               CImg<char> nfilename(4096);
@@ -8348,13 +8273,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       "Command '-output': File '%s', format does not take any output options (options '%s' specified).",
                       nfilename.data(),options.data());
 
-              print(images,0,"Output 3d object%s as file '%s'.",
-                    gmic_selection,
-                    nfilename.data());
+              print(images,0,"Output 3d object%s as %s file '%s'.",
+                    gmic_selection,uext.data(),nfilename.data());
 
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                const CImg<T>& img = gmic_check(images[ind]);
+                const unsigned int uind = selection[l];
+                const CImg<T>& img = gmic_check(images[uind]);
                 if (selection.height()!=1) cimg::number_filename(filename,l,6,nfilename);
                 CImgList<unsigned int> primitives;
                 CImgList<float> colors, opacities;
@@ -8363,12 +8287,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   vertices.CImg3dtoobject3d(primitives,colors,opacities,false).
                     save_off(primitives,colors,nfilename);
                 } catch (CImgException &e) {
-                  CImg<char> message(1024);
-                  if (!vertices.is_CImg3d(true,message))
+                  if (!vertices.is_CImg3d(true,&(*message=0)))
                     error(images,0,0,
                           "Command '-output': 3d object file '%s', invalid 3d object [%u] "
                           "in selected image%s (%s).",
-                          nfilename.data(),ind,gmic_selection,message.data());
+                          nfilename.data(),uind,gmic_selection,message.data());
                   else throw e;
                 }
               }
@@ -8393,15 +8316,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 output_images[l].assign(images[selection[l]],images[selection[l]]?true:false);
               if (output_images.size()==1)
                 print(images,0,
-                      "Output image%s as file '%s', with pixel type '%s' (1 image %dx%dx%dx%d).",
+                      "Output image%s as %s file '%s', with pixel type '%s' (1 image %dx%dx%dx%d).",
                       gmic_selection,
-                      _filename.data(),
+                      uext.data(),_filename.data(),
                       stype,
                       output_images[0].width(),output_images[0].height(),
                       output_images[0].depth(),output_images[0].spectrum());
-              else print(images,0,"Output image%s as file '%s', with pixel type '%s'.",
+              else print(images,0,"Output image%s as %s file '%s', with pixel type '%s'.",
                          gmic_selection,
-                         _filename.data(),
+                         uext.data(),_filename.data(),
                          stype);
               if (!output_images)
                 error(images,0,0,
@@ -8447,7 +8370,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 stype = (std::sscanf(options,"%255[a-zA-Z]%c",&(*argx=0),&(end=0))==1 ||
                          (std::sscanf(options,"%255[a-zA-Z]%c",&(*argx=0),&end)==2 && end==','))?
                 argx:cimg::type<T>::string();
-              const unsigned int l_stype = std::strlen(stype);
+              const unsigned int l_stype = (unsigned int)std::strlen(stype);
               const char *const _options = options.data() + (stype!=argx?0:l_stype+(end==','?1:0));
               float _is_multipage = 0;
               if (std::sscanf(_options,"%255[a-zA-Z]%c",argy,&end)!=1 &&
@@ -8455,7 +8378,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 *argy = 0; _is_multipage = 0;
               }
               const unsigned int compression_type = !cimg::strcasecmp(argy,"jpeg") || !cimg::strcasecmp(argy,"jpg")?2:
-                !cimg::strcasecmp(argy,"lzw")?1:0;
+                !cimg::strcasecmp(argy,"lzw")?1U:0U;
               const bool is_multipage = (bool)cimg::round(_is_multipage);
 
               CImgList<T> output_images(selection.height());
@@ -8471,17 +8394,17 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               cimg_forY(selection,l)
                 output_images[l].assign(images[selection[l]],output_images[l]?true:false);
               if (output_images.size()==1)
-                print(images,0,"Output image%s as file '%s', with pixel type '%s' and %s compression "
+                print(images,0,"Output image%s as %s file '%s', with pixel type '%s' and %s compression "
                       "(1 image %dx%dx%dx%d).",
                       gmic_selection,
-                      _filename.data(),stype,
+                      uext.data(),_filename.data(),stype,
                       compression_type==2?"JPEG":compression_type==1?"LZW":"no",
                       output_images[0].width(),output_images[0].height(),
                       output_images[0].depth(),output_images[0].spectrum());
-              else print(images,0,"Output image%s as file '%s', with pixel type '%s', "
+              else print(images,0,"Output image%s as %s file '%s', with pixel type '%s', "
                          "%s compression and %s-page mode.",
                          gmic_selection,
-                         _filename.data(),stype,
+                         uext.data(),_filename.data(),stype,
                          compression_type==2?"JPEG":compression_type==1?"LZW":"no",
                          is_multipage?"multi":"single");
               if (!output_images)
@@ -8545,23 +8468,22 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   nb_loops = (unsigned int)cimg::round(_nb_loops);
                 if (nb_loops)
                   print(images,0,
-                        "Output image%s as animated file '%s', with %u fps and %u loops.",
-                        gmic_selection,_filename.data(),fps,nb_loops);
+                        "Output image%s as animated %s file '%s', with %u fps and %u loops.",
+                        gmic_selection,uext.data(),_filename.data(),fps,nb_loops);
                 else
                   print(images,0,
-                        "Output image%s as animated file '%s', with %u fps.",
-                        gmic_selection,_filename.data(),fps);
+                        "Output image%s as animated %s file '%s', with %u fps.",
+                        gmic_selection,uext.data(),_filename.data(),fps);
                 output_images.save_gif_external(filename,fps,nb_loops);
               } else {
                 if (output_images.size()==1)
-                  print(images,0,"Output image%s as file '%s' (1 image %dx%dx%dx%d).",
+                  print(images,0,"Output image%s as %s file '%s' (1 image %dx%dx%dx%d).",
                         gmic_selection,
-                        _filename.data(),
+                        uext.data(),_filename.data(),
                         output_images[0].width(),output_images[0].height(),
                         output_images[0].depth(),output_images[0].spectrum());
-                else print(images,0,"Output image%s as file '%s'.",
-                           gmic_selection,
-                           _filename.data());
+                else print(images,0,"Output image%s as %s file '%s'.",
+                           gmic_selection,uext.data(),_filename.data());
                 output_images.save(filename); // Save distinct .gif files.
               }
             } else if (!cimg::strcasecmp(ext,"jpeg") || !cimg::strcasecmp(ext,"jpg")) {
@@ -8582,15 +8504,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 output_images[l].assign(images[selection[l]],output_images[l]?true:false);
               if (output_images.size()==1)
                 print(images,0,
-                      "Output image%s as file '%s', with quality %g%% (1 image %dx%dx%dx%d).",
+                      "Output image%s as %s file '%s', with quality %g%% (1 image %dx%dx%dx%d).",
                       gmic_selection,
-                      _filename.data(),
+                      uext.data(),_filename.data(),
                       quality,
                       output_images[0].width(),output_images[0].height(),
                       output_images[0].depth(),output_images[0].spectrum());
-              else print(images,0,"Output image%s as file '%s', with quality %g%%.",
+              else print(images,0,"Output image%s as %s file '%s', with quality %g%%.",
                          gmic_selection,
-                         _filename.data(),
+                         uext.data(),_filename.data(),
                          quality);
               if (!output_images)
                 error(images,0,0,
@@ -8620,18 +8542,18 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 output_images[l].assign(images[selection[l]],output_images[l]?true:false);
               if (output_images.size()==1)
                 print(images,0,
-                      "Output image%s as file '%s', with header get from file '%s' "
+                      "Output image%s as %s file '%s', with header get from file '%s' "
                       "(1 image %dx%dx%dx%d).",
                       gmic_selection,
-                      _filename.data(),
+                      uext.data(),_filename.data(),
                       options.data(),
                       output_images[0].width(),output_images[0].height(),
                       output_images[0].depth(),output_images[0].spectrum());
               else
                 print(images,0,
-                      "Output image%s as file '%s', with header get from file '%s'.",
+                      "Output image%s as %s file '%s', with header get from file '%s'.",
                       gmic_selection,
-                      _filename.data(),
+                      uext.data(),_filename.data(),
                       options.data());
               if (output_images.size()==1)
                 output_images[0].save_minc2(filename,options);
@@ -8659,15 +8581,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 output_images[l].assign(images[selection[l]],images[selection[l]]?true:false);
               if (output_images.size()==1)
                 print(images,0,
-                      "Output image%s as file '%s', with pixel type '%s' (1 image %dx%dx%dx%d).",
+                      "Output image%s as %s file '%s', with pixel type '%s' (1 image %dx%dx%dx%d).",
                       gmic_selection,
-                      _filename.data(),
+                      uext.data(),_filename.data(),
                       stype,
                       output_images[0].width(),output_images[0].height(),
                       output_images[0].depth(),output_images[0].spectrum());
-              else print(images,0,"Output image%s as file '%s', with pixel type '%s'.",
+              else print(images,0,"Output image%s as %s file '%s', with pixel type '%s'.",
                          gmic_selection,
-                         _filename.data(),
+                         uext.data(),_filename.data(),
                          stype);
               if (!output_images)
                 error(images,0,0,
@@ -8714,9 +8636,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               CImgList<T> output_images(selection.height());
               cimg_forY(selection,l)
                 output_images[l].assign(images[selection[l]],images[selection[l]]?true:false);
-              print(images,0,"Output image%s as file '%s', with pixel type '%s'.",
+              print(images,0,"Output image%s as %s file '%s', with pixel type '%s'.",
                     gmic_selection,
-                    _filename.data(),
+                    uext.data(),_filename.data(),
                     stype);
 
 #define gmic_save_cimg(value_type,svalue_type) \
@@ -8753,9 +8675,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 CImg<char>::string(images_names[selection[l]]).move_to(output_names[1+l]);
               }
               (output_names>'x').unroll('y').move_to(output_images);
-              print(images,0,"Output image%s as file '%s', with pixel type '%s'.",
+              print(images,0,"Output image%s as %s file '%s', with pixel type '%s'.",
                     gmic_selection,
-                    _filename.data(),
+                    uext.data(),_filename.data(),
                     stype);
 
 #define gmic_save_gmz(value_type,svalue_type) \
@@ -8822,15 +8744,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               }
               cimg_forY(selection,l)
                 output_images[l].assign(images[selection[l]],output_images[l]?true:false);
-              print(images,0,"Output image%s as file '%s', with %g fps and %s codec.",
+              print(images,0,"Output image%s as %s file '%s', with %g fps and %s codec.",
                     gmic_selection,
-                    _filename.data(),
+                    uext.data(),_filename.data(),
                     fps,*codec?codec:"(default)");
               try {
                 output_images.save_video(filename,(unsigned int)fps,codec,(bool)keep_open);
               } catch (CImgException&) {
-                warn(images,0,"Command '-output': Filename '%s' has not been successfully encoded using native function. "
-                     "Trying fallback function.",
+                warn(images,0,"Command '-output': Cannot encode file '%s' natively. Trying fallback function.",
                      filename);
                 output_images.save_ffmpeg_external(filename,(unsigned int)fps);
               }
@@ -8848,20 +8769,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               cimg_forY(selection,l)
                 output_images[l].assign(images[selection[l]],output_images[l]?true:false);
               if (output_images.size()==1)
-                print(images,0,"Output image%s as file '%s' (1 image %dx%dx%dx%d).",
+                print(images,0,"Output image%s as %s file '%s' (1 image %dx%dx%dx%d).",
                       gmic_selection,
-                      _filename.data(),
+                      uext.data(),_filename.data(),
                       output_images[0].width(),output_images[0].height(),
                       output_images[0].depth(),output_images[0].spectrum());
-              else print(images,0,"Output image%s as file '%s'.",
-                         gmic_selection,
-                         _filename.data());
+              else print(images,0,"Output image%s as %s file '%s'.",
+                         gmic_selection,uext.data(),_filename.data());
 
               if (*options)
                 error(images,0,0,
-                      "Command '-output': File '%s', format does not take any output options "
+                      "Command '-output': File '%s', format '%s' does not take any output options "
                       "(options '%s' specified).",
-                      _filename.data(),options.data());
+                      _filename.data(),ext,options.data());
 
               output_images.save(filename);
             }
@@ -8872,7 +8792,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 std::remove(filename_tmp);
               } catch (...) { // Failed, maybe 'filename_tmp' consists of several numbered images.
                 bool save_failure = false;
-                CImg<char> message(1024);
+                *message = 0;
                 for (unsigned int i = 0; i!=~0U; ++i) {
                   cimg::number_filename(filename_tmp,i,6,formula);
                   cimg::number_filename(_filename,i,6,message);
@@ -8938,7 +8858,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Run multiple commands in parallel.
           if (!std::strcmp("-parallel",item)) {
             gmic_substitute_args();
-            const char *_arg = argument, *_arg_text = argument_text;
+            const char *_arg = argument, *_arg_text = gmic_argument_text();
             bool wait_mode = true;
             if ((*_arg=='0' || *_arg=='1') && (_arg[1]==',' || !_arg[1])) {
               wait_mode = (bool)(*_arg-'0'); _arg+=2; _arg_text+=2;
@@ -9002,7 +8922,6 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               gi.is_quit = false;
               gi.is_return = false;
               gi.is_double3d = is_double3d;
-              gi.is_default_type = is_default_type;
               gi.check_elif = false;
               gi.verbosity = verbosity;
               gi.render3d = render3d;
@@ -9082,18 +9001,16 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-permute",command)) {
             gmic_substitute_args();
             print(images,0,"Permute axes of image%s, with permutation '%s'.",
-                  gmic_selection,argument_text);
-            cimg_forY(selection,l) {
-              gmic_apply(images[selection[l]],permute_axes(argument));
-            }
+                  gmic_selection,gmic_argument_text());
+            cimg_forY(selection,l) gmic_apply(permute_axes(argument));
             is_released = false; ++position; continue;
           }
 
           // Set progress indice.
           if (!std::strcmp("-progress",item)) {
             gmic_substitute_args();
-            float value = -1;
-            if (std::sscanf(argument,"%f%c",
+            value = -1;
+            if (std::sscanf(argument,"%lf%c",
                             &value,&end)==1) {
               if (value<0) value = -1; else if (value>100) value = 100;
               if (value>=0)
@@ -9101,7 +9018,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       value);
               else
                 print(images,0,"Disable progress indice.");
-              *progress = value;
+              *progress = (float)value;
             } else arg_error("progress");
             ++position; continue;
           }
@@ -9121,15 +9038,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute image%s to the power of image [%d]",
                                gmic_selection,ind[0],
                                "Compute image%s to the power of expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute sequential power of image%s");
 
           // Draw point.
           if (!std::strcmp("-point",command)) {
             gmic_substitute_args();
-            float x = 0, y = 0, z = 0, opacity = 1;
-            char sepx = 0, sepy = 0, sepz = 0;
-            *argx = *argy = *argz = *color = 0;
+            float x = 0, y = 0, z = 0;
+            sepx = sepy = sepz = *argx = *argy = *argz = *color = 0;
+            opacity = 1;
             if ((std::sscanf(argument,"%255[0-9.eE%+-]%c",
                              argx,&end)==1 ||
                  std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
@@ -9139,7 +9056,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                  std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],%f%c",
                              argx,argy,argz,&opacity,&end)==4 ||
                  std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],%f,"
-                             "%4095[0-9.eE,+-]%c",
+                             "%4095[0-9.eEinfa,+-]%c",
                              argx,argy,argz,&opacity,color,&end)==5) &&
                 (std::sscanf(argx,"%f%c",&x,&end)==1 ||
                  (std::sscanf(argx,"%f%c%c",&x,&sepx,&end)==2 && sepx=='%')) &&
@@ -9158,13 +9075,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     opacity,
                     *color?color:"default");
               cimg_forY(selection,l) {
-                CImg<T> &img = images[selection[l]], col(img.spectrum(),1,1,1,0);
-                col.fill(color,true);
+                CImg<T> &img = images[selection[l]];
+                col.assign(img.spectrum(),1,1,1,0).fill(color,true);
                 const int
                   nx = (int)cimg::round(sepx=='%'?x*(img.width()-1)/100:x),
                   ny = (int)cimg::round(sepy=='%'?y*(img.height()-1)/100:y),
                   nz = (int)cimg::round(sepz=='%'?z*(img.depth()-1)/100:z);
-                gmic_apply(img,draw_point(nx,ny,nz,col.data(),opacity));
+                gmic_apply(draw_point(nx,ny,nz,col.data(),opacity));
               }
             } else arg_error("point");
             is_released = false; ++position; continue;
@@ -9174,10 +9091,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-polygon",command)) {
             gmic_substitute_args();
             CImg<char> strint(256);
-            *strint = *color = 0;
-            float N = 0, x0 = 0, y0 = 0, opacity = 1;
-            char sepx = 0, sepy = 0, seph = 0;
-            unsigned int pattern = 0;
+            float N = 0, x0 = 0, y0 = 0;
+            sep1 = sepx = sepy = *strint = *color = 0;
+            pattern = ~0U; opacity = 1;
             if (std::sscanf(argument,"%f%c",
                             &N,&end)==2 && N>=1) {
               N = cimg::round(N);
@@ -9201,19 +9117,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   } else arg_error("polygon");
                 } else arg_error("polygon");
               if (nargument<eargument &&
-                  std::sscanf(nargument,"%4095[0-9.eE+-]",color)==1 &&
+                  std::sscanf(nargument,"%4095[0-9.eEinfa+-]",color)==1 &&
                   std::sscanf(color,"%f",&opacity)==1) {
                 nargument+=std::strlen(color) + 1;
                 *color = 0;
               }
               if (nargument<eargument &&
-                  std::sscanf(nargument,"0%c%4095[0-9a-fA-F]",&seph,color)==2 && seph=='x' &&
+                  std::sscanf(nargument,"0%c%4095[0-9a-fA-F]",&sep1,color)==2 && sep1=='x' &&
                   std::sscanf(color,"%x%c",&pattern,&end)==1) {
                 nargument+=std::strlen(color)+3;
                 *color = 0;
               }
               const char *const _color = nargument<eargument?nargument:&(end=0);
-              if (seph=='x')
+              if (sep1=='x')
                 print(images,0,"Draw %g-vertices outlined polygon on image%s, with opacity %g, "
                       "pattern 0x%x and color (%s).",
                       N,
@@ -9238,10 +9154,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     coords(p,1) = (int)cimg::round(coords0(p,1)*(img.height()-1)/100);
                   else coords(p,1) = (int)cimg::round(coords(p,1));
                 }
-                CImg<T> col(img.spectrum(),1,1,1,0);
-                col.fill(_color,true);
-                if (seph=='x') { gmic_apply(img,draw_polygon(coords,col.data(),opacity,pattern)); }
-                else { gmic_apply(img,draw_polygon(coords,col.data(),opacity)); }
+                col.assign(img.spectrum(),1,1,1,0).fill(_color,true);
+                if (sep1=='x') { gmic_apply(draw_polygon(coords,col.data(),opacity,pattern)); }
+                else gmic_apply(draw_polygon(coords,col.data(),opacity));
               }
             } else arg_error("polygon");
             is_released = false; ++position; continue;
@@ -9265,9 +9180,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   alpha,
                   beta,
                   _scale);
-            cimg_forY(selection,l) {
-              gmic_apply(images[selection[l]],draw_plasma(alpha,beta,_scale));
-            }
+            cimg_forY(selection,l) gmic_apply(draw_plasma(alpha,beta,_scale));
             is_released = false; continue;
           }
 
@@ -9282,16 +9195,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     mode==0?"points":mode==1?"segments":"no-textures");
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                CImg<T> &img = gmic_check(images[ind]);
-                try { gmic_apply(img,convert_primitives_CImg3d(mode)); }
+                const unsigned int uind = selection[l];
+                CImg<T> &img = images[uind];
+                try { gmic_apply(convert_primitives_CImg3d(mode)); }
                 catch (CImgException &e) {
-                  CImg<char> message(1024);
-                  if (!img.is_CImg3d(true,message))
+                  if (!img.is_CImg3d(true,&(*message=0)))
                     error(images,0,0,
                           "Command '-primitives3d': Invalid 3d object [%d], "
                           "in selected image%s (%s).",
-                          ind,gmic_selection,message.data());
+                          uind,gmic_selection,message.data());
                   else throw e;
                 }
               }
@@ -9305,7 +9217,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             double ymin = 0, ymax = 0, xmin = 0, xmax = 0;
             unsigned int plot_type = 1, vertex_type = 1;
             float resolution = 65536;
-            char sep = 0;
+            sep = 0;
             *formula = 0;
             if (((std::sscanf(argument,"'%1023[^']%c%c",
                               formula,&sep,&end)==2 && sep=='\'') ||
@@ -9368,11 +9280,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Draw quiver.
           if (!std::strcmp("-quiver",command)) {
             gmic_substitute_args();
-            float sampling = 25, factor = -20, opacity = 1;
-            unsigned int is_arrows = 1, pattern = ~0U;
-            CImg<unsigned int> ind;
-            char seph = 0;
-            *color = 0;
+            float sampling = 25, factor = -20;
+            unsigned int is_arrows = 1;
+            pattern = ~0U; opacity = 1;
+            sep = *color = 0;
             if ((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]]%c",
                              indices,&end)==1 ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%f%c",
@@ -9385,15 +9296,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                              indices,&sampling,&factor,&is_arrows,&opacity,&end)==5 ||
                  (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%f,%f,%u,%f,0%c%x%c",
                               indices,&sampling,&factor,&is_arrows,
-                              &opacity,&seph,&pattern,&end)==7 && seph=='x') ||
-                 (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%f,%f,%u,%f,%4095[0-9.eE,+-]%c",
+                              &opacity,&sep,&pattern,&end)==7 && sep=='x') ||
+                 (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%f,%f,%u,%f,%4095[0-9.eEinfa,+-]%c",
                               indices,&sampling,&factor,&is_arrows,&opacity,color,&end)==6 &&
                   (bool)(pattern=~0U)) ||
                  (*color=0,std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%f,%f,%u,"
-                                       "%f,0%c%x,%4095[0-9.eE,+-]%c",
+                                       "%f,0%c%x,%4095[0-9.eEinfa,+-]%c",
                                        indices,&sampling,&factor,&is_arrows,
-                                       &opacity,&seph,&pattern,color,&end)==8 &&
-                  seph=='x')) &&
+                                       &opacity,&sep,&pattern,color,&end)==8 &&
+                  sep=='x')) &&
                 (ind=selection2cimg(indices,images.size(),images_names,"-quiver",true,
                                     false,CImg<char>::empty())).height()==1 &&
                 sampling>0 && is_arrows<=1) {
@@ -9409,10 +9320,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     *color?color:"default");
               const CImg<T> flow = gmic_image_arg(*ind);
               cimg_forY(selection,l) {
-                CImg<T> &img = images[selection[l]], col(img.spectrum(),1,1,1,0);
-                col.fill(color,true);
-                gmic_apply(img,draw_quiver(flow,col.data(),opacity,(unsigned int)sampling,
-                                           factor,(bool)is_arrows,pattern));
+                CImg<T> &img = images[selection[l]];
+                col.assign(img.spectrum(),1,1,1,0).fill(color,true);
+                gmic_apply(draw_quiver(flow,col.data(),opacity,(unsigned int)sampling,
+                                       factor,(bool)is_arrows,pattern));
               }
             } else arg_error("quiver");
             is_released = false; ++position; continue;
@@ -9438,9 +9349,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               _images_names.move_to(images_names,0);
             }
             if (verbosity>=0 || is_debug) {
+              cimg::mutex(29);
               std::fprintf(cimg::output()," (%u image%s left).",
                            images.size(),images.size()==1?"":"s");
               std::fflush(cimg::output());
+              cimg::mutex(29,0);
             }
             is_released = false; continue;
           }
@@ -9482,12 +9395,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-resize",command)) {
             gmic_substitute_args();
             float valx = 100, valy = 100, valz = 100, valc = 100, cx = 0, cy = 0, cz = 0, cc = 0;
-            char sep = 0, sepx = '%', sepy = '%', sepz = '%', sepc = '%';
             CImg<char> indicesy(256), indicesz(256), indicesc(256);
             CImg<unsigned int> ind, indx, indy, indz, indc;
-            unsigned int boundary = 0;
             int interpolation = 1;
-            *indices = *indicesy = *indicesz = *indicesc = *argx = *argy = *argz = *argc = 0;
+            *indices = *indicesy = *indicesz = *indicesc = *argx = *argy = *argz = *argc = sep = 0;
+            sepx = sepy = sepz = sepc = '%';
+            boundary = 0;
+
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               indices,&sep,&end)==2 && sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%d%c",
@@ -9520,10 +9434,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     interpolation==4?"grid":interpolation==5?"cubic":"lanczos",
                     boundary<=0?"dirichlet":boundary==1?"neumann":"periodic",
                     cx,cy,cz,cc);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],resize(nvalx,nvaly,nvalz,nvalc,interpolation,
-                                                       boundary,cx,cy,cz,cc));
-              }
+              cimg_forY(selection,l) gmic_apply(resize(nvalx,nvaly,nvalz,nvalc,interpolation,boundary,cx,cy,cz,cc));
               ++position;
             } else if ((cx=cy=cz=cc=0, interpolation=1, boundary=0, true) &&
                        (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-]%c",
@@ -9620,7 +9531,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   nvaly = _nvaly?_nvaly:1,
                   nvalz = _nvalz?_nvalz:1,
                   nvalc = _nvalc?_nvalc:1;
-                gmic_apply(img,resize(nvalx,nvaly,nvalz,nvalc,interpolation,boundary,cx,cy,cz,cc));
+                gmic_apply(resize(nvalx,nvaly,nvalz,nvalc,interpolation,boundary,cx,cy,cz,cc));
               }
               ++position;
             } else {
@@ -9651,8 +9562,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                           selection[l],
                           disp.width(),
                           disp.height());
-                    gmic_apply(img,resize(disp));
-                  } else { gmic_apply(img,replace(img)); }
+                    gmic_apply(resize(disp));
+                  } else gmic_apply(replace(img));
                 }
               }
 #endif // #if cimg_display==0
@@ -9694,26 +9605,25 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Keep rows.
           if (!std::strcmp("-rows",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind0, ind1;
-            float value0 = 0, value1 = 0;
-            char sep0 = 0, sep1 = 0;
-            *argx = *argy = 0;
+            ind0.assign(); ind1.assign();
+            sep0 = sep1 = *argx = *argy = 0;
+            value0 = value1 = 0;
             if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-]%c",
                             argx,&end)==1 &&
                 ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c]",indices,&sep0,&end)==2 &&
                   sep0==']' &&
                   (ind0=selection2cimg(indices,images.size(),images_names,"-rows",true,
                                        false,CImg<char>::empty())).height()==1) ||
-                 std::sscanf(argx,"%f%c",&value0,&end)==1 ||
-                 (std::sscanf(argx,"%f%c%c",&value0,&sep0,&end)==2 && sep0=='%'))) {
-              if (ind0) { value0 = images[*ind0].height() - 1.0f; sep0 = 0; }
+                 std::sscanf(argx,"%lf%c",&value0,&end)==1 ||
+                 (std::sscanf(argx,"%lf%c%c",&value0,&sep0,&end)==2 && sep0=='%'))) {
+              if (ind0) { value0 = images[*ind0].height() - 1.; sep0 = 0; }
               print(images,0,"Keep rows %g%s of image%s.",
                     value0,sep0=='%'?"%":"",
                     gmic_selection);
               cimg_forY(selection,l) {
                 CImg<T> &img = images[selection[l]];
-                const int nvalue0 = (int)cimg::round(sep0=='%'?value0*(img.height()-1)/100:value0);
-                gmic_apply(img,row(nvalue0));
+                nvalue0 = cimg::round(sep0=='%'?value0*(img.height()-1)/100:value0);
+                gmic_apply(row((int)nvalue0));
               }
             } else if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-],%255[][a-zA-Z0-9_.eE%+-]%c",
                                    argx,argy,&end)==2 &&
@@ -9721,26 +9631,25 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                          sep0==']' &&
                          (ind0=selection2cimg(indices,images.size(),images_names,"-rows",true,
                                               false,CImg<char>::empty())).height()==1) ||
-                        std::sscanf(argx,"%f%c",&value0,&end)==1 ||
-                        (std::sscanf(argx,"%f%c%c",&value0,&sep0,&end)==2 && sep0=='%')) &&
+                        std::sscanf(argx,"%lf%c",&value0,&end)==1 ||
+                        (std::sscanf(argx,"%lf%c%c",&value0,&sep0,&end)==2 && sep0=='%')) &&
                        ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c",formula,&sep0,&end)==2 &&
                          sep0==']' &&
                          (ind1=selection2cimg(formula,images.size(),images_names,"-rows",true,
                                               false,CImg<char>::empty())).height()==1) ||
-                        std::sscanf(argy,"%f%c",&value1,&end)==1 ||
-                        (std::sscanf(argy,"%f%c%c",&value1,&sep1,&end)==2 && sep1=='%'))) {
-              if (ind0) { value0 = images[*ind0].height() - 1.0f; sep0 = 0; }
-              if (ind1) { value1 = images[*ind1].height() - 1.0f; sep1 = 0; }
-              print(images,0,"Keep rows %g%s..%g%s of image%s.",
+                        std::sscanf(argy,"%lf%c",&value1,&end)==1 ||
+                        (std::sscanf(argy,"%lf%c%c",&value1,&sep1,&end)==2 && sep1=='%'))) {
+              if (ind0) { value0 = images[*ind0].height() - 1.; sep0 = 0; }
+              if (ind1) { value1 = images[*ind1].height() - 1.; sep1 = 0; }
+              print(images,0,"Keep rows %g%s...%g%s of image%s.",
                     value0,sep0=='%'?"%":"",
                     value1,sep1=='%'?"%":"",
                     gmic_selection);
               cimg_forY(selection,l) {
                 CImg<T> &img = images[selection[l]];
-                const int
-                  nvalue0 = (int)cimg::round(sep0=='%'?value0*(img.height()-1)/100:value0),
-                  nvalue1 = (int)cimg::round(sep1=='%'?value1*(img.height()-1)/100:value1);
-                gmic_apply(img,rows(nvalue0,nvalue1));
+                nvalue0 = cimg::round(sep0=='%'?value0*(img.height()-1)/100:value0);
+                nvalue1 = cimg::round(sep1=='%'?value1*(img.height()-1)/100:value1);
+                gmic_apply(rows((int)nvalue0,(int)nvalue1));
               }
             } else arg_error("rows");
             is_released = false; ++position; continue;
@@ -9750,9 +9659,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-rotate",command)) {
             gmic_substitute_args();
             float angle = 0, zoom = 1, cx = 0, cy = 0;
-            unsigned int interpolation = 1, boundary = 0;
-            char sepx = 0, sepy = 0;
-            *argx = *argy = 0;
+            unsigned int interpolation = 1;
+            sep0 = sep1 = *argx = *argy = 0;
+            boundary = 0;
             if ((std::sscanf(argument,"%f%c",
                              &angle,&end)==1 ||
                  std::sscanf(argument,"%f,%u%c",
@@ -9765,10 +9674,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                              &angle,&interpolation,&boundary,argx,argy,&zoom,&end)==6) &&
                 (!*argx ||
                  std::sscanf(argx,"%f%c",&cx,&end)==1 ||
-                 (std::sscanf(argx,"%f%c%c",&cx,&sepx,&end)==2 && sepx=='%')) &&
+                 (std::sscanf(argx,"%f%c%c",&cx,&sep0,&end)==2 && sep0=='%')) &&
                 (!*argy ||
                  std::sscanf(argy,"%f%c",&cy,&end)==1 ||
-                 (std::sscanf(argy,"%f%c%c",&cy,&sepy,&end)==2 && sepy=='%')) &&
+                 (std::sscanf(argy,"%f%c%c",&cy,&sep1,&end)==2 && sep1=='%')) &&
                 interpolation<=2 && boundary<=2) {
               if (*argx) {
                 print(images,0,"Rotate image%s of %g°, %s interpolation, %s boundary conditions "
@@ -9776,22 +9685,20 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       gmic_selection,angle,
                       interpolation==0?"nearest-neighbor":interpolation==1?"linear":"cubic",
                       boundary==0?"dirichlet":boundary==1?"neumann":"periodic",
-                      cx,sepx=='%'?"%":"",cy,sepy=='%'?"%":"");
+                      cx,sep0=='%'?"%":"",cy,sep1=='%'?"%":"");
                 cimg_forY(selection,l) {
                   CImg<T> &img = images[selection[l]];
                   const float
-                    ncx = sepx=='%'?cx*(img.width()-1)/100:cx,
-                    ncy = sepy=='%'?cy*(img.height()-1)/100:cy;
-                  gmic_apply(img,rotate(angle,ncx,ncy,zoom,interpolation,boundary));
+                    ncx = sep0=='%'?cx*(img.width()-1)/100:cx,
+                    ncy = sep1=='%'?cy*(img.height()-1)/100:cy;
+                  gmic_apply(rotate(angle,ncx,ncy,zoom,interpolation,boundary));
                 }
               } else {
                 print(images,0,"Rotate image%s of %g°, %s interpolation and %s boundary conditions.",
                       gmic_selection,angle,
                       interpolation==0?"nearest-neighbor":interpolation==1?"linear":"cubic",
                       boundary==0?"dirichlet":boundary==1?"neumann":"periodic");
-                cimg_forY(selection,l) {
-                  gmic_apply(images[selection[l]],rotate(angle,interpolation,boundary));
-                }
+                cimg_forY(selection,l) gmic_apply(rotate(angle,interpolation,boundary));
               }
             } else arg_error("rotate");
             is_released = false; ++position; continue;
@@ -9800,31 +9707,28 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Round.
           if (!std::strcmp("-round",command)) {
             gmic_substitute_args();
-            double rounding_value = 1;
             int rounding_type = 0;
+            value = 1;
             if ((std::sscanf(argument,"%lf%c",
-                             &rounding_value,&end)==1 ||
+                             &value,&end)==1 ||
                  std::sscanf(argument,"%lf,%d%c",
-                             &rounding_value,&rounding_type,&end)==2) &&
-                rounding_value>=0 && rounding_type>=-1 && rounding_type<=1) ++position;
-            else { rounding_value = 1; rounding_type = 0; }
+                             &value,&rounding_type,&end)==2) &&
+                value>=0 && rounding_type>=-1 && rounding_type<=1) ++position;
+            else { value = 1; rounding_type = 0; }
             print(images,0,"Round values of image%s by %g and %s rounding.",
                   gmic_selection,
-                  rounding_value,
+                  value,
                   rounding_type<0?"backward":rounding_type>0?"forward":"nearest");
-            cimg_forY(selection,l) {
-              gmic_apply(images[selection[l]],round(rounding_value,rounding_type));
-            }
+            cimg_forY(selection,l) gmic_apply(round(value,rounding_type));
             is_released = false; continue;
           }
 
           // Fill with random values.
           if (!std::strcmp("-rand",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind0, ind1;
-            double value0 = 0, value1 = 0;
-            char sep0 = 0, sep1 = 0;
-            *argx = *argy = 0;
+            ind0.assign(); ind1.assign();
+            sep0 = sep1 = *argx = *argy = 0;
+            value0 = value1 = 0;
             if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-],%255[][a-zA-Z0-9_.eE%+-]%c",
                             argx,argy,&end)==2 &&
                 ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep0,&end)==2 &&
@@ -9847,13 +9751,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     value1,sep1=='%'?"%":"");
               cimg_forY(selection,l) {
                 CImg<T>& img = gmic_check(images[selection[l]]);
-                double vmin = 0, vmax = 0, nvalue0 = value0, nvalue1 = value1;
+                nvalue0 = value0; nvalue1 = value1;
+                vmin = vmax = 0;
                 if (sep0=='%' || sep1=='%') {
                   if (img) vmax = (double)img.max_min(vmin);
                   if (sep0=='%') nvalue0 = vmin + (vmax-vmin)*value0/100;
                   if (sep1=='%') nvalue1 = vmin + (vmax-vmin)*value1/100;
                 }
-                gmic_apply(img,rand((T)nvalue0,(T)nvalue1));
+                gmic_apply(rand((T)nvalue0,(T)nvalue1));
               }
             } else if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep0,&end)==2 &&
                        sep0==']' &&
@@ -9865,9 +9770,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     value0,
                     value1,
                     *ind0);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],rand((T)value0,(T)value1));
-              }
+              cimg_forY(selection,l) gmic_apply(rand((T)value0,(T)value1));
             } else arg_error("rand");
             is_released = false; ++position; continue;
           }
@@ -9885,16 +9788,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               const CImg<float> rot = CImg<float>::rotation_matrix(u,v,w,
                                                                    (float)(angle*cimg::PI/180));
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                CImg<T>& img = gmic_check(images[ind]);
-                try { gmic_apply(img,rotate_CImg3d(rot)); }
+                const unsigned int uind = selection[l];
+                CImg<T>& img = images[uind];
+                try { gmic_apply(rotate_CImg3d(rot)); }
                 catch (CImgException &e) {
-                  CImg<char> message(1024);
-                  if (!img.is_CImg3d(true,message))
+                  if (!img.is_CImg3d(true,&(*message=0)))
                     error(images,0,0,
                           "Command '-rotate3d': Invalid 3d object [%d], "
                           "in selected image%s (%s).",
-                          ind,gmic_selection,message.data());
+                          uind,gmic_selection,message.data());
                   else throw e;
                 }
               }
@@ -9918,7 +9820,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute bitwise left rotation of image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Compute bitwise left rotation of image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute sequential bitwise left rotation of image%s");
 
           // Bitwise right rotation.
@@ -9930,7 +9832,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute bitwise right rotation of image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Compute bitwise left rotation of image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute sequential bitwise left rotation of image%s");
 
           // Reverse 3d object orientation.
@@ -9938,16 +9840,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             print(images,0,"Reverse orientation of 3d object%s.",
                   gmic_selection);
             cimg_forY(selection,l) {
-              const unsigned int ind = selection[l];
-              CImg<T> &img = gmic_check(images[ind]);
-              try { gmic_apply(img,reverse_CImg3d()); }
+              const unsigned int uind = selection[l];
+              CImg<T> &img = images[uind];
+              try { gmic_apply(reverse_CImg3d()); }
               catch (CImgException &e) {
-                CImg<char> message(1024);
-                if (!img.is_CImg3d(true,message))
+                if (!img.is_CImg3d(true,&(*message=0)))
                   error(images,0,0,
                         "Command '-reverse3d': Invalid 3d object [%d], "
                         "in selected image%s (%s).",
-                        ind,gmic_selection,message.data());
+                        uind,gmic_selection,message.data());
                 else throw e;
               }
             }
@@ -9964,7 +9865,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Set status.
           if (!std::strcmp("-status",item)) {
             gmic_substitute_args();
-            print(images,0,"Set status to '%s'.",argument_text);
+            print(images,0,"Set status to '%s'.",gmic_argument_text());
             CImg<char>::string(argument).move_to(status);
             ++position; continue;
           }
@@ -9974,7 +9875,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             if (verbosity>0 || is_debug)
               print(images,0,"Skip argument '%s'.",
-                    argument_text);
+                    gmic_argument_text());
             ++position;
             continue;
           }
@@ -9982,10 +9883,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Set pixel value.
           if (!std::strcmp("-set",command)) {
             gmic_substitute_args();
-            char sepx = 0, sepy = 0, sepz = 0, sepc = 0;
             float x = 0, y = 0, z = 0, c = 0;
-            double value = 0;
-            *argx = *argy = *argz = *argc = 0;
+            value = 0;
+            sepx = sepy = sepz = sepc = *argx = *argy = *argz = *argc = 0;
             if ((std::sscanf(argument,"%lf%c",
                              &value,&end)==1 ||
                  std::sscanf(argument,"%lf,%255[0-9.eE%+-]%c",
@@ -10023,7 +9923,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   ny = (int)cimg::round(sepy=='%'?y*(img.height()-1)/100:y),
                   nz = (int)cimg::round(sepz=='%'?z*(img.depth()-1)/100:z),
                   nc = (int)cimg::round(sepc=='%'?c*(img.spectrum()-1)/100:c);
-                gmic_apply(images[selection[l]],gmic_set(value,nx,ny,nz,nc));
+                gmic_apply(gmic_set(value,nx,ny,nz,nc));
               }
             } else arg_error("set");
             is_released = false; ++position; continue;
@@ -10035,7 +9935,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             float nb = -1;
             char pm = 0;
-            _argx.fill(0);
+            *argx = 0;
             if (std::sscanf(argument,"%255[xyzc],%f%c",argx,&nb,&end)==2 ||
                 (nb=-1,std::sscanf(argument,"%255[xyzc]%c",argx,&end))==1) {
 
@@ -10067,13 +9967,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
               int off = 0;
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l] + off;
-                const CImg<T>& img = gmic_check(images[ind]);
+                const unsigned int uind = selection[l] + off;
+                const CImg<T>& img = gmic_check(images[uind]);
                 if (!img) {
-                  if (!is_get_version) { images.remove(ind); images_names.remove(ind); off-=1; }
+                  if (!is_get_version) { images.remove(uind); images_names.remove(uind); off-=1; }
                 } else {
-                  CImg<char> name = images_names[ind].get_mark();
                   CImgList<T> split(img,true);
+                  name = images_names[uind];
                   for (const char *axis = argx; *axis; ++axis) {
                     const unsigned int N = split.size();
                     for (unsigned int l = 0; l<N; ++l) {
@@ -10085,11 +9985,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     images_names.insert(split.size(),name.copymark());
                     split.move_to(images,~0U);
                   } else {
-                    images.remove(ind); images_names.remove(ind);
+                    images.remove(uind); images_names.remove(uind);
                     off+=(int)split.size() - 1;
-                    images_names.insert(split.size(),name.get_copymark(),ind);
-                    name.move_to(images_names[ind]);
-                    split.move_to(images,ind);
+                    images_names.insert(split.size(),name.get_copymark(),uind);
+                    name.move_to(images_names[uind]);
+                    split.move_to(images,uind);
                   }
                 }
               }
@@ -10098,12 +9998,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
               // Split according to values sequence (opt. with axes too).
               const char *s_values = argument+2;
-              _argx.fill(0);
+              *argx = 0;
               if (std::sscanf(s_values,"%255[xyzc]%c",argx,&end)==2 && end==',') s_values+=std::strlen(argx)+1;
               unsigned int nb_values = 1;
               for (const char *s = s_values; *s; ++s) if (*s==',') ++nb_values;
               CImg<T> values;
-              try { values.assign(nb_values,1,1,1,s_values,true); }
+              try { values.assign(nb_values,1,1,1).fill(s_values,true,false); }
               catch (CImgException&) { values.assign(); }
               if (values) {
                 if (*argx)
@@ -10112,21 +10012,21 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                         pm=='-'?"discard":"keep",
                         argx,
                         std::strlen(argx)>1?'e':'i',
-                        argument_text+(s_values-argument));
+                        gmic_argument_text()+(s_values-argument));
                 else
                   print(images,0,"Split image%s in '%s' mode, according to value sequence '%s'.",
                         gmic_selection,
                         pm=='-'?"discard":"keep",
-                        argument_text+2);
+                        gmic_argument_text()+2);
                 int off = 0;
                 cimg_forY(selection,l) {
-                  const unsigned int ind = selection[l] + off;
-                  const CImg<T>& img = gmic_check(images[ind]);
+                  const unsigned int uind = selection[l] + off;
+                  const CImg<T>& img = gmic_check(images[uind]);
                   if (!img) {
-                    if (!is_get_version) { images.remove(ind); images_names.remove(ind); off-=1; }
+                    if (!is_get_version) { images.remove(uind); images_names.remove(uind); off-=1; }
                   } else {
-                    CImg<char> name = images_names[ind].get_mark();
                     CImgList<T> split;
+                    name = images_names[uind];
 
                     if (*argx) { // Along axes.
                       split.assign(img,true);
@@ -10146,13 +10046,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                         split.move_to(images,~0U);
                       }
                     } else {
-                      images.remove(ind);
-                      images_names.remove(ind);
+                      images.remove(uind);
+                      images_names.remove(uind);
                       off+=(int)split.size() - 1;
                       if (split) {
-                        images_names.insert(split.size(),name.get_copymark(),ind);
-                        name.move_to(images_names[ind]);
-                        split.move_to(images,ind);
+                        images_names.insert(split.size(),name.get_copymark(),uind);
+                        name.move_to(images_names[uind]);
+                        split.move_to(images,uind);
                       }
                     }
                   }
@@ -10170,22 +10070,22 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
               int off = 0;
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l] + off;
-                CImg<T>& img = gmic_check(images[ind]);
+                const unsigned int uind = selection[l] + off;
+                CImg<T>& img = gmic_check(images[uind]);
                 if (!img) {
-                  if (!is_get_version) { images.remove(ind); images_names.remove(ind); off-=1; }
+                  if (!is_get_version) { images.remove(uind); images_names.remove(uind); off-=1; }
                 } else {
-                  CImg<char> name = images_names[ind].get_mark();
                   CImgList<T> split = CImg<T>(img._data,1,img.size(),1,1,true).get_split('y',0);
+                  name = images_names[uind];
                   if (is_get_version) {
                     images_names.insert(split.size(),name.copymark());
                     split.move_to(images,~0U);
                   } else {
-                    images.remove(ind); images_names.remove(ind);
+                    images.remove(uind); images_names.remove(uind);
                     off+=(int)split.size() - 1;
-                    images_names.insert(split.size(),name.get_copymark(),ind);
-                    name.move_to(images_names[ind]);
-                    split.move_to(images,ind);
+                    images_names.insert(split.size(),name.get_copymark(),uind);
+                    name.move_to(images_names[uind]);
+                    split.move_to(images,uind);
                   }
                 }
               }
@@ -10197,9 +10097,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-shared",command)) {
             gmic_substitute_args();
             CImg<char> st0(256), st1(256), st2(256), st3(256), st4(256);
-            char sep0 = 0, sep1 = 0, sep2 = 0, sep3 = 0, sep4 = 0;
+            char sep2 = 0, sep3 = 0, sep4 = 0;
             float a0 = 0, a1 = 0, a2 = 0, a3 = 0, a4 = 0;
-            *st0 = *st1 = *st2 = *st3 = *st4 = 0;
+            sep0 = sep1 = *st0 = *st1 = *st2 = *st3 = *st4 = 0;
             if (std::sscanf(argument,
                             "%255[0-9.eE%+],%255[0-9.eE%+],%255[0-9.eE%+],%255[0-9.eE%+],"
                             "%255[0-9.eE%+]%c",
@@ -10325,10 +10225,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Shift.
           if (!std::strcmp("-shift",command)) {
             gmic_substitute_args();
-            char sepx = 0, sepy = 0, sepz = 0, sepc = 0;
             float dx = 0, dy = 0, dz = 0, dc = 0;
-            unsigned int boundary = 0;
-            *argx = *argy = *argz = *argc = 0;
+            sepx = sepy = sepz = sepc = *argx = *argy = *argz = *argc = 0;
+            boundary = 0;
             if ((std::sscanf(argument,"%255[0-9.eE%+-]%c",
                              argx,&end)==1 ||
                  std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
@@ -10369,7 +10268,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   ndy = (int)cimg::round(sepy=='%'?dy*img.height()/100:dy),
                   ndz = (int)cimg::round(sepz=='%'?dz*img.depth()/100:dz),
                   ndc = (int)cimg::round(sepc=='%'?dc*img.spectrum()/100:dc);
-                gmic_apply(images[selection[l]],shift(ndx,ndy,ndz,ndc,boundary));
+                gmic_apply(shift(ndx,ndy,ndz,ndc,boundary));
               }
             } else arg_error("shift");
             is_released = false; ++position; continue;
@@ -10378,26 +10277,25 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Keep slices.
           if (!std::strcmp("-slices",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind0, ind1;
-            float value0 = 0, value1 = 0;
-            char sep0 = 0, sep1 = 0;
-            *argx = *argy = 0;
+            ind0.assign(); ind1.assign();
+            sep0 = sep1 = *argx = *argy = 0;
+            value0 = value1 = 0;
             if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-]%c",
                             argx,&end)==1 &&
                 ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c]",indices,&sep0,&end)==2 &&
                   sep0==']' &&
                   (ind0=selection2cimg(indices,images.size(),images_names,"-slices",true,
                                        false,CImg<char>::empty())).height()==1) ||
-                 std::sscanf(argx,"%f%c",&value0,&end)==1 ||
-                 (std::sscanf(argx,"%f%c%c",&value0,&sep0,&end)==2 && sep0=='%'))) {
-              if (ind0) { value0 = images[*ind0].depth() - 1.0f; sep0 = 0; }
+                 std::sscanf(argx,"%lf%c",&value0,&end)==1 ||
+                 (std::sscanf(argx,"%lf%c%c",&value0,&sep0,&end)==2 && sep0=='%'))) {
+              if (ind0) { value0 = images[*ind0].depth() - 1.; sep0 = 0; }
               print(images,0,"Keep slice %g%s of image%s.",
                     value0,sep0=='%'?"%":"",
                     gmic_selection);
               cimg_forY(selection,l) {
                 CImg<T> &img = images[selection[l]];
-                const int nvalue0 = (int)cimg::round(sep0=='%'?value0*(img.depth()-1)/100:value0);
-                gmic_apply(img,slice(nvalue0));
+                nvalue0 = cimg::round(sep0=='%'?value0*(img.depth()-1)/100:value0);
+                gmic_apply(slice((int)nvalue0));
               }
             } else if (std::sscanf(argument,"%255[][a-zA-Z0-9_.eE%+-],%255[][a-zA-Z0-9_.eE%+-]%c",
                                    argx,argy,&end)==2 &&
@@ -10405,26 +10303,25 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                          sep0==']' &&
                          (ind0=selection2cimg(indices,images.size(),images_names,"-slices",true,
                                               false,CImg<char>::empty())).height()==1) ||
-                        std::sscanf(argx,"%f%c",&value0,&end)==1 ||
-                        (std::sscanf(argx,"%f%c%c",&value0,&sep0,&end)==2 && sep0=='%')) &&
+                        std::sscanf(argx,"%lf%c",&value0,&end)==1 ||
+                        (std::sscanf(argx,"%lf%c%c",&value0,&sep0,&end)==2 && sep0=='%')) &&
                        ((std::sscanf(argx,"[%255[a-zA-Z0-9_.%+-]%c%c",formula,&sep0,&end)==2 &&
                          sep0==']' &&
                          (ind1=selection2cimg(formula,images.size(),images_names,"-slices",true,
                                               false,CImg<char>::empty())).height()==1) ||
-                        std::sscanf(argy,"%f%c",&value1,&end)==1 ||
-                        (std::sscanf(argy,"%f%c%c",&value1,&sep1,&end)==2 && sep1=='%'))) {
-              if (ind0) { value0 = images[*ind0].depth() - 1.0f; sep0 = 0; }
-              if (ind1) { value1 = images[*ind1].depth() - 1.0f; sep1 = 0; }
-              print(images,0,"Keep slices %g%s..%g%s of image%s.",
+                        std::sscanf(argy,"%lf%c",&value1,&end)==1 ||
+                        (std::sscanf(argy,"%lf%c%c",&value1,&sep1,&end)==2 && sep1=='%'))) {
+              if (ind0) { value0 = images[*ind0].depth() - 1.; sep0 = 0; }
+              if (ind1) { value1 = images[*ind1].depth() - 1.; sep1 = 0; }
+              print(images,0,"Keep slices %g%s...%g%s of image%s.",
                     value0,sep0=='%'?"%":"",
                     value1,sep1=='%'?"%":"",
                     gmic_selection);
               cimg_forY(selection,l) {
                 CImg<T> &img = images[selection[l]];
-                const int
-                  nvalue0 = (int)cimg::round(sep0=='%'?value0*(img.depth()-1)/100:value0),
-                  nvalue1 = (int)cimg::round(sep1=='%'?value1*(img.depth()-1)/100:value1);
-                gmic_apply(img,slices(nvalue0,nvalue1));
+                nvalue0 = cimg::round(sep0=='%'?value0*(img.depth()-1)/100:value0);
+                nvalue1 = cimg::round(sep1=='%'?value1*(img.depth()-1)/100:value1);
+                gmic_apply(slices((int)nvalue0,(int)nvalue1));
               }
             } else arg_error("slices");
             is_released = false; ++position; continue;
@@ -10433,7 +10330,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Set random generator seed.
           if (!std::strcmp("-srand",item)) {
             gmic_substitute_args();
-            double value = 0;
+            value = 0;
             if (std::sscanf(argument,"%lf%c",
                             &value,&end)==1) {
               value = cimg::round(value);
@@ -10457,7 +10354,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Subtract image [%d] to image%s",
                                ind[0],gmic_selection,
                                "Subtract expression %s to image%s",
-                               argument_text,gmic_selection,
+                               gmic_argument_text(),gmic_selection,
                                "Subtract image%s");
           // Square root.
           gmic_simple_item("-sqrt",sqrt,"Compute pointwise square root of image%s.");
@@ -10474,7 +10371,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Sort.
           if (!std::strcmp("-sort",command)) {
             gmic_substitute_args();
-            char order = '+', axis = 0;
+            char order = '+';
+            axis = 0;
             if ((std::sscanf(argument,"%c%c",&order,&end)==1 ||
                  (std::sscanf(argument,"%c,%c%c",&order,&axis,&end)==2 &&
                   (axis=='x' || axis=='y' || axis=='z' || axis=='c'))) &&
@@ -10484,17 +10382,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                             gmic_selection,order=='+'?"ascending":"descending",axis);
             else print(images,0,"Sort values of image%s in %s order.",
                        gmic_selection,order=='+'?"ascending":"descending");
-            cimg_forY(selection,l) {
-              gmic_apply(images[selection[l]],sort(order=='+',axis));
-            }
+            cimg_forY(selection,l) gmic_apply(sort(order=='+',axis));
             is_released = false; continue;
           }
 
           // Solve.
           if (!std::strcmp("-solve",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind;
-            char sep = 0;
+            sep = 0;
             if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep,&end)==2 &&
                 sep==']' &&
                 (ind=selection2cimg(indices,images.size(),images_names,"-solve",true,
@@ -10502,9 +10397,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               print(images,0,"Solve linear system AX = B, with B-vector%s and A-matrix [%d].",
                     gmic_selection,*ind);
               const CImg<T> A = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],solve(A));
-              }
+              cimg_forY(selection,l) gmic_apply(solve(A));
             } else arg_error("solve");
             is_released = false; ++position; continue;
           }
@@ -10523,15 +10416,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     tx,ty,tz);
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                CImg<T>& img = gmic_check(images[ind]);
-                try { gmic_apply(img,shift_CImg3d(-tx,-ty,-tz)); }
+                const unsigned int uind = selection[l];
+                CImg<T>& img = images[uind];
+                try { gmic_apply(shift_CImg3d(-tx,-ty,-tz)); }
                 catch (CImgException &e) {
-                  CImg<char> message(1024);
-                  if (!img.is_CImg3d(true,message))
+                  if (!img.is_CImg3d(true,&(*message=0)))
                     error(images,0,0,
                           "Command '-sub3d': Invalid 3d object [%d], in selected image%s (%s).",
-                          ind,gmic_selection,message.data());
+                          uind,gmic_selection,message.data());
                   else throw e;
                 }
               }
@@ -10564,10 +10456,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 print(images,0,"Sharpen image%s with inverse diffusion and amplitude %g.",
                       gmic_selection,
                       amplitude);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],sharpen(amplitude,(bool)(edge>=0),
-                                                        edge,alpha,sigma));
-              }
+              cimg_forY(selection,l) gmic_apply(sharpen(amplitude,(bool)(edge>=0),edge,alpha,sigma));
             } else arg_error("sharpen");
             is_released = false; ++position; continue;
           }
@@ -10578,8 +10467,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             float amplitude = 0, sharpness = 0.7f, anisotropy = 0.3f, alpha = 0.6f,
               sigma = 1.1f, dl =0.8f, da = 30.0f, gauss_prec = 2.0f;
             unsigned int interpolation = 0, is_fast_approximation = 1;
-            CImg<unsigned int> ind;
-            char sep = 0;
+            sep = 0;
             if ((std::sscanf(argument,"%f%c",
                              &amplitude,&end)==1 ||
                  std::sscanf(argument,"%f,%f%c",
@@ -10630,12 +10518,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       alpha,
                       sigma,
                       dl);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],blur_anisotropic(amplitude,sharpness,anisotropy,
-                                                                 alpha,sigma,dl,da,gauss_prec,
-                                                                 interpolation,
-                                                                 (bool)is_fast_approximation));
-              }
+              cimg_forY(selection,l) gmic_apply(blur_anisotropic(amplitude,sharpness,anisotropy,alpha,sigma,dl,da,
+                                                                 gauss_prec,interpolation,(bool)is_fast_approximation));
             } else if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                                      indices,&sep,&end)==2 && sep==']') ||
                         std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%f%c",
@@ -10677,11 +10561,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       *ind,
                       (int)amplitude,
                       dl);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],blur_anisotropic(tensors,amplitude,dl,da,
-                                                                 gauss_prec,interpolation,
+              cimg_forY(selection,l) gmic_apply(blur_anisotropic(tensors,amplitude,dl,da,gauss_prec,interpolation,
                                                                  is_fast_approximation));
-              }
             } else arg_error("smooth");
             is_released = false; ++position; continue;
           }
@@ -10700,10 +10581,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   keep_shared?"":" and clone shared data");
             unsigned int off = 0;
             cimg_forY(selection,l) {
-              const unsigned int ind = selection[l] + off;
-              const CImg<T> &img = gmic_check(images[ind]);
-              CImg<char> name = images_names[ind].get_mark();
+              const unsigned int uind = selection[l] + off;
+              const CImg<T> &img = gmic_check(images[uind]);
               CImgList<T> split;
+              name = images_names[uind];
               try {
                 if (!keep_shared) {
                   CImg<T> vertices;
@@ -10717,23 +10598,22 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     move_to(split);
                 } else img.get_split_CImg3d().move_to(split);
               } catch (CImgException &e) {
-                CImg<char> message(1024);
-                if (!img.is_CImg3d(true,message))
+                if (!img.is_CImg3d(true,&(*message=0)))
                   error(images,0,0,
                         "Command '-split3d': Invalid 3d object [%d], in selected image%s (%s).",
-                        ind-off,gmic_selection,message.data());
+                        uind - off,gmic_selection,message.data());
                 else throw e;
               }
               if (is_get_version) {
                 images_names.insert(split.size(),name.copymark());
                 split.move_to(images,~0U);
               } else {
-                images.remove(ind);
-                images_names.remove(ind);
+                images.remove(uind);
+                images_names.remove(uind);
                 off+=split.size() - 1;
-                images_names.insert(split.size(),name.get_copymark(),ind);
-                name.move_to(images_names[ind]);
-                split.move_to(images,ind);
+                images_names.insert(split.size(),name.get_copymark(),uind);
+                name.move_to(images_names[uind]);
+                split.move_to(images,uind);
               }
             }
             is_released = false; continue;
@@ -10746,9 +10626,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             CImg<float> U, S, V;
             unsigned int off = 0;
             cimg_forY(selection,l) {
-              const unsigned int ind = selection[l] + off;
-              const CImg<T>& img = gmic_check(images[ind]);
-              CImg<char> name = images_names[ind].get_mark();
+              const unsigned int uind = selection[l] + off;
+              const CImg<T>& img = gmic_check(images[uind]);
+              name = images_names[uind];
               img.SVD(U,S,V,true,100);
               if (is_get_version) {
                 images_names.insert(2,name.copymark());
@@ -10757,11 +10637,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 S.move_to(images);
                 V.move_to(images);
               } else {
-                images_names.insert(2,name.get_copymark(),ind+1);
-                name.move_to(images_names[ind]);
-                U.move_to(images[ind].assign());
-                images.insert(S,ind+1);
-                images.insert(V,ind+2);
+                images_names.insert(2,name.get_copymark(),uind+1);
+                name.move_to(images_names[uind]);
+                U.move_to(images[uind].assign());
+                images.insert(S,uind+1);
+                images.insert(V,uind+2);
                 off+=2;
               }
             }
@@ -10792,11 +10672,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Set 3d specular light parameters.
           if (!std::strcmp("-specl3d",item)) {
             gmic_substitute_args();
-            float value = 0.15f;
-            if (std::sscanf(argument,"%f%c",
+            value = 0.15;
+            if (std::sscanf(argument,"%lf%c",
                             &value,&end)==1 && value>=0) ++position;
-            else value = 0.15f;
-            specular_lightness3d = value;
+            else value = 0.15;
+            specular_lightness3d = (float)value;
             print(images,0,"Set lightness of 3d specular light to %g.",
                   specular_lightness3d);
             continue;
@@ -10804,11 +10684,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
           if (!std::strcmp("-specs3d",item)) {
             gmic_substitute_args();
-            float value = 0.8f;
-            if (std::sscanf(argument,"%f%c",
+            value = 0.8;
+            if (std::sscanf(argument,"%lf%c",
                             &value,&end)==1 && value>=0) ++position;
-            else value = 0.8f;
-            specular_shininess3d = value;
+            else value = 0.8;
+            specular_shininess3d = (float)value;
             print(images,0,"Set shininess of 3d specular light to %g.",
                   specular_shininess3d);
             continue;
@@ -10828,8 +10708,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             unsigned int interp = 2, is_backward = 0, is_oriented_only = 0;
             float x = 0, y = 0, z = 0, L = 100, dl = 0.1f;
-            char sepx = 0, sepy = 0, sepz = 0;
-            *formula = 0;
+            sepx = sepy = sepz = *formula = 0;
             if ((std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
                              argx,argy,argz,&end)==3 ||
                  std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],%f%c",
@@ -10860,8 +10739,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     y,sepy=='%'?"%":"",
                     z,sepz=='%'?"%":"");
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                CImg<T>& img = gmic_check(images[ind]);
+                const unsigned int uind = selection[l];
+                CImg<T>& img = gmic_check(images[uind]);
                 const float
                   nx = cimg::round(sepx=='%'?x*(img.width()-1)/100:x),
                   ny = cimg::round(sepy=='%'?y*(img.height()-1)/100:y),
@@ -10872,7 +10751,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 CImgList<unsigned char> colors;
                 if (vertices.width()>1) {
                   primitives.assign(vertices.width()-1,1,2);
-                  cimglist_for(primitives,l) { primitives(l,0) = l; primitives(l,1) = l+1; }
+                  cimglist_for(primitives,l) { primitives(l,0) = (unsigned int)l; primitives(l,1) = l + 1U; }
                   colors.assign(primitives.size(),1,3,1,1,200);
                 } else {
                   vertices.assign();
@@ -10882,10 +10761,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                        x,sepx=='%'?"%":"",
                        y,sepy=='%'?"%":"",
                        z,sepz=='%'?"%":"",
-                       ind);
+                       uind);
                 }
                 vertices.object3dtoCImg3d(primitives,colors,false);
-                gmic_apply(img,replace(vertices));
+                gmic_apply(replace(vertices));
               }
             } else if ((std::sscanf(argument,"'%4095[^']',%f,%f,%f%c",
                                     formula,&x,&y,&z,&end)==4 ||
@@ -10911,7 +10790,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               CImgList<unsigned char> colors;
               if (vertices.width()>1) {
                 primitives.assign(vertices.width()-1,1,2);
-                cimglist_for(primitives,l) { primitives(l,0) = l; primitives(l,1) = l+1; }
+                cimglist_for(primitives,l) { primitives(l,0) = (unsigned int)l; primitives(l,1) = l + 1U; }
                 colors.assign(primitives.size(),1,3,1,1,200);
               } else {
                 vertices.assign();
@@ -10923,7 +10802,6 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               vertices.object3dtoCImg3d(primitives,colors,false).move_to(images);
               cimg_snprintf(title,_title.size(),"[3d streamline of '%s' at (%g,%g,%g)]",
                             formula,x,y,z);
-              gmic_ellipsize(title,_title.size());
               CImg<char>::string(title).move_to(images_names);
             } else arg_error("streamline3d");
             is_released = false; ++position; continue;
@@ -10939,9 +10817,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             print(images,0,"Compute structure tensor field of image%s, with %s scheme.",
                   gmic_selection,
                   scheme==0?"centered":scheme==1?"forward-backward1":"forward-backward2");
-            cimg_forY(selection,l) {
-              gmic_apply(images[selection[l]],structure_tensors(scheme));
-            }
+            cimg_forY(selection,l) gmic_apply(structure_tensors(scheme));
             is_released = false; continue;
           }
 
@@ -10958,9 +10834,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     feature_type==0?"point":feature_type==1?"segment":feature_type==2?"rectangle":
                     "ellipse",gmic_selection);
               if (verbosity>=0 || is_debug) {
+                cimg::mutex(29);
                 if (is_xyz) std::fprintf(cimg::output(),", from point (%u,%u,%u)",X,Y,Z);
                 std::fprintf(cimg::output()," (skipped, no display support).");
                 std::fflush(cimg::output());
+                cimg::mutex(29,0);
               }
 #else // #if cimg_display==0
               bool is_available_display = false;
@@ -10972,9 +10850,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       feature_type==0?"point":feature_type==1?"segment":
                       feature_type==2?"rectangle":"ellipse",gmic_selection);
                 if (verbosity>=0 || is_debug) {
+                  cimg::mutex(29);
                   if (is_xyz) std::fprintf(cimg::output(),", from point (%u,%u,%u)",X,Y,Z);
                   std::fprintf(cimg::output()," (skipped, no display available).");
                   std::fflush(cimg::output());
+                  cimg::mutex(29,0);
                 }
               }
               if (is_available_display) {
@@ -10982,22 +10862,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       feature_type==0?"point":feature_type==1?"segment":
                       feature_type==2?"rectangle":"ellipse",gmic_selection);
                 if (verbosity>=0 || is_debug) {
+                  cimg::mutex(29);
                   if (is_xyz) std::fprintf(cimg::output(),", from point (%u,%u,%u).",X,Y,Z);
                   else std::fprintf(cimg::output(),".");
                   std::fflush(cimg::output());
+                  cimg::mutex(29,0);
                 }
                 unsigned int XYZ[3];
                 XYZ[0] = X; XYZ[1] = Y; XYZ[2] = Z;
                 if (instant_window[0])
-                  cimg_forY(selection,l) {
-                    gmic_apply(images[selection[l]],select(instant_window[0],feature_type,
-                                                           is_xyz?XYZ:0));
-                  }
+                  cimg_forY(selection,l) { gmic_apply(select(instant_window[0],feature_type,is_xyz?XYZ:0)); }
                 else
-                  cimg_forY(selection,l) {
-                    gmic_apply(images[selection[l]],select(images_names[selection[l]].data(),
+                  cimg_forY(selection,l) gmic_apply(select(images_names[selection[l]].data(),
                                                            feature_type,is_xyz?XYZ:0));
-                  }
               }
 #endif // #if cimg_display==0
             } else arg_error("select");
@@ -11015,8 +10892,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-threshold",command)) {
             gmic_substitute_args();
             unsigned int is_soft = 0;
-            double value = 0;
-            char sep = 0;
+            value = 0;
+            sep = 0;
             if ((std::sscanf(argument,"%lf%c",
                              &value,&end)==1 ||
                  (std::sscanf(argument,"%lf%c%c",
@@ -11032,12 +10909,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     value,sep=='%'?"%":"");
               cimg_forY(selection,l) {
                 CImg<T>& img = gmic_check(images[selection[l]]);
-                double nvalue = value;
+                nvalue = value;
                 if (sep=='%' && img) {
-                  double vmin = 0, vmax = (double)img.max_min(vmin);
+                  vmax = (double)img.max_min(vmin);
                   nvalue = vmin + (vmax-vmin)*value/100;
                 }
-                gmic_apply(img,threshold((T)nvalue,(bool)is_soft));
+                gmic_apply(threshold((T)nvalue,(bool)is_soft));
               }
               ++position;
             } else {
@@ -11070,10 +10947,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       w = CImgDisplay::_fitscreen(visu.width(),visu.height(),1,256,-85,false),
                       h = CImgDisplay::_fitscreen(visu.width(),visu.height(),1,256,-85,true);
                     if (disp) disp.resize(w,h,false); else disp.assign(w,h,0,0);
-                    double vmin = 0, vmax = (double)img.max_min(vmin), percent = 50;
+                    double percent = 50;
                     bool stopflag = false, is_clicked = false;
                     int omx = -1, omy = -1;
                     CImg<unsigned char> res;
+                    vmax = (double)img.max_min(vmin);
+
                     for (disp.show().flush(); !stopflag; ) {
                       const unsigned char white[] = { 255,255,255 }, black[] = { 0,0,0 };
                       const unsigned int key = disp.key();
@@ -11111,8 +10990,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     }
                     print(images,0,"Hard-threshold image [%d] by %g = %.3g%%.",
                           selection[l],(double)(vmin + percent*(vmax-vmin)/100),percent);
-                    gmic_apply(img,threshold((T)(vmin + percent*(vmax-vmin)/100)));
-                  } else { gmic_apply(img,replace(img)); }
+                    gmic_apply(threshold((T)(vmin + percent*(vmax-vmin)/100)));
+                  } else gmic_apply(replace(img));
                 }
               }
 
@@ -11127,23 +11006,24 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Draw text.
           if (!std::strcmp("-text",command)) {
             gmic_substitute_args();
-            CImg<char> text(4096);
-            *argx = *argy = *argz = *text = *color = 0;
-            float x = 0, y = 0, opacity = 1, height = 13;
-            char sepx = 0, sepy = 0, sep_height = 0;
+            name.assign(4096);
+            *argx = *argy = *argz = *name = *color = 0;
+            float x = 0, y = 0, height = 13;
+            sep = sepx = sepy = 0;
+            opacity = 1;
             if ((std::sscanf(argument,"%4095[^,]%c",
-                             text.data(),&end)==1 ||
+                             name.data(),&end)==1 ||
                  std::sscanf(argument,"%4095[^,],%255[0-9.eE%+-]%c",
-                             text.data(),argx,&end)==2 ||
+                             name.data(),argx,&end)==2 ||
                  std::sscanf(argument,"%4095[^,],%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
-                             text.data(),argx,argy,&end)==3 ||
+                             name.data(),argx,argy,&end)==3 ||
                  std::sscanf(argument,"%4095[^,],%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
-                             text.data(),argx,argy,argz,&end)==4 ||
+                             name.data(),argx,argy,argz,&end)==4 ||
                  std::sscanf(argument,"%4095[^,],%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],%f%c",
-                             text.data(),argx,argy,argz,&opacity,&end)==5 ||
+                             name.data(),argx,argy,argz,&opacity,&end)==5 ||
                  std::sscanf(argument,"%4095[^,],%255[0-9.eE%+-],%255[0-9.eE%+-],%255[0-9.eE%+-],%f,"
-                             "%4095[0-9.eE,+-]%c",
-                             text.data(),argx,argy,argz,&opacity,color,&end)==6) &&
+                             "%4095[0-9.eEinfa,+-]%c",
+                             name.data(),argx,argy,argz,&opacity,color,&end)==6) &&
                 (!*argx ||
                  std::sscanf(argx,"%f%c",&x,&end)==1 ||
                  (std::sscanf(argx,"%f%c%c",&x,&sepx,&end)==2 && sepx=='%')) &&
@@ -11152,32 +11032,30 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                  (std::sscanf(argy,"%f%c%c",&y,&sepy,&end)==2 && sepy=='%')) &&
                 (!*argz ||
                  std::sscanf(argz,"%f%c",&height,&end)==1 ||
-                 (std::sscanf(argz,"%f%c%c",&height,&sep_height,&end)==2 && sep_height=='%')) &&
+                 (std::sscanf(argz,"%f%c%c",&height,&sep,&end)==2 && sep=='%')) &&
                 height>=0) {
-              gmic_strreplace(text);
+              gmic_strreplace(name);
               print(images,0,"Draw text '%s' at position (%g%s,%g%s) on image%s, with font "
                     "height %g%s, opacity %g and color (%s).",
-                    text.data(),
+                    name.data(),
                     x,sepx=='%'?"%":"",
                     y,sepy=='%'?"%":"",
                     gmic_selection,
-                    height,sep_height=='%'?"%":"",
+                    height,sep=='%'?"%":"",
                     opacity,
                     *color?color:"default");
-              cimg::strunescape(text);
+              cimg::strunescape(name);
               unsigned int nb_cols = 1;
               for (const char *s = color; *s; ++s) if (*s==',') ++nb_cols;
               cimg_forY(selection,l) {
-                CImg<T>
-                  &img = images[selection[l]],
-                  col(cimg::max(img.spectrum(),(int)nb_cols),1,1,1,0);
-                const unsigned int font_height = (unsigned int)cimg::round(sep_height=='%'?
+                CImg<T> &img = images[selection[l]];
+                const unsigned int font_height = (unsigned int)cimg::round(sep=='%'?
                                                                            height*img._height/100:height);
-                col.fill(color,true);
+                col.assign(cimg::max(img.spectrum(),(int)nb_cols),1,1,1,0).fill(color,true);
                 const int
                   nx = (int)cimg::round(sepx=='%'?x*(img.width()-1)/100:x),
                   ny = (int)cimg::round(sepy=='%'?y*(img.height()-1)/100:y);
-                gmic_apply(img,gmic_draw_text(nx,ny,text,col,0,opacity,font_height,nb_cols));
+                gmic_apply(gmic_draw_text(nx,ny,name,col,0,opacity,font_height,nb_cols));
               }
             } else arg_error("text");
             is_released = false; ++position; continue;
@@ -11187,7 +11065,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (!std::strcmp("-texturize3d",command)) {
             gmic_substitute_args();
             CImg<unsigned int> ind_texture, ind_coords;
-            char sep = 0;
+            sep = 0;
             *argx = *argy = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               argx,&sep,&end)==2 && sep==']') ||
@@ -11209,16 +11087,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 texture = gmic_image_arg(*ind_texture),
                 coords = ind_coords?gmic_image_arg(*ind_coords):CImg<T>();
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                CImg<T>& img = gmic_check(images[ind]);
-                try { gmic_apply(img,texturize_CImg3d(texture,coords)); }
+                const unsigned int uind = selection[l];
+                CImg<T>& img = images[uind];
+                try { gmic_apply(texturize_CImg3d(texture,coords)); }
                 catch (CImgException &e) {
-                  CImg<char> message(1024);
-                  if (!img.is_CImg3d(true,message))
+                  if (!img.is_CImg3d(true,&(*message=0)))
                     error(images,0,0,
                           "Command '-texturize3d': Invalid 3d object [%d], "
                           "in selected image%s (%s).",
-                          ind,gmic_selection,message.data());
+                          uind,gmic_selection,message.data());
                   else throw e;
                 }
               }
@@ -11229,8 +11106,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Tridiagonal solve.
           if (!std::strcmp("-trisolve",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind;
-            char sep = 0;
+            sep = 0;
             if (std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep,&end)==2 &&
                 sep==']' &&
                 (ind=selection2cimg(indices,images.size(),images_names,"-trisolve",true,
@@ -11239,9 +11115,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     "A-matrix [%d].",
                     gmic_selection,*ind);
               const CImg<T> A = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],solve_tridiagonal(A));
-              }
+              cimg_forY(selection,l) gmic_apply(solve_tridiagonal(A));
             } else arg_error("trisolve");
             is_released = false; ++position; continue;
           }
@@ -11259,7 +11133,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Unroll.
           if (!std::strcmp("-unroll",command)) {
             gmic_substitute_args();
-            char axis = 'y';
+            axis = 'y';
             if ((*argument=='x' || *argument=='y' ||
                  *argument=='z' || *argument=='c') && !argument[1]) {
               axis = *argument;
@@ -11268,9 +11142,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             print(images,0,"Unroll image%s along the '%c'-axis.",
                   gmic_selection,
                   axis);
-            cimg_forY(selection,l) {
-              gmic_apply(images[selection[l]],unroll(axis));
-            }
+            cimg_forY(selection,l) gmic_apply(unroll(axis));
             is_released = false; continue;
           }
 
@@ -11291,14 +11163,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               CImgList<char> command_list = CImg<char>::string(argument).get_split(CImg<char>::vector(','),0,false);
               print(images,0,"Discard last definition of custom command%s '%s'",
                     command_list.width()>1?"s":"",
-                    argument_text);
+                    gmic_argument_text());
               unsigned int nb_removed = 0;
               cimglist_for(command_list,l) {
-                CImg<char> &arg_command = command_list[l];
+                CImg<char>& arg_command = command_list[l];
                 arg_command.resize(1,arg_command.height()+1,1,1,0);
                 gmic_strreplace(arg_command);
                 if (*arg_command) {
-                  const int ind = gmic_hashcode(arg_command,false);
+                  const int ind = (int)gmic_hashcode(arg_command,false);
                   cimglist_for(commands_names[ind],l)
                     if (!std::strcmp(commands_names[ind][l],arg_command)) {
                       commands_names[ind].remove(l);
@@ -11309,11 +11181,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 }
               }
               if (verbosity>=0 || is_debug) {
+                cimg::mutex(29);
                 unsigned int siz = 0;
                 for (unsigned int l = 0; l<256; ++l) siz+=commands[l].size();
                 std::fprintf(cimg::output()," (%u found, %u command%s left).",
                              nb_removed,siz,siz>1?"s":"");
                 std::fflush(cimg::output());
+                cimg::mutex(29,0);
               }
             }
             ++position; continue;
@@ -11345,9 +11219,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Vanvliet filter.
           if (!std::strcmp("-vanvliet",command)) {
             gmic_substitute_args();
-            unsigned int boundary = 1, order = 0;
-            char sep = 0, axis = 0;
+            unsigned int order = 0;
             float sigma = 0;
+            axis = sep = 0;
+            boundary = 1;
             if ((std::sscanf(argument,"%f,%u,%c%c",&sigma,&order,&axis,&end)==3 ||
                  (std::sscanf(argument,"%f%c,%u,%c%c",&sigma,&sep,&order,&axis,&end)==4 &&
                   sep=='%') ||
@@ -11362,9 +11237,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     sigma,sep=='%'?"%":"",
                     boundary?"neumann":"dirichlet");
               if (sep=='%') sigma = -sigma;
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],vanvliet(sigma,order,axis,(bool)boundary));
-              }
+              cimg_forY(selection,l) gmic_apply(vanvliet(sigma,order,axis,(bool)boundary));
             } else arg_error("vanvliet");
             is_released = false; ++position; continue;
           }
@@ -11379,7 +11252,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // While.
           if (!std::strcmp("-while",item)) {
             gmic_substitute_args();
-            const CImg<char> &s = scope.back();
+            const CImg<char>& s = scope.back();
             if (s[0]!='*' || s[1]!='d')
               error(images,0,0,
                     "Command '-while': Not associated to a '-do' command within the same scope.");
@@ -11387,14 +11260,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             bool is_filename = false;
             if (std::sscanf(argument,"%f%c",&_is_cond,&end)!=1) {
               is_filename = true;
-              CImg<char> arg_while(argument,std::strlen(argument)+1);
-              gmic_strreplace(arg_while);
-              _is_cond = (float)gmic_check_filename(arg_while);
+              name.assign(argument,(unsigned int)std::strlen(argument)+1);
+              gmic_strreplace(name);
+              _is_cond = (float)gmic_check_filename(name);
             }
             const bool is_cond = (bool)_is_cond;
             if (verbosity>0 || is_debug) print(images,0,"Reach '-while' command -> %s '%s' %s.",
                                                is_filename?"file":"boolean",
-                                               argument_text,
+                                               gmic_argument_text(),
                                                is_filename?(is_cond?"exists":
                                                             "does not exist"):
                                                (is_cond?"is true":"is false"));
@@ -11410,10 +11283,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Warning.
           if (!std::strcmp("-warn",command) && !is_get_version) {
             gmic_substitute_args();
-            CImg<char> str(argument,std::strlen(argument)+1);
-            cimg::strunescape(str);
-            if (is_restriction) warn(images,&selection,"%s",str.data());
-            else warn(images,0,"%s",str.data());
+            name.assign(argument,(unsigned int)std::strlen(argument)+1);
+            cimg::strunescape(name);
+            if (is_restriction) warn(images,&selection,"%s",name.data());
+            else warn(images,0,"%s",name.data());
             ++position; continue;
           }
 
@@ -11426,8 +11299,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             gmic_substitute_args();
             int norm = -1, fullscreen = -1;
             float dimw = -1, dimh = -1, posx = -1, posy = -1;
-            char sepw = 0, seph = 0, sepx = 0, sepy = 0;
-            *argx = *argy = *argz = *argc = *title = 0;
+            sep0 = sep1 = sepx = sepy = *argx = *argy = *argz = *argc = *title = 0;
             if ((std::sscanf(argument,"%255[0-9.eE%+-]%c",
                              argx,&end)==1 ||
                  std::sscanf(argument,"%255[0-9.eE%+-],%255[0-9.eE%+-]%c",
@@ -11452,10 +11324,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                                  "%255[0-9.eE%+-],%255[0-9.eE%+-],%255[^\n]",
                                                  argx,argy,title))==3) &&
                 (std::sscanf(argx,"%f%c",&dimw,&end)==1 ||
-                 (std::sscanf(argx,"%f%c%c",&dimw,&sepw,&end)==2 && sepw=='%')) &&
+                 (std::sscanf(argx,"%f%c%c",&dimw,&sep0,&end)==2 && sep0=='%')) &&
                 (!*argy ||
                  std::sscanf(argy,"%f%c",&dimh,&end)==1 ||
-                 (std::sscanf(argy,"%f%c%c",&dimh,&seph,&end)==2 && seph=='%')) &&
+                 (std::sscanf(argy,"%f%c%c",&dimh,&sep1,&end)==2 && sep1=='%')) &&
                 (!*argz ||
                  std::sscanf(argz,"%f%c",&posx,&end)==1 ||
                  (std::sscanf(argz,"%f%c%c",&posx,&sepx,&end)==2 && sepx=='%')) &&
@@ -11469,11 +11341,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               dimw = dimh = -1;
               norm = fullscreen = -1;
               posx = posy = -1;
-              sepw = seph = 0;
+              sep0 = sep1 = 0;
             }
             if (dimh==0) dimw = 0;
             gmic_strreplace(title);
-            cimg::strunescape(title);
 
             // Get images to display and compute associated optimal size.
             unsigned int optw = 0, opth = 0;
@@ -11482,14 +11353,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 const CImg<T>& img = gmic_check(images[selection[l]]);
                 if (img) {
                   subimages.insert(img,~0U,true);
-                  optw+=img.width() + (img.depth()>1?img.depth():0);
-                  if (img.height()>(int)opth) opth = img.height() + (img.depth()>1?img.depth():0);
+                  optw+=img._width + (img._depth>1?img._depth:0U);
+                  if (img.height()>(int)opth) opth = img._height + (img._depth>1?img._depth:0U);
                 }
               }
-            optw = optw?optw:sepw=='%'?CImgDisplay::screen_width():256;
-            opth = opth?opth:seph=='%'?CImgDisplay::screen_height():256;
-            dimw = dimw<0?-1:cimg::round(sepw=='%'?optw*dimw/100:dimw);
-            dimh = dimh<0?-1:cimg::round(seph=='%'?opth*dimh/100:dimh);
+            optw = optw?optw:sep0=='%'?CImgDisplay::screen_width():256;
+            opth = opth?opth:sep1=='%'?CImgDisplay::screen_height():256;
+            dimw = dimw<0?-1:cimg::round(sep0=='%'?optw*dimw/100:dimw);
+            dimh = dimh<0?-1:cimg::round(sep1=='%'?opth*dimh/100:dimh);
 
 #if cimg_display==0
             print(images,0,
@@ -11525,7 +11396,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                           instant_window[wind].window_height())/100.0f;
                     instant_window[wind].move((int)posx,(int)posy);
                   }
-                  if (norm>=0) instant_window[wind]._normalization = norm;
+                  if (norm>=0) instant_window[wind]._normalization = (unsigned int)norm;
                   if (*title && std::strcmp(instant_window[wind].title(),title))
                     instant_window[wind].set_title("%s",title);
                   if (fullscreen>=0 && (bool)fullscreen!=instant_window[wind].is_fullscreen())
@@ -11589,10 +11460,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Warp.
           if (!std::strcmp("-warp",command)) {
             gmic_substitute_args();
-            unsigned int interpolation = 1, is_relative = 0, boundary = 1;
-            CImg<unsigned int> ind;
+            unsigned int interpolation = 1, is_relative = 0;
             float nb_frames = 1;
-            char sep = 0;
+            boundary = 1;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",
                               indices,&sep,&end)==2 && sep==']')||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u%c",
@@ -11615,10 +11486,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       is_relative?"relative":"absolute",*ind,
                       interpolation==2?"cubic":interpolation==1?"linear":"nearest-neighbor",
                       boundary==0?"dirichlet":boundary==1?"neumann":"periodic");
-                cimg_forY(selection,l) {
-                  gmic_apply(images[selection[l]],warp(warping_field,(bool)is_relative,
-                                                       interpolation,boundary));
-                }
+                cimg_forY(selection,l) gmic_apply(warp(warping_field,(bool)is_relative,interpolation,boundary));
               } else {
                 print(images,0,"Warp image%s with %s displacement field [%u], %s interpolation, "
                       "%s boundary conditions and %d frames.",
@@ -11631,8 +11499,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 cimg_forY(selection,l) {
                   const unsigned int _ind = selection[l] + off;
                   CImg<T>& img = gmic_check(images[_ind]);
-                  CImg<char> name = images_names[_ind].get_mark();
                   CImgList<T> frames((int)nb_frames);
+                  name = images_names[_ind];
                   cimglist_for(frames,t)
                     frames[t] = img.get_warp(warping_field*((t+1.0f)/nb_frames),(bool)is_relative,
                                              interpolation,boundary);
@@ -11653,9 +11521,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // Watershed transform.
           if (!std::strcmp("-watershed",command)) {
             gmic_substitute_args();
-            CImg<unsigned int> ind;
             unsigned int is_filled = 1;
-            char sep = 0;
+            sep = 0;
             if (((std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]%c%c",indices,&sep,&end)==2 &&
                   sep==']') ||
                  std::sscanf(argument,"[%255[a-zA-Z0-9_.%+-]],%u%c",
@@ -11667,9 +11534,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     "%sfilling.",
                     gmic_selection,*ind,is_filled?"":"no ");
               const CImg<T> priority = gmic_image_arg(*ind);
-              cimg_forY(selection,l) {
-                gmic_apply(images[selection[l]],watershed(priority,(bool)is_filled));
-              }
+              cimg_forY(selection,l) gmic_apply(watershed(priority,(bool)is_filled));
             } else arg_error("watershed");
             is_released = false; ++position; continue;
           }
@@ -11770,7 +11635,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                                "Compute bitwise XOR of image%s by image [%d]",
                                gmic_selection,ind[0],
                                "Compute bitwise XOR of image%s by expression %s",
-                               gmic_selection,argument_text,
+                               gmic_selection,gmic_argument_text(),
                                "Compute sequential bitwise XOR of image%s");
 
         } // command1=='x'.
@@ -11787,21 +11652,21 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           bool is_filename = false;
           if (std::sscanf(argument,"%f%c",&_is_cond,&end)!=1) {
             is_filename = true;
-            CImg<char> arg_if(argument,std::strlen(argument)+1);
-            gmic_strreplace(arg_if);
-            _is_cond = (float)gmic_check_filename(arg_if);
+            name.assign(argument,(unsigned int)std::strlen(argument)+1);
+            gmic_strreplace(name);
+            _is_cond = (float)gmic_check_filename(name);
           }
           const bool is_cond = (bool)_is_cond;
           if (item[1]=='i') {
             CImg<char>::string("*if").move_to(scope);
             if (verbosity>0 || is_debug) print(images,0,"Start '-if..-endif' block -> %s '%s' %s.",
                                                is_filename?"file":"boolean",
-                                               argument_text,
+                                               gmic_argument_text(),
                                                is_filename?(is_cond?"exists":"does not exist"):
                                                (is_cond?"is true":"is false"));
           } else if (verbosity>0 || is_debug) print(images,0,"Reach '-elif' block -> %s '%s' %s.",
                                                     is_filename?"file":"boolean",
-                                                    argument_text,
+                                                    gmic_argument_text(),
                                                     is_filename?(is_cond?"exists":
 								 "does not exist"):
                                                     (is_cond?"is true":"is false"));
@@ -11914,7 +11779,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             print(images,0,"Compute %sfourier transform of image%s along the '%s'-ax%cs with complex pair%s",
                   inv_fft?"inverse ":"",
                   gmic_selection,
-                  argument_text,
+                  gmic_argument_text(),
                   std::strlen(argument)>1?'e':'i',
                   selection.height()>2?"s":selection.height()>=1?"":"().");
             ++position;
@@ -11925,16 +11790,18 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   selection.height()>2?"s":selection.height()>=1?"":" ().");
           cimg_forY(selection,l) {
             const unsigned int
-	      ind0 = selection[l],
-	      ind1 = l+1<selection.height()?selection[l+1]:~0U;
-            CImg<T> &img0 = gmic_check(images[ind0]),
-                    &img1 = ind1!=~0U?gmic_check(images[ind1]):CImg<T>::empty();
-            CImg<char> name = images_names[ind0].get_mark();
-            if (ind1!=~0U) { // Complex transform.
+	      uind0 = selection[l],
+	      uind1 = l+1<selection.height()?selection[l+1]:~0U;
+            CImg<T> &img0 = gmic_check(images[uind0]),
+                    &img1 = uind1!=~0U?gmic_check(images[uind1]):CImg<T>::empty();
+            name = images_names[uind0];
+            if (uind1!=~0U) { // Complex transform.
               if (verbosity>=0 || is_debug) {
-                std::fprintf(cimg::output()," ([%u],[%u])%c",ind0,ind1,
+                cimg::mutex(29);
+                std::fprintf(cimg::output()," ([%u],[%u])%c",uind0,uind1,
 			     l>=selection.height()-2?'.':',');
                 std::fflush(cimg::output());
+                cimg::mutex(29,0);
               }
               if (is_get_version) {
                 CImgList<T> fft(img0,img1);
@@ -11950,15 +11817,17 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 else fft.FFT(inv_fft);
                 fft[0].swap(img0);
                 fft[1].swap(img1);
-                name.get_copymark().move_to(images_names[ind1]);
-                name.move_to(images_names[ind0]);
+                name.get_copymark().move_to(images_names[uind1]);
+                name.move_to(images_names[uind0]);
               }
               ++l;
             } else { // Real transform.
               if (verbosity>=0 || is_debug) {
-                std::fprintf(cimg::output()," ([%u],0)%c",ind0,
+                cimg::mutex(29);
+                std::fprintf(cimg::output()," ([%u],0)%c",uind0,
 			     l>=selection.height()-2?'.':',');
                 std::fflush(cimg::output());
+                cimg::mutex(29,0);
               }
               if (is_get_version) {
                 CImgList<T> fft(img0);
@@ -11976,9 +11845,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 if (is_valid_argument) for (const char *s = argument; *s; ++s) fft.FFT(*s,inv_fft);
                 else fft.FFT(inv_fft);
                 fft[0].swap(img0);
-                fft[1].move_to(images,ind0+1);
-                name.get_copymark().move_to(images_names,ind0+1);
-                name.move_to(images_names[ind0]);
+                fft[1].move_to(images,uind0+1);
+                name.get_copymark().move_to(images_names,uind0+1);
+                name.move_to(images_names[uind0]);
               }
             }
           }
@@ -12005,17 +11874,16 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     gmic_selection,
                     sx,sy,sz);
             cimg_forY(selection,l) {
-              const unsigned int ind = selection[l];
-              CImg<T>& img = gmic_check(images[ind]);
+              const unsigned int uind = selection[l];
+              CImg<T>& img = images[uind];
               try {
-                if (divide3d) { gmic_apply(img,scale_CImg3d(1/sx,1/sy,1/sz)); }
-                else { gmic_apply(img,scale_CImg3d(sx,sy,sz)); }
+                if (divide3d) { gmic_apply(scale_CImg3d(1/sx,1/sy,1/sz)); }
+                else gmic_apply(scale_CImg3d(sx,sy,sz));
               } catch (CImgException &e) {
-                CImg<char> message(1024);
-                if (!img.is_CImg3d(true,message))
+                if (!img.is_CImg3d(true,&(*message=0)))
                   error(images,0,0,
                         "Command '-%s3d': Invalid 3d object [%d], in selected image%s (%s).",
-                        divide3d?"div":"mul",ind,gmic_selection,message.data());
+                        divide3d?"div":"mul",uind,gmic_selection,message.data());
                 else throw e;
               }
             }
@@ -12029,7 +11897,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           bool custom_command_found = false, has_arguments = false, _is_noarg = false;
           CImg<char> substituted_command;
           if ((cc>='a' && cc<='z') || (cc>='A' && cc<='Z') || cc=='_') {
-            const int ind = gmic_hashcode(command+1,false);
+            const int ind = (int)gmic_hashcode(command+1,false);
             cimglist_for(commands_names[ind],l) {
               custom_command = commands_names[ind][l].data();
               const char *const command_code = commands[ind][l].data();
@@ -12037,10 +11905,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                 custom_command_found = true;
                 if (is_debug) {
                   CImg<char> command_code_text(264);
-                  const unsigned int ls = std::strlen(command_code);
+                  const unsigned int ls = (unsigned int)std::strlen(command_code);
                   if (ls>=264) {
                     std::memcpy(command_code_text.data(),command_code,128);
-                    std::memcpy(command_code_text.data()+128," ... ",5);
+                    std::memcpy(command_code_text.data()+128,"(...)",5);
                     std::memcpy(command_code_text.data()+133,command_code+ls-130,131);
                   } else std::strcpy(command_code_text.data(),command_code);
                   for (char *ptrs = command_code_text, *ptrd = ptrs; *ptrs || (bool)(*ptrd=0);
@@ -12065,7 +11933,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       else {
                         if (++nb_arguments>=arguments.size())
                           arguments.insert(2+2*nb_arguments-arguments.size());
-                        CImg<char> arg_item(ss,_ss-ss+1);
+                        CImg<char> arg_item(ss,(unsigned int)(_ss - ss + 1));
                         arg_item.back() = 0;
                         arg_item.move_to(arguments[nb_arguments]);
                       }
@@ -12097,13 +11965,13 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     const char *const nsource0 = nsource;
                     nsource = std::strchr(nsource0,'$');
                     if (!nsource) nsource = &commands[ind][l].back();
-                    CImg<char>(nsource0,nsource-nsource0).move_to(substituted_items);
+                    CImg<char>(nsource0,(unsigned int)(nsource - nsource0)).move_to(substituted_items);
                   } else { // '$' expression found.
                     CImg<char> substr(324);
                     inbraces.assign(1,1,1,1,0);
                     int ind = 0, ind1 = 0, l_inbraces = 0;
                     bool is_braces = false;
-                    char sep = 0;
+                    sep = 0;
 
                     if (nsource[1]=='{') {
                       const char *const ptr_beg = nsource + 2, *ptr_end = ptr_beg;
@@ -12113,7 +11981,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                         if (*ptr_end=='}') --p;
                       }
                       if (p) { CImg<char>(nsource++,1).move_to(substituted_items); continue; }
-                      l_inbraces = ptr_end - ptr_beg - 1;
+                      l_inbraces = (int)(ptr_end - ptr_beg - 1);
                       if (l_inbraces>0) inbraces.assign(ptr_beg,l_inbraces + 1).back() = 0;
                       is_braces = true;
                     }
@@ -12122,19 +11990,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     if (nsource[1]=='?') {
                       nsource+=2;
                       cimg_snprintf(substr,substr.width(),"%s",gmic_selection);
-                      CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+                      CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
 
                       // Substitute $# -> maximum indice of known arguments.
                     } else if (nsource[1]=='#') {
                       nsource+=2;
                       cimg_snprintf(substr,substr.width(),"%u",nb_arguments);
-                      CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+                      CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
                       has_arguments = true;
 
                       // Substitute $* -> copy of the specified arguments string.
                     } else if (nsource[1]=='*') {
                       nsource+=2;
-                      CImg<char>(argument,std::strlen(argument)).move_to(substituted_items);
+                      CImg<char>(argument,(unsigned int)std::strlen(argument)).move_to(substituted_items);
                       has_arguments = true;
 
                       // Substitute $"*" -> copy of the specified "quoted" arguments string.
@@ -12156,7 +12024,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       nsource+=2+std::strlen(title);
                       for (unsigned int i = 0; i<=nb_arguments; ++i) {
                         cimg_snprintf(substr,substr.width()," %s%u=\"",title,i);
-                        CImg<char>(substr.data(),std::strlen(substr)).move_to(substituted_items);
+                        CImg<char>(substr.data(),(unsigned int)std::strlen(substr)).move_to(substituted_items);
                         CImg<char>(arguments[i].data(),arguments[i].width()-1).
                           move_to(substituted_items);
                         CImg<char>(2,1,1,1,'\"',' ').move_to(substituted_items);
@@ -12195,7 +12063,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       if (ind>=arguments.width()) arguments.insert(2+2*ind-arguments.size());
                       if (!arguments[ind]) {
                         arguments[ind] = arguments[nind1];
-                        if (ind>(int)nb_arguments) nb_arguments = ind;
+                        if (ind>(int)nb_arguments) nb_arguments = (unsigned int)ind;
                       }
                       if (arguments[ind].width()>1)
                         CImg<char>(arguments[ind].data(),arguments[ind].width()-1).
@@ -12210,7 +12078,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                       if (!arguments[ind]) {
                         cimg_snprintf(substr,substr.width(),"%u",nb_arguments);
                         CImg<char>::string(substr).move_to(arguments[ind]);
-                        if (ind>(int)nb_arguments) nb_arguments = ind;
+                        if (ind>(int)nb_arguments) nb_arguments = (unsigned int)ind;
                       }
                       nsource+=cimg_snprintf(substr,substr.width(),"${%d=$#}",ind);
                       if (arguments[ind].width()>1)
@@ -12228,7 +12096,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                         CImg<char>::string(inbraces.data() +
                                            cimg_snprintf(substr,substr.width(),"%d=",ind)).
                           move_to(arguments[ind]);
-                        if (ind>(int)nb_arguments) nb_arguments = ind;
+                        if (ind>(int)nb_arguments) nb_arguments = (unsigned int)ind;
                       }
                       if (arguments[ind].width()>1)
                         CImg<char>(arguments[ind].data(),arguments[ind].width()-1).
@@ -12251,24 +12119,27 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                           const bool _is_debug = is_debug;
                           bool is_valid_subset = true;
                           verbosity = -16384; is_debug = false;
+                          CImg<char> _status;
+                          status.move_to(_status); // Save status because 'selection2cimg' can change it.
                           try {
                             inds = selection2cimg(inbraces,nb_arguments+1,
                                                   CImgList<char>::empty(),"",false,
                                                   false,CImg<char>::empty());
                           } catch (...) { inds.assign(); is_valid_subset = false; }
+                          _status.move_to(status);
                           verbosity = _verbosity; is_debug = _is_debug;
                           if (is_valid_subset) {
                             nsource+=l_inbraces + 3;
                             if (inds) {
                               cimg_forY(inds,j) {
-                                const unsigned int ind = inds[j];
-                                if (ind) has_arguments = true;
-                                if (!arguments[ind])
+                                const unsigned int uind = inds[j];
+                                if (uind) has_arguments = true;
+                                if (!arguments[uind])
                                   error(images,0,custom_command,
                                         "Command '-%s': Undefined argument '$%d', "
                                         "in expression '${%s}'.",
-                                        custom_command,ind,inbraces.data());
-                                substituted_items.insert(arguments[ind]);
+                                        custom_command,uind,inbraces.data());
+                                substituted_items.insert(arguments[uind]);
                                 substituted_items.back().back() = ',';
                               }
                               if (substituted_items.back().width()>1)
@@ -12295,10 +12166,10 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
                 if (is_debug) {
                   CImg<char> command_code_text(264);
-                  const unsigned int l = std::strlen(substituted_command.data());
+                  const unsigned int l = (unsigned int)std::strlen(substituted_command.data());
                   if (l>=264) {
                     std::memcpy(command_code_text.data(),substituted_command.data(),128);
-                    std::memcpy(command_code_text.data()+128," ... ",5);
+                    std::memcpy(command_code_text.data()+128,"(...)",5);
                     std::memcpy(command_code_text.data()+133,substituted_command.data()+l-130,131);
                   } else std::strcpy(command_code_text.data(),substituted_command.data());
                   for (char *ptrs = command_code_text, *ptrd = ptrs; *ptrs || (bool)(*ptrd=0);
@@ -12315,7 +12186,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           if (custom_command_found) {
             const CImgList<char>
 	      ncommands_line = commands_line_to_CImgList(substituted_command.data());
-            unsigned int nvariables_sizes[256];
+            CImg<unsigned int> nvariables_sizes(256);
 	    for (unsigned int l = 0; l<256; ++l) nvariables_sizes[l] = variables[l]->size();
             CImgList<char> nimages_names(selection.height());
             CImgList<T> nimages(selection.height());
@@ -12325,9 +12196,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             CImg<char>::string(custom_command).move_to(scope);
             if (is_get_version) {
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                nimages[l] = images[ind];
-                nimages_names[l] = images_names[ind];
+                const unsigned int uind = selection[l];
+                nimages[l] = images[uind];
+                nimages_names[l] = images_names[uind];
               }
               try {
                 is_debug_infos = false;
@@ -12341,15 +12212,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               nimages_names.move_to(images_names,~0U);
             } else {
               cimg_forY(selection,l) {
-                const unsigned int ind = selection[l];
-                if (images[ind].is_shared())
-                  nimages[l].assign(images[ind],false);
+                const unsigned int uind = selection[l];
+                if (images[uind].is_shared())
+                  nimages[l].assign(images[uind],false);
                 else {
-                  nimages[l].swap(images[ind]);
+                  nimages[l].swap(images[uind]);
                   // Small hack to be able to track images of the selection passed to the new environment.
-                  std::memcpy(&images[ind]._width,&nimages[l]._data,sizeof(void*));
+                  std::memcpy(&images[uind]._width,&nimages[l]._data,sizeof(void*));
                 }
-                nimages_names[l] = images_names[ind];   // Make a copy to be still able to recognize '-pass[label]'.
+                nimages_names[l] = images_names[uind];   // Make a copy to be still able to recognize '-pass[label]'.
               }
               try {
                 is_debug_infos = false;
@@ -12362,12 +12233,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               const unsigned int nb = cimg::min((unsigned int)selection.height(),nimages.size());
               if (nb>0) {
                 for (unsigned int i = 0; i<nb; ++i) {
-                  const unsigned int ind = selection[i];
-                  if (images[ind].is_shared()) {
-                    images[ind] = nimages[i];
+                  const unsigned int uind = selection[i];
+                  if (images[uind].is_shared()) {
+                    images[uind] = nimages[i];
                     nimages[i].assign();
-                  } else images[ind].swap(nimages[i]);
-                  images_names[ind].swap(nimages_names[i]);
+                  } else images[uind].swap(nimages[i]);
+                  images_names[uind].swap(nimages_names[i]);
                 }
                 nimages.remove(0,nb-1);
                 nimages_names.remove(0,nb-1);
@@ -12375,9 +12246,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               if (nb<(unsigned int)selection.height())
                 remove_images(images,images_names,selection,nb,selection.height()-1);
               else if (nimages) {
-                const unsigned int ind0 = selection?selection.back()+1:images.size();
-                nimages_names.move_to(images_names,ind0);
-                nimages.move_to(images,ind0);
+                const unsigned int uind0 = selection?selection.back()+1:images.size();
+                nimages_names.move_to(images_names,uind0);
+                nimages.move_to(images,uind0);
               }
             }
 	    for (unsigned int l = 0; l<254; ++l) if (variables[l]->size()>nvariables_sizes[l]) {
@@ -12394,23 +12265,22 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
       }  // if (*item=='-') {
 
       // Variable assignment.
-      char sep = 0;
+      sep = 0;
       if (std::strchr(item,'=') && std::sscanf(item,"%255[a-zA-Z0-9_]%c",title,&sep)==2 &&
           sep=='=' && (*title<'0' || *title>'9')) {
-        CImg<char>
-          name(title,std::strlen(title)+1),
-          value = CImg<char>::string(item+name.width());
+        name.assign(title,(unsigned int)std::strlen(title) + 1);
+        CImg<char> value = CImg<char>::string(item+name.width());
         int ind = 0; bool is_name_found = false;
         const bool
           is_global = *name=='_',
           is_thread_global = is_global && name[1]=='_';
         const unsigned int sind = gmic_hashcode(name,true);
-	const int lind = is_global?0:variables_sizes[sind];
+	const int lind = is_global?0:(int)variables_sizes[sind];
         if (is_thread_global) cimg::mutex(30);
         CImgList<char>
 	  &__variables = *variables[sind],
 	  &__variables_names = *variables_names[sind];
-	for (int l = __variables.size()-1; l>=lind; --l)
+	for (int l = __variables.width() - 1; l>=lind; --l)
 	  if (!std::strcmp(__variables_names[l],name)) {
 	    is_name_found = true; ind = l; break;
 	  }
@@ -12428,15 +12298,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
       else { std::strcpy(command,"-input"); argument = item; *restriction = 0; }
       gmic_substitute_args();
       if (!is_restriction || !selection) selection.assign(1,1,1,1,images.size());
+
       CImg<char> indicesy(256), indicesz(256), indicesc(256);
       float dx = 0, dy = 1, dz = 1, dc = 1, nb = 1;
-      char sepx = 0, sepy = 0, sepz = 0, sepc = 0;
       CImg<unsigned int> indx, indy, indz, indc;
       CImgList<char> input_images_names;
       CImgList<T> input_images;
-      *indices = *indicesy = *indicesz = *indicesc = *argx = *argy = *argz = *argc = 0;
+      sepx = sepy = sepz = sepc = *indices = *indicesy = *indicesz = *indicesc = *argx = *argy = *argz = *argc = 0;
 
-      CImg<char> arg_input(argument,std::strlen(argument)+1);
+      CImg<char> arg_input(argument,(unsigned int)std::strlen(argument) + 1);
       gmic_strreplace(arg_input);
 
       if (*arg_input=='0' && !arg_input[1]) {
@@ -12535,15 +12405,15 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
         if (sep) {
           const char *_s_values = arg_input.data() + std::strlen(argx) + std::strlen(argy) +
             std::strlen(argz) + std::strlen(argc) + 4;
-          s_values.assign(_s_values,std::strlen(_s_values)+1);
+          s_values.assign(_s_values,(unsigned int)std::strlen(_s_values) + 1);
           cimg::strpare(s_values,'\'',true,false);
           gmic_strreplace(s_values);
           CImg<char> s_values_text(72);
           *s_values_text = 0;
-          const unsigned int l = std::strlen(s_values);
+          const unsigned int l = (unsigned int)std::strlen(s_values);
           if (l>=72) {
             std::memcpy(s_values_text.data(),s_values.data(),32);
-            std::memcpy(s_values_text.data()+32," ... ",5);
+            std::memcpy(s_values_text.data()+32,"(...)",5);
             std::memcpy(s_values_text.data()+37,s_values.data()+l-34,35);  // Last '\0' is included.
           } else std::strcpy(s_values_text,s_values);
           print(images,0,"Input image at position%s, with values '%s'",
@@ -12555,7 +12425,6 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
         if (s_values) {
           new_image.fill(s_values.data(),true);
           cimg_snprintf(title,_title.size(),"[image of '%s']",s_values.data());
-          gmic_ellipsize(title,_title.size());
           CImg<char>::string(title).move_to(input_images_names);
         } else CImg<char>::string("[unnamed]").move_to(input_images_names);
         new_image.move_to(input_images);
@@ -12566,10 +12435,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
         unsigned int cx = 0, cy = 0, cz = 0, cc = 0, maxcx = 0, maxcy = 0, maxcz = 0;
         const char *nargument = 0;
         for (nargument = arg_input.data() + 1; *nargument; ) {
-          CImg<char> s_value(256);
-          *s_value = 0;
+          CImg<char> s_value(256); *s_value = 0;
           char separator = 0;
-          double value = 0;
+          value = 0;
           if (std::sscanf(nargument,"%255[0-9.eE+-]%c",s_value.data(),&separator)==2 &&
               std::sscanf(s_value,"%lf%c",&value,&end)==1) {
             if (cx>maxcx) maxcx = cx;
@@ -12590,10 +12458,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
         CImg<T> img(maxcx+1,maxcy+1,maxcz+1,cc+1,0);
         cx = cy = cz = cc = 0;
         for (nargument = arg_input.data() + 1; *nargument; ) {
-          CImg<char> s_value(256);
-          *s_value = 0;
+          CImg<char> s_value(256); *s_value = 0;
           char separator = 0;
-          double value = 0;
+          value = 0;
           if (std::sscanf(nargument,"%255[0-9.eE+-]%c",s_value.data(),&separator)==2 &&
               std::sscanf(s_value,"%lf%c",&value,&end)==1) {
             img(cx,cy,cz,cc) = (T)value;
@@ -12606,9 +12473,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             nargument+=std::strlen(s_value) + (separator?1:0);
           } else break;
         }
-        print(images,0,"Input image at position%s, with values '%s'",
+        print(images,0,"Input image at position%s, with values %s",
               _gmic_selection,
-              argument_text);
+              gmic_argument_text());
         img.move_to(input_images);
         arg_input.move_to(input_images_names);
 
@@ -12616,7 +12483,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
         // Input filename.
         char cext[8];
-        CImg<char> _filename(4096), filename_tmp(512), options(256);
+        CImg<char> _filename(4096), filename_tmp(256), options(256);
         *cext = *_filename = *filename_tmp = *options = 0;
         bool is_network_file = false;
         if (std::sscanf(argument,"%8[a-zA-Z]:%4095[^,],%255s",
@@ -12638,14 +12505,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
         if (!cimg::strncasecmp(_filename,"http://",7) ||
             !cimg::strncasecmp(_filename,"https://",8)) {
           try {
-            cimg::load_network_external(_filename,filename_tmp);
+            cimg::load_network(_filename,filename_tmp);
           } catch (CImgIOException&) {
             print(images,0,"Input file '%s' at position%s",
                   _filename0,
                   _gmic_selection);
             error(images,0,0,
                   "Unreachable network file '%s'.",
-                  argument_text);
+                  gmic_argument_text());
           }
           is_network_file = true;
           std::strncpy(_filename,filename_tmp,_filename.width()-1);
@@ -12864,12 +12731,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               _first_frame = (unsigned int)first_frame,
               _last_frame = last_frame>=0?(unsigned int)last_frame:~0U;
             if (_last_frame!=~0U)
-              print(images,0,"Input frames %u..%u with step %g of file '%s' at position%s",
+              print(images,0,"Input frames %u...%u with step %g of file '%s' at position%s",
                     _first_frame,_last_frame,step,
                     _filename0,
                     _gmic_selection);
             else
-              print(images,0,"Input frames %u..(last) with step %g of file '%s' at position%s",
+              print(images,0,"Input frames %u...(last) with step %g of file '%s' at position%s",
                     _first_frame,step,
                     _filename0,
                     _gmic_selection);
@@ -12882,7 +12749,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             print(images,0,"Input frame %u of file '%s' at position%s",
                   _first_frame,_filename0,
                   _gmic_selection);
-            input_images.load_video(filename,first_frame,first_frame);
+            input_images.load_video(filename,_first_frame,(unsigned int)first_frame);
           } else if (!*options) {
             // Read all frames.
             print(images,0,"Input all frames of file '%s' at position%s",
@@ -12983,7 +12850,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             if (err>3) { // Load multiple frames.
               last_frame = cimg::round(last_frame);
               step = cimg::round(step);
-              print(images,0,"Input frames %g..%g with step %g of YUV file '%s' at position%s",
+              print(images,0,"Input frames %g...%g with step %g of YUV file '%s' at position%s",
                     first_frame,last_frame,step,
                     _filename0,
                     _gmic_selection);
@@ -13018,17 +12885,17 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           // TIFF file.
           float first_frame = 0, last_frame = 0, step = 1;
           int err = 0;
-#if cimg_use_tiff
+#ifdef cimg_use_tiff
           static const TIFFErrorHandler default_handler = TIFFSetWarningHandler(0);
           if (verbosity>0 || is_debug) TIFFSetWarningHandler(default_handler);
           else TIFFSetWarningHandler(0);
-#endif // #if cimg_use_tiff
+#endif // #ifdef cimg_use_tiff
           if ((err=std::sscanf(options,"%f,%f,%f",&first_frame,&last_frame,&step))>0) {
             first_frame = cimg::round(first_frame);
             if (err>1) { // Load multiple frames.
               last_frame = cimg::round(last_frame);
               step = cimg::round(step);
-              print(images,0,"Input frames %g..%g with step %g of TIFF file '%s' at position%s",
+              print(images,0,"Input frames %g...%g with step %g of TIFF file '%s' at position%s",
                     first_frame,last_frame,step,
                     _filename0,
                     _gmic_selection);
@@ -13071,9 +12938,11 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
             unsigned int nb_added = 0;
             for (unsigned int l = 0; l<256; ++l) nb_added+=commands[l].size();
             nb_added-=siz;
+            cimg::mutex(29);
             std::fprintf(cimg::output()," (added %u command%s, total %u).",
                          nb_added,nb_added>1?"s":"",siz+nb_added);
             std::fflush(cimg::output());
+            cimg::mutex(29,0);
           }
           continue;
         } else {
@@ -13163,7 +13032,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                     "xor",0
                   };
                   const char *misspelled = 0;
-                  const unsigned int foff = filename[1]=='-'?2:1;
+                  const unsigned int foff = filename[1]=='-'?2U:1U;
                   int dmin = 4;
                   for (unsigned int l = 0; native_commands_names[l]; ++l) {
                     // Look in native commands.
@@ -13181,19 +13050,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                   if (misspelled)
                     error(images,0,0,
                           "Unknown command or filename '%s' (did you mean '-%s' ?).",
-                          argument_text,misspelled);
+                          gmic_argument_text(),misspelled);
                   else error(images,0,0,
                              "Unknown command or filename '%s'.",
-                             argument_text);
+                             gmic_argument_text());
                 } else error(images,0,0,
                              "Unknown %s '%s'.",
                              *filename=='-'?"command or filename":"filename",
-                             argument_text);
+                             gmic_argument_text());
               } else
                 error(images,0,0,
                       "Unknown command '%s' in '%s' type mode "
                       "(command defined only in 'float' type mode ?).",
-                      argument_text,cimg::type<T>::string());
+                      gmic_argument_text(),cimg::type<T>::string());
             } else throw;
           }
         }
@@ -13203,6 +13072,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
       }
 
       if (verbosity>=0 || is_debug) {
+        cimg::mutex(29);
         if (input_images) {
           const unsigned int last = input_images.size() - 1;
           if (input_images.size()==1) {
@@ -13219,7 +13089,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
                          input_images.size(),
                          input_images[0].width(),input_images[0].height(),
                          input_images[0].depth(),input_images[0].spectrum(),
-                         last==1?"":"..,",last,
+                         last==1?"":"(...),",last,
                          input_images[last].width(),input_images[last].height(),
                          input_images[last].depth(),input_images[last].spectrum());
         } else {
@@ -13227,17 +13097,18 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
           input_images_names.assign();
         }
         std::fflush(cimg::output());
+        cimg::mutex(29,0);
       }
 
       for (unsigned int l = 0, siz = selection.height()-1U, off = 0; l<=siz; ++l) {
-        const unsigned int ind = selection[l] + off;
+        const unsigned int uind = selection[l] + off;
         off+=input_images.size();
         if (l!=siz) {
-          images.insert(input_images,ind);
-          images_names.insert(input_images_names,ind);
+          images.insert(input_images,uind);
+          images_names.insert(input_images_names,uind);
         } else {
-          input_images.move_to(images,ind);
-          input_images_names.move_to(images_names,ind);
+          input_images.move_to(images,uind);
+          input_images_names.move_to(images_names,uind);
         }
       }
 
@@ -13276,9 +13147,8 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
     // Post-check local environment consistency.
     if (!is_quit && !is_return) {
-      const CImg<char> &s = scope.back();
-      if (is_default_type &&
-          s[0]=='*' && (s[1]=='d' || s[1]=='i' || s[1]=='r' || (s[1]=='l' && !is_endlocal)))
+      const CImg<char>& s = scope.back();
+      if (s[0]=='*' && (s[1]=='d' || s[1]=='i' || s[1]=='r' || (s[1]=='l' && !is_endlocal)))
         error(images,0,0,
               "A '-%s' command is missing, before return point.",
               s[1]=='d'?"while":s[1]=='i'?"endif":s[1]=='r'?"done":"endlocal");
@@ -13307,7 +13177,9 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
         if (lselection3d) display_objects3d(images,images_names,lselection3d>'y',CImg<unsigned char>::empty());
       }
 #else
-      print_images(images,images_names,CImg<unsigned int>::sequence(images._width,0,images.width()-1),true);
+      CImg<unsigned int> seq(1,images.width());
+      cimg_forY(seq,y) seq[y] = y;
+      print_images(images,images_names,seq,true);
 #endif // #if cimg_display!=0
 #endif // #ifdef gmic_main
       is_released = true;
@@ -13315,12 +13187,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 
     if (is_debug) debug(images,"%sExit scope '%s/'.%s\n",
                         cimg::t_bold,scope.back().data(),cimg::t_normal);
-    if (!is_quit && scope.size()==1 && is_default_type) {
+    if (!is_quit && scope.size()==1) {
       print(images,0,"End G'MIC interpreter.\n");
       is_quit = true;
     }
   } catch (CImgException &e) {
-    CImg<char> error_message(e.what(),std::strlen(e.what())+1);
+    CImg<char> error_message(e.what(),(unsigned int)std::strlen(e.what()) + 1);
     for (char *str = std::strstr(error_message,"CImg"); str; str = std::strstr(str,"CImg")) {
       str[0] = 'g'; str[1] = 'm'; str[2] = 'i'; str[3] = 'c';
     }
@@ -13332,7 +13204,12 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
     else
       error(images,0,0,"%s",error_message.data());
   }
-  debug_line = initial_debug_line;
+
+  if (!is_endlocal) debug_line = initial_debug_line;
+  else {
+    if (next_debug_line!=~0U) { debug_line = next_debug_line; next_debug_line = ~0U; }
+    if (next_debug_filename!=~0U) { debug_filename = next_debug_filename; next_debug_filename = ~0U; }
+  }
   return *this;
 }
 
@@ -13340,12 +13217,14 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 #if cimg_OS==1
 void gmic_segfault_sigaction(int signal, siginfo_t *si, void *arg) {
   cimg::unused(signal,si,arg);
+  cimg::mutex(29);
   std::fprintf(cimg::output(),
                "\n\n%s[gmic] G'MIC encountered a %sfatal error%s%s (Segmentation fault). "
                "Please submit a bug report, at: %shttp://sourceforge.net/p/gmic/bugs/.%s\n\n",
                cimg::t_red,cimg::t_bold,cimg::t_normal,cimg::t_red,
                cimg::t_bold,cimg::t_normal);
   std::fflush(cimg::output());
+  cimg::mutex(29,0);
   std::exit(EXIT_FAILURE);
 }
 #endif
@@ -13355,16 +13234,9 @@ void gmic_segfault_sigaction(int signal, siginfo_t *si, void *arg) {
 //-----------------------
 #ifdef gmic_main
 int main(int argc, char **argv) {
-  cimg::output(stdout);
-  if (argc==1) {
-    std::fprintf(cimg::output(),
-                 "[gmic] No commands, options or data provided (type '%s -h' to get help).\n",
-                 cimg::basename(argv[0]));
-    std::fflush(cimg::output());
-    std::exit(0);
-  }
+  gmic gmic_instance;
 
-  // Fallback for segfault signals.
+  // Set fallback for segfault signals.
 #if cimg_OS==1
   struct sigaction sa;
   std::memset(&sa,0,sizeof(sa));
@@ -13374,10 +13246,15 @@ int main(int argc, char **argv) {
   sigaction(SIGSEGV,&sa,0);
 #endif
 
+  // Set special path for curl on Windows
+  // (in case the use of libcurl is not enabled).
+#if cimg_OS==2
+  cimg::curl_path("_gmic\\curl",true);
+#endif
+
   // Load startup command files.
   CImg<char> commands_user, commands_update, filename_user, filename_update;
   bool is_invalid_user = false, is_invalid_update = false;
-  gmic gmic_instance;
 
 #if cimg_OS!=2
   const char *const path_conf = getenv("HOME");
@@ -13388,7 +13265,7 @@ int main(int argc, char **argv) {
 #endif
   if (path_conf) {
     char sep = 0;
-    cimg::exception_mode() = 0;
+    cimg::exception_mode(0);
     gmic_instance.verbosity = -1;
 
     // Update file.
@@ -13414,9 +13291,7 @@ int main(int argc, char **argv) {
     } catch (...) { commands_user.assign(); }
   }
 
-  // Check if help has been requested.
-  CImg<char> _command_line(1024);
-  char *const command_line = _command_line;
+  // When help has been requested.
   const char
     *const is_help1 = cimg_option("-h",(char*)0,0),
     *const is_help2 = cimg_option("--h",(char*)0,0),
@@ -13430,8 +13305,8 @@ int main(int argc, char **argv) {
 
   if (is_help) {
 
-    // Load all specified commands definitions data.
-    CImgList<> images;
+    // Load specified commands definitions data (eventually).
+    CImgList<gmic_pixel_type> images;
     CImgList<char> images_names;
     if (!is_global_help && commands_user) commands_user.move_to(images);
     if (commands_update) images.insert(commands_update);
@@ -13441,19 +13316,20 @@ int main(int argc, char **argv) {
 
     for (int i = 1; i<argc; ++i) {
       std::FILE *file = 0;
-      char filename_tmp[1024] = { 0 };
+      CImg<char> filename_tmp(256);
+      *filename_tmp = 0;
       if ((!std::strcmp("-m",argv[i]) || !std::strcmp("-command",argv[i])) && i<argc-1) {
         const char *const filename = argv[++i];
         if (!cimg::strncasecmp(filename,"http://",7) || !cimg::strncasecmp(filename,"https://",8))
           try {
-            file = std::fopen(cimg::load_network_external(filename,filename_tmp),"r");
+            file = std::fopen(cimg::load_network(filename,filename_tmp),"r");
           } catch (CImgException&) { file = 0; }
         else file = std::fopen(filename,"r");
       } else if (!cimg::strcasecmp("gmic",cimg::split_filename(argv[i]))) {
         const char *const filename = argv[i];
         if (!cimg::strncasecmp(filename,"http://",7) || !cimg::strncasecmp(filename,"https://",8))
           try {
-            file = std::fopen(cimg::load_network_external(filename,filename_tmp),"r");
+            file = std::fopen(cimg::load_network(filename,filename_tmp),"r");
           } catch (CImgException&) { file = 0; }
         else file = std::fopen(filename,"r");
       }
@@ -13470,8 +13346,10 @@ int main(int argc, char **argv) {
       }
     }
 
+    cimg::output(stdout);
     if (is_global_help) { // Global help.
       try {
+        gmic_instance.verbosity = -1;
         gmic_instance.run("-help \"\" -q",images,images_names);
       } catch (...) { // Fallback in case default version of '-help' has been overloaded.
         images.assign();
@@ -13480,15 +13358,17 @@ int main(int argc, char **argv) {
         gmic("-v - -help \"\" -q",images,images_names);
       }
     } else { // Help for a specified command.
+      CImg<char> tmp_line(1024); *tmp_line = 0;
       try {
-        cimg_snprintf(command_line,_command_line.width(),"-help \"%s\",1 -q",help_argument);
-        gmic_instance.run(command_line,images,images_names);
+        cimg_snprintf(tmp_line,tmp_line.width(),"-help \"%s\",1 -q",help_argument);
+        gmic_instance.verbosity = -1;
+        gmic_instance.run(tmp_line,images,images_names);
       } catch (...) { // Fallback in case default version of '-help' has been overloaded.
-        cimg_snprintf(command_line,_command_line.width(),"-v - -help \"%s\",1 -q",help_argument);
+        cimg_snprintf(tmp_line,tmp_line.width(),"-v - -help \"%s\",1 -q",help_argument);
         images.assign();
         images_names.assign();
         CImg<unsigned char>(data_gmic_def,1,size_data_gmic_def,1,1).move_to(images);
-        gmic(command_line,images,images_names);
+        gmic(tmp_line,images,images_names);
       }
     }
 
@@ -13496,23 +13376,30 @@ int main(int argc, char **argv) {
   }
 
   // Convert 'argv' into G'MIC command line.
-  commands_user.assign();
-  commands_update.assign();
+  commands_user.assign(); commands_update.assign();
   const char *const is_debug = cimg_option("-debug",(char*)0,0);
   cimg::output(is_debug?stdout:stderr);
 
   CImgList<char> items;
-  for (int l = 1; l<argc; ++l) { // Split argv as items.
-    if (std::strchr(argv[l],' ')) {
-      CImg<char>::vector('\"').move_to(items);
-      CImg<char>(argv[l],std::strlen(argv[l])).move_to(items);
-      CImg<char>::string("\"").move_to(items);
-    } else CImg<char>::string(argv[l]).move_to(items);
-    if (l<argc-1) items.back().back()=' ';
+  if (argc==1) { // When no args have been specified.
+    gmic_instance.verbosity = -1;
+    CImg<char>::string("-cli_noarg").move_to(items);
+  } else {
+    gmic_instance.verbosity = 0;
+    for (int l = 1; l<argc; ++l) { // Split argv as items.
+      if (std::strchr(argv[l],' ')) {
+        CImg<char>::vector('\"').move_to(items);
+        CImg<char>(argv[l],(unsigned int)std::strlen(argv[l])).move_to(items);
+        CImg<char>::string("\"").move_to(items);
+      } else CImg<char>::string(argv[l]).move_to(items);
+      if (l<argc-1) items.back().back()=' ';
+    }
   }
+
+  // Insert startup command.
   const bool is_first_item_verbose = items.width()>1 &&
     (!std::strncmp("-v ",items[0],3) || !std::strncmp("-verbose ",items[0],9));
-  items.insert(CImg<char>::string("-start ",false),is_first_item_verbose?2:0);  // Insert startup command.
+  items.insert(CImg<char>::string("-cli_start ",false),is_first_item_verbose?2:0);
 
   if (is_invalid_user) { // Display warning message in case of invalid user command file.
     CImg<char> tmpstr(1024);
@@ -13532,18 +13419,22 @@ int main(int argc, char **argv) {
 
   // Launch G'MIC interpreter.
   try {
-    gmic_instance.verbosity = 0;
-    gmic_instance.run(commands_line.data());
+    CImgList<gmic_pixel_type> images;
+    CImgList<char> images_names;
+    gmic_instance.run(commands_line.data(),images,images_names);
   } catch (gmic_exception &e) {
+
+    // Something went wrong during the pipeline execution.
     std::fprintf(cimg::output(),"\n[gmic] %s%s%s%s",
                  cimg::t_red,cimg::t_bold,e.what(),cimg::t_normal);
     if (*e.command_help()) {
       std::fprintf(cimg::output(),"\n[gmic] Command '-%s' has the following description: \n",
 		   e.command_help());
-      CImgList<float> images;
+      CImgList<gmic_pixel_type> images;
       CImgList<char> images_names;
       CImg<unsigned char>(data_gmic_def,1,size_data_gmic_def,1,1).move_to(images);
-      cimg_snprintf(command_line,_command_line.width(),
+      CImg<char> tmp_line(1024); *tmp_line = 0;
+      cimg_snprintf(tmp_line,tmp_line.width(),
                     "-v - -l[] -i raw:\"%s\",char -m \"%s\" -onfail -rm -endl "
                     "-l[] -i raw:\"%s\",char -m \"%s\" -onfail -rm -endl "
                     "-rv -help \"%s\",0 -q",
@@ -13551,13 +13442,13 @@ int main(int argc, char **argv) {
                     filename_user.data(),filename_user.data(),
                     e.command_help());
       try {
-        gmic(command_line,images,images_names);
+        gmic(tmp_line,images,images_names);
       } catch (...) {
-        cimg_snprintf(command_line,_command_line.width(),"-v - -help \"%s\",1 -q",e.command_help());
+        cimg_snprintf(tmp_line,tmp_line.width(),"-v - -help \"%s\",1 -q",e.command_help());
         images.assign();
         images_names.assign();
         CImg<unsigned char>(data_gmic_def,1,size_data_gmic_def,1,1).move_to(images);
-        gmic(command_line,images,images_names);
+        gmic(tmp_line,images,images_names);
       }
     } else { std::fprintf(cimg::output(),"\n\n"); std::fflush(cimg::output()); }
     return -1;
@@ -13566,12 +13457,19 @@ int main(int argc, char **argv) {
 }
 
 #else
-// Explicitely instanciate constructors and destructor for float-valued images.
+// Explicitely instanciate constructors and destructor when building the library.
 template gmic::gmic(const char *const commands_line,
-                    gmic_list<float>& images, gmic_list<char>& images_names,
-                    const char *const custom_commands=0,
-                    const bool include_default_commands=true,
-                    float *const p_progress=0, bool *const p_is_cancel=0);
+                    gmic_list<gmic_pixel_type>& images, gmic_list<char>& images_names,
+                    const char *const custom_commands,
+                    const bool include_default_commands,
+                    float *const p_progress, bool *const p_is_cancel);
+
+template gmic& gmic::_run(const gmic_list<char>& commands_line,
+                          gmic_list<gmic_pixel_type> &images, gmic_list<char> &images_names,
+                          float *const p_progress, bool *const p_is_cancel);
+
+template CImgList<float>::~CImgList();
+template CImgList<char>::~CImgList();
 
 #endif // #ifdef gmic_main
 #endif // #ifdef cimg_plugin

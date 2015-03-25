@@ -242,10 +242,10 @@ void PF::ImageArea::process_start( const VipsRect& area )
 	// Fill borders with black
 	int right_border = area.width - display_image->Xsize - xoffset;
 	int bottom_border = area.height - display_image->Ysize - yoffset;
-	VipsRect top = {0, 0, area.width, yoffset };
+	VipsRect top = {0, 0, area.width, static_cast<int>(yoffset) };
 	VipsRect bottom = {0, area.height-bottom_border-1, area.width, bottom_border };
-	VipsRect left = {0, yoffset, xoffset, display_image->Ysize };
-	VipsRect right = {area.width-right_border-1, yoffset, right_border, display_image->Ysize };
+	VipsRect left = {0, static_cast<int>(yoffset), static_cast<int>(xoffset), display_image->Ysize };
+	VipsRect right = {area.width-right_border-1, static_cast<int>(yoffset), right_border, display_image->Ysize };
 	double_buffer.get_inactive().fill( top, 0 );
 	double_buffer.get_inactive().fill( bottom, 0 );
 	double_buffer.get_inactive().fill( left, 0 );
@@ -465,8 +465,8 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
 
   // Rectangle corresponding to the preview area
   VipsRect preview_area = {
-    hadj->get_value(), vadj->get_value(),
-    hadj->get_page_size(), vadj->get_page_size()
+		  static_cast<int>(hadj->get_value()), static_cast<int>(vadj->get_value()),
+		  static_cast<int>(hadj->get_page_size()), static_cast<int>(vadj->get_page_size())
   };
   int preview_area_right = preview_area.left + preview_area.width - 1;
   int preview_area_bottom = preview_area.top + preview_area.height - 1;

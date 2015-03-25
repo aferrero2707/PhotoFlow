@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(photoflow)
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+
 find_package(PkgConfig)
 
 MESSAGE(STATUS "Check for LCMS2 availability...")
@@ -21,7 +23,8 @@ pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
 pkg_check_modules(XML2 REQUIRED libxml-2.0)
 
 pkg_check_modules(EXIF REQUIRED libexif)
-pkg_check_modules(EXIV2 REQUIRED exiv2)
+#pkg_check_modules(EXIV2 REQUIRED exiv2)
+find_package (Exiv2)
 
 pkg_check_modules(LENSFUN REQUIRED lensfun)
 MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )

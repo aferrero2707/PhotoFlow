@@ -785,8 +785,6 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
             omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                                   previous->Xsize, previous->Ysize, 
                                   l->omap_layers, NULL );
-            if( !omap )
-              return false;
           }
           std::vector<VipsImage*> in;
           // we add the previous image to the list of inputs, even if it is NULL
@@ -839,7 +837,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       if( par->needs_input() && !previous ) {
         // Here we have a problem: the operation we are trying to insert in the chain requires
         // a primary input image, but there is no previous image available... we give up
-        return false;
+        return NULL;
       }
 
       // We build the chains for the intensity and opacity maps
@@ -853,8 +851,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         imap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->imap_layers, NULL );
-        if( !imap )
-          return false;
+        //if( !imap ) return false;
         //std::list<PF::Layer*>::reverse_iterator map_i = l->imap_layers.rbegin();
         //if(map_i != l->imap_layers.rend()) 
         //imap = (*map_i)->get_processor()->get_par()->get_image();
@@ -864,8 +861,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->omap_layers, NULL );
-        if( !omap )
-          return false;
+        //if( !omap ) return false;
         //std::list<PF::Layer*>::reverse_iterator map_i = l->omap_layers.rbegin();
         //if(map_i != l->omap_layers.rend()) 
         //omap = (*map_i)->get_processor()->get_par()->get_image();
@@ -890,9 +886,9 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         int imgid = l->extra_inputs[iextra].first.second;
         // If the extra input layer is not found we have a problem, better to give up
         // with an error.
-        if( !lextra ) return false;
+        g_assert( lextra != NULL );
         PF::PipelineNode* extra_node = pipeline->get_node( lextra->get_id() );
-        if( !extra_node ) return false;
+        g_assert( extra_node != NULL );
         VipsImage* extra_img = NULL;
         // std::cout<<"  imgid="<<imgid<<"  extra_node->images.size()="<<extra_node->images.size()<<std::endl;
         if( l->extra_inputs[iextra].second == true ) {
@@ -906,7 +902,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         //VipsImage* extra_img = lextra->get_processor()->get_par()->get_image();
         // Similarly, if the extra input layer has no valid image associated to it
         // we have a problem and we gve up
-        if( !extra_img ) return false;
+        g_assert( extra_img != NULL );
         in.push_back( extra_img );
 
         par->set_image_hints( extra_img );
@@ -1023,8 +1019,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         imap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->imap_layers, NULL );
-        if( !imap )
-          return false;
+        //if( !imap ) return false;
         //std::list<PF::Layer*>::reverse_iterator map_i = l->imap_layers.rbegin();
         //if(map_i != l->imap_layers.rend()) 
         //imap = (*map_i)->get_processor()->get_par()->get_image();
@@ -1033,8 +1028,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->omap_layers, NULL );
-        if( !omap )
-          return false;
+        //if( !omap ) return false;
         //std::list<PF::Layer*>::reverse_iterator map_i = l->omap_layers.rbegin();
         //if(map_i != l->omap_layers.rend()) 
         //omap = (*map_i)->get_processor()->get_par()->get_image();

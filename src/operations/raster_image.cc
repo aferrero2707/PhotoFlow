@@ -97,7 +97,7 @@ PF::RasterImage::RasterImage( const std::string f ):
     std::cout<<"RasterImage::RasterImage(): # of output bands="<<image->Bands<<std::endl;
   //#endif
 
-  PF::exif_read( &exif_data, file_name.c_str() );
+  //PF::exif_read( &exif_data, file_name.c_str() );
   void* buf = malloc( sizeof(PF::exif_data_t) );
   if( !buf ) return;
   memcpy( buf, &exif_data, sizeof(PF::exif_data_t) );

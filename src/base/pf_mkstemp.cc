@@ -134,6 +134,8 @@ int mkstemps (char *tmpl, int suffixlen)
   errno = EEXIST;
   return -1;
 }
+#else
+  #include <unistd.h>
 #endif
 
 

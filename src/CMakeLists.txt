@@ -1,10 +1,17 @@
+set(GMIC_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0")
+
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g ")
 #SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}  "-Wall -O0 -g") 
-SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg") 
+#SET(CMAKE_CXX_FLAGS_DEBUG "-std=c++11 -Dgmic_build -Wall -W  -stdlib=libc++ -Dcimg_use_zlib -Dcimg_display=0 -mtune=generic -O0 -g -p -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
+#SET(CMAKE_C_FLAGS_DEBUG "-Dgmic_build -Wall -W  -Dcimg_use_zlib -Dcimg_display=0 -mtune=generic -Wall -O0 -g -p -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
+SET(CMAKE_CXX_FLAGS_DEBUG "-std=c++11 -stdlib=libc++ -Wall -W  -O0 -g -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ${GMIC_FLAGS} ") 
+SET(CMAKE_C_FLAGS_DEBUG "-Wall -W  -O0 -g -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
+
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg -stdlib=libc++ ") 
 #SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops") 
 SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG -DLIBRAW_NODLL -DPF_VERBOSE_UNREF -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
+
+SET(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -O3 -DNDEBUG -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
 include_directories(${GLIBMM_INCLUDE_DIRS})
@@ -55,7 +62,9 @@ link_directories(${PNG_LIBRARY_DIRS})
 include_directories(${XML2_INCLUDE_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
+link_directories(${EXIF_LIBRARY_DIRS})
 include_directories(${EXIV2_INCLUDE_DIRS})
+link_directories(${EXIV2_LIBRARY_DIRS})
 
 include_directories(${LENSFUN_INCLUDE_DIRS})
 link_directories(${LENSFUN_LIBRARY_DIRS})
@@ -120,10 +129,16 @@ FILE(GLOB BaseSources base/*.cc)
 FILE(GLOB DTIncludes dt/common/*.h)
 FILE(GLOB DTSources dt/common/*.c dt/external/*.c)
 
-FILE(GLOB RTIncludes rt/*.hh rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexif/*.hh rt/rtgui/*.h)
-FILE(GLOB RTSources rt/*.cc rt/rtengine/*.c rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)
-#FILE(GLOB RTIncludes rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexis/*.hh rt/rtgui/*.h)
-#FILE(GLOB RTSources rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)
+#FILE(GLOB RTIncludes rt/*.hh rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexif/*.hh rt/rtgui/*.h)
+#FILE(GLOB RTSources rt/*.cc rt/rtengine/*.c rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)
+FILE(GLOB RTIncludes 
+  rt/rtengine/rawimagesource.h 
+)
+FILE(GLOB RTSources 
+  rt/rtengine/rawimagesource.cc
+  rt/rtengine/amaze_demosaic_RT.cc
+  rt/rtengine/igv_demosaic_RT.cc
+)
 
 #FILE(GLOB VipsIncludes vips/plugin/*.h vips/plugin/*.hh)
 #FILE(GLOB VipsSources vips/plugin/*.c vips/plugin/*.cc)
@@ -186,21 +201,23 @@ IF(MINGW)
   SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
 ELSEIF(APPLE)
   #SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -mtune=generic")
-   SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -mtune=generic -fpermissive")
+  SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0")
+  #SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS " -fpermissive")
 ELSE(MINGW)
-  SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic")
-  SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic -fpermissive")
+  #SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic")
+  #SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic -fpermissive")
+  SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
 ENDIF(MINGW)
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES PREFIX "")
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES SUFFIX ".plg")
 
 
 IF(MINGW)
-  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi m)
 ELSEIF(APPLE)
-  list(APPEND ADDITIONAL_LIBS)
+  list(APPEND ADDITIONAL_LIBS pthread m)
 ELSE(MINGW)
-  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
+  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread m)
 ENDIF(MINGW)
 
 add_executable(pfbatch pfbatch.cc)
@@ -284,6 +301,42 @@ INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
+add_executable(gmic_test tests/gmic.cc)
+
+
+target_link_libraries(gmic_test ${LIBS} 
+  pfgui
+  pfbase 
+  pfdt
+  #pfvips 
+  #pfgmic 
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
+  ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  #${LIBRAW_LIBRARIES}  
+  ${STATIC_LIBS}
+  ${ORC_LIBRARIES}
+  fftw3
+  ${ADDITIONAL_LIBS}
+  #gmon
+  )
+
+INSTALL(TARGETS gmic_test RUNTIME DESTINATION bin)
+
+
 #add_executable(refcount # name of the executable on Windows will be example.exe 
 #  tests/refcount.cc 
 #  )
@@ -300,9 +353,28 @@ INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflo
 #target_link_libraries(cast ${VIPS_LIBRARIES})
 
 
-#add_executable(rawsave tests/rawsave.c)
+add_executable(pf_icc_test tests/icc.c)
 
-#target_link_libraries(rawsave ${VIPS_LIBRARIES})
+target_link_libraries(pf_icc_test
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  ${ORC_LIBRARIES}
+  fftw3
+  ${ADDITIONAL_LIBS}
+  
+  )
+
+INSTALL(TARGETS pf_icc_test RUNTIME DESTINATION bin)
 
 
 #add_executable(introspect # name of the executable on Windows will be example.exe 

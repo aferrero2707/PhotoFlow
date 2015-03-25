@@ -106,7 +106,7 @@ void handler(int sig) {
 
 int main (int argc, char *argv[])
 {
-  Gtk::Main app(argc, argv);
+  //return 0;
 
   /*
   if (argc != 2) {
@@ -116,7 +116,7 @@ int main (int argc, char *argv[])
    */
 
 #ifndef WIN32
-  signal(SIGSEGV, handler);   // install our handler
+  //signal(SIGSEGV, handler);   // install our handler
 #endif
 
   if (vips_init (argv[0]))
@@ -131,6 +131,7 @@ int main (int argc, char *argv[])
   vips_clone_stamp_get_type();
   vips_lensfun_get_type();
 
+  //im_concurrency_set( 4 );
 #ifndef NDEBUG
   im_concurrency_set( 1 );
   vips_cache_set_trace( true );
@@ -140,6 +141,8 @@ int main (int argc, char *argv[])
 
   if(!Glib::thread_supported()) 
     Glib::thread_init();
+
+  //return 0;
 
   char exname[512] = {0};
   Glib::ustring exePath;
@@ -168,10 +171,10 @@ int main (int argc, char *argv[])
   char* dataPath_env = getenv("PF_DATA_DIR");
   if( dataPath_env ) {
     dataPath = Glib::ustring(dataPath_env) + "/photoflow";
-    themesPath = dataPath + "/themes";
   } else {
-    themesPath = exePath + "/../share/photoflow/themes";
+    dataPath = exePath + "/../share/photoflow";
   }
+  themesPath = dataPath + "/themes";
 #endif
   std::cout<<"exePath: "<<exePath<<std::endl;
   std::cout<<"themesPath: "<<themesPath<<std::endl;
@@ -210,6 +213,10 @@ int main (int argc, char *argv[])
   }
 
   vips__leak = 1;
+
+//return 0;
+  Gtk::Main* app = new Gtk::Main(argc, argv);
+
   struct stat buffer;   
   //#ifndef WIN32
 #ifdef GTKMM_2
@@ -253,9 +260,10 @@ int main (int argc, char *argv[])
   }
   //Shows the window and returns when it is closed.
   mainWindow->show_all();
-  app.run(*mainWindow);
+  app->run(*mainWindow);
 
   delete mainWindow;
+  delete app;
 
   PF::ImageProcessor::Instance().join();
 
