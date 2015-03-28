@@ -413,6 +413,25 @@ VipsImage* PF::ClonePar::L2rgb(VipsImage* srcimg, unsigned int& level)
 }
 
 
+VipsImage* PF::ClonePar::grey2rgb(VipsImage* srcimg, unsigned int& level)
+{
+  if( !srcimg ) return NULL;
+
+  VipsImage* out = NULL;
+  colorspace_t csin = PF::PF_COLORSPACE_UNKNOWN;
+  if( srcimg )
+    csin = PF::convert_colorspace( srcimg->Type );
+
+  VipsImage* greyimg[3] = {srcimg, srcimg, srcimg};
+  if( vips_bandjoin( greyimg, &out, 3, NULL) ) {
+    std::cout<<"ClonePar::grey2rgb(): vips_bandjoin() failed."<<std::endl;
+    return NULL;
+  }
+
+  return out;
+}
+
+
 VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first, 
                                VipsImage* imap, VipsImage* omap, 
                                unsigned int& level)
@@ -490,7 +509,12 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
       // The target colorspace is greyscale, therefore we either pick one channel from the source image
       // or we apply the appropriate conversion to grayscale
       clone_channel ch = (clone_channel)source_channel.get_enum_value().first;
-      //std::cout<<"ClonePar::build(): source_channel="<<ch<<std::endl;
+      std::cout<<"ClonePar::build(): source_channel="<<ch<<std::endl;
+      if( ch==PF::CLONE_CHANNEL_GREY ) {
+        unsigned int level2 = level;
+        std::cout<<"ClonePar::build(): calling grey2rgb()"<<std::endl;
+        out = grey2rgb( srcimg, level2 );
+      }
       if( ch==PF::CLONE_CHANNEL_RGB ||
           ch==PF::CLONE_CHANNEL_R ||
           ch==PF::CLONE_CHANNEL_G ||

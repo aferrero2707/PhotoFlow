@@ -70,6 +70,7 @@ namespace PF
     VipsImage* rgb2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* Lab2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* L2rgb(VipsImage* in, unsigned int& level);
+    VipsImage* grey2rgb(VipsImage* in, unsigned int& level);
     VipsImage* ab2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
 
   public:
