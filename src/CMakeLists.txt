@@ -1,17 +1,17 @@
-set(GMIC_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0")
+set(GMIC_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra ")
 
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g ")
 #SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}  "-Wall -O0 -g") 
 #SET(CMAKE_CXX_FLAGS_DEBUG "-std=c++11 -Dgmic_build -Wall -W  -stdlib=libc++ -Dcimg_use_zlib -Dcimg_display=0 -mtune=generic -O0 -g -p -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 #SET(CMAKE_C_FLAGS_DEBUG "-Dgmic_build -Wall -W  -Dcimg_use_zlib -Dcimg_display=0 -mtune=generic -Wall -O0 -g -p -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
-SET(CMAKE_CXX_FLAGS_DEBUG "-std=c++11 -stdlib=libc++ -Wall -W  -O0 -g -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ${GMIC_FLAGS} ") 
+SET(CMAKE_CXX_FLAGS_DEBUG "-std=c++11 -Wall -W  -O0 -g -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ${GMIC_FLAGS} ") 
 SET(CMAKE_C_FLAGS_DEBUG "-Wall -W  -O0 -g -DNDEBUG -DDO_WARNINGS -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg -stdlib=libc++ ") 
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg ") 
 #SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops") 
 SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG -DLIBRAW_NODLL -DPF_VERBOSE_UNREF -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
 
-SET(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -O3 -DNDEBUG -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ") 
+SET(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -O3 -DNDEBUG -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ${GMIC_FLAGS} ") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
 include_directories(${GLIBMM_INCLUDE_DIRS})
@@ -197,8 +197,9 @@ add_library (pfgui
 
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_CFLAGS "-fPIC -DPIC")
 IF(MINGW)
-  SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
-  SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
+  #SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic")
+  #SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
+  SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
 ELSEIF(APPLE)
   #SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -mtune=generic")
   SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0")
@@ -206,7 +207,7 @@ ELSEIF(APPLE)
 ELSE(MINGW)
   #SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-Dgmic_build -W  -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic")
   #SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fopenmp -Dcimg_use_openmp -fno-ipa-sra -mtune=generic -fpermissive")
-  SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -mtune=generic -fpermissive")
+  SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-fpermissive")
 ENDIF(MINGW)
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES PREFIX "")
 #SET_TARGET_PROPERTIES(pfvips PROPERTIES SUFFIX ".plg")
@@ -334,7 +335,7 @@ target_link_libraries(gmic_test ${LIBS}
   #gmon
   )
 
-INSTALL(TARGETS gmic_test RUNTIME DESTINATION bin)
+#INSTALL(TARGETS gmic_test RUNTIME DESTINATION bin)
 
 
 #add_executable(refcount # name of the executable on Windows will be example.exe 
@@ -374,7 +375,7 @@ target_link_libraries(pf_icc_test
   
   )
 
-INSTALL(TARGETS pf_icc_test RUNTIME DESTINATION bin)
+#INSTALL(TARGETS pf_icc_test RUNTIME DESTINATION bin)
 
 
 #add_executable(introspect # name of the executable on Windows will be example.exe 
