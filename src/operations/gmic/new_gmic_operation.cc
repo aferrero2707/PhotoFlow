@@ -95,6 +95,8 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_sharpen_rl();
   } else if( op_type == "gmic_split_details" ) {
     processor = new_gmic_split_details();
+  } else if( op_type == "gmic_transfer_colors" ) {
+    processor = new_gmic_transfer_colors();
     //insert new operations here
   }
 

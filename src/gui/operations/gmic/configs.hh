@@ -60,3 +60,4 @@
 #include "gradient_norm_config.hh"
 #include "sharpen_rl_config.hh"
 #include "split_details_config.hh"
+#include "transfer_colors_config.hh"

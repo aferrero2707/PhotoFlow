@@ -63,6 +63,7 @@ namespace PF
   ProcessorBase* new_gmic_gradient_norm();
   ProcessorBase* new_gmic_sharpen_rl();
   ProcessorBase* new_gmic_split_details();
+  ProcessorBase* new_gmic_transfer_colors();
   //insert new operations here
 
   ProcessorBase* new_gmic_operation( std::string op_type );

@@ -97,6 +97,8 @@ PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, P
     dialog = new PF::GmicSharpenRLConfigDialog( current_layer );
   } else if( op_type == "gmic_split_details" ) {
     dialog = new PF::GmicSplitDetailsConfigDialog( current_layer );
+  } else if( op_type == "gmic_transfer_colors" ) {
+    dialog = new PF::GmicTransferColorsConfigDialog( current_layer );
     //insert new operations here
   }
 
