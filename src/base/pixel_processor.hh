@@ -87,7 +87,7 @@ namespace PF
     typedef OP_PAR OpParams;
   public: 
     void render(VipsRegion** ir, int n, int in_first,
-                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* imap, VipsRegion* ,
                 VipsRegion* oreg, OP_PAR* par)
     {
       PEL_PROC<PIXELPROC_TEMPLATE_IMP> proc(par);

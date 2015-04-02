@@ -126,7 +126,7 @@ bool PF::SplineCurve::remove_point( unsigned int id )
   if( id >= (get_npoints()-1) ) return false;
   
 #ifdef SPLINE_USE_STDVEC
-  //points.erase( points.begin() + id );
+  points.erase( points.begin() + id );
 #else
   npoints -= 1;
   std::pair<float,float>* points_new = new std::pair<float,float>[npoints];

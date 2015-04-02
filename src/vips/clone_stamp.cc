@@ -50,6 +50,7 @@
 
 #include <vips/dispatch.h>
 
+#include "../base/array2d.hh"
 #include "../base/processor.hh"
 #include "../base/layer.hh"
 #include "../operations/clone_stamp.hh"
@@ -134,7 +135,7 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   VipsRect point_area;
   VipsRect point_clip;
   int point_clip_right, point_clip_bottom;
-  int x, x0, y, y0, ch, row1, row2;
+  int x, x0, y, y0, ch, row1, row2, col, mx, my1, my2;
   int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
 
   VipsRect image_area = {0, 0, ir->im->Xsize, ir->im->Ysize};
@@ -145,7 +146,7 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   PF::CloneStampPar* par = dynamic_cast<PF::CloneStampPar*>( clone_stamp->processor->get_par() );
   if( !par ) return 1;
 
-  T *p, *pout;
+  T *p, *pout, *pbgd;
   
   if( !ir )
     return( -1 );
@@ -210,6 +211,25 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   out_area.width = in_area.width;
   out_area.height = in_area.height;
 
+  PF::Array2D<float> opacity_max;
+  opacity_max.Init( out_area.width, out_area.height, out_area.top, out_area.left );
+  for( int ic = 0; ic < out_area.width; ic++ ) {
+    for( int ir = 0; ir < out_area.height; ir++ ) {
+      opacity_max.GetLocal(ir, ic) = 0;
+    }
+  }
+
+  // We keep a copy of the original pixels tan needs to be blended with the cloned ones
+  PF::Array2D<T> bgd;
+  bgd.Init( out_area.width*oreg->im->Bands, out_area.height,
+      out_area.top, out_area.left*oreg->im->Bands );
+  for( y = 0; y < out_area.height; y++ ) {
+    pout = (T*)VIPS_REGION_ADDR( oreg, out_area.left, out_area.top + y );
+    for( x = 0; x < out_area.width*oreg->im->Bands; x++ ) {
+      bgd.Get( out_area.top+y, out_area.left*oreg->im->Bands+x ) = pout[x];
+    }
+  }
+
   PF::Stroke<PF::Stamp>& stroke = group.get_strokes()[clone_stamp->stroke_num];
 
   std::list< std::pair<unsigned int, unsigned int> >& points = stroke.get_points();
@@ -222,15 +242,23 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   int pen_size = pen.get_size()/par->get_scale_factor();
   int pen_size2 = pen_size*pen_size;
 
-  //std::cout<<"  pen size="<<pen.get_size()<<"  opacity="<<pen.get_opacity()
+  //std::cout<<"  pen size="<<pen_size<<"  opacity="<<pen.get_opacity()
   //         <<"  smoothness="<<pen.get_smoothness()<<std::endl;
+
+  PF::StampMask* resized_mask = NULL;
+  PF::StampMask* mask = &(pen.get_mask());
+  if( pen_size != pen.get_size() ) {
+    resized_mask = new PF::StampMask;
+    resized_mask->init( pen_size*2+1, pen.get_opacity(), pen.get_smoothness() );
+    mask = resized_mask;
+  }
 
   point_area.width = point_area.height = pen_size*2 + 1;
   for( pi = points.begin(); pi != points.end(); ++pi ) {
     x0 = pi->first/par->get_scale_factor();
     y0 = pi->second/par->get_scale_factor();
 #ifndef NDEBUG
-    std::cout<<"x0="<<x0<<"  y0="<<y0<<std::endl;
+    std::cout<<"  point @ x0="<<x0<<"  y0="<<y0<<std::endl;
 #endif
 
     point_area.left = x0 - pen_size;
@@ -243,7 +271,7 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
     point_clip_right = point_clip.left + point_clip.width - 1;
     point_clip_bottom = point_clip.top + point_clip.height - 1;
 
-    // We have at least one point to process, so we need to process the inout pixels
+    // We have at least one point to process, so we need to process the input pixels
     if( !prepared ) {
 #ifndef NDEBUG
       std::cout<<"  preparing region ir:  top="<<in_area.top
@@ -259,6 +287,8 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
     for( y = 0; y <= pen_size; y++ ) {
       row1 = y0 - y;
       row2 = y0 + y;
+      my1 = pen_size - y;
+      my2 = pen_size + y;
       //int L = pen.get_size() - y;
       int D = (int)sqrt( pen_size2 - y*y );
       int startcol = x0 - D;
@@ -278,25 +308,44 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
       /**/
       if( (row1 >= point_clip.top) && (row1 <= point_clip_bottom) ) {
         p =    (T*)VIPS_REGION_ADDR( ir, startcol-delta_col, row1-delta_row );
+        pbgd = &( bgd.Get(row1, startcol*oreg->im->Bands) );
         pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row1 );
-        for( x = 0; x < colspan; x += oreg->im->Bands ) {
+        mx = startcol - x0 + pen_size;
+        for( x = 0, col = startcol; x < colspan; x += oreg->im->Bands, col++, mx++ ) {
+          float mval = mask->get( mx, my1 );
+          //std::cout<<"    opacity_max.Get("<<row1<<", "<<col<<")="<<opacity_max.Get(row1, col)<<"    mval="<<mval<<std::endl;
+          if( mval < opacity_max.Get(row1, col) )
+            continue;
           for( ch = 0; ch < oreg->im->Bands; ch++ ) {
-            pout[x+ch] = p[x+ch];
+            float val = mval*p[x+ch] + (1.0f-mval)*pbgd[x+ch];
+            pout[x+ch] = static_cast<T>(val);
           }
+          opacity_max.Get(row1, col) = mval;
           //std::cout<<"x="<<x<<"+"<<point_clip.left<<"="<<x+point_clip.left<<std::endl;
         }
       }
       if( (row2 != row1) && (row2 >= point_clip.top) && (row2 <= point_clip_bottom) ) {
         p =    (T*)VIPS_REGION_ADDR( ir, startcol-delta_col, row2-delta_row );
+        pbgd = &( bgd.Get(row2, startcol*oreg->im->Bands) );
         pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row2 );
-        for( x = 0; x < colspan; x += oreg->im->Bands ) {
+        mx = startcol - x0 + pen_size;
+        for( x = 0, col = startcol; x < colspan; x += oreg->im->Bands, col++, mx++ ) {
+          float mval = mask->get( mx, my2 );
+          //std::cout<<"    opacity_max.Get("<<row2<<", "<<col<<")="<<opacity_max.Get(row2, col)<<"    mval="<<mval<<std::endl;
+          if( mval < opacity_max.Get(row2, col) )
+            continue;
           for( ch = 0; ch < oreg->im->Bands; ch++ ) {
-            pout[x+ch] = p[x+ch];
+            float val = mval*p[x+ch] + (1.0f-mval)*pbgd[x+ch];
+            pout[x+ch] = static_cast<T>(val);
+            //pout[x+ch] = p[x+ch];
           }
+          opacity_max.Get(row2, col) = mval;
         }
       }
     }
   }
+
+  if( resized_mask ) delete resized_mask;
 
   return( 0 );
 }
@@ -306,7 +355,7 @@ static int
 vips_clone_stamp_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
 {
   VipsRegion *ir = (VipsRegion *) seq;
-  g_print("vips_clone_stamp_gen() called, ir=%p\n", ir);
+  //g_print("vips_clone_stamp_gen() called, ir=%p\n", ir);
   if( !ir ) return 1;
 
   int result = 0;

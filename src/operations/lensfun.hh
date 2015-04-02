@@ -32,7 +32,9 @@
 
 #include <string>
 
+#ifdef PF_HAS_LENSFUN
 #include <lensfun.h>
+#endif
 
 #include "../base/property.hh"
 #include "../base/operation.hh"
@@ -47,7 +49,9 @@ class LensFunPar: public OpParBase
   Property<std::string> prop_camera_maker;
   Property<std::string> prop_camera_model;
   Property<std::string> prop_lens;
+#ifdef PF_HAS_LENSFUN
   lfDatabase* ldb;
+#endif
   float focal_length, aperture, distance;
 
 public:

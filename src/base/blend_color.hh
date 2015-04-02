@@ -35,7 +35,7 @@ class BlendColor: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
   int pos, ch;
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& , T* , T* top, T* out, const int& x, int& )
   {
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {

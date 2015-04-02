@@ -157,7 +157,7 @@ namespace PF
       val[3] = (T)(p->get_K().get()*FormatInfo<T>::RANGE + FormatInfo<T>::MIN); 
     }
 
-    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
+    void process(T**, const int& , const int& , const int& , const int& x, const double& , T* pout)
     {
       
       for(int i = CHMIN; i <= CHMAX; i++) {

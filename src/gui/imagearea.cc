@@ -329,7 +329,11 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
           layer->get_processor()->get_par() ) {
         PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
         PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+#if defined(_WIN32) || defined(WIN32)
+        if( dialog && dialog->is_visible() ) {
+#else
         if( dialog && dialog->get_visible() ) {
+#endif
           int level = get_pipeline()->get_level();
           float zoom_fact = 1.0f;
           for( unsigned int i = 0; i < level; i++ )
@@ -369,7 +373,11 @@ void PF::ImageArea::draw_area()
           layer->get_processor()->get_par() ) {
         PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
         PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+#if defined(_WIN32) || defined(WIN32)
+        if( dialog && dialog->is_visible() ) {
+#else
         if( dialog && dialog->get_visible() ) {
+#endif
           int level = get_pipeline()->get_level();
           float zoom_fact = 1.0f;
           for( unsigned int i = 0; i < level; i++ )

@@ -77,7 +77,7 @@ VipsImage* PF::GmicSmoothWaveletsHaarPar::build(std::vector<VipsImage*>& in, int
 	for( int l = 1; l <= level; l++ )
 		scalefac *= 2;
 
-  std::string command = "-verbose + -denoise_haar  ";
+  std::string command = "-denoise_haar  ";
   command = command + prop_threshold.get_str();
   command = command + std::string(",") + prop_scales.get_str();
   command = command + std::string(",") + prop_iterations.get_str();

@@ -45,7 +45,9 @@
 
 #include <lcms2.h>
 
+#ifdef PF_HAS_LENSFUN
 #include <lensfun.h>
+#endif
 
 #include <iostream>
 
@@ -94,8 +96,10 @@ typedef struct _VipsLensFun {
    */
   VipsDemandStyle demand_hint;
 
+#ifdef PF_HAS_LENSFUN
   lfDatabase* ldb;
   lfModifier* modifier;
+#endif
 } VipsLensFun;
 
 /*
@@ -148,7 +152,9 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
      <<" height="<<oreg->valid.height<<std::endl;
 #endif
   float* buf = new float[r->width*r->height*2*3];
+#ifdef PF_HAS_LENSFUN
   bool ok = lensfun->modifier->ApplySubpixelGeometryDistortion( r->left, r->top, r->width, r->height, buf );
+#endif
   int xmin=2000000000, xmax = -2000000000, ymin = 2000000000, ymax = -2000000000;
   float* pos = buf;
   for( x = 0; x < r->width; x++ ) {
@@ -286,6 +292,7 @@ vips_lensfun_build( VipsObject *object )
       vips_check_coding_known( klass->nickname, lensfun->in ) )
     return( -1 );
 
+#ifdef PF_HAS_LENSFUN
   PF::LensFunPar* lfpar = dynamic_cast<PF::LensFunPar*>( lensfun->processor->get_par() );
 
   const lfCamera** cameras = lensfun->ldb->FindCameras( lfpar->camera_maker().c_str(),
@@ -328,6 +335,7 @@ vips_lensfun_build( VipsObject *object )
   if (modflags & LF_MODIFY_GEOMETRY)
     g_print ("[geom]");
   g_print (" ...\n");
+#endif
 
   /* Get ready to write to @out. @out must be set via g_object_set() so
    * that vips can see the assignment. It'll complain that @out hasn't
@@ -415,8 +423,10 @@ vips_lensfun_class_init( VipsLensFunClass *klass )
 static void
 vips_lensfun_init( VipsLensFun *lensfun )
 {
+#ifdef PF_HAS_LENSFUN
   lensfun->ldb = lf_db_new();
   lensfun->ldb->Load ();
+#endif
 }
 
 /**

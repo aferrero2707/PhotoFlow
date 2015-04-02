@@ -186,8 +186,13 @@ bool PF::GmicExtractForegroundConfigDialog::pointer_release_event( int button, d
 bool PF::GmicExtractForegroundConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
                                                             float scale, int xoffset, int yoffset )
 {
+#if defined(_WIN32) || defined(WIN32)
+  if( !is_mapped() )
+    return false;
+#else
   if( !get_mapped() ) 
     return false;
+#endif
 
   // We only draw on top of the preview image if we are mapped
 

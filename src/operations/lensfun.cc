@@ -40,8 +40,10 @@ PF::LensFunPar::LensFunPar():
     prop_camera_model( "camera_model", this ),
     prop_lens( "lens", this )
 {
+#ifdef PF_HAS_LENSFUN
   ldb = lf_db_new();
   ldb->Load ();
+#endif
   set_type("lensfun" );
 }
 
@@ -52,6 +54,11 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
 std::cout<<"LensFunPar::build() called."<<std::endl;
   if( (in.size() < 1) || (in[0] == NULL) )
     return NULL;
+
+#ifndef PF_HAS_LENSFUN
+  PF_REF( in[0], "LensFunPar::build(): no LENSFUN support availabe." );
+  return( in[0] );
+#endif
 
   size_t blobsz;
   PF::exif_data_t* exif_data;
@@ -68,6 +75,7 @@ std::cout<<"LensFunPar::build() called."<<std::endl;
     return in[0];
   }
 
+#ifdef PF_HAS_LENSFUN
   const lfCamera** cameras = ldb->FindCameras( exif_data->exif_maker,
       exif_data->exif_model );
   if( !cameras ) {
@@ -92,6 +100,7 @@ std::cout<<"LensFunPar::build() called."<<std::endl;
       prop_lens.update( lens->Model );
     }
   }
+#endif
 
   focal_length = exif_data->exif_focal_length;
   aperture = exif_data->exif_aperture;

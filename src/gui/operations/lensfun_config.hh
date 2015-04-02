@@ -32,7 +32,9 @@
 
 #include <gtkmm.h>
 
+#ifdef PF_HAS_LENSFUN
 #include <lensfun.h>
+#endif
 
 #include "../operation_config_dialog.hh"
 #include "../../operations/lensfun.hh"
@@ -50,7 +52,9 @@ class LensFunConfigDialog: public OperationConfigDialog
   Gtk::Entry makerEntry, modelEntry, lensEntry;
   //#endif
 
+#ifdef PF_HAS_LENSFUN
   lfDatabase* ldb;
+#endif
 
 public:
   LensFunConfigDialog( Layer* l );

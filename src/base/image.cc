@@ -526,7 +526,7 @@ bool PF::Image::open( std::string filename )
     //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
 		file_name = filename;
 
-  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" ) {
+  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" ) {
 
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
@@ -691,11 +691,7 @@ void PF::Image::do_export_merged( std::string filename )
       //g_object_unref( srgbimg );
       // msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
       //PF_UNREF( srgbimg, msg.c_str() );
-#if VIPS_MAJOR_VERSION < 7 || VIPS_MINOR_VERSION < 40
-    vips_image_write_to_file( outimg, filename.c_str() );
-#else
     vips_image_write_to_file( outimg, filename.c_str(), NULL );
-#endif
 		}
     
 		if( ext == "tif" || ext == "tiff" ) {
@@ -707,14 +703,10 @@ void PF::Image::do_export_merged( std::string filename )
       //g_object_unref( srgbimg );
       //msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
       //PF_UNREF( srgbimg, msg.c_str() );
-#if VIPS_MAJOR_VERSION < 7 || VIPS_MINOR_VERSION < 40
-    vips_image_write_to_file( outimg, filename.c_str() );
-#else
     int predictor = 2;
     vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
         "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
     //vips_image_write_to_file( outimg, filename.c_str(), NULL );
-#endif
 		}
 
     //g_object_unref( outimg );

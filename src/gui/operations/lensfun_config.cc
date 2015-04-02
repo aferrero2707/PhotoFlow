@@ -57,8 +57,10 @@ PF::LensFunConfigDialog::LensFunConfigDialog( PF::Layer* layer ):
 
   add_widget( controlsBox );
 
+#ifdef PF_HAS_LENSFUN
   ldb = lf_db_new();
   ldb->Load ();
+#endif
 
   makerEntry.signal_activate().
     connect(sigc::mem_fun(*this,
@@ -90,6 +92,7 @@ void PF::LensFunConfigDialog::do_update()
             (void**)&exif_data, &blobsz ) ) {
           if( blobsz == sizeof(PF::exif_data_t) ) {
 
+#ifdef PF_HAS_LENSFUN
             const lfCamera** cameras = ldb->FindCameras( exif_data->exif_maker,
                 exif_data->exif_model );
             if( !cameras ) {
@@ -114,6 +117,7 @@ void PF::LensFunConfigDialog::do_update()
                 lensEntry.set_text( lens->Model );
               }
             }
+#endif
           }
         }
       }

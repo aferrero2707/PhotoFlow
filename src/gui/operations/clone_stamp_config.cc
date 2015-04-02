@@ -38,11 +38,15 @@ PF::CloneStampConfigDialog::CloneStampConfigDialog( PF::Layer* layer ):
   stamp_size( this, "stamp_size", "Stamp size: ", 5, 0, 1000000, 1, 10, 1),
   stamp_opacity( this, "stamp_opacity", "Stamp opacity: ", 100, 0, 100, 0.1, 1, 100),
   stamp_smoothness( this, "stamp_smoothness", "Stamp smoothness: ", 100, 0, 100, 0.1, 1, 100),
-  srcpt_row( 0 ), srcpt_col( 0 ), srcpt_ready( false ), srcpt_changed( false )
+  undoButton("Undo"),
+  srcpt_row( 0 ), srcpt_col( 0 ), srcpt_ready( false ), srcpt_changed( false ), stroke_started( false )
 {
+  controlsBox.pack_start( undoButton, Gtk::PACK_SHRINK );
   controlsBox.pack_start( stamp_size, Gtk::PACK_SHRINK );
-  //controlsBox.pack_start( stamp_opacity, Gtk::PACK_SHRINK );
-  //controlsBox.pack_start( stamp_smoothness, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( stamp_opacity, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( stamp_smoothness, Gtk::PACK_SHRINK );
+
+  undoButton.signal_clicked().connect( sigc::mem_fun(this, &CloneStampConfigDialog::on_undo) );
 
   add_widget( controlsBox );
 }
@@ -56,6 +60,27 @@ void PF::CloneStampConfigDialog::open()
       get_layer()->get_processor()->get_par() ) {
   }
   OperationConfigDialog::open();
+}
+
+
+void PF::CloneStampConfigDialog::on_undo()
+{
+  // Pointer to the associated Layer object
+  PF::Layer* layer = get_layer();
+  if( !layer ) return;
+
+  // Then we loop over all the operations associated to the
+  // layer in the different pipelines and we let them record the stroke as well
+  PF::Image* image = layer->get_image();
+  if( !image ) return;
+
+  // First of all, the new stroke is recorded by the "master" operation
+  PF::ProcessorBase* processor = layer->get_processor();
+  if( !processor || !(processor->get_par()) ) return;
+
+  PF::CloneStampPar* par = dynamic_cast<PF::CloneStampPar*>( processor->get_par() );
+  if( !par ) return;
+
 }
 
 
@@ -80,9 +105,11 @@ void PF::CloneStampConfigDialog::start_stroke( double x, double y )
   // The source point needs to be set before we can do anything...
   if( !srcpt_ready ) return;
 
-  std::cout<<"CloneStampConfigDialog::start_stroke(): srcpt_changed="<<srcpt_changed<<std::endl;
+  //std::cout<<"CloneStampConfigDialog::start_stroke(): srcpt_changed="<<srcpt_changed<<std::endl;
   if( srcpt_changed ) {
     // A new source point was defined, so we need to start a new strokes group
+    srcpt_dx = x-srcpt_col;
+    srcpt_dy = y-srcpt_row;
     par->new_group( (int)(y-srcpt_row), (int)(x-srcpt_col) );
   }
 
@@ -111,6 +138,7 @@ void PF::CloneStampConfigDialog::start_stroke( double x, double y )
     par->start_stroke();
   }
   srcpt_changed = false;
+  stroke_started = true;
 }
 
 
@@ -135,10 +163,10 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
 
   if( (update.width < 1) || (update.height < 1) )  
     return;
-
-  std::cout<<"PF::CloneStampConfigDialog::draw_point(): area="<<update.width<<","<<update.height
+#ifndef NDEBUG
+  std::cout<<"CloneStampConfigDialog::draw_point(): area="<<update.width<<","<<update.height
            <<"+"<<update.left<<"+"<<update.top<<std::endl;
-
+#endif
   // Then we loop over all the operations associated to the 
   // layer in the different pipelines and we let them record the stroke as well
   PF::Image* image = layer->get_image();
@@ -225,6 +253,7 @@ bool PF::CloneStampConfigDialog::pointer_release_event( int button, double x, do
     srcpt_col = lx;
     srcpt_ready = true;
     srcpt_changed = true;
+    stroke_started = false;
   } else {
     //draw_point( x, y );
   }
@@ -234,15 +263,68 @@ bool PF::CloneStampConfigDialog::pointer_release_event( int button, double x, do
 
 bool PF::CloneStampConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return false;
-  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return false;
+  mouse_x = x; mouse_y = y;
+  if( button != 1 ) return true;
+  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return true;
 #ifndef NDEBUG
   std::cout<<"PF::CloneStampConfigDialog::pointer_motion_event() called."<<std::endl;
 #endif
   double lx = x, ly = y, lw = 1, lh = 1;
   screen2layer( lx, ly, lw, lh );
   draw_point( lx, ly );
-  return false;
+  return true;
 }
 
+
+
+
+bool PF::CloneStampConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+                                           float scale, int xoffset, int yoffset )
+{
+#if defined(_WIN32) || defined(WIN32)
+  if( !is_mapped() )
+    return false;
+#else
+  if( !get_mapped() )
+    return false;
+#endif
+
+  //std::cout<<"CloneStampConfigDialog::modify_preview() called"<<std::endl;
+
+  if( !get_layer() ) return false;
+  if( !get_layer()->get_image() ) return false;
+  if( !get_layer()->get_processor() ) return false;
+  if( !get_layer()->get_processor()->get_par() ) return false;
+
+  PF::OpParBase* par = get_layer()->get_processor()->get_par();
+
+  // Resize the output buffer to match the input one
+  buf_out.resize( buf_in.get_rect() );
+  // Copy pixel data from input to output
+  buf_out.copy( buf_in );
+
+  int pensize = stamp_size.get_adjustment()->get_value();//*scale;
+  double tx = 0, ty = 0, tw = pensize, th = pensize;
+  layer2screen( tx, ty, tw, th );
+  pensize = tw;
+  int pen_size2 = pensize*pensize;
+
+  int x0 = mouse_x;//*scale + xoffset;
+  int y0 = mouse_y;//*scale + yoffset;
+
+  if( stroke_started ) {
+    buf_out.draw_circle( x0, y0, pensize );
+    tx = srcpt_dx; ty = srcpt_dy; tw = 1; th = 1;
+    layer2screen( tx, ty, tw, th );
+    buf_out.draw_circle( x0-tx, y0-ty, pensize );
+  } else if( srcpt_ready ) {
+    buf_out.draw_circle( x0, y0, pensize );
+    tx = srcpt_col; ty = srcpt_row; tw = 1; th = 1;
+    layer2screen( tx, ty, tw, th );
+    buf_out.draw_circle( tx, ty, pensize );
+  } else {
+    buf_out.draw_circle( x0, y0, pensize );
+  }
+  return true;
+}
 

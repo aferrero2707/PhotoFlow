@@ -282,8 +282,13 @@ bool PF::CropConfigDialog::pointer_motion_event( int button, double sx, double s
 bool PF::CropConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
                                            float scale, int xoffset, int yoffset )
 {
+#if defined(_WIN32) || defined(WIN32)
+  if( !is_mapped() )
+    return false;
+#else
   if( !get_mapped() ) 
     return false;
+#endif
 
   if( !get_layer() ) return false;
   if( !get_layer()->get_image() ) return false;

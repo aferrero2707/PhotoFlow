@@ -347,6 +347,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.set_name("Image files");
   filter_tiff.add_mime_type("image/tiff");
   filter_tiff.add_mime_type("image/jpeg");
+  filter_tiff.add_mime_type("image/png");
   filter_tiff.add_pattern("*.pfi");
   Gtk::FileFilter filter_all;
   filter_all.set_name("All files");
@@ -357,6 +358,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->set_name("Image files");
   filter_tiff->add_mime_type("image/tiff");
   filter_tiff->add_mime_type("image/jpeg");
+  filter_tiff->add_mime_type("image/png");
   filter_tiff->add_pattern("*.pfi");
   Glib::RefPtr<Gtk::FileFilter> filter_all = Gtk::FileFilter::create();
   filter_all->set_name("All files");

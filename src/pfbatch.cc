@@ -114,12 +114,12 @@ bool replace_string(std::string& str, const std::string& from, const std::string
 
 int main (int argc, char *argv[])
 {
-  /*
+/*
   if (argc != 2) {
-    printf ("usage: %s <filename>", argv[0]);
-    exit(1);
+  printf ("usage: %s <filename>", argv[0]);
+  exit(1);
   }
-  */
+*/
 
 #ifndef WIN32
   signal(SIGSEGV, handler);   // install our handler
@@ -127,7 +127,7 @@ int main (int argc, char *argv[])
 
   if (vips_init (argv[0]))
     //vips::verror ();
-		return 1;
+    return 1;
 
   vips_layer_get_type();
   vips_gmic_get_type();
@@ -143,60 +143,18 @@ int main (int argc, char *argv[])
   //if(!result) verror ();
   //std::cout<<result->name<<" loaded."<<std::endl;
 
-  char exname[512] = {0};
-  Glib::ustring exePath;
-  Glib::ustring dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
-  Glib::ustring themesPath = dataPath + "/themes";
-  // get the path where the rawtherapee executable is stored
-#ifdef WIN32
-  WCHAR exnameU[512] = {0};
-  GetModuleFileNameW (NULL, exnameU, 512);
-  WideCharToMultiByte(CP_UTF8,0,exnameU,-1,exname,512,0,0 );
-#elif defined(__APPLE__) && defined (__MACH__)
-  char path[1024];
-  uint32_t size = sizeof(exname);
-  if (_NSGetExecutablePath(exname, &size) == 0)
-    printf("executable path is %s\n", exname);
-  else
-    printf("buffer too small; need size %u\n", size);
-#else
-  if (readlink("/proc/self/exe", exname, 512) < 0) {
-    strncpy(exname, argv[0], 512);
-  }
-#endif
-  exePath = Glib::path_get_dirname(exname);
-
-#if defined(__APPLE__) && defined (__MACH__)
-  char* dataPath_env = getenv("PF_DATA_DIR");
-  if( dataPath_env ) {
-    dataPath = Glib::ustring(dataPath_env) + "/photoflow";
-  } else {
-    dataPath = exePath + "/../share/photoflow";
-  }
-  themesPath = dataPath + "/themes";
-#endif
-  std::cout<<"exePath: "<<exePath<<std::endl;
-  std::cout<<"themesPath: "<<themesPath<<std::endl;
-
-  //im_package* result = im_load_plugin("src/pfvips.plg");
-  //if(!result) verror ();
-  //std::cout<<result->name<<" loaded."<<std::endl;
-
   char cCurrentPath[FILENAME_MAX];
-
   if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
     return errno;
   }
-
   cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
-
   char* fullpath = realpath( cCurrentPath, NULL );
-  if(!fullpath)
-    return 1;
+  if(!fullpath) return 1;
   //PF::PhotoFlow::Instance().set_base_dir( fullpath );
-  PF::PhotoFlow::Instance().set_base_dir( exePath );
-  PF::PhotoFlow::Instance().set_data_dir( dataPath );
   free( fullpath );
+
+  Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
+  Glib::ustring themesPath = dataPath + "/themes";
 
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation );
   PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );

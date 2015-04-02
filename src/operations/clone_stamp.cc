@@ -38,7 +38,7 @@ PF::CloneStampPar::CloneStampPar():
   OpParBase(),
   stamp_size( "stamp_size", this, 5 ),
   stamp_opacity( "stamp_opacity", this, 1 ),
-  stamp_smoothness( "stamp_smoothness", this, 0 ),
+  stamp_smoothness( "stamp_smoothness", this, 1 ),
   strokes( "strokes", this )
 {
   set_type( "clone_stamp" );
@@ -75,7 +75,7 @@ VipsImage* PF::CloneStampPar::build(std::vector<VipsImage*>& in, int first,
       if( vips_clone_stamp( tempimg, &outnew, get_processor(), i, j,NULL ) )
         return NULL;
       PF_UNREF( tempimg, "CloneStampPar::build(): tempimg unref" );
-      std::cout<<"CloneStampPar::build(): stroke "<<i<<","<<j<<" built"<<std::endl;
+      //std::cout<<"CloneStampPar::build(): stroke "<<i<<","<<j<<" built"<<std::endl;
     }
   }
 

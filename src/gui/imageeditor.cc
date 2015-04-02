@@ -425,7 +425,11 @@ void PF::ImageEditor::set_active_layer( int id )
         old_active->get_processor()->get_par()->get_config_ui() ) {
       PF::OperationConfigUI* ui = old_active->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+#if defined(_WIN32) || defined(WIN32)
+      if( dialog && dialog->is_visible() ) {
+#else
       if( dialog && dialog->get_visible() ) {
+#endif
         dialog->disable_editing();
       }
     }
@@ -438,7 +442,11 @@ void PF::ImageEditor::set_active_layer( int id )
       PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
       if( dialog ) {
         dialog->set_editor( this );
-        if( dialog->get_visible() ) {
+#if defined(_WIN32) || defined(WIN32)
+        if( dialog && dialog->is_visible() ) {
+#else
+        if( dialog && dialog->get_visible() ) {
+#endif
           dialog->enable_editing();
         }
       }
@@ -656,10 +664,14 @@ bool PF::ImageEditor::on_button_press_event( GdkEventButton* button )
       active_layer->get_processor()->get_par() ) {
     PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
     PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+#if defined(_WIN32) || defined(WIN32)
+    if( dialog && dialog->is_visible() ) {
+#else
     if( dialog && dialog->get_visible() ) {
-      //#ifndef NDEBUG
+#endif
+#ifndef NDEBUG
       std::cout<<"  sending button press event to dialog"<<std::endl;
-      //#endif
+#endif
       int mod_key = PF::MOD_KEY_NONE;
       if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
       if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
@@ -675,21 +687,25 @@ bool PF::ImageEditor::on_button_press_event( GdkEventButton* button )
 
 bool PF::ImageEditor::on_button_release_event( GdkEventButton* button )
 {
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"PF::ImageEditor::on_button_release_event(): button "<<button->button<<" released."<<std::endl;
-//#endif
+#endif
   gdouble x = button->x;
   gdouble y = button->y;
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
-//#endif
+#endif
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {
     PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
     PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+#if defined(_WIN32) || defined(WIN32)
+    if( dialog && dialog->is_visible() ) {
+#else
     if( dialog && dialog->get_visible() ) {
+#endif
 #ifndef NDEBUG
       std::cout<<"  sending button release event to dialog"<<std::endl;
 #endif
@@ -760,7 +776,11 @@ bool PF::ImageEditor::on_motion_notify_event( GdkEventMotion* event )
         active_layer->get_processor()->get_par() ) {
       PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+#if defined(_WIN32) || defined(WIN32)
+      if( dialog && dialog->is_visible() ) {
+#else
       if( dialog && dialog->get_visible() ) {
+#endif
 #ifndef NDEBUG
         std::cout<<"  sending motion event to dialog"<<std::endl;
 #endif

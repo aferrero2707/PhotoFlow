@@ -90,9 +90,9 @@ namespace PF
 
   template< OP_TEMPLATE_DEF >
   void ConvertFormatProc< OP_TEMPLATE_IMP >::
-  render(VipsRegion** ir, int n, int in_first,
-         VipsRegion* imap, VipsRegion* omap, 
-         VipsRegion* oreg, ConvertFormatPar* par)
+  render(VipsRegion** ir, int , int in_first,
+         VipsRegion* , VipsRegion* ,
+         VipsRegion* oreg, ConvertFormatPar* )
   {
     //std::cout<<"ConvertFormatProc::render(): input format="<<ir[in_first]->im->BandFmt<<std::endl;
 

@@ -84,8 +84,8 @@ namespace PF
   class BlenderProc
   {
   public: 
-    void render(VipsRegion** ireg, int n, int in_first,
-                VipsRegion* imap, VipsRegion* omap, 
+    void render(VipsRegion** ireg, int n, int ,
+                VipsRegion* , VipsRegion* omap,
                 VipsRegion* oreg, OpParBase* par)
     {
       if( (n != 2) || (ireg[0] == NULL) || (ireg[1] == NULL) ) {

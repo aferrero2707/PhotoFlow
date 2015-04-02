@@ -32,7 +32,7 @@
 
 #include <vips/vips.h>
 
-#include "../base/rawmatrix.hh"
+#include "../../base/rawmatrix.hh"
 
 namespace rtengine {
 	

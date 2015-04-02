@@ -342,9 +342,8 @@ vips_gmic_gen_template( VipsRegion *oreg,
 				1, seq->ir[i]->im->Bands );
 			vips_to_gmic<T>( seq->ir[0], &need, &img );
 		}
-		std::string cmd = std::string("-verbose + -verbose + -verbose + ") + vipsgmic->command;
-		std::cout<<"Running G'MIC command: "<<cmd<<std::endl;
-		seq->gmic_instance->run( cmd.c_str() /*vipsgmic->command*/,
+		//std::cout<<"Running G'MIC command: "<<vipsgmic->command<<std::endl;
+		seq->gmic_instance->run( vipsgmic->command, 
 			images, images_names );
 		vips_from_gmic<T>( &images._data[0], &need, oreg );
 	}
