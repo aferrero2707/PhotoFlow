@@ -41,7 +41,7 @@ PF::CloneStampConfigDialog::CloneStampConfigDialog( PF::Layer* layer ):
   undoButton("Undo"),
   srcpt_row( 0 ), srcpt_col( 0 ), srcpt_ready( false ), srcpt_changed( false ), stroke_started( false )
 {
-  controlsBox.pack_start( undoButton, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( undoButton, Gtk::PACK_SHRINK );
   controlsBox.pack_start( stamp_size, Gtk::PACK_SHRINK );
   controlsBox.pack_start( stamp_opacity, Gtk::PACK_SHRINK );
   controlsBox.pack_start( stamp_smoothness, Gtk::PACK_SHRINK );
