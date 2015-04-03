@@ -314,9 +314,9 @@ bool PF::CloneStampConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffe
 
   if( stroke_started ) {
     buf_out.draw_circle( x0, y0, pensize );
-    tx = srcpt_dx; ty = srcpt_dy; tw = 1; th = 1;
+    tx = 0; ty = 0; tw = srcpt_dx; th = srcpt_dy;
     layer2screen( tx, ty, tw, th );
-    buf_out.draw_circle( x0-tx, y0-ty, pensize );
+    buf_out.draw_circle( x0-tw, y0-th, pensize );
   } else if( srcpt_ready ) {
     buf_out.draw_circle( x0, y0, pensize );
     tx = srcpt_col; ty = srcpt_row; tw = 1; th = 1;
