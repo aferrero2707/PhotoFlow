@@ -125,7 +125,7 @@ set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/
 #FILE(GLOB LibRawSources external/LibRaw/src/*.cpp external/LibRaw/internal/*.cpp)
 
 
-add_library (pfbase
+add_library (pfbase STATIC
   ${BaseIncludes}
   ${BaseSources}
   ${VipsIncludes}
@@ -144,7 +144,7 @@ add_library (pfbase
 FILE(GLOB DTIncludes dt/common/*.h)
 FILE(GLOB DTSources dt/common/*.c dt/external/*.c)
 
-add_library (pfdt
+add_library (pfdt STATIC
   ${DTIncludes}
   ${DTSources}
 )
@@ -155,7 +155,7 @@ SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-std=gnu99")
 FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
 FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc)
 
-add_library (pfgui
+add_library (pfgui STATIC
   ${GuiIncludes}
   ${GuiSources}
 )
