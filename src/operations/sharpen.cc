@@ -43,12 +43,16 @@ PF::SharpenPar::SharpenPar():
   rl_sigma("rl_sigma",this,1),
   rl_iterations("rl_iterations",this,10)
 {
-	method.add_enum_value(PF::SHARPEN_USM,"USM","Unsharp Mask");
+	//method.add_enum_value(PF::SHARPEN_USM,"USM","Unsharp Mask");
+#ifndef PF_DISABLE_GMIC
 	method.add_enum_value(PF::SHARPEN_DECONV,"DECONV","RL Deconvolution");
+#endif
 	//method.add_enum_value(PF::SHARPEN_MICRO,"MICRO","Micro Contrast");
 
   usm = new_unsharp_mask();
+#ifndef PF_DISABLE_GMIC
   rl = new_gmic_sharpen_rl();
+#endif
 
   set_type("sharpen" );
 }
@@ -73,6 +77,7 @@ VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first,
     }
     break;
   }
+#ifndef PF_DISABLE_GMIC
   case PF::SHARPEN_DECONV: {
     GmicSharpenRLPar* rlpar = dynamic_cast<GmicSharpenRLPar*>( rl->get_par() );
     if( rlpar ) {
@@ -84,6 +89,7 @@ VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first,
     }
     break;
   }
+#endif
   default:
     break;
   }

@@ -273,8 +273,10 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_geom_box.add( op_geom );
   notebook.append_page( op_geom, "geom" );
 
+//#ifndef PF_DISABLE_GMIC
   //op_gmic_box.add( op_gmic );
   notebook.append_page( op_gmic, "G'MIC" );
+//#endif
 
   //op_misc_box.add( op_misc );
   notebook.append_page( op_misc, "misc" );
@@ -315,6 +317,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_geom.get_tree().add_op( "Optical corrections (experimental)", "lensfun" );
 
 //#if !defined(__APPLE__) && !defined(__MACH__)
+#ifndef PF_DISABLE_GMIC
   //op_gmic.get_tree().add_op( "G'MIC Interpreter", "gmic" );
   op_gmic.get_tree().add_op( "Dream Smoothing", "gmic_dream_smooth" );
   op_gmic.get_tree().add_op( "Gradient Norm", "gmic_gradient_norm" );
@@ -345,7 +348,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.get_tree().add_op( "Emulate film [various]", "gmic_emulate_film_various" );
   op_gmic.get_tree().add_op( "Tone mapping", "gmic_tone_mapping" );
   op_gmic.get_tree().add_op( "Transfer colors [advanced]", "gmic_transfer_colors" );
-//#endif
+#endif
   
   op_misc.get_tree().add_op( "Buffer layer", "buffer" );
   op_misc.get_tree().add_op( "Clone layer", "clone" );
