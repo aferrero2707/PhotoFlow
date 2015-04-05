@@ -193,6 +193,8 @@ int main (int argc, char *argv[])
 
   PF::MainWindow* mainWindow = new PF::MainWindow();
 #ifdef GTKMM_3
+  Gtk::Settings::get_default()->property_gtk_application_prefer_dark_theme().set_value(true);
+
   int stat_result = stat((themesPath + "/photoflow-dark.css").c_str(), &buffer);
   if( stat_result == 0 ) {
     Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
