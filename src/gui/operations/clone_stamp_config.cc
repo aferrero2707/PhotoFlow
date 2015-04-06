@@ -41,7 +41,7 @@ PF::CloneStampConfigDialog::CloneStampConfigDialog( PF::Layer* layer ):
   undoButton("Undo"),
   srcpt_row( 0 ), srcpt_col( 0 ), srcpt_ready( false ), srcpt_changed( false ), stroke_started( false )
 {
-  //controlsBox.pack_start( undoButton, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( undoButton, Gtk::PACK_SHRINK );
   controlsBox.pack_start( stamp_size, Gtk::PACK_SHRINK );
   controlsBox.pack_start( stamp_opacity, Gtk::PACK_SHRINK );
   controlsBox.pack_start( stamp_smoothness, Gtk::PACK_SHRINK );
@@ -81,6 +81,19 @@ void PF::CloneStampConfigDialog::on_undo()
   PF::CloneStampPar* par = dynamic_cast<PF::CloneStampPar*>( processor->get_par() );
   if( !par ) return;
 
+  image->lock();
+  std::vector<StrokesGroup>& groups = par->get_strokes();
+  int i = groups.size();
+  i -= 1;
+  while( i >= 0 ) {
+    if( groups[i].get_strokes().size() > 0 ) break;
+    i -= 1;
+  }
+  if( i >= 0 ) {
+    groups[i].get_strokes().pop_back();
+    image->update();
+  }
+  image->unlock();
 }
 
 
