@@ -58,6 +58,7 @@ namespace PF {
 
   Slider pen_size;
   Slider pen_opacity;
+  Gtk::Button undoButton;
 
   double mouse_x, mouse_y;
 
@@ -71,6 +72,8 @@ public:
 
   void on_pen_color_changed();
   void on_bgd_color_changed();
+
+  void on_undo();
 
   void start_stroke();
   void draw_point( double x, double y );

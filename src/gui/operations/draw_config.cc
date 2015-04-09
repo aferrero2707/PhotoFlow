@@ -46,7 +46,8 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
   bgd_color_button( Gdk::RGBA("black") ),
 #endif
   pen_size( this, "pen_size", "Pen size: ", 5, 0, 1000000, 1, 10, 1),
-  pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100)
+  pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100),
+  undoButton("Undo")
 {
   colorButtonsBox1.pack_start( bgd_color_label, Gtk::PACK_SHRINK );
   colorButtonsBox1.pack_start( bgd_color_button, Gtk::PACK_SHRINK );
@@ -55,7 +56,7 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
   colorButtonsBox2.pack_start( pen_size, Gtk::PACK_SHRINK );
   controlsBox.pack_start( colorButtonsBox1 );
   controlsBox.pack_start( colorButtonsBox2 );
-  //penBox.pack_start( pen_opacity );
+  penBox.pack_start( undoButton );
   controlsBox.pack_start( penBox );
 
   /*
@@ -74,6 +75,8 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
     connect( sigc::mem_fun(this, &PF::DrawConfigDialog::on_pen_color_changed) );
   bgd_color_button.signal_color_set().
     connect( sigc::mem_fun(this, &PF::DrawConfigDialog::on_bgd_color_changed) );
+
+  undoButton.signal_clicked().connect( sigc::mem_fun(this, &DrawConfigDialog::on_undo) );
 
   add_widget( controlsBox );
 }
@@ -167,6 +170,35 @@ void PF::DrawConfigDialog::on_bgd_color_changed()
   if( layer->get_image() )
     layer->get_image()->update();
 	std::cout<<"DrawConfigDialog::on_bgd_color_changed(): image updated"<<std::endl;
+}
+
+
+void PF::DrawConfigDialog::on_undo()
+{
+  // Pointer to the associated Layer object
+  PF::Layer* layer = get_layer();
+  if( !layer ) return;
+
+  // Then we loop over all the operations associated to the
+  // layer in the different pipelines and we let them record the stroke as well
+  PF::Image* image = layer->get_image();
+  if( !image ) return;
+
+  // First of all, the new stroke is recorded by the "master" operation
+  PF::ProcessorBase* processor = layer->get_processor();
+  if( !processor || !(processor->get_par()) ) return;
+
+  PF::DrawPar* par = dynamic_cast<PF::DrawPar*>( processor->get_par() );
+  if( !par ) return;
+
+  image->lock();
+  Property< std::list< Stroke<Pencil> > >& pstrokes = par->get_strokes();
+  std::list< Stroke<Pencil> >& strokes = pstrokes.get();
+  if( !strokes.empty() ) {
+    strokes.pop_back();
+    image->update();
+  }
+  image->unlock();
 }
 
 
