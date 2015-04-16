@@ -69,6 +69,11 @@ namespace PF {
       cbox.set_row_separator_func( slot );
     }
 
+    virtual bool check_value( int id, const std::string& name, const std::string& val )
+    {
+      return true;
+    }
+
     void get_value();
     void set_value();
   };

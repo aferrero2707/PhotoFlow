@@ -310,6 +310,9 @@ void PF::OperationConfigDialog::reset_ch_selector()
 
 void PF::OperationConfigDialog::do_update()
 {
+  //for( unsigned int i = 0; i < controls.size(); i++ ) {
+  //  controls[i]->get_value();
+  //}
   //std::vector<Widget*> wl = chselBox.get_children();
   //wl.clear();
   if( get_layer() && get_layer()->get_image() && 
