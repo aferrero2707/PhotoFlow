@@ -196,6 +196,7 @@ int main (int argc, char *argv[])
   Gtk::Settings::get_default()->property_gtk_application_prefer_dark_theme().set_value(true);
 
   int stat_result = stat((themesPath + "/photoflow-dark.css").c_str(), &buffer);
+  stat_result = 1;
   if( stat_result == 0 ) {
     Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
     //Glib::RefPtr<Gtk::StyleContext> cntx = mainWindow->get_style_context();
