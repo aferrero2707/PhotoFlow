@@ -688,7 +688,7 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 
 
-static VipsImage* convert_raw_data( VispImage* raw )
+static VipsImage* convert_raw_data( VipsImage* raw )
 {
   if( !raw ) return NULL;
 
@@ -701,10 +701,10 @@ static VipsImage* convert_raw_data( VispImage* raw )
   }
 
   vips_image_init_fields( band,
-      image->Xsize, image->Ysize,
-      1, image->BandFmt,
-      image->Coding,
-      image->Type,
+      raw->Xsize, raw->Ysize,
+      1, raw->BandFmt,
+      raw->Coding,
+      raw->Type,
       1.0, 1.0);
 
   VipsImage* norm = NULL;
