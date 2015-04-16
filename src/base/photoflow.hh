@@ -102,9 +102,9 @@ namespace PF
 
 
   void pf_object_ref(GObject* object, const char* msg);
-#define PF_REF( object, msg ) pf_object_ref( G_OBJECT(object), msg );
+#define PF_REF( object, msg ) PF::pf_object_ref( G_OBJECT(object), msg );
   void pf_object_unref(GObject* object, const char* msg);
-#define PF_UNREF( object, msg ) pf_object_unref( G_OBJECT(object), msg );
+#define PF_UNREF( object, msg ) PF::pf_object_unref( G_OBJECT(object), msg );
 #define PF_PRINT_REF( object, msg ) std::cout<<msg<<" ref_count: "<<G_OBJECT(object)<<"->"<<G_OBJECT(object)->ref_count<<std::endl;
 }
 

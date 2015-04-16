@@ -688,6 +688,68 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 
 
+static VipsImage* convert_raw_data( VispImage* raw )
+{
+  if( !raw ) return NULL;
+
+  // The image to be displayed has two channels, we assume in this case that it represents RAW data
+  // and we only show the first channel (the second channel contains the color information)
+  VipsImage* band = NULL;
+  if( vips_extract_band( raw, &band, 0, NULL ) ) {
+    std::cout<<"ImageArea::update(): vips_extract_band() failed."<<std::endl;
+    return NULL;
+  }
+
+  vips_image_init_fields( band,
+      image->Xsize, image->Ysize,
+      1, image->BandFmt,
+      image->Coding,
+      image->Type,
+      1.0, 1.0);
+
+  VipsImage* norm = NULL;
+  double par1 = 1.0f/65535.0f;
+  double par2 = 0;
+  if( vips_linear( band, &norm, &par1, &par2, 1, NULL ) ) {
+    PF_UNREF( band, "ImageArea::update(): band unref after vips_linear() failure" );
+    std::cout<<"ImageArea::update(): vips_linear() failed."<<std::endl;
+    return NULL;
+  }
+  PF_UNREF( band, "ImageArea::update(): band unref after vips_linear()" );
+
+  VipsImage* gamma = NULL;
+  float exp = 2.2;
+  if( vips_gamma( norm, &gamma, "exponent", exp, NULL ) ) {
+    PF_UNREF( norm, "ImageArea::update(): norm unref after vips_gamma() failure" );
+    std::cout<<"ImageArea::update(): vips_gamma() failed."<<std::endl;
+    return NULL;
+  }
+  PF_UNREF( norm, "ImageArea::update(): norm unref after vips_gamma()" );
+
+  VipsImage* cast = gamma;
+  /*
+if( vips_cast_ushort( gamma, &cast, NULL ) ) {
+  PF_UNREF( gamma, "ImageArea::update(): gamma unref after vips_cast_ushort() failure" );
+  std::cout<<"ImageArea::update(): vips_cast_ushort() failed."<<std::endl;
+  return NULL;
+}
+PF_UNREF( gamma, "ImageArea::update(): gamma unref after vips_cast_ushort()" );
+   */
+
+  VipsImage* bandv[3] = {cast, cast, cast};
+  VipsImage* out = NULL;
+  if( vips_bandjoin( bandv, &out, 3, NULL ) ) {
+    PF_UNREF( cast, "ImageArea::update(): cast unref after bandjoin failure" );
+    std::cout<<"ImageArea::update(): vips_bandjoin() failed."<<std::endl;
+    return NULL;
+  }
+  PF_UNREF( cast, "ImageArea::update(): cast unref after bandjoin" );
+
+  return out;
+}
+
+
+
 void PF::ImageArea::update( VipsRect* area ) 
 {
   //PF::Pipeline* pipeline = pf_image->get_pipeline(0);
@@ -709,6 +771,11 @@ void PF::ImageArea::update( VipsRect* area )
   VipsImage* image = NULL;
   if( display_merged || (active_layer<0) ) {
     image = get_pipeline()->get_output();
+    if( image && (image->Bands!=2) ) {
+      PF_REF( image, "ImageArea::update(): merged image ref" );
+    } else {
+      image = convert_raw_data( image );
+    }
   } else {
     PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
     if( !node ) return;
@@ -769,6 +836,11 @@ void PF::ImageArea::update( VipsRect* area )
       std::cout<<"ImageArea::update(): image("<<image<<")->Xsize="<<image->Xsize<<"    image->Ysize="<<image->Ysize<<std::endl;    
 #endif
     }
+    if( image && (image->Bands!=2) ) {
+      PF_REF( image, "ImageArea::update(): active image ref" );
+    } else {
+      image = convert_raw_data( image );
+    }
   }
   if( !image ) return;
 
@@ -785,7 +857,7 @@ void PF::ImageArea::update( VipsRect* area )
   convert2srgb->get_par()->set_format( get_pipeline()->get_format() );
   std::vector<VipsImage*> in; in.push_back( image );
   VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
-  //PF_UNREF( image, "ImageArea::update() image unref" );
+  PF_UNREF( image, "ImageArea::update() image unref" );
   // "image" is managed by photoflow, therefore it is not necessary to unref it
   // after the call to convert2srgb: the additional reference is owned by
   // "srgbimg" and will be removed when "srgbimg" is deleted.
