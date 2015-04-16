@@ -30,6 +30,7 @@ dt_profiled_colormatrix_t;
 // image submitter, chart type, illuminant, comments
 static dt_profiled_colormatrix_t dt_profiled_colormatrices[] =
 {
+  // clang-format off
 
   // Robert Park, ColorChecker Passport, strobe, well lit
   { "PENTAX K-x",                   { 821548, 337357,  42923}, { 247818, 1042969, -218735}, { -4105, -293045, 1085129}, {792206, 821823, 668640}},
@@ -42,6 +43,10 @@ static dt_profiled_colormatrix_t dt_profiled_colormatrices[] =
 
   // Denis Cheremisov, CMP Digital Target 4, strobe, well lit
   { "PENTAX K-5",                   { 795456, 343674,  70389}, { 137650,  907654, -299805}, { 31097, -251328, 1054321}, {663452, 689972, 517853}},
+
+  // Scott A. Miller, Wolf Faust IT8, strobe, well lit
+  { "PENTAX K-5 II",                { 883331, 353348,  24261}, { 323563, 1268616, -214432}, { -5951, -390045, 1241409}, {664520, 695984, 564148}},
+  { "PENTAX K-5 II s",              { 883331, 353348,  24261}, { 323563, 1268616, -214432}, { -5951, -390045, 1241409}, {664520, 695984, 564148}},
 
   // Robert Park, ColorChecker Passport, strobe, well lit
   { "PENTAX K-7",                   { 738541, 294037,  28061}, { 316025,  984482, -189682}, { 12543, -185852, 1075027}, {812683, 843994, 682587}},
@@ -159,6 +164,9 @@ static dt_profiled_colormatrix_t dt_profiled_colormatrices[] =
   // Isaac Chanin, Wolf Faust IT8, direct sunlight, well lit
   { "NIKON D5100",                  { 994339, 388123,  37186}, { 226578, 1268478, -310028}, {  1404, -393173, 1285812}, {705582, 733917, 623779}},
 
+  // Torsten Wortwein, Wolf Faust IT8, direct sunlight, well lit
+  { "NIKON D5300",                  { 977005, 388763,  42267}, { 144699, 1161331, -312805}, { 61615, -333832, 1270767}, {702164, 733490, 600052}},
+
   // Robert Park, ColorChecker Passport, strobe, well lit
   { "NIKON D7000",                  { 744919, 228027, -46982}, { 454605, 1326797,  -33585}, {-132294, -467194, 985611}, {609375, 629852, 515625}},
 
@@ -174,8 +182,14 @@ static dt_profiled_colormatrix_t dt_profiled_colormatrices[] =
   // Robert Park, ColorChecker Passport, strobe, well lit
   { "NIKON D300s",                  { 813202, 327667,  31067}, { 248810, 1047043, -203049}, { -1160, -284607, 1075790}, {774872, 800415, 648727}},
 
+  // Michael Below, Wolf Faust IT8, direct sunlight, well lit
+  { "NIKON D600",                   { 871414, 304840, -22202}, { 284576, 1209747, -302277}, { 34256, -289551, 1375656}, {702774, 726685, 540054}},
+
   // Robert Park, ColorChecker Passport, strobe, well lit
   { "NIKON D700",                   { 789261, 332016,  34149}, { 270386,  985748, -129135}, {  4074, -230209,  999008}, {798172, 826721, 673126}},
+
+  // Edouard Gomez, ColorChecker Passport, direct sunlight, well lit
+  { "NIKON D750",                   { 749283, 264481,  28961}, { 291855, 1096207, -304520}, { 12680, -252914, 1194870}, {783035, 813507, 650787}},
 
   // Mauro Fuentes, ColorChecker Passport, direct sunlight, well lit
   { "NIKON D800",                   { 792038, 268860,  33951}, { 289093, 1169876, -251740}, {-32654, -340393, 1127960}, {782806, 804443, 659058}},
@@ -208,10 +222,16 @@ static dt_profiled_colormatrix_t dt_profiled_colormatrices[] =
   { "SONY DSLR-A900",               { 968216, 463638,  -4883}, { 279083, 1156906, -230194}, {-21851, -379623, 1297455}, {749298, 799271, 638580}},
 
   // David Meier, Wolf Faust IT8, direct sunlight, well lit
+  { "SONY SLT-A55",                 { 969696, 407043,  40268}, { 218201, 1182556, -285400}, { 21042, -342819, 1260223}, {762085, 793961, 670151}},
   { "SONY SLT-A55V",                { 969696, 407043,  40268}, { 218201, 1182556, -285400}, { 21042, -342819, 1260223}, {762085, 793961, 670151}},
 
   // Wolfgang Kuehnel, Wolf Faust IT8, strobe, well lit
+  { "SONY SLT-A77",                 {1165085, 503036,  24246}, { 137390, 1265869, -243912}, {-22995, -451843, 1282257}, {645264, 669464, 562073}},
   { "SONY SLT-A77V",                {1165085, 503036,  24246}, { 137390, 1265869, -243912}, {-22995, -451843, 1282257}, {645264, 669464, 562073}},
+
+  // Alexander Rabtchevich, Wolf Faust IT8, strobe, well lit
+  { "SONY SLT-A99",                 {1059296, 441162,  17807}, { 108673, 1104355, -235931}, { 38605, -302109, 1242004}, {820969, 859192, 715988}},
+  { "SONY SLT-A99V",                {1059296, 441162,  17807}, { 108673, 1104355, -235931}, { 38605, -302109, 1242004}, {820969, 859192, 715988}},
 
   // Denis Cheremisov, CMP Digital Target 4, strobe, well lit
   { "SONY ILCE-7",                  { 913254, 376358,  21606}, { 120987, 1024490, -251312}, {  5142, -318573, 1100876}, {849228, 881241, 717255}},
@@ -237,6 +257,13 @@ static dt_profiled_colormatrix_t dt_profiled_colormatrices[] =
   // Frederic Crozat, Wolf Faust IT8, direct sunlight, well lit
   { "OLYMPUS E-M5",                 { 937775, 279129,  75378}, { 232697, 1345169, -493317}, { 62012, -354202, 1458389}, {722229, 755142, 623749}},
 
+  // Copied from E-M5
+  { "OLYMPUS E-M10",                { 937775, 279129,  75378}, { 232697, 1345169, -493317}, { 62012, -354202, 1458389}, {722229, 755142, 623749}},
+  { "OLYMPUS E-PM2",                { 937775, 279129,  75378}, { 232697, 1345169, -493317}, { 62012, -354202, 1458389}, {722229, 755142, 623749}},
+  { "OLYMPUS E-PL6",                { 937775, 279129,  75378}, { 232697, 1345169, -493317}, { 62012, -354202, 1458389}, {722229, 755142, 623749}},
+  { "OLYMPUS E-PL5",                { 937775, 279129,  75378}, { 232697, 1345169, -493317}, { 62012, -354202, 1458389}, {722229, 755142, 623749}},
+  { "OLYMPUS E-P5",                 { 937775, 279129,  75378}, { 232697, 1345169, -493317}, { 62012, -354202, 1458389}, {722229, 755142, 623749}},
+
   // Sebastian Haaf, Wolf Faust IT8, direct sunlight, well lit
   { "OLYMPUS E-M1",                 { 774292, 245407,  30823}, { 433823, 1410355, -453156}, {-18448, -431107, 1479370}, {758911, 788452, 600266}},
 
@@ -261,6 +288,9 @@ static dt_profiled_colormatrix_t dt_profiled_colormatrices[] =
   // Robert Park, ColorChecker Passport, strobe, well lit
   { "Panasonic DMC-G2",             { 753250, 303024,  75287}, { 225540, 1036041, -320923}, { 90927, -233749, 1170151}, {837860, 857056, 687210}},
 
+  // Martin Schitter, Wolf Faust IT8, direct sunlight, well lit
+  { "Panasonic DMC-GH4",            { 937286, 310822,  37857}, { 196823, 1184341, -338242}, { 59952, -267319, 1340836}, {703812, 738983, 594162}},
+
   // Robert Park, ColorChecker Passport, strobe, well lit
   { "Panasonic DMC-LX3",            { 779907, 298859,  94101}, { 239655, 1167938, -489197}, { 53589, -371368, 1317261}, {796707, 825119, 668030}},
 
@@ -275,6 +305,12 @@ static dt_profiled_colormatrix_t dt_profiled_colormatrices[] =
   { "SAMSUNG NX10",                 { 859955, 369919,  17136}, { 127045,  869888, -258362}, { 69351, -149155, 1121475}, {854538, 897888, 691147}},
   { "SAMSUNG NX11",                 { 859955, 369919,  17136}, { 127045,  869888, -258362}, { 69351, -149155, 1121475}, {854538, 897888, 691147}},
 
+  // Pascal de Bruijn, ColorChecker Classic, direct sunlight, well lit
+  { "SAMSUNG NX300",                { 852844, 342072,  35950}, { 201965, 1022202, -298492}, { 37766, -234436, 1215851}, {754166, 791092, 635132}},
+
+  // Copied from NX300
+  { "SAMSUNG NX300M",               { 852844, 342072,  35950}, { 201965, 1022202, -298492}, { 37766, -234436, 1215851}, {754166, 791092, 635132}},
+
   // Pieter de Boer, CMP Digital Target 3, camera strobe, well lit
   { "KODAK EASYSHARE Z1015 IS",     { 716446, 157928, -39536}, { 288498, 1234573, -412460}, { 43045, -337677, 1385773}, {774048, 823563, 644012}},
 
@@ -283,12 +319,16 @@ static dt_profiled_colormatrix_t dt_profiled_colormatrices[] =
 
   // Oleg Dzhimiev, ColorChecker Classic, office lighting, well lit
   { "Elphel 353E",                  {782623, 147903, -272369}, { 110016, 1115250, -729172}, {175949, -157227, 1930222}, {821899, 860794, 671768}}
+
+  // clang-format on
 };
 
 static const int dt_profiled_colormatrix_cnt = sizeof(dt_profiled_colormatrices)/sizeof(dt_profiled_colormatrix_t);
 
 static dt_profiled_colormatrix_t dt_vendor_colormatrices[] =
 {
+  // clang-format off
+
   // Pascal de Bruijn, DIY ColorChecker, daylight, well lit
   { "Canon EOS 50D",                { 665588, 259155, -37750}, {  61172,  790497, -117310}, {237442,  -49667,  979965}, {946487, 1000000, 1082657}},
 
@@ -304,12 +344,16 @@ static dt_profiled_colormatrix_t dt_vendor_colormatrices[] =
   { "SAMSUNG NX5",                  { 590607, 279297,  29831}, { 245789,  745789,  -84747}, {127808,  -25101,  879822}, {955185, 1000000, 1089981}},
   { "SAMSUNG NX10",                 { 590607, 279297,  29831}, { 245789,  745789,  -84747}, {127808,  -25101,  879822}, {955185, 1000000, 1089981}},
   { "SAMSUNG NX111",                { 590607, 279297,  29831}, { 245789,  745789,  -84747}, {127808,  -25101,  879822}, {955185, 1000000, 1089981}},
+
+  // clang-format on
 };
 
 static const int dt_vendor_colormatrix_cnt = sizeof(dt_vendor_colormatrices)/sizeof(dt_profiled_colormatrix_t);
 
 static dt_profiled_colormatrix_t dt_alternate_colormatrices[] =
 {
+  // clang-format off
+
   // Pascal de Bruijn, ColorChecker Classic, daylight, well lit
   { "Canon EOS 400D DIGITAL",       { 773514, 302612,  25558}, { 244278, 1107727, -177689}, { 55725, -289902, 1080765}, {822388, 847488, 696823}},
   { "Canon EOS DIGITAL REBEL XTi",  { 773514, 302612,  25558}, { 244278, 1107727, -177689}, { 55725, -289902, 1080765}, {822388, 847488, 696823}},
@@ -322,6 +366,8 @@ static dt_profiled_colormatrix_t dt_alternate_colormatrices[] =
   { "SAMSUNG NX5",                  { 773254, 310013,  12573}, { 299774, 1003143, -150620}, {  4715, -192886, 1070877}, {817657, 850372, 693924}},
   { "SAMSUNG NX10",                 { 773254, 310013,  12573}, { 299774, 1003143, -150620}, {  4715, -192886, 1070877}, {817657, 850372, 693924}},
   { "SAMSUNG NX111",                { 773254, 310013,  12573}, { 299774, 1003143, -150620}, {  4715, -192886, 1070877}, {817657, 850372, 693924}},
+
+  // clang-format on
 };
 
 static const int dt_alternate_colormatrix_cnt = sizeof(dt_alternate_colormatrices)/sizeof(dt_profiled_colormatrix_t);

@@ -47,10 +47,33 @@ namespace PF
   extern int raw_preproc_sample_y;
 
   enum wb_mode_t {
-    WB_CAMERA,
-    WB_SPOT,
-    WB_COLOR_SPOT
+    WB_CAMERA=0,
+    WB_SPOT=1,
+    WB_COLOR_SPOT=2,
+    WB_DAYLIGHT,
+    WB_DIRECT_SUNLIGHT,
+    WB_CLOUDY,
+    WB_SHADE,
+    WB_INCANDESCENT,
+    WB_INCANDESCENT_WARM,
+    WB_TUNGSTEN,
+    WB_FLUORESCENT,
+    WB_FLUORESCENT_HIGH,
+    WB_COOL_WHITE_FLUORESCENT,
+    WB_WARM_WHITE_FLUORESCENT,
+    WB_DAYLIGHT_FLUORESCENT,
+    WB_NEUTRAL_FLUORESCENT,
+    WB_WHITE_FLUORESCENT,
+    WB_SODIUM_VAPOR_FLUORESCENT,
+    WB_DAY_WHITE_FLUORESCENT,
+    WB_HIGH_TEMP_MERCURY_VAPOR_FLUORESCENT,
+    WB_FLASH,
+    WB_FLASH_AUTO,
+    WB_EVENING_SUN,
+    WB_UNDERWATER,
+    WB_BACK_AND_WHITE
   }; 
+
 
   class RawPreprocessorPar: public OpParBase
   {
@@ -72,6 +95,8 @@ namespace PF
 
     Property<float> exposure;
 
+    float wb_red_current, wb_green_current, wb_blue_current;
+
   public:
     RawPreprocessorPar();
 
@@ -89,9 +114,9 @@ namespace PF
     dcraw_data_t* get_image_data() {return image_data; }
 
     wb_mode_t get_wb_mode() { return (wb_mode_t)(wb_mode.get_enum_value().first); }
-    float get_wb_red() { return wb_red.get(); }
-    float get_wb_green() { return wb_green.get(); }
-    float get_wb_blue() { return wb_blue.get(); }
+    float get_wb_red() { return wb_red_current; /*wb_red.get();*/ }
+    float get_wb_green() { return wb_green_current; /*wb_green.get();*/ }
+    float get_wb_blue() { return wb_blue_current; /*wb_blue.get();*/ }
 
     float get_camwb_corr_red() { return camwb_corr_red.get(); }
     float get_camwb_corr_green() { return camwb_corr_green.get(); }
@@ -122,10 +147,14 @@ namespace PF
       //float range = image_data->color.maximum - image_data->color.black;
       float range = 1;
 			float mul[4] = {
-				image_data->color.cam_mul[0]*par->get_camwb_corr_red(),
-				image_data->color.cam_mul[1]*par->get_camwb_corr_green(),
-				image_data->color.cam_mul[2]*par->get_camwb_corr_blue(),
-				image_data->color.cam_mul[3]*par->get_camwb_corr_green()
+	        //image_data->color.cam_mul[0]*par->get_camwb_corr_red(),
+	        //image_data->color.cam_mul[1]*par->get_camwb_corr_green(),
+	        //image_data->color.cam_mul[2]*par->get_camwb_corr_blue(),
+	        //image_data->color.cam_mul[3]*par->get_camwb_corr_green()
+	        par->get_wb_red()*par->get_camwb_corr_red(),
+	        par->get_wb_green()*par->get_camwb_corr_green(),
+	        par->get_wb_blue()*par->get_camwb_corr_blue(),
+	        par->get_wb_green()*par->get_camwb_corr_green()
 			};
       float min_mul = mul[0];
       float max_mul = mul[0];
@@ -305,15 +334,15 @@ namespace PF
       if( !rdpar ) return;
       //std::cout<<"RawPreprocessor::render(): rdpar->get_wb_mode()="<<rdpar->get_wb_mode()<<std::endl;
       switch( rdpar->get_wb_mode() ) {
-      case WB_CAMERA:
-				render_camwb(ireg, n, in_first, imap, omap, oreg, rdpar);
-				//std::cout<<"render_camwb() called"<<std::endl;
-				break;
       case WB_SPOT:
       case WB_COLOR_SPOT:
 				render_spotwb(ireg, n, in_first, imap, omap, oreg, rdpar);
 				//std::cout<<"render_spotwb() called"<<std::endl;
 				break;
+      default:
+        render_camwb(ireg, n, in_first, imap, omap, oreg, rdpar);
+        //std::cout<<"render_camwb() called"<<std::endl;
+        break;
       }
     }
   };

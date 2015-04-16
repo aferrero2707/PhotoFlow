@@ -27,9 +27,24 @@
 
  */
 
+#include "../base/exif_data.hh"
 #include "../../operations/raw_preprocessor.hh"
 #include "../../operations/raw_output.hh"
 #include "../../operations/raw_developer.hh"
+
+/* We need C linkage for this.
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
+#include "../dt/common/colorspaces.h"
+
+#ifdef __cplusplus
+}
+#endif /*__cplusplus*/
+
+#include "../dt/external/wb_presets.c"
 
 #include "raw_developer_config.hh"
 
@@ -43,6 +58,24 @@
 #define MAX( a, b ) ((a>b) ? a : b)
 #endif
 #define MAX3( a, b, c ) MAX(a,MAX(b,c))
+
+
+bool PF::WBSelector::check_value( int id, const std::string& name, const std::string& val )
+{
+  if( id < 3 ) return true;
+  std::cout<<"WBSelector::check_value(): maker="<<maker<<" model="<<model<<std::endl;
+  for(int i = 0; i < wb_preset_count; i++) {
+    //std::cout<<"  wb_preset[i].make="<<wb_preset[i].make<<" wb_preset[i].model="<<wb_preset[i].model<<std::endl;
+    if( maker == wb_preset[i].make && model == wb_preset[i].model ) {
+      //std::cout<<"    val="<<val<<" wb_preset[i].name="<<wb_preset[i].name<<std::endl;
+      if( val == wb_preset[i].name ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 
 
 PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
@@ -146,6 +179,7 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
 
 void PF::RawDeveloperConfigDialog::do_update()
 {
+  std::cout<<"RawDeveloperConfigDialog::do_update() called."<<std::endl;
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
@@ -155,6 +189,29 @@ void PF::RawDeveloperConfigDialog::do_update()
 
     PropertyBase* prop = par->get_property( "wb_mode" );
     if( !prop )  return;
+
+    PF::Image* image = get_layer()->get_image();
+    PF::Pipeline* pipeline = image->get_pipeline(0);
+    PF::PipelineNode* node = NULL;
+    PF::PipelineNode* inode = NULL;
+    std::string maker, model;
+    if( pipeline ) node = pipeline->get_node( get_layer()->get_id() );
+    if( node ) inode = pipeline->get_node( node->input_id );
+    if( inode && inode->image) {
+      size_t blobsz;
+      PF::exif_data_t* exif_data;
+      if( !vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) &&
+          blobsz == sizeof(PF::exif_data_t) ) {
+        char makermodel[1024];
+        char *tmodel = makermodel;
+        dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &tmodel,
+            exif_data->exif_maker, exif_data->exif_model );
+        maker = makermodel;
+        model = tmodel;
+        wbModeSelector.set_maker_model( maker, model );
+        std::cout<<"RawDeveloperConfigDialog::do_update(): maker="<<maker<<" model="<<model<<std::endl;
+      }
+    }
 
     //std::cout<<"PF::RawDeveloperConfigDialog::do_update() called."<<std::endl;
 
@@ -178,14 +235,6 @@ void PF::RawDeveloperConfigDialog::do_update()
 			wbControlsBox.remove( wbBlueCorrSlider );
 
     switch( prop->get_enum_value().first ) {
-    case PF::WB_CAMERA:
-			if( wbRedCorrSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
-			if( wbGreenCorrSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
-			if( wbBlueCorrSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
-			break;
     case PF::WB_SPOT:
 			if( wbTargetBox.get_parent() == &wbControlsBox )
 				wbControlsBox.remove( wbTargetBox );
@@ -210,6 +259,14 @@ void PF::RawDeveloperConfigDialog::do_update()
 			if( wbBlueSlider.get_parent() != &wbControlsBox )
 				wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
 			break;
+    default:
+      if( wbRedCorrSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
+      if( wbGreenCorrSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
+      if( wbBlueCorrSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
+      break;
 		}
 
     prop = par->get_property( "cam_profile_name" );

@@ -166,7 +166,7 @@ namespace PF
       int height = r->height;
 
       float* p;
-      float* pin;
+      //float* pin;
       float* pout;
       int x, y;
 
