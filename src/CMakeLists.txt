@@ -1,12 +1,12 @@
 IF(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
-   SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
 
-set(COMPILE_FLAGS "${GMIC_FLAGS} -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
+set(COMPILE_FLAGS "${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
 
 if(GTKMM2_FOUND)
   link_directories(${GTKMM2_LIBRARY_DIRS}  )
@@ -85,6 +85,17 @@ include_directories(${VIPS_INCLUDE_DIRS})
 link_directories(${VIPS_LIBRARY_DIRS}  )
 
 
+FILE(GLOB DTIncludes dt/common/*.h)
+FILE(GLOB DTSources dt/common/*.c)
+
+add_library (pfdt STATIC
+  ${DTIncludes}
+  ${DTSources}
+)
+
+SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/src/dt -std=gnu99")
+
+
 FILE(GLOB BaseIncludes base/*.hh)
 FILE(GLOB BaseSources base/*.cc)
 
@@ -139,17 +150,6 @@ add_library (pfbase STATIC
   ${GMicIncludes}
   ${GMicSources}
 )
-
-
-FILE(GLOB DTIncludes dt/common/*.h)
-FILE(GLOB DTSources dt/common/*.c dt/external/*.c)
-
-add_library (pfdt STATIC
-  ${DTIncludes}
-  ${DTSources}
-)
-
-SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-std=gnu99")
 
 
 FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
@@ -243,6 +243,38 @@ INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
+
+
+add_executable(icc tests/icc.c)
+
+#add_dependencies(photoflow ${LIB_DEPS})
+
+target_link_libraries(icc ${LIBS} 
+  pfbase 
+  pfdt
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
+  ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  #${LIBRAW_LIBRARIES}  
+  ${STATIC_LIBS}
+  ${ORC_LIBRARIES}
+  fftw3
+  ${ADDITIONAL_LIBS}
+  #gmon
+  )
 
 
 #add_executable(cast tests/cast.c)

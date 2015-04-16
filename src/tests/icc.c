@@ -105,11 +105,7 @@ main( int argc, char **argv )
   else printf( "Embedded profile not found after vips_image_set_blob()\n" );
 
 
-#if VIPS_MAJOR_VERSION < 7 || VIPS_MINOR_VERSION < 40
-  vips_image_write_to_file( image, argv[2] );
-#else
   vips_image_write_to_file( image, argv[2], NULL );
-#endif
   type = vips_image_get_typeof(image, VIPS_META_ICC_NAME );
   if( type ) printf( "Embedded profile found after vips_image_write_to_file()\n" );
   else printf( "Embedded profile not found after vips_image_write_to_file()\n" );
