@@ -179,6 +179,9 @@ int main (int argc, char *argv[])
   //#ifndef WIN32
 #ifdef GTKMM_2
   int stat_result = stat((themesPath + "/photoflow-dark.gtkrc").c_str(), &buffer);
+#ifdef WIN32
+  stat_result = 1;
+#endif
   std::cout<<"stat_result="<<stat_result<<std::endl;
   if( stat_result == 0 ) {
     std::vector<Glib::ustring> files;
@@ -196,7 +199,7 @@ int main (int argc, char *argv[])
   Gtk::Settings::get_default()->property_gtk_application_prefer_dark_theme().set_value(true);
 
   int stat_result = stat((themesPath + "/photoflow-dark.css").c_str(), &buffer);
-  stat_result = 1;
+  //stat_result = 1;
   if( stat_result == 0 ) {
     Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
     //Glib::RefPtr<Gtk::StyleContext> cntx = mainWindow->get_style_context();
