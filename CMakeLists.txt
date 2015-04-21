@@ -26,7 +26,7 @@ pkg_check_modules(EXIF REQUIRED libexif)
 #pkg_check_modules(EXIV2 REQUIRED exiv2)
 find_package (Exiv2)
 
-pkg_check_modules(LENSFUN REQUIRED lensfun)
+pkg_check_modules(LENSFUN lensfun)
 MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
 MESSAGE( STATUS "LENSFUN_LIBRARY_DIRS:         " ${LENSFUN_LIBRARY_DIRS} )
 MESSAGE( STATUS "LENSFUN_LIBRARIES:         " ${LENSFUN_LIBRARIES})
