@@ -771,6 +771,8 @@ void PF::ImageArea::update( VipsRect* area )
   VipsImage* image = NULL;
   if( display_merged || (active_layer<0) ) {
     image = get_pipeline()->get_output();
+    //std::cout<<"ImageArea::update(): image->Bands="<<image->Bands<<std::endl;
+    //std::cout<<"ImageArea::update(): image->BandFmt="<<image->BandFmt<<std::endl;
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "ImageArea::update(): merged image ref" );
     } else {

@@ -111,7 +111,7 @@ void PF::set_gobject_property<std::string>(gpointer object, const std::string na
 bool PF::PropertyBase::import(PF::PropertyBase* pin)
 {
 #ifndef NDEBUG
-  if( name == "out_profile_mode" )
+  //if( name == "out_profile_mode" )
     std::cout<<"PropertyBase::import(): importing property \""<<name<<"\""<<std::endl;
 #endif
   if( !pin ) 

@@ -309,6 +309,7 @@ vips_layer_build( VipsObject *object )
 
 #ifndef NDEBUG
   std::cout<<"vips_layer_build(): output format = "<<par->get_format()<<std::endl;
+  std::cout<<"vips_layer_build(): output colorspace = "<<PF::convert_colorspace( par->get_interpretation() )<<std::endl;
 #endif
   vips_image_init_fields( layer->out,
 			  par->get_xsize(), par->get_ysize(), 

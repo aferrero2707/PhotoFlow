@@ -216,6 +216,8 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
     
   clear_modified();
 
+  //vips_cache_drop_all();
+
   // Loop on pipelines, re-build and update
   for( unsigned int i = 0; i < get_npipelines(); i++ ) {
     PF::Pipeline* pipeline = get_pipeline( i );

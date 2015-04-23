@@ -110,7 +110,8 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   greychSelector( this, "grey_target_channel", "Target channel: ", -1 ),
   rgbchSelector( this, "rgb_target_channel", "Target channel: ", -1 ),
   labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
-  cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 )
+  cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 ),
+  previewButton("preview)")
 {
   //set_keep_above(true);
   add_button("OK",1);
@@ -170,36 +171,16 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   mainHBox.pack_start( mainBox, Gtk::PACK_SHRINK, false, false );
 
   get_vbox()->pack_start( mainHBox, Gtk::PACK_SHRINK, false, false );
+  get_vbox()->pack_end( previewBox, Gtk::PACK_SHRINK, false, false );
+  previewButton.set_active( true );
+
+  previewButton.signal_clicked().connect(sigc::mem_fun(*this,
+                &OperationConfigDialog::on_preview_clicked) );
 
   signal_focus_in_event().connect( sigc::mem_fun(*this,
 						 &OperationConfigDialog::focus_in_cb) );
   signal_focus_out_event().connect( sigc::mem_fun(*this,
 					     &OperationConfigDialog::focus_out_cb) );
-
-  /*
-  intensityAdj.signal_value_changed().
-    connect(sigc::mem_fun(*this,
-			  &OperationConfigDialog::on_intensity_value_changed));
-
-  opacityAdj.signal_value_changed().
-    connect(sigc::mem_fun(*this,
-			  &OperationConfigDialog::on_opacity_value_changed));
-  */
-
-  // nameEntry.show();
-  // nameBox.show();
-  // topBox.show();
-  // mainBox.show();
-
-  /*
-  add_control( &intensitySlider );
-  add_control( &opacitySlider );
-  add_control( &blendSelector );
-  add_control( &greychSelector );
-  add_control( &rgbchSelector );
-  add_control( &labchSelector );
-  add_control( &cmykchSelector );
-  */
 
   show_all_children();
 }
@@ -321,22 +302,18 @@ void PF::OperationConfigDialog::do_update()
 #ifndef NDEBUG
     std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
 #endif
-    /*
-    if( greychSelector.get_parent() == &chselBox )
-      chselBox.remove( greychSelector );
-    if( rgbchSelector.get_parent() == &chselBox )
-      chselBox.remove( rgbchSelector );
-    if( labchSelector.get_parent() == &chselBox )
-      chselBox.remove( labchSelector );
-    if( cmykchSelector.get_parent() == &chselBox )
-      chselBox.remove( cmykchSelector );
-    */
-    //greychSelector.hide();
-    //rgbchSelector.hide();
-    //labchSelector.hide();
-    //cmykchSelector.hide();
-    PF::OpParBase* par = get_layer()->get_processor()->get_par();
-    PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+
+    PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+    PF::Image* image = get_layer()->get_image();
+    PF::Pipeline* pipeline = image->get_pipeline(0);
+    PF::PipelineNode* node = NULL;
+    if( pipeline ) node = pipeline->get_node( get_layer()->get_id() );
+    if( node && node->processor && node->processor->get_par() ) {
+      PF::OpParBase* par = node->processor->get_par();
+      cs = PF::convert_colorspace( par->get_interpretation() );
+      //std::cout<<"OperationConfigDialog::update() par: "<<par<<std::endl;
+    }
+    //std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called, cs: "<<cs<<std::endl;
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
       if( greychSelector.get_parent() != &chselBox ) {
@@ -371,6 +348,19 @@ void PF::OperationConfigDialog::do_update()
     }
   }
 
+  if( has_preview() ) {
+    if( previewButton.get_parent() != &previewBox ) {
+      previewBox.pack_start( previewButton, Gtk::PACK_SHRINK );
+      previewButton.show();
+    }
+  } else {
+    if( previewButton.get_parent() == &previewBox ) {
+      previewBox.remove( previewButton );
+    }
+  }
+
+  show_all_children();
+
   /*
   // force our program to redraw the entire clock.
   Glib::RefPtr<Gdk::Window> win = get_window();
@@ -401,6 +391,43 @@ void PF::OperationConfigDialog::update_properties()
 }
 
 
+void PF::OperationConfigDialog::on_preview_clicked()
+{
+  std::cout<<"OperationConfigDialog::on_preview_clicked(): active="<<previewButton.get_active()<<std::endl;
+  if( get_layer() && get_layer()->get_image() &&
+    get_layer()->get_processor() &&
+    get_layer()->get_processor()->get_par() ) {
+    PF::OpParBase* par = get_layer()->get_processor()->get_par();
+    if( previewButton.get_active() ) {
+      get_layer()->get_image()->lock();
+      // Enable all controls
+      for( int i = 0; i < controls.size(); i++ ) {
+        controls[i]->set_inhibit( false );
+        controls[i]->set_value();
+      }
+      get_layer()->set_dirty( true );
+      std::cout<<"  updating image"<<std::endl;
+      get_layer()->get_image()->update();
+      get_layer()->get_image()->unlock();
+    } else {
+      get_layer()->get_image()->lock();
+      // Inhibit all controls such that they do not modify the
+      // underlying properties
+      for( int i = 0; i < controls.size(); i++ )
+        controls[i]->set_inhibit( true );
+
+      std::cout<<"  restoring original values"<<std::endl;
+      par->restore_properties( values_save );
+      get_layer()->set_dirty( true );
+      std::cout<<"  updating image"<<std::endl;
+      get_layer()->get_image()->update();
+      std::cout<<"  image updated"<<std::endl;
+      get_layer()->get_image()->unlock();
+    }
+  }
+}
+
+
 void PF::OperationConfigDialog::on_button_clicked(int id)
 {
   switch(id) {
@@ -422,6 +449,12 @@ void PF::OperationConfigDialog::on_button_clicked(int id)
   case 1:
     if( get_layer() ) 
       get_layer()->set_name( nameEntry.get_text().c_str() );
+
+    // Make sure all parameters are copied to the associated properties,
+    // regardless of the "preview" activation
+    for( unsigned int i = 0; i < controls.size(); i++ ) {
+      controls[i]->set_value();
+    }
     //hide_all();
     hide();
     break;

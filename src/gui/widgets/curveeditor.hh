@@ -41,7 +41,7 @@ namespace PF {
 
   class CurveArea: public Gtk::DrawingArea
   {
-    SplineCurve* curve;
+    SplineCurve curve;
 
     int selected_point;
 
@@ -54,8 +54,8 @@ namespace PF {
   public:    
     CurveArea();
 
-    void set_curve( SplineCurve* c ) { curve = c; }
-    SplineCurve* get_curve() { return curve; }
+    void set_curve( const SplineCurve& c ) { curve = c; }
+    SplineCurve& get_curve() { return curve; }
     
     void set_selected_point( int ipt ) { selected_point = ipt; }
     
@@ -93,8 +93,8 @@ namespace PF {
 
     void add_point( float x )
     {
-      SplineCurve* curve = curveArea.get_curve();
-      float ycurve = curve->get_value( x );
+      SplineCurve& curve = curveArea.get_curve();
+      float ycurve = curve.get_value( x );
       add_point( x, ycurve );
     }
     void add_point( float x, float y );

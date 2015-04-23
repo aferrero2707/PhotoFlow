@@ -27,7 +27,7 @@
 
  */
 
-//#include <arpa/inet.h>
+#include <cmath>
 
 #include "../base/exif_data.hh"
 #include "raw_output.hh"

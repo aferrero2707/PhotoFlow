@@ -212,14 +212,14 @@ bool PF::OpParBase::import_settings( OpParBase* pin )
       return false;
   }
 
-  set_demand_hint( pin->get_demand_hint() );
   set_map_flag( pin->is_map() );
   set_editing_flag( pin->is_editing() );
-  set_image_hints( pin->get_xsize(), pin->get_ysize(), 
-		   pin->get_interpretation() );
-  set_nbands( pin->get_nbands() );
-  set_coding( pin->get_coding() );
-  set_format( pin->get_format() );
+  //set_demand_hint( pin->get_demand_hint() );
+  //set_image_hints( pin->get_xsize(), pin->get_ysize(),
+	//	   pin->get_interpretation() );
+  //set_nbands( pin->get_nbands() );
+  //set_coding( pin->get_coding() );
+  //set_format( pin->get_format() );
   return true;
 }
 

@@ -47,6 +47,8 @@ namespace PF {
   public:
     DesaturateConfigDialog( Layer* l );
     
+    bool has_preview() { return true; }
+
     void do_update();
   };
 

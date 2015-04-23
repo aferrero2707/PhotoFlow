@@ -83,66 +83,17 @@ PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog( PF::Layer* l
   outputModeBox.pack_start( outputModeSlider, Gtk::PACK_SHRINK );
   outputModeBox.pack_start( padding4, Gtk::PACK_EXPAND_WIDGET  );
   add_widget( outputModeBox );
-
-  /*
-  brightnessAdj.signal_value_changed().
-    connect(sigc::mem_fun(*this,
-			  &BrightnessContrastConfigDialog::on_brightness_value_changed));
-
-  contrastAdj.signal_value_changed().
-    connect(sigc::mem_fun(*this,
-			  &BrightnessContrastConfigDialog::on_contrast_value_changed));
-  */
 }
 
-
-/*
-void PF::BrightnessContrastConfigDialog::on_brightness_value_changed()
-{
-  double val = brightnessAdj.get_value();
-  std::cout<<"New brightness value: "<<val<<std::endl;
-  if( get_layer() && get_layer()->get_image() && 
-      get_layer()->get_processor() &&
-      get_layer()->get_processor()->get_par() ) {
-    PF::BrightnessContrastPar* par = 
-      dynamic_cast<PF::BrightnessContrastPar*>(get_layer()->get_processor()->get_par());
-    if( par ) {
-      par->set_brightness( val );
-      get_layer()->set_dirty( true );
-      std::cout<<"  updating image"<<std::endl;
-      get_layer()->get_image()->update();
-    }
-  }
-}
-
-
-void PF::BrightnessContrastConfigDialog::on_contrast_value_changed()
-{
-  double val = contrastAdj.get_value();
-  std::cout<<"New contrast value: "<<val<<std::endl;
-  if( get_layer() && get_layer()->get_image() && 
-      get_layer()->get_processor() &&
-      get_layer()->get_processor()->get_par() ) {
-    PF::BrightnessContrastPar* par = 
-      dynamic_cast<PF::BrightnessContrastPar*>(get_layer()->get_processor()->get_par());
-    if( par ) {
-      par->set_contrast( val );
-      get_layer()->set_dirty( true );
-      std::cout<<"  updating image"<<std::endl;
-      get_layer()->get_image()->update();
-    }
-  }
-}
-*/
 
 
 void PF::BrightnessContrastConfigDialog::open()
 {
-  if( get_layer() && get_layer()->get_image() && 
-      get_layer()->get_processor() &&
-      get_layer()->get_processor()->get_par() ) {
-    brightnessSlider.init();
-    contrastSlider.init();
-  }
+//  if( get_layer() && get_layer()->get_image() &&
+//      get_layer()->get_processor() &&
+//      get_layer()->get_processor()->get_par() ) {
+//    brightnessSlider.init();
+//    contrastSlider.init();
+//  }
   OperationConfigDialog::open();
 }

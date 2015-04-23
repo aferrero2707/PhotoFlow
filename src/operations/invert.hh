@@ -75,6 +75,7 @@ namespace PF
   class InvertProc<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, PREVIEW, OP_PAR>
   {
     InvertPar* par;
+    int pos;
   public:
     InvertProc(InvertPar* p): par(p) {}
 
@@ -90,8 +91,9 @@ namespace PF
       */
       /**/
       T* pp = p[first];
-      for(int i = CHMIN; i <= CHMAX; i++) {
-	pout[x+i] = FormatInfo<T>::MAX + FormatInfo<T>::MIN - pp[x+i]; 
+      pos = x;
+      for(int i = CHMIN; i <= CHMAX; i++, pos++) {
+        pout[pos] = FormatInfo<T>::MAX + FormatInfo<T>::MIN - pp[pos];
       }
       /**/
     }

@@ -142,8 +142,17 @@ void PF::CurvesConfigDialog::switch_curve()
       curvesBox.remove( bCurveEditor );
     
 
-    PF::OpParBase* par = get_layer()->get_processor()->get_par();
-    PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+    PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+    PF::Image* image = get_layer()->get_image();
+    PF::Pipeline* pipeline = image->get_pipeline(0);
+    PF::PipelineNode* node = NULL;
+    if( pipeline ) node = pipeline->get_node( get_layer()->get_id() );
+    if( node && node->processor && node->processor->get_par() ) {
+      PF::OpParBase* par = node->processor->get_par();
+      cs = PF::convert_colorspace( par->get_interpretation() );
+      //std::cout<<"OperationConfigDialog::update() par: "<<par<<std::endl;
+    }
+
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
       curvesBox.pack_start( greyCurveEditor, Gtk::PACK_SHRINK );
@@ -219,8 +228,18 @@ void PF::CurvesConfigDialog::do_update()
       selectorsBox.remove( labCurveSelector );
     if( cmykCurveSelector.get_parent() == &selectorsBox )
       selectorsBox.remove( cmykCurveSelector );
-    PF::OpParBase* par = get_layer()->get_processor()->get_par();
-    PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+
+    PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+    PF::Image* image = get_layer()->get_image();
+    PF::Pipeline* pipeline = image->get_pipeline(0);
+    PF::PipelineNode* node = NULL;
+    if( pipeline ) node = pipeline->get_node( get_layer()->get_id() );
+    if( node && node->processor && node->processor->get_par() ) {
+      PF::OpParBase* par = node->processor->get_par();
+      cs = PF::convert_colorspace( par->get_interpretation() );
+      //std::cout<<"OperationConfigDialog::update() par: "<<par<<std::endl;
+    }
+
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
       //greychSelector.show();

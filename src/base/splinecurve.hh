@@ -158,13 +158,16 @@ namespace PF
 
     void from_stream(std::istream& str)
     {
+      //std::cout<<"Property<SplineCurve>::from_stream() called (\""<<get_name()<<"\")"<<std::endl;
       SplineCurve oldcurve = curve;
       int npoints;
       str>>npoints;
+      //std::cout<<"  # of points: "<<npoints<<std::endl;
       if( npoints > 0 ) curve.clear_points();
       for( int i = 0; i < npoints; i++ ) {
         float x, y;
         str>>x>>y;
+        //std::cout<<"  point #"<<i<<": "<<x<<","<<y<<std::endl;
         curve.add_point( x, y );
       }
       if( oldcurve != curve )
@@ -183,8 +186,10 @@ namespace PF
 
     bool import(PropertyBase* pin)
     {
+      //std::cout<<"Property<SplineCurve>::import() called (\""<<get_name()<<"\")"<<std::endl;
       Property<SplineCurve>* pin2 = dynamic_cast< Property<SplineCurve>* >( pin );
       if( pin2 ) {
+        //std::cout<<"  gen_npoints()="<<curve.get_npoints()<<"  pin2->get_npoints()="<<pin2->get().get_npoints()<<std::endl;
         set( pin2->get() );
       } else {
         set_str( pin->get_str() );

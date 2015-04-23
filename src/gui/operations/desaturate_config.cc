@@ -45,6 +45,7 @@ PF::DesaturateConfigDialog::DesaturateConfigDialog( PF::Layer* layer ):
 
 void PF::DesaturateConfigDialog::do_update()
 {
+/*
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
@@ -54,7 +55,7 @@ void PF::DesaturateConfigDialog::do_update()
     if( !prop )  return;
   }
   controlsBox.show_all_children();
-
+*/
   OperationConfigDialog::do_update();
 }
 

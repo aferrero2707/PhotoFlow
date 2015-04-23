@@ -96,6 +96,9 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
   bool has_ch_sel;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
 
+  Gtk::VBox previewBox;
+  Gtk::CheckButton previewButton;
+
   std::list<std::string> values_save;
 
   void reset_ch_selector();
@@ -105,6 +108,8 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
 public:
   OperationConfigDialog(Layer* layer, const Glib::ustring& title, bool has_ch_sel=true);
   virtual ~OperationConfigDialog();
+
+  virtual bool has_preview() { return false; }
 
 #ifdef GTKMM_2
   Gtk::VBox& get_main_box() { return mainBox; }
@@ -119,6 +124,8 @@ public:
   void add_control( PFWidget* control ) { controls.push_back( control ); }
 
   void on_button_clicked(int id);
+
+  void on_preview_clicked();
 
   bool focus_in_cb(GdkEventFocus *focus)
   {
