@@ -153,12 +153,12 @@ void PF::DrawConfigDialog::on_bgd_color_changed()
   if( !par ) return;
   
 #ifdef GTKMM_2
-  float value = pen_color_button.get_color().get_red();
-  par->get_pen_color().get().r = value/65535;
-  value = pen_color_button.get_color().get_green();
-  par->get_pen_color().get().g = value/65535;
-  value = pen_color_button.get_color().get_blue();
-  par->get_pen_color().get().b = value/65535;
+  float value = bgd_color_button.get_color().get_red();
+  par->get_bgd_color().get().r = value/65535;
+  value = bgd_color_button.get_color().get_green();
+  par->get_bgd_color().get().g = value/65535;
+  value = bgd_color_button.get_color().get_blue();
+  par->get_bgd_color().get().b = value/65535;
 #endif
 
 #ifdef GTKMM_3
