@@ -74,6 +74,7 @@ namespace PF {
 #ifdef GTKMM_3
     Glib::RefPtr<Gtk::Adjustment> xadjustment, yadjustment;
 #endif
+    Gtk::HBox spin_buttons_box;
     Gtk::SpinButton xspinButton, yspinButton;
 
     CurveArea curveArea;

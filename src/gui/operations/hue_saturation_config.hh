@@ -57,10 +57,7 @@ namespace PF {
 public:
   HueSaturationConfigDialog( Layer* l );
 
-  void on_hue_value_changed();
-  void on_saturation_value_changed();
-
-  void open();
+  bool has_preview() { return true; }
 };
 
 }

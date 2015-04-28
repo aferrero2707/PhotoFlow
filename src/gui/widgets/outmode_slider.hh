@@ -39,7 +39,8 @@ namespace PF {
   class OutModeSlider: public Gtk::VBox, public PFWidget
   {
     Gtk::VBox vbox;
-    Gtk::HBox labelsBox, labelsBox1, labelsBox2;
+    Gtk::HBox hbox;
+    Gtk::HBox labelsBox, labelsBoxOuter, labelsBox1, labelsBox2;
     Gtk::HBox spinButtonBox;
     Gtk::Alignment spinButtonPadding;
     Gtk::VSeparator vline1, vline2, vline3, vline4;

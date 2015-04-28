@@ -34,6 +34,7 @@
 #include <glib.h>
 
 #define PF_META_EXIF_NAME "custom-exif-data"
+//#define PF_META_EXIF_NAME VIPS_META_EXIF_NAME
 
 namespace PF
 {

@@ -80,6 +80,8 @@ namespace PF
     bool insert_before(std::list<PF::Layer*>& list, Layer* l, int32_t lid);
 
   public:
+    sigc::signal<void> signal_modified;
+
     Layer(int32_t id, bool cached=false);
     virtual ~Layer()
     {
@@ -102,6 +104,7 @@ namespace PF
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }
     void clear_modified() { modified_flag = false; }
+    void modified() {  set_modified(); signal_modified.emit(); }
 
     bool is_dirty() { return dirty; }
     void set_dirty( bool d ) { dirty = d; }
@@ -109,8 +112,18 @@ namespace PF
     
 
     bool is_visible() { return visible; }
-    void set_visible( bool d ) { visible = d; }
-    void clear_visible( ) { visible = false; }
+    void set_visible( bool d )
+    {
+      bool old = visible;
+      visible = d;
+      if( visible != old ) modified();
+    }
+    void clear_visible( )
+    {
+      bool old = visible;
+      visible = false;
+      if( visible != old ) modified();
+    }
     
     bool is_group() { return( !normal ); }
     bool is_normal() { return normal; }
@@ -151,7 +164,7 @@ namespace PF
     void set_blender(ProcessorBase* b);
 
     Image* get_image() { return image; }
-    void set_image( Image* img ) { image = img; }
+    void set_image( Image* img );
 
     void set_input(int n, int32_t lid, int32_t imgid, bool blended=true) {
       for( int i = extra_inputs.size(); i <= n; i++ )
@@ -179,9 +192,6 @@ namespace PF
 
     bool omap_insert(Layer* l, int32_t lid=-1);
     bool omap_insert_before(Layer* l, int32_t lid);
-
-    sigc::signal<void> signal_modified;
-    void modified() { set_modified(); signal_modified.emit(); }
 
     bool save( std::ostream& ostr, int level );
   };

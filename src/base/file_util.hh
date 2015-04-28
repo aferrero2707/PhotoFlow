@@ -34,6 +34,8 @@
 
 namespace PF {
 
-  bool get_file_extension(const std::string & file, std::string & ext);
+bool get_file_extension(const std::string & file, std::string & ext);
+
+std::string replace_file_extension(std::string file, std::string new_ext);
 
 }

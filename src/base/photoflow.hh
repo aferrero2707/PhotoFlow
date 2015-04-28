@@ -37,6 +37,13 @@
 
 //#include "image.hh"
 
+#ifdef LOCALEDIR
+#include <libintl.h>
+#define _(String) gettext(String)
+#else
+#define _(String) (String)
+#endif
+
 #define PF_FILE_VERSION 4
 
 namespace PF

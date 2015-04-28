@@ -90,7 +90,7 @@ gint PF::image_rebuild_callback( gpointer data )
 PF::Image::Image(): 
   layer_manager( this ), 
   async( false ), 
-  modified( false ), 
+  modified_flag( false ),
   rebuilding( false ), 
   loaded( false ),
   disable_update( false )
@@ -214,7 +214,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
     }
   */
     
-  clear_modified();
+  //clear_modified();
 
   //vips_cache_drop_all();
 
@@ -541,6 +541,8 @@ bool PF::Image::open( std::string filename )
     limg->set_name( "background" );
     layer_manager.get_layers().push_back( limg );
 
+    file_name = filename;
+
     /*
     PF::Processor<PF::ImageReaderPar,PF::ImageReader>* imgread = 
       new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
@@ -569,7 +571,9 @@ bool PF::Image::open( std::string filename )
     limg->set_name( "RAW loader" );
     layer_manager.get_layers().push_back( limg );
 
-		/*
+    file_name = filename;
+
+    /*
     limg = layer_manager.new_layer();
     proc = PF::PhotoFlow::Instance().new_operation( "raw_developer", limg );
     limg->set_processor( proc );
@@ -607,6 +611,7 @@ bool PF::Image::save( std::string filename )
     layer_manager.save( of );
     of<<"</image>"<<std::endl;
 		file_name = filename;
+		clear_modified();
     return true;
   } else {
     return false;

@@ -52,6 +52,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 
   LayerTree* view = new LayerTree( );
+  view->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::modified) );
   //frame->add( *view );
   
   //view->set_reorderable();
@@ -510,6 +511,7 @@ void PF::LayerWidget::remove_layers()
     layer_views[page]->get_tree().get_selection();
   Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
   */
+  bool removed = false;
   for( unsigned int ri = 0; ri < sel_rows.size(); ri++ ) {
     iter = model->get_iter( sel_rows[ri] );
     if( !iter ) continue;
@@ -519,9 +521,10 @@ void PF::LayerWidget::remove_layers()
 
     image->remove_layer( l );
     image->get_layer_manager().modified();
+    removed = true;
   }
 
-  update();
+  if( removed ) update();
 }
 
 

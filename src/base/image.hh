@@ -54,14 +54,16 @@ namespace PF
     bool async;
 
     // Flag indicating whether the pipelines have to be re-built
-    bool modified;
+    bool modified_flag;
 
     // Flag indicating whether there is a re-building ongoing
     bool rebuilding;
 
     bool loaded;
 
-		// Current "pfi" file name associated to this image
+		// Current file name associated to this image
+    // It corresponds to the file specified in the
+    // most recent "open" or "save" action
 		std::string file_name;
 
     bool disable_update;
@@ -95,7 +97,7 @@ namespace PF
 
     ~Image();
 
-    //sigc::signal<void> signal_modified;
+    sigc::signal<void> signal_modified;
 
     LayerManager& get_layer_manager() { return layer_manager; }
 
@@ -131,9 +133,10 @@ namespace PF
     bool is_async() { return async; }
     void set_async( bool flag ) { async = flag; }
 
-    bool is_modified() { return modified; }
-    void set_modified() { modified = true; }
-    void clear_modified() { modified = false; }
+    bool is_modified() { return modified_flag; }
+    void set_modified() { modified_flag = true; }
+    void clear_modified() { modified_flag = false; }
+    void modified() {  set_modified(); signal_modified.emit(); }
 
     bool is_rebuilding() { return rebuilding; }
     void set_rebuilding( bool flag ) { rebuilding = flag; }

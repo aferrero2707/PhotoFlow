@@ -54,6 +54,8 @@ namespace PF {
   public:
     SharpenConfigDialog( Layer* l );
     
+    bool has_preview() { return true; }
+
     void do_update();
   };
 

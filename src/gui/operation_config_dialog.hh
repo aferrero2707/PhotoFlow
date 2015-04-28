@@ -90,8 +90,10 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
   //Gtk::Adjustment intensityAdj, opacityAdj;
   //Gtk::HScale intensityScale, opacityScale;
 
-  Slider intensitySlider, opacitySlider;
   Selector blendSelector;
+  Gtk::HBox intensity_box, opacity_box;
+  Slider intensitySlider, opacitySlider;
+  CheckBox imap_enabled_box, omap_enabled_box;
   Slider shift_x, shift_y;
   bool has_ch_sel;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;

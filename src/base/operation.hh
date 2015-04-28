@@ -162,6 +162,8 @@ namespace PF
     PropertyBase lab_target_channel;
     PropertyBase cmyk_target_channel;
 
+    Property<bool> mask_enabled;
+
   public:
     sigc::signal<void> signal_modified;
 
@@ -216,9 +218,13 @@ namespace PF
     bool is_editing() { return editing_flag; }
     void set_editing_flag( bool flag ) { editing_flag = flag; }
 
+    bool get_mask_enabled() { return mask_enabled.get(); }
+
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }
     void clear_modified();
+    virtual void modified() { set_modified(); signal_modified.emit(); }
+
 
     int get_rgb_target_channel() 
     {
@@ -353,8 +359,6 @@ namespace PF
       coding = VIPS_CODING_NONE;
     }
 
-
-    virtual void modified() { set_modified(); signal_modified.emit(); }
 
     bool save( std::ostream& ostr, int level );
   };

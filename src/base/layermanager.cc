@@ -787,13 +787,13 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
                <<"  omap_layers.size()="<<l->omap_layers.size()
                <<std::endl;
 #endif
-      if( previous && !l->imap_layers.empty() ) {
+      if( previous && !l->imap_layers.empty() && pipelinepar->get_mask_enabled()==true ) {
         imap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->imap_layers, NULL );
       }
 
-      if( previous && !l->omap_layers.empty() ) {
+      if( previous && !l->omap_layers.empty() && pipelineblender->get_mask_enabled()==true ) {
         omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->omap_layers, NULL );
@@ -955,7 +955,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
                <<"  omap_layers.size()="<<l->omap_layers.size()
                <<std::endl;
 #endif
-      if( previous && !l->imap_layers.empty() ) {
+      if( previous && !l->imap_layers.empty() && pipelinepar->get_mask_enabled()==true ) {
         imap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->imap_layers, NULL );
@@ -964,7 +964,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         //if(map_i != l->imap_layers.rend()) 
         //imap = (*map_i)->get_processor()->get_par()->get_image();
       }
-      if( previous && !l->omap_layers.empty() ) {
+      if( previous && !l->omap_layers.empty() && pipelineblender->get_mask_enabled()==true ) {
         omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->omap_layers, NULL );

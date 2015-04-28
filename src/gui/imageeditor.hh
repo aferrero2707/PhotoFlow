@@ -36,6 +36,7 @@
 
 #include "imagearea.hh"
 #include "layerwidget.hh"
+#include "tablabelwidget.hh"
 
 
 namespace PF {
@@ -59,6 +60,8 @@ namespace PF {
     Gtk::VBox radioBox;
     Gtk::RadioButton buttonShowMerged, buttonShowActive;
 
+    HTabLabelWidget* tab_label_widget;
+
     void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
     void get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
                            std::list<Layer*>& children );
@@ -72,9 +75,13 @@ namespace PF {
 
     LayerWidget& get_layer_widget() { return layersWidget; }
 
+    void set_tab_label_widget( HTabLabelWidget* l ) { tab_label_widget = l; }
+
     void set_active_layer( int id );
 
     void open_image();
+
+    void on_image_modified();
 
     void on_map();
     void on_realize();

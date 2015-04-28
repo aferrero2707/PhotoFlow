@@ -103,6 +103,8 @@ namespace PF {
     bool get_row(int id, Gtk::TreeModel::iterator& iter);
 
   public:
+    sigc::signal<void> signal_updated;
+
     LayerTree( bool is_map=false );
     virtual ~LayerTree();
 

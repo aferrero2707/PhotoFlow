@@ -1,0 +1,31 @@
+#! /bin/bash
+
+neweronly=0
+presets=""
+while [ true ]; do
+
+	if [ x$1 = "x-n" ]; then 
+		neweronly=1
+		shift 1
+		continue
+	fi
+	
+	if [ x$1 = "x-p" ]; then 
+		presets="$presets $2"
+		shift 2
+		continue
+	fi
+	
+	break
+	
+done
+
+for f in $*; do
+
+	ext=$(echo "$f" | tr . "\n" | tail -n 1)
+	echo "ext: $ext"
+	fname=$(basename "$f" ".$ext")
+	pfbatch "$f" $presets "$fname.tif"
+	exiftool -TagsFromFile "$f" -all:all "$fname.tif"
+
+done

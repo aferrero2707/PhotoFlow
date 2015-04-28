@@ -199,6 +199,8 @@ namespace PF
       //std::cout<<"pout="<<(void*)pout<<std::endl;
 
       T val[16];
+      //std::cout<<"DrawProc: bgd color: "<<opar->get_bgd_color().get().r<<" "
+      //    <<opar->get_bgd_color().get().g<<" "<<opar->get_bgd_color().get().b<<std::endl;
       val[0] = (T)(opar->get_bgd_color().get().r*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
       val[1] = (T)(opar->get_bgd_color().get().g*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
       val[2] = (T)(opar->get_bgd_color().get().b*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);

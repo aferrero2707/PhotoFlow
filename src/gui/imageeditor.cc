@@ -27,6 +27,8 @@
 
  */
 
+#include <libgen.h>
+
 #include <gdk/gdk.h>
 
 #include "../base/imageprocessor.hh"
@@ -48,7 +50,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonZoom100( "1:1" ),
   buttonZoomFit( "Fit" ),
   buttonShowMerged( "show merged layers" ),
-  buttonShowActive( "show active layer" )
+  buttonShowActive( "show active layer" ),
+  tab_label_widget( NULL )
 {
   image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
   image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
@@ -268,7 +271,22 @@ void PF::ImageEditor::open_image()
   //PF::ImageProcessor::Instance().wait_for_caching();
   image->set_loaded( true );
   image_opened = true;
+
+  image->clear_modified();
+  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified) );
   //Gtk::Paned::on_map();
+}
+
+
+void PF::ImageEditor::on_image_modified()
+{
+  std::cout<<"ImageEditor::on_image_modified() called."<<std::endl;
+  if( !tab_label_widget ) return;
+  char* fullpath = strdup( image->get_filename().c_str() );
+  char* fname = basename( fullpath );
+  Glib::ustring label = "*";
+  label = label + fname;
+  tab_label_widget->set_label( label );
 }
 
 

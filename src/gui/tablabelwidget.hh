@@ -103,6 +103,9 @@ public:
     signal_close.emit( widget );
   }
 
+  void set_label( Glib::ustring l ) { label.set_text( l ); }
+  Glib::ustring get_label() { return label.get_text(); }
+
   sigc::signal< void, Gtk::Widget* > signal_close;
 };
 

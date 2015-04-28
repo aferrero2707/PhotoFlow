@@ -66,6 +66,8 @@ class LayerWidget : public Gtk::VBox
   void select_row(int id);
 
 public:
+  sigc::signal<void,int> signal_active_layer_changed;
+
   LayerWidget( Image* image, ImageEditor* editor );
   virtual ~LayerWidget( );
 
@@ -118,7 +120,7 @@ public:
 
   void remove_tab( Gtk::Widget* widget );
 
-  sigc::signal<void,int> signal_active_layer_changed;
+  void modified() { if(image) image->modified(); }
 };
 
 }

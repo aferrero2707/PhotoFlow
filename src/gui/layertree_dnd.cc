@@ -458,7 +458,7 @@ bool PF::LayerTreeModel::drag_data_received_vfunc( const Gtk::TreeModel::Path& d
   }
   
 
-    image->unlock();
+  image->unlock();
   image->update();
   // Now that the layers have been reconfigured, we emit the signal_drop_done
   // to notify the LayerTree that the model has to be updated

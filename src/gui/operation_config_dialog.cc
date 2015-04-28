@@ -101,9 +101,11 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   controlsBoxLeft(Gtk::ORIENTATION_VERTICAL),
   controlsBoxRight(Gtk::ORIENTATION_VERTICAL),
 #endif
+  blendSelector( this, layer->get_blender(), "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
   intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
   opacitySlider( this, layer->get_blender(), "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
-  blendSelector( this, layer->get_blender(), "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
+  imap_enabled_box( this, "mask_enabled", "Enable mask", true),
+  omap_enabled_box( this, layer->get_blender(), "mask_enabled", "Enable mask", true),
   shift_x( this, layer->get_blender(), "shift_x", "X shift", 0, -1000000, 1000000, 1, 10, 1),
   shift_y( this, layer->get_blender(), "shift_y", "Y shift", 0, -1000000, 1000000, 1, 10, 1),
   has_ch_sel(chsel),
@@ -111,7 +113,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   rgbchSelector( this, "rgb_target_channel", "Target channel: ", -1 ),
   labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
   cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 ),
-  previewButton("preview)")
+  previewButton(_("preview"))
 {
   //set_keep_above(true);
   add_button("OK",1);
@@ -140,10 +142,17 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   shiftBox.pack_start( shift_x, Gtk::PACK_EXPAND_PADDING, 10 );
   shiftBox.pack_start( shift_y, Gtk::PACK_EXPAND_PADDING, 10 );
 
-  if(par && par->has_intensity() )
-    controlsBoxLeft.pack_start( intensitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
+  intensity_box.pack_start( intensitySlider, Gtk::PACK_SHRINK );
+  intensity_box.pack_start( imap_enabled_box, Gtk::PACK_SHRINK );
+
+  opacity_box.pack_start( opacitySlider, Gtk::PACK_SHRINK );
+  opacity_box.pack_start( omap_enabled_box, Gtk::PACK_SHRINK );
+
+  if(par && par->has_intensity() ) {
+    controlsBoxLeft.pack_start( intensity_box, Gtk::PACK_EXPAND_PADDING, 10 );
+  }
   if(par && par->has_opacity() ) {
-    controlsBoxLeft.pack_start( opacitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
+    controlsBoxLeft.pack_start( opacity_box, Gtk::PACK_EXPAND_PADDING, 10 );
     controlsBoxLeft.pack_start( shiftBox, Gtk::PACK_EXPAND_PADDING, 10 );
   }
   controlsBox.pack_start( controlsBoxLeft, Gtk::PACK_SHRINK );

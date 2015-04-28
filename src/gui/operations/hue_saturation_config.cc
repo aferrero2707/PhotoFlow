@@ -36,7 +36,6 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Hue/Saturation Adjustment" ),
   hueSlider( this, "hue", "Hue", 0, -180, 180, 0.1, 10, 1),
   saturationSlider( this, "saturation", "Saturation", 0, -1, 1, 0.05, 0.2, 1)
-  //outputModeSlider( this, "color_blend", "Output mode", 0, -1, 1, 0.05, 0.2, 1)
 {
   controlsBox.pack_start( hueSlider );
   controlsBox.pack_start( saturationSlider );
@@ -48,29 +47,4 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   add_widget( padding1 );
 
   add_widget( controlsBox );
-
-  /*
-  add_widget( padding2 );
-  add_widget( hline );
-  add_widget( padding3 );
-
-  padding4.set_size_request( 10, 2 );
-  outputModeBox.pack_start( outputModeSlider, Gtk::PACK_SHRINK );
-  outputModeBox.pack_start( padding4, Gtk::PACK_EXPAND_WIDGET  );
-  add_widget( outputModeBox );
-  */
-}
-
-
-void PF::HueSaturationConfigDialog::open()
-{
-  /*
-  if( get_layer() && get_layer()->get_image() && 
-      get_layer()->get_processor() &&
-      get_layer()->get_processor()->get_par() ) {
-    brightnessSlider.init();
-    contrastSlider.init();
-  }
-  */
-  OperationConfigDialog::open();
 }

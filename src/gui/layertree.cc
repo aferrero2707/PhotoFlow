@@ -311,6 +311,8 @@ void PF::LayerTree::update_model()
   }
   treeView.expand_all();
 
+  signal_updated.emit();
+
   /*
   if (!image) {
     treeModel->clear();

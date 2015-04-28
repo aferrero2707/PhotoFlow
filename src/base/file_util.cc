@@ -1,5 +1,5 @@
 /* 
-   
+
  */
 
 /*
@@ -39,15 +39,36 @@ bool PF::get_file_extension(const std::string & file, std::string & ext)
 #else
   const char * dir_separator = "/";
 #endif
-    std::size_t ext_pos = file.rfind(".");
-    std::size_t dir_pos = file.rfind(dir_separator);
+  std::size_t ext_pos = file.rfind(".");
+  std::size_t dir_pos = file.rfind(dir_separator);
 
-    if(ext_pos>dir_pos+1)
-    {
-        ext.append(file.begin()+ext_pos+1,file.end());
-        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-        return true;
-    }
+  if(ext_pos>dir_pos+1)
+  {
+    ext.append(file.begin()+ext_pos+1,file.end());
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    return true;
+  }
 
-    return false;
+  return false;
+}
+
+
+std::string PF::replace_file_extension(std::string file, std::string new_ext)
+{
+#ifdef WIN32
+  const char * dir_separator = "\\";
+#else
+  const char * dir_separator = "/";
+#endif
+  std::size_t ext_pos = file.rfind(".");
+  std::size_t dir_pos = file.rfind(dir_separator);
+
+  std::string new_file;
+
+  if(ext_pos>dir_pos+1) {
+    new_file.append(file.begin(),file.begin()+ext_pos+1);
+    new_file += new_ext;
+  }
+
+  return new_file;
 }

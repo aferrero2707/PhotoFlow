@@ -36,14 +36,34 @@ PF::CheckBox::CheckBox( OperationConfigDialog* dialog, std::string pname, std::s
 {
   label.set_text( l.c_str() );
 
-  pack_start( label );
   pack_start( check );
+  pack_start( label );
 
   check.set_active( val!=0 );
 
   check.signal_toggled().
     connect(sigc::mem_fun(*this,
-			  &PFWidget::changed));
+        &PFWidget::changed));
+
+  show_all_children();
+}
+
+
+PF::CheckBox::CheckBox( OperationConfigDialog* dialog, PF::ProcessorBase* processor,
+    std::string pname, std::string l, int val ):
+      Gtk::HBox(),
+      PF::PFWidget( dialog, processor, pname )
+{
+  label.set_text( l.c_str() );
+
+  pack_start( check );
+  pack_start( label );
+
+  check.set_active( val!=0 );
+
+  check.signal_toggled().
+    connect(sigc::mem_fun(*this,
+        &PFWidget::changed));
 
   show_all_children();
 }

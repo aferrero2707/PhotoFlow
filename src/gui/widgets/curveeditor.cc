@@ -37,6 +37,8 @@ static const int curve_area_margin = 5;
 PF::CurveEditor::CurveEditor( OperationConfigDialog* dialog, std::string pname ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname ),
+  xlabel( "in: " ),
+  ylabel( "out: " ),
 #ifdef GTKMM_2
   xadjustment( 100, 0, 100, 1, 10, 0),
   yadjustment( 100, 0, 100, 1, 10, 0),
@@ -60,8 +62,11 @@ PF::CurveEditor::CurveEditor( OperationConfigDialog* dialog, std::string pname )
   yspinButton.set_digits( 1 );
 
   box.pack_start( curveArea );
-  box.pack_start( xspinButton );
-  box.pack_start( yspinButton );
+  spin_buttons_box.pack_start( xlabel, Gtk::PACK_SHRINK );
+  spin_buttons_box.pack_start( xspinButton, Gtk::PACK_SHRINK );
+  spin_buttons_box.pack_start( ylabel, Gtk::PACK_SHRINK );
+  spin_buttons_box.pack_start( yspinButton, Gtk::PACK_SHRINK );
+  box.pack_start( spin_buttons_box );
 
   pack_start( box, Gtk::PACK_SHRINK );
 

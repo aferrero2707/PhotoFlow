@@ -83,6 +83,8 @@ extern "C" {
 
   extern GType vips_layer_get_type( void ); 
   extern GType vips_gmic_get_type( void ); 
+  extern GType vips_clone_stamp_get_type( void );
+  extern GType vips_lensfun_get_type( void );
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
@@ -131,6 +133,8 @@ int main (int argc, char *argv[])
 
   vips_layer_get_type();
   vips_gmic_get_type();
+  vips_clone_stamp_get_type();
+  vips_lensfun_get_type();
 
 #ifndef NDEBUG
   im_concurrency_set( 1 );
@@ -210,7 +214,7 @@ int main (int argc, char *argv[])
 
     img_out = argv[argc-1];
     std::cout<<"img_out(1)= "<<img_out<<std::endl;
-    std::string patt = "%file%";
+    std::string patt = "%name%";
     replace_string( img_out, patt, iname );
     std::cout<<"img_out(2)= "<<img_out<<std::endl;
 
@@ -233,6 +237,7 @@ int main (int argc, char *argv[])
   //im_close_plugins();
   vips_shutdown();
 
+  return 0;
 	
 #if defined(__MINGW32__) || defined(__MINGW64__)
 	for (int i = 0; i < _getmaxstdio(); ++i) close (i);

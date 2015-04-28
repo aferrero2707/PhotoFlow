@@ -56,7 +56,7 @@ PF::Layer::Layer(int32_t i, bool c):
 void PF::Layer::set_processor(ProcessorBase* p) 
 { 
   processor = p; 
-  //processor->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::set_modified) );
+  processor->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::modified) );
   //processor->get_par()->signal_modified.connect(sigc::mem_fun(image, &PF::Image::set_modified) );
 }
 
@@ -64,8 +64,15 @@ void PF::Layer::set_processor(ProcessorBase* p)
 void PF::Layer::set_blender(ProcessorBase* p) 
 { 
   blender = p; 
-  //blender->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::set_modified) );
+  blender->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::modified) );
   //blender->get_par()->signal_modified.connect(sigc::mem_fun(image, &PF::Image::set_modified) );
+}
+
+
+void PF::Layer::set_image( Image* img )
+{
+  image = img;
+  signal_modified.connect(sigc::mem_fun(image, &PF::Image::modified) );
 }
 
 

@@ -73,6 +73,8 @@ namespace PF {
 public:
   CropConfigDialog( Layer* l );
 
+  bool has_preview() { return true; }
+
   void open();
 
   bool pointer_press_event( int button, double x, double y, int mod_key );
