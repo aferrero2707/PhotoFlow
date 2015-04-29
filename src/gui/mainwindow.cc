@@ -29,6 +29,7 @@
 
 #include <libgen.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <iostream>
 
@@ -221,8 +222,9 @@ PF::MainWindow::open_image( std::string filename )
   //editor->open();
   viewerNotebook.set_current_page( -1 );
   std::cout<<"MainWindow::open_image(): current notebook page selected"<<std::endl;
-  //if( editor->get_image() )
-  //    editor->get_image()->update();
+  if( editor->get_image() && editor->get_image()->is_modified() )
+    // To properly update the tab label
+    editor->get_image()->modified();
   //getchar();
 
   /*
@@ -525,15 +527,29 @@ void PF::MainWindow::on_button_saveas_clicked()
       }
       std::cout << "File selected: " <<  filename << std::endl;
       editor->get_image()->save( filename );
-      char* fullpath = strdup( editor->get_image()->get_filename().c_str() );
-      char* fname = basename( fullpath );
+      char* cfilename = strdup( editor->get_image()->get_filename().c_str() );
+      char* fname = basename( cfilename );
+      free( cfilename );
+
       HTabLabelWidget* tabwidget = (HTabLabelWidget*)viewerNotebook.get_tab_label( *widget );
       if( tabwidget ) tabwidget->set_label( fname );
+
+      std::string infoname = editor->get_image()->get_backup_filename();
+      infoname += ".info";
+      std::ofstream of;
+      of.open( infoname.c_str() );
+      if( of ) {
+        char* fullpath = realpath( editor->get_image()->get_filename().c_str(), NULL );
+        if(fullpath) {
+          of<<fullpath;
+          free( fullpath );
+        }
+      }
       break;
     }
   case(Gtk::RESPONSE_CANCEL): 
-    {
-      std::cout << "Cancel clicked." << std::endl;
+      {
+    std::cout << "Cancel clicked." << std::endl;
       break;
     }
   default: 
@@ -666,6 +682,11 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
 
   }
 
+  std::string bckname = editor->get_image()->get_backup_filename();
+  unlink( bckname.c_str() );
+  bckname += ".info";
+  unlink( bckname.c_str() );
+
   if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() )
     PF::PhotoFlow::Instance().set_active_image( NULL );
 
@@ -679,6 +700,7 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
   delete( widget );
   if( tabwidget )
     delete( tabwidget );
+
 #ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() page #"<<page<<" removed."<<std::endl;
 #endif

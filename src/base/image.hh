@@ -64,7 +64,12 @@ namespace PF
 		// Current file name associated to this image
     // It corresponds to the file specified in the
     // most recent "open" or "save" action
-		std::string file_name;
+    std::string file_name;
+
+    // Name of the backup file used to save the current
+    // editing parameters so that they can be restored
+    // in case of a program crash
+    std::string backup_file_name;
 
     bool disable_update;
 
@@ -166,9 +171,13 @@ namespace PF
 								 VipsImage** image, std::vector<float>& values );
 		void do_sample( int layer_id, VipsRect& area); 
 
-    bool open( std::string filename );
+    bool open( std::string filename, std::string bckname="" );
 
-		std::string get_filename() { return file_name; }
+    void set_backup_filename(std::string name) { backup_file_name = name; }
+    std::string get_backup_filename() { return backup_file_name; }
+    bool save_backup();
+
+    std::string get_filename() { return file_name; }
     bool save( std::string filename );
     void export_merged( std::string filename );
     void do_export_merged( std::string filename );

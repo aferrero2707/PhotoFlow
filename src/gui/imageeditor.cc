@@ -31,6 +31,7 @@
 
 #include <gdk/gdk.h>
 
+#include "../base/pf_mkstemp.hh"
 #include "../base/imageprocessor.hh"
 #include "imageeditor.hh"
 
@@ -256,7 +257,64 @@ void PF::ImageEditor::open_image()
 {
   if( image_opened ) return;
   std::cout<<"ImageEditor::open_image(): opening image..."<<std::endl;
-  image->open( filename );
+
+  std::string bckname;
+  char* fullpath = realpath( filename.c_str(), NULL );
+  if(fullpath) {
+    // Look into the cache dir for *.info files, and see if there is one
+    // that corresponds to the image we are opening.
+    DIR* dirp = opendir( PF::PhotoFlow::Instance().get_cache_dir().c_str() );
+    if (dirp != NULL) {
+      struct dirent* dp;
+      while ((dp = readdir(dirp)) != NULL) {
+        int len = dp->d_namlen;
+        if (len != 12 || strncmp(dp->d_name, "pfbck-", 6) != 0)
+          continue;
+        std::string infofile = dp->d_name;
+        infofile += ".info";
+        std::ifstream ifile;
+        ifile.open( (PF::PhotoFlow::Instance().get_cache_dir()+infofile).c_str() );
+        if( ifile ) {
+          std::string fname;
+          ifile>>fname;
+          if( fname == fullpath ) {
+            bckname = PF::PhotoFlow::Instance().get_cache_dir() + dp->d_name;
+            break;
+          }
+        }
+      }
+      (void)closedir(dirp);
+    }
+  }
+
+  bool do_recovery = false;
+  if( !bckname.empty() ) {
+    Glib::ustring msg = "Crash recovery found for file\n\"";
+    msg += filename;
+    msg += "\"\nDo you want to restore it?";
+    Gtk::MessageDialog dialog(msg,
+        false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+    //dialog.set_transient_for(*this);
+    dialog.set_default_response( Gtk::RESPONSE_YES );
+
+    //Show the dialog and wait for a user response:
+    int result = dialog.run();
+
+    //Handle the response:
+    switch(result) {
+    case Gtk::RESPONSE_YES:
+      do_recovery = true;
+      break;
+    case Gtk::RESPONSE_NO:
+      unlink( bckname.c_str() );
+      std::string infofile = bckname + ".info";
+      unlink( infofile.c_str() );
+      bckname = "";
+      break;
+    }
+  }
+
+  image->open( filename, bckname );
   std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
   if( !pipeline ) return;
@@ -275,6 +333,26 @@ void PF::ImageEditor::open_image()
   image->clear_modified();
   image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified) );
   //Gtk::Paned::on_map();
+  if( do_recovery ) image->modified();
+
+  //char* fullpath = realpath( filename.c_str(), NULL );
+  if( fullpath && !do_recovery ) {
+    char bckfname[500];
+    sprintf( bckfname,"%spfbck-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
+    int fd = pf_mkstemp( bckfname );
+    if( fd >= 0 ) {
+      close(fd);
+      image->set_backup_filename( bckfname );
+      std::string infoname = bckfname;
+      infoname += ".info";
+      std::ofstream of;
+      of.open( infoname.c_str() );
+      if( of ) {
+        of<<fullpath;
+      }
+    }
+    free( fullpath );
+  }
 }
 
 

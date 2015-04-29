@@ -145,6 +145,8 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 #endif
   if( disable_update ) return;
 
+  save_backup();
+
   if( PF::PhotoFlow::Instance().is_batch() ) {
     do_update( target_pipeline );
   } else {
@@ -514,12 +516,19 @@ void PF::Image::remove_layer( PF::Layer* layer, std::list<Layer*>& list )
 }
 
 
-bool PF::Image::open( std::string filename )
+bool PF::Image::open( std::string filename, std::string bckname )
 {
   std::string ext;
   if( !getFileExtensionLowcase( "/", filename, ext ) ) return false;
   disable_update = true;
-  if( ext == "pfi" ) {
+
+  if( !bckname.empty() ) {
+
+    PF::load_pf_image( bckname, this );
+    file_name = filename;
+    backup_file_name = bckname;
+
+  } else if( ext == "pfi" ) {
 
     loaded = false;
     PF::load_pf_image( filename, this );
@@ -610,12 +619,27 @@ bool PF::Image::save( std::string filename )
     of<<"<image version=\""<<PF_FILE_VERSION<<"\">"<<std::endl;
     layer_manager.save( of );
     of<<"</image>"<<std::endl;
-		file_name = filename;
-		clear_modified();
+    file_name = filename;
+    clear_modified();
     return true;
   } else {
     return false;
   }
+}
+
+
+
+bool PF::Image::save_backup()
+{
+  if( backup_file_name.empty() ) return false;
+
+  std::ofstream of;
+  of.open( backup_file_name.c_str() );
+  if( !of ) return false;
+  of<<"<image version=\""<<PF_FILE_VERSION<<"\">"<<std::endl;
+  layer_manager.save( of );
+  of<<"</image>"<<std::endl;
+  return true;
 }
 
 
