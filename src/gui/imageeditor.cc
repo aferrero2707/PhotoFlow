@@ -267,7 +267,7 @@ void PF::ImageEditor::open_image()
     if (dirp != NULL) {
       struct dirent* dp;
       while ((dp = readdir(dirp)) != NULL) {
-        int len = dp->d_namlen;
+        int len = strlen(dp->d_name);
         if (len != 12 || strncmp(dp->d_name, "pfbck-", 6) != 0)
           continue;
         std::string infofile = dp->d_name;
