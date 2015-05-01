@@ -54,7 +54,7 @@ PF::DrawPar::DrawPar():
   bgd_Y( "bgd_Y", this, 0 ),
   bgd_K( "bgd_K", this, 0 ),
   pen_color( "pen_color", this, RGBColor(1,1,1) ),
-  bgd_color( "bgd_color", this ),
+  bgd_color( "bgd_color", this, RGBColor(0,0,0) ),
   pen_size( "pen_size", this, 5 ),
   pen_opacity( "pen_opacity", this, 1 ),
   strokes( "strokes", this ),
@@ -230,6 +230,11 @@ void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity )
   pen.set_size( pen_size );
   pen.set_opacity( opacity );
 
+  pen.set_channel( 0, pen_color.get().r );
+  pen.set_channel( 1, pen_color.get().g );
+  pen.set_channel( 2, pen_color.get().b );
+
+  /*
   switch( get_colorspace() ) {
   case PF::PF_COLORSPACE_GRAYSCALE:
     pen.set_channel( 0, pen_color.get().r );
@@ -256,6 +261,7 @@ void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity )
 
   if( rawbuf )
     rawbuf->start_stroke();
+    */
 }
 
 
