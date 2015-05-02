@@ -28,6 +28,13 @@
  */
 
 #include <libgen.h>
+#include <dirent.h>
+
+//#include <stdio.h>
+//#include <string.h>
+//#include <dirent.h>
+//#include <unistd.h>
+//#include <sys/stat.h>
 
 #include <gdk/gdk.h>
 
