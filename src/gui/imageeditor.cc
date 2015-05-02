@@ -27,38 +27,20 @@
 
  */
 
-#include <libgen.h>
-#include <dirent.h>
-
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <stdio.h>
-#ifndef WIN32
-#include <execinfo.h>
-#endif
-#include <signal.h>
-#include <unistd.h>
-
 #include <stdio.h>  /* defines FILENAME_MAX */
 //#ifdef WINDOWS
 #if defined(__MINGW32__) || defined(__MINGW64__)
-#include <direct.h>
-#define GetCurrentDir _getcwd
+    #include <direct.h>
+    #define GetCurrentDir _getcwd
+    #define realpath(N,R) _fullpath((R),(N),_MAX_PATH)
 #else
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#define GetCurrentDir getcwd
-#endif
-
-//#include <stdio.h>
-//#include <string.h>
-//#include <dirent.h>
-//#include <unistd.h>
-//#include <sys/stat.h>
+    #include <sys/time.h>
+    #include <sys/resource.h>
+    #include <unistd.h>
+    #define GetCurrentDir getcwd
+ #endif
+#include <libgen.h>
+#include <dirent.h>
 
 #include <gdk/gdk.h>
 
