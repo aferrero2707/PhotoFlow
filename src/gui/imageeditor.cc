@@ -280,6 +280,7 @@ void PF::ImageEditor::open_image()
     if (dirp != NULL) {
       struct dirent* dp;
       while ((dp = readdir(dirp)) != NULL) {
+        std::cout<<"ImageEditor::open_image(): checking "<<dp->d_name<<std::endl;
         int len = strlen(dp->d_name);
         if (len != 12 || strncmp(dp->d_name, "pfbck-", 6) != 0)
           continue;
@@ -287,11 +288,15 @@ void PF::ImageEditor::open_image()
         infofile += ".info";
         std::ifstream ifile;
         ifile.open( (PF::PhotoFlow::Instance().get_cache_dir()+infofile).c_str() );
+        std::cout<<"ImageEditor::open_image(): checking "
+            <<(PF::PhotoFlow::Instance().get_cache_dir()+infofile).c_str()<<std::endl;
         if( ifile ) {
           std::string fname;
           ifile>>fname;
+          std::cout<<"ImageEditor::open_image(): fname="<<fname<<std::endl;
           if( fname == fullpath ) {
             bckname = PF::PhotoFlow::Instance().get_cache_dir() + dp->d_name;
+            std::cout<<"ImageEditor::open_image(): bckname="<<bckname<<std::endl;
             break;
           }
         }
