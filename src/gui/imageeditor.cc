@@ -292,7 +292,7 @@ void PF::ImageEditor::open_image()
             <<(PF::PhotoFlow::Instance().get_cache_dir()+infofile).c_str()<<std::endl;
         if( ifile ) {
           std::string fname;
-          ifile>>fname;
+          std::getline( ifile, fname );
           std::cout<<"ImageEditor::open_image(): fname="<<fname<<std::endl;
           if( fname == fullpath ) {
             bckname = PF::PhotoFlow::Instance().get_cache_dir() + dp->d_name;
