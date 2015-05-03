@@ -82,6 +82,14 @@ namespace PF
 
     void set_opacity( float val ) { opacity = val; }
     float get_opacity() const { return opacity; }
+
+    Pencil & operator=(const Pencil &p)
+    {
+      color = p.get_color();
+      size = p.get_size();
+      opacity = p.get_opacity();
+      return(*this);
+    }
   };
 
 
