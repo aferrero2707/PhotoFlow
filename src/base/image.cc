@@ -145,8 +145,6 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 #endif
   if( disable_update ) return;
 
-  save_backup();
-
   if( PF::PhotoFlow::Instance().is_batch() ) {
     do_update( target_pipeline );
   } else {
@@ -271,6 +269,8 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
   }
   std::cout<<std::endl<<"============================================"<<std::endl<<std::endl<<std::endl;
 #endif
+
+  save_backup();
 }
 
 
