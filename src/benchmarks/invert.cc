@@ -201,7 +201,7 @@ extern "C" {
 int 
 main( int argc, char **argv )
 {
-  Gtk::Main kit(argc, argv);
+  //Gtk::Main kit(argc, argv);
 
   VipsImage *in;
   VipsImage *out;
@@ -227,14 +227,14 @@ main( int argc, char **argv )
   if(!strcmp(argv[1],"pf")) check_vips = false;
 
   if( check_vips ) {
-    if( !(in = vips_image_new_from_file( argv[2] )) )
+    if( !(in = vips_image_new_from_file( argv[2], NULL )) )
       vips_error_exit( "unable to open" ); 
 
     std::cout<<"in refcount after new_from_file:  "<<G_OBJECT(in)->ref_count<<std::endl;
 
     temp = in;
 
-    for(int i = 0; i < 4; i++) {
+    for(int i = 0; i < 1000; i++) {
     
       std::cout<<std::endl;
       std::cout<<"refcount before negative("<<i<<"): in("<<temp<<")="<<G_OBJECT(temp)->ref_count<<std::endl;
@@ -262,7 +262,7 @@ main( int argc, char **argv )
 
     std::cout<<"refcount before write_to_file:  in("<<in<<")="<<G_OBJECT(in)->ref_count
 	       <<"  out("<<out<<")="<<G_OBJECT(out)->ref_count<<std::endl;
-    if( vips_image_write_to_file( out, argv[3] ) ) { 
+    if( vips_image_write_to_file( out, argv[3], NULL ) ) {
       g_object_unref( out );
       vips_error_exit( "unable to write" ); 
     }
@@ -283,7 +283,6 @@ main( int argc, char **argv )
     imgread->get_par()->set_file_name( argv[2] );
 
     PF::Image* pf_image = new PF::Image();
-    pf_image->add_pipeline( VIPS_FORMAT_UCHAR, 0 );
     PF::LayerManager& layer_manager = pf_image->get_layer_manager();
 
     PF::Layer* limg = layer_manager.new_layer();
@@ -298,6 +297,7 @@ main( int argc, char **argv )
       layer_manager.get_layers().push_back( linv1 );
     }
 
+    pf_image->add_pipeline( VIPS_FORMAT_UCHAR, 0 );
     pf_image->do_update(NULL);
 
     PF::Pipeline* pipeline = pf_image->get_pipeline( 0 );
@@ -306,7 +306,7 @@ main( int argc, char **argv )
 
     printf("Writing output image...\n");
 
-    if( vips_image_write_to_file( pipeline->get_output(), argv[3] ) ) { 
+    if( vips_image_write_to_file( pipeline->get_output(), argv[3], NULL ) ) {
       //g_object_unref( out );
       vips_error_exit( "unable to write" ); 
     }

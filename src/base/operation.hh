@@ -31,6 +31,7 @@
 #ifndef OPERATION_H
 #define OPERATION_H
 
+#include <math.h>
 #include <unistd.h>
 
 #include <string>
@@ -38,7 +39,6 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-
 
 #include <vips/vips.h>
 //#include <vips/vips>
@@ -48,6 +48,8 @@
 #include "format_info.hh"
 
 #include "property.hh"
+
+#include "color.hh"
 
 #include "photoflow.hh"
 
@@ -146,6 +148,8 @@ namespace PF
 
     bool map_flag;
 
+    bool editing_flag;
+
     bool modified_flag;
 
     std::list<PropertyBase*> mapped_properties;
@@ -157,6 +161,8 @@ namespace PF
     PropertyBase rgb_target_channel;
     PropertyBase lab_target_channel;
     PropertyBase cmyk_target_channel;
+
+    Property<bool> mask_enabled;
 
   public:
     sigc::signal<void> signal_modified;
@@ -209,9 +215,16 @@ namespace PF
     bool is_map() { return map_flag; }
     void set_map_flag( bool flag ) { map_flag = flag; }
 
+    bool is_editing() { return editing_flag; }
+    void set_editing_flag( bool flag ) { editing_flag = flag; }
+
+    bool get_mask_enabled() { return mask_enabled.get(); }
+
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }
     void clear_modified();
+    virtual void modified() { set_modified(); signal_modified.emit(); }
+
 
     int get_rgb_target_channel() 
     {
@@ -263,12 +276,17 @@ namespace PF
     virtual bool has_opacity() { return true; }
     virtual bool needs_input() { return true; }
     virtual bool needs_caching() { return false; }
+    virtual bool init_hidden() { return false; }
 
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }
 
-    virtual VipsImage* build(std::vector<VipsImage*>& in, int first, 
-			     VipsImage* imap, VipsImage* omap, unsigned int& level);
+    virtual void pre_build( rendermode_t mode ) {}
+
+    virtual VipsImage* build(std::vector<VipsImage*>& in, int first,
+    VipsImage* imap, VipsImage* omap, unsigned int& level);
+    virtual std::vector<VipsImage*> build_many(std::vector<VipsImage*>& in, int first,
+    VipsImage* imap, VipsImage* omap, unsigned int& level);
 
     PropertyBase* get_property(std::string name);
 
@@ -342,8 +360,6 @@ namespace PF
     }
 
 
-    virtual void modified() { set_modified(); signal_modified.emit(); }
-
     bool save( std::ostream& ostr, int level );
   };
 
@@ -408,13 +424,20 @@ namespace PF
 
   #include "blend_passthrough.hh"
   #include "blend_normal.hh"
+  #include "blend_grain_extract.hh"
+  #include "blend_grain_merge.hh"
   #include "blend_multiply.hh"
   #include "blend_screen.hh"
   #include "blend_lighten.hh"
   #include "blend_darken.hh"
   #include "blend_overlay.hh"
+  #include "blend_soft_light.hh"
+  #include "blend_hard_light.hh"
   #include "blend_vivid_light.hh"
-  //#include "blend_luminosity.hh"
+  #include "blend_luminosity.hh"
+  #include "blend_color.hh"
+
+  int vips_copy_metadata( VipsImage* in, VipsImage* out );
 };
 
 

@@ -46,10 +46,12 @@ namespace PF {
     { 
       add(col_name); 
       add(col_nickname); 
+      add(col_help);
     }
     
     Gtk::TreeModelColumn<Glib::ustring> col_name;
     Gtk::TreeModelColumn<std::string> col_nickname;
+    Gtk::TreeModelColumn<Glib::ustring> col_help;
   };
 
   class OperationsTree : public Gtk::TreeView
@@ -74,30 +76,56 @@ namespace PF {
   };
 
 
+  class OperationsTreeWidget: public Gtk::HBox
+  {
+    Gtk::ScrolledWindow left_win;
+    Gtk::Frame left_frame;
+    OperationsTree tree;
+    Gtk::ScrolledWindow right_win;
+    Gtk::Frame right_frame;
+    Gtk::TextView textview;
+  public:
+    OperationsTreeWidget();
+    OperationsTree& get_tree() { return tree; }
+
+    void on_selection_changed();
+  };
+
+
   class OperationsTreeDialog: public Gtk::Dialog
   {
     Gtk::Notebook notebook;
 
-    Gtk::ScrolledWindow op_load_box;
-    OperationsTree op_load;
+    //Gtk::ScrolledWindow op_load_box;
+    //OperationsTree op_load;
+    OperationsTreeWidget op_load;
 
-    Gtk::ScrolledWindow op_raw_box;
-    OperationsTree op_raw;
+    //Gtk::ScrolledWindow op_raw_box;
+    //OperationsTree op_raw;
+    OperationsTreeWidget op_raw;
 
-    Gtk::ScrolledWindow op_conv_box;
-    OperationsTree op_conv;
+    //Gtk::ScrolledWindow op_conv_box;
+    //OperationsTree op_conv;
+    OperationsTreeWidget op_conv;
 
-    Gtk::ScrolledWindow op_color_box;
-    OperationsTree op_color;
+    //Gtk::ScrolledWindow op_color_box;
+    //OperationsTree op_color;
+    OperationsTreeWidget op_color;
 
-    Gtk::ScrolledWindow op_detail_box;
-    OperationsTree op_detail;
+    //Gtk::ScrolledWindow op_detail_box;
+    //OperationsTree op_detail;
+    OperationsTreeWidget op_detail;
 
-    Gtk::ScrolledWindow op_geom_box;
-    OperationsTree op_geom;
+    //Gtk::ScrolledWindow op_geom_box;
+    //OperationsTree op_geom;
+    OperationsTreeWidget op_geom;
 
-    Gtk::ScrolledWindow op_misc_box;
-    OperationsTree op_misc;
+    //Gtk::ScrolledWindow op_gmic_box;
+    OperationsTreeWidget op_gmic;
+
+    //Gtk::ScrolledWindow op_misc_box;
+    //OperationsTree op_misc;
+    OperationsTreeWidget op_misc;
 
     Image* image;
 

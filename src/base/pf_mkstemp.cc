@@ -48,7 +48,7 @@ static const char letters[] =
    rules for mk[s]temp (i.e. end in "XXXXXX").  The name constructed
    does not exist at the time of the call to mkstemp.  TMPL is
    overwritten with the result.  */
-int mkstemp (char *tmpl)
+int mkstemps (char *tmpl, int suffixlen)
 {
   int len;
   char *XXXXXX;
@@ -74,8 +74,8 @@ int mkstemp (char *tmpl)
   unsigned int attempts = ATTEMPTS_MIN;
 #endif
 
-  len = strlen (tmpl);
-  if (len < 6 || strcmp (&tmpl[len - 6], "XXXXXX"))
+  len = strlen (tmpl) - suffixlen;
+  if (len < 6 || strncmp (&tmpl[len - 6], "XXXXXX", 6))
     {
       errno = EINVAL;
       return -1;
@@ -134,12 +134,14 @@ int mkstemp (char *tmpl)
   errno = EEXIST;
   return -1;
 }
+#else
+  #include <unistd.h>
 #endif
 
 
-int pf_mkstemp(char *tmpl)
+int pf_mkstemp(char *tmpl, int suffixlen)
 {
-	int fd = mkstemp(tmpl);
+	int fd = mkstemps(tmpl, suffixlen);
 	if(fd >= 0) cache_files.push_back(tmpl);
 	return fd;
 }

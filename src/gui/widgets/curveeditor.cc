@@ -37,6 +37,8 @@ static const int curve_area_margin = 5;
 PF::CurveEditor::CurveEditor( OperationConfigDialog* dialog, std::string pname ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname ),
+  xlabel( "in: " ),
+  ylabel( "out: " ),
 #ifdef GTKMM_2
   xadjustment( 100, 0, 100, 1, 10, 0),
   yadjustment( 100, 0, 100, 1, 10, 0),
@@ -60,8 +62,11 @@ PF::CurveEditor::CurveEditor( OperationConfigDialog* dialog, std::string pname )
   yspinButton.set_digits( 1 );
 
   box.pack_start( curveArea );
-  box.pack_start( xspinButton );
-  box.pack_start( yspinButton );
+  spin_buttons_box.pack_start( xlabel, Gtk::PACK_SHRINK );
+  spin_buttons_box.pack_start( xspinButton, Gtk::PACK_SHRINK );
+  spin_buttons_box.pack_start( ylabel, Gtk::PACK_SHRINK );
+  spin_buttons_box.pack_start( yspinButton, Gtk::PACK_SHRINK );
+  box.pack_start( spin_buttons_box );
 
   pack_start( box, Gtk::PACK_SHRINK );
 
@@ -84,11 +89,11 @@ PF::CurveEditor::CurveEditor( OperationConfigDialog* dialog, std::string pname )
 
 void PF::CurveEditor::update_point()
 {
-  if( !curveArea.get_curve() ) return;
+  //if( !curveArea.get_curve() ) return;
   if( inhibit_value_changed ) return;
   std::cout<<"PF::CurveEditor::update_point() called."<<std::endl;
   int ipt = curveArea.get_selected_point();
-  if( (ipt >= 0) && (ipt < curveArea.get_curve()->get_points().size()) ) {
+  if( (ipt >= 0) && (ipt < curveArea.get_curve().get_npoints()) ) {
 #ifdef GTKMM_2
     float px = xadjustment.get_value()/100;
     float py = yadjustment.get_value()/100;
@@ -97,8 +102,8 @@ void PF::CurveEditor::update_point()
     float px = xadjustment->get_value()/100;
     float py = yadjustment->get_value()/100;
 #endif
-    if( curveArea.get_curve()->set_point( ipt, px, py ) ) {
-      curveArea.get_curve()->update_spline();
+    if( curveArea.get_curve().set_point( ipt, px, py ) ) {
+      curveArea.get_curve().update_spline();
       curveArea.queue_draw();
       inhibit_value_changed = true;
 #ifdef GTKMM_2
@@ -122,35 +127,40 @@ void PF::CurveEditor::get_value()
   if( !get_prop() ) return;
   PF::Property<PF::SplineCurve>* prop = dynamic_cast< PF::Property<PF::SplineCurve>* >( get_prop() );
   if( !prop ) return;
-  curveArea.set_curve( &prop->get() );
+  curveArea.set_curve( prop->get() );
   curveArea.set_selected_point( 0 );
   inhibit_value_changed = true;
 #ifdef GTKMM_2
-  xadjustment.set_value( prop->get().get_points()[0].first*100 );
-  yadjustment.set_value( prop->get().get_points()[0].second*100 );
+  xadjustment.set_value( prop->get().get_point(0).first*100 );
+  yadjustment.set_value( prop->get().get_point(0).second*100 );
 #endif
 #ifdef GTKMM_3
-  xadjustment->set_value( prop->get().get_points()[0].first*100 );
-  yadjustment->set_value( prop->get().get_points()[0].second*100 );
+  xadjustment->set_value( prop->get().get_point(0).first*100 );
+  yadjustment->set_value( prop->get().get_point(0).second*100 );
 #endif
   inhibit_value_changed = false;
+  std::cout<<"CurveEditor::get_value() called"<<std::endl;
 }
 
 
 void PF::CurveEditor::set_value()
 {
+  if( !get_prop() ) return;
+  PF::Property<PF::SplineCurve>* prop = dynamic_cast< PF::Property<PF::SplineCurve>* >( get_prop() );
+  if( !prop ) return;
+  prop->set( curveArea.get_curve() );
 }
 
 
 
 void PF::CurveEditor::add_point( float xpt, float ycurve )
 {
-  SplineCurve* curve = curveArea.get_curve();
-  int ipt = curve->add_point( xpt, ycurve );
+  SplineCurve& curve = curveArea.get_curve();
+  int ipt = curve.add_point( xpt, ycurve );
   if( ipt >= 0 ) {
     curveArea.set_selected_point( ipt ); 
     grabbed_point = ipt;
-    curve->update_spline();
+    curve.update_spline();
     curveArea.queue_draw();
     inhibit_value_changed = true;
 #ifdef GTKMM_2
@@ -172,7 +182,10 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   const int width = allocation.get_width();
   const int height = allocation.get_height();
 
-  SplineCurve* curve = curveArea.get_curve();
+  SplineCurve& curve = curveArea.get_curve();
+  
+  //if( !curve ) return false;
+  //curve.lock();
   
   switch( event->type ) {
 
@@ -184,17 +197,16 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 #endif
       button_pressed = true;
       
-      if( !curve ) break;
-      
       // Look for a point close to the mouse click
       double xpt = double(event->button.x-1)/(width-3);
       double ypt = double(width-event->button.y-1)/(width-3);
-      std::vector< std::pair<float,float> > points = curve->get_points();
+      //std::vector< std::pair<float,float> > points = curve.get_points();
+      //std::pair<float,float>* points = curve.get_points();
       bool found = false;
       int ipt = -1;
-      for( unsigned int i = 0; i < points.size(); i++ ) {
-        double dx = fabs( xpt - points[i].first);
-        double dy = fabs( ypt - points[i].second);
+      for( unsigned int i = 0; i < curve.get_npoints(); i++ ) {
+        double dx = fabs( xpt - curve.get_point(i).first);
+        double dy = fabs( ypt - curve.get_point(i).second);
 #ifndef NDEBUG
         std::cout<<"  point #"<<i<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
 #endif
@@ -214,28 +226,28 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 #endif
           inhibit_value_changed = true;
 #ifdef GTKMM_2
-          xadjustment.set_value( curve->get_points()[ipt].first*100 );
-          yadjustment.set_value( curve->get_points()[ipt].second*100 );
+          xadjustment.set_value( curve.get_point(ipt).first*100 );
+          yadjustment.set_value( curve.get_point(ipt).second*100 );
 #endif
 #ifdef GTKMM_3
-          xadjustment->set_value( curve->get_points()[ipt].first*100 );
-          yadjustment->set_value( curve->get_points()[ipt].second*100 );
+          xadjustment->set_value( curve.get_point(ipt).first*100 );
+          yadjustment->set_value( curve.get_point(ipt).second*100 );
 #endif
           inhibit_value_changed = false;
           curveArea.queue_draw();
         } else if( event->button.button == 3 ) {
-          curve->remove_point( ipt );
-          curve->update_spline();
+          curve.remove_point( ipt );
+          curve.update_spline();
           curveArea.set_selected_point( 0 );
           curveArea.queue_draw();
           inhibit_value_changed = true;
 #ifdef GTKMM_2
-          xadjustment.set_value( curve->get_points()[0].first*100 );
-          yadjustment.set_value( curve->get_points()[0].second*100 );
+          xadjustment.set_value( curve.get_points()[0].first*100 );
+          yadjustment.set_value( curve.get_points()[0].second*100 );
 #endif
 #ifdef GTKMM_3
-          xadjustment->set_value( curve->get_points()[0].first*100 );
-          yadjustment->set_value( curve->get_points()[0].second*100 );
+          xadjustment->set_value( curve.get_points()[0].first*100 );
+          yadjustment->set_value( curve.get_points()[0].second*100 );
 #endif
           inhibit_value_changed = false;
           changed();
@@ -244,7 +256,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
         if( event->button.button == 1 ) {
           // The click was far from any existing point, let's see if
           // it is on the curve and if we have to add one more point
-          double ycurve = curve->get_value( xpt );
+          double ycurve = curve.get_value( xpt );
           double dy = fabs( ypt - ycurve);
           if( dy<0.02 ) {
             add_point( xpt, ycurve );
@@ -267,7 +279,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   case (Gdk::MOTION_NOTIFY) : 
     {
       //std::cout<<"grabbed point: "<<grabbed_point<<std::endl;
-      if( !curve || (grabbed_point<0) ) break;
+      if( /*!curve ||*/ (grabbed_point<0) ) break;
 
       int tx, ty;
       Gdk::ModifierType mod_type;
@@ -284,8 +296,8 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       float px = double(tx-1)/(width-3);
       float py = double(width-ty-1)/(width-3);
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if( curve->set_point( grabbed_point, px, py ) ) {
-        curve->update_spline();
+      if( curve.set_point( grabbed_point, px, py ) ) {
+        curve.update_spline();
         curveArea.queue_draw();
         inhibit_value_changed = true;
 #ifdef GTKMM_2
@@ -303,6 +315,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   default:
     break;
   }
+  //curve.unlock();
 
   return false;
 }
@@ -310,7 +323,6 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 
 
 PF::CurveArea::CurveArea(): 
-  curve( NULL ),
   selected_point( -1 )
 {
   this->add_events(Gdk::BUTTON_PRESS_MASK);
@@ -403,16 +415,17 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
     cr->unset_dash ();
     
 
-    if( curve ) {
+    if( /*curve*/ true ) {
+      curve.lock();
       cr->set_source_rgb( 0.9, 0.9, 0.9 );
-      curve->update_spline();
+      curve.update_spline();
       std::vector< std::pair<float,float> > vec;
       //std::cout<<"PF::CurveArea::on_expose_event(): width="<<width<<"  height="<<height<<std::endl;
       for( int i = 0; i < width; i++ ) {
         float fi = i;
         vec.push_back( std::make_pair( fi/(width-1), (float)0 ) );
       }
-      curve->get_values( vec );
+      curve.get_values( vec );
 
       // draw curve
       cr->set_source_rgb( 0.9, 0.9, 0.9 );
@@ -422,10 +435,10 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
       }
       cr->stroke ();
 
-      std::vector< std::pair<float,float> > points = curve->get_points();
-      for( unsigned int i = 0; i < points.size(); i++ ) {
-        double x = double(points[i].first)*width+x0;
-        double y = double(1.0f-points[i].second)*height+y0;
+      //std::vector< std::pair<float,float> > points = curve.get_points();
+      for( unsigned int i = 0; i < curve.get_npoints(); i++ ) {
+        double x = double(curve.get_point(i).first)*width+x0;
+        double y = double(1.0f-curve.get_point(i).second)*height+y0;
         cr->set_source_rgb( 0.9, 0.9, 0.9 );
         cr->arc (x, y, 3.5, 0, 2*M_PI);
         cr->fill ();
@@ -435,6 +448,7 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
           cr->fill ();
         }
       }
+      curve.unlock();
     }
   
     return true;

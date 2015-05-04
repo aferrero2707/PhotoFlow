@@ -47,10 +47,33 @@ namespace PF
   extern int raw_preproc_sample_y;
 
   enum wb_mode_t {
-    WB_CAMERA,
-    WB_SPOT,
-    WB_COLOR_SPOT
+    WB_CAMERA=0,
+    WB_SPOT=1,
+    WB_COLOR_SPOT=2,
+    WB_DAYLIGHT,
+    WB_DIRECT_SUNLIGHT,
+    WB_CLOUDY,
+    WB_SHADE,
+    WB_INCANDESCENT,
+    WB_INCANDESCENT_WARM,
+    WB_TUNGSTEN,
+    WB_FLUORESCENT,
+    WB_FLUORESCENT_HIGH,
+    WB_COOL_WHITE_FLUORESCENT,
+    WB_WARM_WHITE_FLUORESCENT,
+    WB_DAYLIGHT_FLUORESCENT,
+    WB_NEUTRAL_FLUORESCENT,
+    WB_WHITE_FLUORESCENT,
+    WB_SODIUM_VAPOR_FLUORESCENT,
+    WB_DAY_WHITE_FLUORESCENT,
+    WB_HIGH_TEMP_MERCURY_VAPOR_FLUORESCENT,
+    WB_FLASH,
+    WB_FLASH_AUTO,
+    WB_EVENING_SUN,
+    WB_UNDERWATER,
+    WB_BACK_AND_WHITE
   }; 
+
 
   class RawPreprocessorPar: public OpParBase
   {
@@ -72,6 +95,8 @@ namespace PF
 
     Property<float> exposure;
 
+    float wb_red_current, wb_green_current, wb_blue_current;
+
   public:
     RawPreprocessorPar();
 
@@ -89,9 +114,9 @@ namespace PF
     dcraw_data_t* get_image_data() {return image_data; }
 
     wb_mode_t get_wb_mode() { return (wb_mode_t)(wb_mode.get_enum_value().first); }
-    float get_wb_red() { return wb_red.get(); }
-    float get_wb_green() { return wb_green.get(); }
-    float get_wb_blue() { return wb_blue.get(); }
+    float get_wb_red() { return wb_red_current; /*wb_red.get();*/ }
+    float get_wb_green() { return wb_green_current; /*wb_green.get();*/ }
+    float get_wb_blue() { return wb_blue_current; /*wb_blue.get();*/ }
 
     float get_camwb_corr_red() { return camwb_corr_red.get(); }
     float get_camwb_corr_green() { return camwb_corr_green.get(); }
@@ -122,17 +147,22 @@ namespace PF
       //float range = image_data->color.maximum - image_data->color.black;
       float range = 1;
 			float mul[4] = {
-				image_data->color.cam_mul[0]*par->get_camwb_corr_red(),
-				image_data->color.cam_mul[1]*par->get_camwb_corr_green(),
-				image_data->color.cam_mul[2]*par->get_camwb_corr_blue(),
-				image_data->color.cam_mul[3]*par->get_camwb_corr_green()
+	        //image_data->color.cam_mul[0]*par->get_camwb_corr_red(),
+	        //image_data->color.cam_mul[1]*par->get_camwb_corr_green(),
+	        //image_data->color.cam_mul[2]*par->get_camwb_corr_blue(),
+	        //image_data->color.cam_mul[3]*par->get_camwb_corr_green()
+	        par->get_wb_red()*par->get_camwb_corr_red(),
+	        par->get_wb_green()*par->get_camwb_corr_green(),
+	        par->get_wb_blue()*par->get_camwb_corr_blue(),
+	        par->get_wb_green()*par->get_camwb_corr_green()
 			};
       float min_mul = mul[0];
       float max_mul = mul[0];
 			/*
       for(int i = 0; i < 4; i++) {
-				std::cout<<"cam_mu["<<i<<"] = "<<image_data->color.cam_mul[i]<<std::endl;
+				std::cout<<"cam_mu["<<i<<"]="<<image_data->color.cam_mul[i]<<"  ";
       }
+      std::cout<<std::endl;
 			*/
       for(int i = 1; i < 4; i++) {
 				if( mul[i] < min_mul )
@@ -161,9 +191,9 @@ namespace PF
 					p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
 					pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 					for( x=0; x < line_sz; x+=3) {
-						pout[x] = p[x] * mul[0];
-						pout[x+1] = p[x+1] * mul[1];
-						pout[x+2] = p[x+2] * mul[2];
+						pout[x] = CLIP(p[x] * mul[0]);
+						pout[x+1] = CLIP(p[x+1] * mul[1]);
+						pout[x+2] = CLIP(p[x+2] * mul[2]);
 						//if(r->left==0 && r->top==0) std::cout<<"  p["<<x<<"]="<<p[x]<<"  pout["<<x<<"]="<<pout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */
@@ -182,8 +212,14 @@ namespace PF
 					PF::RawMatrixRow rp( p );
 					PF::RawMatrixRow rpout( pout );
 					for( x=0; x < r->width; x++) {
+					  //std::cout<<"RawPreprocessor: x="<<x<<"  r->width="<<r->width
+					  //      <<"  size of pel="<<VIPS_IMAGE_SIZEOF_PEL(ireg[in_first]->im)
+					  //      <<","<<VIPS_IMAGE_SIZEOF_PEL(oreg->im)<<std::endl;
 						rpout.color(x) = rp.color(x);
-						rpout[x] = rp[x] * mul[ rp.color(x) ];
+						rpout[x] = CLIP(rp[x] * mul[ rp.icolor(x) ]);
+            //std::cout<<"  rp.color(x)="<<rp.color(x)
+            //    <<"  rp[x]="<<rp[x]<<"  mul[ rp.icolor(x) ]="
+            //    <<mul[ rp.icolor(x) ]<<"  rpout[x]="<<rpout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */
 						rpout[x] *= 65535;
@@ -221,6 +257,7 @@ namespace PF
       if( par->get_wb_blue() > max_mul )
 				max_mul = par->get_wb_blue();
 
+      //std::cout<<"WB mult: "<<par->get_wb_red()<<" "<<par->get_wb_green()<<" "<<par->get_wb_blue()<<std::endl;
       //std::cout<<"range="<<range<<"  min_mul="<<min_mul<<"  new range="<<range*min_mul<<std::endl;
 #ifdef RT_EMU
       /* RawTherapee emulation */
@@ -248,9 +285,9 @@ namespace PF
 					p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
 					pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 					for( x=0; x < line_sz; x+=3) {
-						pout[x] = p[x] * mul[0];
-						pout[x+1] = p[x+1] * mul[1];
-						pout[x+2] = p[x+2] * mul[2];
+						pout[x] = CLIP(p[x] * mul[0]);
+						pout[x+1] = CLIP(p[x+1] * mul[1]);
+						pout[x+2] = CLIP(p[x+2] * mul[2]);
 #ifdef RT_EMU
 						/* RawTherapee emulation */
 						pout[x] *= 65535;
@@ -269,15 +306,15 @@ namespace PF
 					PF::RawMatrixRow rpout( pout );
 					for( x=0; x < r->width; x++) {
 						rpout.color(x) = rp.color(x);
-						rpout[x] = rp[x] * mul[ rp.color(x) ];
+						rpout[x] = CLIP(rp[x] * mul[ rp.icolor(x) ]);
             
             int dx = r->left+x-raw_preproc_sample_x;
             int dy = r->top+y-raw_preproc_sample_y;
             //if( raw_preproc_sample_x > 0 && raw_preproc_sample_y > 0 )
             //  std::cout<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
-						if( abs(dx)<2 && abs(dy)<1 ) 
+						if( false && abs(dx)<2 && abs(dy)<1 ) 
               std::cout<<"  rp["<<x<<"]="<<rp[x]
-                       <<"  mul["<<(int)rp.color(x)<<"]="<<mul[ rp.color(x) ]
+                       <<"  mul["<<(int)rp.color(x)<<"]="<<mul[ rp.icolor(x) ]
                        <<"  rpout["<<x<<"]="<<rpout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */
@@ -297,15 +334,15 @@ namespace PF
       if( !rdpar ) return;
       //std::cout<<"RawPreprocessor::render(): rdpar->get_wb_mode()="<<rdpar->get_wb_mode()<<std::endl;
       switch( rdpar->get_wb_mode() ) {
-      case WB_CAMERA:
-				render_camwb(ireg, n, in_first, imap, omap, oreg, rdpar);
-				//std::cout<<"render_camwb() called"<<std::endl;
-				break;
       case WB_SPOT:
       case WB_COLOR_SPOT:
 				render_spotwb(ireg, n, in_first, imap, omap, oreg, rdpar);
 				//std::cout<<"render_spotwb() called"<<std::endl;
 				break;
+      default:
+        render_camwb(ireg, n, in_first, imap, omap, oreg, rdpar);
+        //std::cout<<"render_camwb() called"<<std::endl;
+        break;
       }
     }
   };

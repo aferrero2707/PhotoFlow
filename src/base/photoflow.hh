@@ -37,6 +37,14 @@
 
 //#include "image.hh"
 
+#ifdef LOCALEDIR
+#include <libintl.h>
+#define _(String) gettext(String)
+#else
+#define _(String) (String)
+#endif
+
+#define PF_FILE_VERSION 4
 
 namespace PF
 {
@@ -56,6 +64,7 @@ namespace PF
 
     std::string cache_dir;
     std::string base_dir;
+    std::string data_dir;
 
     bool batch;
 
@@ -66,7 +75,7 @@ namespace PF
     static PhotoFlow& Instance();
 
     Image* get_active_image() { return active_image; }
-    void set_active_image(Image* i) { active_image = i; }
+    void set_active_image(Image* i) { active_image = i; std::cout<<"Active image: "<<i<<std::endl; }
 
     void set_new_op_func( new_op_func_t f ) { new_op_func = f; }
     void set_new_op_func_nogui( new_op_func_t f ) { new_op_func_nogui = f; }
@@ -88,6 +97,9 @@ namespace PF
     void set_base_dir(std::string dir) { base_dir = dir; }
     std::string get_base_dir() { return base_dir; }
 
+    void set_data_dir(std::string dir) { data_dir = dir; }
+    std::string get_data_dir() { return data_dir; }
+
     std::string get_cache_dir() { return cache_dir; }
 
 		void obj_unref( GObject* obj, char* msg=NULL );
@@ -97,9 +109,9 @@ namespace PF
 
 
   void pf_object_ref(GObject* object, const char* msg);
-#define PF_REF( object, msg ) pf_object_ref( G_OBJECT(object), msg );
+#define PF_REF( object, msg ) PF::pf_object_ref( G_OBJECT(object), msg );
   void pf_object_unref(GObject* object, const char* msg);
-#define PF_UNREF( object, msg ) pf_object_unref( G_OBJECT(object), msg );
+#define PF_UNREF( object, msg ) PF::pf_object_unref( G_OBJECT(object), msg );
 #define PF_PRINT_REF( object, msg ) std::cout<<msg<<" ref_count: "<<G_OBJECT(object)<<"->"<<G_OBJECT(object)->ref_count<<std::endl;
 }
 

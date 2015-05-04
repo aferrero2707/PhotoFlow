@@ -33,7 +33,7 @@
 
 
 PF::ChannelMixerConfigDialog::ChannelMixerConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Brightness/Contrast Adjustment" ),
+  OperationConfigDialog( layer, "Channel Mixer" ),
   red_mix_slider( this, "red_mix", "Red %", 33, -200, 200, 5, 20, 100),
   green_mix_slider( this, "green_mix", "Green %", 34, -200, 200, 5, 20, 100),
   blue_mix_slider( this, "blue_mix", "Blue %", 33, -200, 200, 5, 20, 100)

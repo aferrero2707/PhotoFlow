@@ -155,13 +155,24 @@ void start_element (GMarkupParseContext *context,
         std::istringstream idstream( idstr );
         int ninput = 0;
         while ( !idstream.eof() ) {
-          int id;
+          int id, imgid = 0;
           idstream>>id;
           if( !idstream ) 
             break;
+          if( (version>=4) ) {
+            idstream>>imgid;
+            if( !idstream )
+              break;
+          }
+          bool blended = true;
+          if( (version>=3) ) {
+            idstream>>blended;
+            if( !idstream ) 
+              break;
+          }
           if( id < layer_id_mapper.size() &&
               layer_id_mapper[id] )
-            layer->set_input( ninput, layer_id_mapper[id]->get_id() );
+            layer->set_input( ninput, layer_id_mapper[id]->get_id(), imgid, blended );
           ninput++;
         }
       }
@@ -191,7 +202,8 @@ void start_element (GMarkupParseContext *context,
 
     std::cout<<"Layer \""<<layer->get_name()<<"\" extra inputs: ";
     for(unsigned int i = 0; i < layer->get_extra_inputs().size(); i++)
-      std::cout<<layer->get_extra_inputs()[i]<<" ";
+      std::cout<<layer->get_extra_inputs()[i].first.first<<","<<layer->get_extra_inputs()[i].first.second
+               <<" (blended="<<layer->get_extra_inputs()[i].second<<")";
     std::cout<<std::endl;
 
   } else if( strcmp (element_name, "sublayers") == 0 ) {
@@ -219,8 +231,9 @@ void start_element (GMarkupParseContext *context,
       containers_stack.push_back( make_pair(current_container,true) );
     } else if( type == "child" ) {
       current_container = &(current_layer->get_sublayers());
-      current_container_map_flag = false;
-      containers_stack.push_back( make_pair(current_container,false) );
+      // Child layers inherit the map flag of their parent
+      //current_container_map_flag = false;
+      containers_stack.push_back( make_pair(current_container,current_container_map_flag) );
     }
 
     // At this point we set the current_layer pointer to NULL,
@@ -255,6 +268,8 @@ void start_element (GMarkupParseContext *context,
       if( processor ) {
         std::cout<<"PF::pf_file_loader(): operation created."<<std::endl;
         current_op = processor->get_par();
+        if( !PF::PhotoFlow::Instance().is_batch() && current_op->init_hidden() )
+          current_layer->set_visible( false );
       }
     }
 
@@ -397,7 +412,10 @@ void PF::load_pf_image( std::string filename, PF::Image* img ) {
 
   char* fname = strdup(filename.c_str());
   char* dname = dirname( fname );
-  if( dname ) chdir( dname ); 
+  if( dname ) {
+    if( chdir( dname ) != 0 )
+      std::cout<<"Cannot change current directory to \""<<dname<<"\""<<std::endl;
+  }
   free( fname );
 
   if (g_markup_parse_context_parse (context, text, length, NULL) == FALSE) {
@@ -439,7 +457,10 @@ void PF::insert_pf_preset( std::string filename, PF::Image* img, PF::Layer* prev
 
   char* fname = strdup(filename.c_str());
   char* dname = dirname( fname );
-  if( dname ) chdir( dname ); 
+  if( dname ) {
+    if( chdir( dname ) != 0 )
+      std::cout<<"Cannot change current directory to \""<<dname<<"\""<<std::endl;
+  }
   free( fname );
 
   if (g_markup_parse_context_parse (context, text, length, NULL) == FALSE) {

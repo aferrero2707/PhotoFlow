@@ -32,19 +32,27 @@
 #include <fcntl.h>
 
 #include "unsharp_mask.hh"
+#include "gmic/sharpen_rl.hh"
 #include "sharpen.hh"
 
 
 PF::SharpenPar::SharpenPar(): 
   OpParBase(), 
   method("method",this,PF::SHARPEN_USM,"USM","Unsharp Mask"),
-  usm_radius("usm_radius",this,1)
+  usm_radius("usm_radius",this,1),
+  rl_sigma("rl_sigma",this,1),
+  rl_iterations("rl_iterations",this,10)
 {
-	method.add_enum_value(PF::SHARPEN_USM,"USM","Unsharp Mask");
+	//method.add_enum_value(PF::SHARPEN_USM,"USM","Unsharp Mask");
+#ifndef PF_DISABLE_GMIC
 	method.add_enum_value(PF::SHARPEN_DECONV,"DECONV","RL Deconvolution");
-	method.add_enum_value(PF::SHARPEN_MICRO,"MICRO","Micro Contrast");
+#endif
+	//method.add_enum_value(PF::SHARPEN_MICRO,"MICRO","Micro Contrast");
 
   usm = new_unsharp_mask();
+#ifndef PF_DISABLE_GMIC
+  rl = new_gmic_sharpen_rl();
+#endif
 
   set_type("sharpen" );
 }
@@ -69,6 +77,19 @@ VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first,
     }
     break;
   }
+#ifndef PF_DISABLE_GMIC
+  case PF::SHARPEN_DECONV: {
+    GmicSharpenRLPar* rlpar = dynamic_cast<GmicSharpenRLPar*>( rl->get_par() );
+    if( rlpar ) {
+      rlpar->set_sigma( rl_sigma.get() );
+      rlpar->set_iterations( rl_iterations.get() );
+      rlpar->set_image_hints( in[0] );
+      rlpar->set_format( get_format() );
+      out = rlpar->build( in, first, imap, omap, level );
+    }
+    break;
+  }
+#endif
   default:
     break;
   }

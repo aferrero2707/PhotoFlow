@@ -47,7 +47,7 @@ namespace PF {
 public:
   ChannelMixerConfigDialog( Layer* l );
 
-  //void open();
+  bool has_preview() { return true; }
 };
 
 }

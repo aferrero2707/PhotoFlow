@@ -96,9 +96,12 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   VipsRegion* region;
 
   DoubleBuffer double_buffer;
+  PixelBuffer temp_buffer;
 
   GCond* draw_done;
   GMutex* draw_mutex;
+
+  bool draw_requested;
 
   //Glib::Dispatcher signal_queue_draw;
 
@@ -136,48 +139,9 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
     int lsk;
   } Update;
 
-  /* The main GUI thread runs this when it's idle and there are tiles that need
-   * painting. 
-   */
-  static gboolean set_size_cb (Update * update)
-  {
-    //std::cout<<"set_size_cb() called."<<std::endl;
-    update->image_area->set_size_request(update->rect.width,update->rect.height);
-    g_free (update);
-    return FALSE;
-  }
+  static gboolean set_size_cb (Update * update);
 
-  /* The main GUI thread runs this when it's idle and there are tiles that need
-   * painting. 
-   */
-  static gboolean queue_draw_cb (Update * update)
-  {
-    //std::cout<<"queue_draw_cb() called."<<std::endl;
-    if( update->rect.width == 0 || update->rect.height == 0 )
-      update->image_area->queue_draw();
-    else
-      update->image_area->queue_draw_area( update->rect.left, update->rect.top, 
-					   update->rect.width, update->rect.height );
-    g_free (update);
-    return FALSE;
-  }
-
-  /* The main GUI thread runs this when it's idle and there are tiles that need
-   * painting. 
-   */
-  static gboolean render_cb (Update * update)
-  {
-    update->image_area->draw_area();
-    /*
-    update->image_area->queue_draw_area (update->rect.left+update->image_area->get_xoffset(), 
-                                         update->rect.top+update->image_area->get_yoffset(),
-                                         update->rect.width,
-                                         update->rect.height);
-    */
-    g_free (update);
-
-    return FALSE;
-  }
+  static gboolean queue_draw_cb (Update * update);
 
   /* Come here from the vips_sink_screen() background thread when a tile has 
    * been calculated. 
@@ -185,7 +149,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
    * We can't paint the screen directly since the main GUI thread might be 
    * doing something. Instead, we add an idle callback which will be
    * run by the main GUI thread when it next hits the mainloop.
-   */
+
   static void
   sink_notify (VipsImage *image, VipsRect *rect, void *client)
   {
@@ -197,6 +161,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 
     g_idle_add ((GSourceFunc) render_cb, update);
   }
+  */
 
 public:
 
@@ -225,6 +190,8 @@ public:
   void process_end( const VipsRect& area );
   void draw_area();
 
+  Glib::RefPtr< Gdk::Pixbuf > modify_preview();
+
 	float get_shrink_factor() { return shrink_factor; }
 	void set_shrink_factor( float val ) { shrink_factor = val; }
 
@@ -241,6 +208,20 @@ public:
     hadj = h; vadj = v;
   }
 
+#ifdef GTKMM_2
+  Gtk::Adjustment*
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::Adjustment>
+#endif
+  get_hadj() { return hadj; }
+#ifdef GTKMM_2
+  Gtk::Adjustment*
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::Adjustment>
+#endif
+  get_vadj() { return vadj; }
 
   void update( VipsRect* area );
 
@@ -252,7 +233,7 @@ public:
     if( !display_merged && (old_id != active_layer) ) {
       //update( NULL );
 			if( get_pipeline() && get_pipeline()->get_image() )
-				get_pipeline()->get_image()->update_all();
+				get_pipeline()->get_image()->update();
 		}
   }
   int get_active_layer() { return active_layer; }
@@ -264,9 +245,10 @@ public:
     if( display_merged != old_val ) {
       //update( NULL );
 			if( get_pipeline() && get_pipeline()->get_image() )
-				get_pipeline()->get_image()->update_all();
+				get_pipeline()->get_image()->update();
 		}
   }
+  bool get_display_merged() { return display_merged; }
 
   virtual void on_realize() 
   {

@@ -37,7 +37,6 @@ PF::Layer::Layer(int32_t i, bool c):
   processor( NULL ), 
   blender( NULL ), 
   cached( c ), 
-  cache_buffer( NULL ),
   image( NULL )
 {
   // A layer is always dirty when created, as it is by definition not included in the
@@ -49,8 +48,7 @@ PF::Layer::Layer(int32_t i, bool c):
 
   normal = true;
 
-  if( cached )
-    cache_buffer = new CacheBuffer();
+  set_cached( c );
 }
 
 
@@ -58,7 +56,7 @@ PF::Layer::Layer(int32_t i, bool c):
 void PF::Layer::set_processor(ProcessorBase* p) 
 { 
   processor = p; 
-  //processor->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::set_modified) );
+  processor->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::modified) );
   //processor->get_par()->signal_modified.connect(sigc::mem_fun(image, &PF::Image::set_modified) );
 }
 
@@ -66,8 +64,15 @@ void PF::Layer::set_processor(ProcessorBase* p)
 void PF::Layer::set_blender(ProcessorBase* p) 
 { 
   blender = p; 
-  //blender->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::set_modified) );
+  blender->get_par()->signal_modified.connect(sigc::mem_fun(this, &PF::Layer::modified) );
   //blender->get_par()->signal_modified.connect(sigc::mem_fun(image, &PF::Image::set_modified) );
+}
+
+
+void PF::Layer::set_image( Image* img )
+{
+  image = img;
+  signal_modified.connect(sigc::mem_fun(image, &PF::Image::modified) );
 }
 
 
@@ -140,16 +145,16 @@ bool PF::Layer::omap_insert_before(PF::Layer* l, int32_t lid)
 
 void PF::Layer::remove_input(int32_t lid)
 {
-  bool found = false;
+  bool done = true;
   do {
     for( unsigned int i = 0; i < extra_inputs.size(); i++) {
-      if( extra_inputs[i] == lid ) {
-	extra_inputs.erase( extra_inputs.begin()+i );
-	found = true;
-	break;
+      if( extra_inputs[i].first.first == lid ) {
+        extra_inputs.erase( extra_inputs.begin()+i );
+        done = false;
+        break;
       }
     }
-  } while( found );
+  } while( !done );
 }
 
 
@@ -160,12 +165,13 @@ bool PF::Layer::save( std::ostream& ostr, int level )
   ostr<<"<layer name=\""<<name<<"\" id=\""<<id<<"\" visible=\""<<visible<<"\" normal=\""<<normal<<"\" extra_inputs=\"";
   int n;
   for( int i=0, n=0; i < extra_inputs.size(); i++ ) {
-    int32_t id = extra_inputs[i];
+    int32_t id = extra_inputs[i].first.first;
+    int32_t imgid = extra_inputs[i].first.second;
     if( id < 0 ) continue;
     PF::Layer* l = image->get_layer_manager().get_layer( id );
     if( !l ) continue;
     if( n>0 ) ostr<<" ";
-    ostr<<l->get_id();
+    ostr<<l->get_id()<<" "<<imgid<<" "<<extra_inputs[i].second;
     n++;
   }
   ostr<<"\">"<<std::endl;

@@ -38,19 +38,51 @@
 
 namespace PF {
 
+  enum crop_handle_t {
+    CROP_HANDLE_NONE,
+    CROP_HANDLE_TOPLEFT,
+    CROP_HANDLE_TOPRIGHT,
+    CROP_HANDLE_BOTTOMLEFT,
+    CROP_HANDLE_BOTTOMRIGHT,
+    CROP_HANDLE_LEFT,
+    CROP_HANDLE_RIGHT,
+    CROP_HANDLE_TOP,
+    CROP_HANDLE_BOTTOM,
+    CROP_HANDLE_CENTER
+  };
+
   class CropConfigDialog: public OperationConfigDialog
 {
+  crop_handle_t handle;
+
   Gtk::VBox controlsBox;
+  Gtk::HBox arControlsBox;
 
   Slider cropLeftSlider;
   Slider cropTopSlider;
   Slider cropWidthSlider;
   Slider cropHeightSlider;
+  CheckBox keepARCheckBox;
+  Slider cropARWidthSlider;
+  Slider cropARHeightSlider;
+
+  int crop_center_dx, crop_center_dy;
+
+  void move_handle( int x, int y );
 
 public:
   CropConfigDialog( Layer* l );
 
+  bool has_preview() { return true; }
+
   void open();
+
+  bool pointer_press_event( int button, double x, double y, int mod_key );
+  bool pointer_release_event( int button, double x, double y, int mod_key );
+  bool pointer_motion_event( int button, double x, double y, int mod_key );
+
+  virtual bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
+                               float scale, int xoffset, int yoffset );
 };
 
 }

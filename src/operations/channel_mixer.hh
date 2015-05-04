@@ -42,7 +42,7 @@ namespace PF
   public:
     ChannelMixerPar(): 
       PixelProcessorPar(), 
-      red_mix("red_mix",this,0), 
+      red_mix("red_mix",this,1), 
       green_mix("green_mix",this,0), 
       blue_mix("blue_mix",this,0)
     {

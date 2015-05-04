@@ -30,7 +30,7 @@
 #include "draw.hh"
 
 PF::DrawPar::DrawPar(): 
-  BlenderPar(),
+  OpParBase(),
   pen_grey( "pen_grey", this, 0 ),
   pen_R( "pen_R", this, 1 ),
   pen_G( "pen_G", this, 1 ),
@@ -54,7 +54,7 @@ PF::DrawPar::DrawPar():
   bgd_Y( "bgd_Y", this, 0 ),
   bgd_K( "bgd_K", this, 0 ),
   pen_color( "pen_color", this, RGBColor(1,1,1) ),
-  bgd_color( "bgd_color", this ),
+  bgd_color( "bgd_color", this, RGBColor(0,0,0) ),
   pen_size( "pen_size", this, 5 ),
   pen_opacity( "pen_opacity", this, 1 ),
   strokes( "strokes", this ),
@@ -149,10 +149,10 @@ void PF::DrawPar::init_buffer( unsigned int level )
     rawbuf->init( bgdcol );
 
     VipsRect update;
-    std::list<Stroke>::iterator si;
+    std::list< PF::Stroke<PF::Pencil> >::iterator si;
     for( si = strokes.get().begin(); si != strokes.get().end(); si++ ) {
-      Stroke& stroke = *si;
-      Pen& pen = stroke.get_pen();
+      PF::Stroke<PF::Pencil>& stroke = *si;
+      PF::Pencil& pen = stroke.get_pen();
       rawbuf->start_stroke();
       std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
       for( pi = stroke.get_points().begin(); pi != stroke.get_points().end(); pi++ ) {
@@ -171,6 +171,12 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
 															VipsImage* imap, VipsImage* omap, 
 															unsigned int& level)
 {
+  scale_factor = 1;
+  for(unsigned int l = 0; l < level; l++ ) {
+    scale_factor *= 2;
+  }
+  return OpParBase::build( in, first, imap, omap, level );
+  /*
   if( !rawbuf ) {
 		rawbuf = new PF::RawBuffer();
   }
@@ -180,7 +186,7 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
   init_buffer( level );
 	if(rawbuf->get_fd() < 0)
 		return NULL;
-
+  */
 	/*
 	PF::DiskBufferPar* diskbufpar = dynamic_cast<PF::DiskBufferPar*>(diskbuf->get_par());
 	diskbufpar->set_descriptor( rawbuf->get_fd() );
@@ -204,7 +210,7 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
       in2.push_back( NULL );
       in2.push_back( l->image );
     }
-    VipsImage* out = PF::BlenderPar::build( in2, 0, NULL, omap, level );
+    VipsImage* out = PF::OpParBase::build( in2, 0, NULL, omap, level );
     //g_object_unref( l->image );
     PF_UNREF( l->image, "PF::DrawPar::build(): l->image unref" );
     return out;
@@ -216,14 +222,19 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
 
 void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity )
 {
-  strokes.get().push_back( PF::Stroke() );
+  strokes.get().push_back( PF::Stroke<PF::Pencil>() );
 
-  PF::Stroke& stroke = strokes.get().back();
+  PF::Stroke<PF::Pencil>& stroke = strokes.get().back();
 
-  PF::Pen& pen = stroke.get_pen();
+  PF::Pencil& pen = stroke.get_pen();
   pen.set_size( pen_size );
   pen.set_opacity( opacity );
 
+  pen.set_channel( 0, pen_color.get().r );
+  pen.set_channel( 1, pen_color.get().g );
+  pen.set_channel( 2, pen_color.get().b );
+
+  /*
   switch( get_colorspace() ) {
   case PF::PF_COLORSPACE_GRAYSCALE:
     pen.set_channel( 0, pen_color.get().r );
@@ -250,6 +261,7 @@ void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity )
 
   if( rawbuf )
     rawbuf->start_stroke();
+    */
 }
 
 
@@ -262,7 +274,7 @@ void PF::DrawPar::end_stroke()
 
 void PF::DrawPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
 {
-  PF::Stroke& stroke = strokes.get().back();
+  PF::Stroke<PF::Pencil>& stroke = strokes.get().back();
 
   if( !stroke.get_points().empty() ) {
     if( (stroke.get_points().back().first == x ) &&
@@ -272,10 +284,15 @@ void PF::DrawPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
 
   stroke.get_points().push_back( std::make_pair(x, y) );
 
-  PF::Pen& pen = stroke.get_pen();
+  PF::Pencil& pen = stroke.get_pen();
 
   if( rawbuf )
     rawbuf->draw_point( pen, x, y, update, true );
+  else {
+    update.left = x - pen.get_size();
+    update.top = y - pen.get_size();
+    update.width = update.height = pen.get_size()*2 + 1;
+  }
 }
 
 

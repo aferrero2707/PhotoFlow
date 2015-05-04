@@ -43,7 +43,7 @@ namespace PF {
   class GradientConfigDialog: public OperationConfigDialog
   {
     Selector typeSelector;
-
+    Slider center_x, center_y;
   public:
     GradientConfigDialog( Layer* l );
   };

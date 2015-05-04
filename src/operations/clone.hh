@@ -56,13 +56,13 @@ namespace PF
     CLONE_CHANNEL_K
   }; 
 
-  class ClonePar: public BlenderPar
+  class ClonePar: public OpParBase
   {
     PropertyBase source_channel;
 
     ProcessorBase* convert_format;
     ProcessorBase* convert2lab;
-    ProcessorBase* convert2rgb;
+    ProcessorBase* convert_cs;
     ProcessorBase* desaturate;
 
     VipsImage* Lab2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
@@ -70,6 +70,7 @@ namespace PF
     VipsImage* rgb2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* Lab2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* L2rgb(VipsImage* in, unsigned int& level);
+    VipsImage* grey2rgb(VipsImage* in, unsigned int& level);
     VipsImage* ab2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
 
   public:
@@ -80,6 +81,7 @@ namespace PF
           creation of an intensity map is not allowed
      */
     bool has_intensity() { return false; }
+    bool needs_input() { return false; }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 

@@ -37,6 +37,7 @@
 
 #include "../operations/convertformat.hh"
 #include "../operations/blender.hh"
+#include "../operations/raster_image.hh"
 
 namespace PF 
 {
@@ -51,6 +52,8 @@ namespace PF
     std::string current_file;
     VipsBandFormat current_format;
 
+    RasterImage* raster_image;
+
     ImagePyramid pyramid;
 
   public:
@@ -58,13 +61,14 @@ namespace PF
       OpParBase(), 
       file_name("file_name", this),
       image(NULL),
-      current_format(VIPS_FORMAT_NOTSET)
+      current_format(VIPS_FORMAT_NOTSET),
+      raster_image( NULL )
     {
-      set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
       convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
       blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
       set_type("imageread" );
     }
+    ~ImageReaderPar();
 
     std::string get_file_name() { return file_name.get_str(); }
     void set_file_name( const std::string& name ) { file_name.set_str( name ); }

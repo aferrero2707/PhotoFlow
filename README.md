@@ -16,6 +16,15 @@ Here is the general feature (whish)list:
 
 You can follow the development of photoflow and learn about its usage in the dedicated blog: http://photoflowblog.blogspot.fr/
 
+# Installing from PPA (Ubuntu Linux and derivate distributions)
+
+There are up-to-date packages available for Ubuntu 14.04/14.10 and Mint 17/17.1 in Dariusz Duma's PPA.
+To add the PPA and install photoflow, do the following:
+
+        sudo add-apt-repository ppa:dhor/myway
+        sudo apt-get update
+        sudo apt-get install photoflow
+
 # Downloading and compiling
 
 Photoflow can be compiled under both gtk 2.x and gtk 3.x.
@@ -29,6 +38,7 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
         $ git clone https://github.com/aferrero2707/PhotoFlow.git
 
 2. The build system is based on CMake, so you have to have it installed in your system.
+   You need the following dependencies to build Photoflow: gettext, glib-2.x, libxml-2.0, pkg-config, swig, gtk-doc-tools, automake, gobject-introspection, gnu make, cmake, libtiff, libjpeg, libfftw3, exiv2, lensfun and gtkmm-2.x or gtkmm-3.x.
    PhotoFlow provides an helper script to simplify the building process;
    in order to use it you have to go into the "build" subdirectory and run the "build.sh" script:
 
@@ -52,14 +62,7 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 
 3. If all goes well, you can now open an image file with PhotoFlow:
 
-        $ ./Release/photoflow image_file_name
-
-   There are some test images available:
-
-        $ ./Release/photoflow ../testimages/Lab_curves.pfi
-   or
-
-        $ ./Release/photoflow ../testimages/orton.pfi
+        $ ./Release/bin/photoflow image_file_name
         
 
 # Current status

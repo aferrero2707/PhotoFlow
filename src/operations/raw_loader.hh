@@ -70,7 +70,8 @@ namespace PF
     void set_file_name( const char* name ) { set_file_name( std::string( name ) ); }
 
     void set_format( VipsBandFormat fmt ) { 
-      OpParBase::set_format(VIPS_FORMAT_UCHAR); 
+      //OpParBase::set_format(VIPS_FORMAT_UCHAR);
+      OpParBase::set_format(VIPS_FORMAT_FLOAT);
     }
 
     /* Set processing hints:

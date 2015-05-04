@@ -38,6 +38,7 @@ extern "C" {
 #endif /*__cplusplus*/
 
 #include "../dt/common/colorspaces.h"
+//#include "../base/colorspaces.h"
 
 #ifdef __cplusplus
 }
@@ -51,6 +52,7 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   OpParBase(),
   out_profile_mode("profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
   out_profile_name("profile_name", this),
+  out_profile_data( NULL ),
   transform( NULL ),
   input_cs_type( cmsSigRgbData ),
   output_cs_type( cmsSigRgbData )
@@ -64,7 +66,6 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
   out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
-  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type("convert_colorspace" );
 }
 
@@ -73,19 +74,28 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 				     VipsImage* imap, VipsImage* omap, 
 				     unsigned int& level)
 {
-  if( in.size() < first+1 )
+  if( in.size() < first+1 ) {
+    out_profile_data = NULL;
+    out_profile_data_length = 0;
     return NULL;
+  }
 
   VipsImage* image = in[first];
-  if( !image )
+  if( !image ) {
+    out_profile_data = NULL;
+    out_profile_data_length = 0;
     return NULL;
+  }
 
   void *data;
   size_t data_length;
   
   if( vips_image_get_blob( in[0], VIPS_META_ICC_NAME, 
-			   &data, &data_length ) )
+                           &data, &data_length ) ) {
+    out_profile_data = NULL;
+    out_profile_data_length = 0;
     return NULL;
+  }
 
   cmsHPROFILE in_profile = cmsOpenProfileFromMem( data, data_length );
 
@@ -133,7 +143,9 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       break;
     case OUT_PROF_CUSTOM:
       //std::cout<<"  custom profile selected: \""<<cam_profile_name.get()<<"\""<<std::endl;
-      if( !out_profile_name.get().empty() )
+      if( out_profile_data && out_profile_data_length>0 ) 
+        out_profile = cmsOpenProfileFromMem( out_profile_data, out_profile_data_length );
+      else if( !out_profile_name.get().empty() )
         out_profile = cmsOpenProfileFromFile( out_profile_name.get().c_str(), "r" );
       break;
     default:
@@ -175,7 +187,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       }
     }
   }
-  std::cout<<"ConvertColorspacePar::build(): transform="<<transform<<std::endl;
+  //std::cout<<"ConvertColorspacePar::build(): transform="<<transform<<std::endl;
 
   if( !in_profile && out_profile ) {
     // The input profile was not specified, so we simply assign the output
@@ -185,6 +197,8 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   if( !transform ) {
     if( in_profile )  cmsCloseProfile( in_profile );
     if( out_profile ) cmsCloseProfile( out_profile );
+    out_profile_data = NULL;
+    out_profile_data_length = 0;
     return NULL;
   }
 
@@ -199,12 +213,14 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 			 (VipsCallbackFn) g_free, buf, out_length );
     char tstr[1024];
     cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-    std::cout<<"ConvertColorspacePar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
   }
   /**/
 
   if( in_profile )  cmsCloseProfile( in_profile );
   if( out_profile ) cmsCloseProfile( out_profile );
+  out_profile_data = NULL;
+  out_profile_data_length = 0;
 
   return out;
 }

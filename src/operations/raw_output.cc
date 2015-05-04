@@ -27,8 +27,9 @@
 
  */
 
-//#include <arpa/inet.h>
+#include <cmath>
 
+#include "../base/exif_data.hh"
 #include "raw_output.hh"
 
 /* We need C linkage for this.
@@ -43,7 +44,7 @@ extern "C" {
 }
 #endif /*__cplusplus*/
 
-//#include "../dt/external/adobe_coeff.c"
+#include "../dt/external/adobe_coeff.c"
 //#include "../vips/vips_layer.h"
 
 
@@ -84,7 +85,6 @@ PF::RawOutputPar::RawOutputPar():
   srgb_curve = cmsReverseToneCurve( curve );
   cmsFreeToneCurve( curve );
 
-  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type("raw_output" );
 }
 
@@ -146,9 +146,29 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   if( mode_changed || (cam_profile == NULL) ) {
 
     switch( profile_mode.get_enum_value().first ) {
-    case PF::IN_PROF_MATRIX:
-      cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
+    case PF::IN_PROF_MATRIX: {
+      //cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
+      PF::exif_data_t* exif_data;
+      if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
+          (void**)&exif_data,
+          &blobsz ) ) {
+        std::cout<<"RawOutputPar::build() could not extract exif_custom_data."<<std::endl;
+        return NULL;
+      }
+      if( blobsz != sizeof(PF::exif_data_t) ) {
+        std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
+        return NULL;
+      }
+      char makermodel[1024];
+      dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
+      std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
+      float cam_xyz[12];
+      cam_xyz[0] = NAN;
+      dt_dcraw_adobe_coeff(makermodel, (float(*)[12])cam_xyz);
+      if(std::isnan(cam_xyz[0])) return NULL;
+      cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
       break;
+    }
     case PF::IN_PROF_ICC:
       if( !cam_profile_name.get().empty() )
         cam_profile = cmsOpenProfileFromFile( cam_profile_name.get().c_str(), "r" );
@@ -215,7 +235,34 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   float gamma = gamma_exp.get();
   gamma_curve = cmsBuildGamma( NULL, 1.0f/gamma );
 
-  VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
+  VipsImage* rotated = image;
+  switch( image_data->sizes.flip ) {
+  case 6:
+    if( vips_rot(image, &rotated, VIPS_ANGLE_D90, NULL) )
+      return NULL;
+    break;
+  case 3:
+    if( vips_rot(image, &rotated, VIPS_ANGLE_D180, NULL) )
+      return NULL;
+    break;
+  case 5:
+    if( vips_rot(image, &rotated, VIPS_ANGLE_D270, NULL) )
+      return NULL;
+    break;
+  default: 
+    PF_REF( rotated, "RawOutputPar::build(): rotated ref" );
+    break;
+  }
+  if( !rotated ) return NULL;
+  set_image_hints( rotated );
+
+  std::vector<VipsImage*> in2;
+  in2.push_back( rotated );
+
+  VipsImage* out = OpParBase::build( in2, first, NULL, NULL, level );
+  if( out ) {
+    PF_UNREF( rotated, "RawOutputPar::build(): rotated unref" );
+  }
   /**/
   if( out_profile ) {
     cmsUInt32Number out_length;

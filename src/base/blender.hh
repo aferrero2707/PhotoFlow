@@ -42,10 +42,11 @@ namespace PF
 #define BLEND_LOOP( theblender ) {                                \
     theblender.init_line( omap, r->left, y0 );                    \
     for( x=0, xomap=0; x < line_size; ) {                         \
-      x += dx1;                                                   \
-      theblender.blend( opacity, pbottom, ptop, pout, x, xomap ); \
-      x += dx2;                                                   \
-    }                                                             \
+      for( ch=0; ch<CHMIN; ch++, x++ ) pout[x] = pbottom[x];      \
+      theblender.blend( opacity, pbottom, ptop, pout, x, xomap );       \
+      x += dx;                                                         \
+      for( ch=CHMAX+1; ch<PF::ColorspaceInfo<colorspace>::NCH; ch++, x++ ) pout[x] = pbottom[x]; \
+    }                                                                   \
   }
 
 
@@ -75,15 +76,21 @@ namespace PF
     {
       if( !bottom || !top ) return;
       BlendNormal<T,colorspace,CHMIN,CHMAX,has_omap> blend_normal;
+      BlendGrainExtract<T,colorspace,CHMIN,CHMAX,has_omap> blend_grain_extract;
+      BlendGrainMerge<T,colorspace,CHMIN,CHMAX,has_omap> blend_grain_merge;
       BlendMultiply<T,colorspace,CHMIN,CHMAX,has_omap> blend_multiply;
       BlendScreen<T,colorspace,CHMIN,CHMAX,has_omap> blend_screen;
       BlendLighten<T,colorspace,CHMIN,CHMAX,has_omap> blend_lighten;
       BlendDarken<T,colorspace,CHMIN,CHMAX,has_omap> blend_darken;
       BlendOverlay<T,colorspace,CHMIN,CHMAX,has_omap> blend_overlay;
+      BlendSoftLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_soft_light;
+      BlendHardLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_hard_light;
       BlendVividLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_vivid_light;
-      //BlendLuminosity<T,colorspace,CHMIN,CHMAX,has_omap> blend_lumi;
+      BlendLuminosity<T,colorspace,CHMIN,CHMAX,has_omap> blend_lumi;
+      BlendColor<T,colorspace,CHMIN,CHMAX,has_omap> blend_color;
       Rect *r = &oreg->valid;
-      int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN;
+      //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
+      int x, y, xomap, y0, dx=CHMAX-CHMIN+1, ch;
       int line_size = r->width * oreg->im->Bands;
       T* pbottom;
       T* ptop;
@@ -99,8 +106,20 @@ namespace PF
         case PF_BLEND_NORMAL:
           BLEND_LOOP(blend_normal);
           break;
+        case PF_BLEND_GRAIN_EXTRACT:
+          BLEND_LOOP(blend_grain_extract);
+          break;
+        case PF_BLEND_GRAIN_MERGE:
+          BLEND_LOOP(blend_grain_merge);
+          break;
         case PF_BLEND_OVERLAY:
           BLEND_LOOP(blend_overlay);
+          break;
+        case PF_BLEND_SOFT_LIGHT:
+          BLEND_LOOP(blend_soft_light);
+          break;
+        case PF_BLEND_HARD_LIGHT:
+          BLEND_LOOP(blend_hard_light);
           break;
         case PF_BLEND_VIVID_LIGHT:
           BLEND_LOOP(blend_vivid_light);
@@ -118,9 +137,14 @@ namespace PF
           BLEND_LOOP(blend_darken);
           break;
         case PF_BLEND_LUMI:
-          //BLEND_LOOP2(blend_lumi);
+          BLEND_LOOP2(blend_lumi);
+          break;
+        case PF_BLEND_COLOR:
+          BLEND_LOOP2(blend_color);
           break;
         case PF_BLEND_UNKNOWN:
+          break;
+        default:
           break;
         }
       }  

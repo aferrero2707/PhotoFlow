@@ -53,7 +53,7 @@ public:
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     pos = x;
-    psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
+    //psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
       if( bottom[pos] < FormatInfo<T>::HALF )
 	overlay = (((typename FormatInfo<T>::PROMOTED)top[pos])*bottom[pos]/FormatInfo<T>::MAX)*2;	
@@ -72,15 +72,17 @@ class BlendOverlay<T, CS, CHMIN, CHMAX, true>:
   T ibottom;
   typename FormatInfo<T>::PROMOTED ptop, overlay;
   typename FormatInfo<T>::PROMOTED psum;
+  float opacity_real;
 public:
+  BlendOverlay(): BlendBase<T, CS, CHMIN, CHMAX, true>(), psum(FormatInfo<T>::MAX + FormatInfo<T>::MIN) {}
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     //int i = x;
-    float opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);
+    opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);
     xomap += 1;
 
     pos = x;
-    psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
+    //psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
       if( bottom[pos] < FormatInfo<T>::HALF )
 	overlay = (((typename FormatInfo<T>::PROMOTED)top[pos])*bottom[pos]/FormatInfo<T>::MAX)*2;	

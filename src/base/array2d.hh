@@ -105,8 +105,18 @@ namespace PF {
 #ifdef ARRAY2D_DEBUG
 		std::cout<<"Array2D<T>::~Array2D(): matrix="<<(void*)matrix<<"  buf="<<(void*)buf<<std::endl;
 #endif
-    if( matrix ) free( matrix );
-    if( buf ) free( buf );
+    if( matrix ) {
+      free( matrix );
+#ifdef ARRAY2D_DEBUG
+      std::cout<<"Array2D<T>::~Array2D(): matrix deallocated"<<std::endl;
+#endif
+    }
+    if( buf ) {
+      free( buf );
+#ifdef ARRAY2D_DEBUG
+      std::cout<<"Array2D<T>::~Array2D(): buffer deallocated"<<std::endl;
+#endif
+    }
   }
 
 
@@ -128,9 +138,15 @@ namespace PF {
 	     <<size_allocated<<"  size_new="<<size_new<<std::endl;
 #endif
     if(size_new > size_allocated) {
+#ifdef ARRAY2D_DEBUG
+      std::cout<<"Array2D<T>::Init("<<w<<","<<h<<","<<r_offset<<","<<c_offset<<"): old buf="<<buf;
+#endif
       //Array2DManager::Ref().Allocate(size_new);
       buf = (T*)realloc(buf,size_new);
       size_allocated = size_new;
+#ifdef ARRAY2D_DEBUG
+      std::cout<<"  new buf="<<buf<<std::endl;
+#endif
 #ifdef ARRAY2D_DEBUG
       std::cout<<"  reallocated buffer"<<std::endl;
 #endif

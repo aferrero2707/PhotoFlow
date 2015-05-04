@@ -63,8 +63,7 @@ namespace PF {
 public:
   BrightnessContrastConfigDialog( Layer* l );
 
-  void on_brightness_value_changed();
-  void on_contrast_value_changed();
+  bool has_preview() { return true; }
 
   void open();
 };

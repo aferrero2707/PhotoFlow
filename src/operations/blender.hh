@@ -43,6 +43,14 @@ namespace PF
   {
     Property<blendmode_t> blend_mode;
     Property<float> opacity;
+    Property<int> shift_x;
+    Property<int> shift_y;
+
+    ProcessorBase* white;
+
+    bool adjust_geom( VipsImage* in, VipsImage** out,
+                      int width, int height, unsigned int level );
+
   public:
     BlenderPar();
 
@@ -76,8 +84,8 @@ namespace PF
   class BlenderProc
   {
   public: 
-    void render(VipsRegion** ireg, int n, int in_first,
-                VipsRegion* imap, VipsRegion* omap, 
+    void render(VipsRegion** ireg, int n, int ,
+                VipsRegion* , VipsRegion* omap,
                 VipsRegion* oreg, OpParBase* par)
     {
       if( (n != 2) || (ireg[0] == NULL) || (ireg[1] == NULL) ) {
@@ -91,6 +99,7 @@ namespace PF
 #ifndef NDEBUG
       //usleep(1000);
       std::cout<<"BlenderProc::render(): opacity="<<opacity<<std::endl;
+      std::cout<<"BlenderProc::render(): CS="<<CS<<"  CHMIN="<<CHMIN<<"  CHMAX="<<CHMAX<<std::endl;
 #endif
       blender.blend( ireg[0], ireg[1], oreg, omap );
     }

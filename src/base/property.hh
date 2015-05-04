@@ -46,6 +46,39 @@ namespace PF
   class OpParBase;
 
 
+  /*
+  template<class T1, class T2>
+  bool operator==(const std::pair<T1,T2>& lhs, const std::pair<T1,T2>& rhs)
+  {
+    if( lhs.first != rhs.first ) return false;
+    if( lhs.second != rhs.second ) return false;
+    return true;
+  }
+
+  template<class T1, class T2>
+  bool operator!=(const std::pair<T1,T2>& lhs, const std::pair<T1,T2>& rhs)
+  {
+    return( !(lhs == rhs) );
+  }
+  */
+
+
+  template<class T1, class T2>
+  std::istream& operator >>( std::istream& str, std::pair<T1,T2>& pair )
+  {
+    str>>pair.first>>pair.second;
+    return str;
+  }
+
+  template<class T1, class T2>
+  std::ostream& operator <<( std::ostream& str, const std::pair<T1,T2>& pair )
+  {
+    str<<pair.first<<" "<<pair.second<<" ";
+    return str;
+  }
+
+
+
   template<class T>
   bool operator==(const std::list<T>& lhs, const std::list<T>& rhs)
   {
@@ -66,6 +99,32 @@ namespace PF
 
 
   template<class T>
+  std::istream& operator >>( std::istream& str, std::list<T>& list )
+  {
+    list.clear();
+    int nelt;
+    str>>nelt;
+    for( int i = 0; i < nelt; i++ ) {
+      list.push_back( T() );
+      T& val = list.back();
+      str>>val;
+    }
+    return str;
+  }
+
+  template<class T>
+  std::ostream& operator <<( std::ostream& str, const std::list<T>& list )
+  {
+    str<<list.size()<<" ";
+    typename std::list<T>::const_iterator i;
+    for( i = list.begin(); i != list.end(); i++ ) {
+      str<<(*i);
+    }
+    return str;
+  }
+
+
+  template<class T>
   bool operator==(const std::vector<T>& lhs, const std::vector<T>& rhs)
   {
     if( lhs.size() != rhs.size() ) return false;
@@ -80,6 +139,32 @@ namespace PF
   bool operator!=(const std::vector<T>& lhs, const std::vector<T>& rhs)
   {
     return( !(lhs == rhs) );
+  }
+
+
+  template<class T>
+  std::istream& operator >>( std::istream& str, std::vector<T>& vector )
+  {
+    vector.clear();
+    int nelt;
+    str>>nelt;
+    for( int i = 0; i < nelt; i++ ) {
+      vector.push_back( T() );
+      T& val = vector.back();
+      str>>val;
+    }
+    return str;
+  }
+
+  template<class T>
+  std::ostream& operator <<( std::ostream& str, const std::vector<T>& vector )
+  {
+    str<<vector.size()<<" ";
+    typename std::vector<T>::const_iterator i;
+    for( i = vector.begin(); i != vector.end(); i++ ) {
+      str<<(*i);
+    }
+    return str;
   }
 
 
@@ -149,6 +234,7 @@ namespace PF
 
     virtual void set_str(const std::string& val);
     virtual std::string get_str();
+    std::string get_enum_value_str();
 
     virtual void from_stream(std::istream& str);
     virtual void to_stream(std::ostream& str);
@@ -196,6 +282,13 @@ namespace PF
   void set_gobject_property(gpointer object, const std::string name, const T& value)
   {
     g_object_set( object, name.c_str(), value, NULL );
+  }
+
+
+  template<typename T>
+  void set_gobject_property(gpointer object, const std::string name, const std::list<T>& value)
+  {
+    //g_object_set( object, name.c_str(), value, NULL );
   }
 
 
@@ -301,6 +394,13 @@ namespace PF
       }
     }
 	};
+
+  template <class T> std::string to_string( const T& val )
+  {
+	std::ostringstream str;
+	str << std::dec << val;
+	return str.str();
+  }
 }
 
 

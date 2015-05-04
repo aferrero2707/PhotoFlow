@@ -79,7 +79,7 @@ namespace PF
     bool has_intensity() { return false; }
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
-    //bool needs_caching() { return true; }
+    bool needs_caching() { return true; }
 
     dcraw_data_t* get_image_data() {return image_data; }
 

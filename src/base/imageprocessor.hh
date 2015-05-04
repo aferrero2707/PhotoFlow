@@ -43,6 +43,7 @@ namespace PF
   enum process_request_t {
     IMAGE_REBUILD,
     IMAGE_UPDATE,
+    IMAGE_EXPORT,
     IMAGE_SAMPLE,
     IMAGE_REDRAW_START,
     IMAGE_REDRAW_END,
@@ -59,6 +60,7 @@ namespace PF
     Image* image;
     Pipeline* pipeline;
     PipelineSink* sink;
+    std::string filename;
     Layer* layer;
 		int layer_id;
     VipsRect area;
@@ -80,8 +82,11 @@ namespace PF
 
     // Handling of requests queue
     std::deque<ProcessRequestInfo> optimized_requests;
-    //GCond* requests_pending;
-    //GMutex* requests_mutex;
+
+    bool caching_completed;
+    GCond* caching_completed_cond;
+    GMutex* caching_completed_mutex;
+
     GAsyncQueue* requests;
 
     void optimize_requests();
@@ -91,7 +96,10 @@ namespace PF
 
     static ImageProcessor& Instance();
 
+    void start();
     void run();
+
+    void wait_for_caching();
 
     void submit_request( ProcessRequestInfo request );
 

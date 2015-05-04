@@ -43,11 +43,14 @@ namespace PF {
 
   public:
     CheckBox(OperationConfigDialog* dialog, std::string pname, std::string l, int val);
+    CheckBox(OperationConfigDialog* dialog, ProcessorBase* processor, std::string pname, std::string l, int val);
 
     ~CheckBox() {}
 
     void get_value();
     void set_value();
+
+    bool get_active() { return check.get_active(); }
   };
 
 

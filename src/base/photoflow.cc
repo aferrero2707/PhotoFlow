@@ -32,9 +32,14 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <glibmm.h>
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
   #include<windows.h>
+#endif
+
+#if defined(__APPLE__) && defined (__MACH__)
+#include <mach-o/dyld.h>
 #endif
 
 #include "imageprocessor.hh"
@@ -87,13 +92,52 @@ PF::PhotoFlow::PhotoFlow():
     cache_dir = fname;
   }
 #endif
-}
 
+  char exname[512] = {0};
+  Glib::ustring exePath;
+  // get the path where the executable is stored
+#ifdef WIN32
+  WCHAR exnameU[512] = {0};
+  GetModuleFileNameW (NULL, exnameU, 512);
+  WideCharToMultiByte(CP_UTF8,0,exnameU,-1,exname,512,0,0 );
+#elif defined(__APPLE__) && defined (__MACH__)
+  char path[1024];
+  uint32_t size = sizeof(exname);
+  if (_NSGetExecutablePath(exname, &size) == 0)
+    printf("executable path is %s\n", exname);
+  else
+    printf("buffer too small; need size %u\n", size);
+#else
+  if (readlink("/proc/self/exe", exname, 512) < 0) {
+    //strncpy(exname, argv[0], 512);
+    std::cout<<"Cannot determine full executable name."<<std::endl;
+    exname[0] = '\0';
+  }
+#endif
+  exePath = Glib::path_get_dirname(exname);
+
+  Glib::ustring dataPath;
+#if defined(__APPLE__) && defined (__MACH__)
+  char* dataPath_env = getenv("PF_DATA_DIR");
+  if( dataPath_env ) {
+    dataPath = Glib::ustring(dataPath_env) + "/photoflow";
+  } else {
+    dataPath = exePath + "/../share/photoflow";
+  }
+#else
+  dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
+#endif
+  std::cout<<"exePath: "<<exePath<<std::endl;
+
+  set_base_dir( exePath );
+  set_data_dir( dataPath );
+}
 
 
 PF::PhotoFlow* PF::PhotoFlow::instance = NULL;
 
-PF::PhotoFlow& PF::PhotoFlow::Instance() { 
+PF::PhotoFlow& PF::PhotoFlow::Instance()
+{
   if(!PF::PhotoFlow::instance) 
     PF::PhotoFlow::instance = new PF::PhotoFlow();
   return( *instance );

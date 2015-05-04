@@ -92,6 +92,8 @@ void PF::Selector::get_value()
     get_prop()->get_enum_values();
   std::map< int, std::pair<std::string,std::string> >::iterator iter;
   for( iter = values.begin(); iter != values.end(); iter++ ) {
+    if( !check_value((*iter).first,(*iter).second.first,(*iter).second.second) )
+      continue;
     Gtk::TreeModel::iterator ri = model->append();
     Gtk::TreeModel::Row row = *(ri);
     row[columns.col_name] = (*iter).second.second.c_str();

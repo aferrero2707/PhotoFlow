@@ -38,6 +38,31 @@
 
 namespace PF {
 
+class WBSelector: public Selector
+{
+  std::string maker, model;
+public:
+  WBSelector(OperationConfigDialog* dialog, std::string pname, std::string l, int val):
+    Selector( dialog, pname, l, val )
+  {
+  }
+  WBSelector(OperationConfigDialog* dialog, ProcessorBase* processor, std::string pname, std::string l, int val):
+    Selector( dialog, processor, pname, l, val )
+  {
+  }
+
+  void set_maker_model( std::string ma, std::string mo)
+  {
+    bool modified = false;
+    if( maker != ma || model != mo )
+      modified = true;
+    maker = ma; model = mo;
+    if( modified ) get_value();
+  }
+
+  bool check_value( int id, const std::string& name, const std::string& val );
+};
+
   class RawDeveloperConfigDialog: public OperationConfigDialog
   {
     Gtk::Notebook notebook;
@@ -47,7 +72,7 @@ namespace PF {
     Gtk::VBox demoControlsBox;
     Gtk::VBox outputControlsBox;
     
-    Selector wbModeSelector;
+    WBSelector wbModeSelector;
     Slider wbRedSlider;
     Slider wbGreenSlider;
     Slider wbBlueSlider;
@@ -106,8 +131,8 @@ namespace PF {
     void spot_wb( double x, double y );
     void color_spot_wb( double x, double y );
     
-    void pointer_press_event( int button, double x, double y, int mod_key );
-    void pointer_release_event( int button, double x, double y, int mod_key );
+    //bool pointer_press_event( int button, double x, double y, int mod_key );
+    bool pointer_release_event( int button, double x, double y, int mod_key );
   };
 
 }

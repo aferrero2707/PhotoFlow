@@ -60,6 +60,7 @@ namespace PF
     GaussBlurPar();
 
     bool has_intensity() { return false; }
+    bool needs_caching() { return( radius.get() >= 50 ); }
 
 		sii_coeffs& get_coeffs() { return coeffs; }
 
@@ -122,7 +123,6 @@ namespace PF
     {
 			GaussBlurPar* gpar = dynamic_cast<GaussBlurPar*>(par);
 			if( !gpar ) return;
-
 			Rect *ir = &(ireg[0]->valid);
 			Rect *r = &oreg->valid;
 			//int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );

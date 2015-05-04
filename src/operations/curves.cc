@@ -84,17 +84,23 @@ void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
     }
     grey_curve.get().get_deltas( Greyvec );
   */
+  curve.get().lock();
+  std::cout<<"CurvesPar::update_curve() called. # of points="<<curve.get().get_npoints()<<std::endl;std::cout.flush();
   for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned char>::RANGE;
     float y = curve.get().get_delta( x );
     vec8[i] = (short int)(y*FormatInfo<unsigned char>::RANGE);
+    //std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec8[i]="<<vec8[i]<<std::endl;
   }
   for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
     float y = curve.get().get_delta( x );
     vec16[i] = (int)(y*FormatInfo<unsigned short int>::RANGE);
-    //if(i%1000 == 0) std::cout<<"i="<<i<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<std::endl;
+   //if(i%1000 == 0) 
+    //if(curve.get().get_points().size()>100) 
+   // 	std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<"  points="<<curve.get().get_points().size()<<std::endl;
   }
+  curve.get().unlock();
 }
 
 
@@ -105,15 +111,21 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
 {
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
 
-  if( grey_curve.is_modified() )
+  if( grey_curve.is_modified() ) {
+	  //std::cout<<"update_curve( grey_curve, Greyvec8, Greyvec16 );"<<std::endl;std::cout.flush();
     update_curve( grey_curve, Greyvec8, Greyvec16 );
+  }
 
   if( R_curve.is_modified() || G_curve.is_modified() || 
       B_curve.is_modified() || RGB_curve.is_modified() ) {
-    update_curve( R_curve, RGBvec8[0], RGBvec16[0] );
-    update_curve( G_curve, RGBvec8[1], RGBvec16[1] );
-    update_curve( B_curve, RGBvec8[2], RGBvec16[2] );
-    update_curve( RGB_curve, RGBvec8[3], RGBvec16[3] );
+	    //std::cout<<"update_curve( R_curve, RGBvec8[0], RGBvec16[0] );"<<std::endl;std::cout.flush();
+	    update_curve( R_curve, RGBvec8[0], RGBvec16[0] );
+	    //std::cout<<"update_curve( G_curve, RGBvec8[1], RGBvec16[1] );"<<std::endl;std::cout.flush();
+	    update_curve( G_curve, RGBvec8[1], RGBvec16[1] );
+	    //std::cout<<"update_curve( B_curve, RGBvec8[2], RGBvec16[2] );"<<std::endl;std::cout.flush();
+	    update_curve( B_curve, RGBvec8[2], RGBvec16[2] );
+	    //std::cout<<"update_curve( RGB_curve, RGBvec8[3], RGBvec16[3] );"<<std::endl;std::cout.flush();
+	    update_curve( RGB_curve, RGBvec8[3], RGBvec16[3] );
     for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
       for(int j = 0; j < 3; j++) RGBvec8[j][i] += RGBvec8[3][i];
     }
@@ -208,7 +220,6 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
 
   return out;
 }
-
 
 
 PF::ProcessorBase* PF::new_curves()

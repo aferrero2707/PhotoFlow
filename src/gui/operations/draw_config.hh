@@ -58,6 +58,9 @@ namespace PF {
 
   Slider pen_size;
   Slider pen_opacity;
+  Gtk::Button undoButton;
+
+  double mouse_x, mouse_y;
 
 public:
   DrawConfigDialog( Layer* l );
@@ -70,12 +73,17 @@ public:
   void on_pen_color_changed();
   void on_bgd_color_changed();
 
+  void on_undo();
+
   void start_stroke();
   void draw_point( double x, double y );
 
-  void pointer_press_event( int button, double x, double y, int mod_key );
-  void pointer_release_event( int button, double x, double y, int mod_key );
-  void pointer_motion_event( int button, double x, double y, int mod_key );
+  bool pointer_press_event( int button, double x, double y, int mod_key );
+  bool pointer_release_event( int button, double x, double y, int mod_key );
+  bool pointer_motion_event( int button, double x, double y, int mod_key );
+
+  virtual bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+                               float scale, int xoffset, int yoffset );
 };
 
 }

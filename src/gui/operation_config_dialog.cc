@@ -28,24 +28,46 @@
  */
 
 #include "operation_config_dialog.hh"
+#include "imageeditor.hh"
 
 #include "../base/new_operation.hh"
 
 #include "../gui/operations/raw_developer_config.hh"
 #include "../gui/operations/brightness_contrast_config.hh"
+#include "../gui/operations/hue_saturation_config.hh"
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/crop_config.hh"
+#include "../gui/operations/scale_config.hh"
 #include "../gui/operations/gradient_config.hh"
+#include "../gui/operations/uniform_config.hh"
 #include "../gui/operations/curves_config.hh"
 #include "../gui/operations/channel_mixer_config.hh"
 #include "../gui/operations/gaussblur_config.hh"
 #include "../gui/operations/denoise_config.hh"
+#include "../gui/operations/desaturate_config.hh"
 #include "../gui/operations/sharpen_config.hh"
 #include "../gui/operations/draw_config.hh"
+#include "../gui/operations/clone_stamp_config.hh"
 #include "../gui/operations/convert_colorspace_config.hh"
+#include "../gui/operations/lensfun_config.hh"
 
+#include "operations/gmic/new_gmic_operation_config.hh"
+
+static bool is_blend_mode_row_separator(const Glib::RefPtr<Gtk::TreeModel>& model, const Gtk::TreeModel::iterator& iter)
+{
+  if( iter ) {
+    Gtk::TreeModel::Row row = *iter;
+    if( row ) {
+      //Get the data for the selected row, using our knowledge of the tree
+      //model:
+      //Glib::ustring value = row[2];
+      //if( value > 1000 ) return true;
+    }
+  }
+  return false;
+}
 
 
 static gboolean dialog_update_cb (PF::OperationConfigDialog * dialog)
@@ -64,6 +86,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
 #ifdef GTKMM_3
   Gtk::Dialog(title, false),
 #endif
+  editor( NULL ),
   //intensityAdj( 100, 0, 100, 1, 10, 0),
   //opacityAdj( 100, 0, 100, 1, 10, 0),
   //intensityScale(intensityAdj),
@@ -78,16 +101,21 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   controlsBoxLeft(Gtk::ORIENTATION_VERTICAL),
   controlsBoxRight(Gtk::ORIENTATION_VERTICAL),
 #endif
+  blendSelector( this, layer->get_blender(), "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
   intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
   opacitySlider( this, layer->get_blender(), "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
-  blendSelector( this, layer->get_blender(), "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
+  imap_enabled_box( this, "mask_enabled", "Enable mask", true),
+  omap_enabled_box( this, layer->get_blender(), "mask_enabled", "Enable mask", true),
+  shift_x( this, layer->get_blender(), "shift_x", "X shift", 0, -1000000, 1000000, 1, 10, 1),
+  shift_y( this, layer->get_blender(), "shift_y", "Y shift", 0, -1000000, 1000000, 1, 10, 1),
   has_ch_sel(chsel),
   greychSelector( this, "grey_target_channel", "Target channel: ", -1 ),
   rgbchSelector( this, "rgb_target_channel", "Target channel: ", -1 ),
   labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
-  cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 )
+  cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 ),
+  previewButton(_("preview"))
 {
-  set_keep_above(true);
+  //set_keep_above(true);
   add_button("OK",1);
   add_button("Cancel",0);
 
@@ -105,15 +133,28 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   nameEntry.set_text( "New Layer" );
   nameBox.pack_start( nameEntry, Gtk::PACK_SHRINK );
 
+  //blendSelector.set_row_separator_func( is_blend_mode_row_separator );
   if(par && par->has_opacity() )
     nameBox.pack_end( blendSelector );
 
   topBox.pack_start( nameBox, Gtk::PACK_SHRINK );
 
-  if(par && par->has_intensity() )
-    controlsBoxLeft.pack_start( intensitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
-  if(par && par->has_opacity() )
-    controlsBoxLeft.pack_start( opacitySlider, Gtk::PACK_EXPAND_PADDING, 10 );
+  shiftBox.pack_start( shift_x, Gtk::PACK_EXPAND_PADDING, 10 );
+  shiftBox.pack_start( shift_y, Gtk::PACK_EXPAND_PADDING, 10 );
+
+  intensity_box.pack_start( intensitySlider, Gtk::PACK_SHRINK );
+  intensity_box.pack_start( imap_enabled_box, Gtk::PACK_SHRINK );
+
+  opacity_box.pack_start( opacitySlider, Gtk::PACK_SHRINK );
+  opacity_box.pack_start( omap_enabled_box, Gtk::PACK_SHRINK );
+
+  if(par && par->has_intensity() ) {
+    controlsBoxLeft.pack_start( intensity_box, Gtk::PACK_EXPAND_PADDING, 10 );
+  }
+  if(par && par->has_opacity() ) {
+    controlsBoxLeft.pack_start( opacity_box, Gtk::PACK_EXPAND_PADDING, 10 );
+    controlsBoxLeft.pack_start( shiftBox, Gtk::PACK_EXPAND_PADDING, 10 );
+  }
   controlsBox.pack_start( controlsBoxLeft, Gtk::PACK_SHRINK );
   topBox.pack_start( controlsBox );
 
@@ -139,36 +180,16 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   mainHBox.pack_start( mainBox, Gtk::PACK_SHRINK, false, false );
 
   get_vbox()->pack_start( mainHBox, Gtk::PACK_SHRINK, false, false );
+  get_vbox()->pack_end( previewBox, Gtk::PACK_SHRINK, false, false );
+  previewButton.set_active( true );
+
+  previewButton.signal_clicked().connect(sigc::mem_fun(*this,
+                &OperationConfigDialog::on_preview_clicked) );
 
   signal_focus_in_event().connect( sigc::mem_fun(*this,
 						 &OperationConfigDialog::focus_in_cb) );
   signal_focus_out_event().connect( sigc::mem_fun(*this,
 					     &OperationConfigDialog::focus_out_cb) );
-
-  /*
-  intensityAdj.signal_value_changed().
-    connect(sigc::mem_fun(*this,
-			  &OperationConfigDialog::on_intensity_value_changed));
-
-  opacityAdj.signal_value_changed().
-    connect(sigc::mem_fun(*this,
-			  &OperationConfigDialog::on_opacity_value_changed));
-  */
-
-  // nameEntry.show();
-  // nameBox.show();
-  // topBox.show();
-  // mainBox.show();
-
-  /*
-  add_control( &intensitySlider );
-  add_control( &opacitySlider );
-  add_control( &blendSelector );
-  add_control( &greychSelector );
-  add_control( &rgbchSelector );
-  add_control( &labchSelector );
-  add_control( &cmykchSelector );
-  */
 
   show_all_children();
 }
@@ -225,6 +246,45 @@ void PF::OperationConfigDialog::open()
 
 
 
+void PF::OperationConfigDialog::on_map()
+{
+  Gtk::Dialog::on_map();
+}
+
+
+void PF::OperationConfigDialog::on_unmap()
+{
+  Gtk::Dialog::on_unmap();
+  disable_editing();
+}
+
+
+void PF::OperationConfigDialog::enable_editing()
+{
+  if( get_layer() && get_layer()->get_image() && 
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+    get_layer()->get_processor()->get_par()->set_editing_flag( true );
+    std::cout<<"  Editing flag set to true"<<std::endl;
+    std::cout<<"  updating image"<<std::endl;
+    get_layer()->get_image()->update();
+  }
+}
+
+
+void PF::OperationConfigDialog::disable_editing()
+{
+  if( get_layer() && get_layer()->get_image() && 
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+    get_layer()->get_processor()->get_par()->set_editing_flag( false );
+    std::cout<<"  Editing flag set to false"<<std::endl;
+    std::cout<<"  updating image"<<std::endl;
+    get_layer()->get_image()->update();
+  }
+}
+
+
 void PF::OperationConfigDialog::reset_ch_selector()
 {
   if( greychSelector.get_parent() == &chselBox )
@@ -240,6 +300,9 @@ void PF::OperationConfigDialog::reset_ch_selector()
 
 void PF::OperationConfigDialog::do_update()
 {
+  //for( unsigned int i = 0; i < controls.size(); i++ ) {
+  //  controls[i]->get_value();
+  //}
   //std::vector<Widget*> wl = chselBox.get_children();
   //wl.clear();
   if( get_layer() && get_layer()->get_image() && 
@@ -248,22 +311,18 @@ void PF::OperationConfigDialog::do_update()
 #ifndef NDEBUG
     std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
 #endif
-    /*
-    if( greychSelector.get_parent() == &chselBox )
-      chselBox.remove( greychSelector );
-    if( rgbchSelector.get_parent() == &chselBox )
-      chselBox.remove( rgbchSelector );
-    if( labchSelector.get_parent() == &chselBox )
-      chselBox.remove( labchSelector );
-    if( cmykchSelector.get_parent() == &chselBox )
-      chselBox.remove( cmykchSelector );
-    */
-    //greychSelector.hide();
-    //rgbchSelector.hide();
-    //labchSelector.hide();
-    //cmykchSelector.hide();
-    PF::OpParBase* par = get_layer()->get_processor()->get_par();
-    PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+
+    PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+    PF::Image* image = get_layer()->get_image();
+    PF::Pipeline* pipeline = image->get_pipeline(0);
+    PF::PipelineNode* node = NULL;
+    if( pipeline ) node = pipeline->get_node( get_layer()->get_id() );
+    if( node && node->processor && node->processor->get_par() ) {
+      PF::OpParBase* par = node->processor->get_par();
+      cs = PF::convert_colorspace( par->get_interpretation() );
+      //std::cout<<"OperationConfigDialog::update() par: "<<par<<std::endl;
+    }
+    //std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called, cs: "<<cs<<std::endl;
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
       if( greychSelector.get_parent() != &chselBox ) {
@@ -298,6 +357,19 @@ void PF::OperationConfigDialog::do_update()
     }
   }
 
+  if( has_preview() ) {
+    if( previewButton.get_parent() != &previewBox ) {
+      previewBox.pack_start( previewButton, Gtk::PACK_SHRINK );
+      previewButton.show();
+    }
+  } else {
+    if( previewButton.get_parent() == &previewBox ) {
+      previewBox.remove( previewButton );
+    }
+  }
+
+  show_all_children();
+
   /*
   // force our program to redraw the entire clock.
   Glib::RefPtr<Gdk::Window> win = get_window();
@@ -328,6 +400,43 @@ void PF::OperationConfigDialog::update_properties()
 }
 
 
+void PF::OperationConfigDialog::on_preview_clicked()
+{
+  std::cout<<"OperationConfigDialog::on_preview_clicked(): active="<<previewButton.get_active()<<std::endl;
+  if( get_layer() && get_layer()->get_image() &&
+    get_layer()->get_processor() &&
+    get_layer()->get_processor()->get_par() ) {
+    PF::OpParBase* par = get_layer()->get_processor()->get_par();
+    if( previewButton.get_active() ) {
+      get_layer()->get_image()->lock();
+      // Enable all controls
+      for( int i = 0; i < controls.size(); i++ ) {
+        controls[i]->set_inhibit( false );
+        controls[i]->set_value();
+      }
+      get_layer()->set_dirty( true );
+      std::cout<<"  updating image"<<std::endl;
+      get_layer()->get_image()->update();
+      get_layer()->get_image()->unlock();
+    } else {
+      get_layer()->get_image()->lock();
+      // Inhibit all controls such that they do not modify the
+      // underlying properties
+      for( int i = 0; i < controls.size(); i++ )
+        controls[i]->set_inhibit( true );
+
+      std::cout<<"  restoring original values"<<std::endl;
+      par->restore_properties( values_save );
+      get_layer()->set_dirty( true );
+      std::cout<<"  updating image"<<std::endl;
+      get_layer()->get_image()->update();
+      std::cout<<"  image updated"<<std::endl;
+      get_layer()->get_image()->unlock();
+    }
+  }
+}
+
+
 void PF::OperationConfigDialog::on_button_clicked(int id)
 {
   switch(id) {
@@ -349,12 +458,43 @@ void PF::OperationConfigDialog::on_button_clicked(int id)
   case 1:
     if( get_layer() ) 
       get_layer()->set_name( nameEntry.get_text().c_str() );
+
+    // Make sure all parameters are copied to the associated properties,
+    // regardless of the "preview" activation
+    for( unsigned int i = 0; i < controls.size(); i++ ) {
+      controls[i]->set_value();
+    }
     //hide_all();
     hide();
     break;
   }
 }
 
+
+void PF::OperationConfigDialog::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->screen2image( x, y, w, h );
+}
+void PF::OperationConfigDialog::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->image2layer( x, y, w, h );
+}
+void PF::OperationConfigDialog::screen2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->screen2layer( x, y, w, h );
+}
+void PF::OperationConfigDialog::image2screen( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->image2screen( x, y, w, h );
+}
+void PF::OperationConfigDialog::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->layer2image( x, y, w, h );
+}
+void PF::OperationConfigDialog::layer2screen( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+{
+  if(editor) editor->layer2screen( x, y, w, h);
+}
 
 /*
 void PF::OperationConfigDialog::on_intensity_value_changed()
@@ -395,7 +535,7 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   PF::ProcessorBase* processor = PF::new_operation( op_type, current_layer );
   if( !processor ) return NULL;
 
-  PF::OperationConfigDialog* dialog;
+  PF::OperationConfigDialog* dialog = NULL;
 
   if( op_type == "imageread" ) { 
 
@@ -429,13 +569,21 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::CropConfigDialog( current_layer );
 
+  } else if( op_type == "scale" ) {
+
+    dialog = new PF::ScaleConfigDialog( current_layer );
+
   } else if( op_type == "invert" ) {
 
     dialog = new PF::OperationConfigDialog( current_layer, "Invert Image" );
 
   } else if( op_type == "desaturate" ) {
 
-    dialog = new PF::OperationConfigDialog( current_layer, "Desaturate Image" );
+    dialog = new PF::DesaturateConfigDialog( current_layer );
+
+  } else if( op_type == "uniform" ) {
+
+    dialog = new PF::UniformConfigDialog( current_layer );
 
   } else if( op_type == "gradient" ) {
 
@@ -444,6 +592,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "brightness_contrast" ) {
 
     dialog = new PF::BrightnessContrastConfigDialog( current_layer );
+
+  } else if( op_type == "hue_saturation" ) {
+
+    dialog = new PF::HueSaturationConfigDialog( current_layer );
 
   } else if( op_type == "curves" ) {
       
@@ -477,6 +629,21 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::DrawConfigDialog( current_layer );
 
+  } else if( op_type == "clone_stamp" ) {
+
+    dialog = new PF::CloneStampConfigDialog( current_layer );
+
+  } else if( op_type == "lensfun" ) {
+
+    dialog = new PF::LensFunConfigDialog( current_layer );
+
+  }
+
+  if( !dialog ) {
+    // Try with G'MIC
+    dialog = PF::new_gmic_operation_config( op_type, current_layer );
+  }
+  /*
   } else { // it must be a VIPS operation...
 
     int pos = op_type.find( "vips-" );
@@ -489,6 +656,7 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
     vips_config->set_op( vips_op_type.c_str() );
     dialog = vips_config;
   }
+  */
 
   if( processor ) {
     PF::OpParBase* current_op = processor->get_par();

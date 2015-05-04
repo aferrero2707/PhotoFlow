@@ -29,9 +29,11 @@
 
 #include <libgen.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <iostream>
 
+#include "../base/file_util.hh"
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
 #include "tablabelwidget.hh"
@@ -166,9 +168,33 @@ void PF::MainWindow::on_button_clicked()
   std::cout << "Hello World" << std::endl;
 }
 
+
+void PF::MainWindow::remove_all_tabs()
+{
+  while( true ) {
+    int npages = viewerNotebook.get_n_pages();
+    std::cout<<"MainWindow::on_delete_event(): npages="<<npages<<std::endl;
+    if( npages == 0 ) break;
+    Gtk::Widget* w = viewerNotebook.get_nth_page(npages-1);
+    std::cout<<"MainWindow::on_delete_event(): tab="<<npages-1<<"  w="<<w<<std::endl;
+    if( !w ) continue;
+    std::cout<<"MainWindow::on_delete_event(): removing tab #"<<npages-1<<std::endl;
+    remove_tab( w );
+  }
+}
+
+
 void PF::MainWindow::on_button_exit()
 {
+  remove_all_tabs();
   hide();
+}
+
+
+bool PF::MainWindow::on_delete_event( GdkEventAny* event )
+{
+  remove_all_tabs();
+  return false;
 }
 
 
@@ -190,12 +216,16 @@ PF::MainWindow::open_image( std::string filename )
   viewerNotebook.append_page( *editor, *tabwidget );
   std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
 	free(fullpath);
+	editor->set_tab_label_widget( tabwidget );
   editor->show();
   std::cout<<"MainWindow::open_image(): editor shown"<<std::endl;
   //editor->open();
   viewerNotebook.set_current_page( -1 );
   std::cout<<"MainWindow::open_image(): current notebook page selected"<<std::endl;
-  //image->update();
+  if( editor->get_image() && editor->get_image()->is_modified() )
+    // To properly update the tab label
+    editor->get_image()->modified();
+  //getchar();
 
   /*
   std::vector<VipsImage*> in;
@@ -344,16 +374,25 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.set_name("Image files");
   filter_tiff.add_mime_type("image/tiff");
   filter_tiff.add_mime_type("image/jpeg");
+  filter_tiff.add_mime_type("image/png");
   filter_tiff.add_pattern("*.pfi");
+  Gtk::FileFilter filter_all;
+  filter_all.set_name("All files");
+  filter_all.add_pattern("*.*");
 #endif
 #ifdef GTKMM_3
   Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
   filter_tiff->set_name("Image files");
   filter_tiff->add_mime_type("image/tiff");
   filter_tiff->add_mime_type("image/jpeg");
+  filter_tiff->add_mime_type("image/png");
   filter_tiff->add_pattern("*.pfi");
+  Glib::RefPtr<Gtk::FileFilter> filter_all = Gtk::FileFilter::create();
+  filter_all->set_name("All files");
+  filter_all->add_pattern("*.*");
 #endif
   dialog.add_filter(filter_tiff);
+  dialog.add_filter(filter_all);
 
   if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
@@ -398,9 +437,21 @@ void PF::MainWindow::on_button_save_clicked()
 	if( widget ) {
 		PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
 		if( editor && editor->get_image() ) {
-			if( !(editor->get_image()->get_filename().empty()) )
-				editor->get_image()->save( editor->get_image()->get_filename() );
-			else
+	    bool saved = false;
+			if( !(editor->get_image()->get_filename().empty()) ) {
+			  std::string ext;
+			  PF::get_file_extension( editor->get_image()->get_filename(), ext );
+			  std::cout<<"ext: "<<ext<<std::endl;
+			  if( ext == "pfi" ) {
+			    editor->get_image()->save( editor->get_image()->get_filename() );
+			    saved = true;
+			    char* fullpath = strdup( editor->get_image()->get_filename().c_str() );
+			    char* fname = basename( fullpath );
+			    HTabLabelWidget* tabwidget = (HTabLabelWidget*)viewerNotebook.get_tab_label( *widget );
+			    if( tabwidget ) tabwidget->set_label( fname );
+			  }
+			}
+			if( !saved )
 				on_button_saveas_clicked();
 		}
 	}
@@ -410,9 +461,15 @@ void PF::MainWindow::on_button_save_clicked()
 void PF::MainWindow::on_button_saveas_clicked()
 {
   Gtk::FileChooserDialog dialog("Save image as...",
-				Gtk::FILE_CHOOSER_ACTION_SAVE);
+      Gtk::FILE_CHOOSER_ACTION_SAVE);
   dialog.set_transient_for(*this);
-  
+
+  int page = viewerNotebook.get_current_page();
+  Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
+  if( !widget ) return;
+  PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+  if( !editor || !(editor->get_image()) ) return;
+
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
@@ -429,8 +486,28 @@ void PF::MainWindow::on_button_saveas_clicked()
 #endif
   dialog.add_filter(filter_pfi);
 
-  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+  if( !(editor->get_image()->get_filename().empty()) ) {
+    std::string ext;
+    PF::get_file_extension( editor->get_image()->get_filename(), ext );
+    std::cout<<"ext: "<<ext<<std::endl;
+    if( ext != "pfi" ) {
 
+      char* fullpath = strdup( editor->get_image()->get_filename().c_str() );
+      std::string fname = basename( fullpath );
+      char* dname = dirname( fullpath );
+      char* fulldir = realpath( dname, NULL );
+      if(fulldir) {
+        dialog.set_current_folder( fulldir );
+        free( fulldir );
+      }
+      std::string fname_new = PF::replace_file_extension( fname, "pfi" );
+      dialog.set_current_name( fname_new.c_str() );
+    } else {
+      if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+    }
+  } else {
+    if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+  }
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -443,19 +520,36 @@ void PF::MainWindow::on_button_saveas_clicked()
       //Notice that this is a std::string, not a Glib::ustring.
       last_dir = dialog.get_current_folder();
       std::string filename = dialog.get_filename();
+      std::string extension;
+      if( get_file_extension(filename, extension) ) {
+        if( extension != "pfi" )
+          filename += ".pfi";
+      }
       std::cout << "File selected: " <<  filename << std::endl;
-      int page = viewerNotebook.get_current_page();
-      Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
-      if( widget ) {
-	PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
-	if( editor && editor->get_image() )
-	  editor->get_image()->save( filename );
+      editor->get_image()->save( filename );
+      char* cfilename = strdup( editor->get_image()->get_filename().c_str() );
+      char* fname = basename( cfilename );
+      free( cfilename );
+
+      HTabLabelWidget* tabwidget = (HTabLabelWidget*)viewerNotebook.get_tab_label( *widget );
+      if( tabwidget ) tabwidget->set_label( fname );
+
+      std::string infoname = editor->get_image()->get_backup_filename();
+      infoname += ".info";
+      std::ofstream of;
+      of.open( infoname.c_str() );
+      if( of ) {
+        char* fullpath = realpath( editor->get_image()->get_filename().c_str(), NULL );
+        if(fullpath) {
+          of<<fullpath;
+          free( fullpath );
+        }
       }
       break;
     }
   case(Gtk::RESPONSE_CANCEL): 
-    {
-      std::cout << "Cancel clicked." << std::endl;
+      {
+    std::cout << "Cancel clicked." << std::endl;
       break;
     }
   default: 
@@ -542,9 +636,9 @@ void PF::MainWindow::on_button_export_clicked()
 
 void PF::MainWindow::remove_tab( Gtk::Widget* widget )
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() called."<<std::endl;
-#endif
+//#endif
   int page = viewerNotebook.page_num( *widget );
   if( page < 0 ) return;
   if( page >= viewerNotebook.get_n_pages() ) return;
@@ -553,6 +647,48 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
 
   Gtk::Widget* widget2 = viewerNotebook.get_nth_page( page );
   if( widget != widget2 ) return;
+
+  PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+  if( !editor ) return;
+
+  g_assert( editor->get_image() != NULL );
+  std::cout<<"  editor->get_image()->is_modified(): "<<editor->get_image()->is_modified()<<std::endl;
+  if( editor->get_image()->is_modified() ) {
+    char* fullpath = strdup( editor->get_image()->get_filename().c_str() );
+    char* fname = basename( fullpath );
+    Glib::ustring msg = "Image \"";
+    msg += fname;
+    msg += "\" contains unsaved data.\nDo you want to save it before closing?";
+    Gtk::MessageDialog dialog(msg,
+        false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+    dialog.set_transient_for(*this);
+    dialog.set_default_response( Gtk::RESPONSE_YES );
+
+    //Show the dialog and wait for a user response:
+    int result = dialog.run();
+
+    //Handle the response:
+    switch(result) {
+    case Gtk::RESPONSE_YES:
+      std::cout<<"PF::MainWindow::remove_tab(): response=YES"<<std::endl;
+      on_button_save_clicked();
+      break;
+    case Gtk::RESPONSE_NO:
+      std::cout<<"PF::MainWindow::remove_tab(): response=NO"<<std::endl;
+      break;
+    default:
+      break;
+    }
+
+  }
+
+  std::string bckname = editor->get_image()->get_backup_filename();
+  unlink( bckname.c_str() );
+  bckname += ".info";
+  unlink( bckname.c_str() );
+
+  if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() )
+    PF::PhotoFlow::Instance().set_active_image( NULL );
 
   for( unsigned int i = 0; i < image_editors.size(); i++ ) {
     if( image_editors[i] != widget ) continue;
@@ -564,6 +700,7 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
   delete( widget );
   if( tabwidget )
     delete( tabwidget );
+
 #ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() page #"<<page<<" removed."<<std::endl;
 #endif

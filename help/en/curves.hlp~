@@ -1,0 +1,7 @@
+The curves tool allows to adjust the tonal range and colors of the image through control points.
+
+The tool provides a separate curve for each image channel. In the case of RGB images, an additional curve, called "RGB", allows to modify all three channels at the same time.
+
+In the graphs, the horizontal axis represents the input values and the vertical axis the output ones.The curve is initially a simple diagonal line, meaning that the output exactly matches input.
+
+Left-clicking on the graph with the mouse adds a new control point, while right-clicking on an existing control point deletes it. Control points can be moved by either dragging them with the moiuse, or by setting the corresponding input and output numerical values in the boxes below the graph.

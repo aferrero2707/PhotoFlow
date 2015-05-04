@@ -56,7 +56,7 @@ namespace PF
     std::list<Layer*> sublayers;
     std::list<Layer*> imap_layers;
     std::list<Layer*> omap_layers;
-    std::vector<int32_t> extra_inputs;
+    std::vector< std::pair< std::pair<int32_t,int32_t>,bool> > extra_inputs;
 
     // Flag indicating that the layer has been directly or indirectly
     // modified, and therefore that re-building is needed
@@ -72,7 +72,7 @@ namespace PF
     ProcessorBase* blender;
 
     bool cached;
-    CacheBuffer* cache_buffer;
+    std::map<rendermode_t,CacheBuffer*> cache_buffers;
 
     Image* image;
 
@@ -80,11 +80,18 @@ namespace PF
     bool insert_before(std::list<PF::Layer*>& list, Layer* l, int32_t lid);
 
   public:
+    sigc::signal<void> signal_modified;
+
     Layer(int32_t id, bool cached=false);
     virtual ~Layer()
     {
       std::cout<<"~Layer(): \""<<name<<"\" destructor called."<<std::endl;
-      if( cache_buffer ) delete( cache_buffer );
+      std::map<rendermode_t,CacheBuffer*>::iterator i;
+      for(i = cache_buffers.begin(); i != cache_buffers.end(); i++ ) {
+        if( i->second )
+          delete( i->second );
+      }
+      //if( cache_buffer ) delete( cache_buffer );
       if( processor ) delete( processor );
       if( blender ) delete( blender );
     }
@@ -97,6 +104,7 @@ namespace PF
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }
     void clear_modified() { modified_flag = false; }
+    void modified() {  set_modified(); signal_modified.emit(); }
 
     bool is_dirty() { return dirty; }
     void set_dirty( bool d ) { dirty = d; }
@@ -104,8 +112,18 @@ namespace PF
     
 
     bool is_visible() { return visible; }
-    void set_visible( bool d ) { visible = d; }
-    void clear_visible( ) { visible = false; }
+    void set_visible( bool d )
+    {
+      bool old = visible;
+      visible = d;
+      if( visible != old ) modified();
+    }
+    void clear_visible( )
+    {
+      bool old = visible;
+      visible = false;
+      if( visible != old ) modified();
+    }
     
     bool is_group() { return( !normal ); }
     bool is_normal() { return normal; }
@@ -116,12 +134,27 @@ namespace PF
     {
       bool changed = (cached != c);
       cached = c;
-      if( cached && !cache_buffer )
-        cache_buffer = new CacheBuffer();
-      if( cached && changed && cache_buffer )
-        cache_buffer->reset();
+      if( cached && cache_buffers.empty() ) {
+        cache_buffers.insert( std::make_pair(PF_RENDER_PREVIEW, new CacheBuffer()) );
+        cache_buffers.insert( std::make_pair(PF_RENDER_NORMAL, new CacheBuffer()) );
+      }
+      if( cached && changed )
+        reset_cache_buffers();
     }
-    CacheBuffer* get_cache_buffer() { return cache_buffer; }
+    CacheBuffer* get_cache_buffer( rendermode_t mode )
+    {
+      std::map<rendermode_t,CacheBuffer*>::iterator i = cache_buffers.find( mode );
+      if( i != cache_buffers.end() ) return i->second;
+      return NULL;
+    }
+    void reset_cache_buffers()
+    {
+      std::map<rendermode_t,CacheBuffer*>::iterator i;
+      for(i = cache_buffers.begin(); i != cache_buffers.end(); i++ ) {
+        if( i->second )
+          i->second->reset();
+      }
+    }
 
 
     ProcessorBase* get_processor() { return processor; }
@@ -131,15 +164,21 @@ namespace PF
     void set_blender(ProcessorBase* b);
 
     Image* get_image() { return image; }
-    void set_image( Image* img ) { image = img; }
+    void set_image( Image* img );
 
-    void set_input(int n, int32_t lid) { 
-      for( int i = extra_inputs.size(); i <= n; i++ ) extra_inputs.push_back( -1 );
-      extra_inputs[n] = lid; 
+    void set_input(int n, int32_t lid, int32_t imgid, bool blended=true) {
+      for( int i = extra_inputs.size(); i <= n; i++ )
+        extra_inputs.push_back( std::make_pair(std::make_pair((int32_t)-1,(int32_t)-1),(bool)true) );
+      extra_inputs[n].first.first = lid;
+      extra_inputs[n].first.second = imgid;
+      extra_inputs[n].second = blended; 
     }
-    void add_input(int32_t lid) { extra_inputs.push_back(lid); }
+    void add_input(int32_t lid, int32_t imgid, bool blended=true)
+    {
+      extra_inputs.push_back( std::make_pair(std::make_pair(lid,imgid), blended) );
+    }
     void remove_input(int32_t lid);
-    std::vector<int32_t>& get_extra_inputs() { return extra_inputs; }
+    std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& get_extra_inputs() { return extra_inputs; }
 
     std::list<Layer*>& get_sublayers() { return sublayers; }
     std::list<Layer*>& get_imap_layers() { return imap_layers; }
@@ -153,9 +192,6 @@ namespace PF
 
     bool omap_insert(Layer* l, int32_t lid=-1);
     bool omap_insert_before(Layer* l, int32_t lid);
-
-    sigc::signal<void> signal_modified;
-    void modified() { set_modified(); signal_modified.emit(); }
 
     bool save( std::ostream& ostr, int level );
   };

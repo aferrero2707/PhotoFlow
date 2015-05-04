@@ -53,12 +53,14 @@ void PF::OperationConfigUI::open()
 PF::OpParBase::OpParBase():
 	render_mode(PF_RENDER_PREVIEW), 
   map_flag( false ),
+  editing_flag( false ),
   modified_flag(false),
   intensity("intensity",this,1),
   grey_target_channel("grey_target_channel",this,-1,"Grey","Grey"),
   rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
   lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
-  cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK")
+  cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
+  mask_enabled("mask_enabled",this,true)
 {
   //blend_mode.set_internal(true);
   intensity.set_internal(true);
@@ -74,7 +76,7 @@ PF::OpParBase::OpParBase():
   //blend_mode = PF_BLEND_PASSTHROUGH;
   //blend_mode = PF_BLEND_NORMAL;
   //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
-  demand_hint = VIPS_DEMAND_STYLE_THINSTRIP;
+  demand_hint = VIPS_DEMAND_STYLE_ANY;
   bands = 1;
   xsize = 100; ysize = 100;
 
@@ -211,13 +213,14 @@ bool PF::OpParBase::import_settings( OpParBase* pin )
       return false;
   }
 
-  set_demand_hint( pin->get_demand_hint() );
   set_map_flag( pin->is_map() );
-  set_image_hints( pin->get_xsize(), pin->get_ysize(), 
-		   pin->get_interpretation() );
-  set_nbands( pin->get_nbands() );
-  set_coding( pin->get_coding() );
-  set_format( pin->get_format() );
+  set_editing_flag( pin->is_editing() );
+  //set_demand_hint( pin->get_demand_hint() );
+  //set_image_hints( pin->get_xsize(), pin->get_ysize(),
+	//	   pin->get_interpretation() );
+  //set_nbands( pin->get_nbands() );
+  //set_coding( pin->get_coding() );
+  //set_format( pin->get_format() );
   return true;
 }
 
@@ -273,6 +276,16 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
 
 
 
+std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, int first,
+        VipsImage* imap, VipsImage* omap, unsigned int& level)
+{
+  VipsImage* out = build( in, first, imap, omap, level );
+  std::vector<VipsImage*> result;
+  result.push_back( out );
+  return result;
+}
+
+
 bool PF::OpParBase::save( std::ostream& ostr, int level )
 {
   for(int i = 0; i < level; i++) ostr<<"  ";
@@ -302,4 +315,25 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
   ostr<<"</operation>"<<std::endl;
 
   return true;
+}
+
+
+int PF::vips_copy_metadata( VipsImage* in, VipsImage* out )
+{
+  if( !out ) return 0;
+  int Xsize = out->Xsize;
+  int Ysize = out->Ysize;
+  int bands = out->Bands;
+  VipsBandFormat fmt = out->BandFmt;
+  VipsCoding coding = out->Coding;
+  VipsInterpretation type = out->Type;
+  gdouble xres = out->Xres;
+  gdouble yres = out->Yres;
+  VipsImage* invec[2] = {in, NULL};
+  vips__image_copy_fields_array( out, invec );
+  vips_image_init_fields( out,
+      Xsize, Ysize, bands, fmt,
+      coding, type, xres, yres
+      );
+return 0;
 }

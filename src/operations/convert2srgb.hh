@@ -82,8 +82,8 @@ namespace PF
 
   template< OP_TEMPLATE_DEF >
   void Convert2sRGBProc< OP_TEMPLATE_IMP >::
-  render(VipsRegion** ir, int n, int in_first,
-	 VipsRegion* imap, VipsRegion* omap, 
+  render(VipsRegion** ir, int , int ,
+	 VipsRegion* , VipsRegion* ,
 	 VipsRegion* oreg, Convert2sRGBPar* par)
   {
     Rect *r = &oreg->valid;

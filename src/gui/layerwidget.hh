@@ -42,12 +42,16 @@
 
 namespace PF {
 
+class ImageEditor;
+
 class LayerWidget : public Gtk::VBox
 {
   Image* image;
+  ImageEditor* editor;
 
   Gtk::Notebook notebook;
-  Gtk::HButtonBox buttonbox;
+  //Gtk::HButtonBox buttonbox;
+  Gtk::HBox buttonbox;
   Gtk::Button buttonAdd, buttonAddGroup, buttonDel;
   Gtk::Button buttonPresetLoad, buttonPresetSave;
   Gtk::Dialog layersDialog;
@@ -62,7 +66,9 @@ class LayerWidget : public Gtk::VBox
   void select_row(int id);
 
 public:
-  LayerWidget( Image* image );
+  sigc::signal<void,int> signal_active_layer_changed;
+
+  LayerWidget( Image* image, ImageEditor* editor );
   virtual ~LayerWidget( );
 
   Image* get_image() { return image; }
@@ -114,7 +120,7 @@ public:
 
   void remove_tab( Gtk::Widget* widget );
 
-  sigc::signal<void,int> signal_active_layer_changed;
+  void modified() { if(image) image->modified(); }
 };
 
 }

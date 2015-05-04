@@ -1,0 +1,10 @@
+The healing brush tool allows to clone pixels from one part of the image to another.
+
+To define the source region, left-click on the preview area while holding down the Ctrl key.
+
+Once the source region is defined, the pixels can be cloned by dragging the mouse while holding down the left button.
+
+Two circles show the source and destination pixel areas. The fuzziness of the brush edges can be set from zero (sharp edges)
+to 100 (very smooth edges). 
+
+The strength of the blending between the original and cloned pixels can be set via the opacity parameter.

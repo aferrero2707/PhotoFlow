@@ -1,53 +1,123 @@
-#set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g ")
-#SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}  "-Wall -O0 -g") 
-SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -p -DPF_VERBOSE_UNREF -DLIBRAW_NODLL") 
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-pg") 
-#SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops") 
-SET(CMAKE_CXX_FLAGS_TEST "-O0 -g -DNDEBUG -DLIBRAW_NODLL -DPF_VERBOSE_UNREF ") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DLIBRAW_NODLL") 
+IF(MINGW)
+  SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+ELSEIF(APPLE)
+   SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+ELSE(MINGW)
+  SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+ENDIF(MINGW)
+
+set(COMPILE_FLAGS "${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
 
 if(GTKMM2_FOUND)
-  
-  link_directories(
-    ${GTKMM2_LIBRARY_DIRS}  )
-  
-  include_directories(    ${GTKMM2_INCLUDE_DIRS}  )
-  
-  #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-DGTKMM_2")
-  set(CMAKE_CXX_FLAGS "-DGTKMM_2")
-
+  link_directories(${GTKMM2_LIBRARY_DIRS}  )
+  include_directories(${GTKMM2_INCLUDE_DIRS}  )
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} -DGTKMM_2")
   set(GTKMM_LIBRARIES ${GTKMM2_LIBRARIES})
-  
 endif()
 
 if(GTKMM3_FOUND)
-  
-  link_directories(
-    ${GTKMM3_LIBRARY_DIRS}  )
-  
-  include_directories(    ${GTKMM3_INCLUDE_DIRS}  )
-  
-  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-DGTKMM_3")
-  
+  link_directories(${GTKMM3_LIBRARY_DIRS}  )
+  include_directories(${GTKMM3_INCLUDE_DIRS}  )
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} -DGTKMM_3")  
   set(GTKMM_LIBRARIES ${GTKMM3_LIBRARIES})
-  
 endif()
 
+SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}") 
+
+include_directories(${GLIB_INCLUDE_DIRS})
+link_directories(${GLIB_LIBRARY_DIRS})
+include_directories(${GMODULE_INCLUDE_DIRS})
+link_directories(${GMODULE_LIBRARY_DIRS}  )
+include_directories(${GOBJECT_INCLUDE_DIRS})
+link_directories(${GOBJECT_LIBRARY_DIRS}  )
+include_directories(${GTHREAD_INCLUDE_DIRS})
+link_directories(${GTHREAD_LIBRARY_DIRS}  )
+
+include_directories(${GLIBMM_INCLUDE_DIRS})
+link_directories(${GLIBMM_LIBRARY_DIRS})
+
 include_directories(${SIGC2_INCLUDE_DIRS})
+link_directories(${SIGC2_LIBRARY_DIRS})
 
-
-#include_directories(${LIBXML_INCLUDE_DIRS})
-#set(LIBS ${LIBS} ${LIBXML_LIBRARIES})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
 
-#link_directories(${LIBRAW_LIBRARY_DIRS}  )
-link_directories(${VIPS_LIBRARY_DIRS}  )
-link_directories(${VIPSCC_LIBRARY_DIRS}  )
-include_directories(${VIPS_INCLUDE_DIRS})
-include_directories(${VIPSCC_INCLUDE_DIRS})
+if(LENSFUN_FOUND)
+  link_directories( ${LENSFUN_LIBRARY_DIRS}  )
+  include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
+  set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
+endif()
 
+include_directories(${OPENEXR_INCLUDE_DIRS})
+include_directories(${TIFF_INCLUDE_DIRS})
+include_directories(${JPEG_INCLUDE_DIRS})
+include_directories(${PNG_INCLUDE_DIRS})
+
+link_directories(${OPENEXR_LIBRARY_DIRS})
+link_directories(${TIFF_LIBRARY_DIRS})
+link_directories(${JPEG_LIBRARY_DIRS})
+link_directories(${PNG_LIBRARY_DIRS})
+
+include_directories(${XML2_INCLUDE_DIRS})
+link_directories(${XML2_LIBRARY_DIRS})
+
+include_directories(${LCMS22_INCLUDE_DIRS})
+link_directories(${LCMS22_LIBRARY_DIRS})
+
+include_directories(${EXIF_INCLUDE_DIRS})
+link_directories(${EXIF_LIBRARY_DIRS})
+include_directories(${EXIV2_INCLUDE_DIRS})
+link_directories(${EXIV2_LIBRARY_DIRS})
+
+include_directories(${ORC_INCLUDE_DIRS})
+
+include_directories(${ZLIB_INCLUDE_DIRS})
+link_directories(${ZLIB_LIBRARY_DIRS}  )
+
+include_directories(${PANGO_INCLUDE_DIRS})
+link_directories(${PANGO_LIBRARY_DIRS}  )
+include_directories(${PANGOFT2_INCLUDE_DIRS})
+link_directories(${PANGOFT2_LIBRARY_DIRS}  )
+
+include_directories(${VIPS_INCLUDE_DIRS})
+link_directories(${VIPS_LIBRARY_DIRS}  )
+
+
+FILE(GLOB DTIncludes dt/common/*.h)
+FILE(GLOB DTSources dt/common/*.c)
+
+add_library (pfdt STATIC
+  ${DTIncludes}
+  ${DTSources}
+)
+
+SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/src/dt -std=gnu99")
+
+
+FILE(GLOB BaseIncludes base/*.hh)
+FILE(GLOB BaseSources base/*.cc)
+
+#FILE(GLOB RTIncludes rt/*.hh rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexif/*.hh rt/rtgui/*.h)
+#FILE(GLOB RTSources rt/*.cc rt/rtengine/*.c rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)
+FILE(GLOB RTIncludes 
+  rt/rtengine/rawimagesource.h 
+)
+FILE(GLOB RTSources 
+  rt/rtengine/rawimagesource.cc
+  rt/rtengine/amaze_demosaic_RT.cc
+  rt/rtengine/igv_demosaic_RT.cc
+)
+
+FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)
+FILE(GLOB VipsSources vips/*.c vips/*.cc vips/gmic/*.c vips/gmic/*.cpp)
+
+FILE(GLOB GMicIncludes vips/gmic/gmic/src/*.h)
+FILE(GLOB GMicSources vips/gmic/gmic/src/gmic.cpp)
+
+FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh)
+FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 
 #
 # the libraw part is a bit of a hack:
@@ -61,108 +131,149 @@ set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT
 #list(APPEND LIB_DEPS libraw_r)
 #list(APPEND STATIC_LIBS libraw_static)
 
-set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
-
-
 FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
+set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
 #FILE(GLOB LibRawSources external/LibRaw/src/*.cpp external/LibRaw/internal/*.cpp)
 
-FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh)
-FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc)
 
-FILE(GLOB BaseIncludes base/*.hh)
-FILE(GLOB BaseSources base/*.cc)
-
-FILE(GLOB DTIncludes dt/common/*.h)
-FILE(GLOB DTSources dt/common/*.c dt/external/*.c)
-
-FILE(GLOB RTIncludes rt/*.hh rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexif/*.hh rt/rtgui/*.h)
-FILE(GLOB RTSources rt/*.cc rt/rtengine/*.c rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)
-#FILE(GLOB RTIncludes rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexis/*.hh rt/rtgui/*.h)
-#FILE(GLOB RTSources rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)
-
-#FILE(GLOB VipsIncludes vips/plugin/*.h vips/plugin/*.hh)
-#FILE(GLOB VipsSources vips/plugin/*.c vips/plugin/*.cc)
-FILE(GLOB VipsIncludes vips/*.h vips/*.hh)
-FILE(GLOB VipsSources vips/*.c vips/*.cc)
-
-FILE(GLOB OpIncludes operations/*.hh)
-FILE(GLOB OpSources operations/*.cc)
-
-add_library (pfbase
+add_library (pfbase STATIC
   ${BaseIncludes}
   ${BaseSources}
-  ${DTIncludes}
-  ${DTSources}
+  ${VipsIncludes}
+  ${VipsSources}
   ${RTIncludes}
   ${RTSources}
   ${OpIncludes}
   ${OpSources}
   ${LibRawIncludes}
   ${LibRawSources}
+  ${GMicIncludes}
+  ${GMicSources}
 )
 
-SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-std=gnu99")
 
-add_library (pfvips #SHARED
-  ${VipsIncludes}
-  ${VipsSources}
-)
+FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
+FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc)
 
-#add_library (pfoperations
-#  ${OpIncludes}
-#  ${OpSources}
-#)
-
-#SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_CFLAGS "-fPIC -DPIC")
-SET_TARGET_PROPERTIES(pfvips PROPERTIES COMPILE_FLAGS "-fpermissive")
-#SET_TARGET_PROPERTIES(pfvips PROPERTIES PREFIX "")
-#SET_TARGET_PROPERTIES(pfvips PROPERTIES SUFFIX ".plg")
-
-
-add_executable(photoflow # name of the executable on Windows will be example.exe 
-  main.cc 
+add_library (pfgui STATIC
   ${GuiIncludes}
   ${GuiSources}
-  )
+)
+
+
+IF(MINGW)
+  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
+ELSEIF(APPLE)
+  list(APPEND ADDITIONAL_LIBS)
+ELSE(MINGW)
+  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
+ENDIF(MINGW)
+
+add_executable(pfbatch pfbatch.cc)
 
 #add_dependencies(photoflow ${LIB_DEPS})
 
-IF(MINGW)
-list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi)
-ENDIF(MINGW)
-
-target_link_libraries(photoflow ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
-  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
+target_link_libraries(pfbatch ${LIBS} 
+  pfbase 
+  pfdt
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
+  ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${STATIC_LIBS}
+  ${ORC_LIBRARIES}
+  fftw3
   ${ADDITIONAL_LIBS}
   #gmon
   )
 
-INSTALL(TARGETS photoflow RUNTIME DESTINATION .)
-INSTALL(DIRECTORY ../themes DESTINATION .)
 
-add_executable(invert # name of the executable on Windows will be example.exe 
-  benchmarks/invert.cc 
-  )
-SET_TARGET_PROPERTIES(invert PROPERTIES COMPILE_FLAGS "-fpermissive")
-
-target_link_libraries(invert ${LIBS} pfbase pfvips ${SIGC2_LIBRARIES}
-  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
+add_executable(photoflow # name of the executable on Windows will be example.exe 
+  main.cc 
   )
 
+#add_dependencies(photoflow ${LIB_DEPS})
 
-add_executable(refcount # name of the executable on Windows will be example.exe 
-  tests/refcount.cc 
+target_link_libraries(photoflow ${LIBS} 
+  pfgui
+  pfbase 
+  pfdt
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
+  ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${GTKMM_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  #${LIBRAW_LIBRARIES}  
+  ${STATIC_LIBS}
+  ${ORC_LIBRARIES}
+  fftw3
+  ${ADDITIONAL_LIBS}
+  #gmon
   )
-SET_TARGET_PROPERTIES(refcount PROPERTIES COMPILE_FLAGS "-fpermissive")
 
-target_link_libraries(refcount ${LIBS}   ${SIGC2_LIBRARIES}
-  ${GTKMM_LIBRARIES} ${TIFF_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES} 
+
+INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
+INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
+INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
+INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
+INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
+
+
+add_executable(icc tests/icc.c)
+
+#add_dependencies(photoflow ${LIB_DEPS})
+
+target_link_libraries(icc ${LIBS} 
+  pfbase 
+  pfdt
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
+  ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  #${LIBRAW_LIBRARIES}  
+  ${STATIC_LIBS}
+  ${ORC_LIBRARIES}
+  fftw3
+  ${ADDITIONAL_LIBS}
+  #gmon
   )
 
 

@@ -34,29 +34,57 @@
 #include "property.hh"
 #include "curve.hh"
 
+#define SPLINE_USE_STDVEC 1
+
 
 namespace PF
 {
 
   class SplineCurve: public Curve
   {
+#ifdef SPLINE_USE_STDVEC
     std::vector< std::pair<float,float> > points;
+#else
+    std::pair<float,float>* points;
+    size_t npoints;
+#endif
 
+    GMutex* points_mutex;
+    
     double* ypp;
+    unsigned int ypp_size;
 
   public:
     SplineCurve();
     ~SplineCurve();
 
+    void lock() { g_mutex_lock( points_mutex); }
+    void unlock() { g_mutex_unlock( points_mutex); }
+
     int add_point( float x, float y );
 
     bool remove_point( unsigned int id );
 
-    void clear_points() { points.clear(); }
+    void clear_points() { 
+#ifdef SPLINE_USE_STDVEC
+      points.clear();
+#else
+      delete[] points;
+      points = NULL;
+      npoints = 0;
+#endif
+    }
 
     bool set_point( unsigned int id, float& x, float& y );
 
-    std::vector< std::pair<float,float> > get_points() const { return points; }
+#ifdef SPLINE_USE_STDVEC
+    const std::vector< std::pair<float,float> >& get_points() const { return points; }
+    size_t get_npoints() const { return points.size(); }
+#else
+    const std::pair<float,float>* get_points() const { return points; }
+    size_t get_npoints() const { return npoints; }
+#endif
+    std::pair<float,float> get_point(int n) const { return points[n]; }
 
     void update_spline();
 
@@ -71,12 +99,35 @@ namespace PF
 
     // Fill a vector of equally-spaced points with input-output value deltas
     void get_deltas( std::vector< std::pair<float,float> >& vec );
+    SplineCurve& operator=(const SplineCurve& b)
+    {
+      lock();
+#ifdef SPLINE_USE_STDVEC
+      points = b.get_points();
+#else
+      if( points ) delete[] points;
+      npoints = b.get_npoints();
+      points = new std::pair<float,float>[npoints];
+      for(size_t i = 0; i < npoints; i++) 
+        points[i] = b.get_point(i);
+#endif
+      update_spline();
+      unlock();
+      return *this;
+    } 
   };
 
 
   inline bool operator ==(const SplineCurve& l, const SplineCurve& r)
   {
+#ifdef SPLINE_USE_STDVEC
     if( l.get_points() != r.get_points() ) return false;
+#else
+    if( l.get_npoints() != r.get_npoints() ) return false;
+    for( size_t i = 0; i < l.get_npoints(); i++ ) {
+      if( l.get_point(i) != r.get_point(i) ) return false;
+    }
+#endif
     return true;
   }
 
@@ -107,13 +158,16 @@ namespace PF
 
     void from_stream(std::istream& str)
     {
+      //std::cout<<"Property<SplineCurve>::from_stream() called (\""<<get_name()<<"\")"<<std::endl;
       SplineCurve oldcurve = curve;
       int npoints;
       str>>npoints;
+      //std::cout<<"  # of points: "<<npoints<<std::endl;
       if( npoints > 0 ) curve.clear_points();
       for( int i = 0; i < npoints; i++ ) {
         float x, y;
         str>>x>>y;
+        //std::cout<<"  point #"<<i<<": "<<x<<","<<y<<std::endl;
         curve.add_point( x, y );
       }
       if( oldcurve != curve )
@@ -123,16 +177,19 @@ namespace PF
 
     void to_stream(std::ostream& str)
     {
-      str<<curve.get_points().size();
-      for( unsigned int i = 0; i < curve.get_points().size(); i++ )
-        str<<" "<<curve.get_points()[i].first<<" "<<curve.get_points()[i].second;
-      //str<<value;
+      //std::vector<std::pair<float, float> > points = curve.get_points();
+      str<<curve.get_npoints();
+      for( unsigned int i = 0; i < curve.get_npoints(); i++ )
+    		str<<" "<<curve.get_point(i).first<<" "<<curve.get_point(i).second;
+    	//str<<value;
     }
 
     bool import(PropertyBase* pin)
     {
+      //std::cout<<"Property<SplineCurve>::import() called (\""<<get_name()<<"\")"<<std::endl;
       Property<SplineCurve>* pin2 = dynamic_cast< Property<SplineCurve>* >( pin );
       if( pin2 ) {
+        //std::cout<<"  gen_npoints()="<<curve.get_npoints()<<"  pin2->get_npoints()="<<pin2->get().get_npoints()<<std::endl;
         set( pin2->get() );
       } else {
         set_str( pin->get_str() );

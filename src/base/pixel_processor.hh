@@ -41,18 +41,18 @@ namespace PF
 {
 
 #define PIXELPROC_TEMPLATE_DEF                  \
-  typename T, colorspace_t CS,                  \
-    int CHMIN, int CHMAX,                       \
-    bool PREVIEW, typename OP_PAR
+  typename T_, colorspace_t CS_,                  \
+    int CHMIN_, int CHMAX_,                       \
+    bool PREVIEW_, typename OP_PAR_
 
 #define PIXELPROC_TEMPLATE_IMP                  \
   T, CS, CHMIN, CHMAX, PREVIEW, OP_PAR
 
 
 #define PIXELPROC_TEMPLATE_DEF_CS_SPEC                  \
-  typename T,                                           \
-    int CHMIN, int CHMAX,                               \
-    bool PREVIEW, typename OP_PAR
+  typename T_,                                           \
+    int CHMIN_, int CHMAX_,                               \
+    bool PREVIEW_, typename OP_PAR_
   
 #define PIXELPROC_TEMPLATE_IMP_CS_SPEC(CS_SPEC) \
   T, CS_SPEC, CHMIN, CHMAX, PREVIEW, OP_PAR
@@ -87,7 +87,7 @@ namespace PF
     typedef OP_PAR OpParams;
   public: 
     void render(VipsRegion** ir, int n, int in_first,
-                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* imap, VipsRegion* ,
                 VipsRegion* oreg, OP_PAR* par)
     {
       PEL_PROC<PIXELPROC_TEMPLATE_IMP> proc(par);
@@ -119,8 +119,11 @@ namespace PF
     
       if(n > NMAX) n = NMAX;
     
-      int x, y, ch, dx=CHMAX-CHMIN+1, CHMAXplus1=CHMAX+1;
+      int x, y, ch, dx=CHMAX-CHMIN+1;//, CHMAXplus1=CHMAX+1;
       int ximap, ni;
+
+      //std::cout<<"PixelProcessor::render(): CHMIN="<<CHMIN<<"  CHMAX="<<CHMAX
+      //    <<"PF::ColorspaceInfo<CS>::NCH="<<PF::ColorspaceInfo<CS>::NCH<<std::endl;
     
       for( y = 0; y < r->height; y++ ) {
         
@@ -134,7 +137,8 @@ namespace PF
           for( ch=0; ch<CHMIN; ch++, x++ ) pout[x] = p[0][x];
           proc.process( p, n, in_first, sz, x, intensity_real/*get_intensity( intensity, pimap, ximap )*/, pout );
           x += dx;
-          for( ch=CHMAXplus1; ch<PF::ColorspaceInfo<CS>::NCH; ch++, x++ ) pout[x] = p[0][x];
+          for( ch=CHMAX+1; ch<PF::ColorspaceInfo<CS>::NCH; ch++, x++ ) pout[x] = p[0][x];
+          //for( ch=0; ch<PF::ColorspaceInfo<CS>::NCH; ch++, x++ ) pout[x] = p[0][x];
         }
         if( CS != PF_COLORSPACE_RGB || blend == 0 ) continue;
 

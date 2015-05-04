@@ -69,6 +69,8 @@ namespace PF
       gradient_type_t result = gradient_type_t(gradient_type.get_enum_value().first);
       return( result ); 
     }
+    float get_gradient_center_x() { return gradient_center_x.get(); }
+    float get_gradient_center_y() { return gradient_center_y.get(); }
 
     bool needs_input() { return false; }
   };
@@ -145,14 +147,28 @@ namespace PF
         int px, b;
         int width2 = width/2;
         int height2 = height/2;
-        float diag = sqrtf( width2*width2 + height2*height2);
+        int center_x = (int)( par->get_gradient_center_x()*width );
+        int center_y = (int)( par->get_gradient_center_y()*height );
+        int dx1 = center_x;
+        int dy1 = center_y;
+        int dx2 = width - center_x;
+        int dy2 = height - center_y;
+        float diag1 = sqrtf( dx1*dx1 + dy1*dy1 );
+        float diag2 = sqrtf( dx1*dx1 + dy2*dy2 );
+        float diag3 = sqrtf( dx2*dx2 + dy1*dy1 );
+        float diag4 = sqrtf( dx2*dx2 + dy2*dy2 );
+        float diag = diag1;
+        if( diag2 > diag ) diag = diag2;
+        if( diag3 > diag ) diag = diag3;
+        if( diag4 > diag ) diag = diag4;
+        //float diag = sqrtf( width2*width2 + height2*height2);
         T val;
         
         for( y = 0; y < r->height; y++ ) {      
-          int dy = r->top + y - height2;
+          int dy = r->top + y - center_y;
           pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
           for( x = 0, px = 0; x < r->width; ++x) {
-            int dx = r->left + x - width2;
+            int dx = r->left + x - center_x;
             float R = sqrtf( dx*dx + dy*dy );
             val = (T)((float)FormatInfo<T>::RANGE*(R/diag) + FormatInfo<T>::MIN);
             for( b = 0; b < bands; ++b, ++px) {

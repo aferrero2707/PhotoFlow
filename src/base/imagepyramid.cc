@@ -36,6 +36,7 @@
 #include "pf_mkstemp.hh"
 #include "photoflow.hh"
 #include "imagepyramid.hh"
+#include "exif_data.hh"
 
 VipsImage* PF::pyramid_test_image = NULL;
 GObject* PF::pyramid_test_obj = NULL;
@@ -64,6 +65,17 @@ void PF::ImagePyramid::init( VipsImage* img, int fd )
   // before unreferencing the old ones
   //PF_REF( img, "ImagePyramid::init() img ref" );
 
+  {
+    size_t exifsz;
+    void* exif_data;
+    if( !vips_image_get_blob( img, PF_META_EXIF_NAME,
+        &exif_data,&exifsz ) ) {
+      //std::cout<<"ImagePyramid::init(): exif_custom_data found in img("<<img<<")"<<std::endl;
+    } else {
+      std::cout<<"ImagePyramid::init(): exif_custom_data not found in img("<<img<<")"<<std::endl;
+    }
+  }
+
   char tstr[500];
   for( unsigned int i = 1; i < levels.size(); i++ ) {
     //g_object_unref( levels[i].image );
@@ -79,6 +91,7 @@ void PF::ImagePyramid::init( VipsImage* img, int fd )
   level.image = img;
   level.fd = fd;
   levels.push_back( level );
+
 
 #ifndef NDEBUG
   std::cout<<"ImagePyramid::init(): full-scale image="<<img<<std::endl;
@@ -220,14 +233,27 @@ void PF::ImagePyramid::update( const VipsRect& area )
 PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 {  
   char tstr[500];
+/*
   if( levels.size() > 1 ) {
     pyramid_test_image = levels[1].image;
     pyramid_test_obj = G_OBJECT( pyramid_test_image );
   }
-
+*/
   if( levels.empty() ) 
     return NULL;
   
+  VipsImage* img = levels[0].image;
+
+  size_t exifsz;
+  void* exif_data;
+  if( !vips_image_get_blob( img, PF_META_EXIF_NAME,
+      &exif_data,&exifsz ) ) {
+    //std::cout<<"ImagePyramid::get_level(): exif_custom_data found in img("<<img<<")"<<std::endl;
+  } else {
+    std::cout<<"ImagePyramid::get_level(): exif_custom_data not found in img("<<img<<")"<<std::endl;
+    exif_data = NULL;
+  }
+
   if( level < levels.size() ) {
     // We add a reference to the returned pyramid level, since it must be kept alive until
     // the pyramid is re-built, in which case it will be unreff'd by the pyramid itself
@@ -247,8 +273,6 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   void *profile_data;
   size_t profile_length;
   
-  VipsImage* img = levels[0].image;
-  
   if( vips_image_get_blob( img, VIPS_META_ICC_NAME, 
 			   &profile_data, &profile_length ) )
     profile_data = NULL;
@@ -260,7 +284,6 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 			   &blobsz ) )
     image_data = NULL;
 
-	std::cout<<"ImagePyramid::get_level(): blobsz="<<blobsz<<"  image_data="<<image_data<<std::endl;
 
   VipsImage* in = levels.back().image;
   if( !in )
@@ -272,9 +295,13 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   int nbands = in->Bands;
 
   while( size > 256 ) {
-    VipsImage* out;
-    if( vips_subsample( in, &out, 2, 2, NULL ) )
+    VipsImage* blurred;
+    if( vips_gaussblur( in, &blurred, 0.7, NULL ) )
       return NULL;
+    VipsImage* out;
+    if( vips_subsample( blurred, &out, 2, 2, NULL ) )
+      return NULL;
+    PF_UNREF( blurred, "ImagePyramid::get_level(): blurred unref" );
 #ifndef NDEBUG
     std::cout<<"ImagePyramid::get_level("<<level<<") subsample in="<<in<<"  out="<<out<<std::endl;
 #endif
@@ -282,7 +309,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     width = out->Xsize;
     height = out->Ysize;
     size = (width>height) ? width : height;
-   
+
     char fname[500];
     sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
     int fd = pf_mkstemp( fname );
@@ -290,7 +317,9 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
       return NULL;
     std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
 
+    std::cout<<"ImagePyramid: saving cache file..."<<std::endl;
     vips_rawsave_fd( out, fd, NULL );
+    std::cout<<"ImagePyramid: cache file saved."<<std::endl;
     //char tifname[500];
     //sprintf(tifname,"/tmp/level_%d-1.tif",(int)levels.size());
     //vips_image_write_to_file( out, tifname );
@@ -299,8 +328,9 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     PF_UNREF( out, tstr );
 
     vips_rawload( fname, &in, width, height, VIPS_IMAGE_SIZEOF_PEL( img ), NULL );
+    std::cout<<"ImagePyramid: cache file loaded."<<std::endl;
     //unlink( fname );
-    vips_copy( in, &out, 
+    vips_copy( in, &out,
 	       "format", img->BandFmt,
 	       "bands", img->Bands,
 	       "coding", img->Coding,
@@ -318,20 +348,30 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     if( profile_data ) {
       void* profile_data2 = malloc( profile_length );
       if( profile_data2 ) {
-	memcpy( profile_data2, profile_data, profile_length );
-	vips_image_set_blob( out, VIPS_META_ICC_NAME, 
-			     (VipsCallbackFn) g_free, 
-			     profile_data2, profile_length );
+        memcpy( profile_data2, profile_data, profile_length );
+        vips_image_set_blob( out, VIPS_META_ICC_NAME,
+            (VipsCallbackFn) g_free,
+            profile_data2, profile_length );
       }
     }
 
     if( image_data ) {
       void* image_data2 = malloc( blobsz );
       if( image_data2 ) {
-	memcpy( image_data2, image_data, blobsz );
-	vips_image_set_blob( out, "raw_image_data", 
-			     (VipsCallbackFn) g_free, 
-			     image_data2, blobsz );
+        memcpy( image_data2, image_data, blobsz );
+        vips_image_set_blob( out, "raw_image_data",
+            (VipsCallbackFn) g_free,
+            image_data2, blobsz );
+      }
+    }
+
+    if( exif_data ) {
+      void* exif_data2 = malloc( exifsz );
+      if( exif_data2 ) {
+        memcpy( exif_data2, exif_data, exifsz );
+        vips_image_set_blob( out, PF_META_EXIF_NAME,
+            (VipsCallbackFn) PF::exif_free,
+            exif_data2, exifsz );
       }
     }
 
@@ -341,13 +381,13 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     levels.push_back( newlevel );
 
     in = out;
-    
+
     // If the desired level is reached, we stop
     if( levels.size() == (level+1) )
       break;
   }
 
-  // If the highest available level is smaller than the requested one, it means that 
+  // If the highest available level is smaller than the requested one, it means that
   // the resulting image would be too small and was not computed.
   // In this case, we set the "level" variable to the smallest available one,
   // so that the information of which level is actually returned is transmitted to the caller

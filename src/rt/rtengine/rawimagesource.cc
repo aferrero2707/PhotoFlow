@@ -34,6 +34,7 @@
 void rtengine::RawImageSource::amaze_demosaic(VipsRegion* ir, VipsRegion* oreg)
 {
 	int x, y;
+  int border = 16;
 
   Rect *r = &oreg->valid;
 	int raw_left = (r->left/2)*2;
@@ -41,12 +42,25 @@ void rtengine::RawImageSource::amaze_demosaic(VipsRegion* ir, VipsRegion* oreg)
 	int raw_right = r->left+r->width-1;
 	int raw_bottom = r->top+r->height-1;
 
+	// Make sure the border is entirely processed
+  //if( raw_left < border ) raw_left = 0;
+  //if( raw_top < border ) raw_top = 0;
+  //if( raw_right > (ir->im->Xsize-border-1) ) raw_right = ir->im->Xsize-1;
+  //if( raw_bottom > (ir->im->Ysize-border-1) ) raw_bottom = ir->im->Ysize-1;
+
 	// Portion of the image to be processed (a 16 pixels border is excluded)
   VipsRect r_img = {16, 16, ir->im->Xsize-32, ir->im->Ysize-32};
+  //std::cout<<"image: "<<ir->im->Xsize<<","<<ir->im->Ysize<<"+"<<0<<"+"<<0<<std::endl;
+  //std::cout<<"r_img: "<<r_img.width<<","<<r_img.height<<"+"<<r_img.left<<"+"<<r_img.top<<std::endl;
+  //VipsRect r_img = {0, 0, ir->im->Xsize, ir->im->Ysize};
 
 	// Output region aligned to Bayer pattern and with 16 pixels border excluded
   VipsRect r_raw = {raw_left, raw_top, raw_right-raw_left+1, raw_bottom-raw_top+1};
+  if( (r_raw.width%2) ) r_raw.width += 1;
+  if( (r_raw.height%2) ) r_raw.height += 1;
+  //std::cout<<"r_raw(1): "<<r_raw.width<<","<<r_raw.height<<"+"<<r_raw.left<<"+"<<r_raw.top<<std::endl;
   vips_rect_intersectrect (&r_raw, &r_img, &r_raw);
+  //std::cout<<"r_raw(2): "<<r_raw.width<<","<<r_raw.height<<"+"<<r_raw.left<<"+"<<r_raw.top<<std::endl;
 
 #ifndef NDEBUG
 	//std::cout<<"rawData.init( "<<ir->valid.width<<", "<<ir->valid.height<<", "

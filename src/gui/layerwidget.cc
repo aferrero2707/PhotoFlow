@@ -28,17 +28,18 @@
 */
 
 
+#include "../base/file_util.hh"
 #include "../base/pf_file_loader.hh"
 #include "../operations/buffer.hh"
 #include "../operations/blender.hh"
 #include "tablabelwidget.hh"
 #include "layerwidget.hh"
+#include "imageeditor.hh"
 
 
-
-PF::LayerWidget::LayerWidget( Image* img ): 
+PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   Gtk::VBox(), 
-  image( img ),
+  image( img ), editor( ed ),
   buttonAdd("+"),
   buttonAddGroup("G+"),
   buttonDel("-"),
@@ -46,11 +47,12 @@ PF::LayerWidget::LayerWidget( Image* img ):
   buttonPresetSave("Save"),
   operationsDialog( image, this )
 {
-  set_size_request(300,0);
+  //set_size_request(250,0);
   notebook.set_tab_pos(Gtk::POS_LEFT);
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 
   LayerTree* view = new LayerTree( );
+  view->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::modified) );
   //frame->add( *view );
   
   //view->set_reorderable();
@@ -62,12 +64,22 @@ PF::LayerWidget::LayerWidget( Image* img ):
 
   pack_start(notebook);
 
-  buttonbox.pack_start(buttonAdd/*, Gtk::PACK_SHRINK*/);
-  buttonbox.pack_start(buttonAddGroup/*, Gtk::PACK_SHRINK*/);
-  buttonbox.pack_start(buttonDel/*, Gtk::PACK_SHRINK*/);
+  buttonAdd.set_size_request(40,0);
+  buttonAdd.set_tooltip_text("Add a new layer");
+  buttonAddGroup.set_size_request(40,0);
+  buttonAddGroup.set_tooltip_text("Add a new layer group");
+  buttonDel.set_size_request(40,0);
+  buttonDel.set_tooltip_text("Remove selected layers");
+
+  buttonPresetLoad.set_tooltip_text("Load an existing preset");
+  buttonPresetSave.set_tooltip_text("Save the selected layers as a preset");
+
+  buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
+  buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
+  buttonbox.pack_start(buttonDel, Gtk::PACK_SHRINK);
   buttonbox.pack_start(buttonPresetLoad/*, Gtk::PACK_SHRINK*/);
   buttonbox.pack_start(buttonPresetSave/*, Gtk::PACK_SHRINK*/);
-  buttonbox.set_layout(Gtk::BUTTONBOX_START);
+  //buttonbox.set_layout(Gtk::BUTTONBOX_START);
 
   pack_start(buttonbox, Gtk::PACK_SHRINK);
 
@@ -118,7 +130,7 @@ bool PF::LayerWidget::on_button_event( GdkEventButton* button )
   if( button->button == 1 ) {
     int layer_id = get_selected_layer_id();
 #ifndef NDEBUG
-    std::cout<<"LayerWidget::on_button_event(): elected layer id="<<layer_id<<std::endl;
+    std::cout<<"LayerWidget::on_button_event(): selected layer id="<<layer_id<<std::endl;
 #endif
     if( layer_id >= 0 )
       signal_active_layer_changed.emit( layer_id );
@@ -138,7 +150,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
     std::cout<<"Activated row "<<l->get_name()<<std::endl;
-    if( column == layer_views[page]->get_tree().get_column(2) ) {
+    if( column == layer_views[page]->get_tree().get_column(IMAP_COL_NUM) ) {
       if( !l->get_processor()->get_par()->has_intensity() )
         return;
       std::cout<<"Activated IMap column of row "<<l->get_name()<<std::endl;
@@ -178,7 +190,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
 
       return;
     }
-    if( column == layer_views[page]->get_tree().get_column(3) ) {
+    if( column == layer_views[page]->get_tree().get_column(OMAP_COL_NUM) ) {
       if( !l->get_processor()->get_par()->has_opacity() )
         return;
       std::cout<<"Activated OMap column of row "<<l->get_name()<<std::endl;
@@ -219,8 +231,17 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       return;
     }
 
-    PF::OperationConfigUI* dialog = l->get_processor()->get_par()->get_config_ui();
-    if(dialog) dialog->open();
+    PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+    if( ui ) {
+      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      if(dialog) {
+        Gtk::Window* toplevel = dynamic_cast<Gtk::Window*>(get_toplevel());
+        if( toplevel )
+            dialog->set_transient_for( *toplevel );
+        dialog->open();
+        dialog->enable_editing();
+      }
+    }
   }
 }
 
@@ -347,8 +368,9 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   int page = notebook.get_current_page();
   if( page < 0 ) page = 0;
 
+  bool is_map = layer_views[page]->is_map();
   layer->get_processor()->get_par()->
-    set_map_flag( layer_views[page]->is_map() );
+    set_map_flag( is_map );
     
 #ifndef NDEBUG
   std::cout<<"LayerWidget::add_layer(): layer_views.size()="<<layer_views.size()<<std::endl;
@@ -394,6 +416,12 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   }
 
   layer->signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
+/*
+  if( layer->get_processor() && layer->get_processor()->get_par() ) {
+    PF::OperationConfigDialog* ui = dynamic_cast<PF::OperationConfigDialog*>( layer->get_processor()->get_par()->get_config_ui() );
+    if( ui ) ui->set_editor( editor );
+  }
+*/
 
 
   update();
@@ -475,13 +503,15 @@ void PF::LayerWidget::remove_layers()
   Gtk::TreeModel::iterator iter;
   if( !sel_rows.empty() ) {
     std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
-    iter = model->get_iter( sel_rows[0] );
+    //iter = model->get_iter( sel_rows[0] );
+    signal_active_layer_changed.emit(-1);
   }
   /*
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
     layer_views[page]->get_tree().get_selection();
   Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
   */
+  bool removed = false;
   for( unsigned int ri = 0; ri < sel_rows.size(); ri++ ) {
     iter = model->get_iter( sel_rows[ri] );
     if( !iter ) continue;
@@ -491,9 +521,10 @@ void PF::LayerWidget::remove_layers()
 
     image->remove_layer( l );
     image->get_layer_manager().modified();
+    removed = true;
   }
 
-  update();
+  if( removed ) update();
 }
 
 
@@ -603,7 +634,7 @@ void PF::LayerWidget::on_button_save()
     refTreeSelection->get_selected_rows();
   if( sel_rows.empty() ) return;
 
-  Gtk::FileChooserDialog dialog("Save image as...",
+  Gtk::FileChooserDialog dialog("Save preset as...",
 				Gtk::FILE_CHOOSER_ACTION_SAVE);
   //dialog.set_transient_for(*this);
   
@@ -638,6 +669,11 @@ void PF::LayerWidget::on_button_save()
 
       //Notice that this is a std::string, not a Glib::ustring.
       filename = dialog.get_filename();
+      std::string extension;
+      if( get_file_extension(filename, extension) ) {
+        if( extension != "pfp" )
+          filename += ".pfp";
+      }
       std::cout << "File selected: " <<  filename << std::endl;
       break;
     }
@@ -657,7 +693,7 @@ void PF::LayerWidget::on_button_save()
   of.open( filename.c_str() );
   if( !of ) return;
 
-  of<<"<preset version=\"2\">"<<std::endl;
+  of<<"<preset version=\""<<PF_FILE_VERSION<<"\">"<<std::endl;
   for( int ri = sel_rows.size()-1; ri >= 0; ri-- ) {
     Gtk::TreeModel::iterator iter = model->get_iter( sel_rows[ri] );
     if( !iter ) continue;

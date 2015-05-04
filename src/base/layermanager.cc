@@ -149,6 +149,58 @@ void PF::LayerManager::get_input_layers( Layer* layer, std::list<Layer*>& inputs
 }
 
 
+void PF::LayerManager::get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
+                                         std::list<Layer*>& children )
+{
+  //#ifndef NDEBUG
+  std::cout<<"Collecting children of layer \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
+  //#endif
+  std::list<PF::Layer*> tmplist;
+  std::list<PF::Layer*>::reverse_iterator li;
+  // Loop over layers in reverse order and fill a temporary list,
+  // until either the target layer is found or the end of the
+  // container list is reached
+  for(li = container.rbegin(); li != container.rend(); ++li) {
+    PF::Layer* l = *li;
+    //#ifndef NDEBUG
+    std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
+    //#endif
+    if( l->get_id() == layer->get_id() ) break;
+    // Add layer and all its children to the inputs list
+    //expand_layer( l, inputs );
+    // Add layer to the temporary list
+    tmplist.push_front( l );
+    //#ifndef NDEBUG
+    std::cout<<"    added."<<std::endl;
+    //#endif
+  }
+
+  // Append the temporary list to the childrens one
+  children.insert( children.end(), tmplist.begin(), tmplist.end() );
+
+  PF::Layer* container_layer = get_container_layer( layer );
+  if( !container_layer ) return;
+
+  // Add the container layer to the list of children
+  children.push_back( container_layer );
+
+  std::list<PF::Layer*>* clist = get_list( container_layer );
+  if( !clist ) return;
+
+  // Add all the children of the container layer to the children list
+  get_child_layers( container_layer, *clist, children );
+}
+
+
+void PF::LayerManager::get_child_layers( Layer* layer, std::list<Layer*>& children )
+{
+  if( !layer ) return;
+  std::list<PF::Layer*>* clist = get_list( layer );
+  if( !clist ) return;
+  get_child_layers( layer, *clist, children );
+}
+
+
 bool PF::LayerManager::get_parent_layers(Layer* layer, 
                                          std::list< std::pair<std::string,Layer*> >& plist,
                                          std::string parent_name, std::list<Layer*>& list)
@@ -211,8 +263,19 @@ PF::Layer* PF::LayerManager::get_container_layer( Layer* layer, std::list<Layer*
   std::list<PF::Layer*>::iterator li;
   for(li = list.begin(); li != list.end(); ++li) {
     PF::Layer* l = *li;
+    // We first look in the sublayers list
+    std::list<PF::Layer*>::iterator lj;
+    for( lj = l->get_sublayers().begin(); 
+         lj != l->get_sublayers().end(); ++lj ) {
+      int id1 = layer->get_id();
+      int id2 = ( (*lj)!=NULL ) ? (*lj)->get_id() : -1;
+      if( (*lj) && ((*lj)->get_id() == layer->get_id()) ) {
+        // We found it, no need to continue...
+        return( l );
+      }
+    }
     if( is_map ) {
-      // If the target layer is a layer map, then we only look into the 
+      // If the target layer is a layer map, then we also look into the 
       // intensity and opacity maps
       std::list<PF::Layer*>::iterator lj;
       for( lj = l->get_imap_layers().begin(); 
@@ -226,18 +289,6 @@ PF::Layer* PF::LayerManager::get_container_layer( Layer* layer, std::list<Layer*
       }
       for( lj = l->get_omap_layers().begin(); 
            lj != l->get_omap_layers().end(); ++lj ) {
-        int id1 = layer->get_id();
-        int id2 = ( (*lj)!=NULL ) ? (*lj)->get_id() : -1;
-        if( (*lj) && ((*lj)->get_id() == layer->get_id()) ) {
-          // We found it, no need to continue...
-          return( l );
-        }
-      }
-    } else {
-      // If the target layer is a normal one, we only look in the sublayers list
-      std::list<PF::Layer*>::iterator lj;
-      for( lj = l->get_sublayers().begin(); 
-           lj != l->get_sublayers().end(); ++lj ) {
         int id1 = layer->get_id();
         int id2 = ( (*lj)!=NULL ) ? (*lj)->get_id() : -1;
         if( (*lj) && ((*lj)->get_id() == layer->get_id()) ) {
@@ -321,13 +372,13 @@ std::list<PF::Layer*>* PF::LayerManager::get_list(PF::Layer* layer)
 
 
 
-PF::CacheBuffer* PF::LayerManager::get_cache_buffer()
+PF::CacheBuffer* PF::LayerManager::get_cache_buffer( rendermode_t mode )
 {  
-  return( get_cache_buffer(layers) );
+  return( get_cache_buffer(mode, layers) );
 }
 
 
-PF::CacheBuffer* PF::LayerManager::get_cache_buffer( std::list<Layer*>& list )
+PF::CacheBuffer* PF::LayerManager::get_cache_buffer( rendermode_t mode, std::list<Layer*>& list )
 {  
   std::list<PF::Layer*>::iterator li = list.begin();
   for(li = list.begin(); li != list.end(); ++li) {
@@ -335,50 +386,75 @@ PF::CacheBuffer* PF::LayerManager::get_cache_buffer( std::list<Layer*>& list )
 
     if( !l ) continue;
     if( !l->is_visible() ) continue;
+    //std::cout<<"LayerManager::get_cache_buffer(): checking layer "<<l->get_name()<<std::endl;
 
     PF::CacheBuffer* buf = NULL;
+    /*
     for( unsigned int i = 0; i < l->extra_inputs.size(); i++ ) {
-      Layer* lextra = get_layer( l->extra_inputs[i] );
-      if( lextra && lextra->is_visible() && lextra->is_cached() && lextra->get_cache_buffer() &&
-          !lextra->get_cache_buffer()->is_completed() ) {
-        buf = lextra->get_cache_buffer();
+      Layer* lextra = get_layer( l->extra_inputs[i].first );
+      if( lextra && lextra->is_visible() && lextra->is_cached() && lextra->get_cache_buffer(mode) &&
+          !lextra->get_cache_buffer(mode)->is_completed() ) {
+        buf = lextra->get_cache_buffer( mode );
 #ifndef NDEBUG
         std::cout<<"Extra layer #"<<i<<"(\""<<lextra->get_name()<<"\"): pending cache buffer "<<buf<<std::endl;
 #endif
         break;
       }
     }
-    if( buf ) return buf;
+    if( buf ) {
+      std::cout<<"Found pending cache buffer for layer "<<l->get_name<<std::endl;
+      return buf;
+    }
+    */
 
     // Now we walk through the intensity and opacity maps to see if they contain a pending buffer
-    buf = get_cache_buffer( l->imap_layers );
+    buf = get_cache_buffer( mode, l->imap_layers );
     if( buf ) return buf;
 
-    buf = get_cache_buffer( l->omap_layers );
+    buf = get_cache_buffer( mode, l->omap_layers );
     if( buf ) return buf;
 
     // Finally we walk through the sub-layers; again, if re-building is needed 
     // we mark this layer "dirty" as well
-    buf = get_cache_buffer( l->sublayers );
+    buf = get_cache_buffer( mode, l->sublayers );
     if( buf ) return buf;
 
     // If the current layer is cached and the cache buffer is not completed, we return it.
-    if( l->is_cached() && l->get_cache_buffer() &&
-        !l->get_cache_buffer()->is_completed() ) {
-      buf = l->get_cache_buffer();
+    if( l->get_image() && l->is_cached() && l->get_cache_buffer(mode) &&
+        !l->get_cache_buffer(mode)->is_completed() ) {
+      buf = l->get_cache_buffer( mode );
 #ifndef NDEBUG
       std::cout<<"Layer \""<<l->get_name()<<"\": pending cache buffer "<<buf<<std::endl;
+      std::cout<<"  l->get_image()->get_npipelines()="<<l->get_image()->get_npipelines()<<std::endl;
 #endif
-      if( l->get_image() && l->get_image()->get_pipeline(0) &&
-          l->get_image()->get_pipeline(0)->get_node(l->get_id()) ) {
-        PF::PipelineNode* node = l->get_image()->get_pipeline(0)->get_node(l->get_id());
-        buf->set_image( node->image );
-        //std::cout<<"Caching layer \""<<l->get_name()<<"\""<<std::endl;
+      for( int pi = 0; pi < l->get_image()->get_npipelines(); pi++ ) {
+        PF::Pipeline* pipeline = l->get_image()->get_pipeline(pi);
+        //std::cout<<"    l->get_image()->get_pipeline("<<pi<<")->get_render_mode()="
+        //    <<pipeline->get_render_mode()<<std::endl;
+        if( pipeline && pipeline->get_render_mode() == mode &&
+            pipeline->get_node(l->get_id()) ) {
+          PF::PipelineNode* node = pipeline->get_node(l->get_id());
+          buf->set_image( node->image );
+          //std::cout<<"Caching layer \""<<l->get_name()<<"\"  image="<<node->image<<std::endl;
+          return( buf );
+        }
       }
-      return( buf );
     }
   }
   return NULL;
+}
+
+
+
+
+void PF::LayerManager::reset_cache_buffers( rendermode_t mode, bool reinit )
+{
+  for(unsigned int i = 0; i < layers_pool.size(); i++) {
+    if(layers_pool[i] == NULL)
+      continue;
+    PF::CacheBuffer* buf = layers_pool[i]->get_cache_buffer( mode );
+    if( buf ) buf->reset( reinit );
+  }
 }
 
 
@@ -426,7 +502,7 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     // if the current layer is not qualified as "dirty", but one of the extra input layers is,
     // then we set the dirty flag to true as well
     for( unsigned int i = 0; i < l->extra_inputs.size(); i++ ) {
-      Layer* lextra = get_layer( l->extra_inputs[i] );
+      Layer* lextra = get_layer( l->extra_inputs[i].first.first );
       if( lextra && lextra->is_dirty() ) {
         input_dirty = true;
         break;
@@ -463,9 +539,9 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     // If the current layer is cached, we reset the corresponding cache buffer
     // so that the computation will restart from scratch at the next idle loop
     if( input_dirty || filter_dirty ) {
-      if( l->is_cached() && l->get_cache_buffer() ) {
-        l->get_cache_buffer()->reset();
-      }
+      if( l->is_cached() )
+        l->reset_cache_buffers();
+      //if( l->is_cached() && l->get_cache_buffer() ) l->get_cache_buffer()->reset();
     }
   }
 }
@@ -561,20 +637,17 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
   for(li = list.begin(); li != list.end(); ++li) {
     PF::Layer* l = *li;
 
+    // Detect "pathological" conditions
+    g_assert( l->get_processor() != NULL );
+    g_assert( l->get_processor()->get_par() != NULL );
+    g_assert( l->get_blender() != NULL );
+    g_assert( l->get_blender()->get_par() != NULL );
+
     char* name = (char*)l->get_name().c_str();
-
-    //if(!strcmp(name,"Red channel mask")) {
-#ifndef NDEBUG
-    if(!strcmp(name,"before-after")) {
-      std::cout<<"Rebuilding layer "<<name<<std::endl;
-    }
-#endif
-
-    if( !l->is_visible() ) 
-      continue;
+    if( !l->is_visible() ) continue;
 
 #ifndef NDEBUG
-    std::cout<<"PF::LayerManager::rebuild_chain(): rebuilding layer \""<<name<<"\""<<std::endl;
+    std::cout<<"PF::LayerManager::rebuild_chain(): processing layer \""<<name<<"\""<<std::endl;
 #endif
     if( previous_layer ) {
       previous_node = pipeline->get_node( previous_layer->get_id() );
@@ -582,76 +655,54 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       if( previous_node ) previous = previous_node->blended;
 #ifndef NDEBUG
       std::cout<<"  Previous layer: \""<<previous_layer->get_name()<<"\""<<std::endl;
-      if( previous ) {
-        void *data;
-        size_t data_length;
-        if( vips_image_get_blob( previous, VIPS_META_ICC_NAME, 
-                                 &data, &data_length ) ) {
-          std::cout<<"  WARNING: missing ICC profile from previous layer \""<<previous_layer->get_name()<<"\""<<std::endl;
-        } else {
-          cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
-          if( profile_in ) {
-            char tstr[1024];
-            cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
-            std::cout<<"  Embedded profile found in previous layer \""<<previous_layer->get_name()<<"\": "<<tstr<<std::endl;
-          }
-        }
-      } else {
-        std::cout<<"  WARNING: NULL image previous layer \""<<previous_layer->get_name()<<"\""<<std::endl;
-      }
 #endif
     }
 
+    // Create the node if it does not yet exist, and copy the parameters
+    // from the operation associated with the layer to the
+    // operation associated with the node
     PF::PipelineNode* node = pipeline->set_node( l, previous_layer );
-    if( node != NULL ) {
-      if( node->image ) vips_image_invalidate_all( node->image );
-      if( node->blended ) vips_image_invalidate_all( node->blended );
-    }
-    PF::OpParBase* par = NULL;
-    if( (l->get_processor() != NULL) &&
-        (l->get_processor()->get_par() != NULL) )
-      par = l->get_processor()->get_par();
-    PF::OpParBase* pipelinepar = NULL;
-    if( (node != NULL) &&
-        (node->processor != NULL) &&
-        (node->processor->get_par() != NULL) )
-      pipelinepar = node->processor->get_par();
+    g_assert( node != NULL );
+    g_assert( node->processor != NULL );
+    g_assert( node->processor->get_par() != NULL );
+    g_assert( node->blender != NULL );
+    g_assert( node->blender->get_par() != NULL );
+    if( node->image ) vips_image_invalidate_all( node->image );
+    if( node->blended ) vips_image_invalidate_all( node->blended );
 
-    g_assert( pipelinepar != NULL );
+    PF::OpParBase* par = l->get_processor()->get_par();
+    l->set_cached( par->needs_caching() );
 
+    PF::OpParBase* pipelinepar = node->processor->get_par();
+#ifndef NDEBUG
+    std::cout<<"PF::LayerManager::rebuild_chain(): setting format for layer "<<l->get_name()
+                   <<" to "<<pipeline->get_format()<<std::endl;
+    std::cout<<"  pipelinepar->set_render_mode( "<<pipeline->get_render_mode()<<" );"<<std::endl;
+#endif
+    pipelinepar->set_format( pipeline->get_format() );
     pipelinepar->set_render_mode( pipeline->get_render_mode() );
-    //std::cout<<"pipelinepar->set_render_mode( "<<pipeline->get_render_mode()<<" );"<<std::endl;
 
-    if( par ) {
+    // Run pre-build phase
+    par->pre_build( pipeline->get_render_mode() );
+
+    PF::OpParBase* blender = l->get_blender()->get_par();
+    PF::PropertyBase* p_rgb_target_ch =  blender->get_property( "rgb_target_channel" );
+    if( p_rgb_target_ch )
+      p_rgb_target_ch->set_enum_value( par->get_rgb_target_channel() );
+    PF::PropertyBase* p_lab_target_ch =  blender->get_property( "lab_target_channel" );
+    if( p_lab_target_ch )
+      p_lab_target_ch->set_enum_value( par->get_lab_target_channel() );
+    PF::PropertyBase* p_cmyk_target_ch = blender->get_property( "cmyk_target_channel" );
+    if( p_cmyk_target_ch )
+      p_cmyk_target_ch->set_enum_value( par->get_cmyk_target_channel() );
+
+    PF::OpParBase* pipelineblender = node->blender->get_par();
 #ifndef NDEBUG
-      std::cout<<"PF::LayerManager::rebuild_chain(): setting format for layer "<<l->get_name()
-               <<" to "<<pipeline->get_format()<<std::endl;
+    std::cout<<"PF::LayerManager::rebuild_chain(): setting format for layer "<<l->get_name()
+                   <<" to "<<pipeline->get_format()<<std::endl;
 #endif
-      par->set_format( pipeline->get_format() );
-      l->set_cached( par->needs_caching() );
-    }
-
-    PF::OpParBase* blender = NULL;
-    if( (l->get_blender() != NULL) &&
-        (l->get_blender()->get_par() != NULL) )
-      blender = l->get_blender()->get_par();
-    PF::OpParBase* pipelineblender = NULL;
-    if( (node != NULL) &&
-        (node->blender != NULL) &&
-        (node->blender->get_par() != NULL) )
-      pipelineblender = node->blender->get_par();
-
-    g_assert( pipelineblender != NULL );
-
+    pipelineblender->set_format( pipeline->get_format() );
     pipelineblender->set_render_mode( pipeline->get_render_mode() );
-
-    if( blender ) {
-#ifndef NDEBUG
-      std::cout<<"PF::LayerManager::rebuild_chain(): setting format for layer "<<l->get_name()
-               <<" to "<<pipeline->get_format()<<std::endl;
-#endif
-      blender->set_format( pipeline->get_format() );
-    }
 
     // If the layer is at the beginning of the chain, we set hints about the desired
     // colorspace and pixel format using default values. 
@@ -663,23 +714,23 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
     // If a previous image has been created already, hints are copied from it.
     //if( li == list.begin() || !previous )
     if( !previous ) {
-      par->set_image_hints( width, height, cs );
-      blender->set_image_hints( width, height, cs );
+      pipelinepar->set_image_hints( width, height, cs );
+      pipelineblender->set_image_hints( width, height, cs );
     } else {
-      if( previous ) {
-        par->set_image_hints( previous );
-        blender->set_image_hints( previous );
-      }
+      pipelinepar->set_image_hints( previous );
+      pipelineblender->set_image_hints( previous );
     }
+    //PF::colorspace_t cs = PF::convert_colorspace( pipelinepar->get_interpretation() );
+    //std::cout<<"  par: "<<pipelinepar<<std::endl;
+    //std::cout<<"  cs after set_image_hints: "<<cs<<std::endl;
     
-    if( (pipeline->get_render_mode() == PF::PF_RENDER_PREVIEW) &&
-        l->is_cached() && 
-        (l->get_cache_buffer() != NULL) &&
-        l->get_cache_buffer()->is_completed() ) {
+    if( l->is_cached() &&
+        (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
+        l->get_cache_buffer(pipeline->get_render_mode())->is_completed() ) {
       // The layer is cached, no need to process the underlying layers
       // We only need to associate the cached image with the blender
       unsigned int level = pipeline->get_level();
-      PF::PyramidLevel* pl = l->get_cache_buffer()->get_pyramid().get_level( level );
+      PF::PyramidLevel* pl = l->get_cache_buffer(pipeline->get_render_mode())->get_pyramid().get_level( level );
       if( pl && pl->image ) {
         pipeline->set_level( level );
         VipsImage* newimg = pl->image;
@@ -692,8 +743,6 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
             omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                                   previous->Xsize, previous->Ysize, 
                                   l->omap_layers, NULL );
-            if( !omap )
-              return false;
           }
           std::vector<VipsImage*> in;
           // we add the previous image to the list of inputs, even if it is NULL
@@ -712,24 +761,6 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       }
     }
 
-    // If a node exists already for this layer, we simply take the associated image,
-    // otherwise it means that the layer has never been processed before
-    if( node ) {
-      if( node->image ) {
-        bool ldirty = l->is_dirty();
-        if( false && !l->is_dirty() &&
-            node->image->Xsize == par->get_xsize() &&
-            node->image->Ysize == par->get_ysize() &&
-            node->image->BandFmt == par->get_format() &&
-            node->image->Bands == par->get_nbands() ) {
-          out = node->image;
-          previous_layer = l;
-          continue;
-        } else {
-          //vips_image_invalidate_all( node->image );
-        }
-      }
-    }
 
     /* At this point there are two possibilities:
        1. the layer has no sub-layers, in which case it is combined with the output
@@ -738,6 +769,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
        and then we combine it with the output of the previous layer
     */
     VipsImage* newimg = NULL;
+    std::vector<VipsImage*> newimgvec;
     VipsImage* imap = NULL;
     VipsImage* omap = NULL;
     if( l->sublayers.empty() ) {
@@ -745,7 +777,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       if( par->needs_input() && !previous ) {
         // Here we have a problem: the operation we are trying to insert in the chain requires
         // a primary input image, but there is no previous image available... we give up
-        return false;
+        return NULL;
       }
 
       // We build the chains for the intensity and opacity maps
@@ -755,29 +787,19 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
                <<"  omap_layers.size()="<<l->omap_layers.size()
                <<std::endl;
 #endif
-      if( previous && !l->imap_layers.empty() ) {
+      if( previous && !l->imap_layers.empty() && pipelinepar->get_mask_enabled()==true ) {
         imap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->imap_layers, NULL );
-        if( !imap )
-          return false;
-        //std::list<PF::Layer*>::reverse_iterator map_i = l->imap_layers.rbegin();
-        //if(map_i != l->imap_layers.rend()) 
-        //imap = (*map_i)->get_processor()->get_par()->get_image();
       }
-      if( previous && !l->omap_layers.empty() ) {
+
+      if( previous && !l->omap_layers.empty() && pipelineblender->get_mask_enabled()==true ) {
         omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->omap_layers, NULL );
-        if( !omap )
-          return false;
-        //std::list<PF::Layer*>::reverse_iterator map_i = l->omap_layers.rbegin();
-        //if(map_i != l->omap_layers.rend()) 
-        //omap = (*map_i)->get_processor()->get_par()->get_image();
       }
       
       // we add the previous image to the list of inputs, even if it is NULL
-      //if(previous)
       in.push_back(previous);
 #ifndef NDEBUG
       std::cout<<"Layer \""<<l->get_name()<<"\": added "<<previous<<" to the input vector"<<std::endl;
@@ -788,34 +810,88 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       // images in the input vector
       for(uint32_t iextra = 0; iextra < l->extra_inputs.size(); iextra++) {
 #ifndef NDEBUG
-        std::cout<<"Layer \""<<l->get_name()<<"\": adding extra input layer id="<<l->extra_inputs[iextra]<<"..."<<std::endl;
+        std::cout<<"Layer \""<<l->get_name()<<"\": adding extra input layer id="<<l->extra_inputs[iextra].first
+                 <<" (blended="<<l->extra_inputs[iextra].second<<")..."<<std::endl;
 #endif
-        PF::Layer* lextra = get_layer( l->extra_inputs[iextra] );
+        PF::Layer* lextra = get_layer( l->extra_inputs[iextra].first.first );
+        int imgid = l->extra_inputs[iextra].first.second;
         // If the extra input layer is not found we have a problem, better to give up
         // with an error.
-        if( !lextra ) return false;
+        g_assert( lextra != NULL );
         PF::PipelineNode* extra_node = pipeline->get_node( lextra->get_id() );
-        if( !extra_node ) return false;
-        VipsImage* extra_img = extra_node->image;
-        //VipsImage* extra_img = lextra->get_processor()->get_par()->get_image();
+        g_assert( extra_node != NULL );
+        VipsImage* extra_img = NULL;
+        // std::cout<<"  imgid="<<imgid<<"  extra_node->images.size()="<<extra_node->images.size()<<std::endl;
+        if( l->extra_inputs[iextra].second == true ) {
+          extra_img = extra_node->blended;
+        } else {
+          if( (imgid>=0) && (imgid<extra_node->images.size()) ) {
+            extra_img = extra_node->images[imgid];
+            //std::cout<<"  extra_node->images[imgid]="<<extra_node->images[imgid]<<std::endl;
+          }
+        }
         // Similarly, if the extra input layer has no valid image associated to it
         // we have a problem and we gve up
-        if( !extra_img ) return false;
+        g_assert( extra_img != NULL );
         in.push_back( extra_img );
+
+        // We inherit the image properties (size, colorspace, ...) from the last extra input
+        pipelinepar->set_image_hints( extra_img );
+        pipelineblender->set_image_hints( extra_img );
+        if( par->is_map() ) {
+          // If the layer is a mask, we force the output image colorspace to grayscale
+          pipelinepar->grayscale_image( pipelinepar->get_xsize(), pipelinepar->get_ysize() );
+          pipelineblender->grayscale_image( pipelinepar->get_xsize(), pipelinepar->get_ysize() );
+        }
 #ifndef NDEBUG
         std::cout<<" ...added."<<std::endl;
 #endif
       }
 
-      if( par->get_config_ui() ) {
-        par->get_config_ui()->update_properties();
-      }
+      //if( par->get_config_ui() ) {
+      //  par->get_config_ui()->update_properties();
+      //}
 #ifndef NDEBUG
       std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
 #endif
-      unsigned int level = pipeline->get_level();
+
+      // We import the parameters from the "master" operation associated to the layer,
+      // and which is directly connected with the GUI controls
       pipelinepar->import_settings( par );
-      newimg = pipelinepar->build( in, 0, imap, omap, level );
+
+      unsigned int level = pipeline->get_level();
+      newimgvec = pipelinepar->build_many( in, 0, imap, omap, level );
+      newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
+      //cs = PF::convert_colorspace( pipelinepar->get_interpretation() );
+      //std::cout<<"  par: "<<pipelinepar<<std::endl;
+      //std::cout<<"  cs after build: "<<cs<<std::endl;
+      //cs = PF::convert_colorspace( newimg->Type );
+      //std::cout<<"  cs from newimg: "<<cs<<std::endl;
+
+      if( (newimg != NULL) && (newimgvec.size() == 1) && l->is_cached() &&
+          (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
+          (l->get_cache_buffer(pipeline->get_render_mode())->is_initialized() == false) ) {
+        // The image is being loaded, and the current layer needs to be cached
+        // In this case we cache the data immediately and we use the cached
+        // image instead of the newly built one
+        PF::CacheBuffer* buf = l->get_cache_buffer(pipeline->get_render_mode());
+        buf->set_image( newimg );
+        std::cout<<"Writing cache buffer for layer "<<l->get_name()<<std::endl;
+        double time1 = g_get_real_time();
+        buf->write();
+        buf->set_initialized( true );
+        double time2 = g_get_real_time();
+        std::cout<<"Buffer saved in "<<(time2-time1)/1000000<<" seconds."<<std::endl;
+        PF_UNREF( newimg, "rebuild_chain(): newimg unref after cache buffer filling" );
+
+        PF::PyramidLevel* pl = buf->get_pyramid().get_level( level );
+        if( pl && pl->image ) {
+          pipeline->set_level( level );
+          newimg = pl->image;
+          newimgvec[0] = pl->image;
+        }
+      }
+
       pipelinepar->clear_modified();
       pipeline->set_level( level );
 #ifndef NDEBUG
@@ -866,7 +942,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
                               l->sublayers, previous_layer );
       else
         isub = rebuild_chain( pipeline, cs, 
-                              previous->Xsize, previous->Ysize, 
+                              width, height, 
                               l->sublayers, NULL );
 
       // we add the output of the sub-layers chain to the list of inputs, even if it is NULL
@@ -879,34 +955,57 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
                <<"  omap_layers.size()="<<l->omap_layers.size()
                <<std::endl;
 #endif
-      if( previous && !l->imap_layers.empty() ) {
+      if( previous && !l->imap_layers.empty() && pipelinepar->get_mask_enabled()==true ) {
         imap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->imap_layers, NULL );
-        if( !imap )
-          return false;
+        //if( !imap ) return false;
         //std::list<PF::Layer*>::reverse_iterator map_i = l->imap_layers.rbegin();
         //if(map_i != l->imap_layers.rend()) 
         //imap = (*map_i)->get_processor()->get_par()->get_image();
       }
-      if( previous && !l->omap_layers.empty() ) {
+      if( previous && !l->omap_layers.empty() && pipelineblender->get_mask_enabled()==true ) {
         omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
                               previous->Xsize, previous->Ysize, 
                               l->omap_layers, NULL );
-        if( !omap )
-          return false;
+        //if( !omap ) return false;
         //std::list<PF::Layer*>::reverse_iterator map_i = l->omap_layers.rbegin();
         //if(map_i != l->omap_layers.rend()) 
         //omap = (*map_i)->get_processor()->get_par()->get_image();
       }
       
-      if( par->get_config_ui() ) par->get_config_ui()->update_properties();
+      //if( par->get_config_ui() ) par->get_config_ui()->update_properties();
 #ifndef NDEBUG
       std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
 #endif
       unsigned int level = pipeline->get_level();
       pipelinepar->import_settings( par );
-      newimg = pipelinepar->build( in, 0, imap, omap, level );
+      newimgvec = pipelinepar->build_many( in, 0, imap, omap, level );
+      newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
+
+      if( (newimg != NULL) && (newimgvec.size() == 1) && !image->is_loaded() && l->is_cached() &&
+          (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
+          (l->get_cache_buffer(pipeline->get_render_mode())->is_completed() == false) ) {
+        // The image is being loaded, and the current layer needs to be cached
+        // In this case we cache the data immediately and we use the cached
+        // image instead of the newly built one
+        PF::CacheBuffer* buf = l->get_cache_buffer(pipeline->get_render_mode());
+        buf->set_image( newimg );
+        std::cout<<"Writing cache buffer for layer "<<l->get_name()<<std::endl;
+        gint64 time1 = g_get_real_time();
+        buf->write();
+        gint64 time2 = g_get_real_time();
+        std::cout<<"Buffer saved in "<<(time2-time1)/1000000<<" seconds."<<std::endl;
+        PF_UNREF( newimg, "rebuild_chain(): newimg unref after cache buffer filling" );
+
+        PF::PyramidLevel* pl = buf->get_pyramid().get_level( level );
+        if( pl && pl->image ) {
+          pipeline->set_level( level );
+          newimg = pl->image;
+          newimgvec[0] = pl->image;
+        }
+      }
+
       pipelinepar->clear_modified();
       pipeline->set_level( level );
 #ifndef NDEBUG
@@ -944,11 +1043,11 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
     if( newimg ) {
       VipsImage* blendedimg;
-      pipeline->set_image( newimg, l->get_id() );
+      pipeline->set_images( newimgvec, l->get_id() );
       if( par->has_opacity() && blender && pipelineblender) {
         unsigned int level = pipeline->get_level();
         pipelineblender->import_settings( blender );
-        
+
         std::vector<VipsImage*> in;
         // we add the previous image to the list of inputs, even if it is NULL
         in.push_back( previous );
@@ -995,7 +1094,7 @@ bool PF::LayerManager::rebuild_prepare()
 bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, int height, VipsRect* area )
 {
   if( pipeline && pipeline->get_output() ) {
-    vips_image_invalidate_all( pipeline->get_output() );
+    //vips_image_invalidate_all( pipeline->get_output() );
   }
   VipsImage* output = rebuild_chain( pipeline, cs, width, height, layers, NULL );
 	//std::cout<<"LayerManager::rebuild(): chain rebuild finished."<<std::endl;
@@ -1046,6 +1145,8 @@ bool PF::LayerManager::rebuild_all(Pipeline* pipeline, colorspace_t cs, int widt
   pipeline->set_output( output );
 
   reset_dirty( layers );
+
+
 
   return true;
 }

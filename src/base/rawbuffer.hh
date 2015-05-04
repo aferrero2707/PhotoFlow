@@ -56,13 +56,13 @@
 namespace PF 
 {
 
-  class Pen
+  class Pencil
   {
     std::vector<float> color;
     unsigned int size;
     float opacity;
   public:
-    Pen() {}
+    Pencil() {}
     void set_size( unsigned int s ) { size = s; }
     unsigned int get_size() const { return size; }
 
@@ -82,10 +82,18 @@ namespace PF
 
     void set_opacity( float val ) { opacity = val; }
     float get_opacity() const { return opacity; }
+
+    Pencil & operator=(const Pencil &p)
+    {
+      color = p.get_color();
+      size = p.get_size();
+      opacity = p.get_opacity();
+      return(*this);
+    }
   };
 
 
-  inline bool operator ==(const Pen& l, const Pen& r)
+  inline bool operator ==(const Pencil& l, const Pencil& r)
   {
     if( l.get_color() != r.get_color() ) return false;
     if( l.get_opacity() != r.get_opacity() ) return false;
@@ -93,7 +101,7 @@ namespace PF
     return true;
   }
 
-  inline bool operator !=(const Pen& l, const Pen& r)
+  inline bool operator !=(const Pencil& l, const Pencil& r)
   {
     return( !(l==r) );
   }
@@ -118,6 +126,7 @@ namespace PF
 
 
 
+  template <class Pen>
   class Stroke
   {
     Pen pen;
@@ -135,17 +144,164 @@ namespace PF
   };
 
 
-  inline bool operator ==(const Stroke& l, const Stroke& r)
+  template <class Pen>
+  inline bool operator ==(const Stroke<Pen>& l, const Stroke<Pen>& r)
   {
     if( l.get_pen() != r.get_pen() ) return false;
     if( l.get_points() != r.get_points() ) return false;
     return true;
   }
 
-  inline bool operator !=(const Stroke& l, const Stroke& r)
+  template <class Pen>
+  inline bool operator !=(const Stroke<Pen>& l, const Stroke<Pen>& r)
   {
     return( !(l==r) );
   }
+
+
+  inline std::istream& operator >>( std::istream& str, Pencil& pen )
+  {
+    unsigned int nch;
+    str>>nch;
+    std::vector<float>& color = pen.get_color();
+    color.clear();
+    for( int i = 0; i < nch; i++ ) {
+      float val;
+      str>>val;
+      color.push_back( val );
+    }
+    unsigned int size;
+    float opacity;
+    str>>size>>opacity;
+    pen.set_size( size );
+    pen.set_opacity( opacity );
+    return str;
+  }
+
+  inline std::ostream& operator <<( std::ostream& str, const Pencil& pen )
+  {
+    const std::vector<float>& color = pen.get_color();
+    str<<color.size()<<" ";
+    std::list< std::pair<unsigned int, unsigned int> >::iterator i;
+    for( unsigned int i = 0; i < color.size(); i++ ) {
+      str<<color[i]<<" ";
+    }
+    str<<pen.get_size()<<" "<<pen.get_opacity()<<" ";
+    return str;
+  }
+
+
+
+  template <class Pen>
+  inline std::istream& operator >>( std::istream& str, Stroke<Pen>& stroke )
+  {
+    str>>stroke.get_pen();
+    std::list< std::pair<unsigned int, unsigned int> >& points = stroke.get_points();
+    points.clear();
+    int npoints;
+    str>>npoints;
+    for( int i = 0; i < npoints; i++ ) {
+      unsigned int a, b;
+      str>>a>>b;
+      points.push_back( std::make_pair(a,b) );
+    }
+    return str;
+  }
+
+  template <class Pen>
+  inline std::ostream& operator <<( std::ostream& str, const Stroke<Pen>& stroke )
+  {
+    str<<stroke.get_pen();
+    const std::list< std::pair<unsigned int, unsigned int> >& points = stroke.get_points();
+    str<<points.size()<<" ";
+    std::list< std::pair<unsigned int, unsigned int> >::const_iterator i;
+    for( i = points.begin(); i != points.end(); i++ ) {
+      str<<i->first<<" "<<i->second<<" ";
+    }
+    return str;
+  }
+
+
+  /*
+  template <class Pen>
+  inline std::istream& operator >>( std::istream& str, std::list< Stroke<Pen> >& strokes )
+  {
+    strokes.clear();
+    int nstrokes;
+    str>>nstrokes;
+    for( int i = 0; i < nstrokes; i++ ) {
+      strokes.push_back( Stroke<Pen>() );
+      Stroke<Pen>& stroke = strokes.back();
+      str>>stroke;
+    }
+    return str;
+  }
+
+  template <class Pen>
+  inline std::ostream& operator <<( std::ostream& str, const std::list< Stroke<Pen> >& strokes )
+  {
+    str<<strokes.size()<<" ";
+    typename std::list< Stroke<Pen> >::const_iterator i;
+    for( i = strokes.begin(); i != strokes.end(); i++ ) {
+      str<<(*i);
+    }
+    return str;
+  }
+  */
+
+  /*
+  template <class T>
+  inline bool operator ==(const std::list<T>& l, const std::list<T>& r)
+  {
+    if( l.size() != r.size() ) return false;
+    typename std::list<T>::const_iterator i, j;
+    for( i = l.begin(), j = r.begin(); i != l.end(); i++, j++ ) {
+      if( (*i) != (*j) ) return false;
+    }
+    return true;
+  }
+
+  template <class T>
+  inline bool operator !=(const std::list<T>& l, const std::list<T>& r)
+  {
+    return( !(l==r) );
+  }
+  */
+
+  /*
+  template <class T>
+  inline std::istream& operator >>( std::istream& str, std::list<T>& list )
+  {
+    list.clear();
+    int n;
+    str>>n;
+    for( int i = 0; i < n; i++ ) {
+      list.push_back( T() );
+      T& val = list.back();
+      str>>val;
+    }
+    return str;
+  }
+
+  template <class T>
+  inline std::ostream& operator <<( std::ostream& str, const std::list<T>& list )
+  {
+    str<<list.size()<<" ";
+    typename std::list<T>::const_iterator i;
+    for( i = list.begin(); i != list.end(); i++ ) {
+      str<<(*i);
+    }
+    return str;
+  }
+  */
+
+
+  template<> inline
+  void set_gobject_property< std::list< Stroke<Pencil> > >(gpointer object, const std::string name, 
+                                                           const std::list< Stroke<Pencil> >& value)
+  {
+  }
+
 
 
   class RawBuffer
@@ -213,10 +369,10 @@ namespace PF
 
     void init( const std::vector<float>& bgd_color );
 
-    void draw_row( Pen& pen, unsigned int row, 
+    void draw_row( Pencil& pen, unsigned int row, 
                    unsigned int startcol, unsigned int endcol );
-    void draw_point( Pen& pen, unsigned int x, unsigned int y, VipsRect& update, bool update_pyramid );
-    void draw_segment( Pen& pen, Segment& segment );
+    void draw_point( Pencil& pen, unsigned int x, unsigned int y, VipsRect& update, bool update_pyramid );
+    void draw_segment( Pencil& pen, Segment& segment );
 
     void start_stroke();
     void end_stroke();

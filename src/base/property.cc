@@ -52,6 +52,16 @@ std::string PF::PropertyBase::get_str()
 }
 
 
+std::string PF::PropertyBase::get_enum_value_str()
+{
+  std::ostringstream str;
+  if( is_enum() && !enum_value.second.first.empty() ) {
+    str<<enum_value.first;
+  }
+  return str.str();
+}
+
+
 void PF::PropertyBase::from_stream(std::istream& str)
 {
 #ifndef NDEBUG
@@ -101,7 +111,7 @@ void PF::set_gobject_property<std::string>(gpointer object, const std::string na
 bool PF::PropertyBase::import(PF::PropertyBase* pin)
 {
 #ifndef NDEBUG
-  if( name == "out_profile_mode" )
+  //if( name == "out_profile_mode" )
     std::cout<<"PropertyBase::import(): importing property \""<<name<<"\""<<std::endl;
 #endif
   if( !pin ) 

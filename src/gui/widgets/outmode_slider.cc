@@ -57,14 +57,14 @@ PF::OutModeSlider::OutModeSlider( OperationConfigDialog* dialog, std::string pna
   label2.set_halign( Gtk::ALIGN_CENTER );
   label3.set_halign( Gtk::ALIGN_END );
 #endif
-  label1.set_text( "preserve luminance" );
+  label1.set_text( "keep color/luminance" );
   label2.set_text( "normal" );
   label3.set_text( "preserve colors" );
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( 300, -1 );
-  spinButton.set_size_request( 70, -1 );
+  scale.set_size_request( 250, -1 );
+  //spinButton.set_size_request( 70, -1 );
 
   // Full widget with slider and spin button
   scale.set_value_pos(Gtk::POS_LEFT);
@@ -81,19 +81,22 @@ PF::OutModeSlider::OutModeSlider( OperationConfigDialog* dialog, std::string pna
 
   //labelsBox1.pack_start( vline1, Gtk::PACK_SHRINK );
   labelsBox1.pack_start( label1, label_pack );
-  labelsBox1.pack_start( padding1, Gtk::PACK_EXPAND_WIDGET );
-  labelsBox1.set_size_request(120,-1);
+  //labelsBox1.pack_start( padding1, Gtk::PACK_EXPAND_WIDGET );
+  //labelsBox1.set_size_request(120,-1);
 
-  labelsBox2.pack_start( padding2, Gtk::PACK_EXPAND_WIDGET );
+  //labelsBox2.pack_start( padding2, Gtk::PACK_EXPAND_WIDGET );
   labelsBox2.pack_start( label3, label_pack );
   //labelsBox2.pack_start( vline3, Gtk::PACK_SHRINK );
-  labelsBox2.set_size_request(120,-1);
+  //labelsBox2.set_size_request(120,-1);
 
   labelsBox.pack_start( labelsBox1, Gtk::PACK_SHRINK );
-  labelsBox.pack_start( padding3, Gtk::PACK_EXPAND_WIDGET );
-  labelsBox.pack_start( vline2, Gtk::PACK_SHRINK );
-  labelsBox.pack_start( padding4, Gtk::PACK_EXPAND_WIDGET );
-  labelsBox.pack_start( labelsBox2, Gtk::PACK_SHRINK );
+  //labelsBox.pack_start( padding3, Gtk::PACK_EXPAND_WIDGET );
+  //labelsBox.pack_start( vline2, Gtk::PACK_SHRINK );
+  //labelsBox.pack_start( padding4, Gtk::PACK_EXPAND_WIDGET );
+  //labelsBox.pack_start( labelsBox2, Gtk::PACK_EXPAND_WIDGET );
+  //labelsBox.set_size_request(250,-1);
+  labelsBoxOuter.pack_start( labelsBox, Gtk::PACK_SHRINK );
+
 
   //labelsBox.pack_start( label2, label_pack );
   //labelsBox.pack_start( padding2, Gtk::PACK_EXPAND_WIDGET );
@@ -101,12 +104,14 @@ PF::OutModeSlider::OutModeSlider( OperationConfigDialog* dialog, std::string pna
   //labelsBox.pack_start( label3, label_pack );
   //labelsBox.pack_start( vline4, Gtk::PACK_SHRINK );
   
-  vbox.pack_start( labelsBox );
-  vbox.pack_start( scale );
+  vbox.pack_start( labelsBoxOuter );
+  hbox.pack_start( scale );
+  hbox.pack_start( spinButton );
+  vbox.pack_start( hbox );
 
-  spinButtonBox.pack_start( spinButton, Gtk::PACK_SHRINK );
-  spinButtonBox.pack_start( spinButtonPadding, Gtk::PACK_EXPAND_WIDGET );
-  vbox.pack_start( spinButtonBox );
+  //spinButtonBox.pack_start( spinButton, Gtk::PACK_SHRINK );
+  //spinButtonBox.pack_start( spinButtonPadding, Gtk::PACK_EXPAND_WIDGET );
+  //vbox.pack_start( spinButtonBox );
   
   //pack_start( align );
   pack_start( vbox );

@@ -54,17 +54,16 @@ namespace PF
       if( !img ) return;
       OpParBase::set_image_hints( img );
       rgb_image( get_xsize(), get_ysize() );
-      set_demand_hint( VIPS_DEMAND_STYLE_ANY );
     }
 
     /* Function to derive the output area from the input area
      */
     virtual void transform(const Rect* rin, Rect* rout)
     {
-      rout->left = rin->left+16;
-      rout->top = rin->top+16;
-      rout->width = rin->width-32;
-      rout->height = rin->height-32;
+      rout->left = rin->left+2;
+      rout->top = rin->top+2;
+      rout->width = rin->width-4;
+      rout->height = rin->height-4;
     }
        
     /* Function to derive the area to be read from input images,
@@ -72,18 +71,10 @@ namespace PF
     */
     virtual void transform_inv(const Rect* rout, Rect* rin)
     {
-			// Output region aligned to the Bayer pattern
-			int raw_left = (rout->left/2)*2;
-			int raw_top = (rout->top/2)*2;
-			int raw_right = rout->left+rout->width-1;
-			int raw_bottom = rout->top+rout->height-1;
-			int raw_width = raw_right-raw_left+1;
-			int raw_height = raw_bottom-raw_top+1;
-
-      rin->left = raw_left-16;
-      rin->top = raw_top-16;
-      rin->width = raw_width+32;
-      rin->height = raw_height+32;
+      rin->left = rout->left-2;
+      rin->top = rout->top-2;
+      rin->width = rout->width+4;
+      rin->height = rout->height+4;
     }
       
 

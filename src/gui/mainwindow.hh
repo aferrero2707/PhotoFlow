@@ -88,9 +88,13 @@ public:
 
   void on_button_export_clicked();
 
+  bool on_delete_event( GdkEventAny* event );
+
+
   void open_image(std::string filename);
 
   void remove_tab( Gtk::Widget* widget );
+  void remove_all_tabs();
 
   void on_my_switch_page(
 #ifdef GTKMM_2

@@ -36,7 +36,10 @@ PF::CropPar::CropPar():
   crop_left("crop_left",this,0),
   crop_top("crop_top",this,0),
   crop_width("crop_width",this,0),
-  crop_height("crop_height",this,0)
+  crop_height("crop_height",this,0),
+  keep_ar("keep_ar",this,0),
+  ar_width("ar_width",this,100),
+  ar_height("ar_height",this,100)
 {
   set_type( "crop" );
 }
@@ -52,9 +55,37 @@ VipsImage* PF::CropPar::build(std::vector<VipsImage*>& in, int first,
 	if( srcimg == NULL ) return NULL;
 	VipsImage* out;
 
-	if( vips_crop( srcimg, &out, crop_left.get(), crop_top.get(),
-								 crop_width.get(), crop_height.get(), NULL ) )
-		return NULL;
+  if( is_editing() ) {
+    PF_REF( srcimg, "CropPar::build(): srcimg ref (editing mode)" );
+    return srcimg;
+  }
+
+  int scale_factor = 1;
+  for(unsigned int l = 0; l < level; l++ ) {
+    scale_factor *= 2;
+  }
+
+  if( ((crop_width.get()/scale_factor) < 1) ||
+      ((crop_height.get()/scale_factor) < 1) ) {
+    PF_REF( srcimg, "CropPar::build(): srcimg ref (editing mode)" );
+    return srcimg;
+  }
+
+  int cleft = crop_left.get()/scale_factor;
+  int ctop = crop_top.get()/scale_factor;
+  int cw = crop_width.get()/scale_factor;
+  int ch = crop_height.get()/scale_factor;
+  if( (cleft+cw) > srcimg->Xsize ) cw = srcimg->Xsize - cleft;
+  if( (ctop+ch) > srcimg->Ysize ) ch = srcimg->Ysize - ctop;
+
+  if( vips_crop( srcimg, &out, crop_left.get()/scale_factor, crop_top.get()/scale_factor,
+      crop_width.get()/scale_factor, crop_height.get()/scale_factor, NULL ) ) {
+    std::cout<<"WARNIG: CropPar::build(): vips_crop() failed."<<std::endl;
+    std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  srcimg->Ysize="<<srcimg->Ysize<<std::endl;
+    std::cout<<"vips_crop( srcimg, &out, "<<crop_left.get()/scale_factor<<", "<<crop_top.get()/scale_factor<<", "
+        <<crop_width.get()/scale_factor<<", "<<crop_height.get()/scale_factor<<", NULL )"<<std::endl;
+    return NULL;
+  }
   return out;
 }
 

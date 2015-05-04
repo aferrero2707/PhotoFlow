@@ -49,6 +49,17 @@ PF::UniformPar::UniformPar():
 
 
 
+VipsImage* PF::UniformPar::build(std::vector<VipsImage*>& in, int first, 
+				     VipsImage* imap, VipsImage* omap, 
+				     unsigned int& level)
+{
+  std::cout<<"UniformPar::build(): colorspace="<<get_colorspace()<<std::endl;
+  grey.set( R.get() );
+  return PF::OpParBase::build( in, first, imap, omap, level );
+}
+
+
+
 PF::ProcessorBase* PF::new_uniform()
 {
   return( new PF::Processor<PF::UniformPar,PF::Uniform>() );

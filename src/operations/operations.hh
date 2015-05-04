@@ -30,6 +30,8 @@
 #ifndef OPERATIONS_H
 #define OPERATIONS_H
 
+#include "gmic/operations.hh"
+
 namespace PF
 {
 
@@ -41,8 +43,10 @@ namespace PF
   ProcessorBase* new_buffer();
   ProcessorBase* new_blender();
   ProcessorBase* new_brightness_contrast();
+  ProcessorBase* new_hue_saturation();
   ProcessorBase* new_clone();
   ProcessorBase* new_crop();
+  ProcessorBase* new_scale();
   ProcessorBase* new_convert2rgb();
   ProcessorBase* new_convert2srgb();
   ProcessorBase* new_convert2lab();
@@ -58,6 +62,8 @@ namespace PF
   ProcessorBase* new_uniform();
   ProcessorBase* new_desaturate();
   ProcessorBase* new_draw();
+  ProcessorBase* new_clone_stamp();
+  ProcessorBase* new_lensfun();
   //ProcessorBase* new_vips_operation( std::string op_type );
 }
 

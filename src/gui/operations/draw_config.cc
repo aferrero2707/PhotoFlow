@@ -46,7 +46,8 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
   bgd_color_button( Gdk::RGBA("black") ),
 #endif
   pen_size( this, "pen_size", "Pen size: ", 5, 0, 1000000, 1, 10, 1),
-  pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100)
+  pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100),
+  undoButton("Undo")
 {
   colorButtonsBox1.pack_start( bgd_color_label, Gtk::PACK_SHRINK );
   colorButtonsBox1.pack_start( bgd_color_button, Gtk::PACK_SHRINK );
@@ -55,7 +56,7 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
   colorButtonsBox2.pack_start( pen_size, Gtk::PACK_SHRINK );
   controlsBox.pack_start( colorButtonsBox1 );
   controlsBox.pack_start( colorButtonsBox2 );
-  penBox.pack_start( pen_opacity );
+  penBox.pack_start( undoButton );
   controlsBox.pack_start( penBox );
 
   /*
@@ -74,6 +75,8 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
     connect( sigc::mem_fun(this, &PF::DrawConfigDialog::on_pen_color_changed) );
   bgd_color_button.signal_color_set().
     connect( sigc::mem_fun(this, &PF::DrawConfigDialog::on_bgd_color_changed) );
+
+  undoButton.signal_clicked().connect( sigc::mem_fun(this, &DrawConfigDialog::on_undo) );
 
   add_widget( controlsBox );
 }
@@ -150,12 +153,12 @@ void PF::DrawConfigDialog::on_bgd_color_changed()
   if( !par ) return;
   
 #ifdef GTKMM_2
-  float value = pen_color_button.get_color().get_red();
-  par->get_pen_color().get().r = value/65535;
-  value = pen_color_button.get_color().get_green();
-  par->get_pen_color().get().g = value/65535;
-  value = pen_color_button.get_color().get_blue();
-  par->get_pen_color().get().b = value/65535;
+  float value = bgd_color_button.get_color().get_red();
+  par->get_bgd_color().get().r = value/65535;
+  value = bgd_color_button.get_color().get_green();
+  par->get_bgd_color().get().g = value/65535;
+  value = bgd_color_button.get_color().get_blue();
+  par->get_bgd_color().get().b = value/65535;
 #endif
 
 #ifdef GTKMM_3
@@ -167,6 +170,35 @@ void PF::DrawConfigDialog::on_bgd_color_changed()
   if( layer->get_image() )
     layer->get_image()->update();
 	std::cout<<"DrawConfigDialog::on_bgd_color_changed(): image updated"<<std::endl;
+}
+
+
+void PF::DrawConfigDialog::on_undo()
+{
+  // Pointer to the associated Layer object
+  PF::Layer* layer = get_layer();
+  if( !layer ) return;
+
+  // Then we loop over all the operations associated to the
+  // layer in the different pipelines and we let them record the stroke as well
+  PF::Image* image = layer->get_image();
+  if( !image ) return;
+
+  // First of all, the new stroke is recorded by the "master" operation
+  PF::ProcessorBase* processor = layer->get_processor();
+  if( !processor || !(processor->get_par()) ) return;
+
+  PF::DrawPar* par = dynamic_cast<PF::DrawPar*>( processor->get_par() );
+  if( !par ) return;
+
+  image->lock();
+  Property< std::list< Stroke<Pencil> > >& pstrokes = par->get_strokes();
+  std::list< Stroke<Pencil> >& strokes = pstrokes.get();
+  if( !strokes.empty() ) {
+    strokes.pop_back();
+    image->update();
+  }
+  image->unlock();
 }
 
 
@@ -224,9 +256,17 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
   PF::DrawPar* par = dynamic_cast<PF::DrawPar*>( processor->get_par() );
   if( !par ) return;
   
-  VipsRect update;
-  par->draw_point( x, y, update );
+  VipsRect update = {0,0,0,0};
+  double lx = x, ly = y, lw = 1, lh = 1;
+  screen2layer( lx, ly, lw, lh );
+  //std::cout<<"DrawConfigDialog::draw_point( "<<lx<<", "<<ly<<" )  x="<<x<<" y="<<y<<std::endl;
+  par->draw_point( lx, ly, update );
+  //double ix = lx, iy = ly, iw = 1, ih = 1;
+  //layer2image( ix, iy, iw, ih );
+  //std::cout<<"DrawConfigDialog::draw_point(): ix="<<ix<<"  iy="<<iy<<std::endl;
 
+  if( (update.width < 1) || (update.height < 1) )  
+    return;
 
   // Then we loop over all the operations associated to the 
   // layer in the different pipelines and we let them record the stroke as well
@@ -249,13 +289,19 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
     par = dynamic_cast<PF::DrawPar*>( processor->get_par() );
     if( !par ) continue;
 
-    par->draw_point( x, y, update );
+    par->draw_point( lx, ly, update );
 		//continue;
+    //update.left -= dx;
+    //update.top -= dy;
+    //std::cout<<"lx="<<lx<<"  ly="<<ly<<std::endl;
+    //std::cout<<"update(1): "<<update.width<<","<<update.height<<"+"<<update.left<<"+"<<update.top<<std::endl;
+    layer2image( update );
+    //std::cout<<"update(2): "<<update.width<<","<<update.height<<"+"<<update.left<<"+"<<update.top<<std::endl;
 
 		/**/
     if( (update.width > 0) &&
 				(update.height > 0) ) {
-      if( true || PF::PhotoFlow::Instance().is_batch() ) {
+      if( PF::PhotoFlow::Instance().is_batch() ) {
 				pipeline->sink( update );	
       } else {
 				ProcessRequestInfo request;
@@ -266,7 +312,7 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 				request.area.width = update.width;
 				request.area.height = update.height;
 #ifndef NDEBUG
-				std::cout<<"PF::DrawConfigDialog::draw_point(): submitting rebuild request."<<std::endl;
+				std::cout<<"PF::DrawConfigDialog::draw_point(): submitting rebuild request with area."<<std::endl;
 #endif
 				PF::ImageProcessor::Instance().submit_request( request );
       }
@@ -285,28 +331,69 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 }
 
 
-void PF::DrawConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::DrawConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  if( button != 1 ) return false;
   start_stroke();
   draw_point( x, y );
+  return false;
 }
 
 
-void PF::DrawConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::DrawConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  if( button != 1 ) return false;
   //draw_point( x, y );
+  return false;
 }
 
 
-void PF::DrawConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::DrawConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 ) return;
+  mouse_x = x; mouse_y = y;
+  if( button != 1 ) return true;
 #ifndef NDEBUG
   std::cout<<"PF::DrawConfigDialog::pointer_motion_event() called."<<std::endl;
 #endif
   draw_point( x, y );
+  return true;
 }
 
 
+
+
+bool PF::DrawConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+                                           float scale, int xoffset, int yoffset )
+{
+#if defined(_WIN32) || defined(WIN32)
+  if( !is_mapped() )
+    return false;
+#else
+  if( !get_mapped() )
+    return false;
+#endif
+
+  if( !get_layer() ) return false;
+  if( !get_layer()->get_image() ) return false;
+  if( !get_layer()->get_processor() ) return false;
+  if( !get_layer()->get_processor()->get_par() ) return false;
+
+  PF::OpParBase* par = get_layer()->get_processor()->get_par();
+
+  // Resize the output buffer to match the input one
+  buf_out.resize( buf_in.get_rect() );
+  // Copy pixel data from input to output
+  buf_out.copy( buf_in );
+
+  int pensize = pen_size.get_adjustment()->get_value();//*scale;
+  double tx = 0, ty = 0, tw = pensize, th = pensize;
+  layer2screen( tx, ty, tw, th );
+  pensize = tw;
+  int pen_size2 = pensize*pensize;
+
+  int x0 = mouse_x;//*scale + xoffset;
+  int y0 = mouse_y;//*scale + yoffset;
+
+  buf_out.draw_circle( x0, y0, pensize );
+  return true;
+}

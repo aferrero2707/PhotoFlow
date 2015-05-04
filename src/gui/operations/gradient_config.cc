@@ -32,7 +32,11 @@
 
 PF::GradientConfigDialog::GradientConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Gradient tool" ),
-  typeSelector( this, "gradient_type", "Gradient type: ", 1 )
+  typeSelector( this, "gradient_type", "Gradient type: ", 1 ),
+  center_x( this, "gradient_center_x", "Center X (%)", 100, 0, 100, 1, 10, 100),
+  center_y( this, "gradient_center_y", "Center Y (%)", 100, 0, 100, 1, 10, 100)
 {
   add_widget( typeSelector );
+  add_widget( center_x );
+  add_widget( center_y );
 }

@@ -224,7 +224,7 @@ write( fd, buf, bufsize );						\
 }
 
 
-void PF::RawBuffer::draw_row( Pen& pen, unsigned int row, 
+void PF::RawBuffer::draw_row( Pencil& pen, unsigned int row, 
 															unsigned int startcol, unsigned int endcol )
 {
   if( fd < 0 )
@@ -324,14 +324,14 @@ void PF::RawBuffer::draw_row( Pen& pen, unsigned int row,
 
 
 
-void PF::RawBuffer::draw_point( Pen& pen, unsigned int x0, unsigned int y0,
+void PF::RawBuffer::draw_point( Pencil& pen, unsigned int x0, unsigned int y0,
 																VipsRect& update, bool update_pyramid )
 {
   if( fd < 0 )
     return;
 
 	//std::cout<<"RawBuffer::draw_point("<<x0<<","<<y0<<"): fd="<<fd<<std::endl;
-	//std::cout<<"Pen color: ";
+	//std::cout<<"Pencil color: ";
   //for( int ch = 0; ch < bands; ch++ ) {
 	//	std::cout<<pen.get_channel(ch)<<"  ";
   //}
@@ -380,7 +380,7 @@ void PF::RawBuffer::draw_point( Pen& pen, unsigned int x0, unsigned int y0,
 
 
 
-void PF::RawBuffer::draw_segment( Pen& pen, Segment& segment )
+void PF::RawBuffer::draw_segment( Pencil& pen, Segment& segment )
 {
   if( fd < 0 )
     return;

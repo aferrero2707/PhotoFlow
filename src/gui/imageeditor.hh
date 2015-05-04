@@ -36,6 +36,7 @@
 
 #include "imagearea.hh"
 #include "layerwidget.hh"
+#include "tablabelwidget.hh"
 
 
 namespace PF {
@@ -44,8 +45,10 @@ namespace PF {
   {
     std::string filename;
     Image* image;
+    bool image_opened;
 
     Layer* active_layer;
+    std::list<PF::Layer*> active_layer_children;
 
     Gtk::VBox imageBox;
     ImageArea* imageArea;
@@ -57,6 +60,13 @@ namespace PF {
     Gtk::VBox radioBox;
     Gtk::RadioButton buttonShowMerged, buttonShowActive;
 
+    HTabLabelWidget* tab_label_widget;
+
+    void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
+    void get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
+                           std::list<Layer*>& children );
+    void get_child_layers();
+
   public:
     ImageEditor( std::string filename );
     ~ImageEditor();
@@ -65,13 +75,16 @@ namespace PF {
 
     LayerWidget& get_layer_widget() { return layersWidget; }
 
-    void set_active_layer( int id ) 
-    {
-      if( image )
-	active_layer = image->get_layer_manager().get_layer( id );
-    }
+    void set_tab_label_widget( HTabLabelWidget* l ) { tab_label_widget = l; }
+
+    void set_active_layer( int id );
+
+    void open_image();
+
+    void on_image_modified();
 
     void on_map();
+    void on_realize();
 
     // Handlers for the mouse events inside the image area
     bool on_button_press_event( GdkEventButton* button );
@@ -95,7 +108,21 @@ namespace PF {
       return fact;
     }
 
-    void screen2image( gdouble& x, gdouble& y );
+    void screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h );
+    void image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h );
+    void screen2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+    {
+      screen2image( x, y, w, h );
+      image2layer( x, y, w, h );
+    }
+
+    void image2screen( gdouble& x, gdouble& y, gdouble& w, gdouble& h );
+    void layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h );
+    void layer2screen( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
+    {
+      layer2image( x, y, w, h );
+      image2screen( x, y, w, h );
+    }
 
     void zoom_in();
     void zoom_out();

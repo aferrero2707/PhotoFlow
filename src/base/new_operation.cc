@@ -77,6 +77,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
     processor = new_crop();
 
+  } else if( op_type == "scale" ) {
+
+    //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    processor = new_scale();
+
   } else if( op_type == "invert" ) {
 
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
@@ -101,6 +106,10 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
     processor = new_brightness_contrast();
+
+  } else if( op_type == "hue_saturation" ) {
+
+    processor = new_hue_saturation();
 
   } else if( op_type == "curves" ) {
       
@@ -142,6 +151,21 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
     processor = new_draw();
 
+  } else if( op_type == "clone_stamp" ) {
+
+    //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
+    processor = new_clone_stamp();
+
+  } else if( op_type == "lensfun" ) {
+    processor = new_lensfun();
+  }
+
+  if( !processor ) {
+    // Try with G'MIC
+    std::cout<<"PF::new_gmic_operation( "<<op_type<<" );"<<std::endl;
+    processor = PF::new_gmic_operation( op_type );
+  }
+  /*
   } else { // it must be a VIPS operation...
 
     int pos = op_type.find( "vips-" );
@@ -155,6 +179,7 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     vips_op->get_par()->set_op( vips_op_type.c_str() );
     processor = vips_op;
   }
+  */
 
   if( processor && current_layer ) {
     current_layer->set_processor( processor );
