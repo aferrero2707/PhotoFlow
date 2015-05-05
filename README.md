@@ -27,7 +27,8 @@ To add the PPA and install photoflow, do the following:
 
 # Fedora packages
 
-User Oleastre is providing up-to-date VIPS and PhotoFlow packages for Fedora
+User Oleastre is providing up-to-date VIPS and PhotoFlow packages for Fedora.
+
 To install PhotoFlow, just execute the following commands as root:
 
         dnf copr enable oleastre/PhotoFlow
