@@ -30,17 +30,6 @@
 #include "../base/exif_data.hh"
 #include "image_reader.hh"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /*__cplusplus*/
-
-int
-vips_cast( VipsImage *in, VipsImage **out, VipsBandFormat format, ... );
-
-#ifdef __cplusplus
-}
-#endif /*__cplusplus*/
-
 
 PF::ImageReaderPar::~ImageReaderPar()
 {

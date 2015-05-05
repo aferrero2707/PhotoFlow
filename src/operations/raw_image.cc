@@ -220,14 +220,14 @@ PF::RawImage::RawImage( const std::string f ):
 		       sizeof(dcraw_data_t) );
 
   PF::exif_read( &exif_data, file_name.c_str() );
-/*
+
   buf = malloc( sizeof(exif_data_t) );
   if( !buf ) return;
   memcpy( buf, &exif_data, sizeof(exif_data_t) );
   vips_image_set_blob( image, PF_META_EXIF_NAME,
            (VipsCallbackFn) PF::exif_free, buf,
            sizeof(exif_data_t) );
-*/
+
   print_exif();
 
 #ifdef PF_USE_LIBRAW
@@ -310,6 +310,12 @@ PF::RawImage::~RawImage()
 VipsImage* PF::RawImage::get_image(unsigned int& level)
 {
   if( level == 0 ) {
+    GType type = vips_image_get_typeof(image, PF_META_EXIF_NAME );
+    if( type ) {
+      //std::cout<<"RawImage::get_image(): exif_custom_data found in image("<<image<<")"<<std::endl;
+      //print_exif();
+    } else std::cout<<"RawImage::get_image(): exif_custom_data not found in image("<<image<<")"<<std::endl;
+    /*
 #ifdef DO_WARNINGS
 #warning "RawImage::get_image(): refreshing of exif metadata needed. This is not normal!"
 #endif
@@ -319,7 +325,7 @@ VipsImage* PF::RawImage::get_image(unsigned int& level)
     vips_image_set_blob( image, PF_META_EXIF_NAME,
              (VipsCallbackFn) PF::exif_free, buf,
              sizeof(exif_data_t) );
-
+     */
     PF_REF( image, "RawImage()::get_image(): level 0 ref");
     return image;
   }
