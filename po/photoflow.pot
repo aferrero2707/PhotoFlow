@@ -1,0 +1,138 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-05-05 08:53+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/gui/imageeditor.cc:66
+msgid "show merged layers"
+msgstr ""
+
+#: src/gui/imageeditor.cc:67
+msgid "show active layer"
+msgstr ""
+
+#: src/gui/imageeditor.cc:314
+#, c-format
+msgid "Crash recovery found for file \"%s\". Do you want to restore it?"
+msgstr ""
+
+#: src/gui/layerwidget.cc:46
+msgid "Load"
+msgstr ""
+
+#: src/gui/layerwidget.cc:47 src/gui/mainwindow.cc:57
+msgid "Save"
+msgstr ""
+
+#: src/gui/layerwidget.cc:60
+msgid "Layers"
+msgstr ""
+
+#: src/gui/layerwidget.cc:68
+msgid "Add a new layer"
+msgstr ""
+
+#: src/gui/layerwidget.cc:70
+msgid "Add a new layer group"
+msgstr ""
+
+#: src/gui/layerwidget.cc:72
+msgid "Remove selected layers"
+msgstr ""
+
+#: src/gui/layerwidget.cc:74
+msgid "Load an existing preset"
+msgstr ""
+
+#: src/gui/layerwidget.cc:75
+msgid "Save the selected layers as a preset"
+msgstr ""
+
+#: src/gui/layerwidget.cc:540
+msgid "New Group Layer"
+msgstr ""
+
+#: src/gui/layerwidget.cc:552
+msgid "Group Layer Config"
+msgstr ""
+
+#: src/gui/layerwidget.cc:579 src/gui/layerwidget.cc:647
+#: src/gui/layerwidget.cc:652
+msgid "Photoflow presets"
+msgstr ""
+
+#: src/gui/layerwidget.cc:637
+msgid "Save preset as..."
+msgstr ""
+
+#: src/gui/mainwindow.cc:56
+msgid "Open"
+msgstr ""
+
+#: src/gui/mainwindow.cc:58
+msgid "Save as"
+msgstr ""
+
+#: src/gui/mainwindow.cc:59
+msgid "Export"
+msgstr ""
+
+#: src/gui/mainwindow.cc:60
+msgid "Exit"
+msgstr ""
+
+#: src/gui/mainwindow.cc:359
+msgid "Open image"
+msgstr ""
+
+#: src/gui/mainwindow.cc:374 src/gui/mainwindow.cc:385
+msgid "Image files"
+msgstr ""
+
+#: src/gui/mainwindow.cc:380 src/gui/mainwindow.cc:391
+msgid "All files"
+msgstr ""
+
+#: src/gui/mainwindow.cc:463
+msgid "Save image as..."
+msgstr ""
+
+#: src/gui/mainwindow.cc:479 src/gui/mainwindow.cc:484
+msgid "Photoflow files"
+msgstr ""
+
+#: src/gui/mainwindow.cc:566
+msgid "Export image as..."
+msgstr ""
+
+#: src/gui/mainwindow.cc:576 src/gui/mainwindow.cc:581
+msgid "TIFF files"
+msgstr ""
+
+#: src/gui/mainwindow.cc:588 src/gui/mainwindow.cc:593
+msgid "JPEG files"
+msgstr ""
+
+#: src/gui/mainwindow.cc:663
+#, c-format
+msgid ""
+"Image \"%s\" contains unsaved data. Do you want to save it before closing?"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:116
+msgid "preview"
+msgstr ""

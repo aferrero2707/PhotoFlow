@@ -51,6 +51,9 @@
 #define GetCurrentDir getcwd
 #endif
 
+#include<libintl.h>
+#include<locale.h>
+
 #if defined(__APPLE__) && defined (__MACH__)
 #include <mach-o/dyld.h>
 #endif
@@ -169,6 +172,10 @@ int main (int argc, char *argv[])
     std::cout<<"FATAL: Cannot create cache dir."<<std::endl;
     return 1;
   }
+
+  setlocale(LC_ALL,"");
+  bindtextdomain("photoflow",PF::PhotoFlow::Instance().get_locale_dir().c_str());
+  textdomain("photoflow");
 
   vips__leak = 1;
 

@@ -37,6 +37,7 @@
 #include "photoflow.hh"
 #include "imagepyramid.hh"
 #include "exif_data.hh"
+#include "operation.hh"
 
 VipsImage* PF::pyramid_test_image = NULL;
 GObject* PF::pyramid_test_obj = NULL;
@@ -244,6 +245,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   
   VipsImage* img = levels[0].image;
 
+  /*
   size_t exifsz;
   void* exif_data;
   if( !vips_image_get_blob( img, PF_META_EXIF_NAME,
@@ -253,6 +255,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     std::cout<<"ImagePyramid::get_level(): exif_custom_data not found in img("<<img<<")"<<std::endl;
     exif_data = NULL;
   }
+  */
 
   if( level < levels.size() ) {
     // We add a reference to the returned pyramid level, since it must be kept alive until
@@ -270,9 +273,10 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   }
   
   PF::PyramidLevel newlevel;
+
+  /*
   void *profile_data;
   size_t profile_length;
-  
   if( vips_image_get_blob( img, VIPS_META_ICC_NAME, 
 			   &profile_data, &profile_length ) )
     profile_data = NULL;
@@ -283,7 +287,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 			   &image_data, 
 			   &blobsz ) )
     image_data = NULL;
-
+*/
 
   VipsImage* in = levels.back().image;
   if( !in )
@@ -345,6 +349,9 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     snprintf(tstr,499,"PF::ImagePyramid::get_level(%d) level #%d (after vips_copy)",level, (int)levels.size());
     PF_UNREF( in, tstr );
 
+    PF::vips_copy_metadata( img, out );
+
+    /*
     if( profile_data ) {
       void* profile_data2 = malloc( profile_length );
       if( profile_data2 ) {
@@ -374,6 +381,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
             exif_data2, exifsz );
       }
     }
+    */
 
     newlevel.image = out;
     newlevel.fd = fd;

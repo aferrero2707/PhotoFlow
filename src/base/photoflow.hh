@@ -65,6 +65,7 @@ namespace PF
     std::string cache_dir;
     std::string base_dir;
     std::string data_dir;
+    std::string locale_dir;
 
     bool batch;
 
@@ -99,6 +100,9 @@ namespace PF
 
     void set_data_dir(std::string dir) { data_dir = dir; }
     std::string get_data_dir() { return data_dir; }
+
+    void set_locale_dir(std::string dir) { locale_dir = dir; }
+    std::string get_locale_dir() { return locale_dir; }
 
     std::string get_cache_dir() { return cache_dir; }
 

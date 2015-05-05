@@ -104,10 +104,14 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
   size_t blobsz;
   if( vips_image_get_blob( in[0], "raw_image_data",
 			   (void**)&image_data, 
-			   &blobsz ) )
+			   &blobsz ) ) {
+    std::cout<<"RawOutputPar::build(): could not extract raw_image_data."<<std::endl;
     return NULL;
-  if( blobsz != sizeof(dcraw_data_t) )
+  }
+  if( blobsz != sizeof(dcraw_data_t) ) {
+    std::cout<<"RawOutputPar::build(): wrong raw_image_data size."<<std::endl;
     return NULL;
+  }
 
   switch( wb_mode.get_enum_value().first ) {
   case PF::WB_CAMERA:

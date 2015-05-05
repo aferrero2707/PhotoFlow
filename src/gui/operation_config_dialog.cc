@@ -265,8 +265,8 @@ void PF::OperationConfigDialog::enable_editing()
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     get_layer()->get_processor()->get_par()->set_editing_flag( true );
-    std::cout<<"  Editing flag set to true"<<std::endl;
-    std::cout<<"  updating image"<<std::endl;
+    //std::cout<<"  Editing flag set to true"<<std::endl;
+    //std::cout<<"  updating image"<<std::endl;
     get_layer()->get_image()->update();
   }
 }
@@ -278,8 +278,8 @@ void PF::OperationConfigDialog::disable_editing()
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     get_layer()->get_processor()->get_par()->set_editing_flag( false );
-    std::cout<<"  Editing flag set to false"<<std::endl;
-    std::cout<<"  updating image"<<std::endl;
+    //std::cout<<"  Editing flag set to false"<<std::endl;
+    //std::cout<<"  updating image"<<std::endl;
     get_layer()->get_image()->update();
   }
 }
@@ -402,7 +402,7 @@ void PF::OperationConfigDialog::update_properties()
 
 void PF::OperationConfigDialog::on_preview_clicked()
 {
-  std::cout<<"OperationConfigDialog::on_preview_clicked(): active="<<previewButton.get_active()<<std::endl;
+  //std::cout<<"OperationConfigDialog::on_preview_clicked(): active="<<previewButton.get_active()<<std::endl;
   if( get_layer() && get_layer()->get_image() &&
     get_layer()->get_processor() &&
     get_layer()->get_processor()->get_par() ) {
@@ -415,7 +415,7 @@ void PF::OperationConfigDialog::on_preview_clicked()
         controls[i]->set_value();
       }
       get_layer()->set_dirty( true );
-      std::cout<<"  updating image"<<std::endl;
+      //std::cout<<"  updating image"<<std::endl;
       get_layer()->get_image()->update();
       get_layer()->get_image()->unlock();
     } else {
@@ -425,12 +425,12 @@ void PF::OperationConfigDialog::on_preview_clicked()
       for( int i = 0; i < controls.size(); i++ )
         controls[i]->set_inhibit( true );
 
-      std::cout<<"  restoring original values"<<std::endl;
+      //std::cout<<"  restoring original values"<<std::endl;
       par->restore_properties( values_save );
       get_layer()->set_dirty( true );
-      std::cout<<"  updating image"<<std::endl;
+      //std::cout<<"  updating image"<<std::endl;
       get_layer()->get_image()->update();
-      std::cout<<"  image updated"<<std::endl;
+      //std::cout<<"  image updated"<<std::endl;
       get_layer()->get_image()->unlock();
     }
   }
@@ -445,11 +445,11 @@ void PF::OperationConfigDialog::on_button_clicked(int id)
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
       PF::OpParBase* par = get_layer()->get_processor()->get_par();
-      std::cout<<"  restoring original values"<<std::endl;
+      //std::cout<<"  restoring original values"<<std::endl;
       par->restore_properties( values_save );
       init();
       get_layer()->set_dirty( true );
-      std::cout<<"  updating image"<<std::endl;
+      //std::cout<<"  updating image"<<std::endl;
       get_layer()->get_image()->update();
     }
     //hide_all();
