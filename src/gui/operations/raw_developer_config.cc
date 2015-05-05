@@ -63,7 +63,7 @@ extern "C" {
 bool PF::WBSelector::check_value( int id, const std::string& name, const std::string& val )
 {
   if( id < 3 ) return true;
-  std::cout<<"WBSelector::check_value(): maker="<<maker<<" model="<<model<<std::endl;
+  //std::cout<<"WBSelector::check_value(): maker="<<maker<<" model="<<model<<std::endl;
   for(int i = 0; i < wb_preset_count; i++) {
     //std::cout<<"  wb_preset[i].make="<<wb_preset[i].make<<" wb_preset[i].model="<<wb_preset[i].model<<std::endl;
     if( maker == wb_preset[i].make && model == wb_preset[i].model ) {
@@ -179,7 +179,7 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
 
 void PF::RawDeveloperConfigDialog::do_update()
 {
-  std::cout<<"RawDeveloperConfigDialog::do_update() called."<<std::endl;
+  //std::cout<<"RawDeveloperConfigDialog::do_update() called."<<std::endl;
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
@@ -1068,7 +1068,7 @@ void PF::RawDeveloperConfigDialog::on_cam_filename_changed()
     std::string filename = camProfFileEntry.get_text();
     if( filename.empty() )
       return;
-    std::cout<<"New input profile name: "<<filename<<std::endl;
+    //std::cout<<"New input profile name: "<<filename<<std::endl;
     PF::RawDeveloperPar* par = 
       dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
     if( !par )
@@ -1078,7 +1078,7 @@ void PF::RawDeveloperConfigDialog::on_cam_filename_changed()
       return;
     prop->update( filename );
     get_layer()->set_dirty( true );
-    std::cout<<"  updating image"<<std::endl;
+    //std::cout<<"  updating image"<<std::endl;
     get_layer()->get_image()->update();
   }
 }
@@ -1093,7 +1093,7 @@ void PF::RawDeveloperConfigDialog::on_out_filename_changed()
     std::string filename = outProfFileEntry.get_text();
     if( filename.empty() )
       return;
-    std::cout<<"New output profile name: "<<filename<<std::endl;
+    //std::cout<<"New output profile name: "<<filename<<std::endl;
     PF::RawDeveloperPar* par = 
       dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
     if( !par )
@@ -1103,7 +1103,7 @@ void PF::RawDeveloperConfigDialog::on_out_filename_changed()
       return;
     prop->update( filename );
     get_layer()->set_dirty( true );
-    std::cout<<"  updating image"<<std::endl;
+    //std::cout<<"  updating image"<<std::endl;
     get_layer()->get_image()->update();
   }
 }

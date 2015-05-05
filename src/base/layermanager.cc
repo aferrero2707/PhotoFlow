@@ -152,9 +152,9 @@ void PF::LayerManager::get_input_layers( Layer* layer, std::list<Layer*>& inputs
 void PF::LayerManager::get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
                                          std::list<Layer*>& children )
 {
-  //#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"Collecting children of layer \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
-  //#endif
+#endif
   std::list<PF::Layer*> tmplist;
   std::list<PF::Layer*>::reverse_iterator li;
   // Loop over layers in reverse order and fill a temporary list,
@@ -162,17 +162,17 @@ void PF::LayerManager::get_child_layers( Layer* layer, std::list<PF::Layer*>& co
   // container list is reached
   for(li = container.rbegin(); li != container.rend(); ++li) {
     PF::Layer* l = *li;
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
-    //#endif
+#endif
     if( l->get_id() == layer->get_id() ) break;
     // Add layer and all its children to the inputs list
     //expand_layer( l, inputs );
     // Add layer to the temporary list
     tmplist.push_front( l );
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"    added."<<std::endl;
-    //#endif
+#endif
   }
 
   // Append the temporary list to the childrens one

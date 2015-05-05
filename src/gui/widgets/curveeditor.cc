@@ -139,7 +139,7 @@ void PF::CurveEditor::get_value()
   yadjustment->set_value( prop->get().get_point(0).second*100 );
 #endif
   inhibit_value_changed = false;
-  std::cout<<"CurveEditor::get_value() called"<<std::endl;
+  //std::cout<<"CurveEditor::get_value() called"<<std::endl;
 }
 
 
