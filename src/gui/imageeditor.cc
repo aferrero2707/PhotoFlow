@@ -63,8 +63,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonZoomOut( "Zoom -" ),
   buttonZoom100( "1:1" ),
   buttonZoomFit( "Fit" ),
-  buttonShowMerged( "show merged layers" ),
-  buttonShowActive( "show active layer" ),
+  buttonShowMerged( _("show merged layers") ),
+  buttonShowActive( _("show active layer") ),
   tab_label_widget( NULL )
 {
   image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
@@ -307,10 +307,13 @@ void PF::ImageEditor::open_image()
 
   bool do_recovery = false;
   if( !bckname.empty() ) {
-    Glib::ustring msg = "Crash recovery found for file\n\"";
-    msg += filename;
-    msg += "\"\nDo you want to restore it?";
-    Gtk::MessageDialog dialog(msg,
+    //Glib::ustring msg = "Crash recovery found for file\n\"";
+    //msg += filename;
+    //msg += "\"\nDo you want to restore it?";
+    char tstr[501];
+    snprintf( _("Crash recovery found for file \"%s\". Do you want to restore it?"),
+        500, filename.c_str());
+    Gtk::MessageDialog dialog(tstr,
         false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
     //dialog.set_transient_for(*this);
     dialog.set_default_response( Gtk::RESPONSE_YES );

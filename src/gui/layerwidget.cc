@@ -43,8 +43,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonAdd("+"),
   buttonAddGroup("G+"),
   buttonDel("-"),
-  buttonPresetLoad("Load"),
-  buttonPresetSave("Save"),
+  buttonPresetLoad( _("Load") ),
+  buttonPresetSave( _("Save") ),
   operationsDialog( image, this )
 {
   //set_size_request(250,0);
@@ -57,7 +57,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   
   //view->set_reorderable();
 
-  notebook.append_page(*view,"Layers");
+  notebook.append_page(*view,_("Layers"));
   Widget* page = notebook.get_nth_page(-1);
   Gtk::Label* label = (Gtk::Label*)notebook.get_tab_label(*page);
   label->set_angle(90);
@@ -65,14 +65,14 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   pack_start(notebook);
 
   buttonAdd.set_size_request(40,0);
-  buttonAdd.set_tooltip_text("Add a new layer");
+  buttonAdd.set_tooltip_text( _("Add a new layer") );
   buttonAddGroup.set_size_request(40,0);
-  buttonAddGroup.set_tooltip_text("Add a new layer group");
+  buttonAddGroup.set_tooltip_text( _("Add a new layer group") );
   buttonDel.set_size_request(40,0);
-  buttonDel.set_tooltip_text("Remove selected layers");
+  buttonDel.set_tooltip_text( _("Remove selected layers") );
 
-  buttonPresetLoad.set_tooltip_text("Load an existing preset");
-  buttonPresetSave.set_tooltip_text("Save the selected layers as a preset");
+  buttonPresetLoad.set_tooltip_text( _("Load an existing preset") );
+  buttonPresetSave.set_tooltip_text( _("Save the selected layers as a preset") );
 
   buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
   buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
@@ -537,7 +537,7 @@ void PF::LayerWidget::on_button_add_group()
   PF::LayerManager& layer_manager = image->get_layer_manager();
   PF::Layer* layer = layer_manager.new_layer();
   if( !layer ) return;
-  layer->set_name( "New Group Layer" );
+  layer->set_name( _("New Group Layer") );
   layer->set_normal( false );
 
   PF::ProcessorBase* processor = new_buffer();
@@ -549,7 +549,7 @@ void PF::LayerWidget::on_button_add_group()
   add_layer( layer );
 
   PF::OperationConfigDialog* dialog = 
-    new PF::OperationConfigDialog( layer, Glib::ustring("Group Layer Config") );
+    new PF::OperationConfigDialog( layer, Glib::ustring(_("Group Layer Config")) );
   processor->get_par()->set_config_ui( dialog );
   //dialog->update();
   dialog->open();
@@ -576,12 +576,12 @@ void PF::LayerWidget::on_button_load()
 
 #ifdef GTKMM_2
   Gtk::FileFilter filter_pfp;
-  filter_pfp.set_name("Photoflow presets");
+  filter_pfp.set_name( _("Photoflow presets") );
   filter_pfp.add_pattern("*.pfp");
 #endif
 #ifdef GTKMM_3
   Glib::RefPtr<Gtk::FileFilter> filter_pfp = Gtk::FileFilter::create();
-  filter_pfp->set_name("Photoflow presets");
+  filter_pfp->set_name( -("Photoflow presets") );
   filter_pfp->add_pattern("*.pfp");
 #endif
   dialog.add_filter(filter_pfp);
@@ -634,7 +634,7 @@ void PF::LayerWidget::on_button_save()
     refTreeSelection->get_selected_rows();
   if( sel_rows.empty() ) return;
 
-  Gtk::FileChooserDialog dialog("Save preset as...",
+  Gtk::FileChooserDialog dialog( _("Save preset as..."),
 				Gtk::FILE_CHOOSER_ACTION_SAVE);
   //dialog.set_transient_for(*this);
   
@@ -644,12 +644,12 @@ void PF::LayerWidget::on_button_save()
 
 #ifdef GTKMM_2
   Gtk::FileFilter filter_pfp;
-  filter_pfp.set_name("Photoflow presets");
+  filter_pfp.set_name( _("Photoflow presets") );
   filter_pfp.add_pattern("*.pfp");
 #endif
 #ifdef GTKMM_3
   Glib::RefPtr<Gtk::FileFilter> filter_pfp = Gtk::FileFilter::create();
-  filter_pfp->set_name("Photoflow presets");
+  filter_pfp->set_name( _("Photoflow presets") );
   filter_pfp->add_pattern("*.pfp");
 #endif
   dialog.add_filter(filter_pfp);

@@ -53,11 +53,11 @@ PF::MainWindow::MainWindow():
   controlBox(Gtk::ORIENTATION_VERTICAL),
   topButtonBox(Gtk::ORIENTATION_HORIZONTAL),
 #endif
-  buttonOpen("Open"), 
-  buttonSave("Save"), 
-  buttonSaveAs("Save as"), 
-  buttonExport("Export"), 
-  buttonExit("Exit"), 
+  buttonOpen( _("Open") ),
+  buttonSave( _("Save") ),
+  buttonSaveAs( _("Save as") ),
+  buttonExport( _("Export") ),
+  buttonExit( _("Exit") ),
   buttonTest("Test")
 {
   set_title("Photo Flow");
@@ -356,7 +356,7 @@ void PF::MainWindow::on_button_open_clicked()
 {
   //return;
 
-  Gtk::FileChooserDialog dialog("Open image",
+  Gtk::FileChooserDialog dialog( _("Open image"),
 				Gtk::FILE_CHOOSER_ACTION_OPEN);
   dialog.set_transient_for(*this);
   
@@ -371,24 +371,24 @@ void PF::MainWindow::on_button_open_clicked()
 
 #ifdef GTKMM_2
   Gtk::FileFilter filter_tiff;
-  filter_tiff.set_name("Image files");
+  filter_tiff.set_name( _("Image files") );
   filter_tiff.add_mime_type("image/tiff");
   filter_tiff.add_mime_type("image/jpeg");
   filter_tiff.add_mime_type("image/png");
   filter_tiff.add_pattern("*.pfi");
   Gtk::FileFilter filter_all;
-  filter_all.set_name("All files");
+  filter_all.set_name( _("All files") );
   filter_all.add_pattern("*.*");
 #endif
 #ifdef GTKMM_3
   Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
-  filter_tiff->set_name("Image files");
+  filter_tiff->set_name( _("Image files") );
   filter_tiff->add_mime_type("image/tiff");
   filter_tiff->add_mime_type("image/jpeg");
   filter_tiff->add_mime_type("image/png");
   filter_tiff->add_pattern("*.pfi");
   Glib::RefPtr<Gtk::FileFilter> filter_all = Gtk::FileFilter::create();
-  filter_all->set_name("All files");
+  filter_all->set_name( _("All files") );
   filter_all->add_pattern("*.*");
 #endif
   dialog.add_filter(filter_tiff);
@@ -460,7 +460,7 @@ void PF::MainWindow::on_button_save_clicked()
 
 void PF::MainWindow::on_button_saveas_clicked()
 {
-  Gtk::FileChooserDialog dialog("Save image as...",
+  Gtk::FileChooserDialog dialog( _("Save image as..."),
       Gtk::FILE_CHOOSER_ACTION_SAVE);
   dialog.set_transient_for(*this);
 
@@ -476,12 +476,12 @@ void PF::MainWindow::on_button_saveas_clicked()
 
 #ifdef GTKMM_2
   Gtk::FileFilter filter_pfi;
-  filter_pfi.set_name("Photoflow files");
+  filter_pfi.set_name( _("Photoflow files") );
   filter_pfi.add_pattern("*.pfi");
 #endif
 #ifdef GTKMM_3
   Glib::RefPtr<Gtk::FileFilter> filter_pfi = Gtk::FileFilter::create();
-  filter_pfi->set_name("Photoflow files");
+  filter_pfi->set_name( _("Photoflow files") );
   filter_pfi->add_pattern("*.pfi");
 #endif
   dialog.add_filter(filter_pfi);
@@ -563,7 +563,7 @@ void PF::MainWindow::on_button_saveas_clicked()
 
 void PF::MainWindow::on_button_export_clicked()
 {
-  Gtk::FileChooserDialog dialog("Export image as...",
+  Gtk::FileChooserDialog dialog( _("Export image as..."),
 				Gtk::FILE_CHOOSER_ACTION_SAVE);
   dialog.set_transient_for(*this);
   
@@ -573,24 +573,24 @@ void PF::MainWindow::on_button_export_clicked()
 
 #ifdef GTKMM_2
   Gtk::FileFilter filter_tiff;
-  filter_tiff.set_name("TIFF files");
+  filter_tiff.set_name( _("TIFF files") );
   filter_tiff.add_mime_type("image/tiff");
 #endif
 #ifdef GTKMM_3
   Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
-  filter_tiff->set_name("TIFF files");
+  filter_tiff->set_name( _("TIFF files") );
   filter_tiff->add_mime_type("image/tiff");
 #endif
   dialog.add_filter(filter_tiff);
 
 #ifdef GTKMM_2
   Gtk::FileFilter filter_jpeg;
-  filter_jpeg.set_name("JPEG files");
+  filter_jpeg.set_name( _("JPEG files") );
   filter_jpeg.add_mime_type("image/jpeg");
 #endif
 #ifdef GTKMM_3
   Glib::RefPtr<Gtk::FileFilter> filter_jpeg = Gtk::FileFilter::create();
-  filter_jpeg->set_name("JPEG files");
+  filter_jpeg->set_name( _("JPEG files") );
   filter_jpeg->add_mime_type("image/jpeg");
 #endif
   dialog.add_filter(filter_jpeg);
@@ -656,10 +656,13 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
   if( editor->get_image()->is_modified() ) {
     char* fullpath = strdup( editor->get_image()->get_filename().c_str() );
     char* fname = basename( fullpath );
-    Glib::ustring msg = "Image \"";
-    msg += fname;
-    msg += "\" contains unsaved data.\nDo you want to save it before closing?";
-    Gtk::MessageDialog dialog(msg,
+    //Glib::ustring msg = _("Image \"");
+    //msg += fname;
+    //msg += "\" contains unsaved data.\nDo you want to save it before closing?";
+    char tstr[501];
+    snprintf( _("Image \"%s\" contains unsaved data. Do you want to save it before closing?"),
+        500, fname);
+    Gtk::MessageDialog dialog(tstr,
         false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
     dialog.set_transient_for(*this);
     dialog.set_default_response( Gtk::RESPONSE_YES );

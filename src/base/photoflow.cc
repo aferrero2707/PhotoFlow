@@ -129,8 +129,21 @@ PF::PhotoFlow::PhotoFlow():
 #endif
   std::cout<<"exePath: "<<exePath<<std::endl;
 
+  Glib::ustring localePath;
+#if defined(__APPLE__) && defined (__MACH__)
+  if( dataPath_env ) {
+    localePath = Glib::ustring(dataPath_env) + "/locale";
+  } else {
+    localePath = exePath + "/../share/locale";
+  }
+#else
+  localePath = Glib::ustring(INSTALL_PREFIX) + "/share/locale";
+#endif
+  std::cout<<"exePath: "<<exePath<<std::endl;
+
   set_base_dir( exePath );
   set_data_dir( dataPath );
+  set_locale_dir( localePath );
 }
 
 

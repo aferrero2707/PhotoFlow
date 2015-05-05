@@ -102,7 +102,7 @@ FILE(GLOB BaseSources base/*.cc)
 #FILE(GLOB RTIncludes rt/*.hh rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexif/*.hh rt/rtgui/*.h)
 #FILE(GLOB RTSources rt/*.cc rt/rtengine/*.c rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)
 FILE(GLOB RTIncludes 
-  rt/rtengine/rawimagesource.h 
+  rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h
 )
 FILE(GLOB RTSources 
   rt/rtengine/rawimagesource.cc
