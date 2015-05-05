@@ -50,7 +50,7 @@ static void dt_strlcpy_to_utf8(char *dest, size_t dest_max,
                                Exiv2::ExifData::const_iterator &pos, Exiv2::ExifData& exifData)
 {
   std::string str = pos->print(&exifData);
-  g_print("dt_strlcpy_to_utf8(): str=%s\n",str.c_str());
+  //g_print("dt_strlcpy_to_utf8(): str=%s\n",str.c_str());
 
   char *s = g_locale_to_utf8(str.c_str(), str.length(),
                              NULL, NULL, NULL);
@@ -63,7 +63,7 @@ static void dt_strlcpy_to_utf8(char *dest, size_t dest_max,
   {
     g_strlcpy(dest, str.c_str(), dest_max);
   }
-  g_print("dt_strlcpy_to_utf8(): dest=%s\n",dest);
+  //g_print("dt_strlcpy_to_utf8(): dest=%s\n",dest);
 }
 
 
@@ -196,39 +196,39 @@ bool PF::exif_read(exif_data_t* data, const char* path)
          ((pos = exifData.findKey(Exiv2::ExifKey("Exif.Canon.0x0095")))     != exifData.end())
         ) && pos->size())
     {
-      g_print("read_exif(): Canon lens found.\n");
+      //g_print("read_exif(): Canon lens found.\n");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
     }
     else if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.Panasonic.LensType"))) != exifData.end() && pos->size())
     {
-      g_print("read_exif(): Pnasonic lens found.");
+      //g_print("read_exif(): Pnasonic lens found.");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
     }
 #if LF_VERSION>((0 << 24) | (2 << 16) | (8 << 8) | 0)
     else if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.OlympusEq.LensType"))) != exifData.end() && pos->size())
     {
-      g_print("read_exif(): Olympus lens found.\n");
+      //g_print("read_exif(): Olympus lens found.\n");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
     }
 #endif
 #if EXIV2_MINOR_VERSION>20
     else if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.OlympusEq.LensModel"))) != exifData.end() && pos->size())
     {
-      g_print("read_exif(): Olympus lens found.\n");
+      //g_print("read_exif(): Olympus lens found.\n");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
     }
 #endif
     else if ( (pos=Exiv2::lensName(exifData)) != exifData.end() && pos->size())
     {
-      g_print("read_exif(): Generic lens found.\n");
+      //g_print("read_exif(): Generic lens found.\n");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
     }
     else if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.Photo.LensModel"))) != exifData.end() && pos->size())
     {
-      g_print("read_exif(): Generic2 lens found.\n");
+      //g_print("read_exif(): Generic2 lens found.\n");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
     }
-    g_print("read_exif(): lens=%s\n",data->exif_lens);
+    //g_print("read_exif(): lens=%s\n",data->exif_lens);
 
 #if 0
     /* Read flash mode */
@@ -274,14 +274,14 @@ bool PF::exif_read(exif_data_t* data, const char* path)
       dt_strlcpy_to_utf8(data->exif_model, sizeof(data->exif_model), pos, exifData);
     }
 
-    g_print("read_exif(): model=%s\n",data->exif_model);
+    //g_print("read_exif(): model=%s\n",data->exif_model);
     for(char *c=data->exif_model+sizeof(data->exif_model)-2; c >= data->exif_model; c--) {
       if(*c != ' ' && *c != '\0') {
         *(c+1) = '\0';
         break;
       }
     }
-    g_print("read_exif(): model=%s\n",data->exif_model);
+    //g_print("read_exif(): model=%s\n",data->exif_model);
 
     if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.Image.DateTimeOriginal")))
          != exifData.end() && pos->size())
@@ -295,7 +295,7 @@ bool PF::exif_read(exif_data_t* data, const char* path)
     }
 
 
-    g_print("read_exif(): lens=%s\n",data->exif_lens);
+    //g_print("read_exif(): lens=%s\n",data->exif_lens);
 #if EXIV2_MINOR_VERSION<23
     // workaround for an exiv2 bug writing random garbage into exif_lens for this camera:
     // http://dev.exiv2.org/issues/779
@@ -316,7 +316,7 @@ bool PF::exif_read(exif_data_t* data, const char* path)
         snprintf(data->exif_lens, sizeof(data->exif_lens), "%s", str.c_str());
       }
     };
-    g_print("read_exif(): lens=%s\n",data->exif_lens);
+    //g_print("read_exif(): lens=%s\n",data->exif_lens);
 
     return true;
   }

@@ -85,7 +85,7 @@ void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
     grey_curve.get().get_deltas( Greyvec );
   */
   curve.get().lock();
-  std::cout<<"CurvesPar::update_curve() called. # of points="<<curve.get().get_npoints()<<std::endl;std::cout.flush();
+  //std::cout<<"CurvesPar::update_curve() called. # of points="<<curve.get().get_npoints()<<std::endl;std::cout.flush();
   for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned char>::RANGE;
     float y = curve.get().get_delta( x );

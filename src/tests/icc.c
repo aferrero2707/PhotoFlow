@@ -87,6 +87,12 @@ main( int argc, char **argv )
   if( type ) printf( "Embedded profile found after vips_image_new_from_file()\n" );
   else printf( "Embedded profile not found after vips_image_new_from_file()\n" );
 
+  if( vips_copy( image, &image2, NULL ) )
+    vips_error_exit( NULL );
+  g_object_unref( image );
+
+  image = image2;
+
   cmsHPROFILE out_profile = dt_colorspaces_create_adobergb_profile();
   if( out_profile ) {
     cmsUInt32Number out_length;
@@ -110,7 +116,7 @@ main( int argc, char **argv )
   if( type ) printf( "Embedded profile found after vips_image_write_to_file()\n" );
   else printf( "Embedded profile not found after vips_image_write_to_file()\n" );
 
-  g_object_unref( image );
+  g_object_unref( image2 );
 
   return( 0 );
 }

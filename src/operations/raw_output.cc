@@ -103,10 +103,14 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   size_t blobsz;
   if( vips_image_get_blob( in[0], "raw_image_data",
 			   (void**)&image_data, 
-			   &blobsz ) )
+			   &blobsz ) ) {
+    std::cout<<"RawOutputPar::build(): could not extract raw_image_data."<<std::endl;
     return NULL;
-  if( blobsz != sizeof(dcraw_data_t) )
+  }
+  if( blobsz != sizeof(dcraw_data_t) ) {
+    std::cout<<"RawOutputPar::build(): wrong raw_image_data size."<<std::endl;
     return NULL;
+  }
 
   bool mode_changed = profile_mode.is_modified();
   bool out_mode_changed = out_profile_mode.is_modified();
@@ -161,11 +165,14 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       }
       char makermodel[1024];
       dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
-      std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
+      //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
       float cam_xyz[12];
       cam_xyz[0] = NAN;
       dt_dcraw_adobe_coeff(makermodel, (float(*)[12])cam_xyz);
-      if(std::isnan(cam_xyz[0])) return NULL;
+      if(std::isnan(cam_xyz[0])) {
+        std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
+        return NULL;
+      }
       cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
       break;
     }
@@ -228,7 +235,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
 				      INTENT_PERCEPTUAL, 
 				      cmsFLAGS_NOCACHE );
   }
-  std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
+  //std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
 
   if( gamma_curve )
     cmsFreeToneCurve( gamma_curve );
@@ -271,9 +278,9 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     cmsSaveProfileToMem( out_profile, buf, &out_length);
     vips_image_set_blob( out, VIPS_META_ICC_NAME, 
 			 (VipsCallbackFn) g_free, buf, out_length );
-    char tstr[1024];
-    cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-    std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
+    //char tstr[1024];
+    //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+    //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
   }
   /**/
   return out;

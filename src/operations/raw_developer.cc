@@ -80,11 +80,15 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   size_t blobsz;
   if( vips_image_get_blob( in[0], "raw_image_data",
 			   (void**)&image_data, 
-			   &blobsz ) )
+			   &blobsz ) ) {
+    std::cout<<"RawDeveloperPar::build(): could not extract raw_image_data."<<std::endl;
     return NULL;
+  }
 	//std::cout<<"RawDeveloperPar::build(): blobsz="<<blobsz<<std::endl;
-  if( blobsz != sizeof(dcraw_data_t) )
+  if( blobsz != sizeof(dcraw_data_t) ) {
+    std::cout<<"RawDeveloperPar::build(): wrong raw_image_data size."<<std::endl;
     return NULL;
+  }
   
   
   VipsImage* input_img = in[0];
@@ -191,7 +195,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   }
   */
 
-std::cout<<"RawDeveloper::build(): output image: "<<out2<<std::endl;
+//std::cout<<"RawDeveloper::build(): output image: "<<out2<<std::endl;
   return out2;
 }
 

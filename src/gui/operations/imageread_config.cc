@@ -58,13 +58,13 @@ void PF::ImageReadConfigDialog::on_filename_changed()
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     std::string filename = fileEntry.get_text();
-    std::cout<<"New image file name: "<<filename<<std::endl;
+    //std::cout<<"New image file name: "<<filename<<std::endl;
     PF::ImageReaderPar* par = 
       dynamic_cast<PF::ImageReaderPar*>(get_layer()->get_processor()->get_par());
     if( par && !filename.empty() ) {
       par->set_file_name( filename );
       get_layer()->set_dirty( true );
-      std::cout<<"  updating image"<<std::endl;
+      //std::cout<<"  updating image"<<std::endl;
       get_layer()->get_image()->update();
     }
   }

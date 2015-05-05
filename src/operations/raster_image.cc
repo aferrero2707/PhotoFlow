@@ -94,10 +94,21 @@ PF::RasterImage::RasterImage( const std::string f ):
     image = out;
   }
   //#ifndef NDEBUG
-    std::cout<<"RasterImage::RasterImage(): # of output bands="<<image->Bands<<std::endl;
+  std::cout<<"RasterImage::RasterImage(): # of output bands="<<image->Bands<<std::endl;
   //#endif
 
-  //PF::exif_read( &exif_data, file_name.c_str() );
+  // We make a copy of the original image to make sure that custom metadata is not deleted
+  VipsImage* image_copy;
+  if( vips_copy( image, &image_copy, NULL) ) {
+    std::cout<<"RasterImage::RasterImage(): vips_copy() failed for image "<<file_name<<std::endl;
+    PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_copy() failure." );
+    return;
+  }
+  PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_copy()." );
+  image = image_copy;
+
+  // We read part of the EXIF data and store it in the image as a custom blob
+  PF::exif_read( &exif_data, file_name.c_str() );
   void* buf = malloc( sizeof(PF::exif_data_t) );
   if( !buf ) return;
   memcpy( buf, &exif_data, sizeof(PF::exif_data_t) );
@@ -134,19 +145,15 @@ PF::RasterImage::~RasterImage()
 
 VipsImage* PF::RasterImage::get_image(unsigned int& level)
 {
-  {
-    size_t bufsz;
-    void* buf;
-    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
-        &buf,&bufsz ) ) {
-      //std::cout<<"RasterImage::get_image(): exif_custom_data found in image("<<image<<") before set_blob"<<std::endl;
 #ifndef NDEBUG
-    } else {
-      std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<") before set_blob"<<std::endl;
+  GType type = vips_image_get_typeof(image, PF_META_EXIF_NAME );
+  if( type ) {
+    std::cout<<"RasterImage::get_image(): exif_custom_data found in image("<<image<<")"<<std::endl;
+    print_exif();
+  } else std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<")"<<std::endl;
 #endif
-    }
-  }
 
+/*
 #ifdef DO_WARNINGS
 #warning "RasterImage::get_image(): refreshing of exif metadata needed. This is not normal!"
 #endif
@@ -159,17 +166,11 @@ VipsImage* PF::RasterImage::get_image(unsigned int& level)
 
 #ifndef NDEBUG
  print_exif();
-  {
-    size_t bufsz;
-    void* buf;
-    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
-        &buf,&bufsz ) ) {
-      //std::cout<<"RasterImage::get_image(): exif_custom_data found in image("<<image<<") after set_blob"<<std::endl;
-    } else {
-      std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<") after set_blob"<<std::endl;
-    }
-  }
+ GType type = vips_image_get_typeof(image, PF_META_EXIF_NAME );
+ if( type ) std::cout<<"RasterImage::get_image(): exif_custom_data found in image("<<image<<") after set_blob"<<std::endl;
+ else std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<") after set_blob"<<std::endl;
 #endif
+*/
 /*
   if( level == 0 ) {
     PF_REF( image, "RasterImage()::get_image(): level 0 ref");

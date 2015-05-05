@@ -107,12 +107,12 @@ VipsImage* PF::AmazeDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   //  LEFT BAND
   i0 += 3;
   // Extract a vertical left band at (1,0) and with size (border,t[i0-1]->Ysize)
-  PF_PRINT_REF( t[i0-1], "AmazeDemosaicPar::build(): t[i0-1] refcount before crop" );
+  //PF_PRINT_REF( t[i0-1], "AmazeDemosaicPar::build(): t[i0-1] refcount before crop" );
   if( vips_crop(t[i0-1], &t[i0], 1, 0, border, t[i0-1]->Ysize, NULL) ) {
     std::cout<<"AmazeDemosaicPar::build(): vip_crop(#3) failed"<<std::endl;
     return NULL;
   }
-  PF_PRINT_REF( t[i0-1], "AmazeDemosaicPar::build(): t[i0-1] refcount after crop" );
+  //PF_PRINT_REF( t[i0-1], "AmazeDemosaicPar::build(): t[i0-1] refcount after crop" );
   //PF_UNREF( t[i0-1], "AmazeDemosaicPar::build(): t[i0-1] unref #3" );
   // Flip the band horizontally
   if( vips_flip(t[i0], &t[i0+1], VIPS_DIRECTION_HORIZONTAL, NULL) ) {
@@ -151,7 +151,7 @@ VipsImage* PF::AmazeDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   PF_UNREF( t[i0-1], "AmazeDemosaicPar::build(): t[i0-1] unref #4-2" );
   PF_UNREF( t[i0+1], "AmazeDemosaicPar::build(): t[i0+1] unref #4" );
 
-  std::cout<<"i0+2="<<i0+2<<std::endl;
+  //std::cout<<"i0+2="<<i0+2<<std::endl;
 
   // Copy to extended image
   VipsImage* extended;

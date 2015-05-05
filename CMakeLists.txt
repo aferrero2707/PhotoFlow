@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(photoflow)
+project(photoflow CXX C)
+
+option(USE_NLS "Build Native Language Support (using gettext)" ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 
@@ -68,4 +70,27 @@ endif()
   MESSAGE( STATUS "GTKMM3_FOUND:         " ${GTKMM3_FOUND} )
 
   
+#need to put here do setting LOCALE_DIR variable
+if(USE_NLS)
+find_package(Gettext)
+if(Gettext_FOUND)
+	if(NOT LOCALE_DIR)
+    SET(LOCALE_DIR "${CMAKE_INSTALL_PREFIX}/share/locale")
+	endif(NOT LOCALE_DIR)
+
+	if(NOT LOCALE_DIR)
+		message(QUIET "Set LOCALE_DIR to path to get Gettext working")
+	else()
+		find_package(Msgfmt)
+		if(Msgfmt_FOUND)
+			message(STATUS "Found msgfmt to convert language file. Translation enabled")
+			add_subdirectory(po)
+		else()
+			message(STATUS "Cannot find msgfmt to convert language file. Translation won't be enabled")
+		endif()
+	endif(NOT LOCALE_DIR)
+endif(Gettext_FOUND)
+endif(USE_NLS)
+
+
 add_subdirectory(src) 
