@@ -214,14 +214,14 @@ PF::MainWindow::open_image( std::string filename )
                         editor );
   tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::MainWindow::remove_tab) ); 
   viewerNotebook.append_page( *editor, *tabwidget );
-  std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
+  //std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
 	free(fullpath);
 	editor->set_tab_label_widget( tabwidget );
   editor->show();
-  std::cout<<"MainWindow::open_image(): editor shown"<<std::endl;
+  //std::cout<<"MainWindow::open_image(): editor shown"<<std::endl;
   //editor->open();
   viewerNotebook.set_current_page( -1 );
-  std::cout<<"MainWindow::open_image(): current notebook page selected"<<std::endl;
+  //std::cout<<"MainWindow::open_image(): current notebook page selected"<<std::endl;
   if( editor->get_image() && editor->get_image()->is_modified() )
     // To properly update the tab label
     editor->get_image()->modified();
@@ -660,8 +660,8 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
     //msg += fname;
     //msg += "\" contains unsaved data.\nDo you want to save it before closing?";
     char tstr[501];
-    snprintf( _("Image \"%s\" contains unsaved data. Do you want to save it before closing?"),
-        500, fname);
+    snprintf( tstr, 500, _("Image \"%s\" contains unsaved data. Do you want to save it before closing?"),
+        fname);
     Gtk::MessageDialog dialog(tstr,
         false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
     dialog.set_transient_for(*this);
@@ -724,7 +724,7 @@ void PF::MainWindow::on_my_switch_page(
     PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
     if( editor && editor->get_image() ) {
       PF::PhotoFlow::Instance().set_active_image( editor->get_image() );
-      std::cout<<"MainWindow: image #"<<page_num<<" activated"<<std::endl;
+      //std::cout<<"MainWindow: image #"<<page_num<<" activated"<<std::endl;
     }
   }
 }

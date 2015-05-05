@@ -199,9 +199,9 @@ void PF::ImageEditor::expand_layer( PF::Layer* layer, std::list<PF::Layer*>& lis
 void PF::ImageEditor::get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
     std::list<Layer*>& children )
 {
-  //#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"Collecting children of layer \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
-  //#endif
+#endif
   std::list<PF::Layer*> tmplist;
   std::list<PF::Layer*>::reverse_iterator li;
   // Loop over layers in reverse order and fill a temporary list,
@@ -210,9 +210,9 @@ void PF::ImageEditor::get_child_layers( Layer* layer, std::list<PF::Layer*>& con
   for(li = container.rbegin(); li != container.rend(); ++li) {
     PF::Layer* l = *li;
     if( !l ) continue;
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
-    //#endif
+#endif
     if( (layer != NULL) && (layer->get_id() == l->get_id()) ) break;
     if( !l->is_visible() ) continue;
     if( l->get_processor() == NULL ) continue;
@@ -234,9 +234,9 @@ void PF::ImageEditor::get_child_layers( Layer* layer, std::list<PF::Layer*>& con
     } else {
       // Add layer to the temporary list
       tmplist.push_front( l );
-      //#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"    added."<<std::endl;
-      //#endif
+#endif
     }
   }
 
@@ -269,7 +269,7 @@ void PF::ImageEditor::get_child_layers()
 void PF::ImageEditor::open_image()
 {
   if( image_opened ) return;
-  std::cout<<"ImageEditor::open_image(): opening image..."<<std::endl;
+  //std::cout<<"ImageEditor::open_image(): opening image..."<<std::endl;
 
   std::string bckname;
   char* fullpath = realpath( filename.c_str(), NULL );
@@ -280,7 +280,7 @@ void PF::ImageEditor::open_image()
     if (dirp != NULL) {
       struct dirent* dp;
       while ((dp = readdir(dirp)) != NULL) {
-        //std::cout<<"ImageEditor::open_image(): checking "<<dp->d_name<<std::endl;
+        std::cout<<"ImageEditor::open_image(): checking "<<dp->d_name<<std::endl;
         int len = strlen(dp->d_name);
         if (len != 12 || strncmp(dp->d_name, "pfbck-", 6) != 0)
           continue;
@@ -288,15 +288,15 @@ void PF::ImageEditor::open_image()
         infofile += ".info";
         std::ifstream ifile;
         ifile.open( (PF::PhotoFlow::Instance().get_cache_dir()+infofile).c_str() );
-        //std::cout<<"ImageEditor::open_image(): checking "
-        //    <<(PF::PhotoFlow::Instance().get_cache_dir()+infofile).c_str()<<std::endl;
+        std::cout<<"ImageEditor::open_image(): checking "
+            <<(PF::PhotoFlow::Instance().get_cache_dir()+infofile).c_str()<<std::endl;
         if( ifile ) {
           std::string fname;
           std::getline( ifile, fname );
-          //std::cout<<"ImageEditor::open_image(): fname="<<fname<<std::endl;
+          std::cout<<"ImageEditor::open_image(): fname="<<fname<<std::endl;
           if( fname == fullpath ) {
             bckname = PF::PhotoFlow::Instance().get_cache_dir() + dp->d_name;
-            //std::cout<<"ImageEditor::open_image(): bckname="<<bckname<<std::endl;
+            std::cout<<"ImageEditor::open_image(): bckname="<<bckname<<std::endl;
             break;
           }
         }
@@ -311,8 +311,8 @@ void PF::ImageEditor::open_image()
     //msg += filename;
     //msg += "\"\nDo you want to restore it?";
     char tstr[501];
-    snprintf( _("Crash recovery found for file \"%s\". Do you want to restore it?"),
-        500, filename.c_str());
+    snprintf( tstr, 500, _("Crash recovery found for file \"%s\". Do you want to restore it?"),
+        filename.c_str());
     Gtk::MessageDialog dialog(tstr,
         false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
     //dialog.set_transient_for(*this);
@@ -336,14 +336,14 @@ void PF::ImageEditor::open_image()
   }
 
   image->open( filename, bckname );
-  std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
+  //std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
   if( !pipeline ) return;
   int level = 0;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
-  std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
+  //std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
   image->set_loaded( false );
   image->update();
   //getchar();
@@ -379,7 +379,7 @@ void PF::ImageEditor::open_image()
 
 void PF::ImageEditor::on_image_modified()
 {
-  std::cout<<"ImageEditor::on_image_modified() called."<<std::endl;
+  //std::cout<<"ImageEditor::on_image_modified() called."<<std::endl;
   if( !tab_label_widget ) return;
   char* fullpath = strdup( image->get_filename().c_str() );
   char* fname = basename( fullpath );
@@ -391,14 +391,14 @@ void PF::ImageEditor::on_image_modified()
 
 void PF::ImageEditor::on_map()
 {
-  std::cout<<"ImageEditor::on_map() called."<<std::endl;
+  //std::cout<<"ImageEditor::on_map() called."<<std::endl;
   //open_image();
   Gtk::Paned::on_map();
 }
 
 void PF::ImageEditor::on_realize()
 {
-  std::cout<<"ImageEditor::on_realize() called."<<std::endl;
+  //std::cout<<"ImageEditor::on_realize() called."<<std::endl;
   open_image();
   Gtk::Paned::on_realize();
 }
