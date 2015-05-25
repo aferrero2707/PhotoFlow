@@ -147,10 +147,10 @@ PF::RawImage::RawImage( const std::string f ):
       float val = raw_loader->imgdata.image[row_offset+col][color];
 			val /= raw_loader->imgdata.color.maximum;
 			val *= 65535;
-			if( row==10 && col==11 ) {
+			//if( row==10 && col==11 ) {
 				//std::cout<<"raw pixel @ (0,0): val="<<*fptr<<"  c="<<(int)ptr[sizeof(float)]<<std::endl;
-				std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<std::endl;
-			}
+				//std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<std::endl;
+			//}
 #endif
 #ifdef PF_USE_DCRAW_RT
       unsigned char color = (unsigned char)FC(row,col);
@@ -185,9 +185,9 @@ PF::RawImage::RawImage( const std::string f ):
   std::cout<<"Row buffer deleted"<<std::endl;
 #endif
 
-  std::cout<<"iwidth="<<iwidth<<std::endl
-	   <<"iheight="<<iheight<<std::endl
-	   <<"row="<<row<<"  sizeof(PF::raw_pixel_t)="<<sizeof(PF::raw_pixel_t)<<std::endl;
+  //std::cout<<"iwidth="<<iwidth<<std::endl
+	//   <<"iheight="<<iheight<<std::endl
+	//   <<"row="<<row<<"  sizeof(PF::raw_pixel_t)="<<sizeof(PF::raw_pixel_t)<<std::endl;
   //==================================================================
   // Load the raw file into a vips image
   VipsImage* in;
@@ -228,7 +228,7 @@ PF::RawImage::RawImage( const std::string f ):
            (VipsCallbackFn) PF::exif_free, buf,
            sizeof(exif_data_t) );
 
-  print_exif();
+  //print_exif();
 
 #ifdef PF_USE_LIBRAW
   delete raw_loader;
