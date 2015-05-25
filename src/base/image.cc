@@ -1,5 +1,5 @@
 /* 
-   
+
  */
 
 /*
@@ -33,11 +33,13 @@
 #include <gtk/gtk.h>
 
 #include "fileutils.hh"
+//#include "pf_mkstemp.hh"
 #include "image.hh"
 #include "imageprocessor.hh"
 #include "pf_file_loader.hh"
 #include "../operations/convert2srgb.hh"
 #include "../operations/convertformat.hh"
+//#include "../operations/gmic/gmic_untiled_op.hh"
 
 
 
@@ -64,8 +66,8 @@ gint PF::image_rebuild_callback( gpointer data )
       }
       return false;
     }
-    */
-    
+     */
+
     image->clear_modified();
 
     // Loop on pipelines, re-build and update
@@ -88,12 +90,12 @@ gint PF::image_rebuild_callback( gpointer data )
 
 
 PF::Image::Image(): 
-  layer_manager( this ), 
-  async( false ), 
-  modified_flag( false ),
-  rebuilding( false ), 
-  loaded( false ),
-  disable_update( false )
+      layer_manager( this ),
+      async( false ),
+      modified_flag( false ),
+      rebuilding( false ),
+      loaded( false ),
+      disable_update( false )
 {
   rebuild_mutex = vips_g_mutex_new();
   //g_mutex_lock( rebuild_mutex );
@@ -152,17 +154,17 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     request.image = this;
     request.pipeline = target_pipeline;
     request.request = PF::IMAGE_REBUILD;
-		/*
+    /*
 		if(area) {
 			request.area.left = area->left;
 			request.area.top = area->top;
 			request.area.width = area->width;
 			request.area.height = area->height;
 		} else {
-		*/
-		request.area.width = request.area.height = 0;
-		//}
-    
+     */
+    request.area.width = request.area.height = 0;
+    //}
+
     if( sync ) g_mutex_lock( rebuild_mutex );
 #ifndef NDEBUG
     std::cout<<"PF::Image::update(): submitting rebuild request..."<<std::endl;
@@ -189,7 +191,7 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     update_async();
   else
     update_sync();
-  */
+   */
 }
 
 
@@ -212,8 +214,8 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
     // in fact, this should never happen...
     return false;
     }
-  */
-    
+   */
+
   //clear_modified();
 
   //vips_cache_drop_all();
@@ -223,15 +225,15 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
     PF::Pipeline* pipeline = get_pipeline( i );
     if( !pipeline ) continue;
 
-		if( !target_pipeline) {
-			// We do not target a specific pipeline
-			// For the sake of performance, we only rebuild pipelines that have
-			// sinks attached to them, as otherwise the pipeline can be considered inactive
-			//if( !(pipeline->has_sinks()) ) continue;
-		} else {
-			// We only rebuild the target pipeline
-			if( pipeline != target_pipeline ) continue;
-		}
+    if( !target_pipeline) {
+      // We do not target a specific pipeline
+      // For the sake of performance, we only rebuild pipelines that have
+      // sinks attached to them, as otherwise the pipeline can be considered inactive
+      //if( !(pipeline->has_sinks()) ) continue;
+    } else {
+      // We only rebuild the target pipeline
+      if( pipeline != target_pipeline ) continue;
+    }
 
 #ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<std::endl;
@@ -245,11 +247,11 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
   }
 
 #ifndef NDEBUG
-	std::cout<<"PF::Image::do_update(): finalizing..."<<std::endl;
+  std::cout<<"PF::Image::do_update(): finalizing..."<<std::endl;
 #endif
   get_layer_manager().rebuild_finalize();
 #ifndef NDEBUG
-	std::cout<<"PF::Image::do_update(): finalizing done."<<std::endl;
+  std::cout<<"PF::Image::do_update(): finalizing done."<<std::endl;
 #endif
 
 #ifndef NDEBUG
@@ -261,9 +263,9 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
       PF::PipelineNode* node = pipeline->get_nodes()[ni];
       if( !node ) continue;
       if( !(node->image) ) {
-      std::cout<<"  node #"<<ni<<" ("<<(void*)node->image<<")"<<std::endl;
-				continue;
-			}
+        std::cout<<"  node #"<<ni<<" ("<<(void*)node->image<<")"<<std::endl;
+        continue;
+      }
       std::cout<<"  node #"<<ni<<" ("<<(void*)node->image<<") = "<<G_OBJECT(node->image)->ref_count<<std::endl;
     }
   }
@@ -276,26 +278,26 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
 
 
 void PF::Image::sample( int layer_id, int x, int y, int size, 
-												VipsImage** image, std::vector<float>& values )
+    VipsImage** image, std::vector<float>& values )
 {
-	int left = (int)x-size/2;
-	int top = (int)y-size/2;
-	int width = size;
-	int height = size;
-	VipsRect area = {left, top, width, height};
+  int left = (int)x-size/2;
+  int top = (int)y-size/2;
+  int width = size;
+  int height = size;
+  VipsRect area = {left, top, width, height};
 
   if( PF::PhotoFlow::Instance().is_batch() ) {
     do_sample( layer_id, area );
   } else {
     ProcessRequestInfo request;
     request.image = this;
-		request.layer_id = layer_id;
+    request.layer_id = layer_id;
     request.request = PF::IMAGE_SAMPLE;
-		request.area.left = area.left;
-		request.area.top = area.top;
-		request.area.width = area.width;
-		request.area.height = area.height;
-    
+    request.area.left = area.left;
+    request.area.top = area.top;
+    request.area.width = area.width;
+    request.area.height = area.height;
+
     g_mutex_lock( sample_mutex );
     //#ifndef NDEBUG
     std::cout<<"PF::Image::sample(): submitting sample request..."<<std::endl;
@@ -304,14 +306,14 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     //#ifndef NDEBUG
     std::cout<<"PF::Image::sample(): request submitted."<<std::endl;
     //#endif
-    
+
     g_cond_wait( sample_done, sample_mutex );
     g_mutex_unlock( sample_mutex );
 
-		if(image)
-			*image = sampler_image;
+    if(image)
+      *image = sampler_image;
     values.clear();
-		values = sampler_values;
+    values = sampler_values;
   }
 
   /*
@@ -319,7 +321,7 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     update_async();
   else
     update_sync();
-  */
+   */
 }
 
 
@@ -348,13 +350,13 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
     return;
   }
 
-	// Now we have to process a small portion of the image 
-	// to get the corresponding Lab values
-	VipsImage* spot;
-	VipsRect all = {0 ,0, image->Xsize, image->Ysize};
-	VipsRect clipped;
-	vips_rect_intersectrect( &area, &all, &clipped );
-  
+  // Now we have to process a small portion of the image
+  // to get the corresponding Lab values
+  VipsImage* spot;
+  VipsRect all = {0 ,0, image->Xsize, image->Ysize};
+  VipsRect clipped;
+  vips_rect_intersectrect( &area, &all, &clipped );
+
   /*
 	if( vips_crop( image, &spot, 
 								 clipped.left, clipped.top, 
@@ -364,17 +366,17 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 		return;
   }
 	VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
-  */
+   */
   spot = image;
 
-	VipsRect rspot = {clipped.left, clipped.top, clipped.width, clipped.height};
+  VipsRect rspot = {clipped.left, clipped.top, clipped.width, clipped.height};
 
-	//VipsImage* outimg = im_open( "spot_wb_img", "p" );
-	//if (vips_sink_screen (spot, outimg, NULL,
-	//											64, 64, 1, 
+  //VipsImage* outimg = im_open( "spot_wb_img", "p" );
+  //if (vips_sink_screen (spot, outimg, NULL,
+  //											64, 64, 1,
   //												0, NULL, this))
-	//	return;
-  
+  //	return;
+
   PF::ProcessorBase* convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   std::vector<VipsImage*> in;
   in.push_back( spot );
@@ -387,43 +389,43 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
     return;
   }
   //PF_UNREF( spot, "Image::do_sample() spot unref" )
-	//if( vips_sink_memory( spot ) )
-	//  return;
+  //if( vips_sink_memory( spot ) )
+  //  return;
 
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount before vips_region_new()" )
-	VipsRegion* region = vips_region_new( outimg );
-	if (vips_region_prepare (region, &rspot)) {
+  VipsRegion* region = vips_region_new( outimg );
+  if (vips_region_prepare (region, &rspot)) {
     std::cout<<"Image::do_sample(): vips_region_prepare() failed"<<std::endl;
-		return;
+    return;
   }
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after vips_region_new()" )
 
-	int row, col, b;
-	int line_size = clipped.width*image->Bands;
-	float* p;
-	float avg[16];
+  int row, col, b;
+  int line_size = clipped.width*image->Bands;
+  float* p;
+  float avg[16];
   for( int i = 0; i < 16; i++ ) avg[i] = 0;
-	for( row = 0; row < clipped.height; row++ ) {
-		p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top+row );
+  for( row = 0; row < clipped.height; row++ ) {
+    p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top+row );
     std::cout<<"do_sample(): rspot.left="<<rspot.left<<"  rspot.top+row="<<rspot.top+row<<std::endl;
-		for( col = 0; col < line_size; col += image->Bands ) {
-			for( b = 0; b < image->Bands; b++ ) {
-				avg[b] += p[col+b];
+    for( col = 0; col < line_size; col += image->Bands ) {
+      for( b = 0; b < image->Bands; b++ ) {
+        avg[b] += p[col+b];
         std::cout<<"do_sample(): p["<<row<<"]["<<col+b<<"]="<<p[col+b]<<std::endl;
-			}
-		}
-	}
+      }
+    }
+  }
 
-	sampler_values.clear();
-	for( b = 0; b < image->Bands; b++ ) {
-		avg[b] /= clipped.width*clipped.height;
-		sampler_values.push_back( avg[b] );
-	}
-	sampler_image = image;
+  sampler_values.clear();
+  for( b = 0; b < image->Bands; b++ ) {
+    avg[b] /= clipped.width*clipped.height;
+    sampler_values.push_back( avg[b] );
+  }
+  sampler_image = image;
 
-	//g_object_unref( spot );
+  //g_object_unref( spot );
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount before region unref" );
-	PF_UNREF( region, "Image::do_sample(): region unref" );
+  PF_UNREF( region, "Image::do_sample(): region unref" );
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after region unref" );
   PF_UNREF( outimg, "Image::do_sample(): outimg unref" );
 }
@@ -535,7 +537,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
     //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
-		file_name = filename;
+    file_name = filename;
 
   } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" ) {
 
@@ -569,9 +571,9 @@ bool PF::Image::open( std::string filename, std::string bckname )
 
     //layer_manager.get_layers().push_back( limg );
     layersWidget.add_layer( limg );
-    */
+     */
   } else {
-    
+
     PF::Layer* limg = layer_manager.new_layer();
     PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "raw_loader", limg );
     if( proc->get_par() && proc->get_par()->get_property( "file_name" ) )
@@ -588,7 +590,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
     limg->set_processor( proc );
     limg->set_name( "RAW developer" );
     layer_manager.get_layers().push_back( limg );
-		*/
+     */
 
     /*
     limg = layer_manager.new_layer();
@@ -596,7 +598,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
     limg->set_processor( proc );
     limg->set_name( "RAW output" );
     layer_manager.get_layers().push_back( limg );
-    */
+     */
   }
   disable_update = false;
 
@@ -604,6 +606,8 @@ bool PF::Image::open( std::string filename, std::string bckname )
   //pf_image->signal_modified.connect( sigc::mem_fun(&imageArea, &ImageArea::update_image) );
   //sleep(5);
   //update();
+
+  return true;
 }
 
 
@@ -652,9 +656,9 @@ void PF::Image::export_merged( std::string filename )
     ProcessRequestInfo request;
     request.image = this;
     request.request = PF::IMAGE_EXPORT;
-		request.area.width = request.area.height = 0;
+    request.area.width = request.area.height = 0;
     request.filename = filename;
-    
+
     //#ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): locking mutex..."<<std::endl;
     //#endif
@@ -695,54 +699,44 @@ void PF::Image::do_export_merged( std::string filename )
 #warning "TODO: check if one can update only the export pipeline"
       do_update();
     }
-    */
+     */
+
+    std::string msg;
+
     VipsImage* image = pipeline->get_output();
-    VipsImage* outimg = image;
+    VipsImage* outimg = NULL;
 
     std::vector<VipsImage*> in;
-    /*
-    convert2srgb->get_par()->set_image_hints( image );
-    convert2srgb->get_par()->set_format( pipeline->get_format() );
-    in.clear(); in.push_back( image );
-    VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
-    //g_object_unref( image );
-    std::string msg = std::string("PF::Image::export_merged(") + filename + "), image";
-    PF_UNREF( image, msg.c_str() );
-    */
-    VipsImage* srgbimg = image;
-
-		outimg = srgbimg;
-    std::string msg;
-		if( ext == "jpg" || ext == "jpeg" ) {
+    if( ext == "jpg" || ext == "jpeg" ) {
       in.clear();
-      in.push_back( srgbimg );
-      convert_format->get_par()->set_image_hints( srgbimg );
+      in.push_back( image );
+      convert_format->get_par()->set_image_hints( image );
       convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
-      //g_object_unref( srgbimg );
-      // msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
-      //PF_UNREF( srgbimg, msg.c_str() );
-    vips_image_write_to_file( outimg, filename.c_str(), NULL );
-		}
-    
-		if( ext == "tif" || ext == "tiff" ) {
+      if( outimg ) {
+        vips_jpegsave( outimg, filename.c_str(), "Q", 100, NULL );
+      }
+    }
+
+    if( ext == "tif" || ext == "tiff" ) {
       in.clear();
-      in.push_back( srgbimg );
-      convert_format->get_par()->set_image_hints( srgbimg );
+      in.push_back( image );
+      convert_format->get_par()->set_image_hints( image );
       convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
-      //g_object_unref( srgbimg );
-      //msg = std::string("PF::Image::export_merged(") + filename + "), srgbimg";
-      //PF_UNREF( srgbimg, msg.c_str() );
-    int predictor = 2;
-    vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
-        "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
-    //vips_image_write_to_file( outimg, filename.c_str(), NULL );
-		}
+      if( outimg ) {
+        int predictor = 2;
+        vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
+            "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
+        //vips_image_write_to_file( outimg, filename.c_str(), NULL );
+      }
+    }
+    /**/
 
-    //g_object_unref( outimg );
-    msg = std::string("PF::Image::export_merged(") + filename + "), outimg";
-    PF_UNREF( outimg, msg.c_str() );
+    if( outimg ) {
+      msg = std::string("PF::Image::export_merged(") + filename + "): outimg unref";
+      PF_UNREF( outimg, msg.c_str() );
+    }
     remove_pipeline( pipeline );
     delete pipeline;
     layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
