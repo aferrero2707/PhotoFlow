@@ -45,6 +45,7 @@ PF::GmicUntiledOperationPar::GmicUntiledOperationPar():
 PF::GmicUntiledOperationPar::~GmicUntiledOperationPar()
 {
 	std::cout<<"GmicUntiledOperationPar::~GmicUntiledOperationPar()"<<std::endl;
+	if( gmic_instance ) delete gmic_instance;
 }
 
 
