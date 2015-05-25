@@ -35,7 +35,7 @@
 PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Hue/Saturation Adjustment" ),
   hueSlider( this, "hue", "Hue", 0, -180, 180, 0.1, 10, 1),
-  saturationSlider( this, "saturation", "Saturation", 0, -1, 1, 0.05, 0.2, 1)
+  saturationSlider( this, "saturation", "Saturation", 0, -100, 100, 5, 20, 100)
 {
   controlsBox.pack_start( hueSlider );
   controlsBox.pack_start( saturationSlider );
