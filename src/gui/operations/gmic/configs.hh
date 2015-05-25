@@ -61,3 +61,4 @@
 #include "sharpen_rl_config.hh"
 #include "split_details_config.hh"
 #include "transfer_colors_config.hh"
+#include "watermark_fourier_config.hh"

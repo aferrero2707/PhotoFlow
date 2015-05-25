@@ -11,6 +11,8 @@ class BrightnessContrastProc<T,PF_COLORSPACE_LAB,CHMIN,CHMAX,PREVIEW,OP_PAR>
       typename FormatInfo<T>::SIGNED newval = 
 	(intensity*par->get_contrast()+1.0f)*val + intensity*par->get_brightness()*FormatInfo<T>::RANGE + FormatInfo<T>::HALF;
       clip(newval,pout[x]);
+      pout[x+1] = p[first][x+1];
+      pout[x+2] = p[first][x+2];
     }
   };
 

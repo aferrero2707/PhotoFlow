@@ -51,7 +51,7 @@
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/curves_config.hh"
-*/
+ */
 
 PF::OperationsTree::OperationsTree( )
 {
@@ -113,7 +113,7 @@ void PF::OperationsTreeWidget::on_selection_changed()
       buf->insert_at_cursor("Left-clicking on the graph with the mouse adds a new control point, while right-clicking on an existing ");
       buf->insert_at_cursor("control point deletes it. Control points can be moved by either dragging them with the moiuse, or by setting the corresponding input and output numerical values in the boxes below the graph.");
     }
-    */
+     */
   }
 }
 
@@ -134,18 +134,18 @@ static void* collect_class( GType type )
 
   if( depth == 2 && abstract ) {
     std::map< std::string, std::list<std::string> >::iterator i = 
-      vips_operations.find( klass->nickname );
+        vips_operations.find( klass->nickname );
     if(i == vips_operations.end() ) {
       vips_operations.insert( make_pair( std::string(klass->nickname), 
-					 std::list<std::string>() ) );
+          std::list<std::string>() ) );
       i = vips_operations.find( klass->nickname );
       if(i == vips_operations.end() ) 
-	return( NULL );
+        return( NULL );
     }
     vips_category = klass->nickname;
   } else if( depth >= 2 && !abstract ) {
     std::map< std::string, std::list<std::string> >::iterator i = 
-      vips_operations.find( vips_category );
+        vips_operations.find( vips_category );
     if(i == vips_operations.end() ) 
       return( NULL );
 
@@ -156,33 +156,32 @@ static void* collect_class( GType type )
 
     int nout = 0;
     VIPS_ARGUMENT_FOR_ALL( operation, 
-			   pspec, argument_class, argument_instance ) {
-      
+        pspec, argument_class, argument_instance ) {
+
       g_assert( argument_instance );
-      
+
       if( (argument_class->flags & VIPS_ARGUMENT_OUTPUT) ) {
-	GType otype = G_PARAM_SPEC_VALUE_TYPE( pspec );
-	const gchar* arg_name = g_param_spec_get_name( pspec );
-	
-	if( g_type_is_a( otype, VIPS_TYPE_IMAGE ) ) nout += 1;	  
+        GType otype = G_PARAM_SPEC_VALUE_TYPE( pspec );
+        const gchar* arg_name = g_param_spec_get_name( pspec );
+
+        if( g_type_is_a( otype, VIPS_TYPE_IMAGE ) ) nout += 1;
       }
     } 
     VIPS_ARGUMENT_FOR_ALL_END;
-    
+
     std::cout<<"klass->nickname -> # of output images: "<<nout<<std::endl;
 
     g_object_unref( operation ); 
 
-    if( (nout==1) 
-				//#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
-				//&& !(flags & VIPS_OPERATION_DEPRECATED) 
-				//#endif
-				) 
+    if( nout==1 )
+      //#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
+      //&& !(flags & VIPS_OPERATION_DEPRECATED)
+      //#endif
       i->second.push_back( klass->nickname );
   }
 
   return( NULL );
-  
+
 }
 
 
@@ -237,16 +236,16 @@ void PF::OperationsTree::add_op( Glib::ustring name, const std::string nik)
 
   //expand_all();
 }
-*/
+ */
 
 
 
 
 
 PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
-  Gtk::Dialog("New Layer",true),
-  image( img ),
-  layer_widget( lw )
+      Gtk::Dialog("New Layer",true),
+      image( img ),
+      layer_widget( lw )
 {
   set_default_size(300,300);
 
@@ -254,15 +253,15 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   add_button("Cancel",0);
 
   signal_response().connect( sigc::mem_fun(*this,
-					  &OperationsTreeDialog::on_button_clicked) );
+      &OperationsTreeDialog::on_button_clicked) );
 
   //op_load_box.add( op_load );
   notebook.append_page( op_load, "load" );
 
-  notebook.append_page( op_raw, "raw" );
+  //notebook.append_page( op_raw, "raw" );
 
   //op_conv_box.add( op_conv );
-  notebook.append_page( op_conv, "conv" );
+  //notebook.append_page( op_conv, "conv" );
 
   //op_color_box.add( op_color );
   notebook.append_page( op_color, "color" );
@@ -273,17 +272,17 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_geom_box.add( op_geom );
   notebook.append_page( op_geom, "geom" );
 
-//#ifndef PF_DISABLE_GMIC
+  //#ifndef PF_DISABLE_GMIC
   //op_gmic_box.add( op_gmic );
   notebook.append_page( op_gmic, "G'MIC" );
-//#endif
+  //#endif
 
   //op_misc_box.add( op_misc );
   notebook.append_page( op_misc, "misc" );
 
   op_load.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
-  op_raw.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
-  op_conv.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  //op_raw.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  //op_conv.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
   op_color.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
   op_detail.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
   op_geom.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
@@ -293,10 +292,11 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_load.get_tree().add_op( "Open image", "imageread" );
   op_load.get_tree().add_op( "Open RAW image", "raw_loader" );
 
-  op_raw.get_tree().add_op( "RAW developer", "raw_developer" );
+  //op_raw.get_tree().add_op( "RAW developer", "raw_developer" );
+  op_load.get_tree().add_op( "RAW developer", "raw_developer" );
 
-  op_conv.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
-  op_conv.get_tree().add_op( "Lab conversion", "convert2lab" );
+  //op_conv.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
+  //op_conv.get_tree().add_op( "Lab conversion", "convert2lab" );
 
   op_color.get_tree().add_op( "Uniform Fill", "uniform");
   op_color.get_tree().add_op( "Gradient", "gradient");
@@ -306,6 +306,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( "Hue/Saturation", "hue_saturation" );
   op_color.get_tree().add_op( "Curves", "curves" );
   op_color.get_tree().add_op( "Channel Mixer", "channel_mixer" );
+  op_color.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
 
   op_detail.get_tree().add_op( "Gaussian blur", "gaussblur" );
   op_detail.get_tree().add_op( "Noise reduction", "denoise" );
@@ -316,7 +317,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_geom.get_tree().add_op( "Scale & rotate image", "scale" );
   op_geom.get_tree().add_op( "Optical corrections (experimental)", "lensfun" );
 
-//#if !defined(__APPLE__) && !defined(__MACH__)
+  //#if !defined(__APPLE__) && !defined(__MACH__)
 #ifndef PF_DISABLE_GMIC
   //op_gmic.get_tree().add_op( "G'MIC Interpreter", "gmic" );
   op_gmic.get_tree().add_op( "Dream Smoothing", "gmic_dream_smooth" );
@@ -349,11 +350,12 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.get_tree().add_op( "Tone mapping", "gmic_tone_mapping" );
   op_gmic.get_tree().add_op( "Transfer colors [advanced]", "gmic_transfer_colors" );
 #endif
-  
-  op_misc.get_tree().add_op( "Buffer layer", "buffer" );
-  op_misc.get_tree().add_op( "Clone layer", "clone" );
+
   op_misc.get_tree().add_op( "Draw", "draw" );
   op_misc.get_tree().add_op( "Clone stamp", "clone_stamp" );
+  op_misc.get_tree().add_op( "Clone layer", "clone" );
+  op_misc.get_tree().add_op( "Buffer layer", "buffer" );
+  op_misc.get_tree().add_op( "Digital watermark", "gmic_watermark_fourier" );
 
   get_vbox()->pack_start( notebook );
 
@@ -406,7 +408,7 @@ void PF::OperationsTreeDialog::on_row_activated( const Gtk::TreeModel::Path& pat
     //PF::OperationConfigUI* dialog = l->get_processor()->get_par()->get_config_ui();
     //if(dialog) dialog->open();
   }
-  */
+   */
 }
 
 
@@ -422,25 +424,25 @@ void PF::OperationsTreeDialog::add_layer()
   case 0:
     op_tree = &(op_load.get_tree());
     break;
+    //case 1:
+    //  op_tree = &(op_raw.get_tree());
+    //  break;
+    //case 2:
+    //  op_tree = &(op_conv.get_tree());
+    //  break;
   case 1:
-    op_tree = &(op_raw.get_tree());
-    break;
-  case 2:
-    op_tree = &(op_conv.get_tree());
-    break;
-  case 3:
     op_tree = &(op_color.get_tree());
     break;
-  case 4:
+  case 2:
     op_tree = &(op_detail.get_tree());
     break;
-  case 5:
+  case 3:
     op_tree = &(op_geom.get_tree());
     break;
-  case 6:
+  case 4:
     op_tree = &(op_gmic.get_tree());
     break;
-  case 7:
+  case 5:
     op_tree = &(op_misc.get_tree());
     break;
   default:
@@ -455,8 +457,8 @@ void PF::OperationsTreeDialog::add_layer()
 
   PF::OperationsTreeColumns& columns = op_tree->get_columns();
   //std::cout<<"Adding layer of type \""<<(*iter)[columns.col_name]<<"\""
-	//   <<" ("<<(*iter)[columns.col_nickname]<<")"<<std::endl;
-  
+  //   <<" ("<<(*iter)[columns.col_nickname]<<")"<<std::endl;
+
   if( !image ) return;
 
   PF::LayerManager& layer_manager = image->get_layer_manager();
@@ -466,7 +468,7 @@ void PF::OperationsTreeDialog::add_layer()
 
   std::string op_type = (*iter)[columns.col_nickname];
   PF::ProcessorBase* processor = 
-    PF::PhotoFlow::Instance().new_operation( op_type.c_str(), layer );
+      PF::PhotoFlow::Instance().new_operation( op_type.c_str(), layer );
   if( !processor || !processor->get_par() ) return;
   PF::OperationConfigUI* ui = dynamic_cast<PF::OperationConfigUI*>( processor->get_par()->get_config_ui() );
 
@@ -521,7 +523,7 @@ void PF::OperationsTreeDialog::add_layer()
     vips_config->set_op( str.c_str() );
     dialog = vips_config;
   }
-  */
+   */
 
   if( processor ) {
     layer_widget->add_layer( layer );

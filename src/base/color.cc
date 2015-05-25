@@ -27,24 +27,22 @@
 
  */
 
-//#include "../../operations/hue_saturation.hh"
 
-#include "hue_saturation_config.hh"
+#include "color.hh"
 
 
-PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Hue/Saturation Adjustment" ),
-  hueSlider( this, "hue", "Hue", 0, -180, 180, 0.1, 10, 1),
-  saturationSlider( this, "saturation", "Saturation", 0, -100, 100, 5, 20, 100)
-{
-  controlsBox.pack_start( hueSlider );
-  controlsBox.pack_start( saturationSlider );
-  
-  padding1.set_size_request( 2, 20 );
-  padding2.set_size_request( 2, 10 );
-  padding3.set_size_request( 2, 10 );
+   float PF::hsl_value( float n1, float n2, float hue)
+   {
+     float val;
 
-  add_widget( padding1 );
+     if( hue > 6.0 ) hue -= 6.0f;
+     else if( hue < 0 ) hue += 6.0f;
 
-  add_widget( controlsBox );
-}
+     if( hue < 1.0 ) val = n1 + (n2-n1)*hue;
+     else if( hue < 3.0 ) val = n2;
+     else if( hue < 4.0 ) val = n1 + (n2-n1)*(4.0f-hue);
+     else val = n1;
+
+     return val;
+   }
+

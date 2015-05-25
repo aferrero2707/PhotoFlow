@@ -74,18 +74,37 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
   if( file_name.get().empty() )
     return NULL;
 
-	if( raw_image )
-		raw_image->unref();
+  RawImage* new_raw_image = NULL;
 
   std::map<Glib::ustring, RawImage*>::iterator i = 
     raw_images.find( file_name.get() );
   if( i == raw_images.end() ) {
-    raw_image = new RawImage( file_name.get() );
-    raw_images.insert( make_pair(file_name.get(), raw_image) );
+    std::cout<<"ImageReaderPar::build(): creating new RawImage for file "<<file_name.get()<<std::endl;
+    new_raw_image = new RawImage( file_name.get() );
+    if( new_raw_image )
+      raw_images.insert( make_pair(file_name.get(), new_raw_image) );
   } else {
-    raw_image = i->second;
-    raw_image->ref();
+    new_raw_image = i->second;
+    new_raw_image->ref();
   }
+
+  //if( raw_image ) std::cout<<"raw_image->get_nref(): "<<raw_image->get_nref()<<std::endl;
+  //if( new_raw_image ) std::cout<<"new_raw_image->get_nref(): "<<new_raw_image->get_nref()<<std::endl;
+
+  if( raw_image ) {
+    raw_image->unref();
+    if( raw_image->get_nref() == 0 ) {
+      std::map<Glib::ustring, RawImage*>::iterator i =
+        raw_images.find( file_name.get() );
+      if( i != raw_images.end() )
+        raw_images.erase( i );
+      delete raw_image;
+      std::cout<<"ImageReaderPar::build(): raw_image deleted"<<std::endl;
+    }
+  }
+
+  raw_image = new_raw_image;
+
   if( !raw_image )
     return NULL;
 

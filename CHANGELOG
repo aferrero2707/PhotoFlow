@@ -1,4 +1,23 @@
 =========================================
+Version 0.1.1
+
+- Added file name widget to RAW loader dialog. This allows
+  to edit multiple RAW files simultaneously in the same image.
+
+- Added digital watermarking tool based on G'MIC "watermark_fourier" filter.
+
+- Modified Hue/saturation and brightess/contrast tools to work correctly also in Lab colorspace.
+- Fixed computation of saturation adjustment. Now the saturation slider produces exactly the same
+  output as the equivalent tool in GIMP (except that computations are in 32-bits floating point
+  precision and are applied non-destructively). Internally, the hue/saturation tool now works 
+  in the HSL colorspace like GIMP (instead of the HSV colorspace used before).
+  
+- Moved "RAW developer" tool into "Load" tab and removed "raw" tab.
+- Moved "Color profle conversion" tool into "Color" tab and removed "conv" tab.
+
+- Quality of Jpeg output set to "100".
+
+=========================================
 Version 0.1.0
 
 Initial release

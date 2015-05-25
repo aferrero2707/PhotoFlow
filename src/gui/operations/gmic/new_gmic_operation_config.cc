@@ -99,6 +99,8 @@ PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, P
     dialog = new PF::GmicSplitDetailsConfigDialog( current_layer );
   } else if( op_type == "gmic_transfer_colors" ) {
     dialog = new PF::GmicTransferColorsConfigDialog( current_layer );
+  } else if( op_type == "gmic_watermark_fourier" ) {
+    dialog = new PF::GmicWatermarkFourierConfigDialog( current_layer );
     //insert new operations here
   }
 

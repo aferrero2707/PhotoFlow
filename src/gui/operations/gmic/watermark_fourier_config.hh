@@ -27,24 +27,30 @@
 
  */
 
-//#include "../../operations/hue_saturation.hh"
+#ifndef WATERMARK_FOURIER_CONFIG_DIALOG_HH
+#define WATERMARK_FOURIER_CONFIG_DIALOG_HH
 
-#include "hue_saturation_config.hh"
+#include <gtkmm.h>
+
+#include "../../operation_config_dialog.hh"
+
+#include "../../widgets/layerlist.hh"
 
 
-PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Hue/Saturation Adjustment" ),
-  hueSlider( this, "hue", "Hue", 0, -180, 180, 0.1, 10, 1),
-  saturationSlider( this, "saturation", "Saturation", 0, -100, 100, 5, 20, 100)
+namespace PF {
+
+class GmicWatermarkFourierConfigDialog: public OperationConfigDialog
 {
-  controlsBox.pack_start( hueSlider );
-  controlsBox.pack_start( saturationSlider );
-  
-  padding1.set_size_request( 2, 20 );
-  padding2.set_size_request( 2, 10 );
-  padding3.set_size_request( 2, 10 );
+  Gtk::Button updateButton;
+  TextBox textBox;
+  Slider textsizeSlider;
 
-  add_widget( padding1 );
+public:
+  GmicWatermarkFourierConfigDialog( Layer* l );
 
-  add_widget( controlsBox );
+  void on_update();
+};
+
 }
+
+#endif
