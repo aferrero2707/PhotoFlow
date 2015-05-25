@@ -94,7 +94,7 @@ namespace PF
       T* pin;
       T* pout;
       T R, G, B;
-      float h, s, v;
+      float h, s, v, l;
       int x, y;
 
       for( y = 0; y < height; y++ ) {
@@ -105,7 +105,8 @@ namespace PF
           R = pin[x];
           G = pin[x+1];
           B = pin[x+2];
-          rgb2hsv( R, G, B, h, s, v );
+          //rgb2hsv( R, G, B, h, s, v );
+          rgb2hsl( R, G, B, h, s, l );
 
           //std::cout<<"in RGB: "<<R<<" "<<G<<" "<<B<<"  HSV: "<<h<<" "<<s<<" "<<v<<std::endl;
 
@@ -113,15 +114,71 @@ namespace PF
           if( h > 360 ) h -= 360;
           else if( h < 0 ) h+= 360;
 
-          s += opar->get_saturation();
+          s *= (1.0f+opar->get_saturation());
           if( s < 0 ) s = 0;
           else if( s > 1 ) s = 1;
 
-          hsv2rgb2( h, s, v, R, G, B );
+          //hsv2rgb2( h, s, v, R, G, B );
+          hsl2rgb( h, s, l, R, G, B );
           //std::cout<<"out RGB: "<<R<<" "<<G<<" "<<B<<"  HSV: "<<h<<" "<<s<<" "<<v<<std::endl;
           pout[x] = R;
           pout[x+1] = G;
           pout[x+2] = B;          
+        }
+      }
+    }
+  };
+
+
+
+
+  template < OP_TEMPLATE_DEF_CS_SPEC >
+  class HueSaturation< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_LAB) >
+  {
+  public:
+    void render(VipsRegion** ireg, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap,
+                VipsRegion* oreg, OpParBase* par)
+    {
+      HueSaturationPar* opar = dynamic_cast<HueSaturationPar*>(par);
+      if( !opar ) return;
+      Rect *r = &oreg->valid;
+      int line_size = r->width * oreg->im->Bands;
+      //int width = r->width;
+      int height = r->height;
+
+      T* pin;
+      T* pout;
+      typename PF::FormatInfo<T>::SIGNED a, b;
+      int x, y;
+
+      float sat = 1.0f;
+      if( opar->get_saturation() > 0 ) sat += opar->get_saturation();
+      else {
+        sat -= opar->get_saturation();
+        sat = 1.0f / sat;
+      }
+
+      for( y = 0; y < height; y++ ) {
+        pin = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+
+        for( x = 0; x < line_size; x+=3 ) {
+          a = pin[x+1];
+          b = pin[x+2];
+
+          a -= PF::FormatInfo<T>::HALF;
+          b -= PF::FormatInfo<T>::HALF;
+
+          a *= sat;
+          b *= sat;
+
+          a += PF::FormatInfo<T>::HALF;
+          b += PF::FormatInfo<T>::HALF;
+
+          pout[x] = pin[x];
+          clip( a, pout[x+1] );
+          clip( b, pout[x+2] );
         }
       }
     }
