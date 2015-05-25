@@ -62,6 +62,7 @@ namespace PF
     out = static_cast<T>( (in*FormatInfo<T>::RANGE)-FormatInfo<T>::MIN );
   }
 
+
   // 
   template<class T>
   void rgb2hsv(const T& r, const T& g, const T& b, float& h, float& s, float& v)
@@ -204,11 +205,79 @@ namespace PF
     R += Min;
     G += Min;
     B += Min;
+    if(R>1) R=1; else if(R<0) R=0;
+    if(G>1) G=1; else if(G<0) G=0;
+    if(B>1) B=1; else if(B<0) B=0;
     from_float(R, r);
     from_float(G, g);
     from_float(B, b);
   }
 
+
+
+
+  //
+   template<class T>
+   void rgb2hsl(const T& r, const T& g, const T& b, float& h, float& s, float& l)
+   {
+     float fr, fg, fb; to_float( r, fr ); to_float( g, fg ); to_float( b, fb );
+     float min = MIN3(fr, fg, fb);
+     float max = MAX3(fr, fg, fb);
+     float sum = max+min;
+     float delta = max-min;
+
+     l = sum/2.0f;
+
+     s = h = 0;
+
+     if( delta == 0 ) return;
+
+     if( l <= 0.5 )
+       s = (max-min)/sum;
+     else
+       s = (max-min)/(2.0f-max-min);
+
+     if( fr == max ) h = (fg-fb)/delta;
+     else if( fg == max ) h = (fb-fr)/delta + 2.0f;
+     else if( fb == max ) h = (fr-fg)/delta + 4.0f;
+     h *= 60;
+     if( h < 0 ) h += 360;
+   }
+
+
+
+   float hsl_value( float n1, float n2, float hue);
+
+   //
+   template<class T>
+   void hsl2rgb( const float& h, const float& s, const float& l, T& r, T& g, T& b )
+   {
+     int i;
+     float H = h/60.0f;
+
+     if( s == 0 ) {
+       // achromatic (grey)
+       from_float( l, r );
+       g = b = r;
+       return;
+     }
+
+     float m1, m2;
+     if( l <= 0.5 )
+       m2 = l * (s + 1);
+     else
+       m2 = l + s - l * s;
+
+     m1 = l * 2.0f - m2;
+
+     float fr = hsl_value( m1, m2, H + 2.0f );
+     float fg = hsl_value( m1, m2, H );
+     float fb = hsl_value( m1, m2, H - 2.0f );
+
+     from_float( fr, r );
+     from_float( fg, g );
+     from_float( fb, b );
+   }
 
 
 
