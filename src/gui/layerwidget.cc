@@ -581,7 +581,7 @@ void PF::LayerWidget::on_button_load()
 #endif
 #ifdef GTKMM_3
   Glib::RefPtr<Gtk::FileFilter> filter_pfp = Gtk::FileFilter::create();
-  filter_pfp->set_name( -("Photoflow presets") );
+  filter_pfp->set_name( _("Photoflow presets") );
   filter_pfp->add_pattern("*.pfp");
 #endif
   dialog.add_filter(filter_pfp);

@@ -132,9 +132,9 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
     PF::raw_pixel_t* ptr = ir ? (PF::raw_pixel_t*)VIPS_REGION_ADDR( ir[0], r_raw.left, y+r_raw.top ) : NULL; 
     rawData.set_row( y+r_raw.top, ptr );
   }
-	if( r_raw.left==0 && r_raw.top==0 ) {
-		std::cout<<"rawData[0][0] = "<<rawData[0][0]<<"  c="<<(int)rawData[0].color(0)<<std::endl;
-	}
+	//if( r_raw.left==0 && r_raw.top==0 ) {
+	//	std::cout<<"rawData[0][0] = "<<rawData[0][0]<<"  c="<<(int)rawData[0].color(0)<<std::endl;
+	//}
   PF::Array2D<float> red, green, blue;
   red.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
   green.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );

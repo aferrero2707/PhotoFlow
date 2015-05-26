@@ -77,6 +77,9 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   //std::cout<<"ImageReaderPar::build(): raster_image="<<(void*)raster_image<<std::endl;
+  if( raster_image ) std::cout<<"raster_image->get_nref(): "<<raster_image->get_nref()<<std::endl;
+  if( new_raster_image ) std::cout<<"new_raster_image->get_nref(): "<<new_raster_image->get_nref()<<std::endl;
+
   if( raster_image ) {
     raster_image->unref();
     //std::cout<<"ImageReaderPar::build(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
@@ -100,6 +103,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   
   if( !image ) return NULL;
 
+  /*
   {
     size_t exifsz;
     PF::exif_data_t* exif_data;
@@ -110,6 +114,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       //std::cout<<"ImageReaderPar::build(): exif_custom_data not found in image("<<image<<")"<<std::endl;
     }
   }
+   */
 #ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): "<<std::endl
 	   <<"input images:"<<std::endl;

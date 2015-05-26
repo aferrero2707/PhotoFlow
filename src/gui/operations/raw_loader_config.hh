@@ -27,24 +27,37 @@
 
  */
 
-//#include "../../operations/hue_saturation.hh"
+#ifndef RAW_LOADER_CONFIG_DIALOG_HH
+#define RAW_LOADER_CONFIG_DIALOG_HH
 
-#include "hue_saturation_config.hh"
+#include <gtkmm.h>
+
+#include "../operation_config_dialog.hh"
+#include "../../operations/raw_loader.hh"
 
 
-PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Hue/Saturation Adjustment" ),
-  hueSlider( this, "hue", "Hue", 0, -180, 180, 0.1, 10, 1),
-  saturationSlider( this, "saturation", "Saturation", 0, -100, 100, 5, 20, 100)
+namespace PF {
+
+  class RawLoaderConfigDialog: public OperationConfigDialog
 {
-  controlsBox.pack_start( hueSlider );
-  controlsBox.pack_start( saturationSlider );
-  
-  padding1.set_size_request( 2, 20 );
-  padding2.set_size_request( 2, 10 );
-  padding3.set_size_request( 2, 10 );
+  //#ifdef GTKMM_2
+  Gtk::HBox controlsBox;
 
-  add_widget( padding1 );
+  Gtk::Label label;
+  Gtk::Entry fileEntry;
+  Gtk::Button openButton;
+  //#endif
 
-  add_widget( controlsBox );
+public:
+  RawLoaderConfigDialog( Layer* l );
+
+  void on_button_open_clicked();
+
+  void on_filename_changed();
+
+  void open();
+};
+
 }
+
+#endif
