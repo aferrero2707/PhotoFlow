@@ -42,6 +42,8 @@ namespace PF
   {
   public:
     InvertPar();
+
+    bool has_intensity() { return false; }
   };
 
   
@@ -81,25 +83,36 @@ namespace PF
 
     void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 
     {
-      /*
-      int i = x;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
-      i += 1;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
-      i += 1;
-      pout[i] = (T)(FormatInfo<T>::RANGE - p[first][i]); 
-      */
-      /**/
       T* pp = p[first];
       pos = x;
       for(int i = CHMIN; i <= CHMAX; i++, pos++) {
         pout[pos] = FormatInfo<T>::MAX + FormatInfo<T>::MIN - pp[pos];
       }
-      /**/
     }
   };
 
   
+  template < int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
+  class InvertProc<unsigned short int, PF_COLORSPACE_RGB, CHMIN, CHMAX, PREVIEW, OP_PAR>
+  {
+    InvertPar* par;
+    int pos;
+    unsigned short int* pp;
+  public:
+    InvertProc(InvertPar* p): par(p) {}
+
+    void process(unsigned short int**p, const int& n, const int& first,
+        const int& nch, const int& x, const double& intensity, unsigned short int* pout)
+    {
+      pp = p[first];
+      pos = x;
+      for(int i = CHMIN; i <= CHMAX; i++, pos++) {
+        pout[pos] = FormatInfo<unsigned short int>::MAX - pp[pos];
+      }
+    }
+  };
+
+
   template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
   class InvertProc<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, PREVIEW, OP_PAR>
   {
