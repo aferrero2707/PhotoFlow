@@ -64,7 +64,7 @@ PF::MainWindow::MainWindow():
   // Sets the border width of the window.
   set_border_width(0);
   //set_default_size(120,80);
-  set_default_size(1200,700);
+  set_default_size(1280,700);
   
   add(mainBox);
 

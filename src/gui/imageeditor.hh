@@ -34,6 +34,8 @@
 
 #include <gtkmm.h>
 
+#include "../base/photoflow.hh"
+
 #include "imagearea.hh"
 #include "layerwidget.hh"
 #include "tablabelwidget.hh"

@@ -149,11 +149,13 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   opacity_box.pack_start( opacitySlider, Gtk::PACK_SHRINK );
   opacity_box.pack_start( omap_enabled_box, Gtk::PACK_SHRINK );
 
+  if(par && par->has_opacity() ) {
+    controlsBoxLeft.pack_start( opacity_box, Gtk::PACK_EXPAND_PADDING, 10 );
+  }
   if(par && par->has_intensity() ) {
     controlsBoxLeft.pack_start( intensity_box, Gtk::PACK_EXPAND_PADDING, 10 );
   }
   if(par && par->has_opacity() ) {
-    controlsBoxLeft.pack_start( opacity_box, Gtk::PACK_EXPAND_PADDING, 10 );
     controlsBoxLeft.pack_start( shiftBox, Gtk::PACK_EXPAND_PADDING, 10 );
   }
   controlsBox.pack_start( controlsBoxLeft, Gtk::PACK_SHRINK );

@@ -42,7 +42,9 @@ namespace PF {
 
   class GradientConfigDialog: public OperationConfigDialog
   {
+    Gtk::HBox hbox;
     Selector typeSelector;
+    CheckBox invert_box;
     Slider center_x, center_y;
   public:
     GradientConfigDialog( Layer* l );

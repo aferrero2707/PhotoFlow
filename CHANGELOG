@@ -1,4 +1,12 @@
 =========================================
+Version 0.1.2
+
+- Added "invert" parameter to gradient tool (to reverse the direction of the gradient)
+- Fixed bug that prevented correct loading of presets with multiple layers into a layer mask
+- Fixed locale support (only tested with french translations under Linux)
+- pfconv: output file is now overwritten in place by exiftool
+
+=========================================
 Version 0.1.1
 
 - Added file name widget to RAW loader dialog. This allows
