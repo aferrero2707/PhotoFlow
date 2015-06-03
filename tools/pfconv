@@ -26,6 +26,6 @@ for f in $*; do
 	echo "ext: $ext"
 	fname=$(basename "$f" ".$ext")
 	pfbatch "$f" $presets "$fname.tif"
-	exiftool -TagsFromFile "$f" -all:all "$fname.tif"
+	exiftool -overwrite_original -TagsFromFile "$f" -all:all "$fname.tif"
 
 done
