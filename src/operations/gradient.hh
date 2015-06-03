@@ -49,6 +49,7 @@ namespace PF
   class GradientPar: public OpParBase
   {
     PropertyBase gradient_type;
+    Property<bool> invert;
     Property<float> gradient_center_x;
     Property<float> gradient_center_y;
 
@@ -56,6 +57,7 @@ namespace PF
     GradientPar(): 
       OpParBase(),
       gradient_type("gradient_type",this,GRADIENT_VERTICAL,"vertical","Vertical"),
+      invert("invert",this,false),
       gradient_center_x("gradient_center_x",this,0.5),
       gradient_center_y("gradient_center_y",this,0.5)
     {
@@ -69,10 +71,12 @@ namespace PF
       gradient_type_t result = gradient_type_t(gradient_type.get_enum_value().first);
       return( result ); 
     }
+    bool get_invert() { return invert.get(); }
     float get_gradient_center_x() { return gradient_center_x.get(); }
     float get_gradient_center_y() { return gradient_center_y.get(); }
 
     bool needs_input() { return false; }
+    bool has_intensity() { return false; }
   };
 
   
@@ -112,7 +116,9 @@ namespace PF
       {
         for( y = 0; y < r->height; y++ ) {      
           pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
-          T val = (T)((float)FormatInfo<T>::RANGE*((float)height - r->top - y)/height + FormatInfo<T>::MIN);
+          float fval = static_cast<float>(height - r->top - y)/height;
+          if( par->get_invert() == true ) fval = 1.0f - fval;
+          T val = static_cast<T>(fval*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
           //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
           for( x = 0; x < line_size; ++x) {
             pout[x] = val;
@@ -127,10 +133,19 @@ namespace PF
         if( valvec == NULL )
           break;
         int px, b;
-        for( x = 0, px = 0; x < r->width; ++x) {
-          val = (T)((float)FormatInfo<T>::RANGE*((float)r->left + x)/width + FormatInfo<T>::MIN);
-          for( b = 0; b < bands; ++b, ++px) {
-            valvec[px] = val;
+        if( par->get_invert() == true ) {
+          for( x = 0, px = 0; x < r->width; ++x) {
+            val = (T)((float)FormatInfo<T>::RANGE*((float)width - r->left - x - 1)/width + FormatInfo<T>::MIN);
+            for( b = 0; b < bands; ++b, ++px) {
+              valvec[px] = val;
+            }
+          }
+        } else {
+          for( x = 0, px = 0; x < r->width; ++x) {
+            val = (T)((float)FormatInfo<T>::RANGE*((float)r->left + x)/width + FormatInfo<T>::MIN);
+            for( b = 0; b < bands; ++b, ++px) {
+              valvec[px] = val;
+            }
           }
         }
         for( y = 0; y < r->height; y++ ) {      
@@ -170,7 +185,11 @@ namespace PF
           for( x = 0, px = 0; x < r->width; ++x) {
             int dx = r->left + x - center_x;
             float R = sqrtf( dx*dx + dy*dy );
-            val = (T)((float)FormatInfo<T>::RANGE*(R/diag) + FormatInfo<T>::MIN);
+            if( par->get_invert() == true ) {
+              val = (T)((float)FormatInfo<T>::RANGE*(1.0f-R/diag) + FormatInfo<T>::MIN);
+            } else {
+              val = (T)((float)FormatInfo<T>::RANGE*(R/diag) + FormatInfo<T>::MIN);
+            }
             for( b = 0; b < bands; ++b, ++px) {
               pout[px] = val;
             }

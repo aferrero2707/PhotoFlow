@@ -173,8 +173,10 @@ int main (int argc, char *argv[])
     return 1;
   }
 
-  setlocale(LC_ALL,"");
+  std::cout<<"locale dir: "<<PF::PhotoFlow::Instance().get_locale_dir()<<std::endl;
   bindtextdomain("photoflow",PF::PhotoFlow::Instance().get_locale_dir().c_str());
+  bind_textdomain_codeset("photoflow", "UTF-8");
+  setlocale(LC_ALL,"");
   textdomain("photoflow");
 
   vips__leak = 1;

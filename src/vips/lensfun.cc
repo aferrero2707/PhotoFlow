@@ -33,10 +33,10 @@
 #define DEBUG 1
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif /*HAVE_CONFIG_H*/
-#include <vips/intl.h>
+//#ifdef HAVE_CONFIG_H
+//#include <config.h>
+//#endif /*HAVE_CONFIG_H*/
+//#include <vips/intl.h>
 
 #include <stdio.h>
 #include <stdlib.h>

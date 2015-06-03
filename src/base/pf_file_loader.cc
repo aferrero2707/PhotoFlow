@@ -221,6 +221,7 @@ void start_element (GMarkupParseContext *context,
       value_cursor++;
     }
 
+    std::cout<<"\""<<element_name<<"\" start: current_container_map_flag="<<current_container_map_flag<<std::endl;
     if( type == "imap" ) {
       current_container = &(current_layer->get_imap_layers());
       current_container_map_flag = true;
@@ -273,6 +274,7 @@ void start_element (GMarkupParseContext *context,
       }
     }
 
+    std::cout<<"PF::pf_file_loader(): current_container_map_flag="<<current_container_map_flag<<std::endl;
     if( current_op )
       current_op->set_map_flag( current_container_map_flag );
 
@@ -349,6 +351,7 @@ void end_element (GMarkupParseContext *context,
     std::cout<<"\""<<element_name<<"\" end: layers_stack.size()="<<layers_stack.size()<<std::endl;
     if( !layers_stack.empty() ) 
       current_layer = layers_stack.back();
+    std::cout<<"\""<<element_name<<"\" end: current_container_map_flag="<<current_container_map_flag<<std::endl;
 
   } else if( strcmp (element_name, "sublayers") == 0 ) {
 
@@ -359,6 +362,7 @@ void end_element (GMarkupParseContext *context,
       current_container = containers_stack.back().first;
       current_container_map_flag = containers_stack.back().second;
     }
+    std::cout<<"\""<<element_name<<"\" end: current_container_map_flag="<<current_container_map_flag<<std::endl;
 
     // We also restore the current_layer pointer to the top element of the stack (if present)
     current_layer = NULL;
@@ -444,7 +448,7 @@ void PF::insert_pf_preset( std::string filename, PF::Image* img, PF::Layer* prev
   image = img;
   current_layer = previous;
   current_container = list;
-  if(current_container) containers_stack.push_back( make_pair(current_container,false) );
+  if(current_container) containers_stack.push_back( make_pair(current_container,map_flag) );
 
   current_container_map_flag = map_flag;
 

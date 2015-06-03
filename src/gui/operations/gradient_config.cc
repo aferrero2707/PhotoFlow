@@ -33,10 +33,13 @@
 PF::GradientConfigDialog::GradientConfigDialog( PF::Layer* layer ):
   OperationConfigDialog( layer, "Gradient tool" ),
   typeSelector( this, "gradient_type", "Gradient type: ", 1 ),
+  invert_box( this, "invert", "Invert", true ),
   center_x( this, "gradient_center_x", "Center X (%)", 100, 0, 100, 1, 10, 100),
   center_y( this, "gradient_center_y", "Center Y (%)", 100, 0, 100, 1, 10, 100)
 {
-  add_widget( typeSelector );
+  hbox.pack_start( typeSelector );
+  hbox.pack_start( invert_box, Gtk::PACK_SHRINK );
+  add_widget( hbox );
   add_widget( center_x );
   add_widget( center_y );
 }
