@@ -33,9 +33,8 @@ template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_oma
 class BlendMultiply: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
-  {
-  }
+  void blend(const float& /*opacity*/, T* /*bottom*/, T* /*top*/,
+      T* /*out*/, const int& /*x*/, int& /*xomap*/) {}
 };
 
 
@@ -47,7 +46,7 @@ class BlendMultiply<T, CS, CHMIN, CHMAX, false>:
   int ch, pos;
   typename FormatInfo<T>::PROMOTED ptop;
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
@@ -95,7 +94,7 @@ class BlendMultiply<T, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, false>:
 {
   typename FormatInfo<T>::PROMOTED ptop;
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     ptop = top[x];
     ptop *= bottom[x];
