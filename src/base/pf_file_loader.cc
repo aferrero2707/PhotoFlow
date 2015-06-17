@@ -26,6 +26,12 @@
 
   These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
+  Changelog:
+
+  - 2015/06/03
+    Fixed bug that prevented correct loading of presets with multiple layers into a layer mask.
+
+
 */
 
 #include <libgen.h>
@@ -186,25 +192,31 @@ void start_element (GMarkupParseContext *context,
     layer_id_mapper[old_id] = layer;
 
     layer->set_name( name );
-    layer->set_visible( visible );
+    layer->set_enabled( visible );
     layer->set_normal( normal );
 
     if( (version<2) && (normal==0) ) {
+#ifdef DEBUG_PF_LOAD
       std::cout<<"PF::pf_file_loader(): setting group layer operation to \"buffer\""<<std::endl;
+#endif
       PF::ProcessorBase* processor = PF::PhotoFlow::Instance().new_operation( "buffer", current_layer );
       if( processor ) {
+#ifdef DEBUG_PF_LOAD
         std::cout<<"PF::pf_file_loader(): operation created."<<std::endl;
+#endif
         current_op = processor->get_par();
       }
       if( current_op )
         current_op->set_map_flag( current_container_map_flag );
     } 
 
+#ifdef DEBUG_PF_LOAD
     std::cout<<"Layer \""<<layer->get_name()<<"\" extra inputs: ";
     for(unsigned int i = 0; i < layer->get_extra_inputs().size(); i++)
       std::cout<<layer->get_extra_inputs()[i].first.first<<","<<layer->get_extra_inputs()[i].first.second
                <<" (blended="<<layer->get_extra_inputs()[i].second<<")";
     std::cout<<std::endl;
+#endif
 
   } else if( strcmp (element_name, "sublayers") == 0 ) {
 
@@ -221,7 +233,9 @@ void start_element (GMarkupParseContext *context,
       value_cursor++;
     }
 
+#ifdef DEBUG_PF_LOAD
     std::cout<<"\""<<element_name<<"\" start: current_container_map_flag="<<current_container_map_flag<<std::endl;
+#endif
     if( type == "imap" ) {
       current_container = &(current_layer->get_imap_layers());
       current_container_map_flag = true;
@@ -257,24 +271,34 @@ void start_element (GMarkupParseContext *context,
     if( !current_layer ) return;
 
     if( op_type == "blender" ) {
+#ifdef DEBUG_PF_LOAD
       std::cout<<"PF::pf_file_loader(): setting blender operation"<<std::endl;
+#endif
       current_op = NULL;
       if( current_layer->get_blender() ) {
         current_op = current_layer->get_blender()->get_par();
+#ifdef DEBUG_PF_LOAD
         std::cout<<"PF::pf_file_loader(): blender operation set to "<<current_op<<std::endl;
+#endif
       }
     } else {
+#ifdef DEBUG_PF_LOAD
       std::cout<<"PF::pf_file_loader(): creating operation of type "<<op_type<<std::endl;
+#endif
       PF::ProcessorBase* processor = PF::PhotoFlow::Instance().new_operation( op_type, current_layer );
       if( processor ) {
+#ifdef DEBUG_PF_LOAD
         std::cout<<"PF::pf_file_loader(): operation created."<<std::endl;
+#endif
         current_op = processor->get_par();
         if( !PF::PhotoFlow::Instance().is_batch() && current_op->init_hidden() )
-          current_layer->set_visible( false );
+          current_layer->set_enabled( false );
       }
     }
 
+#ifdef DEBUG_PF_LOAD
     std::cout<<"PF::pf_file_loader(): current_container_map_flag="<<current_container_map_flag<<std::endl;
+#endif
     if( current_op )
       current_op->set_map_flag( current_container_map_flag );
 
@@ -295,7 +319,9 @@ void start_element (GMarkupParseContext *context,
       value_cursor++;
     }
 
+#ifdef DEBUG_PF_LOAD
     std::cout<<"PF::pf_file_loader(): setting property \""<<pname<<"\" to \""<<pvalue<<"\""<<std::endl;
+#endif
 
     if( !pname.empty() && !pvalue.empty() ) {
       if( version < 2 &&
@@ -348,25 +374,34 @@ void end_element (GMarkupParseContext *context,
     // is set to the top element of the stack if present, or to NULL otherwise
     layers_stack.pop_back();
     current_layer = NULL;
+#ifdef DEBUG_PF_LOAD
     std::cout<<"\""<<element_name<<"\" end: layers_stack.size()="<<layers_stack.size()<<std::endl;
+#endif
     if( !layers_stack.empty() ) 
       current_layer = layers_stack.back();
+#ifdef DEBUG_PF_LOAD
     std::cout<<"\""<<element_name<<"\" end: current_container_map_flag="<<current_container_map_flag<<std::endl;
-
+#endif
   } else if( strcmp (element_name, "sublayers") == 0 ) {
 
     containers_stack.pop_back();
     current_container = NULL;
+#ifdef DEBUG_PF_LOAD
     std::cout<<"\""<<element_name<<"\" end: containers_stack.size()="<<containers_stack.size()<<std::endl;
+#endif
     if( !containers_stack.empty() ) {
       current_container = containers_stack.back().first;
       current_container_map_flag = containers_stack.back().second;
     }
+#ifdef DEBUG_PF_LOAD
     std::cout<<"\""<<element_name<<"\" end: current_container_map_flag="<<current_container_map_flag<<std::endl;
+#endif
 
     // We also restore the current_layer pointer to the top element of the stack (if present)
     current_layer = NULL;
+#ifdef DEBUG_PF_LOAD
     std::cout<<"\""<<element_name<<"\" end: layers_stack.size()="<<layers_stack.size()<<std::endl;
+#endif
     if( !layers_stack.empty() ) 
       current_layer = layers_stack.back();
 

@@ -64,6 +64,7 @@ namespace PF
 
     bool modified_flag;
 
+    bool enabled;
     bool visible;
 
     bool normal;
@@ -111,20 +112,26 @@ namespace PF
     void clear_dirty( ) { dirty = false; }
     
 
+    bool is_enabled() { return enabled; }
+    void set_enabled( bool d )
+    {
+      bool old = enabled;
+      enabled = d;
+      if( enabled != old ) modified();
+    }
+    void clear_enabled( )
+    {
+      bool old = enabled;
+      enabled = false;
+      if( enabled != old ) modified();
+    }
+    
     bool is_visible() { return visible; }
     void set_visible( bool d )
     {
-      bool old = visible;
       visible = d;
-      if( visible != old ) modified();
     }
-    void clear_visible( )
-    {
-      bool old = visible;
-      visible = false;
-      if( visible != old ) modified();
-    }
-    
+
     bool is_group() { return( !normal ); }
     bool is_normal() { return normal; }
     void set_normal( bool d ) { normal = d; }
