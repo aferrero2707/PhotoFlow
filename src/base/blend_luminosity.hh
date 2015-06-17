@@ -58,7 +58,7 @@ class BlendLuminosity<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>:
   double irgb[3];
   double rgb[3];
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     // RGB values of the bottom layer
     irgb[0] = (double(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
@@ -113,11 +113,11 @@ class BlendLuminosity<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false>:
   double temp_top;
   double rgb[3];
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
     for( ch=CHMIN; ch<=0; ch++, pos++ ) 
-      out[pos] = top[pos];
+      out[pos] = static_cast<T>( opacity*top[pos]+(1.0f-opacity)*bottom[pos] );
     for( ; ch<=CHMAX; ch++, pos++ ) 
       out[pos] = bottom[pos];
   }
