@@ -209,7 +209,7 @@ void PF::RawDeveloperConfigDialog::do_update()
         maker = makermodel;
         model = tmodel;
         wbModeSelector.set_maker_model( maker, model );
-        std::cout<<"RawDeveloperConfigDialog::do_update(): maker="<<maker<<" model="<<model<<std::endl;
+        //std::cout<<"RawDeveloperConfigDialog::do_update(): maker="<<maker<<" model="<<model<<std::endl;
       }
     }
 

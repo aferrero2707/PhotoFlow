@@ -212,28 +212,23 @@ PF::RawImage::RawImage( const std::string f ):
   
   //==================================================================
   // Save the LibRaw parameters into the image
-  void* buf = malloc( sizeof(dcraw_data_t) );
-  if( !buf ) return;
-  memcpy( buf, pdata, sizeof(dcraw_data_t) );
+  void* rawdata_buf = malloc( sizeof(dcraw_data_t) );
+  if( !rawdata_buf ) return;
+  memcpy( rawdata_buf, pdata, sizeof(dcraw_data_t) );
   vips_image_set_blob( image, "raw_image_data",
-		       (VipsCallbackFn) g_free, buf, 
+		       (VipsCallbackFn) g_free, rawdata_buf,
 		       sizeof(dcraw_data_t) );
 
   PF::exif_read( &exif_data, file_name.c_str() );
 
-  buf = malloc( sizeof(exif_data_t) );
-  if( !buf ) return;
-  memcpy( buf, &exif_data, sizeof(exif_data_t) );
+  void* exifdata_buf = malloc( sizeof(exif_data_t) );
+  if( !exifdata_buf ) return;
+  memcpy( exifdata_buf, &exif_data, sizeof(exif_data_t) );
   vips_image_set_blob( image, PF_META_EXIF_NAME,
-           (VipsCallbackFn) PF::exif_free, buf,
+           (VipsCallbackFn) PF::exif_free, exifdata_buf,
            sizeof(exif_data_t) );
 
   //print_exif();
-
-#ifdef PF_USE_LIBRAW
-  delete raw_loader;
-  //return;
-#endif
 
 	//return;
   
@@ -279,7 +274,9 @@ PF::RawImage::RawImage( const std::string f ):
   // Save the LibRaw parameters into the image
   void* buf2 = malloc( sizeof(dcraw_data_t) );
   if( !buf2 ) return;
-  memcpy( buf2, buf, sizeof(dcraw_data_t) );
+  memcpy( buf2, pdata, sizeof(dcraw_data_t) );
+  dcraw_data_t* image_data = (dcraw_data_t*)buf2;
+  std::cout<<"RawImage: WB = "<<image_data->color.cam_mul[0]<<" "<<image_data->color.cam_mul[1]<<" "<<image_data->color.cam_mul[2]<<std::endl;
   vips_image_set_blob( demo_image, "raw_image_data",
 		       (VipsCallbackFn) g_free, buf2, 
 		       sizeof(dcraw_data_t) );
@@ -292,6 +289,11 @@ PF::RawImage::RawImage( const std::string f ):
            sizeof(exif_data_t) );
 /**/
   pyramid.init( demo_image );
+
+#ifdef PF_USE_LIBRAW
+  delete raw_loader;
+  //return;
+#endif
 }
 
 

@@ -1,4 +1,27 @@
 =========================================
+Version 0.1.3
+
+- Fixed opacity blending of "Color" mode in RGB and Lab colorspaces
+- Fixed opacity blending of "Luminosity" mode in Lab colorspace
+- Fixed filling of layer list of clone tool: for clone layers inserted
+  in layer masks, the parent layer was incorrectly included in the list,
+  leading to a possible unresolvable circular dependency between 
+  the clone layer and its source. Now the parent layer is not included
+  anymore in the list of possible clone sources.
+- original "visible" flag of layers renamed to "enabled", and added a new "visible"
+  flag to indicate if a given layer is either directly hidden or indirectly hidden
+  because some of its parents are hidden.
+  The "enabled" flag now indicates if the layer is directly hidden.
+- Removed fatal assertion on the validity of the output image from layer extra inputs.
+  Now if the image is invalid a NULL pointer is simply added to the list of extra inputs,
+  without causing a program crash. Nevertheless, a notification mechanism should be
+  introduced to inform the user of the abnormal situation.
+- Fixed corruption of RAW image metadata at zoom levels below 100%
+- Fixed bug in the image preview at program startup
+- Fixed several clang compilation warnings
+
+
+=========================================
 Version 0.1.2
 
 - Added "invert" parameter to gradient tool (to reverse the direction of the gradient)

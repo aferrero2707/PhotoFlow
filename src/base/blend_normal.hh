@@ -33,7 +33,8 @@ template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_oma
 class BlendNormal: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) {}
+  void blend(const float& /*opacity*/, T* /*bottom*/, T* /*top*/,
+      T* /*out*/, const int& /*x*/, int& /*xomap*/) {}
 };
 
 
@@ -45,7 +46,7 @@ class BlendNormal<T, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, false>:
   public BlendBase<T, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, false>
 {
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     out[x] = (T)(opacity*top[x] + (1.0f-opacity)*bottom[x]);
   }
@@ -74,7 +75,7 @@ class BlendNormal<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>:
 {
   int ch, pos;
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
     // The target channel(s) get blended
@@ -135,7 +136,7 @@ class BlendNormal<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false>:
 {
   int ch, pos;
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
     // The target channel(s) get blended
@@ -190,7 +191,7 @@ class BlendNormal<T, PF_COLORSPACE_CMYK, CHMIN, CHMAX, false>:
 {
   int ch, pos;
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
     // The target channel(s) get blended

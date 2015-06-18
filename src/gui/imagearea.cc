@@ -92,9 +92,12 @@ gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
   std::cout<<"set_size_cb(1): update->image_area->get_hadj()->get_value()="<<update->image_area->get_hadj()->get_value()<<std::endl;
   std::cout<<"                get_lower()="<<update->image_area->get_hadj()->get_lower()<<std::endl;
   std::cout<<"                get_upper()="<<update->image_area->get_hadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<update->image_area->get_hadj()->get_page_size()<<std::endl;
   std::cout<<"set_size_cb(1): update->image_area->get_vadj()->get_value()="<<update->image_area->get_vadj()->get_value()<<std::endl;
   std::cout<<"                get_lower()="<<update->image_area->get_vadj()->get_lower()<<std::endl;
   std::cout<<"                get_upper()="<<update->image_area->get_vadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<update->image_area->get_vadj()->get_page_size()<<std::endl;
+  std::cout<<"update->image_area->set_size_request("<<update->rect.width<<","<<update->rect.height<<")"<<std::endl;
   */
   update->image_area->set_size_request(update->rect.width,update->rect.height);
   // We need to change the upper limits explicitely, since the adjustments are not updated immediately
@@ -118,9 +121,12 @@ gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
   std::cout<<"set_size_cb(2): update->image_area->get_hadj()->get_value()="<<update->image_area->get_hadj()->get_value()<<std::endl;
   std::cout<<"                get_lower()="<<update->image_area->get_hadj()->get_lower()<<std::endl;
   std::cout<<"                get_upper()="<<update->image_area->get_hadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<update->image_area->get_hadj()->get_page_size()<<std::endl;
   std::cout<<"set_size_cb(2): update->image_area->get_vadj()->get_value()="<<update->image_area->get_vadj()->get_value()<<std::endl;
   std::cout<<"                get_lower()="<<update->image_area->get_vadj()->get_lower()<<std::endl;
   std::cout<<"                get_upper()="<<update->image_area->get_vadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<update->image_area->get_vadj()->get_page_size()<<std::endl;
+  std::cout<<std::endl;
   */
   g_free (update);
   return FALSE;
@@ -155,7 +161,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   maskblend = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
   invert = new PF::Processor<PF::InvertPar,PF::Invert>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
-  set_size_request( 100, 100 );
+  set_size_request( 1, 1 );
 
   draw_done = vips_g_cond_new();
   draw_mutex = vips_g_mutex_new();
@@ -1057,23 +1063,35 @@ void PF::ImageArea::update( VipsRect* area )
   get_size_request( image_width, image_height );
   float area_center_x = 0;
   float area_center_y = 0;
-  if( image_width>0 && image_height>0 ) {
+#ifdef DEBUG_DISPLAY
+  std::cout<<"#0 area_width="<<area_width<<"  image_width="<<image_width<<std::endl;
+  std::cout<<"   area_height="<<area_height<<"  image_height="<<image_height<<std::endl;
+#endif
+  if( image_width>1 && image_height>1 ) {
     area_center_x = area_left + area_width/2;
     area_center_y = area_top + area_height/2;
-    //std::cout<<"#1 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
+#ifdef DEBUG_DISPLAY
+    std::cout<<"#1 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
+#endif
     area_center_x /= image_width;
     area_center_y /= image_height;
-    //std::cout<<"#2 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
+#ifdef DEBUG_DISPLAY
+    std::cout<<"#2 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
+#endif
   }
 
   area_center_x *= outimg->Xsize;
   area_center_y *= outimg->Ysize;
-  //std::cout<<"#3 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"#3 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
+#endif
   area_left = area_center_x - area_width/2;
   if( area_left < 0 ) area_left = 0;
   area_top = area_center_y - area_height/2;
   if( area_top < 0 ) area_top = 0;
-  //std::cout<<"#4 area_left="<<area_left<<"  area_top="<<area_top<<std::endl;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"#4 area_left="<<area_left<<"  area_top="<<area_top<<std::endl;
+#endif
 
   Update * update = g_new (Update, 1);
   update->image_area = this;
@@ -1081,8 +1099,8 @@ void PF::ImageArea::update( VipsRect* area )
   update->rect.top = area_top;
   update->rect.width = outimg->Xsize;
   update->rect.height = outimg->Ysize;
-  //std::cout<<"   update->rect: "<<update->rect<<std::endl;
 #ifdef DEBUG_DISPLAY
+  std::cout<<"   update->rect: "<<update->rect<<std::endl;
   std::cout<<"PF::ImageArea::update(): installing set_size callback."<<std::endl;
 #endif
   gdk_threads_add_idle ((GSourceFunc) set_size_cb, update);

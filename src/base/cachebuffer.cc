@@ -107,7 +107,7 @@ void PF::CacheBuffer::step()
     lseek( fd, offset, SEEK_SET );
     p = VIPS_REGION_ADDR( reg, tile_area.left, tile_area.top+y );
     ssize_t n = ::write( fd, p, VIPS_REGION_SIZEOF_LINE(reg) );
-    if( n != VIPS_REGION_SIZEOF_LINE(reg) )
+    if( n != (ssize_t)VIPS_REGION_SIZEOF_LINE(reg) )
       break;
     offset += VIPS_IMAGE_SIZEOF_LINE(image);
   }

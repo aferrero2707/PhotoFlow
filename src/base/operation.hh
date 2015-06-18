@@ -281,7 +281,7 @@ namespace PF
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }
 
-    virtual void pre_build( rendermode_t mode ) {}
+    virtual void pre_build( rendermode_t /*mode*/ ) {}
 
     virtual VipsImage* build(std::vector<VipsImage*>& in, int first,
     VipsImage* imap, VipsImage* omap, unsigned int& level);
@@ -395,7 +395,7 @@ namespace PF
   class IntensityProc<T,false>
   {
   public:
-    float get_intensity(float& intensity, T*& p, int& x)
+    float get_intensity(float& intensity, T*& /*p*/, int& /*x*/)
     {
       //std::cout<<"IntensityProc<T,false>::get_intensity()"<<std::endl;
       return(intensity);
@@ -418,7 +418,7 @@ namespace PF
   {
   public:
     T* pmap;
-    void init_line(VipsRegion* omap, int left, int top) { }
+    void init_line(VipsRegion* /*omap*/, int /*left*/, int /*top*/) { }
   };
 
 

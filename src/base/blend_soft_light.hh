@@ -33,7 +33,8 @@ template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_oma
 class BlendSoftLight: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) {}
+  void blend(const float& /*opacity*/, T* /*bottom*/, T* /*top*/,
+      T* /*out*/, const int& /*x*/, int& /*xomap*/) {}
 };
 
 
@@ -55,7 +56,7 @@ public:
                     psum((typename FormatInfo<T>::PROMOTED)(FormatInfo<T>::MAX) + FormatInfo<T>::MIN), 
                     MAX2((typename FormatInfo<T>::PROMOTED)(FormatInfo<T>::MAX)*FormatInfo<T>::MAX),
                     sqrtMAX( sqrt(FormatInfo<T>::MAX) ) {}
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
     //psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;

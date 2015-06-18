@@ -168,7 +168,7 @@ void PF::ImageEditor::expand_layer( PF::Layer* layer, std::list<PF::Layer*>& lis
     //#ifndef NDEBUG
     std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
     //#endif
-    if( !l->is_visible() ) continue;
+    if( !l->is_enabled() ) continue;
     if( l->get_processor() == NULL ) continue;
     if( l->get_processor()->get_par() == NULL ) continue;
     PF::OpParBase* par = l->get_processor()->get_par();
@@ -214,7 +214,7 @@ void PF::ImageEditor::get_child_layers( Layer* layer, std::list<PF::Layer*>& con
     std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
 #endif
     if( (layer != NULL) && (layer->get_id() == l->get_id()) ) break;
-    if( !l->is_visible() ) continue;
+    if( !l->is_enabled() ) continue;
     if( l->get_processor() == NULL ) continue;
     if( l->get_processor()->get_par() == NULL ) continue;
     PF::OpParBase* par = l->get_processor()->get_par();
@@ -339,7 +339,7 @@ void PF::ImageEditor::open_image()
   //std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
   if( !pipeline ) return;
-  int level = 0;
+  int level = 1;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
@@ -636,7 +636,7 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   std::list<PF::Layer*>::reverse_iterator li;
   for(li = active_layer_children.rbegin(); li != active_layer_children.rend(); ++li) {
     PF::Layer* l = *li;
-    if( l && l->is_visible() ) {
+    if( l && l->is_enabled() ) {
       // Get the node associated to the layer
       PF::PipelineNode* node = pipeline->get_node( l->get_id() );
       if( !node ) {
@@ -727,7 +727,7 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   std::list<PF::Layer*>::iterator li;
   for(li = active_layer_children.begin(); li != active_layer_children.end(); ++li) {
     PF::Layer* l = *li;
-    if( l && l->is_visible() ) {
+    if( l && l->is_enabled() ) {
       // Get the node associated to the layer
       PF::PipelineNode* node = pipeline->get_node( l->get_id() );
       if( !node ) {

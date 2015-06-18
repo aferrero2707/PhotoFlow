@@ -222,13 +222,13 @@ void PF::LayerTree::on_cell_toggled( const Glib::ustring& path )
   if (iter) {
     Gtk::TreeModel::Row row = *iter;
     //PF::LayerTreeColumns& columns = columns;
-    bool visible = (*iter)[treeModel->columns.col_visible];
+    bool enabled = (*iter)[treeModel->columns.col_visible];
     PF::Layer* l = (*iter)[treeModel->columns.col_layer];
     if( !l ) return;
 #ifndef NDEBUG
-    std::cout<<"Toggled visibility of layer \""<<l->get_name()<<"\": "<<visible<<std::endl;
+    std::cout<<"Toggled visibility of layer \""<<l->get_name()<<"\": "<<enabled<<std::endl;
 #endif
-    l->set_visible( visible );
+    l->set_enabled( enabled );
     l->set_dirty( true );
     //layer_manager->rebuild( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
     l->get_image()->update();
@@ -253,7 +253,7 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
        li != sublayers.end(); li++ ) {
     PF::Layer* l = *li;
     row = *(treeModel->prepend(parent_row.children()));
-    row[treeModel->columns.col_visible] = l->is_visible();
+    row[treeModel->columns.col_visible] = l->is_enabled();
     row[treeModel->columns.col_name] = l->get_name();
     row[treeModel->columns.col_layer] = l;
     if( l->get_processor()->get_par()->has_intensity() )
@@ -291,7 +291,7 @@ void PF::LayerTree::update_model()
       continue;
     }
     Gtk::TreeModel::Row row = *(treeModel->prepend());
-    row[treeModel->columns.col_visible] = l->is_visible();
+    row[treeModel->columns.col_visible] = l->is_enabled();
     row[treeModel->columns.col_name] = l->get_name();
     row[treeModel->columns.col_layer] = l;
     if( l->get_processor()->get_par()->has_intensity() )
@@ -325,7 +325,7 @@ void PF::LayerTree::update_model()
   int layerid;
   for (iter=children.begin(), layerid=0; iter != children.end(); iter++, layerid++) {
     if (layerid >= layers.size()) break;
-    bool visible = layers[layerid]->is_visible();
+    bool visible = layers[layerid]->is_enabled();
     const std::string& name = layers[layerid]->get_name();
     (*iter)[columns.col_visible] = visible;
     (*iter)[columns.col_name] = name;
@@ -342,7 +342,7 @@ void PF::LayerTree::update_model()
   if (layerid < layers.size()) {
     // Append additional layers at the end of the list
     for (; layerid < layers.size(); layerid++) {
-      bool visible = layers[layerid]->is_visible();
+      bool visible = layers[layerid]->is_enabled();
       const std::string& name = layers[layerid]->get_name();
       Gtk::TreeModel::Row row = *(treeModel->append());
       row[columns.col_visible] = visible;
@@ -415,6 +415,7 @@ bool PF::LayerTree::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::T
         return true;
     }
   }
+  return false;
 }
 
 

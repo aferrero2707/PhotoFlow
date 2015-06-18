@@ -33,9 +33,8 @@ template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_oma
 class BlendLighten: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
-  {
-  }
+  void blend(const float& /*opacity*/, T* /*bottom*/, T* /*top*/,
+      T* /*out*/, const int& /*x*/, int& /*xomap*/) {}
 };
 
 
@@ -47,7 +46,7 @@ class BlendLighten<T, CS, CHMIN, CHMAX, false>:
   int ch, pos;
   T temp_top;
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
@@ -94,7 +93,7 @@ class BlendLighten<T, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, false>:
 {
   T temp_top;
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     if( bottom[x]>top[x] ) temp_top = bottom[x];
     else temp_top = top[x];

@@ -70,6 +70,7 @@ endif()
   MESSAGE( STATUS "GTKMM3_FOUND:         " ${GTKMM3_FOUND} )
 
   
+IF(NOT MINGW)
 #need to put here do setting LOCALE_DIR variable
 if(USE_NLS)
 find_package(Gettext)
@@ -91,6 +92,8 @@ if(Gettext_FOUND)
 	endif(NOT LOCALE_DIR)
 endif(Gettext_FOUND)
 endif(USE_NLS)
+ENDIF(NOT MINGW)
+MESSAGE( STATUS "Msgfmt_FOUND:         " ${Msgfmt_FOUND} )
 
 
 add_subdirectory(src) 

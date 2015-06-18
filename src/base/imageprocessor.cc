@@ -33,10 +33,11 @@
 #include "imageprocessor.hh"
 
 
-static gpointer run_image_processor( gpointer data )
+static gpointer run_image_processor( gpointer /*data*/ )
 {
 	std::cout<<"Calling ImageProcessor::instance().run()"<<std::endl;
   PF::ImageProcessor::Instance().run();
+  //return data;
 }
 
 

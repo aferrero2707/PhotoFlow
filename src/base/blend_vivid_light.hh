@@ -31,6 +31,7 @@
 //#include "vivid_light.hh"
 
 
+/*
 static float color_burn(float top, float bottom)
 {
   if( top == 1 ) return 0;
@@ -46,13 +47,15 @@ static float color_dodge(float top, float bottom)
   float result = bottom / (1.0f-top);
   return( (result>1) ? 1 : result );
 }
+*/
 
 
 template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_omap>
 class BlendVividLight: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) {}
+  void blend(const float& /*opacity*/, T* /*bottom*/, T* /*top*/,
+      T* /*out*/, const int& /*x*/, int& /*xomap*/) {}
 };
 
 
@@ -70,7 +73,7 @@ class BlendVividLight<T, CS, CHMIN, CHMAX, false>:
   typename FormatInfo<T>::PROMOTED psum;
 public:
   BlendVividLight(): BlendBase<T, CS, CHMIN, CHMAX, false>(), psum(FormatInfo<T>::MAX + FormatInfo<T>::MIN) {}
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
 #ifdef DO_WARNINGS
 #warning "TODO: optimize vivid light blend"

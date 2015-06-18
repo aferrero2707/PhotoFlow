@@ -33,7 +33,8 @@ template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_oma
 class BlendOverlay: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) {}
+  void blend(const float& /*opacity*/, T* /*bottom*/, T* /*top*/,
+      T* /*out*/, const int& /*x*/, int& /*xomap*/) {}
 };
 
 
@@ -50,7 +51,7 @@ class BlendOverlay<T, CS, CHMIN, CHMAX, false>:
   typename FormatInfo<T>::PROMOTED psum;
 public:
   BlendOverlay(): BlendBase<T, CS, CHMIN, CHMAX, false>(), psum(FormatInfo<T>::MAX + FormatInfo<T>::MIN) {}
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
     //psum = FormatInfo<T>::MAX + FormatInfo<T>::MIN;
