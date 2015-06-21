@@ -34,15 +34,15 @@
 
 
 PF::ConvertColorspaceConfigDialog::ConvertColorspaceConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Convert to profile" ),
-  outProfileModeSelector( this, "profile_mode", "Output profile: ", 1 ),
+  OperationConfigDialog( layer, _("Convert to profile") ),
+  outProfileModeSelector( this, "profile_mode", _("Output profile: "), 1 ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
 
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
-  outProfLabel.set_text( "output profile name:" );
+  outProfLabel.set_text( _("output profile name:") );
   outProfVBox.pack_start( outProfLabel );
   outProfVBox.pack_start( outProfFileEntry );
   outProfHBox.pack_start( outProfVBox );
@@ -65,7 +65,7 @@ PF::ConvertColorspaceConfigDialog::ConvertColorspaceConfigDialog( PF::Layer* lay
 
 void PF::ConvertColorspaceConfigDialog::on_out_button_open_clicked()
 {
-  Gtk::FileChooserDialog dialog("Please choose a file",
+  Gtk::FileChooserDialog dialog(_("Please choose a file"),
 																Gtk::FILE_CHOOSER_ACTION_OPEN);
   dialog.set_transient_for(*this);
   

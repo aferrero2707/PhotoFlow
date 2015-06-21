@@ -31,8 +31,8 @@
 
 
 PF::DesaturateConfigDialog::DesaturateConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Desaturate" ),
-  modeSelector( this, "method", "Desaturate method: ", 0 )
+  OperationConfigDialog( layer, _("Desaturate") ),
+  modeSelector( this, "method", _("Desaturate method: "), 0 )
 {
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK );
   add_widget( controlsBox );

@@ -465,22 +465,25 @@ void PF::LayerManager::reset_cache_buffers( rendermode_t mode, bool reinit )
 
 
 
-void PF::LayerManager::update_visible( std::list<Layer*>& list, bool visible )
+void PF::LayerManager::update_visible( std::list<Layer*>& list, bool parent_visible )
 {
+  bool visible;
   std::list<PF::Layer*>::reverse_iterator li;
   for(li = list.rbegin(); li != list.rend(); ++li) {
     PF::Layer* l = *li;
     if(!l) continue;
 
-    // Reset visible flag first
-    l->set_visible( false );
+    // Set visible flag to parent value first
+    visible = parent_visible;
     // Check if current layer is enabled
     // If not, this and all subsequent and/or child layers
     // will be marked as invisible
     if( !l->is_enabled() ) {
+      //std::cout<<"Layer \""<<l->get_name()<<"\" disabled, setting visible flag to false"<<std::endl;
       visible = false;
     }
     l->set_visible( visible );
+    //std::cout<<"Layer \""<<l->get_name()<<"\" visible flag set to "<<visible<<std::endl;
 
     // Now we walk through the intensity and opacity maps.
     update_visible( l->imap_layers, visible );
@@ -844,7 +847,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       // images in the input vector
       for(uint32_t iextra = 0; iextra < l->extra_inputs.size(); iextra++) {
 #ifndef NDEBUG
-        std::cout<<"Layer \""<<l->get_name()<<"\": adding extra input layer id="<<l->extra_inputs[iextra].first
+        std::cout<<"Layer \""<<l->get_name()<<"\": adding extra input layer id="<<l->extra_inputs[iextra].first.first
                  <<" (blended="<<l->extra_inputs[iextra].second<<")..."<<std::endl;
 #endif
         PF::Layer* lextra = get_layer( l->extra_inputs[iextra].first.first );
@@ -853,18 +856,24 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         // with an error.
         //g_assert( lextra != NULL );
         if( !lextra ) {
+          std::cout<<"Layer \""<<l->get_name()<<"\": extra input layer id="<<l->extra_inputs[iextra].first.first
+                 <<" (blended="<<l->extra_inputs[iextra].second<<") not found (NULL layer pointer)"<<std::endl;
           in.push_back( NULL );
           continue;
         }
         // If the layer is not visible (either bcause it is disabled,
         // or one of its parents is disabled) we ignore the associated image
         if( !(lextra->is_visible()) ) {
+          std::cout<<"Layer \""<<l->get_name()<<"\": extra input layer id="<<l->extra_inputs[iextra].first.first
+                 <<" (blended="<<l->extra_inputs[iextra].second<<") not visible"<<std::endl;
           in.push_back( NULL );
           continue;
         }
         PF::PipelineNode* extra_node = pipeline->get_node( lextra->get_id() );
         //g_assert( extra_node != NULL );
         if( extra_node == NULL ) {
+          std::cout<<"Layer \""<<l->get_name()<<"\": extra input layer id="<<l->extra_inputs[iextra].first.first
+                 <<" (blended="<<l->extra_inputs[iextra].second<<") node not found"<<std::endl;
           in.push_back( NULL );
           continue;
         }
@@ -882,6 +891,8 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         // we have a problem and we gve up
         //g_assert( extra_img != NULL );
         if( extra_img == NULL ) {
+          std::cout<<"Layer \""<<l->get_name()<<"\": extra input layer id="<<l->extra_inputs[iextra].first.first
+                 <<" (blended="<<l->extra_inputs[iextra].second<<") NULL image"<<std::endl;
           in.push_back( NULL );
           continue;
         }

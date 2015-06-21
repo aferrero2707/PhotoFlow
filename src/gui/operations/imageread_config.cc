@@ -33,10 +33,10 @@
 
 
 PF::ImageReadConfigDialog::ImageReadConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Open an image" ),
+  OperationConfigDialog( layer, _("Open an image") ),
   openButton(Gtk::Stock::OPEN)
 {
-  label.set_text( "file name:" );
+  label.set_text( _("file name:") );
 
   controlsBox.pack_start( label );
   controlsBox.pack_start( fileEntry );
@@ -91,7 +91,7 @@ void PF::ImageReadConfigDialog::open()
 
 void PF::ImageReadConfigDialog::on_button_open_clicked()
 {
-  Gtk::FileChooserDialog dialog("Please choose a file",
+  Gtk::FileChooserDialog dialog(_("Please choose a file"),
 				Gtk::FILE_CHOOSER_ACTION_OPEN);
   dialog.set_transient_for(*this);
   

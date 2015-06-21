@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-05-05 08:53+0200\n"
+"POT-Creation-Date: 2015-06-21 20:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,22 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: src/operations/desaturate.cc:37
+msgid "Luminosity"
+msgstr ""
+
+#: src/operations/desaturate.cc:39
+msgid "Lightness"
+msgstr ""
+
+#: src/operations/desaturate.cc:40
+msgid "Average"
+msgstr ""
+
+#: src/operations/desaturate.cc:41
+msgid "Lab L channel"
+msgstr ""
 
 #: src/gui/imageeditor.cc:66
 msgid "show merged layers"
@@ -70,8 +86,8 @@ msgstr ""
 msgid "Group Layer Config"
 msgstr ""
 
-#: src/gui/layerwidget.cc:579 src/gui/layerwidget.cc:647
-#: src/gui/layerwidget.cc:652
+#: src/gui/layerwidget.cc:579 src/gui/layerwidget.cc:584
+#: src/gui/layerwidget.cc:647 src/gui/layerwidget.cc:652
 msgid "Photoflow presets"
 msgstr ""
 
@@ -133,6 +149,320 @@ msgid ""
 "Image \"%s\" contains unsaved data. Do you want to save it before closing?"
 msgstr ""
 
+#: src/gui/operation_config_dialog.cc:105
+msgid "Blend mode: "
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:106
+msgid "Intensity"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:107
+msgid "Opacity"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:108
+#: src/gui/operation_config_dialog.cc:109
+msgid "Enable mask"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:110
+msgid "X shift"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:111
+msgid "Y shift"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:113
+#: src/gui/operation_config_dialog.cc:114
+#: src/gui/operation_config_dialog.cc:115
+msgid "Target channel: "
+msgstr ""
+
 #: src/gui/operation_config_dialog.cc:116
+msgid "Target channel:"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:117
 msgid "preview"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:120
+msgid "OK"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:121
+msgid "Cancel"
+msgstr ""
+
+#: src/gui/operation_config_dialog.cc:134
+msgid "New Layer"
+msgstr ""
+
+#: src/gui/operations/brightness_contrast_config.cc:36
+msgid "Brightness/Contrast Adjustment"
+msgstr ""
+
+#: src/gui/operations/brightness_contrast_config.cc:41
+msgid "Brightness"
+msgstr ""
+
+#: src/gui/operations/brightness_contrast_config.cc:42
+msgid "Contrast"
+msgstr ""
+
+#: src/gui/operations/brightness_contrast_config.cc:43
+#: src/gui/operations/curves_config.cc:45
+msgid "Output mode"
+msgstr ""
+
+#: src/gui/operations/channel_mixer_config.cc:36
+msgid "Channel Mixer"
+msgstr ""
+
+#: src/gui/operations/channel_mixer_config.cc:37
+msgid "Red %"
+msgstr ""
+
+#: src/gui/operations/channel_mixer_config.cc:38
+msgid "Green %"
+msgstr ""
+
+#: src/gui/operations/channel_mixer_config.cc:39
+msgid "Blue %"
+msgstr ""
+
+#: src/gui/operations/clone_config.cc:36
+msgid "Clone layer"
+msgstr ""
+
+#: src/gui/operations/clone_config.cc:37
+msgid "Layer name:"
+msgstr ""
+
+#: src/gui/operations/clone_config.cc:38
+msgid "Source channel: "
+msgstr ""
+
+#: src/gui/operations/clone_stamp_config.cc:37
+msgid "Clone Stamp"
+msgstr ""
+
+#: src/gui/operations/clone_stamp_config.cc:38
+msgid "Stamp size: "
+msgstr ""
+
+#: src/gui/operations/clone_stamp_config.cc:39
+msgid "Stamp opacity: "
+msgstr ""
+
+#: src/gui/operations/clone_stamp_config.cc:40
+msgid "Stamp smoothness: "
+msgstr ""
+
+#: src/gui/operations/clone_stamp_config.cc:41
+#: src/gui/operations/draw_config.cc:50
+msgid "Undo"
+msgstr ""
+
+#: src/gui/operations/convert_colorspace_config.cc:37
+msgid "Convert to profile"
+msgstr ""
+
+#: src/gui/operations/convert_colorspace_config.cc:38
+msgid "Output profile: "
+msgstr ""
+
+#: src/gui/operations/convert_colorspace_config.cc:45
+msgid "output profile name:"
+msgstr ""
+
+#: src/gui/operations/convert_colorspace_config.cc:68
+#: src/gui/operations/imageread_config.cc:94
+msgid "Please choose a file"
+msgstr ""
+
+#: src/gui/operations/crop_config.cc:36
+msgid "Crop"
+msgstr ""
+
+#: src/gui/operations/crop_config.cc:38
+msgid "Crop left"
+msgstr ""
+
+#: src/gui/operations/crop_config.cc:39
+msgid "Crop top"
+msgstr ""
+
+#: src/gui/operations/crop_config.cc:40
+msgid "Crop width"
+msgstr ""
+
+#: src/gui/operations/crop_config.cc:41
+msgid "Crop height"
+msgstr ""
+
+#: src/gui/operations/crop_config.cc:42
+msgid "Keep aspect ratio"
+msgstr ""
+
+#: src/gui/operations/crop_config.cc:43
+msgid "Aspect ratio: W="
+msgstr ""
+
+#: src/gui/operations/crop_config.cc:44
+msgid "/H="
+msgstr ""
+
+#: src/gui/operations/curves_config.cc:33
+msgid "Curves Configuration"
+msgstr ""
+
+#: src/gui/operations/curves_config.cc:50
+#: src/gui/operations/curves_config.cc:63
+msgid "RGB"
+msgstr ""
+
+#: src/gui/operations/curves_config.cc:51
+#: src/gui/operations/curves_config.cc:64
+msgid "Red"
+msgstr ""
+
+#: src/gui/operations/curves_config.cc:52
+#: src/gui/operations/curves_config.cc:65
+msgid "Green"
+msgstr ""
+
+#: src/gui/operations/curves_config.cc:53
+#: src/gui/operations/curves_config.cc:66
+msgid "Blue"
+msgstr ""
+
+#: src/gui/operations/desaturate_config.cc:34
+msgid "Desaturate"
+msgstr ""
+
+#: src/gui/operations/desaturate_config.cc:35
+msgid "Desaturate method: "
+msgstr ""
+
+#: src/gui/operations/draw_config.cc:37
+msgid "Freehand Drawing"
+msgstr ""
+
+#: src/gui/operations/draw_config.cc:38
+msgid "Pen color:              "
+msgstr ""
+
+#: src/gui/operations/draw_config.cc:39
+msgid "Background color: "
+msgstr ""
+
+#: src/gui/operations/draw_config.cc:48
+msgid "Pen size: "
+msgstr ""
+
+#: src/gui/operations/draw_config.cc:49
+msgid "Pen opacity: "
+msgstr ""
+
+#: src/gui/operations/gaussblur_config.cc:36
+msgid "Gaussian Blur"
+msgstr ""
+
+#: src/gui/operations/gaussblur_config.cc:37
+msgid "Preview mode: "
+msgstr ""
+
+#: src/gui/operations/gaussblur_config.cc:38
+msgid "Radius"
+msgstr ""
+
+#: src/gui/operations/gradient_config.cc:34
+msgid "Gradient tool"
+msgstr ""
+
+#: src/gui/operations/gradient_config.cc:35
+msgid "Gradient type: "
+msgstr ""
+
+#: src/gui/operations/gradient_config.cc:36
+msgid "Invert"
+msgstr ""
+
+#: src/gui/operations/gradient_config.cc:37
+msgid "Center X (%)"
+msgstr ""
+
+#: src/gui/operations/gradient_config.cc:38
+msgid "Center Y (%)"
+msgstr ""
+
+#: src/gui/operations/imageread_config.cc:36
+msgid "Open an image"
+msgstr ""
+
+#: src/gui/operations/imageread_config.cc:39
+msgid "file name:"
+msgstr ""
+
+#: src/gui/operations/lensfun_config.cc:37
+msgid "Optical corrections"
+msgstr ""
+
+#: src/gui/operations/lensfun_config.cc:39
+msgid "Camera maker: "
+msgstr ""
+
+#: src/gui/operations/lensfun_config.cc:43
+msgid "Camera model: "
+msgstr ""
+
+#: src/gui/operations/lensfun_config.cc:46
+msgid "Lens model: "
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:82
+msgid "Raw Developer"
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:83
+msgid "WB mode: "
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:84
+msgid "Red WB mult."
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:85
+msgid "Green WB mult."
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:86
+msgid "Blue WB mult."
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:87
+msgid "Red WB correction"
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:88
+msgid "Green WB correction"
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:89
+msgid "Blue WB correction"
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:90
+msgid "Target: "
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:93
+msgid "Demosaicing method: "
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:94
+msgid "False color suppression steps"
 msgstr ""
