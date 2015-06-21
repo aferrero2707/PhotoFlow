@@ -34,16 +34,16 @@
 
 
 PF::LensFunConfigDialog::LensFunConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Optical corrections" )
+  OperationConfigDialog( layer, _("Optical corrections") )
 {
-  label1.set_text( "Camera maker: " );
+  label1.set_text( _("Camera maker: ") );
   hbox1.pack_start( label1 );
   hbox1.pack_start( makerEntry );
 
-  label2.set_text( "Camera model: " );
+  label2.set_text( _("Camera model: ") );
   hbox2.pack_start( label2 );
   hbox2.pack_start( modelEntry );
-  label3.set_text( "Lens model: " );
+  label3.set_text( _("Lens model: ") );
   hbox3.pack_start( label3 );
   hbox3.pack_start( lensEntry );
 

@@ -1,4 +1,9 @@
 =========================================
+Version 0.1.4
+
+- Fixed bug in update of layer's "visible" flag
+
+=========================================
 Version 0.1.3
 
 - Fixed opacity blending of "Color" mode in RGB and Lab colorspaces

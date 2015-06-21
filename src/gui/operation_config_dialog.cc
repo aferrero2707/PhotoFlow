@@ -102,23 +102,23 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   controlsBoxLeft(Gtk::ORIENTATION_VERTICAL),
   controlsBoxRight(Gtk::ORIENTATION_VERTICAL),
 #endif
-  blendSelector( this, layer->get_blender(), "blend_mode", "Blend mode: ", PF_BLEND_PASSTHROUGH ),
-  intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
-  opacitySlider( this, layer->get_blender(), "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
-  imap_enabled_box( this, "mask_enabled", "Enable mask", true),
-  omap_enabled_box( this, layer->get_blender(), "mask_enabled", "Enable mask", true),
-  shift_x( this, layer->get_blender(), "shift_x", "X shift", 0, -1000000, 1000000, 1, 10, 1),
-  shift_y( this, layer->get_blender(), "shift_y", "Y shift", 0, -1000000, 1000000, 1, 10, 1),
+  blendSelector( this, layer->get_blender(), "blend_mode", _("Blend mode: "), PF_BLEND_PASSTHROUGH ),
+  intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
+  opacitySlider( this, layer->get_blender(), "opacity", _("Opacity"), 100, 0, 100, 1, 10, 100),
+  imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
+  omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
+  shift_x( this, layer->get_blender(), "shift_x", _("X shift"), 0, -1000000, 1000000, 1, 10, 1),
+  shift_y( this, layer->get_blender(), "shift_y", _("Y shift"), 0, -1000000, 1000000, 1, 10, 1),
   has_ch_sel(chsel),
-  greychSelector( this, "grey_target_channel", "Target channel: ", -1 ),
-  rgbchSelector( this, "rgb_target_channel", "Target channel: ", -1 ),
-  labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
-  cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 ),
+  greychSelector( this, "grey_target_channel", _("Target channel: "), -1 ),
+  rgbchSelector( this, "rgb_target_channel", _("Target channel: "), -1 ),
+  labchSelector( this, "lab_target_channel", _("Target channel: "), -1 ),
+  cmykchSelector( this, "cmyk_target_channel", _("Target channel:"), -1 ),
   previewButton(_("preview"))
 {
   //set_keep_above(true);
-  add_button("OK",1);
-  add_button("Cancel",0);
+  add_button( _("OK"), 1 );
+  add_button( _("Cancel"), 0 );
 
   signal_response().connect(sigc::mem_fun(*this,
 					  &OperationConfigDialog::on_button_clicked) );
@@ -131,7 +131,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   lname.set_text( "name:" );
   nameBox.pack_start( lname, Gtk::PACK_SHRINK );
 
-  nameEntry.set_text( "New Layer" );
+  nameEntry.set_text( _("New Layer") );
   nameBox.pack_start( nameEntry, Gtk::PACK_SHRINK );
 
   //blendSelector.set_row_separator_func( is_blend_mode_row_separator );

@@ -34,9 +34,9 @@
 
 
 PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Draw" ),
-  pen_color_label("Pen color:              "),
-  bgd_color_label("Background color: "),
+  OperationConfigDialog( layer, _("Freehand Drawing") ),
+  pen_color_label(_("Pen color:              ")),
+  bgd_color_label(_("Background color: ")),
 #ifdef GTKMM_2
   pen_color_button( Gdk::Color("white") ),
   bgd_color_button( Gdk::Color("black") ),
@@ -45,9 +45,9 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
   pen_color_button( Gdk::RGBA("white") ),
   bgd_color_button( Gdk::RGBA("black") ),
 #endif
-  pen_size( this, "pen_size", "Pen size: ", 5, 0, 1000000, 1, 10, 1),
-  pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100),
-  undoButton("Undo")
+  pen_size( this, "pen_size", _("Pen size: "), 5, 0, 1000000, 1, 10, 1),
+  pen_opacity( this, "pen_opacity", _("Pen opacity: "), 100, 0, 100, 0.1, 1, 100),
+  undoButton( _("Undo") )
 {
   colorButtonsBox1.pack_start( bgd_color_label, Gtk::PACK_SHRINK );
   colorButtonsBox1.pack_start( bgd_color_button, Gtk::PACK_SHRINK );

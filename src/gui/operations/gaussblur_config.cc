@@ -33,9 +33,9 @@
 
 
 PF::GaussBlurConfigDialog::GaussBlurConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gaussian Blur" ),
-	modeSelector( this, "preview_mode", "Preview mode: ", PF_BLUR_FAST ),
-  radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1)
+  OperationConfigDialog( layer, _("Gaussian Blur") ),
+	modeSelector( this, "preview_mode", _("Preview mode: "), PF_BLUR_FAST ),
+  radiusSlider( this, "radius", _("Radius"), 5, 0, 1000, 0.1, 1, 1)
 {
   controlsBox.pack_start( modeSelector );
   controlsBox.pack_start( radiusSlider );

@@ -30,7 +30,7 @@
 #include "curves_config.hh"
 
 PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
-  PF::OperationConfigDialog( layer, "Curves Configuration", false ),
+  PF::OperationConfigDialog( layer, _("Curves Configuration"), false ),
   //rgbCurveSelector( this, "RGB_active_curve", "Channel: ", 1 ),
   //labCurveSelector( this, "Lab_active_curve", "Channel: ", 5 ),
   //cmykCurveSelector( this, "CMYK_active_curve", "Channel: ", 8 ),
@@ -42,15 +42,15 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
   LCurveEditor( this, "L_curve" ),
   aCurveEditor( this, "a_curve" ),
   bCurveEditor( this, "b_curve" ),
-  outputModeSlider( this, "color_blend", "Output mode", 0, -1, 1, 0.05, 0.2, 1)
+  outputModeSlider( this, "color_blend", _("Output mode"), 0, -1, 1, 0.05, 0.2, 1)
 {
 
   //rgbCurveSelector.init(); 
 #ifdef GTKMM_2
-  rgbCurveSelector.append_text("RGB");
-  rgbCurveSelector.append_text("Red");
-  rgbCurveSelector.append_text("Green");
-  rgbCurveSelector.append_text("Blue");
+  rgbCurveSelector.append_text(_("RGB"));
+  rgbCurveSelector.append_text(_("Red"));
+  rgbCurveSelector.append_text(_("Green"));
+  rgbCurveSelector.append_text(_("Blue"));
   rgbCurveSelector.set_active( 0 );
 
   labCurveSelector.append_text("L");
@@ -60,10 +60,10 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
 #endif
 
 #ifdef GTKMM_3
-  rgbCurveSelector.append("RGB");
-  rgbCurveSelector.append("Red");
-  rgbCurveSelector.append("Green");
-  rgbCurveSelector.append("Blue");
+  rgbCurveSelector.append(_("RGB"));
+  rgbCurveSelector.append(_("Red"));
+  rgbCurveSelector.append(_("Green"));
+  rgbCurveSelector.append(_("Blue"));
   rgbCurveSelector.set_active( 0 );
 
   labCurveSelector.append("L");
