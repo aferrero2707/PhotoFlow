@@ -30,7 +30,7 @@ msgstr "affiche le calque actif"
 #, c-format
 msgid "Crash recovery found for file \"%s\". Do you want to restore it?"
 msgstr ""
-"Récupération de crash ftrouvé pour le fichier \"%s\". voulez vous le "
+"Récupération de crash trouvé pour le fichier \"%s\". voulez vous le "
 "restaurer?"
 
 #: src/gui/layerwidget.cc:46
