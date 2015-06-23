@@ -303,7 +303,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( "Invert", "invert" );
   op_color.get_tree().add_op( "Desaturate", "desaturate" );
   op_color.get_tree().add_op( "Brightness/Contrast", "brightness_contrast" );
-  op_color.get_tree().add_op( "Hue/Saturation", "hue_saturation" );
+  op_color.get_tree().add_op( "B/C/S/H Adjustment", "hue_saturation" );
   op_color.get_tree().add_op( "Curves", "curves" );
   op_color.get_tree().add_op( "Channel Mixer", "channel_mixer" );
   op_color.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
