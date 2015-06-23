@@ -53,6 +53,7 @@
 #include "../gui/operations/clone_stamp_config.hh"
 #include "../gui/operations/convert_colorspace_config.hh"
 #include "../gui/operations/lensfun_config.hh"
+#include "../gui/operations/volume_config.hh"
 
 #include "operations/gmic/new_gmic_operation_config.hh"
 
@@ -639,6 +640,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "lensfun" ) {
 
     dialog = new PF::LensFunConfigDialog( current_layer );
+
+  } else if( op_type == "volume" ) {
+
+    dialog = new PF::VolumeConfigDialog( current_layer );
 
   }
 
