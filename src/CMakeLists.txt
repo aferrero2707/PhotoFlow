@@ -28,6 +28,7 @@ endif()
 
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG ${COMPILE_FLAGS}") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -131,13 +132,12 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 #
 add_library(libraw_static STATIC IMPORTED)
 set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/LibRaw/liblibraw_r.a)
-#add_subdirectory(external/LibRaw)
-#list(APPEND LIB_DEPS libraw_r)
-#list(APPEND STATIC_LIBS libraw_static)
+add_subdirectory(external/LibRaw)
+list(APPEND LIB_DEPS libraw_r)
+list(APPEND STATIC_LIBS libraw_static)
 
-FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
-set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
-#FILE(GLOB LibRawSources external/LibRaw/src/*.cpp external/LibRaw/internal/*.cpp)
+#FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
+#set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
 
 
 add_library (pfbase STATIC
@@ -154,6 +154,10 @@ add_library (pfbase STATIC
   ${GMicIncludes}
   ${GMicSources}
 )
+
+
+add_dependencies(pfbase ${LIB_DEPS})
+#target_link_libraries(pfbase ${STATIC_LIBS})
 
 
 FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
