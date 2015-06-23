@@ -46,17 +46,27 @@ PF::RawImage::RawImage( const std::string f ):
 #ifdef PF_USE_LIBRAW
   LibRaw* raw_loader = new LibRaw();
   int result = raw_loader->open_file( file_name.c_str() );
-  if( result != 0 ) return;
+  if( result != 0 ) {
+    std::cout<<"RawImage::RawImage(): raw_loader->open_file("<<file_name<<") failed"<<std::endl;
+    delete raw_loader;
+    return;
+  }
   if( (raw_loader->imgdata.idata.cdesc[0] != 'R') ||
       (raw_loader->imgdata.idata.cdesc[1] != 'G') ||
       (raw_loader->imgdata.idata.cdesc[2] != 'B') ||
-      (raw_loader->imgdata.idata.cdesc[3] != 'G') )
+      (raw_loader->imgdata.idata.cdesc[3] != 'G') ) {
+    std::cout<<"RawImage::RawImage(): not an RGBG image"<<std::endl;
+    delete raw_loader;
     return;
+  }
 
   raw_loader->imgdata.params.no_auto_bright = 1;
   result = raw_loader->unpack();
-  if( result != 0 ) 
+  if( result != 0 ) {
+    std::cout<<"RawImage::RawImage(): unpack failed"<<std::endl;
+    delete raw_loader;
     return;
+  }
 
   raw_loader->raw2image();
 
