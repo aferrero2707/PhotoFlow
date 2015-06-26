@@ -4,3 +4,4 @@
 char data_gmic_def[] = {0};
 
 #endif
+const unsigned long size_data_gmic_def = (unsigned long)sizeof(data_gmic_def);
