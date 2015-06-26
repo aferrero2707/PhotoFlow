@@ -35,7 +35,8 @@
 PF::SplineCurve::SplineCurve(): 
   PF::Curve(),
   ypp( NULL ),
-  ypp_size( 0 )
+  ypp_size( 0 ),
+  circular( false )
 {
   points_mutex = vips_g_mutex_new();
 #ifdef SPLINE_USE_STDVEC

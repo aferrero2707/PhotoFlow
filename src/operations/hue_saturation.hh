@@ -167,11 +167,22 @@ namespace PF
 
           //std::cout<<"h_in="<<h_in<<"  h_eq="<<h_eq<<" ("<<h_eq1<<" "<<h_eq2<<" "<<h_eq3<<")"<<std::endl;
 
-          h = h_in + hue + opar->get_hue_eq()*h_eq;
           float hue2 = hue;
+          float saturation2 = saturation;
+          float brightness2 = brightness;
+          float contrast2 = contrast;
+          if( h_eq < 1 ) {
+            hue2 *= h_eq;
+            saturation2 *= h_eq;
+            brightness2 *= h_eq;
+            contrast2 *= h_eq;
+          }
+          /*
+          //h = h_in + hue + opar->get_hue_eq()*h_eq;
           if( opar->get_hue_eq() ) {
             hue2 += opar->get_hue_eq()*h_eq;
           }
+          */
           if( hue2 != 0 ) {
             h = h_in + hue2;
             if( h > 360 ) h -= 360;
@@ -180,7 +191,7 @@ namespace PF
             h = h_in;
           }
 
-          float saturation2 = saturation;
+          /*
           if( opar->get_saturation_eq() ) {
             //float s_eq1 = opar->vec[3][hid];
             //float s_eq2 = opar->vec[4][sid];
@@ -189,6 +200,7 @@ namespace PF
             float s_eq = h_eq;
             saturation2 += opar->get_saturation_eq()*s_eq;
           }
+          */
           if( saturation2 != 0 ) {
             s = s_in*(1.0f+saturation2);
             if( s < 0 ) s = 0;
@@ -203,10 +215,11 @@ namespace PF
           //s = s_in;
 
           //hsv2rgb2( h, s, v, R, G, B );
-          hsl2rgb( h, s, l, RGB[0], RGB[1], RGB[2] );
+          if( (h != h_in) || (s != s_in) )
+            hsl2rgb( h, s, l, RGB[0], RGB[1], RGB[2] );
           //std::cout<<"out RGB: "<<R<<" "<<G<<" "<<B<<"  HSV: "<<h<<" "<<s<<" "<<v<<std::endl;
 
-          float brightness2 = brightness;
+          /*
           if( opar->get_brightness_eq() != 0 ) {
             //float c_eq1 = opar->vec[6][hid];
             //float c_eq2 = opar->vec[7][sid];
@@ -216,7 +229,6 @@ namespace PF
             brightness2 += opar->get_brightness_eq()*b_eq;
           }
 
-          float contrast2 = contrast;
           if( opar->get_contrast_eq() != 0 ) {
             //float c_eq1 = opar->vec[6][hid];
             //float c_eq2 = opar->vec[7][sid];
@@ -225,6 +237,7 @@ namespace PF
             float c_eq = h_eq;
             contrast2 += opar->get_contrast_eq()*c_eq;
           }
+          */
           if( brightness2 != 0 || contrast2 != 0 ) {
             for( k=0; k < 3; k++) {
               tempval = (typename FormatInfo<T>::SIGNED)RGB[k] - FormatInfo<T>::HALF;

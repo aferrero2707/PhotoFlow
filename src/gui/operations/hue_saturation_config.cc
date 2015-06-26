@@ -138,10 +138,10 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   expanders[0][0].add( expander_hboxes[0][0] );
   expander_hboxes[0][0].pack_start( expander_paddings[0][0], Gtk::PACK_SHRINK );
   expander_hboxes[0][0].pack_start( expander_vboxes[0], Gtk::PACK_SHRINK, 0 );
-  expander_vboxes[0].pack_start( brightness2Slider, Gtk::PACK_SHRINK );
-  expander_vboxes[0].pack_start( contrast2Slider, Gtk::PACK_SHRINK );
-  expander_vboxes[0].pack_start( saturation2Slider, Gtk::PACK_SHRINK );
-  expander_vboxes[0].pack_start( hue2Slider, Gtk::PACK_SHRINK );
+  //expander_vboxes[0].pack_start( brightness2Slider, Gtk::PACK_SHRINK );
+  //expander_vboxes[0].pack_start( contrast2Slider, Gtk::PACK_SHRINK );
+  //expander_vboxes[0].pack_start( saturation2Slider, Gtk::PACK_SHRINK );
+  //expander_vboxes[0].pack_start( hue2Slider, Gtk::PACK_SHRINK );
   expander_vboxes[0].pack_start( curves_nb[0], Gtk::PACK_SHRINK );
 
   controlsBox.pack_start( expanders[0][0], Gtk::PACK_SHRINK );
