@@ -158,6 +158,9 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   } else if( op_type == "lensfun" ) {
     processor = new_lensfun();
+
+  } else if( op_type == "volume" ) {
+    processor = new_volume();
   }
 
   if( !processor ) {

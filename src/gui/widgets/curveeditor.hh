@@ -43,6 +43,7 @@ namespace PF {
   {
     SplineCurve curve;
 
+    int border_size;
     int selected_point;
 
 #ifdef GTKMM_2
@@ -57,9 +58,14 @@ namespace PF {
     void set_curve( const SplineCurve& c ) { curve = c; }
     SplineCurve& get_curve() { return curve; }
     
+    void set_border_size( int sz ) { border_size = sz; }
+    int get_border_size() { return border_size; }
+
     void set_selected_point( int ipt ) { selected_point = ipt; }
     
     int get_selected_point() { return selected_point; }
+
+    virtual void draw_background(const Cairo::RefPtr<Cairo::Context>& cr);
   };
 
 
@@ -68,6 +74,7 @@ namespace PF {
     Gtk::VBox box;
     Gtk::Label xlabel, ylabel;
     Gtk::Alignment xalign, yalign;
+    float xmin, xmax, ymin, ymax;
 #ifdef GTKMM_2
     Gtk::Adjustment xadjustment, yadjustment;
 #endif
@@ -77,7 +84,8 @@ namespace PF {
     Gtk::HBox spin_buttons_box;
     Gtk::SpinButton xspinButton, yspinButton;
 
-    CurveArea curveArea;
+    int curve_area_width, curve_area_height;
+    CurveArea* curve_area;
 
     int grabbed_point;
 
@@ -88,13 +96,14 @@ namespace PF {
     bool handle_curve_events(GdkEvent* event);
 
   public:
-    CurveEditor(OperationConfigDialog* dialog, std::string pname );
+    CurveEditor(OperationConfigDialog* dialog, std::string pname, CurveArea* ca,
+        float xmin, float xmax, float ymin, float ymax, int width=300, int height=300, int margin=5 );
 
     ~CurveEditor() {}
 
     void add_point( float x )
     {
-      SplineCurve& curve = curveArea.get_curve();
+      SplineCurve& curve = curve_area->get_curve();
       float ycurve = curve.get_value( x );
       add_point( x, ycurve );
     }

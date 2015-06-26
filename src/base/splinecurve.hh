@@ -44,6 +44,7 @@ namespace PF
   {
 #ifdef SPLINE_USE_STDVEC
     std::vector< std::pair<float,float> > points;
+    std::vector< std::pair<float,float> > points2;
 #else
     std::pair<float,float>* points;
     size_t npoints;
@@ -54,12 +55,17 @@ namespace PF
     double* ypp;
     unsigned int ypp_size;
 
+    bool circular;
+
   public:
     SplineCurve();
     ~SplineCurve();
 
     void lock() { g_mutex_lock( points_mutex); }
     void unlock() { g_mutex_unlock( points_mutex); }
+
+    bool is_circular() const { return circular; }
+    void set_circular( bool c ) { circular = c; }
 
     int add_point( float x, float y );
 
@@ -102,6 +108,7 @@ namespace PF
     SplineCurve& operator=(const SplineCurve& b)
     {
       lock();
+      set_circular( b.is_circular() );
 #ifdef SPLINE_USE_STDVEC
       points = b.get_points();
 #else

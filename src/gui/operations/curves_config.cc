@@ -34,15 +34,15 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
   //rgbCurveSelector( this, "RGB_active_curve", "Channel: ", 1 ),
   //labCurveSelector( this, "Lab_active_curve", "Channel: ", 5 ),
   //cmykCurveSelector( this, "CMYK_active_curve", "Channel: ", 8 ),
-  greyCurveEditor( this, "grey_curve" ),
-  rgbCurveEditor( this, "RGB_curve" ),
-  RCurveEditor( this, "R_curve" ),
-  GCurveEditor( this, "G_curve" ),
-  BCurveEditor( this, "B_curve" ),
-  LCurveEditor( this, "L_curve" ),
-  aCurveEditor( this, "a_curve" ),
-  bCurveEditor( this, "b_curve" ),
-  outputModeSlider( this, "color_blend", _("Output mode"), 0, -1, 1, 0.05, 0.2, 1)
+  greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
+  rgbCurveEditor( this, "RGB_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
+  RCurveEditor( this, "R_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
+  GCurveEditor( this, "G_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
+  BCurveEditor( this, "B_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
+  LCurveEditor( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
+  aCurveEditor( this, "a_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
+  bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
+  outputModeSlider( this, "color_blend", "Output mode", 0, -1, 1, 0.05, 0.2, 1)
 {
 
   //rgbCurveSelector.init(); 

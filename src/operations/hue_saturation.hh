@@ -38,6 +38,7 @@
 
 #include "../base/color.hh"
 #include "../base/processor.hh"
+#include "../base/splinecurve.hh"
 
 
 namespace PF 
@@ -45,19 +46,55 @@ namespace PF
 
   class HueSaturationPar: public OpParBase
   {
-    Property<float> hue;
-    Property<float> saturation;
+    Property<float> hue, hue_eq;
+    Property<float> saturation, saturation_eq;
+    Property<float> contrast, contrast_eq;
+    Property<float> brightness, brightness_eq;
+    Property<bool> brightness_is_gamma;
+    Property<SplineCurve> hue_H_equalizer;
+    Property<SplineCurve> hue_S_equalizer;
+    Property<SplineCurve> hue_L_equalizer;
+    Property<bool> hue_H_equalizer_enabled;
+    Property<bool> hue_S_equalizer_enabled;
+    Property<bool> hue_L_equalizer_enabled;
+    Property<SplineCurve> saturation_H_equalizer;
+    Property<SplineCurve> saturation_S_equalizer;
+    Property<SplineCurve> saturation_L_equalizer;
+    Property<SplineCurve> contrast_H_equalizer;
+    Property<SplineCurve> contrast_S_equalizer;
+    Property<SplineCurve> contrast_L_equalizer;
+    Property<SplineCurve> brightness_H_equalizer;
+    Property<SplineCurve> brightness_S_equalizer;
+    Property<SplineCurve> brightness_L_equalizer;
+
+    Property<SplineCurve>* eq_vec[12];
+
+    void update_curve( Property<SplineCurve>* grey_curve, float* vec );
 
   public:
+
+    float vec[12][65535];
+    bool eq_enabled[12];
 
     HueSaturationPar();
 
     float get_hue() { return hue.get(); }
+    float get_hue_eq() { return hue_eq.get(); }
     float get_saturation() { return saturation.get(); }
+    float get_saturation_eq() { return saturation_eq.get(); }
+    float get_contrast() { return contrast.get(); }
+    float get_contrast_eq() { return contrast_eq.get(); }
+    float get_brightness() { return brightness.get(); }
+    float get_brightness_eq() { return brightness_eq.get(); }
+    bool get_brightness_is_gamma() { return brightness_is_gamma.get(); }
 
-    bool has_intensity() { return true; }
+    bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool needs_input() { return true; }
+
+    VipsImage* build(std::vector<VipsImage*>& in, int first,
+                     VipsImage* imap, VipsImage* omap,
+                     unsigned int& level);
   };
 
   
@@ -91,39 +128,126 @@ namespace PF
       //int width = r->width;
       int height = r->height;
 
+      float hue = opar->get_hue();
+      float saturation = opar->get_saturation();
+      float contrast = opar->get_contrast();
+      float brightness = opar->get_brightness();
+
       T* pin;
       T* pout;
-      T R, G, B;
+      T RGB[3];
+      typename FormatInfo<T>::SIGNED tempval;
+      float h_in, s_in, v_in, l_in;
       float h, s, v, l;
-      int x, y;
+      int x, y, k;
 
       for( y = 0; y < height; y++ ) {
         pin = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 
         for( x = 0; x < line_size; x+=3 ) {
-          R = pin[x];
-          G = pin[x+1];
-          B = pin[x+2];
+          RGB[0] = pin[x];
+          RGB[1] = pin[x+1];
+          RGB[2] = pin[x+2];
           //rgb2hsv( R, G, B, h, s, v );
-          rgb2hsl( R, G, B, h, s, l );
+          rgb2hsl( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
 
-          //std::cout<<"in RGB: "<<R<<" "<<G<<" "<<B<<"  HSV: "<<h<<" "<<s<<" "<<v<<std::endl;
+          //std::cout<<"in RGB: "<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<"  HSL: "<<h_in<<" "<<s_in<<" "<<l_in<<std::endl;
 
-          h += opar->get_hue();
-          if( h > 360 ) h -= 360;
-          else if( h < 0 ) h+= 360;
+          unsigned short int hid = static_cast<unsigned short int>( h_in*65535/360 );
+          unsigned short int sid = static_cast<unsigned short int>( s_in*65535 );
+          unsigned short int lid = static_cast<unsigned short int>( l_in*65535 );
 
-          s *= (1.0f+opar->get_saturation());
-          if( s < 0 ) s = 0;
-          else if( s > 1 ) s = 1;
+
+          float h_eq1 = opar->eq_enabled[0] ? opar->vec[0][hid] : 1;
+          float h_eq2 = opar->eq_enabled[1] ? opar->vec[1][sid] : 1;
+          float h_eq3 = opar->eq_enabled[2] ? opar->vec[2][lid] : 1;
+
+          float h_eq = MIN3( h_eq1, h_eq2, h_eq3 );
+
+          //std::cout<<"h_in="<<h_in<<"  h_eq="<<h_eq<<" ("<<h_eq1<<" "<<h_eq2<<" "<<h_eq3<<")"<<std::endl;
+
+          float hue2 = hue;
+          float saturation2 = saturation;
+          float brightness2 = brightness;
+          float contrast2 = contrast;
+          if( h_eq < 1 ) {
+            hue2 *= h_eq;
+            saturation2 *= h_eq;
+            brightness2 *= h_eq;
+            contrast2 *= h_eq;
+          }
+          /*
+          //h = h_in + hue + opar->get_hue_eq()*h_eq;
+          if( opar->get_hue_eq() ) {
+            hue2 += opar->get_hue_eq()*h_eq;
+          }
+          */
+          if( hue2 != 0 ) {
+            h = h_in + hue2;
+            if( h > 360 ) h -= 360;
+            else if( h < 0 ) h+= 360;
+          } else {
+            h = h_in;
+          }
+
+          /*
+          if( opar->get_saturation_eq() ) {
+            //float s_eq1 = opar->vec[3][hid];
+            //float s_eq2 = opar->vec[4][sid];
+            //float s_eq3 = opar->vec[5][lid];
+            //float s_eq = MIN3( s_eq1, s_eq2, s_eq3 );
+            float s_eq = h_eq;
+            saturation2 += opar->get_saturation_eq()*s_eq;
+          }
+          */
+          if( saturation2 != 0 ) {
+            s = s_in*(1.0f+saturation2);
+            if( s < 0 ) s = 0;
+            else if( s > 1 ) s = 1;
+          } else {
+            s = s_in;
+          }
+
+          l = l_in;
+
+          //h = h_in;
+          //s = s_in;
 
           //hsv2rgb2( h, s, v, R, G, B );
-          hsl2rgb( h, s, l, R, G, B );
+          if( (h != h_in) || (s != s_in) )
+            hsl2rgb( h, s, l, RGB[0], RGB[1], RGB[2] );
           //std::cout<<"out RGB: "<<R<<" "<<G<<" "<<B<<"  HSV: "<<h<<" "<<s<<" "<<v<<std::endl;
-          pout[x] = R;
-          pout[x+1] = G;
-          pout[x+2] = B;          
+
+          /*
+          if( opar->get_brightness_eq() != 0 ) {
+            //float c_eq1 = opar->vec[6][hid];
+            //float c_eq2 = opar->vec[7][sid];
+            //float c_eq3 = opar->vec[8][lid];
+            //float c_eq = MIN3( c_eq1, c_eq2, c_eq3 );
+            float b_eq = h_eq;
+            brightness2 += opar->get_brightness_eq()*b_eq;
+          }
+
+          if( opar->get_contrast_eq() != 0 ) {
+            //float c_eq1 = opar->vec[6][hid];
+            //float c_eq2 = opar->vec[7][sid];
+            //float c_eq3 = opar->vec[8][lid];
+            //float c_eq = MIN3( c_eq1, c_eq2, c_eq3 );
+            float c_eq = h_eq;
+            contrast2 += opar->get_contrast_eq()*c_eq;
+          }
+          */
+          if( brightness2 != 0 || contrast2 != 0 ) {
+            for( k=0; k < 3; k++) {
+              tempval = (typename FormatInfo<T>::SIGNED)RGB[k] - FormatInfo<T>::HALF;
+              clip( (contrast2+1.0f)*tempval+brightness2*FormatInfo<T>::RANGE+FormatInfo<T>::HALF, RGB[k] );
+            }
+          }
+
+          pout[x] = RGB[0];
+          pout[x+1] = RGB[1];
+          pout[x+2] = RGB[2];
         }
       }
     }

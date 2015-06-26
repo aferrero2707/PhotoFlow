@@ -303,7 +303,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( "Invert", "invert" );
   op_color.get_tree().add_op( "Desaturate", "desaturate" );
   op_color.get_tree().add_op( "Brightness/Contrast", "brightness_contrast" );
-  op_color.get_tree().add_op( "Hue/Saturation", "hue_saturation" );
+  op_color.get_tree().add_op( "B/C/S/H Adjustment", "hue_saturation" );
   op_color.get_tree().add_op( "Curves", "curves" );
   op_color.get_tree().add_op( "Channel Mixer", "channel_mixer" );
   op_color.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
@@ -311,6 +311,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.get_tree().add_op( "Gaussian blur", "gaussblur" );
   op_detail.get_tree().add_op( "Noise reduction", "denoise" );
   op_detail.get_tree().add_op( "Sharpen", "sharpen" );
+  op_detail.get_tree().add_op( "Volume", "volume" );
   op_detail.get_tree().add_op( "Multi-level decomposition", "gmic_split_details" );
 
   op_geom.get_tree().add_op( "Crop image", "crop" );
