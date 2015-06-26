@@ -1,4 +1,13 @@
 =========================================
+Version 0.1.5
+
+- Added new "Brightness/Contrast/Saturation/Hue Adjustment" tool, which replaces the previous "Hue/Saturation Adjustment"
+- Added "Volume" tool (similar to "Clarity", i.e. local contrast targeting the mid-tones), inspired by ...
+- LibRAW is now compiled as a separate library (like in darktable)
+- Updated darktable code to version 1.6.7
+- Updated G'MIC code to version 1.6.5.0
+
+=========================================
 Version 0.1.4
 
 - Fixed bug in update of layer's "visible" flag
