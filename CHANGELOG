@@ -1,4 +1,33 @@
 =========================================
+Version 0.1.6
+
+- Points on the B/C/S/H curves can be added by ctrl-clicking on the preview area.
+- Improved gaussian blur filter:
+  - added memory caching at the filter input (improves performance significantly)
+  - blur method is now the same for preview and rendering, and can be choosen from configuration dialog
+  - blur method is fixed to "accurate" for radii below 5 pixels
+  - blur method defaults to "fast" (sii) for radii larger than 5 pixels
+- Modified sinkscreen_pf.c to allow for parallel processing of dirty tiles (one thread for each available CPU core).
+  This improves the responsiveness of the preview area on multi-core machines.
+- Input EXIF/XMP/IPTC metadata are now saved to the exported TIFF and JPG images, using GExiv2.
+  Starting from this version, GExiv2 is therefore needed to compile PhotoFlow
+- Added default layer names for several tools (instead of the generic "New Layer")
+- Icons for the layer masks now represent the actual status of the mask:
+  - white if mask is empty
+  - a gradient if the mask contains one or more layers
+  - a crossed gradient if the mask is not empty, but disabled
+- Updated Frnch transaltions
+
+G'MIC:
+- Added optional in-memory tile caching for G'MIC operations (one cache for each iteration)
+- Improved G'MIC bilateral smoothing (or "surface blur" filter):
+  - added padding parameter based on spatial variance (scaled to actual zoom level)
+  - "value variance" is now independent of zoom level (was incorrectly scaled together with the spatial variance)
+  - enabled tile caching
+- Fixed multi-threaded processing of G'MIC filters under OSX 
+  (by protecting all sscanf calls with a global mutex)
+
+=========================================
 Version 0.1.5
 
 - Added new "Brightness/Contrast/Saturation/Hue Adjustment" tool, which replaces the previous "Hue/Saturation Adjustment"
