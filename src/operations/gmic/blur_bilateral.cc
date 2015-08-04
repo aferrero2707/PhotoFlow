@@ -47,6 +47,16 @@ PF::GmicBlurBilateralPar::GmicBlurBilateralPar():
 
 
 
+int PF::GmicBlurBilateralPar::get_padding( int level )
+{
+  float ss = sigma_s.get();
+  for( int l = 1; l <= level; l++ ) {
+    ss /= 2;
+  }
+  return( ss*2 );
+}
+
+
 VipsImage* PF::GmicBlurBilateralPar::build(std::vector<VipsImage*>& in, int first, 
 				   VipsImage* imap, VipsImage* omap, 
 				   unsigned int& level)
@@ -64,15 +74,26 @@ VipsImage* PF::GmicBlurBilateralPar::build(std::vector<VipsImage*>& in, int firs
 
   float ss = sigma_s.get(), sr = sigma_r.get();
 	for( int l = 1; l <= level; l++ ) {
-		ss /= 2; sr /= 2;
+		ss /= 2; //sr /= 2;
   }
-  char command[500];
-  snprintf(command,499,"-bilateral %f,%f", ss, sr);
+	/*
+	char command[500], ssstr[100], srstr[100];
+  snprintf(ssstr,99,"%0.1f", ss);
+  snprintf(srstr,99,"%0.1f", sr);
+  std::cout<<"ssstr="<<ss<<std::endl;
+  std::cout<<"srstr="<<sr<<std::endl;
+  snprintf(command,499,"-bilateral %s,%s", ssstr, srstr);
+  std::cout<<"gpar->set_command( "<<command<<" );"<<std::endl;
+  */
+  std::string command = "-bilateral ";
+  command = command + to_string( ss ) + "," + to_string( sr );
   gpar->set_command( command );
   gpar->set_iterations( iterations.get() );
-  gpar->set_padding( (int)( MAX(ss,sr)*1.5 ) );
+  //gpar->set_padding( (int)( MAX(ss,sr)*1.5 ) );
+  gpar->set_padding( get_padding(level) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
+  gpar->set_cache_tiles( true );
   /*
 	if( (get_render_mode() == PF_RENDER_PREVIEW && level>0) ) {
 		PF_REF( out, "PF::CimgBlurBilateralPar::build(): out ref" );

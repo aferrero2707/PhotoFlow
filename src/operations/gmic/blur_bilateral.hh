@@ -54,9 +54,9 @@ namespace PF
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
-    bool needs_caching() { return false; }
+    bool needs_caching() { return true; }
 
-      
+    int get_padding( int level );
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 
