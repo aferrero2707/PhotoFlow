@@ -1126,7 +1126,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         PF_REF(blendedimg,"LayerManager::rebuild_chain(): blendedimg ref");
       }
 #ifndef NDEBUG
-      std::cout<<"rebuild_chain(): Layer \""<<l->get_name()<<"\"  blended: 0x"<<blendedimg<<std::endl;
+      std::cout<<"rebuild_chain(): Layer \""<<l->get_name()<<"\"  blended: "<<blendedimg<<std::endl;
 #endif
       pipeline->set_blended( blendedimg, l->get_id() );
       out = blendedimg;
