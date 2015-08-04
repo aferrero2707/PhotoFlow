@@ -235,9 +235,9 @@ void PF::Pipeline::set_blended( VipsImage* img, unsigned int id )
   char tstr[500];
   if( nodes[id] != NULL ) {
     if( nodes[id]->blended != NULL ) {
-      //if( G_OBJECT( nodes[id]->blended )->ref_count < 1 )
-      //	std::cout<<"!!! Pipeline::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->blended<<std::endl;
-      //g_assert( G_OBJECT( nodes[id]->blended )->ref_count > 0 );
+      if( G_OBJECT( nodes[id]->blended )->ref_count < 1 )
+      	std::cout<<"!!! Pipeline::set_image(): wrong ref_count for node #"<<id<<", image="<<nodes[id]->blended<<std::endl;
+      g_assert( G_OBJECT( nodes[id]->blended )->ref_count > 0 );
       //g_object_unref( nodes[id]->blended );
       PF::Layer* l = image->get_layer_manager().get_layer( id );
       if( l )
