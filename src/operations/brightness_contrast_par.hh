@@ -8,6 +8,8 @@
       contrast("contrast",this,0) 
     {
       set_type( "brightness_contrast" );
+
+      set_default_name( _("brightness contrast") );
     }
     float get_brightness() { return brightness.get(); }
     float get_contrast() { return contrast.get(); }

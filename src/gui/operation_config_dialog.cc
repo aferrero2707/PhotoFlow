@@ -132,7 +132,6 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   lname.set_text( "name:" );
   nameBox.pack_start( lname, Gtk::PACK_SHRINK );
 
-  nameEntry.set_text( _("New Layer") );
   nameBox.pack_start( nameEntry, Gtk::PACK_SHRINK );
 
   //blendSelector.set_row_separator_func( is_blend_mode_row_separator );

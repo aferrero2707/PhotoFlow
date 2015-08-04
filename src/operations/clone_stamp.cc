@@ -42,6 +42,8 @@ PF::CloneStampPar::CloneStampPar():
   strokes( "strokes", this )
 {
   set_type( "clone_stamp" );
+
+  set_default_name( _("clone stamp") );
 	//diskbuf = new_diskbuffer();
 }
 

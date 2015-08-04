@@ -57,6 +57,8 @@ PF::ScalePar::ScalePar():
   scale_unit.add_enum_value( SCALE_UNIT_INCHES, "SCALE_UNIT_INCHES", "inches" );
 
   set_type( "scale" );
+
+  set_default_name( _("scale and rotate") );
 }
 
 

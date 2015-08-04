@@ -243,14 +243,14 @@ void PF::OperationsTree::add_op( Glib::ustring name, const std::string nik)
 
 
 PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
-      Gtk::Dialog("New Layer",true),
+      Gtk::Dialog( _("Add New Layer"),true),
       image( img ),
       layer_widget( lw )
 {
   set_default_size(300,300);
 
-  add_button("OK",1);
-  add_button("Cancel",0);
+  add_button( _("OK"), 1 );
+  add_button( _("Cancel"), 0 );
 
   signal_response().connect( sigc::mem_fun(*this,
       &OperationsTreeDialog::on_button_clicked) );
@@ -465,13 +465,17 @@ void PF::OperationsTreeDialog::add_layer()
   PF::LayerManager& layer_manager = image->get_layer_manager();
   PF::Layer* layer = layer_manager.new_layer();
   if( !layer ) return;
-  layer->set_name( "New Layer" );
+
 
   std::string op_type = (*iter)[columns.col_nickname];
   PF::ProcessorBase* processor = 
       PF::PhotoFlow::Instance().new_operation( op_type.c_str(), layer );
   if( !processor || !processor->get_par() ) return;
   PF::OperationConfigUI* ui = dynamic_cast<PF::OperationConfigUI*>( processor->get_par()->get_config_ui() );
+  if( processor->get_par()->get_default_name().empty() )
+    layer->set_name( _("New Layer") );
+  else
+    layer->set_name( processor->get_par()->get_default_name() );
 
   /*
   if( (*iter)[columns.col_nickname] == "imageread" ) { 

@@ -47,6 +47,8 @@ namespace PF
       blue_mix("blue_mix",this,0)
     {
       set_type( "channel_mixer" );
+
+      set_default_name( _("channel mixer") );
     }
     float get_red_mix() { return red_mix.get(); }
     float get_green_mix() { return green_mix.get(); }

@@ -46,6 +46,8 @@ PF::DesaturatePar::DesaturatePar():
   convert2lab = PF::new_operation( "convert2lab", NULL );
   convert_cs = PF::new_convert_colorspace();
   set_type( "desaturate" );
+
+  set_default_name( _("desaturate") );
 }
 
 

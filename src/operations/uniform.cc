@@ -45,6 +45,8 @@ PF::UniformPar::UniformPar():
   K( "K", this, 0 )
 {
   set_type( "uniform" );
+
+  set_default_name( _("uniform fill") );
 }
 
 

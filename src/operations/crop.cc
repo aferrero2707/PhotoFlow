@@ -42,6 +42,8 @@ PF::CropPar::CropPar():
   ar_height("ar_height",this,100)
 {
   set_type( "crop" );
+
+  set_default_name( _("crop") );
 }
 
 
