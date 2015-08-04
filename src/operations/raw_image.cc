@@ -27,6 +27,8 @@
 
  */
 
+#include <gexiv2-metadata.h>
+
 #include "../base/pf_mkstemp.hh"
 #include "../base/rawmatrix.hh"
 
@@ -145,12 +147,17 @@ PF::RawImage::RawImage( const std::string f ):
 #ifndef NDEBUG
   std::cout<<"Row buffer allocated: "<<(void*)rowbuf<<std::endl;
 #endif
+  /* Normalized raw data to 65535 and build raw histogram
+   * */
+  // Allocate raw histogram and fill it with zero
+  int* raw_hist = (int*)malloc( 65535*3*sizeof(int) );
+  memset( raw_hist, 0, 65535*3*sizeof(int) );
+
 	guint8* ptr;
 	float* fptr;
   for(row=0;row<iheight;row++) {
     unsigned int row_offset = row*iwidth;
 		ptr = rowbuf;
-		/**/
     for(col=0; col<iwidth; col++) {
 #ifdef PF_USE_LIBRAW
       unsigned char color = (unsigned char)raw_loader->COLOR(row,col);
@@ -166,6 +173,18 @@ PF::RawImage::RawImage( const std::string f ):
       unsigned char color = (unsigned char)FC(row,col);
       float val = (data[row][col]-c_black[color])*65535/(this->get_white(color)-c_black[color]);
 #endif
+
+      // Fill raw histogram
+      int hist_id = -1;
+      int ch = -1;
+      if( ch < 3 ) ch = color;
+      else if( ch == 3 ) ch = 1;
+      if( ch >= 0 ) hist_id = static_cast<int>( val*3 + ch );
+      if( hist_id >= 0 ) {
+        //std::cout<<"hist_id="<<hist_id
+        raw_hist[hist_id] += 1;
+      }
+
 			fptr = (float*)ptr;
       //*fptr = val;
       //ptr[sizeof(float)] = color;
@@ -221,13 +240,27 @@ PF::RawImage::RawImage( const std::string f ):
   
   
   //==================================================================
+  // Save the raw histogram into the image
+  vips_image_set_blob( image, "raw-hist",
+           (VipsCallbackFn) g_free, raw_hist,
+           sizeof(int)*65535*3 );
+
   // Save the LibRaw parameters into the image
   void* rawdata_buf = malloc( sizeof(dcraw_data_t) );
   if( !rawdata_buf ) return;
   memcpy( rawdata_buf, pdata, sizeof(dcraw_data_t) );
   vips_image_set_blob( image, "raw_image_data",
-		       (VipsCallbackFn) g_free, rawdata_buf,
-		       sizeof(dcraw_data_t) );
+           (VipsCallbackFn) g_free, rawdata_buf,
+           sizeof(dcraw_data_t) );
+
+  // We read the EXIF data and store it in the image as a custom blob
+  GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
+  gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name.c_str(), NULL);
+  if( gexiv2_success )
+    std::cout<<"RawImage::RawImage(): setting gexiv2-data blob"<<std::endl;
+    vips_image_set_blob( image, "gexiv2-data",
+        (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
+        sizeof(GExiv2Metadata) );
 
   PF::exif_read( &exif_data, file_name.c_str() );
 

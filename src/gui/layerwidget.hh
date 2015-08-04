@@ -100,6 +100,18 @@ public:
     }
   }
 
+  static gboolean update_cb(PF::LayerWidget* w)
+  {
+    if( w ) w->update();
+    return( FALSE );
+  }
+
+  void update_idle()
+  {
+    gdk_threads_add_idle ((GSourceFunc) LayerWidget::update_cb, this);
+  }
+
+
   bool on_button_event( GdkEventButton* button );
 
   void on_button_add();
@@ -120,7 +132,7 @@ public:
 
   void remove_tab( Gtk::Widget* widget );
 
-  void modified() { if(image) image->modified(); }
+  void modified() { /*if(image) image->modified();*/ }
 };
 
 }
