@@ -138,6 +138,10 @@ typedef struct _Render {
 	/* Hash of tiles with positions. Tiles can be dirty or painted.
 	 */
 	GHashTable *tiles;
+
+	/* Semaphore that tells when a tile has been processed
+	 */
+	VipsSemaphore tile_done_sem;
 } Render;
 
 /* Our per-thread state.
@@ -398,6 +402,8 @@ render_allocate( VipsThreadState *state, void *a, gboolean *stop )
 
 	g_mutex_lock( render->lock );
 
+/*	printf("render_allocate(): called\n");*/
+
 	if( render_reschedule || 
 		!(tile = render_tile_dirty_get( render )) ) {
 		VIPS_DEBUG_MSG_GREEN( "render_allocate: stopping\n" );
@@ -444,6 +450,9 @@ render_work( VipsThreadState *state, void *a )
 	 */
 	if( render->notify ) 
 		render->notify( render->out, &tile->area, render->a );
+
+/*	printf("render_work(): tile done\n");*/
+	vips_semaphore_up( &render->tile_done_sem );
 
 	return( 0 );
 }
@@ -642,6 +651,8 @@ render_new( VipsImage *in, VipsImage *out, VipsImage *mask,
 
 	render->dirty = NULL;
 
+	vips_semaphore_init( &render->tile_done_sem, 0, "tile_done_sem" );
+
 	/* Both out and mask must close before we can free the render.
 	 */
 	g_signal_connect( out, "close", 
@@ -771,7 +782,7 @@ tile_queue( Tile *tile, VipsRegion *reg )
 	tile->painted = FALSE;
 	tile_touch( tile );
 
-	if( render->notify ) {
+	if( 1 || render->notify ) {
 		/* Add to the list of renders with dirty tiles. The bg 
 		 * thread will pick it up and paint it. It can be already on
 		 * the dirty list.
@@ -858,7 +869,7 @@ render_tile_request( Render *render, VipsRegion *reg, VipsRect *area )
 	}
 	else if( render->ntiles < render->max_tiles || 
 		render->max_tiles == -1 ) {
-		/* We have fewer tiles than teh max. We can just make a new 
+		/* We have fewer tiles than the max. We can just make a new
 		 * tile.
 		 */
 		if( !(tile = tile_new( render )) ) 
@@ -958,12 +969,16 @@ image_fill( VipsRegion *out, void *seq, void *a, void *b, gboolean *stop )
 
 	g_mutex_lock( render->lock );
 
+	GSList* tiles_all = NULL;
+
 	/* 
 
 		FIXME ... if r fits inside a single tile, we could skip the 
 		copy.
 
 	 */
+
+	int n_tiles_dirty = 0;
 
 	for( y = ys; y < VIPS_RECT_BOTTOM( r ); y += tile_height )
 		for( x = xs; x < VIPS_RECT_RIGHT( r ); x += tile_width ) {
@@ -976,15 +991,57 @@ image_fill( VipsRegion *out, void *seq, void *a, void *b, gboolean *stop )
 			area.height = tile_height;
 
 			tile = render_tile_request( render, reg, &area );
-			if( tile )
-				tile_copy( tile, out );
-			else
+			if( tile ) {
+	      if( !tile->painted || tile->region->invalid ) n_tiles_dirty += 1;
+			  tiles_all = g_slist_append( tiles_all, tile );
+				//tile_copy( tile, out );
+			} else
 				VIPS_DEBUG_MSG_RED( "image_fill: argh!\n" );
 		}
 
 	g_mutex_unlock( render->lock );
 
-	return( 0 );
+/*	printf("image_fill(): n_tiles_dirty = %d, tiles_all = %p\n", (int)n_tiles_dirty, tiles_all);*/
+
+  if( !tiles_all ) return( 0 );
+
+  if( n_tiles_dirty > 0 ) {
+    int done;
+    do {
+      done = 1;
+      GSList* item = tiles_all;
+      vips_semaphore_down( &render->tile_done_sem );
+/*      printf("image_fill(): checking tiles\n");*/
+      while( item ) {
+        Tile* tile = (Tile*)item->data;
+/*
+        printf("  image_fill(): tile=%p, tile->painted=%d, tile->region->invalid=%d\n",
+            tile, (int)tile->painted, (int)tile->region->invalid);
+*/
+        if( !tile->painted || tile->region->invalid ) {
+          done = 0;
+          break;
+        }
+        item = item->next;
+/*        printf("image_fill(): done = %d\n", done);*/
+      }
+    } while( !done );
+  }
+
+/*  printf("image_fill(): rendering finished\n");*/
+
+  GSList* item = tiles_all;
+  while( item ) {
+    Tile* tile = (Tile*)item->data;
+    if( tile->painted && !tile->region->invalid ) {
+/*      printf("image_fill(): tile copied\n");*/
+      tile_copy( tile, out );
+    }
+    item = item->next;
+  }
+
+	g_slist_free( tiles_all );
+  return( 0 );
 }
 
 static int
