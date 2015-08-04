@@ -75,6 +75,10 @@ public:
   HueSaturationConfigDialog( Layer* l );
 
   bool has_preview() { return true; }
+
+  bool pointer_press_event( int button, double x, double y, int mod_key );
+  bool pointer_release_event( int button, double x, double y, int mod_key );
+  bool pointer_motion_event( int button, double x, double y, int mod_key );
 };
 
 }

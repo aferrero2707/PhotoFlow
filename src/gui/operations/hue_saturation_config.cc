@@ -216,3 +216,86 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   
   add_widget( controlsBox );
 }
+
+
+bool PF::HueSaturationConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+{
+  if( button != 1 ) return false;
+  return false;
+}
+
+
+bool PF::HueSaturationConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+{
+  if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
+  std::cout<<"HueSaturationConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
+
+  // Retrieve the layer associated to the filter
+  PF::Layer* layer = get_layer();
+  if( !layer ) return false;
+
+  // Retrieve the image the layer belongs to
+  PF::Image* image = layer->get_image();
+  if( !image ) return false;
+
+  // Retrieve the pipeline #0 (full resolution preview)
+  PF::Pipeline* pipeline = image->get_pipeline( 0 );
+  if( !pipeline ) return false;
+
+  // Find the pipeline node associated to the current layer
+  PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
+  if( !node ) return false;
+
+  // Find the input layer of the current filter
+  if( node->input_id < 0 ) return false;
+  PF::Layer* lin = image->get_layer_manager().get_layer( node->input_id );
+  if( !lin ) return false;
+
+  // Sample a 5x5 pixels region of the input layer
+  std::vector<float> values;
+  float H, S, L;
+  double lx = x, ly = y, lw = 1, lh = 1;
+  screen2layer( lx, ly, lw, lh );
+  std::cout<<"image->sample( lin->get_id(), "<<lx<<", "<<ly<<", 5, NULL, values );"<<std::endl;
+  image->sample( lin->get_id(), lx, ly, 5, NULL, values );
+
+  std::cout<<"HueSaturationConfigDialog::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
+
+  rgb2hsl( values[0], values[1], values[2], H, S, L );
+
+  PF::OpParBase* par = get_layer()->get_processor()->get_par();
+  PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+  switch( cs ) {
+  case PF_COLORSPACE_GRAYSCALE:
+    break;
+  case PF_COLORSPACE_RGB:
+    if( values.size() != 3 ) return false;
+    switch( curves_nb[0].get_current_page() ) {
+    case 0:
+      hueHeq.add_point( H/360.0f );
+      break;
+    case 1:
+      hueSeq.add_point( S );
+      break;
+    case 2:
+      hueLeq.add_point( L );
+      break;
+    }
+    break;
+    case PF_COLORSPACE_LAB:
+      break;
+  case PF_COLORSPACE_CMYK:
+    break;
+  default:
+    break;
+  }
+
+  return false;
+}
+
+
+bool PF::HueSaturationConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+{
+  if( button != 1 ) return false;
+  return false;
+}
