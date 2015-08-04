@@ -75,6 +75,12 @@ namespace PF
   }; 
 
 
+  enum exposure_mode_t {
+    EXP_NORMAL,
+    EXP_AUTO
+  };
+
+
   class RawPreprocessorPar: public OpParBase
   {
     dcraw_data_t* image_data;
@@ -94,8 +100,10 @@ namespace PF
     Property<float> wb_target_b;
 
     Property<float> exposure;
+    PropertyBase exposure_mode;
+    Property<float> exposure_clip_amount;
 
-    float wb_red_current, wb_green_current, wb_blue_current;
+    float wb_red_current, wb_green_current, wb_blue_current, exposure_current;
 
   public:
     RawPreprocessorPar();
