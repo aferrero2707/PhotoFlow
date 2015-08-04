@@ -27,30 +27,32 @@
 
  */
 
-#include "../../operations/gaussblur.hh"
-
-#include "gaussblur_config.hh"
+#include "gaussblur_sii.hh"
 
 
-PF::GaussBlurConfigDialog::GaussBlurConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, _("Gaussian Blur") ),
-	modeSelector( this, "blur_mode", _("blur method: "), PF_BLUR_FAST ),
-  radiusSlider( this, "radius", _("radius"), 5, 0, 1000, 0.1, 1, 1)
+PF::GaussBlurSiiPar::GaussBlurSiiPar():
+  OpParBase(),
+  radius("radius",this,5)
 {
-  controlsBox.pack_start( modeSelector );
-  controlsBox.pack_start( radiusSlider );
-  
-  add_widget( controlsBox );
+  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
+  set_type( "gaussblur_sii" );
 }
 
 
 
-void PF::GaussBlurConfigDialog::open()
+VipsImage* PF::GaussBlurSiiPar::build(std::vector<VipsImage*>& in, int first,
+				   VipsImage* imap, VipsImage* omap, 
+				   unsigned int& level)
 {
-  if( get_layer() && get_layer()->get_image() && 
-      get_layer()->get_processor() &&
-      get_layer()->get_processor()->get_par() ) {
-    radiusSlider.init();
-  }
-  OperationConfigDialog::open();
+  VipsImage* srcimg = NULL;
+  if( in.size() > 0 ) srcimg = in[0];
+
+  VipsImage* blurred = PF::OpParBase::build( in, first, NULL, omap, level );
+  return blurred;
+}
+
+
+PF::ProcessorBase* PF::new_gaussblur_sii()
+{
+  return( new PF::Processor<PF::GaussBlurSiiPar,PF::GaussBlurSiiProc>() );
 }
