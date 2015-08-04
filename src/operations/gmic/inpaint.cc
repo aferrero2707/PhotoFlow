@@ -33,15 +33,6 @@
 #include "inpaint.hh"
 
 
-template <class T >
-std::string convert2string( const T& val )
-{
-  std::ostringstream str;
-  str<<val;
-  return str.str();
-}
-
-
 PF::GmicInpaintPar::GmicInpaintPar(): 
   GmicUntiledOperationPar(),
   patch_size( "patch_size", this, 7 ),
@@ -190,9 +181,9 @@ VipsImage* PF::GmicInpaintPar::build(std::vector<VipsImage*>& in, int first,
       command = command + "-input " + tempfile + " -n 0,255 ";
       command = command + "-input " + tempfile2 + " -inpaint[0] [1],";
       command = command + patch_size.get_str();
-      command = command + std::string(",") + convert2string( lookup_size.get()*patch_size.get() );
+      command = command + std::string(",") + to_string( lookup_size.get()*patch_size.get() );
       command = command + std::string(",") + lookup_factor.get_str() + ",1";
-      command = command + std::string(",") + convert2string( blend_size.get()*patch_size.get() );
+      command = command + std::string(",") + to_string( blend_size.get()*patch_size.get() );
       command = command + std::string(",") + blend_threshold.get_str();
       command = command + std::string(",") + blend_decay.get_str();
       command = command + std::string(",") + blend_scales.get_str();
