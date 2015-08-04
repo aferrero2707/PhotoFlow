@@ -85,6 +85,7 @@ PF::HueSaturationPar::HueSaturationPar():
     eq_vec[id]->get().set_point( 0, x1, y1 );
     eq_vec[id]->get().set_point( 1, x2, y2 );
   }
+  /*
   for( id = 0; id < 3; id+=3 ) {
     float x = 40;
     eq_vec[id]->get().add_point( x/360, 0. ); x += 40;
@@ -96,7 +97,7 @@ PF::HueSaturationPar::HueSaturationPar():
     eq_vec[id]->get().add_point( x/360, 0. ); x += 40;
     eq_vec[id]->get().add_point( x/360, 0. ); x += 40;
   }
-
+*/
   x1 = 0; y1 = 0.5;
   //eq_vec[0]->get().set_point( 0, x1, y1 );
 }
