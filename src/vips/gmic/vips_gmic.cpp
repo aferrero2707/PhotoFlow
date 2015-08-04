@@ -47,8 +47,62 @@
 #include "../../base/photoflow.hh"
 
 static char* custom_gmic_commands = 0;
+static GMutex* gmic_mutex = 0;
+
 
 using namespace cimg_library;
+
+
+typedef struct _VipsGMicPoolElement
+{
+  gmic* instance;
+  bool used;
+} VipsGMicPoolElement;
+
+
+
+class GmicPool
+{
+  std::vector<VipsGMicPoolElement*> pool;
+  GMutex* mutex;
+public:
+  GmicPool()
+  {
+    mutex = vips_g_mutex_new();
+  }
+
+  gmic* get_gmic()
+  {
+    g_mutex_lock( mutex );
+    VipsGMicPoolElement* result = NULL;
+    for( unsigned int i = 0; i < pool.size(); i++ ) {
+      if( pool[i]->used ) continue;
+      result = pool[i];
+    }
+    if( !result ) {
+      result = new VipsGMicPoolElement();
+      result->instance = new gmic( 0, custom_gmic_commands, false, 0, 0 );
+      pool.push_back( result );
+    }
+    result->used = true;
+    g_mutex_unlock( mutex );
+    return( result->instance );
+  }
+
+  void release_gmic( gmic* instance )
+  {
+    g_mutex_lock( mutex );
+    for( unsigned int i = 0; i < pool.size(); i++ ) {
+      if( pool[i]->instance != instance ) continue;
+      pool[i]->used = false;
+      break;
+    }
+    g_mutex_unlock( mutex );
+  }
+};
+
+static GmicPool gmic_pool;
+
 
 typedef struct _VipsGMic {
 	VipsOperation parent_instance;
@@ -200,21 +254,24 @@ struct VipsGMicSequence {
 static int
 vips_gmic_stop( void *vseq, void *a, void *b )
 {
-	VipsGMicSequence *seq = (VipsGMicSequence *) vseq;
+  VipsGMicSequence *seq = (VipsGMicSequence *) vseq;
 
-        if( seq->ir ) {
-		int i;
+  if( seq->ir ) {
+    int i;
 
-		for( i = 0; seq->ir[i]; i++ )
-			g_object_unref( seq->ir[i] );
-		VIPS_FREE( seq->ir );
-	}
+    for( i = 0; seq->ir[i]; i++ )
+      g_object_unref( seq->ir[i] );
+    VIPS_FREE( seq->ir );
+  }
 
-	delete seq->gmic_instance;
+  //g_mutex_lock( gmic_mutex );
+  //delete seq->gmic_instance;
+  //g_mutex_unlock( gmic_mutex );
+  gmic_pool.release_gmic( seq->gmic_instance );
 
-	VIPS_FREE( seq );
+  VIPS_FREE( seq );
 
-	return( 0 );
+  return( 0 );
 }
 
 static void *
@@ -247,59 +304,14 @@ vips_gmic_start( VipsImage *out, void *a, void *b )
 		}
 	seq->ir[n] = NULL;
 
-  if( !custom_gmic_commands ) {
-    std::cout<<"Loading G'MIC custom commands..."<<std::endl;
-    char fname[500]; fname[0] = 0;
-#if defined(WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
-    snprintf( fname, 499, "%s\\gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
-    std::cout<<"G'MIC commands definition file: "<<fname<<std::endl;
-    struct stat buffer;   
-    int stat_result = stat( fname, &buffer );
-    if( stat_result != 0 ) {
-      fname[0] = 0;
-    }
-#elif defined(__APPLE__) && defined (__MACH__)
-    //snprintf( fname, 499, "%s/../share/photoflow/gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
-    snprintf( fname, 499, "%s/gmic_def.gmic", PF::PhotoFlow::Instance().get_data_dir().c_str() );
-    std::cout<<"G'MIC commands definition file: "<<fname<<std::endl;
-    struct stat buffer;   
-    int stat_result = stat( fname, &buffer );
-    if( stat_result != 0 ) {
-      fname[0] = 0;
-    }
-#else
-    if( getenv("HOME") ) {
-      //snprintf( fname, 499, "%s/.photoflow/gmic_update.gmic", getenv("HOME") );
-      snprintf( fname, 499, "%s/share/photoflow/gmic_def.gmic", INSTALL_PREFIX );
-      std::cout<<"G'MIC custom commands file: "<<fname<<std::endl;
-      struct stat buffer;   
-      int stat_result = stat( fname, &buffer );
-      if( stat_result != 0 ) {
-        //snprintf( fname, 499, "%s/gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
-        //stat_result = stat( fname, &buffer );
-        //if( stat_result != 0 ) {
-          fname[0] = 0;
-          //}
-      }
-    }
-#endif
-    if( strlen( fname ) > 0 ) {
-      std::ifstream t;
-      int length;
-      t.open(fname);      // open input file
-      t.seekg(0, std::ios::end);    // go to the end
-      length = t.tellg();           // report location (this is the length)
-      t.seekg(0, std::ios::beg);    // go back to the beginning
-      custom_gmic_commands = new char[length];    // allocate memory for a buffer of appropriate dimension
-      t.read(custom_gmic_commands, length);       // read the whole file into the buffer
-      t.close();                    // close file handle
-      std::cout<<"G'MIC custom commands loaded"<<std::endl;
-    }
-  }
-
-	/* Make a gmic for this thread.
-	 */
-	seq->gmic_instance = new gmic( 0, custom_gmic_commands, false, 0, 0 ); 
+  /* Make a gmic for this thread.
+   */
+  //g_mutex_lock( gmic_mutex );
+  //std::cout<<"Allocating G'MIC object"<<std::endl;
+  //seq->gmic_instance = new gmic( 0, custom_gmic_commands, false, 0, 0 );
+  //std::cout<<"G'MIC object created: seq="<<seq<<"  gmic_instance="<<seq->gmic_instance<<std::endl;
+  //g_mutex_unlock( gmic_mutex );
+  seq->gmic_instance = gmic_pool.get_gmic();
 
 	return( (void *) seq );
 }
@@ -326,9 +338,12 @@ vips_gmic_gen_template( VipsRegion *oreg,
 
   //return 0;
 
-	for( int i = 0; seq->ir[i]; i++ ) 
+	ninput = 0;
+	for( int i = 0; seq->ir[i]; i++ ) {
 		if( vips_region_prepare( seq->ir[i], &need ) ) 
 			return( -1 );
+		ninput += 1;
+	}
 
 	gmic_list<float> images;
 	gmic_list<char> images_names;
@@ -342,19 +357,32 @@ vips_gmic_gen_template( VipsRegion *oreg,
 				1, seq->ir[i]->im->Bands );
 			vips_to_gmic<T>( seq->ir[0], &need, &img );
 		}
-		//std::cout<<"Running G'MIC command: "<<vipsgmic->command<<std::endl;
-		seq->gmic_instance->run( vipsgmic->command, 
-			images, images_names );
+		//std::cout<<"Running G'MIC command: \""<<vipsgmic->command<<"\"  seq="<<seq<<"  gmic_instance="<<seq->gmic_instance<<std::endl;
+		//std::cout<<"  gmic_instance->verbosity="<<seq->gmic_instance->verbosity<<std::endl;
+		//g_mutex_lock( gmic_mutex );
+		char* command = strdup( vipsgmic->command );
+		seq->gmic_instance->run( command, images, images_names );
+		free( command );
+		//g_mutex_unlock( gmic_mutex );
+    //std::cout<<"G'MIC command: \""<<vipsgmic->command<<"\"  seq="<<seq<<"  gmic_instance="<<seq->gmic_instance<<" finished"<<std::endl;
 		vips_from_gmic<T>( &images._data[0], &need, oreg );
 	}
 	catch( gmic_exception e ) { 
 		images.assign( (guint) 0 );
 
+    //std::cout<<"G'MIC command: \""<<vipsgmic->command<<"\"  seq="<<seq<<"  gmic_instance="<<seq->gmic_instance<<" failed!"<<std::endl;
+	  //g_mutex_lock( gmic_mutex );
+	  //delete seq->gmic_instance;
+	  //g_mutex_unlock( gmic_mutex );
 		vips_error( "VipsGMic", "%s", e.what() );
 
 		return( -1 );
 	}
 	images.assign( (guint) 0 );
+
+  //g_mutex_lock( gmic_mutex );
+	//delete seq->gmic_instance;
+  //g_mutex_unlock( gmic_mutex );
 
 	return( 0 );
 }
@@ -363,6 +391,8 @@ static int
 vips_gmic_gen( VipsRegion *oreg, void *vseq, void *a, void *b, gboolean *stop )
 {
 	VipsGMicSequence *seq = (VipsGMicSequence *) vseq;
+
+	//std::cout<<"vips_gmic_gen() called."<<std::endl;
 
 	switch( seq->ir[0]->im->BandFmt ) {
 	case VIPS_FORMAT_UCHAR:
@@ -516,6 +546,59 @@ vips_gmic_class_init( VipsGMicClass *klass )
 static void
 vips_gmic_init( VipsGMic *vipsgmic )
 {
+  if( !custom_gmic_commands ) {
+    std::cout<<"Loading G'MIC custom commands..."<<std::endl;
+    char fname[500]; fname[0] = 0;
+#if defined(WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
+    snprintf( fname, 499, "%s\\gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+    std::cout<<"G'MIC commands definition file: "<<fname<<std::endl;
+    struct stat buffer;
+    int stat_result = stat( fname, &buffer );
+    if( stat_result != 0 ) {
+      fname[0] = 0;
+    }
+#elif defined(__APPLE__) && defined (__MACH__)
+    //snprintf( fname, 499, "%s/../share/photoflow/gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+    snprintf( fname, 499, "%s/gmic_def.gmic", PF::PhotoFlow::Instance().get_data_dir().c_str() );
+    std::cout<<"G'MIC commands definition file: "<<fname<<std::endl;
+    struct stat buffer;
+    int stat_result = stat( fname, &buffer );
+    if( stat_result != 0 ) {
+      fname[0] = 0;
+    }
+#else
+    if( getenv("HOME") ) {
+      //snprintf( fname, 499, "%s/.photoflow/gmic_update.gmic", getenv("HOME") );
+      snprintf( fname, 499, "%s/share/photoflow/gmic_def.gmic", INSTALL_PREFIX );
+      std::cout<<"G'MIC custom commands file: "<<fname<<std::endl;
+      struct stat buffer;
+      int stat_result = stat( fname, &buffer );
+      if( stat_result != 0 ) {
+        //snprintf( fname, 499, "%s/gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+        //stat_result = stat( fname, &buffer );
+        //if( stat_result != 0 ) {
+          fname[0] = 0;
+          //}
+      }
+    }
+#endif
+    if( strlen( fname ) > 0 ) {
+      std::ifstream t;
+      int length;
+      t.open(fname);      // open input file
+      t.seekg(0, std::ios::end);    // go to the end
+      length = t.tellg();           // report location (this is the length)
+      t.seekg(0, std::ios::beg);    // go back to the beginning
+      custom_gmic_commands = new char[length];    // allocate memory for a buffer of appropriate dimension
+      t.read(custom_gmic_commands, length);       // read the whole file into the buffer
+      t.close();                    // close file handle
+      std::cout<<"G'MIC custom commands loaded"<<std::endl;
+    }
+  }
+
+  if( !gmic_mutex ) {
+    gmic_mutex = vips_g_mutex_new();
+  }
 }
 
 extern "C" {
