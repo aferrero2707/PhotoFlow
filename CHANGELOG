@@ -1,7 +1,13 @@
 =========================================
 Version 0.1.6
 
-- Points on the B/C/S/H curves can be added by ctrl-clicking on the preview area.
+- Improved selection of curve points
+- The curve points for the generation of the mask for the the B/C/S/H (Brightness/Contrast/Saturation/Hue) tool 
+  can now be added by ctrl-clicking on the preview area.
+- Added feathering of B/C/S/H mask
+- Added H/S/L mask tool. The generated grayscale image is equivalent to the mask of the B/C/S/H tool, 
+  however the advantage is that it can be used as a generic layer mask to be associated to other tools
+  (like curves, blurs, etc...)
 - Improved gaussian blur filter:
   - added memory caching at the filter input (improves performance significantly)
   - blur method is now the same for preview and rendering, and can be choosen from configuration dialog
@@ -16,7 +22,7 @@ Version 0.1.6
   - white if mask is empty
   - a gradient if the mask contains one or more layers
   - a crossed gradient if the mask is not empty, but disabled
-- Updated Frnch transaltions
+- Updated French transaltions
 
 G'MIC:
 - Added optional in-memory tile caching for G'MIC operations (one cache for each iteration)
@@ -26,6 +32,7 @@ G'MIC:
   - enabled tile caching
 - Fixed multi-threaded processing of G'MIC filters under OSX 
   (by protecting all sscanf calls with a global mutex)
+- The film processing presets have been moved from the "G'MIC" to the "color" category
 
 =========================================
 Version 0.1.5
