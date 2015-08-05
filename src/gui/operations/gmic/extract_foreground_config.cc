@@ -31,7 +31,7 @@
 
 
 PF::GmicExtractForegroundConfigDialog::GmicExtractForegroundConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Dream Smoothing (G'MIC)"  ),
+  OperationConfigDialog( layer, "Foreground Extraction (G'MIC)"  ),
   updateButton( "Update" ),
   editPointsButton( "edit control points" ),
   showMaskButton( "show mask" ),
