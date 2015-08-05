@@ -226,7 +226,6 @@ add_executable(pfbatch pfbatch.cc)
 target_link_libraries(pfbatch ${LIBS} 
   pfbase 
   pfdt
-  pfgmic
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
