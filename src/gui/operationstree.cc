@@ -298,15 +298,25 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_conv.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
   //op_conv.get_tree().add_op( "Lab conversion", "convert2lab" );
 
-  op_color.get_tree().add_op( "Uniform Fill", "uniform");
-  op_color.get_tree().add_op( "Gradient", "gradient");
+  op_color.get_tree().add_op( "Curves", "curves" );
+  op_color.get_tree().add_op( "B/C/S/H Adjustment", "hue_saturation" );
   op_color.get_tree().add_op( "Invert", "invert" );
   op_color.get_tree().add_op( "Desaturate", "desaturate" );
-  op_color.get_tree().add_op( "Brightness/Contrast", "brightness_contrast" );
-  op_color.get_tree().add_op( "B/C/S/H Adjustment", "hue_saturation" );
-  op_color.get_tree().add_op( "Curves", "curves" );
+  //op_color.get_tree().add_op( "Brightness/Contrast", "brightness_contrast" );
+  op_color.get_tree().add_op( "Uniform Fill", "uniform");
+  op_color.get_tree().add_op( "Gradient", "gradient");
   op_color.get_tree().add_op( "Channel Mixer", "channel_mixer" );
+  op_color.get_tree().add_op( "H/S/L Mask", "hsl_mask" );
   op_color.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
+  op_color.get_tree().add_op( "Emulate film [color slide]", "gmic_emulate_film_colorslide" );
+  op_color.get_tree().add_op( "Emulate film [B&W]", "gmic_emulate_film_bw" );
+  op_color.get_tree().add_op( "Emulate film [instant consumer]", "gmic_emulate_film_instant_consumer" );
+  op_color.get_tree().add_op( "Emulate film [instant pro]", "gmic_emulate_film_instant_pro" );
+  op_color.get_tree().add_op( "Emulate film [negative color]", "gmic_emulate_film_negative_color" );
+  op_color.get_tree().add_op( "Emulate film [negative new]", "gmic_emulate_film_negative_new" );
+  op_color.get_tree().add_op( "Emulate film [negative old]", "gmic_emulate_film_negative_old" );
+  op_color.get_tree().add_op( "Emulate film [print films]", "gmic_emulate_film_print_films" );
+  op_color.get_tree().add_op( "Emulate film [various]", "gmic_emulate_film_various" );
 
   op_detail.get_tree().add_op( "Gaussian blur", "gaussblur" );
   op_detail.get_tree().add_op( "Noise reduction", "denoise" );
@@ -339,15 +349,6 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.get_tree().add_op( "Smooth [total variation]", "gmic_smooth_total_variation" );
   op_gmic.get_tree().add_op( "Smooth [wavelets]", "gmic_smooth_wavelets_haar" );
   op_gmic.get_tree().add_op( "Smooth [guided]", "gmic_smooth_guided" );
-  op_gmic.get_tree().add_op( "Emulate film [color slide]", "gmic_emulate_film_colorslide" );
-  op_gmic.get_tree().add_op( "Emulate film [B&W]", "gmic_emulate_film_bw" );
-  op_gmic.get_tree().add_op( "Emulate film [instant consumer]", "gmic_emulate_film_instant_consumer" );
-  op_gmic.get_tree().add_op( "Emulate film [instant pro]", "gmic_emulate_film_instant_pro" );
-  op_gmic.get_tree().add_op( "Emulate film [negative color]", "gmic_emulate_film_negative_color" );
-  op_gmic.get_tree().add_op( "Emulate film [negative new]", "gmic_emulate_film_negative_new" );
-  op_gmic.get_tree().add_op( "Emulate film [negative old]", "gmic_emulate_film_negative_old" );
-  op_gmic.get_tree().add_op( "Emulate film [print films]", "gmic_emulate_film_print_films" );
-  op_gmic.get_tree().add_op( "Emulate film [various]", "gmic_emulate_film_various" );
   op_gmic.get_tree().add_op( "Tone mapping", "gmic_tone_mapping" );
   op_gmic.get_tree().add_op( "Transfer colors [advanced]", "gmic_transfer_colors" );
 #endif

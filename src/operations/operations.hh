@@ -44,6 +44,7 @@ namespace PF
   ProcessorBase* new_blender();
   ProcessorBase* new_brightness_contrast();
   ProcessorBase* new_hue_saturation();
+  ProcessorBase* new_hsl_mask();
   ProcessorBase* new_clone();
   ProcessorBase* new_crop();
   ProcessorBase* new_scale();

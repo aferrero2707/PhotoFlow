@@ -35,6 +35,7 @@
 #include "../gui/operations/raw_developer_config.hh"
 #include "../gui/operations/brightness_contrast_config.hh"
 #include "../gui/operations/hue_saturation_config.hh"
+#include "../gui/operations/hsl_mask_config.hh"
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/raw_loader_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
@@ -183,7 +184,7 @@ PF::OperationConfigDialog::OperationConfigDialog(PF::Layer* layer, const Glib::u
   mainHBox.pack_start( mainBox, Gtk::PACK_SHRINK, false, false );
 
   get_vbox()->pack_start( mainHBox, Gtk::PACK_SHRINK, false, false );
-  get_vbox()->pack_end( previewBox, Gtk::PACK_SHRINK, false, false );
+  //get_vbox()->pack_end( previewBox, Gtk::PACK_SHRINK, false, false );
   previewButton.set_active( true );
 
   previewButton.signal_clicked().connect(sigc::mem_fun(*this,
@@ -599,6 +600,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "hue_saturation" ) {
 
     dialog = new PF::HueSaturationConfigDialog( current_layer );
+
+  } else if( op_type == "hsl_mask" ) {
+
+    dialog = new PF::HSLMaskConfigDialog( current_layer );
 
   } else if( op_type == "curves" ) {
       
