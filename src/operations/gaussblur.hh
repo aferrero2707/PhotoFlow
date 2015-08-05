@@ -57,6 +57,9 @@ namespace PF
   public:
     GaussBlurPar();
 
+    void set_radius( float r ) { radius.set( r ); }
+    float get_radius() { return radius.get(); }
+
     bool has_intensity() { return false; }
     bool needs_caching() { return( radius.get() >= 50 ); }
 

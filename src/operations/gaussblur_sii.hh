@@ -168,8 +168,8 @@ namespace PF
 			free( row_buf );
 			free( tmp_buf );
 
-			std::cout<<"gaussblur_sii finished"<<std::endl;
-			usleep(1000000);
+			//std::cout<<"gaussblur_sii finished"<<std::endl;
+			//usleep(1000000);
     }
   };
 
