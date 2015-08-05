@@ -220,7 +220,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 #ifndef NDEBUG
         std::cout<<"  point #"<<i<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
 #endif
-        if( (dx<0.02) && (dy<0.02) ) {
+        if( (dx<0.05) && (dy<0.05) ) {
           ipt = i;
           found = true;
           break;
@@ -268,7 +268,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           // it is on the curve and if we have to add one more point
           double ycurve = curve.get_value( xpt );
           double dy = fabs( ypt - ycurve);
-          if( dy<0.02 ) {
+          if( dy<0.05 ) {
             add_point( xpt, ycurve );
           }
         }
