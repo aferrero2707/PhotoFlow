@@ -52,7 +52,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 
   LayerTree* view = new LayerTree( );
-  view->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::modified) );
+  //view->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::modified) );
   //frame->add( *view );
   
   //view->set_reorderable();
@@ -99,7 +99,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   layer_views.push_back( view );
 
   layer_views[0]->set_layers( &(image->get_layer_manager().get_layers()) );
-  image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
+  //image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
+  image->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::update_idle) );
 
   buttonAdd.signal_clicked().connect( sigc::mem_fun(*this,
                                                     &PF::LayerWidget::on_button_add) );

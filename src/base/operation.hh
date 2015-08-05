@@ -152,6 +152,8 @@ namespace PF
 
     bool modified_flag;
 
+    std::string default_name;
+
     std::list<PropertyBase*> mapped_properties;
     std::list<PropertyBase*> properties;
 
@@ -224,6 +226,10 @@ namespace PF
     void set_modified() { modified_flag = true; }
     void clear_modified();
     virtual void modified() { set_modified(); signal_modified.emit(); }
+
+
+    std::string get_default_name() { return default_name; }
+    void set_default_name( std::string n ) { default_name = n; }
 
 
     int get_rgb_target_channel() 

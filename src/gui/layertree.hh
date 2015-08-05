@@ -97,6 +97,7 @@ namespace PF {
 
     bool map_flag;
 
+    void update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l );
     void update_model(Gtk::TreeModel::Row parent_row);
 
     bool get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::TreeModel::iterator& iter);

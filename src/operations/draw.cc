@@ -63,6 +63,8 @@ PF::DrawPar::DrawPar():
 {
   set_type( "draw" );
 	//diskbuf = new_diskbuffer();
+
+  set_default_name( _("freehand drawing") );
 }
 
 

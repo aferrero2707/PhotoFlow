@@ -38,6 +38,7 @@ namespace PF {
 
   class CheckBox: public Gtk::HBox, public PFWidget
   {
+    Gtk::HBox hbox;
     Gtk::Label label;
     Gtk::CheckButton check;
 

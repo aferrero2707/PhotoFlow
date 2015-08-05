@@ -29,6 +29,9 @@
 
 //#include <arpa/inet.h>
 
+#include "gaussblur.hh"
+#include "hsl_mask.hh"
+
 #include "hue_saturation.hh"
 
 
@@ -58,9 +61,17 @@ PF::HueSaturationPar::HueSaturationPar():
   contrast_L_equalizer( "contrast_L_equalizer", this ),
   brightness_H_equalizer( "brightness_H_equalizer", this ),
   brightness_S_equalizer( "brightness_S_equalizer", this ),
-  brightness_L_equalizer( "brightness_L_equalizer", this )
+  brightness_L_equalizer( "brightness_L_equalizer", this ),
+  show_mask("show_mask",this,false),
+  feather_mask("feather_mask",this,false),
+  feather_radius("feather_radius",this,5.0f)
 {
   set_type("hue_saturation" );
+
+  set_default_name( _("B-C-S-H adjustment") );
+
+  mask = new_hsl_mask();
+  blur = new_gaussblur();
 
   int id = 0;
   eq_vec[id++] = &hue_H_equalizer;
@@ -85,6 +96,7 @@ PF::HueSaturationPar::HueSaturationPar():
     eq_vec[id]->get().set_point( 0, x1, y1 );
     eq_vec[id]->get().set_point( 1, x2, y2 );
   }
+  /*
   for( id = 0; id < 3; id+=3 ) {
     float x = 40;
     eq_vec[id]->get().add_point( x/360, 0. ); x += 40;
@@ -96,7 +108,7 @@ PF::HueSaturationPar::HueSaturationPar():
     eq_vec[id]->get().add_point( x/360, 0. ); x += 40;
     eq_vec[id]->get().add_point( x/360, 0. ); x += 40;
   }
-
+*/
   x1 = 0; y1 = 0.5;
   //eq_vec[0]->get().set_point( 0, x1, y1 );
 }
@@ -110,6 +122,8 @@ void PF::HueSaturationPar::update_curve( PF::Property<PF::SplineCurve>* curve, f
   for(int i = 0; i <= 65535; i++) {
     float x = ((float)i)/65535;
     float y = curve->get().get_value( x );
+    if( y>1 ) y=1;
+    if( y<0 ) y=0;
     vec[i] = y;
     //std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec8[i]="<<vec8[i]<<std::endl;
   }
@@ -122,8 +136,6 @@ VipsImage* PF::HueSaturationPar::build(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap,
         unsigned int& level)
 {
-  VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
-
   for( int id = 0; id < 3; id++ ) {
     if( eq_vec[id]->is_modified() )
       update_curve( eq_vec[id], vec[id] );
@@ -140,6 +152,44 @@ VipsImage* PF::HueSaturationPar::build(std::vector<VipsImage*>& in, int first,
   eq_enabled[0] = hue_H_equalizer_enabled.get();
   eq_enabled[1] = hue_S_equalizer_enabled.get();
   eq_enabled[2] = hue_L_equalizer_enabled.get();
+
+  std::vector<VipsImage*> in2;
+  if( in.size() < 1 )
+    return NULL;
+
+  in2.push_back( in[0] );
+  PF::HSLMaskPar* mask_par = dynamic_cast<PF::HSLMaskPar*>( mask->get_par() );
+  PF::GaussBlurPar* blur_par = dynamic_cast<PF::GaussBlurPar*>( blur->get_par() );
+  if( mask_par ) {
+    std::vector<VipsImage*> in3; in3.push_back( in[0] );
+    mask_par->get_H_curve() = hue_H_equalizer;
+    mask_par->get_S_curve() = hue_S_equalizer;
+    mask_par->get_L_curve() = hue_L_equalizer;
+    mask_par->set_H_curve_enabled( hue_H_equalizer_enabled.get() );
+    mask_par->set_S_curve_enabled( hue_S_equalizer_enabled.get() );
+    mask_par->set_L_curve_enabled( hue_L_equalizer_enabled.get() );
+    mask_par->set_image_hints( in[0] );
+    mask_par->set_format( get_format() );
+    VipsImage* imask = mask_par->build( in3, 0, NULL, NULL, level );
+
+    if( feather_mask.get() == true ) {
+      blur_par->set_radius( feather_radius.get() );
+      blur_par->set_image_hints( in[0] );
+      blur_par->set_format( get_format() );
+      in3.clear();
+      in3.push_back( imask );
+      VipsImage* blurred = blur_par->build( in3, 0, NULL, NULL, level );
+      std::cout<<"blurred = "<<blurred<<std::endl;
+      PF_UNREF( imask, "HueSaturationPar::build(): imask unref");
+      imask = blurred;
+    }
+
+    in2.push_back( imask );
+  }
+
+  VipsImage* out = PF::OpParBase::build( in2, 0, imap, omap, level );
+
+  if( in2.size()>1 ) PF_UNREF( in2[1], "HueSaturationPar::build(): in[2] unref");
 
   return out;
 }

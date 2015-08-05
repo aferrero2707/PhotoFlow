@@ -42,7 +42,8 @@ PF::GMicPar::GMicPar():
   post_command("post_command",this,""),
   padding("padding",this,0),
   x_scale("x_scale",this,1), 
-  y_scale("y_scale",this,1)
+  y_scale("y_scale",this,1),
+  cache_tiles( false )
 {
   convert_format = PF::new_convert_format();	
   convert_format2 = PF::new_convert_format();	
@@ -58,7 +59,10 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* srcimg = NULL;
   if( in.size() > 0 ) srcimg = in[0];
 
-  if( !srcimg ) return NULL;
+  if( !srcimg ) {
+    std::cout<<"GMicPar::build(): null input image"<<std::endl;
+    return NULL;
+  }
 
   if( command.get().empty() ) {
     PF_REF( srcimg, "GMicPar::build(): empty command string" );
@@ -89,8 +93,10 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
 
   VipsImage* srcimg2 = srcimg;
   if( (target_ch>=0) && (target_ch<srcimg->Bands) ) {
-    if( vips_extract_band( srcimg, &srcimg2, target_ch, NULL ) )
+    if( vips_extract_band( srcimg, &srcimg2, target_ch, NULL ) ) {
+      std::cout<<"GMicPar::build(): vips_extract_band() failed"<<std::endl;
       return NULL;
+    }
     vips_image_init_fields( srcimg2,
                             get_xsize(), get_ysize(), 
                             1, get_format(),
@@ -107,7 +113,10 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
   convert_format->get_par()->set_image_hints( srcimg2 );
   convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
   VipsImage* convimg = convert_format->get_par()->build( in2, 0, NULL, NULL, level );
-  if( !convimg ) return NULL;
+  if( !convimg ) {
+    std::cout<<"GMicPar::build(): null convimg"<<std::endl;
+    return NULL;
+  }
   PF_UNREF( srcimg2, "GMicPar::build(): srcimg2 unref" );
   /**/
   //convimg = srcimg;
@@ -115,22 +124,38 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
 
   //return convimg;
 
+  int tw = 128, th = 128, nt = 1000;
+  VipsAccess acc = VIPS_ACCESS_RANDOM;
+  bool threaded = true, persistent = false;
   /**/
   VipsImage* iter_in = convimg;
   VipsImage* iter_out = NULL;
   //std::cout<<"G'MIC command: "<<command.get()<<std::endl;
   std::string cmd = std::string("-verbose - ")+command.get();
   for( int i = 0; i < iterations.get(); i++ ) {
-    VipsImage* inv[2] = { iter_in, NULL };
+    // Memory caching of the padded image
+    VipsImage* cached = iter_in;
+    if( cache_tiles ) {
+      if( vips_tilecache(iter_in, &cached,
+          "tile_width", tw, "tile_height", th, "max_tiles", nt,
+          "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+        std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
+        return NULL;
+      }
+      std::cout<<"GaussBlurPar::build(): vips_tilecache() success."<<std::endl;
+      PF_UNREF( iter_in, "GaussBlurPar::build(): iter_in unref" );
+    }
+
+    VipsImage* inv[2] = { cached, NULL };
     if( vips_gmic( inv, &iter_out, 1,
                    padding.get(), x_scale.get(),
                    y_scale.get(),  
                    cmd.c_str(), NULL ) ) {
       std::cout<<"vips_gmic() failed!!!!!!!"<<std::endl;
-      PF_UNREF( iter_in, "GMicPar::build(): vips_gmic() failed, iter_in unref" );
+      PF_UNREF( cached, "GMicPar::build(): vips_gmic() failed, iter_in unref" );
       return NULL;
     }
-    PF_UNREF( iter_in, "GMicPar::build(): iter_in unref" );
+    PF_UNREF( cached, "GMicPar::build(): iter_in unref" );
     iter_in = iter_out;
   }
   /**/

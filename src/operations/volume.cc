@@ -64,6 +64,8 @@ PF::VolumePar::VolumePar():
   tone_curve.add_point( 0.75, highlights_amount.get() );
 
   set_type("volume" );
+
+  set_default_name( _("local contrast") );
 }
 
 

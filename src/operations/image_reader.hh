@@ -67,6 +67,8 @@ namespace PF
       convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
       blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
       set_type("imageread" );
+
+      set_default_name( _("image layer") );
     }
     ~ImageReaderPar();
 

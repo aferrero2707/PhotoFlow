@@ -814,6 +814,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       if( par->needs_input() && !previous ) {
         // Here we have a problem: the operation we are trying to insert in the chain requires
         // a primary input image, but there is no previous image available... we give up
+        std::cout<<"LayerManager::rebuild_chain(): missing input data for layer \""<<l->get_name()<<"\""<<std::endl;
         return NULL;
       }
 
@@ -1126,7 +1127,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         PF_REF(blendedimg,"LayerManager::rebuild_chain(): blendedimg ref");
       }
 #ifndef NDEBUG
-      std::cout<<"rebuild_chain(): Layer \""<<l->get_name()<<"\"  blended: 0x"<<blendedimg<<std::endl;
+      std::cout<<"rebuild_chain(): Layer \""<<l->get_name()<<"\"  blended: "<<blendedimg<<std::endl;
 #endif
       pipeline->set_blended( blendedimg, l->get_id() );
       out = blendedimg;

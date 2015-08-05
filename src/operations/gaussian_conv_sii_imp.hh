@@ -73,7 +73,7 @@
 	Separated into horizontal and vertical steps and adapted to PhotoFlow 08/2014
  */
 	template < OP_TEMPLATE_DEF_PREVIEW_SPEC > 
-	void GaussBlurProc<OP_TEMPLATE_IMP_PREVIEW_SPEC(true)>::sii_gaussian_conv_h(sii_coeffs& c, T *dest, double *buffer, const T *src, 
+	void GaussBlurSiiProc<OP_TEMPLATE_IMP_PREVIEW_SPEC(true)>::sii_gaussian_conv_h(sii_coeffs& c, T *dest, double *buffer, const T *src,
 																																							long start, long N, long width)
 	{
 		const int NCH = PF::ColorspaceInfo<CS>::NCH;
@@ -155,7 +155,7 @@
 
 
 	template < OP_TEMPLATE_DEF_PREVIEW_SPEC > 
-	void GaussBlurProc<OP_TEMPLATE_IMP_PREVIEW_SPEC(true)>::sii_gaussian_conv_v(sii_coeffs& c, T *dest, double *buffer, const T *src, 
+	void GaussBlurSiiProc<OP_TEMPLATE_IMP_PREVIEW_SPEC(true)>::sii_gaussian_conv_v(sii_coeffs& c, T *dest, double *buffer, const T *src,
 																																							long start, long N, long heigth, long src_stride, long dest_stride)
 	{
 		const int NCH = PF::ColorspaceInfo<CS>::NCH;

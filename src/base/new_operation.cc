@@ -111,6 +111,10 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     processor = new_hue_saturation();
 
+  } else if( op_type == "hsl_mask" ) {
+
+    processor = new_hsl_mask();
+
   } else if( op_type == "curves" ) {
       
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();

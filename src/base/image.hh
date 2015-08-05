@@ -104,6 +104,8 @@ namespace PF
 
     sigc::signal<void> signal_modified;
 
+    sigc::signal<void> signal_updated;
+
     LayerManager& get_layer_manager() { return layer_manager; }
 
     void do_remove_layer( PF::Layer* layer );

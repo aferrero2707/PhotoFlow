@@ -27,42 +27,32 @@
 
  */
 
-#include "../base/processor.hh"
-#include "uniform.hh"
+#include "gaussblur_sii.hh"
 
-PF::UniformPar::UniformPar(): 
-  PixelProcessorPar(),
-  grey( "grey", this, 0 ),
-  R( "R", this, 0 ),
-  G( "G", this, 0 ),
-  B( "B", this, 0 ),
-  L( "L", this, 0 ),
-  a( "a", this, 0 ),
-  b( "b", this, 0 ),
-  C( "C", this, 0 ),
-  M( "M", this, 0 ),
-  Y( "Y", this, 0 ),
-  K( "K", this, 0 )
+
+PF::GaussBlurSiiPar::GaussBlurSiiPar():
+  OpParBase(),
+  radius("radius",this,5)
 {
-  set_type( "uniform" );
-
-  set_default_name( _("uniform fill") );
+  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
+  set_type( "gaussblur_sii" );
 }
 
 
 
-VipsImage* PF::UniformPar::build(std::vector<VipsImage*>& in, int first, 
-				     VipsImage* imap, VipsImage* omap, 
-				     unsigned int& level)
+VipsImage* PF::GaussBlurSiiPar::build(std::vector<VipsImage*>& in, int first,
+				   VipsImage* imap, VipsImage* omap, 
+				   unsigned int& level)
 {
-  std::cout<<"UniformPar::build(): colorspace="<<get_colorspace()<<std::endl;
-  grey.set( R.get() );
-  return PF::OpParBase::build( in, first, imap, omap, level );
+  VipsImage* srcimg = NULL;
+  if( in.size() > 0 ) srcimg = in[0];
+
+  VipsImage* blurred = PF::OpParBase::build( in, first, NULL, omap, level );
+  return blurred;
 }
 
 
-
-PF::ProcessorBase* PF::new_uniform()
+PF::ProcessorBase* PF::new_gaussblur_sii()
 {
-  return( new PF::Processor<PF::UniformPar,PF::Uniform>() );
+  return( new PF::Processor<PF::GaussBlurSiiPar,PF::GaussBlurSiiProc>() );
 }

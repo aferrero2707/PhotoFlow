@@ -27,6 +27,9 @@
 
  */
 #include <string.h>
+
+#include <gexiv2-metadata.h>
+
 #include "../base/pf_mkstemp.hh"
 #include "raster_image.hh"
 
@@ -107,7 +110,15 @@ image( NULL )
   PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_copy()." );
   image = image_copy;
 
-  // We read part of the EXIF data and store it in the image as a custom blob
+  // We read the EXIF data and store it in the image as a custom blob
+  GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
+  gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name.c_str(), NULL);
+  if( gexiv2_success )
+    std::cout<<"RasterImage::RasterImage(): setting gexiv2-data blob"<<std::endl;
+    vips_image_set_blob( image, "gexiv2-data",
+        (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
+        sizeof(GExiv2Metadata) );
+
   PF::exif_read( &exif_data, file_name.c_str() );
   void* buf = malloc( sizeof(PF::exif_data_t) );
   if( !buf ) return;

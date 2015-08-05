@@ -76,6 +76,8 @@ include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
 include_directories(${EXIV2_INCLUDE_DIRS})
 link_directories(${EXIV2_LIBRARY_DIRS})
+include_directories(${GEXIV2_INCLUDE_DIRS})
+link_directories(${GEXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 
@@ -179,38 +181,6 @@ ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
 ENDIF(MINGW)
 
-add_executable(pfbatch pfbatch.cc)
-
-#add_dependencies(photoflow ${LIB_DEPS})
-
-target_link_libraries(pfbatch ${LIBS} 
-  pfbase 
-  pfdt
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${OPENEXR_LIBRARIES}
-  ${XML2_LIBRARIES}
-  ${EXIF_LIBRARIES}
-  ${EXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
-  ${SIGC2_LIBRARIES}
-  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-  ${GLIBMM_LIBRARIES} 
-  ${GLIB_LIBRARIES} 
-  ${GMODULE_LIBRARIES} 
-  ${GOBJECT_LIBRARIES} 
-  ${GTHREAD_LIBRARIES} 
-  ${ZLIB_LIBRARIES}
-  #${LIBRAW_LIBRARIES}  
-  ${STATIC_LIBS}
-  ${ORC_LIBRARIES}
-  fftw3
-  ${ADDITIONAL_LIBS}
-  #gmon
-  )
-
-
 add_executable(photoflow # name of the executable on Windows will be example.exe 
   main.cc 
   )
@@ -228,6 +198,7 @@ target_link_libraries(photoflow ${LIBS}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
+  ${GEXIV2_LIBRARIES}
   ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
@@ -247,18 +218,12 @@ target_link_libraries(photoflow ${LIBS}
   )
 
 
-INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
-INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
-INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
-INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
-INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
-
-add_executable(icc tests/icc.c)
+add_executable(pfbatch pfbatch.cc)
 
 #add_dependencies(photoflow ${LIB_DEPS})
 
-target_link_libraries(icc ${LIBS} 
+target_link_libraries(pfbatch ${LIBS} 
   pfbase 
   pfdt
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
@@ -268,6 +233,7 @@ target_link_libraries(icc ${LIBS}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
+  ${GEXIV2_LIBRARIES}
   ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
@@ -284,6 +250,15 @@ target_link_libraries(icc ${LIBS}
   ${ADDITIONAL_LIBS}
   #gmon
   )
+
+
+
+INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
+INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
+
+INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
+INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
+INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
 #add_executable(cast tests/cast.c)

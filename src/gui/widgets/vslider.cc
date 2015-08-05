@@ -48,13 +48,16 @@ PF::VSlider::VSlider( OperationConfigDialog* dialog, std::string pname, std::str
   spinButton.set_adjustment( adjustment );
 #endif
 
-  label.set_text( l.c_str() ); label.set_angle( 90 ); label.set_alignment( Gtk::ALIGN_END );
+  label.set_text( l.c_str() ); label.set_angle( 90 ); 
+  //label.set_alignment( Gtk::ALIGN_END );
+  label.set_alignment( 1.0 );
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
   scale.set_size_request( -1, 100 );
   //spinButton.set_size_request( 48, -1 );
-  spinButton.set_alignment( Gtk::ALIGN_END );
+  //spinButton.set_alignment( Gtk::ALIGN_END );
+  spinButton.set_alignment( 1.0 );
 
   if( (max-min) < 1000000 ) {
     // Full widget with slider and spin button

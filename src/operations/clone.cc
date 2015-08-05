@@ -59,6 +59,8 @@ PF::ClonePar::ClonePar():
   desaturate = PF::new_desaturate();
 
   set_type( "clone" );
+
+  set_default_name( _("layer clone") );
 }
 
 

@@ -64,6 +64,7 @@ PF::Slider::Slider( OperationConfigDialog* dialog, std::string pname, std::strin
 
     hbox.pack_start( scale );
     hbox.pack_start( spinButton );
+    //spinButton.set_valign( Gtk::ALIGN_END );
 
     pack_start( align );
   } else {
