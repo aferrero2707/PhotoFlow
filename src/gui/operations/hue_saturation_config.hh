@@ -51,6 +51,8 @@ namespace PF {
   Slider brightnessSlider, brightness2Slider, contrastSlider, contrast2Slider;
   Slider hueSlider, hue2Slider, saturationSlider, saturation2Slider;
 
+  CheckBox mask_enable;
+
   Gtk::HSeparator sep1, sep2, sep3, sep4;
 
   Gtk::VBox hueHeq_box, hueSeq_box, hueLeq_box;
@@ -70,6 +72,9 @@ namespace PF {
   Gtk::HBox expander_hboxes[3][4];
   Gtk::VBox expander_vboxes[3];
 
+  Gtk::HBox feather_box;
+  CheckBox feather_enable;
+  Slider featherRadiusSlider;
 
 public:
   HueSaturationConfigDialog( Layer* l );

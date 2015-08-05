@@ -67,7 +67,14 @@ namespace PF
     Property<SplineCurve> brightness_S_equalizer;
     Property<SplineCurve> brightness_L_equalizer;
 
+    Property<bool> show_mask;
+    Property<bool> feather_mask;
+    Property<float> feather_radius;
+
     Property<SplineCurve>* eq_vec[12];
+
+    ProcessorBase* mask;
+    ProcessorBase* blur;
 
     void update_curve( Property<SplineCurve>* grey_curve, float* vec );
 
@@ -87,6 +94,7 @@ namespace PF
     float get_brightness() { return brightness.get(); }
     float get_brightness_eq() { return brightness_eq.get(); }
     bool get_brightness_is_gamma() { return brightness_is_gamma.get(); }
+    bool get_show_mask() { return show_mask.get(); }
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
@@ -134,6 +142,7 @@ namespace PF
       float brightness = opar->get_brightness();
 
       T* pin;
+      T* pmask;
       T* pout;
       T RGB[3];
       typename FormatInfo<T>::SIGNED tempval;
@@ -141,57 +150,79 @@ namespace PF
       float h, s, v, l;
       int x, y, k;
 
-      for( y = 0; y < height; y++ ) {
-        pin = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
-        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+      if( PREVIEW && opar->get_show_mask() ) {
+        for( y = 0; y < height; y++ ) {
+          pin = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+          pmask = (T*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
+          pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
-        for( x = 0; x < line_size; x+=3 ) {
-          RGB[0] = pin[x];
-          RGB[1] = pin[x+1];
-          RGB[2] = pin[x+2];
-          //rgb2hsv( R, G, B, h, s, v );
-          rgb2hsl( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
-
-          //std::cout<<"in RGB: "<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<"  HSL: "<<h_in<<" "<<s_in<<" "<<l_in<<std::endl;
-
-          unsigned short int hid = static_cast<unsigned short int>( h_in*65535/360 );
-          unsigned short int sid = static_cast<unsigned short int>( s_in*65535 );
-          unsigned short int lid = static_cast<unsigned short int>( l_in*65535 );
-
-
-          float h_eq1 = opar->eq_enabled[0] ? opar->vec[0][hid] : 1;
-          float h_eq2 = opar->eq_enabled[1] ? opar->vec[1][sid] : 1;
-          float h_eq3 = opar->eq_enabled[2] ? opar->vec[2][lid] : 1;
-
-          float h_eq = MIN3( h_eq1, h_eq2, h_eq3 );
-
-          //std::cout<<"h_in="<<h_in<<"  h_eq="<<h_eq<<" ("<<h_eq1<<" "<<h_eq2<<" "<<h_eq3<<")"<<std::endl;
-
-          float hue2 = hue;
-          float saturation2 = saturation;
-          float brightness2 = brightness;
-          float contrast2 = contrast;
-          if( h_eq < 1 ) {
-            hue2 *= h_eq;
-            saturation2 *= h_eq;
-            brightness2 *= h_eq;
-            contrast2 *= h_eq;
+          float fmask;
+          for( x = 0; x < line_size; x+=3 ) {
+            to_float( pmask[x], fmask );
+            pout[x] = fmask*pin[x] + (1.0f-fmask)*FormatInfo<T>::MAX;
+            pout[x+1] = fmask*pin[x+1] + (1.0f-fmask)*FormatInfo<T>::MIN;
+            pout[x+2] = fmask*pin[x+2] + (1.0f-fmask)*FormatInfo<T>::MIN;
           }
-          /*
+        }
+      } else {
+        for( y = 0; y < height; y++ ) {
+          pin = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+          pmask = (T*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
+          pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+
+          for( x = 0; x < line_size; x+=3 ) {
+            RGB[0] = pin[x];
+            RGB[1] = pin[x+1];
+            RGB[2] = pin[x+2];
+            //rgb2hsv( R, G, B, h, s, v );
+            rgb2hsl( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
+
+            //std::cout<<"in RGB: "<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<"  HSL: "<<h_in<<" "<<s_in<<" "<<l_in<<std::endl;
+            /*
+            unsigned short int hid = static_cast<unsigned short int>( h_in*65535/360 );
+            unsigned short int sid = static_cast<unsigned short int>( s_in*65535 );
+            unsigned short int lid = static_cast<unsigned short int>( l_in*65535 );
+
+
+            float h_eq1 = opar->eq_enabled[0] ? opar->vec[0][hid] : 1;
+            float h_eq2 = opar->eq_enabled[1] ? opar->vec[1][sid] : 1;
+            float h_eq3 = opar->eq_enabled[2] ? opar->vec[2][lid] : 1;
+
+            float h_eq = MIN3( h_eq1, h_eq2, h_eq3 );
+            */
+
+            float h_eq;
+            to_float( pmask[x], h_eq );
+
+            //std::cout<<"h_in="<<h_in<<"  h_eq="<<h_eq<<" ("<<h_eq1<<" "<<h_eq2<<" "<<h_eq3<<")"<<std::endl;
+
+            float hue2 = hue;
+            float saturation2 = saturation;
+            float brightness2 = brightness;
+            float contrast2 = contrast;
+            /*
+            if( h_eq < 1 ) {
+              hue2 *= h_eq;
+              saturation2 *= h_eq;
+              brightness2 *= h_eq;
+              contrast2 *= h_eq;
+            }
+            */
+            /*
           //h = h_in + hue + opar->get_hue_eq()*h_eq;
           if( opar->get_hue_eq() ) {
             hue2 += opar->get_hue_eq()*h_eq;
           }
-          */
-          if( hue2 != 0 ) {
-            h = h_in + hue2;
-            if( h > 360 ) h -= 360;
-            else if( h < 0 ) h+= 360;
-          } else {
-            h = h_in;
-          }
+             */
+            if( hue2 != 0 ) {
+              h = h_in + hue2;
+              if( h > 360 ) h -= 360;
+              else if( h < 0 ) h+= 360;
+            } else {
+              h = h_in;
+            }
 
-          /*
+            /*
           if( opar->get_saturation_eq() ) {
             //float s_eq1 = opar->vec[3][hid];
             //float s_eq2 = opar->vec[4][sid];
@@ -200,26 +231,26 @@ namespace PF
             float s_eq = h_eq;
             saturation2 += opar->get_saturation_eq()*s_eq;
           }
-          */
-          if( saturation2 != 0 ) {
-            s = s_in*(1.0f+saturation2);
-            if( s < 0 ) s = 0;
-            else if( s > 1 ) s = 1;
-          } else {
-            s = s_in;
-          }
+             */
+            if( saturation2 != 0 ) {
+              s = s_in*(1.0f+saturation2);
+              if( s < 0 ) s = 0;
+              else if( s > 1 ) s = 1;
+            } else {
+              s = s_in;
+            }
 
-          l = l_in;
+            l = l_in;
 
-          //h = h_in;
-          //s = s_in;
+            //h = h_in;
+            //s = s_in;
 
-          //hsv2rgb2( h, s, v, R, G, B );
-          if( (h != h_in) || (s != s_in) )
-            hsl2rgb( h, s, l, RGB[0], RGB[1], RGB[2] );
-          //std::cout<<"out RGB: "<<R<<" "<<G<<" "<<B<<"  HSV: "<<h<<" "<<s<<" "<<v<<std::endl;
+            //hsv2rgb2( h, s, v, R, G, B );
+            if( (h != h_in) || (s != s_in) )
+              hsl2rgb( h, s, l, RGB[0], RGB[1], RGB[2] );
+            //std::cout<<"out RGB: "<<R<<" "<<G<<" "<<B<<"  HSV: "<<h<<" "<<s<<" "<<v<<std::endl;
 
-          /*
+            /*
           if( opar->get_brightness_eq() != 0 ) {
             //float c_eq1 = opar->vec[6][hid];
             //float c_eq2 = opar->vec[7][sid];
@@ -237,17 +268,18 @@ namespace PF
             float c_eq = h_eq;
             contrast2 += opar->get_contrast_eq()*c_eq;
           }
-          */
-          if( brightness2 != 0 || contrast2 != 0 ) {
-            for( k=0; k < 3; k++) {
-              tempval = (typename FormatInfo<T>::SIGNED)RGB[k] - FormatInfo<T>::HALF;
-              clip( (contrast2+1.0f)*tempval+brightness2*FormatInfo<T>::RANGE+FormatInfo<T>::HALF, RGB[k] );
+             */
+            if( brightness2 != 0 || contrast2 != 0 ) {
+              for( k=0; k < 3; k++) {
+                tempval = (typename FormatInfo<T>::SIGNED)RGB[k] - FormatInfo<T>::HALF;
+                clip( (contrast2+1.0f)*tempval+brightness2*FormatInfo<T>::RANGE+FormatInfo<T>::HALF, RGB[k] );
+              }
             }
-          }
 
-          pout[x] = RGB[0];
-          pout[x+1] = RGB[1];
-          pout[x+2] = RGB[2];
+            pout[x] = h_eq*RGB[0] + (1.0f-h_eq)*pin[x];
+            pout[x+1] = h_eq*RGB[1] + (1.0f-h_eq)*pin[x+1];
+            pout[x+2] = h_eq*RGB[2] + (1.0f-h_eq)*pin[x+2];
+          }
         }
       }
     }

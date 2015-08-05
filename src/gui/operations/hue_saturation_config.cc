@@ -90,6 +90,7 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   saturation2Slider( this, "saturation_eq", "Saturation (curve)", 0, -100, 100, 5, 10, 100),
   hueSlider( this, "hue", "Hue", 0, -180, 180, 0.1, 10, 1),
   hue2Slider( this, "hue_eq", "Hue (curve)", 0, -180, 180, 0.1, 10, 1),
+  mask_enable( this, "show_mask", _("show mask"), false ),
   hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 400, 150 ),
   hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
   hueLeq( this, "hue_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
@@ -101,7 +102,9 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   saturationLeq( this, "saturation_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
   contrastHeq( this, "contrast_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 400, 150 ),
   contrastSeq( this, "contrast_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
-  contrastLeq( this, "contrast_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 )
+  contrastLeq( this, "contrast_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
+  feather_enable( this, "feather_mask", _("feather mask"), false ),
+  featherRadiusSlider( this, "feather_radius", _("feather radius"), 1, 0, 100, 1, 5, 1)
 {
   controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( brightness2Slider, Gtk::PACK_SHRINK );
@@ -143,6 +146,14 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   //expander_vboxes[0].pack_start( saturation2Slider, Gtk::PACK_SHRINK );
   //expander_vboxes[0].pack_start( hue2Slider, Gtk::PACK_SHRINK );
   expander_vboxes[0].pack_start( curves_nb[0], Gtk::PACK_SHRINK );
+
+  padding1.set_size_request(20,-1);
+  feather_box.pack_start( feather_enable, Gtk::PACK_SHRINK );
+  feather_box.pack_start( padding1, Gtk::PACK_SHRINK );
+  feather_box.pack_start( featherRadiusSlider, Gtk::PACK_SHRINK );
+  expander_vboxes[0].pack_start( feather_box, Gtk::PACK_SHRINK );
+
+  expander_vboxes[0].pack_start( mask_enable, Gtk::PACK_SHRINK );
 
   controlsBox.pack_start( expanders[0][0], Gtk::PACK_SHRINK );
   /*
