@@ -30,7 +30,7 @@
 
 #include <fstream>
 
-#include <gexiv2-metadata.h>
+#include <gexiv2/gexiv2-metadata.h>
 
 #include "fileutils.hh"
 //#include "pf_mkstemp.hh"

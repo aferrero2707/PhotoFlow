@@ -28,7 +28,7 @@
  */
 #include <string.h>
 
-#include <gexiv2-metadata.h>
+#include <gexiv2/gexiv2-metadata.h>
 
 #include "../base/pf_mkstemp.hh"
 #include "raster_image.hh"

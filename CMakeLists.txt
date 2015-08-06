@@ -28,6 +28,8 @@ pkg_check_modules(EXIF REQUIRED libexif)
 #pkg_check_modules(EXIV2 REQUIRED exiv2)
 find_package (Exiv2)
 pkg_check_modules(GEXIV2 REQUIRED gexiv2)
+MESSAGE( STATUS "GEXIV2_INCLUDE_DIRS:         " ${GEXIV2_INCLUDE_DIRS} )
+MESSAGE( STATUS "GEXIV2_LIBRARY_DIRS:         " ${GEXIV2_LIBRARY_DIRS} )
 
 pkg_check_modules(LENSFUN lensfun)
 MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
