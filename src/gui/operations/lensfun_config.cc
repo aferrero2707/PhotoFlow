@@ -33,8 +33,8 @@
 #include "lensfun_config.hh"
 
 
-PF::LensFunConfigDialog::LensFunConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Optical corrections" )
+PF::LensFunConfigGUI::LensFunConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Optical corrections" )
 {
   label1.set_text( "Camera maker: " );
   hbox1.pack_start( label1 );
@@ -64,13 +64,13 @@ PF::LensFunConfigDialog::LensFunConfigDialog( PF::Layer* layer ):
 
   makerEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-			  &LensFunConfigDialog::on_maker_changed));
+			  &LensFunConfigGUI::on_maker_changed));
 }
 
 
-void PF::LensFunConfigDialog::do_update()
+void PF::LensFunConfigGUI::do_update()
 {
-  std::cout<<"LensFunConfigDialog::do_update() called"<<std::endl;
+  std::cout<<"LensFunConfigGUI::do_update() called"<<std::endl;
   if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
@@ -123,11 +123,11 @@ void PF::LensFunConfigDialog::do_update()
       }
     }
   }
-  OperationConfigDialog::do_update();
+  OperationConfigGUI::do_update();
 }
 
 
-void PF::LensFunConfigDialog::on_maker_changed()
+void PF::LensFunConfigGUI::on_maker_changed()
   {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&

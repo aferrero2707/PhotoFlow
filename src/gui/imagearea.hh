@@ -124,6 +124,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 
   bool display_merged;
   int active_layer;
+  int edited_layer;
 
 	float shrink_factor;
 
@@ -227,7 +228,18 @@ public:
 
   void sink( const VipsRect& area );
 
-  void set_active_layer( int id ) { 
+  void set_edited_layer( int id ) {
+    int old_id = edited_layer;
+    edited_layer = id;
+    if( old_id != edited_layer ) {
+      //update( NULL );
+      if( get_pipeline() && get_pipeline()->get_image() )
+        get_pipeline()->get_image()->update();
+    }
+  }
+  int get_edited_layer() { return edited_layer; }
+
+  void set_displayed_layer( int id ) {
     int old_id = active_layer;
     active_layer = id; 
     if( !display_merged && (old_id != active_layer) ) {

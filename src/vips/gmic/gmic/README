@@ -10,9 +10,9 @@
 
                       GREYC's Magic for Image Computing
 
-                       ( http://gmic.sourceforge.net/ )
+                             ( http://gmic.eu )
 
-                                    1.6.0.0
+                                    1.6.5.2_pre
 
 --------------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@
 
   A complete list of contributors is available on the project web page:
 
-                       http://gmic.sourceforge.net
+                           http://gmic.eu
 
 # Institution
 #-------------
@@ -128,7 +128,8 @@
 
   - Google+ group: https://plus.google.com/117441237982283011318
   - Flickr group: http://www.flickr.com/groups/gmic/discuss
-  - Reference page: http://gmic.sourceforge.net/reference.shtml
+  - Reference page: http://gmic.eu/reference.shtml
+  - Tutorial page: http://gmic.eu/tutorial
   - G'MIC wiki: http://sourceforge.net/p/gmic/wiki/Home/
   - FAQ: http://sourceforge.net/p/gmic/wiki/FAQ/
   - Forum: http://gimpchat.com/viewforum.php?f=28

@@ -67,6 +67,8 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
   set_type("convert_colorspace" );
+
+  set_default_name( _("colorspace conversion") );
 }
 
 

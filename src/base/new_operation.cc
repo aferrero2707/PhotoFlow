@@ -111,6 +111,10 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     processor = new_hue_saturation();
 
+  } else if( op_type == "hsl_mask" ) {
+
+    processor = new_hsl_mask();
+
   } else if( op_type == "curves" ) {
       
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
@@ -158,6 +162,9 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   } else if( op_type == "lensfun" ) {
     processor = new_lensfun();
+
+  } else if( op_type == "volume" ) {
+    processor = new_volume();
   }
 
   if( !processor ) {

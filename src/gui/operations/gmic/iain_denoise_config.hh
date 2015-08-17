@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicIainDenoiseConfigDialog: public OperationConfigDialog
+  class GmicIainDenoiseConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -56,7 +56,7 @@ namespace PF {
     Slider prop_sharpen_edges_slider;
        
   public:
-    GmicIainDenoiseConfigDialog( Layer* l );
+    GmicIainDenoiseConfigGUI( Layer* l );
     
     void open();
   };

@@ -35,7 +35,8 @@
 PF::SplineCurve::SplineCurve(): 
   PF::Curve(),
   ypp( NULL ),
-  ypp_size( 0 )
+  ypp_size( 0 ),
+  circular( false )
 {
   points_mutex = vips_g_mutex_new();
 #ifdef SPLINE_USE_STDVEC
@@ -158,6 +159,14 @@ bool PF::SplineCurve::set_point( unsigned int id, float& x, float& y )
   //if( (id<(points.size()-1)) && (x>=points[id+1].first) ) x = points[id].first;
   if( (id<(get_npoints()-1)) && (x>=points[id+1].first) ) x = points[id].first;
   points[id] = std::make_pair( x, y );
+  if( is_circular() && get_npoints() > 1 ) {
+    if( x==0 && points[get_npoints()-1].first==1 ) {
+      points[get_npoints()-1].second = points[id].second;
+    }
+    if( x==1 && points[0].first==0 ) {
+      points[0].second = points[id].second;
+    }
+  }
   update_spline();
   return true;
 }
@@ -168,6 +177,45 @@ void PF::SplineCurve::update_spline()
   //unsigned int N = points.size();
   unsigned int N = get_npoints();
   if( N < 2) return;
+
+  if( is_circular() ) {
+    bool overlap = false;
+    if( points[0].first == (points[N-1].first-1.0f) ) overlap = true;
+    if( overlap && (N < 3) ) {
+      points2 = points;
+    } else {
+      points2.clear();
+      if( overlap ) {
+        points2.push_back( points[N-3] );
+        points2.push_back( points[N-2] );
+      } else {
+        points2.push_back( points[N-2] );
+        points2.push_back( points[N-1] );
+      }
+      points2[0].first = points2[0].first - 1.0f;
+      points2[1].first = points2[1].first - 1.0f;
+      size_t max = points.size()-1;
+      //if( overlap ) max -= 1;
+      for( size_t i = 0; i <= max; i++ ) {
+        points2.push_back( points[i] );
+      }
+      if( overlap ) {
+        points2.push_back( points[1] );
+        points2.push_back( points[2] );
+      } else {
+        points2.push_back( points[0] );
+        points2.push_back( points[1] );
+      }
+      points2[points2.size()-2].first += 1.0f;
+      points2[points2.size()-1].first += 1.0f;
+      N = points2.size();
+    }
+  } else {
+    points2 = points;
+  }
+
+  N = points2.size();
+
   double* u = new double[N-1];
   if( ypp ) delete [] ypp;
   ypp = new double [N];
@@ -177,12 +225,12 @@ void PF::SplineCurve::update_spline()
   ypp[0] = u[0] = 0.0;	/* set lower boundary condition to "natural" */
   
   for (int i = 1; i < N - 1; ++i) {
-    double sig = (points[i].first - points[i - 1].first) / (points[i + 1].first - points[i - 1].first);
+    double sig = (points2[i].first - points2[i - 1].first) / (points2[i + 1].first - points2[i - 1].first);
     double p = sig * ypp[i - 1] + 2.0;
     ypp[i] = (sig - 1.0) / p;
-    u[i] = ((points[i + 1].second - points[i].second)
-	    / (points[i + 1].first - points[i].first) - (points[i].second - points[i - 1].second) / (points[i].first - points[i - 1].first));
-    u[i] = (6.0 * u[i] / (points[i + 1].first - points[i - 1].first) - sig * u[i - 1]) / p;
+    u[i] = ((points2[i + 1].second - points2[i].second)
+	    / (points2[i + 1].first - points2[i].first) - (points2[i].second - points2[i - 1].second) / (points2[i].first - points2[i - 1].first));
+    u[i] = (6.0 * u[i] / (points2[i + 1].first - points2[i - 1].first) - sig * u[i - 1]) / p;
   }
   
   ypp[N - 1] = 0.0;
@@ -199,13 +247,14 @@ void PF::SplineCurve::update_spline()
 float PF::SplineCurve::get_value( float x )
 {
   //int size = points.size();
-  //unsigned int N = points.size();
-  unsigned int N = get_npoints();
+  unsigned int N = points2.size();
+  //unsigned int N = get_npoints();
+  //if( is_circular() ) N += 2;
   //std::cout<<"size = "<<size<<std::endl;
   //return x;
 
-  if( x <= points[0].first ) return points[0].second;
-  if( x >= points[N-1].first ) return points[N-1].second;
+  if( x <= points2[0].first ) return points2[0].second;
+  if( x >= points2[N-1].first ) return points2[N-1].second;
   
   //std::cout<<"N = "<<N<<std::endl;
   // do a binary search for the right interval:
@@ -213,17 +262,17 @@ float PF::SplineCurve::get_value( float x )
   while (k_hi - k_lo > 1){
     int k = (k_hi + k_lo) / 2;
     //std::cout<<"  k = "<<k<<std::endl;
-    if (points[k].first > x)
+    if (points2[k].first > x)
       k_hi = k;
     else
       k_lo = k;
   }
   
-  std::pair<float,float> p_lo = points[k_lo];
-  std::pair<float,float> p_hi = points[k_hi];
+  std::pair<float,float> p_lo = points2[k_lo];
+  std::pair<float,float> p_hi = points2[k_hi];
   double h = p_hi.first - p_lo.first;
-  //std::cout<<"points.size()="<<points.size()<<"  h="<<"points["<<k_hi<<"].first - points["<<k_lo<<"].first = "<<h<<std::endl;
-//std::cout<<"  points[k_hi].second="<<points[k_hi].second<<"  points[k_lo].second="<<points[k_lo].second<<std::endl;
+  //std::cout<<"points2.size()="<<points2.size()<<"  h="<<"points2["<<k_hi<<"].first - points2["<<k_lo<<"].first = "<<h<<std::endl;
+//std::cout<<"  points2[k_hi].second="<<points2[k_hi].second<<"  points2[k_lo].second="<<points2[k_lo].second<<std::endl;
   // linear
   if( N == 2) {
     float result = p_lo.second + (x - p_lo.first) * ( p_hi.second - p_lo.second ) / h;
@@ -233,17 +282,17 @@ float PF::SplineCurve::get_value( float x )
   } else { // if (kind==Spline) {
     if( k_hi >= ypp_size )
       std::cout<<"k_lo="<<k_lo<<"  k_hi="<<k_hi<<"  ypp_size="<<ypp_size<<"  N="<<N<<std::endl;
-    double a = (points[k_hi].first - x) / h;
-    double b = (x - points[k_lo].first) / h;
-    double r1 = a*points[k_lo].second;
-    double r2 = b*points[k_hi].second;
+    double a = (points2[k_hi].first - x) / h;
+    double b = (x - points2[k_lo].first) / h;
+    double r1 = a*points2[k_lo].second;
+    double r2 = b*points2[k_hi].second;
     double r3 = (a*a*a - a)*ypp[k_lo];
     double r4 = (b*b*b - b)*ypp[k_hi];
     double r = r1 + r2 +(r3+r4)*(h*h)/6.0;
 /*
     double r =
-        a*points[k_lo].second +
-        b*points[k_hi].second +
+        a*points2[k_lo].second +
+        b*points2[k_hi].second +
         ((a*a*a - a)*ypp[k_lo] +
             (b*b*b - b)*ypp[k_hi]) *
             (h*h)/6.0;

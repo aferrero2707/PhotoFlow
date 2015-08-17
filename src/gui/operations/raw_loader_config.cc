@@ -32,8 +32,8 @@
 #include "raw_loader_config.hh"
 
 
-PF::RawLoaderConfigDialog::RawLoaderConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Open a RAW image" ),
+PF::RawLoaderConfigGUI::RawLoaderConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Open a RAW image" ),
   openButton(Gtk::Stock::OPEN)
 {
   label.set_text( "RAW file name:" );
@@ -46,13 +46,13 @@ PF::RawLoaderConfigDialog::RawLoaderConfigDialog( PF::Layer* layer ):
 
   fileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-			  &RawLoaderConfigDialog::on_filename_changed));
+			  &RawLoaderConfigGUI::on_filename_changed));
   openButton.signal_clicked().connect(sigc::mem_fun(*this,
-						    &RawLoaderConfigDialog::on_button_open_clicked) );
+						    &RawLoaderConfigGUI::on_button_open_clicked) );
 }
 
 
-void PF::RawLoaderConfigDialog::on_filename_changed()
+void PF::RawLoaderConfigGUI::on_filename_changed()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -71,7 +71,7 @@ void PF::RawLoaderConfigDialog::on_filename_changed()
 }
 
 
-void PF::RawLoaderConfigDialog::open()
+void PF::RawLoaderConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -84,16 +84,16 @@ void PF::RawLoaderConfigDialog::open()
       //contrastAdj.set_value( par->get_contrast() );
     }
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }
 
 
 
-void PF::RawLoaderConfigDialog::on_button_open_clicked()
+void PF::RawLoaderConfigGUI::on_button_open_clicked()
 {
   Gtk::FileChooserDialog dialog("Please choose a RAW file",
 				Gtk::FILE_CHOOSER_ACTION_OPEN);
-  dialog.set_transient_for(*this);
+  //dialog.set_transient_for(*this);
   
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);

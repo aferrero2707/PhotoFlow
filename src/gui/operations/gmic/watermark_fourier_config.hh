@@ -32,21 +32,21 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 #include "../../widgets/layerlist.hh"
 
 
 namespace PF {
 
-class GmicWatermarkFourierConfigDialog: public OperationConfigDialog
+class GmicWatermarkFourierConfigGUI: public OperationConfigGUI
 {
   Gtk::Button updateButton;
   TextBox textBox;
   Slider textsizeSlider;
 
 public:
-  GmicWatermarkFourierConfigDialog( Layer* l );
+  GmicWatermarkFourierConfigGUI( Layer* l );
 
   void on_update();
 };

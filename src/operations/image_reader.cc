@@ -77,8 +77,8 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   //std::cout<<"ImageReaderPar::build(): raster_image="<<(void*)raster_image<<std::endl;
-  if( raster_image ) std::cout<<"raster_image->get_nref(): "<<raster_image->get_nref()<<std::endl;
-  if( new_raster_image ) std::cout<<"new_raster_image->get_nref(): "<<new_raster_image->get_nref()<<std::endl;
+  //if( raster_image ) std::cout<<"raster_image->get_nref(): "<<raster_image->get_nref()<<std::endl;
+  //if( new_raster_image ) std::cout<<"new_raster_image->get_nref(): "<<new_raster_image->get_nref()<<std::endl;
 
   if( raster_image ) {
     raster_image->unref();

@@ -32,13 +32,13 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/sharpen.hh"
 
 
 namespace PF {
 
-  class SharpenConfigDialog: public OperationConfigDialog
+  class SharpenConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -52,7 +52,7 @@ namespace PF {
     Slider rlIterationsSlider;
 
   public:
-    SharpenConfigDialog( Layer* l );
+    SharpenConfigGUI( Layer* l );
     
     bool has_preview() { return true; }
 

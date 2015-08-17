@@ -41,6 +41,7 @@
 #include "photoflow.hh"
 #include "cachebuffer.hh"
 #include "exif_data.hh"
+#include "operation.hh"
 
 
 PF::CacheBuffer::CacheBuffer():
@@ -107,7 +108,7 @@ void PF::CacheBuffer::step()
     lseek( fd, offset, SEEK_SET );
     p = VIPS_REGION_ADDR( reg, tile_area.left, tile_area.top+y );
     ssize_t n = ::write( fd, p, VIPS_REGION_SIZEOF_LINE(reg) );
-    if( n != VIPS_REGION_SIZEOF_LINE(reg) )
+    if( n != (ssize_t)VIPS_REGION_SIZEOF_LINE(reg) )
       break;
     offset += VIPS_IMAGE_SIZEOF_LINE(image);
   }
@@ -217,7 +218,7 @@ void PF::CacheBuffer::write()
   }
   if( fd < 0 ) return;
 
-  std::cout<<"CacheBuffer::write(): saving image data into "<<filename<<std::endl;
+  std::cout<<"CacheBuffer::write(): saving image 0x"<<image<<" into "<<filename<<std::endl;
 
   int fail = vips_rawsave_fd( image, fd, NULL );
   if( fail ) {
@@ -227,44 +228,50 @@ void PF::CacheBuffer::write()
   close( fd );
 
 
-    completed = true;
-    void *profile_data;
-    size_t profile_length;
-    if( vips_image_get_blob( image, VIPS_META_ICC_NAME,
-                             &profile_data, &profile_length ) )
-      profile_data = NULL;
+  completed = true;
 
-    size_t blobsz;
-    void* image_data;
-    if( vips_image_get_blob( image, "raw_image_data",
-                             &image_data,
-                             &blobsz ) )
-      image_data = NULL;
+  /*
+  void *profile_data;
+  size_t profile_length;
+  if( vips_image_get_blob( image, VIPS_META_ICC_NAME,
+      &profile_data, &profile_length ) )
+    profile_data = NULL;
 
-    size_t exifsz;
-    void* exif_data;
-    if( vips_image_get_blob( image, PF_META_EXIF_NAME,
-        &exif_data,&exifsz ) ) {
-      exif_data = NULL;
-    }
+  size_t blobsz;
+  void* image_data;
+  if( vips_image_get_blob( image, "raw_image_data",
+      &image_data,
+      &blobsz ) )
+    image_data = NULL;
 
-    int width = image->Xsize;
-    int height = image->Ysize;
-    int size = (width>height) ? width : height;
-    int nbands = image->Bands;
+  size_t exifsz;
+  void* exif_data;
+  if( vips_image_get_blob( image, PF_META_EXIF_NAME,
+      &exif_data,&exifsz ) ) {
+    exif_data = NULL;
+  }
+  */
 
-    VipsImage* rawimg;
+  int width = image->Xsize;
+  int height = image->Ysize;
+  int size = (width>height) ? width : height;
+  int nbands = image->Bands;
 
-    vips_rawload( filename.c_str(), &rawimg, width, height,
-                  VIPS_IMAGE_SIZEOF_PEL( image ), NULL );
-    vips_copy( rawimg, &cached,
-         "format", image->BandFmt,
-         "bands", image->Bands,
-         "coding", image->Coding,
-         "interpretation", image->Type,
-         NULL );
-    PF_UNREF( rawimg, "CacheBuffer::step() completed" );
+  VipsImage* rawimg;
 
+  vips_rawload( filename.c_str(), &rawimg, width, height,
+      VIPS_IMAGE_SIZEOF_PEL( image ), NULL );
+  vips_copy( rawimg, &cached,
+      "format", image->BandFmt,
+      "bands", image->Bands,
+      "coding", image->Coding,
+      "interpretation", image->Type,
+      NULL );
+  PF_UNREF( rawimg, "CacheBuffer::step() completed" );
+
+  PF::vips_copy_metadata( image, cached );
+
+    /*
     if( profile_data ) {
       void* profile_data2 = malloc( profile_length );
       if( profile_data2 ) {
@@ -294,6 +301,7 @@ void PF::CacheBuffer::write()
             exif_data2, exifsz );
       }
     }
+    */
 
     pyramid.init( cached );
     std::cout<<"CacheBuffer: caching completed"<<std::endl;

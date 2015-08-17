@@ -171,13 +171,13 @@ void PF::ImagePyramid::update( const VipsRect& area )
     area_out.width = area_in.width/2 + 1;
     area_out.height = area_in.height/2 + 1;
 
-    unsigned int out_right = area_out.left + area_out.width - 1;
+    int out_right = area_out.left + area_out.width - 1;
     if( out_right >= out_width ) {
       area_out.width -= (out_right-out_width-1);
       out_right = area_out.left + area_out.width - 1;
     }
 
-    unsigned int out_bottom = area_out.top + area_out.height - 1;
+    int out_bottom = area_out.top + area_out.height - 1;
     if( out_bottom >= out_height ) {
       area_out.height -= (out_bottom-out_height-1);
       out_bottom = area_out.top + area_out.height - 1;
@@ -196,7 +196,7 @@ void PF::ImagePyramid::update( const VipsRect& area )
     area_in.width = area_out.width*2;
     area_in.height = area_out.height*2;
 
-    unsigned int x, x2, y, in_linesz = area_in.width*pelsz, out_linesz = area_out.width*pelsz;
+    int x, x2, y, in_linesz = area_in.width*pelsz, out_linesz = area_out.width*pelsz;
 
     unsigned char* buf_in = new unsigned char[in_linesz];
     if( !buf_in ) break;

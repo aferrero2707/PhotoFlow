@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicSmoothMedianConfigDialog: public OperationConfigDialog
+  class GmicSmoothMedianConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -46,7 +46,7 @@ namespace PF {
     Slider prop_threshold_slider;
        
   public:
-    GmicSmoothMedianConfigDialog( Layer* l );
+    GmicSmoothMedianConfigGUI( Layer* l );
     
     void open();
   };

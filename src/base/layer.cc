@@ -44,6 +44,7 @@ PF::Layer::Layer(int32_t i, bool c):
   dirty = true;
   modified_flag = true;
 
+  enabled = true;
   visible = true;
 
   normal = true;
@@ -162,9 +163,9 @@ void PF::Layer::remove_input(int32_t lid)
 bool PF::Layer::save( std::ostream& ostr, int level )
 {
   for(int i = 0; i < level; i++) ostr<<"  ";
-  ostr<<"<layer name=\""<<name<<"\" id=\""<<id<<"\" visible=\""<<visible<<"\" normal=\""<<normal<<"\" extra_inputs=\"";
+  ostr<<"<layer name=\""<<name<<"\" id=\""<<id<<"\" visible=\""<<enabled<<"\" normal=\""<<normal<<"\" extra_inputs=\"";
   int n;
-  for( int i=0, n=0; i < extra_inputs.size(); i++ ) {
+  for( size_t i=0, n=0; i < extra_inputs.size(); i++ ) {
     int32_t id = extra_inputs[i].first.first;
     int32_t imgid = extra_inputs[i].first.second;
     if( id < 0 ) continue;

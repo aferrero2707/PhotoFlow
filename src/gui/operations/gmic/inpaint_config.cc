@@ -33,8 +33,8 @@
 #include "inpaint_config.hh"
 
 
-PF::GmicInpaintConfigDialog::GmicInpaintConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Inpaint (G'MIC)"  ),
+PF::GmicInpaintConfigGUI::GmicInpaintConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Inpaint (G'MIC)"  ),
   updateButton( "Update" ),
   patch_size( this, "patch_size", "Patch size: ", 7, 1, 64, 1, 5, 1 ),
   lookup_size( this, "lookup_size", "Lookup size: ", 16, 1, 32, 1, 5, 1 ),
@@ -59,14 +59,14 @@ PF::GmicInpaintConfigDialog::GmicInpaintConfigDialog( PF::Layer* layer ):
   controlsBox.pack_start( blend_scales );
   controlsBox.pack_start( allow_outer_blending );
   
-  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicInpaintConfigDialog::on_update) );
+  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicInpaintConfigGUI::on_update) );
   
   add_widget( controlsBox );
 }
 
 
 
-void PF::GmicInpaintConfigDialog::on_update()
+void PF::GmicInpaintConfigGUI::on_update()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -82,13 +82,13 @@ void PF::GmicInpaintConfigDialog::on_update()
 }
 
 
-void PF::GmicInpaintConfigDialog::open()
+void PF::GmicInpaintConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }
 
 
-void PF::GmicInpaintConfigDialog::start_stroke()
+void PF::GmicInpaintConfigGUI::start_stroke()
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -129,7 +129,7 @@ void PF::GmicInpaintConfigDialog::start_stroke()
 }
 
 
-void PF::GmicInpaintConfigDialog::draw_point( double x, double y )
+void PF::GmicInpaintConfigGUI::draw_point( double x, double y )
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -143,7 +143,7 @@ void PF::GmicInpaintConfigDialog::draw_point( double x, double y )
   if( !par ) return;
   
   VipsRect update = {0,0,0,0};
-  //std::cout<<"GmicInpaintConfigDialog::draw_point( "<<x<<", "<<y<<" )"<<std::endl;
+  //std::cout<<"GmicInpaintConfigGUI::draw_point( "<<x<<", "<<y<<" )"<<std::endl;
   par->draw_point( x, y, update );
 
   if( (update.width < 1) || (update.height < 1) )  
@@ -155,7 +155,7 @@ void PF::GmicInpaintConfigDialog::draw_point( double x, double y )
   if( !image ) return;
 
 #ifndef NDEBUG
-	std::cout<<"PF::GmicInpaintConfigDialog::draw_point(): npipelines="<<image->get_npipelines()<<std::endl;
+	std::cout<<"PF::GmicInpaintConfigGUI::draw_point(): npipelines="<<image->get_npipelines()<<std::endl;
 #endif
   for( unsigned int vi = 0; vi < image->get_npipelines(); vi++ ) {
     PF::Pipeline* pipeline = image->get_pipeline( vi );
@@ -188,7 +188,7 @@ void PF::GmicInpaintConfigDialog::draw_point( double x, double y )
 				request.area.width = update.width;
 				request.area.height = update.height;
 #ifndef NDEBUG
-				std::cout<<"PF::GmicInpaintConfigDialog::draw_point(): submitting rebuild request with area."<<std::endl;
+				std::cout<<"PF::GmicInpaintConfigGUI::draw_point(): submitting rebuild request with area."<<std::endl;
 #endif
 				PF::ImageProcessor::Instance().submit_request( request );
       }
@@ -198,7 +198,7 @@ void PF::GmicInpaintConfigDialog::draw_point( double x, double y )
 	//exit(1);
 
 	/*
-	std::cout<<"GmicInpaintConfigDialog::draw_point("<<x<<","<<y<<"): area = "
+	std::cout<<"GmicInpaintConfigGUI::draw_point("<<x<<","<<y<<"): area = "
 					 <<update.width<<","<<update.height<<"+"<<update.left<<","<<update.top<<std::endl;
 	image->update( &update );
 	//image->update_all();
@@ -207,7 +207,7 @@ void PF::GmicInpaintConfigDialog::draw_point( double x, double y )
 }
 
 
-bool PF::GmicInpaintConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::GmicInpaintConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   double lx = x, ly = y, lw = 1, lh = 1;
@@ -218,7 +218,7 @@ bool PF::GmicInpaintConfigDialog::pointer_press_event( int button, double x, dou
 }
 
 
-bool PF::GmicInpaintConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::GmicInpaintConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   //draw_point( x, y );
@@ -226,11 +226,11 @@ bool PF::GmicInpaintConfigDialog::pointer_release_event( int button, double x, d
 }
 
 
-bool PF::GmicInpaintConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::GmicInpaintConfigGUI::pointer_motion_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
 #ifndef NDEBUG
-  std::cout<<"PF::GmicInpaintConfigDialog::pointer_motion_event() called."<<std::endl;
+  std::cout<<"PF::GmicInpaintConfigGUI::pointer_motion_event() called."<<std::endl;
 #endif
   double lx = x, ly = y, lw = 1, lh = 1;
   screen2layer( lx, ly, lw, lh );

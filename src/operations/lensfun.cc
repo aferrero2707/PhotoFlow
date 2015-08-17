@@ -45,6 +45,8 @@ PF::LensFunPar::LensFunPar():
   ldb->Load ();
 #endif
   set_type("lensfun" );
+
+  set_default_name( _("optical corrections") );
 }
 
 VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first, 

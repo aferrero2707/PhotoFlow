@@ -33,8 +33,8 @@
 #include "draw_config.hh"
 
 
-PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Draw" ),
+PF::DrawConfigGUI::DrawConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Draw" ),
   pen_color_label("Pen color:              "),
   bgd_color_label("Background color: "),
 #ifdef GTKMM_2
@@ -72,18 +72,18 @@ PF::DrawConfigDialog::DrawConfigDialog( PF::Layer* layer ):
   */  
 
   pen_color_button.signal_color_set().
-    connect( sigc::mem_fun(this, &PF::DrawConfigDialog::on_pen_color_changed) );
+    connect( sigc::mem_fun(this, &PF::DrawConfigGUI::on_pen_color_changed) );
   bgd_color_button.signal_color_set().
-    connect( sigc::mem_fun(this, &PF::DrawConfigDialog::on_bgd_color_changed) );
+    connect( sigc::mem_fun(this, &PF::DrawConfigGUI::on_bgd_color_changed) );
 
-  undoButton.signal_clicked().connect( sigc::mem_fun(this, &DrawConfigDialog::on_undo) );
+  undoButton.signal_clicked().connect( sigc::mem_fun(this, &DrawConfigGUI::on_undo) );
 
   add_widget( controlsBox );
 }
 
 
 
-void PF::DrawConfigDialog::open()
+void PF::DrawConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -102,11 +102,11 @@ void PF::DrawConfigDialog::open()
     pen_size.init();
     pen_opacity.init();
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }
 
 
-void PF::DrawConfigDialog::on_pen_color_changed()
+void PF::DrawConfigGUI::on_pen_color_changed()
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -139,7 +139,7 @@ void PF::DrawConfigDialog::on_pen_color_changed()
 }
 
 
-void PF::DrawConfigDialog::on_bgd_color_changed()
+void PF::DrawConfigGUI::on_bgd_color_changed()
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -169,11 +169,11 @@ void PF::DrawConfigDialog::on_bgd_color_changed()
 
   if( layer->get_image() )
     layer->get_image()->update();
-	std::cout<<"DrawConfigDialog::on_bgd_color_changed(): image updated"<<std::endl;
+	std::cout<<"DrawConfigGUI::on_bgd_color_changed(): image updated"<<std::endl;
 }
 
 
-void PF::DrawConfigDialog::on_undo()
+void PF::DrawConfigGUI::on_undo()
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -202,7 +202,7 @@ void PF::DrawConfigDialog::on_undo()
 }
 
 
-void PF::DrawConfigDialog::start_stroke()
+void PF::DrawConfigGUI::start_stroke()
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -243,7 +243,7 @@ void PF::DrawConfigDialog::start_stroke()
 }
 
 
-void PF::DrawConfigDialog::draw_point( double x, double y )
+void PF::DrawConfigGUI::draw_point( double x, double y )
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -259,11 +259,11 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
   VipsRect update = {0,0,0,0};
   double lx = x, ly = y, lw = 1, lh = 1;
   screen2layer( lx, ly, lw, lh );
-  //std::cout<<"DrawConfigDialog::draw_point( "<<lx<<", "<<ly<<" )  x="<<x<<" y="<<y<<std::endl;
+  //std::cout<<"DrawConfigGUI::draw_point( "<<lx<<", "<<ly<<" )  x="<<x<<" y="<<y<<std::endl;
   par->draw_point( lx, ly, update );
   //double ix = lx, iy = ly, iw = 1, ih = 1;
   //layer2image( ix, iy, iw, ih );
-  //std::cout<<"DrawConfigDialog::draw_point(): ix="<<ix<<"  iy="<<iy<<std::endl;
+  //std::cout<<"DrawConfigGUI::draw_point(): ix="<<ix<<"  iy="<<iy<<std::endl;
 
   if( (update.width < 1) || (update.height < 1) )  
     return;
@@ -274,7 +274,7 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
   if( !image ) return;
 
 #ifndef NDEBUG
-	std::cout<<"PF::DrawConfigDialog::draw_point(): npipelines="<<image->get_npipelines()<<std::endl;
+	std::cout<<"PF::DrawConfigGUI::draw_point(): npipelines="<<image->get_npipelines()<<std::endl;
 #endif
   for( unsigned int vi = 0; vi < image->get_npipelines(); vi++ ) {
     PF::Pipeline* pipeline = image->get_pipeline( vi );
@@ -312,7 +312,7 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 				request.area.width = update.width;
 				request.area.height = update.height;
 #ifndef NDEBUG
-				std::cout<<"PF::DrawConfigDialog::draw_point(): submitting rebuild request with area."<<std::endl;
+				std::cout<<"PF::DrawConfigGUI::draw_point(): submitting rebuild request with area."<<std::endl;
 #endif
 				PF::ImageProcessor::Instance().submit_request( request );
       }
@@ -322,7 +322,7 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 	//exit(1);
 
 	/*
-	std::cout<<"DrawConfigDialog::draw_point("<<x<<","<<y<<"): area = "
+	std::cout<<"DrawConfigGUI::draw_point("<<x<<","<<y<<"): area = "
 					 <<update.width<<","<<update.height<<"+"<<update.left<<","<<update.top<<std::endl;
 	image->update( &update );
 	//image->update_all();
@@ -331,7 +331,7 @@ void PF::DrawConfigDialog::draw_point( double x, double y )
 }
 
 
-bool PF::DrawConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::DrawConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   start_stroke();
@@ -340,7 +340,7 @@ bool PF::DrawConfigDialog::pointer_press_event( int button, double x, double y, 
 }
 
 
-bool PF::DrawConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::DrawConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   //draw_point( x, y );
@@ -348,12 +348,12 @@ bool PF::DrawConfigDialog::pointer_release_event( int button, double x, double y
 }
 
 
-bool PF::DrawConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::DrawConfigGUI::pointer_motion_event( int button, double x, double y, int mod_key )
 {
   mouse_x = x; mouse_y = y;
   if( button != 1 ) return true;
 #ifndef NDEBUG
-  std::cout<<"PF::DrawConfigDialog::pointer_motion_event() called."<<std::endl;
+  std::cout<<"PF::DrawConfigGUI::pointer_motion_event() called."<<std::endl;
 #endif
   draw_point( x, y );
   return true;
@@ -362,9 +362,10 @@ bool PF::DrawConfigDialog::pointer_motion_event( int button, double x, double y,
 
 
 
-bool PF::DrawConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+bool PF::DrawConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
                                            float scale, int xoffset, int yoffset )
 {
+  /*
 #if defined(_WIN32) || defined(WIN32)
   if( !is_mapped() )
     return false;
@@ -372,7 +373,7 @@ bool PF::DrawConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf
   if( !get_mapped() )
     return false;
 #endif
-
+*/
   if( !get_layer() ) return false;
   if( !get_layer()->get_image() ) return false;
   if( !get_layer()->get_processor() ) return false;

@@ -55,6 +55,8 @@ PF::SharpenPar::SharpenPar():
 #endif
 
   set_type("sharpen" );
+
+  set_default_name( _("sharpening") );
 }
 
 

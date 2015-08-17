@@ -55,16 +55,17 @@ class BlendColor<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>:
 {
   int pos, ch;
   double temp_top;
-  double rgb[3];
+  double irgb[3], rgb[3];
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     // RGB values of the bottom layer
-    double ired = (double(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-    double igreen = (double(bottom[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-    double iblue = (double(bottom[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    // RGB values of the bottom layer
+    irgb[0] = (double(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    irgb[1] = (double(bottom[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    irgb[2] = (double(bottom[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
     // Luminance value of the bottom layer
-    double lumi = PF::luminance( ired, igreen, iblue );
+    double lumi = PF::luminance( irgb[0], irgb[1], irgb[2] );
 
     // RGB values of the top layer
     double ored = (double(top[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
@@ -78,7 +79,7 @@ public:
 
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      out[pos] = (T)(( (rgb[ch]*opacity)+(rgb[ch]*(1.0f-opacity)) )*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
+      out[pos] = (T)(( (rgb[ch]*opacity)+(irgb[ch]*(1.0f-opacity)) )*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
     }
   }
 };
@@ -112,13 +113,13 @@ class BlendColor<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false>:
   double temp_top;
   double rgb[3];
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
     for( ch=CHMIN; ch<=0; ch++, pos++ ) 
       out[pos] = bottom[pos];
     for( ; ch<=CHMAX; ch++, pos++ ) 
-      out[pos] = top[pos];
+      out[pos] = static_cast<T>( opacity*top[pos]+(1.0f-opacity)*bottom[pos] );
   }
 };
 

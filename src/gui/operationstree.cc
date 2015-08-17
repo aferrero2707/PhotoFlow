@@ -243,14 +243,14 @@ void PF::OperationsTree::add_op( Glib::ustring name, const std::string nik)
 
 
 PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
-      Gtk::Dialog("New Layer",true),
+      Gtk::Dialog( _("Add New Layer"),true),
       image( img ),
       layer_widget( lw )
 {
   set_default_size(300,300);
 
-  add_button("OK",1);
-  add_button("Cancel",0);
+  add_button( _("OK"), 1 );
+  add_button( _("Cancel"), 0 );
 
   signal_response().connect( sigc::mem_fun(*this,
       &OperationsTreeDialog::on_button_clicked) );
@@ -298,19 +298,30 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_conv.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
   //op_conv.get_tree().add_op( "Lab conversion", "convert2lab" );
 
-  op_color.get_tree().add_op( "Uniform Fill", "uniform");
-  op_color.get_tree().add_op( "Gradient", "gradient");
+  op_color.get_tree().add_op( "Curves", "curves" );
+  op_color.get_tree().add_op( "B/C/S/H Adjustment", "hue_saturation" );
   op_color.get_tree().add_op( "Invert", "invert" );
   op_color.get_tree().add_op( "Desaturate", "desaturate" );
-  op_color.get_tree().add_op( "Brightness/Contrast", "brightness_contrast" );
-  op_color.get_tree().add_op( "Hue/Saturation", "hue_saturation" );
-  op_color.get_tree().add_op( "Curves", "curves" );
+  //op_color.get_tree().add_op( "Brightness/Contrast", "brightness_contrast" );
+  op_color.get_tree().add_op( "Uniform Fill", "uniform");
+  op_color.get_tree().add_op( "Gradient", "gradient");
   op_color.get_tree().add_op( "Channel Mixer", "channel_mixer" );
+  op_color.get_tree().add_op( "H/S/L Mask", "hsl_mask" );
   op_color.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
+  op_color.get_tree().add_op( "Emulate film [color slide]", "gmic_emulate_film_colorslide" );
+  op_color.get_tree().add_op( "Emulate film [B&W]", "gmic_emulate_film_bw" );
+  op_color.get_tree().add_op( "Emulate film [instant consumer]", "gmic_emulate_film_instant_consumer" );
+  op_color.get_tree().add_op( "Emulate film [instant pro]", "gmic_emulate_film_instant_pro" );
+  op_color.get_tree().add_op( "Emulate film [negative color]", "gmic_emulate_film_negative_color" );
+  op_color.get_tree().add_op( "Emulate film [negative new]", "gmic_emulate_film_negative_new" );
+  op_color.get_tree().add_op( "Emulate film [negative old]", "gmic_emulate_film_negative_old" );
+  op_color.get_tree().add_op( "Emulate film [print films]", "gmic_emulate_film_print_films" );
+  op_color.get_tree().add_op( "Emulate film [various]", "gmic_emulate_film_various" );
 
   op_detail.get_tree().add_op( "Gaussian blur", "gaussblur" );
   op_detail.get_tree().add_op( "Noise reduction", "denoise" );
   op_detail.get_tree().add_op( "Sharpen", "sharpen" );
+  op_detail.get_tree().add_op( "Volume", "volume" );
   op_detail.get_tree().add_op( "Multi-level decomposition", "gmic_split_details" );
 
   op_geom.get_tree().add_op( "Crop image", "crop" );
@@ -338,15 +349,6 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.get_tree().add_op( "Smooth [total variation]", "gmic_smooth_total_variation" );
   op_gmic.get_tree().add_op( "Smooth [wavelets]", "gmic_smooth_wavelets_haar" );
   op_gmic.get_tree().add_op( "Smooth [guided]", "gmic_smooth_guided" );
-  op_gmic.get_tree().add_op( "Emulate film [color slide]", "gmic_emulate_film_colorslide" );
-  op_gmic.get_tree().add_op( "Emulate film [B&W]", "gmic_emulate_film_bw" );
-  op_gmic.get_tree().add_op( "Emulate film [instant consumer]", "gmic_emulate_film_instant_consumer" );
-  op_gmic.get_tree().add_op( "Emulate film [instant pro]", "gmic_emulate_film_instant_pro" );
-  op_gmic.get_tree().add_op( "Emulate film [negative color]", "gmic_emulate_film_negative_color" );
-  op_gmic.get_tree().add_op( "Emulate film [negative new]", "gmic_emulate_film_negative_new" );
-  op_gmic.get_tree().add_op( "Emulate film [negative old]", "gmic_emulate_film_negative_old" );
-  op_gmic.get_tree().add_op( "Emulate film [print films]", "gmic_emulate_film_print_films" );
-  op_gmic.get_tree().add_op( "Emulate film [various]", "gmic_emulate_film_various" );
   op_gmic.get_tree().add_op( "Tone mapping", "gmic_tone_mapping" );
   op_gmic.get_tree().add_op( "Transfer colors [advanced]", "gmic_transfer_colors" );
 #endif
@@ -464,13 +466,17 @@ void PF::OperationsTreeDialog::add_layer()
   PF::LayerManager& layer_manager = image->get_layer_manager();
   PF::Layer* layer = layer_manager.new_layer();
   if( !layer ) return;
-  layer->set_name( "New Layer" );
+
 
   std::string op_type = (*iter)[columns.col_nickname];
   PF::ProcessorBase* processor = 
       PF::PhotoFlow::Instance().new_operation( op_type.c_str(), layer );
   if( !processor || !processor->get_par() ) return;
   PF::OperationConfigUI* ui = dynamic_cast<PF::OperationConfigUI*>( processor->get_par()->get_config_ui() );
+  if( processor->get_par()->get_default_name().empty() )
+    layer->set_name( _("New Layer") );
+  else
+    layer->set_name( processor->get_par()->get_default_name() );
 
   /*
   if( (*iter)[columns.col_nickname] == "imageread" ) { 
@@ -530,7 +536,7 @@ void PF::OperationsTreeDialog::add_layer()
     //layer_manager.get_layers().push_back( layer );
     //layer_manager.modified();
     if( ui ) {
-      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if(dialog) {
         if( dialog ) {
           //processor->get_par()->set_config_ui( dialog );

@@ -32,8 +32,8 @@
 #include "smooth_wavelets_haar_config.hh"
 
 
-PF::GmicSmoothWaveletsHaarConfigDialog::GmicSmoothWaveletsHaarConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Smooth [wavelets] (G'MIC)"  ),
+PF::GmicSmoothWaveletsHaarConfigGUI::GmicSmoothWaveletsHaarConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Smooth [wavelets] (G'MIC)"  ),
   //iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_threshold_slider( this, "threshold", "threshold", 1, 0, 10, .10, 1.0, 1),
   prop_iterations_slider( this, "iterations", "iterations", 10, 1, 32, 1, 5, 1),
@@ -49,7 +49,7 @@ PF::GmicSmoothWaveletsHaarConfigDialog::GmicSmoothWaveletsHaarConfigDialog( PF::
 
 
 
-void PF::GmicSmoothWaveletsHaarConfigDialog::open()
+void PF::GmicSmoothWaveletsHaarConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

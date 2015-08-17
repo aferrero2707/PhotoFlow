@@ -32,8 +32,8 @@
 #include "gaussblur_config.hh"
 
 
-PF::GaussBlurConfigDialog::GaussBlurConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gaussian Blur" ),
+PF::GaussBlurConfigGUI::GaussBlurConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Gaussian Blur" ),
 	modeSelector( this, "preview_mode", "Preview mode: ", PF_BLUR_FAST ),
   radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1)
 {
@@ -45,12 +45,12 @@ PF::GaussBlurConfigDialog::GaussBlurConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::GaussBlurConfigDialog::open()
+void PF::GaussBlurConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     radiusSlider.init();
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

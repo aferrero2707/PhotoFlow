@@ -67,6 +67,9 @@ namespace PF
 
     PF::CacheBuffer* get_cache_buffer( rendermode_t mode, std::list<Layer*>& list );
 
+    // Walk through the given layer chain and set the "visible" flag
+    void update_visible( std::list<Layer*>& list, bool visible );
+
     // Walk through the given layer chain and set the "dirty" flag of all layers starting from "layer_id" to "true"
     void update_dirty( std::list<Layer*>& list, bool& dirty );
 

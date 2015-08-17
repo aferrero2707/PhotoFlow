@@ -30,38 +30,45 @@
 #include "curveeditor.hh"
 
 
-static const int curve_area_size = 300;
-static const int curve_area_margin = 5;
+//static const int curve_area_size = 300;
+//static const int curve_area_margin = 5;
 
 
-PF::CurveEditor::CurveEditor( OperationConfigDialog* dialog, std::string pname ):
+PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
+    CurveArea* ca, float _xmin, float _xmax, float _ymin, float _ymax,
+    int width, int height, int border_size ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname ),
   xlabel( "in: " ),
   ylabel( "out: " ),
+  xmin( _xmin ), xmax( _xmax ), ymin( _ymin ), ymax( _ymax ),
 #ifdef GTKMM_2
-  xadjustment( 100, 0, 100, 1, 10, 0),
-  yadjustment( 100, 0, 100, 1, 10, 0),
+  xadjustment( xmax, xmin, xmax, 1, 10, 0),
+  yadjustment( ymax, ymin, ymax, 1, 10, 0),
   xspinButton(xadjustment),
   yspinButton(yadjustment),
 #endif
+  curve_area_width( width ),
+  curve_area_height( height ),
+  curve_area( ca ),
   grabbed_point( -1 ),
   button_pressed( false ),
   inhibit_value_changed( false )
 {
 #ifdef GTKMM_3
-  xadjustment = Gtk::Adjustment::create( 100, 0, 100, 1, 10, 0 );
-  yadjustment = Gtk::Adjustment::create( 100, 0, 100, 1, 10, 0 );
+  xadjustment = Gtk::Adjustment::create( xmax, xmin, xmax, 1, 10, 0 );
+  yadjustment = Gtk::Adjustment::create( ymax, ymin, ymax, 1, 10, 0 );
   xspinButton.set_adjustment( xadjustment );
   yspinButton.set_adjustment( yadjustment );
 #endif
-  curveArea.set_size_request( curve_area_size+curve_area_margin*2, 
-                              curve_area_size+curve_area_margin*2 );
+  curve_area->set_size_request( curve_area_width+border_size*2,
+                              curve_area_height+border_size*2 );
+  curve_area->set_border_size( border_size );
 
   xspinButton.set_digits( 1 );
   yspinButton.set_digits( 1 );
 
-  box.pack_start( curveArea );
+  box.pack_start( *curve_area );
   spin_buttons_box.pack_start( xlabel, Gtk::PACK_SHRINK );
   spin_buttons_box.pack_start( xspinButton, Gtk::PACK_SHRINK );
   spin_buttons_box.pack_start( ylabel, Gtk::PACK_SHRINK );
@@ -70,7 +77,7 @@ PF::CurveEditor::CurveEditor( OperationConfigDialog* dialog, std::string pname )
 
   pack_start( box, Gtk::PACK_SHRINK );
 
-  curveArea.signal_event().connect( sigc::mem_fun(*this, &PF::CurveEditor::handle_curve_events) );
+  curve_area->signal_event().connect( sigc::mem_fun(*this, &PF::CurveEditor::handle_curve_events) );
   // adjustment.signal_value_changed().
   //   connect(sigc::mem_fun(*this,
   // 			  &PFWidget::changed));
@@ -89,30 +96,30 @@ PF::CurveEditor::CurveEditor( OperationConfigDialog* dialog, std::string pname )
 
 void PF::CurveEditor::update_point()
 {
-  //if( !curveArea.get_curve() ) return;
+  //if( !curve_area->get_curve() ) return;
   if( inhibit_value_changed ) return;
   std::cout<<"PF::CurveEditor::update_point() called."<<std::endl;
-  int ipt = curveArea.get_selected_point();
-  if( (ipt >= 0) && (ipt < curveArea.get_curve().get_npoints()) ) {
+  int ipt = curve_area->get_selected_point();
+  if( (ipt >= 0) && (ipt < curve_area->get_curve().get_npoints()) ) {
 #ifdef GTKMM_2
-    float px = xadjustment.get_value()/100;
-    float py = yadjustment.get_value()/100;
+    float px = (xadjustment.get_value()-xmin)/(xmax-xmin);
+    float py = (yadjustment.get_value()-ymin)/(ymax-ymin);
 #endif
 #ifdef GTKMM_3
-    float px = xadjustment->get_value()/100;
-    float py = yadjustment->get_value()/100;
+    float px = (xadjustment->get_value()-xmin)/(xmax-xmin);
+    float py = (yadjustment->get_value()-ymin)/(ymax-ymin);
 #endif
-    if( curveArea.get_curve().set_point( ipt, px, py ) ) {
-      curveArea.get_curve().update_spline();
-      curveArea.queue_draw();
+    if( curve_area->get_curve().set_point( ipt, px, py ) ) {
+      curve_area->get_curve().update_spline();
+      curve_area->queue_draw();
       inhibit_value_changed = true;
 #ifdef GTKMM_2
-      xadjustment.set_value( px*100 );
-      yadjustment.set_value( py*100 );
+      xadjustment.set_value( px*(xmax-xmin)+xmin );
+      yadjustment.set_value( py*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-      xadjustment->set_value( px*100 );
-      yadjustment->set_value( py*100 );
+      xadjustment->set_value( px*(xmax-xmin)+xmin );
+      yadjustment->set_value( py*(ymax-ymin)+ymin );
 #endif
       inhibit_value_changed = false;
       changed();
@@ -127,16 +134,16 @@ void PF::CurveEditor::get_value()
   if( !get_prop() ) return;
   PF::Property<PF::SplineCurve>* prop = dynamic_cast< PF::Property<PF::SplineCurve>* >( get_prop() );
   if( !prop ) return;
-  curveArea.set_curve( prop->get() );
-  curveArea.set_selected_point( 0 );
+  curve_area->set_curve( prop->get() );
+  curve_area->set_selected_point( 0 );
   inhibit_value_changed = true;
 #ifdef GTKMM_2
-  xadjustment.set_value( prop->get().get_point(0).first*100 );
-  yadjustment.set_value( prop->get().get_point(0).second*100 );
+  xadjustment.set_value( prop->get().get_point(0).first*(xmax-xmin)+xmin );
+  yadjustment.set_value( prop->get().get_point(0).second*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-  xadjustment->set_value( prop->get().get_point(0).first*100 );
-  yadjustment->set_value( prop->get().get_point(0).second*100 );
+  xadjustment->set_value( prop->get().get_point(0).first*(xmax-xmin)+xmin );
+  yadjustment->set_value( prop->get().get_point(0).second*(ymax-ymin)+ymin );
 #endif
   inhibit_value_changed = false;
   //std::cout<<"CurveEditor::get_value() called"<<std::endl;
@@ -148,28 +155,28 @@ void PF::CurveEditor::set_value()
   if( !get_prop() ) return;
   PF::Property<PF::SplineCurve>* prop = dynamic_cast< PF::Property<PF::SplineCurve>* >( get_prop() );
   if( !prop ) return;
-  prop->set( curveArea.get_curve() );
+  prop->set( curve_area->get_curve() );
 }
 
 
 
 void PF::CurveEditor::add_point( float xpt, float ycurve )
 {
-  SplineCurve& curve = curveArea.get_curve();
+  SplineCurve& curve = curve_area->get_curve();
   int ipt = curve.add_point( xpt, ycurve );
   if( ipt >= 0 ) {
-    curveArea.set_selected_point( ipt ); 
+    curve_area->set_selected_point( ipt );
     grabbed_point = ipt;
     curve.update_spline();
-    curveArea.queue_draw();
+    curve_area->queue_draw();
     inhibit_value_changed = true;
 #ifdef GTKMM_2
-    xadjustment.set_value( xpt*100 );
-    yadjustment.set_value( ycurve*100 );
+    xadjustment.set_value( xpt*(xmax-xmin)+xmin );
+    yadjustment.set_value( ycurve*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-    xadjustment->set_value( xpt*100 );
-    yadjustment->set_value( ycurve*100 );
+    xadjustment->set_value( xpt*(xmax-xmin)+xmin );
+    yadjustment->set_value( ycurve*(ymax-ymin)+ymin );
 #endif
     inhibit_value_changed = false;
   }
@@ -178,11 +185,11 @@ void PF::CurveEditor::add_point( float xpt, float ycurve )
 
 bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 {
-  Gtk::Allocation allocation = curveArea.get_allocation();
+  Gtk::Allocation allocation = curve_area->get_allocation();
   const int width = allocation.get_width();
   const int height = allocation.get_height();
 
-  SplineCurve& curve = curveArea.get_curve();
+  SplineCurve& curve = curve_area->get_curve();
   
   //if( !curve ) return false;
   //curve.lock();
@@ -199,7 +206,10 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       
       // Look for a point close to the mouse click
       double xpt = double(event->button.x-1)/(width-3);
-      double ypt = double(width-event->button.y-1)/(width-3);
+      double ypt = double(height-event->button.y-1)/(height-3);
+      //#ifndef NDEBUG
+              std::cout<<"  xpt="<<xpt<<"  ypt="<<ypt<<std::endl;
+      //#endif
       //std::vector< std::pair<float,float> > points = curve.get_points();
       //std::pair<float,float>* points = curve.get_points();
       bool found = false;
@@ -210,7 +220,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 #ifndef NDEBUG
         std::cout<<"  point #"<<i<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
 #endif
-        if( (dx<0.02) && (dy<0.02) ) {
+        if( (dx<0.05) && (dy<0.05) ) {
           ipt = i;
           found = true;
           break;
@@ -219,35 +229,35 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       if( found ) {
         if( event->button.button == 1 ) {
           // We left-clicked on one existing point, so we grab it
-          curveArea.set_selected_point( ipt ); 
+          curve_area->set_selected_point( ipt );
           grabbed_point = ipt;
 #ifndef NDEBUG
           std::cout<<"  point #"<<ipt<<" grabbed"<<std::endl;
 #endif
           inhibit_value_changed = true;
 #ifdef GTKMM_2
-          xadjustment.set_value( curve.get_point(ipt).first*100 );
-          yadjustment.set_value( curve.get_point(ipt).second*100 );
+          xadjustment.set_value( curve.get_point(ipt).first*(xmax-xmin)+xmin );
+          yadjustment.set_value( curve.get_point(ipt).second*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-          xadjustment->set_value( curve.get_point(ipt).first*100 );
-          yadjustment->set_value( curve.get_point(ipt).second*100 );
+          xadjustment->set_value( curve.get_point(ipt).first*(xmax-xmin)+xmin );
+          yadjustment->set_value( curve.get_point(ipt).second*(ymax-ymin)+ymin );
 #endif
           inhibit_value_changed = false;
-          curveArea.queue_draw();
+          curve_area->queue_draw();
         } else if( event->button.button == 3 ) {
           curve.remove_point( ipt );
           curve.update_spline();
-          curveArea.set_selected_point( 0 );
-          curveArea.queue_draw();
+          curve_area->set_selected_point( 0 );
+          curve_area->queue_draw();
           inhibit_value_changed = true;
 #ifdef GTKMM_2
-          xadjustment.set_value( curve.get_points()[0].first*100 );
-          yadjustment.set_value( curve.get_points()[0].second*100 );
+          xadjustment.set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
+          yadjustment.set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-          xadjustment->set_value( curve.get_points()[0].first*100 );
-          yadjustment->set_value( curve.get_points()[0].second*100 );
+          xadjustment->set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
+          yadjustment->set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
 #endif
           inhibit_value_changed = false;
           changed();
@@ -258,7 +268,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           // it is on the curve and if we have to add one more point
           double ycurve = curve.get_value( xpt );
           double dy = fabs( ypt - ycurve);
-          if( dy<0.02 ) {
+          if( dy<0.05 ) {
             add_point( xpt, ycurve );
           }
         }
@@ -284,7 +294,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       int tx, ty;
       Gdk::ModifierType mod_type;
       if (event->motion.is_hint) {
-        curveArea.get_window()->get_pointer (tx, ty, mod_type);
+        curve_area->get_window()->get_pointer (tx, ty, mod_type);
       }
       else {
         tx = int(event->button.x);
@@ -294,19 +304,19 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       float px = double(tx-1)/(width-3);
-      float py = double(width-ty-1)/(width-3);
+      float py = double(height-ty-1)/(height-3);
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if( curve.set_point( grabbed_point, px, py ) ) {
         curve.update_spline();
-        curveArea.queue_draw();
+        curve_area->queue_draw();
         inhibit_value_changed = true;
 #ifdef GTKMM_2
-        xadjustment.set_value( px*100 );
-        yadjustment.set_value( py*100 );
+        xadjustment.set_value( px*(xmax-xmin)+xmin );
+        yadjustment.set_value( py*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-        xadjustment->set_value( px*100 );
-        yadjustment->set_value( py*100 );
+        xadjustment->set_value( px*(xmax-xmin)+xmin );
+        yadjustment->set_value( py*(ymax-ymin)+ymin );
 #endif
         inhibit_value_changed = false;
       }
@@ -322,8 +332,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 
 
 
-PF::CurveArea::CurveArea(): 
-  selected_point( -1 )
+PF::CurveArea::CurveArea(): border_size( 0 ), selected_point( -1 )
 {
   this->add_events(Gdk::BUTTON_PRESS_MASK);
   this->add_events(Gdk::BUTTON_RELEASE_MASK);
@@ -346,10 +355,10 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
     return true;
 
   Gtk::Allocation allocation = get_allocation();
-  const int width = allocation.get_width() - curve_area_margin*2;
-  const int height = allocation.get_height() - curve_area_margin*2;
-  const int x0 = curve_area_margin;
-  const int y0 = curve_area_margin;
+  const int width = allocation.get_width() - border_size*2;
+  const int height = allocation.get_height() - border_size*2;
+  const int x0 = border_size;
+  const int y0 = border_size;
 
   Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
 
@@ -364,10 +373,11 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
 #ifdef GTKMM_3
   bool PF::CurveArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   {
-    const int width = 300;//allocation.get_width() - curve_area_margin*2;
-    const int height = 300;//allocation.get_height() - curve_area_margin*2;
-    const int x0 = curve_area_margin;
-    const int y0 = curve_area_margin;
+    Gtk::Allocation allocation = get_allocation();
+    const int width = allocation.get_width() - border_size*2;
+    const int height = allocation.get_height() - border_size*2;
+    const int x0 = border_size;
+    const int y0 = border_size;
 #endif
 
     cr->save();
@@ -375,46 +385,17 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
     cr->paint();
     cr->restore();
 
-    // draw f(x)=x line
+    // Draw outer rectangle
     cr->set_antialias( Cairo::ANTIALIAS_GRAY );
     cr->set_source_rgb( 0.9, 0.9, 0.9 );
     cr->set_line_width( 0.5 );
     cr->rectangle( double(0.5+x0-1), double(0.5+y0-1), double(width+1), double(height+1) );
     cr->stroke ();
 
-    std::vector<double> ds (2);
-    ds[0] = 4;
-    ds[1] = 4;
-    cr->set_dash (ds, 0);
-    cr->move_to( double(0.5+x0+width/4), double(y0) );
-    cr->rel_line_to (double(0), double(height) );
-    cr->move_to( double(0.5+x0+width/2), double(y0) );
-    cr->rel_line_to (double(0), double(height) );
-    cr->move_to( double(0.5+x0+width*3/4), double(y0) );
-    cr->rel_line_to (double(0), double(height) );
-    cr->move_to( double(x0), double(0.5+y0+height/4) );
-    cr->rel_line_to (double(width), double(0) );
-    cr->move_to( double(x0), double(0.5+y0+height/2) );
-    cr->rel_line_to (double(width), double(0) );
-    cr->move_to( double(x0), double(0.5+y0+height*3/4) );
-    cr->rel_line_to (double(width), double(0) );
-    cr->stroke ();
-    cr->unset_dash ();
-    
-    ds[0] = 2;
-    ds[1] = 4;
-    cr->set_source_rgb( 0.5, 0.5, 0.5 );
-    cr->set_dash (ds, 0);
-    for( int i = 1; i <= 7; i += 2 ) {
-      cr->move_to( double(0.5+x0+width*i/8), double(y0) );
-      cr->rel_line_to (double(0), double(height) );
-      cr->move_to( double(x0), double(0.5+y0+height*i/8) );
-      cr->rel_line_to (double(width), double(0) );
-    }
-    cr->stroke ();
-    cr->unset_dash ();
-    
 
+    draw_background( cr );
+
+    // Draw curve
     if( /*curve*/ true ) {
       curve.lock();
       cr->set_source_rgb( 0.9, 0.9, 0.9 );
@@ -429,9 +410,9 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
 
       // draw curve
       cr->set_source_rgb( 0.9, 0.9, 0.9 );
-      cr->move_to( double(vec[0].first)*width+x0, double(1.0f-vec[0].second)*width+y0 );
+      cr->move_to( double(vec[0].first)*width+x0, double(1.0f-vec[0].second)*height+y0 );
       for (unsigned int i=1; i<vec.size(); i++) {
-        cr->line_to( double(vec[i].first)*width+x0, double(1.0f-vec[i].second)*width+y0 );
+        cr->line_to( double(vec[i].first)*width+x0, double(1.0f-vec[i].second)*height+y0 );
       }
       cr->stroke ();
 
@@ -456,6 +437,48 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
 
 
 
+  void PF::CurveArea::draw_background(const Cairo::RefPtr<Cairo::Context>& cr)
+  {
+    Gtk::Allocation allocation = get_allocation();
+    const int width = allocation.get_width() - border_size*2;
+    const int height = allocation.get_height() - border_size*2;
+    const int x0 = border_size;
+    const int y0 = border_size;
+
+    // Draw grid
+    cr->set_source_rgb( 0.9, 0.9, 0.9 );
+    std::vector<double> ds (2);
+    ds[0] = 4;
+    ds[1] = 4;
+    cr->set_dash (ds, 0);
+    cr->move_to( double(0.5+x0+width/4), double(y0) );
+    cr->rel_line_to (double(0), double(height) );
+    cr->move_to( double(0.5+x0+width/2), double(y0) );
+    cr->rel_line_to (double(0), double(height) );
+    cr->move_to( double(0.5+x0+width*3/4), double(y0) );
+    cr->rel_line_to (double(0), double(height) );
+    cr->move_to( double(x0), double(0.5+y0+height/4) );
+    cr->rel_line_to (double(width), double(0) );
+    cr->move_to( double(x0), double(0.5+y0+height/2) );
+    cr->rel_line_to (double(width), double(0) );
+    cr->move_to( double(x0), double(0.5+y0+height*3/4) );
+    cr->rel_line_to (double(width), double(0) );
+    cr->stroke ();
+    cr->unset_dash ();
+
+    ds[0] = 2;
+    ds[1] = 4;
+    cr->set_source_rgb( 0.5, 0.5, 0.5 );
+    cr->set_dash (ds, 0);
+    for( int i = 1; i <= 7; i += 2 ) {
+      cr->move_to( double(0.5+x0+width*i/8), double(y0) );
+      cr->rel_line_to (double(0), double(height) );
+      cr->move_to( double(x0), double(0.5+y0+height*i/8) );
+      cr->rel_line_to (double(width), double(0) );
+    }
+    cr->stroke ();
+    cr->unset_dash ();
+  }
 
 
 

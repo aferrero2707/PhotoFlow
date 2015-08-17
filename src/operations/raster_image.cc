@@ -27,14 +27,17 @@
 
  */
 #include <string.h>
+
+#include <gexiv2/gexiv2-metadata.h>
+
 #include "../base/pf_mkstemp.hh"
 #include "raster_image.hh"
 
 
 
 PF::RasterImage::RasterImage( const std::string f ):
-	nref(1), file_name( f ),
-  image( NULL )
+nref(1), file_name( f ),
+image( NULL )
 {
   if( file_name.empty() ) return;
   // Create VipsImage from given file
@@ -47,11 +50,11 @@ PF::RasterImage::RasterImage( const std::string f ):
     std::cout<<"RasterImage::RasterImage(): Failed to load "<<file_name<<std::endl;
     return;
   }
-  
-//#ifndef NDEBUG
+
+#ifndef NDEBUG
   std::cout<<"RasterImage::RasterImage(): # of bands="<<image->Bands<<std::endl;
   std::cout<<"RasterImage::RasterImage(): type="<<image->Type<<std::endl;
-//#endif
+#endif
 
   int out_nbands = 0;
   if( (convert_colorspace(image->Type) == PF_COLORSPACE_GRAYSCALE) &&
@@ -71,31 +74,31 @@ PF::RasterImage::RasterImage( const std::string f ):
     out_nbands = 4;
   }
 
-  //#ifndef NDEBUG
-    std::cout<<"RasterImage::RasterImage(): out_nbands="<<out_nbands<<std::endl;
-  //#endif
+#ifndef NDEBUG
+  std::cout<<"RasterImage::RasterImage(): out_nbands="<<out_nbands<<std::endl;
+#endif
   if( out_nbands > 0 ) {
     VipsImage* out;
     if( vips_extract_band( image, &out, 0, "n", out_nbands, NULL ) ) {
       std::cout<<"RasterImage::RasterImage(): vips_extract_band() failed"<<std::endl;
       return;
     }
-    //#ifndef NDEBUG
-      std::cout<<"RasterImage::RasterImage(): # of output bands="<<out->Bands<<std::endl;
-    //#endif
+#ifndef NDEBUG
+    std::cout<<"RasterImage::RasterImage(): # of output bands="<<out->Bands<<std::endl;
+#endif
 
     PF_UNREF( image, "RasterImage::RasterImage(): image unref" );
     vips_image_init_fields( out,
-                            image->Xsize, image->Ysize, 
-                            out_nbands, image->BandFmt,
-                            image->Coding,
-                            image->Type,
-                            1.0, 1.0);
+        image->Xsize, image->Ysize,
+        out_nbands, image->BandFmt,
+        image->Coding,
+        image->Type,
+        1.0, 1.0);
     image = out;
   }
-  //#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"RasterImage::RasterImage(): # of output bands="<<image->Bands<<std::endl;
-  //#endif
+#endif
 
   // We make a copy of the original image to make sure that custom metadata is not deleted
   VipsImage* image_copy;
@@ -107,14 +110,22 @@ PF::RasterImage::RasterImage( const std::string f ):
   PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_copy()." );
   image = image_copy;
 
-  // We read part of the EXIF data and store it in the image as a custom blob
+  // We read the EXIF data and store it in the image as a custom blob
+  GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
+  gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name.c_str(), NULL);
+  if( gexiv2_success )
+    std::cout<<"RasterImage::RasterImage(): setting gexiv2-data blob"<<std::endl;
+    vips_image_set_blob( image, "gexiv2-data",
+        (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
+        sizeof(GExiv2Metadata) );
+
   PF::exif_read( &exif_data, file_name.c_str() );
   void* buf = malloc( sizeof(PF::exif_data_t) );
   if( !buf ) return;
   memcpy( buf, &exif_data, sizeof(PF::exif_data_t) );
   vips_image_set_blob( image, PF_META_EXIF_NAME,
-           (VipsCallbackFn) PF::exif_free, buf,
-           sizeof(PF::exif_data_t) );
+      (VipsCallbackFn) PF::exif_free, buf,
+      sizeof(PF::exif_data_t) );
 
 #ifndef NDEBUG
   print_exif();
@@ -139,7 +150,7 @@ PF::RasterImage::RasterImage( const std::string f ):
 PF::RasterImage::~RasterImage()
 {
   if( image ) PF_UNREF( image, "RasterImage::~RasterImage() image" );
-	std::cout<<"RasterImage::~RasterImage() called."<<std::endl;
+  std::cout<<"RasterImage::~RasterImage() called."<<std::endl;
 }
 
 
@@ -153,7 +164,7 @@ VipsImage* PF::RasterImage::get_image(unsigned int& level)
   } else std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<")"<<std::endl;
 #endif
 
-/*
+  /*
 #ifdef DO_WARNINGS
 #warning "RasterImage::get_image(): refreshing of exif metadata needed. This is not normal!"
 #endif
@@ -170,13 +181,13 @@ VipsImage* PF::RasterImage::get_image(unsigned int& level)
  if( type ) std::cout<<"RasterImage::get_image(): exif_custom_data found in image("<<image<<") after set_blob"<<std::endl;
  else std::cout<<"RasterImage::get_image(): exif_custom_data not found in image("<<image<<") after set_blob"<<std::endl;
 #endif
-*/
-/*
+   */
+  /*
   if( level == 0 ) {
     PF_REF( image, "RasterImage()::get_image(): level 0 ref");
     return image;
   }
-*/
+   */
   PF::PyramidLevel* plevel = pyramid.get_level( level );
   if( plevel ) {
     return plevel->image;
@@ -188,9 +199,9 @@ VipsImage* PF::RasterImage::get_image(unsigned int& level)
 void PF::RasterImage::print_exif(  PF::exif_data_t* data )
 {
   std::cout<<"RasterImage: (data)"<<std::endl
-        <<"      camera maker: "<<data->exif_maker<<std::endl
-        <<"      model: "<<data->exif_model<<std::endl
-        <<"      lens: "<<data->exif_lens<<std::endl;
+      <<"      camera maker: "<<data->exif_maker<<std::endl
+      <<"      model: "<<data->exif_model<<std::endl
+      <<"      lens: "<<data->exif_lens<<std::endl;
 }
 
 void PF::RasterImage::print_exif()

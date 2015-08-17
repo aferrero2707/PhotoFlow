@@ -38,12 +38,13 @@ namespace PF {
 
   class CheckBox: public Gtk::HBox, public PFWidget
   {
+    Gtk::HBox hbox;
     Gtk::Label label;
     Gtk::CheckButton check;
 
   public:
-    CheckBox(OperationConfigDialog* dialog, std::string pname, std::string l, int val);
-    CheckBox(OperationConfigDialog* dialog, ProcessorBase* processor, std::string pname, std::string l, int val);
+    CheckBox(OperationConfigGUI* dialog, std::string pname, std::string l, int val);
+    CheckBox(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val);
 
     ~CheckBox() {}
 

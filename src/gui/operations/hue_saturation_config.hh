@@ -32,14 +32,14 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 //#include "../widgets/outmode_slider.hh"
-#include "../../operations/brightness_contrast.hh"
+#include "../widgets/curveeditor.hh"
 
 
 namespace PF {
 
-  class HueSaturationConfigDialog: public OperationConfigDialog
+  class HueSaturationConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
 
@@ -49,15 +49,42 @@ namespace PF {
 
   Gtk::Alignment padding1, padding2, padding3, padding4;
 
-  Slider hueSlider, saturationSlider;
+  Slider brightnessSlider, brightness2Slider, contrastSlider, contrast2Slider;
+  Slider hueSlider, hue2Slider, saturationSlider, saturation2Slider;
 
-  //Gtk::HBox outputModeBox;
-  //OutModeSlider outputModeSlider;
+  CheckBox mask_enable;
+
+  Gtk::HSeparator sep1, sep2, sep3, sep4;
+
+  Gtk::VBox hueHeq_box, hueSeq_box, hueLeq_box;
+  CurveEditor hueHeq, hueSeq, hueLeq;
+  CheckBox hueHeq_enable, hueSeq_enable, hueLeq_enable;
+  Gtk::HBox hueHeq_enable_box, hueSeq_enable_box, hueLeq_enable_box;
+  Gtk::Alignment hueHeq_enable_padding, hueSeq_enable_padding, hueLeq_enable_padding;
+
+  CurveEditor saturationHeq, saturationSeq, saturationLeq;
+  CurveEditor contrastHeq, contrastSeq, contrastLeq;
+
+  Gtk::VBox adjustment_box[3];
+  Gtk::Notebook adjustments_nb, curves_nb[3];
+
+  Gtk::Expander expanders[3][4];
+  Gtk::Alignment expander_paddings[3][4];
+  Gtk::HBox expander_hboxes[3][4];
+  Gtk::VBox expander_vboxes[3];
+
+  Gtk::HBox feather_box;
+  CheckBox feather_enable;
+  Slider featherRadiusSlider;
 
 public:
-  HueSaturationConfigDialog( Layer* l );
+  HueSaturationConfigGUI( Layer* l );
 
   bool has_preview() { return true; }
+
+  bool pointer_press_event( int button, double x, double y, int mod_key );
+  bool pointer_release_event( int button, double x, double y, int mod_key );
+  bool pointer_motion_event( int button, double x, double y, int mod_key );
 };
 
 }

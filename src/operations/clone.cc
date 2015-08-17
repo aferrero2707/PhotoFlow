@@ -59,6 +59,8 @@ PF::ClonePar::ClonePar():
   desaturate = PF::new_desaturate();
 
   set_type( "clone" );
+
+  set_default_name( _("layer clone") );
 }
 
 
@@ -509,10 +511,10 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
       // The target colorspace is greyscale, therefore we either pick one channel from the source image
       // or we apply the appropriate conversion to grayscale
       clone_channel ch = (clone_channel)source_channel.get_enum_value().first;
-      std::cout<<"ClonePar::build(): source_channel="<<ch<<std::endl;
+      //std::cout<<"ClonePar::build(): source_channel="<<ch<<std::endl;
       if( ch==PF::CLONE_CHANNEL_GREY ) {
         unsigned int level2 = level;
-        std::cout<<"ClonePar::build(): calling grey2rgb()"<<std::endl;
+        //std::cout<<"ClonePar::build(): calling grey2rgb()"<<std::endl;
         out = grey2rgb( srcimg, level2 );
       }
       if( ch==PF::CLONE_CHANNEL_RGB ||

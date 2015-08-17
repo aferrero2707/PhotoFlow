@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class DrawConfigDialog: public OperationConfigDialog
+  class DrawConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
@@ -63,7 +63,7 @@ namespace PF {
   double mouse_x, mouse_y;
 
 public:
-  DrawConfigDialog( Layer* l );
+  DrawConfigGUI( Layer* l );
 
   void open();
 

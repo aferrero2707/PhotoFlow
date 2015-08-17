@@ -46,7 +46,7 @@ OpParBase(),
   prop_value_precision("value_precision",this,2),
   prop_interpolation("interpolation", this, 0, "NEAREST_NEIGHBOR", "Nearest neighbor"),
 prop_fast_approximation("fast_approximation",this,1),
-  prop_padding("padding",this,1)
+  prop_padding("padding",this,24)
 {	
   gmic = PF::new_gmic();
   prop_interpolation.add_enum_value(1, "LINEAR", "Linear"),

@@ -65,6 +65,8 @@ namespace PF
       gradient_type.add_enum_value(GRADIENT_HORIZONTAL,"horizontal","Horizontal");
       gradient_type.add_enum_value(GRADIENT_RADIAL,"radial","Radial");
       set_type( "gradient" );
+
+      set_default_name( _("gradient") );
     }
 
     gradient_type_t get_gradient_type() { 

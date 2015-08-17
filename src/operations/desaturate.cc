@@ -34,11 +34,11 @@
 
 PF::DesaturatePar::DesaturatePar(): 
   OpParBase(),
-  method( "method", this, PF::DESAT_LUMINOSITY, "DESAT_LUMINOSITY", "Luminosity" )
+  method( "method", this, PF::DESAT_LUMINOSITY, "DESAT_LUMINOSITY", _("Luminosity") )
 {
-  method.add_enum_value( PF::DESAT_LIGHTNESS, "DESAT_LIGHTNESS", "Lightness" );
-  method.add_enum_value( PF::DESAT_AVERAGE, "DESAT_AVERAGE", "Average" );
-  method.add_enum_value( PF::DESAT_LAB, "DESAT_LAB", "Lab L channel" );
+  method.add_enum_value( PF::DESAT_LIGHTNESS, "DESAT_LIGHTNESS", _("Lightness") );
+  method.add_enum_value( PF::DESAT_AVERAGE, "DESAT_AVERAGE", _("Average") );
+  method.add_enum_value( PF::DESAT_LAB, "DESAT_LAB", _("Lab L channel") );
 
   proc_luminosity = PF::new_desaturate_luminosity();
   proc_lightness = PF::new_desaturate_lightness();
@@ -46,6 +46,8 @@ PF::DesaturatePar::DesaturatePar():
   convert2lab = PF::new_operation( "convert2lab", NULL );
   convert_cs = PF::new_convert_colorspace();
   set_type( "desaturate" );
+
+  set_default_name( _("desaturate") );
 }
 
 

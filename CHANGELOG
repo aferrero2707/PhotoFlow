@@ -1,4 +1,77 @@
 =========================================
+Version 0.1.6
+
+- Improved selection of curve points
+- The curve points for the generation of the mask for the the B/C/S/H (Brightness/Contrast/Saturation/Hue) tool 
+  can now be added by ctrl-clicking on the preview area.
+- Added feathering of B/C/S/H mask
+- Added H/S/L mask tool. The generated grayscale image is equivalent to the mask of the B/C/S/H tool, 
+  however the advantage is that it can be used as a generic layer mask to be associated to other tools
+  (like curves, blurs, etc...)
+- Improved gaussian blur filter:
+  - added memory caching at the filter input (improves performance significantly)
+  - blur method is now the same for preview and rendering, and can be choosen from configuration dialog
+  - blur method is fixed to "accurate" for radii below 5 pixels
+  - blur method defaults to "fast" (sii) for radii larger than 5 pixels
+- Modified sinkscreen_pf.c to allow for parallel processing of dirty tiles (one thread for each available CPU core).
+  This improves the responsiveness of the preview area on multi-core machines.
+- Input EXIF/XMP/IPTC metadata are now saved to the exported TIFF and JPG images, using GExiv2.
+  Starting from this version, GExiv2 is therefore needed to compile PhotoFlow
+- Added default layer names for several tools (instead of the generic "New Layer")
+- Icons for the layer masks now represent the actual status of the mask:
+  - white if mask is empty
+  - a gradient if the mask contains one or more layers
+  - a crossed gradient if the mask is not empty, but disabled
+- Updated French transaltions
+
+G'MIC:
+- Added optional in-memory tile caching for G'MIC operations (one cache for each iteration)
+- Improved G'MIC bilateral smoothing (or "surface blur" filter):
+  - added padding parameter based on spatial variance (scaled to actual zoom level)
+  - "value variance" is now independent of zoom level (was incorrectly scaled together with the spatial variance)
+  - enabled tile caching
+- Fixed multi-threaded processing of G'MIC filters under OSX 
+  (by protecting all sscanf calls with a global mutex)
+- The film processing presets have been moved from the "G'MIC" to the "color" category
+
+=========================================
+Version 0.1.5
+
+- Added new "Brightness/Contrast/Saturation/Hue Adjustment" tool, which replaces the previous "Hue/Saturation Adjustment"
+- Added "Volume" tool (similar to "Clarity", i.e. local contrast targeting the mid-tones), inspired by ...
+- LibRAW is now compiled as a separate library (like in darktable)
+- Updated darktable code to version 1.6.7
+- Updated G'MIC code to version 1.6.5.0
+
+=========================================
+Version 0.1.4
+
+- Fixed bug in update of layer's "visible" flag
+
+=========================================
+Version 0.1.3
+
+- Fixed opacity blending of "Color" mode in RGB and Lab colorspaces
+- Fixed opacity blending of "Luminosity" mode in Lab colorspace
+- Fixed filling of layer list of clone tool: for clone layers inserted
+  in layer masks, the parent layer was incorrectly included in the list,
+  leading to a possible unresolvable circular dependency between 
+  the clone layer and its source. Now the parent layer is not included
+  anymore in the list of possible clone sources.
+- original "visible" flag of layers renamed to "enabled", and added a new "visible"
+  flag to indicate if a given layer is either directly hidden or indirectly hidden
+  because some of its parents are hidden.
+  The "enabled" flag now indicates if the layer is directly hidden.
+- Removed fatal assertion on the validity of the output image from layer extra inputs.
+  Now if the image is invalid a NULL pointer is simply added to the list of extra inputs,
+  without causing a program crash. Nevertheless, a notification mechanism should be
+  introduced to inform the user of the abnormal situation.
+- Fixed corruption of RAW image metadata at zoom levels below 100%
+- Fixed bug in the image preview at program startup
+- Fixed several clang compilation warnings
+
+
+=========================================
 Version 0.1.2
 
 - Added "invert" parameter to gradient tool (to reverse the direction of the gradient)

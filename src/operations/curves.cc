@@ -71,6 +71,8 @@ PF::CurvesPar::CurvesPar():
 
   //L_curve.get().add_point( 0.25, 0.10 );
   //L_curve.get().add_point( 0.75, 0.90 );
+
+  set_default_name( _("curves") );
 }
 
 

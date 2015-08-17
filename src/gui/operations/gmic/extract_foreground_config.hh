@@ -34,14 +34,14 @@
 
 #include "../../../operations/gmic/extract_foreground.hh"
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 #include "../../widgets/layerlist.hh"
 
 
 namespace PF {
 
-  class GmicExtractForegroundConfigDialog: public OperationConfigDialog
+  class GmicExtractForegroundConfigGUI: public OperationConfigGUI
   {
     Gtk::Button updateButton;
     Gtk::RadioButton editPointsButton, showMaskButton, showBlendButton;
@@ -52,18 +52,18 @@ namespace PF {
     GmicExtractForegroundPar* get_par();
        
   public:
-    GmicExtractForegroundConfigDialog( Layer* l );
+    GmicExtractForegroundConfigGUI( Layer* l );
     
     void do_update()
     {
       layer_list.update_model();
-      OperationConfigDialog::do_update();
+      OperationConfigGUI::do_update();
     }
 
     void init()
     {
       layer_list.update_model();
-      OperationConfigDialog::init();
+      OperationConfigGUI::init();
     }
 
     void on_update();

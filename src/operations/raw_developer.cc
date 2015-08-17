@@ -64,6 +64,8 @@ PF::RawDeveloperPar::RawDeveloperPar():
   map_properties( raw_output->get_par()->get_properties() );
 
   set_type("raw_developer" );
+
+  set_default_name( _("RAW developer") );
 }
 
 

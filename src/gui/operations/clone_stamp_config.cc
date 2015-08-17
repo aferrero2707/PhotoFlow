@@ -33,8 +33,8 @@
 #include "clone_stamp_config.hh"
 
 
-PF::CloneStampConfigDialog::CloneStampConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "CloneStamp" ),
+PF::CloneStampConfigGUI::CloneStampConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "CloneStamp" ),
   stamp_size( this, "stamp_size", "Stamp size: ", 5, 0, 1000000, 1, 10, 1),
   stamp_opacity( this, "stamp_opacity", "Stamp opacity: ", 100, 0, 100, 0.1, 1, 100),
   stamp_smoothness( this, "stamp_smoothness", "Stamp smoothness: ", 100, 0, 100, 0.1, 1, 100),
@@ -46,24 +46,24 @@ PF::CloneStampConfigDialog::CloneStampConfigDialog( PF::Layer* layer ):
   controlsBox.pack_start( stamp_opacity, Gtk::PACK_SHRINK );
   controlsBox.pack_start( stamp_smoothness, Gtk::PACK_SHRINK );
 
-  undoButton.signal_clicked().connect( sigc::mem_fun(this, &CloneStampConfigDialog::on_undo) );
+  undoButton.signal_clicked().connect( sigc::mem_fun(this, &CloneStampConfigGUI::on_undo) );
 
   add_widget( controlsBox );
 }
 
 
 
-void PF::CloneStampConfigDialog::open()
+void PF::CloneStampConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }
 
 
-void PF::CloneStampConfigDialog::on_undo()
+void PF::CloneStampConfigGUI::on_undo()
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -97,7 +97,7 @@ void PF::CloneStampConfigDialog::on_undo()
 }
 
 
-void PF::CloneStampConfigDialog::start_stroke( double x, double y )
+void PF::CloneStampConfigGUI::start_stroke( double x, double y )
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -118,7 +118,7 @@ void PF::CloneStampConfigDialog::start_stroke( double x, double y )
   // The source point needs to be set before we can do anything...
   if( !srcpt_ready ) return;
 
-  //std::cout<<"CloneStampConfigDialog::start_stroke(): srcpt_changed="<<srcpt_changed<<std::endl;
+  //std::cout<<"CloneStampConfigGUI::start_stroke(): srcpt_changed="<<srcpt_changed<<std::endl;
   if( srcpt_changed ) {
     // A new source point was defined, so we need to start a new strokes group
     srcpt_dx = x-srcpt_col;
@@ -155,7 +155,7 @@ void PF::CloneStampConfigDialog::start_stroke( double x, double y )
 }
 
 
-void PF::CloneStampConfigDialog::draw_point( double x, double y )
+void PF::CloneStampConfigGUI::draw_point( double x, double y )
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
@@ -177,7 +177,7 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
   if( (update.width < 1) || (update.height < 1) )  
     return;
 #ifndef NDEBUG
-  std::cout<<"CloneStampConfigDialog::draw_point(): area="<<update.width<<","<<update.height
+  std::cout<<"CloneStampConfigGUI::draw_point(): area="<<update.width<<","<<update.height
            <<"+"<<update.left<<"+"<<update.top<<std::endl;
 #endif
   // Then we loop over all the operations associated to the 
@@ -186,7 +186,7 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
   if( !image ) return;
 
 #ifndef NDEBUG
-	std::cout<<"PF::CloneStampConfigDialog::draw_point(): npipelines="<<image->get_npipelines()<<std::endl;
+	std::cout<<"PF::CloneStampConfigGUI::draw_point(): npipelines="<<image->get_npipelines()<<std::endl;
 #endif
   for( unsigned int vi = 0; vi < image->get_npipelines(); vi++ ) {
     PF::Pipeline* pipeline = image->get_pipeline( vi );
@@ -219,7 +219,7 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
 				request.area.width = update.width;
 				request.area.height = update.height;
 #ifndef NDEBUG
-				std::cout<<"PF::CloneStampConfigDialog::draw_point(): submitting image update request with area."<<std::endl;
+				std::cout<<"PF::CloneStampConfigGUI::draw_point(): submitting image update request with area."<<std::endl;
 #endif
 				PF::ImageProcessor::Instance().submit_request( request );
       }
@@ -229,7 +229,7 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
 	//exit(1);
 
 	/*
-	std::cout<<"CloneStampConfigDialog::draw_point("<<x<<","<<y<<"): area = "
+	std::cout<<"CloneStampConfigGUI::draw_point("<<x<<","<<y<<"): area = "
 					 <<update.width<<","<<update.height<<"+"<<update.left<<","<<update.top<<std::endl;
 	image->update( &update );
 	//image->update_all();
@@ -238,7 +238,7 @@ void PF::CloneStampConfigDialog::draw_point( double x, double y )
 }
 
 
-bool PF::CloneStampConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::CloneStampConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return false;
@@ -256,7 +256,7 @@ bool PF::CloneStampConfigDialog::pointer_press_event( int button, double x, doub
 }
 
 
-bool PF::CloneStampConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::CloneStampConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) {
@@ -274,13 +274,13 @@ bool PF::CloneStampConfigDialog::pointer_release_event( int button, double x, do
 }
 
 
-bool PF::CloneStampConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::CloneStampConfigGUI::pointer_motion_event( int button, double x, double y, int mod_key )
 {
   mouse_x = x; mouse_y = y;
   if( button != 1 ) return true;
   if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return true;
 #ifndef NDEBUG
-  std::cout<<"PF::CloneStampConfigDialog::pointer_motion_event() called."<<std::endl;
+  std::cout<<"PF::CloneStampConfigGUI::pointer_motion_event() called."<<std::endl;
 #endif
   double lx = x, ly = y, lw = 1, lh = 1;
   screen2layer( lx, ly, lw, lh );
@@ -291,9 +291,10 @@ bool PF::CloneStampConfigDialog::pointer_motion_event( int button, double x, dou
 
 
 
-bool PF::CloneStampConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+bool PF::CloneStampConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
                                            float scale, int xoffset, int yoffset )
 {
+  /*
 #if defined(_WIN32) || defined(WIN32)
   if( !is_mapped() )
     return false;
@@ -301,8 +302,8 @@ bool PF::CloneStampConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffe
   if( !get_mapped() )
     return false;
 #endif
-
-  //std::cout<<"CloneStampConfigDialog::modify_preview() called"<<std::endl;
+*/
+  //std::cout<<"CloneStampConfigGUI::modify_preview() called"<<std::endl;
 
   if( !get_layer() ) return false;
   if( !get_layer()->get_image() ) return false;

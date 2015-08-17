@@ -30,8 +30,8 @@
 #include "gradient_config.hh"
 
 
-PF::GradientConfigDialog::GradientConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gradient tool" ),
+PF::GradientConfigGUI::GradientConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Gradient tool" ),
   typeSelector( this, "gradient_type", "Gradient type: ", 1 ),
   invert_box( this, "invert", "Invert", true ),
   center_x( this, "gradient_center_x", "Center X (%)", 100, 0, 100, 1, 10, 100),

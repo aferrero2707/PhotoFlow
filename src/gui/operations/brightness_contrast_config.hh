@@ -32,14 +32,14 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../widgets/outmode_slider.hh"
 #include "../../operations/brightness_contrast.hh"
 
 
 namespace PF {
 
-  class BrightnessContrastConfigDialog: public OperationConfigDialog
+  class BrightnessContrastConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
@@ -61,7 +61,7 @@ namespace PF {
   OutModeSlider outputModeSlider;
 
 public:
-  BrightnessContrastConfigDialog( Layer* l );
+  BrightnessContrastConfigGUI( Layer* l );
 
   bool has_preview() { return true; }
 

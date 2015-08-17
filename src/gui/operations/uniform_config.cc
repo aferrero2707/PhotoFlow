@@ -33,8 +33,8 @@
 #include "uniform_config.hh"
 
 
-PF::UniformConfigDialog::UniformConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Uniform" ),
+PF::UniformConfigGUI::UniformConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Uniform" ),
   color_label("Color:              "),
 #ifdef GTKMM_2
   color_button( Gdk::Color("white") )
@@ -48,24 +48,24 @@ PF::UniformConfigDialog::UniformConfigDialog( PF::Layer* layer ):
   controlsBox.pack_start( colorButtonsBox1 );
 
   color_button.signal_color_set().
-    connect( sigc::mem_fun(this, &PF::UniformConfigDialog::on_color_changed) );
+    connect( sigc::mem_fun(this, &PF::UniformConfigGUI::on_color_changed) );
 
   add_widget( controlsBox );
 }
 
 
 
-void PF::UniformConfigDialog::open()
+void PF::UniformConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }
 
 
-void PF::UniformConfigDialog::on_color_changed()
+void PF::UniformConfigGUI::on_color_changed()
 {
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();

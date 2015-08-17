@@ -34,6 +34,8 @@ PF::InvertPar::InvertPar():
   PixelProcessorPar()
 {
   set_type( "invert" );
+
+  set_default_name( _("invert") );
 }
 
 

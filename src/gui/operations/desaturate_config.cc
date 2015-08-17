@@ -30,20 +30,20 @@
 #include "desaturate_config.hh"
 
 
-PF::DesaturateConfigDialog::DesaturateConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Desaturate" ),
+PF::DesaturateConfigGUI::DesaturateConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Desaturate" ),
   modeSelector( this, "method", "Desaturate method: ", 0 )
 {
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK );
   add_widget( controlsBox );
 
-  show_all_children();
+  get_main_box().show_all_children();
 }
 
 
 
 
-void PF::DesaturateConfigDialog::do_update()
+void PF::DesaturateConfigGUI::do_update()
 {
 /*
   if( get_layer() && get_layer()->get_image() && 
@@ -56,6 +56,6 @@ void PF::DesaturateConfigDialog::do_update()
   }
   controlsBox.show_all_children();
 */
-  OperationConfigDialog::do_update();
+  OperationConfigGUI::do_update();
 }
 

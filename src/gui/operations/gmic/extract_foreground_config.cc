@@ -30,8 +30,8 @@
 #include "extract_foreground_config.hh"
 
 
-PF::GmicExtractForegroundConfigDialog::GmicExtractForegroundConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Dream Smoothing (G'MIC)"  ),
+PF::GmicExtractForegroundConfigGUI::GmicExtractForegroundConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Dream Smoothing (G'MIC)"  ),
   updateButton( "Update" ),
   editPointsButton( "edit control points" ),
   showMaskButton( "show mask" ),
@@ -50,11 +50,11 @@ PF::GmicExtractForegroundConfigDialog::GmicExtractForegroundConfigDialog( PF::La
   //controlsBox.pack_start( showBlendButton );
   editPointsButton.set_active();
 
-  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_update) );
+  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigGUI::on_update) );
   
-  editPointsButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_edit_points) );
-  showMaskButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_show_mask) );
-  showBlendButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigDialog::on_show_blend) );
+  editPointsButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigGUI::on_edit_points) );
+  showMaskButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigGUI::on_show_mask) );
+  showBlendButton.signal_clicked().connect( sigc::mem_fun(this, &GmicExtractForegroundConfigGUI::on_show_blend) );
   
   add_widget( controlsBox );
   //add_widget( layer_list );
@@ -62,7 +62,7 @@ PF::GmicExtractForegroundConfigDialog::GmicExtractForegroundConfigDialog( PF::La
 
 
 
-PF::GmicExtractForegroundPar* PF::GmicExtractForegroundConfigDialog::get_par()
+PF::GmicExtractForegroundPar* PF::GmicExtractForegroundConfigGUI::get_par()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -74,7 +74,7 @@ PF::GmicExtractForegroundPar* PF::GmicExtractForegroundConfigDialog::get_par()
 }
 
 
-void PF::GmicExtractForegroundConfigDialog::on_update()
+void PF::GmicExtractForegroundConfigGUI::on_update()
 {
   PF::GmicExtractForegroundPar* par = get_par();
   if( !par ) return;
@@ -87,7 +87,7 @@ void PF::GmicExtractForegroundConfigDialog::on_update()
 }
 
 
-void PF::GmicExtractForegroundConfigDialog::on_edit_points()
+void PF::GmicExtractForegroundConfigGUI::on_edit_points()
 {
   PF::GmicExtractForegroundPar* par = get_par();
   if( !par ) return;
@@ -99,7 +99,7 @@ void PF::GmicExtractForegroundConfigDialog::on_edit_points()
 }
 
 
-void PF::GmicExtractForegroundConfigDialog::on_show_mask()
+void PF::GmicExtractForegroundConfigGUI::on_show_mask()
 {
   PF::GmicExtractForegroundPar* par = get_par();
   if( !par ) return;
@@ -111,7 +111,7 @@ void PF::GmicExtractForegroundConfigDialog::on_show_mask()
 }
 
 
-void PF::GmicExtractForegroundConfigDialog::on_show_blend()
+void PF::GmicExtractForegroundConfigGUI::on_show_blend()
 {
   /*
   PF::GmicExtractForegroundPar* par = get_par();
@@ -125,19 +125,19 @@ void PF::GmicExtractForegroundConfigDialog::on_show_blend()
 }
 
 
-void PF::GmicExtractForegroundConfigDialog::open()
+void PF::GmicExtractForegroundConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }
 
 
 
-bool PF::GmicExtractForegroundConfigDialog::pointer_release_event( int button, double sx, double sy, int mod_key )
+bool PF::GmicExtractForegroundConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
   PF::GmicExtractForegroundPar* par = get_par();
   if( !par ) return false;
 
-  std::cout<<"GmicExtractForegroundConfigDialog::pointer_release_event(): button="<<button<<std::endl;
+  std::cout<<"GmicExtractForegroundConfigGUI::pointer_release_event(): button="<<button<<std::endl;
 
   double x = sx, y = sy, w = 1, h = 1;
   screen2layer( x, y, w, h );
@@ -183,9 +183,10 @@ bool PF::GmicExtractForegroundConfigDialog::pointer_release_event( int button, d
 }
 
 
-bool PF::GmicExtractForegroundConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
+bool PF::GmicExtractForegroundConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
                                                             float scale, int xoffset, int yoffset )
 {
+  /*
 #if defined(_WIN32) || defined(WIN32)
   if( !is_mapped() )
     return false;
@@ -193,7 +194,7 @@ bool PF::GmicExtractForegroundConfigDialog::modify_preview( PixelBuffer& buf_in,
   if( !get_mapped() ) 
     return false;
 #endif
-
+*/
   // We only draw on top of the preview image if we are mapped
 
   // Resize the output buffer to match the input one

@@ -32,8 +32,8 @@
 #include "gcd_despeckle_config.hh"
 
 
-PF::GmicGcdDespeckleConfigDialog::GmicGcdDespeckleConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Despeckle (G'MIC)"  ),
+PF::GmicGcdDespeckleConfigGUI::GmicGcdDespeckleConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Despeckle (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_tolerance_slider( this, "tolerance", "tolerance", 20, 0, 50, 1, 5, 1),
   prop_max_area_slider( this, "max_area", "max_area", 10, 0, 100, 1, 5, 1)
@@ -47,7 +47,7 @@ PF::GmicGcdDespeckleConfigDialog::GmicGcdDespeckleConfigDialog( PF::Layer* layer
 
 
 
-void PF::GmicGcdDespeckleConfigDialog::open()
+void PF::GmicGcdDespeckleConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

@@ -32,8 +32,8 @@
 #include "sharpen_rl_config.hh"
 
 
-PF::GmicSharpenRLConfigDialog::GmicSharpenRLConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Sharpen [richardson-lucy] (G'MIC)"  ),
+PF::GmicSharpenRLConfigGUI::GmicSharpenRLConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Sharpen [richardson-lucy] (G'MIC)"  ),
   //iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_sigma_slider( this, "sigma", "sigma", 1, 0.5, 10, .09, .9, 1),
   prop_iterations_slider( this, "rl_iterations", "iterations", 10, 1, 100, 1, 5, 1),
@@ -49,7 +49,7 @@ PF::GmicSharpenRLConfigDialog::GmicSharpenRLConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::GmicSharpenRLConfigDialog::open()
+void PF::GmicSharpenRLConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

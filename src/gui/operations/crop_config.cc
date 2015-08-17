@@ -32,8 +32,8 @@
 #include "crop_config.hh"
 
 
-PF::CropConfigDialog::CropConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Crop" ),
+PF::CropConfigGUI::CropConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Crop" ),
   handle( CROP_HANDLE_NONE ),
   cropLeftSlider( this, "crop_left", "Crop left", 0, 0, 10000000, 1, 10, 1),
   cropTopSlider( this, "crop_top", "Crop top", 0, 0, 10000000, 1, 10, 1),
@@ -58,7 +58,7 @@ PF::CropConfigDialog::CropConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::CropConfigDialog::open()
+void PF::CropConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -68,11 +68,11 @@ void PF::CropConfigDialog::open()
     cropWidthSlider.init();
     cropHeightSlider.init();
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }
 
 
-bool PF::CropConfigDialog::pointer_press_event( int button, double sx, double sy, int mod_key )
+bool PF::CropConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
   if( button != 1 ) return false;
   handle = CROP_HANDLE_NONE;
@@ -153,7 +153,7 @@ bool PF::CropConfigDialog::pointer_press_event( int button, double sx, double sy
 }
 
 
-bool PF::CropConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::CropConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
 
@@ -170,7 +170,7 @@ bool PF::CropConfigDialog::pointer_release_event( int button, double x, double y
 }
 
 
-void PF::CropConfigDialog::move_handle( int x, int y )
+void PF::CropConfigGUI::move_handle( int x, int y )
 {
   int x0 = cropLeftSlider.get_adjustment()->get_value();
   int y0 = cropTopSlider.get_adjustment()->get_value();
@@ -261,7 +261,7 @@ void PF::CropConfigDialog::move_handle( int x, int y )
 
 
 
-bool PF::CropConfigDialog::pointer_motion_event( int button, double sx, double sy, int mod_key )
+bool PF::CropConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
   if( button != 1 ) return false;
 
@@ -279,9 +279,10 @@ bool PF::CropConfigDialog::pointer_motion_event( int button, double sx, double s
 
 
 
-bool PF::CropConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
+bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
                                            float scale, int xoffset, int yoffset )
 {
+  /*
 #if defined(_WIN32) || defined(WIN32)
   if( !is_mapped() )
     return false;
@@ -289,7 +290,7 @@ bool PF::CropConfigDialog::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf
   if( !get_mapped() ) 
     return false;
 #endif
-
+*/
   if( !get_layer() ) return false;
   if( !get_layer()->get_image() ) return false;
   if( !get_layer()->get_processor() ) return false;

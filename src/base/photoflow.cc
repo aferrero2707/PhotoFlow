@@ -47,7 +47,8 @@
 
 PF::PhotoFlow::PhotoFlow(): 
   active_image( NULL ),
-  batch(true)
+  batch(true),
+  single_win_mode(true)
 {
   // Create the cache directory if possible
   char fname[500];

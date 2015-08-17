@@ -29,10 +29,10 @@
 
 #include "layerlist.hh"
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 
 
-PF::LayerList::LayerList( OperationConfigDialog* d, std::string l ):
+PF::LayerList::LayerList( OperationConfigGUI* d, std::string l ):
   Gtk::HBox(),
   dialog( d ),
   inhibit( false )

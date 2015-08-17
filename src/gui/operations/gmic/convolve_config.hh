@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicConvolveConfigDialog: public OperationConfigDialog
+  class GmicConvolveConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -47,7 +47,7 @@ namespace PF {
     Slider prop_kernel_mul;
        
   public:
-    GmicConvolveConfigDialog( Layer* l );
+    GmicConvolveConfigGUI( Layer* l );
     
     void open();
   };

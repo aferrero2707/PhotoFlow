@@ -37,19 +37,40 @@
 #include "layertree.hh"
 #include "operationstree.hh"
 
-#include "operation_config_dialog.hh"
+#include "operation_config_gui.hh"
 #include "operationstree.hh"
 
 namespace PF {
 
 class ImageEditor;
 
+class ControlsGroup: public Gtk::VBox
+{
+  ImageEditor* editor;
+  std::vector<Gtk::Frame*> controls;
+
+public:
+  ControlsGroup( ImageEditor* editor );
+  size_t size() { return controls.size(); }
+  /**/
+  void clear();
+  void add_control(Gtk::Frame* control);
+  void remove_control(Gtk::Frame* control);
+  /**/
+  void set_controls( std::vector<Gtk::Frame*>& new_controls);
+};
+
+
 class LayerWidget : public Gtk::VBox
 {
   Image* image;
   ImageEditor* editor;
 
+  Gtk::VPaned layers_panel;
+  Gtk::VBox top_box;
   Gtk::Notebook notebook;
+  Gtk::ScrolledWindow controls_scrolled_window;
+  ControlsGroup controls_group;
   //Gtk::HButtonBox buttonbox;
   Gtk::HBox buttonbox;
   Gtk::Button buttonAdd, buttonAddGroup, buttonDel;
@@ -79,6 +100,7 @@ public:
     image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
   }
   */
+  ControlsGroup& get_controls_group() { return controls_group; }
 
   void add_layer( Layer* layer );
   void insert_preset( std::string filename );
@@ -100,7 +122,19 @@ public:
     }
   }
 
-  bool on_button_event( GdkEventButton* button );
+  static gboolean update_cb(PF::LayerWidget* w)
+  {
+    if( w ) w->update();
+    return( FALSE );
+  }
+
+  void update_idle()
+  {
+    gdk_threads_add_idle ((GSourceFunc) LayerWidget::update_cb, this);
+  }
+
+
+  //bool on_button_event( GdkEventButton* button );
 
   void on_button_add();
   void on_button_add_group();
@@ -108,6 +142,8 @@ public:
 
   void on_button_load();
   void on_button_save();
+
+  void on_selection_changed();
 
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
 
@@ -120,7 +156,7 @@ public:
 
   void remove_tab( Gtk::Widget* widget );
 
-  void modified() { if(image) image->modified(); }
+  void modified() { /*if(image) image->modified();*/ }
 };
 
 }

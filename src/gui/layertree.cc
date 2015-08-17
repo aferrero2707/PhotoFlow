@@ -27,8 +27,11 @@
 
  */
 
-#include "layertree.hh"
 #include "../base/image.hh"
+
+#include "imageeditor.hh"
+
+#include "layertree.hh"
 
 static const struct {
   guint  	 width;
@@ -154,6 +157,126 @@ static const struct {
 };
 
 
+static const struct {
+  guint    width;
+  guint    height;
+  guint    bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
+  guint8   pixel_data[24 * 15 * 3 + 1];
+} icon_gradient_crossed = {
+  24, 15, 3,
+  "\207\2\2\342\2\2d\23\23%&&011;;;FFFPQP[[[fffppq{{{\206\206\205\220\220\220"
+  "\233\233\233\246\245\245\260\260\260\273\273\273\305\305\306\320\321\321"
+  "\333\332\332\356\227\226\376\31\31\376\206\206\322\0\0\377\0\0\377\0\0\350"
+  "\5\5A--:;;FFFQQP[[[ffeppp{{{\206\206\206\220\220\220\233\233\233\245\245"
+  "\245\260\260\260\273\273\273\305\306\306\325\271\271\374\23\23\377\0\0\377"
+  "\0\0\377>>\30\5\5\243\7\7\377\0\0\377\0\0\377\0\0\301\23\23MCCNQQ[[[fffp"
+  "pp{{{\206\206\206\220\220\220\233\233\233\246\245\245\257\262\262\277\257"
+  "\257\356::\377\0\0\377\0\0\377\0\0\371ff\374\354\354\6\5\5\11\22\22P\24\24"
+  "\333\6\6\377\0\0\377\0\0\377\0\0\22322]ZZeggppp{{{\206\206\206\220\220\220"
+  "\232\235\235\250\241\241\320gg\377\0\0\377\0\0\377\0\0\370((\353\270\270"
+  "\360\366\366\373\373\373\6\6\6\21\21\21\33\33\33$''u\40\40\374\1\1\377\0"
+  "\0\377\0\0\370\4\4\203RRppp{{{\206\205\206\220\220\220\262vv\375\5\5\377"
+  "\0\0\377\0\0\376\5\5\335\225\225\333\335\335\345\345\345\360\360\360\373"
+  "\373\373\6\6\6\21\21\21\33\33\33&&&.12H77\246!!\377\0\0\377\0\0\377\0\0\334"
+  "\34\34\207qq\223vv\346!!\377\0\0\377\0\0\377\0\0\334`a\311\273\273\320\322"
+  "\322\333\333\333\345\345\345\360\360\360\374\373\373\6\6\6\21\21\21\33\33"
+  "\33&&&110;;;AHHfFF\331\25\25\377\0\0\377\0\0\377\0\0\377\0\0\377\0\0\377"
+  "\0\0\350**\267\240\240\271\277\277\305\305\305\320\320\320\333\333\333\345"
+  "\345\345\360\360\360\373\373\373\6\6\6\21\21\21\33\33\33&&&111;;;FFFPQQX"
+  "]]\25366\377\0\0\377\0\0\377\0\0\377\0\0\304]]\244\247\247\260\260\260\273"
+  "\273\273\305\305\306\320\320\320\333\333\333\345\345\345\360\360\360\373"
+  "\373\373\6\6\6\21\21\21\33\33\33&&&110;;;?IIu?@\341\21\21\377\0\0\377\0\0"
+  "\375\2\2\377\0\0\377\0\0\377\0\0\355\"\"\276\222\222\271\301\301\306\305"
+  "\305\320\320\320\333\333\333\345\345\345\360\360\360\373\373\373\6\6\6\21"
+  "\21\21\33\33\33&&&-21M55\264\34\34\377\0\0\377\0\0\377\0\0\324\"\"\201vw"
+  "\215~}\341''\377\0\0\377\0\0\377\0\0\342RR\312\266\265\317\323\323\333\333"
+  "\333\345\345\345\360\360\360\373\373\373\6\6\6\21\21\21\33\33\33$''\213\33"
+  "\33\377\0\0\377\0\0\377\0\0\357\11\11xZZqpp{{{\206\205\206\220\220\220\252"
+  "\203\203\371\14\14\377\0\0\377\0\0\377\1\1\343\200\177\332\335\335\345\345"
+  "\345\360\360\360\373\373\373\6\6\5\10\21\22a\22\22\343\5\5\377\0\0\377\0"
+  "\0\372\2\2\21177[[[eggppq{{{\206\206\206\220\220\220\232\234\234\246\244"
+  "\245\313ss\376\2\2\377\0\0\377\0\0\372\37\37\355\247\247\357\370\370\374"
+  "\373\373\37\5\5\266\5\5\377\0\0\377\0\0\375\1\1\264\27\27EFFOPQ[[[fffppp"
+  "{{{\206\206\205\220\220\220\233\233\233\246\245\246\257\261\261\274\270\270"
+  "\353FF\377\0\0\377\0\0\377\0\0\372SR\374\346\346\330\0\0\377\0\0\377\0\0"
+  "\333\7\7""7//;;;FFFQPP[[[ffeppp{{{\206\206\205\220\220\220\233\233\233\245"
+  "\245\245\260\260\260\273\273\273\305\306\306\322\305\305\372\35\35\377\0"
+  "\0\377\0\0\37788x\2\2\321\4\4X\24\24\"''011;;;FFFQPP[[[fffppp{{{\206\206"
+  "\206\220\220\220\233\233\233\246\245\245\260\260\260\273\273\273\305\305"
+  "\305\320\320\320\332\335\335\355\242\242\374++\375\224\224",
+};
+
+
+static const struct {
+  guint    width;
+  guint    height;
+  guint    bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
+  guint8   pixel_data[24 * 15 * 3 + 1];
+} icon_white = {
+  24, 15, 3,
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377",
+};
+
+
 PF::LayerTreeModel::LayerTreeModel()
 {
   set_column_types( columns );
@@ -166,7 +289,8 @@ Glib::RefPtr<PF::LayerTreeModel> PF::LayerTreeModel::create()
 }
 
 
-PF::LayerTree::LayerTree( bool is_map ): 
+PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
+  editor( e ),
   layers( NULL ),
   map_flag( is_map )
 {
@@ -176,6 +300,26 @@ PF::LayerTree::LayerTree( bool is_map ):
   treeView.append_column("Name", treeModel->columns.col_name);
   treeView.append_column("map1", treeModel->columns.col_omap);
   treeView.append_column("map2", treeModel->columns.col_imap);
+
+  treeView.set_headers_visible(false);
+
+  Gtk::TreeViewColumn* col;
+  col = treeView.get_column(0);
+  col->set_resizable(false); col->set_expand(false);
+  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  //col->set_fixed_width(35);
+  col = treeView.get_column(2);
+  col->set_resizable(false); col->set_expand(false);
+  col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  col->set_fixed_width(30);
+  col = treeView.get_column(3);
+  col->set_resizable(false); col->set_expand(false);
+  col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  col->set_fixed_width(30);
+  col = treeView.get_column(1);
+  col->set_resizable(false); col->set_expand(true);
+  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+
 
   treeView.enable_model_drag_source();
   treeView.enable_model_drag_dest();
@@ -190,6 +334,8 @@ PF::LayerTree::LayerTree( bool is_map ):
     connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_cb) ); 
 
   add( treeView );
+
+  set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC );
 
   set_size_request(280,0);
   /*
@@ -222,16 +368,59 @@ void PF::LayerTree::on_cell_toggled( const Glib::ustring& path )
   if (iter) {
     Gtk::TreeModel::Row row = *iter;
     //PF::LayerTreeColumns& columns = columns;
-    bool visible = (*iter)[treeModel->columns.col_visible];
+    bool enabled = (*iter)[treeModel->columns.col_visible];
     PF::Layer* l = (*iter)[treeModel->columns.col_layer];
     if( !l ) return;
 #ifndef NDEBUG
-    std::cout<<"Toggled visibility of layer \""<<l->get_name()<<"\": "<<visible<<std::endl;
+    std::cout<<"Toggled visibility of layer \""<<l->get_name()<<"\": "<<enabled<<std::endl;
 #endif
-    l->set_visible( visible );
-    l->set_dirty( true );
-    //layer_manager->rebuild( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
-    l->get_image()->update();
+    if( l->get_processor() && l->get_processor()->get_par() &&
+        l->get_processor()->get_par()->get_config_ui() ) {
+      PF::OperationConfigGUI* gui =
+          dynamic_cast<PF::OperationConfigGUI*>( l->get_processor()->get_par()->get_config_ui() );
+      if( gui ) {
+        if( enabled ) gui->show_layer();
+        else gui->hide_layer();
+      }
+    }
+    //l->set_enabled( enabled );
+    //l->set_dirty( true );
+    ////layer_manager->rebuild( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
+    //l->get_image()->update();
+  }
+}
+
+
+
+void PF::LayerTree::update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l )
+{
+  if( l->get_processor()->get_par()->has_intensity() ) {
+    if( l->get_imap_layers().empty() ) {
+      row[treeModel->columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_white.pixel_data,Gdk::COLORSPACE_RGB,
+          false, 8, icon_white.width, icon_white.height, icon_white.width*3);
+    } else {
+      if( l->get_processor()->get_par()->get_mask_enabled() ) {
+        row[treeModel->columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_gradient.pixel_data,Gdk::COLORSPACE_RGB,
+            false, 8, icon_gradient.width, icon_gradient.height, icon_gradient.width*3);
+      } else {
+        row[treeModel->columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_gradient_crossed.pixel_data,Gdk::COLORSPACE_RGB,
+            false, 8, icon_gradient_crossed.width, icon_gradient_crossed.height, icon_gradient_crossed.width*3);
+      }
+    }
+  }
+  if( l->get_processor()->get_par()->has_opacity() ) {
+    if( l->get_omap_layers().empty() ) {
+      row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_white.pixel_data,Gdk::COLORSPACE_RGB,
+          false, 8, icon_white.width, icon_white.height, icon_white.width*3);
+    } else {
+      if( l->get_blender()->get_par()->get_mask_enabled() ) {
+        row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_gradient.pixel_data,Gdk::COLORSPACE_RGB,
+            false, 8, icon_gradient.width, icon_gradient.height, icon_gradient.width*3);
+      } else {
+        row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_gradient_crossed.pixel_data,Gdk::COLORSPACE_RGB,
+            false, 8, icon_gradient_crossed.width, icon_gradient_crossed.height, icon_gradient_crossed.width*3);
+      }
+    }
   }
 }
 
@@ -253,19 +442,15 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
        li != sublayers.end(); li++ ) {
     PF::Layer* l = *li;
     row = *(treeModel->prepend(parent_row.children()));
-    row[treeModel->columns.col_visible] = l->is_visible();
+    row[treeModel->columns.col_visible] = l->is_enabled();
     row[treeModel->columns.col_name] = l->get_name();
     row[treeModel->columns.col_layer] = l;
-    if( l->get_processor()->get_par()->has_intensity() )
-      //row[columns.col_imap] = Gdk::Pixbuf::create_from_file("/home/aferrero/Projects/PhotoFlow/PhotoFlow_VIPS/build/icons/meter.png");
-      row[treeModel->columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_meter.pixel_data,Gdk::COLORSPACE_RGB, 
-							    false, 8, icon_meter.width, icon_meter.height, 
-							    icon_meter.width*3);
-    if( l->get_processor()->get_par()->has_opacity() )
-      //row[columns.col_omap] = Gdk::Pixbuf::create_from_file("/home/aferrero/Projects/PhotoFlow/PhotoFlow_VIPS/build/icons/gradient.png");
-      row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_gradient.pixel_data,Gdk::COLORSPACE_RGB, 
-							    false, 8, icon_gradient.width, icon_gradient.height, 
-							    icon_gradient.width*3);
+    update_mask_icons( row, l );
+
+    if( l->get_processor() && l->get_processor()->get_par() ) {
+      PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( l->get_processor()->get_par()->get_config_ui() );
+      if( ui ) ui->set_editor( editor );
+    }
 
     if( l->is_group() ) {
       update_model( row );
@@ -291,19 +476,15 @@ void PF::LayerTree::update_model()
       continue;
     }
     Gtk::TreeModel::Row row = *(treeModel->prepend());
-    row[treeModel->columns.col_visible] = l->is_visible();
+    row[treeModel->columns.col_visible] = l->is_enabled();
     row[treeModel->columns.col_name] = l->get_name();
     row[treeModel->columns.col_layer] = l;
-    if( l->get_processor()->get_par()->has_intensity() )
-      //row[columns.col_imap] = Gdk::Pixbuf::create_from_file("/home/aferrero/Projects/PhotoFlow/PhotoFlow_VIPS/build/icons/meter.png");
-      row[treeModel->columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_meter.pixel_data,Gdk::COLORSPACE_RGB, 
-							    false, 8, icon_meter.width, icon_meter.height, 
-							    icon_meter.width*3);
-    if( l->get_processor()->get_par()->has_opacity() )
-      //row[columns.col_omap] = Gdk::Pixbuf::create_from_file("/home/aferrero/Projects/PhotoFlow/PhotoFlow_VIPS/build/icons/gradient.png");
-      row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_gradient.pixel_data,Gdk::COLORSPACE_RGB, 
-							    false, 8, icon_gradient.width, icon_gradient.height, 
-							    icon_gradient.width*3);
+    update_mask_icons( row, l );
+
+    if( l->get_processor() && l->get_processor()->get_par() ) {
+      PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( l->get_processor()->get_par()->get_config_ui() );
+      if( ui ) ui->set_editor( editor );
+    }
 
     if( l->is_group() ) {
       update_model( row );
@@ -312,6 +493,15 @@ void PF::LayerTree::update_model()
   treeView.expand_all();
 
   signal_updated.emit();
+
+/*
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+      get_tree().get_selection();
+  if( refTreeSelection->count_selected_rows() == 0 ) {
+    Gtk::TreeModel::Children children = get_model()->children();
+    refTreeSelection->select( children.begin() );
+  }
+*/
 
   /*
   if (!image) {
@@ -325,7 +515,7 @@ void PF::LayerTree::update_model()
   int layerid;
   for (iter=children.begin(), layerid=0; iter != children.end(); iter++, layerid++) {
     if (layerid >= layers.size()) break;
-    bool visible = layers[layerid]->is_visible();
+    bool visible = layers[layerid]->is_enabled();
     const std::string& name = layers[layerid]->get_name();
     (*iter)[columns.col_visible] = visible;
     (*iter)[columns.col_name] = name;
@@ -342,7 +532,7 @@ void PF::LayerTree::update_model()
   if (layerid < layers.size()) {
     // Append additional layers at the end of the list
     for (; layerid < layers.size(); layerid++) {
-      bool visible = layers[layerid]->is_visible();
+      bool visible = layers[layerid]->is_enabled();
       const std::string& name = layers[layerid]->get_name();
       Gtk::TreeModel::Row row = *(treeModel->append());
       row[columns.col_visible] = visible;
@@ -415,6 +605,7 @@ bool PF::LayerTree::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::T
         return true;
     }
   }
+  return false;
 }
 
 

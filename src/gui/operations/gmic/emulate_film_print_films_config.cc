@@ -32,8 +32,8 @@
 #include "emulate_film_print_films_config.hh"
 
 
-PF::GmicEmulateFilmPrintFilmsConfigDialog::GmicEmulateFilmPrintFilmsConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Film Emulation [print films] (G'MIC)"  ),
+PF::GmicEmulateFilmPrintFilmsConfigGUI::GmicEmulateFilmPrintFilmsConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Film Emulation [print films] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_preset_selector( this, "preset", "preset", 0),
   prop_opacity_slider( this, "opacity", "opacity", 1, 0, 1, .01, .1, 1),
@@ -59,7 +59,7 @@ PF::GmicEmulateFilmPrintFilmsConfigDialog::GmicEmulateFilmPrintFilmsConfigDialog
 
 
 
-void PF::GmicEmulateFilmPrintFilmsConfigDialog::open()
+void PF::GmicEmulateFilmPrintFilmsConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

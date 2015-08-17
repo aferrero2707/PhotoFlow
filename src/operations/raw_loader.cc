@@ -109,7 +109,6 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
 
   VipsImage* image = raw_image->get_image( level );
-  
 
   if( image ) {
 #ifndef NDEBUG

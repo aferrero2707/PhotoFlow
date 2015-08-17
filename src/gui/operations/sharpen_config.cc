@@ -30,8 +30,8 @@
 #include "sharpen_config.hh"
 
 
-PF::SharpenConfigDialog::SharpenConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Sharpen" ),
+PF::SharpenConfigGUI::SharpenConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Sharpen" ),
   modeSelector( this, "method", "Sharpen method: ", 0 ),
   usmRadiusSlider( this, "usm_radius", "Radius", 1, 0, 100, 0.05, 0.1, 1),
 rlSigmaSlider( this, "rl_sigma", "Sigma", 1, 0, 100, 0.05, 0.1, 1),
@@ -46,13 +46,13 @@ rlIterationsSlider( this, "rl_iterations", "Iterations", 10, 1, 100, 1, 5, 1)
 
   add_widget( controlsBox );
 
-  show_all_children();
+  get_main_box().show_all_children();
 }
 
 
 
 
-void PF::SharpenConfigDialog::do_update()
+void PF::SharpenConfigGUI::do_update()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -62,7 +62,7 @@ void PF::SharpenConfigDialog::do_update()
     PropertyBase* prop = par->get_property( "method" );
     if( !prop )  return;
 
-    //std::cout<<"PF::SharpenConfigDialog::do_update() called."<<std::endl;
+    //std::cout<<"PF::SharpenConfigGUI::do_update() called."<<std::endl;
 
     if( usmControlsBox.get_parent() == &controlsBox )
       controlsBox.remove( usmControlsBox );
@@ -84,6 +84,6 @@ void PF::SharpenConfigDialog::do_update()
   }
   controlsBox.show_all_children();
 
-  OperationConfigDialog::do_update();
+  OperationConfigGUI::do_update();
 }
 

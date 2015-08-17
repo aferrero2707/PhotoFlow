@@ -27,6 +27,9 @@ pkg_check_modules(XML2 REQUIRED libxml-2.0)
 pkg_check_modules(EXIF REQUIRED libexif)
 #pkg_check_modules(EXIV2 REQUIRED exiv2)
 find_package (Exiv2)
+pkg_check_modules(GEXIV2 REQUIRED gexiv2)
+MESSAGE( STATUS "GEXIV2_INCLUDE_DIRS:         " ${GEXIV2_INCLUDE_DIRS} )
+MESSAGE( STATUS "GEXIV2_LIBRARY_DIRS:         " ${GEXIV2_LIBRARY_DIRS} )
 
 pkg_check_modules(LENSFUN lensfun)
 MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
@@ -52,6 +55,7 @@ pkg_check_modules(VIPS REQUIRED vips>=7.42.0)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
 
+pkg_check_modules(PIXMAN pixman-1 REQUIRED) 
 pkg_check_modules(PANGO pango) 
 pkg_check_modules(PANGOFT2 pangoft2) 
 pkg_check_modules(GLIB glib-2.0) 
@@ -70,6 +74,7 @@ endif()
   MESSAGE( STATUS "GTKMM3_FOUND:         " ${GTKMM3_FOUND} )
 
   
+IF(NOT MINGW)
 #need to put here do setting LOCALE_DIR variable
 if(USE_NLS)
 find_package(Gettext)
@@ -91,6 +96,8 @@ if(Gettext_FOUND)
 	endif(NOT LOCALE_DIR)
 endif(Gettext_FOUND)
 endif(USE_NLS)
+ENDIF(NOT MINGW)
+MESSAGE( STATUS "Msgfmt_FOUND:         " ${Msgfmt_FOUND} )
 
 
 add_subdirectory(src) 

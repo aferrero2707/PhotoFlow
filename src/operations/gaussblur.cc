@@ -34,17 +34,20 @@
 
 
 PF::GaussBlurPar::GaussBlurPar(): 
-  BlenderPar(),
+  OpParBase(),
   radius("radius",this,5),
-	preview_mode("preview_mode",this,PF_BLUR_FAST,"FAST","Fast")
+	blur_mode("blur_mode",this,PF_BLUR_FAST,"FAST","Fast")
 {
-	preview_mode.add_enum_value(PF_BLUR_FAST,"FAST","Fast");
-	preview_mode.add_enum_value(PF_BLUR_EXACT,"ACCURATE","Accurate");
+	blur_mode.add_enum_value(PF_BLUR_FAST,"FAST","Fast");
+	blur_mode.add_enum_value(PF_BLUR_EXACT,"ACCURATE","Accurate");
 	
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  blur_sii = new_gaussblur_sii();
 
   set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type( "gaussblur" );
+
+  set_default_name( _("gaussian blur") );
 }
 
 
@@ -68,14 +71,65 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 		return blurred;
 	}
 
-	sii_precomp( &coeffs, radius2, 3 );
+  std::vector<VipsImage*> in2;
+  bool do_caching = true;
+  int tw = 128, th = 128, nt = 1000;
+  VipsAccess acc = VIPS_ACCESS_RANDOM;
+  int threaded = 1, persistent = 0;
 
-	
-	if( (get_render_mode() == PF_RENDER_PREVIEW) &&
-			(preview_mode.get_enum_value().first == PF_BLUR_FAST) &&
-			(radius2 > 5) ){
-		VipsImage* outnew = PF::OpParBase::build( in, first, NULL, omap, level );
-		return outnew;
+  bool do_fast_blur = false;
+  //if( radius2 > 20 ) do_fast_blur = true;
+  //if( (get_render_mode() == PF_RENDER_PREVIEW) && (radius2 > 5) ) do_fast_blur = true;
+  if( (blur_mode.get_enum_value().first == PF_BLUR_FAST) && (radius2 > 5) ) do_fast_blur = true;
+
+  //if( (get_render_mode() == PF_RENDER_PREVIEW) &&
+  //    (blur_mode.get_enum_value().first == PF_BLUR_FAST) &&
+  //    (radius2 > 5) ){
+  if( do_fast_blur ) {
+    // Fast approximate gaussian blur method
+    GaussBlurSiiPar* gpar = dynamic_cast<GaussBlurSiiPar*>( blur_sii->get_par() );
+    gpar->set_radius( radius2 );
+
+    // First we extend the border of the image to correctly handle edge pixels in the blurring step
+    // The additional padding is given by the blur radius
+    VipsImage* extended;
+    VipsExtend extend = VIPS_EXTEND_COPY;
+    if( vips_embed(srcimg, &extended, gpar->get_padding(), gpar->get_padding(),
+        srcimg->Xsize+2*gpar->get_padding(), srcimg->Ysize+2*gpar->get_padding(),
+        "extend", extend, NULL) ) {
+      std::cout<<"GaussBlurPar::build(): vips_embed() failed."<<std::endl;
+      return NULL;
+    }
+
+    // Memory caching of the padded image
+    VipsImage* cached = extended;
+    if( do_caching ) {
+      if( vips_tilecache(extended, &cached,
+          "tile_width", tw, "tile_height", th, "max_tiles", nt,
+          "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+        std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
+        return NULL;
+      }
+      std::cout<<"GaussBlurPar::build(): vips_tilecache() success."<<std::endl;
+      PF_UNREF( extended, "GaussBlurPar::build(): extended unref" );
+    }
+
+    // Fast blurring
+    gpar->set_image_hints( cached ); gpar->set_format( get_format() );
+    in2.clear(); in2.push_back( cached );
+    VipsImage* blurred = gpar->build( in2, 0, NULL, omap, level );
+    PF_UNREF( cached, "GaussBlurPar::build(): cached unref" );
+
+    // Final cropping to remove the padding pixels
+    VipsImage* cropped;
+    std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  blurred->Xsize="<<blurred->Xsize<<"  padding="<<gpar->get_padding()<<std::endl;
+    if( vips_crop(blurred, &cropped, gpar->get_padding(), gpar->get_padding(),
+        srcimg->Xsize, srcimg->Ysize, NULL) ) {
+      std::cout<<"GaussBlurPar::build(): vips_crop() failed."<<std::endl;
+      return NULL;
+    }
+    PF_UNREF( blurred, "GaussBlurPar::build(): blurred unref" );
+		return cropped;
 	}
 	
 
@@ -85,7 +139,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 		float accuracy = 0.05;
 		VipsPrecision precision = VIPS_PRECISION_FLOAT;
 		if( get_render_mode() == PF_RENDER_PREVIEW &&
-				(preview_mode.get_enum_value().first == PF_BLUR_FAST) ) {
+				(blur_mode.get_enum_value().first == PF_BLUR_FAST) ) {
 			accuracy = 0.2;
 			//if( radius2 > 2 )
 			//	precision = VIPS_PRECISION_APPROXIMATE;
@@ -107,12 +161,20 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 				NULL );
 
     if( !result ) {
-			VipsImage* tmp;
-      result = vips_convsep( srcimg, &tmp, mask, 
+      VipsImage* cached;
+      VipsImage* tmp;
+      if( vips_tilecache(srcimg, &cached,
+          "tile_width", tw, "tile_height", th, "max_tiles", nt,
+          "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+        std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
+        return NULL;
+      }
+      result = vips_convsep( cached, &tmp, mask,
 			     "precision", precision,
 			     NULL );
       //g_object_unref( mask );
       PF_UNREF( mask, "PF::GaussBlurPar::build(): mask unref" );
+      PF_UNREF( cached, "PF::GaussBlurPar::build(): cached unref" );
 		
 			
       if( !result ) {
@@ -127,7 +189,6 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 		
   }
 
-  std::vector<VipsImage*> in2;
   VipsImage* converted = blurred;
   if( false && blurred ) {
     if( get_format() != blurred->BandFmt ) {
@@ -151,7 +212,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   // 	   <<"    output colorspace="<<PF::convert_colorspace( out->Type )
   // 	   <<std::endl;
 #endif
-  VipsImage* out = PF::BlenderPar::build( in2, 0, NULL, omap, level );
+  VipsImage* out = PF::OpParBase::build( in2, 0, NULL, omap, level );
   //g_object_unref( converted );
   PF_UNREF( converted, "PF::GaussBlurPar::build(): converted unref" );
   return out;

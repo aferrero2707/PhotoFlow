@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class UniformConfigDialog: public OperationConfigDialog
+  class UniformConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
@@ -48,7 +48,7 @@ namespace PF {
   Gtk::ColorButton color_button;
 
 public:
-  UniformConfigDialog( Layer* l );
+  UniformConfigGUI( Layer* l );
 
   void open();
 

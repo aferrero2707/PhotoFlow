@@ -32,8 +32,8 @@
 #include "smooth_anisotropic_config.hh"
 
 
-PF::GmicSmoothAnisotropicConfigDialog::GmicSmoothAnisotropicConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Smooth [anisotropic] (G'MIC)"  ),
+PF::GmicSmoothAnisotropicConfigGUI::GmicSmoothAnisotropicConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Smooth [anisotropic] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_amplitude_slider( this, "amplitude", "amplitude", 60, 0, 1000, 10.00, 100.0, 1),
   prop_sharpness_slider( this, "sharpness", "sharpness", 0.7, 0, 2, .02, .2, 1),
@@ -65,7 +65,7 @@ PF::GmicSmoothAnisotropicConfigDialog::GmicSmoothAnisotropicConfigDialog( PF::La
 
 
 
-void PF::GmicSmoothAnisotropicConfigDialog::open()
+void PF::GmicSmoothAnisotropicConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

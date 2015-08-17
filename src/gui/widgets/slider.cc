@@ -30,17 +30,9 @@
 #include "slider.hh"
 
 
-PF::Slider::Slider( OperationConfigDialog* dialog, std::string pname, std::string l, 
-		    double val, double min, double max, double sincr, double pincr,
-		    double mult ):
-  Gtk::VBox(),
-  PF::PFWidget( dialog, pname ),
-#ifdef GTKMM_2
-  adjustment( val, min, max, sincr, pincr, 0),
-  scale(adjustment),
-  spinButton(adjustment),
-#endif
-  multiplier(mult)
+void PF::Slider::create_widgets( std::string l, double val,
+    double min, double max,
+    double sincr, double pincr )
 {
 #ifdef GTKMM_3
   adjustment = Gtk::Adjustment::create( val, min, max, sincr, pincr, 0 );
@@ -52,8 +44,9 @@ PF::Slider::Slider( OperationConfigDialog* dialog, std::string pname, std::strin
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( 300, -1 );
-  spinButton.set_size_request( 70, -1 );
+  scale.set_size_request( 200, -1 );
+  spinButton.set_size_request( 50, -1 );
+  spinButton.set_has_frame( false );
 
   if( (max-min) < 1000000 ) {
     // Full widget with slider and spin button
@@ -62,36 +55,60 @@ PF::Slider::Slider( OperationConfigDialog* dialog, std::string pname, std::strin
     align.set(0,0.5,0,1);
     align.add( label );
 
-    hbox.pack_start( scale );
-    hbox.pack_start( spinButton );
+    //hbox.pack_start( scale, Gtk::PACK_SHRINK );
+    //hbox.pack_start( spinButton, Gtk::PACK_SHRINK );
+    //set_spacing(-3);
+    //pack_start( align );
 
-    pack_start( align );
+    vbox.set_spacing(-3);
+    vbox.pack_start( align, Gtk::PACK_SHRINK );
+    vbox.pack_start( scale, Gtk::PACK_SHRINK );
+    //set_spacing(-3);
+    pack_start( vbox, Gtk::PACK_SHRINK );
+    pack_start( spinButton, Gtk::PACK_SHRINK );
   } else {
-    hbox.pack_start( label );
-    hbox.pack_start( spinButton );
+    //hbox.pack_start( label, Gtk::PACK_SHRINK );
+    //hbox.pack_start( spinButton, Gtk::PACK_SHRINK );
+    pack_start( label, Gtk::PACK_SHRINK );
+    pack_start( spinButton, Gtk::PACK_SHRINK );
   }
 
-  pack_start( hbox );
+  //pack_start( hbox, Gtk::PACK_SHRINK );
 
 #ifdef GTKMM_2
   adjustment.signal_value_changed().
     connect(sigc::mem_fun(*this,
-			  &PFWidget::changed));
+        &PFWidget::changed));
 #endif
 #ifdef GTKMM_3
   adjustment->signal_value_changed().
     connect(sigc::mem_fun(*this,
-			  &PFWidget::changed));
+        &PFWidget::changed));
 #endif
 
   show_all_children();
+
 }
 
 
-PF::Slider::Slider( OperationConfigDialog* dialog, PF::ProcessorBase* processor, std::string pname, std::string l, 
+PF::Slider::Slider( OperationConfigGUI* dialog, std::string pname, std::string l,
 		    double val, double min, double max, double sincr, double pincr,
 		    double mult ):
-  Gtk::VBox(),
+  PF::PFWidget( dialog, pname ),
+#ifdef GTKMM_2
+  adjustment( val, min, max, sincr, pincr, 0),
+  scale(adjustment),
+  spinButton(adjustment),
+#endif
+  multiplier(mult)
+{
+  create_widgets( l, val, min, max, sincr, pincr );
+}
+
+
+PF::Slider::Slider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, std::string pname, std::string l,
+		    double val, double min, double max, double sincr, double pincr,
+		    double mult ):
   PF::PFWidget( dialog, processor, pname ),
 #ifdef GTKMM_2
   adjustment( val, min, max, sincr, pincr, 0),
@@ -100,49 +117,7 @@ PF::Slider::Slider( OperationConfigDialog* dialog, PF::ProcessorBase* processor,
 #endif
   multiplier(mult)
 {
-#ifdef GTKMM_3
-  adjustment = Gtk::Adjustment::create( val, min, max, sincr, pincr, 0 );
-  scale.set_adjustment( adjustment );
-  spinButton.set_adjustment( adjustment );
-#endif
-
-  label.set_text( l.c_str() );
-  scale.set_digits(0);
-  if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
-  if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( 300, -1 );
-  spinButton.set_size_request( 70, -1 );
-
-  if( (max-min) < 500 ) {
-    // Full widget with slider and spin button
-    scale.set_value_pos(Gtk::POS_LEFT);
-    scale.set_draw_value( false );
-    align.set(0,0.5,0,1);
-    align.add( label );
-
-    hbox.pack_start( scale );
-    hbox.pack_start( spinButton );
-
-    pack_start( align );
-  } else {
-    hbox.pack_start( label );
-    hbox.pack_start( spinButton );
-  }
-
-  pack_start( hbox );
-
-#ifdef GTKMM_2
-  adjustment.signal_value_changed().
-    connect(sigc::mem_fun(*this,
-			  &PFWidget::changed));
-#endif
-#ifdef GTKMM_3
-  adjustment->signal_value_changed().
-    connect(sigc::mem_fun(*this,
-			  &PFWidget::changed));
-#endif
-
-  show_all_children();
+  create_widgets( l, val, min, max, sincr, pincr );
 }
 
 

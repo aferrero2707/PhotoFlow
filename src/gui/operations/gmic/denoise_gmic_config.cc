@@ -32,8 +32,8 @@
 #include "denoise_config.hh"
 
 
-PF::GmicDenoiseConfigDialog::GmicDenoiseConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Patch-based Denoise (G'MIC)"  ),
+PF::GmicDenoiseConfigGUI::GmicDenoiseConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Patch-based Denoise (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_sigma_s_slider( this, "sigma_s", "Spatial variance", 1, 0.1, 200, 1, 10, 1),
   prop_sigma_r_slider( this, "sigma_r", "Patch variance", 1, 0.1, 200, 1, 10, 1),
@@ -55,7 +55,7 @@ PF::GmicDenoiseConfigDialog::GmicDenoiseConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::GmicDenoiseConfigDialog::open()
+void PF::GmicDenoiseConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

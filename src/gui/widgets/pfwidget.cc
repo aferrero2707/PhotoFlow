@@ -27,9 +27,9 @@
 
  */
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 
-PF::PFWidget::PFWidget(OperationConfigDialog* d, std::string n): 
+PF::PFWidget::PFWidget(OperationConfigGUI* d, std::string n): 
   inhibit(false), passive(false), dialog( d ), processor( dialog->get_layer()->get_processor() ), pname( n ), property( NULL )
 {
   dialog->add_control( this );
@@ -37,7 +37,7 @@ PF::PFWidget::PFWidget(OperationConfigDialog* d, std::string n):
 
 
 
-PF::PFWidget::PFWidget(OperationConfigDialog* d, ProcessorBase* p, std::string n): 
+PF::PFWidget::PFWidget(OperationConfigGUI* d, ProcessorBase* p, std::string n): 
   inhibit(false), passive(false), dialog( d ), processor( p ), pname( n ), property( NULL )
 {
   dialog->add_control( this );

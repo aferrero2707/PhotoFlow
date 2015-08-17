@@ -56,6 +56,8 @@ namespace PF
     Property<float> x_scale;
     Property<float> y_scale; 
 
+    bool cache_tiles;
+
   public:
     GMicPar();
 
@@ -69,6 +71,7 @@ namespace PF
     void set_x_scale(float xs ) { x_scale.set( xs ); }
     void set_y_scale(float ys ) { x_scale.set( ys ); }
 
+    void set_cache_tiles( bool flag ) { cache_tiles = flag; }
       
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 

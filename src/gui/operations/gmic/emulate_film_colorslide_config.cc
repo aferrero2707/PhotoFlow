@@ -32,8 +32,8 @@
 #include "emulate_film_colorslide_config.hh"
 
 
-PF::GmicEmulateFilmColorslideConfigDialog::GmicEmulateFilmColorslideConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Film Emulation [color slide] (G'MIC)"  ),
+PF::GmicEmulateFilmColorslideConfigGUI::GmicEmulateFilmColorslideConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Film Emulation [color slide] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_preset_selector( this, "preset", "preset", 0),
   prop_opacity_slider( this, "opacity", "opacity", 1, 0, 1, .01, .1, 1),
@@ -59,7 +59,7 @@ PF::GmicEmulateFilmColorslideConfigDialog::GmicEmulateFilmColorslideConfigDialog
 
 
 
-void PF::GmicEmulateFilmColorslideConfigDialog::open()
+void PF::GmicEmulateFilmColorslideConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

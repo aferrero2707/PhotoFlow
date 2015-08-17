@@ -42,6 +42,8 @@ PF::CropPar::CropPar():
   ar_height("ar_height",this,100)
 {
   set_type( "crop" );
+
+  set_default_name( _("crop") );
 }
 
 
@@ -56,6 +58,7 @@ VipsImage* PF::CropPar::build(std::vector<VipsImage*>& in, int first,
 	VipsImage* out;
 
   if( is_editing() ) {
+    std::cout<<"CropPar::build(): editing, returning source image"<<std::endl;
     PF_REF( srcimg, "CropPar::build(): srcimg ref (editing mode)" );
     return srcimg;
   }

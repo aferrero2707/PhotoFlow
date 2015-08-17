@@ -1,9 +1,10 @@
 IF(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
-   SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
-  SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+  SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
 
 set(COMPILE_FLAGS "${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
@@ -27,7 +28,8 @@ if(GTKMM3_FOUND)
 endif()
 
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG ${COMPILE_FLAGS}") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -40,6 +42,9 @@ link_directories(${GTHREAD_LIBRARY_DIRS}  )
 
 include_directories(${GLIBMM_INCLUDE_DIRS})
 link_directories(${GLIBMM_LIBRARY_DIRS})
+
+include_directories(${PIXMAN_INCLUDE_DIRS})
+link_directories(${PIXMAN_LIBRARY_DIRS})
 
 include_directories(${SIGC2_INCLUDE_DIRS})
 link_directories(${SIGC2_LIBRARY_DIRS})
@@ -74,6 +79,8 @@ include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
 include_directories(${EXIV2_INCLUDE_DIRS})
 link_directories(${EXIV2_LIBRARY_DIRS})
+include_directories(${GEXIV2_INCLUDE_DIRS})
+link_directories(${GEXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 
@@ -131,13 +138,12 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 #
 add_library(libraw_static STATIC IMPORTED)
 set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/LibRaw/liblibraw_r.a)
-#add_subdirectory(external/LibRaw)
-#list(APPEND LIB_DEPS libraw_r)
-#list(APPEND STATIC_LIBS libraw_static)
+add_subdirectory(external/LibRaw)
+list(APPEND LIB_DEPS libraw_r)
+list(APPEND STATIC_LIBS libraw_static)
 
-FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
-set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
-#FILE(GLOB LibRawSources external/LibRaw/src/*.cpp external/LibRaw/internal/*.cpp)
+#FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
+#set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
 
 
 add_library (pfbase STATIC
@@ -154,6 +160,10 @@ add_library (pfbase STATIC
   ${GMicIncludes}
   ${GMicSources}
 )
+
+
+add_dependencies(pfbase ${LIB_DEPS})
+#target_link_libraries(pfbase ${STATIC_LIBS})
 
 
 FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
@@ -174,38 +184,6 @@ ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
 ENDIF(MINGW)
 
-add_executable(pfbatch pfbatch.cc)
-
-#add_dependencies(photoflow ${LIB_DEPS})
-
-target_link_libraries(pfbatch ${LIBS} 
-  pfbase 
-  pfdt
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${OPENEXR_LIBRARIES}
-  ${XML2_LIBRARIES}
-  ${EXIF_LIBRARIES}
-  ${EXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
-  ${SIGC2_LIBRARIES}
-  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-  ${GLIBMM_LIBRARIES} 
-  ${GLIB_LIBRARIES} 
-  ${GMODULE_LIBRARIES} 
-  ${GOBJECT_LIBRARIES} 
-  ${GTHREAD_LIBRARIES} 
-  ${ZLIB_LIBRARIES}
-  #${LIBRAW_LIBRARIES}  
-  ${STATIC_LIBS}
-  ${ORC_LIBRARIES}
-  fftw3
-  ${ADDITIONAL_LIBS}
-  #gmon
-  )
-
-
 add_executable(photoflow # name of the executable on Windows will be example.exe 
   main.cc 
   )
@@ -223,9 +201,11 @@ target_link_libraries(photoflow ${LIBS}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
+  ${GEXIV2_LIBRARIES}
   ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${PIXMAN_LIBRARIES} 
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
   ${GLIB_LIBRARIES} 
@@ -242,18 +222,12 @@ target_link_libraries(photoflow ${LIBS}
   )
 
 
-INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
-INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
-INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
-INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
-INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
-
-add_executable(icc tests/icc.c)
+add_executable(pfbatch pfbatch.cc)
 
 #add_dependencies(photoflow ${LIB_DEPS})
 
-target_link_libraries(icc ${LIBS} 
+target_link_libraries(pfbatch ${LIBS} 
   pfbase 
   pfdt
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
@@ -263,6 +237,7 @@ target_link_libraries(icc ${LIBS}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
+  ${GEXIV2_LIBRARIES}
   ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
@@ -279,6 +254,16 @@ target_link_libraries(icc ${LIBS}
   ${ADDITIONAL_LIBS}
   #gmon
   )
+
+
+
+INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
+INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
+
+INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
+INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
+INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
+INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
 #add_executable(cast tests/cast.c)

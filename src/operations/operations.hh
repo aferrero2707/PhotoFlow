@@ -44,6 +44,7 @@ namespace PF
   ProcessorBase* new_blender();
   ProcessorBase* new_brightness_contrast();
   ProcessorBase* new_hue_saturation();
+  ProcessorBase* new_hsl_mask();
   ProcessorBase* new_clone();
   ProcessorBase* new_crop();
   ProcessorBase* new_scale();
@@ -64,6 +65,7 @@ namespace PF
   ProcessorBase* new_draw();
   ProcessorBase* new_clone_stamp();
   ProcessorBase* new_lensfun();
+  ProcessorBase* new_volume();
   //ProcessorBase* new_vips_operation( std::string op_type );
 }
 

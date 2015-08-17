@@ -30,7 +30,7 @@
 
 #include <fstream>
 
-#include <gtk/gtk.h>
+#include <gexiv2/gexiv2-metadata.h>
 
 #include "fileutils.hh"
 //#include "pf_mkstemp.hh"
@@ -271,6 +271,8 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
   }
   std::cout<<std::endl<<"============================================"<<std::endl<<std::endl<<std::endl;
 #endif
+
+  signal_updated.emit();
 
   save_backup();
 }
@@ -706,6 +708,8 @@ void PF::Image::do_export_merged( std::string filename )
     VipsImage* image = pipeline->get_output();
     VipsImage* outimg = NULL;
 
+    bool saved = false;
+
     std::vector<VipsImage*> in;
     if( ext == "jpg" || ext == "jpeg" ) {
       in.clear();
@@ -715,6 +719,7 @@ void PF::Image::do_export_merged( std::string filename )
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       if( outimg ) {
         vips_jpegsave( outimg, filename.c_str(), "Q", 100, NULL );
+        saved = true;
       }
     }
 
@@ -729,9 +734,21 @@ void PF::Image::do_export_merged( std::string filename )
         vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
             "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
         //vips_image_write_to_file( outimg, filename.c_str(), NULL );
+        saved = true;
       }
     }
     /**/
+
+    if( saved ) {
+      void* gexiv2_buf;
+      size_t gexiv2_buf_length;
+      if( vips_image_get_blob( outimg, "gexiv2-data",
+                               &gexiv2_buf, &gexiv2_buf_length ) )
+        gexiv2_buf = NULL;
+      if( gexiv2_buf && (gexiv2_buf_length==sizeof(GExiv2Metadata)) ) {
+        gexiv2_metadata_save_file( (GExiv2Metadata*)gexiv2_buf, filename.c_str(), NULL );
+      }
+    }
 
     if( outimg ) {
       msg = std::string("PF::Image::export_merged(") + filename + "): outimg unref";

@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicGradientNormConfigDialog: public OperationConfigDialog
+  class GmicGradientNormConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -48,7 +48,7 @@ namespace PF {
     Slider prop_max_threshold_slider;
        
   public:
-    GmicGradientNormConfigDialog( Layer* l );
+    GmicGradientNormConfigGUI( Layer* l );
     
     void open();
   };

@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicSmoothMeanCurvatureConfigDialog: public OperationConfigDialog
+  class GmicSmoothMeanCurvatureConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -46,7 +46,7 @@ namespace PF {
     Slider prop_time_step_slider;
        
   public:
-    GmicSmoothMeanCurvatureConfigDialog( Layer* l );
+    GmicSmoothMeanCurvatureConfigGUI( Layer* l );
     
     void open();
   };

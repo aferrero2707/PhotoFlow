@@ -33,7 +33,7 @@
 namespace PF
 {
 
-  OperationConfigDialog* new_gmic_operation_config( std::string op_type, PF::Layer* current_layer );
+  OperationConfigGUI* new_gmic_operation_config( std::string op_type, PF::Layer* current_layer );
 
 }
 
