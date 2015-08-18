@@ -29,10 +29,10 @@
 
 #include "layerlist.hh"
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 
 
-PF::LayerList::LayerList( OperationConfigDialog* d, std::string l ):
+PF::LayerList::LayerList( OperationConfigGUI* d, std::string l ):
   Gtk::HBox(),
   dialog( d ),
   inhibit( false )
@@ -177,11 +177,23 @@ void PF::LayerList::changed()
       //model:
       PF::Layer* l = row[columns.col_layer];
 
+      std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& inputs = layer->get_extra_inputs();
+      if( (inputs.size() > 0) && (inputs[0].first.first == l->get_id())
+          && (inputs[0].first.second == image_num.get_value()) ) {
+        //std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
+        // <<"\" is unmodified."<<std::endl;
+        return;
+      }
+
 #ifndef NDEBUG
       std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
 	       <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
 #endif
       layer->set_input( 0, l->get_id(), image_num.get_value(), row[columns.col_blended] );
+#ifndef NDEBUG
+      std::cout<<"LayerList::changed(): setting dirty flag of layer \""<<layer->get_name()
+         <<"\" to true"<<std::endl;
+#endif
       layer->set_dirty( true );
 			if( !inhibit ) {
 				//std::cout<<"LayerList::changed(): updating image"<<std::endl;
