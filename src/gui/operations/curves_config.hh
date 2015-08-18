@@ -30,14 +30,14 @@
 #ifndef CURVES_CONFIG_DIALOG_HH
 #define CURVES_CONFIG_DIALOG_HH
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/curves.hh"
 #include "../widgets/curveeditor.hh"
 #include "../widgets/outmode_slider.hh"
 
 namespace PF {
 
-  class CurvesConfigDialog: public OperationConfigDialog
+  class CurvesConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::HBox curvesBox;
@@ -63,8 +63,8 @@ namespace PF {
   OutModeSlider outputModeSlider;
 
 public:
-  CurvesConfigDialog(Layer* layer);
-  virtual ~CurvesConfigDialog();
+  CurvesConfigGUI(Layer* layer);
+  virtual ~CurvesConfigGUI();
 
   bool has_preview() { return true; }
 

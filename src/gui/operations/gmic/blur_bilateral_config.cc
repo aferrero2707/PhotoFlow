@@ -32,8 +32,8 @@
 #include "blur_bilateral_config.hh"
 
 
-PF::BlurBilateralConfigDialog::BlurBilateralConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Bilateral Blur" ),
+PF::BlurBilateralConfigGUI::BlurBilateralConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Bilateral Blur" ),
   iterationsSlider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   sigmasSlider( this, "sigma_s", "Spatial variance", 25, 0, 100, 0.1, 1, 1),
   sigmarSlider( this, "sigma_r", "Value variance", 20, 0, 100, 0.1, 1, 1)
@@ -47,12 +47,12 @@ PF::BlurBilateralConfigDialog::BlurBilateralConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::BlurBilateralConfigDialog::open()
+void PF::BlurBilateralConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     //radiusSlider.init();
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

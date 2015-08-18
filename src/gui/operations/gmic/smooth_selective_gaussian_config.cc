@@ -32,8 +32,8 @@
 #include "smooth_selective_gaussian_config.hh"
 
 
-PF::GmicSmoothSelectiveGaussianConfigDialog::GmicSmoothSelectiveGaussianConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Smooth [selective gaussian] (G'MIC)"  ),
+PF::GmicSmoothSelectiveGaussianConfigGUI::GmicSmoothSelectiveGaussianConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Smooth [selective gaussian] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_amplitude_slider( this, "amplitude", "amplitude", 5, 0, 20, .20, 2.0, 1),
   prop_edges_slider( this, "edges", "edges", 0.5, 0, 2, .02, .2, 1),
@@ -49,7 +49,7 @@ PF::GmicSmoothSelectiveGaussianConfigDialog::GmicSmoothSelectiveGaussianConfigDi
 
 
 
-void PF::GmicSmoothSelectiveGaussianConfigDialog::open()
+void PF::GmicSmoothSelectiveGaussianConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

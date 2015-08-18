@@ -32,8 +32,8 @@
 #include "emulate_film_negative_new_config.hh"
 
 
-PF::GmicEmulateFilmNegativeNewConfigDialog::GmicEmulateFilmNegativeNewConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Film Emulation [negative new] (G'MIC)"  ),
+PF::GmicEmulateFilmNegativeNewConfigGUI::GmicEmulateFilmNegativeNewConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Film Emulation [negative new] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_preset_selector( this, "preset", "preset", 0),
   prop_effect_selector( this, "effect", "effect", 1),
@@ -61,7 +61,7 @@ PF::GmicEmulateFilmNegativeNewConfigDialog::GmicEmulateFilmNegativeNewConfigDial
 
 
 
-void PF::GmicEmulateFilmNegativeNewConfigDialog::open()
+void PF::GmicEmulateFilmNegativeNewConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

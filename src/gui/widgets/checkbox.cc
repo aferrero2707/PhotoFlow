@@ -30,7 +30,7 @@
 #include "checkbox.hh"
 
 
-PF::CheckBox::CheckBox( OperationConfigDialog* dialog, std::string pname, std::string l, int val ):
+PF::CheckBox::CheckBox( OperationConfigGUI* dialog, std::string pname, std::string l, int val ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname )
 {
@@ -50,7 +50,7 @@ PF::CheckBox::CheckBox( OperationConfigDialog* dialog, std::string pname, std::s
 }
 
 
-PF::CheckBox::CheckBox( OperationConfigDialog* dialog, PF::ProcessorBase* processor,
+PF::CheckBox::CheckBox( OperationConfigGUI* dialog, PF::ProcessorBase* processor,
     std::string pname, std::string l, int val ):
       Gtk::HBox(),
       PF::PFWidget( dialog, processor, pname )

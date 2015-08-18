@@ -32,7 +32,7 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/crop.hh"
 
 
@@ -51,7 +51,7 @@ namespace PF {
     CROP_HANDLE_CENTER
   };
 
-  class CropConfigDialog: public OperationConfigDialog
+  class CropConfigGUI: public OperationConfigGUI
 {
   crop_handle_t handle;
 
@@ -71,7 +71,7 @@ namespace PF {
   void move_handle( int x, int y );
 
 public:
-  CropConfigDialog( Layer* l );
+  CropConfigGUI( Layer* l );
 
   bool has_preview() { return true; }
 

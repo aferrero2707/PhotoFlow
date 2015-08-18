@@ -27,9 +27,11 @@
 
  */
 
-#include "layertree.hh"
 #include "../base/image.hh"
 
+#include "imageeditor.hh"
+
+#include "layertree.hh"
 
 static void remove_list( std::list<PF::Layer*>& list, const std::list<PF::Layer*>& remove )
 {

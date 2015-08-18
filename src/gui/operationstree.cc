@@ -536,7 +536,7 @@ void PF::OperationsTreeDialog::add_layer()
     //layer_manager.get_layers().push_back( layer );
     //layer_manager.modified();
     if( ui ) {
-      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if(dialog) {
         if( dialog ) {
           //processor->get_par()->set_config_ui( dialog );

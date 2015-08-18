@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicSmoothSelectiveGaussianConfigDialog: public OperationConfigDialog
+  class GmicSmoothSelectiveGaussianConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -47,7 +47,7 @@ namespace PF {
     Slider prop_scales_slider;
        
   public:
-    GmicSmoothSelectiveGaussianConfigDialog( Layer* l );
+    GmicSmoothSelectiveGaussianConfigGUI( Layer* l );
     
     void open();
   };

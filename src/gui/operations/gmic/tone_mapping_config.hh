@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicToneMappingConfigDialog: public OperationConfigDialog
+  class GmicToneMappingConfigGUI: public OperationConfigGUI
   {
     Gtk::Button updateButton;
     Gtk::VBox controlsBox;
@@ -50,7 +50,7 @@ namespace PF {
     Slider prop_padding_slider;
        
   public:
-    GmicToneMappingConfigDialog( Layer* l );
+    GmicToneMappingConfigGUI( Layer* l );
     
     void on_update();
     void open();

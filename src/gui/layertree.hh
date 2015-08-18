@@ -39,6 +39,8 @@
 
 namespace PF {
 
+class ImageEditor;
+
   class LayerTreeModel: public Gtk::TreeStore
   {
   protected:
@@ -91,6 +93,8 @@ namespace PF {
 
     Gtk::TreeView treeView;
 
+    ImageEditor* editor;
+
     //Image* image;
     //LayerManager* layer_manager;
     std::list<Layer*>* layers;
@@ -106,7 +110,7 @@ namespace PF {
   public:
     sigc::signal<void> signal_updated;
 
-    LayerTree( bool is_map=false );
+    LayerTree( ImageEditor* editor, bool is_map=false );
     virtual ~LayerTree();
 
     Glib::RefPtr<Gtk::TreeStore> get_model() { return treeModel; }

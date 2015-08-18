@@ -31,8 +31,8 @@
 #include "transfer_colors_config.hh"
 
 
-PF::GmicTransferColorsConfigDialog::GmicTransferColorsConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Transfer colors [G'MIC]" ),
+PF::GmicTransferColorsConfigGUI::GmicTransferColorsConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Transfer colors [G'MIC]" ),
   updateButton( "Update" ),
   layer_list( this, "Reference image:"),
   regularizationSlider( this, "regularization", "Regularization: ", 8, 0, 16, 1, 5, 1 ),
@@ -45,15 +45,15 @@ PF::GmicTransferColorsConfigDialog::GmicTransferColorsConfigDialog( PF::Layer* l
   add_widget( lumiSlider );
   add_widget( precisionSelector );
 
-  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicTransferColorsConfigDialog::on_update) );
+  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicTransferColorsConfigGUI::on_update) );
 
   //fileEntry.signal_activate().
   //  connect(sigc::mem_fun(*this,
-  //			  &GmicTransferColorsConfigDialog::on_filename_changed));
+  //			  &GmicTransferColorsConfigGUI::on_filename_changed));
 }
 
 
-void PF::GmicTransferColorsConfigDialog::on_layer_changed()
+void PF::GmicTransferColorsConfigGUI::on_layer_changed()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -62,7 +62,7 @@ void PF::GmicTransferColorsConfigDialog::on_layer_changed()
 }
 
 
-void PF::GmicTransferColorsConfigDialog::on_update()
+void PF::GmicTransferColorsConfigGUI::on_update()
 {
   if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&
@@ -78,15 +78,15 @@ void PF::GmicTransferColorsConfigDialog::on_update()
 }
 
 
-void PF::GmicTransferColorsConfigDialog::do_update()
+void PF::GmicTransferColorsConfigGUI::do_update()
 {
   layer_list.update_model();
-  OperationConfigDialog::do_update();
+  OperationConfigGUI::do_update();
 }
 
 
-void PF::GmicTransferColorsConfigDialog::init()
+void PF::GmicTransferColorsConfigGUI::init()
 {
   layer_list.update_model();
-  OperationConfigDialog::init();
+  OperationConfigGUI::init();
 }

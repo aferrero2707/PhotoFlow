@@ -108,7 +108,7 @@ namespace PF
     void modified() {  set_modified(); signal_modified.emit(); }
 
     bool is_dirty() { return dirty; }
-    void set_dirty( bool d ) { dirty = d; }
+    void set_dirty( bool d ) { dirty = d; if(dirty) std::cout<<"\""<<get_name()<<"\"->set_dirty(1) called"<<std::endl;}
     void clear_dirty( ) { dirty = false; }
     
 
@@ -154,14 +154,7 @@ namespace PF
       if( i != cache_buffers.end() ) return i->second;
       return NULL;
     }
-    void reset_cache_buffers()
-    {
-      std::map<rendermode_t,CacheBuffer*>::iterator i;
-      for(i = cache_buffers.begin(); i != cache_buffers.end(); i++ ) {
-        if( i->second )
-          i->second->reset();
-      }
-    }
+    void reset_cache_buffers();
 
 
     ProcessorBase* get_processor() { return processor; }

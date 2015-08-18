@@ -32,8 +32,8 @@
 #include "gradient_norm_config.hh"
 
 
-PF::GmicGradientNormConfigDialog::GmicGradientNormConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Gradient Norm (G'MIC)"  ),
+PF::GmicGradientNormConfigGUI::GmicGradientNormConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Gradient Norm (G'MIC)"  ),
   //iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_smoothness_slider( this, "smoothness", "Smoothness", 0, 0, 10, .10, 1.0, 1),
   prop_linearity_slider( this, "linearity", "linearity", 0.5, 0, 1.5, .01, .1, 1),
@@ -51,7 +51,7 @@ PF::GmicGradientNormConfigDialog::GmicGradientNormConfigDialog( PF::Layer* layer
 
 
 
-void PF::GmicGradientNormConfigDialog::open()
+void PF::GmicGradientNormConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

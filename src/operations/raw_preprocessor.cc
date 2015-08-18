@@ -120,7 +120,6 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
 
   switch( wb_mode.get_enum_value().first ) {
   case PF::WB_CAMERA:
-    std::cout<<"RawOutputPar::build(): WB = "<<image_data->color.cam_mul[0]<<" "<<image_data->color.cam_mul[1]<<" "<<image_data->color.cam_mul[2]<<std::endl;
     wb_red_current = image_data->color.cam_mul[0];
     wb_green_current = image_data->color.cam_mul[1];
     wb_blue_current = image_data->color.cam_mul[2];

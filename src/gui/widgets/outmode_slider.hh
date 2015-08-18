@@ -59,7 +59,7 @@ namespace PF {
     double multiplier;
     
   public:
-    OutModeSlider(OperationConfigDialog* dialog, std::string pname, std::string l,
+    OutModeSlider(OperationConfigGUI* dialog, std::string pname, std::string l,
 	   double val, double min, double max, double sincr, double pincr, double mult);
 
     ~OutModeSlider() {}

@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicDenoiseConfigDialog: public OperationConfigDialog
+  class GmicDenoiseConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -50,7 +50,7 @@ namespace PF {
     Slider prop_is_fast_slider;
        
   public:
-    GmicDenoiseConfigDialog( Layer* l );
+    GmicDenoiseConfigGUI( Layer* l );
     
     void open();
   };

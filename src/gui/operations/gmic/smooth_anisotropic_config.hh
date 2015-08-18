@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicSmoothAnisotropicConfigDialog: public OperationConfigDialog
+  class GmicSmoothAnisotropicConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -55,7 +55,7 @@ namespace PF {
     Slider prop_padding_slider;
        
   public:
-    GmicSmoothAnisotropicConfigDialog( Layer* l );
+    GmicSmoothAnisotropicConfigGUI( Layer* l );
     
     void open();
   };

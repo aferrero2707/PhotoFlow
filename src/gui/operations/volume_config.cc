@@ -30,8 +30,8 @@
 #include "volume_config.hh"
 
 
-PF::VolumeConfigDialog::VolumeConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Volume" ),
+PF::VolumeConfigGUI::VolumeConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Volume" ),
   modeSelector( this, "method", "Method: ", 0 ),
   amount_slider( this, "amount", "Amount", 100, 0, 100, 5, 10, 100),
   enable_equalizer_box( this, "enable_equalizer", "Enable equalizer", true),
@@ -65,14 +65,12 @@ PF::VolumeConfigDialog::VolumeConfigDialog( PF::Layer* layer ):
 
   globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
   add_widget( globalBox );
-
-  show_all_children();
 }
 
 
 
 
-void PF::VolumeConfigDialog::do_update()
+void PF::VolumeConfigGUI::do_update()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -82,7 +80,7 @@ void PF::VolumeConfigDialog::do_update()
     PropertyBase* prop = par->get_property( "method" );
     if( !prop )  return;
 
-    //std::cout<<"PF::VolumeConfigDialog::do_update() called."<<std::endl;
+    //std::cout<<"PF::VolumeConfigGUI::do_update() called."<<std::endl;
 
     if( usmControlsBox.get_parent() == &controlsBox2 )
       controlsBox2.remove( usmControlsBox );
@@ -96,6 +94,6 @@ void PF::VolumeConfigDialog::do_update()
   }
   controlsBox2.show_all_children();
 
-  OperationConfigDialog::do_update();
+  OperationConfigGUI::do_update();
 }
 

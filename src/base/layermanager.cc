@@ -201,7 +201,7 @@ void PF::LayerManager::get_child_layers( Layer* layer, std::list<Layer*>& childr
 }
 
 /*
- * Fill th list of layers that are parent of a target layer, i.e. the list of layers
+ * Fill the list of layers that are parent of a target layer, i.e. the list of layers
  * that contribute to the input of the target layer (excluding the mask associated
  * to the target layer itself)
  */
@@ -440,7 +440,7 @@ PF::CacheBuffer* PF::LayerManager::get_cache_buffer( rendermode_t mode, std::lis
             pipeline->get_node(l->get_id()) ) {
           PF::PipelineNode* node = pipeline->get_node(l->get_id());
           buf->set_image( node->image );
-          //std::cout<<"Caching layer \""<<l->get_name()<<"\"  image="<<node->image<<std::endl;
+          std::cout<<"Caching layer \""<<l->get_name()<<"\"  image="<<node->image<<std::endl;
           return( buf );
         }
       }
@@ -498,7 +498,8 @@ void PF::LayerManager::update_visible( std::list<Layer*>& list, bool parent_visi
 
 
 void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
-{  
+{
+  //if( !list.empty() ) std::cout<<"LayerManager::update_dirty("<<dirty<<")"<<std::endl;
   std::list<PF::Layer*>::iterator li = list.begin();
   for(li = list.begin(); li != list.end(); ++li) {
     PF::Layer* l = *li;
@@ -507,6 +508,8 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     bool filter_dirty = false;
     bool blender_dirty = false;
 
+    //std::cout<<"  Layer \""<<l->get_name()<<"\": dirty="<<dirty
+    //         <<" l->is_dirty()="<<l->is_dirty()<<std::endl;
     // if the current layer is dirty the dirty flag is set to true
     // this will also qualify as "dirty" all the subsequent layers in the list
     // It probably means that the visibility of the layer has been toggled
@@ -519,11 +522,11 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
 #ifndef NDEBUG
     if( l->get_processor() &&
         l->get_processor()->get_par() ) 
-      std::cout<<"Layer \""<<l->get_name()<<"\": par->is_modified()="
+      std::cout<<"  Layer \""<<l->get_name()<<"\": par->is_modified()="
                <<l->get_processor()->get_par()->is_modified()<<std::endl;
     if( l->get_blender() &&
         l->get_blender()->get_par() ) 
-      std::cout<<"Layer \""<<l->get_name()<<"\": blender->is_modified()="
+      std::cout<<"  Layer \""<<l->get_name()<<"\": blender->is_modified()="
                <<l->get_blender()->get_par()->is_modified()<<std::endl;
 #endif
     if( l->get_processor() &&
@@ -554,6 +557,8 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     bool omap_dirty = false;
     update_dirty( l->omap_layers, omap_dirty );
 
+    //std::cout<<"  Layer \""<<l->get_name()<<"\": filter_dirty="<<filter_dirty<<" blender_dirty="<<blender_dirty<<" input_dirty="<<input_dirty<<" imap_dirty="<<imap_dirty<<" omap_dirty="<<omap_dirty<<std::endl;
+
     if( imap_dirty )
       input_dirty = true;
 
@@ -565,6 +570,8 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     bool sub_dirty = false;
     update_dirty( l->sublayers, sub_dirty );
 
+    //std::cout<<"  Layer \""<<l->get_name()<<"\": sub_dirty="<<sub_dirty<<std::endl;
+
     if( sub_dirty )
       input_dirty = true;
 
@@ -572,6 +579,10 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     
     // Now we have finished walking through all the subchains and extra inputs,
     // and we can set the dirty flag for the current layer
+    //if( dirty ) {
+    //  std::cout<<"  Layer \""<<l->get_name()<<"\"->is_dirty()="<<l->is_dirty()<<std::endl;
+    //  std::cout<<"  Layer \""<<l->get_name()<<"\"->set_dirty("<<dirty<<")"<<std::endl;
+    //}
     l->set_dirty( dirty );
     // If the current layer is cached, we reset the corresponding cache buffer
     // so that the computation will restart from scratch at the next idle loop
@@ -1151,6 +1162,9 @@ bool PF::LayerManager::rebuild_prepare()
   bool dirty = false;
   update_dirty( layers, dirty );
 
+#ifndef NDEBUG
+  std::cout<<"PF::LayerManager::rebuild_prepare(): finished"<<std::endl;
+#endif
   if( !dirty ) {
     return false;
   }

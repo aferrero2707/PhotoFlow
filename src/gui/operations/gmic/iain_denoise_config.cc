@@ -32,8 +32,8 @@
 #include "iain_denoise_config.hh"
 
 
-PF::GmicIainDenoiseConfigDialog::GmicIainDenoiseConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Iain's Noise Reduction (G'MIC)"  ),
+PF::GmicIainDenoiseConfigGUI::GmicIainDenoiseConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Iain's Noise Reduction (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_luma_slider( this, "luma", "luma", 3, 0, 20, .20, 2.0, 1),
   prop_chroma_slider( this, "chroma", "chroma", 3, 0, 20, .20, 2.0, 1),
@@ -67,7 +67,7 @@ PF::GmicIainDenoiseConfigDialog::GmicIainDenoiseConfigDialog( PF::Layer* layer )
 
 
 
-void PF::GmicIainDenoiseConfigDialog::open()
+void PF::GmicIainDenoiseConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

@@ -32,8 +32,8 @@
 #include "smooth_diffusion_config.hh"
 
 
-PF::GmicSmoothDiffusionConfigDialog::GmicSmoothDiffusionConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Smooth [diffusion] (G'MIC)"  ),
+PF::GmicSmoothDiffusionConfigGUI::GmicSmoothDiffusionConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Smooth [diffusion] (G'MIC)"  ),
   //iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_iterations_slider( this, "iterations", "iterations", 8, 1, 100, .99, 9.9, 1),
   prop_sharpness_slider( this, "sharpness", "sharpness", 0.7, 0, 2, .02, .2, 1),
@@ -55,7 +55,7 @@ PF::GmicSmoothDiffusionConfigDialog::GmicSmoothDiffusionConfigDialog( PF::Layer*
 
 
 
-void PF::GmicSmoothDiffusionConfigDialog::open()
+void PF::GmicSmoothDiffusionConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

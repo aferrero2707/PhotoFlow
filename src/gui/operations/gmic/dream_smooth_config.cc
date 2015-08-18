@@ -32,8 +32,8 @@
 #include "dream_smooth_config.hh"
 
 
-PF::GmicDreamSmoothConfigDialog::GmicDreamSmoothConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Dream Smoothing (G'MIC)"  ),
+PF::GmicDreamSmoothConfigGUI::GmicDreamSmoothConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Dream Smoothing (G'MIC)"  ),
   updateButton( "Update" ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_interations_slider( this, "smooth_interations", "Smooth interations", 1, 1, 10, 1, 5, 1),
@@ -60,14 +60,14 @@ PF::GmicDreamSmoothConfigDialog::GmicDreamSmoothConfigDialog( PF::Layer* layer )
   controlsBox.pack_start( prop_smoothness_slider );
   //controlsBox.pack_start( paddingSlider );
 
-  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicDreamSmoothConfigDialog::on_update) );
+  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicDreamSmoothConfigGUI::on_update) );
   
   add_widget( controlsBox );
 }
 
 
 
-void PF::GmicDreamSmoothConfigDialog::on_update()
+void PF::GmicDreamSmoothConfigGUI::on_update()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -83,7 +83,7 @@ void PF::GmicDreamSmoothConfigDialog::on_update()
 }
 
 
-void PF::GmicDreamSmoothConfigDialog::open()
+void PF::GmicDreamSmoothConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

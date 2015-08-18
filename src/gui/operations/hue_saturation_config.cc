@@ -80,8 +80,8 @@ public:
 };
 
 
-PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "B/C/S/H Adjustment" ),
+PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "B/C/S/H Adjustment" ),
   brightnessSlider( this, "brightness", "Brightness", 0, -100, 100, 5, 10, 100),
   brightness2Slider( this, "brightness_eq", "Brightness (curve)", 0, -100, 100, 5, 10, 100),
   contrastSlider( this, "contrast", "Contrast", 0, -100, 100, 5, 10, 100),
@@ -91,18 +91,18 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   hueSlider( this, "hue", "Hue", 0, -180, 180, 0.1, 10, 1),
   hue2Slider( this, "hue_eq", "Hue (curve)", 0, -180, 180, 0.1, 10, 1),
   mask_enable( this, "show_mask", _("show mask"), false ),
-  hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 400, 150 ),
-  hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
-  hueLeq( this, "hue_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
+  hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
+  hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
+  hueLeq( this, "hue_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
   hueHeq_enable( this, "hue_H_equalizer_enabled", "Enable", true ),
   hueSeq_enable( this, "hue_S_equalizer_enabled", "Enable", true  ),
   hueLeq_enable( this, "hue_L_equalizer_enabled", "Enable", true  ),
-  saturationHeq( this, "saturation_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 400, 150 ),
-  saturationSeq( this, "saturation_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
-  saturationLeq( this, "saturation_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
-  contrastHeq( this, "contrast_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 400, 150 ),
-  contrastSeq( this, "contrast_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
-  contrastLeq( this, "contrast_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
+  saturationHeq( this, "saturation_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 200, 350 ),
+  saturationSeq( this, "saturation_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
+  saturationLeq( this, "saturation_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
+  contrastHeq( this, "contrast_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 250, 150 ),
+  contrastSeq( this, "contrast_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
+  contrastLeq( this, "contrast_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
   feather_enable( this, "feather_mask", _("feather mask"), false ),
   featherRadiusSlider( this, "feather_radius", _("feather radius"), 1, 0, 100, 1, 5, 1)
 {
@@ -119,9 +119,9 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   //controlsBox.pack_start( hue2Slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( sep4, Gtk::PACK_SHRINK );
 
-  curves_nb[0].append_page( hueHeq_box, "Hue curve" );
-  curves_nb[0].append_page( hueSeq_box, "Saturation curve" );
-  curves_nb[0].append_page( hueLeq_box, "Luminosity curve" );
+  curves_nb[0].append_page( hueHeq_box, _("H curve") );
+  curves_nb[0].append_page( hueSeq_box, _("S curve") );
+  curves_nb[0].append_page( hueLeq_box, _("L curve") );
 
   hueHeq_box.pack_start( hueHeq, Gtk::PACK_SHRINK );
   hueHeq_box.pack_start( hueHeq_enable_box, Gtk::PACK_SHRINK );
@@ -130,16 +130,16 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   hueLeq_box.pack_start( hueLeq, Gtk::PACK_SHRINK );
   hueLeq_box.pack_start( hueLeq_enable_box, Gtk::PACK_SHRINK );
 
-  hueHeq_enable_box.pack_end( hueHeq_enable, Gtk::PACK_SHRINK );
-  hueSeq_enable_box.pack_end( hueSeq_enable, Gtk::PACK_SHRINK );
-  hueLeq_enable_box.pack_end( hueLeq_enable, Gtk::PACK_SHRINK );
+  hueHeq_enable_box.pack_start( hueHeq_enable, Gtk::PACK_SHRINK );
+  hueSeq_enable_box.pack_start( hueSeq_enable, Gtk::PACK_SHRINK );
+  hueLeq_enable_box.pack_start( hueLeq_enable, Gtk::PACK_SHRINK );
   //hueHeq_enable_box.pack_end( hueHeq_enable_padding, Gtk::PACK_EXPAND_WIDGET );
 
   expander_paddings[0][0].set_size_request(20,-1);
 
   expanders[0][0].set_label( "HSL curves" );
   expanders[0][0].add( expander_hboxes[0][0] );
-  expander_hboxes[0][0].pack_start( expander_paddings[0][0], Gtk::PACK_SHRINK );
+  //expander_hboxes[0][0].pack_start( expander_paddings[0][0], Gtk::PACK_SHRINK );
   expander_hboxes[0][0].pack_start( expander_vboxes[0], Gtk::PACK_SHRINK, 0 );
   //expander_vboxes[0].pack_start( brightness2Slider, Gtk::PACK_SHRINK );
   //expander_vboxes[0].pack_start( contrast2Slider, Gtk::PACK_SHRINK );
@@ -148,6 +148,7 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
   expander_vboxes[0].pack_start( curves_nb[0], Gtk::PACK_SHRINK );
 
   padding1.set_size_request(20,-1);
+  featherRadiusSlider.set_width( 100 );
   feather_box.pack_start( feather_enable, Gtk::PACK_SHRINK );
   feather_box.pack_start( padding1, Gtk::PACK_SHRINK );
   feather_box.pack_start( featherRadiusSlider, Gtk::PACK_SHRINK );
@@ -229,14 +230,14 @@ PF::HueSaturationConfigDialog::HueSaturationConfigDialog( PF::Layer* layer ):
 }
 
 
-bool PF::HueSaturationConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::HueSaturationConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   return false;
 }
 
 
-bool PF::HueSaturationConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::HueSaturationConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
   std::cout<<"HueSaturationConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
@@ -305,7 +306,7 @@ bool PF::HueSaturationConfigDialog::pointer_release_event( int button, double x,
 }
 
 
-bool PF::HueSaturationConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::HueSaturationConfigGUI::pointer_motion_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   return false;

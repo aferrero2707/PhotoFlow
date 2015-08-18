@@ -32,8 +32,8 @@
 #include "denoise_config.hh"
 
 
-PF::DenoiseConfigDialog::DenoiseConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Noise Reduction" ),
+PF::DenoiseConfigGUI::DenoiseConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Noise Reduction" ),
 	modeSelector( this, "nr_mode", "N.R. mode: ", PF_NR_ANIBLUR ),
   iterationsSlider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   amplitudeSlider( this, "amplitude", "Amplitude", 1, 0, 100, 1, 1, 1),
@@ -55,12 +55,12 @@ PF::DenoiseConfigDialog::DenoiseConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::DenoiseConfigDialog::open()
+void PF::DenoiseConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     //radiusSlider.init();
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

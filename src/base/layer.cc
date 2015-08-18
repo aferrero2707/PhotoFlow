@@ -77,6 +77,18 @@ void PF::Layer::set_image( Image* img )
 }
 
 
+void PF::Layer::reset_cache_buffers()
+{
+  //std::cout<<"Layer::reset_cache_buffers(\""<<get_name()<<"\")called"<<std::endl;
+  std::map<rendermode_t,CacheBuffer*>::iterator i;
+  for(i = cache_buffers.begin(); i != cache_buffers.end(); i++ ) {
+    if( i->second )
+      i->second->reset();
+  }
+}
+
+
+
 bool PF::Layer::insert(std::list<PF::Layer*>& list, PF::Layer* l, int32_t lid)
 {
   if( lid < 0 ) {

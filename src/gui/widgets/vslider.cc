@@ -30,7 +30,7 @@
 #include "vslider.hh"
 
 
-PF::VSlider::VSlider( OperationConfigDialog* dialog, std::string pname, std::string l,
+PF::VSlider::VSlider( OperationConfigGUI* dialog, std::string pname, std::string l,
 		    double val, double min, double max, double sincr, double pincr,
 		    double mult ):
   Gtk::VBox(),
@@ -93,7 +93,7 @@ PF::VSlider::VSlider( OperationConfigDialog* dialog, std::string pname, std::str
 }
 
 
-PF::VSlider::VSlider( OperationConfigDialog* dialog, PF::ProcessorBase* processor, std::string pname, std::string l,
+PF::VSlider::VSlider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, std::string pname, std::string l,
 		    double val, double min, double max, double sincr, double pincr,
 		    double mult ):
   Gtk::VBox(),

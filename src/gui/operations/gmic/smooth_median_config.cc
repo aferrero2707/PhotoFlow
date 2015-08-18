@@ -32,8 +32,8 @@
 #include "smooth_median_config.hh"
 
 
-PF::GmicSmoothMedianConfigDialog::GmicSmoothMedianConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Smooth [median] (G'MIC)"  ),
+PF::GmicSmoothMedianConfigGUI::GmicSmoothMedianConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Smooth [median] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_radius_slider( this, "radius", "radius", 3, 1, 20, .19, 1.9, 1),
   prop_threshold_slider( this, "threshold", "threshold", 255, 0, 255, 2.55, 25.5, 1)
@@ -47,7 +47,7 @@ PF::GmicSmoothMedianConfigDialog::GmicSmoothMedianConfigDialog( PF::Layer* layer
 
 
 
-void PF::GmicSmoothMedianConfigDialog::open()
+void PF::GmicSmoothMedianConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

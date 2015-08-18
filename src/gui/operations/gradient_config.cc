@@ -30,12 +30,12 @@
 #include "gradient_config.hh"
 
 
-PF::GradientConfigDialog::GradientConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, _("Gradient tool") ),
-  typeSelector( this, "gradient_type", _("Gradient type: "), 1 ),
-  invert_box( this, "invert", _("Invert"), true ),
-  center_x( this, "gradient_center_x", _("Center X (%)"), 100, 0, 100, 1, 10, 100),
-  center_y( this, "gradient_center_y", _("Center Y (%)"), 100, 0, 100, 1, 10, 100)
+PF::GradientConfigGUI::GradientConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Gradient tool" ),
+  typeSelector( this, "gradient_type", "Gradient type: ", 1 ),
+  invert_box( this, "invert", "Invert", true ),
+  center_x( this, "gradient_center_x", "Center X (%)", 100, 0, 100, 1, 10, 100),
+  center_y( this, "gradient_center_y", "Center Y (%)", 100, 0, 100, 1, 10, 100)
 {
   hbox.pack_start( typeSelector );
   hbox.pack_start( invert_box, Gtk::PACK_SHRINK );

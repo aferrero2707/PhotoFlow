@@ -32,7 +32,7 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../widgets/curveeditor.hh"
 
 #include "../widgets/layerlist.hh"
@@ -40,7 +40,7 @@
 
 namespace PF {
 
-  class HSLMaskConfigDialog: public OperationConfigDialog
+  class HSLMaskConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
 
@@ -65,7 +65,7 @@ namespace PF {
 
 
 public:
-  HSLMaskConfigDialog( Layer* l );
+  HSLMaskConfigGUI( Layer* l );
 
   bool has_preview() { return true; }
 

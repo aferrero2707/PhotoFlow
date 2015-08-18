@@ -32,8 +32,8 @@
 #include "smooth_total_variation_config.hh"
 
 
-PF::GmicSmoothTotalVariationConfigDialog::GmicSmoothTotalVariationConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Smooth [total variation] (G'MIC)"  ),
+PF::GmicSmoothTotalVariationConfigGUI::GmicSmoothTotalVariationConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Smooth [total variation] (G'MIC)"  ),
   //iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_iterations_slider( this, "iterations", "iterations", 10, 1, 40, 1, 5, 1),
   prop_time_step_slider( this, "time_step", "time_step", 30, 5, 100, 1, 10, 1)
@@ -47,7 +47,7 @@ PF::GmicSmoothTotalVariationConfigDialog::GmicSmoothTotalVariationConfigDialog( 
 
 
 
-void PF::GmicSmoothTotalVariationConfigDialog::open()
+void PF::GmicSmoothTotalVariationConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

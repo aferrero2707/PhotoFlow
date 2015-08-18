@@ -32,20 +32,20 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/channel_mixer.hh"
 
 
 namespace PF {
 
-  class ChannelMixerConfigDialog: public OperationConfigDialog
+  class ChannelMixerConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
 
   Slider red_mix_slider, green_mix_slider, blue_mix_slider;
 
 public:
-  ChannelMixerConfigDialog( Layer* l );
+  ChannelMixerConfigGUI( Layer* l );
 
   bool has_preview() { return true; }
 };

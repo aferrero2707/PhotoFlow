@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicInpaintConfigDialog: public OperationConfigDialog
+  class GmicInpaintConfigGUI: public OperationConfigGUI
   {
     Gtk::Button updateButton;
     Gtk::VBox controlsBox;
@@ -54,7 +54,7 @@ namespace PF {
     Selector display_mode_selector;
 
   public:
-    GmicInpaintConfigDialog( Layer* l );
+    GmicInpaintConfigGUI( Layer* l );
     
     void on_update();
     void open();

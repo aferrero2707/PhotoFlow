@@ -32,8 +32,8 @@
 #include "emulate_film_bw_config.hh"
 
 
-PF::GmicEmulateFilmBEConfigDialog::GmicEmulateFilmBEConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Film Emulation [black and white] (G'MIC)"  ),
+PF::GmicEmulateFilmBEConfigGUI::GmicEmulateFilmBEConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Film Emulation [black and white] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_preset_selector( this, "preset", "preset", 0),
   prop_opacity_slider( this, "opacity", "opacity", 1, 0, 1, .01, .1, 1),
@@ -59,7 +59,7 @@ PF::GmicEmulateFilmBEConfigDialog::GmicEmulateFilmBEConfigDialog( PF::Layer* lay
 
 
 
-void PF::GmicEmulateFilmBEConfigDialog::open()
+void PF::GmicEmulateFilmBEConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class CloneStampConfigDialog: public OperationConfigDialog
+  class CloneStampConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
 
@@ -54,7 +54,7 @@ namespace PF {
   bool stroke_started;
 
 public:
-  CloneStampConfigDialog( Layer* l );
+  CloneStampConfigGUI( Layer* l );
 
   void open();
 

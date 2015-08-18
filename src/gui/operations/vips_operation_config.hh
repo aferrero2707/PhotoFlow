@@ -34,12 +34,12 @@
 
 #include <vips/vips.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class VipsOperationConfigDialog: public OperationConfigDialog
+  class VipsOperationConfigGUI: public OperationConfigGUI
   {
 #ifdef GTKMM_2
     Gtk::VBox controlsBox;    
@@ -47,7 +47,7 @@ namespace PF {
 
     std::string op_name;
   public:
-    VipsOperationConfigDialog( Layer* layer );
+    VipsOperationConfigGUI( Layer* layer );
     void add_argument( GParamSpec *pspec, VipsArgumentClass *argument_class );
     void set_op(std::string name);
   };

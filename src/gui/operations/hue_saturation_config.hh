@@ -32,13 +32,14 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
+//#include "../widgets/outmode_slider.hh"
 #include "../widgets/curveeditor.hh"
 
 
 namespace PF {
 
-  class HueSaturationConfigDialog: public OperationConfigDialog
+  class HueSaturationConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
 
@@ -77,7 +78,7 @@ namespace PF {
   Slider featherRadiusSlider;
 
 public:
-  HueSaturationConfigDialog( Layer* l );
+  HueSaturationConfigGUI( Layer* l );
 
   bool has_preview() { return true; }
 

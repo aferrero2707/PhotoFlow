@@ -33,16 +33,16 @@
 
 
 
-PF::ConvertColorspaceConfigDialog::ConvertColorspaceConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, _("Convert to profile") ),
-  outProfileModeSelector( this, "profile_mode", _("Output profile: "), 1 ),
+PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Convert to profile" ),
+  outProfileModeSelector( this, "profile_mode", "Output profile: ", 1 ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
 
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
-  outProfLabel.set_text( _("output profile name:") );
+  outProfLabel.set_text( "output profile name:" );
   outProfVBox.pack_start( outProfLabel );
   outProfVBox.pack_start( outProfFileEntry );
   outProfHBox.pack_start( outProfVBox );
@@ -54,20 +54,20 @@ PF::ConvertColorspaceConfigDialog::ConvertColorspaceConfigDialog( PF::Layer* lay
 
   outProfFileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-			  &ConvertColorspaceConfigDialog::on_out_filename_changed));
+			  &ConvertColorspaceConfigGUI::on_out_filename_changed));
   outProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
-							   &ConvertColorspaceConfigDialog::on_out_button_open_clicked) );
+							   &ConvertColorspaceConfigGUI::on_out_button_open_clicked) );
 
-  show_all_children();
+  get_main_box().show_all_children();
 }
 
 
 
-void PF::ConvertColorspaceConfigDialog::on_out_button_open_clicked()
+void PF::ConvertColorspaceConfigGUI::on_out_button_open_clicked()
 {
-  Gtk::FileChooserDialog dialog(_("Please choose a file"),
+  Gtk::FileChooserDialog dialog("Please choose a file",
 																Gtk::FILE_CHOOSER_ACTION_OPEN);
-  dialog.set_transient_for(*this);
+  //dialog.set_transient_for(*this);
   
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
@@ -104,7 +104,7 @@ void PF::ConvertColorspaceConfigDialog::on_out_button_open_clicked()
 
 
 
-void PF::ConvertColorspaceConfigDialog::on_out_filename_changed()
+void PF::ConvertColorspaceConfigGUI::on_out_filename_changed()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&

@@ -32,8 +32,8 @@
 #include "emulate_film_instant_pro_config.hh"
 
 
-PF::GmicEmulateFilmInstantProConfigDialog::GmicEmulateFilmInstantProConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Film Emulation [instant pro] (G'MIC)"  ),
+PF::GmicEmulateFilmInstantProConfigGUI::GmicEmulateFilmInstantProConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Film Emulation [instant pro] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_preset_selector( this, "preset", "preset", 0),
   prop_opacity_slider( this, "opacity", "opacity", 1, 0, 1, .01, .1, 1),
@@ -59,7 +59,7 @@ PF::GmicEmulateFilmInstantProConfigDialog::GmicEmulateFilmInstantProConfigDialog
 
 
 
-void PF::GmicEmulateFilmInstantProConfigDialog::open()
+void PF::GmicEmulateFilmInstantProConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

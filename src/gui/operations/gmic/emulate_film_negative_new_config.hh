@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicEmulateFilmNegativeNewConfigDialog: public OperationConfigDialog
+  class GmicEmulateFilmNegativeNewConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -53,7 +53,7 @@ namespace PF {
     Slider prop_post_normalize_slider;
        
   public:
-    GmicEmulateFilmNegativeNewConfigDialog( Layer* l );
+    GmicEmulateFilmNegativeNewConfigGUI( Layer* l );
     
     void open();
   };

@@ -28,7 +28,7 @@ if(GTKMM3_FOUND)
 endif()
 
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
 SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG ${COMPILE_FLAGS}") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
@@ -42,6 +42,9 @@ link_directories(${GTHREAD_LIBRARY_DIRS}  )
 
 include_directories(${GLIBMM_INCLUDE_DIRS})
 link_directories(${GLIBMM_LIBRARY_DIRS})
+
+include_directories(${PIXMAN_INCLUDE_DIRS})
+link_directories(${PIXMAN_LIBRARY_DIRS})
 
 include_directories(${SIGC2_INCLUDE_DIRS})
 link_directories(${SIGC2_LIBRARY_DIRS})
@@ -202,6 +205,7 @@ target_link_libraries(photoflow ${LIBS}
   ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${PIXMAN_LIBRARIES} 
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
   ${GLIB_LIBRARIES} 
@@ -257,6 +261,7 @@ INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
+INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 

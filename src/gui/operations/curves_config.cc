@@ -29,19 +29,19 @@
 
 #include "curves_config.hh"
 
-PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
-  PF::OperationConfigDialog( layer, _("Curves Configuration"), false ),
+PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
+  PF::OperationConfigGUI( layer, "Curves Configuration", false ),
   //rgbCurveSelector( this, "RGB_active_curve", "Channel: ", 1 ),
   //labCurveSelector( this, "Lab_active_curve", "Channel: ", 5 ),
   //cmykCurveSelector( this, "CMYK_active_curve", "Channel: ", 8 ),
-  greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
-  rgbCurveEditor( this, "RGB_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
-  RCurveEditor( this, "R_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
-  GCurveEditor( this, "G_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
-  BCurveEditor( this, "B_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
-  LCurveEditor( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
-  aCurveEditor( this, "a_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
-  bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100 ),
+  greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+  rgbCurveEditor( this, "RGB_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+  RCurveEditor( this, "R_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+  GCurveEditor( this, "G_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+  BCurveEditor( this, "B_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+  LCurveEditor( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+  aCurveEditor( this, "a_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+  bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
   outputModeSlider( this, "color_blend", "Output mode", 0, -1, 1, 0.05, 0.2, 1)
 {
 
@@ -91,30 +91,30 @@ PF::CurvesConfigDialog::CurvesConfigDialog(PF::Layer* layer):
   padding1.set_size_request( 2, 10 );
   padding2.set_size_request( 2, 10 );
 
-  add_widget( padding1 );
-  add_widget( hline );
-  add_widget( padding2 );
+  //add_widget( padding1 );
+  //add_widget( hline );
+  //add_widget( padding2 );
 
   add_widget( outputModeSlider );
 
   rgbCurveSelector.signal_changed().
     connect(sigc::mem_fun(*this,
-                          &CurvesConfigDialog::update));
+                          &CurvesConfigGUI::update));
   labCurveSelector.signal_changed().
     connect(sigc::mem_fun(*this,
-                          &CurvesConfigDialog::update));
+                          &CurvesConfigGUI::update));
   //add_control( &rgbCurveSelector );
   //add_control( &labCurveSelector );
   //add_control( &cmykCurveSelector );
 }
 
 
-PF::CurvesConfigDialog::~CurvesConfigDialog()
+PF::CurvesConfigGUI::~CurvesConfigGUI()
 {
 }
 
 
-void PF::CurvesConfigDialog::switch_curve()
+void PF::CurvesConfigGUI::switch_curve()
 {
   //std::vector<Widget*> wl = chselBox.get_children();
   //wl.clear();
@@ -150,7 +150,7 @@ void PF::CurvesConfigDialog::switch_curve()
     if( node && node->processor && node->processor->get_par() ) {
       PF::OpParBase* par = node->processor->get_par();
       cs = PF::convert_colorspace( par->get_interpretation() );
-      //std::cout<<"OperationConfigDialog::update() par: "<<par<<std::endl;
+      //std::cout<<"OperationConfigGUI::update() par: "<<par<<std::endl;
     }
 
     switch( cs ) {
@@ -210,7 +210,7 @@ void PF::CurvesConfigDialog::switch_curve()
 }
 
 
-void PF::CurvesConfigDialog::do_update()
+void PF::CurvesConfigGUI::do_update()
 {
   switch_curve();
   //std::vector<Widget*> wl = chselBox.get_children();
@@ -220,7 +220,7 @@ void PF::CurvesConfigDialog::do_update()
       get_layer()->get_processor()->get_par() ) {
 
 #ifndef NDEBUG
-    std::cout<<"CurvesConfigDialog::do_update() for "<<get_layer()->get_name()<<" called"<<std::endl;
+    std::cout<<"CurvesConfigGUI::do_update() for "<<get_layer()->get_name()<<" called"<<std::endl;
 #endif
     if( rgbCurveSelector.get_parent() == &selectorsBox )
       selectorsBox.remove( rgbCurveSelector );
@@ -237,7 +237,7 @@ void PF::CurvesConfigDialog::do_update()
     if( node && node->processor && node->processor->get_par() ) {
       PF::OpParBase* par = node->processor->get_par();
       cs = PF::convert_colorspace( par->get_interpretation() );
-      //std::cout<<"OperationConfigDialog::update() par: "<<par<<std::endl;
+      //std::cout<<"OperationConfigGUI::update() par: "<<par<<std::endl;
     }
 
     switch( cs ) {
@@ -261,21 +261,21 @@ void PF::CurvesConfigDialog::do_update()
     }
   }
 
-  PF::OperationConfigDialog::do_update();
+  PF::OperationConfigGUI::do_update();
 }
 
 
-bool PF::CurvesConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::CurvesConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   return false;
 }
 
 
-bool PF::CurvesConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::CurvesConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
+  std::cout<<"CurvesConfigGUI::pointer_release_event(): button="<<button<<"  x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
   if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
-  std::cout<<"CurvesConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
 
   // Retrieve the layer associated to the filter 
   PF::Layer* layer = get_layer();
@@ -305,7 +305,7 @@ bool PF::CurvesConfigDialog::pointer_release_event( int button, double x, double
   std::cout<<"image->sample( lin->get_id(), "<<lx<<", "<<ly<<", 5, NULL, values );"<<std::endl;
   image->sample( lin->get_id(), lx, ly, 5, NULL, values );
 
-  std::cout<<"CurvesConfigDialog::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
+  std::cout<<"CurvesConfigGUI::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
 
   PF::OpParBase* par = get_layer()->get_processor()->get_par();
   PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
@@ -356,7 +356,7 @@ bool PF::CurvesConfigDialog::pointer_release_event( int button, double x, double
 }
 
 
-bool PF::CurvesConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::CurvesConfigGUI::pointer_motion_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   return false;

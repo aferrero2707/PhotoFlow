@@ -32,13 +32,13 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/unsharp_mask.hh"
 
 
 namespace PF {
 
-  class UnsharpMaskConfigDialog: public OperationConfigDialog
+  class UnsharpMaskConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
@@ -54,7 +54,7 @@ namespace PF {
   Slider amountSlider;
 
 public:
-  UnsharpMaskConfigDialog( Layer* l );
+  UnsharpMaskConfigGUI( Layer* l );
 
   void open();
 };

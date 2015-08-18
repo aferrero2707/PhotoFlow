@@ -27,11 +27,12 @@
 
  */
 
-#ifndef OPERATION_CONFIG_DIALOG_HH
-#define OPERATION_CONFIG_DIALOG_HH
+#ifndef OPERATION_CONFIG_UIGTK_HH
+#define OPERATION_CONFIG_UIGTK_HH
 
 #include <gtkmm.h>
 
+#include "../base/layer.hh"
 #include "../base/image.hh"
 
 #include "widgets/textbox.hh"
@@ -39,6 +40,7 @@
 #include "widgets/slider.hh"
 #include "widgets/selector.hh"
 #include "widgets/exposure_slider.hh"
+#include "widgets/imagebutton.hh"
 
 #include "doublebuffer.hh"
 
@@ -46,7 +48,8 @@ namespace PF {
 
 class ImageEditor;
 
-class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
+
+class OperationConfigGUI: public OperationConfigUI
 {
   ProcessorBase* op;
   ProcessorBase* blender;
@@ -54,109 +57,120 @@ class OperationConfigDialog: public OperationConfigUI, public Gtk::Dialog
   ImageEditor* editor;
 
   std::vector<PFWidget*> controls;
+  std::list<std::string> values_save;
+  std::list< std::list<std::string> > undo_history;
+  std::list< std::list<std::string> > redo_history;
 
-#ifdef GTKMM_2
-  Gtk::VBox mainBox;
-  Gtk::HBox mainHBox;
-  Gtk::HBox chselBox;
-  Gtk::VBox topBox;
-  Gtk::HBox nameBox;
-  Gtk::HBox controlsBox;
-  Gtk::VBox controlsBoxLeft;
-  Gtk::VBox controlsBoxRight;
-#endif
-#ifdef GTKMM_3
-  Gtk::Box mainBox;
-  Gtk::Box mainHBox;
-  Gtk::Box chselBox;
-  Gtk::Box topBox;
-  Gtk::Box nameBox;
-  Gtk::Box controlsBox;
-  Gtk::Box controlsBoxLeft;
-  Gtk::Box controlsBoxRight;
-#endif
-
-  Gtk::HBox shiftBox;
-
-  Gtk::Frame topFrame;
-
-  Gtk::Entry nameEntry;
   Gtk::Label lname, lblendmode;
   Gtk::Label lopacity, lintensity;
   Gtk::Label controlsLabel;
-  //Gtk::Alignment lintensityAl, lopacityAl;
   Gtk::ComboBoxText blendmodeCombo;
 
-  //Gtk::Adjustment intensityAdj, opacityAdj;
-  //Gtk::HScale intensityScale, opacityScale;
-
-  Selector blendSelector;
+  Selector blendSelector, blendSelector2;
   Gtk::HBox intensity_box, opacity_box;
-  Slider intensitySlider, opacitySlider;
+  Slider intensitySlider, intensitySlider2, opacitySlider, opacitySlider2;
   CheckBox imap_enabled_box, omap_enabled_box;
   Slider shift_x, shift_y;
   bool has_ch_sel;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
 
-  Gtk::VBox previewBox;
   Gtk::CheckButton previewButton;
 
-  std::list<std::string> values_save;
+  Gtk::Dialog* dialog;
 
-  void reset_ch_selector();
+  // Embedded controls
+  Gtk::Frame* frame;
+  Gtk::Alignment frame_box_1_padding;
+  Gtk::Alignment frame_box_1_alignment;
+  Gtk::Alignment frame_box_2_padding;
+  Gtk::Alignment frame_box_3_padding;
+  Gtk::HBox frame_hbox;
+  Gtk::VBox frame_vbox;
+  Gtk::HBox frame_top_box_1_1;
+  Gtk::HBox frame_top_box_1_2;
+  Gtk::VBox frame_top_vbox_1;
+  Gtk::HBox frame_top_box_1;
+  Gtk::HBox frame_top_box_2;
+  Gtk::HBox frame_top_box_3;
+  ToggleImageButton frame_visible;
+  //ToggleImageButton frame_preview;
+  ToggleImageButton frame_mask;
+  ToggleImageButton frame_edit;
+  ToggleImageButton frame_sticky;
+  ToggleImageButton frame_undo;
+  ToggleImageButton frame_redo;
+  ToggleImageButton frame_reset;
+  ToggleImageButton frame_close;
+  ToggleImageButton frame_expander;
+  Gtk::Entry nameEntry, nameEntry2;
+  Gtk::Frame controls_frame;
+  Gtk::EventBox controls_evbox;
+  Gtk::VBox controls_box;
+  Gtk::HSeparator hline;
 
-  //virtual OpParBase* get_par() = 0;
-  //virtual ProcessorBase* get_processor() = 0;
+  Gtk::VBox aux_controls_box;
+  Gtk::HBox aux_controls_hbox;
+
+
+  OpParBase* get_par();
+  OpParBase* get_blender();
+
+  void show_layer_cb() { show_layer(); }
+  void hide_layer_cb() { hide_layer(); }
+  void enable_masks_cb() { enable_masks(); }
+  void disable_masks_cb() { disable_masks(); }
+  void enable_editing_cb() { enable_editing(); }
+  void disable_editing_cb() { disable_editing(); }
+  void set_sticky_cb() { set_sticky(); }
+  void unset_sticky_cb() { unset_sticky(); }
+  void parameters_undo_cb() { parameters_undo(); }
+  void parameters_redo_cb() { parameters_redo(); }
+  void parameters_reset_cb() { parameters_reset(); }
+  void close_config_cb() { close_config(); }
+
 public:
-  OperationConfigDialog(Layer* layer, const Glib::ustring& title, bool has_ch_sel=true);
-  virtual ~OperationConfigDialog();
+  OperationConfigGUI( Layer* layer, const Glib::ustring& title, bool has_ch_sel=true );
+  virtual ~OperationConfigGUI();
 
   virtual bool has_preview() { return false; }
 
-#ifdef GTKMM_2
-  Gtk::VBox& get_main_box() { return mainBox; }
-#endif
-#ifdef GTKMM_3
-  Gtk::Box& get_main_box() { return mainBox; }
-#endif
+  Gtk::VBox& get_main_box() { return controls_box; }
+  Gtk::Frame* get_frame() { return frame; }
 
   void set_editor( ImageEditor* e) { editor = e; }
   void add_widget( Gtk::Widget& widget );
 
   void add_control( PFWidget* control ) { controls.push_back( control ); }
 
-  void on_button_clicked(int id);
-
-  void on_preview_clicked();
-
-  bool focus_in_cb(GdkEventFocus *focus)
-  {
-    on_focus_in( focus );
-    return true;
-  }
-  virtual void on_focus_in(GdkEventFocus *focus) 
-  {
-    //std::cout<<"OperationConfigDialog: on_focus_in() called."<<std::endl;
-  }
-
-
-  bool focus_out_cb(GdkEventFocus *focus)
-  {
-    on_focus_out( focus );
-    return true;
-  }
-  virtual void on_focus_out(GdkEventFocus *focus) 
-  {
-    //std::cout<<"OperationConfigDialog: on_focus_out() called."<<std::endl;
-  }
-
+  Gtk::VBox& get_aux_controls() { return aux_controls_box; }
 
   void on_map();
   void on_unmap();
 
+  void expand();
+  void collapse();
 
+  void enable_preview();
+  void disable_preview();
+
+  bool get_editing_flag();
+  virtual void show_layer();
+  virtual void hide_layer();
+  virtual void enable_masks();
+  virtual void disable_masks();
   virtual void enable_editing();
+  void reset_edit_button();
   virtual void disable_editing();
+  virtual void set_sticky();
+  void reset_sticky_button();
+  virtual void unset_sticky();
+  virtual void parameters_undo();
+  virtual void parameters_redo();
+  virtual void parameters_reset();
+  virtual void close_config();
+
+  void on_layer_name_changed();
+  void on_layer_name2_changed();
 
 
   void screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h );
@@ -212,20 +226,19 @@ public:
   virtual bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
                                float scale, int xoffset, int yoffset ) { return false; }
 
+
+  void update_buttons();
   void open();
-
   void init();
-
   void update();
-
-  void do_update();
+  virtual void do_update();
 
   void update_properties();
 };
 
 
 
-  ProcessorBase* new_operation_with_gui( std::string op_type, Layer* current_layer );
+ProcessorBase* new_operation_with_gui( std::string op_type, Layer* current_layer );
 }
 
 #endif

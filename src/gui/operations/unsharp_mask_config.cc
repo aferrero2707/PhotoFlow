@@ -32,8 +32,8 @@
 #include "unsharp_mask_config.hh"
 
 
-PF::UnsharpMaskConfigDialog::UnsharpMaskConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Unsharp Mask" ),
+PF::UnsharpMaskConfigGUI::UnsharpMaskConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Unsharp Mask" ),
   radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1),
   amountSlider( this, "amount", "Amount", 100, 0, 500, 1, 10, 1)
 {
@@ -45,7 +45,7 @@ PF::UnsharpMaskConfigDialog::UnsharpMaskConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::UnsharpMaskConfigDialog::open()
+void PF::UnsharpMaskConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -53,5 +53,5 @@ void PF::UnsharpMaskConfigDialog::open()
     //amountSlider.init();
     //radiusSlider.init();
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

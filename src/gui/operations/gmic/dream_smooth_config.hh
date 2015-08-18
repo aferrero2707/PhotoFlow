@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicDreamSmoothConfigDialog: public OperationConfigDialog
+  class GmicDreamSmoothConfigGUI: public OperationConfigGUI
   {
     Gtk::Button updateButton;
     Gtk::VBox controlsBox;
@@ -52,7 +52,7 @@ namespace PF {
     Slider paddingSlider;
        
   public:
-    GmicDreamSmoothConfigDialog( Layer* l );
+    GmicDreamSmoothConfigGUI( Layer* l );
     
     void on_update();
     void open();

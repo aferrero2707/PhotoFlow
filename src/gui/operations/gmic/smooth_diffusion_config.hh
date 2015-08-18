@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicSmoothDiffusionConfigDialog: public OperationConfigDialog
+  class GmicSmoothDiffusionConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -50,7 +50,7 @@ namespace PF {
     Slider prop_time_step_slider;
        
   public:
-    GmicSmoothDiffusionConfigDialog( Layer* l );
+    GmicSmoothDiffusionConfigGUI( Layer* l );
     
     void open();
   };
