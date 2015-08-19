@@ -2,9 +2,9 @@
 <!DOCTYPE moduleset SYSTEM "moduleset.dtd">
 <?xml-stylesheet type="text/xsl" href="moduleset.xsl"?>
 <moduleset>
-  <include href="/Users/ferrero/Source/jhbuild/modulesets/bootstrap.modules"/>
-  <include href="/Users/ferrero/Source/jhbuild/modulesets/gtk-osx.modules"/>
-  <include href="/Users/ferrero/Source/jhbuild/modulesets/gtk-osx-gtkmm.modules"/>
+  <include href="Source/jhbuild/modulesets/bootstrap.modules"/>
+  <include href="Source/jhbuild/modulesets/gtk-osx.modules"/>
+  <include href="Source/jhbuild/modulesets/gtk-osx-gtkmm.modules"/>
 
   <repository 
     type="tarball" 
