@@ -54,7 +54,7 @@ do_toggle(t)
 
 
 
-void PF::ToggleImageButton::set_active( bool newval)
+void PF::ToggleImageButton::set_active( bool newval )
 {
   //std::cout<<"ToggleImageButton::set_active("<<newval<<") called (active="<<active<<")"<<std::endl;
   if( active == newval ) return;
@@ -80,6 +80,7 @@ void PF::ToggleImageButton::set_active( bool newval)
 void PF::ToggleImageButton::toggle()
 {
   bool new_state = !is_active();
+  std::cout<<"ToggleImageButton::toggle(): is_active()="<<is_active()<<"  new_state="<<new_state<<std::endl;
   set_active( new_state );
   switch( new_state ) {
   case true:

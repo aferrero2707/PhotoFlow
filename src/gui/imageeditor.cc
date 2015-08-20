@@ -56,6 +56,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   filename( fname ),
   image( new PF::Image() ),
   image_opened( false ),
+  displayed_layer( NULL ),
   active_layer( NULL ),
   //imageArea( image->get_pipeline(PIPELINE_ID) ),
   layersWidget( image, this ),
@@ -620,13 +621,13 @@ void PF::ImageEditor::set_edited_layer( int id )
 
 void PF::ImageEditor::set_displayed_layer( int id )
 {
-  PF::Layer* old_active = active_layer;
-  active_layer = NULL;
+  PF::Layer* old_displayed = displayed_layer;
+  displayed_layer = NULL;
   if( image )
-    active_layer = image->get_layer_manager().get_layer( id );
-  //std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
-  if( old_active != active_layer ) {
-    if( active_layer ) {
+    displayed_layer = image->get_layer_manager().get_layer( id );
+  std::cout<<"ImageEditor::set_displayed_layer("<<id<<"): old_displayed="<<old_displayed<<"  displayed_layer="<<displayed_layer<<std::endl;
+  if( old_displayed != displayed_layer ) {
+    if( displayed_layer ) {
       imageArea->set_displayed_layer( id );
       imageArea->set_display_merged( false );
     } else {

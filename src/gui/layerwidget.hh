@@ -114,9 +114,9 @@ public:
 #endif
     for(unsigned int i = 0; i < layer_views.size(); i++) {
       int id = layer_views[i]->get_selected_layer_id();
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"LayerWidget::update() view #"<<i<<"  selected layer id="<<id<<std::endl;
-#endif
+//#endif
       layer_views[i]->update_model();
       layer_views[i]->select_row( id );
     }

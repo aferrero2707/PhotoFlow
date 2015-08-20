@@ -458,6 +458,7 @@ bool PF::OperationConfigGUI::get_editing_flag()
 
 void PF::OperationConfigGUI::set_sticky()
 {
+  std::cout<<"OperationConfigGUI::set_sticky() called."<<std::endl;
   if( !get_layer() ) return;
   if( !get_layer()->get_image() ) return;
 
@@ -487,6 +488,7 @@ void PF::OperationConfigGUI::set_sticky()
     gui->reset_sticky_button();
   }
 
+  std::cout<<"OperationConfigGUI::set_sticky(): editor->set_displayed_layer("<<get_layer()->get_id()<<")"<<std::endl;
   editor->set_displayed_layer( get_layer()->get_id() );
 }
 

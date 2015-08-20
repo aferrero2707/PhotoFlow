@@ -82,17 +82,17 @@ public:
 
 PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, _("HSL Mask") ),
-  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, 400, 150 ),
-  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
-  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
+  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
+  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
+  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
   hueHeq_enable( this, "H_curve_enabled", "Enable", true ),
   hueSeq_enable( this, "S_curve_enabled", "Enable", true  ),
   hueLeq_enable( this, "L_curve_enabled", "Enable", true  ),
   layer_list( this, _("Layer name:") )
 {
-  curves_nb[0].append_page( hueHeq_box, "Hue curve" );
-  curves_nb[0].append_page( hueSeq_box, "Saturation curve" );
-  curves_nb[0].append_page( hueLeq_box, "Luminosity curve" );
+  curves_nb[0].append_page( hueHeq_box, "H curve" );
+  curves_nb[0].append_page( hueSeq_box, "S curve" );
+  curves_nb[0].append_page( hueLeq_box, "L curve" );
 
   hueHeq_box.pack_start( hueHeq, Gtk::PACK_SHRINK );
   hueHeq_box.pack_start( hueHeq_enable_box, Gtk::PACK_SHRINK );

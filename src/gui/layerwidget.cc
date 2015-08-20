@@ -220,21 +220,22 @@ void PF::LayerWidget::on_selection_changed()
   if( page < 0 ) return;
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
       layer_views[page]->get_tree().get_selection();
+  /*
   if( refTreeSelection->count_selected_rows() == 0 ) {
     Gtk::TreeModel::Children children = layer_views[page]->get_model()->children();
     refTreeSelection->select( children.begin() );
     return;
   }
-
+*/
   int layer_id = get_selected_layer_id();
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_changed(): selected layer id="<<layer_id<<std::endl;
-#endif
+//#endif
 
   std::vector<Gtk::TreeModel::Path> selected_rows = refTreeSelection->get_selected_rows();
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_chaged(): "<<selected_rows.size()<<" selected rows."<<std::endl;
-#endif
+//#endif
   std::vector<Gtk::TreeModel::Path>::iterator row_it = selected_rows.begin();
   if( row_it == selected_rows.end() )
     return;
@@ -245,9 +246,9 @@ void PF::LayerWidget::on_selection_changed()
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"Selected row "<<l->get_name()<<std::endl;
-#endif
+//#endif
 
     if( PF::PhotoFlow::Instance().is_single_win_mode() ) {
       PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
@@ -689,6 +690,11 @@ void PF::LayerWidget::remove_layers()
   std::vector<Gtk::TreeModel::Path> sel_rows = 
     refTreeSelection->get_selected_rows();
   Gtk::TreeModel::iterator iter;
+
+  // Clear the selection, since we are going to remove all selected layers
+  //layer_views[page]->select_row( -1 );
+  refTreeSelection->unselect_all();
+
   if( !sel_rows.empty() ) {
     std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
     //iter = model->get_iter( sel_rows[0] );
@@ -712,7 +718,8 @@ void PF::LayerWidget::remove_layers()
     removed = true;
   }
 
-  if( removed ) update();
+  if( removed )
+    update();
 }
 
 

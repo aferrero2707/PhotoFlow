@@ -49,6 +49,7 @@ namespace PF {
     Image* image;
     bool image_opened;
 
+    Layer* displayed_layer;
     Layer* active_layer;
     std::list<PF::Layer*> active_layer_children;
 

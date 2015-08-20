@@ -54,11 +54,11 @@ PF::VolumeConfigGUI::VolumeConfigGUI( PF::Layer* layer ):
   equalizerCheckboxBox.pack_start( equalizerCheckboxPadding, Gtk::PACK_EXPAND_WIDGET );
   controlsBox.pack_start( equalizerCheckboxBox, Gtk::PACK_SHRINK );
 
-  equalizerBox.pack_start( blacks_amount_slider, Gtk::PACK_SHRINK, 10 );
-  equalizerBox.pack_start( shadows_amount_slider, Gtk::PACK_SHRINK, 10 );
-  equalizerBox.pack_start( midtones_amount_slider, Gtk::PACK_SHRINK, 10 );
-  equalizerBox.pack_start( highlights_amount_slider, Gtk::PACK_SHRINK, 10 );
-  equalizerBox.pack_start( whites_amount_slider, Gtk::PACK_SHRINK, 10 );
+  equalizerBox.pack_start( blacks_amount_slider, Gtk::PACK_SHRINK, 2 );
+  equalizerBox.pack_start( shadows_amount_slider, Gtk::PACK_SHRINK, 2 );
+  equalizerBox.pack_start( midtones_amount_slider, Gtk::PACK_SHRINK, 2 );
+  equalizerBox.pack_start( highlights_amount_slider, Gtk::PACK_SHRINK, 2 );
+  equalizerBox.pack_start( whites_amount_slider, Gtk::PACK_SHRINK, 2 );
   equalizerBox.pack_start( equalizerPadding, Gtk::PACK_EXPAND_WIDGET );
 
   controlsBox.pack_start( equalizerBox, Gtk::PACK_SHRINK );
