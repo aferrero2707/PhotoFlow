@@ -272,6 +272,9 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_geom_box.add( op_geom );
   notebook.append_page( op_geom, "geom" );
 
+  //op_geom_box.add( op_geom );
+  notebook.append_page( op_mask, "mask" );
+
   //#ifndef PF_DISABLE_GMIC
   //op_gmic_box.add( op_gmic );
   notebook.append_page( op_gmic, "G'MIC" );
@@ -352,6 +355,23 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_gmic.get_tree().add_op( "Tone mapping", "gmic_tone_mapping" );
   op_gmic.get_tree().add_op( "Transfer colors [advanced]", "gmic_transfer_colors" );
 #endif
+
+
+  op_mask.get_tree().add_op( "Curves", "curves" );
+  op_mask.get_tree().add_op( "Invert", "invert" );
+  op_mask.get_tree().add_op( "Uniform Fill", "uniform");
+  op_mask.get_tree().add_op( "Gradient", "gradient");
+  op_mask.get_tree().add_op( "H/S/L Mask", "hsl_mask" );
+  op_mask.get_tree().add_op( "Gaussian blur", "gaussblur" );
+  //#if !defined(__APPLE__) && !defined(__MACH__)
+#ifndef PF_DISABLE_GMIC
+  //op_gmic.get_tree().add_op( "G'MIC Interpreter", "gmic" );
+  op_mask.get_tree().add_op( "Gradient Norm", "gmic_gradient_norm" );
+#endif
+  op_mask.get_tree().add_op( "Draw", "draw" );
+  op_mask.get_tree().add_op( "Clone layer", "clone" );
+
+
 
   op_misc.get_tree().add_op( "Draw", "draw" );
   op_misc.get_tree().add_op( "Clone stamp", "clone_stamp" );
@@ -442,9 +462,12 @@ void PF::OperationsTreeDialog::add_layer()
     op_tree = &(op_geom.get_tree());
     break;
   case 4:
-    op_tree = &(op_gmic.get_tree());
+    op_tree = &(op_mask.get_tree());
     break;
   case 5:
+    op_tree = &(op_gmic.get_tree());
+    break;
+  case 6:
     op_tree = &(op_misc.get_tree());
     break;
   default:
@@ -536,13 +559,13 @@ void PF::OperationsTreeDialog::add_layer()
     //layer_manager.get_layers().push_back( layer );
     //layer_manager.modified();
     if( ui ) {
-      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
+      PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if(dialog) {
         if( dialog ) {
           //processor->get_par()->set_config_ui( dialog );
           //dialog->update();
           dialog->open();
-          dialog->enable_editing();
+          //dialog->enable_editing();
         }
       }
     }

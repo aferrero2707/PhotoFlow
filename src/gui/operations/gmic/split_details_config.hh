@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicSplitDetailsConfigDialog: public OperationConfigDialog
+  class GmicSplitDetailsConfigGUI: public OperationConfigGUI
   {
     Gtk::Button updateButton;
     Gtk::VBox controlsBox;
@@ -47,7 +47,7 @@ namespace PF {
     Slider prop_detail_scale_slider;
        
   public:
-    GmicSplitDetailsConfigDialog( Layer* l );
+    GmicSplitDetailsConfigGUI( Layer* l );
     
     void on_update();
     void open();

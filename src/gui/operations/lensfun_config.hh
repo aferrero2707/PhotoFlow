@@ -36,13 +36,13 @@
 #include <lensfun.h>
 #endif
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/lensfun.hh"
 
 
 namespace PF {
 
-class LensFunConfigDialog: public OperationConfigDialog
+class LensFunConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
@@ -57,7 +57,7 @@ class LensFunConfigDialog: public OperationConfigDialog
 #endif
 
 public:
-  LensFunConfigDialog( Layer* l );
+  LensFunConfigGUI( Layer* l );
 
   void on_maker_changed();
 

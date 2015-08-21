@@ -30,7 +30,7 @@
 #include "vslider.hh"
 
 
-PF::VSlider::VSlider( OperationConfigDialog* dialog, std::string pname, std::string l,
+PF::VSlider::VSlider( OperationConfigGUI* dialog, std::string pname, std::string l,
 		    double val, double min, double max, double sincr, double pincr,
 		    double mult ):
   Gtk::VBox(),
@@ -52,10 +52,10 @@ PF::VSlider::VSlider( OperationConfigDialog* dialog, std::string pname, std::str
   //label.set_alignment( Gtk::ALIGN_END );
   label.set_alignment( 1.0 );
   scale.set_digits(0);
+  scale.set_size_request( -1, 100 );
+  if( sincr >= 1 ) { spinButton.set_size_request( 48, -1 ); }
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( -1, 100 );
-  //spinButton.set_size_request( 48, -1 );
   //spinButton.set_alignment( Gtk::ALIGN_END );
   spinButton.set_alignment( 1.0 );
 
@@ -93,7 +93,7 @@ PF::VSlider::VSlider( OperationConfigDialog* dialog, std::string pname, std::str
 }
 
 
-PF::VSlider::VSlider( OperationConfigDialog* dialog, PF::ProcessorBase* processor, std::string pname, std::string l,
+PF::VSlider::VSlider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, std::string pname, std::string l,
 		    double val, double min, double max, double sincr, double pincr,
 		    double mult ):
   Gtk::VBox(),

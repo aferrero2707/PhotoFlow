@@ -32,14 +32,14 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/volume.hh"
 #include "../widgets/vslider.hh"
 
 
 namespace PF {
 
-  class VolumeConfigDialog: public OperationConfigDialog
+  class VolumeConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     Gtk::VBox controlsBox2;
@@ -64,7 +64,7 @@ namespace PF {
     Slider usmRadiusSlider;
 
   public:
-    VolumeConfigDialog( Layer* l );
+    VolumeConfigGUI( Layer* l );
     
     bool has_preview() { return true; }
 

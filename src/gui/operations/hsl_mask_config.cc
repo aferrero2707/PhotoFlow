@@ -80,19 +80,19 @@ public:
 };
 
 
-PF::HSLMaskConfigDialog::HSLMaskConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, _("HSL Mask") ),
-  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, 400, 150 ),
-  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
-  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 400, 150 ),
+PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, _("HSL Mask") ),
+  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
+  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
+  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
   hueHeq_enable( this, "H_curve_enabled", "Enable", true ),
   hueSeq_enable( this, "S_curve_enabled", "Enable", true  ),
   hueLeq_enable( this, "L_curve_enabled", "Enable", true  ),
   layer_list( this, _("Layer name:") )
 {
-  curves_nb[0].append_page( hueHeq_box, "Hue curve" );
-  curves_nb[0].append_page( hueSeq_box, "Saturation curve" );
-  curves_nb[0].append_page( hueLeq_box, "Luminosity curve" );
+  curves_nb[0].append_page( hueHeq_box, "H curve" );
+  curves_nb[0].append_page( hueSeq_box, "S curve" );
+  curves_nb[0].append_page( hueLeq_box, "L curve" );
 
   hueHeq_box.pack_start( hueHeq, Gtk::PACK_SHRINK );
   hueHeq_box.pack_start( hueHeq_enable_box, Gtk::PACK_SHRINK );
@@ -182,7 +182,7 @@ PF::HSLMaskConfigDialog::HSLMaskConfigDialog( PF::Layer* layer ):
 }
 
 
-void PF::HSLMaskConfigDialog::do_update()
+void PF::HSLMaskConfigGUI::do_update()
 {
   if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&
@@ -199,28 +199,28 @@ void PF::HSLMaskConfigDialog::do_update()
       }
     }
   }
-  OperationConfigDialog::do_update();
+  OperationConfigGUI::do_update();
 }
 
 
-void PF::HSLMaskConfigDialog::init()
+void PF::HSLMaskConfigGUI::init()
 {
   layer_list.update_model();
-  OperationConfigDialog::init();
+  OperationConfigGUI::init();
 }
 
 
-bool PF::HSLMaskConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+bool PF::HSLMaskConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   return false;
 }
 
 
-bool PF::HSLMaskConfigDialog::pointer_release_event( int button, double x, double y, int mod_key )
+bool PF::HSLMaskConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
-  std::cout<<"HSLMaskConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
+  std::cout<<"HSLMaskConfigGUI::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
 
   // Retrieve the layer associated to the filter
   PF::Layer* layer = get_layer();
@@ -251,7 +251,7 @@ bool PF::HSLMaskConfigDialog::pointer_release_event( int button, double x, doubl
   std::cout<<"image->sample( lin->get_id(), "<<lx<<", "<<ly<<", 5, NULL, values );"<<std::endl;
   image->sample( lin->get_id(), lx, ly, 5, NULL, values );
 
-  std::cout<<"HSLMaskConfigDialog::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
+  std::cout<<"HSLMaskConfigGUI::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
 
   rgb2hsl( values[0], values[1], values[2], H, S, L );
 
@@ -286,7 +286,7 @@ bool PF::HSLMaskConfigDialog::pointer_release_event( int button, double x, doubl
 }
 
 
-bool PF::HSLMaskConfigDialog::pointer_motion_event( int button, double x, double y, int mod_key )
+bool PF::HSLMaskConfigGUI::pointer_motion_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
   return false;

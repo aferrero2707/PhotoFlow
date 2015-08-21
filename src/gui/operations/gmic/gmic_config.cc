@@ -32,8 +32,8 @@
 #include "gmic_config.hh"
 
 
-PF::GMicConfigDialog::GMicConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "G'MIC Command Interface" ),
+PF::GMicConfigGUI::GMicConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "G'MIC Command Interface" ),
   iterationsSlider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   paddingSlider( this, "padding", "Tiles overlap", 0, 0, 1000, 1, 5, 1),
   xscaleSlider( this, "x_scale", "X scale factor", 1, 0, 100, 0.1, 1, 1),
@@ -53,12 +53,12 @@ PF::GMicConfigDialog::GMicConfigDialog( PF::Layer* layer ):
 
   commandFileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-			  &GMicConfigDialog::on_command_changed));
+			  &GMicConfigGUI::on_command_changed));
 }
 
 
 
-void PF::GMicConfigDialog::open()
+void PF::GMicConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -78,12 +78,12 @@ void PF::GMicConfigDialog::open()
       }
     }
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }
 
 
 
-void PF::GMicConfigDialog::on_command_changed()
+void PF::GMicConfigGUI::on_command_changed()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&

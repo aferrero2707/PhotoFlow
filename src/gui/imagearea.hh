@@ -124,6 +124,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 
   bool display_merged;
   int active_layer;
+  int edited_layer;
 
 	float shrink_factor;
 
@@ -227,13 +228,27 @@ public:
 
   void sink( const VipsRect& area );
 
-  void set_active_layer( int id ) { 
+  void set_edited_layer( int id ) {
+    int old_id = edited_layer;
+    edited_layer = id;
+    if( old_id != edited_layer ) {
+      //update( NULL );
+      if( get_pipeline() && get_pipeline()->get_image() )
+        get_pipeline()->get_image()->update();
+    }
+  }
+  int get_edited_layer() { return edited_layer; }
+
+  void set_displayed_layer( int id ) {
     int old_id = active_layer;
     active_layer = id; 
+    std::cout<<"ImageArea::set_displayed_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
     if( !display_merged && (old_id != active_layer) ) {
       //update( NULL );
-			if( get_pipeline() && get_pipeline()->get_image() )
+			if( get_pipeline() && get_pipeline()->get_image() ) {
+        std::cout<<"ImageArea::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
 				get_pipeline()->get_image()->update();
+			}
 		}
   }
   int get_active_layer() { return active_layer; }
@@ -242,10 +257,13 @@ public:
   {
     bool old_val = display_merged;
     display_merged = val;
+    std::cout<<"ImageArea::set_displayed_merged(): val="<<val<<"  old_val="<<old_val<<std::endl;
     if( display_merged != old_val ) {
       //update( NULL );
-			if( get_pipeline() && get_pipeline()->get_image() )
+			if( get_pipeline() && get_pipeline()->get_image() ) {
+			  std::cout<<"ImageArea::set_displayed_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
 				get_pipeline()->get_image()->update();
+			}
 		}
   }
   bool get_display_merged() { return display_merged; }

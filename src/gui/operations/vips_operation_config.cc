@@ -42,7 +42,7 @@ static void* show_required_optional( VipsObject *operation, GParamSpec *pspec,
 			VipsArgumentInstance *argument_instance, void *a, void *b )
 {
   gboolean required = *((gboolean *) a);
-  PF::VipsOperationConfigDialog* dialog = (PF::VipsOperationConfigDialog *)b;
+  PF::VipsOperationConfigGUI* dialog = (PF::VipsOperationConfigGUI *)b;
  
   /* See
    * http://www.vips.ecs.soton.ac.uk/supported/7.38/doc/html/libvips/libvips-VipsArgument.html#VipsArgumentFlags
@@ -76,7 +76,7 @@ static void* show_required_optional( VipsObject *operation, GParamSpec *pspec,
   return( NULL ); 
 }
  
-static int usage( const char *operation_name, PF::VipsOperationConfigDialog* dialog )
+static int usage( const char *operation_name, PF::VipsOperationConfigGUI* dialog )
 {
   VipsOperation *operation;
   gboolean required;
@@ -135,20 +135,20 @@ static int usage( const char *operation_name, PF::VipsOperationConfigDialog* dia
 
 
 
-PF::VipsOperationConfigDialog::VipsOperationConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Vips Operation" )
+PF::VipsOperationConfigGUI::VipsOperationConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Vips Operation" )
 {
 }
 
 
-void PF::VipsOperationConfigDialog::set_op(std::string name)
+void PF::VipsOperationConfigGUI::set_op(std::string name)
 {
   op_name = name;
   usage( op_name.c_str(), this );
 }
 
 
-void PF::VipsOperationConfigDialog::add_argument( GParamSpec *pspec, VipsArgumentClass *argument_class )
+void PF::VipsOperationConfigGUI::add_argument( GParamSpec *pspec, VipsArgumentClass *argument_class )
 {
   GType otype = G_PARAM_SPEC_VALUE_TYPE( pspec );
   VipsObjectClass *oclass;

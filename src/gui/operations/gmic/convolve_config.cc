@@ -32,8 +32,8 @@
 #include "convolve_config.hh"
 
 
-PF::GmicConvolveConfigDialog::GmicConvolveConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Convolve (G'MIC)"  ),
+PF::GmicConvolveConfigGUI::GmicConvolveConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Convolve (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_kernel_selector( this, "kernel", "kernel", 0),
   prop_boundary_selector( this, "boundary", "boundary", 1),
@@ -49,7 +49,7 @@ PF::GmicConvolveConfigDialog::GmicConvolveConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::GmicConvolveConfigDialog::open()
+void PF::GmicConvolveConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

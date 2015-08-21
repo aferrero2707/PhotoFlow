@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class DenoiseConfigDialog: public OperationConfigDialog
+  class DenoiseConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
@@ -54,7 +54,7 @@ namespace PF {
     anisotropySlider, alphaSlider, sigmaSlider;
 
 public:
-  DenoiseConfigDialog( Layer* l );
+  DenoiseConfigGUI( Layer* l );
 
   void open();
 };

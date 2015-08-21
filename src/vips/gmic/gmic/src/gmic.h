@@ -43,7 +43,7 @@
  #
 */
 #ifndef gmic_version
-#define gmic_version 1650
+#define gmic_version 1652
 
 #include <cstdio>
 #include <cstring>
@@ -217,7 +217,8 @@ struct gmic {
                          const bool is_ending=true);
   static char *ellipsize(const char *const s, char *const res, const unsigned int l=80,
                          const bool is_ending=true);
-  static const char* path_rc(const char *const custom_path=0, const bool return_parent=false);
+  static const char* path_user(const char *const custom_path=0);
+  static const char* path_rc(const char *const custom_path=0);
   static bool init_rc(const char *const custom_path=0);
   static const gmic_image<char>& get_default_commands();
 
@@ -322,23 +323,23 @@ struct gmic {
              bool *const is_noargs);
 
   // Class variables.
+  static gmic_image<char> default_commands;
+
   gmic_list<char> *const commands, *const commands_names, *const commands_has_arguments,
     *const _variables, *const _variables_names, **const variables, **const variables_names,
     commands_files, scope;
   gmic_list<unsigned int> dowhiles, repeatdones;
   gmic_image<unsigned char> light3d;
   gmic_image<char> status;
-  static gmic_image<char> default_commands;
+  void *display_window;
 
   float focale3d, light3d_x, light3d_y, light3d_z, specular_lightness3d, specular_shininess3d, _progress, *progress;
   unsigned long reference_time;
   unsigned int nb_carriages, debug_filename, debug_line, cimg_exception_mode;
   int verbosity, render3d, renderd3d;
-  bool is_released, is_debug, is_start, is_return, is_quit, is_double3d, is_debug_info, check_elif;
-  volatile bool _is_cancel, *is_cancel, is_cancel_thread;
-
+  bool is_released, is_debug, is_running, is_start, is_return, is_quit, is_double3d, is_debug_info, check_elif;
   const char *starting_commands_line;
-  void *display_window;
+  volatile bool _is_cancel, *is_cancel, is_cancel_thread;
 };
 
 // Class 'gmic_exception'.

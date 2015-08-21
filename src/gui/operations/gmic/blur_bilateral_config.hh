@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class BlurBilateralConfigDialog: public OperationConfigDialog
+  class BlurBilateralConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
@@ -53,7 +53,7 @@ namespace PF {
     sigmarSlider;
 
 public:
-  BlurBilateralConfigDialog( Layer* l );
+  BlurBilateralConfigGUI( Layer* l );
 
   void open();
 };

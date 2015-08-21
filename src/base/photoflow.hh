@@ -68,6 +68,7 @@ namespace PF
     std::string locale_dir;
 
     bool batch;
+    bool single_win_mode;
 
     static PhotoFlow* instance;
   public:
@@ -83,6 +84,8 @@ namespace PF
 
     void set_batch( bool val ) { batch = val; }
     bool is_batch() { return batch; }
+
+    bool is_single_win_mode() { return single_win_mode; }
 
     ProcessorBase* new_operation(std::string opname, Layer* current_layer)
     {

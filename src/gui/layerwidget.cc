@@ -37,9 +37,64 @@
 #include "imageeditor.hh"
 
 
+PF::ControlsGroup::ControlsGroup( ImageEditor* e ): editor(e)
+{
+  set_spacing(10);
+}
+
+
+void PF::ControlsGroup::clear()
+{
+  for( unsigned int i = 0; i < controls.size(); i++ ) {
+    if( controls[i] && (controls[i]->get_parent() == this) )
+      remove( *(controls[i]) );
+  }
+  controls.clear();
+  editor->update_controls();
+}
+
+
+void PF::ControlsGroup::add_control(Gtk::Frame* control)
+{
+  for( unsigned int i = 0; i < controls.size(); i++ ) {
+    if( controls[i] == control )
+      return;
+  }
+  controls.push_back( control );
+  pack_start( *control, Gtk::PACK_SHRINK );
+  editor->update_controls();
+}
+
+
+void PF::ControlsGroup::remove_control(Gtk::Frame* control)
+{
+  std::cout<<"ControlsGroup::remove_control() called."<<std::endl;
+  if( control->get_parent() == this ) {
+    std::vector<Gtk::Frame*> new_controls;
+    for( unsigned int i = 0; i < controls.size(); i++ ) {
+      std::cout<<"  controls["<<i<<"]="<<controls[i]<<" (control="<<control<<")"<<std::endl;
+      if( controls[i] == control )
+        continue;
+      std::cout<<"  new_controls.push_back("<<controls[i]<<")"<<std::endl;
+      new_controls.push_back( controls[i] );
+    }
+    std::cout<<"ControlsGroup::remove_control(): controls.size()="<<controls.size()<<"  new_controls.size()="<<new_controls.size()<<std::endl;
+    controls = new_controls;
+    remove( *control );
+  }
+  editor->update_controls();
+}
+
+
+void PF::ControlsGroup::set_controls( std::vector<Gtk::Frame*>& new_controls)
+{
+}
+
+
 PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   Gtk::VBox(), 
   image( img ), editor( ed ),
+  controls_group( ed ),
   buttonAdd("+"),
   buttonAddGroup("G+"),
   buttonDel("-"),
@@ -47,11 +102,11 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonPresetSave( _("Save") ),
   operationsDialog( image, this )
 {
-  //set_size_request(250,0);
+  set_size_request(250,200);
   notebook.set_tab_pos(Gtk::POS_LEFT);
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 
-  LayerTree* view = new LayerTree( );
+  LayerTree* view = new LayerTree( editor );
   //view->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::modified) );
   //frame->add( *view );
   
@@ -62,13 +117,13 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   Gtk::Label* label = (Gtk::Label*)notebook.get_tab_label(*page);
   label->set_angle(90);
 
-  pack_start(notebook);
+  top_box.pack_start(notebook);
 
-  buttonAdd.set_size_request(40,0);
+  buttonAdd.set_size_request(30,20);
   buttonAdd.set_tooltip_text( _("Add a new layer") );
-  buttonAddGroup.set_size_request(40,0);
+  buttonAddGroup.set_size_request(30,20);
   buttonAddGroup.set_tooltip_text( _("Add a new layer group") );
-  buttonDel.set_size_request(40,0);
+  buttonDel.set_size_request(30,20);
   buttonDel.set_tooltip_text( _("Remove selected layers") );
 
   buttonPresetLoad.set_tooltip_text( _("Load an existing preset") );
@@ -81,7 +136,17 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonbox.pack_start(buttonPresetSave/*, Gtk::PACK_SHRINK*/);
   //buttonbox.set_layout(Gtk::BUTTONBOX_START);
 
-  pack_start(buttonbox, Gtk::PACK_SHRINK);
+  top_box.pack_start(buttonbox, Gtk::PACK_SHRINK);
+
+  controls_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
+  controls_scrolled_window.set_shadow_type( Gtk::SHADOW_NONE );
+  controls_scrolled_window.set_size_request( 250, 0 );
+  //controls_scrolled_window.add( controls_group );
+
+  //layers_panel.pack1( top_box, true, true );
+  //layers_panel.pack2( controls_scrolled_window, true, true );
+  //pack_start(layers_panel);
+  pack_start( top_box );
 
   /*
     Gtk::CellRendererToggle* cell = 
@@ -91,7 +156,10 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
 
   view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
 
-  view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) ); 
+  //view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) );
+
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = view->get_tree().get_selection();
+  refTreeSelection->signal_changed().connect(sigc::mem_fun(*this, &PF::LayerWidget::on_selection_changed));
 
   notebook.signal_switch_page().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_switch_page) ); 
 
@@ -123,8 +191,10 @@ PF::LayerWidget::~LayerWidget()
 }
 
 
+/*
 bool PF::LayerWidget::on_button_event( GdkEventButton* button )
 {
+  return true;
 #ifndef NDEBUG
   std::cout<<"LayerWidget::on_button_event(): button "<<button->button<<" clicked."<<std::endl;
 #endif
@@ -137,6 +207,111 @@ bool PF::LayerWidget::on_button_event( GdkEventButton* button )
       signal_active_layer_changed.emit( layer_id );
   }
   return true;
+}
+*/
+
+
+void PF::LayerWidget::on_selection_changed()
+{
+#ifndef NDEBUG
+  std::cout<<"LayerWidget::on_selection_chaged() called."<<std::endl;
+#endif
+  int page = notebook.get_current_page();
+  if( page < 0 ) return;
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+      layer_views[page]->get_tree().get_selection();
+  /*
+  if( refTreeSelection->count_selected_rows() == 0 ) {
+    Gtk::TreeModel::Children children = layer_views[page]->get_model()->children();
+    refTreeSelection->select( children.begin() );
+    return;
+  }
+*/
+  int layer_id = get_selected_layer_id();
+//#ifndef NDEBUG
+  std::cout<<"LayerWidget::on_selection_changed(): selected layer id="<<layer_id<<std::endl;
+//#endif
+
+  std::vector<Gtk::TreeModel::Path> selected_rows = refTreeSelection->get_selected_rows();
+//#ifndef NDEBUG
+  std::cout<<"LayerWidget::on_selection_chaged(): "<<selected_rows.size()<<" selected rows."<<std::endl;
+//#endif
+  std::vector<Gtk::TreeModel::Path>::iterator row_it = selected_rows.begin();
+  if( row_it == selected_rows.end() )
+    return;
+
+  Gtk::TreeModel::iterator iter = layer_views[page]->get_model()->get_iter( *row_it );
+  if (iter) {
+    PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
+    bool visible = (*iter)[columns.col_visible];
+    PF::Layer* l = (*iter)[columns.col_layer];
+    if( !l ) return;
+//#ifndef NDEBUG
+    std::cout<<"Selected row "<<l->get_name()<<std::endl;
+//#endif
+
+    if( PF::PhotoFlow::Instance().is_single_win_mode() ) {
+      PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+      if( ui ) {
+        PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+        if( gui && editor ) {
+          editor->set_aux_controls( &(gui->get_aux_controls()) );
+        }
+      }
+    }
+  }
+
+  return;
+
+  /*
+  if( !PF::PhotoFlow::Instance().is_single_win_mode() ) return;
+
+  controls_group.clear();
+
+  int page = notebook.get_current_page();
+  if( page < 0 ) return;
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+      layer_views[page]->get_tree().get_selection();
+  if( refTreeSelection->count_selected_rows() == 0 )
+    return;
+
+  int layer_id = get_selected_layer_id();
+//#ifndef NDEBUG
+  std::cout<<"LayerWidget::on_selection_changed(): selected layer id="<<layer_id<<std::endl;
+//#endif
+  if( layer_id >= 0 )
+    signal_active_layer_changed.emit( layer_id );
+
+  std::vector<Gtk::TreeModel::Path> selected_rows = refTreeSelection->get_selected_rows();
+//#ifndef NDEBUG
+  std::cout<<"LayerWidget::on_selection_chaged(): "<<selected_rows.size()<<" selected rows."<<std::endl;
+//#endif
+  std::vector<Gtk::TreeModel::Path>::iterator row_it = selected_rows.begin();
+  while( row_it != selected_rows.end() ) {
+    Gtk::TreeModel::iterator iter = layer_views[page]->get_model()->get_iter( *row_it );
+    if (iter) {
+      PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
+      bool visible = (*iter)[columns.col_visible];
+      PF::Layer* l = (*iter)[columns.col_layer];
+      if( !l ) return;
+//#ifndef NDEBUG
+      std::cout<<"Selected row "<<l->get_name()<<std::endl;
+//#endif
+
+      if( PF::PhotoFlow::Instance().is_single_win_mode() ) {
+        PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+        if( ui ) {
+          PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+          if( gui && gui->get_frame() ) {
+            controls_group.add_control( gui->get_frame() );
+          }
+        }
+      }
+    }
+    row_it++;
+  }
+  controls_group.show_all_children();
+  */
 }
 
 
@@ -157,14 +332,16 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       std::cout<<"Activated IMap column of row "<<l->get_name()<<std::endl;
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
-      LayerTree* view = new LayerTree( true );
+      LayerTree* view = new LayerTree( editor, true );
       //frame->add( *view );
       
       //view->set_reorderable();
       
       view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
 
-      view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) ); 
+      //view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) );
+      Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = view->get_tree().get_selection();
+      refTreeSelection->signal_changed().connect(sigc::mem_fun(*this, &PF::LayerWidget::on_selection_changed));
 
       /*
         Gtk::CellRendererToggle* cell = 
@@ -197,14 +374,16 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       std::cout<<"Activated OMap column of row "<<l->get_name()<<std::endl;
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
-      LayerTree* view = new LayerTree( true );
+      LayerTree* view = new LayerTree( editor, true );
       //frame->add( *view );
       
       //view->set_reorderable();
       
       view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
 
-      view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) ); 
+      //view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) );
+      Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = view->get_tree().get_selection();
+      refTreeSelection->signal_changed().connect(sigc::mem_fun(*this, &PF::LayerWidget::on_selection_changed));
 
       /*
         Gtk::CellRendererToggle* cell = 
@@ -234,6 +413,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
 
     PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
     if( ui ) {
+      /*
       PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
       if(dialog) {
         Gtk::Window* toplevel = dynamic_cast<Gtk::Window*>(get_toplevel());
@@ -242,6 +422,13 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
         dialog->open();
         dialog->enable_editing();
       }
+      */
+      PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+      if( gui && gui->get_frame() ) {
+        controls_group.add_control( gui->get_frame() );
+        gui->open();
+      }
+      controls_group.show_all_children();
     }
   }
 }
@@ -294,6 +481,7 @@ bool PF::LayerWidget::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk:
         return true;
     }
   }
+  return false;
 }
 
 
@@ -327,9 +515,9 @@ void PF::LayerWidget::select_row(int id)
 
 void PF::LayerWidget::remove_tab( Gtk::Widget* widget )
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::LayerWidget::remove_tab() called."<<std::endl;
-#endif
+//#endif
   int page = notebook.page_num( *widget );
   if( page < 0 ) return;
   if( page >= notebook.get_n_pages() ) return;
@@ -349,9 +537,9 @@ void PF::LayerWidget::remove_tab( Gtk::Widget* widget )
   delete( widget );
   if( tabwidget )
     delete( tabwidget );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::LayerWidget::remove_tab() page #"<<page<<" removed."<<std::endl;
-#endif
+//#endif
 }
 
 
@@ -419,7 +607,7 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   layer->signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
 /*
   if( layer->get_processor() && layer->get_processor()->get_par() ) {
-    PF::OperationConfigDialog* ui = dynamic_cast<PF::OperationConfigDialog*>( layer->get_processor()->get_par()->get_config_ui() );
+    PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( layer->get_processor()->get_par()->get_config_ui() );
     if( ui ) ui->set_editor( editor );
   }
 */
@@ -490,6 +678,71 @@ void PF::LayerWidget::insert_preset( std::string filename )
 
 
 
+void PF::LayerWidget::close_map_tabs( Layer* l )
+{
+  if( !l ) return;
+  std::cout<<"LayerWidget::close_map_tabs(\""<<l->get_name()<<"\") called."<<std::endl;
+  std::list<Layer*>& omap_layers = l->get_omap_layers();
+  std::list<Layer*>& imap_layers = l->get_imap_layers();
+  std::list<Layer*> map_layers = omap_layers;
+  map_layers.insert(map_layers.end(), imap_layers.begin(), imap_layers.end());
+
+  for( int i = notebook.get_n_pages()-1; i>=1; i-- ) {
+    Widget* page = notebook.get_nth_page(i);
+    LayerTree* view = dynamic_cast<LayerTree*>( page );
+    if( !view ) continue;
+    std::list<Layer*>* view_layers = view->get_layers();
+    bool match = false;
+    if( view_layers == &omap_layers ) match = true;
+    if( view_layers == &imap_layers ) match = true;
+    if( match ) remove_tab( page );
+  }
+
+  for( std::list<Layer*>::iterator li = map_layers.begin(); li != map_layers.end(); li++ ) {
+    close_map_tabs( *li );
+  }
+}
+
+
+
+void PF::LayerWidget::detach_controls( Layer* l )
+{
+  if( !l ) return;
+  std::cout<<"LayerWidget::detach_controls(\""<<l->get_name()<<"\") called."<<std::endl;
+  PF::ProcessorBase* processor = l->get_processor();
+  if( processor ) {
+    PF::OpParBase* par = processor->get_par();
+    if( par ) {
+      PF::OperationConfigUI* ui = par->get_config_ui();
+      PF::OperationConfigGUI* gui =
+          dynamic_cast<PF::OperationConfigGUI*>( ui );
+      if( gui ) {
+        get_controls_group().remove_control( gui->get_frame() );
+        std::cout<<"LayerWidget::detach_controls(\""<<l->get_name()<<"\"): controls removed."<<std::endl;
+        if( editor ) {
+          if( editor->get_aux_controls() == &(gui->get_aux_controls()) )
+            editor->set_aux_controls( NULL );
+        }
+      }
+    }
+  }
+  detach_controls( l->get_omap_layers() );
+  detach_controls( l->get_imap_layers() );
+}
+
+
+
+void PF::LayerWidget::detach_controls( std::list<Layer*>& layers )
+{
+  std::cout<<"LayerWidget::detach_controls( std::list<Layer*>& layers ): layers.size()="<<layers.size()<<std::endl;
+  for( std::list<Layer*>::iterator li = layers.begin(); li != layers.end(); li++ ) {
+    if( !(*li) ) continue;
+    detach_controls( *li );
+  }
+}
+
+
+
 void PF::LayerWidget::remove_layers()
 {
   int page = notebook.get_current_page();
@@ -502,6 +755,11 @@ void PF::LayerWidget::remove_layers()
   std::vector<Gtk::TreeModel::Path> sel_rows = 
     refTreeSelection->get_selected_rows();
   Gtk::TreeModel::iterator iter;
+
+  // Clear the selection, since we are going to remove all selected layers
+  //layer_views[page]->select_row( -1 );
+  refTreeSelection->unselect_all();
+
   if( !sel_rows.empty() ) {
     std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
     //iter = model->get_iter( sel_rows[0] );
@@ -520,12 +778,16 @@ void PF::LayerWidget::remove_layers()
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*iter)[columns.col_layer];
 
+    detach_controls( l );
+    close_map_tabs( l );
+
     image->remove_layer( l );
     image->get_layer_manager().modified();
     removed = true;
   }
 
-  if( removed ) update();
+  if( removed )
+    update();
 }
 
 
@@ -547,11 +809,12 @@ void PF::LayerWidget::on_button_add_group()
   PF::ProcessorBase* blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
   layer->set_blender( blender );
 
+  PF::OperationConfigGUI* dialog =
+    new PF::OperationConfigGUI( layer, Glib::ustring(_("Group Layer Config")) );
+  processor->get_par()->set_config_ui( dialog );
+
   add_layer( layer );
 
-  PF::OperationConfigDialog* dialog = 
-    new PF::OperationConfigDialog( layer, Glib::ustring(_("Group Layer Config")) );
-  processor->get_par()->set_config_ui( dialog );
   //dialog->update();
   dialog->open();
 }

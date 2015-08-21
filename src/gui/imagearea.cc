@@ -128,6 +128,37 @@ gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
   std::cout<<"                get_page_size()="<<update->image_area->get_vadj()->get_page_size()<<std::endl;
   std::cout<<std::endl;
   */
+
+  //update->image_area->queue_draw();
+  //std::cout<<"set_size_cb(): queue_draw() called."<<std::endl;
+
+  // Rectangle corresponding to the preview area
+  VipsRect preview_area = {
+      static_cast<int>(update->image_area->get_hadj()->get_value()),
+      static_cast<int>(update->image_area->get_vadj()->get_value()),
+      static_cast<int>(update->image_area->get_hadj()->get_page_size()),
+      static_cast<int>(update->image_area->get_vadj()->get_page_size())
+  };
+
+  update->image_area->queue_draw_area (preview_area.left,//+update->image_area->get_xoffset(),
+                                       preview_area.top,//+update->image_area->get_yoffset(),
+                                       preview_area.width,
+                                       preview_area.height);
+
+  /*
+  PF::ImageArea::Update* update2 = g_new (Update, 1);
+  update2->image_area = update->image_area;
+  //update2->rect.width = update2->rect.height = 0;
+  update2->rect = preview_area;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"set_size_cb(): installing queue_draw callback."<<std::endl;
+#endif
+  //gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
+  gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update2);
+#ifdef DEBUG_DISPLAY
+  std::cout<<"set_size_cb(): queue_draw() called"<<std::endl;
+#endif
+  */
   g_free (update);
   return FALSE;
 }
@@ -144,6 +175,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   draw_requested( false ),
   display_merged( true ),
   active_layer( -1 ),
+  edited_layer( -1 ),
 	shrink_factor( 1 )
 {
   outimg = NULL;
@@ -194,6 +226,13 @@ void PF::ImageArea::submit_area( const VipsRect& area )
   std::cout<<"PF::ImageArea::submit_area(): called"<<std::endl;
   std::cout<<"                              display_image="<<display_image<<std::endl;
   std::cout<<"                              xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
+  std::cout<<"                              area="<<area<<std::endl;
+  // Rectangle corresponding to the preview area
+  VipsRect preview_area = {
+      static_cast<int>(hadj->get_value()), static_cast<int>(vadj->get_value()),
+      static_cast<int>(hadj->get_page_size()), static_cast<int>(vadj->get_page_size())
+  };
+  std::cout<<"                              preview_area="<<preview_area<<std::endl;
 #endif
 
   // Submit request to re-process the area
@@ -326,26 +365,24 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
     return current_pxbuf;
   }
 
-  if( active_layer >= 0 ) {
+  //std::cout<<"ImageArea::modify_preview() called. edited_layer="<<edited_layer<<std::endl;
+  if( edited_layer >= 0 ) {
     PF::Image* image = get_pipeline()->get_image();
     if( image ) {
-      PF::Layer* layer = image->get_layer_manager().get_layer( active_layer );
-      if( layer &&
+      PF::Layer* layer = image->get_layer_manager().get_layer( edited_layer );
+      if( layer && layer->is_visible() &&
           layer->get_processor() &&
           layer->get_processor()->get_par() ) {
         PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
-        PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
-#if defined(_WIN32) || defined(WIN32)
-        if( dialog && dialog->is_visible() ) {
-#else
-        if( dialog && dialog->get_visible() ) {
-#endif
+        PF::OperationConfigGUI* config = dynamic_cast<PF::OperationConfigGUI*>( ui );
+        if( config && config->get_editing_flag() == true ) {
           int level = get_pipeline()->get_level();
           float zoom_fact = 1.0f;
           for( unsigned int i = 0; i < level; i++ )
             zoom_fact /= 2.0f;
           zoom_fact *= get_shrink_factor();
-          if( dialog->modify_preview(double_buffer.get_active(), temp_buffer, zoom_fact, xoffset, yoffset) )
+          //std::cout<<"Calling config->modify_preview()"<<std::endl;
+          if( config->modify_preview(double_buffer.get_active(), temp_buffer, zoom_fact, xoffset, yoffset) )
             current_pxbuf = temp_buffer.get_pxbuf();
         }
       }
@@ -369,6 +406,8 @@ void PF::ImageArea::draw_area()
     return;
   }
 
+  Glib::RefPtr< Gdk::Pixbuf > current_pxbuf = modify_preview();
+  /*
   Glib::RefPtr< Gdk::Pixbuf > current_pxbuf = double_buffer.get_active().get_pxbuf();
   if( active_layer >= 0 ) {
     PF::Image* image = get_pipeline()->get_image();
@@ -378,23 +417,20 @@ void PF::ImageArea::draw_area()
           layer->get_processor() &&
           layer->get_processor()->get_par() ) {
         PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
-        PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
-#if defined(_WIN32) || defined(WIN32)
-        if( dialog && dialog->is_visible() ) {
-#else
-        if( dialog && dialog->get_visible() ) {
-#endif
+        PF::OperationConfigGUI* config = dynamic_cast<PF::OperationConfigGUI*>( ui );
+        if( config && config->get_editing_flag() == true ) {
           int level = get_pipeline()->get_level();
           float zoom_fact = 1.0f;
           for( unsigned int i = 0; i < level; i++ )
             zoom_fact /= 2.0f;
           zoom_fact *= get_shrink_factor();
-          if( dialog->modify_preview(double_buffer.get_active(), temp_buffer, zoom_fact, xoffset, yoffset) )
+          if( config->modify_preview(double_buffer.get_active(), temp_buffer, zoom_fact, xoffset, yoffset) )
             current_pxbuf = temp_buffer.get_pxbuf();
         }
       }
     }
   }
+  */
 
   //std::cout<<"PF::ImageArea::draw_area(): drawing area "
   //     <<double_buffer.get_active().get_rect().width<<","<<double_buffer.get_active().get_rect().height
@@ -412,7 +448,7 @@ void PF::ImageArea::draw_area()
        double_buffer.get_active().get_rect().width*3,
        double_buffer.get_active().get_rect().height*3 );
   cr->clip();
-  /**/
+
   Gdk::Cairo::set_source_pixbuf( cr, current_pxbuf, 
          double_buffer.get_active().get_rect().left,
          double_buffer.get_active().get_rect().top );
@@ -424,7 +460,7 @@ void PF::ImageArea::draw_area()
        double_buffer.get_active().get_rect().width,
        double_buffer.get_active().get_rect().height );
   cr->fill();
-  /**/
+
   cr->paint();
   draw_requested = false;
   double_buffer.unlock();
@@ -449,6 +485,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   int draw_area_right = draw_area.left + draw_area.width - 1;
   int draw_area_bottom = draw_area.top + draw_area.height - 1;
 
+  //std::cout<<"ImageArea::on_expose_event(): draw_area="<<draw_area<<std::endl;
   // Immediately draw the buffered image, to avoid flickering
   // If the requested area is fully contained witin the current preview buffer,
   // we do not submit any further redraw request
@@ -493,7 +530,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   area_tot.top = MIN( draw_area.top, preview_area.top );
   area_tot.width = MAX( draw_area_right, preview_area_right ) - area_tot.left + 1;
   area_tot.height = MAX( draw_area_bottom, preview_area_bottom ) - area_tot.top + 1;
-  //std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot<<std::endl;
+  //std::cout<<"ImageArea::on_expose_event(): area_tot="<<area_tot<<std::endl;
 
   if( display_image->Xsize < hadj->get_page_size() ) {
     xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
@@ -512,6 +549,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   request.area = area_tot;
   request.request = PF::IMAGE_REDRAW_START;
   //std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_start request."<<std::endl;
+  //std::cout<<"ImageArea::on_expose_event(): request.area="<<request.area<<std::endl;
   PF::ImageProcessor::Instance().submit_request( request );
   //std::cout<<"PF::ImageArea::on_draw(): redraw_start request submitted."<<std::endl;
 
@@ -553,13 +591,15 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   g_free( expose );
 #else
 
-  submit_area( draw_area );
+  //submit_area( draw_area );
+  submit_area( area_tot );
 
 #endif
 
 
   request.sink = this;
-  request.area = draw_area;
+  //request.area = draw_area;
+  request.area = area_tot;
   request.request = PF::IMAGE_REDRAW_END;
   //std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_end request."<<std::endl;
   PF::ImageProcessor::Instance().submit_request( request );
@@ -673,13 +713,15 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     submit_area( area );
   }
 #else
-  submit_area( draw_area );
+  //submit_area( draw_area );
+  submit_area( area_tot );
   //std::cout<<"  submitted redraw area: "<<draw_area<<std::endl;
 #endif
 
 
   request.sink = this;
-  request.area = draw_area;
+  //request.area = draw_area;
+  request.area = area_tot;
   request.request = PF::IMAGE_REDRAW_END;
   //std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_end request."<<std::endl;
   PF::ImageProcessor::Instance().submit_request( request );
@@ -775,7 +817,22 @@ void PF::ImageArea::update( VipsRect* area )
   //return;
 
   VipsImage* image = NULL;
-  if( display_merged || (active_layer<0) ) {
+  bool do_merged = display_merged;
+  //std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
+  if( !do_merged ) {
+    if( active_layer < 0 ) do_merged = true;
+    else {
+      PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
+      if( !node ) do_merged = true;
+      //std::cout<<"ImageArea::update(): node="<<node<<std::endl;
+      if( get_pipeline()->get_image() ) {
+        PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( active_layer );
+        if( !temp_layer ) do_merged = true;
+        if( !(temp_layer->is_visible()) ) do_merged = true;
+      }
+    }
+  }
+  if( do_merged ) {
     image = get_pipeline()->get_output();
 #ifdef DEBUG_DISPLAY
     std::cout<<"ImageArea::update(): image->Bands="<<image->Bands<<std::endl;
@@ -1108,6 +1165,7 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"PF::ImageArea::update(): set_size() called"<<std::endl;
 #endif
 
+  /*
   update = g_new (Update, 1);
   update->image_area = this;
   update->rect.width = update->rect.height = 0;
@@ -1119,6 +1177,7 @@ void PF::ImageArea::update( VipsRect* area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): queue_draw() called"<<std::endl;
 #endif
+  */
 }
 
 

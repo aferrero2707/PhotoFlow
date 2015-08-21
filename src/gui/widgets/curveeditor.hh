@@ -96,7 +96,7 @@ namespace PF {
     bool handle_curve_events(GdkEvent* event);
 
   public:
-    CurveEditor(OperationConfigDialog* dialog, std::string pname, CurveArea* ca,
+    CurveEditor(OperationConfigGUI* dialog, std::string pname, CurveArea* ca,
         float xmin, float xmax, float ymin, float ymax, int width=300, int height=300, int margin=5 );
 
     ~CurveEditor() {}

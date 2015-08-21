@@ -221,6 +221,7 @@ namespace PF
     void set_editing_flag( bool flag ) { editing_flag = flag; }
 
     bool get_mask_enabled() { return mask_enabled.get(); }
+    void set_mask_enabled( bool val ) { mask_enabled.update(val); }
 
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }

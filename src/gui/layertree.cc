@@ -27,8 +27,11 @@
 
  */
 
-#include "layertree.hh"
 #include "../base/image.hh"
+
+#include "imageeditor.hh"
+
+#include "layertree.hh"
 
 static const struct {
   guint  	 width;
@@ -286,7 +289,8 @@ Glib::RefPtr<PF::LayerTreeModel> PF::LayerTreeModel::create()
 }
 
 
-PF::LayerTree::LayerTree( bool is_map ): 
+PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
+  editor( e ),
   layers( NULL ),
   map_flag( is_map )
 {
@@ -296,6 +300,26 @@ PF::LayerTree::LayerTree( bool is_map ):
   treeView.append_column("Name", treeModel->columns.col_name);
   treeView.append_column("map1", treeModel->columns.col_omap);
   treeView.append_column("map2", treeModel->columns.col_imap);
+
+  treeView.set_headers_visible(false);
+
+  Gtk::TreeViewColumn* col;
+  col = treeView.get_column(0);
+  col->set_resizable(false); col->set_expand(false);
+  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  //col->set_fixed_width(35);
+  col = treeView.get_column(2);
+  col->set_resizable(false); col->set_expand(false);
+  col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  col->set_fixed_width(30);
+  col = treeView.get_column(3);
+  col->set_resizable(false); col->set_expand(false);
+  col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  col->set_fixed_width(30);
+  col = treeView.get_column(1);
+  col->set_resizable(false); col->set_expand(true);
+  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+
 
   treeView.enable_model_drag_source();
   treeView.enable_model_drag_dest();
@@ -310,6 +334,8 @@ PF::LayerTree::LayerTree( bool is_map ):
     connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_cb) ); 
 
   add( treeView );
+
+  set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC );
 
   set_size_request(280,0);
   /*
@@ -348,10 +374,19 @@ void PF::LayerTree::on_cell_toggled( const Glib::ustring& path )
 #ifndef NDEBUG
     std::cout<<"Toggled visibility of layer \""<<l->get_name()<<"\": "<<enabled<<std::endl;
 #endif
-    l->set_enabled( enabled );
-    l->set_dirty( true );
-    //layer_manager->rebuild( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
-    l->get_image()->update();
+    if( l->get_processor() && l->get_processor()->get_par() &&
+        l->get_processor()->get_par()->get_config_ui() ) {
+      PF::OperationConfigGUI* gui =
+          dynamic_cast<PF::OperationConfigGUI*>( l->get_processor()->get_par()->get_config_ui() );
+      if( gui ) {
+        if( enabled ) gui->show_layer();
+        else gui->hide_layer();
+      }
+    }
+    //l->set_enabled( enabled );
+    //l->set_dirty( true );
+    ////layer_manager->rebuild( PF::PF_COLORSPACE_RGB, VIPS_FORMAT_UCHAR, 100,100 );
+    //l->get_image()->update();
   }
 }
 
@@ -412,11 +447,17 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
     row[treeModel->columns.col_layer] = l;
     update_mask_icons( row, l );
 
+    if( l->get_processor() && l->get_processor()->get_par() ) {
+      PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( l->get_processor()->get_par()->get_config_ui() );
+      if( ui ) ui->set_editor( editor );
+    }
+
     if( l->is_group() ) {
       update_model( row );
     }
   }
 }
+
 
 
 void PF::LayerTree::update_model()
@@ -440,6 +481,11 @@ void PF::LayerTree::update_model()
     row[treeModel->columns.col_layer] = l;
     update_mask_icons( row, l );
 
+    if( l->get_processor() && l->get_processor()->get_par() ) {
+      PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( l->get_processor()->get_par()->get_config_ui() );
+      if( ui ) ui->set_editor( editor );
+    }
+
     if( l->is_group() ) {
       update_model( row );
     }
@@ -447,6 +493,15 @@ void PF::LayerTree::update_model()
   treeView.expand_all();
 
   signal_updated.emit();
+
+/*
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+      get_tree().get_selection();
+  if( refTreeSelection->count_selected_rows() == 0 ) {
+    Gtk::TreeModel::Children children = get_model()->children();
+    refTreeSelection->select( children.begin() );
+  }
+*/
 
   /*
   if (!image) {
@@ -487,6 +542,7 @@ void PF::LayerTree::update_model()
   }
   */
 }
+
 
 
 PF::Layer* PF::LayerTree::get_selected_layer()

@@ -34,27 +34,28 @@
 
 namespace PF {
 
-  class OperationConfigDialog;
+  class OperationConfigGUI;
 
   class PFWidget
   {
     bool inhibit;
     bool passive;
-    OperationConfigDialog* dialog;
+    OperationConfigGUI* dialog;
     ProcessorBase* processor;
     std::string pname;
     PropertyBase* property;
 
   public:
-    PFWidget(OperationConfigDialog* d, std::string n);
-    PFWidget(OperationConfigDialog* d, ProcessorBase* p, std::string n);
+    PFWidget(OperationConfigGUI* d, std::string n);
+    PFWidget(OperationConfigGUI* d, ProcessorBase* p, std::string n);
 
     sigc::signal<void> value_changed;
 
+    bool get_inhibit() { return inhibit; }
     void set_inhibit( bool val ) { inhibit = val; }
     void set_passive( bool val ) { passive = val; }
 
-    OperationConfigDialog* get_dialog() { return dialog; }
+    OperationConfigGUI* get_dialog() { return dialog; }
 
     void set_processor( ProcessorBase* p) { processor = p; }
     ProcessorBase* get_processor() { return processor; }

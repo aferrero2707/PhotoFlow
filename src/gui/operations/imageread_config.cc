@@ -32,11 +32,11 @@
 #include "imageread_config.hh"
 
 
-PF::ImageReadConfigDialog::ImageReadConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, _("Open an image") ),
+PF::ImageReadConfigGUI::ImageReadConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Open an image" ),
   openButton(Gtk::Stock::OPEN)
 {
-  label.set_text( _("file name:") );
+  label.set_text( "file name:" );
 
   controlsBox.pack_start( label );
   controlsBox.pack_start( fileEntry );
@@ -46,13 +46,13 @@ PF::ImageReadConfigDialog::ImageReadConfigDialog( PF::Layer* layer ):
 
   fileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-			  &ImageReadConfigDialog::on_filename_changed));
+			  &ImageReadConfigGUI::on_filename_changed));
   openButton.signal_clicked().connect(sigc::mem_fun(*this,
-						    &ImageReadConfigDialog::on_button_open_clicked) );
+						    &ImageReadConfigGUI::on_button_open_clicked) );
 }
 
 
-void PF::ImageReadConfigDialog::on_filename_changed()
+void PF::ImageReadConfigGUI::on_filename_changed()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -71,7 +71,7 @@ void PF::ImageReadConfigDialog::on_filename_changed()
 }
 
 
-void PF::ImageReadConfigDialog::open()
+void PF::ImageReadConfigGUI::open()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -84,16 +84,16 @@ void PF::ImageReadConfigDialog::open()
       //contrastAdj.set_value( par->get_contrast() );
     }
   }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }
 
 
 
-void PF::ImageReadConfigDialog::on_button_open_clicked()
+void PF::ImageReadConfigGUI::on_button_open_clicked()
 {
-  Gtk::FileChooserDialog dialog(_("Please choose a file"),
+  Gtk::FileChooserDialog dialog("Please choose a file",
 				Gtk::FILE_CHOOSER_ACTION_OPEN);
-  dialog.set_transient_for(*this);
+  //dialog.set_transient_for(*this);
   
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);

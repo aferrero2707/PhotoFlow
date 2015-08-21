@@ -32,13 +32,13 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/raw_developer.hh"
 
 
 namespace PF {
 
-  class ConvertColorspaceConfigDialog: public OperationConfigDialog
+  class ConvertColorspaceConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox outputControlsBox;
     
@@ -53,7 +53,7 @@ namespace PF {
 
     
   public:
-    ConvertColorspaceConfigDialog( Layer* l );
+    ConvertColorspaceConfigGUI( Layer* l );
     
     void on_out_button_open_clicked();
     void on_out_filename_changed();

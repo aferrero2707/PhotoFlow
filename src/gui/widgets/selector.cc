@@ -30,7 +30,7 @@
 #include "selector.hh"
 
 
-PF::Selector::Selector( OperationConfigDialog* dialog, std::string pname, std::string l, int val ):
+PF::Selector::Selector( OperationConfigGUI* dialog, std::string pname, std::string l, int val ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname )
 {
@@ -53,7 +53,7 @@ PF::Selector::Selector( OperationConfigDialog* dialog, std::string pname, std::s
 }
 
 
-PF::Selector::Selector( OperationConfigDialog* dialog, PF::ProcessorBase* processor, std::string pname, std::string l, int val ):
+PF::Selector::Selector( OperationConfigGUI* dialog, PF::ProcessorBase* processor, std::string pname, std::string l, int val ):
   Gtk::HBox(),
   PF::PFWidget( dialog, processor, pname )
 {

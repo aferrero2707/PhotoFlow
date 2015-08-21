@@ -32,7 +32,7 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/clone.hh"
 
 #include "../widgets/layerlist.hh"
@@ -40,13 +40,13 @@
 
 namespace PF {
 
-class CloneConfigDialog: public OperationConfigDialog
+class CloneConfigGUI: public OperationConfigGUI
 {
   LayerList layer_list;
   Selector sourceSelector;
 
 public:
-  CloneConfigDialog( Layer* l );
+  CloneConfigGUI( Layer* l );
 
   void on_layer_changed();
 

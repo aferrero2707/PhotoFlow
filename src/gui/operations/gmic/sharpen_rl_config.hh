@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicSharpenRLConfigDialog: public OperationConfigDialog
+  class GmicSharpenRLConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -47,7 +47,7 @@ namespace PF {
     Selector prop_blur_selector;
        
   public:
-    GmicSharpenRLConfigDialog( Layer* l );
+    GmicSharpenRLConfigGUI( Layer* l );
     
     void open();
   };

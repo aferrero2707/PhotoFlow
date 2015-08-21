@@ -43,12 +43,13 @@
 
 namespace PF {
 
-  class ImageEditor: public Gtk::Paned
+  class ImageEditor: public Gtk::HBox
   {
     std::string filename;
     Image* image;
     bool image_opened;
 
+    Layer* displayed_layer;
     Layer* active_layer;
     std::list<PF::Layer*> active_layer_children;
 
@@ -56,11 +57,17 @@ namespace PF {
     ImageArea* imageArea;
     Gtk::EventBox imageArea_eventBox;
     Gtk::ScrolledWindow imageArea_scrolledWindow;
+    //Gtk::HPaned main_panel;
+    Gtk::HBox main_panel;
     LayerWidget layersWidget;
+    Gtk::VBox layersWidget_box;
+    Gtk::Widget* aux_controls;
+    Gtk::VBox aux_controlsBox;
     Gtk::HBox controlsBox;
     Gtk::Button buttonZoomIn, buttonZoomOut, buttonZoom100, buttonZoomFit;
     Gtk::VBox radioBox;
     Gtk::RadioButton buttonShowMerged, buttonShowActive;
+    Gtk::ScrolledWindow controls_group_scrolled_window;
 
     HTabLabelWidget* tab_label_widget;
 
@@ -79,7 +86,12 @@ namespace PF {
 
     void set_tab_label_widget( HTabLabelWidget* l ) { tab_label_widget = l; }
 
-    void set_active_layer( int id );
+    void update_controls();
+    void set_aux_controls( Gtk::Widget* aux );
+    Gtk::Widget* get_aux_controls() { return aux_controls; }
+
+    void set_edited_layer( int id );
+    void set_displayed_layer( int id );
 
     void open_image();
 
@@ -89,9 +101,9 @@ namespace PF {
     void on_realize();
 
     // Handlers for the mouse events inside the image area
-    bool on_button_press_event( GdkEventButton* button );
-    bool on_button_release_event( GdkEventButton* button );
-    bool on_motion_notify_event( GdkEventMotion* button );
+    bool my_button_press_event( GdkEventButton* button );
+    bool my_button_release_event( GdkEventButton* button );
+    bool my_motion_notify_event( GdkEventMotion* button );
 
 		// Handler for the widget size change
 		bool on_configure_event( GdkEventConfigure* event );

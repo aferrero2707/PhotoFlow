@@ -31,8 +31,8 @@
 #include "watermark_fourier_config.hh"
 
 
-PF::GmicWatermarkFourierConfigDialog::GmicWatermarkFourierConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Digital Watermark" ),
+PF::GmicWatermarkFourierConfigGUI::GmicWatermarkFourierConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Digital Watermark" ),
   updateButton( "Update" ),
   textBox( this, "text", "Text: ", "Watermark" ),
   textsizeSlider( this, "text_size", "Text size: ", 53, 13, 128, 1, 5, 1 )
@@ -41,15 +41,15 @@ PF::GmicWatermarkFourierConfigDialog::GmicWatermarkFourierConfigDialog( PF::Laye
   add_widget( textBox );
   add_widget( textsizeSlider );
 
-  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicWatermarkFourierConfigDialog::on_update) );
+  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicWatermarkFourierConfigGUI::on_update) );
 
   //fileEntry.signal_activate().
   //  connect(sigc::mem_fun(*this,
-  //			  &GmicWatermarkFourierConfigDialog::on_filename_changed));
+  //			  &GmicWatermarkFourierConfigGUI::on_filename_changed));
 }
 
 
-void PF::GmicWatermarkFourierConfigDialog::on_update()
+void PF::GmicWatermarkFourierConfigGUI::on_update()
 {
   if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&

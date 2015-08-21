@@ -32,7 +32,7 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/raw_developer.hh"
 
 
@@ -42,11 +42,11 @@ class WBSelector: public Selector
 {
   std::string maker, model;
 public:
-  WBSelector(OperationConfigDialog* dialog, std::string pname, std::string l, int val):
+  WBSelector(OperationConfigGUI* dialog, std::string pname, std::string l, int val):
     Selector( dialog, pname, l, val )
   {
   }
-  WBSelector(OperationConfigDialog* dialog, ProcessorBase* processor, std::string pname, std::string l, int val):
+  WBSelector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val):
     Selector( dialog, processor, pname, l, val )
   {
   }
@@ -63,7 +63,7 @@ public:
   bool check_value( int id, const std::string& name, const std::string& val );
 };
 
-  class RawDeveloperConfigDialog: public OperationConfigDialog
+  class RawDeveloperConfigGUI: public OperationConfigGUI
   {
     Gtk::Notebook notebook;
     Gtk::HBox wbHBox;
@@ -119,7 +119,7 @@ public:
 
     
   public:
-    RawDeveloperConfigDialog( Layer* l );
+    RawDeveloperConfigGUI( Layer* l );
     
     void do_update();
 

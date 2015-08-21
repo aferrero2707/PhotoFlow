@@ -32,13 +32,13 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/scale.hh"
 
 
 namespace PF {
 
-  class ScaleConfigDialog: public OperationConfigDialog
+  class ScaleConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
 
@@ -73,7 +73,7 @@ namespace PF {
 
 
 public:
-  ScaleConfigDialog( Layer* l );
+  ScaleConfigGUI( Layer* l );
 
   void do_update();
 };

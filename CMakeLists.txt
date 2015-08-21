@@ -55,6 +55,7 @@ pkg_check_modules(VIPS REQUIRED vips>=7.42.0)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
 
+pkg_check_modules(PIXMAN pixman-1 REQUIRED) 
 pkg_check_modules(PANGO pango) 
 pkg_check_modules(PANGOFT2 pangoft2) 
 pkg_check_modules(GLIB glib-2.0) 

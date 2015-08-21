@@ -32,8 +32,8 @@
 #include "tone_mapping_config.hh"
 
 
-PF::GmicToneMappingConfigDialog::GmicToneMappingConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Tone mapping (G'MIC)"  ),
+PF::GmicToneMappingConfigGUI::GmicToneMappingConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Tone mapping (G'MIC)"  ),
   updateButton( "Update" ),
   prop_threshold_slider( this, "threshold", "threshold", 0.5, 0, 1, .01, .1, 1),
   prop_gamma_slider( this, "gamma", "gamma", 0.7, 0, 1, .01, .1, 1),
@@ -49,14 +49,14 @@ PF::GmicToneMappingConfigDialog::GmicToneMappingConfigDialog( PF::Layer* layer )
   controlsBox.pack_start( prop_iterations_slider );
   controlsBox.pack_start( prop_channels_selector );
   
-  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicToneMappingConfigDialog::on_update) );
+  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicToneMappingConfigGUI::on_update) );
   
   add_widget( controlsBox );
 }
 
 
 
-void PF::GmicToneMappingConfigDialog::on_update()
+void PF::GmicToneMappingConfigGUI::on_update()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -72,7 +72,7 @@ void PF::GmicToneMappingConfigDialog::on_update()
 }
 
 
-void PF::GmicToneMappingConfigDialog::open()
+void PF::GmicToneMappingConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

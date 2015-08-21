@@ -32,20 +32,20 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/desaturate.hh"
 
 
 namespace PF {
 
-  class DesaturateConfigDialog: public OperationConfigDialog
+  class DesaturateConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
     Selector modeSelector;
 
   public:
-    DesaturateConfigDialog( Layer* l );
+    DesaturateConfigGUI( Layer* l );
     
     bool has_preview() { return true; }
 

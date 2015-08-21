@@ -32,13 +32,13 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/gaussblur.hh"
 
 
 namespace PF {
 
-  class GaussBlurConfigDialog: public OperationConfigDialog
+  class GaussBlurConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
@@ -54,7 +54,7 @@ namespace PF {
   Slider radiusSlider;
 
 public:
-  GaussBlurConfigDialog( Layer* l );
+  GaussBlurConfigGUI( Layer* l );
 
   void open();
 };

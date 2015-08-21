@@ -30,7 +30,7 @@
 #include "outmode_slider.hh"
 
 
-PF::OutModeSlider::OutModeSlider( OperationConfigDialog* dialog, std::string pname, std::string l, 
+PF::OutModeSlider::OutModeSlider( OperationConfigGUI* dialog, std::string pname, std::string l, 
 		    double val, double min, double max, double sincr, double pincr,
 		    double mult ):
   Gtk::VBox(),
@@ -63,8 +63,8 @@ PF::OutModeSlider::OutModeSlider( OperationConfigDialog* dialog, std::string pna
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( 250, -1 );
-  //spinButton.set_size_request( 70, -1 );
+  scale.set_size_request( 150, -1 );
+  spinButton.set_size_request( 30, -1 );
 
   // Full widget with slider and spin button
   scale.set_value_pos(Gtk::POS_LEFT);

@@ -32,8 +32,8 @@
 #include "split_details_config.hh"
 
 
-PF::GmicSplitDetailsConfigDialog::GmicSplitDetailsConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Multi-Scale Decomposition"  ),
+PF::GmicSplitDetailsConfigGUI::GmicSplitDetailsConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Multi-Scale Decomposition"  ),
   updateButton( "Update" ),
   prop_nscales_slider( this, "nscales", "nscales", 4, 1, 10, 1, 5, 1),
   prop_base_scale_slider( this, "base_scale", "base scale %", 1, 0, 1000000, .01, 1, 1),
@@ -43,14 +43,14 @@ PF::GmicSplitDetailsConfigDialog::GmicSplitDetailsConfigDialog( PF::Layer* layer
   controlsBox.pack_start( prop_base_scale_slider );
   controlsBox.pack_start( prop_detail_scale_slider );
   
-  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicSplitDetailsConfigDialog::on_update) );
+  updateButton.signal_clicked().connect( sigc::mem_fun(this, &GmicSplitDetailsConfigGUI::on_update) );
   
   add_widget( controlsBox );
 }
 
 
 
-void PF::GmicSplitDetailsConfigDialog::on_update()
+void PF::GmicSplitDetailsConfigGUI::on_update()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -66,7 +66,7 @@ void PF::GmicSplitDetailsConfigDialog::on_update()
 }
 
 
-void PF::GmicSplitDetailsConfigDialog::open()
+void PF::GmicSplitDetailsConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

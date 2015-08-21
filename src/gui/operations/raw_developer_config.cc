@@ -78,20 +78,20 @@ bool PF::WBSelector::check_value( int id, const std::string& name, const std::st
 
 
 
-PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, _("Raw Developer") ),
-  wbModeSelector( this, "wb_mode", _("WB mode: "), 0 ),
-  wbRedSlider( this, "wb_red", _("Red WB mult."), 1, 0, 10, 0.05, 0.1, 1),
-  wbGreenSlider( this, "wb_green", _("Green WB mult."), 1, 0, 10, 0.05, 0.1, 1),
-  wbBlueSlider( this, "wb_blue", _("Blue WB mult."), 1, 0, 10, 0.05, 0.1, 1),
-  wbRedCorrSlider( this, "camwb_corr_red", _("Red WB correction"), 1, 0, 10, 0.05, 0.1, 1),
-  wbGreenCorrSlider( this, "camwb_corr_green", _("Green WB correction"), 1, 0, 10, 0.05, 0.1, 1),
-  wbBlueCorrSlider( this, "camwb_corr_blue", _("Blue WB correction"), 1, 0, 10, 0.05, 0.1, 1),
-  wb_target_L_slider( this, "wb_target_L", _("Target: "), 50, 0, 1000000, 0.05, 0.1, 1),
+PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Raw Developer" ),
+  wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
+  wbRedSlider( this, "wb_red", "Red WB mult.", 1, 0, 10, 0.05, 0.1, 1),
+  wbGreenSlider( this, "wb_green", "Green WB mult.", 1, 0, 10, 0.05, 0.1, 1),
+  wbBlueSlider( this, "wb_blue", "Blue WB mult.", 1, 0, 10, 0.05, 0.1, 1),
+  wbRedCorrSlider( this, "camwb_corr_red", "Red WB correction", 1, 0, 10, 0.05, 0.1, 1),
+  wbGreenCorrSlider( this, "camwb_corr_green", "Green WB correction", 1, 0, 10, 0.05, 0.1, 1),
+  wbBlueCorrSlider( this, "camwb_corr_blue", "Blue WB correction", 1, 0, 10, 0.05, 0.1, 1),
+  wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
   wb_target_a_slider( this, "wb_target_a", "a: ", 10, -1000000, 1000000, 0.05, 0.1, 1),
   wb_target_b_slider( this, "wb_target_b", "b: ", 12, -1000000, 1000000, 0.05, 0.1, 1),
-  demoMethodSelector( this, "demo_method", _("Demosaicing method: "), PF::PF_DEMO_AMAZE ),
-  fcsSlider( this, "fcs_steps", _("False color suppression steps"), 1, 0, 4, 1, 1, 1 ),
+  demoMethodSelector( this, "demo_method", "Demosaicing method: ", PF::PF_DEMO_AMAZE ),
+  fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
   profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
@@ -161,25 +161,25 @@ PF::RawDeveloperConfigDialog::RawDeveloperConfigDialog( PF::Layer* layer ):
 
   camProfFileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-			  &RawDeveloperConfigDialog::on_cam_filename_changed));
+			  &RawDeveloperConfigGUI::on_cam_filename_changed));
   camProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
-							   &RawDeveloperConfigDialog::on_cam_button_open_clicked) );
+							   &RawDeveloperConfigGUI::on_cam_button_open_clicked) );
 
   outProfFileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-			  &RawDeveloperConfigDialog::on_out_filename_changed));
+			  &RawDeveloperConfigGUI::on_out_filename_changed));
   outProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
-							   &RawDeveloperConfigDialog::on_out_button_open_clicked) );
+							   &RawDeveloperConfigGUI::on_out_button_open_clicked) );
 
-  show_all_children();
+  get_main_box().show_all_children();
 }
 
 
 
 
-void PF::RawDeveloperConfigDialog::do_update()
+void PF::RawDeveloperConfigGUI::do_update()
 {
-  //std::cout<<"RawDeveloperConfigDialog::do_update() called."<<std::endl;
+  //std::cout<<"RawDeveloperConfigGUI::do_update() called."<<std::endl;
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
@@ -209,11 +209,11 @@ void PF::RawDeveloperConfigDialog::do_update()
         maker = makermodel;
         model = tmodel;
         wbModeSelector.set_maker_model( maker, model );
-        //std::cout<<"RawDeveloperConfigDialog::do_update(): maker="<<maker<<" model="<<model<<std::endl;
+        //std::cout<<"RawDeveloperConfigGUI::do_update(): maker="<<maker<<" model="<<model<<std::endl;
       }
     }
 
-    //std::cout<<"PF::RawDeveloperConfigDialog::do_update() called."<<std::endl;
+    //std::cout<<"PF::RawDeveloperConfigGUI::do_update() called."<<std::endl;
 
 		if( wbTargetBox.get_parent() == &wbControlsBox )
 			wbControlsBox.remove( wbTargetBox );
@@ -305,18 +305,18 @@ void PF::RawDeveloperConfigDialog::do_update()
       break;
     }
   }
-  OperationConfigDialog::do_update();
+  OperationConfigGUI::do_update();
 }
 
 
 /*
-void PF::RawDeveloperConfigDialog::pointer_press_event( int button, double x, double y, int mod_key )
+void PF::RawDeveloperConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return;
 }
 */
 
-bool PF::RawDeveloperConfigDialog::pointer_release_event( int button, double sx, double sy, int mod_key )
+bool PF::RawDeveloperConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
   if( button != 1 ) return false;
 
@@ -341,7 +341,7 @@ bool PF::RawDeveloperConfigDialog::pointer_release_event( int button, double sx,
 
 
 
-void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
+void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
 {
   // Get the layer associated to this operation
   PF::Layer* l = get_layer();
@@ -384,10 +384,10 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
     float rgb_avg[3] = {0, 0, 0};
 		std::vector<float> values;
 
-    std::cout<<"RawDeveloperConfigDialog: getting spot WB ("<<x<<","<<y<<")"<<std::endl;
+    std::cout<<"RawDeveloperConfigGUI: getting spot WB ("<<x<<","<<y<<")"<<std::endl;
 		img->sample( l->get_id(), x, y, 7, NULL, values );
 		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigDialog::pointer_relese_event(): values.size() "
+			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;
 			return;
 		}
@@ -456,10 +456,10 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
       img->unlock();
     }
 
-    std::cout<<"RawDeveloperConfigDialog: checking spot WB"<<std::endl;
+    std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
 		img->sample( l->get_id(), x, y, 7, NULL, values );
 		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigDialog::pointer_relese_event(): values.size() "
+			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;
 			return;
 		}
@@ -486,7 +486,7 @@ void PF::RawDeveloperConfigDialog::spot_wb( double x, double y )
 
 
 
-void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
+void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
 {
   // Get the layer associated to this operation
   PF::Layer* l = get_layer();
@@ -635,7 +635,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 		std::vector<float> values;
 
     std::cout<<std::endl<<std::endl<<"==============================================="<<std::endl;
-   std::cout<<"RawDeveloperConfigDialog: getting color spot WB"<<std::endl;
+   std::cout<<"RawDeveloperConfigGUI: getting color spot WB"<<std::endl;
 		/*
     int line_size = clipped.width*3;
     for( row = 0; row < rspot.height; row++ ) {
@@ -651,11 +651,11 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     rgb_avg[1] /= rspot.width*rspot.height;
     rgb_avg[2] /= rspot.width*rspot.height;
 		*/
-    std::cout<<"RawDeveloperConfigDialog: getting color spot WB ("<<x<<","<<y<<")"<<std::endl;
+    std::cout<<"RawDeveloperConfigGUI: getting color spot WB ("<<x<<","<<y<<")"<<std::endl;
 		img->sample( l->get_id(), x, y, sample_size, NULL, values );
 		//values.clear(); img->sample( l->get_id(), x, y, sample_size, NULL, values );
 		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigDialog::pointer_relese_event(): values.size() "
+			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;
 			return;
 		}
@@ -912,7 +912,7 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     if (vips_region_prepare (region, &rspot))
       return;
   
-    std::cout<<"RawDeveloperConfigDialog: checking spot WB"<<std::endl;
+    std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
     rgb_avg[0] = rgb_avg[1] = rgb_avg[2] = 0;
     for( row = 0; row < rspot.height; row++ ) {
       p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
@@ -927,10 +927,10 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
     rgb_avg[1] /= rspot.width*rspot.height;
     rgb_avg[2] /= rspot.width*rspot.height;
 		*/
-    std::cout<<"RawDeveloperConfigDialog: checking spot WB"<<std::endl;
+    std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
 		img->sample( l->get_id(), x, y, sample_size, NULL, values );
 		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigDialog::pointer_relese_event(): values.size() "
+			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;
 			return;
 		}
@@ -978,11 +978,11 @@ void PF::RawDeveloperConfigDialog::color_spot_wb( double x, double y )
 
 
 
-void PF::RawDeveloperConfigDialog::on_cam_button_open_clicked()
+void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
 {
   Gtk::FileChooserDialog dialog("Please choose a file",
 																Gtk::FILE_CHOOSER_ACTION_OPEN);
-  dialog.set_transient_for(*this);
+  //dialog.set_transient_for(*this);
   
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
@@ -1019,11 +1019,11 @@ void PF::RawDeveloperConfigDialog::on_cam_button_open_clicked()
 
 
 
-void PF::RawDeveloperConfigDialog::on_out_button_open_clicked()
+void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
 {
   Gtk::FileChooserDialog dialog("Please choose a file",
 																Gtk::FILE_CHOOSER_ACTION_OPEN);
-  dialog.set_transient_for(*this);
+  //dialog.set_transient_for(*this);
   
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
@@ -1060,7 +1060,7 @@ void PF::RawDeveloperConfigDialog::on_out_button_open_clicked()
 
 
 
-void PF::RawDeveloperConfigDialog::on_cam_filename_changed()
+void PF::RawDeveloperConfigGUI::on_cam_filename_changed()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -1085,7 +1085,7 @@ void PF::RawDeveloperConfigDialog::on_cam_filename_changed()
 
 
 
-void PF::RawDeveloperConfigDialog::on_out_filename_changed()
+void PF::RawDeveloperConfigGUI::on_out_filename_changed()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&

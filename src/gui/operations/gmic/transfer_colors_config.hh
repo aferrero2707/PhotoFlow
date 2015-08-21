@@ -32,14 +32,14 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 #include "../../widgets/layerlist.hh"
 
 
 namespace PF {
 
-class GmicTransferColorsConfigDialog: public OperationConfigDialog
+class GmicTransferColorsConfigGUI: public OperationConfigGUI
 {
   Gtk::Button updateButton;
   LayerList layer_list;
@@ -48,7 +48,7 @@ class GmicTransferColorsConfigDialog: public OperationConfigDialog
   Selector precisionSelector;
 
 public:
-  GmicTransferColorsConfigDialog( Layer* l );
+  GmicTransferColorsConfigGUI( Layer* l );
 
   void on_layer_changed();
 

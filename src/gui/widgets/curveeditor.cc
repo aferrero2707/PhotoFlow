@@ -34,7 +34,7 @@
 //static const int curve_area_margin = 5;
 
 
-PF::CurveEditor::CurveEditor( OperationConfigDialog* dialog, std::string pname,
+PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
     CurveArea* ca, float _xmin, float _xmax, float _ymin, float _ymax,
     int width, int height, int border_size ):
   Gtk::HBox(),

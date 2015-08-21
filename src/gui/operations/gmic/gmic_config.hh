@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GMicConfigDialog: public OperationConfigDialog
+  class GMicConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
 
@@ -49,7 +49,7 @@ namespace PF {
     xscaleSlider, yscaleSlider;
 
 public:
-  GMicConfigDialog( Layer* l );
+  GMicConfigGUI( Layer* l );
 
   void on_command_changed();
 

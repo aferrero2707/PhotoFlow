@@ -32,8 +32,8 @@
 #include "scale_config.hh"
 
 
-PF::ScaleConfigDialog::ScaleConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Scale/Rotate" ),
+PF::ScaleConfigGUI::ScaleConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Scale/Rotate" ),
   rotate_angle_slider( this, "rotate_angle", "Rotation angle: ", 0, -360, 360, 0.001, 10, 1 ),
   scale_mode( this, "scale_mode", "Scale mode: ", 0 ),
   scale_unit( this, "scale_unit", "", 0 ),
@@ -76,7 +76,7 @@ PF::ScaleConfigDialog::ScaleConfigDialog( PF::Layer* layer ):
 
 
 
-void PF::ScaleConfigDialog::do_update()
+void PF::ScaleConfigGUI::do_update()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -104,7 +104,7 @@ void PF::ScaleConfigDialog::do_update()
     PF::PropertyBase* prop = par->get_property( "scale_unit" );
     PF::PropertyBase* prop2 = par->get_property( "scale_mode" );
     if( prop && prop2 && prop->is_enum() && prop2->is_enum() ) {
-      std::cout<<"ScaleConfigDialog::do_update(): scale_unit="<<prop->get_enum_value().first<<std::endl;
+      std::cout<<"ScaleConfigGUI::do_update(): scale_unit="<<prop->get_enum_value().first<<std::endl;
       switch( prop->get_enum_value().first ) {
       case PF::SCALE_UNIT_PX:
         scale_controls_box.pack_start( scale_pixels_box );
@@ -140,5 +140,5 @@ void PF::ScaleConfigDialog::do_update()
     controlsBox.show_all_children();
     //scale_controls_box.show();
   }
-  OperationConfigDialog::do_update();
+  OperationConfigGUI::do_update();
 }

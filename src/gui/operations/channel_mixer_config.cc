@@ -32,11 +32,11 @@
 #include "channel_mixer_config.hh"
 
 
-PF::ChannelMixerConfigDialog::ChannelMixerConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, _("Channel Mixer") ),
-  red_mix_slider( this, "red_mix", _("Red %"), 33, -200, 200, 5, 20, 100),
-  green_mix_slider( this, "green_mix", _("Green %"), 34, -200, 200, 5, 20, 100),
-  blue_mix_slider( this, "blue_mix", _("Blue %"), 33, -200, 200, 5, 20, 100)
+PF::ChannelMixerConfigGUI::ChannelMixerConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Channel Mixer" ),
+  red_mix_slider( this, "red_mix", "Red %", 33, -200, 200, 5, 20, 100),
+  green_mix_slider( this, "green_mix", "Green %", 34, -200, 200, 5, 20, 100),
+  blue_mix_slider( this, "blue_mix", "Blue %", 33, -200, 200, 5, 20, 100)
 {
   controlsBox.pack_start( red_mix_slider );
   controlsBox.pack_start( green_mix_slider );

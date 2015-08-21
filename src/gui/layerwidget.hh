@@ -37,19 +37,40 @@
 #include "layertree.hh"
 #include "operationstree.hh"
 
-#include "operation_config_dialog.hh"
+#include "operation_config_gui.hh"
 #include "operationstree.hh"
 
 namespace PF {
 
 class ImageEditor;
 
+class ControlsGroup: public Gtk::VBox
+{
+  ImageEditor* editor;
+  std::vector<Gtk::Frame*> controls;
+
+public:
+  ControlsGroup( ImageEditor* editor );
+  size_t size() { return controls.size(); }
+  /**/
+  void clear();
+  void add_control(Gtk::Frame* control);
+  void remove_control(Gtk::Frame* control);
+  /**/
+  void set_controls( std::vector<Gtk::Frame*>& new_controls);
+};
+
+
 class LayerWidget : public Gtk::VBox
 {
   Image* image;
   ImageEditor* editor;
 
+  Gtk::VPaned layers_panel;
+  Gtk::VBox top_box;
   Gtk::Notebook notebook;
+  Gtk::ScrolledWindow controls_scrolled_window;
+  ControlsGroup controls_group;
   //Gtk::HButtonBox buttonbox;
   Gtk::HBox buttonbox;
   Gtk::Button buttonAdd, buttonAddGroup, buttonDel;
@@ -65,6 +86,10 @@ class LayerWidget : public Gtk::VBox
   bool get_row(int id, Gtk::TreeModel::iterator& iter);
   void select_row(int id);
 
+  void detach_controls( Layer* l );
+  void detach_controls( std::list<Layer*>& layers );
+  void close_map_tabs( Layer* l );
+
 public:
   sigc::signal<void,int> signal_active_layer_changed;
 
@@ -79,6 +104,7 @@ public:
     image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
   }
   */
+  ControlsGroup& get_controls_group() { return controls_group; }
 
   void add_layer( Layer* layer );
   void insert_preset( std::string filename );
@@ -92,9 +118,9 @@ public:
 #endif
     for(unsigned int i = 0; i < layer_views.size(); i++) {
       int id = layer_views[i]->get_selected_layer_id();
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"LayerWidget::update() view #"<<i<<"  selected layer id="<<id<<std::endl;
-#endif
+//#endif
       layer_views[i]->update_model();
       layer_views[i]->select_row( id );
     }
@@ -112,7 +138,7 @@ public:
   }
 
 
-  bool on_button_event( GdkEventButton* button );
+  //bool on_button_event( GdkEventButton* button );
 
   void on_button_add();
   void on_button_add_group();
@@ -120,6 +146,8 @@ public:
 
   void on_button_load();
   void on_button_save();
+
+  void on_selection_changed();
 
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
 

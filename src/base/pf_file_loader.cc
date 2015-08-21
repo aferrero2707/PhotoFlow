@@ -51,12 +51,13 @@
 #include "../operations/clone.hh"
 #include "../operations/curves.hh"
 
+/*
 #include "../gui/operations/brightness_contrast_config.hh"
 #include "../gui/operations/imageread_config.hh"
 #include "../gui/operations/vips_operation_config.hh"
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/curves_config.hh"
-
+*/
 
 #include "pf_file_loader.hh"
 
@@ -494,6 +495,7 @@ void PF::insert_pf_preset( std::string filename, PF::Image* img, PF::Layer* prev
     exit(255);
   }
 
+  /*
   char* fname = strdup(filename.c_str());
   char* dname = dirname( fname );
   if( dname ) {
@@ -501,6 +503,7 @@ void PF::insert_pf_preset( std::string filename, PF::Image* img, PF::Layer* prev
       std::cout<<"Cannot change current directory to \""<<dname<<"\""<<std::endl;
   }
   free( fname );
+  */
 
   if (g_markup_parse_context_parse (context, text, length, NULL) == FALSE) {
     printf("Parse failed\n");

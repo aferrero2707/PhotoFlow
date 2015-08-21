@@ -165,7 +165,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       }
       char makermodel[1024];
       dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
-      std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
+      //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
       float cam_xyz[12];
       cam_xyz[0] = NAN;
       dt_dcraw_adobe_coeff(makermodel, (float(*)[12])cam_xyz);

@@ -36,9 +36,10 @@
 
 namespace PF {
 
-  class Slider: public Gtk::VBox, public PFWidget
+  class Slider: public Gtk::HBox, public PFWidget
   {
     Gtk::HBox hbox;
+    Gtk::VBox vbox;
     Gtk::Label label;
     Gtk::Alignment align;
 #ifdef GTKMM_2
@@ -52,10 +53,14 @@ namespace PF {
 
     double multiplier;
     
+    void create_widgets( std::string l, double val,
+        double min, double max,
+        double sincr, double pincr );
+
   public:
-    Slider(OperationConfigDialog* dialog, std::string pname, std::string l,
+    Slider(OperationConfigGUI* dialog, std::string pname, std::string l,
 	   double val, double min, double max, double sincr, double pincr, double mult);
-    Slider(OperationConfigDialog* dialog, ProcessorBase* processor, std::string pname, std::string l,
+    Slider(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l,
 	   double val, double min, double max, double sincr, double pincr, double mult);
 
     ~Slider() {}
@@ -70,6 +75,11 @@ namespace PF {
     void set_editable( bool flag )
     {
       spinButton.set_editable( flag );
+    }
+
+    void set_width( int w )
+    {
+      scale.set_size_request( w, -1 );
     }
 
     void get_value();

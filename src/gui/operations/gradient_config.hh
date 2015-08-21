@@ -32,7 +32,7 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/gradient.hh"
 
 #include "../widgets/selector.hh"
@@ -40,14 +40,14 @@
 
 namespace PF {
 
-  class GradientConfigDialog: public OperationConfigDialog
+  class GradientConfigGUI: public OperationConfigGUI
   {
     Gtk::HBox hbox;
     Selector typeSelector;
     CheckBox invert_box;
     Slider center_x, center_y;
   public:
-    GradientConfigDialog( Layer* l );
+    GradientConfigGUI( Layer* l );
   };
 
 }

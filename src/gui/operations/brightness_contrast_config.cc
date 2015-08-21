@@ -32,52 +32,31 @@
 #include "brightness_contrast_config.hh"
 
 
-PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, _("Brightness/Contrast Adjustment") ),
+PF::BrightnessContrastConfigGUI::BrightnessContrastConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Brightness/Contrast Adjustment" ),
   //brightnessAdj( 0, -1, 1, 0.05, 0.2, 0),
   //contrastAdj( 0, -1, 1, 0.05, 0.2, 0),
   //brightnessScale(brightnessAdj),
   //contrastScale(contrastAdj)
-  brightnessSlider( this, "brightness", _("Brightness"), 0, -1, 1, 0.05, 0.2, 1),
-  contrastSlider( this, "contrast", _("Contrast"), 0, -1, 1, 0.05, 0.2, 1),
-  outputModeSlider( this, "color_blend", _("Output mode"), 0, -1, 1, 0.05, 0.2, 1)
+  brightnessSlider( this, "brightness", "Brightness", 0, -1, 1, 0.05, 0.2, 1),
+  contrastSlider( this, "contrast", "Contrast", 0, -1, 1, 0.05, 0.2, 1),
+  outputModeSlider( this, "color_blend", "Output mode", 0, -1, 1, 0.05, 0.2, 1)
 {
-  /*
-  lbrightness.set_text( "brightness" );
-  brightnessScale.set_size_request(200, 30);
-  brightnessScale.set_digits(2);
-  brightnessScale.set_value_pos(Gtk::POS_RIGHT);
-  lcontrast.set_text( "contrast" );
-  contrastScale.set_size_request(200, 30);
-  contrastScale.set_digits(2);
-  contrastScale.set_value_pos(Gtk::POS_RIGHT);
-
-  lbrightnessAl.set(0,0.5,0,1);
-  lbrightnessAl.add( lbrightness );
-  lcontrastAl.set(0,0.5,0,1);
-  lcontrastAl.add( lcontrast );
-
-  controlsBox.pack_start( lbrightnessAl );
-  controlsBox.pack_start( brightnessScale );
-  controlsBox.pack_start( lcontrastAl );
-  controlsBox.pack_start( contrastScale );
-  */
-  controlsBox.pack_start( brightnessSlider );
-  controlsBox.pack_start( contrastSlider );
-  
   //frame.add( controlsBox );
-  
+
   padding1.set_size_request( 2, 20 );
   padding2.set_size_request( 2, 10 );
   padding3.set_size_request( 2, 10 );
 
   add_widget( padding1 );
 
+  controlsBox.pack_start( brightnessSlider );
+  controlsBox.pack_start( contrastSlider );
   add_widget( controlsBox );
 
-  add_widget( padding2 );
-  add_widget( hline );
-  add_widget( padding3 );
+  //add_widget( padding2 );
+  //add_widget( hline );
+  //add_widget( padding3 );
 
   padding4.set_size_request( 10, 2 );
   outputModeBox.pack_start( outputModeSlider, Gtk::PACK_SHRINK );
@@ -87,7 +66,7 @@ PF::BrightnessContrastConfigDialog::BrightnessContrastConfigDialog( PF::Layer* l
 
 
 
-void PF::BrightnessContrastConfigDialog::open()
+void PF::BrightnessContrastConfigGUI::open()
 {
 //  if( get_layer() && get_layer()->get_image() &&
 //      get_layer()->get_processor() &&
@@ -95,5 +74,5 @@ void PF::BrightnessContrastConfigDialog::open()
 //    brightnessSlider.init();
 //    contrastSlider.init();
 //  }
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

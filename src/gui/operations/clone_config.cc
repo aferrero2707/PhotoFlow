@@ -32,21 +32,21 @@
 #include "clone_config.hh"
 
 
-PF::CloneConfigDialog::CloneConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, _("Clone layer") ),
-  layer_list( this, _("Layer name:") ),
-  sourceSelector( this, "source_channel", _("Source channel: "), 1 )
+PF::CloneConfigGUI::CloneConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Clone layer" ),
+  layer_list( this, "Layer name:"),
+  sourceSelector( this, "source_channel", "Source channel: ", 1 )
 {
   add_widget( layer_list );
   add_widget( sourceSelector );
 
   //fileEntry.signal_activate().
   //  connect(sigc::mem_fun(*this,
-  //			  &CloneConfigDialog::on_filename_changed));
+  //			  &CloneConfigGUI::on_filename_changed));
 }
 
 
-void PF::CloneConfigDialog::on_layer_changed()
+void PF::CloneConfigGUI::on_layer_changed()
 {
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -55,15 +55,15 @@ void PF::CloneConfigDialog::on_layer_changed()
 }
 
 
-void PF::CloneConfigDialog::do_update()
+void PF::CloneConfigGUI::do_update()
 {
   layer_list.update_model();
-  OperationConfigDialog::do_update();
+  OperationConfigGUI::do_update();
 }
 
 
-void PF::CloneConfigDialog::init()
+void PF::CloneConfigGUI::init()
 {
   layer_list.update_model();
-  OperationConfigDialog::init();
+  OperationConfigGUI::init();
 }

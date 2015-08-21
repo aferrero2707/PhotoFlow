@@ -32,12 +32,12 @@
 
 #include <gtkmm.h>
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 
 namespace PF {
 
-  class GmicGcdDespeckleConfigDialog: public OperationConfigDialog
+  class GmicGcdDespeckleConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
     
@@ -46,7 +46,7 @@ namespace PF {
     Slider prop_max_area_slider;
        
   public:
-    GmicGcdDespeckleConfigDialog( Layer* l );
+    GmicGcdDespeckleConfigGUI( Layer* l );
     
     void open();
   };

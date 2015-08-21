@@ -32,8 +32,8 @@
 #include "smooth_guided_config.hh"
 
 
-PF::GmicSmoothGuidedConfigDialog::GmicSmoothGuidedConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Smooth [guided] (G'MIC)"  ),
+PF::GmicSmoothGuidedConfigGUI::GmicSmoothGuidedConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Smooth [guided] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_radius_slider( this, "radius", "radius", 5, 1, 100, 1, 5, 1),
   prop_smoothness_slider( this, "smoothness", "smoothness", 30, 0, 512, 5.12, 51.2, 1)
@@ -47,7 +47,7 @@ PF::GmicSmoothGuidedConfigDialog::GmicSmoothGuidedConfigDialog( PF::Layer* layer
 
 
 
-void PF::GmicSmoothGuidedConfigDialog::open()
+void PF::GmicSmoothGuidedConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

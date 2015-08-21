@@ -32,8 +32,8 @@
 #include "smooth_mean_curvature_config.hh"
 
 
-PF::GmicSmoothMeanCurvatureConfigDialog::GmicSmoothMeanCurvatureConfigDialog( PF::Layer* layer ):
-  OperationConfigDialog( layer, "Smooth [mean-curvature] (G'MIC)"  ),
+PF::GmicSmoothMeanCurvatureConfigGUI::GmicSmoothMeanCurvatureConfigGUI( PF::Layer* layer ):
+  OperationConfigGUI( layer, "Smooth [mean-curvature] (G'MIC)"  ),
   //iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_iterations_slider( this, "iterations", "iterations", 4, 1, 30, .29, 2.9, 1),
   prop_time_step_slider( this, "time_step", "time_step", 30, 5, 50, .45, 4.5, 1)
@@ -47,7 +47,7 @@ PF::GmicSmoothMeanCurvatureConfigDialog::GmicSmoothMeanCurvatureConfigDialog( PF
 
 
 
-void PF::GmicSmoothMeanCurvatureConfigDialog::open()
+void PF::GmicSmoothMeanCurvatureConfigGUI::open()
 {
-  OperationConfigDialog::open();
+  OperationConfigGUI::open();
 }

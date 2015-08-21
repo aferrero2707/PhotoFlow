@@ -32,13 +32,13 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/image_reader.hh"
 
 
 namespace PF {
 
-  class ImageReadConfigDialog: public OperationConfigDialog
+  class ImageReadConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::HBox controlsBox;
@@ -49,7 +49,7 @@ namespace PF {
   //#endif
 
 public:
-  ImageReadConfigDialog( Layer* l );
+  ImageReadConfigGUI( Layer* l );
 
   void on_button_open_clicked();
 

@@ -32,13 +32,13 @@
 
 #include <gtkmm.h>
 
-#include "../operation_config_dialog.hh"
+#include "../operation_config_gui.hh"
 #include "../../operations/raw_loader.hh"
 
 
 namespace PF {
 
-  class RawLoaderConfigDialog: public OperationConfigDialog
+  class RawLoaderConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
   Gtk::HBox controlsBox;
@@ -49,7 +49,7 @@ namespace PF {
   //#endif
 
 public:
-  RawLoaderConfigDialog( Layer* l );
+  RawLoaderConfigGUI( Layer* l );
 
   void on_button_open_clicked();
 

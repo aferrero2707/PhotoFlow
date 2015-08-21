@@ -27,80 +27,80 @@
 
  */
 
-#include "../../operation_config_dialog.hh"
+#include "../../operation_config_gui.hh"
 
 #include "new_gmic_operation_config.hh"
 
 #include "configs.hh"
 
 
-PF::OperationConfigDialog* PF::new_gmic_operation_config( std::string op_type, PF::Layer* current_layer )
+PF::OperationConfigGUI* PF::new_gmic_operation_config( std::string op_type, PF::Layer* current_layer )
 {
-  PF::OperationConfigDialog* dialog = NULL;
+  PF::OperationConfigGUI* dialog = NULL;
   if( op_type == "gmic" ) {  
-    dialog = new PF::GMicConfigDialog( current_layer );
+    dialog = new PF::GMicConfigGUI( current_layer );
   } else if( op_type == "gmic_blur_bilateral" ) {
-    dialog = new PF::BlurBilateralConfigDialog( current_layer );
+    dialog = new PF::BlurBilateralConfigGUI( current_layer );
   } else if( op_type == "gmic_denoise" ) {
-    dialog = new PF::GmicDenoiseConfigDialog( current_layer );
+    dialog = new PF::GmicDenoiseConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_anisotropic" ) {
-    dialog = new PF::GmicSmoothAnisotropicConfigDialog( current_layer );
+    dialog = new PF::GmicSmoothAnisotropicConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_diffusion" ) {
-    dialog = new PF::GmicSmoothDiffusionConfigDialog( current_layer );
+    dialog = new PF::GmicSmoothDiffusionConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_mean_curvature" ) {
-    dialog = new PF::GmicSmoothMeanCurvatureConfigDialog( current_layer );
+    dialog = new PF::GmicSmoothMeanCurvatureConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_wavelets_haar" ) {
-    dialog = new PF::GmicSmoothWaveletsHaarConfigDialog( current_layer );
+    dialog = new PF::GmicSmoothWaveletsHaarConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_median" ) {
-    dialog = new PF::GmicSmoothMedianConfigDialog( current_layer );
+    dialog = new PF::GmicSmoothMedianConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_selective_gaussian" ) {
-    dialog = new PF::GmicSmoothSelectiveGaussianConfigDialog( current_layer );
+    dialog = new PF::GmicSmoothSelectiveGaussianConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_total_variation" ) {
-    dialog = new PF::GmicSmoothTotalVariationConfigDialog( current_layer );
+    dialog = new PF::GmicSmoothTotalVariationConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_colorslide" ) {
-    dialog = new PF::GmicEmulateFilmColorslideConfigDialog( current_layer );
+    dialog = new PF::GmicEmulateFilmColorslideConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_bw" ) {
-    dialog = new PF::GmicEmulateFilmBEConfigDialog( current_layer );
+    dialog = new PF::GmicEmulateFilmBEConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_instant_consumer" ) {
-    dialog = new PF::GmicEmulateFilmInstantConsumerConfigDialog( current_layer );
+    dialog = new PF::GmicEmulateFilmInstantConsumerConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_instant_pro" ) {
-    dialog = new PF::GmicEmulateFilmInstantProConfigDialog( current_layer );
+    dialog = new PF::GmicEmulateFilmInstantProConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_negative_color" ) {
-    dialog = new PF::GmicEmulateFilmNegativeColorConfigDialog( current_layer );
+    dialog = new PF::GmicEmulateFilmNegativeColorConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_negative_new" ) {
-    dialog = new PF::GmicEmulateFilmNegativeNewConfigDialog( current_layer );
+    dialog = new PF::GmicEmulateFilmNegativeNewConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_negative_old" ) {
-    dialog = new PF::GmicEmulateFilmNegativeOldConfigDialog( current_layer );
+    dialog = new PF::GmicEmulateFilmNegativeOldConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_print_films" ) {
-    dialog = new PF::GmicEmulateFilmPrintFilmsConfigDialog( current_layer );
+    dialog = new PF::GmicEmulateFilmPrintFilmsConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_various" ) {
-    dialog = new PF::GmicEmulateFilmVariousConfigDialog( current_layer );
+    dialog = new PF::GmicEmulateFilmVariousConfigGUI( current_layer );
   } else if( op_type == "gmic_gcd_despeckle" ) {
-    dialog = new PF::GmicGcdDespeckleConfigDialog( current_layer );
+    dialog = new PF::GmicGcdDespeckleConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_guided" ) {
-    dialog = new PF::GmicSmoothGuidedConfigDialog( current_layer );
+    dialog = new PF::GmicSmoothGuidedConfigGUI( current_layer );
   } else if( op_type == "gmic_iain_denoise" ) {
-    dialog = new PF::GmicIainDenoiseConfigDialog( current_layer );
+    dialog = new PF::GmicIainDenoiseConfigGUI( current_layer );
   } else if( op_type == "gmic_dream_smooth" ) {
-    dialog = new PF::GmicDreamSmoothConfigDialog( current_layer );
+    dialog = new PF::GmicDreamSmoothConfigGUI( current_layer );
   } else if( op_type == "gmic_extract_foreground" ) {
-    dialog = new PF::GmicExtractForegroundConfigDialog( current_layer );
+    dialog = new PF::GmicExtractForegroundConfigGUI( current_layer );
   } else if( op_type == "gmic_tone_mapping" ) {
-    dialog = new PF::GmicToneMappingConfigDialog( current_layer );
+    dialog = new PF::GmicToneMappingConfigGUI( current_layer );
   } else if( op_type == "gmic_inpaint" ) {
-    dialog = new PF::GmicInpaintConfigDialog( current_layer );
+    dialog = new PF::GmicInpaintConfigGUI( current_layer );
   } else if( op_type == "gmic_convolve" ) {
-    dialog = new PF::GmicConvolveConfigDialog( current_layer );
+    dialog = new PF::GmicConvolveConfigGUI( current_layer );
   } else if( op_type == "gmic_gradient_norm" ) {
-    dialog = new PF::GmicGradientNormConfigDialog( current_layer );
+    dialog = new PF::GmicGradientNormConfigGUI( current_layer );
   } else if( op_type == "gmic_sharpen_rl" ) {
-    dialog = new PF::GmicSharpenRLConfigDialog( current_layer );
+    dialog = new PF::GmicSharpenRLConfigGUI( current_layer );
   } else if( op_type == "gmic_split_details" ) {
-    dialog = new PF::GmicSplitDetailsConfigDialog( current_layer );
+    dialog = new PF::GmicSplitDetailsConfigGUI( current_layer );
   } else if( op_type == "gmic_transfer_colors" ) {
-    dialog = new PF::GmicTransferColorsConfigDialog( current_layer );
+    dialog = new PF::GmicTransferColorsConfigGUI( current_layer );
   } else if( op_type == "gmic_watermark_fourier" ) {
-    dialog = new PF::GmicWatermarkFourierConfigDialog( current_layer );
+    dialog = new PF::GmicWatermarkFourierConfigGUI( current_layer );
     //insert new operations here
   }
 
