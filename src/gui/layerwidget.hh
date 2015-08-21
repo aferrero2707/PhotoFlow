@@ -88,6 +88,7 @@ class LayerWidget : public Gtk::VBox
 
   void detach_controls( Layer* l );
   void detach_controls( std::list<Layer*>& layers );
+  void close_map_tabs( Layer* l );
 
 public:
   sigc::signal<void,int> signal_active_layer_changed;

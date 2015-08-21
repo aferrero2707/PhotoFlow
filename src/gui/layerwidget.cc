@@ -515,9 +515,9 @@ void PF::LayerWidget::select_row(int id)
 
 void PF::LayerWidget::remove_tab( Gtk::Widget* widget )
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::LayerWidget::remove_tab() called."<<std::endl;
-#endif
+//#endif
   int page = notebook.page_num( *widget );
   if( page < 0 ) return;
   if( page >= notebook.get_n_pages() ) return;
@@ -537,9 +537,9 @@ void PF::LayerWidget::remove_tab( Gtk::Widget* widget )
   delete( widget );
   if( tabwidget )
     delete( tabwidget );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::LayerWidget::remove_tab() page #"<<page<<" removed."<<std::endl;
-#endif
+//#endif
 }
 
 
@@ -678,6 +678,33 @@ void PF::LayerWidget::insert_preset( std::string filename )
 
 
 
+void PF::LayerWidget::close_map_tabs( Layer* l )
+{
+  if( !l ) return;
+  std::cout<<"LayerWidget::close_map_tabs(\""<<l->get_name()<<"\") called."<<std::endl;
+  std::list<Layer*>& omap_layers = l->get_omap_layers();
+  std::list<Layer*>& imap_layers = l->get_imap_layers();
+  std::list<Layer*> map_layers = omap_layers;
+  map_layers.insert(map_layers.end(), imap_layers.begin(), imap_layers.end());
+
+  for( int i = notebook.get_n_pages()-1; i>=1; i-- ) {
+    Widget* page = notebook.get_nth_page(i);
+    LayerTree* view = dynamic_cast<LayerTree*>( page );
+    if( !view ) continue;
+    std::list<Layer*>* view_layers = view->get_layers();
+    bool match = false;
+    if( view_layers == &omap_layers ) match = true;
+    if( view_layers == &imap_layers ) match = true;
+    if( match ) remove_tab( page );
+  }
+
+  for( std::list<Layer*>::iterator li = map_layers.begin(); li != map_layers.end(); li++ ) {
+    close_map_tabs( *li );
+  }
+}
+
+
+
 void PF::LayerWidget::detach_controls( Layer* l )
 {
   if( !l ) return;
@@ -752,6 +779,7 @@ void PF::LayerWidget::remove_layers()
     PF::Layer* l = (*iter)[columns.col_layer];
 
     detach_controls( l );
+    close_map_tabs( l );
 
     image->remove_layer( l );
     image->get_layer_manager().modified();

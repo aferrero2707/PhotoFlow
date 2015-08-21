@@ -580,7 +580,7 @@ void PF::ImageEditor::set_edited_layer( int id )
   active_layer = NULL;
   if( image )
     active_layer = image->get_layer_manager().get_layer( id );
-  //std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
+  std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
   if( old_active != active_layer ) {
     /*
     if( old_active &&
