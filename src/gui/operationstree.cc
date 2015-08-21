@@ -542,7 +542,7 @@ void PF::OperationsTreeDialog::add_layer()
           //processor->get_par()->set_config_ui( dialog );
           //dialog->update();
           dialog->open();
-          dialog->enable_editing();
+          //dialog->enable_editing();
         }
       }
     }
