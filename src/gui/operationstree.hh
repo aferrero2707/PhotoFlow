@@ -119,6 +119,7 @@ namespace PF {
     //Gtk::ScrolledWindow op_geom_box;
     //OperationsTree op_geom;
     OperationsTreeWidget op_geom;
+    OperationsTreeWidget op_mask;
 
     //Gtk::ScrolledWindow op_gmic_box;
     OperationsTreeWidget op_gmic;

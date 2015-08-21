@@ -124,7 +124,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_vbox.pack_start( frame_top_box_1, Gtk::PACK_SHRINK, 0 );
   frame_vbox.pack_start( controls_frame, Gtk::PACK_SHRINK, 0 );
 
-  blendSelector.set_size_request( -1, 22 );
+  //blendSelector.set_size_request( -1, 22 );
 
   //frame_box_top.set_spacing(5);
   nameEntry.set_has_frame( false );

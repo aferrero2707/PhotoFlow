@@ -257,10 +257,10 @@ style "murrine-notebook" = "murrine-notebook-bg"
 # ------------------------------------------------------------------------------
 
 # -- Tabs close button style ---------------------------------------------------
-style "notebook-close"
-{
-	stock["gtk-close"] = {{ "Tabs/close.png", *, *, * }}
-}
+#style "notebook-close"
+#{
+#	stock["gtk-close"] = {{ "Tabs/close.png", *, *, * }}
+#}
 # ------------------------------------------------------------------------------
 
 # -- Menubar style -------------------------------------------------------------
@@ -687,9 +687,9 @@ widget "*IdoEntryMenuItem*" style "murrine-wide"
 # ------------------------------------------------------------------------------
 
 # -- External files ------------------------------------------------------------
-include "infobar.rc" 
-include "firefox.rc"
-include "panel.rc"
-include "scrollbar.rc"
+#include "infobar.rc" 
+#include "firefox.rc"
+#include "panel.rc"
+#include "scrollbar.rc"
 #include "nautilus.rc"
 # ------------------------------------------------------------------------------
