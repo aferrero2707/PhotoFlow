@@ -86,6 +86,9 @@ class LayerWidget : public Gtk::VBox
   bool get_row(int id, Gtk::TreeModel::iterator& iter);
   void select_row(int id);
 
+  void detach_controls( Layer* l );
+  void detach_controls( std::list<Layer*>& layers );
+
 public:
   sigc::signal<void,int> signal_active_layer_changed;
 

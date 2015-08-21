@@ -88,6 +88,7 @@ namespace PF {
 
     void update_controls();
     void set_aux_controls( Gtk::Widget* aux );
+    Gtk::Widget* get_aux_controls() { return aux_controls; }
 
     void set_edited_layer( int id );
     void set_displayed_layer( int id );

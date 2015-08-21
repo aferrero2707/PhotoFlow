@@ -678,6 +678,44 @@ void PF::LayerWidget::insert_preset( std::string filename )
 
 
 
+void PF::LayerWidget::detach_controls( Layer* l )
+{
+  if( !l ) return;
+  std::cout<<"LayerWidget::detach_controls(\""<<l->get_name()<<"\") called."<<std::endl;
+  PF::ProcessorBase* processor = l->get_processor();
+  if( processor ) {
+    PF::OpParBase* par = processor->get_par();
+    if( par ) {
+      PF::OperationConfigUI* ui = par->get_config_ui();
+      PF::OperationConfigGUI* gui =
+          dynamic_cast<PF::OperationConfigGUI*>( ui );
+      if( gui ) {
+        get_controls_group().remove_control( gui->get_frame() );
+        std::cout<<"LayerWidget::detach_controls(\""<<l->get_name()<<"\"): controls removed."<<std::endl;
+        if( editor ) {
+          if( editor->get_aux_controls() == &(gui->get_aux_controls()) )
+            editor->set_aux_controls( NULL );
+        }
+      }
+    }
+  }
+  detach_controls( l->get_omap_layers() );
+  detach_controls( l->get_imap_layers() );
+}
+
+
+
+void PF::LayerWidget::detach_controls( std::list<Layer*>& layers )
+{
+  std::cout<<"LayerWidget::detach_controls( std::list<Layer*>& layers ): layers.size()="<<layers.size()<<std::endl;
+  for( std::list<Layer*>::iterator li = layers.begin(); li != layers.end(); li++ ) {
+    if( !(*li) ) continue;
+    detach_controls( *li );
+  }
+}
+
+
+
 void PF::LayerWidget::remove_layers()
 {
   int page = notebook.get_current_page();
@@ -712,6 +750,8 @@ void PF::LayerWidget::remove_layers()
     Gtk::TreeModel::Row row = *iter;
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*iter)[columns.col_layer];
+
+    detach_controls( l );
 
     image->remove_layer( l );
     image->get_layer_manager().modified();
