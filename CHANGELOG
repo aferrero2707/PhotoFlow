@@ -1,4 +1,12 @@
 =========================================
+Version 0.2.0
+
+- Implemented new GUI layout
+- Updated G'MIC to 1.6.5.2_pre version
+- Removed current directory change on preset loading
+- Added OSX build environment and scripts
+
+=========================================
 Version 0.1.6
 
 - Improved selection of curve points
