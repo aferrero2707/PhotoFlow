@@ -1,0 +1,174 @@
+body {
+    overflow-x: hidden;
+}
+
+#pushPage {
+    position: relative;
+    z-index: 5;
+    background: #FFF;
+}
+
+#pushMenu {
+    /*display: none;
+     */
+    visibility: hidden;
+    position: fixed;
+    width: 225px;
+    padding: 1em 1em;
+    margin: 0;
+    background: #333;
+    height: 100%;
+    box-shadow: inset -20px 0 20px -20px black;
+    font-family: Oswald;
+    font-weight: 300;
+    overflow-y: auto;
+
+}
+
+#pushMenu.visible {
+    visibility: visible;
+}
+
+.push-sitename, .push-contents {
+    font-family: Arvo;
+    font-size: 1rem;
+    text-align: center;
+    border-bottom: dashed 1px #666;
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+.push-contents {
+    margin-top: 1.25rem;
+}
+
+#pushMenu .navlink {
+    border-bottom: solid 1px #444;
+}
+
+#pushMenu .navlink a:hover, #pushMenu-TOC .toc a:hover {
+    color: #ccc;
+}
+
+@media ( max-width: 39.9rem) {
+    #pushMenu {
+        background: #333;
+    }
+
+    #pushMenu .navlink {
+        background-color: #222;
+		text-align: center;
+		display: table;
+		width: 100%;
+        height: 50px;
+    }
+
+	#pushMenu .navlink a {
+        height: 100%;
+        display: table-cell;
+        vertical-align: middle;
+	}
+
+    .push-sitename, .push-contents {
+        color: #bbb;
+        border-bottom: dashed 1px #bbb;
+    }
+}
+
+#pushMenu.animating, #pushMenu.menu-visible {
+    display: block;
+}
+
+#pushPage.animating, #bar.animating {
+    transition: transform 0.2s ease-in-out;
+    -webkit-transition: -webkit-transform 0.2s ease-in-out;
+}
+
+#pushPage.animating.left, #bar.animating.left {
+    transform: translate3d( 225px, 0, 0);
+    -webkit-transform: translate3d( 225px, 0, 0);
+}
+
+#pushPage.animating.right, #bar.animating.right {
+    transform: translate3d( -225px, 0, 0);
+    -webkit-transform: translate3d( -225px, 0, 0);
+}
+
+#pushPage.menu-visible, #bar.menu-visible {
+    left: 225px;
+}
+
+#pushPage, #pushMenu, #bar {
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000;
+}
+
+/*
+ * Styles for the TOC
+ */
+
+#pushMenu .toc {
+    border-bottom: solid 1px #444;
+}
+
+#pushMenu .first {
+    font-size: 1.2rem;
+}
+
+#pushMenu .second {
+    font-size: 1.1rem;
+    padding-left: 0.25rem;
+}
+
+#pushMenu .third {
+    font-size: 1rem;
+    padding-left: 0.5rem;
+}
+
+#pushMenu .fourth {
+    font-size: 0.9rem;
+    padding-left: 0.75rem;
+}
+
+#pushMenu .fifth {
+    font-size: 0.8rem;
+    padding-left: 1rem;
+}
+
+#pushMenu-TOC .toc, .toc a {
+    position: relative;
+    z-index: 2;
+}
+
+.toc-progress {
+    background-color: rgb(40, 40, 40);
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    z-index: 1;
+}
+
+@media ( max-width: 39.99rem) {
+    #pushMenu .toc {
+        padding-top: 0.25rem;
+        padding-bottom: 0.5rem;
+    }
+
+    #pushMenu-TOC {
+        padding: 0.3rem;
+        /*
+        background-color: #222;
+        */
+    }
+}
+
+@media ( max-width: 64rem) {
+    #pushMenu .toc {
+        padding-top: 0.25rem;
+        padding-bottom: 0.5rem;
+    }
+}
+
+

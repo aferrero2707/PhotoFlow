@@ -1,0 +1,128 @@
+
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>PIXLS.US (SAMPLE) -  {% if page.title %}{{ page.title }}{% endif %}</title>
+
+    <!-- <link href="http://pixls.us/blog/feed.xml" rel="alternate" type="application/rss+xml" title="Pixls.us Blog Feed" /> -->
+
+    <link rel="stylesheet" href="{{ site.baseurl }}/styles/normalize.css"/>
+    <link rel="stylesheet" href="{{ site.baseurl }}/styles/grid.css"/>
+    <link rel="stylesheet" href="{{ site.baseurl }}/styles/article.css"/>
+    <link rel="stylesheet" href="{{ site.baseurl }}/styles/prism.css"/>
+
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="index.css"/>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<style type="text/css" media="all">
+		 //#lede { background-image: url('https://lh3.googleusercontent.com/-NEKW7KPTLh0/U_lW3AoF3yI/AAAAAAAARN8/b2DSir8MK0s/s0/Nikki-after-opt.jpg'); } 
+         {%if page.lede-img %}
+             #lede { background-image: url("{{ page.lede-img }}"); }
+         {% else %}
+             #lede { background-image: url('https://lh3.googleusercontent.com/-NEKW7KPTLh0/U_lW3AoF3yI/AAAAAAAARN8/b2DSir8MK0s/s0/Nikki-after-opt.jpg'); }
+         {% endif %}
+	</style>
+
+  </head>
+
+  <body>
+
+        <div id="pushPage">
+
+            <section id="lede" class="example lede-img">
+                <div class="lede-attr">
+                    {% if page.lede-attribution %}
+                        {{ page.lede-attribution }}
+                    {% else %}
+                        by <a href='http://blog.patdavid.net'>Pat David</a></div>
+                    {% endif %}
+            </section>
+
+            <!-- Main content area -->
+            <div class="row clearfix">
+                <div class="container">
+                    <div class="column two-thirds">
+                        <div id="main" class="article-title">
+                        <!-- Begin article content -->
+                        <h1 id="title">{% if page.title %}{{ page.title }}{% else %}TITLE{% endif %}</h1>
+                        <p id="subtitle">{% if page.sub-title %}{{ page.sub-title }}{% endif %}</p> 
+                        </div>
+                    </div>
+                </div>
+
+                
+
+
+                        <div class="container">
+                            <div class="column two-thirds">
+                                {{ content }}
+                             </div>
+                        </div>
+
+
+                
+                <!-- End article content -->
+            </div>
+
+                <!-- Author info under post -->
+            <div class="row clearfix">
+                <div class="container clearfix">
+                    <div class="author-end column two-thirds">
+                        <span class="byline">Written by:</span>
+                        <div class="author-box">
+                            <img src="https://lh3.googleusercontent.com/-zfWc9BQ-oGw/AAAAAAAAAAI/AAAAAAAAKgc/gGSESRvbR9E/s150/photo.jpg" alt="Pat David Headshot"/>
+                            <div class="author-box-info">
+                                <div class="author-name"> Pat David </div>
+                                
+                                 <div class="author-bio"> I <a href='http://blog.patdavid.net'>write</a> things.  I <a href='http://www.flickr.com/photos/patdavid'>photograph</a> things.  Sometimes they meet. </div> 
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+                <!-- END: Author info under post -->
+
+
+            		<section class="footer">
+            			<div class="container">
+            				<div class="row clearfix">
+            					<div id="navlinks" class="column two-thirds flow-opposite">
+            						<div class="links-title">More</div>
+            						<div class="navlink"><a href="/">Home</a></div>
+            						<div class="navlink"><a href="/blog">Blog</a></div>
+            						<div class="navlink"><a href="/articles">Articles</a></div>
+            						<div class="navlink"><a href="/software">Software</a></div>
+            					</div>
+            					<div class="column third">
+            						<div class="site-name">PIXLS.US</div>
+            						<p class="site-slogan">Free/Open Source Photography</p>
+            
+                                                
+            					</div>
+            				</div>
+            
+            				<div class="cc-row row clearfix">
+                                <div class="cc-info">
+                                    <p>
+                                    <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br />Unless otherwise noted content on this site, <span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">PIXLS.US</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://blog.patdavid.net" property="cc:attributionName" rel="cc:attributionURL">Pat David</a>, is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+                                </p>
+                                </div>
+            				</div>
+            
+            			</div>
+            		</section>
+            
+            
+
+        </div>
+
+        <script src="/js/prism.js"></script>
+        <script src="/js/img-compare.js"></script>
+		<script src="/js/img-swap.js"></script>
+	</body>
+</html>
+
+

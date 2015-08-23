@@ -1,0 +1,59 @@
+@import url(//fonts.googleapis.com/css?family=Arvo&text=pxPIXLSUS.);
+/*
+ * These styles are for the auto-hiding nav bar when scrolling
+ */
+#bar{
+    position: fixed;
+    top: 0;
+    transition: top 0.3s ease-in-out;
+    background-color: rgba(112,128,144,0.95);
+    /*
+	width: 55px;
+    height: 55px;
+    */
+    width: 45px;
+    height: 45px;
+	overflow: hidden;
+    margin-left: 0.25em;
+	border: solid 2px rgb(50,50,50);
+	z-index: 6;
+}
+
+#navlogo {
+	font-size:2.1em; 
+	font-family: arvo; 
+	/*
+	position: relative; 
+	top: -11px; 
+	*/
+	line-height: 1em;
+	color: rgb(50,50,50);
+	height: 65px;
+}
+
+#header img {
+        width: auto;
+        float: left;
+        margin: initial;
+        position: absolute;
+        left: 0px;
+}
+
+#header h1 {
+    color: #ccc;
+    margin-bottom: 0;
+    float: left;
+    font-size: 1.25rem;
+}
+
+.nav-up {
+    top: -84px !important;
+}
+
+#nav-anchor {
+	text-decoration: none;
+}
+
+#navimg {
+    width: inherit;
+}

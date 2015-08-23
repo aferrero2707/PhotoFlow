@@ -1,0 +1,527 @@
+/* Type
+ *
+ * ============================= */
+@import url(//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic|Oswald:300,400|Roboto+Slab:400,700);
+@font-face {
+	font-family: cc-icons;
+	src: url(/styles/cc-icons.ttf);
+}
+
+body {
+	font-family: Lora, serif;
+	font-weight: 400;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    /*-webkit-text-stroke: 0.15px;
+	 */
+	font-family: Oswald;
+	font-weight:400
+}
+
+h3, h4 {
+	/*font-weight: 300;*/
+}
+
+h4 {
+	text-transform: uppercase;
+}
+
+#title {
+	margin-bottom: 0;
+	font-size: 2rem;
+}
+
+p {
+	color: #555;
+    color: #777;
+    color: #666;
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+p:first-of-type { margin-top: 0; }
+
+.lede {
+	min-height: 150px;
+    background-color: #eee;
+    background-color: whitesmoke;
+	background-size: cover;
+	background-position: center;
+    margin-bottom: 1.5rem;
+}
+
+.lede-img {
+    position: relative;
+}
+
+.lede-attr {
+    font-family: Oswald;
+    font-weight: 300;
+    font-size: 0.9rem;
+    color: #888;
+    position: absolute;
+    right: 0;
+    bottom: -1.5rem;
+    padding-right: 0.5rem;
+}
+
+blockquote {
+	padding: 0 0.5em;
+    border: solid 1px #ccc;
+    border-left: solid 5px #aaa;
+    -webkit-box-shadow: 0 6px 4px -5px #ccc;
+    -moz-box-shadow: 0 6px 4px -5px #ccc;
+    box-shadow: 0 6px 4px -5px #ccc;
+
+}
+
+blockquote::before {
+    /* content: open-quote; */
+}
+
+blockquote > p {
+    margin: 1em auto !important;
+    color: #666;
+}
+
+figure {
+	margin: 1.5em auto;
+	display: table;
+}
+
+figure.full-width {
+	width: 100%;
+}
+
+p img, figure img {
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	margin: 0 auto 0.5rem auto;
+}
+
+figure img {
+	/* cursor: crosshair; */
+}
+
+figure.full-width > figcaption {
+    width: 90%;
+    margin: 0 auto;
+}
+
+figcaption {
+	font-size: 0.85rem;
+	text-align: center;
+	line-height: 1.3em;
+	display: table-caption;
+	caption-side: bottom;
+}
+
+.lede-img {
+	background-size: cover;
+    background-position: center;
+    background-color: #eee;
+    background-color: whitesmoke;
+	margin-bottom: 1.5em;
+    min-height: 250px
+}
+
+@media (min-width: 40rem){
+    .lede-img { min-height: 500px; }
+
+	figure.full-width {
+		width: 100vw;
+        width: 100%;
+	}
+}
+
+@media (min-width: 64rem){
+    .lede-img { min-height: 650px; }
+
+}
+
+#subtitle {
+    font-size: 1.2rem;
+    font-style: italic;
+    color: lightslategray;
+	margin-left: 0;
+    margin-bottom: 1rem;
+    font-weight: 400;
+}
+
+.article-date {
+	font-size: 0.8;
+	font-family: Oswald;
+	font-weight: 300;
+	margin-top: -1em;
+	color: #aaa;
+}
+
+.article-title .author-name {
+    color: #aaa;
+    margin-top: 0;
+    margin-bottom: 0.75em;
+    font-weight: 300;
+    font-size: 1.05em;
+}
+
+/* This is for the section footer at the end of the document */
+/*
+section.footer, header#bar {
+	color: #999;
+	background-color: #333;
+}
+
+section.footer p {
+	color: #888;
+}
+*/
+
+.footer {
+	background-color: #eee;
+    background-color: whitesmoke;
+    box-shadow: inset 0 20px 20px -20px rgba(0,0,0,0.5);
+}
+
+.footer h3 {
+	font-weight: 400;
+	font-size: 1.6rem;
+}
+
+.navlink {
+	font-family: Oswald;
+	font-size: 1.4rem;
+	text-transform: uppercase;
+}
+
+@media (min-width: 40rem){
+    section.footer {
+    	text-align: left;
+    }
+
+	.navlink {
+		margin-bottom: 0.8rem;
+	}
+}
+
+@media (min-width: 64rem){
+	.navlink {
+		margin-bottom: 0;
+		font-size: 1.2rem;
+	}
+}
+
+/*
+ * Styling for navigation links on mobile
+ */
+@media (max-width: 40rem){
+	#navlinks a {
+		display: block;
+		height: 100%;
+		display: table-cell;
+		vertical-align: middle;
+	}
+	
+	.navlink {
+		background-color: #ddd;
+		height: 60px;
+		margin-bottom: 2px;
+		display: table;
+		width: 100%;
+	}
+}
+
+#social-icons {
+	margin-top: 1.7rem;
+}
+
+#social-icons img {
+        width: 35px;
+        height: auto;
+        display: inline;
+        margin: 0 0.5rem 0.5rem auto;
+		opacity: 0.5;
+}
+
+@media (max-width: 64rem){
+        #social-icons img {
+                margin: 0 15px 15px;
+        }
+}
+
+/* Author Info Box at the end of Posts */
+div.post-end {
+	margin-bottom: 2.5em;
+}
+
+.byline {
+	font-family: Oswald;
+	font-weight: 300;
+	font-size: 0.9rem;
+	text-transform: uppercase;
+}
+
+div.author-box {
+	text-align: center;
+}
+
+.author-box img {
+	width: 100px;
+	margin-bottom: 0.5rem;
+}
+
+.author-name {
+	font-family: Oswald;
+	font-weight: 400;
+	font-size: 1.2rem;
+}
+
+.author-end {
+	border-top: solid 1px #ddd;
+	margin: 1.5rem 0;
+}
+
+.author-bio {
+	font-size: 0.9em;
+}
+
+@media (min-width: 40rem){
+	div.author-box {
+		padding-left: 1em;
+		margin-top: 0.5em;
+		margin-bottom: 2.5em;
+		text-align: left;
+	}
+
+	div.author-box-image {
+		position: absolute;
+		width: 100px;
+	}
+
+	.author-box img {
+		width: 150px;
+		float: left;
+		margin-right: 0.5rem;
+	}
+
+	div.author-box-image img {
+		width: 100%;
+	}
+
+	div.author-box-info {
+		margin-left: 110px;
+		min-height: 100px;
+	}
+
+}
+
+.site-name, .links-title {
+    font-family: Oswald;
+	font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+}
+
+.site-slogan {
+	font-family: Oswald;
+	font-weight: 300;
+}
+
+.cc-row {
+	text-align: center;
+}
+@media (min-width: 40rem){
+	.cc-row {
+		margin-top: 3rem;
+	}
+}
+
+.cc {
+	font-family: cc-icons;
+	vertical-align: middle;
+}
+
+.cc-info {
+	font-family: Oswald;
+	font-weight: 300;
+	font-size: 0.85rem;
+}
+
+.cc-info img {
+	display: inline;
+	width: 88px;
+	margin: 0;
+}
+
+.camrule {
+	border-bottom: solid 1px #ccc;
+	display: none;
+}
+
+.camrule-img {
+	height: 40px;
+	height: 2rem;
+	width: auto;
+	margin: 0 auto;
+	margin-bottom: -20px;
+}
+
+@media (min-width: 40rem){
+	ul {
+		display: block;
+        margin-left: 1rem;
+	}
+}
+
+#nextPrev {
+	font-family: Oswald;
+	color: #888;
+	font-weight: 300;
+	margin-bottom: 2rem;
+}
+
+#nextPrev a {
+	color: #7A94AE;
+}
+
+#nextPrev .column div {
+	font-weight: 400;
+}
+
+#nextPrev .next {
+	text-align: right;
+}
+
+#prevTitle {
+	margin-left: 1rem;
+}
+
+#nextTitle {
+	margin-right: 1rem;
+}
+
+pre {
+		background-color: #f8f8f8;
+		-moz-border-radius: 3px;
+		-webkit-border-radius: 3px;
+		border-radius: 3px;
+		border: 1px solid #ddd;
+		white-space: pre;
+		font-family: consolas, "Liberation Mono", Courier, monospace;
+		font-size: 0.8em;
+		padding: 0.3em;
+}
+
+pre code {
+		-moz-border-radius: none;
+		-webkit-border-radius: none;
+		border-radius: none;
+		border: none;
+		white-space: pre;
+		padding: 0;
+		background-color: initial;
+}
+
+.big-vid {
+	margin-left: -5%;
+	width: 110%;
+}
+
+@media (min-width: 40rem){
+	.big-vid {
+		margin-left: 0;
+		width: 150%;
+	}
+}
+
+.fluid-vid {
+	position: relative;
+	padding-bottom: 56.25%;
+	padding-top: 30px;
+	height: 0;
+	overflow: hidden;
+    margin-bottom: 1em;
+}
+
+.fluid-vid iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.Cmd {
+    font-family: Oswald, "Open Sans", sans-serif;
+    text-align: center;
+    display: block;
+    background-color: #f8f8f8;
+    border: dashed 1px #bbb;
+    padding: 0.5rem 0;
+}
+
+.toggle-swap {
+    color: #497bad;
+    cursor: pointer;
+    border-left: solid 2px gray;
+    padding: 0 0.5em;
+}
+
+.toggle-swap:first-of-type {
+    border-left: none;
+}
+
+.toggle-swap:hover {
+    background-color: #497bad;
+    color: white;
+}
+
+@media (max-width: 40rem){
+    .toggle-swap {
+        border: none;
+        display: block;
+        padding: 0.5em 0;
+    }
+}
+
+table {
+    margin: 0 auto;
+}
+
+table, th, td {
+    border: solid 1px #aaa;
+}
+
+th {
+    background-color: #444;
+    color: white;
+}
+
+tbody tr:nth-child(even){
+    background-color: #eee;
+}
+
+th, td {
+    padding: 0.2rem;
+}
+
+a.header-link {
+    position: relative;
+    margin-left: 0.25rem;
+    opacity: 0;
+}
+
+span.header-link::after {
+    content: "\f0c1";
+    font-family: FontAwesome;
+}
+
+h2:hover a.header-link,
+h3:hover a.header-link,
+h4:hover a.header-link,
+h5:hover a.header-link,
+h6:hover a.header-link {
+  /* display: inline; */
+  opacity: 1;
+}
