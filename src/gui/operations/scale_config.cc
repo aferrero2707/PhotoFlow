@@ -34,7 +34,7 @@
 
 PF::ScaleConfigGUI::ScaleConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Scale/Rotate" ),
-  rotate_angle_slider( this, "rotate_angle", "Rotation angle: ", 0, -360, 360, 0.001, 10, 1 ),
+  rotate_angle_slider( this, "rotate_angle", "Rotation angle: ", 0, -360, 360, 0.01, 10, 1 ),
   scale_mode( this, "scale_mode", "Scale mode: ", 0 ),
   scale_unit( this, "scale_unit", "", 0 ),
   scale_width_pixels_slider( this, "scale_width_pixels", "width: ", 0, 0, 10000000, 1, 10, 1 ),
