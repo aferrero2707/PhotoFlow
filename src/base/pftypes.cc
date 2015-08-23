@@ -55,7 +55,7 @@ PF::PropertyBase(name, par)
 {
   add_enum_value(PF_BLEND_PASSTHROUGH,"PF_BLEND_PASSTHROUGH","Passthrough");
   add_enum_value(PF_BLEND_NORMAL,"PF_BLEND_NORMAL","Normal");
-  add_enum_value(PF_BLEND_SEP1,"PF_BLEND_SEP1","Separator");
+  //add_enum_value(PF_BLEND_SEP1,"PF_BLEND_SEP1","Separator");
   add_enum_value(PF_BLEND_GRAIN_EXTRACT,"PF_BLEND_GRAIN_EXTRACT","Grain extract");
   add_enum_value(PF_BLEND_GRAIN_MERGE,"PF_BLEND_GRAIN_MERGE","Grain merge");
   add_enum_value(PF_BLEND_OVERLAY,"PF_BLEND_OVERLAY","Overlay");
