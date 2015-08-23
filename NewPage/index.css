@@ -1,0 +1,23 @@
+
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,700|Roboto+Slab:400,700);
+
+p.color-ex {
+    color: #444;
+    text-align: center;
+    padding: 1em 0;
+    margin: 0 auto;
+}
+
+p.aside {
+    font-size: 0.9em;
+    border: dashed 1px;
+    padding: 0.5rem;
+    font-family: Oswald;
+    font-weight: 300;
+}
+
+p.aside > span {
+    display: block;
+    font-weight: 400;
+}
+
