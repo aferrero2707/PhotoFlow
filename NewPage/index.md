@@ -3,7 +3,7 @@ date: 2015-04-24T10:05:29-05:00
 title: Color management made easy
 sub-title: Color management made easy
 
-lede-img: 'pano_lede.png'
+lede-img: 'http://4.bp.blogspot.com/-2jIUR-RdNqg/Vdc-TGx_KHI/AAAAAAAABRM/BkO93YIolZQ/s1600/Screen%2BShot%2B2015-08-21%2Bat%2B17.04.34.png'
 lede-attribution: "<a href='http://photoflowblog.blogspot.fr'>Andrea Ferrero</a>"
 
 author: "Andrea Ferrero"
