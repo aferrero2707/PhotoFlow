@@ -62,9 +62,8 @@ p:first-of-type { margin-top: 0; }
     color: #888;
     position: absolute;
     left: 0;
-    width: 100%;
     bottom: -1.5rem;
-    padding-right: 0.5rem;
+    padding-left: 0.5rem;
 }
 
 .lede-links {
