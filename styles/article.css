@@ -66,6 +66,18 @@ p:first-of-type { margin-top: 0; }
     padding-right: 0.5rem;
 }
 
+.lede-links {
+    font-family: Oswald;
+    font-weight: 300;
+    font-size: 1.9rem;
+    color: #888;
+    position: absolute;
+    left: 0;
+    width: 100%;
+    bottom: -1.5rem;
+    padding-right: 0.5rem;
+}
+
 blockquote {
 	padding: 0 0.5em;
     border: solid 1px #ccc;
