@@ -12,6 +12,11 @@ author-img: ''
 
 layout: article
 ---
+<table style="background-color:#101010; color=#D0D0D0">
+<tr>
+<td>Features</td><td>Download</td>
+</tr>
+</table>
 
 # Introduction
 I know it's not technical, but I can't help feel that a gentle introduction would help the average reader understand better what they're about to get into... :)
