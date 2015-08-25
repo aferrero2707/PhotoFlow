@@ -61,7 +61,8 @@ p:first-of-type { margin-top: 0; }
     font-size: 0.9rem;
     color: #888;
     position: absolute;
-    right: 0;
+    left: 0;
+    width: 100%;
     bottom: -1.5rem;
     padding-right: 0.5rem;
 }
