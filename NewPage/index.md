@@ -14,7 +14,7 @@ layout: article
 ---
 <table style="background-color:#101010; color=#D0D0D0">
 <tr>
-<td>Features</td><td>Download</td>
+<td>Features</td><td>Download</td><td>Download</td>
 </tr>
 </table>
 
