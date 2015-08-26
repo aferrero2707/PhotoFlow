@@ -46,8 +46,25 @@ PF::RawImage::RawImage( const std::string f ):
 {
 	dcraw_data_t* pdata;
 #ifdef PF_USE_LIBRAW
+  file_name_real = file_name;
+  int ifd = open( file_name_real.c_str(), O_RDONLY );
+  if( ifd < 0 ) {
+    char* fullpath = strdup( file_name_real.c_str() );
+    const gchar* fname = g_basename( fullpath );
+    ifd = open( fname, O_RDONLY );
+    if( ifd < 0 ) {
+      std::cout<<"RawImage::RawImage(): \""<<file_name<<"\" not found"<<std::endl;
+      return;
+    } else {
+      close(ifd);
+    }
+    file_name_real = fname;
+  } else {
+    close(ifd);
+  }
+
   LibRaw* raw_loader = new LibRaw();
-  int result = raw_loader->open_file( file_name.c_str() );
+  int result = raw_loader->open_file( file_name_real.c_str() );
   if( result != 0 ) {
     std::cout<<"RawImage::RawImage(): raw_loader->open_file("<<file_name<<") failed"<<std::endl;
     delete raw_loader;
@@ -255,14 +272,14 @@ PF::RawImage::RawImage( const std::string f ):
 
   // We read the EXIF data and store it in the image as a custom blob
   GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
-  gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name.c_str(), NULL);
+  gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name_real.c_str(), NULL);
   if( gexiv2_success )
     std::cout<<"RawImage::RawImage(): setting gexiv2-data blob"<<std::endl;
     vips_image_set_blob( image, "gexiv2-data",
         (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
         sizeof(GExiv2Metadata) );
 
-  PF::exif_read( &exif_data, file_name.c_str() );
+  PF::exif_read( &exif_data, file_name_real.c_str() );
 
   void* exifdata_buf = malloc( sizeof(exif_data_t) );
   if( !exifdata_buf ) return;
