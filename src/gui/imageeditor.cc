@@ -611,8 +611,8 @@ void PF::ImageEditor::zoom_fit()
   float area_vsize = imageArea_scrolledWindow.get_allocated_height();
 #endif
   std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
-  area_hsize -= 50;
-  area_vsize -= 50;
+  area_hsize -= 20;
+  area_vsize -= 20;
 
 	float shrink_h = area_hsize/image_size_updater->get_image_width();
 	float shrink_v = area_vsize/image_size_updater->get_image_height();
