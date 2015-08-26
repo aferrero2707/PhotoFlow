@@ -186,6 +186,11 @@ void PF::ImageProcessor::run()
 
       // Process the request
       switch( request.request ) {
+      case IMAGE_PIPELINE_SET_LEVEL:
+        if( !request.pipeline ) continue;
+        if( request.level < 0 ) continue;
+        request.pipeline->set_level( request.level );
+        break;
       case IMAGE_REBUILD:
         if( !request.image ) continue;
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;

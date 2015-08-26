@@ -228,14 +228,14 @@ void PF::LayerWidget::on_selection_changed()
   }
 */
   int layer_id = get_selected_layer_id();
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_changed(): selected layer id="<<layer_id<<std::endl;
-//#endif
+#endif
 
   std::vector<Gtk::TreeModel::Path> selected_rows = refTreeSelection->get_selected_rows();
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_chaged(): "<<selected_rows.size()<<" selected rows."<<std::endl;
-//#endif
+#endif
   std::vector<Gtk::TreeModel::Path>::iterator row_it = selected_rows.begin();
   if( row_it == selected_rows.end() )
     return;
@@ -246,9 +246,9 @@ void PF::LayerWidget::on_selection_changed()
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"Selected row "<<l->get_name()<<std::endl;
-//#endif
+#endif
 
     if( PF::PhotoFlow::Instance().is_single_win_mode() ) {
       PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();

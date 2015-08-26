@@ -164,6 +164,8 @@ namespace PF
     void sample_done_signal() { g_cond_signal( sample_done ); }
     void remove_layer_done_signal() { g_cond_signal( remove_layer_done ); }
 
+    void set_pipeline_level( PF::Pipeline* pipeline, int level );
+
     void update( PF::Pipeline* pipeline=NULL, bool sync=false );
     void update_all() { update( NULL ); }
     void do_update( PF::Pipeline* pipeline=NULL );

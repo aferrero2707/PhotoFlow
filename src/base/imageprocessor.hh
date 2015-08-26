@@ -42,6 +42,7 @@ namespace PF
   
   enum process_request_t {
     IMAGE_REBUILD,
+    IMAGE_PIPELINE_SET_LEVEL,
     IMAGE_UPDATE,
     IMAGE_EXPORT,
     IMAGE_SAMPLE,
@@ -63,6 +64,7 @@ namespace PF
     std::string filename;
     Layer* layer;
 		int layer_id;
+		int level;
     VipsRect area;
     unsigned char* buf;
     process_request_t request;

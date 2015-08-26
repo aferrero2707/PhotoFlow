@@ -49,7 +49,11 @@ public:
   }
 
   bool is_dirty() { return dirty; }
-  void set_dirty( bool d ) { dirty = d; }
+  void set_dirty( bool d )
+  {
+    std::cout<<"PixelBuffer::set_dirty("<<d<<") called."<<std::endl;
+    dirty = d;
+  }
 
   Glib::RefPtr< Gdk::Pixbuf > get_pxbuf() { return buf; }
   VipsRect& get_rect() { return rect; }

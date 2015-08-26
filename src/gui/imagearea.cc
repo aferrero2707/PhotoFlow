@@ -66,7 +66,7 @@ static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
 
 gboolean PF::ImageArea::queue_draw_cb (PF::ImageArea::Update * update)
 {
-  if( (update->rect.width > 0) && (update->rect.height > 0) ) {
+  if( false && (update->rect.width > 0) && (update->rect.height > 0) ) {
     update->image_area->queue_draw_area (update->rect.left,//+update->image_area->get_xoffset(),
                                          update->rect.top,//+update->image_area->get_yoffset(),
                                          update->rect.width,
@@ -99,6 +99,8 @@ gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
   std::cout<<"                get_page_size()="<<update->image_area->get_vadj()->get_page_size()<<std::endl;
   std::cout<<"update->image_area->set_size_request("<<update->rect.width<<","<<update->rect.height<<")"<<std::endl;
   */
+  std::cout<<"set_size_cb(): update->rect="<<update->rect<<std::endl;
+
   update->image_area->set_size_request(update->rect.width,update->rect.height);
   // We need to change the upper limits explicitely, since the adjustments are not updated immediately
   // when calling set_size_request(). Otherwise the subsequent set_value() calls might modify the values
@@ -140,10 +142,12 @@ gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
       static_cast<int>(update->image_area->get_vadj()->get_page_size())
   };
 
-  update->image_area->queue_draw_area (preview_area.left,//+update->image_area->get_xoffset(),
-                                       preview_area.top,//+update->image_area->get_yoffset(),
-                                       preview_area.width,
-                                       preview_area.height);
+  //update->image_area->queue_draw_area (preview_area.left,//+update->image_area->get_xoffset(),
+  //                                     preview_area.top,//+update->image_area->get_yoffset(),
+  //                                     preview_area.width,
+  //                                     preview_area.height);
+  update->image_area->queue_draw();
+  std::cout<<"set_size_cb(): update->image_area->queue_draw() called"<<std::endl;
 
   /*
   PF::ImageArea::Update* update2 = g_new (Update, 1);
@@ -222,7 +226,7 @@ PF::ImageArea::~ImageArea ()
 // Submit the given area to the image processor
 void PF::ImageArea::submit_area( const VipsRect& area )
 {
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::submit_area(): called"<<std::endl;
   std::cout<<"                              display_image="<<display_image<<std::endl;
   std::cout<<"                              xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
@@ -233,7 +237,7 @@ void PF::ImageArea::submit_area( const VipsRect& area )
       static_cast<int>(hadj->get_page_size()), static_cast<int>(vadj->get_page_size())
   };
   std::cout<<"                              preview_area="<<preview_area<<std::endl;
-#endif
+//#endif
 
   // Submit request to re-process the area
   // We draw only if there is already a VipsImage attached to this display
@@ -284,6 +288,7 @@ void PF::ImageArea::process_start( const VipsRect& area )
   std::cout<<"Active buffer copied into inactive one"<<std::endl;
 #endif
 
+  /* OBSOLETE
 	// Fill borders with black
 	int right_border = area.width - display_image->Xsize - xoffset;
 	int bottom_border = area.height - display_image->Ysize - yoffset;
@@ -295,6 +300,7 @@ void PF::ImageArea::process_start( const VipsRect& area )
 	double_buffer.get_inactive().fill( bottom, 0 );
 	double_buffer.get_inactive().fill( left, 0 );
 	double_buffer.get_inactive().fill( right, 0 );
+	*/
 }
 
 
@@ -304,18 +310,20 @@ void PF::ImageArea::process_start( const VipsRect& area )
 */
 void PF::ImageArea::process_end( const VipsRect& area )
 {
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::process_end(): called"<<std::endl;
   std::cout<<"                               display_image="<<display_image<<std::endl;
+  std::cout<<"                               image width="<<display_image->Xsize<<std::endl;
+  std::cout<<"                                    height="<<display_image->Ysize<<std::endl;
   std::cout<<"                               xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
-#endif
+//#endif
   double_buffer.lock();
   double_buffer.swap();
   double_buffer.get_active().set_dirty(false);
   double_buffer.get_inactive().set_dirty(true);
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"Buffer swapped"<<std::endl;
-#endif
+//#endif
 
   Update * update = g_new (Update, 1);
   update->image_area = this;
@@ -323,7 +331,7 @@ void PF::ImageArea::process_end( const VipsRect& area )
   update->rect.top = area.top;
   update->rect.width = area.width;
   update->rect.height = area.height;
-  //std::cout<<"PF::ImageArea::process_end(): installing idle callback."<<std::endl;
+  std::cout<<"PF::ImageArea::process_end(): installing draw callback."<<std::endl;
   gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
   double_buffer.unlock();
 }
@@ -474,6 +482,7 @@ void PF::ImageArea::draw_area()
 bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
 {
   //return true;
+  std::cout<<"ImageArea::on_expose_event() called"<<std::endl;
 
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return true;
@@ -490,8 +499,9 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   // If the requested area is fully contained witin the current preview buffer,
   // we do not submit any further redraw request
   double_buffer.lock();
-  //std::cout<<"  draw_area: "<<draw_area<<std::endl;
-  //std::cout<<"  buffer_area: "<<double_buffer.get_active().get_rect()<<std::endl;
+  std::cout<<"  draw_area: "<<draw_area<<std::endl;
+  std::cout<<"  buffer_area: "<<double_buffer.get_active().get_rect()<<std::endl;
+  std::cout<<"  buffer_dirty: "<<double_buffer.get_active().is_dirty()<<std::endl;
   if( double_buffer.get_active().get_rect().width > 0 &&
       double_buffer.get_active().get_rect().height > 0 ) {
     Glib::RefPtr< Gdk::Pixbuf > pixbuf = modify_preview();
@@ -505,12 +515,17 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   }
 
   bool repaint_needed = true;
-  if( vips_rect_includesrect(&(double_buffer.get_active().get_rect()), &draw_area) )
+  if( vips_rect_includesrect(&(double_buffer.get_active().get_rect()), &draw_area) ) {
+    std::cout<<"  vips_rect_includesrect(): double_buffer.get_active().get_rect()="
+        <<double_buffer.get_active().get_rect()
+        <<"  draw_area="<<draw_area
+        <<std::endl;
     repaint_needed = false;
+  }
   if( double_buffer.get_active().is_dirty() )
     repaint_needed = true;
   double_buffer.unlock();
-  //std::cout<<"  repaint_needed="<<repaint_needed<<std::endl;
+  std::cout<<"  repaint_needed="<<repaint_needed<<std::endl;
   if( !repaint_needed )
     return true;
 
@@ -532,6 +547,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   area_tot.height = MAX( draw_area_bottom, preview_area_bottom ) - area_tot.top + 1;
   //std::cout<<"ImageArea::on_expose_event(): area_tot="<<area_tot<<std::endl;
 
+  /* OBSOLETE
   if( display_image->Xsize < hadj->get_page_size() ) {
     xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
   } else {
@@ -542,6 +558,10 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   } else {
     yoffset = 0;
   }
+  */
+
+  xoffset = 0;
+  yoffset = 0;
 
   // Submit the re-computation of the requested area
   ProcessRequestInfo request;
@@ -672,6 +692,7 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   area_tot.height = MAX( draw_area_bottom, preview_area_bottom ) - area_tot.top + 1;
 	//std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot<<std::endl;
 
+  /* OBSOLETE
 	if( display_image->Xsize < hadj->get_page_size() ) {
 		xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
 	} else {
@@ -682,6 +703,10 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	} else {
 		yoffset = 0;
 	}
+  */
+
+  xoffset = 0;
+  yoffset = 0;
 
 	// Submit the re-computation of the requested area
   ProcessRequestInfo request;
@@ -802,9 +827,9 @@ void PF::ImageArea::update( VipsRect* area )
 {
   //PF::Pipeline* pipeline = pf_image->get_pipeline(0);
 
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): called"<<std::endl;
-#endif
+//#endif
   if( !get_pipeline() ) {
     std::cout<<"ImageArea::update(): error: NULL pipeline"<<std::endl;
     return;
@@ -1007,11 +1032,11 @@ void PF::ImageArea::update( VipsRect* area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): vips_sink_screen() called"<<std::endl;
 #endif
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"Image size: "<<outimg->Xsize<<","
 					 <<outimg->Ysize<<std::endl;
   std::cout<<"Shrink factor: "<<shrink_factor<<std::endl;
-#endif
+//#endif
 
 	if( shrink_factor != 1 ) {
 		VipsImage* outimg2;
@@ -1156,14 +1181,14 @@ void PF::ImageArea::update( VipsRect* area )
   update->rect.top = area_top;
   update->rect.width = outimg->Xsize;
   update->rect.height = outimg->Ysize;
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"   update->rect: "<<update->rect<<std::endl;
   std::cout<<"PF::ImageArea::update(): installing set_size callback."<<std::endl;
-#endif
+//#endif
   gdk_threads_add_idle ((GSourceFunc) set_size_cb, update);
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): set_size() called"<<std::endl;
-#endif
+//#endif
 
   /*
   update = g_new (Update, 1);

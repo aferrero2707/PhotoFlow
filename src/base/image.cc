@@ -140,6 +140,27 @@ PF::Image::~Image()
 // to reduce the amount of computations in case only part of the image
 // needs to be updated. If area is NULL, it means that the whole image 
 // was changed.
+void PF::Image::set_pipeline_level( PF::Pipeline* target_pipeline, int level )
+{
+#ifndef NDEBUG
+  std::cout<<"Image::set_pipeline_level( "<<target_pipeline<<", "<<level<<" ) called."<<std::endl;
+#endif
+
+  if( !target_pipeline ) return;
+
+  if( PF::PhotoFlow::Instance().is_batch() ) {
+    target_pipeline->set_level( level );
+  } else {
+    ProcessRequestInfo request;
+    request.image = this;
+    request.pipeline = target_pipeline;
+    request.level = level;
+    request.request = PF::IMAGE_PIPELINE_SET_LEVEL;
+    PF::ImageProcessor::Instance().submit_request( request );
+  }
+}
+
+
 void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 {
 #ifndef NDEBUG

@@ -267,6 +267,21 @@ INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
+add_executable(scrollwin tests/scrollwin.cc)
+
+target_link_libraries(scrollwin
+  ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${PIXMAN_LIBRARIES} 
+  ${GTKMM_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  )
+
+
 #add_executable(cast tests/cast.c)
 
 #target_link_libraries(cast ${VIPS_LIBRARIES})
