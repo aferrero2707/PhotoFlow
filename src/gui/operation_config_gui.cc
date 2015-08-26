@@ -172,15 +172,15 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
 #ifdef GTKMM_2
   Gdk::Color bg;
-  bg.set_grey_p(0.7);
-  controls_frame.modify_base( Gtk::STATE_NORMAL, bg );
+  bg.set_grey_p(0.3);
+  controls_evbox.modify_bg( Gtk::STATE_NORMAL, bg );
 
   bg.set_grey_p(0.22);
-  //nameEntry.modify_base( Gtk::STATE_NORMAL, bg );
+  nameEntry.modify_base( Gtk::STATE_NORMAL, bg );
   //nameEntry.set_alignment(1);
 #endif
-  //controls_evbox.add( controls_box );
-  controls_frame.add( controls_box );
+  controls_evbox.add( controls_box );
+  controls_frame.add( controls_evbox );
 
 
   aux_controls_box.pack_start( aux_controls_hbox, Gtk::PACK_SHRINK );
