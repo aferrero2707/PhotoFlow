@@ -185,7 +185,12 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       same_size && (do_shift == false) &&
       (omap == NULL) ) is_passthrough = true;
 
-  if( is_passthrough && (get_blend_mode() != PF_BLEND_PASSTHROUGH) ) {
+  if( background && foreground && (background->Bands != foreground->Bands) )
+    is_passthrough = true;
+  if( background && foreground && (background->BandFmt != foreground->BandFmt) )
+    is_passthrough = true;
+
+    if( is_passthrough && (get_blend_mode() != PF_BLEND_PASSTHROUGH) ) {
     switch( get_colorspace() ) {
     case PF_COLORSPACE_RGB:
       if( get_rgb_target_channel()>= 0 )
