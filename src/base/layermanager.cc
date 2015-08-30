@@ -647,7 +647,6 @@ bool PF::LayerManager::insert_layer( Layer* layer, int32_t lid )
 }
 
 
-
 bool PF::LayerManager::remove_layer( PF::Layer* layer )
 {  
   if( layer == NULL ) return false;
@@ -667,7 +666,6 @@ bool PF::LayerManager::remove_layer( PF::Layer* layer )
 
   return false;
 }
-
 
 
 

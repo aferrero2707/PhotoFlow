@@ -117,6 +117,8 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::VBox aux_controls_box;
   Gtk::HBox aux_controls_hbox;
 
+  VipsSemaphore update_done_sem;
+
 
   OpParBase* get_par();
   OpParBase* get_blender();
@@ -167,9 +169,11 @@ public:
   virtual void enable_editing();
   void reset_edit_button();
   virtual void disable_editing();
+  bool is_editing() { return frame_edit.is_active(); }
   virtual void set_sticky();
   void reset_sticky_button();
   virtual void unset_sticky();
+  bool is_sticky() { return frame_sticky.is_active(); }
   virtual void parameters_undo();
   virtual void parameters_redo();
   virtual void parameters_reset();
@@ -238,6 +242,9 @@ public:
   void init();
   void update();
   virtual void do_update();
+  void update_notify() {
+    vips_semaphore_up( &update_done_sem );
+  }
 
   void update_properties();
 };

@@ -86,6 +86,8 @@ class LayerWidget : public Gtk::VBox
   bool get_row(int id, Gtk::TreeModel::iterator& iter);
   void select_row(int id);
 
+  void unset_sticky_and_editing( Layer* l );
+  void unset_sticky_and_editing( std::list<Layer*>& layers );
   void detach_controls( Layer* l );
   void detach_controls( std::list<Layer*>& layers );
   int get_map_tab( std::list<Layer*>* map_layers );

@@ -61,8 +61,10 @@
 
 static gboolean config_update_cb (PF::OperationConfigGUI * config)
 {
-  if( config )
+  if( config ) {
     config->do_update();
+    config->update_notify();
+  }
   return FALSE;
 }
 
@@ -102,7 +104,10 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_reset(PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_inactive.png"),
   frame_close(PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_inactive.png"),
   frame_expander(PF::PhotoFlow::Instance().get_data_dir()+"/icons/expand.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/collapse.png",true)
-  {
+{
+  vips_semaphore_init( &update_done_sem, 0, "update_done_sem" );
+
+
   Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
   Glib::ustring iconsPath = dataPath + "/icons";
 
@@ -669,7 +674,7 @@ void PF::OperationConfigGUI::open()
 
 void PF::OperationConfigGUI::do_update()
 {
-  //std::cout<<"PF::OperationConfigGUI::do_update() called."<<std::endl;
+  std::cout<<"PF::OperationConfigGUI::do_update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
   update_buttons();
 
   bool old_inhibit;
@@ -708,8 +713,10 @@ void PF::OperationConfigGUI::do_update()
 
 void PF::OperationConfigGUI::update()
 {
-  //std::cout<<"PF::OperationConfigGUI::update() called."<<std::endl;
   gdk_threads_add_idle ((GSourceFunc) config_update_cb, this);
+  std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): waiting for semaphore"<<std::endl;
+  vips_semaphore_down( &update_done_sem );
+  std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): semaphore ready"<<std::endl;
 }
 
 

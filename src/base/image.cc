@@ -454,12 +454,6 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 }
 
 
-
-// The area parameter represents the region of the image that was actually
-// modified and that needs to be re-computed. This allows certain sinks
-// to reduce the amount of computations in case only part of the image
-// needs to be updated. If area is NULL, it means that the whole image 
-// was changed.
 void PF::Image::remove_layer( PF::Layer* layer )
 {
   if( PF::PhotoFlow::Instance().is_batch() ) {
@@ -469,10 +463,10 @@ void PF::Image::remove_layer( PF::Layer* layer )
     request.image = this;
     request.layer = layer;
     request.request = PF::IMAGE_REMOVE_LAYER;
-    g_mutex_lock( remove_layer_mutex );
+    //g_mutex_lock( remove_layer_mutex );
     PF::ImageProcessor::Instance().submit_request( request );
-    g_cond_wait( remove_layer_done, remove_layer_mutex );
-    g_mutex_unlock( remove_layer_mutex );
+    //g_cond_wait( remove_layer_done, remove_layer_mutex );
+    //g_mutex_unlock( remove_layer_mutex );
   }
 }
 
@@ -507,6 +501,7 @@ void PF::Image::remove_from_inputs( PF::Layer* layer, std::list<Layer*>& list )
 
 void PF::Image::remove_layer( PF::Layer* layer, std::list<Layer*>& list )
 {
+  if( layer ) std::cout<<"Image::remove_layer(\""<<layer->get_name()<<"\") called."<<std::endl;
   std::vector<Pipeline*>::iterator vi;
   for( vi = pipelines.begin(); vi != pipelines.end(); vi++ ) {
     (*vi)->remove_node( layer->get_id() );

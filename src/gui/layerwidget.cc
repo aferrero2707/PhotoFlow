@@ -768,6 +768,34 @@ void PF::LayerWidget::detach_controls( std::list<Layer*>& layers )
 
 
 
+void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
+{
+  if( !l ) return;
+  std::cout<<"LayerWidget::unset_sticky_and_editing(\""<<l->get_name()<<"\") called."<<std::endl;
+
+  if( editor ) {
+    if( editor->get_edited_layer() == l->get_id() )
+      editor->set_edited_layer(-1);
+    if( editor->get_displayed_layer() == l->get_id() )
+      editor->set_displayed_layer(-1);
+  }
+  unset_sticky_and_editing( l->get_omap_layers() );
+  unset_sticky_and_editing( l->get_imap_layers() );
+}
+
+
+
+void PF::LayerWidget::unset_sticky_and_editing( std::list<Layer*>& layers )
+{
+  std::cout<<"LayerWidget::unset_sticky_and_editing( std::list<Layer*>& layers ): layers.size()="<<layers.size()<<std::endl;
+  for( std::list<Layer*>::iterator li = layers.begin(); li != layers.end(); li++ ) {
+    if( !(*li) ) continue;
+    unset_sticky_and_editing( *li );
+  }
+}
+
+
+
 void PF::LayerWidget::remove_layers()
 {
   int page = notebook.get_current_page();
@@ -803,9 +831,14 @@ void PF::LayerWidget::remove_layers()
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*iter)[columns.col_layer];
 
+    std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
+    unset_sticky_and_editing( l );
+    std::cout<<"Calling detach_controls(\""<<l->get_name()<<"\")"<<std::endl;
     detach_controls( l );
+    std::cout<<"Calling close_map_tabs(\""<<l->get_name()<<"\")"<<std::endl;
     close_map_tabs( l );
 
+    std::cout<<"Calling image->remove_layer(\""<<l->get_name()<<"\")"<<std::endl;
     image->remove_layer( l );
     image->get_layer_manager().modified();
     removed = true;

@@ -143,7 +143,9 @@ public:
   void set_aux_controls( Gtk::Widget* aux );
   Gtk::Widget* get_aux_controls() { return aux_controls; }
 
+  int get_edited_layer() { (active_layer) ? active_layer->get_id() : -1; }
   void set_edited_layer( int id );
+  int get_displayed_layer() { (displayed_layer) ? displayed_layer->get_id() : -1; }
   void set_displayed_layer( int id );
 
   void open_image();
