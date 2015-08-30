@@ -38,7 +38,8 @@ namespace PF
 
   enum volume_method_t
   {
-    VOLUME_USM
+    VOLUME_GAUSS,
+    VOLUME_BILATERAL
     //VOLUME_DECONV,
     //VOLUME_MICRO
   };
@@ -47,14 +48,22 @@ namespace PF
   {
     PropertyBase method;
     Property<float> amount;
+    Property<float> threshold;
     Property<bool> enable_equalizer;
     Property<float> blacks_amount;
     Property<float> shadows_amount;
     Property<float> midtones_amount;
     Property<float> highlights_amount;
     Property<float> whites_amount;
-    Property<float> usm_radius;
-    ProcessorBase* usm;
+
+    Property<float> gauss_radius;
+    ProcessorBase* gauss;
+
+    Property<int> bilateral_iterations;
+    Property<float> bilateral_sigma_s;
+    Property<float> bilateral_sigma_r;
+    ProcessorBase* bilateral;
+
     SplineCurve tone_curve;
   public:
     float vec8[UCHAR_MAX+1];
@@ -63,9 +72,10 @@ namespace PF
     VolumePar();
 
     bool has_intensity() { return false; }
-    bool needs_caching() { return false; }
+    bool needs_caching() { return true; }
 
     float get_amount() { return amount.get(); }
+    float get_threshold() { return threshold.get(); }
     bool get_equalizer_enabled() { return enable_equalizer.get(); }
     SplineCurve& get_tone_curve() { return tone_curve; }
       
@@ -84,6 +94,7 @@ namespace PF
 								VipsRegion* imap, VipsRegion* omap, 
 								VipsRegion* out, OpParBase* par) 
     {
+      std::cout<<"VolumeProc::render() called."<<std::endl;
     }
   };
 
@@ -111,8 +122,11 @@ namespace PF
       T* pin1;
       T* pin2;
       T* pout;
+      //typename FormatInfo<T>::SIGNED diff;
+      float diff, out;
       float grey, ngrey, intensity;
       int x, y, pos;
+      //float threshold = opar->get_threshold()*FormatInfo<T>::RANGE;
 
       for( y = 0; y < height; y++ ) {
         pin1 = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
@@ -120,20 +134,39 @@ namespace PF
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
         for( x = 0; x < line_size; x+=3 ) {
-          grey = 0.2126f*pin1[x] + 0.7152f*pin1[x+1] + 0.0722f*pin1[x+2];
-          ngrey = (grey+FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-          intensity = opar->get_tone_curve().get_value( ngrey ) * opar->get_amount();
+          //intensity = 0;
+          if( opar->get_equalizer_enabled() ) {
+            grey = 0.2126f*pin1[x] + 0.7152f*pin1[x+1] + 0.0722f*pin1[x+2];
+            ngrey = (grey+FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+            intensity = opar->get_tone_curve().get_value( ngrey ) * opar->get_amount();
+          } else
+            intensity = opar->get_amount();
 
           pos = x;
-          pout[pos] = intensity*pin2[pos] + (1.0f-intensity)*pin1[pos]; pos++;
-          pout[pos] = intensity*pin2[pos] + (1.0f-intensity)*pin1[pos]; pos++;
-          pout[pos] = intensity*pin2[pos] + (1.0f-intensity)*pin1[pos];
+          diff = static_cast<float>(pin1[pos]) - pin2[pos];
+          //if( fabs(diff) < threshold ) diff /= threshold;
+          out = diff + pin1[pos];
+          clip( intensity*out + (1.0f-intensity)*pin1[pos], pout[pos] ); pos++;
+
+          diff = static_cast<float>(pin1[pos]) - pin2[pos];
+          //if( fabs(diff) < threshold ) diff /= threshold;
+          out = diff + pin1[pos];
+          clip( intensity*out + (1.0f-intensity)*pin1[pos], pout[pos] ); pos++;
+
+          diff = static_cast<float>(pin1[pos]) - pin2[pos];
+          //if( fabs(diff) < threshold ) diff /= threshold;
+          out = diff + pin1[pos];
+          clip( intensity*out + (1.0f-intensity)*pin1[pos], pout[pos] );
+
+          //pout[pos] = intensity*pin2[pos] + (1.0f-intensity)*pin1[pos]; pos++;
+          //pout[pos] = intensity*pin2[pos] + (1.0f-intensity)*pin1[pos]; pos++;
+          //pout[pos] = intensity*pin2[pos] + (1.0f-intensity)*pin1[pos];
         }
       }
     }
   };
 
-
+/*
   template < class BLENDER, int CHMIN, int CHMAX, bool has_imap, bool has_omap, bool PREVIEW >
   class VolumeProc<unsigned short,BLENDER,PF_COLORSPACE_RGB,CHMIN,CHMAX,has_imap,has_omap,PREVIEW>
   {
@@ -183,7 +216,7 @@ namespace PF
       }
     }
   };
-
+*/
 
 
   ProcessorBase* new_volume();

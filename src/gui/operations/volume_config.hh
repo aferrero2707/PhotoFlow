@@ -53,6 +53,7 @@ namespace PF {
     Selector modeSelector;
 
     Slider amount_slider;
+    Slider threshold_slider;
     CheckBox enable_equalizer_box;
     VSlider blacks_amount_slider;
     VSlider shadows_amount_slider;
@@ -62,6 +63,10 @@ namespace PF {
 
     Gtk::VBox usmControlsBox;
     Slider usmRadiusSlider;
+
+    Gtk::VBox bilateralControlsBox;
+    Slider bilateralIterationsSlider, bilateralSigmasSlider,
+      bilateralSigmarSlider;
 
   public:
     VolumeConfigGUI( Layer* l );
