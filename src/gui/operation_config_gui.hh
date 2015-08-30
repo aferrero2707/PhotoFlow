@@ -81,11 +81,14 @@ class OperationConfigGUI: public OperationConfigUI
   // Embedded controls
   Gtk::Frame* frame;
   Gtk::Alignment frame_box_1_padding;
-  Gtk::Alignment frame_box_1_alignment;
+  Gtk::Alignment frame_top_buttons_alignment;
+  Gtk::Alignment frame_top_buttons_alignment2;
   Gtk::Alignment frame_box_2_padding;
   Gtk::Alignment frame_box_3_padding;
   Gtk::HBox frame_hbox;
   Gtk::VBox frame_vbox;
+  Gtk::HBox frame_top_buttons_box;
+  Gtk::HBox frame_top_buttons_box2;
   Gtk::HBox frame_top_box_1_1;
   Gtk::HBox frame_top_box_1_2;
   Gtk::VBox frame_top_vbox_1;
@@ -95,8 +98,11 @@ class OperationConfigGUI: public OperationConfigUI
   ToggleImageButton frame_visible;
   //ToggleImageButton frame_preview;
   ToggleImageButton frame_mask;
+  ToggleImageButton frame_mask2;
   ToggleImageButton frame_edit;
+  ToggleImageButton frame_edit2;
   ToggleImageButton frame_sticky;
+  ToggleImageButton frame_sticky2;
   ToggleImageButton frame_undo;
   ToggleImageButton frame_redo;
   ToggleImageButton frame_reset;
