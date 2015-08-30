@@ -861,12 +861,12 @@ void PF::ImageArea::update( VipsRect* area )
   }
   if( do_merged ) {
     image = get_pipeline()->get_output();
-//#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
     std::cout<<"ImageArea::update(): image="<<image<<std::endl;
     std::cout<<"                     image->Bands="<<image->Bands<<std::endl;
     std::cout<<"                     image->BandFmt="<<image->BandFmt<<std::endl;
     std::cout<<"                     image size: "<<image->Xsize<<"x"<<image->Ysize<<std::endl;
-//#endif
+#endif
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "ImageArea::update(): merged image ref" );
     } else {
