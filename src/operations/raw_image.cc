@@ -167,8 +167,8 @@ PF::RawImage::RawImage( const std::string f ):
   /* Normalized raw data to 65535 and build raw histogram
    * */
   // Allocate raw histogram and fill it with zero
-  int* raw_hist = (int*)malloc( 65535*3*sizeof(int) );
-  memset( raw_hist, 0, 65535*3*sizeof(int) );
+  int* raw_hist = (int*)malloc( 65536*3*sizeof(int) );
+  memset( raw_hist, 0, 65536*3*sizeof(int) );
 
 	guint8* ptr;
 	float* fptr;
@@ -197,6 +197,7 @@ PF::RawImage::RawImage( const std::string f ):
       if( ch < 3 ) ch = color;
       else if( ch == 3 ) ch = 1;
       if( ch >= 0 ) hist_id = static_cast<int>( val*3 + ch );
+      if( hist_id >= 65536*3 ) hist_id = 65536*3-1;
       if( hist_id >= 0 ) {
         //std::cout<<"hist_id="<<hist_id
         raw_hist[hist_id] += 1;
