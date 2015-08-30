@@ -110,11 +110,11 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
   }
 
   if( image ) {
-    //#ifdef DEBUG_DISPLAY
+    #ifdef DEBUG_DISPLAY
     std::cout<<"ImageSizeUpdater::update(): image->Bands="<<image->Bands<<std::endl;
     std::cout<<"ImageSizeUpdater::update(): image->BandFmt="<<image->BandFmt<<std::endl;
     std::cout<<"ImageSizeUpdater::update(): image size: "<<image->Xsize<<"x"<<image->Ysize<<std::endl;
-    //#endif
+    #endif
     image_width = image->Xsize;
     image_height = image->Ysize;
   }
@@ -1048,7 +1048,7 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
 //bool PF::ImageEditor::on_preview_configure_event( GdkEventConfigure* event )
 void PF::ImageEditor::on_my_size_allocate(Gtk::Allocation& allocation)
 {
-	std::cout<<"ImageEditor::on_my_size_allocate() called"<<std::endl;
+	//std::cout<<"ImageEditor::on_my_size_allocate() called"<<std::endl;
 	if( fit_image && fit_image_needed ) {
 	  zoom_fit();
 	  fit_image_needed = false;

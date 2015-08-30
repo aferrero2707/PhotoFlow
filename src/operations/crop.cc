@@ -89,6 +89,9 @@ VipsImage* PF::CropPar::build(std::vector<VipsImage*>& in, int first,
         <<crop_width.get()/scale_factor<<", "<<crop_height.get()/scale_factor<<", NULL )"<<std::endl;
     return NULL;
   }
+  //std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  srcimg->Ysize="<<srcimg->Ysize<<std::endl;
+  //std::cout<<"outimg="<<out<<std::endl;
+  //std::cout<<"outimg->Xsize="<<out->Xsize<<"  outimg->Ysize="<<out->Ysize<<std::endl;
   return out;
 }
 

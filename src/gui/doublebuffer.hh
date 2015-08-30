@@ -51,7 +51,7 @@ public:
   bool is_dirty() { return dirty; }
   void set_dirty( bool d )
   {
-    std::cout<<"PixelBuffer::set_dirty("<<d<<") called."<<std::endl;
+    //std::cout<<"PixelBuffer::set_dirty("<<d<<") called."<<std::endl;
     dirty = d;
   }
 
