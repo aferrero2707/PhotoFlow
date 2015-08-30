@@ -88,6 +88,7 @@ class LayerWidget : public Gtk::VBox
 
   void detach_controls( Layer* l );
   void detach_controls( std::list<Layer*>& layers );
+  int get_map_tab( std::list<Layer*>* map_layers );
   void close_map_tabs( Layer* l );
 
 public:

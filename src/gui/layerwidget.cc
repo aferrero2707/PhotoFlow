@@ -332,6 +332,12 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       std::cout<<"Activated IMap column of row "<<l->get_name()<<std::endl;
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
+      int tab_id = get_map_tab( &(l->get_imap_layers()) );
+      if( tab_id >= 0 ) {
+        notebook.set_current_page( tab_id );
+        return;
+      }
+
       LayerTree* view = new LayerTree( editor, true );
       //frame->add( *view );
       
@@ -374,6 +380,12 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       std::cout<<"Activated OMap column of row "<<l->get_name()<<std::endl;
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
+      int tab_id = get_map_tab( &(l->get_omap_layers()) );
+      if( tab_id >= 0 ) {
+        notebook.set_current_page( tab_id );
+        return;
+      }
+
       LayerTree* view = new LayerTree( editor, true );
       //frame->add( *view );
       
@@ -674,6 +686,19 @@ void PF::LayerWidget::insert_preset( std::string filename )
 
 
   update();
+}
+
+
+int PF::LayerWidget::get_map_tab( std::list<Layer*>* map_layers )
+{
+  for( int i = notebook.get_n_pages()-1; i>=1; i-- ) {
+    Widget* page = notebook.get_nth_page(i);
+    LayerTree* view = dynamic_cast<LayerTree*>( page );
+    if( !view ) continue;
+    std::list<Layer*>* view_layers = view->get_layers();
+    if( view_layers == map_layers ) return i;
+  }
+  return -1;
 }
 
 
