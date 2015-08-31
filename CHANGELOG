@@ -1,4 +1,35 @@
 =========================================
+Version 0.2.1
+
+- Fixed various issues related to the deletion of layers
+  (see issue #35: https://github.com/aferrero2707/PhotoFlow/issues/35)
+- Reduced accuracy of spin button that adjusts the rotation angle in the "scale/rotate" tool
+  (see issue #37: https://github.com/aferrero2707/PhotoFlow/issues/37)
+- When clicking on a layer map icon whose tab ewas already opened opened a new, duplicated tab. 
+  Now the GUI correctly activates the existing tab 
+  (see issue #39: https://github.com/aferrero2707/PhotoFlow/issues/39)
+- Fixed memory corruption in RAW histogram filling 
+  (see issue #40: https://github.com/aferrero2707/PhotoFlow/issues/40)
+- Improved behaviour of image blender: when two images have a different number of channels or pixel format,
+  the blending is set automatically to "passthrough" 
+  (see issue #40: https://github.com/aferrero2707/PhotoFlow/issues/40)
+- The buttons for switching maps on/off, making a layer sticky and enabling/disabling the layer editing mode
+  are now duplicated in the auxiliary controls panel above the layers list
+- Few changes have been introduced into the "Volume" tool, now called "Local contrast":
+  - the "Unsharp mask" method has been renamed to "Gaussian"
+  - the option to use G'MIC "Bilateral smoothing" as blurring operator has been added. 
+    This usually produces results with less evident halos. Idea taken from here:
+- Improved/simplified rendering of preview image:
+  - the centering in zoom-to-fit mode is now handled directly by GTK, instead of drawing a black
+    border explicitely has it was done before.
+  - when in zoom-to-fit mode, the preview image gets properly scaled and re-centered when the right
+    controls panel is shown/hidded (see issue #)
+- When opening a PFI file, if an input image is not found in the path stored in the PFI file it is
+  searched in the same folder as the PFI file itself. This allows PFI files to behave as "sidecars",
+  and to be easily distributed toghether with the original images.
+- Improved color scheme for tools controls (lighter background)
+
+=========================================
 Version 0.2.0
 
 - Implemented new GUI layout
