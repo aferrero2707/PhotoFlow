@@ -134,8 +134,8 @@ int main (int argc, char *argv[])
   vips_clone_stamp_get_type();
   vips_lensfun_get_type();
 
-#ifndef NDEBUG
   //im_concurrency_set( 1 );
+#ifndef NDEBUG
   vips_cache_set_trace( true );
 #endif
 
