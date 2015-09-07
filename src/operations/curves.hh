@@ -61,11 +61,11 @@ namespace PF
                        short int* vec8, int* vec16 );
 
   public:
-    std::vector< std::pair<float,float> > Greyvec;
-    std::vector< std::pair<float,float> > RGBvec[4];
-    std::vector< std::pair<float,float> > Labvec[3];
-    std::vector< std::pair<float,float> > CMYKvec[4];
-    std::vector< std::pair<float,float> >* cvec;
+    //std::vector< std::pair<float,float> > Greyvec;
+    //std::vector< std::pair<float,float> > RGBvec[4];
+    //std::vector< std::pair<float,float> > Labvec[3];
+    //std::vector< std::pair<float,float> > CMYKvec[4];
+    //std::vector< std::pair<float,float> >* cvec;
 
     Property<SplineCurve>* scvec[4];
 
