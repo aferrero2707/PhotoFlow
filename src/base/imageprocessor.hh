@@ -49,6 +49,7 @@ namespace PF
     IMAGE_REDRAW_START,
     IMAGE_REDRAW_END,
     IMAGE_REDRAW,
+    IMAGE_MOVE_LAYER,
     IMAGE_REMOVE_LAYER,
     IMAGE_DESTROY,
     OBJECT_UNREF,
@@ -63,7 +64,9 @@ namespace PF
     PipelineSink* sink;
     std::string filename;
     Layer* layer;
-		int layer_id;
+    int layer_id;
+    int dnd_dest_layer_id;
+    std::list<Layer*>* dnd_dest_layer_list;
 		int level;
     VipsRect area;
     unsigned char* buf;
@@ -97,6 +100,9 @@ namespace PF
     ImageProcessor();
 
     static ImageProcessor& Instance();
+
+    sigc::signal<void> signal_status_ready, signal_status_caching;
+    sigc::signal<void> signal_status_processing, signal_status_exporting;
 
     void start();
     void run();
