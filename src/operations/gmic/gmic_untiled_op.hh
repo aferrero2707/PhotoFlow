@@ -33,11 +33,11 @@
 
 #include "../../base/processor.hh"
 
-#include "../../vips/gmic/gmic/src/gmic.h"
-
 #include "../convertformat.hh"
 #include "../raster_image.hh"
 #include "../untiled_op.hh"
+
+#include "../../vips/gmic/gmic/src/gmic.h"
 
 
 namespace PF 

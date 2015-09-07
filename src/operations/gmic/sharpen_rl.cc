@@ -37,7 +37,7 @@ PF::GmicSharpenRLPar::GmicSharpenRLPar():
 OpParBase(),
   iterations("iterations",this,1),
   prop_sigma("sigma",this,1),
-  prop_iterations("rl_iterations",this,10),
+  prop_iterations("rl_iterations",this,1),
   prop_blur("blur", this, 1, "Gaussian", "Gaussian"),
   padding(0)
 {	
@@ -45,6 +45,10 @@ OpParBase(),
   prop_blur.add_enum_value( 0, "Exponential", "Exponential" );
   set_type( "gmic_sharpen_rl" );
 }
+
+
+bool PF::GmicSharpenRLPar::needs_caching() { return true; }
+
 
 
 int PF::GmicSharpenRLPar::get_padding( int level )

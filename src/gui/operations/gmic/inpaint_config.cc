@@ -27,10 +27,10 @@
 
  */
 
+#include "inpaint_config.hh"
+
 #include "../../../base/imageprocessor.hh"
 #include "../../../operations/gmic/inpaint.hh"
-
-#include "inpaint_config.hh"
 
 
 PF::GmicInpaintConfigGUI::GmicInpaintConfigGUI( PF::Layer* layer ):
