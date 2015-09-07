@@ -170,11 +170,11 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   Gtk::RadioButton::Group group = buttonShowMerged.get_group();
   buttonShowActive.set_group(group);
 
-  //controlsBox.pack_end( radioBox, Gtk::PACK_SHRINK );
   controlsBox.pack_end( buttonZoom100, Gtk::PACK_SHRINK );
   controlsBox.pack_end( buttonZoomFit, Gtk::PACK_SHRINK );
   controlsBox.pack_end( buttonZoomOut, Gtk::PACK_SHRINK );
   controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
+  controlsBox.pack_end( status_indicator, Gtk::PACK_SHRINK );
 
   //imageBox.pack_start( imageArea_eventBox );
   imageBox.pack_start( imageArea_scrolledWindow_box );
@@ -238,6 +238,15 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //signal_configure_event().connect_notify( sigc::mem_fun(*this, &PF::ImageEditor::on_preview_configure_event) );
 
   //open_image();
+
+  PF::ImageProcessor::Instance().signal_status_ready.
+      connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_ready) );
+  PF::ImageProcessor::Instance().signal_status_caching.
+      connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_caching) );
+  PF::ImageProcessor::Instance().signal_status_processing.
+      connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_processing) );
+  PF::ImageProcessor::Instance().signal_status_exporting.
+      connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_exporting) );
 
   show_all_children();
 }

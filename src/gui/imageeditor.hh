@@ -39,6 +39,7 @@
 #include "imagearea.hh"
 #include "layerwidget.hh"
 #include "tablabelwidget.hh"
+#include "widgets/statusindicator.hh"
 
 
 namespace PF {
@@ -113,6 +114,7 @@ class ImageEditor: public Gtk::HBox
   Gtk::Widget* aux_controls;
   Gtk::VBox aux_controlsBox;
   Gtk::HBox controlsBox;
+  StatusIndicatorWidget status_indicator;
   Gtk::Button buttonZoomIn, buttonZoomOut, buttonZoom100, buttonZoomFit;
   Gtk::VBox radioBox;
   Gtk::RadioButton buttonShowMerged, buttonShowActive;
@@ -154,6 +156,15 @@ public:
 
   void on_map();
   void on_realize();
+
+  void set_status( std::string label, int status )
+  {
+    status_indicator.set_status( label, status );
+  }
+  void set_status_ready() { std::cout<<"set_status_ready() called"<<std::endl; set_status(_("ready"), 0); }
+  void set_status_caching() { std::cout<<"set_status_caching() called"<<std::endl; set_status(_("caching"), 1); }
+  void set_status_processing() { std::cout<<"set_status_processing() called"<<std::endl; set_status(_("processing"), 2); }
+  void set_status_exporting() { std::cout<<"set_status_exporting() called"<<std::endl; set_status(_("exporting"), 2); }
 
   // Handlers for the mouse events inside the image area
   bool my_button_press_event( GdkEventButton* button );
