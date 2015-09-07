@@ -680,7 +680,7 @@ void PF::Image::export_merged( std::string filename )
     //#ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): locking mutex..."<<std::endl;
     //#endif
-    g_mutex_lock( export_mutex );
+    //g_mutex_lock( export_mutex );
     //#ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): submitting export request..."<<std::endl;
     //#endif
@@ -690,10 +690,10 @@ void PF::Image::export_merged( std::string filename )
     //#endif
 
     std::cout<<"PF::Image::export_merged(): waiting for export_done...."<<std::endl;
-    g_cond_wait( export_done, export_mutex );
+    //g_cond_wait( export_done, export_mutex );
     std::cout<<"PF::Image::export_merged(): ... export_done received."<<std::endl;
 
-    g_mutex_unlock( export_mutex );
+    //g_mutex_unlock( export_mutex );
   }
 }
 
