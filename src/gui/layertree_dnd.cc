@@ -28,6 +28,7 @@
  */
 
 #include "../base/image.hh"
+#include "../base/imageprocessor.hh"
 
 #include "imageeditor.hh"
 
@@ -421,47 +422,53 @@ bool PF::LayerTreeModel::drag_data_received_vfunc( const Gtk::TreeModel::Path& d
   // and refresh the layer tree model
   // First of all we have to make sure that no image update occurs during
   // the reconfiguration of the layers
-  image->lock();
+  //image->lock();
+  /*
   if( !(image->get_layer_manager().remove_layer(src_layer)) ) {
     image->unlock();
     return false;
   }
+  */
 
-  
+  PF::ProcessRequestInfo request;
+  request.image = image;
+  request.layer = src_layer;
+  request.dnd_dest_layer_list = NULL;
+  request.dnd_dest_layer_id = -1;
+  request.request = PF::IMAGE_MOVE_LAYER;
+
+
   bool result = Gtk::TreeStore::drag_data_received_vfunc( dest, selection_data );
   if( dest_layer ) {
     // If the destination layer is defined, then we insert the dragged layer
     // above it
     std::cout<<"Inserting \""<<src_layer->get_name()<<"\" above \""
              <<dest_layer->get_name()<<"\""<<std::endl;
-    std::list<Layer*>* list = image->get_layer_manager().get_list( dest_layer );
-    if( list == NULL ) {
-    image->unlock();
-      return false;
-    }
-    if( !(insert_layer(*list, src_layer, dest_layer->get_id())) ) {
-    image->unlock();
-      return false;
-    }
+    request.dnd_dest_layer_list = image->get_layer_manager().get_list( dest_layer );
+    request.dnd_dest_layer_id = dest_layer->get_id();
+    //image->unlock();
   } else {
     // Otherwise, if the group layer is defined we insert the dragged
     // layer on top of the group's sublayers
     if( group_layer ) {
-      group_layer->get_sublayers().push_front( src_layer );
+      request.dnd_dest_layer_list = &( group_layer->get_sublayers() );
+      //group_layer->get_sublayers().push_front( src_layer );
       //if( !(insert_layer(group_layer->get_sublayers(), 
       //                   src_layer, -1)) ) {
       //image->unlock();
       //  return false;
       //}
     } else {
-    image->unlock();
+    //image->unlock();
       return false;
     }
   }
-  
 
-  image->unlock();
-  image->update();
+  if( request.dnd_dest_layer_list )
+    PF::ImageProcessor::Instance().submit_request( request );
+
+  //image->unlock();
+  //image->update();
   // Now that the layers have been reconfigured, we emit the signal_drop_done
   // to notify the LayerTree that the model has to be updated
   signal_dnd_done.emit();
