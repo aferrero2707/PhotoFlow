@@ -61,9 +61,11 @@
 
 static gboolean config_update_cb (PF::OperationConfigGUI * config)
 {
+  std::cout<<"config_update_cb() called."<<std::endl;
   if( config ) {
     config->do_update();
     config->update_notify();
+    std::cout<<"config_update_cb(): update notified."<<std::endl;
   }
   return FALSE;
 }
