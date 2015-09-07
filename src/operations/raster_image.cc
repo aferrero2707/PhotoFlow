@@ -40,11 +40,29 @@ nref(1), file_name( f ),
 image( NULL )
 {
   if( file_name.empty() ) return;
+
+  file_name_real = file_name;
+  int ifd = open( file_name_real.c_str(), O_RDONLY );
+  if( ifd < 0 ) {
+    char* fullpath = strdup( file_name_real.c_str() );
+    const gchar* fname = g_basename( fullpath );
+    ifd = open( fname, O_RDONLY );
+    if( ifd < 0 ) {
+      std::cout<<"RasterImage::RasterImage(): \""<<file_name<<"\" not found"<<std::endl;
+      return;
+    } else {
+      close(ifd);
+    }
+    file_name_real = fname;
+  } else {
+    close(ifd);
+  }
+
   // Create VipsImage from given file
 #if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
-  image = vips_image_new_from_file( file_name.c_str() );
+  image = vips_image_new_from_file( file_name_real.c_str() );
 #else
-  image = vips_image_new_from_file( file_name.c_str(), NULL );
+  image = vips_image_new_from_file( file_name_real.c_str(), NULL );
 #endif
   if( !image ) {
     std::cout<<"RasterImage::RasterImage(): Failed to load "<<file_name<<std::endl;
@@ -112,14 +130,14 @@ image( NULL )
 
   // We read the EXIF data and store it in the image as a custom blob
   GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
-  gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name.c_str(), NULL);
+  gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name_real.c_str(), NULL);
   if( gexiv2_success )
     std::cout<<"RasterImage::RasterImage(): setting gexiv2-data blob"<<std::endl;
     vips_image_set_blob( image, "gexiv2-data",
         (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
         sizeof(GExiv2Metadata) );
 
-  PF::exif_read( &exif_data, file_name.c_str() );
+  PF::exif_read( &exif_data, file_name_real.c_str() );
   void* buf = malloc( sizeof(PF::exif_data_t) );
   if( !buf ) return;
   memcpy( buf, &exif_data, sizeof(PF::exif_data_t) );

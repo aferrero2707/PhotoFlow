@@ -53,6 +53,7 @@ namespace PF
   {
     int nref;
 		std::string file_name;
+    std::string file_name_real;
 
 		// VipsImage storing the raster data 
     VipsImage* image;
@@ -69,7 +70,7 @@ namespace PF
     void unref() { nref -= 1; }
     int get_nref() { return nref; }
 
-    std::string get_file_name() { return file_name; }
+    std::string get_file_name() { return file_name_real; }
     VipsImage* get_image(unsigned int& level);
 
     void print_exif( PF::exif_data_t* data );
