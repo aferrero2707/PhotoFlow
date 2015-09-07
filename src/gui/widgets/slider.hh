@@ -84,6 +84,12 @@ namespace PF {
 
     void get_value();
     void set_value();
+
+    void update_gui()
+    {
+      while (gtk_events_pending())
+        gtk_main_iteration();
+    }
   };
 
 

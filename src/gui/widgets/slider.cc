@@ -103,6 +103,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, std::string pname, std::string l
   multiplier(mult)
 {
   create_widgets( l, val, min, max, sincr, pincr );
+  value_changed.connect( sigc::mem_fun(*this, &PF::Slider::update_gui) );
 }
 
 
@@ -118,6 +119,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, st
   multiplier(mult)
 {
   create_widgets( l, val, min, max, sincr, pincr );
+  value_changed.connect( sigc::mem_fun(*this, &PF::Slider::update_gui) );
 }
 
 
