@@ -59,6 +59,7 @@ PF::PropertyBase(name, par)
   add_enum_value(PF_BLEND_GRAIN_EXTRACT,"PF_BLEND_GRAIN_EXTRACT","Grain extract");
   add_enum_value(PF_BLEND_GRAIN_MERGE,"PF_BLEND_GRAIN_MERGE","Grain merge");
   add_enum_value(PF_BLEND_OVERLAY,"PF_BLEND_OVERLAY","Overlay");
+  //add_enum_value(PF_BLEND_OVERLAY_GIMP,"PF_BLEND_OVERLAY_GIMP","Overlay (Gimp)");
   add_enum_value(PF_BLEND_SOFT_LIGHT,"PF_BLEND_SOFT_LIGHT","Soft light");
   add_enum_value(PF_BLEND_HARD_LIGHT,"PF_BLEND_HARD_LIGHT","Hard light");
   add_enum_value(PF_BLEND_VIVID_LIGHT,"PF_BLEND_VIVID_LIGHT","Vivid light");
