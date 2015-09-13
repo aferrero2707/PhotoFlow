@@ -338,3 +338,19 @@ int PF::vips_copy_metadata( VipsImage* in, VipsImage* out )
       );
 return 0;
 }
+
+
+
+float PF::vivid_light_f(float nbottom, float ntop)
+{
+  //nbottom = 50.0f/255.0f;
+  //ntop = 200.0f/255.0f;
+  float nvivid;
+  if( ntop <= 0.5 )
+    nvivid = PF::color_burn( nbottom, ntop*2.0f );
+  else
+    nvivid = PF::color_dodge( nbottom, ntop*2.0f-1.0f );
+
+  //std::cout<<"vivid_light=("<<nbottom*255<<","<<ntop*255<<")="<<nvivid*255.0f<<std::endl;
+  return nvivid;
+}
