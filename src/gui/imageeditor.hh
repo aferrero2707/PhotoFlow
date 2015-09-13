@@ -161,10 +161,10 @@ public:
   {
     status_indicator.set_status( label, status );
   }
-  void set_status_ready() { std::cout<<"set_status_ready() called"<<std::endl; set_status(_("ready"), 0); }
-  void set_status_caching() { std::cout<<"set_status_caching() called"<<std::endl; set_status(_("caching"), 1); }
-  void set_status_processing() { std::cout<<"set_status_processing() called"<<std::endl; set_status(_("processing"), 2); }
-  void set_status_exporting() { std::cout<<"set_status_exporting() called"<<std::endl; set_status(_("exporting"), 2); }
+  void set_status_ready() { set_status(_("ready"), 0); }
+  void set_status_caching() { set_status(_("caching"), 1); }
+  void set_status_processing() { set_status(_("processing"), 2); }
+  void set_status_exporting() { set_status(_("exporting"), 2); }
 
   // Handlers for the mouse events inside the image area
   bool my_button_press_event( GdkEventButton* button );

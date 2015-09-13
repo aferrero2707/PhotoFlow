@@ -61,11 +61,11 @@
 
 static gboolean config_update_cb (PF::OperationConfigGUI * config)
 {
-  std::cout<<"config_update_cb() called."<<std::endl;
+  //std::cout<<"config_update_cb() called."<<std::endl;
   if( config ) {
     config->do_update();
     config->update_notify();
-    std::cout<<"config_update_cb(): update notified."<<std::endl;
+    //std::cout<<"config_update_cb(): update notified."<<std::endl;
   }
   return FALSE;
 }
@@ -682,7 +682,7 @@ void PF::OperationConfigGUI::open()
 
 void PF::OperationConfigGUI::do_update()
 {
-  std::cout<<"PF::OperationConfigGUI::do_update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
+  //std::cout<<"PF::OperationConfigGUI::do_update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
   update_buttons();
 
   bool old_inhibit;
@@ -722,9 +722,9 @@ void PF::OperationConfigGUI::do_update()
 void PF::OperationConfigGUI::update()
 {
   gdk_threads_add_idle ((GSourceFunc) config_update_cb, this);
-  std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): waiting for semaphore"<<std::endl;
+  //std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): waiting for semaphore"<<std::endl;
   vips_semaphore_down( &update_done_sem );
-  std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): semaphore ready"<<std::endl;
+  //std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): semaphore ready"<<std::endl;
 }
 
 

@@ -108,7 +108,7 @@ namespace PF
     void modified() {  set_modified(); signal_modified.emit(); }
 
     bool is_dirty() { return dirty; }
-    void set_dirty( bool d ) { dirty = d; if(dirty) std::cout<<"\""<<get_name()<<"\"->set_dirty(1) called"<<std::endl;}
+    void set_dirty( bool d ) { dirty = d; /*if(dirty) std::cout<<"\""<<get_name()<<"\"->set_dirty(1) called"<<std::endl;*/}
     void clear_dirty( ) { dirty = false; }
     
 
