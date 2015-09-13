@@ -324,7 +324,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.get_tree().add_op( "Gaussian blur", "gaussblur" );
   op_detail.get_tree().add_op( "Noise reduction", "denoise" );
   op_detail.get_tree().add_op( "Sharpen", "sharpen" );
-  op_detail.get_tree().add_op( "Volume", "volume" );
+  op_detail.get_tree().add_op( "Local contrast", "volume" );
   op_detail.get_tree().add_op( "Multi-level decomposition", "gmic_split_details" );
 
   op_geom.get_tree().add_op( "Crop image", "crop" );

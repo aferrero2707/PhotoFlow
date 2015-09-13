@@ -50,7 +50,7 @@ PF::VolumePar::VolumePar():
   gauss_radius("gauss_radius",this,20),
   bilateral_iterations("bilateral_iterations",this,2),
   bilateral_sigma_s("bilateral_sigma_s",this,10),
-  bilateral_sigma_r("bilateral_sigma_r",this,25)
+  bilateral_sigma_r("bilateral_sigma_r",this,7)
 {
 	//method.add_enum_value(PF::SHARPEN_GAUSS,"GAUSS","Unsharp Mask");
 	method.add_enum_value(PF::VOLUME_BILATERAL,"BILATERAL","Bilateral");
