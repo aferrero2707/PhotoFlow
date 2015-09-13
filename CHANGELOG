@@ -28,6 +28,9 @@ Version 0.2.1
   searched in the same folder as the PFI file itself. This allows PFI files to behave as "sidecars",
   and to be easily distributed toghether with the original images.
 - Improved color scheme for tools controls (lighter background)
+- Fixed bug in G'MIC filters under OSX
+- Updated G'MIC to version 1.6.5.2
+- Added alternative overlay blend mode equivalent to GIMP one (very close to soft light)
 
 =========================================
 Version 0.2.0
