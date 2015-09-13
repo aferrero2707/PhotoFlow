@@ -31,6 +31,10 @@
  */
 
 #include <limits.h>
+#include <sys/resource.h>
+#include <assert.h>
+
+#include <pthread.h>
 
 #include <iostream>
 #include <fstream>
@@ -43,6 +47,8 @@ static char* custom_gmic_commands = 0;
 static GMutex* gmic_mutex = 0;
 
 static gmic* gmic_instances[2];
+
+static std::string command;
 
 
 using namespace cimg_library;
@@ -67,6 +73,7 @@ struct ProcessRequestInfo
 class Processor: public sigc::trackable
 {
   GThread* thread;
+  pthread_t _thread;
 
   GAsyncQueue* requests;
 
@@ -78,7 +85,25 @@ public:
 
   void start()
   {
-    thread = g_thread_new( "processor", run_processor, this );
+    pthread_attr_t thread_attr;
+    int s = 0;
+    size_t tmp_size=0;
+
+    s = pthread_attr_init(&thread_attr);
+    assert(s==0);
+
+    s = pthread_attr_setstacksize(&thread_attr , PTHREAD_STACK_MIN + 0x1000000);
+    assert(s==0);
+
+    s = pthread_attr_getstacksize(&thread_attr , &tmp_size );
+    assert(s==0);
+
+    printf("forced stack size of pthread is:%zu\n", tmp_size);
+
+    s = pthread_create(&_thread, &thread_attr, run_processor, this);
+    assert(s==0);
+
+    //thread = g_thread_new( "processor", run_processor, this );
   }
   void run()
   {
@@ -117,8 +142,9 @@ public:
 
   void join()
   {
-    if( thread )
-      g_thread_join( thread );
+    //if( thread )
+      //g_thread_join( thread );
+    pthread_join(_thread,NULL);
     thread = NULL;
   }
 };
@@ -131,7 +157,7 @@ static gpointer run_processor( gpointer data )
   //std::cout<<"Calling ImageProcessor::instance().run()"<<std::endl;
   Processor* processor = (Processor*)data;
   processor->run();
-  //return data;
+  return NULL;
 }
 
 
@@ -140,7 +166,7 @@ static void run_gmic()
   if( !custom_gmic_commands ) {
     std::ifstream t;
     int length;
-    t.open("gmic_def.gmic");      // open input file
+    t.open("gmic_stdlib.gmic");      // open input file
     t.seekg(0, std::ios::end);    // go to the end
     length = t.tellg();           // report location (this is the length)
     t.seekg(0, std::ios::beg);    // go back to the beginning
@@ -155,11 +181,16 @@ static void run_gmic()
 
   images.assign( (guint) 1 );
 
+  std::cout<<std::endl<<"==========================="<<std::endl<<std::endl;
   gmic_image<float> &img = images._data[0];
   img.assign( 128, 128, 1, 3 );
   gmic* gmic_instance = new gmic( 0, custom_gmic_commands, false, 0, 0 );
   //gmic_instance->run( "-verbose - -tv_flow  10,30", images, images_names );
-  gmic_instance->run( "-verbose + -_gimp_freaky_details 2,10,1 ", images, images_names );
+  //gmic_instance->run( "-verbose + -_gimp_freaky_details2 2,10,1 ", images, images_names );
+  //gmic_instance->run( "-verbose + [-1] -bilateral[-1] 10,7 -blend normal ", images, images_names );
+  //gmic_instance->run( "-verbose + [-1] -l[1] -endl ", images, images_names );
+  //gmic_instance->run( "-verbose + -gimp_unsharp 0,2,30,3,0,1,1,1,0,0,0 ", images, images_names );
+  gmic_instance->run( command.c_str(), images, images_names );
   images.assign( (guint) 0 );
   delete gmic_instance;
 }
@@ -168,15 +199,38 @@ static void run_gmic()
 
 int main(int argc, char** argv)
 {
+  const rlim_t kStackSize = 4 * 1024 * 1024;   // min stack size = 16 MB
+  struct rlimit rl;
+  int result;
+
+  result = getrlimit(RLIMIT_STACK, &rl);
+  if (result == 0)
+  {
+      //if (rl.rlim_cur < kStackSize)
+      //{
+          rl.rlim_cur = kStackSize;
+          result = setrlimit(RLIMIT_STACK, &rl);
+          if (result != 0)
+          {
+              fprintf(stderr, "setrlimit returned result = %d\n", result);
+          }
+          else
+          {
+            printf("Stack size correctly set\n");
+          }
+      //}
+  }
+
+  command = argv[1];
+
   Processor* processor = new Processor();
   processor->start();
 
-  for(int i = 0; i < 10; i++) {
+  for(int i = 0; i < 1; i++) {
     std::cout<<"running gmic"<<std::endl;
     run_gmic();
   }
 
-  std::cout<<std::endl<<"==========================="<<std::endl<<std::endl;
   //return(0);
 
   ProcessRequestInfo request;
