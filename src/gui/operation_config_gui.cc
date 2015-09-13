@@ -76,19 +76,19 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   editor( NULL ),
   blendSelector( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH ),
   blendSelector2( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH ),
-  intensitySlider( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
-  intensitySlider2( this, "intensity", "Intensity", 100, 0, 100, 1, 10, 100),
-  opacitySlider( this, layer->get_blender(), "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
-  opacitySlider2( this, layer->get_blender(), "opacity", "Opacity", 100, 0, 100, 1, 10, 100),
-  imap_enabled_box( this, "mask_enabled", "Enable mask", true),
-  omap_enabled_box( this, layer->get_blender(), "mask_enabled", "Enable mask", true),
-  shift_x( this, layer->get_blender(), "shift_x", "X shift", 0, -1000000, 1000000, 1, 10, 1),
-  shift_y( this, layer->get_blender(), "shift_y", "Y shift", 0, -1000000, 1000000, 1, 10, 1),
+  intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
+  intensitySlider2( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
+  opacitySlider( this, layer->get_blender(), "opacity", _("Opacity"), 100, 0, 100, 1, 10, 100),
+  opacitySlider2( this, layer->get_blender(), "opacity", _("Opacity"), 100, 0, 100, 1, 10, 100),
+  imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
+  omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
+  shift_x( this, layer->get_blender(), "shift_x", _("X shift"), 0, -1000000, 1000000, 1, 10, 1),
+  shift_y( this, layer->get_blender(), "shift_y", _("Y shift"), 0, -1000000, 1000000, 1, 10, 1),
   has_ch_sel(chsel),
-  greychSelector( this, "grey_target_channel", "Target channel: ", -1 ),
-  rgbchSelector( this, "rgb_target_channel", "Target channel: ", -1 ),
-  labchSelector( this, "lab_target_channel", "Target channel: ", -1 ),
-  cmykchSelector( this, "cmyk_target_channel", "Target channel:", -1 ),
+  greychSelector( this, "grey_target_channel", _("Target channel: "), -1 ),
+  rgbchSelector( this, "rgb_target_channel", _("Target channel: "), -1 ),
+  labchSelector( this, "lab_target_channel", _("Target channel: "), -1 ),
+  cmykchSelector( this, "cmyk_target_channel", _("Target channel:"), -1 ),
   previewButton(_("preview")),
   dialog( NULL ),
   frame( NULL ),
@@ -311,34 +311,34 @@ void PF::OperationConfigGUI::add_widget( Gtk::Widget& widget )
 
 void PF::OperationConfigGUI::on_map()
 {
-  std::cout<<"OperationConfigGUI::on_map(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
+  //std::cout<<"OperationConfigGUI::on_map(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
 }
 
 
 void PF::OperationConfigGUI::on_unmap()
 {
-  std::cout<<"OperationConfigGUI::on_unmap(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
+  //std::cout<<"OperationConfigGUI::on_unmap(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
 }
 
 
 void PF::OperationConfigGUI::expand()
 {
-  std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
+  //std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
   if( controls_frame.get_parent() == NULL ) {
     frame_vbox.pack_start( controls_frame, Gtk::PACK_SHRINK, 0 );
     controls_frame.show_all_children();
     controls_frame.show();
-    std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
+    //std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
   }
 }
 
 
 void PF::OperationConfigGUI::collapse()
 {
-  std::cout<<"OperationConfigGUI::collapse() called."<<std::endl;
+  //std::cout<<"OperationConfigGUI::collapse() called."<<std::endl;
   if( controls_frame.get_parent() == &frame_vbox ) {
     frame_vbox.remove( controls_frame );
-    std::cout<<"OperationConfigGUI::collapse(): controls hidden"<<std::endl;
+    //std::cout<<"OperationConfigGUI::collapse(): controls hidden"<<std::endl;
   }
 }
 
@@ -471,7 +471,7 @@ void PF::OperationConfigGUI::enable_editing()
     gui->reset_edit_button();
   }
 
-  std::cout<<"OperationConfigGUI::enable_editing(\""<<get_layer()->get_name()<<"\"): par->set_editing_flag( true )"<<std::endl;
+  //std::cout<<"OperationConfigGUI::enable_editing(\""<<get_layer()->get_name()<<"\"): par->set_editing_flag( true )"<<std::endl;
   par->set_editing_flag( true );
 
   editor->set_edited_layer( get_layer()->get_id() );
@@ -496,7 +496,7 @@ void PF::OperationConfigGUI::disable_editing()
   frame_edit2.set_active( false );
 
   par->set_editing_flag( false );
-  std::cout<<"  Editing flag set to false"<<std::endl;
+  //std::cout<<"  Editing flag set to false"<<std::endl;
   //std::cout<<"  updating image"<<std::endl;
   editor->set_edited_layer( -1 );
   get_layer()->get_image()->update();
@@ -516,7 +516,7 @@ bool PF::OperationConfigGUI::get_editing_flag()
 
 void PF::OperationConfigGUI::set_sticky()
 {
-  std::cout<<"OperationConfigGUI::set_sticky() called."<<std::endl;
+  //std::cout<<"OperationConfigGUI::set_sticky() called."<<std::endl;
   if( !get_layer() ) return;
   if( !get_layer()->get_image() ) return;
 
@@ -549,7 +549,7 @@ void PF::OperationConfigGUI::set_sticky()
     gui->reset_sticky_button();
   }
 
-  std::cout<<"OperationConfigGUI::set_sticky(): editor->set_displayed_layer("<<get_layer()->get_id()<<")"<<std::endl;
+  //std::cout<<"OperationConfigGUI::set_sticky(): editor->set_displayed_layer("<<get_layer()->get_id()<<")"<<std::endl;
   editor->set_displayed_layer( get_layer()->get_id() );
 }
 
@@ -849,7 +849,7 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   } else if( op_type == "invert" ) {
 
-    dialog = new PF::OperationConfigGUI( current_layer, "Invert Image" );
+    dialog = new PF::OperationConfigGUI( current_layer, "Convert Colors" );
 
   } else if( op_type == "desaturate" ) {
 

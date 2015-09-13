@@ -440,7 +440,9 @@ PF::CacheBuffer* PF::LayerManager::get_cache_buffer( rendermode_t mode, std::lis
             pipeline->get_node(l->get_id()) ) {
           PF::PipelineNode* node = pipeline->get_node(l->get_id());
           buf->set_image( node->image );
+#ifndef NDEBUG
           std::cout<<"Caching layer \""<<l->get_name()<<"\"  image="<<node->image<<std::endl;
+#endif
           return( buf );
         }
       }

@@ -292,92 +292,93 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_misc.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
 
 
-  op_load.get_tree().add_op( "Open image", "imageread" );
-  op_load.get_tree().add_op( "Open RAW image", "raw_loader" );
+  op_load.get_tree().add_op( _("Open image"), "imageread" );
+  op_load.get_tree().add_op( _("Open RAW image"), "raw_loader" );
 
-  //op_raw.get_tree().add_op( "RAW developer", "raw_developer" );
-  op_load.get_tree().add_op( "RAW developer", "raw_developer" );
+  //op_raw.get_tree().add_op( "RAW developer"), "raw_developer" );
+  op_load.get_tree().add_op( _("RAW developer"), "raw_developer" );
 
-  //op_conv.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
-  //op_conv.get_tree().add_op( "Lab conversion", "convert2lab" );
+  //op_conv.get_tree().add_op( "Color profile conversion"), "convert_colorspace" );
+  //op_conv.get_tree().add_op( "Lab conversion"), "convert2lab" );
 
-  op_color.get_tree().add_op( "Curves", "curves" );
-  op_color.get_tree().add_op( "B/C/S/H Adjustment", "hue_saturation" );
-  op_color.get_tree().add_op( "Invert", "invert" );
-  op_color.get_tree().add_op( "Desaturate", "desaturate" );
-  //op_color.get_tree().add_op( "Brightness/Contrast", "brightness_contrast" );
-  op_color.get_tree().add_op( "Uniform Fill", "uniform");
-  op_color.get_tree().add_op( "Gradient", "gradient");
-  op_color.get_tree().add_op( "Channel Mixer", "channel_mixer" );
-  op_color.get_tree().add_op( "H/S/L Mask", "hsl_mask" );
-  op_color.get_tree().add_op( "Color profile conversion", "convert_colorspace" );
-  op_color.get_tree().add_op( "Emulate film [color slide]", "gmic_emulate_film_colorslide" );
-  op_color.get_tree().add_op( "Emulate film [B&W]", "gmic_emulate_film_bw" );
-  op_color.get_tree().add_op( "Emulate film [instant consumer]", "gmic_emulate_film_instant_consumer" );
-  op_color.get_tree().add_op( "Emulate film [instant pro]", "gmic_emulate_film_instant_pro" );
-  op_color.get_tree().add_op( "Emulate film [negative color]", "gmic_emulate_film_negative_color" );
-  op_color.get_tree().add_op( "Emulate film [negative new]", "gmic_emulate_film_negative_new" );
-  op_color.get_tree().add_op( "Emulate film [negative old]", "gmic_emulate_film_negative_old" );
-  op_color.get_tree().add_op( "Emulate film [print films]", "gmic_emulate_film_print_films" );
-  op_color.get_tree().add_op( "Emulate film [various]", "gmic_emulate_film_various" );
+  op_color.get_tree().add_op( _("Color profile conversion"), "convert_colorspace" );
+  op_color.get_tree().add_op( _("B/C/S/H Adjustment"), "hue_saturation" );
+  op_color.get_tree().add_op( _("Curves"), "curves" );
+  op_color.get_tree().add_op( _("Invert"), "invert" );
+  op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
+  //op_color.get_tree().add_op( "Brightness/Contrast"), "brightness_contrast" );
+  op_color.get_tree().add_op( _("Channel Mixer"), "channel_mixer" );
+  op_color.get_tree().add_op( _("Uniform Fill"), "uniform");
+  op_color.get_tree().add_op( _("Gradient"), "gradient");
+  op_color.get_tree().add_op( _("H/S/L Mask"), "hsl_mask" );
+  op_color.get_tree().add_op( _("Emulate film [color slide]"), "gmic_emulate_film_colorslide" );
+  op_color.get_tree().add_op( _("Emulate film [B&W]"), "gmic_emulate_film_bw" );
+  op_color.get_tree().add_op( _("Emulate film [instant consumer]"), "gmic_emulate_film_instant_consumer" );
+  op_color.get_tree().add_op( _("Emulate film [instant pro]"), "gmic_emulate_film_instant_pro" );
+  op_color.get_tree().add_op( _("Emulate film [negative color]"), "gmic_emulate_film_negative_color" );
+  op_color.get_tree().add_op( _("Emulate film [negative new]"), "gmic_emulate_film_negative_new" );
+  op_color.get_tree().add_op( _("Emulate film [negative old]"), "gmic_emulate_film_negative_old" );
+  op_color.get_tree().add_op( _("Emulate film [print films]"), "gmic_emulate_film_print_films" );
+  op_color.get_tree().add_op( _("Emulate film [various]"), "gmic_emulate_film_various" );
 
-  op_detail.get_tree().add_op( "Gaussian blur", "gaussblur" );
-  op_detail.get_tree().add_op( "Noise reduction", "denoise" );
-  op_detail.get_tree().add_op( "Sharpen", "sharpen" );
-  op_detail.get_tree().add_op( "Local contrast", "volume" );
-  op_detail.get_tree().add_op( "Multi-level decomposition", "gmic_split_details" );
+  op_detail.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
+  op_detail.get_tree().add_op( _("Local contrast"), "volume" );
+  op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
+  op_detail.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
+  op_detail.get_tree().add_op( _("Multi-level decomposition"), "gmic_split_details" );
+  op_detail.get_tree().add_op( _("Noise reduction"), "denoise" );
 
-  op_geom.get_tree().add_op( "Crop image", "crop" );
-  op_geom.get_tree().add_op( "Scale & rotate image", "scale" );
-  op_geom.get_tree().add_op( "Optical corrections (experimental)", "lensfun" );
+  op_geom.get_tree().add_op( _("Crop image"), "crop" );
+  op_geom.get_tree().add_op( _("Scale & rotate image"), "scale" );
+  op_geom.get_tree().add_op( _("Optical corrections (experimental)"), "lensfun" );
 
   //#if !defined(__APPLE__) && !defined(__MACH__)
 #ifndef PF_DISABLE_GMIC
-  //op_gmic.get_tree().add_op( "G'MIC Interpreter", "gmic" );
-  op_gmic.get_tree().add_op( "Dream Smoothing", "gmic_dream_smooth" );
-  op_gmic.get_tree().add_op( "Gradient Norm", "gmic_gradient_norm" );
-  op_gmic.get_tree().add_op( "Convolve", "gmic_convolve" );
-  op_gmic.get_tree().add_op( "Extract Foreground", "gmic_extract_foreground" );
-  op_gmic.get_tree().add_op( "Inpaint [patch-based]", "gmic_inpaint" );
-  op_gmic.get_tree().add_op( "Despeckle", "gmic_gcd_despeckle" );
-  op_gmic.get_tree().add_op( "Iain's Noise Reduction", "gmic_iain_denoise" );
-  op_gmic.get_tree().add_op( "Sharpen [richardson-lucy]", "gmic_sharpen_rl" );
-  op_gmic.get_tree().add_op( "Smooth [anisotropic]", "gmic_smooth_anisotropic" );
-  op_gmic.get_tree().add_op( "Smooth [bilateral]", "gmic_blur_bilateral" );
-  op_gmic.get_tree().add_op( "Smooth [diffusion]", "gmic_smooth_diffusion" );
-  op_gmic.get_tree().add_op( "Smooth [mean-curvature]", "gmic_smooth_mean_curvature" );
-  op_gmic.get_tree().add_op( "Smooth [median]", "gmic_smooth_median" );
-  op_gmic.get_tree().add_op( "Smooth [patch-based]", "gmic_denoise" );
-  op_gmic.get_tree().add_op( "Smooth [selective gaussian]", "gmic_smooth_selective_gaussian" );
-  op_gmic.get_tree().add_op( "Smooth [total variation]", "gmic_smooth_total_variation" );
-  op_gmic.get_tree().add_op( "Smooth [wavelets]", "gmic_smooth_wavelets_haar" );
-  op_gmic.get_tree().add_op( "Smooth [guided]", "gmic_smooth_guided" );
-  op_gmic.get_tree().add_op( "Tone mapping", "gmic_tone_mapping" );
-  op_gmic.get_tree().add_op( "Transfer colors [advanced]", "gmic_transfer_colors" );
+  //op_gmic.get_tree().add_op( "G'MIC Interpreter"), "gmic" );
+  op_gmic.get_tree().add_op( _("Dream Smoothing"), "gmic_dream_smooth" );
+  op_gmic.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
+  op_gmic.get_tree().add_op( _("Convolve"), "gmic_convolve" );
+  op_gmic.get_tree().add_op( _("Extract Foreground"), "gmic_extract_foreground" );
+  op_gmic.get_tree().add_op( _("Inpaint [patch-based]"), "gmic_inpaint" );
+  op_gmic.get_tree().add_op( _("Despeckle"), "gmic_gcd_despeckle" );
+  op_gmic.get_tree().add_op( _("Iain's Noise Reduction"), "gmic_iain_denoise" );
+  op_gmic.get_tree().add_op( _("Sharpen [richardson-lucy]"), "gmic_sharpen_rl" );
+  op_gmic.get_tree().add_op( _("Smooth [anisotropic]"), "gmic_smooth_anisotropic" );
+  op_gmic.get_tree().add_op( _("Smooth [bilateral]"), "gmic_blur_bilateral" );
+  op_gmic.get_tree().add_op( _("Smooth [diffusion]"), "gmic_smooth_diffusion" );
+  op_gmic.get_tree().add_op( _("Smooth [mean-curvature]"), "gmic_smooth_mean_curvature" );
+  op_gmic.get_tree().add_op( _("Smooth [median]"), "gmic_smooth_median" );
+  op_gmic.get_tree().add_op( _("Smooth [patch-based]"), "gmic_denoise" );
+  op_gmic.get_tree().add_op( _("Smooth [selective gaussian]"), "gmic_smooth_selective_gaussian" );
+  op_gmic.get_tree().add_op( _("Smooth [total variation]"), "gmic_smooth_total_variation" );
+  op_gmic.get_tree().add_op( _("Smooth [wavelets]"), "gmic_smooth_wavelets_haar" );
+  op_gmic.get_tree().add_op( _("Smooth [guided]"), "gmic_smooth_guided" );
+  op_gmic.get_tree().add_op( _("Tone mapping"), "gmic_tone_mapping" );
+  op_gmic.get_tree().add_op( _("Transfer colors [advanced]"), "gmic_transfer_colors" );
 #endif
 
 
-  op_mask.get_tree().add_op( "Curves", "curves" );
-  op_mask.get_tree().add_op( "Invert", "invert" );
-  op_mask.get_tree().add_op( "Uniform Fill", "uniform");
-  op_mask.get_tree().add_op( "Gradient", "gradient");
-  op_mask.get_tree().add_op( "H/S/L Mask", "hsl_mask" );
-  op_mask.get_tree().add_op( "Gaussian blur", "gaussblur" );
+  op_mask.get_tree().add_op( _("Curves"), "curves" );
+  op_mask.get_tree().add_op( _("Invert"), "invert" );
+  op_mask.get_tree().add_op( _("Uniform Fill"), "uniform");
+  op_mask.get_tree().add_op( _("Gradient"), "gradient");
+  op_mask.get_tree().add_op( _("H/S/L Mask"), "hsl_mask" );
+  op_mask.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
   //#if !defined(__APPLE__) && !defined(__MACH__)
 #ifndef PF_DISABLE_GMIC
-  //op_gmic.get_tree().add_op( "G'MIC Interpreter", "gmic" );
-  op_mask.get_tree().add_op( "Gradient Norm", "gmic_gradient_norm" );
+  //op_gmic.get_tree().add_op( _("G'MIC Interpreter"), "gmic" );
+  op_mask.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
 #endif
-  op_mask.get_tree().add_op( "Draw", "draw" );
-  op_mask.get_tree().add_op( "Clone layer", "clone" );
+  op_mask.get_tree().add_op( _("Draw"), "draw" );
+  op_mask.get_tree().add_op( _("Clone layer"), "clone" );
 
 
 
-  op_misc.get_tree().add_op( "Draw", "draw" );
-  op_misc.get_tree().add_op( "Clone stamp", "clone_stamp" );
-  op_misc.get_tree().add_op( "Clone layer", "clone" );
-  op_misc.get_tree().add_op( "Buffer layer", "buffer" );
-  op_misc.get_tree().add_op( "Digital watermark", "gmic_watermark_fourier" );
+  op_misc.get_tree().add_op( _("Draw"), "draw" );
+  op_misc.get_tree().add_op( _("Clone stamp"), "clone_stamp" );
+  op_misc.get_tree().add_op( _("Clone layer"), "clone" );
+  op_misc.get_tree().add_op( _("Buffer layer"), "buffer" );
+  op_misc.get_tree().add_op( _("Digital watermark"), "gmic_watermark_fourier" );
 
   get_vbox()->pack_start( notebook );
 
