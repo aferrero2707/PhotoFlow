@@ -85,6 +85,7 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::Alignment frame_top_buttons_alignment2;
   Gtk::Alignment frame_box_2_padding;
   Gtk::Alignment frame_box_3_padding;
+  Gtk::Alignment frame_box_4_padding;
   Gtk::HBox frame_hbox;
   Gtk::VBox frame_vbox;
   Gtk::HBox frame_top_buttons_box;
@@ -95,6 +96,7 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::HBox frame_top_box_1;
   Gtk::HBox frame_top_box_2;
   Gtk::HBox frame_top_box_3;
+  Gtk::HBox frame_top_box_4;
   ToggleImageButton frame_visible;
   //ToggleImageButton frame_preview;
   ToggleImageButton frame_mask;

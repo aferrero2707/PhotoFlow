@@ -178,9 +178,15 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   if(par && par->has_intensity() ) {
     intensitySlider.set_width( 200 );
-    frame_top_box_3.pack_start( intensitySlider, Gtk::PACK_SHRINK );
+    frame_top_box_4.pack_start( intensitySlider, Gtk::PACK_SHRINK );
   }
-  frame_top_box_3.pack_start( frame_box_3_padding, Gtk::PACK_EXPAND_WIDGET );
+  frame_top_box_4.pack_start( frame_box_4_padding, Gtk::PACK_EXPAND_WIDGET );
+  controls_box.pack_start( frame_top_box_4, Gtk::PACK_SHRINK, 0 );
+
+  if(par && par->has_opacity() ) {
+    frame_top_box_3.pack_start( shift_x, Gtk::PACK_SHRINK, 10 );
+    frame_top_box_3.pack_start( shift_y, Gtk::PACK_SHRINK, 10 );
+  }
   controls_box.pack_start( frame_top_box_3, Gtk::PACK_SHRINK, 0 );
 
 #ifdef GTKMM_2
