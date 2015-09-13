@@ -79,6 +79,7 @@ namespace PF
   class ImageProcessor: public sigc::trackable
   {
     GThread* thread;
+    pthread_t _thread;
     std::list<Image*> images;
 
     static ImageProcessor* instance;
@@ -113,8 +114,9 @@ namespace PF
 
 		void join()
 		{
-			if( thread )
-				g_thread_join( thread );
+			//if( thread )
+			//	g_thread_join( thread );
+		  pthread_join(_thread, NULL);
 			thread = NULL;
 		}
 
