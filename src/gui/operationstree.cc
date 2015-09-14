@@ -306,6 +306,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Invert"), "invert" );
   op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
+  op_color.get_tree().add_op( _("Threshold"), "threshold" );
   //op_color.get_tree().add_op( "Brightness/Contrast"), "brightness_contrast" );
   op_color.get_tree().add_op( _("Channel Mixer"), "channel_mixer" );
   op_color.get_tree().add_op( _("Uniform Fill"), "uniform");
@@ -358,9 +359,10 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 #endif
 
 
-  op_mask.get_tree().add_op( _("Curves"), "curves" );
-  op_mask.get_tree().add_op( _("Invert"), "invert" );
   op_mask.get_tree().add_op( _("Uniform Fill"), "uniform");
+  op_mask.get_tree().add_op( _("Invert"), "invert" );
+  op_color.get_tree().add_op( _("Threshold"), "threshold" );
+  op_mask.get_tree().add_op( _("Curves"), "curves" );
   op_mask.get_tree().add_op( _("Gradient"), "gradient");
   op_mask.get_tree().add_op( _("H/S/L Mask"), "hsl_mask" );
   op_mask.get_tree().add_op( _("Gaussian blur"), "gaussblur" );

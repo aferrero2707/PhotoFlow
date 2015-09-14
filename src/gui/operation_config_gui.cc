@@ -55,6 +55,7 @@
 #include "../gui/operations/convert_colorspace_config.hh"
 #include "../gui/operations/lensfun_config.hh"
 #include "../gui/operations/volume_config.hh"
+#include "../gui/operations/threshold_config.hh"
 
 #include "operations/gmic/new_gmic_operation_config.hh"
 
@@ -850,6 +851,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "invert" ) {
 
     dialog = new PF::OperationConfigGUI( current_layer, "Convert Colors" );
+
+  } else if( op_type == "threshold" ) {
+
+    dialog = new PF::ThresholdConfigGUI( current_layer );
 
   } else if( op_type == "desaturate" ) {
 
