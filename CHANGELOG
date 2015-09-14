@@ -1,12 +1,16 @@
 =========================================
 Version 0.2.1
 
+- Added status indicator at the bottom of the image preview area. The possible configurations are:
+  - "ready" + green indicator: the preview area is up-to-date and the processing engine is idle
+  - "processing" + red indicator: the preview area is being updated
+  - "caching" + orange indicator: the preview area is up-to-date but the processing engine is performing some background caching. In this case, further updates of the preview area might be slower than usual
+  - "exporting" + red indicator: the processing engine is busy exporting the current image
 - Fixed various issues related to the deletion of layers
   (see issue #35: https://github.com/aferrero2707/PhotoFlow/issues/35)
 - Reduced accuracy of spin button that adjusts the rotation angle in the "scale/rotate" tool
   (see issue #37: https://github.com/aferrero2707/PhotoFlow/issues/37)
-- When clicking on a layer map icon whose tab ewas already opened opened a new, duplicated tab. 
-  Now the GUI correctly activates the existing tab 
+- Opening a layer map whose tab exists already now activates the tab itself, instead of adding a new one 
   (see issue #39: https://github.com/aferrero2707/PhotoFlow/issues/39)
 - Fixed memory corruption in RAW histogram filling 
   (see issue #40: https://github.com/aferrero2707/PhotoFlow/issues/40)
