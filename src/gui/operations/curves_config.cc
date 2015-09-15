@@ -99,10 +99,10 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
 
   rgbCurveSelector.signal_changed().
     connect(sigc::mem_fun(*this,
-                          &CurvesConfigGUI::update));
+                          &CurvesConfigGUI::do_update));
   labCurveSelector.signal_changed().
     connect(sigc::mem_fun(*this,
-                          &CurvesConfigGUI::update));
+                          &CurvesConfigGUI::do_update));
   //add_control( &rgbCurveSelector );
   //add_control( &labCurveSelector );
   //add_control( &cmykCurveSelector );
@@ -116,6 +116,9 @@ PF::CurvesConfigGUI::~CurvesConfigGUI()
 
 void PF::CurvesConfigGUI::switch_curve()
 {
+#ifndef NDEBUG
+      std::cout<<"CurvesConfigGUI::switch_curve() for "<<get_layer()->get_name()<<" called"<<std::endl;
+#endif
   //std::vector<Widget*> wl = chselBox.get_children();
   //wl.clear();
   if( get_layer() && get_layer()->get_image() && 
