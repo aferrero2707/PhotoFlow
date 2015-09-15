@@ -36,6 +36,9 @@
 
 #include "../base/format_info.hh"
 #include "../base/processor.hh"
+#include "../base/splinecurve.hh"
+
+#include "curves.hh"
 
 namespace PF 
 {
@@ -53,21 +56,26 @@ namespace PF
     Property<float> gradient_center_x;
     Property<float> gradient_center_y;
 
-  public:
-    GradientPar(): 
-      OpParBase(),
-      gradient_type("gradient_type",this,GRADIENT_VERTICAL,"vertical","Vertical"),
-      invert("invert",this,false),
-      gradient_center_x("gradient_center_x",this,0.5),
-      gradient_center_y("gradient_center_y",this,0.5)
-    {
-      gradient_type.add_enum_value(GRADIENT_VERTICAL,"vertical","Vertical");
-      gradient_type.add_enum_value(GRADIENT_HORIZONTAL,"horizontal","Horizontal");
-      gradient_type.add_enum_value(GRADIENT_RADIAL,"radial","Radial");
-      set_type( "gradient" );
+    Property<SplineCurve> grey_curve;
+    Property<SplineCurve> RGB_curve;
+    Property<SplineCurve> R_curve;
+    Property<SplineCurve> G_curve;
+    Property<SplineCurve> B_curve;
+    Property<SplineCurve> L_curve;
+    Property<SplineCurve> a_curve;
+    Property<SplineCurve> b_curve;
+    Property<SplineCurve> C_curve;
+    Property<SplineCurve> M_curve;
+    Property<SplineCurve> Y_curve;
+    Property<SplineCurve> K_curve;
+    PropertyBase RGB_active_curve;
+    PropertyBase Lab_active_curve;
+    PropertyBase CMYK_active_curve;
 
-      set_default_name( _("gradient") );
-    }
+    ProcessorBase* curve;
+
+  public:
+    GradientPar();
 
     gradient_type_t get_gradient_type() { 
       gradient_type_t result = gradient_type_t(gradient_type.get_enum_value().first);
@@ -79,6 +87,10 @@ namespace PF
 
     bool needs_input() { return false; }
     bool has_intensity() { return false; }
+
+    VipsImage* build(std::vector<VipsImage*>& in, int first,
+                     VipsImage* imap, VipsImage* omap,
+                     unsigned int& level);
   };
 
   

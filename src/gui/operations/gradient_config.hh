@@ -36,6 +36,7 @@
 #include "../../operations/gradient.hh"
 
 #include "../widgets/selector.hh"
+#include "../widgets/curveeditor.hh"
 
 
 namespace PF {
@@ -46,8 +47,27 @@ namespace PF {
     Selector typeSelector;
     CheckBox invert_box;
     Slider center_x, center_y;
+
+    Gtk::HBox curvesBox;
+    Gtk::HBox selectorsBox;
+
+   Gtk::ComboBoxText rgbCurveSelector, labCurveSelector, cmykCurveSelector;
+
+    CurveEditor greyCurveEditor;
+
+    CurveEditor rgbCurveEditor;
+    CurveEditor RCurveEditor;
+    CurveEditor GCurveEditor;
+    CurveEditor BCurveEditor;
+
+    CurveEditor LCurveEditor;
+    CurveEditor aCurveEditor;
+    CurveEditor bCurveEditor;
+
   public:
     GradientConfigGUI( Layer* l );
+    void switch_curve();
+    void do_update();
   };
 
 }

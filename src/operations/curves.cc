@@ -50,8 +50,6 @@ PF::CurvesPar::CurvesPar():
   Lab_active_curve( "Lab_active_curve", this, 5, "L", "L" ),
   CMYK_active_curve( "CMYK_active_curve", this, 8, "C", "C" )
 {
-  set_type( "curves" );
-  
   RGB_active_curve.add_enum_value( 1, "RGB", "RGB" );
   RGB_active_curve.add_enum_value( 2, "R", "R" );
   RGB_active_curve.add_enum_value( 3, "G", "G" );
@@ -72,6 +70,7 @@ PF::CurvesPar::CurvesPar():
   //L_curve.get().add_point( 0.25, 0.10 );
   //L_curve.get().add_point( 0.75, 0.90 );
 
+  set_type( "curves" );
   set_default_name( _("curves") );
 }
 

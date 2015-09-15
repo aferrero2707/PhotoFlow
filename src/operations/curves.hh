@@ -83,6 +83,19 @@ namespace PF
 
     CurvesPar();
 
+    void set_grey_curve( Property<SplineCurve>& c ) { grey_curve.import(&c); }
+    void set_RGB_curve( Property<SplineCurve>& c ) { RGB_curve.import(&c); }
+    void set_R_curve( Property<SplineCurve>& c ) { R_curve.import(&c); }
+    void set_G_curve( Property<SplineCurve>& c ) { G_curve.import(&c); }
+    void set_B_curve( Property<SplineCurve>& c ) { B_curve.import(&c); }
+    void set_L_curve( Property<SplineCurve>& c ) { L_curve.import(&c); }
+    void set_a_curve( Property<SplineCurve>& c ) { a_curve.import(&c); }
+    void set_b_curve( Property<SplineCurve>& c ) { b_curve.import(&c); }
+    void set_C_curve( Property<SplineCurve>& c ) { C_curve.import(&c); }
+    void set_M_curve( Property<SplineCurve>& c ) { M_curve.import(&c); }
+    void set_Y_curve( Property<SplineCurve>& c ) { Y_curve.import(&c); }
+    void set_K_curve( Property<SplineCurve>& c ) { K_curve.import(&c); }
+
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
                      VipsImage* imap, VipsImage* omap, 
                      unsigned int& level);
