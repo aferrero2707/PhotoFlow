@@ -177,6 +177,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   yoffset( 0 ),
   pending_pixels( 0 ),
   draw_requested( false ),
+  highlights_warning_enabled( false ),
+  shadows_warning_enabled( false ),
   display_merged( true ),
   active_layer( -1 ),
   edited_layer( -1 ),
@@ -197,6 +199,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   maskblend = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
   invert = new PF::Processor<PF::InvertPar,PF::Invert>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  clipping_warning = new_clipping_warning();
+
   set_size_request( 1, 1 );
 
   draw_done = vips_g_cond_new();
@@ -967,6 +971,18 @@ void PF::ImageArea::update( VipsRect* area )
 #endif
   //outimg = srgbimg;
     
+  ClippingWarningPar* clipping_warning_par = dynamic_cast<ClippingWarningPar*>( clipping_warning->get_par() );
+  if( !clipping_warning_par ) return;
+  clipping_warning_par->set_highlights_warning( highlights_warning_enabled );
+  clipping_warning_par->set_shadows_warning( shadows_warning_enabled );
+  clipping_warning_par->set_image_hints( srgbimg );
+  clipping_warning_par->set_format( get_pipeline()->get_format() );
+  in.clear(); in.push_back( srgbimg );
+  VipsImage* wclipimg = clipping_warning->get_par()->build(in, 0, NULL, NULL, level );
+  PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
+
+  srgbimg = wclipimg;
+
   if( !display_merged && (active_layer>=0) ) {
     PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
     if( !node ) return;

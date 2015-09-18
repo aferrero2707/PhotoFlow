@@ -115,7 +115,10 @@ class ImageEditor: public Gtk::HBox
   Gtk::VBox aux_controlsBox;
   Gtk::HBox controlsBox;
   StatusIndicatorWidget status_indicator;
+  Gtk::Image  img_zoom_in, img_zoom_out, img_zoom_fit;
   Gtk::Button buttonZoomIn, buttonZoomOut, buttonZoom100, buttonZoomFit;
+  Gtk::Image img_shadows_warning, img_highlights_warning;
+  Gtk::ToggleButton button_shadows_warning, button_highlights_warning;
   Gtk::VBox radioBox;
   Gtk::RadioButton buttonShowMerged, buttonShowActive;
   Gtk::ScrolledWindow controls_group_scrolled_window;
@@ -204,6 +207,9 @@ public:
     layer2image( x, y, w, h );
     image2screen( x, y, w, h );
   }
+
+  void toggle_highlights_warning();
+  void toggle_shadows_warning();
 
   void zoom_in();
   void zoom_out();

@@ -131,10 +131,15 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //imageArea( image->get_pipeline(PIPELINE_ID) ),
   layersWidget( image, this ),
   aux_controls( NULL ),
-  buttonZoomIn( "Zoom +" ),
-  buttonZoomOut( "Zoom -" ),
+  img_zoom_in(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"),
+  img_zoom_out(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-out.png"),
+  img_zoom_fit(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-fit.png"),
+  //buttonZoomIn( "Zoom +" ),
+  //buttonZoomOut( "Zoom -" ),
   buttonZoom100( "1:1" ),
-  buttonZoomFit( "Fit" ),
+  //buttonZoomFit( "Fit" ),
+  img_highlights_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/highlights_clip_warning.png"),
+  img_shadows_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/shadows_clip_warning.png"),
   buttonShowMerged( _("show merged layers") ),
   buttonShowActive( _("show active layer") ),
   tab_label_widget( NULL ),
@@ -170,9 +175,23 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   Gtk::RadioButton::Group group = buttonShowMerged.get_group();
   buttonShowActive.set_group(group);
 
+  button_highlights_warning.set_image( img_highlights_warning );
+  button_highlights_warning.set_tooltip_text( _("Toggle highlights clipping warning on/off") );
+  controlsBox.pack_end( button_highlights_warning, Gtk::PACK_SHRINK );
+  button_shadows_warning.set_image( img_shadows_warning );
+  button_shadows_warning.set_tooltip_text( _("Toggle shadows clipping warning on/off") );
+  controlsBox.pack_end( button_shadows_warning, Gtk::PACK_SHRINK );
+
+  buttonZoom100.set_tooltip_text( _("Zoom to 100%") );
   controlsBox.pack_end( buttonZoom100, Gtk::PACK_SHRINK );
+  buttonZoomFit.set_image( img_zoom_fit );
+  buttonZoomFit.set_tooltip_text( _("Fit image to preview area") );
   controlsBox.pack_end( buttonZoomFit, Gtk::PACK_SHRINK );
+  buttonZoomOut.set_image( img_zoom_out );
+  buttonZoomOut.set_tooltip_text( _("Zoom out") );
   controlsBox.pack_end( buttonZoomOut, Gtk::PACK_SHRINK );
+  buttonZoomIn.set_image( img_zoom_in );
+  buttonZoomIn.set_tooltip_text( _("Zoom in") );
   controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
   controlsBox.pack_end( status_indicator, Gtk::PACK_SHRINK );
 
@@ -193,6 +212,11 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
   controls_group_scrolled_window.set_size_request( 280, 0 );
   //main_panel.pack_start( layersWidget.get_controls_group(), Gtk::PACK_SHRINK );
+
+  button_highlights_warning.signal_toggled().connect( sigc::mem_fun(*this,
+      &PF::ImageEditor::toggle_highlights_warning) );
+  button_shadows_warning.signal_toggled().connect( sigc::mem_fun(*this,
+      &PF::ImageEditor::toggle_shadows_warning) );
 
   buttonZoomIn.signal_clicked().connect( sigc::mem_fun(*this,
 						       &PF::ImageEditor::zoom_in) );
@@ -559,6 +583,25 @@ void PF::ImageEditor::on_realize()
   open_image();
   Gtk::HBox::on_realize();
 }
+
+
+void PF::ImageEditor::toggle_highlights_warning()
+{
+  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  if( !pipeline ) return;
+  imageArea->set_highlights_warning( button_highlights_warning.get_active() );
+  image->update();
+}
+
+
+void PF::ImageEditor::toggle_shadows_warning()
+{
+  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  if( !pipeline ) return;
+  imageArea->set_shadows_warning( button_shadows_warning.get_active() );
+  image->update();
+}
+
 
 void PF::ImageEditor::zoom_out()
 {

@@ -36,6 +36,9 @@ Version 0.2.1
 - Updated G'MIC to version 1.6.5.2
 - Added alternative overlay blend mode equivalent to GIMP one (very close to soft light)
 - Re-added GUI controls for horizontal/vertical shifting of layers
+- Scale/rotate tool: added mouse-driven rotation and automatic cropping of rotated image
+- Added shadows/highlights clipping warning in preview area
+- Replaced text of zoom buttons with icons from http://studiojunkyard.github.io/LibreICONS/
 
 =========================================
 Version 0.2.0
