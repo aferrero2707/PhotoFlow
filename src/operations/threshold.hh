@@ -111,6 +111,56 @@ namespace PF
 
 
 
+  template < OP_TEMPLATE_DEF_CS_SPEC >
+  class Threshold< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_RGB) >
+  {
+  public:
+    void render(VipsRegion** ireg, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap,
+                VipsRegion* oreg, OpParBase* par)
+    {
+      ThresholdPar* opar = dynamic_cast<ThresholdPar*>(par);
+      if( !opar ) return;
+      Rect *r = &oreg->valid;
+      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
+      int width = r->width;
+      int height = r->height;
+
+      T thr = static_cast<T>( opar->get_threshold()*PF::FormatInfo<T>::RANGE + PF::FormatInfo<T>::MIN );
+
+      T* p;
+      T* pin;
+      T* pout;
+      typename PF::FormatInfo<T>::PROMOTED avg;
+      int x, y;
+
+      if( opar->do_invert() ) {
+        for( y = 0; y < height; y++ ) {
+          p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+          pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+          for( x=0; x < line_size; x+=3 ) {
+            avg = p[x]; avg += p[x+1]; avg += p[x+2]; avg /= 3;
+            if( avg<=thr ) pout[x] = pout[x+1] = pout[x+2] = PF::FormatInfo<T>::MAX;
+            else pout[x] = pout[x+1] = pout[x+2] = PF::FormatInfo<T>::MIN;
+          }
+        }
+      } else {
+        for( y = 0; y < height; y++ ) {
+          p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+          pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+          for( x=0; x < line_size; x+=3 ) {
+            avg = p[x]; avg += p[x+1]; avg += p[x+2]; avg /= 3;
+            if( avg>thr ) pout[x] = pout[x+1] = pout[x+2] = PF::FormatInfo<T>::MAX;
+            else pout[x] = pout[x+1] = pout[x+2] = PF::FormatInfo<T>::MIN;
+          }
+        }
+      }
+    }
+  };
+
+
+
+
   ProcessorBase* new_threshold();
 }
 
