@@ -139,10 +139,9 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
       if( vips_tilecache(iter_in, &cached,
           "tile_width", tw, "tile_height", th, "max_tiles", nt,
           "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
-        std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
+        std::cout<<"GMicPar::build(): vips_tilecache() failed."<<std::endl;
         return NULL;
       }
-      std::cout<<"GaussBlurPar::build(): vips_tilecache() success."<<std::endl;
       PF_UNREF( iter_in, "GaussBlurPar::build(): iter_in unref" );
     }
 

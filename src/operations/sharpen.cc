@@ -60,6 +60,23 @@ PF::SharpenPar::SharpenPar():
 }
 
 
+bool PF::SharpenPar::needs_caching()
+{
+  switch( method.get_enum_value().first ) {
+  case PF::SHARPEN_USM:
+    return false; break;
+#ifndef PF_DISABLE_GMIC
+  case PF::SHARPEN_DECONV:
+    return true; break;
+#endif
+  default:
+    return false; break;
+  }
+
+}
+
+
+
 VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first, 
 				     VipsImage* imap, VipsImage* omap, 
 				     unsigned int& level)

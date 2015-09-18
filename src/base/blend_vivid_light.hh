@@ -31,23 +31,22 @@
 //#include "vivid_light.hh"
 
 
-/*
-static float color_burn(float top, float bottom)
+static float color_burn(float bottom, float top)
 {
-  if( top == 1 ) return 0;
-  //float result = 1.0f – (1.0f – bottom) / top;
-  float result = 1;
+  if( top == 0 ) return 0;
+  float result = 1.0f - ((1.0f - bottom) / top);
+  //float result = 1;
   return( (result<0) ? 0 : result );
 }
 
 
-static float color_dodge(float top, float bottom)
+static float color_dodge(float bottom, float top)
 {
   if( top == 1 ) return 0;
   float result = bottom / (1.0f-top);
   return( (result>1) ? 1 : result );
 }
-*/
+
 
 
 template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_omap>
@@ -57,6 +56,10 @@ public:
   void blend(const float& /*opacity*/, T* /*bottom*/, T* /*top*/,
       T* /*out*/, const int& /*x*/, int& /*xomap*/) {}
 };
+
+
+float vivid_light_f(float nbottom, float ntop);
+
 
 
 /*
@@ -89,11 +92,14 @@ public:
         //vivid = (ptop*FormatInfo<T>::RANGE / (FormatInfo<T>::RANGE-pbottom*2));
         //result = ((top==0) ? 0 : 1.0f – (1.0f – bottom) / (top*2.0f));
         //result = ((top==0) ? 0 : 1.0f – (1.0f – bottom) / (top*2.0f));
-        nvivid = ((ntop==0) ? 0 : 1.0f - (1.0f - nbottom) / (ntop*2.0f));
+        //nvivid = ((ntop==0) ? 0 : 1.0f - (1.0f - nbottom) / (ntop*2.0f));
+        nvivid = color_burn( nbottom, ntop*2.0f );
       else
         //vivid = (FormatInfo<T>::RANGE - (FormatInfo<T>::RANGE-ptop) / (2*(pbottom-FormatInfo<T>::HALF)));
-        nvivid = ((ntop==1) ? 1 : nbottom / (2.0f*(1.0f-ntop)));
-      //nvivid = PF::vivid_light( ntop, nbottom );
+        //nvivid = ((ntop==1) ? 1 : nbottom / (2.0f*(1.0f-ntop))); // b/(1-(2t-1)) = b/(1-2t+1) = b/(2-2t) = b/(2*(1-t))
+        nvivid = color_dodge( nbottom, ntop*2.0f-1.0f );
+        //nvivid = PF::vivid_light( ntop, nbottom );
+      vivid_light_f(nbottom,ntop);
       if( nvivid < 0 ) nvivid = 0;
       if( nvivid > 1 ) nvivid = 1;
       vivid = (typename FormatInfo<T>::PROMOTED)(nvivid * FormatInfo<T>::RANGE - FormatInfo<T>::MIN);

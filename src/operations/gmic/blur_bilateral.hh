@@ -52,6 +52,10 @@ namespace PF
   public:
     GmicBlurBilateralPar();
 
+    void set_iterations( int i ) { iterations.set( i ); }
+    void set_sigma_s( float s ) { sigma_s.set( s ); }
+    void set_sigma_r( float s ) { sigma_r.set( s ); }
+
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool needs_caching() { return true; }

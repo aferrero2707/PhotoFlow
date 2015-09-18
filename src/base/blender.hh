@@ -83,6 +83,7 @@ namespace PF
       BlendLighten<T,colorspace,CHMIN,CHMAX,has_omap> blend_lighten;
       BlendDarken<T,colorspace,CHMIN,CHMAX,has_omap> blend_darken;
       BlendOverlay<T,colorspace,CHMIN,CHMAX,has_omap> blend_overlay;
+      BlendOverlayGimp<T,colorspace,CHMIN,CHMAX,has_omap> blend_overlay_gimp;
       BlendSoftLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_soft_light;
       BlendHardLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_hard_light;
       BlendVividLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_vivid_light;
@@ -114,6 +115,9 @@ namespace PF
           break;
         case PF_BLEND_OVERLAY:
           BLEND_LOOP(blend_overlay);
+          break;
+        case PF_BLEND_OVERLAY_GIMP:
+          BLEND_LOOP(blend_overlay_gimp);
           break;
         case PF_BLEND_SOFT_LIGHT:
           BLEND_LOOP(blend_soft_light);

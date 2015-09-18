@@ -42,12 +42,14 @@ namespace PF
   
   enum process_request_t {
     IMAGE_REBUILD,
+    IMAGE_PIPELINE_SET_LEVEL,
     IMAGE_UPDATE,
     IMAGE_EXPORT,
     IMAGE_SAMPLE,
     IMAGE_REDRAW_START,
     IMAGE_REDRAW_END,
     IMAGE_REDRAW,
+    IMAGE_MOVE_LAYER,
     IMAGE_REMOVE_LAYER,
     IMAGE_DESTROY,
     OBJECT_UNREF,
@@ -62,7 +64,10 @@ namespace PF
     PipelineSink* sink;
     std::string filename;
     Layer* layer;
-		int layer_id;
+    int layer_id;
+    int dnd_dest_layer_id;
+    std::list<Layer*>* dnd_dest_layer_list;
+		int level;
     VipsRect area;
     unsigned char* buf;
     process_request_t request;
@@ -74,6 +79,7 @@ namespace PF
   class ImageProcessor: public sigc::trackable
   {
     GThread* thread;
+    pthread_t _thread;
     std::list<Image*> images;
 
     static ImageProcessor* instance;
@@ -96,6 +102,9 @@ namespace PF
 
     static ImageProcessor& Instance();
 
+    sigc::signal<void> signal_status_ready, signal_status_caching;
+    sigc::signal<void> signal_status_processing, signal_status_exporting;
+
     void start();
     void run();
 
@@ -105,8 +114,9 @@ namespace PF
 
 		void join()
 		{
-			if( thread )
-				g_thread_join( thread );
+			//if( thread )
+			//	g_thread_join( thread );
+		  pthread_join(_thread, NULL);
 			thread = NULL;
 		}
 

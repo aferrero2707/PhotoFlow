@@ -61,11 +61,11 @@ namespace PF
                        short int* vec8, int* vec16 );
 
   public:
-    std::vector< std::pair<float,float> > Greyvec;
-    std::vector< std::pair<float,float> > RGBvec[4];
-    std::vector< std::pair<float,float> > Labvec[3];
-    std::vector< std::pair<float,float> > CMYKvec[4];
-    std::vector< std::pair<float,float> >* cvec;
+    //std::vector< std::pair<float,float> > Greyvec;
+    //std::vector< std::pair<float,float> > RGBvec[4];
+    //std::vector< std::pair<float,float> > Labvec[3];
+    //std::vector< std::pair<float,float> > CMYKvec[4];
+    //std::vector< std::pair<float,float> >* cvec;
 
     Property<SplineCurve>* scvec[4];
 
@@ -82,6 +82,19 @@ namespace PF
     int * cvec16[4];
 
     CurvesPar();
+
+    void set_grey_curve( Property<SplineCurve>& c ) { grey_curve.import(&c); }
+    void set_RGB_curve( Property<SplineCurve>& c ) { RGB_curve.import(&c); }
+    void set_R_curve( Property<SplineCurve>& c ) { R_curve.import(&c); }
+    void set_G_curve( Property<SplineCurve>& c ) { G_curve.import(&c); }
+    void set_B_curve( Property<SplineCurve>& c ) { B_curve.import(&c); }
+    void set_L_curve( Property<SplineCurve>& c ) { L_curve.import(&c); }
+    void set_a_curve( Property<SplineCurve>& c ) { a_curve.import(&c); }
+    void set_b_curve( Property<SplineCurve>& c ) { b_curve.import(&c); }
+    void set_C_curve( Property<SplineCurve>& c ) { C_curve.import(&c); }
+    void set_M_curve( Property<SplineCurve>& c ) { M_curve.import(&c); }
+    void set_Y_curve( Property<SplineCurve>& c ) { Y_curve.import(&c); }
+    void set_K_curve( Property<SplineCurve>& c ) { K_curve.import(&c); }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
                      VipsImage* imap, VipsImage* omap, 

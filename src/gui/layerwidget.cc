@@ -228,14 +228,14 @@ void PF::LayerWidget::on_selection_changed()
   }
 */
   int layer_id = get_selected_layer_id();
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_changed(): selected layer id="<<layer_id<<std::endl;
-//#endif
+#endif
 
   std::vector<Gtk::TreeModel::Path> selected_rows = refTreeSelection->get_selected_rows();
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_chaged(): "<<selected_rows.size()<<" selected rows."<<std::endl;
-//#endif
+#endif
   std::vector<Gtk::TreeModel::Path>::iterator row_it = selected_rows.begin();
   if( row_it == selected_rows.end() )
     return;
@@ -246,9 +246,9 @@ void PF::LayerWidget::on_selection_changed()
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"Selected row "<<l->get_name()<<std::endl;
-//#endif
+#endif
 
     if( PF::PhotoFlow::Instance().is_single_win_mode() ) {
       PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
@@ -332,6 +332,12 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       std::cout<<"Activated IMap column of row "<<l->get_name()<<std::endl;
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
+      int tab_id = get_map_tab( &(l->get_imap_layers()) );
+      if( tab_id >= 0 ) {
+        notebook.set_current_page( tab_id );
+        return;
+      }
+
       LayerTree* view = new LayerTree( editor, true );
       //frame->add( *view );
       
@@ -374,6 +380,12 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       std::cout<<"Activated OMap column of row "<<l->get_name()<<std::endl;
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
+      int tab_id = get_map_tab( &(l->get_omap_layers()) );
+      if( tab_id >= 0 ) {
+        notebook.set_current_page( tab_id );
+        return;
+      }
+
       LayerTree* view = new LayerTree( editor, true );
       //frame->add( *view );
       
@@ -677,6 +689,19 @@ void PF::LayerWidget::insert_preset( std::string filename )
 }
 
 
+int PF::LayerWidget::get_map_tab( std::list<Layer*>* map_layers )
+{
+  for( int i = notebook.get_n_pages()-1; i>=1; i-- ) {
+    Widget* page = notebook.get_nth_page(i);
+    LayerTree* view = dynamic_cast<LayerTree*>( page );
+    if( !view ) continue;
+    std::list<Layer*>* view_layers = view->get_layers();
+    if( view_layers == map_layers ) return i;
+  }
+  return -1;
+}
+
+
 
 void PF::LayerWidget::close_map_tabs( Layer* l )
 {
@@ -743,6 +768,34 @@ void PF::LayerWidget::detach_controls( std::list<Layer*>& layers )
 
 
 
+void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
+{
+  if( !l ) return;
+  std::cout<<"LayerWidget::unset_sticky_and_editing(\""<<l->get_name()<<"\") called."<<std::endl;
+
+  if( editor ) {
+    if( editor->get_edited_layer() == l->get_id() )
+      editor->set_edited_layer(-1);
+    if( editor->get_displayed_layer() == l->get_id() )
+      editor->set_displayed_layer(-1);
+  }
+  unset_sticky_and_editing( l->get_omap_layers() );
+  unset_sticky_and_editing( l->get_imap_layers() );
+}
+
+
+
+void PF::LayerWidget::unset_sticky_and_editing( std::list<Layer*>& layers )
+{
+  std::cout<<"LayerWidget::unset_sticky_and_editing( std::list<Layer*>& layers ): layers.size()="<<layers.size()<<std::endl;
+  for( std::list<Layer*>::iterator li = layers.begin(); li != layers.end(); li++ ) {
+    if( !(*li) ) continue;
+    unset_sticky_and_editing( *li );
+  }
+}
+
+
+
 void PF::LayerWidget::remove_layers()
 {
   int page = notebook.get_current_page();
@@ -778,9 +831,14 @@ void PF::LayerWidget::remove_layers()
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*iter)[columns.col_layer];
 
+    std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
+    unset_sticky_and_editing( l );
+    std::cout<<"Calling detach_controls(\""<<l->get_name()<<"\")"<<std::endl;
     detach_controls( l );
+    std::cout<<"Calling close_map_tabs(\""<<l->get_name()<<"\")"<<std::endl;
     close_map_tabs( l );
 
+    std::cout<<"Calling image->remove_layer(\""<<l->get_name()<<"\")"<<std::endl;
     image->remove_layer( l );
     image->get_layer_manager().modified();
     removed = true;

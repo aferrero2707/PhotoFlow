@@ -43,7 +43,7 @@
  #
 */
 #ifndef gmic_version
-#define gmic_version 1652
+#define gmic_version 1660
 
 #include <cstdio>
 #include <cstring>
@@ -150,6 +150,19 @@ namespace cimg_library {
 
 #include <locale>
 #define cimg_plugin "gmic.cpp"
+
+#ifdef cimg_use_abort
+static struct cimg_is_abort {
+  bool value;
+  volatile bool *ptr;
+  cimg_is_abort():value(false),ptr(&value) {}
+} _cimg_is_abort;
+#ifdef cimg_use_openmp
+#define cimg_test_abort() if (*_cimg_is_abort.ptr && !omp_get_thread_num()) throw CImgAbortException("");
+#else
+#define cimg_test_abort() if (*_cimg_is_abort.ptr) throw CImgAbortException("")
+#endif // #ifdef cimg_use_openmp
+#endif // #ifdef cimg_use_abort
 #include "./CImg.h"
 
 #if cimg_OS==2
@@ -183,24 +196,22 @@ struct gmic {
 
   gmic(const char *const commands_line,
        const char *const custom_commands=0,
-       const bool include_default_commands=true,
-       float *const p_progress=0, bool *const p_is_cancel=0);
+       const bool include_stdlib=true,
+       float *const p_progress=0, bool *const p_is_abort=0);
 
   template<typename T>
   gmic(const char *const commands_line,
-       gmic_list<T>& images, gmic_list<char>& images_names,
-       const char *const custom_commands=0,
-       const bool include_default_commands=true,
-       float *const p_progress=0, bool *const p_is_cancel=0);
+       gmic_list<T>& images, gmic_list<char>& images_names, const char *const custom_commands=0,
+       const bool include_stdlib=true, float *const p_progress=0, bool *const p_is_abort=0);
 
   // Run G'MIC pipeline on an already-constructed object.
   gmic& run(const char *const commands_line,
-            float *const p_progress=0, bool *const p_is_cancel=0);
+            float *const p_progress=0, bool *const p_is_abort=0);
 
   template<typename T>
   gmic& run(const char *const commands_line,
             gmic_list<T> &images, gmic_list<char> &images_names,
-            float *const p_progress=0, bool *const p_is_cancel=0);
+            float *const p_progress=0, bool *const p_is_abort=0);
 
   // Functions below should be considered as *private*, and should not be
   // used in user's code.
@@ -220,13 +231,13 @@ struct gmic {
   static const char* path_user(const char *const custom_path=0);
   static const char* path_rc(const char *const custom_path=0);
   static bool init_rc(const char *const custom_path=0);
-  static const gmic_image<char>& get_default_commands();
+  static const gmic_image<char>& uncompress_stdlib();
 
   template<typename T>
   void _gmic(const char *const commands_line,
              gmic_list<T>& images, gmic_list<char>& images_names,
-             const char *const custom_commands, const bool include_default_commands,
-             float *const p_progress, bool *const p_is_cancel);
+             const char *const custom_commands, const bool include_stdlib,
+             float *const p_progress, bool *const p_is_abort);
 
   inline gmic& set_variable(const char *const name, const char *const value,
                             const bool add_new_variable,
@@ -235,18 +246,22 @@ struct gmic {
   gmic& add_commands(const char *const data_commands, const char *const commands_file=0);
   gmic& add_commands(std::FILE *const file, const char *const filename=0);
 
-  gmic_image<char> scope2string(const bool is_debug=false) const;
-  gmic_image<char> scope2string(const gmic_image<unsigned int>& scope_selection, const bool is_debug=false) const;
-  gmic_image<char> scope2string(const gmic_image<unsigned int>* scope_selection, const bool is_debug=false) const;
+  gmic_image<char> callstack2string(const bool is_debug=false) const;
+  gmic_image<char> callstack2string(const gmic_image<unsigned int>& callstack_selection,
+                                    const bool is_debug=false) const;
+  gmic_image<char> callstack2string(const gmic_image<unsigned int>* callstack_selection,
+                                    const bool is_debug=false) const;
 
   gmic_image<unsigned int> selection2cimg(const char *const string, const unsigned int indice_max,
                                           const gmic_list<char>& names,
                                           const char *const command, const bool is_selection,
                                           const bool allow_new_name, gmic_image<char>& new_name);
 
-  gmic_image<char> selection2string(const gmic_image<unsigned int>& selection,
-                                    const gmic_list<char>& images_names,
-                                    const unsigned int display_selection) const;
+  gmic_image<char>& selection2string(const gmic_image<unsigned int>& selection,
+                                     const gmic_list<char>& images_names,
+                                     const unsigned int display_selection,
+                                     const bool is_verbose,
+                                     gmic_image<char>& res) const;
 
   gmic_list<char> commands_line_to_CImgList(const char *const commands_line);
 
@@ -264,15 +279,15 @@ struct gmic {
                                    gmic_list<T>& parent_images, gmic_list<char>& parent_images_names,
 				   const unsigned int *const variables_sizes);
   template<typename T>
-  gmic& print(const gmic_list<T>& list, const gmic_image<unsigned int> *const scope_selection,
+  gmic& print(const gmic_list<T>& list, const gmic_image<unsigned int> *const callstack_selection,
 	      const char *format, ...);
 
   template<typename T>
-  gmic& warn(const gmic_list<T>& list, const gmic_image<unsigned int> *const scope_selection,
+  gmic& warn(const gmic_list<T>& list, const gmic_image<unsigned int> *const callstack_selection,
              const bool force_visible, const char *format, ...);
 
   template<typename T>
-  gmic& error(const gmic_list<T>& list, const gmic_image<unsigned int> *const scope_selection,
+  gmic& error(const gmic_list<T>& list, const gmic_image<unsigned int> *const callstack_selection,
 	      const char *const command, const char *format, ...);
 
   template<typename T>
@@ -313,21 +328,21 @@ struct gmic {
   template<typename T>
   gmic& _run(const gmic_list<char>& commands_line,
              gmic_list<T> &images, gmic_list<char> &images_names,
-             float *const p_progress, bool *const p_is_cancel);
+             float *const p_progress, bool *const p_is_abort);
 
   template<typename T>
   gmic& _run(const gmic_list<char>& commands_line, unsigned int& position,
              gmic_list<T>& images, gmic_list<char>&images_names,
              gmic_list<T>& parent_images, gmic_list<char>& parent_images_names,
              const unsigned int *const variables_sizes,
-             bool *const is_noargs);
+             bool *const is_noargs, const char *const parent_arguments);
 
   // Class variables.
-  static gmic_image<char> default_commands;
+  static gmic_image<char> stdlib;
 
   gmic_list<char> *const commands, *const commands_names, *const commands_has_arguments,
     *const _variables, *const _variables_names, **const variables, **const variables_names,
-    commands_files, scope;
+    commands_files, callstack;
   gmic_list<unsigned int> dowhiles, repeatdones;
   gmic_image<unsigned char> light3d;
   gmic_image<char> status;
@@ -339,7 +354,7 @@ struct gmic {
   int verbosity, render3d, renderd3d;
   bool is_released, is_debug, is_running, is_start, is_return, is_quit, is_double3d, is_debug_info, check_elif;
   const char *starting_commands_line;
-  volatile bool _is_cancel, *is_cancel, is_cancel_thread;
+  volatile bool _is_abort, *is_abort, is_abort_thread;
 };
 
 // Class 'gmic_exception'.

@@ -27,9 +27,9 @@
 
  */
 
-#include "../../../operations/gmic/tone_mapping.hh"
-
 #include "tone_mapping_config.hh"
+
+#include "../../../operations/gmic/tone_mapping.hh"
 
 
 PF::GmicToneMappingConfigGUI::GmicToneMappingConfigGUI( PF::Layer* layer ):

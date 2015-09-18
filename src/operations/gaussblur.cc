@@ -110,7 +110,6 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
         std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
         return NULL;
       }
-      std::cout<<"GaussBlurPar::build(): vips_tilecache() success."<<std::endl;
       PF_UNREF( extended, "GaussBlurPar::build(): extended unref" );
     }
 
@@ -122,7 +121,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 
     // Final cropping to remove the padding pixels
     VipsImage* cropped;
-    std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  blurred->Xsize="<<blurred->Xsize<<"  padding="<<gpar->get_padding()<<std::endl;
+    //std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  blurred->Xsize="<<blurred->Xsize<<"  padding="<<gpar->get_padding()<<std::endl;
     if( vips_crop(blurred, &cropped, gpar->get_padding(), gpar->get_padding(),
         srcimg->Xsize, srcimg->Ysize, NULL) ) {
       std::cout<<"GaussBlurPar::build(): vips_crop() failed."<<std::endl;

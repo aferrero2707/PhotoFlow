@@ -31,6 +31,86 @@
 #include "../base/processor.hh"
 
 
+PF::GradientPar::GradientPar():
+OpParBase(),
+gradient_type("gradient_type",this,GRADIENT_VERTICAL,"vertical",_("Vertical")),
+invert("invert",this,false),
+gradient_center_x("gradient_center_x",this,0.5),
+gradient_center_y("gradient_center_y",this,0.5),
+grey_curve( "grey_curve", this ), // 0
+RGB_curve( "RGB_curve", this ),   // 1
+R_curve( "R_curve", this ),       // 2
+G_curve( "G_curve", this ),       // 3
+B_curve( "B_curve", this ),       // 4
+L_curve( "L_curve", this ),       // 5
+a_curve( "a_curve", this ),       // 6
+b_curve( "b_curve", this ),       // 7
+C_curve( "C_curve", this ),       // 8
+M_curve( "M_curve", this ),       // 9
+Y_curve( "Y_curve", this ),       // 10
+K_curve( "K_curve", this ),       // 11
+RGB_active_curve( "RGB_active_curve", this, 1, "RGB", "RGB" ),
+Lab_active_curve( "Lab_active_curve", this, 5, "L", "L" ),
+CMYK_active_curve( "CMYK_active_curve", this, 8, "C", "C" )
+{
+  //gradient_type.add_enum_value(GRADIENT_VERTICAL,"vertical","Vertical");
+  gradient_type.add_enum_value(GRADIENT_HORIZONTAL,"horizontal",_("Horizontal"));
+  gradient_type.add_enum_value(GRADIENT_RADIAL,"radial",_("Radial"));
+
+  RGB_active_curve.add_enum_value( 1, "RGB", "RGB" );
+  RGB_active_curve.add_enum_value( 2, "R", "R" );
+  RGB_active_curve.add_enum_value( 3, "G", "G" );
+  RGB_active_curve.add_enum_value( 4, "B", "B" );
+
+  Lab_active_curve.add_enum_value( 5, "L", "L" );
+  Lab_active_curve.add_enum_value( 6, "a", "a" );
+  Lab_active_curve.add_enum_value( 7, "b", "b" );
+
+  CMYK_active_curve.add_enum_value( 8, "C", "C" );
+  CMYK_active_curve.add_enum_value( 9, "M", "M" );
+  CMYK_active_curve.add_enum_value( 10, "Y", "Y" );
+  CMYK_active_curve.add_enum_value( 11, "K", "K" );
+
+  curve = new_curves();
+
+  set_type( "gradient" );
+  set_default_name( _("gradient") );
+}
+
+
+
+VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
+        VipsImage* imap, VipsImage* omap,
+        unsigned int& level)
+{
+  VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
+  VipsImage* out2 = out;
+
+  CurvesPar* curvepar = dynamic_cast<CurvesPar*>( curve->get_par() );
+  if( curvepar ) {
+    curvepar->set_grey_curve( grey_curve );
+    curvepar->set_RGB_curve( RGB_curve );
+    curvepar->set_R_curve( R_curve );
+    curvepar->set_G_curve( G_curve );
+    curvepar->set_B_curve( B_curve );
+    curvepar->set_L_curve( L_curve );
+    curvepar->set_a_curve( a_curve );
+    curvepar->set_b_curve( b_curve );
+    curvepar->set_C_curve( C_curve );
+    curvepar->set_M_curve( M_curve );
+    curvepar->set_Y_curve( Y_curve );
+    curvepar->set_K_curve( K_curve );
+    curvepar->set_image_hints( out );
+    curvepar->set_format( get_format() );
+    std::vector<VipsImage*> in2; in2.push_back(out);
+    out2 = curvepar->build( in2, 0, imap, omap, level );
+
+    PF_UNREF( out, "GradientPar::build(): out unref" );
+  }
+
+  return out2;
+}
+
 
 PF::ProcessorBase* PF::new_gradient()
 {

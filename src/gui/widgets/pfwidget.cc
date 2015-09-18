@@ -82,10 +82,10 @@ void PF::PFWidget::changed()
     if( !passive ) {
       value_changed.emit();
       //dialog->get_layer()->set_dirty( true );
-      dialog->get_layer()->get_image()->lock();
+      //dialog->get_layer()->get_image()->lock();
       //std::cout<<"  updating image"<<std::endl;
       dialog->get_layer()->get_image()->update();
-      dialog->get_layer()->get_image()->unlock();
+      //dialog->get_layer()->get_image()->unlock();
     }
   }
 }

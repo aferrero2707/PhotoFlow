@@ -27,9 +27,9 @@
 
  */
 
-#include "../../../operations/gmic/split_details.hh"
-
 #include "split_details_config.hh"
+
+#include "../../../operations/gmic/split_details.hh"
 
 
 PF::GmicSplitDetailsConfigGUI::GmicSplitDetailsConfigGUI( PF::Layer* layer ):

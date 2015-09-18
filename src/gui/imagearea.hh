@@ -53,6 +53,7 @@
 #include "../operations/invert.hh"
 #include "../operations/blender.hh"
 #include "../operations/convertformat.hh"
+#include "../operations/clipping_warning.hh"
 
 #include "../gui/operations/imageread_config.hh"
 
@@ -121,6 +122,9 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   PF::ProcessorBase* invert;
 
   PF::ProcessorBase* convert_format;
+
+  PF::ProcessorBase* clipping_warning;
+  bool highlights_warning_enabled, shadows_warning_enabled;
 
   bool display_merged;
   int active_layer;
@@ -192,6 +196,9 @@ public:
   void draw_area();
 
   Glib::RefPtr< Gdk::Pixbuf > modify_preview();
+
+  void set_highlights_warning( bool flag ) { highlights_warning_enabled = flag; }
+  void set_shadows_warning( bool flag ) { shadows_warning_enabled = flag; }
 
 	float get_shrink_factor() { return shrink_factor; }
 	void set_shrink_factor( float val ) { shrink_factor = val; }

@@ -27,9 +27,9 @@
 
  */
 
-#include "../../../operations/gmic/dream_smooth.hh"
-
 #include "dream_smooth_config.hh"
+
+#include "../../../operations/gmic/dream_smooth.hh"
 
 
 PF::GmicDreamSmoothConfigGUI::GmicDreamSmoothConfigGUI( PF::Layer* layer ):

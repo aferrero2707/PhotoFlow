@@ -32,20 +32,30 @@
 
 PF::VolumeConfigGUI::VolumeConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Volume" ),
-  modeSelector( this, "method", "Method: ", 0 ),
-  amount_slider( this, "amount", "Amount", 100, 0, 100, 5, 10, 100),
-  enable_equalizer_box( this, "enable_equalizer", "Enable equalizer", true),
-  blacks_amount_slider( this, "blacks_amount", "Blacks", 100, 0, 100, 5, 10, 100),
-  shadows_amount_slider( this, "shadows_amount", "Shadows", 100, 0, 100, 5, 10, 100),
-  midtones_amount_slider( this, "midtones_amount", "Midtones", 100, 0, 100, 5, 10, 100),
-  highlights_amount_slider( this, "highlights_amount", "Highlights", 100, 0, 100, 5, 10, 100),
-  whites_amount_slider( this, "whites_amount", "Whites", 100, 0, 100, 5, 10, 100),
-  usmRadiusSlider( this, "usm_radius", "Radius", 1, 0, 100, 0.05, 0.1, 1)
+  modeSelector( this, "method", "method: ", 0 ),
+  amount_slider( this, "amount", "amount", 100, 0, 100, 2, 10, 100),
+  threshold_slider( this, "threshold", "threshold", 0, 0, 100, 2, 10, 100),
+  enable_equalizer_box( this, "enable_equalizer", "enable equalizer", true),
+  blacks_amount_slider( this, "blacks_amount", "blacks", 100, 0, 100, 5, 10, 100),
+  shadows_amount_slider( this, "shadows_amount", "shadows", 100, 0, 100, 5, 10, 100),
+  midtones_amount_slider( this, "midtones_amount", "midtones", 100, 0, 100, 5, 10, 100),
+  highlights_amount_slider( this, "highlights_amount", "highlights", 100, 0, 100, 5, 10, 100),
+  whites_amount_slider( this, "whites_amount", "whites", 100, 0, 100, 5, 10, 100),
+  usmRadiusSlider( this, "gauss_radius", "radius", 1, 0, 100, 0.05, 0.1, 1),
+  bilateralIterationsSlider( this, "bilateral_iterations", "iterations", 1, 1, 10, 1, 1, 1),
+  bilateralSigmasSlider( this, "bilateral_sigma_s", "spatial variance", 25, 0, 100, 0.1, 1, 1),
+  bilateralSigmarSlider( this, "bilateral_sigma_r", "value variance", 20, 0, 100, 0.1, 1, 1)
 {
 
   usmControlsBox.pack_start( usmRadiusSlider, Gtk::PACK_SHRINK );
 
+  bilateralControlsBox.pack_start( bilateralIterationsSlider, Gtk::PACK_SHRINK );
+  bilateralControlsBox.pack_start( bilateralSigmasSlider, Gtk::PACK_SHRINK );
+  bilateralControlsBox.pack_start( bilateralSigmarSlider, Gtk::PACK_SHRINK );
+
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK, 10 );
+  controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK, 10 );
+  //controlsBox.pack_start( threshold_slider, Gtk::PACK_SHRINK, 10 );
   controlsBox.pack_start( controlsBox2, Gtk::PACK_SHRINK, 10 );
   controlsBox.pack_start( separator, Gtk::PACK_SHRINK, 10 );
 
@@ -84,13 +94,19 @@ void PF::VolumeConfigGUI::do_update()
 
     if( usmControlsBox.get_parent() == &controlsBox2 )
       controlsBox2.remove( usmControlsBox );
+    if( bilateralControlsBox.get_parent() == &controlsBox2 )
+      controlsBox2.remove( bilateralControlsBox );
 
     switch( prop->get_enum_value().first ) {
-    case PF::VOLUME_USM:
+    case PF::VOLUME_GAUSS:
       controlsBox2.pack_start( usmControlsBox, Gtk::PACK_SHRINK );
       usmControlsBox.show();
-			break;
-		}
+      break;
+    case PF::VOLUME_BILATERAL:
+      controlsBox2.pack_start( bilateralControlsBox, Gtk::PACK_SHRINK );
+      bilateralControlsBox.show();
+      break;
+    }
   }
   controlsBox2.show_all_children();
 

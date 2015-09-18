@@ -80,7 +80,8 @@ namespace PF
 #endif
   {
     int nref;
-		std::string file_name;
+    std::string file_name;
+    std::string file_name_real;
 		std::string cache_file_name;
 		std::string cache_file_name2;
 
@@ -107,6 +108,8 @@ namespace PF
     void ref() { nref += 1; }
     void unref() { nref -= 1; }
     int get_nref() { return nref; }
+
+    std::string get_file_name() { return file_name_real; }
 
     VipsImage* get_image(unsigned int& level);
 

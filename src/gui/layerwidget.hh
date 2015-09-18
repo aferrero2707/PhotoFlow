@@ -86,8 +86,11 @@ class LayerWidget : public Gtk::VBox
   bool get_row(int id, Gtk::TreeModel::iterator& iter);
   void select_row(int id);
 
+  void unset_sticky_and_editing( Layer* l );
+  void unset_sticky_and_editing( std::list<Layer*>& layers );
   void detach_controls( Layer* l );
   void detach_controls( std::list<Layer*>& layers );
+  int get_map_tab( std::list<Layer*>* map_layers );
   void close_map_tabs( Layer* l );
 
 public:
@@ -118,9 +121,9 @@ public:
 #endif
     for(unsigned int i = 0; i < layer_views.size(); i++) {
       int id = layer_views[i]->get_selected_layer_id();
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"LayerWidget::update() view #"<<i<<"  selected layer id="<<id<<std::endl;
-//#endif
+#endif
       layer_views[i]->update_model();
       layer_views[i]->select_row( id );
     }

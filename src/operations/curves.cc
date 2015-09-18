@@ -50,8 +50,6 @@ PF::CurvesPar::CurvesPar():
   Lab_active_curve( "Lab_active_curve", this, 5, "L", "L" ),
   CMYK_active_curve( "CMYK_active_curve", this, 8, "C", "C" )
 {
-  set_type( "curves" );
-  
   RGB_active_curve.add_enum_value( 1, "RGB", "RGB" );
   RGB_active_curve.add_enum_value( 2, "R", "R" );
   RGB_active_curve.add_enum_value( 3, "G", "G" );
@@ -72,6 +70,7 @@ PF::CurvesPar::CurvesPar():
   //L_curve.get().add_point( 0.25, 0.10 );
   //L_curve.get().add_point( 0.75, 0.90 );
 
+  set_type( "curves" );
   set_default_name( _("curves") );
 }
 
@@ -188,7 +187,7 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
       scvec[0] = &grey_curve;
-      cvec = &Greyvec;
+      //cvec = &Greyvec;
       cvec8[0] = Greyvec8;
       cvec16[0] = Greyvec16;
       break;
@@ -197,14 +196,14 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
       scvec[1] = &G_curve;
       scvec[2] = &B_curve;
       scvec[3] = &RGB_curve;
-      cvec = RGBvec;
+      //cvec = RGBvec;
       for(int i=0; i<4; i++ ) {cvec8[i] = RGBvec8[i];cvec16[i] = RGBvec16[i];}
       break;
     case PF_COLORSPACE_LAB:
       scvec[0] = &L_curve;
       scvec[1] = &a_curve;
       scvec[2] = &b_curve;
-      cvec = Labvec;
+      //cvec = Labvec;
       for(int i=0; i<3; i++ ) {cvec8[i] = Labvec8[i];cvec16[i] = Labvec16[i];}
       break;
     case PF_COLORSPACE_CMYK:
@@ -212,7 +211,7 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
       scvec[1] = &M_curve;
       scvec[2] = &Y_curve;
       scvec[3] = &K_curve;
-      cvec = CMYKvec;
+      //cvec = CMYKvec;
       for(int i=0; i<4; i++ ) {cvec8[i] = CMYKvec8[i];cvec16[i] = CMYKvec16[i];}
       break;
     default:

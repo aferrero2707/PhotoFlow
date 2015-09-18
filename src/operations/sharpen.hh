@@ -52,7 +52,7 @@ namespace PF
   public:
     SharpenPar();
 
-    bool needs_caching() { return false; }
+    bool needs_caching();
       
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 

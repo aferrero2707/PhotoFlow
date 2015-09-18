@@ -37,6 +37,7 @@ static gpointer run_image_processor( gpointer /*data*/ )
 {
 	std::cout<<"Calling ImageProcessor::instance().run()"<<std::endl;
   PF::ImageProcessor::Instance().run();
+  return NULL;
   //return data;
 }
 
@@ -55,7 +56,15 @@ PF::ImageProcessor::ImageProcessor(): caching_completed( false )
 void PF::ImageProcessor::start()
 {
   std::cout<<"ImageProcessor::ImageProcessor(): starting thread"<<std::endl;
-  thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
+  pthread_attr_t thread_attr;
+  if( (pthread_attr_init(&thread_attr) == 0) &&
+      // Reserve 8MB of stack size for the new thread
+      (pthread_attr_setstacksize(&thread_attr, 8*1024*1024)) == 0)
+    pthread_create(&_thread,&thread_attr,run_image_processor,NULL);
+  else
+    pthread_create(&_thread,NULL,run_image_processor,NULL);
+
+  //thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
   std::cout<<"ImageProcessor::ImageProcessor(): thread started"<<std::endl;
 }
 
@@ -135,6 +144,7 @@ void PF::ImageProcessor::run()
         PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer( PF_RENDER_PREVIEW );
         //std::cout<<"ImageProcessor::run(): buf="<<buf<<std::endl;
         if( buf ) {
+          signal_status_caching.emit();
           g_mutex_lock( caching_completed_mutex );
           caching_completed = false;
           g_mutex_unlock( caching_completed_mutex );
@@ -152,6 +162,7 @@ void PF::ImageProcessor::run()
           caching_completed = true;
           g_cond_signal( caching_completed_cond );
           g_mutex_unlock( caching_completed_mutex );
+          signal_status_ready.emit();
         }
       }
       /*
@@ -183,11 +194,16 @@ void PF::ImageProcessor::run()
       */
       //g_mutex_unlock( requests_mutex );
 
-
       // Process the request
       switch( request.request ) {
+      case IMAGE_PIPELINE_SET_LEVEL:
+        if( !request.pipeline ) continue;
+        if( request.level < 0 ) continue;
+        request.pipeline->set_level( request.level );
+        break;
       case IMAGE_REBUILD:
         if( !request.image ) continue;
+        signal_status_processing.emit();
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         request.image->lock();
         //std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
@@ -204,6 +220,7 @@ void PF::ImageProcessor::run()
         break;
       case IMAGE_EXPORT:
         if( !request.image ) continue;
+        signal_status_exporting.emit();
         request.image->lock();
         request.image->do_export_merged( request.filename );
         request.image->unlock();
@@ -222,11 +239,13 @@ void PF::ImageProcessor::run()
         break;
       case IMAGE_UPDATE:
         if( !request.pipeline ) continue;
+        signal_status_processing.emit();
         //std::cout<<"PF::ImageProcessor::run(): updating area."<<std::endl;
         request.pipeline->sink( request.area );
         //std::cout<<"PF::ImageProcessor::run(): updating area done."<<std::endl;
         break;
       case IMAGE_REDRAW_START:
+        signal_status_processing.emit();
         request.sink->process_start( request.area );
         break;
       case IMAGE_REDRAW_END:
@@ -249,9 +268,30 @@ void PF::ImageProcessor::run()
         //g_cond_signal( request.done );
         //g_mutex_unlock( request.mutex );
         break;
+      case IMAGE_MOVE_LAYER: {
+        if( !request.image ) continue;
+        if( !request.layer ) continue;
+        if( !request.dnd_dest_layer_list ) break;
+        signal_status_processing.emit();
+        request.image->lock();
+        // Remove the layer from its current container
+        request.image->get_layer_manager().remove_layer( request.layer );
+        // Insert the layer to the destination container, above the specified layer if
+        // valid, at the beginning otherwise
+        PF::Layer* dnd_dest_layer = request.image->get_layer_manager().get_layer( request.dnd_dest_layer_id );
+        if( dnd_dest_layer ) {
+          PF::insert_layer( *(request.dnd_dest_layer_list), request.layer, request.dnd_dest_layer_id );
+        } else {
+          request.dnd_dest_layer_list->push_front( request.layer );
+        }
+        request.image->do_update();
+        request.image->unlock();
+        break;
+      }
       case IMAGE_REMOVE_LAYER:
         if( !request.image ) break;
         if( !request.layer ) break;
+        signal_status_processing.emit();
         request.image->remove_layer_lock();
         request.image->do_remove_layer( request.layer );
         request.image->remove_layer_unlock();

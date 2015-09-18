@@ -87,6 +87,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
     processor = new_invert();
 
+  } else if( op_type == "threshold" ) {
+
+    //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
+    processor = new_threshold();
+
   } else if( op_type == "desaturate" ) {
 
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();

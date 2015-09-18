@@ -66,7 +66,7 @@ static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
 
 gboolean PF::ImageArea::queue_draw_cb (PF::ImageArea::Update * update)
 {
-  if( (update->rect.width > 0) && (update->rect.height > 0) ) {
+  if( false && (update->rect.width > 0) && (update->rect.height > 0) ) {
     update->image_area->queue_draw_area (update->rect.left,//+update->image_area->get_xoffset(),
                                          update->rect.top,//+update->image_area->get_yoffset(),
                                          update->rect.width,
@@ -99,6 +99,8 @@ gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
   std::cout<<"                get_page_size()="<<update->image_area->get_vadj()->get_page_size()<<std::endl;
   std::cout<<"update->image_area->set_size_request("<<update->rect.width<<","<<update->rect.height<<")"<<std::endl;
   */
+  //std::cout<<"set_size_cb(): update->rect="<<update->rect<<std::endl;
+
   update->image_area->set_size_request(update->rect.width,update->rect.height);
   // We need to change the upper limits explicitely, since the adjustments are not updated immediately
   // when calling set_size_request(). Otherwise the subsequent set_value() calls might modify the values
@@ -140,10 +142,12 @@ gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
       static_cast<int>(update->image_area->get_vadj()->get_page_size())
   };
 
-  update->image_area->queue_draw_area (preview_area.left,//+update->image_area->get_xoffset(),
-                                       preview_area.top,//+update->image_area->get_yoffset(),
-                                       preview_area.width,
-                                       preview_area.height);
+  //update->image_area->queue_draw_area (preview_area.left,//+update->image_area->get_xoffset(),
+  //                                     preview_area.top,//+update->image_area->get_yoffset(),
+  //                                     preview_area.width,
+  //                                     preview_area.height);
+  update->image_area->queue_draw();
+  //std::cout<<"set_size_cb(): update->image_area->queue_draw() called"<<std::endl;
 
   /*
   PF::ImageArea::Update* update2 = g_new (Update, 1);
@@ -173,6 +177,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   yoffset( 0 ),
   pending_pixels( 0 ),
   draw_requested( false ),
+  highlights_warning_enabled( false ),
+  shadows_warning_enabled( false ),
   display_merged( true ),
   active_layer( -1 ),
   edited_layer( -1 ),
@@ -193,6 +199,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   maskblend = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
   invert = new PF::Processor<PF::InvertPar,PF::Invert>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  clipping_warning = new_clipping_warning();
+
   set_size_request( 1, 1 );
 
   draw_done = vips_g_cond_new();
@@ -284,6 +292,7 @@ void PF::ImageArea::process_start( const VipsRect& area )
   std::cout<<"Active buffer copied into inactive one"<<std::endl;
 #endif
 
+  /* OBSOLETE
 	// Fill borders with black
 	int right_border = area.width - display_image->Xsize - xoffset;
 	int bottom_border = area.height - display_image->Ysize - yoffset;
@@ -295,6 +304,7 @@ void PF::ImageArea::process_start( const VipsRect& area )
 	double_buffer.get_inactive().fill( bottom, 0 );
 	double_buffer.get_inactive().fill( left, 0 );
 	double_buffer.get_inactive().fill( right, 0 );
+	*/
 }
 
 
@@ -307,6 +317,8 @@ void PF::ImageArea::process_end( const VipsRect& area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::process_end(): called"<<std::endl;
   std::cout<<"                               display_image="<<display_image<<std::endl;
+  std::cout<<"                               image width="<<display_image->Xsize<<std::endl;
+  std::cout<<"                                    height="<<display_image->Ysize<<std::endl;
   std::cout<<"                               xoffset="<<xoffset<<"  yoffset="<<yoffset<<std::endl;
 #endif
   double_buffer.lock();
@@ -323,7 +335,9 @@ void PF::ImageArea::process_end( const VipsRect& area )
   update->rect.top = area.top;
   update->rect.width = area.width;
   update->rect.height = area.height;
-  //std::cout<<"PF::ImageArea::process_end(): installing idle callback."<<std::endl;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::process_end(): installing draw callback."<<std::endl;
+#endif
   gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
   double_buffer.unlock();
 }
@@ -474,6 +488,7 @@ void PF::ImageArea::draw_area()
 bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
 {
   //return true;
+  //std::cout<<"ImageArea::on_expose_event() called"<<std::endl;
 
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return true;
@@ -492,6 +507,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   double_buffer.lock();
   //std::cout<<"  draw_area: "<<draw_area<<std::endl;
   //std::cout<<"  buffer_area: "<<double_buffer.get_active().get_rect()<<std::endl;
+  //std::cout<<"  buffer_dirty: "<<double_buffer.get_active().is_dirty()<<std::endl;
   if( double_buffer.get_active().get_rect().width > 0 &&
       double_buffer.get_active().get_rect().height > 0 ) {
     Glib::RefPtr< Gdk::Pixbuf > pixbuf = modify_preview();
@@ -505,8 +521,13 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   }
 
   bool repaint_needed = true;
-  if( vips_rect_includesrect(&(double_buffer.get_active().get_rect()), &draw_area) )
+  if( vips_rect_includesrect(&(double_buffer.get_active().get_rect()), &draw_area) ) {
+    //std::cout<<"  vips_rect_includesrect(): double_buffer.get_active().get_rect()="
+    //    <<double_buffer.get_active().get_rect()
+    //    <<"  draw_area="<<draw_area
+    //    <<std::endl;
     repaint_needed = false;
+  }
   if( double_buffer.get_active().is_dirty() )
     repaint_needed = true;
   double_buffer.unlock();
@@ -532,6 +553,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   area_tot.height = MAX( draw_area_bottom, preview_area_bottom ) - area_tot.top + 1;
   //std::cout<<"ImageArea::on_expose_event(): area_tot="<<area_tot<<std::endl;
 
+  /* OBSOLETE
   if( display_image->Xsize < hadj->get_page_size() ) {
     xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
   } else {
@@ -542,6 +564,10 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   } else {
     yoffset = 0;
   }
+  */
+
+  xoffset = 0;
+  yoffset = 0;
 
   // Submit the re-computation of the requested area
   ProcessRequestInfo request;
@@ -672,6 +698,7 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   area_tot.height = MAX( draw_area_bottom, preview_area_bottom ) - area_tot.top + 1;
 	//std::cout<<"ImageArea::on_draw(): area_tot="<<area_tot<<std::endl;
 
+  /* OBSOLETE
 	if( display_image->Xsize < hadj->get_page_size() ) {
 		xoffset = (hadj->get_page_size()-display_image->Xsize)/2;
 	} else {
@@ -682,6 +709,10 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	} else {
 		yoffset = 0;
 	}
+  */
+
+  xoffset = 0;
+  yoffset = 0;
 
 	// Submit the re-computation of the requested area
   ProcessRequestInfo request;
@@ -835,9 +866,10 @@ void PF::ImageArea::update( VipsRect* area )
   if( do_merged ) {
     image = get_pipeline()->get_output();
 #ifdef DEBUG_DISPLAY
-    std::cout<<"ImageArea::update(): image->Bands="<<image->Bands<<std::endl;
-    std::cout<<"ImageArea::update(): image->BandFmt="<<image->BandFmt<<std::endl;
-    std::cout<<"ImageArea::update(): image size: "<<image->Xsize<<"x"<<image->Ysize<<std::endl;
+    std::cout<<"ImageArea::update(): image="<<image<<std::endl;
+    std::cout<<"                     image->Bands="<<image->Bands<<std::endl;
+    std::cout<<"                     image->BandFmt="<<image->BandFmt<<std::endl;
+    std::cout<<"                     image size: "<<image->Xsize<<"x"<<image->Ysize<<std::endl;
 #endif
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "ImageArea::update(): merged image ref" );
@@ -939,6 +971,18 @@ void PF::ImageArea::update( VipsRect* area )
 #endif
   //outimg = srgbimg;
     
+  ClippingWarningPar* clipping_warning_par = dynamic_cast<ClippingWarningPar*>( clipping_warning->get_par() );
+  if( !clipping_warning_par ) return;
+  clipping_warning_par->set_highlights_warning( highlights_warning_enabled );
+  clipping_warning_par->set_shadows_warning( shadows_warning_enabled );
+  clipping_warning_par->set_image_hints( srgbimg );
+  clipping_warning_par->set_format( get_pipeline()->get_format() );
+  in.clear(); in.push_back( srgbimg );
+  VipsImage* wclipimg = clipping_warning->get_par()->build(in, 0, NULL, NULL, level );
+  PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
+
+  srgbimg = wclipimg;
+
   if( !display_merged && (active_layer>=0) ) {
     PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
     if( !node ) return;

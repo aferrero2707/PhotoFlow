@@ -131,7 +131,7 @@ namespace PF
   }
   */
 
-  /*
+  /**/
   template < typename Tin, typename T >
   void clip(const Tin& val, T& clipped)
   {
@@ -140,8 +140,8 @@ namespace PF
     else clipped = (T)val;
     //std::cout<<"val="<<(int)val<<"  max="<<(int)FormatInfo<T>::MAX<<"  min="<<(int)FormatInfo<T>::MIN<<"  clipped="<<(int)clipped<<std::endl;
   }
-*/
-
+  /**/
+/*
   template < typename T > 
   void clip(const typename FormatInfo<T>::SIGNED& val, T& clipped)
   {
@@ -150,7 +150,7 @@ namespace PF
     else clipped = (T)val;
     //std::cout<<"val="<<(int)val<<"  max="<<(int)FormatInfo<T>::MAX<<"  min="<<(int)FormatInfo<T>::MIN<<"  clipped="<<(int)clipped<<std::endl;
   }
-
+*/
 
   cmsUInt32Number vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE pin );
 }

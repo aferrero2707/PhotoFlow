@@ -228,8 +228,7 @@ vips_from_gmic( gmic_image<float> *img, VipsRect *img_rect, VipsRegion *out )
 	int y_off = valid->top - img_rect->top;
 
 	for( int y = 0; y < valid->height; y++ ) {
-		T *p = (T *) \
-			   VIPS_REGION_ADDR( out, valid->left, valid->top + y );
+		T *p = (T *)VIPS_REGION_ADDR( out, valid->left, valid->top + y );
 
 		for( int x = 0; x < valid->width; x++ ) {
 		  if( img->spectrum() < im->Bands ) {

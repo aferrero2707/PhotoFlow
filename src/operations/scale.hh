@@ -60,6 +60,7 @@ enum scale_unit_t
   class ScalePar: public OpParBase
   {
     Property<float> rotate_angle;
+    Property<bool> autocrop;
     PropertyBase scale_mode;
     PropertyBase scale_unit;
     Property<int> scale_width_pixels, scale_height_pixels;
@@ -69,16 +70,21 @@ enum scale_unit_t
     Property<float> scale_width_inches, scale_height_inches;
     Property<float> scale_resolution;
 
+    Property< std::vector< std::pair<int,int> > > rotation_points;
+
     int in_width, in_height;
     int out_width, out_height;
     float sin_angle, cos_angle;
     float scale_mult;
+    VipsRect crop;
 
   public:
     ScalePar();
 
     bool has_opacity() { return false; }
     bool has_intensity() { return false; }
+
+    std::vector< std::pair<int,int> >& get_rotation_points() { return rotation_points.get(); }
 
     /* Function to derive the output area from the input area
     */
@@ -88,8 +94,8 @@ enum scale_unit_t
       int in_h2 = in_height/2;
       int out_w2 = out_width/2;
       int out_h2 = out_height/2;
-      float xout = cos_angle*(rin->left-in_w2) - sin_angle*(rin->top-in_h2) + out_w2;
-      float yout = sin_angle*(rin->left-in_w2) + cos_angle*(rin->top-in_h2) + out_h2;
+      float xout = cos_angle*(rin->left-in_w2) - sin_angle*(rin->top-in_h2) + out_w2 - crop.left;
+      float yout = sin_angle*(rin->left-in_w2) + cos_angle*(rin->top-in_h2) + out_h2 - crop.top;
       //std::cout<<"xout="<<xout<<" = "<<cos_angle<<"*("<<rin->left<<"-"<<in_w2<<") - "<<sin_angle<<"*("<<rin->top<<"-"<<in_h2<<") + "<<out_w2<<std::endl;
       //std::cout<<"sin_angle="<<sin_angle<<" cos_angle="<<cos_angle<<"  xout="<<xout<<" yout="<<yout<<std::endl;
       rout->left = xout*scale_mult;
@@ -108,8 +114,8 @@ enum scale_unit_t
       int in_h2 = in_height/2;
       int out_w2 = out_width/2;
       int out_h2 = out_height/2;
-      float xin = cos_angle*(rout->left-out_w2) + sin_angle*(rout->top-out_h2) + in_w2;
-      float yin = minus*sin_angle*(rout->left-out_w2) + cos_angle*(rout->top-out_h2) + in_h2;
+      float xin = cos_angle*(rout->left-out_w2) + sin_angle*(rout->top-out_h2) + in_w2 + crop.left;
+      float yin = minus*sin_angle*(rout->left-out_w2) + cos_angle*(rout->top-out_h2) + in_h2 + crop.top;
       //std::cout<<"xin="<<xin<<" = "<<cos_angle<<"*("<<rout->left<<"-"<<out_w2<<") - "<<sin_angle<<"*("<<rout->top<<"-"<<out_h2<<") + "<<in_w2<<std::endl;
       //std::cout<<"sin_angle="<<sin_angle<<" cos_angle="<<cos_angle<<"  xin="<<xin<<" yin="<<yin<<std::endl;
       rin->left = xin/scale_mult;

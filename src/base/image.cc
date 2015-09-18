@@ -140,6 +140,27 @@ PF::Image::~Image()
 // to reduce the amount of computations in case only part of the image
 // needs to be updated. If area is NULL, it means that the whole image 
 // was changed.
+void PF::Image::set_pipeline_level( PF::Pipeline* target_pipeline, int level )
+{
+#ifndef NDEBUG
+  std::cout<<"Image::set_pipeline_level( "<<target_pipeline<<", "<<level<<" ) called."<<std::endl;
+#endif
+
+  if( !target_pipeline ) return;
+
+  if( PF::PhotoFlow::Instance().is_batch() ) {
+    target_pipeline->set_level( level );
+  } else {
+    ProcessRequestInfo request;
+    request.image = this;
+    request.pipeline = target_pipeline;
+    request.level = level;
+    request.request = PF::IMAGE_PIPELINE_SET_LEVEL;
+    PF::ImageProcessor::Instance().submit_request( request );
+  }
+}
+
+
 void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 {
 #ifndef NDEBUG
@@ -433,12 +454,6 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 }
 
 
-
-// The area parameter represents the region of the image that was actually
-// modified and that needs to be re-computed. This allows certain sinks
-// to reduce the amount of computations in case only part of the image
-// needs to be updated. If area is NULL, it means that the whole image 
-// was changed.
 void PF::Image::remove_layer( PF::Layer* layer )
 {
   if( PF::PhotoFlow::Instance().is_batch() ) {
@@ -448,10 +463,10 @@ void PF::Image::remove_layer( PF::Layer* layer )
     request.image = this;
     request.layer = layer;
     request.request = PF::IMAGE_REMOVE_LAYER;
-    g_mutex_lock( remove_layer_mutex );
+    //g_mutex_lock( remove_layer_mutex );
     PF::ImageProcessor::Instance().submit_request( request );
-    g_cond_wait( remove_layer_done, remove_layer_mutex );
-    g_mutex_unlock( remove_layer_mutex );
+    //g_cond_wait( remove_layer_done, remove_layer_mutex );
+    //g_mutex_unlock( remove_layer_mutex );
   }
 }
 
@@ -486,6 +501,7 @@ void PF::Image::remove_from_inputs( PF::Layer* layer, std::list<Layer*>& list )
 
 void PF::Image::remove_layer( PF::Layer* layer, std::list<Layer*>& list )
 {
+  if( layer ) std::cout<<"Image::remove_layer(\""<<layer->get_name()<<"\") called."<<std::endl;
   std::vector<Pipeline*>::iterator vi;
   for( vi = pipelines.begin(); vi != pipelines.end(); vi++ ) {
     (*vi)->remove_node( layer->get_id() );
@@ -664,7 +680,7 @@ void PF::Image::export_merged( std::string filename )
     //#ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): locking mutex..."<<std::endl;
     //#endif
-    g_mutex_lock( export_mutex );
+    //g_mutex_lock( export_mutex );
     //#ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): submitting export request..."<<std::endl;
     //#endif
@@ -674,10 +690,10 @@ void PF::Image::export_merged( std::string filename )
     //#endif
 
     std::cout<<"PF::Image::export_merged(): waiting for export_done...."<<std::endl;
-    g_cond_wait( export_done, export_mutex );
+    //g_cond_wait( export_done, export_mutex );
     std::cout<<"PF::Image::export_merged(): ... export_done received."<<std::endl;
 
-    g_mutex_unlock( export_mutex );
+    //g_mutex_unlock( export_mutex );
   }
 }
 

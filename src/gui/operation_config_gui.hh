@@ -81,22 +81,30 @@ class OperationConfigGUI: public OperationConfigUI
   // Embedded controls
   Gtk::Frame* frame;
   Gtk::Alignment frame_box_1_padding;
-  Gtk::Alignment frame_box_1_alignment;
+  Gtk::Alignment frame_top_buttons_alignment;
+  Gtk::Alignment frame_top_buttons_alignment2;
   Gtk::Alignment frame_box_2_padding;
   Gtk::Alignment frame_box_3_padding;
+  Gtk::Alignment frame_box_4_padding;
   Gtk::HBox frame_hbox;
   Gtk::VBox frame_vbox;
+  Gtk::HBox frame_top_buttons_box;
+  Gtk::HBox frame_top_buttons_box2;
   Gtk::HBox frame_top_box_1_1;
   Gtk::HBox frame_top_box_1_2;
   Gtk::VBox frame_top_vbox_1;
   Gtk::HBox frame_top_box_1;
   Gtk::HBox frame_top_box_2;
   Gtk::HBox frame_top_box_3;
+  Gtk::HBox frame_top_box_4;
   ToggleImageButton frame_visible;
   //ToggleImageButton frame_preview;
   ToggleImageButton frame_mask;
+  ToggleImageButton frame_mask2;
   ToggleImageButton frame_edit;
+  ToggleImageButton frame_edit2;
   ToggleImageButton frame_sticky;
+  ToggleImageButton frame_sticky2;
   ToggleImageButton frame_undo;
   ToggleImageButton frame_redo;
   ToggleImageButton frame_reset;
@@ -111,8 +119,9 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::VBox aux_controls_box;
   Gtk::HBox aux_controls_hbox;
 
+  VipsSemaphore update_done_sem;
 
-  OpParBase* get_par();
+
   OpParBase* get_blender();
 
   void show_layer_cb() { show_layer(); }
@@ -133,6 +142,8 @@ public:
   virtual ~OperationConfigGUI();
 
   virtual bool has_preview() { return false; }
+
+  OpParBase* get_par();
 
   Gtk::VBox& get_main_box() { return controls_box; }
   Gtk::Frame* get_frame() { return frame; }
@@ -161,9 +172,11 @@ public:
   virtual void enable_editing();
   void reset_edit_button();
   virtual void disable_editing();
+  bool is_editing() { return frame_edit.is_active(); }
   virtual void set_sticky();
   void reset_sticky_button();
   virtual void unset_sticky();
+  bool is_sticky() { return frame_sticky.is_active(); }
   virtual void parameters_undo();
   virtual void parameters_redo();
   virtual void parameters_reset();
@@ -232,6 +245,9 @@ public:
   void init();
   void update();
   virtual void do_update();
+  void update_notify() {
+    vips_semaphore_up( &update_done_sem );
+  }
 
   void update_properties();
 };

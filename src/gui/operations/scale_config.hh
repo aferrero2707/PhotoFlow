@@ -41,8 +41,10 @@ namespace PF {
   class ScaleConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
+  Gtk::HSeparator separator;
 
   Slider rotate_angle_slider;
+  CheckBox autocrop;
 
   Selector scale_mode;
   Selector scale_unit;
@@ -71,11 +73,19 @@ namespace PF {
 
   Slider scale_resolution_slider;
 
+  int active_point_id;
+
 
 public:
   ScaleConfigGUI( Layer* l );
 
   void do_update();
+
+  bool pointer_press_event( int button, double x, double y, int mod_key );
+  bool pointer_release_event( int button, double x, double y, int mod_key );
+  bool pointer_motion_event( int button, double x, double y, int mod_key );
+  bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+      float scale, int xoffset, int yoffset );
 };
 
 }

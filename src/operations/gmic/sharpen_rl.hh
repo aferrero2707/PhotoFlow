@@ -52,7 +52,7 @@ namespace PF
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
-    bool needs_caching() { return true; }
+    bool needs_caching();
 
     void set_sigma( float s ) { prop_sigma.set( s ); }
     void set_iterations( int i ) { prop_iterations.set( i ); }

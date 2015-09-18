@@ -82,21 +82,21 @@ public:
 
 PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "B/C/S/H Adjustment" ),
-  brightnessSlider( this, "brightness", "Brightness", 0, -100, 100, 5, 10, 100),
+  brightnessSlider( this, "brightness", _("Brightness"), 0, -100, 100, 5, 10, 100),
   brightness2Slider( this, "brightness_eq", "Brightness (curve)", 0, -100, 100, 5, 10, 100),
-  contrastSlider( this, "contrast", "Contrast", 0, -100, 100, 5, 10, 100),
+  contrastSlider( this, "contrast", _("Contrast"), 0, -100, 100, 5, 10, 100),
   contrast2Slider( this, "contrast_eq", "Contrast(curve)", 0, -100, 100, 5, 10, 100),
-  saturationSlider( this, "saturation", "Saturation", 0, -100, 100, 5, 10, 100),
+  saturationSlider( this, "saturation", _("Saturation"), 0, -100, 100, 5, 10, 100),
   saturation2Slider( this, "saturation_eq", "Saturation (curve)", 0, -100, 100, 5, 10, 100),
-  hueSlider( this, "hue", "Hue", 0, -180, 180, 0.1, 10, 1),
+  hueSlider( this, "hue", _("Hue"), 0, -180, 180, 0.1, 10, 1),
   hue2Slider( this, "hue_eq", "Hue (curve)", 0, -180, 180, 0.1, 10, 1),
   mask_enable( this, "show_mask", _("show mask"), false ),
   hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
   hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
   hueLeq( this, "hue_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
-  hueHeq_enable( this, "hue_H_equalizer_enabled", "Enable", true ),
-  hueSeq_enable( this, "hue_S_equalizer_enabled", "Enable", true  ),
-  hueLeq_enable( this, "hue_L_equalizer_enabled", "Enable", true  ),
+  hueHeq_enable( this, "hue_H_equalizer_enabled", _("Enable"), true ),
+  hueSeq_enable( this, "hue_S_equalizer_enabled", _("Enable"), true  ),
+  hueLeq_enable( this, "hue_L_equalizer_enabled", _("Enable"), true  ),
   saturationHeq( this, "saturation_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 200, 350 ),
   saturationSeq( this, "saturation_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
   saturationLeq( this, "saturation_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
@@ -137,7 +137,7 @@ PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
 
   expander_paddings[0][0].set_size_request(20,-1);
 
-  expanders[0][0].set_label( "HSL curves" );
+  expanders[0][0].set_label( _("HSL curves") );
   expanders[0][0].add( expander_hboxes[0][0] );
   //expander_hboxes[0][0].pack_start( expander_paddings[0][0], Gtk::PACK_SHRINK );
   expander_hboxes[0][0].pack_start( expander_vboxes[0], Gtk::PACK_SHRINK, 0 );
@@ -240,7 +240,7 @@ bool PF::HueSaturationConfigGUI::pointer_press_event( int button, double x, doub
 bool PF::HueSaturationConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
-  std::cout<<"HueSaturationConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
+  //std::cout<<"HueSaturationConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
 
   // Retrieve the layer associated to the filter
   PF::Layer* layer = get_layer();
@@ -268,10 +268,10 @@ bool PF::HueSaturationConfigGUI::pointer_release_event( int button, double x, do
   float H, S, L;
   double lx = x, ly = y, lw = 1, lh = 1;
   screen2layer( lx, ly, lw, lh );
-  std::cout<<"image->sample( lin->get_id(), "<<lx<<", "<<ly<<", 5, NULL, values );"<<std::endl;
+  //std::cout<<"image->sample( lin->get_id(), "<<lx<<", "<<ly<<", 5, NULL, values );"<<std::endl;
   image->sample( lin->get_id(), lx, ly, 5, NULL, values );
 
-  std::cout<<"HueSaturationConfigDialog::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
+  //std::cout<<"HueSaturationConfigDialog::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
 
   rgb2hsl( values[0], values[1], values[2], H, S, L );
 

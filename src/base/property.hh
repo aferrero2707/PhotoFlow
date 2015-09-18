@@ -292,6 +292,13 @@ namespace PF
   }
 
 
+  template<typename T>
+  void set_gobject_property(gpointer /*object*/, const std::string /*name*/, const std::vector<T>& /*value*/)
+  {
+    //g_object_set( object, name.c_str(), value, NULL );
+  }
+
+
   template<>
   void set_gobject_property<std::string>(gpointer object, const std::string name, const std::string& value);
 

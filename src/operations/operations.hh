@@ -60,6 +60,7 @@ namespace PF
   ProcessorBase* new_unsharp_mask();
   ProcessorBase* new_sharpen();
   ProcessorBase* new_invert();
+  ProcessorBase* new_threshold();
   ProcessorBase* new_uniform();
   ProcessorBase* new_desaturate();
   ProcessorBase* new_draw();
