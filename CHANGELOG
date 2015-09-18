@@ -1,11 +1,40 @@
 =========================================
 Version 0.2.1
 
+* New features:
+
+- Re-added GUI controls for horizontal/vertical shifting of layers
+- Gradient tool: the tool controls now include a curve adjustment, which allows to easily create 
+  arbitrary colored and/or non-linear gradients starting from a linear grayscale one.
+- Scale/rotate tool: added mouse-driven rotation and automatic cropping of rotated image
+- Few changes have been introduced into the "Volume" tool, now called "Local contrast":
+  - the "Unsharp mask" method has been renamed to "Gaussian"
+  - the option to use G'MIC "Bilateral smoothing" as blurring operator has been added. 
+    This usually produces results with less evident halos. Idea taken from here:
+- Added shadows/highlights clipping warning in preview area
+- Replaced text of zoom buttons with icons from http://studiojunkyard.github.io/LibreICONS/
 - Added status indicator at the bottom of the image preview area. The possible configurations are:
   - "ready" + green indicator: the preview area is up-to-date and the processing engine is idle
   - "processing" + red indicator: the preview area is being updated
   - "caching" + orange indicator: the preview area is up-to-date but the processing engine is performing some background caching. In this case, further updates of the preview area might be slower than usual
   - "exporting" + red indicator: the processing engine is busy exporting the current image
+- The buttons for switching maps on/off, making a layer sticky and enabling/disabling the layer editing mode
+  are now duplicated in the auxiliary controls panel above the layers list
+- When opening a PFI file, if an input image is not found in the path stored in the PFI file it is
+  searched in the same folder as the PFI file itself. This allows PFI files to behave as "sidecars",
+  and to be easily distributed toghether with the original images.
+- Improved color scheme for tools controls (lighter background)
+- Added alternative overlay blend mode equivalent to GIMP one (very close to soft light)
+- Improved/simplified rendering of preview image:
+  - the centering in zoom-to-fit mode is now handled directly by GTK, instead of drawing a black
+    border explicitely has it was done before.
+  - when in zoom-to-fit mode, the preview image gets properly scaled and re-centered when the right
+    controls panel is shown/hidded (see issue #36: https://github.com/aferrero2707/PhotoFlow/issues/36)
+- Updated G'MIC to version 1.6.5.2
+
+* Bug fixes:
+
+- Fixed bug in G'MIC filters under OSX (see https://discuss.pixls.us/t/gmic-stability-under-osx/)
 - Fixed various issues related to the deletion of layers
   (see issue #35: https://github.com/aferrero2707/PhotoFlow/issues/35)
 - Reduced accuracy of spin button that adjusts the rotation angle in the "scale/rotate" tool
@@ -17,28 +46,6 @@ Version 0.2.1
 - Improved behaviour of image blender: when two images have a different number of channels or pixel format,
   the blending is set automatically to "passthrough" 
   (see issue #40: https://github.com/aferrero2707/PhotoFlow/issues/40)
-- The buttons for switching maps on/off, making a layer sticky and enabling/disabling the layer editing mode
-  are now duplicated in the auxiliary controls panel above the layers list
-- Few changes have been introduced into the "Volume" tool, now called "Local contrast":
-  - the "Unsharp mask" method has been renamed to "Gaussian"
-  - the option to use G'MIC "Bilateral smoothing" as blurring operator has been added. 
-    This usually produces results with less evident halos. Idea taken from here:
-- Improved/simplified rendering of preview image:
-  - the centering in zoom-to-fit mode is now handled directly by GTK, instead of drawing a black
-    border explicitely has it was done before.
-  - when in zoom-to-fit mode, the preview image gets properly scaled and re-centered when the right
-    controls panel is shown/hidded (see issue #)
-- When opening a PFI file, if an input image is not found in the path stored in the PFI file it is
-  searched in the same folder as the PFI file itself. This allows PFI files to behave as "sidecars",
-  and to be easily distributed toghether with the original images.
-- Improved color scheme for tools controls (lighter background)
-- Fixed bug in G'MIC filters under OSX
-- Updated G'MIC to version 1.6.5.2
-- Added alternative overlay blend mode equivalent to GIMP one (very close to soft light)
-- Re-added GUI controls for horizontal/vertical shifting of layers
-- Scale/rotate tool: added mouse-driven rotation and automatic cropping of rotated image
-- Added shadows/highlights clipping warning in preview area
-- Replaced text of zoom buttons with icons from http://studiojunkyard.github.io/LibreICONS/
 
 =========================================
 Version 0.2.0
