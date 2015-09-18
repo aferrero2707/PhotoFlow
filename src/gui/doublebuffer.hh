@@ -226,9 +226,9 @@ public:
     }
   }
 
+#define PX_MOD( px ) { int _px = px; _px += 127; if(_px>255) _px -= 255; px = (guint8)_px; }
   void draw_circle( int x0, int y0, int radius )
   {
-#define PX_MOD( px ) { int _px = px; _px += 127; if(_px>255) _px -= 255; px = (guint8)_px; }
 
     guint8* px = get_pxbuf()->get_pixels();
     const int rs = get_pxbuf()->get_rowstride();
@@ -310,6 +310,9 @@ public:
       }
     }
   }
+
+
+  void draw_line( int x1, int y1, int x2, int y2 );
 };
 
 

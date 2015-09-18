@@ -122,7 +122,6 @@ class OperationConfigGUI: public OperationConfigUI
   VipsSemaphore update_done_sem;
 
 
-  OpParBase* get_par();
   OpParBase* get_blender();
 
   void show_layer_cb() { show_layer(); }
@@ -143,6 +142,8 @@ public:
   virtual ~OperationConfigGUI();
 
   virtual bool has_preview() { return false; }
+
+  OpParBase* get_par();
 
   Gtk::VBox& get_main_box() { return controls_box; }
   Gtk::Frame* get_frame() { return frame; }
