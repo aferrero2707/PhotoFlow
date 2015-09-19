@@ -31,6 +31,7 @@ Version 0.2.1
   - when in zoom-to-fit mode, the preview image gets properly scaled and re-centered when the right
     controls panel is shown/hidded (see issue #36: https://github.com/aferrero2707/PhotoFlow/issues/36)
 - Updated G'MIC to version 1.6.5.2
+- Updated French translations (thanks to Patrick Depoix)
 
 * Bug fixes:
 
