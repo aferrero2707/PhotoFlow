@@ -146,6 +146,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   fit_image( false ),
   fit_image_needed( false )
 {
+  std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
   image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
   image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
 
@@ -970,6 +971,9 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
 {
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::on_button_press_event(): button "<<button->button<<" pressed."<<std::endl;
+  std::cout<<"PF::ImageEditor::on_button_press_event(): type "<<button->type<<std::endl;
+  if( button->type == GDK_BUTTON_PRESS ) std::cout<<"  single-click"<<std::endl;
+  if( button->type == GDK_2BUTTON_PRESS ) std::cout<<"  double-click"<<std::endl;
 #endif
   gdouble x = button->x;
   gdouble y = button->y;
@@ -978,14 +982,34 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
   std::cout<<"  active_layer: "<<active_layer<<std::endl;
 #endif
-  std::cout<<"ImageEditor::my_button_press_event(): active_layer="<<active_layer<<std::endl;
+
+  // Handle double-click events separately
+  if( button->type != GDK_BUTTON_PRESS ) {
+    if( button->type == GDK_2BUTTON_PRESS ) {
+      PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+      if( !pipeline ) return false;
+      if( pipeline->get_level() == 0 && imageArea->get_shrink_factor() == 1 ) {
+        // we are at 100% zoom, so we switch to fit mode
+        zoom_fit();
+        //std::cout<<"ImageEditor::my_button_release_event(): zoom_fit() called"<<std::endl<<std::endl;
+      } else {
+        int imgw, imgh; imageArea->get_size_request( imgw, imgh );
+        imageArea->set_target_area_center(x/imgw,y/imgh);
+        zoom_actual_size();
+        //std::cout<<"ImageEditor::my_button_release_event(): zoom_actual_size() called"<<std::endl<<std::endl;
+      }
+    }
+    return false;
+  }
+
+
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {
     PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
     PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
-    std::cout<<"ImageEditor::my_button_press_event(): dialog="<<dialog<<std::endl;
-    if( dialog ) std::cout<<"ImageEditor::my_button_press_event(): dialog->get_editing_flag()="<<dialog->get_editing_flag()<<std::endl;
+    //std::cout<<"ImageEditor::my_button_press_event(): dialog="<<dialog<<std::endl;
+    //if( dialog ) std::cout<<"ImageEditor::my_button_press_event(): dialog->get_editing_flag()="<<dialog->get_editing_flag()<<std::endl;
     if( dialog && dialog->get_editing_flag() == true ) {
 #ifndef NDEBUG
       std::cout<<"  sending button press event to dialog"<<std::endl;
@@ -999,8 +1023,8 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
         imageArea->draw_area();
       }
     }
-    return false;
   }
+  return false;
 }
 
 
@@ -1014,8 +1038,8 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
-#endif
   std::cout<<"ImageEditor::my_button_release_event(): active_layer="<<active_layer<<std::endl;
+#endif
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {
@@ -1028,7 +1052,7 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
       int mod_key = PF::MOD_KEY_NONE;
       if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
       if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
-      std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
+      //std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
       if( dialog->pointer_release_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
         // to refresh the preview
