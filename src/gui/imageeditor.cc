@@ -978,14 +978,18 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
   gdouble x = button->x;
   gdouble y = button->y;
 
+  int mod_key = PF::MOD_KEY_NONE;
+  if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+  if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
   std::cout<<"  active_layer: "<<active_layer<<std::endl;
 #endif
 
-  // Handle double-click events separately
+  // Handle CTRL-double-click events separately
   if( button->type != GDK_BUTTON_PRESS ) {
-    if( button->type == GDK_2BUTTON_PRESS ) {
+    if( button->type == GDK_2BUTTON_PRESS && mod_key == PF::MOD_KEY_CTRL) {
       PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
       if( !pipeline ) return false;
       if( pipeline->get_level() == 0 && imageArea->get_shrink_factor() == 1 ) {
@@ -1014,9 +1018,6 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
 #ifndef NDEBUG
       std::cout<<"  sending button press event to dialog"<<std::endl;
 #endif
-      int mod_key = PF::MOD_KEY_NONE;
-      if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-      if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
       if( dialog->pointer_press_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
         // to refresh the preview

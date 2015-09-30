@@ -278,7 +278,7 @@ bool PF::CurvesConfigGUI::pointer_press_event( int button, double x, double y, i
 bool PF::CurvesConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   std::cout<<"CurvesConfigGUI::pointer_release_event(): button="<<button<<"  x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
-  if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
+  if( button != 1 || mod_key != PF::MOD_KEY_NONE ) return false;
 
   // Retrieve the layer associated to the filter 
   PF::Layer* layer = get_layer();
