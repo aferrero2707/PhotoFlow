@@ -54,6 +54,7 @@ namespace PF
     ProcessorBase* proc_luminosity;
     ProcessorBase* proc_lightness;
     ProcessorBase* proc_average;
+    ProcessorBase* proc_average2;
     ProcessorBase* convert2lab;
     ProcessorBase* convert_cs;
 

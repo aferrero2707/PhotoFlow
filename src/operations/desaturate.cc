@@ -43,6 +43,7 @@ PF::DesaturatePar::DesaturatePar():
   proc_luminosity = PF::new_desaturate_luminosity();
   proc_lightness = PF::new_desaturate_lightness();
   proc_average = PF::new_desaturate_average();
+  proc_average2 = PF::new_desaturate_average();
   convert2lab = PF::new_operation( "convert2lab", NULL );
   convert_cs = PF::new_convert_colorspace();
   set_type( "desaturate" );
@@ -121,8 +122,21 @@ VipsImage* PF::DesaturatePar::build(std::vector<VipsImage*>& in, int first,
         csconvpar->set_out_profile_mode( PF::OUT_PROF_CUSTOM );
         csconvpar->set_out_profile_data( profile_data, profile_length );
       }
-      out = convert_cs->get_par()->build( in2, 0, NULL, NULL, level );
+      VipsImage* rgbimg = convert_cs->get_par()->build( in2, 0, NULL, NULL, level );
       PF_UNREF( greyimg, "ClonePar::L2rgb(): greyimg unref" );
+
+      out = rgbimg;
+
+      if( get_render_mode() == PF_RENDER_PREVIEW ) {
+        // We have to circumvent the fact that in 16-bits integer precision,
+        // LCMS does not produce a perfectly neutral RGB image
+        // in the Lab -> RGB conversion when a=b=0
+        in2.clear(); in2.push_back( rgbimg );
+        proc_average2->get_par()->set_image_hints( rgbimg );
+        proc_average2->get_par()->set_format( get_format() );
+        out = proc_average2->get_par()->build( in2, 0, NULL, NULL, level );
+        PF_UNREF( rgbimg, "ClonePar::L2rgb(): rgbimg unref" );
+      }
     }
     break;
   }
