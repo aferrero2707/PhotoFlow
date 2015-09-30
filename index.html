@@ -41,11 +41,7 @@
         <h1>
 <a name="photoflow" class="anchor" href="#photoflow"><span class="octicon octicon-link"></span></a>PhotoFlow</h1>
 <ul>
-<li><h3><a href="#installing-from-ppa">Installation from PPA (Ubuntu linux and derivate distributions)</a></h3></li>
-<li><h3><a href="#installing-arch-linux">Installation on Arch Linux</a></h3></li>
-<li><h3><a href="#downloading-and-compiling">Installation from sources</a></h3></li>
-<li><h3><a href="#downloading-and-compiling-windows">Windows 32-bit installer</a></h3></li>
-<li><h3><a href="#downloading-and-compiling-osx">OSX dmg image</a></h3></li>
+<li><h3><a href="install.html">Installation instructions</a></h3></li>
 <li><h3><a href="presets.html">Useful editing presets</a></h3></li>
 <li><h3><a href="#current-status">Current status</a></h3></li>
 <li><h3><a href="#screenshots">Screenshots</a></h3></li>
@@ -74,77 +70,6 @@
 <li>Support for common photo editing tools: levels, curves, brightness-contrast control, blurring, sharpening, cropping, resizing, colorspace conversions, etc..., all implemented in the form of image layers</li>
 <li>User-friendly interface to develop new tools and image filters as external plugins</li>
 </ul>
-
-<h1>
-<a name="installing-from-ppa" class="anchor" href="#installing-from-ppa"><span class="octicon octicon-link"></span></a>Installing from PPA (Ubuntu linux and derivate distributions)</h1>
-There are up-to-date packages available for Ubuntu 14.04/14.10 and Mint 17/17.1 in Dariusz Duma's PPA. To add the PPA and install photoflow, do the following:
-<pre><code>sudo add-apt-repository ppa:dhor/myway
-sudo apt-get update
-sudo apt-get install photoflow
-</code></pre>
-
-<h1>
-<a name="installing-arch-linux" class="anchor" href="#installing-arch-linux"><span class="octicon octicon-link"></span></a>Installing on Arch Linux</h1>
-Up-to-date precompiled packages as well as PKGBUILD scripts for Arch Linux are available from <a href="https://github.com/aferrero2707/PhotoFlow/releases/tag/v0.2.1">here</a>.
-To install the pre-compiled package, download the <a href="https://github.com/aferrero2707/PhotoFlow/releases/download/v0.2.1/photoflow-git-0.2.1-1-x86_64.pkg.tar.xz">photoflow-git-0.2.1-1-x86_64.pkg.tar.xz</a> archive and then run
-<pre><code>sudo packman -U photoflow-git-0.2.1-1-x86_64.pkg.tar.xz
-</code></pre>
-To compile from sources, download the <a href="https://github.com/aferrero2707/PhotoFlow/releases/download/v0.2.1/PKGBUILD">PKGBUILD</a> file and run this command in the download directory:
-<pre><code>makepkg -i
-</code></pre>
-
-<h1>
-<a name="downloading-and-compiling" class="anchor" href="#downloading-and-compiling"><span class="octicon octicon-link"></span></a>Installation from sources under Linux</h1>
-
-<p>The pixel rendering engine of PhotoFlow is based on VIPS (<a href="http://www.vips.ecs.soton.ac.uk">http://www.vips.ecs.soton.ac.uk</a>). You have to install a recent version of VIPS in order to compile PhotoFlow.</p>
-
-<p>Once VIPS is set up and running, follow these steps to download and compile PhotoFlow:</p>
-
-<ol>
-<li>
-<p>get master branch from GitHub:</p>
-
-<pre><code>$ git clone https://github.com/aferrero2707/PhotoFlow.git
-</code></pre>
-<p>or the development branch:</p>
-
-<pre><code>$ git clone -b develop https://github.com/aferrero2707/PhotoFlow.git
-</code></pre>
-</li>
-<li>
-<p>You need the following dependencies to build Photoflow: gettext, glib-2.x, libxml-2.0, pkg-config, swig, gtk-doc-tools, automake, gobject-introspection, gnu make, cmake, libtiff, libjpeg, libfftw3, exiv2, lensfun and gtkmm-2.x or gtkmm-3.x.</p>
-
-<p>PhotoFlow provides an helper script to simplify the building process;
-in order to use it you have to go into the "build" subdirectory and run the "build_all.sh" script:</p>
-
-<pre><code>$ cd PhotoFlow/build
-$ bash ./build_all.sh
-</code></pre>
-
-<p>This will not only compile photoflow, but also fetch and compile the right version of VIPS automatically.</p>
-
-</li>
-<li>
-<p>If all goes well, you can now open an image file with PhotoFlow:</p>
-
-<pre><code>$ ./Release/bin/photoflow image_file_name
-</code></pre>
-
-<a name="downloading-and-compiling-windows" class="anchor" href="#downloading-and-compiling-windows">
-</li>
-</ol>
-
-<h1>
-<span class="octicon octicon-link"></span></a>Windows installer</h1>
-
-<p>An installer for windows can be found <a href="https://github.com/aferrero2707/PhotoFlow/releases/download/v0.2.1/photoflow-0.2.1-setup.zip">here</a>.</p>
-
-<h1>
-<a name="downloading-and-compiling-osx" class="anchor" href="#downloading-and-compiling-osx">
-<span class="octicon octicon-link"></span></a>OSX dmg image</h1>
-
-<p>A binary distribution for OSX can be found <a href="https://github.com/aferrero2707/PhotoFlow/releases/download/v0.2.1/photoflow-0.2.1.app.dmg">here</a>.</p>
-
 
 <h1>
 <a name="current-status" class="anchor" href="#current-status"><span class="octicon octicon-link"></span></a>Current status</h1>
