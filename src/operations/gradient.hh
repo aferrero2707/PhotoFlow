@@ -72,9 +72,13 @@ namespace PF
     PropertyBase Lab_active_curve;
     PropertyBase CMYK_active_curve;
 
+    Property<SplineCurve> hmod, vmod;
+
     ProcessorBase* curve;
 
   public:
+    float* modvec;
+
     GradientPar();
 
     gradient_type_t get_gradient_type() { 
@@ -84,6 +88,9 @@ namespace PF
     bool get_invert() { return invert.get(); }
     float get_gradient_center_x() { return gradient_center_x.get(); }
     float get_gradient_center_y() { return gradient_center_y.get(); }
+
+    SplineCurve& get_hmod() { return hmod.get(); }
+    SplineCurve& get_vmod() { return vmod.get(); }
 
     bool needs_input() { return false; }
     bool has_intensity() { return false; }
@@ -118,7 +125,7 @@ namespace PF
     int line_size = r->width * bands; //layer->in_all[0]->Bands; 
 
     T* pout;
-    int x, y;
+    int x, y, c, pos;
 
     int width = oreg->im->Xsize - oreg->im->Xoffset;
     int height = oreg->im->Ysize - oreg->im->Yoffset;
@@ -131,44 +138,57 @@ namespace PF
         for( y = 0; y < r->height; y++ ) {      
           pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
           float fval = static_cast<float>(height - r->top - y)/height;
-          if( par->get_invert() == true ) fval = 1.0f - fval;
-          T val = static_cast<T>(fval*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
-          //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
-          for( x = 0; x < line_size; ++x) {
-            pout[x] = val;
+          float fval2;
+          for( x = 0, pos = 0; x < r->width; x++, pos+=bands) {
+            fval2 = MIN( MAX(fval+par->modvec[r->left+x]-0.5f,0), 1 );
+            if( par->get_invert() == true ) fval2 = 1.0f - fval2;
+            T val = static_cast<T>( fval2*FormatInfo<T>::RANGE + FormatInfo<T>::MIN );
+            for( c = 0; c < bands; c++ )
+              pout[pos+c] = val;
           }
         }
         break;
       }
     case GRADIENT_HORIZONTAL: 
       {
-        T* valvec = new T[line_size];
+        float* valvec = new float[line_size];
         T val;
         if( valvec == NULL )
           break;
         int px, b;
+        float fval, fval2;
         if( par->get_invert() == true ) {
           for( x = 0, px = 0; x < r->width; ++x) {
-            val = (T)((float)FormatInfo<T>::RANGE*((float)width - r->left - x - 1)/width + FormatInfo<T>::MIN);
-            for( b = 0; b < bands; ++b, ++px) {
-              valvec[px] = val;
-            }
+            fval = ((float)width - r->left - x - 1)/width;
+            valvec[x] = fval;
+            //val = (T)((float)FormatInfo<T>::RANGE*((float)width - r->left - x - 1)/width + FormatInfo<T>::MIN);
+            //for( b = 0; b < bands; ++b, ++px) {
+              //valvec[px] = val;
+              //valvec[px] = fval;
+            //}
           }
         } else {
           for( x = 0, px = 0; x < r->width; ++x) {
-            val = (T)((float)FormatInfo<T>::RANGE*((float)r->left + x)/width + FormatInfo<T>::MIN);
-            for( b = 0; b < bands; ++b, ++px) {
-              valvec[px] = val;
-            }
+            fval = ((float)r->left + x)/width;
+            valvec[x] = fval;
+            //val = (T)((float)FormatInfo<T>::RANGE*((float)r->left + x)/width + FormatInfo<T>::MIN);
+            //for( b = 0; b < bands; ++b, ++px) {
+              //valvec[px] = val;
+            //}
           }
         }
         for( y = 0; y < r->height; y++ ) {      
           pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
           //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
-          for( x = 0; x < line_size; ++x) {
-            pout[x] = valvec[x];
+          for( x = 0, pos = 0; x < r->width; ++x, pos+=bands ) {
+            fval = MIN( MAX(valvec[x]+par->modvec[r->top+y]-0.5f,0), 1 );
+            val = (T)(fval*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+            for( c = 0; c < bands; c++ )
+              pout[pos+c] = val;
           }
         }
+
+        delete valvec;
         break;
       }
     case GRADIENT_RADIAL:

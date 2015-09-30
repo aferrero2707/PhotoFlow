@@ -51,7 +51,10 @@ Y_curve( "Y_curve", this ),       // 10
 K_curve( "K_curve", this ),       // 11
 RGB_active_curve( "RGB_active_curve", this, 1, "RGB", "RGB" ),
 Lab_active_curve( "Lab_active_curve", this, 5, "L", "L" ),
-CMYK_active_curve( "CMYK_active_curve", this, 8, "C", "C" )
+CMYK_active_curve( "CMYK_active_curve", this, 8, "C", "C" ),
+hmod( "hmod", this ),
+vmod( "vmod", this ),
+modvec( NULL )
 {
   //gradient_type.add_enum_value(GRADIENT_VERTICAL,"vertical","Vertical");
   gradient_type.add_enum_value(GRADIENT_HORIZONTAL,"horizontal",_("Horizontal"));
@@ -71,6 +74,12 @@ CMYK_active_curve( "CMYK_active_curve", this, 8, "C", "C" )
   CMYK_active_curve.add_enum_value( 10, "Y", "Y" );
   CMYK_active_curve.add_enum_value( 11, "K", "K" );
 
+  float x1 = 0, y1 = 0.5, x2 = 1, y2 = 0.5;
+  hmod.get().set_point( 0, x1, y1 );
+  hmod.get().set_point( 1, x2, y2 );
+  vmod.get().set_point( 0, x1, y1 );
+  vmod.get().set_point( 1, x2, y2 );
+
   curve = new_curves();
 
   set_type( "gradient" );
@@ -85,6 +94,33 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
 {
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
   VipsImage* out2 = out;
+
+  int modlen = 0, modh = 0;
+  switch( get_gradient_type() ) {
+  case GRADIENT_VERTICAL:
+    modlen = out->Xsize;
+    modh = out->Ysize;
+    break;
+  case GRADIENT_HORIZONTAL:
+    modlen = out->Ysize;
+    modh = out->Xsize;
+    break;
+  default:
+    break;
+  }
+  if( modlen > 0 ) {
+    modvec = (float*)realloc( modvec, sizeof(float)*modlen);
+    //modulation.get().lock();
+    for(int i = 0; i < modlen; i++) {
+      float x = ((float)i)/(modlen-1);
+      if( get_gradient_type() == GRADIENT_VERTICAL )
+        modvec[i] = vmod.get().get_value( x );
+      if( get_gradient_type() == GRADIENT_HORIZONTAL )
+        modvec[i] = 1.0f-hmod.get().get_value( x );
+    }
+    //modulation.get().unlock();
+  }
+
 
   CurvesPar* curvepar = dynamic_cast<CurvesPar*>( curve->get_par() );
   if( curvepar ) {
