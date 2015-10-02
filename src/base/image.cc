@@ -256,6 +256,49 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
       if( pipeline != target_pipeline ) continue;
     }
 
+    if( pipeline->get_auto_zoom() ) {
+      // This pipeline requires to automatically set the zoom level so that
+      // the width and height do not exceed a given size, so we have to
+      // look into the previously processed pipelines to get the most
+      // accurate estimate of the full-res image
+      int level_min = 1000;
+      PF::Pipeline* hires_pipeline = NULL;
+      for( unsigned int j = 0; j < i; j++ ) {
+        PF::Pipeline* pipeline2 = get_pipeline( j );
+        if( !pipeline2 ) continue;
+        //std::cout<<"pipeline("<<j<<")->get_level()="<<pipeline2->get_level()<<std::endl;
+        if( pipeline2->get_level() < level_min ) {
+          hires_pipeline = pipeline2;
+          level_min = pipeline2->get_level();
+        }
+      }
+      int level = -1;
+      if( hires_pipeline ) {
+        level = hires_pipeline->get_level();
+        //std::cout<<"hires_pipeline->get_level()="<<level<<std::endl;
+        VipsImage* hires_image = NULL;
+        if( pipeline->get_output_layer_id() >= 0 ) {
+          PF::PipelineNode* node = hires_pipeline->get_node( pipeline->get_output_layer_id() );
+          if( node ) hires_image = node->blended;
+        } else {
+          hires_image = hires_pipeline->get_output();
+        }
+        if( hires_image ) {
+          int w = hires_image->Xsize;
+          int h = hires_image->Ysize;
+          //std::cout<<"hires_image dimensions: "<<w<<","<<h<<std::endl;
+          while( (w > pipeline->get_auto_zoom_width()) ||
+              (h > pipeline->get_auto_zoom_height()) ) {
+            w /= 2; h /= 2; level += 1;
+          }
+          //std::cout<<"auto_zoom dimensions: "<<w<<","<<h<<"  level: "<<level<<std::endl;
+        }
+      }
+      if( level >= 0 ) {
+        pipeline->set_level( level );
+      }
+    }
+
 #ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<std::endl;
 #endif
