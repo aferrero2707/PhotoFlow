@@ -46,7 +46,7 @@ static void* histogram_start( struct _VipsImage *out, void *a, void *b )
   //std::cout<<"histogram="<<histogram<<std::endl;
   //std::cout<<"histogram->hist="<<histogram->hist<<std::endl;
   unsigned long int* hist = new unsigned long int[65536*3];
-  for( int i = 0; i < 65535*3; i++ ) {
+  for( int i = 0; i < 65536*3; i++ ) {
     hist[i] = 0;
   }
   return hist;
@@ -57,7 +57,7 @@ static int histogram_stop( void* seq, void *a, void *b )
 {
   unsigned long int* hist = (unsigned long int*)seq;
   PF::Histogram* histogram = (PF::Histogram*)a;
-  for( int i = 0; i < 65535*3; i++ ) {
+  for( int i = 0; i < 65536*3; i++ ) {
     //if( hist[i]>0 ) std::cout<<"histogram->hist["<<i<<"] += "<<hist[i]<<std::endl;
     histogram->hist[i] += hist[i];
   }
@@ -178,9 +178,10 @@ bool PF::Histogram::on_expose_event (GdkEventExpose * event)
     for( int j = 0; j < width; j++ ) {
       hh[i][j] = 0;
     }
-    for( int j = 0; j < 65535; j++ ) {
-      int bin = j*width/65536;
-      //std::cout<<"hh["<<i<<"]["<<bin<<"] += "<<h[i][j]<<std::endl;
+    for( int j = 0; j < 65536; j++ ) {
+      float nj = j; nj /= 65536; nj *= width;
+      int bin = (int)nj;
+      //if(j==65535) std::cout<<"j="<<j<<"  bin="<<bin<<"  width="<<width<<std::endl;
       hh[i][bin] += h[i][j];
     }
     for( int j = 0; j < width; j++ ) {
@@ -191,7 +192,7 @@ bool PF::Histogram::on_expose_event (GdkEventExpose * event)
   for( int i = 0; i < 3; i++ ) {
     if( i == 0 ) cr->set_source_rgb( 0.9, 0., 0. );
     if( i == 1 ) cr->set_source_rgb( 0., 0.9, 0. );
-    if( i == 2 ) cr->set_source_rgb( 0.4, 0.4, 1. );
+    if( i == 2 ) cr->set_source_rgb( 0.2, 0.6, 1. );
 
     float ny = 0;
     if( max > 0 ) {
