@@ -158,7 +158,11 @@ int main (int argc, char *argv[])
   free( fullpath );
 
   Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
+#if defined(WIN32)
+  Glib::ustring themesPath = dataPath + "\\themes";
+#else
   Glib::ustring themesPath = dataPath + "/themes";
+#endif
 
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
   PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
@@ -187,14 +191,19 @@ int main (int argc, char *argv[])
   struct stat buffer;   
   //#ifndef WIN32
 #ifdef GTKMM_2
-  int stat_result = stat((themesPath + "/photoflow-dark.gtkrc").c_str(), &buffer);
+#if defined(WIN32)
+  Glib::ustring themerc = themesPath + "\\photoflow-dark.gtkrc";
+#else
+  Glib::ustring themerc = themesPath + "/photoflow-dark.gtkrc";
+#endif
+  int stat_result = stat(themerc.c_str(), &buffer);
 #ifdef WIN32
-  stat_result = 1;
+  //stat_result = 1;
 #endif
   std::cout<<"stat_result="<<stat_result<<std::endl;
   if( stat_result == 0 ) {
     std::vector<Glib::ustring> files;
-    files.push_back (themesPath + "/photoflow-dark.gtkrc");
+    files.push_back (themerc);
     Gtk::RC::set_default_files (files);
     Gtk::RC::reparse_all (Gtk::Settings::get_default());
     GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
