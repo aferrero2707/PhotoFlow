@@ -274,11 +274,13 @@ PF::RawImage::RawImage( const std::string f ):
   // We read the EXIF data and store it in the image as a custom blob
   GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
   gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name_real.c_str(), NULL);
-  if( gexiv2_success )
-    std::cout<<"RawImage::RawImage(): setting gexiv2-data blob"<<std::endl;
+  if( gexiv2_success ) {
+    //std::cout<<"RawImage::RawImage(): setting gexiv2-data blob"<<std::endl;
+    gexiv2_metadata_set_orientation( gexiv2_buf, GEXIV2_ORIENTATION_NORMAL );
     vips_image_set_blob( image, "gexiv2-data",
         (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
         sizeof(GExiv2Metadata) );
+  }
 
   PF::exif_read( &exif_data, file_name_real.c_str() );
 

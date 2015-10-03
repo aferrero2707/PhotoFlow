@@ -28,8 +28,6 @@
  */
 #include <string.h>
 
-#include <gexiv2/gexiv2-metadata.h>
-
 #include "../base/pf_mkstemp.hh"
 #include "raster_image.hh"
 
@@ -131,11 +129,97 @@ image( NULL )
   // We read the EXIF data and store it in the image as a custom blob
   GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
   gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name_real.c_str(), NULL);
-  if( gexiv2_success )
-    std::cout<<"RasterImage::RasterImage(): setting gexiv2-data blob"<<std::endl;
+  if( gexiv2_success ) {
+    orientation = gexiv2_metadata_get_orientation( gexiv2_buf );
+    gexiv2_metadata_set_orientation( gexiv2_buf, GEXIV2_ORIENTATION_NORMAL );
+    //std::cout<<"RasterImage::RasterImage(): setting gexiv2-data blob"<<std::endl;
+    VipsImage* temp = image;
+    switch( orientation ) {
+    case GEXIV2_ORIENTATION_HFLIP:
+      if( vips_flip( image, &temp, VIPS_DIRECTION_HORIZONTAL, NULL ) ) {
+        PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip() failed." );
+        image = NULL;
+        return;
+      }
+      PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip()." );
+      image = temp;
+      break;
+    case GEXIV2_ORIENTATION_ROT_180:
+      if( vips_rot( image, &temp, VIPS_ANGLE_D180, NULL ) ) {
+        PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180) failed." );
+        image = NULL;
+        return;
+      }
+      PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180)." );
+      image = temp;
+      break;
+    case GEXIV2_ORIENTATION_VFLIP:
+      if( vips_flip( image, &temp, VIPS_DIRECTION_VERTICAL, NULL ) ) {
+        PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip() failed." );
+        image = NULL;
+        return;
+      }
+      PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip()." );
+      image = temp;
+      break;
+    case GEXIV2_ORIENTATION_ROT_90_HFLIP:
+      if( vips_rot( image, &temp, VIPS_ANGLE_D90, NULL ) ) {
+        PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180) failed." );
+        image = NULL;
+        return;
+      }
+      PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180)." );
+      image = temp;
+      if( vips_flip( image, &temp, VIPS_DIRECTION_HORIZONTAL, NULL ) ) {
+        PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip() failed." );
+        image = NULL;
+        return;
+      }
+      PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip()." );
+      image = temp;
+      break;
+    case GEXIV2_ORIENTATION_ROT_90:
+      if( vips_rot( image, &temp, VIPS_ANGLE_D90, NULL ) ) {
+        PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180) failed." );
+        image = NULL;
+        return;
+      }
+      PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180)." );
+      image = temp;
+      break;
+    case GEXIV2_ORIENTATION_ROT_90_VFLIP:
+      if( vips_rot( image, &temp, VIPS_ANGLE_D90, NULL ) ) {
+        PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180) failed." );
+        image = NULL;
+        return;
+      }
+      PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180)." );
+      image = temp;
+      if( vips_flip( image, &temp, VIPS_DIRECTION_VERTICAL, NULL ) ) {
+        PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip() failed." );
+        image = NULL;
+        return;
+      }
+      PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip()." );
+      image = temp;
+      break;
+    case GEXIV2_ORIENTATION_ROT_270:
+      if( vips_rot( image, &temp, VIPS_ANGLE_D270, NULL ) ) {
+        PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(270) failed." );
+        image = NULL;
+        return;
+      }
+      PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(270)." );
+      image = temp;
+      break;
+    default:
+      break;
+    }
+    image = temp;
     vips_image_set_blob( image, "gexiv2-data",
         (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
         sizeof(GExiv2Metadata) );
+  }
 
   PF::exif_read( &exif_data, file_name_real.c_str() );
   void* buf = malloc( sizeof(PF::exif_data_t) );
