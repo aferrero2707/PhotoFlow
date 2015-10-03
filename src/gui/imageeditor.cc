@@ -211,6 +211,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   imageBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
 
   hist_expander.set_label( _("histogram") );
+  hist_expander.set_expanded(true);
   hist_expander.add(*histogram);
 
   layersWidget_box.pack_start( hist_expander, Gtk::PACK_SHRINK );
@@ -1066,6 +1067,7 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 #endif
       int mod_key = PF::MOD_KEY_NONE;
       if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+      if( button->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
       if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
       //std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
       if( dialog->pointer_release_event( button->button, x, y, mod_key ) ) {
