@@ -125,6 +125,8 @@ PF::PhotoFlow::PhotoFlow():
   } else {
     dataPath = exePath + "/../share/photoflow";
   }
+#elif defined(WIN32)
+  dataPath = exePath + "\\..\\share\\photoflow";
 #else
   dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
 #endif
