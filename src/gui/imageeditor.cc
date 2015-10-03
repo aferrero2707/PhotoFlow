@@ -49,7 +49,8 @@
 #include "imageeditor.hh"
 
 
-#define PIPELINE_ID 1
+#define PREVIEW_PIPELINE_ID 1
+#define HISTOGRAM_PIPELINE_ID 2
 
 
 void PF::PreviewScrolledWindow::on_map()
@@ -128,7 +129,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   image_opened( false ),
   displayed_layer( NULL ),
   active_layer( NULL ),
-  //imageArea( image->get_pipeline(PIPELINE_ID) ),
+  //imageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) ),
   layersWidget( image, this ),
   aux_controls( NULL ),
   img_zoom_in(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"),
@@ -146,12 +147,19 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   fit_image( false ),
   fit_image_needed( false )
 {
+  std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
+  // First pipeline is for full-res rendering, second one is for on-screen preview, third one is
+  // for calculating the histogram
   image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
   image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+  PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+  if( p ) {
+    p->set_auto_zoom( true, 256, 256 );
+  }
 
   image_size_updater = new PF::ImageSizeUpdater( image->get_pipeline(0) );
 
-  imageArea = new PF::ImageArea( image->get_pipeline(PIPELINE_ID) );
+  imageArea = new PF::ImageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) );
 
   imageArea->set_adjustments( imageArea_scrolledWindow.get_hadjustment(),
 			     imageArea_scrolledWindow.get_vadjustment() );
@@ -168,6 +176,9 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   imageArea_scrolledWindow.add( imageArea_eventBox2 );
   imageArea_scrolledWindow.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC );
   imageArea_scrolledWindow_box.pack_start( imageArea_scrolledWindow );
+
+  histogram = new PF::Histogram( image->get_pipeline(HISTOGRAM_PIPELINE_ID) );
+
 
   radioBox.pack_start( buttonShowMerged );
   radioBox.pack_start( buttonShowActive );
@@ -199,6 +210,11 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   imageBox.pack_start( imageArea_scrolledWindow_box );
   imageBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
 
+  hist_expander.set_label( _("histogram") );
+  hist_expander.set_expanded(true);
+  hist_expander.add(*histogram);
+
+  layersWidget_box.pack_start( hist_expander, Gtk::PACK_SHRINK );
   aux_controlsBox.set_size_request(-1,80);
   layersWidget_box.pack_start( aux_controlsBox, Gtk::PACK_SHRINK );
   layersWidget_box.pack_start( layersWidget, Gtk::PACK_EXPAND_WIDGET );
@@ -471,7 +487,7 @@ void PF::ImageEditor::open_image()
 
   image->open( filename, bckname );
   //std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
-  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   int level = 0;
   pipeline->set_level( level );
@@ -587,7 +603,7 @@ void PF::ImageEditor::on_realize()
 
 void PF::ImageEditor::toggle_highlights_warning()
 {
-  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   imageArea->set_highlights_warning( button_highlights_warning.get_active() );
   image->update();
@@ -596,7 +612,7 @@ void PF::ImageEditor::toggle_highlights_warning()
 
 void PF::ImageEditor::toggle_shadows_warning()
 {
-  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   imageArea->set_shadows_warning( button_shadows_warning.get_active() );
   image->update();
@@ -605,7 +621,7 @@ void PF::ImageEditor::toggle_shadows_warning()
 
 void PF::ImageEditor::zoom_out()
 {
-  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   int level = pipeline->get_level();
   pipeline->set_level( level + 1 );
@@ -624,7 +640,7 @@ void PF::ImageEditor::zoom_out()
 
 void PF::ImageEditor::zoom_in()
 {
-  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   int level = pipeline->get_level();
   if( level > 0 ) {
@@ -647,7 +663,7 @@ void PF::ImageEditor::zoom_in()
 void PF::ImageEditor::zoom_fit()
 {
   if( !image ) return;
-  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   if( image_size_updater->get_image_width() < 1 ||
       image_size_updater->get_image_height() < 1 ) return;
@@ -694,7 +710,7 @@ void PF::ImageEditor::zoom_fit()
 
 void PF::ImageEditor::zoom_actual_size()
 {
-  PF::Pipeline* pipeline = image->get_pipeline( PIPELINE_ID );
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
 	pipeline->set_level( 0 );
 	imageArea->set_shrink_factor( 1 );
@@ -970,37 +986,61 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
 {
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::on_button_press_event(): button "<<button->button<<" pressed."<<std::endl;
+  std::cout<<"PF::ImageEditor::on_button_press_event(): type "<<button->type<<std::endl;
+  if( button->type == GDK_BUTTON_PRESS ) std::cout<<"  single-click"<<std::endl;
+  if( button->type == GDK_2BUTTON_PRESS ) std::cout<<"  double-click"<<std::endl;
 #endif
   gdouble x = button->x;
   gdouble y = button->y;
+
+  int mod_key = PF::MOD_KEY_NONE;
+  if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+  if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
 
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
   std::cout<<"  active_layer: "<<active_layer<<std::endl;
 #endif
-  std::cout<<"ImageEditor::my_button_press_event(): active_layer="<<active_layer<<std::endl;
+
+  // Handle CTRL-double-click events separately
+  if( button->type != GDK_BUTTON_PRESS ) {
+    if( button->type == GDK_2BUTTON_PRESS && mod_key == PF::MOD_KEY_CTRL) {
+      PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
+      if( !pipeline ) return false;
+      if( pipeline->get_level() == 0 && imageArea->get_shrink_factor() == 1 ) {
+        // we are at 100% zoom, so we switch to fit mode
+        zoom_fit();
+        //std::cout<<"ImageEditor::my_button_release_event(): zoom_fit() called"<<std::endl<<std::endl;
+      } else {
+        int imgw, imgh; imageArea->get_size_request( imgw, imgh );
+        imageArea->set_target_area_center(x/imgw,y/imgh);
+        zoom_actual_size();
+        //std::cout<<"ImageEditor::my_button_release_event(): zoom_actual_size() called"<<std::endl<<std::endl;
+      }
+    }
+    return false;
+  }
+
+
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {
     PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
     PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
-    std::cout<<"ImageEditor::my_button_press_event(): dialog="<<dialog<<std::endl;
-    if( dialog ) std::cout<<"ImageEditor::my_button_press_event(): dialog->get_editing_flag()="<<dialog->get_editing_flag()<<std::endl;
+    //std::cout<<"ImageEditor::my_button_press_event(): dialog="<<dialog<<std::endl;
+    //if( dialog ) std::cout<<"ImageEditor::my_button_press_event(): dialog->get_editing_flag()="<<dialog->get_editing_flag()<<std::endl;
     if( dialog && dialog->get_editing_flag() == true ) {
 #ifndef NDEBUG
       std::cout<<"  sending button press event to dialog"<<std::endl;
 #endif
-      int mod_key = PF::MOD_KEY_NONE;
-      if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-      if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
       if( dialog->pointer_press_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
         // to refresh the preview
         imageArea->draw_area();
       }
     }
-    return false;
   }
+  return false;
 }
 
 
@@ -1014,8 +1054,8 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
-#endif
   std::cout<<"ImageEditor::my_button_release_event(): active_layer="<<active_layer<<std::endl;
+#endif
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {
@@ -1027,8 +1067,9 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 #endif
       int mod_key = PF::MOD_KEY_NONE;
       if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+      if( button->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
       if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
-      std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
+      //std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
       if( dialog->pointer_release_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
         // to refresh the preview

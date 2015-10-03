@@ -30,6 +30,16 @@
 #include "gradient_config.hh"
 
 
+static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
+{
+  str<<r.width<<","<<r.height<<"+"<<r.left<<"+"<<r.top;
+  return str;
+}
+
+
+
+
+
 PF::GradientConfigGUI::GradientConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Gradient tool" ),
   typeSelector( this, "gradient_type", "Gradient type: ", 1 ),
@@ -43,7 +53,8 @@ PF::GradientConfigGUI::GradientConfigGUI( PF::Layer* layer ):
   BCurveEditor( this, "B_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
   LCurveEditor( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
   aCurveEditor( this, "a_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-  bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 )
+  bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+  active_point_id( -1 )
 {
   hbox.pack_start( typeSelector );
   hbox.pack_start( invert_box, Gtk::PACK_SHRINK );
@@ -243,3 +254,228 @@ void PF::GradientConfigGUI::do_update()
 }
 
 
+
+bool PF::GradientConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
+{
+  std::cout<<"GradientConfigGUI::pointer_press_event(): button="<<button<<std::endl;
+
+  if( button != 1 && button != 3 ) return false;
+
+  // Retrieve the layer associated to the filter
+  PF::Layer* layer = get_layer();
+  if( !layer ) return false;
+
+  // Retrieve the image the layer belongs to
+  PF::Image* image = layer->get_image();
+  if( !image ) return false;
+
+  // Retrieve the pipeline #0 (full resolution preview)
+  PF::Pipeline* pipeline = image->get_pipeline( 0 );
+  if( !pipeline ) return false;
+
+  // Find the pipeline node associated to the current layer
+  PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
+  if( !node ) return false;
+  if( !node->image ) return false;
+
+  PF::GradientPar* par = dynamic_cast<PF::GradientPar*>(get_par());
+  if( !par ) return false;
+  if( par->get_gradient_type() != GRADIENT_VERTICAL &&
+      par->get_gradient_type() != GRADIENT_HORIZONTAL ) return false;
+
+  const std::vector< std::pair<float,float> >* ppoints = NULL;
+  if( par->get_gradient_type() == GRADIENT_VERTICAL ) ppoints = &(par->get_vmod().get_points());
+  if( par->get_gradient_type() == GRADIENT_HORIZONTAL ) ppoints = &(par->get_hmod().get_points());
+  const std::vector< std::pair<float,float> >& points = *ppoints;
+
+  double x = sx, y = sy, w = 1, h = 1;
+  screen2layer( x, y, w, h );
+
+  // Find handle point
+  active_point_id = -1;
+  for(unsigned int i = 0; i < points.size(); i++ ) {
+    double px = 0, py = 0;
+    if( par->get_gradient_type() == GRADIENT_VERTICAL ) {
+      px = points[i].first*node->image->Xsize;
+      py = points[i].second*node->image->Ysize;
+    }
+    if( par->get_gradient_type() == GRADIENT_HORIZONTAL ) {
+      px = points[i].second*node->image->Xsize;
+      py = points[i].first*node->image->Ysize;
+    }
+    double dx = x - px;
+    double dy = y - py;
+    if( (fabs(dx) > 10) || (fabs(dy) > 10) ) continue;
+    active_point_id = i;
+    break;
+  }
+
+  if( active_point_id < 0 && button == 1 ) {
+    if( par->get_gradient_type() == GRADIENT_VERTICAL )
+      active_point_id = par->get_vmod().add_point( x/node->image->Xsize, y/node->image->Ysize );
+    if( par->get_gradient_type() == GRADIENT_HORIZONTAL )
+      active_point_id = par->get_hmod().add_point( y/node->image->Ysize, x/node->image->Xsize );
+  }
+  if( active_point_id >= 0 && button == 3 ) {
+    par->get_vmod().remove_point( active_point_id );
+    active_point_id = -1;
+  }
+
+  return true;
+}
+
+
+bool PF::GradientConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
+{
+  std::cout<<"GradientConfigGUI::pointer_release_event(): button="<<button<<std::endl;
+
+  if( button != 1 && button != 3 ) return false;
+
+  PF::GradientPar* par = dynamic_cast<PF::GradientPar*>(get_par());
+  if( !par ) return false;
+  if( par->get_gradient_type() != GRADIENT_VERTICAL &&
+      par->get_gradient_type() != GRADIENT_HORIZONTAL ) return false;
+
+  // Retrieve the layer associated to the filter
+  PF::Layer* layer = get_layer();
+  if( !layer ) return false;
+
+  // Retrieve the image the layer belongs to
+  PF::Image* image = layer->get_image();
+  if( !image ) return false;
+
+  image->update();
+
+  return false;
+}
+
+
+bool PF::GradientConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
+{
+  if( button != 1 ) return false;
+  if( active_point_id < 0 ) return false;
+
+  // Retrieve the layer associated to the filter
+  PF::Layer* layer = get_layer();
+  if( !layer ) return false;
+
+  // Retrieve the image the layer belongs to
+  PF::Image* image = layer->get_image();
+  if( !image ) return false;
+
+  // Retrieve the pipeline #0 (full resolution preview)
+  PF::Pipeline* pipeline = image->get_pipeline( 0 );
+  if( !pipeline ) return false;
+
+  // Find the pipeline node associated to the current layer
+  PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
+  if( !node ) return false;
+  if( !node->image ) return false;
+
+  PF::GradientPar* par = dynamic_cast<PF::GradientPar*>(get_par());
+  if( !par ) return false;
+  if( par->get_gradient_type() != GRADIENT_VERTICAL &&
+      par->get_gradient_type() != GRADIENT_HORIZONTAL ) return false;
+
+  const std::vector< std::pair<float,float> >* ppoints = NULL;
+  if( par->get_gradient_type() == GRADIENT_VERTICAL ) ppoints = &(par->get_vmod().get_points());
+  if( par->get_gradient_type() == GRADIENT_HORIZONTAL ) ppoints = &(par->get_hmod().get_points());
+  const std::vector< std::pair<float,float> >& points = *ppoints;
+
+  if( points.size() <= active_point_id ) return false;
+
+  double x = sx, y = sy, w = 1, h = 1;
+  screen2layer( x, y, w, h );
+  float fx = x/node->image->Xsize, fy = y/node->image->Ysize;
+
+  if( par->get_gradient_type() == GRADIENT_VERTICAL )
+    par->get_vmod().set_point( active_point_id, fx, fy );
+  if( par->get_gradient_type() == GRADIENT_HORIZONTAL )
+    par->get_hmod().set_point( active_point_id, fy, fx );
+
+  return true;
+}
+
+
+
+
+bool PF::GradientConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBuffer& buf_out,
+                                                            float scale, int xoffset, int yoffset )
+{
+  PF::GradientPar* par = dynamic_cast<PF::GradientPar*>(get_par());
+  if( !par ) return false;
+  if( par->get_gradient_type() != GRADIENT_VERTICAL &&
+      par->get_gradient_type() != GRADIENT_HORIZONTAL ) return false;
+
+  // Retrieve the layer associated to the filter
+  PF::Layer* layer = get_layer();
+  if( !layer ) return false;
+
+  // Retrieve the image the layer belongs to
+  PF::Image* image = layer->get_image();
+  if( !image ) return false;
+
+  // Retrieve the pipeline #0 (full resolution preview)
+  PF::Pipeline* pipeline = image->get_pipeline( 0 );
+  if( !pipeline ) return false;
+
+  // Find the pipeline node associated to the current layer
+  PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
+  if( !node ) return false;
+  if( !node->image ) return false;
+
+  // Resize the output buffer to match the input one
+  buf_out.resize( buf_in.get_rect() );
+
+  // Copy pixel data from input to outout
+  buf_out.copy( buf_in );
+
+  const std::vector< std::pair<float,float> >* ppoints = NULL;
+  if( par->get_gradient_type() == GRADIENT_VERTICAL ) ppoints = &(par->get_vmod().get_points());
+  if( par->get_gradient_type() == GRADIENT_HORIZONTAL ) ppoints = &(par->get_hmod().get_points());
+  const std::vector< std::pair<float,float> >& points = *ppoints;
+
+  int point_size = 2;
+
+  int ps = points.size();
+  for(unsigned int i = 0; i < ps; i++ ) {
+    double px = 0, py = 0, pw = 1, ph = 1;
+    if( par->get_gradient_type() == GRADIENT_VERTICAL ) {
+      px = points[i].first*node->image->Xsize;
+      py = points[i].second*node->image->Ysize;
+    }
+    if( par->get_gradient_type() == GRADIENT_HORIZONTAL ) {
+      px = points[i].second*node->image->Xsize;
+      py = points[i].first*node->image->Ysize;
+    }
+    layer2screen( px, py, pw, ph );
+    VipsRect point = { (int)px-point_size-1,
+                       (int)py-point_size-1,
+                       point_size*2+3, point_size*2+3};
+    VipsRect point2 = { (int)px-point_size,
+                        (int)py-point_size,
+                        point_size*2+1, point_size*2+1};
+    buf_out.fill( point, 0, 0, 0 );
+    if( i == active_point_id )
+      buf_out.fill( point2, 255, 0, 0 );
+    else
+      buf_out.fill( point2, 255, 255, 255 );
+
+    if( i == 0 ) continue;
+
+    double px0 = 0, py0 = 0, pw0 = 1, ph0 = 1;
+    if( par->get_gradient_type() == GRADIENT_VERTICAL ) {
+      px0 = points[i-1].first*node->image->Xsize;
+      py0 = points[i-1].second*node->image->Ysize;
+    }
+    if( par->get_gradient_type() == GRADIENT_HORIZONTAL ) {
+      px0 = points[i-1].second*node->image->Xsize;
+      py0 = points[i-1].first*node->image->Ysize;
+    }
+    layer2screen( px0, py0, pw0, ph0 );
+
+    buf_out.draw_line( px0, py0, px, py );
+  }
+
+  return true;
+}

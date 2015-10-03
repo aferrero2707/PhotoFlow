@@ -132,6 +132,8 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 
 	float shrink_factor;
 
+	float target_area_center_x, target_area_center_y;
+
   long int pending_pixels;
 
   /* We send this packet of data from the bg worker thread to the main GUI
@@ -202,6 +204,9 @@ public:
 
 	float get_shrink_factor() { return shrink_factor; }
 	void set_shrink_factor( float val ) { shrink_factor = val; }
+	void set_target_area_center( float x, float y ) {
+	  target_area_center_x = x; target_area_center_y = y;
+	}
 
   void set_adjustments( 
 #ifdef GTKMM_2

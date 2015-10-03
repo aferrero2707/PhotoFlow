@@ -151,10 +151,10 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outputControlsBox.pack_start( outProfHBox );
 
 
-  notebook.append_page( wbControlsBox, "White balance" );
-  notebook.append_page( exposureControlsBox, "Exposure" );
-  notebook.append_page( demoControlsBox, "Demosaicing" );
-  notebook.append_page( outputControlsBox, "Output" );
+  notebook.append_page( wbControlsBox, "WB" );
+  notebook.append_page( exposureControlsBox, "Exp" );
+  notebook.append_page( demoControlsBox, "Demo" );
+  notebook.append_page( outputControlsBox, "ICC" );
     
   add_widget( notebook );
 

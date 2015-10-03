@@ -182,7 +182,9 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   display_merged( true ),
   active_layer( -1 ),
   edited_layer( -1 ),
-	shrink_factor( 1 )
+	shrink_factor( 1 ),
+	target_area_center_x( -1 ),
+	target_area_center_y( -1 )
 {
   outimg = NULL;
   display_image = NULL;
@@ -1168,17 +1170,23 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"#0 area_width="<<area_width<<"  image_width="<<image_width<<std::endl;
   std::cout<<"   area_height="<<area_height<<"  image_height="<<image_height<<std::endl;
 #endif
-  if( image_width>1 && image_height>1 ) {
-    area_center_x = area_left + area_width/2;
-    area_center_y = area_top + area_height/2;
+  if( target_area_center_x < 0 || target_area_center_x < 0 ) {
+    if( image_width>1 && image_height>1 ) {
+      area_center_x = area_left + area_width/2;
+      area_center_y = area_top + area_height/2;
 #ifdef DEBUG_DISPLAY
-    std::cout<<"#1 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
+      std::cout<<"#1 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
 #endif
-    area_center_x /= image_width;
-    area_center_y /= image_height;
+      area_center_x /= image_width;
+      area_center_y /= image_height;
 #ifdef DEBUG_DISPLAY
-    std::cout<<"#2 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
+      std::cout<<"#2 area_center_x="<<area_center_x<<"  area_center_y="<<area_center_y<<std::endl;
 #endif
+    }
+  } else {
+    area_center_x = target_area_center_x;
+    area_center_y = target_area_center_y;
+    target_area_center_x = target_area_center_y = -1;
   }
 
   area_center_x *= outimg->Xsize;

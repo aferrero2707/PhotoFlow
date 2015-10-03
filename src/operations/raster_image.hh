@@ -39,6 +39,8 @@
 
 #include <glibmm.h>
 
+#include <gexiv2/gexiv2-metadata.h>
+
 #include "../base/operation.hh"
 #include "../base/processor.hh"
 #include "../base/imagepyramid.hh"
@@ -60,6 +62,8 @@ namespace PF
 
     exif_data_t exif_data;
 
+    GExiv2Orientation orientation;
+
     ImagePyramid pyramid;
 
   public:
@@ -72,6 +76,8 @@ namespace PF
 
     std::string get_file_name() { return file_name_real; }
     VipsImage* get_image(unsigned int& level);
+
+    GExiv2Orientation get_orientation() { return orientation; }
 
     void print_exif( PF::exif_data_t* data );
     void print_exif();

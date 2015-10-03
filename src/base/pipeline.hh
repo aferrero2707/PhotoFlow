@@ -75,12 +75,21 @@ namespace PF
     VipsBandFormat format;
     unsigned int level;
     rendermode_t render_mode;
+    int output_layer_id;
+
+    bool auto_zoom;
+    int auto_zoom_width, auto_zoom_height;
 
     //Glib::Threads::Mutex processing_mutex;
 
   public:
-    Pipeline(): modified(false), image(NULL), output(NULL), format(VIPS_FORMAT_UCHAR), level(0), render_mode(PF_RENDER_PREVIEW) {}
-    Pipeline( Image* img, VipsBandFormat fmt, int l, rendermode_t m ): image(img), output(NULL), format(fmt), level(l), render_mode(m) {}
+    Pipeline():
+      modified(false), image(NULL), output(NULL), format(VIPS_FORMAT_UCHAR),
+      level(0), render_mode(PF_RENDER_PREVIEW), output_layer_id(-1),
+      auto_zoom(false), auto_zoom_width(0), auto_zoom_height(0) {}
+    Pipeline( Image* img, VipsBandFormat fmt, int l, rendermode_t m ):
+      image(img), output(NULL), format(fmt), level(l), render_mode(m), output_layer_id(-1),
+      auto_zoom(false), auto_zoom_width(0), auto_zoom_height(0) {}
 
     ~Pipeline();
 
@@ -97,6 +106,19 @@ namespace PF
 
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }
+
+    int get_output_layer_id() { return output_layer_id; }
+    void set_output_layer_id( int id ) { output_layer_id = id; }
+
+    bool get_auto_zoom() { return auto_zoom; }
+    void set_auto_zoom( bool az, int w=0, int h=0 )
+    {
+      auto_zoom = az;
+      auto_zoom_width = w;
+      auto_zoom_height = h;
+    }
+    int get_auto_zoom_width() { return auto_zoom_width; }
+    int get_auto_zoom_height() { return auto_zoom_height; }
 
     PipelineNode* set_node( Layer* layer, Layer* input_layer );
     void set_image( VipsImage* img, unsigned int id );

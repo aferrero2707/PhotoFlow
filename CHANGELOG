@@ -1,4 +1,22 @@
 =========================================
+Version 0.2.2
+
+* New Features:
+
+- Added histogram visualization
+- Implemented handling of auto-orientation EXIF flag
+- Added interactive editing of horizontal and vertical gradients shape
+- Changed assignment of mouse clicks in preview area:
+  - Ctrl-clicks are now reserved for zooming/panning.
+  - Ctrl-double-click is now used to toggle between 100% and zoom-to-fit
+  - Sampling of curve points is for now on associated to Alt-click (was Ctrl-click before)
+
+* Bug fixes:
+
+- Improved accuracy of Lab->RGB conversion. This guarantees for example a neutral greyscale image 
+  when desaturating with the "Lab L channel" method
+
+=========================================
 Version 0.2.1
 
 * New features:

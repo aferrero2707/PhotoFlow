@@ -37,6 +37,7 @@
 #include "../base/photoflow.hh"
 
 #include "imagearea.hh"
+#include "histogram.hh"
 #include "layerwidget.hh"
 #include "tablabelwidget.hh"
 #include "widgets/statusindicator.hh"
@@ -95,6 +96,9 @@ class ImageEditor: public Gtk::HBox
   Gtk::VBox imageBox;
   ImageArea* imageArea;
   Gtk::EventBox imageArea_eventBox;
+
+  Gtk::Expander hist_expander;
+  Histogram* histogram;
 
   // Boxes for aligning the image area inside the scrolled window.
   // The image area gets inserted into an HBox which in turn

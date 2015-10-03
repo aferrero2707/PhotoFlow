@@ -64,10 +64,18 @@ namespace PF {
     CurveEditor aCurveEditor;
     CurveEditor bCurveEditor;
 
+    int active_point_id;
+
   public:
     GradientConfigGUI( Layer* l );
     void switch_curve();
     void do_update();
+
+    bool pointer_press_event( int button, double x, double y, int mod_key );
+    bool pointer_release_event( int button, double x, double y, int mod_key );
+    bool pointer_motion_event( int button, double x, double y, int mod_key );
+    bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+        float scale, int xoffset, int yoffset );
   };
 
 }
