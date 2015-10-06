@@ -120,6 +120,7 @@ FILE(GLOB RTSources
   rt/rtengine/rawimagesource.cc
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
+  rt/rtengine/lmmse_demosaic_RT.cc
 )
 
 FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)

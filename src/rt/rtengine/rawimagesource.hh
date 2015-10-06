@@ -34,7 +34,19 @@
 
 #include "../../base/rawmatrix.hh"
 
+#include "LUT.h"
+
+
+
 namespace rtengine {
+
+
+class ProgressListener
+{
+public:
+  void setProgress(float val) {}
+  void setProgressStr(char* str) {}
+};
 	
 	class RawImageSource
 	{
@@ -43,14 +55,26 @@ namespace rtengine {
 		int tile_top, tile_left;
 
 		int FC_roffset, FC_coffset;
+    LUTf igammatab_24_17;
+    LUTf gammatab_24_17a;
+
+    ProgressListener* plistener;
+
 
 		void amaze_demosaic_RT(int winx, int winy, int winw, int winh,
 													 int tilex, int tiley, int tilew, int tileh);//Emil's code for AMaZE
 		void igv_demosaic_RT(int winx, int winy, int winw, int winh,
 													 int tilex, int tiley, int tilew, int tileh);
+		void lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
+		                       int tilex, int tiley, int tilew, int tileh,
+                           int iterations);
+
+    void refinement(int PassCount, int W, int H);
+    void refinement_lassus(int PassCount, int W, int H);
+
 	public:
 
-		RawImageSource(): FC_roffset(0), FC_coffset(0) {}
+		RawImageSource();
 
 		int FC(int r, int c)
 		{
@@ -79,7 +103,8 @@ namespace rtengine {
 
 		// Interface layer between Photoflow and RT code
 		void amaze_demosaic(VipsRegion* ir, VipsRegion* oreg);
-		void igv_demosaic(VipsRegion* ir, VipsRegion* oreg);
+    void igv_demosaic(VipsRegion* ir, VipsRegion* oreg);
+    void lmmse_demosaic(VipsRegion* ir, VipsRegion* oreg);
 		void false_color_correction(VipsRegion* ir, VipsRegion* oreg);
 	};
 }
