@@ -268,41 +268,6 @@ INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
-add_executable(gmic_test tests/gmic_test.cc)
-
-target_link_libraries(gmic_test ${LIBS} 
-  pfgui
-  pfbase 
-  pfdt
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${OPENEXR_LIBRARIES}
-  ${XML2_LIBRARIES}
-  ${EXIF_LIBRARIES}
-  ${EXIV2_LIBRARIES}
-  ${GEXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
-  ${SIGC2_LIBRARIES}
-  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-  ${PIXMAN_LIBRARIES} 
-  ${GTKMM_LIBRARIES} 
-  ${GLIBMM_LIBRARIES} 
-  ${GLIB_LIBRARIES} 
-  ${GMODULE_LIBRARIES} 
-  ${GOBJECT_LIBRARIES} 
-  ${GTHREAD_LIBRARIES} 
-  ${ZLIB_LIBRARIES}
-  #${LIBRAW_LIBRARIES}  
-  ${STATIC_LIBS}
-  ${ORC_LIBRARIES}
-  fftw3
-  ${ADDITIONAL_LIBS}
-  #gmon
-  )
-
-
-
 add_executable(scrollwin tests/scrollwin.cc)
 
 target_link_libraries(scrollwin
