@@ -375,6 +375,9 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/tiff");
   filter_tiff.add_mime_type("image/jpeg");
   filter_tiff.add_mime_type("image/png");
+  filter_tiff.add_pattern("*.raf");
+  filter_tiff.add_pattern("*.RAF");
+  filter_tiff.add_pattern("*.Raf");
   filter_tiff.add_pattern("*.pfi");
   Gtk::FileFilter filter_all;
   filter_all.set_name( _("All files") );
