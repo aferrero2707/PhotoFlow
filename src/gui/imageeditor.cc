@@ -678,7 +678,7 @@ void PF::ImageEditor::zoom_fit()
   float area_hsize = imageArea_scrolledWindow.get_allocated_width();
   float area_vsize = imageArea_scrolledWindow.get_allocated_height();
 #endif
-  std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
+  //std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
   area_hsize -= 20;
   area_vsize -= 20;
 
@@ -686,18 +686,18 @@ void PF::ImageEditor::zoom_fit()
 	float shrink_v = area_vsize/image_size_updater->get_image_height();
 	float shrink_min = (shrink_h<shrink_v) ? shrink_h : shrink_v;
 	int target_level = 0;
-	std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
+	//std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
 	while( shrink_min < 0.5 ) {
 		target_level++;
 		shrink_min *= 2;
-	  std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
+	  //std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
 	}
 
-  std::cout<<"ImageEditor::zoom_fit(): image area size="
-           <<area_hsize<<","<<area_vsize
-           <<"  image size="<<image_size_updater->get_image_width()
-           <<","<<image_size_updater->get_image_height()
-           <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
+  //std::cout<<"ImageEditor::zoom_fit(): image area size="
+  //         <<area_hsize<<","<<area_vsize
+  //         <<"  image size="<<image_size_updater->get_image_width()
+  //         <<","<<image_size_updater->get_image_height()
+  //         <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
 
 	imageArea->set_shrink_factor( shrink_min );
 	image->set_pipeline_level( pipeline, target_level );
