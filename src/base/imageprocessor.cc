@@ -106,19 +106,25 @@ void PF::ImageProcessor::optimize_requests()
       rebuild_found = true;
     }
     if( ri->request == IMAGE_UPDATE ) {
+      //std::cout<<"ImageProcessor::optimize_requests(): request=IMAGE_UPDATE, rebuild_found="<<rebuild_found<<std::endl;
       if( rebuild_found ) {
         do_push = false;
       }
-      if( do_push && info != NULL ) {
-        vips_rect_unionrect( &(info->area), &(ri->area), &(info->area) );
-        do_push = false;
-      }
+      //if( do_push && info != NULL ) {
+      //  vips_rect_unionrect( &(info->area), &(ri->area), &(info->area) );
+      //  do_push = false;
+      //}
     }
     if( do_push ) {
+      //if( ri->request == IMAGE_UPDATE )
+      //  std::cout<<"ImageProcessor::optimize_requests(): request=IMAGE_UPDATE pushed"<<rebuild_found<<std::endl;
       optimized_requests.push_front( *ri );
       if( info == NULL ) {
         info = &(optimized_requests.front());
       }
+    //} else {
+    //  if( ri->request == IMAGE_UPDATE )
+    //    std::cout<<"ImageProcessor::optimize_requests(): request=IMAGE_UPDATE skipped"<<rebuild_found<<std::endl;
     }
   }
 }
