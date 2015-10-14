@@ -18,7 +18,7 @@ You can follow the development of photoflow and learn about its usage in the ded
 
 # Windows and OSX installers
 
-Up-to-date Windows and OSX installers are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page
+Up-to-date Windows and OSX installers are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page.
 
 # Installing from PPA (Ubuntu Linux and derivate distributions)
 
