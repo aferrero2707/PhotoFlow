@@ -16,6 +16,10 @@ Here is the general feature (whish)list:
 
 You can follow the development of photoflow and learn about its usage in the dedicated blog: http://photoflowblog.blogspot.fr/
 
+# Windows and OSX installers
+
+Up-to-date Windows and OSX installers are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page
+
 # Installing from PPA (Ubuntu Linux and derivate distributions)
 
 There are up-to-date packages available for Ubuntu 14.04/14.10 and Mint 17/17.1 in Dariusz Duma's PPA.
