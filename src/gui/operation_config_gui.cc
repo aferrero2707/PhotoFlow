@@ -42,6 +42,7 @@
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/crop_config.hh"
 #include "../gui/operations/scale_config.hh"
+#include "../gui/operations/perspective_config.hh"
 #include "../gui/operations/gradient_config.hh"
 #include "../gui/operations/uniform_config.hh"
 #include "../gui/operations/curves_config.hh"
@@ -847,6 +848,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "scale" ) {
 
     dialog = new PF::ScaleConfigGUI( current_layer );
+
+  } else if( op_type == "perspective" ) {
+
+    dialog = new PF::PerspectiveConfigGUI( current_layer );
 
   } else if( op_type == "invert" ) {
 

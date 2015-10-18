@@ -48,6 +48,7 @@ namespace PF
   ProcessorBase* new_clone();
   ProcessorBase* new_crop();
   ProcessorBase* new_scale();
+  ProcessorBase* new_perspective();
   ProcessorBase* new_convert2rgb();
   ProcessorBase* new_convert2srgb();
   ProcessorBase* new_convert2lab();

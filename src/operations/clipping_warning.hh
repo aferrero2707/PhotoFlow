@@ -30,6 +30,7 @@
 #ifndef PF_CLIP_WARNING_H
 #define PF_CLIP_WARNING_H
 
+#include <string.h>
 #include <string>
 
 #include "../base/processor.hh"

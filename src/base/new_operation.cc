@@ -82,6 +82,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
     processor = new_scale();
 
+  } else if( op_type == "perspective" ) {
+
+    //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    processor = new_perspective();
+
   } else if( op_type == "invert" ) {
 
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
