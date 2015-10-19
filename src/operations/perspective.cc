@@ -30,7 +30,7 @@
 #include "perspective.hh"
 #include "../base/new_operation.hh"
 
-int vips_perspective( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, ... );
+int vips_perspective( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, VipsInterpolate* interpolate, ... );
 
 
 PF::PerspectivePar::PerspectivePar():
@@ -39,14 +39,14 @@ PF::PerspectivePar::PerspectivePar():
 {
   set_type( "perspective" );
 
-  keystones.get().push_back( std::make_pair(0.2f, 0.2f) );
-  keystones.get().push_back( std::make_pair(0.8f, 0.2f) );
-  keystones.get().push_back( std::make_pair(0.8f, 0.8f) );
-  keystones.get().push_back( std::make_pair(0.2f, 0.8f) );
-  //keystones.get().push_back( std::make_pair(0.29f, 0.15f) );
-  //keystones.get().push_back( std::make_pair(0.77f, 0.25f) );
-  //keystones.get().push_back( std::make_pair(0.84f, 0.84f) );
-  //keystones.get().push_back( std::make_pair(0.27f, 0.88f) );
+  //keystones.get().push_back( std::make_pair(0.2f, 0.2f) );
+  //keystones.get().push_back( std::make_pair(0.8f, 0.2f) );
+  //keystones.get().push_back( std::make_pair(0.8f, 0.8f) );
+  //keystones.get().push_back( std::make_pair(0.2f, 0.8f) );
+  keystones.get().push_back( std::make_pair(0.29f, 0.15f) );
+  keystones.get().push_back( std::make_pair(0.77f, 0.25f) );
+  keystones.get().push_back( std::make_pair(0.84f, 0.84f) );
+  keystones.get().push_back( std::make_pair(0.27f, 0.88f) );
 
   set_default_name( _("perspective correction") );
 }
@@ -68,11 +68,19 @@ VipsImage* PF::PerspectivePar::build(std::vector<VipsImage*>& in, int first,
     return srcimg;
   }
 
-  if( vips_perspective(in[0], &out, get_processor(), NULL) ) {
+  VipsInterpolate* interpolate = NULL; //vips_interpolate_new( "nohalo" );
+  if( !interpolate )
+    interpolate = vips_interpolate_new( "bicubic" );
+  if( !interpolate )
+    interpolate = vips_interpolate_new( "bilinear" );
+
+  if( vips_perspective(in[0], &out, get_processor(), interpolate, NULL) ) {
     std::cout<<"vips_perspective() failed."<<std::endl;
     PF_REF( in[0], "PerspectivePar::build(): in[0] ref after viprs_perspective() failed")
     return in[0];
   }
+
+  PF_UNREF( interpolate, "vips_perspective(): interpolate unref" );
 
   return out;
 

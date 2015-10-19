@@ -90,6 +90,8 @@ typedef struct _VipsPerspective {
    */
   PF::ProcessorBase* processor;
 
+  VipsInterpolate* interpolate;
+
   /* The preferred output style for this layer
    */
   VipsDemandStyle demand_hint;
@@ -126,6 +128,10 @@ vips_perspective_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
 {
   VipsRegion *ir = (VipsRegion *) seq;
   VipsPerspective *perspective = (VipsPerspective *) b;
+  const int window_size =
+    vips_interpolate_get_window_size( perspective->interpolate );
+  const int window_offset =
+    vips_interpolate_get_window_offset( perspective->interpolate );
   
   PF::PerspectivePar* par = dynamic_cast<PF::PerspectivePar*>( perspective->processor->get_par() );
 
@@ -135,7 +141,7 @@ vips_perspective_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   /* Output area we are building.
    */
   const VipsRect *r = &oreg->valid;
-  VipsRect s;
+  VipsRect s, r_in;
   int i;
   int x, xx, y, k;
   dt_iop_roi_t roi_in, roi_out;
@@ -159,13 +165,18 @@ vips_perspective_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   //std::cout<<"vips_perspective_gen_template(): roi_out="
   //    <<roi_out.width<<","<<roi_out.height<<"+"<<roi_out.x<<"+"<<roi_out.y<<std::endl;
 
-  s.left = roi_in.x;
-  s.top = roi_in.y;
-  s.width = roi_in.width;
-  s.height = roi_in.height;
+  s.left = roi_in.x - window_offset - 1;
+  s.top = roi_in.y - window_offset - 1;
+  s.width = roi_in.width + window_size + 2 - 1;
+  s.height = roi_in.height + window_size + 2 - 1;
 
   VipsRect rimg = { 0, 0, ir->im->Xsize, ir->im->Ysize };
   vips_rect_intersectrect( &rimg, &s, &s );
+
+  r_in.left = s.left + window_offset;
+  r_in.top = s.top + window_offset;
+  r_in.width = s.width - window_size + 1;
+  r_in.height = s.height - window_size + 1;
 
   /**/
 #ifndef NDEBUG
@@ -204,6 +215,8 @@ vips_perspective_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   //std::cout<<"d->enlarge_x="<<d->enlarge_x<<"  d->enlarge_y="<<d->enlarge_y<<std::endl;
   //std::cout<<"d->offset_x="<<d->offset_x<<"  d->offset_y="<<d->offset_y<<std::endl;
   float o[2];
+  VipsInterpolateMethod interp_method =
+      vips_interpolate_get_method ( perspective->interpolate );
   for( y = 0; y < r->height; y++ ) {
     T *q = (T *)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
     for( x = 0; x < line_size; x+=perspective->in->Bands ) {
@@ -213,18 +226,20 @@ vips_perspective_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
       keystone_backtransform(o, d->k_space, d->a, d->b, d->d, d->e, d->g, d->h, d->kxa, d->kya);
       int srcx = o[0]*ir->im->Xsize;
       int srcy = o[1]*ir->im->Ysize;
-      if( (r->top) == 0 && (r->left) == 0 ) 
-      {
-        //std::cout<<"r->height="<<r->height<<" line_size="<<line_size<<std::endl;
-        //std::cout<<"x="<<x<<" y="<<y<<std::endl;
-        //std::cout<<"out="<<outx<<","<<outy<<"    src="<<srcx<<","<<srcy<<std::endl;
-      }
-      if( vips_rect_includespoint(&s, srcx, srcy) ) {
-	T *p = (T *)VIPS_REGION_ADDR( ir, srcx, srcy );
-        for( xx = 0; xx < perspective->in->Bands; xx++ ) {
-          q[x+xx] = p[xx];
+      //std::cout<<"out="<<outx<<","<<outy<<"    src="<<srcx<<","<<srcy<<std::endl;
+      if( vips_rect_includespoint(&r_in, srcx, srcy) ) {
+        interp_method( perspective->interpolate, &(q[x]), ir, o[0]*ir->im->Xsize, o[1]*ir->im->Ysize );
+        T *p = (T *)VIPS_REGION_ADDR( ir, srcx, srcy );
+        //for( xx = 0; xx < perspective->in->Bands; xx++ ) {
+        //  q[x+xx] = p[xx];
+        //}
+        if( (r->top+x/perspective->in->Bands) == 1000 && (r->left+y) == 1000 )
+        {
+          //std::cout<<"r->height="<<r->height<<" line_size="<<line_size<<std::endl;
+          std::cout<<"x="<<x/perspective->in->Bands<<" y="<<y<<std::endl;
+          std::cout<<"out="<<outx<<","<<outy<<"    src="<<srcx<<","<<srcy<<std::endl;
+          std::cout<<"  p="<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
         }
-	//std::cout<<"x="<<x<<"  p["<<0<<"]="<<(uint32_t)p[0]<<"  pout["<<x<<"]="<<(uint32_t)q[x]<<std::endl;
       } else {
         for( xx = 0; xx < perspective->in->Bands; xx++ ) {
           q[x+xx] = PF::FormatInfo<T>::MIN;
@@ -282,7 +297,14 @@ vips_perspective_build( VipsObject *object )
   VipsPerspective *perspective = (VipsPerspective *) object;
   int i;
 
-  g_print("vips_perspective_build() called. in=%p\n", perspective->in);
+  int window_size = vips_interpolate_get_window_size( perspective->interpolate );
+  int window_offset =
+    vips_interpolate_get_window_offset( perspective->interpolate );
+  VipsDemandStyle hint;
+
+  //g_print("vips_perspective_build() called. in=%p\n", perspective->in);
+  //g_print("vips_perspective_build() window_offset=%d window_size=%d\n",
+  //    window_offset, window_size);
 
   if( VIPS_OBJECT_CLASS( vips_perspective_parent_class )->build( object ) )
     return( -1 );
@@ -300,12 +322,31 @@ vips_perspective_build( VipsObject *object )
    */
   g_object_set( perspective, "out", vips_image_new(), NULL );
 
+  /* Add new pixels around the input so we can interpolate at the edges.
+   */
+  VipsImage* enlarged = perspective->in;
+  /*
+  if( vips_embed( perspective->in, &enlarged,
+    window_offset, window_offset,
+    perspective->in->Xsize + window_size - 1,
+    perspective->in->Ysize + window_size - 1,
+    "extend", VIPS_EXTEND_COPY,
+    NULL ) )
+    return( -1 );
+    */
+
+  g_object_ref( enlarged );
+
+  /* Normally SMALLTILE ...
+   */
+  hint = VIPS_DEMAND_STYLE_SMALLTILE;
+
   /* Set demand hints. 
   */
-  std::cout<<"vips_perspective_build(): perspective->in="<<perspective->in<<std::endl;
-  VipsImage* invec[2] = {perspective->in, NULL};
+  //std::cout<<"vips_perspective_build(): enlarged="<<enlarged<<std::endl;
+  VipsImage* invec[2] = {enlarged, NULL};
   if( vips_image_pipelinev( perspective->out,
-				 VIPS_DEMAND_STYLE_ANY, perspective->in, NULL ) )
+				 hint, enlarged, NULL ) )
     return( -1 );
 
   PF::PerspectivePar* par = dynamic_cast<PF::PerspectivePar*>( perspective->processor->get_par() );
@@ -313,16 +354,16 @@ vips_perspective_build( VipsObject *object )
   if( par->get_keystones().size() != 4 )
     return( -1 );
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"vips_perspective_build(): output format = "<<par->get_format()<<std::endl;
-//#endif
+#endif
 
   dt_iop_roi_t roi_in, roi_out;
   roi_in.x = roi_in.y = 0;
-  roi_in.width = perspective->in->Xsize;
-  roi_in.height = perspective->in->Ysize;
-  std::cout<<"vips_perspective_build(): roi_in="<<roi_in.width<<","<<roi_in.height
-      <<"+"<<roi_in.x<<"+"<<roi_in.y<<std::endl;
+  roi_in.width = enlarged->Xsize; //perspective->in->Xsize;
+  roi_in.height = enlarged->Ysize; //perspective->in->Ysize;
+  //std::cout<<"vips_perspective_build(): roi_in="<<roi_in.width<<","<<roi_in.height
+  //    <<"+"<<roi_in.x<<"+"<<roi_in.y<<std::endl;
 
   dt_iop_clipping_params_t pars;
   pars.angle = 0;
@@ -358,6 +399,8 @@ vips_perspective_build( VipsObject *object )
       vips_start_one, vips_perspective_gen, vips_stop_one,
       perspective->in, perspective ) )
     return( -1 );
+
+  VIPS_UNREF( enlarged );
 
   //g_print("vips_perspective_build() finished!!!\n");
   return( 0 );
@@ -402,6 +445,12 @@ vips_perspective_class_init( VipsPerspectiveClass *klass )
 		    VIPS_ARGUMENT_REQUIRED_INPUT,
 		    G_STRUCT_OFFSET( VipsPerspective, processor ) );
   argid += 1;
+
+  VIPS_ARG_INTERPOLATE( klass, "interpolate", argid,
+    _( "Interpolate" ),
+    _( "Interpolate pixels with this" ),
+    VIPS_ARGUMENT_REQUIRED_INPUT,
+    G_STRUCT_OFFSET( VipsPerspective, interpolate ) );
 }
 
 static void
@@ -418,13 +467,13 @@ vips_perspective_init( VipsPerspective *perspective )
  * Returns: 0 on success, -1 on error.
  */
 int
-vips_perspective( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, ... )
+vips_perspective( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, VipsInterpolate* interpolate, ... )
 {
   va_list ap;
   int result;
 
-  va_start( ap, proc );
-  result = vips_call_split( "perspective", ap, in, out, proc );
+  va_start( ap, interpolate );
+  result = vips_call_split( "perspective", ap, in, out, proc, interpolate );
   va_end( ap );
 
   return( result );
