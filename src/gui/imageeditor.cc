@@ -1003,7 +1003,8 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
 #endif
 
   // Handle CTRL-double-click events separately
-  if( button->type != GDK_BUTTON_PRESS ) {
+  //if( button->type != GDK_BUTTON_PRESS ) {
+  if( mod_key == PF::MOD_KEY_CTRL ) {
     if( button->type == GDK_2BUTTON_PRESS && mod_key == PF::MOD_KEY_CTRL) {
       PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
       if( !pipeline ) return false;
@@ -1052,6 +1053,15 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
   gdouble x = button->x;
   gdouble y = button->y;
 
+  int mod_key = PF::MOD_KEY_NONE;
+  if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+  if( button->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
+  if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+
+  if( mod_key == PF::MOD_KEY_CTRL ) {
+    return false;
+  }
+
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
   std::cout<<"ImageEditor::my_button_release_event(): active_layer="<<active_layer<<std::endl;
@@ -1065,10 +1075,6 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 #ifndef NDEBUG
       std::cout<<"  sending button release event to dialog"<<std::endl;
 #endif
-      int mod_key = PF::MOD_KEY_NONE;
-      if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-      if( button->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
-      if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
       //std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
       if( dialog->pointer_release_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
@@ -1106,6 +1112,17 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
   if(state & GDK_BUTTON3_MASK) button = 3;
   if(state & GDK_BUTTON4_MASK) button = 4;
   if(state & GDK_BUTTON5_MASK) button = 5;
+
+  int mod_key = PF::MOD_KEY_NONE;
+  if( event->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+  if( event->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
+  if( event->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+
+  if( mod_key == PF::MOD_KEY_CTRL ) {
+    return false;
+  }
+
+
   if( true || (state & GDK_BUTTON1_MASK) ) {
 
 #ifndef NDEBUG

@@ -46,7 +46,8 @@
 PF::RawDeveloperPar::RawDeveloperPar(): 
   OpParBase(), output_format( VIPS_FORMAT_NOTSET ),
   demo_method("demo_method",this,PF::PF_DEMO_AMAZE,"AMAZE","Amaze"),
-	fcs_steps("fcs_steps",this,1)
+	fcs_steps("fcs_steps",this,1),
+	caching_enabled( true )
 {
 	demo_method.add_enum_value(PF::PF_DEMO_AMAZE,"AMAZE","Amaze");
 	demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
@@ -69,6 +70,13 @@ PF::RawDeveloperPar::RawDeveloperPar():
   set_type("raw_developer" );
 
   set_default_name( _("RAW developer") );
+}
+
+
+void PF::RawDeveloperPar::set_wb(float r, float g, float b)
+{
+  PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  if( par ) par->set_wb(r,g,b);
 }
 
 

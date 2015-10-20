@@ -75,6 +75,8 @@ namespace PF
 
     void reset_dirty( std::list<Layer*>& list );
     
+    void update_ui( std::list<Layer*>& list );
+
     VipsImage* rebuild_chain(Pipeline* pipeline, colorspace_t cs, 
 														 int width, int height, 
 														 std::list<Layer*>& list, 
@@ -119,7 +121,7 @@ namespace PF
 
     bool rebuild_prepare();
     bool rebuild(Pipeline* pipeline, colorspace_t cs, int width, int height, VipsRect* area );
-    bool rebuild_finalize();
+    bool rebuild_finalize( bool ui_update=true );
 
     bool rebuild_all(Pipeline* pipeline, colorspace_t cs, int width, int height);
 

@@ -130,6 +130,13 @@ namespace PF
     float get_camwb_corr_green() { return camwb_corr_green.get(); }
     float get_camwb_corr_blue() { return camwb_corr_blue.get(); }
 
+    void set_wb(float r, float g, float b) {
+      wb_red_current = r;
+      wb_green_current = g;
+      wb_blue_current = b;
+      std::cout<<"RawPreprocessorPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
+    }
+
     float get_exposure() { return exposure.get(); }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 

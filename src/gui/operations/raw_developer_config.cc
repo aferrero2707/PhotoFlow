@@ -347,6 +347,11 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   PF::Layer* l = get_layer();
   if( !l ) return;
 
+  if( !l->get_processor() ) return;
+  PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>( l->get_processor()->get_par() );
+  if( !par ) return;
+
+
   // Get the image the layer belongs to
   PF::Image* img = l->get_image();
   if( !img ) return;
@@ -358,18 +363,32 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   if( !pipeline ) return;
 
 	// Make sure the first pipeline is up-to-date
-	img->update( pipeline, true );
-  img->unlock();
+	//img->update( pipeline, false );
+  //img->unlock();
 
   // Get the node associated to the layer
   PF::PipelineNode* node = pipeline->get_node( l->get_id() );
   if( !node ) return;
+  if( !(node->processor) ) return;
+  if( !(node->processor->get_par()) ) return;
 
   // Finally, get the underlying VIPS image associated to the layer
   VipsImage* image = node->image;
   if( !image ) return;
 
+  PF::PropertyBase* pwb_red = node->processor->get_par()->get_property("wb_red");
+  PF::PropertyBase* pwb_green = node->processor->get_par()->get_property("wb_green");
+  PF::PropertyBase* pwb_blue = node->processor->get_par()->get_property("wb_blue");
+
+  if( !pwb_red || !pwb_green || !pwb_blue ) return;
+
+  PF::RawDeveloperPar* node_par = dynamic_cast<PF::RawDeveloperPar*>( node->processor->get_par() );
+  if( !node_par ) return;
+
+  par->set_caching( false );
   
+  int sample_size = 7;
+
   float rgb_check[3] = { 0, 0, 0 };
   float rgb_prev[3] = { 1000, 1000, 1000 };
   for( int i = 0; i < 100; i++ ) {
@@ -384,8 +403,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     float rgb_avg[3] = {0, 0, 0};
 		std::vector<float> values;
 
-    std::cout<<"RawDeveloperConfigGUI: getting spot WB ("<<x<<","<<y<<")"<<std::endl;
-		img->sample( l->get_id(), x, y, 7, NULL, values );
+    //std::cout<<"RawDeveloperConfigGUI: getting spot WB ("<<x<<","<<y<<")"<<std::endl;
+		img->sample( l->get_id(), x, y, sample_size, NULL, values );
 		if( values.size() != 3 ) {
 			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;
@@ -394,6 +413,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
 		rgb_avg[0] = values[0];
 		rgb_avg[1] = values[1];
 		rgb_avg[2] = values[2];
+
+		std::cout<<" sampled("<<i<<"): "<<rgb_avg[0]<<" "<<rgb_avg[1]<<" "<<rgb_avg[2]<<std::endl;
 
 
     float rgb_out[3] = {0, 0, 0};
@@ -431,11 +452,11 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       float wb_green_out = wb_green_mul*wb_green_in;
       float wb_blue_out = wb_blue_mul*wb_blue_in;
       float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
-      //scale = 1;
-      std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-							 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-							 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
-      std::cout<<"  scale: "<<scale<<std::endl;
+      scale = 1;
+      //std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+			//				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+			//				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      //std::cout<<"  scale: "<<scale<<std::endl;
       //float scale = wb_green_mul;
       wb_red_out /= scale;
       wb_green_out /= scale;
@@ -444,20 +465,26 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       wb_green_prop->update( wb_green_out );
       wb_blue_prop->update( wb_blue_out );
 
-      std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-							 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-							 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      //std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+			//				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+			//				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
       wbRedSlider.init();
       wbGreenSlider.init();
       wbBlueSlider.init();
 
+      //pwb_red->update( wbRedSlider.get_adjustment()->get_value() );
+      //pwb_green->update( wbGreenSlider.get_adjustment()->get_value() );
+      //pwb_blue->update( wbBlueSlider.get_adjustment()->get_value() );
+
+      //node_par->set_wb( wbRedSlider.get_adjustment()->get_value(), wbGreenSlider.get_adjustment()->get_value(), wbBlueSlider.get_adjustment()->get_value() );
+
       img->update( pipeline, true );
       img->unlock();
     }
 
-    std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
-		img->sample( l->get_id(), x, y, 7, NULL, values );
+    //std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
+		img->sample( l->get_id(), x, y, sample_size, NULL, values );
 		if( values.size() != 3 ) {
 			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
 							 <<values.size()<<" (!= 3)"<<std::endl;
@@ -480,6 +507,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     rgb_prev[2] = rgb_check[2];
   }
 
+  par->set_caching( true );
 	// Update the prepipeline to reflect the new settings
 	img->update();
 }

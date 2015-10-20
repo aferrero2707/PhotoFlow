@@ -196,9 +196,9 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 #endif
 
     if( sync ) {
-      std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
+      //std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
       g_cond_wait( rebuild_done, rebuild_mutex );
-      std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
+      //std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
     }
 
     // In sync mode, the image is left in a locked state to allow further 
@@ -313,7 +313,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
 #ifndef NDEBUG
   std::cout<<"PF::Image::do_update(): finalizing..."<<std::endl;
 #endif
-  get_layer_manager().rebuild_finalize();
+  get_layer_manager().rebuild_finalize( target_pipeline==NULL );
 #ifndef NDEBUG
   std::cout<<"PF::Image::do_update(): finalizing done."<<std::endl;
 #endif
@@ -365,13 +365,13 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     request.area.height = area.height;
 
     g_mutex_lock( sample_mutex );
-    //#ifndef NDEBUG
+    #ifndef NDEBUG
     std::cout<<"PF::Image::sample(): submitting sample request..."<<std::endl;
-    //#endif
+    #endif
     PF::ImageProcessor::Instance().submit_request( request );
-    //#ifndef NDEBUG
+    #ifndef NDEBUG
     std::cout<<"PF::Image::sample(): request submitted."<<std::endl;
-    //#endif
+    #endif
 
     g_cond_wait( sample_done, sample_mutex );
     g_mutex_unlock( sample_mutex );
@@ -435,7 +435,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
    */
   spot = image;
 
-  VipsRect rspot = {clipped.left, clipped.top, clipped.width, clipped.height};
+  VipsRect rspot = {clipped.left, clipped.top, clipped.width+1, clipped.height+1};
+  //std::cout<<"Image::do_sample(): rspot="<<rspot.width<<","<<rspot.height<<"+"<<rspot.left<<"+"<<rspot.top<<std::endl;
 
   //VipsImage* outimg = im_open( "spot_wb_img", "p" );
   //if (vips_sink_screen (spot, outimg, NULL,
@@ -473,11 +474,11 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   for( int i = 0; i < 16; i++ ) avg[i] = 0;
   for( row = 0; row < clipped.height; row++ ) {
     p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top+row );
-    std::cout<<"do_sample(): rspot.left="<<rspot.left<<"  rspot.top+row="<<rspot.top+row<<std::endl;
+    //std::cout<<"do_sample(): rspot.left="<<rspot.left<<"  rspot.top+row="<<rspot.top+row<<std::endl;
     for( col = 0; col < line_size; col += image->Bands ) {
       for( b = 0; b < image->Bands; b++ ) {
         avg[b] += p[col+b];
-        std::cout<<"do_sample(): p["<<row<<"]["<<col+b<<"]="<<p[col+b]<<std::endl;
+        //std::cout<<"do_sample(): p["<<row<<"]["<<col+b<<"]="<<p[col+b]<<std::endl;
       }
     }
   }
