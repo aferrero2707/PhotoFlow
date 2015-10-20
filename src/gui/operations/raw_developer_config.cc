@@ -520,6 +520,11 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   PF::Layer* l = get_layer();
   if( !l ) return;
 
+  if( !l->get_processor() ) return;
+  PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>( l->get_processor()->get_par() );
+  if( !par ) return;
+
+
   // Get the image the layer belongs to
   PF::Image* img = l->get_image();
   if( !img ) return;
@@ -603,6 +608,8 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   float wb_green_mul_prev = 1;
   float wb_blue_mul_prev = 1;
 
+  par->set_caching( false );
+
   float Lab_check[3] = { 0, 0, 0 };
   float Lab_prev[3] = { 0, 1000, 1000 };
   for( int i = 0; i < 100; i++ ) {
@@ -655,7 +662,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     //if( vips_sink_memory( spot ) )
     //  return;
 
-    int sample_size = 15;
+    int sample_size = 7;
     int row, col;
     float* p;
     float red, green, blue;
@@ -914,8 +921,8 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
 
     //bool async = img->is_async();
     //img->set_async( false );
-    //img->update( pipeline, true );
-    img->update( NULL, true );
+    img->update( pipeline, true );
+    //img->update( NULL, true );
     img->unlock();
     //img->set_async( async );
 
@@ -1000,6 +1007,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   cmsCloseProfile( profile_in );
   cmsCloseProfile( profile_out );
 
+  par->set_caching( true );
 	// Update the preview to reflect the new settings
 	img->update();
 }
