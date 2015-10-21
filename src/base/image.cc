@@ -644,6 +644,14 @@ bool PF::Image::open( std::string filename, std::string bckname )
     limg->set_name( "RAW loader" );
     layer_manager.get_layers().push_back( limg );
 
+    if( !PF::PhotoFlow::Instance().is_batch() ) {
+      PF::Layer* limg2 = layer_manager.new_layer();
+      PF::ProcessorBase* proc2 = PF::PhotoFlow::Instance().new_operation( "raw_developer", limg2 );
+      limg2->set_processor( proc2 );
+      limg2->set_name( "RAW developer" );
+      layer_manager.get_layers().push_back( limg2 );
+    }
+
     file_name = filename;
 
     /*
