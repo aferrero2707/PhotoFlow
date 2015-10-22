@@ -19,6 +19,9 @@ PF::PropertyBase::PropertyBase(std::string n, OpParBase* par):
   name(n), internal(false), modified_flag(true)
 {
   par->add_property(this);
+  std::cout<<std::endl<<std::endl<<std::endl<<"=========================="
+      <<std::endl<<"Property \""<<n<<"\" initialized without value"<<std::endl
+      <<"=========================="<<std::endl<<std::endl<<std::endl;
 }
 
 
@@ -32,6 +35,8 @@ PF::PropertyBase::PropertyBase(std::string n, OpParBase* par,
   enum_value.first = val;
   enum_value.second.first = strval;
   enum_value.second.second = valname;
+
+  default_enum_value = enum_value;
 }
 
 
@@ -114,15 +119,19 @@ bool PF::PropertyBase::import(PF::PropertyBase* pin)
   //if( name == "out_profile_mode" )
     std::cout<<"PropertyBase::import(): importing property \""<<name<<"\""<<std::endl;
 #endif
-  if( !pin ) 
+  if( !pin ) {
+    std::cout<<"PropertyBase::import(): pin = NULL"<<std::endl;
     return false;
+  }
 
   if( is_enum() ) {
     std::pair< int, std::pair<std::string,std::string> > val = pin->get_enum_value();
     std::map< int, std::pair<std::string,std::string> >::iterator mi = 
       enum_values.find( val.first );
-    if( mi == enum_values.end() ) 
+    if( mi == enum_values.end() ) {
+      std::cout<<"PropertyBase::import(): enum value "<<val.first<<" not found when importing property \""<<name<<"\""<<std::endl;
       return false;
+    }
     std::pair< int, std::pair<std::string,std::string> > val2 = *mi;
     if( (val.second.first == val2.second.first) &&
         (val.second.second == val2.second.second) ) {
@@ -134,6 +143,9 @@ bool PF::PropertyBase::import(PF::PropertyBase* pin)
 #endif
       return true;
     } else {
+      std::cout<<"PropertyBase::import(): enum value mismatch when importing property \""<<name<<"\""<<std::endl;
+      std::cout<<"  val ="<<val.first<<" "<<val.second.first<<" "<<val.second.second<<std::endl;
+      std::cout<<"  val2="<<val2.first<<" "<<val2.second.first<<" "<<val2.second.second<<std::endl;
       return false;
     }
   } else {

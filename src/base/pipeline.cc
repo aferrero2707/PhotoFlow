@@ -135,6 +135,7 @@ PF::PipelineNode* PF::Pipeline::set_node( Layer* layer, Layer* input_layer )
     if( (node->blender != NULL) &&
         (node->blender->get_par() != NULL) ) {
       bool result = node->blender->get_par()->import_settings( srcblender );
+      if( !result ) std::cout<<"Pipeline::set_node(): failed to import settings for layer \""<<layer->get_name()<<"\""<<std::endl;
       g_assert( result != false );
     }
   }

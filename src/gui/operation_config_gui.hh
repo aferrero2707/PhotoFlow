@@ -239,7 +239,6 @@ public:
   virtual bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
                                float scale, int xoffset, int yoffset ) { return false; }
 
-
   void update_buttons();
   void open();
   void init();

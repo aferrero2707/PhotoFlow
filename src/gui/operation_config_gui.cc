@@ -147,7 +147,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_top_buttons_box.pack_start( frame_edit, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_undo, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_redo, Gtk::PACK_SHRINK, 5 );
-  //frame_top_box_1_1.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_box.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
 
   frame_top_buttons_alignment.add( frame_top_buttons_box );
   frame_top_buttons_alignment.set( 0, 0.5, 0, 0 );
@@ -225,6 +225,15 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   }
   aux_controls_box.set_size_request(100,200);
 
+  frame_visible.set_tooltip_text( _("toggle layer visibility on/off") );
+  frame_mask.set_tooltip_text( _("enable/disable layer mask(s)") );
+  frame_mask2.set_tooltip_text( _("enable/disable layer mask(s)") );
+  frame_sticky.set_tooltip_text( _("toggle sticky flag on/off") );
+  frame_sticky2.set_tooltip_text( _("toggle sticky flag on/off") );
+  frame_edit.set_tooltip_text( _("toggle editing flag on/off") );
+  frame_edit2.set_tooltip_text( _("toggle editing flag on/off") );
+  frame_reset.set_tooltip_text( _("reset tool parameters") );
+
   frame_expander.signal_activated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::expand) );
   frame_expander.signal_deactivated.connect(sigc::mem_fun(*this,
@@ -261,6 +270,9 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
         &OperationConfigGUI::enable_editing_cb) );
   frame_edit2.signal_deactivated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::disable_editing_cb) );
+
+  frame_reset.signal_clicked.connect(sigc::mem_fun(*this,
+        &OperationConfigGUI::parameters_reset_cb) );
 
   frame_close.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::close_config_cb) );
@@ -584,7 +596,10 @@ void PF::OperationConfigGUI::parameters_redo()
 
 void PF::OperationConfigGUI::parameters_reset()
 {
-
+  for( int i = 0; i < controls.size(); i++ )
+    controls[i]->reset();
+  if( get_layer() && get_layer()->get_image() )
+    get_layer()->get_image()->update();
 }
 
 

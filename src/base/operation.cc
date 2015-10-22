@@ -196,21 +196,27 @@ void PF::OpParBase::set_image_hints(int w, int h, colorspace_t cs)
 
 bool PF::OpParBase::import_settings( OpParBase* pin )
 {
-  if( !pin )
+  if( !pin ) {
+    std::cout<<"OpParBase::import_settings(): pin = NULL"<<std::endl;
     return false;
+  }
 
   std::list<PropertyBase*>& propin = pin->get_properties();
   std::list<PropertyBase*>::iterator pi=propin.begin(), pj=properties.begin();
   for( ; pi != propin.end(); pi++, pj++ ) {
-    if( !(*pj)->import( *pi ) )
+    if( !(*pj)->import( *pi ) ) {
+      std::cout<<"OpParBase::import_settings(): failed to import values for property \""<<(*pj)->get_name()<<"\""<<std::endl;
       return false;
+    }
   }
 
   std::list<PropertyBase*>& mpropin = pin->get_mapped_properties();
   std::list<PropertyBase*>::iterator mpi=mpropin.begin(), mpj=mapped_properties.begin();
   for( ; mpi != mpropin.end(); mpi++, mpj++ ) {
-    if( !(*mpj)->import( *mpi ) )
+    if( !(*mpj)->import( *mpi ) ) {
+      std::cout<<"OpParBase::import_settings(): failed to import values for property \""<<(*mpj)->get_name()<<"\""<<std::endl;
       return false;
+    }
   }
 
   set_map_flag( pin->is_map() );
