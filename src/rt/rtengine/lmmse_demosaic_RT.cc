@@ -466,6 +466,8 @@ void RawImageSource::lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
         applyGamma = true;
     }
 
+    //std::cout<<"applyGamma="<<applyGamma<<"  iter="<<iter<<"  passref="<<passref<<std::endl;
+
     float *rix[5];
     float *qix[5];
     float *buffer = (float *)calloc(rr1 * cc1 * 5 * sizeof(float), 1);
