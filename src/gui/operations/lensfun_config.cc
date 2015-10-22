@@ -27,6 +27,8 @@
 
  */
 
+#include <gtkmm.h>
+
 #include "../../base/exif_data.hh"
 #include "../../operations/lensfun.hh"
 
