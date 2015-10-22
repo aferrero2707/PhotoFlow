@@ -169,8 +169,10 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   imageArea_hbox.pack_start( imageArea_eventBox, Gtk::PACK_EXPAND_PADDING );
   imageArea_vbox.pack_start( imageArea_hbox, Gtk::PACK_EXPAND_PADDING );
 
+#ifdef GTKMM_2
   Gdk::Color bg; bg.set_rgb_p(0.1,0.1,0.1);
   imageArea_eventBox2.modify_bg(Gtk::STATE_NORMAL,bg);
+#endif
   imageArea_eventBox2.add(imageArea_vbox);
 
   imageArea_scrolledWindow.add( imageArea_eventBox2 );
@@ -577,7 +579,11 @@ void PF::ImageEditor::on_map()
 {
   std::cout<<"ImageEditor::on_map() called."<<std::endl;
   Gtk::Container* toplevel = get_toplevel();
+#ifdef GTKMM_3
+  if( toplevel->get_is_toplevel() ) {
+#else
   if( toplevel->is_toplevel() ) {
+#endif
     toplevel->add_events( Gdk::STRUCTURE_MASK );
     //toplevel->signal_configure_event().connect_notify( sigc::mem_fun(*this, &PF::ImageEditor::on_preview_configure_event) );
     std::cout<<"ImageEditor::on_map(): toplevel window configured."<<std::endl;
