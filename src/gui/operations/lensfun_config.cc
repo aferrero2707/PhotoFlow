@@ -26,6 +26,7 @@
     These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
  */
+#include <gtkmm.h>
 
 #include "../../base/exif_data.hh"
 #include "../../operations/lensfun.hh"
