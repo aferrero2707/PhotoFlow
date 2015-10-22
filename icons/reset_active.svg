@@ -16,7 +16,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="reset_active.svg"
-   inkscape:export-filename="/Users/ferrero/Source/PhotoFlow/Git/NewControls/PhotoFlow/icons/visible_active.png"
+   inkscape:export-filename="/Users/aferrero/Projects/PhotoFlow/Git/Default/PhotoFlow/icons/reset_active.png"
    inkscape:export-xdpi="3.5999999"
    inkscape:export-ydpi="3.5999999">
   <defs
@@ -65,13 +65,13 @@
        sodipodi:cy="907.53839"
        sodipodi:rx="105.70327"
        sodipodi:ry="105.53263"
-       sodipodi:start="5.462554"
-       sodipodi:end="3.9478107"
-       d="m 227.77273,830.33321 a 105.70327,105.53263 0 0 1 26.4292,115.51291 105.70327,105.53263 0 0 1 -97.73165,67.22218 A 105.70327,105.53263 0 0 1 57.778369,947.25941 105.70327,105.53263 0 0 1 82.537265,831.3782"
+       sodipodi:start="4.7053355"
+       sodipodi:end="4.6976712"
+       d="M 154.96296,802.00839 A 105.70327,105.53263 0 0 1 261.40754,906.59182 105.70327,105.53263 0 0 1 156.85915,1013.0648 105.70327,105.53263 0 0 1 50.013918,908.88935 105.70327,105.53263 0 0 1 154.15287,802.01719"
        sodipodi:open="true" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#c8c8c8;stroke-width:40;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 154.55334,796.77244 c 0,103.4306 0,103.4306 0,103.4306"
+       d="m 154.55334,863.47914 c 0,86.01719 0,86.01719 0,86.01719"
        id="path4138"
        inkscape:connector-curvature="0" />
   </g>
