@@ -229,17 +229,17 @@ vips_perspective_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
       //std::cout<<"out="<<outx<<","<<outy<<"    src="<<srcx<<","<<srcy<<std::endl;
       if( vips_rect_includespoint(&r_in, srcx, srcy) ) {
         interp_method( perspective->interpolate, &(q[x]), ir, o[0]*ir->im->Xsize, o[1]*ir->im->Ysize );
-        T *p = (T *)VIPS_REGION_ADDR( ir, srcx, srcy );
+        //T *p = (T *)VIPS_REGION_ADDR( ir, srcx, srcy );
         //for( xx = 0; xx < perspective->in->Bands; xx++ ) {
         //  q[x+xx] = p[xx];
         //}
-        if( (r->top+x/perspective->in->Bands) == 1000 && (r->left+y) == 1000 )
-        {
+        //if( (r->top+x/perspective->in->Bands) == 1000 && (r->left+y) == 1000 )
+        //{
           //std::cout<<"r->height="<<r->height<<" line_size="<<line_size<<std::endl;
-          std::cout<<"x="<<x/perspective->in->Bands<<" y="<<y<<std::endl;
-          std::cout<<"out="<<outx<<","<<outy<<"    src="<<srcx<<","<<srcy<<std::endl;
-          std::cout<<"  p="<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
-        }
+          //std::cout<<"x="<<x/perspective->in->Bands<<" y="<<y<<std::endl;
+          //std::cout<<"out="<<outx<<","<<outy<<"    src="<<srcx<<","<<srcy<<std::endl;
+          //std::cout<<"  p="<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
+        //}
       } else {
         for( xx = 0; xx < perspective->in->Bands; xx++ ) {
           q[x+xx] = PF::FormatInfo<T>::MIN;
