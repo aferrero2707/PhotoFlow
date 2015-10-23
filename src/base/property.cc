@@ -19,9 +19,9 @@ PF::PropertyBase::PropertyBase(std::string n, OpParBase* par):
   name(n), internal(false), modified_flag(true)
 {
   par->add_property(this);
-  std::cout<<std::endl<<std::endl<<std::endl<<"=========================="
-      <<std::endl<<"Property \""<<n<<"\" initialized without value"<<std::endl
-      <<"=========================="<<std::endl<<std::endl<<std::endl;
+  //std::cout<<std::endl<<std::endl<<std::endl<<"=========================="
+  //    <<std::endl<<"Property \""<<n<<"\" initialized without value"<<std::endl
+  //    <<"=========================="<<std::endl<<std::endl<<std::endl;
 }
 
 
