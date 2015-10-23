@@ -9,6 +9,19 @@
     A helper script is available as tools/dngmeta.sh
 */
 
+static char* _toupper( const char *str )
+{
+  char* ustr = strdup( str );
+  if( !ustr ) return NULL;
+  int i = 0;
+  while( ustr[i] ) {
+    ustr[i] = toupper( ustr[i] );
+    i++;
+  }
+  return ustr;
+}
+
+
 static void dt_dcraw_adobe_coeff(const char *name, float cam_xyz[1][12])
 {
   static const struct {
@@ -558,11 +571,21 @@ static void dt_dcraw_adobe_coeff(const char *name, float cam_xyz[1][12])
   };
 
   for (int i=0; i < sizeof(table)/sizeof(table[1]); i++) {
-    if (!strcmp(name, table[i].cameraid)) {
+    char* s1 = _toupper( name );
+    char* s2 = _toupper( table[i].cameraid );
+    if( !s1 || ! s2 ) {
+      if(s1) free(s1);
+      if(s2) free(s2);
+      continue;
+    }
+    //if (!strcmp(name, table[i].cameraid)) {
+    if (!strcmp(s1,s2)) {
       for (int j=0; j < 12; j++)
         cam_xyz[0][j] = table[i].trans[j] / 10000.0;
+      free(s1); free(s2);
       break;
     }
+    free(s1); free(s2);
   }
 }
 
