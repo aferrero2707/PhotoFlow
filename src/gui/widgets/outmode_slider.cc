@@ -57,7 +57,8 @@ PF::OutModeSlider::OutModeSlider( OperationConfigGUI* dialog, std::string pname,
   label2.set_halign( Gtk::ALIGN_CENTER );
   label3.set_halign( Gtk::ALIGN_END );
 #endif
-  label1.set_text( "keep color/luminance" );
+  label1.set_text( _("preserve colors") );
+  //label1.set_text( "keep color/luminance" );
   label2.set_text( "normal" );
   label3.set_text( "preserve colors" );
   scale.set_digits(0);
