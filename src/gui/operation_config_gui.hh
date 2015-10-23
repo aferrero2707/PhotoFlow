@@ -88,6 +88,8 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::Alignment frame_box_4_padding;
   Gtk::HBox frame_hbox;
   Gtk::VBox frame_vbox;
+  Gtk::VBox frame_shift_box;
+  Gtk::VBox frame_chsel_box;
   Gtk::HBox frame_top_buttons_box;
   Gtk::HBox frame_top_buttons_box2;
   Gtk::HBox frame_top_box_1_1;
@@ -114,7 +116,7 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::Frame controls_frame;
   Gtk::EventBox controls_evbox;
   Gtk::VBox controls_box;
-  Gtk::HSeparator hline;
+  Gtk::HSeparator hline, hline2;
 
   Gtk::VBox aux_controls_box;
   Gtk::HBox aux_controls_hbox;
@@ -136,6 +138,8 @@ class OperationConfigGUI: public OperationConfigUI
   void parameters_redo_cb() { parameters_redo(); }
   void parameters_reset_cb() { parameters_reset(); }
   void close_config_cb() { close_config(); }
+
+  void reset_ch_selector();
 
 public:
   OperationConfigGUI( Layer* layer, const Glib::ustring& title, bool has_ch_sel=true );
