@@ -128,8 +128,6 @@ public:
 };
 
 
-#define SQR sqrt
-
 template < OP_TEMPLATE_DEF_CS_SPEC >
 class ImpulseNR_RTAlgo_Proc< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_RGB) >
 {
