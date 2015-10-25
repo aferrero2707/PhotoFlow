@@ -128,6 +128,10 @@ public:
 };
 
 
+
+/* Impulse noise reduction tool, adapted from Rawtherapee's impulse_denoise.h:
+ * https://code.google.com/p/rawtherapee/source/browse/rtengine/impulse_denoise.h
+*/
 template < OP_TEMPLATE_DEF_CS_SPEC >
 class ImpulseNR_RTAlgo_Proc< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_RGB) >
 {
