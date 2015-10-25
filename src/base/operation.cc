@@ -257,14 +257,20 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
     break;
   case 2:
     vips_layer( n, &outnew, processor, imap, omap, 
-		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
-		"in0", invec[0], "in1", invec[1], NULL );
+    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+    "in0", invec[0], "in1", invec[1], NULL );
+    break;
+  case 3:
+    vips_layer( n, &outnew, processor, imap, omap,
+    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+    "in0", invec[0], "in1", invec[1],
+    "in2", invec[2], NULL );
     break;
   default:
     break;
   }
 
-#ifndef NDEBUG    
+#ifndef NDEBUG
   std::cout<<"OpParBase::build(): type="<<type<<"  format="<<get_format()<<std::endl
 	   <<"input images:"<<std::endl;
   for(int i = 0; i < n; i++) {

@@ -49,9 +49,13 @@ namespace PF {
   //Gtk::HScale contrastScale, brightnessScale;
   //#endif
 
-  Selector modeSelector;
+  //Selector modeSelector;
+  CheckBox impulse_nr_enable;
+  Slider impulse_nr_threshold;
   Slider iterationsSlider, amplitudeSlider, sharpnessSlider,
     anisotropySlider, alphaSlider, sigmaSlider;
+
+  Gtk::HSeparator hline1, hline2, hline3;
 
 public:
   DenoiseConfigGUI( Layer* l );
