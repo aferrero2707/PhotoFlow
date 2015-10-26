@@ -43,7 +43,7 @@
  #
 */
 #ifndef gmic_version
-#define gmic_version 1660
+#define gmic_version 167
 
 #include <cstdio>
 #include <cstring>
@@ -149,6 +149,9 @@ namespace cimg_library {
 #endif // #ifdef _MSC_VER
 
 #include <locale>
+#ifdef cimg_version
+#error "[gmic] *** Error *** File 'CImg.h' has been already included (should have been done first in file 'gmic.h')."
+#endif
 #define cimg_plugin "gmic.cpp"
 
 #ifdef cimg_use_abort
@@ -163,6 +166,9 @@ static struct cimg_is_abort {
 #define cimg_test_abort() if (*_cimg_is_abort.ptr) throw CImgAbortException("")
 #endif // #ifdef cimg_use_openmp
 #endif // #ifdef cimg_use_abort
+#ifndef cimg_display
+#define cimg_display 0
+#endif // #ifndef cimg_display
 #include "./CImg.h"
 
 #if cimg_OS==2
@@ -224,10 +230,6 @@ struct gmic {
   static const char* basename(const char *const str);
   static char *strreplace_fw(char *const str);
   static char *strreplace_bw(char *const str);
-  static char *ellipsize(char *const s, const unsigned int l=80,
-                         const bool is_ending=true);
-  static char *ellipsize(const char *const s, char *const res, const unsigned int l=80,
-                         const bool is_ending=true);
   static const char* path_user(const char *const custom_path=0);
   static const char* path_rc(const char *const custom_path=0);
   static bool init_rc(const char *const custom_path=0);
@@ -239,9 +241,9 @@ struct gmic {
              const char *const custom_commands, const bool include_stdlib,
              float *const p_progress, bool *const p_is_abort);
 
-  inline gmic& set_variable(const char *const name, const char *const value,
-                            const bool add_new_variable,
-                            const unsigned int *const variables_sizes=0);
+  inline const char * set_variable(const char *const name, const char *const value,
+                                   const char operation='=',
+                                   const unsigned int *const variables_sizes=0);
 
   gmic& add_commands(const char *const data_commands, const char *const commands_file=0);
   gmic& add_commands(std::FILE *const file, const char *const filename=0);
@@ -260,7 +262,6 @@ struct gmic {
   gmic_image<char>& selection2string(const gmic_image<unsigned int>& selection,
                                      const gmic_list<char>& images_names,
                                      const unsigned int display_selection,
-                                     const bool is_verbose,
                                      gmic_image<char>& res) const;
 
   gmic_list<char> commands_line_to_CImgList(const char *const commands_line);
@@ -277,7 +278,8 @@ struct gmic {
   gmic_image<char> substitute_item(const char *const source,
                                    gmic_list<T>& images, gmic_list<char>& images_names,
                                    gmic_list<T>& parent_images, gmic_list<char>& parent_images_names,
-				   const unsigned int *const variables_sizes);
+				   const unsigned int *const variables_sizes,
+                                   const gmic_image<unsigned int> *const command_selection);
   template<typename T>
   gmic& print(const gmic_list<T>& list, const gmic_image<unsigned int> *const callstack_selection,
 	      const char *format, ...);
@@ -302,19 +304,22 @@ struct gmic {
   gmic& display_images(const gmic_list<T>& images,
                        const gmic_list<char>& images_names,
                        const gmic_image<unsigned int>& selection,
-                       unsigned int *const XYZ);
+                       unsigned int *const XYZ,
+                       const bool exit_on_anykey);
   template<typename T>
   gmic& display_plots(const gmic_list<T>& images,
                       const gmic_list<char>& images_names,
                       const gmic_image<unsigned int>& selection,
                       const unsigned int plot_type, const unsigned int vertex_type,
                       const double xmin, const double xmax,
-                      const double ymin, const double ymax);
+                      const double ymin, const double ymax,
+                      const bool exit_on_anykey);
   template<typename T>
   gmic& display_objects3d(const gmic_list<T>& images,
                           const gmic_list<char>& images_names,
                           const gmic_image<unsigned int>& selection,
-                          const gmic_image<unsigned char>& background3d);
+                          const gmic_image<unsigned char>& background3d,
+                          const bool exit_on_anykey);
   template<typename T>
   gmic_image<T>& check_image(const gmic_list<T>& list, gmic_image<T>& img);
   template<typename T>
@@ -335,7 +340,8 @@ struct gmic {
              gmic_list<T>& images, gmic_list<char>&images_names,
              gmic_list<T>& parent_images, gmic_list<char>& parent_images_names,
              const unsigned int *const variables_sizes,
-             bool *const is_noargs, const char *const parent_arguments);
+             bool *const is_noargs, const char *const parent_arguments,
+             const gmic_image<unsigned int> *const command_selection);
 
   // Class variables.
   static gmic_image<char> stdlib;

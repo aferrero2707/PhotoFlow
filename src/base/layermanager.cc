@@ -623,6 +623,26 @@ void PF::LayerManager::reset_dirty( std::list<Layer*>& list )
 
 
 
+void PF::LayerManager::update_ui( std::list<Layer*>& list )
+{
+  std::list<PF::Layer*>::iterator li = list.begin();
+  for(li = list.begin(); li != list.end(); ++li) {
+    PF::Layer* l = *li;
+
+    if( l->get_processor() &&
+        l->get_processor()->get_par() &&
+        l->get_processor()->get_par()->get_config_ui() ) {
+      l->get_processor()->get_par()->get_config_ui()->update();
+    }
+    update_ui( l->imap_layers );
+    update_ui( l->omap_layers );
+    update_ui( l->sublayers );
+  }
+}
+
+
+
+
 bool PF::insert_layer( std::list<Layer*>& layers, Layer* layer, int32_t lid )
 {  
   if( lid < 0 ) {
@@ -999,9 +1019,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       }
       std::cout<<"... done."<<std::endl;
 #endif
-      if( par->get_config_ui() ) {
-        par->get_config_ui()->update();
-      }
+      //if( par->get_config_ui() ) par->get_config_ui()->update();
     } else {// if( l->sublayers.empty() )
       std::vector<VipsImage*> in;
 
@@ -1113,7 +1131,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       }
       std::cout<<"... done."<<std::endl;
 #endif
-      if( par->get_config_ui() ) par->get_config_ui()->update();
+      //if( par->get_config_ui() ) par->get_config_ui()->update();
     }// if( l->sublayers.empty() )
 
     if( newimg ) {
@@ -1186,9 +1204,10 @@ bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, 
 }
 
 
-bool PF::LayerManager::rebuild_finalize()
+bool PF::LayerManager::rebuild_finalize( bool ui_update )
 {
   reset_dirty( layers );
+  if( ui_update ) update_ui( layers );
   return true;
 }
 

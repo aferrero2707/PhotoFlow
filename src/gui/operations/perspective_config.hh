@@ -27,40 +27,33 @@
 
  */
 
-#ifndef DENOISE_CONFIG_DIALOG_HH
-#define DENOISE_CONFIG_DIALOG_HH
+#ifndef PERSPECTIVE_CONFIG_DIALOG_HH
+#define PERSPECTIVE_CONFIG_DIALOG_HH
 
 #include <gtkmm.h>
 
 #include "../operation_config_gui.hh"
+#include "../../operations/perspective.hh"
 
 
 namespace PF {
 
-  class DenoiseConfigGUI: public OperationConfigGUI
+  class PerspectiveConfigGUI: public OperationConfigGUI
 {
-  //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
 
-  //Gtk::Label lbrightness, lcontrast;
-  //Gtk::Alignment lcontrastAl, lbrightnessAl;
-
-  //Gtk::Adjustment contrastAdj, brightnessAdj;
-  //Gtk::HScale contrastScale, brightnessScale;
-  //#endif
-
-  //Selector modeSelector;
-  CheckBox impulse_nr_enable;
-  Slider impulse_nr_threshold;
-  Slider iterationsSlider, amplitudeSlider, sharpnessSlider,
-    anisotropySlider, alphaSlider, sigmaSlider;
-
-  Gtk::HSeparator hline1, hline2, hline3;
+  int active_point_id;
 
 public:
-  DenoiseConfigGUI( Layer* l );
+  PerspectiveConfigGUI( Layer* l );
 
-  void open();
+  void do_update();
+
+  bool pointer_press_event( int button, double x, double y, int mod_key );
+  bool pointer_release_event( int button, double x, double y, int mod_key );
+  bool pointer_motion_event( int button, double x, double y, int mod_key );
+  bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+      float scale, int xoffset, int yoffset );
 };
 
 }

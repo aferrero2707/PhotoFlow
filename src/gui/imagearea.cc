@@ -780,12 +780,16 @@ static VipsImage* convert_raw_data( VipsImage* raw )
     std::cout<<"ImageArea::update(): vips_extract_band() failed."<<std::endl;
     return NULL;
   }
+#ifdef DEBUG_DISPLAY
+  std::cout<<"ImageArea::convert_raw_data(): vips_extract_band() done."<<std::endl;
+#endif
 
+  VipsInterpretation interpretation = VIPS_INTERPRETATION_MULTIBAND;
   vips_image_init_fields( band,
       raw->Xsize, raw->Ysize,
       1, raw->BandFmt,
       raw->Coding,
-      raw->Type,
+      interpretation,//raw->Type,
       1.0, 1.0);
 
   VipsImage* norm = NULL;
@@ -797,6 +801,9 @@ static VipsImage* convert_raw_data( VipsImage* raw )
     return NULL;
   }
   PF_UNREF( band, "ImageArea::update(): band unref after vips_linear()" );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"ImageArea::convert_raw_data(): vips_linear() done."<<std::endl;
+#endif
 
   VipsImage* gamma = NULL;
   float exp = 2.2;
@@ -806,6 +813,9 @@ static VipsImage* convert_raw_data( VipsImage* raw )
     return NULL;
   }
   PF_UNREF( norm, "ImageArea::update(): norm unref after vips_gamma()" );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"ImageArea::convert_raw_data(): vips_gamma() done."<<std::endl;
+#endif
 
   VipsImage* cast = gamma;
   /*
@@ -825,8 +835,20 @@ PF_UNREF( gamma, "ImageArea::update(): gamma unref after vips_cast_ushort()" );
     return NULL;
   }
   PF_UNREF( cast, "ImageArea::update(): cast unref after bandjoin" );
+#ifdef DEBUG_DISPLAY
+  std::cout<<"ImageArea::convert_raw_data(): vips_bandjoin() done."<<std::endl;
+#endif
 
-  return out;
+  VipsImage* out2;
+  VipsCoding coding = VIPS_CODING_NONE;
+  interpretation = VIPS_INTERPRETATION_RGB;
+  vips_copy( out, &out2,
+       "coding", coding,
+       "interpretation", interpretation,
+       NULL );
+  g_object_unref( out );
+
+  return out2;
 }
 
 
@@ -851,7 +873,7 @@ void PF::ImageArea::update( VipsRect* area )
 
   VipsImage* image = NULL;
   bool do_merged = display_merged;
-  //std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
+  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
   if( !do_merged ) {
     if( active_layer < 0 ) do_merged = true;
     else {
@@ -876,6 +898,9 @@ void PF::ImageArea::update( VipsRect* area )
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "ImageArea::update(): merged image ref" );
     } else {
+#ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): calling convert_raw_data()"<<std::endl;
+#endif
       image = convert_raw_data( image );
     }
   } else {
@@ -973,17 +998,18 @@ void PF::ImageArea::update( VipsRect* area )
 #endif
   //outimg = srgbimg;
     
+/**/
   ClippingWarningPar* clipping_warning_par = dynamic_cast<ClippingWarningPar*>( clipping_warning->get_par() );
   if( !clipping_warning_par ) return;
   clipping_warning_par->set_highlights_warning( highlights_warning_enabled );
   clipping_warning_par->set_shadows_warning( shadows_warning_enabled );
   clipping_warning_par->set_image_hints( srgbimg );
-  clipping_warning_par->set_format( get_pipeline()->get_format() );
+  clipping_warning_par->set_format( srgbimg->BandFmt );
   in.clear(); in.push_back( srgbimg );
   VipsImage* wclipimg = clipping_warning->get_par()->build(in, 0, NULL, NULL, level );
   PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
-
   srgbimg = wclipimg;
+/**/
 
   if( !display_merged && (active_layer>=0) ) {
     PF::PipelineNode* node = get_pipeline()->get_node( active_layer );

@@ -424,18 +424,28 @@ render_work( VipsThreadState *state, void *a )
 	Render *render = (Render *) a;
 	RenderThreadState *rstate = (RenderThreadState *) state;
 	Tile *tile = rstate->tile;
+	int y;
+	void* p;
 
 	g_assert( tile );
 
-	VIPS_DEBUG_MSG_AMBER( "calculating tile %p %dx%d\n", 
-		tile, tile->area.left, tile->area.top );
+  VIPS_DEBUG_MSG_AMBER( "calculating tile %p %dx%d\n",
+    tile, tile->area.left, tile->area.top );
 
 	if( vips_region_prepare_to( state->reg, tile->region, 
 		&tile->area, tile->area.left, tile->area.top ) ) {
-		VIPS_DEBUG_MSG_RED( "render_work: "
-			"vips_region_prepare_to() failed: %s\n",
-			vips_error_buffer() ); 
-		return( -1 );
+    VIPS_DEBUG_MSG_RED( "render_work: "
+      "vips_region_prepare_to() failed: %s\n",
+      vips_error_buffer() );
+
+    // Fill tile with black
+    for( y = 0; y < tile->region->valid.height; y++ ) {
+      p = VIPS_REGION_ADDR( tile->region, tile->region->valid.left, tile->region->valid.top + y );
+      memset( p, 0, VIPS_REGION_SIZEOF_LINE(tile->region) );
+    }
+    //tile->painted = TRUE;
+    //vips_semaphore_up( &render->tile_done_sem );
+		//return( -1 );
 	}
 	tile->painted = TRUE;
 
@@ -850,11 +860,8 @@ render_tile_request( Render *render, VipsRegion *reg, VipsRect *area )
 {
 	Tile *tile;
 
-	VIPS_DEBUG_MSG_RED( "render_tile_request: asking for %dx%d\n",
-		area->left, area->top );
-
-	//printf("render_tile_request: asking for %dx%d\n",
-	//			 area->left, area->top );
+	VIPS_DEBUG_MSG_RED( "render_tile_request: asking for %dx%d+%d+%d\n",
+		area->width, area->height, area->left, area->top );
 
 	if( (tile = render_tile_lookup( render, area )) ) {
 		/* We already have a tile at this position. If it's invalid,
@@ -963,9 +970,9 @@ image_fill( VipsRegion *out, void *seq, void *a, void *b, gboolean *stop )
 	int xs = (r->left / tile_width) * tile_width;
 	int ys = (r->top / tile_height) * tile_height;
 
-	VIPS_DEBUG_MSG_RED( "image_fill: left = %d, top = %d, "
-									"width = %d, height = %d\n",
-									r->left, r->top, r->width, r->height );
+  VIPS_DEBUG_MSG_RED( "image_fill: left = %d, top = %d, "
+                  "width = %d, height = %d\n",
+                  r->left, r->top, r->width, r->height );
 
 	g_mutex_lock( render->lock );
 
@@ -992,7 +999,11 @@ image_fill( VipsRegion *out, void *seq, void *a, void *b, gboolean *stop )
 
 			tile = render_tile_request( render, reg, &area );
 			if( tile ) {
-	      if( !tile->painted || tile->region->invalid ) n_tiles_dirty += 1;
+	      if( !tile->painted || tile->region->invalid ) {
+	        n_tiles_dirty += 1;
+	        //printf("  image_fill(): adding dirty tile=%p, tile->painted=%d, tile->region->invalid=%d\n",
+	        //    tile, (int)tile->painted, (int)tile->region->invalid);
+	      }
 			  tiles_all = g_slist_append( tiles_all, tile );
 				//tile_copy( tile, out );
 			} else
@@ -1001,7 +1012,7 @@ image_fill( VipsRegion *out, void *seq, void *a, void *b, gboolean *stop )
 
 	g_mutex_unlock( render->lock );
 
-/*	printf("image_fill(): n_tiles_dirty = %d, tiles_all = %p\n", (int)n_tiles_dirty, tiles_all);*/
+	//printf("image_fill(): n_tiles_dirty = %d, tiles_all = %p\n", (int)n_tiles_dirty, tiles_all);
 
   if( !tiles_all ) return( 0 );
 
@@ -1010,14 +1021,12 @@ image_fill( VipsRegion *out, void *seq, void *a, void *b, gboolean *stop )
     do {
       done = 1;
       GSList* item = tiles_all;
+      //printf("image_fill(): waiting for semaphore\n");
       vips_semaphore_down( &render->tile_done_sem );
 /*      printf("image_fill(): checking tiles\n");*/
       while( item ) {
         Tile* tile = (Tile*)item->data;
-/*
-        printf("  image_fill(): tile=%p, tile->painted=%d, tile->region->invalid=%d\n",
-            tile, (int)tile->painted, (int)tile->region->invalid);
-*/
+
         if( !tile->painted || tile->region->invalid ) {
           done = 0;
           break;

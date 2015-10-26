@@ -34,7 +34,9 @@
 
 PF::DenoiseConfigGUI::DenoiseConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Noise Reduction" ),
-	modeSelector( this, "nr_mode", "N.R. mode: ", PF_NR_ANIBLUR ),
+	//modeSelector( this, "nr_mode", "N.R. mode: ", PF_NR_ANIBLUR ),
+  impulse_nr_enable( this, "impulse_nr_enable", _("impulse NR"), false ),
+  impulse_nr_threshold( this, "impulse_nr_threshold", _("threshold"), 50, 0, 100, 5, 20, 1),
   iterationsSlider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   amplitudeSlider( this, "amplitude", "Amplitude", 1, 0, 100, 1, 1, 1),
   sharpnessSlider( this, "sharpness", "Sharpness", 1, 0, 10, 0.1, 1, 1),
@@ -42,13 +44,16 @@ PF::DenoiseConfigGUI::DenoiseConfigGUI( PF::Layer* layer ):
   alphaSlider( this, "alpha", "Alpha", 1, 0, 10, 0.1, 1, 1),
   sigmaSlider( this, "sigma", "Sigma", 1, 0, 10, 0.1, 1, 1)
 {
-  controlsBox.pack_start( modeSelector );
-  controlsBox.pack_start( iterationsSlider );
-  controlsBox.pack_start( amplitudeSlider );
-  controlsBox.pack_start( sharpnessSlider );
-  controlsBox.pack_start( anisotropySlider );
-  controlsBox.pack_start( alphaSlider );
-  controlsBox.pack_start( sigmaSlider );
+  //controlsBox.pack_start( modeSelector );
+  controlsBox.pack_start( impulse_nr_enable );
+  controlsBox.pack_start( impulse_nr_threshold );
+  controlsBox.pack_start( hline1 );
+  //controlsBox.pack_start( iterationsSlider );
+  //controlsBox.pack_start( amplitudeSlider );
+  //controlsBox.pack_start( sharpnessSlider );
+  //controlsBox.pack_start( anisotropySlider );
+  //controlsBox.pack_start( alphaSlider );
+  //controlsBox.pack_start( sigmaSlider );
   
   add_widget( controlsBox );
 }

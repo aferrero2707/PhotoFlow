@@ -34,6 +34,7 @@
 #include "convertformat.hh"
 #include "raw_preprocessor.hh"
 #include "amaze_demosaic.hh"
+#include "lmmse_demosaic.hh"
 #include "igv_demosaic.hh"
 #include "fast_demosaic.hh"
 #include "false_color_correction.hh"
@@ -45,13 +46,16 @@
 PF::RawDeveloperPar::RawDeveloperPar(): 
   OpParBase(), output_format( VIPS_FORMAT_NOTSET ),
   demo_method("demo_method",this,PF::PF_DEMO_AMAZE,"AMAZE","Amaze"),
-	fcs_steps("fcs_steps",this,1)
+	fcs_steps("fcs_steps",this,1),
+	caching_enabled( true )
 {
 	demo_method.add_enum_value(PF::PF_DEMO_AMAZE,"AMAZE","Amaze");
 	demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
-	demo_method.add_enum_value(PF::PF_DEMO_IGV,"IGV","Igv");
+  demo_method.add_enum_value(PF::PF_DEMO_LMMSE,"LMMSE","LMMSE");
+  demo_method.add_enum_value(PF::PF_DEMO_IGV,"IGV","Igv");
 
   amaze_demosaic = new_amaze_demosaic();
+  lmmse_demosaic = new_lmmse_demosaic();
   igv_demosaic = new_igv_demosaic();
   fast_demosaic = new_fast_demosaic();
   raw_preprocessor = new_raw_preprocessor();
@@ -66,6 +70,13 @@ PF::RawDeveloperPar::RawDeveloperPar():
   set_type("raw_developer" );
 
   set_default_name( _("RAW developer") );
+}
+
+
+void PF::RawDeveloperPar::set_wb(float r, float g, float b)
+{
+  PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  if( par ) par->set_wb(r,g,b);
 }
 
 
@@ -107,7 +118,8 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
 		switch( demo_method.get_enum_value().first ) {
 		case PF::PF_DEMO_FAST: demo = fast_demosaic; break;
 		case PF::PF_DEMO_AMAZE: demo = amaze_demosaic; break;
-		case PF::PF_DEMO_IGV: demo = igv_demosaic; break;
+    case PF::PF_DEMO_LMMSE: demo = lmmse_demosaic; break;
+    case PF::PF_DEMO_IGV: demo = igv_demosaic; break;
 		default: break;
 		}
 		//PF::ProcessorBase* demo = amaze_demosaic;

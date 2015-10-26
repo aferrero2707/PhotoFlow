@@ -92,6 +92,8 @@ typedef struct _VipsLensFun {
    */
   PF::ProcessorBase* processor;
 
+  VipsInterpolate* interpolate;
+
   /* The preferred output style for this layer
    */
   VipsDemandStyle demand_hint;
@@ -139,10 +141,15 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   /* Output area we are building.
    */
   const VipsRect *r = &oreg->valid;
-  VipsRect s;
+  VipsRect s, r_in;
   int i;
   int x, xx, y, k;
   
+  const int window_size =
+    vips_interpolate_get_window_size( lensfun->interpolate );
+  const int window_offset =
+    vips_interpolate_get_window_offset( lensfun->interpolate );
+
   /* Area of input we need.
    */
 #ifndef NDEBUG
@@ -172,13 +179,18 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   std::cout<<"vips_lensfun_gen(): xmin="<<xmin<<" ymin="<<ymin<<" xmax="<<xmax<<"ymax="<<ymax<<std::endl;
 #endif
 
-  s.left = xmin - 5;
-  s.top = ymin - 5;
-  s.width = xmax-xmin+11;
-  s.height = ymax-ymin+11;
+  s.left = xmin - window_offset - 5;
+  s.top = ymin - window_offset - 5;
+  s.width = xmax-xmin+window_size+11-1;
+  s.height = ymax-ymin+window_size+11-1;
 
   VipsRect rimg = { 0, 0, ir->im->Xsize, ir->im->Ysize };
   vips_rect_intersectrect( &rimg, &s, &s );
+
+  r_in.left = s.left + window_offset;
+  r_in.top = s.top + window_offset;
+  r_in.width = s.width - window_size + 1;
+  r_in.height = s.height - window_size + 1;
 
   /**/
 #ifndef NDEBUG
@@ -212,6 +224,8 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 #ifndef NDEBUG
   std::cout<<"lensfun->in->Bands="<<lensfun->in->Bands<<std::endl;
 #endif
+  VipsInterpolateMethod interp_method =
+      vips_interpolate_get_method ( lensfun->interpolate );
   int line_size = r->width * lensfun->in->Bands;
   pos = buf;
   for( y = 0; y < r->height; y++ ) {
@@ -220,9 +234,10 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
       for( xx = 0; xx < lensfun->in->Bands; xx++ ) {
         int srcx = pos[0];
         int srcy = pos[1];
-        if( vips_rect_includespoint(&s, srcx, srcy) ) {
-          T *p = (T *)VIPS_REGION_ADDR( ir, srcx, srcy );
-          q[x+xx] = p[xx];
+        if( vips_rect_includespoint(&r_in, srcx, srcy) ) {
+          interp_method( lensfun->interpolate, &(q[x]), ir, pos[0], pos[1] );
+          //T *p = (T *)VIPS_REGION_ADDR( ir, srcx, srcy );
+          //q[x+xx] = p[xx];
         } else {
           q[x+xx] = PF::FormatInfo<T>::MIN;
         }
@@ -280,12 +295,21 @@ vips_lensfun_build( VipsObject *object )
   VipsLensFun *lensfun = (VipsLensFun *) object;
   int i;
 
+  int window_size = vips_interpolate_get_window_size( lensfun->interpolate );
+  int window_offset =
+    vips_interpolate_get_window_offset( lensfun->interpolate );
+  VipsDemandStyle hint;
+
   g_print("vips_lensfun_build() called. in=%p\n", lensfun->in);
 
   if( VIPS_OBJECT_CLASS( vips_lensfun_parent_class )->build( object ) )
     return( -1 );
 
   //lensfun->rand = 0;/*random();*/
+
+  /* Normally SMALLTILE ...
+   */
+  hint = VIPS_DEMAND_STYLE_SMALLTILE;
 
   // Count total number of input images
   if( vips_image_pio_input( lensfun->in ) ||
@@ -348,7 +372,7 @@ vips_lensfun_build( VipsObject *object )
   std::cout<<"vips_lensfun_build(): lensfun->in="<<lensfun->in<<std::endl;
   VipsImage* invec[2] = {lensfun->in, NULL};
   if( vips_image_pipelinev( lensfun->out,
-				 VIPS_DEMAND_STYLE_ANY, lensfun->in, NULL ) )
+				 hint, lensfun->in, NULL ) )
     return( -1 );
 
   PF::OpParBase* par = lensfun->processor->get_par();
@@ -418,6 +442,12 @@ vips_lensfun_class_init( VipsLensFunClass *klass )
 		    VIPS_ARGUMENT_REQUIRED_INPUT,
 		    G_STRUCT_OFFSET( VipsLensFun, processor ) );
   argid += 1;
+
+  VIPS_ARG_INTERPOLATE( klass, "interpolate", argid,
+    _( "Interpolate" ),
+    _( "Interpolate pixels with this" ),
+    VIPS_ARGUMENT_REQUIRED_INPUT,
+    G_STRUCT_OFFSET( VipsLensFun, interpolate ) );
 }
 
 static void
@@ -438,13 +468,13 @@ vips_lensfun_init( VipsLensFun *lensfun )
  * Returns: 0 on success, -1 on error.
  */
 int
-vips_lensfun( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, ... )
+vips_lensfun( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, VipsInterpolate* interpolate, ... )
 {
   va_list ap;
   int result;
 
-  va_start( ap, proc );
-  result = vips_call_split( "lensfun", ap, in, out, proc );
+  va_start( ap, interpolate );
+  result = vips_call_split( "lensfun", ap, in, out, proc, interpolate );
   va_end( ap );
 
   return( result );

@@ -42,7 +42,7 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   LCurveEditor( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
   aCurveEditor( this, "a_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
   bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-  outputModeSlider( this, "color_blend", "Output mode", 0, -1, 1, 0.05, 0.2, 1)
+  outputModeSlider( this, "color_blend", "Output mode", 0, 0, 1, 0.05, 0.2, 1)
 {
 
   //rgbCurveSelector.init(); 

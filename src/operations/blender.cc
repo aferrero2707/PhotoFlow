@@ -123,6 +123,7 @@ PF::BlenderPar::BlenderPar():
 
   //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
   blend_mode.set_enum_value( PF_BLEND_NORMAL );
+  blend_mode.store_default();
   set_type( "blender" );
 }
 

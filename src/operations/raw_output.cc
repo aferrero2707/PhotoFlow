@@ -171,7 +171,8 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       dt_dcraw_adobe_coeff(makermodel, (float(*)[12])cam_xyz);
       if(std::isnan(cam_xyz[0])) {
         std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
-        return NULL;
+        PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
+        return image;
       }
       cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
       break;

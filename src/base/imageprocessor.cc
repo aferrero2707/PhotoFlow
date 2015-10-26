@@ -106,19 +106,25 @@ void PF::ImageProcessor::optimize_requests()
       rebuild_found = true;
     }
     if( ri->request == IMAGE_UPDATE ) {
+      //std::cout<<"ImageProcessor::optimize_requests(): request=IMAGE_UPDATE, rebuild_found="<<rebuild_found<<std::endl;
       if( rebuild_found ) {
         do_push = false;
       }
-      if( do_push && info != NULL ) {
-        vips_rect_unionrect( &(info->area), &(ri->area), &(info->area) );
-        do_push = false;
-      }
+      //if( do_push && info != NULL ) {
+      //  vips_rect_unionrect( &(info->area), &(ri->area), &(info->area) );
+      //  do_push = false;
+      //}
     }
     if( do_push ) {
+      //if( ri->request == IMAGE_UPDATE )
+      //  std::cout<<"ImageProcessor::optimize_requests(): request=IMAGE_UPDATE pushed"<<rebuild_found<<std::endl;
       optimized_requests.push_front( *ri );
       if( info == NULL ) {
         info = &(optimized_requests.front());
       }
+    //} else {
+    //  if( ri->request == IMAGE_UPDATE )
+    //    std::cout<<"ImageProcessor::optimize_requests(): request=IMAGE_UPDATE skipped"<<rebuild_found<<std::endl;
     }
   }
 }
@@ -274,6 +280,13 @@ void PF::ImageProcessor::run()
         if( !request.dnd_dest_layer_list ) break;
         signal_status_processing.emit();
         request.image->lock();
+        std::list<Layer*> children;
+        request.image->get_layer_manager().get_child_layers( request.layer, children );
+        for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
+          if( !(*i) ) continue;
+          (*i)->set_dirty( true );
+        }
+        request.layer->set_dirty( true );
         // Remove the layer from its current container
         request.image->get_layer_manager().remove_layer( request.layer );
         // Insert the layer to the destination container, above the specified layer if

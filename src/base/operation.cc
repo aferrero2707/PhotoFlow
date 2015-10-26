@@ -196,21 +196,27 @@ void PF::OpParBase::set_image_hints(int w, int h, colorspace_t cs)
 
 bool PF::OpParBase::import_settings( OpParBase* pin )
 {
-  if( !pin )
+  if( !pin ) {
+    std::cout<<"OpParBase::import_settings(): pin = NULL"<<std::endl;
     return false;
+  }
 
   std::list<PropertyBase*>& propin = pin->get_properties();
   std::list<PropertyBase*>::iterator pi=propin.begin(), pj=properties.begin();
   for( ; pi != propin.end(); pi++, pj++ ) {
-    if( !(*pj)->import( *pi ) )
+    if( !(*pj)->import( *pi ) ) {
+      std::cout<<"OpParBase::import_settings(): failed to import values for property \""<<(*pj)->get_name()<<"\""<<std::endl;
       return false;
+    }
   }
 
   std::list<PropertyBase*>& mpropin = pin->get_mapped_properties();
   std::list<PropertyBase*>::iterator mpi=mpropin.begin(), mpj=mapped_properties.begin();
   for( ; mpi != mpropin.end(); mpi++, mpj++ ) {
-    if( !(*mpj)->import( *mpi ) )
+    if( !(*mpj)->import( *mpi ) ) {
+      std::cout<<"OpParBase::import_settings(): failed to import values for property \""<<(*mpj)->get_name()<<"\""<<std::endl;
       return false;
+    }
   }
 
   set_map_flag( pin->is_map() );
@@ -251,14 +257,20 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
     break;
   case 2:
     vips_layer( n, &outnew, processor, imap, omap, 
-		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
-		"in0", invec[0], "in1", invec[1], NULL );
+    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+    "in0", invec[0], "in1", invec[1], NULL );
+    break;
+  case 3:
+    vips_layer( n, &outnew, processor, imap, omap,
+    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+    "in0", invec[0], "in1", invec[1],
+    "in2", invec[2], NULL );
     break;
   default:
     break;
   }
 
-#ifndef NDEBUG    
+#ifndef NDEBUG
   std::cout<<"OpParBase::build(): type="<<type<<"  format="<<get_format()<<std::endl
 	   <<"input images:"<<std::endl;
   for(int i = 0; i < n; i++) {

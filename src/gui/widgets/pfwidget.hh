@@ -55,6 +55,8 @@ namespace PF {
     void set_inhibit( bool val ) { inhibit = val; }
     void set_passive( bool val ) { passive = val; }
 
+    virtual void reset() { set_inhibit(true); if(property) {property->reset(); get_value();} set_inhibit(false); }
+
     OperationConfigGUI* get_dialog() { return dialog; }
 
     void set_processor( ProcessorBase* p) { processor = p; }

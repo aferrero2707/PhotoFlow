@@ -30,6 +30,7 @@
 #ifndef PF_CLIP_WARNING_H
 #define PF_CLIP_WARNING_H
 
+#include <string.h>
 #include <string>
 
 #include "../base/processor.hh"
@@ -64,6 +65,19 @@ public:
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, OpParBase* par)
   {
+    Rect *r = &oreg->valid;
+    int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
+    int height = r->height;
+
+    T* p;
+    T* pout;
+    int x, y;
+
+    for( y = 0; y < height; y++ ) {
+      p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+      pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+      memcpy( pout, p, sizeof(T)*line_size );
+    }
   }
 };
 

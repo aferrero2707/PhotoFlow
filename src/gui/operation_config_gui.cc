@@ -42,6 +42,7 @@
 #include "../gui/operations/clone_config.hh"
 #include "../gui/operations/crop_config.hh"
 #include "../gui/operations/scale_config.hh"
+#include "../gui/operations/perspective_config.hh"
 #include "../gui/operations/gradient_config.hh"
 #include "../gui/operations/uniform_config.hh"
 #include "../gui/operations/curves_config.hh"
@@ -83,8 +84,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   opacitySlider2( this, layer->get_blender(), "opacity", _("Opacity"), 100, 0, 100, 1, 10, 100),
   imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
   omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
-  shift_x( this, layer->get_blender(), "shift_x", _("X shift"), 0, -1000000, 1000000, 1, 10, 1),
-  shift_y( this, layer->get_blender(), "shift_y", _("Y shift"), 0, -1000000, 1000000, 1, 10, 1),
+  shift_x( this, layer->get_blender(), "shift_x", _("X shift "), 0, -1000000, 1000000, 1, 10, 1),
+  shift_y( this, layer->get_blender(), "shift_y", _("Y shift "), 0, -1000000, 1000000, 1, 10, 1),
   has_ch_sel(chsel),
   greychSelector( this, "grey_target_channel", _("Target channel: "), -1 ),
   rgbchSelector( this, "rgb_target_channel", _("Target channel: "), -1 ),
@@ -146,7 +147,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_top_buttons_box.pack_start( frame_edit, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_undo, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_redo, Gtk::PACK_SHRINK, 5 );
-  //frame_top_box_1_1.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_box.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
 
   frame_top_buttons_alignment.add( frame_top_buttons_box );
   frame_top_buttons_alignment.set( 0, 0.5, 0, 0 );
@@ -185,10 +186,14 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   controls_box.pack_start( frame_top_box_4, Gtk::PACK_SHRINK, 0 );
 
   if(par && par->has_opacity() ) {
-    frame_top_box_3.pack_start( shift_x, Gtk::PACK_SHRINK, 10 );
-    frame_top_box_3.pack_start( shift_y, Gtk::PACK_SHRINK, 10 );
+    frame_shift_box.pack_start( shift_x, Gtk::PACK_SHRINK, 2 );
+    frame_shift_box.pack_start( shift_y, Gtk::PACK_SHRINK, 2 );
+    frame_top_box_3.pack_start( frame_shift_box, Gtk::PACK_SHRINK, 5 );
+    frame_top_box_3.pack_start( frame_chsel_box, Gtk::PACK_SHRINK, 5 );
   }
   controls_box.pack_start( frame_top_box_3, Gtk::PACK_SHRINK, 0 );
+
+  controls_box.pack_start( hline2, Gtk::PACK_SHRINK, 5 );
 
 #ifdef GTKMM_2
   Gdk::Color bg;
@@ -223,6 +228,15 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
     aux_controls_box.pack_start( intensitySlider2, Gtk::PACK_SHRINK );
   }
   aux_controls_box.set_size_request(100,200);
+
+  frame_visible.set_tooltip_text( _("toggle layer visibility on/off") );
+  frame_mask.set_tooltip_text( _("enable/disable layer mask(s)") );
+  frame_mask2.set_tooltip_text( _("enable/disable layer mask(s)") );
+  frame_sticky.set_tooltip_text( _("toggle sticky flag on/off") );
+  frame_sticky2.set_tooltip_text( _("toggle sticky flag on/off") );
+  frame_edit.set_tooltip_text( _("toggle editing flag on/off") );
+  frame_edit2.set_tooltip_text( _("toggle editing flag on/off") );
+  frame_reset.set_tooltip_text( _("reset tool parameters") );
 
   frame_expander.signal_activated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::expand) );
@@ -260,6 +274,9 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
         &OperationConfigGUI::enable_editing_cb) );
   frame_edit2.signal_deactivated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::disable_editing_cb) );
+
+  frame_reset.signal_clicked.connect(sigc::mem_fun(*this,
+        &OperationConfigGUI::parameters_reset_cb) );
 
   frame_close.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::close_config_cb) );
@@ -583,7 +600,10 @@ void PF::OperationConfigGUI::parameters_redo()
 
 void PF::OperationConfigGUI::parameters_reset()
 {
-
+  for( int i = 0; i < controls.size(); i++ )
+    controls[i]->reset();
+  if( get_layer() && get_layer()->get_image() )
+    get_layer()->get_image()->update();
 }
 
 
@@ -681,6 +701,19 @@ void PF::OperationConfigGUI::open()
 
 
 
+void PF::OperationConfigGUI::reset_ch_selector()
+{
+  if( greychSelector.get_parent() == &frame_chsel_box )
+    frame_chsel_box.remove( greychSelector );
+  if( rgbchSelector.get_parent() == &frame_chsel_box )
+    frame_chsel_box.remove( rgbchSelector );
+  if( labchSelector.get_parent() == &frame_chsel_box )
+    frame_chsel_box.remove( labchSelector );
+  if( cmykchSelector.get_parent() == &frame_chsel_box )
+    frame_chsel_box.remove( cmykchSelector );
+}
+
+
 void PF::OperationConfigGUI::do_update()
 {
   //std::cout<<"PF::OperationConfigGUI::do_update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
@@ -716,6 +749,59 @@ void PF::OperationConfigGUI::do_update()
   if( get_layer() ) {
     nameEntry.set_text( get_layer()->get_name() );
     nameEntry2.set_text( get_layer()->get_name() );
+  }
+
+  // Update target channel selector
+  if( get_layer() && get_layer()->get_image() &&
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+#ifndef NDEBUG
+    std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
+#endif
+
+    PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+    PF::Image* image = get_layer()->get_image();
+    PF::Pipeline* pipeline = image->get_pipeline(0);
+    PF::PipelineNode* node = NULL;
+    if( pipeline ) node = pipeline->get_node( get_layer()->get_id() );
+    if( node && node->processor && node->processor->get_par() ) {
+      PF::OpParBase* par = node->processor->get_par();
+      cs = PF::convert_colorspace( par->get_interpretation() );
+      //std::cout<<"OperationConfigDialog::update() par: "<<par<<std::endl;
+    }
+    //std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called, cs: "<<cs<<std::endl;
+    switch( cs ) {
+    case PF_COLORSPACE_GRAYSCALE:
+      if( greychSelector.get_parent() != &frame_chsel_box ) {
+        reset_ch_selector();
+        frame_chsel_box.pack_start( greychSelector, Gtk::PACK_EXPAND_PADDING );
+        greychSelector.show();
+      }
+      break;
+    case PF_COLORSPACE_RGB:
+      if( rgbchSelector.get_parent() != &frame_chsel_box ) {
+        reset_ch_selector();
+        frame_chsel_box.pack_start( rgbchSelector, Gtk::PACK_EXPAND_PADDING );
+        rgbchSelector.show();
+      }
+      break;
+    case PF_COLORSPACE_LAB:
+      if( labchSelector.get_parent() != &frame_chsel_box ) {
+        reset_ch_selector();
+        frame_chsel_box.pack_start( labchSelector, Gtk::PACK_EXPAND_PADDING );
+        labchSelector.show();
+      }
+      break;
+    case PF_COLORSPACE_CMYK:
+      if( cmykchSelector.get_parent() != &frame_chsel_box ) {
+        reset_ch_selector();
+        frame_chsel_box.pack_start( cmykchSelector, Gtk::PACK_EXPAND_PADDING );
+        cmykchSelector.show();
+      }
+      break;
+    default:
+      break;
+    }
   }
 }
 
@@ -847,6 +933,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "scale" ) {
 
     dialog = new PF::ScaleConfigGUI( current_layer );
+
+  } else if( op_type == "perspective" ) {
+
+    dialog = new PF::PerspectiveConfigGUI( current_layer );
 
   } else if( op_type == "invert" ) {
 

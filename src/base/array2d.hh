@@ -86,6 +86,16 @@ namespace PF {
       //std::cout<<"r="<<r<<"  r_offset="<<r_offset<<"  ptr="<<ptr<<"  ptr2="<<ptr2<<std::endl;
       return matrix_shifted[r];
     }
+
+
+    // use as pointer to data
+    operator T*()
+    {
+        // only if owner this will return a valid pointer
+        return buf;
+    }
+
+
   };
 
 

@@ -46,6 +46,8 @@ namespace PF
 
   class DenoisePar: public OpParBase
   {
+    Property<bool> impulse_nr_enable;
+    Property<float> impulse_nr_threshold;
     Property<int> iterations;
     Property<float> amplitude;
     Property<float> sharpness; 
@@ -54,11 +56,13 @@ namespace PF
     Property<float> sigma;
 		PropertyBase nr_mode;
 
+		ProcessorBase* impulse_nr;
+
   public:
     DenoisePar();
 
     bool has_intensity() { return false; }
-    bool has_opacity() { return false; }
+    bool has_opacity() { return true; }
 
       
 

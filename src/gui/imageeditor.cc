@@ -169,8 +169,10 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   imageArea_hbox.pack_start( imageArea_eventBox, Gtk::PACK_EXPAND_PADDING );
   imageArea_vbox.pack_start( imageArea_hbox, Gtk::PACK_EXPAND_PADDING );
 
+#ifdef GTKMM_2
   Gdk::Color bg; bg.set_rgb_p(0.1,0.1,0.1);
   imageArea_eventBox2.modify_bg(Gtk::STATE_NORMAL,bg);
+#endif
   imageArea_eventBox2.add(imageArea_vbox);
 
   imageArea_scrolledWindow.add( imageArea_eventBox2 );
@@ -577,7 +579,11 @@ void PF::ImageEditor::on_map()
 {
   std::cout<<"ImageEditor::on_map() called."<<std::endl;
   Gtk::Container* toplevel = get_toplevel();
+#ifdef GTKMM_3
+  if( toplevel->get_is_toplevel() ) {
+#else
   if( toplevel->is_toplevel() ) {
+#endif
     toplevel->add_events( Gdk::STRUCTURE_MASK );
     //toplevel->signal_configure_event().connect_notify( sigc::mem_fun(*this, &PF::ImageEditor::on_preview_configure_event) );
     std::cout<<"ImageEditor::on_map(): toplevel window configured."<<std::endl;
@@ -678,7 +684,7 @@ void PF::ImageEditor::zoom_fit()
   float area_hsize = imageArea_scrolledWindow.get_allocated_width();
   float area_vsize = imageArea_scrolledWindow.get_allocated_height();
 #endif
-  std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
+  //std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
   area_hsize -= 20;
   area_vsize -= 20;
 
@@ -686,18 +692,18 @@ void PF::ImageEditor::zoom_fit()
 	float shrink_v = area_vsize/image_size_updater->get_image_height();
 	float shrink_min = (shrink_h<shrink_v) ? shrink_h : shrink_v;
 	int target_level = 0;
-	std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
+	//std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
 	while( shrink_min < 0.5 ) {
 		target_level++;
 		shrink_min *= 2;
-	  std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
+	  //std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
 	}
 
-  std::cout<<"ImageEditor::zoom_fit(): image area size="
-           <<area_hsize<<","<<area_vsize
-           <<"  image size="<<image_size_updater->get_image_width()
-           <<","<<image_size_updater->get_image_height()
-           <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
+  //std::cout<<"ImageEditor::zoom_fit(): image area size="
+  //         <<area_hsize<<","<<area_vsize
+  //         <<"  image size="<<image_size_updater->get_image_width()
+  //         <<","<<image_size_updater->get_image_height()
+  //         <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
 
 	imageArea->set_shrink_factor( shrink_min );
 	image->set_pipeline_level( pipeline, target_level );
@@ -1003,7 +1009,8 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
 #endif
 
   // Handle CTRL-double-click events separately
-  if( button->type != GDK_BUTTON_PRESS ) {
+  //if( button->type != GDK_BUTTON_PRESS ) {
+  if( mod_key == PF::MOD_KEY_CTRL ) {
     if( button->type == GDK_2BUTTON_PRESS && mod_key == PF::MOD_KEY_CTRL) {
       PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
       if( !pipeline ) return false;
@@ -1052,6 +1059,15 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
   gdouble x = button->x;
   gdouble y = button->y;
 
+  int mod_key = PF::MOD_KEY_NONE;
+  if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+  if( button->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
+  if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+
+  if( mod_key == PF::MOD_KEY_CTRL ) {
+    return false;
+  }
+
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
   std::cout<<"ImageEditor::my_button_release_event(): active_layer="<<active_layer<<std::endl;
@@ -1065,10 +1081,6 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 #ifndef NDEBUG
       std::cout<<"  sending button release event to dialog"<<std::endl;
 #endif
-      int mod_key = PF::MOD_KEY_NONE;
-      if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-      if( button->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
-      if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
       //std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
       if( dialog->pointer_release_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
@@ -1106,6 +1118,17 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
   if(state & GDK_BUTTON3_MASK) button = 3;
   if(state & GDK_BUTTON4_MASK) button = 4;
   if(state & GDK_BUTTON5_MASK) button = 5;
+
+  int mod_key = PF::MOD_KEY_NONE;
+  if( event->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
+  if( event->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
+  if( event->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+
+  if( mod_key == PF::MOD_KEY_CTRL ) {
+    return false;
+  }
+
+
   if( true || (state & GDK_BUTTON1_MASK) ) {
 
 #ifndef NDEBUG

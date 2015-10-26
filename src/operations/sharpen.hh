@@ -52,6 +52,7 @@ namespace PF
   public:
     SharpenPar();
 
+    bool has_intensity() { return false; }
     bool needs_caching();
       
     VipsImage* build(std::vector<VipsImage*>& in, int first, 

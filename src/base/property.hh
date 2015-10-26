@@ -177,6 +177,7 @@ namespace PF
     // first -> integer representation
     // second.first -> literal representation
     // second.second -> human-readable representation
+    std::pair< int, std::pair<std::string,std::string> > default_enum_value;
     std::pair< int, std::pair<std::string,std::string> > enum_value;
     std::map< int, std::pair<std::string,std::string> > enum_values;
 
@@ -191,6 +192,16 @@ namespace PF
     PropertyBase(std::string n, OpParBase* par, int val, std::string strval, std::string valname);//: name(n) {}
 
     std::string get_name() { return name; }
+
+    virtual void reset()
+    {
+      if( is_enum() ) set_enum_value( default_enum_value.first );
+    }
+
+    virtual void store_default()
+    {
+      if( is_enum() ) default_enum_value = enum_value;
+    }
 
     bool is_enum() { return( !enum_values.empty() ); }
 
@@ -307,10 +318,16 @@ namespace PF
   template< typename T >
   class Property: public PropertyBase
   {
+    T default_value;
     T value;
   public:
-    Property(std::string name, OpParBase* par): PropertyBase(name, par), value() {}
-    Property(std::string name, OpParBase* par, const T& v): PropertyBase(name, par), value(v) {}
+    Property(std::string name, OpParBase* par): PropertyBase(name, par), value(), default_value() {}
+    Property(std::string name, OpParBase* par, const T& v): PropertyBase(name, par), value(v), default_value(v) {}
+
+    void reset() { set(default_value); }
+
+    void store_default() { default_value = value;}
+
     void set(const T& newval) 
     { 
       if( value != newval )

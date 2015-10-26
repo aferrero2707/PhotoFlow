@@ -30,8 +30,7 @@
 #include "../base/exif_data.hh"
 #include "lensfun.hh"
 
-int vips_lensfun( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, ... );
-int vips_clone_stamp( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, int group_num, int stroke_num, ...);
+int vips_lensfun( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, VipsInterpolate* interpolate, ... );
 
 
 PF::LensFunPar::LensFunPar():
@@ -111,11 +110,19 @@ std::cout<<"LensFunPar::build() called."<<std::endl;
   std::cout<<"Maker: "<<exif_data->exif_maker<<"  model: "<<exif_data->exif_model
       <<"  lens: "<<exif_data->exif_lens<<std::endl;
 
-  if( vips_lensfun(in[0], &outnew, get_processor(), NULL) ) {
+  VipsInterpolate* interpolate = NULL; //vips_interpolate_new( "nohalo" );
+  if( !interpolate )
+    interpolate = vips_interpolate_new( "bicubic" );
+  if( !interpolate )
+    interpolate = vips_interpolate_new( "bilinear" );
+
+  if( vips_lensfun(in[0], &outnew, get_processor(), interpolate, NULL) ) {
     std::cout<<"vips_lensfun() failed."<<std::endl;
     PF_REF( in[0], "LensFunPar::build(): in[0] ref (exif data wrong size)")
     return in[0];
   }
+
+  PF_UNREF( interpolate, "vips_lensfun(): interpolate unref" );
 
   //outnew = in[0];
   //PF_REF( outnew, "LensFunPar::build(): in[0] ref")

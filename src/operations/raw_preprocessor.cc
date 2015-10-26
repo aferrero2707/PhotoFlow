@@ -123,6 +123,9 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
     wb_red_current = image_data->color.cam_mul[0];
     wb_green_current = image_data->color.cam_mul[1];
     wb_blue_current = image_data->color.cam_mul[2];
+    //wb_red_current = 1.513467;
+    //wb_green_current = 1.343420;
+    //wb_blue_current = 4.000183;
     break;
   case PF::WB_SPOT:
   case PF::WB_COLOR_SPOT:
