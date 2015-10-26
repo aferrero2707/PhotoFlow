@@ -1,4 +1,30 @@
 =========================================
+Version 0.2.3
+
+* New Features:
+
+- Updated G'MIC to version 1.6.7
+- Updated adobe camera matrix coefficients and white balance presets to Darktable 1.6.9
+- Added partial support for FUJIFILM SL1000 (only adobe matrices, no WB prests)
+- Added LMMSE demosaicing from RawTherapee
+- Added new "impulse noise reduction" tool, based on the equivalent tool from RawTherapee
+- Added new "perspective correction" tool, based on the "keystone perspective correction" from Darktable.
+- The "RAW developer" tool is now automatically added above the "RAW loader" when opening RAW images
+- Added reset button to restore the tools parameters to their default values
+- Added target channel selector for tools that allow opacity blend
+- File open dialog: updated list of recognized image file formats to include all known RAW extensions
+- Lensfun: improved pixel interpolation
+
+
+* Bug fixes:
+
+- Fixed preview of un-processed RAW images
+- Fixed borken preview when using the freehand drawing and clone stamp tools
+- Fixed application freeze when using the spot and color spot white balance tools
+- The un-processed RAW image is displayed when no suitable adobe camera matrix is found, to prevent application crash
+- Fixed layer dirty flag setting when moving or deleting a layer
+
+=========================================
 Version 0.2.2
 
 * New Features:
