@@ -25,7 +25,17 @@ To add the PPA and install photoflow, do the following:
 
         sudo add-apt-repository ppa:dhor/myway
         sudo apt-get update
-        sudo apt-get install photoflow
+        sudo apt-get install photoflo
+
+# Arch Linux packages
+
+Pre-compiled packages are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page. To install a given version, download the photoflow-git-x.x.x-1-x86_64.pkg.tar.xz archive (where `x.x.x` must be replaced with the version to be installed) and then run 
+
+        sudo packman -U photoflow-git-x.x.x-1-x86_64.pkg.tar.xz
+
+To compile from sources, download the PKGBUILD file and run this command in the download directory:
+
+        makepkg -i
 
 # Fedora packages
 
