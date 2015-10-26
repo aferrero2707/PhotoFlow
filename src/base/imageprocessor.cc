@@ -280,6 +280,13 @@ void PF::ImageProcessor::run()
         if( !request.dnd_dest_layer_list ) break;
         signal_status_processing.emit();
         request.image->lock();
+        std::list<Layer*> children;
+        request.image->get_layer_manager().get_child_layers( request.layer, children );
+        for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
+          if( !(*i) ) continue;
+          (*i)->set_dirty( true );
+        }
+        request.layer->set_dirty( true );
         // Remove the layer from its current container
         request.image->get_layer_manager().remove_layer( request.layer );
         // Insert the layer to the destination container, above the specified layer if

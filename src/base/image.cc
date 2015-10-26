@@ -517,6 +517,13 @@ void PF::Image::remove_layer( PF::Layer* layer )
 
 void PF::Image::do_remove_layer( PF::Layer* layer )
 {
+  std::list<Layer*> children;
+  layer_manager.get_child_layers( layer, children );
+  for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
+    if( !(*i) ) continue;
+    (*i)->set_dirty( true );
+  }
+
   remove_from_inputs( layer );
   std::list<Layer*>* list = layer_manager.get_list( layer );
   if( list )
