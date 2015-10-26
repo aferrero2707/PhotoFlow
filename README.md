@@ -92,15 +92,3 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 
 PhotoFlow is in a early development stage. The present version allows to open an image file and apply basic editing filters via non-destructive adjustment layers. The individual layers can be activated and de-activated using the radio buttons on the right of the image. Moreover, the layers structure can be saved to disk and re-opened again via the command line.
 Loading and processing of RAW images (demosaicing, white balance, exposure adjustment, etc.) is now available, at least at a basic level.
-
-# Roadmap and development plans
-
-The following list shows what features are currently planned or being implemented, in a kind of priority order:
-
-- Implement colorpsace conversions based on ICC profiles (partly implemented already)
-
-- Complete the list of supported blending modes
-
-- Pencil tool for simple hand drawing (almost completely implemented)
-
-
