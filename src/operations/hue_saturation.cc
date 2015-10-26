@@ -95,6 +95,7 @@ PF::HueSaturationPar::HueSaturationPar():
   for( id = 0; id < 3; id++ ) {
     eq_vec[id]->get().set_point( 0, x1, y1 );
     eq_vec[id]->get().set_point( 1, x2, y2 );
+    eq_vec[id]->store_default();
   }
   /*
   for( id = 0; id < 3; id+=3 ) {

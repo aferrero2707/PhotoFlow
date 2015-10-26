@@ -195,7 +195,7 @@ namespace PF
 
     virtual void reset()
     {
-      if( is_enum() ) enum_value = default_enum_value;
+      if( is_enum() ) set_enum_value( default_enum_value.first );
     }
 
     virtual void store_default()
@@ -324,9 +324,9 @@ namespace PF
     Property(std::string name, OpParBase* par): PropertyBase(name, par), value(), default_value() {}
     Property(std::string name, OpParBase* par, const T& v): PropertyBase(name, par), value(v), default_value(v) {}
 
-    void reset() { value = default_value; }
+    void reset() { set(default_value); }
 
-    void store_default() { default_value = value; }
+    void store_default() { default_value = value;}
 
     void set(const T& newval) 
     { 
