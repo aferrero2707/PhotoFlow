@@ -30,6 +30,8 @@
 #ifndef PF_VOLUME_H
 #define PF_VOLUME_H
 
+#include <string.h>
+
 #include "../base/splinecurve.hh"
 #include "../base/processor.hh"
 
