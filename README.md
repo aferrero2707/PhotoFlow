@@ -1,7 +1,7 @@
 PhotoFlow
 =========
 
-The aim of the project is to provide a fully non-destructive photo retouching program that includes a complete workflow from RAW image development to high-quality printing.
+The aim of the project is to provide a fully non-destructive photo retouching program with a complete workflow including RAW image development.
 
 Here is the general feature (whish)list:
 
