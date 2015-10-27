@@ -1,20 +1,22 @@
 PhotoFlow
 =========
 
-The aim of the project is to provide a fully non-destructive photo retouching program that includes a complete workflow from RAW image development to high-quality printing.
+The aim of the project is to provide a fully non-destructive photo retouching program with a complete workflow including RAW image development.
 
 Here is the general feature (whish)list:
 
 - Fully non-destructive, layer-based photo editing workflow with realtime preview of the final image
 - Support for 8-bits and 16-bits integer as well as 32-bits and 64-bits floating point precision, selectable at runtime and on a per-image basis
-- Plugin-based architecture: new tools can be implemented as separate modules that are loaded at runtime
 - Allows to load and edit images of arbitrary size, thanks to the underlying rendering engine based on the VIPS library
 - Fully color managed workflow: user-defined input, work and output profiles, soft-proofing, etc...
 - Support for layer grouping and layer masks
 - Support for common photo editing tools: levels, curves, brightness-contrast control, blurring, sharpening, cropping, resizing, colorspace conversions, etc..., all implemented in the form of image layers
-- User-friendly interface to develop new tools and image filters as external plugins
 
 You can follow the development of photoflow and learn about its usage in the dedicated blog: http://photoflowblog.blogspot.fr/
+
+# Windows and OSX installers
+
+Up-to-date Windows and OSX installers are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page.
 
 # Installing from PPA (Ubuntu Linux and derivate distributions)
 
@@ -23,7 +25,17 @@ To add the PPA and install photoflow, do the following:
 
         sudo add-apt-repository ppa:dhor/myway
         sudo apt-get update
-        sudo apt-get install photoflow
+        sudo apt-get install photoflo
+
+# Arch Linux packages
+
+Pre-compiled packages are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page. To install a given version, download the photoflow-git-x.x.x-1-x86_64.pkg.tar.xz archive (where `x.x.x` must be replaced with the version to be installed) and then run 
+
+        sudo packman -U photoflow-git-x.x.x-1-x86_64.pkg.tar.xz
+
+To compile from sources, download the PKGBUILD file and run this command in the download directory:
+
+        makepkg -i
 
 # Fedora packages
 
@@ -80,15 +92,3 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 
 PhotoFlow is in a early development stage. The present version allows to open an image file and apply basic editing filters via non-destructive adjustment layers. The individual layers can be activated and de-activated using the radio buttons on the right of the image. Moreover, the layers structure can be saved to disk and re-opened again via the command line.
 Loading and processing of RAW images (demosaicing, white balance, exposure adjustment, etc.) is now available, at least at a basic level.
-
-# Roadmap and development plans
-
-The following list shows what features are currently planned or being implemented, in a kind of priority order:
-
-- Implement colorpsace conversions based on ICC profiles (partly implemented already)
-
-- Complete the list of supported blending modes
-
-- Pencil tool for simple hand drawing (almost completely implemented)
-
-
