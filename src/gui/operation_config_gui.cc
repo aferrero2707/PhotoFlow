@@ -186,9 +186,17 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   controls_box.pack_start( frame_top_box_4, Gtk::PACK_SHRINK, 0 );
 
   if(par && par->has_opacity() ) {
-    frame_shift_box.pack_start( shift_x, Gtk::PACK_SHRINK, 2 );
-    frame_shift_box.pack_start( shift_y, Gtk::PACK_SHRINK, 2 );
-    frame_top_box_3.pack_start( frame_shift_box, Gtk::PACK_SHRINK, 5 );
+    if( par && par->has_target_channel() ) {
+      frame_shift_box.pack_start( shift_x, Gtk::PACK_SHRINK, 2 );
+      frame_shift_box.pack_start( shift_y, Gtk::PACK_SHRINK, 2 );
+      frame_top_box_3.pack_start( frame_shift_box, Gtk::PACK_SHRINK, 5 );
+    } else {
+      frame_top_box_3.pack_start( shift_x, Gtk::PACK_SHRINK, 5 );
+      frame_top_box_3.pack_start( shift_y, Gtk::PACK_SHRINK, 5 );
+    }
+  }
+
+  if(par && par->has_target_channel() ) {
     frame_top_box_3.pack_start( frame_chsel_box, Gtk::PACK_SHRINK, 5 );
   }
   controls_box.pack_start( frame_top_box_3, Gtk::PACK_SHRINK, 0 );
@@ -754,7 +762,8 @@ void PF::OperationConfigGUI::do_update()
   // Update target channel selector
   if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&
-      get_layer()->get_processor()->get_par() ) {
+      get_layer()->get_processor()->get_par() &&
+      get_layer()->get_processor()->get_par()->has_target_channel() ) {
 #ifndef NDEBUG
     std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
 #endif

@@ -44,6 +44,7 @@ namespace PF
     InvertPar();
 
     bool has_intensity() { return false; }
+    bool has_target_channel() { return true; }
   };
 
   
