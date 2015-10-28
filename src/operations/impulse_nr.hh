@@ -273,6 +273,11 @@ public:
         }
       }
     }
+
+    for (int i = 0; i < iheight; i++) {
+      delete[] impish[i];
+    }
+    delete[] impish;
   }
 };
 
