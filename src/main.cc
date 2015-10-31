@@ -209,7 +209,7 @@ int main (int argc, char *argv[])
     Gtk::RC::set_default_files (files);
     Gtk::RC::reparse_all (Gtk::Settings::get_default());
     GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
-    gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
+    //gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
   }
 #endif
   //#endif
