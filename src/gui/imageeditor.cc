@@ -1000,8 +1000,9 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
   gdouble y = button->y;
 
   int mod_key = PF::MOD_KEY_NONE;
-  if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-  if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+  if( button->state & GDK_CONTROL_MASK ) mod_key |= PF::MOD_KEY_CTRL;
+  if( button->state & GDK_MOD1_MASK ) mod_key |= PF::MOD_KEY_ALT;
+  if( button->state & GDK_SHIFT_MASK ) mod_key |= PF::MOD_KEY_SHIFT;
 
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
@@ -1060,9 +1061,9 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
   gdouble y = button->y;
 
   int mod_key = PF::MOD_KEY_NONE;
-  if( button->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-  if( button->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
-  if( button->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+  if( button->state & GDK_CONTROL_MASK ) mod_key |= PF::MOD_KEY_CTRL;
+  if( button->state & GDK_MOD1_MASK ) mod_key |= PF::MOD_KEY_ALT;
+  if( button->state & GDK_SHIFT_MASK ) mod_key |= PF::MOD_KEY_SHIFT;
 
   if( mod_key == PF::MOD_KEY_CTRL ) {
     return false;
@@ -1120,9 +1121,9 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
   if(state & GDK_BUTTON5_MASK) button = 5;
 
   int mod_key = PF::MOD_KEY_NONE;
-  if( event->state & GDK_CONTROL_MASK ) mod_key += PF::MOD_KEY_CTRL;
-  if( event->state & GDK_MOD1_MASK ) mod_key += PF::MOD_KEY_ALT;
-  if( event->state & GDK_SHIFT_MASK ) mod_key += PF::MOD_KEY_SHIFT;
+  if( event->state & GDK_CONTROL_MASK ) mod_key |= PF::MOD_KEY_CTRL;
+  if( event->state & GDK_MOD1_MASK ) mod_key |= PF::MOD_KEY_ALT;
+  if( event->state & GDK_SHIFT_MASK ) mod_key |= PF::MOD_KEY_SHIFT;
 
   if( mod_key == PF::MOD_KEY_CTRL ) {
     return false;

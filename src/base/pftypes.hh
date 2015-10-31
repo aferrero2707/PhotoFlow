@@ -125,10 +125,10 @@ namespace PF
 
 
   enum mod_key_t {
-    MOD_KEY_NONE = 0,
-    MOD_KEY_CTRL = 1,
-    MOD_KEY_ALT = 2,
-    MOD_KEY_SHIFT = 4
+    MOD_KEY_NONE = 1,
+    MOD_KEY_CTRL = 2+1,
+    MOD_KEY_ALT = 4+1,
+    MOD_KEY_SHIFT = 8+1
   };
 
 
