@@ -149,6 +149,17 @@ bool PF::Histogram::on_expose_event (GdkEventExpose * event)
 
   Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
 
+#endif
+#ifdef GTKMM_3
+bool PF::Histogram::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+{
+  int border_size = 2;
+  Gtk::Allocation allocation = get_allocation();
+  const int width = allocation.get_width() - border_size*2;
+  const int height = allocation.get_height() - border_size*2;
+  const int x0 = border_size;
+  const int y0 = border_size;
+#endif
   cr->save();
   cr->set_source_rgba(0.2, 0.2, 0.2, 1.0);
   cr->paint();
@@ -215,15 +226,8 @@ bool PF::Histogram::on_expose_event (GdkEventExpose * event)
 
   return TRUE;
 }
-#endif
 
 
-#ifdef GTKMM_3
-bool PF::Histogram::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
-{
-  return true;
-}
-#endif
 
 
 
