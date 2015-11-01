@@ -241,7 +241,7 @@ void PF::CloneStampConfigGUI::draw_point( double x, double y )
 bool PF::CloneStampConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
-  if( (mod_key != PF::MOD_KEY_NONE) && (mod_key != PF::MOD_KEY_ALT) ) return false;
+  if( (mod_key != PF::MOD_KEY_NONE) && (mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT)) ) return false;
 
   double lx = x, ly = y, lw = 1, lh = 1;
   screen2layer( lx, ly, lw, lh );
@@ -259,7 +259,7 @@ bool PF::CloneStampConfigGUI::pointer_press_event( int button, double x, double 
 bool PF::CloneStampConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
-  if( (mod_key == PF::MOD_KEY_ALT) ) {
+  if( (mod_key == (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT)) ) {
     mouse_x = x; mouse_y = y;
     double lx = x, ly = y, lw = 1, lh = 1;
     screen2layer( lx, ly, lw, lh );
