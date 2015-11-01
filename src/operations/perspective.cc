@@ -39,14 +39,14 @@ PF::PerspectivePar::PerspectivePar():
 {
   set_type( "perspective" );
 
-  //keystones.get().push_back( std::make_pair(0.2f, 0.2f) );
-  //keystones.get().push_back( std::make_pair(0.8f, 0.2f) );
-  //keystones.get().push_back( std::make_pair(0.8f, 0.8f) );
-  //keystones.get().push_back( std::make_pair(0.2f, 0.8f) );
-  keystones.get().push_back( std::make_pair(0.29f, 0.15f) );
-  keystones.get().push_back( std::make_pair(0.77f, 0.25f) );
-  keystones.get().push_back( std::make_pair(0.84f, 0.84f) );
-  keystones.get().push_back( std::make_pair(0.27f, 0.88f) );
+  keystones.get().push_back( std::make_pair(0.2f, 0.2f) );
+  keystones.get().push_back( std::make_pair(0.8f, 0.2f) );
+  keystones.get().push_back( std::make_pair(0.8f, 0.8f) );
+  keystones.get().push_back( std::make_pair(0.2f, 0.8f) );
+  //keystones.get().push_back( std::make_pair(0.29f, 0.15f) );
+  //keystones.get().push_back( std::make_pair(0.77f, 0.25f) );
+  //keystones.get().push_back( std::make_pair(0.84f, 0.84f) );
+  //keystones.get().push_back( std::make_pair(0.27f, 0.88f) );
 
   set_default_name( _("perspective correction") );
 }
