@@ -115,7 +115,12 @@ void PF::PixelBuffer::draw_line( int x1, int y1, int x2, int y2 )
 
     for( int y = y1; y <= y2; y++ ) {
 
+      if( y < buf_top ) continue;
+      if( y > buf_bottom ) continue;
+
       int x = x1 + (y-y1)*dx/dy;
+      if( x < buf_left ) continue;
+      if( x > buf_right ) continue;
       guint8* p = px + rs*(y-buf_top) + (x-buf_left)*bl;
       PX_MOD( p[0] ); PX_MOD( p[1] ); PX_MOD( p[2] );
     }
