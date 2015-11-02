@@ -11,7 +11,7 @@ Version 0.2.4
 - Curves tool: sampling of curve points is now associated to Ctrl+Alt+left_click mouse gesture. For this to work, the curves tool has to be set in "edting" mode
 - Clone stamp tool: the sampling region is now selected by a Ctrl+Alt+left_click in the preview area.
 - Image preview: fixed possible memory corruption when drawing vertical lines on top of the preview image
-- Improved compatibility with GTK3
+- Improved compatibility with GTK3. GTKMM3 support can now be activated via -DUSE_GTKMM3=1 cmake option.
 
 =========================================
 Version 0.2.3
