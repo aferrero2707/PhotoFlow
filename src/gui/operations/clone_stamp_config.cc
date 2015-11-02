@@ -241,7 +241,7 @@ void PF::CloneStampConfigGUI::draw_point( double x, double y )
 bool PF::CloneStampConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
-  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return false;
+  if( (mod_key != PF::MOD_KEY_NONE) && (mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT)) ) return false;
 
   double lx = x, ly = y, lw = 1, lh = 1;
   screen2layer( lx, ly, lw, lh );
@@ -252,14 +252,15 @@ bool PF::CloneStampConfigGUI::pointer_press_event( int button, double x, double 
   image->update();
 
   draw_point( lx, ly );
-  return false;
+  return true;
 }
 
 
 bool PF::CloneStampConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
-  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) {
+  if( (mod_key == (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT)) ) {
+    mouse_x = x; mouse_y = y;
     double lx = x, ly = y, lw = 1, lh = 1;
     screen2layer( lx, ly, lw, lh );
     srcpt_row = ly;
@@ -267,6 +268,7 @@ bool PF::CloneStampConfigGUI::pointer_release_event( int button, double x, doubl
     srcpt_ready = true;
     srcpt_changed = true;
     stroke_started = false;
+    return true;
   } else {
     //draw_point( x, y );
   }
@@ -278,7 +280,7 @@ bool PF::CloneStampConfigGUI::pointer_motion_event( int button, double x, double
 {
   mouse_x = x; mouse_y = y;
   if( button != 1 ) return true;
-  if( (mod_key & PF::MOD_KEY_CTRL) != 0 ) return true;
+  if( mod_key != PF::MOD_KEY_NONE ) return true;
 #ifndef NDEBUG
   std::cout<<"PF::CloneStampConfigGUI::pointer_motion_event() called."<<std::endl;
 #endif
@@ -335,7 +337,8 @@ bool PF::CloneStampConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& 
     buf_out.draw_circle( x0, y0, pensize );
     tx = srcpt_col; ty = srcpt_row; tw = 1; th = 1;
     layer2screen( tx, ty, tw, th );
-    buf_out.draw_circle( tx, ty, pensize );
+    if( (tx!=x0) && (ty!=y0) )
+      buf_out.draw_circle( tx, ty, pensize );
   } else {
     buf_out.draw_circle( x0, y0, pensize );
   }

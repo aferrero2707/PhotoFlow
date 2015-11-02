@@ -129,12 +129,14 @@ void PF::Slider::get_value()
   if( !get_prop() ) return;
   double val;
   get_prop()->get(val);
-  //std::cout<<"PF::Slider::get_value(): value="<<val<<std::endl;
 #ifdef GTKMM_2
   adjustment.set_value( val*multiplier );
 #endif
 #ifdef GTKMM_3
   adjustment->set_value( val*multiplier );
+  spinButton.update();
+  //std::cout<<"PF::Slider::get_value("<<get_prop_name()<<"): spinButton.value="<<spinButton.get_value()<<std::endl;
+  //std::cout<<"PF::Slider::get_value("<<get_prop_name()<<"): adjustment.value="<<adjustment->get_value()<<std::endl;
 #endif
 }
 

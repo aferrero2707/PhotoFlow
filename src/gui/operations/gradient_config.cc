@@ -272,6 +272,9 @@ bool PF::GradientConfigGUI::pointer_press_event( int button, double sx, double s
   // Retrieve the pipeline #0 (full resolution preview)
   PF::Pipeline* pipeline = image->get_pipeline( 0 );
   if( !pipeline ) return false;
+  int level = pipeline->get_level();
+  float scale = 1;
+  for( int i = 1; i <= level; i++ ) scale *= 2;
 
   // Find the pipeline node associated to the current layer
   PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
@@ -288,8 +291,9 @@ bool PF::GradientConfigGUI::pointer_press_event( int button, double sx, double s
   if( par->get_gradient_type() == GRADIENT_HORIZONTAL ) ppoints = &(par->get_hmod().get_points());
   const std::vector< std::pair<float,float> >& points = *ppoints;
 
-  double x = sx, y = sy, w = 1, h = 1;
+  double x = sx, y = sy, w = 10, h = 10;
   screen2layer( x, y, w, h );
+  int D = w;
 
   // Find handle point
   active_point_id = -1;
@@ -305,7 +309,7 @@ bool PF::GradientConfigGUI::pointer_press_event( int button, double sx, double s
     }
     double dx = x - px;
     double dy = y - py;
-    if( (fabs(dx) > 10) || (fabs(dy) > 10) ) continue;
+    if( (fabs(dx) > D) || (fabs(dy) > D) ) continue;
     active_point_id = i;
     break;
   }

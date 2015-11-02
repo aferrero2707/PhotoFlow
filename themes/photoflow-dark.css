@@ -1,104 +1,177 @@
-/* 
-  Photoflow dark theme
-  Directly derived from RawTherapee's 25-Gray-Gray.gtkrc theme
-*/
+    /* default color scheme */
+    @define-color bg_color #cecece;
+    @define-color fg_color #3c3c3c;
+    @define-color base_color #fcfcfc;
+    @define-color text_color #000;
+    @define-color selected_bg_color #398ee7;
+    @define-color selected_fg_color #fff;
+    @define-color tooltip_bg_color #000;
+    @define-color tooltip_fg_color #e1e1e1;
 
-/* default color scheme */
-@define-color bg_color #404040;
-@define-color fg_color #979797;
-@define-color base_color #525252;
-@define-color text_color #A2A2A2;
-@define-color selected_bg_color #606060;
-@define-color selected_fg_color #CDCDCD;
-@define-color tooltip_bg_color #252525;
-@define-color tooltip_fg_color #A0A0A0;
+/* dark colormap */
+@define-color theme_bg_color #333;
+@define-color theme_fg_color #eee;
+@define-color theme_base_color #555;
+@define-color theme_text_color #fff;
+@define-color theme_selected_bg_color #398ee7;
+@define-color theme_selected_fg_color #fff;
+@define-color theme_tooltip_bg_color #000;
+@define-color theme_tooltip_fg_color #e1e1e1;
 
 /* misc colors used by gtk+ */
-@define-color info_fg_color @fg_color;
-@define-color info_bg_color #E9C7FF;
-@define-color warning_fg_color rgb (173, 120, 41);
-@define-color warning_bg_color rgb (250, 173, 61);
-@define-color question_fg_color rgb (97, 122, 214);
-@define-color question_bg_color rgb (138, 173, 212);
-@define-color error_fg_color rgb (166, 38, 38);
-@define-color error_bg_color rgb (237, 54, 54);
-@define-color link_color #4a90d9;
-@define-color error_color #ff0000;
-
-/* theme common colors */
-@define-color button_bg_color #404040;
-@define-color dark_bg_color #dee3e9;
-@define-color dark_fg_color @fg_color;
-@define-color transparent rgba (0, 0, 0, 0);
-@define-color backdrop_selected_fg_color @fg_color;
+@define-color info_fg_color rgb (80, 80, 80);
+@define-color info_bg_color rgb (250, 250, 130);
+@define-color warning_fg_color rgb (255, 255, 255);
+@define-color warning_bg_color rgb (255, 150, 80);
+@define-color question_fg_color rgb (80, 80, 80);
+@define-color question_bg_color rgb (150, 180, 230);
+@define-color error_fg_color rgb (255, 255, 255);
+@define-color error_bg_color rgb (200, 70, 50);
+@define-color link_color #2c82dd;
+@define-color error_color #cc0000;
 
 
 
-* {
-  /*padding: 1px;*/
-  /*-GtkButton-child-displacement-x: 1;*/
-  /*-GtkButton-child-displacement-y: 1;*/
-  /*-GtkCheckButton-indicator-size: 14;*/
 
-  background-color: @bg_color;
-  color: @fg_color;
+    /* default */
+    * {
+    engine: none;
 
-  /*-Clearlooks-colorize-scrollbar: true;
-  -Clearlooks-style: classic;*/
-}
+    border-width: 1px;
+    background-clip: padding-box;
 
-*:hover {
-  background-color: shade (@bg_color, 1.02);
-}
+    -GtkArrow-arrow-scaling: 0.5;
+    -GtkButton-child-displacement-x: 1;
+    -GtkButton-child-displacement-y: 1;
+    -GtkButton-default-border: 0;
+    -GtkButton-image-spacing: 0;
+    -GtkButton-interior-focus: true;
+    -GtkButton-inner-border: 1;
+    -GtkCheckButton-indicator-size: 15;
+    -GtkCheckMenuItem-indicator-size: 12;
+    -GtkEntry-inner-border: 1;
+    -GtkEntry-progress-border: 0;
+    -GtkExpander-expander-size: 12;
+    -GtkHTML-link-color: @link_color;
+    -GtkIMHtml-hyperlink-color: @link_color;
+    -GtkMenu-horizontal-padding: 0;
+    -GtkMenu-vertical-padding: 0;
+    -GtkMenuBar-internal-padding: 0;
+    -GtkMenuItem-arrow-scaling: 0.4;
+    -GtkNotebook-initial-gap: 0;
+    -GtkNotebook-tab-overlap: -2;
+    -GtkPaned-handle-size: 1;
+    -GtkProgressBar-min-horizontal-bar-height: 10;
+    -GtkProgressBar-min-vertical-bar-width: 10;
+    -GtkRange-slider-width: 9;
+    -GtkRange-stepper-size: 0;
+    -GtkRange-stepper-spacing: 0;
+    -GtkRange-trough-border: 3;
+    -GtkRange-trough-under-steppers: 1;
+    -GtkScale-trough-border: 1;
+    -GtkScrollbar-activate-slider: 1;
+    -GtkScrollbar-trough-border: 1;
+    -GtkScrollbar-slider-width: 15;
+    -GtkScrollbar-min-slider-length: 50;
+    -GtkScrolledWindow-scrollbar-spacing: 0;
+    -GtkScrolledWindow-scrollbars-within-bevel: 1;
+    -GtkSeparatorMenuItem-horizontal-padding: 0;
+    -GtkStatusbar-shadow-type: none;
+    -GtkTextView-error-underline-color: @error_color;
+    -GtkToolButton-icon-spacing: 6;
+    -GtkToolItemGroup-expander-size: 11;
+    -GtkToolbar-internal-padding: 0;
+    -GtkTreeView-expander-size: 11;
+    -GtkTreeView-vertical-separator: 0;
+    -GtkWidget-wide-separators: true;
+    -GtkWidget-separator-width: 1;
+    -GtkWidget-separator-height: 1;
+    -GtkWidget-focus-padding: 0;
+    -GtkWidget-focus-line-width: 1;
+    -GtkWidget-link-color: @link_color;
+    -GtkWidget-visited-link-color: @link_color;
+    -GtkWindow-resize-grip-width: 13;
+    -GtkWindow-resize-grip-height: 13;
+    -WnckTasklist-fade-overlay-rect: 0;
+    }
 
-*:selected {
-  background-color: @selected_bg_color;
-  color: @selected_fg_color;
-}
+    GtkWindow {
+    color: @theme_fg_color;
+    }
 
-*:insensitive {
-  color: shade (@bg_color, 0.7);
-}
+    * {
+    /* inherit the color from parent by default */
+    color: inherit;
+    background-color: @theme_bg_color;
+    }
 
-*:active {
-  background-color: shade (@bg_color, 0.9);
-}
+    /**********
+    * states *
+    **********/
+    *:insensitive {
+    color: mix (@theme_fg_color, @theme_bg_color, 0.4);
+    text-shadow: 1 1 alpha (@theme_base_color, 0.4);
+    }
 
-.tooltip {
-  padding: 4px;
+    *:active {
+    background-color: shade (@theme_bg_color, 0.9);
+    }
 
-  background-color: @tooltip_bg_color;
-  color: @tooltip_fg_color;
-}
+    *:active:hover:insensitive {
+    }
 
-.button {
-  padding: 3px;
-  background-color: shade (@bg_color, 1.04);
-}
+    *:active:insensitive {
+    }
 
-.button:hover {
-  background-color: shade (@bg_color, 1.06);
-}
+    *:hover {
+    }
 
-.button:active {
-  background-color: shade (@bg_color, 0.85);
-}
+    *:hover:insensitive {
+    }
 
-.entry {
-  padding: 3px;
+    *:selected,
+    *:selected:focus {
+    background-color: alpha (@theme_selected_bg_color, 0.9);
+    color: @theme_selected_fg_color;
+    }
+    
+    
+        .button {
+    background-image: -gtk-gradient(linear, left top, left bottom,
+    from (shade(shade(@theme_bg_color, 1.02), 1.05)),
+    to (shade(shade(@theme_bg_color, 1.02), 0.97)));
 
-  background-color: @base_color;
-  color: @text_color;
-}
+    border-radius: 2px;
+    border-color: shade(shade(@theme_bg_color, 1.02), 0.8);
+    border-style: solid;
+    color: @theme_fg_color;
+    }
 
-.entry:selected {
-  background-color: mix (@selected_bg_color, @base_color, 0.4);
-  /*-Clearlooks-focus-color: shade (0.65, @selected_bg_color)*/
-}
+    .button:active {
+    background-image: -gtk-gradient(linear, left top, left bottom,
+    from (shade(shade(@theme_bg_color, 0.85), 1.05)),
+    to (shade(shade(@theme_bg_color, 0.85), 0.97)));
 
-/* The latter selector is an specification of the first,
-   since any widget may use the same classes or names 
-#window-name .button,
-GtkWindow#window-name GtkButton.button {
-  background-color: #fff;
-}*/
+    border-color: shade(shade(@theme_bg_color, 0.85), 0.8);
+    }
+
+    .button:hover,
+    .button:active:hover {
+    background-image: -gtk-gradient(linear, left top, left bottom,
+    from (shade(shade(@theme_bg_color, 1.07), 1.05)),
+    to (shade(shade(@theme_bg_color, 1.07), 0.97)));
+
+    border-color: shade(shade(@theme_bg_color, 1.07), 0.8);
+    }
+
+    .button:insensitive {
+    background-image: -gtk-gradient(linear, left top, left bottom,
+    from (shade(shade(@theme_bg_color, 0.95), 1.05)),
+    to (shade(shade(@theme_bg_color, 0.95), 0.97)));
+
+    border-color: shade(shade(@theme_bg_color, 0.95), 0.8);
+
+    color: mix(@theme_fg_color, @theme_bg_color, 0.4);
+    }
+    
+    

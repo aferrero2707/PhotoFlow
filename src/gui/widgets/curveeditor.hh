@@ -101,6 +101,24 @@ namespace PF {
 
     ~CurveEditor() {}
 
+    virtual void reset() {
+      PFWidget::reset();
+      SplineCurve& curve = curve_area->get_curve();
+      curve.update_spline();
+      curve_area->set_selected_point( 0 );
+      curve_area->queue_draw();
+      inhibit_value_changed = true;
+#ifdef GTKMM_2
+      xadjustment.set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
+      yadjustment.set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
+#endif
+#ifdef GTKMM_3
+      xadjustment->set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
+      yadjustment->set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
+#endif
+      inhibit_value_changed = false;
+    }
+
     void add_point( float x )
     {
       SplineCurve& curve = curve_area->get_curve();

@@ -152,8 +152,13 @@ namespace PF
   class Property<SplineCurve>: public PropertyBase
   {
     SplineCurve curve;
+    SplineCurve default_curve;
   public:
-    Property(std::string name, OpParBase* par): PropertyBase(name, par), curve() {}
+    Property(std::string name, OpParBase* par): PropertyBase(name, par), curve(), default_curve() {}
+
+    void reset() { set(default_curve); }
+
+    void store_default() { default_curve = curve;}
 
     void set(const SplineCurve& newval) { 
       if( curve != newval )

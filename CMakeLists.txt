@@ -64,14 +64,15 @@ pkg_check_modules(GTHREAD gthread-2.0)
 pkg_check_modules(GOBJECT gobject-2.0) 
 pkg_check_modules(GLIBMM glibmm-2.4) 
 #pkg_check_modules(GTKMM3 gtkmm-3.0<=3.4.0) 
-pkg_check_modules(GTKMM2 REQUIRED gtkmm-2.4) 
-if(NOT GTKMM2_FOUND)
+
+if(USE_GTKMM3)
   pkg_check_modules(GTKMM3 REQUIRED gtkmm-3.0) 
-  #MESSAGE( STATUS "GTKMM2_INCLUDE_DIRS:         " ${GTKMM2_INCLUDE_DIRS} )
-  #MESSAGE( STATUS "GTKMM2_LIBRARY_DIRS:         " ${GTKMM2_LIBRARY_DIRS} )
-endif()
-  MESSAGE( STATUS "GTKMM2_FOUND:         " ${GTKMM2_FOUND} )
-  MESSAGE( STATUS "GTKMM3_FOUND:         " ${GTKMM3_FOUND} )
+else(USE_GTKMM3)
+  pkg_check_modules(GTKMM2 REQUIRED gtkmm-2.4) 
+endif(USE_GTKMM3)
+
+MESSAGE( STATUS "GTKMM2_FOUND:         " ${GTKMM2_FOUND} )
+MESSAGE( STATUS "GTKMM3_FOUND:         " ${GTKMM3_FOUND} )
 
   
 IF(NOT MINGW)

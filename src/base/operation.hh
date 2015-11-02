@@ -281,6 +281,7 @@ namespace PF
 
     virtual bool has_intensity() { return true; }
     virtual bool has_opacity() { return true; }
+    virtual bool has_target_channel() { return false; }
     virtual bool needs_input() { return true; }
     virtual bool needs_caching() { return false; }
     virtual bool init_hidden() { return false; }

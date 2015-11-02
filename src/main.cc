@@ -209,7 +209,7 @@ int main (int argc, char *argv[])
     Gtk::RC::set_default_files (files);
     Gtk::RC::reparse_all (Gtk::Settings::get_default());
     GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
-    gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
+    //gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
   }
 #endif
   //#endif
@@ -219,6 +219,7 @@ int main (int argc, char *argv[])
   Gtk::Settings::get_default()->property_gtk_application_prefer_dark_theme().set_value(true);
 
   int stat_result = stat((themesPath + "/photoflow-dark.css").c_str(), &buffer);
+  //int stat_result = stat((themesPath + "/gtk-3.0/gtk.css").c_str(), &buffer);
   //stat_result = 1;
   if( stat_result == 0 ) {
     Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
@@ -231,6 +232,7 @@ int main (int argc, char *argv[])
     cntx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     //cntx->invalidate();
     css->load_from_path(themesPath + "/photoflow-dark.css");
+    //css->load_from_path(themesPath + "/gtk-3.0/gtk.css");
     //css->load_from_path("themes/photoflow-dark/gtk.css");
   }
 #endif
