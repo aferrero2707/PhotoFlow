@@ -1,4 +1,19 @@
 =========================================
+Version 0.2.4
+
+* Bug fixes:
+
+- The tools reset button now works also with curves
+- The target channel selector has been removed from tools that do not correctly implementing this feature
+- Impulse noise reduction tool: fixed memory leak
+- Fixed crashes on some Xfce-based systems
+- Perspective correction tool: initial region set to rectangle (therefore no correction is initially applied)
+- Curves tool: sampling of curve points is now associated to Ctrl+Alt+left_click mouse gesture. For this to work, the curves tool has to be set in "edting" mode
+- Clone stamp tool: the sampling region is now selected by a Ctrl+Alt+left_click in the preview area.
+- Image preview: fixed possible memory corruption when drawing vertical lines on top of the preview image
+- Improved compatibility with GTK3
+
+=========================================
 Version 0.2.3
 
 * New Features:
