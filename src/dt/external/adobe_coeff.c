@@ -13,7 +13,8 @@ static void dt_dcraw_adobe_coeff(const char *name, float cam_xyz[1][12])
 {
   static const struct {
     const char *prefix;
-    short black, maximum, trans[12];
+    int black, maximum;
+    short trans[12];
   } table[] = {
     { "AGFAPHOTO DC-833m", 0, 0, { 11438,-3762,-1115,-2409,9914,2497,-1227,2295,5300 } }, /* DJC */
     { "Apple QuickTake", 0, 0, { 21392,-5653,-3353,2406,8010,-415,7166,1427,2078 } },	/* DJC */
