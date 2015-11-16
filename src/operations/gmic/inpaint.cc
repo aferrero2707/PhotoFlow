@@ -233,8 +233,8 @@ void PF::GmicInpaintPar::start_stroke( unsigned int pen_size )
     break;
   }
 
-  draw_op1->get_par()->start_stroke( pen_size, 1.0 );
-  draw_op2->get_par()->start_stroke( pen_size, 1.0 );
+  draw_op1->get_par()->start_stroke( pen_size, 1.0, 0.0 );
+  draw_op2->get_par()->start_stroke( pen_size, 1.0, 0.0 );
 }
 
 

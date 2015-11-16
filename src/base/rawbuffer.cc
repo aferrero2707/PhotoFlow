@@ -41,7 +41,6 @@
 #include "photoflow.hh"
 #include "rawbuffer.hh"
 
-
 PF::RawBuffer::RawBuffer():
   image( NULL ),
 	fd(-1)

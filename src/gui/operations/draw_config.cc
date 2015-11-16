@@ -47,6 +47,7 @@ PF::DrawConfigGUI::DrawConfigGUI( PF::Layer* layer ):
 #endif
   pen_size( this, "pen_size", "Pen size: ", 5, 0, 1000000, 1, 10, 1),
   pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100),
+  pen_smoothness( this, "pen_smoothness", "pen smoothness: ", 0, 0, 100, 1, 10, 100),
   undoButton("Undo")
 {
   colorButtonsBox1.pack_start( bgd_color_label, Gtk::PACK_SHRINK );
@@ -56,6 +57,7 @@ PF::DrawConfigGUI::DrawConfigGUI( PF::Layer* layer ):
   colorButtonsBox2.pack_start( pen_size, Gtk::PACK_SHRINK );
   controlsBox.pack_start( colorButtonsBox1 );
   controlsBox.pack_start( colorButtonsBox2 );
+  controlsBox.pack_start( pen_smoothness );
   penBox.pack_start( undoButton );
   controlsBox.pack_start( penBox );
 

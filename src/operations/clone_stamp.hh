@@ -43,6 +43,8 @@
 namespace PF 
 {
 
+#define StampMask PencilMask
+/*
 class StampMask
 {
   unsigned int size;
@@ -139,6 +141,7 @@ public:
     return mask[y][x];
   }
 };
+*/
 
 
 class Stamp
@@ -177,18 +180,18 @@ public:
 
 inline
 bool operator ==(const Stamp& l, const Stamp& r)
-      {
+{
   if( l.get_opacity() != r.get_opacity() ) return false;
   if( l.get_smoothness() != r.get_smoothness() ) return false;
   if( l.get_size() != r.get_size() ) return false;
   return true;
-      }
+}
 
 inline
 bool operator !=(const Stamp& l, const Stamp& r)
-      {
+{
   return( !(l==r) );
-      }
+}
 
 
 inline std::istream& operator >>( std::istream& str, Stamp& pen )
