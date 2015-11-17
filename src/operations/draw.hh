@@ -30,6 +30,7 @@
 #ifndef PF_DRAW_H
 #define PF_DRAW_H
 
+#include <string.h>
 #include <iostream>
 
 #include "../base/array2d.hh"
