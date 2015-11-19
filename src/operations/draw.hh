@@ -231,13 +231,18 @@ namespace PF
       std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
       VipsRect point_area;
       VipsRect point_clip;
+      VipsRect stroke_area;
       VipsRect stroke_clip;
       //std::cout<<"DrawProc::render(): strokes.size()="<<strokes.size()<<std::endl;
       int sn = 0;
       for( si = strokes.begin(); si != strokes.end(); ++si, sn++ ) {
         //std::cout<<"stroke area: "<<si->get_area().width<<","<<si->get_area().height
         //    <<"+"<<si->get_area().left<<"+"<<si->get_area().top<<std::endl;
-        vips_rect_intersectrect( r, &(si->get_area()), &stroke_clip );
+        stroke_area.left = si->get_area().left/opar->get_scale_factor();
+        stroke_area.top = si->get_area().top/opar->get_scale_factor();
+        stroke_area.width = si->get_area().width/opar->get_scale_factor();
+        stroke_area.height = si->get_area().height/opar->get_scale_factor();
+        vips_rect_intersectrect( r, &stroke_area, &stroke_clip );
         if( (stroke_clip.width<1) || (stroke_clip.height<1) ) continue;
         // copy current region to temp buffer
         if( temp ) {
