@@ -190,7 +190,7 @@ bool PF::PerspectiveConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::Pixe
       layer2screen( px2, py2, pw2, ph2 );
       px2 *= node->image->Xsize;
       py2 *= node->image->Ysize;
-      buf_out.draw_line( px1, py1, px2, py2 );
+      buf_out.draw_line( px1, py1, px2, py2, buf_in );
     }
   }
 

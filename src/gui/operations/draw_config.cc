@@ -336,7 +336,8 @@ void PF::DrawConfigGUI::draw_point( double x, double y )
 bool PF::DrawConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
   if( button != 1 ) return false;
-  start_stroke();
+  if( mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) )
+    start_stroke();
   draw_point( x, y );
   return false;
 }
@@ -397,6 +398,6 @@ bool PF::DrawConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
   int x0 = mouse_x;//*scale + xoffset;
   int y0 = mouse_y;//*scale + yoffset;
 
-  buf_out.draw_circle( x0, y0, pensize );
+  buf_out.draw_circle( x0, y0, pensize, buf_in );
   return true;
 }

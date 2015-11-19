@@ -163,6 +163,8 @@ public:
     }
   }
 
+  void draw_point( int x, int y, PixelBuffer& inbuf );
+
   void fill( const VipsRect& area, guint8 val )
   {
     guint8* px2 = buf->get_pixels();
@@ -226,93 +228,13 @@ public:
     }
   }
 
-#define PX_MOD( px ) { int _px = px; _px += 127; if(_px>255) _px -= 255; px = (guint8)_px; }
-  void draw_circle( int x0, int y0, int radius )
-  {
+#define PX_MOD( pxin, pxout ) { int _px = pxin; _px += 127; if(_px>255) _px -= 255; pxout = (guint8)_px; }
+  void fill( const VipsRect& area, PixelBuffer& inbuf );
 
-    guint8* px = get_pxbuf()->get_pixels();
-    const int rs = get_pxbuf()->get_rowstride();
-    const int bl = 3; /*buf->get_byte_length();*/
+  void draw_circle( int x0, int y0, int radius, guint8 r, guint8 g, guint8 b );
+  void draw_circle( int x0, int y0, int radius, PixelBuffer& inbuf );
 
-    int buf_left = get_rect().left;
-    int buf_right = get_rect().left+get_rect().width-1;
-    int buf_top = get_rect().top;
-    int buf_bottom = get_rect().top+get_rect().height-1;
-
-    int r2 = radius*radius;
-
-    for( int y = 0; y <= radius; y++ ) {
-      int row1 = y0 - y;
-      int row2 = y0 + y;
-      //int L = pen.get_size() - y;
-      int D = (int)(sqrt( r2 - y*y )-0.00);
-      int left = x0 - D;
-      if( left < buf_left )
-        left = buf_left;
-      int right = x0 + D;
-      if( right >= buf_right )
-        right = buf_right;
-      int colspan = (right + 1 - left)*3;
-
-      int left2 = right+1;
-      int right2 = left-1;
-      if( y < radius ) {
-        int D2 = (int)(sqrt( r2 - (y+1)*(y+1) )-0.00);
-        left2 = x0 - D2;
-        if( left2 < buf_left )
-          left2 = buf_left;
-        right2 = x0 + D2;
-        if( right2 >= buf_right )
-          right2 = buf_right;
-      }
-
-
-      //endcol = x0;
-
-      /*
-          std::cout<<"x0="<<x0<<"  y0="<<y0<<"  D="<<D<<std::endl;
-          std::cout<<"row1="<<row1<<"  row2="<<row2<<"  startcol="<<startcol<<"  endcol="<<endcol<<"  colspan="<<colspan<<std::endl;
-          std::cout<<"point_clip.left="<<point_clip.left<<"  point_clip.top="<<point_clip.top
-                   <<"  point_clip.width="<<point_clip.width<<"  point_clip.height="<<point_clip.height<<std::endl;
-       */
-      /**/
-      if( (row1 >= buf_top) && (row1 <= buf_bottom) ) {
-        guint8* p = px + rs*(row1-buf_top) + (left-buf_left)*bl;
-        if( left2 <= right ) {
-          for( int x = left; x <= left2; x++, p += bl ) {
-            PX_MOD( p[0] ); PX_MOD( p[1] ); PX_MOD( p[2] );
-          }
-          p = px + rs*(row1-buf_top) + (right2+1-buf_left)*bl;
-          for( int x = right2; x <= right; x++, p += bl ) {
-            PX_MOD( p[0] ); PX_MOD( p[1] ); PX_MOD( p[2] );
-          }
-        } else {
-          for( int x = left; x <= right; x++, p += bl ) {
-            PX_MOD( p[0] ); PX_MOD( p[1] ); PX_MOD( p[2] );
-          }
-        }
-      }
-      if( (row2 != row1) && (row2 >= buf_top) && (row2 <= buf_bottom) ) {
-        guint8* p = px + rs*(row2-buf_top) + (left-buf_left)*bl;
-        if( left2 <= right ) {
-          for( int x = left; x <= left2; x++, p += bl ) {
-            PX_MOD( p[0] ); PX_MOD( p[1] ); PX_MOD( p[2] );
-          }
-          p = px + rs*(row2-buf_top) + (right2+1-buf_left)*bl;
-          for( int x = right2; x <= right; x++, p += bl ) {
-            PX_MOD( p[0] ); PX_MOD( p[1] ); PX_MOD( p[2] );
-          }
-        } else {
-          for( int x = left; x <= right; x++, p += bl ) {
-            PX_MOD( p[0] ); PX_MOD( p[1] ); PX_MOD( p[2] );
-          }
-        }
-      }
-    }
-  }
-
-
-  void draw_line( int x1, int y1, int x2, int y2 );
+  void draw_line( int x1, int y1, int x2, int y2, PixelBuffer& inbuf );
 };
 
 

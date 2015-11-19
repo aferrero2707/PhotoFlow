@@ -330,18 +330,18 @@ bool PF::CloneStampConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& 
   int y0 = mouse_y;//*scale + yoffset;
 
   if( stroke_started ) {
-    buf_out.draw_circle( x0, y0, pensize );
+    buf_out.draw_circle( x0, y0, pensize, buf_in );
     tx = 0; ty = 0; tw = srcpt_dx; th = srcpt_dy;
     layer2screen( tx, ty, tw, th );
-    buf_out.draw_circle( x0-tw, y0-th, pensize );
+    buf_out.draw_circle( x0-tw, y0-th, pensize, buf_in );
   } else if( srcpt_ready ) {
-    buf_out.draw_circle( x0, y0, pensize );
+    buf_out.draw_circle( x0, y0, pensize, buf_in );
     tx = srcpt_col; ty = srcpt_row; tw = 1; th = 1;
     layer2screen( tx, ty, tw, th );
     if( (tx!=x0) && (ty!=y0) )
-      buf_out.draw_circle( tx, ty, pensize );
+      buf_out.draw_circle( tx, ty, pensize, buf_in );
   } else {
-    buf_out.draw_circle( x0, y0, pensize );
+    buf_out.draw_circle( x0, y0, pensize, buf_in );
   }
   return true;
 }
