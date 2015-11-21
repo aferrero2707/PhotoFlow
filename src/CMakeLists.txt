@@ -96,9 +96,16 @@ link_directories(${PANGOFT2_LIBRARY_DIRS}  )
 include_directories(${VIPS_INCLUDE_DIRS})
 link_directories(${VIPS_LIBRARY_DIRS}  )
 
+if (APPLE)
+	include_directories(${MacIntegration_INCLUDE_DIRS})
+	link_directories(${MacIntegration_LIBRARY_DIRS}  )
+    set (MACINTEG_LIBS ${MacIntegration_LIBRARIES})
+endif (APPLE)
 
-FILE(GLOB DTIncludes dt/common/*.h)
-FILE(GLOB DTSources dt/common/*.c)
+
+
+FILE(GLOB DTIncludes dt/common/*.h dt/develop/*.h)
+FILE(GLOB DTSources dt/common/*.c dt/develop/masks/*.c)
 
 add_library (pfdt STATIC
   ${DTIncludes}
@@ -208,6 +215,7 @@ target_link_libraries(photoflow ${LIBS}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
   ${PIXMAN_LIBRARIES} 
+  ${MACINTEG_LIBS}
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
   ${GLIB_LIBRARIES} 
@@ -268,20 +276,23 @@ INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
-#add_executable(scrollwin tests/scrollwin.cc)
+if(GTKMM3_FOUND)
 
-#target_link_libraries(scrollwin
-#  ${SIGC2_LIBRARIES}
-#  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-#  ${PIXMAN_LIBRARIES} 
-#  ${GTKMM_LIBRARIES} 
-#  ${GLIBMM_LIBRARIES} 
-#  ${GLIB_LIBRARIES} 
-#  ${GMODULE_LIBRARIES} 
-#  ${GOBJECT_LIBRARIES} 
-#  ${GTHREAD_LIBRARIES} 
-#  )
+add_executable(scrollwin tests/scrollwin.cc)
 
+target_link_libraries(scrollwin
+  #${SIGC2_LIBRARIES}
+  #${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  #${PIXMAN_LIBRARIES} 
+  ${GTKMM_LIBRARIES} 
+  #${GLIBMM_LIBRARIES} 
+  #${GLIB_LIBRARIES} 
+  #${GMODULE_LIBRARIES} 
+  #${GOBJECT_LIBRARIES} 
+  #${GTHREAD_LIBRARIES} 
+  )
+
+endif(GTKMM3_FOUND)
 
 #add_executable(cast tests/cast.c)
 

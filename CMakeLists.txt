@@ -65,6 +65,11 @@ pkg_check_modules(GOBJECT gobject-2.0)
 pkg_check_modules(GLIBMM glibmm-2.4) 
 #pkg_check_modules(GTKMM3 gtkmm-3.0<=3.4.0) 
 
+if (APPLE)
+    find_package (MacIntegration REQUIRED)
+endif (APPLE)
+
+
 if(USE_GTKMM3)
   pkg_check_modules(GTKMM3 REQUIRED gtkmm-3.0) 
 else(USE_GTKMM3)
