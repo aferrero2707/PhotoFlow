@@ -97,45 +97,7 @@ public:
   float get_opacity() const { return opacity; }
   float get_smoothness() const { return smoothness; }
 
-  void init(unsigned int s, float op, float sm)
-  {
-    //std::cout<<"PencilMask::init("<<s<<", "<<op<<", "<<sm<<") called. mask="<<mask<<std::endl;
-    if( mask ) {
-      for( unsigned int i = 0; i < size; i++) delete[] mask[i];
-      delete[] mask;
-      mask = NULL;
-    }
-
-    size = s;
-    opacity = op;
-    smoothness = sm;
-    if( size == 0 ) return;
-
-    mask = new float*[size];
-    for( unsigned int i = 0; i < size; i++) mask[i] = new float[size];
-
-    int xc = size/2;
-    int yc = xc;
-    float rmin = (1.001f-smoothness)*xc;
-    float rmax = xc;
-    //std::cout<<"PencilMask::init(): rmin="<<rmin<<"  rmax="<<rmax<<std::endl;
-    float dr = rmax-rmin;
-    float dr2 = dr*dr;
-    float minus = -1.0f;
-    for( int x = 0; x < size; x++) {
-      float dx = x-xc;
-      float dx2 = dx*dx;
-      for( int y = 0; y < size; y++) {
-        float dy = y-yc;
-        float r2 = dx2 + dy*dy;
-        float r = sqrt(r2);
-        float val = (r<rmin) ? 1 : ( (r>=rmax) ? 0 : (rmax-r)/(rmax-rmin) );
-        //float val = (r<rmin) ? 1 : ( (r>=rmax) ? 0 : exp(minus*(r-rmin)*(r-rmin)*3.5/dr2) );
-        mask[y][x] = val*opacity;
-        //std::cout<<"  mask["<<y<<"]["<<x<<"]="<<mask[y][x]<<std::endl;
-      }
-    }
-  }
+  void init(unsigned int s, float op, float sm);
 
   float get(int x, int y )
   {
