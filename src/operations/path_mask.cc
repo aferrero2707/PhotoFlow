@@ -193,12 +193,9 @@ PF::PathMaskPar::PathMaskPar():
     border_size( "border_size", this, 0.05 ),
     modvec( NULL ), edgevec( NULL ), segvec( NULL )
 {
-  float x1 = 0.2, y1 = 0.8, x2 = 0.5, y2 = 0.2;
-  float x3 = 0.8, y3 = 0.8;
-  //smod.get().set_point( 0, x1, y1 );
-  //smod.get().set_point( 1, x2, y2 );
-  //smod.get().add_point( x3, y3 );
-  //smod.get().set_center( 0.5, 0.5 );
+  float x1 = 0.0, y1 = 1.0, x2 = 1.0, y2 = 0.0;
+  falloff_curve.get().set_point( 0, x1, y1 );
+  falloff_curve.get().set_point( 1, x2, y2 );
 
   const std::vector< std::pair<float,float> >& points = smod.get().get_points();
   std::pair<float,float> center = smod.get().get_center();
@@ -274,7 +271,7 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
     for( unsigned int i = 0; i < ptvec2.size(); i++ ) {
       int x = ptvec2[i].first;
       int y = ptvec2[i].second;
-      if( (y<0) || (y>out->Ysize) ) continue;
+      if( (y<0) || (y>=out->Ysize) ) continue;
       if( ipy < 20 ) {
         //std::cout<<"spline point "<<x<<","<<y<<std::endl;
       }

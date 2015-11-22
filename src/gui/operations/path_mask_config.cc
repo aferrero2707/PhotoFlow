@@ -44,7 +44,8 @@ PF::PathMaskConfigGUI::PathMaskConfigGUI( PF::Layer* layer ):
               OperationConfigGUI( layer, "Path mask tool" ),
               invert_box( this, "invert", "Invert", true ),
               falloffCurveEditor( this, "falloff_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-              active_point_id( -1 ), center_selected( false )
+              active_point_id( -1 ), center_selected( false ),
+              initializing( false )
 {
   hbox.pack_start( invert_box, Gtk::PACK_SHRINK );
   add_widget( hbox );
@@ -99,6 +100,25 @@ bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double s
   double x = sx, y = sy, w = 10, h = 10;
   screen2layer( x, y, w, h );
   int D = w;
+
+  if( initializing && button == 3 ) {
+    initializing = false;
+    return true;
+  }
+
+  if( initializing && button == 1 ) {
+    active_point_id =
+        par->get_smod().add_point( 0,//par->get_smod().get_npoints(),
+            x/node->image->Xsize, y/node->image->Ysize );
+    return true;
+  }
+
+  if( points.empty() && button == 1 ) {
+    initializing = true;
+    par->get_smod().add_point( 0, x/node->image->Xsize, y/node->image->Ysize );
+    par->get_smod().add_point( 1, x/node->image->Xsize, y/node->image->Ysize );
+    active_point_id = 0;
+  }
 
   center_selected = false;
   std::pair<float,float> center = par->get_smod().get_center();
@@ -199,6 +219,7 @@ bool PF::PathMaskConfigGUI::pointer_release_event( int button, double sx, double
 
   border_resizing = false;
   if( button != 1 && button != 3 ) return false;
+  if( initializing ) return false;
 
   PF::PathMaskPar* par = dynamic_cast<PF::PathMaskPar*>(get_par());
   if( !par ) return false;
@@ -219,7 +240,7 @@ bool PF::PathMaskConfigGUI::pointer_release_event( int button, double sx, double
 
 bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
-  if( button != 1 ) return false;
+  if( !initializing && button != 1 ) return false;
 
   if( !border_resizing && !center_selected && active_point_id < 0 ) return false;
 
@@ -250,6 +271,11 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
   double x = sx, y = sy, w = 1, h = 1;
   screen2layer( x, y, w, h );
   float fx = x/node->image->Xsize, fy = y/node->image->Ysize;
+
+  if( initializing ) {
+    active_point_id = par->get_smod().set_point( active_point_id, fx, fy );
+    return true;
+  }
 
   if( border_resizing ) {
     float l = sqrt( (x-border_resizing_path_point_x)*(x-border_resizing_path_point_x) +
@@ -332,6 +358,8 @@ void PF::PathMaskConfigGUI::draw_outline( PF::PixelBuffer& buf_in, PF::PixelBuff
     buf_out.draw_point( bpx, bpy, buf_in );
     //buf_out.draw_line( bpx, bpy, bpx2, bpy2, buf_in );
   }
+
+  if( initializing ) return;
 
   const std::vector< std::pair<int,int> >& border_points = path.get_border();
   std::cout<<"border_points.size(): "<<border_points.size()<<std::endl;

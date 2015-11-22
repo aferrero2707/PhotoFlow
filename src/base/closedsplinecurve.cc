@@ -41,12 +41,12 @@ ypp( NULL ),
 ypp_size( 0 )
 {
   points_mutex = vips_g_mutex_new();
-  points.push_back( std::make_pair(float(0.5),float(0.2)) );
-  points.push_back( std::make_pair(float(0.8),float(0.8)) );
-  points.push_back( std::make_pair(float(0.2),float(0.8)) );
+  //points.push_back( std::make_pair(float(0.5),float(0.2)) );
+  //points.push_back( std::make_pair(float(0.8),float(0.8)) );
+  //points.push_back( std::make_pair(float(0.2),float(0.8)) );
   center.first = 0.5; center.second = 0.5;
-  update_polar();
-  update_spline();
+  //update_polar();
+  //update_spline();
 }
 
 

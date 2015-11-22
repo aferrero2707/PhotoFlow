@@ -184,6 +184,7 @@ render_spline(VipsRegion** ir, int n, int in_first,
 
   T* pout;
   float* vec = par->falloff_vec;
+  bool empty = ( par->get_smod().get_npoints() == 0 );
 
   int width = oreg->im->Xsize - oreg->im->Xoffset;
   int height = oreg->im->Ysize - oreg->im->Yoffset;
@@ -199,6 +200,15 @@ render_spline(VipsRegion** ir, int n, int in_first,
   //std::cout<<"drawing region @"<<r->left<<","<<r->top<<" -> "<<r->left+r->width-1<<","<<r->top+r->height-1<<std::endl;
   for( y = 0; y < r->height; y++ ) {
     pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top+y );
+
+    if( empty ) {
+      for( x = 0; x < r->width; x++, pout += bands ) {
+        for( b = 0; b < bands; b++ )
+          pout[b] = FormatInfo<T>::MAX;
+      }
+      continue;
+    }
+
     int state = 0;
     bool is_outline = false;
     x = r->left;

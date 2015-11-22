@@ -58,6 +58,8 @@ namespace PF {
     int border_resizing_lstart;
     float border_resizing_size_start;
 
+    bool initializing;
+
     void draw_outline( PixelBuffer& buf_in, PixelBuffer& buf_out, ClosedSplineCurve& path );
 
   public:
