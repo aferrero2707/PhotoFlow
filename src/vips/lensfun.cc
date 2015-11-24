@@ -175,9 +175,9 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
     }
   }
 
-#ifndef NDEBUG
-  std::cout<<"vips_lensfun_gen(): xmin="<<xmin<<" ymin="<<ymin<<" xmax="<<xmax<<"ymax="<<ymax<<std::endl;
-#endif
+//#ifndef NDEBUG
+  std::cout<<"vips_lensfun_gen(): xmin="<<xmin<<" ymin="<<ymin<<" xmax="<<xmax<<" ymax="<<ymax<<std::endl;
+//#endif
 
   s.left = xmin - window_offset - 5;
   s.top = ymin - window_offset - 5;
@@ -193,7 +193,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   r_in.height = s.height - window_size + 1;
 
   /**/
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"vips_lensfun_gen(): "<<std::endl;
   std::cout<<"  input region:  top="<<s.top
 	   <<" left="<<s.left
@@ -203,17 +203,17 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 	   <<" left="<<oreg->valid.left
 	   <<" width="<<oreg->valid.width
 	   <<" height="<<oreg->valid.height<<std::endl;
-#endif
+//#endif
   /**/
   /* Prepare the input images
    */
   if(ir) {
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"  preparing region ir:  top="<<s.top
         <<" left="<<s.left
         <<" width="<<s.width
         <<" height="<<s.height<<std::endl;
-#endif
+//#endif
     /**/
     if( vips_region_prepare( ir, &s ) )
       return( -1 );

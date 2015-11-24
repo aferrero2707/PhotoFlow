@@ -136,7 +136,7 @@ int main (int argc, char *argv[])
   vips_lensfun_get_type();
   vips_perspective_get_type();
 
-  //im_concurrency_set( 1 );
+  im_concurrency_set( 1 );
 #ifndef NDEBUG
   vips_cache_set_trace( true );
 #endif
