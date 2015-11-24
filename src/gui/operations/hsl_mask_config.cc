@@ -85,6 +85,7 @@ PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
   hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
   hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
   hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
+  invert( this, "invert", "invert", false ),
   hueHeq_enable( this, "H_curve_enabled", "Enable", true ),
   hueSeq_enable( this, "S_curve_enabled", "Enable", true  ),
   hueLeq_enable( this, "L_curve_enabled", "Enable", true  ),
@@ -106,8 +107,8 @@ PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
   hueLeq_enable_box.pack_end( hueLeq_enable, Gtk::PACK_SHRINK );
   //hueHeq_enable_box.pack_end( hueHeq_enable_padding, Gtk::PACK_EXPAND_WIDGET );
 
+  controlsBox.pack_start( invert, Gtk::PACK_SHRINK );
   controlsBox.pack_start( curves_nb[0], Gtk::PACK_SHRINK );
-
   controlsBox.pack_start( layer_list, Gtk::PACK_SHRINK );
   /*
   controlsBox.pack_start( adjustments_nb );
