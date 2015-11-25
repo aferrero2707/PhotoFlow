@@ -61,7 +61,7 @@ void PF::PencilMask::init(unsigned int s, float op, float sm)
 
   int xc = size/2;
   int yc = xc;
-  float rmin = (1.001f-smoothness)*xc;
+  float rmin = (1.00001f-smoothness)*xc;
   float rmax = xc;
   //std::cout<<"PencilMask::init(): rmin="<<rmin<<"  rmax="<<rmax<<std::endl;
   float dr = rmax-rmin;
@@ -84,15 +84,16 @@ void PF::PencilMask::init(unsigned int s, float op, float sm)
       float val = 0;
       if( rr < 0 ) val = 1;
       else if( rr < 1 ) {
-        //if( rr2 < 1 ) val = 1.0f-(rr2*rr2)/2;
-        //else val = (2.0f-rr2)*(2.0f-rr2)/2;
-        float exp = 1.8;
-        if( rr2 < 1 ) val = 1.0f-pow(rr2,exp)/2;
-        else val = pow(2.0f-rr2,exp)/2;
+        if( rr2 < 1 ) val = 1.0f-(rr2*rr2)/2;
+        else val = (2.0f-rr2)*(2.0f-rr2)/2;
+        //float exp = 1.8;
+        //if( rr2 < 1 ) val = 1.0f-pow(rr2,exp)/2;
+        //else val = pow(2.0f-rr2,exp)/2;
       }
-      float val2 = sqrt( val );
-      mask[y][x] = val2*opacity;
-      if(r>(rmin-1) && r<(rmin+1)) std::cout<<"r="<<r<<"  (rmin="<<rmin<<")  mask["<<y<<"]["<<x<<"]="<<mask[y][x]<<std::endl;
+      //std::cout<<"x="<<x<<"  y="<<y<<"  rr="<<rr<<"  val="<<val<<std::endl;
+      //float val2 = sqrt( val );
+      mask[y][x] = val*opacity;
+      //if(r>(rmin-1) && r<(rmin+1)) std::cout<<"r="<<r<<"  (rmin="<<rmin<<")  mask["<<y<<"]["<<x<<"]="<<mask[y][x]<<std::endl;
     }
   }
 }
