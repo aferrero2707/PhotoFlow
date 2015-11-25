@@ -152,14 +152,15 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 
   /* Area of input we need.
    */
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"vips_lensfun_gen(): mapping output region top="<<oreg->valid.top
      <<" left="<<oreg->valid.left
      <<" width="<<oreg->valid.width
      <<" height="<<oreg->valid.height<<std::endl;
-#endif
+//#endif
   float* buf = new float[r->width*r->height*2*3];
 #ifdef PF_HAS_LENSFUN
+  std::cout<<"ApplySubpixelGeometryDistortion( "<<r->left<<", "<<r->top<<", "<<r->width<<", "<<r->height<<", buf ) called"<<std::endl;
   bool ok = lensfun->modifier->ApplySubpixelGeometryDistortion( r->left, r->top, r->width, r->height, buf );
 #endif
   int xmin=2000000000, xmax = -2000000000, ymin = 2000000000, ymax = -2000000000;
@@ -167,7 +168,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   for( x = 0; x < r->width; x++ ) {
     for( y = 0; y < r->height; y++ ) {
       for( k= 0; k < 3; k++ ) {
-        //std::cout<<"  x="<<x<<" -> "<<pos[0]<<"    y="<<y<<" -> "<<pos[1]<<std::endl;
+        std::cout<<"  x="<<x<<" -> "<<pos[0]<<"    y="<<y<<" -> "<<pos[1]<<std::endl;
         MIN_MAX( xmin, xmax, pos[0] );
         MIN_MAX( ymin, ymax, pos[1] );
         pos += 2;
