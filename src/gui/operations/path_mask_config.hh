@@ -44,7 +44,7 @@ namespace PF {
   class PathMaskConfigGUI: public OperationConfigGUI
   {
     Gtk::HBox hbox;
-    CheckBox invert_box;
+    CheckBox invert_box, enable_falloff_box;
 
     Gtk::HBox curvesBox;
 
@@ -53,6 +53,11 @@ namespace PF {
     int active_point_id;
     bool center_selected;
     double cxlast, cylast;
+
+    bool path_resizing;
+    double path_resizing_last_point_x, path_resizing_last_point_y;
+
+
     bool border_resizing;
     double border_resizing_path_point_x, border_resizing_path_point_y;
     int border_resizing_lstart;
@@ -65,6 +70,8 @@ namespace PF {
   public:
     PathMaskConfigGUI( Layer* l );
     void do_update();
+
+    void parameters_reset();
 
     bool pointer_press_event( int button, double x, double y, int mod_key );
     bool pointer_release_event( int button, double x, double y, int mod_key );

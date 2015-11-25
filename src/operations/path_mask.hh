@@ -55,6 +55,7 @@ void init_path_segment( falloff_segment& seg, int x1, int y1, int x2, int y2, in
 class PathMaskPar: public OpParBase
 {
   Property<bool> invert;
+  Property<bool> enable_falloff;
 
   Property<SplineCurve> falloff_curve;
 
@@ -78,6 +79,11 @@ public:
   PathMaskPar();
 
   bool get_invert() { return invert.get(); }
+
+  bool get_falloff_enabled() { return enable_falloff.get(); }
+
+  void path_modified() { smod.modified(); }
+  void path_reset() { smod.reset(); }
 
   SplineCurve& get_falloff_curve() { return falloff_curve.get(); }
   ClosedSplineCurve& get_smod() { return smod.get(); }
@@ -287,7 +293,8 @@ render_spline(VipsRegion** ir, int n, int in_first,
     }
   }
 
-  //return;
+  if( par->get_falloff_enabled() == false )
+    return;
 
   /*
     for( unsigned int pi = 0; pi < par->ptvec.size(); pi++ ) {

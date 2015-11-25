@@ -232,6 +232,8 @@ class ClosedSplineCurve: public Curve
   float Dmax;
   float border_size;
 
+  int wd_last, ht_last;
+
   GMutex* points_mutex;
 
   double* ypp;
@@ -279,6 +281,8 @@ public:
 
   void update_spline();
   void update_outline( float wd, float ht );
+  int get_wd_last() { return wd_last; }
+  int get_ht_last() { return ht_last; }
 
   void update_center();
 

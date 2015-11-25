@@ -37,6 +37,8 @@
 
 PF::ClosedSplineCurve::ClosedSplineCurve():
 PF::Curve(),
+wd_last(0),
+ht_last(0),
 ypp( NULL ),
 ypp_size( 0 )
 {
@@ -148,7 +150,7 @@ bool PF::ClosedSplineCurve::remove_point( unsigned int id )
   if( id >= (get_npoints()-1) ) return false;
 
   points.erase( points.begin() + id );
-  update_spline();
+  //update_spline();
   return true;
 }
 
@@ -413,4 +415,6 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
     ptr += 2;
   }
   if( out_border ) free( out_border );
+
+  wd_last = wd; ht_last = ht;
 }
