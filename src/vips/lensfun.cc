@@ -46,7 +46,7 @@
 #include <lcms2.h>
 
 #ifdef PF_HAS_LENSFUN
-#include <lensfun.h>
+#include <lensfun/lensfun.h>
 #endif
 
 #include <iostream>
@@ -178,7 +178,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   for( x = 0; x < r->width; x++ ) {
     for( y = 0; y < r->height; y++ ) {
       for( k = 0; k < 3; k++ ) {
-        std::cout<<"  x="<<x<<" -> "<<pos[0]<<"    y="<<y<<" -> "<<pos[1]<<std::endl;
+        //std::cout<<"  x="<<x<<" -> "<<pos[0]<<"    y="<<y<<" -> "<<pos[1]<<std::endl;
         MIN_MAX( xmin, xmax, pos[0] );
         MIN_MAX( ymin, ymax, pos[1] );
         pos += 2;

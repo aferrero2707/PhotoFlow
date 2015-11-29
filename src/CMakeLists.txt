@@ -3,6 +3,7 @@ IF(MINGW)
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    SET(GMIC_FLAGS "-std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
@@ -54,11 +55,11 @@ link_directories(${SIGC2_LIBRARY_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
 
-if(LENSFUN_FOUND)
-  link_directories( ${LENSFUN_LIBRARY_DIRS}  )
-  include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
+#if(LENSFUN_FOUND)
+#  link_directories( ${LENSFUN_LIBRARY_DIRS}  )
+#  include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
   set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
-endif()
+#endif()
 
 include_directories(${OPENEXR_INCLUDE_DIRS})
 include_directories(${TIFF_INCLUDE_DIRS})
@@ -151,6 +152,15 @@ add_subdirectory(external/LibRaw)
 list(APPEND LIB_DEPS libraw_r)
 list(APPEND STATIC_LIBS libraw_static)
 
+LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
+set(BUILD_STATIC "ON")
+add_library(lensfun_static STATIC IMPORTED)
+set_target_properties(lensfun_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/libs/lensfun/liblensfun.a)
+add_subdirectory(external/lensfun)
+list(APPEND LIB_DEPS lensfun)
+list(APPEND STATIC_LIBS lensfun_static)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+
 #FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
 #set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
 
@@ -211,7 +221,7 @@ target_link_libraries(photoflow ${LIBS}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
   ${GEXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
+  #${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
   ${PIXMAN_LIBRARIES} 
@@ -248,7 +258,7 @@ target_link_libraries(pfbatch ${LIBS}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
   ${GEXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
+  #${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 

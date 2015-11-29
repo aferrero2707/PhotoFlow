@@ -33,7 +33,7 @@
 #include <string>
 
 #ifdef PF_HAS_LENSFUN
-#include <lensfun.h>
+#include <lensfun/lensfun.h>
 #endif
 
 #include "../base/property.hh"

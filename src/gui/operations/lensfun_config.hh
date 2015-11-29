@@ -33,7 +33,7 @@
 #include <gtkmm.h>
 
 #ifdef PF_HAS_LENSFUN
-#include <lensfun.h>
+#include <lensfun/lensfun.h>
 #endif
 
 #include "../operation_config_gui.hh"
