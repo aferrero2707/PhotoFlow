@@ -155,23 +155,24 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 
   /* Area of input we need.
    */
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"vips_lensfun_gen(): mapping output region top="<<oreg->valid.top
      <<" left="<<oreg->valid.left
      <<" width="<<oreg->valid.width
      <<" height="<<oreg->valid.height<<std::endl;
-//#endif
+#endif
   //float* buf = new float[r->width*r->height*2*3];
   void* ptr = malloc( sizeof(float)*r->width*r->height*2*3 + 32 );
   intptr_t iptr = (intptr_t)ptr;
   iptr = (iptr >> 4)<<4;
   float* buf = (float *)iptr;
   //float* buf = (float *)(((intptr_t)(ptr) + 16-1) & ~16);
-  std::cout<<"ptr="<<ptr<<" buf="<<(void*)buf<<std::endl;
+  //std::cout<<"ptr="<<ptr<<" buf="<<(void*)buf<<std::endl;
 #ifdef PF_HAS_LENSFUN
-  std::cout<<"ApplySubpixelGeometryDistortion( "<<r->left<<", "<<r->top<<", "<<r->width<<", "<<r->height
-      <<", "<<(void*)buf<<" ) called"<<std::endl;
+  //std::cout<<"ApplySubpixelGeometryDistortion( "<<r->left<<", "<<r->top<<", "<<r->width<<", "<<r->height
+  //    <<", "<<(void*)buf<<" ) called"<<std::endl;
   bool ok = lensfun->modifier->ApplySubpixelGeometryDistortion( r->left, r->top, r->width, r->height, buf );
+  if(!ok) return( -1 );
 #endif
   int xmin=2000000000, xmax = -2000000000, ymin = 2000000000, ymax = -2000000000;
   float* pos = buf;
@@ -186,9 +187,9 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
     }
   }
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"vips_lensfun_gen(): xmin="<<xmin<<" ymin="<<ymin<<" xmax="<<xmax<<" ymax="<<ymax<<std::endl;
-//#endif
+#endif
 
   s.left = xmin - window_offset - 5;
   s.top = ymin - window_offset - 5;
@@ -204,7 +205,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   r_in.height = s.height - window_size + 1;
 
   /**/
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"vips_lensfun_gen(): "<<std::endl;
   std::cout<<"  input region:  top="<<s.top
 	   <<" left="<<s.left
@@ -214,17 +215,17 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 	   <<" left="<<oreg->valid.left
 	   <<" width="<<oreg->valid.width
 	   <<" height="<<oreg->valid.height<<std::endl;
-//#endif
+#endif
   /**/
   /* Prepare the input images
    */
   if(ir) {
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"  preparing region ir:  top="<<s.top
         <<" left="<<s.left
         <<" width="<<s.width
         <<" height="<<s.height<<std::endl;
-//#endif
+#endif
     /**/
     if( vips_region_prepare( ir, &s ) )
       return( -1 );
