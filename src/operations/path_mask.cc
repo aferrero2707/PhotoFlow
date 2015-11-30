@@ -246,10 +246,70 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
   if( path_modified ) {
     std::cout<<"PathMaskPar::build(): updating path"<<std::endl;
     if( edgevec ) delete[] edgevec;
-    edgevec = new std::vector<float>[out->Ysize];
+    edgevec = new std::vector<path_point>[out->Ysize];
 
     const std::vector< std::pair<int,int> >& spline_points  = get_smod().get_outline();
     const std::vector< std::pair<int,int> >& spline_points2 = get_smod().get_border();
+
+    std::vector<path_point> path_points;
+    for( int pi = 0; pi < spline_points.size(); pi++ ) {
+      int pi2 = pi + 1;
+      if( pi2 >= spline_points.size() ) pi2 = 0;
+      double px  = spline_points[pi].first,  py  = spline_points[pi].second;
+      double px2 = spline_points[pi2].first, py2 = spline_points[pi2].second;
+      int ipx = px, ipy = py;
+      int ipx2 = px2, ipy2 = py2;
+      if( (ipx == ipx2) && (ipy == ipy2) )
+        continue;
+      path_point pt;
+      pt.x = ipx;
+      pt.y = ipy;
+      pt.state_changing = false;
+      path_points.push_back( pt );
+      //std::cout<<"path point #"<<path_points.size()-1<<"  px="<<ipx<<"  py="<<ipy
+      //    <<"  pi2="<<pi2<<"  px2="<<ipx2<<"  py2="<<ipy2<<std::endl;
+    }
+    std::cout<<"spline_points.size()="<<spline_points.size()<<"  path_points.size()="<<path_points.size()<<std::endl;
+
+    int point_start = -1;
+    for( int pi = 0; pi < path_points.size(); pi++ ) {
+      int pi2 = pi + 1;
+      if( pi2 >= path_points.size() ) pi2 = 0;
+      int py = path_points[pi].y;
+      int py2 = path_points[pi2].y;
+      if( py != py2 ) {
+        point_start = pi2;
+        break;
+      }
+    }
+    if( point_start >= 0 ) {
+      int pj = point_start;
+      int yprev;
+      do {
+        int pjprev = pj - 1;
+        if( pjprev < 0 ) pjprev = path_points.size() - 1;
+        int pjnext = pj + 1;
+        if( pjnext >= path_points.size() ) pjnext = 0;
+
+        int px = path_points[pj].x;
+        int py = path_points[pj].y;
+        int pxprev = path_points[pjprev].x;
+        int pxnext = path_points[pjnext].x;
+        int pyprev = path_points[pjprev].y;
+        int pynext = path_points[pjnext].y;
+        if( pyprev != py ) yprev = pyprev;
+
+        int dy1 = py - yprev;
+        int dy2 = py - pynext;
+        int dy = dy1 * dy2;
+        //std::cout<<"pj="<<pj<<"  px="<<px<<"  py="<<py<<"  yprev="<<yprev<<"  pynext="<<pynext<<" dy="<<dy<<std::endl;
+        if( dy < 0 ) path_points[pj].state_changing = true;
+
+        pj += 1;
+        if( pj >= path_points.size() ) pj = 0;
+      } while( pj != point_start );
+    }
+
 
     std::pair<float,float> outline_center = get_smod().get_center();
     float bx = outline_center.first * out->Xsize;
@@ -259,45 +319,57 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
     //std::cout<<"spline_points.size():  "<<spline_points.size()<<std::endl;
     //std::cout<<"spline_points2.size(): "<<spline_points2.size()<<std::endl;
     int xlast=-1, ylast=-1;
-    for( int pi = 0; pi < spline_points.size(); pi++ ) {
-      double px = spline_points[pi].first, py = spline_points[pi].second, pw = 1, ph = 1;
+    int yprev = -1000000;
+    for( int pi = 0; pi < path_points.size(); pi++ ) {
+      double px = path_points[pi].x, py = path_points[pi].y;
 
       int ipx = px, ipy = py;
       //if( ipx==xlast && ipy==ylast ) continue;
       xlast = ipx; ylast = ipy;
+      if( yprev == -1000000 ) yprev = ipy;
 
       int pi2 = pi + 1;
-      if( pi2 >= spline_points.size() ) pi2 = 0;
+      if( pi2 >= path_points.size() ) pi2 = 0;
 
-      double px2 = spline_points[pi2].first, py2 = spline_points[pi2].second, pw2 = 1, ph2 = 1;
+      double px2 = path_points[pi2].x, py2 = path_points[pi2].y;
 
       int ipx2 = px2, ipy2 = py2;
 
       if( (ipx==ipx2) && (ipy==ipy2) ) continue;
 
+      //std::cout<<"pi="<<pi<<"  pi2="<<pi2<<"  ipx="<<ipx<<"  ipy="<<ipy<<"  ipx2="<<ipx2<<"  ipy2="<<ipy2<<std::endl;
+
       get_line_points( ipx, ipy, ipx2, ipy2, ptvec );
       std::vector< std::pair<int,int> > ptvec2;
       get_line_points( ipx, ipy, ipx2, ipy2, ptvec2 );
+      int ylast = -1;
       for( unsigned int i = 0; i < ptvec2.size(); i++ ) {
         int x = ptvec2[i].first;
         int y = ptvec2[i].second;
+        if( x==ipx2 && y==ipy2 ) continue;
         if( (y<0) || (y>=out->Ysize) ) continue;
         if( ipy < 20 ) {
           //std::cout<<"spline point "<<x<<","<<y<<std::endl;
         }
         int idx = -1;
         for( unsigned int j = 0; j < edgevec[y].size(); j++ ) {
-          if( edgevec[y][j] >= x ) {
+          if( edgevec[y][j].x >= x ) {
             idx = j; break;
           }
         }
-        if( idx < 0 ) edgevec[y].push_back( x );
+        path_point ppt; ppt.x = x; ppt.y = y; ppt.state_changing = false;
+        //if( (i == 0) || (y != ipy) ) ppt.state_changing = path_points[pi].state_changing;
+        if( y != ylast ) ppt.state_changing = path_points[pi].state_changing;
+        //std::cout<<"pi="<<pi<<"  x="<<x<<"  y="<<y<<"  state_changing="<<ppt.state_changing<<std::endl;
+        ylast = y;
+        if( idx < 0 ) edgevec[y].push_back( ppt );
         else {
-          if( edgevec[y][idx] > x )
-            edgevec[y].insert( edgevec[y].begin()+idx, x );
+          if( edgevec[y][idx].x > x )
+            edgevec[y].insert( edgevec[y].begin()+idx, ppt );
         }
       }
     }
+    //std::cout<<"Edge vectors filling ended"<<std::endl;
 
     /*
   for( int y = 0; y < 64; y++ ) {
@@ -310,7 +382,8 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
      */
 
     for( int y = 0; y < out->Ysize; y++ ) {
-      if( edgevec[y].empty() ) edgevec[y].push_back( out->Xsize );
+      path_point ppt; ppt.x = out->Xsize; ppt.y = y; ppt.state_changing = false;
+      if( edgevec[y].empty() ) edgevec[y].push_back( ppt );
     }
 
     std::vector< PF::falloff_segment > segments;

@@ -50,6 +50,12 @@ typedef struct _falloff_segment
   float fl;
 } falloff_segment;
 
+typedef struct _path_point
+{
+  int x, y;
+  bool state_changing;
+} path_point;
+
 void init_path_segment( falloff_segment& seg, int x1, int y1, int x2, int y2, int ymin, int ymax );
 
 class PathMaskPar: public OpParBase
@@ -72,7 +78,8 @@ public:
   float* modvec;
   float falloff_vec[65536];
 
-  std::vector<float>* edgevec;
+  std::vector<path_point>* edgevec;
+  //std::vector<float>* edgevec;
   std::vector< falloff_segment >* segvec;
   std::vector< std::pair<int,int> > ptvec;
 
@@ -219,10 +226,10 @@ render_spline(VipsRegion** ir, int n, int in_first,
     bool is_outline = false;
     x = r->left;
     // draw left region
-    int xstart = par->edgevec[r->top+y][0], xend = -1;
+    int xstart = par->edgevec[r->top+y][0].x, xend = -1;
     for( unsigned int pi = 0; pi < par->edgevec[r->top+y].size()-1; pi++ ) {
-      xstart = par->edgevec[r->top+y][pi];
-      xend = par->edgevec[r->top+y][pi+1];
+      xstart = par->edgevec[r->top+y][pi].x;
+      xend = par->edgevec[r->top+y][pi+1].x;
       if( xstart == xend ) continue;
 
       for( ; x < xstart; x++, pout += bands ) {
@@ -232,7 +239,10 @@ render_spline(VipsRegion** ir, int n, int in_first,
           get_falloff_curve( vec, (state != 0)?0.0f:1.0f, pout[b] );
       }
 
-      if( (xend-xstart) > 1 ) {
+      //if( (xend-xstart) > 1 ) {
+      //std::cout<<"par->edgevec["<<r->top+y<<"]["<<pi<<"].state_changing="
+      //    <<par->edgevec[r->top+y][pi].state_changing<<std::endl;
+      if( par->edgevec[r->top+y][pi].state_changing ) {
         // gap found, we change the state
         state = 1 - state;
       }
@@ -244,7 +254,7 @@ render_spline(VipsRegion** ir, int n, int in_first,
       //std::cout<<"crossing1="<<crossing1<<"  crossing2="<<crossing2<<std::endl;
       if( false && r->top+y < 64 )
         std::cout<<"par->edgevec["<<r->top+y<<"]["<<pi<<"]="
-        <<par->edgevec[r->top+y][pi]<<"  xstart="<<xstart
+        <<par->edgevec[r->top+y][pi].x<<"  xstart="<<xstart
         <<"  xend="<<xend<<"  state="<<state<<std::endl;
 
       if( xstart >= r->left && xstart <= right ) {
