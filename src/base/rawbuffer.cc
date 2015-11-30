@@ -61,7 +61,7 @@ void PF::PencilMask::init(unsigned int s, float op, float sm)
 
   int xc = size/2;
   int yc = xc;
-  float rmin = (1.00001f-smoothness)*xc;
+  float rmin = (0.99999f-smoothness)*xc;
   float rmax = xc;
   //std::cout<<"PencilMask::init(): rmin="<<rmin<<"  rmax="<<rmax<<std::endl;
   float dr = rmax-rmin;
@@ -75,6 +75,7 @@ void PF::PencilMask::init(unsigned int s, float op, float sm)
       float r2 = dx2 + dy*dy;
       float r = sqrt(r2);
       float rr = (r - rmin)/dr;
+      //std::cout<<"r="<<r<<"  rmin="<<rmin<<"  dr="<<dr<<std::endl;
       float rr2 = rr*2;
       float sigma = 0.08;
       //sigma = sigma*sigma;

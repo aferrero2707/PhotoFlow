@@ -234,18 +234,18 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
 
 void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity, float smoothness )
 {
+  //std::cout<<"DrawPar::start_stroke(): pen_color="<<pen_color.get().r<<","<<pen_color.get().g<<","<<pen_color.get().b<<std::endl;
   strokes.get().push_back( PF::Stroke<PF::Pencil>() );
 
   PF::Stroke<PF::Pencil>& stroke = strokes.get().back();
 
   PF::Pencil& pen = stroke.get_pen();
-  pen.set_size( pen_size );
-  pen.set_opacity( opacity );
-  pen.set_smoothness( smoothness );
-
   pen.set_channel( 0, pen_color.get().r );
   pen.set_channel( 1, pen_color.get().g );
   pen.set_channel( 2, pen_color.get().b );
+  pen.set_size( pen_size );
+  pen.set_opacity( opacity );
+  pen.set_smoothness( smoothness );
 
   /*
   switch( get_colorspace() ) {
