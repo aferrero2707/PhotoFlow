@@ -580,30 +580,36 @@ draw_segment(VipsRegion* oreg, const falloff_segment& seg, float* vec)
     float op = (float)i / seg.fl;
     pout = (T*)VIPS_REGION_ADDR( oreg, x, y );
     T val; get_falloff_curve( vec, op, val );
+    T val0; get_falloff_curve( vec, 1.0f, val0 );
     for( b = 0; b < bands; ++b)
       pout[b] = val;
 
+
     if( x > left ) {
       pout = (T*)VIPS_REGION_ADDR( oreg, x-1, y );
+      if( pout[0] == val0 )
       for( b = 0; b < bands; ++b) {
             pout[b] = val;
       }
     }
-    if( y > top ) {
-      pout = (T*)VIPS_REGION_ADDR( oreg, x, y-1 );
+    if( x < right ) {
+      pout = (T*)VIPS_REGION_ADDR( oreg, x+1, y );
+      if( pout[0] == val0 )
       for( b = 0; b < bands; ++b) {
             pout[b] = val;
       }
     }
     /**/
-    if( x < right ) {
-      pout = (T*)VIPS_REGION_ADDR( oreg, x+1, y );
+    if( y > top ) {
+      pout = (T*)VIPS_REGION_ADDR( oreg, x, y-1 );
+      if( pout[0] == val0 )
       for( b = 0; b < bands; ++b) {
             pout[b] = val;
       }
     }
     if( y < bottom ) {
       pout = (T*)VIPS_REGION_ADDR( oreg, x, y+1 );
+      if( pout[0] == val0 )
       for( b = 0; b < bands; ++b) {
             pout[b] = val;
       }
