@@ -33,7 +33,7 @@
 #include <unistd.h>
 
 #include "pftypes.hh"
-//#include "processor.hh"
+#include "iccstore.hh"
 
 //#include "image.hh"
 

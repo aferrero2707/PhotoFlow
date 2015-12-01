@@ -83,7 +83,7 @@ namespace PF
     bool has_intensity() { return false; }
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
-    bool needs_caching() { return caching_enabled; }
+    bool needs_caching() { return false/*caching_enabled*/; }
 
     void set_caching( bool flag ) { caching_enabled = flag; }
 

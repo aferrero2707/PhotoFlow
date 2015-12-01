@@ -58,7 +58,7 @@ namespace PF
     PropertyBase CMYK_active_curve;
 
     void update_curve( Property<SplineCurve>& grey_curve,
-                       short int* vec8, int* vec16 );
+                       short int* vec8, int* vec16, bool undo_gamma=false );
 
   public:
     //std::vector< std::pair<float,float> > Greyvec;

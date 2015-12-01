@@ -30,6 +30,7 @@
 #include <cmath>
 
 #include "../base/exif_data.hh"
+#include "../base/iccstore.hh"
 #include "raw_output.hh"
 
 /* We need C linkage for this.
@@ -193,35 +194,8 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     out_profile = NULL;
   }
 
-  if( out_mode_changed || out_changed || (out_profile == NULL) ) {
-    //std::cout<<"RawOutputPar::build(): out_mode_changed="<<out_mode_changed
-    //         <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
-    //std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
-    switch( out_profile_mode.get_enum_value().first ) {
-    case OUT_PROF_sRGB:
-      out_profile = dt_colorspaces_create_srgb_profile();
-      //std::cout<<"RawOutputPar::build(): created sRGB output profile"<<std::endl;
-      break;
-    case OUT_PROF_ADOBE:
-      out_profile = dt_colorspaces_create_adobergb_profile();
-      //std::cout<<"RawOutputPar::build(): created AdobeRGB output profile"<<std::endl;
-      break;
-    case OUT_PROF_PROPHOTO:
-      out_profile = dt_colorspaces_create_prophotorgb_profile();
-      //std::cout<<"RawOutputPar::build(): created ProPhoto output profile"<<std::endl;
-      break;
-    case OUT_PROF_LAB:
-      out_profile = dt_colorspaces_create_lab_profile();
-      //std::cout<<"RawOutputPar::build(): created Lab output profile"<<std::endl;
-      break;
-    case OUT_PROF_CUSTOM:
-      //std::cout<<"  custom profile selected: \""<<cam_profile_name.get()<<"\""<<std::endl;
-      if( !out_profile_name.get().empty() )
-        out_profile = cmsOpenProfileFromFile( out_profile_name.get().c_str(), "r" );
-      break;
-    default:
-      break;
-    }
+  if( out_profile == NULL ) {
+    out_profile = PF::ICCStore::Instance().get_working_profile();
   }
 
   if( changed ) {

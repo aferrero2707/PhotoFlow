@@ -140,6 +140,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   gammaModeHBox.pack_start( gammaModeVBox, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( gammaModeHBox );
 
+  /*
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
@@ -149,6 +150,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outProfHBox.pack_start( outProfVBox );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfHBox );
+  */
 
 
   notebook.append_page( wbControlsBox, "WB" );

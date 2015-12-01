@@ -99,6 +99,7 @@ namespace PF
     InvertPar* par;
     int pos;
     unsigned short int* pp;
+    unsigned short int temp_in, temp_out;
   public:
     InvertProc(InvertPar* p): par(p) {}
 
@@ -108,7 +109,35 @@ namespace PF
       pp = p[first];
       pos = x;
       for(int i = CHMIN; i <= CHMAX; i++, pos++) {
-        pout[pos] = FormatInfo<unsigned short int>::MAX - pp[pos];
+        //pout[pos] = FormatInfo<unsigned short int>::MAX - pp[pos];
+        temp_in = PF::ICCStore::Instance().get_linear2perceptual_vec()[ pp[pos] ];
+        temp_out = FormatInfo<unsigned short int>::MAX - temp_in;
+        pout[pos] = PF::ICCStore::Instance().get_perceptual2linear_vec()[temp_out];
+      }
+    }
+  };
+
+
+  template < int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
+  class InvertProc<float, PF_COLORSPACE_RGB, CHMIN, CHMAX, PREVIEW, OP_PAR>
+  {
+    InvertPar* par;
+    int pos;
+    float* pp;
+    float temp_in, temp_out;
+  public:
+    InvertProc(InvertPar* p): par(p) {}
+
+    void process(float**p, const int& n, const int& first,
+        const int& nch, const int& x, const double& intensity, float* pout)
+    {
+      pp = p[first];
+      pos = x;
+      for(int i = CHMIN; i <= CHMAX; i++, pos++) {
+        //pout[pos] = FormatInfo<unsigned short int>::MAX - pp[pos];
+        temp_in = PF::ICCStore::Instance().linear2perceptual( pp[pos] );
+        temp_out = 1.0f - temp_in;
+        pout[pos] = PF::ICCStore::Instance().perceptual2linear( temp_out );
       }
     }
   };
