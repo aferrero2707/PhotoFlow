@@ -286,7 +286,7 @@ INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
-if(GTKMM3_FOUND)
+if(GTKMM2_FOUND)
 
 add_executable(scrollwin tests/scrollwin.cc)
 
@@ -302,7 +302,7 @@ target_link_libraries(scrollwin
   #${GTHREAD_LIBRARIES} 
   )
 
-endif(GTKMM3_FOUND)
+endif(GTKMM2_FOUND)
 
 #add_executable(cast tests/cast.c)
 
