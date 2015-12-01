@@ -247,6 +247,8 @@ void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity, float smoo
   pen.set_opacity( opacity );
   pen.set_smoothness( smoothness );
 
+  strokes.modified();
+
   /*
   switch( get_colorspace() ) {
   case PF::PF_COLORSPACE_GRAYSCALE:
@@ -297,6 +299,8 @@ void PF::DrawPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
 
   stroke.get_points().push_back( std::make_pair(x, y) );
   stroke.compute_area();
+
+  strokes.modified();
 
   PF::Pencil& pen = stroke.get_pen();
 

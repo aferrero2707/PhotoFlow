@@ -874,7 +874,7 @@ void PF::ImageArea::update( VipsRect* area )
 
   VipsImage* image = NULL;
   bool do_merged = display_merged;
-  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
+  //std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
   if( !do_merged ) {
     if( active_layer < 0 ) do_merged = true;
     else {

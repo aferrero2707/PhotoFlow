@@ -292,6 +292,10 @@ void PF::DrawConfigGUI::draw_point( double x, double y )
     if( !par ) continue;
 
     par->draw_point( lx, ly, update );
+
+    if( vi != PF::PhotoFlow::Instance().get_preview_pipeline_id() )
+      continue;
+
 		//continue;
     //update.left -= dx;
     //update.top -= dy;

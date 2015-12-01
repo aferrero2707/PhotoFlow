@@ -306,7 +306,7 @@ namespace PF
               //std::cout<<"    opacity_max.Get("<<row<<", "<<col<<")="<<opacity_max.Get(row, col)<<"    mval="<<mval<<std::endl;
               if( (col < point_clip.left) ) continue;
               if( (col > point_clip_right) ) break;
-              if( mval < 0.001 ) continue;
+              if( mval < 0.00001 ) continue;
               if( mval <= opacity_max.Get(row, col) ) continue;
               opacity_max.Get(row, col) = mval;
               for( ch = 0; ch < oreg->im->Bands; ch++ ) {
