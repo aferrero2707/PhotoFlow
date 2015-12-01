@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.9)
 
 project(photoflow CXX C)
 
 option(USE_NLS "Build Native Language Support (using gettext)" ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+set(CMAKE_POSITION_INDEPENDENT_CODE True)
 
 find_package(PkgConfig)
 
