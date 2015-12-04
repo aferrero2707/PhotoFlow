@@ -67,6 +67,8 @@ namespace PF
     std::string data_dir;
     std::string locale_dir;
 
+    int preview_pipeline_id;
+
     bool batch;
     bool single_win_mode;
 
@@ -81,6 +83,9 @@ namespace PF
 
     void set_new_op_func( new_op_func_t f ) { new_op_func = f; }
     void set_new_op_func_nogui( new_op_func_t f ) { new_op_func_nogui = f; }
+
+    void set_preview_pipeline_id( int id ) { preview_pipeline_id = id; }
+    int get_preview_pipeline_id() { return preview_pipeline_id; }
 
     void set_batch( bool val ) { batch = val; }
     bool is_batch() { return batch; }

@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.9)
 
 project(photoflow CXX C)
 
 option(USE_NLS "Build Native Language Support (using gettext)" ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+set(CMAKE_POSITION_INDEPENDENT_CODE True)
 
 find_package(PkgConfig)
 
@@ -31,10 +32,10 @@ pkg_check_modules(GEXIV2 REQUIRED gexiv2)
 MESSAGE( STATUS "GEXIV2_INCLUDE_DIRS:         " ${GEXIV2_INCLUDE_DIRS} )
 MESSAGE( STATUS "GEXIV2_LIBRARY_DIRS:         " ${GEXIV2_LIBRARY_DIRS} )
 
-pkg_check_modules(LENSFUN lensfun)
-MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
-MESSAGE( STATUS "LENSFUN_LIBRARY_DIRS:         " ${LENSFUN_LIBRARY_DIRS} )
-MESSAGE( STATUS "LENSFUN_LIBRARIES:         " ${LENSFUN_LIBRARIES})
+#pkg_check_modules(LENSFUN lensfun)
+#MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
+#MESSAGE( STATUS "LENSFUN_LIBRARY_DIRS:         " ${LENSFUN_LIBRARY_DIRS} )
+#MESSAGE( STATUS "LENSFUN_LIBRARIES:         " ${LENSFUN_LIBRARIES})
 
 
 IF(NOT MINGW)
@@ -64,6 +65,11 @@ pkg_check_modules(GTHREAD gthread-2.0)
 pkg_check_modules(GOBJECT gobject-2.0) 
 pkg_check_modules(GLIBMM glibmm-2.4) 
 #pkg_check_modules(GTKMM3 gtkmm-3.0<=3.4.0) 
+
+if (APPLE)
+    find_package (MacIntegration REQUIRED)
+endif (APPLE)
+
 
 if(USE_GTKMM3)
   pkg_check_modules(GTKMM3 REQUIRED gtkmm-3.0) 

@@ -468,9 +468,9 @@ void PF::ImageArea::draw_area()
   Gdk::Cairo::set_source_pixbuf( cr, current_pxbuf, 
          double_buffer.get_active().get_rect().left,
          double_buffer.get_active().get_rect().top );
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"Active buffer copied to screen"<<std::endl;
-#endif
+//#endif
   cr->rectangle( double_buffer.get_active().get_rect().left,
        double_buffer.get_active().get_rect().top,
        double_buffer.get_active().get_rect().width,
@@ -534,6 +534,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
     repaint_needed = true;
   double_buffer.unlock();
   //std::cout<<"  repaint_needed="<<repaint_needed<<std::endl;
+  draw_requested = repaint_needed;
   if( !repaint_needed )
     return true;
 
@@ -873,7 +874,7 @@ void PF::ImageArea::update( VipsRect* area )
 
   VipsImage* image = NULL;
   bool do_merged = display_merged;
-  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
+  //std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
   if( !do_merged ) {
     if( active_layer < 0 ) do_merged = true;
     else {
@@ -1263,7 +1264,7 @@ void PF::ImageArea::update( VipsRect* area )
 void PF::ImageArea::sink( const VipsRect& area ) 
 {
 #ifdef DEBUG_DISPLAY
-  std::cout<<"PF::ImageArea::sink( const VipsRect& area ) called"<<std::endl;
+  std::cout<<"ImageArea::sink( const VipsRect& area ) called"<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = get_pipeline();
@@ -1350,11 +1351,12 @@ void PF::ImageArea::sink( const VipsRect& area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into active buffer"<<std::endl;
 #endif
+  //std::cout<<"ImageArea::sink(): draw_requested="<<draw_requested<<std::endl;
   if( !draw_requested ) {
     Update * update = g_new (Update, 1);
     update->image_area = this;
     update->rect.width = update->rect.height = 0;
-    //std::cout<<"PF::ImageArea::sink(): installing idle callback."<<std::endl;
+    //std::cout<<"ImageArea::sink(): installing idle callback."<<std::endl;
     draw_requested = true;
     gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
   }

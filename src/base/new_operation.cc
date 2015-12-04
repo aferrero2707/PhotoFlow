@@ -112,6 +112,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::GradientPar,PF::Gradient>();
     processor = new_gradient();
 
+  } else if( op_type == "path_mask" ) {
+
+    //processor = new PF::Processor<PF::GradientPar,PF::Gradient>();
+    processor = new_path_mask();
+
   } else if( op_type == "brightness_contrast" ) {
 
     //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();

@@ -3,6 +3,7 @@ IF(MINGW)
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    SET(GMIC_FLAGS "-std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
@@ -54,11 +55,11 @@ link_directories(${SIGC2_LIBRARY_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
 
-if(LENSFUN_FOUND)
-  link_directories( ${LENSFUN_LIBRARY_DIRS}  )
-  include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
+#if(LENSFUN_FOUND)
+#  link_directories( ${LENSFUN_LIBRARY_DIRS}  )
+#  include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
   set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
-endif()
+#endif()
 
 include_directories(${OPENEXR_INCLUDE_DIRS})
 include_directories(${TIFF_INCLUDE_DIRS})
@@ -96,9 +97,16 @@ link_directories(${PANGOFT2_LIBRARY_DIRS}  )
 include_directories(${VIPS_INCLUDE_DIRS})
 link_directories(${VIPS_LIBRARY_DIRS}  )
 
+if (APPLE)
+	include_directories(${MacIntegration_INCLUDE_DIRS})
+	link_directories(${MacIntegration_LIBRARY_DIRS}  )
+    set (MACINTEG_LIBS ${MacIntegration_LIBRARIES})
+endif (APPLE)
 
-FILE(GLOB DTIncludes dt/common/*.h)
-FILE(GLOB DTSources dt/common/*.c)
+
+
+FILE(GLOB DTIncludes dt/common/*.h dt/develop/*.h)
+FILE(GLOB DTSources dt/common/*.c dt/develop/masks/*.c)
 
 add_library (pfdt STATIC
   ${DTIncludes}
@@ -143,6 +151,15 @@ set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT
 add_subdirectory(external/LibRaw)
 list(APPEND LIB_DEPS libraw_r)
 list(APPEND STATIC_LIBS libraw_static)
+
+LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
+set(BUILD_STATIC "ON")
+add_library(lensfun_static STATIC IMPORTED)
+set_target_properties(lensfun_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/libs/lensfun/liblensfun.a)
+add_subdirectory(external/lensfun)
+list(APPEND LIB_DEPS lensfun)
+list(APPEND STATIC_LIBS lensfun_static)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 #FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
 #set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
@@ -204,10 +221,11 @@ target_link_libraries(photoflow ${LIBS}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
   ${GEXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
+  #${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
   ${PIXMAN_LIBRARIES} 
+  ${MACINTEG_LIBS}
   ${GTKMM_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
   ${GLIB_LIBRARIES} 
@@ -240,7 +258,7 @@ target_link_libraries(pfbatch ${LIBS}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
   ${GEXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
+  #${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
@@ -268,20 +286,23 @@ INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
 
+#if(GTKMM3_FOUND)
+
 #add_executable(scrollwin tests/scrollwin.cc)
 
 #target_link_libraries(scrollwin
-#  ${SIGC2_LIBRARIES}
-#  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-#  ${PIXMAN_LIBRARIES} 
+  #${SIGC2_LIBRARIES}
+  #${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  #${PIXMAN_LIBRARIES} 
 #  ${GTKMM_LIBRARIES} 
-#  ${GLIBMM_LIBRARIES} 
-#  ${GLIB_LIBRARIES} 
-#  ${GMODULE_LIBRARIES} 
-#  ${GOBJECT_LIBRARIES} 
-#  ${GTHREAD_LIBRARIES} 
+  #${GLIBMM_LIBRARIES} 
+  #${GLIB_LIBRARIES} 
+  #${GMODULE_LIBRARIES} 
+  #${GOBJECT_LIBRARIES} 
+  #${GTHREAD_LIBRARIES} 
 #  )
 
+#endif(GTKMM3_FOUND)
 
 #add_executable(cast tests/cast.c)
 

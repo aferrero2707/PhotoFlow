@@ -41,7 +41,7 @@
 #include <vector>
 #include <map>
 
-
+/*
 #include "../operations/vips_operation.hh"
 #include "../operations/image_reader.hh"
 #include "../operations/brightness_contrast.hh"
@@ -50,7 +50,7 @@
 #include "../operations/convert2lab.hh"
 #include "../operations/clone.hh"
 #include "../operations/curves.hh"
-
+*/
 /*
 #include "../gui/operations/brightness_contrast_config.hh"
 #include "../gui/operations/imageread_config.hh"

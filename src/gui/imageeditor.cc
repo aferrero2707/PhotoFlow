@@ -159,6 +159,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
   image_size_updater = new PF::ImageSizeUpdater( image->get_pipeline(0) );
 
+  PF::PhotoFlow::Instance().set_preview_pipeline_id(PREVIEW_PIPELINE_ID);
   imageArea = new PF::ImageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) );
 
   imageArea->set_adjustments( imageArea_scrolledWindow.get_hadjustment(),

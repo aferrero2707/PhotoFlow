@@ -365,6 +365,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Threshold"), "threshold" );
   op_mask.get_tree().add_op( _("Curves"), "curves" );
   op_mask.get_tree().add_op( _("Gradient"), "gradient");
+  op_mask.get_tree().add_op( _("Path"), "path_mask");
   op_mask.get_tree().add_op( _("H/S/L Mask"), "hsl_mask" );
   op_mask.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
   //#if !defined(__APPLE__) && !defined(__MACH__)

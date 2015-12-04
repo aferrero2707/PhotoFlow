@@ -1,4 +1,21 @@
 =========================================
+Version 0.2.5
+
+* New features:
+
+- [freehand drawing] Added brush feathering and improved painting performances.
+  Added Ctrl+Alt+left_click mouse combination to continue last stroke.
+- Implemented first version of spline path mask tool.
+- [HSL mask] Added mask inversion.
+- [lens correction] Bundled LensFun version 0.3.2. This fixes a crash of the lensfun module under Ubuntu.
+
+* Bug fixes
+
+- [clone stamp] Fixed bug in region selection affecting strokes after the first one
+- Fixed compilation issues under Fedora 23
+
+
+=========================================
 Version 0.2.4
 
 * Bug fixes:

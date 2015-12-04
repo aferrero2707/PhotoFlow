@@ -46,6 +46,7 @@ namespace PF
 
   class HSLMaskPar: public OpParBase
   {
+    Property<bool> invert;
     Property<SplineCurve> H_curve;
     Property<SplineCurve> S_curve;
     Property<SplineCurve> L_curve;
@@ -72,6 +73,9 @@ namespace PF
     void set_S_curve_enabled( bool en ) { S_curve_enabled.set( en ); }
     void set_L_curve_enabled( bool en ) { L_curve_enabled.set( en ); }
 
+    void set_invert( bool flag) { invert.update(flag); }
+    bool get_invert() { return invert.get(); }
+
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool needs_input() { return false; }
@@ -97,7 +101,7 @@ namespace PF
 
 
   template<class T>
-  T RGB2HSLMask( T* RGB, HSLMaskPar* opar )
+  T RGB2HSLMask( T* RGB, HSLMaskPar* opar, bool inv )
   {
     float h_in, s_in, v_in, l_in;
     rgb2hsl( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
@@ -113,6 +117,7 @@ namespace PF
     float h_eq3 = opar->eq_enabled[2] ? opar->vec[2][lid] : 1;
 
     float h_eq = MIN3( h_eq1, h_eq2, h_eq3 );
+    if( inv ) h_eq = 1.0f - h_eq;
 
     T val = FormatInfo<T>::RANGE*h_eq + FormatInfo<T>::MIN;
     return val;
@@ -137,6 +142,8 @@ namespace PF
       bool ok = true;
       if( n<1 ) ok = false;
 
+      bool inv = opar->get_invert();
+
       // We take the last input image as the mask source
       int in_id = n-1;
 
@@ -158,7 +165,7 @@ namespace PF
             RGB[0] = pin[xin];
             RGB[1] = pin[xin+1];
             RGB[2] = pin[xin+2];
-            T val = RGB2HSLMask( RGB, opar );
+            T val = RGB2HSLMask( RGB, opar, inv );
 
             pout[xout] = val;
           }
@@ -198,6 +205,8 @@ namespace PF
       if( ireg[in_id]->im->Bands != 3 )
         return;
 
+      bool inv = opar->get_invert();
+
       T* pin;
       T* pout;
       T RGB[3];
@@ -213,7 +222,7 @@ namespace PF
             RGB[0] = pin[x];
             RGB[1] = pin[x+1];
             RGB[2] = pin[x+2];
-            T val = RGB2HSLMask( RGB, opar );
+            T val = RGB2HSLMask( RGB, opar, inv );
 
             pout[x] = val;
             pout[x+1] = val;
