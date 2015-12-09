@@ -30,6 +30,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
+#include <cstring>
 
 #include "gaussblur.hh"
 #include "../base/new_operation.hh"
