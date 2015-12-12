@@ -23,6 +23,7 @@ Up-to-date Windows and OSX installers are available from the [releases](https://
 There are up-to-date packages available for Ubuntu 14.04/14.10 and Mint 17/17.1 in two diferent PPAs:
 
 - *Highly Explosive* PPA:
+
 To add the PPA and install photoflow, do the following:
 
         sudo add-apt-repository ppa:dhor/myway
@@ -34,6 +35,7 @@ or to install the daily git builds from the "stable" branch:
         sudo apt-get install photoflow-git
 
 - *Photo Video Applications* PPA:
+
 To add the PPA and install photoflow, do the following:
 
         sudo add-apt-repository ppa:anton+/photo-video-apps
