@@ -109,10 +109,10 @@ namespace PF
       pp = p[first];
       pos = x;
       for(int i = CHMIN; i <= CHMAX; i++, pos++) {
-        //pout[pos] = FormatInfo<unsigned short int>::MAX - pp[pos];
-        temp_in = PF::ICCStore::Instance().get_linear2perceptual_vec()[ pp[pos] ];
-        temp_out = FormatInfo<unsigned short int>::MAX - temp_in;
-        pout[pos] = PF::ICCStore::Instance().get_perceptual2linear_vec()[temp_out];
+        pout[pos] = FormatInfo<unsigned short int>::MAX - pp[pos];
+        //temp_in = PF::ICCStore::Instance().get_linear2perceptual_vec()[ pp[pos] ];
+        //temp_out = FormatInfo<unsigned short int>::MAX - temp_in;
+        //pout[pos] = PF::ICCStore::Instance().get_perceptual2linear_vec()[temp_out];
       }
     }
   };
@@ -134,10 +134,10 @@ namespace PF
       pp = p[first];
       pos = x;
       for(int i = CHMIN; i <= CHMAX; i++, pos++) {
-        //pout[pos] = FormatInfo<unsigned short int>::MAX - pp[pos];
-        temp_in = PF::ICCStore::Instance().linear2perceptual( pp[pos] );
-        temp_out = 1.0f - temp_in;
-        pout[pos] = PF::ICCStore::Instance().perceptual2linear( temp_out );
+        pout[pos] = FormatInfo<unsigned short int>::MAX - pp[pos];
+        //temp_in = PF::ICCStore::Instance().linear2perceptual( pp[pos] );
+        //temp_out = 1.0f - temp_in;
+        //pout[pos] = PF::ICCStore::Instance().perceptual2linear( temp_out );
       }
     }
   };
