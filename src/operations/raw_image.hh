@@ -44,7 +44,8 @@
 
 #include "fast_demosaic.hh"
 
-#define PF_USE_LIBRAW
+//#define PF_USE_LIBRAW
+#define PF_USE_RAWSPEED
 //#define PF_USE_DCRAW_RT
 
 #ifdef PF_USE_LIBRAW
@@ -53,19 +54,27 @@
 typedef libraw_data_t dcraw_data_t;
 #endif
 
-#ifdef PF_USE_DCRAW_RT
-#include "../rt/rtengine/rawimage.h"
+#ifdef PF_USE_RAWSPEED
+#include "rawspeed/RawSpeed/RawSpeed-API.h"
 
 struct dcraw_color_data_t
 {
-	float maximum;
-	float cam_mul[4];
+  unsigned black;
+  unsigned cblack[4];
+  float maximum;
+  float cam_mul[4];
   float cam_xyz[4][3];
+};
+
+struct dcraw_sizes_data_t
+{
+  int flip;
 };
 
 struct dcraw_data_t
 {
 	dcraw_color_data_t color;
+	dcraw_sizes_data_t sizes;
 };
 
 #endif
@@ -75,9 +84,6 @@ namespace PF
 {
 
   class RawImage
-#ifdef PF_USE_DCRAW_RT
-		: public rtengine::RawImage
-#endif
   {
     int nref;
     std::string file_name;
@@ -86,6 +92,10 @@ namespace PF
 		std::string cache_file_name2;
 
 		float c_black[4];
+
+#ifdef PF_USE_RAWSPEED
+		RawSpeed::CameraMetaData *meta;
+#endif
 
 		// VipsImage storing the raw data 
 		// (one float pixel value + one uchar color code)

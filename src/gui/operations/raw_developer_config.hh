@@ -92,6 +92,7 @@ public:
     Slider fcsSlider;
 
     ExposureSlider exposureSlider;
+    Slider blackLevelSlider;
 
     Selector profileModeSelector;
     Gtk::HBox profileModeSelectorBox;

@@ -102,6 +102,7 @@ namespace PF
     Property<float> exposure;
     PropertyBase exposure_mode;
     Property<float> exposure_clip_amount;
+    Property<int> black_level_correction;
 
     float wb_red_current, wb_green_current, wb_blue_current, exposure_current;
 
@@ -138,6 +139,8 @@ namespace PF
     }
 
     float get_exposure() { return exposure.get(); }
+
+    float get_black_level_correction() { return black_level_correction.get(); }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 										 VipsImage* imap, VipsImage* omap, unsigned int& level);
@@ -194,10 +197,17 @@ namespace PF
       //range *= max_mul;
 #endif
     
-      for(int i = 0; i < 4; i++) 
+      float black[4];
+      for(int i = 0; i < 4; i++) {
 				mul[i] = mul[i] * exposure / range;
+        black[i] = par->get_black_level_correction() * exposure / (image_data->color.maximum - image_data->color.black);
+        if( nbands != 3 ) black[i] *= 65535;
+        std::cout<<"black="<<par->get_black_level_correction()<<" * 65535 * "
+            <<exposure<<" / "<<(image_data->color.maximum - image_data->color.black)
+            <<"="<<black[i]<<std::endl;
+      }
     
-      //if(r->left==0 && r->top==0) std::cout<<"RawPreprocessor::render_camwb(): nbands="<<nbands<<std::endl;
+      if(r->left==0 && r->top==0) std::cout<<"RawPreprocessor::render_camwb(): nbands="<<nbands<<std::endl;
       if( nbands == 3 ) {
 				float* p;
 				float* pout;
@@ -206,9 +216,9 @@ namespace PF
 					p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
 					pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 					for( x=0; x < line_sz; x+=3) {
-						pout[x] = CLIP(p[x] * mul[0]);
-						pout[x+1] = CLIP(p[x+1] * mul[1]);
-						pout[x+2] = CLIP(p[x+2] * mul[2]);
+						pout[x] = CLIP(p[x] * mul[0] - black[0]);
+						pout[x+1] = CLIP(p[x+1] * mul[1] - black[1]);
+						pout[x+2] = CLIP(p[x+2] * mul[2] - black[2]);
 						//if(r->left==0 && r->top==0) std::cout<<"  p["<<x<<"]="<<p[x]<<"  pout["<<x<<"]="<<pout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */
@@ -231,10 +241,11 @@ namespace PF
 					  //      <<"  size of pel="<<VIPS_IMAGE_SIZEOF_PEL(ireg[in_first]->im)
 					  //      <<","<<VIPS_IMAGE_SIZEOF_PEL(oreg->im)<<std::endl;
 						rpout.color(x) = rp.color(x);
-						rpout[x] = CLIP(rp[x] * mul[ rp.icolor(x) ]);
-            //std::cout<<"  rp.color(x)="<<rp.color(x)
-            //    <<"  rp[x]="<<rp[x]<<"  mul[ rp.icolor(x) ]="
-            //    <<mul[ rp.icolor(x) ]<<"  rpout[x]="<<rpout[x]<<std::endl;
+						rpout[x] = CLIP(rp[x] * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
+						if(false && r->left==0 && r->top==0)
+            std::cout<<"  rp.color(x)="<<rp.color(x)
+                <<"  rp[x]="<<rp[x]<<"  mul[ rp.icolor(x) ]="
+                <<mul[ rp.icolor(x) ]<<"  rpout[x]="<<rpout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */
 						rpout[x] *= 65535;

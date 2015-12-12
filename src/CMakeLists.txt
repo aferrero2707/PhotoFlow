@@ -2,7 +2,7 @@ IF(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   SET(GMIC_FLAGS "-std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-framework CoreServices -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
@@ -152,6 +152,21 @@ add_subdirectory(external/LibRaw)
 list(APPEND LIB_DEPS libraw_r)
 list(APPEND STATIC_LIBS libraw_static)
 
+#
+# the rawspeed part is a bit of a hack:
+# the static linking didn't work since it was pulling -lstdc++ and -lm into linker flags.
+# so we do a custom dependency and pretend an imported librawsped.a so no other -l are
+# appended.
+#
+add_library(rawspeed_static STATIC IMPORTED)
+set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
+# compile rawspeed
+add_subdirectory(external/rawspeed)
+list(APPEND LIB_DEPS rawspeed)
+list(APPEND STATIC_LIBS rawspeed_static)
+
+
+
 LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
 set(BUILD_STATIC "ON")
 add_library(lensfun_static STATIC IMPORTED)
@@ -202,6 +217,8 @@ ELSEIF(APPLE)
 ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
 ENDIF(MINGW)
+
+list(APPEND ADDITIONAL_LIBS pugixml)
 
 add_executable(photoflow # name of the executable on Windows will be example.exe 
   main.cc 
