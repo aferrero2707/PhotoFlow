@@ -51,6 +51,7 @@ namespace PF
     Property<float> contrast, contrast_eq;
     Property<float> brightness, brightness_eq;
     Property<bool> brightness_is_gamma;
+    Property<float> exposure;
     Property<SplineCurve> hue_H_equalizer;
     Property<SplineCurve> hue_S_equalizer;
     Property<SplineCurve> hue_L_equalizer;
@@ -94,6 +95,8 @@ namespace PF
     float get_brightness() { return brightness.get(); }
     float get_brightness_eq() { return brightness_eq.get(); }
     bool get_brightness_is_gamma() { return brightness_is_gamma.get(); }
+    float get_exposure() { return exposure.get(); }
+
     bool get_show_mask() { return show_mask.get(); }
 
     bool has_intensity() { return false; }
@@ -140,6 +143,7 @@ namespace PF
       float saturation = opar->get_saturation();
       float contrast = opar->get_contrast();
       float brightness = opar->get_brightness();
+      float exposure = opar->get_exposure();
 
       T* pin;
       T* pmask;
@@ -200,6 +204,7 @@ namespace PF
             float saturation2 = saturation;
             float brightness2 = brightness;
             float contrast2 = contrast;
+            float exposure2 = exposure;
             /*
             if( h_eq < 1 ) {
               hue2 *= h_eq;
@@ -269,6 +274,13 @@ namespace PF
             contrast2 += opar->get_contrast_eq()*c_eq;
           }
              */
+
+            if( exposure2 != 0 ) {
+              for( k=0; k < 3; k++) {
+                clip( exposure*RGB[k], RGB[k] );
+              }
+            }
+
             if( brightness2 != 0 || contrast2 != 0 ) {
               for( k=0; k < 3; k++) {
                 tempval = (typename FormatInfo<T>::SIGNED)RGB[k] - FormatInfo<T>::HALF;

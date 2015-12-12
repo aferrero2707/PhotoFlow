@@ -51,6 +51,7 @@ namespace PF {
 
   Slider brightnessSlider, brightness2Slider, contrastSlider, contrast2Slider;
   Slider hueSlider, hue2Slider, saturationSlider, saturation2Slider;
+  ExposureSlider exposureSlider;
 
   CheckBox mask_enable;
 

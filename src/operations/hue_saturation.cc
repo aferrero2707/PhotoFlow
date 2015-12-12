@@ -47,6 +47,7 @@ PF::HueSaturationPar::HueSaturationPar():
   brightness("brightness",this,0),
   brightness_eq("brightness_eq",this,0),
   brightness_is_gamma("brightness_is_gamma",this,false),
+  exposure("exposure",this,1),
   hue_H_equalizer( "hue_H_equalizer", this ),
   hue_S_equalizer( "hue_S_equalizer", this ),
   hue_L_equalizer( "hue_L_equalizer", this ),

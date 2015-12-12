@@ -299,16 +299,16 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_conv.get_tree().add_op( "Color profile conversion"), "convert_colorspace" );
   //op_conv.get_tree().add_op( "Lab conversion"), "convert2lab" );
 
-  //op_color.get_tree().add_op( _("Color profile conversion"), "convert_colorspace" );
-  //op_color.get_tree().add_op( _("B/C/S/H Adjustment"), "hue_saturation" );
+  op_color.get_tree().add_op( _("Base Adjustments"), "hue_saturation" );
   op_color.get_tree().add_op( _("Invert"), "invert" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
   //op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
   //op_color.get_tree().add_op( _("Threshold"), "threshold" );
   //op_color.get_tree().add_op( "Brightness/Contrast"), "brightness_contrast" );
-  //op_color.get_tree().add_op( _("Channel Mixer"), "channel_mixer" );
+  op_color.get_tree().add_op( _("Channel Mixer"), "channel_mixer" );
   //op_color.get_tree().add_op( _("Uniform Fill"), "uniform");
   //op_color.get_tree().add_op( _("Gradient"), "gradient");
+  op_color.get_tree().add_op( _("Color profile conversion"), "convert_colorspace" );
   //op_color.get_tree().add_op( _("H/S/L Mask"), "hsl_mask" );
   //op_color.get_tree().add_op( _("Emulate film [color slide]"), "gmic_emulate_film_colorslide" );
   //op_color.get_tree().add_op( _("Emulate film [B&W]"), "gmic_emulate_film_bw" );
@@ -320,12 +320,12 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_color.get_tree().add_op( _("Emulate film [print films]"), "gmic_emulate_film_print_films" );
   //op_color.get_tree().add_op( _("Emulate film [various]"), "gmic_emulate_film_various" );
 
-  //op_detail.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
+  op_detail.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
   //op_detail.get_tree().add_op( _("Local contrast"), "volume" );
-  //op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
+  op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
   //op_detail.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
   //op_detail.get_tree().add_op( _("Multi-level decomposition"), "gmic_split_details" );
-  //op_detail.get_tree().add_op( _("Noise reduction"), "denoise" );
+  op_detail.get_tree().add_op( _("Noise reduction"), "denoise" );
 
   op_geom.get_tree().add_op( _("Crop image"), "crop" );
   op_geom.get_tree().add_op( _("Scale & rotate image"), "scale" );
