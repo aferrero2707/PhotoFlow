@@ -320,22 +320,22 @@ bool PF::CurvesConfigGUI::pointer_release_event( int button, double x, double y,
   case PF_COLORSPACE_RGB:
     if( values.size() != 3 ) return false;
     {
-      std::vector<float> pvalues;
-      pvalues.push_back( PF::ICCStore::Instance().linear2perceptual( values[0] ) );
-      pvalues.push_back( PF::ICCStore::Instance().linear2perceptual( values[1] ) );
-      pvalues.push_back( PF::ICCStore::Instance().linear2perceptual( values[2] ) );
+      //std::vector<float> pvalues;
+      //pvalues.push_back( PF::ICCStore::Instance().linear2perceptual( values[0] ) );
+      //pvalues.push_back( PF::ICCStore::Instance().linear2perceptual( values[1] ) );
+      //pvalues.push_back( PF::ICCStore::Instance().linear2perceptual( values[2] ) );
       switch( rgbCurveSelector.get_active_row_number() ) {
       case 0:
-        rgbCurveEditor.add_point( (pvalues[0]+pvalues[1]+pvalues[2])/3.0f );
+        rgbCurveEditor.add_point( (values[0]+values[1]+values[2])/3.0f );
         break;
       case 1:
-        RCurveEditor.add_point( pvalues[0] );
+        RCurveEditor.add_point( values[0] );
         break;
       case 2:
-        GCurveEditor.add_point( pvalues[1] );
+        GCurveEditor.add_point( values[1] );
         break;
       case 3:
-        BCurveEditor.add_point( pvalues[2] );
+        BCurveEditor.add_point( values[2] );
         break;
       }
     }

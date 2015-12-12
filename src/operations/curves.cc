@@ -64,6 +64,10 @@ PF::CurvesPar::CurvesPar():
   CMYK_active_curve.add_enum_value( 10, "Y", "Y" );
   CMYK_active_curve.add_enum_value( 11, "K", "K" );
 
+  RGB_curve.get().set_needs_gamma_correction(true);
+  R_curve.get().set_needs_gamma_correction(true);
+  G_curve.get().set_needs_gamma_correction(true);
+  B_curve.get().set_needs_gamma_correction(true);
   //RGB_curve.get().add_point( 0.25, 0.10 );
   //RGB_curve.get().add_point( 0.75, 0.90 );
 
@@ -125,13 +129,13 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
   if( R_curve.is_modified() || G_curve.is_modified() || 
       B_curve.is_modified() || RGB_curve.is_modified() ) {
 	    //std::cout<<"update_curve( R_curve, RGBvec8[0], RGBvec16[0] );"<<std::endl;std::cout.flush();
-	    update_curve( R_curve, RGBvec8[0], RGBvec16[0], true );
+	    update_curve( R_curve, RGBvec8[0], RGBvec16[0], false );
 	    //std::cout<<"update_curve( G_curve, RGBvec8[1], RGBvec16[1] );"<<std::endl;std::cout.flush();
-	    update_curve( G_curve, RGBvec8[1], RGBvec16[1], true );
+	    update_curve( G_curve, RGBvec8[1], RGBvec16[1], false );
 	    //std::cout<<"update_curve( B_curve, RGBvec8[2], RGBvec16[2] );"<<std::endl;std::cout.flush();
-	    update_curve( B_curve, RGBvec8[2], RGBvec16[2], true );
+	    update_curve( B_curve, RGBvec8[2], RGBvec16[2], false );
 	    //std::cout<<"update_curve( RGB_curve, RGBvec8[3], RGBvec16[3] );"<<std::endl;std::cout.flush();
-	    update_curve( RGB_curve, RGBvec8[3], RGBvec16[3], true );
+	    update_curve( RGB_curve, RGBvec8[3], RGBvec16[3], false );
     for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
       for(int j = 0; j < 3; j++) RGBvec8[j][i] += RGBvec8[3][i];
     }

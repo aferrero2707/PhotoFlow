@@ -56,6 +56,7 @@ namespace PF
     unsigned int ypp_size;
 
     bool circular;
+    bool needs_gamma_correction;
 
   public:
     SplineCurve();
@@ -92,6 +93,9 @@ namespace PF
 #endif
     std::pair<float,float> get_point(int n) const { return points[n]; }
 
+    void set_needs_gamma_correction( bool flag ) { needs_gamma_correction = flag; }
+    const bool get_needs_gamma_correction() const { return needs_gamma_correction; }
+
     void update_spline();
 
     // Get the output value corresponding to an input value x (normalized to the [0,1] range)
@@ -109,6 +113,7 @@ namespace PF
     {
       lock();
       set_circular( b.is_circular() );
+      set_needs_gamma_correction( b.get_needs_gamma_correction() );
 #ifdef SPLINE_USE_STDVEC
       points = b.get_points();
 #else
@@ -127,6 +132,8 @@ namespace PF
 
   inline bool operator ==(const SplineCurve& l, const SplineCurve& r)
   {
+    if( l.get_needs_gamma_correction() != r.get_needs_gamma_correction() )
+      return false;
 #ifdef SPLINE_USE_STDVEC
     if( l.get_points() != r.get_points() ) return false;
 #else

@@ -213,7 +213,7 @@ namespace PF
     std::cout<<"Processor::process(): "<<std::endl
 	     <<"  fmt = "<<fmt<<std::endl
 	     <<"  colorspace = "<<colorspace<<std::endl
-	     <<"  blend mode = "<<op_params.get_blend_mode()<<std::endl
+	     //<<"  blend mode = "<<op_params.get_blend_mode()<<std::endl
 	     <<"  imap = "<<imap<<"  omap = "<<omap<<std::endl
 	     <<"  mapflag = "<<mapflag<<std::endl;
     */

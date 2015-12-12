@@ -96,6 +96,8 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
 
 void PF::CurveEditor::update_point()
 {
+  SplineCurve& curve = curve_area->get_curve();
+
   //if( !curve_area->get_curve() ) return;
   if( inhibit_value_changed ) return;
   std::cout<<"PF::CurveEditor::update_point() called."<<std::endl;
@@ -109,10 +111,20 @@ void PF::CurveEditor::update_point()
     float px = (xadjustment->get_value()-xmin)/(xmax-xmin);
     float py = (yadjustment->get_value()-ymin)/(ymax-ymin);
 #endif
-    if( curve_area->get_curve().set_point( ipt, px, py ) ) {
+    float lpx = px;
+    float lpy = py;
+    if( curve.get_needs_gamma_correction() ) {
+      lpx = PF::ICCStore::Instance().perceptual2linear( px );
+      lpy = PF::ICCStore::Instance().perceptual2linear( py );
+    }
+    if( curve_area->get_curve().set_point( ipt, lpx, lpy ) ) {
       curve_area->get_curve().update_spline();
       curve_area->queue_draw();
       inhibit_value_changed = true;
+      if( curve.get_needs_gamma_correction() ) {
+        px = PF::ICCStore::Instance().linear2perceptual( lpx );
+        py = PF::ICCStore::Instance().linear2perceptual( lpy );
+      }
 #ifdef GTKMM_2
       xadjustment.set_value( px*(xmax-xmin)+xmin );
       yadjustment.set_value( py*(ymax-ymin)+ymin );
@@ -137,13 +149,22 @@ void PF::CurveEditor::get_value()
   curve_area->set_curve( prop->get() );
   curve_area->set_selected_point( 0 );
   inhibit_value_changed = true;
+
+  SplineCurve& curve = curve_area->get_curve();
+
+  float px = prop->get().get_point(0).first;
+  float py = prop->get().get_point(0).second;
+  if( curve.get_needs_gamma_correction() ) {
+    px = PF::ICCStore::Instance().linear2perceptual( px );
+    py = PF::ICCStore::Instance().linear2perceptual( py );
+  }
 #ifdef GTKMM_2
-  xadjustment.set_value( prop->get().get_point(0).first*(xmax-xmin)+xmin );
-  yadjustment.set_value( prop->get().get_point(0).second*(ymax-ymin)+ymin );
+  xadjustment.set_value( px*(xmax-xmin)+xmin );
+  yadjustment.set_value( py*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-  xadjustment->set_value( prop->get().get_point(0).first*(xmax-xmin)+xmin );
-  yadjustment->set_value( prop->get().get_point(0).second*(ymax-ymin)+ymin );
+  xadjustment->set_value( px*(xmax-xmin)+xmin );
+  yadjustment->set_value( py*(ymax-ymin)+ymin );
 #endif
   inhibit_value_changed = false;
   //std::cout<<"CurveEditor::get_value() called"<<std::endl;
@@ -170,13 +191,19 @@ void PF::CurveEditor::add_point( float xpt, float ycurve )
     curve.update_spline();
     curve_area->queue_draw();
     inhibit_value_changed = true;
+    float px = xpt;
+    float py = ycurve;
+    if( curve.get_needs_gamma_correction() ) {
+      px = PF::ICCStore::Instance().perceptual2linear( px );
+      py = PF::ICCStore::Instance().perceptual2linear( py );
+    }
 #ifdef GTKMM_2
-    xadjustment.set_value( xpt*(xmax-xmin)+xmin );
-    yadjustment.set_value( ycurve*(ymax-ymin)+ymin );
+    xadjustment.set_value( px*(xmax-xmin)+xmin );
+    yadjustment.set_value( py*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-    xadjustment->set_value( xpt*(xmax-xmin)+xmin );
-    yadjustment->set_value( ycurve*(ymax-ymin)+ymin );
+    xadjustment->set_value( px*(xmax-xmin)+xmin );
+    yadjustment->set_value( py*(ymax-ymin)+ymin );
 #endif
     inhibit_value_changed = false;
   }
@@ -215,8 +242,14 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       bool found = false;
       int ipt = -1;
       for( unsigned int i = 0; i < curve.get_npoints(); i++ ) {
-        double dx = fabs( xpt - curve.get_point(i).first);
-        double dy = fabs( ypt - curve.get_point(i).second);
+        float px = curve.get_point(i).first;
+        float py = curve.get_point(i).second;
+        if( curve.get_needs_gamma_correction() ) {
+          px = PF::ICCStore::Instance().linear2perceptual( px );
+          py = PF::ICCStore::Instance().linear2perceptual( py );
+        }
+        double dx = fabs( xpt - px );
+        double dy = fabs( ypt - py );
 #ifndef NDEBUG
         std::cout<<"  point #"<<i<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
 #endif
@@ -235,13 +268,19 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           std::cout<<"  point #"<<ipt<<" grabbed"<<std::endl;
 #endif
           inhibit_value_changed = true;
+          float px = curve.get_points()[ipt].first;
+          float py = curve.get_points()[ipt].second;
+          if( curve.get_needs_gamma_correction() ) {
+            px = PF::ICCStore::Instance().linear2perceptual( px );
+            py = PF::ICCStore::Instance().linear2perceptual( py );
+          }
 #ifdef GTKMM_2
-          xadjustment.set_value( curve.get_point(ipt).first*(xmax-xmin)+xmin );
-          yadjustment.set_value( curve.get_point(ipt).second*(ymax-ymin)+ymin );
+          xadjustment.set_value( px*(xmax-xmin)+xmin );
+          yadjustment.set_value( py*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-          xadjustment->set_value( curve.get_point(ipt).first*(xmax-xmin)+xmin );
-          yadjustment->set_value( curve.get_point(ipt).second*(ymax-ymin)+ymin );
+          xadjustment->set_value( px*(xmax-xmin)+xmin );
+          yadjustment->set_value( py*(ymax-ymin)+ymin );
 #endif
           inhibit_value_changed = false;
           curve_area->queue_draw();
@@ -251,13 +290,19 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           curve_area->set_selected_point( 0 );
           curve_area->queue_draw();
           inhibit_value_changed = true;
+          float px = curve.get_points()[0].first;
+          float py = curve.get_points()[0].second;
+          if( curve.get_needs_gamma_correction() ) {
+            px = PF::ICCStore::Instance().linear2perceptual( px );
+            py = PF::ICCStore::Instance().linear2perceptual( py );
+          }
 #ifdef GTKMM_2
-          xadjustment.set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
-          yadjustment.set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
+          xadjustment.set_value( px*(xmax-xmin)+xmin );
+          yadjustment.set_value( py*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-          xadjustment->set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
-          yadjustment->set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
+          xadjustment->set_value( px*(xmax-xmin)+xmin );
+          yadjustment->set_value( py*(ymax-ymin)+ymin );
 #endif
           inhibit_value_changed = false;
           changed();
@@ -266,10 +311,19 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
         if( event->button.button == 1 ) {
           // The click was far from any existing point, let's see if
           // it is on the curve and if we have to add one more point
-          double ycurve = curve.get_value( xpt );
-          double dy = fabs( ypt - ycurve);
+          double px = xpt;
+          double py = ypt;
+          if( curve.get_needs_gamma_correction() ) {
+            px = PF::ICCStore::Instance().perceptual2linear( px );
+            py = PF::ICCStore::Instance().perceptual2linear( py );
+          }
+          std::cout<<"px="<<px<<"  py="<<py<<std::endl;
+
+          double ycurve = curve.get_value( px );
+          double dy = fabs( py - ycurve);
+          std::cout<<"ycurve="<<ycurve<<"  dy="<<dy<<std::endl;
           if( dy<0.05 ) {
-            add_point( xpt, ycurve );
+            add_point( px, ycurve );
           }
         }
       }
@@ -305,8 +359,14 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       float px = double(tx-1)/(width-3);
       float py = double(height-ty-1)/(height-3);
+      float lpx = px;
+      float lpy = py;
+      if( curve.get_needs_gamma_correction() ) {
+        lpx = PF::ICCStore::Instance().perceptual2linear( px );
+        lpy = PF::ICCStore::Instance().perceptual2linear( py );
+      }
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if( curve.set_point( grabbed_point, px, py ) ) {
+      if( curve.set_point( grabbed_point, lpx, lpy ) ) {
         curve.update_spline();
         curve_area->queue_draw();
         inhibit_value_changed = true;
@@ -404,9 +464,13 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
       //std::cout<<"PF::CurveArea::on_expose_event(): width="<<width<<"  height="<<height<<std::endl;
       for( int i = 0; i < width; i++ ) {
         float fi = i;
-        vec.push_back( std::make_pair( fi/(width-1), (float)0 ) );
+        fi /= (width-1);
+        float lfi = PF::ICCStore::Instance().perceptual2linear( fi );
+        float ly = curve.get_value( lfi );
+        float y = PF::ICCStore::Instance().linear2perceptual( ly );
+        vec.push_back( std::make_pair( fi, y ) );
       }
-      curve.get_values( vec );
+      //curve.get_values( vec );
 
       // draw curve
       cr->set_source_rgb( 0.9, 0.9, 0.9 );
@@ -418,8 +482,12 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
 
       //std::vector< std::pair<float,float> > points = curve.get_points();
       for( unsigned int i = 0; i < curve.get_npoints(); i++ ) {
-        double x = double(curve.get_point(i).first)*width+x0;
-        double y = double(1.0f-curve.get_point(i).second)*height+y0;
+        double lpx = curve.get_point(i).first;
+        double lpy = curve.get_point(i).second;
+        double px = PF::ICCStore::Instance().linear2perceptual( lpx );
+        double py = PF::ICCStore::Instance().linear2perceptual( lpy );
+        double x = (px * width) + x0;
+        double y = ((1.0f - py) * height) + y0;
         cr->set_source_rgb( 0.9, 0.9, 0.9 );
         cr->arc (x, y, 3.5, 0, 2*M_PI);
         cr->fill ();

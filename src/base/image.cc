@@ -300,7 +300,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
     }
 
 #ifndef NDEBUG
-    std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<std::endl;
+    std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<"  (format="<<pipeline->get_format()<<")"<<std::endl;
 #endif
     //get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, area );
     get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
