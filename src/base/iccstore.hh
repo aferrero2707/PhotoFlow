@@ -30,10 +30,42 @@
 #ifndef PF_ICCSTORE_H
 #define PF_ICCSTORE_H
 
+#include <string>
 #include <lcms2.h>
 
 namespace PF
 {
+
+enum TRC_type
+{
+  PF_TRC_LINEAR,
+  PF_TRC_PERCEPTUAL,
+  PF_TRC_STANDARD
+};
+
+class ICCProfile
+{
+  cmsHPROFILE profile;
+  TRC_type trc_type;
+  cmsToneCurve* perceptual_trc;
+  cmsToneCurve* perceptual_trc_inv;
+
+  int perceptual_trc_vec[65536];
+  int perceptual_trc_inv_vec[65536];
+
+  cmsCIExyYTRIPLE d50_wp_primaries;
+  float Y_R, Y_G, Y_B;
+
+public:
+  ICCProfile( std::string fname, TRC_type type );
+  ~ICCProfile();
+
+  TRC_type get_trc_type() { return trc_type; }
+  bool is_linear() { return( get_trc_type() == PF_TRC_LINEAR ); }
+  bool is_perceptual() { return( get_trc_type() == PF_TRC_PERCEPTUAL ); }
+  bool is_standard() { return( get_trc_type() == PF_TRC_STANDARD ); }
+};
+
 
   class ICCStore
   {

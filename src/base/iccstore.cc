@@ -50,6 +50,39 @@ static cmsCIExyYTRIPLE aces_cg_primaries =
 {0.128, 0.044,  1.0}
 };
 
+
+PF::ICCProfile::ICCProfile( std::string fname, TRC_type type ): trc_type(type)
+{
+  profile = cmsOpenProfileFromFile( fname.c_str(), "r" );
+  std::string xyzprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/XYZ-D50-Identity-elle-V4.icc";
+  cmsHPROFILE xyzprof = cmsOpenProfileFromFile( xyzprofname.c_str(), "r" );
+  cmsHTRANSFORM transform = cmsCreateTransform( profile,
+      TYPE_RGB_FLT,
+      xyzprof,
+      TYPE_RGB_FLT,
+      INTENT_RELATIVE_COLORIMETRIC,
+      cmsFLAGS_NOCACHE );
+
+  float RGB[3], XYZ[3];
+  RGB[0] = 1; RGB[1] = 0; RGB[2] = 0;
+  cmsDoTransform(transform, RGB, XYZ, 1);
+  Y_R = XYZ[1];
+  RGB[0] = 0; RGB[1] = 1; RGB[2] = 0;
+  cmsDoTransform(transform, RGB, XYZ, 1);
+  Y_G = XYZ[1];
+  RGB[0] = 0; RGB[1] = 0; RGB[2] = 1;
+  cmsDoTransform(transform, RGB, XYZ, 1);
+  Y_B = XYZ[1];
+}
+
+
+PF::ICCProfile::~ICCProfile()
+{
+
+}
+
+
+
 PF::ICCStore::ICCStore()
 {
   std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-g10.icc";
@@ -62,6 +95,8 @@ PF::ICCStore::ICCStore()
      { 3.0, 0.862076,  0.137924, 0.110703, 0.080002 };
   perceptual_trc = cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
   perceptual_trc_inv = cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
+  //perceptual_trc = cmsBuildGamma (NULL, 2.19921875);
+  //perceptual_trc_inv = cmsBuildGamma (NULL, 2.19921875);
   perceptual_trc_inv = cmsReverseToneCurve( perceptual_trc_inv );
 
   for( int i = 0; i < 65536; i++ ) {
