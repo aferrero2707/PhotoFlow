@@ -40,6 +40,9 @@
 
 //#define RT_EMU 1
 
+
+#define __CLIP(a) (a)
+
 namespace PF 
 {
 
@@ -241,7 +244,7 @@ namespace PF
 					  //      <<"  size of pel="<<VIPS_IMAGE_SIZEOF_PEL(ireg[in_first]->im)
 					  //      <<","<<VIPS_IMAGE_SIZEOF_PEL(oreg->im)<<std::endl;
 						rpout.color(x) = rp.color(x);
-						rpout[x] = CLIP(rp[x] * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
+						rpout[x] = __CLIP(rp[x] * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
 						if(false && r->left==0 && r->top==0)
             std::cout<<"  rp.color(x)="<<rp.color(x)
                 <<"  rp[x]="<<rp[x]<<"  mul[ rp.icolor(x) ]="
@@ -260,7 +263,7 @@ namespace PF
 											 VipsRegion* imap, VipsRegion* omap, 
 											 VipsRegion* oreg, RawPreprocessorPar* par)
     {
-      //dcraw_data_t* image_data = par->get_image_data();
+      dcraw_data_t* image_data = par->get_image_data();
       float exposure = par->get_exposure();
       Rect *r = &oreg->valid;
       int nbands = ireg[in_first]->im->Bands;
@@ -299,6 +302,16 @@ namespace PF
 				par->get_wb_green() * exposure / range
       };
 
+      float black[4];
+      for(int i = 0; i < 4; i++) {
+        mul[i] = mul[i] * exposure / range;
+        black[i] = par->get_black_level_correction() * exposure / (image_data->color.maximum - image_data->color.black);
+        if( nbands != 3 ) black[i] *= 65535;
+        std::cout<<"black="<<par->get_black_level_correction()<<" * 65535 * "
+            <<exposure<<" / "<<(image_data->color.maximum - image_data->color.black)
+            <<"="<<black[i]<<std::endl;
+      }
+
       //std::cout<<"render_spotwb(): region left/top="<<r->left<<","<<r->top<<"+"<<r->width<<"+"<<r->height<<std::endl;
       //std::cout<<"  raw_preproc_sample_x="<<raw_preproc_sample_x<<std::endl;
       //std::cout<<"  raw_preproc_sample_y="<<raw_preproc_sample_y<<std::endl;
@@ -311,9 +324,9 @@ namespace PF
 					p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
 					pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 					for( x=0; x < line_sz; x+=3) {
-						pout[x] = CLIP(p[x] * mul[0]);
-						pout[x+1] = CLIP(p[x+1] * mul[1]);
-						pout[x+2] = CLIP(p[x+2] * mul[2]);
+						pout[x] = CLIP(p[x] * mul[0] - black[0]);
+						pout[x+1] = CLIP(p[x+1] * mul[1] - black[1]);
+						pout[x+2] = CLIP(p[x+2] * mul[2] - black[2]);
 #ifdef RT_EMU
 						/* RawTherapee emulation */
 						pout[x] *= 65535;
@@ -332,7 +345,7 @@ namespace PF
 					PF::RawMatrixRow rpout( pout );
 					for( x=0; x < r->width; x++) {
 						rpout.color(x) = rp.color(x);
-						rpout[x] = CLIP(rp[x] * mul[ rp.icolor(x) ]);
+						rpout[x] = __CLIP(rp[x] * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
             
             int dx = r->left+x-raw_preproc_sample_x;
             int dy = r->top+y-raw_preproc_sample_y;

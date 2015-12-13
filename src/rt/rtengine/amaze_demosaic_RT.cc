@@ -1348,30 +1348,30 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
             for (cc=16,indx=rr*TS+cc,row=rr+top; cc<cc1-16-(cc1&1); cc+=2,indx++) {
               col = cc + left;
               temp = 	1.0f/((hvwt[(indx-v1)>>1])+(1.0f-hvwt[(indx+1)>>1])+(1.0f-hvwt[(indx-1)>>1])+(hvwt[(indx+v1)>>1]));
-              red[row][col]=65535.0f*(rgbgreen[indx]-	((hvwt[(indx-v1)>>1])*Dgrb[0][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[0][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[0][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[0][(indx+v1)>>1])*
-                  temp);
-              blue[row][col]=65535.0f*(rgbgreen[indx]- ((hvwt[(indx-v1)>>1])*Dgrb[1][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[1][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[1][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[1][(indx+v1)>>1])*
-                  temp);
+              red[row][col]=CLIP(65535.0f*(rgbgreen[indx]-	((hvwt[(indx-v1)>>1])*Dgrb[0][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[0][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[0][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[0][(indx+v1)>>1])*
+                  temp));
+              blue[row][col]=CLIP(65535.0f*(rgbgreen[indx]- ((hvwt[(indx-v1)>>1])*Dgrb[1][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[1][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[1][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[1][(indx+v1)>>1])*
+                  temp));
 
               indx++;
               col++;
-              red[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]);
-              blue[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]);
+              red[row][col]=CLIP(65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]));
+              blue[row][col]=CLIP(65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]));
             }
             if(cc1&1) { // width of tile is odd
               col = cc + left;
               temp = 	1.0f/((hvwt[(indx-v1)>>1])+(1.0f-hvwt[(indx+1)>>1])+(1.0f-hvwt[(indx-1)>>1])+(hvwt[(indx+v1)>>1]));
-              red[row][col]=65535.0f*(rgbgreen[indx]-	((hvwt[(indx-v1)>>1])*Dgrb[0][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[0][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[0][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[0][(indx+v1)>>1])*
-                  temp);
-              blue[row][col]=65535.0f*(rgbgreen[indx]- ((hvwt[(indx-v1)>>1])*Dgrb[1][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[1][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[1][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[1][(indx+v1)>>1])*
-                  temp);
+              red[row][col]=CLIP(65535.0f*(rgbgreen[indx]-	((hvwt[(indx-v1)>>1])*Dgrb[0][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[0][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[0][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[0][(indx+v1)>>1])*
+                  temp));
+              blue[row][col]=CLIP(65535.0f*(rgbgreen[indx]- ((hvwt[(indx-v1)>>1])*Dgrb[1][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[1][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[1][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[1][(indx+v1)>>1])*
+                  temp));
             }
           }
           else {
             for (cc=16,indx=rr*TS+cc,row=rr+top; cc<cc1-16-(cc1&1); cc+=2,indx++) {
               col = cc + left;
-              red[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]);
-              blue[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]);
+              red[row][col]=CLIP(65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]));
+              blue[row][col]=CLIP(65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]));
 
               indx++;
               col++;
