@@ -249,20 +249,20 @@ PF::RawImage::RawImage( const std::string _fname ):
 
     // dimensions of uncropped image
     RawSpeed::iPoint2D dimUncropped = r->getUncroppedDim();
-    iwidth = dimUncropped.x;
-    iheight = dimUncropped.y;
+    //iwidth = dimUncropped.x;
+    //iheight = dimUncropped.y;
 
     // dimensions of cropped image
     RawSpeed::iPoint2D dimCropped = r->dim;
-    //iwidth = dimCropped.x;
-    //iheight = dimCropped.y;
+    iwidth = dimCropped.x;
+    iheight = dimCropped.y;
 
     pdata->sizes.flip = 0;
 
     // crop - Top,Left corner
     RawSpeed::iPoint2D cropTL = r->getCropOffset();
-    //crop_x = cropTL.x;
-    //crop_y = cropTL.y;
+    crop_x = cropTL.x;
+    crop_y = cropTL.y;
 
     // crop - Bottom,Right corner
     RawSpeed::iPoint2D cropBR = dimUncropped - dimCropped - cropTL;
