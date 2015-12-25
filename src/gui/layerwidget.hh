@@ -48,16 +48,18 @@ class ControlsGroup: public Gtk::VBox
 {
   ImageEditor* editor;
   std::vector<Gtk::Frame*> controls;
+  std::vector<PF::OperationConfigGUI*> guis;
 
 public:
   ControlsGroup( ImageEditor* editor );
   size_t size() { return controls.size(); }
   /**/
   void clear();
-  void add_control(Gtk::Frame* control);
-  void remove_control(Gtk::Frame* control);
+  void add_control(PF::OperationConfigGUI* control);
+  void remove_control(PF::OperationConfigGUI* control);
+  void collapse_all();
   /**/
-  void set_controls( std::vector<Gtk::Frame*>& new_controls);
+  //void set_controls( std::vector<Gtk::Frame*>& new_controls);
 };
 
 

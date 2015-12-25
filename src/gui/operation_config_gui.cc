@@ -352,9 +352,13 @@ void PF::OperationConfigGUI::expand()
 {
   //std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
   if( controls_frame.get_parent() == NULL ) {
+    if( editor ) {
+      editor->get_layer_widget().get_controls_group().collapse_all();
+    }
     frame_vbox.pack_start( controls_frame, Gtk::PACK_SHRINK, 0 );
     controls_frame.show_all_children();
     controls_frame.show();
+    frame_expander.set_active(true);
     //std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
   }
 }
@@ -365,6 +369,7 @@ void PF::OperationConfigGUI::collapse()
   //std::cout<<"OperationConfigGUI::collapse() called."<<std::endl;
   if( controls_frame.get_parent() == &frame_vbox ) {
     frame_vbox.remove( controls_frame );
+    frame_expander.set_active(false);
     //std::cout<<"OperationConfigGUI::collapse(): controls hidden"<<std::endl;
   }
 }
@@ -619,7 +624,7 @@ void PF::OperationConfigGUI::parameters_reset()
 void PF::OperationConfigGUI::close_config()
 {
   if( editor ) {
-    editor->get_layer_widget().get_controls_group().remove_control( get_frame() );
+    editor->get_layer_widget().get_controls_group().remove_control( this );
   }
 }
 

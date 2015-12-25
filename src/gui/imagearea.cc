@@ -360,12 +360,17 @@ void PF::ImageArea::process_area( const VipsRect& area )
   //vips_invalidate_area( display_image, parea );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Preparing area "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" for display"<<std::endl;
+  std::cout<<"  display_image: w="<<display_image->Xsize<<" h="<<display_image->Ysize<<std::endl;
+  std::cout<<"  region->im: w="<<region->im->Xsize<<" h="<<region->im->Ysize<<std::endl;
 #endif
   //if( region && region->buffer ) region->buffer->done = 0;
   if (vips_region_prepare (region, parea))
     return;
 
-  double_buffer.get_inactive().copy( region, area, xoffset, yoffset );
+  VipsRect area_clip;
+  vips_rect_intersectrect (&(region->valid), &area, &area_clip);
+
+  double_buffer.get_inactive().copy( region, area_clip, xoffset, yoffset );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into inactive buffer"<<std::endl;
 #endif

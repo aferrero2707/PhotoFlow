@@ -60,7 +60,7 @@ public:
   bool has_intensity() { return false; }
   bool has_opacity() { return false; }
   bool needs_input() { return true; }
-  bool needs_caching() { return true; }
+  bool needs_caching() { return false; }
 
   std::string camera_maker() { return prop_camera_maker.get(); }
   std::string camera_model() { return prop_camera_model.get(); }

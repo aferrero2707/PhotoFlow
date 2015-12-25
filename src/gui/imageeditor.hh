@@ -217,7 +217,7 @@ public:
 
   void zoom_in();
   void zoom_out();
-  void zoom_fit();
+  bool zoom_fit();
   void zoom_actual_size();
 };
 

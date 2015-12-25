@@ -205,9 +205,9 @@ namespace PF
 				mul[i] = mul[i] * exposure / range;
         black[i] = par->get_black_level_correction() * exposure / (image_data->color.maximum - image_data->color.black);
         if( nbands != 3 ) black[i] *= 65535;
-        std::cout<<"black="<<par->get_black_level_correction()<<" * 65535 * "
-            <<exposure<<" / "<<(image_data->color.maximum - image_data->color.black)
-            <<"="<<black[i]<<std::endl;
+        //std::cout<<"black="<<par->get_black_level_correction()<<" * 65535 * "
+        //    <<exposure<<" / "<<(image_data->color.maximum - image_data->color.black)
+        //    <<"="<<black[i]<<std::endl;
       }
     
       if(r->left==0 && r->top==0) std::cout<<"RawPreprocessor::render_camwb(): nbands="<<nbands<<std::endl;
@@ -307,9 +307,9 @@ namespace PF
         mul[i] = mul[i] * exposure / range;
         black[i] = par->get_black_level_correction() * exposure / (image_data->color.maximum - image_data->color.black);
         if( nbands != 3 ) black[i] *= 65535;
-        std::cout<<"black="<<par->get_black_level_correction()<<" * 65535 * "
-            <<exposure<<" / "<<(image_data->color.maximum - image_data->color.black)
-            <<"="<<black[i]<<std::endl;
+        //std::cout<<"black="<<par->get_black_level_correction()<<" * 65535 * "
+        //    <<exposure<<" / "<<(image_data->color.maximum - image_data->color.black)
+        //    <<"="<<black[i]<<std::endl;
       }
 
       //std::cout<<"render_spotwb(): region left/top="<<r->left<<","<<r->top<<"+"<<r->width<<"+"<<r->height<<std::endl;

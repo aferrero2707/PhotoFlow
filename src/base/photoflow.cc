@@ -34,6 +34,18 @@
 #include <stdlib.h>
 #include <glibmm.h>
 
+#include <stdio.h>  /* defines FILENAME_MAX */
+//#ifdef WINDOWS
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
+
 #if defined(__MINGW32__) || defined(__MINGW64__)
   #include<windows.h>
 #endif
@@ -42,6 +54,7 @@
 #include <mach-o/dyld.h>
 #endif
 
+#include "pf_mkstemp.hh"
 #include "imageprocessor.hh"
 #include "photoflow.hh"
 
@@ -158,6 +171,33 @@ PF::PhotoFlow& PF::PhotoFlow::Instance()
     PF::PhotoFlow::instance = new PF::PhotoFlow();
   return( *instance );
 };
+
+
+void PF::PhotoFlow::close()
+{
+  PF::ImageProcessor::Instance().join();
+
+  //im_close_plugins();
+  vips_shutdown();
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+  for (int i = 0; i < _getmaxstdio(); ++i) close (i);
+#elif defined(__APPLE__) && defined(__MACH__)
+#else
+  rlimit rlim;
+  //getrlimit(RLIMIT_NOFILE, &rlim);
+  if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
+    std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<std::endl;
+    for (int i = 3; i < rlim.rlim_max; ++i) {
+      //std::cout<<"i="<<i<<std::endl;
+      //::close (i);
+    }
+  }
+#endif
+  std::list<std::string>::iterator fi;
+  for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
+    unlink( fi->c_str() );
+}
 
 
 

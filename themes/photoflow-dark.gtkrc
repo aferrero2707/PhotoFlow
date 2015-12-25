@@ -577,7 +577,7 @@ widget_class "*<GtkNotebook>*<GtkScrolledWindow>"	style "murrine-notebook-bg"
 
 widget_class "*<GtkButton>"      style "murrine-button"
 widget_class "*<GtkNotebook>"    style "murrine-notebook"
-widget_class "*<GtkNotebook>*"   style "notebook-close"
+#widget_class "*<GtkNotebook>*"   style "notebook-close"
 widget_class "*<GtkStatusbar>*"  style "murrine-statusbar"
 
 widget_class "*<GtkComboBoxEntry>*" style "murrine-comboboxentry"

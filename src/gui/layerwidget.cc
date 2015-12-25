@@ -54,31 +54,40 @@ void PF::ControlsGroup::clear()
 }
 
 
-void PF::ControlsGroup::add_control(Gtk::Frame* control)
+void PF::ControlsGroup::add_control(PF::OperationConfigGUI* gui)
 {
-  for( unsigned int i = 0; i < controls.size(); i++ ) {
-    if( controls[i] == control )
+  collapse_all();
+  for( unsigned int i = 0; i < guis.size(); i++ ) {
+    if( guis[i] == gui ) {
+      guis[i]->expand();
       return;
+    }
   }
+  guis.push_back( gui );
+  Gtk::Frame* control = gui->get_frame();
   controls.push_back( control );
   pack_start( *control, Gtk::PACK_SHRINK );
   editor->update_controls();
 }
 
 
-void PF::ControlsGroup::remove_control(Gtk::Frame* control)
+void PF::ControlsGroup::remove_control(PF::OperationConfigGUI* gui)
 {
+  Gtk::Frame* control = gui->get_frame();
   std::cout<<"ControlsGroup::remove_control() called."<<std::endl;
   if( control->get_parent() == this ) {
+    std::vector<PF::OperationConfigGUI*> new_guis;
     std::vector<Gtk::Frame*> new_controls;
     for( unsigned int i = 0; i < controls.size(); i++ ) {
       std::cout<<"  controls["<<i<<"]="<<controls[i]<<" (control="<<control<<")"<<std::endl;
       if( controls[i] == control )
         continue;
       std::cout<<"  new_controls.push_back("<<controls[i]<<")"<<std::endl;
+      new_guis.push_back( guis[i] );
       new_controls.push_back( controls[i] );
     }
     std::cout<<"ControlsGroup::remove_control(): controls.size()="<<controls.size()<<"  new_controls.size()="<<new_controls.size()<<std::endl;
+    guis = new_guis;
     controls = new_controls;
     remove( *control );
   }
@@ -86,16 +95,24 @@ void PF::ControlsGroup::remove_control(Gtk::Frame* control)
 }
 
 
-void PF::ControlsGroup::set_controls( std::vector<Gtk::Frame*>& new_controls)
+void PF::ControlsGroup::collapse_all()
 {
+  for( unsigned int i = 0; i < guis.size(); i++ ) {
+    guis[i]->collapse();
+  }
 }
+
+
+//void PF::ControlsGroup::set_controls( std::vector<Gtk::Frame*>& new_controls)
+//{
+//}
 
 
 PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   Gtk::VBox(), 
   image( img ), editor( ed ),
   controls_group( ed ),
-  buttonAdd("+"),
+  buttonAdd( _("New Adjustment") ),
   buttonAddGroup("G+"),
   buttonDel("-"),
   buttonPresetLoad( _("Load") ),
@@ -117,9 +134,11 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   Gtk::Label* label = (Gtk::Label*)notebook.get_tab_label(*page);
   label->set_angle(90);
 
+  top_box.pack_start(buttonAdd, Gtk::PACK_SHRINK);
+
   top_box.pack_start(notebook);
 
-  buttonAdd.set_size_request(30,20);
+  buttonAdd.set_size_request(-1,30);
   buttonAdd.set_tooltip_text( _("Add a new layer") );
   buttonAddGroup.set_size_request(30,20);
   buttonAddGroup.set_tooltip_text( _("Add a new layer group") );
@@ -129,7 +148,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonPresetLoad.set_tooltip_text( _("Load an existing preset") );
   buttonPresetSave.set_tooltip_text( _("Save the selected layers as a preset") );
 
-  buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
+  //buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
   buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
   buttonbox.pack_start(buttonDel, Gtk::PACK_SHRINK);
   buttonbox.pack_start(buttonPresetLoad/*, Gtk::PACK_SHRINK*/);
@@ -425,19 +444,9 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
 
     PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
     if( ui ) {
-      /*
-      PF::OperationConfigDialog* dialog = dynamic_cast<PF::OperationConfigDialog*>( ui );
-      if(dialog) {
-        Gtk::Window* toplevel = dynamic_cast<Gtk::Window*>(get_toplevel());
-        if( toplevel )
-            dialog->set_transient_for( *toplevel );
-        dialog->open();
-        dialog->enable_editing();
-      }
-      */
       PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if( gui && gui->get_frame() ) {
-        controls_group.add_control( gui->get_frame() );
+        controls_group.add_control( gui );
         gui->open();
       }
       controls_group.show_all_children();
@@ -628,6 +637,17 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   update();
   layer_views[page]->unselect_all();
   select_row( layer->get_id() );
+
+  PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
+  if( ui ) {
+    PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+    if( gui && gui->get_frame() ) {
+      controls_group.add_control( gui );
+      gui->open();
+    }
+    controls_group.show_all_children();
+  }
+
 }
 
 
@@ -742,7 +762,7 @@ void PF::LayerWidget::detach_controls( Layer* l )
       PF::OperationConfigGUI* gui =
           dynamic_cast<PF::OperationConfigGUI*>( ui );
       if( gui ) {
-        get_controls_group().remove_control( gui->get_frame() );
+        get_controls_group().remove_control( gui );
         std::cout<<"LayerWidget::detach_controls(\""<<l->get_name()<<"\"): controls removed."<<std::endl;
         if( editor ) {
           if( editor->get_aux_controls() == &(gui->get_aux_controls()) )

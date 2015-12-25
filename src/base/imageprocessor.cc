@@ -222,7 +222,7 @@ void PF::ImageProcessor::run()
         */
         request.image->do_update( request.pipeline );
         request.image->unlock();
-        request.image->rebuild_done_signal();
+        //request.image->rebuild_done_signal();
         //std::cout<<"PF::ImageProcessor::run(): updating image done."<<std::endl;
         break;
       case IMAGE_EXPORT:

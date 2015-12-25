@@ -27,8 +27,8 @@
 
  */
 
-#ifndef GTKMM_EXAMPLE_HELLOWORLD_H
-#define GTKMM_EXAMPLE_HELLOWORLD_H
+#ifndef PF_PLUGIN_WINDOW_H
+#define PF_PLUGIN_WINDOW_H
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
 
@@ -42,79 +42,60 @@
 
 #include <gtkmm.h>
 
-#include "imageeditor.hh"
+#include "../gui/imageeditor.hh"
 
 
 namespace PF {
 
-class MainWindow : public Gtk::Window
+class PluginWindow : public Gtk::Window
 {
 protected:
   //Signal handlers:
-  void on_button_clicked();
-  void on_button_exit();
+  //void on_button_clicked();
+  //void on_button_exit();
 
   //Member widgets:
 #ifdef GTKMM_2
   Gtk::VBox mainBox;
   Gtk::VBox editorBox;
   Gtk::VBox controlBox;
-  //Gtk::HButtonBox topButtonBox1, topButtonBox2;
-  Gtk::HBox topButtonBox1, topButtonBox2;
+  Gtk::HButtonBox buttonBox;
 #endif
 #ifdef GTKMM_3
   Gtk::Box mainBox;
   Gtk::Box editorBox;
   Gtk::Box controlBox;
-  Gtk::ButtonBox topButtonBox1, topButtonBox2;
+  Gtk::ButtonBox buttonBox;
 #endif
-  Gtk::HBox top_box;
   Gtk::Notebook viewerNotebook;
-  Gtk::Frame files_frame, editing_frame;
-  Gtk::Image img_open, img_save, img_save_as, img_export;
-  Gtk::Button buttonOpen, buttonSave, buttonSaveAs, buttonExport, buttonExit, buttonTest;
-  Gtk::Image img_load_preset, img_save_preset, img_trash;
-  Gtk::Button buttonNewLayer, buttonNewGroup, buttonDelLayer, buttonLoadPreset, buttonSavePreset;
+  Gtk::Button buttonOk, buttonCancel;
 
-  std::vector<ImageEditor*> image_editors;
+  ImageEditor* image_editor;
 
   std::string last_dir;
+
+  ImageBuffer imgbuf;
 
   //Gtk::ScrolledWindow treeFrame;
   //Gtk::TreeView layerTree;
 
-  Gtk::MenuBar* menubar;
-  Glib::RefPtr<Gtk::UIManager> m_refUIManager;
-  Glib::RefPtr<Gtk::ActionGroup> m_refActionGroup;
-  void make_menus();
-
 public:
-  MainWindow();
-  virtual ~MainWindow();
-
-  void on_button_open_clicked();
-
-  void on_button_save_clicked();
-  void on_button_saveas_clicked();
+  PluginWindow();
+  virtual ~PluginWindow();
 
   void on_button_export_clicked();
 
-  bool on_delete_event( GdkEventAny* event );
+  void on_button_ok();
+  void on_button_cancel();
 
+  ImageBuffer& get_image_buffer() { return imgbuf; }
 
   void open_image(std::string filename);
-
-  void remove_tab( Gtk::Widget* widget );
-  void remove_all_tabs();
-
-  void on_my_switch_page(
-#ifdef GTKMM_2
-                         GtkNotebookPage* 	page,
-#endif
-#ifdef GTKMM_3
-                         Widget* page,
-#endif
-                         guint page_num);
+  void run()
+  {
+    show_all();
+    gtk_main();
+  }
 };
 
 }

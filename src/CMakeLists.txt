@@ -293,6 +293,10 @@ target_link_libraries(pfbatch ${LIBS}
   )
 
 
+if (GIMP_FOUND)
+add_subdirectory(plugin)
+endif (GIMP_FOUND)
+
 
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)

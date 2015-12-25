@@ -34,6 +34,8 @@
 #include <stdlib.h>
 #include <sigc++/sigc++.h>
 
+#include <gexiv2/gexiv2-metadata.h>
+
 #include "layermanager.hh"
 #include "pipeline.hh"
 
@@ -43,6 +45,16 @@
 
 namespace PF
 {
+
+
+struct ImageBuffer
+{
+  float* buf;
+  int width, height;
+  GExiv2Metadata* exif_buf;
+  void* iccdata;
+  size_t iccsize;
+};
 
 
   class Image: public sigc::trackable
@@ -185,6 +197,7 @@ namespace PF
     bool save( std::string filename );
     void export_merged( std::string filename );
     void do_export_merged( std::string filename );
+    void export_merged_to_mem( ImageBuffer* imgbuf );
   };
 
   gint image_rebuild_callback( gpointer data );
