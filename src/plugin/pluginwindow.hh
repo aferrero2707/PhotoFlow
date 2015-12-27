@@ -88,6 +88,8 @@ public:
   void on_button_ok();
   void on_button_cancel();
 
+  void on_unmap();
+
   ImageBuffer& get_image_buffer() { return imgbuf; }
 
   void open_image(std::string filename);

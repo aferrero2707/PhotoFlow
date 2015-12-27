@@ -37,7 +37,7 @@ extern GType vips_perspective_get_type( void );
 static const char raw_ext[] = "3fr,ari,arw,cap,cine,cr2,crw,cs1,dc2,dcr,dng,erf,fff,"
     "hdr,ia,iiq,jpeg,jpg,k25,kc2,kdc,mdc,mef,mos,mrw,nef,"
     "nrw,orf,ori,pef,pxn,qtk,r3d,raf,raw,rdc,rw2,rwl,sr2,"
-    "srf,srw,sti,tif,tiff,pfi,x3f";
+    "srf,srw,sti,pfi,x3f";
 
 
 
@@ -295,11 +295,11 @@ void run(const gchar *name,
 
     struct stat statbuf;
     Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
-  #if defined(WIN32)
+#if defined(WIN32)
     Glib::ustring themesPath = dataPath + "\\themes";
-  #else
+#else
     Glib::ustring themesPath = dataPath + "/themes";
-  #endif
+#endif
 
 #if defined(WIN32)
     Glib::ustring themerc = themesPath + "\\photoflow-dark.gtkrc";
@@ -328,6 +328,8 @@ void run(const gchar *name,
     pluginwin->show_all();
     app->run(*pluginwin);
     std::cout<<"Plug-in window closed."<<std::endl;
+    std::cout<<"pluginwin->get_image_buffer().buf="<<pluginwin->get_image_buffer().buf<<std::endl;
+
 
     int width = 100, height = 100;
     if( pluginwin->get_image_buffer().buf ) {
@@ -364,6 +366,7 @@ void run(const gchar *name,
     tile_height = gimp_tile_height();
 #endif
 
+    if( pluginwin->get_image_buffer().buf ) {
 #if HAVE_GIMP_2_9
     gegl_buffer_set(buffer,
         GEGL_RECTANGLE(0, 0, width, height),
@@ -376,6 +379,7 @@ void run(const gchar *name,
           uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
     }
 #endif
+    }
 
 #if HAVE_GIMP_2_9
     gegl_buffer_flush(buffer);
@@ -383,6 +387,58 @@ void run(const gchar *name,
     gimp_drawable_flush(drawable);
     gimp_drawable_detach(drawable);
 #endif
+
+    printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
+
+    if( false ) {
+    GimpParasite *exif_parasite;
+
+    exif_parasite = gimp_parasite_new("exif-data",
+        GIMP_PARASITE_PERSISTENT,
+        pluginwin->get_image_buffer().exif_buf,
+        sizeof( GExiv2Metadata ));
+#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
+    gimp_image_attach_parasite(gimpImage, exif_parasite);
+#else
+    gimp_image_parasite_attach(gimpImage, exif_parasite);
+#endif
+    gimp_parasite_free(exif_parasite);
+
+#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
+    {
+      GimpParam    *return_vals;
+      gint          nreturn_vals;
+      return_vals = gimp_run_procedure("plug-in-metadata-decode-exif",
+          &nreturn_vals,
+          GIMP_PDB_IMAGE, gimpImage,
+          GIMP_PDB_INT32, 7,
+          GIMP_PDB_INT8ARRAY, "unused",
+          GIMP_PDB_END);
+      if (return_vals[0].data.d_status != GIMP_PDB_SUCCESS) {
+        g_warning("UFRaw Exif -> XMP Merge failed");
+      }
+    }
+#endif
+    }
+
+    /* Create "icc-profile" parasite from output profile
+     * if it is not the internal sRGB.*/
+    if( pluginwin->get_image_buffer().iccdata ) {
+      GimpParasite *icc_parasite;
+      icc_parasite = gimp_parasite_new("icc-profile",
+          GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
+          pluginwin->get_image_buffer().iccsize,
+          pluginwin->get_image_buffer().iccdata);
+      std::cout<<"ICC parasite created"<<std::endl;
+#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
+      gimp_image_attach_parasite(gimpImage, icc_parasite);
+#else
+      gimp_image_parasite_attach(gimpImage, icc_parasite);
+#endif
+      gimp_parasite_free(icc_parasite);
+
+      std::cout<<"ICC profile attached"<<std::endl;
+    }
 
     delete pluginwin;
     delete app;

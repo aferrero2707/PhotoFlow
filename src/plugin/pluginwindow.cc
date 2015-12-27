@@ -81,7 +81,7 @@ PF::PluginWindow::PluginWindow():
   //imageArea_scrolledWindow.add(imageArea);
 
   buttonBox.pack_start(buttonOk, Gtk::PACK_SHRINK);
-  //buttonBox.pack_start(buttonCancel, Gtk::PACK_SHRINK);
+  buttonBox.pack_start(buttonCancel, Gtk::PACK_SHRINK);
   //topButtonBox.pack_start(buttonSaveAs, Gtk::PACK_SHRINK);
   //topButtonBox.pack_start(buttonExport, Gtk::PACK_SHRINK);
   //topButtonBox.pack_start(buttonExit, Gtk::PACK_SHRINK);
@@ -130,6 +130,16 @@ void PF::PluginWindow::on_button_cancel()
 {
   hide();
 }
+
+
+void PF::PluginWindow::on_unmap()
+{
+  std::string bckname = image_editor->get_image()->get_backup_filename();
+  unlink( bckname.c_str() );
+  bckname += ".info";
+  unlink( bckname.c_str() );
+}
+
 
 
 #define LOAD_PFI
