@@ -165,10 +165,10 @@ struct ImageBuffer
 
     //Glib::Threads::Mutex& get_rebuild_mutex() { return rebuild_mutex; }
 
-    void lock() { g_mutex_lock( rebuild_mutex); }
-    void unlock() { g_mutex_unlock( rebuild_mutex); }
-    void sample_lock() { g_mutex_lock( sample_mutex); }
-    void sample_unlock() { g_mutex_unlock( sample_mutex); }
+    void lock();
+    void unlock();
+    void sample_lock();
+    void sample_unlock();
     void remove_layer_lock() { g_mutex_lock( remove_layer_mutex); }
     void remove_layer_unlock() { g_mutex_unlock( remove_layer_mutex); }
     void rebuild_done_signal() { g_cond_signal( rebuild_done ); }

@@ -133,6 +133,47 @@ PF::Image::~Image()
 }
 
 
+void PF::Image::lock()
+{
+  std::cout<<"+++++++++++++++++++++"<<std::endl;
+  std::cout<<"  LOCKING REBUILD MUTEX"<<std::endl;
+  std::cout<<"+++++++++++++++++++++"<<std::endl;
+  g_mutex_lock( rebuild_mutex);
+}
+
+void PF::Image::unlock()
+{
+  std::cout<<"---------------------"<<std::endl;
+  std::cout<<"  UNLOCKING REBUILD MUTEX"<<std::endl;
+  std::cout<<"---------------------"<<std::endl;
+  g_mutex_unlock( rebuild_mutex);
+  std::cout<<"---------------------"<<std::endl;
+  std::cout<<"  REBUILD MUTEX UNLOCKED"<<std::endl;
+  std::cout<<"---------------------"<<std::endl;
+}
+
+void PF::Image::sample_lock()
+{
+  std::cout<<"+++++++++++++++++++++"<<std::endl;
+  std::cout<<"  LOCKING SAMPLE MUTEX"<<std::endl;
+  std::cout<<"+++++++++++++++++++++"<<std::endl;
+  g_mutex_lock( sample_mutex);
+}
+
+void PF::Image::sample_unlock()
+{
+  std::cout<<"---------------------"<<std::endl;
+  std::cout<<"  UNLOCKING SAMPLE MUTEX"<<std::endl;
+  std::cout<<"---------------------"<<std::endl;
+  g_mutex_unlock( sample_mutex);
+  std::cout<<"---------------------"<<std::endl;
+  std::cout<<"  SAMPLE MUTEX UNLOCKED"<<std::endl;
+  std::cout<<"---------------------"<<std::endl;
+}
+
+
+
+
 // The area parameter represents the region of the image that was actually
 // modified and that needs to be re-computed. This allows certain sinks
 // to reduce the amount of computations in case only part of the image
@@ -194,15 +235,18 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 #endif
 
     if( sync && target_pipeline ) {
-      //std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
+      std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
       g_cond_wait( rebuild_done, rebuild_mutex );
-      //std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
+      std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
     }
 
     // In sync mode, the image is left in a locked state to allow further 
     // actions to be taken before any subsequent rebuild and reprocessing 
     // takes place
-    if( sync && target_pipeline ) g_mutex_unlock( rebuild_mutex );
+    if( sync && target_pipeline ) {
+      std::cout<<"PF::Image::update(): unlocking rebuild mutex after condition...."<<std::endl;
+      g_mutex_unlock( rebuild_mutex );
+    }
   }
 
   /*
