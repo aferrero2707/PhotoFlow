@@ -35,7 +35,7 @@ extern GType vips_perspective_get_type( void );
 
 
 static const char raw_ext[] = "3fr,ari,arw,cap,cine,cr2,crw,cs1,dc2,dcr,dng,erf,fff,"
-    "hdr,ia,iiq,jpeg,jpg,k25,kc2,kdc,mdc,mef,mos,mrw,nef,"
+    "hdr,ia,iiq,k25,kc2,kdc,mdc,mef,mos,mrw,nef,"
     "nrw,orf,ori,pef,pxn,qtk,r3d,raf,raw,rdc,rw2,rwl,sr2,"
     "srf,srw,sti,pfi,x3f";
 
