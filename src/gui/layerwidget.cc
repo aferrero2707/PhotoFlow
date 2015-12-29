@@ -135,6 +135,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   label->set_angle(90);
 
   top_box.pack_start(buttonAdd, Gtk::PACK_SHRINK);
+  top_box.pack_start(buttonbox, Gtk::PACK_SHRINK);
 
   top_box.pack_start(notebook);
 
@@ -154,8 +155,6 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonbox.pack_start(buttonPresetLoad/*, Gtk::PACK_SHRINK*/);
   buttonbox.pack_start(buttonPresetSave/*, Gtk::PACK_SHRINK*/);
   //buttonbox.set_layout(Gtk::BUTTONBOX_START);
-
-  top_box.pack_start(buttonbox, Gtk::PACK_SHRINK);
 
   controls_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
   controls_scrolled_window.set_shadow_type( Gtk::SHADOW_NONE );
