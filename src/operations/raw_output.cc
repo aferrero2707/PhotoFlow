@@ -61,8 +61,11 @@ PF::RawOutputPar::RawOutputPar():
   gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","None"),
   gamma_lin("gamma_lin", this, 0),
   gamma_exp("gamma_exp", this, 2.2),
-  out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
+  //out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
+  out_profile_mode("out_profile_mode",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
+  out_trc_mode("out_trc_mode",this,PF::PF_TRC_STANDARD,"TRC_STANDARD","standard"),
   current_out_profile_mode( OUT_PROF_sRGB ),
+  current_out_trc_mode( PF::PF_TRC_STANDARD ),
   out_profile_name("out_profile_name", this),
   out_profile( NULL ),
   transform( NULL )
@@ -73,10 +76,15 @@ PF::RawOutputPar::RawOutputPar():
 
   out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_ACESCG,"ACESCG","ACEScg");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+
+  out_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
+  out_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
 
   gamma_mode.add_enum_value(PF::IN_GAMMA_NONE,"NONE","None");
   gamma_mode.add_enum_value(PF::IN_GAMMA_sRGB,"sRGB","sRGB");
@@ -115,6 +123,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
 
   bool mode_changed = profile_mode.is_modified();
   bool out_mode_changed = out_profile_mode.is_modified();
+  bool out_trc_mode_changed = out_trc_mode.is_modified();
   bool gamma_mode_changed = gamma_mode.is_modified();
   bool cam_changed = cam_profile_name.is_modified();
   bool out_changed = out_profile_name.is_modified();
@@ -139,7 +148,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   //         <<"  cam_changed="<<cam_changed
   //         <<"  out_changed="<<out_changed<<std::endl;
 
-  bool changed = mode_changed || out_mode_changed || gamma_mode_changed || cam_changed || out_changed || out_mode_changed ||
+  bool changed = mode_changed || out_mode_changed || out_trc_mode_changed || gamma_mode_changed || cam_changed || out_changed || out_mode_changed ||
     (cam_profile==NULL) || (out_profile==NULL);
 
   if( cam_profile && (mode_changed || cam_changed) ) {
@@ -189,13 +198,14 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     cam_profile = cmsOpenProfileFromFile( cam_profile_name.get().c_str(), "r" );
   }
 
-  if( out_profile && (out_mode_changed || out_changed) ) {
-    cmsCloseProfile( out_profile );
+  if( out_profile && (out_mode_changed || out_trc_mode_changed || out_changed) ) {
+    //cmsCloseProfile( out_profile );
     out_profile = NULL;
   }
 
+  TRC_type trc_type = (TRC_type)out_trc_mode.get_enum_value().first;
   if( out_profile == NULL ) {
-    out_profile = PF::ICCStore::Instance().get_working_profile();
+    out_profile = PF::ICCStore::Instance().get_profile(trc_type)->get_profile();
   }
 
   if( changed ) {
@@ -253,6 +263,11 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     cmsSaveProfileToMem( out_profile, buf, &out_length);
     vips_image_set_blob( out, VIPS_META_ICC_NAME, 
 			 (VipsCallbackFn) g_free, buf, out_length );
+    //std::cout<<"RawOutputPar::build(): icc profile metadata saved, image="<<out<<" data="<<buf<<" data_length="<<out_length<<std::endl;
+
+    PF::ICCProfileData* iccdata = PF::ICCStore::Instance().get_profile(trc_type)->get_data();
+    vips_image_set_blob( out, "pf-icc-profile-data",
+       (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
     //char tstr[1024];
     //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;

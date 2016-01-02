@@ -58,6 +58,8 @@ namespace PF
     OUT_PROF_sRGB,
     OUT_PROF_ADOBE,
     OUT_PROF_PROPHOTO,
+    OUT_PROF_REC2020,
+    OUT_PROF_ACESCG,
     OUT_PROF_LAB,
     OUT_PROF_CUSTOM
   }; 
@@ -111,7 +113,9 @@ namespace PF
 
     // output color profile
     PropertyBase out_profile_mode;
+    PropertyBase out_trc_mode;
     output_profile_mode_t current_out_profile_mode;
+    TRC_type current_out_trc_mode;
     Property<std::string> out_profile_name;
     std::string current_out_profile_name;
     cmsHPROFILE out_profile;
@@ -127,6 +131,8 @@ namespace PF
     cmsToneCurve* get_gamma_curve() { return gamma_curve; }
     cmsToneCurve* get_srgb_curve() { return srgb_curve; }
     cmsHTRANSFORM get_transform() { return transform; }
+    TRC_type get_trc_type() { return (TRC_type)out_trc_mode.get_enum_value().first; }
+
 
     void set_image_hints( VipsImage* img )
     {
@@ -232,6 +238,16 @@ namespace PF
             cmsDoTransform( opar->get_transform(), p, pout, width );
           else 
             memcpy( pout, p, sizeof(T)*line_size );
+          /*
+          for( int xi = 0; xi < line_size; xi++ ) {
+            float val = 0.1;
+            if( opar->get_trc_type()==PF::PF_TRC_LINEAR ) {
+              val = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), val );
+            }
+            pout[xi] = PF::FormatInfo<T>::RANGE * val;
+            std::cout<<"p_val="<<0.1f<<"  l_val="<<val<<std::endl;
+          }
+          */
         } else {
 
           if( false && r->top==0 && r->left==0 ) {
