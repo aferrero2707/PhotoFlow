@@ -57,6 +57,8 @@ namespace PF
     PropertyBase Lab_active_curve;
     PropertyBase CMYK_active_curve;
 
+    ICCProfileData* data;
+
     void update_curve( Property<SplineCurve>& grey_curve,
                        short int* vec8, int* vec16, bool undo_gamma=false );
 
