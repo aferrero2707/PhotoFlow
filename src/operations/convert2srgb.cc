@@ -46,7 +46,9 @@ PF::Convert2sRGBPar::Convert2sRGBPar():
   profile_out( NULL ),
   transform( NULL )
 {
-  profile_out = cmsCreate_sRGBProfile();
+  //profile_out = cmsCreate_sRGBProfile();
+  std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/sRGB-elle-V4-srgbtrc.icc";
+  profile_out = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
   cmsSetLogErrorHandler( lcms2ErrorLogger );
 
   set_type( "convert2srgb" );
@@ -57,9 +59,6 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first,
 				      VipsImage* imap, VipsImage* omap, 
 				      unsigned int& level)
 {
-  void *data;
-  size_t data_length;
-  
   if( in.size()<1 || in[0]==NULL ) return NULL;
   
   if( transform )
@@ -69,6 +68,9 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first,
   if( profile_in )
     cmsCloseProfile( profile_in );
   profile_in  = NULL;
+
+  void *data;
+  size_t data_length;
 
   if( profile_out && 
       !vips_image_get_blob( in[0], VIPS_META_ICC_NAME, 
@@ -87,15 +89,15 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first,
       cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, profile_out );
       
       transform = cmsCreateTransform( profile_in, 
-				      infmt,
-				      profile_out, 
-				      outfmt,
-				      INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+				      infmt, profile_out, outfmt, INTENT_PERCEPTUAL,
+				      cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+    } else {
+      std::cout<<"Convert2sRGBPar::build(): NULL input profile"<<std::endl;
     }
   }
 
   if( !transform ) {
-		//std::cout<<"Convert2sRGBPar::build(): null transform"<<std::endl;
+		std::cout<<"Convert2sRGBPar::build(): null transform"<<std::endl;
     PF_REF( in[0], "Convert2sRGBPar::build(): null transform" );
     return( in[0] );
   }
