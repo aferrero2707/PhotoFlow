@@ -32,77 +32,121 @@
 
 #include <string>
 #include <lcms2.h>
+#include <vips/vips.h>
 
 namespace PF
 {
 
 enum TRC_type
 {
-  PF_TRC_LINEAR,
-  PF_TRC_PERCEPTUAL,
-  PF_TRC_STANDARD
+  PF_TRC_STANDARD=0,
+  PF_TRC_PERCEPTUAL=1,
+  PF_TRC_LINEAR=2
 };
 
-class ICCProfile
+
+extern cmsToneCurve* Lstar_trc;
+extern cmsToneCurve* iLstar_trc;
+
+
+struct ICCProfileData
 {
-  cmsHPROFILE profile;
-  TRC_type trc_type;
   cmsToneCurve* perceptual_trc;
   cmsToneCurve* perceptual_trc_inv;
+  TRC_type trc_type;
 
   int perceptual_trc_vec[65536];
   int perceptual_trc_inv_vec[65536];
 
-  cmsCIExyYTRIPLE d50_wp_primaries;
+  float Y_R, Y_G, Y_B;
+};
+
+
+ICCProfileData* get_icc_profile_data( VipsImage* img );
+void free_icc_profile_data( ICCProfileData* data );
+cmsFloat32Number linear2perceptual( ICCProfileData* data, cmsFloat32Number val );
+cmsFloat32Number perceptual2linear( ICCProfileData* data, cmsFloat32Number val );
+
+
+class ICCProfile
+{
+  cmsHPROFILE profile;
+  cmsToneCurve* perceptual_trc;
+  cmsToneCurve* perceptual_trc_inv;
+  TRC_type trc_type;
+
+  int perceptual_trc_vec[65536];
+  int perceptual_trc_inv_vec[65536];
+
   float Y_R, Y_G, Y_B;
 
 public:
-  ICCProfile( std::string fname, TRC_type type );
-  ~ICCProfile();
+  ICCProfile( TRC_type type );
+  virtual ~ICCProfile();
+
+  void calc_primaries();
+  void init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv );
 
   TRC_type get_trc_type() { return trc_type; }
   bool is_linear() { return( get_trc_type() == PF_TRC_LINEAR ); }
   bool is_perceptual() { return( get_trc_type() == PF_TRC_PERCEPTUAL ); }
   bool is_standard() { return( get_trc_type() == PF_TRC_STANDARD ); }
+
+  void set_profile( cmsHPROFILE p ) { profile = p; }
+  cmsHPROFILE get_profile() { return profile; }
+
+  cmsFloat32Number linear2perceptual( cmsFloat32Number val )
+  {
+    return cmsEvalToneCurveFloat( perceptual_trc_inv, val );
+  }
+  cmsFloat32Number perceptual2linear( cmsFloat32Number val )
+  {
+    return cmsEvalToneCurveFloat( perceptual_trc, val );
+  }
+
+  int* get_linear2perceptual_vec() { return perceptual_trc_inv_vec; }
+  int* get_perceptual2linear_vec() { return perceptual_trc_vec; }
+
+  float get_luminosity( float R, float G, float B );
+  void get_luminosity( float* RGBv, float* Lv, size_t size );
+
+  ICCProfileData* get_data()
+  {
+    ICCProfileData* data = new ICCProfileData;
+    data->trc_type = trc_type;
+    memcpy( data->perceptual_trc_vec, perceptual_trc_vec, sizeof(int)*65536 );
+    memcpy( data->perceptual_trc_inv_vec, perceptual_trc_inv_vec, sizeof(int)*65536 );
+    data->perceptual_trc =  cmsDupToneCurve( perceptual_trc );
+    data->perceptual_trc_inv =  cmsDupToneCurve( perceptual_trc_inv );
+    data->Y_R = Y_R;
+    data->Y_G = Y_G;
+    data->Y_B = Y_B;
+
+    return data;
+  }
 };
 
 
-  class ICCStore
-  {
-    cmsHPROFILE wprofile;
-    cmsToneCurve* perceptual_trc;
-    cmsToneCurve* perceptual_trc_inv;
+class Rec2020Profile: public ICCProfile
+{
+public:
+  Rec2020Profile(TRC_type type);
+};
 
-    int perceptual_trc_vec[65536];
-    int perceptual_trc_inv_vec[65536];
 
-    cmsCIExyYTRIPLE d50_wp_primaries;
+class ICCStore
+{
+  ICCProfile* rec2020_profiles[3];
+  static ICCStore* instance;
+public:
+  ICCStore();
 
-    static ICCStore* instance;
-  public:
-    ICCStore();
+  static ICCStore& Instance();
 
-    static ICCStore& Instance();
+  ICCProfile* get_profile(TRC_type type) { return rec2020_profiles[type]; }
 
-    cmsHPROFILE get_working_profile() { return wprofile; }
-
-    cmsFloat32Number linear2perceptual( cmsFloat32Number val )
-    {
-      return cmsEvalToneCurveFloat( perceptual_trc_inv, val );
-    }
-    cmsFloat32Number perceptual2linear( cmsFloat32Number val )
-    {
-      return cmsEvalToneCurveFloat( perceptual_trc, val );
-    }
-
-    int* get_linear2perceptual_vec() { return perceptual_trc_inv_vec; }
-    int* get_perceptual2linear_vec() { return perceptual_trc_vec; }
-
-    float get_luminosity( float R, float G, float B )
-    {
-      return( d50_wp_primaries.Red.y*R + d50_wp_primaries.Green.y*G + d50_wp_primaries.Blue.y*B );
-    }
-  };
+  cmsToneCurve* get_Lstar_trc() {return Lstar_trc; }
+};
 }
 
 
