@@ -46,6 +46,8 @@ namespace PF {
     int border_size;
     int selected_point;
 
+    PF::ICCProfileData* data;
+
 #ifdef GTKMM_2
     bool on_expose_event(GdkEventExpose* event);
 #endif
@@ -54,6 +56,14 @@ namespace PF {
 #endif
   public:    
     CurveArea();
+
+    void set_icc_data( PF::ICCProfileData* d )
+    {
+      data = d;
+      if( data ) {
+        curve.set_trc_type( data->trc_type );
+      }
+    }
 
     void set_curve( const SplineCurve& c ) { curve = c; }
     SplineCurve& get_curve() { return curve; }
@@ -87,6 +97,8 @@ namespace PF {
     int curve_area_width, curve_area_height;
     CurveArea* curve_area;
 
+    PF::ICCProfileData* data;
+
     int grabbed_point;
 
     bool button_pressed;
@@ -100,6 +112,12 @@ namespace PF {
         float xmin, float xmax, float ymin, float ymax, int width=300, int height=300, int margin=5 );
 
     ~CurveEditor() {}
+
+    void set_icc_data( PF::ICCProfileData* d )
+    {
+      data = d;
+      if( curve_area ) curve_area->set_icc_data( data );
+    }
 
     virtual void reset() {
       PFWidget::reset();
