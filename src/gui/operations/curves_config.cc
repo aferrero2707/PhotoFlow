@@ -243,6 +243,24 @@ void PF::CurvesConfigGUI::do_update()
       //std::cout<<"OperationConfigGUI::update() par: "<<par<<std::endl;
     }
 
+    if( node && node->image ) {
+      PF::ICCProfileData* data;
+      size_t data_length;
+      if( vips_image_get_blob( node->image, "pf-icc-profile-data",
+          (void**)(&data), &data_length ) ) {
+        std::cout<<"CurvesPar::build(): cannot find ICC profile data"<<std::endl;
+        data = NULL;
+      }
+      if( data_length != sizeof(PF::ICCProfileData) ) {
+        std::cout<<"CurvesPar::build(): wrong size of ICC profile data"<<std::endl;
+        data = NULL;
+      }
+      rgbCurveEditor.set_icc_data( data );
+      RCurveEditor.set_icc_data( data );
+      GCurveEditor.set_icc_data( data );
+      BCurveEditor.set_icc_data( data );
+    }
+
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
       //greychSelector.show();
@@ -321,9 +339,9 @@ bool PF::CurvesConfigGUI::pointer_release_event( int button, double x, double y,
     if( values.size() != 3 ) return false;
     {
       //std::vector<float> pvalues;
-      //pvalues.push_back( PF::ICCStore::Instance().linear2perceptual( values[0] ) );
-      //pvalues.push_back( PF::ICCStore::Instance().linear2perceptual( values[1] ) );
-      //pvalues.push_back( PF::ICCStore::Instance().linear2perceptual( values[2] ) );
+      //pvalues.push_back( PF::ICCStore::Instance().get_profile()->linear2perceptual( values[0] ) );
+      //pvalues.push_back( PF::ICCStore::Instance().get_profile()->linear2perceptual( values[1] ) );
+      //pvalues.push_back( PF::ICCStore::Instance().get_profile()->linear2perceptual( values[2] ) );
       switch( rgbCurveSelector.get_active_row_number() ) {
       case 0:
         rgbCurveEditor.add_point( (values[0]+values[1]+values[2])/3.0f );
