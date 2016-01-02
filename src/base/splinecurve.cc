@@ -37,7 +37,8 @@ PF::SplineCurve::SplineCurve():
   ypp( NULL ),
   ypp_size( 0 ),
   circular( false ),
-  needs_gamma_correction( false )
+  //needs_gamma_correction( false )
+  trc_type( PF::PF_TRC_STANDARD )
 {
   points_mutex = vips_g_mutex_new();
 #ifdef SPLINE_USE_STDVEC
@@ -213,6 +214,12 @@ void PF::SplineCurve::update_spline()
     }
   } else {
     points2 = points;
+    if( trc_type == PF::PF_TRC_LINEAR ) {
+      for( unsigned int i = 0; i < points2.size(); i++ ) {
+        points2[i].first = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), points2[i].first );
+        points2[i].second = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), points2[i].second );
+      }
+    }
   }
 
   N = points2.size();

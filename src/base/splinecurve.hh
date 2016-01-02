@@ -33,6 +33,7 @@
 
 #include "property.hh"
 #include "curve.hh"
+#include "iccstore.hh"
 
 #define SPLINE_USE_STDVEC 1
 
@@ -56,7 +57,9 @@ namespace PF
     unsigned int ypp_size;
 
     bool circular;
-    bool needs_gamma_correction;
+    //bool needs_gamma_correction;
+
+    TRC_type trc_type;
 
   public:
     SplineCurve();
@@ -93,8 +96,11 @@ namespace PF
 #endif
     std::pair<float,float> get_point(int n) const { return points[n]; }
 
-    void set_needs_gamma_correction( bool flag ) { needs_gamma_correction = flag; }
-    const bool get_needs_gamma_correction() const { return needs_gamma_correction; }
+    //void set_needs_gamma_correction( bool flag ) { needs_gamma_correction = flag; }
+    //const bool get_needs_gamma_correction() const { return needs_gamma_correction; }
+
+    void set_trc_type( TRC_type type ) { trc_type = type; }
+    const TRC_type get_trc_type() const { return trc_type; }
 
     void update_spline();
 
@@ -113,7 +119,8 @@ namespace PF
     {
       lock();
       set_circular( b.is_circular() );
-      set_needs_gamma_correction( b.get_needs_gamma_correction() );
+      //set_needs_gamma_correction( b.get_needs_gamma_correction() );
+      set_trc_type( b.get_trc_type() );
 #ifdef SPLINE_USE_STDVEC
       points = b.get_points();
 #else
@@ -132,7 +139,8 @@ namespace PF
 
   inline bool operator ==(const SplineCurve& l, const SplineCurve& r)
   {
-    if( l.get_needs_gamma_correction() != r.get_needs_gamma_correction() )
+    //if( l.get_needs_gamma_correction() != r.get_needs_gamma_correction() ) return false;
+    if( l.get_trc_type() != r.get_trc_type() )
       return false;
 #ifdef SPLINE_USE_STDVEC
     if( l.get_points() != r.get_points() ) return false;
