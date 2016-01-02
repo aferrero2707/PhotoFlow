@@ -111,6 +111,9 @@ public:
     Selector outProfileModeSelector;
     Gtk::HBox outProfileModeSelectorBox;
 
+    Selector outTRCModeSelector;
+    Gtk::HBox outTRCModeSelectorBox;
+
     Gtk::HBox outProfHBox;
     Gtk::VBox outProfVBox;
     Gtk::Label outProfLabel;

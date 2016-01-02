@@ -98,7 +98,8 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   gammaModeSelector( this, "gamma_mode", "Raw gamma: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-  outProfileModeSelector( this, "out_profile_mode", "Output profile: ", 1 ),
+  outProfileModeSelector( this, "out_profile_mode", _("Working profile: "), 1 ),
+  outTRCModeSelector( this, "out_trc_mode", _("encoding: "), 1 ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
   wbControlsBox.pack_start( wbModeSelector, Gtk::PACK_SHRINK );
@@ -140,9 +141,12 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   gammaModeHBox.pack_start( gammaModeVBox, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( gammaModeHBox );
 
-  /*
+  /**/
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
+
+  outTRCModeSelectorBox.pack_start( outTRCModeSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( outTRCModeSelectorBox, Gtk::PACK_SHRINK );
 
   outProfLabel.set_text( "output profile name:" );
   outProfVBox.pack_start( outProfLabel );
@@ -150,7 +154,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outProfHBox.pack_start( outProfVBox );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfHBox );
-  */
+  /**/
 
 
   notebook.append_page( wbControlsBox, "WB" );
