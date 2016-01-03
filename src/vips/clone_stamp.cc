@@ -219,7 +219,7 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
     }
   }
 
-  // We keep a copy of the original pixels tan needs to be blended with the cloned ones
+  // We keep a copy of the original pixels that needs to be blended with the cloned ones
   PF::Array2D<T> bgd;
   bgd.Init( out_area.width*oreg->im->Bands, out_area.height,
       out_area.top, out_area.left*oreg->im->Bands );

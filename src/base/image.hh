@@ -34,6 +34,8 @@
 #include <stdlib.h>
 #include <sigc++/sigc++.h>
 
+#include <gexiv2/gexiv2-metadata.h>
+
 #include "layermanager.hh"
 #include "pipeline.hh"
 
@@ -43,6 +45,17 @@
 
 namespace PF
 {
+
+
+struct ImageBuffer
+{
+  float* buf;
+  int width, height;
+  GExiv2Metadata* exif_buf;
+  void* iccdata;
+  size_t iccsize;
+  TRC_type trc_type;
+};
 
 
   class Image: public sigc::trackable
@@ -153,10 +166,10 @@ namespace PF
 
     //Glib::Threads::Mutex& get_rebuild_mutex() { return rebuild_mutex; }
 
-    void lock() { g_mutex_lock( rebuild_mutex); }
-    void unlock() { g_mutex_unlock( rebuild_mutex); }
-    void sample_lock() { g_mutex_lock( sample_mutex); }
-    void sample_unlock() { g_mutex_unlock( sample_mutex); }
+    void lock();
+    void unlock();
+    void sample_lock();
+    void sample_unlock();
     void remove_layer_lock() { g_mutex_lock( remove_layer_mutex); }
     void remove_layer_unlock() { g_mutex_unlock( remove_layer_mutex); }
     void rebuild_done_signal() { g_cond_signal( rebuild_done ); }
@@ -185,6 +198,7 @@ namespace PF
     bool save( std::string filename );
     void export_merged( std::string filename );
     void do_export_merged( std::string filename );
+    void export_merged_to_mem( ImageBuffer* imgbuf );
   };
 
   gint image_rebuild_callback( gpointer data );

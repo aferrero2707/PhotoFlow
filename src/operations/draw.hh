@@ -30,8 +30,10 @@
 #ifndef PF_DRAW_H
 #define PF_DRAW_H
 
+#include <string.h>
 #include <iostream>
 
+#include "../base/array2d.hh"
 #include "../base/format_info.hh"
 #include "../base/operation.hh"
 #include "../base/processor.hh"
@@ -100,6 +102,7 @@ namespace PF
     Property<RGBColor> bgd_color;
     Property<int> pen_size;
     Property<float> pen_opacity;
+    Property<float> pen_smoothness;
     Property< std::list< Stroke<Pencil> > > strokes;
 
 		ProcessorBase* diskbuf;
@@ -157,9 +160,9 @@ namespace PF
 
     void start_stroke()
     {
-      start_stroke( pen_size.get(), pen_opacity.get() );
+      start_stroke( pen_size.get(), pen_opacity.get(), pen_smoothness.get() );
     }
-    void start_stroke( unsigned int pen_size, float opacity );
+    void start_stroke( unsigned int pen_size, float opacity, float smoothness );
     void end_stroke();
 
     Property< std::list< Stroke<Pencil> > >& get_strokes() { return strokes; }
@@ -192,8 +195,12 @@ namespace PF
       //T* p;
       //T* pin;
       T* pout;
+      T* ptemp;
       int x, x0, y, y0, ch, row1, row2;
       int point_clip_right, point_clip_bottom;
+
+      T** temp = new T*[r->height];
+      for( y = 0; y < r->height; y++) temp[y] = new T[line_size];
 
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top ); 
       //std::cout<<"pout="<<(void*)pout<<std::endl;
@@ -217,24 +224,67 @@ namespace PF
         }
       }
 
+      PF::Array2D<float> opacity_max;
+      opacity_max.Init( r->width, r->height, r->top, r->left );
+
       std::list< Stroke<Pencil> >::iterator si;
       std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
       VipsRect point_area;
       VipsRect point_clip;
+      VipsRect stroke_area;
+      VipsRect stroke_clip;
       //std::cout<<"DrawProc::render(): strokes.size()="<<strokes.size()<<std::endl;
-      for( si = strokes.begin(); si != strokes.end(); ++si ) {
+      int sn = 0;
+      for( si = strokes.begin(); si != strokes.end(); ++si, sn++ ) {
+        //std::cout<<"stroke area: "<<si->get_area().width<<","<<si->get_area().height
+        //    <<"+"<<si->get_area().left<<"+"<<si->get_area().top<<std::endl;
+        stroke_area.left = si->get_area().left/opar->get_scale_factor();
+        stroke_area.top = si->get_area().top/opar->get_scale_factor();
+        stroke_area.width = si->get_area().width/opar->get_scale_factor();
+        stroke_area.height = si->get_area().height/opar->get_scale_factor();
+        vips_rect_intersectrect( r, &stroke_area, &stroke_clip );
+        if( (stroke_clip.width<1) || (stroke_clip.height<1) ) continue;
+        // copy current region to temp buffer
+        if( temp ) {
+          for( y = 0; y < r->height; y++ ) {
+            //p = (T*)VIPS_REGION_ADDR( ireg[in_first], point_clip.left, point_clip.top + y );
+            pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+            memcpy( temp[y], pout, line_size*sizeof(T) );
+          }
+        }
+
         Pencil& pen = si->get_pen();
         //std::cout<<"  pen color: "<<pen.get_channel(0)<<std::endl;
-        int pen_size = pen.get_size()/opar->get_scale_factor();
+        int pen_size = (int)(pen.get_size()/opar->get_scale_factor());
         int pen_size2 = pen_size*pen_size;
         for( ch = 0; ch < oreg->im->Bands; ch++ ) {
           val[ch] = (T)(pen.get_channel(ch)*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
         }
+
+        for( int ic = 0; ic < r->width; ic++ ) {
+          for( int ir = 0; ir < r->height; ir++ ) {
+            opacity_max.GetLocal(ir, ic) = 0;
+          }
+        }
+
         point_area.width = point_area.height = pen_size*2 + 1;
+        PF::PencilMask* resized_mask = NULL;
+        PF::PencilMask* mask = &(pen.get_mask());
+        if( pen_size != pen.get_size() ) {
+          resized_mask = new PF::PencilMask;
+          resized_mask->init( point_area.width, pen.get_opacity(), pen.get_smoothness() );
+          mask = resized_mask;
+        }
+
         std::list< std::pair<unsigned int, unsigned int> >& points = si->get_points();
-        for( pi = points.begin(); pi != points.end(); ++pi ) {
+        //std::cout<<"DrawProc::render(): points.size()="<<points.size()<<std::endl;
+        int pn = 0;
+        for( pi = points.begin(); pi != points.end(); ++pi, pn++ ) {
+          //std::cout<<"Drawing point "<<pi->first<<","<<pi->second<<std::endl;
           point_area.left = pi->first/opar->get_scale_factor() - pen_size;
           point_area.top = pi->second/opar->get_scale_factor() - pen_size;
+          //std::cout<<"Point area: "<<point_area.width<<","<<point_area.height
+          //    <<"+"<<point_area.left<<"+"<<point_area.top<<std::endl;
           vips_rect_intersectrect( r, &point_area, &point_clip );
           if( (point_clip.width<1) || (point_clip.height<1) ) continue;
           point_clip_right = point_clip.left + point_clip.width - 1;
@@ -242,73 +292,48 @@ namespace PF
 
           x0 = pi->first/opar->get_scale_factor();
           y0 = pi->second/opar->get_scale_factor();
-          for( y = 0; y <= pen_size; y++ ) {
-            row1 = y0 - y;
-            row2 = y0 + y;
-            //int L = pen.get_size() - y;
-            int D = (int)sqrt( pen_size2 - y*y );
-            int startcol = x0 - D;
-            if( startcol < point_clip.left ) 
-              startcol = point_clip.left;
-            int endcol = x0 + D;
-            if( endcol >= point_clip_right ) 
-              endcol = point_clip_right;
-            int colspan = (endcol + 1 - startcol)*oreg->im->Bands;
-            
-            //endcol = x0;
-
-            /*
-            std::cout<<"x0="<<x0<<"  y0="<<y0<<"  D="<<D<<std::endl;
-            std::cout<<"row1="<<row1<<"  row2="<<row2<<"  startcol="<<startcol<<"  endcol="<<endcol<<"  colspan="<<colspan<<std::endl;
-            std::cout<<"point_clip.left="<<point_clip.left<<"  point_clip.top="<<point_clip.top
-                     <<"  point_clip.width="<<point_clip.width<<"  point_clip.height="<<point_clip.height<<std::endl;
-            */
-            /**/
-            if( (row1 >= point_clip.top) && (row1 <= point_clip_bottom) ) {
-              pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row1 ); 
-              for( x = 0; x < colspan; x += oreg->im->Bands ) {
-                //std::cout<<"x="<<x<<"+"<<point_clip.left<<"="<<x+point_clip.left<<std::endl;
-                for( ch = 0; ch < oreg->im->Bands; ch++ ) {
-                  pout[x+ch] = val[ch];
-                }
-              }
-            }
-            if( (row2 != row1) && (row2 >= point_clip.top) && (row2 <= point_clip_bottom) ) {
-              pout = (T*)VIPS_REGION_ADDR( oreg, startcol, row2 ); 
-              for( x = 0; x < colspan; x += oreg->im->Bands ) {
-                //std::cout<<"x="<<x<<"+"<<point_clip.left<<"="<<x+point_clip.left<<std::endl;
-                for( ch = 0; ch < oreg->im->Bands; ch++ ) {
-                  pout[x+ch] = val[ch];
-                }
-              }
-            }
-            /**/
-          }
-          /*
-          for( y = 0; y < point_clip.height; y++ ) {
-            //p = (T*)VIPS_REGION_ADDR( ireg[in_first], point_clip.left, point_clip.top + y ); 
-            pout = (T*)VIPS_REGION_ADDR( oreg, point_clip.left, point_clip.top + y ); 
-            for( x = 0; x < line_size; x += oreg->im->Bands ) {
+          for( y = 0; y < point_area.height; y++ ) {
+            int row = y + point_area.top;
+            //std::cout<<"  row="<<row<<std::endl;
+            if( row < point_clip.top ) continue;
+            if( row > point_clip_bottom ) break;
+            pout = (T*)VIPS_REGION_ADDR( oreg, point_area.left, row );
+            ptemp = &(temp[point_area.top-r->top+y][(point_area.left-r->left)*oreg->im->Bands]);
+            for( x = 0; x < point_area.width; x++, pout += oreg->im->Bands, ptemp += oreg->im->Bands ) {
+              int col = x+point_area.left;
+              float mval = mask->get( x, y );
+              //mval = mval/2+0.5;
+              //std::cout<<"    opacity_max.Get("<<row<<", "<<col<<")="<<opacity_max.Get(row, col)<<"    mval="<<mval<<std::endl;
+              if( (col < point_clip.left) ) continue;
+              if( (col > point_clip_right) ) break;
+              if( mval < 0.00001 ) continue;
+              if( mval <= opacity_max.Get(row, col) ) continue;
+              opacity_max.Get(row, col) = mval;
               for( ch = 0; ch < oreg->im->Bands; ch++ ) {
-                pout[x+ch] = val[ch];
+                float out = mval*val[ch] + (1.0f-mval)*pout[ch];
+                //std::cout<<"    pout["<<ch<<"]= "<<pout[ch]<<"  out["<<ch<<"]="<<out<<std::endl;
+                //if( pn == 0 )
+                  ptemp[ch] = static_cast<T>(out);
               }
             }
+            //if( pn > 0 && y > 1 ) break;
           }
-          */
+        }
+
+        // copy temp buffer back to current region
+        if( temp ) {
+          for( y = 0; y < r->height; y++ ) {
+            //p = (T*)VIPS_REGION_ADDR( ireg[in_first], point_clip.left, point_clip.top + y );
+            pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+            memcpy( pout, temp[y], line_size*sizeof(T) );
+          }
         }
       }
-      /*
-      for( y = 0; y < height; y++ ) {
-        p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
-        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 
-        pin = p;
-        if(opar->get_transform()) 
-          cmsDoTransform( opar->get_transform(), pin, pout, width );
-        else 
-          memcpy( pout, pin, sizeof(T)*line_size );
+      if( temp ) {
+        for( y = 0; y < r->height; y++) delete[] temp[y];
+        delete[] temp;
       }
-      */
     }
   };
 
@@ -317,5 +342,6 @@ namespace PF
 }
 
 #endif 
+
 
 

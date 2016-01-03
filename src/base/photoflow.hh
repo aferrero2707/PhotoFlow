@@ -67,6 +67,8 @@ namespace PF
     std::string data_dir;
     std::string locale_dir;
 
+    int preview_pipeline_id;
+
     bool batch;
     bool single_win_mode;
 
@@ -81,6 +83,9 @@ namespace PF
 
     void set_new_op_func( new_op_func_t f ) { new_op_func = f; }
     void set_new_op_func_nogui( new_op_func_t f ) { new_op_func_nogui = f; }
+
+    void set_preview_pipeline_id( int id ) { preview_pipeline_id = id; }
+    int get_preview_pipeline_id() { return preview_pipeline_id; }
 
     void set_batch( bool val ) { batch = val; }
     bool is_batch() { return batch; }
@@ -108,6 +113,8 @@ namespace PF
     std::string get_locale_dir() { return locale_dir; }
 
     std::string get_cache_dir() { return cache_dir; }
+
+    void close();
 
 		void obj_unref( GObject* obj, char* msg=NULL );
 		void obj_unref( VipsImage* obj, char* msg=NULL ) { obj_unref( (GObject*)obj, msg ); }

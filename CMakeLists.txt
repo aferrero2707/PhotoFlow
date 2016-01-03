@@ -5,6 +5,7 @@ project(photoflow CXX C)
 option(USE_NLS "Build Native Language Support (using gettext)" ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+set(CMAKE_POSITION_INDEPENDENT_CODE True)
 
 find_package(PkgConfig)
 
@@ -64,6 +65,16 @@ pkg_check_modules(GTHREAD gthread-2.0)
 pkg_check_modules(GOBJECT gobject-2.0) 
 pkg_check_modules(GLIBMM glibmm-2.4) 
 #pkg_check_modules(GTKMM3 gtkmm-3.0<=3.4.0) 
+
+pkg_check_modules(GIMP gimp-2.0>=2.9.0) 
+if (GIMP_FOUND)
+    pkg_check_modules(GIMP_2_9 gimp-2.0>=2.9.0)
+    if (GIMP_2_9_FOUND)
+        set (HAVE_GIMP_2_9 "1")
+    else (GIMP_2_9_FOUND)
+        set (HAVE_GIMP_2_9 "0")
+    endif (GIMP_2_9_FOUND)
+endif (GIMP_FOUND)
 
 if(USE_GTKMM3)
   pkg_check_modules(GTKMM3 REQUIRED gtkmm-3.0) 

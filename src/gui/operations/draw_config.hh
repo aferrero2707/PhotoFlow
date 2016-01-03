@@ -58,6 +58,7 @@ namespace PF {
 
   Slider pen_size;
   Slider pen_opacity;
+  Slider pen_smoothness;
   Gtk::Button undoButton;
 
   double mouse_x, mouse_y;

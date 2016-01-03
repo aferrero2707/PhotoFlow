@@ -99,6 +99,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     return NULL;
   }
 
+  std::cout<<"ConvertColorspacePar::build(): image="<<in[0]<<" data="<<data<<" data_length="<<data_length<<std::endl;
   cmsHPROFILE in_profile = cmsOpenProfileFromMem( data, data_length );
 
   bool in_changed = false;

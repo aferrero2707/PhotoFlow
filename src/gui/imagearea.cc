@@ -360,12 +360,17 @@ void PF::ImageArea::process_area( const VipsRect& area )
   //vips_invalidate_area( display_image, parea );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Preparing area "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" for display"<<std::endl;
+  std::cout<<"  display_image: w="<<display_image->Xsize<<" h="<<display_image->Ysize<<std::endl;
+  std::cout<<"  region->im: w="<<region->im->Xsize<<" h="<<region->im->Ysize<<std::endl;
 #endif
   //if( region && region->buffer ) region->buffer->done = 0;
   if (vips_region_prepare (region, parea))
     return;
 
-  double_buffer.get_inactive().copy( region, area, xoffset, yoffset );
+  VipsRect area_clip;
+  vips_rect_intersectrect (&(region->valid), &area, &area_clip);
+
+  double_buffer.get_inactive().copy( region, area_clip, xoffset, yoffset );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into inactive buffer"<<std::endl;
 #endif
@@ -534,6 +539,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
     repaint_needed = true;
   double_buffer.unlock();
   //std::cout<<"  repaint_needed="<<repaint_needed<<std::endl;
+  draw_requested = repaint_needed;
   if( !repaint_needed )
     return true;
 
@@ -873,7 +879,7 @@ void PF::ImageArea::update( VipsRect* area )
 
   VipsImage* image = NULL;
   bool do_merged = display_merged;
-  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
+  //std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
   if( !do_merged ) {
     if( active_layer < 0 ) do_merged = true;
     else {
@@ -1350,6 +1356,7 @@ void PF::ImageArea::sink( const VipsRect& area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into active buffer"<<std::endl;
 #endif
+  //std::cout<<"ImageArea::sink(): draw_requested="<<draw_requested<<std::endl;
   if( !draw_requested ) {
     Update * update = g_new (Update, 1);
     update->image_area = this;

@@ -33,6 +33,10 @@
 
 #include <iostream>
 
+#if defined(__APPLE__)
+#include <gtkosxapplication.h>
+#endif
+
 #include "../base/file_util.hh"
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
@@ -43,33 +47,56 @@
 
 PF::MainWindow::MainWindow():
 #ifdef GTKMM_2
-  mainBox(),
-  editorBox(),
-  controlBox(),
+mainBox(),
+editorBox(),
+controlBox(),
 #endif
 #ifdef GTKMM_3
-  mainBox(Gtk::ORIENTATION_VERTICAL),
-  editorBox(Gtk::ORIENTATION_VERTICAL),
-  controlBox(Gtk::ORIENTATION_VERTICAL),
-  topButtonBox(Gtk::ORIENTATION_HORIZONTAL),
+mainBox(Gtk::ORIENTATION_VERTICAL),
+editorBox(Gtk::ORIENTATION_VERTICAL),
+controlBox(Gtk::ORIENTATION_VERTICAL),
+topButtonBox(Gtk::ORIENTATION_HORIZONTAL),
 #endif
-  buttonOpen( _("Open") ),
-  buttonSave( _("Save") ),
-  buttonSaveAs( _("Save as") ),
-  buttonExport( _("Export") ),
-  buttonExit( _("Exit") ),
-  buttonTest("Test")
+files_frame( _("files") ),
+editing_frame( _("editing") ),
+img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
+img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
+img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save-as.png" ),
+img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-export.png" ),
+img_load_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
+img_save_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
+img_trash( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
+buttonOpen( /*_("Open")*/ ),
+buttonSave( /*_("Save")*/ ),
+buttonSaveAs( /*_("Save as")*/ ),
+buttonExport( /*_("Export")*/ ),
+buttonExit( _("Exit") ),
+buttonTest("Test"),
+buttonNewLayer(_("New Adjustment")),
+buttonNewGroup(_("New Group")),
+buttonDelLayer(),
+buttonLoadPreset(),
+buttonSavePreset()
 {
   set_title("Photo Flow");
   // Sets the border width of the window.
   set_border_width(0);
   //set_default_size(120,80);
   set_default_size(1280,700);
-  
-  add(mainBox);
 
-  mainBox.pack_start(topButtonBox, Gtk::PACK_SHRINK);
+  add(mainBox);
+  
+  //make_menus();
+
+  //mainBox.pack_start(topButtonBox, Gtk::PACK_SHRINK);
+  mainBox.pack_start(top_box, Gtk::PACK_SHRINK);
   mainBox.pack_start(editorBox);
+
+  //top_box.pack_start( editing_frame, Gtk::PACK_SHRINK );
+  //top_box.pack_start( files_frame, Gtk::PACK_SHRINK );
+
+  files_frame.add( topButtonBox1 );
+  editing_frame.add( topButtonBox2 );
 
   editorBox.pack_start(viewerNotebook);
 
@@ -81,38 +108,59 @@ PF::MainWindow::MainWindow():
   //viewerNotebook.append_page(buttonTest,"test");
   //imageArea_scrolledWindow.add(imageArea);
 
-  topButtonBox.pack_start(buttonOpen, Gtk::PACK_SHRINK);
-  topButtonBox.pack_start(buttonSave, Gtk::PACK_SHRINK);
-  topButtonBox.pack_start(buttonSaveAs, Gtk::PACK_SHRINK);
-  topButtonBox.pack_start(buttonExport, Gtk::PACK_SHRINK);
-  topButtonBox.pack_start(buttonExit, Gtk::PACK_SHRINK);
-  topButtonBox.set_border_width(5);
-  topButtonBox.set_layout(Gtk::BUTTONBOX_START);
+  buttonOpen.set_image( img_open ); buttonOpen.set_size_request(40,-1);
+  buttonOpen.set_tooltip_text( _("Open existing file") );
+  buttonSave.set_image( img_save ); buttonSave.set_size_request(40,-1);
+  buttonSave.set_tooltip_text( _("Save current image") );
+  buttonSaveAs.set_image( img_save_as ); buttonSaveAs.set_size_request(40,-1);
+  buttonSaveAs.set_tooltip_text( _("Save current image with a different name") );
+  buttonExport.set_image( img_export ); buttonExport.set_size_request(40,-1);
+  buttonExport.set_tooltip_text( _("Export current image to raster format") );
+  top_box.pack_start(buttonOpen, Gtk::PACK_SHRINK);
+  top_box.pack_start(buttonSave, Gtk::PACK_SHRINK);
+  top_box.pack_start(buttonSaveAs, Gtk::PACK_SHRINK);
+  top_box.pack_start(buttonExport, Gtk::PACK_SHRINK);
+
+  topButtonBox2.pack_start(buttonNewLayer, Gtk::PACK_SHRINK);
+  topButtonBox2.pack_start(buttonNewGroup, Gtk::PACK_SHRINK);
+  topButtonBox2.pack_start(buttonDelLayer, Gtk::PACK_SHRINK);
+  buttonLoadPreset.set_image( img_load_preset ); buttonLoadPreset.set_size_request(40,-1);
+  buttonLoadPreset.set_tooltip_text( _("Open existing file") );
+  topButtonBox2.pack_start(buttonLoadPreset, Gtk::PACK_SHRINK);
+  buttonSavePreset.set_image( img_save_preset ); buttonSavePreset.set_size_request(40,-1);
+  buttonSavePreset.set_tooltip_text( _("Open existing file") );
+  topButtonBox2.pack_start(buttonSavePreset, Gtk::PACK_SHRINK);
+
+  top_box.pack_start(buttonExit, Gtk::PACK_SHRINK); buttonExit.set_size_request(70,-1);
+  //topButtonBox.set_border_width(5);
+  //topButtonBox.set_layout(Gtk::BUTTONBOX_START);
+
+
 
   buttonOpen.signal_clicked().connect( sigc::mem_fun(*this,
-						     &MainWindow::on_button_open_clicked) );
+      &MainWindow::on_button_open_clicked) );
 
   buttonSave.signal_clicked().connect( sigc::mem_fun(*this,
-						     &MainWindow::on_button_save_clicked) );
+      &MainWindow::on_button_save_clicked) );
 
   buttonSaveAs.signal_clicked().
-    connect( sigc::mem_fun(*this,
-                           &MainWindow::on_button_saveas_clicked) );
+      connect( sigc::mem_fun(*this,
+          &MainWindow::on_button_saveas_clicked) );
 
   buttonExport.signal_clicked().connect( sigc::mem_fun(*this,
-						       &MainWindow::on_button_export_clicked) );
+      &MainWindow::on_button_export_clicked) );
 
   buttonExit.signal_clicked().connect( sigc::mem_fun(*this,
-						     &MainWindow::on_button_exit) );
+      &MainWindow::on_button_exit) );
 
   viewerNotebook.signal_switch_page().
-    connect( sigc::mem_fun(*this,
-                           &MainWindow::on_my_switch_page) );
+      connect( sigc::mem_fun(*this,
+          &MainWindow::on_my_switch_page) );
 
 
   //imageArea.signal_configure_event().connect(sigc::mem_fun(imageArea,
   //									  &ImageArea::on_resize));
-  
+
   //treeFrame.set_border_width(10);
   //treeFrame.set_policy(Gtk::POLICY_ALWAYS, Gtk::POLICY_ALWAYS);
 
@@ -141,8 +189,8 @@ PF::MainWindow::MainWindow():
     Widget* page = treeNotebook.get_nth_page(-1);
     Gtk::Label* label = (Gtk::Label*)treeNotebook.get_tab_label(*page);
     label->set_angle(90);
-  */
-  
+   */
+
 
   show_all_children();
 
@@ -162,6 +210,113 @@ PF::MainWindow::~MainWindow()
   PF::ImageProcessor::Instance().submit_request( request );	
   //delete pf_image;
 }
+
+
+void PF::MainWindow::make_menus()
+{
+  //Create actions for menus and toolbars:
+  m_refActionGroup = Gtk::ActionGroup::create();
+
+  //File menu:
+  m_refActionGroup->add( Gtk::Action::create("FileMenu", "File") );
+  m_refActionGroup->add( Gtk::Action::create("FileOpen", Gtk::Stock::OPEN),
+      sigc::mem_fun(*this, &PF::MainWindow::on_button_open_clicked) );
+  m_refActionGroup->add( Gtk::Action::create("FileSave", Gtk::Stock::SAVE),
+      sigc::mem_fun(*this, &PF::MainWindow::on_button_save_clicked) );
+  m_refActionGroup->add( Gtk::Action::create("FileSaveAs", Gtk::Stock::SAVE_AS),
+      sigc::mem_fun(*this, &PF::MainWindow::on_button_saveas_clicked) );
+  m_refActionGroup->add( Gtk::Action::create("FileExport", _("Export")),
+      sigc::mem_fun(*this, &PF::MainWindow::on_button_export_clicked) );
+  m_refActionGroup->add( Gtk::Action::create("FilePrefs", Gtk::Stock::PREFERENCES),
+      sigc::mem_fun(*this, &PF::MainWindow::on_button_open_clicked) );
+  m_refActionGroup->add( Gtk::Action::create("FileQuit", Gtk::Stock::QUIT),
+      sigc::mem_fun(*this, &PF::MainWindow::on_button_exit) );
+
+  //Layers menu:
+  m_refActionGroup->add( Gtk::Action::create("LayerMenu", "Layer") );
+
+  //Help menu:
+  m_refActionGroup->add( Gtk::Action::create("HelpMenu", "Help") );
+  m_refActionGroup->add( Gtk::Action::create("HelpAbout", Gtk::Stock::ABOUT),
+      sigc::mem_fun(*this, &PF::MainWindow::on_button_exit) );
+
+  m_refUIManager = Gtk::UIManager::create();
+  m_refUIManager->insert_action_group(m_refActionGroup);
+
+  add_accel_group(m_refUIManager->get_accel_group());
+
+  //Layout the actions in a menubar and toolbar:
+  Glib::ustring ui_info =
+      "<ui>"
+      "  <menubar name='MenuBar'>"
+      "    <menu action='FileMenu'>"
+      "      <menuitem action='FileOpen'/>"
+      "      <menuitem action='FileSave'/>"
+      "      <menuitem action='FileSaveAs'/>"
+      "      <menuitem action='FileExport'/>"
+      "      <separator/>"
+      "      <menuitem action='FilePrefs'/>"
+      "      <separator/>"
+      "      <menuitem action='FileQuit'/>"
+      "    </menu>"
+      "    <menu action='LayerMenu'>"
+      "    </menu>"
+      "    <menu action='HelpMenu'>"
+      "      <menuitem action='HelpAbout'/>"
+      "    </menu>"
+      "  </menubar>"
+      "</ui>";
+
+  try
+  {
+    m_refUIManager->add_ui_from_string(ui_info);
+  }
+  catch(const Glib::Error& ex)
+  {
+    std::cerr << "building menus failed: " <<  ex.what();
+  }
+
+  //Get the menubar and toolbar widgets, and add them to a container widget:
+  Gtk::Widget* pMenubar = m_refUIManager->get_widget("/MenuBar");
+  Gtk::Widget* pMenuFileQuit = m_refUIManager->get_widget("/MenuBar/FileMenu/FileQuit");
+  Gtk::Widget* pMenuFilePrefs = m_refUIManager->get_widget("/MenuBar/FileMenu/FilePrefs");
+  Gtk::Widget* pMenuHelpAbout = m_refUIManager->get_widget("/MenuBar/HelpMenu/HelpAbout");
+//#ifdef MAC_INTEGRATION
+#if defined(__APPLE__)
+    GtkosxApplication* osxApp  = (GtkosxApplication *)g_object_new (GTKOSX_TYPE_APPLICATION, NULL);
+    gboolean falseval = FALSE;
+    gboolean trueval = TRUE;
+    //RTWindow *rtWin = this;
+    //g_signal_connect (osxApp, "NSApplicationBlockTermination", G_CALLBACK (osx_should_quit_cb), rtWin);
+    //g_signal_connect (osxApp, "NSApplicationWillTerminate",  G_CALLBACK (osx_will_quit_cb), rtWin);
+    //g_signal_connect (osxApp, "NSApplicationOpenFile", G_CALLBACK (osx_open_file_cb), rtWin);
+
+    //menubar = gtk_menu_bar_new ();
+    if(pMenubar) {
+      gtkosx_application_set_menu_bar (osxApp, GTK_MENU_SHELL (pMenubar->gobj()));
+      //mainBox.pack_start(*pMenubar, Gtk::PACK_SHRINK, 5);
+    }
+    if( pMenuFileQuit ) {
+      //gtk_widget_hide(GTK_WIDGET(pMenuFileQuit->gobj()));
+    }
+    if( pMenuHelpAbout ) {
+      gtkosx_application_insert_app_menu_item  (osxApp, GTK_WIDGET (pMenuHelpAbout->gobj()), 0);
+      GtkWidget* sep = gtk_separator_menu_item_new ();
+      gtkosx_application_insert_app_menu_item  (osxApp, sep, 1);
+    }
+    if( pMenuFilePrefs ) {
+      gtkosx_application_insert_app_menu_item  (osxApp, GTK_WIDGET (pMenuFilePrefs->gobj()), 2);
+    }
+    gtkosx_application_set_use_quartz_accelerators (osxApp, TRUE);
+    gtkosx_application_ready (osxApp);
+#else //MAC_INTEGRATION
+    if(pMenubar) {
+      mainBox.pack_start(*pMenubar, Gtk::PACK_SHRINK, 5);
+    }
+#endif //MAC_INTEGRATION
+
+}
+
 
 void PF::MainWindow::on_button_clicked()
 {
@@ -203,20 +358,20 @@ bool PF::MainWindow::on_delete_event( GdkEventAny* event )
 void
 PF::MainWindow::open_image( std::string filename )
 {
-	char* fullpath = strdup( filename.c_str() );
+  char* fullpath = strdup( filename.c_str() );
   PF::ImageEditor* editor = new PF::ImageEditor( fullpath );
   image_editors.push_back( editor );
 
-	char* fname = basename( fullpath );
+  char* fname = basename( fullpath );
 
   HTabLabelWidget* tabwidget = 
-    new HTabLabelWidget( std::string(fname),
-                        editor );
+      new HTabLabelWidget( std::string(fname),
+          editor );
   tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::MainWindow::remove_tab) ); 
   viewerNotebook.append_page( *editor, *tabwidget );
   //std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
-	free(fullpath);
-	editor->set_tab_label_widget( tabwidget );
+  free(fullpath);
+  editor->set_tab_label_widget( tabwidget );
   editor->show();
   //std::cout<<"MainWindow::open_image(): editor shown"<<std::endl;
   //editor->open();
@@ -272,7 +427,7 @@ PF::MainWindow::open_image( std::string filename )
   imageArea.set_view( pf_image->get_view(0) );
   //pf_image->signal_modified.connect( sigc::mem_fun(&imageArea, &ImageArea::update_image) );
   pf_image->update();
-  */
+   */
 
 
   /*
@@ -321,7 +476,7 @@ PF::MainWindow::open_image( std::string filename )
   vips_config->set_layer( lvips );
   //vips_config->set_image( pf_image );
   vips_config->set_op( "gamma" );
-  */
+   */
 
 
   //lbc->imap_insert( lgrad );
@@ -342,13 +497,13 @@ PF::MainWindow::open_image( std::string filename )
     if (vips_sink_screen (out, display_image, NULL,
     64, 64, (2000/64)*(2000/64), 0, sink_notify, this))
     verror ();
-      
-      
+
+
     region = vips_region_new (display_image);
     std::cout<<"Image size: "<<display_image->Xsize<<","<<display_image->Ysize<<std::endl;
     set_size_request (display_image->Xsize, display_image->Ysize);
     }
-  */
+   */
 }
 
 
@@ -357,9 +512,9 @@ void PF::MainWindow::on_button_open_clicked()
   //return;
 
   Gtk::FileChooserDialog dialog( _("Open image"),
-				Gtk::FILE_CHOOSER_ACTION_OPEN);
+      Gtk::FILE_CHOOSER_ACTION_OPEN);
   dialog.set_transient_for(*this);
-  
+
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
@@ -449,59 +604,59 @@ void PF::MainWindow::on_button_open_clicked()
   //Handle the response:
   switch(result) {
   case(Gtk::RESPONSE_OK): 
-    {
-      std::cout << "Open clicked." << std::endl;
+      {
+    std::cout << "Open clicked." << std::endl;
 
-      //Notice that this is a std::string, not a Glib::ustring.
-      std::string filename = dialog.get_filename();
-      last_dir = dialog.get_current_folder();
-      std::cout << "File selected: " <<  filename << std::endl;
-      char* fullpath = realpath( filename.c_str(), NULL );
-      if(!fullpath)
-        return;
-      open_image( fullpath );
-      free(fullpath);
-      break;
-    }
+    //Notice that this is a std::string, not a Glib::ustring.
+    std::string filename = dialog.get_filename();
+    last_dir = dialog.get_current_folder();
+    std::cout << "File selected: " <<  filename << std::endl;
+    char* fullpath = realpath( filename.c_str(), NULL );
+    if(!fullpath)
+      return;
+    open_image( fullpath );
+    free(fullpath);
+    break;
+      }
   case(Gtk::RESPONSE_CANCEL): 
-    {
-      std::cout << "Cancel clicked." << std::endl;
-      break;
-    }
+      {
+    std::cout << "Cancel clicked." << std::endl;
+    break;
+      }
   default: 
-    {
-      std::cout << "Unexpected button clicked." << std::endl;
-      break;
-    }
+  {
+    std::cout << "Unexpected button clicked." << std::endl;
+    break;
+  }
   }
 }
 
 
 void PF::MainWindow::on_button_save_clicked()
 {
-	int page = viewerNotebook.get_current_page();
-	Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
-	if( widget ) {
-		PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
-		if( editor && editor->get_image() ) {
-	    bool saved = false;
-			if( !(editor->get_image()->get_filename().empty()) ) {
-			  std::string ext;
-			  PF::get_file_extension( editor->get_image()->get_filename(), ext );
-			  std::cout<<"ext: "<<ext<<std::endl;
-			  if( ext == "pfi" ) {
-			    editor->get_image()->save( editor->get_image()->get_filename() );
-			    saved = true;
-			    char* fullpath = strdup( editor->get_image()->get_filename().c_str() );
-			    char* fname = basename( fullpath );
-			    HTabLabelWidget* tabwidget = (HTabLabelWidget*)viewerNotebook.get_tab_label( *widget );
-			    if( tabwidget ) tabwidget->set_label( fname );
-			  }
-			}
-			if( !saved )
-				on_button_saveas_clicked();
-		}
-	}
+  int page = viewerNotebook.get_current_page();
+  Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
+  if( widget ) {
+    PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+    if( editor && editor->get_image() ) {
+      bool saved = false;
+      if( !(editor->get_image()->get_filename().empty()) ) {
+        std::string ext;
+        PF::get_file_extension( editor->get_image()->get_filename(), ext );
+        std::cout<<"ext: "<<ext<<std::endl;
+        if( ext == "pfi" ) {
+          editor->get_image()->save( editor->get_image()->get_filename() );
+          saved = true;
+          char* fullpath = strdup( editor->get_image()->get_filename().c_str() );
+          char* fname = basename( fullpath );
+          HTabLabelWidget* tabwidget = (HTabLabelWidget*)viewerNotebook.get_tab_label( *widget );
+          if( tabwidget ) tabwidget->set_label( fname );
+        }
+      }
+      if( !saved )
+        on_button_saveas_clicked();
+    }
+  }
 }
 
 
@@ -561,49 +716,49 @@ void PF::MainWindow::on_button_saveas_clicked()
   //Handle the response:
   switch(result) {
   case(Gtk::RESPONSE_OK): 
-    {
-      std::cout << "Save clicked." << std::endl;
-
-      //Notice that this is a std::string, not a Glib::ustring.
-      last_dir = dialog.get_current_folder();
-      std::string filename = dialog.get_filename();
-      std::string extension;
-      if( get_file_extension(filename, extension) ) {
-        if( extension != "pfi" )
-          filename += ".pfi";
-      }
-      std::cout << "File selected: " <<  filename << std::endl;
-      editor->get_image()->save( filename );
-      char* cfilename = strdup( editor->get_image()->get_filename().c_str() );
-      char* fname = basename( cfilename );
-      free( cfilename );
-
-      HTabLabelWidget* tabwidget = (HTabLabelWidget*)viewerNotebook.get_tab_label( *widget );
-      if( tabwidget ) tabwidget->set_label( fname );
-
-      std::string infoname = editor->get_image()->get_backup_filename();
-      infoname += ".info";
-      std::ofstream of;
-      of.open( infoname.c_str() );
-      if( of ) {
-        char* fullpath = realpath( editor->get_image()->get_filename().c_str(), NULL );
-        if(fullpath) {
-          of<<fullpath;
-          free( fullpath );
-        }
-      }
-      break;
-    }
-  case(Gtk::RESPONSE_CANCEL): 
       {
+    std::cout << "Save clicked." << std::endl;
+
+    //Notice that this is a std::string, not a Glib::ustring.
+    last_dir = dialog.get_current_folder();
+    std::string filename = dialog.get_filename();
+    std::string extension;
+    if( get_file_extension(filename, extension) ) {
+      if( extension != "pfi" )
+        filename += ".pfi";
+    }
+    std::cout << "File selected: " <<  filename << std::endl;
+    editor->get_image()->save( filename );
+    char* cfilename = strdup( editor->get_image()->get_filename().c_str() );
+    char* fname = basename( cfilename );
+    free( cfilename );
+
+    HTabLabelWidget* tabwidget = (HTabLabelWidget*)viewerNotebook.get_tab_label( *widget );
+    if( tabwidget ) tabwidget->set_label( fname );
+
+    std::string infoname = editor->get_image()->get_backup_filename();
+    infoname += ".info";
+    std::ofstream of;
+    of.open( infoname.c_str() );
+    if( of ) {
+      char* fullpath = realpath( editor->get_image()->get_filename().c_str(), NULL );
+      if(fullpath) {
+        of<<fullpath;
+        free( fullpath );
+      }
+    }
+    break;
+      }
+  case(Gtk::RESPONSE_CANCEL): 
+        {
     std::cout << "Cancel clicked." << std::endl;
-      break;
-    }
+    break;
+        }
   default: 
-    {
-      std::cout << "Unexpected button clicked." << std::endl;
-      break;
-    }
+  {
+    std::cout << "Unexpected button clicked." << std::endl;
+    break;
+  }
   }
 }
 
@@ -611,9 +766,9 @@ void PF::MainWindow::on_button_saveas_clicked()
 void PF::MainWindow::on_button_export_clicked()
 {
   Gtk::FileChooserDialog dialog( _("Export image as..."),
-				Gtk::FILE_CHOOSER_ACTION_SAVE);
+      Gtk::FILE_CHOOSER_ACTION_SAVE);
   dialog.set_transient_for(*this);
-  
+
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
@@ -650,32 +805,32 @@ void PF::MainWindow::on_button_export_clicked()
   //Handle the response:
   switch(result) {
   case(Gtk::RESPONSE_OK): 
-    {
-      std::cout << "Export clicked." << std::endl;
+      {
+    std::cout << "Export clicked." << std::endl;
 
-      //Notice that this is a std::string, not a Glib::ustring.
-      last_dir = dialog.get_current_folder();
-      std::string filename = dialog.get_filename();
-      std::cout << "File selected: " <<  filename << std::endl;
-      int page = viewerNotebook.get_current_page();
-      Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
-      if( widget ) {
-	PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
-	if( editor && editor->get_image() )
-	  editor->get_image()->export_merged( filename );
+    //Notice that this is a std::string, not a Glib::ustring.
+    last_dir = dialog.get_current_folder();
+    std::string filename = dialog.get_filename();
+    std::cout << "File selected: " <<  filename << std::endl;
+    int page = viewerNotebook.get_current_page();
+    Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
+    if( widget ) {
+      PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+      if( editor && editor->get_image() )
+        editor->get_image()->export_merged( filename );
+    }
+    break;
       }
-      break;
-    }
   case(Gtk::RESPONSE_CANCEL): 
-    {
-      std::cout << "Cancel clicked." << std::endl;
-      break;
-    }
+      {
+    std::cout << "Cancel clicked." << std::endl;
+    break;
+      }
   default: 
-    {
-      std::cout << "Unexpected button clicked." << std::endl;
-      break;
-    }
+  {
+    std::cout << "Unexpected button clicked." << std::endl;
+    break;
+  }
   }
 }
 
@@ -683,9 +838,9 @@ void PF::MainWindow::on_button_export_clicked()
 
 void PF::MainWindow::remove_tab( Gtk::Widget* widget )
 {
-//#ifndef NDEBUG
+  //#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() called."<<std::endl;
-//#endif
+  //#endif
   int page = viewerNotebook.page_num( *widget );
   if( page < 0 ) return;
   if( page >= viewerNotebook.get_n_pages() ) return;
@@ -759,12 +914,12 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
 
 void PF::MainWindow::on_my_switch_page(
 #ifdef GTKMM_2
-                                       GtkNotebookPage* 	page,
+    GtkNotebookPage* 	page,
 #endif
 #ifdef GTKMM_3
-                                       Widget* page,
+    Widget* page,
 #endif
-                                       guint page_num)
+    guint page_num)
 {
   Gtk::Widget* widget = viewerNotebook.get_nth_page( page_num );
   if( widget ) {

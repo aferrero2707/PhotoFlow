@@ -270,7 +270,7 @@ bool PF::ScaleConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBuffe
         py2 = par->get_rotation_points()[1].second,
         pw2 = 1, ph2 = 1;
     layer2screen( px2, py2, pw2, ph2 );
-    buf_out.draw_line( px1, py1, px2, py2 );
+    buf_out.draw_line( px1, py1, px2, py2, buf_in );
   }
 
   int point_size = 2;

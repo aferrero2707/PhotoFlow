@@ -57,6 +57,7 @@ PF::DrawPar::DrawPar():
   bgd_color( "bgd_color", this, RGBColor(0,0,0) ),
   pen_size( "pen_size", this, 5 ),
   pen_opacity( "pen_opacity", this, 1 ),
+  pen_smoothness( "pen_smoothness", this, 0 ),
   strokes( "strokes", this ),
   rawbuf(NULL),
   diskbuf(NULL)
@@ -177,6 +178,15 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
   for(unsigned int l = 0; l < level; l++ ) {
     scale_factor *= 2;
   }
+
+  std::list< Stroke<Pencil> >& sl = strokes.get();
+  std::list< Stroke<Pencil> >::iterator si;
+  //std::cout<<"DrawPar::build(): sl.size()="<<sl.size()<<std::endl;
+  for( si = sl.begin(); si != sl.end(); si++ ) {
+    //std::cout<<"DrawPar::build(): updating stroke area"<<std::endl;
+    si->compute_area();
+  }
+
   return OpParBase::build( in, first, imap, omap, level );
   /*
   if( !rawbuf ) {
@@ -222,19 +232,22 @@ VipsImage* PF::DrawPar::build(std::vector<VipsImage*>& in, int first,
 
 
 
-void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity )
+void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity, float smoothness )
 {
+  //std::cout<<"DrawPar::start_stroke(): pen_color="<<pen_color.get().r<<","<<pen_color.get().g<<","<<pen_color.get().b<<std::endl;
   strokes.get().push_back( PF::Stroke<PF::Pencil>() );
 
   PF::Stroke<PF::Pencil>& stroke = strokes.get().back();
 
   PF::Pencil& pen = stroke.get_pen();
-  pen.set_size( pen_size );
-  pen.set_opacity( opacity );
-
   pen.set_channel( 0, pen_color.get().r );
   pen.set_channel( 1, pen_color.get().g );
   pen.set_channel( 2, pen_color.get().b );
+  pen.set_size( pen_size );
+  pen.set_opacity( opacity );
+  pen.set_smoothness( smoothness );
+
+  strokes.modified();
 
   /*
   switch( get_colorspace() ) {
@@ -285,6 +298,9 @@ void PF::DrawPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
   }
 
   stroke.get_points().push_back( std::make_pair(x, y) );
+  stroke.compute_area();
+
+  strokes.modified();
 
   PF::Pencil& pen = stroke.get_pen();
 

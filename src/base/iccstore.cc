@@ -306,7 +306,7 @@ PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile( type )
   cmsWriteTag(profile, cmsSigCopyrightTag, copyright);
   /* V4 */
   cmsMLU *description = cmsMLUalloc(NULL, 1);
-  cmsMLUsetASCII(description, "en", "US", "Rec2020-elle-V4-rec709.icc");
+  cmsMLUsetASCII(description, "en", "US", "Rec2020-elle-V4.icc");
   cmsWriteTag(profile, cmsSigProfileDescriptionTag, description);
   const char* filename = "Rec2020-elle-V4-rec709.icc";
   cmsSaveProfileToFile(profile, filename);

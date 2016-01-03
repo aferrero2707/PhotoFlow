@@ -30,6 +30,7 @@
 #ifndef PF_ICCSTORE_H
 #define PF_ICCSTORE_H
 
+#include <string.h>
 #include <string>
 #include <lcms2.h>
 #include <vips/vips.h>

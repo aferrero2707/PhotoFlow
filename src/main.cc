@@ -251,28 +251,7 @@ int main (int argc, char *argv[])
   delete mainWindow;
   delete app;
 
-  PF::ImageProcessor::Instance().join();
-
-  //im_close_plugins();
-  vips_shutdown();
-
-#if defined(__MINGW32__) || defined(__MINGW64__)
-  for (int i = 0; i < _getmaxstdio(); ++i) close (i);
-#elif defined(__APPLE__) && defined(__MACH__)
-#else
-  rlimit rlim;
-  //getrlimit(RLIMIT_NOFILE, &rlim);
-  if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
-    std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<std::endl;
-    for (int i = 3; i < rlim.rlim_max; ++i) {
-      //std::cout<<"i="<<i<<std::endl;
-      close (i);
-    }
-  }
-#endif
-  std::list<std::string>::iterator fi;
-  for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
-    unlink( fi->c_str() );
+  PF::PhotoFlow::Instance().close();
 
   return 0;
 }

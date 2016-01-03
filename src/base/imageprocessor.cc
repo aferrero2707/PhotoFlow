@@ -96,6 +96,7 @@ void PF::ImageProcessor::optimize_requests()
     delete( req );
   }
 
+
   bool rebuild_found = false;
   PF::ProcessRequestInfo* info = NULL;
   std::deque<ProcessRequestInfo>::reverse_iterator ri;
@@ -110,10 +111,10 @@ void PF::ImageProcessor::optimize_requests()
       if( rebuild_found ) {
         do_push = false;
       }
-      //if( do_push && info != NULL ) {
-      //  vips_rect_unionrect( &(info->area), &(ri->area), &(info->area) );
-      //  do_push = false;
-      //}
+      if( do_push && info != NULL ) {
+        vips_rect_unionrect( &(info->area), &(ri->area), &(info->area) );
+        do_push = false;
+      }
     }
     if( do_push ) {
       //if( ri->request == IMAGE_UPDATE )
@@ -210,7 +211,7 @@ void PF::ImageProcessor::run()
       case IMAGE_REBUILD:
         if( !request.image ) continue;
         signal_status_processing.emit();
-        //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
+        std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         request.image->lock();
         //std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
         /*
@@ -220,9 +221,10 @@ void PF::ImageProcessor::run()
           request.image->do_update( NULL );
         */
         request.image->do_update( request.pipeline );
+        std::cout<<"PF::ImageProcessor::run(): unlocking image..."<<std::endl;
         request.image->unlock();
-        request.image->rebuild_done_signal();
-        //std::cout<<"PF::ImageProcessor::run(): updating image done."<<std::endl;
+        std::cout<<"PF::ImageProcessor::run(): image unlocked"<<std::endl;
+        //request.image->rebuild_done_signal();
         break;
       case IMAGE_EXPORT:
         if( !request.image ) continue;

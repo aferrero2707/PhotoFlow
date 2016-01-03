@@ -27,6 +27,7 @@
 
  */
 
+
 #include "operation.hh"
 #include "layer.hh"
 //#include "../vips/vips_layer.h"

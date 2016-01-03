@@ -144,8 +144,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonShowMerged( _("show merged layers") ),
   buttonShowActive( _("show active layer") ),
   tab_label_widget( NULL ),
-  fit_image( false ),
-  fit_image_needed( false )
+  fit_image( true ),
+  fit_image_needed( true )
 {
   std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
   // First pipeline is for full-res rendering, second one is for on-screen preview, third one is
@@ -159,6 +159,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
   image_size_updater = new PF::ImageSizeUpdater( image->get_pipeline(0) );
 
+  PF::PhotoFlow::Instance().set_preview_pipeline_id(PREVIEW_PIPELINE_ID);
   imageArea = new PF::ImageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) );
 
   imageArea->set_adjustments( imageArea_scrolledWindow.get_hadjustment(),
@@ -225,6 +226,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //main_panel.pack1( imageBox );
   //main_panel.pack2( layersWidget, false, false );
   main_panel.pack_start( layersWidget_box, Gtk::PACK_SHRINK );
+  main_panel.pack_start( controls_group_scrolled_window, Gtk::PACK_SHRINK );
   main_panel.pack_start( imageBox, Gtk::PACK_EXPAND_WIDGET );
   controls_group_scrolled_window.add( layersWidget.get_controls_group() );
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
@@ -242,8 +244,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 							&PF::ImageEditor::zoom_out) );
   buttonZoom100.signal_clicked().connect( sigc::mem_fun(*this,
 							&PF::ImageEditor::zoom_actual_size) );
-  buttonZoomFit.signal_clicked().connect( sigc::mem_fun(*this,
-							&PF::ImageEditor::zoom_fit) );
+  buttonZoomFit.signal_clicked().connect( sigc::hide_return( sigc::mem_fun(*this,
+							&PF::ImageEditor::zoom_fit) ) );
 
   /*
   buttonShowMerged.signal_clicked().connect( sigc::bind( sigc::mem_fun(imageArea,
@@ -291,6 +293,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_exporting) );
 
   show_all_children();
+  controls_group_scrolled_window.hide();
 }
 
 
@@ -487,15 +490,16 @@ void PF::ImageEditor::open_image()
     }
   }
 
+  std::cout<<"ImageEditor::open_image(): opening image..."<<std::endl;
   image->open( filename, bckname );
-  //std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
+  std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   int level = 0;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
-  //std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
+  std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
   image->set_loaded( false );
   image->update();
   //getchar();
@@ -545,17 +549,19 @@ void PF::ImageEditor::update_controls()
 {
   //std::cout<<"ImageEditor::update_controls(): layersWidget.get_controls_group().size()="<<layersWidget.get_controls_group().size()<<std::endl;
   if( layersWidget.get_controls_group().size() > 0 ) {
-    if( controls_group_scrolled_window.get_parent() != &main_panel ) {
-      main_panel.pack_start( controls_group_scrolled_window, Gtk::PACK_SHRINK );
-      main_panel.show_all_children();
-      if( fit_image ) fit_image_needed = true;
-    }
+    //if( controls_group_scrolled_window.get_parent() != &main_panel ) {
+    //  main_panel.pack_start( controls_group_scrolled_window, Gtk::PACK_SHRINK );
+    //  main_panel.show_all_children();
+    //  if( fit_image ) fit_image_needed = true;
+    //}
+    controls_group_scrolled_window.show();
   } else {
-    if( controls_group_scrolled_window.get_parent() == &main_panel ) {
-      main_panel.remove( controls_group_scrolled_window );
-      main_panel.show_all_children();
-      if( fit_image ) fit_image_needed = true;
-    }
+    //if( controls_group_scrolled_window.get_parent() == &main_panel ) {
+    //  main_panel.remove( controls_group_scrolled_window );
+    //  main_panel.show_all_children();
+    //  if( fit_image ) fit_image_needed = true;
+    //}
+    controls_group_scrolled_window.hide();
   }
 }
 
@@ -597,6 +603,7 @@ void PF::ImageEditor::on_map()
   }
   //open_image();
   Gtk::HBox::on_map();
+  controls_group_scrolled_window.hide();
 }
 
 void PF::ImageEditor::on_realize()
@@ -666,13 +673,17 @@ void PF::ImageEditor::zoom_in()
 }
 
 
-void PF::ImageEditor::zoom_fit()
+bool PF::ImageEditor::zoom_fit()
 {
-  if( !image ) return;
+  std::cout<<"ImageEditor::zoom_fit(): image="<<image<<std::endl;
+  if( !image ) return false;
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
+  std::cout<<"ImageEditor::zoom_fit(): pipeline="<<pipeline<<std::endl;
+  if( !pipeline ) return false;
+  std::cout<<"image_size_updater->get_image_width()="<<image_size_updater->get_image_width()
+      <<" get_image_height()="<<image_size_updater->get_image_height()<<std::endl;
   if( image_size_updater->get_image_width() < 1 ||
-      image_size_updater->get_image_height() < 1 ) return;
+      image_size_updater->get_image_height() < 1 ) return false;
 
   //float area_hsize = imageArea_scrolledWindow.get_hadjustment()->get_page_size();
   //float area_vsize = imageArea_scrolledWindow.get_vadjustment()->get_page_size();
@@ -684,7 +695,7 @@ void PF::ImageEditor::zoom_fit()
   float area_hsize = imageArea_scrolledWindow.get_allocated_width();
   float area_vsize = imageArea_scrolledWindow.get_allocated_height();
 #endif
-  //std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
+  std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
   area_hsize -= 20;
   area_vsize -= 20;
 
@@ -711,6 +722,7 @@ void PF::ImageEditor::zoom_fit()
   image->update();
 
   fit_image = true;
+  return true;
 }
 
 
@@ -1165,10 +1177,11 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
 //bool PF::ImageEditor::on_preview_configure_event( GdkEventConfigure* event )
 void PF::ImageEditor::on_my_size_allocate(Gtk::Allocation& allocation)
 {
-	//std::cout<<"ImageEditor::on_my_size_allocate() called"<<std::endl;
-	if( fit_image && fit_image_needed ) {
-	  zoom_fit();
-	  fit_image_needed = false;
+	std::cout<<"ImageEditor::on_my_size_allocate() called: fit_image="<<fit_image<<" fit_image_needed="<<fit_image_needed<<std::endl;
+	std::cout<<"  allocation width="<<allocation.get_width()<<" height="<<allocation.get_height()<<std::endl;
+	if( fit_image /*&& fit_image_needed*/ ) {
+	  if( zoom_fit() )
+	    fit_image_needed = false;
 	}
 	//return false;
 }
