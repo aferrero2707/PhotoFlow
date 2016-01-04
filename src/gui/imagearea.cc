@@ -1269,7 +1269,7 @@ void PF::ImageArea::update( VipsRect* area )
 void PF::ImageArea::sink( const VipsRect& area ) 
 {
 #ifdef DEBUG_DISPLAY
-  std::cout<<"PF::ImageArea::sink( const VipsRect& area ) called"<<std::endl;
+  std::cout<<"ImageArea::sink( const VipsRect& area ) called"<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = get_pipeline();
@@ -1361,7 +1361,7 @@ void PF::ImageArea::sink( const VipsRect& area )
     Update * update = g_new (Update, 1);
     update->image_area = this;
     update->rect.width = update->rect.height = 0;
-    //std::cout<<"PF::ImageArea::sink(): installing idle callback."<<std::endl;
+    //std::cout<<"ImageArea::sink(): installing idle callback."<<std::endl;
     draw_requested = true;
     gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
   }

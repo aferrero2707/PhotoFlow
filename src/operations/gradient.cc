@@ -95,6 +95,9 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
   VipsImage* out2 = out;
 
+  //PF::ICCProfileData* data;
+  data = PF::get_icc_profile_data( out );
+
   int modlen = 0, modh = 0;
   switch( get_gradient_type() ) {
   case GRADIENT_VERTICAL:
@@ -117,6 +120,10 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
         modvec[i] = vmod.get().get_value( x );
       if( get_gradient_type() == GRADIENT_HORIZONTAL )
         modvec[i] = 1.0f-hmod.get().get_value( x );
+
+      if( data && data->trc_type == PF::PF_TRC_LINEAR ) {
+        modvec[i] = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), modvec[i] );
+      }
     }
     //modulation.get().unlock();
   }

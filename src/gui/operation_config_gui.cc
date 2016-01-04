@@ -44,6 +44,7 @@
 #include "../gui/operations/scale_config.hh"
 #include "../gui/operations/perspective_config.hh"
 #include "../gui/operations/gradient_config.hh"
+#include "../gui/operations/path_mask_config.hh"
 #include "../gui/operations/uniform_config.hh"
 #include "../gui/operations/curves_config.hh"
 #include "../gui/operations/channel_mixer_config.hh"
@@ -971,6 +972,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "gradient" ) {
 
     dialog = new PF::GradientConfigGUI( current_layer );
+
+  } else if( op_type == "path_mask" ) {
+
+    dialog = new PF::PathMaskConfigGUI( current_layer );
 
   } else if( op_type == "brightness_contrast" ) {
 

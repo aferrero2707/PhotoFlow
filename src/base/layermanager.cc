@@ -700,8 +700,6 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
   PipelineNode* previous_node = NULL;
   VipsImage* previous = NULL;
 
-  //std::cout<<"LayerManager::rebuild_chain() called"<<std::endl;
-
   VipsImage* out = NULL;
   std::list<PF::Layer*>::iterator li = list.begin();
   for(li = list.begin(); li != list.end(); ++li) {

@@ -27,6 +27,10 @@
 
  */
 
+#include <stdint.h>
+
+typedef uint32_t uint32;
+
 #include <gexiv2/gexiv2-metadata.h>
 
 #include "../base/pf_mkstemp.hh"
@@ -35,17 +39,23 @@
 #include "../rt/rtengine/camconst.h"
 #include "raw_image.hh"
 
-
-
-PF::RawImage::RawImage( const std::string f ):
-#ifdef PF_USE_DCRAW_RT
-  rtengine::RawImage(f), 
+// define this function, it is only declared in rawspeed:
+int rawspeed_get_number_of_processor_cores()
+{
+#ifdef _OPENMP
+  return omp_get_num_procs();
+#else
+  return 1;
 #endif
-	nref(1), file_name( f ),
+}
+
+
+
+PF::RawImage::RawImage( const std::string _fname ):
+	nref(1), file_name( _fname ),
   image( NULL ), demo_image( NULL )
 {
 	dcraw_data_t* pdata;
-#ifdef PF_USE_LIBRAW
   file_name_real = file_name;
   int ifd = open( file_name_real.c_str(), O_RDONLY );
   if( ifd < 0 ) {
@@ -63,6 +73,9 @@ PF::RawImage::RawImage( const std::string f ):
     close(ifd);
   }
 
+  int iwidth = 0, iheight = 0, crop_x = 0, crop_y = 0;
+
+#ifdef PF_USE_LIBRAW
   LibRaw* raw_loader = new LibRaw();
   int result = raw_loader->open_file( file_name_real.c_str() );
   if( result != 0 ) {
@@ -94,8 +107,8 @@ PF::RawImage::RawImage( const std::string f ):
 #endif
   raw_loader->subtract_black();
 
-	int iwidth = raw_loader->imgdata.sizes.iwidth;
-	int iheight = raw_loader->imgdata.sizes.iheight;
+  iwidth = raw_loader->imgdata.sizes.iwidth;
+	iheight = raw_loader->imgdata.sizes.iheight;
   std::cout<<"LibRAW dimensions: raw width="<<raw_loader->imgdata.sizes.raw_width<<",height="<<raw_loader->imgdata.sizes.raw_height
            <<"    width="<<raw_loader->imgdata.sizes.width<<",height="<<raw_loader->imgdata.sizes.height
            <<"    iwidth="<<raw_loader->imgdata.sizes.iwidth<<",iheight="<<raw_loader->imgdata.sizes.iheight
@@ -107,40 +120,198 @@ PF::RawImage::RawImage( const std::string f ):
 		pdata->color.cam_mul[3] = pdata->color.cam_mul[1];
 #endif
   
-#ifdef PF_USE_DCRAW_RT
-	if( !rtengine::CameraConstantsStore::getInstance() )
-		rtengine::CameraConstantsStore::initCameraConstants(PF::PhotoFlow::Instance().get_base_dir(),"");
-	int result = loadRaw( true, true, NULL, 1 );
-	if( result != 0 ) {
-		std::cout<<"RawImage::RawImage("<<f <<"): loadRaw() result="<<result<<std::endl;
-		return;
-	}
-	if( iwidth == 0 || iheight == 0 )
-		return;
+#ifdef PF_USE_RAWSPEED
+	std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "/rawspeed/cameras.xml";
+  meta = new RawSpeed::CameraMetaData( camfile.c_str() );
 
-	compress_image();
-	if ((this->get_cblack(4)+1)/2 == 1 && (this->get_cblack(5)+1)/2 == 1) {
-		for (int c = 0; c < 4; c++){
-			c_black[FC(c/2,c%2)] = this->get_cblack(6 + c/2 % this->get_cblack(4) * this->get_cblack(5) + c%2 % this->get_cblack(5));
-		}
-	} else {
-		for (int c = 0; c < 4; c++){
-			c_black[c] = (float) this->get_cblack(c);
-		}
-	}
 	dcraw_data_t dcraw_data;
-	dcraw_data.color.cam_mul[0] = get_cam_mul(0);
-	dcraw_data.color.cam_mul[1] = get_cam_mul(1);
-	dcraw_data.color.cam_mul[2] = get_cam_mul(2);
-	dcraw_data.color.cam_mul[3] = get_cam_mul(3);
-	std::cout<<"DCRAW camera WB multipliers: "<<get_cam_mul(0)<<" "<<get_cam_mul(1)
-					 <<" "<<get_cam_mul(2)<<" "<<get_cam_mul(3)<<std::endl;
-	if(dcraw_data.color.cam_mul[3] < 0.00000001) 
-		dcraw_data.color.cam_mul[3] = dcraw_data.color.cam_mul[1];
-	for(int i = 0; i < 4; i++)
-		for(int j = 0; j < 3; j++)
-			dcraw_data.color.cam_xyz[i][j] = get_cam_xyz(i,j);
+	//for(int i = 0; i < 4; i++)
+	//	for(int j = 0; j < 3; j++)
+	//		dcraw_data.color.cam_xyz[i][j] = get_cam_xyz(i,j);
 	pdata = &dcraw_data;
+
+#ifdef __WIN32__
+  const size_t len = strlen(file_name_real.c_str()) + 1;
+  wchar_t filen[len];
+  mbstowcs(filen, filename, len);
+#else
+  char filen[PATH_MAX] = { 0 };
+  snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
+#endif
+  RawSpeed::FileReader f(filen);
+
+#ifdef __APPLE__
+  std::auto_ptr<RawSpeed::RawDecoder> d;
+  std::auto_ptr<RawSpeed::FileMap> m;
+#else
+  std::unique_ptr<RawSpeed::RawDecoder> d;
+  std::unique_ptr<RawSpeed::FileMap> m;
+#endif
+
+  try
+  {
+#ifdef __APPLE__
+    m = auto_ptr<RawSpeed::FileMap>(f.readFile());
+#else
+    m = unique_ptr<RawSpeed::FileMap>(f.readFile());
+#endif
+
+    RawSpeed::RawParser t(m.get());
+#ifdef __APPLE__
+    d = auto_ptr<RawSpeed::RawDecoder>(t.getDecoder(meta));
+#else
+    d = unique_ptr<RawSpeed::RawDecoder>(t.getDecoder(meta));
+#endif
+
+    if(!d.get()) return ;
+
+    d->failOnUnknown = true;
+    d->checkSupport(meta);
+    d->decodeRaw();
+    d->decodeMetaData(meta);
+    RawSpeed::RawImage r = d->mRaw;
+
+    for (uint32 i=0; i<r->errors.size(); i++)
+      fprintf(stderr, "[rawspeed] %s\n", r->errors[i]);
+
+    pdata->color.black = r->blackLevel;
+    pdata->color.maximum = r->whitePoint;
+
+    if(r->blackLevelSeparate[0] == -1 || r->blackLevelSeparate[1] == -1 || r->blackLevelSeparate[2] == -1
+       || r->blackLevelSeparate[3] == -1)
+    {
+      r->calculateBlackAreas();
+    }
+
+    for(uint8_t i = 0; i < 4; i++) pdata->color.cblack[i] = r->blackLevelSeparate[i];
+
+    if(r->blackLevel == -1)
+    {
+      float black = 0.0f;
+      for(uint8_t i = 0; i < 4; i++)
+      {
+        black += pdata->color.cblack[i];
+      }
+      black /= 4.0f;
+
+      pdata->color.black = CLAMP(black, 0, UINT16_MAX);
+    }
+
+    /*
+     * FIXME
+     * if(r->whitePoint == 65536)
+     *   ???
+     */
+
+    // Grab the WB
+    for(int i = 0; i < 3; i++) pdata->color.cam_mul[i] = r->metadata.wbCoeffs[i];
+    pdata->color.cam_mul[3] = pdata->color.cam_mul[1];
+    std::cout<<"RawSpeed camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]
+             <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
+    std::cout<<"RawSpeed black="<<pdata->color.black<<"  white="<<pdata->color.maximum<<std::endl;
+
+    /*
+    img->filters = 0u;
+    if(!r->isCFA)
+    {
+      dt_imageio_retval_t ret = dt_imageio_open_rawspeed_sraw(img, r, mbuf);
+      return ret;
+    }
+
+    img->bpp = r->getBpp();
+    img->filters = r->cfa.getDcrawFilter();
+    if(img->filters)
+    {
+      img->flags &= ~DT_IMAGE_LDR;
+      img->flags |= DT_IMAGE_RAW;
+      if(r->getDataType() == TYPE_FLOAT32) img->flags |= DT_IMAGE_HDR;
+      // special handling for x-trans sensors
+      if(img->filters == 9u)
+      {
+        // get 6x6 CFA offset from top left of cropped image
+        // NOTE: This is different from how things are done with Bayer
+        // sensors. For these, the CFA in cameras.xml is pre-offset
+        // depending on the distance modulo 2 between raw and usable
+        // image data. For X-Trans, the CFA in cameras.xml is
+        // (currently) aligned with the top left of the raw data, and
+        // hence it is shifted here to align with the top left of the
+        // cropped image.
+        iPoint2D tl_margin = r->getCropOffset();
+        for(int i = 0; i < 6; ++i)
+          for(int j = 0; j < 6; ++j)
+          {
+            img->xtrans_uncropped[j][i] = r->cfa.getColorAt(i % 6, j % 6);
+            img->xtrans[j][i] = r->cfa.getColorAt((i + tl_margin.x) % 6, (j + tl_margin.y) % 6);
+          }
+      }
+    }
+    */
+
+    // dimensions of uncropped image
+    RawSpeed::iPoint2D dimUncropped = r->getUncroppedDim();
+    //iwidth = dimUncropped.x;
+    //iheight = dimUncropped.y;
+
+    // dimensions of cropped image
+    RawSpeed::iPoint2D dimCropped = r->dim;
+    iwidth = dimCropped.x;
+    iheight = dimCropped.y;
+
+    pdata->sizes.flip = 0;
+
+    // crop - Top,Left corner
+    RawSpeed::iPoint2D cropTL = r->getCropOffset();
+    crop_x = cropTL.x;
+    crop_y = cropTL.y;
+
+    // crop - Bottom,Right corner
+    RawSpeed::iPoint2D cropBR = dimUncropped - dimCropped - cropTL;
+
+    std::cout<<"original width: "<<dimUncropped.x<<"  crop offset: "<<cropTL.x<<"  cropped width: "<<dimCropped.x<<std::endl;
+
+    /*
+    img->fuji_rotation_pos = r->metadata.fujiRotationPos;
+    img->pixel_aspect_ratio = (float)r->metadata.pixelAspectRatio;
+
+    void *buf = dt_mipmap_cache_alloc(mbuf, img);
+    if(!buf) return DT_IMAGEIO_CACHE_FULL;
+    */
+    /*
+     * since we do not want to crop black borders at this stage,
+     * and we do not want to rotate image, we can just use memcpy,
+     * as it is faster than dt_imageio_flip_buffers, but only if
+     * buffer sizes are equal,
+     * (from Klaus: r->pitch may differ from DT pitch (line to line spacing))
+     * else fallback to generic dt_imageio_flip_buffers()
+     */
+    /*
+    const size_t bufSize_mipmap = (size_t)img->width * img->height * img->bpp;
+    const size_t bufSize_rawspeed = (size_t)r->pitch * dimUncropped.y;
+    if(bufSize_mipmap == bufSize_rawspeed)
+    {
+      memcpy(buf, r->getDataUncropped(0, 0), bufSize_mipmap);
+    }
+    else
+    {
+      dt_imageio_flip_buffers((char *)buf, (char *)r->getDataUncropped(0, 0), r->getBpp(), dimUncropped.x,
+                              dimUncropped.y, dimUncropped.x, dimUncropped.y, r->pitch, ORIENTATION_NONE);
+    }
+    */
+  }
+
+  catch(const std::exception &exc)
+  {
+    printf("[rawspeed] %s\n", exc.what());
+
+    /* if an exception is raised lets not retry or handle the
+     specific ones, consider the file as corrupted */
+    return ;
+  }
+  catch(...)
+  {
+    printf("Unhandled exception in imageio_rawspeed\n");
+    return ;
+  }
 #endif
   //==================================================================
   // Save decoded data to cache file on disk.
@@ -186,9 +357,20 @@ PF::RawImage::RawImage( const std::string f ):
 				//std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<std::endl;
 			//}
 #endif
-#ifdef PF_USE_DCRAW_RT
-      unsigned char color = (unsigned char)FC(row,col);
-      float val = (data[row][col]-c_black[color])*65535/(this->get_white(color)-c_black[color]);
+#ifdef PF_USE_RAWSPEED
+      int col2 = col + crop_x;
+      int row2 = row + crop_y;
+			RawSpeed::RawImage r = d->mRaw;
+      unsigned char color = r->cfa.getColorAt(col2,row2);
+      float val = 0;
+      switch(r->getDataType()) {
+      case RawSpeed::TYPE_USHORT16: val = *((uint16_t*)r->getDataUncropped(col2,row2)); break;
+      case RawSpeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
+      }
+      val -= pdata->color.black;
+      val /= (pdata->color.maximum - pdata->color.black);
+      val *= 65535;
+
 #endif
 
       // Fill raw histogram
@@ -208,6 +390,7 @@ PF::RawImage::RawImage( const std::string f ):
       //ptr[sizeof(float)] = color;
       fptr[0] = val;
       fptr[1] = color;
+      //std::cout<<"val="<<val<<"  color="<<color<<std::endl;
 			ptr += pxsize;
     }
 		/**/
@@ -215,7 +398,7 @@ PF::RawImage::RawImage( const std::string f ):
       break;
 #ifndef NDEBUG
     if( (row%100) == 0 ) std::cout<<"  row "<<row<<" saved."<<std::endl;
-#ifdef PF_USE_DCRAW_RT
+#ifdef PF_USE_RAWSPEED
 		if( row==0 ) {
 			for(col=0; col<10; col++) {
 				std::cout<<"  val="<<data[row][col]<<"  c="<<(unsigned int)FC(row,col)<<std::endl;
@@ -231,6 +414,13 @@ PF::RawImage::RawImage( const std::string f ):
 #ifndef NDEBUG
   std::cout<<"Row buffer deleted"<<std::endl;
 #endif
+
+#ifdef PF_USE_RAWSPEED
+  /* free auto pointers on spot */
+  d.reset();
+  m.reset();
+#endif
+
 
   //std::cout<<"iwidth="<<iwidth<<std::endl
 	//   <<"iheight="<<iheight<<std::endl
@@ -263,18 +453,21 @@ PF::RawImage::RawImage( const std::string f ):
            (VipsCallbackFn) g_free, raw_hist,
            sizeof(int)*65535*3 );
 
-  // Save the LibRaw parameters into the image
-  void* rawdata_buf = malloc( sizeof(dcraw_data_t) );
-  if( !rawdata_buf ) return;
-  memcpy( rawdata_buf, pdata, sizeof(dcraw_data_t) );
-  vips_image_set_blob( image, "raw_image_data",
-           (VipsCallbackFn) g_free, rawdata_buf,
-           sizeof(dcraw_data_t) );
-
   // We read the EXIF data and store it in the image as a custom blob
   GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
   gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name_real.c_str(), NULL);
   if( gexiv2_success ) {
+    GExiv2Orientation orientation = gexiv2_metadata_get_orientation( gexiv2_buf );
+    switch( orientation ) {
+    case GEXIV2_ORIENTATION_ROT_90:
+      pdata->sizes.flip = 6; break;
+    case GEXIV2_ORIENTATION_ROT_180:
+      pdata->sizes.flip = 3; break;
+    case GEXIV2_ORIENTATION_ROT_270:
+      pdata->sizes.flip = 5; break;
+    default:
+      break;
+    }
     //std::cout<<"RawImage::RawImage(): setting gexiv2-data blob"<<std::endl;
     gexiv2_metadata_set_orientation( gexiv2_buf, GEXIV2_ORIENTATION_NORMAL );
     vips_image_set_blob( image, "gexiv2-data",
@@ -282,14 +475,23 @@ PF::RawImage::RawImage( const std::string f ):
         sizeof(GExiv2Metadata) );
   }
 
-  PF::exif_read( &exif_data, file_name_real.c_str() );
 
+  PF::exif_read( &exif_data, file_name_real.c_str() );
   void* exifdata_buf = malloc( sizeof(exif_data_t) );
   if( !exifdata_buf ) return;
   memcpy( exifdata_buf, &exif_data, sizeof(exif_data_t) );
   vips_image_set_blob( image, PF_META_EXIF_NAME,
            (VipsCallbackFn) PF::exif_free, exifdata_buf,
            sizeof(exif_data_t) );
+
+
+  // Save the LibRaw parameters into the image
+  void* rawdata_buf = malloc( sizeof(dcraw_data_t) );
+  if( !rawdata_buf ) return;
+  memcpy( rawdata_buf, pdata, sizeof(dcraw_data_t) );
+  vips_image_set_blob( image, "raw_image_data",
+           (VipsCallbackFn) g_free, rawdata_buf,
+           sizeof(dcraw_data_t) );
 
   //print_exif();
 

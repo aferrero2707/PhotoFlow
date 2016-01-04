@@ -74,8 +74,8 @@ namespace PF {
   Gtk::HBox expander_hboxes[3][4];
   Gtk::VBox expander_vboxes[3];
 
-  Gtk::HBox feather_box;
-  CheckBox feather_enable;
+  Gtk::HBox feather_box, feather_box2;
+  CheckBox feather_enable, mask_invert;
   Slider featherRadiusSlider;
 
 public:

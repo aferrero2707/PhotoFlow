@@ -69,6 +69,7 @@ namespace PF
     Property<SplineCurve> brightness_L_equalizer;
 
     Property<bool> show_mask;
+    Property<bool> invert_mask;
     Property<bool> feather_mask;
     Property<float> feather_radius;
 
@@ -98,6 +99,7 @@ namespace PF
     float get_exposure() { return exposure.get(); }
 
     bool get_show_mask() { return show_mask.get(); }
+    bool get_invert_mask() { return invert_mask.get(); }
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
@@ -144,6 +146,7 @@ namespace PF
       float contrast = opar->get_contrast();
       float brightness = opar->get_brightness();
       float exposure = opar->get_exposure();
+      bool inv = opar->get_invert_mask();
 
       T* pin;
       T* pmask;

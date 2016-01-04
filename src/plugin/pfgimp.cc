@@ -369,16 +369,21 @@ void run(const gchar *name,
 
     if( pluginwin->get_image_buffer().buf ) {
 #if HAVE_GIMP_2_9
-    gegl_buffer_set(buffer,
-        GEGL_RECTANGLE(0, 0, width, height),
-        0, NULL, pluginwin->get_image_buffer().buf,
-        GEGL_AUTO_ROWSTRIDE);
+      GeglRectangle gegl_rect;
+      gegl_rect.x = 0;
+      gegl_rect.y = 0;
+      gegl_rect.width = width;
+      gegl_rect.height = height;
+      gegl_buffer_set(buffer, &gegl_rect,
+          //GEGL_RECTANGLE(0, 0, width, height),
+          0, NULL, pluginwin->get_image_buffer().buf,
+          GEGL_AUTO_ROWSTRIDE);
 #else
-    for (row = 0; row < Crop.height; row += tile_height) {
-      nrows = MIN(Crop.height - row, tile_height);
-      gimp_pixel_rgn_set_rect(&pixel_region,
-          uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
-    }
+      for (row = 0; row < Crop.height; row += tile_height) {
+        nrows = MIN(Crop.height - row, tile_height);
+        gimp_pixel_rgn_set_rect(&pixel_region,
+            uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
+      }
 #endif
     }
 
@@ -389,42 +394,42 @@ void run(const gchar *name,
     gimp_drawable_detach(drawable);
 #endif
 
-    printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
+    //printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
 
     if( false ) {
-    GimpParasite *exif_parasite;
+      GimpParasite *exif_parasite;
 
-    exif_parasite = gimp_parasite_new("exif-data",
-        GIMP_PARASITE_PERSISTENT,
-        pluginwin->get_image_buffer().exif_buf,
-        sizeof( GExiv2Metadata ));
+      exif_parasite = gimp_parasite_new("exif-data",
+          GIMP_PARASITE_PERSISTENT, sizeof( GExiv2Metadata ),
+          pluginwin->get_image_buffer().exif_buf);
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-    gimp_image_attach_parasite(gimpImage, exif_parasite);
+      gimp_image_attach_parasite(gimpImage, exif_parasite);
 #else
-    gimp_image_parasite_attach(gimpImage, exif_parasite);
+      gimp_image_parasite_attach(gimpImage, exif_parasite);
 #endif
-    gimp_parasite_free(exif_parasite);
+      gimp_parasite_free(exif_parasite);
 
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-    {
-      GimpParam    *return_vals;
-      gint          nreturn_vals;
-      return_vals = gimp_run_procedure("plug-in-metadata-decode-exif",
-          &nreturn_vals,
-          GIMP_PDB_IMAGE, gimpImage,
-          GIMP_PDB_INT32, 7,
-          GIMP_PDB_INT8ARRAY, "unused",
-          GIMP_PDB_END);
-      if (return_vals[0].data.d_status != GIMP_PDB_SUCCESS) {
-        g_warning("UFRaw Exif -> XMP Merge failed");
+      {
+        GimpParam    *return_vals;
+        gint          nreturn_vals;
+        return_vals = gimp_run_procedure("plug-in-metadata-decode-exif",
+            &nreturn_vals,
+            GIMP_PDB_IMAGE, gimpImage,
+            GIMP_PDB_INT32, 7,
+            GIMP_PDB_INT8ARRAY, "unused",
+            GIMP_PDB_END);
+        if (return_vals[0].data.d_status != GIMP_PDB_SUCCESS) {
+          g_warning("UFRaw Exif -> XMP Merge failed");
+        }
       }
-    }
 #endif
     }
 
     /* Create "icc-profile" parasite from output profile
      * if it is not the internal sRGB.*/
     if( pluginwin->get_image_buffer().iccdata ) {
+      printf("Saving ICC profile parasite\n");
       GimpParasite *icc_parasite;
       icc_parasite = gimp_parasite_new("icc-profile",
           GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
@@ -442,9 +447,8 @@ void run(const gchar *name,
     }
 
     delete pluginwin;
-    delete app;
-
     PF::PhotoFlow::Instance().close();
+    delete app;
 
   } else {
     if (sendToGimpMode) {

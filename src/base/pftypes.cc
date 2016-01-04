@@ -55,18 +55,20 @@ PF::PropertyBase(name, par)
 {
   add_enum_value(PF_BLEND_PASSTHROUGH,"PF_BLEND_PASSTHROUGH","Passthrough");
   add_enum_value(PF_BLEND_NORMAL,"PF_BLEND_NORMAL","Normal");
-  //add_enum_value(PF_BLEND_GRAIN_EXTRACT,"PF_BLEND_GRAIN_EXTRACT","Grain extract");
-  //add_enum_value(PF_BLEND_GRAIN_MERGE,"PF_BLEND_GRAIN_MERGE","Grain merge");
-  //add_enum_value(PF_BLEND_OVERLAY,"PF_BLEND_OVERLAY","Overlay");
-  //add_enum_value(PF_BLEND_SOFT_LIGHT,"PF_BLEND_SOFT_LIGHT","Soft light");
-  //add_enum_value(PF_BLEND_HARD_LIGHT,"PF_BLEND_HARD_LIGHT","Hard light");
-  //add_enum_value(PF_BLEND_VIVID_LIGHT,"PF_BLEND_VIVID_LIGHT","Vivid light");
+  //add_enum_value(PF_BLEND_SEP1,"PF_BLEND_SEP1","Separator");
+  add_enum_value(PF_BLEND_GRAIN_EXTRACT,"PF_BLEND_GRAIN_EXTRACT","Grain extract");
+  add_enum_value(PF_BLEND_GRAIN_MERGE,"PF_BLEND_GRAIN_MERGE","Grain merge");
+  add_enum_value(PF_BLEND_OVERLAY,"PF_BLEND_OVERLAY","Overlay");
+  //add_enum_value(PF_BLEND_OVERLAY_GIMP,"PF_BLEND_OVERLAY_GIMP","Overlay (Gimp)");
+  add_enum_value(PF_BLEND_SOFT_LIGHT,"PF_BLEND_SOFT_LIGHT","Soft light");
+  add_enum_value(PF_BLEND_HARD_LIGHT,"PF_BLEND_HARD_LIGHT","Hard light");
+  add_enum_value(PF_BLEND_VIVID_LIGHT,"PF_BLEND_VIVID_LIGHT","Vivid light");
   add_enum_value(PF_BLEND_MULTIPLY,"PF_BLEND_MULTIPLY","Multiply");
   add_enum_value(PF_BLEND_SCREEN,"PF_BLEND_SCREEN","Screen");
   add_enum_value(PF_BLEND_LIGHTEN,"PF_BLEND_LIGHTEN","Lighten");
   add_enum_value(PF_BLEND_DARKEN,"PF_BLEND_DARKEN","Darken");
-  //add_enum_value(PF_BLEND_LUMI,"PF_BLEND_LUMI","Luminosity");
-  //add_enum_value(PF_BLEND_COLOR,"PF_BLEND_COLOR","Color");
+  add_enum_value(PF_BLEND_LUMI,"PF_BLEND_LUMI","Luminosity");
+  add_enum_value(PF_BLEND_COLOR,"PF_BLEND_COLOR","Color");
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");

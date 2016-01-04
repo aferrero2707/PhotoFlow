@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.9)
 
 project(photoflow CXX C)
 
@@ -32,10 +32,10 @@ pkg_check_modules(GEXIV2 REQUIRED gexiv2)
 MESSAGE( STATUS "GEXIV2_INCLUDE_DIRS:         " ${GEXIV2_INCLUDE_DIRS} )
 MESSAGE( STATUS "GEXIV2_LIBRARY_DIRS:         " ${GEXIV2_LIBRARY_DIRS} )
 
-pkg_check_modules(LENSFUN lensfun)
-MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
-MESSAGE( STATUS "LENSFUN_LIBRARY_DIRS:         " ${LENSFUN_LIBRARY_DIRS} )
-MESSAGE( STATUS "LENSFUN_LIBRARIES:         " ${LENSFUN_LIBRARIES})
+#pkg_check_modules(LENSFUN lensfun)
+#MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
+#MESSAGE( STATUS "LENSFUN_LIBRARY_DIRS:         " ${LENSFUN_LIBRARY_DIRS} )
+#MESSAGE( STATUS "LENSFUN_LIBRARIES:         " ${LENSFUN_LIBRARIES})
 
 
 IF(NOT MINGW)
@@ -75,6 +75,11 @@ if (GIMP_FOUND)
         set (HAVE_GIMP_2_9 "0")
     endif (GIMP_2_9_FOUND)
 endif (GIMP_FOUND)
+
+if (APPLE)
+    find_package (MacIntegration REQUIRED)
+endif (APPLE)
+
 
 if(USE_GTKMM3)
   pkg_check_modules(GTKMM3 REQUIRED gtkmm-3.0) 

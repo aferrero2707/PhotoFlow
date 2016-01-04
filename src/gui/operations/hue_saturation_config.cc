@@ -105,7 +105,8 @@ PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
   contrastSeq( this, "contrast_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
   contrastLeq( this, "contrast_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
   feather_enable( this, "feather_mask", _("feather mask"), false ),
-  featherRadiusSlider( this, "feather_radius", _("feather radius"), 1, 0, 100, 1, 5, 1)
+  featherRadiusSlider( this, "feather_radius", _("feather radius"), 1, 0, 100, 1, 5, 1),
+  mask_invert( this, "invert_mask", _("invert mask"), false )
 {
   controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
   controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK );
@@ -156,7 +157,9 @@ PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
   feather_box.pack_start( featherRadiusSlider, Gtk::PACK_SHRINK );
   expander_vboxes[0].pack_start( feather_box, Gtk::PACK_SHRINK );
 
-  expander_vboxes[0].pack_start( mask_enable, Gtk::PACK_SHRINK );
+  feather_box2.pack_start( mask_invert, Gtk::PACK_SHRINK );
+  feather_box2.pack_start( mask_enable, Gtk::PACK_SHRINK );
+  expander_vboxes[0].pack_start( feather_box2, Gtk::PACK_SHRINK );
 
   controlsBox.pack_start( expanders[0][0], Gtk::PACK_SHRINK );
   /*

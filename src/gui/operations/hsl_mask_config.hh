@@ -54,7 +54,7 @@ namespace PF {
 
   Gtk::VBox hueHeq_box, hueSeq_box, hueLeq_box;
   CurveEditor hueHeq, hueSeq, hueLeq;
-  CheckBox hueHeq_enable, hueSeq_enable, hueLeq_enable;
+  CheckBox invert, hueHeq_enable, hueSeq_enable, hueLeq_enable;
   Gtk::HBox hueHeq_enable_box, hueSeq_enable_box, hueLeq_enable_box;
   Gtk::Alignment hueHeq_enable_padding, hueSeq_enable_padding, hueLeq_enable_padding;
 

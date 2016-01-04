@@ -46,7 +46,7 @@
 #include <lcms2.h>
 
 #ifdef PF_HAS_LENSFUN
-#include <lensfun.h>
+#include <lensfun/lensfun.h>
 #endif
 
 #include <iostream>
@@ -122,6 +122,9 @@ G_DEFINE_TYPE( VipsLensFun, vips_lensfun, VIPS_TYPE_OPERATION );
 #endif /*__cplusplus*/
 
 
+static void *malloc_aligned(size_t size)
+{
+}
 
 #define MIN_MAX( MIN, MAX, VAL) { if(VAL<MIN) MIN=VAL; if(VAL>MAX) MAX=VAL;}
 
@@ -158,15 +161,24 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
      <<" width="<<oreg->valid.width
      <<" height="<<oreg->valid.height<<std::endl;
 #endif
-  float* buf = new float[r->width*r->height*2*3];
+  //float* buf = new float[r->width*r->height*2*3];
+  void* ptr = malloc( sizeof(float)*r->width*r->height*2*3 + 32 );
+  intptr_t iptr = (intptr_t)ptr;
+  iptr = (iptr >> 4)<<4;
+  float* buf = (float *)iptr;
+  //float* buf = (float *)(((intptr_t)(ptr) + 16-1) & ~16);
+  //std::cout<<"ptr="<<ptr<<" buf="<<(void*)buf<<std::endl;
 #ifdef PF_HAS_LENSFUN
+  //std::cout<<"ApplySubpixelGeometryDistortion( "<<r->left<<", "<<r->top<<", "<<r->width<<", "<<r->height
+  //    <<", "<<(void*)buf<<" ) called"<<std::endl;
   bool ok = lensfun->modifier->ApplySubpixelGeometryDistortion( r->left, r->top, r->width, r->height, buf );
+  if(!ok) return( -1 );
 #endif
   int xmin=2000000000, xmax = -2000000000, ymin = 2000000000, ymax = -2000000000;
   float* pos = buf;
   for( x = 0; x < r->width; x++ ) {
     for( y = 0; y < r->height; y++ ) {
-      for( k= 0; k < 3; k++ ) {
+      for( k = 0; k < 3; k++ ) {
         //std::cout<<"  x="<<x<<" -> "<<pos[0]<<"    y="<<y<<" -> "<<pos[1]<<std::endl;
         MIN_MAX( xmin, xmax, pos[0] );
         MIN_MAX( ymin, ymax, pos[1] );
@@ -176,7 +188,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   }
 
 #ifndef NDEBUG
-  std::cout<<"vips_lensfun_gen(): xmin="<<xmin<<" ymin="<<ymin<<" xmax="<<xmax<<"ymax="<<ymax<<std::endl;
+  std::cout<<"vips_lensfun_gen(): xmin="<<xmin<<" ymin="<<ymin<<" xmax="<<xmax<<" ymax="<<ymax<<std::endl;
 #endif
 
   s.left = xmin - window_offset - 5;
@@ -254,7 +266,8 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 	   <<"  colorspace = "<<oreg->im->Type<<std::endl;
 #endif
   /**/
-  delete[] buf;
+  //delete[] buf;
+  free( ptr );
 
   return( 0 );
 }
@@ -336,13 +349,23 @@ vips_lensfun_build( VipsObject *object )
 	  g_print ("Cannot find the lens `%s' in database\n", lfpar->lens().c_str());
 	  return 1;
   }
+  int li = 0;
+  while( lenses[li] != NULL ) {
+    std::cout<<"Lens #"<<li<<": "<<lenses[li]->Maker<<" "<<lenses[li]->Model<<std::endl;
+    li++;
+  }
   const lfLens *lens = lenses[0];
   lf_free (lenses);
 
   g_print ("Lens `%s' found in database\n", lfpar->lens().c_str());
 
+  std::cout<<"lfModifier::Create( lens, "<<lens->CropFactor<<", "
+      <<lensfun->in->Xsize<<", "<<lensfun->in->Ysize<<" );"<<std::endl;
   lensfun->modifier = lfModifier::Create( lens, lens->CropFactor,
       lensfun->in->Xsize, lensfun->in->Ysize );
+  std::cout<<"lensfun->modifier->Initialize( lens, LF_PF_U8, "<<lfpar->get_focal_length()<<", "
+      <<lfpar->get_aperture()<<", "<<lfpar->get_distance()
+      <<", 1.0, lens->Type, LF_MODIFY_ALL, false );"<<std::endl;
   int modflags = lensfun->modifier->Initialize(
       lens, LF_PF_U8, lfpar->get_focal_length(),
       lfpar->get_aperture(), lfpar->get_distance(), 1.0, lens->Type,

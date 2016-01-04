@@ -64,6 +64,7 @@ PF::HueSaturationPar::HueSaturationPar():
   brightness_S_equalizer( "brightness_S_equalizer", this ),
   brightness_L_equalizer( "brightness_L_equalizer", this ),
   show_mask("show_mask",this,false),
+  invert_mask("invert_mask",this,false),
   feather_mask("feather_mask",this,false),
   feather_radius("feather_radius",this,5.0f)
 {
@@ -170,6 +171,7 @@ VipsImage* PF::HueSaturationPar::build(std::vector<VipsImage*>& in, int first,
     mask_par->set_H_curve_enabled( hue_H_equalizer_enabled.get() );
     mask_par->set_S_curve_enabled( hue_S_equalizer_enabled.get() );
     mask_par->set_L_curve_enabled( hue_L_equalizer_enabled.get() );
+    mask_par->set_invert( get_invert_mask() );
     mask_par->set_image_hints( in[0] );
     mask_par->set_format( get_format() );
     VipsImage* imask = mask_par->build( in3, 0, NULL, NULL, level );

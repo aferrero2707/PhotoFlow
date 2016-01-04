@@ -65,7 +65,8 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_target_b("wb_target_b",this,12), 
   exposure("exposure",this,1),
   exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
-  exposure_clip_amount("exposure_clip_amount",this,0)
+  exposure_clip_amount("exposure_clip_amount",this,0),
+  black_level_correction( "black_level_correction", this, 0)
 {
   wb_mode.add_enum_value(PF::WB_CAMERA,"CAMERA","CAMERA");
   wb_mode.add_enum_value(PF::WB_SPOT,"SPOT","Spot");

@@ -341,7 +341,7 @@ PF::ICCStore::ICCStore()
     float fi = i;
     fi /= 65535;
     float fo = cmsEvalToneCurveFloat( Lstar_trc, fi );
-    std::cout<<"lin="<<fi*65535<<"  perc="<<fo*65535<<"  ("<<fo/fi<<")"<<std::endl;
+    //std::cout<<"lin="<<fi*65535<<"  perc="<<fo*65535<<"  ("<<fo/fi<<")"<<std::endl;
   }
 
   /*

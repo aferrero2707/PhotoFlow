@@ -371,7 +371,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   if( !pipeline ) return;
 
 	// Make sure the first pipeline is up-to-date
-	//img->update( pipeline, false );
+	img->update( pipeline, true );
   //img->unlock();
 
   // Get the node associated to the layer
@@ -488,7 +488,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       //node_par->set_wb( wbRedSlider.get_adjustment()->get_value(), wbGreenSlider.get_adjustment()->get_value(), wbBlueSlider.get_adjustment()->get_value() );
 
       img->update( pipeline, true );
-      img->unlock();
+      //img->unlock();
     }
 
     //std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
@@ -931,7 +931,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     //img->set_async( false );
     img->update( pipeline, true );
     //img->update( NULL, true );
-    img->unlock();
+    //img->unlock();
     //img->set_async( async );
 
 

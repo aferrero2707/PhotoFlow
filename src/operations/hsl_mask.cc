@@ -35,6 +35,7 @@
 
 PF::HSLMaskPar::HSLMaskPar():
   OpParBase(),
+  invert( "invert", this, false ),
   H_curve( "H_curve", this ),
   S_curve( "S_curve", this ),
   L_curve( "L_curve", this ),
