@@ -98,6 +98,7 @@ PF::Image::Image():
   rebuild_mutex = vips_g_mutex_new();
   //g_mutex_lock( rebuild_mutex );
   rebuild_done = vips_g_cond_new();
+  vips_semaphore_init( &rebuild_sem, 0, "rebuild_sem" );
 
   export_mutex = vips_g_mutex_new();
   //g_mutex_lock( export_mutex );
@@ -106,6 +107,7 @@ PF::Image::Image():
   sample_mutex = vips_g_mutex_new();
   //g_mutex_lock( sample_mutex );
   sample_done = vips_g_cond_new();
+  vips_semaphore_init( &sample_sem, 0, "sample_sem" );
 
   remove_layer_mutex = vips_g_mutex_new();
   //g_mutex_lock( remove_layer_mutex );
@@ -214,6 +216,7 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     request.image = this;
     request.pipeline = target_pipeline;
     request.request = PF::IMAGE_REBUILD;
+    request.sync = ( sync && target_pipeline );
     /*
 		if(area) {
 			request.area.left = area->left;
@@ -236,7 +239,9 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 
     if( sync && target_pipeline ) {
       std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
-      g_cond_wait( rebuild_done, rebuild_mutex );
+      //g_cond_wait( rebuild_done, rebuild_mutex );
+      g_mutex_unlock( rebuild_mutex );
+      vips_semaphore_down( &rebuild_sem );
       std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
     }
 
@@ -245,7 +250,7 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     // takes place
     if( sync && target_pipeline ) {
       std::cout<<"PF::Image::update(): unlocking rebuild mutex after condition...."<<std::endl;
-      g_mutex_unlock( rebuild_mutex );
+      //g_mutex_unlock( rebuild_mutex );
     }
   }
 
@@ -258,7 +263,7 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 }
 
 
-void PF::Image::do_update( PF::Pipeline* target_pipeline )
+void PF::Image::do_update( PF::Pipeline* target_pipeline, bool sync )
 {
   //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
   //if( !is_modified() ) return;
@@ -342,7 +347,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
     }
 
 #ifndef NDEBUG
-    std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<"  (format="<<pipeline->get_format()<<")"<<std::endl;
+    std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<std::endl;
 #endif
     //get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, area );
     get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
@@ -353,7 +358,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
   }
 
   //std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
-  rebuild_done_signal();
+  if( sync ) rebuild_done_signal();
   std::cout<<"PF::Image::do_update(): signaling done condition."<<std::endl;
   signal_updated.emit();
 
@@ -409,7 +414,7 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     request.area.width = area.width;
     request.area.height = area.height;
 
-    g_mutex_lock( sample_mutex );
+    //g_mutex_lock( sample_mutex );
     #ifndef NDEBUG
     std::cout<<"PF::Image::sample(): submitting sample request..."<<std::endl;
     #endif
@@ -418,13 +423,15 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     std::cout<<"PF::Image::sample(): request submitted."<<std::endl;
     #endif
 
-    g_cond_wait( sample_done, sample_mutex );
-    g_mutex_unlock( sample_mutex );
+    //g_cond_wait( sample_done, sample_mutex );
+    vips_semaphore_down( &sample_sem );
+    g_mutex_lock( sample_mutex );
 
     if(image)
       *image = sampler_image;
     values.clear();
     values = sampler_values;
+    g_mutex_unlock( sample_mutex );
   }
 
   /*
@@ -929,6 +936,10 @@ static int memsave_scan( VipsRegion *region,
 
 void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
 {
+  imgbuf->iccdata = NULL;
+  imgbuf->iccsize = 0;
+  imgbuf->buf = NULL;
+
   unsigned int level = 0;
   PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
   update( pipeline, true );
@@ -961,9 +972,6 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
         imgbuf->iccsize = iccsize;
         memcpy( imgbuf->iccdata, iccdata, iccsize );
       }
-    } else {
-      imgbuf->iccdata = NULL;
-      imgbuf->iccsize = 0;
     }
 
     imgbuf->trc_type = PF_TRC_STANDARD;
