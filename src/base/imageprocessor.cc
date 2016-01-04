@@ -103,7 +103,10 @@ void PF::ImageProcessor::optimize_requests()
   for( ri = temp_queue.rbegin(); ri != temp_queue.rend(); ri++ ) {
     bool do_push = true;
     if( ri->request == IMAGE_REBUILD ) {
-      if( rebuild_found ) do_push = false;
+      if( rebuild_found ) {
+        do_push = false;
+        if( ri->sync ) info->sync = true;
+      }
       rebuild_found = true;
     }
     if( ri->request == IMAGE_UPDATE ) {
@@ -220,7 +223,7 @@ void PF::ImageProcessor::run()
           else
           request.image->do_update( NULL );
         */
-        request.image->do_update( request.pipeline );
+        request.image->do_update( request.pipeline, request.sync );
         std::cout<<"PF::ImageProcessor::run(): unlocking image..."<<std::endl;
         request.image->unlock();
         std::cout<<"PF::ImageProcessor::run(): image unlocked"<<std::endl;
@@ -231,8 +234,8 @@ void PF::ImageProcessor::run()
         signal_status_exporting.emit();
         request.image->lock();
         request.image->do_export_merged( request.filename );
-        request.image->unlock();
         request.image->export_done_signal();
+        request.image->unlock();
         break;
       case IMAGE_SAMPLE:
         if( !request.image ) continue;
@@ -241,8 +244,8 @@ void PF::ImageProcessor::run()
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): image locked."<<std::endl;
         if( (request.area.width!=0) && (request.area.height!=0) )
           request.image->do_sample( request.layer_id, request.area );
-        request.image->sample_unlock();
         request.image->sample_done_signal();
+        request.image->sample_unlock();
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
         break;
       case IMAGE_UPDATE:

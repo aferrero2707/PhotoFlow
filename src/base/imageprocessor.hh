@@ -62,6 +62,7 @@ namespace PF
     Image* image;
     Pipeline* pipeline;
     PipelineSink* sink;
+    bool sync;
     std::string filename;
     Layer* layer;
     int layer_id;
