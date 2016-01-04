@@ -368,16 +368,21 @@ void run(const gchar *name,
 
     if( pluginwin->get_image_buffer().buf ) {
 #if HAVE_GIMP_2_9
-    gegl_buffer_set(buffer,
-        GEGL_RECTANGLE(0, 0, width, height),
-        0, NULL, pluginwin->get_image_buffer().buf,
-        GEGL_AUTO_ROWSTRIDE);
+      GeglRectangle gegl_rect;
+      gegl_rect.x = 0;
+      gegl_rect.y = 0;
+      gegl_rect.width = width;
+      gegl_rect.height = height;
+      gegl_buffer_set(buffer, &gegl_rect,
+          //GEGL_RECTANGLE(0, 0, width, height),
+          0, NULL, pluginwin->get_image_buffer().buf,
+          GEGL_AUTO_ROWSTRIDE);
 #else
-    for (row = 0; row < Crop.height; row += tile_height) {
-      nrows = MIN(Crop.height - row, tile_height);
-      gimp_pixel_rgn_set_rect(&pixel_region,
-          uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
-    }
+      for (row = 0; row < Crop.height; row += tile_height) {
+        nrows = MIN(Crop.height - row, tile_height);
+        gimp_pixel_rgn_set_rect(&pixel_region,
+            uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
+      }
 #endif
     }
 
@@ -394,9 +399,8 @@ void run(const gchar *name,
     GimpParasite *exif_parasite;
 
     exif_parasite = gimp_parasite_new("exif-data",
-        GIMP_PARASITE_PERSISTENT,
-        pluginwin->get_image_buffer().exif_buf,
-        sizeof( GExiv2Metadata ));
+        GIMP_PARASITE_PERSISTENT, sizeof( GExiv2Metadata ),
+        pluginwin->get_image_buffer().exif_buf);
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
     gimp_image_attach_parasite(gimpImage, exif_parasite);
 #else
