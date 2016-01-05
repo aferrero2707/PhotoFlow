@@ -59,16 +59,16 @@ static cmsCIExyYTRIPLE aces_cg_primaries =
 
 /* D50 WHITE POINTS */
 
-cmsCIExyY d50_romm_spec= {0.3457, 0.3585, 1.0};
+static cmsCIExyY d50_romm_spec= {0.3457, 0.3585, 1.0};
 /* http://photo-lovers.org/pdf/color/romm.pdf */
 
-cmsCIExyY d50_illuminant_specs = {0.345702915, 0.358538597, 1.0};
+static cmsCIExyY d50_illuminant_specs = {0.345702915, 0.358538597, 1.0};
 /* calculated from D50 illuminant XYZ values in ICC specs */
 
 
 /* D65 WHITE POINTS */
 
-cmsCIExyY  d65_srgb_adobe_specs = {0.3127, 0.3290, 1.0};
+static cmsCIExyY  d65_srgb_adobe_specs = {0.3127, 0.3290, 1.0};
 /* White point from the sRGB.icm and AdobeRGB1998 profile specs:
  * http://www.adobe.com/digitalimag/pdfs/AdobeRGB1998.pdf
  * 4.2.1 Reference Display White Point
@@ -246,79 +246,13 @@ void PF::ICCProfile::get_luminosity( float* RGBv, float* Lv, size_t size )
 
 
 
-PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile( type )
-{
-  if( type == PF::PF_TRC_STANDARD ) {
-    /* Rec 709 TRC */
-    cmsFloat64Number rec709_parameters[5] =
-    { 1.0 / 0.45, 1.099,  0.099, 4.500, 0.018 };
-    cmsToneCurve *rec709_parametic_curve =
-        cmsBuildParametricToneCurve(NULL, 4, rec709_parameters);
-    cmsToneCurve *rec709_parametic_curve_inv =
-        cmsBuildParametricToneCurve(NULL, 4, rec709_parameters);
-    rec709_parametic_curve_inv = cmsReverseToneCurve( rec709_parametic_curve_inv );
-    init_trc( rec709_parametic_curve, rec709_parametic_curve_inv );
-  } else {
-    /* LAB "L" (perceptually uniform) TRC */
-    cmsFloat64Number labl_parameters[5] =
-    { 3.0, 0.862076,  0.137924, 0.110703, 0.080002 };
-    cmsToneCurve *labl_parametic_curve =
-        cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
-    cmsToneCurve *labl_parametic_curve_inv =
-        cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
-    labl_parametic_curve_inv = cmsReverseToneCurve( labl_parametic_curve_inv );
-    init_trc( labl_parametic_curve, labl_parametic_curve_inv );
-  }
-
-  /* ***** Make profile: Rec.2020, D65, Rec709 TRC */
-  /*
-   * */
-  cmsCIExyYTRIPLE primaries = rec2020_primaries_prequantized;
-  cmsCIExyY whitepoint = d65_srgb_adobe_specs;
-  /* rec.709 */
-  cmsToneCurve* tone_curve[3];
-  switch( type ) {
-  case PF::PF_TRC_STANDARD: {
-    /* Rec 709 TRC */
-    cmsFloat64Number rec709_parameters[5] =
-    { 1.0 / 0.45, 1.099,  0.099, 4.500, 0.018 };
-    cmsToneCurve *curve = cmsBuildParametricToneCurve(NULL, 4, rec709_parameters);
-    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
-    break;
-  }
-  case PF::PF_TRC_PERCEPTUAL: {
-    cmsFloat64Number labl_parameters[5] =
-    { 3.0, 0.862076,  0.137924, 0.110703, 0.080002 };
-    cmsToneCurve *curve =
-        cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
-    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
-    break;
-  }
-  case PF::PF_TRC_LINEAR: {
-    cmsToneCurve *curve = cmsBuildGamma (NULL, 1.00);
-    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
-    break;
-  }
-  }
-  cmsHPROFILE profile = cmsCreateRGBProfile ( &whitepoint, &primaries, tone_curve );
-  cmsMLU *copyright = cmsMLUalloc(NULL, 1);
-  cmsMLUsetASCII(copyright, "en", "US", "Copyright 2015, Elle Stone (website: http://ninedegreesbelow.com/; email: ellestone@ninedegreesbelow.com). This ICC profile is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License (https://creativecommons.org/licenses/by-sa/3.0/legalcode).");
-  cmsWriteTag(profile, cmsSigCopyrightTag, copyright);
-  /* V4 */
-  cmsMLU *description = cmsMLUalloc(NULL, 1);
-  cmsMLUsetASCII(description, "en", "US", "Rec2020-elle-V4.icc");
-  cmsWriteTag(profile, cmsSigProfileDescriptionTag, description);
-  const char* filename = "Rec2020-elle-V4-rec709.icc";
-  cmsSaveProfileToFile(profile, filename);
-  cmsMLUfree(description);
-
-  set_profile( profile );
-}
-
-
 
 PF::ICCStore::ICCStore()
 {
+  srgb_profiles[0] = new sRGBProfile( PF::PF_TRC_STANDARD );
+  srgb_profiles[1] = new sRGBProfile( PF::PF_TRC_PERCEPTUAL );
+  srgb_profiles[2] = new sRGBProfile( PF::PF_TRC_LINEAR );
+
   rec2020_profiles[0] = new Rec2020Profile( PF::PF_TRC_STANDARD );
   rec2020_profiles[1] = new Rec2020Profile( PF::PF_TRC_PERCEPTUAL );
   rec2020_profiles[2] = new Rec2020Profile( PF::PF_TRC_LINEAR );
@@ -336,13 +270,6 @@ PF::ICCStore::ICCStore()
   Lstar_trc = cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
   iLstar_trc = cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
   iLstar_trc = cmsReverseToneCurve( iLstar_trc );
-
-  for(int i = 0; i < 256; i++) {
-    float fi = i;
-    fi /= 65535;
-    float fo = cmsEvalToneCurveFloat( Lstar_trc, fi );
-    //std::cout<<"lin="<<fi*65535<<"  perc="<<fo*65535<<"  ("<<fo/fi<<")"<<std::endl;
-  }
 
   /*
   for( int i = 0; i < 65536; i++ ) {

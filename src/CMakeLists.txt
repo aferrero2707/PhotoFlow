@@ -117,7 +117,7 @@ SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/src/d
 
 
 FILE(GLOB BaseIncludes base/*.hh)
-FILE(GLOB BaseSources base/*.cc)
+FILE(GLOB BaseSources base/*.cc base/icc/*.cc)
 
 #FILE(GLOB RTIncludes rt/*.hh rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexif/*.hh rt/rtgui/*.h)
 #FILE(GLOB RTSources rt/*.cc rt/rtengine/*.c rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)

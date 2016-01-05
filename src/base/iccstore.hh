@@ -135,8 +135,16 @@ public:
 };
 
 
+class sRGBProfile: public ICCProfile
+{
+public:
+  sRGBProfile(TRC_type type);
+};
+
+
 class ICCStore
 {
+  ICCProfile* srgb_profiles[3];
   ICCProfile* rec2020_profiles[3];
   static ICCStore* instance;
 public:
@@ -144,9 +152,11 @@ public:
 
   static ICCStore& Instance();
 
+  ICCProfile* get_srgb_profile(TRC_type type) { return srgb_profiles[type]; }
   ICCProfile* get_profile(TRC_type type) { return rec2020_profiles[type]; }
 
   cmsToneCurve* get_Lstar_trc() {return Lstar_trc; }
+  cmsToneCurve* get_iLstar_trc() {return iLstar_trc; }
 };
 }
 
