@@ -121,13 +121,22 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
       if( get_gradient_type() == GRADIENT_HORIZONTAL )
         modvec[i] = 1.0f-hmod.get().get_value( x );
 
-      if( data && data->trc_type == PF::PF_TRC_LINEAR ) {
-        modvec[i] = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), modvec[i] );
-      }
     }
     //modulation.get().unlock();
   }
 
+  //std::cout<<"GradientPar::build(): is_map()="<<is_map()<<std::endl;
+  for( int i = 0; i < 65536; i++ ) {
+    float fval = i;
+    fval /= 65535;
+    if( !is_map() && data && data->trc_type == PF::PF_TRC_LINEAR ) {
+      float lval = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), fval );
+      //std::cout<<"modvec["<<i<<"]: perceptual="<<fval<<"  linear="<<lval<<std::endl;
+      fval = lval;
+    }
+    //std::cout<<"trc_vec["<<i<<"]: "<<fval<<std::endl;
+    trc_vec[i] = fval;
+  }
 
   CurvesPar* curvepar = dynamic_cast<CurvesPar*>( curve->get_par() );
   if( curvepar ) {
