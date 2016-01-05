@@ -41,6 +41,7 @@ namespace PF
   class UniformPar: public PixelProcessorPar
   {
     Property<float> grey, R, G, B, L, a, b, C, M, Y, K;
+    float Rconv, Gconv, Bconv;
 
   public:
     UniformPar();
@@ -51,6 +52,9 @@ namespace PF
     Property<float>& get_R() { return R; }
     Property<float>& get_G() { return G; }
     Property<float>& get_B() { return B; }
+    float get_Rconv() { return Rconv; }
+    float get_Gconv() { return Gconv; }
+    float get_Bconv() { return Bconv; }
     Property<float>& get_L() { return L; }
     Property<float>& get_a() { return a; }
     Property<float>& get_b() { return b; }
@@ -103,9 +107,9 @@ namespace PF
   public:
     UniformProc(UniformPar* p): par(p) 
     {
-      val[0] = (T)(par->get_R().get()*FormatInfo<T>::RANGE + FormatInfo<T>::MIN); 
-      val[1] = (T)(par->get_G().get()*FormatInfo<T>::RANGE + FormatInfo<T>::MIN); 
-      val[2] = (T)(par->get_B().get()*FormatInfo<T>::RANGE + FormatInfo<T>::MIN); 
+      val[0] = (T)(par->get_Rconv()*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+      val[1] = (T)(par->get_Gconv()*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+      val[2] = (T)(par->get_Bconv()*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
     }
 
     void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T* pout) 

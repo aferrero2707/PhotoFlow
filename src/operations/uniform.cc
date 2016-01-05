@@ -52,11 +52,41 @@ PF::UniformPar::UniformPar():
 
 
 VipsImage* PF::UniformPar::build(std::vector<VipsImage*>& in, int first, 
-				     VipsImage* imap, VipsImage* omap, 
-				     unsigned int& level)
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
 {
   std::cout<<"UniformPar::build(): colorspace="<<get_colorspace()<<std::endl;
   grey.set( R.get() );
+
+  if( get_colorspace() == PF::PF_COLORSPACE_RGB ) {
+    Rconv = R.get();
+    Gconv = G.get();
+    Bconv = B.get();
+
+    void *data;
+    size_t data_length;
+    if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
+        &data, &data_length ) ) {
+      cmsHPROFILE wprofile = cmsOpenProfileFromMem( data, data_length );
+      if( wprofile ) {
+        cmsHTRANSFORM transform = cmsCreateTransform( PF::ICCStore::Instance().get_srgb_profile(PF::PF_TRC_STANDARD),
+            TYPE_RGB_FLT, wprofile, TYPE_RGB_FLT,
+            INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+        if( transform ) {
+          float rgb_in[3], rgb_out[3];
+          rgb_in[0] = R.get(); rgb_in[1] = G.get(); rgb_in[2] = B.get();
+          cmsDoTransform( transform, rgb_in, rgb_out, 1 );
+          cmsDeleteTransform( transform );
+
+          Rconv = rgb_out[0];
+          Bconv = rgb_out[1];
+          Bconv = rgb_out[2];
+        }
+        cmsCloseProfile( wprofile );
+      }
+    }
+  }
+
   return PF::OpParBase::build( in, first, imap, omap, level );
 }
 
