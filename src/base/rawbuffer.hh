@@ -241,8 +241,8 @@ public:
 template <class Pen>
 void PF::Stroke<Pen>::compute_area()
 {
-  int xmin = 10000000000, xmax = 0;
-  int ymin = 10000000000, ymax = 0;
+  int xmin = 10000000, xmax = 0;
+  int ymin = 10000000, ymax = 0;
   std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
   for( pi = points.begin(); pi != points.end(); pi++ ) {
     int x1 = pi->first - pen.get_size();
