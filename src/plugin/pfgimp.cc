@@ -197,7 +197,7 @@ void run(const gchar *name,
   //uf = ufraw_open(filename);
   /* if UFRaw fails on jpg/jpeg or tif/tiff then open with GIMP */
   std::cout<<"  filename="<<filename<<std::endl;
-  if (false) {
+  if (true) {
     if (!strcasecmp(filename + strlen(filename) - 4, ".jpg") ||
         !strcasecmp(filename + strlen(filename) - 5, ".jpeg")) {
       if (loadThumbnail)
