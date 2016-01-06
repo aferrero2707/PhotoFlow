@@ -328,9 +328,13 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           // it is on the curve and if we have to add one more point
           double px = xpt;
           double py = ypt;
-          if( do_gamma ) {
-            px = PF::perceptual2linear( data, px );
-            py = PF::perceptual2linear( data, py );
+          //if( do_gamma ) {
+          //  px = PF::perceptual2linear( data, px );
+          //  py = PF::perceptual2linear( data, py );
+          //}
+          if( data && data->trc_type==PF::PF_TRC_LINEAR ) {
+            px = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), px );
+            py = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), py );
           }
           std::cout<<"px="<<px<<"  py="<<py<<std::endl;
 
@@ -338,7 +342,12 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           double dy = fabs( py - ycurve);
           std::cout<<"ycurve="<<ycurve<<"  dy="<<dy<<std::endl;
           if( dy<0.05 ) {
-            add_point( px, ycurve );
+            double newpx = xpt;
+            double newpy = ycurve;
+            if( data && data->trc_type==PF::PF_TRC_LINEAR ) {
+              newpy = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_iLstar_trc(), ycurve );
+            }
+            add_point( newpx, newpy );
           }
         }
       }

@@ -62,6 +62,7 @@ namespace PF {
       data = d;
       if( data ) {
         curve.set_trc_type( data->trc_type );
+        curve.update_spline();
       }
     }
 
