@@ -46,6 +46,7 @@ namespace PF {
     Gtk::HBox hbox;
     Selector typeSelector;
     CheckBox invert_box;
+    CheckBox perceptual_box;
     Slider center_x, center_y;
 
     Gtk::HBox curvesBox;

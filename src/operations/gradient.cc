@@ -35,6 +35,7 @@ PF::GradientPar::GradientPar():
 OpParBase(),
 gradient_type("gradient_type",this,GRADIENT_VERTICAL,"vertical",_("Vertical")),
 invert("invert",this,false),
+perceptual("perceptual",this,true),
 gradient_center_x("gradient_center_x",this,0.5),
 gradient_center_y("gradient_center_y",this,0.5),
 grey_curve( "grey_curve", this ), // 0
@@ -129,10 +130,18 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
   for( int i = 0; i < 65536; i++ ) {
     float fval = i;
     fval /= 65535;
-    if( !is_map() && data && data->trc_type == PF::PF_TRC_LINEAR ) {
-      float lval = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), fval );
-      //std::cout<<"modvec["<<i<<"]: perceptual="<<fval<<"  linear="<<lval<<std::endl;
-      fval = lval;
+    if( perceptual.get() ) {
+      if( !is_map() && data && data->trc_type == PF::PF_TRC_LINEAR ) {
+        float lval = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), fval );
+        //std::cout<<"modvec["<<i<<"]: perceptual="<<fval<<"  linear="<<lval<<std::endl;
+        fval = lval;
+      }
+    } else {
+      if( is_map() || !data || data->trc_type != PF::PF_TRC_LINEAR ) {
+            float lval = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_iLstar_trc(), fval );
+            //std::cout<<"modvec["<<i<<"]: perceptual="<<fval<<"  linear="<<lval<<std::endl;
+            fval = lval;
+          }
     }
     //std::cout<<"trc_vec["<<i<<"]: "<<fval<<std::endl;
     trc_vec[i] = fval;

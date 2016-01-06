@@ -53,6 +53,7 @@ class GradientPar: public OpParBase
 {
   PropertyBase gradient_type;
   Property<bool> invert;
+  Property<bool> perceptual;
   Property<float> gradient_center_x;
   Property<float> gradient_center_y;
 
