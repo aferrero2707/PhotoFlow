@@ -183,23 +183,23 @@ void PF::ICCProfile::init_colorants()
   cmsCIEXYZ  blue_colorant  = *blue;
 
   /* Get the Red channel XYZ values */
-  colorants[0][0]=red_colorant.X;
-  colorants[0][1]=red_colorant.Y;
-  colorants[0][2]=red_colorant.Z;
+  colorants[0]=red_colorant.X;
+  colorants[1]=red_colorant.Y;
+  colorants[2]=red_colorant.Z;
 
   /* Get the Green channel XYZ values */
-  colorants[1][0]=green_colorant.X;
-  colorants[1][1]=green_colorant.Y;
-  colorants[1][2]=green_colorant.Z;
+  colorants[3]=green_colorant.X;
+  colorants[4]=green_colorant.Y;
+  colorants[5]=green_colorant.Z;
 
   /* Get the Blue channel XYZ values */
-  colorants[2][0]=blue_colorant.X;
-  colorants[2][1]=blue_colorant.Y;
-  colorants[2][2]=blue_colorant.Z;
+  colorants[6]=blue_colorant.X;
+  colorants[7]=blue_colorant.Y;
+  colorants[8]=blue_colorant.Z;
 
-  Y_R = colorants[0][1];
-  Y_G = colorants[1][1];
-  Y_B = colorants[2][1];
+  Y_R = colorants[1];
+  Y_G = colorants[4];
+  Y_B = colorants[7];
 
 /*
   std::string xyzprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/XYZ-D50-Identity-elle-V4.icc";

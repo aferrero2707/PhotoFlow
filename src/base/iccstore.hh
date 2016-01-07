@@ -92,7 +92,7 @@ class ICCProfile
   int perceptual_trc_vec[65536];
   int perceptual_trc_inv_vec[65536];
 
-  double colorants[3][3];
+  double colorants[9];
   float Y_R, Y_G, Y_B;
 
 public:
@@ -101,6 +101,8 @@ public:
 
   void init_colorants();
   void init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv );
+
+  double* get_colorants() { return colorants; }
 
   TRC_type get_trc_type() { return trc_type; }
   bool is_linear() { return( get_trc_type() == PF_TRC_LINEAR ); }
