@@ -234,9 +234,10 @@ void run(const gchar *name,
       gdk_threads_leave();
 #endif
       return;
+/*
     } else {
-      /* Don't issue a message on thumbnail failure, since ufraw-gimp
-       * will be called again with "file_ufraw_load" */
+      // Don't issue a message on thumbnail failure, since ufraw-gimp
+      // will be called again with "file_ufraw_load"
       if (loadThumbnail) {
 #ifndef _WIN32
         gdk_threads_leave();
@@ -247,6 +248,7 @@ void run(const gchar *name,
       gdk_threads_leave();
 #endif
       return;
+*/
     }
   }
   /* Load $HOME/.ufrawrc */
