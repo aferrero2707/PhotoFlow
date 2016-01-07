@@ -75,7 +75,7 @@ PF::RawOutputPar::RawOutputPar():
   profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC");
 
   out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
@@ -203,9 +203,10 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     out_profile = NULL;
   }
 
+  profile_type_t ptype = (profile_type_t)out_profile_mode.get_enum_value().first;
   TRC_type trc_type = (TRC_type)out_trc_mode.get_enum_value().first;
   if( out_profile == NULL ) {
-    out_profile = PF::ICCStore::Instance().get_profile(trc_type)->get_profile();
+    out_profile = PF::ICCStore::Instance().get_profile( ptype, trc_type )->get_profile();
   }
 
   if( changed ) {
@@ -265,7 +266,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
 			 (VipsCallbackFn) g_free, buf, out_length );
     //std::cout<<"RawOutputPar::build(): icc profile metadata saved, image="<<out<<" data="<<buf<<" data_length="<<out_length<<std::endl;
 
-    PF::ICCProfileData* iccdata = PF::ICCStore::Instance().get_profile(trc_type)->get_data();
+    PF::ICCProfileData* iccdata = PF::ICCStore::Instance().get_profile( ptype, trc_type )->get_data();
     vips_image_set_blob( out, "pf-icc-profile-data",
        (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
     //char tstr[1024];

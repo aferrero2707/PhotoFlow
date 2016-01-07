@@ -53,18 +53,6 @@ namespace PF
   }; 
 
 
-  enum output_profile_mode_t {
-    OUT_PROF_NONE,
-    OUT_PROF_sRGB,
-    OUT_PROF_ADOBE,
-    OUT_PROF_PROPHOTO,
-    OUT_PROF_REC2020,
-    OUT_PROF_ACESCG,
-    OUT_PROF_LAB,
-    OUT_PROF_CUSTOM
-  }; 
-
-
   enum input_gamma_mode_t {
     IN_GAMMA_NONE,
     IN_GAMMA_sRGB,
@@ -114,7 +102,7 @@ namespace PF
     // output color profile
     PropertyBase out_profile_mode;
     PropertyBase out_trc_mode;
-    output_profile_mode_t current_out_profile_mode;
+    profile_type_t current_out_profile_mode;
     TRC_type current_out_trc_mode;
     Property<std::string> out_profile_name;
     std::string current_out_profile_name;

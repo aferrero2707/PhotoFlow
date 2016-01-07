@@ -44,16 +44,6 @@
 namespace PF 
 {
 
-  enum output_profile_t {
-    OUT_PROF_NONE,
-    OUT_PROF_sRGB,
-    OUT_PROF_ADOBE,
-    OUT_PROF_PROPHOTO,
-    OUT_PROF_LAB,
-    OUT_PROF_CUSTOM
-  }; 
-
-
   class ConvertColorspacePar: public OpParBase
   {
     std::string in_profile_name;
@@ -79,7 +69,7 @@ namespace PF
     cmsHTRANSFORM get_transform() { return transform; }
 
     int get_out_profile_mode() { return out_profile_mode.get_enum_value().first; }
-    void set_out_profile_mode( output_profile_t mode ) { out_profile_mode.set_enum_value( mode ); }
+    void set_out_profile_mode( profile_type_t mode ) { out_profile_mode.set_enum_value( mode ); }
     void set_out_profile_data( void* data, int length ) { 
       out_profile_data = data; 
       out_profile_data_length = length; 
