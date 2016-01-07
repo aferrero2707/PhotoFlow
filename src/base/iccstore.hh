@@ -122,8 +122,8 @@ public:
   int* get_linear2perceptual_vec() { return perceptual_trc_inv_vec; }
   int* get_perceptual2linear_vec() { return perceptual_trc_vec; }
 
-  float get_luminosity( float R, float G, float B );
-  void get_luminosity( float* RGBv, float* Lv, size_t size );
+  float get_lightness( float R, float G, float B );
+  void get_lightness( float* RGBv, float* Lv, size_t size );
 
   ICCProfileData* get_data()
   {

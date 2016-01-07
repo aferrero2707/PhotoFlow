@@ -245,7 +245,7 @@ void PF::ICCProfile::init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv )
 }
 
 
-float PF::ICCProfile::get_luminosity( float R, float G, float B )
+float PF::ICCProfile::get_lightness( float R, float G, float B )
 {
   if( is_linear() ) {
     return( Y_R*R + Y_G*G + Y_B*B );
@@ -258,7 +258,7 @@ float PF::ICCProfile::get_luminosity( float R, float G, float B )
   }
 }
 
-void PF::ICCProfile::get_luminosity( float* RGBv, float* Lv, size_t size )
+void PF::ICCProfile::get_lightness( float* RGBv, float* Lv, size_t size )
 {
   if( is_linear() ) {
     for( size_t i = 0, pos = 0; i < size; i++, pos += 3 ) {
