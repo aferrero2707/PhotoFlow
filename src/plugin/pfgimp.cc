@@ -447,9 +447,8 @@ void run(const gchar *name,
     }
 
     delete pluginwin;
-    delete app;
-
     PF::PhotoFlow::Instance().close();
+    delete app;
 
   } else {
     if (sendToGimpMode) {
