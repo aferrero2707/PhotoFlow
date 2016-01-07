@@ -46,6 +46,19 @@ enum TRC_type
 };
 
 
+enum profile_type_t {
+  OUT_PROF_NONE,
+  OUT_PROF_sRGB,
+  OUT_PROF_ADOBE,
+  OUT_PROF_PROPHOTO,
+  OUT_PROF_REC2020,
+  OUT_PROF_ACESCG,
+  OUT_PROF_LAB,
+  OUT_PROF_CUSTOM
+};
+
+
+
 extern cmsToneCurve* Lstar_trc;
 extern cmsToneCurve* iLstar_trc;
 
@@ -79,13 +92,14 @@ class ICCProfile
   int perceptual_trc_vec[65536];
   int perceptual_trc_inv_vec[65536];
 
+  double colorants[3][3];
   float Y_R, Y_G, Y_B;
 
 public:
   ICCProfile( TRC_type type );
   virtual ~ICCProfile();
 
-  void calc_primaries();
+  void init_colorants();
   void init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv );
 
   TRC_type get_trc_type() { return trc_type; }
@@ -153,7 +167,7 @@ public:
   static ICCStore& Instance();
 
   ICCProfile* get_srgb_profile(TRC_type type) { return srgb_profiles[type]; }
-  ICCProfile* get_profile(TRC_type type) { return rec2020_profiles[type]; }
+  ICCProfile* get_profile(profile_type_t ptype, TRC_type trc_type);
 
   cmsToneCurve* get_Lstar_trc() {return Lstar_trc; }
   cmsToneCurve* get_iLstar_trc() {return iLstar_trc; }

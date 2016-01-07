@@ -169,8 +169,39 @@ PF::ICCProfile::~ICCProfile()
 }
 
 
-void PF::ICCProfile::calc_primaries()
+void PF::ICCProfile::init_colorants()
 {
+  double colorants[3][3];
+
+  /* get the profile colorant information and fill in colorants */
+
+  cmsCIEXYZ *red            = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigRedColorantTag);
+  cmsCIEXYZ  red_colorant   = *red;
+  cmsCIEXYZ *green          = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigGreenColorantTag);
+  cmsCIEXYZ  green_colorant = *green;
+  cmsCIEXYZ *blue           = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigBlueColorantTag);
+  cmsCIEXYZ  blue_colorant  = *blue;
+
+  /* Get the Red channel XYZ values */
+  colorants[0][0]=red_colorant.X;
+  colorants[0][1]=red_colorant.Y;
+  colorants[0][2]=red_colorant.Z;
+
+  /* Get the Green channel XYZ values */
+  colorants[1][0]=green_colorant.X;
+  colorants[1][1]=green_colorant.Y;
+  colorants[1][2]=green_colorant.Z;
+
+  /* Get the Blue channel XYZ values */
+  colorants[2][0]=blue_colorant.X;
+  colorants[2][1]=blue_colorant.Y;
+  colorants[2][2]=blue_colorant.Z;
+
+  Y_R = colorants[0][1];
+  Y_G = colorants[1][1];
+  Y_B = colorants[2][1];
+
+/*
   std::string xyzprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/XYZ-D50-Identity-elle-V4.icc";
   cmsHPROFILE xyzprof = cmsOpenProfileFromFile( xyzprofname.c_str(), "r" );
   cmsHTRANSFORM transform = cmsCreateTransform( profile,
@@ -190,6 +221,7 @@ void PF::ICCProfile::calc_primaries()
   RGB[0] = 0; RGB[1] = 0; RGB[2] = 1;
   cmsDoTransform(transform, RGB, XYZ, 1);
   Y_B = XYZ[1];
+*/
 }
 
 
@@ -286,6 +318,17 @@ PF::ICCStore::ICCStore()
   }
    */
 }
+
+
+PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_type trc_type)
+{
+  switch( ptype ) {
+  case PF::OUT_PROF_sRGB: return srgb_profiles[trc_type];
+  case PF::OUT_PROF_REC2020: return rec2020_profiles[trc_type];
+  default: return NULL;
+  }
+}
+
 
 
 PF::ICCStore* PF::ICCStore::instance = NULL;
