@@ -171,8 +171,6 @@ PF::ICCProfile::~ICCProfile()
 
 void PF::ICCProfile::init_colorants()
 {
-  double colorants[3][3];
-
   /* get the profile colorant information and fill in colorants */
 
   cmsCIEXYZ *red            = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigRedColorantTag);
