@@ -81,7 +81,7 @@ public:
 
 
 PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
-  OperationConfigGUI( layer, "B/C/S/H Adjustment" ),
+  OperationConfigGUI( layer, "Base Adjustments" ),
   brightnessSlider( this, "brightness", _("Brightness"), 0, -100, 100, 5, 10, 100),
   brightness2Slider( this, "brightness_eq", "Brightness (curve)", 0, -100, 100, 5, 10, 100),
   contrastSlider( this, "contrast", _("Contrast"), 0, -100, 100, 5, 10, 100),
