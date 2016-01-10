@@ -198,6 +198,10 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     //         <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
     //std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
     switch( out_profile_mode.get_enum_value().first ) {
+    case OUT_PROF_NONE:
+      out_profile = NULL;
+      //std::cout<<"RawOutputPar::build(): created sRGB output profile"<<std::endl;
+      break;
     case OUT_PROF_sRGB:
       out_profile = dt_colorspaces_create_srgb_profile();
       //std::cout<<"RawOutputPar::build(): created sRGB output profile"<<std::endl;
@@ -282,6 +286,13 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     //char tstr[1024];
     //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
+  } else if( cam_profile ) {
+    cmsUInt32Number out_length;
+    cmsSaveProfileToMem( cam_profile, NULL, &out_length);
+    void* buf = malloc( out_length );
+    cmsSaveProfileToMem( cam_profile, buf, &out_length);
+    vips_image_set_blob( out, VIPS_META_ICC_NAME,
+        (VipsCallbackFn) g_free, buf, out_length );
   }
   /**/
   return out;
