@@ -403,7 +403,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   notebook.append_page( wbControlsBox, "WB" );
   notebook.append_page( exposureControlsBox, "Exp" );
   notebook.append_page( demoControlsBox, "Demo" );
-  notebook.append_page( outputControlsBox, "ICC" );
+  notebook.append_page( outputControlsBox, "Color" );
     
   add_widget( notebook );
 
