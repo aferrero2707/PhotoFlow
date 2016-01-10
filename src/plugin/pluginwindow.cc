@@ -57,6 +57,8 @@ PF::PluginWindow::PluginWindow():
   image_editor( NULL )
 {
   imgbuf.buf = NULL;
+  imgbuf.iccdata = NULL;
+  imgbuf.iccsize = 0;
 
   set_title("Photo Flow");
   // Sets the border width of the window.
