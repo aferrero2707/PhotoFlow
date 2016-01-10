@@ -955,8 +955,6 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
   convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
   outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
   if( outimg ) {
-    msg = std::string("PF::Image::export_merged_to_mem(): outimg unref");
-    PF_UNREF( outimg, msg.c_str() );
     imgbuf->buf = (float*)malloc( sizeof(float)*3*outimg->Xsize*outimg->Ysize );
     imgbuf->width = outimg->Xsize;
     imgbuf->height = outimg->Ysize;
@@ -990,6 +988,9 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
     } else {
       imgbuf->exif_buf = NULL;
     }
+
+    msg = std::string("PF::Image::export_merged_to_mem(): outimg unref");
+    PF_UNREF( outimg, msg.c_str() );
   }
 
   remove_pipeline( pipeline );
