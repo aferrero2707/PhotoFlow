@@ -206,7 +206,9 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   profile_type_t ptype = (profile_type_t)out_profile_mode.get_enum_value().first;
   TRC_type trc_type = (TRC_type)out_trc_mode.get_enum_value().first;
   if( out_profile == NULL ) {
-    out_profile = PF::ICCStore::Instance().get_profile( ptype, trc_type )->get_profile();
+    PF::ICCProfile* iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
+    if( iccprof )
+      out_profile = iccprof->get_profile();
   }
 
   if( changed ) {
@@ -272,6 +274,25 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     //char tstr[1024];
     //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
+  } else if( cam_profile ) {
+    cmsUInt32Number out_length;
+    cmsSaveProfileToMem( cam_profile, NULL, &out_length);
+    void* buf = malloc( out_length );
+    cmsSaveProfileToMem( cam_profile, buf, &out_length);
+    vips_image_set_blob( out, VIPS_META_ICC_NAME,
+        (VipsCallbackFn) g_free, buf, out_length );
+
+    ICCProfileData* iccdata = new ICCProfileData;
+    iccdata->trc_type = PF::PF_TRC_LINEAR;
+    memset( iccdata->perceptual_trc_vec, 0, sizeof(int)*65536 );
+    memset( iccdata->perceptual_trc_inv_vec, 0, sizeof(int)*65536 );
+    iccdata->perceptual_trc =  cmsBuildGamma (NULL, 1.00);
+    iccdata->perceptual_trc_inv =  cmsBuildGamma (NULL, 1.00);
+    iccdata->Y_R = 1;
+    iccdata->Y_G = 1;
+    iccdata->Y_B = 1;
+    vips_image_set_blob( out, "pf-icc-profile-data",
+       (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
   }
   /**/
   return out;
