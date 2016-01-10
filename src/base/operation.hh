@@ -444,7 +444,8 @@ namespace PF
   #include "blend_soft_light.hh"
   #include "blend_hard_light.hh"
   #include "blend_vivid_light.hh"
-  #include "blend_luminosity.hh"
+#include "blend_luminosity.hh"
+#include "blend_luminance.hh"
   #include "blend_color.hh"
 
   int vips_copy_metadata( VipsImage* in, VipsImage* out );
