@@ -73,10 +73,31 @@ PF::RawDeveloperPar::RawDeveloperPar():
 }
 
 
+
+PF::wb_mode_t PF::RawDeveloperPar::get_wb_mode()
+{
+  PF::wb_mode_t result = PF::WB_CAMERA;
+  PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  if( par ) result = par->get_wb_mode();
+  return result;
+}
+
+
 void PF::RawDeveloperPar::set_wb(float r, float g, float b)
 {
   PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
   if( par ) par->set_wb(r,g,b);
+}
+
+
+void PF::RawDeveloperPar::get_wb(float* mul)
+{
+  PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  if( par ) {
+    mul[0] = par->get_wb_red();
+    mul[1] = par->get_wb_green();
+    mul[2] = par->get_wb_blue();
+  }
 }
 
 

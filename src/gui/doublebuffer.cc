@@ -42,12 +42,12 @@ void PF::PixelBuffer::copy( VipsRegion* region, VipsRect src_rect, int xoffs, in
   int rs2 = buf->get_rowstride();
   int bl2 = 3; /*buf->get_byte_length();*/
 
-  //#ifndef NDEBUG
+  #ifndef NDEBUG
   std::cout<<"PixelBuffer::copy()"<<std::endl;
   std::cout<<"  src_rect="<<src_rect.width<<"x"<<src_rect.height<<"+"<<src_rect.left<<"+"<<src_rect.top<<std::endl;
   std::cout<<"  xoffs="<<xoffs<<"  yoffs="<<yoffs<<std::endl;
   std::cout<<"  rect="<<rect.width<<"x"<<rect.height<<"+"<<rect.left<<"+"<<rect.top<<std::endl;
-  //#endif
+  #endif
 
   // We add the offset of the image relative to the buffer to src_rect
   src_rect.left += xoffs;
@@ -61,13 +61,13 @@ void PF::PixelBuffer::copy( VipsRegion* region, VipsRect src_rect, int xoffs, in
   //int xend = clip.left+clip.width-1;
   int yend = clip.top+clip.height-1;
 
-  //#ifndef NDEBUG
+  #ifndef NDEBUG
   std::cout<<"  src_rect(2)="<<src_rect.width<<"x"<<src_rect.height<<"+"<<src_rect.left<<"+"<<src_rect.top<<std::endl;
   std::cout<<"  clip="<<clip.width<<"x"<<clip.height<<"+"<<clip.left<<"+"<<clip.top<<std::endl;
   std::cout<<"  xstart="<<xstart<<"  ystart="<<ystart<<"  yend="<<yend<<std::endl;
-  //#endif
+  #endif
 
-  std::cout<<"clip.width*bl2="<<clip.width*bl2<<"  rs1="<<rs1<<std::endl;
+  //std::cout<<"clip.width*bl2="<<clip.width*bl2<<"  rs1="<<rs1<<std::endl;
   for( int y = ystart; y <= yend; y++ ) {
     int dy1 = y - src_rect.top;
     int dy2 = y - rect.top;

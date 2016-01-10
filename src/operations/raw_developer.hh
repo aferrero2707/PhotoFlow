@@ -39,6 +39,7 @@
 #include "../base/rawmatrix.hh"
 
 #include "raw_image.hh"
+#include "raw_preprocessor.hh"
 
 namespace PF 
 {
@@ -89,6 +90,8 @@ namespace PF
 
     dcraw_data_t* get_image_data() {return image_data; }
 
+    wb_mode_t get_wb_mode();
+    void get_wb(float* mul);
     void set_wb(float r, float g, float b);
 
 

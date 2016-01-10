@@ -73,6 +73,8 @@ public:
     Gtk::VBox outputControlsBox;
     
     WBSelector wbModeSelector;
+    Slider wbTempSlider;
+    Slider wbTintSlider;
     Slider wbRedSlider;
     Slider wbGreenSlider;
     Slider wbBlueSlider;
@@ -118,7 +120,16 @@ public:
     Gtk::Entry outProfFileEntry;
     Gtk::Button outProfOpenButton;
 
+    double XYZ_to_CAM[3][3], CAM_to_XYZ[3][3];
+    float preset_wb[3];
     
+    void temp2mul(double TempK, double tint, double mul[3]);
+    void mul2temp(float coeffs[3], double *TempK, double *tint);
+
+    bool ignore_temp_tint_change;
+    void temp_tint_changed();
+
+
   public:
     RawDeveloperConfigGUI( Layer* l );
     
