@@ -56,6 +56,7 @@ PF::ImageProcessor::ImageProcessor(): caching_completed( false )
 void PF::ImageProcessor::start()
 {
   std::cout<<"ImageProcessor::ImageProcessor(): starting thread"<<std::endl;
+#if defined(__APPLE__)
   pthread_attr_t thread_attr;
   if( (pthread_attr_init(&thread_attr) == 0) &&
       // Reserve 8MB of stack size for the new thread
@@ -63,8 +64,9 @@ void PF::ImageProcessor::start()
     pthread_create(&_thread,&thread_attr,run_image_processor,NULL);
   else
     pthread_create(&_thread,NULL,run_image_processor,NULL);
-
-  //thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
+#else
+  thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
+#endif
   std::cout<<"ImageProcessor::ImageProcessor(): thread started"<<std::endl;
 }
 
