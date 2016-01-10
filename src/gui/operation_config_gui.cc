@@ -133,9 +133,9 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame->add( frame_hbox );
   frame->add( frame_vbox );
 
-  frame_vbox.pack_start( hline, Gtk::PACK_SHRINK, 0 );
   frame_vbox.pack_start( frame_top_box_1, Gtk::PACK_SHRINK, 0 );
   frame_vbox.pack_start( controls_frame, Gtk::PACK_SHRINK, 0 );
+  //frame_vbox.pack_start( hline, Gtk::PACK_SHRINK, 5 );
 
   //blendSelector.set_size_request( -1, 22 );
 
@@ -202,7 +202,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   controls_box.pack_start( frame_top_box_3, Gtk::PACK_SHRINK, 0 );
 
-  controls_box.pack_start( hline2, Gtk::PACK_SHRINK, 5 );
+  controls_box.pack_end( hline2, Gtk::PACK_SHRINK, 5 );
 
 #ifdef GTKMM_2
   Gdk::Color bg;

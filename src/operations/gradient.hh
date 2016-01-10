@@ -235,7 +235,9 @@ render(VipsRegion** ir, int n, int in_first,
 
   //VipsRegion* ireg = ir ? ir[0] : NULL;
   //blender.blend( ireg, oreg, oreg, omap );
-};
+    };
+
+
 
 
 ProcessorBase* new_gradient();

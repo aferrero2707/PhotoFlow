@@ -473,9 +473,9 @@ void PF::ImageArea::draw_area()
   Gdk::Cairo::set_source_pixbuf( cr, current_pxbuf, 
          double_buffer.get_active().get_rect().left,
          double_buffer.get_active().get_rect().top );
-//#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
   std::cout<<"Active buffer copied to screen"<<std::endl;
-//#endif
+#endif
   cr->rectangle( double_buffer.get_active().get_rect().left,
        double_buffer.get_active().get_rect().top,
        double_buffer.get_active().get_rect().width,

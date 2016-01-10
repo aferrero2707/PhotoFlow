@@ -294,8 +294,6 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   op_load.get_tree().add_op( _("Open image"), "imageread" );
   op_load.get_tree().add_op( _("Open RAW image"), "raw_loader" );
-
-  //op_raw.get_tree().add_op( "RAW developer"), "raw_developer" );
   op_load.get_tree().add_op( _("RAW developer"), "raw_developer" );
 
   //op_conv.get_tree().add_op( "Color profile conversion"), "convert_colorspace" );

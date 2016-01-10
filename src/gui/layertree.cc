@@ -317,7 +317,7 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
   col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   col->set_fixed_width(30);
   col = treeView.get_column(1);
-  col->set_resizable(false); col->set_expand(true);
+  col->set_resizable(true); col->set_expand(true);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
 
 
@@ -337,7 +337,7 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
 
   set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC );
 
-  set_size_request(280,0);
+  //set_size_request(250,0);
   /*
   Gtk::TreeModel::Row row = *(treeModel->append());
   row[columns.col_visible] = true;
