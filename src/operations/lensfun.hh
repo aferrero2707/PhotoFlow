@@ -32,8 +32,10 @@
 
 #include <string>
 
-#ifdef PF_HAS_LENSFUN
+#if (BUNDLED_LENSFUN == 1)
 #include <lensfun/lensfun.h>
+#else
+#include <lensfun.h>
 #endif
 
 #include "../base/property.hh"
