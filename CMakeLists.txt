@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8.9)
 
 project(photoflow CXX C)
 
+# options controlling the build process
+option(BUNDLED_LENSFUN "Use bundled LensFun library" ON)
 option(USE_NLS "Build Native Language Support (using gettext)" ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
@@ -32,10 +34,12 @@ pkg_check_modules(GEXIV2 REQUIRED gexiv2)
 MESSAGE( STATUS "GEXIV2_INCLUDE_DIRS:         " ${GEXIV2_INCLUDE_DIRS} )
 MESSAGE( STATUS "GEXIV2_LIBRARY_DIRS:         " ${GEXIV2_LIBRARY_DIRS} )
 
-#pkg_check_modules(LENSFUN lensfun)
-#MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
-#MESSAGE( STATUS "LENSFUN_LIBRARY_DIRS:         " ${LENSFUN_LIBRARY_DIRS} )
-#MESSAGE( STATUS "LENSFUN_LIBRARIES:         " ${LENSFUN_LIBRARIES})
+if(NOT BUNDLED_LENSFUN)
+  pkg_check_modules(LENSFUN REQUIRED lensfun)
+  MESSAGE( STATUS "LENSFUN_INCLUDE_DIRS:         " ${LENSFUN_INCLUDE_DIRS} )
+  MESSAGE( STATUS "LENSFUN_LIBRARY_DIRS:         " ${LENSFUN_LIBRARY_DIRS} )
+  MESSAGE( STATUS "LENSFUN_LIBRARIES:         " ${LENSFUN_LIBRARIES})
+endif(NOT BUNDLED_LENSFUN)
 
 
 IF(NOT MINGW)

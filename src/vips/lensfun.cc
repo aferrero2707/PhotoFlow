@@ -45,8 +45,10 @@
 
 #include <lcms2.h>
 
-#ifdef PF_HAS_LENSFUN
+#if (BUNDLED_LENSFUN == 1)
 #include <lensfun/lensfun.h>
+#else
+#include <lensfun.h>
 #endif
 
 #include <iostream>

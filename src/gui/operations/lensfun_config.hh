@@ -32,8 +32,10 @@
 
 #include <gtkmm.h>
 
-#ifdef PF_HAS_LENSFUN
+#if (BUNDLED_LENSFUN == 1)
 #include <lensfun/lensfun.h>
+#else
+#include <lensfun.h>
 #endif
 
 #include "../operation_config_gui.hh"

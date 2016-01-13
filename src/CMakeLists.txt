@@ -14,6 +14,10 @@ if(Msgfmt_FOUND)
 	set(COMPILE_FLAGS "${COMPILE_FLAGS} -DLOCALEDIR=\"${LOCALE_DIR}\"")
 endif()
 
+if(BUNDLED_LENSFUN)
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBUNDLED_LENSFUN=1")
+endif()
+
 if(GTKMM2_FOUND)
   link_directories(${GTKMM2_LIBRARY_DIRS}  )
   include_directories(${GTKMM2_INCLUDE_DIRS}  )
@@ -30,7 +34,8 @@ endif()
 
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
 SET(CMAKE_CXX_FLAGS_VERBDEBUG "-Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+#SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
 SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG ${COMPILE_FLAGS}") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
@@ -55,11 +60,6 @@ link_directories(${SIGC2_LIBRARY_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
 
-#if(LENSFUN_FOUND)
-#  link_directories( ${LENSFUN_LIBRARY_DIRS}  )
-#  include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
-  set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
-#endif()
 
 include_directories(${OPENEXR_INCLUDE_DIRS})
 include_directories(${TIFF_INCLUDE_DIRS})
@@ -167,14 +167,21 @@ list(APPEND STATIC_LIBS rawspeed_static)
 
 
 
-LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
-set(BUILD_STATIC "ON")
-add_library(lensfun_static STATIC IMPORTED)
-set_target_properties(lensfun_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/libs/lensfun/liblensfun.a)
-add_subdirectory(external/lensfun)
-list(APPEND LIB_DEPS lensfun)
-list(APPEND STATIC_LIBS lensfun_static)
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+if(BUNDLED_LENSFUN)
+  LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
+  set(BUILD_STATIC "ON")
+  add_library(lensfun_static STATIC IMPORTED)
+  set_target_properties(lensfun_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/libs/lensfun/liblensfun.a)
+  add_subdirectory(external/lensfun)
+  list(APPEND LIB_DEPS lensfun)
+  list(APPEND STATIC_LIBS lensfun_static)
+  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+else(BUNDLED_LENSFUN)
+  link_directories( ${LENSFUN_LIBRARY_DIRS}  )
+  include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
+endif(BUNDLED_LENSFUN)
+set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
+
 
 #FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
 #set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
@@ -226,6 +233,7 @@ add_executable(photoflow # name of the executable on Windows will be example.exe
 
 #add_dependencies(photoflow ${LIB_DEPS})
 
+
 target_link_libraries(photoflow ${LIBS} 
   pfgui
   pfbase 
@@ -238,7 +246,7 @@ target_link_libraries(photoflow ${LIBS}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
   ${GEXIV2_LIBRARIES}
-  #${LENSFUN_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
   ${PIXMAN_LIBRARIES} 
@@ -275,7 +283,7 @@ target_link_libraries(pfbatch ${LIBS}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
   ${GEXIV2_LIBRARIES}
-  #${LENSFUN_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
   ${GLIBMM_LIBRARIES} 
