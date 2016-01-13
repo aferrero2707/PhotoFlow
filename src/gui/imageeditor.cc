@@ -675,13 +675,13 @@ void PF::ImageEditor::zoom_in()
 
 bool PF::ImageEditor::zoom_fit()
 {
-  std::cout<<"ImageEditor::zoom_fit(): image="<<image<<std::endl;
+  //std::cout<<"ImageEditor::zoom_fit(): image="<<image<<std::endl;
   if( !image ) return false;
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  std::cout<<"ImageEditor::zoom_fit(): pipeline="<<pipeline<<std::endl;
+  //std::cout<<"ImageEditor::zoom_fit(): pipeline="<<pipeline<<std::endl;
   if( !pipeline ) return false;
-  std::cout<<"image_size_updater->get_image_width()="<<image_size_updater->get_image_width()
-      <<" get_image_height()="<<image_size_updater->get_image_height()<<std::endl;
+  //std::cout<<"image_size_updater->get_image_width()="<<image_size_updater->get_image_width()
+  //    <<" get_image_height()="<<image_size_updater->get_image_height()<<std::endl;
   if( image_size_updater->get_image_width() < 1 ||
       image_size_updater->get_image_height() < 1 ) return false;
 
@@ -695,7 +695,7 @@ bool PF::ImageEditor::zoom_fit()
   float area_hsize = imageArea_scrolledWindow.get_allocated_width();
   float area_vsize = imageArea_scrolledWindow.get_allocated_height();
 #endif
-  std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
+  //std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
   area_hsize -= 20;
   area_vsize -= 20;
 
@@ -751,7 +751,7 @@ void PF::ImageEditor::set_edited_layer( int id )
   active_layer = NULL;
   if( image )
     active_layer = image->get_layer_manager().get_layer( id );
-  std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
+  //std::cout<<"ImageEditor::set_edited_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
   if( old_active != active_layer ) {
     /*
     if( old_active &&
@@ -1177,8 +1177,8 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
 //bool PF::ImageEditor::on_preview_configure_event( GdkEventConfigure* event )
 void PF::ImageEditor::on_my_size_allocate(Gtk::Allocation& allocation)
 {
-	std::cout<<"ImageEditor::on_my_size_allocate() called: fit_image="<<fit_image<<" fit_image_needed="<<fit_image_needed<<std::endl;
-	std::cout<<"  allocation width="<<allocation.get_width()<<" height="<<allocation.get_height()<<std::endl;
+	//std::cout<<"ImageEditor::on_my_size_allocate() called: fit_image="<<fit_image<<" fit_image_needed="<<fit_image_needed<<std::endl;
+	//std::cout<<"  allocation width="<<allocation.get_width()<<" height="<<allocation.get_height()<<std::endl;
 	if( fit_image /*&& fit_image_needed*/ ) {
 	  if( zoom_fit() )
 	    fit_image_needed = false;
