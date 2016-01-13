@@ -269,7 +269,13 @@ void PF::RawDeveloperConfigGUI::mul2temp(float coeffs[3], double *TempK, double 
 {
   //dt_iop_temperature_gui_data_t *g = (dt_iop_temperature_gui_data_t *)self->gui_data;
 
-  std::cout<<"mul2temp(): coeffs="<<coeffs[0]<<","<<coeffs[1]<<","<<coeffs[2]<<std::endl;
+  //std::cout<<"mul2temp(): coeffs="<<coeffs[0]<<","<<coeffs[1]<<","<<coeffs[2]<<std::endl;
+  printf("mul2temp: coeffs[]=%f,%f,%f\nCAM_to_XYZ:\n",coeffs[0],coeffs[1],coeffs[2]);
+  for(int k = 0; k < 3; k++)
+  {
+    printf("    %.4f %.4f %.4f\n",CAM_to_XYZ[k][0],CAM_to_XYZ[k][1],CAM_to_XYZ[k][2]);
+  }
+
   double CAM[3];
   for(int k = 0; k < 3; k++) CAM[k] = 1.0 / coeffs[k];
 
@@ -343,7 +349,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   gammaModeSelector( this, "gamma_mode", "Raw gamma: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-  outProfileModeSelector( this, "out_profile_mode", "Output profile: ", 1 ),
+  outProfileModeSelector( this, "out_profile_mode", "Working profile: ", 1 ),
   outProfOpenButton(Gtk::Stock::OPEN),
   ignore_temp_tint_change( false )
 {
@@ -492,7 +498,7 @@ void PF::RawDeveloperConfigGUI::temp_tint_changed()
 
 
 void PF::RawDeveloperConfigGUI::do_update()
-  {
+{
   //std::cout<<"RawDeveloperConfigGUI::do_update() called."<<std::endl;
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
