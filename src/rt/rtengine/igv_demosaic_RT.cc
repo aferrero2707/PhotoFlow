@@ -25,6 +25,11 @@
 #include "sleef.c"
 #include "opthelper.h"
 
+
+#undef CLIP
+#define CLIP(x) x
+
+
 //namespace rtengine {
 namespace rtengine {
 

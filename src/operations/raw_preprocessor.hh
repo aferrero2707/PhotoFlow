@@ -293,6 +293,7 @@ namespace PF
       range *= max_mul;
 #else
       range *= min_mul;
+      //range *= max_mul;
 #endif
 
       float mul[4] = { 
