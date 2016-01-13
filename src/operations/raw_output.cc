@@ -220,7 +220,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
 				      TYPE_RGB_FLT,
 				      out_profile, 
 				      TYPE_RGB_FLT,
-				      INTENT_PERCEPTUAL, 
+				      INTENT_RELATIVE_COLORIMETRIC,
 				      cmsFLAGS_NOCACHE );
   }
   //std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
