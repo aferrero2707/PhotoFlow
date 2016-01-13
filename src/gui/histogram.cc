@@ -120,7 +120,7 @@ PF::Histogram::Histogram( Pipeline* v ):
 {
   hist = new unsigned long int[65536*3];
   //std::cout<<"Histogram::Histogram(): hist="<<hist<<std::endl;
-  set_size_request( 200, 150 );
+  set_size_request( 270, 150 );
 }
 
 PF::Histogram::~Histogram ()

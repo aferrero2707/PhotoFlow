@@ -115,13 +115,58 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonAdd( _("New Adjustment") ),
   buttonAddGroup("G+"),
   buttonDel("-"),
-  buttonPresetLoad( _("Load") ),
-  buttonPresetSave( _("Save") ),
-  operationsDialog( image, this )
+  buttonPresetLoad( _("Load preset") ),
+  buttonPresetSave( _("Save preset") ),
+  operationsDialog( image, this ),
+  add_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/add-layer.png", "", image, this),
+  group_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/group.png", "", image, this),
+  trash_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/trash.png", "", image, this),
+  curves_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/curves.png", "curves", image, this),
+  uniform_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/bucket-fill.png", "uniform", image, this),
+  gradient_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/gradient.png", "gradient", image, this),
+  path_mask_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/path-mask.png", "path_mask", image, this),
+  desaturate_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/desaturate.png", "desaturate", image, this),
+  crop_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/crop.png", "crop", image, this),
+  basic_edits_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "hue_saturation", image, this),
+  draw_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/draw.png", "draw", image, this),
+  clone_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/clone.png", "clone_stamp", image, this),
+  scale_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/scale.png", "scale", image, this),
+  perspective_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/perspective.png", "perspective", image, this)
 {
-  set_size_request(250,200);
+  set_size_request(310,-1);
   notebook.set_tab_pos(Gtk::POS_LEFT);
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
+
+  add_button.set_tooltip_text( _("new layer") );
+  group_button.set_tooltip_text( _("new group layer") );
+  trash_button.set_tooltip_text( _("delete layer") );
+  basic_edits_button.set_tooltip_text( _("basic editing") );
+  curves_button.set_tooltip_text( _("curves tool") );
+  uniform_button.set_tooltip_text( _("uniform fill") );
+  gradient_button.set_tooltip_text( _("gradient tool") );
+  desaturate_button.set_tooltip_text( _("desaturate tool") );
+  crop_button.set_tooltip_text( _("crop tool") );
+  draw_button.set_tooltip_text( _("freehand drawing") );
+  clone_button.set_tooltip_text( _("clone stamp tool") );
+  perspective_button.set_tooltip_text( _("perspective correction") );
+  scale_button.set_tooltip_text( _("scale/rotate tool") );
+  path_mask_button.set_tooltip_text( _("path tool") );
+
+  tool_buttons_box.pack_start( add_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( group_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( uniform_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( gradient_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( desaturate_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( crop_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( perspective_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( scale_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( path_mask_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( draw_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( clone_button, Gtk::PACK_SHRINK, 2 );
+
 
   LayerTree* view = new LayerTree( editor );
   //view->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::modified) );
@@ -134,10 +179,10 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   Gtk::Label* label = (Gtk::Label*)notebook.get_tab_label(*page);
   label->set_angle(90);
 
-  top_box.pack_start(buttonAdd, Gtk::PACK_SHRINK);
-  top_box.pack_start(buttonbox, Gtk::PACK_SHRINK);
+  //top_box.pack_start(buttonAdd, Gtk::PACK_SHRINK);
+  //top_box.pack_start(buttonbox, Gtk::PACK_SHRINK);
 
-  top_box.pack_start(notebook);
+  //top_box.pack_start(notebook);
 
   buttonAdd.set_size_request(-1,30);
   buttonAdd.set_tooltip_text( _("Add a new layer") );
@@ -150,8 +195,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonPresetSave.set_tooltip_text( _("Save the selected layers as a preset") );
 
   //buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
-  buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
-  buttonbox.pack_start(buttonDel, Gtk::PACK_SHRINK);
+  //buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
+  //buttonbox.pack_start(buttonDel, Gtk::PACK_SHRINK);
   buttonbox.pack_start(buttonPresetLoad/*, Gtk::PACK_SHRINK*/);
   buttonbox.pack_start(buttonPresetSave/*, Gtk::PACK_SHRINK*/);
   //buttonbox.set_layout(Gtk::BUTTONBOX_START);
@@ -164,6 +209,11 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //layers_panel.pack1( top_box, true, true );
   //layers_panel.pack2( controls_scrolled_window, true, true );
   //pack_start(layers_panel);
+
+  main_box.pack_start(tool_buttons_box, Gtk::PACK_SHRINK);
+  main_box.pack_start(notebook, Gtk::PACK_EXPAND_WIDGET);
+  top_box.pack_start( main_box, Gtk::PACK_EXPAND_WIDGET );
+  top_box.pack_start( buttonbox, Gtk::PACK_SHRINK );
   pack_start( top_box );
 
   /*
@@ -194,6 +244,13 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
                                                          &PF::LayerWidget::on_button_add_group) );
   buttonDel.signal_clicked().connect( sigc::mem_fun(*this,
                                                     &PF::LayerWidget::on_button_del) );
+
+  add_button.signal_clicked.connect( sigc::mem_fun(*this,
+      &PF::LayerWidget::on_button_add) );
+  group_button.signal_clicked.connect( sigc::mem_fun(*this,
+      &PF::LayerWidget::on_button_add_group) );
+  trash_button.signal_clicked.connect( sigc::mem_fun(*this,
+      &PF::LayerWidget::on_button_del) );
 
   buttonPresetLoad.signal_clicked().
     connect(sigc::mem_fun(*this,

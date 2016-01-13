@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="16"
+   height="16"
+   viewBox="0 0 16 16"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="add-layer.svg"
+   inkscape:export-filename="/Users/aferrero/Projects/Photoflow/Git/Default/PhotoFlow/icons/add-layer.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="8"
+     inkscape:cx="36.866819"
+     inkscape:cy="-5.0084586"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1280"
+     inkscape:window-height="751"
+     inkscape:window-x="0"
+     inkscape:window-y="1"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-1036.3622)">
+    <rect
+       style="opacity:1;fill:#c86464;fill-opacity:1;stroke:#c8c8c8;stroke-width:0;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect4222"
+       width="15.99999"
+       height="15.99999"
+       x="4.9484615e-06"
+       y="1036.3622" />
+    <image
+       y="1036.3622"
+       x="0"
+       id="image4215"
+       xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAABl0RVh0
+U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHbSURBVDiNpZI/bxNBEMXf7O45YOT4T0gc
+BJhQUQAFBCS+BClACXIKmkRyQ5UvkgI3ETGCjhIJJASiRClpYpBIclGMojsb5HPh5dYn7d5SxGfA
+DmDBSiPNK96b+e0uWWvxP0f8LJ48rb3XWl8b18w5/zgI2KxtXM/l8pfu3lkEEf3V7HkeXr955Q4C
+OOeV+fkbJ3q9HqSUiOMYxhjEcTzSl0ol1D9sfzNGV1l/espau3zu7HmmlIIxBlprGGNGesdxYK3F
+4eHnU4yxddZf4Pbc3EVORIii6BfDcGUyGTQaByiVLoCIuQwAhHAeXLl89WQYhiPmYZ3NZlGvb0NK
+GRqjq2KztlEUQtyamjoNAEin0xh+2kQTEbrdLoiAIGinGWPrgojuz0wXme/7sNYOLmq4kpD9/T1k
+c3nk8gU0Ggeu4Jzf9Jue8+Vrqz8NAH7/uTgXSEmJzOSkMkZXhdZ6TQixcG9pecJaCwubpByPICW2
+tt6h1fIVgLeCiMoz00Vqt9tjIey5OyjkC3Gn03m8ulKJ/wlBKRVZGz8CAKG1XmOMLSwtlieOrH9G
+UKqHFy+fu6srlR0AEERUnp09Y4IgGAthd/dTaIx5mIQfIfheqtn0ox8jE4hjUTSAZ4n4DvECaqYG
+7D4PAAAAAElFTkSuQmCC
+"
+       preserveAspectRatio="none"
+       height="16"
+       width="16" />
+  </g>
+</svg>
