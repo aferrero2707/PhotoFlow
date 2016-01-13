@@ -35,7 +35,7 @@
 
 PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Convert to profile" ),
-  outProfileModeSelector( this, "profile_mode", "Output profile: ", 1 ),
+  outProfileModeSelector( this, "profile_mode", "working profile: ", 1 ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
 
