@@ -43,6 +43,9 @@
 
 #include "raw_image.hh"
 
+#define CLIPRAW(a) ((a)>0.0?((a)<1.0?(a):1.0):0.0)
+//#define CLIPRAW(a) (a)
+
 namespace PF 
 {
 
@@ -179,6 +182,7 @@ namespace PF
       int x, y;
 
       T* line = new T[line_size];
+      T* line2 = new T[line_size];
 
       //std::cout<<"opar->get_transform(): "<<opar->get_transform()<<std::endl;
     
@@ -216,26 +220,27 @@ namespace PF
             }
             pin = line;
           }
-          if(opar->get_transform()) 
-            cmsDoTransform( opar->get_transform(), pin, pout, width );
-          else 
+          if(opar->get_transform()) {
+            for( int xi = 0; xi < line_size; xi++ ) {
+              line2[xi] = CLIPRAW(pin[xi]);
+            }
+            cmsDoTransform( opar->get_transform(), line2, pout, width );
+          } else
             memcpy( pout, pin, sizeof(T)*line_size );
 
         } else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ) {
-          if(opar->get_transform()) 
-            cmsDoTransform( opar->get_transform(), p, pout, width );
-          else 
-            memcpy( pout, p, sizeof(T)*line_size );
-          /*
-          for( int xi = 0; xi < line_size; xi++ ) {
-            float val = 0.1;
-            if( opar->get_trc_type()==PF::PF_TRC_LINEAR ) {
-              val = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), val );
+          if(opar->get_transform()) {
+            for( int xi = 0; xi < line_size; xi++ ) {
+              line2[xi] = CLIPRAW(p[xi]);
             }
-            pout[xi] = PF::FormatInfo<T>::RANGE * val;
-            std::cout<<"p_val="<<0.1f<<"  l_val="<<val<<std::endl;
+            cmsDoTransform( opar->get_transform(), line2, pout, width );
+          } else
+            memcpy( pout, p, sizeof(T)*line_size );
+          for( int xi = 0; xi < line_size; xi+=3 ) {
+            //if(p[xi] > 1)
+              //std::cout<<"RGB_in="<<line2[xi]<<","<<line2[xi+1]<<","<<line2[xi+2]
+              //         <<"  RGB_out="<<pout[xi]<<","<<pout[xi+1]<<","<<pout[xi+2]<<std::endl;
           }
-          */
         } else {
 
           if( false && r->top==0 && r->left==0 ) {
@@ -257,7 +262,7 @@ namespace PF
 
         }
       }
-      delete line;
+      delete line; delete line2;
     }
   };
 
