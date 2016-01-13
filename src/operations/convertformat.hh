@@ -75,6 +75,8 @@ namespace PF
         pout = (Tout*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
         for( x=0; x < line_size; x++) {
           norm = (double(p[x]) + FormatInfo<Tin>::MIN)/FormatInfo<Tin>::RANGE;
+          if( norm>1 ) norm = 1;
+          if( norm<0 ) norm = 0;
           pout[x] = (Tout)(norm*FormatInfo<Tout>::RANGE - FormatInfo<Tout>::MIN);
           std::cout<<"p[x]="<<(int)p[x]<<"  norm="<<norm<<"  pout[x]="<<pout[x]<<std::endl;
         }
@@ -186,7 +188,7 @@ namespace PF
           pout[x] = (T)(CLAMP(p[x],0,1)*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
           if(false) {
             int xx = x+r->left;
-            if( (xx < 64*6) && ((y+r->top) == 8) ) {
+            if( p[x]>1 ) {
               std::cout<<"convert_format(float): p["<<xx<<"]="<<p[x]<<"  pout["<<xx<<"]="<<(float)pout[x]<<std::endl;
             }
           }
