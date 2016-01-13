@@ -87,10 +87,10 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first,
       cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, profile_out );
       
       transform = cmsCreateTransform( profile_in, 
-				      infmt,
-				      profile_out, 
-				      outfmt,
-				      INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+				      infmt, profile_out, outfmt, INTENT_PERCEPTUAL,
+				      cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+    } else {
+      std::cout<<"Convert2sRGBPar::build(): NULL input profile"<<std::endl;
     }
   }
 
