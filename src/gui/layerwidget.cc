@@ -118,10 +118,11 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonPresetLoad( _("Load preset") ),
   buttonPresetSave( _("Save preset") ),
   operationsDialog( image, this ),
-  add_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/plus.png", "", image, this),
+  add_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/add-layer.png", "", image, this),
   group_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/group.png", "", image, this),
   trash_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/trash.png", "", image, this),
   curves_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/curves.png", "curves", image, this),
+  uniform_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/bucket-fill.png", "uniform", image, this),
   gradient_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/gradient.png", "gradient", image, this),
   path_mask_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/path-mask.png", "path_mask", image, this),
   desaturate_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/desaturate.png", "desaturate", image, this),
@@ -141,6 +142,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   trash_button.set_tooltip_text( _("delete layer") );
   basic_edits_button.set_tooltip_text( _("basic editing") );
   curves_button.set_tooltip_text( _("curves tool") );
+  uniform_button.set_tooltip_text( _("uniform fill") );
   gradient_button.set_tooltip_text( _("gradient tool") );
   desaturate_button.set_tooltip_text( _("desaturate tool") );
   crop_button.set_tooltip_text( _("crop tool") );
@@ -155,6 +157,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( uniform_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( gradient_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( desaturate_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( crop_button, Gtk::PACK_SHRINK, 2 );
@@ -501,6 +504,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       if( gui && gui->get_frame() ) {
         controls_group.add_control( gui );
         gui->open();
+        gui->expand();
       }
       controls_group.show_all_children();
     }
@@ -796,6 +800,10 @@ void PF::LayerWidget::close_map_tabs( Layer* l )
     if( match ) remove_tab( page );
   }
 
+  for( std::list<Layer*>::iterator li = l->get_sublayers().begin(); li != l->get_sublayers().end(); li++ ) {
+    close_map_tabs( *li );
+  }
+
   for( std::list<Layer*>::iterator li = map_layers.begin(); li != map_layers.end(); li++ ) {
     close_map_tabs( *li );
   }
@@ -826,6 +834,7 @@ void PF::LayerWidget::detach_controls( Layer* l )
   }
   detach_controls( l->get_omap_layers() );
   detach_controls( l->get_imap_layers() );
+  detach_controls( l->get_sublayers() );
 }
 
 
@@ -854,6 +863,7 @@ void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
   }
   unset_sticky_and_editing( l->get_omap_layers() );
   unset_sticky_and_editing( l->get_imap_layers() );
+  unset_sticky_and_editing( l->get_sublayers() );
 }
 
 
