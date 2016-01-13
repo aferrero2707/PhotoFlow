@@ -986,11 +986,24 @@ void PF::ImageArea::update( VipsRect* area )
   PF_UNREF( region, "ImageArea::update() region unref" );
   PF_UNREF( display_image, "ImageArea::update() display_image unref" );
 
-  convert2srgb->get_par()->set_image_hints( image );
+  std::vector<VipsImage*> in;
+  /**/
+    ClippingWarningPar* clipping_warning_par = dynamic_cast<ClippingWarningPar*>( clipping_warning->get_par() );
+    if( !clipping_warning_par ) return;
+    clipping_warning_par->set_highlights_warning( highlights_warning_enabled );
+    clipping_warning_par->set_shadows_warning( shadows_warning_enabled );
+    clipping_warning_par->set_image_hints( image );
+    clipping_warning_par->set_format( image->BandFmt );
+    in.clear(); in.push_back( image );
+    VipsImage* wclipimg = clipping_warning->get_par()->build(in, 0, NULL, NULL, level );
+    PF_UNREF( image, "ImageArea::update() image unref after clipping warning" );
+  /**/
+
+  convert2srgb->get_par()->set_image_hints( wclipimg );
   convert2srgb->get_par()->set_format( get_pipeline()->get_format() );
-  std::vector<VipsImage*> in; in.push_back( image );
+  in.clear(); in.push_back( wclipimg );
   VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
-  PF_UNREF( image, "ImageArea::update() image unref" );
+  PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref" );
   // "image" is managed by photoflow, therefore it is not necessary to unref it
   // after the call to convert2srgb: the additional reference is owned by
   // "srgbimg" and will be removed when "srgbimg" is deleted.
@@ -1004,19 +1017,6 @@ void PF::ImageArea::update( VipsRect* area )
 #endif
   //outimg = srgbimg;
     
-/**/
-  ClippingWarningPar* clipping_warning_par = dynamic_cast<ClippingWarningPar*>( clipping_warning->get_par() );
-  if( !clipping_warning_par ) return;
-  clipping_warning_par->set_highlights_warning( highlights_warning_enabled );
-  clipping_warning_par->set_shadows_warning( shadows_warning_enabled );
-  clipping_warning_par->set_image_hints( srgbimg );
-  clipping_warning_par->set_format( srgbimg->BandFmt );
-  in.clear(); in.push_back( srgbimg );
-  VipsImage* wclipimg = clipping_warning->get_par()->build(in, 0, NULL, NULL, level );
-  PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
-  srgbimg = wclipimg;
-/**/
-
   if( !display_merged && (active_layer>=0) ) {
     PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
     if( !node ) return;

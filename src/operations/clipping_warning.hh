@@ -111,12 +111,12 @@ public:
       p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
       for( x=0; x < line_size; x+=3 ) {
-        avg = p[x]; avg += p[x+1]; avg += p[x+2]; avg /= 3;
-        if( avg<=min && opar->get_shadows_warning() ) {
+        //avg = p[x]; avg += p[x+1]; avg += p[x+2]; avg /= 3;
+        if( opar->get_shadows_warning() && MIN3(p[x],p[x+1],p[x+2])<=min ) {
           pout[x] = static_cast<T>( 0.2f*PF::FormatInfo<T>::RANGE + PF::FormatInfo<T>::MIN );
           pout[x+1] = static_cast<T>( 0.8f*PF::FormatInfo<T>::RANGE + PF::FormatInfo<T>::MIN );
           pout[x+2] = static_cast<T>( 1.0f*PF::FormatInfo<T>::RANGE + PF::FormatInfo<T>::MIN );
-        } else if( avg>=max && opar->get_highlights_warning() ) {
+        } else if( opar->get_highlights_warning() && MAX3(p[x],p[x+1],p[x+2])>=max ) {
           pout[x] = static_cast<T>( 1.0f*PF::FormatInfo<T>::RANGE + PF::FormatInfo<T>::MIN );
           pout[x+1] = 0;
           pout[x+2] = 0;
