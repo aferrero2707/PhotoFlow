@@ -236,11 +236,6 @@ namespace PF
             cmsDoTransform( opar->get_transform(), line2, pout, width );
           } else
             memcpy( pout, p, sizeof(T)*line_size );
-          for( int xi = 0; xi < line_size; xi+=3 ) {
-            //if(p[xi] > 1)
-              //std::cout<<"RGB_in="<<line2[xi]<<","<<line2[xi+1]<<","<<line2[xi+2]
-              //         <<"  RGB_out="<<pout[xi]<<","<<pout[xi+1]<<","<<pout[xi+2]<<std::endl;
-          }
         } else {
 
           if( false && r->top==0 && r->left==0 ) {
@@ -259,7 +254,11 @@ namespace PF
             pin = line;
           }
           memcpy( pout, pin, sizeof(T)*line_size );
-
+        }
+        for( int xi = 0; xi < line_size; xi++ ) {
+          //if(pout[xi] > 1 || pout[xi] < 0)
+          //  std::cout<<"RGB_out["<<xi%3<<"]="<<pout[xi]<<std::endl;
+          pout[xi] = CLIPRAW(pout[xi]);
         }
       }
       delete line; delete line2;
