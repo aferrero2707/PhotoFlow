@@ -69,8 +69,8 @@ struct ICCProfileData
   cmsToneCurve* perceptual_trc_inv;
   TRC_type trc_type;
 
-  int perceptual_trc_vec[65536];
-  int perceptual_trc_inv_vec[65536];
+  float perceptual_trc_vec[65536];
+  float perceptual_trc_inv_vec[65536];
 
   float Y_R, Y_G, Y_B;
 };
@@ -89,8 +89,8 @@ class ICCProfile
   cmsToneCurve* perceptual_trc_inv;
   TRC_type trc_type;
 
-  int perceptual_trc_vec[65536];
-  int perceptual_trc_inv_vec[65536];
+  float perceptual_trc_vec[65536];
+  float perceptual_trc_inv_vec[65536];
 
   double colorants[9];
   float Y_R, Y_G, Y_B;
@@ -109,7 +109,7 @@ public:
   bool is_perceptual() { return( get_trc_type() == PF_TRC_PERCEPTUAL ); }
   bool is_standard() { return( get_trc_type() == PF_TRC_STANDARD ); }
 
-  void set_profile( cmsHPROFILE p ) { profile = p; }
+  void set_profile( cmsHPROFILE p ) { profile = p; init_colorants(); }
   cmsHPROFILE get_profile() { return profile; }
 
   cmsFloat32Number linear2perceptual( cmsFloat32Number val )
@@ -121,8 +121,8 @@ public:
     return cmsEvalToneCurveFloat( perceptual_trc, val );
   }
 
-  int* get_linear2perceptual_vec() { return perceptual_trc_inv_vec; }
-  int* get_perceptual2linear_vec() { return perceptual_trc_vec; }
+  float* get_linear2perceptual_vec() { return perceptual_trc_inv_vec; }
+  float* get_perceptual2linear_vec() { return perceptual_trc_vec; }
 
   float get_lightness( float R, float G, float B );
   void get_lightness( float* RGBv, float* Lv, size_t size );
@@ -131,8 +131,8 @@ public:
   {
     ICCProfileData* data = new ICCProfileData;
     data->trc_type = trc_type;
-    memcpy( data->perceptual_trc_vec, perceptual_trc_vec, sizeof(int)*65536 );
-    memcpy( data->perceptual_trc_inv_vec, perceptual_trc_inv_vec, sizeof(int)*65536 );
+    memcpy( data->perceptual_trc_vec, perceptual_trc_vec, sizeof(perceptual_trc_vec) );
+    memcpy( data->perceptual_trc_inv_vec, perceptual_trc_inv_vec, sizeof(perceptual_trc_inv_vec) );
     data->perceptual_trc =  cmsDupToneCurve( perceptual_trc );
     data->perceptual_trc_inv =  cmsDupToneCurve( perceptual_trc_inv );
     data->Y_R = Y_R;

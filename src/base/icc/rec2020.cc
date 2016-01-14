@@ -28,6 +28,7 @@
  */
 
 #include <string>
+#include "../photoflow.hh"
 #include "../iccstore.hh"
 
 
@@ -108,6 +109,7 @@ PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile( type )
   cmsCIExyY whitepoint = d65_srgb_adobe_specs;
   /* rec.709 */
   cmsToneCurve* tone_curve[3];
+  cmsHPROFILE profile = NULL;
   switch( type ) {
   case PF::PF_TRC_STANDARD: {
     /* Rec 709 TRC */
@@ -115,6 +117,9 @@ PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile( type )
     { 1.0 / 0.45, 1.099,  0.099, 4.500, 0.018 };
     cmsToneCurve *curve = cmsBuildParametricToneCurve(NULL, 4, rec709_parameters);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-rec709.icc";
+    std::cout<<"loading profile "<<wprofname<<std::endl;
+    profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
     break;
   }
   case PF::PF_TRC_PERCEPTUAL: {
@@ -123,25 +128,32 @@ PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile( type )
     cmsToneCurve *curve =
         cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-labl.icc";
+    std::cout<<"loading profile "<<wprofname<<std::endl;
+    profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
     break;
   }
   case PF::PF_TRC_LINEAR: {
     cmsToneCurve *curve = cmsBuildGamma (NULL, 1.00);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-g10.icc";
+    std::cout<<"loading profile "<<wprofname<<std::endl;
+    profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
     break;
   }
   }
-  cmsHPROFILE profile = cmsCreateRGBProfile ( &whitepoint, &primaries, tone_curve );
+  /*
+  profile = cmsCreateRGBProfile ( &whitepoint, &primaries, tone_curve );
   cmsMLU *copyright = cmsMLUalloc(NULL, 1);
   cmsMLUsetASCII(copyright, "en", "US", "Copyright 2015, Elle Stone (website: http://ninedegreesbelow.com/; email: ellestone@ninedegreesbelow.com). This ICC profile is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License (https://creativecommons.org/licenses/by-sa/3.0/legalcode).");
   cmsWriteTag(profile, cmsSigCopyrightTag, copyright);
-  /* V4 */
+  // V4
   cmsMLU *description = cmsMLUalloc(NULL, 1);
   cmsMLUsetASCII(description, "en", "US", "Rec2020-elle-V4.icc");
   cmsWriteTag(profile, cmsSigProfileDescriptionTag, description);
   //const char* filename = "Rec2020-elle-V4-rec709.icc";
   //cmsSaveProfileToFile(profile, filename);
   cmsMLUfree(description);
-
+  */
   set_profile( profile );
 }

@@ -171,8 +171,8 @@ PF::ICCProfile::~ICCProfile()
 
 void PF::ICCProfile::init_colorants()
 {
+  if( !profile ) return;
   /* get the profile colorant information and fill in colorants */
-
   cmsCIEXYZ *red            = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigRedColorantTag);
   cmsCIEXYZ  red_colorant   = *red;
   cmsCIEXYZ *green          = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigGreenColorantTag);
@@ -194,6 +194,9 @@ void PF::ICCProfile::init_colorants()
   colorants[6]=blue_colorant.X;
   colorants[7]=blue_colorant.Y;
   colorants[8]=blue_colorant.Z;
+
+  //for( int i = 0; i < 9; i++ ) std::cout<<"colorants["<<i<<"]="<<colorants[i]<<std::endl;
+  //getchar();
 
   Y_R = colorants[1];
   Y_G = colorants[4];
@@ -231,14 +234,14 @@ void PF::ICCProfile::init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv )
   for( int i = 0; i < 65536; i++ ) {
     cmsFloat32Number in = i, out;
     in /= 65535;
-    out = cmsEvalToneCurveFloat( perceptual_trc, in )*65535;
-    if( out > 65535 ) out = 65535;
+    out = cmsEvalToneCurveFloat( perceptual_trc, in );
+    if( out > 1 ) out = 1;
     if( out < 0 ) out = 0;
-    perceptual_trc_vec[i] = (int)out;
-    out = cmsEvalToneCurveFloat( perceptual_trc_inv, in )*65535;
-    if( out > 65535 ) out = 65535;
+    perceptual_trc_vec[i] = out;
+    out = cmsEvalToneCurveFloat( perceptual_trc_inv, in );
+    if( out > 1 ) out = 1;
     if( out < 0 ) out = 0;
-    perceptual_trc_inv_vec[i] = (int)out;
+    perceptual_trc_inv_vec[i] = out;
   }
 }
 

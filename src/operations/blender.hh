@@ -48,11 +48,15 @@ namespace PF
 
     ProcessorBase* white;
 
+    ICCProfileData* icc_data;
+
     bool adjust_geom( VipsImage* in, VipsImage** out,
                       int width, int height, unsigned int level );
 
   public:
     BlenderPar();
+
+    ICCProfileData* get_icc_data() { return icc_data; }
 
     blendmode_t get_blend_mode() { 
       return( (blendmode_t)blend_mode.get_enum_value().first ); 
@@ -94,8 +98,11 @@ namespace PF
       }
 
       BlenderPar* bpar = dynamic_cast<BlenderPar*>(par);
-      float opacity = 1; if(bpar) opacity = bpar->get_opacity();
+      if( !bpar ) return;
+      float opacity = bpar->get_opacity();
       Blender<T,CS,CHMIN,CHMAX,has_omap> blender( bpar->get_blend_mode(), opacity );
+      //std::cout<<"BlenderProc::render(): bpar->get_icc_data()="<<bpar->get_icc_data()<<std::endl;
+      blender.set_icc_data( bpar->get_icc_data() );
 #ifndef NDEBUG
       //usleep(1000);
       std::cout<<"BlenderProc::render(): opacity="<<opacity<<std::endl;

@@ -34,7 +34,9 @@ template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_oma
 class BlendLuminance: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
   int pos, ch;
+  ICCProfileData* data;
 public:
+  void set_icc_data( ICCProfileData* d ) { data = d; }
   void blend(const float& , T* , T* top, T* out, const int& x, int& )
   {
     pos = x;
@@ -54,14 +56,15 @@ class BlendLuminance<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>:
   public BlendBase<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>
 {
   int pos, ch;
-  double temp_top;
-  double irgb[3];
-  double rgb[3];
+  float temp_top, temp_out;
+  float irgb[3];
+  float rgb[3];
   ICCProfileData* data;
 public:
   void set_icc_data( ICCProfileData* d ) { data = d; }
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
+    //std::cout<<"BlendLuminance: data="<<data<<std::endl;
     if( !data ) {
       pos = x;
       for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
@@ -70,17 +73,20 @@ public:
       return;
     }
 
+    //std::cout<<"BlendLuminance: data->trc_type="<<data->trc_type<<std::endl;
+
     // RGB values of the bottom layer
-    irgb[0] = (double(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-    irgb[1] = (double(bottom[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-    irgb[2] = (double(bottom[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    irgb[0] = (float(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    irgb[1] = (float(bottom[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    irgb[2] = (float(bottom[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
 
     // RGB values of the top layer
-    double ored = (double(top[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-    double ogreen = (double(top[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-    double oblue = (double(top[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    float ored = (float(top[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    float ogreen = (float(top[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+    float oblue = (float(top[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
 
     if( data->trc_type!=PF_TRC_LINEAR ) {
+      //std::cout<<"BlendLuminance: perceptual -> linear: "<<irgb[0]<<" -> "<<data->perceptual_trc_vec[ (int)(irgb[0]*65535) ]<<std::endl;
       // RGB values are encoded perceptually
       irgb[0] = data->perceptual_trc_vec[ (int)(irgb[0]*65535) ];
       irgb[1] = data->perceptual_trc_vec[ (int)(irgb[1]*65535) ];
@@ -94,18 +100,22 @@ public:
     float oL = data->Y_R*ored + data->Y_G*ogreen + data->Y_B*oblue;
     float r = oL / MAX(iL, 0.0000000000000000001);
 
-    rgb[0] = ored * r;
-    rgb[1] = ogreen * r;
-    rgb[2] = oblue * r;
+    rgb[0] = irgb[0] * r;
+    rgb[1] = irgb[1] * r;
+    rgb[2] = irgb[2] * r;
+
+    //if(x==0) std::cout<<"ired="<<irgb[0]<<"  ored="<<ored<<"  data->Y_R="<<data->Y_R<<"  r="<<r<<"  rgb[0]="<<rgb[0]<<std::endl;
 
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      out[pos] = (T)(( (rgb[ch]*opacity)+(irgb[ch]*(1.0f-opacity)) )*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
-      if( out[pos]<0 ) out[pos] = 0;
-      if( out[pos]>1 ) out[pos] = 1;
+      //temp_out = (T)(( (rgb[ch]*opacity)+(irgb[ch]*(1.0f-opacity)) )*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
+      temp_out = (rgb[ch]*opacity)+(irgb[ch]*(1.0f-opacity));
+      if( temp_out<0 ) temp_out = 0;
+      if( temp_out>1 ) temp_out = 1;
       if( data->trc_type!=PF_TRC_LINEAR ) {
-        out[pos] = data->perceptual_trc_inv_vec[ (int)(out[pos]*65535) ];
+        temp_out = data->perceptual_trc_inv_vec[ (int)(temp_out*65535) ];
       }
+      out[pos] = (T)(temp_out*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
     }
   }
 };
@@ -116,7 +126,9 @@ class BlendLuminance<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, true>:
 {
   BlendLuminance<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false> blender;
   float opacity_real;
+  ICCProfileData* data;
 public:
+  void set_icc_data( ICCProfileData* d ) { data = d; blender.set_icc_data(data); }
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     float opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);
@@ -138,7 +150,9 @@ class BlendLuminance<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false>:
   int pos, ch;
   double temp_top;
   double rgb[3];
+  ICCProfileData* data;
 public:
+  void set_icc_data( ICCProfileData* d ) { data = d; }
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
@@ -155,7 +169,9 @@ class BlendLuminance<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, true>:
 {
   BlendLuminance<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false> blender;
   float opacity_real;
+  ICCProfileData* data;
 public:
+  void set_icc_data( ICCProfileData* d ) { data = d; blender.set_icc_data(data); }
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     float opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);

@@ -67,7 +67,8 @@ PF::PropertyBase(name, par)
   add_enum_value(PF_BLEND_SCREEN,"PF_BLEND_SCREEN","Screen");
   add_enum_value(PF_BLEND_LIGHTEN,"PF_BLEND_LIGHTEN","Lighten");
   add_enum_value(PF_BLEND_DARKEN,"PF_BLEND_DARKEN","Darken");
-  add_enum_value(PF_BLEND_LUMI,"PF_BLEND_LUMI","Luminosity");
+  //add_enum_value(PF_BLEND_LUMI,"PF_BLEND_LUMI","Luminosity");
+  add_enum_value(PF_BLEND_LUMINANCE,"PF_BLEND_LUMINANCE","Luminance");
   add_enum_value(PF_BLEND_COLOR,"PF_BLEND_COLOR","Color");
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");

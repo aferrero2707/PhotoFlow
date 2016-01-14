@@ -65,13 +65,16 @@ namespace PF
   {
     blendmode_t mode;
     float opacity;
+    ICCProfileData* data;
 
   public:
     Blender( blendmode_t m, float o ):
-      mode( m ), opacity( o )
+      mode( m ), opacity( o ), data( NULL )
     {
     }
     
+    void set_icc_data( ICCProfileData* d ) { data = d; }
+
     void blend(VipsRegion* bottom, VipsRegion* top, VipsRegion* oreg, VipsRegion* omap) 
     {
       if( !bottom || !top ) return;
@@ -88,6 +91,7 @@ namespace PF
       BlendHardLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_hard_light;
       BlendVividLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_vivid_light;
       BlendLuminosity<T,colorspace,CHMIN,CHMAX,has_omap> blend_lumi;
+      BlendLuminance<T,colorspace,CHMIN,CHMAX,has_omap> blend_luminance;
       BlendColor<T,colorspace,CHMIN,CHMAX,has_omap> blend_color;
       Rect *r = &oreg->valid;
       //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
@@ -142,6 +146,10 @@ namespace PF
           break;
         case PF_BLEND_LUMI:
           BLEND_LOOP2(blend_lumi);
+          break;
+        case PF_BLEND_LUMINANCE:
+          blend_luminance.set_icc_data( data );
+          BLEND_LOOP2(blend_luminance);
           break;
         case PF_BLEND_COLOR:
           BLEND_LOOP2(blend_color);
