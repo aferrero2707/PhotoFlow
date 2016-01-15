@@ -337,6 +337,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   demoMethodSelector( this, "demo_method", "Demosaicing method: ", PF::PF_DEMO_AMAZE ),
   fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
+  saturationLevelSlider( this, "saturation_level_correction", _("saturation level"), 0, -50, 50, 1, 10, 100 ),
   blackLevelSlider( this, "black_level_correction", _("black level"), 0, -500, 500, 5, 10, 1 ),
   profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
@@ -368,8 +369,9 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   wbControlsBox.pack_start( wbGreenCorrSlider );
   wbControlsBox.pack_start( wbBlueCorrSlider );
 
-  exposureControlsBox.pack_start( exposureSlider );
-  exposureControlsBox.pack_start( blackLevelSlider );
+  exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
+  exposureControlsBox.pack_start( saturationLevelSlider, Gtk::PACK_SHRINK );
+  exposureControlsBox.pack_start( blackLevelSlider, Gtk::PACK_SHRINK );
 
   demoControlsBox.pack_start( demoMethodSelector );
   demoControlsBox.pack_start( fcsSlider );

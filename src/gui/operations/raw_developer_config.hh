@@ -94,6 +94,7 @@ public:
     Slider fcsSlider;
 
     ExposureSlider exposureSlider;
+    Slider saturationLevelSlider;
     Slider blackLevelSlider;
 
     Selector profileModeSelector;

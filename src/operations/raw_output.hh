@@ -43,13 +43,19 @@
 
 #include "raw_image.hh"
 
-#define CLIPRAW(a) ((a)>0.0?((a)<1.0?(a):1.0):0.0)
-//#define CLIPRAW(a) (a)
+//#define CLIPRAW(a) ((a)>0.0?((a)<1.0?(a):1.0):0.0)
+#define CLIPRAW(a) (a)
 
 namespace PF 
 {
 
-  enum input_profile_mode_t {
+enum exposure_mode_t {
+  EXP_NORMAL,
+  EXP_AUTO
+};
+
+
+ enum input_profile_mode_t {
     IN_PROF_NONE,
     IN_PROF_MATRIX,
     IN_PROF_ICC
@@ -85,6 +91,11 @@ namespace PF
     // Initialized as xyz_sRGB * rgb_cam
     double xyz_cam[3][3];
 
+    Property<float> exposure;
+    PropertyBase exposure_mode;
+    Property<float> exposure_clip_amount;
+    float wb_red_current, wb_green_current, wb_blue_current, exposure_current;
+
     PropertyBase profile_mode;
     input_profile_mode_t current_profile_mode;
 
@@ -116,6 +127,19 @@ namespace PF
   public:
 
     RawOutputPar();
+
+    float get_wb_red() { return wb_red_current; /*wb_red.get();*/ }
+    float get_wb_green() { return wb_green_current; /*wb_green.get();*/ }
+    float get_wb_blue() { return wb_blue_current; /*wb_blue.get();*/ }
+
+    void set_wb(float r, float g, float b) {
+      wb_red_current = r;
+      wb_green_current = g;
+      wb_blue_current = b;
+      std::cout<<"RawPreprocessorPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
+    }
+
+    float get_exposure() { return exposure.get(); }
 
     input_profile_mode_t get_camera_profile_mode() { return (input_profile_mode_t)profile_mode.get_enum_value().first; }
     input_gamma_mode_t get_gamma_mode() { return (input_gamma_mode_t)gamma_mode.get_enum_value().first; }
@@ -161,6 +185,7 @@ namespace PF
     {
       RawOutputPar* opar = dynamic_cast<RawOutputPar*>(par);
       if( !opar ) return;
+      float exposure = opar->get_exposure();
       Rect *r = &oreg->valid;
       int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
       int width = r->width;
@@ -176,6 +201,24 @@ namespace PF
                  <<"  oreg->im->BandFmt="<<oreg->im->BandFmt<<std::endl;
       }
     
+      float mul[3] = {
+        opar->get_wb_red(),
+        opar->get_wb_green(),
+        opar->get_wb_blue()
+      };
+      float sat[3];
+      float min_mul = mul[0];
+      float max_mul = mul[0];
+      for( int i = 1; i < 3; i++ ) {
+        if( mul[i] < min_mul ) min_mul = mul[i];
+        if( mul[i] > max_mul ) max_mul = mul[i];
+      }
+      for( int i = 0; i < 3; i++ ) {
+        mul[i] /= max_mul;
+        sat[i] = mul[i]*0.99;
+      }
+      exposure *= max_mul/min_mul;
+
       T* p;
       T* pin;
       T* pout;
@@ -203,57 +246,73 @@ namespace PF
         p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 
-          if( false && r->top==0 && r->left==0 ) {
-            std::cout<<"RawOutput::render(): camera_profile_mode="<<opar->get_camera_profile_mode()<<std::endl;
+        if( false && r->top==0 && r->left==0 ) {
+          std::cout<<"RawOutput::render(): camera_profile_mode="<<opar->get_camera_profile_mode()<<std::endl;
+        }
+
+        for( x = 0; x < line_size; x+=3 ) {
+          //std::cout<<"RAW: "<<p[x]<<","<<p[x+1]<<","<<p[x+2]
+          //         <<"(saturation: "<<sat[0]<<","<<sat[1]<<","<<sat[2]<<")"<<std::endl;
+          if( false && (p[x]>sat[0]) && (p[x+1]>sat[1]) && (p[x+2]>sat[2]) )
+            line[x] = line[x+1] = line[x+2] = MAX3(p[x],p[x+1],p[x+2])*exposure;
+          else {
+            line[x] = p[x]*exposure;
+            line[x+1] = p[x+1]*exposure;
+            line[x+2] = p[x+2]*exposure;
           }
+          //if( (p[x]>sat[0]) || (p[x+1]>sat[1]) || (p[x+2]>sat[2]) )
+          //  std::cout<<"RAW: "<<line[x]<<","<<line[x+1]<<","<<line[x+2]<<std::endl;
+          //line[x] = 1.5; line[x+1] = 1.05; line[x+2] = 1.7;
+        }
+
         if( opar->get_camera_profile_mode() == IN_PROF_ICC ) {
 
-          pin = p;
           if( opar->get_gamma_mode() == IN_GAMMA_sRGB ) {
             for( x = 0; x < line_size; x++ ) {
-              line[x] = cmsEvalToneCurveFloat( srgb_curve, p[x] );
+              line[x] = cmsEvalToneCurveFloat( srgb_curve, line[x] );
             }
-            pin = line;
           } else if( opar->get_gamma_mode() == IN_GAMMA_CUSTOM ) {
             for( x = 0; x < line_size; x++ ) {
-              line[x] = cmsEvalToneCurveFloat( gamma_curve, p[x] );
+              line[x] = cmsEvalToneCurveFloat( gamma_curve, line[x] );
             }
-            pin = line;
           }
+
           if(opar->get_transform()) {
             for( int xi = 0; xi < line_size; xi++ ) {
-              line2[xi] = CLIPRAW(pin[xi]);
+              line2[xi] = CLIPRAW(line[xi]);
             }
             cmsDoTransform( opar->get_transform(), line2, pout, width );
-          } else
-            memcpy( pout, pin, sizeof(T)*line_size );
+          } else {
+            memcpy( pout, line, sizeof(T)*line_size );
+            for( int xi = 0; xi < line_size; xi++ ) {
+              pout[xi] = CLIPRAW(pout[xi]*exposure);
+            }
+          }
 
         } else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ) {
           if(opar->get_transform()) {
             for( int xi = 0; xi < line_size; xi++ ) {
-              line2[xi] = CLIPRAW(p[xi]);
+              line2[xi] = CLIPRAW(line[xi]);
             }
             cmsDoTransform( opar->get_transform(), line2, pout, width );
-          } else
-            memcpy( pout, p, sizeof(T)*line_size );
+          } else {
+            memcpy( pout, line, sizeof(T)*line_size );
+          }
         } else {
 
           if( false && r->top==0 && r->left==0 ) {
             std::cout<<"RawOutput::render(): gamma_mode="<<opar->get_gamma_mode()<<std::endl;
           }
-          pin = p;
           if( opar->get_gamma_mode() == IN_GAMMA_sRGB ) {
             for( x = 0; x < line_size; x++ ) {
-              line[x] = cmsEvalToneCurveFloat( srgb_curve, p[x] );
+              line[x] = cmsEvalToneCurveFloat( srgb_curve, line[x] );
             }
-            pin = line;
           } else if( opar->get_gamma_mode() == IN_GAMMA_CUSTOM ) {
             for( x = 0; x < line_size; x++ ) {
-              line[x] = cmsEvalToneCurveFloat( gamma_curve, p[x] );
+              line[x] = cmsEvalToneCurveFloat( gamma_curve, line[x] );
             }
-            pin = line;
           }
-          memcpy( pout, pin, sizeof(T)*line_size );
+          memcpy( pout, line, sizeof(T)*line_size );
         }
         for( int xi = 0; xi < line_size; xi++ ) {
           //if(pout[xi] > 1 || pout[xi] < 0)

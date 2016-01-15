@@ -52,6 +52,9 @@ extern "C" {
 PF::RawOutputPar::RawOutputPar(): 
   OpParBase(),
   image_data( NULL ),
+  exposure("exposure",this,1),
+  exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
+  exposure_clip_amount("exposure_clip_amount",this,0),
   profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
   //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
   current_profile_mode( IN_PROF_MATRIX ),
@@ -70,6 +73,8 @@ PF::RawOutputPar::RawOutputPar():
   out_profile( NULL ),
   transform( NULL )
 {
+  exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
+
   profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","NONE");
   profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","MATRIX");
   profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC");
@@ -120,6 +125,9 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     std::cout<<"RawOutputPar::build(): wrong raw_image_data size."<<std::endl;
     return NULL;
   }
+
+  if( exposure_mode.get_enum_value().first == PF::EXP_NORMAL )
+    exposure_current = exposure.get();
 
   bool mode_changed = profile_mode.is_modified();
   bool out_mode_changed = out_profile_mode.is_modified();
@@ -215,13 +223,16 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     if( transform )
       cmsDeleteTransform( transform );  
     transform = NULL;
-    if( cam_profile && out_profile )
+    if( cam_profile && out_profile ) {
+      bool supported = cmsIsIntentSupported(cam_profile,INTENT_RELATIVE_COLORIMETRIC,LCMS_USED_AS_INPUT);
+      std::cout<<"Relative calorimetric supported by input profile: "<<supported<<std::endl;
       transform = cmsCreateTransform( cam_profile, 
 				      TYPE_RGB_FLT,
 				      out_profile, 
 				      TYPE_RGB_FLT,
 				      INTENT_RELATIVE_COLORIMETRIC,
-				      cmsFLAGS_NOCACHE );
+				      cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
+    }
   }
   //std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
 
