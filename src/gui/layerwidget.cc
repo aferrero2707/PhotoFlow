@@ -154,7 +154,6 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
 
   tool_buttons_box.pack_start( add_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( group_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( uniform_button, Gtk::PACK_SHRINK, 2 );
@@ -166,6 +165,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( path_mask_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( draw_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( clone_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 2 );
 
 
   LayerTree* view = new LayerTree( editor );
