@@ -41,6 +41,7 @@
 //#define RT_EMU 1
 
 
+//#define __CLIP(a)  CLIP(a)
 #define __CLIP(a) (a)
 
 namespace PF 
@@ -211,9 +212,9 @@ namespace PF
 					p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
 					pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 					for( x=0; x < line_sz; x+=3) {
-						pout[x] = CLIP(p[x] * sat_corr * mul[0] - black[0]);
-						pout[x+1] = CLIP(p[x+1] * sat_corr * mul[1] - black[1]);
-						pout[x+2] = CLIP(p[x+2] * sat_corr * mul[2] - black[2]);
+						pout[x] = __CLIP(p[x] * sat_corr * mul[0] - black[0]);
+						pout[x+1] = __CLIP(p[x+1] * sat_corr * mul[1] - black[1]);
+						pout[x+2] = __CLIP(p[x+2] * sat_corr * mul[2] - black[2]);
 						//if(r->left==0 && r->top==0) std::cout<<"  p["<<x<<"]="<<p[x]<<"  pout["<<x<<"]="<<pout[x]<<std::endl;
 #ifdef RT_EMU
 						/* RawTherapee emulation */
@@ -237,7 +238,7 @@ namespace PF
 					  //      <<","<<VIPS_IMAGE_SIZEOF_PEL(oreg->im)<<std::endl;
 						rpout.color(x) = rp.color(x);
 						rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
-						if(false && r->left==0 && r->top==0)
+						if(false)
             std::cout<<"  rp.color(x)="<<rp.color(x)
                 <<"  rp[x]="<<rp[x]<<"  mul[ rp.icolor(x) ]="
                 <<mul[ rp.icolor(x) ]<<"  rpout[x]="<<rpout[x]<<std::endl;
