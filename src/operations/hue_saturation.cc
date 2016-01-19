@@ -29,6 +29,19 @@
 
 //#include <arpa/inet.h>
 
+/* We need C linkage for this.
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
+#include "../dt/common/colorspaces.h"
+//#include "../base/colorspaces.h"
+
+#ifdef __cplusplus
+}
+#endif /*__cplusplus*/
+
 #include "gaussblur.hh"
 #include "hsl_mask.hh"
 
@@ -70,7 +83,7 @@ PF::HueSaturationPar::HueSaturationPar():
 {
   set_type("hue_saturation" );
 
-  set_default_name( _("B-C-S-H adjustment") );
+  set_default_name( _("basic adjustments") );
 
   mask = new_hsl_mask();
   blur = new_gaussblur();
@@ -114,6 +127,11 @@ PF::HueSaturationPar::HueSaturationPar():
 */
   x1 = 0; y1 = 0.5;
   //eq_vec[0]->get().set_point( 0, x1, y1 );
+
+  //lab_profile = dt_colorspaces_create_lab_profile();
+  std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Lab-D50-Identity-elle-V4.icc";
+  lab_profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
+  transform = NULL;
 }
 
 
@@ -155,6 +173,38 @@ VipsImage* PF::HueSaturationPar::build(std::vector<VipsImage*>& in, int first,
   eq_enabled[0] = hue_H_equalizer_enabled.get();
   eq_enabled[1] = hue_S_equalizer_enabled.get();
   eq_enabled[2] = hue_L_equalizer_enabled.get();
+
+
+  void *prof_data;
+  size_t prof_data_length;
+
+  if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
+                           &prof_data, &prof_data_length ) ) {
+    if( transform )
+      cmsDeleteTransform( transform );
+
+    //std::cout<<"ConvertColorspacePar::build(): image="<<in[0]<<" data="<<data<<" data_length="<<data_length<<std::endl;
+    cmsHPROFILE in_profile = cmsOpenProfileFromMem( prof_data, prof_data_length );
+
+    transform = NULL;
+    cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, in_profile );
+    cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, lab_profile );
+
+    transform = cmsCreateTransform( in_profile,
+        TYPE_RGB_FLT,//infmt,
+        lab_profile,
+        TYPE_Lab_FLT,//outfmt,
+        INTENT_RELATIVE_COLORIMETRIC,
+        cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+
+    transform_inv = cmsCreateTransform( lab_profile,
+        TYPE_Lab_FLT,//outfmt,
+        in_profile,
+        TYPE_RGB_FLT,//infmt,
+        INTENT_RELATIVE_COLORIMETRIC,
+        cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+  }
+
 
   std::vector<VipsImage*> in2;
   if( in.size() < 1 )
