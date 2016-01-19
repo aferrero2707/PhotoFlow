@@ -150,8 +150,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
   // First pipeline is for full-res rendering, second one is for on-screen preview, third one is
   // for calculating the histogram
-  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
-  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
+  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
   PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
   if( p ) {
     p->set_auto_zoom( true, 256, 256 );
@@ -218,7 +218,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   hist_expander.add(*histogram);
 
   layersWidget_box.pack_start( hist_expander, Gtk::PACK_SHRINK );
-  aux_controlsBox.set_size_request(-1,50);
+  aux_controlsBox.set_size_request(-1,70);
   layersWidget_box.pack_start( aux_controlsBox, Gtk::PACK_SHRINK );
   layersWidget_box.pack_start( layersWidget, Gtk::PACK_EXPAND_WIDGET );
 
