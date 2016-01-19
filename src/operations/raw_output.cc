@@ -66,7 +66,7 @@ PF::RawOutputPar::RawOutputPar():
   gamma_exp("gamma_exp", this, 2.2),
   //out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
   out_profile_mode("out_profile_mode",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
-  out_trc_mode("out_trc_mode",this,PF::PF_TRC_STANDARD,"TRC_STANDARD","standard"),
+  out_trc_mode("out_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
   current_out_profile_mode( OUT_PROF_sRGB ),
   current_out_trc_mode( PF::PF_TRC_STANDARD ),
   out_profile_name("out_profile_name", this),
@@ -88,8 +88,9 @@ PF::RawOutputPar::RawOutputPar():
   //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
+  //out_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
   out_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
-  out_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
+  out_trc_mode.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
 
   gamma_mode.add_enum_value(PF::IN_GAMMA_NONE,"NONE","None");
   gamma_mode.add_enum_value(PF::IN_GAMMA_sRGB,"sRGB","sRGB");
