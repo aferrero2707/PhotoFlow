@@ -86,7 +86,7 @@ public:
     float oblue = (float(top[x+2]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
 
     if( data->trc_type!=PF_TRC_LINEAR ) {
-      //std::cout<<"BlendLuminance: perceptual -> linear: "<<irgb[0]<<" -> "<<data->perceptual_trc_vec[ (int)(irgb[0]*65535) ]<<std::endl;
+      std::cout<<"BlendLuminance: perceptual -> linear: "<<irgb[0]<<" -> "<<data->perceptual_trc_vec[ (int)(irgb[0]*65535) ]<<std::endl;
       // RGB values are encoded perceptually
       irgb[0] = data->perceptual_trc_vec[ (int)(irgb[0]*65535) ];
       irgb[1] = data->perceptual_trc_vec[ (int)(irgb[1]*65535) ];
@@ -94,6 +94,10 @@ public:
       ored = data->perceptual_trc_vec[ (int)(ored*65535) ];
       ogreen = data->perceptual_trc_vec[ (int)(ogreen*65535) ];
       oblue = data->perceptual_trc_vec[ (int)(oblue*65535) ];
+
+      //irgb[0] = cmsEvalToneCurveFloat( data->perceptual_trc, irgb[0] );
+      //irgb[1] = cmsEvalToneCurveFloat( data->perceptual_trc, irgb[0] );
+      //irgb[2] = cmsEvalToneCurveFloat( data->perceptual_trc, irgb[0] );
     }
 
     float iL = data->Y_R*irgb[0] + data->Y_G*irgb[1] + data->Y_B*irgb[2];
