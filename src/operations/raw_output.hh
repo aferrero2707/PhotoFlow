@@ -253,9 +253,39 @@ enum exposure_mode_t {
         for( x = 0; x < line_size; x+=3 ) {
           //std::cout<<"RAW: "<<p[x]<<","<<p[x+1]<<","<<p[x+2]
           //         <<"(saturation: "<<sat[0]<<","<<sat[1]<<","<<sat[2]<<")"<<std::endl;
-          if( false && (p[x]>sat[0]) && (p[x+1]>sat[1]) && (p[x+2]>sat[2]) )
+          if( false ) {
+          if( (p[x]>sat[0]) && (p[x+1]>sat[1]) && (p[x+2]>sat[2]) ) {
             line[x] = line[x+1] = line[x+2] = MAX3(p[x],p[x+1],p[x+2])*exposure;
-          else {
+          } else if( (p[x]>sat[0]) && (p[x+1]>sat[1]) ) {
+              line[x] = MAX3(p[x],p[x+1],p[x+2])*exposure;
+              line[x+1] = MAX3(p[x],p[x+1],p[x+2])*exposure;
+              line[x+2] = p[x+2];
+          } else if( (p[x]>sat[0]) && (p[x+2]>sat[2]) ) {
+              line[x] = MAX3(p[x],p[x+1],p[x+2])*exposure;
+              line[x+2] = MAX3(p[x],p[x+1],p[x+2])*exposure;
+              line[x+1] = p[x+1];
+          } else if( (p[x+1]>sat[1]) && (p[x+2]>sat[2]) ) {
+              line[x+1] = MAX3(p[x],p[x+1],p[x+2])*exposure;
+              line[x+2] = MAX3(p[x],p[x+1],p[x+2])*exposure;
+              line[x] = p[x];
+          } else if( (p[x]>sat[0]) ) {
+              line[x] = MAX(p[x],MIN(p[x+1],p[x+2]))*exposure;
+              line[x+1] = p[x+1];
+              line[x+2] = p[x+2];
+          } else if( (p[x+1]>sat[1]) ) {
+              line[x+1] = MAX(p[x+1],MIN(p[x],p[x+2]))*exposure;
+              line[x] = p[x];
+              line[x+2] = p[x+2];
+          } else if( (p[x+2]>sat[2]) ) {
+              line[x+2] = MAX(p[x+2],MIN(p[x],p[x+1]))*exposure;
+              line[x] = p[x];
+              line[x+1] = p[x+1];
+          } else {
+            line[x] = p[x]*exposure;
+            line[x+1] = p[x+1]*exposure;
+            line[x+2] = p[x+2]*exposure;
+          }
+          } else {
             line[x] = p[x]*exposure;
             line[x+1] = p[x+1]*exposure;
             line[x+2] = p[x+2]*exposure;
