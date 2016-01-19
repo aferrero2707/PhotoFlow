@@ -860,7 +860,8 @@ void PF::Image::do_export_merged( std::string filename )
       if( outimg ) {
         int predictor = 2;
         vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
-            "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
+            "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
+        //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
         //vips_image_write_to_file( outimg, filename.c_str(), NULL );
         saved = true;
       }
