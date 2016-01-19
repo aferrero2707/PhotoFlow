@@ -90,7 +90,7 @@ PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
   saturation2Slider( this, "saturation_eq", "Saturation (curve)", 0, -100, 100, 5, 10, 100),
   hueSlider( this, "hue", _("Hue"), 0, -180, 180, 0.1, 10, 1),
   hue2Slider( this, "hue_eq", "Hue (curve)", 0, -180, 180, 0.1, 10, 1),
-  exposureSlider( this, "exposure", _("Exposure"), 0, -10, 10, 0.5, 2 ),
+  exposureSlider( this, "exposure", _("Exposure"), 0, -10, 10, 0.1, 1 ),
   mask_enable( this, "show_mask", _("show mask"), false ),
   hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
   hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
@@ -124,7 +124,7 @@ PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
 
   curves_nb[0].append_page( hueHeq_box, _("H curve") );
   curves_nb[0].append_page( hueSeq_box, _("S curve") );
-  curves_nb[0].append_page( hueLeq_box, _("L curve") );
+  //curves_nb[0].append_page( hueLeq_box, _("L curve") );
 
   hueHeq_box.pack_start( hueHeq, Gtk::PACK_SHRINK );
   hueHeq_box.pack_start( hueHeq_enable_box, Gtk::PACK_SHRINK );

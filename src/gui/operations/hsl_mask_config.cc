@@ -93,7 +93,7 @@ PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
 {
   curves_nb[0].append_page( hueHeq_box, "H curve" );
   curves_nb[0].append_page( hueSeq_box, "S curve" );
-  curves_nb[0].append_page( hueLeq_box, "L curve" );
+  //curves_nb[0].append_page( hueLeq_box, "L curve" );
 
   hueHeq_box.pack_start( hueHeq, Gtk::PACK_SHRINK );
   hueHeq_box.pack_start( hueHeq_enable_box, Gtk::PACK_SHRINK );
