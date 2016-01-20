@@ -112,6 +112,9 @@ PF::BlenderPar::BlenderPar():
   opacity("opacity",this,1),
   shift_x("shift_x",this,0),
   shift_y("shift_y",this,0),
+  profile_bottom( NULL ),
+  profile_top( NULL ),
+  transform( NULL ),
   icc_data( NULL )
 {
   white = PF::new_operation( "uniform", NULL );
@@ -136,35 +139,56 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* outnew;
   VipsImage* background = NULL;
   VipsImage* foreground = NULL;
-  //void *data;
-  //size_t data_length;
+  void *prof_data_bottom;
+  size_t prof_data_length_bottom;
+  void *prof_data_top;
+  size_t prof_data_length_top;
   //cmsHPROFILE profile_in;
 
   if( in.empty() ) return NULL;
   if( in.size() > 0 ) background = in[0];
   if( in.size() > 1 ) foreground = in[1];
 
+  if( profile_bottom ) cmsCloseProfile( profile_bottom );
+  if( profile_top ) cmsCloseProfile( profile_top );
+  profile_bottom = NULL;
+  profile_top = NULL;
+
   icc_data = NULL;
   std::cout<<"BlenderPar::build(): background="<<background<<std::endl;
   if( background ) {
     icc_data = PF::get_icc_profile_data( background );
     std::cout<<"BlenderPar::build(): icc_data="<<icc_data<<std::endl;
-    /*
+
     if( !vips_image_get_blob( background, VIPS_META_ICC_NAME, 
-                              &data, &data_length ) ) {
-    
-      profile_in = cmsOpenProfileFromMem( data, data_length );
-      if( profile_in ) {
-        char tstr[1024];
-        cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
-#ifndef NDEBUG
-        std::cout<<"BlenderPar::build(): Input profile: "<<tstr<<std::endl;
-#endif
-        cmsCloseProfile( profile_in );
+                              &prof_data_bottom, &prof_data_length_bottom ) ) {
+
+      if( foreground ) {
+        if( !vips_image_get_blob( foreground, VIPS_META_ICC_NAME,
+                                  &prof_data_top, &prof_data_length_top ) ) {
+          if( prof_data_bottom != prof_data_top ) {
+            profile_top = cmsOpenProfileFromMem( prof_data_top, prof_data_length_top );
+            profile_bottom = cmsOpenProfileFromMem( prof_data_bottom, prof_data_length_bottom );
+          }
+        }
       }
     }  
-    */
   }
+
+  if( transform ) cmsDeleteTransform( transform );
+  transform = NULL;
+  if( profile_bottom && profile_top ) {
+    cmsUInt32Number infmt = vips2lcms_pixel_format( background->BandFmt, profile_top );
+    cmsUInt32Number outfmt = vips2lcms_pixel_format( foreground->BandFmt, profile_bottom );
+
+    transform = cmsCreateTransform( profile_top, infmt,
+        profile_bottom, outfmt,
+        INTENT_RELATIVE_COLORIMETRIC,
+        cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+
+    std::cout<<"BlenderPar::build(): blending images with different ICC profiles"<<std::endl;
+  }
+
 
   bool same_size = true;
   if( background && foreground ) {
@@ -191,7 +215,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   if( (get_blend_mode() == PF_BLEND_NORMAL) && 
       (get_opacity() > 0.999999f) &&
       same_size && (do_shift == false) &&
-      (omap == NULL) ) is_passthrough = true;
+      (omap == NULL) && (transform == NULL) ) is_passthrough = true;
 
   if( background && foreground && (background->Bands != foreground->Bands) )
     is_passthrough = true;

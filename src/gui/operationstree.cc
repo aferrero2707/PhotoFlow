@@ -292,9 +292,9 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_misc.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
 
 
-  //op_load.get_tree().add_op( _("Open image"), "imageread" );
   op_load.get_tree().add_op( _("Open RAW image"), "raw_loader" );
   op_load.get_tree().add_op( _("RAW developer"), "raw_developer" );
+  op_load.get_tree().add_op( _("Open image"), "imageread" );
 
   //op_conv.get_tree().add_op( "Color profile conversion"), "convert_colorspace" );
   //op_conv.get_tree().add_op( "Lab conversion"), "convert2lab" );

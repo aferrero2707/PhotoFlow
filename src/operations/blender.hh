@@ -48,6 +48,8 @@ namespace PF
 
     ProcessorBase* white;
 
+    cmsHPROFILE profile_bottom, profile_top;
+    cmsHTRANSFORM transform;
     ICCProfileData* icc_data;
 
     bool adjust_geom( VipsImage* in, VipsImage** out,
@@ -57,6 +59,7 @@ namespace PF
     BlenderPar();
 
     ICCProfileData* get_icc_data() { return icc_data; }
+    cmsHTRANSFORM get_transform() { return transform; }
 
     blendmode_t get_blend_mode() { 
       return( (blendmode_t)blend_mode.get_enum_value().first ); 
@@ -102,6 +105,7 @@ namespace PF
       float opacity = bpar->get_opacity();
       Blender<T,CS,CHMIN,CHMAX,has_omap> blender( bpar->get_blend_mode(), opacity );
       //std::cout<<"BlenderProc::render(): bpar->get_icc_data()="<<bpar->get_icc_data()<<std::endl;
+      blender.set_transform( bpar->get_transform() );
       blender.set_icc_data( bpar->get_icc_data() );
 #ifndef NDEBUG
       //usleep(1000);

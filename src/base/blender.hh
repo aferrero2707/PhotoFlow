@@ -43,7 +43,7 @@ namespace PF
     theblender.init_line( omap, r->left, y0 );                    \
     for( x=0, xomap=0; x < line_size; ) {                         \
       for( ch=0; ch<CHMIN; ch++, x++ ) pout[x] = pbottom[x];      \
-      theblender.blend( opacity, pbottom, ptop, pout, x, xomap );       \
+      theblender.blend( opacity, pbottom, line, pout, x, xomap );       \
       x += dx;                                                         \
       for( ch=CHMAX+1; ch<PF::ColorspaceInfo<colorspace>::NCH; ch++, x++ ) pout[x] = pbottom[x]; \
     }                                                                   \
@@ -53,7 +53,7 @@ namespace PF
 #define BLEND_LOOP2( theblender ) {                               \
     theblender.init_line( omap, r->left, y0 );                    \
     for( x=0, xomap=0; x < line_size; ) {                         \
-      theblender.blend( opacity, pbottom, ptop, pout, x, xomap ); \
+      theblender.blend( opacity, pbottom, line, pout, x, xomap ); \
       x += PF::ColorspaceInfo<colorspace>::NCH;                   \
     }                                                             \
   }
@@ -65,14 +65,16 @@ namespace PF
   {
     blendmode_t mode;
     float opacity;
+    cmsHTRANSFORM transform;
     ICCProfileData* data;
 
   public:
     Blender( blendmode_t m, float o ):
-      mode( m ), opacity( o ), data( NULL )
+      mode( m ), opacity( o ), transform( NULL ), data( NULL )
     {
     }
     
+    void set_transform(cmsHTRANSFORM t) { transform = t; }
     void set_icc_data( ICCProfileData* d ) { data = d; }
 
     void blend(VipsRegion* bottom, VipsRegion* top, VipsRegion* oreg, VipsRegion* omap) 
@@ -96,15 +98,24 @@ namespace PF
       Rect *r = &oreg->valid;
       //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
       int x, y, xomap, y0, dx=CHMAX-CHMIN+1, ch;
-      int line_size = r->width * oreg->im->Bands;
+      int width = r->width;
+      int line_size = width * oreg->im->Bands;
       T* pbottom;
       T* ptop;
       T* pout;
+      T* line = NULL;
+      if( transform ) line = new T[line_size];
       for( y = 0; y < r->height; y++ ) {      
         y0 = r->top + y;
         pbottom = (T*)VIPS_REGION_ADDR( bottom, r->left, y0 ); 
         ptop = (T*)VIPS_REGION_ADDR( top, r->left, y0 ); 
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, y0 ); 
+        if( transform ) {
+          cmsDoTransform( transform, ptop, line, width );
+          //std::cout<<"Blender::blend(): calling cmsDoTransform()"<<std::endl;
+        } else {
+          line = ptop;
+        }
         switch(mode) {
         case PF_BLEND_PASSTHROUGH:
           break;
