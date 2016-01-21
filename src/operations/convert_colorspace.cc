@@ -167,7 +167,8 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
                                       infmt,
                                       out_profile, 
                                       outfmt,
-                                      INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+                                      INTENT_RELATIVE_COLORIMETRIC,
+                                                    cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
     }
 
     if( out_profile) {
