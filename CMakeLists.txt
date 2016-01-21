@@ -42,8 +42,9 @@ if(NOT BUNDLED_LENSFUN)
 endif(NOT BUNDLED_LENSFUN)
 
 
-IF(NOT MINGW)
 pkg_check_modules(OPENEXR OpenEXR)
+
+IF(NOT MINGW)
 pkg_check_modules(ORC REQUIRED orc-0.4)
 ENDIF(NOT MINGW)
 

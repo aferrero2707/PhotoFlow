@@ -645,6 +645,8 @@ bool PF::Image::open( std::string filename, std::string bckname )
   if( !getFileExtensionLowcase( "/", filename, ext ) ) return false;
   disable_update = true;
 
+  std::cout<<"ext: "<<ext<<std::endl;
+
   if( !bckname.empty() ) {
 
     PF::load_pf_image( bckname, this );
@@ -660,10 +662,12 @@ bool PF::Image::open( std::string filename, std::string bckname )
     //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
     file_name = filename;
 
-  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" ) {
+  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" || ext=="exr" ) {
 
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
+
+    std::cout<<"Opening rsater image "<<filename<<std::endl;
 
     PF::Layer* limg = layer_manager.new_layer();
     PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "imageread", limg );
