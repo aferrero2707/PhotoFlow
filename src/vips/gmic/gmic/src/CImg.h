@@ -168,12 +168,15 @@
 #endif
 
 // Look for C++11 features
-#if !defined(cimg_use_cpp11) && __cplusplus>201100
-#define cimg_use_cpp11
-#endif
+//#if !defined(cimg_use_cpp11) && __cplusplus>201100
+//#define cimg_use_cpp11
+//#endif
+#undef cimg_use_cpp11
 #ifdef cimg_use_cpp11
 #include <initializer_list>
 #include <utility>
+#else
+#warning "C++11 features not used!!!"
 #endif
 
 // Configure the 'abort' signal handler (does nothing by default).
