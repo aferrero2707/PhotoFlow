@@ -181,7 +181,7 @@ void PF::PhotoFlow::close()
   vips_shutdown();
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
-  for (int i = 0; i < _getmaxstdio(); ++i) close (i);
+  for (int i = 0; i < _getmaxstdio(); ++i) ::close (i);
 #elif defined(__APPLE__) && defined(__MACH__)
 #else
   rlimit rlim;
