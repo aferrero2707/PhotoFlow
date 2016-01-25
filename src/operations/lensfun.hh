@@ -27,8 +27,14 @@
 
  */
 
-#ifndef PF_LENSFUN_H
-#define PF_LENSFUN_H
+#ifdef PF_LENSFUN_HH
+#warning "PF_LENSFUN_HH already defined!!!"
+#else
+#warning "PF_LENSFUN_HH not defined."
+#endif
+
+#ifndef PF_LENSFUN_HH
+#define PF_LENSFUN_HH
 
 #include <string>
 

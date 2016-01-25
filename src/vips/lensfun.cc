@@ -58,6 +58,12 @@
 
 #include <vips/dispatch.h>
 
+#warning "Now including lensfun.hh"
+#ifdef PF_LENSFUN_HH
+#warning "PF_LENSFUN_HH already defined!!!"
+#else
+#warning "PF_LENSFUN_HH not defined."
+#endif
 #include "../operations/lensfun.hh"
 //#include "../base/processor.hh"
 
