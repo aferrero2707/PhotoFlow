@@ -30,23 +30,112 @@
 #include "slider.hh"
 
 
+PF::NumEntry::NumEntry(): Gtk::Entry(), digits(1), inhibited(false)
+{
+  signal_activate().connect(sigc::mem_fun(*this,&PF::NumEntry::text_changed));
+
+  signal_key_press_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
+  signal_key_release_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
+  add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
+}
+
+
+bool PF::NumEntry::on_key_press_or_release_event(GdkEventKey* event)
+{
+  if (event->type == GDK_KEY_PRESS &&
+      (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)) == 0) {
+    if( (event->keyval == GDK_KEY_Up) ) {
+      std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
+      float new_val = adjustment->get_value();
+      new_val += adjustment->get_step_increment();
+      adjustment->set_value( new_val );
+      return true;
+    }
+    if( (event->keyval == GDK_KEY_Down) ) {
+      std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
+      float new_val = adjustment->get_value();
+      new_val -= adjustment->get_step_increment();
+      adjustment->set_value( new_val );
+      return true;
+    }
+    if( (event->keyval == GDK_KEY_Page_Up) ) {
+      std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
+      float new_val = adjustment->get_value();
+      new_val += adjustment->get_page_increment();
+      adjustment->set_value( new_val );
+      return true;
+    }
+    if( (event->keyval == GDK_KEY_Page_Down) ) {
+      std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
+      float new_val = adjustment->get_value();
+      new_val -= adjustment->get_page_increment();
+      adjustment->set_value( new_val );
+      return true;
+    }
+  }
+  return false;
+}
+
+
+#ifdef GTKMM_2
+void PF::NumEntry::set_adjustment( Gtk::Adjustment* a )
+#endif
+#ifdef GTKMM_3
+void PF::NumEntry::set_adjustment( Glib::RefPtr<Gtk::Adjustment> a )
+#endif
+{
+  adjustment = a;
+  adjustment->signal_value_changed().
+      connect(sigc::mem_fun(*this,
+          &NumEntry::changed));
+  changed();
+}
+
+
+void PF::NumEntry::changed()
+{
+  inhibited = true;
+  std::ostringstream str;
+  str << adjustment->get_value();
+  set_text( str.str() );
+  inhibited = false;
+}
+
+
+void PF::NumEntry::text_changed()
+{
+  if( inhibited ) return;
+  std::istringstream str( get_text() );
+  float val;
+  str >> val;
+  adjustment->set_value( val );
+}
+
+
 void PF::Slider::create_widgets( std::string l, double val,
     double min, double max,
     double sincr, double pincr )
 {
+#ifdef GTKMM_2
+  numentry.set_adjustment( &adjustment );
+#endif
 #ifdef GTKMM_3
   adjustment = Gtk::Adjustment::create( val, min, max, sincr, pincr, 0 );
   scale.set_adjustment( adjustment );
   spinButton.set_adjustment( adjustment );
+  numentry.set_adjustment( adjustment );
 #endif
 
   label.set_text( l.c_str() );
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( 200, -1 );
+  scale.set_size_request( 140, -1 );
   spinButton.set_size_request( 50, -1 );
   spinButton.set_has_frame( false );
+
+  numentry.set_size_request( 30, -1 );
+  numentry.set_has_frame( false );
 
   if( (max-min) < 1000000 ) {
     // Full widget with slider and spin button
@@ -65,12 +154,14 @@ void PF::Slider::create_widgets( std::string l, double val,
     vbox.pack_start( scale, Gtk::PACK_SHRINK );
     //set_spacing(-3);
     pack_start( vbox, Gtk::PACK_SHRINK );
-    pack_start( spinButton, Gtk::PACK_SHRINK );
+    //pack_start( spinButton, Gtk::PACK_SHRINK );
+    pack_start( numentry, Gtk::PACK_SHRINK );
   } else {
     //hbox.pack_start( label, Gtk::PACK_SHRINK );
     //hbox.pack_start( spinButton, Gtk::PACK_SHRINK );
     pack_start( label, Gtk::PACK_SHRINK );
-    pack_start( spinButton, Gtk::PACK_SHRINK );
+    //pack_start( spinButton, Gtk::PACK_SHRINK );
+    pack_start( numentry, Gtk::PACK_SHRINK );
   }
 
   //pack_start( hbox, Gtk::PACK_SHRINK );
