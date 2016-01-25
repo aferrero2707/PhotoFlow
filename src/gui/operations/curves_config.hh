@@ -57,6 +57,11 @@ namespace PF {
   CurveEditor aCurveEditor;
   CurveEditor bCurveEditor;
 
+  CurveEditor CCurveEditor;
+  CurveEditor MCurveEditor;
+  CurveEditor YCurveEditor;
+  CurveEditor KCurveEditor;
+
   Gtk::Alignment padding1, padding2, padding3;
   Gtk::HSeparator hline;
   Gtk::HBox outputModeBox;

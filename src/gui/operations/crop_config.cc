@@ -74,6 +74,8 @@ void PF::CropConfigGUI::open()
 
 bool PF::CropConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
   handle = CROP_HANDLE_NONE;
 
@@ -155,6 +157,8 @@ bool PF::CropConfigGUI::pointer_press_event( int button, double sx, double sy, i
 
 bool PF::CropConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
 
   cropLeftSlider.set_value();
@@ -263,6 +267,8 @@ void PF::CropConfigGUI::move_handle( int x, int y )
 
 bool PF::CropConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
 
   double x = sx, y = sy, w = 1, h = 1;

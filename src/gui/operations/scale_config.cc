@@ -42,12 +42,12 @@ PF::ScaleConfigGUI::ScaleConfigGUI( PF::Layer* layer ):
   scale_height_pixels_slider( this, "scale_height_pixels", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
   scale_width_percent_slider( this, "scale_width_percent", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
   scale_height_percent_slider( this, "scale_height_percent", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_width_mm_slider( this, "scale_width_mm", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_height_mm_slider( this, "scale_height_mm", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_width_cm_slider( this, "scale_width_cm", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_height_cm_slider( this, "scale_height_cm", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_width_inches_slider( this, "scale_width_inches", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_height_inches_slider( this, "scale_height_inches", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_width_mm_slider( this, "scale_width_mm", _("W: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_height_mm_slider( this, "scale_height_mm", _("H: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_width_cm_slider( this, "scale_width_cm", _("W: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_height_cm_slider( this, "scale_height_cm", _("H: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_width_inches_slider( this, "scale_width_inches", _("W: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_height_inches_slider( this, "scale_height_inches", _("H: "), 0, 0, 10000000, 1, 10, 1 ),
   scale_resolution_slider( this, "scale_resolution", _("resolution: "), 0, 0, 10000000, 1, 10, 1 ),
   active_point_id( -1 )
 {
@@ -152,6 +152,8 @@ void PF::ScaleConfigGUI::do_update()
 
 bool PF::ScaleConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
 
   PF::ScalePar* par = dynamic_cast<PF::ScalePar*>(get_par());
@@ -179,6 +181,8 @@ bool PF::ScaleConfigGUI::pointer_press_event( int button, double sx, double sy, 
 
 bool PF::ScaleConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   PF::ScalePar* par = dynamic_cast<PF::ScalePar*>(get_par());
   if( !par ) return false;
 
@@ -227,6 +231,8 @@ bool PF::ScaleConfigGUI::pointer_release_event( int button, double sx, double sy
 
 bool PF::ScaleConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
   if( active_point_id < 0 ) return false;
 

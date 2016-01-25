@@ -86,6 +86,7 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::Alignment frame_box_2_padding;
   Gtk::Alignment frame_box_3_padding;
   Gtk::Alignment frame_box_4_padding;
+  Gtk::Alignment middle_padding;
   Gtk::HBox frame_hbox;
   Gtk::VBox frame_vbox;
   Gtk::VBox frame_shift_box;

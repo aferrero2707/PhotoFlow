@@ -133,7 +133,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   scale_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/scale.png", "scale", image, this),
   perspective_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/perspective.png", "perspective", image, this)
 {
-  set_size_request(310,-1);
+  set_size_request(250,-1);
   notebook.set_tab_pos(Gtk::POS_LEFT);
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 
@@ -856,8 +856,8 @@ void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
   std::cout<<"LayerWidget::unset_sticky_and_editing(\""<<l->get_name()<<"\") called."<<std::endl;
 
   if( editor ) {
-    if( editor->get_edited_layer() == l->get_id() )
-      editor->set_edited_layer(-1);
+    //if( editor->get_active_layer() == l->get_id() )
+    //  editor->set_active_layer(-1);
     if( editor->get_displayed_layer() == l->get_id() )
       editor->set_displayed_layer(-1);
   }

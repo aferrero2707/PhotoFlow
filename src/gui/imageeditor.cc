@@ -230,7 +230,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   main_panel.pack_start( imageBox, Gtk::PACK_EXPAND_WIDGET );
   controls_group_scrolled_window.add( layersWidget.get_controls_group() );
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
-  controls_group_scrolled_window.set_size_request( 280, 0 );
+  controls_group_scrolled_window.set_size_request( 230, 0 );
   //main_panel.pack_start( layersWidget.get_controls_group(), Gtk::PACK_SHRINK );
 
   button_highlights_warning.signal_toggled().connect( sigc::mem_fun(*this,
@@ -745,13 +745,13 @@ void PF::ImageEditor::zoom_actual_size()
 }
 
 
-void PF::ImageEditor::set_edited_layer( int id )
+void PF::ImageEditor::set_active_layer( int id )
 {
   PF::Layer* old_active = active_layer;
   active_layer = NULL;
   if( image )
     active_layer = image->get_layer_manager().get_layer( id );
-  //std::cout<<"ImageEditor::set_edited_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
+  std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
   if( old_active != active_layer ) {
     /*
     if( old_active &&
@@ -1038,10 +1038,16 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
         //std::cout<<"ImageEditor::my_button_release_event(): zoom_actual_size() called"<<std::endl<<std::endl;
       }
     }
+    if( button->type == GDK_BUTTON_PRESS && mod_key == PF::MOD_KEY_CTRL && button->button == 1) {
+      preview_drag_start_x = x;
+      preview_drag_start_y = y;
+      adjustment_drag_start_x = imageArea_scrolledWindow.get_hadjustment()->get_value();
+      adjustment_drag_start_y = imageArea_scrolledWindow.get_vadjustment()->get_value();
+    }
     return false;
   }
 
-
+  std::cout<<"ImageEditor::my_button_press_event(): active_layer="<<active_layer<<std::endl;
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {
@@ -1049,7 +1055,7 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
     PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
     //std::cout<<"ImageEditor::my_button_press_event(): dialog="<<dialog<<std::endl;
     //if( dialog ) std::cout<<"ImageEditor::my_button_press_event(): dialog->get_editing_flag()="<<dialog->get_editing_flag()<<std::endl;
-    if( dialog && dialog->get_editing_flag() == true ) {
+    if( dialog /*&& dialog->get_editing_flag() == true*/ ) {
 #ifndef NDEBUG
       std::cout<<"  sending button press event to dialog"<<std::endl;
 #endif
@@ -1066,9 +1072,9 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
 
 bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::ImageEditor::on_button_release_event(): button "<<button->button<<" released."<<std::endl;
-#endif
+//#endif
   gdouble x = button->x;
   gdouble y = button->y;
 
@@ -1081,19 +1087,19 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
     return false;
   }
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
   std::cout<<"ImageEditor::my_button_release_event(): active_layer="<<active_layer<<std::endl;
-#endif
+//#endif
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {
     PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
     PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
-    if( dialog && dialog->get_editing_flag() == true ) {
-#ifndef NDEBUG
+    if( dialog /*&& dialog->get_editing_flag() == true*/ ) {
+//#ifndef NDEBUG
       std::cout<<"  sending button release event to dialog"<<std::endl;
-#endif
+//#endif
       //std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
       if( dialog->pointer_release_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
@@ -1138,6 +1144,36 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
   if( event->state & GDK_SHIFT_MASK ) mod_key |= PF::MOD_KEY_SHIFT;
 
   if( mod_key == PF::MOD_KEY_CTRL ) {
+    if( button == 1 ) {
+      int dx = (int)(x - preview_drag_start_x);
+      int dy = (int)(y - preview_drag_start_y);
+      //std::cout<<"dx="<<dx<<"  x="<<x<<"  start="<<preview_drag_start_x
+      //    <<"  adj="<<imageArea_scrolledWindow.get_hadjustment()->get_value()
+      //    <<"  delta="<<fabs(imageArea_scrolledWindow.get_hadjustment()->get_value() - (adjustment_drag_start_x-dx))
+      //    <<std::endl;
+      if( fabs(imageArea_scrolledWindow.get_hadjustment()->get_value() - (adjustment_drag_start_x-dx)) > 2 ||
+          fabs(imageArea_scrolledWindow.get_vadjustment()->get_value() - (adjustment_drag_start_y-dy)) > 2 ) {
+
+        double xmax = imageArea_scrolledWindow.get_hadjustment()->get_upper() -
+            imageArea_scrolledWindow.get_hadjustment()->get_page_size();
+        double ymax = imageArea_scrolledWindow.get_vadjustment()->get_upper() -
+            imageArea_scrolledWindow.get_vadjustment()->get_page_size();
+      //std::cout<<"new val="<<adjustment_drag_start_x-dx
+        //  <<"  upper="<<xmax<<std::endl;
+        if( (adjustment_drag_start_x-dx) <= xmax ) {
+          imageArea_scrolledWindow.get_hadjustment()->set_value(adjustment_drag_start_x-dx);
+          adjustment_drag_start_x -= dx;
+        }
+        if( (adjustment_drag_start_y-dy) <= ymax ) {
+          imageArea_scrolledWindow.get_vadjustment()->set_value(adjustment_drag_start_y-dy);
+          adjustment_drag_start_y -= dy;
+        }
+        //preview_drag_start_x += dx;
+        //preview_drag_start_y += dy;
+
+        //std::cout<<"Dragging done"<<std::endl;
+      }
+    }
     return false;
   }
 
@@ -1154,7 +1190,7 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
         active_layer->get_processor()->get_par() ) {
       PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
-      if( dialog && dialog->get_editing_flag() == true ) {
+      if( dialog /*&& dialog->get_editing_flag() == true*/ ) {
 #ifndef NDEBUG
         std::cout<<"  sending motion event to dialog"<<std::endl;
 #endif

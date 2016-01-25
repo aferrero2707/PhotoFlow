@@ -33,6 +33,8 @@
 #include "hsl_mask_config.hh"
 
 
+#define CURVE_SIZE 192
+
 class HueEqualizerArea: public PF::CurveArea
 {
 public:
@@ -82,9 +84,9 @@ public:
 
 PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, _("HSL Mask") ),
-  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
-  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
-  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
+  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
+  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
   invert( this, "invert", "invert", false ),
   hueHeq_enable( this, "H_curve_enabled", "Enable", true ),
   hueSeq_enable( this, "S_curve_enabled", "Enable", true  ),

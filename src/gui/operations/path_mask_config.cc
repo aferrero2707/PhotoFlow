@@ -30,6 +30,8 @@
 #include "path_mask_config.hh"
 
 
+#define CURVE_SIZE 192
+
 static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
 {
   str<<r.width<<","<<r.height<<"+"<<r.left<<"+"<<r.top;
@@ -44,7 +46,7 @@ PF::PathMaskConfigGUI::PathMaskConfigGUI( PF::Layer* layer ):
               OperationConfigGUI( layer, "Path mask tool" ),
               invert_box( this, "invert", _("invert"), true ),
               enable_falloff_box( this, "enable_falloff", _("enable falloff"), true ),
-              falloffCurveEditor( this, "falloff_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+              falloffCurveEditor( this, "falloff_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
               active_point_id( -1 ), center_selected( false ),
               initializing( false )
 {
@@ -79,6 +81,8 @@ void PF::PathMaskConfigGUI::do_update()
 bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
   std::cout<<"PathMaskConfigGUI::pointer_press_event(): button="<<button<<std::endl;
+
+  if( !get_editing_flag() ) return false;
 
   border_resizing = false;
   path_resizing = false;
@@ -239,6 +243,8 @@ bool PF::PathMaskConfigGUI::pointer_release_event( int button, double sx, double
 {
   //std::cout<<"PathMaskConfigGUI::pointer_release_event(): button="<<button<<std::endl;
 
+  if( !get_editing_flag() ) return false;
+
   border_resizing = false;
   path_resizing = false;
   if( button != 1 && button != 3 ) return false;
@@ -263,6 +269,8 @@ bool PF::PathMaskConfigGUI::pointer_release_event( int button, double sx, double
 
 bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( !initializing && button != 1 ) return false;
 
   if( !path_resizing && !border_resizing && !center_selected && active_point_id < 0 ) return false;

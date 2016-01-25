@@ -50,6 +50,8 @@ void PF::PerspectiveConfigGUI::do_update()
 
 bool PF::PerspectiveConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
 
   // Retrieve the layer associated to the filter
@@ -98,12 +100,16 @@ bool PF::PerspectiveConfigGUI::pointer_press_event( int button, double sx, doubl
 
 bool PF::PerspectiveConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   return false;
 }
 
 
 bool PF::PerspectiveConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
   if( active_point_id < 0 ) return false;
 
