@@ -45,19 +45,21 @@
 
 #include <lcms2.h>
 
+/*
 #if (BUNDLED_LENSFUN == 1)
 #include <lensfun/lensfun.h>
 #else
 #include <lensfun.h>
 #endif
+*/
 
 #include <iostream>
 
 
 #include <vips/dispatch.h>
 
-#include "../base/processor.hh"
 #include "../operations/lensfun.hh"
+//#include "../base/processor.hh"
 
 #define PF_MAX_INPUT_IMAGES 10
 
