@@ -133,7 +133,7 @@ PF::RawImage::RawImage( const std::string _fname ):
 #ifdef __WIN32__
   const size_t len = strlen(file_name_real.c_str()) + 1;
   wchar_t filen[len];
-  mbstowcs(filen, filename, len);
+  mbstowcs(filen, file_name_real.c_str(), len);
 #else
   char filen[PATH_MAX] = { 0 };
   snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
