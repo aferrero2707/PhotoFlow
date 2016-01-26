@@ -1147,10 +1147,6 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
     if( button == 1 ) {
       int dx = (int)(x - preview_drag_start_x);
       int dy = (int)(y - preview_drag_start_y);
-      //std::cout<<"dx="<<dx<<"  x="<<x<<"  start="<<preview_drag_start_x
-      //    <<"  adj="<<imageArea_scrolledWindow.get_hadjustment()->get_value()
-      //    <<"  delta="<<fabs(imageArea_scrolledWindow.get_hadjustment()->get_value() - (adjustment_drag_start_x-dx))
-      //    <<std::endl;
       if( fabs(imageArea_scrolledWindow.get_hadjustment()->get_value() - (adjustment_drag_start_x-dx)) > 2 ||
           fabs(imageArea_scrolledWindow.get_vadjustment()->get_value() - (adjustment_drag_start_y-dy)) > 2 ) {
 
@@ -1158,8 +1154,6 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
             imageArea_scrolledWindow.get_hadjustment()->get_page_size();
         double ymax = imageArea_scrolledWindow.get_vadjustment()->get_upper() -
             imageArea_scrolledWindow.get_vadjustment()->get_page_size();
-      //std::cout<<"new val="<<adjustment_drag_start_x-dx
-        //  <<"  upper="<<xmax<<std::endl;
         if( (adjustment_drag_start_x-dx) <= xmax ) {
           imageArea_scrolledWindow.get_hadjustment()->set_value(adjustment_drag_start_x-dx);
           adjustment_drag_start_x -= dx;
@@ -1168,10 +1162,6 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
           imageArea_scrolledWindow.get_vadjustment()->set_value(adjustment_drag_start_y-dy);
           adjustment_drag_start_y -= dy;
         }
-        //preview_drag_start_x += dx;
-        //preview_drag_start_y += dy;
-
-        //std::cout<<"Dragging done"<<std::endl;
       }
     }
     return false;
