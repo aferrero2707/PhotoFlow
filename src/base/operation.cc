@@ -293,9 +293,27 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
 std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
-  VipsImage* out = build( in, first, imap, omap, level );
   std::vector<VipsImage*> result;
-  result.push_back( out );
+  VipsImage* out = build( in, first, imap, omap, level );
+
+  VipsImage* cached = out;
+  if( out && needs_caching() ) {
+    int tw = 64, th = 64;
+    // reserve two complete rows of tiles
+    int nt = out->Xsize*2/tw;
+    VipsAccess acc = VIPS_ACCESS_RANDOM;
+    int threaded = 1, persistent = 0;
+
+    if( vips_tilecache(out, &cached,
+        "tile_width", tw, "tile_height", th, "max_tiles", nt,
+        "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+      std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
+      return result;
+    }
+    PF_UNREF( out, "OpParBase::build_many(): out unref" );
+  }
+
+  result.push_back( cached );
   return result;
 }
 
