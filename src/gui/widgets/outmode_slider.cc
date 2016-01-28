@@ -64,7 +64,7 @@ PF::OutModeSlider::OutModeSlider( OperationConfigGUI* dialog, std::string pname,
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( 150, -1 );
+  scale.set_size_request( 120, -1 );
   spinButton.set_size_request( 30, -1 );
 
   // Full widget with slider and spin button

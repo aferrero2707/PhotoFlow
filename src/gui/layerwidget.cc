@@ -192,13 +192,17 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonDel.set_tooltip_text( _("Remove selected layers") );
 
   buttonPresetLoad.set_tooltip_text( _("Load an existing preset") );
+  buttonPresetLoad.set_size_request(108, 26);
   buttonPresetSave.set_tooltip_text( _("Save the selected layers as a preset") );
+  buttonPresetSave.set_size_request(108, 26);
 
+  buttonbox.set_spacing(5);
+  //buttonbox.set_border_width(4);
   //buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
   //buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
   //buttonbox.pack_start(buttonDel, Gtk::PACK_SHRINK);
-  buttonbox.pack_start(buttonPresetLoad/*, Gtk::PACK_SHRINK*/);
-  buttonbox.pack_start(buttonPresetSave/*, Gtk::PACK_SHRINK*/);
+  buttonbox.pack_end(buttonPresetSave, Gtk::PACK_SHRINK);
+  buttonbox.pack_end(buttonPresetLoad, Gtk::PACK_SHRINK);
   //buttonbox.set_layout(Gtk::BUTTONBOX_START);
 
   controls_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
@@ -211,9 +215,12 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //pack_start(layers_panel);
 
   main_box.pack_start(tool_buttons_box, Gtk::PACK_SHRINK);
-  main_box.pack_start(notebook, Gtk::PACK_EXPAND_WIDGET);
+  main_box.pack_start(vbox, Gtk::PACK_EXPAND_WIDGET);
+  vbox.set_spacing(4);
+  vbox.pack_start(notebook, Gtk::PACK_EXPAND_WIDGET);
+  vbox.pack_start( buttonbox, Gtk::PACK_SHRINK );
   top_box.pack_start( main_box, Gtk::PACK_EXPAND_WIDGET );
-  top_box.pack_start( buttonbox, Gtk::PACK_SHRINK );
+  //top_box.pack_start( buttonbox, Gtk::PACK_SHRINK );
   pack_start( top_box );
 
   /*

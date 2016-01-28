@@ -65,7 +65,7 @@ public:
   class Slider: public Gtk::HBox, public PFWidget
   {
     Gtk::HBox hbox;
-    Gtk::VBox vbox;
+    Gtk::VBox vbox, vbox2;
     Gtk::Label label;
     Gtk::Alignment align;
 #ifdef GTKMM_2

@@ -37,6 +37,7 @@ PF::NumEntry::NumEntry(): Gtk::Entry(), digits(1), inhibited(false)
   signal_key_press_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
   signal_key_release_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
   add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
+  set_width_chars(5);
 }
 
 
@@ -134,7 +135,7 @@ void PF::Slider::create_widgets( std::string l, double val,
   spinButton.set_size_request( 50, -1 );
   spinButton.set_has_frame( false );
 
-  numentry.set_size_request( 30, -1 );
+  //numentry.set_size_request( 30, -1 );
   numentry.set_has_frame( false );
 
   if( (max-min) < 1000000 ) {
@@ -152,7 +153,8 @@ void PF::Slider::create_widgets( std::string l, double val,
     vbox.set_spacing(-3);
     vbox.pack_start( align, Gtk::PACK_SHRINK );
     vbox.pack_start( scale, Gtk::PACK_SHRINK );
-    //set_spacing(-3);
+    //vbox2.pack_end( numentry, Gtk::PACK_SHRINK );
+    set_spacing(4);
     pack_start( vbox, Gtk::PACK_SHRINK );
     //pack_start( spinButton, Gtk::PACK_SHRINK );
     pack_start( numentry, Gtk::PACK_SHRINK );

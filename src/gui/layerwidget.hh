@@ -72,6 +72,7 @@ class LayerWidget : public Gtk::VBox
   Gtk::VPaned layers_panel;
   Gtk::VBox top_box;
   Gtk::HBox main_box;
+  Gtk::VBox vbox;
   Gtk::Notebook notebook;
   Gtk::ScrolledWindow controls_scrolled_window;
   ControlsGroup controls_group;

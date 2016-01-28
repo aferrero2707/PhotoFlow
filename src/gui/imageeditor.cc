@@ -191,21 +191,29 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
   button_highlights_warning.set_image( img_highlights_warning );
   button_highlights_warning.set_tooltip_text( _("Toggle highlights clipping warning on/off") );
+  button_highlights_warning.set_size_request(35,26);
   controlsBox.pack_end( button_highlights_warning, Gtk::PACK_SHRINK );
   button_shadows_warning.set_image( img_shadows_warning );
   button_shadows_warning.set_tooltip_text( _("Toggle shadows clipping warning on/off") );
+  button_shadows_warning.set_size_request(35,26);
   controlsBox.pack_end( button_shadows_warning, Gtk::PACK_SHRINK );
 
+  controlsBox.set_spacing(2);
+  controlsBox.set_border_width(2);
   buttonZoom100.set_tooltip_text( _("Zoom to 100%") );
+  buttonZoom100.set_size_request(26,0);
   controlsBox.pack_end( buttonZoom100, Gtk::PACK_SHRINK );
   buttonZoomFit.set_image( img_zoom_fit );
   buttonZoomFit.set_tooltip_text( _("Fit image to preview area") );
+  buttonZoomFit.set_size_request(26,0);
   controlsBox.pack_end( buttonZoomFit, Gtk::PACK_SHRINK );
   buttonZoomOut.set_image( img_zoom_out );
   buttonZoomOut.set_tooltip_text( _("Zoom out") );
+  buttonZoomOut.set_size_request(26,0);
   controlsBox.pack_end( buttonZoomOut, Gtk::PACK_SHRINK );
   buttonZoomIn.set_image( img_zoom_in );
   buttonZoomIn.set_tooltip_text( _("Zoom in") );
+  buttonZoomIn.set_size_request(26,0);
   controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
   controlsBox.pack_end( status_indicator, Gtk::PACK_SHRINK );
 
@@ -230,7 +238,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   main_panel.pack_start( imageBox, Gtk::PACK_EXPAND_WIDGET );
   controls_group_scrolled_window.add( layersWidget.get_controls_group() );
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
-  controls_group_scrolled_window.set_size_request( 230, 0 );
+  controls_group_scrolled_window.set_size_request( 240, 0 );
   //main_panel.pack_start( layersWidget.get_controls_group(), Gtk::PACK_SHRINK );
 
   button_highlights_warning.signal_toggled().connect( sigc::mem_fun(*this,
@@ -1087,10 +1095,10 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
     return false;
   }
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
   std::cout<<"ImageEditor::my_button_release_event(): active_layer="<<active_layer<<std::endl;
-//#endif
+#endif
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {

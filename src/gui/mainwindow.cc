@@ -55,7 +55,8 @@ controlBox(),
 mainBox(Gtk::ORIENTATION_VERTICAL),
 editorBox(Gtk::ORIENTATION_VERTICAL),
 controlBox(Gtk::ORIENTATION_VERTICAL),
-topButtonBox(Gtk::ORIENTATION_HORIZONTAL),
+topButtonBox1(Gtk::ORIENTATION_HORIZONTAL),
+topButtonBox2(Gtk::ORIENTATION_HORIZONTAL),
 #endif
 files_frame( _("files") ),
 editing_frame( _("editing") ),
@@ -116,10 +117,13 @@ buttonSavePreset()
   buttonSaveAs.set_tooltip_text( _("Save current image with a different name") );
   buttonExport.set_image( img_export ); buttonExport.set_size_request(40,-1);
   buttonExport.set_tooltip_text( _("Export current image to raster format") );
-  top_box.pack_start(buttonOpen, Gtk::PACK_SHRINK);
-  top_box.pack_start(buttonSave, Gtk::PACK_SHRINK);
-  top_box.pack_start(buttonSaveAs, Gtk::PACK_SHRINK);
-  top_box.pack_start(buttonExport, Gtk::PACK_SHRINK);
+
+  top_box.set_spacing(4);
+  top_box.set_border_width(4);
+  top_box.pack_start(buttonOpen, Gtk::PACK_SHRINK, 0);
+  top_box.pack_start(buttonSave, Gtk::PACK_SHRINK, 0);
+  top_box.pack_start(buttonSaveAs, Gtk::PACK_SHRINK, 0);
+  top_box.pack_start(buttonExport, Gtk::PACK_SHRINK, 0);
 
   topButtonBox2.pack_start(buttonNewLayer, Gtk::PACK_SHRINK);
   topButtonBox2.pack_start(buttonNewGroup, Gtk::PACK_SHRINK);

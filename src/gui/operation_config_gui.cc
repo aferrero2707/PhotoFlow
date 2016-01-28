@@ -124,7 +124,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
 
   frame = new Gtk::Frame;
-  frame->set_size_request(200,-1);
+  //frame->set_size_request(200,-1);
   frame->set_shadow_type( Gtk::SHADOW_NONE );
 
   controls_frame.set_shadow_type( Gtk::SHADOW_NONE );
@@ -232,6 +232,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   aux_controls_hbox.pack_start( frame_top_buttons_alignment2, Gtk::PACK_SHRINK );
 
+  nameEntry2.set_width_chars(10);
   aux_controls_hbox.pack_start( nameEntry2, Gtk::PACK_EXPAND_WIDGET );
   if(par && par->has_opacity() ) {
     aux_controls_hbox.pack_start( blendSelector2, Gtk::PACK_SHRINK );
@@ -240,7 +241,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   if(false && par && par->has_intensity() ) {
     aux_controls_box.pack_start( intensitySlider2, Gtk::PACK_SHRINK );
   }
-  aux_controls_box.set_size_request(100,80);
+  aux_controls_box.set_size_request(0,80);
 
   frame_visible.set_tooltip_text( _("toggle layer visibility on/off") );
   frame_mask.set_tooltip_text( _("enable/disable layer mask(s)") );
@@ -356,7 +357,7 @@ void PF::OperationConfigGUI::on_unmap()
 
 void PF::OperationConfigGUI::expand()
 {
-  std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
+  //std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
   if( controls_frame.get_parent() == NULL ) {
     std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
     if( editor ) {

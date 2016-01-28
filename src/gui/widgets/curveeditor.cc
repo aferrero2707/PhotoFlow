@@ -69,8 +69,10 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
   yspinButton.set_digits( 1 );
 
   box.pack_start( *curve_area );
+  numentries_spacing.set_size_request(10,0);
   spin_buttons_box.pack_start( xlabel, Gtk::PACK_SHRINK );
   spin_buttons_box.pack_start( xspinButton, Gtk::PACK_SHRINK );
+  spin_buttons_box.pack_start( numentries_spacing, Gtk::PACK_SHRINK );
   spin_buttons_box.pack_start( ylabel, Gtk::PACK_SHRINK );
   spin_buttons_box.pack_start( yspinButton, Gtk::PACK_SHRINK );
   box.pack_start( spin_buttons_box );
