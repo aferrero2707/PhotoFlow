@@ -314,12 +314,12 @@ if (GIMP_FOUND)
   FILE(GLOB PluginIncludes plugin/*.hh)
   FILE(GLOB PluginSources plugin/*.cc)
 
-  add_executable(pfgimp ${PluginSources})
-
   include_directories(${GIMP_2_9_INCLUDE_DIRS})
   link_directories(${GIMP_2_9_LIBRARY_DIRS})
   include_directories(${GIMPUI_INCLUDE_DIRS})
   link_directories(${GIMPUI_LIBRARY_DIRS})
+
+  add_executable(pfgimp ${PluginSources})
 
   set_target_properties(pfgimp PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
 
