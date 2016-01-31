@@ -1290,7 +1290,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     //img->set_async( false );
     img->update( pipeline, true );
     //img->update( NULL, true );
-    img->unlock();
+    //img->unlock();
     //img->set_async( async );
 
 
