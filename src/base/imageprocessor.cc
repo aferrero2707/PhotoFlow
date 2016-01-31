@@ -243,8 +243,8 @@ void PF::ImageProcessor::run()
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): image locked."<<std::endl;
         if( (request.area.width!=0) && (request.area.height!=0) )
           request.image->do_sample( request.layer_id, request.area );
-        request.image->sample_unlock();
         request.image->sample_done_signal();
+        request.image->sample_unlock();
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
         break;
       case IMAGE_UPDATE:

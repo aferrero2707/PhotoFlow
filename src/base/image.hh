@@ -36,6 +36,8 @@
 
 #include <gexiv2/gexiv2-metadata.h>
 
+#include "condition.hh"
+
 #include "layermanager.hh"
 #include "pipeline.hh"
 
@@ -87,12 +89,14 @@ struct ImageBuffer
 
     GMutex* rebuild_mutex;
     GCond* rebuild_done;
+    PF::Condition rebuild_cond;
 
     GMutex* export_mutex;
     GCond* export_done;
 
     GMutex* sample_mutex;
     GCond* sample_done;
+    PF::Condition sample_cond;
 
     GMutex* remove_layer_mutex;
     GCond* remove_layer_done;
@@ -171,9 +175,9 @@ struct ImageBuffer
     void sample_unlock();
     void remove_layer_lock() { g_mutex_lock( remove_layer_mutex); }
     void remove_layer_unlock() { g_mutex_unlock( remove_layer_mutex); }
-    void rebuild_done_signal() { g_cond_signal( rebuild_done ); }
+    void rebuild_done_signal() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.signal(); }
     void export_done_signal() { g_cond_signal( export_done ); }
-    void sample_done_signal() { g_cond_signal( sample_done ); }
+    void sample_done_signal() { /*g_cond_signal( sample_done );*/ sample_cond.signal(); }
     void remove_layer_done_signal() { g_cond_signal( remove_layer_done ); }
 
     void set_pipeline_level( PF::Pipeline* pipeline, int level );

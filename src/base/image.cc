@@ -149,9 +149,9 @@ void PF::Image::unlock()
   std::cout<<"  UNLOCKING REBUILD MUTEX"<<std::endl;
   std::cout<<"---------------------"<<std::endl;
   g_mutex_unlock( rebuild_mutex);
-  std::cout<<"---------------------"<<std::endl;
-  std::cout<<"  REBUILD MUTEX UNLOCKED"<<std::endl;
-  std::cout<<"---------------------"<<std::endl;
+  //std::cout<<"---------------------"<<std::endl;
+  //std::cout<<"  REBUILD MUTEX UNLOCKED"<<std::endl;
+  //std::cout<<"---------------------"<<std::endl;
 }
 
 void PF::Image::sample_lock()
@@ -168,9 +168,9 @@ void PF::Image::sample_unlock()
   std::cout<<"  UNLOCKING SAMPLE MUTEX"<<std::endl;
   std::cout<<"---------------------"<<std::endl;
   g_mutex_unlock( sample_mutex);
-  std::cout<<"---------------------"<<std::endl;
-  std::cout<<"  SAMPLE MUTEX UNLOCKED"<<std::endl;
-  std::cout<<"---------------------"<<std::endl;
+  //std::cout<<"---------------------"<<std::endl;
+  //std::cout<<"  SAMPLE MUTEX UNLOCKED"<<std::endl;
+  //std::cout<<"---------------------"<<std::endl;
 }
 
 
@@ -227,28 +227,29 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     request.area.width = request.area.height = 0;
     //}
 
-    if( sync && target_pipeline ) g_mutex_lock( rebuild_mutex );
-#ifndef NDEBUG
+    if( sync && target_pipeline ) lock(); //g_mutex_lock( rebuild_mutex );
+//#ifndef NDEBUG
     std::cout<<"PF::Image::update(): submitting rebuild request..."<<std::endl;
-#endif
+//#endif
     PF::ImageProcessor::Instance().submit_request( request );
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::update(): request submitted."<<std::endl;
-#endif
+//#endif
 
     if( sync && target_pipeline ) {
       std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
-      g_cond_wait( rebuild_done, rebuild_mutex );
+      unlock(); //g_mutex_unlock( rebuild_mutex );
+      //g_cond_wait( rebuild_done, rebuild_mutex );
+      rebuild_cond.wait();
       std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
     }
 
     // In sync mode, the image is left in a locked state to allow further 
     // actions to be taken before any subsequent rebuild and reprocessing 
     // takes place
-    if( sync && target_pipeline ) {
-      std::cout<<"PF::Image::update(): unlocking rebuild mutex after condition...."<<std::endl;
-      g_mutex_unlock( rebuild_mutex );
-    }
+    //if( sync && target_pipeline ) {
+    //  std::cout<<"PF::Image::update(): unlocking rebuild mutex after condition...."<<std::endl;
+    //}
   }
 
   /*
@@ -411,7 +412,7 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     request.area.width = area.width;
     request.area.height = area.height;
 
-    g_mutex_lock( sample_mutex );
+    sample_lock(); //g_mutex_lock( sample_mutex );
     #ifndef NDEBUG
     std::cout<<"PF::Image::sample(): submitting sample request..."<<std::endl;
     #endif
@@ -420,8 +421,9 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     std::cout<<"PF::Image::sample(): request submitted."<<std::endl;
     #endif
 
-    g_cond_wait( sample_done, sample_mutex );
-    g_mutex_unlock( sample_mutex );
+    //g_cond_wait( sample_done, sample_mutex );
+    sample_unlock(); //g_mutex_unlock( sample_mutex );
+    sample_cond.wait();
 
     if(image)
       *image = sampler_image;
