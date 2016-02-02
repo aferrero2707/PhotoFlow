@@ -154,16 +154,26 @@ void PF::Slider::create_widgets( std::string l, double val,
     vbox.pack_start( align, Gtk::PACK_SHRINK );
     vbox.pack_start( scale, Gtk::PACK_SHRINK );
     //vbox2.pack_end( numentry, Gtk::PACK_SHRINK );
-    set_spacing(4);
+    //set_spacing(4);
     pack_start( vbox, Gtk::PACK_SHRINK );
     //pack_start( spinButton, Gtk::PACK_SHRINK );
-    pack_start( numentry, Gtk::PACK_SHRINK );
+    //hbox2.pack_start( vbox, Gtk::PACK_SHRINK );
+    //hbox2.set_baseline_position( Gtk::BASELINE_POSITION_CENTER );
+    hbox2.pack_start( numentry, Gtk::PACK_SHRINK, 4 );
+
+    reset_button_align.set( Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0 );
+    reset_button_align.add( reset_button );
+    hbox2.pack_start( reset_button_align, Gtk::PACK_SHRINK );
+    pack_start( hbox2, Gtk::PACK_SHRINK );
   } else {
     //hbox.pack_start( label, Gtk::PACK_SHRINK );
     //hbox.pack_start( spinButton, Gtk::PACK_SHRINK );
     pack_start( label, Gtk::PACK_SHRINK );
     //pack_start( spinButton, Gtk::PACK_SHRINK );
-    pack_start( numentry, Gtk::PACK_SHRINK );
+    pack_start( numentry, Gtk::PACK_SHRINK, 4 );
+    reset_button_align.set( Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0 );
+    reset_button_align.add( reset_button );
+    pack_start( reset_button_align, Gtk::PACK_SHRINK );
   }
 
   //pack_start( hbox, Gtk::PACK_SHRINK );
@@ -179,6 +189,11 @@ void PF::Slider::create_widgets( std::string l, double val,
         &PFWidget::changed));
 #endif
 
+  reset_button.signal_clicked.connect(sigc::mem_fun(*this,
+        &PF::Slider::reset) );
+  reset_button.signal_clicked.connect(sigc::mem_fun(*this,
+        &PF::Slider::changed) );
+
   show_all_children();
 
 }
@@ -193,6 +208,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, std::string pname, std::string l
   scale(adjustment),
   spinButton(adjustment),
 #endif
+  reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_inactive.png"),
   multiplier(mult)
 {
   create_widgets( l, val, min, max, sincr, pincr );
@@ -209,6 +225,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, st
   scale(adjustment),
   spinButton(adjustment),
 #endif
+  reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_inactive.png"),
   multiplier(mult)
 {
   create_widgets( l, val, min, max, sincr, pincr );

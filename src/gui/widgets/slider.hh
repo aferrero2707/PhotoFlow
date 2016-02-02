@@ -33,6 +33,7 @@
 #include <gtkmm.h>
 
 #include "pfwidget.hh"
+#include "imagebutton.hh"
 
 namespace PF {
 
@@ -64,7 +65,7 @@ public:
 
   class Slider: public Gtk::HBox, public PFWidget
   {
-    Gtk::HBox hbox;
+    Gtk::HBox hbox, hbox2;
     Gtk::VBox vbox, vbox2;
     Gtk::Label label;
     Gtk::Alignment align;
@@ -77,6 +78,9 @@ public:
     Gtk::HScale scale;
     Gtk::SpinButton spinButton;
     NumEntry numentry;
+
+    Gtk::Alignment reset_button_align;
+    ToggleImageButton reset_button;
 
     double multiplier;
     
