@@ -54,6 +54,7 @@ PF::Pipeline::~Pipeline()
 				else
 					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref image (NULL layer)" );
 				PF_UNREF( nodes[i]->image, tstr );
+				std::cout<<"Pipeline::~Pipeline(): unref of nodes[i]->image"<<std::endl;
       }
       if( nodes[i]->blended != NULL ) {
         if( G_OBJECT( nodes[i]->blended )->ref_count <= 0 ) {
@@ -71,15 +72,27 @@ PF::Pipeline::~Pipeline()
 					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref blended image (NULL layer)" );
 				PF_UNREF( nodes[i]->blended, tstr );
       }
-      if( nodes[i]->processor != NULL )
-				delete( nodes[i]->processor );
+      if( nodes[i]->processor != NULL ) {
+        std::cout<<"Pipeline::~Pipeline(): deleting processor"<<std::endl;
+        delete( nodes[i]->processor );
+        std::cout<<"Pipeline::~Pipeline(): processor deleted"<<std::endl;
+      }
+      if( nodes[i]->blender != NULL ) {
+        std::cout<<"Pipeline::~Pipeline(): deleting blender"<<std::endl;
+        delete( nodes[i]->blender );
+        std::cout<<"Pipeline::~Pipeline(): blender deleted"<<std::endl;
+      }
       delete nodes[i];
     }
   }
+  std::cout<<"Pipeline::~Pipeline(): deleting sinks"<<std::endl;
   for( unsigned int i = 0; i < sinks.size(); i++ ) {
     if( sinks[i] == NULL ) continue;
+    std::cout<<"Pipeline::~Pipeline(): deleting sink #"<<i<<std::endl;
 		delete( sinks[i] );
+    std::cout<<"Pipeline::~Pipeline(): sink #"<<i<<" deleted"<<std::endl;
 	}
+  std::cout<<"Pipeline::~Pipeline(): all sinks deleted"<<std::endl;
 }
 
 
