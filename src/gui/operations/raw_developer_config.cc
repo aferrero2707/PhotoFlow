@@ -781,7 +781,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
 		rgb_avg[1] = values[1];
 		rgb_avg[2] = values[2];
 
-		//std::cout<<" sampled("<<i<<"): "<<rgb_avg[0]<<" "<<rgb_avg[1]<<" "<<rgb_avg[2]<<std::endl;
+		std::cout<<" sampled("<<i<<"): "<<rgb_avg[0]<<" "<<rgb_avg[1]<<" "<<rgb_avg[2]<<std::endl;
 
 
     float rgb_out[3] = {0, 0, 0};

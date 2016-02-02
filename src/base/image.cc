@@ -954,6 +954,7 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
   unsigned int level = 0;
   PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
   update( pipeline, true );
+  std::cout<<"Image::export_merged_to_mem(): image updated."<<std::endl;
 
   std::string msg;
   VipsImage* image = pipeline->get_output();
@@ -965,6 +966,7 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
   convert_format->get_par()->set_image_hints( image );
   convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
   outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+  std::cout<<"Image::export_merged_to_mem(): outimg="<<outimg<<std::endl;
   if( outimg ) {
     imgbuf->buf = (float*)malloc( sizeof(float)*3*outimg->Xsize*outimg->Ysize );
     imgbuf->width = outimg->Xsize;

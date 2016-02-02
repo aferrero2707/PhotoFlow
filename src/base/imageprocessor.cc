@@ -215,7 +215,7 @@ void PF::ImageProcessor::run()
         signal_status_processing.emit();
         std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         request.image->lock();
-        //std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
+        std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
         /*
           if( (request.area.width!=0) && (request.area.height!=0) )
           request.image->do_update( &(request.area) );
