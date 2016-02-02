@@ -61,6 +61,7 @@ public:
   void wait()
   {
     g_mutex_lock( mutex );
+    signaled = false;
     while( !signaled )
       g_cond_wait( condition, mutex );
     signaled = false;
