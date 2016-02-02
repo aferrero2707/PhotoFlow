@@ -446,9 +446,14 @@ void run(const gchar *name,
       std::cout<<"ICC profile attached"<<std::endl;
     }
 
-    delete pluginwin;
-    PF::PhotoFlow::Instance().close();
+    std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Plug-in: deleting application"<<std::endl;
     delete app;
+    std::cout<<"Plug-in: application deleted"<<std::endl;
+    std::cout<<"Plug-in: deleting main window"<<std::endl;
+    delete pluginwin;
+    std::cout<<"Plug-in: closing photoflow"<<std::endl;
+    PF::PhotoFlow::Instance().close();
 
   } else {
     if (sendToGimpMode) {
