@@ -47,8 +47,9 @@ namespace PF
     ProcessorBase(OpParBase* p): op_par_base(p) {}
     virtual ~ProcessorBase() 
     {
-      std::cout<<"~ProcessorBase(): deleting "<<(void*)op_par_base<<std::endl;
+      //std::cout<<"~ProcessorBase(): deleting "<<(void*)op_par_base<<std::endl;
       //delete op_par_base;
+      //std::cout<<"~ProcessorBase(): "<<(void*)op_par_base<<" deleted"<<std::endl;
     }
 
 
