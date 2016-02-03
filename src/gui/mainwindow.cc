@@ -209,9 +209,11 @@ PF::MainWindow::~MainWindow()
     if( image_editors[i] )
       delete( image_editors[i] );
   }
+  /*
   ProcessRequestInfo request;
   request.request = PF::PROCESSOR_END;
   PF::ImageProcessor::Instance().submit_request( request );	
+  */
   //delete pf_image;
 }
 

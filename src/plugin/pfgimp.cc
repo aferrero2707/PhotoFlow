@@ -286,6 +286,7 @@ void run(const gchar *name,
     vips_perspective_get_type();
     if(!Glib::thread_supported())
       Glib::thread_init();
+    //gimp_ui_init("photoflow-gimp", TRUE);
     PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
     PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
     PF::PhotoFlow::Instance().set_batch( false );
@@ -329,6 +330,7 @@ void run(const gchar *name,
     std::cout<<"  file opened"<<std::endl;
     pluginwin->show_all();
     app->run(*pluginwin);
+    //gtk_main();
     std::cout<<"Plug-in window closed."<<std::endl;
     std::cout<<"pluginwin->get_image_buffer().buf="<<pluginwin->get_image_buffer().buf<<std::endl;
 
@@ -395,7 +397,7 @@ void run(const gchar *name,
     gimp_drawable_detach(drawable);
 #endif
 
-    printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
+    //printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
 
     if( false ) {
     GimpParasite *exif_parasite;
@@ -447,11 +449,18 @@ void run(const gchar *name,
     }
 
     std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Plug-in: stopping image processor"<<std::endl;
+    PF::ProcessRequestInfo request;
+    request.request = PF::PROCESSOR_END;
+    PF::ImageProcessor::Instance().submit_request( request );
+    PF::ImageProcessor::Instance().join();
+    std::cout<<"Plug-in: image processor stopped"<<std::endl;
+    std::cout<<"Plug-in: deleting main window"<<std::endl;
+    delete pluginwin;
+    std::cout<<"Plug-in: main window deleted"<<std::endl;
     std::cout<<"Plug-in: deleting application"<<std::endl;
     delete app;
     std::cout<<"Plug-in: application deleted"<<std::endl;
-    std::cout<<"Plug-in: deleting main window"<<std::endl;
-    delete pluginwin;
     std::cout<<"Plug-in: closing photoflow"<<std::endl;
     PF::PhotoFlow::Instance().close();
 

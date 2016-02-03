@@ -218,7 +218,8 @@ int main (int argc, char *argv[])
 #ifdef GTKMM_3
   Gtk::Settings::get_default()->property_gtk_application_prefer_dark_theme().set_value(true);
 
-  int stat_result = stat((themesPath + "/photoflow-dark.css").c_str(), &buffer);
+  //int stat_result = stat((themesPath + "/photoflow-dark.css").c_str(), &buffer);
+  int stat_result = stat((themesPath + "/RawTherapee.css").c_str(), &buffer);
   //int stat_result = stat((themesPath + "/gtk-3.0/gtk.css").c_str(), &buffer);
   //stat_result = 1;
   if( stat_result == 0 ) {
@@ -231,7 +232,9 @@ int main (int argc, char *argv[])
     //cntx->add_provider(css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     cntx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     //cntx->invalidate();
-    css->load_from_path(themesPath + "/photoflow-dark.css");
+    //css->load_from_path(themesPath + "/photoflow-dark.css");
+    std::cout<<"Loading theme file "<<themesPath + "/RawTherapee.css"<<std::endl;
+    css->load_from_path(themesPath + "/RawTherapee.css");
     //css->load_from_path(themesPath + "/gtk-3.0/gtk.css");
     //css->load_from_path("themes/photoflow-dark/gtk.css");
   }
@@ -247,6 +250,11 @@ int main (int argc, char *argv[])
   //Shows the window and returns when it is closed.
   mainWindow->show_all();
   app->run(*mainWindow);
+
+  PF::ProcessRequestInfo request;
+  request.request = PF::PROCESSOR_END;
+  PF::ImageProcessor::Instance().submit_request( request );
+  PF::ImageProcessor::Instance().join();
 
   delete mainWindow;
   delete app;

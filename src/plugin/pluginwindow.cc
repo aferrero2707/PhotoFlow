@@ -105,10 +105,13 @@ PF::PluginWindow::~PluginWindow()
   if( image_editor ) delete( image_editor );
   std::cout<<"~PluginWindow(): image editor deleted"<<std::endl;
 
+  /*
   std::cout<<"~PluginWindow(): submitting end request for image processor"<<std::endl;
   ProcessRequestInfo request;
   request.request = PF::PROCESSOR_END;
   PF::ImageProcessor::Instance().submit_request( request );	
+  std::cout<<"~PluginWindow(): request submitted"<<std::endl;
+  */
   //delete pf_image;
 }
 

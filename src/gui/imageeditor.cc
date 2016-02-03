@@ -307,14 +307,18 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
 PF::ImageEditor::~ImageEditor()
 {
-	/*
+	/**/
+  std::cout<<"~ImageEditor(): deleting image"<<std::endl;
   if( image )
     delete image;
-	*/
+  std::cout<<"~ImageEditor(): image deleted"<<std::endl;
+	/**/
+  /*
   ProcessRequestInfo request;
   request.image = image;
   request.request = PF::IMAGE_DESTROY;
   PF::ImageProcessor::Instance().submit_request( request );	
+  */
 }
 
 

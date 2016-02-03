@@ -175,7 +175,7 @@ PF::PhotoFlow& PF::PhotoFlow::Instance()
 
 void PF::PhotoFlow::close()
 {
-  PF::ImageProcessor::Instance().join();
+  //PF::ImageProcessor::Instance().join();
 
   //im_close_plugins();
   vips_shutdown();
