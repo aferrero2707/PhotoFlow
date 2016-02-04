@@ -159,7 +159,8 @@ void PF::Image::sample_lock()
   std::cout<<"+++++++++++++++++++++"<<std::endl;
   std::cout<<"  LOCKING SAMPLE MUTEX"<<std::endl;
   std::cout<<"+++++++++++++++++++++"<<std::endl;
-  g_mutex_lock( sample_mutex);
+  //g_mutex_lock( sample_mutex);
+  sample_cond.lock();
 }
 
 void PF::Image::sample_unlock()
@@ -167,7 +168,8 @@ void PF::Image::sample_unlock()
   std::cout<<"---------------------"<<std::endl;
   std::cout<<"  UNLOCKING SAMPLE MUTEX"<<std::endl;
   std::cout<<"---------------------"<<std::endl;
-  g_mutex_unlock( sample_mutex);
+  //g_mutex_unlock( sample_mutex);
+  sample_cond.unlock();
   //std::cout<<"---------------------"<<std::endl;
   //std::cout<<"  SAMPLE MUTEX UNLOCKED"<<std::endl;
   //std::cout<<"---------------------"<<std::endl;
@@ -422,8 +424,12 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     #endif
 
     //g_cond_wait( sample_done, sample_mutex );
-    sample_unlock(); //g_mutex_unlock( sample_mutex );
+    std::cout<<"Image::sample(): unlocking mutex."<<std::endl;
+    //sample_unlock(); //g_mutex_unlock( sample_mutex );
+    std::cout<<"Image::sample(): waiting for done."<<std::endl;
     sample_cond.wait();
+    sample_unlock();
+    std::cout<<"Image::sample(): done received."<<std::endl;
 
     if(image)
       *image = sampler_image;
@@ -538,6 +544,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
     sampler_values.push_back( avg[b] );
   }
   sampler_image = image;
+
+  std::cout<<"Image::do_sample() finished."<<std::endl;
 
   //g_object_unref( spot );
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount before region unref" );
