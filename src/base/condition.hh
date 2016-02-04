@@ -50,22 +50,32 @@ public:
     condition = vips_g_cond_new();
   }
 
-  void signal()
+  void lock()
   {
     g_mutex_lock( mutex );
+  }
+
+  void unlock()
+  {
+    g_mutex_unlock( mutex );
+  }
+
+  void signal()
+  {
+    //g_mutex_lock( mutex );
     signaled = true;
     g_cond_signal( condition );
-    g_mutex_unlock( mutex );
+    //g_mutex_unlock( mutex );
   }
 
   void wait()
   {
-    g_mutex_lock( mutex );
+    //g_mutex_lock( mutex );
     signaled = false;
     while( !signaled )
       g_cond_wait( condition, mutex );
     signaled = false;
-    g_mutex_unlock( mutex );
+    //g_mutex_unlock( mutex );
   }
 };
 
