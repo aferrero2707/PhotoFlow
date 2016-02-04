@@ -359,7 +359,14 @@ bool PF::CurvesConfigGUI::pointer_release_event( int button, double x, double y,
   std::cout<<"CurvesConfigGUI::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
 
   PF::OpParBase* par = get_layer()->get_processor()->get_par();
-  PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+  PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+  if( node->processor && node->processor->get_par() ) {
+    PF::OpParBase* par = node->processor->get_par();
+    cs = PF::convert_colorspace( par->get_interpretation() );
+    //std::cout<<"OperationConfigGUI::update() par: "<<par<<std::endl;
+    std::cout<<"CurvesConfigGUI::pointer_release_event(): interpretation="<<par->get_interpretation()<<std::endl;
+    std::cout<<"CurvesConfigGUI::pointer_release_event(): colorspace="<<cs<<std::endl;
+  }
   switch( cs ) {
   case PF_COLORSPACE_GRAYSCALE:
     if( values.empty() ) return false;
@@ -367,8 +374,10 @@ bool PF::CurvesConfigGUI::pointer_release_event( int button, double x, double y,
     break;
   case PF_COLORSPACE_RGB:
     if( values.size() != 3 ) return false;
+    std::cout<<"CurvesConfigGUI::pointer_release_event(): rgbCurveSelector.get_active_row_number()="<<rgbCurveSelector.get_active_row_number()<<std::endl;
     switch( rgbCurveSelector.get_active_row_number() ) {
     case 0:
+      std::cout<<"CurvesConfigGUI::pointer_release_event(): rgbCurveEditor.add_point( "<<(values[0]+values[1]+values[2])/3.0f<<" );"<<std::endl;
       rgbCurveEditor.add_point( (values[0]+values[1]+values[2])/3.0f );
       break;
     case 1:
