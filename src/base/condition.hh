@@ -62,10 +62,10 @@ public:
 
   void signal()
   {
-    //g_mutex_lock( mutex );
+    g_mutex_lock( mutex );
     signaled = true;
     g_cond_signal( condition );
-    //g_mutex_unlock( mutex );
+    g_mutex_unlock( mutex );
   }
 
   void wait()

@@ -229,7 +229,7 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     request.area.width = request.area.height = 0;
     //}
 
-    if( sync && target_pipeline ) lock(); //g_mutex_lock( rebuild_mutex );
+    if( sync && target_pipeline ) rebuild_cond.lock(); //g_mutex_lock( rebuild_mutex );
 //#ifndef NDEBUG
     std::cout<<"PF::Image::update(): submitting rebuild request..."<<std::endl;
 //#endif
@@ -240,9 +240,10 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 
     if( sync && target_pipeline ) {
       std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
-      unlock(); //g_mutex_unlock( rebuild_mutex );
+      //unlock(); //g_mutex_unlock( rebuild_mutex );
       //g_cond_wait( rebuild_done, rebuild_mutex );
       rebuild_cond.wait();
+      rebuild_cond.unlock();
       std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
     }
 
@@ -359,6 +360,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
 
   //std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
   rebuild_done_signal();
+  //rebuild_cond.unlock();
   std::cout<<"PF::Image::do_update(): signaling done condition."<<std::endl;
   signal_updated.emit();
 
