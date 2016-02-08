@@ -507,7 +507,7 @@ void PF::ImageEditor::open_image()
   std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
-  int level = 0;
+  int level = 1;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
@@ -615,13 +615,13 @@ void PF::ImageEditor::on_map()
   }
   //open_image();
   Gtk::HBox::on_map();
-  controls_group_scrolled_window.hide();
 }
 
 void PF::ImageEditor::on_realize()
 {
   std::cout<<"ImageEditor::on_realize() called."<<std::endl;
   open_image();
+  controls_group_scrolled_window.hide();
   Gtk::HBox::on_realize();
 }
 
