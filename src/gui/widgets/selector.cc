@@ -43,6 +43,8 @@ PF::Selector::Selector( OperationConfigGUI* dialog, std::string pname, std::stri
   pack_start( label, Gtk::PACK_SHRINK );
   pack_start( cbox, Gtk::PACK_SHRINK );
 
+  cbox.set_size_request( 150, -1 );
+
   //pack_start( vbox, Gtk::PACK_SHRINK );
 
   cbox.signal_changed().

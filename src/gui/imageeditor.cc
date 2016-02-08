@@ -238,7 +238,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   main_panel.pack_start( imageBox, Gtk::PACK_EXPAND_WIDGET );
   controls_group_scrolled_window.add( layersWidget.get_controls_group() );
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
-  controls_group_scrolled_window.set_size_request( 240, 0 );
+  controls_group_scrolled_window.set_size_request( 280, 0 );
   //main_panel.pack_start( layersWidget.get_controls_group(), Gtk::PACK_SHRINK );
 
   button_highlights_warning.signal_toggled().connect( sigc::mem_fun(*this,

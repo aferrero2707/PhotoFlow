@@ -344,16 +344,16 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
   ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
   ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
-  demoMethodSelector( this, "demo_method", "Demosaicing method: ", PF::PF_DEMO_AMAZE ),
+  demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
   fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
   blackLevelSlider( this, "black_level_correction", _("black level"), 0, -500, 500, 5, 10, 1 ),
-  profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
+  profileModeSelector( this, "profile_mode", _("input: "), 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
   gammaModeSelector( this, "gamma_mode", "Raw gamma: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-  outProfileModeSelector( this, "out_profile_mode", "Working profile: ", 1 ),
+  outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
   outProfOpenButton(Gtk::Stock::OPEN),
   ignore_temp_tint_change( false )
 {
@@ -394,7 +394,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   camProfLabel.set_text( "camera profile name:" );
   camProfVBox.pack_start( camProfLabel, Gtk::PACK_SHRINK );
   camProfVBox.pack_start( camProfFileEntry, Gtk::PACK_SHRINK );
-  camProfHBox.pack_start( camProfVBox );
+  camProfHBox.pack_start( camProfVBox, Gtk::PACK_SHRINK );
   camProfHBox.pack_start( camProfOpenButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
 
@@ -410,7 +410,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outProfLabel.set_text( "output profile name:" );
   outProfVBox.pack_start( outProfLabel, Gtk::PACK_SHRINK );
   outProfVBox.pack_start( outProfFileEntry, Gtk::PACK_SHRINK );
-  outProfHBox.pack_start( outProfVBox );
+  outProfHBox.pack_start( outProfVBox, Gtk::PACK_SHRINK );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
 
