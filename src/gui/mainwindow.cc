@@ -945,8 +945,16 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
   bckname += ".info";
   unlink( bckname.c_str() );
 
-  if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() )
+  if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() ) {
     PF::PhotoFlow::Instance().set_active_image( NULL );
+    if( editor->get_image() ) {
+      // Make sure that aching of current image is stopped
+      PF::Pipeline* pipeline = editor->get_image()->get_pipeline( 0 );
+      if( pipeline ) {
+        editor->get_image()->update( pipeline, true );
+      }
+    }
+  }
 
   for( unsigned int i = 0; i < image_editors.size(); i++ ) {
     if( image_editors[i] != widget ) continue;
