@@ -60,6 +60,7 @@ namespace PF
     PF::ProcessorBase* igv_demosaic;
     PF::ProcessorBase* fast_demosaic;
     PF::ProcessorBase* raw_preprocessor;
+    PF::ProcessorBase* ca_correct;
     PF::ProcessorBase* raw_output;
     PF::ProcessorBase* convert_format;
     PF::ProcessorBase* fcs[4];

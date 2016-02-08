@@ -35,6 +35,7 @@
 #include "../../base/rawmatrix.hh"
 
 #include "LUT.h"
+#include "../../operations/raw_image.hh"
 
 
 
@@ -58,11 +59,17 @@ public:
     LUTf igammatab_24_17;
     LUTf gammatab_24_17a;
 
+    double fitparams[3][2][16];
+    dcraw_data_t* image_data;
+
     ProgressListener* plistener;
 
 
-		void amaze_demosaic_RT(int winx, int winy, int winw, int winh,
-													 int tilex, int tiley, int tilew, int tileh);//Emil's code for AMaZE
+    void CA_correct_RT(int winx, int winy, int winw, int winh,
+                           int tilex, int tiley, int tilew, int tileh,
+                           bool autoCA, float cared, float cablue);
+    void amaze_demosaic_RT(int winx, int winy, int winw, int winh,
+                           int tilex, int tiley, int tilew, int tileh);//Emil's code for AMaZE
 		void igv_demosaic_RT(int winx, int winy, int winw, int winh,
 													 int tilex, int tiley, int tilew, int tileh);
 		void lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
@@ -76,6 +83,12 @@ public:
 
 		RawImageSource();
 
+		void set_image_data( dcraw_data_t* d )
+		{
+		  image_data = d;
+		  if(d) memcpy( fitparams, d->color.ca_fitparams, sizeof(fitparams) );
+		}
+
 		int FC(int r, int c)
 		{
       r -= FC_roffset;
@@ -83,6 +96,7 @@ public:
 
       int rr = r+tile_top;
       int cc = c+tile_left;
+
       if(rr<0) rr = -rr;
       if(cc<0) cc = -cc;
       if( rr >= (tile_top+rawData.GetHeight()) ) {
@@ -94,15 +108,26 @@ public:
         rr = tile_left + rawData.GetWidth() - dr - 1;
       }
 
-			int color = rawData[rr].color(cc);
+      if( image_data ) {
+        int color2 = ( image_data->idata.filters >> ((((rr+image_data->sizes.top_margin) << 1 & 14) +
+            ((cc+image_data->sizes.left_margin) & 1)) << 1) & 3 );
+        if( color2 == 3 ) color2 = 1;
+
+        //if(rr<8 && cc<8) std::cout<<"rr="<<rr<<" cc="<<cc<<" c="<<color2<<" filters="<<image_data->idata.filters<<std::endl;
+        return color2;
+      }
+
+      int color = rawData[rr].color(cc);
 			if( color<0 || color>3)
 				return 0;
 			if( color == 3 ) color = 1;
+
 			return color;
 		}
 
 		// Interface layer between Photoflow and RT code
-		void amaze_demosaic(VipsRegion* ir, VipsRegion* oreg);
+    void ca_correct(VipsRegion* ir, VipsRegion* oreg, bool autoCA, float cared, float cablue);
+    void amaze_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void igv_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void lmmse_demosaic(VipsRegion* ir, VipsRegion* oreg);
 		void false_color_correction(VipsRegion* ir, VipsRegion* oreg);
