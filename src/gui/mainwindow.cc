@@ -45,6 +45,19 @@
 #include "mainwindow.hh"
 
 
+typedef struct {
+  Gtk::Widget* widget;
+} WidgetDestroyData;
+
+static gboolean widget_destroy_cb (WidgetDestroyData * data)
+{
+  if( data ) {
+    delete( data->widget );
+    g_free( data );
+  }
+}
+
+
 PF::MainWindow::MainWindow():
 #ifdef GTKMM_2
 mainBox(),
@@ -963,13 +976,22 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
   }
 
   viewerNotebook.remove_page( page );
-  delete( widget );
-  if( tabwidget )
-    delete( tabwidget );
+  widget->hide();
+  //delete( widget );
+  //if( tabwidget )
+  //  delete( tabwidget );
 
-#ifndef NDEBUG
+  WidgetDestroyData * update = g_new (WidgetDestroyData, 1);
+  update->widget = widget;
+  g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+
+  update = g_new (WidgetDestroyData, 1);
+  update->widget = tabwidget;
+  g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+
+//#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() page #"<<page<<" removed."<<std::endl;
-#endif
+//#endif
 }
 
 
