@@ -870,7 +870,8 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble&
 void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
 {
   if( !image ) return;
-  if( !imageArea->get_display_merged() ) return;
+  if( !active_layer ) return;
+
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::image2layer(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
 #endif
@@ -881,39 +882,65 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     return;
   }
 
-  std::list<PF::Layer*>::reverse_iterator li;
-  for(li = active_layer_children.rbegin(); li != active_layer_children.rend(); ++li) {
-    PF::Layer* l = *li;
-    if( l && l->is_enabled() ) {
-      // Get the node associated to the layer
-      PF::PipelineNode* node = pipeline->get_node( l->get_id() );
-      if( !node ) {
-        std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
-        continue;
-      }
-      if( !node->processor ) {
-        std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
-        continue;
-      }
+  if( imageArea->get_display_merged() ) {
+    std::list<PF::Layer*>::reverse_iterator li;
+    for(li = active_layer_children.rbegin(); li != active_layer_children.rend(); ++li) {
+      PF::Layer* l = *li;
+      if( l && l->is_enabled() ) {
+        // Get the node associated to the layer
+        PF::PipelineNode* node = pipeline->get_node( l->get_id() );
+        if( !node ) {
+          std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+          continue;
+        }
+        if( !node->processor ) {
+          std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
+          continue;
+        }
 
-      PF::OpParBase* par = node->processor->get_par();
-      VipsRect rin, rout;
-      rout.left = x;
-      rout.top = y;
-      rout.width = w;
-      rout.height = h;
-      par->transform_inv( &rout, &rin );
+        PF::OpParBase* par = node->processor->get_par();
+        VipsRect rin, rout;
+        rout.left = x;
+        rout.top = y;
+        rout.width = w;
+        rout.height = h;
+        par->transform_inv( &rout, &rin );
 
-      x = rin.left;
-      y = rin.top;
-      w = rin.width;
-      h = rin.height;
+        x = rin.left;
+        y = rin.top;
+        w = rin.width;
+        h = rin.height;
 #ifndef NDEBUG
-      std::cout<<"PF::ImageEditor::image2layer(): after \""<<l->get_name()
-          <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
+        std::cout<<"PF::ImageEditor::image2layer(): after \""<<l->get_name()
+              <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
+      }
     }
   }
+
+  PF::PipelineNode* node = pipeline->get_node( active_layer->get_id() );
+  if( !node ) {
+    std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+    return;
+  }
+  if( !node->processor ) {
+    std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
+    return;
+  }
+
+  PF::OpParBase* par = node->processor->get_par();
+  VipsRect rin, rout;
+  rout.left = x;
+  rout.top = y;
+  rout.width = w;
+  rout.height = h;
+  par->transform_inv( &rout, &rin );
+
+  x = rin.left;
+  y = rin.top;
+  w = rin.width;
+  h = rin.height;
+
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::image2layer(): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
@@ -961,16 +988,41 @@ void PF::ImageEditor::image2screen( gdouble& x, gdouble& y, gdouble& w, gdouble&
 void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
 {
   if( !image ) return;
-  if( !imageArea->get_display_merged() ) return;
-#ifndef NDEBUG
-  std::cout<<"PF::ImageEditor::layer2image(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
-#endif
+  if( !active_layer ) return;
 
   PF::Pipeline* pipeline = image->get_pipeline( 0 );
   if( !pipeline ) {
     std::cout<<"ImageEditor::layer2image(): NULL pipeline"<<std::endl;
     return;
   }
+
+  PF::PipelineNode* node = pipeline->get_node( active_layer->get_id() );
+  if( !node ) {
+    std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+    return;
+  }
+  if( !node->processor ) {
+    std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
+    return;
+  }
+
+  PF::OpParBase* par = node->processor->get_par();
+  VipsRect rin, rout;
+  rin.left = x;
+  rin.top = y;
+  rin.width = w;
+  rin.height = h;
+  par->transform( &rin, &rout );
+
+  x = rout.left;
+  y = rout.top;
+  w = rout.width;
+  h = rout.height;
+
+  if( !imageArea->get_display_merged() ) return;
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::layer2image(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+#endif
 
   std::list<PF::Layer*>::iterator li;
   for(li = active_layer_children.begin(); li != active_layer_children.end(); ++li) {
