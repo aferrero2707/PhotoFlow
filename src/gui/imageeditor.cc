@@ -1006,6 +1006,10 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     return;
   }
 
+//#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::layer2image(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+//#endif
+
   PF::OpParBase* par = node->processor->get_par();
   VipsRect rin, rout;
   rin.left = x;
@@ -1019,11 +1023,11 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   w = rout.width;
   h = rout.height;
 
-  if( !imageArea->get_display_merged() ) return;
-#ifndef NDEBUG
-  std::cout<<"PF::ImageEditor::layer2image(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
-#endif
+  //#ifndef NDEBUG
+    std::cout<<"PF::ImageEditor::layer2image(): after active layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+  //#endif
 
+  if( imageArea->get_display_merged() ) {
   std::list<PF::Layer*>::iterator li;
   for(li = active_layer_children.begin(); li != active_layer_children.end(); ++li) {
     PF::Layer* l = *li;
@@ -1051,15 +1055,16 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
       y = rout.top;
       w = rout.width;
       h = rout.height;
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"PF::ImageEditor::layer2image(): after \""<<l->get_name()
           <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
-#endif
+//#endif
     }
   }
-#ifndef NDEBUG
+  }
+//#ifndef NDEBUG
   std::cout<<"PF::ImageEditor::layer2image(): x'="<<x<<"  y'="<<y<<std::endl;
-#endif
+//#endif
   //return true;
 }
 
