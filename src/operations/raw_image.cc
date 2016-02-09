@@ -379,15 +379,15 @@ PF::RawImage::RawImage( const std::string _fname ):
       case RawSpeed::TYPE_USHORT16: val = *((uint16_t*)r->getDataUncropped(col2,row2)); break;
       case RawSpeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
       }
-      if( row<8 && col<8 ) {
-        std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<"  max="<<pdata->color.maximum<<std::endl;
-      }
+      //if( row<8 && col<8 ) {
+      //  std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<"  max="<<pdata->color.maximum<<std::endl;
+      //}
       val -= pdata->color.black;
       val /= (pdata->color.maximum - pdata->color.black);
       val *= 65535;
-      if( row<8 && col<8 ) {
-        std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<" (scaled)"<<std::endl;
-      }
+      //if( row<8 && col<8 ) {
+      //  std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<" (scaled)"<<std::endl;
+      //}
 
 #endif
 
