@@ -184,18 +184,18 @@ bool PF::PerspectiveConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::Pixe
       double px1 = par->get_keystones()[i].first,
           py1 = par->get_keystones()[i].second,
           pw1 = 1, ph1 = 1;
-      layer2screen( px1, py1, pw1, ph1 );
       px1 *= node->image->Xsize;
       py1 *= node->image->Ysize;
+      layer2screen( px1, py1, pw1, ph1 );
 
       int i2 = i+1;
       if( i2 >= 4 ) i2 = 0;
       double px2 = par->get_keystones()[i2].first,
           py2 = par->get_keystones()[i2].second,
           pw2 = 1, ph2 = 1;
-      layer2screen( px2, py2, pw2, ph2 );
       px2 *= node->image->Xsize;
       py2 *= node->image->Ysize;
+      layer2screen( px2, py2, pw2, ph2 );
       buf_out.draw_line( px1, py1, px2, py2, buf_in );
     }
   }
@@ -206,9 +206,9 @@ bool PF::PerspectiveConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::Pixe
     double px = par->get_keystones()[i].first,
         py = par->get_keystones()[i].second,
         pw = 1, ph = 1;
-    layer2screen( px, py, pw, ph );
     px *= node->image->Xsize;
     py *= node->image->Ysize;
+    layer2screen( px, py, pw, ph );
     VipsRect point = { (int)px-point_size-1,
                        (int)py-point_size-1,
                        point_size*2+3, point_size*2+3};
