@@ -300,7 +300,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_conv.get_tree().add_op( "Lab conversion"), "convert2lab" );
 
   op_color.get_tree().add_op( _("Color profile conversion"), "convert_colorspace" );
-  op_color.get_tree().add_op( _("Base Adjustments"), "hue_saturation" );
+  op_color.get_tree().add_op( _("Basic Adjustments"), "hue_saturation" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Invert"), "invert" );
   op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
