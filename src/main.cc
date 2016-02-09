@@ -256,6 +256,8 @@ int main (int argc, char *argv[])
   PF::ImageProcessor::Instance().submit_request( request );
   PF::ImageProcessor::Instance().join();
 
+  std::cout<<"Image processing thread finished"<<std::endl;
+
   delete mainWindow;
   delete app;
 
