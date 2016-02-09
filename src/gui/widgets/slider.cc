@@ -32,11 +32,13 @@
 
 PF::NumEntry::NumEntry(): Gtk::Entry(), digits(1), inhibited(false)
 {
-  signal_activate().connect(sigc::mem_fun(*this,&PF::NumEntry::text_changed));
+  signal_activate().connect( sigc::mem_fun(*this,&PF::NumEntry::text_changed) );
+
+  signal_focus_out_event().connect( sigc::mem_fun(*this,&PF::NumEntry::my_on_focus_out) );
 
   signal_key_press_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
   signal_key_release_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
-  add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
+  add_events( Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK | Gdk::FOCUS_CHANGE_MASK );
   set_width_chars(5);
 }
 
@@ -52,21 +54,21 @@ bool PF::NumEntry::on_key_press_or_release_event(GdkEventKey* event)
       adjustment->set_value( new_val );
       return true;
     }
-    if( (event->keyval == GDK_KEY_Down) ) {
+    if( event->keyval == GDK_KEY_Down ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       float new_val = adjustment->get_value();
       new_val -= adjustment->get_step_increment();
       adjustment->set_value( new_val );
       return true;
     }
-    if( (event->keyval == GDK_KEY_Page_Up) ) {
+    if( event->keyval == GDK_KEY_Page_Up ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       float new_val = adjustment->get_value();
       new_val += adjustment->get_page_increment();
       adjustment->set_value( new_val );
       return true;
     }
-    if( (event->keyval == GDK_KEY_Page_Down) ) {
+    if( event->keyval == GDK_KEY_Page_Down ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       float new_val = adjustment->get_value();
       new_val -= adjustment->get_page_increment();
@@ -110,6 +112,7 @@ void PF::NumEntry::text_changed()
   float val;
   str >> val;
   adjustment->set_value( val );
+  return;
 }
 
 

@@ -58,6 +58,11 @@ public:
 #endif
 
     bool on_key_press_or_release_event(GdkEventKey* event);
+    bool my_on_focus_out(GdkEventFocus *focus)
+    {
+      text_changed();
+      return false;
+    }
 
     void changed();
     void text_changed();
