@@ -55,8 +55,8 @@ namespace PF
     */
     virtual void transform(const Rect* rin, Rect* rout)
     {
-      rout->left = rin->left - crop_left.get();
-      rout->top = rin->top - crop_top.get();
+      rout->left = (is_editing()==true) ? rin->left : rin->left - crop_left.get();
+      rout->top = (is_editing()==true) ? rin->top : rin->top - crop_top.get();
       rout->width = rin->width;
       rout->height = rin->height;
     }
@@ -66,8 +66,8 @@ namespace PF
     */
     virtual void transform_inv(const Rect* rout, Rect* rin)
     {
-      rin->left = rout->left + crop_left.get();
-      rin->top = rout->top + crop_top.get();
+      rin->left = (is_editing()==true) ? rout->left : rout->left + crop_left.get();
+      rin->top = (is_editing()==true) ? rout->top : rout->top + crop_top.get();
       rin->width = rout->width;
       rin->height = rout->height;
     }
