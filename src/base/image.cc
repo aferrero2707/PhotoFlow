@@ -426,7 +426,7 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     #endif
 
     //g_cond_wait( sample_done, sample_mutex );
-    std::cout<<"Image::sample(): unlocking mutex."<<std::endl;
+    //std::cout<<"Image::sample(): unlocking mutex."<<std::endl;
     //sample_unlock(); //g_mutex_unlock( sample_mutex );
     std::cout<<"Image::sample(): waiting for done."<<std::endl;
     sample_cond.wait();
@@ -651,6 +651,8 @@ bool PF::Image::open( std::string filename, std::string bckname )
   std::string ext;
   if( !getFileExtensionLowcase( "/", filename, ext ) ) return false;
   disable_update = true;
+
+  std::cout<<"ext: "<<ext<<std::endl;
 
   if( !bckname.empty() ) {
 
