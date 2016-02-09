@@ -37,7 +37,7 @@ PF::ScaleConfigGUI::ScaleConfigGUI( PF::Layer* layer ):
   rotate_angle_slider( this, "rotate_angle", _("rotation angle"), 0, -360, 360, 0.01, 10, 1 ),
   autocrop( this, "autocrop", _("auto crop"), false ),
   scale_mode( this, "scale_mode", _("scale mode: "), 0 ),
-  scale_unit( this, "scale_unit", "", 0 ),
+  scale_unit( this, "scale_unit", _("unit: "), 0 ),
   scale_width_pixels_slider( this, "scale_width_pixels", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
   scale_height_pixels_slider( this, "scale_height_pixels", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
   scale_width_percent_slider( this, "scale_width_percent", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
@@ -56,9 +56,10 @@ PF::ScaleConfigGUI::ScaleConfigGUI( PF::Layer* layer ):
 
   controlsBox.pack_start( separator, Gtk::PACK_SHRINK, 10 );
 
-  controlsBox.pack_start( scale_mode );
+  controlsBox.pack_start( scale_mode, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( scale_unit, Gtk::PACK_SHRINK, 5 );
   
-  scale_controls_box.pack_end( scale_unit );
+  //scale_controls_box.pack_end( scale_unit );
   controlsBox.pack_start( scale_controls_box );
 
   scale_pixels_box.pack_start( scale_width_pixels_slider );
