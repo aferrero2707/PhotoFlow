@@ -45,6 +45,23 @@
 #include "mainwindow.hh"
 
 
+typedef struct {
+  Gtk::Widget* widget;
+} WidgetDestroyData;
+
+static gboolean widget_destroy_cb (WidgetDestroyData * data)
+{
+  if( data ) {
+    std::cout<<"widget_destroy_cb() called."<<std::endl;
+    std::cout<<"widget_destroy_cb(): destroying widget..."<<std::endl;
+    delete( data->widget );
+    std::cout<<"widget_destroy_cb(): ...widget destroyed."<<std::endl;
+    g_free( data );
+  }
+  return false;
+}
+
+
 PF::MainWindow::MainWindow():
 #ifdef GTKMM_2
 mainBox(),
@@ -55,7 +72,8 @@ controlBox(),
 mainBox(Gtk::ORIENTATION_VERTICAL),
 editorBox(Gtk::ORIENTATION_VERTICAL),
 controlBox(Gtk::ORIENTATION_VERTICAL),
-topButtonBox(Gtk::ORIENTATION_HORIZONTAL),
+topButtonBox1(Gtk::ORIENTATION_HORIZONTAL),
+topButtonBox2(Gtk::ORIENTATION_HORIZONTAL),
 #endif
 files_frame( _("files") ),
 editing_frame( _("editing") ),
@@ -116,10 +134,13 @@ buttonSavePreset()
   buttonSaveAs.set_tooltip_text( _("Save current image with a different name") );
   buttonExport.set_image( img_export ); buttonExport.set_size_request(40,-1);
   buttonExport.set_tooltip_text( _("Export current image to raster format") );
-  top_box.pack_start(buttonOpen, Gtk::PACK_SHRINK);
-  top_box.pack_start(buttonSave, Gtk::PACK_SHRINK);
-  top_box.pack_start(buttonSaveAs, Gtk::PACK_SHRINK);
-  top_box.pack_start(buttonExport, Gtk::PACK_SHRINK);
+
+  top_box.set_spacing(4);
+  top_box.set_border_width(4);
+  top_box.pack_start(buttonOpen, Gtk::PACK_SHRINK, 0);
+  top_box.pack_start(buttonSave, Gtk::PACK_SHRINK, 0);
+  top_box.pack_start(buttonSaveAs, Gtk::PACK_SHRINK, 0);
+  top_box.pack_start(buttonExport, Gtk::PACK_SHRINK, 0);
 
   topButtonBox2.pack_start(buttonNewLayer, Gtk::PACK_SHRINK);
   topButtonBox2.pack_start(buttonNewGroup, Gtk::PACK_SHRINK);
@@ -205,9 +226,11 @@ PF::MainWindow::~MainWindow()
     if( image_editors[i] )
       delete( image_editors[i] );
   }
+  /*
   ProcessRequestInfo request;
   request.request = PF::PROCESSOR_END;
   PF::ImageProcessor::Instance().submit_request( request );	
+  */
   //delete pf_image;
 }
 
@@ -588,6 +611,53 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_mime_type("image/tiff");
   filter_tiff->add_mime_type("image/jpeg");
   filter_tiff->add_mime_type("image/png");
+  filter_tiff->add_mime_type("image/x-3fr");
+  filter_tiff->add_mime_type("image/x-adobe-dng");
+  filter_tiff->add_mime_type("image/x-arw;image/x-bay");
+  filter_tiff->add_mime_type("image/x-canon-cr2");
+  filter_tiff->add_mime_type("image/x-canon-crw");
+  filter_tiff->add_mime_type("image/x-cap");
+  filter_tiff->add_mime_type("image/x-cr2");
+  filter_tiff->add_mime_type("image/x-crw");
+  filter_tiff->add_mime_type("image/x-dcr");
+  filter_tiff->add_mime_type("image/x-dcraw");
+  filter_tiff->add_mime_type("image/x-dcs");
+  filter_tiff->add_mime_type("image/x-dng");
+  filter_tiff->add_mime_type("image/x-drf");
+  filter_tiff->add_mime_type("image/x-eip");
+  filter_tiff->add_mime_type("image/x-erf");
+  filter_tiff->add_mime_type("image/x-fff");
+  filter_tiff->add_mime_type("image/x-fuji-raf");
+  filter_tiff->add_mime_type("image/x-iiq");
+  filter_tiff->add_mime_type("image/x-k25");
+  filter_tiff->add_mime_type("image/x-kdc");
+  filter_tiff->add_mime_type("image/x-mef");
+  filter_tiff->add_mime_type("image/x-minolta-mrw");
+  filter_tiff->add_mime_type("image/x-mos");
+  filter_tiff->add_mime_type("image/x-mrw");
+  filter_tiff->add_mime_type("image/x-nef");
+  filter_tiff->add_mime_type("image/x-nikon-nef");
+  filter_tiff->add_mime_type("image/x-nrw");
+  filter_tiff->add_mime_type("image/x-olympus-orf");
+  filter_tiff->add_mime_type("image/x-orf");
+  filter_tiff->add_mime_type("image/x-panasonic-raw");
+  filter_tiff->add_mime_type("image/x-pef");
+  filter_tiff->add_mime_type("image/x-pentax-pef");
+  filter_tiff->add_mime_type("image/x-ptx");
+  filter_tiff->add_mime_type("image/x-pxn");
+  filter_tiff->add_mime_type("image/x-r3d");
+  filter_tiff->add_mime_type("image/x-raf");
+  filter_tiff->add_mime_type("image/x-raw");
+  filter_tiff->add_mime_type("image/x-rw2");
+  filter_tiff->add_mime_type("image/x-rwl");
+  filter_tiff->add_mime_type("image/x-rwz");
+  filter_tiff->add_mime_type("image/x-sigma-x3f");
+  filter_tiff->add_mime_type("image/x-sony-arw");
+  filter_tiff->add_mime_type("image/x-sony-sr2");
+  filter_tiff->add_mime_type("image/x-sony-srf");
+  filter_tiff->add_mime_type("image/x-sr2");
+  filter_tiff->add_mime_type("image/x-srf");
+  filter_tiff->add_mime_type("image/x-x3f");
   filter_tiff->add_pattern("*.pfi");
   Glib::RefPtr<Gtk::FileFilter> filter_all = Gtk::FileFilter::create();
   filter_all->set_name( _("All files") );
@@ -892,8 +962,16 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
   bckname += ".info";
   unlink( bckname.c_str() );
 
-  if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() )
+  if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() ) {
     PF::PhotoFlow::Instance().set_active_image( NULL );
+    if( editor->get_image() ) {
+      // Make sure that aching of current image is stopped
+      PF::Pipeline* pipeline = editor->get_image()->get_pipeline( 0 );
+      if( pipeline ) {
+        editor->get_image()->update( pipeline, true );
+      }
+    }
+  }
 
   for( unsigned int i = 0; i < image_editors.size(); i++ ) {
     if( image_editors[i] != widget ) continue;
@@ -902,13 +980,22 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
   }
 
   viewerNotebook.remove_page( page );
-  delete( widget );
-  if( tabwidget )
-    delete( tabwidget );
+  widget->hide();
+  //delete( widget );
+  //if( tabwidget )
+  //  delete( tabwidget );
 
-#ifndef NDEBUG
+  WidgetDestroyData * update = g_new (WidgetDestroyData, 1);
+  update->widget = widget;
+  g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+
+  update = g_new (WidgetDestroyData, 1);
+  update->widget = tabwidget;
+  g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+
+//#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() page #"<<page<<" removed."<<std::endl;
-#endif
+//#endif
 }
 
 

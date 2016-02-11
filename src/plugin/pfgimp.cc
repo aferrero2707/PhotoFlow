@@ -286,6 +286,7 @@ void run(const gchar *name,
     vips_perspective_get_type();
     if(!Glib::thread_supported())
       Glib::thread_init();
+    //gimp_ui_init("photoflow-gimp", TRUE);
     PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
     PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
     PF::PhotoFlow::Instance().set_batch( false );
@@ -329,6 +330,7 @@ void run(const gchar *name,
     std::cout<<"  file opened"<<std::endl;
     pluginwin->show_all();
     app->run(*pluginwin);
+    //gtk_main();
     std::cout<<"Plug-in window closed."<<std::endl;
     std::cout<<"pluginwin->get_image_buffer().buf="<<pluginwin->get_image_buffer().buf<<std::endl;
 
@@ -448,9 +450,22 @@ void run(const gchar *name,
       std::cout<<"ICC profile attached"<<std::endl;
     }
 
+    std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Plug-in: stopping image processor"<<std::endl;
+    PF::ProcessRequestInfo request;
+    request.request = PF::PROCESSOR_END;
+    PF::ImageProcessor::Instance().submit_request( request );
+    PF::ImageProcessor::Instance().join();
+    std::cout<<"Plug-in: image processor stopped"<<std::endl;
+    std::cout<<"Plug-in: deleting main window"<<std::endl;
     delete pluginwin;
-    PF::PhotoFlow::Instance().close();
+    std::cout<<"Plug-in: main window deleted"<<std::endl;
+    std::cout<<"Plug-in: deleting application"<<std::endl;
     delete app;
+    std::cout<<"Plug-in: application deleted"<<std::endl;
+    std::cout<<"Plug-in: closing photoflow"<<std::endl;
+    PF::PhotoFlow::Instance().close();
+    std::cout<<"Plug-in: photoflow closed"<<std::endl;
 
   } else {
     if (sendToGimpMode) {
@@ -478,9 +493,11 @@ void run(const gchar *name,
      */
     /* To make sure we don't delete the raw file by mistake we check
      * that the file is really an ID file. */
+    /*
     if (sendToGimpMode &&
         strcasecmp(filename + strlen(filename) - 6, ".ufraw") == 0)
       g_unlink(filename);
+    */
   }
   /*
     if (status != UFRAW_SUCCESS || uf->gimpImage == -1) {
@@ -495,6 +512,7 @@ void run(const gchar *name,
         return;
     }
    */
+  std::cout<<"Plug-in: setting return values"<<std::endl;
   *nreturn_vals = 2;
   values[0].type = GIMP_PDB_STATUS;
   values[0].data.d_status = GIMP_PDB_SUCCESS;
@@ -507,9 +525,12 @@ void run(const gchar *name,
     values[3].type = GIMP_PDB_INT32;
     //values[3].data.d_int32 = uf->initialHeight;
   }
+  std::cout<<"Plug-in: return values done"<<std::endl;
+  std::cout<<"Plug-in: calling gdk_threads_leave()"<<std::endl;
 #ifndef _WIN32
   gdk_threads_leave();
 #endif
+  std::cout<<"Plug-in: gdk_threads_leave() done"<<std::endl;
   return;
 }
 

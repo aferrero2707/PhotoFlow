@@ -248,6 +248,13 @@ int main (int argc, char *argv[])
   mainWindow->show_all();
   app->run(*mainWindow);
 
+  PF::ProcessRequestInfo request;
+  request.request = PF::PROCESSOR_END;
+  PF::ImageProcessor::Instance().submit_request( request );
+  PF::ImageProcessor::Instance().join();
+
+  std::cout<<"Image processing thread finished"<<std::endl;
+
   delete mainWindow;
   delete app;
 

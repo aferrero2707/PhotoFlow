@@ -133,6 +133,8 @@ class ImageEditor: public Gtk::HBox
   bool fit_image;
   bool fit_image_needed;
 
+  int preview_drag_start_x, preview_drag_start_y, adjustment_drag_start_x, adjustment_drag_start_y;
+
   void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
   void get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
       std::list<Layer*>& children );
@@ -152,8 +154,8 @@ public:
   void set_aux_controls( Gtk::Widget* aux );
   Gtk::Widget* get_aux_controls() { return aux_controls; }
 
-  int get_edited_layer() { (active_layer) ? active_layer->get_id() : -1; }
-  void set_edited_layer( int id );
+  int get_active_layer() { (active_layer) ? active_layer->get_id() : -1; }
+  void set_active_layer( int id );
   int get_displayed_layer() { (displayed_layer) ? displayed_layer->get_id() : -1; }
   void set_displayed_layer( int id );
 

@@ -224,6 +224,7 @@ PF::ImageArea::~ImageArea ()
   delete convert_format;
   delete invert;
   delete uniform;
+  std::cout<<"~ImageArea finished"<<std::endl;
   //delete pf_image;
 }
 

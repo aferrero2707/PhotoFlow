@@ -175,11 +175,13 @@ PF::PhotoFlow& PF::PhotoFlow::Instance()
 
 void PF::PhotoFlow::close()
 {
-  PF::ImageProcessor::Instance().join();
+  //PF::ImageProcessor::Instance().join();
 
   //im_close_plugins();
+  std::cout<<"PhotoFlow::close(): calling vips shutdown"<<std::endl;
   vips_shutdown();
-
+  std::cout<<"PhotoFlow::close(): vips shutdown done"<<std::endl;
+/*
 #if defined(__MINGW32__) || defined(__MINGW64__)
   for (int i = 0; i < _getmaxstdio(); ++i) ::close (i);
 #elif defined(__APPLE__) && defined(__MACH__)
@@ -194,9 +196,15 @@ void PF::PhotoFlow::close()
     }
   }
 #endif
+*/
+  std::cout<<"PhotoFlow::close(): deleting cache files"<<std::endl;
   std::list<std::string>::iterator fi;
-  for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
+  for(fi = cache_files.begin(); fi != cache_files.end(); fi++) {
+    std::cout<<"  deleting "<<fi->c_str()<<std::endl;
     unlink( fi->c_str() );
+    std::cout<<"  "<<fi->c_str()<<" deleted"<<std::endl;
+  }
+  std::cout<<"PhotoFlow::close(): cache files deleted"<<std::endl;
 }
 
 
