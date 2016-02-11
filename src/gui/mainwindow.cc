@@ -52,9 +52,13 @@ typedef struct {
 static gboolean widget_destroy_cb (WidgetDestroyData * data)
 {
   if( data ) {
+    std::cout<<"widget_destroy_cb() called."<<std::endl;
+    std::cout<<"widget_destroy_cb(): destroying widget..."<<std::endl;
     delete( data->widget );
+    std::cout<<"widget_destroy_cb(): ...widget destroyed."<<std::endl;
     g_free( data );
   }
+  return false;
 }
 
 
