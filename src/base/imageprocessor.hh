@@ -62,7 +62,6 @@ namespace PF
     Image* image;
     Pipeline* pipeline;
     PipelineSink* sink;
-    bool sync;
     std::string filename;
     Layer* layer;
     int layer_id;
@@ -79,8 +78,11 @@ namespace PF
 
   class ImageProcessor: public sigc::trackable
   {
-    GThread* thread;
+#if defined(__APPLE__)
     pthread_t _thread;
+#else
+    GThread* thread;
+#endif
     std::list<Image*> images;
 
     static ImageProcessor* instance;
@@ -115,10 +117,13 @@ namespace PF
 
 		void join()
 		{
-			//if( thread )
-			//	g_thread_join( thread );
+#if defined(__APPLE__)
 		  pthread_join(_thread, NULL);
+#else
+      if( thread )
+        g_thread_join( thread );
 			thread = NULL;
+#endif
 		}
 
     //void add_image( Image* img );

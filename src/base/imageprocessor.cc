@@ -56,6 +56,7 @@ PF::ImageProcessor::ImageProcessor(): caching_completed( false )
 void PF::ImageProcessor::start()
 {
   std::cout<<"ImageProcessor::ImageProcessor(): starting thread"<<std::endl;
+#if defined(__APPLE__)
   pthread_attr_t thread_attr;
   if( (pthread_attr_init(&thread_attr) == 0) &&
       // Reserve 8MB of stack size for the new thread
@@ -63,8 +64,9 @@ void PF::ImageProcessor::start()
     pthread_create(&_thread,&thread_attr,run_image_processor,NULL);
   else
     pthread_create(&_thread,NULL,run_image_processor,NULL);
-
-  //thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
+#else
+  thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
+#endif
   std::cout<<"ImageProcessor::ImageProcessor(): thread started"<<std::endl;
 }
 
@@ -103,10 +105,7 @@ void PF::ImageProcessor::optimize_requests()
   for( ri = temp_queue.rbegin(); ri != temp_queue.rend(); ri++ ) {
     bool do_push = true;
     if( ri->request == IMAGE_REBUILD ) {
-      if( rebuild_found ) {
-        do_push = false;
-        if( ri->sync ) info->sync = true;
-      }
+      if( rebuild_found ) do_push = false;
       rebuild_found = true;
     }
     if( ri->request == IMAGE_UPDATE ) {
@@ -216,14 +215,14 @@ void PF::ImageProcessor::run()
         signal_status_processing.emit();
         std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         request.image->lock();
-        //std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
+        std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
         /*
           if( (request.area.width!=0) && (request.area.height!=0) )
           request.image->do_update( &(request.area) );
           else
           request.image->do_update( NULL );
         */
-        request.image->do_update( request.pipeline, request.sync );
+        request.image->do_update( request.pipeline );
         std::cout<<"PF::ImageProcessor::run(): unlocking image..."<<std::endl;
         request.image->unlock();
         std::cout<<"PF::ImageProcessor::run(): image unlocked"<<std::endl;
@@ -234,19 +233,19 @@ void PF::ImageProcessor::run()
         signal_status_exporting.emit();
         request.image->lock();
         request.image->do_export_merged( request.filename );
-        request.image->export_done_signal();
         request.image->unlock();
+        request.image->export_done_signal();
         break;
       case IMAGE_SAMPLE:
         if( !request.image ) continue;
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
-        request.image->sample_lock();
+        //request.image->sample_lock();
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): image locked."<<std::endl;
         if( (request.area.width!=0) && (request.area.height!=0) )
           request.image->do_sample( request.layer_id, request.area );
         request.image->sample_done_signal();
-        request.image->sample_unlock();
-        //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
+        //request.image->sample_unlock();
+        std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
         break;
       case IMAGE_UPDATE:
         if( !request.pipeline ) continue;
