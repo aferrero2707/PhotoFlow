@@ -289,6 +289,10 @@ PF::ICCStore::ICCStore()
   rec2020_profiles[0] = new Rec2020Profile( PF::PF_TRC_STANDARD );
   rec2020_profiles[1] = new Rec2020Profile( PF::PF_TRC_PERCEPTUAL );
   rec2020_profiles[2] = new Rec2020Profile( PF::PF_TRC_LINEAR );
+
+  aces_profiles[0] = new ACESProfile( PF::PF_TRC_STANDARD );
+  aces_profiles[1] = new ACESProfile( PF::PF_TRC_PERCEPTUAL );
+  aces_profiles[2] = new ACESProfile( PF::PF_TRC_LINEAR );
   /*
   std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-g10.icc";
   profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
@@ -326,6 +330,7 @@ PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_typ
   switch( ptype ) {
   case PF::OUT_PROF_sRGB: return srgb_profiles[trc_type];
   case PF::OUT_PROF_REC2020: return rec2020_profiles[trc_type];
+  case PF::OUT_PROF_ACES: return aces_profiles[trc_type];
   default: return NULL;
   }
 }
