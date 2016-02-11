@@ -85,6 +85,7 @@ include_directories(${GEXIV2_INCLUDE_DIRS})
 link_directories(${GEXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
+link_directories(${ORC_LIBRARY_DIRS})
 
 include_directories(${ZLIB_INCLUDE_DIRS})
 link_directories(${ZLIB_LIBRARY_DIRS}  )
@@ -119,13 +120,12 @@ SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/src/d
 FILE(GLOB BaseIncludes base/*.hh)
 FILE(GLOB BaseSources base/*.cc base/icc/*.cc)
 
-#FILE(GLOB RTIncludes rt/*.hh rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexif/*.hh rt/rtgui/*.h)
-#FILE(GLOB RTSources rt/*.cc rt/rtengine/*.c rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)
 FILE(GLOB RTIncludes 
   rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h
 )
 FILE(GLOB RTSources 
   rt/rtengine/rawimagesource.cc
+  rt/rtengine/CA_correct_RT.cc
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
@@ -183,9 +183,6 @@ endif(BUNDLED_LENSFUN)
 set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
 
 
-#FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
-#set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
-
 
 add_library (pfbase STATIC
   ${BaseIncludes}
@@ -204,7 +201,6 @@ add_library (pfbase STATIC
 
 
 add_dependencies(pfbase ${LIB_DEPS})
-#target_link_libraries(pfbase ${STATIC_LIBS})
 
 
 FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
@@ -227,12 +223,11 @@ ENDIF(MINGW)
 
 list(APPEND ADDITIONAL_LIBS pugixml)
 
-add_executable(photoflow # name of the executable on Windows will be example.exe 
-  main.cc 
-  )
-
-#add_dependencies(photoflow ${LIB_DEPS})
-
+#--------------------------------------------------
+#
+# photoflow executable
+#
+add_executable(photoflow main.cc)
 
 target_link_libraries(photoflow ${LIBS} 
   pfgui
@@ -268,9 +263,11 @@ target_link_libraries(photoflow ${LIBS}
 
 
 
+#--------------------------------------------------
+#
+# pfbatch executable
+#
 add_executable(pfbatch pfbatch.cc)
-
-#add_dependencies(photoflow ${LIB_DEPS})
 
 target_link_libraries(pfbatch ${LIBS} 
   pfbase 
@@ -301,11 +298,6 @@ target_link_libraries(pfbatch ${LIBS}
   )
 
 
-if (GIMP_FOUND)
-add_subdirectory(plugin)
-endif (GIMP_FOUND)
-
-
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 
@@ -315,6 +307,71 @@ INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
+
+#--------------------------------------------------
+#
+# GIMP plug-in
+#
+if (GIMP_FOUND)
+  FILE(GLOB PluginIncludes plugin/*.hh)
+  FILE(GLOB PluginSources plugin/*.cc)
+
+  include_directories(${GIMP_2_9_INCLUDE_DIRS})
+  link_directories(${GIMP_2_9_LIBRARY_DIRS})
+  include_directories(${GIMPUI_INCLUDE_DIRS})
+  link_directories(${GIMPUI_LIBRARY_DIRS})
+
+  add_executable(pfgimp ${PluginSources})
+
+  set_target_properties(pfgimp PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
+
+  target_link_libraries(pfgimp ${LIBS} 
+    pfgui
+    pfbase 
+    pfdt
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${OPENEXR_LIBRARIES}
+    ${XML2_LIBRARIES}
+    ${EXIF_LIBRARIES}
+    ${EXIV2_LIBRARIES}
+    ${GEXIV2_LIBRARIES}
+    ${LENSFUN_LIBRARIES}
+    ${SIGC2_LIBRARIES}
+    ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+    ${PIXMAN_LIBRARIES} 
+    ${MACINTEG_LIBS}
+    #${GIMP_LIBS}
+    ${GIMP_2_9_LIBRARIES}
+    ${GIMPUI_LIBRARIES}
+    ${GTKMM_LIBRARIES} 
+    ${GLIBMM_LIBRARIES} 
+    ${GLIB_LIBRARIES} 
+    ${GMODULE_LIBRARIES} 
+    ${GOBJECT_LIBRARIES} 
+    ${GTHREAD_LIBRARIES} 
+    ${ZLIB_LIBRARIES}
+    #${LIBRAW_LIBRARIES}  
+    ${STATIC_LIBS}
+    ${ORC_LIBRARIES}
+    fftw3
+    ${ADDITIONAL_LIBS}
+    #gmon
+  )
+  
+  INSTALL(TARGETS pfgimp RUNTIME DESTINATION share/photoflow/plug-in)
+endif (GIMP_FOUND)
+
+
+  get_property(idirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+  foreach(dir ${idirs})
+    message(STATUS "include dir='${dir}'")
+  endforeach()
+  get_property(ldirs DIRECTORY PROPERTY LINK_DIRECTORIES)
+  foreach(dir ${ldirs})
+    message(STATUS "library dir='${dir}'")
+  endforeach()
 
 #if(GTKMM3_FOUND)
 
