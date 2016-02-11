@@ -269,7 +269,13 @@ void PF::RawDeveloperConfigGUI::mul2temp(float coeffs[3], double *TempK, double 
 {
   //dt_iop_temperature_gui_data_t *g = (dt_iop_temperature_gui_data_t *)self->gui_data;
 
-  std::cout<<"mul2temp(): coeffs="<<coeffs[0]<<","<<coeffs[1]<<","<<coeffs[2]<<std::endl;
+  //std::cout<<"mul2temp(): coeffs="<<coeffs[0]<<","<<coeffs[1]<<","<<coeffs[2]<<std::endl;
+  printf("mul2temp: coeffs[]=%f,%f,%f\nCAM_to_XYZ:\n",coeffs[0],coeffs[1],coeffs[2]);
+  for(int k = 0; k < 3; k++)
+  {
+    printf("    %.4f %.4f %.4f\n",CAM_to_XYZ[k][0],CAM_to_XYZ[k][1],CAM_to_XYZ[k][2]);
+  }
+
   double CAM[3];
   for(int k = 0; k < 3; k++) CAM[k] = 1.0 / coeffs[k];
 
@@ -334,17 +340,21 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
   wb_target_a_slider( this, "wb_target_a", "a: ", 10, -1000000, 1000000, 0.05, 0.1, 1),
   wb_target_b_slider( this, "wb_target_b", "b: ", 12, -1000000, 1000000, 0.05, 0.1, 1),
-  demoMethodSelector( this, "demo_method", "Demosaicing method: ", PF::PF_DEMO_AMAZE ),
+  enable_ca_checkbox( this, "enable_ca", _("enable CA correction"), false ),
+  auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
+  ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
+  ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
+  demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
   fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
   saturationLevelSlider( this, "saturation_level_correction", _("saturation level"), 0, -50, 50, 1, 10, 100 ),
   blackLevelSlider( this, "black_level_correction", _("black level"), 0, -500, 500, 5, 10, 1 ),
-  profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
+  profileModeSelector( this, "profile_mode", _("input: "), 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
   gammaModeSelector( this, "gamma_mode", "Raw gamma: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-  outProfileModeSelector( this, "out_profile_mode", _("Working profile: "), 1 ),
+  outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
   outTRCModeSelector( this, "out_trc_mode", _("encoding: "), 1 ),
   outProfOpenButton(Gtk::Stock::OPEN),
   ignore_temp_tint_change( false )
@@ -360,39 +370,43 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   wbControlsBox.pack_start( wbTargetBox );
   wbControlsBox.pack_start( wb_best_match_label, Gtk::PACK_SHRINK );
 
-  wbControlsBox.pack_start( wbTempSlider );
-  wbControlsBox.pack_start( wbTintSlider );
-  wbControlsBox.pack_start( wbRedSlider );
-  wbControlsBox.pack_start( wbGreenSlider );
-  wbControlsBox.pack_start( wbBlueSlider );
-  wbControlsBox.pack_start( wbRedCorrSlider );
-  wbControlsBox.pack_start( wbGreenCorrSlider );
-  wbControlsBox.pack_start( wbBlueCorrSlider );
+  wbControlsBox.pack_start( wbTempSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbTintSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
 
   exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
   exposureControlsBox.pack_start( saturationLevelSlider, Gtk::PACK_SHRINK );
   exposureControlsBox.pack_start( blackLevelSlider, Gtk::PACK_SHRINK );
 
-  demoControlsBox.pack_start( demoMethodSelector );
-  demoControlsBox.pack_start( fcsSlider );
+  lensControlsBox.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
+  lensControlsBox.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
+  lensControlsBox.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
+  lensControlsBox.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
+
+  demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
+  demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
 
   profileModeSelectorBox.pack_start( profileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK );
 
   camProfLabel.set_text( "camera profile name:" );
-  camProfVBox.pack_start( camProfLabel );
-  camProfVBox.pack_start( camProfFileEntry );
-  camProfHBox.pack_start( camProfVBox );
+  camProfVBox.pack_start( camProfLabel, Gtk::PACK_SHRINK );
+  camProfVBox.pack_start( camProfFileEntry, Gtk::PACK_SHRINK );
+  camProfHBox.pack_start( camProfVBox, Gtk::PACK_SHRINK );
   camProfHBox.pack_start( camProfOpenButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( camProfHBox );
+  outputControlsBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
 
-  gammaModeVBox.pack_start( gammaModeSelector );
+  gammaModeVBox.pack_start( gammaModeSelector, Gtk::PACK_SHRINK );
   //gammaModeVBox.pack_start( inGammaLinSlider );
-  gammaModeVBox.pack_start( inGammaExpSlider );
+  gammaModeVBox.pack_start( inGammaExpSlider, Gtk::PACK_SHRINK );
   gammaModeHBox.pack_start( gammaModeVBox, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( gammaModeHBox );
+  outputControlsBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
 
-  /**/
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
@@ -400,16 +414,16 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outputControlsBox.pack_start( outTRCModeSelectorBox, Gtk::PACK_SHRINK );
 
   outProfLabel.set_text( "output profile name:" );
-  outProfVBox.pack_start( outProfLabel );
-  outProfVBox.pack_start( outProfFileEntry );
-  outProfHBox.pack_start( outProfVBox );
+  outProfVBox.pack_start( outProfLabel, Gtk::PACK_SHRINK );
+  outProfVBox.pack_start( outProfFileEntry, Gtk::PACK_SHRINK );
+  outProfHBox.pack_start( outProfVBox, Gtk::PACK_SHRINK );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outProfHBox );
-  /**/
+  outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
 
 
   notebook.append_page( wbControlsBox, "WB" );
   notebook.append_page( exposureControlsBox, "Exp" );
+  notebook.append_page( lensControlsBox, "Lens" );
   notebook.append_page( demoControlsBox, "Demo" );
   notebook.append_page( outputControlsBox, "Color" );
     
@@ -732,7 +746,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   if( !pipeline ) return;
 
 	// Make sure the first pipeline is up-to-date
-	img->update( pipeline, true );
+	//img->update( pipeline, false );
   //img->unlock();
 
   // Get the node associated to the layer

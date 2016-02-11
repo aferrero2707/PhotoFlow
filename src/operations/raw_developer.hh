@@ -60,6 +60,7 @@ namespace PF
     PF::ProcessorBase* igv_demosaic;
     PF::ProcessorBase* fast_demosaic;
     PF::ProcessorBase* raw_preprocessor;
+    PF::ProcessorBase* ca_correct;
     PF::ProcessorBase* raw_output;
     PF::ProcessorBase* convert_format;
     PF::ProcessorBase* fcs[4];
@@ -84,7 +85,7 @@ namespace PF
     bool has_intensity() { return false; }
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
-    bool needs_caching() { return false/*caching_enabled*/; }
+    bool needs_caching() { return caching_enabled; }
 
     void set_caching( bool flag ) { caching_enabled = flag; }
 

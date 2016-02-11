@@ -69,6 +69,7 @@ public:
     Gtk::HBox wbHBox;
     Gtk::VBox wbControlsBox;
     Gtk::VBox exposureControlsBox;
+    Gtk::VBox lensControlsBox;
     Gtk::VBox demoControlsBox;
     Gtk::VBox outputControlsBox;
     
@@ -96,6 +97,10 @@ public:
     ExposureSlider exposureSlider;
     Slider saturationLevelSlider;
     Slider blackLevelSlider;
+
+    CheckBox enable_ca_checkbox;
+    CheckBox auto_ca_checkbox;
+    Slider ca_red_slider, ca_blue_slider;
 
     Selector profileModeSelector;
     Gtk::HBox profileModeSelectorBox;
