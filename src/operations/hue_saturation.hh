@@ -54,6 +54,8 @@ namespace PF
     Property<float> brightness, brightness_eq;
     Property<bool> brightness_is_gamma;
     Property<float> exposure;
+    Property<float> white_level;
+    Property<float> black_level;
     Property<SplineCurve> hue_H_equalizer;
     Property<SplineCurve> hue_S_equalizer;
     Property<SplineCurve> hue_L_equalizer;
@@ -80,6 +82,8 @@ namespace PF
     ProcessorBase* mask;
     ProcessorBase* blur;
 
+    ICCProfileData* icc_data;
+
     cmsHPROFILE lab_profile;
     cmsHTRANSFORM transform, transform_inv;
 
@@ -95,6 +99,8 @@ namespace PF
     cmsHTRANSFORM get_transform() { return transform; }
     cmsHTRANSFORM get_transform_inv() { return transform_inv; }
 
+    ICCProfileData* get_icc_data() { return icc_data; }
+
     float get_hue() { return hue.get(); }
     float get_hue_eq() { return hue_eq.get(); }
     float get_saturation() { return saturation.get(); }
@@ -105,6 +111,8 @@ namespace PF
     float get_brightness_eq() { return brightness_eq.get(); }
     bool get_brightness_is_gamma() { return brightness_is_gamma.get(); }
     float get_exposure() { return exposure.get(); }
+    float get_white_level() { return white_level.get(); }
+    float get_black_level() { return black_level.get(); }
 
     bool get_show_mask() { return show_mask.get(); }
     bool get_invert_mask() { return invert_mask.get(); }
@@ -154,6 +162,8 @@ namespace PF
       float contrast = opar->get_contrast();
       float brightness = opar->get_brightness();
       float exposure = opar->get_exposure();
+      float black_level = opar->get_black_level();
+      float white_level = opar->get_white_level();
       bool inv = opar->get_invert_mask();
 
       float* pin;
@@ -195,11 +205,16 @@ namespace PF
 
             //std::cout<<"h_in="<<h_in<<"  h_eq="<<h_eq<<" ("<<h_eq1<<" "<<h_eq2<<" "<<h_eq3<<")"<<std::endl;
 
+            float black_level2 = black_level;
+            float white_level2 = white_level;
             float hue2 = hue;
             float saturation2 = saturation;
             float brightness2 = brightness;
             float contrast2 = contrast;
             float exposure2 = exposure;
+
+            //if( back_level2 >= 1.f ) black_level2 = 0.9999f;
+            //if( white_level2 <= -1.f ) white_level2 = -0.9999f;
             /*
             if( h_eq < 1 ) {
               hue2 *= h_eq;
@@ -227,6 +242,18 @@ namespace PF
           }
              */
 
+            if( (black_level2 != 0) || (white_level2 != 0) ) {
+              float delta = (white_level2 + 1.f - black_level2);
+              if( fabs(delta) < 0.0001f ) {
+                if( delta > 0 ) delta = 0.0001f;
+                else delta = -0.0001f;
+              }
+              for( k=0; k < 3; k++) {
+                RGB[k] = (RGB[k] - black_level2) / delta;
+                //clip( exposure*RGB[k], RGB[k] );
+              }
+            }
+
             if( exposure2 != 0 ) {
               for( k=0; k < 3; k++) {
                 RGB[k] *= exposure;
@@ -235,9 +262,12 @@ namespace PF
             }
 
             if( brightness2 != 0 || contrast2 != 0 ) {
+              float midpoint = 0.5;
+              if( opar->get_icc_data() && (opar->get_icc_data()->trc_type == PF::PF_TRC_LINEAR) )
+                midpoint = 0.18;
               for( k=0; k < 3; k++) {
-                tempval = (typename FormatInfo<float>::SIGNED)RGB[k] - FormatInfo<float>::HALF;
-                RGB[k] = (contrast2+1.0f)*tempval+brightness2*FormatInfo<float>::RANGE+FormatInfo<float>::HALF;
+                tempval = (typename FormatInfo<float>::SIGNED)RGB[k] - midpoint;
+                RGB[k] = (contrast2+1.0f)*tempval+brightness2*FormatInfo<float>::RANGE + midpoint;
                 //clip( (contrast2+1.0f)*tempval+brightness2*FormatInfo<float>::RANGE+FormatInfo<float>::HALF, RGB[k] );
               }
             }

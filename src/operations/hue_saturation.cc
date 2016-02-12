@@ -61,6 +61,8 @@ PF::HueSaturationPar::HueSaturationPar():
   brightness_eq("brightness_eq",this,0),
   brightness_is_gamma("brightness_is_gamma",this,false),
   exposure("exposure",this,1),
+  white_level("white_level",this,0),
+  black_level("black_level",this,0),
   hue_H_equalizer( "hue_H_equalizer", this ),
   hue_S_equalizer( "hue_S_equalizer", this ),
   hue_L_equalizer( "hue_L_equalizer", this ),
@@ -174,6 +176,8 @@ VipsImage* PF::HueSaturationPar::build(std::vector<VipsImage*>& in, int first,
   eq_enabled[1] = hue_S_equalizer_enabled.get();
   eq_enabled[2] = hue_L_equalizer_enabled.get();
 
+
+  icc_data = PF::get_icc_profile_data( in[0] );
 
   void *prof_data;
   size_t prof_data_length;
