@@ -33,6 +33,8 @@
 #include "hue_saturation_config.hh"
 
 
+#define CURVE_SIZE 192
+
 class HueEqualizerArea: public PF::CurveArea
 {
 public:
@@ -82,6 +84,8 @@ public:
 
 PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Base Adjustments" ),
+  black_level_slider( this, "black_level", _("black"), 0, -100, 100, 5, 10, 100),
+  white_level_slider( this, "white_level", _("white"), 0, -100, 1600, 5, 10, 100),
   brightnessSlider( this, "brightness", _("Brightness"), 0, -100, 100, 5, 10, 100),
   brightness2Slider( this, "brightness_eq", "Brightness (curve)", 0, -100, 100, 5, 10, 100),
   contrastSlider( this, "contrast", _("Contrast"), 0, -100, 100, 5, 10, 100),
@@ -92,23 +96,25 @@ PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
   hue2Slider( this, "hue_eq", "Hue (curve)", 0, -180, 180, 0.1, 10, 1),
   exposureSlider( this, "exposure", _("Exposure"), 0, -10, 10, 0.1, 1 ),
   mask_enable( this, "show_mask", _("show mask"), false ),
-  hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
-  hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
-  hueLeq( this, "hue_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
+  hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
+  hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  hueLeq( this, "hue_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
   hueHeq_enable( this, "hue_H_equalizer_enabled", _("Enable"), true ),
   hueSeq_enable( this, "hue_S_equalizer_enabled", _("Enable"), true  ),
   hueLeq_enable( this, "hue_L_equalizer_enabled", _("Enable"), true  ),
   saturationHeq( this, "saturation_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 200, 350 ),
-  saturationSeq( this, "saturation_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
-  saturationLeq( this, "saturation_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
-  contrastHeq( this, "contrast_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 250, 150 ),
-  contrastSeq( this, "contrast_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
-  contrastLeq( this, "contrast_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
-  feather_enable( this, "feather_mask", _("feather mask"), false ),
-  featherRadiusSlider( this, "feather_radius", _("feather radius"), 1, 0, 100, 1, 5, 1),
+  saturationSeq( this, "saturation_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  saturationLeq( this, "saturation_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  contrastHeq( this, "contrast_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
+  contrastSeq( this, "contrast_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  contrastLeq( this, "contrast_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  feather_enable( this, "feather_mask", _("feather"), false ),
+  featherRadiusSlider( this, "feather_radius", _("radius "), 1, 0, 1000000, 1, 5, 1),
   mask_invert( this, "invert_mask", _("invert mask"), false )
 {
-  controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( black_level_slider, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( white_level_slider, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
   controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( brightness2Slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( sep1, Gtk::PACK_SHRINK );

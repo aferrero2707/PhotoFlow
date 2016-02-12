@@ -49,6 +49,7 @@ namespace PF {
 
   Gtk::Alignment padding1, padding2, padding3, padding4;
 
+  Slider black_level_slider, white_level_slider;
   Slider brightnessSlider, brightness2Slider, contrastSlider, contrast2Slider;
   Slider hueSlider, hue2Slider, saturationSlider, saturation2Slider;
   ExposureSlider exposureSlider;
