@@ -33,8 +33,12 @@
 
 
 PF::ImageReadConfigGUI::ImageReadConfigGUI( PF::Layer* layer ):
-  OperationConfigGUI( layer, "Open an image" ),
-  openButton(Gtk::Stock::OPEN)
+OperationConfigGUI( layer, "Open an image" ),
+openButton(Gtk::Stock::OPEN),
+inProfileModeSelector( this, "in_profile_mode", "input profile: ", 1 ),
+inTRCModeSelector( this, "in_trc_mode", _("encoding: "), 1 ),
+outProfileModeSelector( this, "out_profile_mode", "working profile: ", 1 ),
+outTRCModeSelector( this, "out_trc_mode", _("encoding: "), 1 )
 {
   label.set_text( "file name:" );
 
@@ -42,7 +46,23 @@ PF::ImageReadConfigGUI::ImageReadConfigGUI( PF::Layer* layer ):
   controlsBox.pack_start( fileEntry );
   controlsBox.pack_start( openButton );
   
-  add_widget( controlsBox );
+  outputControlsBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
+  spacing1.set_size_request(0,20);
+  outputControlsBox.pack_start( spacing1, Gtk::PACK_SHRINK );
+
+  inProfileModeSelectorBox.pack_start( inProfileModeSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( inProfileModeSelectorBox, Gtk::PACK_SHRINK );
+  inTRCModeSelectorBox.pack_start( inTRCModeSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( inTRCModeSelectorBox, Gtk::PACK_SHRINK );
+  spacing2.set_size_request(0,20);
+  outputControlsBox.pack_start( spacing2, Gtk::PACK_SHRINK );
+
+  outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
+  outTRCModeSelectorBox.pack_start( outTRCModeSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( outTRCModeSelectorBox, Gtk::PACK_SHRINK );
+
+  add_widget( outputControlsBox );
 
   fileEntry.signal_activate().
     connect(sigc::mem_fun(*this,

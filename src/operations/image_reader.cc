@@ -203,6 +203,97 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   std::cout<<"                         out refcount ("<<(void*)out<<") = "<<G_OBJECT(out)->ref_count<<std::endl;
 #endif
 
+
+  bool changed = in_profile_mode.is_modified() || in_trc_mode.is_modified() ||
+      out_profile_mode.is_modified() || out_trc_mode.is_modified();
+
+  cmsHPROFILE in_profile = NULL;
+  profile_type_t ptype = (profile_type_t)in_profile_mode.get_enum_value().first;
+  TRC_type trc_type = (TRC_type)in_trc_mode.get_enum_value().first;
+  std::cout<<"Getting input profile..."<<std::endl;
+  PF::ICCProfile* iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
+  if( iccprof ) {
+    in_profile = iccprof->get_profile();
+    std::cout<<"... OK"<<std::endl;
+  } else {
+    std::cout<<"... FAILED"<<std::endl;
+  }
+
+  cmsHPROFILE out_profile = NULL;
+  ptype = (profile_type_t)out_profile_mode.get_enum_value().first;
+  trc_type = (TRC_type)out_trc_mode.get_enum_value().first;
+  std::cout<<"Getting output profile..."<<std::endl;
+  iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
+  if( iccprof ) {
+    out_profile = iccprof->get_profile();
+    std::cout<<"... OK"<<std::endl;
+  } else {
+    std::cout<<"... FAILED"<<std::endl;
+  }
+
+  std::cout<<"ImageReaderPar::build(): in_profile="<<in_profile<<std::endl;
+
+  if( changed ) {
+    if( transform )
+      cmsDeleteTransform( transform );
+    transform = NULL;
+    if( in_profile && out_profile ) {
+      cmsUInt32Number infmt = vips2lcms_pixel_format( out->BandFmt, in_profile );
+      cmsUInt32Number outfmt = vips2lcms_pixel_format( out->BandFmt, out_profile );
+
+      transform = cmsCreateTransform( in_profile,
+          infmt,
+          out_profile,
+          outfmt,
+          INTENT_RELATIVE_COLORIMETRIC,
+          cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+    } else if( !out_profile ) {
+      out_profile = in_profile;
+    }
+  } else if( !out_profile ) {
+    out_profile = in_profile;
+  }
+
+  std::cout<<"ImageReaderPar::build(): out_profile="<<out_profile<<std::endl;
+
+  if( out && out_profile ) {
+
+    if( transform ) {
+      cmsColorSpaceSignature output_cs_type = cmsGetColorSpace(out_profile);
+      switch( output_cs_type ) {
+      case cmsSigGrayData:
+        grayscale_image( get_xsize(), get_ysize() );
+        break;
+      case cmsSigRgbData:
+        rgb_image( get_xsize(), get_ysize() );
+        break;
+      case cmsSigLabData:
+        lab_image( get_xsize(), get_ysize() );
+        break;
+      case cmsSigCmykData:
+        cmyk_image( get_xsize(), get_ysize() );
+        break;
+      default:
+        break;
+      }
+
+      std::vector<VipsImage*> in2; in2.push_back( out );
+      VipsImage* converted = OpParBase::build( in2, 0, NULL, NULL, level );
+
+      out = converted;
+    }
+
+    cmsUInt32Number out_length;
+    cmsSaveProfileToMem( out_profile, NULL, &out_length);
+    void* buf = malloc( out_length );
+    cmsSaveProfileToMem( out_profile, buf, &out_length);
+    vips_image_set_blob( out, VIPS_META_ICC_NAME,
+       (VipsCallbackFn) g_free, buf, out_length );
+    char tstr[1024];
+    cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+    std::cout<<"ImageReaderPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
+  }
+
   return out;
 }
 

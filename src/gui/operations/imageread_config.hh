@@ -48,6 +48,19 @@ namespace PF {
   Gtk::Button openButton;
   //#endif
 
+  Gtk::Alignment spacing1, spacing2;
+  Gtk::VBox outputControlsBox;
+
+  Selector inProfileModeSelector;
+  Gtk::HBox inProfileModeSelectorBox;
+  Selector inTRCModeSelector;
+  Gtk::HBox inTRCModeSelectorBox;
+
+  Selector outProfileModeSelector;
+  Gtk::HBox outProfileModeSelectorBox;
+  Selector outTRCModeSelector;
+  Gtk::HBox outTRCModeSelectorBox;
+
 public:
   ImageReadConfigGUI( Layer* l );
 
