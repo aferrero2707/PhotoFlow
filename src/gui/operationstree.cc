@@ -337,11 +337,11 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_gmic.get_tree().add_op( "G'MIC Interpreter"), "gmic" );
   op_gmic.get_tree().add_op( _("Dream Smoothing"), "gmic_dream_smooth" );
   op_gmic.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
-  op_gmic.get_tree().add_op( _("Convolve"), "gmic_convolve" );
-  op_gmic.get_tree().add_op( _("Extract Foreground"), "gmic_extract_foreground" );
-  op_gmic.get_tree().add_op( _("Inpaint [patch-based]"), "gmic_inpaint" );
-  op_gmic.get_tree().add_op( _("Despeckle"), "gmic_gcd_despeckle" );
-  op_gmic.get_tree().add_op( _("Iain's Noise Reduction"), "gmic_iain_denoise" );
+  //too generic op_gmic.get_tree().add_op( _("Convolve"), "gmic_convolve" );
+  //crashes op_gmic.get_tree().add_op( _("Extract Foreground"), "gmic_extract_foreground" );
+  //slow op_gmic.get_tree().add_op( _("Inpaint [patch-based]"), "gmic_inpaint" );
+  //RT algorithm is better? op_gmic.get_tree().add_op( _("Despeckle"), "gmic_gcd_despeckle" );
+  //crashes? op_gmic.get_tree().add_op( _("Iain's Noise Reduction"), "gmic_iain_denoise" );
   op_gmic.get_tree().add_op( _("Sharpen [richardson-lucy]"), "gmic_sharpen_rl" );
   op_gmic.get_tree().add_op( _("Smooth [anisotropic]"), "gmic_smooth_anisotropic" );
   op_gmic.get_tree().add_op( _("Smooth [bilateral]"), "gmic_blur_bilateral" );

@@ -46,12 +46,24 @@
 //#define CLIPRAW(a) ((a)>0.0?((a)<1.0?(a):1.0):0.0)
 #define CLIPRAW(a) (a)
 
+//#define CLIPOUT(a) ((a)>0.0?((a)<1.0?(a):1.0):0.0)
+#define CLIPOUT(a) (a)
+
+#define PF_CLIP(a,MAX)  ((a)<(MAX)?(a):(MAX))
+#define PF_CLAMP(a,MIN,MAX)  ((a)>(MIN)?((a)<(MAX)?(a):(MAX)):(MIN))
+
 namespace PF 
 {
 
 enum exposure_mode_t {
   EXP_NORMAL,
   EXP_AUTO
+};
+
+
+enum hlreco_mode_t {
+  HLRECO_NONE,
+  HLRECO_CLIP
 };
 
 
@@ -94,6 +106,8 @@ enum exposure_mode_t {
     Property<float> exposure;
     PropertyBase exposure_mode;
     Property<float> exposure_clip_amount;
+    PropertyBase hlreco_mode;
+
     float wb_red_current, wb_green_current, wb_blue_current, exposure_current;
 
     PropertyBase profile_mode;
@@ -140,6 +154,8 @@ enum exposure_mode_t {
     }
 
     float get_exposure() { return exposure.get(); }
+
+    hlreco_mode_t get_hlreco_mode() { return (hlreco_mode_t)hlreco_mode.get_enum_value().first; }
 
     input_profile_mode_t get_camera_profile_mode() { return (input_profile_mode_t)profile_mode.get_enum_value().first; }
     input_gamma_mode_t get_gamma_mode() { return (input_gamma_mode_t)gamma_mode.get_enum_value().first; }
@@ -215,9 +231,10 @@ enum exposure_mode_t {
       }
       for( int i = 0; i < 3; i++ ) {
         mul[i] /= max_mul;
-        sat[i] = mul[i]*0.99;
+        sat[i] = mul[i];
       }
-      exposure *= max_mul/min_mul;
+      float sat_min = min_mul/max_mul;
+      exposure = exposure * max_mul/min_mul;
 
       T* p;
       T* pin;
@@ -253,43 +270,18 @@ enum exposure_mode_t {
         for( x = 0; x < line_size; x+=3 ) {
           //std::cout<<"RAW: "<<p[x]<<","<<p[x+1]<<","<<p[x+2]
           //         <<"(saturation: "<<sat[0]<<","<<sat[1]<<","<<sat[2]<<")"<<std::endl;
-          if( false ) {
-          if( (p[x]>sat[0]) && (p[x+1]>sat[1]) && (p[x+2]>sat[2]) ) {
-            line[x] = line[x+1] = line[x+2] = MAX3(p[x],p[x+1],p[x+2])*exposure;
-          } else if( (p[x]>sat[0]) && (p[x+1]>sat[1]) ) {
-              line[x] = MAX3(p[x],p[x+1],p[x+2])*exposure;
-              line[x+1] = MAX3(p[x],p[x+1],p[x+2])*exposure;
-              line[x+2] = p[x+2];
-          } else if( (p[x]>sat[0]) && (p[x+2]>sat[2]) ) {
-              line[x] = MAX3(p[x],p[x+1],p[x+2])*exposure;
-              line[x+2] = MAX3(p[x],p[x+1],p[x+2])*exposure;
-              line[x+1] = p[x+1];
-          } else if( (p[x+1]>sat[1]) && (p[x+2]>sat[2]) ) {
-              line[x+1] = MAX3(p[x],p[x+1],p[x+2])*exposure;
-              line[x+2] = MAX3(p[x],p[x+1],p[x+2])*exposure;
-              line[x] = p[x];
-          } else if( (p[x]>sat[0]) ) {
-              line[x] = MAX(p[x],MIN(p[x+1],p[x+2]))*exposure;
-              line[x+1] = p[x+1];
-              line[x+2] = p[x+2];
-          } else if( (p[x+1]>sat[1]) ) {
-              line[x+1] = MAX(p[x+1],MIN(p[x],p[x+2]))*exposure;
-              line[x] = p[x];
-              line[x+2] = p[x+2];
-          } else if( (p[x+2]>sat[2]) ) {
-              line[x+2] = MAX(p[x+2],MIN(p[x],p[x+1]))*exposure;
-              line[x] = p[x];
-              line[x+1] = p[x+1];
+          if( opar->get_hlreco_mode() == HLRECO_CLIP ) {
+            line[x] = PF_CLIP( p[x], sat_min )*exposure;
+            line[x+1] = PF_CLIP( p[x+1], sat_min )*exposure;
+            line[x+2] = PF_CLIP( p[x+2], sat_min )*exposure;
           } else {
             line[x] = p[x]*exposure;
             line[x+1] = p[x+1]*exposure;
             line[x+2] = p[x+2]*exposure;
           }
-          } else {
-            line[x] = p[x]*exposure;
-            line[x+1] = p[x+1]*exposure;
-            line[x+2] = p[x+2]*exposure;
-          }
+          //std::cout<<"p[]="<<p[x]<<","<<p[x+1]<<","<<p[x+2]<<"  sat_min_="<<sat_min<<"  sat[]="
+          //    <<sat[0]<<","<<sat[1]<<","<<sat[2]<<"  line[]="
+          //    <<line[x]<<","<<line[x+1]<<","<<line[x+2]<<std::endl;
           //if( (p[x]>sat[0]) || (p[x+1]>sat[1]) || (p[x+2]>sat[2]) )
           //  std::cout<<"RAW: "<<line[x]<<","<<line[x+1]<<","<<line[x+2]<<std::endl;
           //line[x] = 1.5; line[x+1] = 1.05; line[x+2] = 1.7;
@@ -347,7 +339,7 @@ enum exposure_mode_t {
         for( int xi = 0; xi < line_size; xi++ ) {
           //if(pout[xi] > 1 || pout[xi] < 0)
           //  std::cout<<"RGB_out["<<xi%3<<"]="<<pout[xi]<<std::endl;
-          pout[xi] = CLIPRAW(pout[xi]);
+          pout[xi] = CLIPOUT(pout[xi]);
         }
       }
       delete line; delete line2;

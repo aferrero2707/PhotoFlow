@@ -349,6 +349,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
   saturationLevelSlider( this, "saturation_level_correction", _("saturation level"), 0, -50, 50, 1, 10, 100 ),
   blackLevelSlider( this, "black_level_correction", _("black level"), 0, -500, 500, 5, 10, 1 ),
+  hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
   profileModeSelector( this, "profile_mode", _("input: "), 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
   gammaModeSelector( this, "gamma_mode", "Raw gamma: ", 0 ),
@@ -382,6 +383,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
   exposureControlsBox.pack_start( saturationLevelSlider, Gtk::PACK_SHRINK );
   exposureControlsBox.pack_start( blackLevelSlider, Gtk::PACK_SHRINK );
+  exposureControlsBox.pack_start( hlrecoModeSelector, Gtk::PACK_SHRINK );
 
   lensControlsBox.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
   lensControlsBox.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );

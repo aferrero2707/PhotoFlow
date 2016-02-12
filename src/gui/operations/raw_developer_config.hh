@@ -97,6 +97,7 @@ public:
     ExposureSlider exposureSlider;
     Slider saturationLevelSlider;
     Slider blackLevelSlider;
+    Selector hlrecoModeSelector;
 
     CheckBox enable_ca_checkbox;
     CheckBox auto_ca_checkbox;
