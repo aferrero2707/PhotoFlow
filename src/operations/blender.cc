@@ -66,13 +66,19 @@ bool PF::BlenderPar::adjust_geom( VipsImage* in, VipsImage** out,
     
     std::cout<<"in->Xsize="<<in->Xsize<<"  in->Ysize="<<in->Ysize<<std::endl;
     std::cout<<"vips_embed(in, &image, "<<dx2<<", "<<dy2<<", "<<embed_width<<", "<<embed_height<<", NULL)"<<std::endl;
+    PF_PRINT_REF( in, "BlenderPar::shift_image(): in before embed:" );
+    /**/
     if( vips_embed(in, &image, dx2, dy2, embed_width, embed_height, NULL) ) {
       std::cout<<"vips_embed() failed"<<std::endl;
       return false;
     }
-    std::cout<<"image after embed: "<<image<<std::endl;
+    /**/
+    //std::cout<<"image after embed: "<<image<<std::endl;
+    PF_UNREF( in, "BlenderPar::shift_image(): in unref after enbed" );
+    PF_PRINT_REF( in, "BlenderPar::shift_image(): in after embed:" );
+    std::cout<<"BlenderPar::shift_image(): Image embedded"<<std::endl;
   } else {
-    PF_REF( image, "BlenderPar::shift_image(): image ref before crop" );
+    //PF_REF( image, "BlenderPar::shift_image(): image ref before crop" );
   }
 
   VipsImage* cropped = image;
@@ -84,10 +90,14 @@ bool PF::BlenderPar::adjust_geom( VipsImage* in, VipsImage** out,
     
     std::cout<<"image->Xsize="<<image->Xsize<<"  image->Ysize="<<image->Ysize<<std::endl;
     std::cout<<"vips_crop(image, &cropped, "<<dx2<<", "<<dy2<<", "<<width<<", "<<height<<", NULL)"<<std::endl;
+    PF_PRINT_REF( image, "BlenderPar::shift_image(): image before crop:" );
     if( vips_crop(image, &cropped, dx2, dy2, width, height, NULL) ) {
       std::cout<<"vips_crop() failed"<<std::endl;
       return false;
     }
+    PF_UNREF( image, "BlenderPar::shift_image(): image unref after crop" );
+    PF_PRINT_REF( image, "BlenderPar::shift_image(): image after crop:" );
+    std::cout<<"BlenderPar::shift_image(): Image cropped"<<std::endl;
   }
   //PF_UNREF( image, "BlenderPar::shift_image(): image unref after crop" );
 
@@ -148,6 +158,10 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   if( in.empty() ) return NULL;
   if( in.size() > 0 ) background = in[0];
   if( in.size() > 1 ) foreground = in[1];
+
+  //PF_REF(background, "BlenderPar::build(): initial background ref");
+  PF_REF(foreground, "BlenderPar::build(): initial foreground ref");
+  PF_REF(omap, "BlenderPar::build(): initial omap ref");
 
   if( profile_bottom ) cmsCloseProfile( profile_bottom );
   if( profile_top ) cmsCloseProfile( profile_top );
@@ -240,6 +254,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       break;
     }
   }
+    std::cout<<"BlenderPar::build(): is_passthrough="<<is_passthrough<<std::endl;
 
   // If both images are not NULL and the blending mode is not "passthrough-equivalent",
   // we activate the blending code.
@@ -268,6 +283,8 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
 #endif
       adjust_geom( omap_in, &omap2,
                    background->Xsize, background->Ysize, level );
+    } else {
+      //PF_REF( foreground2, "BlenderPar::build() foreground2 ref when no shift/crop/embed" );
     }
     std::vector<VipsImage*> in_;
     in_.push_back( background );
@@ -282,15 +299,21 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
 
     set_image_hints( background );
     outnew = PF::OpParBase::build( in_, first, NULL, omap2, level );
-    if( foreground2 != foreground ) PF_UNREF( foreground2, "BlenderPar::build(): foreground2 unref" );
-    if( omap2 != omap ) PF_UNREF( omap2, "BlenderPar::build(): omap2 unref" );
+    //if( foreground2 != foreground ) PF_UNREF( foreground2, "BlenderPar::build(): foreground2 unref" );
+    //if( omap2 != omap )
+      PF_UNREF( omap2, "BlenderPar::build(): omap2 unref" );
+    //PF_UNREF( background, "BlenderPar::build() background unref" );
+    //PF_UNREF( foreground, "BlenderPar::build() foreground unref" );
+    PF_UNREF( foreground2, "BlenderPar::build() foreground2 unref" );
+    std::cout<<"BlenderPar::build(): doing explicit layer blending"<<std::endl;
   } else if( (background != NULL) && (foreground != NULL) && is_passthrough ) {
     outnew = foreground;
-    PF_REF( outnew, "BlenderPar::build() foreground ref" );
+    //PF_REF( outnew, "BlenderPar::build() foreground ref" );
+    //PF_UNREF( background, "BlenderPar::build() background unref" );
   } else if( (background == NULL) && (foreground != NULL) ) {
     // background is NULL, force mode to PASSTHROUGH and copy foreground to output
     outnew = foreground;
-    PF_REF( outnew, "BlenderPar::build() foreground ref" );
+    //PF_REF( outnew, "BlenderPar::build() foreground ref" );
   } else if( (foreground == NULL) && (background != NULL) ) {
     // foreground is NULL, force mode to PASSTHROUGH and copy background to output
     outnew = background;
