@@ -134,6 +134,8 @@ void PF::GmicExtractForegroundConfigGUI::open()
 
 bool PF::GmicExtractForegroundConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   PF::GmicExtractForegroundPar* par = get_par();
   if( !par ) return false;
 
@@ -196,6 +198,8 @@ bool PF::GmicExtractForegroundConfigGUI::modify_preview( PixelBuffer& buf_in, Pi
 #endif
 */
   // We only draw on top of the preview image if we are mapped
+
+  if( !get_editing_flag() ) return false;
 
   // Resize the output buffer to match the input one
   buf_out.resize( buf_in.get_rect() );

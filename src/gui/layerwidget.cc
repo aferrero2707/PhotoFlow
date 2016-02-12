@@ -133,7 +133,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   scale_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/scale.png", "scale", image, this),
   perspective_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/perspective.png", "perspective", image, this)
 {
-  set_size_request(310,-1);
+  set_size_request(250,-1);
   notebook.set_tab_pos(Gtk::POS_LEFT);
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 
@@ -192,13 +192,17 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonDel.set_tooltip_text( _("Remove selected layers") );
 
   buttonPresetLoad.set_tooltip_text( _("Load an existing preset") );
+  buttonPresetLoad.set_size_request(108, 26);
   buttonPresetSave.set_tooltip_text( _("Save the selected layers as a preset") );
+  buttonPresetSave.set_size_request(108, 26);
 
+  buttonbox.set_spacing(5);
+  //buttonbox.set_border_width(4);
   //buttonbox.pack_start(buttonAdd, Gtk::PACK_SHRINK);
   //buttonbox.pack_start(buttonAddGroup, Gtk::PACK_SHRINK);
   //buttonbox.pack_start(buttonDel, Gtk::PACK_SHRINK);
-  buttonbox.pack_start(buttonPresetLoad/*, Gtk::PACK_SHRINK*/);
-  buttonbox.pack_start(buttonPresetSave/*, Gtk::PACK_SHRINK*/);
+  buttonbox.pack_end(buttonPresetSave, Gtk::PACK_SHRINK);
+  buttonbox.pack_end(buttonPresetLoad, Gtk::PACK_SHRINK);
   //buttonbox.set_layout(Gtk::BUTTONBOX_START);
 
   controls_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
@@ -211,9 +215,12 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //pack_start(layers_panel);
 
   main_box.pack_start(tool_buttons_box, Gtk::PACK_SHRINK);
-  main_box.pack_start(notebook, Gtk::PACK_EXPAND_WIDGET);
+  main_box.pack_start(vbox, Gtk::PACK_EXPAND_WIDGET);
+  vbox.set_spacing(4);
+  vbox.pack_start(notebook, Gtk::PACK_EXPAND_WIDGET);
+  vbox.pack_start( buttonbox, Gtk::PACK_SHRINK );
   top_box.pack_start( main_box, Gtk::PACK_EXPAND_WIDGET );
-  top_box.pack_start( buttonbox, Gtk::PACK_SHRINK );
+  //top_box.pack_start( buttonbox, Gtk::PACK_SHRINK );
   pack_start( top_box );
 
   /*
@@ -504,6 +511,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       if( gui && gui->get_frame() ) {
         controls_group.add_control( gui );
         gui->open();
+        gui->expand();
       }
       controls_group.show_all_children();
     }
@@ -799,6 +807,10 @@ void PF::LayerWidget::close_map_tabs( Layer* l )
     if( match ) remove_tab( page );
   }
 
+  for( std::list<Layer*>::iterator li = l->get_sublayers().begin(); li != l->get_sublayers().end(); li++ ) {
+    close_map_tabs( *li );
+  }
+
   for( std::list<Layer*>::iterator li = map_layers.begin(); li != map_layers.end(); li++ ) {
     close_map_tabs( *li );
   }
@@ -829,6 +841,7 @@ void PF::LayerWidget::detach_controls( Layer* l )
   }
   detach_controls( l->get_omap_layers() );
   detach_controls( l->get_imap_layers() );
+  detach_controls( l->get_sublayers() );
 }
 
 
@@ -850,13 +863,14 @@ void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
   std::cout<<"LayerWidget::unset_sticky_and_editing(\""<<l->get_name()<<"\") called."<<std::endl;
 
   if( editor ) {
-    if( editor->get_edited_layer() == l->get_id() )
-      editor->set_edited_layer(-1);
+    //if( editor->get_active_layer() == l->get_id() )
+    //  editor->set_active_layer(-1);
     if( editor->get_displayed_layer() == l->get_id() )
       editor->set_displayed_layer(-1);
   }
   unset_sticky_and_editing( l->get_omap_layers() );
   unset_sticky_and_editing( l->get_imap_layers() );
+  unset_sticky_and_editing( l->get_sublayers() );
 }
 
 

@@ -29,19 +29,25 @@
 
 #include "curves_config.hh"
 
+#define CURVE_SIZE 206
+
 PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   PF::OperationConfigGUI( layer, "Curves Configuration", false ),
   //rgbCurveSelector( this, "RGB_active_curve", "Channel: ", 1 ),
   //labCurveSelector( this, "Lab_active_curve", "Channel: ", 5 ),
   //cmykCurveSelector( this, "CMYK_active_curve", "Channel: ", 8 ),
-  greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-  rgbCurveEditor( this, "RGB_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-  RCurveEditor( this, "R_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-  GCurveEditor( this, "G_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-  BCurveEditor( this, "B_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-  LCurveEditor( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-  aCurveEditor( this, "a_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-  bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+  greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  rgbCurveEditor( this, "RGB_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  RCurveEditor( this, "R_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  GCurveEditor( this, "G_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  BCurveEditor( this, "B_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  LCurveEditor( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  aCurveEditor( this, "a_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  CCurveEditor( this, "C_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  MCurveEditor( this, "M_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  YCurveEditor( this, "Y_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  KCurveEditor( this, "K_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
   outputModeSlider( this, "color_blend", "Output mode", 0, 0, 1, 0.05, 0.2, 1)
 {
 
@@ -57,6 +63,12 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   labCurveSelector.append_text("a");
   labCurveSelector.append_text("b");
   labCurveSelector.set_active( 0 );
+
+  cmykCurveSelector.append_text("C");
+  cmykCurveSelector.append_text("M");
+  cmykCurveSelector.append_text("Y");
+  cmykCurveSelector.append_text("K");
+  cmykCurveSelector.set_active(0);
 #endif
 
 #ifdef GTKMM_3
@@ -70,6 +82,12 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   labCurveSelector.append("a");
   labCurveSelector.append("b");
   labCurveSelector.set_active( 0 );
+
+  cmykCurveSelector.append("C");
+  cmykCurveSelector.append("M");
+  cmykCurveSelector.append("Y");
+  cmykCurveSelector.append("K");
+  cmykCurveSelector.set_active(0);
 #endif
 
   add_widget( selectorsBox );
@@ -101,6 +119,9 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
     connect(sigc::mem_fun(*this,
                           &CurvesConfigGUI::do_update));
   labCurveSelector.signal_changed().
+    connect(sigc::mem_fun(*this,
+                          &CurvesConfigGUI::do_update));
+  cmykCurveSelector.signal_changed().
     connect(sigc::mem_fun(*this,
                           &CurvesConfigGUI::do_update));
   //add_control( &rgbCurveSelector );
@@ -144,6 +165,15 @@ void PF::CurvesConfigGUI::switch_curve()
     if( bCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( bCurveEditor );
     
+    if( CCurveEditor.get_parent() == (&curvesBox) )
+      curvesBox.remove( CCurveEditor );
+    if( MCurveEditor.get_parent() == (&curvesBox) )
+      curvesBox.remove( MCurveEditor );
+    if( YCurveEditor.get_parent() == (&curvesBox) )
+      curvesBox.remove( YCurveEditor );
+    if( KCurveEditor.get_parent() == (&curvesBox) )
+      curvesBox.remove( KCurveEditor );
+
 
     PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
     PF::Image* image = get_layer()->get_image();
@@ -201,6 +231,24 @@ void PF::CurvesConfigGUI::switch_curve()
       //labchSelector.show();
       break;
     case PF_COLORSPACE_CMYK:
+      switch( cmykCurveSelector.get_active_row_number() ) {
+      case 0:
+        curvesBox.pack_start( CCurveEditor, Gtk::PACK_SHRINK );
+        CCurveEditor.show();
+        break;
+      case 1:
+        curvesBox.pack_start( MCurveEditor, Gtk::PACK_SHRINK );
+        MCurveEditor.show();
+        break;
+      case 2:
+        curvesBox.pack_start( YCurveEditor, Gtk::PACK_SHRINK );
+        YCurveEditor.show();
+        break;
+      case 3:
+        curvesBox.pack_start( KCurveEditor, Gtk::PACK_SHRINK );
+        KCurveEditor.show();
+        break;
+      }
       //chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );
       //cmykchSelector.show();
       break;
@@ -329,7 +377,14 @@ bool PF::CurvesConfigGUI::pointer_release_event( int button, double x, double y,
   std::cout<<"CurvesConfigGUI::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
 
   PF::OpParBase* par = get_layer()->get_processor()->get_par();
-  PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+  PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+  if( node->processor && node->processor->get_par() ) {
+    PF::OpParBase* par = node->processor->get_par();
+    cs = PF::convert_colorspace( par->get_interpretation() );
+    //std::cout<<"OperationConfigGUI::update() par: "<<par<<std::endl;
+    std::cout<<"CurvesConfigGUI::pointer_release_event(): interpretation="<<par->get_interpretation()<<std::endl;
+    std::cout<<"CurvesConfigGUI::pointer_release_event(): colorspace="<<cs<<std::endl;
+  }
   switch( cs ) {
   case PF_COLORSPACE_GRAYSCALE:
     if( values.empty() ) return false;

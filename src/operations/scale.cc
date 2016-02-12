@@ -233,11 +233,15 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   if( srcimg == NULL ) return NULL;
   VipsImage* out, *rotated;
 
+  bool do_autocrop = autocrop.get();
+
   if( is_editing() ) {
     //std::cout<<"ScalePar::build(): editing, returning source image"<<std::endl;
-    PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
-    return srcimg;
+    //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
+    //return srcimg;
+    do_autocrop = false;
   }
+
 
   in_width = srcimg->Xsize;
   in_height = srcimg->Ysize;
@@ -263,7 +267,7 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     crop.width = out_width;
     crop.height = out_height;
 
-    if( autocrop.get() == true ) {
+    if( do_autocrop == true ) {
       dt_iop_clipping_data_t data;
       data.angle = rotate_angle.get() * 3.141592653589793 / 180.0;
       dt_iop_roi_t roi_in, roi_out;

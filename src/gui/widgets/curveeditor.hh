@@ -84,7 +84,7 @@ namespace PF {
   {
     Gtk::VBox box;
     Gtk::Label xlabel, ylabel;
-    Gtk::Alignment xalign, yalign;
+    Gtk::Alignment xalign, yalign, numentries_spacing;
     float xmin, xmax, ymin, ymax;
 #ifdef GTKMM_2
     Gtk::Adjustment xadjustment, yadjustment;
