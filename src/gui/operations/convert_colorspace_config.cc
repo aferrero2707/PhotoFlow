@@ -36,11 +36,20 @@
 PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Convert to profile" ),
   outProfileModeSelector( this, "profile_mode", "working profile: ", 1 ),
+  outTRCModeSelector( this, "trc_mode", _("encoding: "), 1 ),
+  assignButton( this, "assign", _("assign profile: "), false ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
 
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
+
+  outTRCModeSelectorBox.pack_start( outTRCModeSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( outTRCModeSelectorBox, Gtk::PACK_SHRINK );
+
+  assignButtonBox.pack_start( assignButton, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( assignButtonBox, Gtk::PACK_SHRINK );
+
 
   outProfLabel.set_text( "output profile name:" );
   outProfVBox.pack_start( outProfLabel );

@@ -50,7 +50,9 @@ namespace PF
 
     // output color profile
     PropertyBase out_profile_mode;
+    PropertyBase out_trc_mode;
     Property<std::string> out_profile_name;
+    Property<bool> assign;
 
     void* out_profile_data;
     int out_profile_data_length;
