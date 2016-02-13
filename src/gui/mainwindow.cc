@@ -77,9 +77,12 @@ topButtonBox2(Gtk::ORIENTATION_HORIZONTAL),
 #endif
 files_frame( _("files") ),
 editing_frame( _("editing") ),
-img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
-img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
-img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save-as.png" ),
+//img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
+img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-folder-open.png" ),
+//img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
+img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-floppy.png" ),
+//img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save-as.png" ),
+img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/save-as.png" ),
 img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-export.png" ),
 img_load_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
 img_save_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
@@ -357,15 +360,15 @@ void PF::MainWindow::remove_all_tabs()
     std::cout<<"MainWindow::on_delete_event(): tab="<<npages-1<<"  w="<<w<<std::endl;
     if( !w ) continue;
     std::cout<<"MainWindow::on_delete_event(): removing tab #"<<npages-1<<std::endl;
-    remove_tab( w );
+    remove_tab( w, true );
   }
 }
 
 
 void PF::MainWindow::on_button_exit()
 {
-  remove_all_tabs();
   hide();
+  remove_all_tabs();
 }
 
 
@@ -390,7 +393,7 @@ PF::MainWindow::open_image( std::string filename )
   HTabLabelWidget* tabwidget = 
       new HTabLabelWidget( std::string(fname),
           editor );
-  tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::MainWindow::remove_tab) ); 
+  tabwidget->signal_close.connect( sigc::bind<bool>(sigc::mem_fun(*this, &PF::MainWindow::remove_tab), false) );
   viewerNotebook.append_page( *editor, *tabwidget );
   //std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
   free(fullpath);
@@ -906,7 +909,7 @@ void PF::MainWindow::on_button_export_clicked()
 
 
 
-void PF::MainWindow::remove_tab( Gtk::Widget* widget )
+void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
 {
   //#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() called."<<std::endl;
@@ -981,19 +984,22 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
 
   viewerNotebook.remove_page( page );
   widget->hide();
-  //delete( widget );
-  //if( tabwidget )
-  //  delete( tabwidget );
 
-  WidgetDestroyData * update = g_new (WidgetDestroyData, 1);
-  update->widget = widget;
-  g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+  if(immediate) {
+    delete( widget );
+    if( tabwidget )
+      delete( tabwidget );
+  } else {
+    WidgetDestroyData * update = g_new (WidgetDestroyData, 1);
+    update->widget = widget;
+    g_idle_add ((GSourceFunc) widget_destroy_cb, update);
 
-  update = g_new (WidgetDestroyData, 1);
-  update->widget = tabwidget;
-  g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+    update = g_new (WidgetDestroyData, 1);
+    update->widget = tabwidget;
+    g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+  }
 
-//#ifndef NDEBUG
+  //#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() page #"<<page<<" removed."<<std::endl;
 //#endif
 }

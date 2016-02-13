@@ -104,7 +104,7 @@ public:
 
   void open_image(std::string filename);
 
-  void remove_tab( Gtk::Widget* widget );
+  void remove_tab( Gtk::Widget* widget, bool immediate );
   void remove_all_tabs();
 
   void on_my_switch_page(
