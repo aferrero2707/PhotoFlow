@@ -351,7 +351,7 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
       bzpt2->state = DT_MASKS_POINT_STATE_NORMAL;
       form->points = g_list_append(form->points, bzpt2);
       guint nb = g_list_length(form->points);
-      printf("ClosedSplineCurve::get_points(): nb(2)=%d\n", nb);
+      //printf("ClosedSplineCurve::get_points(): nb(2)=%d\n", nb);
       form->source[0] = bzpt->corner[0] + 0.02f;
       form->source[1] = bzpt->corner[1] + 0.02f;
       nb++;
@@ -377,8 +377,8 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
       &out_points, &out_points_count,
       &out_border, &out_border_count, 0);
   //std::cout<<"_path_get_points_border(): result="<<result<<std::endl;
-  std::cout<<"update_outline(): out_points_count="<<out_points_count
-      <<"  out_border_count="<<out_border_count<<std::endl;
+  //std::cout<<"update_outline(): out_points_count="<<out_points_count
+  //    <<"  out_border_count="<<out_border_count<<std::endl;
 
   outline.clear();
   float* ptr = out_points;

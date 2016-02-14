@@ -122,7 +122,7 @@ void _path_init_ctrl_points(dt_masks_form_t *form)
   if(g_list_length(form->points) < 2) return;
 
   guint nb = g_list_length(form->points);
-  printf("_path_init_ctrl_points(): nb=%d\n", nb);
+  //printf("_path_init_ctrl_points(): nb=%d\n", nb);
   for(int k = 0; k < nb; k++)
   {
     dt_masks_point_path_t *point3 = (dt_masks_point_path_t *)g_list_nth_data(form->points, k);
@@ -140,11 +140,11 @@ void _path_init_ctrl_points(dt_masks_form_t *form)
       dt_masks_point_path_t *point4 = (dt_masks_point_path_t *)g_list_nth_data(form->points, k4);
       dt_masks_point_path_t *point5 = (dt_masks_point_path_t *)g_list_nth_data(form->points, k5);
 
-      printf("_path_init_ctrl_points(): point #%d=%f %f %f %f %f %f\n", k, 
-             point3->corner[0], point3->corner[1],
-             point3->ctrl1[0], point3->ctrl1[1],
-             point3->ctrl2[0], point3->ctrl2[1]
-        );
+      //printf("_path_init_ctrl_points(): point #%d=%f %f %f %f %f %f\n", k,
+      //       point3->corner[0], point3->corner[1],
+      //       point3->ctrl1[0], point3->ctrl1[1],
+      //       point3->ctrl2[0], point3->ctrl2[1]
+      //  );
 
       float bx1, by1, bx2, by2;
       _path_catmull_to_bezier(point1->corner[0], point1->corner[1], point2->corner[0], point2->corner[1],
@@ -253,7 +253,7 @@ static int _path_fill_gaps(int lastx, int lasty, int x, int y, dt_masks_dynbuf_t
 static void _path_points_recurs_border_gaps(float *cmax, float *bmin, float *bmin2, float *bmax, dt_masks_dynbuf_t *dpoints,
                                             dt_masks_dynbuf_t *dborder, gboolean clockwise)
 {
-  printf("_path_points_recurs_border_gaps() called.\n");
+  //printf("_path_points_recurs_border_gaps() called.\n");
   // we want to find the start and end angles
   double a1 = atan2(bmin[1] - cmax[1], bmin[0] - cmax[0]);
   double a2 = atan2(bmax[1] - cmax[1], bmax[0] - cmax[0]);
@@ -519,7 +519,7 @@ int _path_get_points_border(//dt_develop_t *dev,
   float dx, dy;
   dx = dy = 0.0f;
   guint nb = g_list_length(form->points);
-  printf("_path_get_points_border(): nb=%d\n", nb);
+  //printf("_path_get_points_border(): nb=%d\n", nb);
   if(source && nb > 0)
   {
     dt_masks_point_path_t *pt = (dt_masks_point_path_t *)g_list_nth_data(form->points, 0);
@@ -536,11 +536,11 @@ int _path_get_points_border(//dt_develop_t *dev,
     dt_masks_dynbuf_add(dpoints, pt->ctrl2[0] * wd - dx);
     dt_masks_dynbuf_add(dpoints, pt->ctrl2[1] * ht - dy);
 
-    printf("_path_get_points_border(): point #%d=%f %f %f %f %f %f\n", k, 
-           pt->corner[0], pt->corner[1],
-           pt->ctrl1[0], pt->ctrl1[1],
-           pt->ctrl2[0], pt->ctrl2[1]
-      );
+    //printf("_path_get_points_border(): point #%d=%f %f %f %f %f %f\n", k,
+    //       pt->corner[0], pt->corner[1],
+    //       pt->ctrl1[0], pt->ctrl1[1],
+    //       pt->ctrl2[0], pt->ctrl2[1]
+    //  );
   }
   // for the border, we store value too
   if(dborder)
@@ -643,7 +643,7 @@ int _path_get_points_border(//dt_develop_t *dev,
   *points = dt_masks_dynbuf_harvest(dpoints);
   dt_masks_dynbuf_free(dpoints);
 
-  printf("_path_get_points_border(): points_count=%d\n", (int)(*points_count));
+  //printf("_path_get_points_border(): points_count=%d\n", (int)(*points_count));
 
   if(dborder)
   {
