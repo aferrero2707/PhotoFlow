@@ -98,6 +98,11 @@ public:
     Slider saturationLevelSlider;
     Slider blackLevelSlider;
     Selector hlrecoModeSelector;
+    Gtk::Label black_level_label;
+    Gtk::Label white_level_label;
+    Gtk::Alignment black_level_label_align;
+    Gtk::Alignment white_level_label_align;
+    Gtk::HSeparator separator;
 
     CheckBox enable_ca_checkbox;
     CheckBox auto_ca_checkbox;
