@@ -720,6 +720,8 @@ widget "*entry_fast_search*" style "synaptic-quick-search"
 widget "*IdoEntryMenuItem*" style "murrine-wide"
 # ------------------------------------------------------------------------------
 
+widget_class "*Scrollbar" style "murrine-scrollbar"
+
 # -- External files ------------------------------------------------------------
 #include "infobar.rc" 
 #include "firefox.rc"
