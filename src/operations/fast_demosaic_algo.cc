@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define RT_EMU
+//#define RT_EMU
 
 #include "fast_demosaic.hh"
 
@@ -407,9 +407,12 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
       ptr[x*3+1] = green[y+r->top][x+r->left]/65535;
       ptr[x*3+2] = blue[y+r->top][x+r->left]/65535;
 #else
-      ptr[xx] = CLAMP( red[y+r->top][x+r->left], 0, 1 );
-      ptr[xx+1] = CLAMP( green[y+r->top][x+r->left], 0, 1 );
-      ptr[xx+2] = CLAMP( blue[y+r->top][x+r->left], 0, 1 );
+      //ptr[xx] = CLAMP( red[y+r->top][x+r->left], 0, 1 );
+      //ptr[xx+1] = CLAMP( green[y+r->top][x+r->left], 0, 1 );
+      //ptr[xx+2] = CLAMP( blue[y+r->top][x+r->left], 0, 1 );
+      ptr[xx] = red[y+r->top][x+r->left];
+      ptr[xx+1] = green[y+r->top][x+r->left];
+      ptr[xx+2] = blue[y+r->top][x+r->left];
 #endif
     }
   }
