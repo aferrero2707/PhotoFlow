@@ -76,6 +76,7 @@ PF::RawOutputPar::RawOutputPar():
 {
   exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
 
+  hlreco_mode.add_enum_value(PF::HLRECO_BLEND,"HLRECO_BLEND",_("blend"));
   hlreco_mode.add_enum_value(PF::HLRECO_NONE,"HLRECO_NONE",_("none"));
 
   profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","NONE");
