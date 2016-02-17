@@ -400,19 +400,19 @@ void run(const gchar *name,
 
     //printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
 
-    if( false ) {
+    if( true ) {
       GimpParasite *exif_parasite;
 
       exif_parasite = gimp_parasite_new("exif-data",
           GIMP_PARASITE_PERSISTENT, sizeof( GExiv2Metadata ),
           pluginwin->get_image_buffer().exif_buf);
-#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-      gimp_image_attach_parasite(gimpImage, exif_parasite);
-#else
+//#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
+//      gimp_image_attach_parasite(gimpImage, exif_parasite);
+//#else
       gimp_image_parasite_attach(gimpImage, exif_parasite);
-#endif
+//#endif
       gimp_parasite_free(exif_parasite);
-
+/*
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
       {
         GimpParam    *return_vals;
@@ -428,6 +428,7 @@ void run(const gchar *name,
         }
       }
 #endif
+*/
     }
 
     /* Create "icc-profile" parasite from output profile
