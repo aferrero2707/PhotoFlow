@@ -429,6 +429,16 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
     }
   }
 
+  if( crop_width > 10 && crop_height > 10 ) {
+    buf_out.draw_line( crop_left + crop_width/3, crop_top,
+        crop_left + crop_width/3, crop_bottom, buf_in );
+    buf_out.draw_line( crop_left + crop_width*2/3, crop_top,
+        crop_left + crop_width*2/3, crop_bottom, buf_in );
+    buf_out.draw_line( crop_left, crop_top + crop_height/3,
+        crop_right, crop_top + crop_height/3, buf_in );
+    buf_out.draw_line( crop_left, crop_top + crop_height*2/3,
+        crop_right, crop_top + crop_height*2/3, buf_in );
+  }
   return true;
 
   // Draw outline of cropped area
