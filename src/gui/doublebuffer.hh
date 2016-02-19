@@ -181,7 +181,12 @@ public:
     }
   }
 
-#define PX_MOD( pxin, pxout ) { int _px = pxin; _px += 127; if(_px>255) _px -= 255; pxout = (guint8)_px; }
+#define PX_MOD( pxin, pxout ) { \
+  int _pxmax = MAX(pxin[0], MAX(pxin[1], pxin[2])); \
+  int _px = _pxmax; _px += 127; if(_px>255) _px -= 255; \
+  pxout[0] = pxout[1] = pxout[2] = (guint8)_px; \
+  }
+
   void fill( const VipsRect& area, PixelBuffer& inbuf );
 
   void draw_circle( int x0, int y0, int radius, guint8 r, guint8 g, guint8 b );

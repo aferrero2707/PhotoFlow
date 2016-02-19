@@ -103,7 +103,7 @@ void PF::PixelBuffer::draw_point( int x, int y, PixelBuffer& inbuf )
       (y>=buf_top) && (y<=buf_bottom) ) {
     guint8* inp = inpx + rs*(y-buf_top) + (x-buf_left)*bl;
     guint8* p = px + rs*(y-buf_top) + (x-buf_left)*bl;
-    PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+    PX_MOD( inp, p ); // PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
   }
 }
 
@@ -136,9 +136,9 @@ void PF::PixelBuffer::fill( const VipsRect& area, PixelBuffer& inbuf )
     guint8* p2 = px2 + rs2*dy2 + dx2*bl2;
 
     for( x = 0; x <= dx; x+=bl2 ) {
-      PX_MOD( inpx[0], p2[0] );
-      PX_MOD( inpx[1], p2[1] );
-      PX_MOD( inpx[2], p2[2] );
+      PX_MOD( inpx, p2 );
+      //PX_MOD( inpx[1], p2[1] );
+      //PX_MOD( inpx[2], p2[2] );
       inpx += bl2;
       p2 += bl2;
     }
@@ -285,17 +285,17 @@ void PF::PixelBuffer::draw_circle( int x0, int y0, int radius, PixelBuffer& inbu
       guint8* inp = inpx + rs*(row1-buf_top) + (left-buf_left)*bl;
       guint8* p = px + rs*(row1-buf_top) + (left-buf_left)*bl;
       if( left2 <= right ) {
-        for( int x = left; x <= left2; x++, p += bl ) {
-          PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+        for( int x = left; x <= left2; x++, inp += bl, p += bl ) {
+          PX_MOD( inp, p ); // PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
         }
         inp = inpx + rs*(row1-buf_top) + (right2+1-buf_left)*bl;
         p = px + rs*(row1-buf_top) + (right2+1-buf_left)*bl;
-        for( int x = right2; x <= right; x++, p += bl ) {
-          PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+        for( int x = right2; x <= right; x++, inp += bl, p += bl ) {
+          PX_MOD( inp, p ); // PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
         }
       } else {
-        for( int x = left; x <= right; x++, p += bl ) {
-          PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+        for( int x = left; x <= right; x++, inp += bl, p += bl ) {
+          PX_MOD( inp, p ); // PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
         }
       }
     }
@@ -303,17 +303,17 @@ void PF::PixelBuffer::draw_circle( int x0, int y0, int radius, PixelBuffer& inbu
       guint8* inp = inpx + rs*(row2-buf_top) + (left-buf_left)*bl;
       guint8* p = px + rs*(row2-buf_top) + (left-buf_left)*bl;
       if( left2 <= right ) {
-        for( int x = left; x <= left2; x++, p += bl ) {
-          PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+        for( int x = left; x <= left2; x++, inp += bl, p += bl ) {
+          PX_MOD( inp, p ); // PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
         }
         inp = inpx + rs*(row2-buf_top) + (right2+1-buf_left)*bl;
         p = px + rs*(row2-buf_top) + (right2+1-buf_left)*bl;
-        for( int x = right2; x <= right; x++, p += bl ) {
-          PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+        for( int x = right2; x <= right; x++, inp += bl, p += bl ) {
+          PX_MOD( inp, p ); // PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
         }
       } else {
-        for( int x = left; x <= right; x++, p += bl ) {
-          PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+        for( int x = left; x <= right; x++, inp += bl, p += bl ) {
+          PX_MOD( inp, p ); //PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
         }
       }
     }
@@ -345,7 +345,7 @@ void PF::PixelBuffer::draw_line( int x1, int y1, int x2, int y2, PixelBuffer& in
         (y1>=buf_top) && (y1<=buf_bottom) ) {
       guint8* inp = inpx + rs*(y1-buf_top) + (x1-buf_left)*bl;
       guint8* p = px + rs*(y1-buf_top) + (x1-buf_left)*bl;
-      PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+      PX_MOD( inp, p ); //PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
       //p[0] = 255; p[1] = p[2] = 255;
     }
     return;
@@ -373,9 +373,10 @@ void PF::PixelBuffer::draw_line( int x1, int y1, int x2, int y2, PixelBuffer& in
 
       guint8* inp = inpx + rs*(y1-buf_top) + (xstart-buf_left)*bl;
       guint8* p = px + rs*(y1-buf_top) + (xstart-buf_left)*bl;
-      for( int x = xstart; x <= xend; x++, p += bl ) {
+      for( int x = xstart; x <= xend; x++, inp += bl, p += bl ) {
         //if( x!=x2_ )
-        PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+        PX_MOD( inp, p ); //PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+        //std::cout<<"draw_line(): in="<<(int)inp[0]<<","<<(int)inp[1]<<","<<(int)inp[2]<<"  p="<<(int)p[0]<<","<<(int)p[1]<<","<<(int)p[2]<<std::endl;
         //p[0] = 255; p[1] = p[2] = 255;
       }
     } else {
@@ -409,9 +410,9 @@ void PF::PixelBuffer::draw_line( int x1, int y1, int x2, int y2, PixelBuffer& in
 
         guint8* inp = inpx + rs*(y-buf_top) + (xstart-buf_left)*bl;
         guint8* p = px + rs*(y-buf_top) + (xstart-buf_left)*bl;
-        for( int x = xstart; x <= xend; x++, p += bl ) {
+        for( int x = xstart; x <= xend; x++, inp += bl, p += bl ) {
           //if( x!=x2_ && y!=y2_ )
-          PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+          PX_MOD( inp, p ); //PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
           //p[0] = 255; p[1] = p[2] = 255;
         }
       }
@@ -438,7 +439,7 @@ void PF::PixelBuffer::draw_line( int x1, int y1, int x2, int y2, PixelBuffer& in
       guint8* inp = inpx + rs*(y-buf_top) + (x-buf_left)*bl;
       guint8* p = px + rs*(y-buf_top) + (x-buf_left)*bl;
       //if( x!=x2_ && y!=y2_ )
-      PX_MOD( inp[0], p[0] ); PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
+      PX_MOD( inp, p ); //PX_MOD( inp[1], p[1] ); PX_MOD( inp[2], p[2] );
       //p[0] = 255; p[1] = p[2] = 255;
     }
   }
