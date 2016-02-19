@@ -614,6 +614,9 @@ void PF::ImageEditor::on_map()
     std::cout<<"ImageEditor::on_map(): parent window configured."<<std::endl;
   }
   //open_image();
+
+  if( fit_image ) zoom_fit();
+
   Gtk::HBox::on_map();
 }
 
@@ -728,10 +731,13 @@ bool PF::ImageEditor::zoom_fit()
   //         <<","<<image_size_updater->get_image_height()
   //         <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
 
-	imageArea->set_shrink_factor( shrink_min );
-	image->set_pipeline_level( pipeline, target_level );
-	//pipeline2->set_level( target_level );
-  image->update();
+	if( (imageArea->get_shrink_factor() != shrink_min) ||
+	    (pipeline->get_level() != target_level) ) {
+	  imageArea->set_shrink_factor( shrink_min );
+	  image->set_pipeline_level( pipeline, target_level );
+	  //pipeline2->set_level( target_level );
+	  image->update();
+	}
 
   fit_image = true;
   return true;
@@ -1006,9 +1012,9 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     return;
   }
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"PF::ImageEditor::layer2image(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
-//#endif
+#endif
 
   PF::OpParBase* par = node->processor->get_par();
   VipsRect rin, rout;
@@ -1023,9 +1029,9 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   w = rout.width;
   h = rout.height;
 
-  //#ifndef NDEBUG
+  #ifndef NDEBUG
     std::cout<<"PF::ImageEditor::layer2image(): after active layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
-  //#endif
+  #endif
 
   if( imageArea->get_display_merged() ) {
   std::list<PF::Layer*>::iterator li;
@@ -1055,16 +1061,16 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
       y = rout.top;
       w = rout.width;
       h = rout.height;
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"PF::ImageEditor::layer2image(): after \""<<l->get_name()
           <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
-//#endif
+#endif
+      }
     }
   }
-  }
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"PF::ImageEditor::layer2image(): x'="<<x<<"  y'="<<y<<std::endl;
-//#endif
+#endif
   //return true;
 }
 
@@ -1244,6 +1250,8 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
              <<"  hint: "<<event->is_hint<<"  state: "<<event->state
              <<std::endl;
 #endif
+    //std::cout<<"PF::ImageEditor::on_motion_notify_event(): active_layer="<<active_layer;
+    //if(active_layer) std::cout<<" ("<<active_layer->get_name()<<")"<<std::endl;
     if( active_layer &&
         active_layer->get_processor() &&
         active_layer->get_processor()->get_par() ) {
