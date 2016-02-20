@@ -34,18 +34,6 @@ or to install the daily git builds from the "stable" branch:
 
         sudo apt-get install photoflow-git
 
-- *Photo Video Applications* PPA:
-
-To add the PPA and install photoflow, do the following:
-
-        sudo add-apt-repository ppa:anton+/photo-video-apps
-        sudo apt-get update
-        sudo apt-get install photoflow
-
-or to install the daily git builds from the "stable" branch:
-
-        sudo apt-get install photoflow-unstable
-
 # Arch Linux packages
 
 Pre-compiled packages are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page. To install a given version, download the photoflow-git-x.x.x-1-x86_64.pkg.tar.xz archive (where `x.x.x` must be replaced with the version to be installed) and then run 
