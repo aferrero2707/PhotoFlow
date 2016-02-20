@@ -259,6 +259,7 @@ int main (int argc, char *argv[])
   std::cout<<"Image processing thread finished"<<std::endl;
 
   delete mainWindow;
+  app->iteration( false );
   delete app;
 
   PF::PhotoFlow::Instance().close();

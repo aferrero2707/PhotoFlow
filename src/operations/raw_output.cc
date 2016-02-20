@@ -49,35 +49,44 @@ extern "C" {
 
 
 PF::RawOutputPar::RawOutputPar(): 
-  OpParBase(),
-  image_data( NULL ),
-  profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
-  //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
-  current_profile_mode( IN_PROF_MATRIX ),
-  gamma_curve( NULL ),
-  cam_profile_name("cam_profile_name", this),
-  cam_profile( NULL ),
-  gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","None"),
-  gamma_lin("gamma_lin", this, 0),
-  gamma_exp("gamma_exp", this, 2.2),
-  out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
-  current_out_profile_mode( OUT_PROF_sRGB ),
-  out_profile_name("out_profile_name", this),
-  out_profile( NULL ),
-  transform( NULL )
+          OpParBase(),
+          image_data( NULL ),
+          exposure("exposure",this,1),
+          exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
+          exposure_clip_amount("exposure_clip_amount",this,0),
+          hlreco_mode("hlreco_mode",this,PF::HLRECO_CLIP,"HLRECO_CLIP",_("clip")),
+          profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
+          //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
+          current_profile_mode( IN_PROF_MATRIX ),
+          gamma_curve( NULL ),
+          cam_profile_name("cam_profile_name", this),
+          cam_profile( NULL ),
+          gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","linear"),
+          gamma_lin("gamma_lin", this, 0),
+          gamma_exp("gamma_exp", this, 2.2),
+          out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","sRGB"),
+          current_out_profile_mode( OUT_PROF_sRGB ),
+          out_profile_name("out_profile_name", this),
+          out_profile( NULL ),
+          transform( NULL )
 {
-  profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","NONE");
+  exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
+
+  hlreco_mode.add_enum_value(PF::HLRECO_BLEND,"HLRECO_BLEND",_("blend"));
+  hlreco_mode.add_enum_value(PF::HLRECO_NONE,"HLRECO_NONE",_("none"));
+
+  profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","RAW");
   profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","MATRIX");
   profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC");
 
   out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
   out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
   out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
   out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
   out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
-  gamma_mode.add_enum_value(PF::IN_GAMMA_NONE,"NONE","None");
+  gamma_mode.add_enum_value(PF::IN_GAMMA_NONE,"NONE","linear");
   gamma_mode.add_enum_value(PF::IN_GAMMA_sRGB,"sRGB","sRGB");
   gamma_mode.add_enum_value(PF::IN_GAMMA_CUSTOM,"CUSTOM","Custom");
 
@@ -90,8 +99,8 @@ PF::RawOutputPar::RawOutputPar():
 
 
 VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first, 
-				     VipsImage* imap, VipsImage* omap, 
-				     unsigned int& level)
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
 {
   if( in.size() < first+1 )
     return NULL;
@@ -102,8 +111,8 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
 
   size_t blobsz;
   if( vips_image_get_blob( in[0], "raw_image_data",
-			   (void**)&image_data, 
-			   &blobsz ) ) {
+      (void**)&image_data,
+      &blobsz ) ) {
     std::cout<<"RawOutputPar::build(): could not extract raw_image_data."<<std::endl;
     return NULL;
   }
@@ -131,7 +140,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   current_out_profile_mode = (output_profile_mode_t)out_profile_mode.get_enum_value().first;
   current_cam_profile_name = cam_profile_name.get();
   current_out_profile_name = out_profile_name.get();
-  */
+   */
 
   //std::cout<<"RawOutputPar::build(): mode_changed="<<mode_changed
   //         <<"  out_mode_changed="<<out_mode_changed
@@ -139,7 +148,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   //         <<"  out_changed="<<out_changed<<std::endl;
 
   bool changed = mode_changed || out_mode_changed || gamma_mode_changed || cam_changed || out_changed || out_mode_changed ||
-    (cam_profile==NULL) || (out_profile==NULL);
+      (cam_profile==NULL) || (out_profile==NULL);
 
   if( cam_profile && (mode_changed || cam_changed) ) {
     cmsCloseProfile( cam_profile );
@@ -234,11 +243,11 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     transform = NULL;
     if( cam_profile && out_profile )
       transform = cmsCreateTransform( cam_profile, 
-				      TYPE_RGB_FLT,
-				      out_profile, 
-				      TYPE_RGB_FLT,
-				      INTENT_PERCEPTUAL, 
-				      cmsFLAGS_NOCACHE );
+          TYPE_RGB_FLT,
+          out_profile,
+          TYPE_RGB_FLT,
+          INTENT_RELATIVE_COLORIMETRIC,
+          cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
   }
   //std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
 
@@ -282,7 +291,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     void* buf = malloc( out_length );
     cmsSaveProfileToMem( out_profile, buf, &out_length);
     vips_image_set_blob( out, VIPS_META_ICC_NAME, 
-			 (VipsCallbackFn) g_free, buf, out_length );
+        (VipsCallbackFn) g_free, buf, out_length );
     //char tstr[1024];
     //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;

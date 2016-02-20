@@ -183,6 +183,22 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   /**/
   raw_output->get_par()->set_image_hints( out_demo );
   raw_output->get_par()->set_format( VIPS_FORMAT_FLOAT );
+  RawPreprocessorPar* rppar = dynamic_cast<RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  RawOutputPar* ropar = dynamic_cast<RawOutputPar*>( raw_output->get_par() );
+  if( rppar && ropar ) {
+    switch( rppar->get_wb_mode() ) {
+    case WB_SPOT:
+    case WB_COLOR_SPOT:
+      ropar->set_wb( rppar->get_wb_red(), rppar->get_wb_green(), rppar->get_wb_blue() );
+      break;
+    default:
+      ropar->set_wb( rppar->get_wb_red()*rppar->get_camwb_corr_red(),
+          rppar->get_wb_green()*rppar->get_camwb_corr_green(),
+          rppar->get_wb_blue()*rppar->get_camwb_corr_blue() );
+      break;
+    }
+  }
+
   in2.clear(); in2.push_back( out_demo );
   VipsImage* out = raw_output->get_par()->build( in2, 0, NULL, NULL, level );
   g_object_unref( out_demo );

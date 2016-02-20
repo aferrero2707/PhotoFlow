@@ -28,6 +28,7 @@
  */
 
 #include "../base/exif_data.hh"
+#include "../../operations/raw_image.hh"
 #include "../../operations/raw_preprocessor.hh"
 #include "../../operations/raw_output.hh"
 #include "../../operations/raw_developer.hh"
@@ -347,10 +348,12 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
   fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
-  blackLevelSlider( this, "black_level_correction", _("black level"), 0, -500, 500, 5, 10, 1 ),
+  saturationLevelSlider( this, "saturation_level_correction", _("RAW white level %"), 100, 0, 200, 0.5, 5, 100 ),
+  blackLevelSlider( this, "black_level_correction", _("RAW black level %"), 100, 0, 200, 0.5, 5, 100 ),
+  hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
   profileModeSelector( this, "profile_mode", _("input: "), 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
-  gammaModeSelector( this, "gamma_mode", "Raw gamma: ", 0 ),
+  gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
   outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
@@ -377,8 +380,18 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
   wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
 
-  exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
-  exposureControlsBox.pack_start( blackLevelSlider, Gtk::PACK_SHRINK );
+  black_level_label_align.set( 0, 0.5, 0, 0 );
+  white_level_label_align.set( 0, 0.5, 0, 0 );
+  black_level_label_align.add( black_level_label );
+  white_level_label_align.add( white_level_label );
+
+  exposureControlsBox.pack_start( black_level_label_align, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( white_level_label_align, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( separator, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( blackLevelSlider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( saturationLevelSlider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( hlrecoModeSelector, Gtk::PACK_SHRINK, 2 );
 
   lensControlsBox.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
   lensControlsBox.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
@@ -586,6 +599,32 @@ void PF::RawDeveloperConfigGUI::do_update()
             ignore_temp_tint_change = false;
           }
         }
+      }
+
+      dcraw_data_t* raw_data;
+      if( !vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data, &blobsz ) &&
+          blobsz == sizeof(dcraw_data_t) ) {
+        float black_level = raw_data->color.black;
+        float white_level = raw_data->color.maximum;
+
+        PropertyBase* blc = par->get_property( "black_level_correction" );
+        float black_corr = 1;
+        if( blc ) blc->get( black_corr );
+
+        PropertyBase* wlc = par->get_property( "saturation_level_correction" );
+        float white_corr = 1;
+        if( wlc ) wlc->get( white_corr );
+
+        float black_level2 = black_level * (black_corr);
+        float white_level2 = white_level * (white_corr);
+
+        char tstr[500];
+        snprintf( tstr, 499, "RAW black: %.1f (def. = %.0f)",
+            black_level2, black_level );
+        black_level_label.set_text( tstr );
+        snprintf( tstr, 499, "RAW white: %.1f (def. = %.0f)",
+            white_level2, white_level );
+        white_level_label.set_text( tstr );
       }
     }
 

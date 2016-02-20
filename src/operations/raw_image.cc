@@ -375,17 +375,19 @@ PF::RawImage::RawImage( const std::string _fname ):
 			RawSpeed::RawImage r = d->mRaw;
       unsigned char color = r->cfa.getColorAt(col2,row2);
       float val = 0;
+      float nval = 0;
       switch(r->getDataType()) {
       case RawSpeed::TYPE_USHORT16: val = *((uint16_t*)r->getDataUncropped(col2,row2)); break;
       case RawSpeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
       }
-      //if( row<8 && col<8 ) {
-      //  std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<"  max="<<pdata->color.maximum<<std::endl;
-      //}
-      val -= pdata->color.black;
-      val /= (pdata->color.maximum - pdata->color.black);
-      val *= 65535;
-      //if( row<8 && col<8 ) {
+      if( abs(row-2798)<5 && abs(col-2748)<5 ) {
+        std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<"  max="<<pdata->color.maximum<<std::endl;
+      }
+      //pdata->color.black = 2048;
+      nval = val - pdata->color.black;
+      nval /= (pdata->color.maximum - pdata->color.black);
+      nval *= 65535;
+      //if( abs(row-2798)<5 && abs(col-2748)<5 ) {
       //  std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<" (scaled)"<<std::endl;
       //}
 
@@ -410,7 +412,7 @@ PF::RawImage::RawImage( const std::string _fname ):
       fptr[1] = color;
       //std::cout<<"val="<<val<<"  color="<<color<<std::endl;
 			ptr += pxsize;
-			rawData[row][col] = val;
+			rawData[row][col] = nval;
     }
 		/**/
     if( write( temp_fd, rowbuf, pxsize*iwidth ) != (pxsize*iwidth) )

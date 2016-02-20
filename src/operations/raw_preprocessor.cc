@@ -63,14 +63,12 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_target_L("wb_target_L",this,-100), 
   wb_target_a("wb_target_a",this,10), 
   wb_target_b("wb_target_b",this,12), 
-  exposure("exposure",this,1),
-  exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
-  exposure_clip_amount("exposure_clip_amount",this,0),
-  black_level_correction( "black_level_correction", this, 0)
+  saturation_level_correction( "saturation_level_correction", this, 1),
+  black_level_correction( "black_level_correction", this, 1)
 {
   wb_mode.add_enum_value(PF::WB_CAMERA,"CAMERA","CAMERA");
   wb_mode.add_enum_value(PF::WB_SPOT,"SPOT","Spot");
-  //wb_mode.add_enum_value(PF::WB_COLOR_SPOT,"COLOR_SPOT","Color spot");
+  wb_mode.add_enum_value(PF::WB_COLOR_SPOT,"COLOR_SPOT","Color spot");
   wb_mode.add_enum_value(PF::WB_DAYLIGHT,"DAYLIGHT",Daylight);
   wb_mode.add_enum_value(PF::WB_DIRECT_SUNLIGHT,"DIRECT_SUNLIGHT",DirectSunlight);
   wb_mode.add_enum_value(PF::WB_CLOUDY,"CLOUDY",Cloudy);
@@ -93,8 +91,6 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_mode.add_enum_value(PF::WB_EVENING_SUN,"EVENING_SUN",EveningSun);
   wb_mode.add_enum_value(PF::WB_UNDERWATER,"UNDERWATER",Underwater);
   wb_mode.add_enum_value(PF::WB_BACK_AND_WHITE,"BACK_AND_WHITE",BlackNWhite);
-
-  exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
 
   set_type("raw_preprocessor" );
 }
@@ -164,8 +160,6 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
   }
   }
 
-  if( exposure_mode.get_enum_value().first == PF::EXP_NORMAL )
-    exposure_current = exposure.get();
   VipsImage* image = OpParBase::build( in, first, NULL, NULL, level );
   if( !image )
     return NULL;
