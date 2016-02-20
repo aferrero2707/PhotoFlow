@@ -430,8 +430,8 @@ namespace PF
       range *= max_mul;
 #endif
 
-      float white_corr = rdpar->get_saturation_level_correction();
-      float black_corr = rdpar->get_black_level_correction();
+      float white_corr = rdpar->get_saturation_level_correction() + 1.f;
+      float black_corr = rdpar->get_black_level_correction() + 1.f;
 
       //if(r->top==0 && r->left==0) std::cout<<"white_corr="<<white_corr<<std::endl;
 
