@@ -135,10 +135,10 @@ PF::CurvesConfigGUI::~CurvesConfigGUI()
 }
 
 
-void PF::CurvesConfigGUI::switch_curve()
+void PF::CurvesConfigGUI::activate_curve( PF::CurveEditor& curve )
 {
 #ifndef NDEBUG
-      std::cout<<"CurvesConfigGUI::switch_curve() for "<<get_layer()->get_name()<<" called"<<std::endl;
+      std::cout<<"CurvesConfigGUI::activate_curve() for "<<get_layer()->get_name()<<" called"<<std::endl;
 #endif
   //std::vector<Widget*> wl = chselBox.get_children();
   //wl.clear();
@@ -146,34 +146,63 @@ void PF::CurvesConfigGUI::switch_curve()
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
 
-    if( greyCurveEditor.get_parent() == (&curvesBox) )
+    PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+    PF::Image* image = get_layer()->get_image();
+    PF::Pipeline* pipeline = image->get_pipeline(0);
+    PF::PipelineNode* node = NULL;
+    if( pipeline ) node = pipeline->get_node( get_layer()->get_id() );
+    if( node && node->processor && node->processor->get_par() ) {
+      PF::OpParBase* par = node->processor->get_par();
+      cs = PF::convert_colorspace( par->get_interpretation() );
+      //std::cout<<"OperationConfigGUI::update() par: "<<par<<std::endl;
+    }
+
+    if( ((&curve) != (&greyCurveEditor)) && (greyCurveEditor.get_parent() == (&curvesBox)) )
       curvesBox.remove( greyCurveEditor );
 
-    if( rgbCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&rgbCurveEditor)) && rgbCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( rgbCurveEditor );
-    if( RCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&RCurveEditor)) && RCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( RCurveEditor );
-    if( GCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&GCurveEditor)) && GCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( GCurveEditor );
-    if( BCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&BCurveEditor)) && BCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( BCurveEditor );
     
-    if( LCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&LCurveEditor)) && LCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( LCurveEditor );
-    if( aCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&aCurveEditor)) && aCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( aCurveEditor );
-    if( bCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&bCurveEditor)) && bCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( bCurveEditor );
     
-    if( CCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&CCurveEditor)) && CCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( CCurveEditor );
-    if( MCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&MCurveEditor)) && MCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( MCurveEditor );
-    if( YCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&YCurveEditor)) && YCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( YCurveEditor );
-    if( KCurveEditor.get_parent() == (&curvesBox) )
+    if( ((&curve) != (&KCurveEditor)) && KCurveEditor.get_parent() == (&curvesBox) )
       curvesBox.remove( KCurveEditor );
 
+    if( curve.get_parent() != (&curvesBox) ) {
+      curvesBox.pack_start( curve, Gtk::PACK_SHRINK );
+      curve.show();
+    }
+  }
+}
+
+
+void PF::CurvesConfigGUI::switch_curve()
+{
+#ifndef NDEBUG
+      std::cout<<"CurvesConfigGUI::switch_curve() for "<<get_layer()->get_name()<<" called"<<std::endl;
+#endif
+  //std::vector<Widget*> wl = chselBox.get_children();
+  //wl.clear();
+  if( get_layer() && get_layer()->get_image() &&
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
 
     PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
     PF::Image* image = get_layer()->get_image();
@@ -188,42 +217,34 @@ void PF::CurvesConfigGUI::switch_curve()
 
     switch( cs ) {
     case PF_COLORSPACE_GRAYSCALE:
-      curvesBox.pack_start( greyCurveEditor, Gtk::PACK_SHRINK );
-      greyCurveEditor.show();
+      activate_curve( greyCurveEditor );
       break;
     case PF_COLORSPACE_RGB:
       switch( rgbCurveSelector.get_active_row_number() ) {
       case 0:
-        curvesBox.pack_start( rgbCurveEditor, Gtk::PACK_SHRINK );
-        rgbCurveEditor.show();
+        activate_curve( rgbCurveEditor );
         break;
       case 1:
-        curvesBox.pack_start( RCurveEditor, Gtk::PACK_SHRINK );
-        RCurveEditor.show();
+        activate_curve( RCurveEditor );
         break;
       case 2:
-        curvesBox.pack_start( GCurveEditor, Gtk::PACK_SHRINK );
-        GCurveEditor.show();
+        activate_curve( GCurveEditor );
         break;
       case 3:
-        curvesBox.pack_start( BCurveEditor, Gtk::PACK_SHRINK );
-        BCurveEditor.show();
+        activate_curve( BCurveEditor );
         break;
       }
       break;
     case PF_COLORSPACE_LAB:
       switch( labCurveSelector.get_active_row_number() ) {
       case 0:
-        curvesBox.pack_start( LCurveEditor, Gtk::PACK_SHRINK );
-        LCurveEditor.show();
+        activate_curve( LCurveEditor );
         break;
       case 1:
-        curvesBox.pack_start( aCurveEditor, Gtk::PACK_SHRINK );
-        aCurveEditor.show();
+        activate_curve( aCurveEditor );
         break;
       case 2:
-        curvesBox.pack_start( bCurveEditor, Gtk::PACK_SHRINK );
-        bCurveEditor.show();
+        activate_curve( bCurveEditor );
         break;
       }
       break;
@@ -233,20 +254,16 @@ void PF::CurvesConfigGUI::switch_curve()
     case PF_COLORSPACE_CMYK:
       switch( cmykCurveSelector.get_active_row_number() ) {
       case 0:
-        curvesBox.pack_start( CCurveEditor, Gtk::PACK_SHRINK );
-        CCurveEditor.show();
+        activate_curve( CCurveEditor );
         break;
       case 1:
-        curvesBox.pack_start( MCurveEditor, Gtk::PACK_SHRINK );
-        MCurveEditor.show();
+        activate_curve( MCurveEditor );
         break;
       case 2:
-        curvesBox.pack_start( YCurveEditor, Gtk::PACK_SHRINK );
-        YCurveEditor.show();
+        activate_curve( YCurveEditor );
         break;
       case 3:
-        curvesBox.pack_start( KCurveEditor, Gtk::PACK_SHRINK );
-        KCurveEditor.show();
+        activate_curve( KCurveEditor );
         break;
       }
       //chselBox.pack_start( cmykchSelector, Gtk::PACK_SHRINK );

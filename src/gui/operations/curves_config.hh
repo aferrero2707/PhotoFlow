@@ -67,13 +67,14 @@ namespace PF {
   Gtk::HBox outputModeBox;
   OutModeSlider outputModeSlider;
 
+  void switch_curve();
+  void activate_curve( CurveEditor& curve );
+
 public:
   CurvesConfigGUI(Layer* layer);
   virtual ~CurvesConfigGUI();
 
   bool has_preview() { return true; }
-
-  void switch_curve();
 
   void do_update();
 
