@@ -244,7 +244,7 @@ bool PF::HueSaturationConfigGUI::pointer_press_event( int button, double x, doub
 
 bool PF::HueSaturationConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
+  if( button != 1 || mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) ) return false;
   //std::cout<<"HueSaturationConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
 
   // Retrieve the layer associated to the filter
@@ -278,15 +278,18 @@ bool PF::HueSaturationConfigGUI::pointer_release_event( int button, double x, do
 
   //std::cout<<"HueSaturationConfigDialog::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
 
-  rgb2hsl( values[0], values[1], values[2], H, S, L );
-
-  PF::OpParBase* par = get_layer()->get_processor()->get_par();
-  PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+  //PF::OpParBase* par = get_layer()->get_processor()->get_par();
+  PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+  if( node->processor && node->processor->get_par() ) {
+    PF::OpParBase* par = node->processor->get_par();
+    cs = PF::convert_colorspace( par->get_interpretation() );
+  }
   switch( cs ) {
   case PF_COLORSPACE_GRAYSCALE:
     break;
-  case PF_COLORSPACE_RGB:
+  case PF_COLORSPACE_RGB: {
     if( values.size() != 3 ) return false;
+    rgb2hsl( values[0], values[1], values[2], H, S, L );
     switch( curves_nb[0].get_current_page() ) {
     case 0:
       hueHeq.add_point( H/360.0f );
@@ -299,8 +302,9 @@ bool PF::HueSaturationConfigGUI::pointer_release_event( int button, double x, do
       break;
     }
     break;
-    case PF_COLORSPACE_LAB:
-      break;
+  }
+  case PF_COLORSPACE_LAB:
+    break;
   case PF_COLORSPACE_CMYK:
     break;
   default:
