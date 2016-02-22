@@ -195,14 +195,12 @@ void PF::Slider::create_widgets( std::string l, double val,
     reset_button_align.set( Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0 );
     reset_button_align.add( reset_button );
     hbox.pack_end( reset_button_align, Gtk::PACK_SHRINK );
-    hbox.pack_end( reset_button_align, Gtk::PACK_SHRINK );
-
     hbox.pack_end( numentry, Gtk::PACK_SHRINK, 0 );
 
     scale.set_value_pos(Gtk::POS_LEFT);
     scale.set_draw_value( false );
-    align.set(0,0.5,0,1);
-    align.add( label );
+    //align.set(0,0.5,0,1);
+    //align.add( label );
 
     //hbox.pack_start( scale, Gtk::PACK_SHRINK );
     //hbox.pack_start( spinButton, Gtk::PACK_SHRINK );
