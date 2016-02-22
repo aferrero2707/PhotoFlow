@@ -136,6 +136,14 @@ namespace PF
     bool is_normal() { return normal; }
     void set_normal( bool d ) { normal = d; }
     
+    bool is_map()
+    {
+      if( processor && processor->get_par() )
+        return processor->get_par()->is_map();
+      else
+        return false;
+    }
+
     bool is_cached() { return cached; }
     void set_cached( bool c ) 
     {
