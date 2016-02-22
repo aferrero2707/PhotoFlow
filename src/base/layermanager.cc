@@ -77,6 +77,7 @@ void PF::LayerManager::delete_layer( PF::Layer* layer )
     return;
   }
   layers_pool[layer->get_id()] = NULL;
+  std::cout<<"LayerManager::delete_layer(): deleting layer"<<layer<<std::endl;
   delete layer;
 }
 
