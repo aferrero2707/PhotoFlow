@@ -9256,22 +9256,19 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
 #if cimg_OS!=2
 
 #if defined(__MACOSX__) || defined(__APPLE__)
-              const unsigned long stacksize = 16*1024*1024;
+              const unsigned long stacksize = 8*1024*1024;
               pthread_attr_t thread_attr;
-              if (!pthread_attr_init(&thread_attr) && !pthread_attr_setstacksize(&thread_attr,stacksize)) {
+              if (!pthread_attr_init(&thread_attr) && !pthread_attr_setstacksize(&thread_attr,stacksize))
                 // Reserve enough stack size for the new thread.
-                printf("Creating thread with 16MB stack size\n");
                 pthread_create(&_threads_data[l].thread_id,&thread_attr,gmic_parallel<T>,(void*)&_threads_data[l]);
-              } else {
+              else
 #endif // #if defined(__MACOSX__) || defined(__APPLE__)
-                printf("Creating thread with default stack size\n");
                 pthread_create(&_threads_data[l].thread_id,0,gmic_parallel<T>,(void*)&_threads_data[l]);
 
 #else // #if cimg_OS!=2
               _threads_data[l].thread_id = CreateThread(0,0,gmic_parallel<T>,
                                                         (void*)&_threads_data[l],0,0);
 #endif // #if cimg_OS!=2
-              }
 #else // #ifdef gmic_is_parallel
               gmic_parallel<T>((void*)&_threads_data[l]);
 #endif // #ifdef gmic_is_parallel
