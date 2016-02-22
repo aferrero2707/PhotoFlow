@@ -83,7 +83,8 @@ img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-folder-open.png
 img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-floppy.png" ),
 //img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save-as.png" ),
 img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/save-as.png" ),
-img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-export.png" ),
+//img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-export.png" ),
+img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-file-image.png" ),
 img_load_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
 img_save_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
 img_trash( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
@@ -367,8 +368,8 @@ void PF::MainWindow::remove_all_tabs()
 
 void PF::MainWindow::on_button_exit()
 {
-  hide();
   remove_all_tabs();
+  hide();
 }
 
 
