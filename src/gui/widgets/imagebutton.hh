@@ -36,45 +36,66 @@
 
 namespace PF {
 
-  class ToggleImageButton: public Gtk::VBox
+class ImageButton: public Gtk::VBox
+{
+  Gtk::EventBox event_box;
+  Gtk::VBox button_box;
+  Gtk::Image img, pressed_img;
+
+public:
+  sigc::signal<void> signal_clicked;
+
+  ImageButton(Glib::ustring img, Glib::ustring pressed_img);
+
+  void on_realize();
+  void on_map();
+
+  // Handlers for the mouse events inside the image area
+  bool on_button_press_event( GdkEventButton* button );
+  bool on_button_release_event( GdkEventButton* button );
+};
+
+
+
+class ToggleImageButton: public Gtk::VBox
+{
+  Gtk::EventBox event_box;
+  Gtk::VBox button_box;
+  Gtk::Image active_img, inactive_img;
+
+  bool active;
+  bool do_toggle;
+
+public:
+  sigc::signal<void> signal_clicked;
+  sigc::signal<void> signal_activated, signal_deactivated;
+
+  ToggleImageButton(Glib::ustring active, Glib::ustring inactive,
+      bool do_toggle=false, bool initial_state=true);
+
+  bool is_active() { return active; }
+  void set_active( bool a );
+
+  void set_active_image(Glib::ustring img)
   {
-    Gtk::EventBox event_box;
-    Gtk::VBox button_box;
-    Gtk::Image active_img, inactive_img;
+    active_img.set( img );
+  }
+  void set_inactive_image(Glib::ustring img)
+  {
+    inactive_img.set( img );
+  }
+  void set_images(Glib::ustring active, Glib::ustring inactive)
+  {
+    active_img.set( active );
+    inactive_img.set( inactive );
+  }
 
-    bool active;
-    bool do_toggle;
+  void toggle();
 
-  public:
-    sigc::signal<void> signal_clicked;
-    sigc::signal<void> signal_activated, signal_deactivated;
-
-    ToggleImageButton(Glib::ustring active, Glib::ustring inactive,
-        bool do_toggle=false, bool initial_state=true);
-
-    bool is_active() { return active; }
-    void set_active( bool a );
-
-    void set_active_image(Glib::ustring img)
-    {
-      active_img.set( img );
-    }
-    void set_inactive_image(Glib::ustring img)
-    {
-      inactive_img.set( img );
-    }
-    void set_images(Glib::ustring active, Glib::ustring inactive)
-    {
-      active_img.set( active );
-      inactive_img.set( inactive );
-    }
-
-    void toggle();
-
-    // Handlers for the mouse events inside the image area
-    bool on_button_press_event( GdkEventButton* button );
-    bool on_button_release_event( GdkEventButton* button );
-  };
+  // Handlers for the mouse events inside the image area
+  bool on_button_press_event( GdkEventButton* button );
+  bool on_button_release_event( GdkEventButton* button );
+};
 
 
 }
