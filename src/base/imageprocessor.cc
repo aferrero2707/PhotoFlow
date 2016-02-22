@@ -60,10 +60,13 @@ void PF::ImageProcessor::start()
   pthread_attr_t thread_attr;
   if( (pthread_attr_init(&thread_attr) == 0) &&
       // Reserve 8MB of stack size for the new thread
-      (pthread_attr_setstacksize(&thread_attr, 8*1024*1024)) == 0)
+      (pthread_attr_setstacksize(&thread_attr, 8*1024*1024)) == 0) {
+    printf("Creating thread with 16MB stack size\n");
     pthread_create(&_thread,&thread_attr,run_image_processor,NULL);
-  else
+  } else {
+    printf("Creating thread with default stack size\n");
     pthread_create(&_thread,NULL,run_image_processor,NULL);
+  }
 #else
   thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
 #endif
