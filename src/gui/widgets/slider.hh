@@ -37,10 +37,14 @@
 
 namespace PF {
 
-class NumEntry: public Gtk::Entry
+class NumEntry: public Gtk::HBox
 {
   int digits;
   bool inhibited;
+  Gtk::Entry entry;
+  //Gtk::Image step_up, step_down;
+  ImageButton button_step_up, button_step_down;
+  Gtk::VBox button_box;
 #ifdef GTKMM_2
     Gtk::Adjustment* adjustment;
 #endif
@@ -64,6 +68,9 @@ public:
       return false;
     }
 
+    void step_up();
+    void step_down();
+
     void changed();
     void text_changed();
 };
@@ -85,7 +92,7 @@ public:
     NumEntry numentry;
 
     Gtk::Alignment reset_button_align;
-    ToggleImageButton reset_button;
+    ImageButton reset_button;
 
     double multiplier;
     

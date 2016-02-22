@@ -30,16 +30,43 @@
 #include "slider.hh"
 
 
-PF::NumEntry::NumEntry(): Gtk::Entry(), digits(1), inhibited(false)
+PF::NumEntry::NumEntry():
+Gtk::HBox(),
+//step_up(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-down-small.png"),
+//step_down(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-down-small.png"),
+button_step_up(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-up-small.png", PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-up-small-pressed.png"),
+button_step_down(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-down-small.png", PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-down-small-pressed.png"),
+digits(1), inhibited(false)
 {
-  signal_activate().connect( sigc::mem_fun(*this,&PF::NumEntry::text_changed) );
+  pack_start( entry, Gtk::PACK_SHRINK );
+  pack_start( button_box, Gtk::PACK_SHRINK );
 
-  signal_focus_out_event().connect( sigc::mem_fun(*this,&PF::NumEntry::my_on_focus_out) );
+  //button_step_up.add( step_up );
+  //button_step_up.set_relief (Gtk::RELIEF_NONE);
+  //button_step_up.set_border_width (0);
+  button_step_up.set_can_focus(false);
+  //button_step_down.add( step_down );
+  //button_step_down.set_relief (Gtk::RELIEF_NONE);
+  //button_step_down.set_border_width (0);
+  button_step_down.set_can_focus(false);
+  button_box.pack_start( button_step_up, Gtk::PACK_SHRINK );
+  button_box.pack_start( button_step_down, Gtk::PACK_SHRINK );
 
-  signal_key_press_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
-  signal_key_release_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
-  add_events( Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK | Gdk::FOCUS_CHANGE_MASK );
-  set_width_chars(5);
+  entry.signal_activate().connect( sigc::mem_fun(*this,&PF::NumEntry::text_changed) );
+
+  entry.signal_focus_out_event().connect( sigc::mem_fun(*this,&PF::NumEntry::my_on_focus_out) );
+
+  entry.signal_key_press_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
+  entry.signal_key_release_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
+  entry.add_events( Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK | Gdk::FOCUS_CHANGE_MASK );
+  entry.set_width_chars(5);
+  entry.set_has_frame( false );
+
+  button_step_up.signal_clicked.connect(sigc::mem_fun(*this,
+        &PF::NumEntry::step_up) );
+  button_step_down.signal_clicked.connect(sigc::mem_fun(*this,
+        &PF::NumEntry::step_down) );
+
 }
 
 
@@ -80,6 +107,22 @@ bool PF::NumEntry::on_key_press_or_release_event(GdkEventKey* event)
 }
 
 
+void PF::NumEntry::step_up()
+{
+  float new_val = adjustment->get_value();
+  new_val += adjustment->get_step_increment();
+  adjustment->set_value( new_val );
+}
+
+
+void PF::NumEntry::step_down()
+{
+  float new_val = adjustment->get_value();
+  new_val -= adjustment->get_step_increment();
+  adjustment->set_value( new_val );
+}
+
+
 #ifdef GTKMM_2
 void PF::NumEntry::set_adjustment( Gtk::Adjustment* a )
 #endif
@@ -100,7 +143,7 @@ void PF::NumEntry::changed()
   inhibited = true;
   std::ostringstream str;
   str << adjustment->get_value();
-  set_text( str.str() );
+  entry.set_text( str.str() );
   inhibited = false;
 }
 
@@ -108,11 +151,10 @@ void PF::NumEntry::changed()
 void PF::NumEntry::text_changed()
 {
   if( inhibited ) return;
-  std::istringstream str( get_text() );
+  std::istringstream str( entry.get_text() );
   float val;
   str >> val;
   adjustment->set_value( val );
-  return;
 }
 
 
@@ -134,15 +176,29 @@ void PF::Slider::create_widgets( std::string l, double val,
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( 140, -1 );
+  scale.set_size_request( 180, -1 );
   spinButton.set_size_request( 50, -1 );
   spinButton.set_has_frame( false );
 
   //numentry.set_size_request( 30, -1 );
-  numentry.set_has_frame( false );
+  //numentry.set_has_frame( false );
 
   if( (max-min) < 1000000 ) {
     // Full widget with slider and spin button
+    pack_start( vbox, Gtk::PACK_SHRINK );
+
+    vbox.pack_start( hbox, Gtk::PACK_SHRINK );
+    //vbox.set_spacing(-3);
+
+    hbox.pack_start( label, Gtk::PACK_SHRINK );
+
+    reset_button_align.set( Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0 );
+    reset_button_align.add( reset_button );
+    hbox.pack_end( reset_button_align, Gtk::PACK_SHRINK );
+    hbox.pack_end( reset_button_align, Gtk::PACK_SHRINK );
+
+    hbox.pack_end( numentry, Gtk::PACK_SHRINK, 0 );
+
     scale.set_value_pos(Gtk::POS_LEFT);
     scale.set_draw_value( false );
     align.set(0,0.5,0,1);
@@ -153,27 +209,20 @@ void PF::Slider::create_widgets( std::string l, double val,
     //set_spacing(-3);
     //pack_start( align );
 
-    vbox.set_spacing(-3);
-    vbox.pack_start( align, Gtk::PACK_SHRINK );
     vbox.pack_start( scale, Gtk::PACK_SHRINK );
     //vbox2.pack_end( numentry, Gtk::PACK_SHRINK );
     //set_spacing(4);
-    pack_start( vbox, Gtk::PACK_SHRINK );
     //pack_start( spinButton, Gtk::PACK_SHRINK );
     //hbox2.pack_start( vbox, Gtk::PACK_SHRINK );
     //hbox2.set_baseline_position( Gtk::BASELINE_POSITION_CENTER );
-    hbox2.pack_start( numentry, Gtk::PACK_SHRINK, 4 );
+    //hbox2.pack_start( numentry, Gtk::PACK_SHRINK, 4 );
 
-    reset_button_align.set( Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0 );
-    reset_button_align.add( reset_button );
-    hbox2.pack_start( reset_button_align, Gtk::PACK_SHRINK );
-    pack_start( hbox2, Gtk::PACK_SHRINK );
   } else {
     //hbox.pack_start( label, Gtk::PACK_SHRINK );
     //hbox.pack_start( spinButton, Gtk::PACK_SHRINK );
     pack_start( label, Gtk::PACK_SHRINK );
     //pack_start( spinButton, Gtk::PACK_SHRINK );
-    pack_start( numentry, Gtk::PACK_SHRINK, 4 );
+    pack_start( numentry, Gtk::PACK_SHRINK, 0 );
     reset_button_align.set( Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0 );
     reset_button_align.add( reset_button );
     pack_start( reset_button_align, Gtk::PACK_SHRINK );
@@ -211,7 +260,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, std::string pname, std::string l
   scale(adjustment),
   spinButton(adjustment),
 #endif
-  reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_inactive.png"),
+  reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore-pressed.png"),
   multiplier(mult)
 {
   create_widgets( l, val, min, max, sincr, pincr );
@@ -228,7 +277,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, st
   scale(adjustment),
   spinButton(adjustment),
 #endif
-  reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_inactive.png"),
+  reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore-pressed.png"),
   multiplier(mult)
 {
   create_widgets( l, val, min, max, sincr, pincr );
