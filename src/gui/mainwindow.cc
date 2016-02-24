@@ -848,18 +848,6 @@ void PF::MainWindow::on_button_export_clicked()
   dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
 
 #ifdef GTKMM_2
-  Gtk::FileFilter filter_tiff;
-  filter_tiff.set_name( _("TIFF files") );
-  filter_tiff.add_mime_type("image/tiff");
-#endif
-#ifdef GTKMM_3
-  Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
-  filter_tiff->set_name( _("TIFF files") );
-  filter_tiff->add_mime_type("image/tiff");
-#endif
-  dialog.add_filter(filter_tiff);
-
-#ifdef GTKMM_2
   Gtk::FileFilter filter_jpeg;
   filter_jpeg.set_name( _("JPEG files") );
   filter_jpeg.add_mime_type("image/jpeg");
@@ -870,6 +858,18 @@ void PF::MainWindow::on_button_export_clicked()
   filter_jpeg->add_mime_type("image/jpeg");
 #endif
   dialog.add_filter(filter_jpeg);
+
+  #ifdef GTKMM_2
+  Gtk::FileFilter filter_tiff;
+  filter_tiff.set_name( _("TIFF files") );
+  filter_tiff.add_mime_type("image/tiff");
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
+  filter_tiff->set_name( _("TIFF files") );
+  filter_tiff->add_mime_type("image/tiff");
+#endif
+  dialog.add_filter(filter_tiff);
 
   if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
