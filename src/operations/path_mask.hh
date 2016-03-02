@@ -35,6 +35,7 @@
 #include <iostream>
 
 #include "../base/format_info.hh"
+#include "../base/color.hh"
 #include "../base/processor.hh"
 #include "../base/splinecurve.hh"
 
@@ -112,6 +113,7 @@ void get_line_points(int x1, int y1, int x2, int y2, std::vector< std::pair<int,
 
 template<class T>
 void get_falloff_curve( float* vec, float val, T& out ) {
+  std::cout<<"WARNING!!!!!!!!! default get_falloff_curve() called"<<std::endl;
   out = 0;
 }
 
@@ -232,11 +234,15 @@ render_spline(VipsRegion** ir, int n, int in_first,
       xend = par->edgevec[r->top+y][pi+1].x;
       if( xstart == xend ) continue;
 
+      int idx;
       for( ; x < xstart; x++, pout += bands ) {
         if( x > right ) break;
+        (state != 0) ? idx=0 : idx=65535;
         for( b = 0; b < bands; b++ )
           //pout[b] = (state != 0) ? FormatInfo<T>::MAX : FormatInfo<T>::MIN;
-          get_falloff_curve( vec, (state != 0)?0.0f:1.0f, pout[b] );
+          //get_falloff_curve( vec, (state != 0)?0.0f:1.0f, pout[b] );
+          //pout[b] = (state != 0) ? (T)(vec[0]*FormatInfo<T>::MAX) : (T)(vec[65535]*FormatInfo<T>::MAX);
+          from_float( vec[idx], pout[b] );
       }
 
       //if( (xend-xstart) > 1 ) {
@@ -262,15 +268,20 @@ render_spline(VipsRegion** ir, int n, int in_first,
           std::cout<<"  drawing outline at x="<<x<<std::endl;
         for( b = 0; b < bands; b++ )
           //pout[b] = FormatInfo<T>::MAX;
-          get_falloff_curve( vec, 0.0f, pout[b] );
+          //get_falloff_curve( vec, 0.0f, pout[b] );
+          //pout[b] = (T)(vec[0]*FormatInfo<T>::MAX);
+          from_float( vec[0], pout[b] );
         x++; pout += bands;
       }
 
       for( ; x < xend; x++, pout += bands ) {
         if( x > right ) break;
+        (state != 0) ? idx=0 : idx=65535;
         for( b = 0; b < bands; b++ )
           //pout[b] = (state != 0) ? FormatInfo<T>::MAX : FormatInfo<T>::MIN;
-          get_falloff_curve( vec, (state != 0)?0.0f:1.0f, pout[b] );
+          //get_falloff_curve( vec, (state != 0)?0.0f:1.0f, pout[b] );
+          //pout[b] = (state != 0) ? (T)(vec[0]*FormatInfo<T>::MAX) : (T)(vec[65535]*FormatInfo<T>::MAX);
+          from_float( vec[idx], pout[b] );
       }
       /**/
       if( xend >= r->left && xend <= right ) {
@@ -278,7 +289,9 @@ render_spline(VipsRegion** ir, int n, int in_first,
           std::cout<<"  drawing outline at x="<<x<<std::endl;
         for( b = 0; b < bands; b++ )
           //pout[b] = FormatInfo<T>::MAX;
-          get_falloff_curve( vec, 0.0f, pout[b] );
+          //get_falloff_curve( vec, 0.0f, pout[b] );
+          //pout[b] = (T)(vec[0]*FormatInfo<T>::MAX);
+          from_float( vec[0], pout[b] );
         //x++; pout += bands;
       }
       /**/
@@ -299,7 +312,9 @@ render_spline(VipsRegion** ir, int n, int in_first,
     for( ; x <= right; x++, pout += bands ) {
       for( b = 0; b < bands; b++ )
         //pout[b] = FormatInfo<T>::MIN;
-        get_falloff_curve( vec, 1.0f, pout[b] );
+        //get_falloff_curve( vec, 1.0f, pout[b] );
+        //pout[b] = (T)(vec[65535]*FormatInfo<T>::MAX);
+        from_float( vec[65535], pout[b] );
     }
   }
 
@@ -560,6 +575,7 @@ draw_segment(VipsRegion* oreg, const falloff_segment& seg, float* vec)
   float lx = seg.x2 - seg.x1;
   float ly = seg.y2 - seg.y1;
 
+  T val0; get_falloff_curve( vec, 1.0f, val0 );
   for( i = seg.lmin; i <= seg.lmax; i++ ) {
     // position
     x = (int)((float)i * lx / seg.fl) + seg.x1;
@@ -580,7 +596,6 @@ draw_segment(VipsRegion* oreg, const falloff_segment& seg, float* vec)
     float op = (float)i / seg.fl;
     pout = (T*)VIPS_REGION_ADDR( oreg, x, y );
     T val; get_falloff_curve( vec, op, val );
-    T val0; get_falloff_curve( vec, 1.0f, val0 );
     for( b = 0; b < bands; ++b)
       pout[b] = val;
 
