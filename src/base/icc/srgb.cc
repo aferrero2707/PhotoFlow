@@ -103,19 +103,18 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile( type )
     init_trc( labl_parametic_curve, labl_parametic_curve_inv );
   }
 
-  /* ***** Make profile: Rec.2020, D65, Rec709 TRC */
+  /* ***** Make profile: sRGB, D65, sRGB TRC */
   /*
    * */
   cmsCIExyYTRIPLE primaries = srgb_primaries_pre_quantized;
   cmsCIExyY whitepoint = d65_srgb_adobe_specs;
-  /* rec.709 */
   cmsToneCurve* tone_curve[3];
   switch( type ) {
   case PF::PF_TRC_STANDARD: {
-    /* Rec 709 TRC */
-    cmsFloat64Number rec709_parameters[5] =
-    { 1.0 / 0.45, 1.099,  0.099, 4.500, 0.018 };
-    cmsToneCurve *curve = cmsBuildParametricToneCurve(NULL, 4, rec709_parameters);
+    /* sRGB TRC */
+    cmsFloat64Number srgb_parameters[5] =
+    { 2.4, 1.0 / 1.055,  0.055 / 1.055, 1.0 / 12.92, 0.04045 };
+    cmsToneCurve *curve = cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
     break;
   }
