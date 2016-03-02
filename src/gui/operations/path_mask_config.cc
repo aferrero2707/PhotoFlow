@@ -520,7 +520,7 @@ bool PF::PathMaskConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
     //printf("buf_out.draw_line( %f, %f, %f, %f)\n", px0, py0, px, py );
     buf_out.draw_line( px0, py0, px, py, buf_in );
   }
-  std::cout<<std::endl;
+  //std::cout<<std::endl;
 
   std::pair<float,float> center = par->get_smod().get_center();
   double cx = center.first * node->image->Xsize;
