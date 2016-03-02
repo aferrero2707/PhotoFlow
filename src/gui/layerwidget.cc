@@ -127,7 +127,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   path_mask_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/path-mask.png", "path_mask", image, this),
   desaturate_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/desaturate.png", "desaturate", image, this),
   crop_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/crop.png", "crop", image, this),
-  basic_edits_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "hue_saturation", image, this),
+  basic_edits_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "levels", image, this),
   draw_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/draw.png", "draw", image, this),
   clone_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/clone.png", "clone_stamp", image, this),
   scale_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/scale.png", "scale", image, this),
