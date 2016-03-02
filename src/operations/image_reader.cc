@@ -207,25 +207,46 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   bool changed = in_profile_mode.is_modified() || in_trc_mode.is_modified() ||
       out_profile_mode.is_modified() || out_trc_mode.is_modified();
 
-  cmsHPROFILE in_profile = NULL;
-  profile_type_t ptype = (profile_type_t)in_profile_mode.get_enum_value().first;
-  TRC_type trc_type = (TRC_type)in_trc_mode.get_enum_value().first;
-  std::cout<<"Getting input profile..."<<std::endl;
-  PF::ICCProfile* iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-  if( iccprof ) {
-    in_profile = iccprof->get_profile();
-    std::cout<<"... OK"<<std::endl;
+  //if( in_profile ) cmsCloseProfile( in_profile );
+  //if( out_profile ) cmsCloseProfile( out_profile );
+  in_profile = NULL;
+  out_profile = NULL;
+  profile_type_t ptype;
+  TRC_type trc_type;
+  PF::ICCProfile* in_iccprof = NULL;
+
+  if( (profile_type_t)in_profile_mode.get_enum_value().first == PF::OUT_PROF_EMBEDDED ) {
+    void *data;
+    size_t data_length;
+    if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
+        &data, &data_length ) ) {
+      in_profile = cmsOpenProfileFromMem( data, data_length );
+      if( in_profile ) {
+        char tstr[1024];
+        cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+        std::cout<<"ImageReader: Embedded profile found: "<<tstr<<std::endl;
+        //cmsCloseProfile( profile_in );
+      }
+    }
   } else {
-    std::cout<<"... FAILED"<<std::endl;
+    ptype = (profile_type_t)in_profile_mode.get_enum_value().first;
+    trc_type = (TRC_type)in_trc_mode.get_enum_value().first;
+    std::cout<<"Getting input profile..."<<std::endl;
+    in_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
+    if( in_iccprof ) {
+      in_profile = in_iccprof->get_profile();
+      std::cout<<"... OK"<<std::endl;
+    } else {
+      std::cout<<"... FAILED"<<std::endl;
+    }
   }
 
-  cmsHPROFILE out_profile = NULL;
   ptype = (profile_type_t)out_profile_mode.get_enum_value().first;
   trc_type = (TRC_type)out_trc_mode.get_enum_value().first;
   std::cout<<"Getting output profile..."<<std::endl;
-  iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-  if( iccprof ) {
-    out_profile = iccprof->get_profile();
+  PF::ICCProfile* out_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
+  if( out_iccprof ) {
+    out_profile = out_iccprof->get_profile();
     std::cout<<"... OK"<<std::endl;
   } else {
     std::cout<<"... FAILED"<<std::endl;
@@ -248,9 +269,11 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
           INTENT_RELATIVE_COLORIMETRIC,
           cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
     } else if( !out_profile ) {
+      out_iccprof = in_iccprof;
       out_profile = in_profile;
     }
   } else if( !out_profile ) {
+    out_iccprof = in_iccprof;
     out_profile = in_profile;
   }
 
@@ -292,6 +315,12 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     char tstr[1024];
     cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     std::cout<<"ImageReaderPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
+
+    if( out_iccprof ) {
+      PF::ICCProfileData* iccdata = out_iccprof->get_data();
+      vips_image_set_blob( out, "pf-icc-profile-data",
+          (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
+    }
   }
 
   return out;

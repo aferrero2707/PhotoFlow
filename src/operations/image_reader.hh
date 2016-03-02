@@ -58,6 +58,8 @@ namespace PF
     std::string current_file;
     VipsBandFormat current_format;
 
+    cmsHPROFILE in_profile;
+    cmsHPROFILE out_profile;
     cmsHTRANSFORM transform;
 
     RasterImage* raster_image;
@@ -75,10 +77,12 @@ namespace PF
       out_trc_mode("out_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
       image(NULL),
       current_format(VIPS_FORMAT_NOTSET),
+      in_profile( NULL ),
+      out_profile( NULL ),
       transform( NULL ),
       raster_image( NULL )
     {
-      in_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
+      //in_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
       in_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
       in_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
       in_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
