@@ -246,6 +246,21 @@ void PF::ICCProfile::init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv )
 }
 
 
+cmsHPROFILE PF::ICCProfile::get_profile()
+{
+  cmsHPROFILE result;
+  cmsUInt32Number out_length;
+  cmsSaveProfileToMem( profile, NULL, &out_length);
+  void* buf = malloc( out_length );
+  cmsSaveProfileToMem( profile, buf, &out_length);
+
+  result = cmsOpenProfileFromMem( buf, out_length );
+  std::cout<<"ICCProfile::get_profile(): buf="<<buf<<std::endl;
+  //free( buf );
+  return result;
+}
+
+
 float PF::ICCProfile::get_lightness( float R, float G, float B )
 {
   if( is_linear() ) {

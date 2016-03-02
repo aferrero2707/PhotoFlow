@@ -112,7 +112,7 @@ public:
   bool is_standard() { return( get_trc_type() == PF_TRC_STANDARD ); }
 
   void set_profile( cmsHPROFILE p ) { profile = p; init_colorants(); }
-  cmsHPROFILE get_profile() { return profile; }
+  cmsHPROFILE get_profile(); //{ return profile; }
 
   cmsFloat32Number linear2perceptual( cmsFloat32Number val )
   {
