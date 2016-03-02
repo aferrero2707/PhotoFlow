@@ -60,7 +60,7 @@ namespace PF
 
   public:
 
-    float vec[3][65535];
+    float vec[3][65536];
     bool eq_enabled[3];
 
     HSLMaskPar();
@@ -120,10 +120,14 @@ namespace PF
     float h_eq2 = opar->eq_enabled[1] ? opar->vec[1][sid] : 1;
     float h_eq3 = opar->eq_enabled[2] ? opar->vec[2][lid] : 1;
 
+    //std::cout<<"opar->vec[2][65535]="<<opar->vec[2][65535]<<std::endl;
+
     float h_eq = MIN3( h_eq1, h_eq2, h_eq3 );
     if( inv ) h_eq = 1.0f - h_eq;
 
+
     T val = FormatInfo<T>::RANGE*h_eq + FormatInfo<T>::MIN;
+    //std::cout<<"  lid: "<<lid<<"   h_eq3: "<<h_eq3<<"   h_eq: "<<h_eq<<"   val: "<<val<<std::endl;
     return val;
   }
 
