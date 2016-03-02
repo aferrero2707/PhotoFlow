@@ -31,18 +31,35 @@
 #include "color.hh"
 
 
-   float PF::hsl_value( float n1, float n2, float hue)
-   {
-     float val;
+namespace PF
+{
 
-     if( hue > 6.0 ) hue -= 6.0f;
-     else if( hue < 0 ) hue += 6.0f;
 
-     if( hue < 1.0 ) val = n1 + (n2-n1)*hue;
-     else if( hue < 3.0 ) val = n2;
-     else if( hue < 4.0 ) val = n1 + (n2-n1)*(4.0f-hue);
-     else val = n1;
+  template<>
+  void to_float<float>( const float& in, float& out )
+  {
+    out = in;
+  }
 
-     return val;
-   }
+  template<>
+  void from_float<float>( const float& in, float& out )
+  {
+    out = in;
+  }
+}
+
+float PF::hsl_value( float n1, float n2, float hue)
+{
+  float val;
+
+  if( hue > 6.0 ) hue -= 6.0f;
+  else if( hue < 0 ) hue += 6.0f;
+
+  if( hue < 1.0 ) val = n1 + (n2-n1)*hue;
+  else if( hue < 3.0 ) val = n2;
+  else if( hue < 4.0 ) val = n1 + (n2-n1)*(4.0f-hue);
+  else val = n1;
+
+  return val;
+}
 
