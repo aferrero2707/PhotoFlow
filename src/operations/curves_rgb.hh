@@ -119,3 +119,29 @@
   };
 
 
+
+
+
+  template < int CHMIN, int CHMAX, class OP_PAR >
+  class CurvesProc<float,PF_COLORSPACE_RGB,CHMIN,CHMAX,true,OP_PAR>
+  {
+    CurvesPar* par;
+    int pos;
+  public:
+    CurvesProc(CurvesPar* p): par(p) {}
+
+    void process(float**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, float* pout)
+    {
+      float* pp = p[first];
+      unsigned int id;
+      pos = x;
+      for(int i = CHMIN; i <= CHMAX; i++, pos++) {
+        id = MAX(MIN(pp[pos], 1.f), 0.f)*65535;
+        //if(false&&x==0) std::cout<<"CurvesProc::process(): cvec16["<<i<<"]["<<pp[pos]<<"]="<<par->cvec16[i][pp[pos]]<<std::endl;
+        pout[pos] = (intensity*par->cvec16[i][id])/65535 + pp[pos];
+        //std::cout<<"pp[pos]="<<pp[pos]<<"  cvec16[i][pp[pos]]="<<par->cvec16[i][pp[pos]]<<"  pout[pos]="<<pout[pos]<<std::endl;
+      }
+    }
+  };
+
+
