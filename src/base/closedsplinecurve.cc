@@ -37,6 +37,7 @@
 
 PF::ClosedSplineCurve::ClosedSplineCurve():
 PF::Curve(),
+Dmax(0), border_size(0),
 wd_last(0),
 ht_last(0),
 ypp( NULL ),
@@ -340,7 +341,7 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
       form->source[1] = bzpt->corner[1] + 0.02f;
     }
 
-    // if that's the first point we should had another one as base point
+    // if that's the first point we should add another one as base point
     if(false && nb == 0)
     {
       dt_masks_point_path_t *bzpt2 = (dt_masks_point_path_t *)(malloc(sizeof(dt_masks_point_path_t)));
@@ -377,8 +378,8 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
       &out_points, &out_points_count,
       &out_border, &out_border_count, 0);
   //std::cout<<"_path_get_points_border(): result="<<result<<std::endl;
-  std::cout<<"update_outline(): out_points_count="<<out_points_count
-      <<"  out_border_count="<<out_border_count<<std::endl;
+  //std::cout<<"update_outline(): out_points_count="<<out_points_count
+  //    <<"  out_border_count="<<out_border_count<<std::endl;
 
   outline.clear();
   float* ptr = out_points;
