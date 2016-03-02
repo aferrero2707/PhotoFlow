@@ -62,7 +62,7 @@ PF::RawOutputPar::RawOutputPar():
   gamma_curve( NULL ),
   cam_profile_name("cam_profile_name", this),
   cam_profile( NULL ),
-  gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","None"),
+  gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","linear"),
   gamma_lin("gamma_lin", this, 0),
   gamma_exp("gamma_exp", this, 2.2),
   //out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
@@ -79,12 +79,12 @@ PF::RawOutputPar::RawOutputPar():
   hlreco_mode.add_enum_value(PF::HLRECO_BLEND,"HLRECO_BLEND",_("blend"));
   hlreco_mode.add_enum_value(PF::HLRECO_NONE,"HLRECO_NONE",_("none"));
 
-  profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","NONE");
+  profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","RAW");
   profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","MATRIX");
   profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC");
 
   out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
@@ -96,7 +96,7 @@ PF::RawOutputPar::RawOutputPar():
   out_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
   out_trc_mode.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
 
-  gamma_mode.add_enum_value(PF::IN_GAMMA_NONE,"NONE","None");
+  gamma_mode.add_enum_value(PF::IN_GAMMA_NONE,"NONE","linear");
   gamma_mode.add_enum_value(PF::IN_GAMMA_sRGB,"sRGB","sRGB");
   gamma_mode.add_enum_value(PF::IN_GAMMA_CUSTOM,"CUSTOM","Custom");
 
