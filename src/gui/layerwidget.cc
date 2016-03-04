@@ -230,6 +230,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   */
 
   view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) ); 
+  view->get_tree().signal_row_expanded().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_expanded) );
+  view->get_tree().signal_row_collapsed().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_collapsed) );
 
   //view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) );
 
@@ -518,6 +520,37 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
   }
 }
 
+
+void PF::LayerWidget::on_row_expanded( const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path )
+{
+  int page = notebook.get_current_page();
+  if( page < 0 ) return;
+  if (iter) {
+    std::cout<<"LayerWidget::on_row_expanded() called"<<std::endl;
+    PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
+    bool visible = (*iter)[columns.col_visible];
+    PF::Layer* l = (*iter)[columns.col_layer];
+    if( !l ) return;
+    l->set_expanded( true );
+    std::cout<<"LayerWidget::on_row_expanded(): layer expanded flag set"<<std::endl;
+  }
+}
+
+
+void PF::LayerWidget::on_row_collapsed( const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path )
+{
+  int page = notebook.get_current_page();
+  if( page < 0 ) return;
+  if (iter) {
+    std::cout<<"LayerWidget::on_row_collapsed() called"<<std::endl;
+    PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
+    bool visible = (*iter)[columns.col_visible];
+    PF::Layer* l = (*iter)[columns.col_layer];
+    if( !l ) return;
+    l->set_expanded( false );
+    std::cout<<"LayerWidget::on_row_collapsed(): layer expanded flag reset"<<std::endl;
+  }
+}
 
 
 int PF::LayerWidget::get_selected_layer_id()

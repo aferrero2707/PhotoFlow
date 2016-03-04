@@ -162,6 +162,8 @@ public:
   void on_selection_changed();
 
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
+  void on_row_expanded( const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path );
+  void on_row_collapsed( const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path );
 
 #ifdef GTKMM_3
   void on_switch_page(Widget* page, guint page_num);

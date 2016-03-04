@@ -66,6 +66,7 @@ namespace PF
 
     bool enabled;
     bool visible;
+    bool expanded;
 
     bool normal;
 
@@ -130,6 +131,12 @@ namespace PF
     void set_visible( bool d )
     {
       visible = d;
+    }
+
+    bool is_expanded() { return expanded; }
+    void set_expanded( bool d )
+    {
+      expanded = d;
     }
 
     bool is_group() { return( !normal ); }
