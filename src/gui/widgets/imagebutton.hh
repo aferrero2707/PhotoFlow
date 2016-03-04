@@ -41,6 +41,7 @@ class ImageButton: public Gtk::VBox
   Gtk::EventBox event_box;
   Gtk::VBox button_box;
   Gtk::Image img, pressed_img;
+  Gtk::Alignment img_align, pressed_img_align;
 
 public:
   sigc::signal<void> signal_clicked;

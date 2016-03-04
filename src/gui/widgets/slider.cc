@@ -49,8 +49,8 @@ digits(1), inhibited(false)
   //button_step_down.set_relief (Gtk::RELIEF_NONE);
   //button_step_down.set_border_width (0);
   button_step_down.set_can_focus(false);
-  button_box.pack_start( button_step_up, Gtk::PACK_SHRINK );
-  button_box.pack_start( button_step_down, Gtk::PACK_SHRINK );
+  button_box.pack_start( button_step_up, Gtk::PACK_EXPAND_WIDGET );
+  button_box.pack_start( button_step_down, Gtk::PACK_EXPAND_WIDGET );
 
   entry.signal_activate().connect( sigc::mem_fun(*this,&PF::NumEntry::text_changed) );
 
@@ -192,9 +192,10 @@ void PF::Slider::create_widgets( std::string l, double val,
 
     hbox.pack_start( label, Gtk::PACK_SHRINK );
 
-    reset_button_align.set( Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0 );
-    reset_button_align.add( reset_button );
-    hbox.pack_end( reset_button_align, Gtk::PACK_SHRINK );
+    //reset_button_align.set( Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0 );
+    //reset_button_align.add( reset_button );
+    vbox2.pack_start( reset_button, Gtk::PACK_EXPAND_WIDGET );
+    hbox.pack_end( vbox2, Gtk::PACK_SHRINK );
     hbox.pack_end( numentry, Gtk::PACK_SHRINK, 0 );
 
     scale.set_value_pos(Gtk::POS_LEFT);
@@ -311,4 +312,5 @@ void PF::Slider::set_value()
   double val = adjustment->get_value()/multiplier;
 #endif
   get_prop()->update(val);
+  //std::cout<<"PF::Slider::set_value(): property=\""<<get_prop_name()<<"\"(0x"<<get_prop()<<")  val="<<val<<std::endl;
 }

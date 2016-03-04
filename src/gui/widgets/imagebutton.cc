@@ -36,12 +36,19 @@ PF::ImageButton::ImageButton(Glib::ustring i, Glib::ustring pi)
 {
   img.set( i );
   pressed_img.set( pi );
-  button_box.pack_start( img, Gtk::PACK_SHRINK );
+
+  img_align.set(0.5,0.5,0,0);
+  pressed_img_align.set(0.5,0.5,0,0);
+
+  img_align.add(img);
+  pressed_img_align.add(pressed_img);
+
+  button_box.pack_start( img_align, Gtk::PACK_EXPAND_WIDGET );
   //button_box.pack_start( pressed_img, Gtk::PACK_SHRINK );
   event_box.add( button_box );
   event_box.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK );
 
-  pack_start( event_box, Gtk::PACK_SHRINK );
+  pack_start( event_box, Gtk::PACK_EXPAND_WIDGET );
 
   show_all_children();
 
