@@ -109,7 +109,7 @@ bool PF::NumEntry::on_key_press_or_release_event(GdkEventKey* event)
 
 void PF::NumEntry::step_up()
 {
-  float new_val = adjustment->get_value();
+  double new_val = adjustment->get_value();
   new_val += adjustment->get_step_increment();
   adjustment->set_value( new_val );
 }
@@ -117,7 +117,7 @@ void PF::NumEntry::step_up()
 
 void PF::NumEntry::step_down()
 {
-  float new_val = adjustment->get_value();
+  double new_val = adjustment->get_value();
   new_val -= adjustment->get_step_increment();
   adjustment->set_value( new_val );
 }
