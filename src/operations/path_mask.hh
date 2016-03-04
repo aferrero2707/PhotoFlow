@@ -212,7 +212,7 @@ render_spline(VipsRegion** ir, int n, int in_first,
   int bottom = r->top + r->height - 1;
 
   //std::cout<<"left="<<r->left<<"  right="<<right<<std::endl;
-  if( r->left==0 && r->top==0 )
+  if( false && r->left==0 && r->top==0 )
     std::cout<<"PathMask: drawing region @"<<r->left<<","<<r->top<<" -> "<<r->left+r->width-1<<","<<r->top+r->height-1<<std::endl;
   for( y = 0; y < r->height; y++ ) {
     pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top+y );
@@ -319,7 +319,7 @@ render_spline(VipsRegion** ir, int n, int in_first,
     }
   }
 
-  if( r->left==0 && r->top==0 )
+  if( false && r->left==0 && r->top==0 )
     std::cout<<"PathMask: par->get_falloff_enabled()="<<par->get_falloff_enabled()<<std::endl;
 
   if( par->get_falloff_enabled() == false )
@@ -349,7 +349,7 @@ render_spline(VipsRegion** ir, int n, int in_first,
   // draw falloff
   /**/
   int si = r->top/64;
-  if( r->left==0 && r->top==0 )
+  if( false && r->left==0 && r->top==0 )
     std::cout<<"PathMask: r->top="<<r->top<<"  par->segvec["<<si<<"].size()="<<par->segvec[si].size()<<std::endl;
   for( unsigned int pi = 0; pi < par->segvec[si].size(); pi++ ) {
     int pi2 = pi + 1;
@@ -601,7 +601,7 @@ draw_segment(VipsRegion* oreg, const falloff_segment& seg, float* vec)
     float op = (float)i / seg.fl;
     pout = (T*)VIPS_REGION_ADDR( oreg, x, y );
     T val; get_falloff_curve( vec, op, val );
-    if( x<2 && y<2 ) std::cout<<"draw_segment(): x="<<x<<" y="<<y<<"  op="<<op<<"  val="<<val<<std::endl;
+    if( false && x<2 && y<2 ) std::cout<<"draw_segment(): x="<<x<<" y="<<y<<"  op="<<op<<"  val="<<val<<std::endl;
     for( b = 0; b < bands; ++b)
       pout[b] = val;
 

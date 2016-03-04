@@ -314,7 +314,7 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
   update_center();
   //float wd = 1000.0f/Dmax;
   //float ht = wd;
-  std::cout<<"ClosedSplineCurve::update_outline(): Dmax="<<Dmax<<"  wd="<<wd<<"  ht="<<ht<<"  border_size="<<border_size<<std::endl;
+  //std::cout<<"ClosedSplineCurve::update_outline(): Dmax="<<Dmax<<"  wd="<<wd<<"  ht="<<ht<<"  border_size="<<border_size<<std::endl;
   dt_masks_form_t *form = (dt_masks_form_t *)malloc(sizeof(dt_masks_form_t));
   form->type = DT_MASKS_PATH;
   form->version = DEVELOP_MASKS_VERSION;
@@ -323,11 +323,11 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
   form->points = NULL;
   float masks_border = border_size;
 
-  printf("ClosedSplineCurve::update_outline(): points.size()=%d\n", (int)points.size());
+  //printf("ClosedSplineCurve::update_outline(): points.size()=%d\n", (int)points.size());
   for( unsigned int pi = 0; pi < points.size(); pi++ ) {
     dt_masks_point_path_t *bzpt = (dt_masks_point_path_t *)(malloc(sizeof(dt_masks_point_path_t)));
     int nb = g_list_length(form->points);
-    printf("ClosedSplineCurve::get_points(): nb(1)=%d\n", nb);
+    //printf("ClosedSplineCurve::get_points(): nb(1)=%d\n", nb);
     // change the values
     bzpt->corner[0] = points[pi].first;
     bzpt->corner[1] = points[pi].second;
@@ -377,9 +377,9 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
   int result = _path_get_points_border(form, 999, wd, ht,
       &out_points, &out_points_count,
       &out_border, &out_border_count, 0);
-  std::cout<<"_path_get_points_border(): result="<<result<<std::endl;
-  std::cout<<"update_outline(): out_points_count="<<out_points_count
-      <<"  out_border_count="<<out_border_count<<std::endl;
+  //std::cout<<"_path_get_points_border(): result="<<result<<std::endl;
+  //std::cout<<"update_outline(): out_points_count="<<out_points_count
+  //    <<"  out_border_count="<<out_border_count<<std::endl;
 
   outline.clear();
   float* ptr = out_points;

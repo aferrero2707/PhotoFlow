@@ -176,6 +176,30 @@ bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double s
     return true;
   }
 
+  // Check if click is along the falloff outline, in which case we initiate
+  // the falloff resizing
+  if( active_point_id < 0 && button == 1 ) {
+
+    const std::vector< std::pair<int,int> >& path_points = par->get_smod().get_outline();
+    const std::vector< std::pair<int,int> >& border_points = par->get_smod().get_border();
+    for( int pi = 0; pi < border_points.size(); pi++ ) {
+      double px = border_points[pi].first, py = border_points[pi].second, pw = 1, ph = 1;
+      double dx = x - px;
+      double dy = y - py;
+      if( (fabs(dx) > D) || (fabs(dy) > D) ) continue;
+
+      double px2 = path_points[pi].first, py2 = path_points[pi].second;
+
+      border_resizing = true;
+      border_resizing_path_point_x = px2;
+      border_resizing_path_point_y = py2;
+      border_resizing_lstart = sqrt( (px-px2)*(px-px2) + (py-py2)*(py-py2) );
+      border_resizing_size_start = par->get_border_size();
+      //std::cout<<"Border selected, lstart="<<border_resizing_lstart<<std::endl;
+      return true;
+    }
+  }
+
   // Check if click is along the path outline, in which case we add
   // a new spline point
   if( active_point_id < 0 && button == 1 ) {
@@ -207,30 +231,6 @@ bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double s
       // the point is close enough to the spline, so it can be added after the last crossed control point
       active_point_id = par->get_smod().add_point( spline_point_id+1, x/node->image->Xsize, y/node->image->Ysize );
       par->path_modified();
-      break;
-    }
-  }
-
-  // Check if click is along the falloff outline, in which case we initiate
-  // the falloff resizing
-  if( active_point_id < 0 && button == 1 ) {
-
-    const std::vector< std::pair<int,int> >& path_points = par->get_smod().get_outline();
-    const std::vector< std::pair<int,int> >& border_points = par->get_smod().get_border();
-    for( int pi = 0; pi < border_points.size(); pi++ ) {
-      double px = border_points[pi].first, py = border_points[pi].second, pw = 1, ph = 1;
-      double dx = x - px;
-      double dy = y - py;
-      if( (fabs(dx) > D) || (fabs(dy) > D) ) continue;
-
-      double px2 = path_points[pi].first, py2 = path_points[pi].second;
-
-      border_resizing = true;
-      border_resizing_path_point_x = px2;
-      border_resizing_path_point_y = py2;
-      border_resizing_lstart = sqrt( (px-px2)*(px-px2) + (py-py2)*(py-py2) );
-      border_resizing_size_start = par->get_border_size();
-      //std::cout<<"Border selected, lstart="<<border_resizing_lstart<<std::endl;
       break;
     }
   }
@@ -336,7 +336,7 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
     float r = l/border_resizing_lstart;
     float new_size = r * border_resizing_size_start;
     //std::cout<<"Border resize: l="<<l<<"  r="<<r<<"  new_size="<<new_size<<std::endl;
-    par->set_border_size( MAX(0.05, new_size) );
+    par->set_border_size( MAX(0.01, new_size) );
     par->path_modified();
     return true;
   }
