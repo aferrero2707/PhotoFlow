@@ -161,6 +161,8 @@ void PF::CloneStampPar::draw_point( unsigned int x, unsigned int y, VipsRect& up
 
   stroke.get_points().push_back( std::make_pair(x, y) );
 
+  strokes.modified();
+
   PF::Stamp& pen = stroke.get_pen();
 
   update.left = x - pen.get_size();

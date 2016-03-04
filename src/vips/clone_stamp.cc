@@ -179,7 +179,7 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   /**/
 
   std::vector<PF::StrokesGroup>& groups = par->get_strokes();
-  std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
+  std::list< std::pair<int, int> >::iterator pi;
 
 #ifndef NDEBUG
   std::cout<<"vips_clone_stamp_gen(): n. of groups: "<<groups.size()<<std::endl;
@@ -232,7 +232,7 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
 
   PF::Stroke<PF::Stamp>& stroke = group.get_strokes()[clone_stamp->stroke_num];
 
-  std::list< std::pair<unsigned int, unsigned int> >& points = stroke.get_points();
+  std::list< std::pair<int, int> >& points = stroke.get_points();
 #ifndef NDEBUG
   std::cout<<"vips_clone_stamp_gen(): starting stroke"<<std::endl;
   std::cout<<"  n. of points: "<<points.size()<<std::endl;

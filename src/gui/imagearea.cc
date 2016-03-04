@@ -1271,6 +1271,7 @@ void PF::ImageArea::sink( const VipsRect& area )
 {
 #ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::sink( const VipsRect& area ) called"<<std::endl;
+    std::cout<<"area="<<area.left<<","<<area.top<<"+"<<area.width<<"+"<<area.height<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = get_pipeline();
@@ -1307,10 +1308,17 @@ void PF::ImageArea::sink( const VipsRect& area )
 	*/
   //VipsRegion* region2 = vips_region_new (display_image);
   VipsRegion* region2 = vips_region_new( outimg );
-  vips_invalidate_area( display_image, &scaled_area );
 	//vips_region_invalidate( region2 );
 
   VipsRect* parea = (VipsRect*)(&scaled_area);
+  VipsRect iarea = {0, 0, display_image->Xsize, display_image->Ysize};
+
+  vips_rect_intersectrect (&iarea, parea, parea);
+  if( (parea->width <= 0) ||
+      (parea->height <= 0) )
+    return;
+
+  vips_invalidate_area( display_image, &scaled_area );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Preparing area "<<scaled_area.left<<","<<scaled_area.top<<"+"<<scaled_area.width<<"+"<<scaled_area.height<<std::endl;
 #endif
@@ -1318,8 +1326,8 @@ void PF::ImageArea::sink( const VipsRect& area )
     std::cout<<"ImageArea::sink(): vips_region_prepare() failed."<<std::endl;
     return;
   }
-  unsigned char* pout = (unsigned char*)VIPS_REGION_ADDR( region2, parea->left, parea->top ); 
 	/*
+  unsigned char* pout = (unsigned char*)VIPS_REGION_ADDR( region2, parea->left, parea->top ); 
 	std::cout<<"Plotting scaled area "<<scaled_area.width<<","<<scaled_area.height
 					 <<"+"<<scaled_area.left<<","<<scaled_area.top<<std::endl;
 	guint8 *px1 = (guint8 *) VIPS_REGION_ADDR( region, scaled_area.left, scaled_area.top );

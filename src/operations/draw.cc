@@ -157,7 +157,7 @@ void PF::DrawPar::init_buffer( unsigned int level )
       PF::Stroke<PF::Pencil>& stroke = *si;
       PF::Pencil& pen = stroke.get_pen();
       rawbuf->start_stroke();
-      std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
+      std::list< std::pair<int, int> >::iterator pi;
       for( pi = stroke.get_points().begin(); pi != stroke.get_points().end(); pi++ ) {
 				rawbuf->draw_point( pen, pi->first, pi->second, update, false );
       }
@@ -287,7 +287,7 @@ void PF::DrawPar::end_stroke()
 
 
 
-void PF::DrawPar::draw_point( unsigned int x, unsigned int y, VipsRect& update )
+void PF::DrawPar::draw_point( int x, int y, VipsRect& update )
 {
   PF::Stroke<PF::Pencil>& stroke = strokes.get().back();
 

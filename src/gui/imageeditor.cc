@@ -271,7 +271,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
   //imageArea_eventBox.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
   //main_panel.set_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
-  imageArea_eventBox.set_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
+  imageArea_eventBox.set_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  /*| Gdk::POINTER_MOTION_HINT_MASK*/ | Gdk::STRUCTURE_MASK );
   imageArea_eventBox.signal_button_press_event().
     connect( sigc::mem_fun(*this, &PF::ImageEditor::my_button_press_event) );
   imageArea_eventBox.signal_button_release_event().
@@ -847,6 +847,7 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble&
 #endif
   x -= imageArea->get_xoffset();
   y -= imageArea->get_yoffset();
+  /*
   if( (x<0) || (y<0) ) return;
   if( imageArea->get_display_image() ) {
     if( x >= imageArea->get_display_image()->Xsize ) 
@@ -854,6 +855,7 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble&
     if( y >= imageArea->get_display_image()->Ysize ) 
       return;
   }
+  */
 
   float zoom_fact = get_zoom_factor();
 #ifndef NDEBUG
@@ -1193,6 +1195,8 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
 	gdouble x, y;
 	guint state;
 	if (event->is_hint) {
+std::cout<<"event->is_hint"<<std::endl;
+return false;
 		//event->window->get_pointer(&ix, &iy, &state);
       //x = ix;
       //y = iy;
