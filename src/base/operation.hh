@@ -449,6 +449,8 @@ namespace PF
   #include "blend_color.hh"
 
   int vips_copy_metadata( VipsImage* in, VipsImage* out );
+
+  void print_embedded_profile( VipsImage* img );
 };
 
 

@@ -27,6 +27,7 @@
 
  */
 
+#include <lcms2.h>
 
 #include "operation.hh"
 #include "layer.hh"
@@ -369,6 +370,25 @@ int PF::vips_copy_metadata( VipsImage* in, VipsImage* out )
       );
 return 0;
 }
+
+
+
+void PF::print_embedded_profile( VipsImage* image )
+{
+  void *data;
+  size_t data_length;
+  if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
+      &data, &data_length ) ) {
+    cmsHPROFILE in_profile = cmsOpenProfileFromMem( data, data_length );
+    if( in_profile ) {
+      char tstr[1024];
+      cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"Embedded profile found: "<<tstr<<std::endl;
+      cmsCloseProfile( in_profile );
+    }
+  }
+}
+
 
 
 

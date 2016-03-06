@@ -248,6 +248,8 @@ void PF::ICCProfile::init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv )
 
 cmsHPROFILE PF::ICCProfile::get_profile()
 {
+  return profile;
+
   cmsHPROFILE result;
   cmsUInt32Number out_length;
   cmsSaveProfileToMem( profile, NULL, &out_length);

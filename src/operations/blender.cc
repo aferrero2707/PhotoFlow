@@ -159,6 +159,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   if( in.size() > 0 ) background = in[0];
   if( in.size() > 1 ) foreground = in[1];
 
+
   //PF_REF(background, "BlenderPar::build(): initial background ref");
   PF_REF(foreground, "BlenderPar::build(): initial foreground ref");
   PF_REF(omap, "BlenderPar::build(): initial omap ref");
@@ -170,9 +171,15 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
 
   icc_data = NULL;
   std::cout<<"BlenderPar::build(): background="<<background<<std::endl;
-  if( background ) {
+  if(background) {std::cout<<"bottom profile: "; PF::print_embedded_profile(background);}
+  if(foreground) {std::cout<<"top profile:    "; PF::print_embedded_profile(foreground);}
+  if( !is_map() && background ) {
+    // Colorspace data of background and foreground layers are compared.
+    // If they differ, an explicit ICC transform is operated from foreground to background.
+    // Colorspace data is ignored for map layers, which are not colormanaged.
     icc_data = PF::get_icc_profile_data( background );
     std::cout<<"BlenderPar::build(): icc_data="<<icc_data<<std::endl;
+
 
     if( !vips_image_get_blob( background, VIPS_META_ICC_NAME, 
                               &prof_data_bottom, &prof_data_length_bottom ) ) {
