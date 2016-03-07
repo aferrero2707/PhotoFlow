@@ -213,11 +213,11 @@ add_library (pfgui STATIC
 
 
 IF(MINGW)
-  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
-  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
-  if(BUNDLED_LENSFUN)
-    list(APPEND ADDITIONAL_LIBS tre_regex)
-  endif(BUNDLED_LENSFUN)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
+  #if(BUNDLED_LENSFUN)
+  #  list(APPEND ADDITIONAL_LIBS tre_regex)
+  #endif(BUNDLED_LENSFUN)
 ELSEIF(APPLE)
   list(APPEND ADDITIONAL_LIBS)
 ELSE(MINGW)
