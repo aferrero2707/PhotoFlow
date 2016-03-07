@@ -722,7 +722,7 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
     image->get_layer_manager().modified();
   }
 
-  layer->signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
+  //layer->signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
 /*
   if( layer->get_processor() && layer->get_processor()->get_par() ) {
     PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( layer->get_processor()->get_par()->get_config_ui() );
