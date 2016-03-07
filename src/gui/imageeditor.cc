@@ -152,7 +152,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   // for calculating the histogram
   image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
   image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
-  PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+  PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
   if( p ) {
     p->set_auto_zoom( true, 256, 256 );
   }
