@@ -33,6 +33,7 @@
 #include <string.h>
 #include <string>
 #include <lcms2.h>
+#include <glibmm.h>
 #include <vips/vips.h>
 
 namespace PF
@@ -173,6 +174,8 @@ class ICCStore
   ICCProfile* rec2020_profiles[3];
   ICCProfile* aces_profiles[3];
   static ICCStore* instance;
+
+  Glib::ustring    defaultMonitorProfile;  // Main monitors standard profile name, from OS
 public:
   ICCStore();
 

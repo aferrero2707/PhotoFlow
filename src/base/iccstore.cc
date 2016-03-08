@@ -339,6 +339,32 @@ PF::ICCStore::ICCStore()
     perceptual_trc_inv_vec[i] = (int)out;
   }
    */
+
+  defaultMonitorProfile = "";
+
+#ifdef WIN32
+  // Get current main monitor. Could be fine tuned to get the current windows monitor (multi monitor setup),
+  // but problem is that we live in RTEngine with no GUI window to query around
+  HDC hDC = GetDC(NULL);
+
+  if (hDC != NULL) {
+      if (SetICMMode(hDC, ICM_ON)) {
+          char profileName[MAX_PATH + 1];
+          DWORD profileLength = MAX_PATH;
+
+          if (GetICMProfileA(hDC, &profileLength, profileName)) {
+              defaultMonitorProfile = Glib::ustring(profileName);
+          }
+
+          // might fail if e.g. the monitor has no profile
+      }
+
+      ReleaseDC(NULL, hDC);
+  }
+
+#else
+// TODO: Add other OS specific code here
+#endif
 }
 
 
