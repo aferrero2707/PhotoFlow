@@ -95,6 +95,7 @@ PF::LevelsConfigGUI::LevelsConfigGUI( PF::Layer* layer ):
   hueSlider( this, "hue", _("Hue"), 0, -180, 180, 0.1, 10, 1),
   hue2Slider( this, "hue_eq", "Hue (curve)", 0, -180, 180, 0.1, 10, 1),
   exposureSlider( this, "exposure", _("exposure"), 0, -10, 10, 0.1, 1 ),
+  gamma_slider( this, "gamma", _("gamma adjustment"), 0, -1, 1, 0.01, 0.1, 1 ),
   mask_enable( this, "show_mask", _("show mask"), false ),
   hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
   hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
@@ -116,6 +117,7 @@ PF::LevelsConfigGUI::LevelsConfigGUI( PF::Layer* layer ):
   //controlsBox.pack_start( white_level_slider, Gtk::PACK_SHRINK );
   controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
   controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( gamma_slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( brightness2Slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( sep1, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( contrastSlider, Gtk::PACK_SHRINK );

@@ -50,8 +50,11 @@ class LevelsPar: public OpParBase
 {
   Property<float> brightness;
   Property<float> exposure;
+  Property<float> gamma;
   Property<float> white_level;
   Property<float> black_level;
+
+  float exponent;
 
 public:
 
@@ -59,6 +62,7 @@ public:
 
   float get_brightness() { return brightness.get(); }
   float get_exposure() { return exposure.get(); }
+  float get_gamma() { return exponent; }
   float get_white_level() { return white_level.get(); }
   float get_black_level() { return black_level.get(); }
 
@@ -66,8 +70,8 @@ public:
   bool has_opacity() { return true; }
   bool needs_input() { return true; }
 
-  //VipsImage* build(std::vector<VipsImage*>& in, int first,
-  //                 VipsImage* imap, VipsImage* omap, unsigned int& level);
+  VipsImage* build(std::vector<VipsImage*>& in, int first,
+                   VipsImage* imap, VipsImage* omap, unsigned int& level);
 };
 
 
@@ -103,6 +107,7 @@ public:
 
     float brightness = opar->get_brightness();
     float exposure = opar->get_exposure();
+    float gamma = opar->get_gamma();
     float black_level = opar->get_black_level();
     float white_level = opar->get_white_level();
 
@@ -124,6 +129,7 @@ public:
         float white_level2 = white_level;
         float brightness2 = brightness;
         float exposure2 = exposure;
+        float gamma2 = gamma;
 
 
         if( (black_level2 != 0) || (white_level2 != 0) ) {
@@ -148,6 +154,13 @@ public:
         if( exposure2 != 0 ) {
           for( k=0; k < 3; k++) {
             RGB[k] *= exposure;
+            //clip( exposure*RGB[k], RGB[k] );
+          }
+        }
+
+        if( gamma2 != 1 ) {
+          for( k=0; k < 3; k++) {
+            RGB[k] = powf( RGB[k], gamma );
             //clip( exposure*RGB[k], RGB[k] );
           }
         }

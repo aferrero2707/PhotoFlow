@@ -35,12 +35,27 @@ PF::LevelsPar::LevelsPar():
   OpParBase(),
   brightness("brightness",this,0),
   exposure("exposure",this,1),
+  gamma("gamma",this,0),
   white_level("white_level",this,0),
   black_level("black_level",this,0)
 {
   set_type("levels" );
 
   set_default_name( _("levels") );
+}
+
+
+
+VipsImage* PF::LevelsPar::build(std::vector<VipsImage*>& in, int first,
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
+{
+  if( in.size()<1 || in[0]==NULL ) return NULL;
+
+  exponent = 1.f/powf( 10.f, gamma.get() );
+
+  VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
+  return out;
 }
 
 
