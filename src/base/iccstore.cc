@@ -310,6 +310,7 @@ PF::ICCStore::ICCStore()
   aces_profiles[0] = new ACESProfile( PF::PF_TRC_STANDARD );
   aces_profiles[1] = new ACESProfile( PF::PF_TRC_PERCEPTUAL );
   aces_profiles[2] = new ACESProfile( PF::PF_TRC_LINEAR );
+
   /*
   std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-g10.icc";
   profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
@@ -343,6 +344,7 @@ PF::ICCStore::ICCStore()
   defaultMonitorProfile = "";
 
 #ifdef WIN32
+  /*
   // Get current main monitor. Could be fine tuned to get the current windows monitor (multi monitor setup),
   // but problem is that we live in RTEngine with no GUI window to query around
   HDC hDC = GetDC(NULL);
@@ -361,7 +363,7 @@ PF::ICCStore::ICCStore()
 
       ReleaseDC(NULL, hDC);
   }
-
+  */
 #else
 // TODO: Add other OS specific code here
 #endif

@@ -27,6 +27,8 @@
 
  */
 
+#include <glibmm/iochannel.h>
+
 #include "photoflow.hh"
 #include "options.hh"
 #include "../rt/rtengine/safekeyfile.h"
@@ -34,6 +36,12 @@
 PF::Options::Options()
 {
   display_profile_type = PF::PF_DISPLAY_PROF_sRGB;
+}
+
+void PF::Options::set_display_profile_type(int t)
+{
+  if( t>= 0 && t < PF::PF_DISPLAY_PROF_MAX)
+    display_profile_type = (display_profile_t)t;
 }
 
 
@@ -81,7 +89,16 @@ void PF::Options::save()
   keyFile.set_string ("Color Management", "CustomDisplayProfileName", custom_display_profile_name);
 
   try {
-    keyFile.save_to_file( fname );
+    //keyFile.save_to_file( fname );
+    Glib::ustring opt_str = keyFile.to_data();
+    //std::string fnames = fname.get_raw();
+    std::cout<<"Saving options..."<<std::endl;
+    std::cout<<opt_str<<std::endl;
+    std::string mode = "w";
+    Glib::RefPtr< Glib::IOChannel > ioch = Glib::IOChannel::create_from_file( fname.raw(), mode );
+    ioch->write( opt_str );
+    ioch->close();
+    std::cout<<"... options saved."<<std::endl;
   } catch (Glib::Error &err) {
     printf("Options::readFromFile / Error code %d while saving values to \"%s\":\n%s\n", err.code(), fname.c_str(), err.what().c_str());
   } catch (...) {

@@ -26,6 +26,7 @@
 
 
 #include "../base/imageprocessor.hh"
+#include "../operations/icc_transform.hh"
 #include "imagearea.hh"
 
 
@@ -177,6 +178,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   yoffset( 0 ),
   pending_pixels( 0 ),
   draw_requested( false ),
+  current_display_profile_type( PF_DISPLAY_PROF_MAX ),
+  current_display_profile( NULL ),
   highlights_warning_enabled( false ),
   shadows_warning_enabled( false ),
   display_merged( true ),
@@ -191,7 +194,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   region = NULL;
   mask = NULL;
   mask_region = NULL;
-  convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
+  //convert2display = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
+  convert2display = new_icc_transform();
   uniform = new PF::Processor<PF::UniformPar,PF::Uniform>();
   if( uniform->get_par() ) {
     uniform->get_par()->get_R().set( 1 );
@@ -220,7 +224,7 @@ PF::ImageArea::~ImageArea ()
   PF_UNREF( region, "ImageArea::~ImageArea()" );
   PF_UNREF( display_image, "ImageArea::~ImageArea()" );
   PF_UNREF( outimg, "ImageArea::~ImageArea()" );
-  delete convert2srgb;
+  delete convert2display;
   delete convert_format;
   delete invert;
   delete uniform;
@@ -989,31 +993,67 @@ void PF::ImageArea::update( VipsRect* area )
 
   std::vector<VipsImage*> in;
   /**/
-    ClippingWarningPar* clipping_warning_par = dynamic_cast<ClippingWarningPar*>( clipping_warning->get_par() );
-    if( !clipping_warning_par ) return;
-    clipping_warning_par->set_highlights_warning( highlights_warning_enabled );
-    clipping_warning_par->set_shadows_warning( shadows_warning_enabled );
-    clipping_warning_par->set_image_hints( image );
-    clipping_warning_par->set_format( image->BandFmt );
-    in.clear(); in.push_back( image );
-    VipsImage* wclipimg = clipping_warning->get_par()->build(in, 0, NULL, NULL, level );
-    PF_UNREF( image, "ImageArea::update() image unref after clipping warning" );
+  ClippingWarningPar* clipping_warning_par = dynamic_cast<ClippingWarningPar*>( clipping_warning->get_par() );
+  if( !clipping_warning_par ) return;
+  clipping_warning_par->set_highlights_warning( highlights_warning_enabled );
+  clipping_warning_par->set_shadows_warning( shadows_warning_enabled );
+  clipping_warning_par->set_image_hints( image );
+  clipping_warning_par->set_format( image->BandFmt );
+  in.clear(); in.push_back( image );
+  VipsImage* wclipimg = clipping_warning->get_par()->build(in, 0, NULL, NULL, level );
+  PF_UNREF( image, "ImageArea::update() image unref after clipping warning" );
   /**/
 
-  convert2srgb->get_par()->set_image_hints( wclipimg );
-  convert2srgb->get_par()->set_format( get_pipeline()->get_format() );
+  // Display profile management
+  PF::Options& options = PF::PhotoFlow::Instance().get_options();
+  if( options.get_display_profile_type() != current_display_profile_type ||
+      options.get_custom_display_profile_name().c_str() != current_display_profile_name ) {
+
+    if( current_display_profile_type==PF_DISPLAY_PROF_CUSTOM && current_display_profile ) {
+      cmsCloseProfile( current_display_profile );
+    }
+
+    current_display_profile_type = options.get_display_profile_type();
+    current_display_profile_name = options.get_custom_display_profile_name().c_str();
+
+    std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
+    switch( current_display_profile_type ) {
+    case PF_DISPLAY_PROF_sRGB:
+      current_display_profile = PF::ICCStore::Instance().get_profile( PF::OUT_PROF_sRGB, PF::PF_TRC_STANDARD )->get_profile();
+      char tstr[1024];
+      cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+  //#ifndef NDEBUG
+      std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
+  //#endif
+      break;
+    case PF_DISPLAY_PROF_CUSTOM:
+      current_display_profile =
+          cmsOpenProfileFromFile( options.get_custom_display_profile_name().c_str(), "r" );
+      std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
+          <<" -> "<<current_display_profile<<std::endl;
+      break;
+    }
+  }
+  PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
+  std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
+  if( icc_par ) {
+    std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
+    icc_par->set_out_profile( current_display_profile );
+  }
+  convert2display->get_par()->set_image_hints( wclipimg );
+  convert2display->get_par()->set_format( get_pipeline()->get_format() );
   in.clear(); in.push_back( wclipimg );
-  VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
+  VipsImage* srgbimg = convert2display->get_par()->build(in, 0, NULL, NULL, level );
   PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref" );
   // "image" is managed by photoflow, therefore it is not necessary to unref it
-  // after the call to convert2srgb: the additional reference is owned by
+  // after the call to convert2display: the additional reference is owned by
   // "srgbimg" and will be removed when "srgbimg" is deleted.
   // This works also in the case when "image" and "srgbimg" are the same object,
   // as the additional reference will be removed when calling 
   // g_object_unref(srgbimg) later on
 
 #ifndef NDEBUG
-  PF_PRINT_REF( srgbimg, "ImageArea::update(): srgbimg after convert2srgb: " );
+  PF_PRINT_REF( srgbimg, "ImageArea::update(): srgbimg after convert2display: " );
   std::cout<<"ImageArea::update(): image="<<image<<"   ref_count="<<G_OBJECT( image )->ref_count<<std::endl;
 #endif
   //outimg = srgbimg;

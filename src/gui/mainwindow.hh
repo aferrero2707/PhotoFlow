@@ -72,7 +72,7 @@ protected:
   Gtk::Notebook viewerNotebook;
   Gtk::Frame files_frame, editing_frame;
   Gtk::Image img_open, img_save, img_save_as, img_export;
-  Gtk::Button buttonOpen, buttonSave, buttonSaveAs, buttonExport, buttonExit, buttonTest;
+  Gtk::Button buttonOpen, buttonSave, buttonSaveAs, buttonExport, buttonExit, buttonSettings;
   Gtk::Image img_load_preset, img_save_preset, img_trash;
   Gtk::Button buttonNewLayer, buttonNewGroup, buttonDelLayer, buttonLoadPreset, buttonSavePreset;
 
@@ -99,10 +99,14 @@ public:
 
   void on_button_export_clicked();
 
+  void on_button_settings_clicked();
+
   bool on_delete_event( GdkEventAny* event );
 
 
   void open_image(std::string filename);
+
+  void update_all_images();
 
   void remove_tab( Gtk::Widget* widget );
   void remove_all_tabs();

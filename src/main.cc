@@ -170,6 +170,8 @@ int main (int argc, char *argv[])
   PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
   PF::PhotoFlow::Instance().set_batch( false );
 
+  PF::PhotoFlow::Instance().get_options().load();
+
   std::cout<<"Starting image processor..."<<std::endl;
   PF::ImageProcessor::Instance().start();
   std::cout<<"Image processor started."<<std::endl;

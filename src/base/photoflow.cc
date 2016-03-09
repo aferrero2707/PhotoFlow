@@ -38,6 +38,7 @@
 //#ifdef WINDOWS
 #if defined(__MINGW32__) || defined(__MINGW64__)
 #include <direct.h>
+#include <shlobj.h>
 #define GetCurrentDir _getcwd
 #else
 #include <sys/time.h>
@@ -107,22 +108,23 @@ PF::PhotoFlow::PhotoFlow():
   }
 #endif
 
-#ifdef WIN32
+#if defined(__MINGW32__) || defined(__MINGW64__)
     WCHAR pathW[MAX_PATH] = {0};
     char pathA[MAX_PATH];
 
     if (SHGetSpecialFolderPathW(NULL, pathW, CSIDL_LOCAL_APPDATA, false)) {
       WideCharToMultiByte(CP_UTF8, 0, pathW, -1, pathA, MAX_PATH, 0, 0);
       config_dir = Glib::build_filename(Glib::ustring(pathA), "photoflow");
-      int result = mkdir(config_dir.c_str(), 0755);
+      int result = mkdir(config_dir.c_str());
       if( (result == 0) || (errno == EEXIST) ) {
         config_dir = Glib::build_filename(config_dir, "config");
-        result = mkdir(config_dir.c_str(), 0755);
+        result = mkdir(config_dir.c_str());
         if( (result != 0) && (errno != EEXIST) ) {
           perror("mkdir");
           std::cout<<"Cannot create "<<config_dir<<"    exiting."<<std::endl;
           exit( 1 );
         }
+      }
     }
 #else
     if( getenv("HOME") ) {
