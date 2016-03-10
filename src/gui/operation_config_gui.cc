@@ -658,6 +658,7 @@ void PF::OperationConfigGUI::close_config()
 
 void PF::OperationConfigGUI::on_layer_name_changed()
 {
+  std::cout<<"OperationConfigGUI::on_layer_name_changed() called"<<std::endl;
   if( get_layer() && (get_layer()->get_name() != nameEntry.get_text()) ) {
     get_layer()->set_name( nameEntry.get_text() );
     nameEntry2.set_text( nameEntry.get_text() );
@@ -674,6 +675,7 @@ void PF::OperationConfigGUI::on_layer_name_changed()
 
 void PF::OperationConfigGUI::on_layer_name2_changed()
 {
+  std::cout<<"OperationConfigGUI::on_layer_name2_changed() called"<<std::endl;
   if( get_layer() && (get_layer()->get_name() != nameEntry2.get_text()) ) {
     get_layer()->set_name( nameEntry2.get_text() );
     nameEntry.set_text( nameEntry2.get_text() );

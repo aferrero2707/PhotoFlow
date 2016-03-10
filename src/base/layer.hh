@@ -106,7 +106,13 @@ namespace PF
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }
     void clear_modified() { modified_flag = false; }
-    void modified() {  set_modified(); signal_modified.emit(); }
+    void modified()
+    {
+      set_modified();
+      //std::cout<<"Layer::modified(): emitting signal_modified."<<std::endl;
+      signal_modified.emit();
+      //std::cout<<"Layer::modified(): signal_modified emitted."<<std::endl;
+    }
 
     bool is_dirty() { return dirty; }
     void set_dirty( bool d ) { dirty = d; /*if(dirty) std::cout<<"\""<<get_name()<<"\"->set_dirty(1) called"<<std::endl;*/}

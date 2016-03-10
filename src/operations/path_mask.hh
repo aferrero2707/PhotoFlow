@@ -90,7 +90,12 @@ public:
 
   bool get_falloff_enabled() { return enable_falloff.get(); }
 
-  void path_modified() { smod.modified(); }
+  void path_modified()
+  {
+    //std::cout<<"PathMask::path_modified() called"<<std::endl;
+    smod.modified();
+    //std::cout<<"PathMask::path_modified() finished"<<std::endl;
+  }
   void path_reset() { smod.reset(); }
 
   SplineCurve& get_falloff_curve() { return falloff_curve.get(); }

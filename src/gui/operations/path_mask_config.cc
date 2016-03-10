@@ -269,6 +269,7 @@ bool PF::PathMaskConfigGUI::pointer_release_event( int button, double sx, double
 
 bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
+  //std::cout<<"PathMaskConfigGUI::pointer_motion_event() called"<<std::endl;
   if( !get_editing_flag() ) return false;
 
   if( !initializing && button != 1 ) return false;
@@ -307,6 +308,7 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
   if( initializing ) {
     active_point_id = par->get_smod().set_point( active_point_id, fx, fy );
     par->path_modified();
+    //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished (initializing)"<<std::endl;
     return true;
   }
 
@@ -327,6 +329,7 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
       par->get_smod().set_point( pi, center.first+pdx, center.second+pdy );
     }
     par->path_modified();
+    //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished (path_resizing)"<<std::endl;
     return true;
   }
 
@@ -338,6 +341,7 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
     //std::cout<<"Border resize: l="<<l<<"  r="<<r<<"  new_size="<<new_size<<std::endl;
     par->set_border_size( MAX(0.01, new_size) );
     par->path_modified();
+    //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished (border_resizing)"<<std::endl;
     return true;
   }
 
@@ -352,12 +356,16 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
     par->get_smod().update_center();
     par->path_modified();
   } else {
-    if( points.size() <= active_point_id ) return false;
+    if( points.size() <= active_point_id ) {
+      //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished (!center_selected)"<<std::endl;
+      return false;
+    }
 
     active_point_id = par->get_smod().set_point( active_point_id, fx, fy );
     par->path_modified();
   }
 
+  //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished"<<std::endl;
   return true;
 }
 
