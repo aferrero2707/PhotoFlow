@@ -90,7 +90,8 @@ style "murrine-default"
 
 	GtkEntry          ::honors-transparent-bg-hint   = 1
 	GtkEntry          ::state-hint                   = 0
-	GtkEntry          ::progress-border              = { 2, 2, 2, 2 }
+#	GtkEntry          ::progress-border              = { 2, 2, 2, 2 }
+	GtkEntry          ::progress-border              = { 0, 0, 0, 0 }
 	
 	GtkMenuBar        ::window-dragging              = 1
 
