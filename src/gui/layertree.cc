@@ -305,26 +305,30 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
 
   Gtk::TreeViewColumn* col;
   col = treeView.get_column(0);
-  col->set_resizable(false); col->set_expand(false);
+  col->set_resizable(false); col->set_expand(true);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   //col->set_fixed_width(35);
   col = treeView.get_column(2);
   col->set_resizable(false); col->set_expand(false);
-  col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   col->set_fixed_width(30);
   col = treeView.get_column(3);
   col->set_resizable(false); col->set_expand(false);
-  col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   col->set_fixed_width(30);
   col = treeView.get_column(1);
-  col->set_resizable(true); col->set_expand(true);
+  col->set_resizable(false); col->set_expand(true);
+  //col->set_max_width(50);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  //col->set_fixed_width(80);
 
 
   treeView.enable_model_drag_source();
   treeView.enable_model_drag_dest();
 
   treeView.get_selection()->set_mode(Gtk::SELECTION_MULTIPLE);
+
+  //treeView.set_size_request( 150, -1 );
 
   Gtk::CellRendererToggle* cell = 
     dynamic_cast<Gtk::CellRendererToggle*>( treeView.get_column_cell_renderer(0) );
@@ -337,7 +341,7 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
 
   set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC );
 
-  //set_size_request(250,0);
+  //set_size_request(180,0);
   /*
   Gtk::TreeModel::Row row = *(treeModel->append());
   row[columns.col_visible] = true;
@@ -444,7 +448,7 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
     Gtk::TreeModel::iterator iter = treeModel->prepend(parent_row.children());
     row = *(iter);
     row[treeModel->columns.col_visible] = l->is_enabled();
-    row[treeModel->columns.col_name] = l->get_name();
+    row[treeModel->columns.col_name] = l->get_name().substr(0,15);
     row[treeModel->columns.col_layer] = l;
     update_mask_icons( row, l );
 
@@ -486,7 +490,7 @@ void PF::LayerTree::update_model()
     Gtk::TreeModel::iterator iter = treeModel->prepend();
     Gtk::TreeModel::Row row = *(iter);
     row[treeModel->columns.col_visible] = l->is_enabled();
-    row[treeModel->columns.col_name] = l->get_name();
+    row[treeModel->columns.col_name] = l->get_name().substr(0,15);
     row[treeModel->columns.col_layer] = l;
     update_mask_icons( row, l );
 
@@ -508,6 +512,7 @@ void PF::LayerTree::update_model()
     }
   }
   //treeView.expand_all();
+  treeView.columns_autosize();
 
   signal_updated.emit();
 

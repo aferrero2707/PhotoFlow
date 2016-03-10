@@ -32,48 +32,9 @@
 
 #include <gtkmm.h>
 
-#include "pfwidget.hh"
-#include "imagebutton.hh"
+#include "numentry.hh"
 
 namespace PF {
-
-class NumEntry: public Gtk::HBox
-{
-  int digits;
-  bool inhibited;
-  Gtk::Entry entry;
-  //Gtk::Image step_up, step_down;
-  ImageButton button_step_up, button_step_down;
-  Gtk::VBox button_box;
-#ifdef GTKMM_2
-    Gtk::Adjustment* adjustment;
-#endif
-#ifdef GTKMM_3
-    Glib::RefPtr<Gtk::Adjustment> adjustment;
-#endif
-public:
-    NumEntry();
-
-#ifdef GTKMM_2
-    void set_adjustment( Gtk::Adjustment* a );
-#endif
-#ifdef GTKMM_3
-    void set_adjustment( Glib::RefPtr<Gtk::Adjustment> a );
-#endif
-
-    bool on_key_press_or_release_event(GdkEventKey* event);
-    bool my_on_focus_out(GdkEventFocus *focus)
-    {
-      text_changed();
-      return false;
-    }
-
-    void step_up();
-    void step_down();
-
-    void changed();
-    void text_changed();
-};
 
   class Slider: public Gtk::HBox, public PFWidget
   {

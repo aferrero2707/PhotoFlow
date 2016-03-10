@@ -533,6 +533,7 @@ void PF::LayerWidget::on_row_expanded( const Gtk::TreeModel::iterator& iter, con
     if( !l ) return;
     l->set_expanded( true );
     std::cout<<"LayerWidget::on_row_expanded(): layer expanded flag set"<<std::endl;
+    layer_views[page]->get_tree().columns_autosize();
   }
 }
 
@@ -549,6 +550,7 @@ void PF::LayerWidget::on_row_collapsed( const Gtk::TreeModel::iterator& iter, co
     if( !l ) return;
     l->set_expanded( false );
     std::cout<<"LayerWidget::on_row_collapsed(): layer expanded flag reset"<<std::endl;
+    layer_views[page]->get_tree().columns_autosize();
   }
 }
 

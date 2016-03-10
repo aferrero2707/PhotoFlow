@@ -226,7 +226,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   hist_expander.add(*histogram);
 
   layersWidget_box.pack_start( hist_expander, Gtk::PACK_SHRINK );
-  aux_controlsBox.set_size_request(-1,60);
+  aux_controlsBox.set_size_request(-1,70);
   layersWidget_box.pack_start( aux_controlsBox, Gtk::PACK_SHRINK );
   layersWidget_box.pack_start( layersWidget, Gtk::PACK_EXPAND_WIDGET );
 
