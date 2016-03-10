@@ -41,11 +41,26 @@ namespace PF {
 
 class SettingsDialog : public Gtk::Dialog
 {
+  //Tree model columns:
+  class DCMModelColumns : public Gtk::TreeModel::ColumnRecord
+  {
+  public:
+
+    DCMModelColumns()
+    { add(col_id); add(col_value); }
+
+    Gtk::TreeModelColumn<int> col_id;
+    Gtk::TreeModelColumn<Glib::ustring> col_value;
+  };
+
+  DCMModelColumns cm_display_profile_columns;
+  Glib::RefPtr<Gtk::ListStore> cm_display_profile_model;
+
   Gtk::Notebook notebook;
 
   Gtk::VBox about_box, color_box;
 
-  Gtk::ComboBoxText cm_display_profile_type_selector;
+  Gtk::ComboBox cm_display_profile_type_selector;
   Gtk::Image cm_display_profile_open_img;
   Gtk::Button cm_display_profile_open_button;
   Gtk::Entry cm_display_profile_entry;

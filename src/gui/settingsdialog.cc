@@ -64,9 +64,28 @@ PF::SettingsDialog::SettingsDialog():
   notebook.append_page( color_box, "Color management" );
   notebook.append_page( about_box, "About" );
 
-  cm_display_profile_type_selector.insert( 0, "sRGB" );
-  cm_display_profile_type_selector.insert( 1, "System (not working)" );
-  cm_display_profile_type_selector.insert( 2, "Custom" );
+  cm_display_profile_model = Gtk::ListStore::create(cm_display_profile_columns);
+  cm_display_profile_type_selector.set_model( cm_display_profile_model );
+  cm_display_profile_type_selector.pack_start(cm_display_profile_columns.col_value);
+
+  Gtk::TreeModel::iterator ri = cm_display_profile_model->append();
+  Gtk::TreeModel::Row row = *(ri);
+  row[cm_display_profile_columns.col_id] = 0;
+  row[cm_display_profile_columns.col_value] = "sRGB";
+
+  ri = cm_display_profile_model->append();
+  row = *(ri);
+  row[cm_display_profile_columns.col_id] = 1;
+  row[cm_display_profile_columns.col_value] = "System (not working)";
+
+  ri = cm_display_profile_model->append();
+  row = *(ri);
+  row[cm_display_profile_columns.col_id] = 2;
+  row[cm_display_profile_columns.col_value] = "Custom";
+
+  //cm_display_profile_type_selector.insert( 0, "sRGB" );
+  //cm_display_profile_type_selector.insert( 1, "System (not working)" );
+  //cm_display_profile_type_selector.insert( 2, "Custom" );
   cm_display_profile_type_selector.set_active( 0 );
   cm_display_profile_type_selector.set_size_request( 30, -1 );
 
