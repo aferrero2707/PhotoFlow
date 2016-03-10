@@ -464,9 +464,10 @@ bool PF::LayerTreeModel::drag_data_received_vfunc( const Gtk::TreeModel::Path& d
     }
   }
 
-  if( request.dnd_dest_layer_list )
+  if( request.dnd_dest_layer_list ) {
     PF::ImageProcessor::Instance().submit_request( request );
-
+    image->get_layer_manager().modified();
+  }
   //image->unlock();
   //image->update();
   // Now that the layers have been reconfigured, we emit the signal_drop_done

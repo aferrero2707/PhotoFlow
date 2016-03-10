@@ -291,9 +291,11 @@ void PF::ImageProcessor::run()
         request.image->get_layer_manager().get_child_layers( request.layer, children );
         for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
           if( !(*i) ) continue;
+          //std::cout<<"LayerManamegr::run(IMAGE_MOVE_LAYER): setting dirty flag for layer \""<<(*i)->get_name()<<"\""<<std::endl;
           (*i)->set_dirty( true );
         }
         request.layer->set_dirty( true );
+        //std::cout<<"LayerManamegr::run(IMAGE_MOVE_LAYER): setting dirty flag for layer \""<<request.layer->get_name()<<"\""<<std::endl;
         // Remove the layer from its current container
         request.image->get_layer_manager().remove_layer( request.layer );
         // Insert the layer to the destination container, above the specified layer if

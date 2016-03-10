@@ -114,6 +114,7 @@ PF::Image::Image():
   remove_layer_done = vips_g_cond_new();
 
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update_all) );
+  layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::modified) );
   convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 

@@ -589,7 +589,7 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     l->set_dirty( dirty );
     // If the current layer is cached, we reset the corresponding cache buffer
     // so that the computation will restart from scratch at the next idle loop
-    if( input_dirty || filter_dirty ) {
+    if( l->is_dirty() || input_dirty || filter_dirty ) {
       if( l->is_cached() )
         l->reset_cache_buffers();
       //if( l->is_cached() && l->get_cache_buffer() ) l->get_cache_buffer()->reset();
