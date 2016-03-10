@@ -92,7 +92,7 @@ PF::HueSaturationPar::HueSaturationPar():
 
   hue_H_equalizer.get().set_circular( true );
 
-  float x1 = 0, y1 = 0., x2 = 1, y2 = 0.;
+  float x1 = 0, y1 = 1., x2 = 1, y2 = 1.;
   for( id = 0; id < 3; id++ ) {
     eq_vec[id]->get().set_point( 0, x1, y1 );
     eq_vec[id]->get().set_point( 1, x2, y2 );
