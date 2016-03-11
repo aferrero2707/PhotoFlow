@@ -38,6 +38,7 @@
 //#ifdef WINDOWS
 #if defined(__MINGW32__) || defined(__MINGW64__)
 #include <direct.h>
+#include <shlobj.h>
 #define GetCurrentDir _getcwd
 #else
 #include <sys/time.h>
@@ -105,6 +106,45 @@ PF::PhotoFlow::PhotoFlow():
     }
     cache_dir = fname;
   }
+#endif
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+    WCHAR pathW[MAX_PATH] = {0};
+    char pathA[MAX_PATH];
+
+    if (SHGetSpecialFolderPathW(NULL, pathW, CSIDL_LOCAL_APPDATA, false)) {
+      WideCharToMultiByte(CP_UTF8, 0, pathW, -1, pathA, MAX_PATH, 0, 0);
+      config_dir = Glib::build_filename(Glib::ustring(pathA), "photoflow");
+      int result = mkdir(config_dir.c_str());
+      if( (result == 0) || (errno == EEXIST) ) {
+        config_dir = Glib::build_filename(config_dir, "config");
+        result = mkdir(config_dir.c_str());
+        if( (result != 0) && (errno != EEXIST) ) {
+          perror("mkdir");
+          std::cout<<"Cannot create "<<config_dir<<"    exiting."<<std::endl;
+          exit( 1 );
+        }
+      }
+    }
+#else
+    if( getenv("HOME") ) {
+      sprintf( fname,"%s/.photoflow", getenv("HOME") );
+      int result = mkdir(fname, 0755);
+      if( (result == 0) || (errno == EEXIST) ) {
+        sprintf( fname,"%s/.photoflow/config/", getenv("HOME") );
+        result = mkdir(fname, 0755);
+        if( (result != 0) && (errno != EEXIST) ) {
+          perror("mkdir");
+          std::cout<<"Cannot create "<<fname<<"    exiting."<<std::endl;
+          exit( 1 );
+        }
+      } else {
+        perror("mkdir");
+        std::cout<<"Cannot create "<<fname<<" (result="<<result<<")   exiting."<<std::endl;
+        exit( 1 );
+      }
+      config_dir = fname;
+    }
 #endif
 
   char exname[512] = {0};
@@ -181,6 +221,8 @@ void PF::PhotoFlow::close()
   std::cout<<"PhotoFlow::close(): calling vips shutdown"<<std::endl;
   vips_shutdown();
   std::cout<<"PhotoFlow::close(): vips shutdown done"<<std::endl;
+
+  options.save();
 /*
 #if defined(__MINGW32__) || defined(__MINGW64__)
   for (int i = 0; i < _getmaxstdio(); ++i) ::close (i);

@@ -43,12 +43,13 @@
 
 //#include <vips/vips>
 
+#include "../base/options.hh"
 #include "../base/photoflow.hh"
 #include "../base/pipeline.hh"
 #include "../base/image.hh"
 
 #include "../operations/image_reader.hh"
-#include "../operations/convert2srgb.hh"
+//#include "../operations/convert2srgb.hh"
 #include "../operations/uniform.hh"
 #include "../operations/invert.hh"
 #include "../operations/blender.hh"
@@ -114,7 +115,10 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
    */
   VipsRegion* mask_region;
 
-  PF::ProcessorBase* convert2srgb;
+  PF::ProcessorBase* convert2display;
+  display_profile_t current_display_profile_type;
+  Glib::ustring current_display_profile_name;
+  cmsHPROFILE current_display_profile;
 
   PF::Processor<PF::UniformPar,PF::Uniform>* uniform;
   PF::Processor<PF::BlenderPar,PF::BlenderProc>* maskblend;

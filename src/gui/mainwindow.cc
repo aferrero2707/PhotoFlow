@@ -42,6 +42,7 @@
 #include "../base/pf_file_loader.hh"
 #include "tablabelwidget.hh"
 #include "layertree.hh"
+#include "settingsdialog.hh"
 #include "mainwindow.hh"
 
 
@@ -93,7 +94,7 @@ buttonSave( /*_("Save")*/ ),
 buttonSaveAs( /*_("Save as")*/ ),
 buttonExport( /*_("Export")*/ ),
 buttonExit( _("Exit") ),
-buttonTest("Test"),
+buttonSettings("Settings"),
 buttonNewLayer(_("New Adjustment")),
 buttonNewGroup(_("New Group")),
 buttonDelLayer(),
@@ -145,6 +146,7 @@ buttonSavePreset()
   top_box.pack_start(buttonSave, Gtk::PACK_SHRINK, 0);
   top_box.pack_start(buttonSaveAs, Gtk::PACK_SHRINK, 0);
   top_box.pack_start(buttonExport, Gtk::PACK_SHRINK, 0);
+  top_box.pack_start(buttonSettings, Gtk::PACK_SHRINK, 0);
 
   topButtonBox2.pack_start(buttonNewLayer, Gtk::PACK_SHRINK);
   topButtonBox2.pack_start(buttonNewGroup, Gtk::PACK_SHRINK);
@@ -174,6 +176,9 @@ buttonSavePreset()
 
   buttonExport.signal_clicked().connect( sigc::mem_fun(*this,
       &MainWindow::on_button_export_clicked) );
+
+  buttonSettings.signal_clicked().connect( sigc::mem_fun(*this,
+      &MainWindow::on_button_settings_clicked) );
 
   buttonExit.signal_clicked().connect( sigc::mem_fun(*this,
       &MainWindow::on_button_exit) );
@@ -908,6 +913,37 @@ void PF::MainWindow::on_button_export_clicked()
   }
 }
 
+
+
+void PF::MainWindow::on_button_settings_clicked()
+{
+  std::cout<<"on_button_settings_clicked()"<<std::endl;
+  PF::SettingsDialog dialog;
+  dialog.set_transient_for( *this );
+  dialog.set_position( Gtk::WIN_POS_CENTER_ON_PARENT );
+  //dialog.set_position( Gtk::WIN_POS_CENTER );
+
+  dialog.signal_cm_modified.connect( sigc::mem_fun(*this,
+      &MainWindow::update_all_images) );
+
+  dialog.run();
+}
+
+
+
+void PF::MainWindow::update_all_images()
+{
+  for( int i = 0; i < viewerNotebook.get_n_pages(); i++ ) {
+    Gtk::Widget* widget = viewerNotebook.get_nth_page( i );
+    if( !widget ) continue;
+
+    PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+    if( !editor ) return;
+
+    g_assert( editor->get_image() != NULL );
+    editor->get_image()->update();
+  }
+}
 
 
 void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )

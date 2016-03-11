@@ -33,6 +33,7 @@
 #include <unistd.h>
 
 #include "pftypes.hh"
+#include "options.hh"
 
 //#include "image.hh"
 
@@ -61,6 +62,7 @@ namespace PF
     new_op_func_t new_op_func;
     new_op_func_t new_op_func_nogui;
 
+    std::string config_dir;
     std::string cache_dir;
     std::string base_dir;
     std::string data_dir;
@@ -71,11 +73,15 @@ namespace PF
     bool batch;
     bool single_win_mode;
 
+    Options options;
+
     static PhotoFlow* instance;
   public:
     PhotoFlow();
 
     static PhotoFlow& Instance();
+
+    Options& get_options() { return options; }
 
     Image* get_active_image() { return active_image; }
     void set_active_image(Image* i) { active_image = i; std::cout<<"Active image: "<<i<<std::endl; }
@@ -112,6 +118,7 @@ namespace PF
     std::string get_locale_dir() { return locale_dir; }
 
     std::string get_cache_dir() { return cache_dir; }
+    std::string get_config_dir() { return config_dir; }
 
     void close();
 

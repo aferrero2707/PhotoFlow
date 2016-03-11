@@ -68,7 +68,7 @@ protected:
   Gtk::ButtonBox buttonBox;
 #endif
   Gtk::Notebook viewerNotebook;
-  Gtk::Button buttonOk, buttonCancel;
+  Gtk::Button buttonOk, buttonCancel, buttonSettings;
 
   ImageEditor* image_editor;
 
@@ -87,12 +87,14 @@ public:
 
   void on_button_ok();
   void on_button_cancel();
+  void on_button_settings_clicked();
 
   void on_unmap();
 
   ImageBuffer& get_image_buffer() { return imgbuf; }
 
   void open_image(std::string filename);
+  void update_image();
   void run()
   {
     show_all();
