@@ -216,9 +216,9 @@ void PF::ImageProcessor::run()
       case IMAGE_REBUILD:
         if( !request.image ) continue;
         signal_status_processing.emit();
-        std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
+        //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         request.image->lock();
-        std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
+        //std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
         /*
           if( (request.area.width!=0) && (request.area.height!=0) )
           request.image->do_update( &(request.area) );
@@ -226,9 +226,9 @@ void PF::ImageProcessor::run()
           request.image->do_update( NULL );
         */
         request.image->do_update( request.pipeline );
-        std::cout<<"PF::ImageProcessor::run(): unlocking image..."<<std::endl;
+        //std::cout<<"PF::ImageProcessor::run(): unlocking image..."<<std::endl;
         request.image->unlock();
-        std::cout<<"PF::ImageProcessor::run(): image unlocked"<<std::endl;
+        //std::cout<<"PF::ImageProcessor::run(): image unlocked"<<std::endl;
         //request.image->rebuild_done_signal();
         break;
       case IMAGE_EXPORT:
@@ -248,7 +248,7 @@ void PF::ImageProcessor::run()
           request.image->do_sample( request.layer_id, request.area );
         request.image->sample_done_signal();
         //request.image->sample_unlock();
-        std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
+        //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
         break;
       case IMAGE_UPDATE:
         if( !request.pipeline ) continue;

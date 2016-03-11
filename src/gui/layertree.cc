@@ -473,7 +473,7 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
 
 void PF::LayerTree::update_model()
 {
-  std::cout<<"LayerTree::update_model() called"<<std::endl;
+  //std::cout<<"LayerTree::update_model() called"<<std::endl;
   treeModel->clear();
   std::list<PF::Layer*>::iterator li;
   for( li = layers->begin(); li != layers->end(); li++ ) {
@@ -503,10 +503,10 @@ void PF::LayerTree::update_model()
       update_model( row );
       Gtk::TreeModel::Path path = treeModel->get_path( iter );
       if( l->is_expanded() ) {
-        std::cout<<"LayerTree::update_model(): expanding row"<<std::endl;
+        //std::cout<<"LayerTree::update_model(): expanding row"<<std::endl;
         treeView.expand_row( path, true );
       } else {
-        std::cout<<"LayerTree::update_model(): collapsing row"<<std::endl;
+        //std::cout<<"LayerTree::update_model(): collapsing row"<<std::endl;
         treeView.collapse_row( path );
       }
     }
@@ -516,7 +516,7 @@ void PF::LayerTree::update_model()
 
   signal_updated.emit();
 
-  std::cout<<"LayerTree::update_model() finished"<<std::endl;
+  //std::cout<<"LayerTree::update_model() finished"<<std::endl;
 /*
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
       get_tree().get_selection();

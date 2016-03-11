@@ -123,11 +123,11 @@ public:
   void remove_layers();
 
   void update() {
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::update() called."<<std::endl;
     if( layer_views.size() > 0 )
       std::cout<<"layer_views.size() > 0"<<std::endl;
-//#endif
+#endif
     for(unsigned int i = 0; i < layer_views.size(); i++) {
       int id = layer_views[i]->get_selected_layer_id();
 #ifndef NDEBUG
@@ -140,14 +140,14 @@ public:
 
   static gboolean update_cb(PF::LayerWidget* w)
   {
-    std::cout<<"LayerWidget::update_cb() called."<<std::endl;
+    //std::cout<<"LayerWidget::update_cb() called."<<std::endl;
     if( w ) w->update();
     return( FALSE );
   }
 
   void update_idle()
   {
-    std::cout<<"LayerWidget::update_idle() called."<<std::endl;
+    //std::cout<<"LayerWidget::update_idle() called."<<std::endl;
     gdk_threads_add_idle ((GSourceFunc) LayerWidget::update_cb, this);
   }
 

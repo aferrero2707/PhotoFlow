@@ -526,13 +526,13 @@ void PF::LayerWidget::on_row_expanded( const Gtk::TreeModel::iterator& iter, con
   int page = notebook.get_current_page();
   if( page < 0 ) return;
   if (iter) {
-    std::cout<<"LayerWidget::on_row_expanded() called"<<std::endl;
+    //std::cout<<"LayerWidget::on_row_expanded() called"<<std::endl;
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
     l->set_expanded( true );
-    std::cout<<"LayerWidget::on_row_expanded(): layer expanded flag set"<<std::endl;
+    //std::cout<<"LayerWidget::on_row_expanded(): layer expanded flag set"<<std::endl;
     layer_views[page]->get_tree().columns_autosize();
   }
 }
@@ -543,13 +543,13 @@ void PF::LayerWidget::on_row_collapsed( const Gtk::TreeModel::iterator& iter, co
   int page = notebook.get_current_page();
   if( page < 0 ) return;
   if (iter) {
-    std::cout<<"LayerWidget::on_row_collapsed() called"<<std::endl;
+    //std::cout<<"LayerWidget::on_row_collapsed() called"<<std::endl;
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
     l->set_expanded( false );
-    std::cout<<"LayerWidget::on_row_collapsed(): layer expanded flag reset"<<std::endl;
+    //std::cout<<"LayerWidget::on_row_collapsed(): layer expanded flag reset"<<std::endl;
     layer_views[page]->get_tree().columns_autosize();
   }
 }
@@ -964,14 +964,14 @@ void PF::LayerWidget::remove_layers()
       editor->set_active_layer( -1 );
     }
 
-    std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
+    //std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
     unset_sticky_and_editing( l );
-    std::cout<<"Calling detach_controls(\""<<l->get_name()<<"\")"<<std::endl;
+    //std::cout<<"Calling detach_controls(\""<<l->get_name()<<"\")"<<std::endl;
     detach_controls( l );
-    std::cout<<"Calling close_map_tabs(\""<<l->get_name()<<"\")"<<std::endl;
+    //std::cout<<"Calling close_map_tabs(\""<<l->get_name()<<"\")"<<std::endl;
     close_map_tabs( l );
 
-    std::cout<<"Calling image->remove_layer(\""<<l->get_name()<<"\")"<<std::endl;
+    //std::cout<<"Calling image->remove_layer(\""<<l->get_name()<<"\")"<<std::endl;
     image->remove_layer( l );
     image->get_layer_manager().modified();
     removed = true;
