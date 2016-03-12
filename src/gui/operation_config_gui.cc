@@ -107,6 +107,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_undo(PF::PhotoFlow::Instance().get_data_dir()+"/icons/undo_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/undo_inactive.png"),
   frame_redo(PF::PhotoFlow::Instance().get_data_dir()+"/icons/redo_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/redo_inactive.png"),
   frame_reset(PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_inactive.png"),
+  frame_help(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png"),
+  frame_help2(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png"),
   frame_close(PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_inactive.png"),
   frame_expander(PF::PhotoFlow::Instance().get_data_dir()+"/icons/expand.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/collapse.png",true)
 {
@@ -149,6 +151,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame_top_box_1_1.pack_start( frame_undo, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_redo, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_box.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_box.pack_start( frame_help, Gtk::PACK_SHRINK, 5 );
 
   frame_top_buttons_alignment.add( frame_top_buttons_box );
   frame_top_buttons_alignment.set( 0, 0.5, 0, 0 );
@@ -225,7 +228,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   frame_top_buttons_box2.pack_start( frame_mask2, Gtk::PACK_SHRINK, 2 );
   frame_top_buttons_box2.pack_start( frame_sticky2, Gtk::PACK_SHRINK, 2 );
-  //frame_top_buttons_box2.pack_start( frame_edit2, Gtk::PACK_SHRINK, 2 );
+  frame_top_buttons_box2.pack_start( frame_help2, Gtk::PACK_SHRINK, 2 );
 
   frame_top_buttons_alignment2.add( frame_top_buttons_box2 );
   frame_top_buttons_alignment2.set( 0, 0.5, 0, 0 );
@@ -251,6 +254,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_edit.set_tooltip_text( _("toggle editing flag on/off") );
   frame_edit2.set_tooltip_text( _("toggle editing flag on/off") );
   frame_reset.set_tooltip_text( _("reset tool parameters") );
+  frame_help.set_tooltip_text( _("show information on current tool") );
+  frame_help2.set_tooltip_text( _("show information on current tool") );
 
   frame_expander.signal_activated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::expand) );
@@ -293,6 +298,11 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   frame_reset.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::parameters_reset_cb) );
+
+  frame_help.signal_clicked.connect(sigc::mem_fun(*this,
+        &OperationConfigGUI::show_help_cb) );
+  frame_help2.signal_clicked.connect(sigc::mem_fun(*this,
+        &OperationConfigGUI::show_help_cb) );
 
   frame_close.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::close_config_cb) );
@@ -644,6 +654,56 @@ void PF::OperationConfigGUI::parameters_reset()
     controls[i]->reset();
   if( get_layer() && get_layer()->get_image() )
     get_layer()->get_image()->update();
+}
+
+
+void PF::OperationConfigGUI::show_help()
+{
+  Gtk::Dialog dialog("help", false, false);
+  dialog.set_default_size(300,100);
+
+  Gtk::Frame frame;
+
+  Glib::ustring help;
+  if( get_par() ) {
+  Glib::ustring helpPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow/help/en/" + get_par()->get_type() + ".hlp";
+  std::ifstream file(helpPath.c_str());
+  char ch;
+  if( !file.fail() ) {
+    while(!file.eof()) {
+      //std::string tmpStr;
+      //std::getline(file, tmpStr);
+      //help += tmpStr;
+      file.get( ch );
+      if( !file.fail() ) help += ch;
+    }
+  } else {
+    help = "Ths help is not yet available. Sorry.";
+  }
+  }
+
+  Gtk::TextView textview;
+  Glib::RefPtr< Gtk::TextBuffer > buf = textview.get_buffer ();
+  buf->set_text( help );
+  textview.set_wrap_mode(Gtk::WRAP_WORD);
+  textview.set_left_margin( 5 );
+  textview.set_right_margin( 5 );
+  textview.set_editable( false );
+  textview.set_cursor_visible( false );
+
+  dialog.get_vbox()->pack_start( textview );
+
+  //frame.add( textview );
+  //dialog.get_vbox()->pack_start( frame );
+  //dialog.get_content_area().pack_start( frame );
+
+  dialog.show_all_children();
+
+  Gtk::Container* toplevel = controls_box.get_toplevel();
+  if( toplevel && toplevel->is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+    dialog.set_transient_for( *(dynamic_cast<Gtk::Window*>(toplevel)) );
+
+  dialog.run();
 }
 
 
