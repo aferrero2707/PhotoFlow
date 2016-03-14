@@ -103,6 +103,44 @@ if (APPLE)
     set (MACINTEG_LIBS ${MacIntegration_LIBRARIES})
 endif (APPLE)
 
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+
+# Get the current working branch
+execute_process(
+  COMMAND git rev-parse --abbrev-ref HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_BRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the latest commit hash of the working branch
+execute_process(
+  COMMAND git log -1 --format=%H
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the latest commit date of the working branch
+execute_process(
+  COMMAND git log -1 --format=%ci
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_DATE
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# eventually update the version.cc file
+execute_process(
+  COMMAND ${CMAKE_SOURCE_DIR}/tools/update_version_info.sh 0 ${CMAKE_SOURCE_DIR}/VERSION ${GIT_BRANCH} ${GIT_COMMIT_DATE} ${GIT_COMMIT_HASH} ${CMAKE_CURRENT_BINARY_DIR}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE VERSION_UPDATE_SUCCESS
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+MESSAGE( STATUS "tools/update_version_info.sh: " ${VERSION_UPDATE_SUCCESS} )
+
+
 
 
 FILE(GLOB DTIncludes dt/common/*.h dt/develop/*.h)
@@ -116,8 +154,8 @@ add_library (pfdt STATIC
 SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/src/dt -std=gnu99")
 
 
-FILE(GLOB BaseIncludes base/*.hh)
-FILE(GLOB BaseSources base/*.cc)
+FILE(GLOB BaseIncludes version.hh base/*.hh)
+FILE(GLOB BaseSources ${CMAKE_CURRENT_BINARY_DIR}/version.cc base/*.cc)
 
 FILE(GLOB RTIncludes 
   rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h

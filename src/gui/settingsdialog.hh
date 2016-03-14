@@ -60,6 +60,8 @@ class SettingsDialog : public Gtk::Dialog
 
   Gtk::VBox about_box, color_box;
 
+  Gtk::TextView about_textview;
+
   Gtk::HBox cm_display_profile_type_box;
   Gtk::Label cm_display_profile_type_label;
   Gtk::ComboBox cm_display_profile_type_selector;

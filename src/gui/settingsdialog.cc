@@ -30,7 +30,10 @@
 #include <iostream>
 #include <vips/vips.h>
 
+#include <version.hh>
+
 #include "settingsdialog.hh"
+
 
 /*
 #include "../operations/vips_operation.hh"
@@ -102,6 +105,17 @@ PF::SettingsDialog::SettingsDialog():
   color_box.pack_start( cm_display_profile_box, Gtk::PACK_SHRINK, 4 );
 
   //cm_display_profile_type_selector.set_size_request( 30, -1 );
+
+  Glib::ustring about = PF::version_string;
+  Glib::RefPtr< Gtk::TextBuffer > buf = about_textview.get_buffer ();
+  buf->set_text( about );
+  about_textview.set_wrap_mode(Gtk::WRAP_WORD);
+  about_textview.set_left_margin( 5 );
+  about_textview.set_right_margin( 5 );
+  about_textview.set_editable( false );
+  about_textview.set_cursor_visible( false );
+
+  about_box.pack_start( about_textview, Gtk::PACK_EXPAND_WIDGET );
 
   get_vbox()->pack_start( notebook );
 
