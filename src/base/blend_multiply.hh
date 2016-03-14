@@ -85,9 +85,48 @@ public:
 
 
 
+template<colorspace_t CS, int CHMIN, int CHMAX>
+class BlendMultiply<float, CS, CHMIN, CHMAX, false>:
+  public BlendBase<float, CS, CHMIN, CHMAX, false>
+{
+  int ch, pos;
+public:
+  void blend(const float& opacity, float* bottom, float* top, float* out, const int& x, int& /*xomap*/)
+  {
+    pos = x;
+    for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
+      out[pos] = opacity*top[pos]*bottom[pos] + (1.0f-opacity)*bottom[pos];
+    }
+  }
+};
+
+
+
+template<typename T, colorspace_t CS, int CHMIN, int CHMAX>
+class BlendMultiply<float, CS, CHMIN, CHMAX, true>:
+  public BlendBase<float, CS, CHMIN, CHMAX, true>
+{
+  int ch, pos;
+  float opacity_real;
+public:
+  void blend(const float& opacity, float* bottom, float* top, float* out, const int& x, int& xomap)
+  {
+    opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);
+    xomap += 1;
+
+    pos = x;
+    for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
+      out[pos] = opacity_real*top[pos]*bottom[pos] + (1.0f-opacity_real)*bottom[pos];
+    }
+  }
+};
+
+
+
 /*
   Greyscale colorspace
  */
+
 template<typename T, int CHMIN, int CHMAX>
 class BlendMultiply<T, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, false>: 
   public BlendBase<T, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, false>
@@ -115,6 +154,31 @@ public:
     ptop = top[x];
     ptop *= bottom[x];
     clip( opacity_real*ptop/FormatInfo<T>::RANGE + (1.0f-opacity_real)*bottom[x], out[x] );
+  }
+};
+
+
+template<int CHMIN, int CHMAX>
+class BlendMultiply<float, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, false>:
+  public BlendBase<float, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, false>
+{
+public:
+  void blend(const float& opacity, float* bottom, float* top, float* out, const int& x, int& /*xomap*/)
+  {
+    out[x] = opacity*top[x]*bottom[x] + (1.0f-opacity)*bottom[x];
+  }
+};
+
+template<int CHMIN, int CHMAX>
+class BlendMultiply<float, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, true>:
+  public BlendBase<float, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, true>
+{
+public:
+  void blend(const float& opacity, float* bottom, float* top, float* out, const int& x, int& xomap)
+  {
+    float opacity_real = opacity*(this->pmap[xomap]+FormatInfo<float>::MIN)/(FormatInfo<float>::RANGE);
+    xomap += 1;
+    out[x] = opacity_real*top[x]*bottom[x] + (1.0f-opacity_real)*bottom[x];
   }
 };
 
