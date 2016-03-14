@@ -433,7 +433,9 @@ namespace PF
 
 
   #include "blend_passthrough.hh"
-  #include "blend_normal.hh"
+#include "blend_normal.hh"
+#include "blend_add.hh"
+#include "blend_subtract.hh"
   #include "blend_grain_extract.hh"
   #include "blend_grain_merge.hh"
   #include "blend_multiply.hh"
@@ -444,8 +446,8 @@ namespace PF
   #include "blend_soft_light.hh"
   #include "blend_hard_light.hh"
   #include "blend_vivid_light.hh"
-#include "blend_luminosity.hh"
-#include "blend_luminance.hh"
+  #include "blend_luminosity.hh"
+  #include "blend_luminance.hh"
   #include "blend_color.hh"
 
   int vips_copy_metadata( VipsImage* in, VipsImage* out );
