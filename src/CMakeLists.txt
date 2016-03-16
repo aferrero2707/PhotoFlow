@@ -106,6 +106,7 @@ endif (APPLE)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 
+if (AUTOMATED_VERSION_CHECK)
 # Get the current working branch
 execute_process(
   COMMAND git rev-parse --abbrev-ref HEAD
@@ -130,6 +131,8 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+MESSAGE( STATUS "CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR} )
+MESSAGE( STATUS "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR} )
 # eventually update the version.cc file
 execute_process(
   COMMAND ${CMAKE_SOURCE_DIR}/tools/update_version_info.sh 0 ${CMAKE_SOURCE_DIR}/VERSION ${GIT_BRANCH} ${GIT_COMMIT_DATE} ${GIT_COMMIT_HASH} ${CMAKE_CURRENT_BINARY_DIR}
@@ -139,7 +142,7 @@ execute_process(
 )
 
 MESSAGE( STATUS "tools/update_version_info.sh: " ${VERSION_UPDATE_SUCCESS} )
-
+endif (AUTOMATED_VERSION_CHECK)
 
 
 
@@ -155,7 +158,11 @@ SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/src/d
 
 
 FILE(GLOB BaseIncludes version.hh base/*.hh)
-FILE(GLOB BaseSources ${CMAKE_CURRENT_BINARY_DIR}/version.cc base/*.cc)
+if (AUTOMATED_VERSION_CHECK)
+  FILE(GLOB BaseSources ${CMAKE_CURRENT_BINARY_DIR}/version.cc base/*.cc)
+else (AUTOMATED_VERSION_CHECK)
+  FILE(GLOB BaseSources version.cc base/*.cc)
+endif (AUTOMATED_VERSION_CHECK)
 
 FILE(GLOB RTIncludes 
   rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h

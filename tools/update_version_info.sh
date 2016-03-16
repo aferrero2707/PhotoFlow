@@ -8,6 +8,7 @@ hash="$5"
 bindir="$6"
 
 echo "Updating PhotoFlow version info"
+echo "bindir: $bindir"
 update=0
 
 if [ x"$release" = "x1" ]; then
