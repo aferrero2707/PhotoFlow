@@ -81,6 +81,8 @@ namespace PF
     {
       if( !bottom || !top ) return;
       BlendNormal<T,colorspace,CHMIN,CHMAX,has_omap> blend_normal;
+      BlendAdd<T,colorspace,CHMIN,CHMAX,has_omap> blend_add;
+      BlendSubtract<T,colorspace,CHMIN,CHMAX,has_omap> blend_subtract;
       BlendGrainExtract<T,colorspace,CHMIN,CHMAX,has_omap> blend_grain_extract;
       BlendGrainMerge<T,colorspace,CHMIN,CHMAX,has_omap> blend_grain_merge;
       BlendMultiply<T,colorspace,CHMIN,CHMAX,has_omap> blend_multiply;
@@ -121,6 +123,12 @@ namespace PF
           break;
         case PF_BLEND_NORMAL:
           BLEND_LOOP(blend_normal);
+          break;
+        case PF_BLEND_ADD:
+          BLEND_LOOP(blend_add);
+          break;
+        case PF_BLEND_SUBTRACT:
+          BLEND_LOOP(blend_subtract);
           break;
         case PF_BLEND_GRAIN_EXTRACT:
           BLEND_LOOP(blend_grain_extract);
