@@ -72,7 +72,9 @@ PF::RawOutputPar::RawOutputPar():
   current_out_trc_mode( PF::PF_TRC_STANDARD ),
   out_profile_name("out_profile_name", this),
   out_profile( NULL ),
-  transform( NULL )
+  transform( NULL ),
+  clip_negative("clip_negative",this,true),
+  clip_overflow("clip_overflow",this,true)
 {
   exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
 

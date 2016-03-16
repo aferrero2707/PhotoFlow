@@ -135,6 +135,10 @@ public:
     Gtk::Entry outProfFileEntry;
     Gtk::Button outProfOpenButton;
 
+    CheckBox clip_negative_checkbox;
+    CheckBox clip_overflow_checkbox;
+
+
     double XYZ_to_CAM[3][3], CAM_to_XYZ[3][3];
     float preset_wb[3];
     

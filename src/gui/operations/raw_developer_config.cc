@@ -359,6 +359,8 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
   outTRCModeSelector( this, "out_trc_mode", _("encoding: "), 1 ),
   outProfOpenButton(Gtk::Stock::OPEN),
+  clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
+  clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
   ignore_temp_tint_change( false )
 {
   wbControlsBox.pack_start( wbModeSelector, Gtk::PACK_SHRINK );
@@ -402,6 +404,9 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
   demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
 
+  outputControlsBox.pack_end( clip_overflow_checkbox, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_end( clip_negative_checkbox, Gtk::PACK_SHRINK );
+
   profileModeSelectorBox.pack_start( profileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK );
 
@@ -429,7 +434,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outProfVBox.pack_start( outProfFileEntry, Gtk::PACK_SHRINK );
   outProfHBox.pack_start( outProfVBox, Gtk::PACK_SHRINK );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
+  //outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
 
 
   notebook.append_page( wbControlsBox, "WB" );

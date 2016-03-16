@@ -139,6 +139,8 @@ enum hlreco_mode_t {
 
     cmsHTRANSFORM transform;
 
+    Property<bool> clip_negative, clip_overflow;
+
   public:
 
     RawOutputPar();
@@ -165,6 +167,8 @@ enum hlreco_mode_t {
     cmsHTRANSFORM get_transform() { return transform; }
     TRC_type get_trc_type() { return (TRC_type)out_trc_mode.get_enum_value().first; }
 
+    bool get_clip_negative() { return clip_negative.get(); }
+    bool get_clip_overflow() { return clip_overflow.get(); }
 
     void set_image_hints( VipsImage* img )
     {
@@ -526,7 +530,9 @@ enum hlreco_mode_t {
         for( int xi = 0; xi < line_size; xi++ ) {
           //if(pout[xi] > 1 || pout[xi] < 0)
           //  std::cout<<"RGB_out["<<xi%3<<"]="<<pout[xi]<<std::endl;
-          pout[xi] = CLIPOUT(pout[xi]);
+          if( opar->get_clip_negative() ) pout[xi] = MAX( pout[xi], 0.f );
+          if( opar->get_clip_overflow() ) pout[xi] = MIN( pout[xi], 1.f );
+          //pout[xi] = CLIPOUT(pout[xi]);
         }
       }
       delete line; delete line2;
