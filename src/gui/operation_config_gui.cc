@@ -34,6 +34,7 @@
 
 #include "../gui/operations/raw_developer_config.hh"
 #include "../gui/operations/brightness_contrast_config.hh"
+#include "../gui/operations/clip_config.hh"
 #include "../gui/operations/levels_config.hh"
 #include "../gui/operations/hue_saturation_config.hh"
 #include "../gui/operations/hsl_mask_config.hh"
@@ -969,6 +970,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "clone" ) {
 
     dialog = new PF::CloneConfigGUI( current_layer );
+
+  } else if( op_type == "clip" ) {
+
+    dialog = new PF::ClipConfigGUI( current_layer );
 
   } else if( op_type == "crop" ) {
 
