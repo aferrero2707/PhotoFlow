@@ -1,4 +1,53 @@
 =========================================
+Version 0.2.6
+
+* New features:
+
+- Implemented GIMP plug-in
+- Processing pipeline:
+  - Disabled pre-caching of layers at image loading. Added output tilecache operations to cached layers.
+  - Updated G'MIC to version 1.6.9
+- Raw processing:
+  - Added temperature/tint white-balance controls
+  - Added chromatic aberrations correction module (automatic and manual), based on RawTherapee code
+  - Added "clip" and "blend" highlights reconstruction modes.
+    "clip" mode just clips the output of the demosaicing phase to the [0..1] range.
+    "blend" mode is derived from the similar mode of RawTherapee and is equivalent to DCRAW's "-H 2" option
+  - Added correction of RAW black/white points. The corrections are applied to the RAW data BEFORE the white balancing step
+  - The camera input profile is now assigned to the image data when the working profile is set to NONE
+  - Added possibility to define a default processing preset for all opened RAW files, to be stored as "$HOME/.photoflow/presets/default.pfp" under Linux/OSX. This feature is not yet working under Windows
+- Scale/rotate tool: added horizontal and vertical image flipping
+- GUI:
+  - Added vertical panel with tools shortcuts on the left of the layers list
+  - Implemented preview image panning via Ctrl-left-click-n-drag
+  - Added persistent application settings and settings dialog
+  - Added "about" section in settings dialog
+  - Added possibility to choose a custom monitor profile from disk, which is then used to render the image in the preview area
+  - Added help dialogs specific for each tool
+  - The clipping warning logic has been changed: now it gets activated whenever at least one channel exceeds the threshold
+  - Changed logic for tools activation: now only one tool at a time can be expanded and thus activated, and it also grabs control of the mouse clicks in the preview area. The "editing flag" button has therefore been removed.
+  - Improved slider widgets appearance and added reset button
+  - Completed GTK3 compatibilty and added initial GTK3 theme, based on TooWaBoo's RawTherapeeBlue.css theme (add link)
+  - Improved file handling icons. New icons are adapted from the LibreIcons iconset (add link)
+  - Added rule-of-thirds guidelines to "crop" tool
+  - Added possibility to move the selected control point in the curves tool via the keyboard up/down/left/right arrows.
+  - Enabled Ctrl+Alt+left_click sampling of curve points for the "H/S/L mask" and the "brightness/contrast/saturation/hue" tools
+  - The expanded/collapsed state of group layers in GUI is now kept when the processing pipeline is re-built and saved in the PFI files
+- Build system: added building option to choose among the bundled and system-wide LensFun libraries
+
+* Bug fixes:
+
+- Fixed various bugs in processing threads synchronization
+- Fixed various bugs in objects clean-up at program end
+- Fixed mouse coordinates conversion for "perspective" tool
+- Fixed laggynesh of path tool during path creation and bug in falloff rendering
+- Fixed bugs in freehand drawing pencil rendering at the image borders. 
+- Fixed bug in clone-stamp realtime update while dragging pencil.
+- Fixed bug in dirty flag updating for layers inside a group
+- Fixed various bugs in cache updates when moving/deleting/hiding layers
+
+
+=========================================
 Version 0.2.5
 
 * New features:
