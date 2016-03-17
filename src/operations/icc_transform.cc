@@ -65,15 +65,15 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     in_profile = cmsOpenProfileFromMem( data, data_length );
   }
 
-  std::cout<<"ICCTransformPar::build(): image="<<in[0]<<" data="<<data<<" data_length="<<data_length<<std::endl;
+  //std::cout<<"ICCTransformPar::build(): image="<<in[0]<<" data="<<data<<" data_length="<<data_length<<std::endl;
 
   bool in_changed = false;
   if( in_profile ) {
     char tstr[1024];
     cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"icc_transform: Embedded profile found: "<<tstr<<std::endl;
-//#endif
+#endif
     
     if( in_profile_name != tstr ) {
       in_changed = true;
@@ -99,12 +99,12 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   if( out_profile) {
-    std::cout<<"icc_transform: output profile: "<<out_profile<<std::endl;
+    //std::cout<<"icc_transform: output profile: "<<out_profile<<std::endl;
     char tstr[1024];
     cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"icc_transform: output profile: "<<tstr<<std::endl;
-    //#endif
+#endif
     output_cs_type = cmsGetColorSpace(out_profile);
     switch( output_cs_type ) {
     case cmsSigGrayData:

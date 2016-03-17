@@ -1030,28 +1030,28 @@ void PF::ImageArea::update( VipsRect* area )
     current_display_profile_type = options.get_display_profile_type();
     current_display_profile_name = options.get_custom_display_profile_name().c_str();
 
-    std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
+    //std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
     switch( current_display_profile_type ) {
     case PF_DISPLAY_PROF_sRGB:
       current_display_profile = dt_colorspaces_create_srgb_profile();
       char tstr[1024];
       cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-  //#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
-  //#endif
+#endif
       break;
     case PF_DISPLAY_PROF_CUSTOM:
       current_display_profile =
           cmsOpenProfileFromFile( options.get_custom_display_profile_name().c_str(), "r" );
-      std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
-          <<" -> "<<current_display_profile<<std::endl;
+      //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
+      //    <<" -> "<<current_display_profile<<std::endl;
       break;
     }
   }
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
-  std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
+  //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
   if( icc_par ) {
-    std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
+    //std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
     icc_par->set_out_profile( current_display_profile );
   }
   convert2display->get_par()->set_image_hints( wclipimg );

@@ -58,9 +58,9 @@ layer_widget(lw)
 
 bool PF::ToolButton::on_button_press_event( GdkEventButton* button )
 {
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"PF::ToolButton::on_button_press_event(): button "<<button->button<<" pressed."<<std::endl;
-//#endif
+#endif
   if( button->button != 1 ) return false;
 #ifdef GTKMM_3
   img.set_opacity(1);
@@ -71,9 +71,9 @@ bool PF::ToolButton::on_button_press_event( GdkEventButton* button )
 
 bool PF::ToolButton::on_button_release_event( GdkEventButton* button )
 {
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"PF::ToolButton::on_button_release_event(): button "<<button->button<<" released."<<std::endl;
-//#endif
+#endif
   if( button->button != 1 ) return false;
 #ifdef GTKMM_3
   img.set_opacity(0.7);

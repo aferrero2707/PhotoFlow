@@ -369,7 +369,7 @@ void PF::OperationConfigGUI::expand()
 {
   //std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
   if( controls_frame.get_parent() == NULL ) {
-    std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
+    //std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
     if( editor ) {
       editor->get_layer_widget().get_controls_group().collapse_all();
     }
