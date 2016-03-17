@@ -68,9 +68,21 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
   xspinButton.set_digits( 1 );
   yspinButton.set_digits( 1 );
 
-  box.pack_start( *curve_area );
+  curve_area_ebox.add( *curve_area );
+  curve_area_ebox.add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_MOTION_MASK | Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK );
+#ifdef GTKMM_2
+  curve_area_ebox.set_flags(Gtk::CAN_FOCUS);
+#endif
+#ifdef GTKMM_3
+  curve_area_ebox.set_can_focus(TRUE);
+#endif
+
+
+  box.pack_start( curve_area_ebox );
+  numentries_spacing.set_size_request(10,0);
   spin_buttons_box.pack_start( xlabel, Gtk::PACK_SHRINK );
   spin_buttons_box.pack_start( xspinButton, Gtk::PACK_SHRINK );
+  spin_buttons_box.pack_start( numentries_spacing, Gtk::PACK_SHRINK );
   spin_buttons_box.pack_start( ylabel, Gtk::PACK_SHRINK );
   spin_buttons_box.pack_start( yspinButton, Gtk::PACK_SHRINK );
   box.pack_start( spin_buttons_box );
@@ -78,6 +90,8 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
   pack_start( box, Gtk::PACK_SHRINK );
 
   curve_area->signal_event().connect( sigc::mem_fun(*this, &PF::CurveEditor::handle_curve_events) );
+  curve_area_ebox.signal_key_press_event().connect( sigc::mem_fun(*this, &PF::CurveEditor::on_key_press_or_release_event) );
+  curve_area_ebox.signal_key_release_event().connect( sigc::mem_fun(*this, &PF::CurveEditor::on_key_press_or_release_event) );
   // adjustment.signal_value_changed().
   //   connect(sigc::mem_fun(*this,
   // 			  &PFWidget::changed));
@@ -204,6 +218,8 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 #endif
       button_pressed = true;
       
+      curve_area_ebox.grab_focus();
+
       // Look for a point close to the mouse click
       double xpt = double(event->button.x-1)/(width-3);
       double ypt = double(height-event->button.y-1)/(height-3);
@@ -332,11 +348,60 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 
 
 
+bool PF::CurveEditor::on_key_press_or_release_event(GdkEventKey* event)
+{
+  if( (curve_area->get_selected_point()>=0) && event->type == GDK_KEY_PRESS &&
+      (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)) == 0 ) {
+
+    SplineCurve& curve = curve_area->get_curve();
+
+    std::pair<float,float> pt = curve.get_point( curve_area->get_selected_point() );
+    float delta = 0.01;
+
+    if( (event->keyval == GDK_KEY_Up) ) {
+      std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
+      pt.second += delta;
+    }
+    if( event->keyval == GDK_KEY_Down ) {
+      std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
+      pt.second -= delta;
+    }
+    if( event->keyval == GDK_KEY_Left ) {
+      std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
+      pt.first -= delta;
+    }
+    if( event->keyval == GDK_KEY_Right ) {
+      std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
+      pt.first += delta;
+    }
+
+    float px = pt.first, py = pt.second;
+    if( curve.set_point( curve_area->get_selected_point(), px, py ) ) {
+      curve.update_spline();
+      curve_area->queue_draw();
+      inhibit_value_changed = true;
+#ifdef GTKMM_2
+      xadjustment.set_value( px*(xmax-xmin)+xmin );
+      yadjustment.set_value( py*(ymax-ymin)+ymin );
+#endif
+#ifdef GTKMM_3
+      xadjustment->set_value( px*(xmax-xmin)+xmin );
+      yadjustment->set_value( py*(ymax-ymin)+ymin );
+#endif
+      inhibit_value_changed = false;
+      changed();
+      get_prop()->modified();
+    }
+  }
+  return true;
+}
+
+
 PF::CurveArea::CurveArea(): border_size( 0 ), selected_point( -1 )
 {
-  this->add_events(Gdk::BUTTON_PRESS_MASK);
-  this->add_events(Gdk::BUTTON_RELEASE_MASK);
-  this->add_events(Gdk::BUTTON_MOTION_MASK);
+  this->add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_MOTION_MASK | Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK );
+  //this->add_events(Gdk::BUTTON_RELEASE_MASK);
+  //this->add_events(Gdk::BUTTON_MOTION_MASK);
 #ifdef GTKMM_2
   set_flags(Gtk::CAN_FOCUS);
 #endif

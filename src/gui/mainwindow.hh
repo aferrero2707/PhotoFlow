@@ -59,16 +59,22 @@ protected:
   Gtk::VBox mainBox;
   Gtk::VBox editorBox;
   Gtk::VBox controlBox;
-  Gtk::HButtonBox topButtonBox;
+  //Gtk::HButtonBox topButtonBox1, topButtonBox2;
+  Gtk::HBox topButtonBox1, topButtonBox2;
 #endif
 #ifdef GTKMM_3
   Gtk::Box mainBox;
   Gtk::Box editorBox;
   Gtk::Box controlBox;
-  Gtk::ButtonBox topButtonBox;
+  Gtk::ButtonBox topButtonBox1, topButtonBox2;
 #endif
+  Gtk::HBox top_box;
   Gtk::Notebook viewerNotebook;
-  Gtk::Button buttonOpen, buttonSave, buttonSaveAs, buttonExport, buttonExit, buttonTest;
+  Gtk::Frame files_frame, editing_frame;
+  Gtk::Image img_open, img_save, img_save_as, img_export, img_settings, img_exit;
+  Gtk::Button buttonOpen, buttonSave, buttonSaveAs, buttonExport, buttonExit, buttonSettings;
+  Gtk::Image img_load_preset, img_save_preset, img_trash;
+  Gtk::Button buttonNewLayer, buttonNewGroup, buttonDelLayer, buttonLoadPreset, buttonSavePreset;
 
   std::vector<ImageEditor*> image_editors;
 
@@ -76,6 +82,11 @@ protected:
 
   //Gtk::ScrolledWindow treeFrame;
   //Gtk::TreeView layerTree;
+
+  Gtk::MenuBar* menubar;
+  Glib::RefPtr<Gtk::UIManager> m_refUIManager;
+  Glib::RefPtr<Gtk::ActionGroup> m_refActionGroup;
+  void make_menus();
 
 public:
   MainWindow();
@@ -88,12 +99,16 @@ public:
 
   void on_button_export_clicked();
 
+  void on_button_settings_clicked();
+
   bool on_delete_event( GdkEventAny* event );
 
 
   void open_image(std::string filename);
 
-  void remove_tab( Gtk::Widget* widget );
+  void update_all_images();
+
+  void remove_tab( Gtk::Widget* widget, bool immediate );
   void remove_all_tabs();
 
   void on_my_switch_page(

@@ -305,26 +305,30 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
 
   Gtk::TreeViewColumn* col;
   col = treeView.get_column(0);
-  col->set_resizable(false); col->set_expand(false);
+  col->set_resizable(false); col->set_expand(true);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   //col->set_fixed_width(35);
   col = treeView.get_column(2);
   col->set_resizable(false); col->set_expand(false);
-  col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   col->set_fixed_width(30);
   col = treeView.get_column(3);
   col->set_resizable(false); col->set_expand(false);
-  col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   col->set_fixed_width(30);
   col = treeView.get_column(1);
   col->set_resizable(false); col->set_expand(true);
+  //col->set_max_width(50);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  //col->set_fixed_width(80);
 
 
   treeView.enable_model_drag_source();
   treeView.enable_model_drag_dest();
 
   treeView.get_selection()->set_mode(Gtk::SELECTION_MULTIPLE);
+
+  //treeView.set_size_request( 150, -1 );
 
   Gtk::CellRendererToggle* cell = 
     dynamic_cast<Gtk::CellRendererToggle*>( treeView.get_column_cell_renderer(0) );
@@ -337,7 +341,7 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
 
   set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC );
 
-  set_size_request(280,0);
+  //set_size_request(180,0);
   /*
   Gtk::TreeModel::Row row = *(treeModel->append());
   row[columns.col_visible] = true;
@@ -441,9 +445,10 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
   for( std::list<Layer*>::iterator li = sublayers.begin();
        li != sublayers.end(); li++ ) {
     PF::Layer* l = *li;
-    row = *(treeModel->prepend(parent_row.children()));
+    Gtk::TreeModel::iterator iter = treeModel->prepend(parent_row.children());
+    row = *(iter);
     row[treeModel->columns.col_visible] = l->is_enabled();
-    row[treeModel->columns.col_name] = l->get_name();
+    row[treeModel->columns.col_name] = l->get_name().substr(0,15);
     row[treeModel->columns.col_layer] = l;
     update_mask_icons( row, l );
 
@@ -454,6 +459,12 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
 
     if( l->is_group() ) {
       update_model( row );
+      Gtk::TreeModel::Path path = treeModel->get_path( iter );
+      if( l->is_expanded() ) {
+        treeView.expand_row( path, true );
+      } else {
+        treeView.collapse_row( path );
+      }
     }
   }
 }
@@ -462,6 +473,7 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
 
 void PF::LayerTree::update_model()
 {
+  //std::cout<<"LayerTree::update_model() called"<<std::endl;
   treeModel->clear();
   std::list<PF::Layer*>::iterator li;
   for( li = layers->begin(); li != layers->end(); li++ ) {
@@ -475,9 +487,10 @@ void PF::LayerTree::update_model()
       std::cout<<"LayerTree::update_model(): NULL operation for layer \""<<l->get_name()<<"\""<<std::endl;
       continue;
     }
-    Gtk::TreeModel::Row row = *(treeModel->prepend());
+    Gtk::TreeModel::iterator iter = treeModel->prepend();
+    Gtk::TreeModel::Row row = *(iter);
     row[treeModel->columns.col_visible] = l->is_enabled();
-    row[treeModel->columns.col_name] = l->get_name();
+    row[treeModel->columns.col_name] = l->get_name().substr(0,15);
     row[treeModel->columns.col_layer] = l;
     update_mask_icons( row, l );
 
@@ -488,12 +501,22 @@ void PF::LayerTree::update_model()
 
     if( l->is_group() ) {
       update_model( row );
+      Gtk::TreeModel::Path path = treeModel->get_path( iter );
+      if( l->is_expanded() ) {
+        //std::cout<<"LayerTree::update_model(): expanding row"<<std::endl;
+        treeView.expand_row( path, true );
+      } else {
+        //std::cout<<"LayerTree::update_model(): collapsing row"<<std::endl;
+        treeView.collapse_row( path );
+      }
     }
   }
-  treeView.expand_all();
+  //treeView.expand_all();
+  treeView.columns_autosize();
 
   signal_updated.emit();
 
+  //std::cout<<"LayerTree::update_model() finished"<<std::endl;
 /*
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
       get_tree().get_selection();

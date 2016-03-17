@@ -77,6 +77,7 @@ void PF::LayerManager::delete_layer( PF::Layer* layer )
     return;
   }
   layers_pool[layer->get_id()] = NULL;
+  std::cout<<"LayerManager::delete_layer(): deleting layer"<<layer<<std::endl;
   delete layer;
 }
 
@@ -510,14 +511,6 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     bool filter_dirty = false;
     bool blender_dirty = false;
 
-    //std::cout<<"  Layer \""<<l->get_name()<<"\": dirty="<<dirty
-    //         <<" l->is_dirty()="<<l->is_dirty()<<std::endl;
-    // if the current layer is dirty the dirty flag is set to true
-    // this will also qualify as "dirty" all the subsequent layers in the list
-    // It probably means that the visibility of the layer has been toggled
-    if( l->is_dirty() )
-      dirty = true;
-
     // If the operation associated to the current layer has been modified,
     // the dirty flag is set to true.
     // This will also qualify as "dirty" all the subsequent layers in the list
@@ -569,13 +562,21 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
 
     // Finally we walk through the sub-layers; again, if re-building is needed 
     // we mark this layer "dirty" as well
-    bool sub_dirty = false;
+    bool sub_dirty = dirty;
     update_dirty( l->sublayers, sub_dirty );
 
     //std::cout<<"  Layer \""<<l->get_name()<<"\": sub_dirty="<<sub_dirty<<std::endl;
 
     if( sub_dirty )
       input_dirty = true;
+
+    //std::cout<<"  Layer \""<<l->get_name()<<"\": dirty="<<dirty
+    //         <<" l->is_dirty()="<<l->is_dirty()<<std::endl;
+    // if the current layer is dirty the dirty flag is set to true
+    // this will also qualify as "dirty" all the subsequent layers in the list
+    // It probably means that the visibility of the layer has been toggled
+    if( l->is_dirty() )
+      dirty = true;
 
     dirty = dirty || input_dirty || blender_dirty || filter_dirty;
     
@@ -588,7 +589,7 @@ void PF::LayerManager::update_dirty( std::list<Layer*>& list, bool& dirty )
     l->set_dirty( dirty );
     // If the current layer is cached, we reset the corresponding cache buffer
     // so that the computation will restart from scratch at the next idle loop
-    if( input_dirty || filter_dirty ) {
+    if( /*l->is_dirty() ||*/ input_dirty || filter_dirty ) {
       if( l->is_cached() )
         l->reset_cache_buffers();
       //if( l->is_cached() && l->get_cache_buffer() ) l->get_cache_buffer()->reset();
@@ -963,7 +964,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       //cs = PF::convert_colorspace( newimg->Type );
       //std::cout<<"  cs from newimg: "<<cs<<std::endl;
 
-      if( (newimg != NULL) && (newimgvec.size() == 1) && l->is_cached() &&
+      if( false && (newimg != NULL) && (newimgvec.size() == 1) && l->is_cached() &&
           (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
           (l->get_cache_buffer(pipeline->get_render_mode())->is_initialized() == false) ) {
         // The image is being loaded, and the current layer needs to be cached
@@ -1076,7 +1077,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       newimgvec = pipelinepar->build_many( in, 0, imap, omap, level );
       newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
 
-      if( (newimg != NULL) && (newimgvec.size() == 1) && !image->is_loaded() && l->is_cached() &&
+      if( false && (newimg != NULL) && (newimgvec.size() == 1) && !image->is_loaded() && l->is_cached() &&
           (l->get_cache_buffer(pipeline->get_render_mode()) != NULL) &&
           (l->get_cache_buffer(pipeline->get_render_mode())->is_completed() == false) ) {
         // The image is being loaded, and the current layer needs to be cached

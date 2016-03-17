@@ -41,10 +41,12 @@
 #include "../base/imagepyramid.hh"
 #include "../base/photoflow.hh"
 #include "../base/exif_data.hh"
+#include "../base/array2d.hh"
 
 #include "fast_demosaic.hh"
 
-#define PF_USE_LIBRAW
+//#define PF_USE_LIBRAW
+#define PF_USE_RAWSPEED
 //#define PF_USE_DCRAW_RT
 
 #ifdef PF_USE_LIBRAW
@@ -53,19 +55,37 @@
 typedef libraw_data_t dcraw_data_t;
 #endif
 
-#ifdef PF_USE_DCRAW_RT
-#include "../rt/rtengine/rawimage.h"
+#ifdef PF_USE_RAWSPEED
+#include "rawspeed/RawSpeed/RawSpeed-API.h"
+
+struct dcraw_iparams_t
+{
+  unsigned int filters;
+};
 
 struct dcraw_color_data_t
 {
-	float maximum;
-	float cam_mul[4];
+  unsigned black;
+  unsigned cblack[4];
+  float maximum;
+  float cam_mul[4];
   float cam_xyz[4][3];
+  double ca_fitparams[3][2][16];
+};
+
+struct dcraw_sizes_data_t
+{
+  unsigned short int raw_height, raw_width;
+  unsigned short int height, width;
+  unsigned short int top_margin, left_margin;
+  int flip;
 };
 
 struct dcraw_data_t
 {
+  dcraw_iparams_t idata;
 	dcraw_color_data_t color;
+	dcraw_sizes_data_t sizes;
 };
 
 #endif
@@ -75,9 +95,6 @@ namespace PF
 {
 
   class RawImage
-#ifdef PF_USE_DCRAW_RT
-		: public rtengine::RawImage
-#endif
   {
     int nref;
     std::string file_name;
@@ -85,7 +102,13 @@ namespace PF
 		std::string cache_file_name;
 		std::string cache_file_name2;
 
-		float c_black[4];
+	  dcraw_data_t dcraw_data;
+
+	  float c_black[4];
+
+#ifdef PF_USE_RAWSPEED
+		RawSpeed::CameraMetaData *meta;
+#endif
 
 		// VipsImage storing the raw data 
 		// (one float pixel value + one uchar color code)
@@ -99,7 +122,14 @@ namespace PF
 
     exif_data_t exif_data;
 
+    Array2D<float> rawData;  // holds preprocessed pixel values, rowData[i][j] corresponds to the ith row and jth column
+    // Result of CA auto-correction
+    double fitparams[3][2][16];
+
     PF::ImagePyramid pyramid;
+
+    int LinEqSolve(int nDim, double* pfMatr, double* pfVect, double* pfSolution);
+    void CA_correct_RT();
 
   public:
     RawImage( const std::string name );
@@ -110,6 +140,12 @@ namespace PF
     int get_nref() { return nref; }
 
     std::string get_file_name() { return file_name_real; }
+
+    unsigned FC (unsigned row, unsigned col) const
+    {
+      return( dcraw_data.idata.filters >> ((((row+dcraw_data.sizes.top_margin) << 1 & 14) +
+          ((col+dcraw_data.sizes.left_margin) & 1)) << 1) & 3 );
+    }
 
     VipsImage* get_image(unsigned int& level);
 

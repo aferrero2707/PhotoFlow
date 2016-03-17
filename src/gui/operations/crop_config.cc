@@ -74,6 +74,8 @@ void PF::CropConfigGUI::open()
 
 bool PF::CropConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
   handle = CROP_HANDLE_NONE;
 
@@ -155,6 +157,8 @@ bool PF::CropConfigGUI::pointer_press_event( int button, double sx, double sy, i
 
 bool PF::CropConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
 
   cropLeftSlider.set_value();
@@ -263,6 +267,8 @@ void PF::CropConfigGUI::move_handle( int x, int y )
 
 bool PF::CropConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
 
   double x = sx, y = sy, w = 1, h = 1;
@@ -423,6 +429,16 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
     }
   }
 
+  if( crop_width > 10 && crop_height > 10 ) {
+    buf_out.draw_line( crop_left + crop_width/3, crop_top,
+        crop_left + crop_width/3, crop_bottom, buf_in );
+    buf_out.draw_line( crop_left + crop_width*2/3, crop_top,
+        crop_left + crop_width*2/3, crop_bottom, buf_in );
+    buf_out.draw_line( crop_left, crop_top + crop_height/3,
+        crop_right, crop_top + crop_height/3, buf_in );
+    buf_out.draw_line( crop_left, crop_top + crop_height*2/3,
+        crop_right, crop_top + crop_height*2/3, buf_in );
+  }
   return true;
 
   // Draw outline of cropped area

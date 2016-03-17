@@ -67,8 +67,12 @@ style "murrine-default"
 	GtkScale          ::slider-width                 = 13
 	GtkScale		  ::trough-side-details          = 1
 
+	GtkScrollbar      ::slider-width                 = 10
 	GtkScrollbar      ::min-slider-length            = 20
 	GtkScrollbar      ::activate-slider              = 1
+	#GtkScrollbar      ::bg[NORMAL] = "#ACACAC"
+    #GtkScrollbar      ::bg[PRELIGHT] = "#808080"
+    #GtkScrollbar      ::bg[ACTIVE] = "#ACACAC"
 	GtkMenuBar        ::internal-padding             = 0
 	GtkExpander       ::expander-size                = 10
 	GtkToolbar        ::internal-padding             = 0
@@ -86,7 +90,8 @@ style "murrine-default"
 
 	GtkEntry          ::honors-transparent-bg-hint   = 1
 	GtkEntry          ::state-hint                   = 0
-	GtkEntry          ::progress-border              = { 2, 2, 2, 2 }
+#	GtkEntry          ::progress-border              = { 2, 2, 2, 2 }
+	GtkEntry          ::progress-border              = { 0, 0, 0, 0 }
 	
 	GtkMenuBar        ::window-dragging              = 1
 
@@ -405,6 +410,36 @@ style "murrine-frame-title"
 }
 # ------------------------------------------------------------------------------
 
+# -- Frame title style ---------------------------------------------------------
+style "murrine-scrollbar" = "murrine-default"
+{
+  #fg[NORMAL] = "#FC0CAC"
+  #fg[PRELIGHT] = "#F00080"
+  #fg[ACTIVE] = "#FC0CAC"
+  #bg[NORMAL] = "#0C0CAC"
+  #bg[PRELIGHT] = "#000080"
+  bg[SELECTED] = "#4C4C4C"
+
+	engine "murrine" {
+		arrowstyle		= 1
+		roundness		= 9
+		gradient_shades		= {1.0,1.0,1.0,1.0}
+		highlight_shade		= 1.0
+		glow_shade		= 0.95
+		reliefstyle		= 2
+		gradient_colors		= FALSE
+    		lightborder_shade       = 1.0
+		lightborderstyle	= 0
+		trough_shades	        = { 0.97, 0.97}
+		trough_border_shades	= { 1.03, 1.03 }
+		border_shades		= { 0.85, 0.85}		# slider border outline
+		shadow_shades		= { 0.5, 0.8 }
+		contrast		= 0.0			# no trough-border
+		prelight_shade		= 0.6
+	}
+}
+# ------------------------------------------------------------------------------
+
 # -- Tooltips style ------------------------------------------------------------
 style "murrine-tooltips" = "murrine-wider"
 {	
@@ -577,7 +612,7 @@ widget_class "*<GtkNotebook>*<GtkScrolledWindow>"	style "murrine-notebook-bg"
 
 widget_class "*<GtkButton>"      style "murrine-button"
 widget_class "*<GtkNotebook>"    style "murrine-notebook"
-widget_class "*<GtkNotebook>*"   style "notebook-close"
+#widget_class "*<GtkNotebook>*"   style "notebook-close"
 widget_class "*<GtkStatusbar>*"  style "murrine-statusbar"
 
 widget_class "*<GtkComboBoxEntry>*" style "murrine-comboboxentry"
@@ -685,6 +720,8 @@ widget "*entry_fast_search*" style "synaptic-quick-search"
 # -- Thickness for indicator menu items ----------------------------------------
 widget "*IdoEntryMenuItem*" style "murrine-wide"
 # ------------------------------------------------------------------------------
+
+widget_class "*Scrollbar" style "murrine-scrollbar"
 
 # -- External files ------------------------------------------------------------
 #include "infobar.rc" 

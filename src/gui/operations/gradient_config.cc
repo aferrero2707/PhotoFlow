@@ -30,6 +30,8 @@
 #include "gradient_config.hh"
 
 
+#define CURVE_SIZE 192
+
 static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
 {
   str<<r.width<<","<<r.height<<"+"<<r.left<<"+"<<r.top;
@@ -42,22 +44,22 @@ static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
 
 PF::GradientConfigGUI::GradientConfigGUI( PF::Layer* layer ):
       OperationConfigGUI( layer, "Gradient tool" ),
-      typeSelector( this, "gradient_type", "Gradient type: ", 1 ),
+      typeSelector( this, "gradient_type", "Type: ", 1 ),
       invert_box( this, "invert", "Invert", true ),
       center_x( this, "gradient_center_x", "Center X (%)", 100, 0, 100, 1, 10, 100),
       center_y( this, "gradient_center_y", "Center Y (%)", 100, 0, 100, 1, 10, 100),
-      greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-      rgbCurveEditor( this, "RGB_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-      RCurveEditor( this, "R_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-      GCurveEditor( this, "G_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-      BCurveEditor( this, "B_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-      LCurveEditor( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-      aCurveEditor( this, "a_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
-      bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+      greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+      rgbCurveEditor( this, "RGB_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+      RCurveEditor( this, "R_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+      GCurveEditor( this, "G_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+      BCurveEditor( this, "B_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+      LCurveEditor( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+      aCurveEditor( this, "a_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+      bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
       active_point_id( -1 )
 {
-  hbox.pack_start( typeSelector );
-  hbox.pack_start( invert_box, Gtk::PACK_SHRINK );
+  hbox.pack_start( typeSelector, Gtk::PACK_SHRINK );
+  hbox.pack_start( invert_box, Gtk::PACK_SHRINK, 5 );
   add_widget( hbox );
   add_widget( center_x );
   add_widget( center_y );
@@ -259,6 +261,8 @@ bool PF::GradientConfigGUI::pointer_press_event( int button, double sx, double s
 {
   std::cout<<"GradientConfigGUI::pointer_press_event(): button="<<button<<std::endl;
 
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 && button != 3 ) return false;
 
   // Retrieve the layer associated to the filter
@@ -338,6 +342,8 @@ bool PF::GradientConfigGUI::pointer_release_event( int button, double sx, double
 {
   std::cout<<"GradientConfigGUI::pointer_release_event(): button="<<button<<std::endl;
 
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 && button != 3 ) return false;
 
   PF::GradientPar* par = dynamic_cast<PF::GradientPar*>(get_par());
@@ -361,6 +367,8 @@ bool PF::GradientConfigGUI::pointer_release_event( int button, double sx, double
 
 bool PF::GradientConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
   if( active_point_id < 0 ) return false;
 
@@ -446,7 +454,7 @@ bool PF::GradientConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
   int point_size = 2;
 
   int ps = points.size();
-  std::cout<<"GradientConfigGUI::modify_preview(): ps="<<ps<<std::endl;
+  //std::cout<<"GradientConfigGUI::modify_preview(): ps="<<ps<<std::endl;
   for(unsigned int i = 0; i < ps; i++ ) {
     double px = 0, py = 0, pw = 1, ph = 1;
     if( par->get_gradient_type() == GRADIENT_VERTICAL ) {
@@ -472,7 +480,7 @@ bool PF::GradientConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
       buf_out.fill( point2, 255, 255, 255 );
 
     int i2 = i - 1;
-    if( i2 < 0 ) i2 = ps - 1;
+    if( i2 < 0 ) continue;
 
     double px0 = 0, py0 = 0, pw0 = 1, ph0 = 1;
     if( par->get_gradient_type() == GRADIENT_VERTICAL ) {
@@ -488,7 +496,7 @@ bool PF::GradientConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
     //printf("buf_out.draw_line( %f, %f, %f, %f)\n", px0, py0, px, py );
     buf_out.draw_line( px0, py0, px, py, buf_in );
   }
-  std::cout<<std::endl;
+  //std::cout<<std::endl;
 
 
   return true;

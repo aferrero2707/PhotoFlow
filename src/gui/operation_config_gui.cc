@@ -107,6 +107,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_undo(PF::PhotoFlow::Instance().get_data_dir()+"/icons/undo_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/undo_inactive.png"),
   frame_redo(PF::PhotoFlow::Instance().get_data_dir()+"/icons/redo_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/redo_inactive.png"),
   frame_reset(PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_inactive.png"),
+  frame_help(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info-pressed.png"),
+  frame_help2(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info-pressed.png"),
   frame_close(PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_inactive.png"),
   frame_expander(PF::PhotoFlow::Instance().get_data_dir()+"/icons/expand.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/collapse.png",true)
 {
@@ -124,7 +126,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
 
   frame = new Gtk::Frame;
-  frame->set_size_request(200,-1);
+  //frame->set_size_request(200,-1);
   frame->set_shadow_type( Gtk::SHADOW_NONE );
 
   controls_frame.set_shadow_type( Gtk::SHADOW_NONE );
@@ -133,9 +135,9 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame->add( frame_hbox );
   frame->add( frame_vbox );
 
-  frame_vbox.pack_start( hline, Gtk::PACK_SHRINK, 0 );
   frame_vbox.pack_start( frame_top_box_1, Gtk::PACK_SHRINK, 0 );
-  frame_vbox.pack_start( controls_frame, Gtk::PACK_SHRINK, 0 );
+  //frame_vbox.pack_start( controls_frame, Gtk::PACK_SHRINK, 0 );
+  //frame_vbox.pack_start( hline, Gtk::PACK_SHRINK, 5 );
 
   //blendSelector.set_size_request( -1, 22 );
 
@@ -145,10 +147,11 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame_top_box_1.pack_start( frame_preview, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_box.pack_start( frame_mask, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_box.pack_start( frame_sticky, Gtk::PACK_SHRINK, 5 );
-  frame_top_buttons_box.pack_start( frame_edit, Gtk::PACK_SHRINK, 5 );
+  //frame_top_buttons_box.pack_start( frame_edit, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_undo, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_redo, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_box.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_box.pack_start( frame_help, Gtk::PACK_SHRINK, 5 );
 
   frame_top_buttons_alignment.add( frame_top_buttons_box );
   frame_top_buttons_alignment.set( 0, 0.5, 0, 0 );
@@ -161,8 +164,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   }
 
   frame_top_box_1_2.pack_start( frame_expander, Gtk::PACK_SHRINK, 5 );
-  frame_top_box_1_2.pack_start( nameEntry, Gtk::PACK_SHRINK );
-  frame_top_box_1_2.pack_start( frame_box_1_padding, Gtk::PACK_EXPAND_WIDGET );
+  frame_top_box_1_2.pack_start( nameEntry, Gtk::PACK_EXPAND_WIDGET );
+  //frame_top_box_1_2.pack_start( frame_box_1_padding, Gtk::PACK_EXPAND_WIDGET );
   frame_top_box_1_2.pack_start( frame_close, Gtk::PACK_SHRINK, 5 );
 
   nameEntry.set_text( "layer name" );
@@ -173,15 +176,15 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
 
   if(par && par->has_opacity() ) {
-    opacitySlider.set_width( 200 );
-    frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_SHRINK );
+    //opacitySlider.set_width( 200 );
+    frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( blendSelector, Gtk::PACK_SHRINK );
   }
   controls_box.pack_start( frame_top_box_2, Gtk::PACK_SHRINK, 0 );
 
   if(par && par->has_intensity() ) {
-    intensitySlider.set_width( 200 );
-    frame_top_box_4.pack_start( intensitySlider, Gtk::PACK_SHRINK );
+    //intensitySlider.set_width( 200 );
+    frame_top_box_4.pack_start( intensitySlider, Gtk::PACK_EXPAND_WIDGET );
   }
   frame_top_box_4.pack_start( frame_box_4_padding, Gtk::PACK_EXPAND_WIDGET );
   controls_box.pack_start( frame_top_box_4, Gtk::PACK_SHRINK, 0 );
@@ -202,7 +205,11 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   controls_box.pack_start( frame_top_box_3, Gtk::PACK_SHRINK, 0 );
 
-  controls_box.pack_start( hline2, Gtk::PACK_SHRINK, 5 );
+  //middle_padding.set_size_request(-1,5);
+  //controls_box.pack_start( middle_padding, Gtk::PACK_SHRINK, 0 );
+  controls_box.pack_start( hline, Gtk::PACK_SHRINK, 5 );
+
+  controls_box.pack_end( hline2, Gtk::PACK_SHRINK, 5 );
 
 #ifdef GTKMM_2
   Gdk::Color bg;
@@ -221,13 +228,14 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   frame_top_buttons_box2.pack_start( frame_mask2, Gtk::PACK_SHRINK, 2 );
   frame_top_buttons_box2.pack_start( frame_sticky2, Gtk::PACK_SHRINK, 2 );
-  frame_top_buttons_box2.pack_start( frame_edit2, Gtk::PACK_SHRINK, 2 );
+  frame_top_buttons_box2.pack_start( frame_help2, Gtk::PACK_SHRINK, 2 );
 
   frame_top_buttons_alignment2.add( frame_top_buttons_box2 );
   frame_top_buttons_alignment2.set( 0, 0.5, 0, 0 );
 
   aux_controls_hbox.pack_start( frame_top_buttons_alignment2, Gtk::PACK_SHRINK );
 
+  nameEntry2.set_width_chars(10);
   aux_controls_hbox.pack_start( nameEntry2, Gtk::PACK_EXPAND_WIDGET );
   if(par && par->has_opacity() ) {
     aux_controls_hbox.pack_start( blendSelector2, Gtk::PACK_SHRINK );
@@ -236,7 +244,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   if(false && par && par->has_intensity() ) {
     aux_controls_box.pack_start( intensitySlider2, Gtk::PACK_SHRINK );
   }
-  aux_controls_box.set_size_request(100,80);
+  aux_controls_box.set_size_request(0,80);
 
   frame_visible.set_tooltip_text( _("toggle layer visibility on/off") );
   frame_mask.set_tooltip_text( _("enable/disable layer mask(s)") );
@@ -246,6 +254,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_edit.set_tooltip_text( _("toggle editing flag on/off") );
   frame_edit2.set_tooltip_text( _("toggle editing flag on/off") );
   frame_reset.set_tooltip_text( _("reset tool parameters") );
+  frame_help.set_tooltip_text( _("show information on current tool") );
+  frame_help2.set_tooltip_text( _("show information on current tool") );
 
   frame_expander.signal_activated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::expand) );
@@ -275,6 +285,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_sticky2.signal_deactivated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::unset_sticky_cb) );
 
+  /*
   frame_edit.signal_activated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::enable_editing_cb) );
   frame_edit.signal_deactivated.connect(sigc::mem_fun(*this,
@@ -283,9 +294,15 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
         &OperationConfigGUI::enable_editing_cb) );
   frame_edit2.signal_deactivated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::disable_editing_cb) );
+  */
 
   frame_reset.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::parameters_reset_cb) );
+
+  frame_help.signal_clicked.connect(sigc::mem_fun(*this,
+        &OperationConfigGUI::show_help_cb) );
+  frame_help2.signal_clicked.connect(sigc::mem_fun(*this,
+        &OperationConfigGUI::show_help_cb) );
 
   frame_close.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::close_config_cb) );
@@ -352,9 +369,23 @@ void PF::OperationConfigGUI::expand()
 {
   //std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
   if( controls_frame.get_parent() == NULL ) {
+    //std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
+    if( editor ) {
+      editor->get_layer_widget().get_controls_group().collapse_all();
+    }
     frame_vbox.pack_start( controls_frame, Gtk::PACK_SHRINK, 0 );
     controls_frame.show_all_children();
     controls_frame.show();
+    frame_expander.set_active(true);
+    if( editor && get_layer()) {
+      editor->set_active_layer( get_layer()->get_id() );
+    }
+
+    PF::OpParBase* par = get_par();
+    if( par ) {
+      par->set_editing_flag( true );
+      get_layer()->get_image()->update();
+    }
     //std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
   }
 }
@@ -365,7 +396,17 @@ void PF::OperationConfigGUI::collapse()
   //std::cout<<"OperationConfigGUI::collapse() called."<<std::endl;
   if( controls_frame.get_parent() == &frame_vbox ) {
     frame_vbox.remove( controls_frame );
+    frame_expander.set_active(false);
     //std::cout<<"OperationConfigGUI::collapse(): controls hidden"<<std::endl;
+    if( editor ) {
+      editor->set_active_layer( -1 );
+    }
+
+    PF::OpParBase* par = get_par();
+    if( par ) {
+      par->set_editing_flag( false );
+      get_layer()->get_image()->update();
+    }
   }
 }
 
@@ -472,7 +513,7 @@ void PF::OperationConfigGUI::enable_editing()
 
   frame_edit.set_active( true );
   frame_edit2.set_active( true );
-
+/*
   PF::LayerManager& lm = get_layer()->get_image()->get_layer_manager();
 
   // First we fill a list with all the layers in the image
@@ -498,10 +539,10 @@ void PF::OperationConfigGUI::enable_editing()
     gui->reset_edit_button();
   }
 
+  editor->set_edited_layer( get_layer()->get_id() );
+*/
   //std::cout<<"OperationConfigGUI::enable_editing(\""<<get_layer()->get_name()<<"\"): par->set_editing_flag( true )"<<std::endl;
   par->set_editing_flag( true );
-
-  editor->set_edited_layer( get_layer()->get_id() );
 
   get_layer()->get_image()->update();
 }
@@ -525,7 +566,7 @@ void PF::OperationConfigGUI::disable_editing()
   par->set_editing_flag( false );
   //std::cout<<"  Editing flag set to false"<<std::endl;
   //std::cout<<"  updating image"<<std::endl;
-  editor->set_edited_layer( -1 );
+  //editor->set_edited_layer( -1 );
   get_layer()->get_image()->update();
 }
 
@@ -616,16 +657,70 @@ void PF::OperationConfigGUI::parameters_reset()
 }
 
 
+void PF::OperationConfigGUI::show_help()
+{
+  Gtk::Dialog dialog("help", false);
+  dialog.set_default_size(300,100);
+
+  Gtk::Frame frame;
+
+  Glib::ustring help;
+  if( get_par() ) {
+  Glib::ustring helpPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow/help/en/" + get_par()->get_type() + ".hlp";
+  std::ifstream file(helpPath.c_str());
+  char ch;
+  if( !file.fail() ) {
+    while(!file.eof()) {
+      //std::string tmpStr;
+      //std::getline(file, tmpStr);
+      //help += tmpStr;
+      file.get( ch );
+      if( !file.fail() ) help += ch;
+    }
+  } else {
+    help = "Ths help is not yet available. Sorry.";
+  }
+  }
+
+  Gtk::TextView textview;
+  Glib::RefPtr< Gtk::TextBuffer > buf = textview.get_buffer ();
+  buf->set_text( help );
+  textview.set_wrap_mode(Gtk::WRAP_WORD);
+  textview.set_left_margin( 5 );
+  textview.set_right_margin( 5 );
+  textview.set_editable( false );
+  textview.set_cursor_visible( false );
+
+  dialog.get_vbox()->pack_start( textview );
+
+  //frame.add( textview );
+  //dialog.get_vbox()->pack_start( frame );
+  //dialog.get_content_area().pack_start( frame );
+
+  dialog.add_button(_("Close"), Gtk::RESPONSE_OK);
+
+  dialog.show_all_children();
+
+  Gtk::Container* toplevel = controls_box.get_toplevel();
+  if( toplevel && toplevel->is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+    dialog.set_transient_for( *(dynamic_cast<Gtk::Window*>(toplevel)) );
+
+  dialog.run();
+}
+
+
 void PF::OperationConfigGUI::close_config()
 {
+  collapse();
   if( editor ) {
-    editor->get_layer_widget().get_controls_group().remove_control( get_frame() );
+    editor->get_layer_widget().get_controls_group().remove_control( this );
   }
 }
 
 
 void PF::OperationConfigGUI::on_layer_name_changed()
 {
+  //std::cout<<"OperationConfigGUI::on_layer_name_changed() called"<<std::endl;
   if( get_layer() && (get_layer()->get_name() != nameEntry.get_text()) ) {
     get_layer()->set_name( nameEntry.get_text() );
     nameEntry2.set_text( nameEntry.get_text() );
@@ -642,6 +737,7 @@ void PF::OperationConfigGUI::on_layer_name_changed()
 
 void PF::OperationConfigGUI::on_layer_name2_changed()
 {
+  //std::cout<<"OperationConfigGUI::on_layer_name2_changed() called"<<std::endl;
   if( get_layer() && (get_layer()->get_name() != nameEntry2.get_text()) ) {
     get_layer()->set_name( nameEntry2.get_text() );
     nameEntry.set_text( nameEntry2.get_text() );
@@ -704,6 +800,7 @@ void PF::OperationConfigGUI::open()
 
   if( PF::PhotoFlow::Instance().is_single_win_mode() && frame )
     frame->show_all();
+  expand();
   //show_all();
   //show();
 }

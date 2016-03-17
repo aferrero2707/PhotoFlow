@@ -43,6 +43,8 @@ namespace PF {
   //#ifdef GTKMM_2
   Gtk::HBox controlsBox;
 
+  Gtk::Image img_open;
+
   Gtk::Label label;
   Gtk::Entry fileEntry;
   Gtk::Button openButton;

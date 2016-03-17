@@ -56,15 +56,20 @@ PF::ImageProcessor::ImageProcessor(): caching_completed( false )
 void PF::ImageProcessor::start()
 {
   std::cout<<"ImageProcessor::ImageProcessor(): starting thread"<<std::endl;
+#if defined(__APPLE__)
   pthread_attr_t thread_attr;
   if( (pthread_attr_init(&thread_attr) == 0) &&
       // Reserve 8MB of stack size for the new thread
-      (pthread_attr_setstacksize(&thread_attr, 8*1024*1024)) == 0)
+      (pthread_attr_setstacksize(&thread_attr, 8*1024*1024)) == 0) {
+    printf("Creating thread with 16MB stack size\n");
     pthread_create(&_thread,&thread_attr,run_image_processor,NULL);
-  else
+  } else {
+    printf("Creating thread with default stack size\n");
     pthread_create(&_thread,NULL,run_image_processor,NULL);
-
-  //thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
+  }
+#else
+  thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
+#endif
   std::cout<<"ImageProcessor::ImageProcessor(): thread started"<<std::endl;
 }
 
@@ -221,9 +226,10 @@ void PF::ImageProcessor::run()
           request.image->do_update( NULL );
         */
         request.image->do_update( request.pipeline );
+        //std::cout<<"PF::ImageProcessor::run(): unlocking image..."<<std::endl;
         request.image->unlock();
-        request.image->rebuild_done_signal();
-        //std::cout<<"PF::ImageProcessor::run(): updating image done."<<std::endl;
+        //std::cout<<"PF::ImageProcessor::run(): image unlocked"<<std::endl;
+        //request.image->rebuild_done_signal();
         break;
       case IMAGE_EXPORT:
         if( !request.image ) continue;
@@ -236,12 +242,12 @@ void PF::ImageProcessor::run()
       case IMAGE_SAMPLE:
         if( !request.image ) continue;
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
-        request.image->sample_lock();
+        //request.image->sample_lock();
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): image locked."<<std::endl;
         if( (request.area.width!=0) && (request.area.height!=0) )
           request.image->do_sample( request.layer_id, request.area );
-        request.image->sample_unlock();
         request.image->sample_done_signal();
+        //request.image->sample_unlock();
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
         break;
       case IMAGE_UPDATE:
@@ -285,9 +291,13 @@ void PF::ImageProcessor::run()
         request.image->get_layer_manager().get_child_layers( request.layer, children );
         for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
           if( !(*i) ) continue;
-          (*i)->set_dirty( true );
+          //std::cout<<"LayerManamegr::run(IMAGE_MOVE_LAYER): setting dirty flag for layer \""<<(*i)->get_name()<<"\""<<std::endl;
+          //(*i)->set_dirty( true );
+          (*i)->get_processor()->get_par()->modified();
         }
-        request.layer->set_dirty( true );
+        //request.layer->set_dirty( true );
+        request.layer->get_processor()->get_par()->modified();
+        //std::cout<<"LayerManamegr::run(IMAGE_MOVE_LAYER): setting dirty flag for layer \""<<request.layer->get_name()<<"\""<<std::endl;
         // Remove the layer from its current container
         request.image->get_layer_manager().remove_layer( request.layer );
         // Insert the layer to the destination container, above the specified layer if

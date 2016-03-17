@@ -294,15 +294,13 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   op_load.get_tree().add_op( _("Open image"), "imageread" );
   op_load.get_tree().add_op( _("Open RAW image"), "raw_loader" );
-
-  //op_raw.get_tree().add_op( "RAW developer"), "raw_developer" );
   op_load.get_tree().add_op( _("RAW developer"), "raw_developer" );
 
   //op_conv.get_tree().add_op( "Color profile conversion"), "convert_colorspace" );
   //op_conv.get_tree().add_op( "Lab conversion"), "convert2lab" );
 
   op_color.get_tree().add_op( _("Color profile conversion"), "convert_colorspace" );
-  op_color.get_tree().add_op( _("B/C/S/H Adjustment"), "hue_saturation" );
+  op_color.get_tree().add_op( _("Basic Adjustments"), "hue_saturation" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Invert"), "invert" );
   op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
@@ -339,11 +337,11 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_gmic.get_tree().add_op( "G'MIC Interpreter"), "gmic" );
   op_gmic.get_tree().add_op( _("Dream Smoothing"), "gmic_dream_smooth" );
   op_gmic.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
-  op_gmic.get_tree().add_op( _("Convolve"), "gmic_convolve" );
-  op_gmic.get_tree().add_op( _("Extract Foreground"), "gmic_extract_foreground" );
-  op_gmic.get_tree().add_op( _("Inpaint [patch-based]"), "gmic_inpaint" );
-  op_gmic.get_tree().add_op( _("Despeckle"), "gmic_gcd_despeckle" );
-  op_gmic.get_tree().add_op( _("Iain's Noise Reduction"), "gmic_iain_denoise" );
+  //too generic op_gmic.get_tree().add_op( _("Convolve"), "gmic_convolve" );
+  //crashes op_gmic.get_tree().add_op( _("Extract Foreground"), "gmic_extract_foreground" );
+  //slow op_gmic.get_tree().add_op( _("Inpaint [patch-based]"), "gmic_inpaint" );
+  //RT algorithm is better? op_gmic.get_tree().add_op( _("Despeckle"), "gmic_gcd_despeckle" );
+  //crashes? op_gmic.get_tree().add_op( _("Iain's Noise Reduction"), "gmic_iain_denoise" );
   op_gmic.get_tree().add_op( _("Sharpen [richardson-lucy]"), "gmic_sharpen_rl" );
   op_gmic.get_tree().add_op( _("Smooth [anisotropic]"), "gmic_smooth_anisotropic" );
   op_gmic.get_tree().add_op( _("Smooth [bilateral]"), "gmic_blur_bilateral" );

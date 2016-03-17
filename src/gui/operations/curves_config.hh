@@ -57,18 +57,24 @@ namespace PF {
   CurveEditor aCurveEditor;
   CurveEditor bCurveEditor;
 
+  CurveEditor CCurveEditor;
+  CurveEditor MCurveEditor;
+  CurveEditor YCurveEditor;
+  CurveEditor KCurveEditor;
+
   Gtk::Alignment padding1, padding2, padding3;
   Gtk::HSeparator hline;
   Gtk::HBox outputModeBox;
-  OutModeSlider outputModeSlider;
+  /*OutMode*/Slider outputModeSlider;
+
+  void switch_curve();
+  void activate_curve( CurveEditor& curve );
 
 public:
   CurvesConfigGUI(Layer* layer);
   virtual ~CurvesConfigGUI();
 
   bool has_preview() { return true; }
-
-  void switch_curve();
 
   void do_update();
 

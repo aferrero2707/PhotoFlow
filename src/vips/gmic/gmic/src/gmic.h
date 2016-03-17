@@ -43,7 +43,7 @@
  #
 */
 #ifndef gmic_version
-#define gmic_version 167
+#define gmic_version 169
 
 #include <cstdio>
 #include <cstring>
@@ -156,14 +156,13 @@ namespace cimg_library {
 
 #ifdef cimg_use_abort
 static struct cimg_is_abort {
-  bool value;
-  volatile bool *ptr;
+  bool value, *ptr;
   cimg_is_abort():value(false),ptr(&value) {}
 } _cimg_is_abort;
 #ifdef cimg_use_openmp
-#define cimg_test_abort() if (*_cimg_is_abort.ptr && !omp_get_thread_num()) throw CImgAbortException("");
+#define cimg_test_abort() if (*_cimg_is_abort.ptr && !omp_get_thread_num()) throw CImgAbortException();
 #else
-#define cimg_test_abort() if (*_cimg_is_abort.ptr) throw CImgAbortException("")
+#define cimg_test_abort() if (*_cimg_is_abort.ptr) throw CImgAbortException()
 #endif // #ifdef cimg_use_openmp
 #endif // #ifdef cimg_use_abort
 #ifndef cimg_display
@@ -182,7 +181,7 @@ static struct cimg_is_abort {
 #endif // #if cimg_OS==2
 
 // Define some special character codes used for replacement in double quoted strings.
-const char _dollar = 23, _lbrace = 24, _rbrace = 25, _comma = 26, _dquote = 28, _newline = 29;
+const char gmic_dollar = 23, gmic_lbrace = 24, gmic_rbrace = 25, gmic_comma = 26, gmic_dquote = 28, gmic_newline = 29;
 
 #endif // #ifndef gmic_build
 
@@ -360,7 +359,7 @@ struct gmic {
   int verbosity, render3d, renderd3d;
   bool is_released, is_debug, is_running, is_start, is_return, is_quit, is_double3d, is_debug_info, check_elif;
   const char *starting_commands_line;
-  volatile bool _is_abort, *is_abort, is_abort_thread;
+  bool _is_abort, *is_abort, is_abort_thread;
 };
 
 // Class 'gmic_exception'.

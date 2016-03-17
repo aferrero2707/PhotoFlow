@@ -34,31 +34,39 @@
 
 PF::ScaleConfigGUI::ScaleConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Scale/Rotate" ),
+  vflip( this, "vflip", _("flip vertically"), false ),
+  hflip( this, "hflip", _("flip horizontally"), false ),
   rotate_angle_slider( this, "rotate_angle", _("rotation angle"), 0, -360, 360, 0.01, 10, 1 ),
   autocrop( this, "autocrop", _("auto crop"), false ),
   scale_mode( this, "scale_mode", _("scale mode: "), 0 ),
-  scale_unit( this, "scale_unit", "", 0 ),
+  scale_unit( this, "scale_unit", _("unit: "), 0 ),
   scale_width_pixels_slider( this, "scale_width_pixels", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
   scale_height_pixels_slider( this, "scale_height_pixels", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
   scale_width_percent_slider( this, "scale_width_percent", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
   scale_height_percent_slider( this, "scale_height_percent", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_width_mm_slider( this, "scale_width_mm", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_height_mm_slider( this, "scale_height_mm", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_width_cm_slider( this, "scale_width_cm", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_height_cm_slider( this, "scale_height_cm", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_width_inches_slider( this, "scale_width_inches", _("width: "), 0, 0, 10000000, 1, 10, 1 ),
-  scale_height_inches_slider( this, "scale_height_inches", _("height: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_width_mm_slider( this, "scale_width_mm", _("W: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_height_mm_slider( this, "scale_height_mm", _("H: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_width_cm_slider( this, "scale_width_cm", _("W: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_height_cm_slider( this, "scale_height_cm", _("H: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_width_inches_slider( this, "scale_width_inches", _("W: "), 0, 0, 10000000, 1, 10, 1 ),
+  scale_height_inches_slider( this, "scale_height_inches", _("H: "), 0, 0, 10000000, 1, 10, 1 ),
   scale_resolution_slider( this, "scale_resolution", _("resolution: "), 0, 0, 10000000, 1, 10, 1 ),
   active_point_id( -1 )
 {
-  controlsBox.pack_start( rotate_angle_slider );
-  controlsBox.pack_start( autocrop );
+  controlsBox.pack_start( vflip );
+  controlsBox.pack_start( hflip );
 
   controlsBox.pack_start( separator, Gtk::PACK_SHRINK, 10 );
 
-  controlsBox.pack_start( scale_mode );
+  controlsBox.pack_start( rotate_angle_slider );
+  controlsBox.pack_start( autocrop );
+
+  controlsBox.pack_start( separator2, Gtk::PACK_SHRINK, 10 );
+
+  controlsBox.pack_start( scale_mode, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( scale_unit, Gtk::PACK_SHRINK, 5 );
   
-  scale_controls_box.pack_end( scale_unit );
+  //scale_controls_box.pack_end( scale_unit );
   controlsBox.pack_start( scale_controls_box );
 
   scale_pixels_box.pack_start( scale_width_pixels_slider );
@@ -152,6 +160,8 @@ void PF::ScaleConfigGUI::do_update()
 
 bool PF::ScaleConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
 
   PF::ScalePar* par = dynamic_cast<PF::ScalePar*>(get_par());
@@ -179,6 +189,8 @@ bool PF::ScaleConfigGUI::pointer_press_event( int button, double sx, double sy, 
 
 bool PF::ScaleConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   PF::ScalePar* par = dynamic_cast<PF::ScalePar*>(get_par());
   if( !par ) return false;
 
@@ -227,6 +239,8 @@ bool PF::ScaleConfigGUI::pointer_release_event( int button, double sx, double sy
 
 bool PF::ScaleConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
   if( active_point_id < 0 ) return false;
 

@@ -30,6 +30,8 @@
 #include "path_mask_config.hh"
 
 
+#define CURVE_SIZE 192
+
 static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
 {
   str<<r.width<<","<<r.height<<"+"<<r.left<<"+"<<r.top;
@@ -44,7 +46,7 @@ PF::PathMaskConfigGUI::PathMaskConfigGUI( PF::Layer* layer ):
               OperationConfigGUI( layer, "Path mask tool" ),
               invert_box( this, "invert", _("invert"), true ),
               enable_falloff_box( this, "enable_falloff", _("enable falloff"), true ),
-              falloffCurveEditor( this, "falloff_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 240 ),
+              falloffCurveEditor( this, "falloff_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
               active_point_id( -1 ), center_selected( false ),
               initializing( false )
 {
@@ -79,6 +81,8 @@ void PF::PathMaskConfigGUI::do_update()
 bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
   std::cout<<"PathMaskConfigGUI::pointer_press_event(): button="<<button<<std::endl;
+
+  if( !get_editing_flag() ) return false;
 
   border_resizing = false;
   path_resizing = false;
@@ -172,6 +176,30 @@ bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double s
     return true;
   }
 
+  // Check if click is along the falloff outline, in which case we initiate
+  // the falloff resizing
+  if( active_point_id < 0 && button == 1 ) {
+
+    const std::vector< std::pair<int,int> >& path_points = par->get_smod().get_outline();
+    const std::vector< std::pair<int,int> >& border_points = par->get_smod().get_border();
+    for( int pi = 0; pi < border_points.size(); pi++ ) {
+      double px = border_points[pi].first, py = border_points[pi].second, pw = 1, ph = 1;
+      double dx = x - px;
+      double dy = y - py;
+      if( (fabs(dx) > D) || (fabs(dy) > D) ) continue;
+
+      double px2 = path_points[pi].first, py2 = path_points[pi].second;
+
+      border_resizing = true;
+      border_resizing_path_point_x = px2;
+      border_resizing_path_point_y = py2;
+      border_resizing_lstart = sqrt( (px-px2)*(px-px2) + (py-py2)*(py-py2) );
+      border_resizing_size_start = par->get_border_size();
+      //std::cout<<"Border selected, lstart="<<border_resizing_lstart<<std::endl;
+      return true;
+    }
+  }
+
   // Check if click is along the path outline, in which case we add
   // a new spline point
   if( active_point_id < 0 && button == 1 ) {
@@ -207,30 +235,6 @@ bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double s
     }
   }
 
-  // Check if click is along the falloff outline, in which case we initiate
-  // the falloff resizing
-  if( active_point_id < 0 && button == 1 ) {
-
-    const std::vector< std::pair<int,int> >& path_points = par->get_smod().get_outline();
-    const std::vector< std::pair<int,int> >& border_points = par->get_smod().get_border();
-    for( int pi = 0; pi < border_points.size(); pi++ ) {
-      double px = border_points[pi].first, py = border_points[pi].second, pw = 1, ph = 1;
-      double dx = x - px;
-      double dy = y - py;
-      if( (fabs(dx) > D) || (fabs(dy) > D) ) continue;
-
-      double px2 = path_points[pi].first, py2 = path_points[pi].second;
-
-      border_resizing = true;
-      border_resizing_path_point_x = px2;
-      border_resizing_path_point_y = py2;
-      border_resizing_lstart = sqrt( (px-px2)*(px-px2) + (py-py2)*(py-py2) );
-      border_resizing_size_start = par->get_border_size();
-      //std::cout<<"Border selected, lstart="<<border_resizing_lstart<<std::endl;
-      break;
-    }
-  }
-
   return true;
 }
 
@@ -238,6 +242,8 @@ bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double s
 bool PF::PathMaskConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
   //std::cout<<"PathMaskConfigGUI::pointer_release_event(): button="<<button<<std::endl;
+
+  if( !get_editing_flag() ) return false;
 
   border_resizing = false;
   path_resizing = false;
@@ -263,6 +269,9 @@ bool PF::PathMaskConfigGUI::pointer_release_event( int button, double sx, double
 
 bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
 {
+  //std::cout<<"PathMaskConfigGUI::pointer_motion_event() called"<<std::endl;
+  if( !get_editing_flag() ) return false;
+
   if( !initializing && button != 1 ) return false;
 
   if( !path_resizing && !border_resizing && !center_selected && active_point_id < 0 ) return false;
@@ -299,6 +308,7 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
   if( initializing ) {
     active_point_id = par->get_smod().set_point( active_point_id, fx, fy );
     par->path_modified();
+    //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished (initializing)"<<std::endl;
     return true;
   }
 
@@ -319,6 +329,7 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
       par->get_smod().set_point( pi, center.first+pdx, center.second+pdy );
     }
     par->path_modified();
+    //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished (path_resizing)"<<std::endl;
     return true;
   }
 
@@ -328,8 +339,9 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
     float r = l/border_resizing_lstart;
     float new_size = r * border_resizing_size_start;
     //std::cout<<"Border resize: l="<<l<<"  r="<<r<<"  new_size="<<new_size<<std::endl;
-    par->set_border_size( MAX(0.05, new_size) );
+    par->set_border_size( MAX(0.01, new_size) );
     par->path_modified();
+    //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished (border_resizing)"<<std::endl;
     return true;
   }
 
@@ -344,12 +356,16 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
     par->get_smod().update_center();
     par->path_modified();
   } else {
-    if( points.size() <= active_point_id ) return false;
+    if( points.size() <= active_point_id ) {
+      //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished (!center_selected)"<<std::endl;
+      return false;
+    }
 
     active_point_id = par->get_smod().set_point( active_point_id, fx, fy );
     par->path_modified();
   }
 
+  //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished"<<std::endl;
   return true;
 }
 
@@ -512,7 +528,7 @@ bool PF::PathMaskConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
     //printf("buf_out.draw_line( %f, %f, %f, %f)\n", px0, py0, px, py );
     buf_out.draw_line( px0, py0, px, py, buf_in );
   }
-  std::cout<<std::endl;
+  //std::cout<<std::endl;
 
   std::pair<float,float> center = par->get_smod().get_center();
   double cx = center.first * node->image->Xsize;

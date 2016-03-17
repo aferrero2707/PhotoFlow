@@ -26,6 +26,7 @@
 
 
 #include "../base/imageprocessor.hh"
+#include "../operations/icc_transform.hh"
 #include "imagearea.hh"
 
 
@@ -44,6 +45,20 @@ extern "C" {
 		     VipsSinkNotify notify, void *a );
   
   extern void vips_invalidate_area( VipsImage *image, VipsRect* r  );
+
+#ifdef __cplusplus
+}
+#endif /*__cplusplus*/
+
+
+/* We need C linkage for this.
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
+#include "../dt/common/colorspaces.h"
+//#include "../base/colorspaces.h"
 
 #ifdef __cplusplus
 }
@@ -177,6 +192,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   yoffset( 0 ),
   pending_pixels( 0 ),
   draw_requested( false ),
+  current_display_profile_type( PF_DISPLAY_PROF_MAX ),
+  current_display_profile( NULL ),
   highlights_warning_enabled( false ),
   shadows_warning_enabled( false ),
   display_merged( true ),
@@ -191,7 +208,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   region = NULL;
   mask = NULL;
   mask_region = NULL;
-  convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
+  //convert2display = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
+  convert2display = new_icc_transform();
   uniform = new PF::Processor<PF::UniformPar,PF::Uniform>();
   if( uniform->get_par() ) {
     uniform->get_par()->get_R().set( 1 );
@@ -220,10 +238,11 @@ PF::ImageArea::~ImageArea ()
   PF_UNREF( region, "ImageArea::~ImageArea()" );
   PF_UNREF( display_image, "ImageArea::~ImageArea()" );
   PF_UNREF( outimg, "ImageArea::~ImageArea()" );
-  delete convert2srgb;
+  delete convert2display;
   delete convert_format;
   delete invert;
   delete uniform;
+  std::cout<<"~ImageArea finished"<<std::endl;
   //delete pf_image;
 }
 
@@ -360,12 +379,17 @@ void PF::ImageArea::process_area( const VipsRect& area )
   //vips_invalidate_area( display_image, parea );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Preparing area "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" for display"<<std::endl;
+  std::cout<<"  display_image: w="<<display_image->Xsize<<" h="<<display_image->Ysize<<std::endl;
+  std::cout<<"  region->im: w="<<region->im->Xsize<<" h="<<region->im->Ysize<<std::endl;
 #endif
   //if( region && region->buffer ) region->buffer->done = 0;
   if (vips_region_prepare (region, parea))
     return;
 
-  double_buffer.get_inactive().copy( region, area, xoffset, yoffset );
+  VipsRect area_clip;
+  vips_rect_intersectrect (&(region->valid), &area, &area_clip);
+
+  double_buffer.get_inactive().copy( region, area_clip, xoffset, yoffset );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into inactive buffer"<<std::endl;
 #endif
@@ -468,9 +492,9 @@ void PF::ImageArea::draw_area()
   Gdk::Cairo::set_source_pixbuf( cr, current_pxbuf, 
          double_buffer.get_active().get_rect().left,
          double_buffer.get_active().get_rect().top );
-//#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
   std::cout<<"Active buffer copied to screen"<<std::endl;
-//#endif
+#endif
   cr->rectangle( double_buffer.get_active().get_rect().left,
        double_buffer.get_active().get_rect().top,
        double_buffer.get_active().get_rect().width,
@@ -981,37 +1005,73 @@ void PF::ImageArea::update( VipsRect* area )
   PF_UNREF( region, "ImageArea::update() region unref" );
   PF_UNREF( display_image, "ImageArea::update() display_image unref" );
 
-  convert2srgb->get_par()->set_image_hints( image );
-  convert2srgb->get_par()->set_format( get_pipeline()->get_format() );
-  std::vector<VipsImage*> in; in.push_back( image );
-  VipsImage* srgbimg = convert2srgb->get_par()->build(in, 0, NULL, NULL, level );
-  PF_UNREF( image, "ImageArea::update() image unref" );
+  std::vector<VipsImage*> in;
+  /**/
+  ClippingWarningPar* clipping_warning_par = dynamic_cast<ClippingWarningPar*>( clipping_warning->get_par() );
+  if( !clipping_warning_par ) return;
+  clipping_warning_par->set_highlights_warning( highlights_warning_enabled );
+  clipping_warning_par->set_shadows_warning( shadows_warning_enabled );
+  clipping_warning_par->set_image_hints( image );
+  clipping_warning_par->set_format( image->BandFmt );
+  in.clear(); in.push_back( image );
+  VipsImage* wclipimg = clipping_warning->get_par()->build(in, 0, NULL, NULL, level );
+  PF_UNREF( image, "ImageArea::update() image unref after clipping warning" );
+  /**/
+
+  // Display profile management
+  PF::Options& options = PF::PhotoFlow::Instance().get_options();
+  if( options.get_display_profile_type() != current_display_profile_type ||
+      options.get_custom_display_profile_name().c_str() != current_display_profile_name ) {
+
+    if( current_display_profile_type==PF_DISPLAY_PROF_CUSTOM && current_display_profile ) {
+      cmsCloseProfile( current_display_profile );
+    }
+
+    current_display_profile_type = options.get_display_profile_type();
+    current_display_profile_name = options.get_custom_display_profile_name().c_str();
+
+    //std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
+    switch( current_display_profile_type ) {
+    case PF_DISPLAY_PROF_sRGB:
+      current_display_profile = dt_colorspaces_create_srgb_profile();
+      char tstr[1024];
+      cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+#ifndef NDEBUG
+      std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
+#endif
+      break;
+    case PF_DISPLAY_PROF_CUSTOM:
+      current_display_profile =
+          cmsOpenProfileFromFile( options.get_custom_display_profile_name().c_str(), "r" );
+      //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
+      //    <<" -> "<<current_display_profile<<std::endl;
+      break;
+    }
+  }
+  PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
+  //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
+  if( icc_par ) {
+    //std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
+    icc_par->set_out_profile( current_display_profile );
+  }
+  convert2display->get_par()->set_image_hints( wclipimg );
+  convert2display->get_par()->set_format( get_pipeline()->get_format() );
+  in.clear(); in.push_back( wclipimg );
+  VipsImage* srgbimg = convert2display->get_par()->build(in, 0, NULL, NULL, level );
+  PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref" );
   // "image" is managed by photoflow, therefore it is not necessary to unref it
-  // after the call to convert2srgb: the additional reference is owned by
+  // after the call to convert2display: the additional reference is owned by
   // "srgbimg" and will be removed when "srgbimg" is deleted.
   // This works also in the case when "image" and "srgbimg" are the same object,
   // as the additional reference will be removed when calling 
   // g_object_unref(srgbimg) later on
 
 #ifndef NDEBUG
-  PF_PRINT_REF( srgbimg, "ImageArea::update(): srgbimg after convert2srgb: " );
+  PF_PRINT_REF( srgbimg, "ImageArea::update(): srgbimg after convert2display: " );
   std::cout<<"ImageArea::update(): image="<<image<<"   ref_count="<<G_OBJECT( image )->ref_count<<std::endl;
 #endif
   //outimg = srgbimg;
     
-/**/
-  ClippingWarningPar* clipping_warning_par = dynamic_cast<ClippingWarningPar*>( clipping_warning->get_par() );
-  if( !clipping_warning_par ) return;
-  clipping_warning_par->set_highlights_warning( highlights_warning_enabled );
-  clipping_warning_par->set_shadows_warning( shadows_warning_enabled );
-  clipping_warning_par->set_image_hints( srgbimg );
-  clipping_warning_par->set_format( srgbimg->BandFmt );
-  in.clear(); in.push_back( srgbimg );
-  VipsImage* wclipimg = clipping_warning->get_par()->build(in, 0, NULL, NULL, level );
-  PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
-  srgbimg = wclipimg;
-/**/
-
   if( !display_merged && (active_layer>=0) ) {
     PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
     if( !node ) return;
@@ -1265,6 +1325,7 @@ void PF::ImageArea::sink( const VipsRect& area )
 {
 #ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::sink( const VipsRect& area ) called"<<std::endl;
+    std::cout<<"area="<<area.left<<","<<area.top<<"+"<<area.width<<"+"<<area.height<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = get_pipeline();
@@ -1301,10 +1362,17 @@ void PF::ImageArea::sink( const VipsRect& area )
 	*/
   //VipsRegion* region2 = vips_region_new (display_image);
   VipsRegion* region2 = vips_region_new( outimg );
-  vips_invalidate_area( display_image, &scaled_area );
 	//vips_region_invalidate( region2 );
 
   VipsRect* parea = (VipsRect*)(&scaled_area);
+  VipsRect iarea = {0, 0, display_image->Xsize, display_image->Ysize};
+
+  vips_rect_intersectrect (&iarea, parea, parea);
+  if( (parea->width <= 0) ||
+      (parea->height <= 0) )
+    return;
+
+  vips_invalidate_area( display_image, &scaled_area );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Preparing area "<<scaled_area.left<<","<<scaled_area.top<<"+"<<scaled_area.width<<"+"<<scaled_area.height<<std::endl;
 #endif
@@ -1312,8 +1380,8 @@ void PF::ImageArea::sink( const VipsRect& area )
     std::cout<<"ImageArea::sink(): vips_region_prepare() failed."<<std::endl;
     return;
   }
-  unsigned char* pout = (unsigned char*)VIPS_REGION_ADDR( region2, parea->left, parea->top ); 
 	/*
+  unsigned char* pout = (unsigned char*)VIPS_REGION_ADDR( region2, parea->left, parea->top ); 
 	std::cout<<"Plotting scaled area "<<scaled_area.width<<","<<scaled_area.height
 					 <<"+"<<scaled_area.left<<","<<scaled_area.top<<std::endl;
 	guint8 *px1 = (guint8 *) VIPS_REGION_ADDR( region, scaled_area.left, scaled_area.top );

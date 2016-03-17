@@ -145,6 +145,7 @@ void start_element (GMarkupParseContext *context,
     int old_id = -1;
     std::string name;
     int visible = -1;
+    int expanded = -1;
     int normal = -1;
     std::vector<int> extra_inputs;
 
@@ -155,6 +156,8 @@ void start_element (GMarkupParseContext *context,
         name = *value_cursor;
       } else if (strcmp (*name_cursor, "visible") == 0) {
         visible = atoi( *value_cursor );
+      } else if (strcmp (*name_cursor, "expanded") == 0) {
+        expanded = atoi( *value_cursor );
       } else if (strcmp (*name_cursor, "normal") == 0) {
         normal = atoi( *value_cursor );
       } else if (strcmp (*name_cursor, "extra_inputs") == 0) {
@@ -194,6 +197,7 @@ void start_element (GMarkupParseContext *context,
 
     layer->set_name( name );
     layer->set_enabled( visible );
+    layer->set_expanded( expanded );
     layer->set_normal( normal );
 
     if( (version<2) && (normal==0) ) {

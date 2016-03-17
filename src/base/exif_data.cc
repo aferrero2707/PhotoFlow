@@ -70,6 +70,8 @@ static void dt_strlcpy_to_utf8(char *dest, size_t dest_max,
 
 bool PF::exif_read(exif_data_t* data, const char* path)
 {
+  try
+  {
   Exiv2::Image::AutoPtr image;
   image = Exiv2::ImageFactory::open(path);
   assert(image.get() != 0);
@@ -81,8 +83,6 @@ bool PF::exif_read(exif_data_t* data, const char* path)
   if(exifData.empty()) 
     return false;
   
-  try
-  {
     /* List of tag names taken from exiv2's printSummary() in actions.cpp */
     Exiv2::ExifData::const_iterator pos;
     /* Read shutter time */

@@ -2,7 +2,7 @@ IF(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   SET(GMIC_FLAGS "-std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-framework CoreServices -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
@@ -12,6 +12,10 @@ set(COMPILE_FLAGS "${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DI
 
 if(Msgfmt_FOUND)
 	set(COMPILE_FLAGS "${COMPILE_FLAGS} -DLOCALEDIR=\"${LOCALE_DIR}\"")
+endif()
+
+if(BUNDLED_LENSFUN)
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBUNDLED_LENSFUN=1")
 endif()
 
 if(GTKMM2_FOUND)
@@ -30,7 +34,7 @@ endif()
 
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
 SET(CMAKE_CXX_FLAGS_VERBDEBUG "-Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
 SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG ${COMPILE_FLAGS}") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
@@ -55,21 +59,16 @@ link_directories(${SIGC2_LIBRARY_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
 
-if(MINGW)
-  link_directories( ${LENSFUN_LIBRARY_DIRS}  )
-  include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
-endif(MINGW)
-set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
 
 include_directories(${OPENEXR_INCLUDE_DIRS})
-include_directories(${TIFF_INCLUDE_DIRS})
-include_directories(${JPEG_INCLUDE_DIRS})
-include_directories(${PNG_INCLUDE_DIRS})
-
 link_directories(${OPENEXR_LIBRARY_DIRS})
+include_directories(${TIFF_INCLUDE_DIRS})
 link_directories(${TIFF_LIBRARY_DIRS})
+include_directories(${JPEG_INCLUDE_DIRS})
 link_directories(${JPEG_LIBRARY_DIRS})
+include_directories(${PNG_INCLUDE_DIRS})
 link_directories(${PNG_LIBRARY_DIRS})
+
 
 include_directories(${XML2_INCLUDE_DIRS})
 link_directories(${XML2_LIBRARY_DIRS})
@@ -85,6 +84,7 @@ include_directories(${GEXIV2_INCLUDE_DIRS})
 link_directories(${GEXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
+link_directories(${ORC_LIBRARY_DIRS})
 
 include_directories(${ZLIB_INCLUDE_DIRS})
 link_directories(${ZLIB_LIBRARY_DIRS}  )
@@ -103,6 +103,47 @@ if (APPLE)
     set (MACINTEG_LIBS ${MacIntegration_LIBRARIES})
 endif (APPLE)
 
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+
+if (AUTOMATED_VERSION_CHECK)
+# Get the current working branch
+execute_process(
+  COMMAND git rev-parse --abbrev-ref HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_BRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the latest commit hash of the working branch
+execute_process(
+  COMMAND git log -1 --format=%H
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the latest commit date of the working branch
+execute_process(
+  COMMAND git log -1 --format=%ci
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_DATE
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+MESSAGE( STATUS "CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR} )
+MESSAGE( STATUS "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR} )
+# eventually update the version.cc file
+execute_process(
+  COMMAND ${CMAKE_SOURCE_DIR}/tools/update_version_info.sh 0 ${CMAKE_SOURCE_DIR}/VERSION ${GIT_BRANCH} ${GIT_COMMIT_DATE} ${GIT_COMMIT_HASH} ${CMAKE_CURRENT_BINARY_DIR}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE VERSION_UPDATE_SUCCESS
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+MESSAGE( STATUS "tools/update_version_info.sh: " ${VERSION_UPDATE_SUCCESS} )
+endif (AUTOMATED_VERSION_CHECK)
+
 
 
 FILE(GLOB DTIncludes dt/common/*.h dt/develop/*.h)
@@ -116,16 +157,19 @@ add_library (pfdt STATIC
 SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/src/dt -std=gnu99")
 
 
-FILE(GLOB BaseIncludes base/*.hh)
-FILE(GLOB BaseSources base/*.cc)
+FILE(GLOB BaseIncludes version.hh base/*.hh)
+if (AUTOMATED_VERSION_CHECK)
+  FILE(GLOB BaseSources ${CMAKE_CURRENT_BINARY_DIR}/version.cc base/*.cc)
+else (AUTOMATED_VERSION_CHECK)
+  FILE(GLOB BaseSources version.cc base/*.cc)
+endif (AUTOMATED_VERSION_CHECK)
 
-#FILE(GLOB RTIncludes rt/*.hh rt/rtengine/*.h rt/rtengine/*.hh rt/rtexif/*.h rt/rtexif/*.hh rt/rtgui/*.h)
-#FILE(GLOB RTSources rt/*.cc rt/rtengine/*.c rt/rtengine/*.cc rt/rtexif/*.cc rt/rtgui/*.cc)
 FILE(GLOB RTIncludes 
   rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h
 )
 FILE(GLOB RTSources 
   rt/rtengine/rawimagesource.cc
+  rt/rtengine/CA_correct_RT.cc
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
@@ -152,7 +196,22 @@ add_subdirectory(external/LibRaw)
 list(APPEND LIB_DEPS libraw_r)
 list(APPEND STATIC_LIBS libraw_static)
 
-IF(NOT MINGW)
+#
+# the rawspeed part is a bit of a hack:
+# the static linking didn't work since it was pulling -lstdc++ and -lm into linker flags.
+# so we do a custom dependency and pretend an imported librawsped.a so no other -l are
+# appended.
+#
+add_library(rawspeed_static STATIC IMPORTED)
+set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
+# compile rawspeed
+add_subdirectory(external/rawspeed)
+list(APPEND LIB_DEPS rawspeed)
+list(APPEND STATIC_LIBS rawspeed_static)
+
+
+
+if(BUNDLED_LENSFUN)
   LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
   set(BUILD_STATIC "ON")
   add_library(lensfun_static STATIC IMPORTED)
@@ -161,10 +220,12 @@ IF(NOT MINGW)
   list(APPEND LIB_DEPS lensfun)
   list(APPEND STATIC_LIBS lensfun_static)
   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-ENDIF(NOT MINGW)
+else(BUNDLED_LENSFUN)
+  link_directories( ${LENSFUN_LIBRARY_DIRS}  )
+  include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
+endif(BUNDLED_LENSFUN)
+set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
 
-#FILE(GLOB LibRawIncludes external/LibRaw/libraw/*.h)
-#set(LibRawSources external/LibRaw/internal/dcraw_common.cpp external/LibRaw/src/libraw_cxx.cpp external/LibRaw/internal/dcraw_fileio.cpp external/LibRaw/internal/demosaic_packs.cpp external/LibRaw/src/libraw_c_api.cpp external/LibRaw/src/libraw_datastream.cpp)
 
 
 add_library (pfbase STATIC
@@ -184,7 +245,6 @@ add_library (pfbase STATIC
 
 
 add_dependencies(pfbase ${LIB_DEPS})
-#target_link_libraries(pfbase ${STATIC_LIBS})
 
 
 FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
@@ -205,11 +265,13 @@ ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
 ENDIF(MINGW)
 
-add_executable(photoflow # name of the executable on Windows will be example.exe 
-  main.cc 
-  )
+list(APPEND ADDITIONAL_LIBS pugixml)
 
-#add_dependencies(photoflow ${LIB_DEPS})
+#--------------------------------------------------
+#
+# photoflow executable
+#
+add_executable(photoflow main.cc)
 
 target_link_libraries(photoflow ${LIBS} 
   pfgui
@@ -245,9 +307,11 @@ target_link_libraries(photoflow ${LIBS}
 
 
 
+#--------------------------------------------------
+#
+# pfbatch executable
+#
 add_executable(pfbatch pfbatch.cc)
-
-#add_dependencies(photoflow ${LIB_DEPS})
 
 target_link_libraries(pfbatch ${LIBS} 
   pfbase 
@@ -278,15 +342,80 @@ target_link_libraries(pfbatch ${LIBS}
   )
 
 
-
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
+INSTALL(DIRECTORY ../icc DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
 
+
+#--------------------------------------------------
+#
+# GIMP plug-in
+#
+if (GIMP_FOUND)
+  FILE(GLOB PluginIncludes plugin/*.hh)
+  FILE(GLOB PluginSources plugin/*.cc)
+
+  include_directories(${GIMP_2_9_INCLUDE_DIRS})
+  link_directories(${GIMP_2_9_LIBRARY_DIRS})
+  include_directories(${GIMPUI_INCLUDE_DIRS})
+  link_directories(${GIMPUI_LIBRARY_DIRS})
+
+  add_executable(pfgimp ${PluginSources})
+
+  set_target_properties(pfgimp PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
+
+  target_link_libraries(pfgimp ${LIBS} 
+    pfgui
+    pfbase 
+    pfdt
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${OPENEXR_LIBRARIES}
+    ${XML2_LIBRARIES}
+    ${EXIF_LIBRARIES}
+    ${EXIV2_LIBRARIES}
+    ${GEXIV2_LIBRARIES}
+    ${LENSFUN_LIBRARIES}
+    ${SIGC2_LIBRARIES}
+    ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+    ${PIXMAN_LIBRARIES} 
+    ${MACINTEG_LIBS}
+    #${GIMP_LIBS}
+    ${GIMP_2_9_LIBRARIES}
+    ${GIMPUI_LIBRARIES}
+    ${GTKMM_LIBRARIES} 
+    ${GLIBMM_LIBRARIES} 
+    ${GLIB_LIBRARIES} 
+    ${GMODULE_LIBRARIES} 
+    ${GOBJECT_LIBRARIES} 
+    ${GTHREAD_LIBRARIES} 
+    ${ZLIB_LIBRARIES}
+    #${LIBRAW_LIBRARIES}  
+    ${STATIC_LIBS}
+    ${ORC_LIBRARIES}
+    fftw3
+    ${ADDITIONAL_LIBS}
+    #gmon
+  )
+  
+  INSTALL(TARGETS pfgimp RUNTIME DESTINATION share/photoflow/plug-in)
+endif (GIMP_FOUND)
+
+
+  get_property(idirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+  foreach(dir ${idirs})
+    message(STATUS "include dir='${dir}'")
+  endforeach()
+  get_property(ldirs DIRECTORY PROPERTY LINK_DIRECTORIES)
+  foreach(dir ${ldirs})
+    message(STATUS "library dir='${dir}'")
+  endforeach()
 
 #if(GTKMM3_FOUND)
 

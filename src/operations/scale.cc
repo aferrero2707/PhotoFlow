@@ -192,6 +192,8 @@ static void modify_roi_out(dt_iop_clipping_data_t* d, dt_iop_roi_t* roi_in_orig,
 
 PF::ScalePar::ScalePar():
       OpParBase(),
+      vflip("vflip",this,false),
+      hflip("hflip",this,false),
       rotate_angle("rotate_angle",this,0),
       autocrop("autocrop",this,true),
       scale_mode("scale_mode",this, SCALE_MODE_FIT, "SCALE_MODE_FIT", "Fit"),
@@ -233,11 +235,16 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   if( srcimg == NULL ) return NULL;
   VipsImage* out, *rotated;
 
+  PF_REF( srcimg, "ScalePar::build(): initial srcimg ref" );
+  bool do_autocrop = autocrop.get();
+
   if( is_editing() ) {
     //std::cout<<"ScalePar::build(): editing, returning source image"<<std::endl;
-    PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
-    return srcimg;
+    //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
+    //return srcimg;
+    do_autocrop = false;
   }
+
 
   in_width = srcimg->Xsize;
   in_height = srcimg->Ysize;
@@ -245,6 +252,27 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   out_height = in_height;
   sin_angle = 0;
   cos_angle = 1;
+
+  if( vflip.get() ) {
+    VipsImage* flipped;
+    if( vips_flip( srcimg, &flipped, VIPS_DIRECTION_VERTICAL, NULL ) ) {
+      PF_UNREF( srcimg, "ScalePar::build(): image unref after vips_flip() failed." );
+      return NULL;
+    }
+    PF_UNREF( srcimg, "ScalePar::build(): image unref after vips_flip()." );
+    srcimg = flipped;
+  }
+
+  if( hflip.get() ) {
+    VipsImage* flipped;
+    if( vips_flip( srcimg, &flipped, VIPS_DIRECTION_HORIZONTAL, NULL ) ) {
+      PF_UNREF( srcimg, "ScalePar::build(): image unref after vips_flip() failed." );
+      return NULL;
+    }
+    PF_UNREF( srcimg, "ScalePar::build(): image unref after vips_flip()." );
+    srcimg = flipped;
+  }
+
 
   if( rotate_angle.get() != 0 ) {
     sin_angle = sin( rotate_angle.get() * 3.141592653589793 / 180.0 );
@@ -257,13 +285,15 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
         NULL) ) {
       return NULL;
     }
+    PF_UNREF( srcimg, "srcimg unref after rotate" );
+
     out_width = rotated->Xsize;
     out_height = rotated->Ysize;
     crop.left = crop.top = 0;
     crop.width = out_width;
     crop.height = out_height;
 
-    if( autocrop.get() == true ) {
+    if( do_autocrop == true ) {
       dt_iop_clipping_data_t data;
       data.angle = rotate_angle.get() * 3.141592653589793 / 180.0;
       dt_iop_roi_t roi_in, roi_out;
@@ -310,9 +340,9 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     }
     set_image_hints( out );
     srcimg = out;
-  } else {
+  } /*else {
     PF_REF( srcimg, "ScalePar::build(): srcimg ref for angle=0" );
-  }
+  }*/
 
   scale_mult = 1;
   int scale_factor = 1;
@@ -380,11 +410,13 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     PF_UNREF( srcimg, "ScalePar::build(): srcimg unref after vips_resize()" );
   } else {
     //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
-    return srcimg;
+    //return srcimg;
+
+    out = srcimg;
   }
 
+  set_image_hints( out );
   return out;
-
 }
 
 

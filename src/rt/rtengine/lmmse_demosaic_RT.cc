@@ -42,6 +42,10 @@ namespace rtengine {
 #define M(a) a
 
 
+#undef CLIP
+#define CLIP(x) x
+
+
 /*
    Refinement based on EECI demosaicing algorithm by L. Chang and Y.P. Tan
    Paul Lee

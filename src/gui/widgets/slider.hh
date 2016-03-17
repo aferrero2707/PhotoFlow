@@ -32,14 +32,14 @@
 
 #include <gtkmm.h>
 
-#include "pfwidget.hh"
+#include "numentry.hh"
 
 namespace PF {
 
   class Slider: public Gtk::HBox, public PFWidget
   {
-    Gtk::HBox hbox;
-    Gtk::VBox vbox;
+    Gtk::HBox hbox, hbox2;
+    Gtk::VBox vbox, vbox2;
     Gtk::Label label;
     Gtk::Alignment align;
 #ifdef GTKMM_2
@@ -50,6 +50,10 @@ namespace PF {
 #endif
     Gtk::HScale scale;
     Gtk::SpinButton spinButton;
+    NumEntry numentry;
+
+    Gtk::Alignment reset_button_align;
+    ImageButton reset_button;
 
     double multiplier;
     

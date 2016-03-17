@@ -27,13 +27,21 @@
 
  */
 
-#ifndef PF_LENSFUN_H
-#define PF_LENSFUN_H
+#ifdef PF_LENSFUN_HH
+#warning "PF_LENSFUN_HH already defined!!!"
+#else
+#warning "PF_LENSFUN_HH not defined."
+#endif
+
+#ifndef PF_LENSFUN_HH
+#define PF_LENSFUN_HH
 
 #include <string>
 
-#ifdef PF_HAS_LENSFUN
+#if (BUNDLED_LENSFUN == 1)
 #include <lensfun/lensfun.h>
+#else
+#include <lensfun.h>
 #endif
 
 #include "../base/property.hh"
@@ -60,7 +68,7 @@ public:
   bool has_intensity() { return false; }
   bool has_opacity() { return false; }
   bool needs_input() { return true; }
-  bool needs_caching() { return true; }
+  bool needs_caching() { return false; }
 
   std::string camera_maker() { return prop_camera_maker.get(); }
   std::string camera_model() { return prop_camera_model.get(); }

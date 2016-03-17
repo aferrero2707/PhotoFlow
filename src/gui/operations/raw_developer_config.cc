@@ -28,6 +28,7 @@
  */
 
 #include "../base/exif_data.hh"
+#include "../../operations/raw_image.hh"
 #include "../../operations/raw_preprocessor.hh"
 #include "../../operations/raw_output.hh"
 #include "../../operations/raw_developer.hh"
@@ -45,8 +46,256 @@ extern "C" {
 #endif /*__cplusplus*/
 
 #include "../dt/external/wb_presets.c"
+#include "../dt/external/adobe_coeff.c"
+#include "../dt/external/cie_colorimetric_tables.c"
 
 #include "raw_developer_config.hh"
+
+/* Darktable code starts here
+ */
+
+#define generate_mat3inv_body(c_type, A, B)                                                                  \
+  static int mat3inv_##c_type(c_type *const dst, const c_type *const src)                                           \
+  {                                                                                                          \
+                                                                                                             \
+    const c_type det = A(1, 1) * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3))                                     \
+                       - A(2, 1) * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3))                                   \
+                       + A(3, 1) * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                  \
+                                                                                                             \
+    const c_type epsilon = 1e-7f;                                                                            \
+    if(fabs(det) < epsilon) return 1;                                                                        \
+                                                                                                             \
+    const c_type invDet = 1.0 / det;                                                                         \
+                                                                                                             \
+    B(1, 1) = invDet * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3));                                              \
+    B(1, 2) = -invDet * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3));                                             \
+    B(1, 3) = invDet * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                              \
+                                                                                                             \
+    B(2, 1) = -invDet * (A(3, 3) * A(2, 1) - A(3, 1) * A(2, 3));                                             \
+    B(2, 2) = invDet * (A(3, 3) * A(1, 1) - A(3, 1) * A(1, 3));                                              \
+    B(2, 3) = -invDet * (A(2, 3) * A(1, 1) - A(2, 1) * A(1, 3));                                             \
+                                                                                                             \
+    B(3, 1) = invDet * (A(3, 2) * A(2, 1) - A(3, 1) * A(2, 2));                                              \
+    B(3, 2) = -invDet * (A(3, 2) * A(1, 1) - A(3, 1) * A(1, 2));                                             \
+    B(3, 3) = invDet * (A(2, 2) * A(1, 1) - A(2, 1) * A(1, 2));                                              \
+    return 0;                                                                                                \
+  }
+
+#define A(y, x) src[(y - 1) * 3 + (x - 1)]
+#define B(y, x) dst[(y - 1) * 3 + (x - 1)]
+/** inverts the given 3x3 matrix */
+generate_mat3inv_body(float, A, B)
+
+    int mat3inv(float *const dst, const float *const src)
+{
+  return mat3inv_float(dst, src);
+}
+
+generate_mat3inv_body(double, A, B)
+#undef B
+#undef A
+#undef generate_mat3inv_body
+
+
+#define INITIALBLACKBODYTEMPERATURE 4000
+
+#define DT_IOP_LOWEST_TEMPERATURE 1901
+#define DT_IOP_HIGHEST_TEMPERATURE 25000
+
+#define DT_IOP_LOWEST_TINT 0.135
+#define DT_IOP_HIGHEST_TINT 2.326
+
+
+/*
+ * Spectral power distribution functions
+ * https://en.wikipedia.org/wiki/Spectral_power_distribution
+ */
+typedef double((*spd)(unsigned long int wavelength, double TempK));
+
+/*
+ * Bruce Lindbloom, "Spectral Power Distribution of a Blackbody Radiator"
+ * http://www.brucelindbloom.com/Eqn_Blackbody.html
+ */
+static double spd_blackbody(unsigned long int wavelength, double TempK)
+{
+  // convert wavelength from nm to m
+  const long double lambda = (double)wavelength * 1e-9;
+
+/*
+ * these 2 constants were computed using following Sage code:
+ *
+ * (from http://physics.nist.gov/cgi-bin/cuu/Value?h)
+ * h = 6.62606957 * 10^-34 # Planck
+ * c= 299792458 # speed of light in vacuum
+ * k = 1.3806488 * 10^-23 # Boltzmann
+ *
+ * c_1 = 2 * pi * h * c^2
+ * c_2 = h * c / k
+ *
+ * print 'c_1 = ', c_1, ' ~= ', RealField(128)(c_1)
+ * print 'c_2 = ', c_2, ' ~= ', RealField(128)(c_2)
+ */
+
+#define c1 3.7417715246641281639549488324352159753e-16L
+#define c2 0.014387769599838156481252937624049081933L
+
+  return (double)(c1 / (powl(lambda, 5) * (expl(c2 / (lambda * TempK)) - 1.0L)));
+
+#undef c2
+#undef c1
+}
+
+/*
+ * Bruce Lindbloom, "Spectral Power Distribution of a CIE D-Illuminant"
+ * http://www.brucelindbloom.com/Eqn_DIlluminant.html
+ * and https://en.wikipedia.org/wiki/Standard_illuminant#Illuminant_series_D
+ */
+static double spd_daylight(unsigned long int wavelength, double TempK)
+{
+  cmsCIExyY WhitePoint = { 0.3127, 0.3290, 1.0 };
+
+  /*
+   * Bruce Lindbloom, "TempK to xy"
+   * http://www.brucelindbloom.com/Eqn_T_to_xy.html
+   */
+  cmsWhitePointFromTemp(&WhitePoint, TempK);
+
+  const double M = (0.0241 + 0.2562 * WhitePoint.x - 0.7341 * WhitePoint.y),
+               m1 = (-1.3515 - 1.7703 * WhitePoint.x + 5.9114 * WhitePoint.y) / M,
+               m2 = (0.0300 - 31.4424 * WhitePoint.x + 30.0717 * WhitePoint.y) / M;
+
+  const unsigned long int j
+      = ((wavelength - cie_daylight_components[0].wavelength)
+         / (cie_daylight_components[1].wavelength - cie_daylight_components[0].wavelength));
+
+  return (cie_daylight_components[j].S[0] + m1 * cie_daylight_components[j].S[1]
+          + m2 * cie_daylight_components[j].S[2]);
+}
+
+/*
+ * Bruce Lindbloom, "Computing XYZ From Spectral Data (Emissive Case)"
+ * http://www.brucelindbloom.com/Eqn_Spect_to_XYZ.html
+ */
+static cmsCIEXYZ spectrum_to_XYZ(double TempK, spd I)
+{
+  cmsCIEXYZ Source = {.X = 0.0, .Y = 0.0, .Z = 0.0 };
+
+  /*
+   * Color matching functions
+   * https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions
+   */
+  for(size_t i = 0; i < cie_1931_std_colorimetric_observer_count; i++)
+  {
+    const unsigned long int lambda = cie_1931_std_colorimetric_observer[0].wavelength
+                                     + (cie_1931_std_colorimetric_observer[1].wavelength
+                                        - cie_1931_std_colorimetric_observer[0].wavelength) * i;
+    const double P = I(lambda, TempK);
+    Source.X += P * cie_1931_std_colorimetric_observer[i].xyz.X;
+    Source.Y += P * cie_1931_std_colorimetric_observer[i].xyz.Y;
+    Source.Z += P * cie_1931_std_colorimetric_observer[i].xyz.Z;
+  }
+
+  // normalize so that each component is in [0.0, 1.0] range
+  const double _max = MAX(MAX(Source.X, Source.Y), Source.Z);
+  Source.X /= _max;
+  Source.Y /= _max;
+  Source.Z /= _max;
+
+  return Source;
+}
+
+//
+static cmsCIEXYZ temperature_to_XYZ(double TempK)
+{
+  if(TempK < DT_IOP_LOWEST_TEMPERATURE) TempK = DT_IOP_LOWEST_TEMPERATURE;
+  if(TempK > DT_IOP_HIGHEST_TEMPERATURE) TempK = DT_IOP_HIGHEST_TEMPERATURE;
+
+  if(TempK < INITIALBLACKBODYTEMPERATURE)
+  {
+    // if temperature is less than 4000K we use blackbody,
+    // because there will be no Daylight reference below 4000K...
+    return spectrum_to_XYZ(TempK, spd_blackbody);
+  }
+  else
+  {
+    return spectrum_to_XYZ(TempK, spd_daylight);
+  }
+}
+
+// binary search inversion
+static void XYZ_to_temperature(cmsCIEXYZ XYZ, double *TempK, double *tint)
+{
+  double maxtemp = DT_IOP_HIGHEST_TEMPERATURE, mintemp = DT_IOP_LOWEST_TEMPERATURE;
+  cmsCIEXYZ _xyz;
+
+  for(*TempK = (maxtemp + mintemp) / 2.0; (maxtemp - mintemp) > 1.0; *TempK = (maxtemp + mintemp) / 2.0)
+  {
+    _xyz = temperature_to_XYZ(*TempK);
+    if(_xyz.Z / _xyz.X > XYZ.Z / XYZ.X)
+      maxtemp = *TempK;
+    else
+      mintemp = *TempK;
+  }
+
+  *tint = (_xyz.Y / _xyz.X) / (XYZ.Y / XYZ.X);
+
+  if(*TempK < DT_IOP_LOWEST_TEMPERATURE) *TempK = DT_IOP_LOWEST_TEMPERATURE;
+  if(*TempK > DT_IOP_HIGHEST_TEMPERATURE) *TempK = DT_IOP_HIGHEST_TEMPERATURE;
+  if(*tint < DT_IOP_LOWEST_TINT) *tint = DT_IOP_LOWEST_TINT;
+  if(*tint > DT_IOP_HIGHEST_TINT) *tint = DT_IOP_HIGHEST_TINT;
+}
+
+void PF::RawDeveloperConfigGUI::temp2mul(double TempK, double tint, double mul[3])
+{
+  //dt_iop_temperature_gui_data_t *g = (dt_iop_temperature_gui_data_t *)self->gui_data;
+
+  cmsCIEXYZ _xyz = temperature_to_XYZ(TempK);
+
+  double XYZ[3] = { _xyz.X, _xyz.Y / tint, _xyz.Z };
+
+  double CAM[3];
+  for(int k = 0; k < 3; k++)
+  {
+    CAM[k] = 0.0;
+    for(int i = 0; i < 3; i++)
+    {
+      CAM[k] += XYZ_to_CAM[k][i] * XYZ[i];
+    }
+  }
+
+  for(int k = 0; k < 3; k++) mul[k] = 1.0 / CAM[k];
+}
+
+void PF::RawDeveloperConfigGUI::mul2temp(float coeffs[3], double *TempK, double *tint)
+{
+  //dt_iop_temperature_gui_data_t *g = (dt_iop_temperature_gui_data_t *)self->gui_data;
+
+  //std::cout<<"mul2temp(): coeffs="<<coeffs[0]<<","<<coeffs[1]<<","<<coeffs[2]<<std::endl;
+  printf("mul2temp: coeffs[]=%f,%f,%f\nCAM_to_XYZ:\n",coeffs[0],coeffs[1],coeffs[2]);
+  for(int k = 0; k < 3; k++)
+  {
+    printf("    %.4f %.4f %.4f\n",CAM_to_XYZ[k][0],CAM_to_XYZ[k][1],CAM_to_XYZ[k][2]);
+  }
+
+  double CAM[3];
+  for(int k = 0; k < 3; k++) CAM[k] = 1.0 / coeffs[k];
+
+  double XYZ[3];
+  for(int k = 0; k < 3; k++)
+  {
+    XYZ[k] = 0.0;
+    for(int i = 0; i < 3; i++)
+    {
+      XYZ[k] += CAM_to_XYZ[k][i] * CAM[i];
+    }
+  }
+
+  XYZ_to_temperature((cmsCIEXYZ){ XYZ[0], XYZ[1], XYZ[2] }, TempK, tint);
+}
+
+/* Darktable code ends here
+ */
+
 
 
 #ifndef MIN
@@ -81,6 +330,8 @@ bool PF::WBSelector::check_value( int id, const std::string& name, const std::st
 PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Raw Developer" ),
   wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
+  wbTempSlider( this, "", _("temperature"), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 5, 20, 1),
+  wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
   wbRedSlider( this, "wb_red", "Red WB mult.", 1, 0, 10, 0.05, 0.1, 1),
   wbGreenSlider( this, "wb_green", "Green WB mult.", 1, 0, 10, 0.05, 0.1, 1),
   wbBlueSlider( this, "wb_blue", "Blue WB mult.", 1, 0, 10, 0.05, 0.1, 1),
@@ -90,16 +341,24 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
   wb_target_a_slider( this, "wb_target_a", "a: ", 10, -1000000, 1000000, 0.05, 0.1, 1),
   wb_target_b_slider( this, "wb_target_b", "b: ", 12, -1000000, 1000000, 0.05, 0.1, 1),
-  demoMethodSelector( this, "demo_method", "Demosaicing method: ", PF::PF_DEMO_AMAZE ),
+  enable_ca_checkbox( this, "enable_ca", _("enable CA correction"), false ),
+  auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
+  ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
+  ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
+  demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
   fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
-  profileModeSelector( this, "profile_mode", "Color conversion mode: ", 0 ),
+  saturationLevelSlider( this, "raw_white_level_correction", _("RAW white level %"), 0, -100, 100, 0.5, 5, 100 ),
+  blackLevelSlider( this, "raw_black_level_correction", _("RAW black level %"), 0, -100, 100, 0.5, 5, 100 ),
+  hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
+  profileModeSelector( this, "profile_mode", _("input: "), 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
-  gammaModeSelector( this, "gamma_mode", "Raw gamma: ", 0 ),
+  gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-  outProfileModeSelector( this, "out_profile_mode", "Output profile: ", 1 ),
-  outProfOpenButton(Gtk::Stock::OPEN)
+  outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
+  outProfOpenButton(Gtk::Stock::OPEN),
+  ignore_temp_tint_change( false )
 {
   wbControlsBox.pack_start( wbModeSelector, Gtk::PACK_SHRINK );
 
@@ -112,49 +371,68 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   wbControlsBox.pack_start( wbTargetBox );
   wbControlsBox.pack_start( wb_best_match_label, Gtk::PACK_SHRINK );
 
-  wbControlsBox.pack_start( wbRedSlider );
-  wbControlsBox.pack_start( wbGreenSlider );
-  wbControlsBox.pack_start( wbBlueSlider );
-  wbControlsBox.pack_start( wbRedCorrSlider );
-  wbControlsBox.pack_start( wbGreenCorrSlider );
-  wbControlsBox.pack_start( wbBlueCorrSlider );
+  wbControlsBox.pack_start( wbTempSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbTintSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
 
-  exposureControlsBox.pack_start( exposureSlider );
+  black_level_label_align.set( 0, 0.5, 0, 0 );
+  white_level_label_align.set( 0, 0.5, 0, 0 );
+  black_level_label_align.add( black_level_label );
+  white_level_label_align.add( white_level_label );
 
-  demoControlsBox.pack_start( demoMethodSelector );
-  demoControlsBox.pack_start( fcsSlider );
+  exposureControlsBox.pack_start( black_level_label_align, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( white_level_label_align, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( separator, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( blackLevelSlider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( saturationLevelSlider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( hlrecoModeSelector, Gtk::PACK_SHRINK, 2 );
+
+  lensControlsBox.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
+  lensControlsBox.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
+  lensControlsBox.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
+  lensControlsBox.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
+
+  demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
+  demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
 
   profileModeSelectorBox.pack_start( profileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK );
 
   camProfLabel.set_text( "camera profile name:" );
-  camProfVBox.pack_start( camProfLabel );
-  camProfVBox.pack_start( camProfFileEntry );
-  camProfHBox.pack_start( camProfVBox );
+  camProfVBox.pack_start( camProfLabel, Gtk::PACK_SHRINK );
+  camProfVBox.pack_start( camProfFileEntry, Gtk::PACK_SHRINK );
+  camProfHBox.pack_start( camProfVBox, Gtk::PACK_SHRINK );
   camProfHBox.pack_start( camProfOpenButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( camProfHBox );
+  outputControlsBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
 
-  gammaModeVBox.pack_start( gammaModeSelector );
+  gammaModeVBox.pack_start( gammaModeSelector, Gtk::PACK_SHRINK );
   //gammaModeVBox.pack_start( inGammaLinSlider );
-  gammaModeVBox.pack_start( inGammaExpSlider );
+  gammaModeVBox.pack_start( inGammaExpSlider, Gtk::PACK_SHRINK );
   gammaModeHBox.pack_start( gammaModeVBox, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( gammaModeHBox );
+  outputControlsBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
 
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
   outProfLabel.set_text( "output profile name:" );
-  outProfVBox.pack_start( outProfLabel );
-  outProfVBox.pack_start( outProfFileEntry );
-  outProfHBox.pack_start( outProfVBox );
+  outProfVBox.pack_start( outProfLabel, Gtk::PACK_SHRINK );
+  outProfVBox.pack_start( outProfFileEntry, Gtk::PACK_SHRINK );
+  outProfHBox.pack_start( outProfVBox, Gtk::PACK_SHRINK );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outProfHBox );
+  outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
 
 
   notebook.append_page( wbControlsBox, "WB" );
   notebook.append_page( exposureControlsBox, "Exp" );
+  notebook.append_page( lensControlsBox, "Lens" );
   notebook.append_page( demoControlsBox, "Demo" );
-  notebook.append_page( outputControlsBox, "ICC" );
+  notebook.append_page( outputControlsBox, "Color" );
     
   add_widget( notebook );
 
@@ -171,10 +449,75 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
 							   &RawDeveloperConfigGUI::on_out_button_open_clicked) );
 
+  wbTempSlider.get_adjustment()->signal_value_changed().
+      connect(sigc::mem_fun(*this,&PF::RawDeveloperConfigGUI::temp_tint_changed));
+  wbTintSlider.get_adjustment()->signal_value_changed().
+      connect(sigc::mem_fun(*this,&PF::RawDeveloperConfigGUI::temp_tint_changed));
+
   get_main_box().show_all_children();
 }
 
 
+void PF::RawDeveloperConfigGUI::temp_tint_changed()
+{
+  if( ignore_temp_tint_change ) return;
+
+  if( get_layer() && get_layer()->get_image() &&
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+    PF::RawDeveloperPar* par =
+      dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
+    if( !par ) return;
+
+    PropertyBase* prop = par->get_property( "wb_mode" );
+    if( !prop )  return;
+
+    double temp = wbTempSlider.get_adjustment()->get_value();
+    double tint = wbTintSlider.get_adjustment()->get_value();
+
+    double cam_mul[3];
+    temp2mul( temp, tint, cam_mul );
+    double min_mul = MIN3(cam_mul[0], cam_mul[1], cam_mul[2]);
+    for( int i = 0; i < 3; i++ ) cam_mul[i] /= min_mul;
+    std::cout<<"temp_tint_changed(): temp="<<temp<<"  tint="<<tint
+        <<"  mul="<<cam_mul[0]<<","<<cam_mul[1]<<","<<cam_mul[2]<<std::endl;
+    switch( prop->get_enum_value().first ) {
+    case PF::WB_SPOT:
+    case PF::WB_COLOR_SPOT:
+      // In the spot WB case we directly set the WB multitpliers
+      wbRedSlider.set_inhibit(true);
+      wbRedSlider.get_adjustment()->set_value(cam_mul[0]);
+      wbRedSlider.set_value();
+      wbRedSlider.set_inhibit(false);
+      wbGreenSlider.set_inhibit(true);
+      wbGreenSlider.get_adjustment()->set_value(cam_mul[1]);
+      wbGreenSlider.set_value();
+      wbGreenSlider.set_inhibit(false);
+      wbBlueSlider.set_inhibit(true);
+      wbBlueSlider.get_adjustment()->set_value(cam_mul[2]);
+      wbBlueSlider.set_value();
+      wbBlueSlider.set_inhibit(false);
+      break;
+    default:
+      // Otherwise set the WB multitplier corrections
+      wbRedCorrSlider.set_inhibit(true);
+      wbRedCorrSlider.get_adjustment()->set_value(cam_mul[0]/preset_wb[0]);
+      wbRedCorrSlider.set_value();
+      wbRedCorrSlider.set_inhibit(false);
+      wbGreenCorrSlider.set_inhibit(true);
+      wbGreenCorrSlider.get_adjustment()->set_value(cam_mul[1]/preset_wb[1]);
+      wbGreenCorrSlider.set_value();
+      wbGreenCorrSlider.set_inhibit(false);
+      wbBlueCorrSlider.set_inhibit(true);
+      wbBlueCorrSlider.get_adjustment()->set_value(cam_mul[2]/preset_wb[2]);
+      wbBlueCorrSlider.set_value();
+      wbBlueCorrSlider.set_inhibit(false);
+      break;
+    }
+
+    get_layer()->get_image()->update();
+  }
+}
 
 
 void PF::RawDeveloperConfigGUI::do_update()
@@ -194,9 +537,11 @@ void PF::RawDeveloperConfigGUI::do_update()
     PF::Pipeline* pipeline = image->get_pipeline(0);
     PF::PipelineNode* node = NULL;
     PF::PipelineNode* inode = NULL;
+    PF::ProcessorBase* processor = NULL;
     std::string maker, model;
     if( pipeline ) node = pipeline->get_node( get_layer()->get_id() );
     if( node ) inode = pipeline->get_node( node->input_id );
+    if( node ) processor = node->processor;
     if( inode && inode->image) {
       size_t blobsz;
       PF::exif_data_t* exif_data;
@@ -210,15 +555,85 @@ void PF::RawDeveloperConfigGUI::do_update()
         model = tmodel;
         wbModeSelector.set_maker_model( maker, model );
         //std::cout<<"RawDeveloperConfigGUI::do_update(): maker="<<maker<<" model="<<model<<std::endl;
+
+        if( processor ) {
+          PF::RawDeveloperPar* par2 =
+              dynamic_cast<PF::RawDeveloperPar*>(processor->get_par());
+          if( par2 ) {
+            dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
+            //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
+            float xyz_to_cam[4][3];
+            xyz_to_cam[0][0] = NAN;
+            dt_dcraw_adobe_coeff(makermodel, (float(*)[12])xyz_to_cam);
+            if(!isnan(xyz_to_cam[0][0])) {
+              for(int i = 0; i < 3; i++) {
+                for(int j = 0; j < 3; j++) {
+                  XYZ_to_CAM[i][j] = (double)xyz_to_cam[i][j];
+                }
+              }
+            }
+            // and inverse matrix
+            mat3inv_double((double *)CAM_to_XYZ, (double *)XYZ_to_CAM);
+
+            double temp, tint;
+            par2->get_wb( preset_wb );
+            std::cout<<"PF::RawDeveloperConfigGUI::do_update(): preset WB="
+                <<preset_wb[0]<<","<<preset_wb[1]<<","<<preset_wb[2]<<std::endl;
+            float real_wb[3];
+            for( int i = 0; i < 3; i++ ) real_wb[i] = preset_wb[i];
+            if( par2->get_wb_mode() != PF::WB_SPOT &&
+                par2->get_wb_mode() != PF::WB_COLOR_SPOT ) {
+              // we are using one of the WB presets, so we have to take into account the
+              // WB correction sliders as well
+              real_wb[0] *= wbRedCorrSlider.get_adjustment()->get_value();
+              real_wb[1] *= wbGreenCorrSlider.get_adjustment()->get_value();
+              real_wb[2] *= wbBlueCorrSlider.get_adjustment()->get_value();
+            }
+            std::cout<<"PF::RawDeveloperConfigGUI::do_update(): real WB="
+                <<real_wb[0]<<","<<real_wb[1]<<","<<real_wb[2]<<std::endl;
+            mul2temp( real_wb, &temp, &tint );
+
+            ignore_temp_tint_change = true;
+            wbTempSlider.get_adjustment()->set_value( temp );
+            wbTintSlider.get_adjustment()->set_value( tint );
+            ignore_temp_tint_change = false;
+          }
+        }
+      }
+
+      dcraw_data_t* raw_data;
+      if( !vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data, &blobsz ) &&
+          blobsz == sizeof(dcraw_data_t) ) {
+        float black_level = raw_data->color.black;
+        float white_level = raw_data->color.maximum;
+
+        PropertyBase* blc = par->get_property( "black_level_correction" );
+        float black_corr = 1;
+        if( blc ) blc->get( black_corr );
+
+        PropertyBase* wlc = par->get_property( "saturation_level_correction" );
+        float white_corr = 1;
+        if( wlc ) wlc->get( white_corr );
+
+        float black_level2 = black_level * (black_corr);
+        float white_level2 = white_level * (white_corr);
+
+        char tstr[500];
+        snprintf( tstr, 499, "RAW black: %.1f (def. = %.0f)",
+            black_level2, black_level );
+        black_level_label.set_text( tstr );
+        snprintf( tstr, 499, "RAW white: %.1f (def. = %.0f)",
+            white_level2, white_level );
+        white_level_label.set_text( tstr );
       }
     }
 
     //std::cout<<"PF::RawDeveloperConfigGUI::do_update() called."<<std::endl;
 
-		if( wbTargetBox.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbTargetBox );
-		if( wb_best_match_label.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wb_best_match_label );
+    if( wbTargetBox.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbTargetBox );
+    if( wb_best_match_label.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wb_best_match_label );
 
 		if( wbRedSlider.get_parent() == &wbControlsBox )
 			wbControlsBox.remove( wbRedSlider );
@@ -268,6 +683,7 @@ void PF::RawDeveloperConfigGUI::do_update()
         wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
       break;
 		}
+
 
     prop = par->get_property( "cam_profile_name" );
     if( !prop )  return;
@@ -480,7 +896,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       //node_par->set_wb( wbRedSlider.get_adjustment()->get_value(), wbGreenSlider.get_adjustment()->get_value(), wbBlueSlider.get_adjustment()->get_value() );
 
       img->update( pipeline, true );
-      img->unlock();
+      //img->unlock();
     }
 
     //std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
@@ -923,7 +1339,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     //img->set_async( false );
     img->update( pipeline, true );
     //img->update( NULL, true );
-    img->unlock();
+    //img->unlock();
     //img->set_async( async );
 
 

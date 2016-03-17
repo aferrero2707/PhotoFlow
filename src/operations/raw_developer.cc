@@ -33,6 +33,7 @@
 
 #include "convertformat.hh"
 #include "raw_preprocessor.hh"
+#include "ca_correct.hh"
 #include "amaze_demosaic.hh"
 #include "lmmse_demosaic.hh"
 #include "igv_demosaic.hh"
@@ -59,12 +60,14 @@ PF::RawDeveloperPar::RawDeveloperPar():
   igv_demosaic = new_igv_demosaic();
   fast_demosaic = new_fast_demosaic();
   raw_preprocessor = new_raw_preprocessor();
+  ca_correct = new_ca_correct();
   raw_output = new_raw_output();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 	for(int ifcs = 0; ifcs < 4; ifcs++) 
 		fcs[ifcs] = new_false_color_correction();
 
   map_properties( raw_preprocessor->get_par()->get_properties() );
+  map_properties( ca_correct->get_par()->get_properties() );
   map_properties( raw_output->get_par()->get_properties() );
 
   set_type("raw_developer" );
@@ -73,10 +76,31 @@ PF::RawDeveloperPar::RawDeveloperPar():
 }
 
 
+
+PF::wb_mode_t PF::RawDeveloperPar::get_wb_mode()
+{
+  PF::wb_mode_t result = PF::WB_CAMERA;
+  PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  if( par ) result = par->get_wb_mode();
+  return result;
+}
+
+
 void PF::RawDeveloperPar::set_wb(float r, float g, float b)
 {
   PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
   if( par ) par->set_wb(r,g,b);
+}
+
+
+void PF::RawDeveloperPar::get_wb(float* mul)
+{
+  PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  if( par ) {
+    mul[0] = par->get_wb_red();
+    mul[1] = par->get_wb_green();
+    mul[2] = par->get_wb_blue();
+  }
 }
 
 
@@ -114,6 +138,13 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
       return NULL;
   
     in2.push_back( image );
+    ca_correct->get_par()->set_image_hints( image );
+    ca_correct->get_par()->set_format( VIPS_FORMAT_FLOAT );
+    VipsImage* out_ca = ca_correct->get_par()->build( in2, 0, NULL, NULL, level );
+    g_object_unref( image );
+    //VipsImage* out_ca = image;
+
+    in2.clear(); in2.push_back( out_ca );
 		PF::ProcessorBase* demo = NULL;
 		switch( demo_method.get_enum_value().first ) {
 		case PF::PF_DEMO_FAST: demo = fast_demosaic; break;
@@ -126,10 +157,10 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
 		//PF::ProcessorBase* demo = igv_demosaic;
 		//PF::ProcessorBase* demo = fast_demosaic;
 		if( !demo ) return NULL;
-    demo->get_par()->set_image_hints( image );
+    demo->get_par()->set_image_hints( out_ca );
     demo->get_par()->set_format( VIPS_FORMAT_FLOAT );
     out_demo = demo->get_par()->build( in2, 0, NULL, NULL, level );
-    g_object_unref( image );
+    g_object_unref( out_ca );
 
 		for(int ifcs = 0; ifcs < VIPS_MIN(fcs_steps.get(),4); ifcs++) {
 			VipsImage* temp = out_demo;
@@ -152,6 +183,22 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   /**/
   raw_output->get_par()->set_image_hints( out_demo );
   raw_output->get_par()->set_format( VIPS_FORMAT_FLOAT );
+  RawPreprocessorPar* rppar = dynamic_cast<RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  RawOutputPar* ropar = dynamic_cast<RawOutputPar*>( raw_output->get_par() );
+  if( rppar && ropar ) {
+    switch( rppar->get_wb_mode() ) {
+    case WB_SPOT:
+    case WB_COLOR_SPOT:
+      ropar->set_wb( rppar->get_wb_red(), rppar->get_wb_green(), rppar->get_wb_blue() );
+      break;
+    default:
+      ropar->set_wb( rppar->get_wb_red()*rppar->get_camwb_corr_red(),
+          rppar->get_wb_green()*rppar->get_camwb_corr_green(),
+          rppar->get_wb_blue()*rppar->get_camwb_corr_blue() );
+      break;
+    }
+  }
+
   in2.clear(); in2.push_back( out_demo );
   VipsImage* out = raw_output->get_par()->build( in2, 0, NULL, NULL, level );
   g_object_unref( out_demo );

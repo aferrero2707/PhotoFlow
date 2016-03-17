@@ -33,6 +33,8 @@
 #include "hue_saturation_config.hh"
 
 
+#define CURVE_SIZE 192
+
 class HueEqualizerArea: public PF::CurveArea
 {
 public:
@@ -81,7 +83,7 @@ public:
 
 
 PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
-  OperationConfigGUI( layer, "B/C/S/H Adjustment" ),
+  OperationConfigGUI( layer, "Base Adjustments" ),
   brightnessSlider( this, "brightness", _("Brightness"), 0, -100, 100, 5, 10, 100),
   brightness2Slider( this, "brightness_eq", "Brightness (curve)", 0, -100, 100, 5, 10, 100),
   contrastSlider( this, "contrast", _("Contrast"), 0, -100, 100, 5, 10, 100),
@@ -91,20 +93,20 @@ PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
   hueSlider( this, "hue", _("Hue"), 0, -180, 180, 0.1, 10, 1),
   hue2Slider( this, "hue_eq", "Hue (curve)", 0, -180, 180, 0.1, 10, 1),
   mask_enable( this, "show_mask", _("show mask"), false ),
-  hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
-  hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
-  hueLeq( this, "hue_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
+  hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
+  hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  hueLeq( this, "hue_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
   hueHeq_enable( this, "hue_H_equalizer_enabled", _("Enable"), true ),
   hueSeq_enable( this, "hue_S_equalizer_enabled", _("Enable"), true  ),
   hueLeq_enable( this, "hue_L_equalizer_enabled", _("Enable"), true  ),
   saturationHeq( this, "saturation_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 200, 350 ),
-  saturationSeq( this, "saturation_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
-  saturationLeq( this, "saturation_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
-  contrastHeq( this, "contrast_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, 250, 150 ),
-  contrastSeq( this, "contrast_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
-  contrastLeq( this, "contrast_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, 250, 150 ),
-  feather_enable( this, "feather_mask", _("feather mask"), false ),
-  featherRadiusSlider( this, "feather_radius", _("feather radius"), 1, 0, 100, 1, 5, 1),
+  saturationSeq( this, "saturation_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  saturationLeq( this, "saturation_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  contrastHeq( this, "contrast_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
+  contrastSeq( this, "contrast_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  contrastLeq( this, "contrast_L_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  feather_enable( this, "feather_mask", _("feather"), false ),
+  featherRadiusSlider( this, "feather_radius", _("radius "), 1, 0, 1000000, 1, 5, 1),
   mask_invert( this, "invert_mask", _("invert mask"), false )
 {
   controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK );
@@ -242,7 +244,7 @@ bool PF::HueSaturationConfigGUI::pointer_press_event( int button, double x, doub
 
 bool PF::HueSaturationConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
+  if( button != 1 || mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) ) return false;
   //std::cout<<"HueSaturationConfigDialog::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
 
   // Retrieve the layer associated to the filter
@@ -276,15 +278,18 @@ bool PF::HueSaturationConfigGUI::pointer_release_event( int button, double x, do
 
   //std::cout<<"HueSaturationConfigDialog::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
 
-  rgb2hsl( values[0], values[1], values[2], H, S, L );
-
-  PF::OpParBase* par = get_layer()->get_processor()->get_par();
-  PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+  //PF::OpParBase* par = get_layer()->get_processor()->get_par();
+  PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+  if( node->processor && node->processor->get_par() ) {
+    PF::OpParBase* par = node->processor->get_par();
+    cs = PF::convert_colorspace( par->get_interpretation() );
+  }
   switch( cs ) {
   case PF_COLORSPACE_GRAYSCALE:
     break;
-  case PF_COLORSPACE_RGB:
+  case PF_COLORSPACE_RGB: {
     if( values.size() != 3 ) return false;
+    rgb2hsl( values[0], values[1], values[2], H, S, L );
     switch( curves_nb[0].get_current_page() ) {
     case 0:
       hueHeq.add_point( H/360.0f );
@@ -297,8 +302,9 @@ bool PF::HueSaturationConfigGUI::pointer_release_event( int button, double x, do
       break;
     }
     break;
-    case PF_COLORSPACE_LAB:
-      break;
+  }
+  case PF_COLORSPACE_LAB:
+    break;
   case PF_COLORSPACE_CMYK:
     break;
   default:

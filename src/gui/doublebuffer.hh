@@ -114,54 +114,7 @@ public:
     }
   }
 
-  void copy( VipsRegion* region, VipsRect src_rect, int xoffs=0, int yoffs=0 )
-  {
-    guint8 *px1 = (guchar *) VIPS_REGION_ADDR( region, src_rect.left, src_rect.top );
-    int rs1 = VIPS_REGION_LSKIP( region );
-    int bl1 = 3; /*buf->get_byte_length();*/
-
-    guint8* px2 = buf->get_pixels();
-    int rs2 = buf->get_rowstride();
-    int bl2 = 3; /*buf->get_byte_length();*/
-
-#ifndef NDEBUG
-    std::cout<<"PixelBuffer::copy()"<<std::endl;
-    std::cout<<"  src_rect="<<src_rect.width<<"x"<<src_rect.height<<"+"<<src_rect.left<<"+"<<src_rect.top<<std::endl;
-    std::cout<<"  xoffs="<<xoffs<<"  yoffs="<<yoffs<<std::endl;
-    std::cout<<"  rect="<<rect.width<<"x"<<rect.height<<"+"<<rect.left<<"+"<<rect.top<<std::endl;
-#endif
-
-    // We add the offset of the image relative to the buffer to src_rect
-    src_rect.left += xoffs;
-    src_rect.top += yoffs;
-    VipsRect clip;
-    vips_rect_intersectrect (&src_rect, &rect, &clip);
-    if( clip.width <= 0 ||
-        clip.height <= 0 ) return;
-    int xstart = clip.left;
-    int ystart = clip.top;
-    //int xend = clip.left+clip.width-1;
-    int yend = clip.top+clip.height-1;
-
-#ifndef NDEBUG
-    std::cout<<"  src_rect(2)="<<src_rect.width<<"x"<<src_rect.height<<"+"<<src_rect.left<<"+"<<src_rect.top<<std::endl;
-    std::cout<<"  clip="<<clip.width<<"x"<<clip.height<<"+"<<clip.left<<"+"<<clip.top<<std::endl;
-    std::cout<<"  xstart="<<xstart<<"  ystart="<<ystart<<"  yend="<<yend<<std::endl;
-#endif
-
-    for( int y = ystart; y <= yend; y++ ) {
-      int dy1 = y - src_rect.top;
-      int dy2 = y - rect.top;
-
-      int dx1 = xstart - src_rect.left;
-      int dx2 = xstart - rect.left;
-
-      guint8* p1 = px1 + rs1*dy1 + dx1*bl1;
-      guint8* p2 = px2 + rs2*dy2 + dx2*bl2;
-
-      memcpy( p2, p1, clip.width*bl2 );
-    }
-  }
+  void copy( VipsRegion* region, VipsRect src_rect, int xoffs=0, int yoffs=0 );
 
   void draw_point( int x, int y, PixelBuffer& inbuf );
 
@@ -228,7 +181,12 @@ public:
     }
   }
 
-#define PX_MOD( pxin, pxout ) { int _px = pxin; _px += 127; if(_px>255) _px -= 255; pxout = (guint8)_px; }
+#define PX_MOD( pxin, pxout ) { \
+  int _pxmax = MAX(pxin[0], MAX(pxin[1], pxin[2])); \
+  int _px = _pxmax; _px += 127; if(_px>255) _px -= 255; \
+  pxout[0] = pxout[1] = pxout[2] = (guint8)_px; \
+  }
+
   void fill( const VipsRect& area, PixelBuffer& inbuf );
 
   void draw_circle( int x0, int y0, int radius, guint8 r, guint8 g, guint8 b );

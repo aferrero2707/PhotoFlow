@@ -69,10 +69,13 @@ public:
     Gtk::HBox wbHBox;
     Gtk::VBox wbControlsBox;
     Gtk::VBox exposureControlsBox;
+    Gtk::VBox lensControlsBox;
     Gtk::VBox demoControlsBox;
     Gtk::VBox outputControlsBox;
     
     WBSelector wbModeSelector;
+    Slider wbTempSlider;
+    Slider wbTintSlider;
     Slider wbRedSlider;
     Slider wbGreenSlider;
     Slider wbBlueSlider;
@@ -92,6 +95,18 @@ public:
     Slider fcsSlider;
 
     ExposureSlider exposureSlider;
+    Slider saturationLevelSlider;
+    Slider blackLevelSlider;
+    Selector hlrecoModeSelector;
+    Gtk::Label black_level_label;
+    Gtk::Label white_level_label;
+    Gtk::Alignment black_level_label_align;
+    Gtk::Alignment white_level_label_align;
+    Gtk::HSeparator separator;
+
+    CheckBox enable_ca_checkbox;
+    CheckBox auto_ca_checkbox;
+    Slider ca_red_slider, ca_blue_slider;
 
     Selector profileModeSelector;
     Gtk::HBox profileModeSelectorBox;
@@ -117,7 +132,16 @@ public:
     Gtk::Entry outProfFileEntry;
     Gtk::Button outProfOpenButton;
 
+    double XYZ_to_CAM[3][3], CAM_to_XYZ[3][3];
+    float preset_wb[3];
     
+    void temp2mul(double TempK, double tint, double mul[3]);
+    void mul2temp(float coeffs[3], double *TempK, double *tint);
+
+    bool ignore_temp_tint_change;
+    void temp_tint_changed();
+
+
   public:
     RawDeveloperConfigGUI( Layer* l );
     

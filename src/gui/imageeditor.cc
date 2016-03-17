@@ -144,8 +144,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonShowMerged( _("show merged layers") ),
   buttonShowActive( _("show active layer") ),
   tab_label_widget( NULL ),
-  fit_image( false ),
-  fit_image_needed( false )
+  fit_image( true ),
+  fit_image_needed( true )
 {
   std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
   // First pipeline is for full-res rendering, second one is for on-screen preview, third one is
@@ -191,21 +191,29 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
   button_highlights_warning.set_image( img_highlights_warning );
   button_highlights_warning.set_tooltip_text( _("Toggle highlights clipping warning on/off") );
+  button_highlights_warning.set_size_request(35,26);
   controlsBox.pack_end( button_highlights_warning, Gtk::PACK_SHRINK );
   button_shadows_warning.set_image( img_shadows_warning );
   button_shadows_warning.set_tooltip_text( _("Toggle shadows clipping warning on/off") );
+  button_shadows_warning.set_size_request(35,26);
   controlsBox.pack_end( button_shadows_warning, Gtk::PACK_SHRINK );
 
+  controlsBox.set_spacing(2);
+  controlsBox.set_border_width(2);
   buttonZoom100.set_tooltip_text( _("Zoom to 100%") );
+  buttonZoom100.set_size_request(26,0);
   controlsBox.pack_end( buttonZoom100, Gtk::PACK_SHRINK );
   buttonZoomFit.set_image( img_zoom_fit );
   buttonZoomFit.set_tooltip_text( _("Fit image to preview area") );
+  buttonZoomFit.set_size_request(26,0);
   controlsBox.pack_end( buttonZoomFit, Gtk::PACK_SHRINK );
   buttonZoomOut.set_image( img_zoom_out );
   buttonZoomOut.set_tooltip_text( _("Zoom out") );
+  buttonZoomOut.set_size_request(26,0);
   controlsBox.pack_end( buttonZoomOut, Gtk::PACK_SHRINK );
   buttonZoomIn.set_image( img_zoom_in );
   buttonZoomIn.set_tooltip_text( _("Zoom in") );
+  buttonZoomIn.set_size_request(26,0);
   controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
   controlsBox.pack_end( status_indicator, Gtk::PACK_SHRINK );
 
@@ -218,7 +226,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   hist_expander.add(*histogram);
 
   layersWidget_box.pack_start( hist_expander, Gtk::PACK_SHRINK );
-  aux_controlsBox.set_size_request(-1,80);
+  aux_controlsBox.set_size_request(-1,70);
   layersWidget_box.pack_start( aux_controlsBox, Gtk::PACK_SHRINK );
   layersWidget_box.pack_start( layersWidget, Gtk::PACK_EXPAND_WIDGET );
 
@@ -226,6 +234,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //main_panel.pack1( imageBox );
   //main_panel.pack2( layersWidget, false, false );
   main_panel.pack_start( layersWidget_box, Gtk::PACK_SHRINK );
+  main_panel.pack_start( controls_group_scrolled_window, Gtk::PACK_SHRINK );
   main_panel.pack_start( imageBox, Gtk::PACK_EXPAND_WIDGET );
   controls_group_scrolled_window.add( layersWidget.get_controls_group() );
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
@@ -243,8 +252,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 							&PF::ImageEditor::zoom_out) );
   buttonZoom100.signal_clicked().connect( sigc::mem_fun(*this,
 							&PF::ImageEditor::zoom_actual_size) );
-  buttonZoomFit.signal_clicked().connect( sigc::mem_fun(*this,
-							&PF::ImageEditor::zoom_fit) );
+  buttonZoomFit.signal_clicked().connect( sigc::hide_return( sigc::mem_fun(*this,
+							&PF::ImageEditor::zoom_fit) ) );
 
   /*
   buttonShowMerged.signal_clicked().connect( sigc::bind( sigc::mem_fun(imageArea,
@@ -262,7 +271,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
   //imageArea_eventBox.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
   //main_panel.set_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
-  imageArea_eventBox.set_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
+  imageArea_eventBox.set_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  /*| Gdk::POINTER_MOTION_HINT_MASK*/ | Gdk::STRUCTURE_MASK );
   imageArea_eventBox.signal_button_press_event().
     connect( sigc::mem_fun(*this, &PF::ImageEditor::my_button_press_event) );
   imageArea_eventBox.signal_button_release_event().
@@ -292,19 +301,24 @@ PF::ImageEditor::ImageEditor( std::string fname ):
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_exporting) );
 
   show_all_children();
+  controls_group_scrolled_window.hide();
 }
 
 
 PF::ImageEditor::~ImageEditor()
 {
-	/*
+	/**/
+  std::cout<<"~ImageEditor(): deleting image"<<std::endl;
   if( image )
     delete image;
-	*/
+  std::cout<<"~ImageEditor(): image deleted"<<std::endl;
+	/**/
+  /*
   ProcessRequestInfo request;
   request.image = image;
   request.request = PF::IMAGE_DESTROY;
   PF::ImageProcessor::Instance().submit_request( request );	
+  */
 }
 
 
@@ -488,15 +502,16 @@ void PF::ImageEditor::open_image()
     }
   }
 
+  std::cout<<"ImageEditor::open_image(): opening image..."<<std::endl;
   image->open( filename, bckname );
-  //std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
+  std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
-  int level = 0;
+  int level = 1;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
-  //std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
+  std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
   image->set_loaded( false );
   image->update();
   //getchar();
@@ -546,17 +561,19 @@ void PF::ImageEditor::update_controls()
 {
   //std::cout<<"ImageEditor::update_controls(): layersWidget.get_controls_group().size()="<<layersWidget.get_controls_group().size()<<std::endl;
   if( layersWidget.get_controls_group().size() > 0 ) {
-    if( controls_group_scrolled_window.get_parent() != &main_panel ) {
-      main_panel.pack_start( controls_group_scrolled_window, Gtk::PACK_SHRINK );
-      main_panel.show_all_children();
-      if( fit_image ) fit_image_needed = true;
-    }
+    //if( controls_group_scrolled_window.get_parent() != &main_panel ) {
+    //  main_panel.pack_start( controls_group_scrolled_window, Gtk::PACK_SHRINK );
+    //  main_panel.show_all_children();
+    //  if( fit_image ) fit_image_needed = true;
+    //}
+    controls_group_scrolled_window.show();
   } else {
-    if( controls_group_scrolled_window.get_parent() == &main_panel ) {
-      main_panel.remove( controls_group_scrolled_window );
-      main_panel.show_all_children();
-      if( fit_image ) fit_image_needed = true;
-    }
+    //if( controls_group_scrolled_window.get_parent() == &main_panel ) {
+    //  main_panel.remove( controls_group_scrolled_window );
+    //  main_panel.show_all_children();
+    //  if( fit_image ) fit_image_needed = true;
+    //}
+    controls_group_scrolled_window.hide();
   }
 }
 
@@ -597,6 +614,9 @@ void PF::ImageEditor::on_map()
     std::cout<<"ImageEditor::on_map(): parent window configured."<<std::endl;
   }
   //open_image();
+
+  if( fit_image ) zoom_fit();
+
   Gtk::HBox::on_map();
 }
 
@@ -604,6 +624,7 @@ void PF::ImageEditor::on_realize()
 {
   std::cout<<"ImageEditor::on_realize() called."<<std::endl;
   open_image();
+  controls_group_scrolled_window.hide();
   Gtk::HBox::on_realize();
 }
 
@@ -667,13 +688,17 @@ void PF::ImageEditor::zoom_in()
 }
 
 
-void PF::ImageEditor::zoom_fit()
+bool PF::ImageEditor::zoom_fit()
 {
-  if( !image ) return;
+  //std::cout<<"ImageEditor::zoom_fit(): image="<<image<<std::endl;
+  if( !image ) return false;
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
+  //std::cout<<"ImageEditor::zoom_fit(): pipeline="<<pipeline<<std::endl;
+  if( !pipeline ) return false;
+  //std::cout<<"image_size_updater->get_image_width()="<<image_size_updater->get_image_width()
+  //    <<" get_image_height()="<<image_size_updater->get_image_height()<<std::endl;
   if( image_size_updater->get_image_width() < 1 ||
-      image_size_updater->get_image_height() < 1 ) return;
+      image_size_updater->get_image_height() < 1 ) return false;
 
   //float area_hsize = imageArea_scrolledWindow.get_hadjustment()->get_page_size();
   //float area_vsize = imageArea_scrolledWindow.get_vadjustment()->get_page_size();
@@ -706,12 +731,16 @@ void PF::ImageEditor::zoom_fit()
   //         <<","<<image_size_updater->get_image_height()
   //         <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
 
-	imageArea->set_shrink_factor( shrink_min );
-	image->set_pipeline_level( pipeline, target_level );
-	//pipeline2->set_level( target_level );
-  image->update();
+	if( (imageArea->get_shrink_factor() != shrink_min) ||
+	    (pipeline->get_level() != target_level) ) {
+	  imageArea->set_shrink_factor( shrink_min );
+	  image->set_pipeline_level( pipeline, target_level );
+	  //pipeline2->set_level( target_level );
+	  image->update();
+	}
 
   fit_image = true;
+  return true;
 }
 
 
@@ -734,13 +763,13 @@ void PF::ImageEditor::zoom_actual_size()
 }
 
 
-void PF::ImageEditor::set_edited_layer( int id )
+void PF::ImageEditor::set_active_layer( int id )
 {
   PF::Layer* old_active = active_layer;
   active_layer = NULL;
   if( image )
     active_layer = image->get_layer_manager().get_layer( id );
-  std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
+  //std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
   if( old_active != active_layer ) {
     /*
     if( old_active &&
@@ -818,6 +847,7 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble&
 #endif
   x -= imageArea->get_xoffset();
   y -= imageArea->get_yoffset();
+  /*
   if( (x<0) || (y<0) ) return;
   if( imageArea->get_display_image() ) {
     if( x >= imageArea->get_display_image()->Xsize ) 
@@ -825,6 +855,7 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble&
     if( y >= imageArea->get_display_image()->Ysize ) 
       return;
   }
+  */
 
   float zoom_fact = get_zoom_factor();
 #ifndef NDEBUG
@@ -847,7 +878,8 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble&
 void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
 {
   if( !image ) return;
-  if( !imageArea->get_display_merged() ) return;
+  if( !active_layer ) return;
+
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::image2layer(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
 #endif
@@ -858,39 +890,65 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     return;
   }
 
-  std::list<PF::Layer*>::reverse_iterator li;
-  for(li = active_layer_children.rbegin(); li != active_layer_children.rend(); ++li) {
-    PF::Layer* l = *li;
-    if( l && l->is_enabled() ) {
-      // Get the node associated to the layer
-      PF::PipelineNode* node = pipeline->get_node( l->get_id() );
-      if( !node ) {
-        std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
-        continue;
-      }
-      if( !node->processor ) {
-        std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
-        continue;
-      }
+  if( imageArea->get_display_merged() ) {
+    std::list<PF::Layer*>::reverse_iterator li;
+    for(li = active_layer_children.rbegin(); li != active_layer_children.rend(); ++li) {
+      PF::Layer* l = *li;
+      if( l && l->is_enabled() ) {
+        // Get the node associated to the layer
+        PF::PipelineNode* node = pipeline->get_node( l->get_id() );
+        if( !node ) {
+          std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+          continue;
+        }
+        if( !node->processor ) {
+          std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
+          continue;
+        }
 
-      PF::OpParBase* par = node->processor->get_par();
-      VipsRect rin, rout;
-      rout.left = x;
-      rout.top = y;
-      rout.width = w;
-      rout.height = h;
-      par->transform_inv( &rout, &rin );
+        PF::OpParBase* par = node->processor->get_par();
+        VipsRect rin, rout;
+        rout.left = x;
+        rout.top = y;
+        rout.width = w;
+        rout.height = h;
+        par->transform_inv( &rout, &rin );
 
-      x = rin.left;
-      y = rin.top;
-      w = rin.width;
-      h = rin.height;
+        x = rin.left;
+        y = rin.top;
+        w = rin.width;
+        h = rin.height;
 #ifndef NDEBUG
-      std::cout<<"PF::ImageEditor::image2layer(): after \""<<l->get_name()
-          <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
+        std::cout<<"PF::ImageEditor::image2layer(): after \""<<l->get_name()
+              <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
+      }
     }
   }
+
+  PF::PipelineNode* node = pipeline->get_node( active_layer->get_id() );
+  if( !node ) {
+    std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+    return;
+  }
+  if( !node->processor ) {
+    std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
+    return;
+  }
+
+  PF::OpParBase* par = node->processor->get_par();
+  VipsRect rin, rout;
+  rout.left = x;
+  rout.top = y;
+  rout.width = w;
+  rout.height = h;
+  par->transform_inv( &rout, &rin );
+
+  x = rin.left;
+  y = rin.top;
+  w = rin.width;
+  h = rin.height;
+
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::image2layer(): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
@@ -938,10 +996,7 @@ void PF::ImageEditor::image2screen( gdouble& x, gdouble& y, gdouble& w, gdouble&
 void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
 {
   if( !image ) return;
-  if( !imageArea->get_display_merged() ) return;
-#ifndef NDEBUG
-  std::cout<<"PF::ImageEditor::layer2image(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
-#endif
+  if( !active_layer ) return;
 
   PF::Pipeline* pipeline = image->get_pipeline( 0 );
   if( !pipeline ) {
@@ -949,6 +1004,38 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     return;
   }
 
+  PF::PipelineNode* node = pipeline->get_node( active_layer->get_id() );
+  if( !node ) {
+    std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+    return;
+  }
+  if( !node->processor ) {
+    std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
+    return;
+  }
+
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::layer2image(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+#endif
+
+  PF::OpParBase* par = node->processor->get_par();
+  VipsRect rin, rout;
+  rin.left = x;
+  rin.top = y;
+  rin.width = w;
+  rin.height = h;
+  par->transform( &rin, &rout );
+
+  x = rout.left;
+  y = rout.top;
+  w = rout.width;
+  h = rout.height;
+
+  #ifndef NDEBUG
+    std::cout<<"PF::ImageEditor::layer2image(): after active layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+  #endif
+
+  if( imageArea->get_display_merged() ) {
   std::list<PF::Layer*>::iterator li;
   for(li = active_layer_children.begin(); li != active_layer_children.end(); ++li) {
     PF::Layer* l = *li;
@@ -980,6 +1067,7 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
       std::cout<<"PF::ImageEditor::layer2image(): after \""<<l->get_name()
           <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
+      }
     }
   }
 #ifndef NDEBUG
@@ -1027,10 +1115,16 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
         //std::cout<<"ImageEditor::my_button_release_event(): zoom_actual_size() called"<<std::endl<<std::endl;
       }
     }
+    if( button->type == GDK_BUTTON_PRESS && mod_key == PF::MOD_KEY_CTRL && button->button == 1) {
+      preview_drag_start_x = x;
+      preview_drag_start_y = y;
+      adjustment_drag_start_x = imageArea_scrolledWindow.get_hadjustment()->get_value();
+      adjustment_drag_start_y = imageArea_scrolledWindow.get_vadjustment()->get_value();
+    }
     return false;
   }
 
-
+  std::cout<<"ImageEditor::my_button_press_event(): active_layer="<<active_layer<<std::endl;
   if( active_layer &&
       active_layer->get_processor() &&
       active_layer->get_processor()->get_par() ) {
@@ -1038,7 +1132,7 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
     PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
     //std::cout<<"ImageEditor::my_button_press_event(): dialog="<<dialog<<std::endl;
     //if( dialog ) std::cout<<"ImageEditor::my_button_press_event(): dialog->get_editing_flag()="<<dialog->get_editing_flag()<<std::endl;
-    if( dialog && dialog->get_editing_flag() == true ) {
+    if( dialog /*&& dialog->get_editing_flag() == true*/ ) {
 #ifndef NDEBUG
       std::cout<<"  sending button press event to dialog"<<std::endl;
 #endif
@@ -1055,9 +1149,9 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
 
 bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::ImageEditor::on_button_release_event(): button "<<button->button<<" released."<<std::endl;
-#endif
+//#endif
   gdouble x = button->x;
   gdouble y = button->y;
 
@@ -1079,10 +1173,10 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
       active_layer->get_processor()->get_par() ) {
     PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
     PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
-    if( dialog && dialog->get_editing_flag() == true ) {
-#ifndef NDEBUG
+    if( dialog /*&& dialog->get_editing_flag() == true*/ ) {
+//#ifndef NDEBUG
       std::cout<<"  sending button release event to dialog"<<std::endl;
-#endif
+//#endif
       //std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
       if( dialog->pointer_release_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
@@ -1101,6 +1195,8 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
 	gdouble x, y;
 	guint state;
 	if (event->is_hint) {
+std::cout<<"event->is_hint"<<std::endl;
+return false;
 		//event->window->get_pointer(&ix, &iy, &state);
       //x = ix;
       //y = iy;
@@ -1127,6 +1223,26 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
   if( event->state & GDK_SHIFT_MASK ) mod_key |= PF::MOD_KEY_SHIFT;
 
   if( mod_key == PF::MOD_KEY_CTRL ) {
+    if( button == 1 ) {
+      int dx = (int)(x - preview_drag_start_x);
+      int dy = (int)(y - preview_drag_start_y);
+      if( fabs(imageArea_scrolledWindow.get_hadjustment()->get_value() - (adjustment_drag_start_x-dx)) > 2 ||
+          fabs(imageArea_scrolledWindow.get_vadjustment()->get_value() - (adjustment_drag_start_y-dy)) > 2 ) {
+
+        double xmax = imageArea_scrolledWindow.get_hadjustment()->get_upper() -
+            imageArea_scrolledWindow.get_hadjustment()->get_page_size();
+        double ymax = imageArea_scrolledWindow.get_vadjustment()->get_upper() -
+            imageArea_scrolledWindow.get_vadjustment()->get_page_size();
+        if( (adjustment_drag_start_x-dx) <= xmax ) {
+          imageArea_scrolledWindow.get_hadjustment()->set_value(adjustment_drag_start_x-dx);
+          adjustment_drag_start_x -= dx;
+        }
+        if( (adjustment_drag_start_y-dy) <= ymax ) {
+          imageArea_scrolledWindow.get_vadjustment()->set_value(adjustment_drag_start_y-dy);
+          adjustment_drag_start_y -= dy;
+        }
+      }
+    }
     return false;
   }
 
@@ -1138,12 +1254,14 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
              <<"  hint: "<<event->is_hint<<"  state: "<<event->state
              <<std::endl;
 #endif
+    //std::cout<<"PF::ImageEditor::on_motion_notify_event(): active_layer="<<active_layer;
+    //if(active_layer) std::cout<<" ("<<active_layer->get_name()<<")"<<std::endl;
     if( active_layer &&
         active_layer->get_processor() &&
         active_layer->get_processor()->get_par() ) {
       PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
-      if( dialog && dialog->get_editing_flag() == true ) {
+      if( dialog /*&& dialog->get_editing_flag() == true*/ ) {
 #ifndef NDEBUG
         std::cout<<"  sending motion event to dialog"<<std::endl;
 #endif
@@ -1166,10 +1284,11 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
 //bool PF::ImageEditor::on_preview_configure_event( GdkEventConfigure* event )
 void PF::ImageEditor::on_my_size_allocate(Gtk::Allocation& allocation)
 {
-	//std::cout<<"ImageEditor::on_my_size_allocate() called"<<std::endl;
-	if( fit_image && fit_image_needed ) {
-	  zoom_fit();
-	  fit_image_needed = false;
+	//std::cout<<"ImageEditor::on_my_size_allocate() called: fit_image="<<fit_image<<" fit_image_needed="<<fit_image_needed<<std::endl;
+	//std::cout<<"  allocation width="<<allocation.get_width()<<" height="<<allocation.get_height()<<std::endl;
+	if( fit_image /*&& fit_image_needed*/ ) {
+	  if( zoom_fit() )
+	    fit_image_needed = false;
 	}
 	//return false;
 }

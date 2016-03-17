@@ -339,6 +339,8 @@ void PF::DrawConfigGUI::draw_point( double x, double y )
 
 bool PF::DrawConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
   if( mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) )
     start_stroke();
@@ -349,6 +351,8 @@ bool PF::DrawConfigGUI::pointer_press_event( int button, double x, double y, int
 
 bool PF::DrawConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   if( button != 1 ) return false;
   //draw_point( x, y );
   return false;
@@ -357,7 +361,10 @@ bool PF::DrawConfigGUI::pointer_release_event( int button, double x, double y, i
 
 bool PF::DrawConfigGUI::pointer_motion_event( int button, double x, double y, int mod_key )
 {
+  if( !get_editing_flag() ) return false;
+
   mouse_x = x; mouse_y = y;
+  //std::cout<<"DrawConfigGUI::pointer_motion_event(): mouse_x="<<mouse_x<<" mouse_y="<<mouse_y<<std::endl;
   if( button != 1 ) return true;
 #ifndef NDEBUG
   std::cout<<"PF::DrawConfigGUI::pointer_motion_event() called."<<std::endl;

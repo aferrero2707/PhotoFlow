@@ -66,6 +66,7 @@ namespace PF
 
     bool enabled;
     bool visible;
+    bool expanded;
 
     bool normal;
 
@@ -105,7 +106,13 @@ namespace PF
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }
     void clear_modified() { modified_flag = false; }
-    void modified() {  set_modified(); signal_modified.emit(); }
+    void modified()
+    {
+      set_modified();
+      //std::cout<<"Layer::modified(): emitting signal_modified."<<std::endl;
+      signal_modified.emit();
+      //std::cout<<"Layer::modified(): signal_modified emitted."<<std::endl;
+    }
 
     bool is_dirty() { return dirty; }
     void set_dirty( bool d ) { dirty = d; /*if(dirty) std::cout<<"\""<<get_name()<<"\"->set_dirty(1) called"<<std::endl;*/}
@@ -132,10 +139,24 @@ namespace PF
       visible = d;
     }
 
+    bool is_expanded() { return expanded; }
+    void set_expanded( bool d )
+    {
+      expanded = d;
+    }
+
     bool is_group() { return( !normal ); }
     bool is_normal() { return normal; }
     void set_normal( bool d ) { normal = d; }
     
+    bool is_map()
+    {
+      if( processor && processor->get_par() )
+        return processor->get_par()->is_map();
+      else
+        return false;
+    }
+
     bool is_cached() { return cached; }
     void set_cached( bool c ) 
     {

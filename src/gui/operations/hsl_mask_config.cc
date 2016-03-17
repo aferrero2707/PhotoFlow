@@ -33,6 +33,8 @@
 #include "hsl_mask_config.hh"
 
 
+#define CURVE_SIZE 192
+
 class HueEqualizerArea: public PF::CurveArea
 {
 public:
@@ -82,29 +84,34 @@ public:
 
 PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, _("HSL Mask") ),
-  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, 240, 150 ),
-  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
-  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, 240, 150 ),
+  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
+  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
   invert( this, "invert", "invert", false ),
   hueHeq_enable( this, "H_curve_enabled", "Enable", true ),
   hueSeq_enable( this, "S_curve_enabled", "Enable", true  ),
   hueLeq_enable( this, "L_curve_enabled", "Enable", true  ),
   layer_list( this, _("Layer name:") )
 {
-  curves_nb[0].append_page( hueHeq_box, "H curve" );
-  curves_nb[0].append_page( hueSeq_box, "S curve" );
-  curves_nb[0].append_page( hueLeq_box, "L curve" );
+  curves_nb[0].append_page( hueHeq_hbox, "H curve" );
+  curves_nb[0].append_page( hueSeq_hbox, "S curve" );
+  curves_nb[0].append_page( hueLeq_hbox, "L curve" );
 
+  hueHeq_hbox.pack_start( hueHeq_box, Gtk::PACK_SHRINK );
   hueHeq_box.pack_start( hueHeq, Gtk::PACK_SHRINK );
   hueHeq_box.pack_start( hueHeq_enable_box, Gtk::PACK_SHRINK );
+  hueHeq_enable_box.pack_end( hueHeq_enable, Gtk::PACK_SHRINK );
+
+  hueSeq_hbox.pack_start( hueSeq_box, Gtk::PACK_SHRINK );
   hueSeq_box.pack_start( hueSeq, Gtk::PACK_SHRINK );
   hueSeq_box.pack_start( hueSeq_enable_box, Gtk::PACK_SHRINK );
+  hueSeq_enable_box.pack_end( hueSeq_enable, Gtk::PACK_SHRINK );
+
+  hueLeq_hbox.pack_start( hueLeq_box, Gtk::PACK_SHRINK );
   hueLeq_box.pack_start( hueLeq, Gtk::PACK_SHRINK );
   hueLeq_box.pack_start( hueLeq_enable_box, Gtk::PACK_SHRINK );
-
-  hueHeq_enable_box.pack_end( hueHeq_enable, Gtk::PACK_SHRINK );
-  hueSeq_enable_box.pack_end( hueSeq_enable, Gtk::PACK_SHRINK );
   hueLeq_enable_box.pack_end( hueLeq_enable, Gtk::PACK_SHRINK );
+
   //hueHeq_enable_box.pack_end( hueHeq_enable_padding, Gtk::PACK_EXPAND_WIDGET );
 
   controlsBox.pack_start( invert, Gtk::PACK_SHRINK );
@@ -220,7 +227,7 @@ bool PF::HSLMaskConfigGUI::pointer_press_event( int button, double x, double y, 
 
 bool PF::HSLMaskConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
-  if( button != 1 || mod_key != PF::MOD_KEY_CTRL ) return false;
+  if( button != 1 || mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) ) return false;
   std::cout<<"HSLMaskConfigGUI::pointer_release_event(): x="<<x<<"  y="<<y<<"    mod_key="<<mod_key<<std::endl;
 
   // Retrieve the layer associated to the filter
@@ -235,14 +242,30 @@ bool PF::HSLMaskConfigGUI::pointer_release_event( int button, double x, double y
   PF::Pipeline* pipeline = image->get_pipeline( 0 );
   if( !pipeline ) return false;
 
-  // Find the pipeline node associated to the current layer
-  PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
-  if( !node ) return false;
+  PF::Layer* lin = NULL;
+  PF::PipelineNode* nodein = NULL;
+  std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& extra_inputs = layer->get_extra_inputs();
+  if( extra_inputs.size() > 0 ) {
+    lin = image->get_layer_manager().get_layer( extra_inputs[0].first.first );
+    if( lin ) {
+      nodein = pipeline->get_node( lin->get_id() );
+    }
+  } else {
+    // Find the pipeline node associated to the current layer
+    PF::PipelineNode* node = pipeline->get_node( layer->get_id() );
+    if( !node ) return false;
 
-  // Find the input layer of the current filter
-  if( node->input_id < 0 ) return false;
-  PF::Layer* lin = image->get_layer_manager().get_layer( node->input_id );
+    // Find the input layer of the current filter
+    if( node->input_id < 0 ) return false;
+    lin = image->get_layer_manager().get_layer( node->input_id );
+
+    if( lin ) {
+      nodein = pipeline->get_node( lin->get_id() );
+    }
+  }
+
   if( !lin ) return false;
+  if( !nodein ) return false;
 
   // Sample a 5x5 pixels region of the input layer
   std::vector<float> values;
@@ -254,15 +277,19 @@ bool PF::HSLMaskConfigGUI::pointer_release_event( int button, double x, double y
 
   std::cout<<"HSLMaskConfigGUI::pointer_release_event(): values="<<values[0]<<","<<values[1]<<","<<values[2]<<std::endl;
 
-  rgb2hsl( values[0], values[1], values[2], H, S, L );
-
-  PF::OpParBase* par = get_layer()->get_processor()->get_par();
-  PF::colorspace_t cs = PF::convert_colorspace( par->get_interpretation() );
+  PF::OpParBase* par = lin->get_processor()->get_par();
+  PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
+  if( nodein->processor && nodein->processor->get_par() ) {
+    PF::OpParBase* parin = nodein->processor->get_par();
+    cs = PF::convert_colorspace( parin->get_interpretation() );
+  }
+  std::cout<<"HSLMaskConfigGUI::pointer_release_event(): cs="<<cs<<std::endl;
   switch( cs ) {
   case PF_COLORSPACE_GRAYSCALE:
     break;
-  case PF_COLORSPACE_RGB:
+  case PF_COLORSPACE_RGB: {
     if( values.size() != 3 ) return false;
+    rgb2hsl( values[0], values[1], values[2], H, S, L );
     switch( curves_nb[0].get_current_page() ) {
     case 0:
       hueHeq.add_point( H/360.0f );
@@ -275,8 +302,9 @@ bool PF::HSLMaskConfigGUI::pointer_release_event( int button, double x, double y
       break;
     }
     break;
-    case PF_COLORSPACE_LAB:
-      break;
+  }
+  case PF_COLORSPACE_LAB:
+    break;
   case PF_COLORSPACE_CMYK:
     break;
   default:

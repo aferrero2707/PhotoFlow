@@ -53,6 +53,7 @@ namespace PF {
   Gtk::HSeparator sep1, sep2, sep3, sep4;
 
   Gtk::VBox hueHeq_box, hueSeq_box, hueLeq_box;
+  Gtk::HBox hueHeq_hbox, hueSeq_hbox, hueLeq_hbox;
   CurveEditor hueHeq, hueSeq, hueLeq;
   CheckBox invert, hueHeq_enable, hueSeq_enable, hueLeq_enable;
   Gtk::HBox hueHeq_enable_box, hueSeq_enable_box, hueLeq_enable_box;

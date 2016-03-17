@@ -17,6 +17,12 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+#ifdef INFINITYf
+#undef INFINITYf
+#endif
+#define INFINITYf ((float)INFINITY)
+
 /** region of interest */
 typedef struct dt_iop_roi_t
 {
@@ -143,7 +149,7 @@ void modify_roi_out(//struct dt_iop_module_t *self, struct dt_dev_pixelpipe_iop_
     struct dt_iop_clipping_data_t *d, dt_iop_roi_t *roi_out,
     const dt_iop_roi_t *roi_in_orig)
 {
-  printf("modify_roi_out(): roi_in=%d,%d\n",roi_in_orig->width,roi_in_orig->height);
+  //printf("modify_roi_out(): roi_in=%d,%d\n",roi_in_orig->width,roi_in_orig->height);
   dt_iop_roi_t roi_in_d = *roi_in_orig;
   dt_iop_roi_t *roi_in = &roi_in_d;
 
@@ -152,8 +158,8 @@ void modify_roi_out(//struct dt_iop_module_t *self, struct dt_dev_pixelpipe_iop_
   *roi_out = *roi_in;
   // set roi_out values with rotation and keystone
   // initial corners pos
-  float corn_x[4] = { 0.0f, roi_in->width, roi_in->width, 0.0f };
-  float corn_y[4] = { 0.0f, 0.0f, roi_in->height, roi_in->height };
+  float corn_x[4] = { 0.0f, ((float)(roi_in->width)), ((float)(roi_in->width)), 0.0f };
+  float corn_y[4] = { 0.0f, 0.0f, ((float)(roi_in->height)), ((float)(roi_in->height)) };
   // destination corner points
   float corn_out_x[4] = { 0.0f };
   float corn_out_y[4] = { 0.0f };
@@ -165,14 +171,13 @@ void modify_roi_out(//struct dt_iop_module_t *self, struct dt_dev_pixelpipe_iop_
   float p[2], o[2];
   for(int c = 0; c < 4; c++)
   {
-    printf("corn_x[%d]=%f  corn_y[%d]=%f\n",
-        c,corn_x[c],c,corn_y[c]);
+    //printf("corn_x[%d]=%f  corn_y[%d]=%f\n",c,corn_x[c],c,corn_y[c]);
     // keystone
     o[0] = corn_x[c];
     o[1] = corn_y[c];
-    printf("modify_roi_out(): #1 o(%d)=%f,%f\n",c,o[0],o[1]);
+    //printf("modify_roi_out(): #1 o(%d)=%f,%f\n",c,o[0],o[1]);
     o[0] /= (float)roi_in->width, o[1] /= (float)roi_in->height;
-    printf("%f %f %f %f %f %f %f %f %f\n", d->a, d->b, d->d, d->e, d->g, d->h, d->kxa, d->kya);
+    //printf("%f %f %f %f %f %f %f %f\n", d->a, d->b, d->d, d->e, d->g, d->h, d->kxa, d->kya);
     if(keystone_transform(o, d->k_space, d->a, d->b, d->d, d->e, d->g, d->h, d->kxa, d->kya) != 1)
     {
       // we set the point to maximum possible
@@ -186,13 +191,12 @@ void modify_roi_out(//struct dt_iop_module_t *self, struct dt_dev_pixelpipe_iop_
         o[1] = 2.0f;
     }
     o[0] *= roi_in->width, o[1] *= roi_in->height;
-    printf("modify_roi_out(): #2 o(%d)=%f,%f\n",c,o[0],o[1]);
+    //printf("modify_roi_out(): #2 o(%d)=%f,%f\n",c,o[0],o[1]);
 
     // and we set the values
     corn_out_x[c] = o[0];
     corn_out_y[c] = o[1];
-    printf("corn_out_x[%d]=%f  corn_out_y[%d]=%f\n",
-        c,corn_out_x[c],c,corn_out_y[c]);
+    //printf("corn_out_x[%d]=%f  corn_out_y[%d]=%f\n",c,corn_out_x[c],c,corn_out_y[c]);
   }
 
   float new_x, new_y, new_sc_x, new_sc_y;
@@ -200,13 +204,13 @@ void modify_roi_out(//struct dt_iop_module_t *self, struct dt_dev_pixelpipe_iop_
   if(new_x + roi_in->width < 0) new_x = -roi_in->width;
   new_y = fminf(fminf(fminf(corn_out_y[0], corn_out_y[1]), corn_out_y[2]), corn_out_y[3]);
   if(new_y + roi_in->height < 0) new_y = -roi_in->height;
-  printf("modify_roi_out(): new_x=%f  new_y=%f\n",new_x,new_y);
+  //printf("modify_roi_out(): new_x=%f  new_y=%f\n",new_x,new_y);
 
   new_sc_x = fmaxf(fmaxf(fmaxf(corn_out_x[0], corn_out_x[1]), corn_out_x[2]), corn_out_x[3]);
   if(new_sc_x > 2.0f * roi_in->width) new_sc_x = 2.0f * roi_in->width;
   new_sc_y = fmaxf(fmaxf(fmaxf(corn_out_y[0], corn_out_y[1]), corn_out_y[2]), corn_out_y[3]);
   if(new_sc_y > 2.0f * roi_in->height) new_sc_y = 2.0f * roi_in->height;
-  printf("modify_roi_out(): #1 new_sc_x=%f  new_sc_y=%f\n",new_sc_x,new_sc_y);
+  //printf("modify_roi_out(): #1 new_sc_x=%f  new_sc_y=%f\n",new_sc_x,new_sc_y);
 
   // be careful, we don't want too small area here !
   if(new_sc_x - new_x < roi_in->width / 8.0f)
@@ -226,15 +230,15 @@ void modify_roi_out(//struct dt_iop_module_t *self, struct dt_dev_pixelpipe_iop_
 
   new_sc_y = new_sc_y - new_y;
   new_sc_x = new_sc_x - new_x;
-  printf("modify_roi_out(): #2 new_sc_x=%f  new_sc_y=%f\n",new_sc_x,new_sc_y);
+  //printf("modify_roi_out(): #2 new_sc_x=%f  new_sc_y=%f\n",new_sc_x,new_sc_y);
 
   // now we apply the clipping
   new_x += d->cx * new_sc_x;
   new_y += d->cy * new_sc_y;
   new_sc_x *= d->cw - d->cx;
   new_sc_y *= d->ch - d->cy;
-  printf("modify_roi_out(): #3 new_x=%f  new_y=%f\n",new_x,new_y);
-  printf("modify_roi_out(): #3 new_sc_x=%f  new_sc_y=%f\n",new_sc_x,new_sc_y);
+  //printf("modify_roi_out(): #3 new_x=%f  new_y=%f\n",new_x,new_y);
+  //printf("modify_roi_out(): #3 new_sc_x=%f  new_sc_y=%f\n",new_sc_x,new_sc_y);
 
   d->enlarge_x = fmaxf(-new_x, 0.0f);
   roi_out->x = fmaxf(new_x, 0.0f);
@@ -246,8 +250,8 @@ void modify_roi_out(//struct dt_iop_module_t *self, struct dt_dev_pixelpipe_iop_
   d->tx = roi_in->width * .5f;
   d->ty = roi_in->height * .5f;
 
-  printf("modify_roi_out(): roi_out=%d,%d+%d+%d\n",roi_out->width,roi_out->height,roi_out->x,roi_out->y);
-  printf("modify_roi_out(): d->enlarge_x=%f  d->enlarge_y=%f\n",(float)d->enlarge_x,(float)d->enlarge_y);
+  //printf("modify_roi_out(): roi_out=%d,%d+%d+%d\n",roi_out->width,roi_out->height,roi_out->x,roi_out->y);
+  //printf("modify_roi_out(): d->enlarge_x=%f  d->enlarge_y=%f\n",(float)d->enlarge_x,(float)d->enlarge_y);
 
   // sanity check.
   if(roi_out->x < 0) roi_out->x = 0;
@@ -281,7 +285,7 @@ void modify_roi_in(struct dt_iop_clipping_data_t *d,
   float p[2], o[2],
       aabb[4] = { roi_out_x + d->cix * so, roi_out_y + d->ciy * so, roi_out_x + d->cix * so + roi_out->width,
                   roi_out_y + d->ciy * so + roi_out->height };
-  float aabb_in[4] = { INFINITY, INFINITY, -INFINITY, -INFINITY };
+  float aabb_in[4] = { INFINITYf, INFINITYf, -INFINITYf, -INFINITYf };
   for(int c = 0; c < 4; c++)
   {
     // get corner points of roi_out
@@ -502,7 +506,7 @@ void commit_params(//struct dt_iop_module_t *self, dt_iop_params_t *p1, dt_dev_p
     d->all_off = 1;
     d->k_apply = 0;
   }
-  printf("commit_params(): %f %f %f %f %f %f %f %f %f\n", d->a, d->b, d->d, d->e, d->g, d->h, d->kxa, d->kya);
+  //printf("commit_params(): %f %f %f %f %f %f %f %f\n", d->a, d->b, d->d, d->e, d->g, d->h, d->kxa, d->kya);
 
   /*
   if(gui_has_focus(self))

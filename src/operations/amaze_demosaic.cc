@@ -60,8 +60,9 @@ VipsImage* PF::AmazeDemosaicPar::build(std::vector<VipsImage*>& in, int first,
 
   //  TOP BAND
   int i0 = 0;
+  VipsImage* input = in[0];
   // Extract an horizontal top band at (0,1) and with size (in[0]->Xsize,border)
-  if( vips_crop(in[0], &t[i0], 0, 1, in[0]->Xsize, border, NULL) ) {
+  if( vips_crop(input, &t[i0], 0, 1, input->Xsize, border, NULL) ) {
     std::cout<<"AmazeDemosaicPar::build(): vip_crop(#1) failed"<<std::endl;
     return NULL;
   }

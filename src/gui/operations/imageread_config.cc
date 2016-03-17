@@ -34,13 +34,16 @@
 
 PF::ImageReadConfigGUI::ImageReadConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Open an image" ),
-  openButton(Gtk::Stock::OPEN)
+  img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-folder-open.png" ),
+  openButton(/*Gtk::Stock::OPEN*/)
 {
-  label.set_text( "file name:" );
+  label.set_text( _("file name:") );
+  openButton.set_image( img_open );
+  fileEntry.set_width_chars(20);
 
-  controlsBox.pack_start( label );
-  controlsBox.pack_start( fileEntry );
-  controlsBox.pack_start( openButton );
+  controlsBox.pack_start( label, Gtk::PACK_SHRINK, 0 );
+  controlsBox.pack_start( fileEntry, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( openButton, Gtk::PACK_SHRINK, 0 );
   
   add_widget( controlsBox );
 

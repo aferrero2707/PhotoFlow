@@ -39,6 +39,7 @@
 
 #include "operation_config_gui.hh"
 #include "operationstree.hh"
+#include "widgets/toolbutton.hh"
 
 namespace PF {
 
@@ -48,16 +49,18 @@ class ControlsGroup: public Gtk::VBox
 {
   ImageEditor* editor;
   std::vector<Gtk::Frame*> controls;
+  std::vector<PF::OperationConfigGUI*> guis;
 
 public:
   ControlsGroup( ImageEditor* editor );
   size_t size() { return controls.size(); }
   /**/
   void clear();
-  void add_control(Gtk::Frame* control);
-  void remove_control(Gtk::Frame* control);
+  void add_control(PF::OperationConfigGUI* control);
+  void remove_control(PF::OperationConfigGUI* control);
+  void collapse_all();
   /**/
-  void set_controls( std::vector<Gtk::Frame*>& new_controls);
+  //void set_controls( std::vector<Gtk::Frame*>& new_controls);
 };
 
 
@@ -68,6 +71,8 @@ class LayerWidget : public Gtk::VBox
 
   Gtk::VPaned layers_panel;
   Gtk::VBox top_box;
+  Gtk::HBox main_box;
+  Gtk::VBox vbox;
   Gtk::Notebook notebook;
   Gtk::ScrolledWindow controls_scrolled_window;
   ControlsGroup controls_group;
@@ -77,6 +82,10 @@ class LayerWidget : public Gtk::VBox
   Gtk::Button buttonPresetLoad, buttonPresetSave;
   Gtk::Dialog layersDialog;
   OperationsTreeDialog operationsDialog;
+
+  Gtk::VBox tool_buttons_box;
+  ToolButton add_button, group_button, trash_button, curves_button, uniform_button, gradient_button, path_mask_button, desaturate_button, crop_button,
+  basic_edits_button, draw_button, clone_button, perspective_button, scale_button;
 
   std::vector<Gtk::ScrolledWindow*> layer_frames;
   std::vector<LayerTree*> layer_views;
@@ -131,12 +140,14 @@ public:
 
   static gboolean update_cb(PF::LayerWidget* w)
   {
+    //std::cout<<"LayerWidget::update_cb() called."<<std::endl;
     if( w ) w->update();
     return( FALSE );
   }
 
   void update_idle()
   {
+    //std::cout<<"LayerWidget::update_idle() called."<<std::endl;
     gdk_threads_add_idle ((GSourceFunc) LayerWidget::update_cb, this);
   }
 
@@ -153,6 +164,8 @@ public:
   void on_selection_changed();
 
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
+  void on_row_expanded( const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path );
+  void on_row_collapsed( const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path );
 
 #ifdef GTKMM_3
   void on_switch_page(Widget* page, guint page_num);

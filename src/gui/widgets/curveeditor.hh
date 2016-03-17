@@ -41,6 +41,7 @@ namespace PF {
 
   class CurveArea: public Gtk::DrawingArea
   {
+    //Gtk::DrawingArea area;
     SplineCurve curve;
 
     int border_size;
@@ -73,7 +74,7 @@ namespace PF {
   {
     Gtk::VBox box;
     Gtk::Label xlabel, ylabel;
-    Gtk::Alignment xalign, yalign;
+    Gtk::Alignment xalign, yalign, numentries_spacing;
     float xmin, xmax, ymin, ymax;
 #ifdef GTKMM_2
     Gtk::Adjustment xadjustment, yadjustment;
@@ -86,6 +87,7 @@ namespace PF {
 
     int curve_area_width, curve_area_height;
     CurveArea* curve_area;
+    Gtk::EventBox curve_area_ebox;
 
     int grabbed_point;
 
@@ -94,6 +96,7 @@ namespace PF {
     bool inhibit_value_changed;
 
     bool handle_curve_events(GdkEvent* event);
+    bool on_key_press_or_release_event(GdkEventKey* event);
 
   public:
     CurveEditor(OperationConfigGUI* dialog, std::string pname, CurveArea* ca,

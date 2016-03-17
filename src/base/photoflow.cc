@@ -34,6 +34,19 @@
 #include <stdlib.h>
 #include <glibmm.h>
 
+#include <stdio.h>  /* defines FILENAME_MAX */
+//#ifdef WINDOWS
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#include <direct.h>
+#include <shlobj.h>
+#define GetCurrentDir _getcwd
+#else
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
+
 #if defined(__MINGW32__) || defined(__MINGW64__)
   #include<windows.h>
 #endif
@@ -42,6 +55,7 @@
 #include <mach-o/dyld.h>
 #endif
 
+#include "pf_mkstemp.hh"
 #include "imageprocessor.hh"
 #include "photoflow.hh"
 
@@ -92,6 +106,45 @@ PF::PhotoFlow::PhotoFlow():
     }
     cache_dir = fname;
   }
+#endif
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+    WCHAR pathW[MAX_PATH] = {0};
+    char pathA[MAX_PATH];
+
+    if (SHGetSpecialFolderPathW(NULL, pathW, CSIDL_LOCAL_APPDATA, false)) {
+      WideCharToMultiByte(CP_UTF8, 0, pathW, -1, pathA, MAX_PATH, 0, 0);
+      config_dir = Glib::build_filename(Glib::ustring(pathA), "photoflow");
+      int result = mkdir(config_dir.c_str());
+      if( (result == 0) || (errno == EEXIST) ) {
+        config_dir = Glib::build_filename(config_dir, "config");
+        result = mkdir(config_dir.c_str());
+        if( (result != 0) && (errno != EEXIST) ) {
+          perror("mkdir");
+          std::cout<<"Cannot create "<<config_dir<<"    exiting."<<std::endl;
+          exit( 1 );
+        }
+      }
+    }
+#else
+    if( getenv("HOME") ) {
+      sprintf( fname,"%s/.photoflow", getenv("HOME") );
+      int result = mkdir(fname, 0755);
+      if( (result == 0) || (errno == EEXIST) ) {
+        sprintf( fname,"%s/.photoflow/config/", getenv("HOME") );
+        result = mkdir(fname, 0755);
+        if( (result != 0) && (errno != EEXIST) ) {
+          perror("mkdir");
+          std::cout<<"Cannot create "<<fname<<"    exiting."<<std::endl;
+          exit( 1 );
+        }
+      } else {
+        perror("mkdir");
+        std::cout<<"Cannot create "<<fname<<" (result="<<result<<")   exiting."<<std::endl;
+        exit( 1 );
+      }
+      config_dir = fname;
+    }
 #endif
 
   char exname[512] = {0};
@@ -158,6 +211,43 @@ PF::PhotoFlow& PF::PhotoFlow::Instance()
     PF::PhotoFlow::instance = new PF::PhotoFlow();
   return( *instance );
 };
+
+
+void PF::PhotoFlow::close()
+{
+  //PF::ImageProcessor::Instance().join();
+
+  //im_close_plugins();
+  std::cout<<"PhotoFlow::close(): calling vips shutdown"<<std::endl;
+  vips_shutdown();
+  std::cout<<"PhotoFlow::close(): vips shutdown done"<<std::endl;
+
+  options.save();
+/*
+#if defined(__MINGW32__) || defined(__MINGW64__)
+  for (int i = 0; i < _getmaxstdio(); ++i) ::close (i);
+#elif defined(__APPLE__) && defined(__MACH__)
+#else
+  rlimit rlim;
+  //getrlimit(RLIMIT_NOFILE, &rlim);
+  if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
+    std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<std::endl;
+    for (int i = 3; i < rlim.rlim_max; ++i) {
+      //std::cout<<"i="<<i<<std::endl;
+      //::close (i);
+    }
+  }
+#endif
+*/
+  std::cout<<"PhotoFlow::close(): deleting cache files"<<std::endl;
+  std::list<std::string>::iterator fi;
+  for(fi = cache_files.begin(); fi != cache_files.end(); fi++) {
+    std::cout<<"  deleting "<<fi->c_str()<<std::endl;
+    unlink( fi->c_str() );
+    std::cout<<"  "<<fi->c_str()<<" deleted"<<std::endl;
+  }
+  std::cout<<"PhotoFlow::close(): cache files deleted"<<std::endl;
+}
 
 
 

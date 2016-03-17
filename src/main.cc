@@ -170,6 +170,8 @@ int main (int argc, char *argv[])
   PF::PhotoFlow::Instance().set_new_op_func_nogui( PF::new_operation );
   PF::PhotoFlow::Instance().set_batch( false );
 
+  PF::PhotoFlow::Instance().get_options().load();
+
   std::cout<<"Starting image processor..."<<std::endl;
   PF::ImageProcessor::Instance().start();
   std::cout<<"Image processor started."<<std::endl;
@@ -219,6 +221,7 @@ int main (int argc, char *argv[])
   Gtk::Settings::get_default()->property_gtk_application_prefer_dark_theme().set_value(true);
 
   int stat_result = stat((themesPath + "/photoflow-dark.css").c_str(), &buffer);
+  //int stat_result = stat((themesPath + "/RawTherapee.css").c_str(), &buffer);
   //int stat_result = stat((themesPath + "/gtk-3.0/gtk.css").c_str(), &buffer);
   //stat_result = 1;
   if( stat_result == 0 ) {
@@ -231,48 +234,40 @@ int main (int argc, char *argv[])
     //cntx->add_provider(css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     cntx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     //cntx->invalidate();
+    std::cout<<"Loading theme file "<<themesPath + "/photoflow-dark.css"<<std::endl;
     css->load_from_path(themesPath + "/photoflow-dark.css");
+    //std::cout<<"Loading theme file "<<themesPath + "/RawTherapee.css"<<std::endl;
+    //css->load_from_path(themesPath + "/RawTherapee.css");
     //css->load_from_path(themesPath + "/gtk-3.0/gtk.css");
     //css->load_from_path("themes/photoflow-dark/gtk.css");
   }
 #endif
 
+  //Shows the window and returns when it is closed.
+  mainWindow->show_all();
   if( argc > 1 ) {
     fullpath = realpath( argv[argc-1], NULL );
     if(!fullpath)
       return 1;
     mainWindow->open_image( fullpath );
     free(fullpath);
+  } else {
+    mainWindow->on_button_open_clicked();
   }
-  //Shows the window and returns when it is closed.
-  mainWindow->show_all();
   app->run(*mainWindow);
 
+  PF::ProcessRequestInfo request;
+  request.request = PF::PROCESSOR_END;
+  PF::ImageProcessor::Instance().submit_request( request );
+  PF::ImageProcessor::Instance().join();
+
+  std::cout<<"Image processing thread finished"<<std::endl;
+
+  app->iteration( false );
   delete mainWindow;
   delete app;
 
-  PF::ImageProcessor::Instance().join();
-
-  //im_close_plugins();
-  vips_shutdown();
-
-#if defined(__MINGW32__) || defined(__MINGW64__)
-  for (int i = 0; i < _getmaxstdio(); ++i) close (i);
-#elif defined(__APPLE__) && defined(__MACH__)
-#else
-  rlimit rlim;
-  //getrlimit(RLIMIT_NOFILE, &rlim);
-  if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
-    std::cout<<"rlim.rlim_max="<<rlim.rlim_max<<std::endl;
-    for (int i = 3; i < rlim.rlim_max; ++i) {
-      //std::cout<<"i="<<i<<std::endl;
-      close (i);
-    }
-  }
-#endif
-  std::list<std::string>::iterator fi;
-  for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
-    unlink( fi->c_str() );
+  PF::PhotoFlow::Instance().close();
 
   return 0;
 }
