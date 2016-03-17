@@ -75,6 +75,8 @@ PF::SettingsDialog::SettingsDialog():
   Gtk::TreeModel::Row row = *(ri);
   row[cm_display_profile_columns.col_id] = 0;
   row[cm_display_profile_columns.col_value] = "sRGB";
+
+#if !defined(__MACOSX__) && !defined(__APPLE__)
 /*
   ri = cm_display_profile_model->append();
   row = *(ri);
@@ -86,16 +88,14 @@ PF::SettingsDialog::SettingsDialog():
   row[cm_display_profile_columns.col_id] = 2;
   row[cm_display_profile_columns.col_value] = "Custom";
 
-  //cm_display_profile_type_selector.insert( 0, "sRGB" );
-  //cm_display_profile_type_selector.insert( 1, "System (not working)" );
-  //cm_display_profile_type_selector.insert( 2, "Custom" );
-  cm_display_profile_type_selector.set_active( 0 );
-
   //cm_display_profile_button.add( cm_display_profile_img );
   cm_display_profile_open_label.set_text( _("custom display profile name: ") );
   cm_display_profile_box.pack_start( cm_display_profile_open_label, Gtk::PACK_SHRINK );
   cm_display_profile_box.pack_start( cm_display_profile_entry, Gtk::PACK_SHRINK, 4 );
   cm_display_profile_box.pack_start( cm_display_profile_open_button, Gtk::PACK_SHRINK );
+#endif
+
+  cm_display_profile_type_selector.set_active( 0 );
 
   cm_display_profile_type_label.set_text( _("display profile type: ") );
   cm_display_profile_type_box.pack_start( cm_display_profile_type_label, Gtk::PACK_SHRINK );
