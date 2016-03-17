@@ -454,7 +454,7 @@ bool PF::GradientConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
   int point_size = 2;
 
   int ps = points.size();
-  std::cout<<"GradientConfigGUI::modify_preview(): ps="<<ps<<std::endl;
+  //std::cout<<"GradientConfigGUI::modify_preview(): ps="<<ps<<std::endl;
   for(unsigned int i = 0; i < ps; i++ ) {
     double px = 0, py = 0, pw = 1, ph = 1;
     if( par->get_gradient_type() == GRADIENT_VERTICAL ) {
@@ -480,7 +480,7 @@ bool PF::GradientConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
       buf_out.fill( point2, 255, 255, 255 );
 
     int i2 = i - 1;
-    if( i2 < 0 ) i2 = ps - 1;
+    if( i2 < 0 ) continue;
 
     double px0 = 0, py0 = 0, pw0 = 1, ph0 = 1;
     if( par->get_gradient_type() == GRADIENT_VERTICAL ) {
@@ -496,7 +496,7 @@ bool PF::GradientConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
     //printf("buf_out.draw_line( %f, %f, %f, %f)\n", px0, py0, px, py );
     buf_out.draw_line( px0, py0, px, py, buf_in );
   }
-  std::cout<<std::endl;
+  //std::cout<<std::endl;
 
 
   return true;
