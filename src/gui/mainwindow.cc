@@ -86,6 +86,8 @@ img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-floppy.png" ),
 img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/save-as.png" ),
 //img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-export.png" ),
 img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-file-image.png" ),
+img_settings( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-sliders.png" ),
+img_exit( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-sign-out.png" ),
 img_load_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
 img_save_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
 img_trash( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
@@ -93,8 +95,8 @@ buttonOpen( /*_("Open")*/ ),
 buttonSave( /*_("Save")*/ ),
 buttonSaveAs( /*_("Save as")*/ ),
 buttonExport( /*_("Export")*/ ),
-buttonExit( _("Exit") ),
-buttonSettings("Settings"),
+buttonExit( /*_("Exit")*/ ),
+buttonSettings(),
 buttonNewLayer(_("New Adjustment")),
 buttonNewGroup(_("New Group")),
 buttonDelLayer(),
@@ -139,6 +141,10 @@ buttonSavePreset()
   buttonSaveAs.set_tooltip_text( _("Save current image with a different name") );
   buttonExport.set_image( img_export ); buttonExport.set_size_request(40,-1);
   buttonExport.set_tooltip_text( _("Export current image to raster format") );
+  buttonSettings.set_image( img_settings ); buttonSettings.set_size_request(40,-1);
+  buttonSettings.set_tooltip_text( _("Open settings dialog") );
+  buttonExit.set_image( img_exit ); buttonExit.set_size_request(40,-1);
+  buttonExit.set_tooltip_text( _("Exit PhotoFlow") );
 
   top_box.set_spacing(4);
   top_box.set_border_width(4);
@@ -158,7 +164,7 @@ buttonSavePreset()
   buttonSavePreset.set_tooltip_text( _("Open existing file") );
   topButtonBox2.pack_start(buttonSavePreset, Gtk::PACK_SHRINK);
 
-  top_box.pack_start(buttonExit, Gtk::PACK_SHRINK); buttonExit.set_size_request(70,-1);
+  top_box.pack_start(buttonExit, Gtk::PACK_SHRINK); //buttonExit.set_size_request(70,-1);
   //topButtonBox.set_border_width(5);
   //topButtonBox.set_layout(Gtk::BUTTONBOX_START);
 

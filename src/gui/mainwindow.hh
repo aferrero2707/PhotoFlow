@@ -71,7 +71,7 @@ protected:
   Gtk::HBox top_box;
   Gtk::Notebook viewerNotebook;
   Gtk::Frame files_frame, editing_frame;
-  Gtk::Image img_open, img_save, img_save_as, img_export;
+  Gtk::Image img_open, img_save, img_save_as, img_export, img_settings, img_exit;
   Gtk::Button buttonOpen, buttonSave, buttonSaveAs, buttonExport, buttonExit, buttonSettings;
   Gtk::Image img_load_preset, img_save_preset, img_trash;
   Gtk::Button buttonNewLayer, buttonNewGroup, buttonDelLayer, buttonLoadPreset, buttonSavePreset;
