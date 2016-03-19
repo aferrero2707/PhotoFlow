@@ -702,7 +702,7 @@ void PF::OperationConfigGUI::show_help()
   dialog.show_all_children();
 
   Gtk::Container* toplevel = controls_box.get_toplevel();
-  if( toplevel && toplevel->is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+  if( toplevel && toplevel->get_is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
     dialog.set_transient_for( *(dynamic_cast<Gtk::Window*>(toplevel)) );
 
   dialog.run();
