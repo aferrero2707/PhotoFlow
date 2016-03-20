@@ -666,20 +666,20 @@ void PF::OperationConfigGUI::show_help()
 
   Glib::ustring help;
   if( get_par() ) {
-  Glib::ustring helpPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow/help/en/" + get_par()->get_type() + ".hlp";
-  std::ifstream file(helpPath.c_str());
-  char ch;
-  if( !file.fail() ) {
-    while(!file.eof()) {
-      //std::string tmpStr;
-      //std::getline(file, tmpStr);
-      //help += tmpStr;
-      file.get( ch );
-      if( !file.fail() ) help += ch;
+    Glib::ustring helpPath = PF::PhotoFlow::Instance().get_data_dir() + "/help/en/" + get_par()->get_type() + ".hlp";
+    std::ifstream file(helpPath.c_str());
+    char ch;
+    if( !file.fail() ) {
+      while(!file.eof()) {
+        //std::string tmpStr;
+        //std::getline(file, tmpStr);
+        //help += tmpStr;
+        file.get( ch );
+        if( !file.fail() ) help += ch;
+      }
+    } else {
+      help = "Ths help is not yet available. Sorry.";
     }
-  } else {
-    help = "Ths help is not yet available. Sorry.";
-  }
   }
 
   Gtk::TextView textview;
@@ -702,7 +702,7 @@ void PF::OperationConfigGUI::show_help()
   dialog.show_all_children();
 
   Gtk::Container* toplevel = controls_box.get_toplevel();
-  if( toplevel && toplevel->is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+  if( toplevel && toplevel->get_is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
     dialog.set_transient_for( *(dynamic_cast<Gtk::Window*>(toplevel)) );
 
   dialog.run();

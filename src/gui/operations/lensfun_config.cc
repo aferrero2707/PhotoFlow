@@ -60,7 +60,20 @@ PF::LensFunConfigGUI::LensFunConfigGUI( PF::Layer* layer ):
 
 #ifdef PF_HAS_LENSFUN
   ldb = lf_db_new();
-  ldb->Load ();
+#if (BUNDLED_LENSFUN == 1)
+  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_data_dir() + "/lensfun/version_1/";
+  ldb->LoadDirectory( lfdb.c_str() );
+  std::cout<<"LensFun database loaded from "<<lfdb<<std::endl;
+#else
+  //char* lfdb_env = getenv("PF_LENSFUN_DATA_DIR");
+  //if( lfdb_env ) {
+  //  ldb->LoadDirectory( lfdb.c_str() );
+  //  std::cout<<"LensFun database loaded from "<<lfdb_env<<std::endl;
+  //} else {
+    ldb->Load ();
+    std::cout<<"LensFun database loaded from default location"<<std::endl;
+  //}
+#endif //(BUNDLED_LENSFUN == 1)
 #endif
 
   makerEntry.signal_activate().
