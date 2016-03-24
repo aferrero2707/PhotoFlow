@@ -74,11 +74,12 @@ void PF::ImageButton::on_map()
 
 bool PF::ImageButton::on_button_press_event( GdkEventButton* button )
 {
+  if( button->type != GDK_BUTTON_PRESS || button->button != 1 ) return false;
 #ifndef NDEBUG
   std::cout<<"PF::ToggleImageButton::on_button_press_event(): button "<<button->button<<" pressed."<<std::endl;
 #endif
-  button_box.remove( img );
-  button_box.pack_start( pressed_img, Gtk::PACK_SHRINK );
+  button_box.remove( img_align );
+  button_box.pack_start( pressed_img_align, Gtk::PACK_SHRINK );
   show_all_children();
   return true;
 }
@@ -93,8 +94,8 @@ bool PF::ImageButton::on_button_release_event( GdkEventButton* button )
 
   signal_clicked.emit();
 
-  button_box.remove( pressed_img );
-  button_box.pack_start( img, Gtk::PACK_SHRINK );
+  button_box.remove( pressed_img_align );
+  button_box.pack_start( img_align, Gtk::PACK_SHRINK );
   show_all_children();
   return true;
 }
