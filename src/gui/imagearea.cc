@@ -1203,8 +1203,11 @@ void PF::ImageArea::update( VipsRect* area )
   region = vips_region_new (display_image);
 
 	int tile_size = 128;
+	// make room for at most a 4k display
+	int max_csreen_width = 128*30;
+	int max_screen_height = 128*20;
   if (vips_sink_screen2 (outimg, display_image, NULL,
-												 tile_size, tile_size, (2000/tile_size)*(2000/tile_size), 
+												 tile_size, tile_size, (max_csreen_width/tile_size)*(max_screen_height/tile_size),
 												 //6400, 64, (2000/64), 
 												 0, NULL, this))
 		return;
