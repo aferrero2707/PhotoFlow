@@ -86,7 +86,7 @@ extern "C" {
 /** inverts the given 3x3 matrix */
 generate_mat3inv_body(float, A, B)
 
-    int mat3inv(float *const dst, const float *const src)
+static int mat3inv(float *const dst, const float *const src)
 {
   return mat3inv_float(dst, src);
 }
@@ -448,15 +448,15 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
 
   camProfFileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-			  &RawDeveloperConfigGUI::on_cam_filename_changed));
+        &RawDeveloperConfigGUI::on_cam_filename_changed));
   camProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
-							   &RawDeveloperConfigGUI::on_cam_button_open_clicked) );
+                 &RawDeveloperConfigGUI::on_cam_button_open_clicked) );
 
   outProfFileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-			  &RawDeveloperConfigGUI::on_out_filename_changed));
+        &RawDeveloperConfigGUI::on_out_filename_changed));
   outProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
-							   &RawDeveloperConfigGUI::on_out_button_open_clicked) );
+                 &RawDeveloperConfigGUI::on_out_button_open_clicked) );
 
   wbTempSlider.get_adjustment()->signal_value_changed().
       connect(sigc::mem_fun(*this,&PF::RawDeveloperConfigGUI::temp_tint_changed));
@@ -535,7 +535,7 @@ void PF::RawDeveloperConfigGUI::do_update()
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
-    PF::RawDeveloperPar* par = 
+    PF::RawDeveloperPar* par =
       dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
     if( !par ) return;
 
@@ -644,45 +644,45 @@ void PF::RawDeveloperConfigGUI::do_update()
     if( wb_best_match_label.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wb_best_match_label );
 
-		if( wbRedSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbRedSlider );
-		if( wbGreenSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbGreenSlider );
-		if( wbBlueSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbBlueSlider );
+    if( wbRedSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbRedSlider );
+    if( wbGreenSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbGreenSlider );
+    if( wbBlueSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbBlueSlider );
 
-		if( wbRedCorrSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbRedCorrSlider );
-		if( wbGreenCorrSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbGreenCorrSlider );
-		if( wbBlueCorrSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbBlueCorrSlider );
+    if( wbRedCorrSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbRedCorrSlider );
+    if( wbGreenCorrSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbGreenCorrSlider );
+    if( wbBlueCorrSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbBlueCorrSlider );
 
     switch( prop->get_enum_value().first ) {
     case PF::WB_SPOT:
-			if( wbTargetBox.get_parent() == &wbControlsBox )
-				wbControlsBox.remove( wbTargetBox );
-			if( wb_best_match_label.get_parent() == &wbControlsBox )
-				wbControlsBox.remove( wb_best_match_label );
-			if( wbRedSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
-			if( wbGreenSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
-			if( wbBlueSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
-			break;
+      if( wbTargetBox.get_parent() == &wbControlsBox )
+        wbControlsBox.remove( wbTargetBox );
+      if( wb_best_match_label.get_parent() == &wbControlsBox )
+        wbControlsBox.remove( wb_best_match_label );
+      if( wbRedSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
+      if( wbGreenSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
+      if( wbBlueSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+      break;
     case PF::WB_COLOR_SPOT:
-			if( wbTargetBox.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbTargetBox, Gtk::PACK_SHRINK );
-			if( wb_best_match_label.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wb_best_match_label, Gtk::PACK_SHRINK );
-			if( wbRedSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
-			if( wbGreenSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
-			if( wbBlueSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
-			break;
+      if( wbTargetBox.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbTargetBox, Gtk::PACK_SHRINK );
+      if( wb_best_match_label.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wb_best_match_label, Gtk::PACK_SHRINK );
+      if( wbRedSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
+      if( wbGreenSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
+      if( wbBlueSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+      break;
     default:
       if( wbRedCorrSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
@@ -691,7 +691,7 @@ void PF::RawDeveloperConfigGUI::do_update()
       if( wbBlueCorrSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
       break;
-		}
+    }
 
 
     prop = par->get_property( "cam_profile_name" );
@@ -787,8 +787,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   PF::Pipeline* pipeline = img->get_pipeline( 0 );
   if( !pipeline ) return;
 
-	// Make sure the first pipeline is up-to-date
-	//img->update( pipeline, false );
+  // Make sure the first pipeline is up-to-date
+  //img->update( pipeline, false );
   //img->unlock();
 
   // Get the node associated to the layer
@@ -826,20 +826,20 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     int height = 7;
 
     float rgb_avg[3] = {0, 0, 0};
-		std::vector<float> values;
+    std::vector<float> values;
 
     //std::cout<<"RawDeveloperConfigGUI: getting spot WB ("<<x<<","<<y<<")"<<std::endl;
-		img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
-							 <<values.size()<<" (!= 3)"<<std::endl;
-			return;
-		}
-		rgb_avg[0] = values[0];
-		rgb_avg[1] = values[1];
-		rgb_avg[2] = values[2];
+    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    if( values.size() != 3 ) {
+      std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
+               <<values.size()<<" (!= 3)"<<std::endl;
+      return;
+    }
+    rgb_avg[0] = values[0];
+    rgb_avg[1] = values[1];
+    rgb_avg[2] = values[2];
 
-		std::cout<<" sampled("<<i<<"): "<<rgb_avg[0]<<" "<<rgb_avg[1]<<" "<<rgb_avg[2]<<std::endl;
+    std::cout<<" sampled("<<i<<"): "<<rgb_avg[0]<<" "<<rgb_avg[1]<<" "<<rgb_avg[2]<<std::endl;
 
 
     float rgb_out[3] = {0, 0, 0};
@@ -856,12 +856,12 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     float wb_green_mul;
     float wb_blue_mul;
 
-		// The target color is gray, so we simply neutralize the spot value
-		// The green channel is kept fixed and the other two are scaled to 
-		// the green value
-		wb_red_mul = rgb_avg[1]/rgb_avg[0];
-		wb_blue_mul = rgb_avg[1]/rgb_avg[2];
-		wb_green_mul = 1;
+    // The target color is gray, so we simply neutralize the spot value
+    // The green channel is kept fixed and the other two are scaled to
+    // the green value
+    wb_red_mul = rgb_avg[1]/rgb_avg[0];
+    wb_blue_mul = rgb_avg[1]/rgb_avg[2];
+    wb_green_mul = 1;
 
     PropertyBase* wb_red_prop = wbRedSlider.get_prop();
     PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
@@ -879,8 +879,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
       scale = 1;
       //std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-			//				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-			//				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      //         <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+      //         <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
       //std::cout<<"  scale: "<<scale<<std::endl;
       //float scale = wb_green_mul;
       wb_red_out /= scale;
@@ -891,8 +891,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       wb_blue_prop->update( wb_blue_out );
 
       //std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-			//				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-			//				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      //         <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+      //         <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
       wbRedSlider.init();
       wbGreenSlider.init();
@@ -909,15 +909,15 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     }
 
     //std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
-		img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
-							 <<values.size()<<" (!= 3)"<<std::endl;
-			return;
-		}
-		rgb_check[0] = values[0];
-		rgb_check[1] = values[1];
-		rgb_check[2] = values[2];
+    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    if( values.size() != 3 ) {
+      std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
+               <<values.size()<<" (!= 3)"<<std::endl;
+      return;
+    }
+    rgb_check[0] = values[0];
+    rgb_check[1] = values[1];
+    rgb_check[2] = values[2];
 
     std::cout<<" rgb check("<<i<<"): "<<rgb_check[0]<<" "<<rgb_check[1]<<" "<<rgb_check[2]<<std::endl;
 
@@ -933,8 +933,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   }
 
   par->set_caching( true );
-	// Update the prepipeline to reflect the new settings
-	img->update();
+  // Update the prepipeline to reflect the new settings
+  img->update();
 }
 
 
@@ -960,9 +960,9 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   PF::Pipeline* pipeline = img->get_pipeline( 0 );
   if( !pipeline ) return;
 
-	// Make sure the first pipeline is up-to-date
-	//img->update( pipeline, true );
-	//img->update( NULL, true );
+  // Make sure the first pipeline is up-to-date
+  //img->update( pipeline, true );
+  //img->update( NULL, true );
   //img->unlock();
 
   // Get the node associated to the layer
@@ -983,7 +983,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   void *data;
   size_t data_length;
   if( vips_image_get_blob( image, VIPS_META_ICC_NAME, 
-			   &data, &data_length ) )
+         &data, &data_length ) )
     return;
 
   cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
@@ -1005,18 +1005,18 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   cmsUInt32Number outfmt = TYPE_Lab_FLT;
 
   cmsHTRANSFORM transform = cmsCreateTransform( profile_in, 
-						infmt,
-						profile_out, 
-						outfmt,
-						INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+            infmt,
+            profile_out,
+            outfmt,
+            INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
   if( !transform )
     return;
 
   cmsHTRANSFORM transform_inv = cmsCreateTransform( profile_out, 
-						    outfmt,
-						    profile_in, 
-						    infmt,
-						    INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+                outfmt,
+                profile_in,
+                infmt,
+                INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
   if( !transform_inv )
     return;
 
@@ -1061,29 +1061,29 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     float wb_green_out;
     float wb_blue_out;
 
-		/*
+    /*
     VipsRect crop = {left, top, width, height};
     VipsRect all = {0 ,0, image->Xsize, image->Ysize};
     VipsRect clipped;
     vips_rect_intersectrect( &crop, &all, &clipped );
   
     if( vips_crop( image, &spot, 
-									 clipped.left, clipped.top, 
-									 clipped.width, clipped.height, 
-									 NULL ) )
+                   clipped.left, clipped.top,
+                   clipped.width, clipped.height,
+                   NULL ) )
       return;
 
     VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
 
     VipsImage* outimg = im_open( "spot_wb_img", "p" );
     if (vips_sink_screen (spot, outimg, NULL,
-													64, 64, 1, 
-													0, NULL, this))
+                          64, 64, 1,
+                          0, NULL, this))
       return;
     VipsRegion* region = vips_region_new( outimg );
     if (vips_region_prepare (region, &rspot))
       return;
-		*/
+    */
     //if( vips_sink_memory( spot ) )
     //  return;
 
@@ -1092,36 +1092,36 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     float* p;
     float red, green, blue;
     float rgb_avg[3] = {0, 0, 0};
-		std::vector<float> values;
+    std::vector<float> values;
 
     std::cout<<std::endl<<std::endl<<"==============================================="<<std::endl;
    std::cout<<"RawDeveloperConfigGUI: getting color spot WB"<<std::endl;
-		/*
+    /*
     int line_size = clipped.width*3;
     for( row = 0; row < rspot.height; row++ ) {
       p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
       for( col = 0; col < line_size; col += 3 ) {
-				red = p[col];      rgb_avg[0] += red;
-				green = p[col+1];  rgb_avg[1] += green;
-				blue = p[col+2];   rgb_avg[2] += blue;
-				//std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
+        red = p[col];      rgb_avg[0] += red;
+        green = p[col+1];  rgb_avg[1] += green;
+        blue = p[col+2];   rgb_avg[2] += blue;
+        //std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
       }
     }
     rgb_avg[0] /= rspot.width*rspot.height;
     rgb_avg[1] /= rspot.width*rspot.height;
     rgb_avg[2] /= rspot.width*rspot.height;
-		*/
+    */
     std::cout<<"RawDeveloperConfigGUI: getting color spot WB ("<<x<<","<<y<<")"<<std::endl;
-		img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		//values.clear(); img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
-							 <<values.size()<<" (!= 3)"<<std::endl;
-			return;
-		}
-		rgb_avg[0] = values[0];
-		rgb_avg[1] = values[1];
-		rgb_avg[2] = values[2];
+    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    //values.clear(); img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    if( values.size() != 3 ) {
+      std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
+               <<values.size()<<" (!= 3)"<<std::endl;
+      return;
+    }
+    rgb_avg[0] = values[0];
+    rgb_avg[1] = values[1];
+    rgb_avg[2] = values[2];
 
     std::cout<<" RGB in: "<<rgb_avg[0]*255<<" "<<rgb_avg[1]*255<<" "<<rgb_avg[2]*255<<std::endl;
 
@@ -1150,7 +1150,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     float wb_delta2 = Lab_wb[2] - ab_zero;
 
     if( (fabs(wb_delta1) < epsilon) &&
-				(fabs(wb_delta2) < epsilon) ) {
+        (fabs(wb_delta2) < epsilon) ) {
 
       // The target color is gray, so we simply neutralize the spot value
       // The green channel is kept fixed and the other two are scaled to 
@@ -1169,7 +1169,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
       Lab_out[1] = Lab_wb[1];
       Lab_out[2] = Lab_in[2];
       if( delta2*wb_delta2 < 0 )
-				Lab_out[2] = -Lab_in[2];
+        Lab_out[2] = -Lab_in[2];
 
       // Now we convert back to RGB and we compute the multiplicative
       // factors that bring from the current WB to the target one
@@ -1188,7 +1188,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
       Lab_out[1] = Lab_in[1];
       Lab_out[2] = Lab_wb[2];
       if( delta1*wb_delta1 < 0 )
-				Lab_out[1] = -Lab_in[1];
+        Lab_out[1] = -Lab_in[1];
 
       // Now we convert back to RGB and we compute the multiplicative
       // factors that bring from the current WB to the target one
@@ -1208,11 +1208,11 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
 
       Lab_out[0] = Lab_in[0];
       if( fabs(wb_delta1) > fabs(wb_delta2) ) {
-				Lab_out[1] = sign1*delta1 + ab_zero;
-				Lab_out[2] = sign2*delta2*ab_ratio/wb_ab_ratio + ab_zero;
+        Lab_out[1] = sign1*delta1 + ab_zero;
+        Lab_out[2] = sign2*delta2*ab_ratio/wb_ab_ratio + ab_zero;
       } else {
-				Lab_out[1] = sign1*delta1*wb_ab_ratio/ab_ratio + ab_zero;
-				Lab_out[2] = sign2*delta2 + ab_zero;
+        Lab_out[1] = sign1*delta1*wb_ab_ratio/ab_ratio + ab_zero;
+        Lab_out[2] = sign2*delta2 + ab_zero;
       }
       Lab_out[1] = Lab_wb[1];
       Lab_out[2] = Lab_wb[2];
@@ -1352,21 +1352,21 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     //img->set_async( async );
 
 
-		/*
+    /*
     g_object_unref( spot );
     g_object_unref( outimg );
     g_object_unref( region );
 
     if( vips_crop( image, &spot, 
-									 clipped.left, clipped.top, 
-									 clipped.width, clipped.height, 
-									 NULL ) )
+                   clipped.left, clipped.top,
+                   clipped.width, clipped.height,
+                   NULL ) )
       return;
 
     outimg = im_open( "spot_wb_img", "p" );
     if (vips_sink_screen (spot, outimg, NULL,
-													64, 64, 1, 
-													0, NULL, this))
+                          64, 64, 1,
+                          0, NULL, this))
       return;
     region = vips_region_new( outimg );
     if (vips_region_prepare (region, &rspot))
@@ -1377,37 +1377,37 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     for( row = 0; row < rspot.height; row++ ) {
       p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
       for( col = 0; col < line_size; col += 3 ) {
-				red = p[col];      rgb_avg[0] += red;
-				green = p[col+1];  rgb_avg[1] += green;
-				blue = p[col+2];   rgb_avg[2] += blue;
-				//std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
+        red = p[col];      rgb_avg[0] += red;
+        green = p[col+1];  rgb_avg[1] += green;
+        blue = p[col+2];   rgb_avg[2] += blue;
+        //std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
       }
     }
     rgb_avg[0] /= rspot.width*rspot.height;
     rgb_avg[1] /= rspot.width*rspot.height;
     rgb_avg[2] /= rspot.width*rspot.height;
-		*/
+    */
     std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
-		img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
-							 <<values.size()<<" (!= 3)"<<std::endl;
-			return;
-		}
-		rgb_avg[0] = values[0];
-		rgb_avg[1] = values[1];
-		rgb_avg[2] = values[2];
+    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    if( values.size() != 3 ) {
+      std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
+               <<values.size()<<" (!= 3)"<<std::endl;
+      return;
+    }
+    rgb_avg[0] = values[0];
+    rgb_avg[1] = values[1];
+    rgb_avg[2] = values[2];
 
     std::cout<<" RGB check: "<<rgb_avg[0]*255<<" "<<rgb_avg[1]*255<<" "<<rgb_avg[2]*255<<std::endl;
     // Now we convert the average RGB values in the WB spot region to Lab
     cmsDoTransform( transform, rgb_avg, Lab_check, 1 );
     std::cout<<" Lab check("<<i<<"): "<<Lab_check[0]<<" "<<Lab_check[1]<<" "<<Lab_check[2]<<std::endl;
 
-		/*
+    /*
     g_object_unref( spot );
     g_object_unref( outimg );
     g_object_unref( region );
-		*/
+    */
 
     if( i == 0 ) continue;
     float delta_a = Lab_check[1] - Lab_prev[1];
@@ -1424,7 +1424,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
 
   char tstr[500];
   snprintf( tstr, 499, "Best match: L=%0.2f a=%0.2f b=%0.2f",
-						Lab_check[0], Lab_check[1], Lab_check[2] );
+            Lab_check[0], Lab_check[1], Lab_check[2] );
   wb_best_match_label.set_text( tstr );
 
   cmsDeleteTransform( transform );
@@ -1433,8 +1433,8 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   cmsCloseProfile( profile_out );
 
   par->set_caching( true );
-	// Update the preview to reflect the new settings
-	img->update();
+  // Update the preview to reflect the new settings
+  img->update();
 }
 
 
@@ -1442,9 +1442,9 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
 void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
 {
   Gtk::FileChooserDialog dialog("Please choose a file",
-																Gtk::FILE_CHOOSER_ACTION_OPEN);
+                                Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
-  
+
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
@@ -1454,7 +1454,7 @@ void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
 
   //Handle the response:
   switch(result) {
-  case(Gtk::RESPONSE_OK): 
+  case(Gtk::RESPONSE_OK):
     {
       std::cout << "Open clicked." << std::endl;
 
@@ -1465,12 +1465,12 @@ void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
       on_cam_filename_changed();
       break;
     }
-  case(Gtk::RESPONSE_CANCEL): 
+  case(Gtk::RESPONSE_CANCEL):
     {
       std::cout << "Cancel clicked." << std::endl;
       break;
     }
-  default: 
+  default:
     {
       std::cout << "Unexpected button clicked." << std::endl;
       break;
@@ -1483,9 +1483,9 @@ void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
 void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
 {
   Gtk::FileChooserDialog dialog("Please choose a file",
-																Gtk::FILE_CHOOSER_ACTION_OPEN);
+                                Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
-  
+
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
@@ -1495,7 +1495,7 @@ void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
 
   //Handle the response:
   switch(result) {
-  case(Gtk::RESPONSE_OK): 
+  case(Gtk::RESPONSE_OK):
     {
       std::cout << "Open clicked." << std::endl;
 
@@ -1506,12 +1506,12 @@ void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
       on_out_filename_changed();
       break;
     }
-  case(Gtk::RESPONSE_CANCEL): 
+  case(Gtk::RESPONSE_CANCEL):
     {
       std::cout << "Cancel clicked." << std::endl;
       break;
     }
-  default: 
+  default:
     {
       std::cout << "Unexpected button clicked." << std::endl;
       break;
@@ -1523,19 +1523,19 @@ void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
 
 void PF::RawDeveloperConfigGUI::on_cam_filename_changed()
 {
-  if( get_layer() && get_layer()->get_image() && 
+  if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     std::string filename = camProfFileEntry.get_text();
     if( filename.empty() )
       return;
     //std::cout<<"New input profile name: "<<filename<<std::endl;
-    PF::RawDeveloperPar* par = 
+    PF::RawDeveloperPar* par =
       dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
     if( !par )
       return;
     PropertyBase* prop = par->get_property( "cam_profile_name" );
-    if( !prop ) 
+    if( !prop )
       return;
     prop->update( filename );
     get_layer()->set_dirty( true );
@@ -1548,19 +1548,19 @@ void PF::RawDeveloperConfigGUI::on_cam_filename_changed()
 
 void PF::RawDeveloperConfigGUI::on_out_filename_changed()
 {
-  if( get_layer() && get_layer()->get_image() && 
+  if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     std::string filename = outProfFileEntry.get_text();
     if( filename.empty() )
       return;
     //std::cout<<"New output profile name: "<<filename<<std::endl;
-    PF::RawDeveloperPar* par = 
+    PF::RawDeveloperPar* par =
       dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
     if( !par )
       return;
     PropertyBase* prop = par->get_property( "out_profile_name" );
-    if( !prop ) 
+    if( !prop )
       return;
     prop->update( filename );
     get_layer()->set_dirty( true );
