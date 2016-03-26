@@ -102,7 +102,7 @@ public:
 
 
 
-template<typename T, colorspace_t CS, int CHMIN, int CHMAX>
+template<colorspace_t CS, int CHMIN, int CHMAX>
 class BlendMultiply<float, CS, CHMIN, CHMAX, true>:
   public BlendBase<float, CS, CHMIN, CHMAX, true>
 {
@@ -111,7 +111,7 @@ class BlendMultiply<float, CS, CHMIN, CHMAX, true>:
 public:
   void blend(const float& opacity, float* bottom, float* top, float* out, const int& x, int& xomap)
   {
-    opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);
+    opacity_real = opacity*this->pmap[xomap];
     xomap += 1;
 
     pos = x;
@@ -176,7 +176,7 @@ class BlendMultiply<float, PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, true>:
 public:
   void blend(const float& opacity, float* bottom, float* top, float* out, const int& x, int& xomap)
   {
-    float opacity_real = opacity*(this->pmap[xomap]+FormatInfo<float>::MIN)/(FormatInfo<float>::RANGE);
+    float opacity_real = opacity*this->pmap[xomap];
     xomap += 1;
     out[x] = opacity_real*top[x]*bottom[x] + (1.0f-opacity_real)*bottom[x];
   }
