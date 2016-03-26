@@ -67,6 +67,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
     processor = new_blender();
 
+  } else if( op_type == "white_balance" ) {
+
+    //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    processor = new_white_balance();
+
   } else if( op_type == "clip" ) {
 
     //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();

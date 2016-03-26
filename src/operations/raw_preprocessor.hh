@@ -50,35 +50,6 @@ namespace PF
   extern int raw_preproc_sample_x;
   extern int raw_preproc_sample_y;
 
-  enum wb_mode_t {
-    WB_CAMERA=0,
-    WB_SPOT=1,
-    WB_COLOR_SPOT=2,
-    WB_DAYLIGHT,
-    WB_DIRECT_SUNLIGHT,
-    WB_CLOUDY,
-    WB_SHADE,
-    WB_INCANDESCENT,
-    WB_INCANDESCENT_WARM,
-    WB_TUNGSTEN,
-    WB_FLUORESCENT,
-    WB_FLUORESCENT_HIGH,
-    WB_COOL_WHITE_FLUORESCENT,
-    WB_WARM_WHITE_FLUORESCENT,
-    WB_DAYLIGHT_FLUORESCENT,
-    WB_NEUTRAL_FLUORESCENT,
-    WB_WHITE_FLUORESCENT,
-    WB_SODIUM_VAPOR_FLUORESCENT,
-    WB_DAY_WHITE_FLUORESCENT,
-    WB_HIGH_TEMP_MERCURY_VAPOR_FLUORESCENT,
-    WB_FLASH,
-    WB_FLASH_AUTO,
-    WB_EVENING_SUN,
-    WB_UNDERWATER,
-    WB_BACK_AND_WHITE
-  }; 
-
-
   class RawPreprocessorPar: public OpParBase
   {
     dcraw_data_t* image_data;
@@ -393,10 +364,10 @@ namespace PF
       default:
         //render_camwb(ireg, n, in_first, imap, omap, oreg, rdpar);
         //std::cout<<"render_camwb() called"<<std::endl;
-        mul[0] = rdpar->get_wb_red()*rdpar->get_camwb_corr_red();
-        mul[1] = rdpar->get_wb_green()*rdpar->get_camwb_corr_green();
-        mul[2] = rdpar->get_wb_blue()*rdpar->get_camwb_corr_blue();
-        mul[3] = rdpar->get_wb_green()*rdpar->get_camwb_corr_green();
+        mul[0] = rdpar->get_wb_red();//*rdpar->get_camwb_corr_red();
+        mul[1] = rdpar->get_wb_green();//*rdpar->get_camwb_corr_green();
+        mul[2] = rdpar->get_wb_blue();//*rdpar->get_camwb_corr_blue();
+        mul[3] = rdpar->get_wb_green();//*rdpar->get_camwb_corr_green();
         break;
       }
 

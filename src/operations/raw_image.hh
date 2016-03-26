@@ -69,6 +69,7 @@ struct dcraw_color_data_t
   unsigned cblack[4];
   float maximum;
   float cam_mul[4];
+  float wb_mul[4];
   float cam_xyz[4][3];
   double ca_fitparams[3][2][16];
 };
@@ -93,6 +94,9 @@ struct dcraw_data_t
 
 namespace PF 
 {
+
+
+dcraw_data_t* get_raw_data( VipsImage* image );
 
   class RawImage
   {

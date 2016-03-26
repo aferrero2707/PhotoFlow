@@ -32,7 +32,7 @@
 #include <fcntl.h>
 
 #include "../base/exif_data.hh"
-#include "raw_preprocessor.hh"
+#include "white_balance.hh"
 
 /* We need C linkage for this.
  */
@@ -48,10 +48,10 @@ extern "C" {
 
 #include "../dt/external/wb_presets.c"
 
-int PF::raw_preproc_sample_x = 0;
-int PF::raw_preproc_sample_y = 0;
+int PF::wb_sample_x = 0;
+int PF::wb_sample_y = 0;
 
-PF::RawPreprocessorPar::RawPreprocessorPar(): 
+PF::WhiteBalancePar::WhiteBalancePar():
   OpParBase(), image_data( NULL ),
   wb_mode("wb_mode",this,PF::WB_CAMERA,"CAMERA","CAMERA"),
   wb_red("wb_red",this,1), 
@@ -92,28 +92,19 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_mode.add_enum_value(PF::WB_UNDERWATER,"UNDERWATER",Underwater);
   wb_mode.add_enum_value(PF::WB_BACK_AND_WHITE,"BACK_AND_WHITE",BlackNWhite);
 
-  set_type("raw_preprocessor" );
+  set_type("white_balance" );
 }
 
 
-VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first, 
+VipsImage* PF::WhiteBalancePar::build(std::vector<VipsImage*>& in, int first,
 				     VipsImage* imap, VipsImage* omap, 
 				     unsigned int& level)
 {
   if( (in.size()<1) || (in[0]==NULL) )
     return NULL;
   
-  size_t blobsz;
-  if( vips_image_get_blob( in[0], "raw_image_data",
-			   (void**)&image_data, 
-			   &blobsz ) ) {
-    std::cout<<"RawOutputPar::build(): could not extract raw_image_data."<<std::endl;
-    return NULL;
-  }
-  if( blobsz != sizeof(dcraw_data_t) ) {
-    std::cout<<"RawOutputPar::build(): wrong raw_image_data size."<<std::endl;
-    return NULL;
-  }
+  image_data = get_raw_data( in[0] );
+  if( !image_data ) return NULL;
 
   switch( wb_mode.get_enum_value().first ) {
   case PF::WB_CAMERA:
@@ -131,6 +122,7 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
     wb_blue_current = wb_blue.get();
     break;
   default: {
+    size_t blobsz;
     PF::exif_data_t* exif_data;
     if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
         (void**)&exif_data,
@@ -150,9 +142,9 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
       if( !strcmp(wb_preset[i].make, makermodel) && !strcmp(wb_preset[i].model, model) ) {
         if( wb_mode.get_enum_value().second.second == wb_preset[i].name &&
             wb_preset[i].tuning == 0 ) {
-          wb_red_current = wb_preset[i].channel[0] * camwb_corr_red.get();
-          wb_green_current = wb_preset[i].channel[1] * camwb_corr_green.get();
-          wb_blue_current = wb_preset[i].channel[2] * camwb_corr_blue.get();
+          wb_red_current = wb_preset[i].channel[0];
+          wb_green_current = wb_preset[i].channel[1];
+          wb_blue_current = wb_preset[i].channel[2];
         }
       }
     }
@@ -160,13 +152,39 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
   }
   }
 
-  dcraw_data_t* raw_image_data = get_raw_data( in[0] );
-  if( raw_image_data ) {
-    raw_image_data->color.wb_mul[0]= wb_red_current;
-    raw_image_data->color.wb_mul[1]= wb_green_current;
-    raw_image_data->color.wb_mul[2]= wb_blue_current;
-    raw_image_data->color.wb_mul[3]= wb_green_current;
+  float min_mul_in = image_data->color.wb_mul[0];
+  float max_mul_in = image_data->color.wb_mul[0];
+  for(int i = 1; i < 4; i++) {
+    if( image_data->color.wb_mul[i] < min_mul_in )
+      min_mul_in = image_data->color.wb_mul[i];
+    if( image_data->color.wb_mul[i] > max_mul_in )
+      max_mul_in = image_data->color.wb_mul[i];
   }
+
+  float mul[4];
+  mul[0] = wb_red_current;
+  mul[1] = wb_green_current;
+  mul[2] = wb_blue_current;
+  mul[3] = wb_green_current;
+  float min_mul = wb_red_current;
+  float max_mul = wb_red_current;
+  for(int i = 1; i < 4; i++) {
+    if( mul[i] < min_mul )
+      min_mul = mul[i];
+    if( mul[i] > max_mul )
+      max_mul = mul[i];
+  }
+
+  for(int i = 0; i < 4; i++) {
+    //mul[i] = mul[i] * min_mul_in / min_mul;
+    mul[i] = mul[i] / min_mul;
+  }
+
+  wb_red_current = mul[0] / image_data->color.wb_mul[0];
+  wb_green_current = mul[1] / image_data->color.wb_mul[1];
+  wb_blue_current = mul[2] / image_data->color.wb_mul[2];
+
+  std::cout<<"WhiteBalancePar::build(): WB mul="<<wb_red_current<<","<<wb_green_current<<","<<wb_blue_current<<endl;
 
   VipsImage* image = OpParBase::build( in, first, NULL, NULL, level );
   if( !image )
@@ -176,7 +194,7 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
 }
 
 
-PF::ProcessorBase* PF::new_raw_preprocessor()
+PF::ProcessorBase* PF::new_white_balance()
 {
-  return new PF::Processor<PF::RawPreprocessorPar,PF::RawPreprocessor>();
+  return new PF::Processor<PF::WhiteBalancePar,PF::WhiteBalance>();
 }
