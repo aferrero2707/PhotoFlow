@@ -42,9 +42,12 @@ PF::LayerList::LayerList( OperationConfigGUI* d, std::string l ):
 
   image_num.set_range(0,99);
 
+  set_spacing( 5 );
+
   model = Gtk::ListStore::create(columns);
   cbox.set_model( model );
   cbox.pack_start(columns.col_name);
+  cbox.set_size_request( 150, -1 );
 
   vbox.pack_start( label, Gtk::PACK_SHRINK );
   vbox.pack_start( cbox, Gtk::PACK_SHRINK );
