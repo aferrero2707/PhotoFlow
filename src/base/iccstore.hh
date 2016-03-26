@@ -79,18 +79,16 @@ struct ICCProfileData
 };
 
 
-ICCProfileData* get_icc_profile_data( VipsImage* img );
-void free_icc_profile_data( ICCProfileData* data );
-cmsFloat32Number linear2perceptual( ICCProfileData* data, cmsFloat32Number val );
-cmsFloat32Number perceptual2linear( ICCProfileData* data, cmsFloat32Number val );
-
-
 class ICCProfile
 {
+  void* profile_data;
+  cmsUInt32Number profile_size;
   cmsHPROFILE profile;
   cmsToneCurve* perceptual_trc;
   cmsToneCurve* perceptual_trc_inv;
   TRC_type trc_type;
+
+  Glib::ustring filename;
 
   float perceptual_trc_vec[65536];
   float perceptual_trc_inv_vec[65536];
@@ -98,22 +96,37 @@ class ICCProfile
   double colorants[9];
   float Y_R, Y_G, Y_B;
 
+  void init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv );
+
+  int refcount;
+
 public:
-  ICCProfile( TRC_type type );
+  ICCProfile();
   virtual ~ICCProfile();
 
+  void ref() { refcount += 1; }
+  void unref() { refcount -= 1; }
+  int get_ref_count() { return refcount; }
+
+  void set_file_name( Glib::ustring name ) { filename = name; }
+  Glib::ustring get_file_name() { return filename; }
+
   void init_colorants();
-  void init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv );
+  void init_trc();
 
   double* get_colorants() { return colorants; }
 
+  void set_trc_type(TRC_type type) { trc_type = type; }
   TRC_type get_trc_type() { return trc_type; }
   bool is_linear() { return( get_trc_type() == PF_TRC_LINEAR ); }
   bool is_perceptual() { return( get_trc_type() == PF_TRC_PERCEPTUAL ); }
   bool is_standard() { return( get_trc_type() == PF_TRC_STANDARD ); }
 
-  void set_profile( cmsHPROFILE p ) { profile = p; init_colorants(); }
+  void set_profile( cmsHPROFILE p );
   cmsHPROFILE get_profile(); //{ return profile; }
+
+  cmsUInt32Number get_profile_size() { return profile_size; }
+  void* get_profile_data() { return profile_data; }
 
   cmsFloat32Number linear2perceptual( cmsFloat32Number val )
   {
@@ -126,6 +139,12 @@ public:
 
   float* get_linear2perceptual_vec() { return perceptual_trc_inv_vec; }
   float* get_perceptual2linear_vec() { return perceptual_trc_vec; }
+
+  float get_luminance( float R, float G, float B )
+  {
+    return( Y_R*R + Y_G*G + Y_B*B );
+  }
+  //void get_luminance( float* RGBv, float* Lv, size_t size );
 
   float get_lightness( float R, float G, float B );
   void get_lightness( float* RGBv, float* Lv, size_t size );
@@ -144,6 +163,23 @@ public:
 
     return data;
   }
+};
+
+
+//ICCProfileData* get_icc_profile_data( VipsImage* img );
+//void free_icc_profile_data( ICCProfileData* data );
+void set_icc_profile( VipsImage* img, ICCProfile* prof );
+ICCProfile* get_icc_profile( VipsImage* img );
+void iccprofile_unref( void* prof );
+
+//cmsFloat32Number linear2perceptual( ICCProfileData* data, cmsFloat32Number val );
+//cmsFloat32Number perceptual2linear( ICCProfileData* data, cmsFloat32Number val );
+
+
+class DiskProfile: public ICCProfile
+{
+public:
+  DiskProfile();
 };
 
 
@@ -173,6 +209,8 @@ class ICCStore
   ICCProfile* srgb_profiles[3];
   ICCProfile* rec2020_profiles[3];
   ICCProfile* aces_profiles[3];
+  std::vector<ICCProfile*> profiles;
+
   static ICCStore* instance;
 
   Glib::ustring    defaultMonitorProfile;  // Main monitors standard profile name, from OS
@@ -183,6 +221,9 @@ public:
 
   ICCProfile* get_srgb_profile(TRC_type type) { return srgb_profiles[type]; }
   ICCProfile* get_profile(profile_type_t ptype, TRC_type trc_type);
+  ICCProfile* get_profile( Glib::ustring pname );
+  ICCProfile* get_profile( void* pdata, cmsUInt32Number psize );
+  ICCProfile* get_profile( cmsHPROFILE profile );
 
   cmsToneCurve* get_Lstar_trc() {return Lstar_trc; }
   cmsToneCurve* get_iLstar_trc() {return iLstar_trc; }

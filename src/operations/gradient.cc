@@ -97,7 +97,7 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out2 = out;
 
   //PF::ICCProfileData* data;
-  data = PF::get_icc_profile_data( out );
+  icc_data = PF::get_icc_profile( out );
 
   int modlen = 0, modh = 0;
   switch( get_gradient_type() ) {
@@ -131,13 +131,13 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
     float fval = i;
     fval /= 65535;
     if( perceptual.get() ) {
-      if( !is_map() && data && data->trc_type == PF::PF_TRC_LINEAR ) {
+      if( !is_map() && icc_data && icc_data->is_linear() ) {
         float lval = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), fval );
         //std::cout<<"modvec["<<i<<"]: perceptual="<<fval<<"  linear="<<lval<<std::endl;
         fval = lval;
       }
     } else {
-      if( is_map() || !data || data->trc_type != PF::PF_TRC_LINEAR ) {
+      if( is_map() || !icc_data || !icc_data->is_linear() ) {
             float lval = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_iLstar_trc(), fval );
             //std::cout<<"modvec["<<i<<"]: perceptual="<<fval<<"  linear="<<lval<<std::endl;
             fval = lval;

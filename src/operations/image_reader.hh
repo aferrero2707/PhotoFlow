@@ -48,8 +48,10 @@ namespace PF
     // output color profile
     PropertyBase in_profile_mode;
     PropertyBase in_trc_mode;
+    Property<std::string> in_profile_name;
     PropertyBase out_profile_mode;
     PropertyBase out_trc_mode;
+    Property<std::string> out_profile_name;
 
     VipsImage* image;
     PF::ProcessorBase* convert_format;
@@ -73,8 +75,10 @@ namespace PF
       //out_profile_mode("profile_mode",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
       in_profile_mode("in_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("embedded")),
       in_trc_mode("in_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+      in_profile_name("in_profile_name",this),
       out_profile_mode("out_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("same")),
       out_trc_mode("out_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+      out_profile_name("out_profile_name",this),
       image(NULL),
       current_format(VIPS_FORMAT_NOTSET),
       in_profile( NULL ),
@@ -89,16 +93,16 @@ namespace PF
       //in_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
       //in_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
       //in_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-      //in_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+      in_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
-      out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
+      //out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
       out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
       out_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
       out_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
       //out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
       //out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
       //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-      //out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+      out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
       //in_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
       in_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
@@ -121,6 +125,9 @@ namespace PF
     std::string get_file_name() { return file_name.get_str(); }
     void set_file_name( const std::string& name ) { file_name.set_str( name ); }
     void set_file_name( const char* name ) { set_file_name( std::string( name ) ); }
+
+    profile_type_t get_in_profile_mode() { return (profile_type_t)in_profile_mode.get_enum_value().first; }
+    profile_type_t get_out_profile_mode() { return (profile_type_t)out_profile_mode.get_enum_value().first; }
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 

@@ -28,6 +28,7 @@
  */
 
 #include <string>
+#include <iostream>
 #include "../iccstore.hh"
 
 
@@ -79,10 +80,13 @@ static cmsCIExyY  d65_srgb_adobe_specs = {0.3127, 0.3290, 1.0};
  * */
 
 
-PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile( type )
+PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
 {
+  set_trc_type( type );
+
+  /*
   if( type == PF::PF_TRC_STANDARD ) {
-    /* sRGB TRC */
+    // sRGB TRC
     cmsFloat64Number srgb_parameters[5] =
     { 2.4, 1.0 / 1.055,  0.055 / 1.055, 1.0 / 12.92, 0.04045 };
     cmsToneCurve *srgb_parametic_curve =
@@ -90,9 +94,9 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile( type )
     cmsToneCurve *srgb_parametic_curve_inv =
         cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
     srgb_parametic_curve_inv = cmsReverseToneCurve( srgb_parametic_curve_inv );
-    init_trc( srgb_parametic_curve, srgb_parametic_curve_inv );
+    //init_trc( srgb_parametic_curve, srgb_parametic_curve_inv );
   } else {
-    /* LAB "L" (perceptually uniform) TRC */
+    // LAB "L" (perceptually uniform) TRC
     cmsFloat64Number labl_parameters[5] =
     { 3.0, 0.862076,  0.137924, 0.110703, 0.080002 };
     cmsToneCurve *labl_parametic_curve =
@@ -100,8 +104,9 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile( type )
     cmsToneCurve *labl_parametic_curve_inv =
         cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
     labl_parametic_curve_inv = cmsReverseToneCurve( labl_parametic_curve_inv );
-    init_trc( labl_parametic_curve, labl_parametic_curve_inv );
+    //init_trc( labl_parametic_curve, labl_parametic_curve_inv );
   }
+  */
 
   /* ***** Make profile: sRGB, D65, sRGB TRC */
   /*
@@ -144,5 +149,6 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile( type )
   //cmsSaveProfileToFile(profile, filename);
   cmsMLUfree(description);
 
+  std::cout<<"Initializing sRGB profile"<<std::endl;
   set_profile( profile );
 }

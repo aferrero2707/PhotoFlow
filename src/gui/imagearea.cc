@@ -1004,14 +1004,13 @@ void PF::ImageArea::update( VipsRect* area )
   PF_UNREF( image, "ImageArea::update() image unref after clipping warning" );
   /**/
 
+  std::cout<<"ImageArea::update(): embedded profile:"<<std::endl;
+  print_embedded_profile( wclipimg );
+
   // Display profile management
   PF::Options& options = PF::PhotoFlow::Instance().get_options();
   if( options.get_display_profile_type() != current_display_profile_type ||
       options.get_custom_display_profile_name().c_str() != current_display_profile_name ) {
-
-    if( current_display_profile_type==PF_DISPLAY_PROF_CUSTOM && current_display_profile ) {
-      cmsCloseProfile( current_display_profile );
-    }
 
     current_display_profile_type = options.get_display_profile_type();
     current_display_profile_name = options.get_custom_display_profile_name().c_str();
@@ -1027,8 +1026,7 @@ void PF::ImageArea::update( VipsRect* area )
   //#endif
       break;
     case PF_DISPLAY_PROF_CUSTOM:
-      current_display_profile =
-          cmsOpenProfileFromFile( options.get_custom_display_profile_name().c_str(), "r" );
+      current_display_profile = PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() );
       std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
           <<" -> "<<current_display_profile<<std::endl;
       break;

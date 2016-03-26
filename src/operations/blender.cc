@@ -125,7 +125,8 @@ PF::BlenderPar::BlenderPar():
   profile_bottom( NULL ),
   profile_top( NULL ),
   transform( NULL ),
-  icc_data( NULL )
+  icc_data_bottom( NULL ),
+  icc_data_top( NULL )
 {
   white = PF::new_operation( "uniform", NULL );
   PropertyBase* R = white->get_par()->get_property( "R" );
@@ -164,12 +165,13 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   PF_REF(foreground, "BlenderPar::build(): initial foreground ref");
   PF_REF(omap, "BlenderPar::build(): initial omap ref");
 
-  if( profile_bottom ) cmsCloseProfile( profile_bottom );
-  if( profile_top ) cmsCloseProfile( profile_top );
+  //if( profile_bottom ) cmsCloseProfile( profile_bottom );
+  //if( profile_top ) cmsCloseProfile( profile_top );
   profile_bottom = NULL;
   profile_top = NULL;
+  icc_data_bottom = NULL;
+  icc_data_top = NULL;
 
-  icc_data = NULL;
   std::cout<<"BlenderPar::build(): background="<<background<<std::endl;
   if(background) {std::cout<<"bottom profile: "; PF::print_embedded_profile(background);}
   if(foreground) {std::cout<<"top profile:    "; PF::print_embedded_profile(foreground);}
@@ -177,23 +179,17 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     // Colorspace data of background and foreground layers are compared.
     // If they differ, an explicit ICC transform is operated from foreground to background.
     // Colorspace data is ignored for map layers, which are not colormanaged.
-    icc_data = PF::get_icc_profile_data( background );
-    std::cout<<"BlenderPar::build(): icc_data="<<icc_data<<std::endl;
+    icc_data_bottom = PF::get_icc_profile( background );
+    std::cout<<"BlenderPar::build(): icc_data_bottom="<<icc_data_bottom<<std::endl;
 
-
-    if( !vips_image_get_blob( background, VIPS_META_ICC_NAME, 
-                              &prof_data_bottom, &prof_data_length_bottom ) ) {
-
-      if( foreground ) {
-        if( !vips_image_get_blob( foreground, VIPS_META_ICC_NAME,
-                                  &prof_data_top, &prof_data_length_top ) ) {
-          if( prof_data_bottom != prof_data_top ) {
-            profile_top = cmsOpenProfileFromMem( prof_data_top, prof_data_length_top );
-            profile_bottom = cmsOpenProfileFromMem( prof_data_bottom, prof_data_length_bottom );
-          }
-        }
+    if( foreground ) {
+      icc_data_top = PF::get_icc_profile( foreground );
+      std::cout<<"BlenderPar::build(): icc_data_top="<<icc_data_top<<std::endl;
+      if( icc_data_bottom != icc_data_top ) {
+        if( icc_data_bottom ) profile_bottom = icc_data_bottom->get_profile();
+        if( icc_data_top ) profile_top = icc_data_top->get_profile();
       }
-    }  
+    }
   }
 
   if( transform ) cmsDeleteTransform( transform );

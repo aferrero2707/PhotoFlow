@@ -844,6 +844,7 @@ void PF::Image::do_export_merged( std::string filename )
     //Glib::Threads::Mutex::Lock lock( rebuild_mutex );
     unsigned int level = 0;
     PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+    //PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_NORMAL );
     do_update();
     /*
     while( true ) {
@@ -1005,8 +1006,8 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
     }
 
     imgbuf->trc_type = PF_TRC_STANDARD;
-    ICCProfileData* iccinfo  = get_icc_profile_data( outimg );
-    if( iccinfo ) imgbuf->trc_type = iccinfo->trc_type;
+    ICCProfile* iccinfo  = get_icc_profile( outimg );
+    if( iccinfo ) imgbuf->trc_type = iccinfo->get_trc_type();
 
     void* gexiv2_buf;
     size_t gexiv2_buf_length;

@@ -116,48 +116,11 @@ static cmsCIExyY d60_aces= {0.32168, 0.33767, 1.0};
 
 
 
-PF::ICCProfileData* PF::get_icc_profile_data( VipsImage* img )
+PF::ICCProfile::ICCProfile()
 {
-  if( !img ) return NULL;
-  PF::ICCProfileData* data;
-  size_t data_length;
-  if( vips_image_get_blob( img, "pf-icc-profile-data",
-          (void**)(&data), &data_length ) ) {
-    std::cout<<"get_icc_profile_data(): cannot find ICC profile data"<<std::endl;
-    data = NULL;
-  }
-  if( data_length != sizeof(PF::ICCProfileData) ) {
-    std::cout<<"get_icc_profile_data(): wrong size of ICC profile data"<<std::endl;
-    data = NULL;
-  }
-  return data;
-}
-
-
-void PF::free_icc_profile_data( ICCProfileData* data )
-{
-  cmsFreeToneCurve( data->perceptual_trc );
-  cmsFreeToneCurve( data->perceptual_trc_inv );
-
-  delete data;
-}
-
-
-cmsFloat32Number PF::linear2perceptual( ICCProfileData* data, cmsFloat32Number val )
-{
-  return cmsEvalToneCurveFloat( data->perceptual_trc_inv, val );
-}
-
-
-cmsFloat32Number PF::perceptual2linear( ICCProfileData* data, cmsFloat32Number val )
-{
-  return cmsEvalToneCurveFloat( data->perceptual_trc, val );
-}
-
-
-PF::ICCProfile::ICCProfile( TRC_type type )
-{
-  trc_type = type;
+  profile_data = NULL;
+  profile_size = 0;
+  trc_type = PF_TRC_STANDARD;
   perceptual_trc = NULL;
   perceptual_trc_inv = NULL;
 }
@@ -166,6 +129,22 @@ PF::ICCProfile::ICCProfile( TRC_type type )
 PF::ICCProfile::~ICCProfile()
 {
 
+}
+
+
+void PF::ICCProfile::set_profile( cmsHPROFILE p )
+{
+  profile = p;
+  cmsSaveProfileToMem( profile, NULL, &profile_size);
+  profile_data = malloc( profile_size );
+  cmsSaveProfileToMem( profile, profile_data, &profile_size);
+
+  char tstr[1024];
+  cmsGetProfileInfoASCII(profile, cmsInfoDescription, "en", "US", tstr, 1024);
+  std::cout<<"ICCProfile::set_profile(): data="<<profile_data<<" size="<<profile_size<<"  name="<<tstr<<std::endl;
+
+  init_colorants();
+  init_trc();
 }
 
 
@@ -223,6 +202,39 @@ void PF::ICCProfile::init_colorants()
   cmsDoTransform(transform, RGB, XYZ, 1);
   Y_B = XYZ[1];
 */
+}
+
+
+void PF::ICCProfile::init_trc()
+{
+  if( !profile ) return;
+  /* get the profile colorant information and fill in colorants */
+  cmsToneCurve *red_trc   = (cmsToneCurve*)cmsReadTag(profile, cmsSigRedTRCTag);
+  //cmsToneCurve *green_trc = (cmsToneCurve*)cmsReadTag(profile, cmsSigGreenTRCTag);
+  //cmsToneCurve *blue_trc  = (cmsToneCurve*)cmsReadTag(profile, cmsSigBlueTRCTag);
+
+  if( !red_trc ) return;
+
+  cmsBool is_linear = cmsIsToneCurveLinear(red_trc);
+  cmsInt32Number tcpt = cmsGetToneCurveParametricType(red_trc);
+  bool is_parametric = (tcpt>0) ? true : false;
+
+  std::cout<<"ICCProfile::init_trc(): is_linear="<<is_linear<<"  is_parametric="<<is_parametric<<std::endl;
+
+  if( is_linear ) {
+    /* LAB "L" (perceptually uniform) TRC */
+    cmsFloat64Number labl_parameters[5] =
+    { 3.0, 0.862076,  0.137924, 0.110703, 0.080002 };
+    cmsToneCurve *labl_parametic_curve =
+        cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
+    cmsToneCurve *labl_parametic_curve_inv = cmsReverseToneCurve( labl_parametic_curve );
+    init_trc( labl_parametic_curve, labl_parametic_curve_inv );
+    set_trc_type( PF::PF_TRC_LINEAR );
+  } else {
+    cmsToneCurve* red_trc_inv = cmsReverseToneCurve( red_trc );
+    init_trc( red_trc, red_trc_inv );
+    set_trc_type( PF::PF_TRC_PERCEPTUAL );
+  }
 }
 
 
@@ -295,6 +307,114 @@ void PF::ICCProfile::get_lightness( float* RGBv, float* Lv, size_t size )
 }
 
 
+/*
+PF::ICCProfileData* PF::get_icc_profile_data( VipsImage* img )
+{
+  if( !img ) return NULL;
+  PF::ICCProfileData* data;
+  size_t data_length;
+  if( vips_image_get_blob( img, "pf-icc-profile-data",
+          (void**)(&data), &data_length ) ) {
+    std::cout<<"get_icc_profile_data(): cannot find ICC profile data"<<std::endl;
+    data = NULL;
+  }
+  if( data_length != sizeof(PF::ICCProfileData) ) {
+    std::cout<<"get_icc_profile_data(): wrong size of ICC profile data"<<std::endl;
+    data = NULL;
+  }
+  return data;
+}
+
+
+void PF::free_icc_profile_data( ICCProfileData* data )
+{
+  cmsFreeToneCurve( data->perceptual_trc );
+  cmsFreeToneCurve( data->perceptual_trc_inv );
+
+  delete data;
+}
+
+
+cmsFloat32Number PF::linear2perceptual( ICCProfileData* data, cmsFloat32Number val )
+{
+  return cmsEvalToneCurveFloat( data->perceptual_trc_inv, val );
+}
+
+
+cmsFloat32Number PF::perceptual2linear( ICCProfileData* data, cmsFloat32Number val )
+{
+  return cmsEvalToneCurveFloat( data->perceptual_trc, val );
+}
+*/
+
+
+struct ICCProfileContainer
+{
+  PF::ICCProfile* profile;
+};
+
+
+void PF::set_icc_profile( VipsImage* img, PF::ICCProfile* prof )
+{
+  if( !prof ) return;
+  ICCProfileContainer* pc = (ICCProfileContainer*)g_malloc( sizeof(ICCProfileContainer) );
+  if( pc ) {
+    pc->profile = prof;
+    vips_image_set_blob( img, "pf-icc-profile",
+        (VipsCallbackFn)g_free, pc, sizeof(ICCProfileContainer) );
+
+    void* buf = g_malloc( prof->get_profile_size() );
+    if( buf ) {
+      memcpy( buf, prof->get_profile_data(), prof->get_profile_size() );
+      vips_image_set_blob( img, VIPS_META_ICC_NAME,
+          (VipsCallbackFn) g_free, buf, prof->get_profile_size() );
+      std::cout<<"PF::set_icc_profile(): VIPS_META_ICC blob set (size="<<prof->get_profile_size()<<")"<<std::endl;
+    } else {
+      std::cerr<<"PF::set_icc_profile(): cannot allocate "<<prof->get_profile_size()<<" bytes"<<std::endl;
+    }
+  } else {
+    std::cerr<<"PF::set_icc_profile(): cannot allocate "<<prof->get_profile_size()<<" bytes"<<std::endl;
+  }
+}
+
+
+
+PF::ICCProfile* PF::get_icc_profile( VipsImage* img )
+{
+  if( !img ) return NULL;
+  ICCProfileContainer* pc;
+  size_t data_size;
+  if( vips_image_get_blob( img, "pf-icc-profile",
+          (void**)(&pc), &data_size ) ) {
+    std::cout<<"get_icc_profile_data(): cannot find ICC profile data"<<std::endl;
+    return( NULL );
+  }
+  if( data_size != sizeof(ICCProfileContainer) ) {
+    std::cout<<"get_icc_profile(): wrong size of ICC profile data"<<std::endl;
+    return( NULL );
+  }
+  if( !pc ) return NULL;
+  return(pc->profile);
+}
+
+
+void PF::iccprofile_unref( void* prof )
+{
+  PF::ICCProfile* iccprof = (PF::ICCProfile*)( prof );
+  if( !iccprof ) return;
+  if( iccprof->get_ref_count() < 1 ) {
+    std::cerr<<"WARNING!!! PF::iccprofile_unref("<<prof<<"): wrong refcount: "<<iccprof->get_ref_count()<<std::endl;
+    return;
+  }
+
+  iccprof->unref();
+  if( iccprof->get_ref_count() == 0 ) {
+    std::cout<<"PF::iccprofile_unref("<<prof<<"): deleting profile"<<std::endl;
+    delete iccprof;
+  }
+}
+
+
 
 
 PF::ICCStore::ICCStore()
@@ -302,14 +422,23 @@ PF::ICCStore::ICCStore()
   srgb_profiles[0] = new sRGBProfile( PF::PF_TRC_STANDARD );
   srgb_profiles[1] = new sRGBProfile( PF::PF_TRC_PERCEPTUAL );
   srgb_profiles[2] = new sRGBProfile( PF::PF_TRC_LINEAR );
+  srgb_profiles[0]->ref(); profiles.push_back( srgb_profiles[0] );
+  srgb_profiles[1]->ref(); profiles.push_back( srgb_profiles[1] );
+  srgb_profiles[2]->ref(); profiles.push_back( srgb_profiles[2] );
 
   rec2020_profiles[0] = new Rec2020Profile( PF::PF_TRC_STANDARD );
   rec2020_profiles[1] = new Rec2020Profile( PF::PF_TRC_PERCEPTUAL );
   rec2020_profiles[2] = new Rec2020Profile( PF::PF_TRC_LINEAR );
+  rec2020_profiles[0]->ref(); profiles.push_back( rec2020_profiles[0] );
+  rec2020_profiles[1]->ref(); profiles.push_back( rec2020_profiles[1] );
+  rec2020_profiles[2]->ref(); profiles.push_back( rec2020_profiles[2] );
 
   aces_profiles[0] = new ACESProfile( PF::PF_TRC_STANDARD );
   aces_profiles[1] = new ACESProfile( PF::PF_TRC_PERCEPTUAL );
   aces_profiles[2] = new ACESProfile( PF::PF_TRC_LINEAR );
+  aces_profiles[0]->ref(); profiles.push_back( aces_profiles[0] );
+  aces_profiles[1]->ref(); profiles.push_back( aces_profiles[1] );
+  aces_profiles[2]->ref(); profiles.push_back( aces_profiles[2] );
 
   /*
   std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-g10.icc";
@@ -379,6 +508,115 @@ PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_typ
   default: return NULL;
   }
 }
+
+
+PF::ICCProfile* PF::ICCStore::get_profile( Glib::ustring pname )
+{
+  // First we loop over all the opened profiles to see if there is
+  // already one associated to the same file
+  for(unsigned int pi = 0; pi < profiles.size(); pi++ ) {
+    if( profiles[pi]->get_file_name() == pname ) {
+      return profiles[pi];
+    }
+  }
+
+  // Next, we check if an equivalent profile exists, even if not directly opened from disk
+  cmsHPROFILE temp_profile = cmsOpenProfileFromFile( pname.c_str(), "r" );
+  if( temp_profile ) {
+    cmsUInt32Number psize;
+    cmsSaveProfileToMem( temp_profile, NULL, &psize);
+    if( psize > 0 ) {
+      void* pdata = malloc( psize );
+      if( pdata ) {
+        cmsSaveProfileToMem( temp_profile, pdata, &psize);
+
+        // We loop over all the opened profiles to see if there is one with matching data
+        for(unsigned int pi = 0; pi < profiles.size(); pi++ ) {
+          if( profiles[pi]->get_profile_size() == psize &&
+              memcmp(profiles[pi]->get_profile_data(), pdata, psize) == 0 ) {
+            return profiles[pi];
+          }
+        }
+
+        free( pdata );
+      }
+    }
+
+    PF::ICCProfile* new_profile = new PF::ICCProfile();
+    new_profile->set_profile( temp_profile );
+    new_profile->set_file_name( pname );
+
+    profiles.push_back( new_profile );
+    return new_profile;
+  }
+
+  return NULL;
+}
+
+
+PF::ICCProfile* PF::ICCStore::get_profile( void* pdata, cmsUInt32Number psize )
+{
+  if( !pdata || psize==0 ) return NULL;
+  // We loop over all the opened profiles to see if there is one with matching data
+  for(unsigned int pi = 0; pi < profiles.size(); pi++ ) {
+    if( profiles[pi]->get_profile_size() == psize &&
+        memcmp(profiles[pi]->get_profile_data(), pdata, psize) == 0 ) {
+      return profiles[pi];
+    }
+  }
+
+  void* buf = malloc( psize );
+  if( !buf ) return NULL;
+  memcpy( buf, pdata, psize );
+
+  cmsHPROFILE temp_profile = cmsOpenProfileFromMem( buf, psize );
+
+  std::cout<<"ICCStore::get_profile( void* pdata, cmsUInt32Number psize ): temp_profile="<<temp_profile<<std::endl;
+
+  PF::ICCProfile* new_profile = new PF::ICCProfile();
+  new_profile->set_profile( temp_profile );
+
+  profiles.push_back( new_profile );
+  return new_profile;
+}
+
+
+PF::ICCProfile* PF::ICCStore::get_profile( cmsHPROFILE prof )
+{
+  if( !prof ) return NULL;
+  cmsUInt32Number psize;
+  cmsSaveProfileToMem( prof, NULL, &psize);
+  if( psize > 0 ) {
+    void* pdata = g_malloc( psize );
+    if( pdata ) {
+      cmsSaveProfileToMem( prof, pdata, &psize);
+
+      // We loop over all the opened profiles to see if there is one with matching data
+      for(unsigned int pi = 0; pi < profiles.size(); pi++ ) {
+        if( profiles[pi]->get_profile_size() == psize &&
+            memcmp(profiles[pi]->get_profile_data(), pdata, psize) == 0 ) {
+          g_free( pdata );
+          cmsCloseProfile( prof );
+          return profiles[pi];
+        }
+      }
+
+      cmsHPROFILE temp_profile = cmsOpenProfileFromMem( pdata, psize );
+      PF::ICCProfile* new_profile = new PF::ICCProfile();
+      new_profile->set_profile( prof );
+
+      profiles.push_back( new_profile );
+      return new_profile;
+    } else {
+      return NULL;
+    }
+  } else {
+    return NULL;
+  }
+
+  return NULL;
+}
+
 
 
 

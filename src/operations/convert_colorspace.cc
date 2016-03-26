@@ -62,13 +62,13 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
 {
   convert2lab = PF::new_convert2lab();
 
-  out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
   out_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
   //out_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
   out_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
@@ -97,17 +97,23 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     return NULL;
   }
 
+  cmsHPROFILE in_profile = NULL;
+  PF::ICCProfile* iccprof_in = PF::get_icc_profile( in[first] );
+  if( iccprof_in )  {
+    in_profile = iccprof_in->get_profile();
+  }
+
+  /*
   void *data;
   size_t data_length;
   
-  cmsHPROFILE in_profile = NULL;
   if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
                            &data, &data_length ) ) {
     in_profile = cmsOpenProfileFromMem( data, data_length );
   }
 
   std::cout<<"ConvertColorspacePar::build(): image="<<in[0]<<" data="<<data<<" data_length="<<data_length<<std::endl;
-
+*/
   bool in_changed = false;
   if( in_profile ) {
     char tstr[1024];
@@ -132,14 +138,26 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   cmsHPROFILE out_profile = NULL;
   profile_type_t ptype = (profile_type_t)out_profile_mode.get_enum_value().first;
   TRC_type trc_type = (TRC_type)out_trc_mode.get_enum_value().first;
-  std::cout<<"Getting built-in profile..."<<std::endl;
-    PF::ICCProfile* iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
+  PF::ICCProfile* iccprof = NULL;
+  if( ptype != PF::OUT_PROF_CUSTOM ) {
+    std::cout<<"Getting built-in profile..."<<std::endl;
+    iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
     if( iccprof ) {
       out_profile = iccprof->get_profile();
       std::cout<<"... OK"<<std::endl;
     } else {
       std::cout<<"... FAILED"<<std::endl;
     }
+  } else {
+    std::cout<<"Getting custom profile "<<out_profile_name.get()<<" ..."<<std::endl;
+    iccprof = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
+    if( iccprof ) {
+      out_profile = iccprof->get_profile();
+      std::cout<<"... OK"<<std::endl;
+    } else {
+      std::cout<<"... FAILED"<<std::endl;
+    }
+  }
   std::cout<<"ConvertColorspacePar::build(): out_mode_changed="<<out_mode_changed
            <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
   std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
@@ -222,7 +240,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   //}
 
   if( in_profile && out_profile && !assign.get() && !transform ) {
-    if( in_profile )  cmsCloseProfile( in_profile );
+    //if( in_profile )  cmsCloseProfile( in_profile );
     //if( out_profile ) cmsCloseProfile( out_profile );
     out_profile = NULL;
     out_profile_data = NULL;
@@ -231,7 +249,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   }
 
   VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
-  /**/
+  /*
   if( out_profile ) {
     cmsUInt32Number out_length;
     cmsSaveProfileToMem( out_profile, NULL, &out_length);
@@ -244,9 +262,10 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     std::cout<<"ConvertColorspacePar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
     if( assign.get() ) std::cout<<"    profile assigned"<<std::endl;
   }
-  /**/
+  */
+  if( iccprof ) PF::set_icc_profile( out, iccprof );
 
-  if( in_profile )  cmsCloseProfile( in_profile );
+  //if( in_profile )  cmsCloseProfile( in_profile );
   //if( out_profile ) cmsCloseProfile( out_profile );
   out_profile = NULL;
   out_profile_data = NULL;

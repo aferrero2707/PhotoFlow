@@ -121,7 +121,8 @@ enum hlreco_mode_t {
     // Either from xyz_cam or from icc 
     Property<std::string> cam_profile_name;
     std::string current_cam_profile_name;
-    cmsHPROFILE cam_profile;
+    //cmsHPROFILE cam_profile;
+    PF::ICCProfile* cam_profile;
 
     // Input gamma 
     PropertyBase gamma_mode;
@@ -135,7 +136,8 @@ enum hlreco_mode_t {
     TRC_type current_out_trc_mode;
     Property<std::string> out_profile_name;
     std::string current_out_profile_name;
-    cmsHPROFILE out_profile;
+    //cmsHPROFILE out_profile;
+    PF::ICCProfile* out_profile;
 
     cmsHTRANSFORM transform;
 
@@ -153,7 +155,7 @@ enum hlreco_mode_t {
       wb_red_current = r;
       wb_green_current = g;
       wb_blue_current = b;
-      std::cout<<"RawPreprocessorPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
+      std::cout<<"RawOutputPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
     }
 
     float get_exposure() { return exposure.get(); }

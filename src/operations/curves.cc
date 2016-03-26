@@ -94,18 +94,18 @@ void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
   //std::cout<<"CurvesPar::update_curve() called. # of points="<<curve.get().get_npoints()<<std::endl;std::cout.flush();
   for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned char>::RANGE;
-    float xp = undo_gamma ? PF::linear2perceptual( data, x ) : x;
+    float xp = x; //undo_gamma ? PF::linear2perceptual( data, x ) : x;
     //std::cout<<"x="<<x<<"  xp="<<xp<<std::endl;
     float yp = curve.get().get_value( xp );
-    float y = undo_gamma ? PF::perceptual2linear( data, yp ) : yp;
+    float y = yp; //undo_gamma ? PF::perceptual2linear( data, yp ) : yp;
     vec8[i] = (short int)((y-x)*FormatInfo<unsigned char>::RANGE);
     //std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec8[i]="<<vec8[i]<<std::endl;
   }
   for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
-    float xp = undo_gamma ? PF::linear2perceptual( data, x ) : x;
+    float xp = x; //undo_gamma ? PF::linear2perceptual( data, x ) : x;
     float yp = curve.get().get_value( xp );
-    float y = undo_gamma ? PF::perceptual2linear( data, yp ) : yp;
+    float y = yp; //undo_gamma ? PF::perceptual2linear( data, yp ) : yp;
     vec16[i] = (int)((y-x)*FormatInfo<unsigned short int>::RANGE);
    //if(i%1000 == 0) 
     //if(curve.get().get_points().size()>100) 
@@ -123,7 +123,7 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
 
   //PF::ICCProfileData* data;
-  data = PF::get_icc_profile_data( out );
+  icc_data = PF::get_icc_profile( out );
 
   if( grey_curve.is_modified() ) {
     //std::cout<<"update_curve( grey_curve, Greyvec8, Greyvec16 );"<<std::endl;std::cout.flush();
@@ -134,14 +134,14 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
       B_curve.is_modified() || RGB_curve.is_modified() || true ) {
     bool do_gamma = false;
 
-    if( data ) {
-      R_curve.get().set_trc_type( data->trc_type ); R_curve.get().update_spline();
-      G_curve.get().set_trc_type( data->trc_type ); G_curve.get().update_spline();
-      B_curve.get().set_trc_type( data->trc_type ); B_curve.get().update_spline();
-      RGB_curve.get().set_trc_type( data->trc_type ); RGB_curve.get().update_spline();
+    if( icc_data ) {
+      R_curve.get().set_trc_type( icc_data->get_trc_type() ); R_curve.get().update_spline();
+      G_curve.get().set_trc_type( icc_data->get_trc_type() ); G_curve.get().update_spline();
+      B_curve.get().set_trc_type( icc_data->get_trc_type() ); B_curve.get().update_spline();
+      RGB_curve.get().set_trc_type( icc_data->get_trc_type() ); RGB_curve.get().update_spline();
     }
 
-    //if( data && data->trc_type==PF::PF_TRC_LINEAR ) do_gamma = true;
+    //if( data && icc_data->get_trc_type()==PF::PF_TRC_LINEAR ) do_gamma = true;
     //std::cout<<"update_curve( R_curve, RGBvec8[0], RGBvec16[0] );"<<std::endl;std::cout.flush();
     update_curve( R_curve, RGBvec8[0], RGBvec16[0], do_gamma );
     //std::cout<<"update_curve( G_curve, RGBvec8[1], RGBvec16[1] );"<<std::endl;std::cout.flush();

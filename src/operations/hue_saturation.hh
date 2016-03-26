@@ -82,7 +82,7 @@ namespace PF
     ProcessorBase* mask;
     ProcessorBase* blur;
 
-    ICCProfileData* icc_data;
+    ICCProfile* icc_data;
 
     cmsHPROFILE lab_profile;
     cmsHTRANSFORM transform, transform_inv;
@@ -99,7 +99,7 @@ namespace PF
     cmsHTRANSFORM get_transform() { return transform; }
     cmsHTRANSFORM get_transform_inv() { return transform_inv; }
 
-    ICCProfileData* get_icc_data() { return icc_data; }
+    ICCProfile* get_icc_data() { return icc_data; }
 
     float get_hue() { return hue.get(); }
     float get_hue_eq() { return hue_eq.get(); }
@@ -263,7 +263,7 @@ namespace PF
 
             if( brightness2 != 0 || contrast2 != 0 ) {
               float midpoint = 0.5;
-              if( opar->get_icc_data() && (opar->get_icc_data()->trc_type == PF::PF_TRC_LINEAR) )
+              if( opar->get_icc_data() && (opar->get_icc_data()->is_linear()) )
                 midpoint = 0.18;
               for( k=0; k < 3; k++) {
                 tempval = (typename FormatInfo<float>::SIGNED)RGB[k] - midpoint;

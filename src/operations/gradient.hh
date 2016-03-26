@@ -75,7 +75,7 @@ class GradientPar: public OpParBase
 
   Property<SplineCurve> hmod, vmod;
 
-  ICCProfileData* data;
+  ICCProfile* icc_data;
 
   ProcessorBase* curve;
 

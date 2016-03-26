@@ -167,7 +167,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     (cam_profile==NULL) || (out_profile==NULL);
 
   if( cam_profile && (mode_changed || cam_changed) ) {
-    cmsCloseProfile( cam_profile );
+    //cmsCloseProfile( cam_profile );
     cam_profile = NULL;
   }
 
@@ -199,18 +199,20 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
         return image;
       }
-      cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
+      cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
+      cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
+      //cmsCloseProfile( cam_prof_temp );
       break;
     }
     case PF::IN_PROF_ICC:
       if( !cam_profile_name.get().empty() )
-        cam_profile = cmsOpenProfileFromFile( cam_profile_name.get().c_str(), "r" );
+        cam_profile = PF::ICCStore::Instance().get_profile( cam_profile_name.get() );
       break;
     default:
       break;
     }
   } else if( (profile_mode.get_enum_value().first == PF::IN_PROF_ICC) && cam_changed ) {
-    cam_profile = cmsOpenProfileFromFile( cam_profile_name.get().c_str(), "r" );
+    cam_profile = PF::ICCStore::Instance().get_profile( cam_profile_name.get() );
   }
 
   if( out_profile && (out_mode_changed || out_trc_mode_changed || out_changed) ) {
@@ -221,9 +223,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   profile_type_t ptype = (profile_type_t)out_profile_mode.get_enum_value().first;
   TRC_type trc_type = (TRC_type)out_trc_mode.get_enum_value().first;
   if( out_profile == NULL ) {
-    PF::ICCProfile* iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-    if( iccprof )
-      out_profile = iccprof->get_profile();
+    out_profile = PF::ICCStore::Instance().get_profile( ptype, trc_type );
   }
 
   if( changed ) {
@@ -231,11 +231,12 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       cmsDeleteTransform( transform );  
     transform = NULL;
     if( cam_profile && out_profile ) {
-      bool supported = cmsIsIntentSupported(cam_profile,INTENT_RELATIVE_COLORIMETRIC,LCMS_USED_AS_INPUT);
+      bool supported = cmsIsIntentSupported(cam_profile->get_profile(),
+          INTENT_RELATIVE_COLORIMETRIC,LCMS_USED_AS_INPUT);
       std::cout<<"Relative calorimetric supported by input profile: "<<supported<<std::endl;
-      transform = cmsCreateTransform( cam_profile, 
+      transform = cmsCreateTransform( cam_profile->get_profile(),
 				      TYPE_RGB_FLT,
-				      out_profile, 
+				      out_profile->get_profile(),
 				      TYPE_RGB_FLT,
 				      INTENT_RELATIVE_COLORIMETRIC,
 				      cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
@@ -278,6 +279,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   }
   /**/
   if( out_profile ) {
+    /*
     cmsUInt32Number out_length;
     cmsSaveProfileToMem( out_profile, NULL, &out_length);
     void* buf = malloc( out_length );
@@ -292,7 +294,11 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     //char tstr[1024];
     //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
+    */
+    std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, out_profile ) called"<<std::endl;
+    PF::set_icc_profile( out, out_profile );
   } else if( cam_profile ) {
+    /*
     cmsUInt32Number out_length;
     cmsSaveProfileToMem( cam_profile, NULL, &out_length);
     void* buf = malloc( out_length );
@@ -311,6 +317,9 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     iccdata->Y_B = 1;
     vips_image_set_blob( out, "pf-icc-profile-data",
        (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
+    */
+    std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, cam_profile ) called"<<std::endl;
+    PF::set_icc_profile( out, cam_profile );
   }
   /**/
   return out;

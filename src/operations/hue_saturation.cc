@@ -177,11 +177,12 @@ VipsImage* PF::HueSaturationPar::build(std::vector<VipsImage*>& in, int first,
   eq_enabled[2] = hue_L_equalizer_enabled.get();
 
 
-  icc_data = PF::get_icc_profile_data( in[0] );
+  icc_data = PF::get_icc_profile( in[0] );
 
   void *prof_data;
   size_t prof_data_length;
 
+  /*
   if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
                            &prof_data, &prof_data_length ) ) {
     if( transform )
@@ -208,7 +209,7 @@ VipsImage* PF::HueSaturationPar::build(std::vector<VipsImage*>& in, int first,
         INTENT_RELATIVE_COLORIMETRIC,
         cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
   }
-
+  */
 
   std::vector<VipsImage*> in2;
   if( in.size() < 1 )

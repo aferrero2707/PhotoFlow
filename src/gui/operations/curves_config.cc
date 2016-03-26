@@ -292,7 +292,7 @@ void PF::CurvesConfigGUI::do_update()
     }
 
     if( node && node->image ) {
-      PF::ICCProfileData* data;
+      PF::ICCProfile* data;
       size_t data_length;
       if( vips_image_get_blob( node->image, "pf-icc-profile-data",
           (void**)(&data), &data_length ) ) {

@@ -37,7 +37,7 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Convert to profile" ),
   outProfileModeSelector( this, "profile_mode", "working profile: ", 1 ),
   outTRCModeSelector( this, "trc_mode", _("encoding: "), 1 ),
-  assignButton( this, "assign", _("assign profile: "), false ),
+  assignButton( this, "assign", _("assign profile"), false ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
 
@@ -47,16 +47,15 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   outTRCModeSelectorBox.pack_start( outTRCModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outTRCModeSelectorBox, Gtk::PACK_SHRINK );
 
-  assignButtonBox.pack_start( assignButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( assignButtonBox, Gtk::PACK_SHRINK );
-
-
-  outProfLabel.set_text( "output profile name:" );
+  outProfLabel.set_text( _("working profile name:") );
   outProfVBox.pack_start( outProfLabel );
   outProfVBox.pack_start( outProfFileEntry );
   outProfHBox.pack_start( outProfVBox );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfHBox );
+
+  assignButtonBox.pack_start( assignButton, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( assignButtonBox, Gtk::PACK_SHRINK );
 
   add_widget( outputControlsBox );
 
@@ -70,6 +69,27 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   get_main_box().show_all_children();
 }
 
+
+
+void PF::ConvertColorspaceConfigGUI::do_update()
+{
+  PF::OpParBase* par = get_par();
+  PF::ConvertColorspacePar* ccpar = dynamic_cast<PF::ConvertColorspacePar*>( par );
+  if( ccpar ) {
+    if( ccpar->get_out_profile_mode() == PF::OUT_PROF_CUSTOM ) {
+      outTRCModeSelectorBox.hide();
+    } else {
+      outTRCModeSelectorBox.show();
+    }
+
+    if( ccpar->get_out_profile_mode() == PF::OUT_PROF_CUSTOM ) {
+      outProfHBox.show();
+    } else {
+      outProfHBox.hide();
+    }
+  }
+  OperationConfigGUI::do_update();
+}
 
 
 void PF::ConvertColorspaceConfigGUI::on_out_button_open_clicked()

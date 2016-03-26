@@ -28,6 +28,7 @@
  */
 
 #include <string>
+#include <iostream>
 #include "../photoflow.hh"
 #include "../iccstore.hh"
 
@@ -69,10 +70,13 @@ static cmsCIExyY  d65_srgb_adobe_specs = {0.3127, 0.3290, 1.0};
  * */
 
 
-PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile( type )
+PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile()
 {
+  set_trc_type( type );
+
+  /*
   if( type == PF::PF_TRC_STANDARD ) {
-    /* Rec 709 TRC */
+    // Rec 709 TRC
     cmsFloat64Number rec709_parameters[5] =
     { 1.0 / 0.45, 1.0 / 1.099,  0.099 / 1.099,  1.0 / 4.5, 0.018 };
     cmsToneCurve *rec709_parametic_curve =
@@ -80,18 +84,9 @@ PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile( type )
     cmsToneCurve *rec709_parametic_curve_inv =
         cmsBuildParametricToneCurve(NULL, 4, rec709_parameters);
     rec709_parametic_curve_inv = cmsReverseToneCurve( rec709_parametic_curve_inv );
-    init_trc( rec709_parametic_curve, rec709_parametic_curve_inv );
-    /* sRGB TRC *//*
-    cmsFloat64Number srgb_parameters[5] =
-    { 2.4, 1.0 / 1.055,  0.055 / 1.055, 1.0 / 12.92, 0.04045 };
-    cmsToneCurve *srgb_parametic_curve =
-        cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
-    cmsToneCurve *srgb_parametic_curve_inv =
-        cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
-    srgb_parametic_curve_inv = cmsReverseToneCurve( srgb_parametic_curve_inv );
-    init_trc( srgb_parametic_curve, srgb_parametic_curve_inv );*/
+    //init_trc( rec709_parametic_curve, rec709_parametic_curve_inv );
   } else {
-    /* LAB "L" (perceptually uniform) TRC */
+    // LAB "L" (perceptually uniform) TRC
     cmsFloat64Number labl_parameters[5] =
     { 3.0, 0.862076,  0.137924, 0.110703, 0.080002 };
     cmsToneCurve *labl_parametic_curve =
@@ -99,8 +94,9 @@ PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile( type )
     cmsToneCurve *labl_parametic_curve_inv =
         cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
     labl_parametic_curve_inv = cmsReverseToneCurve( labl_parametic_curve_inv );
-    init_trc( labl_parametic_curve, labl_parametic_curve_inv );
+    //init_trc( labl_parametic_curve, labl_parametic_curve_inv );
   }
+  */
 
   /* ***** Make profile: Rec.2020, D65, Rec709 TRC */
   /*
@@ -155,5 +151,7 @@ PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile( type )
   //cmsSaveProfileToFile(profile, filename);
   cmsMLUfree(description);
   /**/
+
+  std::cout<<"Initializing Rec.2020 profile"<<std::endl;
   set_profile( profile );
 }

@@ -220,12 +220,15 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     size_t data_length;
     if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
         &data, &data_length ) ) {
-      in_profile = cmsOpenProfileFromMem( data, data_length );
-      if( in_profile ) {
-        char tstr[1024];
-        cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-        std::cout<<"ImageReader: Embedded profile found: "<<tstr<<std::endl;
-        //cmsCloseProfile( profile_in );
+      in_iccprof = PF::ICCStore::Instance().get_profile( data, data_length );
+      if( in_iccprof ) {
+        in_profile = in_iccprof->get_profile();
+        if( in_profile ) {
+          char tstr[1024];
+          cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+          std::cout<<"ImageReader: Embedded profile found: "<<tstr<<std::endl;
+          //cmsCloseProfile( profile_in );
+        }
       }
     }
   } else {
@@ -278,6 +281,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   std::cout<<"ImageReaderPar::build(): out_profile="<<out_profile<<std::endl;
+  std::cout<<"ImageReaderPar::build(): transform="<<transform<<std::endl;
 
   if( out && out_profile ) {
 
@@ -306,6 +310,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       out = converted;
     }
 
+    /*
     cmsUInt32Number out_length;
     cmsSaveProfileToMem( out_profile, NULL, &out_length);
     void* buf = malloc( out_length );
@@ -320,6 +325,12 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       PF::ICCProfileData* iccdata = out_iccprof->get_data();
       vips_image_set_blob( out, "pf-icc-profile-data",
           (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
+    }
+    */
+    if( out_iccprof ) {
+      std::cout<<"ImageReaderPar::build(): setting embedded profile..."<<std::endl;
+      PF::set_icc_profile( out, out_iccprof );
+      PF::print_embedded_profile( out );
     }
   }
 

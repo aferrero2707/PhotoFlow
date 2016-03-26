@@ -50,7 +50,8 @@ namespace PF
 
     cmsHPROFILE profile_bottom, profile_top;
     cmsHTRANSFORM transform;
-    ICCProfileData* icc_data;
+    ICCProfile* icc_data_bottom;
+    ICCProfile* icc_data_top;
 
     bool adjust_geom( VipsImage* in, VipsImage** out,
                       int width, int height, unsigned int level );
@@ -58,7 +59,9 @@ namespace PF
   public:
     BlenderPar();
 
-    ICCProfileData* get_icc_data() { return icc_data; }
+    ICCProfile* get_icc_data_top() { return icc_data_top; }
+    ICCProfile* get_icc_data_bottom() { return icc_data_bottom; }
+    ICCProfile* get_icc_data() { return icc_data_bottom; }
     cmsHTRANSFORM get_transform() { return transform; }
 
     blendmode_t get_blend_mode() { 

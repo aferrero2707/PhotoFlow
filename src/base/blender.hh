@@ -66,7 +66,7 @@ namespace PF
     blendmode_t mode;
     float opacity;
     cmsHTRANSFORM transform;
-    ICCProfileData* data;
+    ICCProfile* data;
 
   public:
     Blender( blendmode_t m, float o ):
@@ -75,7 +75,7 @@ namespace PF
     }
     
     void set_transform(cmsHTRANSFORM t) { transform = t; }
-    void set_icc_data( ICCProfileData* d ) { data = d; }
+    void set_icc_data( ICCProfile* d ) { data = d; }
 
     void blend(VipsRegion* bottom, VipsRegion* top, VipsRegion* oreg, VipsRegion* omap) 
     {

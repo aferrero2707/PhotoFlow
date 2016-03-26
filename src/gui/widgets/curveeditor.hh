@@ -46,7 +46,7 @@ namespace PF {
     int border_size;
     int selected_point;
 
-    PF::ICCProfileData* data;
+    PF::ICCProfile* icc_data;
 
 #ifdef GTKMM_2
     bool on_expose_event(GdkEventExpose* event);
@@ -57,11 +57,11 @@ namespace PF {
   public:    
     CurveArea();
 
-    void set_icc_data( PF::ICCProfileData* d )
+    void set_icc_data( PF::ICCProfile* d )
     {
-      data = d;
-      if( data ) {
-        curve.set_trc_type( data->trc_type );
+      icc_data = d;
+      if( icc_data ) {
+        curve.set_trc_type( icc_data->get_trc_type() );
         curve.update_spline();
       }
     }
@@ -98,7 +98,7 @@ namespace PF {
     int curve_area_width, curve_area_height;
     CurveArea* curve_area;
 
-    PF::ICCProfileData* data;
+    PF::ICCProfile* icc_data;
 
     int grabbed_point;
 
@@ -114,10 +114,10 @@ namespace PF {
 
     ~CurveEditor() {}
 
-    void set_icc_data( PF::ICCProfileData* d )
+    void set_icc_data( PF::ICCProfile* d )
     {
-      data = d;
-      if( curve_area ) curve_area->set_icc_data( data );
+      icc_data = d;
+      if( curve_area ) curve_area->set_icc_data( icc_data );
     }
 
     virtual void reset() {

@@ -159,6 +159,7 @@ int main (int argc, char *argv[])
   //PF::PhotoFlow::Instance().set_base_dir( fullpath );
   free( fullpath );
 
+  PF::ICCStore::Instance();
   Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
 #if defined(WIN32)
   Glib::ustring themesPath = dataPath + "\\themes";
@@ -233,6 +234,7 @@ int main (int argc, char *argv[])
     //cntx->add_provider(css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     cntx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     //cntx->invalidate();
+    std::cout<<"Loading theme file "<<themesPath + "/photoflow-dark.css"<<std::endl;
     css->load_from_path(themesPath + "/photoflow-dark.css");
     //css->load_from_path(themesPath + "/gtk-3.0/gtk.css");
     //css->load_from_path("themes/photoflow-dark/gtk.css");
@@ -257,6 +259,7 @@ int main (int argc, char *argv[])
 
   std::cout<<"Image processing thread finished"<<std::endl;
 
+  app->iteration( false );
   delete mainWindow;
   delete app;
 
