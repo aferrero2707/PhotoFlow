@@ -35,6 +35,7 @@
 #include "../gui/operations/raw_developer_config.hh"
 #include "../gui/operations/brightness_contrast_config.hh"
 #include "../gui/operations/clip_config.hh"
+#include "../gui/operations/white_balance_config.hh"
 #include "../gui/operations/levels_config.hh"
 #include "../gui/operations/hue_saturation_config.hh"
 #include "../gui/operations/hsl_mask_config.hh"
@@ -94,6 +95,10 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   rgbchSelector( this, "rgb_target_channel", _("Target channel: "), -1 ),
   labchSelector( this, "lab_target_channel", _("Target channel: "), -1 ),
   cmykchSelector( this, "cmyk_target_channel", _("Target channel:"), -1 ),
+  input_source_expander( _("input source") ),
+  input_source_checkbox( this, "previous_channel_is_input", _("process previous layer"), true),
+  layer_list( this, "Layer name:"),
+  sourceSelector( this, "source_channel", "Source channel: ", 1 ),
   previewButton(_("preview")),
   dialog( NULL ),
   frame( NULL ),
@@ -208,7 +213,16 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //controls_box.pack_start( middle_padding, Gtk::PACK_SHRINK, 0 );
   controls_box.pack_start( hline, Gtk::PACK_SHRINK, 5 );
 
+  layer_selector_box.pack_start( input_source_checkbox, Gtk::PACK_SHRINK, 5 );
+  layer_selector_box.pack_start( layer_list, Gtk::PACK_SHRINK, 5 );
+  //layer_selector_box.pack_start( sourceSelector, Gtk::PACK_SHRINK, 5 );
+  input_source_expander.add( layer_selector_box );
+  input_source_expander.set_expanded( false );
+  controls_box.pack_end( input_source_expander, Gtk::PACK_SHRINK, 5 );
+
+  //controls_box.pack_end( layer_selector_checkbox, Gtk::PACK_SHRINK, 5 );
   controls_box.pack_end( hline2, Gtk::PACK_SHRINK, 5 );
+
 
 #ifdef GTKMM_2
   Gdk::Color bg;
@@ -763,6 +777,8 @@ void PF::OperationConfigGUI::do_update()
   //std::cout<<"PF::OperationConfigGUI::do_update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
   update_buttons();
 
+  layer_list.update_model();
+
   bool old_inhibit;
   PF::PFWidget* w;
 
@@ -793,6 +809,11 @@ void PF::OperationConfigGUI::do_update()
   if( get_layer() ) {
     nameEntry.set_text( get_layer()->get_name() );
     nameEntry2.set_text( get_layer()->get_name() );
+  }
+
+  if( get_par() ) {
+    if( get_par()->get_previous_channel_is_input() ) layer_list.hide();
+    else layer_list.show();
   }
 
   // Update target channel selector
@@ -974,6 +995,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "clip" ) {
 
     dialog = new PF::ClipConfigGUI( current_layer );
+
+  } else if( op_type == "white_balance" ) {
+
+    dialog = new PF::WhiteBalanceConfigGUI( current_layer );
 
   } else if( op_type == "crop" ) {
 

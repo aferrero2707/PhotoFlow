@@ -77,6 +77,7 @@ void PF::LayerManager::delete_layer( PF::Layer* layer )
     return;
   }
   layers_pool[layer->get_id()] = NULL;
+  std::cout<<"LayerManager::delete_layer(): deleting layer"<<layer<<std::endl;
   delete layer;
 }
 
@@ -812,6 +813,8 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
                                   previous->Xsize, previous->Ysize, 
                                   l->omap_layers, NULL );
           }
+
+          std::cout<<"rebuild_chain(): blending images for layer \""<<l->get_name()<<"\" (cached)"<<std::endl;
           std::vector<VipsImage*> in;
           // we add the previous image to the list of inputs, even if it is NULL
           in.push_back( previous );
@@ -868,8 +871,9 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
                               l->omap_layers, NULL );
       }
       
-      // we add the previous image to the list of inputs, even if it is NULL
-      in.push_back(previous);
+      // we add the previous image to the list of inputs, only if there are no extra inputs
+      if( l->extra_inputs.empty() )
+        in.push_back(previous);
 #ifndef NDEBUG
       std::cout<<"Layer \""<<l->get_name()<<"\": added "<<previous<<" to the input vector"<<std::endl;
       std::cout<<"Layer \""<<l->get_name()<<"\": extra inputs size: "<<l->extra_inputs.size()<<std::endl;
@@ -1141,6 +1145,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         unsigned int level = pipeline->get_level();
         pipelineblender->import_settings( blender );
 
+        std::cout<<"rebuild_chain(): blending images for layer \""<<l->get_name()<<"\""<<std::endl;
         std::vector<VipsImage*> in;
         // we add the previous image to the list of inputs, even if it is NULL
         in.push_back( previous );

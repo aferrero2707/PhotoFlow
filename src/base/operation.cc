@@ -62,7 +62,8 @@ PF::OpParBase::OpParBase():
   rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
   lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
-  mask_enabled("mask_enabled",this,true)
+  mask_enabled("mask_enabled",this,true),
+  previous_channel_is_input("previous_channel_is_input",this,true)
 {
   //blend_mode.set_internal(true);
   intensity.set_internal(true);
@@ -385,8 +386,11 @@ void PF::print_embedded_profile( VipsImage* image )
       cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
       std::cout<<"Embedded profile found: "<<tstr<<std::endl;
       cmsCloseProfile( in_profile );
+      return;
     }
+    std::cout<<"Cannot open profile from memory."<<std::endl;
   }
+  std::cout<<"Embedded profile not found."<<std::endl;
 }
 
 

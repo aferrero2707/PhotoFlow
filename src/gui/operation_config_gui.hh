@@ -41,12 +41,14 @@
 #include "widgets/selector.hh"
 #include "widgets/exposure_slider.hh"
 #include "widgets/imagebutton.hh"
+#include "widgets/layerlist.hh"
 
 #include "doublebuffer.hh"
 
 namespace PF {
 
 class ImageEditor;
+
 
 
 class OperationConfigGUI: public OperationConfigUI
@@ -73,6 +75,13 @@ class OperationConfigGUI: public OperationConfigUI
   Slider shift_x, shift_y;
   bool has_ch_sel;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
+
+  Gtk::Expander input_source_expander;
+  CheckBox input_source_checkbox;
+  Gtk::VBox layer_selector_box;
+  LayerList layer_list;
+  Selector sourceSelector;
+
 
   Gtk::CheckButton previewButton;
 

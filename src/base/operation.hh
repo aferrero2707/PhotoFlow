@@ -166,6 +166,8 @@ namespace PF
 
     Property<bool> mask_enabled;
 
+    Property<bool> previous_channel_is_input;
+
   public:
     sigc::signal<void> signal_modified;
 
@@ -257,6 +259,8 @@ namespace PF
 				return -1;
     } 
 
+    bool get_previous_channel_is_input() { return previous_channel_is_input.get(); }
+
     /* Function to derive the output area from the input area
     */
     virtual void transform(const Rect* rin, Rect* rout)
@@ -292,9 +296,9 @@ namespace PF
     virtual void pre_build( rendermode_t /*mode*/ ) {}
 
     virtual VipsImage* build(std::vector<VipsImage*>& in, int first,
-    VipsImage* imap, VipsImage* omap, unsigned int& level);
+        VipsImage* imap, VipsImage* omap, unsigned int& level);
     virtual std::vector<VipsImage*> build_many(std::vector<VipsImage*>& in, int first,
-    VipsImage* imap, VipsImage* omap, unsigned int& level);
+        VipsImage* imap, VipsImage* omap, unsigned int& level);
 
     PropertyBase* get_property(std::string name);
 
