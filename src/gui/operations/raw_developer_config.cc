@@ -404,8 +404,8 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
   demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
 
-  outputControlsBox.pack_end( clip_overflow_checkbox, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_end( clip_negative_checkbox, Gtk::PACK_SHRINK );
+  //outputControlsBox.pack_end( clip_overflow_checkbox, Gtk::PACK_SHRINK );
+  //outputControlsBox.pack_end( clip_negative_checkbox, Gtk::PACK_SHRINK );
 
   profileModeSelectorBox.pack_start( profileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK );
