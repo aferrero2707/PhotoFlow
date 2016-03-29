@@ -40,7 +40,7 @@ PF::LayerList::LayerList( OperationConfigGUI* d, std::string l ):
   label.set_text( l.c_str() );
   label2.set_text( "sub-image" );
 
-  //image_num.set_range(0,99);
+  image_num.set_range(0,99);
 
   model = Gtk::ListStore::create(columns);
   cbox.set_model( model );
