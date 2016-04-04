@@ -445,6 +445,9 @@ void PF::OperationConfigGUI::hide_layer()
   l->set_enabled( false );
   l->set_dirty( true );
 
+  if( frame_sticky.is_active() )
+    unset_sticky();
+
   l->get_image()->update();
 
   //std::cout<<"Layer \""<<l->get_name()<<"\" hidden"<<std::endl;
