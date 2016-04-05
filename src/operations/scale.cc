@@ -253,6 +253,10 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   sin_angle = 0;
   cos_angle = 1;
 
+  crop.left = crop.top = 0;
+  crop.width = out_width;
+  crop.height = out_height;
+
   if( vflip.get() ) {
     VipsImage* flipped;
     if( vips_flip( srcimg, &flipped, VIPS_DIRECTION_VERTICAL, NULL ) ) {
