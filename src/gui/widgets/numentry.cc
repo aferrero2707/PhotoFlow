@@ -44,11 +44,11 @@ digits(1), inhibited(false)
   //button_step_up.add( step_up );
   //button_step_up.set_relief (Gtk::RELIEF_NONE);
   //button_step_up.set_border_width (0);
-  button_step_up.set_can_focus(false);
+  //button_step_up.set_can_focus(false);
   //button_step_down.add( step_down );
   //button_step_down.set_relief (Gtk::RELIEF_NONE);
   //button_step_down.set_border_width (0);
-  button_step_down.set_can_focus(false);
+  //button_step_down.set_can_focus(false);
 
   button_step_up.set_size_request( 20, -1 );
   button_step_down.set_size_request( 20, -1 );
