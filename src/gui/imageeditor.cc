@@ -49,9 +49,6 @@
 #include "imageeditor.hh"
 
 
-#define PREVIEW_PIPELINE_ID 1
-#define HISTOGRAM_PIPELINE_ID 2
-
 
 void PF::PreviewScrolledWindow::on_map()
 {
@@ -150,9 +147,9 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
   // First pipeline is for full-res rendering, second one is for on-screen preview, third one is
   // for calculating the histogram
-  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
-  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
-  PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
+  PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
   if( p ) {
     p->set_auto_zoom( true, 256, 256 );
   }
@@ -882,6 +879,7 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
 
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::image2layer(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+  std::cout<<"  active_layer_children.size()="<<active_layer_children.size()<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = image->get_pipeline( 0 );
@@ -926,6 +924,10 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     }
   }
 
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::image2layer(): active layer: "<<active_layer->get_name()<<std::endl;
+#endif
+
   PF::PipelineNode* node = pipeline->get_node( active_layer->get_id() );
   if( !node ) {
     std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
@@ -935,6 +937,10 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
     return;
   }
+
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::image2layer(): before active layer: x'="<<x<<"  y'="<<y<<std::endl;
+#endif
 
   PF::OpParBase* par = node->processor->get_par();
   VipsRect rin, rout;
