@@ -96,6 +96,19 @@ static int histogram_scan( VipsRegion *region,
       }
       break;
     }
+    case VIPS_FORMAT_FLOAT: {
+      float* pp = (float*)p;
+      for( x = 0; x < lsz; x+=bands ) {
+        unsigned short int idx;
+        PF::from_float( MAX( MIN(pp[x], 1), 0), idx );
+        h1[ idx ] += 1;
+        PF::from_float( MAX( MIN(pp[x+1], 1), 0), idx );
+        h2[ idx ] += 1;
+        PF::from_float( MAX( MIN(pp[x+2], 1), 0), idx );
+        h3[ idx ] += 1;
+      }
+      break;
+    }
     }
     p += lsk;
   }
