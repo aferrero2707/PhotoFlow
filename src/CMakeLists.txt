@@ -216,10 +216,10 @@ if(BUNDLED_LENSFUN)
   set(BUILD_STATIC "ON")
   add_library(lensfun_static STATIC IMPORTED)
   set_target_properties(lensfun_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/libs/lensfun/liblensfun.a)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/include)
   add_subdirectory(external/lensfun)
   list(APPEND LIB_DEPS lensfun)
   list(APPEND STATIC_LIBS lensfun_static)
-  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 else(BUNDLED_LENSFUN)
   link_directories( ${LENSFUN_LIBRARY_DIRS}  )
   include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
@@ -257,8 +257,8 @@ add_library (pfgui STATIC
 
 
 IF(MINGW)
-  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
-  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
 ELSEIF(APPLE)
   list(APPEND ADDITIONAL_LIBS)
 ELSE(MINGW)
@@ -280,6 +280,7 @@ target_link_libraries(photoflow ${LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${STATIC_LIBS}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
@@ -298,7 +299,6 @@ target_link_libraries(photoflow ${LIBS}
   ${GTHREAD_LIBRARIES} 
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
-  ${STATIC_LIBS}
   ${ORC_LIBRARIES}
   fftw3
   ${ADDITIONAL_LIBS}
@@ -319,6 +319,7 @@ target_link_libraries(pfbatch ${LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${STATIC_LIBS}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
@@ -334,7 +335,6 @@ target_link_libraries(pfbatch ${LIBS}
   ${GTHREAD_LIBRARIES} 
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
-  ${STATIC_LIBS}
   ${ORC_LIBRARIES}
   fftw3
   ${ADDITIONAL_LIBS}
@@ -376,6 +376,7 @@ if (GIMP_FOUND)
     ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
     ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
     ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${STATIC_LIBS}
     ${OPENEXR_LIBRARIES}
     ${XML2_LIBRARIES}
     ${EXIF_LIBRARIES}
@@ -397,7 +398,6 @@ if (GIMP_FOUND)
     ${GTHREAD_LIBRARIES} 
     ${ZLIB_LIBRARIES}
     #${LIBRAW_LIBRARIES}  
-    ${STATIC_LIBS}
     ${ORC_LIBRARIES}
     fftw3
     ${ADDITIONAL_LIBS}
