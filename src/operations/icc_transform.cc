@@ -122,12 +122,14 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     default:
       break;
     }
+  } else {
+    std::cout<<"icc_transform: NULL output profile"<<std::endl;
   }
 
   if( in_profile )  cmsCloseProfile( in_profile );
 
   VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
-  /*
+  /**/
   if( out_profile ) {
     cmsUInt32Number out_length;
     cmsSaveProfileToMem( out_profile, NULL, &out_length);
@@ -135,11 +137,11 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     cmsSaveProfileToMem( out_profile, buf, &out_length);
     vips_image_set_blob( out, VIPS_META_ICC_NAME, 
 			 (VipsCallbackFn) g_free, buf, out_length );
-    char tstr[1024];
-    cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-    std::cout<<"ICCTransformPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
+    //char tstr[1024];
+    //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+    //std::cout<<"ICCTransformPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
   }
-  */
+  /**/
 
   return out;
 }
