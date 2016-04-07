@@ -57,10 +57,6 @@
 #include "imagepyramid.hh"
 
 
-
-#define PF_CACHE_BUFFER_TILE_SIZE 128
-
-
 namespace PF 
 {
 
