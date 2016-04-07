@@ -41,7 +41,11 @@
 #include "layermanager.hh"
 #include "pipeline.hh"
 
+#define CACHE_PIPELINE_ID 0
 #define PREVIEW_PIPELINE_ID 1
+#define HISTOGRAM_PIPELINE_ID 2
+
+
 
 
 

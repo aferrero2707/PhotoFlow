@@ -153,7 +153,7 @@ void PF::ImageProcessor::run()
       //std::cout<<"ImageProcessor::run(): image="<<image<<std::endl;
       if( image ) {
         // Only cache buffers for PREVIEW pipelines are updated automatically
-        PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer( PF_RENDER_PREVIEW );
+        PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer();
         //std::cout<<"ImageProcessor::run(): buf="<<buf<<std::endl;
         if( buf ) {
           signal_status_caching.emit();

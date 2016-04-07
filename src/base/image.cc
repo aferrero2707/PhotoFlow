@@ -908,7 +908,7 @@ void PF::Image::do_export_merged( std::string filename )
     }
     remove_pipeline( pipeline );
     delete pipeline;
-    layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
+    //layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
     std::cout<<"Image saved to file "<<filename<<std::endl;
   }
 }
@@ -1020,6 +1020,6 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
 
   remove_pipeline( pipeline );
   delete pipeline;
-  layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
+  //layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
   std::cout<<"Image saved to memory "<<std::endl;
 }

@@ -65,7 +65,7 @@ namespace PF
 
     Layer* get_container_layer( Layer* layer, std::list<Layer*>& list );
 
-    PF::CacheBuffer* get_cache_buffer( rendermode_t mode, std::list<Layer*>& list );
+    PF::CacheBuffer* get_cache_buffer( std::list<Layer*>& list );
 
     // Walk through the given layer chain and set the "visible" flag
     void update_visible( std::list<Layer*>& list, bool visible );
@@ -115,8 +115,8 @@ namespace PF
 
     bool remove_layer( Layer* layer );
 
-    PF::CacheBuffer* get_cache_buffer( rendermode_t mode );
-    void reset_cache_buffers( rendermode_t mode, bool reinit );
+    PF::CacheBuffer* get_cache_buffer();
+    void reset_cache_buffers(bool reinit );
 
 
     bool rebuild_prepare();

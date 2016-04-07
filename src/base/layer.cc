@@ -78,6 +78,27 @@ void PF::Layer::set_image( Image* img )
 }
 
 
+void PF::Layer::set_cached( bool c )
+{
+  bool changed = (cached != c);
+  cached = c;
+  if( cached && cache_buffers.empty() ) {
+    //cache_buffers.insert( std::make_pair(PF::PF_RENDER_PREVIEW, new PF::CacheBuffer()) );
+    cache_buffers.insert( std::make_pair(PF::PF_RENDER_NORMAL, new PF::CacheBuffer()) );
+  }
+  if( cached && changed )
+    reset_cache_buffers();
+}
+
+
+PF::CacheBuffer* PF::Layer::get_cache_buffer()
+{
+  std::map<rendermode_t,PF::CacheBuffer*>::iterator i = cache_buffers.find( /*mode*/PF_RENDER_NORMAL );
+  if( i != cache_buffers.end() ) return i->second;
+  return NULL;
+}
+
+
 void PF::Layer::reset_cache_buffers()
 {
   //std::cout<<"Layer::reset_cache_buffers(\""<<get_name()<<"\")called"<<std::endl;

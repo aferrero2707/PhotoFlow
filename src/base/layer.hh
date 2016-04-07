@@ -42,6 +42,7 @@
 #include "processor.hh"
 #include "cachebuffer.hh"
 
+
 namespace PF
 {
 
@@ -124,13 +125,21 @@ namespace PF
     {
       bool old = enabled;
       enabled = d;
-      if( enabled != old ) modified();
+      if( enabled != old ) {
+        modified();
+        if( get_processor() && get_processor()->get_par() )
+          get_processor()->get_par()->set_modified();
+      }
     }
     void clear_enabled( )
     {
       bool old = enabled;
       enabled = false;
-      if( enabled != old ) modified();
+      if( enabled != old ) {
+        modified();
+        if( get_processor() && get_processor()->get_par() )
+          get_processor()->get_par()->set_modified();
+      }
     }
     
     bool is_visible() { return visible; }
@@ -158,23 +167,8 @@ namespace PF
     }
 
     bool is_cached() { return cached; }
-    void set_cached( bool c ) 
-    {
-      bool changed = (cached != c);
-      cached = c;
-      if( cached && cache_buffers.empty() ) {
-        cache_buffers.insert( std::make_pair(PF_RENDER_PREVIEW, new CacheBuffer()) );
-        cache_buffers.insert( std::make_pair(PF_RENDER_NORMAL, new CacheBuffer()) );
-      }
-      if( cached && changed )
-        reset_cache_buffers();
-    }
-    CacheBuffer* get_cache_buffer( rendermode_t mode )
-    {
-      std::map<rendermode_t,CacheBuffer*>::iterator i = cache_buffers.find( mode );
-      if( i != cache_buffers.end() ) return i->second;
-      return NULL;
-    }
+    void set_cached( bool c );
+    CacheBuffer* get_cache_buffer();
     void reset_cache_buffers();
 
 
