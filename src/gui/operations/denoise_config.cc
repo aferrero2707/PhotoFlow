@@ -37,6 +37,11 @@ PF::DenoiseConfigGUI::DenoiseConfigGUI( PF::Layer* layer ):
 	//modeSelector( this, "nr_mode", "N.R. mode: ", PF_NR_ANIBLUR ),
   impulse_nr_enable( this, "impulse_nr_enable", _("impulse NR"), false ),
   impulse_nr_threshold( this, "impulse_nr_threshold", _("threshold"), 50, 0, 100, 5, 20, 1),
+  nlmeans_enable( this, "nlmeans_enable", _("non-local means"), false ),
+  nlmeans_radius( this, "nlmeans_radius", _("radius"), 2, 1, 10, 1, 2, 1),
+  nlmeans_strength( this, "nlmeans_strength", _("strength"), 50, 0, 100, 5, 20, 1),
+  nlmeans_luma_frac( this, "nlmeans_luma_frac", _("luma"), 50, 0, 100, 5, 20, 100),
+  nlmeans_chroma_frac( this, "nlmeans_chroma_frac", _("chroma"), 100, 0, 100, 5, 20, 100),
   iterationsSlider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   amplitudeSlider( this, "amplitude", "Amplitude", 1, 0, 100, 1, 1, 1),
   sharpnessSlider( this, "sharpness", "Sharpness", 1, 0, 10, 0.1, 1, 1),
@@ -48,7 +53,12 @@ PF::DenoiseConfigGUI::DenoiseConfigGUI( PF::Layer* layer ):
   controlsBox.pack_start( impulse_nr_enable );
   controlsBox.pack_start( impulse_nr_threshold );
   controlsBox.pack_start( hline1 );
-  //controlsBox.pack_start( iterationsSlider );
+
+  controlsBox.pack_start( nlmeans_enable );
+  controlsBox.pack_start( nlmeans_radius );
+  controlsBox.pack_start( nlmeans_strength );
+  controlsBox.pack_start( nlmeans_luma_frac );
+  controlsBox.pack_start( nlmeans_chroma_frac );
   //controlsBox.pack_start( amplitudeSlider );
   //controlsBox.pack_start( sharpnessSlider );
   //controlsBox.pack_start( anisotropySlider );
