@@ -34,7 +34,7 @@
 
 #include <glibmm.h>
 
-#include <libraw/libraw.h>
+//#include <libraw/libraw.h>
 
 #include "../base/processor.hh"
 
@@ -50,6 +50,7 @@ namespace PF
     OUT_PROF_ADOBE,
     OUT_PROF_PROPHOTO,
     OUT_PROF_LAB,
+    OUT_PROF_CMYK,
     OUT_PROF_CUSTOM
   }; 
 

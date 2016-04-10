@@ -27,8 +27,8 @@
 
  */
 
+#include "../../../operations/gmic/transfer_colors.hh"
 #include "transfer_colors_config.hh"
-#include "../../operations/gmic/transfer_colors.hh"
 
 
 PF::GmicTransferColorsConfigGUI::GmicTransferColorsConfigGUI( PF::Layer* layer ):

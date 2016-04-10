@@ -57,7 +57,7 @@ link_directories(${SIGC2_LIBRARY_DIRS})
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
+#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
 
 
 include_directories(${OPENEXR_INCLUDE_DIRS})
@@ -190,11 +190,11 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 # so we do a custom dependency and pretend an imported liblibraw_r.a so no other -l are
 # appended.
 #
-add_library(libraw_static STATIC IMPORTED)
-set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/LibRaw/liblibraw_r.a)
-add_subdirectory(external/LibRaw)
-list(APPEND LIB_DEPS libraw_r)
-list(APPEND STATIC_LIBS libraw_static)
+#add_library(libraw_static STATIC IMPORTED)
+#set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/LibRaw/liblibraw_r.a)
+#add_subdirectory(external/LibRaw)
+#list(APPEND LIB_DEPS libraw_r)
+#list(APPEND STATIC_LIBS libraw_static)
 
 #
 # the rawspeed part is a bit of a hack:

@@ -32,7 +32,7 @@
 
 #include <string>
 
-#include <libraw/libraw.h>
+//#include <libraw/libraw.h>
 
 #include "../base/processor.hh"
 #include "../base/imagepyramid.hh"
