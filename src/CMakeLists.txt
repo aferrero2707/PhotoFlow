@@ -8,7 +8,7 @@ ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
 
-set(COMPILE_FLAGS "${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
+set(COMPILE_FLAGS " ${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
 
 if(Msgfmt_FOUND)
 	set(COMPILE_FLAGS "${COMPILE_FLAGS} -DLOCALEDIR=\"${LOCALE_DIR}\"")
@@ -32,10 +32,10 @@ if(GTKMM3_FOUND)
   set(GTKMM_LIBRARIES ${GTKMM3_LIBRARIES})
 endif()
 
-SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_VERBDEBUG "-Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
-SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_DEBUG " -Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_VERBDEBUG " -Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -DNDEBUG ${COMPILE_FLAGS}") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -224,7 +224,7 @@ else(BUNDLED_LENSFUN)
   link_directories( ${LENSFUN_LIBRARY_DIRS}  )
   include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
 endif(BUNDLED_LENSFUN)
-set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
+set(CMAKE_CXX_FLAGS " -DPF_HAS_LENSFUN ")
 
 
 
