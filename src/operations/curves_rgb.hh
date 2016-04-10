@@ -137,6 +137,7 @@
 
     void process(float**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, float* pout)
     {
+      //std::cout<<"CurvesProc::process(float) called in non_preview mode"<<std::endl;
       pp = p[first];
       pos = x;
       for(int i = CHMIN; i <= CHMAX; i++, pos++) {
@@ -148,6 +149,39 @@
         else if ( nout < 0 ) nout = 0;
         pout[pos] = nout;
         //std::cout<<"pp[pos]="<<pp[pos]<<"  d2="<<d2<<"  pout[pos]="<<pout[pos]<<std::endl;
+      }
+    }
+  };
+
+
+
+
+
+  template < int CHMIN, int CHMAX, class OP_PAR >
+  class CurvesProc<float,PF_COLORSPACE_RGB,CHMIN,CHMAX,true,OP_PAR>
+  {
+    CurvesPar* par;
+    int pos;
+    float nin, nout, d1, d2;
+    float* pp;
+    unsigned short int idx;
+  public:
+    CurvesProc(CurvesPar* p): par(p) {}
+
+    void process(float**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, float* pout)
+    {
+      //std::cout<<"CurvesProc::process(float) called in preview mode"<<std::endl;
+      pp = p[first];
+      pos = x;
+      for(int i = CHMIN; i <= CHMAX; i++, pos++) {
+        //std::cout<<"CurvesProc::process(): pp[pos]="<<pp[pos]<<std::endl;
+        from_float( pp[pos], idx );
+        //std::cout<<"CurvesProc::process(): idx="<<idx<<std::endl;
+        //if(false&&x==0)
+          //std::cout<<"CurvesProc::process(): cvec16["<<i<<"]["<<idx<<"]="<<par->cvec16[i][idx]/65535<<std::endl;
+        pout[pos] = (intensity*par->cvec16[i][idx]/65535 + pp[pos]);
+        //std::cout<<"pp[pos]="<<pp[pos]<<"  cvec16[i][pp[pos]]="
+        //    <<par->cvec16[i][pp[pos]]<<"  pout[pos]="<<pout[pos]<<" ("<<((float)pout[pos])/65535<<")"<<std::endl;
       }
     }
   };
