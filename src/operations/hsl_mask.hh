@@ -60,7 +60,7 @@ namespace PF
 
   public:
 
-    float vec[3][65535];
+    float vec[3][65536];
     bool eq_enabled[3];
 
     HSLMaskPar();
