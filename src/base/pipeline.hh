@@ -108,7 +108,7 @@ namespace PF
     void set_level( unsigned int l )
     {
       if( level != l ) {
-        Glib::Threads::Mutex::Lock lock(mutex);
+        //Glib::Threads::Mutex::Lock lock(mutex);
         set_force_rebuild();
       }
       level = l;
