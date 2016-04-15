@@ -58,6 +58,18 @@ void PF::Options::load()
 
       // --------------------------------------------------------------------------------------------------------
 
+      if (keyFile.has_group ("Folders")) {
+        if (keyFile.has_key ("Folders", "last_visited_image_folder")) {
+          last_visited_image_folder = keyFile.get_string ("Folders", "last_visited_image_folder");
+        }
+        if (keyFile.has_key ("Folders", "last_visited_preset_folder")) {
+          last_visited_preset_folder = keyFile.get_string ("Folders", "last_visited_preset_folder");
+        }
+        if (keyFile.has_key ("Folders", "last_visited_icc_folder")) {
+          last_visited_icc_folder = keyFile.get_string ("Folders", "last_visited_icc_folder");
+        }
+      }
+
       if (keyFile.has_group ("Color Management")) {
         if (keyFile.has_key ("Color Management", "DisplayProfileType")) {
           int keyval = keyFile.get_integer ("Color Management", "DisplayProfileType");
@@ -84,6 +96,10 @@ void PF::Options::save()
 
   Glib::ustring fname =
       Glib::build_filename( Glib::ustring(PF::PhotoFlow::Instance().get_config_dir()), "options" );
+
+  keyFile.set_string ("Folders", "last_visited_image_folder", last_visited_image_folder);
+  keyFile.set_string ("Folders", "last_visited_preset_folder", last_visited_preset_folder);
+  keyFile.set_string ("Folders", "last_visited_icc_folder", last_visited_icc_folder);
 
   keyFile.set_integer ("Color Management", "DisplayProfileType", (int)display_profile_type);
   keyFile.set_string ("Color Management", "CustomDisplayProfileName", custom_display_profile_name);

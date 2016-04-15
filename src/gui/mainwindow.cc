@@ -673,6 +673,7 @@ void PF::MainWindow::on_button_open_clicked()
   dialog.add_filter(filter_tiff);
   dialog.add_filter(filter_all);
 
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
   if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
   //Show the dialog and wait for a user response:
@@ -687,6 +688,7 @@ void PF::MainWindow::on_button_open_clicked()
     //Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
     last_dir = dialog.get_current_folder();
+    PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
     std::cout << "File selected: " <<  filename << std::endl;
     char* fullpath = realpath( filename.c_str(), NULL );
     if(!fullpath)
@@ -782,9 +784,11 @@ void PF::MainWindow::on_button_saveas_clicked()
       std::string fname_new = PF::replace_file_extension( fname, "pfi" );
       dialog.set_current_name( fname_new.c_str() );
     } else {
+      Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
       if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
     }
   } else {
+    Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
     if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
   }
   //Show the dialog and wait for a user response:
@@ -797,7 +801,8 @@ void PF::MainWindow::on_button_saveas_clicked()
     std::cout << "Save clicked." << std::endl;
 
     //Notice that this is a std::string, not a Glib::ustring.
-    last_dir = dialog.get_current_folder();
+    Glib::ustring last_dir = dialog.get_current_folder();
+    PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
     std::string filename = dialog.get_filename();
     std::string extension;
     if( get_file_extension(filename, extension) ) {
@@ -874,6 +879,7 @@ void PF::MainWindow::on_button_export_clicked()
 #endif
   dialog.add_filter(filter_jpeg);
 
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
   if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
   //Show the dialog and wait for a user response:
@@ -887,6 +893,7 @@ void PF::MainWindow::on_button_export_clicked()
 
     //Notice that this is a std::string, not a Glib::ustring.
     last_dir = dialog.get_current_folder();
+    PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
     std::string filename = dialog.get_filename();
     std::cout << "File selected: " <<  filename << std::endl;
     int page = viewerNotebook.get_current_page();
