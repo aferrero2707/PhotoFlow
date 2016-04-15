@@ -70,6 +70,7 @@ namespace PF
   ProcessorBase* new_draw();
   ProcessorBase* new_clone_stamp();
   ProcessorBase* new_lensfun();
+  ProcessorBase* new_tone_mapping();
   ProcessorBase* new_volume();
   ProcessorBase* new_path_mask();
   //ProcessorBase* new_vips_operation( std::string op_type );

@@ -303,6 +303,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Clip values"), "clip" );
   op_color.get_tree().add_op( _("White Balance"), "white_balance" );
   op_color.get_tree().add_op( _("Levels"), "levels" );
+  op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping" );
   //op_color.get_tree().add_op( _("Basic Adjustments"), "hue_saturation" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Invert"), "invert" );
