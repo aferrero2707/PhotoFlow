@@ -30,6 +30,7 @@
 #ifndef ICC_TRANSFORM_H
 #define ICC_TRANSFORM_H
 
+#include <string.h>
 #include <string>
 
 #include <glibmm.h>
