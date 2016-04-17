@@ -69,6 +69,7 @@ namespace PF
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
+    bool has_target_channel() { return true; }
 
       
 
