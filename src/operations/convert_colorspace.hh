@@ -30,6 +30,7 @@
 #ifndef CONVERT_COLORSPACE_H
 #define CONVERT_COLORSPACE_H
 
+#include <cstring>
 #include <string>
 
 #include <glibmm.h>
