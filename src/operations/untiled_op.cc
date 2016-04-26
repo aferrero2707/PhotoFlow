@@ -90,7 +90,7 @@ bool PF::UntiledOperationPar::import_settings( OpParBase* pin )
 
 void PF::UntiledOperationPar::pre_build( rendermode_t mode )
 {
-  if( mode==PF_RENDER_PREVIEW ) {
+  if( true /*mode==PF_RENDER_PREVIEW*/ ) {
     if( !do_update ) return;
 
     preview_cache_file_names.reserve( get_cache_files_num() );
@@ -125,7 +125,7 @@ void PF::UntiledOperationPar::pre_build( rendermode_t mode )
 std::string PF::UntiledOperationPar::get_cache_file_name( unsigned int n )
 {
   std::string cache_file_name;
-  if( get_render_mode() == PF_RENDER_PREVIEW ) {
+  if( true /*get_render_mode() == PF_RENDER_PREVIEW*/ ) {
     cache_file_name = get_preview_cache_file_name( n );
 #ifndef NDEBUG
     std::cout<<"UntiledOperationPar: setting cache file name to preview_cache_file_name ("
