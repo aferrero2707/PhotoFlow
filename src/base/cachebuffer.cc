@@ -163,6 +163,9 @@ void PF::CacheBuffer::step()
 	       NULL );
     PF_UNREF( rawimg, "CacheBuffer::step() completed" );
 
+    PF::vips_copy_metadata( image, cached );
+
+/*
     if( profile_data ) {
       void* profile_data2 = malloc( profile_length );
       if( profile_data2 ) {
@@ -192,6 +195,7 @@ void PF::CacheBuffer::step()
             exif_data2, exifsz );
       }
     }
+*/
 
     pyramid.init( cached );
     std::cout<<"CacheBuffer: caching completed"<<std::endl;
