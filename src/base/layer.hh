@@ -68,6 +68,7 @@ namespace PF
     bool enabled;
     bool visible;
     bool expanded;
+    bool hidden;
 
     bool normal;
 
@@ -143,10 +144,10 @@ namespace PF
     }
     
     bool is_visible() { return visible; }
-    void set_visible( bool d )
-    {
-      visible = d;
-    }
+    void set_visible( bool d ) { visible = d; }
+
+    bool is_hidden() { return hidden; }
+    void set_hidden( bool d ) { hidden = d; }
 
     bool is_expanded() { return expanded; }
     void set_expanded( bool d )

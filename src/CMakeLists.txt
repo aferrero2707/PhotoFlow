@@ -358,7 +358,7 @@ INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflo
 #
 if (GIMP_FOUND)
   FILE(GLOB PluginIncludes plugin/*.hh)
-  FILE(GLOB PluginSources plugin/*.cc)
+  FILE(GLOB PluginSources plugin/pluginwindow.cc plugin/pfgimp.cc)
 
   include_directories(${GIMP_2_9_INCLUDE_DIRS})
   link_directories(${GIMP_2_9_LIBRARY_DIRS})
@@ -404,7 +404,50 @@ if (GIMP_FOUND)
     #gmon
   )
   
-  INSTALL(TARGETS pfgimp RUNTIME DESTINATION share/photoflow/plug-in)
+  
+  FILE(GLOB LoadPluginIncludes plugin/*.hh)
+  FILE(GLOB LoadPluginSources plugin/pluginwindow.cc plugin/pfgimp-load.cc)
+
+  add_executable(pfgimp-load ${LoadPluginSources})
+
+  set_target_properties(pfgimp-load PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
+
+  target_link_libraries(pfgimp-load ${LIBS} 
+    pfgui
+    pfbase 
+    pfdt
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${STATIC_LIBS}
+    ${OPENEXR_LIBRARIES}
+    ${XML2_LIBRARIES}
+    ${EXIF_LIBRARIES}
+    ${EXIV2_LIBRARIES}
+    ${GEXIV2_LIBRARIES}
+    ${LENSFUN_LIBRARIES}
+    ${SIGC2_LIBRARIES}
+    ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+    ${PIXMAN_LIBRARIES} 
+    ${MACINTEG_LIBS}
+    #${GIMP_LIBS}
+    ${GIMP_2_9_LIBRARIES}
+    ${GIMPUI_LIBRARIES}
+    ${GTKMM_LIBRARIES} 
+    ${GLIBMM_LIBRARIES} 
+    ${GLIB_LIBRARIES} 
+    ${GMODULE_LIBRARIES} 
+    ${GOBJECT_LIBRARIES} 
+    ${GTHREAD_LIBRARIES} 
+    ${ZLIB_LIBRARIES}
+    #${LIBRAW_LIBRARIES}  
+    ${ORC_LIBRARIES}
+    fftw3
+    ${ADDITIONAL_LIBS}
+    #gmon
+  )
+  
+  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION share/photoflow/plug-in)
 endif (GIMP_FOUND)
 
 

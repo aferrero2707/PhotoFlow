@@ -2,17 +2,14 @@
 #include "pluginwindow.hh"
 #include "../base/new_operation.hh"
 #include "../base/imageprocessor.hh"
-#include "../base/pf_file_loader.hh"
 #if HAVE_GIMP_2_9
 #include <gegl.h>
 #endif
+#include <libgimpbase/gimpbase.h>
 #include <libgimp/gimp.h>
 #include <libgimp/gimpui.h>
-#include <libgimpbase/gimpbase.h>
 #include <glib/gi18n.h>
 #include <string.h>
-
-#include <fstream>
 
 #define VERSION "0.2.5"
 
@@ -37,16 +34,12 @@ extern GType vips_perspective_get_type( void );
 
 
 
-// Manage different versions of the GIMP API.
-#define _gimp_item_is_valid gimp_item_is_valid
-#define _gimp_image_get_item_position gimp_image_get_item_position
-#if GIMP_MINOR_VERSION<=8
-#define _gimp_item_get_visible gimp_drawable_get_visible
-#else
-#define _gimp_item_get_visible gimp_item_get_visible
-#endif
+static const char raw_ext[] = "3fr,ari,arw,cap,cine,cr2,crw,cs1,dc2,dcr,dng,erf,fff,"
+    "hdr,ia,iiq,k25,kc2,kdc,mdc,mef,mos,mrw,nef,"
+    "nrw,orf,ori,pef,pxn,qtk,r3d,raf,raw,rdc,rw2,rwl,sr2,"
+    "srf,srw,sti,pfi,x3f";
 
-GimpPDBStatusType status = GIMP_PDB_SUCCESS;   // The plug-in return status.
+
 
 static PF::PluginWindow* pluginwin;
 
@@ -70,27 +63,66 @@ MAIN()
 
 void query()
 {
-  static const GimpParamDef args[] = {
-    {GIMP_PDB_INT32,    (gchar*)"run_mode", (gchar*)"Interactive, non-interactive"},
-    {GIMP_PDB_IMAGE,    (gchar*)"image",    (gchar*)"Input image"},
-    {GIMP_PDB_DRAWABLE, (gchar*)"drawable", (gchar*)"Input drawable (unused)"},
+  static const GimpParamDef load_args[] = {
+      { GIMP_PDB_INT32,  "run_mode", "Interactive, non-interactive" },
+      { GIMP_PDB_STRING, "filename", "The name of the file to load" },
+      { GIMP_PDB_STRING, "raw_filename", "The name of the file to load" },
   };
+  static const GimpParamDef load_return_vals[] = {
+      { GIMP_PDB_IMAGE, "image", "Output image" },
+  };
+  static const GimpParamDef thumb_args[] = {
+      { GIMP_PDB_STRING, "filename",     "The name of the file to load" },
+      { GIMP_PDB_INT32,  "thumb_size",   "Preferred thumbnail size" }
+  };
+  static const GimpParamDef thumb_return_vals[] = {
+      { GIMP_PDB_IMAGE,  "image",        "Thumbnail image" },
+      { GIMP_PDB_INT32,  "image_width",  "Width of full-sized image" },
+      { GIMP_PDB_INT32,  "image_height", "Height of full-sized image" }
+  };
+  gimp_install_procedure("file_pf_load",
+      "Loads digital camera raw files",
+      "Loads digital camera raw files.",
+      "Udi Fuchs",
+      "Copyright 2003 by Dave Coffin\n"
+      "Copyright 2004 by Pawel Jochym\n"
+      "Copyright 2004-2015 by Udi Fuchs",
+      "pf-" VERSION,
+      "raw image",
+      NULL,
+      GIMP_PLUGIN,
+      G_N_ELEMENTS(load_args),
+      G_N_ELEMENTS(load_return_vals),
+      load_args,
+      load_return_vals);
 
-  gimp_install_procedure("plug-in-photoflow",             // name
-                         "PhotoFlow",                    // blurb
-                         "PhotoFlow",                    // help
-                         "Andrea Ferrero", // author
-                         "Andrea Ferrero", // copyright
-                         "2016",                     // date
-                         "_PhotoFlow...",                // menu_path
-                         "RGB*",              // image_types
-                         GIMP_PLUGIN,                // type
-                         G_N_ELEMENTS(args),         // nparams
-                         0,                          // nreturn_vals
-                         args,                       // params
-                         0);                         // return_vals
+#if HAVE_GIMP_2_9
+  gimp_register_magic_load_handler("file_pf_load",
+      (char *)raw_ext,
+      "",
+      "0,string,II*\\0,"
+      "0,string,MM\\0*,"
+      "0,string,<?xml");
+#else
+  gimp_register_load_handler("file_pf_load", (char *)raw_ext, "");
+#endif
 
-  gimp_plugin_menu_register("plug-in-photoflow", "<Image>/Filters");
+  gimp_install_procedure("file_pf_load_thumb",
+      "Loads thumbnails from digital camera raw files.",
+      "Loads thumbnails from digital camera raw files.",
+      "Udi Fuchs",
+      "Copyright 2004-2015 by Udi Fuchs",
+      "pf-" VERSION,
+      NULL,
+      NULL,
+      GIMP_PLUGIN,
+      G_N_ELEMENTS(thumb_args),
+      G_N_ELEMENTS(thumb_return_vals),
+      thumb_args, thumb_return_vals);
+
+  gimp_register_thumbnail_loader("file_pf_load",
+      "file_pf_load_thumb");
+
 }
 
 char *pf_binary;
@@ -104,7 +136,9 @@ void run(const gchar *name,
 {
   // TODO: Check if the static variable here is really needed.
   // In any case this should cause no issues with threads.
+  static GimpParam values[4];
   GimpRunMode run_mode;
+  char *filename;
   int size;
   int status;
 
@@ -127,175 +161,117 @@ void run(const gchar *name,
   GimpPixelRgn pixel_region;
   int tile_height, row, nrows;
 #endif
-  //gint32 layer;
+  gint32 layer;
+  int gimpImage;
 
-  static GimpParam return_values[1];
-  *return_vals  = return_values;
   *nreturn_vals = 1;
-  return_values[0].type = GIMP_PDB_STATUS;
+  *return_vals = values;
 
-  int image_id = param[1].data.d_drawable;
-#if GIMP_MINOR_VERSION<=8
-  gimp_tile_cache_ntiles(2*(gimp_image_width(image_id)/gimp_tile_width() + 1));
+  std::cout<<"pfgimp::run(): name="<<name<<std::endl;
+
+  if (!strcmp(name, "file_pf_load_thumb")) {
+    run_mode = (GimpRunMode)0;
+    filename = param[0].data.d_string;
+    size = param[1].data.d_int32;
+  } else if (!strcmp(name, "file_pf_load")) {
+    run_mode = (GimpRunMode)param[0].data.d_int32;
+    filename = param[1].data.d_string;
+    size = 0;
+  } else {
+    values[0].type = GIMP_PDB_STATUS;
+    values[0].data.d_status = GIMP_PDB_CALLING_ERROR;
+#ifndef _WIN32
+    gdk_threads_leave();
 #endif
-
-  Gtk::Main* app = new Gtk::Main(0, NULL);
-
-  // Retrieve the list of desired layers.
-  int
-  nb_layers = 0,
-  *layers = gimp_image_get_layers(image_id,&nb_layers),
-  active_layer_id = gimp_image_get_active_layer(image_id);
-  int source_layer_id = active_layer_id;
-
-  GimpParasite *phf_parasite = gimp_item_get_parasite( active_layer_id, "phf-config" );
-  std::cout<<"PhF plug-in: phf_parasite="<<phf_parasite<<std::endl;
-  bool replace_layer = false;
-  std::string pfiname;
-  if( phf_parasite && gimp_parasite_data_size( phf_parasite ) > 0 &&
-      gimp_parasite_data( phf_parasite ) != NULL ) {
-
-    char tstr[501];
-    snprintf( tstr, 500, _("PhF editing config detected.\nDo you want to continue editing the current layer?") );
-    Gtk::MessageDialog dialog(tstr,
-        false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
-    //dialog.set_transient_for(*this);
-    dialog.set_default_response( Gtk::RESPONSE_YES );
-
-    //Show the dialog and wait for a user response:
-    int result = dialog.run();
-
-    //Handle the response:
-    switch(result) {
-    case Gtk::RESPONSE_YES: {
-      glong size = gimp_parasite_data_size( phf_parasite );
-      pfiname = PF::PhotoFlow::Instance().get_cache_dir() + "/gimp_layer.pfi";
-      std::ofstream t;
-      t.open( pfiname );
-      t.write( (const char*)(gimp_parasite_data( phf_parasite )), size );
-      t.close();
-      replace_layer = true;
-      break;
-    }
-    case Gtk::RESPONSE_NO:
-      break;
-    }
+    return;
   }
-
-  if( replace_layer ) {
-    if (active_layer_id>=0) {
-      int i = 0; for (i = 0; i<nb_layers; ++i) if (layers[i]==active_layer_id) break;
-      if (i<nb_layers - 1) source_layer_id = layers[i + 1];
-      else source_layer_id = -1;
-    }
-  }
-  std::cout<<"PhF plug-in: pfiname="<<pfiname<<"  replace_layer="<<replace_layer<<"  source_layer_id="<<source_layer_id<<std::endl;
-
+  gboolean loadThumbnail = size > 0;
+  /*
+    char *gtkrcfile = g_build_filename(uf_get_home_dir(),
+                                       ".ufraw-gtkrc", NULL);
+    gtk_rc_add_default_file(gtkrcfile);
+    g_free(gtkrcfile);
+   */
   gimp_ui_init("photoflow-gimp", TRUE);
 
-  GimpParasite *exif_parasite = gimp_image_get_parasite( image_id, "exif-data" );
-  GimpParasite *icc_parasite  = gimp_image_get_parasite( image_id, "icc-profile" );
-
-  std::string filename;
-
-  if( source_layer_id >= 0 ) {
-    // Get input buffer
-    gint rgn_x, rgn_y, rgn_width, rgn_height;
-    if (!_gimp_item_is_valid(source_layer_id)) return;
-    if (!gimp_drawable_mask_intersect(source_layer_id,&rgn_x,&rgn_y,&rgn_width,&rgn_height)) return;
-    const int spectrum = (gimp_drawable_is_rgb(source_layer_id)?3:1) +
-        (gimp_drawable_has_alpha(source_layer_id)?1:0);
-    float* inbuf = (float*)malloc( sizeof(float)*3*rgn_width*rgn_height );
-#if GIMP_MINOR_VERSION<=8
-    GimpDrawable *drawable = gimp_drawable_get(source_layer_id);
-    GimpPixelRgn region;
-    gimp_pixel_rgn_init(&region,drawable,rgn_x,rgn_y,rgn_width,rgn_height,false,false);
-    guchar* row = g_new(guchar,rgn_width*spectrum), *ptrs = 0;
-    switch (spectrum) {
-    case 1 : {
-      float* ptr_r = inbuf;
-      for( int y = 0; y < rgn_height; y++ ) {
-        gimp_pixel_rgn_get_row(&region,ptrs=row,rgn_x,rgn_y + y,rgn_width);
-        for( int x = 0; x < rgn_width; x++ ) {
-          float val = ((float)*(ptrs++))/255;
-          *(ptr_r++) = val;
-          *(ptr_r++) = val;
-          *(ptr_r++) = val;
-        }
-      }
-    } break;
-    case 2 : {
-      float* ptr_r = inbuf;
-      for( int y = 0; y < rgn_height; y++ ) {
-        gimp_pixel_rgn_get_row(&region,ptrs=row,rgn_x,rgn_y + y,rgn_width);
-        for( int x = 0; x < rgn_width; x++ ) {
-          float val = ((float)*(ptrs++))/255; ptrs++;
-          *(ptr_r++) = val;
-          *(ptr_r++) = val;
-          *(ptr_r++) = val;
-        }
-      }
-    } break;
-    case 3 : {
-      float* ptr_r = inbuf;
-      for( int y = 0; y < rgn_height; y++ ) {
-        gimp_pixel_rgn_get_row(&region,ptrs=row,rgn_x,rgn_y + y,rgn_width);
-        for( int x = 0; x < rgn_width; x++ ) {
-          *(ptr_r++) = ((float)*(ptrs++))/255;
-          *(ptr_r++) = ((float)*(ptrs++))/255;
-          *(ptr_r++) = ((float)*(ptrs++))/255;
-        }
-      }
-    } break;
-    case 4 : {
-      float* ptr_r = inbuf;
-      for( int y = 0; y < rgn_height; y++ ) {
-        gimp_pixel_rgn_get_row(&region,ptrs=row,rgn_x,rgn_y + y,rgn_width);
-        for( int x = 0; x < rgn_width; x++ ) {
-          *(ptr_r++) = ((float)*(ptrs++))/255;
-          *(ptr_r++) = ((float)*(ptrs++))/255;
-          *(ptr_r++) = ((float)*(ptrs++))/255; ptrs++;
-        }
-      }
-    } break;
-    }
-    g_free(row);
-    gimp_drawable_detach(drawable);
-#else
-    GeglRectangle rect;
-    gegl_rectangle_set(&rect,rgn_x,rgn_y,rgn_width,rgn_height);
-    buffer = gimp_drawable_get_buffer(source_layer_id);
-    const char *const format = "R'G'B' float";
-    gegl_buffer_get(buffer,&rect,1,babl_format(format),inbuf,0,GEGL_ABYSS_NONE);
-    g_object_unref(buffer);
+  //uf = ufraw_open(filename);
+  /* if UFRaw fails on jpg/jpeg or tif/tiff then open with GIMP */
+  std::cout<<"  filename="<<filename<<std::endl;
+  if (true) {
+    if (!strcasecmp(filename + strlen(filename) - 4, ".jpg") ||
+        !strcasecmp(filename + strlen(filename) - 5, ".jpeg")) {
+      if (loadThumbnail)
+        *return_vals = gimp_run_procedure2("file_jpeg_load_thumb",
+            nreturn_vals, nparams, param);
+      else
+        *return_vals = gimp_run_procedure2("file_jpeg_load",
+            nreturn_vals, nparams, param);
+#ifndef _WIN32
+      gdk_threads_leave();
 #endif
-
-    VipsImage* input_img =
-        vips_image_new_from_memory( inbuf, sizeof(float)*3*rgn_width*rgn_height,
-            rgn_width, rgn_height, 3, VIPS_FORMAT_FLOAT );
-
-    if( icc_parasite && gimp_parasite_data_size( icc_parasite ) > 0 &&
-        gimp_parasite_data( icc_parasite ) != NULL ) {
-      glong iccsize = gimp_parasite_data_size( icc_parasite );
-      void* iccdata = malloc( iccsize );
-      memcpy( iccdata, gimp_parasite_data( icc_parasite ), iccsize );
-
-      vips_image_set_blob( input_img, VIPS_META_ICC_NAME,
-          (VipsCallbackFn) g_free, iccdata, iccsize );
+      return;
+    } else if (!strcasecmp(filename + strlen(filename) - 4, ".tif") ||
+        !strcasecmp(filename + strlen(filename) - 5, ".tiff")) {
+      if (!loadThumbnail)
+        *return_vals = gimp_run_procedure2("file_tiff_load",
+            nreturn_vals, nparams, param);
+      else {
+        /* There is no "file_tiff_load_thumb".
+         * The call to "file_ufraw_load" will handle the thumbnail */
+        /* Following is another solution for tiff thumbnails
+                GimpParam tiffParam[3];
+                tiffParam[0].type = GIMP_PDB_INT32;
+                tiffParam[0].data.d_int32 = GIMP_RUN_NONINTERACTIVE;
+                tiffParam[1].type = GIMP_PDB_STRING;
+                tiffParam[1].data.d_string = filename;
+                tiffParam[2].type = GIMP_PDB_STRING;
+                tiffParam[2].data.d_string = filename;
+         *return_vals = gimp_run_procedure2 ("file_tiff_load",
+                    	nreturn_vals, 3, tiffParam);
+         */
+      }
+#ifndef _WIN32
+      gdk_threads_leave();
+#endif
+      return;
+/*
+    } else {
+      // Don't issue a message on thumbnail failure, since ufraw-gimp
+      // will be called again with "file_ufraw_load"
+      if (loadThumbnail) {
+#ifndef _WIN32
+        gdk_threads_leave();
+#endif
+        return;
+      }
+#ifndef _WIN32
+      gdk_threads_leave();
+#endif
+      return;
+*/
     }
-
-    filename = PF::PhotoFlow::Instance().get_cache_dir() + "/gimp_layer.tif";
-    vips_tiffsave( input_img, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_NONE,
-        "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
-
-    g_object_unref( input_img );
   }
-
-  gimp_parasite_free(exif_parasite);
-  gimp_parasite_free(icc_parasite);
-
+  /* Load $HOME/.ufrawrc */
+  //conf_load(&rc, NULL);
+  /*
+    ufraw_config(uf, &rc, NULL, NULL);
+    sendToGimpMode = (uf->conf->createID == send_id);
+#if !HAVE_GIMP_2_9
+    if (loadThumbnail) {
+        uf->conf->size = size;
+        uf->conf->embeddedImage = TRUE;
+    }
+#else
+    if (run_mode == GIMP_RUN_NONINTERACTIVE) uf->conf->shrink = 8;
+#endif
+   */
+  /* UFRaw already issues warnings.
+   * With GIMP_PDB_CANCEL, Gimp won't issue another one. */
+  values[0].type = GIMP_PDB_STATUS;
+  values[0].data.d_status = GIMP_PDB_CANCEL;
   /* BUG - what should be done with GIMP_RUN_WITH_LAST_VALS */
-  if (run_mode == GIMP_RUN_INTERACTIVE && !sendToGimpMode) {
+  if (run_mode == GIMP_RUN_INTERACTIVE &&
+      !loadThumbnail && !sendToGimpMode) {
     /* Show the preview in interactive mode, unless if we are
      * in thumbnail mode or 'send to gimp' mode. */
     std::cout<<"  before creating window"<<std::endl;
@@ -320,6 +296,7 @@ void run(const gchar *name,
     std::cout<<"Starting image processor..."<<std::endl;
     PF::ImageProcessor::Instance().start();
     std::cout<<"Image processor started."<<std::endl;
+    Gtk::Main* app = new Gtk::Main(0, NULL);
 
     struct stat statbuf;
     Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
@@ -351,20 +328,7 @@ void run(const gchar *name,
     pluginwin = new PF::PluginWindow();
     std::cout<<"  window created"<<std::endl;
     std::cout<<"  data_dir="<<PF::PhotoFlow::Instance().get_data_dir()<<std::endl;
-    std::cout<<"  filename="<<filename<<"  pfiname="<<pfiname<<std::endl;
-    if( !filename.empty() ) {
-      pluginwin->open_image( filename, true );
-      if( !pfiname.empty() ) {
-        g_assert( pluginwin->get_image_editor() != NULL );
-        PF::ImageEditor* pfeditor = pluginwin->get_image_editor();
-        g_assert( pfeditor != NULL );
-        PF::Image* pfimage = pfeditor->get_image();
-        g_assert( pfimage != NULL );
-        PF::insert_pf_preset( pfiname, pfimage, NULL, &(pfimage->get_layer_manager().get_layers()), false );
-      }
-    } else if( !pfiname.empty() ) {
-      pluginwin->open_image( pfiname, false );
-    }
+    pluginwin->open_image( filename );
     std::cout<<"  file opened"<<std::endl;
     pluginwin->show_all();
     app->run(*pluginwin);
@@ -379,38 +343,36 @@ void run(const gchar *name,
       height = pluginwin->get_image_buffer().height;
     }
 
-    // Transfer the output layers back into GIMP.
-    GimpLayerModeEffects layer_blendmode = GIMP_NORMAL_MODE;
-    gint layer_posx = 0, layer_posy = 0;
-    double layer_opacity = 100;
+#if HAVE_GIMP_2_9
+    gimpImage =
+        gimp_image_new_with_precision(width, height, GIMP_RGB,
+            GIMP_PRECISION_FLOAT_GAMMA);
+#else
+    gimpImage = gimp_image_new(width, height, GIMP_RGB);
+#endif
+    gimp_image_set_filename(gimpImage, filename);
 
-    gint32 dest_layer_id = active_layer_id;
-    if( !replace_layer ) {
     /* Create the "background" layer to hold the image... */
-    gint32 layer = gimp_layer_new(image_id, _("PhF output"), width,
+    layer = gimp_layer_new(gimpImage, _("Background"), width,
         height, GIMP_RGB_IMAGE, 100.0,
         GIMP_NORMAL_MODE);
-    std::cout<<"PhF plug-in: new layer created"<<std::endl;
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,7,3)
-    gimp_image_insert_layer(image_id, layer, 0, -1);
+    gimp_image_insert_layer(gimpImage, layer, 0, 0);
 #else
-    gimp_image_add_layer(image_id, layer, -1);
+    gimp_image_add_layer(gimpImage, layer, 0);
 #endif
-    std::cout<<"PhF plug-in: new layer added"<<std::endl;
-    dest_layer_id = layer;
-    }
+
     /* Get the drawable and set the pixel region for our load... */
 #if HAVE_GIMP_2_9
-    buffer = gimp_drawable_get_buffer(dest_layer_id);
+    buffer = gimp_drawable_get_buffer(layer);
 #else
-    drawable = gimp_drawable_get(dest_layer_id);
+    drawable = gimp_drawable_get(layer);
     gimp_pixel_rgn_init(&pixel_region, drawable, 0, 0, drawable->width,
         drawable->height, TRUE, FALSE);
     tile_height = gimp_tile_height();
 #endif
 
     if( pluginwin->get_image_buffer().buf ) {
-      std::cout<<"PhF plug-in: copying buffer..."<<std::endl;
 #if HAVE_GIMP_2_9
       GeglRectangle gegl_rect;
       gegl_rect.x = 0;
@@ -428,37 +390,38 @@ void run(const gchar *name,
             uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
       }
 #endif
-      std::cout<<"PhF plug-in: buffer copied"<<std::endl;
+    }
 
-      PF::ImageEditor* pfeditor = pluginwin->get_image_editor();
-      g_assert( pfeditor != NULL );
-      PF::Image* pfimage = pfeditor->get_image();
-      g_assert( pfimage != NULL );
-      std::string pfiname = PF::PhotoFlow::Instance().get_cache_dir() + "/gimp_layer.pfi";
-      if( pfimage->save(pfiname) ) {
-        // Load PFI file into memory
-        std::ifstream t;
-        std::stringstream strstr;
-        t.open( pfiname );
-        strstr << t.rdbuf();
-        char* buffer = strdup( strstr.str().c_str() );
-        /*
-        int length;
-        t.seekg(0,std::ios::end);
-        length = t.tellg();
-        t.seekg(0,std::ios::beg);
-        char* buffer = new char[length+1];
-        t.read( buffer, length );
-        buffer[length] = 0;
-        */
-        t.close();
+    std::cout<<"PhF plug-in: buffer copied"<<std::endl;
 
-        GimpParasite *cfg_parasite;
-        cfg_parasite = gimp_parasite_new("phf-config",
-            GIMP_PARASITE_PERSISTENT, strlen(buffer), buffer);
-        gimp_item_attach_parasite(dest_layer_id, cfg_parasite);
-        gimp_parasite_free(cfg_parasite);
-      }
+    PF::ImageEditor* pfeditor = pluginwin->get_image_editor();
+    g_assert( pfeditor != NULL );
+    PF::Image* pfimage = pfeditor->get_image();
+    g_assert( pfimage != NULL );
+    std::string pfiname = PF::PhotoFlow::Instance().get_cache_dir() + "/gimp_layer.pfi";
+    if( pfimage->save(pfiname) ) {
+      // Load PFI file into memory
+      std::ifstream t;
+      std::stringstream strstr;
+      t.open( pfiname );
+      strstr << t.rdbuf();
+      char* buffer = strdup( strstr.str().c_str() );
+      /*
+      int length;
+      t.seekg(0,std::ios::end);
+      length = t.tellg();
+      t.seekg(0,std::ios::beg);
+      char* buffer = new char[length+1];
+      t.read( buffer, length );
+      buffer[length] = 0;
+      */
+      t.close();
+
+      GimpParasite *cfg_parasite;
+      cfg_parasite = gimp_parasite_new("phf-config",
+          GIMP_PARASITE_PERSISTENT, strlen(buffer), buffer);
+      gimp_item_attach_parasite(layer, cfg_parasite);
+      gimp_parasite_free(cfg_parasite);
     }
 
 #if HAVE_GIMP_2_9
@@ -470,16 +433,17 @@ void run(const gchar *name,
 
     //printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
 
-    if( false ) {
+    if( true ) {
       GimpParasite *exif_parasite;
 
+      std::cout<<"pluginwin->get_image_buffer().exif_buf="<<pluginwin->get_image_buffer().exif_buf<<std::endl;
       exif_parasite = gimp_parasite_new("exif-data",
           GIMP_PARASITE_PERSISTENT, sizeof( GExiv2Metadata ),
           pluginwin->get_image_buffer().exif_buf);
 //#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
 //      gimp_image_attach_parasite(gimpImage, exif_parasite);
 //#else
-      gimp_image_parasite_attach(image_id, exif_parasite);
+      gimp_image_parasite_attach(gimpImage, exif_parasite);
 //#endif
       gimp_parasite_free(exif_parasite);
 /*
@@ -512,9 +476,9 @@ void run(const gchar *name,
           pluginwin->get_image_buffer().iccdata);
       std::cout<<"ICC parasite created"<<std::endl;
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-      gimp_image_attach_parasite(image_id, icc_parasite);
+      gimp_image_attach_parasite(gimpImage, icc_parasite);
 #else
-      gimp_image_parasite_attach(image_id, icc_parasite);
+      gimp_image_parasite_attach(gimpImage, icc_parasite);
 #endif
       gimp_parasite_free(icc_parasite);
 
@@ -539,10 +503,63 @@ void run(const gchar *name,
     std::cout<<"Plug-in: photoflow closed"<<std::endl;
 
   } else {
+    if (sendToGimpMode) {
+      char *text = g_strdup_printf(_("Loading raw file '%s'"),
+          filename);
+      gimp_progress_init(text);
+      g_free(text);
+    }
+    /*
+        if (sendToGimpMode) gimp_progress_update(0.1);
+        status = ufraw_load_raw(uf);
+        if (status != UFRAW_SUCCESS) {
+            values[0].type = GIMP_PDB_STATUS;
+            values[0].data.d_status = GIMP_PDB_EXECUTION_ERROR;
+#ifndef _WIN32
+            gdk_threads_leave();
+#endif
+            return;
+        }
+        if (sendToGimpMode) gimp_progress_update(0.3);
+        ufraw_save_gimp_image(uf, NULL);
+        if (sendToGimpMode) gimp_progress_update(1.0);
+        ufraw_close_darkframe(uf->conf);
+        ufraw_close(uf);
+     */
+    /* To make sure we don't delete the raw file by mistake we check
+     * that the file is really an ID file. */
+    /*
+    if (sendToGimpMode &&
+        strcasecmp(filename + strlen(filename) - 6, ".ufraw") == 0)
+      g_unlink(filename);
+    */
   }
-
+  /*
+    if (status != UFRAW_SUCCESS || uf->gimpImage == -1) {
+        values[0].type = GIMP_PDB_STATUS;
+        if (status == UFRAW_CANCEL)
+            values[0].data.d_status = GIMP_PDB_CANCEL;
+        else
+            values[0].data.d_status = GIMP_PDB_EXECUTION_ERROR;
+#ifndef _WIN32
+        gdk_threads_leave();
+#endif
+        return;
+    }
+   */
   std::cout<<"Plug-in: setting return values"<<std::endl;
-  return_values[0].data.d_status = status;
+  *nreturn_vals = 2;
+  values[0].type = GIMP_PDB_STATUS;
+  values[0].data.d_status = GIMP_PDB_SUCCESS;
+  values[1].type = GIMP_PDB_IMAGE;
+  values[1].data.d_image = gimpImage;
+  if (loadThumbnail) {
+    *nreturn_vals = 4;
+    values[2].type = GIMP_PDB_INT32;
+    //values[2].data.d_int32 = uf->initialWidth;
+    values[3].type = GIMP_PDB_INT32;
+    //values[3].data.d_int32 = uf->initialHeight;
+  }
   std::cout<<"Plug-in: return values done"<<std::endl;
   std::cout<<"Plug-in: calling gdk_threads_leave()"<<std::endl;
 #ifndef _WIN32

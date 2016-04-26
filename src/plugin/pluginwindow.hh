@@ -92,8 +92,10 @@ public:
   void on_unmap();
 
   ImageBuffer& get_image_buffer() { return imgbuf; }
+  ImageEditor* get_image_editor() { return image_editor; }
 
-  void open_image(std::string filename);
+  void open_image(std::string filename, bool hidden=false);
+  void open_buffer(void* buf, int w, int h);
   void update_image();
   void run()
   {

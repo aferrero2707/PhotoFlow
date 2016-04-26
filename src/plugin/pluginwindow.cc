@@ -184,15 +184,22 @@ void PF::PluginWindow::on_unmap()
 #define LOAD_PFI
 
 void
-PF::PluginWindow::open_image( std::string filename )
+PF::PluginWindow::open_image( std::string filename, bool hidden )
 {
   if( image_editor ) delete image_editor;
 
 	char* fullpath = strdup( filename.c_str() );
   image_editor = new PF::ImageEditor( fullpath );
+  std::cout<<"PluginWindow::open_image("<<filename<<", "<<hidden<<") called"<<std::endl;
+  image_editor->set_hide_background_layer( hidden );
+  image_editor->open_image();
 	free(fullpath);
   editorBox.pack_start( *image_editor );
   //image_editor->show();
 }
 
+void PF::PluginWindow::open_buffer(void* buf, int w, int h)
+{
+
+}
 
