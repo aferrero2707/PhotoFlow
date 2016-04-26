@@ -30,6 +30,10 @@
 
 #include <string>
 
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#define realpath(N,R) _fullpath((R),(N),_MAX_PATH)
+#endif
+
 namespace PF
 {
 

@@ -724,16 +724,16 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
     char* name = (char*)l->get_name().c_str();
     if( !l->is_enabled() ) continue;
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::LayerManager::rebuild_chain(): processing layer \""<<name<<"\""<<std::endl;
-//#endif
+#endif
     if( previous_layer ) {
       previous_node = pipeline->get_node( previous_layer->get_id() );
       //if( previous_node ) previous = previous_node->image;
       if( previous_node ) previous = previous_node->blended;
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"  Previous layer: \""<<previous_layer->get_name()<<"\""<<std::endl;
-//#endif
+#endif
     }
 
     // Create the node if it does not yet exist, and copy the parameters
@@ -1205,6 +1205,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         unsigned int level = pipeline->get_level();
         pipelineblender->import_settings( blender );
 
+        //std::cout<<"rebuild_chain(): blending images for layer \""<<l->get_name()<<"\""<<std::endl;
         std::vector<VipsImage*> in;
         // we add the previous image to the list of inputs, even if it is NULL
         in.push_back( previous );
@@ -1256,7 +1257,7 @@ bool PF::LayerManager::rebuild_prepare()
 
 bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, int height, VipsRect* area )
 {
-  Glib::Threads::Mutex::Lock lock( pipeline->get_mutex() );
+  //Glib::Threads::Mutex::Lock lock( pipeline->get_mutex() );
 
   if( pipeline && pipeline->get_output() ) {
     //vips_image_invalidate_all( pipeline->get_output() );

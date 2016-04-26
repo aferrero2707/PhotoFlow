@@ -843,6 +843,7 @@ void PF::Image::do_export_merged( std::string filename )
     //Glib::Threads::Mutex::Lock lock( rebuild_mutex );
     unsigned int level = 0;
     PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+    //PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_NORMAL );
     do_update();
     /*
     while( true ) {
@@ -880,10 +881,12 @@ void PF::Image::do_export_merged( std::string filename )
       in.push_back( image );
       convert_format->get_par()->set_image_hints( image );
       convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
+      //convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       if( outimg ) {
         int predictor = 2;
         vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
+        //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
             "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
         //vips_image_write_to_file( outimg, filename.c_str(), NULL );
         saved = true;
