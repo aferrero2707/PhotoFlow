@@ -78,8 +78,6 @@ protected:
 
   std::vector<ImageEditor*> image_editors;
 
-  std::string last_dir;
-
   //Gtk::ScrolledWindow treeFrame;
   //Gtk::TreeView layerTree;
 

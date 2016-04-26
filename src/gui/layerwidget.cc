@@ -822,6 +822,9 @@ void PF::LayerWidget::on_button_add_image()
   dialog.add_filter(filter_tiff);
   dialog.add_filter(filter_all);
 
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -830,6 +833,9 @@ void PF::LayerWidget::on_button_add_image()
   case(Gtk::RESPONSE_OK):
         {
     std::cout << "Open clicked." << std::endl;
+
+    last_dir = dialog.get_current_folder();
+    PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
 
     //Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
@@ -1291,7 +1297,8 @@ void PF::LayerWidget::on_button_load()
 #endif
   dialog.add_filter(filter_pfp);
 
-  //if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_preset_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
   //Show the dialog and wait for a user response:
   int result = dialog.run();
@@ -1303,6 +1310,9 @@ void PF::LayerWidget::on_button_load()
   case(Gtk::RESPONSE_OK): 
     {
       std::cout << "Save clicked." << std::endl;
+
+      last_dir = dialog.get_current_folder();
+      PF::PhotoFlow::Instance().get_options().set_last_visited_preset_folder( last_dir );
 
       //Notice that this is a std::string, not a Glib::ustring.
       filename = dialog.get_filename();
@@ -1359,7 +1369,8 @@ void PF::LayerWidget::on_button_save()
 #endif
   dialog.add_filter(filter_pfp);
 
-  //if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_preset_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
   //Show the dialog and wait for a user response:
   int result = dialog.run();
@@ -1371,6 +1382,9 @@ void PF::LayerWidget::on_button_save()
   case(Gtk::RESPONSE_OK): 
     {
       std::cout << "Save clicked." << std::endl;
+
+      last_dir = dialog.get_current_folder();
+      PF::PhotoFlow::Instance().get_options().set_last_visited_preset_folder( last_dir );
 
       //Notice that this is a std::string, not a Glib::ustring.
       filename = dialog.get_filename();
