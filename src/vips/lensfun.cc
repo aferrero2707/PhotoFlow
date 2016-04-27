@@ -488,8 +488,21 @@ vips_lensfun_init( VipsLensFun *lensfun )
 {
 #ifdef PF_HAS_LENSFUN
   lensfun->ldb = lf_db_new();
-  lensfun->ldb->Load ();
-#endif
+#if (BUNDLED_LENSFUN == 1)
+  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_data_dir() + "/lensfun/version_1/";
+  lensfun->ldb->LoadDirectory( lfdb.c_str() );
+  std::cout<<"LensFun database loaded from "<<lfdb<<std::endl;
+#else
+  //char* lfdb_env = getenv("PF_LENSFUN_DATA_DIR");
+  //if( lfdb_env ) {
+  //  lensfun->ldb->LoadDirectory( lfdb.c_str() );
+  //  std::cout<<"LensFun database loaded from "<<lfdb_env<<std::endl;
+  //} else {
+    lensfun->ldb->Load ();
+    std::cout<<"LensFun database loaded from default location"<<std::endl;
+  //}
+#endif //(BUNDLED_LENSFUN == 1)
+#endif //PF_HAS_LENSFUN
 }
 
 /**
