@@ -130,4 +130,8 @@ ENDIF(NOT MINGW)
 MESSAGE( STATUS "Msgfmt_FOUND:         " ${Msgfmt_FOUND} )
 
 
+set(THEME hicolor)
+set(THEME_DIRECTORY ${CMAKE_INSTALL_PREFIX}/share/icons/${THEME})
+
 add_subdirectory(src) 
+add_subdirectory(data)
