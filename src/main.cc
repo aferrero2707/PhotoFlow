@@ -241,15 +241,17 @@ int main (int argc, char *argv[])
   }
 #endif
 
+  //Shows the window and returns when it is closed.
+  mainWindow->show_all();
   if( argc > 1 ) {
     fullpath = realpath( argv[argc-1], NULL );
     if(!fullpath)
       return 1;
     mainWindow->open_image( fullpath );
     free(fullpath);
+  } else {
+    mainWindow->on_button_open_clicked();
   }
-  //Shows the window and returns when it is closed.
-  mainWindow->show_all();
   app->run(*mainWindow);
 
   PF::ProcessRequestInfo request;
