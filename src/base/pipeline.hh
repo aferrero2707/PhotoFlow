@@ -82,7 +82,7 @@ namespace PF
 
     bool force_rebuild;
 
-    Glib::Threads::Mutex mutex;
+    //Glib::Threads::Mutex mutex;
 
   public:
     Pipeline():
@@ -95,7 +95,7 @@ namespace PF
 
     ~Pipeline();
 
-    Glib::Threads::Mutex& get_mutex() { return mutex; }
+    //Glib::Threads::Mutex& get_mutex() { return mutex; }
 
     bool is_modified() { return modified; }
     void set_modified( bool flag ) { modified = flag; }
