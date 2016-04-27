@@ -78,10 +78,16 @@ topButtonBox2(Gtk::ORIENTATION_HORIZONTAL),
 #endif
 files_frame( _("files") ),
 editing_frame( _("editing") ),
-img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
-img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
-img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save-as.png" ),
-img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-export.png" ),
+//img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
+img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-folder-open.png" ),
+//img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
+img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-floppy.png" ),
+//img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save-as.png" ),
+img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/save-as.png" ),
+//img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-export.png" ),
+img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-file-image.png" ),
+img_settings( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-sliders.png" ),
+img_exit( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-sign-out.png" ),
 img_load_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
 img_save_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
 img_trash( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
@@ -89,8 +95,8 @@ buttonOpen( /*_("Open")*/ ),
 buttonSave( /*_("Save")*/ ),
 buttonSaveAs( /*_("Save as")*/ ),
 buttonExport( /*_("Export")*/ ),
-buttonExit( _("Exit") ),
-buttonSettings("Settings"),
+buttonExit( /*_("Exit")*/ ),
+buttonSettings(),
 buttonNewLayer(_("New Adjustment")),
 buttonNewGroup(_("New Group")),
 buttonDelLayer(),
@@ -135,6 +141,10 @@ buttonSavePreset()
   buttonSaveAs.set_tooltip_text( _("Save current image with a different name") );
   buttonExport.set_image( img_export ); buttonExport.set_size_request(40,-1);
   buttonExport.set_tooltip_text( _("Export current image to raster format") );
+  buttonSettings.set_image( img_settings ); buttonSettings.set_size_request(40,-1);
+  buttonSettings.set_tooltip_text( _("Open settings dialog") );
+  buttonExit.set_image( img_exit ); buttonExit.set_size_request(40,-1);
+  buttonExit.set_tooltip_text( _("Exit PhotoFlow") );
 
   top_box.set_spacing(4);
   top_box.set_border_width(4);
@@ -154,7 +164,7 @@ buttonSavePreset()
   buttonSavePreset.set_tooltip_text( _("Open existing file") );
   topButtonBox2.pack_start(buttonSavePreset, Gtk::PACK_SHRINK);
 
-  top_box.pack_start(buttonExit, Gtk::PACK_SHRINK); buttonExit.set_size_request(70,-1);
+  top_box.pack_start(buttonExit, Gtk::PACK_SHRINK); //buttonExit.set_size_request(70,-1);
   //topButtonBox.set_border_width(5);
   //topButtonBox.set_layout(Gtk::BUTTONBOX_START);
 
@@ -362,7 +372,7 @@ void PF::MainWindow::remove_all_tabs()
     std::cout<<"MainWindow::on_delete_event(): tab="<<npages-1<<"  w="<<w<<std::endl;
     if( !w ) continue;
     std::cout<<"MainWindow::on_delete_event(): removing tab #"<<npages-1<<std::endl;
-    remove_tab( w );
+    remove_tab( w, true );
   }
 }
 
@@ -395,7 +405,7 @@ PF::MainWindow::open_image( std::string filename )
   HTabLabelWidget* tabwidget = 
       new HTabLabelWidget( std::string(fname),
           editor );
-  tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::MainWindow::remove_tab) ); 
+  tabwidget->signal_close.connect( sigc::bind<bool>(sigc::mem_fun(*this, &PF::MainWindow::remove_tab), false) );
   viewerNotebook.append_page( *editor, *tabwidget );
   //std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
   free(fullpath);
@@ -856,18 +866,6 @@ void PF::MainWindow::on_button_export_clicked()
   dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
 
 #ifdef GTKMM_2
-  Gtk::FileFilter filter_tiff;
-  filter_tiff.set_name( _("TIFF files") );
-  filter_tiff.add_mime_type("image/tiff");
-#endif
-#ifdef GTKMM_3
-  Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
-  filter_tiff->set_name( _("TIFF files") );
-  filter_tiff->add_mime_type("image/tiff");
-#endif
-  dialog.add_filter(filter_tiff);
-
-#ifdef GTKMM_2
   Gtk::FileFilter filter_jpeg;
   filter_jpeg.set_name( _("JPEG files") );
   filter_jpeg.add_mime_type("image/jpeg");
@@ -878,6 +876,18 @@ void PF::MainWindow::on_button_export_clicked()
   filter_jpeg->add_mime_type("image/jpeg");
 #endif
   dialog.add_filter(filter_jpeg);
+
+#ifdef GTKMM_2
+  Gtk::FileFilter filter_tiff;
+  filter_tiff.set_name( _("TIFF files") );
+  filter_tiff.add_mime_type("image/tiff");
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
+  filter_tiff->set_name( _("TIFF files") );
+  filter_tiff->add_mime_type("image/tiff");
+#endif
+  dialog.add_filter(filter_tiff);
 
   Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
   if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
@@ -951,7 +961,7 @@ void PF::MainWindow::update_all_images()
 }
 
 
-void PF::MainWindow::remove_tab( Gtk::Widget* widget )
+void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
 {
   //#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() called."<<std::endl;
@@ -1026,17 +1036,20 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget )
 
   viewerNotebook.remove_page( page );
   widget->hide();
-  //delete( widget );
-  //if( tabwidget )
-  //  delete( tabwidget );
 
-  WidgetDestroyData * update = g_new (WidgetDestroyData, 1);
-  update->widget = widget;
-  g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+  if(immediate) {
+    delete( widget );
+    if( tabwidget )
+      delete( tabwidget );
+  } else {
+    WidgetDestroyData * update = g_new (WidgetDestroyData, 1);
+    update->widget = widget;
+    g_idle_add ((GSourceFunc) widget_destroy_cb, update);
 
-  update = g_new (WidgetDestroyData, 1);
-  update->widget = tabwidget;
-  g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+    update = g_new (WidgetDestroyData, 1);
+    update->widget = tabwidget;
+    g_idle_add ((GSourceFunc) widget_destroy_cb, update);
+  }
 
 //#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() page #"<<page<<" removed."<<std::endl;
