@@ -114,6 +114,7 @@ PF::Image::Image():
   remove_layer_done = vips_g_cond_new();
 
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update_all) );
+  layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::modified) );
   convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 
@@ -912,7 +913,7 @@ void PF::Image::do_export_merged( std::string filename )
     }
     remove_pipeline( pipeline );
     delete pipeline;
-    layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
+    //layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
     std::cout<<"Image saved to file "<<filename<<std::endl;
   }
 }
@@ -1028,6 +1029,6 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
 
   remove_pipeline( pipeline );
   delete pipeline;
-  layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
+  //layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
   std::cout<<"Image saved to memory "<<std::endl;
 }
