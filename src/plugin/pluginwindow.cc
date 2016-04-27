@@ -37,6 +37,7 @@
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
 #include "../gui/layertree.hh"
+#include "../gui/settingsdialog.hh"
 #include "pluginwindow.hh"
 
 
@@ -54,6 +55,7 @@ PF::PluginWindow::PluginWindow():
 #endif
   buttonOk( _("Ok") ),
   buttonCancel( _("Cancel") ),
+  buttonSettings("Settings"),
   image_editor( NULL )
 {
   imgbuf.buf = NULL;
@@ -84,6 +86,7 @@ PF::PluginWindow::PluginWindow():
 
   buttonBox.pack_start(buttonOk, Gtk::PACK_SHRINK);
   buttonBox.pack_start(buttonCancel, Gtk::PACK_SHRINK);
+  buttonBox.pack_start(buttonSettings, Gtk::PACK_SHRINK);
   //topButtonBox.pack_start(buttonSaveAs, Gtk::PACK_SHRINK);
   //topButtonBox.pack_start(buttonExport, Gtk::PACK_SHRINK);
   //topButtonBox.pack_start(buttonExit, Gtk::PACK_SHRINK);
@@ -94,6 +97,9 @@ PF::PluginWindow::PluginWindow():
       &PluginWindow::on_button_ok) );
   buttonCancel.signal_clicked().connect( sigc::mem_fun(*this,
       &PluginWindow::on_button_cancel) );
+  buttonSettings.signal_clicked().connect( sigc::mem_fun(*this,
+      &PluginWindow::on_button_settings_clicked) );
+
 
   show_all_children();
 }
@@ -139,6 +145,32 @@ void PF::PluginWindow::on_button_cancel()
 }
 
 
+
+void PF::PluginWindow::on_button_settings_clicked()
+{
+  std::cout<<"on_button_settings_clicked()"<<std::endl;
+  PF::SettingsDialog dialog;
+  dialog.set_transient_for( *this );
+  dialog.set_position( Gtk::WIN_POS_CENTER_ON_PARENT );
+  //dialog.set_position( Gtk::WIN_POS_CENTER );
+
+  dialog.signal_cm_modified.connect( sigc::mem_fun(*this,
+      &PluginWindow::update_image) );
+
+  dialog.run();
+}
+
+
+
+void PF::PluginWindow::update_image()
+{
+  if( !image_editor ) return;
+  g_assert( image_editor->get_image() != NULL );
+  image_editor->get_image()->update();
+}
+
+
+
 void PF::PluginWindow::on_unmap()
 {
   std::string bckname = image_editor->get_image()->get_backup_filename();
@@ -152,15 +184,22 @@ void PF::PluginWindow::on_unmap()
 #define LOAD_PFI
 
 void
-PF::PluginWindow::open_image( std::string filename )
+PF::PluginWindow::open_image( std::string filename, bool hidden )
 {
   if( image_editor ) delete image_editor;
 
 	char* fullpath = strdup( filename.c_str() );
   image_editor = new PF::ImageEditor( fullpath );
+  std::cout<<"PluginWindow::open_image("<<filename<<", "<<hidden<<") called"<<std::endl;
+  image_editor->set_hide_background_layer( hidden );
+  image_editor->open_image();
 	free(fullpath);
   editorBox.pack_start( *image_editor );
   //image_editor->show();
 }
 
+void PF::PluginWindow::open_buffer(void* buf, int w, int h)
+{
+
+}
 

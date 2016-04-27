@@ -133,6 +133,8 @@ class ImageEditor: public Gtk::HBox
   bool fit_image;
   bool fit_image_needed;
 
+  bool hide_background_layer;
+
   int preview_drag_start_x, preview_drag_start_y, adjustment_drag_start_x, adjustment_drag_start_y;
 
   void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
@@ -154,12 +156,20 @@ public:
   void set_aux_controls( Gtk::Widget* aux );
   Gtk::Widget* get_aux_controls() { return aux_controls; }
 
-  int get_active_layer() { (active_layer) ? active_layer->get_id() : -1; }
+  int get_active_layer() {
+    //std::cout<<"ImageEditor::get_active_layer(): active_layer="<<active_layer;
+    //if(active_layer) std::cout<<"(\""<<active_layer->get_name()<<"\", "<<active_layer->get_id()<<")"<<std::endl;
+    return( (active_layer) ? active_layer->get_id() : -1 );
+  }
   void set_active_layer( int id );
   int get_displayed_layer() { (displayed_layer) ? displayed_layer->get_id() : -1; }
   void set_displayed_layer( int id );
 
+  void set_hide_background_layer( bool flag ) { hide_background_layer = flag; }
+  bool get_hide_background_layer() { return hide_background_layer; }
+
   void open_image();
+  void build_image();
 
   void on_image_modified();
 

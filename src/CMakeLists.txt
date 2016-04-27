@@ -8,7 +8,7 @@ ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
 
-set(COMPILE_FLAGS "${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
+set(COMPILE_FLAGS " ${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
 
 if(Msgfmt_FOUND)
 	set(COMPILE_FLAGS "${COMPILE_FLAGS} -DLOCALEDIR=\"${LOCALE_DIR}\"")
@@ -59,18 +59,18 @@ link_directories(${SIGC2_LIBRARY_DIRS})
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
+#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
 
 
 include_directories(${OPENEXR_INCLUDE_DIRS})
-include_directories(${TIFF_INCLUDE_DIRS})
-include_directories(${JPEG_INCLUDE_DIRS})
-include_directories(${PNG_INCLUDE_DIRS})
-
 link_directories(${OPENEXR_LIBRARY_DIRS})
+include_directories(${TIFF_INCLUDE_DIRS})
 link_directories(${TIFF_LIBRARY_DIRS})
+include_directories(${JPEG_INCLUDE_DIRS})
 link_directories(${JPEG_LIBRARY_DIRS})
+include_directories(${PNG_INCLUDE_DIRS})
 link_directories(${PNG_LIBRARY_DIRS})
+
 
 include_directories(${XML2_INCLUDE_DIRS})
 link_directories(${XML2_LIBRARY_DIRS})
@@ -104,6 +104,47 @@ if (APPLE)
 	link_directories(${MacIntegration_LIBRARY_DIRS}  )
     set (MACINTEG_LIBS ${MacIntegration_LIBRARIES})
 endif (APPLE)
+
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+
+if (AUTOMATED_VERSION_CHECK)
+# Get the current working branch
+execute_process(
+  COMMAND git rev-parse --abbrev-ref HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_BRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the latest commit hash of the working branch
+execute_process(
+  COMMAND git log -1 --format=%H
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the latest commit date of the working branch
+execute_process(
+  COMMAND git log -1 --format=%ci
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_DATE
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+MESSAGE( STATUS "CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR} )
+MESSAGE( STATUS "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR} )
+# eventually update the version.cc file
+execute_process(
+  COMMAND ${CMAKE_SOURCE_DIR}/tools/update_version_info.sh 0 ${CMAKE_SOURCE_DIR}/VERSION ${GIT_BRANCH} ${GIT_COMMIT_DATE} ${GIT_COMMIT_HASH} ${CMAKE_CURRENT_BINARY_DIR}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE VERSION_UPDATE_SUCCESS
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+MESSAGE( STATUS "tools/update_version_info.sh: " ${VERSION_UPDATE_SUCCESS} )
+endif (AUTOMATED_VERSION_CHECK)
 
 
 
@@ -147,11 +188,11 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc operations/filmulate/*.
 # so we do a custom dependency and pretend an imported liblibraw_r.a so no other -l are
 # appended.
 #
-add_library(libraw_static STATIC IMPORTED)
-set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/LibRaw/liblibraw_r.a)
-add_subdirectory(external/LibRaw)
-list(APPEND LIB_DEPS libraw_r)
-list(APPEND STATIC_LIBS libraw_static)
+#add_library(libraw_static STATIC IMPORTED)
+#set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/LibRaw/liblibraw_r.a)
+#add_subdirectory(external/LibRaw)
+#list(APPEND LIB_DEPS libraw_r)
+#list(APPEND STATIC_LIBS libraw_static)
 
 #
 # the rawspeed part is a bit of a hack:
@@ -181,7 +222,7 @@ else(BUNDLED_LENSFUN)
   link_directories( ${LENSFUN_LIBRARY_DIRS}  )
   include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
 endif(BUNDLED_LENSFUN)
-set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
+set(CMAKE_CXX_FLAGS " -DPF_HAS_LENSFUN ")
 
 
 
@@ -318,7 +359,7 @@ INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflo
 #
 if (GIMP_FOUND)
   FILE(GLOB PluginIncludes plugin/*.hh)
-  FILE(GLOB PluginSources plugin/*.cc)
+  FILE(GLOB PluginSources plugin/pluginwindow.cc plugin/pfgimp.cc)
 
   include_directories(${GIMP_2_9_INCLUDE_DIRS})
   link_directories(${GIMP_2_9_LIBRARY_DIRS})
@@ -364,7 +405,50 @@ if (GIMP_FOUND)
     #gmon
   )
   
-  INSTALL(TARGETS pfgimp RUNTIME DESTINATION share/photoflow/plug-in)
+  
+  FILE(GLOB LoadPluginIncludes plugin/*.hh)
+  FILE(GLOB LoadPluginSources plugin/pluginwindow.cc plugin/pfgimp-load.cc)
+
+  add_executable(pfgimp-load ${LoadPluginSources})
+
+  set_target_properties(pfgimp-load PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
+
+  target_link_libraries(pfgimp-load ${LIBS} 
+    pfgui
+    pfbase 
+    pfdt
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${STATIC_LIBS}
+    ${OPENEXR_LIBRARIES}
+    ${XML2_LIBRARIES}
+    ${EXIF_LIBRARIES}
+    ${EXIV2_LIBRARIES}
+    ${GEXIV2_LIBRARIES}
+    ${LENSFUN_LIBRARIES}
+    ${SIGC2_LIBRARIES}
+    ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+    ${PIXMAN_LIBRARIES} 
+    ${MACINTEG_LIBS}
+    #${GIMP_LIBS}
+    ${GIMP_2_9_LIBRARIES}
+    ${GIMPUI_LIBRARIES}
+    ${GTKMM_LIBRARIES} 
+    ${GLIBMM_LIBRARIES} 
+    ${GLIB_LIBRARIES} 
+    ${GMODULE_LIBRARIES} 
+    ${GOBJECT_LIBRARIES} 
+    ${GTHREAD_LIBRARIES} 
+    ${ZLIB_LIBRARIES}
+    #${LIBRAW_LIBRARIES}  
+    ${ORC_LIBRARIES}
+    fftw3
+    ${ADDITIONAL_LIBS}
+    #gmon
+  )
+  
+  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION share/photoflow/plug-in)
 endif (GIMP_FOUND)
 
 
