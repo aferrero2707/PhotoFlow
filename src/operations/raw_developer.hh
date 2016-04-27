@@ -27,12 +27,12 @@
 
  */
 
-#ifndef VIPS_RAW_DEVELOPER_H
-#define VIPS_RAW_DEVELOPER_H
+#ifndef PF_RAW_DEVELOPER_H
+#define PF_RAW_DEVELOPER_H
 
 #include <string>
 
-#include <libraw/libraw.h>
+//#include <libraw/libraw.h>
 
 #include "../base/processor.hh"
 #include "../base/imagepyramid.hh"
