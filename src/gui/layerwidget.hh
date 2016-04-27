@@ -141,12 +141,14 @@ public:
 
   static gboolean update_cb(PF::LayerWidget* w)
   {
+    //std::cout<<"LayerWidget::update_cb() called."<<std::endl;
     if( w ) w->update();
     return( FALSE );
   }
 
   void update_idle()
   {
+    //std::cout<<"LayerWidget::update_idle() called."<<std::endl;
     gdk_threads_add_idle ((GSourceFunc) LayerWidget::update_cb, this);
   }
 
@@ -164,6 +166,8 @@ public:
   void on_selection_changed();
 
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
+  void on_row_expanded( const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path );
+  void on_row_collapsed( const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path );
 
 #ifdef GTKMM_3
   void on_switch_page(Widget* page, guint page_num);
