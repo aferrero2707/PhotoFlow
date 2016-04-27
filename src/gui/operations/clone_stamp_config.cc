@@ -202,6 +202,10 @@ void PF::CloneStampConfigGUI::draw_point( double x, double y )
     if( !par ) continue;
 
     par->draw_point( x, y, update );
+
+    if( vi != PF::PhotoFlow::Instance().get_preview_pipeline_id() )
+      continue;
+
 		//continue;
     layer2image( update );
 

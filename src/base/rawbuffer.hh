@@ -221,7 +221,7 @@ class Stroke
 {
   Pen pen;
   std::list<Segment> segments;
-  std::list< std::pair<unsigned int, unsigned int> > points;
+  std::list< std::pair<int, int> > points;
 
   VipsRect area;
 
@@ -230,8 +230,8 @@ public:
 
   Pen& get_pen() { return pen; }
   const Pen& get_pen() const { return pen; }
-  std::list< std::pair<unsigned int, unsigned int> >& get_points() { return points; }
-  const std::list< std::pair<unsigned int, unsigned int> >& get_points() const { return points; }
+  std::list< std::pair<int, int> >& get_points() { return points; }
+  const std::list< std::pair<int, int> >& get_points() const { return points; }
   std::list< Segment >& get_segments() { return segments; }
   VipsRect& get_area() { return area; }
   void compute_area();
@@ -241,9 +241,9 @@ public:
 template <class Pen>
 void PF::Stroke<Pen>::compute_area()
 {
-  int xmin = 10000000, xmax = 0;
-  int ymin = 10000000, ymax = 0;
-  std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
+  int xmin = 10000000, xmax = -10000000;
+  int ymin = 10000000, ymax = -10000000;
+  std::list< std::pair<int, int> >::iterator pi;
   for( pi = points.begin(); pi != points.end(); pi++ ) {
     int x1 = pi->first - pen.get_size();
     int x2 = pi->first + pen.get_size();
@@ -256,7 +256,7 @@ void PF::Stroke<Pen>::compute_area()
     ymax = MAX( ymax, y2 );
   }
 
-  //std::cout<<"Stroke<Pen>::compute_area(): points.size()="<<points.size()<<"  xmin="<<xmin<<"  xmax="<<xmax<<"  ymin="<<ymin<<"  ymax"<<std::endl;
+  //std::cout<<"Stroke<Pen>::compute_area(): points.size()="<<points.size()<<"  xmin="<<xmin<<"  xmax="<<xmax<<"  ymin="<<ymin<<"  ymax="<<ymax<<std::endl;
 
   area.left = xmin;
   area.top = ymin;
@@ -322,12 +322,12 @@ template <class Pen>
 inline std::istream& operator >>( std::istream& str, Stroke<Pen>& stroke )
 {
   str>>stroke.get_pen();
-  std::list< std::pair<unsigned int, unsigned int> >& points = stroke.get_points();
+  std::list< std::pair<int, int> >& points = stroke.get_points();
   points.clear();
   int npoints;
   str>>npoints;
   for( int i = 0; i < npoints; i++ ) {
-    unsigned int a, b;
+    int a, b;
     str>>a>>b;
     points.push_back( std::make_pair(a,b) );
   }
@@ -338,9 +338,9 @@ template <class Pen>
 inline std::ostream& operator <<( std::ostream& str, const Stroke<Pen>& stroke )
 {
   str<<stroke.get_pen();
-  const std::list< std::pair<unsigned int, unsigned int> >& points = stroke.get_points();
+  const std::list< std::pair<int, int> >& points = stroke.get_points();
   str<<points.size()<<" ";
-  std::list< std::pair<unsigned int, unsigned int> >::const_iterator i;
+  std::list< std::pair<int, int> >::const_iterator i;
   for( i = points.begin(); i != points.end(); i++ ) {
     str<<i->first<<" "<<i->second<<" ";
   }

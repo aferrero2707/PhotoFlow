@@ -167,7 +167,7 @@ namespace PF
 
     Property< std::list< Stroke<Pencil> > >& get_strokes() { return strokes; }
 
-    void draw_point( unsigned int x, unsigned int y, VipsRect& update );
+    void draw_point( int x, int y, VipsRect& update );
   };
 
   
@@ -228,7 +228,7 @@ namespace PF
       opacity_max.Init( r->width, r->height, r->top, r->left );
 
       std::list< Stroke<Pencil> >::iterator si;
-      std::list< std::pair<unsigned int, unsigned int> >::iterator pi;
+      std::list< std::pair<int, int> >::iterator pi;
       VipsRect point_area;
       VipsRect point_clip;
       VipsRect stroke_area;
@@ -238,11 +238,15 @@ namespace PF
       for( si = strokes.begin(); si != strokes.end(); ++si, sn++ ) {
         //std::cout<<"stroke area: "<<si->get_area().width<<","<<si->get_area().height
         //    <<"+"<<si->get_area().left<<"+"<<si->get_area().top<<std::endl;
-        stroke_area.left = si->get_area().left/opar->get_scale_factor();
-        stroke_area.top = si->get_area().top/opar->get_scale_factor();
-        stroke_area.width = si->get_area().width/opar->get_scale_factor();
-        stroke_area.height = si->get_area().height/opar->get_scale_factor();
+        stroke_area.left = si->get_area().left/static_cast<int>(opar->get_scale_factor());
+        stroke_area.top = si->get_area().top/static_cast<int>(opar->get_scale_factor());
+        stroke_area.width = si->get_area().width/static_cast<int>(opar->get_scale_factor());
+        stroke_area.height = si->get_area().height/static_cast<int>(opar->get_scale_factor());
+        //std::cout<<"stroke area: "<<stroke_area.width<<","<<stroke_area.height
+        //    <<"+"<<stroke_area.left<<"+"<<stroke_area.top<<std::endl;
         vips_rect_intersectrect( r, &stroke_area, &stroke_clip );
+        //std::cout<<"stroke clip: "<<stroke_clip.width<<","<<stroke_clip.height
+        //    <<"+"<<stroke_clip.left<<"+"<<stroke_clip.top<<std::endl;
         if( (stroke_clip.width<1) || (stroke_clip.height<1) ) continue;
         // copy current region to temp buffer
         if( temp ) {
@@ -276,16 +280,18 @@ namespace PF
           mask = resized_mask;
         }
 
-        std::list< std::pair<unsigned int, unsigned int> >& points = si->get_points();
+        std::list< std::pair<int, int> >& points = si->get_points();
         //std::cout<<"DrawProc::render(): points.size()="<<points.size()<<std::endl;
         int pn = 0;
         for( pi = points.begin(); pi != points.end(); ++pi, pn++ ) {
           //std::cout<<"Drawing point "<<pi->first<<","<<pi->second<<std::endl;
-          point_area.left = pi->first/opar->get_scale_factor() - pen_size;
-          point_area.top = pi->second/opar->get_scale_factor() - pen_size;
+          point_area.left = pi->first/static_cast<int>(opar->get_scale_factor()) - pen_size;
+          point_area.top = pi->second/static_cast<int>(opar->get_scale_factor()) - pen_size;
           //std::cout<<"Point area: "<<point_area.width<<","<<point_area.height
           //    <<"+"<<point_area.left<<"+"<<point_area.top<<std::endl;
           vips_rect_intersectrect( r, &point_area, &point_clip );
+          //std::cout<<"Point clip: "<<point_clip.width<<","<<point_clip.height
+          //    <<"+"<<point_clip.left<<"+"<<point_clip.top<<std::endl;
           if( (point_clip.width<1) || (point_clip.height<1) ) continue;
           point_clip_right = point_clip.left + point_clip.width - 1;
           point_clip_bottom = point_clip.top + point_clip.height - 1;
