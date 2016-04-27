@@ -44,6 +44,9 @@
 #include "operation.hh"
 
 
+#define PF_CACHE_BUFFER_TILE_SIZE 128
+
+
 PF::CacheBuffer::CacheBuffer():
   image( NULL ), cached( NULL ), fd(-1),
   initialized( false ), completed( false ), step_x(0), step_y(0)

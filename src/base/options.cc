@@ -52,7 +52,7 @@ void PF::Options::load()
 
   Glib::ustring fname =
       Glib::build_filename( Glib::ustring(PF::PhotoFlow::Instance().get_config_dir()), "options" );
-
+  std::cout<<"Loading custom settings..."<<std::endl;
   try {
     if (keyFile.load_from_file (fname)) {
 
@@ -75,9 +75,11 @@ void PF::Options::load()
           int keyval = keyFile.get_integer ("Color Management", "DisplayProfileType");
           if( keyval>0 && keyval<PF::PF_DISPLAY_PROF_MAX)
             display_profile_type = (display_profile_t)keyval;
+          std::cout<<"display_profile_type="<<display_profile_type<<std::endl;
         }
         if (keyFile.has_key ("Color Management", "CustomDisplayProfileName")) {
           custom_display_profile_name = keyFile.get_string ("Color Management", "CustomDisplayProfileName");
+          std::cout<<"custom_display_profile_name="<<custom_display_profile_name<<std::endl;
         }
       }
     }
@@ -86,6 +88,7 @@ void PF::Options::load()
   } catch (...) {
     printf("Options::readFromFile / Unknown exception while trying to load \"%s\"!\n", fname.c_str());
   }
+  std::cout<<"... custom settings loaded."<<std::endl; //getchar();
 }
 
 

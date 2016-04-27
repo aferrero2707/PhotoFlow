@@ -52,6 +52,8 @@ VipsImage* PF::LevelsPar::build(std::vector<VipsImage*>& in, int first,
 {
   if( in.size()<1 || in[0]==NULL ) return NULL;
 
+  std::cout<<"LevelsPar::build(): in.size()="<<in.size()<<std::endl;
+
   exponent = 1.f/powf( 10.f, gamma.get() );
 
   VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );

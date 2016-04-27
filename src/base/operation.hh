@@ -228,7 +228,13 @@ namespace PF
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }
     void clear_modified();
-    virtual void modified() { set_modified(); signal_modified.emit(); }
+    virtual void modified()
+    {
+      set_modified();
+      //std::cout<<"OpParBase::modified(): emitting signal_modified."<<std::endl;
+      signal_modified.emit();
+      //std::cout<<"OpParBase::modified(): signal_modified emitted."<<std::endl;
+    }
 
 
     std::string get_default_name() { return default_name; }
