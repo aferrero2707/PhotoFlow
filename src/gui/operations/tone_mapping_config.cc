@@ -82,12 +82,16 @@ void PF::ToneMappingConfigGUI::do_update()
     //std::cout<<"PF::ToneMappingConfigGUI::do_update() called."<<std::endl;
 
     if( prop->get_enum_value().first != PF::TONE_MAPPING_EXP_GAMMA &&
-        gammaControlsBox.get_parent() == &controlsBox2 )
+        gammaControlsBox.get_parent() == &controlsBox2 ) {
+      gammaControlsBox.hide();
       controlsBox2.remove( gammaControlsBox );
+    }
 
     if( prop->get_enum_value().first != PF::TONE_MAPPING_FILMIC &&
-        filmicControlsBox.get_parent() == &controlsBox2 )
+        filmicControlsBox.get_parent() == &controlsBox2 ) {
+      filmicControlsBox.hide();
       controlsBox2.remove( filmicControlsBox );
+    }
 
     switch( prop->get_enum_value().first ) {
     case PF::TONE_MAPPING_EXP_GAMMA:
@@ -95,8 +99,8 @@ void PF::ToneMappingConfigGUI::do_update()
       gammaControlsBox.show();
       break;
     case PF::TONE_MAPPING_FILMIC:
-      //controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
-      //filmicControlsBox.show();
+      controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
+      filmicControlsBox.show();
       break;
     }
   }

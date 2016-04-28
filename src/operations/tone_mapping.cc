@@ -46,8 +46,8 @@ PF::ToneMappingPar::ToneMappingPar():
   lumi_blend_frac("lumi_blend_frac",this,0),
   icc_data( NULL )
 {
-  //method.add_enum_value(PF::TONE_MAPPING_REINHARD,"TONE_MAPPING_REINHARD","Reinhard");
-  //method.add_enum_value(PF::TONE_MAPPING_HEJL,"TONE_MAPPING_HEJL","Hejl-Dawson");
+  method.add_enum_value(PF::TONE_MAPPING_REINHARD,"TONE_MAPPING_REINHARD","Reinhard");
+  method.add_enum_value(PF::TONE_MAPPING_HEJL,"TONE_MAPPING_HEJL","Hejl-Dawson");
   method.add_enum_value(PF::TONE_MAPPING_FILMIC,"TONE_MAPPING_FILMIC","filmic");
   set_type("tone_mapping" );
 
