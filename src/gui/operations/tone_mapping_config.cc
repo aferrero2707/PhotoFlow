@@ -57,7 +57,8 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
 
   controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 10 );
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK, 10 );
-  controlsBox.pack_start( gammaControlsBox, Gtk::PACK_SHRINK, 10 );
+  controlsBox.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( filmicControlsBox, Gtk::PACK_SHRINK, 0 );
 
   controlsBox.pack_end( lumi_blend_frac_slider, Gtk::PACK_SHRINK, 10 );
 
