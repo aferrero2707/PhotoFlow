@@ -91,12 +91,12 @@ void PF::ToneMappingConfigGUI::do_update()
 
     switch( prop->get_enum_value().first ) {
     case PF::TONE_MAPPING_EXP_GAMMA:
-      controlsBox2.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
-      gammaControlsBox.show();
+      //controlsBox2.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
+      //gammaControlsBox.show();
       break;
     case PF::TONE_MAPPING_FILMIC:
-      controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
-      filmicControlsBox.show();
+      //controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
+      //filmicControlsBox.show();
       break;
     }
   }
