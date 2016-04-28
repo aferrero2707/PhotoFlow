@@ -28,6 +28,7 @@
  */
 
 #include <stdint.h>
+#include <memory>
 
 typedef uint32_t uint32;
 
