@@ -224,7 +224,7 @@ else(BUNDLED_LENSFUN)
   link_directories( ${LENSFUN_LIBRARY_DIRS}  )
   include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
 endif(BUNDLED_LENSFUN)
-set(CMAKE_CXX_FLAGS " -DPF_HAS_LENSFUN ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 
 
 
