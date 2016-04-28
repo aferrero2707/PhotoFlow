@@ -57,8 +57,9 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
 
   controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 10 );
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK, 10 );
-  controlsBox.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
-  //controlsBox.pack_start( filmicControlsBox, Gtk::PACK_SHRINK, 0 );
+  controlsBox.pack_start( controlsBox2, Gtk::PACK_SHRINK, 10 );
+  //controlsBox2.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
+  //controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK, 0 );
 
   //controlsBox.pack_end( lumi_blend_frac_slider, Gtk::PACK_SHRINK, 10 );
 
@@ -81,25 +82,25 @@ void PF::ToneMappingConfigGUI::do_update()
     //std::cout<<"PF::ToneMappingConfigGUI::do_update() called."<<std::endl;
 
     if( prop->get_enum_value().first != PF::TONE_MAPPING_EXP_GAMMA &&
-        gammaControlsBox.get_parent() == &controlsBox )
-      controlsBox.remove( gammaControlsBox );
+        gammaControlsBox.get_parent() == &controlsBox2 )
+      controlsBox2.remove( gammaControlsBox );
 
     if( prop->get_enum_value().first != PF::TONE_MAPPING_FILMIC &&
-        filmicControlsBox.get_parent() == &controlsBox )
-      controlsBox.remove( filmicControlsBox );
+        filmicControlsBox.get_parent() == &controlsBox2 )
+      controlsBox2.remove( filmicControlsBox );
 
     switch( prop->get_enum_value().first ) {
     case PF::TONE_MAPPING_EXP_GAMMA:
-      controlsBox.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
+      controlsBox2.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
       gammaControlsBox.show();
       break;
     case PF::TONE_MAPPING_FILMIC:
-      controlsBox.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
+      controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
       filmicControlsBox.show();
       break;
     }
   }
-  controlsBox.show_all_children();
+  controlsBox2.show_all_children();
 
   OperationConfigGUI::do_update();
 }

@@ -41,6 +41,7 @@ namespace PF {
   class ToneMappingConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
+    Gtk::VBox controlsBox2;
 
     ExposureSlider exposureSlider;
     Selector modeSelector;
