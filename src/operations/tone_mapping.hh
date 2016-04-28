@@ -45,6 +45,7 @@ enum tone_mapping_method_t
 {
   TONE_MAPPING_EXP_GAMMA,
   TONE_MAPPING_REINHARD,
+  TONE_MAPPING_HEJL,
   TONE_MAPPING_FILMIC
 };
 
@@ -183,9 +184,17 @@ public:
           }
           break;
         }
+        case TONE_MAPPING_HEJL: {
+          for( k=0; k < 3; k++) {
+            float x = MAX(0,RGB[k]-0.004);
+            RGB[k] = (x*(6.2*x+.5))/(x*(6.2*x+1.7)+0.06);
+          }
+          break;
+        }
         case TONE_MAPPING_FILMIC: {
           float whiteScale = 1.0f/( ((W*(A*W+C*B)+D*E)/(W*(A*W+B)+D*F))-E/F );
           for( k=0; k < 3; k++) {
+            RGB[k] *= 2;
             RGB[k] = ((RGB[k]*(A*RGB[k]+C*B)+D*E)/(RGB[k]*(A*RGB[k]+B)+D*F))-E/F;
             RGB[k] *= whiteScale;
           }

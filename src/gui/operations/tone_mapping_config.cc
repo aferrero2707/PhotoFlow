@@ -35,13 +35,13 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
   exposureSlider( this, "exposure", _("exposure"), 0, -10, 10, 0.1, 1 ),
   modeSelector( this, "method", "method: ", 0 ),
   gamma_slider( this, "gamma", _("gamma adjustment"), 1, 1, 5, 0.2, 1, 1 ),
-  filmic_A_slider( this, "filmic_A", _("A"), 0.5, 0, 1, 0.02, 0.1, 1 ),
-  filmic_B_slider( this, "filmic_B", _("B"), 0.5, 0, 1, 0.02, 0.1, 1 ),
-  filmic_C_slider( this, "filmic_C", _("C"), 0.5, 0, 1, 0.02, 0.1, 1 ),
-  filmic_D_slider( this, "filmic_D", _("D"), 0.5, 0, 1, 0.02, 0.1, 1 ),
-  filmic_E_slider( this, "filmic_E", _("E"), 0.5, 0, 0.1, 0.005, 0.02, 1 ),
-  filmic_F_slider( this, "filmic_F", _("F"), 0.5, 0, 0.1, 0.01, 0.02, 1 ),
-  filmic_W_slider( this, "filmic_W", _("W"), 10, 1, 100, 5, 20, 1 ),
+  filmic_A_slider( this, "filmic_A", _("shoulder strength"), 0.5, 0, 1, 0.02, 0.1, 1 ),
+  filmic_B_slider( this, "filmic_B", _("linear strength"), 0.5, 0, 1, 0.02, 0.1, 1 ),
+  filmic_C_slider( this, "filmic_C", _("linear angle"), 0.5, 0, 1, 0.02, 0.1, 1 ),
+  filmic_D_slider( this, "filmic_D", _("toe strength"), 0.5, 0, 1, 0.02, 0.1, 1 ),
+  filmic_E_slider( this, "filmic_E", _("toe num."), 0.5, 0, 0.1, 0.002, 0.01, 1 ),
+  filmic_F_slider( this, "filmic_F", _("toe den."), 0.5, 0, 1, 0.02, 0.1, 1 ),
+  filmic_W_slider( this, "filmic_W", _("lin. white point"), 10, 1, 100, 2, 10, 1 ),
   lumi_blend_frac_slider( this, "lumi_blend_frac", _("preserve colors"), 1, 0, 1, 0.02, 0.1, 1 )
 {
 
