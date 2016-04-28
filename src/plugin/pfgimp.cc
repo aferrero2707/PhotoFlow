@@ -46,7 +46,7 @@ extern GType vips_perspective_get_type( void );
 #define _gimp_item_get_visible gimp_item_get_visible
 #endif
 
-GimpPDBStatusType status = GIMP_PDB_SUCCESS;   // The plug-in return status.
+//static GimpPDBStatusType status = GIMP_PDB_SUCCESS;   // The plug-in return status.
 
 static PF::PluginWindow* pluginwin;
 
@@ -106,7 +106,7 @@ void run(const gchar *name,
   // In any case this should cause no issues with threads.
   GimpRunMode run_mode;
   int size;
-  int status;
+  GimpPDBStatusType status = GIMP_PDB_SUCCESS;
 
 #if !GLIB_CHECK_VERSION(2,31,0)
   g_thread_init(NULL);

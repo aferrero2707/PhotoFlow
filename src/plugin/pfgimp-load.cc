@@ -140,7 +140,7 @@ void run(const gchar *name,
   GimpRunMode run_mode;
   char *filename;
   int size;
-  int status;
+  GimpPDBStatusType status;
 
 #if !GLIB_CHECK_VERSION(2,31,0)
   g_thread_init(NULL);
