@@ -1009,10 +1009,11 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
     if( !vips_image_get_blob( outimg, "gexiv2-data",
                              &gexiv2_buf, &gexiv2_buf_length ) &&
         gexiv2_buf && (gexiv2_buf_length==sizeof(GExiv2Metadata)) ) {
-      imgbuf->exif_buf = (GExiv2Metadata*)malloc( sizeof(GExiv2Metadata) );
-      if( imgbuf->exif_buf ) {
-        memcpy( imgbuf->exif_buf, gexiv2_buf, sizeof(GExiv2Metadata) );
-      }
+      imgbuf->exif_buf = (GExiv2Metadata*)gexiv2_buf;
+      //imgbuf->exif_buf = (GExiv2Metadata*)malloc( sizeof(GExiv2Metadata) );
+      //if( imgbuf->exif_buf ) {
+        //memcpy( imgbuf->exif_buf, gexiv2_buf, sizeof(GExiv2Metadata) );
+      //}
     } else {
       imgbuf->exif_buf = NULL;
     }
