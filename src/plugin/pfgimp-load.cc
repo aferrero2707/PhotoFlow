@@ -140,7 +140,7 @@ void run(const gchar *name,
   GimpRunMode run_mode;
   char *filename;
   int size;
-  int status;
+  GimpPDBStatusType status;
 
 #if !GLIB_CHECK_VERSION(2,31,0)
   g_thread_init(NULL);
@@ -438,16 +438,24 @@ void run(const gchar *name,
       GimpParasite *exif_parasite;
 
       std::cout<<"pluginwin->get_image_buffer().exif_buf="<<pluginwin->get_image_buffer().exif_buf<<std::endl;
-      exif_parasite = gimp_parasite_new("exif-data",
-          GIMP_PARASITE_PERSISTENT, sizeof( GExiv2Metadata ),
-          pluginwin->get_image_buffer().exif_buf);
-//#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-//      gimp_image_attach_parasite(gimpImage, exif_parasite);
-//#else
-      gimp_image_parasite_attach(gimpImage, exif_parasite);
-//#endif
-      gimp_parasite_free(exif_parasite);
-/*
+      if( pluginwin->get_image_buffer().exif_buf ) {
+        gimp_image_set_metadata( gimpImage, pluginwin->get_image_buffer().exif_buf );
+        /*
+        gchar* meta_string = gimp_metadata_serialize( pluginwin->get_image_buffer().exif_buf );
+        if( meta_string ) {
+          exif_parasite = gimp_parasite_new("gimp-image-metadata",
+              GIMP_PARASITE_PERSISTENT, strlen( meta_string ) + 1, meta_string);
+          //#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
+          //      gimp_image_attach_parasite(gimpImage, exif_parasite);
+          //#else
+          gimp_image_parasite_attach(gimpImage, exif_parasite);
+          //#endif
+          //gimp_parasite_free(exif_parasite);
+          g_free( meta_string );
+        }
+        */
+      }
+      /*
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
       {
         GimpParam    *return_vals;
