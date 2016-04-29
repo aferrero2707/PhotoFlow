@@ -193,8 +193,24 @@ void run(const gchar *name,
 
   gimp_ui_init("photoflow-gimp", TRUE);
 
-  GimpParasite *exif_parasite = gimp_image_get_parasite( image_id, "exif-data" );
-  GimpParasite *icc_parasite  = gimp_image_get_parasite( image_id, "icc-profile" );
+  //GimpParasite *exif_parasite = gimp_image_parasite_find( image_id, "gimp-image-metadata" );
+  GimpMetadata* exif_metadata = gimp_image_get_metadata( image_id );
+  GimpParasite *icc_parasite  = gimp_image_parasite_find( image_id, "icc-profile" );
+  glong iccsize = 0;
+  void* iccdata = NULL;
+
+  std::cout<<std::endl<<std::endl
+      <<"image_id: "<<image_id
+      <<"  ICC parasite: "<<icc_parasite
+      <<"  EXIF metadata: "<<exif_metadata
+      <<std::endl<<std::endl;
+
+  if( icc_parasite && gimp_parasite_data_size( icc_parasite ) > 0 &&
+      gimp_parasite_data( icc_parasite ) != NULL ) {
+    iccsize = gimp_parasite_data_size( icc_parasite );
+    iccdata = malloc( iccsize );
+    memcpy( iccdata, gimp_parasite_data( icc_parasite ), iccsize );
+  }
 
   std::string filename;
 
@@ -262,10 +278,23 @@ void run(const gchar *name,
     g_free(row);
     gimp_drawable_detach(drawable);
 #else
+    cmsBool is_lin_gamma = false;
+    if( iccdata ) {
+      cmsHPROFILE iccprofile = cmsOpenProfileFromMem( iccdata, iccsize );
+      if( iccprofile ) {
+        char tstr[1024];
+        cmsGetProfileInfoASCII(iccprofile, cmsInfoDescription, "en", "US", tstr, 1024);
+        std::cout<<std::endl<<std::endl<<"embedded profile: "<<tstr<<std::endl<<std::endl;
+        cmsToneCurve *red_trc   = (cmsToneCurve*)cmsReadTag(iccprofile, cmsSigRedTRCTag);
+        is_lin_gamma = cmsIsToneCurveLinear(red_trc);
+        cmsCloseProfile( iccprofile );
+      }
+    }
+
     GeglRectangle rect;
     gegl_rectangle_set(&rect,rgn_x,rgn_y,rgn_width,rgn_height);
     buffer = gimp_drawable_get_buffer(source_layer_id);
-    const char *const format = "R'G'B' float";
+    const char *const format = is_lin_gamma ? "RGB float" : "R'G'B' float";
     gegl_buffer_get(buffer,&rect,1,babl_format(format),inbuf,0,GEGL_ABYSS_NONE);
     g_object_unref(buffer);
 #endif
@@ -289,10 +318,19 @@ void run(const gchar *name,
         "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
 
     g_object_unref( input_img );
+
+    //if( exif_parasite ) {
+    //  std::cout<<"Metadata:"<<std::endl<<(gchar*)gimp_parasite_data(exif_parasite)<<std::endl;
+    //  GimpMetadata* exif_metadata = gimp_metadata_deserialize( (gchar*)gimp_parasite_data(exif_parasite) );
+      if( exif_metadata ) {
+        gexiv2_metadata_save_file( /*(GExiv2Metadata*)*/exif_metadata, filename.c_str(), NULL );
+        g_object_unref( exif_metadata );
+      }
+    //}
   }
 
-  gimp_parasite_free(exif_parasite);
-  gimp_parasite_free(icc_parasite);
+  //gimp_parasite_free(exif_parasite);
+  //gimp_parasite_free(icc_parasite);
 
   /* BUG - what should be done with GIMP_RUN_WITH_LAST_VALS */
   if (run_mode == GIMP_RUN_INTERACTIVE && !sendToGimpMode) {
