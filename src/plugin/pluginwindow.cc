@@ -195,6 +195,7 @@ PF::PluginWindow::open_image( std::string filename, bool hidden )
   image_editor->open_image();
 	free(fullpath);
   editorBox.pack_start( *image_editor );
+  PF::PhotoFlow::Instance().set_active_image( image_editor->get_image() );
   //image_editor->show();
 }
 
