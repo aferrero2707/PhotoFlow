@@ -64,6 +64,7 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
   out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
   out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_CMYK,"CMYK","CMYK");
   out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
   set_type("convert_colorspace" );
@@ -143,6 +144,13 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       out_profile = dt_colorspaces_create_lab_profile();
       //std::cout<<"ConvertColorspacePar::build(): created Lab output profile"<<std::endl;
       break;
+    case OUT_PROF_CMYK:
+    {
+      std::string cmykprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/cmyk.icm";
+      out_profile = cmsOpenProfileFromFile( cmykprofname.c_str(), "r" );
+      //std::cout<<"ConvertColorspacePar::build(): created Lab output profile"<<std::endl;
+      break;
+    }
     case OUT_PROF_CUSTOM:
       //std::cout<<"  custom profile selected: \""<<cam_profile_name.get()<<"\""<<std::endl;
       if( out_profile_data && out_profile_data_length>0 ) 
