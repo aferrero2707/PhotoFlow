@@ -27,8 +27,8 @@
 
  */
 
-#ifndef VIPS_RAW_DEVELOPER_H
-#define VIPS_RAW_DEVELOPER_H
+#ifndef PF_RAW_DEVELOPER_H
+#define PF_RAW_DEVELOPER_H
 
 #include <string>
 
