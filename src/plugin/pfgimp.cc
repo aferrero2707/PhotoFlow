@@ -424,18 +424,18 @@ void run(const gchar *name,
 
     gint32 dest_layer_id = active_layer_id;
     if( !replace_layer ) {
-    /* Create the "background" layer to hold the image... */
-    gint32 layer = gimp_layer_new(image_id, _("PhF output"), width,
-        height, GIMP_RGB_IMAGE, 100.0,
-        GIMP_NORMAL_MODE);
-    std::cout<<"PhF plug-in: new layer created"<<std::endl;
+      /* Create the "background" layer to hold the image... */
+      gint32 layer = gimp_layer_new(image_id, _("PhF output"), width,
+          height, GIMP_RGB_IMAGE, 100.0,
+          GIMP_NORMAL_MODE);
+      std::cout<<"PhF plug-in: new layer created"<<std::endl;
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,7,3)
-    gimp_image_insert_layer(image_id, layer, 0, -1);
+      gimp_image_insert_layer(image_id, layer, 0, -1);
 #else
-    gimp_image_add_layer(image_id, layer, -1);
+      gimp_image_add_layer(image_id, layer, -1);
 #endif
-    std::cout<<"PhF plug-in: new layer added"<<std::endl;
-    dest_layer_id = layer;
+      std::cout<<"PhF plug-in: new layer added"<<std::endl;
+      dest_layer_id = layer;
     }
     /* Get the drawable and set the pixel region for our load... */
 #if HAVE_GIMP_2_9
@@ -459,6 +459,10 @@ void run(const gchar *name,
           //GEGL_RECTANGLE(0, 0, width, height),
           0, NULL, pluginwin->get_image_buffer().buf,
           GEGL_AUTO_ROWSTRIDE);
+      g_object_unref(buffer);
+      //gimp_drawable_merge_shadow(layer_id,true);
+      gimp_drawable_update(dest_layer_id,0,0,width,height);
+      gimp_layer_resize(dest_layer_id,width,height,0,0);
 #else
       for (row = 0; row < Crop.height; row += tile_height) {
         nrows = MIN(Crop.height - row, tile_height);
@@ -578,6 +582,8 @@ void run(const gchar *name,
 
   } else {
   }
+
+  gimp_displays_flush();
 
   std::cout<<"Plug-in: setting return values"<<std::endl;
   return_values[0].data.d_status = status;
