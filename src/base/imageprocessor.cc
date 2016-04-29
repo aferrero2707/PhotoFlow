@@ -175,6 +175,7 @@ void PF::ImageProcessor::run()
           g_cond_signal( caching_completed_cond );
           g_mutex_unlock( caching_completed_mutex );
           signal_status_ready.emit();
+          //std::cout<<"ImageProcessor::run(): signal_status_ready emitted"<<std::endl;
         }
       }
       /*

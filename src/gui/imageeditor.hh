@@ -178,6 +178,7 @@ public:
 
   void set_status( std::string label, int status )
   {
+    //std::cout<<"ImageEditor::set_status("<<label<<", "<<status<<") called"<<std::endl;
     status_indicator.set_status( label, status );
   }
   void set_status_ready() { set_status(_("ready"), 0); }
