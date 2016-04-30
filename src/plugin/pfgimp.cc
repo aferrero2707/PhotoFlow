@@ -102,9 +102,8 @@ void run(const gchar *name,
     gint *nreturn_vals,
     GimpParam **return_vals)
 {
-  // TODO: Check if the static variable here is really needed.
-  // In any case this should cause no issues with threads.
-  GimpRunMode run_mode;
+  GimpRunMode run_mode = (GimpRunMode)param[0].data.d_int32;
+
   int size;
   GimpPDBStatusType status = GIMP_PDB_SUCCESS;
 
@@ -332,6 +331,8 @@ void run(const gchar *name,
   //gimp_parasite_free(exif_parasite);
   //gimp_parasite_free(icc_parasite);
 
+  std::cout<<"plug-in: run_mode="<<run_mode<<"  GIMP_RUN_INTERACTIVE="<<GIMP_RUN_INTERACTIVE<<std::endl;
+
   /* BUG - what should be done with GIMP_RUN_WITH_LAST_VALS */
   if (run_mode == GIMP_RUN_INTERACTIVE) {
     /* Show the preview in interactive mode, unless if we are
@@ -543,24 +544,26 @@ void run(const gchar *name,
 */
     }
 
-    /* Create "icc-profile" parasite from output profile
-     * if it is not the internal sRGB.*/
-    if( pluginwin->get_image_buffer().iccdata ) {
-      printf("Saving ICC profile parasite\n");
-      GimpParasite *icc_parasite;
-      icc_parasite = gimp_parasite_new("icc-profile",
-          GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
-          pluginwin->get_image_buffer().iccsize,
-          pluginwin->get_image_buffer().iccdata);
-      std::cout<<"ICC parasite created"<<std::endl;
+    if( false ) {
+      /* Create "icc-profile" parasite from output profile
+       * if it is not the internal sRGB.*/
+      if( pluginwin->get_image_buffer().iccdata ) {
+        printf("Saving ICC profile parasite\n");
+        GimpParasite *icc_parasite;
+        icc_parasite = gimp_parasite_new("icc-profile",
+            GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
+            pluginwin->get_image_buffer().iccsize,
+            pluginwin->get_image_buffer().iccdata);
+        std::cout<<"ICC parasite created"<<std::endl;
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-      gimp_image_attach_parasite(image_id, icc_parasite);
+        gimp_image_attach_parasite(image_id, icc_parasite);
 #else
-      gimp_image_parasite_attach(image_id, icc_parasite);
+        gimp_image_parasite_attach(image_id, icc_parasite);
 #endif
-      gimp_parasite_free(icc_parasite);
+        gimp_parasite_free(icc_parasite);
 
-      std::cout<<"ICC profile attached"<<std::endl;
+        std::cout<<"ICC profile attached"<<std::endl;
+      }
     }
 
     std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
@@ -581,6 +584,7 @@ void run(const gchar *name,
     std::cout<<"Plug-in: photoflow closed"<<std::endl;
 
   } else {
+    std::cout<<"plug-in: execution skipped"<<std::endl;
   }
 
   gimp_displays_flush();
