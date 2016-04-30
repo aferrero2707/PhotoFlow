@@ -333,7 +333,7 @@ void run(const gchar *name,
   //gimp_parasite_free(icc_parasite);
 
   /* BUG - what should be done with GIMP_RUN_WITH_LAST_VALS */
-  if (run_mode == GIMP_RUN_INTERACTIVE && !sendToGimpMode) {
+  if (run_mode == GIMP_RUN_INTERACTIVE) {
     /* Show the preview in interactive mode, unless if we are
      * in thumbnail mode or 'send to gimp' mode. */
     std::cout<<"  before creating window"<<std::endl;
