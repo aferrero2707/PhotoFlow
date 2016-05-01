@@ -109,7 +109,7 @@ edit_current_layer_dialog()
   gchar            *text;
   int  retval;
 
-  GtkDialogFlags flags = 0;
+  GtkDialogFlags flags = (GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT);
   dialog = gimp_dialog_new (_("Edit Current Layer"), "pfgimp-edit-current-layer-confirm",
                             NULL, flags,
                             gimp_standard_help_func,
