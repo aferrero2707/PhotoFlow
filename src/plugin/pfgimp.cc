@@ -96,6 +96,85 @@ void query()
 char *pf_binary;
 gboolean sendToGimpMode;
 
+
+static int
+edit_current_layer_dialog()
+{
+  GtkWidget        *dialog;
+  GtkWidget        *hbox;
+  GtkWidget        *image;
+  GtkWidget        *main_vbox;
+  GtkWidget        *label;
+  gchar            *text;
+  int  retval;
+
+  dialog = gimp_dialog_new (_("Edit Current Layer"), "pfgimp-edit-current-layer-confirm",
+                            NULL, 0,
+                            gimp_standard_help_func,
+                            "pfgimp-edit-current-layer-confirm-dialog",
+
+                            _("Create new"), GTK_RESPONSE_CANCEL,
+                            _("Edit current"),     GTK_RESPONSE_OK,
+
+                            NULL);
+
+  gtk_dialog_set_alternative_button_order (GTK_DIALOG (dialog),
+                                           GTK_RESPONSE_OK,
+                                           GTK_RESPONSE_CANCEL,
+                                           -1);
+
+  gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);
+  gimp_window_set_transient (GTK_WINDOW (dialog));
+
+  hbox = gtk_hbox_new (FALSE, 12);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+                      hbox, TRUE, TRUE, 0);
+  gtk_container_set_border_width (GTK_CONTAINER (hbox), 12);
+  gtk_widget_show (hbox);
+
+  image = gtk_image_new_from_icon_name ("dialog-warning",
+                                        GTK_ICON_SIZE_DIALOG);
+  gtk_misc_set_alignment (GTK_MISC (image), 0.5, 0.0);
+  gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
+  gtk_widget_show (image);
+
+  main_vbox = gtk_vbox_new (FALSE, 12);
+  gtk_box_pack_start (GTK_BOX (hbox), main_vbox, FALSE, FALSE, 0);
+  gtk_widget_show (main_vbox);
+
+  text = g_strdup ("This is a PhotoFlow layer.\nDo you want to continue\nediting this layer\nor create a new one?");
+  label = gtk_label_new (text);
+  g_free (text);
+
+  gimp_label_set_attributes (GTK_LABEL (label),
+                             PANGO_ATTR_SCALE,  PANGO_SCALE_LARGE,
+                             PANGO_ATTR_WEIGHT, PANGO_WEIGHT_BOLD,
+                             -1);
+  gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.0);
+  gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
+  gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
+  gtk_box_pack_start (GTK_BOX (main_vbox), label, FALSE, FALSE, 0);
+  gtk_widget_show (label);
+
+  gtk_widget_show (dialog);
+
+  switch (gimp_dialog_run (GIMP_DIALOG (dialog)))
+    {
+    case GTK_RESPONSE_OK:
+      retval = Gtk::RESPONSE_YES;
+      break;
+
+    default:
+      retval = Gtk::RESPONSE_NO;
+      break;
+    }
+
+  gtk_widget_destroy (dialog);
+
+  return retval;
+}
+
+
 void run(const gchar *name,
     gint nparams,
     const GimpParam *param,
@@ -133,6 +212,8 @@ void run(const gchar *name,
   *nreturn_vals = 1;
   return_values[0].type = GIMP_PDB_STATUS;
 
+  gimp_ui_init("pfgimp", FALSE);
+
   int image_id = param[1].data.d_drawable;
 #if GIMP_MINOR_VERSION<=8
   gimp_tile_cache_ntiles(2*(gimp_image_width(image_id)/gimp_tile_width() + 1));
@@ -154,6 +235,7 @@ void run(const gchar *name,
   if( phf_parasite && gimp_parasite_data_size( phf_parasite ) > 0 &&
       gimp_parasite_data( phf_parasite ) != NULL ) {
 
+    /*
     char tstr[501];
     snprintf( tstr, 500, _("PhF editing config detected.\nDo you want to continue editing the current layer?") );
     Gtk::MessageDialog dialog(tstr,
@@ -163,6 +245,8 @@ void run(const gchar *name,
 
     //Show the dialog and wait for a user response:
     int result = dialog.run();
+    */
+    int result = edit_current_layer_dialog();
 
     //Handle the response:
     switch(result) {
