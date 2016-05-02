@@ -36,6 +36,7 @@ namespace PF
   ProcessorBase* new_gmic();
   ProcessorBase* new_gmic_blur_bilateral();
   ProcessorBase* new_gmic_denoise();
+  ProcessorBase* new_gmic_smooth_nlmeans();
   ProcessorBase* new_gmic_smooth_anisotropic();
   ProcessorBase* new_gmic_smooth_diffusion();
   ProcessorBase* new_gmic_smooth_mean_curvature();

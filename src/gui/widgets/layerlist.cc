@@ -171,6 +171,8 @@ void PF::LayerList::changed()
   PF::Image* image = layer->get_image();
   if( !image ) return;
 
+  std::cout<<"LayerList::changed() called, inhibit="<<inhibit<<std::endl;
+
   Gtk::TreeModel::iterator iter = cbox.get_active();
   if( iter ) {
     Gtk::TreeModel::Row row = *iter;

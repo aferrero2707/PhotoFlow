@@ -621,6 +621,8 @@ vips_gmic( VipsImage **in, VipsImage **out, int n,
 	va_list ap;
 	int result;
 
+	printf("vips_gmic(): padding=%d\n", padding);
+
 	array = vips_array_image_new( in, n ); 
 	va_start( ap, command );
 	result = vips_call_split( "gmic", ap, array, out, 

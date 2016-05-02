@@ -330,7 +330,9 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_geom.get_tree().add_op( _("Crop image"), "crop" );
   op_geom.get_tree().add_op( _("Scale & rotate image"), "scale" );
   op_geom.get_tree().add_op( _("Perspective correction"), "perspective" );
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
   op_geom.get_tree().add_op( _("Optical corrections (experimental)"), "lensfun" );
+#endif
 
   //#if !defined(__APPLE__) && !defined(__MACH__)
 #ifndef PF_DISABLE_GMIC
@@ -343,6 +345,8 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //RT algorithm is better? op_gmic.get_tree().add_op( _("Despeckle"), "gmic_gcd_despeckle" );
   //crashes? op_gmic.get_tree().add_op( _("Iain's Noise Reduction"), "gmic_iain_denoise" );
   op_gmic.get_tree().add_op( _("Sharpen [richardson-lucy]"), "gmic_sharpen_rl" );
+  //op_gmic.get_tree().add_op( _("Denoise"), "gmic_denoise" );
+  //op_gmic.get_tree().add_op( _("Smooth [non-local means]"), "gmic_smooth_nlmeans" );
   op_gmic.get_tree().add_op( _("Smooth [anisotropic]"), "gmic_smooth_anisotropic" );
   op_gmic.get_tree().add_op( _("Smooth [bilateral]"), "gmic_blur_bilateral" );
   op_gmic.get_tree().add_op( _("Smooth [diffusion]"), "gmic_smooth_diffusion" );
