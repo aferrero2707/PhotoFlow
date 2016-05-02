@@ -99,13 +99,13 @@ public:
 
       if(rr<0) rr = -rr;
       if(cc<0) cc = -cc;
-      if( rr >= (tile_top+rawData.GetHeight()) ) {
+      if( rr >= (tile_top+(int)(rawData.GetHeight())) ) {
         int dr = rr -  (tile_top+rawData.GetHeight()) + 1;
-        rr = tile_top + rawData.GetHeight() - dr - 1;
+        rr = tile_top + (int)(rawData.GetHeight()) - dr - 1;
       }
-      if( cc >= (tile_left+rawData.GetWidth()) ) {
+      if( cc >= (tile_left+(int)(rawData.GetWidth())) ) {
         int dr = cc -  (tile_left+rawData.GetWidth()) + 1;
-        rr = tile_left + rawData.GetWidth() - dr - 1;
+        rr = tile_left + (int)(rawData.GetWidth()) - dr - 1;
       }
 
       if( image_data ) {

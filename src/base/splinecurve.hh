@@ -251,7 +251,7 @@ public:
   float get_border_size() { return border_size; }
   void set_border_size( float sz ) { border_size = sz; }
 
-  int add_point( unsigned int id, float x, float y );
+  int add_point( int id, float x, float y );
 
   bool remove_point( unsigned int id );
 

@@ -68,11 +68,11 @@ PF::Layer* PF::LayerManager::new_layer()
 
 void PF::LayerManager::delete_layer( PF::Layer* layer )
 {
-  if( layer->get_id() < 0 ) {
-    std::cout<<"ERROR: LayerManager::delete_layer(): layer->get_id() < 0"<<std::endl;
-    return;
-  }
-  if( layer->get_id() >= (int)layers_pool.size() ) {
+//  if( layer->get_id() < 0 ) {
+//    std::cout<<"ERROR: LayerManager::delete_layer(): layer->get_id() < 0"<<std::endl;
+//    return;
+//  }
+  if( layer->get_id() >= layers_pool.size() ) {
     std::cout<<"ERROR: LayerManager::delete_layer(): layer->get_id() >= layers_pool.size()"<<std::endl;
     return;
   }
@@ -662,7 +662,7 @@ bool PF::insert_layer( std::list<Layer*>& layers, Layer* layer, int32_t lid )
 
   std::list<Layer*>::iterator it;
   for( it = layers.begin(); it != layers.end(); ++it )
-    if( (*it)->get_id() == lid ) break;
+    if( (int32_t)(*it)->get_id() == lid ) break;
 
   if( it == layers.end() ) return false;
   it++;

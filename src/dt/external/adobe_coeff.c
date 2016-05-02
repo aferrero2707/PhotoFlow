@@ -562,7 +562,7 @@ static void dt_dcraw_adobe_coeff(const char *name, float cam_xyz[1][12])
     { "SONY SLT-A99", 128, 0, { 6344,-1612,-462,-4863,12477,2681,-865,1786,6899 } },
   };
 
-  for (int i=0; i < sizeof(table)/sizeof(table[1]); i++) {
+  for (unsigned int i=0; i < sizeof(table)/sizeof(table[1]); i++) {
     //printf("[adobe_coeff] name=%s  table[i].prefix=%s\n", name, table[i].prefix);
     if (!strncmp (name, table[i].prefix, strlen(table[i].prefix))) {
       if (strcmp(name, table[i].prefix))
@@ -570,7 +570,7 @@ static void dt_dcraw_adobe_coeff(const char *name, float cam_xyz[1][12])
       // if (table[i].black)   black   = (ushort) table[i].black;
       // if (table[i].maximum) maximum = (ushort) table[i].maximum;
       if (table[i].trans[0]) {
-        for (int j=0; j < 12; j++)
+        for (unsigned int j=0; j < 12; j++)
           cam_xyz[0][j] = table[i].trans[j] / 10000.0;
       }
       break;

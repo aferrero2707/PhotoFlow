@@ -246,7 +246,7 @@ bool PF::ScaleConfigGUI::pointer_motion_event( int button, double sx, double sy,
 
   PF::ScalePar* par = dynamic_cast<PF::ScalePar*>(get_par());
   if( !par ) return false;
-  if( par->get_rotation_points().size() <= active_point_id ) return false;
+  if( (int)(par->get_rotation_points().size()) <= active_point_id ) return false;
 
   double x = sx, y = sy, w = 1, h = 1;
   screen2layer( x, y, w, h );
@@ -301,7 +301,7 @@ bool PF::ScaleConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBuffe
                         (int)py-point_size,
                         point_size*2+1, point_size*2+1};
     buf_out.fill( point, 0, 0, 0 );
-    if( i == active_point_id )
+    if( (int)(i) == active_point_id )
       buf_out.fill( point2, 255, 0, 0 );
     else
       buf_out.fill( point2, 255, 255, 255 );

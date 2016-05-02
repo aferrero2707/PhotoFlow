@@ -116,7 +116,7 @@ void PF::LayerList::update_model()
     row[columns.col_layer] = (*iter).second;
     row[columns.col_blended] = true;
     if( (*iter).second ) {
-      if( ((*iter).second->get_id() == lid) && (blended == true) ) {
+      if( ((int)((*iter).second->get_id()) == lid) && (blended == true) ) {
 				cbox.set_active( model->children().size()-1 );
 				image_num.set_value( imgid );
 				active_lid = (*iter).second->get_id();
@@ -131,7 +131,7 @@ void PF::LayerList::update_model()
     row[columns.col_layer] = (*iter).second;
     row[columns.col_blended] = false;
     if( (*iter).second ) {
-      if( ((*iter).second->get_id() == lid) && (blended == false) ) {
+      if( ((int)((*iter).second->get_id()) == lid) && (blended == false) ) {
 				cbox.set_active( model->children().size()-1 );
         image_num.set_value( imgid );
 				active_lid = (*iter).second->get_id();
@@ -182,7 +182,7 @@ void PF::LayerList::changed()
       PF::Layer* l = row[columns.col_layer];
 
       std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& inputs = layer->get_extra_inputs();
-      if( (inputs.size() > 0) && (inputs[0].first.first == l->get_id())
+      if( (inputs.size() > 0) && (inputs[0].first.first == (int)(l->get_id()))
           && (inputs[0].first.second == image_num.get_value()) ) {
         //std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
         // <<"\" is unmodified."<<std::endl;

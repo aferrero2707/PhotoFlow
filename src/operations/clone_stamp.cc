@@ -69,9 +69,9 @@ VipsImage* PF::CloneStampPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* outnew = in[0];
   PF_REF( outnew, "CloneStampPar::build(): initial outnew ref" );
 
-  for( int i = 0; i < strokes.get().size(); i++) {
+  for( unsigned int i = 0; i < strokes.get().size(); i++) {
     PF::StrokesGroup& group = strokes.get()[i];
-    for( int j = 0; j < group.get_strokes().size(); j++ ) {
+    for( unsigned int j = 0; j < group.get_strokes().size(); j++ ) {
       //PF::Stroke<PF::Stamp>& stroke = group.get_strokes()[j];
       VipsImage* tempimg = outnew;
       if( vips_clone_stamp( tempimg, &outnew, get_processor(), i, j,NULL ) )
@@ -154,8 +154,8 @@ void PF::CloneStampPar::draw_point( unsigned int x, unsigned int y, VipsRect& up
   PF::Stroke<PF::Stamp>& stroke = group.get_strokes().back();
 
   if( !stroke.get_points().empty() ) {
-    if( (stroke.get_points().back().first == x ) &&
-				(stroke.get_points().back().second == y ) )
+    if( (stroke.get_points().back().first == (int)x ) &&
+				(stroke.get_points().back().second == (int)y ) )
       return;
   }
 

@@ -105,7 +105,7 @@ static bool check_inputs( std::list<PF::Layer*> layers, std::list<PF::Layer*> pl
       std::cout<<"check_inputs(): checking extra input \""<<(*li)->get_name()<<"\"["<<i<<"]="<<id<<std::endl;
       for( std::list<PF::Layer*>::iterator lj = plist.begin();
            lj != plist.end(); lj++ ) {
-        if( ((*lj) != NULL) && ((*lj)->get_id() == id) ) {
+        if( ((*lj) != NULL) && ((int)((*lj)->get_id()) == id) ) {
           std::cout<<"check_inputs(): found."<<std::endl;
           found = true;
           break;
@@ -162,7 +162,7 @@ static bool check_inputs2( std::list<PF::Layer*> layers, std::list< PF::Layer*> 
            lj != drag_list.end(); lj++ ) {
         if( (*lj) == NULL ) continue;
         std::cout<<"check_inputs2(): checking dragged layer \""<<(*lj)->get_name()<<"\"="<<(*lj)->get_id()<<std::endl;
-        if( (*lj)->get_id() == id ) {
+        if( (int)((*lj)->get_id()) == id ) {
           std::cout<<"check_inputs2(): found."<<std::endl;
           found = true;
           break;

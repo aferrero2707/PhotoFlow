@@ -416,7 +416,7 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
         PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
         PF::OperationConfigGUI* config = dynamic_cast<PF::OperationConfigGUI*>( ui );
         if( config && config->get_editing_flag() == true ) {
-          int level = get_pipeline()->get_level();
+          unsigned int level = get_pipeline()->get_level();
           float zoom_fact = 1.0f;
           for( unsigned int i = 0; i < level; i++ )
             zoom_fact /= 2.0f;
@@ -1046,6 +1046,8 @@ void PF::ImageArea::update( VipsRect* area )
       //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
       //    <<" -> "<<current_display_profile<<std::endl;
       break;
+    default:
+      break;
     }
   }
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
@@ -1334,7 +1336,7 @@ void PF::ImageArea::sink( const VipsRect& area )
   PF::Pipeline* pipeline = get_pipeline();
   if( !pipeline ) return;
   if( !outimg ) return;
-  int level = pipeline->get_level();
+  unsigned int level = pipeline->get_level();
   float fact = 1.0f;
   for( unsigned int i = 0; i < level; i++ )
     fact /= 2.0f;

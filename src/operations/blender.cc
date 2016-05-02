@@ -39,7 +39,7 @@ bool PF::BlenderPar::adjust_geom( VipsImage* in, VipsImage** out,
   *out = NULL;
 
   double scale = 1;
-	for( int l = 1; l <= level; l++ )
+	for( unsigned int l = 1; l <= level; l++ )
 		scale *= 2;
 
   int dx = shift_x.get()/scale;

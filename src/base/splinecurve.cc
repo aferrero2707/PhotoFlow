@@ -224,7 +224,7 @@ void PF::SplineCurve::update_spline()
   
   ypp[0] = u[0] = 0.0;	/* set lower boundary condition to "natural" */
   
-  for (int i = 1; i < N - 1; ++i) {
+  for  (int i = 1; i < (int)N - 1; ++i) {
     double sig = (points2[i].first - points2[i - 1].first) / (points2[i + 1].first - points2[i - 1].first);
     double p = sig * ypp[i - 1] + 2.0;
     ypp[i] = (sig - 1.0) / p;
@@ -234,7 +234,7 @@ void PF::SplineCurve::update_spline()
   }
   
   ypp[N - 1] = 0.0;
-  for (int k = N - 2; k >= 0; --k)
+  for (int k = (int)N - 2; k >= 0; --k)
     ypp[k] = ypp[k] * ypp[k + 1] + u[k];
   
   delete [] u;
@@ -280,7 +280,7 @@ float PF::SplineCurve::get_value( float x )
     return result;
   // spline curve
   } else { // if (kind==Spline) {
-    if( k_hi >= ypp_size )
+    if( k_hi >= (int)ypp_size )
       std::cout<<"k_lo="<<k_lo<<"  k_hi="<<k_hi<<"  ypp_size="<<ypp_size<<"  N="<<N<<std::endl;
     double a = (points2[k_hi].first - x) / h;
     double b = (x - points2[k_lo].first) / h;

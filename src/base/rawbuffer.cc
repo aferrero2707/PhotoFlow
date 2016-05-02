@@ -67,10 +67,10 @@ void PF::PencilMask::init(unsigned int s, float op, float sm)
   float dr = rmax-rmin;
   float dr2 = dr*dr;
   float minus = -1.0f;
-  for( int x = 0; x < size; x++) {
+  for( unsigned int x = 0; x < size; x++) {
     float dx = x-xc;
     float dx2 = dx*dx;
-    for( int y = 0; y < size; y++) {
+    for( unsigned int y = 0; y < size; y++) {
       float dy = y-yc;
       float r2 = dx2 + dy*dy;
       float r = sqrt(r2);
@@ -129,7 +129,7 @@ PF::RawBuffer::RawBuffer(std::string fname):
 buf = malloc( sizeofpel*xsize );	\
 if( !buf ) break;				\
 TYPE val[16];			\
-for( int ch = 0; ch < bands; ch++ ) {					\
+for( unsigned int ch = 0; ch < bands; ch++ ) {					\
   val[ch] = (TYPE)(bgd_color[ch]*FormatInfo<TYPE>::RANGE + FormatInfo<TYPE>::MIN); \
 }									\
 TYPE* tbuf = (TYPE*)buf;						\
@@ -183,7 +183,7 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
     buf = malloc( sizeofpel*xsize );
     if( !buf ) break;
     unsigned short int val[16];
-    for( int ch = 0; ch < bands; ch++ ) {
+    for( unsigned int ch = 0; ch < bands; ch++ ) {
       val[ch] = (unsigned short int)(bgd_color[ch]*FormatInfo<unsigned short int>::RANGE + FormatInfo<unsigned short int>::MIN);
     }
     unsigned short int* tbuf = (unsigned short int*)buf;
@@ -207,6 +207,8 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
   case VIPS_FORMAT_DOUBLE:
     INIT_BUF( double );
     break;
+  default:
+    return;
   }
   pxmask = NULL;
 
@@ -242,7 +244,7 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
 
 #define DRAW_ROW( TYPE ) {																							\
     TYPE val[16];																													\
-    for( int ch = 0; ch < bands; ch++ ) {																	\
+    for( unsigned int ch = 0; ch < bands; ch++ ) {																	\
       val[ch] = (TYPE)(pen.get_channel(ch)*FormatInfo<TYPE>::RANGE + FormatInfo<TYPE>::MIN); \
     }																																			\
     unsigned int x;																												\
@@ -259,7 +261,7 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
         if( pxmask[col2] == 0 ) {																					\
           continue;																												\
         }																																	\
-        for( int ch = 0; ch < bands; ch++ ) {															\
+        for( unsigned int ch = 0; ch < bands; ch++ ) {															\
           x = col*bands + ch;																							\
           oldval = tbuf[x];																								\
           tbuf[x] = (TYPE)(pen.get_opacity()*val[ch] + transparency*oldval); \
@@ -270,7 +272,7 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
         if( pxmask[col2] == 0 ) {																						\
           continue;																													\
         }																																		\
-        for( int ch = 0; ch < bands; ch++ ) {																\
+        for( unsigned int ch = 0; ch < bands; ch++ ) {																\
           x = col*bands + ch;																								\
           tbuf[x] = val[ch];																								\
         }																																		\
@@ -360,6 +362,8 @@ void PF::RawBuffer::draw_row( Pencil& pen, unsigned int row,
   case VIPS_FORMAT_DOUBLE:
     DRAW_ROW( double );
     break;
+  default:
+    break;
   }
 
   // Merge existing painted ranges with the newly painted pixels
@@ -406,7 +410,7 @@ void PF::RawBuffer::draw_point( Pencil& pen, unsigned int x0, unsigned int y0,
     if( startcol < 0 ) 
       startcol = 0;
     int endcol = x0 + D;
-    if( endcol >= xsize ) 
+    if( endcol >= (int)xsize )
       endcol = xsize - 1;
 
     //endcol = x0;
@@ -414,7 +418,7 @@ void PF::RawBuffer::draw_point( Pencil& pen, unsigned int x0, unsigned int y0,
 
     if( row1 >= 0 )
       draw_row( pen, row1, startcol, endcol );
-    if( (row2 != row1) && (row2 < ysize) )
+    if( (row2 != row1) && (row2 < (int)ysize) )
       draw_row( pen, row2, startcol, endcol );
   }
   //fsync( fd );
@@ -461,13 +465,13 @@ void PF::RawBuffer::draw_segment( Pencil& pen, Segment& segment )
       if( startcol < 0 ) 
         startcol = 0;
       int endcol = x0[i] + D;
-      if( endcol >= xsize ) 
+      if( endcol >= (int)xsize )
         endcol = xsize - 1;
 
 
       if( row1 >= 0 )
         draw_row( pen, row1, startcol, endcol );
-      if( (row2 != row1) && (row2 < ysize) )
+      if( (row2 != row1) && (row2 < (int)ysize) )
         draw_row( pen, row2, startcol, endcol );
 
       //if( i==1 ) break;
@@ -479,6 +483,7 @@ void PF::RawBuffer::draw_segment( Pencil& pen, Segment& segment )
 void PF::RawBuffer::start_stroke()
 {
   if( buf ) free( buf );
+  buf = NULL;
   switch( get_format() ) {
   case VIPS_FORMAT_UCHAR:
     buf = malloc( sizeof(unsigned char)*xsize*bands );
@@ -495,6 +500,8 @@ void PF::RawBuffer::start_stroke()
   case VIPS_FORMAT_DOUBLE:
     buf = malloc( sizeof(double)*xsize*bands );
     memset(buf, 0, sizeof(double)*xsize*bands );
+    break;
+  default:
     break;
   }
   if( !buf ) return;

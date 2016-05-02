@@ -58,12 +58,14 @@
 
 #include <vips/dispatch.h>
 
+/*
 #warning "Now including lensfun.hh"
 #ifdef PF_LENSFUN_HH
 #warning "PF_LENSFUN_HH already defined!!!"
 #else
 #warning "PF_LENSFUN_HH not defined."
 #endif
+*/
 #include "../operations/lensfun.hh"
 //#include "../base/processor.hh"
 
@@ -134,6 +136,7 @@ G_DEFINE_TYPE( VipsLensFun, vips_lensfun, VIPS_TYPE_OPERATION );
 
 static void *malloc_aligned(size_t size)
 {
+  return NULL;
 }
 
 #define MIN_MAX( MIN, MAX, VAL) { if(VAL<MIN) MIN=VAL; if(VAL>MAX) MAX=VAL;}
@@ -303,6 +306,8 @@ vips_lensfun_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop 
     break;
   case VIPS_FORMAT_DOUBLE:
     result = vips_lensfun_gen_template<double>( oreg, seq, a, b, stop );
+    break;
+  default:
     break;
   }
 

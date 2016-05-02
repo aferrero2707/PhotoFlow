@@ -77,7 +77,7 @@ bool PF::NumEntry::on_key_press_or_release_event(GdkEventKey* event)
 {
   if (event->type == GDK_KEY_PRESS &&
       (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)) == 0) {
-    if( (event->keyval == GDK_KEY_Up) ) {
+    if( event->keyval == GDK_KEY_Up ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       float new_val = adjustment->get_value();
       new_val += adjustment->get_step_increment();

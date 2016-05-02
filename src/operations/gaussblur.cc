@@ -62,7 +62,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* blurred = srcimg;
 
 	double radius2 = radius.get();
-	for( int l = 1; l <= level; l++ )
+	for( unsigned int l = 1; l <= level; l++ )
 		radius2 /= 2;
 
 	if( (get_render_mode() == PF_RENDER_PREVIEW) &&

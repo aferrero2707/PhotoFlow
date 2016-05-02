@@ -72,7 +72,7 @@ public:
     void step_down();
 
     float get_value() { return adjustment->get_value(); }
-    float set_value(float val) { adjustment->set_value(val); changed(); }
+    void set_value(float val) { adjustment->set_value(val); changed(); }
 
     Glib::SignalProxy0<void> signal_changed() { return adjustment->signal_value_changed(); }
 

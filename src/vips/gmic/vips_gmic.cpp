@@ -30,7 +30,6 @@
 
  */
 
-#define _(S) (S)
 
 #include <vips/vips.h>
 #include <vips/dispatch.h>
@@ -40,11 +39,17 @@
 #include <iostream>
 #include <fstream>
 
+#include "../../base/photoflow.hh"
+
+#ifdef _
+#undef _
+#endif
+
+#define _(S) (S)
 //#include "CImg.h"
 #include "gmic/src/gmic.h"
 //#include "gmic.h"
 
-#include "../../base/photoflow.hh"
 
 static char* custom_gmic_commands = 0;
 static GMutex* gmic_mutex = 0;

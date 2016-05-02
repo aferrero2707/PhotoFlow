@@ -126,6 +126,8 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
                             get_interpretation(),
                             1.0, 1.0);
     break;
+  default:
+    break;
   }
 
   return out;
@@ -197,6 +199,8 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
                             get_coding(),
                             get_interpretation(),
                             1.0, 1.0);
+    break;
+  default:
     break;
   }
 

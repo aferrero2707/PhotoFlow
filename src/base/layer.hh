@@ -52,7 +52,7 @@ namespace PF
   {
     friend class LayerManager;
 
-    int32_t id;
+    uint32_t id;
     std::string name;
     std::list<Layer*> sublayers;
     std::list<Layer*> imap_layers;
@@ -86,7 +86,7 @@ namespace PF
   public:
     sigc::signal<void> signal_modified;
 
-    Layer(int32_t id, bool cached=false);
+    Layer(uint32_t id, bool cached=false);
     virtual ~Layer()
     {
       std::cout<<"~Layer(): \""<<name<<"\" destructor called."<<std::endl;
@@ -103,7 +103,7 @@ namespace PF
     std::string get_name() { return name; }
     void set_name( std::string n ) { name = n; modified(); }
 
-    int32_t get_id() { return id; }
+    uint32_t get_id() { return id; }
 
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }

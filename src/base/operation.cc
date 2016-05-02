@@ -238,8 +238,8 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
 {
   VipsImage* outnew = NULL;
   VipsImage* invec[100];
-  int n = 0;
-  for(int i = 0; i < in.size(); i++) {
+  unsigned int n = 0;
+  for(unsigned int i = 0; i < in.size(); i++) {
     if( !in[i] ) continue;
     invec[n] = in[i];
     n++;

@@ -112,7 +112,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_close(PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_inactive.png"),
   frame_expander(PF::PhotoFlow::Instance().get_data_dir()+"/icons/expand.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/collapse.png",true)
 {
-  vips_semaphore_init( &update_done_sem, 0, "update_done_sem" );
+  vips_semaphore_init( &update_done_sem, 0, (char*)"update_done_sem" );
 
 
   Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
@@ -653,7 +653,7 @@ void PF::OperationConfigGUI::parameters_redo()
 
 void PF::OperationConfigGUI::parameters_reset()
 {
-  for( int i = 0; i < controls.size(); i++ )
+  for( unsigned int i = 0; i < controls.size(); i++ )
     controls[i]->reset();
   if( get_layer() && get_layer()->get_image() )
     get_layer()->get_image()->update();
@@ -777,7 +777,7 @@ void PF::OperationConfigGUI::init()
 {
   //std::cout<<"OperationConfigGUI::init(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
   update_buttons();
-  for( int i = 0; i < controls.size(); i++ )
+  for( unsigned int i = 0; i < controls.size(); i++ )
     controls[i]->init();
 }
 
@@ -946,7 +946,7 @@ void PF::OperationConfigGUI::enable_preview()
 
   get_layer()->get_image()->lock();
   // Enable all controls
-  for( int i = 0; i < controls.size(); i++ ) {
+  for( unsigned int i = 0; i < controls.size(); i++ ) {
     controls[i]->set_inhibit( false );
     controls[i]->set_value();
   }
@@ -965,7 +965,7 @@ void PF::OperationConfigGUI::disable_preview()
   get_layer()->get_image()->lock();
   // Inhibit all controls such that they do not modify the
   // underlying properties
-  for( int i = 0; i < controls.size(); i++ )
+  for( unsigned int i = 0; i < controls.size(); i++ )
     controls[i]->set_inhibit( true );
 
   //std::cout<<"  restoring original values"<<std::endl;

@@ -203,7 +203,7 @@ void PF::CloneStampConfigGUI::draw_point( double x, double y )
 
     par->draw_point( x, y, update );
 
-    if( vi != PF::PhotoFlow::Instance().get_preview_pipeline_id() )
+    if( (int)(vi) != PF::PhotoFlow::Instance().get_preview_pipeline_id() )
       continue;
 
 		//continue;
@@ -268,7 +268,7 @@ bool PF::CloneStampConfigGUI::pointer_release_event( int button, double x, doubl
   if( !get_editing_flag() ) return false;
 
   if( button != 1 ) return false;
-  if( (mod_key == (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT)) ) {
+  if( mod_key == (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) ) {
     mouse_x = x; mouse_y = y;
     double lx = x, ly = y, lw = 1, lh = 1;
     screen2layer( lx, ly, lw, lh );

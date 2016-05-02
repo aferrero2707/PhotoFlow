@@ -175,7 +175,7 @@ namespace PF {
 
     // Step 3: check if the row pointers need to be (re)assigned
     if(GetWidth() != w || GetHeight() != h) {
-      for(int j = 0; j < h; j++) {
+      for(int j = 0; j < (int)h; j++) {
 	matrix[j] = &(buf[j*w]);
 #ifdef ARRAY2D_DEBUG
 	//std::cout<<"  matrix["<<j<<"] = &(buf["<<j<<"*"<<w<<"])"
@@ -198,7 +198,7 @@ namespace PF {
 #endif
     }
     if(GetHeight() != h || c_offset != GetColOffset()) {
-      for(int j = 0; j < h; j++) {
+      for(int j = 0; j < (int)h; j++) {
 	matrix_shifted[j+r_offset] = matrix[j] - c_offset;
 #ifdef ARRAY2D_DEBUG
 	//std::cout<<"  matrix_shifted["<<j+r_offset<<"] = matrix["<<j<<"-"<<c_offset<<std::endl;

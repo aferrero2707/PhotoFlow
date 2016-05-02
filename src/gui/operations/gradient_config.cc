@@ -399,7 +399,7 @@ bool PF::GradientConfigGUI::pointer_motion_event( int button, double sx, double 
   if( par->get_gradient_type() == GRADIENT_HORIZONTAL ) ppoints = &(par->get_hmod().get_points());
   const std::vector< std::pair<float,float> >& points = *ppoints;
 
-  if( points.size() <= active_point_id ) return false;
+  if( (int)(points.size()) <= active_point_id ) return false;
 
   double x = sx, y = sy, w = 1, h = 1;
   screen2layer( x, y, w, h );
@@ -455,7 +455,7 @@ bool PF::GradientConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
 
   int ps = points.size();
   //std::cout<<"GradientConfigGUI::modify_preview(): ps="<<ps<<std::endl;
-  for(unsigned int i = 0; i < ps; i++ ) {
+  for( int i = 0; i < ps; i++ ) {
     double px = 0, py = 0, pw = 1, ph = 1;
     if( par->get_gradient_type() == GRADIENT_VERTICAL ) {
       px = points[i].first*node->image->Xsize;

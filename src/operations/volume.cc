@@ -96,7 +96,7 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
     //vec8[i] = (short int)(y*FormatInfo<unsigned char>::RANGE);
     //std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec8[i]="<<vec8[i]<<std::endl;
   }
-  for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
+  for(unsigned int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
     vec16[i] = tone_curve.get_value( x );
     //vec16[i] = (int)(y*FormatInfo<unsigned short int>::RANGE);

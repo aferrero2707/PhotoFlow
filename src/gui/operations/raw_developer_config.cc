@@ -27,12 +27,6 @@
 
  */
 
-#include "../base/exif_data.hh"
-#include "../../operations/raw_image.hh"
-#include "../../operations/raw_preprocessor.hh"
-#include "../../operations/raw_output.hh"
-#include "../../operations/raw_developer.hh"
-
 /* We need C linkage for this.
  */
 #ifdef __cplusplus
@@ -48,6 +42,12 @@ extern "C" {
 #include "../dt/external/wb_presets.c"
 #include "../dt/external/adobe_coeff.c"
 #include "../dt/external/cie_colorimetric_tables.c"
+
+#include "../base/exif_data.hh"
+#include "../../operations/raw_image.hh"
+#include "../../operations/raw_preprocessor.hh"
+#include "../../operations/raw_output.hh"
+#include "../../operations/raw_developer.hh"
 
 #include "raw_developer_config.hh"
 

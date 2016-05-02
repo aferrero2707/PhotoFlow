@@ -114,7 +114,7 @@ void PF::CurveEditor::update_point()
   if( inhibit_value_changed ) return;
   std::cout<<"PF::CurveEditor::update_point() called."<<std::endl;
   int ipt = curve_area->get_selected_point();
-  if( (ipt >= 0) && (ipt < curve_area->get_curve().get_npoints()) ) {
+  if( (ipt >= 0) && (ipt < (int)(curve_area->get_curve().get_npoints())) ) {
 #ifdef GTKMM_2
     float px = (xadjustment.get_value()-xmin)/(xmax-xmin);
     float py = (yadjustment.get_value()-ymin)/(ymax-ymin);
@@ -358,7 +358,7 @@ bool PF::CurveEditor::on_key_press_or_release_event(GdkEventKey* event)
     std::pair<float,float> pt = curve.get_point( curve_area->get_selected_point() );
     float delta = 0.01;
 
-    if( (event->keyval == GDK_KEY_Up) ) {
+    if( event->keyval == GDK_KEY_Up ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       pt.second += delta;
     }
@@ -488,7 +488,7 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
         cr->set_source_rgb( 0.9, 0.9, 0.9 );
         cr->arc (x, y, 3.5, 0, 2*M_PI);
         cr->fill ();
-        if( i == selected_point ) {
+        if( (int)(i) == selected_point ) {
           cr->set_source_rgb( 0.9, 0.0, 0.0 );
           cr->arc (x, y, 2., 0, 2*M_PI);
           cr->fill ();

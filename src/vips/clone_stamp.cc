@@ -184,7 +184,8 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
 #ifndef NDEBUG
   std::cout<<"vips_clone_stamp_gen(): n. of groups: "<<groups.size()<<std::endl;
 #endif
-  if( groups.size() <= clone_stamp->group_num )
+  if( clone_stamp->group_num < 0 ) return 1;
+  if( (int)groups.size() <= clone_stamp->group_num )
       return 1;
   PF::StrokesGroup& group = groups[clone_stamp->group_num];
 
@@ -239,8 +240,8 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
 #endif
 
   PF::Stamp& pen = stroke.get_pen();
-  int pen_size = pen.get_size()/par->get_scale_factor();
-  int pen_size2 = pen_size*pen_size;
+  unsigned int pen_size = pen.get_size()/par->get_scale_factor();
+  unsigned int pen_size2 = pen_size*pen_size;
 
   //std::cout<<"  pen size="<<pen_size<<"  opacity="<<pen.get_opacity()
   //         <<"  smoothness="<<pen.get_smoothness()<<std::endl;
@@ -284,7 +285,7 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
       prepared = true;
     }
 
-    for( y = 0; y <= pen_size; y++ ) {
+    for( y = 0; y <= (int)pen_size; y++ ) {
       row1 = y0 - y;
       row2 = y0 + y;
       my1 = pen_size - y;
@@ -372,6 +373,8 @@ vips_clone_stamp_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *s
     break;
   case VIPS_FORMAT_DOUBLE:
     result = vips_clone_stamp_gen_template<double>( oreg, seq, a, b, stop );
+    break;
+  default:
     break;
   }
 

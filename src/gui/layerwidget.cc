@@ -597,7 +597,7 @@ bool PF::LayerWidget::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk:
     //Gtk::TreeModel::Row row = *it;
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*it)[columns.col_layer];
-    if(l && (l->get_id()==id)) {
+    if(l && ((int)(l->get_id())==id)) {
       iter = it;
       return true;
     }
@@ -1156,7 +1156,7 @@ void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
   if( editor ) {
     //if( editor->get_active_layer() == l->get_id() )
     //  editor->set_active_layer(-1);
-    if( editor->get_displayed_layer() == l->get_id() )
+    if( editor->get_displayed_layer() == (int)(l->get_id()) )
       editor->set_displayed_layer(-1);
   }
   unset_sticky_and_editing( l->get_omap_layers() );
@@ -1215,7 +1215,7 @@ void PF::LayerWidget::remove_layers()
     if( editor ) {
       std::cout<<"editor->get_active_layer()="<<editor->get_active_layer()<<"  l->get_id()="<<l->get_id()<<std::endl;
     }
-    if( editor && (editor->get_active_layer() == l->get_id()) ) {
+    if( editor && (editor->get_active_layer() == (int)(l->get_id())) ) {
       std::cout<<"editor->set_active_layer( -1 );"<<std::endl;
       editor->set_active_layer( -1 );
     }
@@ -1423,7 +1423,7 @@ void PF::LayerWidget::on_button_save()
     Gtk::TreeModel::iterator parent = row.parent();
     if( parent ) {
       bool selected = false;
-      for( int rj = 0; rj < sel_rows.size(); rj++ ) {
+      for( unsigned int rj = 0; rj < sel_rows.size(); rj++ ) {
         Gtk::TreeModel::iterator iter2 = model->get_iter( sel_rows[rj] );
         if( !iter2 ) continue;
         if( parent != iter2 ) continue;

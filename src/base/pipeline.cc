@@ -101,7 +101,7 @@ PF::PipelineNode* PF::Pipeline::set_node( Layer* layer, Layer* input_layer )
   if( !layer )
     return NULL;
 
-  int id = layer->get_id();
+  uint32_t id = layer->get_id();
   if( id >= nodes.size() ) {
     while( nodes.size() <= (id+1) ) nodes.push_back(NULL);
     nodes[id] = new PF::PipelineNode;

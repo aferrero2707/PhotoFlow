@@ -74,7 +74,7 @@ void PF::ClosedSplineCurve::update_polar()
 
 
 
-int PF::ClosedSplineCurve::add_point( unsigned int id, float x, float y )
+int PF::ClosedSplineCurve::add_point( int id, float x, float y )
 {
   //if( (get_npoints()>0) && (x<=points[0].first) ) return -1;
   //if( (get_npoints()>1) && (x >= points[get_npoints()-1].first) ) return -1;
@@ -82,7 +82,7 @@ int PF::ClosedSplineCurve::add_point( unsigned int id, float x, float y )
   lock();
   if( id >= 0 ) {
 
-    if( id < points.size() ) {
+    if( id < (int)points.size() ) {
       points.insert( points.begin()+id, std::make_pair(x,y) );
 #ifndef NDEBUG
       std::cout<<"PF::ClosedSplineCurve::add_point( "<<x<<", "<<y<<" ): point added before "<<points[i].first<<std::endl;
@@ -282,8 +282,10 @@ void PF::ClosedSplineCurve::update_center()
 
 #define CLIPD(a) ((a)>0.0?((a)<1.0?(a):1.0):0.0)
 
+
 float PF::ClosedSplineCurve::get_value( float x )
 {
+  return 0;
 }
 
 
@@ -363,7 +365,7 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
   _path_init_ctrl_points(form);
   ctrl_points.clear();
   guint nb = g_list_length(form->points);
-  for(int k = 0; k < nb; k++) {
+  for(int k = 0; k < (int)nb; k++) {
     dt_masks_point_path_t *pt = (dt_masks_point_path_t *)g_list_nth_data(form->points, k);
     std::pair<float,float> ctrl1 = std::make_pair( (float)pt->ctrl1[0], (float)pt->ctrl1[1] );
     std::pair<float,float> ctrl2 = std::make_pair( (float)pt->ctrl2[0], (float)pt->ctrl2[1] );
@@ -385,7 +387,7 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
   float* ptr = out_points;
   int xlast = -999999, ylast = -999999;
   for( int pi = 0; pi < out_points_count; pi++ ) {
-    if( pi >= points.size()*3 ) {
+    if( pi >= (int)points.size()*3 ) {
       int ix = (int)ptr[0];
       int iy = (int)ptr[1];
       //std::cout<<"path point "<<ix<<","<<iy<<"  (last "<<xlast<<","<<ylast<<")"<<std::endl;
@@ -403,7 +405,7 @@ void PF::ClosedSplineCurve::update_outline( float wd, float ht )
   ptr = out_border;
   xlast = -999999; ylast = -999999;
   for( int pi = 0; pi < out_border_count; pi++ ) {
-    if( pi >= points.size()*3 ) {
+    if( pi >= (int)points.size()*3 ) {
       int ix = (int)ptr[0];
       int iy = (int)ptr[1];
       //std::cout<<"path point "<<ix<<","<<iy<<"  (last "<<xlast<<","<<ylast<<")"<<std::endl;

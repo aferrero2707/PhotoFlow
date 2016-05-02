@@ -618,7 +618,7 @@ bool PF::LayerTree::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::T
         it != rows.end(); it++ ) {
     //Gtk::TreeModel::Row row = *it;
     PF::Layer* l = (*it)[treeModel->columns.col_layer];
-    if(l && (l->get_id()==id)) {
+    if(l && ((int)(l->get_id())==id)) {
       iter = it;
       return true;
     }

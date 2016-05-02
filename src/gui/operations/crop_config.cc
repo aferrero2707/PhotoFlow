@@ -259,6 +259,8 @@ void PF::CropConfigGUI::move_handle( int x, int y )
     cropTopSlider.get_adjustment()->set_value( ynew );
     break;
   }
+  default:
+    break;
   }
 }
 

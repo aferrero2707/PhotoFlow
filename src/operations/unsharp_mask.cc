@@ -50,13 +50,13 @@ VipsImage* PF::UnsharpMaskPar::build(std::vector<VipsImage*>& in, int first,
 				   unsigned int& level)
 {
   VipsImage* srcimg = NULL;
-  if( in.size() > first ) srcimg = in[first];
+  if( (int)in.size() > first ) srcimg = in[first];
 
 	if( !srcimg )
 		return NULL;
 
 	double radius2 = radius.get();
-	for( int l = 1; l < level; l++ )
+	for( unsigned int l = 1; l < level; l++ )
 		radius2 /= 2;
 
 	blur->get_par()->set_image_hints( this );

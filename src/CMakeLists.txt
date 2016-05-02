@@ -2,7 +2,7 @@ IF(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   SET(GMIC_FLAGS "-framework CoreServices -mmacosx-version-min=10.8 -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
@@ -266,6 +266,10 @@ ELSE(MINGW)
 ENDIF(MINGW)
 
 list(APPEND ADDITIONAL_LIBS pugixml)
+
+IF(APPLE)
+  list(APPEND LIBS "-framework CoreServices")
+ENDIF(APPLE)
 
 #--------------------------------------------------
 #

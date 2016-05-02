@@ -70,7 +70,7 @@ std::vector<VipsImage*> PF::GmicSplitDetailsPar::build_many(std::vector<VipsImag
     //command = command + std::string(",") + prop_iterations.get_str();
     //command = command + std::string(",") + prop_channels.get_enum_value_str();
     command = command + " -div[0] 255 -output[0] " + get_cache_file_name(0) + ",float";
-    for( int i = 1; i < get_cache_files_num(); i++ ) {
+    for( unsigned int i = 1; i < get_cache_files_num(); i++ ) {
       std::ostringstream str;
       str<<i;
       std::string id = str.str();

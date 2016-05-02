@@ -310,7 +310,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
       // the width and height do not exceed a given size, so we have to
       // look into the previously processed pipelines to get the most
       // accurate estimate of the full-res image
-      int level_min = 1000;
+      unsigned int level_min = 1000;
       PF::Pipeline* hires_pipeline = NULL;
       for( unsigned int j = 0; j < i; j++ ) {
         PF::Pipeline* pipeline2 = get_pipeline( j );
@@ -323,7 +323,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
       }
       int level = -1;
       if( hires_pipeline ) {
-        level = hires_pipeline->get_level();
+        level = (int)hires_pipeline->get_level();
         //std::cout<<"hires_pipeline->get_level()="<<level<<std::endl;
         VipsImage* hires_image = NULL;
         if( pipeline->get_output_layer_id() >= 0 ) {

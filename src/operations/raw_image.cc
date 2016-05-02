@@ -60,7 +60,7 @@ PF::RawImage::RawImage( const std::string _fname ):
   int ifd = open( file_name_real.c_str(), O_RDONLY );
   if( ifd < 0 ) {
     char* fullpath = strdup( file_name_real.c_str() );
-    const gchar* fname = g_basename( fullpath );
+    gchar* fname = g_path_get_basename( fullpath );
     ifd = open( fname, O_RDONLY );
     if( ifd < 0 ) {
       std::cout<<"RawImage::RawImage(): \""<<file_name<<"\" not found"<<std::endl;
@@ -69,6 +69,7 @@ PF::RawImage::RawImage( const std::string _fname ):
       close(ifd);
     }
     file_name_real = fname;
+    g_free( fname );
   } else {
     close(ifd);
   }
@@ -415,7 +416,7 @@ PF::RawImage::RawImage( const std::string _fname ):
 			rawData[row][col] = nval;
     }
 		/**/
-    if( write( temp_fd, rowbuf, pxsize*iwidth ) != (pxsize*iwidth) )
+    if( (int)write( temp_fd, rowbuf, pxsize*iwidth ) != (int)(iwidth*pxsize) )
       break;
 #ifndef NDEBUG
     if( (row%100) == 0 ) std::cout<<"  row "<<row<<" saved."<<std::endl;
@@ -725,11 +726,11 @@ int PF::RawImage::LinEqSolve(int nDim, double* pfMatr, double* pfVect, double* p
 
     for(k = 0; k < (nDim - 1); k++) { // base row of matrix
         // search of line with max element
-        fMaxElem = fabsf( pfMatr[k * nDim + k] );
+        fMaxElem = fabs( pfMatr[k * nDim + k] );
         m = k;
 
         for (i = k + 1; i < nDim; i++) {
-            if(fMaxElem < fabsf(pfMatr[i * nDim + k]) ) {
+            if(fMaxElem < fabs(pfMatr[i * nDim + k]) ) {
                 fMaxElem = pfMatr[i * nDim + k];
                 m = i;
             }
@@ -1157,12 +1158,12 @@ void PF::RawImage::CA_correct_RT()
                              rbhpfh[indx] = fabsf(ghpfh - fabsf(fabsf(rgb[indx][c]-rgb[indx+4][c])+fabsf(rgb[indx][c]-rgb[indx-4][c]) -
                              fabsf(rgb[indx+4][c]-rgb[indx-4][c])));*/
 
-                            glpfv = 0.25 * (2.0 * rgb[1][indx] + rgb[1][indx + v2] + rgb[1][indx - v2]);
-                            glpfh = 0.25 * (2.0 * rgb[1][indx] + rgb[1][indx + 2] + rgb[1][indx - 2]);
-                            rblpfv[indx >> 1] = eps + fabsf(glpfv - 0.25 * (2.0 * rgb[c][indx] + rgb[c][indx + v2] + rgb[c][indx - v2]));
-                            rblpfh[indx >> 1] = eps + fabsf(glpfh - 0.25 * (2.0 * rgb[c][indx] + rgb[c][indx + 2] + rgb[c][indx - 2]));
-                            grblpfv[indx >> 1] = glpfv + 0.25 * (2.0 * rgb[c][indx] + rgb[c][indx + v2] + rgb[c][indx - v2]);
-                            grblpfh[indx >> 1] = glpfh + 0.25 * (2.0 * rgb[c][indx] + rgb[c][indx + 2] + rgb[c][indx - 2]);
+                            glpfv = 0.25f * (2.0f * rgb[1][indx] + rgb[1][indx + v2] + rgb[1][indx - v2]);
+                            glpfh = 0.25f * (2.0f * rgb[1][indx] + rgb[1][indx + 2] + rgb[1][indx - 2]);
+                            rblpfv[indx >> 1] = eps + fabsf(glpfv - 0.25f * (2.0f * rgb[c][indx] + rgb[c][indx + v2] + rgb[c][indx - v2]));
+                            rblpfh[indx >> 1] = eps + fabsf(glpfh - 0.25f * (2.0f * rgb[c][indx] + rgb[c][indx + 2] + rgb[c][indx - 2]));
+                            grblpfv[indx >> 1] = glpfv + 0.25f * (2.0f * rgb[c][indx] + rgb[c][indx + v2] + rgb[c][indx - v2]);
+                            grblpfh[indx >> 1] = glpfh + 0.25f * (2.0f * rgb[c][indx] + rgb[c][indx + 2] + rgb[c][indx - 2]);
                         }
 
                     areawt[0][0] = areawt[1][0] = 1;
@@ -1179,10 +1180,10 @@ void PF::RawImage::CA_correct_RT()
                             //solve for the interpolation position that minimizes color difference variance over the tile
 
                             //vertical
-                            gdiff = 0.3125 * (rgb[1][indx + TS] - rgb[1][indx - TS]) + 0.09375 * (rgb[1][indx + TS + 1] - rgb[1][indx - TS + 1] + rgb[1][indx + TS - 1] - rgb[1][indx - TS - 1]);
+                            gdiff = 0.3125f * (rgb[1][indx + TS] - rgb[1][indx - TS]) + 0.09375f * (rgb[1][indx + TS + 1] - rgb[1][indx - TS + 1] + rgb[1][indx + TS - 1] - rgb[1][indx - TS - 1]);
                             deltgrb = (rgb[c][indx] - rgb[1][indx]);
 
-                            gradwt = fabsf(0.25 * rbhpfv[indx >> 1] + 0.125 * (rbhpfv[(indx >> 1) + 1] + rbhpfv[(indx >> 1) - 1]) ) * (grblpfv[(indx >> 1) - v1] + grblpfv[(indx >> 1) + v1]) / (eps + 0.1 * grblpfv[(indx >> 1) - v1] + rblpfv[(indx >> 1) - v1] + 0.1 * grblpfv[(indx >> 1) + v1] + rblpfv[(indx >> 1) + v1]);
+                            gradwt = fabsf(0.25f * rbhpfv[indx >> 1] + 0.125f * (rbhpfv[(indx >> 1) + 1] + rbhpfv[(indx >> 1) - 1]) ) * (grblpfv[(indx >> 1) - v1] + grblpfv[(indx >> 1) + v1]) / (eps + 0.1f * grblpfv[(indx >> 1) - v1] + rblpfv[(indx >> 1) - v1] + 0.1f * grblpfv[(indx >> 1) + v1] + rblpfv[(indx >> 1) + v1]);
 
                             coeff[0][0][c] += gradwt * deltgrb * deltgrb;
                             coeff[0][1][c] += gradwt * gdiff * deltgrb;
@@ -1190,10 +1191,10 @@ void PF::RawImage::CA_correct_RT()
 //                  areawt[0][c]+=1;
 
                             //horizontal
-                            gdiff = 0.3125 * (rgb[1][indx + 1] - rgb[1][indx - 1]) + 0.09375 * (rgb[1][indx + 1 + TS] - rgb[1][indx - 1 + TS] + rgb[1][indx + 1 - TS] - rgb[1][indx - 1 - TS]);
+                            gdiff = 0.3125f * (rgb[1][indx + 1] - rgb[1][indx - 1]) + 0.09375f * (rgb[1][indx + 1 + TS] - rgb[1][indx - 1 + TS] + rgb[1][indx + 1 - TS] - rgb[1][indx - 1 - TS]);
                             deltgrb = (rgb[c][indx] - rgb[1][indx]);
 
-                            gradwt = fabsf(0.25 * rbhpfh[indx >> 1] + 0.125 * (rbhpfh[(indx >> 1) + v1] + rbhpfh[(indx >> 1) - v1]) ) * (grblpfh[(indx >> 1) - 1] + grblpfh[(indx >> 1) + 1]) / (eps + 0.1 * grblpfh[(indx >> 1) - 1] + rblpfh[(indx >> 1) - 1] + 0.1 * grblpfh[(indx >> 1) + 1] + rblpfh[(indx >> 1) + 1]);
+                            gradwt = fabsf(0.25f * rbhpfh[indx >> 1] + 0.125f * (rbhpfh[(indx >> 1) + v1] + rbhpfh[(indx >> 1) - v1]) ) * (grblpfh[(indx >> 1) - 1] + grblpfh[(indx >> 1) + 1]) / (eps + 0.1f * grblpfh[(indx >> 1) - 1] + rblpfh[(indx >> 1) - 1] + 0.1f * grblpfh[(indx >> 1) + 1] + rblpfh[(indx >> 1) + 1]);
 
                             coeff[1][0][c] += gradwt * deltgrb * deltgrb;
                             coeff[1][1][c] += gradwt * gdiff * deltgrb;

@@ -253,7 +253,7 @@ void PF::VipsOperationPar::add_argument( GParamSpec *pspec, VipsArgumentClass *a
     /* Map to an option menu?
      */
     printf( "\t\tenum - values:\n" ); 
-    for( i = 0; i < pspec_enum->enum_class->n_values - 1; i++ ) {
+    for( i = 0; i < (int)pspec_enum->enum_class->n_values - 1; i++ ) {
       printf( "\t\t\t%d - %s (%s)\n", 
 	      i, 
 	      pspec_enum->enum_class->values[i].value_nick,
@@ -308,7 +308,7 @@ VipsImage* PF::VipsOperationPar::build(std::vector<VipsImage*>& in, int first,
 
       if( g_type_is_a( otype, VIPS_TYPE_IMAGE ) ) {
 
-	if( in_img_id < in.size() ) {
+	if( in_img_id < (int)in.size() ) {
 	  VipsImage* img = in[in_img_id];
 	  if( img )
 	    g_object_set( operation, arg_name, img, NULL );

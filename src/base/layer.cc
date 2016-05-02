@@ -32,7 +32,7 @@
 #include "image.hh"
 
 
-PF::Layer::Layer(int32_t i, bool c): 
+PF::Layer::Layer(uint32_t i, bool c):
   id(i), 
   processor( NULL ), 
   blender( NULL ), 
@@ -121,7 +121,7 @@ bool PF::Layer::insert(std::list<PF::Layer*>& list, PF::Layer* l, int32_t lid)
 
   std::list<Layer*>::iterator it;
   for( it = list.begin(); it != list.end(); ++it )
-    if( (*it)->get_id() == lid ) break;
+    if( (int32_t)(*it)->get_id() == lid ) break;
 
   if( it == list.end() ) return false;
 
@@ -136,7 +136,7 @@ bool PF::Layer::insert_before(std::list<PF::Layer*>& list, PF::Layer* l, int32_t
 {
   std::list<Layer*>::iterator it;
   for( it = list.begin(); it != list.end(); ++it )
-    if( (*it)->get_id() == lid ) break;
+    if( (int32_t)(*it)->get_id() == lid ) break;
 
   if( it == list.end() ) return false;
 

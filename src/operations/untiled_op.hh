@@ -75,14 +75,14 @@ namespace PF
     unsigned int get_cache_files_num() { return cache_files_num; }
     std::string get_preview_cache_file_name(unsigned int n)
     {
-      if( (n>=0) && (n<preview_cache_file_names.size()) )
+      if( n<preview_cache_file_names.size() )
         return preview_cache_file_names[n];
       else
         return std::string();
     }
     std::string get_render_cache_file_name(unsigned int n)
     {
-      if( (n>=0) && (n<render_cache_file_names.size()) )
+      if( n<render_cache_file_names.size() )
         return render_cache_file_names[n];
       else
         return std::string();

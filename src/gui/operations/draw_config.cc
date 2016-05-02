@@ -293,7 +293,7 @@ void PF::DrawConfigGUI::draw_point( double x, double y )
 
     par->draw_point( lx, ly, update );
 
-    if( vi != PF::PhotoFlow::Instance().get_preview_pipeline_id() )
+    if( (int)(vi) != PF::PhotoFlow::Instance().get_preview_pipeline_id() )
       continue;
 
 		//continue;

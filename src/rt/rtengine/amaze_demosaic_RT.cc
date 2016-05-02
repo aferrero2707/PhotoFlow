@@ -903,7 +903,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
             //if both agree on interpolation direction, choose the one with strongest directional discrimination;
             //otherwise, choose the u/d and l/r difference fluctuation weights
-            if ((0.5-varwt)*(0.5-diffwt)>0 && fabsf(0.5-diffwt)<fabsf(0.5-varwt)) {hvwt[indx>>1]=varwt;} else {hvwt[indx>>1]=diffwt;}
+            if ((0.5f-varwt)*(0.5f-diffwt)>0 && fabsf(0.5f-diffwt)<fabsf(0.5f-varwt)) {hvwt[indx>>1]=varwt;} else {hvwt[indx>>1]=diffwt;}
 
             //hvwt[indx]=varwt;
           }
@@ -1003,7 +1003,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
             //					hvwtalt = 0.25*(hvwt[(indx-m1)>>1]+hvwt[(indx+p1)>>1]+hvwt[(indx-p1)>>1]+hvwt[(indx+m1)>>1]);
             //					vo=fabsf(0.5-hvwt[indx>>1]);
             //					ve=fabsf(0.5-hvwtalt);
-            if (fabsf(0.5-hvwt[indx>>1])<fabsf(0.5-hvwtalt)) {hvwt[indx>>1]=hvwtalt;}//a better result was obtained from the neighbors
+            if (fabsf(0.5f-hvwt[indx>>1])<fabsf(0.5f-hvwtalt)) {hvwt[indx>>1]=hvwtalt;}//a better result was obtained from the neighbors
             //					if (vo<ve) {hvwt[indx>>1]=hvwtalt;}//a better result was obtained from the neighbors
 
 
@@ -1226,7 +1226,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
           //first ask if one gets more directional discrimination from nearby B/R sites
           pmwtalt = xdivf(pmwt[(indx-m1)>>1]+pmwt[(indx+p1)>>1]+pmwt[(indx-p1)>>1]+pmwt[(indx+m1)>>1],2);
-          if (fabsf(0.5-pmwt[indx1])<fabsf(0.5-pmwtalt)) {pmwt[indx1]=pmwtalt;}//a better result was obtained from the neighbors
+          if (fabsf(0.5f-pmwt[indx1])<fabsf(0.5f-pmwtalt)) {pmwt[indx1]=pmwtalt;}//a better result was obtained from the neighbors
 
           rbint[indx1] = xdiv2f(cfa[indx] + rbm[indx1]*(1.0f-pmwt[indx1]) + rbp[indx1]*pmwt[indx1]);//this is R+B, interpolated
         }
@@ -1235,7 +1235,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
         for (rr=12; rr<rr1-12; rr++)
           for (cc=12+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-12; cc+=2,indx+=2,indx1++) {
 
-            if (fabsf(0.5-pmwt[indx>>1])<fabsf(0.5-hvwt[indx>>1]) )
+            if (fabsf(0.5f-pmwt[indx>>1])<fabsf(0.5f-hvwt[indx>>1]) )
               continue;
 
             //now interpolate G vertically/horizontally using R+B values

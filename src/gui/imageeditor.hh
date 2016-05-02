@@ -162,7 +162,7 @@ public:
     return( (active_layer) ? active_layer->get_id() : -1 );
   }
   void set_active_layer( int id );
-  int get_displayed_layer() { (displayed_layer) ? displayed_layer->get_id() : -1; }
+  int get_displayed_layer() { return (displayed_layer) ? displayed_layer->get_id() : -1; }
   void set_displayed_layer( int id );
 
   void set_hide_background_layer( bool flag ) { hide_background_layer = flag; }
@@ -199,7 +199,7 @@ public:
   {
     PF::Pipeline* pipeline = image->get_pipeline(1);
     if( !pipeline ) return 1.0f;
-    int level = pipeline->get_level();
+    unsigned int level = pipeline->get_level();
     float fact = 1.0f;
     for( unsigned int i = 0; i < level; i++ )
       fact /= 2.0f;

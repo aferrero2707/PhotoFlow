@@ -165,7 +165,7 @@ void start_element (GMarkupParseContext *context,
         std::istringstream idstream( idstr );
         int ninput = 0;
         while ( !idstream.eof() ) {
-          int id, imgid = 0;
+          unsigned int id, imgid = 0;
           idstream>>id;
           if( !idstream ) 
             break;

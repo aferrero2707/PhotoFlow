@@ -77,7 +77,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 				     VipsImage* imap, VipsImage* omap, 
 				     unsigned int& level)
 {
-  if( in.size() < first+1 ) {
+  if( (int)in.size() < first+1 ) {
     out_profile_data = NULL;
     out_profile_data_length = 0;
     return NULL;

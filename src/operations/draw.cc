@@ -136,8 +136,8 @@ void PF::DrawPar::init_buffer( unsigned int level )
   }
 
   if( (bgd_match == false) || 
-      (cur_xsize != get_xsize()) ||
-      (cur_ysize != get_ysize()) ||
+      ((int)cur_xsize != get_xsize()) ||
+      ((int)cur_ysize != get_ysize()) ||
       (rawbuf->get_nbands() != get_nbands()) ||
       (rawbuf->get_format() != get_format()) ) {
 #ifndef NDEBUG

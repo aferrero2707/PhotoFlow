@@ -102,7 +102,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     VipsImage* imap, VipsImage* omap,
     unsigned int& level)
 {
-  if( in.size() < first+1 )
+  if( (int)in.size() < first+1 )
     return NULL;
 
   VipsImage* image = in[first];

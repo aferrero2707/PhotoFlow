@@ -182,7 +182,7 @@ bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double s
 
     const std::vector< std::pair<int,int> >& path_points = par->get_smod().get_outline();
     const std::vector< std::pair<int,int> >& border_points = par->get_smod().get_border();
-    for( int pi = 0; pi < border_points.size(); pi++ ) {
+    for( unsigned int pi = 0; pi < border_points.size(); pi++ ) {
       double px = border_points[pi].first, py = border_points[pi].second, pw = 1, ph = 1;
       double dx = x - px;
       double dy = y - py;
@@ -208,7 +208,7 @@ bool PF::PathMaskConfigGUI::pointer_press_event( int button, double sx, double s
     std::pair<float,float> outline_scaling =
         par->get_smod().get_outline_scaling( node->image->Xsize, node->image->Ysize );
     int spline_point_id = -1;
-    for( int pi = 0; pi < spline_points.size(); pi++ ) {
+    for( unsigned int pi = 0; pi < spline_points.size(); pi++ ) {
       double px = spline_points[pi].first*outline_scaling.first,
           py = spline_points[pi].second*outline_scaling.second, pw = 1, ph = 1;
 
@@ -356,7 +356,7 @@ bool PF::PathMaskConfigGUI::pointer_motion_event( int button, double sx, double 
     par->get_smod().update_center();
     par->path_modified();
   } else {
-    if( points.size() <= active_point_id ) {
+    if( (int)(points.size()) <= active_point_id ) {
       //std::cout<<"PathMaskConfigGUI::pointer_motion_event() finished (!center_selected)"<<std::endl;
       return false;
     }
@@ -400,7 +400,7 @@ void PF::PathMaskConfigGUI::draw_outline( PF::PixelBuffer& buf_in, PF::PixelBuff
   const std::vector< std::pair<int,int> >& spline_points = path.get_outline();
   //std::cout<<"spline_points.size(): "<<spline_points.size()<<std::endl;
   int xlast=-1, ylast=-1;
-  for( int pi = 0; pi < spline_points.size(); pi++ ) {
+  for( unsigned int pi = 0; pi < spline_points.size(); pi++ ) {
     //std::cout<<"point #"<<pi<<": "<<spline_points[pi].first<<" "<<spline_points[pi].second<<std::endl;
     double bpx = spline_points[pi].first, bpy = spline_points[pi].second, pw = 1, ph = 1;
 
@@ -410,7 +410,7 @@ void PF::PathMaskConfigGUI::draw_outline( PF::PixelBuffer& buf_in, PF::PixelBuff
     if( ipx==xlast && ipy==ylast ) continue;
     xlast = ipx; ylast = ipy;
 
-    int pi2 = pi - 1;
+    int pi2 = (int)(pi) - 1;
     if( pi2 < 0 ) pi2 = spline_points.size() - 1;
 
     double bpx2 = spline_points[pi2].first, bpy2 = spline_points[pi2].second, pw2 = 1, ph2 = 1;
@@ -429,7 +429,7 @@ void PF::PathMaskConfigGUI::draw_outline( PF::PixelBuffer& buf_in, PF::PixelBuff
   const std::vector< std::pair<int,int> >& border_points = path.get_border();
   //std::cout<<"border_points.size(): "<<border_points.size()<<std::endl;
   xlast=-1; ylast=-1;
-  for( int pi = 0; pi < border_points.size(); pi++ ) {
+  for( unsigned int pi = 0; pi < border_points.size(); pi++ ) {
     //std::cout<<"point #"<<pi<<": "<<border_points[pi].first<<" "<<border_points[pi].second<<std::endl;
     double bpx = border_points[pi].first, bpy = border_points[pi].second, pw = 1, ph = 1;
 
@@ -439,7 +439,7 @@ void PF::PathMaskConfigGUI::draw_outline( PF::PixelBuffer& buf_in, PF::PixelBuff
     if( ipx==xlast && ipy==ylast ) continue;
     xlast = ipx; ylast = ipy;
 
-    int pi2 = pi - 1;
+    int pi2 = (int)(pi) - 1;
     if( pi2 < 0 ) pi2 = border_points.size() - 1;
 
     double bpx2 = border_points[pi2].first, bpy2 = border_points[pi2].second, pw2 = 1, ph2 = 1;
@@ -493,7 +493,7 @@ bool PF::PathMaskConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
 
   draw_outline( buf_in, buf_out, par->get_smod() );
 
-  int ps = points.size();
+  unsigned int ps = points.size();
   //std::cout<<"PathMaskConfigGUI::modify_preview(): ps="<<ps<<std::endl;
   for(unsigned int i = 0; i < ps; i++ ) {
     double px = 0, py = 0, pw = 1, ph = 1;
@@ -510,15 +510,15 @@ bool PF::PathMaskConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBu
         (int)py-point_size,
         point_size*2+1, point_size*2+1};
     buf_out.fill( point, 0, 0, 0 );
-    if( i == active_point_id )
+    if( (int)(i) == active_point_id )
       buf_out.fill( point2, 255, 0, 0 );
     else
       buf_out.fill( point2, 255, 255, 255 );
 
     continue;
 
-    int i2 = i - 1;
-    if( i2 < 0 ) i2 = ps - 1;
+    int i2 = (int)(i) - 1;
+    if( i2 < 0 ) i2 = (int)(ps) - 1;
 
     double px0 = 0, py0 = 0, pw0 = 1, ph0 = 1;
     px0 = points[i2].first*node->image->Xsize;

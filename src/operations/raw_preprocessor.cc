@@ -31,9 +31,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "../base/exif_data.hh"
-#include "raw_preprocessor.hh"
-
 /* We need C linkage for this.
  */
 #ifdef __cplusplus
@@ -47,6 +44,9 @@ extern "C" {
 #endif /*__cplusplus*/
 
 #include "../dt/external/wb_presets.c"
+
+#include "../base/exif_data.hh"
+#include "raw_preprocessor.hh"
 
 int PF::raw_preproc_sample_x = 0;
 int PF::raw_preproc_sample_y = 0;

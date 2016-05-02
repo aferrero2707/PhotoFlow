@@ -228,7 +228,7 @@ PF::RasterImage* PF::UntiledOperationPar::get_raster_image( unsigned int n)
 
 void PF::UntiledOperationPar::raster_image_detach( unsigned int n )
 {
-  if( (n<0) || (n>=raster_image_vec.size()) )
+  if( n>=raster_image_vec.size() )
     return;
   PF::RasterImage* raster_image = raster_image_vec[n];
 #ifndef NDEBUG
