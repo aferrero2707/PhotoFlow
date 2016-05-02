@@ -44,7 +44,6 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
   filmic_W_slider( this, "filmic_W", _("lin. white point"), 10, 1, 100, 2, 10, 1 ),
   lumi_blend_frac_slider( this, "lumi_blend_frac", _("preserve colors"), 1, 0, 1, 0.02, 0.1, 1 )
 {
-
   gammaControlsBox.pack_start( gamma_slider, Gtk::PACK_SHRINK );
 
   filmicControlsBox.pack_start( filmic_A_slider, Gtk::PACK_SHRINK );
@@ -58,12 +57,13 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
   controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 10 );
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK, 10 );
   controlsBox.pack_start( controlsBox2, Gtk::PACK_SHRINK, 10 );
-  //controlsBox2.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
-  //controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK, 0 );
+  controlsBox.pack_start( separator, Gtk::PACK_SHRINK, 10 );
 
-  //controlsBox.pack_end( lumi_blend_frac_slider, Gtk::PACK_SHRINK, 10 );
+  controlsBox.pack_start( lumi_blend_frac_slider, Gtk::PACK_SHRINK );
 
-  add_widget( controlsBox );
+
+  globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
+  add_widget( globalBox );
 }
 
 
@@ -81,17 +81,10 @@ void PF::ToneMappingConfigGUI::do_update()
 
     //std::cout<<"PF::ToneMappingConfigGUI::do_update() called."<<std::endl;
 
-    if( prop->get_enum_value().first != PF::TONE_MAPPING_EXP_GAMMA &&
-        gammaControlsBox.get_parent() == &controlsBox2 ) {
-      gammaControlsBox.hide();
+    if( gammaControlsBox.get_parent() == &controlsBox2 )
       controlsBox2.remove( gammaControlsBox );
-    }
-
-    if( prop->get_enum_value().first != PF::TONE_MAPPING_FILMIC &&
-        filmicControlsBox.get_parent() == &controlsBox2 ) {
-      filmicControlsBox.hide();
+    if( filmicControlsBox.get_parent() == &controlsBox2 )
       controlsBox2.remove( filmicControlsBox );
-    }
 
     switch( prop->get_enum_value().first ) {
     case PF::TONE_MAPPING_EXP_GAMMA:

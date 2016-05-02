@@ -42,9 +42,12 @@ namespace PF {
   {
     Gtk::VBox controlsBox;
     Gtk::VBox controlsBox2;
-
+    Gtk::HBox globalBox;
+    Gtk::HSeparator separator;
+    
     ExposureSlider exposureSlider;
     Selector modeSelector;
+
     Gtk::VBox gammaControlsBox;
     Slider gamma_slider;
 
