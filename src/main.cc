@@ -120,6 +120,7 @@ int main (int argc, char *argv[])
   int di = 0;
   while( system_data_dirs[di] != NULL ) {
     std::cout<<"  "<<system_data_dirs[di]<<std::endl;
+    di++;
   }
   std::cout<<"User data dir: "<<g_get_user_data_dir()<<std::endl;
 #endif
