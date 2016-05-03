@@ -163,6 +163,8 @@ int main (int argc, char *argv[])
   Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
 #if defined(WIN32)
   Glib::ustring themesPath = dataPath + "\\themes";
+  Glib::ustring mimePath = PF::PhotoFlow::Instance().get_base_dir() + "\\..\\share\\mime";
+  setenv( "XDG_DATA_DIR", mimePath.c_str(), 1 );
 #else
   Glib::ustring themesPath = dataPath + "/themes";
 #endif
