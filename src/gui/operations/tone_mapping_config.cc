@@ -81,23 +81,39 @@ void PF::ToneMappingConfigGUI::do_update()
 
     //std::cout<<"PF::ToneMappingConfigGUI::do_update() called."<<std::endl;
 
-    if( gammaControlsBox.get_parent() == &controlsBox2 )
-      controlsBox2.remove( gammaControlsBox );
-    if( filmicControlsBox.get_parent() == &controlsBox2 )
-      controlsBox2.remove( filmicControlsBox );
+    bool need_update = false;
 
-    switch( prop->get_enum_value().first ) {
-    case PF::TONE_MAPPING_EXP_GAMMA:
-      controlsBox2.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
-      gammaControlsBox.show();
-      break;
-    case PF::TONE_MAPPING_FILMIC:
-      controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
-      filmicControlsBox.show();
-      break;
+    if( prop->get_enum_value().first == PF::TONE_MAPPING_EXP_GAMMA ) {
+      if( gammaControlsBox.get_parent() != &controlsBox2 )
+	need_update = true;
+    } else if( prop->get_enum_value().first == PF::TONE_MAPPING_FILMIC ) {
+      if( filmicControlsBox.get_parent() != &controlsBox2 )
+	need_update = true;
+    } else {
+      if( (gammaControlsBox.get_parent() == &controlsBox2) || 
+	  (filmicControlsBox.get_parent() == &controlsBox2) )
+	need_update = true;
     }
+
+    if( need_update ) {
+      if( gammaControlsBox.get_parent() == &controlsBox2 )
+	controlsBox2.remove( gammaControlsBox );
+      if( filmicControlsBox.get_parent() == &controlsBox2 )
+	controlsBox2.remove( filmicControlsBox );
+      
+      switch( prop->get_enum_value().first ) {
+      case PF::TONE_MAPPING_EXP_GAMMA:
+	controlsBox2.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
+	gammaControlsBox.show();
+	break;
+      case PF::TONE_MAPPING_FILMIC:
+	controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
+	filmicControlsBox.show();
+	break;
+      }
+    }
+    controlsBox2.show_all_children();
   }
-  controlsBox2.show_all_children();
 
   OperationConfigGUI::do_update();
 }
