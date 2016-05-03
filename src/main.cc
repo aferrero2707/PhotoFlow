@@ -115,6 +115,7 @@ int main (int argc, char *argv[])
   std::string mimeVar = "XDG_DATA_HOME";
   std::cout<<"Setting XDG_DATA_HOME to "<<mimePath<<std::endl;
   Glib::setenv( mimeVar, mimePath, true );
+  g_get_user_data_dir();
 #endif
   //return 0;
 
