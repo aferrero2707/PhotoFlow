@@ -164,7 +164,7 @@ public:
 
         if( exposure2 != 0 ) {
           for( k=0; k < 3; k++) {
-            RGB[k] *= exposure;
+            RGB[k] *= exposure2;
             //clip( exposure*RGB[k], RGB[k] );
           }
         }
@@ -173,7 +173,7 @@ public:
         case TONE_MAPPING_EXP_GAMMA:
           if( gamma2 != 1 ) {
             for( k=0; k < 3; k++) {
-              RGB[k] = powf( RGB[k], gamma );
+              RGB[k] = powf( RGB[k], gamma2 );
               //clip( exposure*RGB[k], RGB[k] );
             }
           }
@@ -188,6 +188,7 @@ public:
           for( k=0; k < 3; k++) {
             float x = MAX(0,RGB[k]-0.004);
             RGB[k] = (x*(6.2*x+.5))/(x*(6.2*x+1.7)+0.06);
+            RGB[k] = powf( RGB[k], 2.2f );
           }
           break;
         }
