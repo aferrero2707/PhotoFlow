@@ -110,6 +110,12 @@ void handler(int sig) {
 
 int main (int argc, char *argv[])
 {
+#if defined(WIN32)
+  std::string mimePath = (std::string)(PF::PhotoFlow::Instance().get_base_dir()) + "\\..\\share";
+  std::string mimeVar = "XDG_DATA_HOME";
+  std::cout<<"Setting XDG_DATA_HOME to "<<mimePath<<std::endl;
+  Glib::setenv( mimeVar, mimePath, true );
+#endif
   //return 0;
 
   /*
@@ -163,9 +169,6 @@ int main (int argc, char *argv[])
   Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
 #if defined(WIN32)
   Glib::ustring themesPath = dataPath + "\\themes";
-  std::string mimePath = (std::string)(PF::PhotoFlow::Instance().get_base_dir()) + "\\..\\share\\mime";
-  std::string mimeVar = "XDG_DATA_DIR";
-  Glib::setenv( mimeVar, mimePath, true );
 #else
   Glib::ustring themesPath = dataPath + "/themes";
 #endif
