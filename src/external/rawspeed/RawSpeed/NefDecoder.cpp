@@ -276,11 +276,11 @@ void NefDecoder::readCoolpixMangledRaw(ByteStream &input, iPoint2D& size, iPoint
   uint32 y = offset.y;
   h = MIN(h + (uint32)offset.y, (uint32)mRaw->dim.y);
   w *= cpp;
-  BitPumpMSB32 *in = new BitPumpMSB32(&input);
+  BitPumpMSB32 in(&input);
   for (; y < h; y++) {
     ushort16* dest = (ushort16*) & data[offset.x*sizeof(ushort16)*cpp+y*outPitch];
     for (uint32 x = 0 ; x < w; x++) {
-      dest[x] =  in->getBits(12);
+      dest[x] = in.getBits(12);
     }
   }
 }
@@ -308,17 +308,17 @@ void NefDecoder::readCoolpixSplitRaw(ByteStream &input, iPoint2D& size, iPoint2D
   h = MIN(h + (uint32)offset.y, (uint32)mRaw->dim.y);
   w *= cpp;
   h /= 2;
-  BitPumpMSB *in = new BitPumpMSB(&input);
+  BitPumpMSB in(&input);
   for (; y < h; y++) {
     ushort16* dest = (ushort16*) & data[offset.x*sizeof(ushort16)*cpp+y*2*outPitch];
     for (uint32 x = 0 ; x < w; x++) {
-      dest[x] =  in->getBits(12);
+      dest[x] =  in.getBits(12);
     }
   }
   for (y = offset.y; y < h; y++) {
     ushort16* dest = (ushort16*) & data[offset.x*sizeof(ushort16)*cpp+(y*2+1)*outPitch];
     for (uint32 x = 0 ; x < w; x++) {
-      dest[x] =  in->getBits(12);
+      dest[x] =  in.getBits(12);
     }
   }
 }
@@ -559,6 +559,11 @@ void NefDecoder::decodeMetaDataInternal(CameraMetaData *meta) {
         mRaw->metadata.wbCoeffs[2] = (float) (get4LE(tmp,12) << 2);
       }
     }
+  }
+
+  if (hints.find(string("nikon_wb_adjustment")) != hints.end()) {
+    mRaw->metadata.wbCoeffs[0] *= 256/527.0;
+    mRaw->metadata.wbCoeffs[2] *= 256/317.0;
   }
 
   string mode = getMode();
