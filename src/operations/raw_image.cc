@@ -50,6 +50,37 @@ int rawspeed_get_number_of_processor_cores()
 }
 
 
+static void rawspeed_lookup_makermodel(RawSpeed::Camera *cam, const char *maker, const char *model,
+    char *mk, int mk_len, char *md, int md_len,
+    char *al, int al_len)
+{
+  int got_it_done = FALSE;
+  try {
+    if (cam)
+    {
+      g_strlcpy(mk, cam->canonical_make.c_str(), mk_len);
+      g_strlcpy(md, cam->canonical_model.c_str(), md_len);
+      g_strlcpy(al, cam->canonical_alias.c_str(), al_len);
+      got_it_done = TRUE;
+    }
+  }
+  catch(const std::exception &exc)
+  {
+    printf("[rawspeed] %s\n", exc.what());
+  }
+
+  if (!got_it_done)
+  {
+    // We couldn't find the camera or caught some exception, just punt and pass
+    // through the same values
+    g_strlcpy(mk, maker, mk_len);
+    g_strlcpy(md, model, md_len);
+    g_strlcpy(al, model, al_len);
+  }
+}
+
+
+
 
 PF::RawImage::RawImage( const std::string _fname ):
 	nref(1), file_name( _fname ),
@@ -513,6 +544,24 @@ PF::RawImage::RawImage( const std::string _fname ):
 
 
   PF::exif_read( &exif_data, file_name_real.c_str() );
+
+#ifdef PF_USE_RAWSPEED
+  RawSpeed::Camera *cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "");
+  if (!cam)
+    cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "dng");
+  // We need to use the exif values, so let's get rawspeed to munge them
+  rawspeed_lookup_makermodel(cam, exif_data.exif_maker, exif_data.exif_model,
+      exif_data.camera_maker, sizeof(exif_data.camera_maker),
+      exif_data.camera_model, sizeof(exif_data.camera_model),
+      exif_data.camera_alias, sizeof(exif_data.camera_alias));
+
+  // Now we just create a makermodel by concatenation
+  g_strlcpy(exif_data.camera_makermodel, exif_data.camera_maker, sizeof(exif_data.camera_makermodel));
+  int maker_len = strlen(exif_data.camera_maker);
+  exif_data.camera_makermodel[maker_len] = ' ';
+  g_strlcpy(exif_data.camera_makermodel+maker_len+1, exif_data.camera_model, sizeof(exif_data.camera_makermodel)-maker_len-1);
+#endif
+
   void* exifdata_buf = malloc( sizeof(exif_data_t) );
   if( !exifdata_buf ) return;
   memcpy( exifdata_buf, &exif_data, sizeof(exif_data_t) );
