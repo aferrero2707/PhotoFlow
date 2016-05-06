@@ -65,8 +65,9 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   //out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
   out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
   out_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
   out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 

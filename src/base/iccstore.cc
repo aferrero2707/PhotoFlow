@@ -440,6 +440,18 @@ PF::ICCStore::ICCStore()
   aces_profiles[1]->ref(); profiles.push_back( aces_profiles[1] );
   aces_profiles[2]->ref(); profiles.push_back( aces_profiles[2] );
 
+  acescg_profiles[0] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/ACEScg-elle-V4-srgbtrc.icc");
+  acescg_profiles[1] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/ACEScg-elle-V4-labl.icc");
+  acescg_profiles[2] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/ACEScg-elle-V4-g10.icc");
+
+  adobe_profiles[0] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/ClayRGB-elle-V4-g22.icc");
+  adobe_profiles[1] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/ClayRGB-elle-V4-labl.icc");
+  adobe_profiles[2] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/ClayRGB-elle-V4-g10.icc");
+
+  prophoto_profiles[0] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-g18.icc");
+  prophoto_profiles[1] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-labl.icc");
+  prophoto_profiles[2] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-g10.icc");
+
   /*
   std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-g10.icc";
   profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
@@ -505,6 +517,9 @@ PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_typ
   case PF::OUT_PROF_sRGB: return srgb_profiles[trc_type];
   case PF::OUT_PROF_REC2020: return rec2020_profiles[trc_type];
   case PF::OUT_PROF_ACES: return aces_profiles[trc_type];
+  case PF::OUT_PROF_ACEScg: return acescg_profiles[trc_type];
+  case PF::OUT_PROF_ADOBE: return adobe_profiles[trc_type];
+  case PF::OUT_PROF_PROPHOTO: return prophoto_profiles[trc_type];
   default: return NULL;
   }
 }
@@ -545,6 +560,7 @@ PF::ICCProfile* PF::ICCStore::get_profile( Glib::ustring pname )
     PF::ICCProfile* new_profile = new PF::ICCProfile();
     new_profile->set_profile( temp_profile );
     new_profile->set_file_name( pname );
+    new_profile->ref();
 
     profiles.push_back( new_profile );
     return new_profile;

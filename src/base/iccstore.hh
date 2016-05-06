@@ -51,11 +51,11 @@ enum profile_type_t {
   OUT_PROF_NONE,
   OUT_PROF_EMBEDDED,
   OUT_PROF_sRGB,
+  OUT_PROF_REC2020,
   OUT_PROF_ADOBE,
   OUT_PROF_PROPHOTO,
-  OUT_PROF_REC2020,
+  OUT_PROF_ACEScg,
   OUT_PROF_ACES,
-  OUT_PROF_ACESCG,
   OUT_PROF_LAB,
   OUT_PROF_CUSTOM
 };
@@ -209,6 +209,9 @@ class ICCStore
   ICCProfile* srgb_profiles[3];
   ICCProfile* rec2020_profiles[3];
   ICCProfile* aces_profiles[3];
+  ICCProfile* acescg_profiles[3];
+  ICCProfile* adobe_profiles[3];
+  ICCProfile* prophoto_profiles[3];
   std::vector<ICCProfile*> profiles;
 
   static ICCStore* instance;

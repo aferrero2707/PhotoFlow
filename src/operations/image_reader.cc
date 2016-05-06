@@ -31,40 +31,93 @@
 #include "image_reader.hh"
 
 
+PF::ImageReaderPar::ImageReaderPar():
+OpParBase(),
+file_name("file_name", this),
+//out_profile_mode("profile_mode",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
+in_profile_mode("in_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("embedded")),
+in_trc_mode("in_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+in_profile_name("in_profile_name",this),
+out_profile_mode("out_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("same")),
+out_trc_mode("out_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+out_profile_name("out_profile_name",this),
+image(NULL),
+current_format(VIPS_FORMAT_NOTSET),
+in_profile( NULL ),
+out_profile( NULL ),
+transform( NULL ),
+raster_image( NULL )
+{
+  //in_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
+  in_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
+  in_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
+  in_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
+  in_profile_mode.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
+  in_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
+  in_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
+  //in_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
+  in_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACEScg","ACEScg");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
+  //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+
+  //in_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
+  in_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
+  in_trc_mode.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+
+  //out_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
+  out_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
+  out_trc_mode.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+
+  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+  set_type("imageread" );
+
+  set_default_name( _("image layer") );
+}
+
+
 PF::ImageReaderPar::~ImageReaderPar()
 {
-	std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image="<<(void*)raster_image<<std::endl;
+  std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image="<<(void*)raster_image<<std::endl;
   if( raster_image ) {
     raster_image->unref();
-		std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
+    std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
     if( raster_image->get_nref() == 0 ) {
       std::map<Glib::ustring, RasterImage*>::iterator i = 
-				raster_images.find( raster_image->get_file_name() );
+          raster_images.find( raster_image->get_file_name() );
       if( i != raster_images.end() ) 
-				raster_images.erase( i );
+        raster_images.erase( i );
       delete raster_image;
-			std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image deleted"<<std::endl;
-			raster_image = 0;
+      std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image deleted"<<std::endl;
+      raster_image = 0;
     }
   }
 }
 
 
 VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first, 
-				     VipsImage* imap, VipsImage* omap, 
-				     unsigned int& level)
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
 {
   bool modified = false;
 
   if( file_name.get().empty() )
     return NULL;
 
-  
+
   std::map<Glib::ustring, RasterImage*>::iterator i = 
-    raster_images.find( file_name.get() );
+      raster_images.find( file_name.get() );
 
   RasterImage* new_raster_image = NULL;
-  
+
   if( i == raster_images.end() ) {
     std::cout<<"ImageReaderPar::build(): creating new RasterImage for file "<<file_name.get()<<std::endl;
     new_raster_image = new RasterImage( file_name.get() );
@@ -85,7 +138,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     //std::cout<<"ImageReaderPar::build(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
     if( raster_image->get_nref() == 0 ) {
       std::map<Glib::ustring, RasterImage*>::iterator i = 
-        raster_images.find( file_name.get() );
+          raster_images.find( file_name.get() );
       if( i != raster_images.end() ) 
         raster_images.erase( i );
       delete raster_image;
@@ -98,9 +151,9 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
   if( !raster_image )
     return NULL;
-  
+
   VipsImage* image = raster_image->get_image( level );
-  
+
   if( !image ) return NULL;
 
   /*
@@ -117,7 +170,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
    */
 #ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): "<<std::endl
-	   <<"input images:"<<std::endl;
+      <<"input images:"<<std::endl;
   for(int i = 0; i < in.size(); i++) {
     std::cout<<"  "<<(void*)in[i]<<std::endl;
   }
@@ -134,11 +187,11 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     }
 
     vips_image_init_fields( out,
-                            image->Xsize, image->Ysize, 
-                            nbands, image->BandFmt,
-                            image->Coding,
-                            image->Type,
-                            1.0, 1.0);
+        image->Xsize, image->Ysize,
+        nbands, image->BandFmt,
+        image->Coding,
+        image->Type,
+        1.0, 1.0);
     PF_UNREF( image, "ImageReaderPar::build(): image unref after extract_band" );
     image = out;
   }
@@ -149,7 +202,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   void *data;
   size_t data_length;
   if( !vips_image_get_blob( image, VIPS_META_ICC_NAME, 
-			    &data, &data_length ) ) {
+      &data, &data_length ) ) {
     cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
     if( profile_in ) {  
       char tstr[1024];
@@ -326,7 +379,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       vips_image_set_blob( out, "pf-icc-profile-data",
           (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
     }
-    */
+     */
     if( out_iccprof ) {
       std::cout<<"ImageReaderPar::build(): setting embedded profile..."<<std::endl;
       PF::set_icc_profile( out, out_iccprof );

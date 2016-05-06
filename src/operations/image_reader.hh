@@ -69,55 +69,7 @@ namespace PF
     ImagePyramid pyramid;
 
   public:
-    ImageReaderPar(): 
-      OpParBase(), 
-      file_name("file_name", this),
-      //out_profile_mode("profile_mode",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
-      in_profile_mode("in_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("embedded")),
-      in_trc_mode("in_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
-      in_profile_name("in_profile_name",this),
-      out_profile_mode("out_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("same")),
-      out_trc_mode("out_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
-      out_profile_name("out_profile_name",this),
-      image(NULL),
-      current_format(VIPS_FORMAT_NOTSET),
-      in_profile( NULL ),
-      out_profile( NULL ),
-      transform( NULL ),
-      raster_image( NULL )
-    {
-      //in_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-      in_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
-      in_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
-      in_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-      //in_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
-      //in_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
-      //in_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-      in_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
-
-      //out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-      out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
-      out_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
-      out_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-      //out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
-      //out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
-      //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-      out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
-
-      //in_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
-      in_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
-      in_trc_mode.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
-
-      //out_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
-      out_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
-      out_trc_mode.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
-
-      convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
-      blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
-      set_type("imageread" );
-
-      set_default_name( _("image layer") );
-    }
+    ImageReaderPar();
     ~ImageReaderPar();
 
     cmsHTRANSFORM get_transform() { return transform; }
