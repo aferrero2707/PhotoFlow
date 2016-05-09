@@ -81,6 +81,7 @@ struct ICCProfileData
 
 class ICCProfile
 {
+  bool has_colorants;
   void* profile_data;
   cmsUInt32Number profile_size;
   cmsHPROFILE profile;
@@ -142,7 +143,7 @@ public:
 
   float get_luminance( float R, float G, float B )
   {
-    return( Y_R*R + Y_G*G + Y_B*B );
+    return( (has_colorants) ? Y_R*R + Y_G*G + Y_B*B : 0.0f );
   }
   //void get_luminance( float* RGBv, float* Lv, size_t size );
 

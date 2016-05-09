@@ -118,6 +118,7 @@ static cmsCIExyY d60_aces= {0.32168, 0.33767, 1.0};
 
 PF::ICCProfile::ICCProfile()
 {
+  has_colorants = false;
   profile_data = NULL;
   profile_size = 0;
   trc_type = PF_TRC_STANDARD;
@@ -150,13 +151,17 @@ void PF::ICCProfile::set_profile( cmsHPROFILE p )
 
 void PF::ICCProfile::init_colorants()
 {
+  has_colorants = false;
   if( !profile ) return;
   /* get the profile colorant information and fill in colorants */
   cmsCIEXYZ *red            = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigRedColorantTag);
+  if( !red ) return;
   cmsCIEXYZ  red_colorant   = *red;
   cmsCIEXYZ *green          = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigGreenColorantTag);
+  if( !green ) return;
   cmsCIEXYZ  green_colorant = *green;
   cmsCIEXYZ *blue           = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigBlueColorantTag);
+  if( !blue ) return;
   cmsCIEXYZ  blue_colorant  = *blue;
 
   /* Get the Red channel XYZ values */
@@ -180,6 +185,8 @@ void PF::ICCProfile::init_colorants()
   Y_R = colorants[1];
   Y_G = colorants[4];
   Y_B = colorants[7];
+
+  has_colorants = true;
 
 /*
   std::string xyzprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/XYZ-D50-Identity-elle-V4.icc";
@@ -277,6 +284,7 @@ cmsHPROFILE PF::ICCProfile::get_profile()
 
 float PF::ICCProfile::get_lightness( float R, float G, float B )
 {
+  if( !has_colorants ) return 0;
   if( is_linear() ) {
     return( Y_R*R + Y_G*G + Y_B*B );
   } else {
@@ -290,6 +298,11 @@ float PF::ICCProfile::get_lightness( float R, float G, float B )
 
 void PF::ICCProfile::get_lightness( float* RGBv, float* Lv, size_t size )
 {
+  if( !has_colorants ) {
+    for( size_t i = 0; i < size; i++ ) {
+      Lv[i] = 0;
+    }
+  }
   if( is_linear() ) {
     for( size_t i = 0, pos = 0; i < size; i++, pos += 3 ) {
       Lv[i] = Y_R * RGBv[pos] + Y_G * RGBv[pos+1] + Y_B * RGBv[pos+2];
