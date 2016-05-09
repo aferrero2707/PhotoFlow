@@ -135,14 +135,20 @@ namespace PF
         pout = (float*)VIPS_REGION_ADDR( out, r->left, r->top + y ); 
         cmsDoTransform( transform, p, pout, width );
 
+        //if( false && r->left==0 && r->top==0 && y==0 ) {
+        //  std::cout<<"Convert2LabProc::render(): in: "<<p[0]<<" "<<p[1]<<" "<<p[2]<<"  out:"<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+        //}
+
         for( x = 0; x < line_size; x+= 3 ) {
           pout[x] = (cmsFloat32Number) (pout[x] / 100.0); 
-          pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0) / 255.0); 
-          pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 255.0);
+          pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0) / 256.0);
+          pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 256.0);
+          //pout[x+1] = (cmsFloat32Number) ((pout[x+1] / 128.0) + 0.5f);
+          //pout[x+2] = (cmsFloat32Number) ((pout[x+2] / 128.0) + 0.5f);
 
-          if( r->left==0 && r->top==0 && x==0 && y==0 ) {
-            std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
-          }
+          //if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+          //  std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]-0.5f<<" "<<pout[x+2]-0.5f<<std::endl;
+          //}
         }
       }
     }
@@ -178,8 +184,8 @@ namespace PF
 
         for( x = 0; x < line_size; x+= 3 ) {
           pout[x] = (cmsFloat64Number) (pout[x] / 100.0); 
-          pout[x+1] = (cmsFloat64Number) ((pout[x+1] + 128.0) / 255.0); 
-          pout[x+2] = (cmsFloat64Number) ((pout[x+2] + 128.0) / 255.0);
+          pout[x+1] = (cmsFloat64Number) ((pout[x+1] + 128.0f) / 256.0);
+          pout[x+2] = (cmsFloat64Number) ((pout[x+2] + 128.0f) / 256.0);
         }
       }
     }
