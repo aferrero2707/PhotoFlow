@@ -67,10 +67,10 @@ void PF::PencilMask::init(unsigned int s, float op, float sm)
   float dr = rmax-rmin;
   float dr2 = dr*dr;
   float minus = -1.0f;
-  for( unsigned int x = 0; x < size; x++) {
+  for( int x = 0; x < (int)(size); x++) {
     float dx = x-xc;
     float dx2 = dx*dx;
-    for( unsigned int y = 0; y < size; y++) {
+    for( int y = 0; y < (int)(size); y++) {
       float dy = y-yc;
       float r2 = dx2 + dy*dy;
       float r = sqrt(r2);

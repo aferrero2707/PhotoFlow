@@ -308,6 +308,7 @@ namespace PF
             for( x = 0; x < point_area.width; x++, pout += oreg->im->Bands, ptemp += oreg->im->Bands ) {
               int col = x+point_area.left;
               float mval = mask->get( x, y );
+              //std::cout<<"    col="<<col<<std::endl;
               //mval = mval/2+0.5;
               //std::cout<<"    opacity_max.Get("<<row<<", "<<col<<")="<<opacity_max.Get(row, col)<<"    mval="<<mval<<std::endl;
               if( (col < point_clip.left) ) continue;
