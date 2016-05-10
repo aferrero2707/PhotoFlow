@@ -49,7 +49,7 @@ sh_color_adjustment("sh_color_adjustment",this,100),
 hi_color_adjustment("hi_color_adjustment",this,50),
 in_profile( NULL )
 {
-  method.add_enum_value(PF::SHAHI_BILATERAL,"SHAHI_BILATERAL","bilateral");
+  //method.add_enum_value(PF::SHAHI_BILATERAL,"SHAHI_BILATERAL","bilateral");
 
   gauss = new_gaussblur();
   convert2lab = PF::new_operation( "convert2lab", NULL );
