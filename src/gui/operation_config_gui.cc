@@ -59,6 +59,7 @@
 #include "../gui/operations/volume_config.hh"
 #include "../gui/operations/threshold_config.hh"
 #include "../gui/operations/shadows_highlights_config.hh"
+#include "../gui/operations/defringe_config.hh"
 
 #include "operations/gmic/new_gmic_operation_config.hh"
 
@@ -1137,6 +1138,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "shadows_highlights" ) {
 
     dialog = new PF::ShadowsHighlightsConfigGUI( current_layer );
+
+  } else if( op_type == "defringe" ) {
+
+    dialog = new PF::DefringeConfigGUI( current_layer );
 
   }
 

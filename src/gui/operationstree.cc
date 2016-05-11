@@ -303,6 +303,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Basic Adjustments"), "hue_saturation" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights" );
+  op_color.get_tree().add_op( _("Defringe"), "defringe" );
   op_color.get_tree().add_op( _("Invert"), "invert" );
   op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
   op_color.get_tree().add_op( _("Threshold"), "threshold" );
