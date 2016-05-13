@@ -331,9 +331,9 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_geom.get_tree().add_op( _("Crop image"), "crop" );
   op_geom.get_tree().add_op( _("Scale & rotate image"), "scale" );
   op_geom.get_tree().add_op( _("Perspective correction"), "perspective" );
-#if !defined(__MINGW32__) && !defined(__MINGW64__)
+//#if !defined(__MINGW32__) && !defined(__MINGW64__)
   op_geom.get_tree().add_op( _("Optical corrections (experimental)"), "lensfun" );
-#endif
+//#endif
 
   //#if !defined(__APPLE__) && !defined(__MACH__)
 #ifndef PF_DISABLE_GMIC
