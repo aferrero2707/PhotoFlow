@@ -50,6 +50,7 @@ in_profile( NULL )
   gauss = new_gaussblur();
   convert2lab = PF::new_operation( "convert2lab", NULL );
   convert2input = new_icc_transform();
+  defringe_algo = new PF::Processor<PF::DefringeAlgoPar,PF::DefringeAlgoProc>();
 
   set_type("defringe" );
 
@@ -69,6 +70,12 @@ VipsImage* PF::DefringePar::build(std::vector<VipsImage*>& in, int first,
   if( (in.size()<1) || (in[0]==NULL) )
     return NULL;
 
+  VipsImage* srcimg = in[0];
+
+  double radius2 = radius.get();
+  for( unsigned int l = 1; l <= level; l++ )
+    radius2 /= 2;
+
   std::vector<VipsImage*> in2;
 
   void *data;
@@ -79,17 +86,43 @@ VipsImage* PF::DefringePar::build(std::vector<VipsImage*>& in, int first,
     in_profile = cmsOpenProfileFromMem( data, data_length );
   }
 
-  convert2lab->get_par()->set_image_hints( in[0] );
+  DefringeAlgoPar* defringepar = dynamic_cast<DefringeAlgoPar*>( defringe_algo->get_par() );
+  defringepar->set_radius( radius2 );
+  defringepar->set_threshold( threshold.get() );
+  defringepar->set_op_mode( (defringe_method_t)(op_mode.get_enum_value().first) );
+  defringepar->fb_init();
+
+  int padding = defringepar->get_padding();
+
+  std::cout<<"padding: "<<padding<<std::endl;
+  std::cout<<"srcimg->Xsize: "<<srcimg->Xsize<<std::endl;
+
+  // Extend the image by two pixels to account for the pixel averaging window
+  // of the impulse noise reduction algorithm
+  VipsImage* extended;
+  VipsExtend extend = VIPS_EXTEND_COPY;
+  if( vips_embed(srcimg, &extended, padding, padding,
+      srcimg->Xsize+padding*2, srcimg->Ysize+padding*2,
+      "extend", extend, NULL) ) {
+    std::cout<<"DefringePar::build(): vips_embed() failed."<<std::endl;
+    PF_REF( in[0], "DefringePar::build(): vips_embed() failed." );
+    return NULL;
+  }
+  std::cout<<"extended->Xsize: "<<extended->Xsize<<std::endl;
+
+
+  convert2lab->get_par()->set_image_hints( extended );
   convert2lab->get_par()->set_format( get_format() );
-  in2.clear(); in2.push_back( in[0] );
+  in2.clear(); in2.push_back( extended );
   VipsImage* labimg = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
   if( !labimg ) {
     std::cout<<"DefringePar::build(): null Lab image"<<std::endl;
     PF_REF( in[0], "DefringePar::build(): null Lab image" );
     return in[0];
   }
+  PF_UNREF( extended, "DefringePar::build(): extended unref after convert2lab" );
 
-  VipsImage* out = NULL;
+
   VipsImage* blurred = NULL;
 
   GaussBlurPar* gausspar = dynamic_cast<GaussBlurPar*>( gauss->get_par() );
@@ -108,25 +141,46 @@ VipsImage* PF::DefringePar::build(std::vector<VipsImage*>& in, int first,
     return in[0];
   }
 
+  defringepar->set_image_hints( labimg );
+  defringepar->set_format( get_format() );
   in2.clear();
-  in2.push_back(labimg);
+  in2.push_back( labimg );
   in2.push_back(blurred);
-  VipsImage* defr = OpParBase::build( in2, 0, imap, omap, level );
-  PF_UNREF( blurred, "ImageArea::update() blurred unref" );
+  VipsImage* defr = defringepar->build( in2, 0, NULL, NULL, level );
+  PF_UNREF( blurred, "DefringePar::build(): extended unref after convert2lab" );
+
+  std::cout<<"defr->Xsize: "<<defr->Xsize<<std::endl;
+
+  // Final cropping to remove the padding pixels
+  VipsImage* cropped;
+  //std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  impnrimg->Xsize="<<impnrimg->Xsize<<std::endl;
+  if( vips_crop(defr, &cropped, padding, padding,
+      srcimg->Xsize, srcimg->Ysize, NULL) ) {
+    std::cout<<"DefringePar::build(): vips_crop() failed."<<std::endl;
+    PF_UNREF( defr, "DefringePar::build(): defr unref" );
+    PF_REF( in[0], "DefringePar::build(): vips_crop() failed" );
+    return in[0];
+  }
+  PF_UNREF( defr, "DefringePar::build(): defr unref" );
+  //std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  cropped->Xsize="<<cropped->Xsize<<std::endl;
+
+  std::cout<<"cropped->Xsize: "<<cropped->Xsize<<std::endl;
+
 
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2input->get_par() );
   if( icc_par ) {
     icc_par->set_out_profile( in_profile );
   }
-  convert2input->get_par()->set_image_hints( defr );
+  convert2input->get_par()->set_image_hints( cropped );
   convert2input->get_par()->set_format( get_format() );
-  in2.clear(); in2.push_back( defr );
+  in2.clear(); in2.push_back( cropped );
   std::cout<<"DefringePar::build(): calling convert2input->get_par()->build()"<<std::endl;
-  out = convert2input->get_par()->build(in2, 0, NULL, NULL, level );
-  PF_UNREF( defr, "ImageArea::update() cropped unref" );
+  VipsImage* out = convert2input->get_par()->build(in2, 0, NULL, NULL, level );
+  PF_UNREF( cropped, "DefringePar::update() cropped unref" );
 
+  std::cout<<"out->Xsize: "<<out->Xsize<<std::endl;
 
-  set_image_hints( in[0] );
+  set_image_hints( out );
 
   return out;
 }

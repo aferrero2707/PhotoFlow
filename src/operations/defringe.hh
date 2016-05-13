@@ -53,6 +53,7 @@ class DefringePar: public OpParBase
   ProcessorBase* gauss;
   ProcessorBase* convert2lab;
   ProcessorBase* convert2input;
+  ProcessorBase* defringe_algo;
 
   cmsHPROFILE in_profile;
 
@@ -73,6 +74,171 @@ public:
 
 
 
+class DefringeAlgoPar: public OpParBase
+{
+  defringe_method_t op_mode;
+  float radius;
+  float threshold;
+
+  int* xy_avg;
+  int* xy_small;
+  int samples_avg;
+  int samples_small;
+  int dmax;
+
+public:
+  DefringeAlgoPar(): OpParBase()
+  {
+    radius = threshold = 0;
+    xy_avg = xy_small = NULL;
+    dmax = 0;
+  }
+
+  int get_padding() { return dmax; }
+
+  /* Function to derive the output area from the input area
+   */
+  virtual void transform(const Rect* rin, Rect* rout)
+  {
+    int pad = get_padding();
+    rout->left = rin->left+pad;
+    rout->top = rin->top+pad;
+    rout->width = rin->width-pad*2;
+    rout->height = rin->height-pad*2;
+  }
+
+  /* Function to derive the area to be read from input images,
+     based on the requested output area
+  */
+  virtual void transform_inv(const Rect* rout, Rect* rin)
+  {
+    int pad = get_padding();
+    rin->left = rout->left-pad;
+    rin->top = rout->top-pad;
+    rin->width = rout->width+pad*2;
+    rin->height = rout->height+pad*2;
+  }
+
+
+  void set_op_mode( defringe_method_t m ) { op_mode = m; }
+  defringe_method_t get_op_mode() { return op_mode; }
+  void set_radius( float r ) { radius = r; }
+  float get_radius() { return radius; }
+  void set_threshold( float t ) { threshold = t; }
+  float get_threshold() { return threshold; }
+
+  int get_samples_avg() { return samples_avg; }
+  int* get_xy_avg() { return xy_avg; }
+  int get_samples_small() { return samples_small; }
+  int* get_xy_small() { return xy_small; }
+
+/*
+  VipsImage* build(std::vector<VipsImage*>& in, int first,
+      VipsImage* imap, VipsImage* omap,
+      unsigned int& level)
+  {
+    fb_init();
+    return OpParBase::build( in, first, imap, omap, level );
+  }
+*/
+
+  void fib_latt(int *const x, int *const y, float radius, int step, int idx)
+  {
+    // idx < 1 because division by zero is also a problem in the following line
+    if(idx >= (int)(sizeof(fib) / sizeof(float)) - 1 || idx < 1)
+    {
+      *x = 0;
+      *y = 0;
+      std::cout<<"Fibonacci lattice index wrong/out of bounds in: defringe module"<<std::endl;
+      return;
+    }
+    float px = step / fib[idx], py = step * (fib[idx + 1] / fib[idx]);
+    py -= (int)py;
+    float dx = px * radius, dy = py * radius;
+    *x = round(dx - radius / 2.0);
+    *y = round(dy - radius / 2.0);
+  }
+
+  bool fb_init()
+  {
+    int samples_wish = (int)(radius * radius);
+    int sampleidx_avg = 0;
+    dmax = 0;
+
+    // select samples by fibonacci number
+    if(samples_wish > 89) {
+      sampleidx_avg = 12; // 144 samples
+    } else if(samples_wish > 55) {
+      sampleidx_avg = 11; // 89 samples
+    } else if(samples_wish > 34) {
+      sampleidx_avg = 10; // ..you get the idea
+    } else if(samples_wish > 21) {
+      sampleidx_avg = 9;
+    } else if(samples_wish > 13) {
+      sampleidx_avg = 8;
+    } else {
+      // don't use less than 13 samples
+      sampleidx_avg = 7;
+    }
+
+    const int sampleidx_small = sampleidx_avg - 1;
+    const int small_radius = MAX(radius, 3);
+    const int avg_radius = 24 + radius * 4;
+
+    samples_small = (int)fib[sampleidx_small];
+    samples_avg = (int)fib[sampleidx_avg];
+
+    int* tmp;
+
+    // precompute all required fibonacci lattices:
+    if( xy_avg ) free( xy_avg );
+    xy_avg = (int*)malloc((size_t)2 * sizeof(int) * samples_avg); // TODO: where free() should be called?
+    if (xy_avg != NULL)
+    {
+      tmp = xy_avg;
+      for(int u = 0; u < samples_avg; u++)
+      {
+        int dx, dy;
+        fib_latt(&dx, &dy, avg_radius, u, sampleidx_avg);
+        *tmp++ = dx;
+        *tmp++ = dy;
+        if( dmax < abs(dx) ) dmax = abs(dx);
+        if( dmax < abs(dy) ) dmax = abs(dy);
+      }
+    }
+    else
+    {
+      std::cout<<"Error allocating memory for fibonacci lattice in: defringe module"<<std::endl;
+      return false;
+    }
+
+    if( xy_small ) free( xy_small );
+    xy_small = (int*)malloc((size_t)2 * sizeof(int) * samples_small); // TODO: where free() should be called?
+    if (xy_small != NULL)
+    {
+      tmp = xy_small;
+      for(int u = 0; u < samples_small; u++)
+      {
+        int dx, dy;
+        fib_latt(&dx, &dy, small_radius, u, sampleidx_small);
+        *tmp++ = dx;
+        *tmp++ = dy;
+      }
+    }
+    else
+    {
+      std::cout<<"Error allocating memory for fibonacci lattice in: defringe module"<<std::endl;
+      return false;
+    }
+
+    std::cout<<"fb_init(): radius="<<radius<<" dmax="<<dmax<<std::endl;
+
+    return true;
+  }
+};
+
+
+
 template < OP_TEMPLATE_DEF >
 class DefringeProc
 {
@@ -86,8 +252,21 @@ public:
 
 
 
+template < OP_TEMPLATE_DEF >
+class DefringeAlgoProc
+{
+public:
+  void render(VipsRegion** in, int n, int in_first,
+      VipsRegion* imap, VipsRegion* omap,
+      VipsRegion* out, OpParBase* par)
+  {
+  }
+};
+
+
+
 template < OP_TEMPLATE_DEF_TYPE_SPEC >
-class DefringeProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
+class DefringeAlgoProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -98,16 +277,24 @@ public:
     if( ireg[0] == NULL ) return;
     if( ireg[1] == NULL ) return;
 
-    DefringePar* opar = dynamic_cast<DefringePar*>(par);
+    DefringeAlgoPar* opar = dynamic_cast<DefringeAlgoPar*>(par);
     if( !opar ) return;
 
     bool bError = false;
     
-    const float threshold = opar->get_threshold()/100.f;
+#define RESCALE_LAB(ab) (((ab)-127.f)/255.f)
+    
+    const float threshold = RESCALE_LAB(opar->get_threshold());
+    Rect *ir = &ireg[0]->valid;
     Rect *r = &oreg->valid;
     const int ch = oreg->im->Bands;
+    const int iwidth = ir->width;
+    const int iheight = ir->height;
     const int width = r->width;
     const int height = r->height;
+    const int ilsz = iwidth*ch;
+    const int lsz = width*ch;
+    const int border = r->top - ir->top;
 
     float* in = NULL;
     float* pblur = NULL;
@@ -141,113 +328,35 @@ public:
     // Pre-Compute Fibonacci Lattices
     int *tmp = NULL;
 
-    int samples_wish = (int)(radius * radius);
-    int sampleidx_avg = 0;
-    
-    // select samples by fibonacci number
-    if (!bError) {
-      if(samples_wish > 89)
-      {
-        sampleidx_avg = 12; // 144 samples
-      }
-      else if(samples_wish > 55)
-      {
-        sampleidx_avg = 11; // 89 samples
-      }
-      else if(samples_wish > 34)
-      {
-        sampleidx_avg = 10; // ..you get the idea
-      }
-      else if(samples_wish > 21)
-      {
-        sampleidx_avg = 9;
-      }
-      else if(samples_wish > 13)
-      {
-        sampleidx_avg = 8;
-      }
-      else
-      { // don't use less than 13 samples
-        sampleidx_avg = 7;
-      }
-    }
-    
-    const int sampleidx_small = sampleidx_avg - 1;
-    const int small_radius = MAX(radius, 3);
-    const int avg_radius = 24 + radius * 4;
+    const int samples_small = opar->get_samples_small();
+    const int samples_avg = opar->get_samples_avg();
 
-    const int samples_small = (int)fib[sampleidx_small];
-    const int samples_avg = (int)fib[sampleidx_avg];
-
-    // precompute all required fibonacci lattices:
-    if (!bError) {
-      xy_avg = (int*)malloc((size_t)2 * sizeof(int) * samples_avg);
-      if (xy_avg != NULL)
-      {
-        tmp = xy_avg;
-        for(int u = 0; u < samples_avg; u++)
-        {
-          int dx, dy;
-          fib_latt(&dx, &dy, avg_radius, u, sampleidx_avg);
-          *tmp++ = dx;
-          *tmp++ = dy;
-        }
-      }
-      else
-      {
-        std::cout<<"Error allocating memory for fibonacci lattice in: defringe module"<<std::endl;
-        bError = true;
-      }
-    }
+    xy_avg = opar->get_xy_avg();
+    xy_small = opar->get_xy_small();
 
     if (!bError) {
-      xy_small = (int*)malloc((size_t)2 * sizeof(int) * samples_small);
-      if (xy_small != NULL)
-      {
-        tmp = xy_small;
-        for(int u = 0; u < samples_small; u++)
-        {
-          int dx, dy;
-          fib_latt(&dx, &dy, small_radius, u, sampleidx_small);
-          *tmp++ = dx;
-          *tmp++ = dy;
-        }
-      }
-      else
-      {
-        std::cout<<"Error allocating memory for fibonacci lattice in: defringe module"<<std::endl;
-        bError = true;
-      }
-    }
-    
-    if (!bError) {
-      edge_chroma = (float*)malloc(width * height * sizeof(float));
+      edge_chroma = (float*)malloc(iwidth * iheight * sizeof(float));
       if (edge_chroma != NULL)
       {
-        memset(edge_chroma, 0, width * height * sizeof(float));
+        memset(edge_chroma, 0, iwidth * iheight * sizeof(float));
         
-        // TODO: can we use this?
-    /*  #ifdef _OPENMP
-      #pragma omp parallel for default(none) shared(width, height,                                                 \
-                                                    d) reduction(+ : avg_edge_chroma) schedule(static)
-      #endif*/
-        for(int v = 0; v < height; v++)
+        for(int v = 0; v < iheight; v++)
         {
-          in = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + v );
-          out = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + v );
-          float *ec = edge_chroma + v * width;
+          in = (float*)VIPS_REGION_ADDR( ireg[0], ir->left, ir->top + v );
+          pblur = (float*)VIPS_REGION_ADDR( ireg[1], ir->left, ir->top + v );
+          float *ec = edge_chroma + v * iwidth;
           
-          for(int t = 0; t < width; t++)
+          for(int t = 0, tt = 0; t < ilsz; t+=ch, tt++)
           {
             // edge-detect on color channels
             // method: difference of original to gaussian blurred image:
-            float a = in[t * ch + 1] - out[t * ch + 1];
-            float b = in[t * ch + 2] - out[t * ch + 2];
+            float a = in[t + 1] - pblur[t + 1];
+            float b = in[t + 2] - pblur[t + 2];
     
             float edge = (a * a + b * b); // range up to 2*(256)^2 -> approx. 0 to 131072
     
             // save local edge chroma in out[.. +3] , this is later compared with threshold
-            ec[t] = edge;
+            ec[tt] = edge;
             
             // the average chroma of the edge-layer in the roi
             if(MODE_GLOBAL_AVERAGE == opar->get_op_mode()) avg_edge_chroma += edge;
@@ -265,37 +374,34 @@ public:
     if (!bError) {
       if(MODE_GLOBAL_AVERAGE == opar->get_op_mode())
       {
-        avg_edge_chroma = avg_edge_chroma / (width * height) + (10.0f/100.f) * FLT_EPSILON;
-        thresh = fmax(0.1f/100.f, (4.0f/100.f) * threshold * avg_edge_chroma / MAGIC_THRESHOLD_COEFF);
+        avg_edge_chroma = avg_edge_chroma / (iwidth * iheight) + RESCALE_LAB(10.0f) * FLT_EPSILON;
+        thresh = fmax(RESCALE_LAB(0.1f), RESCALE_LAB(4.0f) * threshold * avg_edge_chroma / MAGIC_THRESHOLD_COEFF);
       }
       else
       {
         // this fixed value will later be changed when doing local averaging, or kept as-is in "static" mode
-        avg_edge_chroma = MAGIC_THRESHOLD_COEFF/100.f;
-        thresh = fmax(0.1f/100.f, threshold);
+        avg_edge_chroma = RESCALE_LAB(MAGIC_THRESHOLD_COEFF);
+        thresh = fmax(RESCALE_LAB(0.1f), threshold);
       }
-      thresh /= 100.f;
+//      thresh /= 100.f;
     }
     
     if (!bError) {
-    // TODO: can we use this?
-/*  #ifdef _OPENMP
-  // dynamically/guided scheduled due to possible uneven edge-chroma distribution (thanks to rawtherapee code
-  // for this hint!)
-  #pragma omp parallel for default(none) shared(width, height, d, xy_small, xy_avg, xy_artifact)               \
-      firstprivate(thresh, avg_edge_chroma) schedule(guided, 32)
-  #endif*/
-      for(int v = 0; v < height; v++)
+      for(int v = 0, vv = border; v < height; v++, vv++)
       {
         in = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + v );
         out = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + v );
-        float *ec = edge_chroma + v * width;
+
+        int l = vv * iwidth;
+        int lprev = (vv - 1) * iwidth;
+        int lnext = (vv + 1) * iwidth;
+        float *ec = edge_chroma + l;
         
-        for(int t = 0; t < width; t++)
+        for(int t = 0, tt = border; t < lsz; t+=ch, tt++)
         {
           float local_thresh = thresh;
           // think of compiler setting "-funswitch-loops" to maybe improve these things:
-          if(MODE_LOCAL_AVERAGE == opar->get_op_mode() && ec[t] > thresh)
+          if(MODE_LOCAL_AVERAGE == opar->get_op_mode() && ec[tt] > thresh)
           {
             float local_avg = 0.0f;
             // use some and not all values from the neigbourhood to speed things up:
@@ -304,30 +410,37 @@ public:
             {
               int dx = *tmp++;
               int dy = *tmp++;
-              int x = MAX(0, MIN(width - 1, t + dx));
-              int y = MAX(0, MIN(height - 1, v + dy));
-              local_avg += edge_chroma[y * width + x];
+              int x = tt + dx; //provided that the region padding is correct, this is not needed: MAX(0, MIN(width - 1, t + dx));
+              int y = vv + dy; //provided that the region padding is correct, this is not needed: MAX(0, MIN(height - 1, v + dy));
+              local_avg += edge_chroma[y * iwidth + x];
             }
-            avg_edge_chroma = fmax(0.01f/100.f, (float)local_avg / samples_avg);
-            local_thresh = fmax(0.1f/100.f, (4.0f/100.f) * threshold * avg_edge_chroma / MAGIC_THRESHOLD_COEFF);
+            avg_edge_chroma = fmax(RESCALE_LAB(0.01f), (float)local_avg / samples_avg);
+            local_thresh = fmax(RESCALE_LAB(0.1f), RESCALE_LAB(4.0f) * threshold * avg_edge_chroma / MAGIC_THRESHOLD_COEFF);
           }
   
-          if(edge_chroma[(size_t)v * width + t] > local_thresh
-                     // reduces artifacts ("region growing by 1 pixel"):
-                     || edge_chroma[(size_t)MAX(0, (v - 1)) * width + MAX(0, (t - 1))] > local_thresh
-                     || edge_chroma[(size_t)MAX(0, (v - 1)) * width + t] > local_thresh
-                     || edge_chroma[(size_t)MAX(0, (v - 1)) * width + MIN(width - 1, (t + 1))] > local_thresh
-                     || edge_chroma[(size_t)v * width + MAX(0, (t - 1))] > local_thresh
-                     || edge_chroma[(size_t)v * width + MIN(width - 1, (t + 1))] > local_thresh
-                     || edge_chroma[(size_t)MIN(height - 1, (v + 1)) * width + MAX(0, (t - 1))] > local_thresh
-                     || edge_chroma[(size_t)MIN(height - 1, (v + 1)) * width + t] > local_thresh
-                     || edge_chroma[(size_t)MIN(height - 1, (v + 1)) * width + MIN(width - 1, (t + 1))]
-                        > local_thresh)
+          if(edge_chroma[(size_t)vv * width + tt] > local_thresh
+              // reduces artifacts ("region growing by 1 pixel"):
+              || edge_chroma[lprev + tt - 1] > local_thresh
+              || edge_chroma[lprev + tt] > local_thresh
+              || edge_chroma[lprev + tt + 1] > local_thresh
+              || edge_chroma[l + tt - 1] > local_thresh
+              || edge_chroma[l + tt + 1] > local_thresh
+              || edge_chroma[lnext + tt - 1] > local_thresh
+              || edge_chroma[lnext + tt] > local_thresh
+              || edge_chroma[lnext + tt + 1] > local_thresh)
+            //|| edge_chroma[(size_t)MAX(0, (vv - 1)) * width + MAX(0, (tt - 1))] > local_thresh
+            //|| edge_chroma[(size_t)MAX(0, (vv - 1)) * width + tt] > local_thresh
+            //|| edge_chroma[(size_t)MAX(0, (vv - 1)) * width + MIN(width - 1, (tt + 1))] > local_thresh
+            //|| edge_chroma[(size_t)vv * width + MAX(0, (tt - 1))] > local_thresh
+            //|| edge_chroma[(size_t)vv * width + MIN(width - 1, (tt + 1))] > local_thresh
+            //|| edge_chroma[(size_t)MIN(height - 1, (vv + 1)) * width + MAX(0, (tt - 1))] > local_thresh
+            //|| edge_chroma[(size_t)MIN(height - 1, (vv + 1)) * width + tt] > local_thresh
+            //|| edge_chroma[(size_t)MIN(height - 1, (vv + 1)) * width + MIN(width - 1, (tt + 1))] > local_thresh)
           {
             float atot = 0.f, btot = 0.f;
             float norm = 0.f;
             float weight = 0.f;
-            
+
             // it seems better to use only some pixels from a larger window instead of all pixels from a smaller window
             // we use a fibonacci lattice for that, samples amount need to be a fibonacci number, this can then be
             // scaled to a certain radius
@@ -338,14 +451,14 @@ public:
             {
               int dx = *tmp++;
               int dy = *tmp++;
-              int x = MAX(0, MIN(width - 1, t + dx));
-              int y = MAX(0, MIN(height - 1, v + dy));
+              int x = tt + dx; //provided that the region padding is correct, this is not needed: MAX(0, MIN(width - 1, t + dx));
+              int y = vv + dy; //provided that the region padding is correct, this is not needed: MAX(0, MIN(height - 1, v + dy));
               
               // inverse chroma weighted average of neigbouring pixels inside window
               // also taking average edge chromaticity into account (either global or local average)
   
-              weight = 1.0f / (edge_chroma[(size_t)y * width + x] + avg_edge_chroma);
-              float *in2 = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+              weight = 1.0f / (edge_chroma[(size_t)y * iwidth + x] + avg_edge_chroma);
+              float *in2 = (float*)VIPS_REGION_ADDR( ireg[0], ir->left, ir->top + y );
   
               atot += weight * in2[x * ch + 1];
               btot += weight * in2[x * ch + 2];
@@ -359,15 +472,15 @@ public:
             double a = (atot / norm); // *balance + in[v*width*ch + t*ch +1]*(1.0-balance);
             double b = (btot / norm); // *balance + in[v*width*ch + t*ch +2]*(1.0-balance);
   
-            out[t * ch + 1] = a;
-            out[t * ch + 2] = b;
+            out[t + 1] = a;
+            out[t + 2] = b;
           }
           else
           {
-            out[t * ch + 1] = in[t * ch + 1];
-            out[t * ch + 2] = in[t * ch + 2];
+            out[t + 1] = in[t + 1];
+            out[t + 2] = in[t + 2];
           }
-          out[t * ch] = in[t * ch];
+          out[t] = in[t];
         }
       }
     }
@@ -383,29 +496,10 @@ public:
       }
     }
       
-    if (xy_small) free(xy_small);
-    if (xy_avg) free(xy_avg);
     if (edge_chroma) free(edge_chroma);
     
   }
   
-  void fib_latt(int *const x, int *const y, float radius, int step, int idx)
-  {
-    // idx < 1 because division by zero is also a problem in the following line
-    if(idx >= sizeof(fib) / sizeof(float) - 1 || idx < 1)
-    {
-      *x = 0;
-      *y = 0;
-      std::cout<<"Fibonacci lattice index wrong/out of bounds in: defringe module"<<std::endl;
-      return;
-    }
-    float px = step / fib[idx], py = step * (fib[idx + 1] / fib[idx]);
-    py -= (int)py;
-    float dx = px * radius, dy = py * radius;
-    *x = round(dx - radius / 2.0);
-    *y = round(dy - radius / 2.0);
-  }
-
 };
 
 
