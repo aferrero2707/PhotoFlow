@@ -77,24 +77,31 @@ public:
 class DefringeAlgoPar: public OpParBase
 {
   defringe_method_t op_mode;
-  float radius;
+  float sigma;
+  int radius;
   float threshold;
 
   int* xy_avg;
   int* xy_small;
   int samples_avg;
   int samples_small;
-  int dmax;
+  int dmax, dmax_small;
 
 public:
   DefringeAlgoPar(): OpParBase()
   {
     radius = threshold = 0;
     xy_avg = xy_small = NULL;
-    dmax = 0;
+    dmax = dmax_small = 0;
   }
 
-  int get_padding() { return dmax; }
+  ~DefringeAlgoPar()
+  {
+    if( xy_avg ) free( xy_avg );
+    if( xy_small ) free( xy_small );
+  }
+
+  int get_padding() { return( (op_mode == MODE_LOCAL_AVERAGE) ? dmax : dmax_small ); }
 
   /* Function to derive the output area from the input area
    */
@@ -122,8 +129,8 @@ public:
 
   void set_op_mode( defringe_method_t m ) { op_mode = m; }
   defringe_method_t get_op_mode() { return op_mode; }
-  void set_radius( float r ) { radius = r; }
-  float get_radius() { return radius; }
+  void set_sigma( float s ) { sigma = s; }
+  int get_radius() { return radius; }
   void set_threshold( float t ) { threshold = t; }
   float get_threshold() { return threshold; }
 
@@ -131,16 +138,6 @@ public:
   int* get_xy_avg() { return xy_avg; }
   int get_samples_small() { return samples_small; }
   int* get_xy_small() { return xy_small; }
-
-/*
-  VipsImage* build(std::vector<VipsImage*>& in, int first,
-      VipsImage* imap, VipsImage* omap,
-      unsigned int& level)
-  {
-    fb_init();
-    return OpParBase::build( in, first, imap, omap, level );
-  }
-*/
 
   void fib_latt(int *const x, int *const y, float radius, int step, int idx)
   {
@@ -161,9 +158,12 @@ public:
 
   bool fb_init()
   {
+    const float sigma_tmp = fmax(0.1f, fabs(sigma));
+    radius = ceil(2.0f * ceilf(sigma_tmp));
     int samples_wish = (int)(radius * radius);
     int sampleidx_avg = 0;
     dmax = 0;
+    dmax_small = 0;
 
     // select samples by fibonacci number
     if(samples_wish > 89) {
@@ -192,7 +192,7 @@ public:
 
     // precompute all required fibonacci lattices:
     if( xy_avg ) free( xy_avg );
-    xy_avg = (int*)malloc((size_t)2 * sizeof(int) * samples_avg); // TODO: where free() should be called?
+    xy_avg = (int*)malloc((size_t)2 * sizeof(int) * samples_avg);
     if (xy_avg != NULL)
     {
       tmp = xy_avg;
@@ -213,7 +213,7 @@ public:
     }
 
     if( xy_small ) free( xy_small );
-    xy_small = (int*)malloc((size_t)2 * sizeof(int) * samples_small); // TODO: where free() should be called?
+    xy_small = (int*)malloc((size_t)2 * sizeof(int) * samples_small);
     if (xy_small != NULL)
     {
       tmp = xy_small;
@@ -223,6 +223,8 @@ public:
         fib_latt(&dx, &dy, small_radius, u, sampleidx_small);
         *tmp++ = dx;
         *tmp++ = dy;
+        if( dmax_small < abs(dx) ) dmax_small = abs(dx);
+        if( dmax_small < abs(dy) ) dmax_small = abs(dy);
       }
     }
     else
@@ -230,8 +232,6 @@ public:
       std::cout<<"Error allocating memory for fibonacci lattice in: defringe module"<<std::endl;
       return false;
     }
-
-    std::cout<<"fb_init(): radius="<<radius<<" dmax="<<dmax<<std::endl;
 
     return true;
   }
@@ -280,9 +280,9 @@ public:
     DefringeAlgoPar* opar = dynamic_cast<DefringeAlgoPar*>(par);
     if( !opar ) return;
 
+#define RESCALE_LAB(ab) ((ab)/255.f)
+
     bool bError = false;
-    
-#define RESCALE_LAB(ab) (((ab)-127.f)/255.f)
     
     const float threshold = RESCALE_LAB(opar->get_threshold());
     Rect *ir = &ireg[0]->valid;
@@ -300,9 +300,8 @@ public:
     float* pblur = NULL;
     float* out = NULL;
 
-    const int order = 1; // 0,1,2
-    const float sigma = fmax(0.1f, fabs(opar->get_radius()))/* * roi_in->scale / piece->iscale */; // TODO: get scale
-    const int radius = ceil(2.0f * ceilf(sigma));
+    //const int order = 1; // 0,1,2
+    const int radius = opar->get_radius();
     
     float avg_edge_chroma = 0.0f;
     
@@ -314,18 +313,7 @@ public:
     if(width < 2 * radius + 1 || height < 2 * radius + 1) 
       bError = true;
 
-    // The loop should output only a few pixels, so just copy everything first
-//TODO: should be a better way to copy images
-    if (!bError) {
-      for( int y = 0; y < height; y++ ) {
-        pblur = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
-        out = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
-  
-        for( int x = 0; x < width * ch; x++ ) out[x] = pblur[x];
-      }
-    }
-    
-    // Pre-Compute Fibonacci Lattices
+    // Pre-Computed Fibonacci Lattices
     int *tmp = NULL;
 
     const int samples_small = opar->get_samples_small();
@@ -380,10 +368,10 @@ public:
       else
       {
         // this fixed value will later be changed when doing local averaging, or kept as-is in "static" mode
-        avg_edge_chroma = RESCALE_LAB(MAGIC_THRESHOLD_COEFF);
+        avg_edge_chroma = RESCALE_LAB(RESCALE_LAB(MAGIC_THRESHOLD_COEFF));
         thresh = fmax(RESCALE_LAB(0.1f), threshold);
       }
-//      thresh /= 100.f;
+      thresh = RESCALE_LAB(thresh);
     }
     
     if (!bError) {
@@ -418,7 +406,7 @@ public:
             local_thresh = fmax(RESCALE_LAB(0.1f), RESCALE_LAB(4.0f) * threshold * avg_edge_chroma / MAGIC_THRESHOLD_COEFF);
           }
   
-          if(edge_chroma[(size_t)vv * width + tt] > local_thresh
+          if(edge_chroma[(size_t)vv * iwidth + tt] > local_thresh
               // reduces artifacts ("region growing by 1 pixel"):
               || edge_chroma[lprev + tt - 1] > local_thresh
               || edge_chroma[lprev + tt] > local_thresh
@@ -428,14 +416,6 @@ public:
               || edge_chroma[lnext + tt - 1] > local_thresh
               || edge_chroma[lnext + tt] > local_thresh
               || edge_chroma[lnext + tt + 1] > local_thresh)
-            //|| edge_chroma[(size_t)MAX(0, (vv - 1)) * width + MAX(0, (tt - 1))] > local_thresh
-            //|| edge_chroma[(size_t)MAX(0, (vv - 1)) * width + tt] > local_thresh
-            //|| edge_chroma[(size_t)MAX(0, (vv - 1)) * width + MIN(width - 1, (tt + 1))] > local_thresh
-            //|| edge_chroma[(size_t)vv * width + MAX(0, (tt - 1))] > local_thresh
-            //|| edge_chroma[(size_t)vv * width + MIN(width - 1, (tt + 1))] > local_thresh
-            //|| edge_chroma[(size_t)MIN(height - 1, (vv + 1)) * width + MAX(0, (tt - 1))] > local_thresh
-            //|| edge_chroma[(size_t)MIN(height - 1, (vv + 1)) * width + tt] > local_thresh
-            //|| edge_chroma[(size_t)MIN(height - 1, (vv + 1)) * width + MIN(width - 1, (tt + 1))] > local_thresh)
           {
             float atot = 0.f, btot = 0.f;
             float norm = 0.f;
@@ -469,8 +449,8 @@ public:
             // reduce artifcats but on first tries results weren't very convincing, 
             // and there are blend settings available anyway
   
-            double a = (atot / norm); // *balance + in[v*width*ch + t*ch +1]*(1.0-balance);
-            double b = (btot / norm); // *balance + in[v*width*ch + t*ch +2]*(1.0-balance);
+            double a = (atot / norm);
+            double b = (btot / norm);
   
             out[t + 1] = a;
             out[t + 2] = b;
@@ -481,13 +461,13 @@ public:
             out[t + 2] = in[t + 2];
           }
           out[t] = in[t];
+
         }
       }
     }
 
     if (bError) {
       // something went wrong, return original image
-  //TODO: should be a better way to copy images
       for( int y = 0; y < height; y++ ) {
         in = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
         out = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
@@ -497,7 +477,6 @@ public:
     }
       
     if (edge_chroma) free(edge_chroma);
-    
   }
   
 };
