@@ -64,6 +64,7 @@ namespace PF
     PF::ProcessorBase* raw_output;
     PF::ProcessorBase* convert_format;
     PF::ProcessorBase* fcs[4];
+    PF::ProcessorBase* hotpixels;
 
 		// False color suppression steps
 		PropertyBase demo_method;
