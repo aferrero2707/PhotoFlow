@@ -123,6 +123,9 @@ public:
   bool is_perceptual() { return( get_trc_type() == PF_TRC_PERCEPTUAL ); }
   bool is_standard() { return( get_trc_type() == PF_TRC_STANDARD ); }
 
+  cmsToneCurve* get_p2l_trc() { return perceptual_trc; }
+  cmsToneCurve* get_l2p_trc() { return perceptual_trc_inv; }
+
   void set_profile( cmsHPROFILE p );
   cmsHPROFILE get_profile(); //{ return profile; }
 

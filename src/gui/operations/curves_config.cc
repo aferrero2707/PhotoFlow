@@ -36,6 +36,7 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   //rgbCurveSelector( this, "RGB_active_curve", "Channel: ", 1 ),
   //labCurveSelector( this, "Lab_active_curve", "Channel: ", 5 ),
   //cmykCurveSelector( this, "CMYK_active_curve", "Channel: ", 8 ),
+  RGB_is_linear_check( this, "RGB_is_linear", _("linear"), false ),
   greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
   rgbCurveEditor( this, "RGB_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
   RCurveEditor( this, "R_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
@@ -273,13 +274,16 @@ void PF::CurvesConfigGUI::do_update()
 #ifndef NDEBUG
     std::cout<<"CurvesConfigGUI::do_update() for "<<get_layer()->get_name()<<" called"<<std::endl;
 #endif
-    if( rgbCurveSelector.get_parent() == &selectorsBox )
+    if( rgbCurveSelector.get_parent() == &selectorsBox ) {
       selectorsBox.remove( rgbCurveSelector );
+      selectorsBox.remove( RGB_is_linear_check );
+    }
     if( labCurveSelector.get_parent() == &selectorsBox )
       selectorsBox.remove( labCurveSelector );
     if( cmykCurveSelector.get_parent() == &selectorsBox )
       selectorsBox.remove( cmykCurveSelector );
 
+    bool RGB_is_linear = false;
     PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
     PF::Image* image = get_layer()->get_image();
     PF::Pipeline* pipeline = image->get_pipeline(0);
@@ -289,24 +293,21 @@ void PF::CurvesConfigGUI::do_update()
       PF::OpParBase* par = node->processor->get_par();
       cs = PF::convert_colorspace( par->get_interpretation() );
       //std::cout<<"OperationConfigGUI::update() par: "<<par<<std::endl;
+      PF::Property<bool>* prop_lin =
+          dynamic_cast< PF::Property<bool>* >( par->get_property("RGB_is_linear") );
+      RGB_is_linear = prop_lin->get();
     }
 
     if( node && node->image ) {
-      PF::ICCProfile* data;
-      size_t data_length;
-      if( vips_image_get_blob( node->image, "pf-icc-profile-data",
-          (void**)(&data), &data_length ) ) {
-        std::cout<<"CurvesPar::build(): cannot find ICC profile data"<<std::endl;
-        data = NULL;
-      }
-      if( data_length != sizeof(PF::ICCProfileData) ) {
-        std::cout<<"CurvesPar::build(): wrong size of ICC profile data"<<std::endl;
-        data = NULL;
-      }
+      PF::ICCProfile* data = PF::get_icc_profile( node->image );
       rgbCurveEditor.set_icc_data( data );
       RCurveEditor.set_icc_data( data );
       GCurveEditor.set_icc_data( data );
       BCurveEditor.set_icc_data( data );
+      rgbCurveEditor.set_display_mode( RGB_is_linear );
+      RCurveEditor.set_display_mode( RGB_is_linear );
+      GCurveEditor.set_display_mode( RGB_is_linear );
+      BCurveEditor.set_display_mode( RGB_is_linear );
     }
 
     switch( cs ) {
@@ -315,7 +316,9 @@ void PF::CurvesConfigGUI::do_update()
       break;
     case PF_COLORSPACE_RGB:
       selectorsBox.pack_start( rgbCurveSelector, Gtk::PACK_SHRINK );
+      selectorsBox.pack_start( RGB_is_linear_check, Gtk::PACK_SHRINK );
       rgbCurveSelector.show();
+      RGB_is_linear_check.show();
       break;
     case PF_COLORSPACE_LAB:
       selectorsBox.pack_start( labCurveSelector, Gtk::PACK_SHRINK );

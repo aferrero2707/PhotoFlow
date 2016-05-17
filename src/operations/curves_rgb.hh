@@ -132,6 +132,7 @@
     int pos;
     float nin, nout, d1, d2;
     float* pp;
+    unsigned short int idx;
   public:
     CurvesProc(CurvesPar* p): par(p) {}
 
@@ -141,6 +142,9 @@
       pp = p[first];
       pos = x;
       for(int i = CHMIN; i <= CHMAX; i++, pos++) {
+        from_float( CLIPF(pp[pos]), idx );
+        pout[pos] = (intensity*par->cvec16[i][idx]/65535 + CLIPF(pp[pos]));
+        /*
         nin = pp[pos];
         d1 = par->scvec[i]->get().get_delta( nin );
         d2 = par->scvec[3]->get().get_delta( nin );
@@ -149,6 +153,7 @@
         else if ( nout < 0 ) nout = 0;
         pout[pos] = nout;
         //std::cout<<"pp[pos]="<<pp[pos]<<"  d2="<<d2<<"  pout[pos]="<<pout[pos]<<std::endl;
+        */
       }
     }
   };
@@ -175,11 +180,11 @@
       pos = x;
       for(int i = CHMIN; i <= CHMAX; i++, pos++) {
         //std::cout<<"CurvesProc::process(): pp[pos]="<<pp[pos]<<std::endl;
-        from_float( pp[pos], idx );
+        from_float( CLIPF(pp[pos]), idx );
         //std::cout<<"CurvesProc::process(): idx="<<idx<<std::endl;
         //if(false&&x==0)
           //std::cout<<"CurvesProc::process(): cvec16["<<i<<"]["<<idx<<"]="<<par->cvec16[i][idx]/65535<<std::endl;
-        pout[pos] = (intensity*par->cvec16[i][idx]/65535 + pp[pos]);
+        pout[pos] = (intensity*par->cvec16[i][idx]/65535 + CLIPF(pp[pos]));
         //std::cout<<"pp[pos]="<<pp[pos]<<"  cvec16[i][pp[pos]]="
         //    <<par->cvec16[i][pp[pos]]<<"  pout[pos]="<<pout[pos]<<" ("<<((float)pout[pos])/65535<<")"<<std::endl;
       }

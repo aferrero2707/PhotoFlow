@@ -215,9 +215,12 @@ void PF::SplineCurve::update_spline()
   } else {
     points2 = points;
     if( trc_type == PF::PF_TRC_LINEAR ) {
+      //std::cout<<"SplineCurve::update_spline(): p2l_trc="<<p2l_trc<<std::endl;
       for( unsigned int i = 0; i < points2.size(); i++ ) {
-        points2[i].first = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), points2[i].first );
-        points2[i].second = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), points2[i].second );
+        points2[i].first = cmsEvalToneCurveFloat( p2l_trc, points2[i].first );
+        points2[i].second = cmsEvalToneCurveFloat( p2l_trc, points2[i].second );
+        //std::cout<<"  points["<<i<<"].first="<<points[i].first<<" -> points2["<<i<<"].first="<<points2[i].first<<std::endl;
+        //std::cout<<"  points["<<i<<"].second="<<points[i].second<<" -> points2["<<i<<"].second="<<points2[i].second<<std::endl;
       }
     }
   }

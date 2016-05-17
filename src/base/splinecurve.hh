@@ -60,6 +60,8 @@ namespace PF
     //bool needs_gamma_correction;
 
     TRC_type trc_type;
+    cmsToneCurve* p2l_trc;
+    cmsToneCurve* l2p_trc;
 
   public:
     SplineCurve();
@@ -101,6 +103,12 @@ namespace PF
 
     void set_trc_type( TRC_type type ) { trc_type = type; }
     const TRC_type get_trc_type() const { return trc_type; }
+    const bool is_linear() const { return( trc_type == PF_TRC_LINEAR ); }
+
+    void set_p2l_trc( cmsToneCurve* c ) { p2l_trc = c; }
+    void set_l2p_trc( cmsToneCurve* c ) { l2p_trc = c; }
+    cmsToneCurve* get_p2l_trc() const { return p2l_trc; }
+    cmsToneCurve* get_l2p_trc() const { return l2p_trc; }
 
     void update_spline();
 
@@ -121,6 +129,8 @@ namespace PF
       set_circular( b.is_circular() );
       //set_needs_gamma_correction( b.get_needs_gamma_correction() );
       set_trc_type( b.get_trc_type() );
+      set_p2l_trc( b.get_p2l_trc() );
+      set_l2p_trc( b.get_l2p_trc() );
 #ifdef SPLINE_USE_STDVEC
       points = b.get_points();
 #else

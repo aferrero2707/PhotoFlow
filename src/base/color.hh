@@ -41,6 +41,10 @@
 #endif
 #define MAX3( a, b, c ) MAX(a,MAX(b,c))
 
+#ifndef CLIPF
+#define CLIPF(a) ((a)>0.0f?((a)<1.0f?(a):1.0f):0.0f)
+#endif
+
 #include <math.h>
 
 #include "format_info.hh"

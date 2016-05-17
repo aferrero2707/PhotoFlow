@@ -49,6 +49,7 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
   yspinButton(yadjustment),
 #endif
   icc_data( NULL ),
+  is_linear( false ),
   curve_area_width( width ),
   curve_area_height( height ),
   curve_area( ca ),
@@ -97,6 +98,42 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
 }
 
 
+/*
+ *
+ */
+float PF::CurveArea::get_curve_value( float px )
+{
+  //std::cout<<"CurveArea::get_curve_value( "<<px<<" ) called"<<std::endl;
+  if( curve.is_linear() &&  !is_linear ) {
+    // The working colorspace is linear, but the curve is shown in perceptual scale,
+    // so we need to convert the UI point to linear
+   px = perceptual2linear( px );
+  } else if( !curve.is_linear() &&  is_linear ) {
+    // The working colorspace is perceptual, but the curve is shown in linear scale,
+    // so we need to convert the UI point to perceptual
+    px = linear2perceptual( px );
+  }
+  float py = curve.get_value( px );
+  //std::cout<<"  px="<<px<<"  py="<<py<<std::endl;
+
+  // Now we have to convert back the curve Y value to the UI scale
+  if( curve.is_linear() &&  !is_linear ) {
+    // The working colorspace is linear, but the curve is shown in perceptual scale,
+    // so we need to convert the Y value to perceptual
+   py = linear2perceptual( py );
+  } else if( !curve.is_linear() &&  is_linear ) {
+    // The working colorspace is perceptual, but the curve is shown in linear scale,
+    // so we need to convert the Y value to linear
+    py = perceptual2linear( py );
+  }
+  //std::cout<<"  py="<<py<<std::endl;
+
+  return py;
+}
+
+/*
+ * Update the curve after one of the points has been moved
+ */
 void PF::CurveEditor::update_point()
 {
   SplineCurve& curve = curve_area->get_curve();
@@ -106,7 +143,7 @@ void PF::CurveEditor::update_point()
   std::cout<<"PF::CurveEditor::update_point() called."<<std::endl;
 
   bool do_gamma = false;
-  //if( data && data->trc_type==PF::PF_TRC_LINEAR ) do_gamma = true;
+  if( is_linear ) do_gamma = true;
 
   int ipt = curve_area->get_selected_point();
   if( (ipt >= 0) && (ipt < curve_area->get_curve().get_npoints()) ) {
@@ -118,19 +155,19 @@ void PF::CurveEditor::update_point()
     float px = (xadjustment->get_value()-xmin)/(xmax-xmin);
     float py = (yadjustment->get_value()-ymin)/(ymax-ymin);
 #endif
-    float lpx = px;
-    float lpy = py;
+    float px2 = px;
+    float py2 = py;
     if( do_gamma ) {
-      lpx = icc_data->perceptual2linear( px );
-      lpy = icc_data->perceptual2linear( py );
+      px2 = curve_area->linear2perceptual( px );
+      py2 = curve_area->linear2perceptual( py );
     }
-    if( curve_area->get_curve().set_point( ipt, lpx, lpy ) ) {
+    if( curve_area->get_curve().set_point( ipt, px2, py2 ) ) {
       curve_area->get_curve().update_spline();
       curve_area->queue_draw();
       inhibit_value_changed = true;
       if( do_gamma ) {
-        px = icc_data->linear2perceptual( lpx );
-        py = icc_data->linear2perceptual( lpy );
+        px = curve_area->perceptual2linear( px2 );
+        py = curve_area->perceptual2linear( py2 );
       }
 #ifdef GTKMM_2
       xadjustment.set_value( px*(xmax-xmin)+xmin );
@@ -148,6 +185,9 @@ void PF::CurveEditor::update_point()
 }
 
 
+/*
+ * Update the displayed curve from the operattion's property
+ */
 void PF::CurveEditor::get_value()
 {
   std::cout<<"CurveEditor::get_value() called."<<std::endl;
@@ -161,13 +201,13 @@ void PF::CurveEditor::get_value()
   SplineCurve& curve = curve_area->get_curve();
 
   bool do_gamma = false;
-  //if( data && data->trc_type==PF::PF_TRC_LINEAR ) do_gamma = true;
+  if( is_linear ) do_gamma = true;
 
   float px = prop->get().get_point(0).first;
   float py = prop->get().get_point(0).second;
   if( do_gamma ) {
-    px = icc_data->linear2perceptual( px );
-    py = icc_data->linear2perceptual( py );
+    px = curve_area->perceptual2linear( px );
+    py = curve_area->perceptual2linear( py );
   }
 #ifdef GTKMM_2
   xadjustment.set_value( px*(xmax-xmin)+xmin );
@@ -191,14 +231,16 @@ void PF::CurveEditor::set_value()
 }
 
 
-
+/*
+ * Adds a point to the curve. The point coordinates must be in perceptual encoding
+ */
 void PF::CurveEditor::add_point( float xpt, float ycurve )
 {
   SplineCurve& curve = curve_area->get_curve();
   int ipt = curve.add_point( xpt, ycurve );
   if( ipt >= 0 ) {
     bool do_gamma = false;
-    //if( data && data->trc_type==PF::PF_TRC_LINEAR ) do_gamma = true;
+    if( is_linear ) do_gamma = true;
 
     curve_area->set_selected_point( ipt );
     grabbed_point = ipt;
@@ -208,8 +250,8 @@ void PF::CurveEditor::add_point( float xpt, float ycurve )
     float px = xpt;
     float py = ycurve;
     if( do_gamma ) {
-      px = icc_data->perceptual2linear( px );
-      py = icc_data->perceptual2linear( py );
+      px = curve_area->perceptual2linear( px );
+      py = curve_area->perceptual2linear( py );
     }
 #ifdef GTKMM_2
     xadjustment.set_value( px*(xmax-xmin)+xmin );
@@ -236,7 +278,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   //curve.lock();
   
   bool do_gamma = false;
-  //if( data && data->trc_type==PF::PF_TRC_LINEAR ) do_gamma = true;
+  if( is_linear ) do_gamma = true;
 
   switch( event->type ) {
 
@@ -251,9 +293,9 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       // Look for a point close to the mouse click
       double xpt = double(event->button.x-1)/(width-3);
       double ypt = double(height-event->button.y-1)/(height-3);
-      //#ifndef NDEBUG
+      #ifndef NDEBUG
               std::cout<<"  xpt="<<xpt<<"  ypt="<<ypt<<std::endl;
-      //#endif
+      #endif
       //std::vector< std::pair<float,float> > points = curve.get_points();
       //std::pair<float,float>* points = curve.get_points();
       bool found = false;
@@ -262,8 +304,8 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
         float px = curve.get_point(i).first;
         float py = curve.get_point(i).second;
         if( do_gamma ) {
-          px = icc_data->linear2perceptual( px );
-          py = icc_data->linear2perceptual( py );
+          px = curve_area->perceptual2linear( px );
+          py = curve_area->perceptual2linear( py );
         }
         double dx = fabs( xpt - px );
         double dy = fabs( ypt - py );
@@ -288,8 +330,8 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           float px = curve.get_points()[ipt].first;
           float py = curve.get_points()[ipt].second;
           if( do_gamma ) {
-            px = icc_data->linear2perceptual( px );
-            py = icc_data->linear2perceptual( py );
+            px = curve_area->perceptual2linear( px );
+            py = curve_area->perceptual2linear( py );
           }
 #ifdef GTKMM_2
           xadjustment.set_value( px*(xmax-xmin)+xmin );
@@ -310,8 +352,8 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           float px = curve.get_points()[0].first;
           float py = curve.get_points()[0].second;
           if( do_gamma ) {
-            px = icc_data->linear2perceptual( px );
-            py = icc_data->linear2perceptual( py );
+            px = curve_area->perceptual2linear( px );
+            py = curve_area->perceptual2linear( py );
           }
 #ifdef GTKMM_2
           xadjustment.set_value( px*(xmax-xmin)+xmin );
@@ -334,20 +376,20 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           //  px = PF::perceptual2linear( data, px );
           //  py = PF::perceptual2linear( data, py );
           //}
-          if( icc_data && icc_data->is_linear() ) {
-            px = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), px );
-            py = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), py );
-          }
           std::cout<<"px="<<px<<"  py="<<py<<std::endl;
 
-          double ycurve = curve.get_value( px );
+          double ycurve = curve_area->get_curve_value( px );
           double dy = fabs( py - ycurve);
           std::cout<<"ycurve="<<ycurve<<"  dy="<<dy<<std::endl;
           if( dy<0.05 ) {
             double newpx = xpt;
             double newpy = ycurve;
-            if( icc_data && icc_data->is_linear() ) {
-              newpy = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_iLstar_trc(), ycurve );
+            //if( icc_data && icc_data->is_linear() ) {
+            //  newpy = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_iLstar_trc(), ycurve );
+            //}
+            if( do_gamma ) {
+              newpx = curve_area->linear2perceptual( newpx );
+              newpy = curve_area->linear2perceptual( newpy );
             }
             add_point( newpx, newpy );
           }
@@ -388,8 +430,8 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       float lpx = px;
       float lpy = py;
       if( do_gamma ) {
-        lpx = icc_data->perceptual2linear( px );
-        lpy = icc_data->perceptual2linear( py );
+        lpx = curve_area->linear2perceptual( px );
+        lpy = curve_area->linear2perceptual( py );
       }
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if( curve.set_point( grabbed_point, lpx, lpy ) ) {
@@ -418,7 +460,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 
 
 
-PF::CurveArea::CurveArea(): border_size( 0 ), selected_point( -1 ), icc_data( NULL )
+PF::CurveArea::CurveArea(): border_size( 0 ), selected_point( -1 ), icc_data( NULL ), is_linear( false )
 {
   this->add_events(Gdk::BUTTON_PRESS_MASK);
   this->add_events(Gdk::BUTTON_RELEASE_MASK);
@@ -435,7 +477,7 @@ PF::CurveArea::CurveArea(): border_size( 0 ), selected_point( -1 ), icc_data( NU
 #ifdef GTKMM_2
 bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
 {
-  std::cout<<"CurveArea::on_expose_event() called: trc_type="<<curve.get_trc_type()<<std::endl;
+  //std::cout<<"CurveArea::on_expose_event() called: trc_type="<<curve.get_trc_type()<<std::endl;
   // This is where we draw on the window
   Glib::RefPtr<Gdk::Window> window = get_window();
   if( !window )
@@ -482,8 +524,9 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
 
     draw_background( cr );
 
+    std::cout<<"CurveArea::on_draw(): is_linear="<<is_linear<<std::endl;
     bool do_gamma = false;
-    if( icc_data && icc_data->is_linear() ) do_gamma = true;
+    if( is_linear ) do_gamma = true;
 
     // Draw curve
     if( /*curve*/ true ) {
@@ -495,11 +538,8 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
       for( int i = 0; i < width; i++ ) {
         float fi = i;
         fi /= (width-1);
-        float lfi = fi;
-        if( do_gamma ) lfi = icc_data->perceptual2linear( fi );
-        float ly = curve.get_value( lfi );
-        float y = ly;
-        if( do_gamma ) y = icc_data->linear2perceptual( ly );
+        float y = get_curve_value( fi );
+        //std::cout<<"  fi="<<fi<<"  y="<<y<<std::endl;
         vec.push_back( std::make_pair( fi, y ) );
       }
       //curve.get_values( vec );
@@ -514,14 +554,14 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
 
       //std::vector< std::pair<float,float> > points = curve.get_points();
       for( unsigned int i = 0; i < curve.get_npoints(); i++ ) {
-        double lpx = curve.get_point(i).first;
-        double lpy = curve.get_point(i).second;
-        double px = lpx;
-        double py = lpy;
-        //if( do_gamma ) {
-        //  px = PF::linear2perceptual( data, lpx );
-        //  py = PF::linear2perceptual( data, lpy );
-        //}
+        double px = curve.get_point(i).first;
+        double py = curve.get_point(i).second;
+        if( do_gamma ) {
+          //std::cout<<"  before gamma: px="<<px<<", py="<<py<<std::endl;
+          px = perceptual2linear( px );
+          py = perceptual2linear( py );
+          //std::cout<<"  after gamma:  px="<<px<<", py="<<py<<std::endl;
+        }
         double x = (px * width) + x0;
         double y = ((1.0f - py) * height) + y0;
         cr->set_source_rgb( 0.9, 0.9, 0.9 );

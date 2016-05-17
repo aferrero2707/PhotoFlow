@@ -57,6 +57,8 @@ namespace PF
     PropertyBase Lab_active_curve;
     PropertyBase CMYK_active_curve;
 
+    Property<bool> RGB_is_linear;
+
     ICCProfile* icc_data;
 
     void update_curve( Property<SplineCurve>& grey_curve,

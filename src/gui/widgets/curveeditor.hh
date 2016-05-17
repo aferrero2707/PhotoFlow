@@ -47,6 +47,9 @@ namespace PF {
     int selected_point;
 
     PF::ICCProfile* icc_data;
+    bool is_linear;
+    cmsToneCurve* p2l_trc;
+    cmsToneCurve* l2p_trc;
 
 #ifdef GTKMM_2
     bool on_expose_event(GdkEventExpose* event);
@@ -57,13 +60,39 @@ namespace PF {
   public:    
     CurveArea();
 
+    void set_display_mode( bool lin )
+    {
+      is_linear = lin;
+    }
+
     void set_icc_data( PF::ICCProfile* d )
     {
       icc_data = d;
+      p2l_trc = NULL;
+      l2p_trc = NULL;
       if( icc_data ) {
-        curve.set_trc_type( icc_data->get_trc_type() );
+        p2l_trc =
+            icc_data->is_linear() ? PF::ICCStore::Instance().get_Lstar_trc() : icc_data->get_p2l_trc();
+        l2p_trc =
+            icc_data->is_linear() ? PF::ICCStore::Instance().get_iLstar_trc() : icc_data->get_l2p_trc();
+
+        curve.set_trc_type( icc_data->is_linear() ? PF_TRC_LINEAR : PF_TRC_PERCEPTUAL );
+        curve.set_p2l_trc( p2l_trc );
+        curve.set_l2p_trc( l2p_trc );
         curve.update_spline();
       }
+      //std::cout<<"CurveEditor::set_icc_data(): icc_data="<<icc_data<<", p2l_trc="<<p2l_trc<<std::endl;
+    }
+
+    cmsFloat32Number linear2perceptual( cmsFloat32Number val )
+    {
+      if( !l2p_trc ) return val;
+      return cmsEvalToneCurveFloat( l2p_trc, val );
+    }
+    cmsFloat32Number perceptual2linear( cmsFloat32Number val )
+    {
+      if( !p2l_trc ) return val;
+      return cmsEvalToneCurveFloat( p2l_trc, val );
     }
 
     void set_curve( const SplineCurve& c ) { curve = c; }
@@ -75,6 +104,8 @@ namespace PF {
     void set_selected_point( int ipt ) { selected_point = ipt; }
     
     int get_selected_point() { return selected_point; }
+
+    float get_curve_value( float px );
 
     virtual void draw_background(const Cairo::RefPtr<Cairo::Context>& cr);
   };
@@ -99,6 +130,7 @@ namespace PF {
     CurveArea* curve_area;
 
     PF::ICCProfile* icc_data;
+    bool is_linear;
 
     int grabbed_point;
 
@@ -113,6 +145,12 @@ namespace PF {
         float xmin, float xmax, float ymin, float ymax, int width=300, int height=300, int margin=5 );
 
     ~CurveEditor() {}
+
+    void set_display_mode( bool lin )
+    {
+      is_linear = lin;
+      curve_area->set_display_mode( lin );
+    }
 
     void set_icc_data( PF::ICCProfile* d )
     {
