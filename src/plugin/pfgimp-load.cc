@@ -346,8 +346,9 @@ void run(const gchar *name,
 #if HAVE_GIMP_2_9
     gimpImage =
         gimp_image_new_with_precision(width, height, GIMP_RGB,
-            (pluginwin->get_image_buffer().trc_type == PF::PF_TRC_LINEAR) ?
-                GIMP_PRECISION_FLOAT_LINEAR : GIMP_PRECISION_FLOAT_GAMMA);
+            GIMP_PRECISION_FLOAT_GAMMA);
+    //        (pluginwin->get_image_buffer().trc_type == PF::PF_TRC_LINEAR) ?
+    //            GIMP_PRECISION_FLOAT_LINEAR : GIMP_PRECISION_FLOAT_GAMMA);
 #else
     gimpImage = gimp_image_new(width, height, GIMP_RGB);
 #endif
