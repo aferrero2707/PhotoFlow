@@ -63,8 +63,8 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
   xspinButton.set_adjustment( xadjustment );
   yspinButton.set_adjustment( yadjustment );
 #endif
-  curve_area->set_size_request( curve_area_width+border_size*2,
-                              curve_area_height+border_size*2 );
+  curve_area->set_size_request( curve_area_width/*+border_size*2*/,
+                              curve_area_height/*+border_size*2*/ );
   curve_area->set_border_size( border_size );
 
   xspinButton.set_digits( 1 );
@@ -279,20 +279,21 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   
   bool do_gamma = false;
   if( is_linear ) do_gamma = true;
+  int border_size = curve_area->get_border_size();
 
   switch( event->type ) {
 
   case Gdk::BUTTON_PRESS: 
     {
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"PF::CurveArea::handle_events(): button pressed @ "
                <<event->button.x<<","<<event->button.y<<std::endl;
-#endif
+//#endif
       button_pressed = true;
       
       // Look for a point close to the mouse click
-      double xpt = double(event->button.x-1)/(width-3);
-      double ypt = double(height-event->button.y-1)/(height-3);
+      double xpt = double(event->button.x-border_size)/(width-border_size*2);
+      double ypt = 1.0 - double(event->button.y-border_size)/(height-border_size*2);
       #ifndef NDEBUG
               std::cout<<"  xpt="<<xpt<<"  ypt="<<ypt<<std::endl;
       #endif
@@ -425,8 +426,8 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       }
 
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      float px = double(tx-1)/(width-3);
-      float py = double(height-ty-1)/(height-3);
+      float px = double(tx-border_size)/(width-border_size*2);
+      float py = 1.0 - double(ty-border_size)/(height-border_size*2);
       float lpx = px;
       float lpy = py;
       if( do_gamma ) {

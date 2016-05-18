@@ -29,7 +29,7 @@
 
 #include "curves_config.hh"
 
-#define CURVE_SIZE 250
+#define CURVE_SIZE 260
 
 PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   PF::OperationConfigGUI( layer, "Curves Configuration", false ),
