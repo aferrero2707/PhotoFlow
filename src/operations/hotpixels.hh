@@ -111,7 +111,7 @@ namespace PF
       const int width = r->width;
       const int height = r->height;
       const int widthx2 = width * 2;
-      const bool markfixed = rdpar->get_hotp_markfixed();
+      const bool markfixed = ( rdpar->get_hotp_markfixed() && ( rdpar->get_render_mode() == PF_RENDER_PREVIEW ) );
       const int min_neighbours = rdpar->get_hotp_permissive() ? 3 : 4;
 
       float *cin = NULL;
@@ -171,7 +171,7 @@ namespace PF
         PF::RawMatrixRow out( p_out );
 
 //        for(int col = 2; col < width - 1; col++, in++, out++)
-        for(int col = 2; col < width - 2; col+=2)
+        for(int col = 2; col < width - 2; col++)
         {
           float mid = in[col] * multiplier;
           if(in[col] > threshold)
