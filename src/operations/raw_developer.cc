@@ -95,6 +95,13 @@ void PF::RawDeveloperPar::set_wb(float r, float g, float b)
   if( par ) par->set_wb(r,g,b);
 }
 
+int PF::RawDeveloperPar::get_hotp_fixed()
+{
+  int result = 0;
+  PF::HotPixelsPar* par = dynamic_cast<PF::HotPixelsPar*>( hotpixels->get_par() );
+  if( par ) result = par->get_pixels_fixed();
+  return result;
+}
 
 void PF::RawDeveloperPar::get_wb(float* mul)
 {
@@ -143,6 +150,8 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
     in2.push_back( image );
     hotpixels->get_par()->set_image_hints( image );
     hotpixels->get_par()->set_format( VIPS_FORMAT_FLOAT );
+    HotPixelsPar* hppar = dynamic_cast<HotPixelsPar*>( hotpixels->get_par() );
+    hppar->set_pixels_fixed( 0 );
     VipsImage* out_hotp = hotpixels->get_par()->build( in2, 0, NULL, NULL, level );
     g_object_unref( image );
     

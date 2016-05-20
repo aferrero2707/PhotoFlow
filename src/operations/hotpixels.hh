@@ -27,6 +27,13 @@
 
 */
 
+/*
+ * The hotpixels algorithm is based on the Darktable "Hot Pixels" module
+ * 
+ * http://www.darktable.org/
+ * 
+ */
+
 #ifndef VIPS_HOTPIXELS_H
 #define VIPS_HOTPIXELS_H
 
@@ -77,6 +84,48 @@ namespace PF
     int get_pixels_fixed() { return pixels_fixed; }
     void set_pixels_fixed(int p) { pixels_fixed = p; }
 
+    /* Function to derive the output area from the input area
+     */
+    virtual void transform(const Rect* rin, Rect* rout)
+    {
+      int border = 2;
+      rout->left = rin->left+border;
+      rout->top = rin->top+border;
+      rout->width = rin->width-border*2;
+      rout->height = rin->height-border*2;
+    }
+       
+    /* Function to derive the area to be read from input images,
+       based on the requested output area
+    */
+    virtual void transform_inv(const Rect* rout, Rect* rin)
+    {
+      int border = 2;
+      // Output region aligned to the Bayer pattern
+      int raw_left = (rout->left/2)*2;
+      //if( raw_left < border ) raw_left = 0;
+
+      int raw_top = (rout->top/2)*2;
+      //if( raw_top < border ) raw_top = 0;
+
+      int raw_right = rout->left+rout->width-1;
+      //if( raw_right > (in->Xsize-border-1) ) raw_right = in->Xsize-1;
+
+      int raw_bottom = rout->top+rout->height-1;
+      //if( raw_bottom > (in->Ysize-border-1) ) raw_bottom = in->Ysize-1;
+
+      int raw_width = raw_right-raw_left+1;
+      int raw_height = raw_bottom-raw_top+1;
+
+      rin->left = raw_left-border;
+      rin->top = raw_top-border;
+      rin->width = raw_width+border*2;
+      rin->height = raw_height+border*2;
+
+      if( (rin->width%2) ) rin->width += 1;
+      if( (rin->height%2) ) rin->height += 1;
+    }
+      
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 										 VipsImage* imap, VipsImage* omap, unsigned int& level);
   };
@@ -107,10 +156,13 @@ namespace PF
       const float threshold = rdpar->get_hotp_threshold();
       const float multiplier = rdpar->get_hotp_strength() / 2.0f;
       Rect *r = &oreg->valid;
+      Rect *ir = &ireg[in_first]->valid;
       int nbands = ireg[in_first]->im->Bands;
-      const int width = r->width;
-      const int height = r->height;
-      const int widthx2 = width * 2;
+      const int owidth = r->width;
+      const int oheight = r->height;
+      const int iwidth = ir->width;
+      const int iheight = ir->height;
+      const int iwidthx2 = iwidth * 2;
       const bool markfixed = ( rdpar->get_hotp_markfixed() && ( rdpar->get_render_mode() == PF_RENDER_PREVIEW ) );
       const int min_neighbours = rdpar->get_hotp_permissive() ? 3 : 4;
 
@@ -120,17 +172,20 @@ namespace PF
       float *cout = NULL;
       
       std::cout<<"HotPixels::render "<<std::endl;
+      std::cout<<"ir->width: "<<ir->width<<"ir->height: "<<ir->height<<std::endl;
+      std::cout<<"ir->left: "<<ir->left<<"ir->top: "<<ir->top<<std::endl;
+      std::cout<<"r->width: "<<r->width<<"r->height: "<<r->height<<std::endl;
+      std::cout<<"r->left: "<<r->left<<"r->top: "<<r->top<<std::endl;
       std::cout<<"nbands: "<<nbands<<std::endl;
       
 
       // The loop should output only a few pixels, so just copy everything first
-//      memcpy(o, i, (size_t)roi_out->width * roi_out->height * sizeof(float));
-      for(int y = 0; y < height; y++)
+      for(int y = 0; y < oheight; y++)
       {
         cin = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
         cout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
-        for(int x = 0; x < width*nbands; x++, cin++, cout++)
+        for(int x = 0; x < owidth*nbands; x++, cin++, cout++)
         {
           *cout = *cin;
         }
@@ -155,14 +210,11 @@ namespace PF
       
 
 //      for(int row = 2; row < roi_out->height - 2; row++)
-      for(int row = 2; row < height - 2; row++)
+      for(int row = 0; row < oheight; row++)
       {
-//        const float *in = (float *)i + (size_t)width * row + 2;
-//        float *out = (float *)o + (size_t)width * row + 2;
-        
-        p_in = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + row );
-        p_in1 = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + row - 2);
-        p_in2 = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + row + 2);
+        p_in = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left-2, r->top + row );
+        p_in1 = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left-2, r->top + row - 2);
+        p_in2 = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left-2, r->top + row + 2);
         p_out = (PF::raw_pixel_t*)VIPS_REGION_ADDR( oreg, r->left, r->top + row );
 
         PF::RawMatrixRow in( p_in );
@@ -171,7 +223,7 @@ namespace PF
         PF::RawMatrixRow out( p_out );
 
 //        for(int col = 2; col < width - 1; col++, in++, out++)
-        for(int col = 2; col < width - 2; col++)
+        for(int col = 2; col < owidth + 2; col++)
         {
           float mid = in[col] * multiplier;
           if(in[col] > threshold)
@@ -197,14 +249,14 @@ namespace PF
     #undef TESTONE
             if(count >= min_neighbours)
             {
-              out[col] = maxin;
+              out[col-2] = maxin;
               fixed++;
               if(markfixed)
               {
 //                for(int i = -2; i >= -10 && i >= -col; i -= 2) out[i] = in[col];
 //                for(int i = 2; i <= 10 && i < width - col; i += 2) out[i] = in[col];
-                for(int i = -1; i >= -5 && i >= -col; i--) out[i+col] = in[col];
-                for(int i = 1; i <= 5 && i < width - col; i++) out[i+col] = in[col];
+                for(int i = -1; i >= -5 && i >= -col; i--) out[i+col-2] = in[col];
+                for(int i = 1; i <= 5 && i < owidth - col; i++) out[i+col-2] = in[col];
               }
             }
           }
@@ -217,31 +269,6 @@ namespace PF
     }
   };
   
-/*
-  template < OP_TEMPLATE_DEF > 
-  class HotPixelsProc
-  {
-  public: 
-    void render(VipsRegion** ireg, int n, int in_first,
-                VipsRegion* imap, VipsRegion* omap, 
-                VipsRegion* oreg, HotPixelsPar* par)
-    {
-    }
-  };
-
-
-  template < OP_TEMPLATE_DEF_TYPE_SPEC > 
-  class HotPixelsProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
-  {
-  public: 
-    void render(VipsRegion** ireg, int n, int in_first,
-                VipsRegion* imap, VipsRegion* omap, 
-                VipsRegion* oreg, HotPixelsPar* par)
-    {
-    }
-  };
-*/
-
 
   ProcessorBase* new_hotpixels();
 }

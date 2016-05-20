@@ -95,6 +95,7 @@ namespace PF
     wb_mode_t get_wb_mode();
     void get_wb(float* mul);
     void set_wb(float r, float g, float b);
+    int get_hotp_fixed();
 
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 

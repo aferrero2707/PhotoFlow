@@ -361,7 +361,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outProfOpenButton(Gtk::Stock::OPEN),
   ignore_temp_tint_change( false ),
   hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
-  hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold for hot pixel"
+  hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
   hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
   hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ), 
   hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ) 
@@ -648,7 +648,7 @@ void PF::RawDeveloperConfigGUI::do_update()
     // TODO: not sure where this go...
     {
       char tstr[500];
-      snprintf( tstr, 499, "pixels fixed: %i", 0 );
+      snprintf( tstr, 499, "pixels fixed: %i", par->get_hotp_fixed() );
       hotp_numfixed_label.set_text( tstr );
     }
 
