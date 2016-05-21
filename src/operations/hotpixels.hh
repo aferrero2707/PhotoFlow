@@ -180,7 +180,7 @@ namespace PF
       
 
       // The loop should output only a few pixels, so just copy everything first
-      for(int y = 0; y < oheight; y++)
+/*      for(int y = 0; y < oheight; y++)
       {
         cin = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
         cout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
@@ -190,6 +190,8 @@ namespace PF
           *cout = *cin;
         }
       }
+      */
+      vips_region_copy (ireg[in_first], oreg, r, r->left, r->top);
       
       int fixed = rdpar->get_pixels_fixed();
 
