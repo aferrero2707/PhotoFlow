@@ -101,19 +101,12 @@ namespace PF
     virtual void transform_inv(const Rect* rout, Rect* rin)
     {
       int border = 2;
+      
       // Output region aligned to the Bayer pattern
       int raw_left = (rout->left/2)*2;
-      //if( raw_left < border ) raw_left = 0;
-
       int raw_top = (rout->top/2)*2;
-      //if( raw_top < border ) raw_top = 0;
-
       int raw_right = rout->left+rout->width-1;
-      //if( raw_right > (in->Xsize-border-1) ) raw_right = in->Xsize-1;
-
       int raw_bottom = rout->top+rout->height-1;
-      //if( raw_bottom > (in->Ysize-border-1) ) raw_bottom = in->Ysize-1;
-
       int raw_width = raw_right-raw_left+1;
       int raw_height = raw_bottom-raw_top+1;
 
@@ -171,38 +164,11 @@ namespace PF
       float *cin2 = NULL;
       float *cout = NULL;
       
-      std::cout<<"HotPixels::render "<<std::endl;
-      std::cout<<"ir->width: "<<ir->width<<"ir->height: "<<ir->height<<std::endl;
-      std::cout<<"ir->left: "<<ir->left<<"ir->top: "<<ir->top<<std::endl;
-      std::cout<<"r->width: "<<r->width<<"r->height: "<<r->height<<std::endl;
-      std::cout<<"r->left: "<<r->left<<"r->top: "<<r->top<<std::endl;
-      std::cout<<"nbands: "<<nbands<<std::endl;
-      
-
       // The loop should output only a few pixels, so just copy everything first
-/*      for(int y = 0; y < oheight; y++)
-      {
-        cin = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
-        cout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
-
-        for(int x = 0; x < owidth*nbands; x++, cin++, cout++)
-        {
-          *cout = *cin;
-        }
-      }
-      */
       vips_region_copy (ireg[in_first], oreg, r, r->left, r->top);
       
       int fixed = rdpar->get_pixels_fixed();
 
-      // TODO: do we support xtrans?
-/*      if(img->filters == 9u)
-      {
-        fixed = process_xtrans(i, o, roi_in, width, height, img->xtrans, threshold, multiplier, markfixed,
-                               min_neighbours);
-        goto processed;
-      }
-*/
     // Bayer sensor array
       
       PF::raw_pixel_t *p_in = NULL;
@@ -210,8 +176,6 @@ namespace PF
       PF::raw_pixel_t *p_in2 = NULL;
       PF::raw_pixel_t *p_out = NULL;
       
-
-//      for(int row = 2; row < roi_out->height - 2; row++)
       for(int row = 0; row < oheight; row++)
       {
         p_in = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left-2, r->top + row );
@@ -224,8 +188,7 @@ namespace PF
         PF::RawMatrixRow in2( p_in2 );
         PF::RawMatrixRow out( p_out );
 
-//        for(int col = 2; col < width - 1; col++, in++, out++)
-        for(int col = 2; col < owidth + 2; col++)
+        for(int col = 2; col < iwidth - 2; col++)
         {
           float mid = in[col] * multiplier;
           if(in[col] > threshold)
@@ -240,10 +203,6 @@ namespace PF
         count++;                                                                                                 \
         if(other > maxin) maxin = other;                                                                         \
       }
-//            TESTONE(in, -2);
-//            TESTONE(-widthx2);
-//            TESTONE(in, +2);
-//            TESTONE(+widthx2);
             TESTONE(in, -2);
             TESTONE(in1, 0);
             TESTONE(in, +2);
@@ -255,8 +214,6 @@ namespace PF
               fixed++;
               if(markfixed)
               {
-//                for(int i = -2; i >= -10 && i >= -col; i -= 2) out[i] = in[col];
-//                for(int i = 2; i <= 10 && i < width - col; i += 2) out[i] = in[col];
                 for(int i = -1; i >= -5 && i >= -col; i--) out[i+col-2] = in[col];
                 for(int i = 1; i <= 5 && i < owidth - col; i++) out[i+col-2] = in[col];
               }
@@ -266,8 +223,6 @@ namespace PF
       }
 
       rdpar->set_pixels_fixed(fixed);
-      std::cout<<"pixels fixed: "<<fixed<<std::endl;
-      
     }
   };
   

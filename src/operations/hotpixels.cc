@@ -68,8 +68,6 @@ VipsImage* PF::HotPixelsPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   }
 
-  std::cout<<"HotPixelsPar::build(): filters="<<image_data->idata.filters<<std::endl;
-
   int border = 2;
 
   VipsImage* t[12];

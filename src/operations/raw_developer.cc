@@ -155,15 +155,11 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
     VipsImage* out_hotp = hotpixels->get_par()->build( in2, 0, NULL, NULL, level );
     g_object_unref( image );
     
-//    in2.push_back( image );
     in2.clear(); in2.push_back( out_hotp );
-//    ca_correct->get_par()->set_image_hints( image );
     ca_correct->get_par()->set_image_hints( out_hotp );
     ca_correct->get_par()->set_format( VIPS_FORMAT_FLOAT );
     VipsImage* out_ca = ca_correct->get_par()->build( in2, 0, NULL, NULL, level );
-//    g_object_unref( image );
     g_object_unref( out_hotp );
-    //VipsImage* out_ca = image;
 
     in2.clear(); in2.push_back( out_ca );
 		PF::ProcessorBase* demo = NULL;

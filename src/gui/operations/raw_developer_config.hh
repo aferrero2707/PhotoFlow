@@ -138,8 +138,6 @@ public:
     Slider hotp_threshold_slider;
     CheckBox hotp_permissive_checkbox;
     CheckBox hotp_markfixed_checkbox;
-    Gtk::Label hotp_numfixed_label;
-    Gtk::Alignment hotp_numfixed_label_align;
 
     double XYZ_to_CAM[3][3], CAM_to_XYZ[3][3];
     float preset_wb[3];

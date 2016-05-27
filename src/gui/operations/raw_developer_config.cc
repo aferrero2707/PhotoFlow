@@ -439,10 +439,6 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   hotpixelsControlsBox.pack_start( hotp_permissive_checkbox, Gtk::PACK_SHRINK );
   hotpixelsControlsBox.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
 
-  hotp_numfixed_label_align.set( 0, 0.5, 0, 0 );
-  hotp_numfixed_label_align.add( hotp_numfixed_label );
-  hotpixelsControlsBox.pack_start( hotp_numfixed_label_align, Gtk::PACK_SHRINK, 2 );
-
 
   notebook.append_page( wbControlsBox, "WB" );
   notebook.append_page( exposureControlsBox, "Exp" );
@@ -643,13 +639,6 @@ void PF::RawDeveloperConfigGUI::do_update()
             white_level2, white_level );
         white_level_label.set_text( tstr );
       }
-    }
-
-    // TODO: not sure where this go...
-    {
-      char tstr[500];
-      snprintf( tstr, 499, "pixels fixed: %i", par->get_hotp_fixed() );
-      hotp_numfixed_label.set_text( tstr );
     }
 
     //std::cout<<"PF::RawDeveloperConfigGUI::do_update() called."<<std::endl;
