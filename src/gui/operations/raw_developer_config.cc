@@ -48,6 +48,7 @@ extern "C" {
 #include "../../operations/raw_preprocessor.hh"
 #include "../../operations/raw_output.hh"
 #include "../../operations/raw_developer.hh"
+//#include "../../operations/hotpixels.hh"
 
 #include "raw_developer_config.hh"
 
@@ -358,7 +359,12 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
   outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
   outProfOpenButton(Gtk::Stock::OPEN),
-  ignore_temp_tint_change( false )
+  ignore_temp_tint_change( false ),
+  hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
+  hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
+  hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
+  hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ), 
+  hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ) 
 {
   wbControlsBox.pack_start( wbModeSelector, Gtk::PACK_SHRINK );
 
@@ -427,12 +433,19 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
 
+  hotpixelsControlsBox.pack_start( hotp_enable_checkbox, Gtk::PACK_SHRINK );
+  hotpixelsControlsBox.pack_start( hotp_threshold_slider, Gtk::PACK_SHRINK );
+  hotpixelsControlsBox.pack_start( hotp_strength_slider, Gtk::PACK_SHRINK );
+  hotpixelsControlsBox.pack_start( hotp_permissive_checkbox, Gtk::PACK_SHRINK );
+  hotpixelsControlsBox.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
+
 
   notebook.append_page( wbControlsBox, "WB" );
   notebook.append_page( exposureControlsBox, "Exp" );
   notebook.append_page( lensControlsBox, "Lens" );
   notebook.append_page( demoControlsBox, "Demo" );
   notebook.append_page( outputControlsBox, "Color" );
+  notebook.append_page( hotpixelsControlsBox, "Hot Pixels" );
     
   add_widget( notebook );
 

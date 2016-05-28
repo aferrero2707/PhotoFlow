@@ -64,6 +64,7 @@ namespace PF
     PF::ProcessorBase* raw_output;
     PF::ProcessorBase* convert_format;
     PF::ProcessorBase* fcs[4];
+    PF::ProcessorBase* hotpixels;
 
 		// False color suppression steps
 		PropertyBase demo_method;
@@ -94,6 +95,7 @@ namespace PF
     wb_mode_t get_wb_mode();
     void get_wb(float* mul);
     void set_wb(float r, float g, float b);
+    int get_hotp_fixed();
 
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
