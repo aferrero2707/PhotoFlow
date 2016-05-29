@@ -51,7 +51,10 @@
 
 PF::SettingsDialog::SettingsDialog():
       Gtk::Dialog( _("Settings"),true),
-      cm_display_profile_open_button(Gtk::Stock::OPEN)
+      cm_working_profile_open_button(Gtk::Stock::OPEN),
+      cm_display_profile_open_button(Gtk::Stock::OPEN),
+      cm_working_profile_frame( _("Working RGB Colorspace") ),
+      cm_display_profile_frame( _("Display Profile") )
 {
   set_default_size(600,400);
 
@@ -64,12 +67,75 @@ PF::SettingsDialog::SettingsDialog():
   notebook.append_page( color_box, "Color management" );
   notebook.append_page( about_box, "About" );
 
+
+  // Working colorspace settings
+  cm_working_profile_model = Gtk::ListStore::create(cm_working_profile_columns);
+  cm_working_profile_type_selector.set_model( cm_working_profile_model );
+  cm_working_profile_type_selector.pack_start(cm_working_profile_columns.col_value);
+
+  Gtk::TreeModel::iterator ri = cm_working_profile_model->append();
+  Gtk::TreeModel::Row row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_sRGB;
+  row[cm_working_profile_columns.col_value] = "sRGB";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_REC2020;
+  row[cm_working_profile_columns.col_value] = "Rec.2020";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_ADOBE;
+  row[cm_working_profile_columns.col_value] = "AdobeRGB";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_PROPHOTO;
+  row[cm_working_profile_columns.col_value] = "ProPhotoRGB";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_ACEScg;
+  row[cm_working_profile_columns.col_value] = "ACEScg";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_ACES;
+  row[cm_working_profile_columns.col_value] = "ACES";
+
+  cm_working_trc_model = Gtk::ListStore::create(cm_working_trc_columns);
+  cm_working_trc_type_selector.set_model( cm_working_trc_model );
+  cm_working_trc_type_selector.pack_start(cm_working_trc_columns.col_value);
+
+  ri = cm_working_trc_model->append();
+  row = *(ri);
+  row[cm_working_trc_columns.col_id] = PF::PF_TRC_LINEAR;
+  row[cm_working_trc_columns.col_value] = "linear";
+  ri = cm_working_trc_model->append();
+  row = *(ri);
+  row[cm_working_trc_columns.col_id] = PF::PF_TRC_PERCEPTUAL;
+  row[cm_working_trc_columns.col_value] = "perceptual";
+  //ri = cm_working_trc_model->append();
+  //row = *(ri);
+  //row[cm_working_trc_columns.col_id] = PF::PF_TRC_sRGB;
+  //row[cm_working_trc_columns.col_value] = "sRGB";
+
+  //cm_working_profile_type_selector.set_active( 1 );
+  cm_working_profile_type_selector.set_size_request( 150, -1 );
+  cm_working_trc_type_selector.set_active( 0 );
+  cm_working_trc_type_selector.set_size_request( 150, -1 );
+
+  cm_working_profile_box2.pack_start(cm_working_profile_type_selector, Gtk::PACK_SHRINK);
+  cm_working_profile_box2.pack_start(cm_working_trc_type_selector, Gtk::PACK_SHRINK);
+  cm_working_profile_box.pack_start( cm_working_profile_entry, Gtk::PACK_SHRINK );
+  cm_working_profile_box.pack_start( cm_working_profile_open_button, Gtk::PACK_SHRINK );
+
+  cm_working_profile_frame_box.pack_start( cm_working_profile_box2, Gtk::PACK_SHRINK, 5 );
+  //cm_working_profile_frame_box.pack_start( cm_working_profile_box, Gtk::PACK_SHRINK, 5 );
+  cm_working_profile_frame.add( cm_working_profile_frame_box );
+
+  // Display profile settings
   cm_display_profile_model = Gtk::ListStore::create(cm_display_profile_columns);
   cm_display_profile_type_selector.set_model( cm_display_profile_model );
   cm_display_profile_type_selector.pack_start(cm_display_profile_columns.col_value);
 
-  Gtk::TreeModel::iterator ri = cm_display_profile_model->append();
-  Gtk::TreeModel::Row row = *(ri);
+  ri = cm_display_profile_model->append();
+  row = *(ri);
   row[cm_display_profile_columns.col_id] = 0;
   row[cm_display_profile_columns.col_value] = "sRGB";
 
@@ -86,15 +152,20 @@ PF::SettingsDialog::SettingsDialog():
   //cm_display_profile_type_selector.insert( 0, "sRGB" );
   //cm_display_profile_type_selector.insert( 1, "System (not working)" );
   //cm_display_profile_type_selector.insert( 2, "Custom" );
-  cm_display_profile_type_selector.set_active( 0 );
+  //cm_display_profile_type_selector.set_active( 0 );
   cm_display_profile_type_selector.set_size_request( 30, -1 );
 
   //cm_display_profile_button.add( cm_display_profile_img );
   cm_display_profile_box.pack_start( cm_display_profile_entry, Gtk::PACK_SHRINK );
   cm_display_profile_box.pack_start( cm_display_profile_open_button, Gtk::PACK_SHRINK );
 
-  color_box.pack_start( cm_display_profile_type_selector, Gtk::PACK_SHRINK );
-  color_box.pack_start( cm_display_profile_box, Gtk::PACK_SHRINK );
+  cm_display_profile_frame_box.pack_start( cm_display_profile_type_selector, Gtk::PACK_SHRINK, 5 );
+  cm_display_profile_frame_box.pack_start( cm_display_profile_box, Gtk::PACK_SHRINK, 5 );
+  cm_display_profile_frame.add( cm_display_profile_frame_box );
+
+
+  color_box.pack_start( cm_working_profile_frame, Gtk::PACK_SHRINK,10 );
+  color_box.pack_start( cm_display_profile_frame, Gtk::PACK_SHRINK,0 );
 
   get_vbox()->pack_start( notebook );
 
@@ -121,6 +192,30 @@ void PF::SettingsDialog::open()
 
 void PF::SettingsDialog::load_settings()
 {
+  profile_type_t ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
+  Glib::RefPtr< Gtk::TreeModel > model = cm_working_profile_type_selector.get_model();
+  Gtk::TreeModel::Children rows = model->children();
+  Gtk::TreeModel::iterator ri = cm_working_profile_model->append();
+  for( ri = rows.begin(); ri != rows.end(); ri++ ) {
+    Gtk::TreeModel::Row row = *(ri);
+    if( row[cm_working_profile_columns.col_id] == (int)(ptype) ) {
+      cm_working_profile_type_selector.set_active( ri );
+      break;
+    }
+  }
+
+  TRC_type ttype = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
+  model = cm_working_trc_type_selector.get_model();
+  rows = model->children();
+  ri = cm_working_trc_model->append();
+  for( ri = rows.begin(); ri != rows.end(); ri++ ) {
+    Gtk::TreeModel::Row row = *(ri);
+    if( row[cm_working_trc_columns.col_id] == (int)(ttype) ) {
+      cm_working_trc_type_selector.set_active( ri );
+      break;
+    }
+  }
+
   cm_display_profile_type_selector.set_active( PF::PhotoFlow::Instance().get_options().get_display_profile_type() );
   cm_display_profile_entry.set_text( PF::PhotoFlow::Instance().get_options().get_custom_display_profile_name() );
 }
@@ -129,6 +224,17 @@ void PF::SettingsDialog::load_settings()
 void PF::SettingsDialog::save_settings()
 {
   bool cm_dpy_modified = false;
+
+  Gtk::TreeModel::iterator ri = cm_working_profile_type_selector.get_active();
+  Gtk::TreeModel::Row row = *(ri);
+  int ptype = row[cm_working_profile_columns.col_id];
+  PF::PhotoFlow::Instance().get_options().set_working_profile_type( ptype );
+
+  ri = cm_working_trc_type_selector.get_active();
+  row = *(ri);
+  int ttype = row[cm_working_trc_columns.col_id];
+  PF::PhotoFlow::Instance().get_options().set_working_trc_type( ttype );
+
   if( cm_display_profile_type_selector.get_active_row_number() != (int)PF::PhotoFlow::Instance().get_options().get_display_profile_type() ) {
     cm_dpy_modified = true;
   }

@@ -131,9 +131,10 @@ enum hlreco_mode_t {
 
     // output color profile
     PropertyBase out_profile_mode;
-    PropertyBase out_trc_mode;
-    profile_type_t current_out_profile_mode;
-    TRC_type current_out_trc_mode;
+    PropertyBase out_profile_type;
+    PropertyBase out_trc_type;
+    profile_type_t current_out_profile_type;
+    TRC_type current_out_trc_type;
     Property<std::string> out_profile_name;
     std::string current_out_profile_name;
     //cmsHPROFILE out_profile;
@@ -167,7 +168,7 @@ enum hlreco_mode_t {
     cmsToneCurve* get_gamma_curve() { return gamma_curve; }
     cmsToneCurve* get_srgb_curve() { return srgb_curve; }
     cmsHTRANSFORM get_transform() { return transform; }
-    TRC_type get_trc_type() { return (TRC_type)out_trc_mode.get_enum_value().first; }
+    TRC_type get_trc_type() { return (TRC_type)out_trc_type.get_enum_value().first; }
 
     bool get_clip_negative() { return clip_negative.get(); }
     bool get_clip_overflow() { return clip_overflow.get(); }

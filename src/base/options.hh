@@ -46,6 +46,9 @@ namespace PF
 
   class Options
   {
+    profile_type_t working_profile_type;
+    TRC_type working_trc_type;
+    Glib::ustring custom_working_profile_name;
 
     display_profile_t display_profile_type;
     Glib::ustring custom_display_profile_name;
@@ -56,6 +59,17 @@ namespace PF
 
   public:
     Options();
+
+    void set_working_profile_type(int t);
+    profile_type_t get_working_profile_type() { return working_profile_type; }
+    void set_working_trc_type(int t);
+    TRC_type get_working_trc_type() { return working_trc_type; }
+    void set_custom_working_profile_name( std::string n )
+    {
+      custom_working_profile_name = n;
+    }
+    std::string get_custom_working_profile_name() { return custom_working_profile_name; }
+
 
     void set_display_profile_type(int t);
     display_profile_t get_display_profile_type() { return display_profile_type; }

@@ -35,11 +35,14 @@ PF::ImageReaderPar::ImageReaderPar():
 OpParBase(),
 file_name("file_name", this),
 //out_profile_mode("profile_mode",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
-in_profile_mode("in_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("embedded")),
-in_trc_mode("in_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+in_profile_mode("in_profile_mode",this,PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("embedded")),
+in_profile_type("in_profile_type",this,PF::OUT_PROF_REC2020,"REC2020",_("Rec.2020")),
+in_trc_type("in_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
 in_profile_name("in_profile_name",this),
-out_profile_mode("out_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("same")),
-out_trc_mode("out_trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+//out_profile_mode("out_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("same")),
+out_profile_mode("out_profile_mode",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
+out_profile_type("out_profile_type",this,PF::OUT_PROF_REC2020,"REC2020",_("Rec.2020")),
+out_trc_type("out_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
 out_profile_name("out_profile_name",this),
 image(NULL),
 current_format(VIPS_FORMAT_NOTSET),
@@ -48,33 +51,41 @@ out_profile( NULL ),
 transform( NULL ),
 raster_image( NULL )
 {
-  //in_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  in_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
-  in_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
-  in_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-  in_profile_mode.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
-  in_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
-  in_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
-  //in_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-  in_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+  in_profile_mode.add_enum_value(PF::PROF_MODE_NONE,"NONE",_("none"));
+  in_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
+  in_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
+
+  //in_profile_type.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
+  in_profile_type.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
+  in_profile_type.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
+  in_profile_type.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
+  in_profile_type.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
+  in_profile_type.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
+  in_profile_type.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
+  //in_profile_type.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
+  //in_profile_type.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
   //out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACEScg","ACEScg");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+  out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use input"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
 
-  //in_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
-  in_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
-  in_trc_mode.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+  out_profile_type.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
+  out_profile_type.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
+  out_profile_type.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
+  out_profile_type.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
+  out_profile_type.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
+  out_profile_type.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
+  //out_profile_type.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
+  //out_profile_type.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
-  //out_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
-  out_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
-  out_trc_mode.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+  //in_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
+  in_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
+  in_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+
+  //out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
+  out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
+  out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
 
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
@@ -156,6 +167,11 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
   if( !image ) return NULL;
 
+  VipsImage* tmp;
+  vips_copy( image, &tmp, NULL );
+  PF_UNREF( image, "ImageReaderPar::build(): image unref after vips_copy" );
+  image = tmp;
+
   /*
   {
     size_t exifsz;
@@ -214,9 +230,10 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 #endif
 
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
+  std::cout<<std::endl<<"================="<<std::endl;
   std::cout<<"ImageReaderPar::build(): get_format()="<<get_format()<<"  image->BandFmt="<<image->BandFmt<<std::endl;
-#endif
+//#endif
   VipsImage* out = image;
   std::vector<VipsImage*> in2;
   in2.push_back( image );
@@ -257,18 +274,21 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 #endif
 
 
-  bool changed = in_profile_mode.is_modified() || in_trc_mode.is_modified() ||
-      out_profile_mode.is_modified() || out_trc_mode.is_modified();
+  bool changed = in_profile_mode.is_modified() || in_profile_type.is_modified() || in_trc_type.is_modified() ||
+      out_profile_mode.is_modified() || out_profile_type.is_modified() || out_trc_type.is_modified();
 
   //if( in_profile ) cmsCloseProfile( in_profile );
   //if( out_profile ) cmsCloseProfile( out_profile );
   in_profile = NULL;
   out_profile = NULL;
   profile_type_t ptype;
+  profile_mode_t pmode;
   TRC_type trc_type;
   PF::ICCProfile* in_iccprof = NULL;
 
-  if( (profile_type_t)in_profile_mode.get_enum_value().first == PF::OUT_PROF_EMBEDDED ) {
+  if( (profile_mode_t)in_profile_mode.get_enum_value().first == PF::PROF_MODE_NONE ) {
+    // do nothing
+  } else if( (profile_mode_t)in_profile_mode.get_enum_value().first == PF::PROF_MODE_EMBEDDED ) {
     void *data;
     size_t data_length;
     if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
@@ -284,9 +304,20 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
         }
       }
     }
+  } else if( (profile_mode_t)in_profile_mode.get_enum_value().first == PF::PROF_MODE_ICC ) {
+    in_iccprof = PF::ICCStore::Instance().get_profile( in_profile_name.get() );
+    if( in_iccprof ) {
+      in_profile = in_iccprof->get_profile();
+      if( in_profile ) {
+        char tstr[1024];
+        cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+        std::cout<<"ImageReader: custom input profile from disk: "<<tstr<<std::endl;
+        //cmsCloseProfile( profile_in );
+      }
+    }
   } else {
-    ptype = (profile_type_t)in_profile_mode.get_enum_value().first;
-    trc_type = (TRC_type)in_trc_mode.get_enum_value().first;
+    ptype = (profile_type_t)in_profile_type.get_enum_value().first;
+    trc_type = (TRC_type)in_trc_type.get_enum_value().first;
     std::cout<<"Getting input profile..."<<std::endl;
     in_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
     if( in_iccprof ) {
@@ -296,25 +327,42 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"... FAILED"<<std::endl;
     }
   }
-
-  ptype = (profile_type_t)out_profile_mode.get_enum_value().first;
-  trc_type = (TRC_type)out_trc_mode.get_enum_value().first;
-  std::cout<<"Getting output profile..."<<std::endl;
-  PF::ICCProfile* out_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-  if( out_iccprof ) {
-    out_profile = out_iccprof->get_profile();
-    std::cout<<"... OK"<<std::endl;
-  } else {
-    std::cout<<"... FAILED"<<std::endl;
-  }
-
   std::cout<<"ImageReaderPar::build(): in_profile="<<in_profile<<std::endl;
 
-  if( changed ) {
-    if( transform )
-      cmsDeleteTransform( transform );
-    transform = NULL;
-    if( in_profile && out_profile ) {
+  if( transform )
+    cmsDeleteTransform( transform );
+  transform = NULL;
+  PF::ICCProfile* out_iccprof = NULL;
+  if( (profile_mode_t)in_profile_mode.get_enum_value().first != PF::PROF_MODE_NONE ) {
+    // only retrieve the working profile if the image is color managed
+    pmode = (profile_mode_t)out_profile_mode.get_enum_value().first;
+    if( pmode == PF::PROF_MODE_EMBEDDED ) {
+      // do nothing
+      std::cout<<"Using embedded profile"<<std::endl;
+        out_iccprof = in_iccprof;
+        out_profile = in_profile;
+    } else if( pmode == PF::PROF_MODE_DEFAULT && in_iccprof ) {
+      ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
+      trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
+      std::cout<<"Getting output profile..."<<std::endl;
+      out_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
+    } else if( pmode == PF::PROF_MODE_ICC && in_iccprof ) {
+      out_iccprof = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
+    } else if( pmode == PF::PROF_MODE_CUSTOM && in_iccprof ) {
+      ptype = (profile_type_t)out_profile_type.get_enum_value().first;
+      trc_type = (TRC_type)out_trc_type.get_enum_value().first;
+      std::cout<<"Getting output profile..."<<std::endl;
+      out_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
+    }
+    if( out_iccprof ) {
+      out_profile = out_iccprof->get_profile();
+      std::cout<<"... OK"<<std::endl;
+    } else {
+      std::cout<<"... FAILED"<<std::endl;
+    }
+
+    //if( changed ) {
+    if( in_profile && out_profile && out_profile != in_profile ) {
       cmsUInt32Number infmt = vips2lcms_pixel_format( out->BandFmt, in_profile );
       cmsUInt32Number outfmt = vips2lcms_pixel_format( out->BandFmt, out_profile );
 
@@ -324,14 +372,12 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
           outfmt,
           INTENT_RELATIVE_COLORIMETRIC,
           cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
-    } else if( !out_profile ) {
-      out_iccprof = in_iccprof;
-      out_profile = in_profile;
+    //} else if( !out_profile ) {
+    //  out_iccprof = in_iccprof;
+    //  out_profile = in_profile;
     }
-  } else if( !out_profile ) {
-    out_iccprof = in_iccprof;
-    out_profile = in_profile;
   }
+
 
   std::cout<<"ImageReaderPar::build(): out_profile="<<out_profile<<std::endl;
   std::cout<<"ImageReaderPar::build(): transform="<<transform<<std::endl;
@@ -380,9 +426,12 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
           (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
     }
      */
+  }
+
+  if( out ) {
+    std::cout<<"ImageReaderPar::build(): setting embedded profile..."<<std::endl;
+    PF::set_icc_profile( out, out_iccprof );
     if( out_iccprof ) {
-      std::cout<<"ImageReaderPar::build(): setting embedded profile..."<<std::endl;
-      PF::set_icc_profile( out, out_iccprof );
       PF::print_embedded_profile( out );
     }
   }

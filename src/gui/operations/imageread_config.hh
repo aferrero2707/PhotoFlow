@@ -53,6 +53,8 @@ namespace PF {
 
   Selector inProfileModeSelector;
   Gtk::HBox inProfileModeSelectorBox;
+  Selector inProfileTypeSelector;
+  Gtk::HBox inProfileTypeSelectorBox;
   Selector inTRCModeSelector;
   Gtk::HBox inTRCModeSelectorBox;
 
@@ -64,6 +66,8 @@ namespace PF {
 
   Selector outProfileModeSelector;
   Gtk::HBox outProfileModeSelectorBox;
+  Selector outProfileTypeSelector;
+  Gtk::HBox outProfileTypeSelectorBox;
   Selector outTRCModeSelector;
   Gtk::HBox outTRCModeSelectorBox;
 
@@ -73,12 +77,19 @@ namespace PF {
   Gtk::Entry outProfFileEntry;
   Gtk::Button outProfOpenButton;
 
+  Gtk::VBox inProfBox, outProfBox;
+  Gtk::Frame inProfFrame, outProfFrame;
+
 public:
   ImageReadConfigGUI( Layer* l );
 
   void on_button_open_clicked();
+  void on_in_button_open_clicked();
+  void on_out_button_open_clicked();
 
   void on_filename_changed();
+  void on_in_filename_changed();
+  void on_out_filename_changed();
 
   void open();
   void do_update();

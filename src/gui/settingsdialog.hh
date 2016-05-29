@@ -53,6 +53,11 @@ class SettingsDialog : public Gtk::Dialog
     Gtk::TreeModelColumn<Glib::ustring> col_value;
   };
 
+  DCMModelColumns cm_working_profile_columns;
+  Glib::RefPtr<Gtk::ListStore> cm_working_profile_model;
+  DCMModelColumns cm_working_trc_columns;
+  Glib::RefPtr<Gtk::ListStore> cm_working_trc_model;
+
   DCMModelColumns cm_display_profile_columns;
   Glib::RefPtr<Gtk::ListStore> cm_display_profile_model;
 
@@ -60,11 +65,22 @@ class SettingsDialog : public Gtk::Dialog
 
   Gtk::VBox about_box, color_box;
 
+  Gtk::ComboBox cm_working_profile_type_selector;
+  Gtk::Image cm_working_profile_open_img;
+  Gtk::Button cm_working_profile_open_button;
+  Gtk::Entry cm_working_profile_entry;
+  Gtk::HBox cm_working_profile_box;
+  Gtk::HBox cm_working_profile_box2;
+  Gtk::ComboBox cm_working_trc_type_selector;
+
   Gtk::ComboBox cm_display_profile_type_selector;
   Gtk::Image cm_display_profile_open_img;
   Gtk::Button cm_display_profile_open_button;
   Gtk::Entry cm_display_profile_entry;
   Gtk::HBox cm_display_profile_box;
+
+  Gtk::Frame cm_working_profile_frame, cm_display_profile_frame;
+  Gtk::VBox cm_working_profile_frame_box, cm_display_profile_frame_box;
 
 public:
   sigc::signal<void> signal_cm_modified;

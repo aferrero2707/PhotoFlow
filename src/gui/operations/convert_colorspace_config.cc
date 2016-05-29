@@ -35,8 +35,9 @@
 
 PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Convert to profile" ),
-  outProfileModeSelector( this, "profile_mode", "working profile: ", 1 ),
-  outTRCModeSelector( this, "trc_mode", _("encoding: "), 1 ),
+  outProfileModeSelector( this, "profile_mode", _("type: "), 1 ),
+  outProfileTypeSelector( this, "profile_type", _("gamut: "), 1 ),
+  outTRCTypeSelector( this, "trc_type", _("encoding: "), 1 ),
   assignButton( this, "assign", _("assign profile"), false ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
@@ -44,8 +45,11 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
-  outTRCModeSelectorBox.pack_start( outTRCModeSelector, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outTRCModeSelectorBox, Gtk::PACK_SHRINK );
+  outProfileTypeSelectorBox.pack_start( outProfileTypeSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( outProfileTypeSelectorBox, Gtk::PACK_SHRINK );
+
+  outTRCTypeSelectorBox.pack_start( outTRCTypeSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( outTRCTypeSelectorBox, Gtk::PACK_SHRINK );
 
   outProfLabel.set_text( _("working profile name:") );
   outProfVBox.pack_start( outProfLabel );
@@ -76,18 +80,21 @@ void PF::ConvertColorspaceConfigGUI::do_update()
   PF::OpParBase* par = get_par();
   PF::ConvertColorspacePar* ccpar = dynamic_cast<PF::ConvertColorspacePar*>( par );
   if( ccpar ) {
-    if( ccpar->get_out_profile_mode() == PF::OUT_PROF_CUSTOM ) {
-      outTRCModeSelectorBox.hide();
-    } else {
-      outTRCModeSelectorBox.show();
-    }
-
-    if( ccpar->get_out_profile_mode() == PF::OUT_PROF_CUSTOM ) {
-      outProfHBox.show();
-    } else {
+    if( ccpar->get_out_profile_mode() == PF::PROF_MODE_DEFAULT ) {
+      outProfileTypeSelectorBox.hide();
+      outTRCTypeSelectorBox.hide();
       outProfHBox.hide();
+    } else if( ccpar->get_out_profile_mode() == PF::PROF_MODE_CUSTOM ) {
+      outProfileTypeSelectorBox.show();
+      outTRCTypeSelectorBox.show();
+      outProfHBox.hide();
+    } else if( ccpar->get_out_profile_mode() == PF::PROF_MODE_ICC ) {
+      outProfileTypeSelectorBox.hide();
+      outTRCTypeSelectorBox.hide();
+      outProfHBox.show();
     }
   }
+
   OperationConfigGUI::do_update();
 }
 

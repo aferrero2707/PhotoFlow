@@ -47,10 +47,12 @@ namespace PF
     Property<std::string> file_name;
     // output color profile
     PropertyBase in_profile_mode;
-    PropertyBase in_trc_mode;
+    PropertyBase in_profile_type;
+    PropertyBase in_trc_type;
     Property<std::string> in_profile_name;
     PropertyBase out_profile_mode;
-    PropertyBase out_trc_mode;
+    PropertyBase out_profile_type;
+    PropertyBase out_trc_type;
     Property<std::string> out_profile_name;
 
     VipsImage* image;
@@ -78,8 +80,10 @@ namespace PF
     void set_file_name( const std::string& name ) { file_name.set_str( name ); }
     void set_file_name( const char* name ) { set_file_name( std::string( name ) ); }
 
-    profile_type_t get_in_profile_mode() { return (profile_type_t)in_profile_mode.get_enum_value().first; }
-    profile_type_t get_out_profile_mode() { return (profile_type_t)out_profile_mode.get_enum_value().first; }
+    profile_mode_t get_in_profile_mode() { return (profile_mode_t)in_profile_mode.get_enum_value().first; }
+    profile_mode_t get_out_profile_mode() { return (profile_mode_t)out_profile_mode.get_enum_value().first; }
+    profile_type_t get_in_profile_type() { return (profile_type_t)in_profile_type.get_enum_value().first; }
+    profile_type_t get_out_profile_type() { return (profile_type_t)out_profile_type.get_enum_value().first; }
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 

@@ -45,8 +45,11 @@ namespace PF {
     Selector outProfileModeSelector;
     Gtk::HBox outProfileModeSelectorBox;
 
-    Selector outTRCModeSelector;
-    Gtk::HBox outTRCModeSelectorBox;
+    Selector outProfileTypeSelector;
+    Gtk::HBox outProfileTypeSelectorBox;
+
+    Selector outTRCTypeSelector;
+    Gtk::HBox outTRCTypeSelectorBox;
 
     CheckBox assignButton;
     Gtk::HBox assignButtonBox;

@@ -51,7 +51,8 @@ namespace PF
 
     // output color profile
     PropertyBase out_profile_mode;
-    PropertyBase out_trc_mode;
+    PropertyBase out_profile_type;
+    PropertyBase out_trc_type;
     Property<std::string> out_profile_name;
     Property<bool> assign;
 
@@ -72,7 +73,9 @@ namespace PF
     cmsHTRANSFORM get_transform() { return transform; }
 
     int get_out_profile_mode() { return out_profile_mode.get_enum_value().first; }
-    void set_out_profile_mode( profile_type_t mode ) { out_profile_mode.set_enum_value( mode ); }
+    void set_out_profile_mode( profile_mode_t mode ) { out_profile_mode.set_enum_value( mode ); }
+    int get_out_profile_type() { return out_profile_type.get_enum_value().first; }
+    void set_out_profile_type( profile_type_t type ) { out_profile_type.set_enum_value( type ); }
     void set_out_profile_data( void* data, int length ) { 
       out_profile_data = data; 
       out_profile_data_length = length; 

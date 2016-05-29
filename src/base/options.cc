@@ -35,8 +35,22 @@
 
 PF::Options::Options()
 {
+  working_profile_type = PF::OUT_PROF_REC2020;
+  working_trc_type = PF_TRC_LINEAR;
   display_profile_type = PF::PF_DISPLAY_PROF_sRGB;
 }
+
+void PF::Options::set_working_profile_type(int t)
+{
+  working_profile_type = (profile_type_t)t;
+}
+
+
+void PF::Options::set_working_trc_type(int t)
+{
+  working_trc_type = (TRC_type)t;
+}
+
 
 void PF::Options::set_display_profile_type(int t)
 {
@@ -71,6 +85,41 @@ void PF::Options::load()
       }
 
       if (keyFile.has_group ("Color Management")) {
+        if (keyFile.has_key ("Color Management", "WorkingProfileType")) {
+          std::string keyval = keyFile.get_string ("Color Management", "WorkingProfileType");
+          if( keyval == "sRGB" )
+            working_profile_type = PF::OUT_PROF_sRGB;
+          else if( keyval == "ADOBE" )
+            working_profile_type = PF::OUT_PROF_ADOBE;
+          else if( keyval == "REC2020" )
+            working_profile_type = PF::OUT_PROF_REC2020;
+          else if( keyval == "PROPHOTO" )
+            working_profile_type = PF::OUT_PROF_PROPHOTO;
+          else if( keyval == "ACEScg" )
+            working_profile_type = PF::OUT_PROF_ACEScg;
+          else if( keyval == "ACES" )
+            working_profile_type = PF::OUT_PROF_ACES;
+          else if( keyval == "CUSTOM" )
+            working_profile_type = PF::OUT_PROF_CUSTOM;
+          std::cout<<"working_profile_type="<<working_profile_type<<std::endl;
+        }
+        if (keyFile.has_key ("Color Management", "WorkingTRCType")) {
+          std::string keyval = keyFile.get_string ("Color Management", "WorkingTRCType");
+          if( keyval == "TRC_STANDARD" )
+            working_trc_type = PF::PF_TRC_STANDARD;
+          else if( keyval == "TRC_PERCEPTUAL" )
+            working_trc_type = PF::PF_TRC_PERCEPTUAL;
+          else if( keyval == "TRC_LINEAR" )
+            working_trc_type = PF::PF_TRC_LINEAR;
+          else if( keyval == "TRC_sRGB" )
+            working_trc_type = PF::PF_TRC_sRGB;
+          std::cout<<"working_trc_type="<<working_trc_type<<std::endl;
+        }
+        if (keyFile.has_key ("Color Management", "CustomWorkingProfileName")) {
+          custom_working_profile_name = keyFile.get_string ("Color Management", "CustomWorkingProfileName");
+          std::cout<<"custom_working_profile_name="<<custom_working_profile_name<<std::endl;
+        }
+
         if (keyFile.has_key ("Color Management", "DisplayProfileType")) {
           int keyval = keyFile.get_integer ("Color Management", "DisplayProfileType");
           if( keyval>0 && keyval<PF::PF_DISPLAY_PROF_MAX)
@@ -103,6 +152,47 @@ void PF::Options::save()
   keyFile.set_string ("Folders", "last_visited_image_folder", last_visited_image_folder);
   keyFile.set_string ("Folders", "last_visited_preset_folder", last_visited_preset_folder);
   keyFile.set_string ("Folders", "last_visited_icc_folder", last_visited_icc_folder);
+
+  switch( working_profile_type ) {
+  case OUT_PROF_sRGB:
+    keyFile.set_string ("Color Management", "WorkingProfileType", "sRGB");
+    break;
+  case OUT_PROF_REC2020:
+    keyFile.set_string ("Color Management", "WorkingProfileType", "REC2020");
+    break;
+  case OUT_PROF_ADOBE:
+    keyFile.set_string ("Color Management", "WorkingProfileType", "ADOBE");
+    break;
+  case OUT_PROF_PROPHOTO:
+    keyFile.set_string ("Color Management", "WorkingProfileType", "PROPHOTO");
+    break;
+  case OUT_PROF_ACEScg:
+    keyFile.set_string ("Color Management", "WorkingProfileType", "ACEScg");
+    break;
+  case OUT_PROF_ACES:
+    keyFile.set_string ("Color Management", "WorkingProfileType", "ACES");
+    break;
+  case OUT_PROF_CUSTOM:
+    keyFile.set_string ("Color Management", "WorkingProfileType", "CUSTOM");
+    break;
+  default: break;
+  }
+  switch( working_trc_type ) {
+  case PF_TRC_STANDARD:
+    keyFile.set_string ("Color Management", "WorkingTRCType", "TRC_STANDARD");
+    break;
+  case PF_TRC_PERCEPTUAL:
+    keyFile.set_string ("Color Management", "WorkingTRCType", "TRC_PERCEPTUAL");
+    break;
+  case PF_TRC_LINEAR:
+    keyFile.set_string ("Color Management", "WorkingTRCType", "TRC_LINEAR");
+    break;
+  case PF_TRC_sRGB:
+    keyFile.set_string ("Color Management", "WorkingTRCType", "TRC_sRGB");
+    break;
+  default: break;
+  }
+  keyFile.set_string ("Color Management", "CustomWorkingProfileName", custom_display_profile_name);
 
   keyFile.set_integer ("Color Management", "DisplayProfileType", (int)display_profile_type);
   keyFile.set_string ("Color Management", "CustomDisplayProfileName", custom_display_profile_name);

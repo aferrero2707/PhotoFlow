@@ -119,7 +119,7 @@ VipsImage* PF::DesaturatePar::build(std::vector<VipsImage*>& in, int first,
   
       PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert_cs->get_par());
       if(csconvpar) {
-        csconvpar->set_out_profile_mode( PF::OUT_PROF_CUSTOM );
+        csconvpar->set_out_profile_mode( PF::PROF_MODE_ICC );
         csconvpar->set_out_profile_data( profile_data, profile_length );
       }
       VipsImage* rgbimg = convert_cs->get_par()->build( in2, 0, NULL, NULL, level );

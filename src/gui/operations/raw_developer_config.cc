@@ -351,14 +351,17 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   saturationLevelSlider( this, "saturation_level_correction", _("RAW white level %"), 100, 0, 200, 0.5, 5, 100 ),
   blackLevelSlider( this, "black_level_correction", _("RAW black level %"), 100, 0, 200, 0.5, 5, 100 ),
   hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
-  profileModeSelector( this, "profile_mode", _("input: "), 0 ),
+  profileModeSelector( this, "profile_mode", _("type: "), 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
   gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-  outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
-  outTRCModeSelector( this, "out_trc_mode", _("encoding: "), 1 ),
+  outProfileModeSelector( this, "out_profile_mode", _("type: "), 1 ),
+  outProfileTypeSelector( this, "out_profile_type", _("gamut: "), 1 ),
+  outTRCTypeSelector( this, "out_trc_type", _("encoding: "), 1 ),
   outProfOpenButton(Gtk::Stock::OPEN),
+  inProfFrame( _("camera profile") ),
+  outProfFrame( _("working profile") ),
   clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
   clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
   ignore_temp_tint_change( false )
@@ -407,28 +410,39 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   //outputControlsBox.pack_end( clip_overflow_checkbox, Gtk::PACK_SHRINK );
   //outputControlsBox.pack_end( clip_negative_checkbox, Gtk::PACK_SHRINK );
 
-  profileModeSelectorBox.pack_start( profileModeSelector, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK );
+  //===================
+  // Input camera profile
+  outputControlsBox.pack_start( inProfFrame, Gtk::PACK_SHRINK, 10 );
+  outputControlsBox.pack_start( outProfFrame, Gtk::PACK_SHRINK, 10 );
+  inProfFrame.add( inProfBox );
+  outProfFrame.add( outProfBox );
+
+  inProfBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK );
+  profileModeSelectorBox.pack_end( profileModeSelector, Gtk::PACK_SHRINK );
+
+  gammaModeVBox.pack_start( gammaModeSelector, Gtk::PACK_SHRINK );
+  //gammaModeVBox.pack_start( inGammaLinSlider );
+  gammaModeVBox.pack_start( inGammaExpSlider, Gtk::PACK_SHRINK );
+  gammaModeHBox.pack_end( gammaModeVBox, Gtk::PACK_SHRINK );
+  inProfBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
 
   camProfLabel.set_text( "camera profile name:" );
   camProfVBox.pack_start( camProfLabel, Gtk::PACK_SHRINK );
   camProfVBox.pack_start( camProfFileEntry, Gtk::PACK_SHRINK );
   camProfHBox.pack_start( camProfVBox, Gtk::PACK_SHRINK );
   camProfHBox.pack_start( camProfOpenButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
+  inProfBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
 
-  gammaModeVBox.pack_start( gammaModeSelector, Gtk::PACK_SHRINK );
-  //gammaModeVBox.pack_start( inGammaLinSlider );
-  gammaModeVBox.pack_start( inGammaExpSlider, Gtk::PACK_SHRINK );
-  gammaModeHBox.pack_start( gammaModeVBox, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
+  outProfileModeSelectorBox.pack_end( outProfileModeSelector, Gtk::PACK_SHRINK );
+  outProfBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
-  outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
+  outProfileTypeSelectorBox.pack_end( outProfileTypeSelector, Gtk::PACK_SHRINK );
+  outProfBox.pack_start( outProfileTypeSelectorBox, Gtk::PACK_SHRINK );
 
-  outTRCModeSelectorBox.pack_start( outTRCModeSelector, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outTRCModeSelectorBox, Gtk::PACK_SHRINK );
+  outTRCTypeSelectorBox.pack_end( outTRCTypeSelector, Gtk::PACK_SHRINK );
+  outProfBox.pack_start( outTRCTypeSelectorBox, Gtk::PACK_SHRINK );
 
+  outProfBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
   outProfLabel.set_text( "output profile name:" );
   outProfVBox.pack_start( outProfLabel, Gtk::PACK_SHRINK );
   outProfVBox.pack_start( outProfFileEntry, Gtk::PACK_SHRINK );
@@ -707,27 +721,40 @@ void PF::RawDeveloperConfigGUI::do_update()
     prop = par->get_property( "profile_mode" );
     if( !prop )  return;
 
-    if( camProfHBox.get_parent() == &outputControlsBox )
-      outputControlsBox.remove( camProfHBox );
-
-    if( outProfHBox.get_parent() == &outputControlsBox )
-      outputControlsBox.remove( outProfHBox );
-
-    if( gammaModeHBox.get_parent() == &outputControlsBox )
-      outputControlsBox.remove( gammaModeHBox );
-
     switch( prop->get_enum_value().first ) {
     case PF::IN_PROF_NONE:
-      outputControlsBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
+      camProfHBox.hide();
+      gammaModeHBox.show();
+      outProfFrame.hide();
       break;
     case PF::IN_PROF_MATRIX:
-      outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
+      camProfHBox.hide();
+      gammaModeHBox.hide();
+      outProfFrame.show();
       break;
     case PF::IN_PROF_ICC:
-      outputControlsBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
-      outputControlsBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
-      outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
+      camProfHBox.show();
+      gammaModeHBox.show();
+      outProfFrame.show();
       break;
+    }
+
+    prop = par->get_property( "out_profile_mode" );
+    if( !prop )  return;
+
+    if( prop->get_enum_value().first == PF::PROF_MODE_EMBEDDED ||
+        prop->get_enum_value().first == PF::PROF_MODE_DEFAULT ) {
+      outProfileTypeSelectorBox.hide();
+      outTRCTypeSelectorBox.hide();
+      outProfHBox.hide();
+    } else if( prop->get_enum_value().first == PF::PROF_MODE_CUSTOM ) {
+      outProfileTypeSelectorBox.show();
+      outTRCTypeSelectorBox.show();
+      outProfHBox.hide();
+    } else if( prop->get_enum_value().first == PF::PROF_MODE_ICC ) {
+      outProfileTypeSelectorBox.hide();
+      outTRCTypeSelectorBox.hide();
+      outProfHBox.show();
     }
   }
   OperationConfigGUI::do_update();

@@ -72,7 +72,8 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     char tstr[1024];
     cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
 //#ifndef NDEBUG
-    std::cout<<"icc_transform: Embedded profile found: "<<tstr<<std::endl;
+    std::cout<<"icc_transform: embedded profile: "<<in_profile<<std::endl;
+    std::cout<<"icc_transform: embedded profile name: "<<tstr<<std::endl;
 //#endif
     
     if( in_profile_name != tstr ) {
@@ -103,7 +104,7 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     char tstr[1024];
     cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //#ifndef NDEBUG
-    std::cout<<"icc_transform: output profile: "<<tstr<<std::endl;
+    std::cout<<"icc_transform: output profile name: "<<tstr<<std::endl;
     //#endif
     output_cs_type = cmsGetColorSpace(out_profile);
     switch( output_cs_type ) {

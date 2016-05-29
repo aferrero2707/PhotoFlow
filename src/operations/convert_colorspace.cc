@@ -51,8 +51,9 @@ extern "C" {
 PF::ConvertColorspacePar::ConvertColorspacePar(): 
   OpParBase(),
   //out_profile_mode("profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
-  out_profile_mode("profile_mode",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
-  out_trc_mode("trc_mode",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+  out_profile_mode("profile_mode",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
+  out_profile_type("profile_type",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
+  out_trc_type("trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
   out_profile_name("profile_name", this),
   assign("assign", this, false),
   out_profile_data( NULL ),
@@ -63,17 +64,22 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   convert2lab = PF::new_convert2lab();
 
   //out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-  out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+  //out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use input"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
 
-  //out_trc_mode.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
-  out_trc_mode.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
-  out_trc_mode.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+  //out_profile_type.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
+  out_profile_type.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
+  out_profile_type.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
+  out_profile_type.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
+  out_profile_type.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
+  out_profile_type.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
+  //out_profile_type.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
+  //out_profile_type.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+
+  //out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
+  out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
+  out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
 
   set_type("convert_colorspace" );
 
@@ -131,33 +137,34 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   }
 
   bool out_mode_changed = out_profile_mode.is_modified();
+  bool out_type_changed = out_profile_type.is_modified();
   bool out_changed = out_profile_name.is_modified();
-  bool out_trc_mode_changed = out_trc_mode.is_modified();
+  bool out_trc_type_changed = out_trc_type.is_modified();
 
-  bool changed = in_changed || out_mode_changed || out_trc_mode_changed || out_changed;
+  bool changed = in_changed || out_mode_changed || out_type_changed || out_trc_type_changed || out_changed;
 
   cmsHPROFILE out_profile = NULL;
-  profile_type_t ptype = (profile_type_t)out_profile_mode.get_enum_value().first;
-  TRC_type trc_type = (TRC_type)out_trc_mode.get_enum_value().first;
+  profile_mode_t pmode = (profile_mode_t)out_profile_mode.get_enum_value().first;
+  profile_type_t ptype = (profile_type_t)out_profile_type.get_enum_value().first;
+  TRC_type trc_type = (TRC_type)out_trc_type.get_enum_value().first;
   PF::ICCProfile* iccprof = NULL;
-  if( ptype != PF::OUT_PROF_CUSTOM ) {
-    std::cout<<"Getting built-in profile..."<<std::endl;
+
+  if( pmode == PF::PROF_MODE_DEFAULT ) {
+    ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
+    trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
+    std::cout<<"Getting output profile..."<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-    if( iccprof ) {
-      out_profile = iccprof->get_profile();
-      std::cout<<"... OK"<<std::endl;
-    } else {
-      std::cout<<"... FAILED"<<std::endl;
-    }
-  } else {
-    std::cout<<"Getting custom profile "<<out_profile_name.get()<<" ..."<<std::endl;
+  } else if( pmode == PF::PROF_MODE_ICC ) {
     iccprof = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
-    if( iccprof ) {
-      out_profile = iccprof->get_profile();
-      std::cout<<"... OK"<<std::endl;
-    } else {
-      std::cout<<"... FAILED"<<std::endl;
-    }
+  } else if( pmode == PF::PROF_MODE_CUSTOM ) {
+    ptype = (profile_type_t)out_profile_type.get_enum_value().first;
+    trc_type = (TRC_type)out_trc_type.get_enum_value().first;
+    std::cout<<"Getting output profile..."<<std::endl;
+    iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
+  }
+
+  if( iccprof ) {
+    out_profile = iccprof->get_profile();
   }
   std::cout<<"ConvertColorspacePar::build(): out_mode_changed="<<out_mode_changed
            <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;

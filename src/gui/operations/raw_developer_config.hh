@@ -126,14 +126,21 @@ public:
     Selector outProfileModeSelector;
     Gtk::HBox outProfileModeSelectorBox;
 
-    Selector outTRCModeSelector;
-    Gtk::HBox outTRCModeSelectorBox;
+    Selector outProfileTypeSelector;
+    Gtk::HBox outProfileTypeSelectorBox;
+
+    Selector outTRCTypeSelector;
+    Gtk::HBox outTRCTypeSelectorBox;
 
     Gtk::HBox outProfHBox;
     Gtk::VBox outProfVBox;
     Gtk::Label outProfLabel;
     Gtk::Entry outProfFileEntry;
     Gtk::Button outProfOpenButton;
+
+    Gtk::VBox inProfBox, outProfBox;
+    Gtk::Frame inProfFrame, outProfFrame;
+
 
     CheckBox clip_negative_checkbox;
     CheckBox clip_overflow_checkbox;
