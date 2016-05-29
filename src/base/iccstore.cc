@@ -369,7 +369,11 @@ struct ICCProfileContainer
 
 void PF::set_icc_profile( VipsImage* img, PF::ICCProfile* prof )
 {
-  if( !prof ) return;
+  if( !prof ) {
+    void* buf = NULL;
+    vips_image_set_blob( img, VIPS_META_ICC_NAME, (VipsCallbackFn) g_free, buf, 0 );
+    return;
+  }
   ICCProfileContainer* pc = (ICCProfileContainer*)g_malloc( sizeof(ICCProfileContainer) );
   if( pc ) {
     pc->profile = prof;
