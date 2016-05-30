@@ -346,6 +346,13 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
   ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
   ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
+  ca_frame( _("CA correction") ),
+  hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
+  hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
+  hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
+  hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ),
+  hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ),
+  hotp_frame( _("hot pixels filter") ),
   demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
   fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
@@ -359,12 +366,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
   outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
   outProfOpenButton(Gtk::Stock::OPEN),
-  ignore_temp_tint_change( false ),
-  hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
-  hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
-  hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
-  hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ), 
-  hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ) 
+  ignore_temp_tint_change( false )
 {
   wbControlsBox.pack_start( wbModeSelector, Gtk::PACK_SHRINK );
 
@@ -399,10 +401,20 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
   exposureControlsBox.pack_start( hlrecoModeSelector, Gtk::PACK_SHRINK, 2 );
 
-  lensControlsBox.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
-  lensControlsBox.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
-  lensControlsBox.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
-  lensControlsBox.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
+  lensControlsBox.pack_start( ca_frame, Gtk::PACK_SHRINK, 10 );
+  lensControlsBox.pack_start( hotp_frame, Gtk::PACK_SHRINK, 10 );
+  ca_frame.add( ca_box );
+  ca_box.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
+  ca_box.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
+  ca_box.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
+  ca_box.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
+
+  hotp_frame.add( hotp_box );
+  hotp_box.pack_start( hotp_enable_checkbox, Gtk::PACK_SHRINK );
+  hotp_box.pack_start( hotp_threshold_slider, Gtk::PACK_SHRINK );
+  hotp_box.pack_start( hotp_strength_slider, Gtk::PACK_SHRINK );
+  hotp_box.pack_start( hotp_permissive_checkbox, Gtk::PACK_SHRINK );
+  hotp_box.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
 
   demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
   demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
@@ -433,19 +445,13 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
 
-  hotpixelsControlsBox.pack_start( hotp_enable_checkbox, Gtk::PACK_SHRINK );
-  hotpixelsControlsBox.pack_start( hotp_threshold_slider, Gtk::PACK_SHRINK );
-  hotpixelsControlsBox.pack_start( hotp_strength_slider, Gtk::PACK_SHRINK );
-  hotpixelsControlsBox.pack_start( hotp_permissive_checkbox, Gtk::PACK_SHRINK );
-  hotpixelsControlsBox.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
-
 
   notebook.append_page( wbControlsBox, "WB" );
   notebook.append_page( exposureControlsBox, "Exp" );
-  notebook.append_page( lensControlsBox, "Lens" );
+  notebook.append_page( lensControlsBox, "Corr" );
   notebook.append_page( demoControlsBox, "Demo" );
   notebook.append_page( outputControlsBox, "Color" );
-  notebook.append_page( hotpixelsControlsBox, "Hot Pixels" );
+  //notebook.append_page( hotpixelsControlsBox, "Hot Pixels" );
     
   add_widget( notebook );
 
