@@ -40,6 +40,7 @@
 #include "fast_demosaic.hh"
 #include "false_color_correction.hh"
 #include "raw_output.hh"
+#include "hotpixels.hh"
 
 #include "raw_developer.hh"
 
@@ -62,6 +63,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   raw_preprocessor = new_raw_preprocessor();
   ca_correct = new_ca_correct();
   raw_output = new_raw_output();
+  hotpixels = new_hotpixels();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
 	for(int ifcs = 0; ifcs < 4; ifcs++) 
 		fcs[ifcs] = new_false_color_correction();
@@ -69,6 +71,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   map_properties( raw_preprocessor->get_par()->get_properties() );
   map_properties( ca_correct->get_par()->get_properties() );
   map_properties( raw_output->get_par()->get_properties() );
+  map_properties( hotpixels->get_par()->get_properties() );
 
   set_type("raw_developer" );
 
@@ -92,6 +95,13 @@ void PF::RawDeveloperPar::set_wb(float r, float g, float b)
   if( par ) par->set_wb(r,g,b);
 }
 
+int PF::RawDeveloperPar::get_hotp_fixed()
+{
+  int result = 0;
+  PF::HotPixelsPar* par = dynamic_cast<PF::HotPixelsPar*>( hotpixels->get_par() );
+  if( par ) result = par->get_pixels_fixed();
+  return result;
+}
 
 void PF::RawDeveloperPar::get_wb(float* mul)
 {
@@ -136,13 +146,20 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
     VipsImage* image = raw_preprocessor->get_par()->build( in, 0, NULL, NULL, level );
     if( !image )
       return NULL;
-  
+    
     in2.push_back( image );
-    ca_correct->get_par()->set_image_hints( image );
+    hotpixels->get_par()->set_image_hints( image );
+    hotpixels->get_par()->set_format( VIPS_FORMAT_FLOAT );
+    HotPixelsPar* hppar = dynamic_cast<HotPixelsPar*>( hotpixels->get_par() );
+    hppar->set_pixels_fixed( 0 );
+    VipsImage* out_hotp = hotpixels->get_par()->build( in2, 0, NULL, NULL, level );
+    g_object_unref( image );
+    
+    in2.clear(); in2.push_back( out_hotp );
+    ca_correct->get_par()->set_image_hints( out_hotp );
     ca_correct->get_par()->set_format( VIPS_FORMAT_FLOAT );
     VipsImage* out_ca = ca_correct->get_par()->build( in2, 0, NULL, NULL, level );
-    g_object_unref( image );
-    //VipsImage* out_ca = image;
+    g_object_unref( out_hotp );
 
     in2.clear(); in2.push_back( out_ca );
 		PF::ProcessorBase* demo = NULL;
