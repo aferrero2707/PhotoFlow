@@ -1034,9 +1034,9 @@ void PF::ImageArea::update( VipsRect* area )
   }
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
   std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
-  if( icc_par ) {
+  if( icc_par && current_display_profile ) {
     std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
-    icc_par->set_out_profile( current_display_profile );
+    icc_par->set_out_profile( current_display_profile->get_profile() );
   }
   convert2display->get_par()->set_image_hints( wclipimg );
   convert2display->get_par()->set_format( get_pipeline()->get_format() );

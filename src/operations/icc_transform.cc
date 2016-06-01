@@ -33,6 +33,7 @@
 
 PF::ICCTransformPar::ICCTransformPar():
   OpParBase(),
+  out_profile( NULL ),
   transform( NULL ),
   input_cs_type( cmsSigRgbData ),
   output_cs_type( cmsSigRgbData )
@@ -83,12 +84,16 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     input_cs_type = cmsGetColorSpace(in_profile);
   }
 
+  std::cout<<"icc_transform: out_profile="<<out_profile<<std::endl;
+
   if( transform )
     cmsDeleteTransform( transform );
 
   transform = NULL;
   if( in_profile && out_profile ) {
+    std::cout<<"icc_transform: getting input profile format"<<std::endl;
     cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, in_profile );
+    std::cout<<"icc_transform: getting output profile format"<<std::endl;
     cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, out_profile );
 
     transform = cmsCreateTransform( in_profile,
@@ -97,6 +102,10 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
         outfmt,
         INTENT_RELATIVE_COLORIMETRIC,
         cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+    std::cout<<"icc_transform: transform: "<<transform<<std::endl;
+    std::cout<<"icc_transform: in_profile: "<<in_profile<<std::endl;
+    std::cout<<"icc_transform: infmt: "<<infmt<<std::endl;
+    std::cout<<"icc_transform: outfmt: "<<outfmt<<std::endl;
   }
 
   if( out_profile) {
