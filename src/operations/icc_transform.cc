@@ -110,10 +110,10 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
 
   if( out_profile) {
     std::cout<<"icc_transform: output profile: "<<out_profile<<std::endl;
-//    char tstr[1024];
-//    cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //#ifndef NDEBUG
-//    std::cout<<"icc_transform: output profile: "<<tstr<<std::endl;
+    char tstr[1024];
+    cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+    std::cout<<"icc_transform: output profile: "<<tstr<<std::endl;
     //#endif
     output_cs_type = cmsGetColorSpace(out_profile);
     switch( output_cs_type ) {

@@ -1026,7 +1026,7 @@ void PF::ImageArea::update( VipsRect* area )
   //#endif
       break;
     case PF_DISPLAY_PROF_CUSTOM:
-      current_display_profile = PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() );
+      current_display_profile = PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() )->get_profile();
       std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
           <<" -> "<<current_display_profile<<std::endl;
       break;
@@ -1036,7 +1036,7 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
   if( icc_par && current_display_profile ) {
     std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
-    icc_par->set_out_profile( current_display_profile->get_profile() );
+    icc_par->set_out_profile( current_display_profile );
   }
   convert2display->get_par()->set_image_hints( wclipimg );
   convert2display->get_par()->set_format( get_pipeline()->get_format() );
