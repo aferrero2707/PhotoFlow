@@ -82,9 +82,9 @@ PF::RawOutputPar::RawOutputPar():
   hlreco_mode.add_enum_value(PF::HLRECO_BLEND,"HLRECO_BLEND",_("blend"));
   hlreco_mode.add_enum_value(PF::HLRECO_NONE,"HLRECO_NONE",_("none"));
 
-  profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","RAW");
-  profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","MATRIX");
-  profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC");
+  profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","Raw color");
+  profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","Standard profile");
+  profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC from disk");
 
   //out_profile_type.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
   out_profile_type.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
@@ -99,9 +99,9 @@ PF::RawOutputPar::RawOutputPar():
   //out_profile_type.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
   //out_profile_type.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
-  out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use input"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use camera profile"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
-  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC from disk"));
 
   //out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
   out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
