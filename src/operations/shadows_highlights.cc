@@ -124,8 +124,8 @@ VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int firs
   }
 
   in2.clear();
-  in2.push_back(labimg);
   in2.push_back(blurred);
+  in2.push_back(labimg);
   VipsImage* shahi = OpParBase::build( in2, 0, imap, omap, level );
   //PF_UNREF( labimg, "ImageArea::update() labimg unref" );
   PF_UNREF( blurred, "ImageArea::update() blurred unref" );

@@ -140,8 +140,8 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   std::vector<VipsImage*> in2;
-  in2.push_back(in[0]);
   in2.push_back(smoothed);
+  in2.push_back(in[0]);
   VipsImage* out = OpParBase::build( in2, 0, imap, omap, level );
 
   std::cout<<"VolumePar::build(): out="<<out<<std::endl;

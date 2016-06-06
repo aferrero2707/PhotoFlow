@@ -423,7 +423,8 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
     }
   }
 
-  VipsImage* cached;
+  VipsImage* cached = out;
+  /*
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   bool threaded = true, persistent = false;
   if( vips_tilecache(out, &cached,
@@ -433,7 +434,7 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   }
   PF_UNREF( out, "GaussBlurPar::build(): iter_in unref" );
-
+  */
   return cached;
 }
 

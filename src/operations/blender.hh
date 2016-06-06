@@ -101,7 +101,7 @@ namespace PF
       std::cout<<"BlenderProc::render(): opacity="<<opacity<<std::endl;
       std::cout<<"BlenderProc::render(): CS="<<CS<<"  CHMIN="<<CHMIN<<"  CHMAX="<<CHMAX<<std::endl;
 #endif
-      blender.blend( ireg[0], ireg[1], oreg, omap );
+      blender.blend( ireg[1], ireg[0], oreg, omap );
     }
   };
 

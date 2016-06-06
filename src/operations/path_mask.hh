@@ -148,7 +148,13 @@ render(VipsRegion** ir, int n, int in_first,
     {
   //BLENDER blender( par->get_blend_mode(), par->get_opacity() );
 
+    //std::cout<<"PathMask: rendering region top="<<oreg->valid.top
+    //    <<" left="<<oreg->valid.left
+    //    <<" width="<<oreg->valid.width
+    //    <<" height="<<oreg->valid.height<<std::endl;
+
     render_spline( ir, n, in_first, imap, omap, oreg, par );
+    //usleep(100000);
 };
 
 

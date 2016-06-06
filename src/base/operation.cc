@@ -297,7 +297,7 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
   VipsImage* out = build( in, first, imap, omap, level );
 
   VipsImage* cached = out;
-  if( out && needs_caching() ) {
+  if( out && false && needs_caching() ) {
     int tw = 64, th = 64;
     // reserve two complete rows of tiles
     int nt = out->Xsize*2/tw;

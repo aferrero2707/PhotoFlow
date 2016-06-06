@@ -72,7 +72,11 @@ namespace PF
     VolumePar();
 
     bool has_intensity() { return false; }
-    bool needs_caching() { return true; }
+    bool needs_caching() {
+      if( method.get_enum_value().first==VOLUME_BILATERAL ||
+          gauss_radius.get() > 50 ) return true;
+      return false;
+    }
 
     float get_amount() { return amount.get(); }
     float get_threshold() { return threshold.get(); }
@@ -129,8 +133,8 @@ namespace PF
       //float threshold = opar->get_threshold()*FormatInfo<T>::RANGE;
 
       for( y = 0; y < height; y++ ) {
-        pin1 = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
-        pin2 = (T*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
+        pin1 = (T*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
+        pin2 = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
         for( x = 0; x < line_size; x+=3 ) {

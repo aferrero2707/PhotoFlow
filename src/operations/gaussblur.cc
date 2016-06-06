@@ -72,7 +72,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 	}
 
   std::vector<VipsImage*> in2;
-  bool do_caching = true;
+  bool do_caching = false;
   int tw = 128, th = 128, nt = 1000;
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   int threaded = 1, persistent = 0;
@@ -160,20 +160,22 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 				NULL );
 
     if( !result ) {
-      VipsImage* cached;
+      //VipsImage* cached;
       VipsImage* tmp;
+      /*
       if( vips_tilecache(srcimg, &cached,
           "tile_width", tw, "tile_height", th, "max_tiles", nt,
           "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
         std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
         return NULL;
       }
-      result = vips_convsep( cached, &tmp, mask,
+      */
+      result = vips_convsep( srcimg, &tmp, mask,
 			     "precision", precision,
 			     NULL );
       //g_object_unref( mask );
       PF_UNREF( mask, "PF::GaussBlurPar::build(): mask unref" );
-      PF_UNREF( cached, "PF::GaussBlurPar::build(): cached unref" );
+      //PF_UNREF( cached, "PF::GaussBlurPar::build(): cached unref" );
 		
 			
       if( !result ) {
