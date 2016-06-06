@@ -41,14 +41,14 @@ compress_slider( this, "compress", _("compress"), 50, 0, 100, 2, 10, 1),
 sh_color_adj_slider( this, "sh_color_adjustment", _("shadows color adjustment"), 100, 0, 100, 2, 10, 1),
 hi_color_adj_slider( this, "hi_color_adjustment", _("highlights color adjustment"), 50, 0, 100, 2, 10, 1)
 {
-  controlsBox.pack_start( sh_slider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( hi_slider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( wp_adj_slider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( radius_slider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( compress_slider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( sh_color_adj_slider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( hi_color_adj_slider, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( sh_slider, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( hi_slider, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( wp_adj_slider, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( radius_slider, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( compress_slider, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( sh_color_adj_slider, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( hi_color_adj_slider, Gtk::PACK_SHRINK, 5 );
 
   add_widget( controlsBox );
 
