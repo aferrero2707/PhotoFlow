@@ -9,6 +9,7 @@
 #include <libgimp/gimp.h>
 #include <libgimp/gimpui.h>
 #include <libgimpbase/gimpbase.h>
+#include <libgimpwidgets/gimpwidgets.h>
 #include <glib/gi18n.h>
 #include <string.h>
 
@@ -96,15 +97,94 @@ void query()
 char *pf_binary;
 gboolean sendToGimpMode;
 
+
+static int
+edit_current_layer_dialog()
+{
+  GtkWidget        *dialog;
+  GtkWidget        *hbox;
+  GtkWidget        *image;
+  GtkWidget        *main_vbox;
+  GtkWidget        *label;
+  gchar            *text;
+  int  retval;
+
+  GtkDialogFlags flags = (GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT);
+  dialog = gimp_dialog_new (_("Edit Current Layer"), "pfgimp-edit-current-layer-confirm",
+                            NULL, flags,
+                            gimp_standard_help_func,
+                            "pfgimp-edit-current-layer-confirm-dialog",
+
+                            _("Create new"), GTK_RESPONSE_CANCEL,
+                            _("Edit current"),     GTK_RESPONSE_OK,
+
+                            NULL);
+
+  gtk_dialog_set_alternative_button_order (GTK_DIALOG (dialog),
+                                           GTK_RESPONSE_OK,
+                                           GTK_RESPONSE_CANCEL,
+                                           -1);
+
+  gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);
+  gimp_window_set_transient (GTK_WINDOW (dialog));
+
+  hbox = gtk_hbox_new (FALSE, 12);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+                      hbox, TRUE, TRUE, 0);
+  gtk_container_set_border_width (GTK_CONTAINER (hbox), 12);
+  gtk_widget_show (hbox);
+
+  image = gtk_image_new_from_icon_name ("dialog-warning",
+                                        GTK_ICON_SIZE_DIALOG);
+  gtk_misc_set_alignment (GTK_MISC (image), 0.5, 0.0);
+  gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
+  gtk_widget_show (image);
+
+  main_vbox = gtk_vbox_new (FALSE, 12);
+  gtk_box_pack_start (GTK_BOX (hbox), main_vbox, FALSE, FALSE, 0);
+  gtk_widget_show (main_vbox);
+
+  text = g_strdup ("This is a PhotoFlow layer.\nDo you want to continue\nediting this layer\nor create a new one?");
+  label = gtk_label_new (text);
+  g_free (text);
+
+  gimp_label_set_attributes (GTK_LABEL (label),
+                             PANGO_ATTR_SCALE,  PANGO_SCALE_LARGE,
+                             PANGO_ATTR_WEIGHT, PANGO_WEIGHT_BOLD,
+                             -1);
+  gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.0);
+  gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
+  gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
+  gtk_box_pack_start (GTK_BOX (main_vbox), label, FALSE, FALSE, 0);
+  gtk_widget_show (label);
+
+  gtk_widget_show (dialog);
+
+  switch (gimp_dialog_run (GIMP_DIALOG (dialog)))
+    {
+    case GTK_RESPONSE_OK:
+      retval = Gtk::RESPONSE_YES;
+      break;
+
+    default:
+      retval = Gtk::RESPONSE_NO;
+      break;
+    }
+
+  gtk_widget_destroy (dialog);
+
+  return retval;
+}
+
+
 void run(const gchar *name,
     gint nparams,
     const GimpParam *param,
     gint *nreturn_vals,
     GimpParam **return_vals)
 {
-  // TODO: Check if the static variable here is really needed.
-  // In any case this should cause no issues with threads.
-  GimpRunMode run_mode;
+  GimpRunMode run_mode = (GimpRunMode)param[0].data.d_int32;
+
   int size;
   GimpPDBStatusType status = GIMP_PDB_SUCCESS;
 
@@ -134,6 +214,8 @@ void run(const gchar *name,
   *nreturn_vals = 1;
   return_values[0].type = GIMP_PDB_STATUS;
 
+  gimp_ui_init("pfgimp", FALSE);
+
   int image_id = param[1].data.d_drawable;
 #if GIMP_MINOR_VERSION<=8
   gimp_tile_cache_ntiles(2*(gimp_image_width(image_id)/gimp_tile_width() + 1));
@@ -155,6 +237,7 @@ void run(const gchar *name,
   if( phf_parasite && gimp_parasite_data_size( phf_parasite ) > 0 &&
       gimp_parasite_data( phf_parasite ) != NULL ) {
 
+    /*
     char tstr[501];
     snprintf( tstr, 500, _("PhF editing config detected.\nDo you want to continue editing the current layer?") );
     Gtk::MessageDialog dialog(tstr,
@@ -164,6 +247,8 @@ void run(const gchar *name,
 
     //Show the dialog and wait for a user response:
     int result = dialog.run();
+    */
+    int result = edit_current_layer_dialog();
 
     //Handle the response:
     switch(result) {
@@ -213,6 +298,8 @@ void run(const gchar *name,
   }
 
   std::string filename;
+  cmsBool is_lin_gamma = false;
+  std::string format = "R'G'B' float";
 
   if( source_layer_id >= 0 ) {
     // Get input buffer
@@ -278,7 +365,6 @@ void run(const gchar *name,
     g_free(row);
     gimp_drawable_detach(drawable);
 #else
-    cmsBool is_lin_gamma = false;
     if( iccdata ) {
       cmsHPROFILE iccprofile = cmsOpenProfileFromMem( iccdata, iccsize );
       if( iccprofile ) {
@@ -294,8 +380,8 @@ void run(const gchar *name,
     GeglRectangle rect;
     gegl_rectangle_set(&rect,rgn_x,rgn_y,rgn_width,rgn_height);
     buffer = gimp_drawable_get_buffer(source_layer_id);
-    const char *const format = is_lin_gamma ? "RGB float" : "R'G'B' float";
-    gegl_buffer_get(buffer,&rect,1,babl_format(format),inbuf,0,GEGL_ABYSS_NONE);
+    format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+    gegl_buffer_get(buffer,&rect,1,babl_format(format.c_str()),inbuf,0,GEGL_ABYSS_NONE);
     g_object_unref(buffer);
 #endif
 
@@ -331,6 +417,8 @@ void run(const gchar *name,
 
   //gimp_parasite_free(exif_parasite);
   //gimp_parasite_free(icc_parasite);
+
+  std::cout<<"plug-in: run_mode="<<run_mode<<"  GIMP_RUN_INTERACTIVE="<<GIMP_RUN_INTERACTIVE<<std::endl;
 
   /* BUG - what should be done with GIMP_RUN_WITH_LAST_VALS */
   if (run_mode == GIMP_RUN_INTERACTIVE) {
@@ -450,6 +538,7 @@ void run(const gchar *name,
     if( pluginwin->get_image_buffer().buf ) {
       std::cout<<"PhF plug-in: copying buffer..."<<std::endl;
 #if HAVE_GIMP_2_9
+      format = is_lin_gamma ? "RGB float" : "R'G'B' float";
       GeglRectangle gegl_rect;
       gegl_rect.x = 0;
       gegl_rect.y = 0;
@@ -457,7 +546,7 @@ void run(const gchar *name,
       gegl_rect.height = height;
       gegl_buffer_set(buffer, &gegl_rect,
           //GEGL_RECTANGLE(0, 0, width, height),
-          0, NULL, pluginwin->get_image_buffer().buf,
+          0, babl_format(format.c_str()), pluginwin->get_image_buffer().buf,
           GEGL_AUTO_ROWSTRIDE);
       g_object_unref(buffer);
       //gimp_drawable_merge_shadow(layer_id,true);
@@ -543,24 +632,26 @@ void run(const gchar *name,
 */
     }
 
-    /* Create "icc-profile" parasite from output profile
-     * if it is not the internal sRGB.*/
-    if( pluginwin->get_image_buffer().iccdata ) {
-      printf("Saving ICC profile parasite\n");
-      GimpParasite *icc_parasite;
-      icc_parasite = gimp_parasite_new("icc-profile",
-          GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
-          pluginwin->get_image_buffer().iccsize,
-          pluginwin->get_image_buffer().iccdata);
-      std::cout<<"ICC parasite created"<<std::endl;
+    if( false ) {
+      /* Create "icc-profile" parasite from output profile
+       * if it is not the internal sRGB.*/
+      if( pluginwin->get_image_buffer().iccdata ) {
+        printf("Saving ICC profile parasite\n");
+        GimpParasite *icc_parasite;
+        icc_parasite = gimp_parasite_new("icc-profile",
+            GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
+            pluginwin->get_image_buffer().iccsize,
+            pluginwin->get_image_buffer().iccdata);
+        std::cout<<"ICC parasite created"<<std::endl;
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-      gimp_image_attach_parasite(image_id, icc_parasite);
+        gimp_image_attach_parasite(image_id, icc_parasite);
 #else
-      gimp_image_parasite_attach(image_id, icc_parasite);
+        gimp_image_parasite_attach(image_id, icc_parasite);
 #endif
-      gimp_parasite_free(icc_parasite);
+        gimp_parasite_free(icc_parasite);
 
-      std::cout<<"ICC profile attached"<<std::endl;
+        std::cout<<"ICC profile attached"<<std::endl;
+      }
     }
 
     std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
@@ -581,6 +672,7 @@ void run(const gchar *name,
     std::cout<<"Plug-in: photoflow closed"<<std::endl;
 
   } else {
+    std::cout<<"plug-in: execution skipped"<<std::endl;
   }
 
   gimp_displays_flush();
