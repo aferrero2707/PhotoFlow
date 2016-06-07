@@ -298,6 +298,8 @@ void run(const gchar *name,
   }
 
   std::string filename;
+  cmsBool is_lin_gamma = false;
+  std::string format = "R'G'B' float";
 
   if( source_layer_id >= 0 ) {
     // Get input buffer
@@ -363,7 +365,6 @@ void run(const gchar *name,
     g_free(row);
     gimp_drawable_detach(drawable);
 #else
-    cmsBool is_lin_gamma = false;
     if( iccdata ) {
       cmsHPROFILE iccprofile = cmsOpenProfileFromMem( iccdata, iccsize );
       if( iccprofile ) {
@@ -379,8 +380,8 @@ void run(const gchar *name,
     GeglRectangle rect;
     gegl_rectangle_set(&rect,rgn_x,rgn_y,rgn_width,rgn_height);
     buffer = gimp_drawable_get_buffer(source_layer_id);
-    const char *const format = is_lin_gamma ? "RGB float" : "R'G'B' float";
-    gegl_buffer_get(buffer,&rect,1,babl_format(format),inbuf,0,GEGL_ABYSS_NONE);
+    format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+    gegl_buffer_get(buffer,&rect,1,babl_format(format.c_str()),inbuf,0,GEGL_ABYSS_NONE);
     g_object_unref(buffer);
 #endif
 
@@ -537,6 +538,7 @@ void run(const gchar *name,
     if( pluginwin->get_image_buffer().buf ) {
       std::cout<<"PhF plug-in: copying buffer..."<<std::endl;
 #if HAVE_GIMP_2_9
+      format = is_lin_gamma ? "RGB float" : "R'G'B' float";
       GeglRectangle gegl_rect;
       gegl_rect.x = 0;
       gegl_rect.y = 0;
@@ -544,7 +546,7 @@ void run(const gchar *name,
       gegl_rect.height = height;
       gegl_buffer_set(buffer, &gegl_rect,
           //GEGL_RECTANGLE(0, 0, width, height),
-          0, NULL, pluginwin->get_image_buffer().buf,
+          0, babl_format(format.c_str()), pluginwin->get_image_buffer().buf,
           GEGL_AUTO_ROWSTRIDE);
       g_object_unref(buffer);
       //gimp_drawable_merge_shadow(layer_id,true);
