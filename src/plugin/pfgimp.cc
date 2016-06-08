@@ -216,6 +216,8 @@ void run(const gchar *name,
 
   gimp_ui_init("pfgimp", FALSE);
 
+  std::cout<<"Starting PhotoFlow plug-in"<<std::endl;
+
   int image_id = param[1].data.d_drawable;
 #if GIMP_MINOR_VERSION<=8
   gimp_tile_cache_ntiles(2*(gimp_image_width(image_id)/gimp_tile_width() + 1));
