@@ -677,6 +677,8 @@ void run(const gchar *name,
 
   gimp_displays_flush();
 
+  std::cout<<"Closing PhotoFlow plug-in"<<std::endl;
+
   std::cout<<"Plug-in: setting return values"<<std::endl;
   return_values[0].data.d_status = status;
   std::cout<<"Plug-in: return values done"<<std::endl;
