@@ -41,6 +41,7 @@ PF::LayerList::LayerList( OperationConfigGUI* d, std::string l ):
   label2.set_text( "sub-image" );
 
   image_num.set_range(0,99);
+  //image_num.set_value(5);
 
   model = Gtk::ListStore::create(columns);
   cbox.set_model( model );
@@ -56,7 +57,8 @@ PF::LayerList::LayerList( OperationConfigGUI* d, std::string l ):
   vbox2.pack_start( image_num, Gtk::PACK_SHRINK );
   pack_start( vbox2, Gtk::PACK_SHRINK );
 
-  image_num.signal_changed().
+  //image_num.signal_changed().
+  image_num.signal_activate().
     connect(sigc::mem_fun(*this,
         &LayerList::changed));
 
@@ -71,6 +73,7 @@ PF::LayerList::LayerList( OperationConfigGUI* d, std::string l ):
 void PF::LayerList::update_model()
 {
   //std::cout<<"LayerList::update_model() called"<<std::endl;
+  //return;
   if( !dialog ) return;
   PF::Layer* layer = dialog->get_layer();
   if(! layer ) return;
@@ -184,23 +187,23 @@ void PF::LayerList::changed()
       std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& inputs = layer->get_extra_inputs();
       if( (inputs.size() > 0) && (inputs[0].first.first == (int)(l->get_id()))
           && (inputs[0].first.second == image_num.get_value()) ) {
-        //std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
-        // <<"\" is unmodified."<<std::endl;
+        std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
+         <<"\" is unmodified."<<std::endl;
         return;
       }
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
 	       <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
-#endif
+//#endif
       layer->set_input( 0, l->get_id(), image_num.get_value(), row[columns.col_blended] );
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"LayerList::changed(): setting dirty flag of layer \""<<layer->get_name()
          <<"\" to true"<<std::endl;
-#endif
+//#endif
       layer->set_dirty( true );
 			if( !inhibit ) {
-				//std::cout<<"LayerList::changed(): updating image"<<std::endl;
+				std::cout<<"LayerList::changed(): updating image"<<std::endl;
 				image->update();
 			}
     }

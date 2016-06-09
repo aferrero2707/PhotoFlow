@@ -71,6 +71,7 @@ namespace PF
   ProcessorBase* new_path_mask();
   ProcessorBase* new_shadows_highlights();
   ProcessorBase* new_defringe();
+  ProcessorBase* new_split_details();
   //ProcessorBase* new_vips_operation( std::string op_type );
 }
 
