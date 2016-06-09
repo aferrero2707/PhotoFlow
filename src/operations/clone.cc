@@ -51,7 +51,7 @@ PF::ClonePar::ClonePar():
   source_channel.add_enum_value(PF::CLONE_CHANNEL_a,"a","a");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_b,"b","b");
 
-  source_channel.set_enum_value(PF::CLONE_CHANNEL_R);
+  source_channel.set_enum_value(PF::CLONE_CHANNEL_RGB);
 
   convert2lab = PF::new_operation( "convert2lab", NULL );
   convert_cs = PF::new_convert_colorspace();
