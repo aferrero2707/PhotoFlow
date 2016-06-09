@@ -44,7 +44,7 @@ PF::GaussBlurPar::GaussBlurPar():
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   blur_sii = new_gaussblur_sii();
 
-  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
+  //set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type( "gaussblur" );
 
   set_default_name( _("gaussian blur") );
@@ -85,6 +85,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   //if( (get_render_mode() == PF_RENDER_PREVIEW) &&
   //    (blur_mode.get_enum_value().first == PF_BLUR_FAST) &&
   //    (radius2 > 5) ){
+  std::cout<<"GaussBlurPar::build(): do_fast_blur="<<do_fast_blur<<std::endl;
   if( do_fast_blur ) {
     // Fast approximate gaussian blur method
     GaussBlurSiiPar* gpar = dynamic_cast<GaussBlurSiiPar*>( blur_sii->get_par() );
