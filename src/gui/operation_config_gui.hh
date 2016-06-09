@@ -98,7 +98,7 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::VBox frame_top_vbox_1;
   Gtk::HBox frame_top_box_1;
   Gtk::HBox frame_top_box_2;
-  Gtk::HBox frame_top_box_3;
+  Gtk::VBox frame_top_box_3;
   Gtk::HBox frame_top_box_4;
   ToggleImageButton frame_visible;
   //ToggleImageButton frame_preview;
