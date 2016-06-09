@@ -56,7 +56,7 @@
 
 
 #define OP_TEMPLATE_DEF \
-  typename T, class BLENDER, colorspace_t CS,	\
+  typename T, class BLENDER, PF::colorspace_t CS,	\
     int CHMIN, int CHMAX,								\
     bool has_imap, bool has_omap, bool PREVIEW
 
@@ -64,7 +64,7 @@
   T, BLENDER, CS, CHMIN, CHMAX, has_imap, has_omap, PREVIEW
 
 #define OP_TEMPLATE_DEF_BLENDER_SPEC \
-  typename T, colorspace_t CS,	int CHMIN, int CHMAX,		\
+  typename T, PF::colorspace_t CS,	int CHMIN, int CHMAX,		\
     bool has_imap, bool has_omap, bool PREVIEW
 
 #define OP_TEMPLATE_IMP_BLENDER_SPEC(BLENDER_SPEC) \
@@ -72,7 +72,7 @@
 
 
 #define OP_TEMPLATE_DEF_TYPE_SPEC \
-  class BLENDER, colorspace_t CS, int CHMIN, int CHMAX,		\
+  class BLENDER, PF::colorspace_t CS, int CHMIN, int CHMAX,		\
     bool has_imap, bool has_omap, bool PREVIEW
 
 #define OP_TEMPLATE_IMP_TYPE_SPEC(TYPE_SPEC) \
@@ -89,7 +89,7 @@
 
 
 #define OP_TEMPLATE_DEF_PREVIEW_SPEC \
-  typename T, class BLENDER, colorspace_t CS,	int CHMIN, int CHMAX,	\
+  typename T, class BLENDER, PF::colorspace_t CS,	int CHMIN, int CHMAX,	\
     bool has_imap, bool has_omap
 
 #define OP_TEMPLATE_IMP_PREVIEW_SPEC(PREVIEW_SPEC) \
@@ -166,6 +166,8 @@ namespace PF
 
     Property<bool> mask_enabled;
 
+    //std::vector<VipsImage*> outvec;
+
   public:
     sigc::signal<void> signal_modified;
 
@@ -173,6 +175,9 @@ namespace PF
 
     virtual ~OpParBase()
     {
+      //for(unsigned int i = 0; i < outvec.size(); i++ ) {
+      //  PF_UNREF( outvec[i], "~OpParBase(): previous outputs unref" );
+      //}
       std::cout<<"~OpParBase(): deleting operation "<<(void*)this<<std::endl;
     }
 
@@ -301,6 +306,9 @@ namespace PF
         VipsImage* imap, VipsImage* omap, unsigned int& level);
     virtual std::vector<VipsImage*> build_many(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap, unsigned int& level);
+    std::vector<VipsImage*> build_many_internal(std::vector<VipsImage*>& in, int first,
+        VipsImage* imap, VipsImage* omap, unsigned int& level);
+
 
     PropertyBase* get_property(std::string name);
 

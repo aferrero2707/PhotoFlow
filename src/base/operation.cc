@@ -318,6 +318,20 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
 }
 
 
+std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage*>& in, int first,
+        VipsImage* imap, VipsImage* omap, unsigned int& level)
+{
+  std::vector<VipsImage*> result = build_many( in, first, imap, omap, level );
+
+  //for(unsigned int i = 0; i < outvec.size(); i++ ) {
+  //  PF_UNREF( outvec[i], "OpParBase::build_many_internal(): previous outputs unref" );
+  //}
+  //outvec = result;
+
+  return result;
+}
+
+
 bool PF::OpParBase::save( std::ostream& ostr, int level )
 {
   for(int i = 0; i < level; i++) ostr<<"  ";
