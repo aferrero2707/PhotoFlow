@@ -86,7 +86,8 @@ PF::RawOutputPar::RawOutputPar():
   hlreco_mode.add_enum_value(PF::HLRECO_NONE,"HLRECO_NONE",_("none"));
 
   profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","Raw color");
-  profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","Standard camera profile");
+  profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","Standard profile");
+  //profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","Standard camera profile");
   profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC from disk");
   profile_mode.add_enum_value(PF::IN_PROF_DCP,"DCP","DCP from disk");
 
