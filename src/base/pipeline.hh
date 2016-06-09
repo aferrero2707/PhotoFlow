@@ -59,6 +59,7 @@ namespace PF
     int input_id;
 
     PipelineNode(): processor( NULL ), blender( NULL ), image( NULL ), blended( NULL ), input_id( -1 ) {}
+    ~PipelineNode();
   };
 
 
