@@ -33,6 +33,8 @@
 #include "../base/iccstore.hh"
 #include "raw_output.hh"
 
+
+
 /* We need C linkage for this.
  */
 #ifdef __cplusplus
@@ -61,6 +63,7 @@ PF::RawOutputPar::RawOutputPar():
   current_profile_mode( IN_PROF_MATRIX ),
   gamma_curve( NULL ),
   cam_profile_name("cam_profile_name", this),
+  cam_dcp_profile_name("cam_dcp_profile_name", this),
   cam_profile( NULL ),
   gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","linear"),
   gamma_lin("gamma_lin", this, 0),
@@ -82,9 +85,10 @@ PF::RawOutputPar::RawOutputPar():
   hlreco_mode.add_enum_value(PF::HLRECO_BLEND,"HLRECO_BLEND",_("blend"));
   hlreco_mode.add_enum_value(PF::HLRECO_NONE,"HLRECO_NONE",_("none"));
 
-  profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","RAW");
-  profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","MATRIX");
-  profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC");
+  profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","Raw color");
+  profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","Standard camera profile");
+  profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC from disk");
+  profile_mode.add_enum_value(PF::IN_PROF_DCP,"DCP","DCP from disk");
 
   //out_profile_type.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
   out_profile_type.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
@@ -99,9 +103,9 @@ PF::RawOutputPar::RawOutputPar():
   //out_profile_type.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
   //out_profile_type.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
 
-  out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use input"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use camera profile"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
-  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC from disk"));
 
   //out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
   out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
@@ -151,6 +155,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   bool out_trc_type_changed = out_trc_type.is_modified();
   bool gamma_mode_changed = gamma_mode.is_modified();
   bool cam_changed = cam_profile_name.is_modified();
+  bool cam_dcp_changed = cam_dcp_profile_name.is_modified();
   bool out_changed = out_profile_name.is_modified();
   /*
   if( profile_mode.get_enum_value().first != (int)current_profile_mode )
@@ -173,10 +178,10 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   //         <<"  cam_changed="<<cam_changed
   //         <<"  out_changed="<<out_changed<<std::endl;
 
-  bool changed = mode_changed || out_mode_changed || out_type_changed || out_trc_type_changed || gamma_mode_changed || cam_changed || out_changed || out_mode_changed ||
+  bool changed = mode_changed || out_mode_changed || out_type_changed || out_trc_type_changed || gamma_mode_changed || cam_changed || cam_dcp_changed || out_changed || out_mode_changed ||
     (cam_profile==NULL) || (out_profile==NULL);
 
-  if( cam_profile && (mode_changed || cam_changed) ) {
+  if( cam_profile && (mode_changed || cam_changed || cam_dcp_changed) ) {
     //cmsCloseProfile( cam_profile );
     cam_profile = NULL;
   }
@@ -184,31 +189,43 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   // create input camera profile based on Adobe matrices
   if( mode_changed || (cam_profile == NULL) ) {
 
+    PF::exif_data_t* exif_data;
+    if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
+        (void**)&exif_data,
+        &blobsz ) ) {
+      std::cout<<"RawOutputPar::build() could not extract exif_custom_data."<<std::endl;
+      return NULL;
+    }
+    if( blobsz != sizeof(PF::exif_data_t) ) {
+      std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
+      return NULL;
+    }
+    char makermodel[1024];
+    dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
+    //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
+    float cam_xyz[12];
+    cam_xyz[0] = NAN;
+    dt_dcraw_adobe_coeff(makermodel, (float(*)[12])cam_xyz);
+    if(std::isnan(cam_xyz[0])) {
+      std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
+      PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
+      return image;
+    }
+    double dcam_xyz[3][3];
+    for(int i = 0; i < 3; i++)
+      for(int j = 0; j < 3; j++)
+        dcam_xyz[i][j] = cam_xyz[i*3+j];
+
+    std::cout<<"dcam_xyz:"<<std::endl;
+    for(int i = 0; i < 3; i++) {
+      for(int j = 0; j < 3; j++) {
+	std::cout<<dcam_xyz[i][j]<<" ";
+      }
+      std::cout<<std::endl;
+    }
     switch( profile_mode.get_enum_value().first ) {
     case PF::IN_PROF_MATRIX: {
       //cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
-      PF::exif_data_t* exif_data;
-      if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
-          (void**)&exif_data,
-          &blobsz ) ) {
-        std::cout<<"RawOutputPar::build() could not extract exif_custom_data."<<std::endl;
-        return NULL;
-      }
-      if( blobsz != sizeof(PF::exif_data_t) ) {
-        std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
-        return NULL;
-      }
-      char makermodel[1024];
-      dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
-      //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
-      float cam_xyz[12];
-      cam_xyz[0] = NAN;
-      dt_dcraw_adobe_coeff(makermodel, (float(*)[12])cam_xyz);
-      if(std::isnan(cam_xyz[0])) {
-        std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
-        PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
-        return image;
-      }
       cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
       cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
       //cmsCloseProfile( cam_prof_temp );
@@ -217,6 +234,36 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     case PF::IN_PROF_ICC:
       if( !cam_profile_name.get().empty() )
         cam_profile = PF::ICCStore::Instance().get_profile( cam_profile_name.get() );
+      break;
+    case PF::IN_PROF_DCP:
+      if( !cam_dcp_profile_name.get().empty() ) {
+        std::cout<<"dcam_xyz:"<<std::endl;
+        for(int i = 0; i < 3; i++) {
+          for(int j = 0; j < 3; j++) {
+            std::cout<<dcam_xyz[i][j]<<" ";
+          }
+          std::cout<<std::endl;
+        }
+        cam_dcp_profile = new rtengine::DCPProfile( cam_dcp_profile_name.get(), true );
+        double cam_wb[3] = {get_wb_red(), get_wb_green(), get_wb_blue()};
+        double mXYZCAM[3][3];
+        cam_dcp_profile->MakeXYZCAM( cam_wb, dcam_xyz, 0, mXYZCAM );
+        std::cout<<"mXYZCAM:"<<std::endl;
+        for(int i = 0; i < 3; i++) {
+          for(int j = 0; j < 3; j++) {
+            std::cout<<mXYZCAM[i][j]<<" ";
+          }
+          std::cout<<std::endl;
+        }
+        float cam_xyz_dcp[3][3];
+        for(int i = 0; i < 3; i++)
+          for(int j = 0; j < 3; j++)
+            cam_xyz_dcp[i][j] = mXYZCAM[i][j];
+        cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzmatrix_profile((float (*)[3])cam_xyz_dcp);
+        cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
+        std::cout<<"RawOutputPar::build(): DCP cam_profile="<<cam_profile
+            <<"  cam_profile->get_profile()="<<cam_profile->get_profile()<<std::endl;
+      }
       break;
     default:
       break;
@@ -270,7 +317,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
           cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
     }
   }
-  //std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
+  std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
 
   if( gamma_curve )
     cmsFreeToneCurve( gamma_curve );

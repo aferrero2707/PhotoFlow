@@ -41,6 +41,8 @@
 //#include "../rt/iccmatrices.hh"
 #include "../dt/common/srgb_tone_curve_values.h"
 
+#include "../rt/rtengine/dcp.h"
+
 #include "raw_image.hh"
 
 //#define CLIPRAW(a) ((a)>0.0?((a)<1.0?(a):1.0):0.0)
@@ -71,7 +73,8 @@ enum hlreco_mode_t {
  enum input_profile_mode_t {
     IN_PROF_NONE,
     IN_PROF_MATRIX,
-    IN_PROF_ICC
+    IN_PROF_ICC,
+    IN_PROF_DCP
   }; 
 
 
@@ -123,6 +126,10 @@ enum hlreco_mode_t {
     std::string current_cam_profile_name;
     //cmsHPROFILE cam_profile;
     PF::ICCProfile* cam_profile;
+
+    Property<std::string> cam_dcp_profile_name;
+    std::string current_cam_dcp_profile_name;
+    rtengine::DCPProfile* cam_dcp_profile;
 
     // Input gamma 
     PropertyBase gamma_mode;
@@ -503,7 +510,8 @@ enum hlreco_mode_t {
             }
           }
 
-        } else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ) {
+        } else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ||
+            opar->get_camera_profile_mode() == IN_PROF_DCP ) {
           if(opar->get_transform()) {
             for( int xi = 0; xi < line_size; xi++ ) {
               line2[xi] = CLIPRAW(line[xi]);

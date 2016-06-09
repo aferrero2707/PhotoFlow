@@ -164,7 +164,7 @@ FILE(GLOB BaseSources base/*.cc base/icc/*.cc)
 
 FILE(GLOB RTIncludes 
   rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h
-  #rt/rtengine/dcp.h rt/rtexif/rtexif.h
+  rt/rtengine/dcp.h rt/rtexif/rtexif.h
 )
 FILE(GLOB RTSources 
   rt/rtengine/rawimagesource.cc
@@ -172,7 +172,7 @@ FILE(GLOB RTSources
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
-  #rt/rtengine/dcp.cc rt/rtexif/*.cc
+  rt/rtengine/dcp.cc rt/rtengine/curves.cc rt/rtengine/diagonalcurves.cc rt/rtengine/flatcurves.cc rt/rtengine/color.cc rt/rtexif/*.cc
 )
 
 FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)

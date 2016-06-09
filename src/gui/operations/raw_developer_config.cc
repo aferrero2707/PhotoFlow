@@ -353,6 +353,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
   profileModeSelector( this, "profile_mode", _("type: "), 0 ),
   camProfOpenButton(Gtk::Stock::OPEN),
+  camDCPProfOpenButton(Gtk::Stock::OPEN),
   gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
   inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
   inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
@@ -433,6 +434,13 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   camProfHBox.pack_start( camProfOpenButton, Gtk::PACK_SHRINK );
   inProfBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
 
+  camDCPProfLabel.set_text( "DCP profile name:" );
+  camDCPProfVBox.pack_start( camDCPProfLabel, Gtk::PACK_SHRINK );
+  camDCPProfVBox.pack_start( camDCPProfFileEntry, Gtk::PACK_SHRINK );
+  camDCPProfHBox.pack_start( camDCPProfVBox, Gtk::PACK_SHRINK );
+  camDCPProfHBox.pack_start( camDCPProfOpenButton, Gtk::PACK_SHRINK );
+  inProfBox.pack_start( camDCPProfHBox, Gtk::PACK_SHRINK );
+
   outProfileModeSelectorBox.pack_end( outProfileModeSelector, Gtk::PACK_SHRINK );
   outProfBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
@@ -465,6 +473,12 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
         &RawDeveloperConfigGUI::on_cam_filename_changed));
   camProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
                  &RawDeveloperConfigGUI::on_cam_button_open_clicked) );
+
+  camDCPProfFileEntry.signal_activate().
+    connect(sigc::mem_fun(*this,
+        &RawDeveloperConfigGUI::on_cam_dcp_filename_changed));
+  camDCPProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
+                 &RawDeveloperConfigGUI::on_cam_dcp_button_open_clicked) );
 
   outProfFileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
@@ -713,6 +727,11 @@ void PF::RawDeveloperConfigGUI::do_update()
     std::string filename = prop->get_str();
     camProfFileEntry.set_text( filename.c_str() );
 
+    prop = par->get_property( "cam_dcp_profile_name" );
+    if( !prop )  return;
+    filename = prop->get_str();
+    camDCPProfFileEntry.set_text( filename.c_str() );
+
     prop = par->get_property( "out_profile_name" );
     if( !prop )  return;
     filename = prop->get_str();
@@ -725,16 +744,25 @@ void PF::RawDeveloperConfigGUI::do_update()
     case PF::IN_PROF_NONE:
       camProfHBox.hide();
       gammaModeHBox.show();
+      camDCPProfHBox.hide();
       outProfFrame.hide();
       break;
     case PF::IN_PROF_MATRIX:
       camProfHBox.hide();
       gammaModeHBox.hide();
+      camDCPProfHBox.hide();
       outProfFrame.show();
       break;
     case PF::IN_PROF_ICC:
       camProfHBox.show();
       gammaModeHBox.show();
+      camDCPProfHBox.hide();
+      outProfFrame.show();
+      break;
+    case PF::IN_PROF_DCP:
+      camProfHBox.hide();
+      gammaModeHBox.hide();
+      camDCPProfHBox.show();
       outProfFrame.show();
       break;
     }
@@ -1513,6 +1541,53 @@ void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
 
 
 
+void PF::RawDeveloperConfigGUI::on_cam_dcp_button_open_clicked()
+{
+  Gtk::FileChooserDialog dialog("Please choose a DCP profile",
+                                Gtk::FILE_CHOOSER_ACTION_OPEN);
+  //dialog.set_transient_for(*this);
+
+  //Add response buttons the the dialog:
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_icc_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
+  //Show the dialog and wait for a user response:
+  int result = dialog.run();
+
+  //Handle the response:
+  switch(result) {
+  case(Gtk::RESPONSE_OK):
+    {
+      std::cout << "Open clicked." << std::endl;
+
+      last_dir = dialog.get_current_folder();
+      PF::PhotoFlow::Instance().get_options().set_last_visited_icc_folder( last_dir );
+
+      //Notice that this is a std::string, not a Glib::ustring.
+      std::string filename = dialog.get_filename();
+      std::cout << "File selected: " <<  filename << std::endl;
+      camDCPProfFileEntry.set_text( filename.c_str() );
+      on_cam_dcp_filename_changed();
+      break;
+    }
+  case(Gtk::RESPONSE_CANCEL):
+    {
+      std::cout << "Cancel clicked." << std::endl;
+      break;
+    }
+  default:
+    {
+      std::cout << "Unexpected button clicked." << std::endl;
+      break;
+    }
+  }
+}
+
+
+
 void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
 {
   Gtk::FileChooserDialog dialog("Please choose a file",
@@ -1579,6 +1654,31 @@ void PF::RawDeveloperConfigGUI::on_cam_filename_changed()
     prop->update( filename );
     get_layer()->set_dirty( true );
     //std::cout<<"  updating image"<<std::endl;
+    get_layer()->get_image()->update();
+  }
+}
+
+
+
+void PF::RawDeveloperConfigGUI::on_cam_dcp_filename_changed()
+{
+  if( get_layer() && get_layer()->get_image() &&
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+    std::string filename = camDCPProfFileEntry.get_text();
+    if( filename.empty() )
+      return;
+    std::cout<<"New DCP profile name: "<<filename<<std::endl;
+    PF::RawDeveloperPar* par =
+      dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
+    if( !par )
+      return;
+    PropertyBase* prop = par->get_property( "cam_dcp_profile_name" );
+    if( !prop )
+      return;
+    prop->update( filename );
+    get_layer()->set_dirty( true );
+    std::cout<<"  updating image"<<std::endl;
     get_layer()->get_image()->update();
   }
 }

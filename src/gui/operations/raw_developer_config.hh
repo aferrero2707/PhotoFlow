@@ -117,6 +117,12 @@ public:
     Gtk::Entry camProfFileEntry;
     Gtk::Button camProfOpenButton;
 
+    Gtk::HBox camDCPProfHBox;
+    Gtk::VBox camDCPProfVBox;
+    Gtk::Label camDCPProfLabel;
+    Gtk::Entry camDCPProfFileEntry;
+    Gtk::Button camDCPProfOpenButton;
+
     Gtk::HBox gammaModeHBox;
     Gtk::VBox gammaModeVBox;
     Selector gammaModeSelector;
@@ -163,6 +169,8 @@ public:
 
     void on_cam_button_open_clicked();
     void on_cam_filename_changed();
+    void on_cam_dcp_button_open_clicked();
+    void on_cam_dcp_filename_changed();
     void on_out_button_open_clicked();
     void on_out_filename_changed();
 
