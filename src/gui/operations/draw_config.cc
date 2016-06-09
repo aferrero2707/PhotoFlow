@@ -45,6 +45,7 @@ PF::DrawConfigGUI::DrawConfigGUI( PF::Layer* layer ):
   pen_color_button( Gdk::RGBA("white") ),
   bgd_color_button( Gdk::RGBA("black") ),
 #endif
+  bgd_transparent_checkbox( this, "bgd_transparent", _("transparent"), false ),
   pen_size( this, "pen_size", "Pen size: ", 5, 0, 1000000, 1, 10, 1),
   pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100),
   pen_smoothness( this, "pen_smoothness", "pen smoothness: ", 0, 0, 100, 1, 10, 100),
@@ -52,6 +53,7 @@ PF::DrawConfigGUI::DrawConfigGUI( PF::Layer* layer ):
 {
   colorButtonsBox1.pack_start( bgd_color_label, Gtk::PACK_SHRINK );
   colorButtonsBox1.pack_start( bgd_color_button, Gtk::PACK_SHRINK );
+  colorButtonsBox1.pack_start( bgd_transparent_checkbox, Gtk::PACK_SHRINK );
   colorButtonsBox2.pack_start( pen_color_label, Gtk::PACK_SHRINK );
   colorButtonsBox2.pack_start( pen_color_button, Gtk::PACK_SHRINK );
   colorButtonsBox2.pack_start( pen_size, Gtk::PACK_SHRINK );

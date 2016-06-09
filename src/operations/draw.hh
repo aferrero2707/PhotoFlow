@@ -100,6 +100,7 @@ namespace PF
     Property<float> bgd_grey, bgd_R, bgd_G, bgd_B, bgd_L, bgd_a, bgd_b, bgd_C, bgd_M, bgd_Y, bgd_K;
     Property<RGBColor> pen_color;
     Property<RGBColor> bgd_color;
+    Property<bool> bgd_transparent;
     Property<int> pen_size;
     Property<float> pen_opacity;
     Property<float> pen_smoothness;
@@ -142,6 +143,7 @@ namespace PF
 
     Property<RGBColor>& get_pen_color() { return pen_color; }
     Property<RGBColor>& get_bgd_color() { return bgd_color; }
+    Property<bool>& get_bgd_transparent() { return bgd_transparent; }
 
     bool has_intensity() { return false; }
     bool needs_input() { return false; }
@@ -193,7 +195,7 @@ namespace PF
       //int height = r->height;
 
       //T* p;
-      //T* pin;
+      T* pin;
       T* pout;
       T* ptemp;
       int x, x0, y, y0, ch, row1, row2;
@@ -214,12 +216,25 @@ namespace PF
       //val[0] = (T)(1*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
       //val[1] = (T)(0*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
       //val[2] = (T)(0*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
-      for( y = 0; y < r->height; y++ ) {
-        //p = (T*)VIPS_REGION_ADDR( ireg[in_first], point_clip.left, point_clip.top + y ); 
-        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
-        for( x = 0; x < line_size; x += oreg->im->Bands ) {
-          for( ch = 0; ch < oreg->im->Bands; ch++ ) {
-            pout[x+ch] = val[ch];
+
+      if( opar->get_bgd_transparent().get() ) {
+        for( y = 0; y < r->height; y++ ) {
+          //p = (T*)VIPS_REGION_ADDR( ireg[in_first], point_clip.left, point_clip.top + y );
+          pin = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+          pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+          for( x = 0; x < line_size; x += oreg->im->Bands ) {
+            for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+              pout[x+ch] = pin[x+ch];
+            }
+          }
+        }
+      } else {
+        for( y = 0; y < r->height; y++ ) {
+          pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+          for( x = 0; x < line_size; x += oreg->im->Bands ) {
+            for( ch = 0; ch < oreg->im->Bands; ch++ ) {
+              pout[x+ch] = val[ch];
+            }
           }
         }
       }

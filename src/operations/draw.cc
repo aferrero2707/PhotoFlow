@@ -55,6 +55,7 @@ PF::DrawPar::DrawPar():
   bgd_K( "bgd_K", this, 0 ),
   pen_color( "pen_color", this, RGBColor(1,1,1) ),
   bgd_color( "bgd_color", this, RGBColor(0,0,0) ),
+  bgd_transparent( "bgd_transparent", this, false ),
   pen_size( "pen_size", this, 5 ),
   pen_opacity( "pen_opacity", this, 1 ),
   pen_smoothness( "pen_smoothness", this, 0 ),
