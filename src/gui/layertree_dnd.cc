@@ -339,11 +339,11 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
   source_layers.push_back( src_layer );
 
   // Condition #1
-  can_drop = check_inputs( source_layers, plist );
+  if( can_drop ) can_drop = check_inputs( source_layers, plist );
   std::cout<<"can_drop #1="<<can_drop<<std::endl;
 
   // Condition #2
-  can_drop = check_inputs2( source_layers, plist );
+  if( can_drop ) can_drop = check_inputs2( source_layers, plist );
   std::cout<<"can_drop #2="<<can_drop<<std::endl;
 
   if( !can_drop ) return false;
