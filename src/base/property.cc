@@ -133,8 +133,8 @@ bool PF::PropertyBase::import(PF::PropertyBase* pin)
       return false;
     }
     std::pair< int, std::pair<std::string,std::string> > val2 = *mi;
-    if( (val.second.first == val2.second.first) &&
-        (val.second.second == val2.second.second) ) {
+    if( (val.second.first == val2.second.first) ) {//&&
+        //(val.second.second == val2.second.second) ) {
       if(enum_value.first != val.first)
         modified();
       enum_value = val;
