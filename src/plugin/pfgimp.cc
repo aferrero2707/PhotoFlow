@@ -372,9 +372,9 @@ void run(const gchar *name,
       if( iccprofile ) {
         char tstr[1024];
         cmsGetProfileInfoASCII(iccprofile, cmsInfoDescription, "en", "US", tstr, 1024);
-        std::cout<<std::endl<<std::endl<<"embedded profile: "<<tstr<<std::endl<<std::endl;
         cmsToneCurve *red_trc   = (cmsToneCurve*)cmsReadTag(iccprofile, cmsSigRedTRCTag);
         is_lin_gamma = cmsIsToneCurveLinear(red_trc);
+        std::cout<<std::endl<<std::endl<<"embedded profile: "<<tstr<<"  is_lin_gamma="<<is_lin_gamma<<std::endl<<std::endl;
         cmsCloseProfile( iccprofile );
       }
     }
@@ -383,6 +383,7 @@ void run(const gchar *name,
     gegl_rectangle_set(&rect,rgn_x,rgn_y,rgn_width,rgn_height);
     buffer = gimp_drawable_get_buffer(source_layer_id);
     format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+    std::cout<<"GEGL input format: "<<format<<std::endl;
     gegl_buffer_get(buffer,&rect,1,babl_format(format.c_str()),inbuf,0,GEGL_ABYSS_NONE);
     g_object_unref(buffer);
 #endif
@@ -541,6 +542,8 @@ void run(const gchar *name,
       std::cout<<"PhF plug-in: copying buffer..."<<std::endl;
 #if HAVE_GIMP_2_9
       format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+      //format = "R'G'B' float";
+      std::cout<<"Output format: "<<format<<std::endl;
       GeglRectangle gegl_rect;
       gegl_rect.x = 0;
       gegl_rect.y = 0;
@@ -548,9 +551,10 @@ void run(const gchar *name,
       gegl_rect.height = height;
       gegl_buffer_set(buffer, &gegl_rect,
           //GEGL_RECTANGLE(0, 0, width, height),
-          0, babl_format(format.c_str()), pluginwin->get_image_buffer().buf,
+          0, babl_format(format.c_str()),
+          pluginwin->get_image_buffer().buf,
           GEGL_AUTO_ROWSTRIDE);
-      g_object_unref(buffer);
+      //g_object_unref(buffer);
       //gimp_drawable_merge_shadow(layer_id,true);
       gimp_drawable_update(dest_layer_id,0,0,width,height);
       gimp_layer_resize(dest_layer_id,width,height,0,0);
@@ -596,6 +600,7 @@ void run(const gchar *name,
 
 #if HAVE_GIMP_2_9
     gegl_buffer_flush(buffer);
+    g_object_unref(buffer);
 #else
     gimp_drawable_flush(drawable);
     gimp_drawable_detach(drawable);
