@@ -303,8 +303,12 @@ void run(const gchar *name,
   cmsBool is_lin_gamma = false;
   std::string format = "R'G'B' float";
 
+  int in_width = 0, in_height = 0;
+
   if( source_layer_id >= 0 ) {
     // Get input buffer
+    in_width = gimp_drawable_width( source_layer_id );
+    in_height = gimp_drawable_height( source_layer_id );
     gint rgn_x, rgn_y, rgn_width, rgn_height;
     if (!_gimp_item_is_valid(source_layer_id)) return;
     if (!gimp_drawable_mask_intersect(source_layer_id,&rgn_x,&rgn_y,&rgn_width,&rgn_height)) return;
@@ -557,7 +561,8 @@ void run(const gchar *name,
       //g_object_unref(buffer);
       //gimp_drawable_merge_shadow(layer_id,true);
       gimp_drawable_update(dest_layer_id,0,0,width,height);
-      gimp_layer_resize(dest_layer_id,width,height,0,0);
+      if( in_width != width || in_height != height )
+        gimp_layer_resize(dest_layer_id,width,height,0,0);
 #else
       for (row = 0; row < Crop.height; row += tile_height) {
         nrows = MIN(Crop.height - row, tile_height);
