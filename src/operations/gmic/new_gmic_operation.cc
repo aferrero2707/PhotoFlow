@@ -73,6 +73,8 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_emulate_film_print_films();
   } else if( op_type == "gmic_emulate_film_various" ) {
     processor = new_gmic_emulate_film_various();
+  } else if( op_type == "gmic_emulate_film_user_defined" ) {
+    processor = new_gmic_emulate_film_user_defined();
   } else if( op_type == "gmic_gcd_despeckle" ) {
     processor = new_gmic_gcd_despeckle();
   } else if( op_type == "gmic_smooth_guided" ) {

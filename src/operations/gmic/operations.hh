@@ -52,6 +52,7 @@ namespace PF
   ProcessorBase* new_gmic_emulate_film_negative_old();
   ProcessorBase* new_gmic_emulate_film_print_films();
   ProcessorBase* new_gmic_emulate_film_various();
+  ProcessorBase* new_gmic_emulate_film_user_defined();
   ProcessorBase* new_gmic_gcd_despeckle();
   ProcessorBase* new_gmic_smooth_guided();
   ProcessorBase* new_gmic_iain_denoise();
