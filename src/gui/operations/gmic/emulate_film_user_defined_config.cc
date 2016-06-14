@@ -47,13 +47,13 @@ PF::GmicEmulateFilmUserDefinedConfigGUI::GmicEmulateFilmUserDefinedConfigGUI( PF
   //controlsBox.set_size_request(200,-1);
 
   controlsBox.pack_start( fileEntryBox, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( prop_opacity_slider );
-  controlsBox.pack_start( prop_gamma_slider );
-  controlsBox.pack_start( prop_contrast_slider );
-  controlsBox.pack_start( prop_brightness_slider );
-  controlsBox.pack_start( prop_hue_slider );
-  controlsBox.pack_start( prop_saturation_slider );
-  controlsBox.pack_start( prop_post_normalize_slider );
+  //controlsBox.pack_start( prop_opacity_slider );
+  //controlsBox.pack_start( prop_gamma_slider );
+  //controlsBox.pack_start( prop_contrast_slider );
+  //controlsBox.pack_start( prop_brightness_slider );
+  //controlsBox.pack_start( prop_hue_slider );
+  //controlsBox.pack_start( prop_saturation_slider );
+  //controlsBox.pack_start( prop_post_normalize_slider );
   
   add_widget( controlsBox );
 
@@ -139,5 +139,16 @@ void PF::GmicEmulateFilmUserDefinedConfigGUI::on_button_open_clicked()
 
 void PF::GmicEmulateFilmUserDefinedConfigGUI::open()
 {
+  if( get_layer() && get_layer()->get_image() &&
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+    PF::OpParBase* par = get_layer()->get_processor()->get_par();
+    if( par ) {
+      PF::PropertyBase* prop = par->get_property( "filename" );
+      std::string filename = prop->get_str();
+      if( !filename.empty() )
+        fileEntry.set_text( filename );
+    }
+  }
   OperationConfigGUI::open();
 }

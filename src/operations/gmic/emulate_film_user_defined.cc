@@ -51,6 +51,7 @@ prop_haldlutfilename("haldlutfilename", this),
   gmic_proc = PF::new_gmic();
   gmic_instance = NULL;
   set_type( "gmic_emulate_film_user_defined" );
+  set_default_name( _("apply LUT") );
 }
 
 
