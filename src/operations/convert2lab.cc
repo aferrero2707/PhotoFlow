@@ -65,25 +65,22 @@ VipsImage* PF::Convert2LabPar::build(std::vector<VipsImage*>& in, int first,
   
   if( in.size()<1 || in[0]==NULL ) return NULL;
   
-  if( !profile_out )
-    return NULL;
+  cmsHPROFILE profile_in = NULL;
+  PF::ICCProfile* iccprof_in = PF::get_icc_profile( in[first] );
+  if( iccprof_in )  {
+    profile_in = iccprof_in->get_profile();
+  }
 
-  if( vips_image_get_blob( in[0], VIPS_META_ICC_NAME, 
-			   &data, &data_length ) )
-    return NULL;
-
-  if( profile_in )
-    cmsCloseProfile( profile_in );
-
-  profile_in = cmsOpenProfileFromMem( data, data_length );
   if( !profile_in ) 
-    return NULL;
+    return in[0];
   
   char tstr[1024];
   cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
 #ifndef NDEBUG
   std::cout<<"convert2lab: Embedded profile found: "<<tstr<<std::endl;
 #endif
+
+  cmsHPROFILE profile_out = PF::ICCStore::Instance().get_Lab_profile()->get_profile();
 
   if( transform )
     cmsDeleteTransform( transform );
@@ -100,13 +97,16 @@ VipsImage* PF::Convert2LabPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
 
   VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
-  cmsUInt32Number out_length;
-  cmsSaveProfileToMem( profile_out, NULL, &out_length);
-  void* buf = malloc( out_length );
-  cmsSaveProfileToMem( profile_out, buf, &out_length);
-  vips_image_set_blob( out, VIPS_META_ICC_NAME, 
-		       (VipsCallbackFn) g_free, buf, out_length );
   
+  PF::set_icc_profile( out, PF::ICCStore::Instance().get_Lab_profile() );
+
+  //cmsUInt32Number out_length;
+  //cmsSaveProfileToMem( profile_out, NULL, &out_length);
+  //void* buf = malloc( out_length );
+  //cmsSaveProfileToMem( profile_out, buf, &out_length);
+  //vips_image_set_blob( out, VIPS_META_ICC_NAME,
+	//	       (VipsCallbackFn) g_free, buf, out_length );
+
   return out;
 }
 

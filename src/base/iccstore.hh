@@ -217,6 +217,13 @@ public:
 };
 
 
+class LabProfile: public ICCProfile
+{
+public:
+  LabProfile(TRC_type type);
+};
+
+
 class ICCStore
 {
   ICCProfile* srgb_profiles[3];
@@ -226,6 +233,9 @@ class ICCStore
   ICCProfile* adobe_profiles[3];
   ICCProfile* prophoto_profiles[3];
   std::vector<ICCProfile*> profiles;
+
+  ICCProfile* Lab_profile;
+  ICCProfile* XYZ_profile;
 
   static ICCStore* instance;
 
@@ -240,6 +250,9 @@ public:
   ICCProfile* get_profile( Glib::ustring pname );
   ICCProfile* get_profile( void* pdata, cmsUInt32Number psize );
   ICCProfile* get_profile( cmsHPROFILE profile );
+
+  ICCProfile* get_Lab_profile() { return Lab_profile; }
+  ICCProfile* get_XYZ_profile() { return XYZ_profile; }
 
   cmsToneCurve* get_Lstar_trc() {return Lstar_trc; }
   cmsToneCurve* get_iLstar_trc() {return iLstar_trc; }

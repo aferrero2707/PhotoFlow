@@ -374,6 +374,16 @@ void PF::set_icc_profile( VipsImage* img, PF::ICCProfile* prof )
     vips_image_set_blob( img, VIPS_META_ICC_NAME, (VipsCallbackFn) g_free, buf, 0 );
     return;
   }
+
+  std::cout<<"set_icc_profile: prof="<<prof<<std::endl;
+  if( prof->get_profile() ) {
+    char tstr[1024];
+    cmsGetProfileInfoASCII(prof->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
+    std::cout<<"set_icc_profile: profile name : "<<tstr<<std::endl;
+  } else {
+    std::cout<<"set_icc_profile: prof->get_profile() == NULL"<<std::endl;
+  }
+
   ICCProfileContainer* pc = (ICCProfileContainer*)g_malloc( sizeof(ICCProfileContainer) );
   if( pc ) {
     pc->profile = prof;
@@ -382,10 +392,10 @@ void PF::set_icc_profile( VipsImage* img, PF::ICCProfile* prof )
 
     void* buf = g_malloc( prof->get_profile_size() );
     if( buf ) {
+      std::cout<<"PF::set_icc_profile(): VIPS_META_ICC blob set (size="<<prof->get_profile_size()<<")"<<std::endl;
       memcpy( buf, prof->get_profile_data(), prof->get_profile_size() );
       vips_image_set_blob( img, VIPS_META_ICC_NAME,
           (VipsCallbackFn) g_free, buf, prof->get_profile_size() );
-      std::cout<<"PF::set_icc_profile(): VIPS_META_ICC blob set (size="<<prof->get_profile_size()<<")"<<std::endl;
     } else {
       std::cerr<<"PF::set_icc_profile(): cannot allocate "<<prof->get_profile_size()<<" bytes"<<std::endl;
     }
@@ -468,6 +478,9 @@ PF::ICCStore::ICCStore()
   prophoto_profiles[0] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-g18.icc");
   prophoto_profiles[1] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-labl.icc");
   prophoto_profiles[2] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-g10.icc");
+
+  Lab_profile = new LabProfile( PF::PF_TRC_PERCEPTUAL );
+  Lab_profile->ref(); profiles.push_back( Lab_profile );
 
   /*
   std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-g10.icc";

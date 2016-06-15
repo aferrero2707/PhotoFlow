@@ -76,9 +76,9 @@ namespace PF
     void set_out_profile_mode( profile_mode_t mode ) { out_profile_mode.set_enum_value( mode ); }
     int get_out_profile_type() { return out_profile_type.get_enum_value().first; }
     void set_out_profile_type( profile_type_t type ) { out_profile_type.set_enum_value( type ); }
-    void set_out_profile_data( void* data, int length ) { 
-      out_profile_data = data; 
-      out_profile_data_length = length; 
+    void set_out_profile_data( void* data, int length ) {
+      out_profile_data = data;
+      out_profile_data_length = length;
     }
 
     void set_image_hints( VipsImage* img )
