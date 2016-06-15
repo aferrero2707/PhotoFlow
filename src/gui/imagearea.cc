@@ -1008,6 +1008,7 @@ void PF::ImageArea::update( VipsRect* area )
   print_embedded_profile( wclipimg );
 
   // Display profile management
+  cmsHPROFILE icc_display_profile;
   PF::Options& options = PF::PhotoFlow::Instance().get_options();
   if( options.get_display_profile_type() != current_display_profile_type ||
       options.get_custom_display_profile_name().c_str() != current_display_profile_name ) {
@@ -1018,15 +1019,17 @@ void PF::ImageArea::update( VipsRect* area )
     std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
     switch( current_display_profile_type ) {
     case PF_DISPLAY_PROF_sRGB:
-      current_display_profile = PF::ICCStore::Instance().get_profile( PF::OUT_PROF_sRGB, PF::PF_TRC_STANDARD )->get_profile();
+      current_display_profile = PF::ICCStore::Instance().get_profile( PF::OUT_PROF_sRGB, PF::PF_TRC_STANDARD );
+      icc_display_profile = current_display_profile->get_profile();
       char tstr[1024];
-      cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      cmsGetProfileInfoASCII(icc_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
   //#ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
   //#endif
       break;
     case PF_DISPLAY_PROF_CUSTOM:
-      current_display_profile = PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() )->get_profile();
+      current_display_profile = PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() );
+      icc_display_profile = current_display_profile->get_profile();
       std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
           <<" -> "<<current_display_profile<<std::endl;
       break;
@@ -1035,7 +1038,8 @@ void PF::ImageArea::update( VipsRect* area )
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
   std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
   if( icc_par && current_display_profile ) {
-    std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
+    std::cout<<"ImageArea::update(): setting display profile: PhF profile="<<current_display_profile
+        <<"  ICC profile="<<icc_display_profile<<std::endl;
     icc_par->set_out_profile( current_display_profile );
   }
   convert2display->get_par()->set_image_hints( wclipimg );

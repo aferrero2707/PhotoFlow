@@ -47,7 +47,8 @@ namespace PF
   {
     std::string in_profile_name;
 
-    cmsHPROFILE in_profile, out_profile;
+    ICCProfile* in_profile;
+    ICCProfile* out_profile;
     cmsHTRANSFORM transform;
 
     cmsColorSpaceSignature input_cs_type;
@@ -59,7 +60,7 @@ namespace PF
 
     cmsHTRANSFORM get_transform() { return transform; }
 
-    void set_out_profile( cmsHPROFILE p ) { out_profile = p; }
+    void set_out_profile( ICCProfile* p ) { out_profile = p; }
     void set_image_hints( VipsImage* img )
     {
       if( !img ) return;

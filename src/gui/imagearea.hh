@@ -118,7 +118,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   PF::ProcessorBase* convert2display;
   display_profile_t current_display_profile_type;
   Glib::ustring current_display_profile_name;
-  cmsHPROFILE current_display_profile;
+  ICCProfile* current_display_profile;
 
   PF::Processor<PF::UniformPar,PF::Uniform>* uniform;
   PF::Processor<PF::BlenderPar,PF::BlenderProc>* maskblend;
