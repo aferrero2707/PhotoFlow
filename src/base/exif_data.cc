@@ -256,12 +256,16 @@ bool PF::exif_read(exif_data_t* data, const char* path)
       dt_strlcpy_to_utf8(data->exif_maker, sizeof(data->exif_maker), pos, exifData);
     }
 
-    for(char *c=data->exif_maker+sizeof(data->exif_maker)-2; c >= data->exif_maker; c--) {
+    printf( "data->exif_maker before stripping: \"%s\"\n", data->exif_maker );
+    size_t slen = strnlen( data->exif_maker, sizeof(data->exif_maker)-2 );
+    for(char *c=data->exif_maker+slen; c >= data->exif_maker; c--) {
+      std::cout<<"c: \""<<*c<<"\"("<<(int)*c<<")"<<std::endl;
       if(*c != ' ' && *c != '\0') {
         *(c+1) = '\0';
         break;
       }
     }
+    printf( "data->exif_maker after stripping: \"%s\"\n", data->exif_maker );
 
     if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.Image.Model")))
          != exifData.end() && pos->size())
@@ -275,12 +279,15 @@ bool PF::exif_read(exif_data_t* data, const char* path)
     }
 
     //g_print("read_exif(): model=%s\n",data->exif_model);
-    for(char *c=data->exif_model+sizeof(data->exif_model)-2; c >= data->exif_model; c--) {
+    printf( "data->exif_model before stripping: \"%s\"\n", data->exif_model );
+    slen = strnlen( data->exif_model, sizeof(data->exif_model)-2 );
+    for(char *c=data->exif_model+slen; c >= data->exif_model; c--) {
       if(*c != ' ' && *c != '\0') {
         *(c+1) = '\0';
         break;
       }
     }
+    printf( "data->exif_model after stripping: \"%s\"\n", data->exif_model );
     //g_print("read_exif(): model=%s\n",data->exif_model);
 
     if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.Image.DateTimeOriginal")))
