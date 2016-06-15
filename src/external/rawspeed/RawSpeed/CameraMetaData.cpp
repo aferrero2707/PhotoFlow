@@ -57,6 +57,7 @@ CameraMetaData::~CameraMetaData(void) {
 
 Camera* CameraMetaData::getCamera(string make, string model, string mode) {
   string id = string(make).append(model).append(mode);
+  printf("CameraMetaData::getCamera(): id=\"%s\"\n", id.c_str());
   if (cameras.end() == cameras.find(id))
     return NULL;
   return cameras[id];

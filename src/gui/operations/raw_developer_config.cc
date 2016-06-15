@@ -591,6 +591,12 @@ void PF::RawDeveloperConfigGUI::do_update()
                 }
               }
             }
+            printf("RawDeveloperConfigGUI::do_update(): xyz_to_cam:\n");
+            for(int k = 0; k < 3; k++)
+            {
+              printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
+            }
+
             // and inverse matrix
             mat3inv_double((double *)CAM_to_XYZ, (double *)XYZ_to_CAM);
 

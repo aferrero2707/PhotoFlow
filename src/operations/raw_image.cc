@@ -69,6 +69,7 @@ static void rawspeed_lookup_makermodel(RawSpeed::Camera *cam, const char *maker,
     printf("[rawspeed] %s\n", exc.what());
   }
 
+  std::cout<<"rawspeed_lookup_makermodel: cam="<<cam<<"  got_it_done="<<got_it_done<<std::endl;
   if (!got_it_done)
   {
     // We couldn't find the camera or caught some exception, just punt and pass
@@ -547,8 +548,10 @@ PF::RawImage::RawImage( const std::string _fname ):
 
 #ifdef PF_USE_RAWSPEED
   RawSpeed::Camera *cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "");
-  if (!cam)
+  if (!cam) {
+    std::cout<<"RawImage: getting rawspeed camera in DNG mode"<<std::endl;
     cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "dng");
+  }
   // We need to use the exif values, so let's get rawspeed to munge them
   rawspeed_lookup_makermodel(cam, exif_data.exif_maker, exif_data.exif_model,
       exif_data.camera_maker, sizeof(exif_data.camera_maker),
@@ -560,6 +563,14 @@ PF::RawImage::RawImage( const std::string _fname ):
   int maker_len = strlen(exif_data.camera_maker);
   exif_data.camera_makermodel[maker_len] = ' ';
   g_strlcpy(exif_data.camera_makermodel+maker_len+1, exif_data.camera_model, sizeof(exif_data.camera_makermodel)-maker_len-1);
+
+  std::cout<<"RawImage: Camera maker/model data:"<<std::endl
+      <<"  exif_data.exif_maker: "<<exif_data.exif_maker<<std::endl
+      <<"  exif_data.exif_model: "<<exif_data.exif_model<<std::endl
+      <<"  exif_data.camera_maker: "<<exif_data.camera_maker<<std::endl
+      <<"  exif_data.camera_model: "<<exif_data.camera_model<<std::endl
+      <<"  exif_data.camera_alias: "<<exif_data.camera_alias<<std::endl
+      <<"  exif_data.camera_makermodel: "<<exif_data.camera_makermodel<<std::endl;
 #endif
 
   void* exifdata_buf = malloc( sizeof(exif_data_t) );
