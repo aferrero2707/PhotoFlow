@@ -1087,6 +1087,8 @@ void PF::ImageArea::update( VipsRect* area )
       //g_object_unref( srgbimg );
       //g_object_unref( mapinverted );
 
+      PF::set_icc_profile( redimage, current_display_profile );
+
       maskblend->get_par()->set_image_hints( srgbimg );
       maskblend->get_par()->set_format( get_pipeline()->get_format() );
       maskblend->get_par()->set_blend_mode( PF::PF_BLEND_NORMAL );
@@ -1098,7 +1100,9 @@ void PF::ImageArea::update( VipsRect* area )
       std::cout<<"ImageArea::update(): srgbimg->Xsize="<<srgbimg->Xsize<<"    srgbimg->Ysize="<<srgbimg->Ysize<<std::endl;    
       std::cout<<"ImageArea::update(): redimage->Xsize="<<redimage->Xsize<<"    redimage->Ysize="<<redimage->Ysize<<std::endl;    
 #endif      
+      std::cout<<"ImageArea::update(): building maskblend operation..."<<std::endl;
       VipsImage* blendimage = maskblend->get_par()->build(in, 0, NULL, mapinverted, level );
+      std::cout<<"ImageArea::update(): ... maskblend done"<<std::endl;
       PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
       PF_UNREF( mapinverted, "ImageArea::update() mapinverted unref" );
       PF_UNREF( redimage, "ImageArea::update() redimage unref" );
