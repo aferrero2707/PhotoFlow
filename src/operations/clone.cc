@@ -128,6 +128,9 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
     break;
   }
 
+  // This is a mask image, so it has no associated color profile
+  if( out )
+    PF::set_icc_profile( out, NULL );
   return out;
 }
 
@@ -145,11 +148,11 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   switch( ch ) {
   case PF::CLONE_CHANNEL_RGB: 
     {
-      VipsImage* luma;
-      desaturate->get_par()->set_image_hints( srcimg );
-      desaturate->get_par()->set_format( get_format() );
+      convert2lab->get_par()->set_image_hints( srcimg );
+      convert2lab->get_par()->set_format( get_format() );
       std::vector<VipsImage*> in2; in2.push_back( srcimg );
-      luma = desaturate->get_par()->build( in2, 0, NULL, NULL, level );
+      VipsImage* luma = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
+
       if( !luma ) return NULL;
       if( vips_extract_band( luma, &out, 0, NULL ) )
         return NULL;
@@ -200,6 +203,9 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
     break;
   }
 
+  // This is a mask image, so it has no associated color profile
+  if( out )
+    PF::set_icc_profile( out, NULL );
   return out;
 }
 
