@@ -40,10 +40,10 @@ namespace PF
 
 
   enum desaturate_method_t {
+    DESAT_LAB,
     DESAT_LUMINOSITY,
     DESAT_LIGHTNESS,
-    DESAT_AVERAGE,
-    DESAT_LAB
+    DESAT_AVERAGE
   };
 
 
