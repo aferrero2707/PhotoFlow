@@ -40,18 +40,19 @@
 
 PF::ClonePar::ClonePar(): 
   PF::OpParBase(),
-  source_channel("source_channel",this,PF::CLONE_CHANNEL_RGB,"RGB","RGB")
+  //source_channel("source_channel",this,PF::CLONE_CHANNEL_RGB,"RGB","RGB")
+  source_channel("source_channel",this,PF::CLONE_CHANNEL_SOURCE,"SOURCE",_("all"))
 {
-  source_channel.add_enum_value(PF::CLONE_CHANNEL_GREY,"Grey","Grey");
+  //source_channel.add_enum_value(PF::CLONE_CHANNEL_GREY,"Grey","Grey");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_R,"R","R");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_G,"G","G");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_B,"B","B");
-  source_channel.add_enum_value(PF::CLONE_CHANNEL_Lab,"Lab","Lab");
+  //source_channel.add_enum_value(PF::CLONE_CHANNEL_Lab,"Lab","Lab");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_L,"L","L");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_a,"a","a");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_b,"b","b");
 
-  source_channel.set_enum_value(PF::CLONE_CHANNEL_R);
+  source_channel.set_enum_value(PF::CLONE_CHANNEL_SOURCE);
 
   convert2lab = PF::new_operation( "convert2lab", NULL );
   convert_cs = PF::new_convert_colorspace();
@@ -88,6 +89,7 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
     PF_REF( srcimg, "PF::ClonePar::Lab2grayscale(): srcimg ref (csin != PF::PF_COLORSPACE_LAB)" );
   }
   switch( ch ) {
+  case PF::CLONE_CHANNEL_SOURCE:
   case PF::CLONE_CHANNEL_L:
     if( vips_extract_band( srcimg, &out, 0, NULL ) )
       return NULL;
@@ -142,11 +144,13 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   if( srcimg ) 
     csin = PF::convert_colorspace( srcimg->Type );
 
+  std::cout<<"ClonePar::rgb2grayscale(): csin="<<csin<<std::endl;
   if( csin != PF::PF_COLORSPACE_RGB ) {
     return NULL;
   }
   switch( ch ) {
   case PF::CLONE_CHANNEL_RGB: 
+  case PF::CLONE_CHANNEL_SOURCE:
     {
       convert2lab->get_par()->set_image_hints( srcimg );
       convert2lab->get_par()->set_format( get_format() );
@@ -224,6 +228,7 @@ VipsImage* PF::ClonePar::rgb2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
     return NULL;
   }
   switch( ch ) {
+  case PF::CLONE_CHANNEL_SOURCE:
   case PF::CLONE_CHANNEL_RGB:
     out = srcimg;
     g_object_ref( out );
@@ -451,10 +456,14 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
 
   colorspace_t cs = get_colorspace();
 
-#ifndef NDEBUG
+  colorspace_t csin = PF::PF_COLORSPACE_UNKNOWN;
+  if( srcimg )
+    csin = PF::convert_colorspace( srcimg->Type );
+
+//#ifndef NDEBUG
   std::cout<<"ClonePar::build(): in.size()="<<in.size()<<"  srcimg="<<srcimg<<std::endl;
-  std::cout<<"ClonePar::build(): colorspace="<<cs<<std::endl;
-#endif
+  std::cout<<"ClonePar::build(): colorspace="<<cs<<"  input_colorspace="<<csin<<std::endl;
+//#endif
 
   if( !srcimg ) {
     if( in.size() > 0 ) {
@@ -471,22 +480,27 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
       // The target colorspace is greyscale, therefore we either pick one channel from the source image
       // or we apply the appropriate conversion to grayscale
       clone_channel ch = (clone_channel)source_channel.get_enum_value().first;
-      if( ch==PF::CLONE_CHANNEL_GREY ) {
+      std::cout<<"ClonePar::build(): clone_channel="<<ch<<std::endl;
+      if( ch==PF::CLONE_CHANNEL_GREY ||
+          (ch==PF::CLONE_CHANNEL_SOURCE && csin == PF::PF_COLORSPACE_GRAYSCALE) ) {
         out = srcimg;
         PF_REF( out, "ClonePar::build(): srcimg ref" );
       }
       if( ch==PF::CLONE_CHANNEL_Lab ||
           ch==PF::CLONE_CHANNEL_L ||
           ch==PF::CLONE_CHANNEL_a ||
-          ch==PF::CLONE_CHANNEL_b ) {
+          ch==PF::CLONE_CHANNEL_b ||
+          (ch==PF::CLONE_CHANNEL_SOURCE && csin == PF::PF_COLORSPACE_LAB) ) {
         unsigned int level2 = level;
         out = Lab2grayscale( srcimg, ch, level2 );
       }
       if( ch==PF::CLONE_CHANNEL_RGB ||
           ch==PF::CLONE_CHANNEL_R ||
           ch==PF::CLONE_CHANNEL_G ||
-          ch==PF::CLONE_CHANNEL_B ) {
+          ch==PF::CLONE_CHANNEL_B ||
+          (ch==PF::CLONE_CHANNEL_SOURCE && csin == PF::PF_COLORSPACE_RGB) ) {
         unsigned int level2 = level;
+        std::cout<<"ClonePar::build(): calling rgb2grayscale()"<<std::endl;
         out = rgb2grayscale( srcimg, ch, level2 );
       }
     }
@@ -526,7 +540,8 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
       if( ch==PF::CLONE_CHANNEL_RGB ||
           ch==PF::CLONE_CHANNEL_R ||
           ch==PF::CLONE_CHANNEL_G ||
-          ch==PF::CLONE_CHANNEL_B ) {
+          ch==PF::CLONE_CHANNEL_B ||
+          (ch==PF::CLONE_CHANNEL_SOURCE && csin == PF::PF_COLORSPACE_RGB) ) {
         unsigned int level2 = level;
         //std::cout<<"ClonePar::build(): calling rgb2rgb()"<<std::endl;
         out = rgb2rgb( srcimg, ch, level2 );
@@ -545,7 +560,8 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
       // The target colorspace is greyscale, therefore we either pick one channel from the source image
       // or we apply the appropriate conversion to grayscale
       clone_channel ch = (clone_channel)source_channel.get_enum_value().first;
-      if( ch==PF::CLONE_CHANNEL_Lab ) {
+      if( ch==PF::CLONE_CHANNEL_Lab ||
+          (ch==PF::CLONE_CHANNEL_SOURCE && csin == PF::PF_COLORSPACE_LAB) ) {
         out = srcimg;
         g_object_ref( out );
       }
