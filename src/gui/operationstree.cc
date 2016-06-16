@@ -328,6 +328,8 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
   op_detail.get_tree().add_op( _("Multi-level decomposition"), "split_details" );
   //op_detail.get_tree().add_op( _("Multi-level decomposition"), "gmic_split_details" );
+  op_detail.get_tree().add_op( _("Wavelet Decompose"), "wavdec" );
+  op_detail.get_tree().add_op( _("Wavelet Decompose Many"), "wavdec_many" );
   op_detail.get_tree().add_op( _("Noise reduction"), "denoise" );
 
   op_geom.get_tree().add_op( _("Crop image"), "crop" );

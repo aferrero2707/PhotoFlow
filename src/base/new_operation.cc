@@ -187,6 +187,15 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
   } else if( op_type == "split_details" ) {
     processor = new_split_details();
 
+  } else if( op_type == "wavdec" ) {
+    processor = new_wavdec();
+
+  } else if( op_type == "wavdec_many" ) {
+    processor = new_wavdec_many();
+
+  } else if( op_type == "subtrimg" ) {
+    processor = new_subtrimg();
+
   } else if( op_type == "volume" ) {
     processor = new_volume();
   }
