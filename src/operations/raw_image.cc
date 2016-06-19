@@ -36,6 +36,7 @@ typedef uint32_t uint32;
 #include "../base/pf_mkstemp.hh"
 #include "../base/rawmatrix.hh"
 
+
 #include "../rt/rtengine/camconst.h"
 #include "raw_image.hh"
 
@@ -81,6 +82,11 @@ static void rawspeed_lookup_makermodel(RawSpeed::Camera *cam, const char *maker,
 }
 
 
+
+bool PF::check_xtrans( unsigned filters )
+{
+  return( filters == 9u);
+}
 
 
 PF::RawImage::RawImage( const std::string _fname ):
@@ -206,7 +212,26 @@ PF::RawImage::RawImage( const std::string _fname ):
     for (uint32 i=0; i<r->errors.size(); i++)
       fprintf(stderr, "[rawspeed] %s\n", r->errors[i]);
 
+    // Get CFA pattern
     pdata->idata.filters = r->cfa.getDcrawFilter();
+    if(pdata->idata.filters == 9u)
+    {
+      // get 6x6 CFA offset from top left of cropped image
+      // NOTE: This is different from how things are done with Bayer
+      // sensors. For these, the CFA in cameras.xml is pre-offset
+      // depending on the distance modulo 2 between raw and usable
+      // image data. For X-Trans, the CFA in cameras.xml is
+      // (currently) aligned with the top left of the raw data, and
+      // hence it is shifted here to align with the top left of the
+      // cropped image.
+      RawSpeed::iPoint2D tl_margin = r->getCropOffset();
+      for(int i = 0; i < 6; ++i)
+        for(int j = 0; j < 6; ++j)
+        {
+          pdata->idata.xtrans_uncropped[j][i] = r->cfa.getColorAt(i % 6, j % 6);
+          pdata->idata.xtrans[j][i] = r->cfa.getColorAt((i + tl_margin.x) % 6, (j + tl_margin.y) % 6);
+        }
+    }
 
     pdata->color.black = r->blackLevel;
     pdata->color.maximum = r->whitePoint;
@@ -595,7 +620,9 @@ PF::RawImage::RawImage( const std::string _fname ):
   
   int width = image->Xsize;
   int height = image->Ysize;
-  PF::ProcessorBase* fast_demosaic = PF::new_fast_demosaic();
+  PF::ProcessorBase* fast_demosaic = NULL;
+  if( is_xtrans() ) fast_demosaic = PF::new_fast_demosaic_xtrans();
+  else fast_demosaic = PF::new_fast_demosaic();
   fast_demosaic->get_par()->set_image_hints( image );
   fast_demosaic->get_par()->set_format( VIPS_FORMAT_FLOAT );
   fast_demosaic->get_par()->set_demand_hint( VIPS_DEMAND_STYLE_FATSTRIP );
