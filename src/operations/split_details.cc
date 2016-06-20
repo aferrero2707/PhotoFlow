@@ -29,6 +29,7 @@
 
 
 #include "gaussblur.hh"
+#include "wavdec.hh"
 #include "split_details.hh"
 
 
@@ -36,6 +37,7 @@
   {
     float blur_radius;
     PF::ProcessorBase* gauss;
+    PF::ProcessorBase* wavdec;
 
   public:
     SplitDetailsLevelPar();
@@ -53,6 +55,7 @@
     PF::OpParBase()
   {
     gauss = PF::new_gaussblur();
+    wavdec = PF::new_wavdec();
 
     set_type("decompose_level");
   }
@@ -70,12 +73,21 @@
 
     std::vector<VipsImage*> in2;
     PF::GaussBlurPar* gausspar = dynamic_cast<PF::GaussBlurPar*>( gauss->get_par() );
+    PF::WavDecPar* wavdecpar = dynamic_cast<PF::WavDecPar*>( wavdec->get_par() );
     if( gausspar ) {
       in2.push_back( srcimg );
+      /*
       gausspar->set_radius( blur_radius );
       gausspar->set_image_hints( srcimg );
       gausspar->set_format( get_format() );
       VipsImage* smoothed = gausspar->build( in2, 0, NULL, NULL, level );
+      */
+      wavdecpar->set_numScales( 1 );
+      wavdecpar->set_currScale( 2 );
+      wavdecpar->set_blendFactor( .5f );
+      wavdecpar->set_image_hints( srcimg );
+      wavdecpar->set_format( get_format() );
+      VipsImage* smoothed = wavdecpar->build( in2, 0, NULL, NULL, level );
 
       in2.clear();
       in2.push_back( smoothed );
