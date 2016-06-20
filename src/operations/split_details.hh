@@ -48,7 +48,6 @@ enum split_details_blur_type
     PropertyBase blur_type;
     Property<int> prop_nscales;
     Property<float> prop_base_scale;
-    //Property<float> prop_detail_scale;
 
     std::vector<ProcessorBase*> levels;
 

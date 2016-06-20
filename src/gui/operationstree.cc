@@ -326,7 +326,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.get_tree().add_op( _("Local contrast"), "volume" );
   op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
   op_detail.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
-  op_detail.get_tree().add_op( _("Multi-level decomposition"), "split_details" );
+  op_detail.get_tree().add_op( _("Split Details"), "split_details" );
   //op_detail.get_tree().add_op( _("Multi-level decomposition"), "gmic_split_details" );
   op_detail.get_tree().add_op( _("Noise reduction"), "denoise" );
 
