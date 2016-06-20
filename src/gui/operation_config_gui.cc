@@ -61,6 +61,7 @@
 #include "../gui/operations/shadows_highlights_config.hh"
 #include "../gui/operations/defringe_config.hh"
 #include "../gui/operations/split_details_config.hh"
+#include "../gui/operations/wavdec_config.hh"
 
 #include "operations/gmic/new_gmic_operation_config.hh"
 

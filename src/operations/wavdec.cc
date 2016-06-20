@@ -39,6 +39,7 @@ PF::WavDecPar::WavDecPar():
 OpParBase(),
 numScales("numScales",this,0),
 currScale("currScale",this,0),
+initial_Lev("initial_Lev",this,0),
 blendFactor("blendFactor",this,0.5f)
 {
   wavdec_algo = new PF::Processor<PF::WavDecAlgoPar,PF::WavDecAlgoProc>();
@@ -72,7 +73,7 @@ VipsImage* PF::WavDecPar::build(std::vector<VipsImage*>& in, int first,
     max_scales = numScales.get();
   }
 
-  int padding = get_padding(max_scales);
+  int padding = get_padding(max_scales, get_initial_Lev());
   wav_dec_par->set_padding(padding);
 
 //  std::cout<<"WavDecPar::build() padding: "<<padding<<std::endl;
@@ -105,6 +106,7 @@ VipsImage* PF::WavDecPar::build(std::vector<VipsImage*>& in, int first,
   wav_dec_par->set_numScales( get_numScales() );
   wav_dec_par->set_currScale( get_currScale() );
   wav_dec_par->set_blendFactor( get_blendFactor() );
+  wav_dec_par->set_initial_Lev( get_initial_Lev() );
   
   wav_dec_par->set_image_hints( cached );
   wav_dec_par->set_format( get_format() );
