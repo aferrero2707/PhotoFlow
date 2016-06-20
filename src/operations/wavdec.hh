@@ -38,6 +38,7 @@
 #define PF_WAVDEC_H
 
 #include <string.h>
+#include "../base/processor.hh"
 
 namespace PF 
 {
@@ -45,7 +46,7 @@ namespace PF
 
 class WavDecPar: public OpParBase
 {
-  Property<float> numScales, currScale, blendFactor;
+  Property<float> numScales, currScale, blendFactor, initial_Lev;
   
   ProcessorBase* wavdec_algo;
 
@@ -61,8 +62,10 @@ public:
   float set_currScale(float a) { currScale.set(a); }
   float get_blendFactor() { return (float)blendFactor.get(); }
   float set_blendFactor(float a) { blendFactor.set(a); }
+  int get_initial_Lev() { return initial_Lev.get(); }
+  void set_initial_Lev(int s) { initial_Lev.set(s); }
 
-  int get_padding(int nScales) { return pow(2, nScales); }
+  int get_padding(int nScales, int initial_Lev) { return pow(2, nScales+initial_Lev); }
   
   VipsImage* build(std::vector<VipsImage*>& in, int first,
       VipsImage* imap, VipsImage* omap,
@@ -72,6 +75,7 @@ public:
 class WavDecAlgoPar: public OpParBase
 {
   float numScales, currScale, blendFactor;
+  int initial_Lev;
   int padding;
 
 public:
@@ -80,6 +84,7 @@ public:
       numScales = 0;
       currScale = 0;
       blendFactor = .5f;
+      initial_Lev = 0;
       padding = 0;
   }
   
@@ -91,6 +96,8 @@ public:
   float set_blendFactor(float a) { blendFactor=a; }
   int get_padding() { return padding; }
   void set_padding(int p) { padding = p; }
+  int get_initial_Lev() { return initial_Lev; }
+  void set_initial_Lev(int p) { initial_Lev = p; }
 
   static int get_maxScales(const int width, const int height)
   {
@@ -167,6 +174,7 @@ class WavDecAlgoProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
     int wd_return_layer;
     float wd_blend_factor; // .128f
     int wd_max_scales;
+    int wd_initial_Lev;
     
 #define INDEX_WT_IMAGE(ch, index) (((index)*ch)+c)
 
@@ -206,6 +214,7 @@ public:
       memcpy(pwd, pin, i_line_size * sizeof(float));
     }
     
+    wd_initial_Lev = (int)opar->get_initial_Lev();
     wd_scales = (int)opar->get_numScales();
     wd_return_layer = (int)opar->get_currScale();
     wd_blend_factor = (float)opar->get_blendFactor();
@@ -310,13 +319,13 @@ private:
 
       for (int row = 0; row < wd_height; row++) 
       {
-        dwt_hat_transform(temp, buffer[hpass] + (row * i_line_size), 1, wd_width, 1 << lev);
+        dwt_hat_transform(temp, buffer[hpass] + (row * i_line_size), 1, wd_width, 1 << (lev+wd_initial_Lev));
         memcpy(&(buffer[lpass][row * i_line_size]), temp, i_line_size * sizeof(float));
       }
       
       for (int col = 0; col < wd_width; col++) 
       {
-        dwt_hat_transform(temp, buffer[lpass] + col*wd_ch, wd_width, wd_height, 1 << lev);
+        dwt_hat_transform(temp, buffer[lpass] + col*wd_ch, wd_width, wd_height, 1 << (lev+wd_initial_Lev));
         for (int row = 0; row < wd_height; row++) 
         {
           for (int c = 0; c < wd_ch; c++) 
