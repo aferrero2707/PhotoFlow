@@ -51,7 +51,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   OpParBase(), output_format( VIPS_FORMAT_NOTSET ),
   demo_method("demo_method",this,PF::PF_DEMO_AMAZE,"AMAZE","Amaze"),
 	fcs_steps("fcs_steps",this,1),
-	caching_enabled( false )
+	caching_enabled( true )
 {
 	demo_method.add_enum_value(PF::PF_DEMO_AMAZE,"AMAZE","Amaze");
 	//demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
