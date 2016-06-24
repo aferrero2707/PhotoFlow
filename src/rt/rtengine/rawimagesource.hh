@@ -52,6 +52,7 @@ public:
 	class RawImageSource
 	{
 		PF::RawMatrix rawData;
+		float** rawDataBuf;
 		PF::Array2D<float> red, green, blue;
 		int tile_top, tile_left;
 
@@ -75,6 +76,8 @@ public:
 		void lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
 		                       int tilex, int tiley, int tilew, int tileh,
                            int iterations);
+    void xtrans_demosaic_RT(int winx, int winy, int winw, int winh,
+                           int tilex, int tiley, int tilew, int tileh);
 
     void refinement(int PassCount, int W, int H);
     void refinement_lassus(int PassCount, int W, int H);
@@ -130,6 +133,7 @@ public:
     void amaze_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void igv_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void lmmse_demosaic(VipsRegion* ir, VipsRegion* oreg);
+    void xtrans_demosaic(VipsRegion* ir, VipsRegion* oreg);
 		void false_color_correction(VipsRegion* ir, VipsRegion* oreg);
 	};
 }

@@ -37,6 +37,7 @@
 #include "amaze_demosaic.hh"
 #include "lmmse_demosaic.hh"
 #include "igv_demosaic.hh"
+#include "xtrans_demosaic.hh"
 #include "fast_demosaic.hh"
 #include "fast_demosaic_xtrans.hh"
 #include "false_color_correction.hh"
@@ -60,6 +61,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   amaze_demosaic = new_amaze_demosaic();
   lmmse_demosaic = new_lmmse_demosaic();
   igv_demosaic = new_igv_demosaic();
+  xtrans_demosaic = new_xtrans_demosaic();
   fast_demosaic = new_fast_demosaic();
   fast_demosaic_xtrans = new_fast_demosaic_xtrans();
   FastDemosaicXTransPar* xtrans_par =
@@ -158,7 +160,8 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
     if( PF::check_xtrans(image_data->idata.filters) ) {
       out_ca = image;
       //PF_REF( out_ca, "RawDeveloperPar::build(): in[0] ref for xtrans");
-      demo = fast_demosaic_xtrans;
+      //demo = fast_demosaic_xtrans;
+      demo = xtrans_demosaic;
     } else {
       in2.push_back( image );
       hotpixels->get_par()->set_image_hints( image );

@@ -173,6 +173,7 @@ FILE(GLOB RTSources
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
+  rt/rtengine/xtrans_demosaic_RT.cc
 )
 
 FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)
@@ -451,7 +452,7 @@ if (GIMP_FOUND)
     #gmon
   )
   
-  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION share/photoflow/plug-in)
+  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION lib/gimp/2.0/plug-ins)
 endif (GIMP_FOUND)
 
 
