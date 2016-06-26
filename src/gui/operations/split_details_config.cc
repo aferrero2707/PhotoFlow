@@ -43,8 +43,26 @@ PF::SplitDetailsConfigGUI::SplitDetailsConfigGUI( PF::Layer* layer ):
   controlsBox.pack_start( prop_base_scale_slider, Gtk::PACK_SHRINK, 5 );
   //controlsBox.pack_start( prop_detail_scale_slider );
   
+  blur_type_selector.get_combo_box()->signal_changed().connect(sigc::mem_fun(*this,&PF::SplitDetailsConfigGUI::blur_type_selector_changed));
+
   add_widget( controlsBox );
 }
 
+void PF::SplitDetailsConfigGUI::blur_type_selector_changed()
+{
+  PF::SplitDetailsPar* lpar = dynamic_cast<PF::SplitDetailsPar*>( get_par() );
+  if ( lpar->get_blur_type() == PF::SPLIT_DETAILS_BLUR_GAUSS )
+    prop_base_scale_slider.show();
+  else
+    prop_base_scale_slider.hide();
+
+}
+
+void PF::SplitDetailsConfigGUI::do_update()
+{
+  PF::OperationConfigGUI::do_update();
+  
+  blur_type_selector_changed();
+}
 
 

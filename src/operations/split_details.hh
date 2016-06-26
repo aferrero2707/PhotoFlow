@@ -58,6 +58,8 @@ enum split_details_blur_type
     std::vector<VipsImage*> build_many(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap,
         unsigned int& level);
+    
+    int get_blur_type() { return blur_type.get_enum_value().first; }
   };
 
   
