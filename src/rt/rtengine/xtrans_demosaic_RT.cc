@@ -25,6 +25,7 @@
 ////////////////////////////////////////////////////////////////
 
 #include <string.h>
+#include <sys/types.h>
 
 //#include "rtengine.h"
 #include "rawimagesource.hh"
