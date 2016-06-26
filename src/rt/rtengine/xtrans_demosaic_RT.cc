@@ -25,7 +25,6 @@
 ////////////////////////////////////////////////////////////////
 
 #include <string.h>
-#include <sys/types.h>
 
 //#include "rtengine.h"
 #include "rawimagesource.hh"
@@ -77,7 +76,7 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
 
   // sgrow/sgcol is the offset in the sensor matrix of the solitary
   // green pixels
-  ushort sgrow, sgcol;
+  unsigned short sgrow, sgcol;
 
   const int height = winh, width = winw;
 
