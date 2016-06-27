@@ -162,7 +162,11 @@ PF::RawImage::RawImage( const std::string _fname ):
 #endif
   
 #ifdef PF_USE_RAWSPEED
+#ifdef __WIN32__
+  std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "\\rawspeed\\cameras.xml";
+#else
 	std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "/rawspeed/cameras.xml";
+#endif
 	std::cout<<"RawImage::RawImage(): RAWSpeed camera file: "<<camfile<<std::endl;
   meta = new RawSpeed::CameraMetaData( camfile.c_str() );
 
