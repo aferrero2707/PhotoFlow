@@ -64,8 +64,10 @@
 char* _lf_get_database_dir()
 {
   std::string dbdir;
-  if( getenv("LOCALAPPDATA") ) {
-    dbdir = getenv("LOCALAPPDATA");
+  //if( getenv("LOCALAPPDATA") ) {
+  //  dbdir = getenv("LOCALAPPDATA");
+  if( getenv("PROGRAMDATA") ) {
+    dbdir = getenv("PROGRAMDATA");
     dbdir += "\\lensfun\\version_1";
   }
   std::cout<<"LensFun database dir: "<<dbdir<<std::endl;
@@ -194,8 +196,10 @@ PF::PhotoFlow::PhotoFlow():
     dataPath = exePath + "/../share/photoflow";
   }
 #elif defined(WIN32)
-  if( getenv("LOCALAPPDATA") ) {
-    dataPath = getenv("LOCALAPPDATA");
+  //if( getenv("LOCALAPPDATA") ) {
+  //  dataPath = getenv("LOCALAPPDATA");
+  if( getenv("PROGRAMDATA") ) {
+    dataPath = getenv("PROGRAMDATA");
     dataPath += "\\photoflow";
   } else {
     dataPath = exePath + "\\..\\share\\photoflow";

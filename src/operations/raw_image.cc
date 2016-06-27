@@ -29,6 +29,8 @@
 
 #include <stdint.h>
 
+#include <memory>
+
 typedef uint32_t uint32;
 
 #include <gexiv2/gexiv2-metadata.h>
