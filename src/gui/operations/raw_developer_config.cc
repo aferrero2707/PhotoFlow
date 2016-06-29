@@ -552,6 +552,8 @@ void PF::RawDeveloperConfigGUI::do_update()
     PropertyBase* prop = par->get_property( "wb_mode" );
     if( !prop )  return;
 
+    bool is_xtrans = false;
+
     PF::Image* image = get_layer()->get_image();
     PF::Pipeline* pipeline = image->get_pipeline(0);
     PF::PipelineNode* node = NULL;
@@ -629,6 +631,8 @@ void PF::RawDeveloperConfigGUI::do_update()
       dcraw_data_t* raw_data;
       if( !vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data, &blobsz ) &&
           blobsz == sizeof(dcraw_data_t) ) {
+        is_xtrans = PF::check_xtrans( raw_data->idata.filters );
+
         float black_level = raw_data->color.black;
         float white_level = raw_data->color.maximum;
 
@@ -709,6 +713,8 @@ void PF::RawDeveloperConfigGUI::do_update()
       break;
 		}
 
+    if( is_xtrans ) demoMethodSelector.hide();
+    else demoMethodSelector.show();
 
     prop = par->get_property( "cam_profile_name" );
     if( !prop )  return;
