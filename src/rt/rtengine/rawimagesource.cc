@@ -417,7 +417,7 @@ void rtengine::RawImageSource::xtrans_demosaic(VipsRegion* ir, VipsRegion* oreg)
   blue.Init( ir->valid.width, ir->valid.height, 0, 0 );
 
   // Call to demosaicing method
-  xtrans_demosaic_RT(0, 0, ir->valid.width, ir->valid.height,
+  xtrans_demosaic_RT(ir->valid.left, ir->valid.top, ir->valid.width, ir->valid.height,
                     r_raw.left, r_raw.top, r_raw.width, r_raw.height);
 
   free( rawDataBuf );

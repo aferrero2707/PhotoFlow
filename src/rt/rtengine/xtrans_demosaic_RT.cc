@@ -62,6 +62,9 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
   constexpr int ts = 114;      /* Tile Size */
   constexpr int tsh = ts / 2;  /* half of Tile Size */
 
+  bool verbose = false;
+  //if( winx<100 && winy > 3000 ) verbose = true;
+
   double progress = 0.0;
   const bool plistenerActive = plistener;
 
@@ -106,15 +109,6 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
   int allhex[2][3][3][8];
   {
     int gint, d, h, v, ng, row, col, c;
-/*
-    printf("CFA pattern:\n");
-    for (row = 0; row < 16; row++) {
-      for (col = 0; col < 16; col++) {
-        printf("%d ", (int)fcol(row,col));
-      }
-      printf("\n");
-    }
-*/
     for (row = 0; row < 3; row++)
       for (col = 0; col < 3; col++) {
         gint = isgreen(row, col);
@@ -143,11 +137,29 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
             //allhex[1][row][col][c ^ (gint * 2 & d)] = h + v * ts;
             allhex[0][row][col][c ^ (gint * 2 & d)] = h + v * width;
             allhex[1][row][col][c ^ (gint * 2 & d)] = h + v * ts;
-            //printf("r=%d c=%d v=%d h=%d allhex=%d\n", row, col, v, h, allhex[0][row][col][c ^ (gint * 2 & d)]);
+            if(verbose) {printf("r=%d c=%d v=%d h=%d allhex[%d]=%d\n",
+                row, col, v, h, (int)(c ^ (gint * 2 & d)),
+                allhex[0][row][col][c ^ (gint * 2 & d)]);}
           }
         }
       }
-
+    /*
+    for (row = 0; row < 3; row++) {
+      for (col = 0; col < 3; col++) {
+        for (ng = 0; ng < 8; ng++) {
+          if( allhex[0][row][col][ng] > 1000 ) {
+            printf("CFA pattern:\n");
+            for (row = 0; row < 16; row++) {
+              for (col = 0; col < 16; col++) {
+                printf("%d ", (int)fcol(row,col));
+              }
+              printf("\n");
+            }
+          }
+        }
+      }
+    }
+    */
   }
 
 
@@ -197,6 +209,9 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
         int mrow = MIN (top + ts, height - 3);
         int mcol = MIN (left + ts, width - 3);
 
+        int *thex = allhex[0][0][0];
+        int thexid = 1;
+        if(verbose) {printf("(%d)  thex[0][0]: %p  [", thexid, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thexid++;}
         /* Set greenmin and greenmax to the minimum and maximum allowed values: */
         for (int row = top; row < mrow; row++) {
           // find first non-green pixel
@@ -251,9 +266,10 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
             }
 
             int *hex = allhex[0][row % 3][col % 3];
-            //printf("hex[%d][%d]: ",(int)(row%3),(int)(col%3));
-            //for(int c=0; c<6; c++) printf("%d ",hex[c]);
-            //printf("\n");
+            //printf("row: %d  col: %d\n",(int)(row),(int)(col));
+            //printf("hex[%d][%d]: %p  [", (int)(row%3),(int)(col%3), (void*)(hex));
+            //for(int c=0; c<8; c++) printf("%d ",hex[c]);
+            //printf("]\n");
 
             for (; col < mcol - 1; col += 3) {
               minval = FLT_MAX;
@@ -293,6 +309,7 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
 
         memset(rgb, 0, ts * ts * 3 * sizeof(float));
 
+        if(verbose) {printf("(%d)  thex[0][0]: %p  [", thexid, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thexid++;}
         for (int row = top; row < mrow; row++)
           for (int col = left; col < mcol; col++) {
             rgb[0][row - top][col - left][fcol(row, col)] = rawData[row][col];
@@ -302,6 +319,7 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
           memcpy (rgb[c + 1], rgb[0], sizeof * rgb);
         }
 
+        if(verbose) {printf("(%d)  thex[0][0]: %p  [", thexid, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thexid++;}
         /* Interpolate green horizontally, vertically, and along both diagonals: */
         for (int row = top; row < mrow; row++) {
           // find first non-green pixel
@@ -358,11 +376,13 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
           }
         }
 
+        if(verbose) {printf("(%d)  thex[0][0]: %p  [", thexid, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thexid++;}
         for (int pass = 0; pass < passes; pass++) {
           if (pass == 1) {
             memcpy (rgb += 4, buffer, 4 * sizeof * rgb);
           }
-
+          int thehexid2 = 1;
+          if(verbose) {printf("(%d-%d-%d)  thex[0][0]: %p  [", thexid, pass, thehexid2, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thehexid2++;}
           /* Recalculate green from interpolated values of closer pixels: */
           if (pass) {
             for (int row = top + 2; row < mrow - 2; row++) {
@@ -407,22 +427,57 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
             }
           }
 
+          if(verbose) {printf("(%d-%d-%d)  thex[0][0]: %p  [", thexid, pass, thehexid2, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thehexid2++;}
           /* Interpolate red and blue values for solitary green pixels:   */
+          int sgstartrow = (top - sgrow + 4) / 3 * 3 + sgrow;
           int sgstartcol = (left - sgcol + 4) / 3 * 3 + sgcol;
 
-          for (int row = (top - sgrow + 4) / 3 * 3 + sgrow; row < mrow - 2; row += 3) {
+          if( verbose ) {
+            printf("sgstartrow=%d  sgstartcol=%d\n", sgstartrow, sgstartcol);
+            printf("CFA pattern:\n");
+            for (int row = 0; row < 16; row++) {
+              for (int col = 0; col < 16; col++) {
+                printf("%d ", (int)fcol(row+sgstartrow,col+sgstartcol));
+              }
+              printf("\n");
+            }
+
+          }
+
+          for (int row = sgstartrow; row < mrow - 2; row += 3) {
             for (int col = sgstartcol, h = fcol(row, col + 1); col < mcol - 2; col += 3, h ^= 2) {
               float (*rix)[3] = &rgb[0][row - top][col - left];
               float diff[6] = {0.f};
 
+              if(verbose) {printf("top=%d  left=%d  row=%d  col=%d  h=%d\n", winy, winx, row, col, h);}
+              if( verbose && h == 1 ) {
+                printf("CFA pattern:\n");
+                for (int row2 = 0; row2 < 18; row2++) {
+                  for (int col2 = 0; col2 < 18; col2++) {
+                    printf("%d ", (int)fcol(row+row2-6,col+col2-6));
+                  }
+                  printf("\n");
+                }
+                getchar();
+              }
+              if(false && verbose) {printf("(%d-%d-%d, %d-%d)  thex[0][0]: %p  [", thexid, pass, thehexid2, row, col, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n");}
               for (int i = 1, d = 0; d < 6; d++, i ^= ts ^ 1, h ^= 2) {
                 for (int c = 0; c < 2; c++, h ^= 2) {
                   float g = rix[0][1] + rix[0][1] - rix[i << c][1] - rix[-i << c][1];
+                  if(false && verbose) {printf("(%d-%d-%d, %d-%d, %d-%d-%d-%d)  thex[0][0]: %p  [",
+                      thexid, pass, thehexid2, row, col, i, d, c, h, (void*)(thex));
+                  for(int cc=0; cc<8; cc++) printf("%d ",thex[cc]); printf("] before color[%d][%d]\n",h,d);}
                   color[h][d] = g + rix[i << c][h] + rix[-i << c][h];
+                  if(false && verbose) {printf("(%d-%d-%d, %d-%d, %d-%d-%d-%d)  thex[0][0]: %p  [",
+                      thexid, pass, thehexid2, row, col, i, d, c, h, (void*)(thex));
+                  for(int cc=0; cc<8; cc++) printf("%d ",thex[cc]); printf("] after color[%d][%d]\n",h,d);}
 
                   if (d > 1)
                     diff[d] += SQR (rix[i << c][1] - rix[-i << c][1]
                                                                   - rix[i << c][h] + rix[-i << c][h]) + SQR(g);
+                  if(false && verbose) {printf("(%d-%d-%d, %d-%d, %d-%d-%d-%d)  thex[0][0]: %p  [",
+                      thexid, pass, thehexid2, row, col, i, d, c, h, (void*)(thex));
+                  for(int cc=0; cc<8; cc++) printf("%d ",thex[cc]); printf("]\n");}
                 }
 
                 if (d > 2 && (d & 1))    // 3, 5
@@ -431,6 +486,10 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
                         color[c * 2][d] = color[c * 2][d - 1];
                       }
 
+                if(false && verbose) {printf("(%d-%d-%d, %d-%d, %d-%d)  thex[0][0]: %p  [",
+                    thexid, pass, thehexid2, row, col, i, d, (void*)(thex));
+                for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n");}
+
                 if ((d & 1) || d < 2) { // d: 0, 1, 3, 5
                   for(int c = 0; c < 2; c++) {
                     rix[0][c * 2] = CLIP(0.5f * color[c * 2][d]);
@@ -438,10 +497,15 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
 
                   rix += ts * ts;
                 }
+                if(false && verbose) {printf("(%d-%d-%d, %d-%d, %d-%d)  thex[0][0]: %p  [",
+                    thexid, pass, thehexid2, row, col, i, d, (void*)(thex));
+                for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n");}
               }
+              if(false && verbose) {printf("(%d-%d-%d, %d-%d)  thex[0][0]: %p  [", thexid, pass, thehexid2, row, col, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n");}
             }
           }
 
+          if(verbose) {printf("(%d-%d-%d)  thex[0][0]: %p  [", thexid, pass, thehexid2, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thehexid2++;}
           /* Interpolate red for blue pixels and vice versa:      */
           for (int row = top + 3; row < mrow - 3; row++) {
             int leftstart = left + 3;
@@ -485,6 +549,7 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
             }
           }
 
+          if(verbose) {printf("(%d-%d-%d)  thex[0][0]: %p  [", thexid, pass, thehexid2, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thehexid2++;}
           /* Fill in red and blue for 2x2 blocks of green:        */
           // Find first row of 2x2 green
           int topstart = top + 2;
@@ -503,6 +568,7 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
 
           int coloffsetstart = 2 - (fcol(topstart, leftstart + 1) & 1);
 
+          if(verbose) {printf("(%d-%d-%d)  thex[0][0]: %p  [", thexid, pass, thehexid2, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thehexid2++;}
           for (int row = topstart; row < mrow - 2; row++) {
             if ((row - sgrow) % 3) {
               int *hexmod[2];
@@ -531,8 +597,10 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
               }
             }
           }
+          if(verbose) {printf("(%d-%d-%d)  thex[0][0]: %p  [", thexid, pass, thehexid2, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thehexid2++;}
         }
 
+        if(verbose) {printf("(%d)  thex[0][0]: %p  [", thexid, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thexid++;}
         // end of multipass part
         rgb = (float(*)[ts][ts][3]) buffer;
         mrow -= top;
@@ -615,7 +683,7 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
             int f = dir[d & 3];
             f = f == 1 ? 1 : f - 8;
 
-            for (int row = 5; row < mrow - 5; row++)
+            for (int row = 5; row < mrow - 5; row++) {
               for (int col = 5; col < mcol - 5; col++) {
                 float *y = &yuv[0][row - 4][col - 4];
                 float *u = &yuv[1][row - 4][col - 4];
@@ -624,6 +692,7 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
                                                              + SQR(2 * u[0] - u[f] - u[-f])
                                                              + SQR(2 * v[0] - v[f] - v[-f]);
               }
+            }
           }
         }
 
@@ -797,10 +866,11 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
         }
 
 
+        if(verbose) {printf("(%d)  thex[0][0]: %p  [", thexid, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thexid++;}
         /* Average the most homogeneous pixels for the final result: */
         uint8_t hm[8];
 
-        for (int row = MIN(top, 8); row < mrow - 8; row++)
+        for (int row = MIN(top, 8); row < mrow - 8; row++) {
           for (int col = MIN(left, 8); col < mcol - 8; col++) {
             int d = 0;
 
@@ -833,7 +903,8 @@ SSEFUNCTION void RawImageSource::xtrans_demosaic_RT(int winx, int winy, int winw
             blue[row + top][col + left] = avg[2] / avg[3];
             //std::cout<<"X-trans demo: setting output pixel "<<row+top<<","<<col+left<<": "<<avg[0] / avg[3]<<","<<avg[1] / avg[3]<<","<<avg[2] / avg[3]<<std::endl;
           }
-
+        }
+        if(verbose) {printf("(%d)  thex[0][0]: %p  [", thexid, (void*)(thex)); for(int c=0; c<8; c++) printf("%d ",thex[c]); printf("]\n"); thexid++;}
       }
 
     free(buffer);

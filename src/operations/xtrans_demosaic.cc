@@ -85,7 +85,7 @@ VipsImage* PF::XTransDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   //  BOTTOM BAND
   i0 += 2;
   // Extract an horizontal bottom band at (0,in[0]->Ysize-border-1) and with size (in[0]->Xsize,border)
-  if( vips_crop(in[0], &t[i0], 0, in[0]->Ysize-border-1, in[0]->Xsize, border, NULL) ) {
+  if( vips_crop(in[0], &t[i0], 0, in[0]->Ysize-border, in[0]->Xsize, border, NULL) ) {
     std::cout<<"AmazeDemosaicXTransPar::build(): vip_crop(#2) failed"<<std::endl;
     return NULL;
   }
@@ -133,7 +133,7 @@ VipsImage* PF::XTransDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   //  RIGHT BAND
   i0 += 2;
   // Extract a vertical right band at (t[i0-1]->Xsize-1,0) and with size (border,t[i0-1]->Ysize)
-  if( vips_crop(t[i0-1], &t[i0], t[i0-1]->Xsize-border-1, 0, border, t[i0-1]->Ysize, NULL) ) {
+  if( vips_crop(t[i0-1], &t[i0], t[i0-1]->Xsize-border, 0, border, t[i0-1]->Ysize, NULL) ) {
     std::cout<<"AmazeDemosaicXTransPar::build(): vip_crop(#4) failed"<<std::endl;
     return NULL;
   }
@@ -199,7 +199,7 @@ VipsImage* PF::XTransDemosaicPar::build(std::vector<VipsImage*>& in, int first,
 
   int tw = 114 - 16;
   int th = tw;
-  int nt = 4;
+  int nt = (cropped->Xsize/tw + 1) * 3;
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   int threaded = 1, persistent = 0;
   VipsImage* cached;
