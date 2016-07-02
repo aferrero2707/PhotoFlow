@@ -80,8 +80,6 @@ include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
 include_directories(${EXIV2_INCLUDE_DIRS})
 link_directories(${EXIV2_LIBRARY_DIRS})
-include_directories(${GEXIV2_INCLUDE_DIRS})
-link_directories(${GEXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 link_directories(${ORC_LIBRARY_DIRS})
@@ -237,6 +235,21 @@ endif(BUNDLED_LENSFUN)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 
 
+if(BUNDLED_GEXIV2)
+  include(ExternalProject)
+  ExternalProject_Add(gexiv2
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
+    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
+    BUILD_COMMAND ${MAKE})
+  set(GEXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/include)
+  set( GEXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib)
+  set(GEXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib/libgexiv2.a)
+endif(BUNDLED_GEXIV2)
+include_directories(${GEXIV2_INCLUDE_DIRS})
+link_directories(${GEXIV2_LIBRARY_DIRS})
+
+MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
 add_library (pfbase STATIC
   ${BaseIncludes}
