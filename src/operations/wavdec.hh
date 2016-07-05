@@ -46,7 +46,8 @@ namespace PF
 
 class WavDecPar: public OpParBase
 {
-  Property<float> numScales, currScale, blendFactor, initial_Lev;
+  Property<int> numScales, currScale, preview_scale, initial_lev;
+  Property<float> blendFactor;
   
   ProcessorBase* wavdec_algo;
 
@@ -56,16 +57,19 @@ public:
   bool has_intensity() { return false; }
 //  bool needs_caching() { return true; }
 
-  float get_numScales() { return (float)numScales.get(); }
-  float set_numScales(float a) { numScales.set(a); }
-  float get_currScale() { return (float)currScale.get(); }
-  float set_currScale(float a) { currScale.set(a); }
-  float get_blendFactor() { return (float)blendFactor.get(); }
-  float set_blendFactor(float a) { blendFactor.set(a); }
-  int get_initial_Lev() { return initial_Lev.get(); }
-  void set_initial_Lev(int s) { initial_Lev.set(s); }
+  int get_numScales() { return numScales.get(); }
+  void set_numScales(int a) { numScales.set(a); }
+  int get_currScale() { return currScale.get(); }
+  void set_currScale(int a) { currScale.set(a); }
+  int get_initial_lev() { return initial_lev.get(); }
+  void set_initial_lev(int s) { initial_lev.set(s); }
+  int get_preview_scale() { return preview_scale.get(); }
+  void set_preview_scale(int s) { preview_scale.set(s); }
 
-  int get_padding(int nScales, int initial_Lev) { return pow(2, nScales+initial_Lev); }
+  float get_blendFactor() { return blendFactor.get(); }
+  void set_blendFactor(float a) { blendFactor.set(a); }
+
+  int get_padding(int nScales, int initial_lev) { return pow(2, nScales+initial_lev); }
   
   VipsImage* build(std::vector<VipsImage*>& in, int first,
       VipsImage* imap, VipsImage* omap,
@@ -74,8 +78,10 @@ public:
 
 class WavDecAlgoPar: public OpParBase
 {
-  float numScales, currScale, blendFactor;
-  int initial_Lev;
+  int numScales, currScale;
+  float blendFactor;
+  int initial_lev;
+  int preview_scale;
   int padding;
 
 public:
@@ -84,20 +90,24 @@ public:
       numScales = 0;
       currScale = 0;
       blendFactor = .5f;
-      initial_Lev = 0;
+      initial_lev = 0;
+      preview_scale = 1;
       padding = 0;
   }
   
-  float get_numScales() { return (float)numScales; }
-  float set_numScales(float a) { numScales=a; }
-  float get_currScale() { return (float)currScale; }
-  float set_currScale(float a) { currScale=a; }
-  float get_blendFactor() { return (float)blendFactor; }
-  float set_blendFactor(float a) { blendFactor=a; }
+  int get_numScales() { return numScales; }
+  void set_numScales(int a) { numScales=a; }
+  int get_currScale() { return currScale; }
+  void set_currScale(int a) { currScale=a; }
   int get_padding() { return padding; }
   void set_padding(int p) { padding = p; }
-  int get_initial_Lev() { return initial_Lev; }
-  void set_initial_Lev(int p) { initial_Lev = p; }
+  int get_initial_lev() { return initial_lev; }
+  void set_initial_lev(int p) { initial_lev = p; }
+  int get_preview_scale() { return preview_scale; }
+  void set_preview_scale(int p) { preview_scale = p; }
+
+  float get_blendFactor() { return (float)blendFactor; }
+  void set_blendFactor(float a) { blendFactor=a; }
 
   static int get_maxScales(const int width, const int height)
   {
@@ -174,7 +184,8 @@ class WavDecAlgoProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
     int wd_return_layer;
     float wd_blend_factor; // .128f
     int wd_max_scales;
-    int wd_initial_Lev;
+    int wd_initial_lev;
+    float wd_preview_scale;
     
 #define INDEX_WT_IMAGE(ch, index) (((index)*ch)+c)
 
@@ -214,10 +225,12 @@ public:
       memcpy(pwd, pin, i_line_size * sizeof(float));
     }
     
-    wd_initial_Lev = (int)opar->get_initial_Lev();
+    wd_initial_lev = (int)opar->get_initial_lev();
     wd_scales = (int)opar->get_numScales();
     wd_return_layer = (int)opar->get_currScale();
     wd_blend_factor = (float)opar->get_blendFactor();
+    wd_preview_scale = (float)opar->get_preview_scale()+1;
+    wd_preview_scale = 1.f / wd_preview_scale;
     wd_max_scales = opar->get_maxScales(wd_width, wd_height);
     if (wd_scales > wd_max_scales)
     {
@@ -319,13 +332,13 @@ private:
 
       for (int row = 0; row < wd_height; row++) 
       {
-        dwt_hat_transform(temp, buffer[hpass] + (row * i_line_size), 1, wd_width, 1 << (lev+wd_initial_Lev));
+        dwt_hat_transform(temp, buffer[hpass] + (row * i_line_size), 1, wd_width, 1 << (lev+wd_initial_lev));
         memcpy(&(buffer[lpass][row * i_line_size]), temp, i_line_size * sizeof(float));
       }
       
       for (int col = 0; col < wd_width; col++) 
       {
-        dwt_hat_transform(temp, buffer[lpass] + col*wd_ch, wd_width, wd_height, 1 << (lev+wd_initial_Lev));
+        dwt_hat_transform(temp, buffer[lpass] + col*wd_ch, wd_width, wd_height, 1 << (lev+wd_initial_lev));
         for (int row = 0; row < wd_height; row++) 
         {
           for (int c = 0; c < wd_ch; c++) 
@@ -397,10 +410,11 @@ private:
     }
   }
 
-  void dwt_hat_transform(float *temp, float *const base, const int st, const int size, const int sc)
+  void dwt_hat_transform(float *temp, float *const base, const int st, const int size, int sc)
   {
     int i, c;
     const float hat_mult = 2.f;
+    sc = std::min(size, (int)(sc * wd_preview_scale));
     
     for (i = 0; i < sc; i++)
     {

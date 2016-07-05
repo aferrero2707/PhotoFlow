@@ -34,7 +34,7 @@
 PF::SplitDetailsConfigGUI::SplitDetailsConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Multi-Scale Decomposition"  ),
   blur_type_selector( this, "blur_type", _("blur type: "), PF::SPLIT_DETAILS_BLUR_GAUSS ),
-  prop_nscales_slider( this, "nscales", "nscales", 4, 1, 10, 1, 5, 1),
+  prop_nscales_slider( this, "nscales", "scales: ", 4, 1, 10, 1, 5, 1),
   prop_base_scale_slider( this, "base_scale", "base scale %", 1, 0, 1000000, .01, 1, 1)
   //prop_detail_scale_slider( this, "detail_scale", "detail scale %", 0.01, 0, 1000000, .01, 1, 1)
 {
