@@ -1,5 +1,5 @@
 IF(MINGW)
-  SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+  SET(GMIC_FLAGS "-mwindows -std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
@@ -16,6 +16,12 @@ endif()
 
 if(BUNDLED_LENSFUN)
   set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBUNDLED_LENSFUN=1")
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/include)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/include/lensfun)
+endif()
+
+if(BABL_FLIPS_DISABLED)
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBABL_FLIPS_DISABLED=1")
 endif()
 
 if(GTKMM2_FOUND)
