@@ -54,6 +54,8 @@ namespace PF
     PropertyBase out_profile_type;
     PropertyBase out_trc_type;
     Property<std::string> out_profile_name;
+    PropertyBase intent;
+    Property<bool> bpc;
     Property<bool> assign;
 
     void* out_profile_data;

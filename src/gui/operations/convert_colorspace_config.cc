@@ -38,6 +38,8 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   outProfileModeSelector( this, "profile_mode", _("type: "), 1 ),
   outProfileTypeSelector( this, "profile_type", _("gamut: "), 1 ),
   outTRCTypeSelector( this, "trc_type", _("encoding: "), 1 ),
+  intentSelector( this, "rendering_intent", _("intent: "), 1 ),
+  bpcButton( this, "bpc", _("black point compensation"), false ),
   assignButton( this, "assign", _("assign profile"), false ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
@@ -57,6 +59,12 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   outProfHBox.pack_start( outProfVBox );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfHBox );
+
+  intentSelectorBox.pack_start( intentSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( intentSelectorBox, Gtk::PACK_SHRINK );
+
+  bpcButtonBox.pack_start( bpcButton, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( bpcButtonBox, Gtk::PACK_SHRINK );
 
   assignButtonBox.pack_start( assignButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( assignButtonBox, Gtk::PACK_SHRINK );

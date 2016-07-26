@@ -55,6 +55,8 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   out_profile_type("profile_type",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
   out_trc_type("trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
   out_profile_name("profile_name", this),
+  intent("rendering_intent",this,INTENT_RELATIVE_COLORIMETRIC,"INTENT_RELATIVE_COLORIMETRIC","relative colorimetric"),
+  bpc("bpc", this, false),
   assign("assign", this, false),
   out_profile_data( NULL ),
   transform( NULL ),
@@ -80,6 +82,10 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   //out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
   out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
   out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+
+  intent.add_enum_value( INTENT_PERCEPTUAL, "INTENT_PERCEPTUAL", "perceptual" );
+  intent.add_enum_value( INTENT_SATURATION, "INTENT_SATURATION", "saturation" );
+  intent.add_enum_value( INTENT_ABSOLUTE_COLORIMETRIC, "INTENT_ABSOLUTE_COLORIMETRIC", "absolute colorimetric" );
 
   set_type("convert_colorspace" );
 
@@ -212,12 +218,14 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, in_profile );
       cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, out_profile );
 
+      cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
+      if( bpc.get() ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
       transform = cmsCreateTransform( in_profile, 
                                       infmt,
                                       out_profile, 
                                       outfmt,
-                                      INTENT_RELATIVE_COLORIMETRIC,
-                                                    cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+                                      intent.get_enum_value().first,//INTENT_RELATIVE_COLORIMETRIC,
+                                      flags); //cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
     }
   }
 

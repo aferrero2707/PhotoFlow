@@ -51,6 +51,12 @@ namespace PF {
     Selector outTRCTypeSelector;
     Gtk::HBox outTRCTypeSelectorBox;
 
+    Selector intentSelector;
+    Gtk::HBox intentSelectorBox;
+
+    CheckBox bpcButton;
+    Gtk::HBox bpcButtonBox;
+
     CheckBox assignButton;
     Gtk::HBox assignButtonBox;
 
