@@ -12,38 +12,41 @@
 
                              ( http://gmic.eu )
 
-                                    1.7.2
+                                    _gmic_version
 
 --------------------------------------------------------------------------------
 
-# Summary
-#---------
+# In a nutshell
+#---------------
 
- G'MIC is a full-featured open-source framework for image processing.
- It provides several different user interfaces to convert/manipulate/filter/visualize
- generic image datasets, ranging from 1d scalar signals to 3d+t sequences of
- multi-spectral volumetric images, including 2d color images.
+ G'MIC is a full-featured open-source framework for image processing, distributed
+ under the CeCILL license (GPL compatible).
+ It provides several different user interfaces to convert/manipulate/filter/
+ visualize generic image datasets, ranging from 1d scalar signals to 3d+t
+ sequences of multi-spectral volumetric images, thus including 2d color images.
 
- Technically speaking, what it does is:
+ These user interfaces are:
 
- * Define a lightweight but powerful script language (the G'MIC language)
-   dedicated to the design of image processing operators and pipelines.
+ 1 - A command-line interface gmic, to use the G'MIC image processing features
+     from a shell. In this setting, G'MIC may be seen as a friendly companion to
+     the ImageMagick or GraphicsMagick software suites.
 
- * Provide several user interfaces embedding the corresponding interpreter:
+ 2 - A small, portable, thread-safe and multi-threaded, C++ image processing
+     library libgmic, to be linked to third-party applications. Its simple API
+     allows programmers to add all G'MIC features in their own software without
+     much efforts (a C API is provided as well).
 
-   - A command-line executable 'gmic', to use the G'MIC framework from a
-     shell.
-   - A plug-in 'gmic_gimp', to bring G'MIC capabilities to the GIMP
-     image retouching software.
-   - A web-service 'G'MIC Online', to allow users applying image processing
-     algorithms directly in a web browser.
-   - A Qt-based interface 'ZArt', for real-time manipulation of webcam images.
-   - A thread-safe C++ library 'libgmic', to be linked to third-party applications.
+ 3 - A plug-in gmic_gimp, to bring G'MIC capabilities to the image retouching
+     software GIMP. More than 450 filters are already available, sorted by
+     category (Artistic, Black & white, Colors, Contours, Deformations,
+     Degradations, Details, Film emulation, Frames, Layers, Light & shadows,
+     Patterns, Rendering, Repair, Sequences, etc.).
 
- G'MIC is focused on the design of possibly complex pipelines for converting,
- manipulating, filtering and visualizing generic 1d/2d/3d multi-spectral image
- datasets. This includes of course color images, but also more complex data
- as image sequences or 3d(+t) volumetric float-valued datasets.
+ 4 - A web service G'MIC Online, to allow users applying image processing
+     algorithms on their images, directly from a web browser.
+
+ 5 - A Qt-based interface ZArt, for real-time processing of video streaming
+     coming from webcams or video files.
 
  G'MIC is an open framework: the default script language can be extended with
  custom G'MIC-written commands, defining thus new image available filters or
@@ -56,12 +59,15 @@
  GREYC laboratory, in Caen/France, by permanent researchers working in the field
  of image processing on a daily basis.
 
+ Purchasing commercial licenses for using G'MIC in closed-source
+ applications is possible. Contact us if you are interested in getting one.
+
 # Project Manager and main developer
 #-----------------------------------
 
   David Tschumperlé  ( http://tschumperle.users.greyc.fr/ )
 
-  A complete list of contributors is available on the project web page:
+  A complete list of external contributors is available on the project web page:
 
                            http://gmic.eu
 
@@ -87,41 +93,6 @@
    - CNRS  ( http://www.cnrs.fr/ )
    - CEA   ( http://www.cea.fr/ )
    - INRIA ( http://www.inria.fr/ )
-
-# How to install the GIMP plug-in
-#---------------------------------
-
-  GIMP (http://www.gimp.org) is an open-source painting and image retouching
-  software which can be extended with additional 'plug-ins'.
-  G'MIC provides such a plug-in, named 'gmic_gimp'. To install the G'MIC
-  plug-in for GIMP, you have to copy the file 'gmic_gimp' (Unix) or
-  'gmic_gimp.exe' (Windows) to the plug-in folder of your GIMP installation.
-
-  This folder is usually located at:
-
-  - on Unix: '$HOME/.gimp-2.x/plug-ins/' (for local installation),
-             or 'usr/lib/gimp/2.0/plug-ins/' (for global installation).
-
-  - on Windows: 'C:\Program Files\GIMP-2.x\lib\gimp\2.0\plugins\'
-                (for global installation, see notes below for other options).
-
-  - on MacOSX: '$HOME/Library/Application\ Support/Gimp/plug-ins/'
-               (for installation from GimponOSX Gimp 2.6).
-
-               '$HOME/Library/GIMP/2.8/plug-ins/'
-               (for installation from GimponOSX Gimp 2.8+).
-
-  Notes for Windows:
-
-  You may prefer to install the plugin for individual users and avoid having
-  to save into the program files folder.  The location differs depending on
-  your version of Windows and can be configured in GIMP 2.8, for example:
-
-  - on Windows 7: C:\Users\%USERNAME%\.gimp-2.8\plug-ins
-
-  - on Windows XP: C:\Documents and Settings\%USERNAME%\.gimp-2.8\plug-ins
-
-  See the FAQ for more information.
 
 # More information online
 #-------------------------

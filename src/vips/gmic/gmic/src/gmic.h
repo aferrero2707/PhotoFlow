@@ -42,8 +42,9 @@
  #  knowledge of the CeCILL license and that you accept its terms.
  #
 */
+
 #ifndef gmic_version
-#define gmic_version 172
+#define gmic_version 175
 
 #include <cstdio>
 #include <cstring>
@@ -253,9 +254,8 @@ struct gmic {
                                     const bool is_debug=false) const;
 
   gmic_image<unsigned int> selection2cimg(const char *const string, const unsigned int indice_max,
-                                          const gmic_list<char>& names,
-                                          const char *const command, const bool is_selection,
-                                          const bool allow_new_name, gmic_image<char>& new_name);
+                                          const gmic_list<char>& names, const char *const command,
+                                          const bool is_selection=true, gmic_image<char> *const new_name=0);
 
   gmic_image<char>& selection2string(const gmic_image<unsigned int>& selection,
                                      const gmic_list<char>& images_names,
@@ -278,7 +278,8 @@ struct gmic {
                                    gmic_list<T>& images, gmic_list<char>& images_names,
                                    gmic_list<T>& parent_images, gmic_list<char>& parent_images_names,
 				   const unsigned int *const variables_sizes,
-                                   const gmic_image<unsigned int> *const command_selection);
+                                   const gmic_image<unsigned int> *const command_selection,
+                                   const bool is_image_expr);
   template<typename T>
   gmic& print(const gmic_list<T>& list, const gmic_image<unsigned int> *const callstack_selection,
 	      const char *format, ...);

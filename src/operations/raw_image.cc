@@ -69,12 +69,13 @@ PF::RawImage::RawImage( const std::string _fname ):
 	nref(1), file_name( _fname ),
   image( NULL ), demo_image( NULL )
 {
+  std::cout<<"RawImage::RawImage(): opening file \""<<file_name<<"\""<<std::endl;
 	dcraw_data_t* pdata;
   file_name_real = file_name;
   int ifd = open( file_name_real.c_str(), O_RDONLY );
   if( ifd < 0 ) {
     char* fullpath = strdup( file_name_real.c_str() );
-    const gchar* fname = g_basename( fullpath );
+    gchar* fname = g_path_get_basename( fullpath );
     ifd = open( fname, O_RDONLY );
     if( ifd < 0 ) {
       std::cout<<"RawImage::RawImage(): \""<<file_name<<"\" not found"<<std::endl;
@@ -83,6 +84,7 @@ PF::RawImage::RawImage( const std::string _fname ):
       close(ifd);
     }
     file_name_real = fname;
+    g_free( fname );
   } else {
     close(ifd);
   }
@@ -135,7 +137,12 @@ PF::RawImage::RawImage( const std::string _fname ):
 #endif
   
 #ifdef PF_USE_RAWSPEED
+#ifdef __WIN32__
+  std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "\\rawspeed\\cameras.xml";
+#else
 	std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "/rawspeed/cameras.xml";
+#endif
+	std::cout<<"RawImage::RawImage(): RAWSpeed camera file: "<<camfile<<std::endl;
   meta = new RawSpeed::CameraMetaData( camfile.c_str() );
 
 	//for(int i = 0; i < 4; i++)
@@ -345,20 +352,20 @@ PF::RawImage::RawImage( const std::string _fname ):
   sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
   int temp_fd = pf_mkstemp( fname );
   if( temp_fd < 0 ) return;
-  std::cout<<"RawLoader: cache file: "<<fname<<std::endl;
+  std::cout<<"RawImage: cache file: "<<fname<<std::endl;
 	cache_file_name = fname;
   
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"Saving raw data to buffer..."<<std::endl;
-#endif
+//#endif
   int row, col, col2;
   //size_t pxsize = sizeof(PF::RawPixel);
   //size_t pxsize = sizeof(float)+sizeof(guint8);
   size_t pxsize = sizeof(float)*2;
   guint8* rowbuf = (guint8*)malloc( iwidth*pxsize );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"Row buffer allocated: "<<(void*)rowbuf<<std::endl;
-#endif
+//#endif
   /* Normalized raw data to 65535 and build raw histogram
    * */
   // Allocate raw histogram and fill it with zero
@@ -372,6 +379,11 @@ PF::RawImage::RawImage( const std::string _fname ):
   for(row=0;row<iheight;row++) {
     unsigned int row_offset = row*iwidth;
 		ptr = rowbuf;
+		//#ifndef NDEBUG
+		  //std::cout<<"  row: "<<row<<std::endl;
+    if( (row%10) == 0 ) std::cout<<"  saving row "<<row<<""<<std::endl;
+		//#endif
+    RawSpeed::RawImage& r = d->mRaw;
     for(col=0; col<iwidth; col++) {
 #ifdef PF_USE_LIBRAW
       unsigned char color = (unsigned char)raw_loader->COLOR(row,col);
@@ -386,7 +398,6 @@ PF::RawImage::RawImage( const std::string _fname ):
 #ifdef PF_USE_RAWSPEED
       int col2 = col + crop_x;
       int row2 = row + crop_y;
-			RawSpeed::RawImage r = d->mRaw;
       unsigned char color = r->cfa.getColorAt(col2,row2);
       float val = 0;
       float nval = 0;
@@ -429,7 +440,7 @@ PF::RawImage::RawImage( const std::string _fname ):
 			rawData[row][col] = nval;
     }
 		/**/
-    if( write( temp_fd, rowbuf, pxsize*iwidth ) != (pxsize*iwidth) )
+    if( (int)write( temp_fd, rowbuf, pxsize*iwidth ) != (int)(iwidth*pxsize) )
       break;
 #ifndef NDEBUG
     if( (row%100) == 0 ) std::cout<<"  row "<<row<<" saved."<<std::endl;
@@ -562,10 +573,13 @@ PF::RawImage::RawImage( const std::string _fname ):
   int fd = pf_mkstemp( fname );
   if( fd < 0 )
     return;
-  std::cout<<"RawLoader: cache file: "<<fname<<std::endl;
+  std::cout<<"RawImage: cache file: "<<fname<<std::endl;
 	cache_file_name2 = fname;
   
+
+  std::cout<<"RawImage: calling vips_rawsave_fd()"<<std::endl;
   vips_rawsave_fd( out_demo, fd, NULL );
+  std::cout<<"RawImage: vips_rawsave_fd() finished"<<std::endl;
   g_object_unref( out_demo );
   delete fast_demosaic;
   
