@@ -2,7 +2,7 @@ IF(MINGW)
   SET(GMIC_FLAGS "-mwindows -std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   SET(GMIC_FLAGS "-framework CoreServices -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
@@ -16,6 +16,12 @@ endif()
 
 if(BUNDLED_LENSFUN)
   set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBUNDLED_LENSFUN=1")
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/include)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/include/lensfun)
+endif()
+
+if(BABL_FLIPS_DISABLED)
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBABL_FLIPS_DISABLED=1")
 endif()
 
 if(GTKMM2_FOUND)
@@ -181,8 +187,8 @@ FILE(GLOB VipsSources vips/*.c vips/*.cc vips/gmic/*.c vips/gmic/*.cpp)
 FILE(GLOB GMicIncludes vips/gmic/gmic/src/*.h)
 FILE(GLOB GMicSources vips/gmic/gmic/src/gmic.cpp)
 
-FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh operations/filmulate/*.hpp)
-FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc operations/filmulate/*.cpp)
+FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh)
+FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 
 #
 # the libraw part is a bit of a hack:
@@ -216,7 +222,16 @@ if(BUNDLED_LENSFUN)
   set(BUILD_STATIC "ON")
   add_library(lensfun_static STATIC IMPORTED)
   set_target_properties(lensfun_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/libs/lensfun/liblensfun.a)
+INCLUDE(CheckIncludeFiles)
+CHECK_INCLUDE_FILES(regex.h HAVE_REGEX_H)
+CHECK_INCLUDE_FILES(endian.h HAVE_ENDIAN_H)
+  message( "HAVE_REGEX_H: " ${HAVE_REGEX_H} )
   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/include)
+IF(NOT HAVE_REGEX_H)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/include/regex)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/libs/regex)
+  #message( "INCLUDE_DIRECTORIES(" ${CMAKE_CURRENT_BINARY_DIR} "/include/regex" )
+ENDIF(NOT HAVE_REGEX_H)
   add_subdirectory(external/lensfun)
   list(APPEND LIB_DEPS lensfun)
   list(APPEND STATIC_LIBS lensfun_static)
@@ -224,7 +239,7 @@ else(BUNDLED_LENSFUN)
   link_directories( ${LENSFUN_LIBRARY_DIRS}  )
   include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
 endif(BUNDLED_LENSFUN)
-set(CMAKE_CXX_FLAGS " -DPF_HAS_LENSFUN ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 
 
 
@@ -271,6 +286,10 @@ ELSE(MINGW)
 ENDIF(MINGW)
 
 list(APPEND ADDITIONAL_LIBS pugixml)
+
+IF(APPLE)
+  list(APPEND LIBS "-framework CoreServices")
+ENDIF(APPLE)
 
 #--------------------------------------------------
 #
@@ -452,7 +471,7 @@ if (GIMP_FOUND)
     #gmon
   )
   
-  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION share/photoflow/plug-in)
+  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION lib/gimp/2.0/plug-ins)
 endif (GIMP_FOUND)
 
 
