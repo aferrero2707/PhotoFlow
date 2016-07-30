@@ -568,6 +568,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/tiff");
   filter_tiff.add_mime_type("image/jpeg");
   filter_tiff.add_mime_type("image/png");
+  //filter_tiff.add_mime_type("image/exr");
   /*filter_tiff.add_mime_type("image/x-3fr");
   filter_tiff.add_mime_type("image/x-adobe-dng");
   filter_tiff.add_mime_type("image/x-arw;image/x-bay");
@@ -616,6 +617,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/x-srf");
   filter_tiff.add_mime_type("image/x-x3f");
   filter_tiff.add_mime_type("image/x-exr");*/
+  filter_tiff.add_pattern("*.exr");
   filter_tiff.add_pattern("*.3fr");
   filter_tiff.add_pattern("*.ari");
   filter_tiff.add_pattern("*.arw");
@@ -715,6 +717,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_mime_type("image/x-srf");
   filter_tiff->add_mime_type("image/x-x3f");
   filter_tiff->add_mime_type("image/x-exr");*/
+  filter_tiff->add_pattern("*.exr");
   filter_tiff->add_pattern("*.3fr");
   filter_tiff->add_pattern("*.ari");
   filter_tiff->add_pattern("*.arw");
