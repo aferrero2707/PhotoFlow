@@ -5103,6 +5103,16 @@ const wb_data wb_preset[] =
   { "Pentax", "K-x", Tungsten, 0,		{ 1.0463, 1, 3.4015, 0 } },
   { "Pentax", "K-x", Flash, 0,			{ 2.1120, 1, 1.2741, 0 } },
 
+  { "Pentax", "K-S1", Daylight                     , 0, { 2.277344, 1, 1.656250, 0 } },
+  { "Pentax", "K-S1", Shade                        , 0, { 2.847656, 1, 1.230469, 0 } },
+  { "Pentax", "K-S1", Cloudy                       , 0, { 2.546875, 1, 1.429688, 0 } },
+  { "Pentax", "K-S1", Tungsten                     , 0, { 1.343750, 1, 3.089844, 0 } },
+  { "Pentax", "K-S1", WarmWhiteFluorescent         , 0, { 1.777344, 1, 2.781250, 0 } },
+  { "Pentax", "K-S1", DayWhiteFluorescent          , 0, { 2.367188, 1, 1.824219, 0 } },
+  { "Pentax", "K-S1", DaylightFluorescent          , 0, { 2.761719, 1, 1.617188, 0 } },
+  { "Pentax", "K-S1", WhiteFluorescent             , 0, { 2.125000, 1, 2.210938, 0 } },
+  { "Pentax", "K-S1", Flash                        , 0, { 2.613281, 1, 1.351562, 0 } },
+
   { "Pentax", "K-S2", Daylight                     , 0, { 2.257812, 1, 1.683594, 0 } },
   { "Pentax", "K-S2", Shade                        , 0, { 2.882812, 1, 1.218750, 0 } },
   { "Pentax", "K-S2", Cloudy                       , 0, { 2.574219, 1, 1.414062, 0 } },
@@ -6636,6 +6646,21 @@ const wb_data wb_preset[] =
   { "Sony", "ILCA-77M2", DayWhiteFluorescent, 0,{ 2.68359375, 1, 1.78125, 0 } },
   { "Sony", "ILCA-77M2", DaylightFluorescent, 0,{ 3.00390625, 1, 1.609375, 0 } },
   { "Sony", "ILCA-77M2", Flash, 0,   { 3.203125, 1, 1.43359375, 0 } },
+
+  { "Sony", "ILCA-68", Daylight            , 0, { 2.503906, 1, 1.597656, 0 } },
+  { "Sony", "ILCA-68", Shade               , 0, { 2.992188, 1, 1.316406, 0 } },
+  { "Sony", "ILCA-68", Cloudy              , 0, { 2.710938, 1, 1.464844, 0 } },
+  { "Sony", "ILCA-68", Tungsten            , 0, { 1.535156, 1, 2.890625, 0 } },
+  { "Sony", "ILCA-68", WarmWhiteFluorescent, 0, { 1.761719, 1, 2.843750, 0 } },
+  { "Sony", "ILCA-68", CoolWhiteFluorescent, 0, { 2.234375, 1, 2.300781, 0 } },
+  { "Sony", "ILCA-68", DayWhiteFluorescent , 0, { 2.386719, 1, 1.687500, 0 } },
+  { "Sony", "ILCA-68", DaylightFluorescent , 0, { 2.660156, 1, 1.542969, 0 } },
+  { "Sony", "ILCA-68", Flash               , 0, { 2.875000, 1, 1.386719, 0 } },
+  { "Sony", "ILCA-68", "2500K"             , 0, { 1.335938, 1, 3.492188, 0 } },
+  { "Sony", "ILCA-68", "3200K"             , 0, { 1.718750, 1, 2.500000, 0 } },
+  { "Sony", "ILCA-68", "4500K"             , 0, { 2.257812, 1, 1.800781, 0 } },
+  { "Sony", "ILCA-68", "6000K"             , 0, { 2.687500, 1, 1.476562, 0 } },
+  { "Sony", "ILCA-68", "8500K"             , 0, { 3.148438, 1, 1.246094, 0 } },
 
   // firmware ILCE-7 (A7) Ver 1.0.1
   { "Sony", "ILCE-7", Daylight, 0,		{ 2.39843750, 1, 1.46484375, 0 } },

@@ -9,8 +9,6 @@
     A helper script is available as tools/dngmeta.sh
 */
 
-#include<iostream>
-
 static void dt_dcraw_adobe_coeff(const char *name, float cam_xyz[1][12])
 {
   static const struct {
@@ -264,6 +262,7 @@ static void dt_dcraw_adobe_coeff(const char *name, float cam_xyz[1][12])
     { "Nikon D40", { 6992,-1668,-806,-8138,15748,2543,-874,850,7897 } },
     { "Nikon D4S", { 8598,-2848,-857,-5618,13606,2195,-1002,1773,7137 } },
     { "Nikon D4", { 8598,-2848,-857,-5618,13606,2195,-1002,1773,7137 } },
+    { "Nikon D5", { 9200,-3522,-992,-5755,13803,2117,-753,1486,6338 } },
     { "Nikon Df", { 8598,-2848,-857,-5618,13606,2195,-1002,1773,7137 } },
     { "Nikon D5000", { 7309,-1403,-519,-8474,16008,2622,-2433,2826,8064 } },
     { "Nikon D5100", { 8198,-2239,-724,-4871,12389,2798,-1043,2050,7181 } },
@@ -533,6 +532,7 @@ static void dt_dcraw_adobe_coeff(const char *name, float cam_xyz[1][12])
     { "Sony DSLR-A850", { 5413,-1162,-365,-5665,13098,2866,-608,1179,8440 } },
     { "Sony DSLR-A900", { 5209,-1072,-397,-8845,16120,2919,-1618,1803,8654 } },
     { "Sony ILCA-77M2",{ 5991,-1732,-443,-4100,11989,2381,-704,1467,5992 } },
+    { "Sony ILCA-68", { 6435,-1903,-536,-4722,12449,2550,-663,1363,6517 } },
     { "Sony ILCE-7SM2", { 5838,-1430,-246,-3497,11477,2297,-748,1885,5778 } },
     { "Sony ILCE-7S", { 5838,-1430,-246,-3497,11477,2297,-748,1885,5778 } },
     { "Sony ILCE-7RM2", { 6629,-1900,-483,-4618,12349,2550,-622,1381,6514 } },
@@ -567,10 +567,9 @@ static void dt_dcraw_adobe_coeff(const char *name, float cam_xyz[1][12])
     { "Sony SLT-A99", { 6344,-1612,-462,-4863,12477,2681,-865,1786,6899 } },
   };
 
-  std::cout<<"adobe_coeff(): name="<<name<<std::endl;
-  for (unsigned int i=0; i < sizeof(table)/sizeof(table[1]); i++) {
+  for (int i=0; i < sizeof(table)/sizeof(table[1]); i++) {
     if (!strcmp(name, table[i].cameraid)) {
-      for (unsigned int j=0; j < 12; j++)
+      for (int j=0; j < 12; j++)
         cam_xyz[0][j] = table[i].trans[j] / 10000.0;
       break;
     }
