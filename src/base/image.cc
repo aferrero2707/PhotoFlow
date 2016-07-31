@@ -265,7 +265,7 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 }
 
 
-void PF::Image::do_update( PF::Pipeline* target_pipeline )
+void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
 {
   //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
   //if( !is_modified() ) return;
@@ -368,7 +368,10 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline )
 #ifndef NDEBUG
   std::cout<<"PF::Image::do_update(): finalizing..."<<std::endl;
 #endif
-  get_layer_manager().rebuild_finalize( target_pipeline==NULL );
+  bool _update_gui;
+  if( target_pipeline ) _update_gui = false;
+  else _update_gui = update_gui;
+  get_layer_manager().rebuild_finalize( _update_gui );
 #ifndef NDEBUG
   std::cout<<"PF::Image::do_update(): finalizing done."<<std::endl;
 #endif
@@ -871,7 +874,11 @@ void PF::Image::do_export_merged( std::string filename )
       convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       if( outimg ) {
+        Glib::Timer timer;
+        timer.start();
         vips_jpegsave( outimg, filename.c_str(), "Q", 100, NULL );
+        timer.stop();
+        std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
         saved = true;
       }
     }
@@ -966,6 +973,10 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
   imgbuf->iccdata = NULL;
   imgbuf->iccsize = 0;
   imgbuf->buf = NULL;
+
+  std::cout<<"Image::export_merged_to_mem(): waiting for caching completion..."<<std::endl;
+  PF::ImageProcessor::Instance().wait_for_caching();
+  std::cout<<"Image::export_merged_to_mem(): ... caching completed"<<std::endl;
 
   unsigned int level = 0;
   PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );

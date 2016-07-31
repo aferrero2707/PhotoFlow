@@ -188,7 +188,7 @@ struct ImageBuffer
 
     void update( PF::Pipeline* pipeline=NULL, bool sync=false );
     void update_all() { update( NULL ); }
-    void do_update( PF::Pipeline* pipeline=NULL );
+    void do_update( PF::Pipeline* pipeline=NULL, bool update_gui=true );
 
 
 		void sample( int layer_id, int x, int y, int size, 

@@ -33,6 +33,25 @@
 #include "imageprocessor.hh"
 
 
+static void complete_caching( PF::Image* image )
+{
+  if( !image ) return;
+  while( true ) {
+    PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer();
+    if( buf ) {
+      buf->step();
+      if( buf->is_completed() ) {
+        image->lock();
+        image->do_update(NULL, false);
+        image->unlock();
+      }
+    } else {
+      break;
+    }
+  }
+}
+
+
 static gpointer run_image_processor( gpointer /*data*/ )
 {
 	std::cout<<"Calling ImageProcessor::instance().run()"<<std::endl;
@@ -165,7 +184,7 @@ void PF::ImageProcessor::run()
           //buf->write();
           if( buf->is_completed() ) {
             image->lock();
-            image->do_update();
+            image->do_update(NULL, false);
             image->unlock();
           }
           continue;
@@ -216,7 +235,7 @@ void PF::ImageProcessor::run()
         break;
       case IMAGE_REBUILD:
         if( !request.image ) continue;
-        signal_status_processing.emit();
+        signal_status_updating.emit();
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         request.image->lock();
         //std::cout<<"PF::ImageProcessor::run(): image locked."<<std::endl;
@@ -234,6 +253,7 @@ void PF::ImageProcessor::run()
         break;
       case IMAGE_EXPORT:
         if( !request.image ) continue;
+        complete_caching( request.image );
         signal_status_exporting.emit();
         request.image->lock();
         request.image->do_export_merged( request.filename );
