@@ -974,7 +974,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
           continue;
         }
         VipsImage* extra_img = NULL;
-        // std::cout<<"  imgid="<<imgid<<"  extra_node->images.size()="<<extra_node->images.size()<<std::endl;
+        std::cout<<"  imgid="<<imgid<<"  extra_node->images.size()="<<extra_node->images.size()<<std::endl;
         if( l->extra_inputs[iextra].second == true ) {
           extra_img = extra_node->blended;
         } else {
@@ -1200,6 +1200,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
     if( newimg ) {
       VipsImage* blendedimg;
+      std::cout<<"rebuild_chain(): Layer \""<<l->get_name()<<"\" newimgvec.size()="<<newimgvec.size()<<std::endl;
       pipeline->set_images( newimgvec, l->get_id() );
       if( par->has_opacity() && blender && pipelineblender) {
         unsigned int level = pipeline->get_level();

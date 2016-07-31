@@ -86,32 +86,46 @@ namespace PF {
   {
     unsigned int width, height;
     unsigned int r_offset, c_offset;
-    raw_pixel_t **buf;
+    raw_pixel_t **rbuf;
     raw_pixel_t **rows;
+    raw_pixel_t *buf;
 
   public:
     RawMatrix(): 
       width( 0 ), height( 0 ),
       r_offset( 0 ), c_offset( 0 ),
-      buf( NULL ), rows( NULL ) 
+      rbuf( NULL ), rows( NULL ), buf( NULL )
     {
     }
-    ~RawMatrix() {}
+    ~RawMatrix()
+    {
+      if( rbuf ) free( rbuf );
+      if( buf ) free( buf );
+    }
 
     unsigned int GetWidth() { return width; }
     unsigned int GetHeight() { return height; }
 
-    void init(unsigned int w, unsigned int h, unsigned int r_offs, unsigned int c_offs)
+    void init(unsigned int w, unsigned int h, unsigned int r_offs, unsigned int c_offs, bool do_allocation=false)
     {
       width = w;
       height = h;
       r_offset = r_offs;
       c_offset = c_offs;
-      buf = (raw_pixel_t**)realloc( buf, sizeof(raw_pixel_t*)*height );
-      rows = buf - r_offset;
+      rbuf = (raw_pixel_t**)realloc( buf, sizeof(raw_pixel_t*)*height );
+      rows = rbuf - r_offset;
       for( unsigned int i = 0; i < height; i++ )
-	buf[i] = NULL;
+        rbuf[i] = NULL;
+      if( do_allocation ) {
+        buf = (raw_pixel_t*)realloc( buf, sizeof(raw_pixel_t*)*height*width );
+        for( int row = 0; row < height; row++ ) {
+          set_row( row, buf );
+          buf += width;
+        }
+      }
     }
+
+    raw_pixel_t* GetBuffer() { return buf; }
 
 
     void set_row( unsigned int row, raw_pixel_t* ptr )

@@ -65,6 +65,7 @@ public:
 
     ProgressListener* plistener;
 
+    //VipsImage* add_cfa_border( VipsImage* in, int border );
 
     void CA_correct_RT(int winx, int winy, int winw, int winh,
                            int tilex, int tiley, int tilew, int tileh,
@@ -94,6 +95,9 @@ public:
 
 		int FC(int r, int c)
 		{
+		  //std::cout<<"RawImageSource::FC(): "<<(void*)image_data<<", "<<FC_roffset<<","<<FC_coffset<<","<<tile_top<<","<<tile_left<<std::endl;
+		  //int rr = r, cc = c;
+
       r -= FC_roffset;
       c -= FC_coffset;
 

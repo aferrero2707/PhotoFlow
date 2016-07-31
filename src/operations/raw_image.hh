@@ -115,8 +115,7 @@ bool check_xtrans( unsigned filters );
 		RawSpeed::CameraMetaData *meta;
 #endif
 
-		// VipsImage storing the raw data 
-		// (one float pixel value + one uchar color code)
+		// VipsImages storing the raw data, one band for the pixel values and a nother for the colors
     VipsImage* image;
 		// VipsImage storing the dark frame data (if available)
     VipsImage* df_image;
@@ -124,10 +123,12 @@ bool check_xtrans( unsigned filters );
     VipsImage* ff_image;
 		// Demosaiced image
     VipsImage* demo_image;
+    PF::ProcessorBase* fast_demosaic;
 
     exif_data_t exif_data;
 
     Array2D<float> rawData;  // holds preprocessed pixel values, rowData[i][j] corresponds to the ith row and jth column
+    //RawMatrix rawData;  // holds preprocessed pixel values, rowData[i][j] corresponds to the ith row and jth column
     // Result of CA auto-correction
     double fitparams[3][2][16];
 

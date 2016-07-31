@@ -445,7 +445,8 @@ namespace PF
         //std::cout<<"black="<<rdpar->get_black_level_correction()<<" * 65535 * "
         //    <<exposure<<" / "<<(image_data->color.maximum - image_data->color.black)
         //    <<"="<<black[i]<<std::endl;
-        //std::cout<<"black["<<i<<"]="<<black[i]<<"  white["<<i<<"]="<<white[i]<<std::endl;
+        if(false && r->left==0 && r->top==0)
+          std::cout<<"black["<<i<<"]="<<black[i]<<"  white["<<i<<"]="<<white[i]<<std::endl;
       }
 
       //if(r->left==0 && r->top==0) std::cout<<"RawPreprocessor::render_camwb(): nbands="<<nbands<<std::endl;
@@ -488,9 +489,10 @@ namespace PF
             //rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
             int c = rp.icolor(x);
             rpout[x] = __CLIP( (rp[x]-black[c]) * mul[c] * 65535.f / (white[c]-black[c]) );
-            //if(false && r->left==0 && r->top==0) std::cout<<"  c="<<c
-            //    <<"  rp[x]="<<rp[x]<<"  mul[ c ]="
-            //    <<mul[ c ]<<"  rpout[x]="<<rpout[x]<<std::endl;
+            if(false && r->left==0 && r->top==0 && y==0 && x<16)
+              std::cout<<"  c="<<c
+              <<"  rp[x]="<<rp[x]<<"  mul[ c ]="
+              <<mul[ c ]<<"  rpout[x]="<<rpout[x]/65535.f<<std::endl;
 #ifdef RT_EMU
             /* RawTherapee emulation */
             rpout[x] *= 65535;
