@@ -63,14 +63,17 @@ bool PF::StatusIndicatorLed::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
   cr->save();
   switch( status ) {
-  case 0:
+  case 0: // ready
     cr->set_source_rgba(0., 1., 0., 1.0);
     break;
-  case 1:
+  case 1: // caching
     cr->set_source_rgba(1., 0.5, 0., 1.0);
     break;
-  case 2:
+  case 2: // processing
     cr->set_source_rgba(1., 0., 0., 1.0);
+    break;
+  case 3: // updating
+    cr->set_source_rgba(0., 0., 1., 1.0);
     break;
   }
   cr->paint();

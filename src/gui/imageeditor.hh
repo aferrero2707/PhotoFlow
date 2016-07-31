@@ -184,6 +184,7 @@ public:
   void set_status_ready() { set_status(_("ready"), 0); }
   void set_status_caching() { set_status(_("caching"), 1); }
   void set_status_processing() { set_status(_("processing"), 2); }
+  void set_status_updating() { set_status(_("updating"), 3); }
   void set_status_exporting() { set_status(_("exporting"), 2); }
 
   // Handlers for the mouse events inside the image area

@@ -295,6 +295,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_caching) );
   PF::ImageProcessor::Instance().signal_status_processing.
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_processing) );
+  PF::ImageProcessor::Instance().signal_status_updating.
+      connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_updating) );
   PF::ImageProcessor::Instance().signal_status_exporting.
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_exporting) );
 
