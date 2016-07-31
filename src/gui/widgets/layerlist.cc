@@ -174,7 +174,7 @@ void PF::LayerList::changed()
   PF::Image* image = layer->get_image();
   if( !image ) return;
 
-  std::cout<<"LayerList::changed() called, inhibit="<<inhibit<<std::endl;
+  //std::cout<<"LayerList::changed() called, inhibit="<<inhibit<<std::endl;
 
   Gtk::TreeModel::iterator iter = cbox.get_active();
   if( iter ) {
@@ -187,8 +187,8 @@ void PF::LayerList::changed()
       std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& inputs = layer->get_extra_inputs();
       if( (inputs.size() > 0) && (inputs[0].first.first == (int)(l->get_id()))
           && (inputs[0].first.second == image_num.get_value()) ) {
-        std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
-         <<"\" is unmodified."<<std::endl;
+        //std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
+        // <<"\" is unmodified."<<std::endl;
         return;
       }
 

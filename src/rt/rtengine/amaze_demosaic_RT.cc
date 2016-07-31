@@ -220,8 +220,11 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 	for (top=winy-16; top < winy+height; top += TS-32)
 		for (left=winx-16; left < winx+width; left += TS-32) {
      */
-    for (top=tiley-16; top < tiley+tileh; top += TS-32)
-      for (left=tilex-16; left < tilex+tilew; left += TS-32) {
+    int ntilesprocessed = 0;
+    for (top=tiley-16; top < tiley+tileh-16; top += TS-32)
+      for (left=tilex-16; left < tilex+tilew-16; left += TS-32) {
+        //std::cout<<"Amaze: tiley="<<tiley<<"  tileh="<<tileh<<"  top="<<top<<std::endl;
+        ntilesprocessed += 1;
         memset(nyquist, 0, sizeof(char)*TS*TSH);
         memset(rbint, 0, sizeof(float)*TS*TSH);
         //location of tile bottom edge
@@ -1442,7 +1445,9 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
     // clean up
     free(buffer);
+    //std::cout<<"Amaze:  ntilesprocessed="<<ntilesprocessed<<std::endl;
   }
+
   /*
 	if(plistener)
 		plistener->setProgress(1.0);
