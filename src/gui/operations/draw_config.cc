@@ -49,16 +49,17 @@ PF::DrawConfigGUI::DrawConfigGUI( PF::Layer* layer ):
   pen_size( this, "pen_size", "Pen size: ", 5, 0, 1000000, 1, 10, 1),
   pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100),
   pen_smoothness( this, "pen_smoothness", "pen smoothness: ", 0, 0, 100, 1, 10, 100),
-  undoButton("Undo")
+  undoButton("Undo"), inhibit( false )
 {
   colorButtonsBox1.pack_start( bgd_color_label, Gtk::PACK_SHRINK );
   colorButtonsBox1.pack_start( bgd_color_button, Gtk::PACK_SHRINK );
   colorButtonsBox1.pack_start( bgd_transparent_checkbox, Gtk::PACK_SHRINK );
   colorButtonsBox2.pack_start( pen_color_label, Gtk::PACK_SHRINK );
   colorButtonsBox2.pack_start( pen_color_button, Gtk::PACK_SHRINK );
-  colorButtonsBox2.pack_start( pen_size, Gtk::PACK_SHRINK );
+  //colorButtonsBox2.pack_start( pen_size, Gtk::PACK_SHRINK );
   controlsBox.pack_start( colorButtonsBox1 );
   controlsBox.pack_start( colorButtonsBox2 );
+  controlsBox.pack_start( pen_size, Gtk::PACK_SHRINK );
   controlsBox.pack_start( pen_smoothness );
   penBox.pack_start( undoButton );
   controlsBox.pack_start( penBox );
@@ -92,19 +93,38 @@ void PF::DrawConfigGUI::open()
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
-    /*
-    pen_grey.init();
-    pen_R.init();
-    pen_G.init();
-    pen_B.init();
 
-    bgd_grey.init();
-    bgd_R.init();
-    bgd_G.init();
-    bgd_B.init();
-    */
+    PF::DrawPar* par = dynamic_cast<PF::DrawPar*>( get_layer()->get_processor()->get_par() );
+    if( !par ) return;
+
+    inhibit = true;
+
+  #ifdef GTKMM_2
+    Gdk::Color rgb;
+    rgb.set_rgb_p( par->get_pen_color().get().r*1.f,
+        par->get_pen_color().get().g*1.f,
+        par->get_pen_color().get().b*1.f );
+    pen_color_button.set_color( rgb );
+    rgb.set_rgb_p( par->get_bgd_color().get().r*1.f,
+        par->get_bgd_color().get().g*1.f,
+        par->get_bgd_color().get().b*1.f );
+    bgd_color_button.set_color( rgb );
+  #endif
+
+  #ifdef GTKMM_3
+    Gdk::RGBA rgba;
+    rgba.set_rgba( par->get_pen_color().get().r, par->get_pen_color().get().g,
+        par->get_pen_color().get().b, 1.f );
+    pen_color_button.set_rgba( rgba );
+    rgba.set_rgba( par->get_bgd_color().get().r, par->get_bgd_color().get().g,
+        par->get_bgd_color().get().b, 1.f );
+    bgd_color_button.set_rgba( rgba );
+  #endif
+
     pen_size.init();
     pen_opacity.init();
+
+    inhibit = false;
   }
   OperationConfigGUI::open();
 }
@@ -112,6 +132,8 @@ void PF::DrawConfigGUI::open()
 
 void PF::DrawConfigGUI::on_pen_color_changed()
 {
+  if( inhibit ) return;
+
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
   if( !layer ) return;
@@ -145,6 +167,8 @@ void PF::DrawConfigGUI::on_pen_color_changed()
 
 void PF::DrawConfigGUI::on_bgd_color_changed()
 {
+  if( inhibit ) return;
+
   // Pointer to the associated Layer object
   PF::Layer* layer = get_layer();
   if( !layer ) return;

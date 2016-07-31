@@ -63,6 +63,7 @@ namespace PF {
   Gtk::Button undoButton;
 
   double mouse_x, mouse_y;
+  bool inhibit;
 
 public:
   DrawConfigGUI( Layer* l );
