@@ -52,6 +52,20 @@ VipsImage* PF::AmazeDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   
   if( in.size()<1 || in[0]==NULL ) return NULL;
   
+  size_t blobsz;
+  if( vips_image_get_blob( in[0], "raw_image_data",
+         (void**)&image_data,
+         &blobsz ) ) {
+    std::cout<<"AmazeDemosaicPar::build(): could not extract raw_image_data."<<std::endl;
+    return NULL;
+  }
+  if( blobsz != sizeof(dcraw_data_t) ) {
+    std::cout<<"AmazeDemosaicPar::build(): wrong raw_image_data size."<<std::endl;
+    return NULL;
+  }
+
+  std::cout<<"AmazeDemosaicPar::build(): filters="<<image_data->idata.filters<<std::endl;
+
   int border = 16;
 
   //VipsImage **t = (VipsImage **)
@@ -195,9 +209,26 @@ VipsImage* PF::AmazeDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   //sprintf(tifname,"/tmp/level_%d-2.tif",(int)levels.size());
   //vips_image_write_to_file( out, tifname );
   //g_object_unref( img );
-  PF_UNREF( cropped, "PF::AmazeDemosaicPar::build(): cropped unref" );
+  PF_UNREF( cropped, "AmazeDemosaicPar::build(): cropped unref" );
 
-  return out;
+
+  int tw = 160 - 32;
+  int th = tw;
+  int nt = (cropped->Xsize/tw + 1) * 3;
+  VipsAccess acc = VIPS_ACCESS_RANDOM;
+  int threaded = 1, persistent = 0;
+  VipsImage* cached;
+  if( vips_tilecache(out, &cached,
+      "tile_width", tw, "tile_height", th, "max_tiles", nt,
+      "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+    std::cout<<"AmazeDemosaicPar::build(): vips_tilecache() failed."<<std::endl;
+    return NULL;
+  }
+  PF_UNREF( out, "AmazeDemosaicPar::build(): out unref" );
+
+  return cached;
+
+  //return out;
 }
 
 
