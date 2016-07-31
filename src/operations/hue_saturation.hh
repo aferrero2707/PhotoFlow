@@ -50,6 +50,7 @@ namespace PF
     Property<float> saturation, saturation_eq;
     Property<float> contrast, contrast_eq;
     Property<float> brightness, brightness_eq;
+    Property<float> gamma;
     Property<bool> brightness_is_gamma;
     Property<SplineCurve> hue_H_equalizer;
     Property<SplineCurve> hue_S_equalizer;
@@ -66,6 +67,8 @@ namespace PF
     Property<SplineCurve> brightness_H_equalizer;
     Property<SplineCurve> brightness_S_equalizer;
     Property<SplineCurve> brightness_L_equalizer;
+
+    float exponent;
 
     Property<bool> show_mask;
     Property<bool> invert_mask;
@@ -94,6 +97,7 @@ namespace PF
     float get_contrast_eq() { return contrast_eq.get(); }
     float get_brightness() { return brightness.get(); }
     float get_brightness_eq() { return brightness_eq.get(); }
+    float get_gamma() { return exponent; }
     bool get_brightness_is_gamma() { return brightness_is_gamma.get(); }
     bool get_show_mask() { return show_mask.get(); }
     bool get_invert_mask() { return invert_mask.get(); }
@@ -336,7 +340,14 @@ namespace PF
           a += PF::FormatInfo<T>::HALF;
           b += PF::FormatInfo<T>::HALF;
 
-          pout[x] = pin[x];
+          if( opar->get_gamma() != 1 ) {
+            pout[x] = powf( pin[x], opar->get_gamma() );
+            float L = 0.1;
+            if(r->left==0 && r->top==0 && y<5 && x < 15)
+              printf("brightness: in=%f  out=%f\n", pin[x], pout[x]);
+          } else {
+            pout[x] = pin[x];
+          }
           clip( a, pout[x+1] );
           clip( b, pout[x+2] );
         }

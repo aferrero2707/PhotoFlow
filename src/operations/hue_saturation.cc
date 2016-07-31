@@ -46,6 +46,7 @@ PF::HueSaturationPar::HueSaturationPar():
   contrast_eq("contrast_eq",this,0),
   brightness("brightness",this,0),
   brightness_eq("brightness_eq",this,0),
+  gamma("gamma",this,0),
   brightness_is_gamma("brightness_is_gamma",this,false),
   hue_H_equalizer( "hue_H_equalizer", this ),
   hue_S_equalizer( "hue_S_equalizer", this ),
@@ -154,6 +155,8 @@ VipsImage* PF::HueSaturationPar::build(std::vector<VipsImage*>& in, int first,
   eq_enabled[0] = hue_H_equalizer_enabled.get();
   eq_enabled[1] = hue_S_equalizer_enabled.get();
   eq_enabled[2] = hue_L_equalizer_enabled.get();
+
+  exponent = (gamma.get() >= 0.0f) ? 1.0f / (1.0f + gamma.get()*2.f) : (1.0f - gamma.get()*2.);
 
   std::vector<VipsImage*> in2;
   if( in.size() < 1 )
