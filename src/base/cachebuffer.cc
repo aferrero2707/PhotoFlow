@@ -103,6 +103,7 @@ void PF::CacheBuffer::step()
   std::vector<_ThreadInfo> threads;
   for( int t = 0; t < nthreads; t++ ) {
     guchar* buf = (guchar*)malloc( VIPS_IMAGE_SIZEOF_PEL(image)*PF_CACHE_BUFFER_TILE_SIZE*PF_CACHE_BUFFER_TILE_SIZE );
+    //memset(buf, 0, VIPS_IMAGE_SIZEOF_PEL(image)*PF_CACHE_BUFFER_TILE_SIZE*PF_CACHE_BUFFER_TILE_SIZE);
     _ThreadInfo info;
     threads.push_back( info );
     threads[t].thread = Glib::Threads::Thread::create( sigc::bind(sigc::mem_fun(*this, &PF::CacheBuffer::step_cb), step_x, step_y, buf) );
@@ -168,7 +169,7 @@ void PF::CacheBuffer::step()
           if( n != (ssize_t)VIPS_IMAGE_SIZEOF_PEL(image)*tile_area.width ) break;
         }
         offset += VIPS_IMAGE_SIZEOF_LINE(image);
-        p += VIPS_IMAGE_SIZEOF_PEL(image)*tile_area.width;
+        p += VIPS_IMAGE_SIZEOF_PEL(image)*PF_CACHE_BUFFER_TILE_SIZE;
       }
     }
     //std::cout<<"CacheBuffer::step(): thread #"<<t<<" free("<<(void*)threads[t].buf<<")"<<std::endl;
@@ -278,7 +279,7 @@ void PF::CacheBuffer::step_cb(int x0, int y0, guchar* buf)
     return;
   }
 
-  if( tile_area.left == 0 ) std::cout<<"CacheBuffer::step(): row="<<tile_area.top<<std::endl;
+  //if( tile_area.left == 0 ) std::cout<<"CacheBuffer::step(): row="<<tile_area.top<<std::endl;
 
   // Update the image region corresponding to the current tile
   VipsRegion* reg = vips_region_new( image );
