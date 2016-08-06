@@ -48,6 +48,11 @@ namespace PF {
        
   public:
     SplitDetailsConfigGUI( Layer* l );
+    
+    void blur_type_selector_changed();
+    
+    void do_update();
+    
   };
 
 }

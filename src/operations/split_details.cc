@@ -37,7 +37,7 @@
   {
     int blur_type;
     float blur_radius;
-    int initial_Lev;
+    int initial_lev;
     PF::ProcessorBase* gauss;
     PF::ProcessorBase* wavdec;
 
@@ -46,7 +46,7 @@
     ~SplitDetailsLevelPar() { std::cout<<"~SplitDetailsLevelPar() called."<<std::endl; }
 
     void set_blur_radius(float r) { blur_radius = r; }
-    void set_initial_Lev(int r) { initial_Lev = r; }
+    void set_initial_lev(int r) { initial_lev = r; }
     void set_blur_type(int r) { blur_type = r; }
 
     std::vector<VipsImage*> build_many(std::vector<VipsImage*>& in, int first,
@@ -103,7 +103,8 @@
       if( wavdecpar ) {
         in2.push_back( srcimg );
         
-        wavdecpar->set_initial_Lev( initial_Lev );
+        wavdecpar->set_initial_lev( initial_lev );
+        wavdecpar->set_preview_scale( level );
         wavdecpar->set_numScales( 1 );
         wavdecpar->set_currScale( 2 );
         wavdecpar->set_blendFactor( .5f );
@@ -158,6 +159,7 @@
           diff = static_cast< typename PF::FormatInfo<T>::SIGNED >(porig[x]) -
               static_cast< typename PF::FormatInfo<T>::SIGNED >(pblur[x]);
           pout[x] = diff/2 + PF::FormatInfo<T>::HALF;
+          //std::cout<<"porig="<<porig[x]<<"  pblur="<<pblur[x]<<"  diff="<<diff<<" pout="<<pout[x]<<std::endl;
         }
       }
     }
@@ -216,7 +218,7 @@ std::vector<VipsImage*> PF::SplitDetailsPar::build_many(std::vector<VipsImage*>&
     // gasussian
     lpar->set_blur_radius( blur_radius );
     // wavelets
-    lpar->set_initial_Lev( i );
+    lpar->set_initial_lev( i );
     
     lpar->set_image_hints( prev_scale );
     lpar->set_format( get_format() );
