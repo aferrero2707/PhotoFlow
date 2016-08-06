@@ -76,8 +76,6 @@ namespace PF {
 
     void get_value();
     void set_value();
-    
-    Gtk::ComboBox* get_combo_box() { return &cbox; }
   };
 
 
