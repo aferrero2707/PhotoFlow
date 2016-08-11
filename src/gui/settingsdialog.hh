@@ -61,6 +61,9 @@ class SettingsDialog : public Gtk::Dialog
   DCMModelColumns cm_display_profile_columns;
   Glib::RefPtr<Gtk::ListStore> cm_display_profile_model;
 
+  DCMModelColumns cm_display_profile_intent_columns;
+  Glib::RefPtr<Gtk::ListStore> cm_display_profile_intent_model;
+
   Gtk::Notebook notebook;
 
   Gtk::VBox about_box, color_box;
@@ -77,6 +80,8 @@ class SettingsDialog : public Gtk::Dialog
   Gtk::Image cm_display_profile_open_img;
   Gtk::Button cm_display_profile_open_button;
   Gtk::Entry cm_display_profile_entry;
+  Gtk::ComboBox cm_display_profile_intent_selector;
+  Gtk::CheckButton cm_display_profile_bpc_selector;
   Gtk::HBox cm_display_profile_box;
 
   Gtk::Frame cm_working_profile_frame, cm_display_profile_frame;

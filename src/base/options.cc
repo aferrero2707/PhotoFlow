@@ -38,6 +38,7 @@ PF::Options::Options()
   working_profile_type = PF::OUT_PROF_REC2020;
   working_trc_type = PF_TRC_LINEAR;
   display_profile_type = PF::PF_DISPLAY_PROF_sRGB;
+  display_profile_intent = INTENT_RELATIVE_COLORIMETRIC;
 }
 
 void PF::Options::set_working_profile_type(int t)
@@ -130,6 +131,23 @@ void PF::Options::load()
           custom_display_profile_name = keyFile.get_string ("Color Management", "CustomDisplayProfileName");
           std::cout<<"custom_display_profile_name="<<custom_display_profile_name<<std::endl;
         }
+        if (keyFile.has_key ("Color Management", "DisplayProfileIntent")) {
+          std::string keyval = keyFile.get_string ("Color Management", "DisplayProfileIntent");
+          if( keyval == "PERCEPTUAL" )
+            display_profile_intent = INTENT_PERCEPTUAL;
+          else if( keyval == "RELATIVE_COLORIMETRIC" )
+            display_profile_intent = INTENT_RELATIVE_COLORIMETRIC;
+          else if( keyval == "ABSOLUTE_COLORIMETRIC" )
+            display_profile_intent = INTENT_ABSOLUTE_COLORIMETRIC;
+          else if( keyval == "SATURATION" )
+            display_profile_intent = INTENT_SATURATION;
+          std::cout<<"display_profile_intent="<<display_profile_intent<<std::endl;
+        }
+        if (keyFile.has_key ("Color Management", "DisplayProfileBPC")) {
+          int keyval = keyFile.get_integer ("Color Management", "DisplayProfileBPC");
+          display_profile_bpc = (keyval != 0);
+          std::cout<<"display_profile_bpc="<<display_profile_bpc<<std::endl;
+        }
       }
     }
   } catch (Glib::Error &err) {
@@ -196,6 +214,23 @@ void PF::Options::save()
 
   keyFile.set_integer ("Color Management", "DisplayProfileType", (int)display_profile_type);
   keyFile.set_string ("Color Management", "CustomDisplayProfileName", custom_display_profile_name);
+
+  switch( display_profile_intent ) {
+  case INTENT_PERCEPTUAL:
+    keyFile.set_string ("Color Management", "DisplayProfileIntent", "PERCEPTUAL");
+    break;
+  case INTENT_RELATIVE_COLORIMETRIC:
+    keyFile.set_string ("Color Management", "DisplayProfileIntent", "RELATIVE_COLORIMETRIC");
+    break;
+  case INTENT_ABSOLUTE_COLORIMETRIC:
+    keyFile.set_string ("Color Management", "DisplayProfileIntent", "ABSOLUTE_COLORIMETRIC");
+    break;
+  case INTENT_SATURATION:
+    keyFile.set_string ("Color Management", "DisplayProfileIntent", "SATURATION");
+    break;
+  default: break;
+  }
+  keyFile.set_integer ("Color Management", "DisplayProfileBPC", (int)((display_profile_bpc==true) ? 1 : 0));
 
   try {
     //keyFile.save_to_file( fname );

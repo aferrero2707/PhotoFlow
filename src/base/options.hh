@@ -31,18 +31,20 @@
 #define PF_OPTIONS_H
 
 #include <string>
+#include <lcms2.h>
 #include <glibmm.h>
 
 namespace PF
 {
 
-  enum display_profile_t
-  {
-    PF_DISPLAY_PROF_sRGB = 0,
-    PF_DISPLAY_PROF_SYSTEM = 1,
-    PF_DISPLAY_PROF_CUSTOM = 2,
-    PF_DISPLAY_PROF_MAX
-  };
+enum display_profile_t
+{
+  PF_DISPLAY_PROF_sRGB = 0,
+  PF_DISPLAY_PROF_SYSTEM = 1,
+  PF_DISPLAY_PROF_CUSTOM = 2,
+  PF_DISPLAY_PROF_MAX
+};
+
 
   class Options
   {
@@ -52,6 +54,8 @@ namespace PF
 
     display_profile_t display_profile_type;
     Glib::ustring custom_display_profile_name;
+    int display_profile_intent;
+    bool display_profile_bpc;
 
     Glib::ustring last_visited_image_folder;
     Glib::ustring last_visited_preset_folder;
@@ -79,6 +83,18 @@ namespace PF
       custom_display_profile_name = n;
     }
     std::string get_custom_display_profile_name() { return custom_display_profile_name; }
+
+    void set_display_profile_intent( int n )
+    {
+      display_profile_intent = n;
+    }
+    int get_display_profile_intent() { return display_profile_intent; }
+
+    void set_display_profile_bpc( bool n )
+    {
+      display_profile_bpc = n;
+    }
+    bool get_display_profile_bpc() { return display_profile_bpc; }
 
     // last visited folders
     void set_last_visited_image_folder( std::string f ) { last_visited_image_folder = f; }

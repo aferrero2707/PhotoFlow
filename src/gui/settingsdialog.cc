@@ -54,7 +54,8 @@ PF::SettingsDialog::SettingsDialog():
       cm_working_profile_open_button(Gtk::Stock::OPEN),
       cm_display_profile_open_button(Gtk::Stock::OPEN),
       cm_working_profile_frame( _("Working RGB Colorspace") ),
-      cm_display_profile_frame( _("Display Profile") )
+      cm_display_profile_frame( _("Display Profile") ),
+      cm_display_profile_bpc_selector( _("black point compensation") )
 {
   set_default_size(600,400);
 
@@ -161,6 +162,39 @@ PF::SettingsDialog::SettingsDialog():
 
   cm_display_profile_frame_box.pack_start( cm_display_profile_type_selector, Gtk::PACK_SHRINK, 5 );
   cm_display_profile_frame_box.pack_start( cm_display_profile_box, Gtk::PACK_SHRINK, 5 );
+
+  cm_display_profile_intent_model = Gtk::ListStore::create(cm_display_profile_intent_columns);
+  cm_display_profile_intent_selector.set_model( cm_display_profile_intent_model );
+  cm_display_profile_intent_selector.pack_start(cm_display_profile_intent_columns.col_value);
+
+  ri = cm_display_profile_intent_model->append();
+  row = *(ri);
+  row[cm_display_profile_intent_columns.col_id] = 0;
+  row[cm_display_profile_intent_columns.col_value] = "perceptual";
+
+  ri = cm_display_profile_intent_model->append();
+  row = *(ri);
+  row[cm_display_profile_intent_columns.col_id] = 1;
+  row[cm_display_profile_intent_columns.col_value] = "relative colorimetric";
+
+  ri = cm_display_profile_intent_model->append();
+  row = *(ri);
+  row[cm_display_profile_intent_columns.col_id] = 2;
+  row[cm_display_profile_intent_columns.col_value] = "absolute colorimetric";
+
+  ri = cm_display_profile_intent_model->append();
+  row = *(ri);
+  row[cm_display_profile_intent_columns.col_id] = 3;
+  row[cm_display_profile_intent_columns.col_value] = "saturation";
+
+  cm_display_profile_intent_selector.set_active( 0 );
+  cm_display_profile_intent_selector.set_size_request( 30, -1 );
+
+  cm_display_profile_frame_box.pack_start( cm_display_profile_bpc_selector, Gtk::PACK_SHRINK, 5 );
+
+  cm_display_profile_frame_box.pack_start( cm_display_profile_intent_selector, Gtk::PACK_SHRINK, 5 );
+
+
   cm_display_profile_frame.add( cm_display_profile_frame_box );
 
 
@@ -218,6 +252,18 @@ void PF::SettingsDialog::load_settings()
 
   cm_display_profile_type_selector.set_active( PF::PhotoFlow::Instance().get_options().get_display_profile_type() );
   cm_display_profile_entry.set_text( PF::PhotoFlow::Instance().get_options().get_custom_display_profile_name() );
+
+  switch( PF::PhotoFlow::Instance().get_options().get_display_profile_intent() ){
+  case INTENT_PERCEPTUAL: cm_display_profile_intent_selector.set_active(0); break;
+  case INTENT_RELATIVE_COLORIMETRIC: cm_display_profile_intent_selector.set_active(1); break;
+  case INTENT_ABSOLUTE_COLORIMETRIC: cm_display_profile_intent_selector.set_active(2); break;
+  case INTENT_SATURATION: cm_display_profile_intent_selector.set_active(3); break;
+  }
+
+  if( PF::PhotoFlow::Instance().get_options().get_display_profile_bpc() > 0 )
+    cm_display_profile_bpc_selector.set_active( true );
+  else
+    cm_display_profile_bpc_selector.set_active( false );
 }
 
 
@@ -241,11 +287,31 @@ void PF::SettingsDialog::save_settings()
   if( cm_display_profile_entry.get_text() != PF::PhotoFlow::Instance().get_options().get_custom_display_profile_name() ) {
     cm_dpy_modified = true;
   }
-  if( cm_dpy_modified ) signal_cm_modified.emit();
 
   std::cout<<"cm_display_profile_type_selector.get_active_row_number(): "<<cm_display_profile_type_selector.get_active_row_number()<<std::endl;
   PF::PhotoFlow::Instance().get_options().set_display_profile_type( cm_display_profile_type_selector.get_active_row_number() );
   PF::PhotoFlow::Instance().get_options().set_custom_display_profile_name( cm_display_profile_entry.get_text() );
+
+  int new_display_profile_intent;
+  switch( cm_display_profile_intent_selector.get_active_row_number() ){
+  case 0: new_display_profile_intent = INTENT_PERCEPTUAL; break;
+  case 1: new_display_profile_intent = INTENT_RELATIVE_COLORIMETRIC; break;
+  case 2: new_display_profile_intent = INTENT_ABSOLUTE_COLORIMETRIC; break;
+  case 3: new_display_profile_intent = INTENT_SATURATION; break;
+  }
+  if( new_display_profile_intent != PF::PhotoFlow::Instance().get_options().get_display_profile_intent() ) {
+    cm_dpy_modified = true;
+  }
+  PF::PhotoFlow::Instance().get_options().set_display_profile_intent( new_display_profile_intent );
+
+  if( cm_display_profile_bpc_selector.get_active() !=
+      PF::PhotoFlow::Instance().get_options().get_display_profile_bpc() ) {
+    cm_dpy_modified = true;
+  }
+  PF::PhotoFlow::Instance().get_options().set_display_profile_bpc( cm_display_profile_bpc_selector.get_active() );
+
+  if( cm_dpy_modified ) signal_cm_modified.emit();
+
   PF::PhotoFlow::Instance().get_options().save();
 }
 

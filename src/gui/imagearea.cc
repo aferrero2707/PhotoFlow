@@ -1042,6 +1042,8 @@ void PF::ImageArea::update( VipsRect* area )
         <<"  ICC profile="<<icc_display_profile<<std::endl;
     icc_par->set_out_profile( current_display_profile );
   }
+  icc_par->set_intent( options.get_display_profile_intent() );
+  icc_par->set_bpc( options.get_display_profile_bpc() );
   convert2display->get_par()->set_image_hints( wclipimg );
   convert2display->get_par()->set_format( get_pipeline()->get_format() );
   in.clear(); in.push_back( wclipimg );
