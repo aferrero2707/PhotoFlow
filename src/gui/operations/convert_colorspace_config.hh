@@ -54,6 +54,11 @@ namespace PF {
     Selector intentSelector;
     Gtk::HBox intentSelectorBox;
 
+    CheckBox clip_negative_checkbox;
+    CheckBox clip_overflow_checkbox;
+    Gtk::HBox clip_negative_box;
+    Gtk::HBox clip_overflow_box;
+
     CheckBox bpcButton;
     Gtk::HBox bpcButtonBox;
 
@@ -66,6 +71,9 @@ namespace PF {
     Gtk::Entry outProfFileEntry;
     Gtk::Button outProfOpenButton;
 
+    Gtk::CheckButton gamutWarningButton;
+    Gtk::HBox gamutWarningButtonBox;
+
     
   public:
     ConvertColorspaceConfigGUI( Layer* l );
@@ -74,6 +82,8 @@ namespace PF {
 
     void on_out_button_open_clicked();
     void on_out_filename_changed();
+
+    void on_gamut_warning_toggled();
   };
 
 }

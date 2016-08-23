@@ -45,6 +45,71 @@
 namespace PF 
 {
 
+class GamutWarningPar: public PF::OpParBase
+{
+public:
+  GamutWarningPar():
+    PF::OpParBase()
+  {
+    set_type("gamut_warning");
+  }
+  ~GamutWarningPar() { std::cout<<"~GamutWarningPar() called."<<std::endl; }
+  /*
+    VipsImage* build(std::vector<VipsImage*>& in, int first,
+        VipsImage* imap, VipsImage* omap,
+        unsigned int& level);
+   */
+};
+
+
+template < OP_TEMPLATE_DEF >
+class GamutWarningProc
+{
+public:
+  void render(VipsRegion** ireg, int n, int in_first,
+      VipsRegion* imap, VipsRegion* omap,
+      VipsRegion* oreg, PF::OpParBase* par)
+  {
+    if( n != 3 ) return;
+    if( ireg[0] == NULL ) return;
+    if( ireg[1] == NULL ) return;
+    if( ireg[2] == NULL ) return;
+
+    Rect *r = &oreg->valid;
+    int line_size = r->width * oreg->im->Bands;
+    int height = r->height;
+
+    T* p1;
+    T* p2;
+    T* pin;
+    T* pout;
+    int x, y/*, pos*/;
+    float diff;
+    const float delta = 0.00001;
+
+    for( y = 0; y < height; y++ ) {
+      p1 = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+      p2 = (T*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
+      pin = (T*)VIPS_REGION_ADDR( ireg[2], r->left, r->top + y );
+      pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+
+      for( x = 0; x < line_size; x+=3 ) {
+        diff = fabs(static_cast< float >(p1[x]) - static_cast< float >(p2[x]));
+        diff += fabs(static_cast< float >(p1[x+1]) - static_cast< float >(p2[x+1]));
+        diff += fabs(static_cast< float >(p1[x+2]) - static_cast< float >(p2[x+2]));
+        if( diff > delta ) {
+          pout[x] = pout[x+1] = pout[x+2] = PF::FormatInfo<T>::HALF;
+        } else {
+          pout[x] = pin[x];
+          pout[x+1] = pin[x+1];
+          pout[x+2] = pin[x+2];
+        }
+      }
+    }
+  }
+};
+
+
   class ConvertColorspacePar: public OpParBase
   {
     std::string in_profile_name;
@@ -58,12 +123,20 @@ namespace PF
     Property<bool> bpc;
     Property<bool> assign;
 
+    Property<bool> clip_negative, clip_overflow;
+
     void* out_profile_data;
     int out_profile_data_length;
 
     cmsHTRANSFORM transform;
+    ProcessorBase* gw_transform_in;
+    ProcessorBase* gw_transform_out;
+    Processor<GamutWarningPar,GamutWarningProc>* gw;
 
     ProcessorBase* convert2lab;
+
+    bool softproof;
+    bool gamut_warning;
 
     cmsColorSpaceSignature input_cs_type;
     cmsColorSpaceSignature output_cs_type;
@@ -83,6 +156,9 @@ namespace PF
       out_profile_data_length = length;
     }
 
+    bool get_clip_negative() { return clip_negative.get(); }
+    bool get_clip_overflow() { return clip_overflow.get(); }
+
     void set_image_hints( VipsImage* img )
     {
       if( !img ) return;
@@ -92,6 +168,12 @@ namespace PF
 
     cmsColorSpaceSignature get_input_cs_type() { return input_cs_type; }
     cmsColorSpaceSignature get_output_cs_type() { return output_cs_type; }
+
+    bool softproof_enabled() { return softproof; }
+    void set_softproof( bool s ) { softproof = s; }
+
+    bool gamut_warning_enabled() { return gamut_warning; }
+    void set_gamut_warning( bool s ) { gamut_warning = s; }
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 
@@ -103,6 +185,17 @@ namespace PF
     bool has_intensity() { return false; }
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
+
+    bool import_settings( OpParBase* pin ) {
+      ConvertColorspacePar* pin2 = dynamic_cast<ConvertColorspacePar*>( pin );
+      if( pin2 ) {
+        set_softproof( pin2->softproof_enabled() );
+        set_gamut_warning( pin2->gamut_warning_enabled() );
+      }
+      return OpParBase::import_settings( pin );
+    }
+
+
 
     //cmsHPROFILE create_profile_from_matrix (const double matrix[3][3], bool gamma, Glib::ustring name);
 
@@ -208,8 +301,13 @@ namespace PF
         } else {
           memcpy( pout, p, sizeof(float)*line_size );
         }
+        if( opar->get_clip_negative() || opar->get_clip_overflow() ) {
+          for( x = 0; x < line_size; x+= 1 ) {
+            if( opar->get_clip_negative() ) pout[x] = MAX( pout[x], 0.f );
+            if( opar->get_clip_overflow() ) pout[x] = MIN( pout[x], 1.f );
+          }
+        }
       }
-
       if( opar->get_input_cs_type() == cmsSigLabData && line ) {
         delete( line );
       }

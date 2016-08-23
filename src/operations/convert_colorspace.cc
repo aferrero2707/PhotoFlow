@@ -29,6 +29,7 @@
 
 //#include <arpa/inet.h>
 
+#include "icc_transform.hh"
 #include "convert_colorspace.hh"
 
 /* We need C linkage for this.
@@ -48,20 +49,31 @@ extern "C" {
 //#include "../vips/vips_layer.h"
 
 
+
+
+
+
+
 PF::ConvertColorspacePar::ConvertColorspacePar(): 
-  OpParBase(),
-  //out_profile_mode("profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
-  out_profile_mode("profile_mode",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
-  out_profile_type("profile_type",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
-  out_trc_type("trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
-  out_profile_name("profile_name", this),
-  intent("rendering_intent",this,INTENT_RELATIVE_COLORIMETRIC,"INTENT_RELATIVE_COLORIMETRIC","relative colorimetric"),
-  bpc("bpc", this, false),
-  assign("assign", this, false),
-  out_profile_data( NULL ),
-  transform( NULL ),
-  input_cs_type( cmsSigRgbData ),
-  output_cs_type( cmsSigRgbData )
+      OpParBase(),
+      //out_profile_mode("profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
+      out_profile_mode("profile_mode",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
+      out_profile_type("profile_type",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
+      out_trc_type("trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+      out_profile_name("profile_name", this),
+      intent("rendering_intent",this,INTENT_RELATIVE_COLORIMETRIC,"INTENT_RELATIVE_COLORIMETRIC","relative colorimetric"),
+      bpc("bpc", this, false),
+      assign("assign", this, false),
+      clip_negative("clip_negative",this,false),
+      clip_overflow("clip_overflow",this,false),
+      out_profile_data( NULL ),
+      transform( NULL ),
+      gw_transform_in( NULL ),
+      gw_transform_out( NULL ),
+      softproof( false ),
+      gamut_warning( false ),
+      input_cs_type( cmsSigRgbData ),
+      output_cs_type( cmsSigRgbData )
 {
   convert2lab = PF::new_convert2lab();
 
@@ -87,6 +99,10 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   intent.add_enum_value( INTENT_SATURATION, "INTENT_SATURATION", "saturation" );
   intent.add_enum_value( INTENT_ABSOLUTE_COLORIMETRIC, "INTENT_ABSOLUTE_COLORIMETRIC", "absolute colorimetric" );
 
+  gw_transform_in = new_icc_transform();
+  gw_transform_out = new_icc_transform();
+  gw = new PF::Processor<PF::GamutWarningPar,PF::GamutWarningProc>();
+
   set_type("convert_colorspace" );
 
   set_default_name( _("colorspace conversion") );
@@ -94,8 +110,8 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
 
 
 VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int first, 
-				     VipsImage* imap, VipsImage* omap, 
-				     unsigned int& level)
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
 {
   if( in.size() < first+1 ) {
     out_profile_data = NULL;
@@ -119,14 +135,14 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   /*
   void *data;
   size_t data_length;
-  
+
   if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
                            &data, &data_length ) ) {
     in_profile = cmsOpenProfileFromMem( data, data_length );
   }
 
   std::cout<<"ConvertColorspacePar::build(): image="<<in[0]<<" data="<<data<<" data_length="<<data_length<<std::endl;
-*/
+   */
   bool in_changed = false;
   if( in_profile ) {
     char tstr[1024];
@@ -134,7 +150,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 #ifndef NDEBUG
     std::cout<<"convert2lab: Embedded profile found: "<<tstr<<std::endl;
 #endif
-    
+
     if( in_profile_name != tstr ) {
       in_changed = true;
     }
@@ -173,7 +189,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     out_profile = iccprof->get_profile();
   }
   std::cout<<"ConvertColorspacePar::build(): out_mode_changed="<<out_mode_changed
-           <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
+      <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
   std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
   if( changed ) {
 
@@ -208,7 +224,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     default:
       break;
     }
-    */
+     */
 
     if( transform )
       cmsDeleteTransform( transform );  
@@ -221,38 +237,38 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
       if( bpc.get() ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
       transform = cmsCreateTransform( in_profile, 
-                                      infmt,
-                                      out_profile, 
-                                      outfmt,
-                                      intent.get_enum_value().first,//INTENT_RELATIVE_COLORIMETRIC,
-                                      flags); //cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+          infmt,
+          out_profile,
+          outfmt,
+          intent.get_enum_value().first,//INTENT_RELATIVE_COLORIMETRIC,
+          flags); //cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
     }
   }
 
-    if( out_profile) {
-      output_cs_type = cmsGetColorSpace(out_profile);
-      switch( output_cs_type ) {
-      case cmsSigGrayData:
-        grayscale_image( get_xsize(), get_ysize() );
-        break;
-      case cmsSigRgbData:
-        rgb_image( get_xsize(), get_ysize() );
-        break;
-      case cmsSigLabData:
-        lab_image( get_xsize(), get_ysize() );
-        break;
-      case cmsSigCmykData:
-        cmyk_image( get_xsize(), get_ysize() );
-        break;
-      default:
-        break;
-      }
+  if( out_profile) {
+    output_cs_type = cmsGetColorSpace(out_profile);
+    switch( output_cs_type ) {
+    case cmsSigGrayData:
+      grayscale_image( get_xsize(), get_ysize() );
+      break;
+    case cmsSigRgbData:
+      rgb_image( get_xsize(), get_ysize() );
+      break;
+    case cmsSigLabData:
+      lab_image( get_xsize(), get_ysize() );
+      break;
+    case cmsSigCmykData:
+      cmyk_image( get_xsize(), get_ysize() );
+      break;
+    default:
+      break;
     }
+  }
   //std::cout<<"ConvertColorspacePar::build(): transform="<<transform<<std::endl;
 
   //if( !in_profile && out_profile ) {
-    // The input profile was not specified, so we simply assign the output
-    // profile without any conversion
+  // The input profile was not specified, so we simply assign the output
+  // profile without any conversion
   //}
 
   if( in_profile && out_profile && !assign.get() && !transform ) {
@@ -278,8 +294,50 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     std::cout<<"ConvertColorspacePar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
     if( assign.get() ) std::cout<<"    profile assigned"<<std::endl;
   }
-  */
+   */
   if( iccprof ) PF::set_icc_profile( out, iccprof );
+
+  if( gamut_warning ) {
+    PF::ICCProfile* aces_prof =
+        PF::ICCStore::Instance().get_profile( PF::OUT_PROF_ACES, PF::PF_TRC_LINEAR );
+    if( aces_prof && aces_prof->get_profile() ) {
+      PF::ICCTransformPar* tr_in =
+          dynamic_cast<PF::ICCTransformPar*>( gw_transform_in->get_par() );
+      PF::ICCTransformPar* tr_out =
+          dynamic_cast<PF::ICCTransformPar*>( gw_transform_out->get_par() );
+      VipsImage* gw_in = NULL, *gw_out = NULL, *out2 = NULL;
+      if( tr_in && tr_out ) {
+        std::vector<VipsImage*> in2;
+        in2.push_back( image );
+        tr_in->set_image_hints( image );
+        tr_in->set_format( get_format() );
+        tr_in->set_out_profile( aces_prof );
+        gw_in = tr_in->build( in2, 0, NULL, NULL, level );
+
+        in2.clear(); in2.push_back( out );
+        tr_out->set_image_hints( out );
+        tr_out->set_format( get_format() );
+        tr_out->set_out_profile( aces_prof );
+        gw_out = tr_out->build( in2, 0, NULL, NULL, level );
+        PF_UNREF( out, "ConvertColorspacePar::build(): out unref after gamut warning transform" );
+
+        in2.clear();
+        in2.push_back( gw_in );
+        in2.push_back( gw_out );
+        in2.push_back( out );
+        gw->get_par()->set_image_hints( out );
+        gw->get_par()->set_format( get_format() );
+        out2 = gw->get_par()->build( in2, 0, NULL, NULL, level );
+        PF_UNREF( gw_in, "ConvertColorspacePar::build(): out unref after gamut warning process" );
+        PF_UNREF( gw_out, "ConvertColorspacePar::build(): out unref after gamut warning process" );
+        //PF_UNREF( out, "ConvertColorspacePar::build(): out unref after gamut warning process" );
+
+        out = out2;
+        if( iccprof ) PF::set_icc_profile( out, iccprof );
+      }
+    }
+  }
+
 
   //if( in_profile )  cmsCloseProfile( in_profile );
   //if( out_profile ) cmsCloseProfile( out_profile );
