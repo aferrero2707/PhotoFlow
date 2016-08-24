@@ -62,7 +62,7 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
       out_trc_type("trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
       out_profile_name("profile_name", this),
       intent("rendering_intent",this,INTENT_RELATIVE_COLORIMETRIC,"INTENT_RELATIVE_COLORIMETRIC","relative colorimetric"),
-      bpc("bpc", this, false),
+      bpc("bpc", this, true),
       assign("assign", this, false),
       clip_negative("clip_negative",this,false),
       clip_overflow("clip_overflow",this,false),

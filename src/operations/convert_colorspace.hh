@@ -85,7 +85,7 @@ public:
     T* pout;
     int x, y/*, pos*/;
     float diff;
-    const float delta = 0.00001;
+    const float delta = 0.01;
 
     for( y = 0; y < height; y++ ) {
       p1 = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
@@ -97,6 +97,7 @@ public:
         diff = fabs(static_cast< float >(p1[x]) - static_cast< float >(p2[x]));
         diff += fabs(static_cast< float >(p1[x+1]) - static_cast< float >(p2[x+1]));
         diff += fabs(static_cast< float >(p1[x+2]) - static_cast< float >(p2[x+2]));
+        if( false && r->top==0 && r->left==0 ) std::cout<<"diff: "<<diff<<"  delta: "<<delta<<std::endl;
         if( diff > delta ) {
           pout[x] = pout[x+1] = pout[x+2] = PF::FormatInfo<T>::HALF;
         } else {
