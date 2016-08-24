@@ -118,6 +118,12 @@ class ImageEditor: public Gtk::HBox
   Gtk::Widget* aux_controls;
   Gtk::VBox aux_controlsBox;
   Gtk::HBox controlsBox;
+
+  Gtk::Frame soft_proof_frame;
+  Gtk::VBox soft_proof_box;
+  Gtk::CheckButton sim_black_ink_button;
+  Gtk::CheckButton sim_paper_color_button;
+
   StatusIndicatorWidget status_indicator;
   Gtk::Image  img_zoom_in, img_zoom_out, img_zoom_fit;
   Gtk::Button buttonZoomIn, buttonZoomOut, buttonZoom100, buttonZoomFit;
@@ -226,6 +232,9 @@ public:
 
   void toggle_highlights_warning();
   void toggle_shadows_warning();
+
+  void on_sim_black_ink_toggled();
+  void on_sim_paper_color_toggled();
 
   void zoom_in();
   void zoom_out();

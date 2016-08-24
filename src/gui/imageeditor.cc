@@ -129,6 +129,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //imageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) ),
   layersWidget( image, this ),
   aux_controls( NULL ),
+  sim_black_ink_button( _("sim. black ink") ),
+  sim_paper_color_button( _("sim. paper color") ),
   img_zoom_in(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"),
   img_zoom_out(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-out.png"),
   img_zoom_fit(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-fit.png"),
@@ -213,6 +215,12 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonZoomIn.set_tooltip_text( _("Zoom in") );
   buttonZoomIn.set_size_request(26,0);
   controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
+
+  soft_proof_box.pack_start( sim_black_ink_button, Gtk::PACK_SHRINK );
+  soft_proof_box.pack_start( sim_paper_color_button, Gtk::PACK_SHRINK );
+  soft_proof_frame.add( soft_proof_box );
+  controlsBox.pack_end( soft_proof_frame, Gtk::PACK_SHRINK );
+
   controlsBox.pack_end( status_indicator, Gtk::PACK_SHRINK );
 
   //imageBox.pack_start( imageArea_eventBox );
@@ -238,6 +246,11 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
   controls_group_scrolled_window.set_size_request( 280, 0 );
   //main_panel.pack_start( layersWidget.get_controls_group(), Gtk::PACK_SHRINK );
+
+  sim_black_ink_button.signal_toggled().connect( sigc::mem_fun(*this,
+      &PF::ImageEditor::on_sim_black_ink_toggled) );
+  sim_paper_color_button.signal_toggled().connect( sigc::mem_fun(*this,
+      &PF::ImageEditor::on_sim_paper_color_toggled) );
 
   button_highlights_warning.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::ImageEditor::toggle_highlights_warning) );
@@ -674,6 +687,24 @@ void PF::ImageEditor::toggle_shadows_warning()
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   imageArea->set_shadows_warning( button_shadows_warning.get_active() );
+  image->update();
+}
+
+
+void PF::ImageEditor::on_sim_black_ink_toggled()
+{
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
+  if( !pipeline ) return;
+  imageArea->set_sim_black_ink( sim_black_ink_button.get_active() );
+  image->update();
+}
+
+
+void PF::ImageEditor::on_sim_paper_color_toggled()
+{
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
+  if( !pipeline ) return;
+  imageArea->set_sim_paper_color( sim_paper_color_button.get_active() );
   image->update();
 }
 

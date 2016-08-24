@@ -129,6 +129,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 
   PF::ProcessorBase* clipping_warning;
   bool highlights_warning_enabled, shadows_warning_enabled;
+  bool sim_black_ink_enabled, sim_paper_color_enabled;
 
   bool display_merged;
   int active_layer;
@@ -205,6 +206,9 @@ public:
 
   void set_highlights_warning( bool flag ) { highlights_warning_enabled = flag; }
   void set_shadows_warning( bool flag ) { shadows_warning_enabled = flag; }
+
+  void set_sim_black_ink( bool flag ) { sim_black_ink_enabled = flag; }
+  void set_sim_paper_color( bool flag ) { sim_paper_color_enabled = flag; }
 
 	float get_shrink_factor() { return shrink_factor; }
 	void set_shrink_factor( float val ) { shrink_factor = val; }

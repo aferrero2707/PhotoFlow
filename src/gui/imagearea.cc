@@ -182,6 +182,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   current_display_profile( NULL ),
   highlights_warning_enabled( false ),
   shadows_warning_enabled( false ),
+  sim_black_ink_enabled( false ),
+  sim_paper_color_enabled( false ),
   display_merged( true ),
   active_layer( -1 ),
   edited_layer( -1 ),
@@ -1044,6 +1046,13 @@ void PF::ImageArea::update( VipsRect* area )
   }
   icc_par->set_intent( options.get_display_profile_intent() );
   icc_par->set_bpc( options.get_display_profile_bpc() );
+  if( sim_paper_color_enabled ) {
+    icc_par->set_intent( INTENT_ABSOLUTE_COLORIMETRIC );
+    icc_par->set_bpc( false );
+  } else if( sim_black_ink_enabled ) {
+    icc_par->set_intent( INTENT_RELATIVE_COLORIMETRIC );
+    icc_par->set_bpc( false );
+  }
   convert2display->get_par()->set_image_hints( wclipimg );
   convert2display->get_par()->set_format( get_pipeline()->get_format() );
   in.clear(); in.push_back( wclipimg );
