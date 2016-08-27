@@ -44,8 +44,8 @@ RawDecoder::~RawDecoder(void) {
 
 void RawDecoder::decodeUncompressed(TiffIFD *rawIFD, BitOrder order) {
   uint32 nslices = rawIFD->getEntry(STRIPOFFSETS)->count;
-  const uint32 *offsets = rawIFD->getEntry(STRIPOFFSETS)->getIntArray();
-  const uint32 *counts = rawIFD->getEntry(STRIPBYTECOUNTS)->getIntArray();
+  TiffEntry *offsets = rawIFD->getEntry(STRIPOFFSETS);
+  TiffEntry *counts = rawIFD->getEntry(STRIPBYTECOUNTS);
   uint32 yPerSlice = rawIFD->getEntry(ROWSPERSTRIP)->getInt();
   uint32 width = rawIFD->getEntry(IMAGEWIDTH)->getInt();
   uint32 height = rawIFD->getEntry(IMAGELENGTH)->getInt();
@@ -56,8 +56,8 @@ void RawDecoder::decodeUncompressed(TiffIFD *rawIFD, BitOrder order) {
 
   for (uint32 s = 0; s < nslices; s++) {
     RawSlice slice;
-    slice.offset = offsets[s];
-    slice.count = counts[s];
+    slice.offset = offsets->getInt(s);
+    slice.count = counts->getInt(s);
     if (offY + yPerSlice > height)
       slice.h = height - offY;
     else
@@ -65,7 +65,7 @@ void RawDecoder::decodeUncompressed(TiffIFD *rawIFD, BitOrder order) {
 
     offY += yPerSlice;
 
-    if (mFile->isValid(slice.offset + slice.count)) // Only decode if size is valid
+    if (mFile->isValid(slice.offset, slice.count)) // Only decode if size is valid
       slices.push_back(slice);
   }
 
@@ -79,7 +79,7 @@ void RawDecoder::decodeUncompressed(TiffIFD *rawIFD, BitOrder order) {
   offY = 0;
   for (uint32 i = 0; i < slices.size(); i++) {
     RawSlice slice = slices[i];
-    ByteStream in(mFile->getData(slice.offset), slice.count);
+    ByteStream in(mFile, slice.offset, slice.count);
     iPoint2D size(width, slice.h);
     iPoint2D pos(0, offY);
     bitPerPixel = (int)((uint64)((uint64)slice.count * 8u) / (slice.h * width));
@@ -103,9 +103,11 @@ void RawDecoder::decodeUncompressed(TiffIFD *rawIFD, BitOrder order) {
 void RawDecoder::readUncompressedRaw(ByteStream &input, iPoint2D& size, iPoint2D& offset, int inputPitch, int bitPerPixel, BitOrder order) {
   uchar8* data = mRaw->getData();
   uint32 outPitch = mRaw->pitch;
-  uint32 w = size.x;
-  uint32 h = size.y;
+  uint64 w = size.x;
+  uint64 h = size.y;
   uint32 cpp = mRaw->getCpp();
+  uint64 ox = offset.x;
+  uint64 oy = offset.y;
 
   if (input.getRemainSize() < (inputPitch*h)) {
     if ((int)input.getRemainSize() > inputPitch) {
@@ -117,14 +119,14 @@ void RawDecoder::readUncompressedRaw(ByteStream &input, iPoint2D& size, iPoint2D
   if (bitPerPixel > 16 && mRaw->getDataType() == TYPE_USHORT16)
     ThrowRDE("readUncompressedRaw: Unsupported bit depth");
 
-  uint32 skipBits = inputPitch - w * bitPerPixel / 8;  // Skip per line
-  if (offset.y > mRaw->dim.y)
+  uint32 skipBits = inputPitch - w * cpp * bitPerPixel / 8;  // Skip per line
+  if (oy > (uint64) mRaw->dim.y)
     ThrowRDE("readUncompressedRaw: Invalid y offset");
-  if (offset.x + size.x > mRaw->dim.x)
+  if (ox + size.x > (uint64)mRaw->dim.x)
     ThrowRDE("readUncompressedRaw: Invalid x offset");
 
-  uint32 y = offset.y;
-  h = MIN(h + (uint32)offset.y, (uint32)mRaw->dim.y);
+  uint64 y = oy;
+  h = MIN(h + oy, (uint32)mRaw->dim.y);
 
   if (mRaw->getDataType() == TYPE_FLOAT32)
   {
@@ -220,9 +222,12 @@ void RawDecoder::Decode8BitRaw(ByteStream &input, uint32 w, uint32 h) {
 }
 
 void RawDecoder::Decode12BitRaw(ByteStream &input, uint32 w, uint32 h) {
+  if(w<2) ThrowIOE("Are you mad? 1 pixel wide raw images are no fun");
+
   uchar8* data = mRaw->getData();
   uint32 pitch = mRaw->pitch;
   const uchar8 *in = input.getData();
+
   if (input.getRemainSize() < ((w*12/8)*h)) {
     if ((uint32)input.getRemainSize() > (w*12/8)) {
       h = input.getRemainSize() / (w*12/8) - 1;
@@ -243,6 +248,8 @@ void RawDecoder::Decode12BitRaw(ByteStream &input, uint32 w, uint32 h) {
 }
 
 void RawDecoder::Decode12BitRawWithControl(ByteStream &input, uint32 w, uint32 h) {
+  if(w<2) ThrowIOE("Are you mad? 1 pixel wide raw images are no fun");
+
   uchar8* data = mRaw->getData();
   uint32 pitch = mRaw->pitch;
   const uchar8 *in = input.getData();
@@ -278,6 +285,8 @@ void RawDecoder::Decode12BitRawWithControl(ByteStream &input, uint32 w, uint32 h
 }
 
 void RawDecoder::Decode12BitRawBEWithControl(ByteStream &input, uint32 w, uint32 h) {
+  if(w<2) ThrowIOE("Are you mad? 1 pixel wide raw images are no fun");
+
   uchar8* data = mRaw->getData();
   uint32 pitch = mRaw->pitch;
   const uchar8 *in = input.getData();
@@ -313,6 +322,8 @@ void RawDecoder::Decode12BitRawBEWithControl(ByteStream &input, uint32 w, uint32
 }
 
 void RawDecoder::Decode12BitRawBE(ByteStream &input, uint32 w, uint32 h) {
+  if(w<2) ThrowIOE("Are you mad? 1 pixel wide raw images are no fun");
+
   uchar8* data = mRaw->getData();
   uint32 pitch = mRaw->pitch;
   const uchar8 *in = input.getData();
@@ -336,6 +347,8 @@ void RawDecoder::Decode12BitRawBE(ByteStream &input, uint32 w, uint32 h) {
 }
 
 void RawDecoder::Decode12BitRawBEInterlaced(ByteStream &input, uint32 w, uint32 h) {
+  if(w<2) ThrowIOE("Are you mad? 1 pixel wide raw images are no fun");
+
   uchar8* data = mRaw->getData();
   uint32 pitch = mRaw->pitch;
   const uchar8 *in = input.getData();
@@ -505,8 +518,8 @@ bool RawDecoder::checkCameraSupported(CameraMetaData *meta, string make, string 
     if (mode.length() == 0)
       writeLog(DEBUG_PRIO_WARNING, "Unable to find camera in database: %s %s %s\n", make.c_str(), model.c_str(), mode.c_str());
 
-     if (failOnUnknown)
-       ThrowRDE("Camera '%s' '%s', mode '%s' not supported, and not allowed to guess. Sorry.", make.c_str(), model.c_str(), mode.c_str());
+    if (failOnUnknown)
+      ThrowRDE("Camera '%s' '%s', mode '%s' not supported, and not allowed to guess. Sorry.", make.c_str(), model.c_str(), mode.c_str());
 
     // Assume the camera can be decoded, but return false, so decoders can see that we are unsure.
     return false;    
@@ -604,14 +617,21 @@ void *RawDecoderDecodeThread(void *_this) {
   } catch (IOException &ex) {
     me->parent->mRaw->setError(ex.what());
   }
-  pthread_exit(NULL);
-  return 0;
+  return NULL;
 }
 
 void RawDecoder::startThreads() {
+#ifdef NO_PTHREAD
+  uint32 threads = 1;
+  RawDecoderThread t;
+  t.start_y = 0;
+  t.end_y = mRaw->dim.y;
+  t.parent = this;
+  RawDecoderDecodeThread(&t);
+#else
   uint32 threads;
   bool fail = false;
-  threads = getThreadCount(); 
+  threads = MIN(mRaw->dim.y, getThreadCount());
   int y_offset = 0;
   int y_per_thread = (mRaw->dim.y + threads - 1) / threads;
   RawDecoderThread *t = new RawDecoderThread[threads];
@@ -642,6 +662,8 @@ void RawDecoder::startThreads() {
   if (fail) {
     ThrowRDE("RawDecoder::startThreads: Unable to start threads");
   }
+#endif
+
   if (mRaw->errors.size() >= threads)
     ThrowRDE("RawDecoder::startThreads: All threads reported errors. Cannot load image.");
 }
@@ -720,6 +742,8 @@ void RawDecoder::startTasks( uint32 tasks )
     delete[] t;
     return;
   }
+
+#ifndef NO_PTHREAD
   pthread_attr_t attr;
 
   /* Initialize and set thread detached attribute */
@@ -743,6 +767,9 @@ void RawDecoder::startTasks( uint32 tasks )
     ThrowRDE("RawDecoder::startThreads: All threads reported errors. Cannot load image.");
 
   delete[] t;
+#else
+  ThrowRDE("Unreachable");
+#endif
 }
 
 } // namespace RawSpeed

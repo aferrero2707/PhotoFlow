@@ -118,7 +118,7 @@ namespace PF {
         rbuf[i] = NULL;
       if( do_allocation ) {
         buf = (raw_pixel_t*)realloc( buf, sizeof(raw_pixel_t*)*height*width );
-        for( int row = 0; row < height; row++ ) {
+        for( unsigned int row = 0; row < height; row++ ) {
           set_row( row, buf );
           buf += width;
         }

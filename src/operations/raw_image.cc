@@ -170,7 +170,7 @@ PF::RawImage::RawImage( const std::string _fname ):
     d->checkSupport(meta);
     d->decodeRaw();
     d->decodeMetaData(meta);
-    RawSpeed::RawImage r = d->mRaw;
+    RawSpeed::RawImage& r = d->mRaw;
 
     for (uint32 i=0; i<r->errors.size(); i++)
       fprintf(stderr, "[rawspeed] %s\n", r->errors[i]);
@@ -311,22 +311,26 @@ PF::RawImage::RawImage( const std::string _fname ):
 
   guint8* ptr = rawbuf;
 	float* fptr;
+	std::cout<<"RawImage: crop_x="<<crop_x<<" crop_y="<<crop_y<<std::endl;
+  RawSpeed::RawImage& r = d->mRaw;
   for(row=0;row<iheight;row++) {
     unsigned int row_offset = row*iwidth;
 		//#ifndef NDEBUG
 		  //std::cout<<"  row: "<<row<<std::endl;
-    if( (row%100) == 0 ) std::cout<<"  saving row "<<row<<""<<std::endl;
+    //if( (row%100) == 0 ) std::cout<<"  saving row "<<row<<""<<std::endl;
 		//#endif
-    RawSpeed::RawImage& r = d->mRaw;
     for(col=0; col<iwidth; col++) {
       int col2 = col + crop_x;
       int row2 = row + crop_y;
-      unsigned char color = r->cfa.getColorAt(col2,row2);
+      unsigned char color = r->cfa.getColorAt(col,row);
       float val = 0;
       float nval = 0;
       switch(r->getDataType()) {
       case RawSpeed::TYPE_USHORT16: val = *((uint16_t*)r->getDataUncropped(col2,row2)); break;
       case RawSpeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
+      }
+      if(row<8 && col<8) {
+        std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<std::endl;
       }
       nval = val - pdata->color.black;
       nval /= (pdata->color.maximum - pdata->color.black);
@@ -354,6 +358,10 @@ PF::RawImage::RawImage( const std::string _fname ):
       //rawData[row].color(col) = color;
     }
   }
+
+  g_strlcpy(exif_data.camera_maker, r->metadata.canonical_make.c_str(), sizeof(exif_data.camera_maker));
+  g_strlcpy(exif_data.camera_model, r->metadata.canonical_model.c_str(), sizeof(exif_data.camera_model));
+  g_strlcpy(exif_data.camera_alias, r->metadata.canonical_alias.c_str(), sizeof(exif_data.camera_alias));
 
   /* free auto pointers on spot */
   d.reset();
@@ -442,16 +450,19 @@ PF::RawImage::RawImage( const std::string _fname ):
 
   PF::exif_read( &exif_data, file_name_real.c_str() );
 
-  RawSpeed::Camera *cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "");
-  if (!cam) {
-    std::cout<<"RawImage: getting rawspeed camera in DNG mode"<<std::endl;
-    cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "dng");
+std::cout<<"maker: \""<<exif_data.exif_maker<<"\" model: \""<<exif_data.exif_model<<"\""<<std::endl;
+  if (!exif_data.camera_maker[0] || !exif_data.camera_model[0] || !exif_data.camera_alias[0]) {
+    RawSpeed::Camera *cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "");
+    if (!cam) {
+      std::cout<<"RawImage: getting rawspeed camera in DNG mode"<<std::endl;
+      cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "dng");
+    }
+    // We need to use the exif values, so let's get rawspeed to munge them
+    rawspeed_lookup_makermodel(cam, exif_data.exif_maker, exif_data.exif_model,
+        exif_data.camera_maker, sizeof(exif_data.camera_maker),
+        exif_data.camera_model, sizeof(exif_data.camera_model),
+        exif_data.camera_alias, sizeof(exif_data.camera_alias));
   }
-  // We need to use the exif values, so let's get rawspeed to munge them
-  rawspeed_lookup_makermodel(cam, exif_data.exif_maker, exif_data.exif_model,
-      exif_data.camera_maker, sizeof(exif_data.camera_maker),
-      exif_data.camera_model, sizeof(exif_data.camera_model),
-      exif_data.camera_alias, sizeof(exif_data.camera_alias));
 
   // Now we just create a makermodel by concatenation
   g_strlcpy(exif_data.camera_makermodel, exif_data.camera_maker, sizeof(exif_data.camera_makermodel));

@@ -39,7 +39,8 @@ CameraMetaData::CameraMetaData(const char *docname) {
 
   for (xml_node camera = cameras.child("Camera"); camera; camera = camera.next_sibling("Camera")) {
     Camera *cam = new Camera(camera);
-    addCamera(cam);
+
+    if(!addCamera(cam)) continue;
 
     // Create cameras for aliases.
     for (uint32 i = 0; i < cam->aliases.size(); i++) {
@@ -57,7 +58,6 @@ CameraMetaData::~CameraMetaData(void) {
 
 Camera* CameraMetaData::getCamera(string make, string model, string mode) {
   string id = string(make).append(model).append(mode);
-  printf("CameraMetaData::getCamera(): id=\"%s\"\n", id.c_str());
   if (cameras.end() == cameras.find(id))
     return NULL;
   return cameras[id];
@@ -80,13 +80,13 @@ bool CameraMetaData::hasChdkCamera(uint32 filesize) {
   return chdkCameras.end() != chdkCameras.find(filesize);
 }
 
-void CameraMetaData::addCamera( Camera* cam )
+bool CameraMetaData::addCamera( Camera* cam )
 {
   string id = string(cam->make).append(cam->model).append(cam->mode);
   if (cameras.end() != cameras.find(id)) {
     writeLog(DEBUG_PRIO_WARNING, "CameraMetaData: Duplicate entry found for camera: %s %s, Skipping!\n", cam->make.c_str(), cam->model.c_str());
     delete(cam);
-    return;
+    return false;
   } else {
     cameras[id] = cam;
   }
@@ -101,6 +101,7 @@ void CameraMetaData::addCamera( Camera* cam )
       // writeLog(DEBUG_PRIO_WARNING, "CHDK camera: %s %s size:%u\n", cam->make.c_str(), cam->model.c_str(), size);
     }
   }
+  return true;
 }
 
 void CameraMetaData::disableMake( string make )
