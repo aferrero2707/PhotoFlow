@@ -115,12 +115,12 @@ public:
         rr = tile_left + (int)(rawData.GetWidth()) - dr - 1;
       }
 
-      if( image_data ) {
+      if( false && image_data ) {
         int color2 = ( image_data->idata.filters >> ((((rr+image_data->sizes.top_margin) << 1 & 14) +
             ((cc+image_data->sizes.left_margin) & 1)) << 1) & 3 );
         if( color2 == 3 ) color2 = 1;
 
-        //if(rr<8 && cc<8) std::cout<<"rr="<<rr<<" cc="<<cc<<" c="<<color2<<" filters="<<image_data->idata.filters<<std::endl;
+        if(rr<8 && cc<8) std::cout<<"rr="<<rr<<" cc="<<cc<<" c="<<color2<<" filters="<<image_data->idata.filters<<std::endl;
         return color2;
       }
 
