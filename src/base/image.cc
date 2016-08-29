@@ -998,11 +998,14 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
 
   cmsHPROFILE out_iccprofile = NULL;
   outimg = floatimg;
+  std::cout<<"Image::export_merged_to_mem(): out_iccdata="<<(void*)out_iccdata<<std::endl;
   if( floatimg && out_iccdata ) {
     out_iccprofile = cmsOpenProfileFromMem( out_iccdata, out_iccsize );
+    std::cout<<"Image::export_merged_to_mem(): out_iccprofile="<<(void*)out_iccprofile<<std::endl;
     if( out_iccprofile ) {
       PF::ICCTransformPar* conv_par =
           dynamic_cast<PF::ICCTransformPar*>( convert2outprof->get_par() );
+      std::cout<<"Image::export_merged_to_mem(): conv_par="<<(void*)conv_par<<std::endl;
       if( conv_par ) {
         in.clear();
         in.push_back( floatimg );
