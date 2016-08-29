@@ -56,7 +56,9 @@ PF::PluginWindow::PluginWindow():
   buttonOk( _("Ok") ),
   buttonCancel( _("Cancel") ),
   buttonSettings("Settings"),
-  image_editor( NULL )
+  image_editor( NULL ),
+  gimp_iccdata( NULL ),
+  gimp_iccsize( 0 )
 {
   imgbuf.buf = NULL;
   imgbuf.iccdata = NULL;
@@ -126,7 +128,7 @@ void PF::PluginWindow::on_button_ok()
 {
   if( image_editor && image_editor->get_image() )
   {
-    image_editor->get_image()->export_merged_to_mem( &imgbuf );
+    image_editor->get_image()->export_merged_to_mem( &imgbuf, gimp_iccdata, gimp_iccsize );
     if( imgbuf.buf ) {
       for( int i = 0; i < imgbuf.width*imgbuf.height*3; i++ ) {
         //std::cout<<"imgbuf.buf["<<i<<"]="<<imgbuf.buf[i]<<std::endl;

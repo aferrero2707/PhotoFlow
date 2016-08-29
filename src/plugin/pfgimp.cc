@@ -216,6 +216,8 @@ void run(const gchar *name,
 
   gimp_ui_init("pfgimp", FALSE);
 
+  std::cout<<"Starting PhotoFlow plug-in"<<std::endl;
+
   int image_id = param[1].data.d_drawable;
 #if GIMP_MINOR_VERSION<=8
   gimp_tile_cache_ntiles(2*(gimp_image_width(image_id)/gimp_tile_width() + 1));
@@ -301,8 +303,12 @@ void run(const gchar *name,
   cmsBool is_lin_gamma = false;
   std::string format = "R'G'B' float";
 
+  int in_width = 0, in_height = 0;
+
   if( source_layer_id >= 0 ) {
     // Get input buffer
+    in_width = gimp_drawable_width( source_layer_id );
+    in_height = gimp_drawable_height( source_layer_id );
     gint rgn_x, rgn_y, rgn_width, rgn_height;
     if (!_gimp_item_is_valid(source_layer_id)) return;
     if (!gimp_drawable_mask_intersect(source_layer_id,&rgn_x,&rgn_y,&rgn_width,&rgn_height)) return;
@@ -370,9 +376,9 @@ void run(const gchar *name,
       if( iccprofile ) {
         char tstr[1024];
         cmsGetProfileInfoASCII(iccprofile, cmsInfoDescription, "en", "US", tstr, 1024);
-        std::cout<<std::endl<<std::endl<<"embedded profile: "<<tstr<<std::endl<<std::endl;
         cmsToneCurve *red_trc   = (cmsToneCurve*)cmsReadTag(iccprofile, cmsSigRedTRCTag);
         is_lin_gamma = cmsIsToneCurveLinear(red_trc);
+        std::cout<<std::endl<<std::endl<<"embedded profile: "<<tstr<<"  is_lin_gamma="<<is_lin_gamma<<std::endl<<std::endl;
         cmsCloseProfile( iccprofile );
       }
     }
@@ -507,6 +513,7 @@ void run(const gchar *name,
     } else if( !pfiname.empty() ) {
       pluginwin->open_image( pfiname, false );
     }
+    pluginwin->set_gimp_icc_profile( iccdata, iccsize );
     std::cout<<"  file opened"<<std::endl;
     pluginwin->show_all();
     app->run(*pluginwin);
@@ -582,7 +589,8 @@ void run(const gchar *name,
       g_object_unref(buffer);
       //gimp_drawable_merge_shadow(layer_id,true);
       gimp_drawable_update(dest_layer_id,0,0,width,height);
-      gimp_layer_resize(dest_layer_id,width,height,0,0);
+      if( in_width != width || in_height != height )
+        gimp_layer_resize(dest_layer_id,width,height,0,0);
 #else
       for (row = 0; row < Crop.height; row += tile_height) {
         nrows = MIN(Crop.height - row, tile_height);
@@ -707,6 +715,8 @@ void run(const gchar *name,
   }
 
   gimp_displays_flush();
+
+  std::cout<<"Closing PhotoFlow plug-in"<<std::endl;
 
   std::cout<<"Plug-in: setting return values"<<std::endl;
   return_values[0].data.d_status = status;

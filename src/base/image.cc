@@ -39,6 +39,7 @@
 #include "pf_file_loader.hh"
 #include "../operations/convert2srgb.hh"
 #include "../operations/convertformat.hh"
+#include "../operations/icc_transform.hh"
 //#include "../operations/gmic/gmic_untiled_op.hh"
 
 
@@ -117,6 +118,7 @@ PF::Image::Image():
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::modified) );
   convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  convert2outprof = new_icc_transform();
 
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
@@ -968,7 +970,7 @@ static int memsave_scan( VipsRegion *region,
 
 
 
-void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
+void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata, size_t out_iccsize )
 {
   imgbuf->iccdata = NULL;
   imgbuf->iccsize = 0;
@@ -992,7 +994,27 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
   in.push_back( image );
   convert_format->get_par()->set_image_hints( image );
   convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
-  outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+  VipsImage* floatimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+
+  cmsHPROFILE out_iccprofile = NULL;
+  outimg = floatimg;
+  if( floatimg && out_iccdata ) {
+    out_iccprofile = cmsOpenProfileFromMem( out_iccdata, out_iccsize );
+    if( out_iccprofile ) {
+      PF::ICCTransformPar* conv_par =
+          dynamic_cast<PF::ICCTransformPar*>( convert2outprof->get_par() );
+      if( conv_par ) {
+        in.clear();
+        in.push_back( floatimg );
+        conv_par->set_image_hints( floatimg );
+        conv_par->set_format( VIPS_FORMAT_FLOAT );
+        conv_par->set_out_profile( out_iccprofile );
+        outimg = convert2outprof->get_par()->build( in, 0, NULL, NULL, level );
+        PF_UNREF( floatimg, "" );
+      }
+    }
+  }
+
   std::cout<<"Image::export_merged_to_mem(): outimg="<<outimg<<std::endl;
   if( outimg ) {
     imgbuf->buf = (float*)malloc( sizeof(float)*3*outimg->Xsize*outimg->Ysize );
@@ -1000,6 +1022,8 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf )
     imgbuf->height = outimg->Ysize;
 
     vips_sink( image, memsave_start, memsave_scan, memsave_stop, imgbuf, NULL );
+
+    if( out_iccprofile ) cmsCloseProfile( out_iccprofile );
 
     void *iccdata;
     size_t iccsize;
