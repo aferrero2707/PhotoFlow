@@ -1024,7 +1024,7 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
     imgbuf->width = outimg->Xsize;
     imgbuf->height = outimg->Ysize;
 
-    vips_sink( image, memsave_start, memsave_scan, memsave_stop, imgbuf, NULL );
+    vips_sink( outimg, memsave_start, memsave_scan, memsave_stop, imgbuf, NULL );
 
     if( out_iccprofile ) cmsCloseProfile( out_iccprofile );
 
