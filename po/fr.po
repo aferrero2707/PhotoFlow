@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Version 0.72\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-08-25 21:09+0200\n"
-"PO-Revision-Date: 2015-05-06 11:04+0100\n"
+"PO-Revision-Date: 2016-08-26 16:09+0100\n"
 "Last-Translator: Patrick Depoix <patrick.depoix@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: Fr_fr\n"
@@ -21,125 +21,123 @@ msgstr ""
 #: src/operations/brightness_contrast_par.hh:12
 #: src/operations/brightness_contrast_par.hh:14
 msgid "brightness contrast"
-msgstr ""
+msgstr "contraste de brillance"
 
 #: src/operations/channel_mixer.hh:51
 msgid "channel mixer"
-msgstr ""
+msgstr "mélangeur de canal"
 
 #: src/operations/gradient.hh:69 src/operations/gradient.cc:86
 msgid "gradient"
-msgstr ""
+msgstr "dégradé"
 
 #: src/operations/image_reader.hh:71
-#, fuzzy
 msgid "image layer"
 msgstr "Fichiers images"
 
 #: src/operations/clone.cc:63
 msgid "layer clone"
-msgstr ""
+msgstr "clonage de calque"
 
 #: src/operations/clone_stamp.cc:46
 msgid "clone stamp"
-msgstr ""
+msgstr "tampon de clonage"
 
 #: src/operations/convert_colorspace.cc:71
 #: src/operations/convert_colorspace.cc:72
 msgid "colorspace conversion"
-msgstr ""
+msgstr "conversion d'espace couleur"
 
 #: src/operations/crop.cc:46
 msgid "crop"
-msgstr ""
+msgstr "découpage"
 
 #: src/operations/curves.cc:75 src/operations/curves.cc:74
 msgid "curves"
-msgstr ""
+msgstr "courbes"
 
 #: src/operations/desaturate.cc:37
 msgid "Luminosity"
-msgstr ""
+msgstr "Luminosité"
 
 #: src/operations/desaturate.cc:39
 msgid "Lightness"
-msgstr ""
+msgstr "clarté"
 
 #: src/operations/desaturate.cc:40
 msgid "Average"
-msgstr ""
+msgstr "Moyenne"
 
 #: src/operations/desaturate.cc:41
 msgid "Lab L channel"
-msgstr ""
+msgstr "Canal LAB-L"
 
 #: src/operations/desaturate.cc:50 src/operations/desaturate.cc:51
 msgid "desaturate"
-msgstr ""
+msgstr "désaturation"
 
 #: src/operations/draw.cc:67 src/operations/draw.cc:69
 #: src/gui/layerwidget.cc:152
 msgid "freehand drawing"
-msgstr ""
+msgstr "dessin main levée"
 
 #: src/operations/gaussblur.cc:50
 msgid "gaussian blur"
-msgstr ""
+msgstr "flou gaussien"
 
 #: src/operations/hsl_mask.cc:47 src/operations/hsl_mask.cc:48
 msgid "HSL mask"
-msgstr ""
+msgstr "Masque HSL"
 
 #: src/operations/hue_saturation.cc:71 src/operations/hue_saturation.cc:73
 msgid "B-C-S-H adjustment"
-msgstr ""
+msgstr "Réglage B-C-S-T"
 
 #: src/operations/invert.cc:38 src/gui/operations/path_mask_config.cc:47
 #: src/gui/operations/threshold_config.cc:38
 msgid "invert"
-msgstr ""
+msgstr "inverser"
 
 #: src/operations/lensfun.cc:49 src/operations/lensfun.cc:62
 msgid "optical corrections"
-msgstr ""
+msgstr "corrections optiques"
 
 #: src/operations/raw_developer.cc:68 src/gui/operationstree.cc:299
 #: src/operations/raw_developer.cc:85 src/gui/operationstree.cc:297
 msgid "RAW developer"
-msgstr ""
+msgstr "développeur RAW"
 
 #: src/operations/scale.cc:61 src/operations/scale.cc:224
 msgid "scale and rotate"
-msgstr ""
+msgstr "échelle et rotation"
 
 #: src/operations/sharpen.cc:59
 msgid "sharpening"
-msgstr ""
+msgstr "accentuation"
 
 #: src/operations/uniform.cc:49 src/gui/layerwidget.cc:148
 msgid "uniform fill"
-msgstr ""
+msgstr "Remplissage uniforme"
 
 #: src/operations/volume.cc:74
 msgid "local contrast"
-msgstr ""
+msgstr "contraste local"
 
 #: src/gui/imageeditor.hh:164 src/gui/imageeditor.hh:184
 msgid "ready"
-msgstr ""
+msgstr "prêt"
 
 #: src/gui/imageeditor.hh:165 src/gui/imageeditor.hh:185
 msgid "caching"
-msgstr ""
+msgstr "mise en cache"
 
 #: src/gui/imageeditor.hh:166 src/gui/imageeditor.hh:186
 msgid "processing"
-msgstr ""
+msgstr "processus"
 
 #: src/gui/imageeditor.hh:167 src/gui/imageeditor.hh:188
-#, fuzzy
 msgid "exporting"
-msgstr "Exporter"
+msgstr "exportation"
 
 #: src/gui/imageeditor.cc:138 src/gui/imageeditor.cc:141
 msgid "show merged layers"
@@ -153,7 +151,7 @@ msgstr "affiche le calque actif"
 #, c-format
 msgid "Crash recovery found for file \"%s\". Do you want to restore it?"
 msgstr ""
-"Récupération de crash trouvé pour le fichier \"%s\". voulez vous le "
+"Récupération de crash trouvé pour le fichier \"%s\". Voulez-vous le "
 "restaurer?"
 
 #: src/gui/layerwidget.cc:101
@@ -275,35 +273,35 @@ msgstr ""
 #: src/gui/operation_config_gui.cc:79 src/gui/operation_config_gui.cc:80
 #: src/gui/operation_config_gui.cc:86 src/gui/operation_config_gui.cc:87
 msgid "Intensity"
-msgstr ""
+msgstr "Intensité"
 
 #: src/gui/operation_config_gui.cc:81 src/gui/operation_config_gui.cc:82
 #: src/gui/operation_config_gui.cc:88 src/gui/operation_config_gui.cc:89
 msgid "Opacity"
-msgstr ""
+msgstr "Opacité"
 
 #: src/gui/operation_config_gui.cc:83 src/gui/operation_config_gui.cc:84
 #: src/gui/operation_config_gui.cc:90 src/gui/operation_config_gui.cc:91
 msgid "Enable mask"
-msgstr ""
+msgstr "Activez le masque"
 
 #: src/gui/operation_config_gui.cc:85
 msgid "X shift"
-msgstr ""
+msgstr "décalage X"
 
 #: src/gui/operation_config_gui.cc:86
 msgid "Y shift"
-msgstr ""
+msgstr "décalage Y"
 
 #: src/gui/operation_config_gui.cc:88 src/gui/operation_config_gui.cc:89
 #: src/gui/operation_config_gui.cc:90 src/gui/operation_config_gui.cc:95
 #: src/gui/operation_config_gui.cc:96 src/gui/operation_config_gui.cc:97
 msgid "Target channel: "
-msgstr ""
+msgstr "Canal cible:"
 
 #: src/gui/operation_config_gui.cc:91 src/gui/operation_config_gui.cc:98
 msgid "Target channel:"
-msgstr ""
+msgstr "Canal cible:"
 
 #: src/gui/operation_config_gui.cc:92 src/gui/operation_config_gui.cc:99
 msgid "preview"
@@ -316,7 +314,7 @@ msgstr "prévisualisation"
 #: src/gui/operations/gradient_config.cc:68
 #: src/gui/operations/gradient_config.cc:81
 msgid "RGB"
-msgstr ""
+msgstr "RVB"
 
 #: src/gui/operations/curves_config.cc:51
 #: src/gui/operations/curves_config.cc:64
@@ -325,7 +323,7 @@ msgstr ""
 #: src/gui/operations/gradient_config.cc:69
 #: src/gui/operations/gradient_config.cc:82
 msgid "Red"
-msgstr ""
+msgstr "Rouge"
 
 #: src/gui/operations/curves_config.cc:52
 #: src/gui/operations/curves_config.cc:65
@@ -334,7 +332,7 @@ msgstr ""
 #: src/gui/operations/gradient_config.cc:70
 #: src/gui/operations/gradient_config.cc:83
 msgid "Green"
-msgstr ""
+msgstr "vert"
 
 #: src/gui/operations/curves_config.cc:53
 #: src/gui/operations/curves_config.cc:66
@@ -343,42 +341,42 @@ msgstr ""
 #: src/gui/operations/gradient_config.cc:71
 #: src/gui/operations/gradient_config.cc:84
 msgid "Blue"
-msgstr ""
+msgstr "Bleu"
 
 #: src/gui/operations/hsl_mask_config.cc:84
 #: src/gui/operations/hsl_mask_config.cc:86
 msgid "HSL Mask"
-msgstr ""
+msgstr "masque HSL"
 
 #: src/gui/operations/hsl_mask_config.cc:91
 #: src/gui/operations/hsl_mask_config.cc:94
 msgid "Layer name:"
-msgstr ""
+msgstr "Nom du calque:"
 
 #: src/gui/operations/hue_saturation_config.cc:85
 #: src/gui/operations/hue_saturation_config.cc:87
 msgid "Brightness"
-msgstr ""
+msgstr "Brillance"
 
 #: src/gui/operations/hue_saturation_config.cc:87
 #: src/gui/operations/hue_saturation_config.cc:89
 msgid "Contrast"
-msgstr ""
+msgstr "Contraste"
 
 #: src/gui/operations/hue_saturation_config.cc:89
 #: src/gui/operations/hue_saturation_config.cc:91
 msgid "Saturation"
-msgstr ""
+msgstr "Saturation"
 
 #: src/gui/operations/hue_saturation_config.cc:91
 #: src/gui/operations/hue_saturation_config.cc:93
 msgid "Hue"
-msgstr ""
+msgstr "Teinte"
 
 #: src/gui/operations/hue_saturation_config.cc:93
 #: src/gui/operations/hue_saturation_config.cc:96
 msgid "show mask"
-msgstr ""
+msgstr "affichez le masque"
 
 #: src/gui/operations/hue_saturation_config.cc:97
 #: src/gui/operations/hue_saturation_config.cc:98
@@ -387,798 +385,784 @@ msgstr ""
 #: src/gui/operations/hue_saturation_config.cc:101
 #: src/gui/operations/hue_saturation_config.cc:102
 msgid "Enable"
-msgstr ""
+msgstr "Activez"
 
 #: src/gui/operations/hue_saturation_config.cc:106
 msgid "feather mask"
-msgstr ""
+msgstr "masque d'adoucissement"
 
 #: src/gui/operations/hue_saturation_config.cc:107
 msgid "feather radius"
-msgstr ""
+msgstr "rayon d'adoucissement"
 
 #: src/gui/operations/hue_saturation_config.cc:122
 #: src/gui/operations/hue_saturation_config.cc:127
 msgid "H curve"
-msgstr ""
+msgstr "courbe H"
 
 #: src/gui/operations/hue_saturation_config.cc:123
 #: src/gui/operations/hue_saturation_config.cc:128
 msgid "S curve"
-msgstr ""
+msgstr "courbe S"
 
 #: src/gui/operations/hue_saturation_config.cc:124
 #: src/gui/operations/hue_saturation_config.cc:129
 msgid "L curve"
-msgstr ""
+msgstr "courbe L"
 
 #: src/gui/operations/hue_saturation_config.cc:140
 #: src/gui/operations/hue_saturation_config.cc:145
 msgid "HSL curves"
-msgstr ""
+msgstr "courbe HSL"
 
 #: src/gui/operationstree.cc:246
-#, fuzzy
 msgid "Add New Layer"
 msgstr "Ajoutez un nouveau calque"
 
 #: src/gui/operationstree.cc:252 src/gui/settingsdialog.cc:61
 msgid "OK"
-msgstr ""
+msgstr "Ok"
 
 #: src/gui/operationstree.cc:253 src/gui/settingsdialog.cc:62
 msgid "Cancel"
-msgstr ""
+msgstr "Annuler"
 
 #: src/gui/operationstree.cc:296
-#, fuzzy
 msgid "Open RAW image"
-msgstr "Ouvrir une image"
+msgstr "Ouvrir une image RAW"
 
 #: src/gui/operationstree.cc:304 src/gui/operationstree.cc:302
 msgid "Color profile conversion"
-msgstr ""
+msgstr "Conversion du profil couleur"
 
 #: src/gui/operationstree.cc:305
 msgid "B/C/S/H Adjustment"
-msgstr ""
+msgstr "Réglage B/C/S/T"
 
 #: src/gui/operationstree.cc:306 src/gui/operationstree.cc:361
 #: src/gui/operationstree.cc:304 src/gui/operationstree.cc:371
 msgid "Curves"
-msgstr ""
+msgstr "Courbes"
 
 #: src/gui/operationstree.cc:307 src/gui/operationstree.cc:362
 #: src/gui/operationstree.cc:369
 msgid "Invert"
-msgstr ""
+msgstr "Inverser"
 
 #: src/gui/operationstree.cc:308
 msgid "Desaturate"
-msgstr ""
+msgstr "Désaturation"
 
 #: src/gui/operationstree.cc:310 src/gui/operationstree.cc:311
 msgid "Channel Mixer"
-msgstr ""
+msgstr "Mixeur de canaux"
 
 #: src/gui/operationstree.cc:311 src/gui/operationstree.cc:363
 #: src/gui/operationstree.cc:312 src/gui/operationstree.cc:368
 msgid "Uniform Fill"
-msgstr ""
+msgstr "Remplissage uniforme"
 
 #: src/gui/operationstree.cc:312 src/gui/operationstree.cc:364
 #: src/gui/operationstree.cc:313 src/gui/operationstree.cc:372
 msgid "Gradient"
-msgstr ""
+msgstr "Dégradé"
 
 #: src/gui/operationstree.cc:313 src/gui/operationstree.cc:365
 #: src/gui/operationstree.cc:314 src/gui/operationstree.cc:374
 msgid "H/S/L Mask"
-msgstr ""
+msgstr "Masque H/S/L"
 
 #: src/gui/operationstree.cc:314 src/gui/operationstree.cc:315
 msgid "Emulate film [color slide]"
-msgstr ""
+msgstr "Emuler le film [diapositive couleur]"
 
 #: src/gui/operationstree.cc:315 src/gui/operationstree.cc:316
 msgid "Emulate film [B&W]"
-msgstr ""
+msgstr "Emuler le film [b&n]"
 
 #: src/gui/operationstree.cc:316 src/gui/operationstree.cc:317
 msgid "Emulate film [instant consumer]"
-msgstr ""
+msgstr "Emuler le film [instantanée]"
 
 #: src/gui/operationstree.cc:317 src/gui/operationstree.cc:318
 msgid "Emulate film [instant pro]"
-msgstr ""
+msgstr "Emuler le film [instant. pro.]"
 
 #: src/gui/operationstree.cc:318 src/gui/operationstree.cc:319
 msgid "Emulate film [negative color]"
-msgstr ""
+msgstr "Emuler le film [négatif couleur]"
 
 #: src/gui/operationstree.cc:319 src/gui/operationstree.cc:320
 msgid "Emulate film [negative new]"
-msgstr ""
+msgstr "Emuler le film [nouveau négatif]"
 
 #: src/gui/operationstree.cc:320 src/gui/operationstree.cc:321
 msgid "Emulate film [negative old]"
-msgstr ""
+msgstr "Emuler le film [ancien négatif]"
 
 #: src/gui/operationstree.cc:321 src/gui/operationstree.cc:322
 msgid "Emulate film [print films]"
-msgstr ""
+msgstr "Emuler le film [films impression]"
 
 #: src/gui/operationstree.cc:322 src/gui/operationstree.cc:323
 msgid "Emulate film [various]"
-msgstr ""
+msgstr "Emuler le film [variés]"
 
 #: src/gui/operationstree.cc:324 src/gui/operationstree.cc:366
 #: src/gui/operationstree.cc:325 src/gui/operationstree.cc:375
 msgid "Gaussian blur"
-msgstr ""
+msgstr "Flou gaussien"
 
 #: src/gui/operationstree.cc:325 src/gui/operationstree.cc:326
 msgid "Local contrast"
-msgstr ""
+msgstr "Contraste local"
 
 #: src/gui/operationstree.cc:326 src/gui/operationstree.cc:327
 msgid "Sharpen"
-msgstr ""
+msgstr "Netteté"
 
 #: src/gui/operationstree.cc:327 src/gui/operationstree.cc:339
 #: src/gui/operationstree.cc:370 src/gui/operationstree.cc:328
 #: src/gui/operationstree.cc:344 src/gui/operationstree.cc:379
 msgid "Gradient Norm"
-msgstr ""
+msgstr "Dégradé normal"
 
 #: src/gui/operationstree.cc:328
 msgid "Multi-level decomposition"
-msgstr ""
+msgstr "Décomposition multi-niveaux"
 
 #: src/gui/operationstree.cc:329 src/gui/operationstree.cc:331
 msgid "Noise reduction"
-msgstr ""
+msgstr "Réduction de bruit"
 
 #: src/gui/operationstree.cc:331 src/gui/operationstree.cc:333
-#, fuzzy
 msgid "Crop image"
 msgstr "Ouvrir une image"
 
 #: src/gui/operationstree.cc:332 src/gui/operationstree.cc:334
 msgid "Scale & rotate image"
-msgstr ""
+msgstr "Echelle & rotation de l'image"
 
 #: src/gui/operationstree.cc:333 src/gui/operationstree.cc:337
 msgid "Optical corrections (experimental)"
-msgstr ""
+msgstr "Corrections optiques (expérimental)"
 
 #: src/gui/operationstree.cc:338 src/gui/operationstree.cc:343
 msgid "Dream Smoothing"
-msgstr ""
+msgstr "Lissage de rêve"
 
 #: src/gui/operationstree.cc:340
 msgid "Convolve"
-msgstr ""
+msgstr "Enrouler ensemble"
 
 #: src/gui/operationstree.cc:341
 msgid "Extract Foreground"
-msgstr ""
+msgstr "Extraction du premier plan"
 
 #: src/gui/operationstree.cc:342
 msgid "Inpaint [patch-based]"
-msgstr ""
+msgstr "Inpaint [basé sur patch]"
 
 #: src/gui/operationstree.cc:343
 msgid "Despeckle"
-msgstr ""
+msgstr "Dépoussiérer"
 
 #: src/gui/operationstree.cc:344
 msgid "Iain's Noise Reduction"
-msgstr ""
+msgstr "Réduction du bruit Iain"
 
 #: src/gui/operationstree.cc:345 src/gui/operationstree.cc:350
 msgid "Sharpen [richardson-lucy]"
-msgstr ""
+msgstr "Netteté [richardson-lucy]"
 
 #: src/gui/operationstree.cc:346 src/gui/operationstree.cc:353
 msgid "Smooth [anisotropic]"
-msgstr ""
+msgstr "Adoucissement [anisotropic]"
 
 #: src/gui/operationstree.cc:347 src/gui/operationstree.cc:354
 msgid "Smooth [bilateral]"
-msgstr ""
+msgstr "Adoucissement [bilatéral]"
 
 #: src/gui/operationstree.cc:348 src/gui/operationstree.cc:355
 msgid "Smooth [diffusion]"
-msgstr ""
+msgstr "Adoucissement [diffusion]"
 
 #: src/gui/operationstree.cc:349 src/gui/operationstree.cc:356
 msgid "Smooth [mean-curvature]"
-msgstr ""
+msgstr "Adoucissement [simili-courbe]"
 
 #: src/gui/operationstree.cc:350 src/gui/operationstree.cc:357
 msgid "Smooth [median]"
-msgstr ""
+msgstr "Adoucissement [moyen]"
 
 #: src/gui/operationstree.cc:351 src/gui/operationstree.cc:358
 msgid "Smooth [patch-based]"
-msgstr ""
+msgstr "Adoucissement [basé sur patch]"
 
 #: src/gui/operationstree.cc:352 src/gui/operationstree.cc:359
 msgid "Smooth [selective gaussian]"
-msgstr ""
+msgstr "Adoucissement [gaussien sélectif]"
 
 #: src/gui/operationstree.cc:353 src/gui/operationstree.cc:360
 msgid "Smooth [total variation]"
-msgstr ""
+msgstr "Adoucissement [variation totale]"
 
 #: src/gui/operationstree.cc:354 src/gui/operationstree.cc:361
 msgid "Smooth [wavelets]"
-msgstr ""
+msgstr "Adoucissement [vaguelettes]"
 
 #: src/gui/operationstree.cc:355 src/gui/operationstree.cc:362
 msgid "Smooth [guided]"
-msgstr ""
+msgstr "Adoucissement [guidé]"
 
 #: src/gui/operationstree.cc:356 src/gui/operationstree.cc:363
 msgid "Tone mapping"
-msgstr ""
+msgstr "Tone-mapping"
 
 #: src/gui/operationstree.cc:357 src/gui/operationstree.cc:364
 msgid "Transfer colors [advanced]"
-msgstr ""
+msgstr "Couleurs de transfert [avancé]"
 
 #: src/gui/operationstree.cc:372 src/gui/operationstree.cc:377
 #: src/gui/operationstree.cc:381 src/gui/operationstree.cc:386
 msgid "Draw"
-msgstr ""
+msgstr "Dessiner"
 
 #: src/gui/operationstree.cc:373 src/gui/operationstree.cc:379
 #: src/gui/operationstree.cc:382 src/gui/operationstree.cc:388
-#, fuzzy
 msgid "Clone layer"
-msgstr "Ajoutez un nouveau calque"
+msgstr "Dupliquer le calque"
 
 #: src/gui/operationstree.cc:378 src/gui/operationstree.cc:387
 msgid "Clone stamp"
-msgstr ""
+msgstr "Tampon de clonage"
 
 #: src/gui/operationstree.cc:380 src/gui/operationstree.cc:389
 msgid "Buffer layer"
-msgstr ""
+msgstr "calque tampon"
 
 #: src/gui/operationstree.cc:381 src/gui/operationstree.cc:390
 msgid "Digital watermark"
-msgstr ""
+msgstr "copyright digital"
 
 #: src/gui/operationstree.cc:501 src/gui/operationstree.cc:510
 #: src/gui/widgets/toolbutton.cc:103
-#, fuzzy
 msgid "New Layer"
-msgstr "Nouveau groupe de calques"
+msgstr "Nouveau calque"
 
 #: src/operations/split_details.cc:173
 msgid "gaussian"
-msgstr ""
+msgstr "gaussien"
 
 #: src/operations/split_details.cc:177
 msgid "wavelets"
-msgstr ""
+msgstr "vaguelettes"
 
 #: src/operations/split_details.cc:180
 msgid "split details"
-msgstr ""
+msgstr "séparer les détails"
 
 #: src/operations/subtr_image.cc:45
 msgid "Subtract Image"
-msgstr ""
+msgstr "Soustraire l'image"
 
 #: src/operations/threshold.cc:39 src/gui/operations/defringe_config.cc:47
 #: src/gui/operations/denoise_config.cc:39
 #: src/gui/operations/raw_developer_config.cc:351
 #: src/gui/operations/threshold_config.cc:37
 msgid "threshold"
-msgstr ""
+msgstr "seuil"
 
 #: src/operations/wavdec.cc:49
 msgid "Wavelet Decompose"
-msgstr ""
+msgstr "Wavelet Decompose"
 
 #: src/operations/defringe.cc:57
 msgid "defringe"
-msgstr ""
+msgstr "supprimer la frange"
 
 #: src/operations/denoise.cc:59
 msgid "noise reduction"
-msgstr ""
+msgstr "réduction de bruit"
 
 #: src/operations/gradient.cc:36
 msgid "Vertical"
-msgstr ""
+msgstr "Vertical"
 
 #: src/operations/gradient.cc:60
 msgid "Horizontal"
-msgstr ""
+msgstr "Horizontal"
 
 #: src/operations/gradient.cc:61
 msgid "Radial"
-msgstr ""
+msgstr "Radial"
 
 #: src/operations/icc_transform.cc:42
 msgid "ICC transform"
-msgstr ""
+msgstr "transformer l'ICC"
 
 #: src/operations/impulse_nr.cc:50 src/gui/operations/denoise_config.cc:38
 msgid "impulse NR"
-msgstr ""
+msgstr "impulser NR"
 
 #: src/operations/nlmeans.cc:50
 msgid "NL means"
-msgstr ""
+msgstr "Sensation NL"
 
 #: src/operations/path_mask.cc:209
 msgid "path mask"
-msgstr ""
+msgstr "Masque de chemin"
 
 #: src/operations/perspective.cc:51 src/gui/layerwidget.cc:154
 msgid "perspective correction"
-msgstr ""
+msgstr "correction de perspective"
 
 #: src/operations/raw_output.cc:57
 msgid "clip"
-msgstr ""
+msgstr "clip"
 
 #: src/operations/raw_output.cc:75
 msgid "blend"
-msgstr ""
+msgstr "mélange"
 
 #: src/operations/raw_output.cc:76
 msgid "none"
-msgstr ""
+msgstr "aucun"
 
 #: src/operations/shadows_highlights.cc:60
 msgid "shadows/highlights"
-msgstr ""
+msgstr "ombres/éclats"
 
 #: src/gui/imageeditor.hh:187
 msgid "updating"
-msgstr ""
+msgstr "mise à jour"
 
 #: src/gui/imageeditor.cc:191
 msgid "Toggle highlights clipping warning on/off"
-msgstr ""
+msgstr "Activer/désactiver l'alarme de réduction d'éclats"
 
 #: src/gui/imageeditor.cc:195
 msgid "Toggle shadows clipping warning on/off"
-msgstr ""
+msgstr "Activer/désactiver l'alarme de réduction d'ombres"
 
 #: src/gui/imageeditor.cc:201
 msgid "Zoom to 100%"
-msgstr ""
+msgstr "zoom à 100%"
 
 #: src/gui/imageeditor.cc:205
 msgid "Fit image to preview area"
-msgstr ""
+msgstr "ajuster l'image à la prévisualisation"
 
 #: src/gui/imageeditor.cc:209
 msgid "Zoom out"
-msgstr ""
+msgstr "zoom arrière"
 
 #: src/gui/imageeditor.cc:213
 msgid "Zoom in"
-msgstr ""
+msgstr "zoom avant"
 
 #: src/gui/imageeditor.cc:222
 msgid "histogram"
-msgstr ""
+msgstr "histogramme"
 
 #: src/gui/layerwidget.cc:116 src/gui/mainwindow.cc:100
 msgid "New Adjustment"
-msgstr ""
+msgstr "Nouvel ajustement"
 
 #: src/gui/layerwidget.cc:119
-#, fuzzy
 msgid "Load preset"
-msgstr "Chargez un préréglage existant"
+msgstr "Chargez un préréglage"
 
 #: src/gui/layerwidget.cc:120
-#, fuzzy
 msgid "Save preset"
-msgstr "Enregistrez le préréglage sous..."
+msgstr "Enregistrez le préréglage"
 
 #: src/gui/layerwidget.cc:142
-#, fuzzy
 msgid "new layer"
 msgstr "Ajoutez un nouveau calque"
 
 #: src/gui/layerwidget.cc:143
-#, fuzzy
 msgid "new group layer"
-msgstr "Nouveau groupe de calques"
+msgstr "nouveau groupe de calques "
 
 #: src/gui/layerwidget.cc:144
-#, fuzzy
 msgid "delete layer"
-msgstr "Enlevez les calques sélectionnés"
+msgstr "Enlevez le calque sélectionné"
 
 #: src/gui/layerwidget.cc:145
 msgid "insert image as layer"
-msgstr ""
+msgstr "in-serrer une image en calque"
 
 #: src/gui/layerwidget.cc:146
 msgid "basic editing"
-msgstr ""
+msgstr "Edition basique"
 
 #: src/gui/layerwidget.cc:147
 msgid "curves tool"
-msgstr ""
+msgstr "outil courbe"
 
 #: src/gui/layerwidget.cc:149
 msgid "gradient tool"
-msgstr ""
+msgstr "outil dégradé"
 
 #: src/gui/layerwidget.cc:150
 msgid "desaturate tool"
-msgstr ""
+msgstr "outil désaturation"
 
 #: src/gui/layerwidget.cc:151
 msgid "crop tool"
-msgstr ""
+msgstr "outil de découpe"
 
 #: src/gui/layerwidget.cc:153
 msgid "clone stamp tool"
-msgstr ""
+msgstr "Outil clonage"
 
 #: src/gui/layerwidget.cc:155
 msgid "scale/rotate tool"
-msgstr ""
+msgstr "outil échelle/rotation"
 
 #: src/gui/layerwidget.cc:156
 msgid "path tool"
-msgstr ""
+msgstr "outil chemin"
 
 #: src/gui/layerwidget.cc:976
-#, fuzzy
 msgid "RAW image"
 msgstr "Ouvrir une image"
 
 #: src/gui/mainwindow.cc:79
-#, fuzzy
 msgid "files"
 msgstr "Tous les fichiers"
 
 #: src/gui/mainwindow.cc:80
 msgid "editing"
-msgstr ""
+msgstr "édition"
 
 #: src/gui/mainwindow.cc:101
-#, fuzzy
 msgid "New Group"
-msgstr "Nouveau groupe de calques"
+msgstr "Nouveau groupe"
 
 #: src/gui/mainwindow.cc:137 src/gui/mainwindow.cc:161
 #: src/gui/mainwindow.cc:164
 msgid "Open existing file"
-msgstr ""
+msgstr "Ouvrir un fichier existant"
 
 #: src/gui/mainwindow.cc:139
 msgid "Save current image"
-msgstr ""
+msgstr "Enregistrer l'image actuelle"
 
 #: src/gui/mainwindow.cc:141
 msgid "Save current image with a different name"
-msgstr ""
+msgstr "Enregistrer l'image actuelle avec un nom différent"
 
 #: src/gui/mainwindow.cc:143
 msgid "Export current image to raster format"
-msgstr ""
+msgstr "Exporter  l'image sous rasterisation"
 
 #: src/gui/mainwindow.cc:145
 msgid "Open settings dialog"
-msgstr ""
+msgstr "Ouvrir la fenêtre des réglages"
 
 #: src/gui/mainwindow.cc:147
 msgid "Exit PhotoFlow"
-msgstr ""
+msgstr "Fermer PhotofFow"
 
 #: src/gui/operation_config_gui.cc:92
 msgid "X shift "
-msgstr ""
+msgstr "décalage X"
 
 #: src/gui/operation_config_gui.cc:93
 msgid "Y shift "
-msgstr ""
+msgstr "décalage Y"
 
 #: src/gui/operation_config_gui.cc:253
 msgid "toggle layer visibility on/off"
-msgstr ""
+msgstr "Activer/désactiver la visibilité des calques"
 
 #: src/gui/operation_config_gui.cc:254 src/gui/operation_config_gui.cc:255
 msgid "enable/disable layer mask(s)"
-msgstr ""
+msgstr "activer/désactiver le masque(s) de calque"
 
 #: src/gui/operation_config_gui.cc:256 src/gui/operation_config_gui.cc:257
 msgid "toggle sticky flag on/off"
-msgstr ""
+msgstr "Activer/désactiver le \"favoris\""
 
 #: src/gui/operation_config_gui.cc:258 src/gui/operation_config_gui.cc:259
 msgid "toggle editing flag on/off"
-msgstr ""
+msgstr "activer/désactiver l'état d'édition"
 
 #: src/gui/operation_config_gui.cc:260
 msgid "reset tool parameters"
-msgstr ""
+msgstr "restaurer les paramètres de l'outil"
 
 #: src/gui/operation_config_gui.cc:261 src/gui/operation_config_gui.cc:262
 msgid "show information on current tool"
-msgstr ""
+msgstr "afficher l'information sur l'outil"
 
 #: src/gui/operation_config_gui.cc:707
 msgid "Close"
-msgstr ""
+msgstr "Fermer"
 
 #: src/gui/operations/defringe_config.cc:41
 msgid "operation mode"
-msgstr ""
+msgstr "mode d'opération"
 
 #: src/gui/operations/defringe_config.cc:44
 msgid "edge dection radius"
-msgstr ""
+msgstr "rayon de détection de bord"
 
 #: src/gui/operations/denoise_config.cc:40
 msgid "non-local means"
-msgstr ""
+msgstr "sensations non-local"
 
 #: src/gui/operations/denoise_config.cc:41
 #: src/gui/operations/gmic/smooth_nlmeans_config.cc:38
 #: src/gui/operations/shadows_highlights_config.cc:39
 msgid "radius"
-msgstr ""
+msgstr "rayon"
 
 #: src/gui/operations/denoise_config.cc:42
 #: src/gui/operations/raw_developer_config.cc:352
 msgid "strength"
-msgstr ""
+msgstr "puissance"
 
 #: src/gui/operations/denoise_config.cc:43
 msgid "luma"
-msgstr ""
+msgstr "luma"
 
 #: src/gui/operations/denoise_config.cc:44
 msgid "chroma"
-msgstr ""
+msgstr "chroma"
 
 #: src/gui/operations/draw_config.cc:48
 msgid "transparent"
-msgstr ""
+msgstr "transparent"
 
 #: src/gui/operations/gmic/smooth_nlmeans_config.cc:39
 msgid "size"
-msgstr ""
+msgstr "taille"
 
 #: src/gui/operations/hue_saturation_config.cc:95
 msgid "gamma"
-msgstr ""
+msgstr "gamma"
 
 #: src/gui/operations/hue_saturation_config.cc:109
 msgid "feather"
-msgstr ""
+msgstr "adoucissement"
 
 #: src/gui/operations/hue_saturation_config.cc:110
 msgid "radius "
-msgstr ""
+msgstr "rayon"
 
 #: src/gui/operations/hue_saturation_config.cc:111
 msgid "invert mask"
-msgstr ""
+msgstr "inverser le masque"
 
 #: src/gui/operations/imageread_config.cc:40
 msgid "file name:"
-msgstr ""
+msgstr "nom du fichier:"
 
 #: src/gui/operations/path_mask_config.cc:48
 msgid "enable falloff"
-msgstr ""
+msgstr "activer le lissage de bord"
 
 #: src/gui/operations/raw_developer_config.cc:334
 msgid "temperature"
-msgstr ""
+msgstr "température"
 
 #: src/gui/operations/raw_developer_config.cc:335
 msgid "tint"
-msgstr ""
+msgstr "teinter"
 
 #: src/gui/operations/raw_developer_config.cc:345
 msgid "enable CA correction"
-msgstr ""
+msgstr "activer la correction CA"
 
 #: src/gui/operations/raw_developer_config.cc:346
 msgid "auto"
-msgstr ""
+msgstr "auto"
 
 #: src/gui/operations/raw_developer_config.cc:347
 msgid "red"
-msgstr ""
+msgstr "rouge"
 
 #: src/gui/operations/raw_developer_config.cc:348
 msgid "blue"
-msgstr ""
+msgstr "bleu"
 
 #: src/gui/operations/raw_developer_config.cc:349
 msgid "CA correction"
-msgstr ""
+msgstr "Correction CA"
 
 #: src/gui/operations/raw_developer_config.cc:350
 msgid "enable hot pixels correction"
-msgstr ""
+msgstr "activer la correction des pixels chauds"
 
 #: src/gui/operations/raw_developer_config.cc:353
 msgid "detect by 3 neighbors"
-msgstr ""
+msgstr "détecter 3 voisins"
 
 #: src/gui/operations/raw_developer_config.cc:354
 msgid "mark fixed pixels"
-msgstr ""
+msgstr "fixer des pixels"
 
 #: src/gui/operations/raw_developer_config.cc:355
 msgid "hot pixels filter"
-msgstr ""
+msgstr "filtre de pixels chauds"
 
 #: src/gui/operations/raw_developer_config.cc:356
 msgid "method: "
-msgstr ""
+msgstr "méthode:"
 
 #: src/gui/operations/raw_developer_config.cc:359
 msgid "RAW white level %"
-msgstr ""
+msgstr "% niveau de blanc RAW"
 
 #: src/gui/operations/raw_developer_config.cc:360
 msgid "RAW black level %"
-msgstr ""
+msgstr "% niveau de noir RAW"
 
 #: src/gui/operations/raw_developer_config.cc:361
 msgid "highlights reco: "
-msgstr ""
+msgstr "reco des éclats"
 
 #: src/gui/operations/raw_developer_config.cc:362
 msgid "input: "
-msgstr ""
+msgstr "entrée:"
 
 #: src/gui/operations/raw_developer_config.cc:367
 msgid "working profile: "
-msgstr ""
+msgstr "profil de travail:"
 
 #: src/gui/operations/scale_config.cc:37
 msgid "flip vertically"
-msgstr ""
+msgstr "renversement vertical"
 
 #: src/gui/operations/scale_config.cc:38
 msgid "flip horizontally"
-msgstr ""
+msgstr "renversement horizontal"
 
 #: src/gui/operations/scale_config.cc:39
 msgid "rotation angle"
-msgstr ""
+msgstr "angle de rotation"
 
 #: src/gui/operations/scale_config.cc:40
 msgid "auto crop"
-msgstr ""
+msgstr "découpage auto"
 
 #: src/gui/operations/scale_config.cc:41
 msgid "scale mode: "
-msgstr ""
+msgstr "mode d'échelle:"
 
 #: src/gui/operations/scale_config.cc:42
 msgid "unit: "
-msgstr ""
+msgstr "unité:"
 
 #: src/gui/operations/scale_config.cc:43 src/gui/operations/scale_config.cc:45
 msgid "width: "
-msgstr ""
+msgstr "largeur:"
 
 #: src/gui/operations/scale_config.cc:44 src/gui/operations/scale_config.cc:46
 msgid "height: "
-msgstr ""
+msgstr "hauteur:"
 
 #: src/gui/operations/scale_config.cc:47 src/gui/operations/scale_config.cc:49
 #: src/gui/operations/scale_config.cc:51
 msgid "W: "
-msgstr ""
+msgstr "W:"
 
 #: src/gui/operations/scale_config.cc:48 src/gui/operations/scale_config.cc:50
 #: src/gui/operations/scale_config.cc:52
 msgid "H: "
-msgstr ""
+msgstr "H:"
 
 #: src/gui/operations/scale_config.cc:53
 msgid "resolution: "
-msgstr ""
+msgstr "résolution:"
 
 #: src/gui/operations/shadows_highlights_config.cc:35
 msgid "soften with: "
-msgstr ""
+msgstr "atténuer avec:"
 
 #: src/gui/operations/shadows_highlights_config.cc:36
 msgid "shadows"
-msgstr ""
+msgstr "ombres"
 
 #: src/gui/operations/shadows_highlights_config.cc:37
 msgid "highlights"
-msgstr ""
+msgstr "éclats"
 
 #: src/gui/operations/shadows_highlights_config.cc:38
 msgid "whithe point adjustment"
-msgstr ""
+msgstr "réglage du point blanc"
 
 #: src/gui/operations/shadows_highlights_config.cc:40
 msgid "compress"
-msgstr ""
+msgstr "compressez"
 
 #: src/gui/operations/shadows_highlights_config.cc:41
 msgid "shadows color adjustment"
-msgstr ""
+msgstr "Ajustement de la couleur de l'ombre"
 
 #: src/gui/operations/shadows_highlights_config.cc:42
 msgid "highlights color adjustment"
-msgstr ""
+msgstr "ajustement de la couleur des éclats"
 
 #: src/gui/operations/split_details_config.cc:36
 msgid "blur type: "
-msgstr ""
+msgstr "type de bleu:"
 
 #: src/gui/operations/wavdec_config.cc:35
 msgid "Scales"
-msgstr ""
+msgstr "Mises à l'échelle"
 
 #: src/gui/operations/wavdec_config.cc:36
-#, fuzzy
 msgid "Preview Scale"
-msgstr "prévisualisation"
+msgstr "Prévisualisation"
 
 #: src/gui/operations/wavdec_config.cc:37
 msgid "Blend Factor"
-msgstr ""
+msgstr "facteur de mélange"
 
 #: src/gui/operationstree.cc:303
 msgid "Basic Adjustments"
-msgstr ""
+msgstr "Ajustements basique"
 
 #: src/gui/operationstree.cc:305
 msgid "Shadows/Highlights"
-msgstr ""
+msgstr "Ombres/Eclats"
 
 #: src/gui/operationstree.cc:306
 msgid "Defringe"
-msgstr ""
+msgstr "Supprimer la frange"
 
 #: src/gui/operationstree.cc:309 src/gui/operationstree.cc:370
 msgid "Threshold"
-msgstr ""
+msgstr "Seuil"
 
 #: src/gui/operationstree.cc:329
 msgid "Split Details"
-msgstr ""
+msgstr "Séparer les détails"
 
 #: src/gui/operationstree.cc:335
 msgid "Perspective correction"
-msgstr ""
+msgstr "Correction de perspective"
 
 #: src/gui/operationstree.cc:373
 msgid "Path"
-msgstr ""
+msgstr "Chemin"
 
 #: src/gui/settingsdialog.cc:56
 msgid "Settings"
-msgstr ""
+msgstr "Réglages"
 
 #: src/gui/settingsdialog.cc:92
 msgid "custom display profile name: "
-msgstr ""
+msgstr "Nom d'un profil d'affichage personnalisé:"
 
 #: src/gui/settingsdialog.cc:100
 msgid "display profile type: "
-msgstr ""
+msgstr "Afficher le type de profil:"
 
 #: src/gui/widgets/outmode_slider.cc:60
 msgid "preserve colors"
-msgstr ""
+msgstr "préserver les couleurs"
