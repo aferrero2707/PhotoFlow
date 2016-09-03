@@ -94,7 +94,10 @@ private:
     // Separated from init() to keep the code clear
     static void initMunsell ();
     static double hue2rgb(double p, double q, double t);
-
+    static float hue2rgbfloat(float p, float q, float t);
+#ifdef __SSE2__
+    static vfloat hue2rgb(vfloat p, vfloat q, vfloat t);
+#endif
 public:
 
     typedef enum Channel {
@@ -131,9 +134,9 @@ public:
 
     // look-up tables for the standard srgb gamma and its inverse (filled by init())
     static LUTf igammatab_srgb;
+    static LUTf igammatab_srgb1;
     static LUTf gammatab_srgb;
-//  static LUTf igammatab_709;
-//  static LUTf gammatab_709;
+    static LUTf gammatab_srgb1;
     static LUTf igammatab_55;
     static LUTf gammatab_55;
     static LUTf igammatab_4;
@@ -144,9 +147,15 @@ public:
     static LUTf igammatab_24_17;
     static LUTf gammatab_24_17a;
     static LUTf gammatab_13_2;
+    static LUTf igammatab_13_2;
+    static LUTf gammatab_115_2;
+    static LUTf igammatab_115_2;
+    static LUTf gammatab_145_3;
+    static LUTf igammatab_145_3;
 
     // look-up tables for the simple exponential gamma
     static LUTf gammatab;
+    static LUTuc gammatabThumb; // for thumbnails
 
 
     static void init ();
@@ -184,7 +193,10 @@ public:
     * @param l luminance channel [0; 1] (return value)
     */
     static void rgb2hsl (float r, float g, float b, float &h, float &s, float &l);
-
+    static void rgb2hslfloat (float r, float g, float b, float &h, float &s, float &l);
+#ifdef __SSE2__
+    static void rgb2hsl (vfloat r, vfloat g, vfloat b, vfloat &h, vfloat &s, vfloat &l);
+#endif
 
     /**
     * @brief Convert hue/saturation/luminance in red/green/blue
@@ -196,6 +208,10 @@ public:
     * @param b blue channel [0 ; 65535] (return value)
     */
     static void hsl2rgb (float h, float s, float l, float &r, float &g, float &b);
+    static void hsl2rgbfloat (float h, float s, float l, float &r, float &g, float &b);
+#ifdef __SSE2__
+    static void hsl2rgb (vfloat h, vfloat s, vfloat l, vfloat &r, vfloat &g, vfloat &b);
+#endif
 
     /**
     * @brief Convert hue/saturation/luminance in red/green/blue
@@ -220,6 +236,42 @@ public:
     */
     static void rgb2hsv (float r, float g, float b, float &h, float &s, float &v);
 
+    static inline bool rgb2hsvdcp(float r, float g, float b, float &h, float &s, float &v)
+    {
+
+        float var_Min = min(r, g, b);
+
+        if(var_Min < 0.f) {
+            return false;
+        } else {
+            float var_Max = max(r, g, b);
+            float del_Max = var_Max - var_Min;
+            v = var_Max / 65535.f;
+
+            if (fabsf(del_Max) < 0.00001f) {
+                h = 0.f;
+                s = 0.f;
+            } else {
+                s = del_Max / var_Max;
+
+                if ( r == var_Max ) {
+                    h = (g - b) / del_Max;
+                } else if ( g == var_Max ) {
+                    h = 2.f + (b - r) / del_Max;
+                } else { /*if ( b == var_Max ) */
+                    h = 4.f + (r - g) / del_Max;
+                }
+
+                if ( h < 0.f ) {
+                    h += 6.f;
+                } else if ( h > 6.f ) {
+                    h -= 6.f;
+                }
+            }
+
+            return true;
+        }
+    }
 
     /**
     * @brief Convert hue saturation value in red green blue
@@ -231,6 +283,57 @@ public:
     * @param b blue channel [0 ; 65535] (return value)
     */
     static void hsv2rgb (float h, float s, float v, float &r, float &g, float &b);
+
+    static inline void hsv2rgbdcp (float h, float s, float v, float &r, float &g, float &b)
+    {
+        // special version for dcp which saves 1 division (in caller) and six multiplications (inside this function)
+        int sector = h;  // sector 0 to 5, floor() is very slow, and h is always >0
+        float f = h - sector; // fractional part of h
+
+        v *= 65535.f;
+        float vs = v * s;
+        float p = v - vs;
+        float q = v - f * vs;
+        float t = p + v - q;
+
+        switch (sector) {
+            case 1:
+                r = q;
+                g = v;
+                b = p;
+                break;
+
+            case 2:
+                r = p;
+                g = v;
+                b = t;
+                break;
+
+            case 3:
+                r = p;
+                g = q;
+                b = v;
+                break;
+
+            case 4:
+                r = t;
+                g = p;
+                b = v;
+                break;
+
+            case 5:
+                r = v;
+                g = p;
+                b = q;
+                break;
+
+            default:
+                r = v;
+                g = t;
+                b = p;
+        }
+    }
+
     static void hsv2rgb (float h, float s, float v, int &r, int &g, int &b);
 
 
@@ -298,6 +401,9 @@ public:
     */
     static void xyz2rgb (float x, float y, float z, float &r, float &g, float &b, const double rgb_xyz[3][3]);
     static void xyz2rgb (float x, float y, float z, float &r, float &g, float &b, const float rgb_xyz[3][3]);
+#ifdef __SSE2__
+    static void xyz2rgb (vfloat x, vfloat y, vfloat z, vfloat &r, vfloat &g, vfloat &b, const vfloat rgb_xyz[3][3]);
+#endif
 
 
     /**
@@ -313,7 +419,9 @@ public:
     */
     static void rgbxyz (float r, float g, float b, float &x, float &y, float &z, const double xyz_rgb[3][3]);
     static void rgbxyz (float r, float g, float b, float &x, float &y, float &z, const float xyz_rgb[3][3]);
-
+#ifdef __SSE2__
+    static void rgbxyz (vfloat r, vfloat g, vfloat b, vfloat &x, vfloat &y, vfloat &z, const vfloat xyz_rgb[3][3]);
+#endif
 
     /**
     * @brief Convert Lab in xyz
@@ -941,8 +1049,44 @@ public:
     */
     static inline double gamma13_2     (double x)
     {
-        return x <= 0.016613 ? x * 2.0 : 1.009968 * exp(log(x) / 1.3) - 0.016613;
+        return x <= 0.016613 ? x * 2.0 : 1.009968 * exp(log(x) / 1.3) - 0.009968;
     }
+
+    static inline double igamma13_2    (double x)
+    {
+        return x <= 0.033226 ? x / 2.0 : exp(log((x + 0.009968) / 1.009968) * 1.3);
+    }
+
+    static inline double gamma115_2     (double x)
+    {
+        return x <= 0.001692 ? x * 2.0 : 1.000508 * exp(log(x) / 1.15) - 0.000508;
+    }
+
+    static inline double igamma115_2    (double x)
+    {
+        return x <= 0.003384 ? x / 2.0 : exp(log((x + 0.000508) / 1.000508) * 1.15);
+    }
+
+    static inline double gamma145_3     (double x)
+    {
+        return x <= 0.009115 ? x * 3.0 : 1.012305 * exp(log(x) / 1.45) - 0.012305;
+    }
+
+    static inline double igamma145_3    (double x)
+    {
+        return x <= 0.027345 ? x / 3.0 : exp(log((x + 0.012305) / 1.012305) * 1.45);
+    }
+
+//gamma for Retinex
+    static inline double gammareti      (double x, double gamma, double start, double slope, double mul, double add)
+    {
+        return (x <= start ? x*slope : exp(log(x) / gamma) * mul - add);
+    }
+    static inline double igammareti     (double x, double gamma, double start, double slope, double mul, double add)
+    {
+        return (x <= start * slope ? x / slope : exp(log((x + add) / mul) * gamma) );
+    }
+
 
 
     // gamma function with adjustable parameters
@@ -1028,6 +1172,10 @@ public:
     static inline float  gamma_srgb       (float x)
     {
         return gammatab_srgb[x];
+    }
+    static inline float  gamma_srgbclipped       (float x)
+    {
+        return gamma2curve[x];
     }
     static inline float  gamma            (float x)
     {

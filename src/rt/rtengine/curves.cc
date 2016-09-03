@@ -16,12 +16,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with RawTherapee.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <vector>
+#include <algorithm>
+#include <memory>
+#include <cmath>
+#include <cstring>
 #include <glib.h>
 #include <glib/gstdio.h>
-#include <cmath>
-#include <vector>
-#include <cstring>
-#include <algorithm>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -66,6 +67,18 @@ void Curve::AddPolygons ()
     // adding the last point of the sub-curve
     poly_x.push_back(x3);
     poly_y.push_back(y3);
+}
+
+void Curve::fillDyByDx ()
+{
+    dyByDx.resize(poly_x.size() - 1);
+
+    for(unsigned int i = 0; i < poly_x.size() - 1; i++) {
+        double dx = poly_x[i + 1] - poly_x[i];
+        double dy = poly_y[i + 1] - poly_y[i];
+        dyByDx[i] = dy / dx;
+
+    }
 }
 
 void Curve::fillHash()
@@ -156,9 +169,7 @@ const double CurveFactory::sRGBGammaCurve = 2.4;
 
 void fillCurveArray(DiagonalCurve* diagCurve, LUTf &outCurve, int skip, bool needed)
 {
-
     if (needed) {
-        LUTf lutCurve (65536);
 
         for (int i = 0; i <= 0xffff; i += i < 0xffff - skip ? skip : 1 ) {
             // change to [0,1] range
@@ -166,348 +177,210 @@ void fillCurveArray(DiagonalCurve* diagCurve, LUTf &outCurve, int skip, bool nee
             // apply custom/parametric/NURBS curve, if any
             val = diagCurve->getVal (val);
             // store result in a temporary array
-            lutCurve[i] = (val);
+            outCurve[i] = val;
         }
 
         // if skip>1, let apply linear interpolation in the skipped points of the curve
         if (skip > 1) {
-            int prev = 0;
+            float skipmul = 1.f / (float) skip;
 
-            for (int i = 1; i <= 0xffff - skip; i++) {
-                if (i % skip == 0) {
-                    prev += skip;
-                    continue;
+            for (int i = 0; i <= 0x10000 - skip; i += skip) {
+                for(int j = 1; j < skip; j++) {
+                    outCurve[i + j] = ( outCurve[i] * (skip - j) + outCurve[i + skip] * j ) * skipmul;
                 }
-
-                lutCurve[i] = ( lutCurve[prev] * (skip - i % skip) + lutCurve[prev + skip] * (i % skip) ) / skip;
             }
         }
 
-        for (int i = 0; i <= 0xffff; i++) {
-            outCurve[i] = (65535.f * lutCurve[i]);
-        }
+        outCurve *= 65535.f;
     } else {
-
-        for (int i = 0; i <= 0xffff; i++) {
-            outCurve[i] = (float)i;
-        }
-
-    }
-
-}
-
-void CurveFactory::updatechroma (
-    const std::vector<double>& cccurvePoints,
-    LUTu & histogramC, LUTu & outBeforeCCurveHistogramC,//for chroma
-    int skip)
-{
-    LUTf dCcurve(65536, 0);
-    float val;
-
-    for (int i = 0; i < 48000; i++) { //32768*1.414  + ...
-        val = (double)i / 47999.0;
-        dCcurve[i] = CLIPD(val);
-    }
-
-    outBeforeCCurveHistogramC.clear();
-    bool histNeededC = false;
-
-
-    if (!cccurvePoints.empty() && cccurvePoints[0] != 0) {
-        if (outBeforeCCurveHistogramC /*&& histogramCropped*/) {
-            histNeededC = true;
-        }
-    }
-
-    for (int i = 0; i < 48000; i++) { //32768*1.414  + ...
-        float val;
-
-        if (histNeededC) {
-            float hval = dCcurve[i];
-            int hi = (int)(255.0 * CLIPD(hval)); //
-            outBeforeCCurveHistogramC[hi] += histogramC[i] ;
-        }
+        outCurve.makeIdentity();
     }
 }
 
-
-void CurveFactory::curveLightBrightColor (
-    procparams::ColorAppearanceParams::eTCModeId curveMode1, const std::vector<double>& curvePoints1,
-    procparams::ColorAppearanceParams::eTCModeId curveMode2, const std::vector<double>& curvePoints2,
-    procparams::ColorAppearanceParams::eCTCModeId curveMode3, const std::vector<double>& curvePoints3,
-    LUTu & histogram, LUTu & histogramCropped, LUTu & outBeforeCCurveHistogram,//for Luminance
-    LUTu & histogramC, LUTu & outBeforeCCurveHistogramC,//for chroma
-    ColorAppearance & customColCurve1,
-    ColorAppearance & customColCurve2,
-    ColorAppearance & customColCurve3,
-    int skip)
+void CurveFactory::curveLightBrightColor (const std::vector<double>& curvePoints1, const std::vector<double>& curvePoints2, const std::vector<double>& curvePoints3,
+        const LUTu & histogram, LUTu & outBeforeCCurveHistogram,//for Luminance
+        const LUTu & histogramC, LUTu & outBeforeCCurveHistogramC,//for chroma
+        ColorAppearance & customColCurve1, ColorAppearance & customColCurve2, ColorAppearance & customColCurve3, int skip)
 {
 
     outBeforeCCurveHistogram.clear();
     outBeforeCCurveHistogramC.clear();
-    bool histNeededC = false;
-
     bool histNeeded = false;
-    DiagonalCurve* tcurve = NULL;
     customColCurve3.Reset();
 
     if (!curvePoints3.empty() && curvePoints3[0] > DCT_Linear && curvePoints3[0] < DCT_Unchanged) {
-        tcurve = new DiagonalCurve (curvePoints3, CURVES_MIN_POLY_POINTS / skip);
+        DiagonalCurve tcurve(curvePoints3, CURVES_MIN_POLY_POINTS / skip);
 
-        if (outBeforeCCurveHistogramC /*&& histogramCropped*/) {
-            histNeededC = true;
+        if (outBeforeCCurveHistogramC) {
+            histogramC.compressTo(outBeforeCCurveHistogramC, 48000);
         }
 
-    }
-
-    if (tcurve) {
-        if (tcurve->isIdentity()) {
-            delete tcurve;
-            tcurve = NULL;
-        } else {
+        if (!tcurve.isIdentity()) {
             customColCurve3.Set(tcurve);
         }
-
-        delete tcurve;
-        tcurve = NULL;
     }
+
 
     customColCurve2.Reset();
 
     if (!curvePoints2.empty() && curvePoints2[0] > DCT_Linear && curvePoints2[0] < DCT_Unchanged) {
-        tcurve = new DiagonalCurve (curvePoints2, CURVES_MIN_POLY_POINTS / skip);
+        DiagonalCurve tcurve(curvePoints2, CURVES_MIN_POLY_POINTS / skip);
 
-        if (outBeforeCCurveHistogram /*&& histogramCropped*/) {
+        if (outBeforeCCurveHistogram) {
             histNeeded = true;
         }
 
-    }
-
-    if (tcurve) {
-        if (tcurve->isIdentity()) {
-            delete tcurve;
-            tcurve = NULL;
-        } else {
+        if (!tcurve.isIdentity()) {
             customColCurve2.Set(tcurve);
         }
-
-        delete tcurve;
-        tcurve = NULL;
     }
+
 
     // create first curve if needed
     customColCurve1.Reset();
 
     if (!curvePoints1.empty() && curvePoints1[0] > DCT_Linear && curvePoints1[0] < DCT_Unchanged) {
-        tcurve = new DiagonalCurve (curvePoints1, CURVES_MIN_POLY_POINTS / skip);
+        DiagonalCurve tcurve(curvePoints1, CURVES_MIN_POLY_POINTS / skip);
 
-        if (outBeforeCCurveHistogram /*&& histogramCropped*/) {
+        if (outBeforeCCurveHistogram) {
             histNeeded = true;
         }
 
-    }
-
-    if (tcurve) {
-        if (tcurve->isIdentity()) {
-            delete tcurve;
-            tcurve = NULL;
-        } else  {
+        if (!tcurve.isIdentity()) {
             customColCurve1.Set(tcurve);
-            delete tcurve;
-            tcurve = NULL;
         }
     }
 
     if (histNeeded) {
-        for (int i = 0; i < 32768; i++) {
-            double hval = CLIPD((double)i / 32767.0);
-            int hi = (int)(255.0 * hval);
-            outBeforeCCurveHistogram[hi] += histogram[i] ;
-        }
-    }
-
-    if (histNeededC) {
-        for (int i = 0; i < 48000; i++) { //32768*1.414  + ...
-            double hval = CLIPD((double)i / 47999.0);
-            int hi = (int)(255.0 * hval); //
-            outBeforeCCurveHistogramC[hi] += histogramC[i] ;
-        }
-    }
-
-    if (tcurve) {
-        delete tcurve;
-    }
-
-}
-// add curve Denoise : C=f(C)
-void CurveFactory::denoiseCC ( bool & ccdenoiseutili, const std::vector<double>& cccurvePoints, LUTf & NoiseCCcurve, int skip)
-{
-    bool needed;
-    DiagonalCurve* dCurve = NULL;
-    LUTf dCcurve(65536, 0);
-
-    float val;
-
-    for (int i = 0; i < 48000; i++) {
-        dCcurve[i] = (float)i / 47999.0;
-    }
-
-    needed = false;
-
-    if (!cccurvePoints.empty() && cccurvePoints[0] != 0) {
-        dCurve = new DiagonalCurve (cccurvePoints, CURVES_MIN_POLY_POINTS / skip);
-
-        if (dCurve && !dCurve->isIdentity()) {
-            needed = true;
-            ccdenoiseutili = true;
-        }
-    }
-
-    fillCurveArray(dCurve, NoiseCCcurve, skip, needed);
-    //NoiseCCcurve.dump("Noise");
-
-    if (dCurve) {
-        delete dCurve;
-        dCurve = NULL;
+        histogram.compressTo(outBeforeCCurveHistogram, 32768);
     }
 }
 
-
-void CurveFactory::curveBW (
-    const std::vector<double>& curvePointsbw, const std::vector<double>& curvePointsbw2,
-    LUTu & histogrambw, LUTu & outBeforeCCurveHistogrambw,//for Luminance
-    ToneCurve & customToneCurvebw1, ToneCurve & customToneCurvebw2, int skip)
+void CurveFactory::curveBW ( const std::vector<double>& curvePointsbw, const std::vector<double>& curvePointsbw2,
+                             const LUTu & histogrambw, LUTu & outBeforeCCurveHistogrambw,//for Luminance
+                             ToneCurve & customToneCurvebw1, ToneCurve & customToneCurvebw2, int skip)
 {
+
     const float gamma_ = Color::sRGBGammaCurve;
-    const float start = expf(gamma_ * logf( -0.055 / ((1.0 / gamma_ - 1.0) * 1.055 )));
-    const float slope = 1.055 * powf (start, 1.0 / gamma_ - 1) - 0.055 / start;
-    const float mul = 1.055;
-    const float add = 0.055;
 
     outBeforeCCurveHistogrambw.clear();
     bool histNeeded = false;
 
-    DiagonalCurve* tcurve = NULL;
     customToneCurvebw2.Reset();
 
     if (!curvePointsbw2.empty() && curvePointsbw2[0] > DCT_Linear && curvePointsbw2[0] < DCT_Unchanged) {
-        tcurve = new DiagonalCurve (curvePointsbw2, CURVES_MIN_POLY_POINTS / skip);
+        DiagonalCurve tcurve(curvePointsbw2, CURVES_MIN_POLY_POINTS / skip);
 
-        if (outBeforeCCurveHistogrambw /*&& histogramCropped*/) {
+        if (outBeforeCCurveHistogrambw) {
             histNeeded = true;
         }
 
-    }
-
-    if (tcurve) {
-        if (!tcurve->isIdentity()) {
-            customToneCurvebw2.Set(tcurve, gamma_, start, slope, mul, add);
+        if (!tcurve.isIdentity()) {
+            customToneCurvebw2.Set(tcurve, gamma_);
         }
-
-        delete tcurve;
-        tcurve = NULL;
     }
+
 
     customToneCurvebw1.Reset();
 
     if (!curvePointsbw.empty() && curvePointsbw[0] > DCT_Linear && curvePointsbw[0] < DCT_Unchanged) {
-        tcurve = new DiagonalCurve (curvePointsbw, CURVES_MIN_POLY_POINTS / skip);
+        DiagonalCurve tcurve(curvePointsbw, CURVES_MIN_POLY_POINTS / skip);
 
-        if (outBeforeCCurveHistogrambw /*&& histogramCropped*/) {
+        if (outBeforeCCurveHistogrambw ) {
             histNeeded = true;
         }
 
-    }
-
-    if (tcurve) {
-        if (!tcurve->isIdentity()) {
-            customToneCurvebw1.Set(tcurve, gamma_, start, slope, mul, add);
+        if (!tcurve.isIdentity()) {
+            customToneCurvebw1.Set(tcurve, gamma_);
         }
-
-        delete tcurve;
-        tcurve = NULL;
     }
+
 
     // create first curve if needed
     if (histNeeded) {
-        LUTf dcurve(65536, 0);
-
-        float val;
-
-        for (int i = 0; i < 32768; i++) {
-            val = (float)i / 32767.f;
-            dcurve[i] = CLIPD(val);
-        }
-
-        for (int i = 0; i < 32768; i++) {
-            float hval = dcurve[i];
-            int hi = (int)(255.0 * CLIPD(hval));
-            outBeforeCCurveHistogrambw[hi] += histogrambw[i] ;
-        }
+        histogrambw.compressTo(outBeforeCCurveHistogrambw, 32768);
     }
-
-    if (tcurve) {
-        delete tcurve;
-    }
-
 }
+
 // add curve Lab : C=f(L)
-void CurveFactory::curveCL ( bool & clcutili, const std::vector<double>& clcurvePoints, LUTf & clCurve, LUTu & histogramcl, LUTu & outBeforeCLurveHistogram, int skip)
+void CurveFactory::curveCL ( bool & clcutili, const std::vector<double>& clcurvePoints, LUTf & clCurve, int skip)
 {
-    bool needed;
-    DiagonalCurve* dCurve = NULL;
-
-    if (outBeforeCLurveHistogram) {
-        outBeforeCLurveHistogram.clear();
-    }
-
-    bool histNeededCL = false;
-
-    needed = false;
+    clcutili = false;
+    std::unique_ptr<DiagonalCurve> dCurve;
 
     if (!clcurvePoints.empty() && clcurvePoints[0] != 0) {
-        dCurve = new DiagonalCurve (clcurvePoints, CURVES_MIN_POLY_POINTS / skip);
-
-        if (outBeforeCLurveHistogram) {
-            histNeededCL = true;
-        }
+        dCurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(clcurvePoints, CURVES_MIN_POLY_POINTS / skip));
 
         if (dCurve && !dCurve->isIdentity()) {
-            needed = true;
             clcutili = true;
         }
     }
 
-    if(histNeededCL)
-        for (int i = 0; i < 50000; i++) { //32768*1.414  + ...
-            int hi = (int)(255.0 * CLIPD((float)i / 49999.0)); //
-            outBeforeCLurveHistogram[hi] += histogramcl[i] ;
+    fillCurveArray(dCurve.get(), clCurve, skip, clcutili);
+}
+
+void CurveFactory::mapcurve ( bool & mapcontlutili, const std::vector<double>& mapcurvePoints, LUTf & mapcurve, int skip, const LUTu & histogram, LUTu & outBeforeCurveHistogram)
+{
+    bool needed = false;
+    std::unique_ptr<DiagonalCurve> dCurve;
+    outBeforeCurveHistogram.clear();
+    bool histNeeded = false;
+
+    if (!mapcurvePoints.empty() && mapcurvePoints[0] != 0) {
+        dCurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(mapcurvePoints, CURVES_MIN_POLY_POINTS / skip));
+
+        if (outBeforeCurveHistogram) {
+            histNeeded = true;
         }
 
-
-    fillCurveArray(dCurve, clCurve, skip, needed);
-
-    if (dCurve) {
-        delete dCurve;
-        dCurve = NULL;
+        if (dCurve && !dCurve->isIdentity()) {
+            needed = true;
+            mapcontlutili = true;
+        }
     }
+
+    if (histNeeded) {
+        histogram.compressTo(outBeforeCurveHistogram, 32768);
+    }
+
+    fillCurveArray(dCurve.get(), mapcurve, skip, needed);
 }
+
+void CurveFactory::curveDehaContL ( bool & dehacontlutili, const std::vector<double>& dehaclcurvePoints, LUTf & dehaclCurve, int skip, const LUTu & histogram, LUTu & outBeforeCurveHistogram)
+{
+    bool needed = false;
+    std::unique_ptr<DiagonalCurve> dCurve;
+    outBeforeCurveHistogram.clear();
+    bool histNeeded = false;
+
+    if (!dehaclcurvePoints.empty() && dehaclcurvePoints[0] != 0) {
+        dCurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(dehaclcurvePoints, CURVES_MIN_POLY_POINTS / skip));
+
+        if (outBeforeCurveHistogram) {
+            histNeeded = true;
+        }
+
+        if (dCurve && !dCurve->isIdentity()) {
+            needed = true;
+            dehacontlutili = true;
+        }
+    }
+
+    if (histNeeded) {
+        histogram.compressTo(outBeforeCurveHistogram, 32768);
+    }
+
+    fillCurveArray(dCurve.get(), dehaclCurve, skip, needed);
+}
+
 // add curve Lab wavelet : Cont=f(L)
 void CurveFactory::curveWavContL ( bool & wavcontlutili, const std::vector<double>& wavclcurvePoints, LUTf & wavclCurve, /*LUTu & histogramwavcl, LUTu & outBeforeWavCLurveHistogram,*/int skip)
 {
-    bool needed;
-    DiagonalCurve* dCurve = NULL;
-
-    //  if (outBeforeWavCLurveHistogram)
-    //      outBeforeWavCLurveHistogram.clear();
-    bool histNeededCL = false;
-
-    needed = false;
+    bool needed = false;
+    std::unique_ptr<DiagonalCurve> dCurve;
 
     if (!wavclcurvePoints.empty() && wavclcurvePoints[0] != 0) {
-        dCurve = new DiagonalCurve (wavclcurvePoints, CURVES_MIN_POLY_POINTS / skip);
-        //  if (outBeforeWavCLurveHistogram)
-        //      histNeededCL = true;
+        dCurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(wavclcurvePoints, CURVES_MIN_POLY_POINTS / skip));
 
         if (dCurve && !dCurve->isIdentity()) {
             needed = true;
@@ -515,212 +388,89 @@ void CurveFactory::curveWavContL ( bool & wavcontlutili, const std::vector<doubl
         }
     }
 
-    //  if(histNeededCL)
-    for (int i = 0; i < 32768; i++) { //32768*1.414  + ...
-        int hi = (int)(255.0 * CLIPD((float)i / 32767.0)); //
-        //  outBeforeWavCLurveHistogram[hi] += histogramwavcl[i] ;
-    }
-
-
-    fillCurveArray(dCurve, wavclCurve, skip, needed);
-    //  wavclCurve.dump("WL");
-
-    if (dCurve) {
-        delete dCurve;
-        dCurve = NULL;
-    }
+    fillCurveArray(dCurve.get(), wavclCurve, skip, needed);
 }
 
-// add curve Colortoning : C=f(L)
-void CurveFactory::curveToningCL ( bool & clctoningutili, const std::vector<double>& clcurvePoints, LUTf & clToningCurve, int skip)
+// add curve Colortoning : C=f(L) and CLf(L)
+void CurveFactory::curveToning ( const std::vector<double>& curvePoints, LUTf & ToningCurve, int skip)
 {
-    bool needed;
-    DiagonalCurve* dCurve = NULL;
+    bool needed = false;
+    std::unique_ptr<DiagonalCurve> dCurve;
 
-    needed = false;
-
-    if (!clcurvePoints.empty() && clcurvePoints[0] != 0) {
-        dCurve = new DiagonalCurve (clcurvePoints, CURVES_MIN_POLY_POINTS / skip);
+    if (!curvePoints.empty() && curvePoints[0] != 0) {
+        dCurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(curvePoints, CURVES_MIN_POLY_POINTS / skip));
 
         if (dCurve && !dCurve->isIdentity()) {
             needed = true;
-            clctoningutili = true;
         }
     }
 
-    fillCurveArray(dCurve, clToningCurve, skip, needed);
-
-    //  clToningCurve.dump("CLToning");
-    if (dCurve) {
-        delete dCurve;
-        dCurve = NULL;
-    }
+    fillCurveArray(dCurve.get(), ToningCurve, skip, needed);
 }
 
-// add curve Colortoning : CLf(L)
-void CurveFactory::curveToningLL ( bool & llctoningutili, const std::vector<double>& llcurvePoints, LUTf & llToningCurve, int skip)
-{
-    bool needed;
-    DiagonalCurve* dCurve = NULL;
-
-    needed = false;
-
-    if (!llcurvePoints.empty() && llcurvePoints[0] != 0) {
-        dCurve = new DiagonalCurve (llcurvePoints, CURVES_MIN_POLY_POINTS / skip);
-
-        if (dCurve && !dCurve->isIdentity()) {
-            needed = true;
-            llctoningutili = true;
-        }
-    }
-
-    fillCurveArray(dCurve, llToningCurve, skip, needed);
-//      llToningCurve.dump("LLToning");
-
-    if (dCurve) {
-        delete dCurve;
-        dCurve = NULL;
-    }
-}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-void CurveFactory::complexsgnCurve (float adjustr, bool & autili,  bool & butili, bool & ccutili, bool & cclutili, double saturation, double rstprotection,
+void CurveFactory::complexsgnCurve (bool & autili,  bool & butili, bool & ccutili, bool & cclutili,
                                     const std::vector<double>& acurvePoints, const std::vector<double>& bcurvePoints, const std::vector<double>& cccurvePoints,
                                     const std::vector<double>& lccurvePoints, LUTf & aoutCurve, LUTf & boutCurve, LUTf & satCurve, LUTf & lhskCurve,
-                                    LUTu & histogramC, LUTu & histogramLC, LUTu & outBeforeCCurveHistogram, LUTu & outBeforeLCurveHistogram, //for chroma
                                     int skip)
 {
 
-
-    //-----------------------------------------------------
-
-    bool needed;
-    DiagonalCurve* dCurve = NULL;
-    LUTf dCcurve(65536, 0);
-    int k = 48000; //32768*1.41
-
-    if(outBeforeCCurveHistogram || outBeforeLCurveHistogram) {
-        for (int i = 0; i < k * adjustr; i++) { //# 32768*1.414  approximation maxi for chroma
-            dCcurve[i] = (float)i / (k * adjustr - 1);
-        }
-    }
-
-    if (outBeforeCCurveHistogram) {
-        outBeforeCCurveHistogram.clear();
-    }
-
-    bool histNeededC = false;
-
-    if (outBeforeLCurveHistogram) {
-        outBeforeLCurveHistogram.clear();
-    }
-
-    bool histNeededLC = false;
-
-    //-----------------------------------------------------
-
-    needed = false;
+    autili = butili = ccutili = cclutili = false;
+    std::unique_ptr<DiagonalCurve> dCurve;
 
     // create a curve if needed
     if (!acurvePoints.empty() && acurvePoints[0] != 0) {
-        dCurve = new DiagonalCurve (acurvePoints, CURVES_MIN_POLY_POINTS / skip);
+        dCurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(acurvePoints, CURVES_MIN_POLY_POINTS / skip));
 
         if (dCurve && !dCurve->isIdentity()) {
-            needed = true;
             autili = true;
         }
     }
 
-    fillCurveArray(dCurve, aoutCurve, skip, needed);
-    //if(autili) aoutCurve.dump("acurve");
+    fillCurveArray(dCurve.get(), aoutCurve, skip, autili);
 
-    if (dCurve) {
-        delete dCurve;
-        dCurve = NULL;
-    }
+    dCurve = nullptr;
 
     //-----------------------------------------------------
 
-    needed = false;
-
     if (!bcurvePoints.empty() && bcurvePoints[0] != 0) {
-        dCurve = new DiagonalCurve (bcurvePoints, CURVES_MIN_POLY_POINTS / skip);
+        dCurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(bcurvePoints, CURVES_MIN_POLY_POINTS / skip));
 
         if (dCurve && !dCurve->isIdentity()) {
-            needed = true;
             butili = true;
         }
     }
 
-    fillCurveArray(dCurve, boutCurve, skip, needed);
+    fillCurveArray(dCurve.get(), boutCurve, skip, butili);
 
-    if (dCurve) {
-        delete dCurve;
-        dCurve = NULL;
-    }
+    dCurve = nullptr;
 
     //-----------------------------------------------
-    needed = false;
 
     if (!cccurvePoints.empty() && cccurvePoints[0] != 0) {
-        dCurve = new DiagonalCurve (cccurvePoints, CURVES_MIN_POLY_POINTS / skip);
-
-        if (outBeforeCCurveHistogram /*&& histogramCropped*/) {
-            histNeededC = true;
-        }
+        dCurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(cccurvePoints, CURVES_MIN_POLY_POINTS / skip));
 
         if (dCurve && !dCurve->isIdentity()) {
-            needed = true;
             ccutili = true;
         }
     }
 
-    if (histNeededC) {
-        for (int i = 0; i < k * adjustr; i++) { //32768*1.414  + ...
-            float hval = dCcurve[i];
-            int hi = (int)(255.0 * CLIPD(hval)); //
-            outBeforeCCurveHistogram[hi] += histogramC[i] ;
-        }
-    }
+    fillCurveArray(dCurve.get(), satCurve, skip, ccutili);
 
-    fillCurveArray(dCurve, satCurve, skip, needed);
-
-    if (dCurve) {
-        delete dCurve;
-        dCurve = NULL;
-    }
+    dCurve = nullptr;
 
     //----------------------------
-    needed = false;
 
     if (!lccurvePoints.empty() && lccurvePoints[0] != 0) {
-        dCurve = new DiagonalCurve (lccurvePoints, CURVES_MIN_POLY_POINTS / skip);
-
-        if (outBeforeLCurveHistogram /*&& histogramCropped*/) {
-            histNeededLC = true;
-        }
+        dCurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(lccurvePoints, CURVES_MIN_POLY_POINTS / skip));
 
         if (dCurve && !dCurve->isIdentity()) {
-            needed = true;
             cclutili = true;
         }
     }
 
-    if (histNeededLC) {
-        for (int i = 0; i < k * adjustr; i++) { //32768*1.414  + ...
-            float hval = dCcurve[i];
-            int hi = (int)(255.0 * CLIPD(hval)); //
-            outBeforeLCurveHistogram[hi] += histogramLC[i] ;
-        }
-    }
-
-
-    fillCurveArray(dCurve, lhskCurve, skip, needed);
-
-    if (dCurve) {
-        delete dCurve;
-        dCurve = NULL;
-    }
+    fillCurveArray(dCurve.get(), lhskCurve, skip, cclutili);
 
 }
 
@@ -728,11 +478,12 @@ void CurveFactory::complexsgnCurve (float adjustr, bool & autili,  bool & butili
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+//SSEFUNCTION
 void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, double hlcomprthresh,
         double shcompr, double br, double contr,
         procparams::ToneCurveParams::eTCModeId curveMode, const std::vector<double>& curvePoints,
         procparams::ToneCurveParams::eTCModeId curveMode2, const std::vector<double>& curvePoints2,
-        LUTu & histogram, LUTu & histogramCropped,
+        LUTu & histogram,
         LUTf & hlCurve, LUTf & shCurve, LUTf & outCurve,
         LUTu & outBeforeCCurveHistogram,
         ToneCurve & customToneCurve1,
@@ -758,36 +509,35 @@ void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, dou
     // tone curve base. a: slope (from exp.comp.), b: black, def_mul: max. x value (can be>1), hr,sr: highlight,shadow recovery
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    DiagonalCurve* brightcurve = NULL;
+    std::unique_ptr<DiagonalCurve> brightcurve;
 
     // check if brightness curve is needed
     if (br > 0.00001 || br < -0.00001) {
 
-        std::vector<double> brightcurvePoints;
-        brightcurvePoints.resize(9);
-        brightcurvePoints.at(0) = double(DCT_NURBS);
+        std::vector<double> brightcurvePoints(9);
+        brightcurvePoints[0] = DCT_NURBS;
 
-        brightcurvePoints.at(1) = 0.; //black point.  Value in [0 ; 1] range
-        brightcurvePoints.at(2) = 0.; //black point.  Value in [0 ; 1] range
+        brightcurvePoints[1] = 0.; //black point.  Value in [0 ; 1] range
+        brightcurvePoints[2] = 0.; //black point.  Value in [0 ; 1] range
 
         if(br > 0) {
-            brightcurvePoints.at(3) = 0.1; //toe point
-            brightcurvePoints.at(4) = 0.1 + br / 150.0; //value at toe point
+            brightcurvePoints[3] = 0.1; //toe point
+            brightcurvePoints[4] = 0.1 + br / 150.0; //value at toe point
 
-            brightcurvePoints.at(5) = 0.7; //shoulder point
-            brightcurvePoints.at(6) = min(1.0, 0.7 + br / 300.0); //value at shoulder point
+            brightcurvePoints[5] = 0.7; //shoulder point
+            brightcurvePoints[6] = min(1.0, 0.7 + br / 300.0); //value at shoulder point
         } else {
-            brightcurvePoints.at(3) = max(0.0, 0.1 - br / 150.0); //toe point
-            brightcurvePoints.at(4) = 0.1; //value at toe point
+            brightcurvePoints[3] = max(0.0, 0.1 - br / 150.0); //toe point
+            brightcurvePoints[4] = 0.1; //value at toe point
 
-            brightcurvePoints.at(5) = 0.7 - br / 300.0; //shoulder point
-            brightcurvePoints.at(6) = 0.7; //value at shoulder point
+            brightcurvePoints[5] = 0.7 - br / 300.0; //shoulder point
+            brightcurvePoints[6] = 0.7; //value at shoulder point
         }
 
-        brightcurvePoints.at(7) = 1.; // white point
-        brightcurvePoints.at(8) = 1.; // value at white point
+        brightcurvePoints[7] = 1.; // white point
+        brightcurvePoints[8] = 1.; // value at white point
 
-        brightcurve = new DiagonalCurve (brightcurvePoints, CURVES_MIN_POLY_POINTS / skip);
+        brightcurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(brightcurvePoints, CURVES_MIN_POLY_POINTS / skip));
     }
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -797,26 +547,52 @@ void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, dou
     float scale = 65536.0;
     float comp = (max(0.0, ecomp) + 1.0) * hlcompr / 100.0;
     float shoulder = ((scale / max(1.0f, exp_scale)) * (hlcomprthresh / 200.0)) + 0.1;
-    //printf("shoulder = %e\n",shoulder);
-    //printf ("exp_scale= %f comp= %f def_mul=%f a= %f \n",exp_scale,comp,def_mul,a);
 
-    if (comp <= 0.0f)
-        for (int i = 0; i < 0x10000; i++) {
-            hlCurve[i] = exp_scale;
-        }
-    else {
-        for (int i = 0; i <= shoulder; i++) {
-            hlCurve[i] = exp_scale;
-        }
+    if (comp <= 0.0f) {
+        hlCurve.makeConstant(exp_scale);
+    } else {
+        hlCurve.makeConstant(exp_scale, shoulder + 1);
 
         float scalemshoulder = scale - shoulder;
 
-        for (int i = shoulder + 1; i < 0x10000; i++) {
+#ifdef __SSE2__
+        int i = shoulder + 1;
+
+        if(i & 1) { // original formula, slower than optimized formulas below but only used once or none, so I let it as is for reference
             // change to [0,1] range
             float val = (float)i - shoulder;
             float R = val * comp / (scalemshoulder);
             hlCurve[i] = xlog(1.0 + R * exp_scale) / R; // don't use xlogf or 1.f here. Leads to errors caused by too low precision
+            i++;
         }
+
+        vdouble onev = _mm_set1_pd(1.0);
+        vdouble Rv = _mm_set_pd((i + 1 - shoulder) * (double)comp / scalemshoulder, (i - shoulder) * (double)comp / scalemshoulder);
+        vdouble incrementv = _mm_set1_pd(2.0 * comp / scalemshoulder);
+        vdouble exp_scalev = _mm_set1_pd(exp_scale);
+
+        for (; i < 0x10000; i += 2) {
+            // change to [0,1] range
+            vdouble resultv = xlog(onev + Rv * exp_scalev) / Rv;
+            vfloat resultfv = _mm_cvtpd_ps(resultv);
+            _mm_store_ss(&hlCurve[i], resultfv);
+            resultfv = PERMUTEPS(resultfv, _MM_SHUFFLE(1, 1, 1, 1));
+            _mm_store_ss(&hlCurve[i + 1], resultfv);
+            Rv += incrementv;
+        }
+
+#else
+        float R = comp / scalemshoulder;
+        float increment = R;
+
+        for (int i = shoulder + 1; i < 0x10000; i++) {
+            // change to [0,1] range
+            hlCurve[i] = xlog(1.0 + R * exp_scale) / R; // don't use xlogf or 1.f here. Leads to errors caused by too low precision
+            R += increment;
+        }
+
+#endif
+
     }
 
 
@@ -827,11 +603,11 @@ void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, dou
     // change to [0,1] range
     shCurve.setClip(LUT_CLIP_ABOVE); // used LUT_CLIP_ABOVE, because the curve converges to 1.0 at the upper end and we don't want to exceed this value.
     float val = 1.f / 65535.f;
-    float   val2 = simplebasecurve (val, black, 0.015 * shcompr);
+    float val2 = simplebasecurve (val, black, 0.015 * shcompr);
     shCurve[0] = CLIPD(val2) / val;
-    val = 0.0;
     // gamma correction
-    val = gamma (val, gamma_, start, slope, mul, add);
+
+    val = Color::gammatab_srgb[0] / 65535.f;
 
     // apply brightness curve
     if (brightcurve) {
@@ -841,30 +617,25 @@ void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, dou
     // store result in a temporary array
     dcurve[0] = CLIPD(val);
 
-    #pragma omp parallel for
-
     for (int i = 1; i < 0x10000; i++) {
-        float val;
-        val = (float)i / 65535.0f;
+        float val = i / 65535.f;
 
         float   val2 = simplebasecurve (val, black, 0.015 * shcompr);
-        shCurve[i] = CLIPD(val2) / val;
+        shCurve[i] = val2 / val;
 
         // gamma correction
-        val = gamma (val, gamma_, start, slope, mul, add);
+        val = Color::gammatab_srgb[i] / 65535.f;
 
         // apply brightness curve
         if (brightcurve) {
-            val = brightcurve->getVal (val);    // TODO: getVal(double) is very slow! Optimize with a LUTf
+            val = CLIPD(brightcurve->getVal (val));    // TODO: getVal(double) is very slow! Optimize with a LUTf
         }
 
         // store result in a temporary array
-        dcurve[i] = CLIPD(val);
+        dcurve[i] = val;
     }
 
-    if (brightcurve) {
-        delete brightcurve;
-    }
+    brightcurve = nullptr;
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -877,69 +648,55 @@ void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, dou
         unsigned int sum = 0;
         float avg = 0;
 
-        //double sqavg = 0;
         for (int i = 0; i <= 0xffff; i++) {
-            float fi = i;
-            fi *= hlCurve[i];
+            float fi = i * hlCurve[i];
             avg += dcurve[(int)(shCurve[fi] * fi)] * histogram[i];
-            //sqavg += dcurve[i]*dcurve[i] * histogram[i];
             sum += histogram[i];
         }
 
         avg /= sum;
-        //sqavg /= sum;
-        //double stddev = sqrt(sqavg-avg*avg);
 
         //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        std::vector<double> contrastcurvePoints;
-        contrastcurvePoints.resize(9);
-        contrastcurvePoints.at(0) = double(DCT_NURBS);
+        std::vector<double> contrastcurvePoints(9);
+        contrastcurvePoints[0] = DCT_NURBS;
 
-        contrastcurvePoints.at(1) = 0; //black point.  Value in [0 ; 1] range
-        contrastcurvePoints.at(2) = 0; //black point.  Value in [0 ; 1] range
+        contrastcurvePoints[1] = 0; //black point.  Value in [0 ; 1] range
+        contrastcurvePoints[2] = 0; //black point.  Value in [0 ; 1] range
 
-        contrastcurvePoints.at(3) = avg - avg * (0.6 - contr / 250.0); //toe point
-        contrastcurvePoints.at(4) = avg - avg * (0.6 + contr / 250.0); //value at toe point
+        contrastcurvePoints[3] = avg - avg * (0.6 - contr / 250.0); //toe point
+        contrastcurvePoints[4] = avg - avg * (0.6 + contr / 250.0); //value at toe point
 
-        contrastcurvePoints.at(5) = avg + (1 - avg) * (0.6 - contr / 250.0); //shoulder point
-        contrastcurvePoints.at(6) = avg + (1 - avg) * (0.6 + contr / 250.0); //value at shoulder point
+        contrastcurvePoints[5] = avg + (1 - avg) * (0.6 - contr / 250.0); //shoulder point
+        contrastcurvePoints[6] = avg + (1 - avg) * (0.6 + contr / 250.0); //value at shoulder point
 
-        contrastcurvePoints.at(7) = 1.; // white point
-        contrastcurvePoints.at(8) = 1.; // value at white point
+        contrastcurvePoints[7] = 1.; // white point
+        contrastcurvePoints[8] = 1.; // value at white point
 
-        DiagonalCurve* contrastcurve = new DiagonalCurve (contrastcurvePoints, CURVES_MIN_POLY_POINTS / skip);
+        const DiagonalCurve contrastcurve(contrastcurvePoints, CURVES_MIN_POLY_POINTS / skip);
 
         //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         // apply contrast enhancement
         for (int i = 0; i <= 0xffff; i++) {
-            dcurve[i]  = contrastcurve->getVal (dcurve[i]);
+            dcurve[i] = contrastcurve.getVal (dcurve[i]);
         }
-
-        delete contrastcurve;
     }
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     // create second curve if needed
     bool histNeeded = false;
-    DiagonalCurve* tcurve = NULL;
     customToneCurve2.Reset();
 
     if (!curvePoints2.empty() && curvePoints2[0] > DCT_Linear && curvePoints2[0] < DCT_Unchanged) {
-        tcurve = new DiagonalCurve (curvePoints2, CURVES_MIN_POLY_POINTS / skip);
+        const DiagonalCurve tcurve(curvePoints2, CURVES_MIN_POLY_POINTS / skip);
 
-        if (outBeforeCCurveHistogram /*&& histogramCropped*/) {
+        if (!tcurve.isIdentity()) {
+            customToneCurve2.Set(tcurve, gamma_);
+        }
+
+        if (outBeforeCCurveHistogram ) {
             histNeeded = true;
         }
-    }
-
-    if (tcurve) {
-        if (!tcurve->isIdentity()) {
-            customToneCurve2.Set(tcurve, gamma_, start, slope, mul, add);
-        }
-
-        delete tcurve;
-        tcurve = NULL;
     }
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -950,90 +707,52 @@ void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, dou
     customToneCurve1.Reset();
 
     if (!curvePoints.empty() && curvePoints[0] > DCT_Linear && curvePoints[0] < DCT_Unchanged) {
-        tcurve = new DiagonalCurve (curvePoints, CURVES_MIN_POLY_POINTS / skip);
+        const DiagonalCurve tcurve(curvePoints, CURVES_MIN_POLY_POINTS / skip);
 
-        if (outBeforeCCurveHistogram /*&& histogramCropped*/) {
+        if (!tcurve.isIdentity()) {
+            customToneCurve1.Set(tcurve, gamma_);
+        }
+
+        if (outBeforeCCurveHistogram) {
             histNeeded = true;
         }
     }
 
-    if (tcurve) {
-        if (!tcurve->isIdentity()) {
-            customToneCurve1.Set(tcurve, gamma_, start, slope, mul, add);
-        }
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        delete tcurve;
-        tcurve = NULL;
+#ifdef __SSE2__
+    vfloat gamma_v = F2V(gamma_);
+    vfloat startv = F2V(start);
+    vfloat slopev = F2V(slope);
+    vfloat mulv = F2V(mul);
+    vfloat addv = F2V(add);
+    vfloat c65535v = F2V(65535.f);
+
+    for (int i = 0; i <= 0xffff; i += 4) {
+        vfloat valv = LVFU(dcurve[i]);
+        valv = igamma (valv, gamma_v, startv, slopev, mulv, addv);
+        STVFU(outCurve[i], c65535v * valv);
     }
 
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    // create curve bw
-    // curve 2
-    /*      DiagonalCurve* tbwcurve = NULL;
-            customToneCurvebw2.Reset();
-
-            if (!curvePointsbw2.empty() && curvePointsbw2[0]>DCT_Linear && curvePointsbw2[0]<DCT_Unchanged) {
-                tbwcurve = new DiagonalCurve (curvePointsbw2, CURVES_MIN_POLY_POINTS/skip);
-                if (outBeforeCCurveHistogram )
-                    histNeeded = true;
-            }
-            if (tbwcurve) {
-                if (tbwcurve->isIdentity()) {
-                    delete tbwcurve;
-                    tbwcurve = NULL;
-                }
-                else
-                    customToneCurvebw2.Set(tbwcurve);
-                delete tbwcurve;
-                tbwcurve = NULL;
-            }
-
-            customToneCurvebw1.Reset();
-
-            if (!curvePointsbw.empty() && curvePointsbw[0]>DCT_Linear && curvePointsbw[0]<DCT_Unchanged) {
-                tbwcurve = new DiagonalCurve (curvePointsbw, CURVES_MIN_POLY_POINTS/skip);
-                if (outBeforeCCurveHistogram )
-                    histNeeded = true;
-            }
-            if (tbwcurve) {
-                if (tbwcurve->isIdentity()) {
-                    delete tbwcurve;
-                    tbwcurve = NULL;
-                }
-                else if (curveModeb != procparams::BlackWhiteParams::TC_MODE_STD_BW) {
-                    customToneCurvebw1.Set(tbwcurve);
-                    delete tbwcurve;
-                    tbwcurve = NULL;
-                }
-            }
-        */
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#else
 
     for (int i = 0; i <= 0xffff; i++) {
         float val = dcurve[i];
-
-        if (histNeeded) {
-            float fi = i;
-            float hval = hlCurve[i] * fi;
-            hval = dcurve[shCurve[hval] * hval];
-            //if (needigamma)
-            //  hval = igamma2 (hval);
-            int hi = (int)(255.0 * (hval));
-            outBeforeCCurveHistogram[hi] += histogram/*Cropped*/[i] ;
-        }
-
         val = igamma (val, gamma_, start, slope, mul, add);
         outCurve[i] = (65535.f * val);
     }
 
-    if (tcurve) {
-        delete tcurve;
-    }
+#endif
 
-    /*if (outBeforeCCurveHistogram) {
-        for (int i=0; i<256; i++) printf("i= %d bchist= %d \n",i,outBeforeCCurveHistogram[i]);
-    }*/
+    if (histNeeded) {
+        for (int i = 0; i <= 0xffff; i++) {
+            float fi = i;
+            float hval = hlCurve[i] * fi;
+            hval = dcurve[shCurve[hval] * hval];
+            int hi = (int)(255.f * (hval));
+            outBeforeCCurveHistogram[hi] += histogram[i] ;
+        }
+    }
 }
 
 
@@ -1042,13 +761,11 @@ void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, dou
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void CurveFactory::complexLCurve (double br, double contr, const std::vector<double>& curvePoints,
-                                  LUTu & histogram, LUTu & histogramCropped, LUTf & outCurve,
+                                  const LUTu & histogram, LUTf & outCurve,
                                   LUTu & outBeforeCCurveHistogram, int skip, bool & utili)
 {
 
-    // curve without contrast
-    LUTf dcurve(65536, 0);
-
+    utili = false;
     // clear array that stores histogram valid before applying the custom curve
     if (outBeforeCCurveHistogram) {
         outBeforeCCurveHistogram.clear();
@@ -1086,7 +803,7 @@ void CurveFactory::complexLCurve (double br, double contr, const std::vector<dou
         brightcurvePoints.at(7) = 1.; // white point
         brightcurvePoints.at(8) = 1.; // value at white point
 
-        DiagonalCurve* brightcurve = new DiagonalCurve (brightcurvePoints, CURVES_MIN_POLY_POINTS / skip);
+        DiagonalCurve brightcurve(brightcurvePoints, CURVES_MIN_POLY_POINTS / skip);
         //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         // Applying brightness curve
@@ -1096,18 +813,14 @@ void CurveFactory::complexLCurve (double br, double contr, const std::vector<dou
             float val = (float)i / 32767.0;
 
             // apply brightness curve
-            val = brightcurve->getVal (val);
+            val = brightcurve.getVal (val);
 
             // store result in a temporary array
-            dcurve[i] = CLIPD(val);
+            outCurve[i] = CLIPD(val);
         }
 
-        delete brightcurve;
     } else {
-        for (int i = 0; i < 32768; i++) { // L values range up to 32767, higher values are for highlight overflow
-            // set the identity curve in the temporary array
-            dcurve[i] = (float)i / 32767.0;
-        }
+        outCurve.makeIdentity(32767.f);
     }
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1118,27 +831,21 @@ void CurveFactory::complexLCurve (double br, double contr, const std::vector<dou
     if (contr > 0.00001 || contr < -0.00001) {
         utili = true;
 
-        DiagonalCurve* contrastcurve = NULL;
-
         // compute mean luminance of the image with the curve applied
         int sum = 0;
         float avg = 0;
 
-        //float sqavg = 0;
         for (int i = 0; i < 32768; i++) {
-            avg += dcurve[i] * histogram[i];
-            //sqavg += dcurve[i]*dcurve[i] * histogram[i];
+            avg += outCurve[i] * histogram[i];
             sum += histogram[i];
         }
 
+        std::vector<double> contrastcurvePoints;
+
         if(sum) {
             avg /= sum;
-            //sqavg /= sum;
-            //float stddev = sqrt(sqavg-avg*avg);
-            //      printf("avg=%f\n",avg);
 
             //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            std::vector<double> contrastcurvePoints;
             contrastcurvePoints.resize(9);
             contrastcurvePoints.at(0) = double(DCT_NURBS);
 
@@ -1154,12 +861,10 @@ void CurveFactory::complexLCurve (double br, double contr, const std::vector<dou
             contrastcurvePoints.at(7) = 1.; // white point
             contrastcurvePoints.at(8) = 1.; // value at white point
 
-            contrastcurve = new DiagonalCurve (contrastcurvePoints, CURVES_MIN_POLY_POINTS / skip);
             //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         } else {
             //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             // sum has an invalid value (next to 0, producing a division by zero, so we create a fake contrast curve, producing a white image
-            std::vector<double> contrastcurvePoints;
             contrastcurvePoints.resize(5);
             contrastcurvePoints.at(0) = double(DCT_NURBS);
 
@@ -1169,35 +874,34 @@ void CurveFactory::complexLCurve (double br, double contr, const std::vector<dou
             contrastcurvePoints.at(3) = 1.; // white point
             contrastcurvePoints.at(4) = 1.; // value at white point
 
-            contrastcurve = new DiagonalCurve (contrastcurvePoints, CURVES_MIN_POLY_POINTS / skip);
             //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         }
 
+        DiagonalCurve contrastcurve(contrastcurvePoints, CURVES_MIN_POLY_POINTS / skip);
+
         // apply contrast enhancement
         for (int i = 0; i < 32768; i++) {
-            dcurve[i]  = contrastcurve->getVal (dcurve[i]);
+            outCurve[i] = contrastcurve.getVal (outCurve[i]);
         }
 
-        delete contrastcurve;
     }
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     // create a curve if needed
-    DiagonalCurve* tcurve = NULL;
+    std::unique_ptr<DiagonalCurve> tcurve;
     bool histNeeded = false;
 
     if (!curvePoints.empty() && curvePoints[0] != 0) {
-        tcurve = new DiagonalCurve (curvePoints, CURVES_MIN_POLY_POINTS / skip);
+        tcurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve (curvePoints, CURVES_MIN_POLY_POINTS / skip));
 
-        if (outBeforeCCurveHistogram /*&& histogramCropped*/) {
+        if (outBeforeCCurveHistogram) {
             histNeeded = true;
         }
     }
 
     if (tcurve && tcurve->isIdentity()) {
-        delete tcurve;
-        tcurve = NULL;
+        tcurve = nullptr;
     }
 
     if (tcurve) {
@@ -1208,41 +912,32 @@ void CurveFactory::complexLCurve (double br, double contr, const std::vector<dou
             float val;
 
             if (histNeeded) {
-                float hval = dcurve[i];
-                int hi = (int)(255.0 * CLIPD(hval));
-                outBeforeCCurveHistogram[hi] += histogram/*Cropped*/[i] ;
+                float hval = outCurve[i];
+                int hi = (int)(255.f * hval);
+                outBeforeCCurveHistogram[hi] += histogram[i] ;
             }
 
             // apply custom/parametric/NURBS curve, if any
-            val = tcurve->getVal (dcurve[i]);
+            val = tcurve->getVal (outCurve[i]);
 
-            outCurve[i] = (32767.0 * val);
+            outCurve[i] = (32767.f * val);
         }
     } else {
+
         // Skip the slow getval method if no curve is used (or an identity curve)
         // L values go up to 32767, last stop is for highlight overflow
-        for (int i = 0; i < 32768; i++) {
-            if (histNeeded) {
-                float hval = dcurve[i];
-                int hi = (int)(255.0 * CLIPD(hval));
-                outBeforeCCurveHistogram[hi] += histogram/*Cropped*/[i] ;
-            }
-
-            outCurve[i] = 32767.0 * dcurve[i];
+        if(histNeeded) {
+            histogram.compressTo(outBeforeCCurveHistogram, 32768, outCurve);
         }
+
+        outCurve *= 32767.f;
+
     }
 
-    for (int i = 32768; i < 65536; i++) {
+    for (int i = 32768; i < 32770; i++) { // set last two elements of lut to 32768 and 32769 to allow linear interpolation
         outCurve[i] = (float)i;
     }
 
-    if (tcurve) {
-        delete tcurve;
-    }
-
-    /*if (outBeforeCCurveHistogram) {
-        for (int i=0; i<256; i++) printf("i= %d bchist= %d \n",i,outBeforeCCurveHistogram[i]);
-    }*/
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1252,19 +947,15 @@ void CurveFactory::complexLCurve (double br, double contr, const std::vector<dou
 void CurveFactory::RGBCurve (const std::vector<double>& curvePoints, LUTf & outCurve, int skip)
 {
 
-
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
     // create a curve if needed
-    DiagonalCurve* tcurve = NULL;
+    std::unique_ptr<DiagonalCurve> tcurve;
 
     if (!curvePoints.empty() && curvePoints[0] != 0) {
-        tcurve = new DiagonalCurve (curvePoints, CURVES_MIN_POLY_POINTS / skip);
+        tcurve = std::unique_ptr<DiagonalCurve>(new DiagonalCurve(curvePoints, CURVES_MIN_POLY_POINTS / skip));
     }
 
     if (tcurve && tcurve->isIdentity()) {
-        delete tcurve;
-        tcurve = NULL;
+        tcurve = nullptr;
     }
 
     if (tcurve) {
@@ -1274,23 +965,14 @@ void CurveFactory::RGBCurve (const std::vector<double>& curvePoints, LUTf & outC
 
         for (int i = 0; i < 65536; i++) {
             // apply custom/parametric/NURBS curve, if any
-
             // RGB curves are defined with sRGB gamma, but operate on linear data
-            float val = float(i) / 65535.f;
-            val = CurveFactory::gamma2 (val);
+            float val = Color::gamma2curve[i] / 65535.f;
             val = tcurve->getVal(val);
-            val = CurveFactory::igamma2 (val);
-            //float val = tcurve->getVal ((float)i/65536.0f);
-            outCurve[i] = (65536.0f * val);
+            outCurve[i] = Color::igammatab_srgb[val * 65535.f];
         }
-
-        delete tcurve;
-    }
-    // let the LUTf empty for identity curves
-    else {
+    } else { // let the LUTf empty for identity curves
         outCurve.reset();
     }
-
 }
 
 
@@ -1300,12 +982,78 @@ void ColorAppearance::Reset()
 }
 
 // Fill a LUT with X/Y, ranged 0xffff
-void ColorAppearance::Set(Curve *pCurve)
+void ColorAppearance::Set(const Curve &pCurve)
 {
     lutColCurve(65536);
 
     for (int i = 0; i < 65536; i++) {
-        lutColCurve[i] = pCurve->getVal(double(i) / 65535.) * 65535.;
+        lutColCurve[i] = pCurve.getVal(double(i) / 65535.) * 65535.;
+    }
+}
+
+//
+RetinextransmissionCurve::RetinextransmissionCurve() {};
+
+void RetinextransmissionCurve::Reset()
+{
+    luttransmission.reset();
+}
+
+void RetinextransmissionCurve::Set(const Curve &pCurve)
+{
+    if (pCurve.isIdentity()) {
+        luttransmission.reset(); // raise this value if the quality suffers from this number of samples
+        return;
+    }
+
+    luttransmission(501); // raise this value if the quality suffers from this number of samples
+
+    for (int i = 0; i < 501; i++) {
+        luttransmission[i] = pCurve.getVal(double(i) / 500.);
+    }
+}
+
+void RetinextransmissionCurve::Set(const std::vector<double> &curvePoints)
+{
+    if (!curvePoints.empty() && curvePoints[0] > FCT_Linear && curvePoints[0] < FCT_Unchanged) {
+        FlatCurve tcurve(curvePoints, false, CURVES_MIN_POLY_POINTS / 2);
+        tcurve.setIdentityValue(0.);
+        Set(tcurve);
+    } else {
+        Reset();
+    }
+}
+
+
+RetinexgaintransmissionCurve::RetinexgaintransmissionCurve() {};
+
+void RetinexgaintransmissionCurve::Reset()
+{
+    lutgaintransmission.reset();
+}
+
+void RetinexgaintransmissionCurve::Set(const Curve &pCurve)
+{
+    if (pCurve.isIdentity()) {
+        lutgaintransmission.reset(); // raise this value if the quality suffers from this number of samples
+        return;
+    }
+
+    lutgaintransmission(501); // raise this value if the quality suffers from this number of samples
+
+    for (int i = 0; i < 501; i++) {
+        lutgaintransmission[i] = pCurve.getVal(double(i) / 500.);
+    }
+}
+
+void RetinexgaintransmissionCurve::Set(const std::vector<double> &curvePoints)
+{
+    if (!curvePoints.empty() && curvePoints[0] > FCT_Linear && curvePoints[0] < FCT_Unchanged) {
+        FlatCurve tcurve(curvePoints, false, CURVES_MIN_POLY_POINTS / 2);
+        tcurve.setIdentityValue(0.);
+        Set(tcurve);
+    } else {
+        Reset();
     }
 }
 
@@ -1315,20 +1063,34 @@ void ToneCurve::Reset()
 }
 
 // Fill a LUT with X/Y, ranged 0xffff
-void ToneCurve::Set(Curve *pCurve, float gamma, float start, float slope, float mul, float add)
+void ToneCurve::Set(const Curve &pCurve, float gamma)
 {
     lutToneCurve(65536);
 
     if (gamma <= 0.0 || gamma == 1.) {
         for (int i = 0; i < 65536; i++) {
-            lutToneCurve[i] = (float)pCurve->getVal(float(i) / 65535.f) * 65535.f;
+            lutToneCurve[i] = (float)pCurve.getVal(float(i) / 65535.f) * 65535.f;
         }
+    } else if(gamma == (float)Color::sRGBGammaCurve) {
+        // for sRGB gamma we can use luts, which is much faster
+        for (int i = 0; i < 65536; i++) {
+            float val = Color::gammatab_srgb[i] / 65535.f;
+            val = pCurve.getVal(val);
+            val = Color::igammatab_srgb[val * 65535.f];
+            lutToneCurve[i] = val;
+        }
+
     } else {
+        const float start = expf(gamma * logf( -0.055 / ((1.0 / gamma - 1.0) * 1.055 )));
+        const float slope = 1.055 * powf (start, 1.0 / gamma - 1) - 0.055 / start;
+        const float mul = 1.055;
+        const float add = 0.055;
+
         // apply gamma, that is 'pCurve' is defined with the given gamma and here we convert it to a curve in linear space
         for (int i = 0; i < 65536; i++) {
             float val = float(i) / 65535.f;
             val = CurveFactory::gamma (val, gamma, start, slope, mul, add);
-            val = pCurve->getVal(val);
+            val = pCurve.getVal(val);
             val = CurveFactory::igamma (val, gamma, start, slope, mul, add);
             lutToneCurve[i] = val * 65535.f;
         }
@@ -1358,18 +1120,17 @@ void OpacityCurve::Set(const Curve *pCurve)
 
 void OpacityCurve::Set(const std::vector<double> &curvePoints, bool &opautili)
 {
-    FlatCurve* tcurve = NULL;
+    std::unique_ptr<FlatCurve> tcurve;
 
     if (!curvePoints.empty() && curvePoints[0] > FCT_Linear && curvePoints[0] < FCT_Unchanged) {
-        tcurve = new FlatCurve (curvePoints, false, CURVES_MIN_POLY_POINTS / 2);
+        tcurve = std::unique_ptr<FlatCurve>(new FlatCurve(curvePoints, false, CURVES_MIN_POLY_POINTS / 2));
         tcurve->setIdentityValue(0.);
     }
 
     if (tcurve) {
-        Set(tcurve);
+        Set(tcurve.get());
         opautili = true;
-        delete tcurve;
-        tcurve = NULL;
+        tcurve = nullptr;
     }
 }
 
@@ -1742,16 +1503,14 @@ void ColorGradientCurve::SetXYZ(const Curve *pCurve, const double xyz_rgb[3][3],
 
 void ColorGradientCurve::SetXYZ(const std::vector<double> &curvePoints, const double xyz_rgb[3][3], const double rgb_xyz[3][3], float satur, float lumin)
 {
-    FlatCurve* tcurve = NULL;
+    std::unique_ptr<FlatCurve> tcurve;
 
     if (!curvePoints.empty() && curvePoints[0] > FCT_Linear && curvePoints[0] < FCT_Unchanged) {
-        tcurve = new FlatCurve (curvePoints, false, CURVES_MIN_POLY_POINTS / 2);
+        tcurve = std::unique_ptr<FlatCurve>(new FlatCurve(curvePoints, false, CURVES_MIN_POLY_POINTS / 2));
     }
 
     if (tcurve) {
-        SetXYZ(tcurve, xyz_rgb, rgb_xyz, satur, lumin);
-        delete tcurve;
-        tcurve = NULL;
+        SetXYZ(tcurve.get(), xyz_rgb, rgb_xyz, satur, lumin);
     }
 }
 
@@ -1843,16 +1602,14 @@ void ColorGradientCurve::SetRGB(const Curve *pCurve, const double xyz_rgb[3][3],
 
 void ColorGradientCurve::SetRGB(const std::vector<double> &curvePoints, const double xyz_rgb[3][3], const double rgb_xyz[3][3])
 {
-    FlatCurve* tcurve = NULL;
+    std::unique_ptr<FlatCurve> tcurve;
 
     if (!curvePoints.empty() && curvePoints[0] > FCT_Linear && curvePoints[0] < FCT_Unchanged) {
-        tcurve = new FlatCurve (curvePoints, false, CURVES_MIN_POLY_POINTS / 2);
+        tcurve = std::unique_ptr<FlatCurve>(new FlatCurve(curvePoints, false, CURVES_MIN_POLY_POINTS / 2));
     }
 
     if (tcurve) {
-        SetRGB(tcurve, xyz_rgb, rgb_xyz);
-        delete tcurve;
-        tcurve = NULL;
+        SetRGB(tcurve.get(), xyz_rgb, rgb_xyz);
     }
 }
 
@@ -1861,6 +1618,549 @@ void ColorGradientCurve::getVal(float index, float &r, float &g, float &b) const
     r = lut1[index * 500.f];
     g = lut2[index * 500.f];
     b = lut3[index * 500.f];
+}
+
+// this is a generic cubic spline implementation, to clean up we could probably use something already existing elsewhere
+void PerceptualToneCurve::cubic_spline(const float x[], const float y[], const int len, const float out_x[], float out_y[], const int out_len)
+{
+    int i, j;
+
+    float **A = (float **)malloc(2 * len * sizeof(*A));
+    float *As = (float *)calloc(1, 2 * len * 2 * len * sizeof(*As));
+    float *b = (float *)calloc(1, 2 * len * sizeof(*b));
+    float *c = (float *)calloc(1, 2 * len * sizeof(*c));
+    float *d = (float *)calloc(1, 2 * len * sizeof(*d));
+
+    for (i = 0; i < 2 * len; i++) {
+        A[i] = &As[2 * len * i];
+    }
+
+    for (i = len - 1; i > 0; i--) {
+        b[i] = (y[i] - y[i - 1]) / (x[i] - x[i - 1]);
+        d[i - 1] = x[i] - x[i - 1];
+    }
+
+    for (i = 1; i < len - 1; i++) {
+        A[i][i] = 2 * (d[i - 1] + d[i]);
+
+        if (i > 1) {
+            A[i][i - 1] = d[i - 1];
+            A[i - 1][i] = d[i - 1];
+        }
+
+        A[i][len - 1] = 6 * (b[i + 1] - b[i]);
+    }
+
+    for(i = 1; i < len - 2; i++) {
+        float v = A[i + 1][i] / A[i][i];
+
+        for(j = 1; j <= len - 1; j++) {
+            A[i + 1][j] -= v * A[i][j];
+        }
+    }
+
+    for(i = len - 2; i > 0; i--) {
+        float acc = 0;
+
+        for(j = i; j <= len - 2; j++) {
+            acc += A[i][j] * c[j];
+        }
+
+        c[i] = (A[i][len - 1] - acc) / A[i][i];
+    }
+
+    for (i = 0; i < out_len; i++) {
+        float x_out = out_x[i];
+        float y_out = 0;
+
+        for (j = 0; j < len - 1; j++) {
+            if (x[j] <= x_out && x_out <= x[j + 1]) {
+                float v = x_out - x[j];
+                y_out = y[j] +
+                        ((y[j + 1] - y[j]) / d[j] - (2 * d[j] * c[j] + c[j + 1] * d[j]) / 6) * v +
+                        (c[j] * 0.5) * v * v +
+                        ((c[j + 1] - c[j]) / (6 * d[j])) * v * v * v;
+            }
+        }
+
+        out_y[i] = y_out;
+    }
+
+    free(A);
+    free(As);
+    free(b);
+    free(c);
+    free(d);
+}
+
+// generic function for finding minimum of f(x) in the a-b range using the interval halving method
+float PerceptualToneCurve::find_minimum_interval_halving(float (*func)(float x, void *arg), void *arg, float a, float b, float tol, int nmax)
+{
+    float L = b - a;
+    float x = (a + b) * 0.5;
+
+    for (int i = 0; i < nmax; i++) {
+        float f_x = func(x, arg);
+
+        if ((b - a) * 0.5 < tol) {
+            return x;
+        }
+
+        float x1 = a + L / 4;
+        float f_x1 = func(x1, arg);
+
+        if (f_x1 < f_x) {
+            b = x;
+            x = x1;
+        } else {
+            float x2 = b - L / 4;
+            float f_x2 = func(x2, arg);
+
+            if (f_x2 < f_x) {
+                a = x;
+                x = x2;
+            } else {
+                a = x1;
+                b = x2;
+            }
+        }
+
+        L = b - a;
+    }
+
+    return x;
+}
+
+struct find_tc_slope_fun_arg {
+    const ToneCurve * tc;
+};
+
+float PerceptualToneCurve::find_tc_slope_fun(float k, void *arg)
+{
+    struct find_tc_slope_fun_arg *a = (struct find_tc_slope_fun_arg *)arg;
+    float areasum = 0;
+    const int steps = 10;
+
+    for (int i = 0; i < steps; i++) {
+        float x = 0.1 + ((float)i / (steps - 1)) * 0.5; // testing (sRGB) range [0.1 - 0.6], ie ignore highligths and dark shadows
+        float y = CurveFactory::gamma2(a->tc->lutToneCurve[CurveFactory::igamma2(x) * 65535] / 65535.0);
+        float y1 = k * x;
+
+        if (y1 > 1) {
+            y1 = 1;
+        }
+
+        areasum += (y - y1) * (y - y1); // square is a rough approx of (twice) the area, but it's fine for our purposes
+    }
+
+    return areasum;
+}
+
+float PerceptualToneCurve::get_curve_val(float x, float range[2], float lut[], size_t lut_size)
+{
+    float xm = (x - range[0]) / (range[1] - range[0]) * (lut_size - 1);
+
+    if (xm <= 0) {
+        return lut[0];
+    }
+
+    int idx = (int)xm;
+
+    if (idx >= lut_size - 1) {
+        return lut[lut_size - 1];
+    }
+
+    float d = xm - (float)idx; // [0 .. 1]
+    return (1.0 - d) * lut[idx] + d * lut[idx + 1];
+}
+
+// calculate a single value that represents the contrast of the tone curve
+float PerceptualToneCurve::calculateToneCurveContrastValue(void) const
+{
+
+    // find linear y = k*x the best approximates the curve, which is the linear scaling/exposure component that does not contribute any contrast
+
+    // Note: the analysis is made on the gamma encoded curve, as the LUT is linear we make backwards gamma to
+    struct find_tc_slope_fun_arg arg = { this };
+    float k = find_minimum_interval_halving(find_tc_slope_fun, &arg, 0.1, 5.0, 0.01, 20); // normally found in 8 iterations
+    //fprintf(stderr, "average slope: %f\n", k);
+
+    float maxslope = 0;
+    {
+        // look at midtone slope
+        const float xd = 0.07;
+        const float tx[] = { 0.30, 0.35, 0.40, 0.45 }; // we only look in the midtone range
+
+        for (int i = 0; i < sizeof(tx) / sizeof(tx[0]); i++) {
+            float x0 = tx[i] - xd;
+            float y0 = CurveFactory::gamma2(lutToneCurve[CurveFactory::igamma2(x0) * 65535.f] / 65535.f) - k * x0;
+            float x1 = tx[i] + xd;
+            float y1 = CurveFactory::gamma2(lutToneCurve[CurveFactory::igamma2(x1) * 65535.f] / 65535.f) - k * x1;
+            float slope = 1.0 + (y1 - y0) / (x1 - x0);
+
+            if (slope > maxslope) {
+                maxslope = slope;
+            }
+        }
+
+        // look at slope at (light) shadows and (dark) highlights
+        float e_maxslope = 0;
+        {
+            const float tx[] = { 0.20, 0.25, 0.50, 0.55 }; // we only look in the midtone range
+
+            for (int i = 0; i < sizeof(tx) / sizeof(tx[0]); i++) {
+                float x0 = tx[i] - xd;
+                float y0 = CurveFactory::gamma2(lutToneCurve[CurveFactory::igamma2(x0) * 65535.f] / 65535.f) - k * x0;
+                float x1 = tx[i] + xd;
+                float y1 = CurveFactory::gamma2(lutToneCurve[CurveFactory::igamma2(x1) * 65535.f] / 65535.f) - k * x1;
+                float slope = 1.0 + (y1 - y0) / (x1 - x0);
+
+                if (slope > e_maxslope) {
+                    e_maxslope = slope;
+                }
+            }
+        }
+        //fprintf(stderr, "%.3f %.3f\n", maxslope, e_maxslope);
+        // midtone slope is more important for contrast, but weigh in some slope from brights and darks too.
+        maxslope = maxslope * 0.7 + e_maxslope * 0.3;
+    }
+    return maxslope;
+}
+
+void PerceptualToneCurve::Apply(float &r, float &g, float &b, PerceptualToneCurveState & state) const
+{
+    float x, y, z;
+
+    if (!state.isProphoto) {
+        // convert to prophoto space to make sure the same result is had regardless of working color space
+        float newr = state.Working2Prophoto[0][0] * r + state.Working2Prophoto[0][1] * g + state.Working2Prophoto[0][2] * b;
+        float newg = state.Working2Prophoto[1][0] * r + state.Working2Prophoto[1][1] * g + state.Working2Prophoto[1][2] * b;
+        float newb = state.Working2Prophoto[2][0] * r + state.Working2Prophoto[2][1] * g + state.Working2Prophoto[2][2] * b;
+        r = newr;
+        g = newg;
+        b = newb;
+    }
+
+    const AdobeToneCurve& adobeTC = static_cast<const AdobeToneCurve&>((const ToneCurve&) * this);
+    float ar = r;
+    float ag = g;
+    float ab = b;
+    adobeTC.Apply(ar, ag, ab);
+
+    if (ar >= 65535.f && ag >= 65535.f && ab >= 65535.f) {
+        // clip fast path, will also avoid strange colors of clipped highlights
+        r = g = b = 65535.f;
+        return;
+    }
+
+    if (ar <= 0.f && ag <= 0.f && ab <= 0.f) {
+        r = g = b = 0;
+        return;
+    }
+
+    // ProPhoto constants for luminance, that is xyz_prophoto[1][]
+    const float Yr = 0.2880402f;
+    const float Yg = 0.7118741f;
+    const float Yb = 0.0000857f;
+
+    // we use the Adobe (RGB-HSV hue-stabilized) curve to decide luminance, which generally leads to a less contrasty result
+    // compared to a pure luminance curve. We do this to be more compatible with the most popular curves.
+    float oldLuminance = r * Yr + g * Yg + b * Yb;
+    float newLuminance = ar * Yr + ag * Yg + ab * Yb;
+    float Lcoef = newLuminance / oldLuminance;
+    r = LIM<float>(r * Lcoef, 0.f, 65535.f);
+    g = LIM<float>(g * Lcoef, 0.f, 65535.f);
+    b = LIM<float>(b * Lcoef, 0.f, 65535.f);
+
+    // move to JCh so we can modulate chroma based on the global contrast-related chroma scaling factor
+    Color::Prophotoxyz(r, g, b, x, y, z);
+
+    float J, C, h;
+    //Ciecam02::xyz2jch_ciecam02float( J, C, h,
+    //                                 aw, fl,
+    //                                 x * 0.0015259022f,  y * 0.0015259022f,  z * 0.0015259022f,
+    //                                 xw, yw,  zw,
+    //                                 c,  nc, pow1, nbb, ncb, cz, d);
+
+
+    if (!isfinite(J) || !isfinite(C) || !isfinite(h)) {
+        // this can happen for dark noise colors or colors outside human gamut. Then we just return the curve's result.
+        if (!state.isProphoto) {
+            float newr = state.Prophoto2Working[0][0] * r + state.Prophoto2Working[0][1] * g + state.Prophoto2Working[0][2] * b;
+            float newg = state.Prophoto2Working[1][0] * r + state.Prophoto2Working[1][1] * g + state.Prophoto2Working[1][2] * b;
+            float newb = state.Prophoto2Working[2][0] * r + state.Prophoto2Working[2][1] * g + state.Prophoto2Working[2][2] * b;
+            r = newr;
+            g = newg;
+            b = newb;
+        }
+
+        return;
+    }
+
+    float cmul = state.cmul_contrast; // chroma scaling factor
+
+    // depending on color, the chroma scaling factor can be fine-tuned below
+
+    {
+        // decrease chroma scaling sligthly of extremely saturated colors
+        float saturated_scale_factor = 0.95f;
+        const float lolim = 35.f; // lower limit, below this chroma all colors will keep original chroma scaling factor
+        const float hilim = 60.f; // high limit, above this chroma the chroma scaling factor is multiplied with the saturated scale factor value above
+
+        if (C < lolim) {
+            // chroma is low enough, don't scale
+            saturated_scale_factor = 1.f;
+        } else if (C < hilim) {
+            // S-curve transition between low and high limit
+            float x = (C - lolim) / (hilim - lolim); // x = [0..1], 0 at lolim, 1 at hilim
+
+            if (x < 0.5f) {
+                x = 2.f * SQR(x);
+            } else {
+                x = 1.f - 2.f * SQR(1 - x);
+            }
+
+            saturated_scale_factor = (1.f - x) + saturated_scale_factor * x;
+        } else {
+            // do nothing, high saturation color, keep scale factor
+        }
+
+        cmul *= saturated_scale_factor;
+    }
+
+    {
+        // increase chroma scaling slightly of shadows
+        float nL = Color::gamma2curve[newLuminance]; // apply gamma so we make comparison and transition with a more perceptual lightness scale
+        float dark_scale_factor = 1.20f;
+        //float dark_scale_factor = 1.0 + state.debug.p2 / 100.0f;
+        const float lolim = 0.15f;
+        const float hilim = 0.50f;
+
+        if (nL < lolim) {
+            // do nothing, keep scale factor
+        } else if (nL < hilim) {
+            // S-curve transition
+            float x = (nL - lolim) / (hilim - lolim); // x = [0..1], 0 at lolim, 1 at hilim
+
+            if (x < 0.5f) {
+                x = 2.f * SQR(x);
+            } else {
+                x = 1.f - 2.f * SQR(1 - x);
+            }
+
+            dark_scale_factor = dark_scale_factor * (1.0f - x) + x;
+        } else {
+            dark_scale_factor = 1.f;
+        }
+
+        cmul *= dark_scale_factor;
+    }
+
+    {
+        // to avoid strange CIECAM02 chroma errors on close-to-shadow-clipping colors we reduce chroma scaling towards 1.0 for black colors
+        float dark_scale_factor = 1.f / cmul;
+        const float lolim = 4.f;
+        const float hilim = 7.f;
+
+        if (J < lolim) {
+            // do nothing, keep scale factor
+        } else if (J < hilim) {
+            // S-curve transition
+            float x = (J - lolim) / (hilim - lolim);
+
+            if (x < 0.5f) {
+                x = 2.f * SQR(x);
+            } else {
+                x = 1.f - 2.f * SQR(1 - x);
+            }
+
+            dark_scale_factor = dark_scale_factor * (1.f - x) + x;
+        } else {
+            dark_scale_factor = 1.f;
+        }
+
+        cmul *= dark_scale_factor;
+    }
+
+    C *= cmul;
+
+    //Ciecam02::jch2xyz_ciecam02float( x, y, z,
+    //                                 J, C, h,
+    //                                 xw, yw,  zw,
+    //                                 f,  c, nc, 1, pow1, nbb, ncb, fl, cz, d, aw );
+
+    if (!isfinite(x) || !isfinite(y) || !isfinite(z)) {
+        // can happen for colors on the rim of being outside gamut, that worked without chroma scaling but not with. Then we return only the curve's result.
+        if (!state.isProphoto) {
+            float newr = state.Prophoto2Working[0][0] * r + state.Prophoto2Working[0][1] * g + state.Prophoto2Working[0][2] * b;
+            float newg = state.Prophoto2Working[1][0] * r + state.Prophoto2Working[1][1] * g + state.Prophoto2Working[1][2] * b;
+            float newb = state.Prophoto2Working[2][0] * r + state.Prophoto2Working[2][1] * g + state.Prophoto2Working[2][2] * b;
+            r = newr;
+            g = newg;
+            b = newb;
+        }
+
+        return;
+    }
+
+    Color::xyz2Prophoto(x, y, z, r, g, b);
+    r *= 655.35f;
+    g *= 655.35f;
+    b *= 655.35f;
+    r = LIM<float>(r, 0.f, 65535.f);
+    g = LIM<float>(g, 0.f, 65535.f);
+    b = LIM<float>(b, 0.f, 65535.f);
+
+    {
+        // limit saturation increase in rgb space to avoid severe clipping and flattening in extreme highlights
+
+        // we use the RGB-HSV hue-stable "Adobe" curve as reference. For S-curve contrast it increases
+        // saturation greatly, but desaturates extreme highlights and thus provide a smooth transition to
+        // the white point. However the desaturation effect is quite strong so we make a weighting
+        float ah, as, av, h, s, v;
+        Color::rgb2hsv(ar, ag, ab, ah, as, av);
+        Color::rgb2hsv(r, g, b, h, s, v);
+
+        float sat_scale = as <= 0.f ? 1.f : s / as; // saturation scale compared to Adobe curve
+        float keep = 0.2f;
+        const float lolim = 1.00f; // only mix in the Adobe curve if we have increased saturation compared to it
+        const float hilim = 1.20f;
+
+        if (sat_scale < lolim) {
+            // saturation is low enough, don't desaturate
+            keep = 1.f;
+        } else if (sat_scale < hilim) {
+            // S-curve transition
+            float x = (sat_scale - lolim) / (hilim - lolim); // x = [0..1], 0 at lolim, 1 at hilim
+
+            if (x < 0.5f) {
+                x = 2.f * SQR(x);
+            } else {
+                x = 1.f - 2.f * SQR(1 - x);
+            }
+
+            keep = (1.f - x) + keep * x;
+        } else {
+            // do nothing, very high increase, keep minimum amount
+        }
+
+        if (keep < 1.f) {
+            // mix in some of the Adobe curve result
+            r = r * keep + (1.f - keep) * ar;
+            g = g * keep + (1.f - keep) * ag;
+            b = b * keep + (1.f - keep) * ab;
+        }
+    }
+
+    if (!state.isProphoto) {
+        float newr = state.Prophoto2Working[0][0] * r + state.Prophoto2Working[0][1] * g + state.Prophoto2Working[0][2] * b;
+        float newg = state.Prophoto2Working[1][0] * r + state.Prophoto2Working[1][1] * g + state.Prophoto2Working[1][2] * b;
+        float newb = state.Prophoto2Working[2][0] * r + state.Prophoto2Working[2][1] * g + state.Prophoto2Working[2][2] * b;
+        r = newr;
+        g = newg;
+        b = newb;
+    }
+}
+
+float PerceptualToneCurve::cf_range[2];
+float PerceptualToneCurve::cf[1000];
+float PerceptualToneCurve::f, PerceptualToneCurve::c, PerceptualToneCurve::nc, PerceptualToneCurve::yb, PerceptualToneCurve::la, PerceptualToneCurve::xw, PerceptualToneCurve::yw, PerceptualToneCurve::zw, PerceptualToneCurve::gamut;
+float PerceptualToneCurve::n, PerceptualToneCurve::d, PerceptualToneCurve::nbb, PerceptualToneCurve::ncb, PerceptualToneCurve::cz, PerceptualToneCurve::aw, PerceptualToneCurve::wh, PerceptualToneCurve::pfl, PerceptualToneCurve::fl, PerceptualToneCurve::pow1;
+
+void PerceptualToneCurve::init()
+{
+
+    // init ciecam02 state, used for chroma scalings
+    xw = 96.42f;
+    yw = 100.0f;
+    zw = 82.49f;
+    yb = 20;
+    la = 20;
+    f  = 1.00f;
+    c  = 0.69f;
+    nc = 1.00f;
+
+    //Ciecam02::initcam1float(gamut, yb, 1.f, f, la, xw, yw, zw, n, d, nbb, ncb,
+    //                        cz, aw, wh, pfl, fl, c);
+    //pow1 = pow_F( 1.64f - pow_F( 0.29f, n ), 0.73f );
+
+    {
+        // init contrast-value-to-chroma-scaling conversion curve
+
+        // contrast value in the left column, chroma scaling in the right. Handles for a spline.
+        // Put the columns in a file (without commas) and you can plot the spline with gnuplot: "plot 'curve.txt' smooth csplines"
+        // A spline can easily get overshoot issues so if you fine-tune the values here make sure that the resulting spline is smooth afterwards, by
+        // plotting it for example.
+        const float p[] = {
+            0.60, 0.70, // lowest contrast
+            0.70, 0.80,
+            0.90, 0.94,
+            0.99, 1.00,
+            1.00, 1.00, // 1.0 (linear curve) to 1.0, no scaling
+            1.07, 1.00,
+            1.08, 1.00,
+            1.11, 1.02,
+            1.20, 1.08,
+            1.30, 1.12,
+            1.80, 1.20,
+            2.00, 1.22  // highest contrast
+        };
+
+        const size_t in_len = sizeof(p) / sizeof(p[0]) / 2;
+        float in_x[in_len];
+        float in_y[in_len];
+
+        for (size_t i = 0; i < in_len; i++) {
+            in_x[i] = p[2 * i + 0];
+            in_y[i] = p[2 * i + 1];
+        }
+
+        const size_t out_len = sizeof(cf) / sizeof(cf[0]);
+        float out_x[out_len];
+
+        for (size_t i = 0; i < out_len; i++) {
+            out_x[i] = in_x[0] + (in_x[in_len - 1] - in_x[0]) * (float)i / (out_len - 1);
+        }
+
+        cubic_spline(in_x, in_y, in_len, out_x, cf, out_len);
+        cf_range[0] = in_x[0];
+        cf_range[1] = in_x[in_len - 1];
+    }
+}
+
+void PerceptualToneCurve::initApplyState(PerceptualToneCurveState & state, Glib::ustring workingSpace) const
+{
+
+    // Get the curve's contrast value, and convert to a chroma scaling
+    const float contrast_value = calculateToneCurveContrastValue();
+    state.cmul_contrast = get_curve_val(contrast_value, cf_range, cf, sizeof(cf) / sizeof(cf[0]));
+    //fprintf(stderr, "contrast value: %f => chroma scaling %f\n", contrast_value, state.cmul_contrast);
+
+    // Create state for converting to/from prophoto (if necessary)
+    if (workingSpace == "ProPhoto") {
+        state.isProphoto = true;
+    } else {
+      /*
+        state.isProphoto = false;
+        TMatrix Work = iccStore->workingSpaceMatrix(workingSpace);
+        memset(state.Working2Prophoto, 0, sizeof(state.Working2Prophoto));
+
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                for (int k = 0; k < 3; k++) {
+                    state.Working2Prophoto[i][j] += prophoto_xyz[i][k] * Work[k][j];
+                }
+
+        Work = iccStore->workingSpaceInverseMatrix (workingSpace);
+        memset(state.Prophoto2Working, 0, sizeof(state.Prophoto2Working));
+
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                for (int k = 0; k < 3; k++) {
+                    state.Prophoto2Working[i][j] += Work[i][k] * xyz_prophoto[k][j];
+                }
+       */
+    }
 }
 
 }

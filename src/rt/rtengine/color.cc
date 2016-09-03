@@ -39,8 +39,11 @@ LUTf Color::cachef;
 LUTf Color::gamma2curve;
 
 LUTf Color::gammatab;
+LUTuc Color::gammatabThumb;
 LUTf Color::igammatab_srgb;
+LUTf Color::igammatab_srgb1;
 LUTf Color::gammatab_srgb;
+LUTf Color::gammatab_srgb1;
 //  LUTf Color::igammatab_709;
 //  LUTf Color::gammatab_709;
 LUTf Color::igammatab_55;
@@ -53,6 +56,11 @@ LUTf Color::gammatab_26_11;
 LUTf Color::igammatab_24_17;
 LUTf Color::gammatab_24_17a;
 LUTf Color::gammatab_13_2;
+LUTf Color::igammatab_13_2;
+LUTf Color::gammatab_115_2;
+LUTf Color::igammatab_115_2;
+LUTf Color::gammatab_145_3;
+LUTf Color::igammatab_145_3;
 
 // Wikipedia sRGB: Unlike most other RGB color spaces, the sRGB gamma cannot be expressed as a single numerical value.
 // The overall gamma is approximately 2.2, consisting of a linear (gamma 1.0) section near black, and a non-linear section elsewhere involving a 2.4 exponent
@@ -131,103 +139,209 @@ void MunsellDebugInfo::reinitValues()
 void Color::init ()
 {
 
-    int maxindex = 65536;
-    cachef(maxindex, LUT_CLIP_BELOW);
-
-    gamma2curve(maxindex, LUT_CLIP_BELOW | LUT_CLIP_ABOVE);
-
-    for (int i = 0; i < maxindex; i++) {
-        if (i > eps_max) {
-            cachef[i] = 327.68 * ( exp(1.0 / 3.0 * log((double)i / MAXVALF) ));
-        } else {
-            cachef[i] = 327.68 * ((kappa * i / MAXVALF + 16.0) / 116.0);
-        }
-    }
-
-    for (int i = 0; i < maxindex; i++) {
-        gamma2curve[i] = (gamma2(i / 65535.0) * 65535.0);
-    }
-
     /*******************************************/
 
-    gammatab(65536, 0);
-    igammatab_srgb(65536, 0);
-    gammatab_srgb(65536, 0);
-    //  igammatab_709(65536,0);
-    //  gammatab_709(65536,0);
-    igammatab_55(65536, 0);
-    gammatab_55(65536, 0);
-    igammatab_4(65536, 0);
-    gammatab_4(65536, 0);
+    constexpr auto maxindex = 65536;
 
-    igammatab_26_11(65536, 0);
-    gammatab_26_11(65536, 0);
-    igammatab_24_17(65536, 0);
-    gammatab_24_17a(65536, LUT_CLIP_ABOVE | LUT_CLIP_BELOW);
-    gammatab_13_2(65536, 0);
+    cachef(maxindex, LUT_CLIP_BELOW);
+    gammatab(maxindex, 0);
+    gammatabThumb(maxindex, 0);
 
-    for (int i = 0; i < 65536; i++) {
-        gammatab_srgb[i] = (65535.0 * gamma2 (i / 65535.0));
+    igammatab_srgb(maxindex, 0);
+    igammatab_srgb1(maxindex, 0);
+    gammatab_srgb(maxindex, 0);
+    gammatab_srgb1(maxindex, 0);
+    igammatab_55(maxindex, 0);
+    gammatab_55(maxindex, 0);
+    igammatab_4(maxindex, 0);
+    gammatab_4(maxindex, 0);
+
+    igammatab_26_11(maxindex, 0);
+    gammatab_26_11(maxindex, 0);
+    igammatab_24_17(maxindex, 0);
+    gammatab_24_17a(maxindex, LUT_CLIP_ABOVE | LUT_CLIP_BELOW);
+    gammatab_13_2(maxindex, 0);
+    igammatab_13_2(maxindex, 0);
+    gammatab_115_2(maxindex, 0);
+    igammatab_115_2(maxindex, 0);
+    gammatab_145_3(maxindex, 0);
+    igammatab_145_3(maxindex, 0);
+
+#ifdef _OPENMP
+    #pragma omp parallel sections
+#endif
+    {
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+        {
+            int i = 0;
+            int epsmaxint = eps_max;
+
+            for (; i <= epsmaxint; i++)
+            {
+                cachef[i] = 327.68 * ((kappa * i / MAXVALF + 16.0) / 116.0);
+            }
+
+            for(; i < maxindex; i++)
+            {
+                cachef[i] = 327.68 * std::cbrt((double)i / MAXVALF);
+            }
+        }
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+        {
+            for (int i = 0; i < maxindex; i++)
+            {
+                gammatab_srgb[i] = gammatab_srgb1[i] = gamma2(i / 65535.0);
+            }
+            gammatab_srgb *= 65535.f;
+            gamma2curve.share(gammatab_srgb, LUT_CLIP_BELOW | LUT_CLIP_ABOVE); // shares the buffer with gammatab_srgb but has different clip flags
+        }
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+{
+        for (int i = 0; i < maxindex; i++) {
+            igammatab_srgb[i] = igammatab_srgb1[i] = igamma2 (i / 65535.0);
+        }
+        igammatab_srgb *= 65535.f;
+}
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+        {
+            double rsRGBGamma = 1.0 / sRGBGamma;
+
+            for (int i = 0; i < maxindex; i++) {
+                double val = pow (i / 65535.0, rsRGBGamma);
+                gammatab[i] = 65535.0 * val;
+                gammatabThumb[i] = (unsigned char)(255.0 * val);
+            }
+        }
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            gammatab_55[i] = 65535.0 * gamma55 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            igammatab_55[i] = 65535.0 * igamma55 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            gammatab_4[i] = 65535.0 * gamma4 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            igammatab_4[i] = 65535.0 * igamma4 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            gammatab_13_2[i] = 65535.0 * gamma13_2 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            igammatab_13_2[i] = 65535.0 * igamma13_2 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            gammatab_115_2[i] = 65535.0 * gamma115_2 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            igammatab_115_2[i] = 65535.0 * igamma115_2 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            gammatab_145_3[i] = 65535.0 * gamma145_3 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            igammatab_145_3[i] = 65535.0 * igamma145_3 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            gammatab_26_11[i] = 65535.0 * gamma26_11 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            igammatab_26_11[i] = 65535.0 * igamma26_11 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            gammatab_24_17a[i] = gamma24_17(i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+
+        for (int i = 0; i < maxindex; i++) {
+            igammatab_24_17[i] = 65535.0 * igamma24_17 (i / 65535.0);
+        }
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+        initMunsell();
+
+#ifdef _OPENMP
+        #pragma omp section
+#endif
+        linearGammaTRC = cmsBuildGamma(NULL, 1.0);
     }
-
-    for (int i = 0; i < 65536; i++) {
-        igammatab_srgb[i] = (65535.0 * igamma2 (i / 65535.0));
-    }
-
-    for (int i = 0; i < 65536; i++) {
-        gammatab[i] = (65535.0 * pow (i / 65535.0, 0.454545));
-    }
-
-    /*       for (int i=0; i<65536; i++)
-               gammatab_709[i] = (65535.0 * gamma709 (i/65535.0));
-           for (int i=0; i<65536; i++)
-               igammatab_709[i] = (65535.0 * igamma709 (i/65535.0));
-    */
-    for (int i = 0; i < 65536; i++) {
-        gammatab_55[i] = (65535.0 * gamma55 (i / 65535.0));
-    }
-
-    for (int i = 0; i < 65536; i++) {
-        igammatab_55[i] = (65535.0 * igamma55 (i / 65535.0));
-    }
-
-    for (int i = 0; i < 65536; i++) {
-        gammatab_4[i] = (65535.0 * gamma4 (i / 65535.0));
-    }
-
-    for (int i = 0; i < 65536; i++) {
-        igammatab_4[i] = (65535.0 * igamma4 (i / 65535.0));
-    }
-
-    for (int i = 0; i < 65536; i++) {
-        gammatab_13_2[i] = (65535.0 * gamma13_2 (i / 65535.0));
-    }
-
-    for (int i = 0; i < 65536; i++) {
-        gammatab_26_11[i] = (65535.0 * gamma26_11 (i / 65535.0));
-    }
-
-    for (int i = 0; i < 65536; i++) {
-        igammatab_26_11[i] = (65535.0 * igamma26_11 (i / 65535.0));
-    }
-
-    for (int i = 0; i < 65536; i++) {
-        float j = (float)i / 65535.0f;
-        gammatab_24_17a[i] = gamma24_17(j);
-    }
-
-    for (int i = 0; i < 65536; i++) {
-        igammatab_24_17[i] = (65535.0 * igamma24_17 (i / 65535.0));
-    }
-
-    /*FILE* f = fopen ("c.txt", "wt");
-    for (int i=0; i<256; i++)
-    fprintf (f, "%g %g\n", i/255.0, clower (i/255.0, 2.0, 1.0));
-    fclose (f);*/
-
-    initMunsell();
-
-    linearGammaTRC = cmsBuildGamma(NULL, 1.0);
 }
 
 void Color::cleanup ()
@@ -283,6 +397,70 @@ void Color::rgb2hsl(float r, float g, float b, float &h, float &s, float &l)
     }
 }
 
+void Color::rgb2hslfloat(float r, float g, float b, float &h, float &s, float &l)
+{
+
+    float m = min(r, g, b);
+    float M = max(r, g, b);
+    float C = M - m;
+
+    l = (M + m) * 7.6295109e-6f; // (0.5f / 65535.f)
+
+    if (fabsf(C) < 0.65535f) { // 0.00001f * 65535.f
+        h = 0.f;
+        s = 0.f;
+    } else {
+
+        if (l <= 0.5f) {
+            s = (M - m) / (M + m);
+        } else {
+            s = (M - m) / (131070.f - M - m); // 131070.f = 2.f * 65535.f
+        }
+
+        if ( r == M ) {
+            h = (g - b);
+        } else if ( g == M ) {
+            h = (2.f * C) + (b - r);
+        } else {
+            h = (4.f * C) + (r - g);
+        }
+
+        h /= (6.f * C);
+
+        if ( h < 0.f ) {
+            h += 1.f;
+        } else if ( h > 1.f ) {
+            h -= 1.f;
+        }
+    }
+}
+
+#ifdef __SSE2__
+void Color::rgb2hsl(vfloat r, vfloat g, vfloat b, vfloat &h, vfloat &s, vfloat &l)
+{
+    vfloat maxv = _mm_max_ps(r, _mm_max_ps(g, b));
+    vfloat minv = _mm_min_ps(r, _mm_min_ps(g, b));
+    vfloat C = maxv - minv;
+    vfloat tempv = maxv + minv;
+    l = (tempv) * F2V(7.6295109e-6f);
+    s = (maxv - minv);
+    s /= vself(vmaskf_gt(l, F2V(0.5f)), F2V(131070.f) - tempv, tempv);
+
+    h = F2V(4.f) * C + r - g;
+    h = vself(vmaskf_eq(g, maxv), F2V(2.f) * C + b - r, h);
+    h = vself(vmaskf_eq(r, maxv), g - b, h);
+
+    h /= (F2V(6.f) * C);
+    vfloat onev = F2V(1.f);
+    h = vself(vmaskf_lt(h, ZEROV), h + onev, h);
+    h = vself(vmaskf_gt(h, onev), h - onev, h);
+
+    vmask zeromask = vmaskf_lt(vabsf(C), F2V(0.65535f));
+    h = vself(zeromask, ZEROV, h);
+    s = vself(zeromask, ZEROV, s);
+}
+#endif
+
 double Color::hue2rgb(double p, double q, double t)
 {
     if (t < 0.) {
@@ -301,6 +479,42 @@ double Color::hue2rgb(double p, double q, double t)
         return p;
     }
 }
+
+float Color::hue2rgbfloat(float p, float q, float t)
+{
+    if (t < 0.f) {
+        t += 6.f;
+    } else if( t > 6.f) {
+        t -= 6.f;
+    }
+
+    if      (t < 1.f) {
+        return p + (q - p) * t;
+    } else if (t < 3.f) {
+        return q;
+    } else if (t < 4.f) {
+        return p + (q - p) * (4.f - t);
+    } else {
+        return p;
+    }
+}
+
+#ifdef __SSE2__
+vfloat Color::hue2rgb(vfloat p, vfloat q, vfloat t)
+{
+    vfloat fourv = F2V(4.f);
+    vfloat threev = F2V(3.f);
+    vfloat sixv = threev + threev;
+    t = vself(vmaskf_lt(t, ZEROV), t + sixv, t);
+    t = vself(vmaskf_gt(t, sixv), t - sixv, t);
+
+    vfloat temp1 = p + (q - p) * t;
+    vfloat temp2 = p + (q - p) * (fourv - t);
+    vfloat result = vself(vmaskf_lt(t, fourv), temp2, p);
+    result = vself(vmaskf_lt(t, threev), q, result);
+    return vself(vmaskf_lt(t, fourv - threev), temp1, result);
+}
+#endif
 
 void Color::hsl2rgb (float h, float s, float l, float &r, float &g, float &b)
 {
@@ -326,6 +540,53 @@ void Color::hsl2rgb (float h, float s, float l, float &r, float &g, float &b)
         b = float(65535.0 * hue2rgb (m1, m2, h_ * 6.0 - 2.0));
     }
 }
+
+void Color::hsl2rgbfloat (float h, float s, float l, float &r, float &g, float &b)
+{
+
+    if (s == 0.f) {
+        r = g = b = 65535.f * l;    //  achromatic
+    } else {
+        float m2;
+
+        if (l <= 0.5f) {
+            m2 = l * (1.f + s);
+        } else {
+            m2 = l + s - l * s;
+        }
+
+        float m1 = 2.f * l - m2;
+
+        r = 65535.f * hue2rgbfloat (m1, m2, h * 6.f + 2.f);
+        g = 65535.f * hue2rgbfloat (m1, m2, h * 6.f);
+        b = 65535.f * hue2rgbfloat (m1, m2, h * 6.f - 2.f);
+    }
+}
+
+#ifdef __SSE2__
+void Color::hsl2rgb (vfloat h, vfloat s, vfloat l, vfloat &r, vfloat &g, vfloat &b)
+{
+
+    vfloat m2 = s * l;
+    m2 = vself(vmaskf_gt(l, F2V(0.5f)), s - m2, m2);
+    m2 += l;
+
+    vfloat twov = F2V(2.f);
+    vfloat c65535v = F2V(65535.f);
+    vfloat m1 = l + l - m2;
+
+    h *= F2V(6.f);
+    r = c65535v * hue2rgb (m1, m2, h + twov);
+    g = c65535v * hue2rgb (m1, m2, h);
+    b = c65535v * hue2rgb (m1, m2, h - twov);
+
+    vmask selectsMask = vmaskf_eq(ZEROV, s);
+    vfloat lc65535v = c65535v * l;
+    r = vself(selectsMask, lc65535v, r);
+    g = vself(selectsMask, lc65535v, g);
+    b = vself(selectsMask, lc65535v, b);
+}
+#endif
 
 void Color::hsl2rgb01 (float h, float s, float l, float &r, float &g, float &b)
 {
@@ -568,6 +829,15 @@ void Color::rgbxyz (float r, float g, float b, float &x, float &y, float &z, con
     z = ((xyz_rgb[2][0] * r + xyz_rgb[2][1] * g + xyz_rgb[2][2] * b)) ;
 }
 
+#ifdef __SSE2__
+void Color::rgbxyz (vfloat r, vfloat g, vfloat b, vfloat &x, vfloat &y, vfloat &z, const vfloat xyz_rgb[3][3])
+{
+    x = ((xyz_rgb[0][0] * r + xyz_rgb[0][1] * g + xyz_rgb[0][2] * b)) ;
+    y = ((xyz_rgb[1][0] * r + xyz_rgb[1][1] * g + xyz_rgb[1][2] * b)) ;
+    z = ((xyz_rgb[2][0] * r + xyz_rgb[2][1] * g + xyz_rgb[2][2] * b)) ;
+}
+#endif
+
 void Color::xyz2rgb (float x, float y, float z, float &r, float &g, float &b, const double rgb_xyz[3][3])
 {
     //Transform to output color.  Standard sRGB is D65, but internal representation is D50
@@ -598,6 +868,15 @@ void Color::xyz2rgb (float x, float y, float z, float &r, float &g, float &b, co
     b = ((rgb_xyz[2][0] * x + rgb_xyz[2][1] * y + rgb_xyz[2][2] * z)) ;
 }
 
+#ifdef __SSE2__
+void Color::xyz2rgb (vfloat x, vfloat y, vfloat z, vfloat &r, vfloat &g, vfloat &b, const vfloat rgb_xyz[3][3])
+{
+    r = ((rgb_xyz[0][0] * x + rgb_xyz[0][1] * y + rgb_xyz[0][2] * z)) ;
+    g = ((rgb_xyz[1][0] * x + rgb_xyz[1][1] * y + rgb_xyz[1][2] * z)) ;
+    b = ((rgb_xyz[2][0] * x + rgb_xyz[2][1] * y + rgb_xyz[2][2] * z)) ;
+}
+#endif // __SSE2__
+
 void Color::trcGammaBW (float &r, float &g, float &b, float gammabwr, float gammabwg, float gammabwb)
 {
     // correct gamma for black and white image : pseudo TRC curve of ICC profil
@@ -623,6 +902,15 @@ void Color::computeBWMixerConstants (const Glib::ustring &setting, const Glib::u
 {
     float somm;
     float som = mixerRed + mixerGreen + mixerBlue;
+
+    if(som >= 0.f && som < 1.f) {
+        som = 1.f;
+    }
+
+    if(som < 0.f && som > -1.f) {
+        som = -1.f;
+    }
+
 
     // rM = mixerRed, gM = mixerGreen, bM = mixerBlue !
     //presets
@@ -685,6 +973,15 @@ void Color::computeBWMixerConstants (const Glib::ustring &setting, const Glib::u
     bbm = mixerBlue;
 
     somm = mixerRed + mixerGreen + mixerBlue;
+
+    if(somm >= 0.f && somm < 1.f) {
+        somm = 1.f;
+    }
+
+    if(somm < 0.f && somm > -1.f) {
+        somm = -1.f;
+    }
+
     mixerRed = mixerRed / somm;
     mixerGreen = mixerGreen / somm;
     mixerBlue = mixerBlue / somm;
@@ -900,12 +1197,24 @@ void Color::computeBWMixerConstants (const Glib::ustring &setting, const Glib::u
     mixerGreen = mixerGreen * filgreen;
     mixerBlue  = mixerBlue  * filblue;
 
+    if(mixerRed + mixerGreen + mixerBlue == 0) {
+        mixerRed += 1.f;
+    }
+
     mixerRed   = filcor * mixerRed   / (mixerRed + mixerGreen + mixerBlue);
     mixerGreen = filcor * mixerGreen / (mixerRed + mixerGreen + mixerBlue);
     mixerBlue  = filcor * mixerBlue  / (mixerRed + mixerGreen + mixerBlue);
 
     if(filter != "None") {
         som = mixerRed + mixerGreen + mixerBlue;
+
+        if(som >= 0.f && som < 1.f) {
+            som = 1.f;
+        }
+
+        if(som < 0.f && som > -1.f) {
+            som = -1.f;
+        }
 
         if(setting == "RGB-Abs" || setting == "ROYGCBPM-Abs") {
             kcorec = kcorec * som;
@@ -1055,12 +1364,10 @@ void Color::interpolateRGBColor (float realL, float iplow, float iphigh, int alg
     float bal, balH, cal, calH, calm;
     bal = balH = balance;
     cal = calH = calm = 1.f - chromat;
-    float med = (iphigh + iplow) / 2.f;
-    float medH = (iphigh + iplow) / 2.f;
+    float med = 1.f;
+    float medH = 0.f;
     float medL = (iphigh + iplow) / 2.f;
 
-    med = 1.f;
-    medH = 0.f; //new algo for 2 colors
     float calan;
     calan = chromat;
 
@@ -1133,35 +1440,35 @@ void Color::calcGamma (double pwr, double ts, int mode, int imax, double &gamma0
 {
     //from Dcraw (D.Coffin)
     int i;
-    double g[6], bnd[2] = {0, 0};
+    double g[6], bnd[2] = {0., 0.};
 
     g[0] = pwr;
     g[1] = ts;
-    g[2] = g[3] = g[4] = 0;
-    bnd[g[1] >= 1] = 1;
+    g[2] = g[3] = g[4] = 0.;
+    bnd[g[1] >= 1.] = 1.;
 
-    if (g[1] && (g[1] - 1) * (g[0] - 1) <= 0) {
+    if (g[1] && (g[1] - 1.) * (g[0] - 1.) <= 0.) {
         for (i = 0; i < 48; i++) {
-            g[2] = (bnd[0] + bnd[1]) / 2;
+            g[2] = (bnd[0] + bnd[1]) / 2.;
 
             if (g[0]) {
-                bnd[(pow(g[2] / g[1], -g[0]) - 1) / g[0] - 1 / g[2] > -1] = g[2];
+                bnd[(pow(g[2] / g[1], -g[0]) - 1.) / g[0] - 1. / g[2] > -1.] = g[2];
             } else {
-                bnd[g[2] / exp(1 - 1 / g[2]) < g[1]] = g[2];
+                bnd[g[2] / exp(1. - 1. / g[2]) < g[1]] = g[2];
             }
         }
 
         g[3] = g[2] / g[1];
 
         if (g[0]) {
-            g[4] = g[2] * (1 / g[0] - 1);
+            g[4] = g[2] * (1. / g[0] - 1.);
         }
     }
 
     if (g[0]) {
-        g[5] = 1 / (g[1] * SQR(g[3]) / 2 - g[4] * (1 - g[3]) + (1 - pow(g[3], 1 + g[0])) * (1 + g[4]) / (1 + g[0])) - 1;
+        g[5] = 1. / (g[1] * SQR(g[3]) / 2. - g[4] * (1. - g[3]) + (1. - pow(g[3], 1. + g[0])) * (1. + g[4]) / (1. + g[0])) - 1.;
     } else {
-        g[5] = 1 / (g[1] * SQR(g[3]) / 2 + 1 - g[2] - g[3] - g[2] * g[3] * (log(g[3]) - 1)) - 1;
+        g[5] = 1. / (g[1] * SQR(g[3]) / 2. + 1. - g[2] - g[3] - g[2] * g[3] * (log(g[3]) - 1.)) - 1.;
     }
 
     if (!mode--) {
@@ -1252,9 +1559,9 @@ void Color::Yuv2Lab(float Yin, float u, float v, float &L, float &a, float &b, d
 
     gamutmap(X, Y, Z, wp);
 
-    float fx = (X <= 65535.0 ? cachef[X] : (327.68 * exp(log(X / MAXVALF) / 3.0 )));
-    float fy = (Y <= 65535.0 ? cachef[Y] : (327.68 * exp(log(Y / MAXVALF) / 3.0 )));
-    float fz = (Z <= 65535.0 ? cachef[Z] : (327.68 * exp(log(Z / MAXVALF) / 3.0 )));
+    float fx = (X <= 65535.0 ? cachef[X] : (327.68 * std::cbrt(X / MAXVALF)));
+    float fy = (Y <= 65535.0 ? cachef[Y] : (327.68 * std::cbrt(Y / MAXVALF)));
+    float fz = (Z <= 65535.0 ? cachef[Z] : (327.68 * std::cbrt(Z / MAXVALF)));
 
     L = (116.0 * fy - 5242.88); //5242.88=16.0*327.68;
     a = (500.0 * (fx - fy) );
@@ -1300,7 +1607,7 @@ void Color::XYZ2Luv (float X, float Y, float Z, float &L, float &u, float &v)
     Z /= 65535.f;
 
     if (Y > float(eps)) {
-        L = 116.f * pow(Y, 1.f / 3.f) - 16.f;
+        L = 116.f * std::cbrt(Y) - 16.f;
     } else {
         L = float(kappa) * Y;
     }
@@ -1545,21 +1852,13 @@ void Color::transitred (const float HH, float const Chprov1, const float dred, c
     if(HH >= 0.15f && HH < 1.3f) {
         if (Chprov1 < dred) {
             factor = factorskin;
-        } else if(Chprov1 < (dred + protect_red))
-            // factor = (factorsat-factorskin)/protect_red*Chprov1+factorsat-(dred+protect_red)*(factorsat-factorskin)/protect_red;
-            // optimized formula
-        {
+        } else if(Chprov1 < (dred + protect_red)) {
             factor = ((factorsat - factorskin) * Chprov1 + factorsat * protect_red - (dred + protect_red) * (factorsat - factorskin)) / protect_red;
         }
-    }
-    // then test if chroma is in the extanded range
-    else if ( HH > (0.15f - deltaHH) || HH < (1.3f + deltaHH) ) {
+    } else if ( HH > (0.15f - deltaHH) && HH < (1.3f + deltaHH) ) { // test if chroma is in the extended range
         if (Chprov1 < dred) {
             factor = factorskinext;    // C=dred=55 => real max of skin tones
-        } else if (Chprov1 < (dred + protect_red)) // transition
-            // factor = (factorsat-factorskinext)/protect_red*Chprov1+factorsat-(dred+protect_red)*(factorsat-factorskinext)/protect_red;
-            // optimized formula
-        {
+        } else if (Chprov1 < (dred + protect_red)) {// transition
             factor = ((factorsat - factorskinext) * Chprov1 + factorsat * protect_red - (dred + protect_red) * (factorsat - factorskinext)) / protect_red;
         }
     }

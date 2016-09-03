@@ -65,6 +65,7 @@ PF::RawOutputPar::RawOutputPar():
   cam_profile_name("cam_profile_name", this),
   cam_dcp_profile_name("cam_dcp_profile_name", this),
   cam_profile( NULL ),
+  apply_hue_sat_map( true ),
   gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","linear"),
   gamma_lin("gamma_lin", this, 0),
   gamma_exp("gamma_exp", this, 2.2),
@@ -245,10 +246,14 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
           }
           std::cout<<std::endl;
         }
-        cam_dcp_profile = new rtengine::DCPProfile( cam_dcp_profile_name.get(), true );
+
+        int preferred_illuminant = 2;
+        cam_dcp_profile = new rtengine::DCPProfile( cam_dcp_profile_name.get() );
         double cam_wb[3] = {get_wb_red(), get_wb_green(), get_wb_blue()};
-        double mXYZCAM[3][3];
-        cam_dcp_profile->MakeXYZCAM( cam_wb, dcam_xyz, 0, mXYZCAM );
+        //double mXYZCAM[3][3];
+        //cam_dcp_profile->makeXyzCam( cam_wb, dcam_xyz, 0, mXYZCAM );
+        rtengine::DCPProfile::Matrix mXYZCAM;
+        mXYZCAM = cam_dcp_profile->makeXyzCam( cam_wb, dcam_xyz, preferred_illuminant );
         std::cout<<"mXYZCAM:"<<std::endl;
         for(int i = 0; i < 3; i++) {
           for(int j = 0; j < 3; j++) {
@@ -256,14 +261,47 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
           }
           std::cout<<std::endl;
         }
-        float cam_xyz_dcp[3][3];
+        float xyz_cam_dcp[3][3];
         for(int i = 0; i < 3; i++)
           for(int j = 0; j < 3; j++)
-            cam_xyz_dcp[i][j] = mXYZCAM[i][j];
-        cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzmatrix_profile((float (*)[3])cam_xyz_dcp);
-        cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
-        std::cout<<"RawOutputPar::build(): DCP cam_profile="<<cam_profile
-            <<"  cam_profile->get_profile()="<<cam_profile->get_profile()<<std::endl;
+            xyz_cam_dcp[i][j] = mXYZCAM[i][j];
+
+        delta_base = cam_dcp_profile->makeHueSatMap( cam_wb, preferred_illuminant );
+        delta_info = cam_dcp_profile->get_delta_info();
+
+        look_table = cam_dcp_profile->get_look_table();
+        look_info = cam_dcp_profile->get_look_info();
+
+        bool apply_hue_sat_map = true;
+        if( apply_hue_sat_map && !delta_base.empty() ) {
+          // LUT available --> Calculate matrix for conversion raw>ProPhoto
+          for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+              prophoto_cam[i][j] = 0;
+              for (int k = 0; k < 3; ++k) {
+                prophoto_cam[i][j] += rtengine::prophoto_xyz[i][k] * xyz_cam_dcp[k][j];
+              }
+            }
+          }
+          std::cout<<"pro_photo:"<<std::endl;
+          for(int i = 0; i < 3; i++) {
+            for(int j = 0; j < 3; j++) {
+              std::cout<<prophoto_cam[i][j]<<" ";
+            }
+            std::cout<<std::endl;
+          }
+          //cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzmatrix_profile((float (*)[3])rtengine::xyz_prophoto);
+          //std::cout<<"cam_prof_temp(prophoto): "<<cam_prof_temp<<std::endl;
+          cam_profile = PF::ICCStore::Instance().get_profile( PF::OUT_PROF_PROPHOTO, PF::PF_TRC_LINEAR );
+          std::cout<<"cam_profile(prophoto): "<<cam_profile<<std::endl;
+        } else {
+          cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzmatrix_profile((float (*)[3])xyz_cam_dcp);
+          cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
+        }
+        std::cout<<"RawOutputPar::build(): DCP cam_profile="<<cam_profile;
+        if( cam_profile )
+            std::cout<<"  cam_profile->get_profile()="<<cam_profile->get_profile();
+        std::cout<<std::endl;
       }
       break;
     default:

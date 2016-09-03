@@ -130,6 +130,13 @@ enum hlreco_mode_t {
     Property<std::string> cam_dcp_profile_name;
     std::string current_cam_dcp_profile_name;
     rtengine::DCPProfile* cam_dcp_profile;
+    std::vector<rtengine::DCPProfile::HsbModify> delta_base;
+    rtengine::DCPProfile::HsdTableInfo delta_info;
+    std::vector<rtengine::DCPProfile::HsbModify> look_table;
+    rtengine::DCPProfile::HsdTableInfo look_info;
+
+    float prophoto_cam[3][3];
+    bool apply_hue_sat_map;
 
     // Input gamma 
     PropertyBase gamma_mode;
@@ -177,8 +184,34 @@ enum hlreco_mode_t {
     cmsHTRANSFORM get_transform() { return transform; }
     TRC_type get_trc_type() { return (TRC_type)out_trc_type.get_enum_value().first; }
 
+    const std::vector<rtengine::DCPProfile::HsbModify>& get_delta_base() { return delta_base; }
+    const rtengine::DCPProfile::HsdTableInfo& get_delta_info() { return delta_info; }
+
+    const std::vector<rtengine::DCPProfile::HsbModify>& get_look_table() { return look_table; }
+    const rtengine::DCPProfile::HsdTableInfo& get_look_info() { return look_info; }
+
+    typedef float _matrix3x3[3][3];
+    void get_prophoto_cam_dcp( _matrix3x3& m ) {
+      m[0][0] = prophoto_cam[0][0];
+      m[0][1] = prophoto_cam[0][1];
+      m[0][2] = prophoto_cam[0][2];
+      m[1][0] = prophoto_cam[1][0];
+      m[1][1] = prophoto_cam[1][1];
+      m[1][2] = prophoto_cam[1][2];
+      m[2][0] = prophoto_cam[2][0];
+      m[2][1] = prophoto_cam[2][1];
+      m[2][2] = prophoto_cam[2][2];
+    }
+    bool get_apply_hue_sat_map() { return apply_hue_sat_map; }
+
     bool get_clip_negative() { return clip_negative.get(); }
     bool get_clip_overflow() { return clip_overflow.get(); }
+
+    void apply_dcp_tone_curve( float& r, float& g, float& b )
+    {
+      if( cam_dcp_profile && cam_dcp_profile->getHasToneCurve() )
+        cam_dcp_profile->get_tone_curve().Apply(r, g, b);
+    }
 
     void set_image_hints( VipsImage* img )
     {
@@ -440,6 +473,18 @@ enum hlreco_mode_t {
       std::cout<<"("<<r->left<<","<<r->top<<"): max = "<<max[0]<<"  "<<max[1]<<"  "<<max[2]<<std::endl;
       */
 
+      float pro_photo[3][3];
+      opar->get_prophoto_cam_dcp(pro_photo);
+      /*
+      std::cout<<"pro_photo:"<<std::endl;
+      for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+          std::cout<<pro_photo[i][j]<<" ";
+        }
+        std::cout<<std::endl;
+      }
+      */
+
       for( y = 0; y < height; y++ ) {
         p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
         pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
@@ -510,11 +555,56 @@ enum hlreco_mode_t {
             }
           }
 
-        } else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ||
-            opar->get_camera_profile_mode() == IN_PROF_DCP ) {
+        } else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ) {
           if(opar->get_transform()) {
             for( int xi = 0; xi < line_size; xi++ ) {
               line2[xi] = CLIPRAW(line[xi]);
+            }
+            cmsDoTransform( opar->get_transform(), line2, pout, width );
+            //std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
+            //    <<pout[0]<<","<<pout[1]<<","<<pout[2]<<std::endl;
+          } else {
+            memcpy( pout, line, sizeof(float)*line_size );
+          }
+        } else if( opar->get_camera_profile_mode() == IN_PROF_DCP ) {
+          if(opar->get_transform()) {
+            float newr, newg, newb, h, s, v;
+
+            for( int xi = 0; xi < line_size; xi++ ) {
+              line2[xi] = CLIPRAW(line[xi]);
+            }
+            if( opar->get_apply_hue_sat_map() && !opar->get_delta_base().empty() ) {
+              for( int xi = 0; xi < line_size; xi+=3 ) {
+                newr = pro_photo[0][0] * line2[xi] + pro_photo[0][1] * line2[xi+1] + pro_photo[0][2] * line2[xi+2];
+                newg = pro_photo[1][0] * line2[xi] + pro_photo[1][1] * line2[xi+1] + pro_photo[1][2] * line2[xi+2];
+                newb = pro_photo[2][0] * line2[xi] + pro_photo[2][1] * line2[xi+1] + pro_photo[2][2] * line2[xi+2];
+                // If point is in negative area, just the matrix, but not the LUT. This is checked inside Color::rgb2hsvdcp
+                if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                  std::cout<<"newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
+                if(rtengine::Color::rgb2hsvdcp(newr*65535.f, newg*65535.f, newb*65535.f, h , s, v)) {
+                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                    std::cout<<"  h="<<h<<" s="<<s<<" v="<<v<<std::endl;
+                  hsdApply(opar->get_delta_info(), opar->get_delta_base(), h, s, v);
+                  hsdApply(opar->get_look_info(), opar->get_look_table(), h, s, v);
+                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                    std::cout<<"    h="<<h<<" s="<<s<<" v="<<v<<std::endl;
+                  // RT range correction
+                  if (h < 0.0f) {
+                    h += 6.0f;
+                  } else if (h >= 6.0f) {
+                    h -= 6.0f;
+                  }
+                  rtengine::Color::hsv2rgbdcp(h, s, v, newr, newg, newb);
+                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                    std::cout<<"    newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
+                  opar->apply_dcp_tone_curve(newr, newg, newb);
+                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                    std::cout<<"      newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
+                }
+                line2[xi] = newr/65535.f;
+                line2[xi+1] = newg/65535.f;
+                line2[xi+2] = newb/65535.f;
+              }
             }
             cmsDoTransform( opar->get_transform(), line2, pout, width );
             //std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
