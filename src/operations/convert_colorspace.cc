@@ -312,12 +312,14 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
         tr_in->set_image_hints( image );
         tr_in->set_format( get_format() );
         tr_in->set_out_profile( aces_prof );
+        tr_in->set_bpc( false );
         gw_in = tr_in->build( in2, 0, NULL, NULL, level );
 
         in2.clear(); in2.push_back( out );
         tr_out->set_image_hints( out );
         tr_out->set_format( get_format() );
         tr_out->set_out_profile( aces_prof );
+        tr_out->set_bpc( false );
         gw_out = tr_out->build( in2, 0, NULL, NULL, level );
         PF_UNREF( out, "ConvertColorspacePar::build(): out unref after gamut warning transform" );
 
@@ -327,9 +329,15 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
         in2.push_back( out );
         gw->get_par()->set_image_hints( out );
         gw->get_par()->set_format( get_format() );
+
+        if( !cmsIsMatrixShaper(out_profile) ) {
+          PF::GamutWarningPar* gw2 = dynamic_cast<PF::GamutWarningPar*>( gw->get_par() );
+          if( gw2 ) gw2->set_delta( 0.005 );
+        }
+
         out2 = gw->get_par()->build( in2, 0, NULL, NULL, level );
-        PF_UNREF( gw_in, "ConvertColorspacePar::build(): out unref after gamut warning process" );
-        PF_UNREF( gw_out, "ConvertColorspacePar::build(): out unref after gamut warning process" );
+        PF_UNREF( gw_in, "ConvertColorspacePar::build(): gw_in unref after gamut warning process" );
+        PF_UNREF( gw_out, "ConvertColorspacePar::build(): gw_out unref after gamut warning process" );
         //PF_UNREF( out, "ConvertColorspacePar::build(): out unref after gamut warning process" );
 
         out = out2;

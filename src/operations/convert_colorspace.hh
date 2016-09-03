@@ -47,13 +47,18 @@ namespace PF
 
 class GamutWarningPar: public PF::OpParBase
 {
+  float delta;
 public:
   GamutWarningPar():
+    delta( 0.0001 ),
     PF::OpParBase()
   {
     set_type("gamut_warning");
   }
   ~GamutWarningPar() { std::cout<<"~GamutWarningPar() called."<<std::endl; }
+
+  void set_delta(float d) { delta = d; }
+  float get_delta() { return delta; }
   /*
     VipsImage* build(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap,
@@ -74,6 +79,8 @@ public:
     if( ireg[0] == NULL ) return;
     if( ireg[1] == NULL ) return;
     if( ireg[2] == NULL ) return;
+    PF::GamutWarningPar* opar = dynamic_cast<PF::GamutWarningPar*>( par );
+    if( opar == NULL ) return;
 
     Rect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands;
@@ -85,7 +92,7 @@ public:
     T* pout;
     int x, y/*, pos*/;
     float diff1, diff2, diff3, diff;
-    const float delta = 0.0001;
+    const float delta = opar->get_delta(); //0.0001;
 
     for( y = 0; y < height; y++ ) {
       p1 = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
@@ -94,11 +101,15 @@ public:
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
       for( x = 0; x < line_size; x+=3 ) {
-        diff1 = fabs(static_cast< float >(p1[x]) - static_cast< float >(p2[x]));
-        diff2 = fabs(static_cast< float >(p1[x+1]) - static_cast< float >(p2[x+1]));
-        diff3 = fabs(static_cast< float >(p1[x+2]) - static_cast< float >(p2[x+2]));
-        diff = diff1 + diff2 + diff3;
-        if( false && r->top==0 && r->left==0 ) std::cout<<"diff: "<<diff<<" ("<<diff1<<","<<diff2<<","<<diff3<<")  delta: "<<delta<<std::endl;
+        diff1 = (static_cast< float >(p1[x]) - static_cast< float >(p2[x]));
+        diff2 = (static_cast< float >(p1[x+1]) - static_cast< float >(p2[x+1]));
+        diff3 = (static_cast< float >(p1[x+2]) - static_cast< float >(p2[x+2]));
+        diff = MAX3( fabs(diff1), fabs(diff2), fabs(diff3) );
+        if( false && r->top==0 && r->left==0 ) {
+          std::cout<<"in:  "<<p1[x]<<","<<p1[x+1]<<","<<p1[x+2]<<std::endl;
+          std::cout<<"out: "<<p2[x]<<","<<p2[x+1]<<","<<p2[x+2]<<std::endl;
+          std::cout<<"diff: "<<diff<<" ("<<diff1<<","<<diff2<<","<<diff3<<")  delta: "<<delta<<std::endl;
+        }
         if( diff > delta ) {
           pout[x] = pout[x+1] = pout[x+2] = PF::FormatInfo<T>::HALF;
         } else {
