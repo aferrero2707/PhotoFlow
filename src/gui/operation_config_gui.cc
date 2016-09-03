@@ -132,7 +132,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
 
   frame = new Gtk::Frame;
-  //frame->set_size_request(200,-1);
+  //frame->set_size_request(100,-1);
   frame->set_shadow_type( Gtk::SHADOW_NONE );
 
   controls_frame.set_shadow_type( Gtk::SHADOW_NONE );

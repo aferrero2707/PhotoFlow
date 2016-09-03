@@ -10,9 +10,9 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="16"
-   height="16"
-   viewBox="0 0 16 16"
+   width="22"
+   height="22"
+   viewBox="0 0 22 22"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
@@ -57,17 +57,19 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-1036.3622)">
+     transform="translate(0,-1030.3622)">
     <rect
        style="opacity:1;fill:#c86464;fill-opacity:1;stroke:#c8c8c8;stroke-width:0;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect4222"
-       width="15.99999"
-       height="15.99999"
-       x="4.9484615e-06"
-       y="1036.3622" />
+       width="19.99999"
+       height="19.99999"
+       x="1.000005"
+       y="1031.3622"
+       ry="4.25"
+       rx="4.25" />
     <image
-       y="1036.3622"
-       x="0"
+       y="1033.3622"
+       x="3"
        id="image4215"
        xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAABl0RVh0
 U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHbSURBVDiNpZI/bxNBEMXf7O45YOT4T0gc
