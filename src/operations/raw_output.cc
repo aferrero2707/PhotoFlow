@@ -247,7 +247,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
           std::cout<<std::endl;
         }
 
-        int preferred_illuminant = 2;
+        int preferred_illuminant = 0;
         cam_dcp_profile = new rtengine::DCPProfile( cam_dcp_profile_name.get() );
         double cam_wb[3] = {get_wb_red(), get_wb_green(), get_wb_blue()};
         //double mXYZCAM[3][3];
