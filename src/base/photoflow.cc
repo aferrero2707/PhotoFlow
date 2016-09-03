@@ -205,7 +205,12 @@ PF::PhotoFlow::PhotoFlow():
     dataPath = exePath + "\\..\\share\\photoflow";
   }
 #else
-  dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
+  char* dataPath_env = getenv("PF_DATA_DIR");
+  if( dataPath_env ) {
+    dataPath = Glib::ustring(dataPath_env) + "/photoflow";
+  } else {
+    dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
+  }
 #endif
   std::cout<<"dataPath: "<<dataPath<<std::endl;
 
