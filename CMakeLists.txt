@@ -5,6 +5,7 @@ project(photoflow CXX C)
 # options controlling the build process
 option(BUNDLED_LENSFUN "Use bundled LensFun library" ON)
 option(USE_NLS "Build Native Language Support (using gettext)" ON)
+option(BABL_FLIPS_DISABLED "BABL flips disabled" OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 set(CMAKE_POSITION_INDEPENDENT_CODE True)

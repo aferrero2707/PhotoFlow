@@ -386,8 +386,23 @@ void run(const gchar *name,
     GeglRectangle rect;
     gegl_rectangle_set(&rect,rgn_x,rgn_y,rgn_width,rgn_height);
     buffer = gimp_drawable_get_buffer(source_layer_id);
+#ifdef BABL_FLIPS_DISABLED
+    format = "RGB float";
+#else
     format = is_lin_gamma ? "RGB float" : "R'G'B' float";
-    std::cout<<"GEGL input format: "<<format<<std::endl;
+#endif
+    /*
+    Babl* tmpfmt = babl_format( format.c_str() );
+    std::cout<<"pfgimp: input BABL format \""<<format<<"\": tmpfmt="<<tmpfmt<<std::endl;
+    if( !tmpfmt ) {
+      std::cout<<"pfgimp: input BABL format \""<<format<<"\" not available"<<std::endl;
+      tmpfmt = babl_format( "RGB float" );
+      if( tmpfmt ) {
+        std::cout<<"pfgimp: forcing input BABL format to \""<<format<<"\""<<std::endl;
+        format = "RGB float";
+      }
+    }
+    */
     gegl_buffer_get(buffer,&rect,1,babl_format(format.c_str()),inbuf,0,GEGL_ABYSS_NONE);
     g_object_unref(buffer);
 #endif
@@ -498,6 +513,7 @@ void run(const gchar *name,
     } else if( !pfiname.empty() ) {
       pluginwin->open_image( pfiname, false );
     }
+    pluginwin->set_gimp_icc_profile( iccdata, iccsize );
     std::cout<<"  file opened"<<std::endl;
     pluginwin->show_all();
     app->run(*pluginwin);
@@ -545,9 +561,22 @@ void run(const gchar *name,
     if( pluginwin->get_image_buffer().buf ) {
       std::cout<<"PhF plug-in: copying buffer..."<<std::endl;
 #if HAVE_GIMP_2_9
+#ifdef BABL_FLIPS_DISABLED
+      format = "RGB float";
+#else
       format = is_lin_gamma ? "RGB float" : "R'G'B' float";
-      //format = "R'G'B' float";
-      std::cout<<"Output format: "<<format<<std::endl;
+#endif
+      /*
+      Babl* tmpfmt = babl_format( format.c_str() );
+      if( !tmpfmt ) {
+        std::cout<<"pfgimp: output BABL format \""<<format<<"\" not available"<<std::endl;
+        tmpfmt = babl_format( "RGB float" );
+        if( tmpfmt ) {
+          std::cout<<"pfgimp: forcing output BABL format to \""<<format<<"\""<<std::endl;
+          format = "RGB float";
+        }
+      }
+      */
       GeglRectangle gegl_rect;
       gegl_rect.x = 0;
       gegl_rect.y = 0;

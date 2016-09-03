@@ -108,6 +108,7 @@ class Image: public sigc::trackable
 
   ProcessorBase* convert2srgb;
   ProcessorBase* convert_format;
+  ProcessorBase* convert2outprof;
 
   void remove_from_inputs( PF::Layer* layer );
   void remove_from_inputs( PF::Layer* layer, std::list<Layer*>& list );
@@ -206,7 +207,7 @@ public:
   bool save( std::string filename );
   void export_merged( std::string filename );
   void do_export_merged( std::string filename );
-  void export_merged_to_mem( ImageBuffer* imgbuf );
+  void export_merged_to_mem( ImageBuffer* imgbuf, void* gimp_iccdata, size_t gimp_iccsize );
 };
 
 gint image_rebuild_callback( gpointer data );
