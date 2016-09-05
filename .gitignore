@@ -8,3 +8,6 @@ build/Makefile
 build/cmake_install.cmake
 build/src/
 build/gmon.out
+
+# hide VIPS' source tree
+libvips/
