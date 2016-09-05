@@ -14,11 +14,9 @@ if [ ${rebuild_VIPS} -eq 1 ]; then
         if [ -e libvips ]; then
             cd libvips
             git pull
-				    ./bootstrap.sh
         else
 				    git clone https://github.com/jcupitt/libvips.git
 				    cd libvips
-				    ./bootstrap.sh
         fi
     else
 				cd libvips
@@ -59,5 +57,7 @@ cd Release
     fi
     cd ../libvips
 
+    # run libvips bootstrapper
+    ./autogen.sh
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:${vips_install}/lib/pkgconfig"
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd) -DINSTALL_PREFIX=$(pwd) ../../ && make install
