@@ -1,4 +1,6 @@
 #! /bin/bash
+#  UPDATE_VIPS    : 1 if VIPS shall be updated before build. Optional.
+#                   Enabled by default.
 
 vips_install=$(pwd)/VIPS/build
 rebuild_VIPS=1
@@ -40,11 +42,22 @@ if [ ${rebuild_VIPS} -eq 1 ]; then
 		fi
 
 		cd ../..
+## UPDATE_VIPS: use environment variable or default value 1.
+update_VIPS=${UPDATE_VIPS:-1}
+if [ ${update_VIPS} -eq 1 ]; then
+    echo "Update VIPS: yes"
+else
+    echo "Update VIPS: no"
 fi
 
 #rm -rf Release
 mkdir -p Release
 cd Release
+    # get update
+    if [ ${update_VIPS} -eq 1 ]; then
+        ../tools/update_libvips.sh
+    fi
+    cd ../libvips
 
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:${vips_install}/lib/pkgconfig"
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd) -DINSTALL_PREFIX=$(pwd) ../../ && make install
