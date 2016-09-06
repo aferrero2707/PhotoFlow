@@ -38,7 +38,8 @@
     #include <sys/resource.h>
     #include <unistd.h>
     #define GetCurrentDir getcwd
- #endif
+#endif
+#include <unistd.h>
 #include <libgen.h>
 #include <dirent.h>
 
@@ -307,18 +308,21 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
 PF::ImageEditor::~ImageEditor()
 {
-	/**/
+  /*
   std::cout<<"~ImageEditor(): deleting image"<<std::endl;
   if( image )
     delete image;
   std::cout<<"~ImageEditor(): image deleted"<<std::endl;
-	/**/
-  /*
+  */
+  /**/
+  // Images need to be destroyed by the processing thread
   ProcessRequestInfo request;
   request.image = image;
   request.request = PF::IMAGE_DESTROY;
-  PF::ImageProcessor::Instance().submit_request( request );	
-  */
+  PF::ImageProcessor::Instance().submit_request( request );
+  // Ugly temporary solution to make sure that the image is destroyed before continuing
+  sleep(1);	
+  /**/
 }
 
 
