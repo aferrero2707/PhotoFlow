@@ -72,9 +72,9 @@ MAIN()
 void query()
 {
   static const GimpParamDef args[] = {
-    {GIMP_PDB_INT32,    (gchar*)"run_mode", (gchar*)"Interactive, non-interactive"},
-    {GIMP_PDB_IMAGE,    (gchar*)"image",    (gchar*)"Input image"},
-    {GIMP_PDB_DRAWABLE, (gchar*)"drawable", (gchar*)"Input drawable (unused)"},
+    {GIMP_PDB_INT32,    (gchar*)"run_mode", (gchar*)_("Interactive, non-interactive")},
+    {GIMP_PDB_IMAGE,    (gchar*)"image",    (gchar*)_("Input image")},
+    {GIMP_PDB_DRAWABLE, (gchar*)"drawable", (gchar*)_("Input drawable (unused)")},
   };
 
   gimp_install_procedure("plug-in-photoflow",             // name
@@ -144,7 +144,7 @@ edit_current_layer_dialog()
   gtk_box_pack_start (GTK_BOX (hbox), main_vbox, FALSE, FALSE, 0);
   gtk_widget_show (main_vbox);
 
-  text = g_strdup ("This is a PhotoFlow layer.\nDo you want to continue\nediting this layer\nor create a new one?");
+  text = g_strdup _(("This is a PhotoFlow layer.\nDo you want to continue\nediting this layer\nor create a new one?"));
   label = gtk_label_new (text);
   g_free (text);
 

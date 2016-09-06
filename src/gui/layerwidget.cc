@@ -26,7 +26,7 @@
   These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
 */
-
+#include <glib.h>
 
 #include "../base/file_util.hh"
 #include "../base/fileutils.hh"
@@ -36,7 +36,6 @@
 #include "tablabelwidget.hh"
 #include "layerwidget.hh"
 #include "imageeditor.hh"
-
 
 PF::ControlsGroup::ControlsGroup( ImageEditor* e ): editor(e)
 {
@@ -446,7 +445,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       */
 
       VTabLabelWidget* tabwidget = 
-        new VTabLabelWidget( std::string("intensity (")+l->get_name()+")",
+        new VTabLabelWidget( std::string(_("intensity ("))+l->get_name()+")",
                             view );
       tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::LayerWidget::remove_tab) ); 
       notebook.append_page( *view, *tabwidget );
@@ -494,7 +493,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       */
 
       VTabLabelWidget* tabwidget = 
-        new VTabLabelWidget( std::string("opacity (")+l->get_name()+")",
+        new VTabLabelWidget( std::string(_("opacity ("))+l->get_name()+")",
                             view );
       tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::LayerWidget::remove_tab) ); 
       notebook.append_page( *view, *tabwidget );
@@ -961,7 +960,7 @@ void PF::LayerWidget::insert_image( std::string filename )
     if( proc->get_par() && proc->get_par()->get_property( "file_name" ) )
       proc->get_par()->get_property( "file_name" )->set_str( filename );
     limg->set_processor( proc );
-    limg->set_name( "image file" );
+    limg->set_name( _("image file") );
 
     add_layer( limg );
   } else {
@@ -1277,7 +1276,7 @@ void PF::LayerWidget::on_button_del()
 
 void PF::LayerWidget::on_button_load()
 {
-  Gtk::FileChooserDialog dialog("Open preset",
+  Gtk::FileChooserDialog dialog(_("Open preset"),
 				Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
   
