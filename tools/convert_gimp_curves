@@ -1,0 +1,110 @@
+#! /bin/bash
+
+cat > "$2" <<\EOF
+<preset version="4">
+  <layer name="curves" id="1" visible="1" expanded="1" normal="1" extra_inputs="">
+    <operation type="curves">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="color_blend" value="0">
+      </property>
+EOF
+
+counter=0
+i=0
+x=0
+y=0
+cn=1
+curves="RGB_curve R_curve G_curve B_curve"
+while read p; do
+  #echo "line: "
+  #echo $p
+    firstchar=$(echo $p | cut -c 1)
+    if [ x"$firstchar" = "x#" ]; then
+  	continue
+    fi
+    if [ $cn -eq 5 ]; then break; fi
+    if [ $counter -eq 0 -a $i -eq 0 ]; then
+        values=""
+        nvalues=0
+        curve=$(echo "$curves" | cut -d" " -f $cn)
+        echo -n "      <property name=\"$curve\" value=\"" >> $2
+    fi
+  #echo "values: "
+    valuelist=$(echo $p | tr -s " " | tr " " "\n")
+  #echo "$valuelist"
+    
+    for v in $valuelist; do
+  	echo $v
+  	vv=$(echo "scale=2; $v / 255" | bc -l)
+  	if [ "x${i}" = "x0" ]; then
+  	    x=$vv
+  	else
+	    y=$vv
+	    counter=$((counter+1))
+  	fi
+  	if [ "x${i}" = "x1" -a $v -ge 0 ]; then
+  	    values="$values $x $y"
+  	    nvalues=$((nvalues+1))
+  	fi
+	echo "i=$i counter=$counter values=\"$nvalues $values\""
+	i=$((1-i))
+  	if [ "x${counter}" = "x17" ]; then
+	    echo "$nvalues $values\">" >> $2
+	    echo "      </property>" >> $2
+	    counter=0
+	    cn=$((cn+1))
+  	fi
+    done
+done <$1
+
+
+cat >> "$2" <<\EOF
+      <property name="RGB_active_curve" value="RGB">
+      </property>
+      <property name="Lab_active_curve" value="L">
+      </property>
+      <property name="CMYK_active_curve" value="C">
+      </property>
+    </operation>
+    <operation type="blender">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="blend_mode" value="PF_BLEND_NORMAL">
+      </property>
+      <property name="opacity" value="1">
+      </property>
+      <property name="shift_x" value="0">
+      </property>
+      <property name="shift_y" value="0">
+      </property>
+    </operation>
+    <sublayers type="child">
+    </sublayers>
+    <sublayers type="imap">
+    </sublayers>
+    <sublayers type="omap">
+    </sublayers>
+  </layer>
+</preset>
+EOF
