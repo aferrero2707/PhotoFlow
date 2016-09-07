@@ -196,8 +196,8 @@ PF::ScalePar::ScalePar():
       hflip("hflip",this,false),
       rotate_angle("rotate_angle",this,0),
       autocrop("autocrop",this,true),
-      scale_mode("scale_mode",this, SCALE_MODE_FIT, "SCALE_MODE_FIT", "Fit"),
-      scale_unit("scale_unit", this, SCALE_UNIT_PERCENT, "SCALE_UNIT_PERCENT", "percent"),
+      scale_mode("scale_mode",this, SCALE_MODE_FIT, "SCALE_MODE_FIT", _("Fit")),
+      scale_unit("scale_unit", this, SCALE_UNIT_PERCENT, "SCALE_UNIT_PERCENT", _("percent")),
       scale_width_pixels("scale_width_pixels",this,0),
       scale_height_pixels("scale_height_pixels",this,0),
       scale_width_percent("scale_width_percent",this,100),
@@ -214,10 +214,10 @@ PF::ScalePar::ScalePar():
   //scale_mode.add_enum_value( SCALE_MODE_FILL, "SCALE_MODE_FILL", "Fill" );
   //scale_mode.add_enum_value( SCALE_MODE_RESIZE, "SCALE_MODE_RESIZE", "Resize" );
 
-  scale_unit.add_enum_value( SCALE_UNIT_PX, "SCALE_UNIT_PX", "pixels" );
-  scale_unit.add_enum_value( SCALE_UNIT_MM, "SCALE_UNIT_MM", "mm" );
-  scale_unit.add_enum_value( SCALE_UNIT_CM, "SCALE_UNIT_CM", "cm" );
-  scale_unit.add_enum_value( SCALE_UNIT_INCHES, "SCALE_UNIT_INCHES", "inches" );
+  scale_unit.add_enum_value( SCALE_UNIT_PX, "SCALE_UNIT_PX", _("pixels") );
+  scale_unit.add_enum_value( SCALE_UNIT_MM, "SCALE_UNIT_MM", _("mm") );
+  scale_unit.add_enum_value( SCALE_UNIT_CM, "SCALE_UNIT_CM", _("cm") );
+  scale_unit.add_enum_value( SCALE_UNIT_INCHES, "SCALE_UNIT_INCHES", _("inches") );
 
   set_type( "scale" );
 
