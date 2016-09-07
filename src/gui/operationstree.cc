@@ -106,12 +106,12 @@ void PF::OperationsTreeWidget::on_selection_changed()
     std::string op_type = (*iter)[columns.col_nickname];
     if( op_type == "curves" ) {
       buf->set_text("The curves tool allows to adjust the tonal range and colors of the image through control points.\n\n");
-      buf->insert_at_cursor("The tool provides a separate curve for each image channel. In the case of RGB images, ");
+      buf->insert_at_cursor("The tool provides a separate curve for each image channel. In the case of RGB images, "));
       buf->insert_at_cursor("an additional curve, called \"RGB\", allows to modify all three channels at the same time.\n\n");
       buf->insert_at_cursor("In the graphs, the horizontal axis represents the input values and the vertical axis the output ones.");
       buf->insert_at_cursor("The curve is initially a simple diagonal line, meaning that the output exactly matches input.\n\n");
       buf->insert_at_cursor("Left-clicking on the graph with the mouse adds a new control point, while right-clicking on an existing ");
-      buf->insert_at_cursor("control point deletes it. Control points can be moved by either dragging them with the moiuse, or by setting the corresponding input and output numerical values in the boxes below the graph.");
+      buf->insert_at_cursor("control point deletes it. Control points can be moved by either dragging them with the mouse, or by setting the corresponding input and output numerical values in the boxes below the graph.");
     }
      */
   }
@@ -205,7 +205,7 @@ void PF::OperationsTree::add_op( Glib::ustring name, const std::string nik)
       if( !file.fail() ) help += ch;
     }
   } else {
-    help = "Ths help is not yet available. Sorry.";
+    help = _("This help is not yet available. Sorry.");
   }
   row[columns.col_help] = help;
   PF::operations_help_map.insert( std::make_pair(nik, help) );

@@ -685,7 +685,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
     if( proc->get_par() && proc->get_par()->get_property( "file_name" ) )
       proc->get_par()->get_property( "file_name" )->set_str( filename );
     limg->set_processor( proc );
-    limg->set_name( "background" );
+    limg->set_name( _("background") );
     layer_manager.get_layers().push_back( limg );
 
     file_name = filename;

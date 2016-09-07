@@ -35,10 +35,10 @@
 
 PF::CloneStampConfigGUI::CloneStampConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "CloneStamp" ),
-  stamp_size( this, "stamp_size", "Stamp size: ", 5, 0, 1000000, 1, 10, 1),
-  stamp_opacity( this, "stamp_opacity", "Stamp opacity: ", 100, 0, 100, 0.1, 1, 100),
-  stamp_smoothness( this, "stamp_smoothness", "Stamp smoothness: ", 100, 0, 100, 0.1, 1, 100),
-  undoButton("Undo"),
+  stamp_size( this, "stamp_size", _("Stamp size: "), 5, 0, 1000000, 1, 10, 1),
+  stamp_opacity( this, "stamp_opacity", _("Stamp opacity: "), 100, 0, 100, 0.1, 1, 100),
+  stamp_smoothness( this, "stamp_smoothness", _("Stamp smoothness: "), 100, 0, 100, 0.1, 1, 100),
+  undoButton(_("Undo")),
   srcpt_row( 0 ), srcpt_col( 0 ), srcpt_ready( false ), srcpt_changed( false ), stroke_started( false )
 {
   controlsBox.pack_start( undoButton, Gtk::PACK_SHRINK );

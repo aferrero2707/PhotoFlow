@@ -38,9 +38,9 @@ PF::BrightnessContrastConfigGUI::BrightnessContrastConfigGUI( PF::Layer* layer )
   //contrastAdj( 0, -1, 1, 0.05, 0.2, 0),
   //brightnessScale(brightnessAdj),
   //contrastScale(contrastAdj)
-  brightnessSlider( this, "brightness", "Brightness", 0, -1, 1, 0.05, 0.2, 1),
-  contrastSlider( this, "contrast", "Contrast", 0, -1, 1, 0.05, 0.2, 1),
-  outputModeSlider( this, "color_blend", "Output mode", 0, -1, 1, 0.05, 0.2, 1)
+  brightnessSlider( this, "brightness", _("Brightness"), 0, -1, 1, 0.05, 0.2, 1),
+  contrastSlider( this, "contrast", _("Contrast"), 0, -1, 1, 0.05, 0.2, 1),
+  outputModeSlider( this, "color_blend", _("Output mode"), 0, -1, 1, 0.05, 0.2, 1)
 {
   //frame.add( controlsBox );
 

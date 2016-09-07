@@ -35,13 +35,13 @@
 PF::CropConfigGUI::CropConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Crop" ),
   handle( CROP_HANDLE_NONE ),
-  cropLeftSlider( this, "crop_left", "Crop left", 0, 0, 10000000, 1, 10, 1),
-  cropTopSlider( this, "crop_top", "Crop top", 0, 0, 10000000, 1, 10, 1),
-  cropWidthSlider( this, "crop_width", "Crop width", 0, 0, 10000000, 1, 10, 1),
-  cropHeightSlider( this, "crop_height", "Crop height", 0, 0, 10000000, 1, 10, 1),
-  keepARCheckBox( this, "keep_ar", "Keep aspect ratio", 0 ),
-  cropARWidthSlider( this, "ar_width", "Aspect ratio: W=", 0, 0, 10000000, 1, 10, 1),
-  cropARHeightSlider( this, "ar_height", "/H=", 0, 0, 10000000, 1, 10, 1)
+  cropLeftSlider( this, "crop_left", _("Crop left"), 0, 0, 10000000, 1, 10, 1),
+  cropTopSlider( this, "crop_top", _("Crop top"), 0, 0, 10000000, 1, 10, 1),
+  cropWidthSlider( this, "crop_width", _("Crop width"), 0, 0, 10000000, 1, 10, 1),
+  cropHeightSlider( this, "crop_height", _("Crop height"), 0, 0, 10000000, 1, 10, 1),
+  keepARCheckBox( this, "keep_ar", _("Keep aspect ratio"), 0 ),
+  cropARWidthSlider( this, "ar_width", _("Aspect ratio: W="), 0, 0, 10000000, 1, 10, 1),
+  cropARHeightSlider( this, "ar_height", _("/H="), 0, 0, 10000000, 1, 10, 1)
 {
   controlsBox.pack_start( cropLeftSlider );
   controlsBox.pack_start( cropTopSlider );

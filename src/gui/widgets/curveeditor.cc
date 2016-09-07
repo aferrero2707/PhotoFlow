@@ -39,8 +39,8 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
     int width, int height, int border_size ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname ),
-  xlabel( "in: " ),
-  ylabel( "out: " ),
+  xlabel( _("in: ") ),
+  ylabel( _("out: ") ),
   xmin( _xmin ), xmax( _xmax ), ymin( _ymin ), ymax( _ymax ),
 #ifdef GTKMM_2
   xadjustment( xmax, xmin, xmax, 1, 10, 0),

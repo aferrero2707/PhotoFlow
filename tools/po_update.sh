@@ -10,8 +10,9 @@ for dir in $dirs; do
 done
 xgettext --from-code=UTF-8 --files-from=/tmp/sources.list --default-domain=photoflow -k_ --join-existing -o po/photoflow.pot
 
-langs="fr pl"
+langs="de fr pl"
 for lang in $langs; do
+    printf $lang: 
     msgmerge --output-file=po/${lang}.po po/${lang}.po po/photoflow.pot
 done
 #rm -f /tmp/sources.list

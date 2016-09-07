@@ -64,8 +64,8 @@ PF::SettingsDialog::SettingsDialog():
   signal_response().connect( sigc::mem_fun(*this,
       &SettingsDialog::on_button_clicked) );
 
-  notebook.append_page( color_box, "Color management" );
-  notebook.append_page( about_box, "About" );
+  notebook.append_page( color_box, _("Color management") );
+  notebook.append_page( about_box, _("About") );
 
   cm_display_profile_model = Gtk::ListStore::create(cm_display_profile_columns);
   cm_display_profile_type_selector.set_model( cm_display_profile_model );
@@ -86,7 +86,7 @@ PF::SettingsDialog::SettingsDialog():
   ri = cm_display_profile_model->append();
   row = *(ri);
   row[cm_display_profile_columns.col_id] = 2;
-  row[cm_display_profile_columns.col_value] = "Custom";
+  row[cm_display_profile_columns.col_value] = _("Custom");
 
   //cm_display_profile_button.add( cm_display_profile_img );
   cm_display_profile_open_label.set_text( _("custom display profile name: ") );
@@ -209,7 +209,7 @@ void PF::SettingsDialog::on_button_clicked(int id)
 
 void PF::SettingsDialog::on_button_display_profile_open_clicked()
 {
-  Gtk::FileChooserDialog dialog("Please choose an ICC profile",
+  Gtk::FileChooserDialog dialog(_("Please choose an ICC profile"),
         Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
 

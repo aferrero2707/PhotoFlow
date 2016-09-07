@@ -31,6 +31,7 @@
 #include "imageeditor.hh"
 
 #include "../base/new_operation.hh"
+#include "../base/photoflow.hh"
 
 #include "../gui/operations/raw_developer_config.hh"
 #include "../gui/operations/brightness_contrast_config.hh"
@@ -666,7 +667,7 @@ void PF::OperationConfigGUI::parameters_reset()
 
 void PF::OperationConfigGUI::show_help()
 {
-  Gtk::Dialog dialog("help", false);
+  Gtk::Dialog dialog(_("help"), false);
   dialog.set_default_size(300,100);
 
   Gtk::Frame frame;
@@ -685,7 +686,7 @@ void PF::OperationConfigGUI::show_help()
         if( !file.fail() ) help += ch;
       }
     } else {
-      help = "Ths help is not yet available. Sorry.";
+      help = _("This help is not yet available. Sorry.");
     }
   }
 

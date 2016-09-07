@@ -35,8 +35,8 @@
 
 PF::DrawConfigGUI::DrawConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Draw" ),
-  pen_color_label("Pen color:              "),
-  bgd_color_label("Background color: "),
+  pen_color_label(_("Pen color:              ")),
+  bgd_color_label(_("Background color: ")),
 #ifdef GTKMM_2
   pen_color_button( Gdk::Color("white") ),
   bgd_color_button( Gdk::Color("black") ),
@@ -46,10 +46,10 @@ PF::DrawConfigGUI::DrawConfigGUI( PF::Layer* layer ):
   bgd_color_button( Gdk::RGBA("black") ),
 #endif
   bgd_transparent_checkbox( this, "bgd_transparent", _("transparent"), false ),
-  pen_size( this, "pen_size", "Pen size: ", 5, 0, 1000000, 1, 10, 1),
-  pen_opacity( this, "pen_opacity", "Pen opacity: ", 100, 0, 100, 0.1, 1, 100),
-  pen_smoothness( this, "pen_smoothness", "pen smoothness: ", 0, 0, 100, 1, 10, 100),
-  undoButton("Undo"), inhibit( false )
+  pen_size( this, "pen_size", _("Pen size: "), 5, 0, 1000000, 1, 10, 1),
+  pen_opacity( this, "pen_opacity", _("Pen opacity: "), 100, 0, 100, 0.1, 1, 100),
+  pen_smoothness( this, "pen_smoothness", _("pen smoothness: "), 0, 0, 100, 1, 10, 100),
+  undoButton(_("Undo")), inhibit( false )
 {
   colorButtonsBox1.pack_start( bgd_color_label, Gtk::PACK_SHRINK );
   colorButtonsBox1.pack_start( bgd_color_button, Gtk::PACK_SHRINK );
