@@ -144,7 +144,7 @@ edit_current_layer_dialog()
   gtk_box_pack_start (GTK_BOX (hbox), main_vbox, FALSE, FALSE, 0);
   gtk_widget_show (main_vbox);
 
-  text = g_strdup _(("This is a PhotoFlow layer.\nDo you want to continue\nediting this layer\nor create a new one?"));
+  text = g_strdup (_("This is a PhotoFlow layer.\nDo you want to continue\nediting this layer\nor create a new one?"));
   label = gtk_label_new (text);
   g_free (text);
 
@@ -389,7 +389,8 @@ void run(const gchar *name,
 #ifdef BABL_FLIPS_DISABLED
     format = "RGB float";
 #else
-    format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+    //format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+    format = "R'G'B' float";
 #endif
     /*
     Babl* tmpfmt = babl_format( format.c_str() );
@@ -564,7 +565,8 @@ void run(const gchar *name,
 #ifdef BABL_FLIPS_DISABLED
       format = "RGB float";
 #else
-      format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+      //format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+      format = "R'G'B' float";
 #endif
       /*
       Babl* tmpfmt = babl_format( format.c_str() );
