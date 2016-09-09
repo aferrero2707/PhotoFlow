@@ -32,7 +32,7 @@ extern GType vips_perspective_get_type( void );
 }
 #endif /*__cplusplus*/
 
-
+GimpPDBStatusType status = GIMP_PDB_CALLING_ERROR;
 
 static const char raw_ext[] = "3fr,ari,arw,cap,cine,cr2,crw,cs1,dc2,dcr,dng,erf,fff,"
     "hdr,ia,iiq,k25,kc2,kdc,mdc,mef,mos,mrw,nef,"
@@ -168,6 +168,8 @@ void run(const gchar *name,
   *return_vals = values;
 
   std::cout<<"pfgimp::run(): name="<<name<<std::endl;
+
+  status = GIMP_PDB_CALLING_ERROR;
 
   if (!strcmp(name, "file_pf_load_thumb")) {
     run_mode = (GimpRunMode)0;
@@ -341,7 +343,6 @@ void run(const gchar *name,
     if( pluginwin->get_image_buffer().buf ) {
       width = pluginwin->get_image_buffer().width;
       height = pluginwin->get_image_buffer().height;
-    }
 
 #if HAVE_GIMP_2_9
     gimpImage =
@@ -390,6 +391,7 @@ void run(const gchar *name,
             uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
       }
 #endif
+      status = GIMP_PDB_SUCCESS;
     }
 
     std::cout<<"PhF plug-in: buffer copied"<<std::endl;
@@ -492,7 +494,7 @@ void run(const gchar *name,
 
       std::cout<<"ICC profile attached"<<std::endl;
     }
-
+    }
     std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Plug-in: stopping image processor"<<std::endl;
     PF::ProcessRequestInfo request;
@@ -556,17 +558,23 @@ void run(const gchar *name,
     }
    */
   std::cout<<"Plug-in: setting return values"<<std::endl;
-  *nreturn_vals = 2;
-  values[0].type = GIMP_PDB_STATUS;
-  values[0].data.d_status = GIMP_PDB_SUCCESS;
-  values[1].type = GIMP_PDB_IMAGE;
-  values[1].data.d_image = gimpImage;
-  if (loadThumbnail) {
-    *nreturn_vals = 4;
-    values[2].type = GIMP_PDB_INT32;
-    //values[2].data.d_int32 = uf->initialWidth;
-    values[3].type = GIMP_PDB_INT32;
-    //values[3].data.d_int32 = uf->initialHeight;
+  if( status == GIMP_PDB_SUCCESS ) {
+    *nreturn_vals = 2;
+    values[0].type = GIMP_PDB_STATUS;
+    values[0].data.d_status = status;
+    values[1].type = GIMP_PDB_IMAGE;
+    values[1].data.d_image = gimpImage;
+    if (loadThumbnail) {
+      *nreturn_vals = 4;
+      values[2].type = GIMP_PDB_INT32;
+      //values[2].data.d_int32 = uf->initialWidth;
+      values[3].type = GIMP_PDB_INT32;
+      //values[3].data.d_int32 = uf->initialHeight;
+    }
+  } else {
+    *nreturn_vals = 1;
+    values[0].type = GIMP_PDB_STATUS;
+    values[0].data.d_status = status;
   }
   std::cout<<"Plug-in: return values done"<<std::endl;
   std::cout<<"Plug-in: calling gdk_threads_leave()"<<std::endl;
