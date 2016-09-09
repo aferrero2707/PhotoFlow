@@ -1036,9 +1036,9 @@ void PF::ImageArea::update( VipsRect* area )
       current_display_profile = dt_colorspaces_create_srgb_profile();
       char tstr[1024];
       cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-#ifndef NDEBUG
+      //#ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
-#endif
+      //#endif
       break;
     case PF_DISPLAY_PROF_CUSTOM:
       current_display_profile =

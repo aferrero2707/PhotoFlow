@@ -146,7 +146,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
 
 
-#ifndef NDEBUG
+  //#ifndef NDEBUG
   void *data;
   size_t data_length;
   if( !vips_image_get_blob( image, VIPS_META_ICC_NAME, 
@@ -159,7 +159,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       cmsCloseProfile( profile_in );
     }
   }
-#endif
+  //#endif
 
 
 //#ifndef NDEBUG

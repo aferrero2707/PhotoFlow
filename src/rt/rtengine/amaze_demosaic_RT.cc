@@ -421,7 +421,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
           for (row=rr+top, cc=ccmin; cc < ccmax; cc++) {
             indx1=rr*TS+cc;
             cfa[indx1] = (rawData[row][cc+left])/65535.0f;
-            if(false && top==0 && left==0 && rr<10 && cc<10) {
+            if(true && top==0 && left==0 && rr<10 && cc<10) {
               std::cout<<"rr="<<rr<<"  cc="<<cc<<"    cfa["<<indx1<<"] = "<<cfa[indx1]<<"    c="<<FC(rr,cc)<<std::endl;
             }
             if(FC(rr,cc)==1)

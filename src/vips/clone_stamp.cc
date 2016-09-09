@@ -140,6 +140,18 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
 
   VipsRect image_area = {0, 0, ir->im->Xsize, ir->im->Ysize};
 
+  /**/
+#ifndef NDEBUG
+  std::cout<<"vips_clone_stamp_gen(): ";//<<std::endl;
+  //if( clone_stamp->processor->get_par()->get_config_ui() )
+  //  std::cout<<"  name: "<<clone_stamp->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
+  std::cout<<"  output region: top="<<oreg->valid.top
+     <<" left="<<oreg->valid.left
+     <<" width="<<oreg->valid.width
+     <<" height="<<oreg->valid.height<<std::endl;
+#endif
+  /**/
+
   if( !clone_stamp->processor ) return 1;
   if( !clone_stamp->processor->get_par() ) return 1;
 
@@ -165,18 +177,6 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
     }
     */
   }
-
-  /**/
-#ifndef NDEBUG
-  std::cout<<"vips_clone_stamp_gen(): "<<std::endl;
-  if( clone_stamp->processor->get_par()->get_config_ui() )
-    std::cout<<"  name: "<<clone_stamp->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
-  std::cout<<"  output region: top="<<oreg->valid.top
-	   <<" left="<<oreg->valid.left
-	   <<" width="<<oreg->valid.width
-	   <<" height="<<oreg->valid.height<<std::endl;
-#endif
-  /**/
 
   std::vector<PF::StrokesGroup>& groups = par->get_strokes();
   std::list< std::pair<int, int> >::iterator pi;

@@ -238,18 +238,35 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   if( changed ) {
-    if( transform )
+    std::cout<<"RawOutputPar::build(): color conversion changed, rebuilding transform"<<std::endl;
+    std::cout<<"  cam_profile="<<(void*)cam_profile<<"  out_profile="<<(void*)out_profile<<std::endl;
+    char tstr[1024];
+    if( cam_profile ) {
+      cmsGetProfileInfoASCII(cam_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"  cam_profile description: "<<tstr<<std::endl;
+      std::cout<<"  cam_profile colorspace: "<<cmsGetColorSpace(cam_profile)<<std::endl;
+    }
+    if( out_profile ) {
+      cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"  out_profile description: "<<tstr<<std::endl;
+      std::cout<<"  out_profile colorspace: "<<cmsGetColorSpace(out_profile)<<std::endl;
+    }
+    if( transform ) {
       cmsDeleteTransform( transform );  
+    }
     transform = NULL;
-    if( cam_profile && out_profile )
+    if( cam_profile && out_profile ) {
       transform = cmsCreateTransform( cam_profile, 
+          //TYPE_YCbCr_8,//(FLOAT_SH(1)|COLORSPACE_SH(PT_YCbCr)|CHANNELS_SH(3)|BYTES_SH(4)),
           TYPE_RGB_FLT,
           out_profile,
           TYPE_RGB_FLT,
           INTENT_RELATIVE_COLORIMETRIC,
           cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
+      std::cout<<"RawOutputPar::build(): new transform="<<transform<<std::endl;
+    }
   }
-  //std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
+  std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
 
   if( gamma_curve )
     cmsFreeToneCurve( gamma_curve );
