@@ -495,6 +495,10 @@ enum hlreco_mode_t {
               line2[xi] = CLIPRAW(line[xi]);
             }
             cmsDoTransform( opar->get_transform(), line2, pout, width );
+            if(false && r->left<20 && r->top<20 && y==0) {
+              std::cout<<"in: "<<line[0]<<","<<line[1]<<","<<line[2]<<"   ";
+              std::cout<<"out: "<<pout[0]<<","<<pout[1]<<","<<pout[2]<<"   "<<std::endl;
+            }
           } else {
             memcpy( pout, line, sizeof(float)*line_size );
             for( int xi = 0; xi < line_size; xi++ ) {
