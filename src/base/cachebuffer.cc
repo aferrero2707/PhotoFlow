@@ -132,9 +132,13 @@ void PF::CacheBuffer::step()
     // Create the memory buffer if not yet done.
     if( memarray == NULL ) {
       memarray = (guchar*)malloc(imgsz);
-      if( memarray == NULL ) return;
+      if( memarray == NULL ) {
+        // Not enough memory to allocate the buffer, revert to disk storage
+        memory_storage = false;
+      }
     }
-  } else {
+  }
+  if( !memory_storage ) {
     // Create the disk buffer if not yet done.
     if( fd < 0 ) {
       char fname[500];
@@ -150,7 +154,7 @@ void PF::CacheBuffer::step()
   VipsRect image_area = { 0, 0, image->Xsize, image->Ysize };
 
   //std::cout<<"threads.size: "<<threads.size()<<std::endl;
-  for( int t = 0; t < threads.size(); t++ ) {
+  for( unsigned int t = 0; t < threads.size(); t++ ) {
     threads[t].thread->join();
     VipsRect tile_area = { threads[t].x, threads[t].y, PF_CACHE_BUFFER_TILE_SIZE, PF_CACHE_BUFFER_TILE_SIZE };
     vips_rect_intersectrect( &image_area, &tile_area, &tile_area );
