@@ -308,13 +308,15 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
 PF::ImageEditor::~ImageEditor()
 {
-  /*
-  std::cout<<"~ImageEditor(): deleting image"<<std::endl;
-  if( image )
-    delete image;
-  std::cout<<"~ImageEditor(): image deleted"<<std::endl;
-  */
   /**/
+  std::cout<<"~ImageEditor(): deleting image"<<std::endl;
+  if( image ) {
+    image->destroy();
+    delete image;
+  }
+  std::cout<<"~ImageEditor(): image deleted"<<std::endl;
+  /**/
+  /*
   // Images need to be destroyed by the processing thread
   ProcessRequestInfo request;
   request.image = image;
@@ -322,7 +324,7 @@ PF::ImageEditor::~ImageEditor()
   PF::ImageProcessor::Instance().submit_request( request );
   // Ugly temporary solution to make sure that the image is destroyed before continuing
   sleep(1);	
-  /**/
+  */
 }
 
 

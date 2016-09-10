@@ -344,7 +344,9 @@ void PF::ImageProcessor::run()
         break;
       case IMAGE_DESTROY:
         if( !request.image ) continue;
-        delete request.image;
+        //delete request.image;
+        request.image->do_destroy();
+        request.image->destroy_done_signal();
         std::cout<<"PF::ImageProcessor::run(): image destroyed."<<std::endl;
         break;
       case PROCESSOR_END:

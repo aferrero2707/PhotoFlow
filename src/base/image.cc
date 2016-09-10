@@ -131,10 +131,12 @@ PF::Image::Image():
 
 PF::Image::~Image()
 {
+  /*
   for( unsigned int vi = 0; vi < pipelines.size(); vi++ ) {
     if( pipelines[vi] != NULL )
       delete pipelines[vi];
   }
+  */
 }
 
 
@@ -173,6 +175,28 @@ void PF::Image::sample_unlock()
   //std::cout<<"---------------------"<<std::endl;
   //g_mutex_unlock( sample_mutex);
   sample_cond.unlock();
+  //std::cout<<"---------------------"<<std::endl;
+  //std::cout<<"  SAMPLE MUTEX UNLOCKED"<<std::endl;
+  //std::cout<<"---------------------"<<std::endl;
+}
+
+
+void PF::Image::destroy_lock()
+{
+  //std::cout<<"+++++++++++++++++++++"<<std::endl;
+  //std::cout<<"  LOCKING SAMPLE MUTEX"<<std::endl;
+  //std::cout<<"+++++++++++++++++++++"<<std::endl;
+  //g_mutex_lock( sample_mutex);
+  destroy_cond.lock();
+}
+
+void PF::Image::destroy_unlock()
+{
+  //std::cout<<"---------------------"<<std::endl;
+  //std::cout<<"  UNLOCKING SAMPLE MUTEX"<<std::endl;
+  //std::cout<<"---------------------"<<std::endl;
+  //g_mutex_unlock( sample_mutex);
+  destroy_cond.unlock();
   //std::cout<<"---------------------"<<std::endl;
   //std::cout<<"  SAMPLE MUTEX UNLOCKED"<<std::endl;
   //std::cout<<"---------------------"<<std::endl;
@@ -560,6 +584,45 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   PF_UNREF( region, "Image::do_sample(): region unref" );
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after region unref" );
   PF_UNREF( outimg, "Image::do_sample(): outimg unref" );
+}
+
+
+void PF::Image::destroy()
+{
+  if( PF::PhotoFlow::Instance().is_batch() ) {
+    do_destroy();
+  } else {
+    ProcessRequestInfo request;
+    request.image = this;
+    request.request = PF::IMAGE_DESTROY;
+
+    destroy_lock(); //g_mutex_lock( sample_mutex );
+    #ifndef NDEBUG
+    std::cout<<"PF::Image::destroy(): submitting destroy request..."<<std::endl;
+    #endif
+    PF::ImageProcessor::Instance().submit_request( request );
+    #ifndef NDEBUG
+    std::cout<<"PF::Image::destroy(): request submitted."<<std::endl;
+    #endif
+
+    std::cout<<"Image::destroy(): waiting for done."<<std::endl;
+    destroy_cond.wait();
+    destroy_unlock();
+    std::cout<<"Image::destroy(): done received."<<std::endl;
+
+  }
+}
+
+
+void PF::Image::do_destroy()
+{
+  for( unsigned int vi = 0; vi < pipelines.size(); vi++ ) {
+    if( pipelines[vi] != NULL )
+      delete pipelines[vi];
+  }
+  delete convert2srgb;
+  delete convert_format;
+  delete convert2outprof;
 }
 
 
