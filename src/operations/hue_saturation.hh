@@ -343,8 +343,8 @@ namespace PF
           if( opar->get_gamma() != 1 ) {
             pout[x] = powf( pin[x], opar->get_gamma() );
             float L = 0.1;
-            if(r->left==0 && r->top==0 && y<5 && x < 15)
-              printf("brightness: in=%f  out=%f\n", pin[x], pout[x]);
+            if(false && r->left==0 && r->top==0 && y<5 && x < 15)
+              printf("brightness: in=%f  out=%f\n", (float)pin[x], (float)pout[x]);
           } else {
             pout[x] = pin[x];
           }

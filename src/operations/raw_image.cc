@@ -329,7 +329,7 @@ PF::RawImage::RawImage( const std::string _fname ):
       case RawSpeed::TYPE_USHORT16: val = *((uint16_t*)r->getDataUncropped(col2,row2)); break;
       case RawSpeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
       }
-      if(row<8 && col<8) {
+      if(false && row<8 && col<8) {
         std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<std::endl;
       }
       nval = val - pdata->color.black;
@@ -1003,7 +1003,7 @@ void PF::RawImage::CA_correct_RT()
                             //rgb[c][indx1] = (rawData[row][col]) / 65535.0f;
                             rgb[c][indx1] = (rawData[row][col]) * mult[c] / 65535.0f;
                             //rgb[indx1][c] = image[indx][c]/65535.0f;//for dcraw implementation
-			    if(row<4 && col<4) printf("rawData[%d][%d](%d) = %f * %f = %f\n",row,col,c,(rawData[row][col]), mult[c], (rawData[row][col]) * mult[c]);
+                            if(false && row<4 && col<4) printf("rawData[%d][%d](%d) = %f * %f = %f\n",row,col,c,(rawData[row][col]), mult[c], (rawData[row][col]) * mult[c]);
                         }
 
                     // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

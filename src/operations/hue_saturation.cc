@@ -70,7 +70,7 @@ PF::HueSaturationPar::HueSaturationPar():
 {
   set_type("hue_saturation" );
 
-  set_default_name( _("B-C-S-H adjustment") );
+  set_default_name( _("basic adjustments") );
 
   mask = new_hsl_mask();
   blur = new_gaussblur();
