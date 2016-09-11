@@ -527,7 +527,6 @@ void run(const gchar *name,
     if( pluginwin->get_image_buffer().buf ) {
       width = pluginwin->get_image_buffer().width;
       height = pluginwin->get_image_buffer().height;
-    }
 
     // Transfer the output layers back into GIMP.
     GimpLayerModeEffects layer_blendmode = GIMP_NORMAL_MODE;
@@ -694,17 +693,18 @@ void run(const gchar *name,
         std::cout<<"ICC profile attached"<<std::endl;
       }
     }
+    }
 
     std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Plug-in: deleting main window"<<std::endl;
+    delete pluginwin;
+    std::cout<<"Plug-in: main window deleted"<<std::endl;
     std::cout<<"Plug-in: stopping image processor"<<std::endl;
     PF::ProcessRequestInfo request;
     request.request = PF::PROCESSOR_END;
     PF::ImageProcessor::Instance().submit_request( request );
     PF::ImageProcessor::Instance().join();
     std::cout<<"Plug-in: image processor stopped"<<std::endl;
-    std::cout<<"Plug-in: deleting main window"<<std::endl;
-    delete pluginwin;
-    std::cout<<"Plug-in: main window deleted"<<std::endl;
     std::cout<<"Plug-in: deleting application"<<std::endl;
     delete app;
     std::cout<<"Plug-in: application deleted"<<std::endl;
