@@ -633,7 +633,7 @@ void run(const gchar *name,
     }
 
 #if HAVE_GIMP_2_9
-    gegl_buffer_flush(buffer);
+    //gegl_buffer_flush(buffer);
 #else
     gimp_drawable_flush(drawable);
     gimp_drawable_detach(drawable);
