@@ -187,7 +187,7 @@ run (const gchar      *name,
 
   //INIT_I18N ();
 
-  run_mode = param[0].data.d_int32;
+  run_mode = static_cast<GimpRunMode>(param[0].data.d_int32);
 
   *nreturn_vals = 1;
   *return_vals  = values;
