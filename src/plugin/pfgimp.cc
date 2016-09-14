@@ -298,22 +298,44 @@ void run(const gchar *name,
 
   //GimpParasite *exif_parasite = gimp_image_parasite_find( image_id, "gimp-image-metadata" );
   GimpMetadata* exif_metadata = gimp_image_get_metadata( image_id );
+#if GIMP_MINOR_VERSION<=8
   GimpParasite *icc_parasite  = gimp_image_parasite_find( image_id, "icc-profile" );
   glong iccsize = 0;
   void* iccdata = NULL;
-
   std::cout<<std::endl<<std::endl
       <<"image_id: "<<image_id
       <<"  ICC parasite: "<<icc_parasite
       <<"  EXIF metadata: "<<exif_metadata
       <<std::endl<<std::endl;
 
+#else
+  GimpColorProfile* img_profile = gimp_image_get_effective_color_profile(image_id);
+  gsize iccsize = 0;
+  void* iccdata = NULL;
+  std::cout<<std::endl<<std::endl
+      <<"image_id: "<<image_id
+      <<"  Image profile: "<<img_profile
+      <<"  EXIF metadata: "<<exif_metadata
+      <<std::endl<<std::endl;
+
+#endif
+
+#if GIMP_MINOR_VERSION<=8
   if( icc_parasite && gimp_parasite_data_size( icc_parasite ) > 0 &&
       gimp_parasite_data( icc_parasite ) != NULL ) {
     iccsize = gimp_parasite_data_size( icc_parasite );
     iccdata = malloc( iccsize );
     memcpy( iccdata, gimp_parasite_data( icc_parasite ), iccsize );
   }
+#else
+  if( img_profile ) {
+    guint8* p = gimp_color_profile_get_icc_profile(img_profile, &iccsize);
+    if( p && iccsize > 0 ) {
+      iccdata = malloc( iccsize );
+      memcpy( iccdata, p, iccsize );
+    }
+  }
+#endif
 
   std::string filename;
   cmsBool is_lin_gamma = false;
@@ -388,6 +410,7 @@ void run(const gchar *name,
     g_free(row);
     gimp_drawable_detach(drawable);
 #else
+    /*
     if( iccdata ) {
       cmsHPROFILE iccprofile = cmsOpenProfileFromMem( iccdata, iccsize );
       if( iccprofile ) {
@@ -399,6 +422,7 @@ void run(const gchar *name,
         cmsCloseProfile( iccprofile );
       }
     }
+    */
 
     GeglRectangle rect;
     gegl_rectangle_set(&rect,rgn_x,rgn_y,rgn_width,rgn_height);
@@ -430,14 +454,12 @@ void run(const gchar *name,
         vips_image_new_from_memory( inbuf, sizeof(float)*3*rgn_width*rgn_height,
             rgn_width, rgn_height, 3, VIPS_FORMAT_FLOAT );
 
-    if( icc_parasite && gimp_parasite_data_size( icc_parasite ) > 0 &&
-        gimp_parasite_data( icc_parasite ) != NULL ) {
-      glong iccsize = gimp_parasite_data_size( icc_parasite );
-      void* iccdata = malloc( iccsize );
-      memcpy( iccdata, gimp_parasite_data( icc_parasite ), iccsize );
+    if( iccdata != NULL ) {
+      void* iccdata2 = malloc( iccsize );
+      memcpy( iccdata2, iccdata, iccsize );
 
       vips_image_set_blob( input_img, VIPS_META_ICC_NAME,
-          (VipsCallbackFn) g_free, iccdata, iccsize );
+          (VipsCallbackFn) g_free, iccdata2, iccsize );
     }
 
     filename = PF::PhotoFlow::Instance().get_cache_dir() + "/gimp_layer.tif";
