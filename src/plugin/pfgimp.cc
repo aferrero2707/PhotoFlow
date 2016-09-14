@@ -69,27 +69,43 @@ GimpPlugInInfo PLUG_IN_INFO = {
 
 MAIN()
 
+
+static Babl* get_phf_format(GeglBuffer* buffer)
+{
+  Babl* gimp_format = gegl_buffer_get_format( buffer );
+  std::string format = "R'G'B' float";
+  if( !strncmp(babl_get_name(gimp_format), "Y' ", 3) ) format = "R'G'B' float";
+  if( !strncmp(babl_get_name(gimp_format), "Y ", 2) ) format = "RGB float";
+  if( !strncmp(babl_get_name(gimp_format), "R'G'B' ", 3) ) format = "R'G'B' float";
+  if( !strncmp(babl_get_name(gimp_format), "RGB ", 3) ) format = "RGB float";
+  Babl* phf_format = babl_format(format.c_str());
+
+  printf("gimp_format: %p\n",(void*)gimp_format);
+  printf("phf_format: %p\n",(void*)phf_format);
+  return phf_format;
+}
+
 void query()
 {
   static const GimpParamDef args[] = {
-    {GIMP_PDB_INT32,    (gchar*)"run_mode", (gchar*)_("Interactive, non-interactive")},
-    {GIMP_PDB_IMAGE,    (gchar*)"image",    (gchar*)_("Input image")},
-    {GIMP_PDB_DRAWABLE, (gchar*)"drawable", (gchar*)_("Input drawable (unused)")},
+      {GIMP_PDB_INT32,    (gchar*)"run_mode", (gchar*)_("Interactive, non-interactive")},
+      {GIMP_PDB_IMAGE,    (gchar*)"image",    (gchar*)_("Input image")},
+      {GIMP_PDB_DRAWABLE, (gchar*)"drawable", (gchar*)_("Input drawable (unused)")},
   };
 
   gimp_install_procedure("plug-in-photoflow",             // name
-                         "PhotoFlow",                    // blurb
-                         "PhotoFlow",                    // help
-                         "Andrea Ferrero", // author
-                         "Andrea Ferrero", // copyright
-                         "2016",                     // date
-                         "_PhotoFlow...",                // menu_path
-                         "RGB*",              // image_types
-                         GIMP_PLUGIN,                // type
-                         G_N_ELEMENTS(args),         // nparams
-                         0,                          // nreturn_vals
-                         args,                       // params
-                         0);                         // return_vals
+      "PhotoFlow",                    // blurb
+      "PhotoFlow",                    // help
+      "Andrea Ferrero", // author
+      "Andrea Ferrero", // copyright
+      "2016",                     // date
+      "_PhotoFlow...",                // menu_path
+      "RGB*",              // image_types
+      GIMP_PLUGIN,                // type
+      G_N_ELEMENTS(args),         // nparams
+      0,                          // nreturn_vals
+      args,                       // params
+      0);                         // return_vals
 
   gimp_plugin_menu_register("plug-in-photoflow", "<Image>/Filters");
 }
@@ -111,31 +127,31 @@ edit_current_layer_dialog()
 
   GtkDialogFlags flags = (GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT);
   dialog = gimp_dialog_new (_("Edit Current Layer"), "pfgimp-edit-current-layer-confirm",
-                            NULL, flags,
-                            gimp_standard_help_func,
-                            "pfgimp-edit-current-layer-confirm-dialog",
+      NULL, flags,
+      gimp_standard_help_func,
+      "pfgimp-edit-current-layer-confirm-dialog",
 
-                            _("Create new"), GTK_RESPONSE_CANCEL,
-                            _("Edit current"),     GTK_RESPONSE_OK,
+      _("Create new"), GTK_RESPONSE_CANCEL,
+      _("Edit current"),     GTK_RESPONSE_OK,
 
-                            NULL);
+      NULL);
 
   gtk_dialog_set_alternative_button_order (GTK_DIALOG (dialog),
-                                           GTK_RESPONSE_OK,
-                                           GTK_RESPONSE_CANCEL,
-                                           -1);
+      GTK_RESPONSE_OK,
+      GTK_RESPONSE_CANCEL,
+      -1);
 
   gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);
   gimp_window_set_transient (GTK_WINDOW (dialog));
 
   hbox = gtk_hbox_new (FALSE, 12);
   gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
-                      hbox, TRUE, TRUE, 0);
+      hbox, TRUE, TRUE, 0);
   gtk_container_set_border_width (GTK_CONTAINER (hbox), 12);
   gtk_widget_show (hbox);
 
   image = gtk_image_new_from_icon_name ("dialog-warning",
-                                        GTK_ICON_SIZE_DIALOG);
+      GTK_ICON_SIZE_DIALOG);
   gtk_misc_set_alignment (GTK_MISC (image), 0.5, 0.0);
   gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
   gtk_widget_show (image);
@@ -149,9 +165,9 @@ edit_current_layer_dialog()
   g_free (text);
 
   gimp_label_set_attributes (GTK_LABEL (label),
-                             PANGO_ATTR_SCALE,  PANGO_SCALE_LARGE,
-                             PANGO_ATTR_WEIGHT, PANGO_WEIGHT_BOLD,
-                             -1);
+      PANGO_ATTR_SCALE,  PANGO_SCALE_LARGE,
+      PANGO_ATTR_WEIGHT, PANGO_WEIGHT_BOLD,
+      -1);
   gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.0);
   gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
   gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
@@ -161,15 +177,15 @@ edit_current_layer_dialog()
   gtk_widget_show (dialog);
 
   switch (gimp_dialog_run (GIMP_DIALOG (dialog)))
-    {
-    case GTK_RESPONSE_OK:
-      retval = Gtk::RESPONSE_YES;
-      break;
+  {
+  case GTK_RESPONSE_OK:
+    retval = Gtk::RESPONSE_YES;
+    break;
 
-    default:
-      retval = Gtk::RESPONSE_NO;
-      break;
-    }
+  default:
+    retval = Gtk::RESPONSE_NO;
+    break;
+  }
 
   gtk_widget_destroy (dialog);
 
@@ -240,16 +256,16 @@ void run(const gchar *name,
       gimp_parasite_data( phf_parasite ) != NULL ) {
 
     /*
-    char tstr[501];
-    snprintf( tstr, 500, _("PhF editing config detected.\nDo you want to continue editing the current layer?") );
-    Gtk::MessageDialog dialog(tstr,
-        false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
-    //dialog.set_transient_for(*this);
-    dialog.set_default_response( Gtk::RESPONSE_YES );
+      char tstr[501];
+      snprintf( tstr, 500, _("PhF editing config detected.\nDo you want to continue editing the current layer?") );
+      Gtk::MessageDialog dialog(tstr,
+      false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+      //dialog.set_transient_for(*this);
+      dialog.set_default_response( Gtk::RESPONSE_YES );
 
-    //Show the dialog and wait for a user response:
-    int result = dialog.run();
-    */
+      //Show the dialog and wait for a user response:
+      int result = dialog.run();
+     */
     int result = edit_current_layer_dialog();
 
     //Handle the response:
@@ -302,7 +318,8 @@ void run(const gchar *name,
   std::string filename;
   cmsBool is_lin_gamma = false;
   std::string format = "R'G'B' float";
-
+  Babl* gimp_format;
+  Babl* phf_format;
   int in_width = 0, in_height = 0;
 
   if( source_layer_id >= 0 ) {
@@ -387,24 +404,25 @@ void run(const gchar *name,
     gegl_rectangle_set(&rect,rgn_x,rgn_y,rgn_width,rgn_height);
     buffer = gimp_drawable_get_buffer(source_layer_id);
 #ifdef BABL_FLIPS_DISABLED
-    format = "RGB float";
+    //format = "RGB float";
 #else
     //format = is_lin_gamma ? "RGB float" : "R'G'B' float";
-    format = "R'G'B' float";
+    //format = "R'G'B' float";
 #endif
     /*
-    Babl* tmpfmt = babl_format( format.c_str() );
-    std::cout<<"pfgimp: input BABL format \""<<format<<"\": tmpfmt="<<tmpfmt<<std::endl;
-    if( !tmpfmt ) {
+      Babl* tmpfmt = babl_format( format.c_str() );
+      std::cout<<"pfgimp: input BABL format \""<<format<<"\": tmpfmt="<<tmpfmt<<std::endl;
+      if( !tmpfmt ) {
       std::cout<<"pfgimp: input BABL format \""<<format<<"\" not available"<<std::endl;
       tmpfmt = babl_format( "RGB float" );
       if( tmpfmt ) {
-        std::cout<<"pfgimp: forcing input BABL format to \""<<format<<"\""<<std::endl;
-        format = "RGB float";
+      std::cout<<"pfgimp: forcing input BABL format to \""<<format<<"\""<<std::endl;
+      format = "RGB float";
       }
-    }
-    */
-    gegl_buffer_get(buffer,&rect,1,babl_format(format.c_str()),inbuf,0,GEGL_ABYSS_NONE);
+      }
+     */
+    phf_format = get_phf_format(buffer);
+    gegl_buffer_get(buffer,&rect,1,phf_format,inbuf,0,GEGL_ABYSS_NONE);
     g_object_unref(buffer);
 #endif
 
@@ -431,12 +449,28 @@ void run(const gchar *name,
     //if( exif_parasite ) {
     //  std::cout<<"Metadata:"<<std::endl<<(gchar*)gimp_parasite_data(exif_parasite)<<std::endl;
     //  GimpMetadata* exif_metadata = gimp_metadata_deserialize( (gchar*)gimp_parasite_data(exif_parasite) );
-      if( exif_metadata ) {
-        gexiv2_metadata_save_file( /*(GExiv2Metadata*)*/exif_metadata, filename.c_str(), NULL );
-        g_object_unref( exif_metadata );
-      }
+    if( exif_metadata ) {
+      gexiv2_metadata_save_file( /*(GExiv2Metadata*)*/exif_metadata, filename.c_str(), NULL );
+      g_object_unref( exif_metadata );
+    }
     //}
+  } else {
+#if GIMP_MINOR_VERSION>8
+    gint32 drawable_id = gimp_image_get_active_drawable(image_id);
+    buffer = gimp_drawable_get_buffer(drawable_id);
+#ifdef BABL_FLIPS_DISABLED
+    //format = "RGB float";
+#else
+    //format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+    //format = "R'G'B' float";
+#endif
+    //const Babl* phf_format = babl_format(format.c_str());
+    phf_format = get_phf_format(buffer);
+    g_object_unref(buffer);
+#endif
   }
+
+  std::cout<<"BABL format for PhF image: "<<babl_get_name(phf_format)<<std::endl;;
 
   //gimp_parasite_free(exif_parasite);
   //gimp_parasite_free(icc_parasite);
@@ -528,171 +562,171 @@ void run(const gchar *name,
       width = pluginwin->get_image_buffer().width;
       height = pluginwin->get_image_buffer().height;
 
-    // Transfer the output layers back into GIMP.
-    GimpLayerModeEffects layer_blendmode = GIMP_NORMAL_MODE;
-    gint layer_posx = 0, layer_posy = 0;
-    double layer_opacity = 100;
+      // Transfer the output layers back into GIMP.
+      GimpLayerModeEffects layer_blendmode = GIMP_NORMAL_MODE;
+      gint layer_posx = 0, layer_posy = 0;
+      double layer_opacity = 100;
 
-    gint32 dest_layer_id = active_layer_id;
-    if( !replace_layer ) {
-      /* Create the "background" layer to hold the image... */
-      gint32 layer = gimp_layer_new(image_id, _("PhF output"), width,
-          height, GIMP_RGB_IMAGE, 100.0,
-          GIMP_NORMAL_MODE);
-      std::cout<<"PhF plug-in: new layer created"<<std::endl;
+      gint32 dest_layer_id = active_layer_id;
+      if( !replace_layer ) {
+        /* Create the "background" layer to hold the image... */
+        gint32 layer = gimp_layer_new(image_id, _("PhF output"), width,
+            height, GIMP_RGB_IMAGE, 100.0,
+            GIMP_NORMAL_MODE);
+        std::cout<<"PhF plug-in: new layer created"<<std::endl;
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,7,3)
-      gimp_image_insert_layer(image_id, layer, 0, -1);
+        gimp_image_insert_layer(image_id, layer, 0, -1);
 #else
-      gimp_image_add_layer(image_id, layer, -1);
+        gimp_image_add_layer(image_id, layer, -1);
 #endif
-      std::cout<<"PhF plug-in: new layer added"<<std::endl;
-      dest_layer_id = layer;
-    }
-    /* Get the drawable and set the pixel region for our load... */
+        std::cout<<"PhF plug-in: new layer added"<<std::endl;
+        dest_layer_id = layer;
+      }
+      /* Get the drawable and set the pixel region for our load... */
 #if HAVE_GIMP_2_9
-    buffer = gimp_drawable_get_buffer(dest_layer_id);
+      buffer = gimp_drawable_get_buffer(dest_layer_id);
 #else
-    drawable = gimp_drawable_get(dest_layer_id);
-    gimp_pixel_rgn_init(&pixel_region, drawable, 0, 0, drawable->width,
-        drawable->height, TRUE, FALSE);
-    tile_height = gimp_tile_height();
+      drawable = gimp_drawable_get(dest_layer_id);
+      gimp_pixel_rgn_init(&pixel_region, drawable, 0, 0, drawable->width,
+          drawable->height, TRUE, FALSE);
+      tile_height = gimp_tile_height();
 #endif
 
-    if( pluginwin->get_image_buffer().buf ) {
-      std::cout<<"PhF plug-in: copying buffer..."<<std::endl;
+      if( pluginwin->get_image_buffer().buf ) {
+        std::cout<<"PhF plug-in: copying buffer..."<<std::endl;
 #if HAVE_GIMP_2_9
 #ifdef BABL_FLIPS_DISABLED
-      format = "RGB float";
+        format = "RGB float";
 #else
-      //format = is_lin_gamma ? "RGB float" : "R'G'B' float";
-      format = "R'G'B' float";
+        //format = is_lin_gamma ? "RGB float" : "R'G'B' float";
+        format = "R'G'B' float";
 #endif
-      /*
-      Babl* tmpfmt = babl_format( format.c_str() );
-      if( !tmpfmt ) {
-        std::cout<<"pfgimp: output BABL format \""<<format<<"\" not available"<<std::endl;
-        tmpfmt = babl_format( "RGB float" );
-        if( tmpfmt ) {
+        /*
+	  Babl* tmpfmt = babl_format( format.c_str() );
+	  if( !tmpfmt ) {
+	  std::cout<<"pfgimp: output BABL format \""<<format<<"\" not available"<<std::endl;
+	  tmpfmt = babl_format( "RGB float" );
+	  if( tmpfmt ) {
           std::cout<<"pfgimp: forcing output BABL format to \""<<format<<"\""<<std::endl;
           format = "RGB float";
+	  }
+	  }
+         */
+        GeglRectangle gegl_rect;
+        gegl_rect.x = 0;
+        gegl_rect.y = 0;
+        gegl_rect.width = width;
+        gegl_rect.height = height;
+        gegl_buffer_set(buffer, &gegl_rect,
+            //GEGL_RECTANGLE(0, 0, width, height),
+            0, phf_format, pluginwin->get_image_buffer().buf,
+            GEGL_AUTO_ROWSTRIDE);
+        g_object_unref(buffer);
+        //gimp_drawable_merge_shadow(layer_id,true);
+        gimp_drawable_update(dest_layer_id,0,0,width,height);
+        if( in_width != width || in_height != height )
+          gimp_layer_resize(dest_layer_id,width,height,0,0);
+#else
+        for (row = 0; row < Crop.height; row += tile_height) {
+          nrows = MIN(Crop.height - row, tile_height);
+          gimp_pixel_rgn_set_rect(&pixel_region,
+              uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
+        }
+#endif
+        std::cout<<"PhF plug-in: buffer copied"<<std::endl;
+
+        PF::ImageEditor* pfeditor = pluginwin->get_image_editor();
+        g_assert( pfeditor != NULL );
+        PF::Image* pfimage = pfeditor->get_image();
+        g_assert( pfimage != NULL );
+        std::string pfiname = PF::PhotoFlow::Instance().get_cache_dir() + "/gimp_layer.pfi";
+        if( pfimage->save(pfiname) ) {
+          // Load PFI file into memory
+          std::ifstream t;
+          std::stringstream strstr;
+          t.open( pfiname );
+          strstr << t.rdbuf();
+          char* buffer = strdup( strstr.str().c_str() );
+          /*
+	    int length;
+	    t.seekg(0,std::ios::end);
+	    length = t.tellg();
+	    t.seekg(0,std::ios::beg);
+	    char* buffer = new char[length+1];
+	    t.read( buffer, length );
+	    buffer[length] = 0;
+           */
+          t.close();
+
+          GimpParasite *cfg_parasite;
+          cfg_parasite = gimp_parasite_new("phf-config",
+              GIMP_PARASITE_PERSISTENT, strlen(buffer), buffer);
+          gimp_item_attach_parasite(dest_layer_id, cfg_parasite);
+          gimp_parasite_free(cfg_parasite);
         }
       }
-      */
-      GeglRectangle gegl_rect;
-      gegl_rect.x = 0;
-      gegl_rect.y = 0;
-      gegl_rect.width = width;
-      gegl_rect.height = height;
-      gegl_buffer_set(buffer, &gegl_rect,
-          //GEGL_RECTANGLE(0, 0, width, height),
-          0, babl_format(format.c_str()), pluginwin->get_image_buffer().buf,
-          GEGL_AUTO_ROWSTRIDE);
-      g_object_unref(buffer);
-      //gimp_drawable_merge_shadow(layer_id,true);
-      gimp_drawable_update(dest_layer_id,0,0,width,height);
-      if( in_width != width || in_height != height )
-        gimp_layer_resize(dest_layer_id,width,height,0,0);
-#else
-      for (row = 0; row < Crop.height; row += tile_height) {
-        nrows = MIN(Crop.height - row, tile_height);
-        gimp_pixel_rgn_set_rect(&pixel_region,
-            uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
-      }
-#endif
-      std::cout<<"PhF plug-in: buffer copied"<<std::endl;
-
-      PF::ImageEditor* pfeditor = pluginwin->get_image_editor();
-      g_assert( pfeditor != NULL );
-      PF::Image* pfimage = pfeditor->get_image();
-      g_assert( pfimage != NULL );
-      std::string pfiname = PF::PhotoFlow::Instance().get_cache_dir() + "/gimp_layer.pfi";
-      if( pfimage->save(pfiname) ) {
-        // Load PFI file into memory
-        std::ifstream t;
-        std::stringstream strstr;
-        t.open( pfiname );
-        strstr << t.rdbuf();
-        char* buffer = strdup( strstr.str().c_str() );
-        /*
-        int length;
-        t.seekg(0,std::ios::end);
-        length = t.tellg();
-        t.seekg(0,std::ios::beg);
-        char* buffer = new char[length+1];
-        t.read( buffer, length );
-        buffer[length] = 0;
-        */
-        t.close();
-
-        GimpParasite *cfg_parasite;
-        cfg_parasite = gimp_parasite_new("phf-config",
-            GIMP_PARASITE_PERSISTENT, strlen(buffer), buffer);
-        gimp_item_attach_parasite(dest_layer_id, cfg_parasite);
-        gimp_parasite_free(cfg_parasite);
-      }
-    }
 
 #if HAVE_GIMP_2_9
-    //gegl_buffer_flush(buffer);
+      //gegl_buffer_flush(buffer);
 #else
-    gimp_drawable_flush(drawable);
-    gimp_drawable_detach(drawable);
+      gimp_drawable_flush(drawable);
+      gimp_drawable_detach(drawable);
 #endif
 
-    //printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
+      //printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
 
-    if( false ) {
-      GimpParasite *exif_parasite;
+      if( false ) {
+        GimpParasite *exif_parasite;
 
-      exif_parasite = gimp_parasite_new("exif-data",
-          GIMP_PARASITE_PERSISTENT, sizeof( GExiv2Metadata ),
-          pluginwin->get_image_buffer().exif_buf);
-//#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-//      gimp_image_attach_parasite(gimpImage, exif_parasite);
-//#else
-      gimp_image_parasite_attach(image_id, exif_parasite);
-//#endif
-      gimp_parasite_free(exif_parasite);
-/*
-#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-      {
-        GimpParam    *return_vals;
-        gint          nreturn_vals;
-        return_vals = gimp_run_procedure("plug-in-metadata-decode-exif",
-            &nreturn_vals,
-            GIMP_PDB_IMAGE, gimpImage,
-            GIMP_PDB_INT32, 7,
-            GIMP_PDB_INT8ARRAY, "unused",
-            GIMP_PDB_END);
-        if (return_vals[0].data.d_status != GIMP_PDB_SUCCESS) {
+        exif_parasite = gimp_parasite_new("exif-data",
+            GIMP_PARASITE_PERSISTENT, sizeof( GExiv2Metadata ),
+            pluginwin->get_image_buffer().exif_buf);
+        //#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
+        //      gimp_image_attach_parasite(gimpImage, exif_parasite);
+        //#else
+        gimp_image_parasite_attach(image_id, exif_parasite);
+        //#endif
+        gimp_parasite_free(exif_parasite);
+        /*
+	  #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
+	  {
+	  GimpParam    *return_vals;
+	  gint          nreturn_vals;
+	  return_vals = gimp_run_procedure("plug-in-metadata-decode-exif",
+	  &nreturn_vals,
+	  GIMP_PDB_IMAGE, gimpImage,
+	  GIMP_PDB_INT32, 7,
+	  GIMP_PDB_INT8ARRAY, "unused",
+	  GIMP_PDB_END);
+	  if (return_vals[0].data.d_status != GIMP_PDB_SUCCESS) {
           g_warning("UFRaw Exif -> XMP Merge failed");
+	  }
+	  }
+	  #endif
+         */
+      }
+
+      if( false ) {
+        /* Create "icc-profile" parasite from output profile
+         * if it is not the internal sRGB.*/
+        if( pluginwin->get_image_buffer().iccdata ) {
+          printf("Saving ICC profile parasite\n");
+          GimpParasite *icc_parasite;
+          icc_parasite = gimp_parasite_new("icc-profile",
+              GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
+              pluginwin->get_image_buffer().iccsize,
+              pluginwin->get_image_buffer().iccdata);
+          std::cout<<"ICC parasite created"<<std::endl;
+#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
+          gimp_image_attach_parasite(image_id, icc_parasite);
+#else
+          gimp_image_parasite_attach(image_id, icc_parasite);
+#endif
+          gimp_parasite_free(icc_parasite);
+
+          std::cout<<"ICC profile attached"<<std::endl;
         }
       }
-#endif
-*/
-    }
-
-    if( false ) {
-      /* Create "icc-profile" parasite from output profile
-       * if it is not the internal sRGB.*/
-      if( pluginwin->get_image_buffer().iccdata ) {
-        printf("Saving ICC profile parasite\n");
-        GimpParasite *icc_parasite;
-        icc_parasite = gimp_parasite_new("icc-profile",
-            GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
-            pluginwin->get_image_buffer().iccsize,
-            pluginwin->get_image_buffer().iccdata);
-        std::cout<<"ICC parasite created"<<std::endl;
-#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-        gimp_image_attach_parasite(image_id, icc_parasite);
-#else
-        gimp_image_parasite_attach(image_id, icc_parasite);
-#endif
-        gimp_parasite_free(icc_parasite);
-
-        std::cout<<"ICC profile attached"<<std::endl;
-      }
-    }
     }
 
     std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
@@ -730,191 +764,3 @@ void run(const gchar *name,
   std::cout<<"Plug-in: gdk_threads_leave() done"<<std::endl;
   return;
 }
-
-
-#ifdef UFRAW_SOURCE
-
-int gimp_row_writer(ufraw_data *uf, void *volatile out, void *pixbuf,
-    int row, int width, int height, int grayscale, int bitDepth)
-{
-  (void)uf;
-  (void)grayscale;
-  (void)bitDepth;
-
-#if HAVE_GIMP_2_9
-  gegl_buffer_set(out, GEGL_RECTANGLE(0, row, width, height),
-      0, NULL, pixbuf,
-      GEGL_AUTO_ROWSTRIDE);
-#else
-  gimp_pixel_rgn_set_rect(out, pixbuf, 0, row, width, height);
-#endif
-
-  return UFRAW_SUCCESS;
-}
-
-long ufraw_save_gimp_image(ufraw_data *uf, GtkWidget *widget)
-{
-#if HAVE_GIMP_2_9
-  GeglBuffer *buffer;
-#else
-  GimpDrawable *drawable;
-  GimpPixelRgn pixel_region;
-  int tile_height, row, nrows;
-#endif
-  gint32 layer;
-  UFRectangle Crop;
-  int depth;
-  (void)widget;
-
-  uf->gimpImage = -1;
-
-  if (uf->conf->embeddedImage) {
-    if (ufraw_convert_embedded(uf) != UFRAW_SUCCESS)
-      return UFRAW_ERROR;
-    Crop.height = uf->thumb.height;
-    Crop.width = uf->thumb.width;
-    Crop.y = 0;
-    Crop.x = 0;
-    depth = 3;
-  } else {
-    if (ufraw_convert_image(uf) != UFRAW_SUCCESS)
-      return UFRAW_ERROR;
-    ufraw_get_scaled_crop(uf, &Crop);
-#if HAVE_GIMP_2_9
-    if (uf->conf->profile[out_profile]
-                          [uf->conf->profileIndex[out_profile]].BitDepth == 16)
-      depth = 6;
-    else
-      depth = 3;
-#else
-    depth = 3;
-#endif
-  }
-#if HAVE_GIMP_2_9
-  uf->gimpImage =
-      gimp_image_new_with_precision(Crop.width, Crop.height, GIMP_RGB,
-          depth == 3 ? GIMP_PRECISION_U8_GAMMA :
-              GIMP_PRECISION_U16_GAMMA);
-#else
-  uf->gimpImage = gimp_image_new(Crop.width, Crop.height, GIMP_RGB);
-#endif
-  if (uf->gimpImage == -1) {
-    ufraw_message(UFRAW_ERROR, _("Can't allocate new image."));
-    return UFRAW_ERROR;
-  }
-  gimp_image_set_filename(uf->gimpImage, uf->filename);
-
-  /* Create the "background" layer to hold the image... */
-  layer = gimp_layer_new(uf->gimpImage, _("Background"), Crop.width,
-      Crop.height, GIMP_RGB_IMAGE, 100.0,
-      GIMP_NORMAL_MODE);
-#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,7,3)
-  gimp_image_insert_layer(uf->gimpImage, layer, 0, 0);
-#else
-  gimp_image_add_layer(uf->gimpImage, layer, 0);
-#endif
-
-  /* Get the drawable and set the pixel region for our load... */
-#if HAVE_GIMP_2_9
-  buffer = gimp_drawable_get_buffer(layer);
-#else
-  drawable = gimp_drawable_get(layer);
-  gimp_pixel_rgn_init(&pixel_region, drawable, 0, 0, drawable->width,
-      drawable->height, TRUE, FALSE);
-  tile_height = gimp_tile_height();
-#endif
-
-  if (uf->conf->embeddedImage) {
-#if HAVE_GIMP_2_9
-    gegl_buffer_set(buffer,
-        GEGL_RECTANGLE(0, 0, Crop.width, Crop.height),
-        0, NULL, uf->thumb.buffer,
-        GEGL_AUTO_ROWSTRIDE);
-#else
-    for (row = 0; row < Crop.height; row += tile_height) {
-      nrows = MIN(Crop.height - row, tile_height);
-      gimp_pixel_rgn_set_rect(&pixel_region,
-          uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
-    }
-#endif
-  } else {
-#if HAVE_GIMP_2_9
-    ufraw_write_image_data(uf, buffer, &Crop, depth == 3 ? 8 : 16, 0,
-        gimp_row_writer);
-#else
-    ufraw_write_image_data(uf, &pixel_region, &Crop, depth == 3 ? 8 : 16, 0,
-        gimp_row_writer);
-#endif
-  }
-#if HAVE_GIMP_2_9
-  gegl_buffer_flush(buffer);
-#else
-  gimp_drawable_flush(drawable);
-  gimp_drawable_detach(drawable);
-#endif
-
-  if (uf->conf->embeddedImage) return UFRAW_SUCCESS;
-
-  ufraw_exif_prepare_output(uf);
-  if (uf->outputExifBuf != NULL) {
-    if (uf->outputExifBufLen > 65533) {
-      ufraw_message(UFRAW_SET_WARNING,
-          _("EXIF buffer length %d, too long, ignored."),
-          uf->outputExifBufLen);
-    } else {
-      GimpParasite *exif_parasite;
-
-      exif_parasite = gimp_parasite_new("exif-data",
-          GIMP_PARASITE_PERSISTENT, uf->outputExifBufLen, uf->outputExifBuf);
-#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-      gimp_image_attach_parasite(uf->gimpImage, exif_parasite);
-#else
-      gimp_image_parasite_attach(uf->gimpImage, exif_parasite);
-#endif
-      gimp_parasite_free(exif_parasite);
-
-#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-      {
-        GimpParam    *return_vals;
-        gint          nreturn_vals;
-        return_vals = gimp_run_procedure("plug-in-metadata-decode-exif",
-            &nreturn_vals,
-            GIMP_PDB_IMAGE, uf->gimpImage,
-            GIMP_PDB_INT32, 7,
-            GIMP_PDB_INT8ARRAY, "unused",
-            GIMP_PDB_END);
-        if (return_vals[0].data.d_status != GIMP_PDB_SUCCESS) {
-          g_warning("UFRaw Exif -> XMP Merge failed");
-        }
-      }
-#endif
-    }
-  }
-  /* Create "icc-profile" parasite from output profile
-   * if it is not the internal sRGB.*/
-  if (strcmp(uf->developer->profileFile[out_profile], "")) {
-    char *buf;
-    gsize len;
-    if (g_file_get_contents(uf->developer->profileFile[out_profile],
-        &buf, &len, NULL)) {
-      GimpParasite *icc_parasite;
-      icc_parasite = gimp_parasite_new("icc-profile",
-          GIMP_PARASITE_PERSISTENT, len, buf);
-#if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-      gimp_image_attach_parasite(uf->gimpImage, icc_parasite);
-#else
-      gimp_image_parasite_attach(uf->gimpImage, icc_parasite);
-#endif
-      gimp_parasite_free(icc_parasite);
-      g_free(buf);
-    } else {
-      ufraw_message(UFRAW_WARNING,
-          _("Failed to embed output profile '%s' in image."),
-          uf->developer->profileFile[out_profile]);
-    }
-  }
-  return UFRAW_SUCCESS;
-}
-
-
-#endif

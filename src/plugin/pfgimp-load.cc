@@ -24,14 +24,14 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-  extern GType vips_layer_get_type( void );
-  extern GType vips_gmic_get_type( void );
-  extern GType vips_cimg_blur_anisotropic_get_type( void );
-  extern GType vips_cimg_blur_bilateral_get_type( void );
-  extern void vips_cimg_operation_init( void );
-  extern GType vips_clone_stamp_get_type( void );
-  extern GType vips_lensfun_get_type( void );
-  extern GType vips_perspective_get_type( void );
+extern GType vips_layer_get_type( void );
+extern GType vips_gmic_get_type( void );
+extern GType vips_cimg_blur_anisotropic_get_type( void );
+extern GType vips_cimg_blur_bilateral_get_type( void );
+extern void vips_cimg_operation_init( void );
+extern GType vips_clone_stamp_get_type( void );
+extern GType vips_lensfun_get_type( void );
+extern GType vips_perspective_get_type( void );
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
@@ -39,9 +39,9 @@ extern "C" {
 GimpPDBStatusType status = GIMP_PDB_CALLING_ERROR;
 
 static const char raw_ext[] = "3fr,ari,arw,cap,cine,cr2,crw,cs1,dc2,dcr,dng,erf,fff,"
-  "hdr,ia,iiq,k25,kc2,kdc,mdc,mef,mos,mrw,nef,"
-  "nrw,orf,ori,pef,pxn,qtk,r3d,raf,raw,rdc,rw2,rwl,sr2,"
-  "srf,srw,sti,pfi,x3f";
+    "hdr,ia,iiq,k25,kc2,kdc,mdc,mef,mos,mrw,nef,"
+    "nrw,orf,ori,pef,pxn,qtk,r3d,raf,raw,rdc,rw2,rwl,sr2,"
+    "srf,srw,sti,pfi,x3f";
 
 
 
@@ -49,28 +49,28 @@ static PF::PluginWindow* pluginwin;
 
 static void     query                (void);
 static void     run                  (const gchar      *name,
-                                      gint              nparams,
-                                      const GimpParam  *param,
-                                      gint             *nreturn_vals,
-                                      GimpParam       **return_vals);
+    gint              nparams,
+    const GimpParam  *param,
+    gint             *nreturn_vals,
+    GimpParam       **return_vals);
 static gint32   load_image           (const gchar      *filename,
-                                      GimpRunMode       run_mode,
-                                      GError          **error);
+    GimpRunMode       run_mode,
+    GError          **error);
 
 static gint32   load_thumbnail_image (const gchar      *filename,
-                                      gint             thumb_size,
-                                      gint             *width,
-                                      gint             *height,
-                                      GError          **error);
+    gint             thumb_size,
+    gint             *width,
+    gint             *height,
+    GError          **error);
 
 
 //long pf_save_gimp_image(ufraw_data *uf, GtkWidget *widget);
 
 GimpPlugInInfo PLUG_IN_INFO = {
-  NULL,  /* init_procedure */
-  NULL,  /* quit_procedure */
-  query, /* query_procedure */
-  run,   /* run_procedure */
+    NULL,  /* init_procedure */
+    NULL,  /* quit_procedure */
+    query, /* query_procedure */
+    run,   /* run_procedure */
 };
 
 MAIN()
@@ -78,48 +78,48 @@ MAIN()
 void query()
 {
   static const GimpParamDef load_args[] = {
-    { GIMP_PDB_INT32,  "run_mode", "Interactive, non-interactive" },
-    { GIMP_PDB_STRING, "filename", "The name of the file to load" },
-    { GIMP_PDB_STRING, "raw_filename", "The name of the file to load" },
+      { GIMP_PDB_INT32,  "run_mode", "Interactive, non-interactive" },
+      { GIMP_PDB_STRING, "filename", "The name of the file to load" },
+      { GIMP_PDB_STRING, "raw_filename", "The name of the file to load" },
   };
   static const GimpParamDef load_return_vals[] = {
-    { GIMP_PDB_IMAGE, "image", "Output image" },
+      { GIMP_PDB_IMAGE, "image", "Output image" },
   };
   static const GimpParamDef thumb_args[] = {
-    { GIMP_PDB_STRING, "filename",     "The name of the file to load" },
-    { GIMP_PDB_INT32,  "thumb_size",   "Preferred thumbnail size" }
+      { GIMP_PDB_STRING, "filename",     "The name of the file to load" },
+      { GIMP_PDB_INT32,  "thumb_size",   "Preferred thumbnail size" }
   };
   static const GimpParamDef thumb_return_vals[] = {
-    { GIMP_PDB_IMAGE,  "image",        "Thumbnail image" },
-    { GIMP_PDB_INT32,  "image_width",  "Width of full-sized image" },
-    { GIMP_PDB_INT32,  "image_height", "Height of full-sized image" }
+      { GIMP_PDB_IMAGE,  "image",        "Thumbnail image" },
+      { GIMP_PDB_INT32,  "image_width",  "Width of full-sized image" },
+      { GIMP_PDB_INT32,  "image_height", "Height of full-sized image" }
   };
 
 
   for (int i = 0; i < G_N_ELEMENTS (file_formats); i++)
-    {
-      const FileFormat *format = &file_formats[i];
+  {
+    const FileFormat *format = &file_formats[i];
 
-      gimp_install_procedure (format->load_proc,
-                              format->load_blurb,
-                              format->load_help,
-                              "Tobias Ellinghaus",
-                              "Tobias Ellinghaus",
-                              "2016",
-                              format->file_type,
-                              NULL,
-                              GIMP_PLUGIN,
-                              G_N_ELEMENTS (load_args),
-                              G_N_ELEMENTS (load_return_vals),
-                              load_args, load_return_vals);
+    gimp_install_procedure (format->load_proc,
+        format->load_blurb,
+        format->load_help,
+        "Tobias Ellinghaus",
+        "Tobias Ellinghaus",
+        "2016",
+        format->file_type,
+        NULL,
+        GIMP_PLUGIN,
+        G_N_ELEMENTS (load_args),
+        G_N_ELEMENTS (load_return_vals),
+        load_args, load_return_vals);
 
-      gimp_register_file_handler_mime (format->load_proc,
-                                       format->mime_type);
-      gimp_register_magic_load_handler (format->load_proc,
-                                        format->extensions,
-                                        "",
-                                        format->magic);
-    }
+    gimp_register_file_handler_mime (format->load_proc,
+        format->mime_type);
+    gimp_register_magic_load_handler (format->load_proc,
+        format->extensions,
+        "",
+        format->magic);
+  }
 
   /*
     gimp_install_procedure("file_pf_load",
@@ -148,22 +148,22 @@ void query()
     #else
     gimp_register_load_handler("file_pf_load", (char *)raw_ext, "");
     #endif
-  */
+   */
   gimp_install_procedure("file_pf_load_thumb",
-			 "Loads thumbnails from digital camera raw files.",
-			 "Loads thumbnails from digital camera raw files.",
-			 "Udi Fuchs",
-			 "Copyright 2004-2015 by Udi Fuchs",
-			 "pf-" VERSION,
-			 NULL,
-			 NULL,
-			 GIMP_PLUGIN,
-			 G_N_ELEMENTS(thumb_args),
-			 G_N_ELEMENTS(thumb_return_vals),
-			 thumb_args, thumb_return_vals);
+      "Loads thumbnails from digital camera raw files.",
+      "Loads thumbnails from digital camera raw files.",
+      "Udi Fuchs",
+      "Copyright 2004-2015 by Udi Fuchs",
+      "pf-" VERSION,
+      NULL,
+      NULL,
+      GIMP_PLUGIN,
+      G_N_ELEMENTS(thumb_args),
+      G_N_ELEMENTS(thumb_return_vals),
+      thumb_args, thumb_return_vals);
 
   gimp_register_thumbnail_loader("file_pf_load",
-				 "file_pf_load_thumb");
+      "file_pf_load_thumb");
 
 }
 
@@ -173,10 +173,10 @@ gboolean sendToGimpMode;
 
 static void
 run (const gchar      *name,
-     gint              nparams,
-     const GimpParam  *param,
-     gint             *nreturn_vals,
-     GimpParam       **return_vals)
+    gint              nparams,
+    const GimpParam  *param,
+    gint             *nreturn_vals,
+    GimpParam       **return_vals)
 {
   static GimpParam   values[6];
   GimpPDBStatusType  status = GIMP_PDB_SUCCESS;
@@ -197,69 +197,69 @@ run (const gchar      *name,
 
   /* check if the format passed is actually supported & load */
   for (i = 0; i < G_N_ELEMENTS (file_formats); i++)
+  {
+    const FileFormat *format = &file_formats[i];
+
+    if (format->load_proc && ! strcmp (name, format->load_proc))
     {
-      const FileFormat *format = &file_formats[i];
+      image_ID = load_image (param[1].data.d_string, run_mode, &error);
 
-      if (format->load_proc && ! strcmp (name, format->load_proc))
-        {
-          image_ID = load_image (param[1].data.d_string, run_mode, &error);
+      if (image_ID != -1)
+      {
+        *nreturn_vals = 2;
+        values[1].type         = GIMP_PDB_IMAGE;
+        values[1].data.d_image = image_ID;
+      }
+      else
+      {
+        status = GIMP_PDB_EXECUTION_ERROR;
+      }
 
-          if (image_ID != -1)
-            {
-              *nreturn_vals = 2;
-              values[1].type         = GIMP_PDB_IMAGE;
-              values[1].data.d_image = image_ID;
-            }
-          else
-            {
-              status = GIMP_PDB_EXECUTION_ERROR;
-            }
-
-          break;
-        }
-      else if (! strcmp (name, LOAD_THUMB_PROC))
-        {
-          gint width  = 0;
-          gint height = 0;
-
-          image_ID = load_thumbnail_image (param[0].data.d_string,
-                                           param[1].data.d_int32,
-                                           &width,
-                                           &height,
-                                           &error);
-
-          if (image_ID != -1)
-            {
-              *nreturn_vals = 6;
-              values[1].type         = GIMP_PDB_IMAGE;
-              values[1].data.d_image = image_ID;
-              values[2].type         = GIMP_PDB_INT32;
-              values[2].data.d_int32 = width;
-              values[3].type         = GIMP_PDB_INT32;
-              values[3].data.d_int32 = height;
-              values[4].type         = GIMP_PDB_INT32;
-              values[4].data.d_int32 = GIMP_RGB_IMAGE;
-              values[5].type         = GIMP_PDB_INT32;
-              values[5].data.d_int32 = 1; /* num_layers */
-            }
-          else
-            {
-              status = GIMP_PDB_EXECUTION_ERROR;
-            }
-
-          break;
-        }
+      break;
     }
+    else if (! strcmp (name, LOAD_THUMB_PROC))
+    {
+      gint width  = 0;
+      gint height = 0;
+
+      image_ID = load_thumbnail_image (param[0].data.d_string,
+          param[1].data.d_int32,
+          &width,
+          &height,
+          &error);
+
+      if (image_ID != -1)
+      {
+        *nreturn_vals = 6;
+        values[1].type         = GIMP_PDB_IMAGE;
+        values[1].data.d_image = image_ID;
+        values[2].type         = GIMP_PDB_INT32;
+        values[2].data.d_int32 = width;
+        values[3].type         = GIMP_PDB_INT32;
+        values[3].data.d_int32 = height;
+        values[4].type         = GIMP_PDB_INT32;
+        values[4].data.d_int32 = GIMP_RGB_IMAGE;
+        values[5].type         = GIMP_PDB_INT32;
+        values[5].data.d_int32 = 1; /* num_layers */
+      }
+      else
+      {
+        status = GIMP_PDB_EXECUTION_ERROR;
+      }
+
+      break;
+    }
+  }
 
   if (i == G_N_ELEMENTS (file_formats))
     status = GIMP_PDB_CALLING_ERROR;
 
   if (status != GIMP_PDB_SUCCESS && error)
-    {
-      *nreturn_vals = 2;
-      values[1].type           = GIMP_PDB_STRING;
-      values[1].data.d_string  = error->message;
-    }
+  {
+    *nreturn_vals = 2;
+    values[1].type           = GIMP_PDB_STRING;
+    values[1].data.d_string  = error->message;
+  }
 
   values[0].data.d_status = status;
 }
@@ -267,8 +267,8 @@ run (const gchar      *name,
 
 
 gint32 load_image (const gchar      *filename,
-		   GimpRunMode       run_mode,
-		   GError          **error)
+    GimpRunMode       run_mode,
+    GError          **error)
 {
   // TODO: Check if the static variable here is really needed.
   // In any case this should cause no issues with threads.
@@ -378,8 +378,8 @@ gint32 load_image (const gchar      *filename,
 
 #if HAVE_GIMP_2_9
       gimpImage =
-        gimp_image_new_with_precision(width, height, GIMP_RGB,
-				      GIMP_PRECISION_FLOAT_GAMMA);
+          gimp_image_new_with_precision(width, height, GIMP_RGB,
+              GIMP_PRECISION_FLOAT_GAMMA);
 #else
       gimpImage = gimp_image_new(width, height, GIMP_RGB);
 #endif
@@ -387,8 +387,8 @@ gint32 load_image (const gchar      *filename,
 
       /* Create the "background" layer to hold the image... */
       layer = gimp_layer_new(gimpImage, _("Background"), width,
-			     height, GIMP_RGB_IMAGE, 100.0,
-			     GIMP_NORMAL_MODE);
+          height, GIMP_RGB_IMAGE, 100.0,
+          GIMP_NORMAL_MODE);
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,7,3)
       gimp_image_insert_layer(gimpImage, layer, 0, 0);
 #else
@@ -401,29 +401,29 @@ gint32 load_image (const gchar      *filename,
 #else
       drawable = gimp_drawable_get(layer);
       gimp_pixel_rgn_init(&pixel_region, drawable, 0, 0, drawable->width,
-			  drawable->height, TRUE, FALSE);
+          drawable->height, TRUE, FALSE);
       tile_height = gimp_tile_height();
 #endif
 
       if( pluginwin->get_image_buffer().buf ) {
 #if HAVE_GIMP_2_9
-	GeglRectangle gegl_rect;
-	gegl_rect.x = 0;
-	gegl_rect.y = 0;
-	gegl_rect.width = width;
-	gegl_rect.height = height;
-	gegl_buffer_set(buffer, &gegl_rect,
-			//GEGL_RECTANGLE(0, 0, width, height),
-			0, NULL, pluginwin->get_image_buffer().buf,
-			GEGL_AUTO_ROWSTRIDE);
+        GeglRectangle gegl_rect;
+        gegl_rect.x = 0;
+        gegl_rect.y = 0;
+        gegl_rect.width = width;
+        gegl_rect.height = height;
+        gegl_buffer_set(buffer, &gegl_rect,
+            //GEGL_RECTANGLE(0, 0, width, height),
+            0, NULL, pluginwin->get_image_buffer().buf,
+            GEGL_AUTO_ROWSTRIDE);
 #else
-	for (row = 0; row < Crop.height; row += tile_height) {
-	  nrows = MIN(Crop.height - row, tile_height);
-	  gimp_pixel_rgn_set_rect(&pixel_region,
-				  uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
-	}
+        for (row = 0; row < Crop.height; row += tile_height) {
+          nrows = MIN(Crop.height - row, tile_height);
+          gimp_pixel_rgn_set_rect(&pixel_region,
+              uf->thumb.buffer + 3 * row * Crop.width, 0, row, Crop.width, nrows);
+        }
 #endif
-	status = GIMP_PDB_SUCCESS;
+        status = GIMP_PDB_SUCCESS;
       }
 
       std::cout<<"PhF plug-in: buffer copied"<<std::endl;
@@ -434,13 +434,13 @@ gint32 load_image (const gchar      *filename,
       g_assert( pfimage != NULL );
       std::string pfiname = PF::PhotoFlow::Instance().get_cache_dir() + "/gimp_layer.pfi";
       if( pfimage->save(pfiname) ) {
-	// Load PFI file into memory
-	std::ifstream t;
-	std::stringstream strstr;
-	t.open( pfiname );
-	strstr << t.rdbuf();
-	char* buffer = strdup( strstr.str().c_str() );
-	/*
+        // Load PFI file into memory
+        std::ifstream t;
+        std::stringstream strstr;
+        t.open( pfiname );
+        strstr << t.rdbuf();
+        char* buffer = strdup( strstr.str().c_str() );
+        /*
 	  int length;
 	  t.seekg(0,std::ios::end);
 	  length = t.tellg();
@@ -448,14 +448,14 @@ gint32 load_image (const gchar      *filename,
 	  char* buffer = new char[length+1];
 	  t.read( buffer, length );
 	  buffer[length] = 0;
-	*/
-	t.close();
+         */
+        t.close();
 
-	GimpParasite *cfg_parasite;
-	cfg_parasite = gimp_parasite_new("phf-config",
-					 GIMP_PARASITE_PERSISTENT, strlen(buffer), buffer);
-	gimp_item_attach_parasite(layer, cfg_parasite);
-	gimp_parasite_free(cfg_parasite);
+        GimpParasite *cfg_parasite;
+        cfg_parasite = gimp_parasite_new("phf-config",
+            GIMP_PARASITE_PERSISTENT, strlen(buffer), buffer);
+        gimp_item_attach_parasite(layer, cfg_parasite);
+        gimp_parasite_free(cfg_parasite);
       }
 
 #if HAVE_GIMP_2_9
@@ -468,12 +468,12 @@ gint32 load_image (const gchar      *filename,
       //printf("pluginwin->get_image_buffer().exif_buf=%X\n",pluginwin->get_image_buffer().exif_buf);
 
       if( true ) {
-	GimpParasite *exif_parasite;
+        GimpParasite *exif_parasite;
 
-	std::cout<<"pluginwin->get_image_buffer().exif_buf="<<pluginwin->get_image_buffer().exif_buf<<std::endl;
-	if( pluginwin->get_image_buffer().exif_buf ) {
-	  gimp_image_set_metadata( gimpImage, pluginwin->get_image_buffer().exif_buf );
-	  /*
+        std::cout<<"pluginwin->get_image_buffer().exif_buf="<<pluginwin->get_image_buffer().exif_buf<<std::endl;
+        if( pluginwin->get_image_buffer().exif_buf ) {
+          gimp_image_set_metadata( gimpImage, pluginwin->get_image_buffer().exif_buf );
+          /*
 	    gchar* meta_string = gimp_metadata_serialize( pluginwin->get_image_buffer().exif_buf );
 	    if( meta_string ) {
 	    exif_parasite = gimp_parasite_new("gimp-image-metadata",
@@ -486,9 +486,9 @@ gint32 load_image (const gchar      *filename,
 	    //gimp_parasite_free(exif_parasite);
 	    g_free( meta_string );
 	    }
-	  */
-	}
-	/*
+           */
+        }
+        /*
 	  #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
 	  {
 	  GimpParam    *return_vals;
@@ -504,27 +504,27 @@ gint32 load_image (const gchar      *filename,
 	  }
 	  }
 	  #endif
-	*/
+         */
       }
 
       /* Create "icc-profile" parasite from output profile
        * if it is not the internal sRGB.*/
       if( pluginwin->get_image_buffer().iccdata ) {
-	printf("Saving ICC profile parasite\n");
-	GimpParasite *icc_parasite;
-	icc_parasite = gimp_parasite_new("icc-profile",
-					 GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
-					 pluginwin->get_image_buffer().iccsize,
-					 pluginwin->get_image_buffer().iccdata);
-	std::cout<<"ICC parasite created"<<std::endl;
+        printf("Saving ICC profile parasite\n");
+        GimpParasite *icc_parasite;
+        icc_parasite = gimp_parasite_new("icc-profile",
+            GIMP_PARASITE_PERSISTENT | GIMP_PARASITE_UNDOABLE,
+            pluginwin->get_image_buffer().iccsize,
+            pluginwin->get_image_buffer().iccdata);
+        std::cout<<"ICC parasite created"<<std::endl;
 #if defined(GIMP_CHECK_VERSION) && GIMP_CHECK_VERSION(2,8,0)
-	gimp_image_attach_parasite(gimpImage, icc_parasite);
+        gimp_image_attach_parasite(gimpImage, icc_parasite);
 #else
-	gimp_image_parasite_attach(gimpImage, icc_parasite);
+        gimp_image_parasite_attach(gimpImage, icc_parasite);
 #endif
-	gimp_parasite_free(icc_parasite);
+        gimp_parasite_free(icc_parasite);
 
-	std::cout<<"ICC profile attached"<<std::endl;
+        std::cout<<"ICC profile attached"<<std::endl;
       }
     }
     std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
@@ -555,10 +555,10 @@ gint32 load_image (const gchar      *filename,
 
 static gint32
 load_thumbnail_image (const gchar   *filename,
-                      gint           thumb_size,
-                      gint          *width,
-                      gint          *height,
-                      GError       **error)
+    gint           thumb_size,
+    gint          *width,
+    gint          *height,
+    GError       **error)
 {
   gint32  image_ID         = -1;
 
