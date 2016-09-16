@@ -331,7 +331,7 @@ bool PF::WBSelector::check_value( int id, const std::string& name, const std::st
 PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Raw Developer" ),
   wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
-  wbTempSlider( this, "", _("temperature"), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 5, 20, 1),
+  wbTempSlider( this, "", _("temperature"), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
   wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
   wbRedSlider( this, "wb_red", "Red WB mult.", 1, 0, 10, 0.05, 0.1, 1),
   wbGreenSlider( this, "wb_green", "Green WB mult.", 1, 0, 10, 0.05, 0.1, 1),
