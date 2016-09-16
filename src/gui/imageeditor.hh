@@ -172,6 +172,7 @@ public:
   void build_image();
 
   void on_image_modified();
+  void on_image_modified_idle_cb();
 
   void on_map();
   void on_realize();
