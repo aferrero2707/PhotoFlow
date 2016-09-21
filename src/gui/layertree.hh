@@ -136,6 +136,7 @@ class ImageEditor;
     // Updates the tree model with the layers from the associated image
     void update_model();
     void update_model_cb() { update_model(); }
+    void update_model_idle_cb();
 
     std::list<Layer*>* get_layers() { return layers; }
     void set_layers( std::list<Layer*>* l ) {

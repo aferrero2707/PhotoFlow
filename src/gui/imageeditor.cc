@@ -121,6 +121,26 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
 
 
 
+typedef struct {
+  PF::ImageEditor* editor;
+} EditorCBData;
+
+static gboolean editor_on_image_modified_cb ( EditorCBData* data)
+{
+  if( data ) {
+    data->editor->on_image_modified();
+    g_free( data );
+  }
+  return false;
+}
+
+
+
+
+
+
+
+
 PF::ImageEditor::ImageEditor( std::string fname ):
   filename( fname ),
   image( new PF::Image() ),
@@ -579,8 +599,16 @@ void PF::ImageEditor::build_image()
   image->set_loaded( true );
 
   image->clear_modified();
-  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified) );
+  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified_idle_cb) );
   //Gtk::Paned::on_map();
+}
+
+
+void PF::ImageEditor::on_image_modified_idle_cb()
+{
+  EditorCBData * update = g_new (EditorCBData, 1);
+  update->editor = this;
+  g_idle_add ((GSourceFunc) editor_on_image_modified_cb, update);
 }
 
 

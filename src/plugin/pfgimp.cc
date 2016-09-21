@@ -330,6 +330,7 @@ void run(const gchar *name,
 #else
   if( img_profile ) {
     const guint8* p = gimp_color_profile_get_icc_profile(img_profile, &iccsize);
+    guint8* p = gimp_color_profile_get_icc_profile(img_profile, &iccsize);
     if( p && iccsize > 0 ) {
       iccdata = malloc( iccsize );
       memcpy( iccdata, p, iccsize );

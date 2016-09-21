@@ -277,6 +277,22 @@ static const struct {
 };
 
 
+typedef struct {
+  PF::LayerTree* tree;
+} TreeUpdateData;
+
+static gboolean tree_update_cb ( TreeUpdateData* data)
+{
+  if( data ) {
+    data->tree->update_model();
+    g_free( data );
+  }
+  return false;
+}
+
+
+
+
 PF::LayerTreeModel::LayerTreeModel()
 {
   set_column_types( columns );
@@ -335,7 +351,7 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
   cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerTree::on_cell_toggled) ); 
 
   treeModel->signal_dnd_done.
-    connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_cb) ); 
+    connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_idle_cb) );
 
   add( treeView );
 
@@ -469,6 +485,14 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
   }
 }
 
+
+
+void PF::LayerTree::update_model_idle_cb()
+{
+  TreeUpdateData * update = g_new (TreeUpdateData, 1);
+  update->tree = this;
+  g_idle_add ((GSourceFunc) tree_update_cb, update);
+}
 
 
 void PF::LayerTree::update_model()
