@@ -136,7 +136,7 @@ VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int firs
     //std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
     icc_par->set_out_profile( in_profile );
   }
-  convert2input->get_par()->set_image_hints( shahi );
+  convert2input->get_par()->set_image_hints( in[0] );
   convert2input->get_par()->set_format( get_format() );
   in2.clear(); in2.push_back( shahi );
   std::cout<<"NonLocalmeansPar::build(): calling convert2input->get_par()->build()"<<std::endl;
