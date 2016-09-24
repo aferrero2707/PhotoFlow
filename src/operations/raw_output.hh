@@ -172,12 +172,9 @@ enum hlreco_mode_t {
     cmsToneCurve* get_srgb_curve() { return srgb_curve; }
     cmsHTRANSFORM get_transform() { return transform; }
 
-    void set_image_hints( VipsImage* img )
-    {
-      if( !img ) return;
-      OpParBase::set_image_hints( img );
-      rgb_image( get_xsize(), get_ysize() );
-    }
+    void set_image_hints( VipsImage* img );
+
+    int get_out_profile_mode() { return out_profile_mode.get_enum_value().first; }
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 
@@ -499,6 +496,14 @@ enum hlreco_mode_t {
               std::cout<<"in: "<<line[0]<<","<<line[1]<<","<<line[2]<<"   ";
               std::cout<<"out: "<<pout[0]<<","<<pout[1]<<","<<pout[2]<<"   "<<std::endl;
             }
+
+            if( opar->get_out_profile_mode() == OUT_PROF_LAB ) {
+              for( x = 0; x < line_size; x+= 3 ) {
+                pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0) / 256.0);
+                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 256.0);
+              }
+            }
           } else {
             memcpy( pout, line, sizeof(float)*line_size );
             for( int xi = 0; xi < line_size; xi++ ) {
@@ -514,6 +519,14 @@ enum hlreco_mode_t {
             cmsDoTransform( opar->get_transform(), line2, pout, width );
             //std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
             //    <<pout[0]<<","<<pout[1]<<","<<pout[2]<<std::endl;
+
+            if( opar->get_out_profile_mode() == OUT_PROF_LAB ) {
+              for( x = 0; x < line_size; x+= 3 ) {
+                pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0) / 256.0);
+                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 256.0);
+              }
+            }
           } else {
             memcpy( pout, line, sizeof(float)*line_size );
           }

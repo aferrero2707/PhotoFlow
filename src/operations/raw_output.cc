@@ -98,6 +98,21 @@ PF::RawOutputPar::RawOutputPar():
 }
 
 
+void PF::RawOutputPar::set_image_hints( VipsImage* img )
+{
+  if( !img ) return;
+  PF::OpParBase::set_image_hints( img );
+  std::cout<<"RawOutputPar::set_image_hints(): out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
+  if( out_profile_mode.get_enum_value().first == PF::OUT_PROF_LAB ) {
+    std::cout<<"RawOutputPar::set_image_hints(): calling lab_image()"<<std::endl;
+    lab_image( get_xsize(), get_ysize() );
+  } else {
+    std::cout<<"RawOutputPar::set_image_hints(): calling rgb_image()"<<std::endl;
+    rgb_image( get_xsize(), get_ysize() );
+  }
+}
+
+
 VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first, 
     VipsImage* imap, VipsImage* omap,
     unsigned int& level)
@@ -256,11 +271,15 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     }
     transform = NULL;
     if( cam_profile && out_profile ) {
+      cmsUInt32Number out_lcms_type = TYPE_RGB_FLT;
+      if( out_profile_mode.get_enum_value().first == PF::OUT_PROF_LAB ) {
+        out_lcms_type = TYPE_Lab_FLT;
+      }
       transform = cmsCreateTransform( cam_profile, 
           //TYPE_YCbCr_8,//(FLOAT_SH(1)|COLORSPACE_SH(PT_YCbCr)|CHANNELS_SH(3)|BYTES_SH(4)),
           TYPE_RGB_FLT,
           out_profile,
-          TYPE_RGB_FLT,
+          out_lcms_type,
           INTENT_RELATIVE_COLORIMETRIC,
           cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
       std::cout<<"RawOutputPar::build(): new transform="<<transform<<std::endl;

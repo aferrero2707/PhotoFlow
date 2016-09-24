@@ -275,6 +275,8 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   convert_format->get_par()->set_format( get_format() );
   out2 = convert_format->get_par()->build( in3, 0, NULL, NULL, level );
   g_object_unref( gamma );
+
+  set_image_hints( out2 );
   /*
   if( out2 ) {
     if( !vips_image_get_blob( out2, VIPS_META_ICC_NAME, 
