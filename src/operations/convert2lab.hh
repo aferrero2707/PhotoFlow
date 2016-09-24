@@ -125,6 +125,10 @@ namespace PF
       cmsHTRANSFORM transform = par->get_transform();
 
 
+      if( false /*&& r->left==0 && r->top==0*/ ) {
+        std::cout<<"Convert2LabProc::render(): region: "<<r->width<<","<<r->height<<"+"<<r->left<<"+"<<r->top<<std::endl;
+      }
+
       float* p;    
       float* pout;
       int x, y;

@@ -62,6 +62,28 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
   in_profile = NULL;
   if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
                            &data, &data_length ) ) {
+    void *data_out;
+    cmsUInt32Number data_out_length;
+    cmsSaveProfileToMem( out_profile, NULL, &data_out_length );
+    bool matching = false;
+    if( data_out_length == data_length ) {
+      data_out = malloc( data_out_length );
+      if( data_out ) {
+        if( cmsSaveProfileToMem(out_profile, data_out, &data_out_length) ) {
+          if( memcmp(data, data_out, data_length) == 0 ) {
+            matching  = true;
+          }
+        }
+        free( data_out );
+      }
+    }
+
+    if( matching ) {
+      PF_REF( in[first], "ICCTransformPar::build(): input image ref for equal input and output profiles" );
+      std::cout<<"ICCTransformPar::build(): matching input and output profiles, no transform needed"<<std::endl;
+      return in[first];
+    }
+
     in_profile = cmsOpenProfileFromMem( data, data_length );
   }
 

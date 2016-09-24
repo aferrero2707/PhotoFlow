@@ -97,7 +97,9 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
                            &data, &data_length ) ) {
     out_profile_data = NULL;
     out_profile_data_length = 0;
-    return NULL;
+    PF_REF( in[0], "ConvertColorspacePar::build(): input image ref due to missing embedded profile" );
+    std::cout<<"ConvertColorspacePar::build(): missing embedded profile, returning input image"<<std::endl;
+    return in[0];
   }
 
   cmsHPROFILE in_profile = cmsOpenProfileFromMem( data, data_length );
@@ -123,6 +125,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   bool changed = in_changed || out_mode_changed || out_changed;
 
   cmsHPROFILE out_profile = NULL;
+  //std::cout<<"ConvertColorspacePar::build(): changed="<<changed<<std::endl;
   if( changed ) {
     //std::cout<<"ConvertColorspacePar::build(): out_mode_changed="<<out_mode_changed
     //         <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
@@ -167,6 +170,31 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 
     transform = NULL;
     if( in_profile && out_profile ) {
+
+      void *data_out;
+      cmsUInt32Number data_out_length;
+      cmsSaveProfileToMem( out_profile, NULL, &data_out_length );
+      bool matching = false;
+      //std::cout<<"ConvertColorspacePar::build(): data_length="<<data_length<<"  data_out_length="<<data_out_length<<std::endl;
+      if( data_out_length == data_length ) {
+        data_out = malloc( data_out_length );
+        if( data_out ) {
+          if( cmsSaveProfileToMem(out_profile, data_out, &data_out_length) ) {
+            if( memcmp(data, data_out, data_length) == 0 ) {
+              matching  = true;
+            }
+            //std::cout<<"ConvertColorspacePar::build(): matching="<<matching<<" after memcmp()"<<std::endl;
+          }
+          free( data_out );
+        }
+      }
+
+      if( matching ) {
+        PF_REF( in[0], "ConvertColorspacePar::build(): input image ref for equal input and output profiles" );
+        std::cout<<"ConvertColorspacePar::build(): matching input and output profiles, no transform needed"<<std::endl;
+        return in[0];
+      }
+
       cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, in_profile );
       cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, out_profile );
 
