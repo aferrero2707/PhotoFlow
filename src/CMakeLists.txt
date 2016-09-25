@@ -379,6 +379,7 @@ target_link_libraries(pfbatch ${LIBS}
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 
+INSTALL(DIRECTORY ../presets DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icc DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
