@@ -67,7 +67,7 @@ pkg_check_modules(ORC orc-0.4)
 
 pkg_check_modules(SIGC2 REQUIRED sigc++-2.0)
 
-pkg_check_modules(VIPS REQUIRED vips>=7.42.0)
+pkg_check_modules(VIPS REQUIRED vips>=8.3.3)
 #pkg_check_modules(VIPSCC REQUIRED vipsCC)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
