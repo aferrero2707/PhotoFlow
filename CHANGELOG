@@ -50,6 +50,7 @@ Version 0.2.7
 - [lensfun] using LoadDirectory() to open database for bundled lensfun version
 - [scale/rotate tool] fixed issue with non-initialized crop area
 - [hand drawing] fixel various bugs related in the strokes rendering
+- [noise reduction] fixed impulse NR for Lab colorspace
 - Fixed crash when closing the application or one of the image tabs (see issue #106)
 - [gimp plug-in] Fixed crash when closing the GIMP plug-in from either the "Close"button or the window close button
 - [gui] increased size of preview tile cache to accommodate 4k displays
