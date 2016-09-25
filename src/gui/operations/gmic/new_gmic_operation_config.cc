@@ -43,6 +43,8 @@ PF::OperationConfigGUI* PF::new_gmic_operation_config( std::string op_type, PF::
     dialog = new PF::BlurBilateralConfigGUI( current_layer );
   } else if( op_type == "gmic_denoise" ) {
     dialog = new PF::GmicDenoiseConfigGUI( current_layer );
+  } else if( op_type == "gmic_smooth_nlmeans" ) {
+    dialog = new PF::GmicSmoothNonLocalMeansConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_anisotropic" ) {
     dialog = new PF::GmicSmoothAnisotropicConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_diffusion" ) {

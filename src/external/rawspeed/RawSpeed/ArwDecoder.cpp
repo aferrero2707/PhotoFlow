@@ -38,6 +38,7 @@ ArwDecoder::~ArwDecoder(void) {
 }
 
 RawImage ArwDecoder::decodeRawInternal() {
+  TiffIFD* raw = NULL;
   vector<TiffIFD*> data = mRootIFD->getIFDsWithTag(STRIPOFFSETS);
 
   if (data.empty()) {
@@ -47,13 +48,17 @@ RawImage ArwDecoder::decodeRawInternal() {
       // We've caught the elusive A100 in the wild, a transitional format
       // between the simple sanity of the MRW custom format and the wordly
       // wonderfullness of the Tiff-based ARW format, let's shoot from the hip
-      uint32 off = mRootIFD->getEntryRecursive(SUBIFDS)->getInt();
+      data = mRootIFD->getIFDsWithTag(SUBIFDS);
+      if (data.empty())
+        ThrowRDE("ARW: A100 format, couldn't find offset");
+      raw = data[0];
+      uint32 off = raw->getEntry(SUBIFDS)->getInt();
       uint32 width = 3881;
       uint32 height = 2608;
 
       mRaw->dim = iPoint2D(width, height);
       mRaw->createData();
-      ByteStream input(mFile->getData(off),mFile->getSize()-off);
+      ByteStream input(mFile, off);
 
       try {
         DecodeARW(input, width, height);
@@ -63,12 +68,48 @@ RawImage ArwDecoder::decodeRawInternal() {
       }
 
       return mRaw;
+    } else if (hints.find("srf_format") != hints.end()) {
+      data = mRootIFD->getIFDsWithTag(IMAGEWIDTH);
+      if (data.empty())
+        ThrowRDE("ARW: SRF format, couldn't find width/height");
+      raw = data[0];
+
+      uint32 width = raw->getEntry(IMAGEWIDTH)->getInt();
+      uint32 height = raw->getEntry(IMAGELENGTH)->getInt();
+      uint32 len = width*height*2;
+
+      // Constants taken from dcraw
+      uint32 off = 862144;
+      uint32 key_off = 200896;
+      uint32 head_off = 164600;
+
+      // Replicate the dcraw contortions to get the "decryption" key
+      const uchar8 *data = mFile->getData(key_off, 1);
+      uint32 offset = (*data)*4;
+      data = mFile->getData(key_off+offset, 4);
+      uint32 key = get4BE(data,0);
+      uchar8 *head = mFile->getDataWrt(head_off, 40);
+      SonyDecrypt((uint32 *) head, 10, key);
+      for (int i=26; i-- > 22; )
+        key = key << 8 | head[i];
+
+      // "Decrypt" the whole image buffer in place
+      uchar8 *image_data = mFile->getDataWrt(off, len);
+      SonyDecrypt((uint32 *) image_data, len/4, key);
+
+      // And now decode as a normal 16bit raw
+      mRaw->dim = iPoint2D(width, height);
+      mRaw->createData();
+      ByteStream input(image_data,len);
+      Decode16BitRawBEunpacked(input, width, height);
+
+      return mRaw;
     } else {
       ThrowRDE("ARW Decoder: No image data found");
     }
   }
 
-  TiffIFD* raw = data[0];
+  raw = data[0];
   int compression = raw->getEntry(COMPRESSION)->getInt();
   if (1 == compression) {
     try {
@@ -118,11 +159,11 @@ RawImage ArwDecoder::decodeRawInternal() {
   mRaw->createData();
 
   ushort16 curve[0x4001];
-  const ushort16* c = raw->getEntry(SONY_CURVE)->getShortArray();
+  TiffEntry *c = raw->getEntry(SONY_CURVE);
   uint32 sony_curve[] = { 0, 0, 0, 0, 0, 4095 };
 
   for (uint32 i = 0; i < 4; i++)
-    sony_curve[i+1] = (c[i] >> 2) & 0xfff;
+    sony_curve[i+1] = (c->getShort(i) >> 2) & 0xfff;
 
   for (uint32 i = 0; i < 0x4001; i++)
     curve[i] = i;
@@ -140,11 +181,10 @@ RawImage ArwDecoder::decodeRawInternal() {
   if (!mFile->isValid(off))
     ThrowRDE("Sony ARW decoder: Data offset after EOF, file probably truncated");
 
-  if (!mFile->isValid(off + c2))
+  if (!mFile->isValid(off, c2))
     c2 = mFile->getSize() - off;
 
-
-  ByteStream input(mFile->getData(off), c2);
+  ByteStream input(mFile, off, c2);
  
   try {
     if (arw1)
@@ -174,7 +214,7 @@ void ArwDecoder::DecodeUncompressed(TiffIFD* raw) {
 
   mRaw->dim = iPoint2D(width, height);
   mRaw->createData();
-  ByteStream input(mFile->getData(off), c2);
+  ByteStream input(mFile, off, c2);
 
   if (hints.find("sr2_format") != hints.end())
     Decode14BitRawBEunpacked(input, width, height);
@@ -279,10 +319,10 @@ void ArwDecoder::decodeMetaDataInternal(CameraMetaData *meta) {
       TiffEntry *priv = mRootIFD->getEntryRecursive(DNGPRIVATEDATA);
       const uchar8 *offdata = priv->getData();
       uint32 off = get4LE(offdata,0);
-      const unsigned char* data = mFile->getData(off);
       uint32 length = mFile->getSize()-off;
+      const unsigned char* data = mFile->getData(off, length);
       uint32 currpos = 8;
-      while (currpos < length) {
+      while (currpos+20 < length) {
         uint32 tag = get4BE(data,currpos);
         uint32 len = get4LE(data,currpos+4);
         if (tag == 0x574247) { /* WBG */
@@ -301,9 +341,31 @@ void ArwDecoder::decodeMetaDataInternal(CameraMetaData *meta) {
   } else { // Everything else but the A100
     try {
       GetWB();
-    } catch (...) {
+    } catch (const std::exception& e) {
+      mRaw->setError(e.what());
       // We caught an exception reading WB, just ignore it
     }
+  }
+}
+
+void ArwDecoder::SonyDecrypt(uint32 *buffer, uint32 len, uint32 key) {
+  uint32 pad[128];
+
+  // Initialize the decryption pad from the key
+  for (int p=0; p < 4; p++)
+    pad[p] = key = key * 48828125 + 1;
+  pad[3] = pad[3] << 1 | (pad[0]^pad[2]) >> 31;
+  for (int p=4; p < 127; p++)
+    pad[p] = (pad[p-4]^pad[p-2]) << 1 | (pad[p-3]^pad[p-1]) >> 31;
+  for (int p=0; p < 127; p++)
+    pad[p] = get4BE((uchar8 *) &pad[p],0);
+
+  int p = 127;
+  // Decrypt the buffer in place using the pad
+  while (len--) {
+    pad[p & 127] = pad[(p+1) & 127] ^ pad[(p+1+64) & 127];
+    *buffer++ ^= pad[p & 127];
+    p++;
   }
 }
 
@@ -333,28 +395,8 @@ void ArwDecoder::GetWB() {
     if (sony_private)
       delete(sony_private);
 
-    if (mFile->getSize() < off+len)
-      ThrowRDE("ARW: Sony WB block out of range, corrupted file?");
-
-    uint32 *ifp_data = (uint32 *) mFile->getDataWrt(off);
-    uint32 pad[128];
-    uint32 p;
-    // Initialize the decryption
-    for (p=0; p < 4; p++)
-      pad[p] = key = key * 48828125 + 1;
-    pad[3] = pad[3] << 1 | (pad[0]^pad[2]) >> 31;
-    for (p=4; p < 127; p++)
-      pad[p] = (pad[p-4]^pad[p-2]) << 1 | (pad[p-3]^pad[p-1]) >> 31;
-    for (p=0; p < 127; p++)
-      pad[p] = get4BE((uchar8 *) &pad[p],0);
-
-    // Decrypt the buffer in place
-    uint32 count = len/4;
-    while (count--) {
-      pad[p & 127] = pad[(p+1) & 127] ^ pad[(p+1+64) & 127];
-      *ifp_data++ ^= pad[p & 127];
-      p++;
-    }
+    uint32 *ifp_data = (uint32 *) mFile->getDataWrt(off, len);
+    SonyDecrypt(ifp_data, len/4, key);
 
     if (mRootIFD->endian == getHostEndianness())
       sony_private = new TiffIFD(mFile, off);
@@ -365,26 +407,16 @@ void ArwDecoder::GetWB() {
       TiffEntry *wb = sony_private->getEntry(SONYGRBGLEVELS);
       if (wb->count != 4)
         ThrowRDE("ARW: WB has %d entries instead of 4", wb->count);
-      if (wb->type == TIFF_SHORT) { // We're probably in the SR2 format
-        const ushort16 *tmp = wb->getShortArray();
-        mRaw->metadata.wbCoeffs[0] = (float)tmp[1];
-        mRaw->metadata.wbCoeffs[1] = (float)tmp[0];
-        mRaw->metadata.wbCoeffs[2] = (float)tmp[2];
-      }
-      else {
-        const short16 *tmp = wb->getSignedShortArray();
-        mRaw->metadata.wbCoeffs[0] = (float)tmp[1];
-        mRaw->metadata.wbCoeffs[1] = (float)tmp[0];
-        mRaw->metadata.wbCoeffs[2] = (float)tmp[2];
-      }
+      mRaw->metadata.wbCoeffs[0] = wb->getFloat(1);
+      mRaw->metadata.wbCoeffs[1] = wb->getFloat(0);
+      mRaw->metadata.wbCoeffs[2] = wb->getFloat(2);
     } else if (sony_private->hasEntry(SONYRGGBLEVELS)){
       TiffEntry *wb = sony_private->getEntry(SONYRGGBLEVELS);
       if (wb->count != 4)
         ThrowRDE("ARW: WB has %d entries instead of 4", wb->count);
-      const short16 *tmp = wb->getSignedShortArray();
-      mRaw->metadata.wbCoeffs[0] = (float)tmp[0];
-      mRaw->metadata.wbCoeffs[1] = (float)tmp[1];
-      mRaw->metadata.wbCoeffs[2] = (float)tmp[3];
+      mRaw->metadata.wbCoeffs[0] = wb->getFloat(0);
+      mRaw->metadata.wbCoeffs[1] = wb->getFloat(1);
+      mRaw->metadata.wbCoeffs[2] = wb->getFloat(3);
     }
     if (sony_private)
       delete(sony_private);
@@ -396,7 +428,7 @@ void ArwDecoder::GetWB() {
 void ArwDecoder::decodeThreaded(RawDecoderThread * t) {
   uchar8* data = mRaw->getData();
   uint32 pitch = mRaw->pitch;
-  uint32 w = mRaw->dim.x;
+  int32 w = mRaw->dim.x;
 
   BitPumpPlain bits(in);
   for (uint32 y = t->start_y; y < t->end_y; y++) {
@@ -406,7 +438,7 @@ void ArwDecoder::decodeThreaded(RawDecoderThread * t) {
     uint32 random = bits.peekBits(24);
 
     // Process 32 pixels (16x2) per loop.
-    for (uint32 x = 0; x < w - 30;) {
+    for (int32 x = 0; x < w - 30;) {
       bits.checkPos();
       int _max = bits.getBits(11);
       int _min = bits.getBits(11);

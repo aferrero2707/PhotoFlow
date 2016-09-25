@@ -38,7 +38,8 @@
     #include <sys/resource.h>
     #include <unistd.h>
     #define GetCurrentDir getcwd
- #endif
+#endif
+#include <unistd.h>
 #include <libgen.h>
 #include <dirent.h>
 
@@ -48,9 +49,6 @@
 #include "../base/imageprocessor.hh"
 #include "imageeditor.hh"
 
-
-#define PREVIEW_PIPELINE_ID 1
-#define HISTOGRAM_PIPELINE_ID 2
 
 
 void PF::PreviewScrolledWindow::on_map()
@@ -123,6 +121,26 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
 
 
 
+typedef struct {
+  PF::ImageEditor* editor;
+} EditorCBData;
+
+static gboolean editor_on_image_modified_cb ( EditorCBData* data)
+{
+  if( data ) {
+    data->editor->on_image_modified();
+    g_free( data );
+  }
+  return false;
+}
+
+
+
+
+
+
+
+
 PF::ImageEditor::ImageEditor( std::string fname ):
   filename( fname ),
   image( new PF::Image() ),
@@ -145,14 +163,15 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonShowActive( _("show active layer") ),
   tab_label_widget( NULL ),
   fit_image( true ),
-  fit_image_needed( true )
+  fit_image_needed( true ),
+  hide_background_layer( false )
 {
   std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
   // First pipeline is for full-res rendering, second one is for on-screen preview, third one is
   // for calculating the histogram
-  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
-  image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
-  PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_PREVIEW );
+  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
+  PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
   if( p ) {
     p->set_auto_zoom( true, 256, 256 );
   }
@@ -297,6 +316,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_caching) );
   PF::ImageProcessor::Instance().signal_status_processing.
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_processing) );
+  PF::ImageProcessor::Instance().signal_status_updating.
+      connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_updating) );
   PF::ImageProcessor::Instance().signal_status_exporting.
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_exporting) );
 
@@ -307,17 +328,22 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
 PF::ImageEditor::~ImageEditor()
 {
-	/**/
+  /**/
   std::cout<<"~ImageEditor(): deleting image"<<std::endl;
-  if( image )
+  if( image ) {
+    image->destroy();
     delete image;
+  }
   std::cout<<"~ImageEditor(): image deleted"<<std::endl;
-	/**/
+  /**/
   /*
+  // Images need to be destroyed by the processing thread
   ProcessRequestInfo request;
   request.image = image;
   request.request = PF::IMAGE_DESTROY;
-  PF::ImageProcessor::Instance().submit_request( request );	
+  PF::ImageProcessor::Instance().submit_request( request );
+  // Ugly temporary solution to make sure that the image is destroyed before continuing
+  sleep(1);	
   */
 }
 
@@ -502,12 +528,19 @@ void PF::ImageEditor::open_image()
     }
   }
 
-  std::cout<<"ImageEditor::open_image(): opening image..."<<std::endl;
+  std::cout<<"ImageEditor::open_image(): opening image "<<filename<<" ..."<<std::endl;
   image->open( filename, bckname );
-  std::cout<<"ImageEditor::open_image(): ... done."<<std::endl;
+  std::list<Layer*>& layers = image->get_layer_manager().get_layers();
+  std::cout<<"ImageEditor::open_image(): ... done. layers.size()="<<layers.size()<<std::endl;
+  if( !layers.empty() ) {
+    std::cout<<"ImageEditor::open_image(): calling \""<<layers.front()->get_name()<<"\"->set_hidden( "<<hide_background_layer<<" )"<<std::endl;
+    layers.front()->set_hidden( hide_background_layer );
+  }
+
+  /*
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
-  int level = 1;
+  int level = 0;
   pipeline->set_level( level );
 	imageArea->set_shrink_factor( 1 );
   layersWidget.update();
@@ -523,6 +556,7 @@ void PF::ImageEditor::open_image()
   image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified) );
   //Gtk::Paned::on_map();
   if( do_recovery ) image->modified();
+  */
 
   //char* fullpath = realpath( filename.c_str(), NULL );
   if( fullpath && !do_recovery ) {
@@ -542,6 +576,39 @@ void PF::ImageEditor::open_image()
     }
     free( fullpath );
   }
+  image_opened = true;
+}
+
+
+void PF::ImageEditor::build_image()
+{
+  open_image();
+  //std::cout<<"ImageEditor::open_image(): opening image..."<<std::endl;
+
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
+  if( !pipeline ) return;
+  int level = 0;
+  pipeline->set_level( level );
+  imageArea->set_shrink_factor( 1 );
+  layersWidget.update();
+  std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
+  image->set_loaded( false );
+  image->update();
+  //getchar();
+  //PF::ImageProcessor::Instance().wait_for_caching();
+  image->set_loaded( true );
+
+  image->clear_modified();
+  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified_idle_cb) );
+  //Gtk::Paned::on_map();
+}
+
+
+void PF::ImageEditor::on_image_modified_idle_cb()
+{
+  EditorCBData * update = g_new (EditorCBData, 1);
+  update->editor = this;
+  g_idle_add ((GSourceFunc) editor_on_image_modified_cb, update);
 }
 
 
@@ -623,7 +690,7 @@ void PF::ImageEditor::on_map()
 void PF::ImageEditor::on_realize()
 {
   std::cout<<"ImageEditor::on_realize() called."<<std::endl;
-  open_image();
+  build_image();
   controls_group_scrolled_window.hide();
   Gtk::HBox::on_realize();
 }
@@ -717,7 +784,7 @@ bool PF::ImageEditor::zoom_fit()
 	float shrink_h = area_hsize/image_size_updater->get_image_width();
 	float shrink_v = area_vsize/image_size_updater->get_image_height();
 	float shrink_min = (shrink_h<shrink_v) ? shrink_h : shrink_v;
-	int target_level = 0;
+	unsigned int target_level = 0;
 	//std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
 	while( shrink_min < 0.5 ) {
 		target_level++;
@@ -882,6 +949,7 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
 
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::image2layer(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+  std::cout<<"  active_layer_children.size()="<<active_layer_children.size()<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = image->get_pipeline( 0 );
@@ -926,6 +994,10 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     }
   }
 
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::image2layer(): active layer: "<<active_layer->get_name()<<std::endl;
+#endif
+
   PF::PipelineNode* node = pipeline->get_node( active_layer->get_id() );
   if( !node ) {
     std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
@@ -935,6 +1007,10 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
     return;
   }
+
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::image2layer(): before active layer: x'="<<x<<"  y'="<<y<<std::endl;
+#endif
 
   PF::OpParBase* par = node->processor->get_par();
   VipsRect rin, rout;
@@ -1031,41 +1107,41 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   w = rout.width;
   h = rout.height;
 
-  #ifndef NDEBUG
-    std::cout<<"PF::ImageEditor::layer2image(): after active layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
-  #endif
+#ifndef NDEBUG
+  std::cout<<"PF::ImageEditor::layer2image(): after active layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
+#endif
 
   if( imageArea->get_display_merged() ) {
-  std::list<PF::Layer*>::iterator li;
-  for(li = active_layer_children.begin(); li != active_layer_children.end(); ++li) {
-    PF::Layer* l = *li;
-    if( l && l->is_enabled() ) {
-      // Get the node associated to the layer
-      PF::PipelineNode* node = pipeline->get_node( l->get_id() );
-      if( !node ) {
-        std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
-        continue;
-      }
-      if( !node->processor ) {
-        std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
-        continue;
-      }
+    std::list<PF::Layer*>::iterator li;
+    for(li = active_layer_children.begin(); li != active_layer_children.end(); ++li) {
+      PF::Layer* l = *li;
+      if( l && l->is_enabled() ) {
+        // Get the node associated to the layer
+        PF::PipelineNode* node = pipeline->get_node( l->get_id() );
+        if( !node ) {
+          std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+          continue;
+        }
+        if( !node->processor ) {
+          std::cout<<"Image::do_sample(): NULL node processor"<<std::endl;
+          continue;
+        }
 
-      PF::OpParBase* par = node->processor->get_par();
-      VipsRect rin, rout;
-      rin.left = x;
-      rin.top = y;
-      rin.width = w;
-      rin.height = h;
-      par->transform( &rin, &rout );
+        PF::OpParBase* par = node->processor->get_par();
+        VipsRect rin, rout;
+        rin.left = x;
+        rin.top = y;
+        rin.width = w;
+        rin.height = h;
+        par->transform( &rin, &rout );
 
-      x = rout.left;
-      y = rout.top;
-      w = rout.width;
-      h = rout.height;
+        x = rout.left;
+        y = rout.top;
+        w = rout.width;
+        h = rout.height;
 #ifndef NDEBUG
-      std::cout<<"PF::ImageEditor::layer2image(): after \""<<l->get_name()
-          <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
+        std::cout<<"PF::ImageEditor::layer2image(): after \""<<l->get_name()
+              <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
       }
     }

@@ -27,12 +27,6 @@
 
  */
 
-#include "../base/exif_data.hh"
-#include "../../operations/raw_image.hh"
-#include "../../operations/raw_preprocessor.hh"
-#include "../../operations/raw_output.hh"
-#include "../../operations/raw_developer.hh"
-
 /* We need C linkage for this.
  */
 #ifdef __cplusplus
@@ -48,6 +42,13 @@ extern "C" {
 #include "../dt/external/wb_presets.c"
 #include "../dt/external/adobe_coeff.c"
 #include "../dt/external/cie_colorimetric_tables.c"
+
+#include "../base/exif_data.hh"
+#include "../../operations/raw_image.hh"
+#include "../../operations/raw_preprocessor.hh"
+#include "../../operations/raw_output.hh"
+#include "../../operations/raw_developer.hh"
+//#include "../../operations/hotpixels.hh"
 
 #include "raw_developer_config.hh"
 
@@ -330,7 +331,7 @@ bool PF::WBSelector::check_value( int id, const std::string& name, const std::st
 PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Raw Developer" ),
   wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
-  wbTempSlider( this, "", _("temperature"), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 5, 20, 1),
+  wbTempSlider( this, "", _("temperature"), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
   wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
   wbRedSlider( this, "wb_red", "Red WB mult.", 1, 0, 10, 0.05, 0.1, 1),
   wbGreenSlider( this, "wb_green", "Green WB mult.", 1, 0, 10, 0.05, 0.1, 1),
@@ -345,6 +346,13 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
   ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
   ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
+  ca_frame( _("CA correction") ),
+  hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
+  hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
+  hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
+  hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ),
+  hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ),
+  hotp_frame( _("hot pixels filter") ),
   demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
   fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
   exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
@@ -393,10 +401,20 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
   exposureControlsBox.pack_start( hlrecoModeSelector, Gtk::PACK_SHRINK, 2 );
 
-  lensControlsBox.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
-  lensControlsBox.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
-  lensControlsBox.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
-  lensControlsBox.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
+  lensControlsBox.pack_start( ca_frame, Gtk::PACK_SHRINK, 10 );
+  lensControlsBox.pack_start( hotp_frame, Gtk::PACK_SHRINK, 10 );
+  ca_frame.add( ca_box );
+  ca_box.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
+  ca_box.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
+  ca_box.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
+  ca_box.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
+
+  hotp_frame.add( hotp_box );
+  hotp_box.pack_start( hotp_enable_checkbox, Gtk::PACK_SHRINK );
+  hotp_box.pack_start( hotp_threshold_slider, Gtk::PACK_SHRINK );
+  hotp_box.pack_start( hotp_strength_slider, Gtk::PACK_SHRINK );
+  hotp_box.pack_start( hotp_permissive_checkbox, Gtk::PACK_SHRINK );
+  hotp_box.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
 
   demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
   demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
@@ -430,9 +448,10 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
 
   notebook.append_page( wbControlsBox, "WB" );
   notebook.append_page( exposureControlsBox, "Exp" );
-  notebook.append_page( lensControlsBox, "Lens" );
+  notebook.append_page( lensControlsBox, "Corr" );
   notebook.append_page( demoControlsBox, "Demo" );
   notebook.append_page( outputControlsBox, "Color" );
+  //notebook.append_page( hotpixelsControlsBox, "Hot Pixels" );
     
   add_widget( notebook );
 
@@ -533,6 +552,8 @@ void PF::RawDeveloperConfigGUI::do_update()
     PropertyBase* prop = par->get_property( "wb_mode" );
     if( !prop )  return;
 
+    bool is_xtrans = false;
+
     PF::Image* image = get_layer()->get_image();
     PF::Pipeline* pipeline = image->get_pipeline(0);
     PF::PipelineNode* node = NULL;
@@ -547,12 +568,12 @@ void PF::RawDeveloperConfigGUI::do_update()
       PF::exif_data_t* exif_data;
       if( !vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) &&
           blobsz == sizeof(PF::exif_data_t) ) {
-        char makermodel[1024];
-        char *tmodel = makermodel;
-        dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &tmodel,
-            exif_data->exif_maker, exif_data->exif_model );
-        maker = makermodel;
-        model = tmodel;
+        //char makermodel[1024];
+        //char *tmodel = makermodel;
+        //dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &tmodel,
+        //    exif_data->exif_maker, exif_data->exif_model );
+        maker = exif_data->camera_maker;
+        model = exif_data->camera_model;
         wbModeSelector.set_maker_model( maker, model );
         //std::cout<<"RawDeveloperConfigGUI::do_update(): maker="<<maker<<" model="<<model<<std::endl;
 
@@ -560,11 +581,11 @@ void PF::RawDeveloperConfigGUI::do_update()
           PF::RawDeveloperPar* par2 =
               dynamic_cast<PF::RawDeveloperPar*>(processor->get_par());
           if( par2 ) {
-            dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
+            //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
             //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
             float xyz_to_cam[4][3];
             xyz_to_cam[0][0] = NAN;
-            dt_dcraw_adobe_coeff(makermodel, (float(*)[12])xyz_to_cam);
+            dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])xyz_to_cam);
             if(!isnan(xyz_to_cam[0][0])) {
               for(int i = 0; i < 3; i++) {
                 for(int j = 0; j < 3; j++) {
@@ -572,6 +593,12 @@ void PF::RawDeveloperConfigGUI::do_update()
                 }
               }
             }
+            printf("RawDeveloperConfigGUI::do_update(): xyz_to_cam:\n");
+            for(int k = 0; k < 3; k++)
+            {
+              printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
+            }
+
             // and inverse matrix
             mat3inv_double((double *)CAM_to_XYZ, (double *)XYZ_to_CAM);
 
@@ -604,6 +631,8 @@ void PF::RawDeveloperConfigGUI::do_update()
       dcraw_data_t* raw_data;
       if( !vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data, &blobsz ) &&
           blobsz == sizeof(dcraw_data_t) ) {
+        is_xtrans = PF::check_xtrans( raw_data->idata.filters );
+
         float black_level = raw_data->color.black;
         float white_level = raw_data->color.maximum;
 
@@ -684,6 +713,8 @@ void PF::RawDeveloperConfigGUI::do_update()
       break;
 		}
 
+    if( is_xtrans ) demoMethodSelector.hide();
+    else demoMethodSelector.show();
 
     prop = par->get_property( "cam_profile_name" );
     if( !prop )  return;

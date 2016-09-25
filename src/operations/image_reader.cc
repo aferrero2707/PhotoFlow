@@ -68,6 +68,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   if( i == raster_images.end() ) {
     std::cout<<"ImageReaderPar::build(): creating new RasterImage for file "<<file_name.get()<<std::endl;
     new_raster_image = new RasterImage( file_name.get() );
+    std::cout<<"ImageReaderPar::build(): RasterImage for file "<<file_name.get()<<" created"<<std::endl;
     if( new_raster_image ) 
       raster_images.insert( make_pair(file_name.get(), new_raster_image) );
   } else {
@@ -82,7 +83,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
   if( raster_image ) {
     raster_image->unref();
-    //std::cout<<"ImageReaderPar::build(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
+    std::cout<<"ImageReaderPar::build(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
     if( raster_image->get_nref() == 0 ) {
       std::map<Glib::ustring, RasterImage*>::iterator i = 
         raster_images.find( file_name.get() );
@@ -145,7 +146,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
 
 
-#ifndef NDEBUG
+  //#ifndef NDEBUG
   void *data;
   size_t data_length;
   if( !vips_image_get_blob( image, VIPS_META_ICC_NAME, 
@@ -158,12 +159,12 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       cmsCloseProfile( profile_in );
     }
   }
-#endif
+  //#endif
 
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): get_format()="<<get_format()<<"  image->BandFmt="<<image->BandFmt<<std::endl;
-#endif
+//#endif
   VipsImage* out = image;
   std::vector<VipsImage*> in2;
   in2.push_back( image );

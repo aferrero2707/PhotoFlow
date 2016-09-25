@@ -30,7 +30,6 @@
 
  */
 
-#define _(S) (S)
 
 #include <vips/vips.h>
 #include <vips/dispatch.h>
@@ -40,11 +39,17 @@
 #include <iostream>
 #include <fstream>
 
+#include "../../base/photoflow.hh"
+
+#ifdef _
+#undef _
+#endif
+
+#define _(S) (S)
 //#include "CImg.h"
 #include "gmic/src/gmic.h"
 //#include "gmic.h"
 
-#include "../../base/photoflow.hh"
 
 static char* custom_gmic_commands = 0;
 static GMutex* gmic_mutex = 0;
@@ -549,7 +554,7 @@ vips_gmic_init( VipsGMic *vipsgmic )
     std::cout<<"Loading G'MIC custom commands..."<<std::endl;
     char fname[500]; fname[0] = 0;
 #if defined(WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
-    snprintf( fname, 499, "%s\\gmic_def.gmic", PF::PhotoFlow::Instance().get_base_dir().c_str() );
+    snprintf( fname, 499, "%s\\gmic_def.gmic", PF::PhotoFlow::Instance().get_data_dir().c_str() );
     std::cout<<"G'MIC commands definition file: "<<fname<<std::endl;
     struct stat buffer;
     int stat_result = stat( fname, &buffer );
@@ -620,6 +625,8 @@ vips_gmic( VipsImage **in, VipsImage **out, int n,
 	VipsArrayImage *array; 
 	va_list ap;
 	int result;
+
+	printf("vips_gmic(): padding=%d\n", padding);
 
 	array = vips_array_image_new( in, n ); 
 	va_start( ap, command );

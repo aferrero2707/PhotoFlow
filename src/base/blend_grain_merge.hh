@@ -50,7 +50,7 @@ public:
   {
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      ptop = ( (typename FormatInfo<T>::SIGNED)top[pos]+bottom[pos]-FormatInfo<T>::HALF );
+      ptop = ( ((typename FormatInfo<T>::SIGNED)(top[pos])-FormatInfo<T>::HALF)*2 + bottom[pos] );
       clip( opacity*ptop + (1.0f-opacity)*bottom[pos], out[pos] );
       //std::cout<<"  out="<<(int)out[pos]<<std::endl;
     }
@@ -74,7 +74,7 @@ public:
 
     pos = x;
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
-      ptop = ( (typename FormatInfo<T>::SIGNED)top[pos]+bottom[pos]-FormatInfo<T>::HALF );
+      ptop = ( ((typename FormatInfo<T>::SIGNED)top[pos]-FormatInfo<T>::HALF)*2 + bottom[pos] );
       clip( opacity_real*ptop + (1.0f-opacity_real)*bottom[pos], out[pos] );
       //std::cout<<"  out="<<(int)out[pos]<<std::endl;
     }

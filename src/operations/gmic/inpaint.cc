@@ -250,8 +250,8 @@ void PF::GmicInpaintPar::draw_point( unsigned int x, unsigned int y, VipsRect& u
   PF::Stroke<PF::Pencil>& stroke = strokes.get().back();
 
   if( !stroke.get_points().empty() ) {
-    if( (stroke.get_points().back().first == x ) &&
-				(stroke.get_points().back().second == y ) )
+    if( (stroke.get_points().back().first == (int)x ) &&
+				(stroke.get_points().back().second == (int)y ) )
       return;
   }
 

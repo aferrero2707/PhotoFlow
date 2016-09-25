@@ -42,6 +42,7 @@
 #include "processor.hh"
 #include "cachebuffer.hh"
 
+
 namespace PF
 {
 
@@ -51,7 +52,7 @@ namespace PF
   {
     friend class LayerManager;
 
-    int32_t id;
+    uint32_t id;
     std::string name;
     std::list<Layer*> sublayers;
     std::list<Layer*> imap_layers;
@@ -67,6 +68,7 @@ namespace PF
     bool enabled;
     bool visible;
     bool expanded;
+    bool hidden;
 
     bool normal;
 
@@ -84,7 +86,7 @@ namespace PF
   public:
     sigc::signal<void> signal_modified;
 
-    Layer(int32_t id, bool cached=false);
+    Layer(uint32_t id, bool cached=false);
     virtual ~Layer()
     {
       std::cout<<"~Layer(): \""<<name<<"\" destructor called."<<std::endl;
@@ -101,7 +103,7 @@ namespace PF
     std::string get_name() { return name; }
     void set_name( std::string n ) { name = n; modified(); }
 
-    int32_t get_id() { return id; }
+    uint32_t get_id() { return id; }
 
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }
@@ -124,20 +126,28 @@ namespace PF
     {
       bool old = enabled;
       enabled = d;
-      if( enabled != old ) modified();
+      if( enabled != old ) {
+        modified();
+        if( get_processor() && get_processor()->get_par() )
+          get_processor()->get_par()->set_modified();
+      }
     }
     void clear_enabled( )
     {
       bool old = enabled;
       enabled = false;
-      if( enabled != old ) modified();
+      if( enabled != old ) {
+        modified();
+        if( get_processor() && get_processor()->get_par() )
+          get_processor()->get_par()->set_modified();
+      }
     }
     
     bool is_visible() { return visible; }
-    void set_visible( bool d )
-    {
-      visible = d;
-    }
+    void set_visible( bool d ) { visible = d; }
+
+    bool is_hidden() { return hidden; }
+    void set_hidden( bool d ) { hidden = d; }
 
     bool is_expanded() { return expanded; }
     void set_expanded( bool d )
@@ -158,23 +168,8 @@ namespace PF
     }
 
     bool is_cached() { return cached; }
-    void set_cached( bool c ) 
-    {
-      bool changed = (cached != c);
-      cached = c;
-      if( cached && cache_buffers.empty() ) {
-        cache_buffers.insert( std::make_pair(PF_RENDER_PREVIEW, new CacheBuffer()) );
-        cache_buffers.insert( std::make_pair(PF_RENDER_NORMAL, new CacheBuffer()) );
-      }
-      if( cached && changed )
-        reset_cache_buffers();
-    }
-    CacheBuffer* get_cache_buffer( rendermode_t mode )
-    {
-      std::map<rendermode_t,CacheBuffer*>::iterator i = cache_buffers.find( mode );
-      if( i != cache_buffers.end() ) return i->second;
-      return NULL;
-    }
+    void set_cached( bool c );
+    CacheBuffer* get_cache_buffer();
     void reset_cache_buffers();
 
 

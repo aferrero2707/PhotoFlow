@@ -32,6 +32,44 @@
 #include "photoflow.hh"
 
 
+PF::PipelineNode::~PipelineNode()
+{
+  char tstr[500];
+  if( image != NULL ) {
+    if( G_OBJECT( image )->ref_count <= 0 ) {
+      std::cout<<"~PipelineNode(): image refcount <= 0"<<std::endl;
+    }
+    g_assert( G_OBJECT( image )->ref_count > 0 );
+  }
+
+  for( size_t j = 0; j < images.size(); j++ ) {
+    snprintf( tstr, 499, "~PipelineNode() unref images[%d]", (int)j );
+    PF_UNREF( images[j], tstr );
+    std::cout<<"~PipelineNode(): unref of images["<<j<<"]"<<std::endl;
+  }
+
+  if( blended != NULL ) {
+    if( G_OBJECT( blended )->ref_count <= 0 ) {
+      std::cout<<"~PipelineNode(): blended refcount <= 0"<<std::endl;
+    }
+    g_assert( G_OBJECT( blended )->ref_count > 0 );
+    PF_UNREF( blended, "~PipelineNode() unref blended image" );
+  }
+
+  if( processor != NULL ) {
+    std::cout<<"~PipelineNode(): deleting processor"<<std::endl;
+    delete( processor );
+    std::cout<<"~PipelineNode(): processor deleted"<<std::endl;
+  }
+
+  if( blender != NULL ) {
+    std::cout<<"~PipelineNode(): deleting blender"<<std::endl;
+    delete( blender );
+    std::cout<<"~PipelineNode(): blender deleted"<<std::endl;
+  }
+}
+
+
 PF::Pipeline::~Pipeline()
 {
   std::cout<<"Pipeline::~Pipeline() called."<<std::endl;
@@ -39,49 +77,8 @@ PF::Pipeline::~Pipeline()
   for( unsigned int i = 0; i < nodes.size(); i++ ) {
     if( nodes[i] != NULL ) {
       PF::Layer* l = image->get_layer_manager().get_layer( i );
-      if( nodes[i]->image != NULL ) {
-        if( G_OBJECT( nodes[i]->image )->ref_count <= 0 ) {
-          if( l )
-            std::cout<<"PF::Pipeline::~Pipeline(): layer "<<l->get_name()<<" refcount <= 0"<<std::endl;
-          else
-            std::cout<<"PF::Pipeline::~Pipeline(): NULL layer refcount <= 0"<<std::endl;
-        }
-				g_assert( G_OBJECT( nodes[i]->image )->ref_count > 0 );
-				//g_object_unref( nodes[i]->image );
-				if( l )
-					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref image of layer %s",
-										l->get_name().c_str() );
-				else
-					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref image (NULL layer)" );
-				PF_UNREF( nodes[i]->image, tstr );
-				std::cout<<"Pipeline::~Pipeline(): unref of nodes[i]->image"<<std::endl;
-      }
-      if( nodes[i]->blended != NULL ) {
-        if( G_OBJECT( nodes[i]->blended )->ref_count <= 0 ) {
-          if( l )
-            std::cout<<"PF::Pipeline::~Pipeline(): layer "<<l->get_name()<<" blended refcount <= 0"<<std::endl;
-          else
-            std::cout<<"PF::Pipeline::~Pipeline(): NULL layer blended refcount <= 0"<<std::endl;
-        }
-				g_assert( G_OBJECT( nodes[i]->blended )->ref_count > 0 );
-				//g_object_unref( nodes[i]->image );
-				if( l )
-					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref blended image of layer %s",
-										l->get_name().c_str() );
-				else
-					snprintf( tstr, 499, "PF::Pipeline::~Pipeline() unref blended image (NULL layer)" );
-				PF_UNREF( nodes[i]->blended, tstr );
-      }
-      if( nodes[i]->processor != NULL ) {
-        std::cout<<"Pipeline::~Pipeline(): deleting processor"<<std::endl;
-        delete( nodes[i]->processor );
-        std::cout<<"Pipeline::~Pipeline(): processor deleted"<<std::endl;
-      }
-      if( nodes[i]->blender != NULL ) {
-        std::cout<<"Pipeline::~Pipeline(): deleting blender"<<std::endl;
-        delete( nodes[i]->blender );
-        std::cout<<"Pipeline::~Pipeline(): blender deleted"<<std::endl;
-      }
+      std::cout<<"Pipeline::~Pipeline(): deleting node of layer \""
+          <<(l ? l->get_name() : "")<<"\""<<std::endl;
       delete nodes[i];
     }
   }
@@ -101,7 +98,7 @@ PF::PipelineNode* PF::Pipeline::set_node( Layer* layer, Layer* input_layer )
   if( !layer )
     return NULL;
 
-  int id = layer->get_id();
+  uint32_t id = layer->get_id();
   if( id >= nodes.size() ) {
     while( nodes.size() <= (id+1) ) nodes.push_back(NULL);
     nodes[id] = new PF::PipelineNode;
@@ -234,7 +231,16 @@ void PF::Pipeline::set_images( std::vector<VipsImage*> imgvec, unsigned int id )
       nodes[id]->images.clear();
       nodes[id]->image = NULL;
     }
+
     nodes[id]->images = imgvec;
+    if( l ) {
+      snprintf( tstr, 499, "PF::Pipeline::set_images() ref image of layer %s",
+                l->get_name().c_str() );
+    } else {
+      snprintf( tstr, 499, "PF::Pipeline::set_images() ref image (NULL layer)" );
+    }
+    //for( size_t i = 0; i < nodes[id]->images.size(); i++ )
+    //  PF_REF( nodes[id]->images[i], tstr );
     if( !(imgvec.empty()) ) nodes[id]->image = imgvec[0];
     else nodes[id]->image = NULL;
   }
@@ -272,6 +278,7 @@ void PF::Pipeline::remove_node( unsigned int id )
 
   char tstr[500];
   if( nodes[id] != NULL ) {
+    /*
     PF::Layer* l = image->get_layer_manager().get_layer( id );
     if( nodes[id]->blended != NULL ) {
       //g_object_unref( nodes[id]->image );
@@ -296,7 +303,7 @@ void PF::Pipeline::remove_node( unsigned int id )
     }
     if( nodes[id]->processor != NULL )
       delete( nodes[id]->processor );
-
+    */
     delete nodes[id];
     nodes[id] = NULL;
   }

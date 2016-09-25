@@ -31,8 +31,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "../base/exif_data.hh"
-#include "raw_preprocessor.hh"
+#include <glibmm.h>
 
 /* We need C linkage for this.
  */
@@ -47,6 +46,9 @@ extern "C" {
 #endif /*__cplusplus*/
 
 #include "../dt/external/wb_presets.c"
+
+#include "../base/exif_data.hh"
+#include "raw_preprocessor.hh"
 
 int PF::raw_preproc_sample_x = 0;
 int PF::raw_preproc_sample_y = 0;
@@ -142,12 +144,13 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
       return NULL;
     }
-    char makermodel[1024];
-    char *model = makermodel;
-    dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &model,
-        exif_data->exif_maker, exif_data->exif_model );
+    //char makermodel[1024];
+    //char *model = makermodel;
+    //dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &model,
+    //    exif_data->exif_maker, exif_data->exif_model );
     for(int i = 0; i < wb_preset_count; i++) {
-      if( !strcmp(wb_preset[i].make, makermodel) && !strcmp(wb_preset[i].model, model) ) {
+      if( !strcmp(wb_preset[i].make, exif_data->camera_maker) &&
+          !strcmp(wb_preset[i].model, exif_data->camera_model) ) {
         if( wb_mode.get_enum_value().second.second == wb_preset[i].name &&
             wb_preset[i].tuning == 0 ) {
           wb_red_current = wb_preset[i].channel[0];

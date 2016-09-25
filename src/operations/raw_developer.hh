@@ -27,12 +27,12 @@
 
  */
 
-#ifndef VIPS_RAW_DEVELOPER_H
-#define VIPS_RAW_DEVELOPER_H
+#ifndef PF_RAW_DEVELOPER_H
+#define PF_RAW_DEVELOPER_H
 
 #include <string>
 
-#include <libraw/libraw.h>
+//#include <libraw/libraw.h>
 
 #include "../base/processor.hh"
 #include "../base/imagepyramid.hh"
@@ -58,12 +58,15 @@ namespace PF
     PF::ProcessorBase* amaze_demosaic;
     PF::ProcessorBase* lmmse_demosaic;
     PF::ProcessorBase* igv_demosaic;
+    PF::ProcessorBase* xtrans_demosaic;
     PF::ProcessorBase* fast_demosaic;
+    PF::ProcessorBase* fast_demosaic_xtrans;
     PF::ProcessorBase* raw_preprocessor;
     PF::ProcessorBase* ca_correct;
     PF::ProcessorBase* raw_output;
     PF::ProcessorBase* convert_format;
     PF::ProcessorBase* fcs[4];
+    PF::ProcessorBase* hotpixels;
 
 		// False color suppression steps
 		PropertyBase demo_method;
@@ -94,6 +97,7 @@ namespace PF
     wb_mode_t get_wb_mode();
     void get_wb(float* mul);
     void set_wb(float r, float g, float b);
+    int get_hotp_fixed();
 
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 

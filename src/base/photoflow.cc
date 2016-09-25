@@ -59,6 +59,22 @@
 #include "imageprocessor.hh"
 #include "photoflow.hh"
 
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+char* _lf_get_database_dir()
+{
+  std::string dbdir;
+  //if( getenv("LOCALAPPDATA") ) {
+  //  dbdir = getenv("LOCALAPPDATA");
+  if( getenv("PROGRAMDATA") ) {
+    dbdir = getenv("PROGRAMDATA");
+    dbdir += "\\lensfun\\version_1";
+  }
+  std::cout<<"LensFun database dir: "<<dbdir<<std::endl;
+  return dbdir.c_str();
+}
+#endif
+
 PF::PhotoFlow::PhotoFlow(): 
   active_image( NULL ),
   batch(true),
@@ -169,6 +185,7 @@ PF::PhotoFlow::PhotoFlow():
   }
 #endif
   exePath = Glib::path_get_dirname(exname);
+  std::cout<<"exePath: "<<exePath<<std::endl;
 
   Glib::ustring dataPath;
 #if defined(__APPLE__) && defined (__MACH__)
@@ -179,11 +196,23 @@ PF::PhotoFlow::PhotoFlow():
     dataPath = exePath + "/../share/photoflow";
   }
 #elif defined(WIN32)
-  dataPath = exePath + "\\..\\share\\photoflow";
+  //if( getenv("LOCALAPPDATA") ) {
+  //  dataPath = getenv("LOCALAPPDATA");
+  if( getenv("PROGRAMDATA") ) {
+    dataPath = getenv("PROGRAMDATA");
+    dataPath += "\\photoflow";
+  } else {
+    dataPath = exePath + "\\..\\share\\photoflow";
+  }
 #else
-  dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
+  char* dataPath_env = getenv("PF_DATA_DIR");
+  if( dataPath_env ) {
+    dataPath = Glib::ustring(dataPath_env) + "/photoflow";
+  } else {
+    dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
+  }
 #endif
-  std::cout<<"exePath: "<<exePath<<std::endl;
+  std::cout<<"dataPath: "<<dataPath<<std::endl;
 
   Glib::ustring localePath;
 #if defined(__APPLE__) && defined (__MACH__)
@@ -195,7 +224,7 @@ PF::PhotoFlow::PhotoFlow():
 #else
   localePath = Glib::ustring(INSTALL_PREFIX) + "/share/locale";
 #endif
-  std::cout<<"exePath: "<<exePath<<std::endl;
+  std::cout<<"localePath: "<<localePath<<std::endl;
 
   set_base_dir( exePath );
   set_data_dir( dataPath );

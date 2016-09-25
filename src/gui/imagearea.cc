@@ -416,7 +416,7 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
         PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
         PF::OperationConfigGUI* config = dynamic_cast<PF::OperationConfigGUI*>( ui );
         if( config && config->get_editing_flag() == true ) {
-          int level = get_pipeline()->get_level();
+          unsigned int level = get_pipeline()->get_level();
           float zoom_fact = 1.0f;
           for( unsigned int i = 0; i < level; i++ )
             zoom_fact /= 2.0f;
@@ -1036,15 +1036,17 @@ void PF::ImageArea::update( VipsRect* area )
       current_display_profile = dt_colorspaces_create_srgb_profile();
       char tstr[1024];
       cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-#ifndef NDEBUG
+      //#ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
-#endif
+      //#endif
       break;
     case PF_DISPLAY_PROF_CUSTOM:
       current_display_profile =
           cmsOpenProfileFromFile( options.get_custom_display_profile_name().c_str(), "r" );
       //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
       //    <<" -> "<<current_display_profile<<std::endl;
+      break;
+    default:
       break;
     }
   }
@@ -1203,8 +1205,11 @@ void PF::ImageArea::update( VipsRect* area )
   region = vips_region_new (display_image);
 
 	int tile_size = 128;
+	// make room for at most a 4k display
+	int max_csreen_width = 128*30;
+	int max_screen_height = 128*20;
   if (vips_sink_screen2 (outimg, display_image, NULL,
-												 tile_size, tile_size, (2000/tile_size)*(2000/tile_size), 
+												 tile_size, tile_size, (max_csreen_width/tile_size)*(max_screen_height/tile_size),
 												 //6400, 64, (2000/64), 
 												 0, NULL, this))
 		return;
@@ -1331,7 +1336,7 @@ void PF::ImageArea::sink( const VipsRect& area )
   PF::Pipeline* pipeline = get_pipeline();
   if( !pipeline ) return;
   if( !outimg ) return;
-  int level = pipeline->get_level();
+  unsigned int level = pipeline->get_level();
   float fact = 1.0f;
   for( unsigned int i = 0; i < level; i++ )
     fact /= 2.0f;

@@ -43,7 +43,7 @@ image( NULL )
   int ifd = open( file_name_real.c_str(), O_RDONLY );
   if( ifd < 0 ) {
     char* fullpath = strdup( file_name_real.c_str() );
-    const gchar* fname = g_basename( fullpath );
+    gchar* fname = g_path_get_basename( fullpath );
     ifd = open( fname, O_RDONLY );
     if( ifd < 0 ) {
       std::cout<<"RasterImage::RasterImage(): \""<<file_name<<"\" not found"<<std::endl;
@@ -52,6 +52,7 @@ image( NULL )
       close(ifd);
     }
     file_name_real = fname;
+    g_free( fname );
   } else {
     close(ifd);
   }

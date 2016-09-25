@@ -34,7 +34,7 @@
 
 #include <glibmm.h>
 
-#include <libraw/libraw.h>
+//#include <libraw/libraw.h>
 
 #include "../base/color.hh"
 #include "../base/processor.hh"
@@ -60,7 +60,7 @@ namespace PF
 
   public:
 
-    float vec[3][65535];
+    float vec[3][65536];
     bool eq_enabled[3];
 
     HSLMaskPar();

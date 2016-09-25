@@ -98,11 +98,26 @@ PF::RawOutputPar::RawOutputPar():
 }
 
 
+void PF::RawOutputPar::set_image_hints( VipsImage* img )
+{
+  if( !img ) return;
+  PF::OpParBase::set_image_hints( img );
+  std::cout<<"RawOutputPar::set_image_hints(): out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
+  if( out_profile_mode.get_enum_value().first == PF::OUT_PROF_LAB ) {
+    std::cout<<"RawOutputPar::set_image_hints(): calling lab_image()"<<std::endl;
+    lab_image( get_xsize(), get_ysize() );
+  } else {
+    std::cout<<"RawOutputPar::set_image_hints(): calling rgb_image()"<<std::endl;
+    rgb_image( get_xsize(), get_ysize() );
+  }
+}
+
+
 VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first, 
     VipsImage* imap, VipsImage* omap,
     unsigned int& level)
 {
-  if( in.size() < first+1 )
+  if( (int)in.size() < first+1 )
     return NULL;
 
   VipsImage* image = in[first];
@@ -172,12 +187,12 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
         return NULL;
       }
-      char makermodel[1024];
-      dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
+      //char makermodel[1024];
+      //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
       //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
       float cam_xyz[12];
       cam_xyz[0] = NAN;
-      dt_dcraw_adobe_coeff(makermodel, (float(*)[12])cam_xyz);
+      dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])cam_xyz);
       if(std::isnan(cam_xyz[0])) {
         std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
         PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
@@ -238,18 +253,39 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   if( changed ) {
-    if( transform )
+    std::cout<<"RawOutputPar::build(): color conversion changed, rebuilding transform"<<std::endl;
+    std::cout<<"  cam_profile="<<(void*)cam_profile<<"  out_profile="<<(void*)out_profile<<std::endl;
+    char tstr[1024];
+    if( cam_profile ) {
+      cmsGetProfileInfoASCII(cam_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"  cam_profile description: "<<tstr<<std::endl;
+      std::cout<<"  cam_profile colorspace: "<<cmsGetColorSpace(cam_profile)<<std::endl;
+    }
+    if( out_profile ) {
+      cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"  out_profile description: "<<tstr<<std::endl;
+      std::cout<<"  out_profile colorspace: "<<cmsGetColorSpace(out_profile)<<std::endl;
+    }
+    if( transform ) {
       cmsDeleteTransform( transform );  
+    }
     transform = NULL;
-    if( cam_profile && out_profile )
+    if( cam_profile && out_profile ) {
+      cmsUInt32Number out_lcms_type = TYPE_RGB_FLT;
+      if( out_profile_mode.get_enum_value().first == PF::OUT_PROF_LAB ) {
+        out_lcms_type = TYPE_Lab_FLT;
+      }
       transform = cmsCreateTransform( cam_profile, 
+          //TYPE_YCbCr_8,//(FLOAT_SH(1)|COLORSPACE_SH(PT_YCbCr)|CHANNELS_SH(3)|BYTES_SH(4)),
           TYPE_RGB_FLT,
           out_profile,
-          TYPE_RGB_FLT,
+          out_lcms_type,
           INTENT_RELATIVE_COLORIMETRIC,
           cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
+      std::cout<<"RawOutputPar::build(): new transform="<<transform<<std::endl;
+    }
   }
-  //std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
+  std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
 
   if( gamma_curve )
     cmsFreeToneCurve( gamma_curve );

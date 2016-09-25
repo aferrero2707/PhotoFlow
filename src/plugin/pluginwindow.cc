@@ -56,7 +56,9 @@ PF::PluginWindow::PluginWindow():
   buttonOk( _("Ok") ),
   buttonCancel( _("Cancel") ),
   buttonSettings("Settings"),
-  image_editor( NULL )
+  image_editor( NULL ),
+  gimp_iccdata( NULL ),
+  gimp_iccsize( 0 )
 {
   imgbuf.buf = NULL;
   imgbuf.iccdata = NULL;
@@ -126,7 +128,7 @@ void PF::PluginWindow::on_button_ok()
 {
   if( image_editor && image_editor->get_image() )
   {
-    image_editor->get_image()->export_merged_to_mem( &imgbuf );
+    image_editor->get_image()->export_merged_to_mem( &imgbuf, gimp_iccdata, gimp_iccsize );
     if( imgbuf.buf ) {
       for( int i = 0; i < imgbuf.width*imgbuf.height*3; i++ ) {
         //std::cout<<"imgbuf.buf["<<i<<"]="<<imgbuf.buf[i]<<std::endl;
@@ -184,15 +186,23 @@ void PF::PluginWindow::on_unmap()
 #define LOAD_PFI
 
 void
-PF::PluginWindow::open_image( std::string filename )
+PF::PluginWindow::open_image( std::string filename, bool hidden )
 {
   if( image_editor ) delete image_editor;
 
 	char* fullpath = strdup( filename.c_str() );
   image_editor = new PF::ImageEditor( fullpath );
+  std::cout<<"PluginWindow::open_image("<<filename<<", "<<hidden<<") called"<<std::endl;
+  image_editor->set_hide_background_layer( hidden );
+  image_editor->open_image();
 	free(fullpath);
   editorBox.pack_start( *image_editor );
+  PF::PhotoFlow::Instance().set_active_image( image_editor->get_image() );
   //image_editor->show();
 }
 
+void PF::PluginWindow::open_buffer(void* buf, int w, int h)
+{
+
+}
 

@@ -50,6 +50,10 @@ namespace PF
     display_profile_t display_profile_type;
     Glib::ustring custom_display_profile_name;
 
+    Glib::ustring last_visited_image_folder;
+    Glib::ustring last_visited_preset_folder;
+    Glib::ustring last_visited_icc_folder;
+
   public:
     Options();
 
@@ -61,6 +65,14 @@ namespace PF
       custom_display_profile_name = n;
     }
     std::string get_custom_display_profile_name() { return custom_display_profile_name; }
+
+    // last visited folders
+    void set_last_visited_image_folder( std::string f ) { last_visited_image_folder = f; }
+    std::string get_last_visited_image_folder() { return last_visited_image_folder; }
+    void set_last_visited_preset_folder( std::string f ) { last_visited_preset_folder = f; }
+    std::string get_last_visited_preset_folder() { return last_visited_preset_folder; }
+    void set_last_visited_icc_folder( std::string f ) { last_visited_icc_folder = f; }
+    std::string get_last_visited_icc_folder() { return last_visited_icc_folder; }
 
     void load();
     void save();

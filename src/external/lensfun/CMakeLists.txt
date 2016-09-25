@@ -26,10 +26,12 @@ CHECK_INCLUDE_FILES(endian.h HAVE_ENDIAN_H)
 
 # set include directories
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include/lensfun)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include/lensfun)
+  message( "HAVE_REGEX_H: " ${HAVE_REGEX_H} )
 IF(NOT HAVE_REGEX_H)
-  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include/regex)
-  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libs/regex)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include/regex)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/libs/regex)
+  message( "INCLUDE_DIRECTORIES(" ${CMAKE_CURRENT_SOURCE_DIR} "/include/regex" )
 ENDIF()
 
 # options controlling the build process
@@ -74,7 +76,7 @@ IF(BUILD_FOR_SSE2)
   ENDIF()
 ENDIF()
 
-IF(WIN32)
+IF(_WIN32_)
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libs/getopt)
   # base path for searching for glib on windows
   IF(NOT GLIB2_BASE_DIR)
@@ -89,7 +91,8 @@ ENDIF()
 # find dependencies
 # NOTE: must be one of the macros listed in https://developer.gnome.org/glib/stable/glib-Version-Information.html
 SET(LENSFUN_GLIB_REQUIREMENT_MACRO "GLIB_VERSION_2_40")
-FIND_PACKAGE(GLIB2 REQUIRED 2.40)
+#FIND_PACKAGE(GLIB2 REQUIRED 2.40)
+pkg_check_modules(GLIB glib-2.0) 
 
 INCLUDE_DIRECTORIES(SYSTEM ${GLIB2_INCLUDE_DIRS})
 
@@ -131,9 +134,9 @@ IF(WIN32)
 ENDIF(WIN32)
 
 # create config.h file
-CONFIGURE_FILE(include/lensfun/config.h.in.cmake ${CMAKE_BINARY_DIR}/include/lensfun/config.h)
+CONFIGURE_FILE(include/lensfun/config.h.in.cmake ${CMAKE_CURRENT_BINARY_DIR}/include/lensfun/config.h)
 # create lensfun.h file
-CONFIGURE_FILE(include/lensfun/lensfun.h.in ${CMAKE_BINARY_DIR}/include/lensfun/lensfun.h @ONLY)
+CONFIGURE_FILE(include/lensfun/lensfun.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/lensfun/lensfun.h @ONLY)
 
 # include libs
 ADD_SUBDIRECTORY(libs)

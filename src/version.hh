@@ -1,6 +1,6 @@
 namespace PF
 {
 
-extern char* version_string;
+extern char const* version_string;
 
 };

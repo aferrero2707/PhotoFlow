@@ -48,6 +48,11 @@ namespace PF
   {
     Property<bool> impulse_nr_enable;
     Property<float> impulse_nr_threshold;
+    Property<bool> nlmeans_enable;
+    Property<float> nlmeans_radius;
+    Property<float> nlmeans_strength;
+    Property<float> nlmeans_luma_frac;
+    Property<float> nlmeans_chroma_frac;
     Property<int> iterations;
     Property<float> amplitude;
     Property<float> sharpness; 
@@ -56,13 +61,15 @@ namespace PF
     Property<float> sigma;
 		PropertyBase nr_mode;
 
-		ProcessorBase* impulse_nr;
+    ProcessorBase* impulse_nr;
+    ProcessorBase* nlmeans;
 
   public:
     DenoisePar();
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
+    bool has_target_channel() { return true; }
 
       
 

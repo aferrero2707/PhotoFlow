@@ -27,8 +27,8 @@
 
  */
 
+#include "../../../operations/gmic/watermark_fourier.hh"
 #include "watermark_fourier_config.hh"
-#include "../../operations/gmic/watermark_fourier.hh"
 
 
 PF::GmicWatermarkFourierConfigGUI::GmicWatermarkFourierConfigGUI( PF::Layer* layer ):

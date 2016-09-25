@@ -30,11 +30,12 @@
 #ifndef CONVERT_COLORSPACE_H
 #define CONVERT_COLORSPACE_H
 
+#include <cstring>
 #include <string>
 
 #include <glibmm.h>
 
-#include <libraw/libraw.h>
+//#include <libraw/libraw.h>
 
 #include "../base/processor.hh"
 
@@ -50,6 +51,7 @@ namespace PF
     OUT_PROF_ADOBE,
     OUT_PROF_PROPHOTO,
     OUT_PROF_LAB,
+    OUT_PROF_CMYK,
     OUT_PROF_CUSTOM
   }; 
 
@@ -183,27 +185,27 @@ namespace PF
           if( opar->get_input_cs_type() == cmsSigLabData ) {
             for( x = 0; x < line_size; x+= 3 ) {
               line[x] = (cmsFloat32Number) (p[x] * 100.0);
-              line[x+1] = (cmsFloat32Number) (p[x+1]*255.0 - 127.5);
-              line[x+2] = (cmsFloat32Number) (p[x+2]*255.0 - 127.5);
-              if( r->left==0 && r->top==0 && x==0 && y==0 ) {
-                std::cout<<"ConvertColorspace::render(): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<std::endl;
-              }
+              line[x+1] = (cmsFloat32Number) (p[x+1]*256.0f - 128.0f);
+              line[x+2] = (cmsFloat32Number) (p[x+2]*256.0f - 128.0f);
+              //if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+              //  std::cout<<"ConvertColorspace::render(): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<std::endl;
+              //}
             }
             cmsDoTransform( opar->get_transform(), line, pout, width );
-            if( r->left==0 && r->top==0 && y==0 ) {
-              std::cout<<"ConvertColorspace::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
-            }
+            //if( r->left==0 && r->top==0 && y==0 ) {
+            //  std::cout<<"ConvertColorspace::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+            //}
           } else {
             cmsDoTransform( opar->get_transform(), p, pout, width );
             if( opar->get_output_cs_type() == cmsSigLabData ) {
               for( x = 0; x < line_size; x+= 3 ) {
                 pout[x] = (cmsFloat32Number) (pout[x] / 100.0); 
-                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 127.5) / 255.0);
-                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 127.5) / 255.0);
+                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0f) / 256.0f);
+                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0f) / 256.0f);
                 
-                if( r->left==0 && r->top==0 && x==0 && y==0 ) {
-                  std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
-                }
+                //if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+                //  std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
+                //}
               }
             }
           }
@@ -254,8 +256,8 @@ namespace PF
           if( opar->get_input_cs_type() == cmsSigLabData ) {
             for( x = 0; x < line_size; x+= 3 ) {
               line[x] = (cmsFloat64Number) (pin[x] * 100.0); 
-              line[x+1] = (cmsFloat64Number) (pin[x+1]*255.0 - 128.0); 
-              line[x+2] = (cmsFloat64Number) (pin[x+2]*255.0 - 128.0); 
+              line[x+1] = (cmsFloat64Number) (pin[x+1]*256.0 - 128.0);
+              line[x+2] = (cmsFloat64Number) (pin[x+2]*256.0 - 128.0);
             }
             cmsDoTransform( opar->get_transform(), line, pout, width );
           } else {

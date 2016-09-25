@@ -89,6 +89,8 @@ VipsImage* PF::GMicPar::build(std::vector<VipsImage*>& in, int first,
   case PF_COLORSPACE_CMYK:
     target_ch = get_cmyk_target_channel();
     break;
+  default:
+    break;
   }
 
   VipsImage* srcimg2 = srcimg;

@@ -76,6 +76,9 @@ protected:
 
   ImageBuffer imgbuf;
 
+  void* gimp_iccdata;
+  size_t gimp_iccsize;
+
   //Gtk::ScrolledWindow treeFrame;
   //Gtk::TreeView layerTree;
 
@@ -92,8 +95,16 @@ public:
   void on_unmap();
 
   ImageBuffer& get_image_buffer() { return imgbuf; }
+  ImageEditor* get_image_editor() { return image_editor; }
 
-  void open_image(std::string filename);
+  void set_gimp_icc_profile( void* iccdata, size_t iccsize )
+  {
+    gimp_iccdata = iccdata;
+    gimp_iccsize = iccsize;
+  }
+
+  void open_image(std::string filename, bool hidden=false);
+  void open_buffer(void* buf, int w, int h);
   void update_image();
   void run()
   {

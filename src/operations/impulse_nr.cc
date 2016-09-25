@@ -72,7 +72,7 @@ VipsImage* PF::ImpulseNRPar::build(std::vector<VipsImage*>& in, int first,
       "extend", extend, NULL) ) {
     std::cout<<"ImpulseNRPar::build(): vips_embed() failed."<<std::endl;
     PF_REF( in[0], "ImpulseNRPar::build(): vips_embed() failed." );
-    return NULL;
+    return in[0];
   }
 
   convert2lab->get_par()->set_image_hints( extended );

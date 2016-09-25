@@ -1,4 +1,61 @@
 =========================================
+Version 0.2.7
+
+* New features:
+
+- Added default application icon and desktop file
+- [base] implemented "insert image as layer" funcionality
+- [raw processing] added initial support for X-Trans sensors
+- [tools] added wavelet-based multi-scale decomposition tool based on GIMP "wavelet decompose" filter (*)
+- [tools] added "hot pixels filter" algorithm ported from Darktable (*)
+- [tools] added non-local means noise reduction algorithm ported from Darktable
+- [tools] added initial implementation of shadows/highlights tool from Darktable (only gaussian blurring)
+- [tools] added "defringe" algorithm ported from Darktable (*)
+- [freehand drawing] added option for choosing a transparent background
+- [basic adjustments] added "gamma" adjustment
+- [gimp plug-in] the plug-in configuration gets now stored as meta-data in the associated GIMP layer
+  This gives the possibility to directly paint over a layer with the pencil
+- Added (optional) bundling of GExiv2 v0.10.3
+
+(*) contributed by Edgardo Hoszowski
+
+* Improvements:
+
+- [base] implemented sharing of cache buffers between preview and export
+  This dramatically improves the export speed when caching is completed
+- [base] changed pixel format of preview pipeline to float
+  All computations are now performed in floating-point precision
+- [icc conversion] disabled ICC transforms when input and output colorspaces are the same
+- Removed dependency on LibRAW
+- [clone layer] it is now possible to select a single channel as clone target
+- [denoise] it is now possible to restrict the noise reduction to a single channel
+- [sharpening] it is now possible to restrict the noise reduction to a single channel
+- [gui] last visited folders saved into options file
+- [base] changed application data folder under Windows to %PROGRAMDATA%
+- [processing] optimised VipsImage processing order to avoid over-computation of tiles
+- [raw processing] improved speed of RAW decoding
+- [base] introduced memory-based caching. 
+  The caching reverts to disk storage if the buffer is larger than 500MB or if memory allocation fails
+- [gimp plug-in] added ICC conversion to GIMP working profile when returning the output image from the PhotoFlow plug-in
+- [rescaling] the image rescaling tool now uses the default high-quality algorithm from vips_resize() function
+- [gimp plug-in] improved RAW file matching
+- [gimp plug-in] improved detection of input BABL format and GIMP working profile
+  Now the code works correctly for both gamma-encoded and linear input image data
+
+* Bug fixes:
+
+- [gmic/film emulation] fixed malformed gmic commands for B&W and print film presets
+- [raw processing] Fixed output to Lab colorspace
+- [demosaicing] Fixed corrupted image border for "Fast" and "IGV" methods
+- [lensfun] using LoadDirectory() to open database for bundled lensfun version
+- [scale/rotate tool] fixed issue with non-initialized crop area
+- [hand drawing] fixel various bugs related in the strokes rendering
+- Fixed crash when closing the application or one of the image tabs (see issue #106)
+- [gimp plug-in] Fixed crash when closing the GIMP plug-in from either the "Close"button or the window close button
+- [gui] increased size of preview tile cache to accommodate 4k displays
+- [gui] fixed crashed due to GUI updates inside processor thread
+
+=========================================
 Version 0.2.6
 
 * New features:

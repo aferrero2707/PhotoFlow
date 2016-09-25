@@ -32,7 +32,7 @@
 
 #include <string>
 
-#include <libraw/libraw.h>
+//#include <libraw/libraw.h>
 
 #include "../base/operation.hh"
 #include "../rt/rtengine/rawimagesource.hh"
@@ -44,11 +44,15 @@ namespace PF
 
   class AmazeDemosaicPar: public OpParBase
   {
+    dcraw_data_t* image_data;
+
   public:
     AmazeDemosaicPar();
     bool has_intensity() { return false; }
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
+
+    dcraw_data_t* get_image_data() { return image_data; }
 
     void set_image_hints( VipsImage* img )
     {
@@ -131,6 +135,7 @@ namespace PF
 								VipsRegion* out, AmazeDemosaicPar* par) 
     {
 			rtengine::RawImageSource rawimg;
+      rawimg.set_image_data( par->get_image_data() );
 			rawimg.amaze_demosaic( in[0], out );
     }
   };

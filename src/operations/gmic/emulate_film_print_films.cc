@@ -87,7 +87,7 @@ VipsImage* PF::GmicEmulateFilmPrintFilmsPar::build(std::vector<VipsImage*>& in, 
 	for( int l = 1; l <= level; l++ )
 		scalefac *= 2;
 
-  std::string command = "-gimp_emulate_film_print_films  ";
+  std::string command = "-gimp_emulate_film_print  ";
   command = command + prop_preset.get_enum_value_str();
   command = command + std::string(",") + prop_opacity.get_str();
   command = command + std::string(",") + prop_gamma.get_str();

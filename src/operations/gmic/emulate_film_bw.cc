@@ -109,6 +109,7 @@ VipsImage* PF::GmicEmulateFilmBEPar::build(std::vector<VipsImage*>& in, int firs
   command = command + std::string(",") + prop_hue.get_str();
   command = command + std::string(",") + prop_saturation.get_str();
   command = command + std::string(",") + prop_post_normalize.get_str();
+  command = command + std::string(",0");
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
   gpar->set_padding( get_padding( level ) );

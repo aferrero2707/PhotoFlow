@@ -39,12 +39,16 @@ public:
   } RawImageWorkerTask;
   RawImageWorker(RawImageData *img, RawImageWorkerTask task, int start_y, int end_y);
   ~RawImageWorker();
+#ifndef NO_PTHREAD
   void startThread();
   void waitForThread();
+#endif
   void performTask();
 protected:
+#ifndef NO_PTHREAD
   pthread_t threadid;
   pthread_attr_t attr;
+#endif
   RawImageData* data;
   RawImageWorkerTask task;
   int start_y;
@@ -73,7 +77,7 @@ public:
   double pixelAspectRatio;
 
   // White balance coefficients of the image
-  float wbCoeffs[3];
+  float wbCoeffs[4];
 
   // How many pixels far down the left edge and far up the right edge the image 
   // corners are when the image is rotated 45 degrees in Fuji rotated sensors.

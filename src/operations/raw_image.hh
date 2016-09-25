@@ -44,6 +44,7 @@
 #include "../base/array2d.hh"
 
 #include "fast_demosaic.hh"
+#include "fast_demosaic_xtrans.hh"
 
 //#define PF_USE_LIBRAW
 #define PF_USE_RAWSPEED
@@ -61,6 +62,8 @@ typedef libraw_data_t dcraw_data_t;
 struct dcraw_iparams_t
 {
   unsigned int filters;
+  int xtrans_uncropped[6][6];
+  int xtrans[6][6];
 };
 
 struct dcraw_color_data_t
@@ -94,6 +97,8 @@ struct dcraw_data_t
 namespace PF 
 {
 
+bool check_xtrans( unsigned filters );
+
   class RawImage
   {
     int nref;
@@ -110,8 +115,7 @@ namespace PF
 		RawSpeed::CameraMetaData *meta;
 #endif
 
-		// VipsImage storing the raw data 
-		// (one float pixel value + one uchar color code)
+		// VipsImages storing the raw data, one band for the pixel values and a nother for the colors
     VipsImage* image;
 		// VipsImage storing the dark frame data (if available)
     VipsImage* df_image;
@@ -119,10 +123,12 @@ namespace PF
     VipsImage* ff_image;
 		// Demosaiced image
     VipsImage* demo_image;
+    PF::ProcessorBase* fast_demosaic;
 
     exif_data_t exif_data;
 
     Array2D<float> rawData;  // holds preprocessed pixel values, rowData[i][j] corresponds to the ith row and jth column
+    //RawMatrix rawData;  // holds preprocessed pixel values, rowData[i][j] corresponds to the ith row and jth column
     // Result of CA auto-correction
     double fitparams[3][2][16];
 
@@ -139,12 +145,19 @@ namespace PF
     void unref() { nref -= 1; }
     int get_nref() { return nref; }
 
+    bool is_xtrans() { return check_xtrans( dcraw_data.idata.filters ); }
+
     std::string get_file_name() { return file_name_real; }
 
     unsigned FC (unsigned row, unsigned col) const
     {
       return( dcraw_data.idata.filters >> ((((row+dcraw_data.sizes.top_margin) << 1 & 14) +
           ((col+dcraw_data.sizes.left_margin) & 1)) << 1) & 3 );
+    }
+
+    unsigned FC_xtrans (unsigned row, unsigned col) const
+    {
+      return( dcraw_data.idata.xtrans[(row)%6][(col)%6] );
     }
 
     VipsImage* get_image(unsigned int& level);

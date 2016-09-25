@@ -39,7 +39,7 @@ bool PF::BlenderPar::adjust_geom( VipsImage* in, VipsImage** out,
   *out = NULL;
 
   double scale = 1;
-	for( int l = 1; l <= level; l++ )
+	for( unsigned int l = 1; l <= level; l++ )
 		scale *= 2;
 
   int dx = shift_x.get()/scale;
@@ -239,8 +239,8 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
                    background->Xsize, background->Ysize, level );
     }
     std::vector<VipsImage*> in_;
-    in_.push_back( background );
     in_.push_back( foreground2 );
+    in_.push_back( background );
 #ifndef NDEBUG
     std::cout<<"background("<<background<<")->Xsize="<<background->Xsize<<"    background->Ysize="<<background->Ysize<<std::endl;
     std::cout<<"foreground("<<foreground<<")->Xsize="<<foreground->Xsize<<"    foreground->Ysize="<<foreground->Ysize<<std::endl;

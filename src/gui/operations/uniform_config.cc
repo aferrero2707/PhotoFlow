@@ -35,7 +35,7 @@
 
 PF::UniformConfigGUI::UniformConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Uniform" ),
-  color_label("Color:              "),
+  color_label(_("Color:              ")),
 #ifdef GTKMM_2
   color_button( Gdk::Color("white") )
 #endif

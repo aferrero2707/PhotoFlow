@@ -164,6 +164,8 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   /**/
 #ifndef NDEBUG
   std::cout<<"vips_layer_gen(): "<<std::endl;
+  if( layer->processor->get_par() )
+    std::cout<<"  type: "<<layer->processor->get_par()->get_type()<<std::endl;
   if( layer->processor->get_par()->get_config_ui() )
     std::cout<<"  name: "<<layer->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
   std::cout<<"  output region: top="<<oreg->valid.top

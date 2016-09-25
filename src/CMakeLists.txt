@@ -1,14 +1,14 @@
 IF(MINGW)
-  SET(GMIC_FLAGS "-std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+  SET(GMIC_FLAGS "-mwindows -std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   SET(GMIC_FLAGS "-framework CoreServices -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
 
-set(COMPILE_FLAGS "${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
+set(COMPILE_FLAGS " ${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
 
 if(Msgfmt_FOUND)
 	set(COMPILE_FLAGS "${COMPILE_FLAGS} -DLOCALEDIR=\"${LOCALE_DIR}\"")
@@ -16,6 +16,12 @@ endif()
 
 if(BUNDLED_LENSFUN)
   set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBUNDLED_LENSFUN=1")
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/include)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/include/lensfun)
+endif()
+
+if(BABL_FLIPS_DISABLED)
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBABL_FLIPS_DISABLED=1")
 endif()
 
 if(GTKMM2_FOUND)
@@ -32,10 +38,10 @@ if(GTKMM3_FOUND)
   set(GTKMM_LIBRARIES ${GTKMM3_LIBRARIES})
 endif()
 
-SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_VERBDEBUG "-Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
-SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_DEBUG " -Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_VERBDEBUG " -Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ffast-math -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -57,7 +63,7 @@ link_directories(${SIGC2_LIBRARY_DIRS})
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
+#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw)
 
 
 include_directories(${OPENEXR_INCLUDE_DIRS})
@@ -80,8 +86,6 @@ include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
 include_directories(${EXIV2_INCLUDE_DIRS})
 link_directories(${EXIV2_LIBRARY_DIRS})
-include_directories(${GEXIV2_INCLUDE_DIRS})
-link_directories(${GEXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 link_directories(${ORC_LIBRARY_DIRS})
@@ -173,6 +177,7 @@ FILE(GLOB RTSources
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
+  rt/rtengine/xtrans_demosaic_RT.cc
 )
 
 FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)
@@ -190,11 +195,11 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 # so we do a custom dependency and pretend an imported liblibraw_r.a so no other -l are
 # appended.
 #
-add_library(libraw_static STATIC IMPORTED)
-set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/LibRaw/liblibraw_r.a)
-add_subdirectory(external/LibRaw)
-list(APPEND LIB_DEPS libraw_r)
-list(APPEND STATIC_LIBS libraw_static)
+#add_library(libraw_static STATIC IMPORTED)
+#set_target_properties(libraw_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/LibRaw/liblibraw_r.a)
+#add_subdirectory(external/LibRaw)
+#list(APPEND LIB_DEPS libraw_r)
+#list(APPEND STATIC_LIBS libraw_static)
 
 #
 # the rawspeed part is a bit of a hack:
@@ -202,6 +207,7 @@ list(APPEND STATIC_LIBS libraw_static)
 # so we do a custom dependency and pretend an imported librawsped.a so no other -l are
 # appended.
 #
+set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX})
 add_library(rawspeed_static STATIC IMPORTED)
 set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
 # compile rawspeed
@@ -216,17 +222,41 @@ if(BUNDLED_LENSFUN)
   set(BUILD_STATIC "ON")
   add_library(lensfun_static STATIC IMPORTED)
   set_target_properties(lensfun_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/libs/lensfun/liblensfun.a)
+INCLUDE(CheckIncludeFiles)
+CHECK_INCLUDE_FILES(regex.h HAVE_REGEX_H)
+CHECK_INCLUDE_FILES(endian.h HAVE_ENDIAN_H)
+  message( "HAVE_REGEX_H: " ${HAVE_REGEX_H} )
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/external/lensfun/include)
+IF(NOT HAVE_REGEX_H)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/include/regex)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/libs/regex)
+  #message( "INCLUDE_DIRECTORIES(" ${CMAKE_CURRENT_BINARY_DIR} "/include/regex" )
+ENDIF(NOT HAVE_REGEX_H)
   add_subdirectory(external/lensfun)
   list(APPEND LIB_DEPS lensfun)
   list(APPEND STATIC_LIBS lensfun_static)
-  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 else(BUNDLED_LENSFUN)
   link_directories( ${LENSFUN_LIBRARY_DIRS}  )
   include_directories( ${LENSFUN_INCLUDE_DIRS}  )  
 endif(BUNDLED_LENSFUN)
-set(CMAKE_CXX_FLAGS "-DPF_HAS_LENSFUN")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 
 
+if(BUNDLED_GEXIV2)
+  include(ExternalProject)
+  ExternalProject_Add(gexiv2
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
+    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
+    BUILD_COMMAND ${MAKE})
+  set(GEXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/include)
+  set( GEXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib)
+  set(GEXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib/libgexiv2.a)
+endif(BUNDLED_GEXIV2)
+include_directories(${GEXIV2_INCLUDE_DIRS})
+link_directories(${GEXIV2_LIBRARY_DIRS})
+
+MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
 add_library (pfbase STATIC
   ${BaseIncludes}
@@ -257,8 +287,8 @@ add_library (pfgui STATIC
 
 
 IF(MINGW)
-  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
-  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
 ELSEIF(APPLE)
   list(APPEND ADDITIONAL_LIBS)
 ELSE(MINGW)
@@ -266,6 +296,10 @@ ELSE(MINGW)
 ENDIF(MINGW)
 
 list(APPEND ADDITIONAL_LIBS pugixml)
+
+IF(APPLE)
+  list(APPEND LIBS "-framework CoreServices")
+ENDIF(APPLE)
 
 #--------------------------------------------------
 #
@@ -280,6 +314,7 @@ target_link_libraries(photoflow ${LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${STATIC_LIBS}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
@@ -298,7 +333,6 @@ target_link_libraries(photoflow ${LIBS}
   ${GTHREAD_LIBRARIES} 
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
-  ${STATIC_LIBS}
   ${ORC_LIBRARIES}
   fftw3
   ${ADDITIONAL_LIBS}
@@ -319,6 +353,7 @@ target_link_libraries(pfbatch ${LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${STATIC_LIBS}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
@@ -334,7 +369,6 @@ target_link_libraries(pfbatch ${LIBS}
   ${GTHREAD_LIBRARIES} 
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
-  ${STATIC_LIBS}
   ${ORC_LIBRARIES}
   fftw3
   ${ADDITIONAL_LIBS}
@@ -345,6 +379,7 @@ target_link_libraries(pfbatch ${LIBS}
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 
+INSTALL(DIRECTORY ../presets DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icc DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
@@ -358,7 +393,7 @@ INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflo
 #
 if (GIMP_FOUND)
   FILE(GLOB PluginIncludes plugin/*.hh)
-  FILE(GLOB PluginSources plugin/*.cc)
+  FILE(GLOB PluginSources plugin/pluginwindow.cc plugin/pfgimp.cc)
 
   include_directories(${GIMP_2_9_INCLUDE_DIRS})
   link_directories(${GIMP_2_9_LIBRARY_DIRS})
@@ -376,6 +411,7 @@ if (GIMP_FOUND)
     ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
     ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
     ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${STATIC_LIBS}
     ${OPENEXR_LIBRARIES}
     ${XML2_LIBRARIES}
     ${EXIF_LIBRARIES}
@@ -397,14 +433,56 @@ if (GIMP_FOUND)
     ${GTHREAD_LIBRARIES} 
     ${ZLIB_LIBRARIES}
     #${LIBRAW_LIBRARIES}  
-    ${STATIC_LIBS}
     ${ORC_LIBRARIES}
     fftw3
     ${ADDITIONAL_LIBS}
     #gmon
   )
   
-  INSTALL(TARGETS pfgimp RUNTIME DESTINATION share/photoflow/plug-in)
+  
+  FILE(GLOB LoadPluginIncludes plugin/*.hh)
+  FILE(GLOB LoadPluginSources plugin/pluginwindow.cc plugin/pfgimp-load.cc)
+
+  add_executable(pfgimp-load ${LoadPluginSources})
+
+  set_target_properties(pfgimp-load PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
+
+  target_link_libraries(pfgimp-load ${LIBS} 
+    pfgui
+    pfbase 
+    pfdt
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+    ${STATIC_LIBS}
+    ${OPENEXR_LIBRARIES}
+    ${XML2_LIBRARIES}
+    ${EXIF_LIBRARIES}
+    ${EXIV2_LIBRARIES}
+    ${GEXIV2_LIBRARIES}
+    ${LENSFUN_LIBRARIES}
+    ${SIGC2_LIBRARIES}
+    ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+    ${PIXMAN_LIBRARIES} 
+    ${MACINTEG_LIBS}
+    #${GIMP_LIBS}
+    ${GIMP_2_9_LIBRARIES}
+    ${GIMPUI_LIBRARIES}
+    ${GTKMM_LIBRARIES} 
+    ${GLIBMM_LIBRARIES} 
+    ${GLIB_LIBRARIES} 
+    ${GMODULE_LIBRARIES} 
+    ${GOBJECT_LIBRARIES} 
+    ${GTHREAD_LIBRARIES} 
+    ${ZLIB_LIBRARIES}
+    #${LIBRAW_LIBRARIES}  
+    ${ORC_LIBRARIES}
+    fftw3
+    ${ADDITIONAL_LIBS}
+    #gmon
+  )
+  
+  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION ${GIMP_2_9_PREFIX}/lib/gimp/2.0/plug-ins)
 endif (GIMP_FOUND)
 
 

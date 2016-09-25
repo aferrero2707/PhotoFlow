@@ -32,7 +32,7 @@
 #include "image.hh"
 
 
-PF::Layer::Layer(int32_t i, bool c): 
+PF::Layer::Layer(uint32_t i, bool c):
   id(i), 
   processor( NULL ), 
   blender( NULL ), 
@@ -46,6 +46,7 @@ PF::Layer::Layer(int32_t i, bool c):
 
   enabled = true;
   visible = true;
+  hidden = false;
   expanded = true;
 
   normal = true;
@@ -78,6 +79,27 @@ void PF::Layer::set_image( Image* img )
 }
 
 
+void PF::Layer::set_cached( bool c )
+{
+  bool changed = (cached != c);
+  cached = c;
+  if( cached && cache_buffers.empty() ) {
+    //cache_buffers.insert( std::make_pair(PF::PF_RENDER_PREVIEW, new PF::CacheBuffer()) );
+    cache_buffers.insert( std::make_pair(PF::PF_RENDER_NORMAL, new PF::CacheBuffer()) );
+  }
+  if( cached && changed )
+    reset_cache_buffers();
+}
+
+
+PF::CacheBuffer* PF::Layer::get_cache_buffer()
+{
+  std::map<rendermode_t,PF::CacheBuffer*>::iterator i = cache_buffers.find( /*mode*/PF_RENDER_NORMAL );
+  if( i != cache_buffers.end() ) return i->second;
+  return NULL;
+}
+
+
 void PF::Layer::reset_cache_buffers()
 {
   //std::cout<<"Layer::reset_cache_buffers(\""<<get_name()<<"\")called"<<std::endl;
@@ -99,7 +121,7 @@ bool PF::Layer::insert(std::list<PF::Layer*>& list, PF::Layer* l, int32_t lid)
 
   std::list<Layer*>::iterator it;
   for( it = list.begin(); it != list.end(); ++it )
-    if( (*it)->get_id() == lid ) break;
+    if( (int32_t)(*it)->get_id() == lid ) break;
 
   if( it == list.end() ) return false;
 
@@ -114,7 +136,7 @@ bool PF::Layer::insert_before(std::list<PF::Layer*>& list, PF::Layer* l, int32_t
 {
   std::list<Layer*>::iterator it;
   for( it = list.begin(); it != list.end(); ++it )
-    if( (*it)->get_id() == lid ) break;
+    if( (int32_t)(*it)->get_id() == lid ) break;
 
   if( it == list.end() ) return false;
 
@@ -175,6 +197,8 @@ void PF::Layer::remove_input(int32_t lid)
 
 bool PF::Layer::save( std::ostream& ostr, int level )
 {
+  if( is_hidden() ) return true;
+
   for(int i = 0; i < level; i++) ostr<<"  ";
   ostr<<"<layer name=\""<<name<<"\" id=\""<<id<<"\" visible=\""<<enabled<<"\" expanded=\""<<expanded
       <<"\" normal=\""<<normal<<"\" extra_inputs=\"";

@@ -26,16 +26,16 @@
   These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
 */
-
+#include <glib.h>
 
 #include "../base/file_util.hh"
+#include "../base/fileutils.hh"
 #include "../base/pf_file_loader.hh"
 #include "../operations/buffer.hh"
 #include "../operations/blender.hh"
 #include "tablabelwidget.hh"
 #include "layerwidget.hh"
 #include "imageeditor.hh"
-
 
 PF::ControlsGroup::ControlsGroup( ImageEditor* e ): editor(e)
 {
@@ -121,6 +121,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   add_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/add-layer.png", "", image, this),
   group_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/group.png", "", image, this),
   trash_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/trash.png", "", image, this),
+  insert_image_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-file-image.png", "", image, this),
   curves_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/curves.png", "curves", image, this),
   uniform_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/bucket-fill.png", "uniform", image, this),
   gradient_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/gradient.png", "gradient", image, this),
@@ -140,6 +141,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   add_button.set_tooltip_text( _("new layer") );
   group_button.set_tooltip_text( _("new group layer") );
   trash_button.set_tooltip_text( _("delete layer") );
+  insert_image_button.set_tooltip_text( _("insert image as layer") );
   basic_edits_button.set_tooltip_text( _("basic editing") );
   curves_button.set_tooltip_text( _("curves tool") );
   uniform_button.set_tooltip_text( _("uniform fill") );
@@ -154,6 +156,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
 
   tool_buttons_box.pack_start( add_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( group_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( insert_image_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( uniform_button, Gtk::PACK_SHRINK, 2 );
@@ -260,6 +263,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
       &PF::LayerWidget::on_button_add_group) );
   trash_button.signal_clicked.connect( sigc::mem_fun(*this,
       &PF::LayerWidget::on_button_del) );
+  insert_image_button.signal_clicked.connect( sigc::mem_fun(*this,
+      &PF::LayerWidget::on_button_add_image) );
 
   buttonPresetLoad.signal_clicked().
     connect(sigc::mem_fun(*this,
@@ -440,7 +445,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       */
 
       VTabLabelWidget* tabwidget = 
-        new VTabLabelWidget( std::string("intensity (")+l->get_name()+")",
+        new VTabLabelWidget( std::string(_("intensity ("))+l->get_name()+")",
                             view );
       tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::LayerWidget::remove_tab) ); 
       notebook.append_page( *view, *tabwidget );
@@ -488,7 +493,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       */
 
       VTabLabelWidget* tabwidget = 
-        new VTabLabelWidget( std::string("opacity (")+l->get_name()+")",
+        new VTabLabelWidget( std::string(_("opacity ("))+l->get_name()+")",
                             view );
       tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::LayerWidget::remove_tab) ); 
       notebook.append_page( *view, *tabwidget );
@@ -591,7 +596,7 @@ bool PF::LayerWidget::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk:
     //Gtk::TreeModel::Row row = *it;
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*it)[columns.col_layer];
-    if(l && (l->get_id()==id)) {
+    if(l && ((int)(l->get_id())==id)) {
       iter = it;
       return true;
     }
@@ -672,6 +677,188 @@ void PF::LayerWidget::on_button_add()
 
 
 
+void PF::LayerWidget::on_button_add_image()
+{
+  Gtk::FileChooserDialog dialog( _("Open image"),
+      Gtk::FILE_CHOOSER_ACTION_OPEN);
+
+  Gtk::Container* toplevel = get_toplevel();
+#ifdef GTKMM_2
+  if( toplevel && toplevel->is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+#endif
+#ifdef GTKMM_3
+  if( toplevel && toplevel->get_is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+#endif
+    dialog.set_transient_for( *(dynamic_cast<Gtk::Window*>(toplevel)) );
+
+  //Add response buttons the the dialog:
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+  //Glib::RefPtr<Gtk::FileFilter> filter_pfi = Gtk::FileFilter::create();
+  //filter_pfi->set_name("Photoflow files");
+  //filter_pfi->add_pattern("*.pfi");
+  //dialog.add_filter(filter_pfi);
+
+#ifdef GTKMM_2
+  Gtk::FileFilter filter_tiff;
+  filter_tiff.set_name( _("Image files") );
+  filter_tiff.add_mime_type("image/tiff");
+  filter_tiff.add_mime_type("image/jpeg");
+  filter_tiff.add_mime_type("image/png");
+  filter_tiff.add_mime_type("image/x-3fr");
+  filter_tiff.add_mime_type("image/x-adobe-dng");
+  filter_tiff.add_mime_type("image/x-arw;image/x-bay");
+  filter_tiff.add_mime_type("image/x-canon-cr2");
+  filter_tiff.add_mime_type("image/x-canon-crw");
+  filter_tiff.add_mime_type("image/x-cap");
+  filter_tiff.add_mime_type("image/x-cr2");
+  filter_tiff.add_mime_type("image/x-crw");
+  filter_tiff.add_mime_type("image/x-dcr");
+  filter_tiff.add_mime_type("image/x-dcraw");
+  filter_tiff.add_mime_type("image/x-dcs");
+  filter_tiff.add_mime_type("image/x-dng");
+  filter_tiff.add_mime_type("image/x-drf");
+  filter_tiff.add_mime_type("image/x-eip");
+  filter_tiff.add_mime_type("image/x-erf");
+  filter_tiff.add_mime_type("image/x-fff");
+  filter_tiff.add_mime_type("image/x-fuji-raf");
+  filter_tiff.add_mime_type("image/x-iiq");
+  filter_tiff.add_mime_type("image/x-k25");
+  filter_tiff.add_mime_type("image/x-kdc");
+  filter_tiff.add_mime_type("image/x-mef");
+  filter_tiff.add_mime_type("image/x-minolta-mrw");
+  filter_tiff.add_mime_type("image/x-mos");
+  filter_tiff.add_mime_type("image/x-mrw");
+  filter_tiff.add_mime_type("image/x-nef");
+  filter_tiff.add_mime_type("image/x-nikon-nef");
+  filter_tiff.add_mime_type("image/x-nrw");
+  filter_tiff.add_mime_type("image/x-olympus-orf");
+  filter_tiff.add_mime_type("image/x-orf");
+  filter_tiff.add_mime_type("image/x-panasonic-raw");
+  filter_tiff.add_mime_type("image/x-pef");
+  filter_tiff.add_mime_type("image/x-pentax-pef");
+  filter_tiff.add_mime_type("image/x-ptx");
+  filter_tiff.add_mime_type("image/x-pxn");
+  filter_tiff.add_mime_type("image/x-r3d");
+  filter_tiff.add_mime_type("image/x-raf");
+  filter_tiff.add_mime_type("image/x-raw");
+  filter_tiff.add_mime_type("image/x-rw2");
+  filter_tiff.add_mime_type("image/x-rwl");
+  filter_tiff.add_mime_type("image/x-rwz");
+  filter_tiff.add_mime_type("image/x-sigma-x3f");
+  filter_tiff.add_mime_type("image/x-sony-arw");
+  filter_tiff.add_mime_type("image/x-sony-sr2");
+  filter_tiff.add_mime_type("image/x-sony-srf");
+  filter_tiff.add_mime_type("image/x-sr2");
+  filter_tiff.add_mime_type("image/x-srf");
+  filter_tiff.add_mime_type("image/x-x3f");
+  filter_tiff.add_mime_type("image/x-exr");
+  filter_tiff.add_pattern("*.pfi");
+  Gtk::FileFilter filter_all;
+  filter_all.set_name( _("All files") );
+  filter_all.add_pattern("*.*");
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::FileFilter> filter_tiff = Gtk::FileFilter::create();
+  filter_tiff->set_name( _("Image files") );
+  filter_tiff->add_mime_type("image/tiff");
+  filter_tiff->add_mime_type("image/jpeg");
+  filter_tiff->add_mime_type("image/png");
+  filter_tiff->add_mime_type("image/x-3fr");
+  filter_tiff->add_mime_type("image/x-adobe-dng");
+  filter_tiff->add_mime_type("image/x-arw;image/x-bay");
+  filter_tiff->add_mime_type("image/x-canon-cr2");
+  filter_tiff->add_mime_type("image/x-canon-crw");
+  filter_tiff->add_mime_type("image/x-cap");
+  filter_tiff->add_mime_type("image/x-cr2");
+  filter_tiff->add_mime_type("image/x-crw");
+  filter_tiff->add_mime_type("image/x-dcr");
+  filter_tiff->add_mime_type("image/x-dcraw");
+  filter_tiff->add_mime_type("image/x-dcs");
+  filter_tiff->add_mime_type("image/x-dng");
+  filter_tiff->add_mime_type("image/x-drf");
+  filter_tiff->add_mime_type("image/x-eip");
+  filter_tiff->add_mime_type("image/x-erf");
+  filter_tiff->add_mime_type("image/x-fff");
+  filter_tiff->add_mime_type("image/x-fuji-raf");
+  filter_tiff->add_mime_type("image/x-iiq");
+  filter_tiff->add_mime_type("image/x-k25");
+  filter_tiff->add_mime_type("image/x-kdc");
+  filter_tiff->add_mime_type("image/x-mef");
+  filter_tiff->add_mime_type("image/x-minolta-mrw");
+  filter_tiff->add_mime_type("image/x-mos");
+  filter_tiff->add_mime_type("image/x-mrw");
+  filter_tiff->add_mime_type("image/x-nef");
+  filter_tiff->add_mime_type("image/x-nikon-nef");
+  filter_tiff->add_mime_type("image/x-nrw");
+  filter_tiff->add_mime_type("image/x-olympus-orf");
+  filter_tiff->add_mime_type("image/x-orf");
+  filter_tiff->add_mime_type("image/x-panasonic-raw");
+  filter_tiff->add_mime_type("image/x-pef");
+  filter_tiff->add_mime_type("image/x-pentax-pef");
+  filter_tiff->add_mime_type("image/x-ptx");
+  filter_tiff->add_mime_type("image/x-pxn");
+  filter_tiff->add_mime_type("image/x-r3d");
+  filter_tiff->add_mime_type("image/x-raf");
+  filter_tiff->add_mime_type("image/x-raw");
+  filter_tiff->add_mime_type("image/x-rw2");
+  filter_tiff->add_mime_type("image/x-rwl");
+  filter_tiff->add_mime_type("image/x-rwz");
+  filter_tiff->add_mime_type("image/x-sigma-x3f");
+  filter_tiff->add_mime_type("image/x-sony-arw");
+  filter_tiff->add_mime_type("image/x-sony-sr2");
+  filter_tiff->add_mime_type("image/x-sony-srf");
+  filter_tiff->add_mime_type("image/x-sr2");
+  filter_tiff->add_mime_type("image/x-srf");
+  filter_tiff->add_mime_type("image/x-x3f");
+  filter_tiff->add_mime_type("image/x-exr");
+  filter_tiff->add_pattern("*.pfi");
+  Glib::RefPtr<Gtk::FileFilter> filter_all = Gtk::FileFilter::create();
+  filter_all->set_name( _("All files") );
+  filter_all->add_pattern("*.*");
+#endif
+  dialog.add_filter(filter_tiff);
+  dialog.add_filter(filter_all);
+
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
+  //Show the dialog and wait for a user response:
+  int result = dialog.run();
+
+  //Handle the response:
+  switch(result) {
+  case(Gtk::RESPONSE_OK):
+        {
+    std::cout << "Open clicked." << std::endl;
+
+    last_dir = dialog.get_current_folder();
+    PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
+
+    //Notice that this is a std::string, not a Glib::ustring.
+    std::string filename = dialog.get_filename();
+    std::cout << "File selected: " <<  filename << std::endl;
+    char* fullpath = realpath( filename.c_str(), NULL );
+    if(!fullpath)
+      return;
+    insert_image( fullpath );
+    free(fullpath);
+    break;
+        }
+  case(Gtk::RESPONSE_CANCEL):
+        {
+    std::cout << "Cancel clicked." << std::endl;
+    break;
+        }
+  default:
+    std::cout << "Unexpected button clicked." << std::endl;
+    break;
+  }
+}
+
+
+
 void PF::LayerWidget::add_layer( PF::Layer* layer )
 {
   int page = notebook.get_current_page();
@@ -679,6 +866,8 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
 
   bool is_map = layer_views[page]->is_map();
   layer->get_processor()->get_par()->
+    set_map_flag( is_map );
+  layer->get_blender()->get_par()->
     set_map_flag( is_map );
     
 #ifndef NDEBUG
@@ -749,6 +938,72 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
 
 }
 
+
+void PF::LayerWidget::insert_image( std::string filename )
+{
+  std::string ext;
+  if( !PF::getFileExtensionLowcase( "/", filename, ext ) ) return;
+
+  if( ext == "pfi" ) {
+  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" || ext=="exr" ) {
+
+    std::cout<<"Inserting raster image "<<filename<<std::endl;
+
+    if( !image ) return;
+
+    PF::LayerManager& layer_manager = image->get_layer_manager();
+    PF::Layer* layer = layer_manager.new_layer();
+    if( !layer ) return;
+
+    PF::Layer* limg = layer_manager.new_layer();
+    PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "imageread", limg );
+    if( proc->get_par() && proc->get_par()->get_property( "file_name" ) )
+      proc->get_par()->get_property( "file_name" )->set_str( filename );
+    limg->set_processor( proc );
+    limg->set_name( _("image file") );
+
+    add_layer( limg );
+  } else {
+
+    std::cout<<"Inserting raw image "<<filename<<std::endl;
+
+    if( !image ) return;
+
+    PF::LayerManager& layer_manager = image->get_layer_manager();
+    PF::Layer* gl = layer_manager.new_layer();
+    if( !gl ) return;
+    gl->set_name( _("RAW image") );
+    gl->set_normal( false );
+
+    PF::ProcessorBase* processor = new_buffer();
+    gl->set_processor( processor );
+
+    PF::ProcessorBase* blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    gl->set_blender( blender );
+
+    PF::OperationConfigGUI* dialog =
+      new PF::OperationConfigGUI( gl, Glib::ustring(_("Group Layer Config")) );
+    processor->get_par()->set_config_ui( dialog );
+
+    // RAW loader layer
+    PF::Layer* limg = layer_manager.new_layer();
+    PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "raw_loader", limg );
+    if( proc->get_par() && proc->get_par()->get_property( "file_name" ) )
+      proc->get_par()->get_property( "file_name" )->set_str( filename );
+    limg->set_processor( proc );
+    limg->set_name( "RAW loader" );
+    gl->sublayers_insert( limg, -1 );
+
+    // RAW processor
+    PF::Layer* limg2 = layer_manager.new_layer();
+    PF::ProcessorBase* proc2 = PF::PhotoFlow::Instance().new_operation( "raw_developer", limg2 );
+    limg2->set_processor( proc2 );
+    limg2->set_name( "RAW developer" );
+    gl->sublayers_insert( limg2, -1 );
+
+    add_layer( gl );
+  }
+}
 
 
 void PF::LayerWidget::insert_preset( std::string filename )
@@ -900,7 +1155,7 @@ void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
   if( editor ) {
     //if( editor->get_active_layer() == l->get_id() )
     //  editor->set_active_layer(-1);
-    if( editor->get_displayed_layer() == l->get_id() )
+    if( editor->get_displayed_layer() == (int)(l->get_id()) )
       editor->set_displayed_layer(-1);
   }
   unset_sticky_and_editing( l->get_omap_layers() );
@@ -959,7 +1214,7 @@ void PF::LayerWidget::remove_layers()
     if( editor ) {
       std::cout<<"editor->get_active_layer()="<<editor->get_active_layer()<<"  l->get_id()="<<l->get_id()<<std::endl;
     }
-    if( editor && (editor->get_active_layer() == l->get_id()) ) {
+    if( editor && (editor->get_active_layer() == (int)(l->get_id())) ) {
       std::cout<<"editor->set_active_layer( -1 );"<<std::endl;
       editor->set_active_layer( -1 );
     }
@@ -1021,7 +1276,7 @@ void PF::LayerWidget::on_button_del()
 
 void PF::LayerWidget::on_button_load()
 {
-  Gtk::FileChooserDialog dialog("Open preset",
+  Gtk::FileChooserDialog dialog(_("Open preset"),
 				Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
   
@@ -1041,7 +1296,8 @@ void PF::LayerWidget::on_button_load()
 #endif
   dialog.add_filter(filter_pfp);
 
-  //if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_preset_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
   //Show the dialog and wait for a user response:
   int result = dialog.run();
@@ -1053,6 +1309,9 @@ void PF::LayerWidget::on_button_load()
   case(Gtk::RESPONSE_OK): 
     {
       std::cout << "Save clicked." << std::endl;
+
+      last_dir = dialog.get_current_folder();
+      PF::PhotoFlow::Instance().get_options().set_last_visited_preset_folder( last_dir );
 
       //Notice that this is a std::string, not a Glib::ustring.
       filename = dialog.get_filename();
@@ -1109,7 +1368,8 @@ void PF::LayerWidget::on_button_save()
 #endif
   dialog.add_filter(filter_pfp);
 
-  //if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_preset_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
   //Show the dialog and wait for a user response:
   int result = dialog.run();
@@ -1121,6 +1381,9 @@ void PF::LayerWidget::on_button_save()
   case(Gtk::RESPONSE_OK): 
     {
       std::cout << "Save clicked." << std::endl;
+
+      last_dir = dialog.get_current_folder();
+      PF::PhotoFlow::Instance().get_options().set_last_visited_preset_folder( last_dir );
 
       //Notice that this is a std::string, not a Glib::ustring.
       filename = dialog.get_filename();
@@ -1159,7 +1422,7 @@ void PF::LayerWidget::on_button_save()
     Gtk::TreeModel::iterator parent = row.parent();
     if( parent ) {
       bool selected = false;
-      for( int rj = 0; rj < sel_rows.size(); rj++ ) {
+      for( unsigned int rj = 0; rj < sel_rows.size(); rj++ ) {
         Gtk::TreeModel::iterator iter2 = model->get_iter( sel_rows[rj] );
         if( !iter2 ) continue;
         if( parent != iter2 ) continue;

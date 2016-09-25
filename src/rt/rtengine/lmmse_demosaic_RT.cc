@@ -39,7 +39,7 @@ namespace rtengine {
 #define PIX_SORT(a,b) { if ((a)>(b)) {temp=(a);(a)=(b);(b)=temp;} }
 #define PIX_SORTV(av,bv)  tempv = _mm_min_ps(av,bv); bv = _mm_max_ps(av,bv); av = tempv;
 
-#define M(a) a
+#define M(a) (char*)(a)
 
 
 #undef CLIP

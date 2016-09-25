@@ -27,11 +27,13 @@
 
  */
 
+/*
 #ifdef PF_LENSFUN_HH
 #warning "PF_LENSFUN_HH already defined!!!"
 #else
 #warning "PF_LENSFUN_HH not defined."
 #endif
+*/
 
 #ifndef PF_LENSFUN_HH
 #define PF_LENSFUN_HH

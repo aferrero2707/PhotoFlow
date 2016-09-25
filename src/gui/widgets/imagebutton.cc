@@ -74,11 +74,12 @@ void PF::ImageButton::on_map()
 
 bool PF::ImageButton::on_button_press_event( GdkEventButton* button )
 {
+  if( button->type != GDK_BUTTON_PRESS || button->button != 1 ) return false;
 #ifndef NDEBUG
   std::cout<<"PF::ToggleImageButton::on_button_press_event(): button "<<button->button<<" pressed."<<std::endl;
 #endif
-  button_box.remove( img );
-  button_box.pack_start( pressed_img, Gtk::PACK_SHRINK );
+  button_box.remove( img_align );
+  button_box.pack_start( pressed_img_align, Gtk::PACK_SHRINK );
   show_all_children();
   return true;
 }
@@ -93,8 +94,8 @@ bool PF::ImageButton::on_button_release_event( GdkEventButton* button )
 
   signal_clicked.emit();
 
-  button_box.remove( pressed_img );
-  button_box.pack_start( img, Gtk::PACK_SHRINK );
+  button_box.remove( pressed_img_align );
+  button_box.pack_start( img_align, Gtk::PACK_SHRINK );
   show_all_children();
   return true;
 }
@@ -131,15 +132,12 @@ void PF::ToggleImageButton::set_active( bool newval )
     button_box.remove( inactive_img );
   if( active_img.get_parent() == &button_box )
     button_box.remove( active_img );
-  switch( newval ) {
-  case true:
+  if( newval ) {
     button_box.pack_start( active_img, Gtk::PACK_SHRINK );
     active_img.show();
-    break;
-  case false:
+  } else {
     button_box.pack_start( inactive_img, Gtk::PACK_SHRINK );
     inactive_img.show();
-    break;
   }
   active = newval;
 }
@@ -151,13 +149,10 @@ void PF::ToggleImageButton::toggle()
   bool new_state = !is_active();
   //std::cout<<"ToggleImageButton::toggle(): is_active()="<<is_active()<<"  new_state="<<new_state<<std::endl;
   set_active( new_state );
-  switch( new_state ) {
-  case true:
+  if( new_state ) {
     signal_activated.emit();
-    break;
-  case false:
+  } else {
     signal_deactivated.emit();
-    break;
   }
 }
 

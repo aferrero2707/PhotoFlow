@@ -531,7 +531,8 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
 
         // copy CA corrected results to temporary image matrix
         for (rr = border; rr < rr1 - border; rr++) {
-          c = FC(rr + top, left + border + FC(rr + top, 2) & 1);
+          //c = FC(rr + top, left + border + FC(rr + top, 2) & 1);
+          c = FC(rr, left + FC(rr, 2) & 1);
 
           for (row = rr + top, cc = border + (FC(rr, 2) & 1), indx = (row * width + cc + left) >> 1; cc < cc1 - border; cc += 2, indx++) {
             col = cc + left;
@@ -565,10 +566,12 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
 
     //for(row = 0; row < height; row++)
     //  for(col = 0 + (FC(row, 0) & 1), indx = (row * width + col) >> 1; col < width; col += 2, indx++) {
-    for(row = tiley; row < tiley+tileh; row++)
-      for(col = tilex + (FC(row, 0) & 1), indx = (row * width + col) >> 1; col < tilex+tilew; col += 2, indx++) {
+    for(row = 0; row < tileh; row++)
+      for(col = 0 + (FC(row, 0) & 1), indx = ((row+tiley) * width + (col+tilex)) >> 1; col < tilew; col += 2, indx++) {
+    //for(row = tiley; row < tiley+tileh; row++)
+    //  for(col = tilex + (FC(row, 0) & 1), indx = (row * width + col) >> 1; col < tilex+tilew; col += 2, indx++) {
         //if(tiley==8&&tilex==8 && row<16 && col<16) std::cout<<"(2) row="<<row<<" col="<<col<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
-        rawData[row][col] = RawDataTmp[indx];
+        rawData[row+tiley][col+tilex] = RawDataTmp[indx];
       }
 
 

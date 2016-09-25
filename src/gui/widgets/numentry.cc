@@ -44,11 +44,11 @@ digits(1), inhibited(false)
   //button_step_up.add( step_up );
   //button_step_up.set_relief (Gtk::RELIEF_NONE);
   //button_step_up.set_border_width (0);
-  button_step_up.set_can_focus(false);
+  //button_step_up.set_can_focus(false);
   //button_step_down.add( step_down );
   //button_step_down.set_relief (Gtk::RELIEF_NONE);
   //button_step_down.set_border_width (0);
-  button_step_down.set_can_focus(false);
+  //button_step_down.set_can_focus(false);
 
   button_step_up.set_size_request( 20, -1 );
   button_step_down.set_size_request( 20, -1 );
@@ -77,7 +77,7 @@ bool PF::NumEntry::on_key_press_or_release_event(GdkEventKey* event)
 {
   if (event->type == GDK_KEY_PRESS &&
       (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)) == 0) {
-    if( (event->keyval == GDK_KEY_Up) ) {
+    if( event->keyval == GDK_KEY_Up ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       float new_val = adjustment->get_value();
       new_val += adjustment->get_step_increment();

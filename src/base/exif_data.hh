@@ -51,6 +51,11 @@ typedef struct _exif_data_t
 	char exif_model[64];
 	char exif_lens[128];
 	char exif_datetime_taken[20];
+  char camera_maker[64];
+  char camera_model[64];
+  char camera_alias[64];
+  char camera_makermodel[128];
+  char camera_legacy_makermodel[128];
 } exif_data_t;
 
 bool exif_read(exif_data_t* data, const char* path);

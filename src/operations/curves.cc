@@ -93,7 +93,7 @@ void PF::CurvesPar::update_curve( PF::Property<PF::SplineCurve>& curve,
     vec8[i] = (short int)(y*FormatInfo<unsigned char>::RANGE);
     //std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec8[i]="<<vec8[i]<<std::endl;
   }
-  for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
+  for(unsigned int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
     float y = curve.get().get_delta( x );
     vec16[i] = (int)(y*FormatInfo<unsigned short int>::RANGE);
@@ -130,7 +130,7 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
     for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
       for(int j = 0; j < 3; j++) RGBvec8[j][i] += RGBvec8[3][i];
     }
-    for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
+    for(unsigned int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
       for(int j = 0; j < 3; j++) {
         RGBvec16[j][i] += RGBvec16[3][i];
         //if(i%1000 == 0) std::cout<<"i="<<i<<"  RGBvec16["<<j<<"][i]="<<RGBvec16[j][i]<<std::endl;

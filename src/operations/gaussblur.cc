@@ -44,7 +44,7 @@ PF::GaussBlurPar::GaussBlurPar():
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   blur_sii = new_gaussblur_sii();
 
-  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
+  //set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type( "gaussblur" );
 
   set_default_name( _("gaussian blur") );
@@ -62,7 +62,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* blurred = srcimg;
 
 	double radius2 = radius.get();
-	for( int l = 1; l <= level; l++ )
+	for( unsigned int l = 1; l <= level; l++ )
 		radius2 /= 2;
 
 	if( (get_render_mode() == PF_RENDER_PREVIEW) &&
@@ -72,7 +72,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 	}
 
   std::vector<VipsImage*> in2;
-  bool do_caching = true;
+  bool do_caching = false;
   int tw = 128, th = 128, nt = 1000;
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   int threaded = 1, persistent = 0;
@@ -85,6 +85,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   //if( (get_render_mode() == PF_RENDER_PREVIEW) &&
   //    (blur_mode.get_enum_value().first == PF_BLUR_FAST) &&
   //    (radius2 > 5) ){
+  std::cout<<"GaussBlurPar::build(): do_fast_blur="<<do_fast_blur<<std::endl;
   if( do_fast_blur ) {
     // Fast approximate gaussian blur method
     GaussBlurSiiPar* gpar = dynamic_cast<GaussBlurSiiPar*>( blur_sii->get_par() );
@@ -160,20 +161,22 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 				NULL );
 
     if( !result ) {
-      VipsImage* cached;
+      //VipsImage* cached;
       VipsImage* tmp;
+      /*
       if( vips_tilecache(srcimg, &cached,
           "tile_width", tw, "tile_height", th, "max_tiles", nt,
           "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
         std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
         return NULL;
       }
-      result = vips_convsep( cached, &tmp, mask,
+      */
+      result = vips_convsep( srcimg, &tmp, mask,
 			     "precision", precision,
 			     NULL );
       //g_object_unref( mask );
       PF_UNREF( mask, "PF::GaussBlurPar::build(): mask unref" );
-      PF_UNREF( cached, "PF::GaussBlurPar::build(): cached unref" );
+      //PF_UNREF( cached, "PF::GaussBlurPar::build(): cached unref" );
 		
 			
       if( !result ) {

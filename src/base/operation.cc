@@ -238,8 +238,8 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
 {
   VipsImage* outnew = NULL;
   VipsImage* invec[100];
-  int n = 0;
-  for(int i = 0; i < in.size(); i++) {
+  unsigned int n = 0;
+  for(unsigned int i = 0; i < in.size(); i++) {
     if( !in[i] ) continue;
     invec[n] = in[i];
     n++;
@@ -297,7 +297,7 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
   VipsImage* out = build( in, first, imap, omap, level );
 
   VipsImage* cached = out;
-  if( out && needs_caching() ) {
+  if( out && false && needs_caching() ) {
     int tw = 64, th = 64;
     // reserve two complete rows of tiles
     int nt = out->Xsize*2/tw;
@@ -314,6 +314,20 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
   }
 
   result.push_back( cached );
+  return result;
+}
+
+
+std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage*>& in, int first,
+        VipsImage* imap, VipsImage* omap, unsigned int& level)
+{
+  std::vector<VipsImage*> result = build_many( in, first, imap, omap, level );
+
+  //for(unsigned int i = 0; i < outvec.size(); i++ ) {
+  //  PF_UNREF( outvec[i], "OpParBase::build_many_internal(): previous outputs unref" );
+  //}
+  //outvec = result;
+
   return result;
 }
 

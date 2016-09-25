@@ -283,6 +283,8 @@ vips_perspective_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *s
   case VIPS_FORMAT_DOUBLE:
     result = vips_perspective_gen_template<double>( oreg, seq, a, b, stop );
     break;
+  default:
+    break;
   }
 
   return result;

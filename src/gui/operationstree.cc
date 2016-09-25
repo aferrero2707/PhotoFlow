@@ -106,12 +106,12 @@ void PF::OperationsTreeWidget::on_selection_changed()
     std::string op_type = (*iter)[columns.col_nickname];
     if( op_type == "curves" ) {
       buf->set_text("The curves tool allows to adjust the tonal range and colors of the image through control points.\n\n");
-      buf->insert_at_cursor("The tool provides a separate curve for each image channel. In the case of RGB images, ");
+      buf->insert_at_cursor("The tool provides a separate curve for each image channel. In the case of RGB images, "));
       buf->insert_at_cursor("an additional curve, called \"RGB\", allows to modify all three channels at the same time.\n\n");
       buf->insert_at_cursor("In the graphs, the horizontal axis represents the input values and the vertical axis the output ones.");
       buf->insert_at_cursor("The curve is initially a simple diagonal line, meaning that the output exactly matches input.\n\n");
       buf->insert_at_cursor("Left-clicking on the graph with the mouse adds a new control point, while right-clicking on an existing ");
-      buf->insert_at_cursor("control point deletes it. Control points can be moved by either dragging them with the moiuse, or by setting the corresponding input and output numerical values in the boxes below the graph.");
+      buf->insert_at_cursor("control point deletes it. Control points can be moved by either dragging them with the mouse, or by setting the corresponding input and output numerical values in the boxes below the graph.");
     }
      */
   }
@@ -205,7 +205,7 @@ void PF::OperationsTree::add_op( Glib::ustring name, const std::string nik)
       if( !file.fail() ) help += ch;
     }
   } else {
-    help = "Ths help is not yet available. Sorry.";
+    help = _("This help is not yet available. Sorry.");
   }
   row[columns.col_help] = help;
   PF::operations_help_map.insert( std::make_pair(nik, help) );
@@ -302,6 +302,8 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Color profile conversion"), "convert_colorspace" );
   op_color.get_tree().add_op( _("Basic Adjustments"), "hue_saturation" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
+  op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights" );
+  op_color.get_tree().add_op( _("Defringe"), "defringe" );
   op_color.get_tree().add_op( _("Invert"), "invert" );
   op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
   op_color.get_tree().add_op( _("Threshold"), "threshold" );
@@ -324,13 +326,16 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.get_tree().add_op( _("Local contrast"), "volume" );
   op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
   op_detail.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
-  op_detail.get_tree().add_op( _("Multi-level decomposition"), "gmic_split_details" );
+  op_detail.get_tree().add_op( _("Split Details"), "split_details" );
+  //op_detail.get_tree().add_op( _("Multi-level decomposition"), "gmic_split_details" );
   op_detail.get_tree().add_op( _("Noise reduction"), "denoise" );
 
   op_geom.get_tree().add_op( _("Crop image"), "crop" );
   op_geom.get_tree().add_op( _("Scale & rotate image"), "scale" );
   op_geom.get_tree().add_op( _("Perspective correction"), "perspective" );
+//#if !defined(__MINGW32__) && !defined(__MINGW64__)
   op_geom.get_tree().add_op( _("Optical corrections (experimental)"), "lensfun" );
+//#endif
 
   //#if !defined(__APPLE__) && !defined(__MACH__)
 #ifndef PF_DISABLE_GMIC
@@ -343,6 +348,8 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //RT algorithm is better? op_gmic.get_tree().add_op( _("Despeckle"), "gmic_gcd_despeckle" );
   //crashes? op_gmic.get_tree().add_op( _("Iain's Noise Reduction"), "gmic_iain_denoise" );
   op_gmic.get_tree().add_op( _("Sharpen [richardson-lucy]"), "gmic_sharpen_rl" );
+  //op_gmic.get_tree().add_op( _("Denoise"), "gmic_denoise" );
+  //op_gmic.get_tree().add_op( _("Smooth [non-local means]"), "gmic_smooth_nlmeans" );
   op_gmic.get_tree().add_op( _("Smooth [anisotropic]"), "gmic_smooth_anisotropic" );
   op_gmic.get_tree().add_op( _("Smooth [bilateral]"), "gmic_blur_bilateral" );
   op_gmic.get_tree().add_op( _("Smooth [diffusion]"), "gmic_smooth_diffusion" );

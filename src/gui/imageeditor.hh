@@ -133,6 +133,8 @@ class ImageEditor: public Gtk::HBox
   bool fit_image;
   bool fit_image_needed;
 
+  bool hide_background_layer;
+
   int preview_drag_start_x, preview_drag_start_y, adjustment_drag_start_x, adjustment_drag_start_y;
 
   void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
@@ -160,23 +162,30 @@ public:
     return( (active_layer) ? active_layer->get_id() : -1 );
   }
   void set_active_layer( int id );
-  int get_displayed_layer() { (displayed_layer) ? displayed_layer->get_id() : -1; }
+  int get_displayed_layer() { return (displayed_layer) ? displayed_layer->get_id() : -1; }
   void set_displayed_layer( int id );
 
+  void set_hide_background_layer( bool flag ) { hide_background_layer = flag; }
+  bool get_hide_background_layer() { return hide_background_layer; }
+
   void open_image();
+  void build_image();
 
   void on_image_modified();
+  void on_image_modified_idle_cb();
 
   void on_map();
   void on_realize();
 
   void set_status( std::string label, int status )
   {
+    //std::cout<<"ImageEditor::set_status("<<label<<", "<<status<<") called"<<std::endl;
     status_indicator.set_status( label, status );
   }
   void set_status_ready() { set_status(_("ready"), 0); }
   void set_status_caching() { set_status(_("caching"), 1); }
   void set_status_processing() { set_status(_("processing"), 2); }
+  void set_status_updating() { set_status(_("updating"), 3); }
   void set_status_exporting() { set_status(_("exporting"), 2); }
 
   // Handlers for the mouse events inside the image area
@@ -192,7 +201,7 @@ public:
   {
     PF::Pipeline* pipeline = image->get_pipeline(1);
     if( !pipeline ) return 1.0f;
-    int level = pipeline->get_level();
+    unsigned int level = pipeline->get_level();
     float fact = 1.0f;
     for( unsigned int i = 0; i < level; i++ )
       fact /= 2.0f;
