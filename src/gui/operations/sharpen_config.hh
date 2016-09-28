@@ -51,6 +51,10 @@ namespace PF {
     Slider rlSigmaSlider;
     Slider rlIterationsSlider;
 
+    Gtk::VBox textureControlsBox;
+    Slider textureStrengthSlider;
+    Slider textureRadiusSlider;
+
   public:
     SharpenConfigGUI( Layer* l );
     

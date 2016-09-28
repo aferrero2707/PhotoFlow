@@ -27,60 +27,60 @@
 
  */
 
-#ifndef PF_SHARPEN_H
-#define PF_SHARPEN_H
+#ifndef GMIC_SHARPEN_TEXTURE_H
+#define GMIC_SHARPEN_TEXTURE_H
+
+
+#include "../base/processor.hh"
 
 
 namespace PF 
 {
 
-  enum sharpen_method_t
+  class GmicSharpenTexturePar: public OpParBase
   {
-    SHARPEN_USM,
-    SHARPEN_DECONV,
-    SHARPEN_TEXTURE
-  };
+    Property<float> prop_radius;
+    Property<float> prop_strength;
+    ProcessorBase* gmic;
 
-  class SharpenPar: public OpParBase
-  {
-    PropertyBase method;
-    Property<float> usm_radius;
-    Property<float> rl_sigma;
-    Property<int> rl_iterations;
-    Property<float> texture_radius;
-    Property<float> texture_strength;
-    ProcessorBase* usm;
-    ProcessorBase* rl;
-    ProcessorBase* texture;
+    float padding;
+
   public:
-    SharpenPar();
+    GmicSharpenTexturePar();
 
     bool has_intensity() { return false; }
+    bool has_opacity() { return true; }
     bool needs_caching();
-    bool has_target_channel() { return true; }
-      
+
+    void set_radius( float s ) { prop_radius.set( s ); }
+    void set_strength( float s ) { prop_strength.set( s ); }
+
+
+    int get_padding( int level );      
+
+
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
-		     VipsImage* imap, VipsImage* omap, 
-		     unsigned int& level);
+                     VipsImage* imap, VipsImage* omap, 
+                     unsigned int& level);
   };
 
   
 
   template < OP_TEMPLATE_DEF > 
-  class SharpenProc
+  class GmicSharpenTextureProc
   {
   public: 
-    void render(VipsRegion** in, int n, int in_first,
-								VipsRegion* imap, VipsRegion* omap, 
-								VipsRegion* out, OpParBase* par) 
-    {
+    void render(VipsRegion** ireg, int n, int in_first,
+                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* oreg, OpParBase* par)
+    {	
     }
   };
 
 
 
-  ProcessorBase* new_sharpen();
 
+  ProcessorBase* new_gmic_sharpen_texture();
 }
 
 #endif 
