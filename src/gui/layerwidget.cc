@@ -54,19 +54,59 @@ void PF::ControlsGroup::clear()
 }
 
 
-void PF::ControlsGroup::add_control(PF::OperationConfigGUI* gui)
+void PF::ControlsGroup::update()
 {
+  editor->get_image()->rebuild_done_wait( false );
+
+  // temporarely remove all controls
+  for( unsigned int i = 0; i < controls.size(); i++ ) {
+    if( controls[i] && (controls[i]->get_parent() == this) )
+      remove( *(controls[i]) );
+  }
+
+  // get a flattened copy of the layers tree
+  std::list<Layer*> layers;
+  editor->get_image()->get_layer_manager().get_flattened_layers_tree( layers );
+
+  // loop over the layers, and re-insert in the controls group those that are in the guis list
+  std::cout<<"ControlsGroup::update(): layers.size()="<<layers.size()<<std::endl;
+  for( std::list<Layer*>::reverse_iterator li = layers.rbegin(); li != layers.rend(); li++ ) {
+    PF::Layer* l = *li;
+    PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+    if( ui ) {
+      PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+        if( gui ) {
+        for( unsigned int i = 0; i < guis.size(); i++ ) {
+          if( guis[i] == gui ) {
+            Gtk::Frame* control = gui->get_frame();
+            pack_start( *control, Gtk::PACK_SHRINK );
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  editor->get_image()->rebuild_unlock();
+}
+
+void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gui)
+{
+  editor->get_image()->rebuild_done_wait( false );
   collapse_all();
   for( unsigned int i = 0; i < guis.size(); i++ ) {
     if( guis[i] == gui ) {
       guis[i]->expand();
+      editor->get_image()->rebuild_unlock();
       return;
     }
   }
   guis.push_back( gui );
   Gtk::Frame* control = gui->get_frame();
   controls.push_back( control );
-  pack_start( *control, Gtk::PACK_SHRINK );
+  //pack_end( *control, Gtk::PACK_SHRINK );
+  editor->get_image()->rebuild_unlock();
+  update();
   editor->update_controls();
 }
 
@@ -516,7 +556,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     if( ui ) {
       PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if( gui && gui->get_frame() ) {
-        controls_group.add_control( gui );
+        controls_group.add_control( l, gui );
         gui->open();
         gui->expand();
       }
@@ -930,7 +970,7 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   if( ui ) {
     PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
     if( gui && gui->get_frame() ) {
-      controls_group.add_control( gui );
+      controls_group.add_control( layer, gui );
       gui->open();
     }
     controls_group.show_all_children();

@@ -100,6 +100,8 @@ namespace PF
 
     void get_input_layers( Layer* layer, std::list<Layer*>& inputs );
 
+    void get_flattened_layers_tree( std::list<Layer*>& inputs );
+
     void get_child_layers( Layer* layer, std::list<Layer*>& children );
 
     void get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist);

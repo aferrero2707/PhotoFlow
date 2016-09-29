@@ -416,6 +416,12 @@ void PF::OperationConfigGUI::collapse()
 }
 
 
+bool PF::OperationConfigGUI::is_expanded()
+{
+  return frame_expander.is_active();
+}
+
+
 void PF::OperationConfigGUI::show_layer()
 {
   frame_visible.set_active( true );
@@ -928,6 +934,8 @@ void PF::OperationConfigGUI::do_update()
 
 void PF::OperationConfigGUI::update()
 {
+  if( !is_expanded() ) return;
+
   gdk_threads_add_idle ((GSourceFunc) config_update_cb, this);
   //std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): waiting for semaphore"<<std::endl;
   vips_semaphore_down( &update_done_sem );

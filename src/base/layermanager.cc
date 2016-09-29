@@ -94,7 +94,6 @@ PF::Layer* PF::LayerManager::get_layer(int id)
 void PF::LayerManager::expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list )
 {
   if( !layer ) return;
-  list.push_back( layer );
   // Sublayers
   for( std::list<PF::Layer*>::iterator li = layer->get_sublayers().begin();
        li != layer->get_sublayers().end(); li++ ) {
@@ -110,6 +109,8 @@ void PF::LayerManager::expand_layer( PF::Layer* layer, std::list<PF::Layer*>& li
        li != layer->get_omap_layers().end(); li++ ) {
     expand_layer( *li, list);
   }
+  // the layer itself
+  list.push_back( layer );
 }
 
 
@@ -147,6 +148,17 @@ void PF::LayerManager::get_input_layers( Layer* layer, std::list<Layer*>& inputs
   std::list<PF::Layer*>* clist = get_list( layer );
   if( !clist ) return;
   get_input_layers( layer, *clist, inputs );
+}
+
+
+void PF::LayerManager::get_flattened_layers_tree( std::list<Layer*>& inputs )
+{
+  if( layers.empty() ) return;
+  PF::Layer* top_layer = layers.back();
+  if( !top_layer ) return;
+  get_input_layers( top_layer, layers, inputs );
+  //inputs.push_back(top_layer);
+  expand_layer( top_layer, inputs );
 }
 
 

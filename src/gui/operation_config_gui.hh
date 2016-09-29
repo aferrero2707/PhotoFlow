@@ -168,6 +168,7 @@ public:
 
   void expand();
   void collapse();
+  bool is_expanded();
 
   void enable_preview();
   void disable_preview();

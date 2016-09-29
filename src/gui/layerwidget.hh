@@ -56,7 +56,8 @@ public:
   size_t size() { return controls.size(); }
   /**/
   void clear();
-  void add_control(PF::OperationConfigGUI* control);
+  void update();
+  void add_control(PF::Layer* layer, PF::OperationConfigGUI* control);
   void remove_control(PF::OperationConfigGUI* control);
   void collapse_all();
   /**/
