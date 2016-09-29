@@ -233,9 +233,9 @@ void PF::Image::set_pipeline_level( PF::Pipeline* target_pipeline, int level )
 
 void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"Image::update( "<<target_pipeline<<", "<<sync<<" ) called."<<std::endl;
-#endif
+//#endif
   if( disable_update ) return;
 
   if( PF::PhotoFlow::Instance().is_batch() ) {
@@ -256,22 +256,23 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     request.area.width = request.area.height = 0;
     //}
 
-    if( sync && target_pipeline ) rebuild_cond.lock(); //g_mutex_lock( rebuild_mutex );
-#ifndef NDEBUG
+    if( sync && target_pipeline ) //rebuild_cond.lock(); //g_mutex_lock( rebuild_mutex );
+//#ifndef NDEBUG
     std::cout<<"PF::Image::update(): submitting rebuild request..."<<std::endl;
-#endif
+//#endif
     PF::ImageProcessor::Instance().submit_request( request );
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::update(): request submitted."<<std::endl;
-#endif
+//#endif
 
     if( sync && target_pipeline ) {
       std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
       //unlock(); //g_mutex_unlock( rebuild_mutex );
       //g_cond_wait( rebuild_done, rebuild_mutex );
-      rebuild_cond.wait();
-      rebuild_cond.unlock();
-      //std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
+      //rebuild_cond.wait();
+      //rebuild_cond.unlock();
+      rebuild_done_wait();
+      std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
     }
 
     // In sync mode, the image is left in a locked state to allow further 
@@ -295,6 +296,9 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
 {
   //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
   //if( !is_modified() ) return;
+
+  // Set the rebuild condition to FALSE
+  rebuild_done_reset();
 
 #ifndef NDEBUG
   std::cout<<std::endl<<"============================================"<<std::endl;
@@ -374,33 +378,34 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
       }
     }
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<std::endl;
-#endif
+//#endif
     //get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, area );
     get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): pipeline #"<<i<<" updated."<<std::endl;
-#endif
+//#endif
     //pipeline->update();
   }
 
   //std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
+  // Set the rebuild condition to TRUE and emit the signal
   rebuild_done_signal();
   //rebuild_cond.unlock();
   //std::cout<<"PF::Image::do_update(): signaling done condition."<<std::endl;
   signal_updated.emit();
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::Image::do_update(): finalizing..."<<std::endl;
-#endif
+//#endif
   bool _update_gui;
   if( target_pipeline ) _update_gui = false;
   else _update_gui = update_gui;
   get_layer_manager().rebuild_finalize( _update_gui );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"PF::Image::do_update(): finalizing done."<<std::endl;
-#endif
+//#endif
 
 #ifndef NDEBUG
   for( unsigned int i = 0; i < get_npipelines(); i++ ) {
@@ -434,7 +439,7 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
   int height = size;
   VipsRect area = {left, top, width, height};
 
-  if( PF::PhotoFlow::Instance().is_batch() ) {
+  if( true || PF::PhotoFlow::Instance().is_batch() ) {
     do_sample( layer_id, area );
   } else {
     ProcessRequestInfo request;
@@ -462,12 +467,12 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     sample_cond.wait();
     sample_unlock();
     std::cout<<"Image::sample(): done received."<<std::endl;
-
-    if(image)
-      *image = sampler_image;
-    values.clear();
-    values = sampler_values;
   }
+
+  if(image)
+    *image = sampler_image;
+  values.clear();
+  values = sampler_values;
 
   /*
   if( is_async() )
@@ -480,6 +485,10 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
 
 void PF::Image::do_sample( int layer_id, VipsRect& area )
 {
+  std::cout<<"Image::do_sample(): waiting for rebuild_done..."<<std::endl;
+  rebuild_done_wait();
+  std::cout<<"Image::do_sample(): rebuild_done received"<<std::endl;
+
   // Get the default pipeline of the image 
   // (it is supposed to be at 1:1 zoom level 
   // and floating point accuracy)
@@ -573,6 +582,7 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   sampler_values.clear();
   for( b = 0; b < image->Bands; b++ ) {
     avg[b] /= clipped.width*clipped.height;
+    std::cout<<"sampler_values.push_back("<<avg[b]<<")"<<std::endl;
     sampler_values.push_back( avg[b] );
   }
   sampler_image = image;
@@ -596,7 +606,9 @@ void PF::Image::destroy()
     request.image = this;
     request.request = PF::IMAGE_DESTROY;
 
-    destroy_lock(); //g_mutex_lock( sample_mutex );
+    // Set the rebuild condition to FALSE
+    rebuild_done_reset();
+    //destroy_lock(); //g_mutex_lock( sample_mutex );
     #ifndef NDEBUG
     std::cout<<"PF::Image::destroy(): submitting destroy request..."<<std::endl;
     #endif
@@ -606,8 +618,9 @@ void PF::Image::destroy()
     #endif
 
     std::cout<<"Image::destroy(): waiting for done."<<std::endl;
-    destroy_cond.wait();
-    destroy_unlock();
+    //destroy_cond.wait();
+    //destroy_unlock();
+    rebuild_done_wait();
     std::cout<<"Image::destroy(): done received."<<std::endl;
 
   }
@@ -616,6 +629,10 @@ void PF::Image::destroy()
 
 void PF::Image::do_destroy()
 {
+  std::cout<<"Image::do_destroy() called."<<std::endl;
+  // Set the rebuild condition to FALSE
+  rebuild_done_reset();
+
   for( unsigned int vi = 0; vi < pipelines.size(); vi++ ) {
     if( pipelines[vi] != NULL )
       delete pipelines[vi];
@@ -623,6 +640,10 @@ void PF::Image::do_destroy()
   delete convert2srgb;
   delete convert_format;
   delete convert2outprof;
+
+  // Set the rebuild condition to TRUE and emit the signal
+  rebuild_done_signal();
+  std::cout<<"Image::do_destroy() finished."<<std::endl;
 }
 
 
@@ -645,6 +666,9 @@ void PF::Image::remove_layer( PF::Layer* layer )
 
 void PF::Image::do_remove_layer( PF::Layer* layer )
 {
+  // Set the rebuild condition to FALSE
+  rebuild_done_reset();
+
   std::list<Layer*> children;
   layer_manager.get_child_layers( layer, children );
   for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
@@ -656,6 +680,9 @@ void PF::Image::do_remove_layer( PF::Layer* layer )
   std::list<Layer*>* list = layer_manager.get_list( layer );
   if( list )
     remove_layer( layer, *list );
+
+  // The rebuild condition will be cleared and signaled when updating the image
+  //rebuild_done_signal();
 }
 
 

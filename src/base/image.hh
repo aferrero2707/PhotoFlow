@@ -184,7 +184,11 @@ struct ImageBuffer
     void destroy_unlock();
     void remove_layer_lock() { g_mutex_lock( remove_layer_mutex); }
     void remove_layer_unlock() { g_mutex_unlock( remove_layer_mutex); }
+    void rebuild_lock() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.lock(); }
+    void rebuild_unlock() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.unlock(); }
+    void rebuild_done_reset() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.reset(); }
     void rebuild_done_signal() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.signal(); }
+    void rebuild_done_wait(bool unlock=true) { /*g_cond_signal( rebuild_done );*/ rebuild_cond.wait(unlock); }
     void export_done_signal() { g_cond_signal( export_done ); }
     void sample_done_signal() { /*g_cond_signal( sample_done );*/ sample_cond.signal(); }
     void destroy_done_signal() { /*g_cond_signal( sample_done );*/ destroy_cond.signal(); }
