@@ -161,6 +161,13 @@ public:
   void on_button_add_image();
   void on_button_del();
 
+  void save_preset(std::string filename);
+
+  void delete_selected_layers();
+  void cut_selected_layers();
+  void copy_selected_layers();
+  void paste_layers();
+
   void on_button_load();
   void on_button_save();
 

@@ -1309,9 +1309,40 @@ void PF::LayerWidget::on_button_add_group()
 
 void PF::LayerWidget::on_button_del()
 {
+  delete_selected_layers();
+}
+
+
+
+void PF::LayerWidget::delete_selected_layers()
+{
   remove_layers();
 }
 
+
+void PF::LayerWidget::cut_selected_layers()
+{
+  gchar* bufname = g_build_filename( PF::PhotoFlow::Instance().get_cache_dir().c_str(), "copy_buffer.pfp", NULL );
+  save_preset(bufname);
+  g_free( bufname );
+  delete_selected_layers();
+}
+
+
+void PF::LayerWidget::copy_selected_layers()
+{
+  gchar* bufname = g_build_filename( PF::PhotoFlow::Instance().get_cache_dir().c_str(), "copy_buffer.pfp", NULL );
+  save_preset(bufname);
+  g_free( bufname );
+}
+
+
+void PF::LayerWidget::paste_layers()
+{
+  gchar* bufname = g_build_filename( PF::PhotoFlow::Instance().get_cache_dir().c_str(), "copy_buffer.pfp", NULL );
+  insert_preset(bufname);
+  g_free( bufname );
+}
 
 
 void PF::LayerWidget::on_button_load()
@@ -1446,6 +1477,22 @@ void PF::LayerWidget::on_button_save()
       return;
     }
   }
+
+  save_preset(filename);
+}
+
+
+void PF::LayerWidget::save_preset(std::string filename)
+{
+  int page = notebook.get_current_page();
+  if( page < 0 ) page = 0;
+
+  Glib::RefPtr<Gtk::TreeStore> model = layer_views[page]->get_model();
+
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+    layer_views[page]->get_tree().get_selection();
+  std::vector<Gtk::TreeModel::Path> sel_rows =
+    refTreeSelection->get_selected_rows();
 
   std::ofstream of;
   of.open( filename.c_str() );
