@@ -36,12 +36,12 @@ PF::GmicEmulateFilmInstantConsumerConfigGUI::GmicEmulateFilmInstantConsumerConfi
   OperationConfigGUI( layer, "Film Emulation [instant consumer] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
   prop_preset_selector( this, "preset", "preset", 0),
-  prop_opacity_slider( this, "opacity", "opacity", 1, 0, 1, .01, .1, 1),
-  prop_gamma_slider( this, "gamma", "gamma", 0, -1.2, 1.2, .02, .2, 1),
-  prop_contrast_slider( this, "contrast", "contrast", 1, 0, 4, .04, .4, 1),
-  prop_brightness_slider( this, "brightness", "brightness", 0, -255, 255, 5.10, 51.0, 1),
-  prop_hue_slider( this, "hue", "hue", 0, -180, 180, 3.60, 36.0, 1),
-  prop_saturation_slider( this, "saturation", "saturation", 0, -1, 1, .02, .2, 1),
+  prop_opacity_slider( this, "opacity", "opacity", 100, 0, 100, 1, 10, 1),
+  prop_gamma_slider( this, "gamma", "gamma", 0, -100, 100, 1, 10, 1),
+  prop_contrast_slider( this, "contrast", "contrast", 0, -100, 100, 1, 10, 1),
+  prop_brightness_slider( this, "brightness", "brightness", 0, -100, 100, 1, 10, 1),
+  prop_hue_slider( this, "hue", "hue", 0, -100, 100, 1, 10, 1),
+  prop_saturation_slider( this, "saturation", "saturation", 0, -100, 100, 1, 10, 1),
   prop_post_normalize_slider( this, "post_normalize", "post_normalize", 0, 0, 1, 1, 5, 1)
 {
   controlsBox.pack_start( iterations_slider );
