@@ -635,16 +635,25 @@ void PF::Image::do_destroy()
   //rebuild_done_reset();
 
   for( unsigned int vi = 0; vi < pipelines.size(); vi++ ) {
-    if( pipelines[vi] != NULL )
+    if( pipelines[vi] != NULL ) {
+      std::cout<<"Image::do_destroy(): deleting pipeline #"<<vi<<std::endl;
       delete pipelines[vi];
+      std::cout<<"Image::do_destroy(): pipeline #"<<vi<<" delete"<<std::endl;
+    }
   }
+  std::cout<<"Image::do_destroy(): deleting convert2srgb"<<std::endl;
   delete convert2srgb;
+  std::cout<<"Image::do_destroy(): convert2srgb deleted"<<std::endl;
+  std::cout<<"Image::do_destroy(): deleting convert_format"<<std::endl;
   delete convert_format;
+  std::cout<<"Image::do_destroy(): convert_format deleted"<<std::endl;
+  std::cout<<"Image::do_destroy(): deleting convert2outprof"<<std::endl;
   delete convert2outprof;
+  std::cout<<"Image::do_destroy(): convert2outprof deleted"<<std::endl;
 
   // Set the rebuild condition to TRUE and emit the signal
-  rebuild_done_signal();
   std::cout<<"Image::do_destroy() finished."<<std::endl;
+  rebuild_done_signal();
 }
 
 
