@@ -62,10 +62,9 @@ public:
 
   void reset()
   {
-    g_mutex_lock( mutex );
+    //g_mutex_lock( mutex );
     signaled = false;
-    g_cond_signal( condition );
-    g_mutex_unlock( mutex );
+    //g_mutex_unlock( mutex );
   }
 
   void signal()
@@ -78,7 +77,7 @@ public:
 
   void wait(bool unlk=true)
   {
-    g_mutex_lock( mutex );
+    //g_mutex_lock( mutex );
     //signaled = false;
     while( !signaled )
       g_cond_wait( condition, mutex );

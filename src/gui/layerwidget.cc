@@ -56,6 +56,7 @@ void PF::ControlsGroup::clear()
 
 void PF::ControlsGroup::update()
 {
+  editor->get_image()->rebuild_lock();
   editor->get_image()->rebuild_done_wait( false );
 
   // temporarely remove all controls
@@ -92,6 +93,7 @@ void PF::ControlsGroup::update()
 
 void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gui)
 {
+  editor->get_image()->rebuild_lock();
   editor->get_image()->rebuild_done_wait( false );
   collapse_all();
   for( unsigned int i = 0; i < guis.size(); i++ ) {

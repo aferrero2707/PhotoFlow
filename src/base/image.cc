@@ -256,7 +256,7 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     request.area.width = request.area.height = 0;
     //}
 
-    if( sync && target_pipeline ) //rebuild_cond.lock(); //g_mutex_lock( rebuild_mutex );
+    if( sync ) rebuild_done_reset(); //rebuild_cond.lock(); //g_mutex_lock( rebuild_mutex );
 //#ifndef NDEBUG
     std::cout<<"PF::Image::update(): submitting rebuild request..."<<std::endl;
 //#endif
@@ -265,13 +265,13 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     std::cout<<"PF::Image::update(): request submitted."<<std::endl;
 //#endif
 
-    if( sync && target_pipeline ) {
+    if( sync ) {
       std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
       //unlock(); //g_mutex_unlock( rebuild_mutex );
       //g_cond_wait( rebuild_done, rebuild_mutex );
       //rebuild_cond.wait();
       //rebuild_cond.unlock();
-      rebuild_done_wait();
+      rebuild_done_wait( true );
       std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
     }
 
@@ -298,7 +298,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
   //if( !is_modified() ) return;
 
   // Set the rebuild condition to FALSE
-  rebuild_done_reset();
+  //rebuild_done_reset();
 
 #ifndef NDEBUG
   std::cout<<std::endl<<"============================================"<<std::endl;
@@ -486,7 +486,8 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
 void PF::Image::do_sample( int layer_id, VipsRect& area )
 {
   std::cout<<"Image::do_sample(): waiting for rebuild_done..."<<std::endl;
-  rebuild_done_wait();
+  rebuild_lock();
+  rebuild_done_wait( true );
   std::cout<<"Image::do_sample(): rebuild_done received"<<std::endl;
 
   // Get the default pipeline of the image 
@@ -631,7 +632,7 @@ void PF::Image::do_destroy()
 {
   std::cout<<"Image::do_destroy() called."<<std::endl;
   // Set the rebuild condition to FALSE
-  rebuild_done_reset();
+  //rebuild_done_reset();
 
   for( unsigned int vi = 0; vi < pipelines.size(); vi++ ) {
     if( pipelines[vi] != NULL )
@@ -667,7 +668,7 @@ void PF::Image::remove_layer( PF::Layer* layer )
 void PF::Image::do_remove_layer( PF::Layer* layer )
 {
   // Set the rebuild condition to FALSE
-  rebuild_done_reset();
+  //rebuild_done_reset();
 
   std::list<Layer*> children;
   layer_manager.get_child_layers( layer, children );
@@ -765,10 +766,12 @@ bool PF::Image::open( std::string filename, std::string bckname )
     //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
     file_name = filename;
 
-  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" ) {
+  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" || ext=="exr" ) {
 
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
+
+    std::cout<<"Opening raster image "<<filename<<std::endl;
 
     PF::Layer* limg = layer_manager.new_layer();
     PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "imageread", limg );
