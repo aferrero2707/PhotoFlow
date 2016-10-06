@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="libre-chevron-up"
+   viewBox="0 0 14 14"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="libre-chevron-up-pressed.svg"
+   inkscape:export-filename="/Users/aferrero/Projects/Photoflow/Git/Default/PhotoFlow/icons/libre-chevron-up-small-pressed.png"
+   inkscape:export-xdpi="51.43"
+   inkscape:export-ydpi="51.43">
+  <metadata
+     id="metadata9">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs7" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1280"
+     inkscape:window-height="751"
+     id="namedview5"
+     showgrid="true"
+     inkscape:zoom="16.857143"
+     inkscape:cx="7"
+     inkscape:cy="7"
+     inkscape:window-x="0"
+     inkscape:window-y="1"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="libre-chevron-up">
+    <inkscape:grid
+       type="xygrid"
+       id="grid4156" />
+  </sodipodi:namedview>
+  <path
+     d="m 13.392459,10.19449 -1.23573,1.22829 q -0.14144,0.14144 -0.33499,0.14144 -0.19355,0 -0.33499,-0.14144 L 7.5338983,7.4699294 3.5810483,11.42278 q -0.14144,0.14144 -0.33499,0.14144 -0.19355,0 -0.33499,-0.14144 l -1.23573,-1.22829 q -0.14144,-0.14144 -0.14144,-0.3387102 0,-0.1972704 0.14144,-0.3387104 l 5.52357,-5.51613 q 0.14144,-0.14143 0.33499,-0.14143 0.19355,0 0.33499,0.14143 l 5.5235707,5.51613 q 0.14144,0.14144 0.14144,0.3387104 0,0.1972702 -0.14144,0.3387102 z"
+     id="path3"
+     style="fill:#ffffff;fill-opacity:1"
+     inkscape:connector-curvature="0" />
+</svg>
