@@ -44,8 +44,8 @@
 
 
 void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
-		       VipsRegion* imap, VipsRegion* omap, 
-		       VipsRegion* oreg, PF::FastDemosaicPar* par)
+    VipsRegion* imap, VipsRegion* omap,
+    VipsRegion* oreg, PF::FastDemosaicPar* par)
 {
   PF_LUTf& invGrad = par->get_inv_grad();
 
@@ -132,9 +132,9 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
     PF::raw_pixel_t* ptr = ir ? (PF::raw_pixel_t*)VIPS_REGION_ADDR( ir[0], r_raw.left, y+r_raw.top ) : NULL; 
     rawData.set_row( y+r_raw.top, ptr );
   }
-	//if( r_raw.left==0 && r_raw.top==0 ) {
-	//	std::cout<<"rawData[0][0] = "<<rawData[0][0]<<"  c="<<(int)rawData[0].color(0)<<std::endl;
-	//}
+  if( false && r_raw.left<16 && r_raw.top<16 ) {
+  	std::cout<<"FastDemosaic: rawData["<<r_raw.top<<"]["<<r_raw.left<<"] = "<<rawData[r_raw.top][r_raw.left]<<" c="<<rawData[r_raw.top].color(r_raw.left)<<std::endl;
+  }
   PF::Array2D<float> red, green, blue;
   red.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
   green.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
@@ -177,7 +177,7 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
 	}
       }
     }//j
-		
+
     for (int j=xend2+1; j<=right2; j++) {//last few columns
       for (int c=0; c<6; c++) sum[c]=0;
       for (int i1=i-1; i1<i+2; i1++)
@@ -207,7 +207,7 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
       }
     }//j
   }//i
-	
+
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   for (int j=xstart2; j <= xend2; j++) {
     float sum[6];
@@ -241,7 +241,7 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
 	}
       }
     }//i
-		
+
     for (int i=yend2+1; i<=bottom2; i++) {//last few rows
       for (int c=0; c<6; c++) sum[c]=0;
       for (int i1=i-1; i1<i+2; i1++)
@@ -282,67 +282,67 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
     for (int j=xstart2; j <= xend2; j++) {
       color = rawData[i].color(j);
       if (color&1) {
-	green[i][j] = rawData[i][j];
-	//red[i][j] = green[i][j];
-	//blue[i][j] = green[i][j];					
+        green[i][j] = rawData[i][j];
+        //red[i][j] = green[i][j];
+        //blue[i][j] = green[i][j];
       } else {
-	//compute directional weights using image gradients
-	iwtu = (fabs(rawData[i+1][j]-
-		    rawData[i-1][j])+
-		fabs(rawData[i][j]-
-		    rawData[i-2][j])+
-		fabs(rawData[i-1][j]-
-		    rawData[i-3][j])) /4;
-	wtu=invGrad[(int)iwtu];
-	iwtd = (fabs(rawData[i-1][j]-
-		    rawData[i+1][j])+
-		fabs(rawData[i][j]-
-		    rawData[i+2][j])+
-		fabs(rawData[i+1][j]-
-		     rawData[i+3][j])) /4;
-	wtd=invGrad[(int)iwtd];
-	iwtl = (fabs(rawData[i][j+1]-
-		    rawData[i][j-1])+
-		fabs(rawData[i][j]-
-		    rawData[i][j-2])+
-		fabs(rawData[i][j-1]-
-		    rawData[i][j-3])) /4;
-	wtl=invGrad[(int)iwtl];
-	iwtr = (fabs(rawData[i][j-1]-
-		    rawData[i][j+1])+
-		fabs(rawData[i][j]-
-		    rawData[i][j+2])+
-		fabs(rawData[i][j+1]-
-		    rawData[i][j+3])) /4;
-	wtr=invGrad[(int)iwtr];
+        //compute directional weights using image gradients
+        iwtu = (fabs(rawData[i+1][j]-
+            rawData[i-1][j])+
+            fabs(rawData[i][j]-
+                rawData[i-2][j])+
+                fabs(rawData[i-1][j]-
+                    rawData[i-3][j])) /4;
+        wtu=invGrad[(int)iwtu];
+        iwtd = (fabs(rawData[i-1][j]-
+            rawData[i+1][j])+
+            fabs(rawData[i][j]-
+                rawData[i+2][j])+
+                fabs(rawData[i+1][j]-
+                    rawData[i+3][j])) /4;
+        wtd=invGrad[(int)iwtd];
+        iwtl = (fabs(rawData[i][j+1]-
+            rawData[i][j-1])+
+            fabs(rawData[i][j]-
+                rawData[i][j-2])+
+                fabs(rawData[i][j-1]-
+                    rawData[i][j-3])) /4;
+        wtl=invGrad[(int)iwtl];
+        iwtr = (fabs(rawData[i][j-1]-
+            rawData[i][j+1])+
+            fabs(rawData[i][j]-
+                rawData[i][j+2])+
+                fabs(rawData[i][j+1]-
+                    rawData[i][j+3])) /4;
+        wtr=invGrad[(int)iwtr];
 
-	//store in rgb array the interpolated G value at R/B grid points using directional weighted average
-	green[i][j]=(wtu*rawData[i-1][j]+wtd*rawData[i+1][j]+wtl*rawData[i][j-1]+wtr*rawData[i][j+1]) / (wtu+wtd+wtl+wtr);
-	//red[i][j] = green[i][j];
-	//blue[i][j] = green[i][j];
-					
-	if(false && i<14 && j<14) {
-	  for(int ii = -3; ii <= 3; ii++) {
-	    std::cout<<"	";
-	    for(int jj = -3; jj <= 3; jj++) {
-	      std::cout<<rawData[i+ii][j+jj]<<"  ";
-	    }
-	    std::cout<<std::endl;
-	  }
-	  std::cout<<"	i="<<i<<"  j="<<j
-		   <<"  wtu="<<wtu
-		   <<"  wtd="<<wtd
-		   <<"  wtl="<<wtl
-		   <<"  wtr="<<wtr
-		   <<"  iwtu="<<iwtu
-		   <<"  iwtd="<<iwtd
-		   <<"  iwtl="<<iwtl
-		   <<"  iwtr="<<iwtr
-		   <<std::endl;
-	}
+        //store in rgb array the interpolated G value at R/B grid points using directional weighted average
+        green[i][j]=(wtu*rawData[i-1][j]+wtd*rawData[i+1][j]+wtl*rawData[i][j-1]+wtr*rawData[i][j+1]) / (wtu+wtd+wtl+wtr);
+        //red[i][j] = green[i][j];
+        //blue[i][j] = green[i][j];
+
+        if(false && i<14 && j<14) {
+          for(int ii = -3; ii <= 3; ii++) {
+            std::cout<<"	";
+            for(int jj = -3; jj <= 3; jj++) {
+              std::cout<<rawData[i+ii][j+jj]<<"  ";
+            }
+            std::cout<<std::endl;
+          }
+          std::cout<<"	i="<<i<<"  j="<<j
+              <<"  wtu="<<wtu
+              <<"  wtd="<<wtd
+              <<"  wtl="<<wtl
+              <<"  wtr="<<wtr
+              <<"  iwtu="<<iwtu
+              <<"  iwtd="<<iwtd
+              <<"  iwtl="<<iwtl
+              <<"  iwtr="<<iwtr
+              <<std::endl;
+        }
       }
       if(false && i<14 && j<14)
-	std::cout<<"step #1	i="<<i<<"  j="<<j<<"  green[i][j]="<<green[i][j]<<std::endl;
+        std::cout<<"step #1	i="<<i<<"  j="<<j<<"  green[i][j]="<<green[i][j]<<std::endl;
     }
   }
 
@@ -354,22 +354,22 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
     for (int j=xstart1+dx; j <= xend1; j+=2) {
       color = rawData[i].color(j);
       if( (color&1) != 0 )
-	continue;
+        continue;
       //interpolate B/R colors at R/B sites
       if (color==0) {//R site
-	red[i][j] = rawData[i][j];
-	blue[i][j] = green[i][j] - 0.25f*((green[i-1][j-1]+green[i-1][j+1]+green[i+1][j+1]+green[i+1][j-1]) -
-					  PF::min(static_cast<float>(clip_pt),rawData[i-1][j-1]+rawData[i-1][j+1]+rawData[i+1][j+1]+rawData[i+1][j-1]));
+        red[i][j] = rawData[i][j];
+        blue[i][j] = green[i][j] - 0.25f*((green[i-1][j-1]+green[i-1][j+1]+green[i+1][j+1]+green[i+1][j-1]) -
+            PF::min(static_cast<float>(clip_pt),rawData[i-1][j-1]+rawData[i-1][j+1]+rawData[i+1][j+1]+rawData[i+1][j-1]));
       } else {//B site
-	red[i][j] = green[i][j] - 0.25f*((green[i-1][j-1]+green[i-1][j+1]+green[i+1][j+1]+green[i+1][j-1]) -
-					 PF::min(static_cast<float>(clip_pt),rawData[i-1][j-1]+rawData[i-1][j+1]+rawData[i+1][j+1]+rawData[i+1][j-1]));
-	blue[i][j] = rawData[i][j];
+        red[i][j] = green[i][j] - 0.25f*((green[i-1][j-1]+green[i-1][j+1]+green[i+1][j+1]+green[i+1][j-1]) -
+            PF::min(static_cast<float>(clip_pt),rawData[i-1][j-1]+rawData[i-1][j+1]+rawData[i+1][j+1]+rawData[i+1][j-1]));
+        blue[i][j] = rawData[i][j];
       }
       if(false && i<14 && j<14)
-	std::cout<<"step #2	i="<<i<<"  j="<<j
-		 <<"  red[i][j]="<<red[i][j]
-		 <<"  blue[i][j]="<<blue[i][j]
-		 <<std::endl;
+        std::cout<<"step #2	i="<<i<<"  j="<<j
+        <<"  red[i][j]="<<red[i][j]
+                                 <<"  blue[i][j]="<<blue[i][j]
+                                                            <<std::endl;
     }
   }
 
@@ -382,18 +382,18 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
     for (int j=xstart+dx; j <= xend; j+=2) {
       color = rawData[i].color(j);
       if( (color&1) != 1 ) 
-	continue;
-			
+        continue;
+
       //interpolate R and B colors at G sites
       red[i][j] = green[i][j] - 0.25f*((green[i-1][j]-red[i-1][j])+(green[i+1][j]-red[i+1][j])+
-				       (green[i][j-1]-red[i][j-1])+(green[i][j+1]-red[i][j+1]));
+          (green[i][j-1]-red[i][j-1])+(green[i][j+1]-red[i][j+1]));
       blue[i][j] = green[i][j] - 0.25f*((green[i-1][j]-blue[i-1][j])+(green[i+1][j]-blue[i+1][j])+
-					(green[i][j-1]-blue[i][j-1])+(green[i][j+1]-blue[i][j+1]));
+          (green[i][j-1]-blue[i][j-1])+(green[i][j+1]-blue[i][j+1]));
       if(false && i<14 && j<14)
-	std::cout<<"step #3	i="<<i<<"  j="<<j
-		 <<"  red[i][j]="<<red[i][j]
-		 <<"  blue[i][j]="<<blue[i][j]
-		 <<std::endl;
+        std::cout<<"step #3	i="<<i<<"  j="<<j
+        <<"  red[i][j]="<<red[i][j]
+                                 <<"  blue[i][j]="<<blue[i][j]
+                                                            <<std::endl;
     }
   }
 
@@ -414,6 +414,9 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
       ptr[xx+1] = green[y+r->top][x+r->left];
       ptr[xx+2] = blue[y+r->top][x+r->left];
 #endif
+      if( false && r->top < 10 && r-> left < 10 )
+        std::cout<<"r="<<r->top+y<<" c="<<r->left+x<<"  raw="
+        <<rawData[r->top+y][r->left+x]<<"  rgb="<<ptr[xx]<<","<<ptr[xx+1]<<","<<ptr[xx+2]<<std::endl;
     }
   }
 }

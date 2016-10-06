@@ -62,6 +62,7 @@ static int histogram_stop( void* seq, void *a, void *b )
     histogram->hist[i] += hist[i];
   }
   delete hist;
+  return 1;
 }
 
 
@@ -109,6 +110,8 @@ static int histogram_scan( VipsRegion *region,
       }
       break;
     }
+    default:
+      break;
     }
     p += lsk;
   }

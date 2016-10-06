@@ -59,11 +59,10 @@ RawImage OrfDecoder::decodeRawInternal() {
 
   uint32 off = raw->getEntry(STRIPOFFSETS)->getInt();
   uint32 size = 0;
-  const uint32 *sizes = counts->getIntArray();
   for (uint32 i=0; i < counts->count; i++)
-    size += sizes[i];
+    size += counts->getInt(i);
 
-  if (!mFile->isValid(off + size))
+  if (!mFile->isValid(off, size))
     ThrowRDE("ORF Decoder: Truncated file");
 
   uint32 width = raw->getEntry(IMAGEWIDTH)->getInt();
@@ -73,7 +72,7 @@ RawImage OrfDecoder::decodeRawInternal() {
   mRaw->createData();
 
   // We add 3 bytes slack, since the bitpump might be a few bytes ahead.
-  ByteStream input(mFile->getData(off), MIN(size+3, mFile->getSize() - off));
+  ByteStream input(mFile, off, size+3);
 
   try {
     if (offsets->count != 1 || (hints.find(string("force_uncompressed")) != hints.end()))
@@ -126,7 +125,7 @@ void OrfDecoder::decodeCompressed(ByteStream& s, uint32 w, uint32 h) {
     for (high = 0; high < 12; high++)
       if ((b>>(11-high))&1)
         break;
-      bittable[i] = min(12,high);
+    bittable[i] = min(12,high);
   }
   left0 = nw0 = left1 = nw1 = 0;
 
@@ -303,10 +302,9 @@ void OrfDecoder::decodeMetaDataInternal(CameraMetaData *meta) {
             wb->offsetFromParent();
           }
           if (wb->count == 2 || wb->count == 4) {
-            const ushort16 *tmp = wb->getShortArray();
-            mRaw->metadata.wbCoeffs[0] = (float) tmp[0];
+            mRaw->metadata.wbCoeffs[0] = wb->getFloat(0);
             mRaw->metadata.wbCoeffs[1] = 256.0f;
-            mRaw->metadata.wbCoeffs[2] = (float) tmp[1];
+            mRaw->metadata.wbCoeffs[2] = wb->getFloat(1);
           }
         }
 
@@ -317,16 +315,15 @@ void OrfDecoder::decodeMetaDataInternal(CameraMetaData *meta) {
           if (blackEntry->count == 4) {
             blackEntry->parent_offset = img_entry->parent_offset - 12;
             blackEntry->offsetFromParent();
-            const ushort16* black = blackEntry->getShortArray();
             for (int i = 0; i < 4; i++) {
               if (mRaw->cfa.getColorAt(i&1, i>>1) == CFA_RED)
-                mRaw->blackLevelSeparate[i] = black[0];
+                mRaw->blackLevelSeparate[i] = blackEntry->getShort(0);
               else if (mRaw->cfa.getColorAt(i&1, i>>1) == CFA_BLUE)
-                mRaw->blackLevelSeparate[i] = black[3];
+                mRaw->blackLevelSeparate[i] = blackEntry->getShort(3);
               else if (mRaw->cfa.getColorAt(i&1, i>>1) == CFA_GREEN && i<2)
-                mRaw->blackLevelSeparate[i] = black[1];
+                mRaw->blackLevelSeparate[i] = blackEntry->getShort(1);
               else if (mRaw->cfa.getColorAt(i&1, i>>1) == CFA_GREEN)
-                mRaw->blackLevelSeparate[i] = black[2];
+                mRaw->blackLevelSeparate[i] = blackEntry->getShort(2);
             }
             // Adjust whitelevel based on the read black (we assume the dynamic range is the same)
             mRaw->whitePoint -= (mRaw->blackLevel - mRaw->blackLevelSeparate[0]);

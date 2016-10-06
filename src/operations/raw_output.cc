@@ -52,34 +52,36 @@ extern "C" {
 
 
 PF::RawOutputPar::RawOutputPar(): 
-  OpParBase(),
-  image_data( NULL ),
-  exposure("exposure",this,1),
-  exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
-  exposure_clip_amount("exposure_clip_amount",this,0),
-  hlreco_mode("hlreco_mode",this,PF::HLRECO_CLIP,"HLRECO_CLIP",_("clip")),
-  profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
-  //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
-  current_profile_mode( IN_PROF_MATRIX ),
-  gamma_curve( NULL ),
-  cam_profile_name("cam_profile_name", this),
-  cam_dcp_profile_name("cam_dcp_profile_name", this),
-  cam_profile( NULL ),
-  apply_hue_sat_map( true ),
-  gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","linear"),
-  gamma_lin("gamma_lin", this, 0),
-  gamma_exp("gamma_exp", this, 2.2),
-  //out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
-  out_profile_mode("out_profile_mode",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
-  out_profile_type("out_profile_type",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
-  out_trc_type("out_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
-  current_out_profile_type( OUT_PROF_sRGB ),
-  current_out_trc_type( PF::PF_TRC_STANDARD ),
-  out_profile_name("out_profile_name", this),
-  out_profile( NULL ),
-  transform( NULL ),
-  clip_negative("clip_negative",this,false),
-  clip_overflow("clip_overflow",this,false)
+      OpParBase(),
+      image_data( NULL ),
+      exposure("exposure",this,1),
+      exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
+      exposure_clip_amount("exposure_clip_amount",this,0),
+      hlreco_mode("hlreco_mode",this,PF::HLRECO_CLIP,"HLRECO_CLIP",_("clip")),
+      profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
+      //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
+      current_profile_mode( IN_PROF_MATRIX ),
+      gamma_curve( NULL ),
+      cam_profile_name("cam_profile_name", this),
+      cam_dcp_profile_name("cam_dcp_profile_name", this),
+      cam_profile( NULL ),
+      apply_hue_sat_map( true ),
+      gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","linear"),
+      gamma_lin("gamma_lin", this, 0),
+      gamma_exp("gamma_exp", this, 2.2),
+      //out_profile_mode("out_profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","Built-in sRGB"),
+      out_profile_mode("out_profile_mode2",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
+      out_profile_type("out_profile_mode",this,PF::PROF_TYPE_REC2020,"REC2020","Rec.2020"),
+      //out_profile_type("out_profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","sRGB"),
+      //out_trc_type("out_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+      out_trc_type("out_trc_type",this,PF::PF_TRC_STANDARD,"TRC_STANDARD",_("standard")),
+      current_out_profile_type( PROF_TYPE_sRGB ),
+      current_out_trc_type( PF::PF_TRC_STANDARD ),
+      out_profile_name("out_profile_name", this),
+      out_profile( NULL ),
+      transform( NULL ),
+      clip_negative("clip_negative",this,true),
+      clip_overflow("clip_overflow",this,true)
 {
   exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
 
@@ -92,26 +94,25 @@ PF::RawOutputPar::RawOutputPar():
   profile_mode.add_enum_value(PF::IN_PROF_ICC,"ICC","ICC from disk");
   profile_mode.add_enum_value(PF::IN_PROF_DCP,"DCP","DCP from disk");
 
-  //out_profile_type.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  out_profile_type.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
-  out_profile_type.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
-  out_profile_type.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
-  out_profile_type.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
-  out_profile_type.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_ACESCG,"ACESCG","ACEScg");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_EMBEDDED,"EMBEDDED",_("use camera profile"));
+  out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB,"sRGB","sRGB");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_REC2020,"REC2020","Rec.2020");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_ADOBE,"ADOBE","Adobe RGB 1998");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_PROPHOTO,"PROPHOTO","ProPhoto RGB");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_ACEScg,"ACEScg","ACEScg");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_ACES,"ACES","ACES");
+  //out_profile_type.add_enum_value(PF::PROF_TYPE_CUSTOM,"CUSTOM","Custom");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_LAB,"LAB","Lab");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_SETTINGS,"FROM_SETTINGS","from settings");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_DISK,"FROM_DISK","open from disk");
 
   out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use camera profile"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC from disk"));
 
-  //out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
+  out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
   out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
-  out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+  //out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
 
   gamma_mode.add_enum_value(PF::IN_GAMMA_NONE,"NONE","linear");
   gamma_mode.add_enum_value(PF::IN_GAMMA_sRGB,"sRGB","sRGB");
@@ -121,15 +122,30 @@ PF::RawOutputPar::RawOutputPar():
   srgb_curve = cmsReverseToneCurve( curve );
   cmsFreeToneCurve( curve );
 
-  set_type("raw_output" );
+  set_type("raw_output_v2" );
 }
 
+/*
+void PF::RawOutputPar::set_image_hints( VipsImage* img )
+{
+  if( !img ) return;
+  PF::OpParBase::set_image_hints( img );
+  std::cout<<"RawOutputPar::set_image_hints(): out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
+  if( out_profile_mode.get_enum_value().first == PF::PROF_TYPE_LAB ) {
+    std::cout<<"RawOutputPar::set_image_hints(): calling lab_image()"<<std::endl;
+    lab_image( get_xsize(), get_ysize() );
+  } else {
+    std::cout<<"RawOutputPar::set_image_hints(): calling rgb_image()"<<std::endl;
+    rgb_image( get_xsize(), get_ysize() );
+  }
+}
+ */
 
 VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first, 
-				     VipsImage* imap, VipsImage* omap, 
-				     unsigned int& level)
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
 {
-  if( in.size() < first+1 )
+  if( (int)in.size() < first+1 )
     return NULL;
 
   VipsImage* image = in[first];
@@ -138,8 +154,8 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
 
   size_t blobsz;
   if( vips_image_get_blob( in[0], "raw_image_data",
-			   (void**)&image_data, 
-			   &blobsz ) ) {
+      (void**)&image_data,
+      &blobsz ) ) {
     std::cout<<"RawOutputPar::build(): could not extract raw_image_data."<<std::endl;
     return NULL;
   }
@@ -173,7 +189,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   current_out_profile_mode = (output_profile_mode_t)out_profile_mode.get_enum_value().first;
   current_cam_profile_name = cam_profile_name.get();
   current_out_profile_name = out_profile_name.get();
-  */
+   */
 
   //std::cout<<"RawOutputPar::build(): mode_changed="<<mode_changed
   //         <<"  out_mode_changed="<<out_mode_changed
@@ -181,7 +197,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   //         <<"  out_changed="<<out_changed<<std::endl;
 
   bool changed = mode_changed || out_mode_changed || out_type_changed || out_trc_type_changed || gamma_mode_changed || cam_changed || cam_dcp_changed || out_changed || out_mode_changed ||
-    (cam_profile==NULL) || (out_profile==NULL);
+      (cam_profile==NULL) || (out_profile==NULL);
 
   if( cam_profile && (mode_changed || cam_changed || cam_dcp_changed) ) {
     //cmsCloseProfile( cam_profile );
@@ -202,12 +218,12 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
       return NULL;
     }
-    char makermodel[1024];
-    dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
+    //char makermodel[1024];
+    //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
     //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
     float cam_xyz[12];
     cam_xyz[0] = NAN;
-    dt_dcraw_adobe_coeff(makermodel, (float(*)[12])cam_xyz);
+    dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])cam_xyz);
     if(std::isnan(cam_xyz[0])) {
       std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
       PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
@@ -221,10 +237,11 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     std::cout<<"dcam_xyz:"<<std::endl;
     for(int i = 0; i < 3; i++) {
       for(int j = 0; j < 3; j++) {
-	std::cout<<dcam_xyz[i][j]<<" ";
+        std::cout<<dcam_xyz[i][j]<<" ";
       }
       std::cout<<std::endl;
     }
+
     switch( profile_mode.get_enum_value().first ) {
     case PF::IN_PROF_MATRIX: {
       //cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
@@ -292,7 +309,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
           }
           //cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzmatrix_profile((float (*)[3])rtengine::xyz_prophoto);
           //std::cout<<"cam_prof_temp(prophoto): "<<cam_prof_temp<<std::endl;
-          cam_profile = PF::ICCStore::Instance().get_profile( PF::OUT_PROF_PROPHOTO, PF::PF_TRC_LINEAR );
+          cam_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_PROPHOTO, PF::PF_TRC_LINEAR );
           std::cout<<"cam_profile(prophoto): "<<cam_profile<<std::endl;
         } else {
           cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzmatrix_profile((float (*)[3])xyz_cam_dcp);
@@ -300,7 +317,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         }
         std::cout<<"RawOutputPar::build(): DCP cam_profile="<<cam_profile;
         if( cam_profile )
-            std::cout<<"  cam_profile->get_profile()="<<cam_profile->get_profile();
+          std::cout<<"  cam_profile->get_profile()="<<cam_profile->get_profile();
         std::cout<<std::endl;
       }
       break;
@@ -325,19 +342,19 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   TRC_type trc_type;
   if( (profile_mode_t)profile_mode.get_enum_value().first != PF::PROF_MODE_NONE ) {
     // only retrieve the working profile if the image is color managed
-    pmode = (profile_mode_t)out_profile_mode.get_enum_value().first;
-    if( pmode == PF::PROF_MODE_EMBEDDED ) {
+    pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
+    if( pmode == PF::PROF_TYPE_EMBEDDED ) {
       // do nothing
       std::cout<<"Using embedded profile"<<std::endl;
-        out_profile = cam_profile;
-    } else if( pmode == PF::PROF_MODE_DEFAULT && cam_profile ) {
+      out_profile = cam_profile;
+    } else if( pmode == PF::PROF_TYPE_FROM_SETTINGS && cam_profile ) {
       ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
       trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
       std::cout<<"Getting output profile..."<<std::endl;
       out_profile = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-    } else if( pmode == PF::PROF_MODE_ICC && cam_profile ) {
+    } else if( pmode == PF::PROF_TYPE_FROM_DISK && cam_profile ) {
       out_profile = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
-    } else if( pmode == PF::PROF_MODE_CUSTOM && cam_profile ) {
+    } else { //if( pmode == PF::PROF_MODE_CUSTOM && cam_profile ) {
       ptype = (profile_type_t)out_profile_type.get_enum_value().first;
       trc_type = (TRC_type)out_trc_type.get_enum_value().first;
       std::cout<<"Getting output profile..."<<std::endl;
@@ -408,7 +425,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     //char tstr[1024];
     //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
-    */
+     */
     std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, out_profile ) called"<<std::endl;
     if( out_profile ) {
       char tstr[1024];
@@ -437,7 +454,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     iccdata->Y_B = 1;
     vips_image_set_blob( out, "pf-icc-profile-data",
        (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
-    */
+     */
     std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, cam_profile ) called"<<std::endl;
     if( cam_profile ) {
       char tstr[1024];

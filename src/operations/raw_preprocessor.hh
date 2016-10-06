@@ -459,7 +459,7 @@ namespace PF
             //rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
             int c = rp.icolor(x);
             rpout[x] = __CLIP( (rp[x]-black[c]) * mul[c] * 65535.f / (white[c]-black[c]) );
-            if(true && r->left==0 && r->top==0) std::cout<<"  c="<<c
+            if(false && r->left==0 && r->top==0) std::cout<<"  c="<<c
                 <<"  rp[x]="<<rp[x]<<"  mul[ c ]="
                 <<mul[ c ]<<"  rpout[x]="<<rpout[x]<<std::endl;
 #ifdef RT_EMU

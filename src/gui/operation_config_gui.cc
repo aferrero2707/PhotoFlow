@@ -32,36 +32,42 @@
 
 #include "../base/new_operation.hh"
 
-#include "../gui/operations/raw_developer_config.hh"
-#include "../gui/operations/brightness_contrast_config.hh"
-#include "../gui/operations/clip_config.hh"
-#include "../gui/operations/white_balance_config.hh"
-#include "../gui/operations/levels_config.hh"
-#include "../gui/operations/hue_saturation_config.hh"
-#include "../gui/operations/hsl_mask_config.hh"
-#include "../gui/operations/imageread_config.hh"
-#include "../gui/operations/raw_loader_config.hh"
-#include "../gui/operations/vips_operation_config.hh"
-#include "../gui/operations/clone_config.hh"
-#include "../gui/operations/crop_config.hh"
-#include "../gui/operations/scale_config.hh"
-#include "../gui/operations/perspective_config.hh"
-#include "../gui/operations/gradient_config.hh"
-#include "../gui/operations/path_mask_config.hh"
-#include "../gui/operations/uniform_config.hh"
-#include "../gui/operations/curves_config.hh"
-#include "../gui/operations/channel_mixer_config.hh"
-#include "../gui/operations/gaussblur_config.hh"
-#include "../gui/operations/denoise_config.hh"
-#include "../gui/operations/desaturate_config.hh"
-#include "../gui/operations/sharpen_config.hh"
-#include "../gui/operations/draw_config.hh"
-#include "../gui/operations/clone_stamp_config.hh"
-#include "../gui/operations/convert_colorspace_config.hh"
-#include "../gui/operations/lensfun_config.hh"
-#include "../gui/operations/volume_config.hh"
-#include "../gui/operations/threshold_config.hh"
-#include "../gui/operations/tone_mapping_config.hh"
+#include "operations/raw_developer_config.hh"
+#include "../legacy/gui/operations/raw_developer_config.hh"
+#include "../legacy/gui/operations/brightness_contrast_config.hh"
+#include "operations/clip_config.hh"
+#include "operations/white_balance_config.hh"
+#include "operations/levels_config.hh"
+#include "operations/basic_adjustments_config.hh"
+#include "../legacy/gui/operations/hue_saturation_config.hh"
+#include "operations/hsl_mask_config.hh"
+#include "operations/imageread_config.hh"
+#include "operations/raw_loader_config.hh"
+#include "operations/vips_operation_config.hh"
+#include "operations/clone_config.hh"
+#include "operations/crop_config.hh"
+#include "operations/scale_config.hh"
+#include "operations/perspective_config.hh"
+#include "operations/gradient_config.hh"
+#include "operations/path_mask_config.hh"
+#include "operations/uniform_config.hh"
+#include "operations/curves_config.hh"
+#include "operations/channel_mixer_config.hh"
+#include "operations/gaussblur_config.hh"
+#include "operations/denoise_config.hh"
+#include "operations/desaturate_config.hh"
+#include "operations/sharpen_config.hh"
+#include "operations/draw_config.hh"
+#include "operations/clone_stamp_config.hh"
+#include "operations/convert_colorspace_config.hh"
+#include "operations/lensfun_config.hh"
+#include "operations/volume_config.hh"
+#include "operations/threshold_config.hh"
+#include "operations/shadows_highlights_config.hh"
+#include "operations/defringe_config.hh"
+#include "operations/split_details_config.hh"
+#include "operations/wavdec_config.hh"
+#include "operations/tone_mapping_config.hh"
 
 #include "operations/gmic/new_gmic_operation_config.hh"
 
@@ -115,10 +121,12 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_undo(PF::PhotoFlow::Instance().get_data_dir()+"/icons/undo_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/undo_inactive.png"),
   frame_redo(PF::PhotoFlow::Instance().get_data_dir()+"/icons/redo_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/redo_inactive.png"),
   frame_reset(PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_inactive.png"),
+  frame_help(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info-pressed.png"),
+  frame_help2(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info-pressed.png"),
   frame_close(PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_inactive.png"),
   frame_expander(PF::PhotoFlow::Instance().get_data_dir()+"/icons/expand.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/collapse.png",true)
 {
-  vips_semaphore_init( &update_done_sem, 0, "update_done_sem" );
+  vips_semaphore_init( &update_done_sem, 0, (char*)"update_done_sem" );
 
 
   Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
@@ -132,7 +140,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
 
   frame = new Gtk::Frame;
-  //frame->set_size_request(100,-1);
+  //frame->set_size_request(200,-1);
   frame->set_shadow_type( Gtk::SHADOW_NONE );
 
   controls_frame.set_shadow_type( Gtk::SHADOW_NONE );
@@ -157,6 +165,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame_top_box_1_1.pack_start( frame_undo, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_redo, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_box.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_box.pack_start( frame_help, Gtk::PACK_SHRINK, 5 );
 
   frame_top_buttons_alignment.add( frame_top_buttons_box );
   frame_top_buttons_alignment.set( 0, 0.5, 0, 0 );
@@ -242,7 +251,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   frame_top_buttons_box2.pack_start( frame_mask2, Gtk::PACK_SHRINK, 2 );
   frame_top_buttons_box2.pack_start( frame_sticky2, Gtk::PACK_SHRINK, 2 );
-  //frame_top_buttons_box2.pack_start( frame_edit2, Gtk::PACK_SHRINK, 2 );
+  frame_top_buttons_box2.pack_start( frame_help2, Gtk::PACK_SHRINK, 2 );
 
   frame_top_buttons_alignment2.add( frame_top_buttons_box2 );
   frame_top_buttons_alignment2.set( 0, 0.5, 0, 0 );
@@ -268,6 +277,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_edit.set_tooltip_text( _("toggle editing flag on/off") );
   frame_edit2.set_tooltip_text( _("toggle editing flag on/off") );
   frame_reset.set_tooltip_text( _("reset tool parameters") );
+  frame_help.set_tooltip_text( _("show information on current tool") );
+  frame_help2.set_tooltip_text( _("show information on current tool") );
 
   frame_expander.signal_activated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::expand) );
@@ -310,6 +321,11 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   frame_reset.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::parameters_reset_cb) );
+
+  frame_help.signal_clicked.connect(sigc::mem_fun(*this,
+        &OperationConfigGUI::show_help_cb) );
+  frame_help2.signal_clicked.connect(sigc::mem_fun(*this,
+        &OperationConfigGUI::show_help_cb) );
 
   frame_close.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::close_config_cb) );
@@ -376,7 +392,7 @@ void PF::OperationConfigGUI::expand()
 {
   //std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
   if( controls_frame.get_parent() == NULL ) {
-    std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
+    //std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
     if( editor ) {
       editor->get_layer_widget().get_controls_group().collapse_all();
     }
@@ -415,6 +431,12 @@ void PF::OperationConfigGUI::collapse()
       get_layer()->get_image()->update();
     }
   }
+}
+
+
+bool PF::OperationConfigGUI::is_expanded()
+{
+  return frame_expander.is_active();
 }
 
 
@@ -660,10 +682,67 @@ void PF::OperationConfigGUI::parameters_redo()
 
 void PF::OperationConfigGUI::parameters_reset()
 {
-  for( int i = 0; i < controls.size(); i++ )
+  for( unsigned int i = 0; i < controls.size(); i++ )
     controls[i]->reset();
   if( get_layer() && get_layer()->get_image() )
     get_layer()->get_image()->update();
+}
+
+
+void PF::OperationConfigGUI::show_help()
+{
+  Gtk::Dialog dialog(_("help"), false);
+  dialog.set_default_size(300,100);
+
+  Gtk::Frame frame;
+
+  Glib::ustring help;
+  if( get_par() ) {
+    Glib::ustring helpPath = PF::PhotoFlow::Instance().get_data_dir() + "/help/en/" + get_par()->get_type() + ".hlp";
+    std::ifstream file(helpPath.c_str());
+    char ch;
+    if( !file.fail() ) {
+      while(!file.eof()) {
+        //std::string tmpStr;
+        //std::getline(file, tmpStr);
+        //help += tmpStr;
+        file.get( ch );
+        if( !file.fail() ) help += ch;
+      }
+    } else {
+      help = _("This help is not yet available. Sorry.");
+    }
+  }
+
+  Gtk::TextView textview;
+  Glib::RefPtr< Gtk::TextBuffer > buf = textview.get_buffer ();
+  buf->set_text( help );
+  textview.set_wrap_mode(Gtk::WRAP_WORD);
+  textview.set_left_margin( 5 );
+  textview.set_right_margin( 5 );
+  textview.set_editable( false );
+  textview.set_cursor_visible( false );
+
+  dialog.get_vbox()->pack_start( textview );
+
+  //frame.add( textview );
+  //dialog.get_vbox()->pack_start( frame );
+  //dialog.get_content_area().pack_start( frame );
+
+  dialog.add_button(_("Close"), Gtk::RESPONSE_OK);
+
+  dialog.show_all_children();
+
+  Gtk::Container* toplevel = controls_box.get_toplevel();
+#ifdef GTKMM_2
+  if( toplevel && toplevel->is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+#endif
+#ifdef GTKMM_3
+  if( toplevel && toplevel->get_is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+#endif
+    dialog.set_transient_for( *(dynamic_cast<Gtk::Window*>(toplevel)) );
+
+  dialog.run();
 }
 
 
@@ -678,6 +757,7 @@ void PF::OperationConfigGUI::close_config()
 
 void PF::OperationConfigGUI::on_layer_name_changed()
 {
+  //std::cout<<"OperationConfigGUI::on_layer_name_changed() called"<<std::endl;
   if( get_layer() && (get_layer()->get_name() != nameEntry.get_text()) ) {
     get_layer()->set_name( nameEntry.get_text() );
     nameEntry2.set_text( nameEntry.get_text() );
@@ -694,6 +774,7 @@ void PF::OperationConfigGUI::on_layer_name_changed()
 
 void PF::OperationConfigGUI::on_layer_name2_changed()
 {
+  //std::cout<<"OperationConfigGUI::on_layer_name2_changed() called"<<std::endl;
   if( get_layer() && (get_layer()->get_name() != nameEntry2.get_text()) ) {
     get_layer()->set_name( nameEntry2.get_text() );
     nameEntry.set_text( nameEntry2.get_text() );
@@ -725,7 +806,7 @@ void PF::OperationConfigGUI::init()
 {
   //std::cout<<"OperationConfigGUI::init(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
   update_buttons();
-  for( int i = 0; i < controls.size(); i++ )
+  for( unsigned int i = 0; i < controls.size(); i++ )
     controls[i]->init();
 }
 
@@ -878,9 +959,13 @@ void PF::OperationConfigGUI::do_update()
 
 void PF::OperationConfigGUI::update()
 {
-  gdk_threads_add_idle ((GSourceFunc) config_update_cb, this);
+  if( !is_expanded() ) return;
+
+  do_update();
+
+  //gdk_threads_add_idle ((GSourceFunc) config_update_cb, this);
   //std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): waiting for semaphore"<<std::endl;
-  vips_semaphore_down( &update_done_sem );
+  //vips_semaphore_down( &update_done_sem );
   //std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): semaphore ready"<<std::endl;
 }
 
@@ -901,7 +986,7 @@ void PF::OperationConfigGUI::enable_preview()
 
   get_layer()->get_image()->lock();
   // Enable all controls
-  for( int i = 0; i < controls.size(); i++ ) {
+  for( unsigned int i = 0; i < controls.size(); i++ ) {
     controls[i]->set_inhibit( false );
     controls[i]->set_value();
   }
@@ -920,7 +1005,7 @@ void PF::OperationConfigGUI::disable_preview()
   get_layer()->get_image()->lock();
   // Inhibit all controls such that they do not modify the
   // underlying properties
-  for( int i = 0; i < controls.size(); i++ )
+  for( unsigned int i = 0; i < controls.size(); i++ )
     controls[i]->set_inhibit( true );
 
   //std::cout<<"  restoring original values"<<std::endl;
@@ -976,9 +1061,17 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::RawLoaderConfigGUI( current_layer );
 
+  } else if( op_type == "raw_developer_v2" ) {
+
+    dialog = new PF::RawDeveloperConfigGUI( current_layer );
+
   } else if( op_type == "raw_developer" ) {
 
     dialog = new PF::RawDeveloperConfigGUI( current_layer );
+
+  } else if( op_type == "raw_output_v2" ) {
+
+    dialog = new PF::OperationConfigGUI( current_layer, "RAW output" );
 
   } else if( op_type == "raw_output" ) {
 
@@ -1099,6 +1192,18 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "volume" ) {
 
     dialog = new PF::VolumeConfigGUI( current_layer );
+
+  } else if( op_type == "shadows_highlights" ) {
+
+    dialog = new PF::ShadowsHighlightsConfigGUI( current_layer );
+
+  } else if( op_type == "defringe" ) {
+
+    dialog = new PF::DefringeConfigGUI( current_layer );
+
+  } else if( op_type == "split_details" ) {
+
+    dialog = new PF::SplitDetailsConfigGUI( current_layer );
 
   } else if( op_type == "tone_mapping" ) {
 

@@ -39,9 +39,9 @@ PF::GmicEmulateFilmUserDefinedPar::GmicEmulateFilmUserDefinedPar():
 OpParBase(),
 prop_filename("filename", this),
 prop_haldlutfilename("haldlutfilename", this),
-  prop_opacity("opacity",this,1),
+  prop_opacity("opacity",this,100),
   prop_gamma("gamma",this,0),
-  prop_contrast("contrast",this,1),
+  prop_contrast("contrast",this,0),
   prop_brightness("brightness",this,0),
   prop_hue("hue",this,0),
   prop_saturation("saturation",this,0),
@@ -226,9 +226,9 @@ VipsImage* PF::GmicEmulateFilmUserDefinedPar::build(std::vector<VipsImage*>& in,
   std::string command = "-verbose - -gimp_emulate_film_userdefined  2,";
   command = command + lutname;
   command = command + std::string(",") + prop_opacity.get_str();
-  command = command + std::string(",") + prop_gamma.get_str();
-  command = command + std::string(",") + prop_contrast.get_str();
   command = command + std::string(",") + prop_brightness.get_str();
+  command = command + std::string(",") + prop_contrast.get_str();
+  command = command + std::string(",") + prop_gamma.get_str();
   command = command + std::string(",") + prop_hue.get_str();
   command = command + std::string(",") + prop_saturation.get_str();
   command = command + std::string(",") + prop_post_normalize.get_str();

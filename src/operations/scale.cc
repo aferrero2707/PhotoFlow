@@ -192,10 +192,12 @@ static void modify_roi_out(dt_iop_clipping_data_t* d, dt_iop_roi_t* roi_in_orig,
 
 PF::ScalePar::ScalePar():
       OpParBase(),
+      vflip("vflip",this,false),
+      hflip("hflip",this,false),
       rotate_angle("rotate_angle",this,0),
       autocrop("autocrop",this,true),
-      scale_mode("scale_mode",this, SCALE_MODE_FIT, "SCALE_MODE_FIT", "Fit"),
-      scale_unit("scale_unit", this, SCALE_UNIT_PERCENT, "SCALE_UNIT_PERCENT", "percent"),
+      scale_mode("scale_mode",this, SCALE_MODE_FIT, "SCALE_MODE_FIT", _("Fit")),
+      scale_unit("scale_unit", this, SCALE_UNIT_PERCENT, "SCALE_UNIT_PERCENT", _("percent")),
       scale_width_pixels("scale_width_pixels",this,0),
       scale_height_pixels("scale_height_pixels",this,0),
       scale_width_percent("scale_width_percent",this,100),
@@ -212,10 +214,10 @@ PF::ScalePar::ScalePar():
   //scale_mode.add_enum_value( SCALE_MODE_FILL, "SCALE_MODE_FILL", "Fill" );
   //scale_mode.add_enum_value( SCALE_MODE_RESIZE, "SCALE_MODE_RESIZE", "Resize" );
 
-  scale_unit.add_enum_value( SCALE_UNIT_PX, "SCALE_UNIT_PX", "pixels" );
-  scale_unit.add_enum_value( SCALE_UNIT_MM, "SCALE_UNIT_MM", "mm" );
-  scale_unit.add_enum_value( SCALE_UNIT_CM, "SCALE_UNIT_CM", "cm" );
-  scale_unit.add_enum_value( SCALE_UNIT_INCHES, "SCALE_UNIT_INCHES", "inches" );
+  scale_unit.add_enum_value( SCALE_UNIT_PX, "SCALE_UNIT_PX", _("pixels") );
+  scale_unit.add_enum_value( SCALE_UNIT_MM, "SCALE_UNIT_MM", _("mm") );
+  scale_unit.add_enum_value( SCALE_UNIT_CM, "SCALE_UNIT_CM", _("cm") );
+  scale_unit.add_enum_value( SCALE_UNIT_INCHES, "SCALE_UNIT_INCHES", _("inches") );
 
   set_type( "scale" );
 
@@ -233,6 +235,7 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   if( srcimg == NULL ) return NULL;
   VipsImage* out, *rotated;
 
+  PF_REF( srcimg, "ScalePar::build(): initial srcimg ref" );
   bool do_autocrop = autocrop.get();
 
   if( is_editing() ) {
@@ -250,6 +253,31 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   sin_angle = 0;
   cos_angle = 1;
 
+  crop.left = crop.top = 0;
+  crop.width = out_width;
+  crop.height = out_height;
+
+  if( vflip.get() ) {
+    VipsImage* flipped;
+    if( vips_flip( srcimg, &flipped, VIPS_DIRECTION_VERTICAL, NULL ) ) {
+      PF_UNREF( srcimg, "ScalePar::build(): image unref after vips_flip() failed." );
+      return NULL;
+    }
+    PF_UNREF( srcimg, "ScalePar::build(): image unref after vips_flip()." );
+    srcimg = flipped;
+  }
+
+  if( hflip.get() ) {
+    VipsImage* flipped;
+    if( vips_flip( srcimg, &flipped, VIPS_DIRECTION_HORIZONTAL, NULL ) ) {
+      PF_UNREF( srcimg, "ScalePar::build(): image unref after vips_flip() failed." );
+      return NULL;
+    }
+    PF_UNREF( srcimg, "ScalePar::build(): image unref after vips_flip()." );
+    srcimg = flipped;
+  }
+
+
   if( rotate_angle.get() != 0 ) {
     sin_angle = sin( rotate_angle.get() * 3.141592653589793 / 180.0 );
     cos_angle = cos( rotate_angle.get() * 3.141592653589793 / 180.0 );
@@ -261,6 +289,8 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
         NULL) ) {
       return NULL;
     }
+    PF_UNREF( srcimg, "srcimg unref after rotate" );
+
     out_width = rotated->Xsize;
     out_height = rotated->Ysize;
     crop.left = crop.top = 0;
@@ -314,9 +344,9 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     }
     set_image_hints( out );
     srcimg = out;
-  } else {
+  } /*else {
     PF_REF( srcimg, "ScalePar::build(): srcimg ref for angle=0" );
-  }
+  }*/
 
   scale_mult = 1;
   int scale_factor = 1;
@@ -369,13 +399,12 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     float scale = MIN( scale_width, scale_height );
     scale_mult = scale;
 
-    /*
-    VipsInterpolate* interpolate = vips_interpolate_new( "nohalo" );
-    if( !interpolate )
-      interpolate = vips_interpolate_new( "bicubic" );
-    if( !interpolate )
-      interpolate = vips_interpolate_new( "bilinear" );
-     */
+    //VipsInterpolate* interpolate = vips_interpolate_new( "nohalo" );
+    //if( !interpolate )
+    //  interpolate = vips_interpolate_new( "bicubic" );
+    //if( !interpolate )
+    //  interpolate = vips_interpolate_new( "bilinear" );
+
     //if( vips_resize(srcimg, &out, scale, "interpolate", interpolate, NULL) ) {
     if( vips_resize(srcimg, &out, scale, NULL) ) {
       std::cout<<"ScalePar::build(): vips_resize() failed."<<std::endl;
@@ -386,11 +415,13 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     PF_UNREF( srcimg, "ScalePar::build(): srcimg unref after vips_resize()" );
   } else {
     //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
-    return srcimg;
+    //return srcimg;
+
+    out = srcimg;
   }
 
+  set_image_hints( out );
   return out;
-
 }
 
 

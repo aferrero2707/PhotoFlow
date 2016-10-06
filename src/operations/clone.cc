@@ -128,6 +128,8 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
                             get_interpretation(),
                             1.0, 1.0);
     break;
+  default:
+    break;
   }
 
   // This is a mask image, so it has no associated color profile
@@ -204,6 +206,8 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
                             get_coding(),
                             get_interpretation(),
                             1.0, 1.0);
+    break;
+  default:
     break;
   }
 

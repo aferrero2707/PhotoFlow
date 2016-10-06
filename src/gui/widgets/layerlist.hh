@@ -33,6 +33,7 @@
 #include <gtkmm.h>
 
 #include "pfwidget.hh"
+#include "numentry.hh"
 
 namespace PF {
 
@@ -61,6 +62,7 @@ namespace PF {
     Gtk::VBox vbox2;
     Gtk::Label label2;
     Gtk::SpinButton image_num;
+    //NumEntry image_num;
     Glib::RefPtr<Gtk::ListStore> model;
 
     bool inhibit;

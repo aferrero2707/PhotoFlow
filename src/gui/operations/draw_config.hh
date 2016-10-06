@@ -48,6 +48,7 @@ namespace PF {
   Gtk::Label pen_color_label, bgd_color_label;
 
   Gtk::ColorButton pen_color_button, bgd_color_button;
+  CheckBox bgd_transparent_checkbox;
 
   //Gtk::Label lbrightness, lcontrast;
   //Gtk::Alignment lcontrastAl, lbrightnessAl;
@@ -62,6 +63,7 @@ namespace PF {
   Gtk::Button undoButton;
 
   double mouse_x, mouse_y;
+  bool inhibit;
 
 public:
   DrawConfigGUI( Layer* l );

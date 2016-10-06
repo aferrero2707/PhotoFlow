@@ -248,6 +248,7 @@ bool PF::exif_read(exif_data_t* data, const char* path)
     if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.Image.Make")))
          != exifData.end() && pos->size())
     {
+      std::string str = pos->print(&exifData);
       dt_strlcpy_to_utf8(data->exif_maker, sizeof(data->exif_maker), pos, exifData);
     }
     else if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.PanasonicRaw.Make")))

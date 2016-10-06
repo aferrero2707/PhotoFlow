@@ -60,6 +60,13 @@ public:
     g_mutex_unlock( mutex );
   }
 
+  void reset()
+  {
+    //g_mutex_lock( mutex );
+    signaled = false;
+    //g_mutex_unlock( mutex );
+  }
+
   void signal()
   {
     g_mutex_lock( mutex );
@@ -68,14 +75,14 @@ public:
     g_mutex_unlock( mutex );
   }
 
-  void wait()
+  void wait(bool unlk=true)
   {
     //g_mutex_lock( mutex );
-    signaled = false;
+    //signaled = false;
     while( !signaled )
       g_cond_wait( condition, mutex );
-    signaled = false;
-    //g_mutex_unlock( mutex );
+    //signaled = false;
+    if(unlk) g_mutex_unlock( mutex );
   }
 };
 

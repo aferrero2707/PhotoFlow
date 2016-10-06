@@ -146,7 +146,7 @@ void PF::CurveEditor::update_point()
   if( is_linear ) do_gamma = true;
 
   int ipt = curve_area->get_selected_point();
-  if( (ipt >= 0) && (ipt < curve_area->get_curve().get_npoints()) ) {
+  if( (ipt >= 0) && (ipt < (int)(curve_area->get_curve().get_npoints())) ) {
 #ifdef GTKMM_2
     float px = (xadjustment.get_value()-xmin)/(xmax-xmin);
     float py = (yadjustment.get_value()-ymin)/(ymax-ymin);

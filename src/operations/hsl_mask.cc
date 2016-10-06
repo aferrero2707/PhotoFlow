@@ -74,7 +74,6 @@ void PF::HSLMaskPar::update_curve( PF::Property<PF::SplineCurve>* curve, float* 
     vec[i] = y;
     //std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec[i]="<<vec[i]<<std::endl;
   }
-  std::cout<<"vec[65535]="<<vec[65535]<<std::endl;
   curve->get().unlock();
 }
 

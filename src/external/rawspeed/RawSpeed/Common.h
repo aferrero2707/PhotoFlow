@@ -64,13 +64,17 @@ typedef char* LPCWSTR;
 #define FALSE 0
 #endif
 
+#ifndef UINT32_MAX
+#define UINT32_MAX 0xffffffff
+#endif
+
 #define get2BE(data,pos) ((((ushort16)(data)[pos]) << 8) | \
                            ((ushort16)(data)[pos+1]))
 
 #define get2LE(data,pos) ((((ushort16)(data)[pos+1]) << 8) | \
                            ((ushort16)(data)[pos]))
 
-#define get4BE(data,pos) ((((uint32)(data)[pos]) << 24) | \
+#define get4BE(data,pos) ((((uint32)(data)[pos+0]) << 24) | \
                           (((uint32)(data)[pos+1]) << 16) | \
                           (((uint32)(data)[pos+2]) << 8) | \
                            ((uint32)(data)[pos+3]))
@@ -88,6 +92,15 @@ typedef char* LPCWSTR;
                           (((uint64)(data)[pos+2]) << 16) | \
                           (((uint64)(data)[pos+1]) << 8)  | \
                            ((uint64)(data)[pos]))
+
+#define get8BE(data,pos) ((((uint64)(data)[pos+0]) << 56) | \
+                          (((uint64)(data)[pos+1]) << 48) | \
+                          (((uint64)(data)[pos+2]) << 40) | \
+                          (((uint64)(data)[pos+3]) << 32) | \
+                          (((uint64)(data)[pos+4]) << 24) | \
+                          (((uint64)(data)[pos+5]) << 16) | \
+                          (((uint64)(data)[pos+6]) << 8)  | \
+                           ((uint64)(data)[pos+7]))
 
 int rawspeed_get_number_of_processor_cores();
 
@@ -136,12 +149,25 @@ inline int lmax(int p0, int p1) {
 
 inline uint32 getThreadCount()
 {
-#ifdef WIN32
+#ifdef NO_PTHREAD
+  return 1;
+#elif WIN32
   return pthread_num_processors_np();
 #else
   return rawspeed_get_number_of_processor_cores();
 #endif
 }
+
+#ifdef NO_PTHREAD
+typedef void* pthread_mutex_t;
+#define pthread_mutex_init(A, B)
+#define pthread_mutex_destroy(A)
+#define pthread_mutex_lock(A)
+#define pthread_mutex_unlock(A)
+#endif
+
+typedef int __attribute__((aligned(1))) align1_int;
+typedef unsigned int __attribute__((aligned(1))) align1_uint;
 
 inline Endianness getHostEndianness() {
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -174,9 +200,13 @@ inline Endianness getHostEndianness() {
 #include <intrin.h>
 #define LE_PLATFORM_HAS_BSWAP
 #define PLATFORM_BSWAP32(A) _byteswap_ulong(A)
+// See http://tinyurl.com/hqfuznc
+#if _MSC_VER >= 1900
+extern "C" { FILE __iob_func[3] = { *stdin,*stdout,*stderr }; }
+#endif
 #endif
 
-inline uint32 clampbits(int x, uint32 n) { 
+inline uint32 clampbits(int x, uint32 n) {
   uint32 _y_temp; 
   if( (_y_temp=x>>n) ) 
     x = ~_y_temp >> (32-n); 

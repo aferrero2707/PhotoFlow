@@ -41,7 +41,9 @@ namespace PF {
   class ScaleConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
-  Gtk::HSeparator separator;
+  Gtk::HSeparator separator, separator2;
+
+  CheckBox vflip, hflip;
 
   Slider rotate_angle_slider;
   CheckBox autocrop;

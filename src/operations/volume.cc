@@ -48,9 +48,9 @@ PF::VolumePar::VolumePar():
   highlights_amount("highlights_amount",this,0.7),
   whites_amount("whites_amount",this,0),
   gauss_radius("gauss_radius",this,20),
-  bilateral_iterations("bilateral_iterations",this,2),
+  bilateral_iterations("bilateral_iterations",this,1),
   bilateral_sigma_s("bilateral_sigma_s",this,10),
-  bilateral_sigma_r("bilateral_sigma_r",this,7)
+  bilateral_sigma_r("bilateral_sigma_r",this,20)
 {
 	//method.add_enum_value(PF::SHARPEN_GAUSS,"GAUSS","Unsharp Mask");
 	method.add_enum_value(PF::VOLUME_BILATERAL,"BILATERAL","Bilateral");
@@ -96,7 +96,7 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
     //vec8[i] = (short int)(y*FormatInfo<unsigned char>::RANGE);
     //std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec8[i]="<<vec8[i]<<std::endl;
   }
-  for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
+  for(unsigned int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
     float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
     vec16[i] = tone_curve.get_value( x );
     //vec16[i] = (int)(y*FormatInfo<unsigned short int>::RANGE);
@@ -140,8 +140,8 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   std::vector<VipsImage*> in2;
-  in2.push_back(in[0]);
   in2.push_back(smoothed);
+  in2.push_back(in[0]);
   VipsImage* out = OpParBase::build( in2, 0, imap, omap, level );
 
   std::cout<<"VolumePar::build(): out="<<out<<std::endl;

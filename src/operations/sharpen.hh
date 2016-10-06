@@ -38,7 +38,7 @@ namespace PF
   {
     SHARPEN_USM,
     SHARPEN_DECONV,
-    SHARPEN_MICRO
+    SHARPEN_TEXTURE
   };
 
   class SharpenPar: public OpParBase
@@ -47,13 +47,17 @@ namespace PF
     Property<float> usm_radius;
     Property<float> rl_sigma;
     Property<int> rl_iterations;
+    Property<float> texture_radius;
+    Property<float> texture_strength;
     ProcessorBase* usm;
     ProcessorBase* rl;
+    ProcessorBase* texture;
   public:
     SharpenPar();
 
     bool has_intensity() { return false; }
     bool needs_caching();
+    bool has_target_channel() { return true; }
       
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 

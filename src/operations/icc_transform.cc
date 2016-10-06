@@ -50,7 +50,7 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
 				     VipsImage* imap, VipsImage* omap, 
 				     unsigned int& level)
 {
-  if( in.size() < first+1 ) {
+  if( (int)in.size() < first+1 ) {
     return NULL;
   }
 
@@ -62,13 +62,19 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
   void *data;
   size_t data_length;
   
-  in_profile = PF::get_icc_profile( in[0] );
-  //if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
-  //                         &data, &data_length ) ) {
-  //  in_profile = cmsOpenProfileFromMem( data, data_length );
-  //}
+  in_profile = PF::get_icc_profile( in[first] );
+  bool matching = false;
+  if( in_profile && out_profile && in_profile->equals_to(out_profile) ) {
+    matching = true;
+  }
 
-  std::cout<<"ICCTransformPar::build(): image="<<in[0]<<" data="<<data<<" data_length="<<data_length<<std::endl;
+  if( matching ) {
+    PF_REF( in[first], "ICCTransformPar::build(): input image ref for equal input and output profiles" );
+    std::cout<<"ICCTransformPar::build(): matching input and output profiles, no transform needed"<<std::endl;
+    return in[first];
+  }
+
+  //std::cout<<"ICCTransformPar::build(): image="<<in[0]<<" data="<<data<<" data_length="<<data_length<<std::endl;
 
   bool in_changed = false;
   if( in_profile && in_profile->get_profile() ) {
@@ -100,6 +106,7 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, out_profile->get_profile() );
 
     cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
+    std::cout<<"icc_transform: get_bpc()="<<get_bpc()<<std::endl;
     if( get_bpc() ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
     transform = cmsCreateTransform( in_profile->get_profile(),
         infmt,

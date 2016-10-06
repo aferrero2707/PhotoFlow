@@ -78,6 +78,7 @@ namespace PF {
   public:
     ConvertColorspaceConfigGUI( Layer* l );
     
+    void open();
     void do_update();
 
     void on_out_button_open_clicked();

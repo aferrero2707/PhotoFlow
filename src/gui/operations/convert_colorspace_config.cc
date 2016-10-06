@@ -50,8 +50,8 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
-  outProfileTypeSelectorBox.pack_start( outProfileTypeSelector, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outProfileTypeSelectorBox, Gtk::PACK_SHRINK );
+  //outProfileTypeSelectorBox.pack_start( outProfileTypeSelector, Gtk::PACK_SHRINK );
+  //outputControlsBox.pack_start( outProfileTypeSelectorBox, Gtk::PACK_SHRINK );
 
   outTRCTypeSelectorBox.pack_start( outTRCTypeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outTRCTypeSelectorBox, Gtk::PACK_SHRINK );
@@ -97,23 +97,35 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
 
 
 
+void PF::ConvertColorspaceConfigGUI::open()
+{
+  PF::OpParBase* par = get_par();
+  PF::ConvertColorspacePar* ccpar = dynamic_cast<PF::ConvertColorspacePar*>( par );
+  if( ccpar ) {
+    outProfFileEntry.set_text( ccpar->get_out_profile_name() );
+  }
+  OperationConfigGUI::open();
+}
+
+
+
 void PF::ConvertColorspaceConfigGUI::do_update()
 {
   PF::OpParBase* par = get_par();
   PF::ConvertColorspacePar* ccpar = dynamic_cast<PF::ConvertColorspacePar*>( par );
   if( ccpar ) {
-    if( ccpar->get_out_profile_mode() == PF::PROF_MODE_DEFAULT ) {
-      outProfileTypeSelectorBox.hide();
+    if( ccpar->get_out_profile_type() == PF::PROF_TYPE_FROM_SETTINGS ) {
+      //outProfileTypeSelectorBox.hide();
       outTRCTypeSelectorBox.hide();
       outProfHBox.hide();
-    } else if( ccpar->get_out_profile_mode() == PF::PROF_MODE_CUSTOM ) {
-      outProfileTypeSelectorBox.show();
-      outTRCTypeSelectorBox.show();
-      outProfHBox.hide();
-    } else if( ccpar->get_out_profile_mode() == PF::PROF_MODE_ICC ) {
-      outProfileTypeSelectorBox.hide();
+    } else if( ccpar->get_out_profile_type() == PF::PROF_TYPE_FROM_DISK ) {
+      //outProfileTypeSelectorBox.hide();
       outTRCTypeSelectorBox.hide();
       outProfHBox.show();
+    } else {//if( ccpar->get_out_profile_mode() == PF::PROF_MODE_CUSTOM ) {
+      //outProfileTypeSelectorBox.show();
+      outTRCTypeSelectorBox.show();
+      outProfHBox.hide();
     }
   }
 

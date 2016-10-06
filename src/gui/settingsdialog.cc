@@ -76,27 +76,27 @@ PF::SettingsDialog::SettingsDialog():
 
   Gtk::TreeModel::iterator ri = cm_working_profile_model->append();
   Gtk::TreeModel::Row row = *(ri);
-  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_sRGB;
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_sRGB;
   row[cm_working_profile_columns.col_value] = "sRGB";
   ri = cm_working_profile_model->append();
   row = *(ri);
-  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_REC2020;
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_REC2020;
   row[cm_working_profile_columns.col_value] = "Rec.2020";
   ri = cm_working_profile_model->append();
   row = *(ri);
-  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_ADOBE;
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_ADOBE;
   row[cm_working_profile_columns.col_value] = "AdobeRGB";
   ri = cm_working_profile_model->append();
   row = *(ri);
-  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_PROPHOTO;
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_PROPHOTO;
   row[cm_working_profile_columns.col_value] = "ProPhotoRGB";
   ri = cm_working_profile_model->append();
   row = *(ri);
-  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_ACEScg;
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_ACEScg;
   row[cm_working_profile_columns.col_value] = "ACEScg";
   ri = cm_working_profile_model->append();
   row = *(ri);
-  row[cm_working_profile_columns.col_id] = PF::OUT_PROF_ACES;
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_ACES;
   row[cm_working_profile_columns.col_value] = "ACES";
 
   cm_working_trc_model = Gtk::ListStore::create(cm_working_trc_columns);

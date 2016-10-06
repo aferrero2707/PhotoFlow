@@ -38,11 +38,13 @@
 
 //#include "image.hh"
 
+#ifndef _
 #ifdef LOCALEDIR
 #include <libintl.h>
 #define _(String) gettext(String)
 #else
 #define _(String) (String)
+#endif
 #endif
 
 #define PF_FILE_VERSION 4

@@ -81,7 +81,7 @@ RawImage NefDecoder::decodeRawInternal() {
   if (counts->count != offsets->count) {
     ThrowRDE("NEF Decoder: Byte count number does not match strip size: count:%u, strips:%u ", counts->count, offsets->count);
   }
-  if (!mFile->isValid(offsets->getInt() + counts->getInt()))
+  if (!mFile->isValid(offsets->getInt(), counts->getInt()))
     ThrowRDE("NEF Decoder: Invalid strip byte count. File probably truncated.");
 
 
@@ -133,7 +133,7 @@ are only needed for the D100, thanks to a bug in some cameras
 that tags all images as "compressed".
 */
 bool NefDecoder::D100IsCompressed(uint32 offset) {
-  const uchar8 *test = mFile->getData(offset);
+  const uchar8 *test = mFile->getData(offset, 256);
   int i;
 
   for (i = 15; i < 256; i += 16)
@@ -145,23 +145,23 @@ bool NefDecoder::D100IsCompressed(uint32 offset) {
    as if they were compressed. For those cases we set uncompressed mode
    by figuring out that the image is the size of uncompressed packing */
 bool NefDecoder::NEFIsUncompressed(TiffIFD *raw) {
-  const uint32 *counts = raw->getEntry(STRIPBYTECOUNTS)->getIntArray();
+  TiffEntry *counts = raw->getEntry(STRIPBYTECOUNTS);
   uint32 width = raw->getEntry(IMAGEWIDTH)->getInt();
   uint32 height = raw->getEntry(IMAGELENGTH)->getInt();
   uint32 bitPerPixel = raw->getEntry(BITSPERSAMPLE)->getInt();
 
-  return counts[0] == width*height*bitPerPixel/8;
+  return counts->getInt(0) == width*height*bitPerPixel/8;
 }
 
 /* At least the D810 has a broken firmware that tags uncompressed images
    as if they were compressed. For those cases we set uncompressed mode
    by figuring out that the image is the size of uncompressed packing */
 bool NefDecoder::NEFIsUncompressedRGB(TiffIFD *raw) {
-  const uint32 *counts = raw->getEntry(STRIPBYTECOUNTS)->getIntArray();
+  TiffEntry *counts = raw->getEntry(STRIPBYTECOUNTS);
   uint32 width = raw->getEntry(IMAGEWIDTH)->getInt();
   uint32 height = raw->getEntry(IMAGELENGTH)->getInt();
 
-  return counts[0] == width*height*3;
+  return counts->getInt(0) == width*height*3;
 }
 
 
@@ -183,8 +183,8 @@ void NefDecoder::DecodeUncompressed() {
   vector<TiffIFD*> data = mRootIFD->getIFDsWithTag(CFAPATTERN);
   TiffIFD* raw = FindBestImage(&data);
   uint32 nslices = raw->getEntry(STRIPOFFSETS)->count;
-  const uint32 *offsets = raw->getEntry(STRIPOFFSETS)->getIntArray();
-  const uint32 *counts = raw->getEntry(STRIPBYTECOUNTS)->getIntArray();
+  TiffEntry *offsets = raw->getEntry(STRIPOFFSETS);
+  TiffEntry *counts = raw->getEntry(STRIPBYTECOUNTS);
   uint32 yPerSlice = raw->getEntry(ROWSPERSTRIP)->getInt();
   uint32 width = raw->getEntry(IMAGEWIDTH)->getInt();
   uint32 height = raw->getEntry(IMAGELENGTH)->getInt();
@@ -195,8 +195,8 @@ void NefDecoder::DecodeUncompressed() {
 
   for (uint32 s = 0; s < nslices; s++) {
     NefSlice slice;
-    slice.offset = offsets[s];
-    slice.count = counts[s];
+    slice.offset = offsets->getInt(s);
+    slice.count = counts->getInt(s);
     if (offY + yPerSlice > height)
       slice.h = height - offY;
     else
@@ -204,7 +204,7 @@ void NefDecoder::DecodeUncompressed() {
 
     offY = MIN(height, offY + yPerSlice);
 
-    if (mFile->isValid(slice.offset + slice.count)) // Only decode if size is valid
+    if (mFile->isValid(slice.offset, slice.count)) // Only decode if size is valid
       slices.push_back(slice);
   }
 
@@ -230,7 +230,7 @@ void NefDecoder::DecodeUncompressed() {
   offY = 0;
   for (uint32 i = 0; i < slices.size(); i++) {
     NefSlice slice = slices[i];
-    ByteStream in(mFile->getData(slice.offset), slice.count);
+    ByteStream in(mFile, slice.offset, slice.count);
     iPoint2D size(width, slice.h);
     iPoint2D pos(0, offY);
     try {
@@ -276,11 +276,11 @@ void NefDecoder::readCoolpixMangledRaw(ByteStream &input, iPoint2D& size, iPoint
   uint32 y = offset.y;
   h = MIN(h + (uint32)offset.y, (uint32)mRaw->dim.y);
   w *= cpp;
-  BitPumpMSB32 *in = new BitPumpMSB32(&input);
+  BitPumpMSB32 in(&input);
   for (; y < h; y++) {
     ushort16* dest = (ushort16*) & data[offset.x*sizeof(ushort16)*cpp+y*outPitch];
     for (uint32 x = 0 ; x < w; x++) {
-      dest[x] =  in->getBits(12);
+      dest[x] = in.getBits(12);
     }
   }
 }
@@ -308,17 +308,17 @@ void NefDecoder::readCoolpixSplitRaw(ByteStream &input, iPoint2D& size, iPoint2D
   h = MIN(h + (uint32)offset.y, (uint32)mRaw->dim.y);
   w *= cpp;
   h /= 2;
-  BitPumpMSB *in = new BitPumpMSB(&input);
+  BitPumpMSB in(&input);
   for (; y < h; y++) {
     ushort16* dest = (ushort16*) & data[offset.x*sizeof(ushort16)*cpp+y*2*outPitch];
     for (uint32 x = 0 ; x < w; x++) {
-      dest[x] =  in->getBits(12);
+      dest[x] =  in.getBits(12);
     }
   }
   for (y = offset.y; y < h; y++) {
     ushort16* dest = (ushort16*) & data[offset.x*sizeof(ushort16)*cpp+(y*2+1)*outPitch];
     for (uint32 x = 0 ; x < w; x++) {
-      dest[x] =  in->getBits(12);
+      dest[x] =  in.getBits(12);
     }
   }
 }
@@ -338,7 +338,7 @@ void NefDecoder::DecodeD100Uncompressed() {
 
   mRaw->dim = iPoint2D(width, height);
   mRaw->createData();
-  ByteStream input(mFile->getData(offset), mFile->getSize()-offset);
+  ByteStream input(mFile, offset);
 
   Decode12BitRawBEWithControl(input, width, height);
 }
@@ -355,7 +355,7 @@ void NefDecoder::DecodeSNefUncompressed() {
   mRaw->isCFA = false;
   mRaw->createData();
 
-  ByteStream in(mFile->getData(offset), mFile->getSize()-offset);
+  ByteStream in(mFile, offset);
 
   DecodeNikonSNef(in, width, height);
 }
@@ -372,10 +372,7 @@ void NefDecoder::checkSupportInternal(CameraMetaData *meta) {
 
   if (meta->hasCamera(make, model, extended_mode))
     this->checkCameraSupported(meta, make, model, extended_mode);
-  else if (meta->hasCamera(make, model, mode))
-    this->checkCameraSupported(meta, make, model, mode);
-  else
-    this->checkCameraSupported(meta, make, model, "");
+  else this->checkCameraSupported(meta, make, model, mode);
 }
 
 string NefDecoder::getMode() {
@@ -472,12 +469,11 @@ void NefDecoder::decodeMetaDataInternal(CameraMetaData *meta) {
   vector<TiffIFD*> note = mRootIFD->getIFDsWithTag((TiffTag)12);
   if (!note.empty()) {
     TiffEntry *wb = note[0]->getEntry((TiffTag)12);
-    if (wb->count == 4 && wb->type == TIFF_RATIONAL) {
-      const uint32* wba = wb->getIntArray();
-      mRaw->metadata.wbCoeffs[0] = wba[0]*1.0f / wba[1];
-      mRaw->metadata.wbCoeffs[1] = wba[4]*1.0f / wba[5];
-      mRaw->metadata.wbCoeffs[2] = wba[2]*1.0f / wba[3];
-      if (mRaw->metadata.wbCoeffs[1] == 0)
+    if (wb->count == 4) {
+      mRaw->metadata.wbCoeffs[0] = wb->getFloat(0);
+      mRaw->metadata.wbCoeffs[1] = wb->getFloat(2);
+      mRaw->metadata.wbCoeffs[2] = wb->getFloat(1);
+      if (mRaw->metadata.wbCoeffs[1] == 0.0f)
         mRaw->metadata.wbCoeffs[1] = 1.0f;
     }
   } else if (mRootIFD->hasEntryRecursive((TiffTag)0x0097)) {
@@ -488,15 +484,13 @@ void NefDecoder::decodeMetaDataInternal(CameraMetaData *meta) {
       for (uint32 i=0; i<4; i++)
         version = (version << 4) + data[i]-'0';
       if (version == 0x100 && wb->count >= 80 && wb->type == TIFF_UNDEFINED) {
-        const ushort16 *tmp = wb->getShortArray();
-        mRaw->metadata.wbCoeffs[0] = (float) tmp[36];
-        mRaw->metadata.wbCoeffs[2] = (float) tmp[37];
-        mRaw->metadata.wbCoeffs[1] = (float) tmp[38];
+        mRaw->metadata.wbCoeffs[0] = (float) wb->getShort(36);
+        mRaw->metadata.wbCoeffs[2] = (float) wb->getShort(37);
+        mRaw->metadata.wbCoeffs[1] = (float) wb->getShort(38);
       } else if (version == 0x103 && wb->count >= 26 && wb->type == TIFF_UNDEFINED) {
-        const ushort16 *tmp = wb->getShortArray();
-        mRaw->metadata.wbCoeffs[0] = (float) tmp[10];
-        mRaw->metadata.wbCoeffs[1] = (float) tmp[11];
-        mRaw->metadata.wbCoeffs[2] = (float) tmp[12];
+        mRaw->metadata.wbCoeffs[0] = (float) wb->getShort(10);
+        mRaw->metadata.wbCoeffs[1] = (float) wb->getShort(11);
+        mRaw->metadata.wbCoeffs[2] = (float) wb->getShort(12);
       } else if (((version == 0x204 && wb->count >= 564) ||
                   (version == 0x205 && wb->count >= 284)) &&
                  mRootIFD->hasEntryRecursive((TiffTag)0x001d) &&
@@ -561,6 +555,11 @@ void NefDecoder::decodeMetaDataInternal(CameraMetaData *meta) {
     }
   }
 
+  if (hints.find(string("nikon_wb_adjustment")) != hints.end()) {
+    mRaw->metadata.wbCoeffs[0] *= 256/527.0;
+    mRaw->metadata.wbCoeffs[2] *= 256/317.0;
+  }
+
   string mode = getMode();
   string extended_mode = getExtendedMode(mode);
   if (meta->hasCamera(make, model, extended_mode)) {
@@ -583,6 +582,8 @@ void NefDecoder::decodeMetaDataInternal(CameraMetaData *meta) {
 // Note that values are scaled. See comment below on details.
 // OPTME: It would be trivial to run this multithreaded.
 void NefDecoder::DecodeNikonSNef(ByteStream &input, uint32 w, uint32 h) {
+  if(w<6) ThrowIOE("NEF: got a %u wide sNEF, aborting", w);
+
   uchar8* data = mRaw->getData();
   uint32 pitch = mRaw->pitch;
   const uchar8 *in = input.getData();
@@ -605,12 +606,11 @@ void NefDecoder::DecodeNikonSNef(ByteStream &input, uint32 w, uint32 h) {
   if (wb->count != 4 || wb->type != TIFF_RATIONAL)
     ThrowRDE("NEF Decoder: Whitebalance has unknown count or type");
 
-  const uint32* wba = wb->getIntArray();
-  if (!(wba[1] && wba[3] && wba[5] && wba[7]))
-    ThrowRDE("NEF Decoder: Whitebalance has zero value");
+  float wb_r = wb->getFloat(0);
+  float wb_b = wb->getFloat(1);
 
-  float wb_r = (float)wba[0] / (float)wba[1];
-  float wb_b = (float)wba[2] / (float)wba[3];
+  if (wb_r == 0.0f || wb_b == 0.0f)
+    ThrowRDE("NEF Decoder: Whitebalance has zero value");
 
   mRaw->metadata.wbCoeffs[0] = wb_r;
   mRaw->metadata.wbCoeffs[1] = 1.0f;

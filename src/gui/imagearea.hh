@@ -115,6 +115,8 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
    */
   VipsRegion* mask_region;
 
+  bool softproof_enabled;
+  PF::ProcessorBase* softproof_conversion;
   PF::ProcessorBase* convert2display;
   display_profile_t current_display_profile_type;
   Glib::ustring current_display_profile_name;
@@ -129,7 +131,8 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 
   PF::ProcessorBase* clipping_warning;
   bool highlights_warning_enabled, shadows_warning_enabled;
-  bool sim_black_ink_enabled, sim_paper_color_enabled;
+  bool softproof_bpc_enabled, sim_black_ink_enabled, sim_paper_color_enabled, gamut_warning_enabled;
+  cmsUInt32Number softproof_intent;
 
   bool display_merged;
   int active_layer;
@@ -207,8 +210,14 @@ public:
   void set_highlights_warning( bool flag ) { highlights_warning_enabled = flag; }
   void set_shadows_warning( bool flag ) { shadows_warning_enabled = flag; }
 
+  void set_softproof_bpc( bool flag ) { softproof_bpc_enabled = flag; }
   void set_sim_black_ink( bool flag ) { sim_black_ink_enabled = flag; }
   void set_sim_paper_color( bool flag ) { sim_paper_color_enabled = flag; }
+  void set_gamut_warning( bool flag ) { gamut_warning_enabled = flag; }
+  void set_softproof_intent( cmsUInt32Number i ) { softproof_intent = i; }
+  void enable_softproof() { softproof_enabled = true; }
+  void disable_softproof() { softproof_enabled = false; }
+  PF::ProcessorBase* get_softproof_conversion() { return softproof_conversion; }
 
 	float get_shrink_factor() { return shrink_factor; }
 	void set_shrink_factor( float val ) { shrink_factor = val; }

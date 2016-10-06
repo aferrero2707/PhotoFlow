@@ -43,7 +43,7 @@ namespace PF
     theblender.init_line( omap, r->left, y0 );                    \
     for( x=0, xomap=0; x < line_size; ) {                         \
       for( ch=0; ch<CHMIN; ch++, x++ ) pout[x] = pbottom[x];      \
-      theblender.blend( opacity, pbottom, line, pout, x, xomap );       \
+      theblender.blend( opacity, pbottom, tmpline, pout, x, xomap );       \
       x += dx;                                                         \
       for( ch=CHMAX+1; ch<PF::ColorspaceInfo<colorspace>::NCH; ch++, x++ ) pout[x] = pbottom[x]; \
     }                                                                   \
@@ -53,7 +53,7 @@ namespace PF
 #define BLEND_LOOP2( theblender ) {                               \
     theblender.init_line( omap, r->left, y0 );                    \
     for( x=0, xomap=0; x < line_size; ) {                         \
-      theblender.blend( opacity, pbottom, line, pout, x, xomap ); \
+      theblender.blend( opacity, pbottom, tmpline, pout, x, xomap ); \
       x += PF::ColorspaceInfo<colorspace>::NCH;                   \
     }                                                             \
   }
@@ -107,16 +107,18 @@ namespace PF
       T* pout;
       T* line = NULL;
       if( transform ) line = new T[line_size];
+      T* tmpline = NULL;
       for( y = 0; y < r->height; y++ ) {      
         y0 = r->top + y;
         pbottom = (T*)VIPS_REGION_ADDR( bottom, r->left, y0 ); 
         ptop = (T*)VIPS_REGION_ADDR( top, r->left, y0 ); 
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, y0 ); 
         if( transform ) {
-          cmsDoTransform( transform, ptop, line, width );
+          tmpline = line;
+          cmsDoTransform( transform, ptop, tmpline, width );
           //std::cout<<"Blender::blend(): calling cmsDoTransform()"<<std::endl;
         } else {
-          line = ptop;
+          tmpline = ptop;
         }
         switch(mode) {
         case PF_BLEND_PASSTHROUGH:
@@ -178,7 +180,8 @@ namespace PF
         default:
           break;
         }
-      }  
+      }
+      if(line) delete[] line;
     }
   };
 

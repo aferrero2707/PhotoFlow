@@ -33,6 +33,7 @@
 #include "gmic_config.hh"
 #include "blur_bilateral_config.hh"
 #include "denoise_config.hh"
+#include "smooth_nlmeans_config.hh"
 #include "smooth_anisotropic_config.hh"
 #include "smooth_diffusion_config.hh"
 #include "smooth_mean_curvature_config.hh"

@@ -39,6 +39,7 @@ void PF::get_falloff_curve<unsigned short int>( float* vec, float val, unsigned 
 template<>
 void PF::get_falloff_curve<float>( float* vec, float val, float& out ) {
   out = vec[static_cast<unsigned short int>(val*65535)];
+  //std::cout<<"get_falloff_curve<float>(): val="<<val<<"  out="<<out<<std::endl;
 }
 
 
@@ -154,7 +155,7 @@ static void get_falloff_segments( const std::vector< std::pair<int,int> >& point
   int last0[2] = { -100, -100 }, last1[2] = { -100, -100 };
   //nbp = 0;
   int next = 0;
-  for(int i = 0; i < border.size(); i++) {
+  for(unsigned int i = 0; i < border.size(); i++) {
     p0[0] = points[i].first, p0[1] = points[i].second;
     if(next > 0)
       p1[0] = border[next].first, p1[1] = border[next].second;
@@ -162,7 +163,7 @@ static void get_falloff_segments( const std::vector< std::pair<int,int> >& point
       p1[0] = border[i].first, p1[1] = border[i].second;
 
     // now we check p1 value to know if we have to skip a part
-    if(next == i) next = 0;
+    if(next == (int)i) next = 0;
     while(p1[0] == -999999) {
       if(p1[1] == -999999)
         next = i - 1;
@@ -220,8 +221,8 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
 
   falloff_curve.get().lock();
   if( falloff_curve.is_modified() || invert.is_modified() ) {
-    std::cout<<"PathMaskPar::build(): updating falloff LUT"<<std::endl;
-    for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
+    //std::cout<<"PathMaskPar::build(): updating falloff LUT"<<std::endl;
+    for(unsigned int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
       float x = ((float)i)/FormatInfo<unsigned short int>::RANGE;
       float y = falloff_curve.get().get_value( x );
       falloff_vec[i] = invert.get() ? 1.0f-y : y;
@@ -229,6 +230,8 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
   }
   falloff_curve.get().unlock();
 
+  //std::cout<<"PathMaskPar::build(): get_smod().get_border_size()="<<get_smod().get_border_size()
+  //    <<"  border_size.get()="<<border_size.get()<<std::endl;
   bool path_modified = smod.is_modified();
   if( get_smod().get_border_size() != border_size.get() ) {
     get_smod().set_border_size( border_size.get() );
@@ -243,8 +246,9 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
   const std::vector< std::pair<float,float> >& points = smod.get().get_points();
   int ps = points.size();
 
+  //std::cout<<"PathMaskPar::build(): path_modified="<<path_modified<<std::endl;
   if( path_modified ) {
-    std::cout<<"PathMaskPar::build(): updating path"<<std::endl;
+    //std::cout<<"PathMaskPar::build(): updating path"<<std::endl;
     if( edgevec ) delete[] edgevec;
     edgevec = new std::vector<path_point>[out->Ysize];
 
@@ -252,8 +256,8 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
     const std::vector< std::pair<int,int> >& spline_points2 = get_smod().get_border();
 
     std::vector<path_point> path_points;
-    for( int pi = 0; pi < spline_points.size(); pi++ ) {
-      int pi2 = pi + 1;
+    for( unsigned int pi = 0; pi < spline_points.size(); pi++ ) {
+      unsigned int pi2 = pi + 1;
       if( pi2 >= spline_points.size() ) pi2 = 0;
       double px  = spline_points[pi].first,  py  = spline_points[pi].second;
       double px2 = spline_points[pi2].first, py2 = spline_points[pi2].second;
@@ -269,11 +273,11 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
       //std::cout<<"path point #"<<path_points.size()-1<<"  px="<<ipx<<"  py="<<ipy
       //    <<"  pi2="<<pi2<<"  px2="<<ipx2<<"  py2="<<ipy2<<std::endl;
     }
-    std::cout<<"spline_points.size()="<<spline_points.size()<<"  path_points.size()="<<path_points.size()<<std::endl;
+    //std::cout<<"PathMaskPar::build(): spline_points.size()="<<spline_points.size()<<"  path_points.size()="<<path_points.size()<<std::endl;
 
     int point_start = -1;
-    for( int pi = 0; pi < path_points.size(); pi++ ) {
-      int pi2 = pi + 1;
+    for( unsigned int pi = 0; pi < path_points.size(); pi++ ) {
+      unsigned int pi2 = pi + 1;
       if( pi2 >= path_points.size() ) pi2 = 0;
       int py = path_points[pi].y;
       int py2 = path_points[pi2].y;
@@ -289,7 +293,7 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
         int pjprev = pj - 1;
         if( pjprev < 0 ) pjprev = path_points.size() - 1;
         int pjnext = pj + 1;
-        if( pjnext >= path_points.size() ) pjnext = 0;
+        if( pjnext >= (int)path_points.size() ) pjnext = 0;
 
         int px = path_points[pj].x;
         int py = path_points[pj].y;
@@ -306,7 +310,7 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
         if( dy < 0 ) path_points[pj].state_changing = true;
 
         pj += 1;
-        if( pj >= path_points.size() ) pj = 0;
+        if( pj >= (int)path_points.size() ) pj = 0;
       } while( pj != point_start );
     }
 
@@ -320,7 +324,7 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
     //std::cout<<"spline_points2.size(): "<<spline_points2.size()<<std::endl;
     int xlast=-1, ylast=-1;
     int yprev = -1000000;
-    for( int pi = 0; pi < path_points.size(); pi++ ) {
+    for( unsigned int pi = 0; pi < path_points.size(); pi++ ) {
       double px = path_points[pi].x, py = path_points[pi].y;
 
       int ipx = px, ipy = py;
@@ -329,7 +333,7 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
       if( yprev == -1000000 ) yprev = ipy;
 
       int pi2 = pi + 1;
-      if( pi2 >= path_points.size() ) pi2 = 0;
+      if( pi2 >= (int)path_points.size() ) pi2 = 0;
 
       double px2 = path_points[pi2].x, py2 = path_points[pi2].y;
 
@@ -393,8 +397,10 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
     segvec = new std::vector< PF::falloff_segment >[out->Ysize/tw+1];
 
     for( int y = 0, si = 0; y < out->Ysize; y+=tw, si++ ) {
-      //std::cout<<"Filling segment "<<si<<"  ("<<y<<" -> "<<y+tw<<")"<<std::endl;
-      for( int i = 0; i < segments.size(); i++ ) {
+      //std::cout<<"PathMaskPar::build(): Filling segment "<<si<<"  ("<<y<<" -> "<<y+tw<<")"<<std::endl;
+      //std::cout<<"  segments.size()="<<segments.size()<<std::endl;
+      //if( segments.size()>0 ) std::cout<<"  segments[0]="<<segments[0].x1<<","<<segments[0].x1<<","<<segments[0].y1<<" -> "<<segments[0].x2<<","<<segments[0].y2<<std::endl;
+      for( unsigned int i = 0; i < segments.size(); i++ ) {
         int ipx = segments[i].x1;
         int ipy = segments[i].y1;
         int ibpx = segments[i].x2;
@@ -413,11 +419,12 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
           segvec[si].push_back( seg );
         }
       }
-      //std::cout<<"segvec["<<si<<"].size()="<<segvec[si].size()<<std::endl;
+      //std::cout<<"PathMaskPar::build(): segvec["<<si<<"].size()="<<segvec[si].size()<<std::endl;
     }
   }
 
-  VipsImage* cached;
+  VipsImage* cached = out;
+  /**/
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   bool threaded = true, persistent = false;
   if( vips_tilecache(out, &cached,
@@ -427,7 +434,7 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   }
   PF_UNREF( out, "GaussBlurPar::build(): iter_in unref" );
-
+  /**/
   return cached;
 }
 

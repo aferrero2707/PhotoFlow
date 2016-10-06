@@ -56,7 +56,9 @@ public:
   size_t size() { return controls.size(); }
   /**/
   void clear();
-  void add_control(PF::OperationConfigGUI* control);
+  void populate();
+  void update();
+  void add_control(PF::Layer* layer, PF::OperationConfigGUI* control);
   void remove_control(PF::OperationConfigGUI* control);
   void collapse_all();
   /**/
@@ -139,6 +141,8 @@ public:
     }
   }
 
+  void update_controls();
+
   static gboolean update_cb(PF::LayerWidget* w)
   {
     //std::cout<<"LayerWidget::update_cb() called."<<std::endl;
@@ -159,6 +163,13 @@ public:
   void on_button_add_group();
   void on_button_add_image();
   void on_button_del();
+
+  void save_preset(std::string filename);
+
+  void delete_selected_layers();
+  void cut_selected_layers();
+  void copy_selected_layers();
+  void paste_layers();
 
   void on_button_load();
   void on_button_save();

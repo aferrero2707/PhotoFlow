@@ -88,8 +88,6 @@ include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
 include_directories(${EXIV2_INCLUDE_DIRS})
 link_directories(${EXIV2_LIBRARY_DIRS})
-include_directories(${GEXIV2_INCLUDE_DIRS})
-link_directories(${GEXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 link_directories(${ORC_LIBRARY_DIRS})
@@ -165,8 +163,12 @@ add_library (pfdt STATIC
 SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/src/dt -std=gnu99")
 
 
-FILE(GLOB BaseIncludes base/*.hh)
-FILE(GLOB BaseSources base/*.cc base/icc/*.cc)
+FILE(GLOB BaseIncludes version.hh base/*.hh)
+if (AUTOMATED_VERSION_CHECK)
+  FILE(GLOB BaseSources ${CMAKE_CURRENT_BINARY_DIR}/version.cc base/*.cc base/icc/*.cc)
+else (AUTOMATED_VERSION_CHECK)
+  FILE(GLOB BaseSources version.cc base/*.cc base/icc/*.cc)
+endif (AUTOMATED_VERSION_CHECK)
 
 FILE(GLOB RTIncludes 
   rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h
@@ -178,6 +180,7 @@ FILE(GLOB RTSources
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
+  rt/rtengine/xtrans_demosaic_RT.cc
   rt/rtengine/dcp.cc rt/rtengine/curves.cc rt/rtengine/diagonalcurves.cc rt/rtengine/flatcurves.cc rt/rtengine/color.cc rt/rtexif/*.cc
 )
 
@@ -187,8 +190,8 @@ FILE(GLOB VipsSources vips/*.c vips/*.cc vips/gmic/*.c vips/gmic/*.cpp)
 FILE(GLOB GMicIncludes vips/gmic/gmic/src/*.h)
 FILE(GLOB GMicSources vips/gmic/gmic/src/gmic.cpp)
 
-FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh)
-FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
+FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh legacy/operations/*.hh)
+FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc legacy/operations/*.cc)
 
 #
 # the libraw part is a bit of a hack:
@@ -208,6 +211,7 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 # so we do a custom dependency and pretend an imported librawsped.a so no other -l are
 # appended.
 #
+set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX})
 add_library(rawspeed_static STATIC IMPORTED)
 set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
 # compile rawspeed
@@ -242,6 +246,21 @@ endif(BUNDLED_LENSFUN)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 
 
+if(BUNDLED_GEXIV2)
+  include(ExternalProject)
+  ExternalProject_Add(gexiv2
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
+    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
+    BUILD_COMMAND ${MAKE})
+  set(GEXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/include)
+  set( GEXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib)
+  set(GEXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib/libgexiv2.a)
+endif(BUNDLED_GEXIV2)
+include_directories(${GEXIV2_INCLUDE_DIRS})
+link_directories(${GEXIV2_LIBRARY_DIRS})
+
+MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
 add_library (pfbase STATIC
   ${BaseIncludes}
@@ -262,8 +281,8 @@ add_library (pfbase STATIC
 add_dependencies(pfbase ${LIB_DEPS})
 
 
-FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
-FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc)
+FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh legacy/gui/operations/*.hh)
+FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc legacy/gui/operations/*.cc)
 
 add_library (pfgui STATIC
   ${GuiIncludes}
@@ -272,13 +291,8 @@ add_library (pfgui STATIC
 
 
 IF(MINGW)
-  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
-  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
-  if(BUNDLED_LENSFUN)
-    list(APPEND ADDITIONAL_LIBS tre_regex)
-  else(BUNDLED_LENSFUN)
-    list(APPEND ADDITIONAL_LIBS regex)
-  endif(BUNDLED_LENSFUN)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
 ELSEIF(APPLE)
   list(APPEND ADDITIONAL_LIBS)
 ELSE(MINGW)
@@ -369,6 +383,7 @@ target_link_libraries(pfbatch ${LIBS}
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 
+INSTALL(DIRECTORY ../presets DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icc DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
@@ -471,7 +486,7 @@ if (GIMP_FOUND)
     #gmon
   )
   
-  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION lib/gimp/2.0/plug-ins)
+  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION ${GIMP_2_9_PREFIX}/lib/gimp/2.0/plug-ins)
 endif (GIMP_FOUND)
 
 

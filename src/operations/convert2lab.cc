@@ -65,6 +65,12 @@ VipsImage* PF::Convert2LabPar::build(std::vector<VipsImage*>& in, int first,
   
   if( in.size()<1 || in[0]==NULL ) return NULL;
   
+  if( in[0]->Type == VIPS_INTERPRETATION_LAB ) {
+    PF_REF( in[0], "Convert2LabPar::build(): ref input Lab image" );
+    std::cout<<"Convert2LabPar::build(): input image already in Lab colorspace, no transform needed"<<std::endl;
+    return in[0];
+  }
+
   cmsHPROFILE profile_in = NULL;
   PF::ICCProfile* iccprof_in = PF::get_icc_profile( in[first] );
   if( iccprof_in )  {

@@ -74,6 +74,7 @@ namespace PF {
     void Resize(unsigned int width, unsigned int height);
     void SetRowColOffset(unsigned int roffs, unsigned int coffs);
     void SetXYOffset(unsigned int xoffs, unsigned int yoffs);
+    void Reset();
 
     T* GetBuffer() { return buf; }
     T& Get(unsigned int r, unsigned int c);
@@ -113,7 +114,7 @@ namespace PF {
   Array2D<T>::~Array2D()
   {
 #ifdef ARRAY2D_DEBUG
-		std::cout<<"Array2D<T>::~Array2D(): matrix="<<(void*)matrix<<"  buf="<<(void*)buf<<std::endl;
+    std::cout<<"Array2D<T>::~Array2D(): matrix="<<(void*)matrix<<"  buf="<<(void*)buf<<std::endl;
 #endif
     if( matrix ) {
       free( matrix );
@@ -123,6 +124,29 @@ namespace PF {
     }
     if( buf ) {
       free( buf );
+#ifdef ARRAY2D_DEBUG
+      std::cout<<"Array2D<T>::~Array2D(): buffer deallocated"<<std::endl;
+#endif
+    }
+  }
+
+
+  template<class T>
+  void Array2D<T>::Reset()
+  {
+#ifdef ARRAY2D_DEBUG
+    std::cout<<"Array2D<T>::~Array2D(): matrix="<<(void*)matrix<<"  buf="<<(void*)buf<<std::endl;
+#endif
+    if( matrix ) {
+      free( matrix );
+      matrix = NULL;
+#ifdef ARRAY2D_DEBUG
+      std::cout<<"Array2D<T>::~Array2D(): matrix deallocated"<<std::endl;
+#endif
+    }
+    if( buf ) {
+      free( buf );
+      buf = NULL;
 #ifdef ARRAY2D_DEBUG
       std::cout<<"Array2D<T>::~Array2D(): buffer deallocated"<<std::endl;
 #endif
@@ -175,7 +199,7 @@ namespace PF {
 
     // Step 3: check if the row pointers need to be (re)assigned
     if(GetWidth() != w || GetHeight() != h) {
-      for(int j = 0; j < h; j++) {
+      for(int j = 0; j < (int)h; j++) {
 	matrix[j] = &(buf[j*w]);
 #ifdef ARRAY2D_DEBUG
 	//std::cout<<"  matrix["<<j<<"] = &(buf["<<j<<"*"<<w<<"])"
@@ -198,7 +222,7 @@ namespace PF {
 #endif
     }
     if(GetHeight() != h || c_offset != GetColOffset()) {
-      for(int j = 0; j < h; j++) {
+      for(int j = 0; j < (int)h; j++) {
 	matrix_shifted[j+r_offset] = matrix[j] - c_offset;
 #ifdef ARRAY2D_DEBUG
 	//std::cout<<"  matrix_shifted["<<j+r_offset<<"] = matrix["<<j<<"-"<<c_offset<<std::endl;

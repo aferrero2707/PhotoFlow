@@ -51,6 +51,38 @@ int rawspeed_get_number_of_processor_cores()
 }
 
 
+static void rawspeed_lookup_makermodel(RawSpeed::Camera *cam, const char *maker, const char *model,
+    char *mk, int mk_len, char *md, int md_len,
+    char *al, int al_len)
+{
+  int got_it_done = FALSE;
+  try {
+    if (cam)
+    {
+      g_strlcpy(mk, cam->canonical_make.c_str(), mk_len);
+      g_strlcpy(md, cam->canonical_model.c_str(), md_len);
+      g_strlcpy(al, cam->canonical_alias.c_str(), al_len);
+      got_it_done = TRUE;
+    }
+  }
+  catch(const std::exception &exc)
+  {
+    printf("[rawspeed] %s\n", exc.what());
+  }
+
+  std::cout<<"rawspeed_lookup_makermodel: cam="<<cam<<"  got_it_done="<<got_it_done<<std::endl;
+  if (!got_it_done)
+  {
+    // We couldn't find the camera or caught some exception, just punt and pass
+    // through the same values
+    g_strlcpy(mk, maker, mk_len);
+    g_strlcpy(md, model, md_len);
+    g_strlcpy(al, model, al_len);
+  }
+}
+
+
+
 dcraw_data_t* PF::get_raw_data( VipsImage* image )
 {
   if( !image ) return NULL;
@@ -63,6 +95,12 @@ dcraw_data_t* PF::get_raw_data( VipsImage* image )
   return NULL;
 }
 
+
+
+bool PF::check_xtrans( unsigned filters )
+{
+  return( filters == 9u);
+}
 
 
 PF::RawImage::RawImage( const std::string _fname ):
@@ -91,52 +129,7 @@ PF::RawImage::RawImage( const std::string _fname ):
 
   int iwidth = 0, iheight = 0, crop_x = 0, crop_y = 0;
 
-#ifdef PF_USE_LIBRAW
-  LibRaw* raw_loader = new LibRaw();
-  int result = raw_loader->open_file( file_name_real.c_str() );
-  if( result != 0 ) {
-    std::cout<<"RawImage::RawImage(): raw_loader->open_file("<<file_name<<") failed"<<std::endl;
-    delete raw_loader;
-    return;
-  }
-  if( (raw_loader->imgdata.idata.cdesc[0] != 'R') ||
-      (raw_loader->imgdata.idata.cdesc[1] != 'G') ||
-      (raw_loader->imgdata.idata.cdesc[2] != 'B') ||
-      (raw_loader->imgdata.idata.cdesc[3] != 'G') ) {
-    std::cout<<"RawImage::RawImage(): not an RGBG image"<<std::endl;
-    delete raw_loader;
-    return;
-  }
-
-  raw_loader->imgdata.params.no_auto_bright = 1;
-  result = raw_loader->unpack();
-  if( result != 0 ) {
-    std::cout<<"RawImage::RawImage(): unpack failed"<<std::endl;
-    delete raw_loader;
-    return;
-  }
-
-  raw_loader->raw2image();
-
-#ifdef DO_WARNINGS
-#warning "TODO: add a custom subtract_black() function that works in unbounded mode"
-#endif
-  raw_loader->subtract_black();
-
-  iwidth = raw_loader->imgdata.sizes.iwidth;
-	iheight = raw_loader->imgdata.sizes.iheight;
-  std::cout<<"LibRAW dimensions: raw width="<<raw_loader->imgdata.sizes.raw_width<<",height="<<raw_loader->imgdata.sizes.raw_height
-           <<"    width="<<raw_loader->imgdata.sizes.width<<",height="<<raw_loader->imgdata.sizes.height
-           <<"    iwidth="<<raw_loader->imgdata.sizes.iwidth<<",iheight="<<raw_loader->imgdata.sizes.iheight
-           <<"    flip="<<raw_loader->imgdata.sizes.flip<<std::endl;
-	pdata = &(raw_loader->imgdata);
-	std::cout<<"LibRAW camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]
-					 <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
-	if(pdata->color.cam_mul[3] < 0.00000001) 
-		pdata->color.cam_mul[3] = pdata->color.cam_mul[1];
-#endif
   
-#ifdef PF_USE_RAWSPEED
 #ifdef __WIN32__
   std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "\\rawspeed\\cameras.xml";
 #else
@@ -189,12 +182,31 @@ PF::RawImage::RawImage( const std::string _fname ):
     d->checkSupport(meta);
     d->decodeRaw();
     d->decodeMetaData(meta);
-    RawSpeed::RawImage r = d->mRaw;
+    RawSpeed::RawImage& r = d->mRaw;
 
     for (uint32 i=0; i<r->errors.size(); i++)
       fprintf(stderr, "[rawspeed] %s\n", r->errors[i]);
 
+    // Get CFA pattern
     pdata->idata.filters = r->cfa.getDcrawFilter();
+    if(pdata->idata.filters == 9u)
+    {
+      // get 6x6 CFA offset from top left of cropped image
+      // NOTE: This is different from how things are done with Bayer
+      // sensors. For these, the CFA in cameras.xml is pre-offset
+      // depending on the distance modulo 2 between raw and usable
+      // image data. For X-Trans, the CFA in cameras.xml is
+      // (currently) aligned with the top left of the raw data, and
+      // hence it is shifted here to align with the top left of the
+      // cropped image.
+      RawSpeed::iPoint2D tl_margin = r->getCropOffset();
+      for(int i = 0; i < 6; ++i)
+        for(int j = 0; j < 6; ++j)
+        {
+          pdata->idata.xtrans_uncropped[j][i] = r->cfa.getColorAt(i % 6, j % 6);
+          pdata->idata.xtrans[j][i] = r->cfa.getColorAt((i + tl_margin.x) % 6, (j + tl_margin.y) % 6);
+        }
+    }
 
     pdata->color.black = r->blackLevel;
     pdata->color.maximum = r->whitePoint;
@@ -232,43 +244,6 @@ PF::RawImage::RawImage( const std::string _fname ):
              <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
     std::cout<<"RawSpeed black="<<pdata->color.black<<"  white="<<pdata->color.maximum<<std::endl;
 
-    /*
-    img->filters = 0u;
-    if(!r->isCFA)
-    {
-      dt_imageio_retval_t ret = dt_imageio_open_rawspeed_sraw(img, r, mbuf);
-      return ret;
-    }
-
-    img->bpp = r->getBpp();
-    img->filters = r->cfa.getDcrawFilter();
-    if(img->filters)
-    {
-      img->flags &= ~DT_IMAGE_LDR;
-      img->flags |= DT_IMAGE_RAW;
-      if(r->getDataType() == TYPE_FLOAT32) img->flags |= DT_IMAGE_HDR;
-      // special handling for x-trans sensors
-      if(img->filters == 9u)
-      {
-        // get 6x6 CFA offset from top left of cropped image
-        // NOTE: This is different from how things are done with Bayer
-        // sensors. For these, the CFA in cameras.xml is pre-offset
-        // depending on the distance modulo 2 between raw and usable
-        // image data. For X-Trans, the CFA in cameras.xml is
-        // (currently) aligned with the top left of the raw data, and
-        // hence it is shifted here to align with the top left of the
-        // cropped image.
-        iPoint2D tl_margin = r->getCropOffset();
-        for(int i = 0; i < 6; ++i)
-          for(int j = 0; j < 6; ++j)
-          {
-            img->xtrans_uncropped[j][i] = r->cfa.getColorAt(i % 6, j % 6);
-            img->xtrans[j][i] = r->cfa.getColorAt((i + tl_margin.x) % 6, (j + tl_margin.y) % 6);
-          }
-      }
-    }
-    */
-
     // dimensions of uncropped image
     RawSpeed::iPoint2D dimUncropped = r->getUncroppedDim();
     //iwidth = dimUncropped.x;
@@ -299,35 +274,6 @@ PF::RawImage::RawImage( const std::string _fname ):
     RawSpeed::iPoint2D cropBR = dimUncropped - dimCropped - cropTL;
 
     std::cout<<"original width: "<<dimUncropped.x<<"  crop offset: "<<cropTL.x<<"  cropped width: "<<dimCropped.x<<std::endl;
-
-    /*
-    img->fuji_rotation_pos = r->metadata.fujiRotationPos;
-    img->pixel_aspect_ratio = (float)r->metadata.pixelAspectRatio;
-
-    void *buf = dt_mipmap_cache_alloc(mbuf, img);
-    if(!buf) return DT_IMAGEIO_CACHE_FULL;
-    */
-    /*
-     * since we do not want to crop black borders at this stage,
-     * and we do not want to rotate image, we can just use memcpy,
-     * as it is faster than dt_imageio_flip_buffers, but only if
-     * buffer sizes are equal,
-     * (from Klaus: r->pitch may differ from DT pitch (line to line spacing))
-     * else fallback to generic dt_imageio_flip_buffers()
-     */
-    /*
-    const size_t bufSize_mipmap = (size_t)img->width * img->height * img->bpp;
-    const size_t bufSize_rawspeed = (size_t)r->pitch * dimUncropped.y;
-    if(bufSize_mipmap == bufSize_rawspeed)
-    {
-      memcpy(buf, r->getDataUncropped(0, 0), bufSize_mipmap);
-    }
-    else
-    {
-      dt_imageio_flip_buffers((char *)buf, (char *)r->getDataUncropped(0, 0), r->getBpp(), dimUncropped.x,
-                              dimUncropped.y, dimUncropped.x, dimUncropped.y, r->pitch, ORIENTATION_NONE);
-    }
-    */
   }
 
   catch(const std::exception &exc)
@@ -343,7 +289,8 @@ PF::RawImage::RawImage( const std::string _fname ):
     printf("Unhandled exception in imageio_rawspeed\n");
     return ;
   }
-#endif
+
+
   //==================================================================
   // Save decoded data to cache file on disk.
   // The pixel values are normalized to the [0..65535] range 
@@ -362,9 +309,9 @@ PF::RawImage::RawImage( const std::string _fname ):
   //size_t pxsize = sizeof(PF::RawPixel);
   //size_t pxsize = sizeof(float)+sizeof(guint8);
   size_t pxsize = sizeof(float)*2;
-  guint8* rowbuf = (guint8*)malloc( iwidth*pxsize );
+  guint8* rawbuf = (guint8*)malloc( pxsize*iwidth*iheight );
 //#ifndef NDEBUG
-  std::cout<<"Row buffer allocated: "<<(void*)rowbuf<<std::endl;
+  std::cout<<"Raw buffer allocated: "<<(void*)rawbuf<<std::endl;
 //#endif
   /* Normalized raw data to 65535 and build raw histogram
    * */
@@ -374,49 +321,34 @@ PF::RawImage::RawImage( const std::string _fname ):
 
   rawData.Init( iwidth, iheight, 0, 0 );
 
-  guint8* ptr;
+  guint8* ptr = rawbuf;
 	float* fptr;
+	std::cout<<"RawImage: crop_x="<<crop_x<<" crop_y="<<crop_y<<std::endl;
+  RawSpeed::RawImage& r = d->mRaw;
   for(row=0;row<iheight;row++) {
     unsigned int row_offset = row*iwidth;
-		ptr = rowbuf;
 		//#ifndef NDEBUG
 		  //std::cout<<"  row: "<<row<<std::endl;
-    if( (row%10) == 0 ) std::cout<<"  saving row "<<row<<""<<std::endl;
+    //if( (row%100) == 0 ) std::cout<<"  saving row "<<row<<""<<std::endl;
 		//#endif
-    RawSpeed::RawImage& r = d->mRaw;
     for(col=0; col<iwidth; col++) {
-#ifdef PF_USE_LIBRAW
-      unsigned char color = (unsigned char)raw_loader->COLOR(row,col);
-      float val = raw_loader->imgdata.image[row_offset+col][color];
-			val /= raw_loader->imgdata.color.maximum;
-			val *= 65535;
-			//if( row==10 && col==11 ) {
-				//std::cout<<"raw pixel @ (0,0): val="<<*fptr<<"  c="<<(int)ptr[sizeof(float)]<<std::endl;
-				//std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<std::endl;
-			//}
-#endif
-#ifdef PF_USE_RAWSPEED
       int col2 = col + crop_x;
       int row2 = row + crop_y;
-      unsigned char color = r->cfa.getColorAt(col2,row2);
+      //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : r->cfa.getColorAt(col,row);
+      unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
       float val = 0;
       float nval = 0;
       switch(r->getDataType()) {
       case RawSpeed::TYPE_USHORT16: val = *((uint16_t*)r->getDataUncropped(col2,row2)); break;
       case RawSpeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
       }
-      if( abs(row-2798)<5 && abs(col-2748)<5 ) {
-        std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<"  max="<<pdata->color.maximum<<std::endl;
+      if(true && row<8 && col<8) {
+        std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<std::endl;
       }
-      //pdata->color.black = 2048;
       nval = val - pdata->color.black;
       nval /= (pdata->color.maximum - pdata->color.black);
       nval *= 65535;
-      //if( abs(row-2798)<5 && abs(col-2748)<5 ) {
-      //  std::cout<<"raw pixel @ ("<<row<<","<<col<<"): val="<<val<<"  c="<<(int)color<<" (scaled)"<<std::endl;
-      //}
 
-#endif
 
       // Fill raw histogram
       int hist_id = -1;
@@ -430,42 +362,23 @@ PF::RawImage::RawImage( const std::string _fname ):
         raw_hist[hist_id] += 1;
       }
 
-			fptr = (float*)ptr;
-      //*fptr = val;
-      //ptr[sizeof(float)] = color;
+      fptr = (float*)ptr;
       fptr[0] = val;
       fptr[1] = color;
-      //std::cout<<"val="<<val<<"  color="<<color<<std::endl;
-			ptr += pxsize;
-			rawData[row][col] = nval;
-    }
-		/**/
-    if( (int)write( temp_fd, rowbuf, pxsize*iwidth ) != (int)(iwidth*pxsize) )
-      break;
-#ifndef NDEBUG
-    if( (row%100) == 0 ) std::cout<<"  row "<<row<<" saved."<<std::endl;
-#ifdef PF_USE_RAWSPEED
-		if( row==0 ) {
-			for(col=0; col<10; col++) {
-				std::cout<<"  val="<<data[row][col]<<"  c="<<(unsigned int)FC(row,col)<<std::endl;
-			}
-		}
-#endif
-#endif
-  }
-#ifndef NDEBUG
-  std::cout<<"Deleting row buffer: "<<(void*)rowbuf<<std::endl;
-#endif
-  free( rowbuf );
-#ifndef NDEBUG
-  std::cout<<"Row buffer deleted"<<std::endl;
-#endif
+      ptr += pxsize;
 
-#ifdef PF_USE_RAWSPEED
+      rawData[row][col] = nval;
+      //rawData[row].color(col) = color;
+    }
+  }
+
+  g_strlcpy(exif_data.camera_maker, r->metadata.canonical_make.c_str(), sizeof(exif_data.camera_maker));
+  g_strlcpy(exif_data.camera_model, r->metadata.canonical_model.c_str(), sizeof(exif_data.camera_model));
+  g_strlcpy(exif_data.camera_alias, r->metadata.canonical_alias.c_str(), sizeof(exif_data.camera_alias));
+
   /* free auto pointers on spot */
   d.reset();
   m.reset();
-#endif
 
   std::cout<<"Starting CA correction..."<<std::endl;
   CA_correct_RT();
@@ -479,6 +392,7 @@ PF::RawImage::RawImage( const std::string _fname ):
       printf("\n");
     }
   }
+  rawData.Reset();
   //getchar();
 
 
@@ -486,25 +400,36 @@ PF::RawImage::RawImage( const std::string _fname ):
 	//   <<"iheight="<<iheight<<std::endl
 	//   <<"row="<<row<<"  sizeof(PF::raw_pixel_t)="<<sizeof(PF::raw_pixel_t)<<std::endl;
   //==================================================================
-  // Load the raw file into a vips image
-  VipsImage* in;
-  if( vips_rawload( fname, &in, iwidth, 
-										iheight, pxsize, NULL ) )
+  // Load the RAW image data into a vips image
+  std::cout<<"RawImage: rawData.GetBuffer()="<<(void*)rawData.GetBuffer()<<std::endl;
+  std::cout<<"  buffer size: "<<sizeof(float)*iwidth*iheight<<" bytes"<<std::endl;
+  VipsImage* ti = vips_image_new_from_memory_copy(
+      rawbuf, sizeof(float)*2*iwidth*iheight,
+      iwidth, iheight, 2, VIPS_FORMAT_FLOAT );
+#ifndef NDEBUG
+  std::cout<<"Deleting Raw buffer: "<<(void*)rowbuf<<std::endl;
+#endif
+  free( rawbuf );
+#ifndef NDEBUG
+  std::cout<<"Raw buffer deleted"<<std::endl;
+#endif
+  if( !ti ) {
+    std::cout<<"RawImage: ERROR creating Vips image from memory"<<std::endl;
     return;
-  //unlink( fname );
+  }
   
   VipsCoding coding = VIPS_CODING_NONE;
   VipsInterpretation interpretation = VIPS_INTERPRETATION_MULTIBAND;
   //VipsBandFormat format = VIPS_FORMAT_UCHAR;
   VipsBandFormat format = VIPS_FORMAT_FLOAT;
   int nbands = 2;
-  vips_copy( in, &image, 
-	     "format", format,
-	     "bands", nbands,
-	     "coding", coding,
-	     "interpretation", interpretation,
-	     NULL );
-  g_object_unref( in );
+  vips_copy( ti, &image,
+       "format", format,
+       "bands", nbands,
+       "coding", coding,
+       "interpretation", interpretation,
+       NULL );
+  g_object_unref( ti );
   
   
   //==================================================================
@@ -537,6 +462,35 @@ PF::RawImage::RawImage( const std::string _fname ):
 
 
   PF::exif_read( &exif_data, file_name_real.c_str() );
+
+std::cout<<"maker: \""<<exif_data.exif_maker<<"\" model: \""<<exif_data.exif_model<<"\""<<std::endl;
+  if (!exif_data.camera_maker[0] || !exif_data.camera_model[0] || !exif_data.camera_alias[0]) {
+    RawSpeed::Camera *cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "");
+    if (!cam) {
+      std::cout<<"RawImage: getting rawspeed camera in DNG mode"<<std::endl;
+      cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "dng");
+    }
+    // We need to use the exif values, so let's get rawspeed to munge them
+    rawspeed_lookup_makermodel(cam, exif_data.exif_maker, exif_data.exif_model,
+        exif_data.camera_maker, sizeof(exif_data.camera_maker),
+        exif_data.camera_model, sizeof(exif_data.camera_model),
+        exif_data.camera_alias, sizeof(exif_data.camera_alias));
+  }
+
+  // Now we just create a makermodel by concatenation
+  g_strlcpy(exif_data.camera_makermodel, exif_data.camera_maker, sizeof(exif_data.camera_makermodel));
+  int maker_len = strlen(exif_data.camera_maker);
+  exif_data.camera_makermodel[maker_len] = ' ';
+  g_strlcpy(exif_data.camera_makermodel+maker_len+1, exif_data.camera_model, sizeof(exif_data.camera_makermodel)-maker_len-1);
+
+  std::cout<<"RawImage: Camera maker/model data:"<<std::endl
+      <<"  exif_data.exif_maker: "<<exif_data.exif_maker<<std::endl
+      <<"  exif_data.exif_model: "<<exif_data.exif_model<<std::endl
+      <<"  exif_data.camera_maker: "<<exif_data.camera_maker<<std::endl
+      <<"  exif_data.camera_model: "<<exif_data.camera_model<<std::endl
+      <<"  exif_data.camera_alias: "<<exif_data.camera_alias<<std::endl
+      <<"  exif_data.camera_makermodel: "<<exif_data.camera_makermodel<<std::endl;
+
   void* exifdata_buf = malloc( sizeof(exif_data_t) );
   if( !exifdata_buf ) return;
   memcpy( exifdata_buf, &exif_data, sizeof(exif_data_t) );
@@ -559,7 +513,9 @@ PF::RawImage::RawImage( const std::string _fname ):
   
   int width = image->Xsize;
   int height = image->Ysize;
-  PF::ProcessorBase* fast_demosaic = PF::new_fast_demosaic();
+  fast_demosaic = NULL;
+  if( is_xtrans() ) fast_demosaic = PF::new_fast_demosaic_xtrans();
+  else fast_demosaic = PF::new_fast_demosaic();
   fast_demosaic->get_par()->set_image_hints( image );
   fast_demosaic->get_par()->set_format( VIPS_FORMAT_FLOAT );
   fast_demosaic->get_par()->set_demand_hint( VIPS_DEMAND_STYLE_FATSTRIP );
@@ -569,6 +525,17 @@ PF::RawImage::RawImage( const std::string _fname ):
   VipsImage* out_demo = fast_demosaic->get_par()->build( in2, 0, NULL, NULL, level );
   //g_object_unref( image );
   
+  vips_copy( out_demo, &demo_image,
+       "format", VIPS_FORMAT_FLOAT,
+       "bands", (int)3,
+       "coding", VIPS_CODING_NONE,
+       "interpretation", VIPS_INTERPRETATION_RGB,
+       NULL );
+  g_object_unref( out_demo );
+
+  pyramid.init( demo_image );
+  return;
+
   sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
   int fd = pf_mkstemp( fname );
   if( fd < 0 )
@@ -617,11 +584,6 @@ PF::RawImage::RawImage( const std::string _fname ):
            sizeof(exif_data_t) );
 /**/
   pyramid.init( demo_image );
-
-#ifdef PF_USE_LIBRAW
-  delete raw_loader;
-  //return;
-#endif
 }
 
 
@@ -629,6 +591,7 @@ PF::RawImage::~RawImage()
 {
   if( image ) PF_UNREF( image, "RawImage::~RawImage() image" );
   if( demo_image ) PF_UNREF( demo_image, "RawImage::~RawImage() demo_image" );
+  if( fast_demosaic ) delete fast_demosaic;
 	std::cout<<"RawImage::~RawImage() called."<<std::endl;
 	if( !(cache_file_name.empty()) )
 		unlink( cache_file_name.c_str() );
@@ -753,11 +716,11 @@ int PF::RawImage::LinEqSolve(int nDim, double* pfMatr, double* pfVect, double* p
 
     for(k = 0; k < (nDim - 1); k++) { // base row of matrix
         // search of line with max element
-        fMaxElem = fabsf( pfMatr[k * nDim + k] );
+        fMaxElem = fabs( pfMatr[k * nDim + k] );
         m = k;
 
         for (i = k + 1; i < nDim; i++) {
-            if(fMaxElem < fabsf(pfMatr[i * nDim + k]) ) {
+            if(fMaxElem < fabs(pfMatr[i * nDim + k]) ) {
                 fMaxElem = pfMatr[i * nDim + k];
                 m = i;
             }
@@ -1053,7 +1016,7 @@ void PF::RawImage::CA_correct_RT()
                             //rgb[c][indx1] = (rawData[row][col]) / 65535.0f;
                             rgb[c][indx1] = (rawData[row][col]) * mult[c] / 65535.0f;
                             //rgb[indx1][c] = image[indx][c]/65535.0f;//for dcraw implementation
-			    if(row<4 && col<4) printf("rawData[%d][%d](%d) = %f * %f = %f\n",row,col,c,(rawData[row][col]), mult[c], (rawData[row][col]) * mult[c]);
+                            if(false && row<4 && col<4) printf("rawData[%d][%d](%d) = %f * %f = %f\n",row,col,c,(rawData[row][col]), mult[c], (rawData[row][col]) * mult[c]);
                         }
 
                     // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1185,12 +1148,12 @@ void PF::RawImage::CA_correct_RT()
                              rbhpfh[indx] = fabsf(ghpfh - fabsf(fabsf(rgb[indx][c]-rgb[indx+4][c])+fabsf(rgb[indx][c]-rgb[indx-4][c]) -
                              fabsf(rgb[indx+4][c]-rgb[indx-4][c])));*/
 
-                            glpfv = 0.25 * (2.0 * rgb[1][indx] + rgb[1][indx + v2] + rgb[1][indx - v2]);
-                            glpfh = 0.25 * (2.0 * rgb[1][indx] + rgb[1][indx + 2] + rgb[1][indx - 2]);
-                            rblpfv[indx >> 1] = eps + fabsf(glpfv - 0.25 * (2.0 * rgb[c][indx] + rgb[c][indx + v2] + rgb[c][indx - v2]));
-                            rblpfh[indx >> 1] = eps + fabsf(glpfh - 0.25 * (2.0 * rgb[c][indx] + rgb[c][indx + 2] + rgb[c][indx - 2]));
-                            grblpfv[indx >> 1] = glpfv + 0.25 * (2.0 * rgb[c][indx] + rgb[c][indx + v2] + rgb[c][indx - v2]);
-                            grblpfh[indx >> 1] = glpfh + 0.25 * (2.0 * rgb[c][indx] + rgb[c][indx + 2] + rgb[c][indx - 2]);
+                            glpfv = 0.25f * (2.0f * rgb[1][indx] + rgb[1][indx + v2] + rgb[1][indx - v2]);
+                            glpfh = 0.25f * (2.0f * rgb[1][indx] + rgb[1][indx + 2] + rgb[1][indx - 2]);
+                            rblpfv[indx >> 1] = eps + fabsf(glpfv - 0.25f * (2.0f * rgb[c][indx] + rgb[c][indx + v2] + rgb[c][indx - v2]));
+                            rblpfh[indx >> 1] = eps + fabsf(glpfh - 0.25f * (2.0f * rgb[c][indx] + rgb[c][indx + 2] + rgb[c][indx - 2]));
+                            grblpfv[indx >> 1] = glpfv + 0.25f * (2.0f * rgb[c][indx] + rgb[c][indx + v2] + rgb[c][indx - v2]);
+                            grblpfh[indx >> 1] = glpfh + 0.25f * (2.0f * rgb[c][indx] + rgb[c][indx + 2] + rgb[c][indx - 2]);
                         }
 
                     areawt[0][0] = areawt[1][0] = 1;
@@ -1207,10 +1170,10 @@ void PF::RawImage::CA_correct_RT()
                             //solve for the interpolation position that minimizes color difference variance over the tile
 
                             //vertical
-                            gdiff = 0.3125 * (rgb[1][indx + TS] - rgb[1][indx - TS]) + 0.09375 * (rgb[1][indx + TS + 1] - rgb[1][indx - TS + 1] + rgb[1][indx + TS - 1] - rgb[1][indx - TS - 1]);
+                            gdiff = 0.3125f * (rgb[1][indx + TS] - rgb[1][indx - TS]) + 0.09375f * (rgb[1][indx + TS + 1] - rgb[1][indx - TS + 1] + rgb[1][indx + TS - 1] - rgb[1][indx - TS - 1]);
                             deltgrb = (rgb[c][indx] - rgb[1][indx]);
 
-                            gradwt = fabsf(0.25 * rbhpfv[indx >> 1] + 0.125 * (rbhpfv[(indx >> 1) + 1] + rbhpfv[(indx >> 1) - 1]) ) * (grblpfv[(indx >> 1) - v1] + grblpfv[(indx >> 1) + v1]) / (eps + 0.1 * grblpfv[(indx >> 1) - v1] + rblpfv[(indx >> 1) - v1] + 0.1 * grblpfv[(indx >> 1) + v1] + rblpfv[(indx >> 1) + v1]);
+                            gradwt = fabsf(0.25f * rbhpfv[indx >> 1] + 0.125f * (rbhpfv[(indx >> 1) + 1] + rbhpfv[(indx >> 1) - 1]) ) * (grblpfv[(indx >> 1) - v1] + grblpfv[(indx >> 1) + v1]) / (eps + 0.1f * grblpfv[(indx >> 1) - v1] + rblpfv[(indx >> 1) - v1] + 0.1f * grblpfv[(indx >> 1) + v1] + rblpfv[(indx >> 1) + v1]);
 
                             coeff[0][0][c] += gradwt * deltgrb * deltgrb;
                             coeff[0][1][c] += gradwt * gdiff * deltgrb;
@@ -1218,10 +1181,10 @@ void PF::RawImage::CA_correct_RT()
 //                  areawt[0][c]+=1;
 
                             //horizontal
-                            gdiff = 0.3125 * (rgb[1][indx + 1] - rgb[1][indx - 1]) + 0.09375 * (rgb[1][indx + 1 + TS] - rgb[1][indx - 1 + TS] + rgb[1][indx + 1 - TS] - rgb[1][indx - 1 - TS]);
+                            gdiff = 0.3125f * (rgb[1][indx + 1] - rgb[1][indx - 1]) + 0.09375f * (rgb[1][indx + 1 + TS] - rgb[1][indx - 1 + TS] + rgb[1][indx + 1 - TS] - rgb[1][indx - 1 - TS]);
                             deltgrb = (rgb[c][indx] - rgb[1][indx]);
 
-                            gradwt = fabsf(0.25 * rbhpfh[indx >> 1] + 0.125 * (rbhpfh[(indx >> 1) + v1] + rbhpfh[(indx >> 1) - v1]) ) * (grblpfh[(indx >> 1) - 1] + grblpfh[(indx >> 1) + 1]) / (eps + 0.1 * grblpfh[(indx >> 1) - 1] + rblpfh[(indx >> 1) - 1] + 0.1 * grblpfh[(indx >> 1) + 1] + rblpfh[(indx >> 1) + 1]);
+                            gradwt = fabsf(0.25f * rbhpfh[indx >> 1] + 0.125f * (rbhpfh[(indx >> 1) + v1] + rbhpfh[(indx >> 1) - v1]) ) * (grblpfh[(indx >> 1) - 1] + grblpfh[(indx >> 1) + 1]) / (eps + 0.1f * grblpfh[(indx >> 1) - 1] + rblpfh[(indx >> 1) - 1] + 0.1f * grblpfh[(indx >> 1) + 1] + rblpfh[(indx >> 1) + 1]);
 
                             coeff[1][0][c] += gradwt * deltgrb * deltgrb;
                             coeff[1][1][c] += gradwt * gdiff * deltgrb;

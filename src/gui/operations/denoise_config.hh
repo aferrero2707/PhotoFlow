@@ -52,6 +52,14 @@ namespace PF {
   //Selector modeSelector;
   CheckBox impulse_nr_enable;
   Slider impulse_nr_threshold;
+
+  CheckBox nlmeans_enable;
+  Slider nlmeans_radius;
+  Slider nlmeans_strength;
+  Slider nlmeans_luma_frac;
+  Slider nlmeans_chroma_frac;
+
+
   Slider iterationsSlider, amplitudeSlider, sharpnessSlider,
     anisotropySlider, alphaSlider, sigmaSlider;
 

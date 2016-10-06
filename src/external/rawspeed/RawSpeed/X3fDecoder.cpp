@@ -33,9 +33,9 @@ RawDecoder(file), bytes(NULL) {
   huge_table = NULL;
   line_offsets = NULL;
   if (getHostEndianness() == little)
-    bytes = new ByteStream(file->getData(0), file->getSize());
+    bytes = new ByteStream(file, 0);
   else
-    bytes = new ByteStreamSwap(file->getData(0), file->getSize());
+    bytes = new ByteStreamSwap(file, 0);
 }
 
 X3fDecoder::~X3fDecoder(void)
@@ -62,7 +62,7 @@ string X3fDecoder::getIdAsString(ByteStream *bytes) {
 RawImage X3fDecoder::decodeRawInternal()
 {
   vector<X3fImage>::iterator img = mImages.begin();
-  for (; img !=  mImages.end(); img++) {
+  for (; img !=  mImages.end(); ++img) {
     X3fImage cimg = *img;
     if (cimg.type == 1 || cimg.type == 3) {
       decompressSigma(cimg);
@@ -87,38 +87,38 @@ void X3fDecoder::decodeMetaDataInternal( CameraMetaData *meta )
 
 // readName will read the make and model of the image.
 //
-// If the name is read, it will return true, and the make/model
+// If the name is read, it will return (boolean)TRUE, and the make/model
 // will be available in camera_make/camera_model members.
 boolean X3fDecoder::readName() {
   if (camera_make.length() != 0 && camera_model.length() != 0) {
-    return ((boolean)TRUE);
+    return (boolean)TRUE;
   }
 
   // Read from properties
   if (hasProp("CAMMANUF") && hasProp("CAMMODEL")) {
     camera_make = getProp("CAMMANUF");
     camera_model = getProp("CAMMODEL");
-    return ((boolean)TRUE);
+    return (boolean)TRUE;
   }
 
   // See if we can find EXIF info and grab the name from there.
   // This is needed for Sigma DP2 Quattro and possibly later cameras.
   vector<X3fImage>::iterator img = mImages.begin();
-  for (; img !=  mImages.end(); img++) {
+  for (; img !=  mImages.end(); ++img) {
     X3fImage cimg = *img;
     if (cimg.type == 2 && cimg.format == 0x12 && cimg.dataSize > 100) {
-      if (!mFile->isValid(cimg.dataOffset + cimg.dataSize - 1)) {
-        return ((boolean)FALSE);
+      if (!mFile->isValid(cimg.dataOffset, cimg.dataSize )) {
+        return (boolean)FALSE;
       }
-      ByteStream i(mFile->getDataWrt(cimg.dataOffset), cimg.dataSize);
+      ByteStream i(mFile, cimg.dataOffset, cimg.dataSize);
       // Skip jpeg header
       i.skipBytes(6);
       if (i.getInt() == 0x66697845) { // Match text 'Exif'
-        TiffParser t(new FileMap(mFile->getDataWrt(cimg.dataOffset+12), i.getRemainSize()));
+        TiffParser t(new FileMap(mFile, cimg.dataOffset+12, i.getRemainSize()));
         try {
           t.parseData();
         } catch (...) {
-          return ((boolean)FALSE);
+          return (boolean)FALSE;
         }
         TiffIFD *root = t.RootIFD();
         try {
@@ -127,14 +127,14 @@ boolean X3fDecoder::readName() {
             camera_make = root->getEntryRecursive(MAKE)->getString();
             mProperties.props["CAMMANUF"] = root->getEntryRecursive(MAKE)->getString();
             mProperties.props["CAMMODEL"] = root->getEntryRecursive(MODEL)->getString();
-            return ((boolean)TRUE);
+            return (boolean)TRUE;
           }
         } catch (...) {}
-        return ((boolean)FALSE);
+        return (boolean)FALSE;
       }
     }
   }
-  return ((boolean)FALSE);
+  return (boolean)FALSE;
 }
 
 void X3fDecoder::checkSupportInternal( CameraMetaData *meta )
@@ -148,7 +148,7 @@ void X3fDecoder::checkSupportInternal( CameraMetaData *meta )
   // If we somehow got to here without a camera, see if we have an image
   // with proper format identifiers.
   vector<X3fImage>::iterator img = mImages.begin();
-  for (; img !=  mImages.end(); img++) {
+  for (; img !=  mImages.end(); ++img) {
     X3fImage cimg = *img;
     if (cimg.type == 1 || cimg.type == 3) {
       if (cimg.format == 30 || cimg.format == 35)
@@ -169,7 +169,7 @@ string X3fDecoder::getProp(const char* key )
 
 void X3fDecoder::decompressSigma( X3fImage &image )
 {
-  ByteStream input(mFile->getDataWrt(image.dataOffset), image.dataSize);
+  ByteStream input(mFile, image.dataOffset, image.dataSize);
   mRaw->dim.x = image.width;
   mRaw->dim.y = image.height;
   mRaw->setCpp(3);
@@ -281,7 +281,7 @@ void X3fDecoder::decompressSigma( X3fImage &image )
       }
     }
     // Load offsets
-    ByteStream i2(mFile->getDataWrt(image.dataOffset+image.dataSize-mRaw->dim.y*4), mRaw->dim.y*4);
+    ByteStream i2(mFile, image.dataOffset+image.dataSize-mRaw->dim.y*4, mRaw->dim.y*4);
     line_offsets = (uint32*)_aligned_malloc(4*mRaw->dim.y, 16);
     if (!line_offsets)
       ThrowRDE("SigmaDecompressor: Memory Allocation failed.");
@@ -360,7 +360,7 @@ void X3fDecoder::decodeThreaded( RawDecoderThread* t )
     }
     
     /* We have a weird prediction which is actually more appropriate for a CFA image */
-    BitPumpMSB *bits = new BitPumpMSB(mFile->getData(plane_offset[i]), mFile->getSize()-plane_offset[i]);
+    BitPumpMSB bits(mFile, plane_offset[i]);
     /* Initialize predictors */
     int pred_up[4];
     int pred_left[2];
@@ -369,22 +369,22 @@ void X3fDecoder::decodeThreaded( RawDecoderThread* t )
 
     for (int y = 0; y < dim.y; y++) {
       ushort16* dst = (ushort16*)mRaw->getData(0, y << subs) + i;
-      int diff1= SigmaDecode(bits);
-      int diff2 = SigmaDecode(bits);
+      int diff1= SigmaDecode(&bits);
+      int diff2 = SigmaDecode(&bits);
       dst[0] = pred_left[0] = pred_up[y & 1] = pred_up[y & 1] + diff1;
       dst[3<<subs] = pred_left[1] = pred_up[(y & 1) + 2] = pred_up[(y & 1) + 2] + diff2;
       dst += 6<<subs;
       // We decode two pixels every loop
       for (int x = 2; x < dim.x; x += 2) {
-        int diff1 = SigmaDecode(bits);
-        int diff2 = SigmaDecode(bits);
+        int diff1 = SigmaDecode(&bits);
+        int diff2 = SigmaDecode(&bits);
         dst[0] = pred_left[0] = pred_left[0] + diff1;
         dst[3<<subs] = pred_left[1] = pred_left[1] + diff2;
         dst += 6<<subs;
       }
       // If plane is larger than image, skip that number of pixels.
       for (int i = 0; i < skipX; i++)
-        SigmaSkipOne(bits);
+        SigmaSkipOne(&bits);
     }
     return;
   }
@@ -392,7 +392,7 @@ void X3fDecoder::decodeThreaded( RawDecoderThread* t )
   if (curr_image->format == 6) {
     int pred[3];
     for (uint32 y = t->start_y; y < t->end_y; y++) {
-      BitPumpMSB bits(mFile->getData(line_offsets[y]),mFile->getSize()-line_offsets[y]);
+      BitPumpMSB bits(mFile, line_offsets[y]);
       ushort16* dst = (ushort16*)mRaw->getData(0,y);
       pred[0] = pred[1] = pred[2] = 0;
       for (int x = 0; x < mRaw->dim.x; x++) {
@@ -461,10 +461,10 @@ int X3fDecoder::SigmaDecode(BitPumpMSB *bits) {
 FileMap* X3fDecoder::getCompressedData()
 {
   vector<X3fImage>::iterator img = mImages.begin();
-  for (; img !=  mImages.end(); img++) {
+  for (; img !=  mImages.end(); ++img) {
     X3fImage cimg = *img;
     if (cimg.type == 1 || cimg.type == 3) {
-      return new FileMap(mFile->getDataWrt(cimg.dataOffset), cimg.dataSize);
+      return new FileMap(mFile, cimg.dataOffset, cimg.dataSize);
     }
   }
   return NULL;

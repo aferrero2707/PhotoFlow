@@ -107,7 +107,7 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::VBox frame_top_vbox_1;
   Gtk::HBox frame_top_box_1;
   Gtk::HBox frame_top_box_2;
-  Gtk::HBox frame_top_box_3;
+  Gtk::VBox frame_top_box_3;
   Gtk::HBox frame_top_box_4;
   ToggleImageButton frame_visible;
   //ToggleImageButton frame_preview;
@@ -120,6 +120,8 @@ class OperationConfigGUI: public OperationConfigUI
   ToggleImageButton frame_undo;
   ToggleImageButton frame_redo;
   ToggleImageButton frame_reset;
+  ImageButton frame_help;
+  ImageButton frame_help2;
   ToggleImageButton frame_close;
   ToggleImageButton frame_expander;
   Gtk::Entry nameEntry, nameEntry2;
@@ -147,6 +149,7 @@ class OperationConfigGUI: public OperationConfigUI
   void parameters_undo_cb() { parameters_undo(); }
   void parameters_redo_cb() { parameters_redo(); }
   void parameters_reset_cb() { parameters_reset(); }
+  void show_help_cb() { show_help(); }
   void close_config_cb() { close_config(); }
 
   void reset_ch_selector();
@@ -174,6 +177,7 @@ public:
 
   void expand();
   void collapse();
+  bool is_expanded();
 
   void enable_preview();
   void disable_preview();
@@ -194,6 +198,7 @@ public:
   virtual void parameters_undo();
   virtual void parameters_redo();
   virtual void parameters_reset();
+  virtual void show_help();
   virtual void close_config();
 
   void on_layer_name_changed();

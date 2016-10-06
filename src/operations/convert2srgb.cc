@@ -79,11 +79,11 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first,
     profile_in = cmsOpenProfileFromMem( data, data_length );
     if( profile_in ) {
   
-//#ifndef NDEBUG
+#ifndef NDEBUG
       char tstr[1024];
       cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
       std::cout<<"convert2srgb: image="<<in[0]<<"  embedded profile found: "<<tstr<<std::endl;
-//#endif
+#endif
       
       cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, profile_in );
       cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, profile_out );

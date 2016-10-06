@@ -1409,6 +1409,8 @@ void rtengine::hsdApply(const DCPProfile::HsdTableInfo& table_info, const std::v
     float val_scale;
     float v_encoded = v;
 
+    if( table_base.empty() ) return;
+
     if (table_info.val_divisions < 2) {
         // Optimize most common case of "2.5D" table
         const float h_scaled = h * table_info.pc.h_scale;

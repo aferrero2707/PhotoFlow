@@ -220,8 +220,11 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 	for (top=winy-16; top < winy+height; top += TS-32)
 		for (left=winx-16; left < winx+width; left += TS-32) {
      */
-    for (top=tiley-16; top < tiley+tileh; top += TS-32)
-      for (left=tilex-16; left < tilex+tilew; left += TS-32) {
+    int ntilesprocessed = 0;
+    for (top=tiley-16; top < tiley+tileh-16; top += TS-32)
+      for (left=tilex-16; left < tilex+tilew-16; left += TS-32) {
+        //std::cout<<"Amaze: tiley="<<tiley<<"  tileh="<<tileh<<"  top="<<top<<std::endl;
+        ntilesprocessed += 1;
         memset(nyquist, 0, sizeof(char)*TS*TSH);
         memset(rbint, 0, sizeof(float)*TS*TSH);
         //location of tile bottom edge
@@ -419,7 +422,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
             indx1=rr*TS+cc;
             cfa[indx1] = (rawData[row][cc+left])/65535.0f;
             if(false && top==0 && left==0 && rr<10 && cc<10) {
-              std::cout<<"rr="<<rr<<"  cc="<<cc<<"    cfa["<<indx1<<"] = "<<cfa[indx1]<<"    c="<<FC(rr,cc)<<std::endl;
+              std::cout<<"amaze: rr="<<rr<<"  cc="<<cc<<"    cfa["<<indx1<<"] = "<<cfa[indx1]<<"    c="<<FC(rr,cc)<<std::endl;
             }
             if(FC(rr,cc)==1)
               rgbgreen[indx1] = cfa[indx1];
@@ -903,7 +906,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
             //if both agree on interpolation direction, choose the one with strongest directional discrimination;
             //otherwise, choose the u/d and l/r difference fluctuation weights
-            if ((0.5-varwt)*(0.5-diffwt)>0 && fabsf(0.5-diffwt)<fabsf(0.5-varwt)) {hvwt[indx>>1]=varwt;} else {hvwt[indx>>1]=diffwt;}
+            if ((0.5f-varwt)*(0.5f-diffwt)>0 && fabsf(0.5f-diffwt)<fabsf(0.5f-varwt)) {hvwt[indx>>1]=varwt;} else {hvwt[indx>>1]=diffwt;}
 
             //hvwt[indx]=varwt;
           }
@@ -1003,7 +1006,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
             //					hvwtalt = 0.25*(hvwt[(indx-m1)>>1]+hvwt[(indx+p1)>>1]+hvwt[(indx-p1)>>1]+hvwt[(indx+m1)>>1]);
             //					vo=fabsf(0.5-hvwt[indx>>1]);
             //					ve=fabsf(0.5-hvwtalt);
-            if (fabsf(0.5-hvwt[indx>>1])<fabsf(0.5-hvwtalt)) {hvwt[indx>>1]=hvwtalt;}//a better result was obtained from the neighbors
+            if (fabsf(0.5f-hvwt[indx>>1])<fabsf(0.5f-hvwtalt)) {hvwt[indx>>1]=hvwtalt;}//a better result was obtained from the neighbors
             //					if (vo<ve) {hvwt[indx>>1]=hvwtalt;}//a better result was obtained from the neighbors
 
 
@@ -1226,7 +1229,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
           //first ask if one gets more directional discrimination from nearby B/R sites
           pmwtalt = xdivf(pmwt[(indx-m1)>>1]+pmwt[(indx+p1)>>1]+pmwt[(indx-p1)>>1]+pmwt[(indx+m1)>>1],2);
-          if (fabsf(0.5-pmwt[indx1])<fabsf(0.5-pmwtalt)) {pmwt[indx1]=pmwtalt;}//a better result was obtained from the neighbors
+          if (fabsf(0.5f-pmwt[indx1])<fabsf(0.5f-pmwtalt)) {pmwt[indx1]=pmwtalt;}//a better result was obtained from the neighbors
 
           rbint[indx1] = xdiv2f(cfa[indx] + rbm[indx1]*(1.0f-pmwt[indx1]) + rbp[indx1]*pmwt[indx1]);//this is R+B, interpolated
         }
@@ -1235,7 +1238,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
         for (rr=12; rr<rr1-12; rr++)
           for (cc=12+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-12; cc+=2,indx+=2,indx1++) {
 
-            if (fabsf(0.5-pmwt[indx>>1])<fabsf(0.5-hvwt[indx>>1]) )
+            if (fabsf(0.5f-pmwt[indx>>1])<fabsf(0.5f-hvwt[indx>>1]) )
               continue;
 
             //now interpolate G vertically/horizontally using R+B values
@@ -1407,7 +1410,11 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
             indx=rr*TS+cc;
             //std::cout<<"top="<<top<<"  rr1="<<rr1<<"  rr="<<rr<<"  cc="<<cc<<"  left="<<left<<"  row="<<row<<"  col="<<col<<"  indx="<<indx<<std::endl;
             green[row][col] = CLIP(65535.0f*rgbgreen[indx]);
-            //std::cout<<"  green["<<row<<"]["<<col<<"]="<<green[row][col]<<std::endl;
+            if( false && top==0 && left==0 ) {
+            std::cout<<"amaze:    red["<<row<<"]["<<col<<"]="<<red[row][col]<<std::endl;
+            std::cout<<"amaze:  green["<<row<<"]["<<col<<"]="<<green[row][col]<<std::endl;
+            std::cout<<"amaze:   blue["<<row<<"]["<<col<<"]="<<blue[row][col]<<std::endl;
+            }
 
             //for dcraw implementation
             //for (c=0; c<3; c++){
@@ -1442,7 +1449,9 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
     // clean up
     free(buffer);
+    //std::cout<<"Amaze:  ntilesprocessed="<<ntilesprocessed<<std::endl;
   }
+
   /*
 	if(plistener)
 		plistener->setProgress(1.0);

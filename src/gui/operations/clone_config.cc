@@ -27,15 +27,13 @@
 
  */
 
-#include "../../operations/brightness_contrast.hh"
-
 #include "clone_config.hh"
 
 
 PF::CloneConfigGUI::CloneConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Clone layer" ),
   layer_list( this, "Layer name:"),
-  sourceSelector( this, "source_channel", "Source channel: ", 1 )
+  sourceSelector( this, "source_channel", _("Source channel: "), 1 )
 {
   add_widget( layer_list );
   add_widget( sourceSelector );

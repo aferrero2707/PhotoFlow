@@ -30,18 +30,23 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
+#include <cstring>
 
 #include "gaussblur.hh"
 #include "../base/new_operation.hh"
+#include "icc_transform.hh"
 #include "impulse_nr.hh"
 
 
 PF::ImpulseNRPar::ImpulseNRPar():
   OpParBase(), 
-  threshold("threshold",this,0.5)
+  threshold("threshold",this,0.5),
+  in_profile( NULL )
 {
 
   convert2lab = PF::new_operation( "convert2lab", NULL );
+  convert2input = new_icc_transform();
   gauss_blur = new_gaussblur();
   impulse_nr_algo = new PF::Processor<PF::ImpulseNR_RTAlgo_Par,PF::ImpulseNR_RTAlgo_Proc>();
 
@@ -59,6 +64,8 @@ VipsImage* PF::ImpulseNRPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   VipsImage* srcimg = in[0];
 
+  in_profile = PF::get_icc_profile( in[first] );
+
   std::vector<VipsImage*> in2;
 
   // Extend the image by two pixels to account for the pixel averaging window
@@ -70,7 +77,7 @@ VipsImage* PF::ImpulseNRPar::build(std::vector<VipsImage*>& in, int first,
       "extend", extend, NULL) ) {
     std::cout<<"ImpulseNRPar::build(): vips_embed() failed."<<std::endl;
     PF_REF( in[0], "ImpulseNRPar::build(): vips_embed() failed." );
-    return NULL;
+    return in[0];
   }
 
   convert2lab->get_par()->set_image_hints( extended );
@@ -160,7 +167,24 @@ VipsImage* PF::ImpulseNRPar::build(std::vector<VipsImage*>& in, int first,
   PF_UNREF( impnrimg, "GaussBlurPar::build(): impnrimg unref" );
   //std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  cropped->Xsize="<<cropped->Xsize<<std::endl;
 
-  VipsImage* out = cropped;
+
+  PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2input->get_par() );
+  //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
+  if( icc_par ) {
+    //std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
+    icc_par->set_out_profile( in_profile );
+  }
+  convert2input->get_par()->set_image_hints( cropped );
+  convert2input->get_par()->set_format( get_format() );
+  in2.clear(); in2.push_back( cropped );
+  std::cout<<"ImpulseNRPar::build(): calling convert2input->get_par()->build()"<<std::endl;
+  VipsImage* out = convert2input->get_par()->build(in2, 0, NULL, NULL, level );
+  PF_UNREF( cropped, "ImpulseNRPar::update() cropped unref" );
+
+
+  set_image_hints( out );
+
+  //VipsImage* out = cropped;
   //std::cout<<"ImpulseNRPar::build(): out="<<out<<std::endl;
 
   return out;

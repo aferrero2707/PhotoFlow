@@ -25,6 +25,9 @@
 #include "common/debug.h"
 */
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "../masks.h"
 
 /** get the point of the path at pos t [0,1]  */

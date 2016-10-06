@@ -224,9 +224,9 @@ public:
 }
 
   int get_delta_row() const { return delta_row; }
-  int set_delta_row( int d ) { delta_row = d; }
+  void set_delta_row( int d ) { delta_row = d; }
   int get_delta_col() const { return delta_col; }
-  int set_delta_col( int d ) { delta_col = d; }
+  void set_delta_col( int d ) { delta_col = d; }
   std::vector< Stroke<Stamp> >& get_strokes() { return strokes; }
   const std::vector< Stroke<Stamp> >& get_strokes() const { return strokes; }
 };

@@ -72,6 +72,7 @@ public:
     Gtk::VBox lensControlsBox;
     Gtk::VBox demoControlsBox;
     Gtk::VBox outputControlsBox;
+    Gtk::VBox hotpixelsControlsBox;
     
     WBSelector wbModeSelector;
     Slider wbTempSlider;
@@ -107,6 +108,16 @@ public:
     CheckBox enable_ca_checkbox;
     CheckBox auto_ca_checkbox;
     Slider ca_red_slider, ca_blue_slider;
+    Gtk::VBox ca_box;
+    Gtk::Frame ca_frame;
+
+    CheckBox hotp_enable_checkbox;
+    Slider hotp_strength_slider;
+    Slider hotp_threshold_slider;
+    CheckBox hotp_permissive_checkbox;
+    CheckBox hotp_markfixed_checkbox;
+    Gtk::VBox hotp_box;
+    Gtk::Frame hotp_frame;
 
     Selector profileModeSelector;
     Gtk::HBox profileModeSelectorBox;

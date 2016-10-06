@@ -35,10 +35,10 @@
 
 PF::CloneStampConfigGUI::CloneStampConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "CloneStamp" ),
-  stamp_size( this, "stamp_size", "Stamp size: ", 5, 0, 1000000, 1, 10, 1),
-  stamp_opacity( this, "stamp_opacity", "Stamp opacity: ", 100, 0, 100, 0.1, 1, 100),
-  stamp_smoothness( this, "stamp_smoothness", "Stamp smoothness: ", 100, 0, 100, 0.1, 1, 100),
-  undoButton("Undo"),
+  stamp_size( this, "stamp_size", _("Stamp size: "), 5, 0, 1000000, 1, 10, 1),
+  stamp_opacity( this, "stamp_opacity", _("Stamp opacity: "), 100, 0, 100, 0.1, 1, 100),
+  stamp_smoothness( this, "stamp_smoothness", _("Stamp smoothness: "), 100, 0, 100, 0.1, 1, 100),
+  undoButton(_("Undo")),
   srcpt_row( 0 ), srcpt_col( 0 ), srcpt_ready( false ), srcpt_changed( false ), stroke_started( false )
 {
   controlsBox.pack_start( undoButton, Gtk::PACK_SHRINK );
@@ -203,7 +203,7 @@ void PF::CloneStampConfigGUI::draw_point( double x, double y )
 
     par->draw_point( x, y, update );
 
-    if( vi != PF::PhotoFlow::Instance().get_preview_pipeline_id() )
+    if( (int)(vi) != PF::PhotoFlow::Instance().get_preview_pipeline_id() )
       continue;
 
 		//continue;
@@ -268,7 +268,7 @@ bool PF::CloneStampConfigGUI::pointer_release_event( int button, double x, doubl
   if( !get_editing_flag() ) return false;
 
   if( button != 1 ) return false;
-  if( (mod_key == (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT)) ) {
+  if( mod_key == (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) ) {
     mouse_x = x; mouse_y = y;
     double lx = x, ly = y, lw = 1, lh = 1;
     screen2layer( lx, ly, lw, lh );

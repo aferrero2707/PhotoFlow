@@ -34,14 +34,15 @@
 PF::ImageReaderPar::ImageReaderPar():
 OpParBase(),
 file_name("file_name", this),
-//out_profile_mode("profile_mode",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
+//out_profile_mode("profile_mode",this,PF::PROF_TYPE_REC2020,"REC2020","Rec.2020"),
 in_profile_mode("in_profile_mode",this,PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("embedded")),
-in_profile_type("in_profile_type",this,PF::OUT_PROF_REC2020,"REC2020",_("Rec.2020")),
+in_profile_type("in_profile_type",this,PF::PROF_TYPE_REC2020,"REC2020",_("Rec.2020")),
 in_trc_type("in_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
 in_profile_name("in_profile_name",this),
-//out_profile_mode("out_profile_mode",this,PF::OUT_PROF_EMBEDDED,"EMBEDDED",_("same")),
+//out_profile_mode("out_profile_mode",this,PF::PROF_TYPE_EMBEDDED,"EMBEDDED",_("same")),
 out_profile_mode("out_profile_mode",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
-out_profile_type("out_profile_type",this,PF::OUT_PROF_REC2020,"REC2020",_("Rec.2020")),
+//out_profile_type("out_profile_type",this,PF::PROF_TYPE_REC2020,"REC2020",_("Rec.2020")),
+out_profile_type("out_profile_type",this,PF::PROF_TYPE_EMBEDDED,"EMBEDDED",_("use embedded")),
 out_trc_type("out_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
 out_profile_name("out_profile_name",this),
 image(NULL),
@@ -55,29 +56,32 @@ raster_image( NULL )
   in_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
   in_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
 
-  //in_profile_type.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  in_profile_type.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
-  in_profile_type.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
-  in_profile_type.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-  in_profile_type.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
-  in_profile_type.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
-  in_profile_type.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
-  //in_profile_type.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-  //in_profile_type.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+  //in_profile_type.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
+  in_profile_type.add_enum_value(PF::PROF_TYPE_sRGB,"sRGB","sRGB");
+  in_profile_type.add_enum_value(PF::PROF_TYPE_REC2020,"REC2020","Rec.2020");
+  in_profile_type.add_enum_value(PF::PROF_TYPE_ACES,"ACES","ACES");
+  in_profile_type.add_enum_value(PF::PROF_TYPE_ACEScg,"ACEScg","ACEScg");
+  in_profile_type.add_enum_value(PF::PROF_TYPE_ADOBE,"ADOBE","Adobe RGB 1998");
+  in_profile_type.add_enum_value(PF::PROF_TYPE_PROPHOTO,"PROPHOTO","ProPhoto RGB");
+  //in_profile_type.add_enum_value(PF::PROF_TYPE_LAB,"LAB","Lab");
+  //in_profile_type.add_enum_value(PF::PROF_TYPE_CUSTOM,"CUSTOM","Custom");
 
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use input"));
+  //out_profile_mode.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
+  out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use embedded"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
 
-  out_profile_type.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
-  out_profile_type.add_enum_value(PF::OUT_PROF_REC2020,"REC2020","Rec.2020");
-  out_profile_type.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-  out_profile_type.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
-  out_profile_type.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
-  out_profile_type.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB,"sRGB","sRGB");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_REC2020,"REC2020","Rec.2020");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_ADOBE,"ADOBE","Adobe RGB 1998");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_PROPHOTO,"PROPHOTO","ProPhoto RGB");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_ACEScg,"ACEScg","ACEScg");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_ACES,"ACES","ACES");
+  //out_profile_type.add_enum_value(PF::PROF_TYPE_CUSTOM,"CUSTOM","Custom");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_LAB,"LAB","Lab");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_SETTINGS,"FROM_SETTINGS","from settings");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_DISK,"FROM_DISK","open from disk");
+
 
   //in_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
   in_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
@@ -335,20 +339,20 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   PF::ICCProfile* out_iccprof = NULL;
   if( (profile_mode_t)in_profile_mode.get_enum_value().first != PF::PROF_MODE_NONE ) {
     // only retrieve the working profile if the image is color managed
-    pmode = (profile_mode_t)out_profile_mode.get_enum_value().first;
-    if( pmode == PF::PROF_MODE_EMBEDDED ) {
+    pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
+    if( pmode == PF::PROF_TYPE_EMBEDDED ) {
       // do nothing
       std::cout<<"Using embedded profile"<<std::endl;
         out_iccprof = in_iccprof;
         out_profile = in_profile;
-    } else if( pmode == PF::PROF_MODE_DEFAULT && in_iccprof ) {
+    } else if( pmode == PF::PROF_TYPE_FROM_SETTINGS && in_iccprof ) {
       ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
       trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
       std::cout<<"Getting output profile..."<<std::endl;
       out_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-    } else if( pmode == PF::PROF_MODE_ICC && in_iccprof ) {
+    } else if( pmode == PF::PROF_TYPE_FROM_DISK && in_iccprof ) {
       out_iccprof = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
-    } else if( pmode == PF::PROF_MODE_CUSTOM && in_iccprof ) {
+    } else {//if( pmode == PF::PROF_MODE_CUSTOM && in_iccprof ) {
       ptype = (profile_type_t)out_profile_type.get_enum_value().first;
       trc_type = (TRC_type)out_trc_type.get_enum_value().first;
       std::cout<<"Getting output profile..."<<std::endl;
@@ -405,6 +409,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
       std::vector<VipsImage*> in2; in2.push_back( out );
       VipsImage* converted = OpParBase::build( in2, 0, NULL, NULL, level );
+      PF_UNREF( out, "ImageReaderPar::build(): out unref after ICC conversion" );
 
       out = converted;
     }

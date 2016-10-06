@@ -40,6 +40,7 @@
 namespace PF {
 
 class ImageEditor;
+class LayerWidget;
 
   class LayerTreeModel: public Gtk::TreeStore
   {
@@ -86,12 +87,26 @@ class ImageEditor;
 
 
 
+  class LayersTreeView: public Gtk::TreeView
+  {
+    Gtk::Menu popupMenu;
+    LayerWidget* layer_widget;
+  public:
+    LayersTreeView(LayerWidget* layer_widget);
+    bool on_button_press_event(GdkEventButton* button_event) override;
+    void on_menu_cut();
+    void on_menu_copy();
+    void on_menu_paste();
+  };
+
+
+
   class LayerTree : public Gtk::ScrolledWindow
   {
     // Tree model to be filled with individial layers informations
     Glib::RefPtr<PF::LayerTreeModel> treeModel;
 
-    Gtk::TreeView treeView;
+    LayersTreeView treeView;
 
     ImageEditor* editor;
 
@@ -136,6 +151,7 @@ class ImageEditor;
     // Updates the tree model with the layers from the associated image
     void update_model();
     void update_model_cb() { update_model(); }
+    void update_model_idle_cb();
 
     std::list<Layer*>* get_layers() { return layers; }
     void set_layers( std::list<Layer*>* l ) {

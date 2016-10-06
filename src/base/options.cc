@@ -35,7 +35,7 @@
 
 PF::Options::Options()
 {
-  working_profile_type = PF::OUT_PROF_REC2020;
+  working_profile_type = PF::PROF_TYPE_REC2020;
   working_trc_type = PF_TRC_LINEAR;
   display_profile_type = PF::PF_DISPLAY_PROF_sRGB;
   display_profile_intent = INTENT_RELATIVE_COLORIMETRIC;
@@ -89,19 +89,19 @@ void PF::Options::load()
         if (keyFile.has_key ("Color Management", "WorkingProfileType")) {
           std::string keyval = keyFile.get_string ("Color Management", "WorkingProfileType");
           if( keyval == "sRGB" )
-            working_profile_type = PF::OUT_PROF_sRGB;
+            working_profile_type = PF::PROF_TYPE_sRGB;
           else if( keyval == "ADOBE" )
-            working_profile_type = PF::OUT_PROF_ADOBE;
+            working_profile_type = PF::PROF_TYPE_ADOBE;
           else if( keyval == "REC2020" )
-            working_profile_type = PF::OUT_PROF_REC2020;
+            working_profile_type = PF::PROF_TYPE_REC2020;
           else if( keyval == "PROPHOTO" )
-            working_profile_type = PF::OUT_PROF_PROPHOTO;
+            working_profile_type = PF::PROF_TYPE_PROPHOTO;
           else if( keyval == "ACEScg" )
-            working_profile_type = PF::OUT_PROF_ACEScg;
+            working_profile_type = PF::PROF_TYPE_ACEScg;
           else if( keyval == "ACES" )
-            working_profile_type = PF::OUT_PROF_ACES;
+            working_profile_type = PF::PROF_TYPE_ACES;
           else if( keyval == "CUSTOM" )
-            working_profile_type = PF::OUT_PROF_CUSTOM;
+            working_profile_type = PF::PROF_TYPE_CUSTOM;
           std::cout<<"working_profile_type="<<working_profile_type<<std::endl;
         }
         if (keyFile.has_key ("Color Management", "WorkingTRCType")) {
@@ -172,25 +172,25 @@ void PF::Options::save()
   keyFile.set_string ("Folders", "last_visited_icc_folder", last_visited_icc_folder);
 
   switch( working_profile_type ) {
-  case OUT_PROF_sRGB:
+  case PROF_TYPE_sRGB:
     keyFile.set_string ("Color Management", "WorkingProfileType", "sRGB");
     break;
-  case OUT_PROF_REC2020:
+  case PROF_TYPE_REC2020:
     keyFile.set_string ("Color Management", "WorkingProfileType", "REC2020");
     break;
-  case OUT_PROF_ADOBE:
+  case PROF_TYPE_ADOBE:
     keyFile.set_string ("Color Management", "WorkingProfileType", "ADOBE");
     break;
-  case OUT_PROF_PROPHOTO:
+  case PROF_TYPE_PROPHOTO:
     keyFile.set_string ("Color Management", "WorkingProfileType", "PROPHOTO");
     break;
-  case OUT_PROF_ACEScg:
+  case PROF_TYPE_ACEScg:
     keyFile.set_string ("Color Management", "WorkingProfileType", "ACEScg");
     break;
-  case OUT_PROF_ACES:
+  case PROF_TYPE_ACES:
     keyFile.set_string ("Color Management", "WorkingProfileType", "ACES");
     break;
-  case OUT_PROF_CUSTOM:
+  case PROF_TYPE_CUSTOM:
     keyFile.set_string ("Color Management", "WorkingProfileType", "CUSTOM");
     break;
   default: break;

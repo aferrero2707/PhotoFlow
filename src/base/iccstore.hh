@@ -58,15 +58,17 @@ enum profile_mode_t {
 
 
 enum profile_type_t {
-  OUT_PROF_EMBEDDED,
-  OUT_PROF_sRGB,
-  OUT_PROF_REC2020,
-  OUT_PROF_ADOBE,
-  OUT_PROF_PROPHOTO,
-  OUT_PROF_ACEScg,
-  OUT_PROF_ACES,
-  OUT_PROF_LAB,
-  OUT_PROF_CUSTOM
+  PROF_TYPE_EMBEDDED,
+  PROF_TYPE_FROM_SETTINGS,
+  PROF_TYPE_FROM_DISK,
+  PROF_TYPE_sRGB,
+  PROF_TYPE_REC2020,
+  PROF_TYPE_ADOBE,
+  PROF_TYPE_PROPHOTO,
+  PROF_TYPE_ACEScg,
+  PROF_TYPE_ACES,
+  PROF_TYPE_LAB,
+  PROF_TYPE_CUSTOM
 };
 
 
@@ -161,6 +163,8 @@ public:
 
   float get_lightness( float R, float G, float B );
   void get_lightness( float* RGBv, float* Lv, size_t size );
+
+  bool equals_to( PF::ICCProfile* prof);
 
   ICCProfileData* get_data()
   {

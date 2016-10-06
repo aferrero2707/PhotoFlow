@@ -52,6 +52,7 @@ public:
 	class RawImageSource
 	{
 		PF::RawMatrix rawData;
+		float** rawDataBuf;
 		PF::Array2D<float> red, green, blue;
 		int tile_top, tile_left;
 
@@ -64,6 +65,7 @@ public:
 
     ProgressListener* plistener;
 
+    //VipsImage* add_cfa_border( VipsImage* in, int border );
 
     void CA_correct_RT(int winx, int winy, int winw, int winh,
                            int tilex, int tiley, int tilew, int tileh,
@@ -75,6 +77,8 @@ public:
 		void lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
 		                       int tilex, int tiley, int tilew, int tileh,
                            int iterations);
+    void xtrans_demosaic_RT(int winx, int winy, int winw, int winh,
+                           int tilex, int tiley, int tilew, int tileh);
 
     void refinement(int PassCount, int W, int H);
     void refinement_lassus(int PassCount, int W, int H);
@@ -91,6 +95,9 @@ public:
 
 		int FC(int r, int c)
 		{
+		  //std::cout<<"RawImageSource::FC(): "<<(void*)image_data<<", "<<FC_roffset<<","<<FC_coffset<<","<<tile_top<<","<<tile_left<<std::endl;
+		  //int rr = r, cc = c;
+
       r -= FC_roffset;
       c -= FC_coffset;
 
@@ -99,21 +106,21 @@ public:
 
       if(rr<0) rr = -rr;
       if(cc<0) cc = -cc;
-      if( rr >= (tile_top+rawData.GetHeight()) ) {
+      if( rr >= (tile_top+(int)(rawData.GetHeight())) ) {
         int dr = rr -  (tile_top+rawData.GetHeight()) + 1;
-        rr = tile_top + rawData.GetHeight() - dr - 1;
+        rr = tile_top + (int)(rawData.GetHeight()) - dr - 1;
       }
-      if( cc >= (tile_left+rawData.GetWidth()) ) {
+      if( cc >= (tile_left+(int)(rawData.GetWidth())) ) {
         int dr = cc -  (tile_left+rawData.GetWidth()) + 1;
-        rr = tile_left + rawData.GetWidth() - dr - 1;
+        rr = tile_left + (int)(rawData.GetWidth()) - dr - 1;
       }
 
-      if( image_data ) {
+      if( false && image_data ) {
         int color2 = ( image_data->idata.filters >> ((((rr+image_data->sizes.top_margin) << 1 & 14) +
             ((cc+image_data->sizes.left_margin) & 1)) << 1) & 3 );
         if( color2 == 3 ) color2 = 1;
 
-        //if(rr<8 && cc<8) std::cout<<"rr="<<rr<<" cc="<<cc<<" c="<<color2<<" filters="<<image_data->idata.filters<<std::endl;
+        if(rr<8 && cc<8) std::cout<<"rr="<<rr<<" cc="<<cc<<" c="<<color2<<" filters="<<image_data->idata.filters<<std::endl;
         return color2;
       }
 
@@ -130,6 +137,7 @@ public:
     void amaze_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void igv_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void lmmse_demosaic(VipsRegion* ir, VipsRegion* oreg);
+    void xtrans_demosaic(VipsRegion* ir, VipsRegion* oreg);
 		void false_color_correction(VipsRegion* ir, VipsRegion* oreg);
 	};
 }

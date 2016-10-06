@@ -107,6 +107,7 @@ namespace PF
 
     sigc::signal<void> signal_status_ready, signal_status_caching;
     sigc::signal<void> signal_status_processing, signal_status_exporting;
+    sigc::signal<void> signal_status_updating;
 
     void start();
     void run();

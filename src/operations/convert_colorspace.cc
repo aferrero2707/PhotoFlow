@@ -56,16 +56,18 @@ extern "C" {
 
 PF::ConvertColorspacePar::ConvertColorspacePar(): 
       OpParBase(),
-      //out_profile_mode("profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB"),
-      out_profile_mode("profile_mode",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
-      out_profile_type("profile_type",this,PF::OUT_PROF_REC2020,"REC2020","Rec.2020"),
-      out_trc_type("trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+      //out_profile_mode("profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","Built-in sRGB"),
+      out_profile_mode("profile_mode2",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
+      out_profile_type("profile_mode",this,PF::PROF_TYPE_REC2020,"REC2020","Rec.2020"),
+      //out_profile_type("profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","sRGB"),
+      //out_trc_type("trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+      out_trc_type("trc_type",this,PF::PF_TRC_STANDARD,"TRC_STANDARD",_("standard")),
       out_profile_name("profile_name", this),
       intent("rendering_intent",this,INTENT_RELATIVE_COLORIMETRIC,"INTENT_RELATIVE_COLORIMETRIC","relative colorimetric"),
       bpc("bpc", this, true),
       assign("assign", this, false),
-      clip_negative("clip_negative",this,false),
-      clip_overflow("clip_overflow",this,false),
+      clip_negative("clip_negative",this,true),
+      clip_overflow("clip_overflow",this,true),
       out_profile_data( NULL ),
       transform( NULL ),
       gw_transform_in( NULL ),
@@ -77,27 +79,29 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
 {
   convert2lab = PF::new_convert2lab();
 
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
+  //out_profile_mode.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
   //out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use input"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
 
-  //out_profile_type.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
-  out_profile_type.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","sRGB");
-  out_profile_type.add_enum_value(PF::OUT_PROF_ACES,"ACES","ACES");
-  out_profile_type.add_enum_value(PF::OUT_PROF_ACEScg,"ACEScg","ACEScg");
-  out_profile_type.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Adobe RGB 1998");
-  out_profile_type.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","ProPhoto RGB");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
-  //out_profile_type.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
+  //out_profile_type.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB,"sRGB","sRGB");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_REC2020,"REC2020","Rec.2020");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_ACES,"ACES","ACES");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_ACEScg,"ACEScg","ACEScg");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_ADOBE,"ADOBE","Adobe RGB 1998");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_PROPHOTO,"PROPHOTO","ProPhoto RGB");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_LAB,"LAB","Lab");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_SETTINGS,"FROM_SETTINGS","from settings");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_DISK,"FROM_DISK","open from disk");
 
-  //out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
-  out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
-  out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+  out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR",_("linear"));
+  out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL",_("perceptual"));
+  //out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
 
   intent.add_enum_value( INTENT_PERCEPTUAL, "INTENT_PERCEPTUAL", "perceptual" );
-  intent.add_enum_value( INTENT_SATURATION, "INTENT_SATURATION", "saturation" );
   intent.add_enum_value( INTENT_ABSOLUTE_COLORIMETRIC, "INTENT_ABSOLUTE_COLORIMETRIC", "absolute colorimetric" );
+  intent.add_enum_value( INTENT_SATURATION, "INTENT_SATURATION", "saturation" );
 
   gw_transform_in = new_icc_transform();
   gw_transform_out = new_icc_transform();
@@ -166,22 +170,23 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   bool changed = in_changed || out_mode_changed || out_type_changed || out_trc_type_changed || out_changed;
 
   cmsHPROFILE out_profile = NULL;
-  profile_mode_t pmode = (profile_mode_t)out_profile_mode.get_enum_value().first;
+  profile_mode_t pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
   profile_type_t ptype = (profile_type_t)out_profile_type.get_enum_value().first;
   TRC_type trc_type = (TRC_type)out_trc_type.get_enum_value().first;
   PF::ICCProfile* iccprof = NULL;
 
-  if( pmode == PF::PROF_MODE_DEFAULT ) {
+  if( pmode == PF::PROF_TYPE_FROM_SETTINGS ) {
     ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
     trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
-    std::cout<<"Getting output profile..."<<std::endl;
+    std::cout<<"ConvertColorspacePar::build(): Getting output profile from settings..."<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-  } else if( pmode == PF::PROF_MODE_ICC ) {
+  } else if( pmode == PF::PROF_TYPE_FROM_DISK ) {
+    std::cout<<"ConvertColorspacePar::build(): Getting output profile from disk: "<<out_profile_name.get()<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
-  } else if( pmode == PF::PROF_MODE_CUSTOM ) {
+  } else {//if( pmode == PF::PROF_MODE_CUSTOM ) {
     ptype = (profile_type_t)out_profile_type.get_enum_value().first;
     trc_type = (TRC_type)out_trc_type.get_enum_value().first;
-    std::cout<<"Getting output profile..."<<std::endl;
+    std::cout<<"ConvertColorspacePar::build(): Getting built-in profile: "<<out_profile_type.get_enum_value().second.first<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
   }
 
@@ -198,23 +203,23 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
              <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
     std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
     switch( out_profile_mode.get_enum_value().first ) {
-    case OUT_PROF_sRGB:
+    case PROF_TYPE_sRGB:
       out_profile = dt_colorspaces_create_srgb_profile();
       //std::cout<<"ConvertColorspacePar::build(): created sRGB output profile"<<std::endl;
       break;
-    case OUT_PROF_ADOBE:
+    case PROF_TYPE_ADOBE:
       out_profile = dt_colorspaces_create_adobergb_profile();
       //std::cout<<"ConvertColorspacePar::build(): created AdobeRGB output profile"<<std::endl;
       break;
-    case OUT_PROF_PROPHOTO:
+    case PROF_TYPE_PROPHOTO:
       out_profile = dt_colorspaces_create_prophotorgb_profile();
       //std::cout<<"ConvertColorspacePar::build(): created ProPhoto output profile"<<std::endl;
       break;
-    case OUT_PROF_LAB:
+    case PROF_TYPE_LAB:
       out_profile = dt_colorspaces_create_lab_profile();
       //std::cout<<"ConvertColorspacePar::build(): created Lab output profile"<<std::endl;
       break;
-    case OUT_PROF_CUSTOM:
+    case PROF_TYPE_CUSTOM:
       //std::cout<<"  custom profile selected: \""<<cam_profile_name.get()<<"\""<<std::endl;
       if( out_profile_data && out_profile_data_length>0 ) 
         out_profile = cmsOpenProfileFromMem( out_profile_data, out_profile_data_length );
@@ -297,10 +302,18 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
    */
   if( iccprof ) PF::set_icc_profile( out, iccprof );
 
-  if( gamut_warning ) {
+  std::cout<<"ConvertColorspacePar::build(): gamut_warning="<<gamut_warning<<"  get_render_mode()="<<get_render_mode()<<std::endl;
+  if( gamut_warning && (get_render_mode() == PF_RENDER_PREVIEW) ) {
     PF::ICCProfile* aces_prof =
-        PF::ICCStore::Instance().get_profile( PF::OUT_PROF_ACES, PF::PF_TRC_LINEAR );
-    if( aces_prof && aces_prof->get_profile() ) {
+        PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_ACES, PF::PF_TRC_LINEAR );
+    PF::ICCProfile* Lab_prof =
+        PF::ICCStore::Instance().get_Lab_profile();
+    PF::ICCProfile* gw_prof = aces_prof;
+    if( !cmsIsMatrixShaper(out_profile) ) {
+      gw_prof = Lab_prof;
+    }
+    std::cout<<"ConvertColorspacePar::build(): gw_prof="<<(void*)gw_prof<<std::endl;
+    if( gw_prof && gw_prof->get_profile() ) {
       PF::ICCTransformPar* tr_in =
           dynamic_cast<PF::ICCTransformPar*>( gw_transform_in->get_par() );
       PF::ICCTransformPar* tr_out =
@@ -311,15 +324,15 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
         in2.push_back( image );
         tr_in->set_image_hints( image );
         tr_in->set_format( get_format() );
-        tr_in->set_out_profile( aces_prof );
+        tr_in->set_out_profile( gw_prof );
         tr_in->set_bpc( false );
         gw_in = tr_in->build( in2, 0, NULL, NULL, level );
 
         in2.clear(); in2.push_back( out );
         tr_out->set_image_hints( out );
         tr_out->set_format( get_format() );
-        tr_out->set_out_profile( aces_prof );
-        tr_out->set_bpc( false );
+        tr_out->set_out_profile( gw_prof );
+        tr_out->set_bpc( bpc.get() );
         gw_out = tr_out->build( in2, 0, NULL, NULL, level );
         PF_UNREF( out, "ConvertColorspacePar::build(): out unref after gamut warning transform" );
 
@@ -330,9 +343,14 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
         gw->get_par()->set_image_hints( out );
         gw->get_par()->set_format( get_format() );
 
+        PF::GamutWarningPar* gw2 = dynamic_cast<PF::GamutWarningPar*>( gw->get_par() );
+        if( gw2 ) {
         if( !cmsIsMatrixShaper(out_profile) ) {
-          PF::GamutWarningPar* gw2 = dynamic_cast<PF::GamutWarningPar*>( gw->get_par() );
-          if( gw2 ) gw2->set_delta( 0.005 );
+            gw2->set_delta( 4.9999 );
+            gw2->set_dest_is_matrix( false );
+          }
+        } else {
+          gw2->set_dest_is_matrix( true );
         }
 
         out2 = gw->get_par()->build( in2, 0, NULL, NULL, level );

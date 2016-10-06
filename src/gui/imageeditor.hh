@@ -40,6 +40,7 @@
 #include "histogram.hh"
 #include "layerwidget.hh"
 #include "tablabelwidget.hh"
+#include "softproofdialog.hh"
 #include "widgets/statusindicator.hh"
 
 
@@ -121,8 +122,8 @@ class ImageEditor: public Gtk::HBox
 
   Gtk::Frame soft_proof_frame;
   Gtk::VBox soft_proof_box;
-  Gtk::CheckButton sim_black_ink_button;
-  Gtk::CheckButton sim_paper_color_button;
+  Gtk::CheckButton soft_proof_enable_button;
+  SoftProofDialog* softproof_dialog;
 
   StatusIndicatorWidget status_indicator;
   Gtk::Image  img_zoom_in, img_zoom_out, img_zoom_fit;
@@ -153,6 +154,7 @@ public:
   ~ImageEditor();
 
   Image* get_image() { return image; }
+  ImageArea* get_image_area() { return imageArea; }
 
   LayerWidget& get_layer_widget() { return layersWidget; }
 
@@ -168,7 +170,7 @@ public:
     return( (active_layer) ? active_layer->get_id() : -1 );
   }
   void set_active_layer( int id );
-  int get_displayed_layer() { (displayed_layer) ? displayed_layer->get_id() : -1; }
+  int get_displayed_layer() { return (displayed_layer) ? displayed_layer->get_id() : -1; }
   void set_displayed_layer( int id );
 
   void set_hide_background_layer( bool flag ) { hide_background_layer = flag; }
@@ -178,17 +180,23 @@ public:
   void build_image();
 
   void on_image_modified();
+  void on_image_modified_idle_cb();
+
+  void on_image_updated();
+  void on_image_updated_idle_cb();
 
   void on_map();
   void on_realize();
 
   void set_status( std::string label, int status )
   {
+    //std::cout<<"ImageEditor::set_status("<<label<<", "<<status<<") called"<<std::endl;
     status_indicator.set_status( label, status );
   }
   void set_status_ready() { set_status(_("ready"), 0); }
   void set_status_caching() { set_status(_("caching"), 1); }
   void set_status_processing() { set_status(_("processing"), 2); }
+  void set_status_updating() { set_status(_("updating"), 3); }
   void set_status_exporting() { set_status(_("exporting"), 2); }
 
   // Handlers for the mouse events inside the image area
@@ -204,7 +212,7 @@ public:
   {
     PF::Pipeline* pipeline = image->get_pipeline(1);
     if( !pipeline ) return 1.0f;
-    int level = pipeline->get_level();
+    unsigned int level = pipeline->get_level();
     float fact = 1.0f;
     for( unsigned int i = 0; i < level; i++ )
       fact /= 2.0f;
@@ -233,8 +241,11 @@ public:
   void toggle_highlights_warning();
   void toggle_shadows_warning();
 
-  void on_sim_black_ink_toggled();
-  void on_sim_paper_color_toggled();
+  void on_soft_proof_toggled();
+  void soft_proof_disable()
+  {
+    soft_proof_enable_button.set_active(false);
+  }
 
   void zoom_in();
   void zoom_out();

@@ -27,8 +27,6 @@
 
  */
 
-#include "../../operations/brightness_contrast.hh"
-
 #include "imageread_config.hh"
 
 
@@ -74,8 +72,8 @@ outProfFrame( _("working profile") )
   inProfHBox.set_size_request(250,-1);
   inProfBox.pack_start( inProfHBox, Gtk::PACK_SHRINK );
 
-  outProfileModeSelectorBox.pack_end( outProfileModeSelector, Gtk::PACK_SHRINK );
-  outProfBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
+  //outProfileModeSelectorBox.pack_end( outProfileModeSelector, Gtk::PACK_SHRINK );
+  //outProfBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
   outProfileTypeSelectorBox.pack_end( outProfileTypeSelector, Gtk::PACK_SHRINK );
   outProfBox.pack_start( outProfileTypeSelectorBox, Gtk::PACK_SHRINK );
   outTRCModeSelectorBox.pack_end( outTRCModeSelector, Gtk::PACK_SHRINK );
@@ -232,19 +230,19 @@ void PF::ImageReadConfigGUI::do_update()
         inProfHBox.show();
     }
 
-    if( irpar->get_out_profile_mode() == PF::PROF_MODE_EMBEDDED ||
-        irpar->get_out_profile_mode() == PF::PROF_MODE_DEFAULT ) {
-      outProfileTypeSelectorBox.hide();
+    if( irpar->get_out_profile_type() == PF::PROF_TYPE_EMBEDDED ||
+        irpar->get_out_profile_type() == PF::PROF_TYPE_FROM_SETTINGS ) {
+      //outProfileTypeSelectorBox.hide();
       outTRCModeSelectorBox.hide();
       outProfHBox.hide();
-    } else if( irpar->get_out_profile_mode() == PF::PROF_MODE_CUSTOM ) {
-      outProfileTypeSelectorBox.show();
-      outTRCModeSelectorBox.show();
-      outProfHBox.hide();
-    } else if( irpar->get_out_profile_mode() == PF::PROF_MODE_ICC ) {
-      outProfileTypeSelectorBox.hide();
+    } else if( irpar->get_out_profile_type() == PF::PROF_TYPE_FROM_DISK ) {
+      //outProfileTypeSelectorBox.hide();
       outTRCModeSelectorBox.hide();
       outProfHBox.show();
+    } else {//if( irpar->get_out_profile_mode() == PF::PROF_MODE_CUSTOM ) {
+      //outProfileTypeSelectorBox.show();
+      outTRCModeSelectorBox.show();
+      outProfHBox.hide();
     }
   }
   OperationConfigGUI::do_update();

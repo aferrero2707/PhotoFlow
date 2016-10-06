@@ -27,6 +27,7 @@
 
 #include "../base/imageprocessor.hh"
 #include "../operations/icc_transform.hh"
+#include "../operations/convert_colorspace.hh"
 #include "imagearea.hh"
 
 
@@ -178,12 +179,15 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   yoffset( 0 ),
   pending_pixels( 0 ),
   draw_requested( false ),
+  softproof_enabled( false ),
   current_display_profile_type( PF_DISPLAY_PROF_MAX ),
   current_display_profile( NULL ),
   highlights_warning_enabled( false ),
   shadows_warning_enabled( false ),
+  softproof_bpc_enabled( false ),
   sim_black_ink_enabled( false ),
   sim_paper_color_enabled( false ),
+  gamut_warning_enabled( false ),
   display_merged( true ),
   active_layer( -1 ),
   edited_layer( -1 ),
@@ -197,6 +201,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   mask = NULL;
   mask_region = NULL;
   //convert2display = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
+  softproof_conversion = new_convert_colorspace();
   convert2display = new_icc_transform();
   uniform = new PF::Processor<PF::UniformPar,PF::Uniform>();
   if( uniform->get_par() ) {
@@ -404,7 +409,7 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
         PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
         PF::OperationConfigGUI* config = dynamic_cast<PF::OperationConfigGUI*>( ui );
         if( config && config->get_editing_flag() == true ) {
-          int level = get_pipeline()->get_level();
+          unsigned int level = get_pipeline()->get_level();
           float zoom_fact = 1.0f;
           for( unsigned int i = 0; i < level; i++ )
             zoom_fact /= 2.0f;
@@ -1021,7 +1026,7 @@ void PF::ImageArea::update( VipsRect* area )
     std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
     switch( current_display_profile_type ) {
     case PF_DISPLAY_PROF_sRGB:
-      current_display_profile = PF::ICCStore::Instance().get_profile( PF::OUT_PROF_sRGB, PF::PF_TRC_STANDARD );
+      current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_STANDARD );
       icc_display_profile = current_display_profile->get_profile();
       char tstr[1024];
       cmsGetProfileInfoASCII(icc_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
@@ -1037,6 +1042,27 @@ void PF::ImageArea::update( VipsRect* area )
       break;
     }
   }
+
+  std::cout<<"ImageArea::update(): softproof_enabled="<<softproof_enabled<<std::endl;
+  if( softproof_enabled ) {
+    PF::ConvertColorspacePar* cc_par =
+        dynamic_cast<PF::ConvertColorspacePar*>( softproof_conversion->get_par() );
+    if( cc_par ) {
+      if( gamut_warning_enabled ) {
+        cc_par->set_gamut_warning( true );
+      } else {
+        cc_par->set_gamut_warning( false );
+      }
+      cc_par->set_bpc(softproof_bpc_enabled);
+    }
+    softproof_conversion->get_par()->set_image_hints( wclipimg );
+    softproof_conversion->get_par()->set_format( get_pipeline()->get_format() );
+    in.clear(); in.push_back( wclipimg );
+    VipsImage* tmpimg = softproof_conversion->get_par()->build(in, 0, NULL, NULL, level );
+    PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref after softproof_conversion" );
+    wclipimg = tmpimg;
+  }
+
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
   std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
   if( icc_par && current_display_profile ) {
@@ -1046,10 +1072,10 @@ void PF::ImageArea::update( VipsRect* area )
   }
   icc_par->set_intent( options.get_display_profile_intent() );
   icc_par->set_bpc( options.get_display_profile_bpc() );
-  if( sim_paper_color_enabled ) {
+  if( softproof_enabled && sim_paper_color_enabled ) {
     icc_par->set_intent( INTENT_ABSOLUTE_COLORIMETRIC );
     icc_par->set_bpc( false );
-  } else if( sim_black_ink_enabled ) {
+  } else if( softproof_enabled && sim_black_ink_enabled ) {
     icc_par->set_intent( INTENT_RELATIVE_COLORIMETRIC );
     icc_par->set_bpc( false );
   }
@@ -1331,12 +1357,13 @@ void PF::ImageArea::sink( const VipsRect& area )
 {
 #ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::sink( const VipsRect& area ) called"<<std::endl;
+    std::cout<<"area="<<area.left<<","<<area.top<<"+"<<area.width<<"+"<<area.height<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = get_pipeline();
   if( !pipeline ) return;
   if( !outimg ) return;
-  int level = pipeline->get_level();
+  unsigned int level = pipeline->get_level();
   float fact = 1.0f;
   for( unsigned int i = 0; i < level; i++ )
     fact /= 2.0f;

@@ -30,6 +30,7 @@
 #include "../base/image.hh"
 
 #include "imageeditor.hh"
+#include "layerwidget.hh"
 
 #include "layertree.hh"
 
@@ -277,6 +278,22 @@ static const struct {
 };
 
 
+typedef struct {
+  PF::LayerTree* tree;
+} TreeUpdateData;
+
+static gboolean tree_update_cb ( TreeUpdateData* data)
+{
+  if( data ) {
+    data->tree->update_model();
+    g_free( data );
+  }
+  return false;
+}
+
+
+
+
 PF::LayerTreeModel::LayerTreeModel()
 {
   set_column_types( columns );
@@ -289,7 +306,76 @@ Glib::RefPtr<PF::LayerTreeModel> PF::LayerTreeModel::create()
 }
 
 
-PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
+PF::LayersTreeView::LayersTreeView(PF::LayerWidget* lw): Gtk::TreeView(), layer_widget(lw)
+{
+  //Fill popup menu:
+  auto item = Gtk::manage(new Gtk::MenuItem("_Cut", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::cut_selected_layers) );
+  popupMenu.append(*item);
+
+  item = Gtk::manage(new Gtk::MenuItem("_Copy", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::copy_selected_layers) );
+  popupMenu.append(*item);
+
+  item = Gtk::manage(new Gtk::MenuItem("_Paste", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::paste_layers) );
+  popupMenu.append(*item);
+
+  item = Gtk::manage(new Gtk::MenuItem("_Delete", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::delete_selected_layers) );
+  popupMenu.append(*item);
+
+  popupMenu.accelerate(*this);
+  popupMenu.show_all(); //Show all menu items when the menu pops up
+}
+
+
+bool PF::LayersTreeView::on_button_press_event(GdkEventButton* button_event)
+{
+  bool return_value = false;
+
+  //Call base class, to allow normal handling,
+  //such as allowing the row to be selected by the right-click:
+  //return_value = TreeView::on_button_press_event(button_event);
+
+  //Then do our custom stuff:
+  if( (button_event->type == GDK_BUTTON_PRESS) && (button_event->button == 3) ) {
+    popupMenu.popup(button_event->button, button_event->time);
+
+  } else {
+    return_value = TreeView::on_button_press_event(button_event);
+  }
+
+  return return_value;
+
+}
+
+
+void PF::LayersTreeView::on_menu_cut()
+{
+
+}
+
+
+void PF::LayersTreeView::on_menu_copy()
+{
+
+}
+
+
+void PF::LayersTreeView::on_menu_paste()
+{
+
+}
+
+
+
+PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
+  treeView(&(e->get_layer_widget())),
   editor( e ),
   layers( NULL ),
   map_flag( is_map )
@@ -335,7 +421,7 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
   cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerTree::on_cell_toggled) ); 
 
   treeModel->signal_dnd_done.
-    connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_cb) ); 
+    connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_idle_cb) );
 
   add( treeView );
 
@@ -469,6 +555,14 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
   }
 }
 
+
+
+void PF::LayerTree::update_model_idle_cb()
+{
+  TreeUpdateData * update = g_new (TreeUpdateData, 1);
+  update->tree = this;
+  g_idle_add ((GSourceFunc) tree_update_cb, update);
+}
 
 
 void PF::LayerTree::update_model()
@@ -618,7 +712,7 @@ bool PF::LayerTree::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::T
         it != rows.end(); it++ ) {
     //Gtk::TreeModel::Row row = *it;
     PF::Layer* l = (*it)[treeModel->columns.col_layer];
-    if(l && (l->get_id()==id)) {
+    if(l && ((int)(l->get_id())==id)) {
       iter = it;
       return true;
     }

@@ -71,6 +71,8 @@ namespace PF
 
     std::string filename;
     int fd;
+    guchar* memarray;
+    bool memarray_assigned;
 
     // Flag indicating if the cache buffer has already been initialized
     // Used by the layer manager to write buffers upon image loading/exporting
@@ -81,6 +83,8 @@ namespace PF
 
     // Coordinates of the tile being processed
     int step_x, step_y;
+
+    void step_cb(int x0, int y0, guchar* buf);
 
   public:
     CacheBuffer();

@@ -105,11 +105,11 @@ public:
       std::cout<<"PencilMask::get(): WARNING: mask = NULL"<<std::endl;
       return 1;
     }
-    if( x < 0 || x >= size) {
+    if( x < 0 || x >= (int)size) {
       std::cout<<"PencilMask::get(): WARNING: x value out of range ("<<x<<")"<<std::endl;
       return 1;
     }
-    if( y < 0 || y >= size) {
+    if( y < 0 || y >= (int)size) {
       std::cout<<"PencilMask::get(): WARNING: y value out of range ("<<y<<")"<<std::endl;
       return 1;
     }
@@ -287,7 +287,7 @@ inline std::istream& operator >>( std::istream& str, Pencil& pen )
   str>>nch;
   std::vector<float>& color = pen.get_color();
   color.clear();
-  for( int i = 0; i < nch; i++ ) {
+  for( unsigned int i = 0; i < nch; i++ ) {
     float val;
     str>>val;
     color.push_back( val );
@@ -438,9 +438,9 @@ class RawBuffer
   unsigned char* pxmask;
 
   // Requested image fields
-  int xsize;
-  int ysize;
-  int bands;
+  unsigned int xsize;
+  unsigned int ysize;
+  unsigned int bands;
   VipsBandFormat format;
   VipsCoding coding;
   VipsInterpretation interpretation;

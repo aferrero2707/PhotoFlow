@@ -320,6 +320,17 @@ void PF::ICCProfile::get_lightness( float* RGBv, float* Lv, size_t size )
 }
 
 
+bool PF::ICCProfile::equals_to( PF::ICCProfile* prof)
+{
+  if( !prof ) return false;
+  if( prof->get_profile_size() == get_profile_size() &&
+      memcmp(prof->get_profile_data(), get_profile_data(), get_profile_size()) == 0 ) {
+    return true;
+  }
+  return false;
+}
+
+
 /*
 PF::ICCProfileData* PF::get_icc_profile_data( VipsImage* img )
 {
@@ -544,12 +555,12 @@ PF::ICCStore::ICCStore()
 PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_type trc_type)
 {
   switch( ptype ) {
-  case PF::OUT_PROF_sRGB: return srgb_profiles[trc_type];
-  case PF::OUT_PROF_REC2020: return rec2020_profiles[trc_type];
-  case PF::OUT_PROF_ACES: return aces_profiles[trc_type];
-  case PF::OUT_PROF_ACEScg: return acescg_profiles[trc_type];
-  case PF::OUT_PROF_ADOBE: return adobe_profiles[trc_type];
-  case PF::OUT_PROF_PROPHOTO: return prophoto_profiles[trc_type];
+  case PF::PROF_TYPE_sRGB: return srgb_profiles[trc_type];
+  case PF::PROF_TYPE_REC2020: return rec2020_profiles[trc_type];
+  case PF::PROF_TYPE_ACES: return aces_profiles[trc_type];
+  case PF::PROF_TYPE_ACEScg: return acescg_profiles[trc_type];
+  case PF::PROF_TYPE_ADOBE: return adobe_profiles[trc_type];
+  case PF::PROF_TYPE_PROPHOTO: return prophoto_profiles[trc_type];
   default: return NULL;
   }
 }

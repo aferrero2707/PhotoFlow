@@ -26,7 +26,7 @@
   These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
 */
-
+#include <glib.h>
 
 #include "../base/file_util.hh"
 #include "../base/fileutils.hh"
@@ -36,7 +36,6 @@
 #include "tablabelwidget.hh"
 #include "layerwidget.hh"
 #include "imageeditor.hh"
-
 
 PF::ControlsGroup::ControlsGroup( ImageEditor* e ): editor(e)
 {
@@ -55,19 +54,71 @@ void PF::ControlsGroup::clear()
 }
 
 
-void PF::ControlsGroup::add_control(PF::OperationConfigGUI* gui)
+void PF::ControlsGroup::populate()
 {
+  editor->get_image()->rebuild_done_wait( false );
+
+  // temporarely remove all controls
+  for( unsigned int i = 0; i < controls.size(); i++ ) {
+    if( controls[i] && (controls[i]->get_parent() == this) )
+      remove( *(controls[i]) );
+  }
+
+  // get a flattened copy of the layers tree
+  std::list<Layer*> layers;
+  editor->get_image()->get_layer_manager().get_flattened_layers_tree( layers );
+
+  // loop over the layers, and re-insert in the controls group those that are in the guis list
+  std::cout<<"ControlsGroup::update(): layers.size()="<<layers.size()<<std::endl;
+  for( std::list<Layer*>::reverse_iterator li = layers.rbegin(); li != layers.rend(); li++ ) {
+    PF::Layer* l = *li;
+    PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+    if( ui ) {
+      PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+        if( gui ) {
+        for( unsigned int i = 0; i < guis.size(); i++ ) {
+          if( guis[i] == gui ) {
+            Gtk::Frame* control = gui->get_frame();
+            pack_start( *control, Gtk::PACK_SHRINK );
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  editor->get_image()->rebuild_unlock();
+}
+
+
+void PF::ControlsGroup::update()
+{
+  std::cout<<"ControlsGroup::update() called"<<std::endl;
+  editor->get_image()->lock();
+  for( unsigned int i = 0; i < guis.size(); i++ ) {
+    guis[i]->update();
+  }
+  editor->get_image()->unlock();
+}
+
+
+void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gui)
+{
+  editor->get_image()->rebuild_done_wait( false );
   collapse_all();
   for( unsigned int i = 0; i < guis.size(); i++ ) {
     if( guis[i] == gui ) {
       guis[i]->expand();
+      editor->get_image()->rebuild_unlock();
       return;
     }
   }
   guis.push_back( gui );
   Gtk::Frame* control = gui->get_frame();
   controls.push_back( control );
-  pack_start( *control, Gtk::PACK_SHRINK );
+  //pack_end( *control, Gtk::PACK_SHRINK );
+  editor->get_image()->rebuild_unlock();
+  populate();
   editor->update_controls();
 }
 
@@ -169,7 +220,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( path_mask_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( draw_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( clone_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 8 );
 
 
   LayerTree* view = new LayerTree( editor );
@@ -299,6 +350,12 @@ bool PF::LayerWidget::on_button_event( GdkEventButton* button )
   return true;
 }
 */
+
+
+void PF::LayerWidget::update_controls()
+{
+  controls_group.update();
+}
 
 
 void PF::LayerWidget::on_selection_changed()
@@ -446,7 +503,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       */
 
       VTabLabelWidget* tabwidget = 
-        new VTabLabelWidget( std::string("intensity (")+l->get_name()+")",
+        new VTabLabelWidget( std::string(_("intensity ("))+l->get_name()+")",
                             view );
       tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::LayerWidget::remove_tab) ); 
       notebook.append_page( *view, *tabwidget );
@@ -494,7 +551,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       */
 
       VTabLabelWidget* tabwidget = 
-        new VTabLabelWidget( std::string("opacity (")+l->get_name()+")",
+        new VTabLabelWidget( std::string(_("opacity ("))+l->get_name()+")",
                             view );
       tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::LayerWidget::remove_tab) ); 
       notebook.append_page( *view, *tabwidget );
@@ -517,7 +574,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     if( ui ) {
       PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if( gui && gui->get_frame() ) {
-        controls_group.add_control( gui );
+        controls_group.add_control( l, gui );
         gui->open();
         gui->expand();
       }
@@ -597,7 +654,7 @@ bool PF::LayerWidget::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk:
     //Gtk::TreeModel::Row row = *it;
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*it)[columns.col_layer];
-    if(l && (l->get_id()==id)) {
+    if(l && ((int)(l->get_id())==id)) {
       iter = it;
       return true;
     }
@@ -922,8 +979,9 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   }
 */
 
-
+  std::cout<<"LayerWidget::add_layer(): submitting image update request..."<<std::endl;
   update();
+  std::cout<<"LayerWidget::add_layer(): image update request submitted"<<std::endl;
   layer_views[page]->unselect_all();
   select_row( layer->get_id() );
 
@@ -931,7 +989,7 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   if( ui ) {
     PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
     if( gui && gui->get_frame() ) {
-      controls_group.add_control( gui );
+      controls_group.add_control( layer, gui );
       gui->open();
     }
     controls_group.show_all_children();
@@ -961,7 +1019,7 @@ void PF::LayerWidget::insert_image( std::string filename )
     if( proc->get_par() && proc->get_par()->get_property( "file_name" ) )
       proc->get_par()->get_property( "file_name" )->set_str( filename );
     limg->set_processor( proc );
-    limg->set_name( "image file" );
+    limg->set_name( _("image file") );
 
     add_layer( limg );
   } else {
@@ -1156,7 +1214,7 @@ void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
   if( editor ) {
     //if( editor->get_active_layer() == l->get_id() )
     //  editor->set_active_layer(-1);
-    if( editor->get_displayed_layer() == l->get_id() )
+    if( editor->get_displayed_layer() == (int)(l->get_id()) )
       editor->set_displayed_layer(-1);
   }
   unset_sticky_and_editing( l->get_omap_layers() );
@@ -1215,7 +1273,7 @@ void PF::LayerWidget::remove_layers()
     if( editor ) {
       std::cout<<"editor->get_active_layer()="<<editor->get_active_layer()<<"  l->get_id()="<<l->get_id()<<std::endl;
     }
-    if( editor && (editor->get_active_layer() == l->get_id()) ) {
+    if( editor && (editor->get_active_layer() == (int)(l->get_id())) ) {
       std::cout<<"editor->set_active_layer( -1 );"<<std::endl;
       editor->set_active_layer( -1 );
     }
@@ -1270,14 +1328,45 @@ void PF::LayerWidget::on_button_add_group()
 
 void PF::LayerWidget::on_button_del()
 {
-  remove_layers();
+  delete_selected_layers();
 }
 
 
 
+void PF::LayerWidget::delete_selected_layers()
+{
+  remove_layers();
+}
+
+
+void PF::LayerWidget::cut_selected_layers()
+{
+  gchar* bufname = g_build_filename( PF::PhotoFlow::Instance().get_cache_dir().c_str(), "copy_buffer.pfp", NULL );
+  save_preset(bufname);
+  g_free( bufname );
+  delete_selected_layers();
+}
+
+
+void PF::LayerWidget::copy_selected_layers()
+{
+  gchar* bufname = g_build_filename( PF::PhotoFlow::Instance().get_cache_dir().c_str(), "copy_buffer.pfp", NULL );
+  save_preset(bufname);
+  g_free( bufname );
+}
+
+
+void PF::LayerWidget::paste_layers()
+{
+  gchar* bufname = g_build_filename( PF::PhotoFlow::Instance().get_cache_dir().c_str(), "copy_buffer.pfp", NULL );
+  insert_preset(bufname);
+  g_free( bufname );
+}
+
+
 void PF::LayerWidget::on_button_load()
 {
-  Gtk::FileChooserDialog dialog("Open preset",
+  Gtk::FileChooserDialog dialog(_("Open preset"),
 				Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
   
@@ -1408,6 +1497,22 @@ void PF::LayerWidget::on_button_save()
     }
   }
 
+  save_preset(filename);
+}
+
+
+void PF::LayerWidget::save_preset(std::string filename)
+{
+  int page = notebook.get_current_page();
+  if( page < 0 ) page = 0;
+
+  Glib::RefPtr<Gtk::TreeStore> model = layer_views[page]->get_model();
+
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+    layer_views[page]->get_tree().get_selection();
+  std::vector<Gtk::TreeModel::Path> sel_rows =
+    refTreeSelection->get_selected_rows();
+
   std::ofstream of;
   of.open( filename.c_str() );
   if( !of ) return;
@@ -1423,7 +1528,7 @@ void PF::LayerWidget::on_button_save()
     Gtk::TreeModel::iterator parent = row.parent();
     if( parent ) {
       bool selected = false;
-      for( int rj = 0; rj < sel_rows.size(); rj++ ) {
+      for( unsigned int rj = 0; rj < sel_rows.size(); rj++ ) {
         Gtk::TreeModel::iterator iter2 = model->get_iter( sel_rows[rj] );
         if( !iter2 ) continue;
         if( parent != iter2 ) continue;

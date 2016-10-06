@@ -73,7 +73,7 @@ VipsImage* PF::GmicSharpenRLPar::build(std::vector<VipsImage*>& in, int first,
   if( !gpar ) return NULL;
 
   float scalefac = 1;
-	for( int l = 1; l <= level; l++ )
+	for( unsigned int l = 1; l <= level; l++ )
 		scalefac *= 2;
 
 	padding = prop_sigma.get()*2.0*prop_iterations.get()/scalefac;

@@ -68,11 +68,11 @@ PF::Layer* PF::LayerManager::new_layer()
 
 void PF::LayerManager::delete_layer( PF::Layer* layer )
 {
-  if( layer->get_id() < 0 ) {
-    std::cout<<"ERROR: LayerManager::delete_layer(): layer->get_id() < 0"<<std::endl;
-    return;
-  }
-  if( layer->get_id() >= (int)layers_pool.size() ) {
+//  if( layer->get_id() < 0 ) {
+//    std::cout<<"ERROR: LayerManager::delete_layer(): layer->get_id() < 0"<<std::endl;
+//    return;
+//  }
+  if( layer->get_id() >= layers_pool.size() ) {
     std::cout<<"ERROR: LayerManager::delete_layer(): layer->get_id() >= layers_pool.size()"<<std::endl;
     return;
   }
@@ -94,7 +94,6 @@ PF::Layer* PF::LayerManager::get_layer(int id)
 void PF::LayerManager::expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list )
 {
   if( !layer ) return;
-  list.push_back( layer );
   // Sublayers
   for( std::list<PF::Layer*>::iterator li = layer->get_sublayers().begin();
        li != layer->get_sublayers().end(); li++ ) {
@@ -110,6 +109,8 @@ void PF::LayerManager::expand_layer( PF::Layer* layer, std::list<PF::Layer*>& li
        li != layer->get_omap_layers().end(); li++ ) {
     expand_layer( *li, list);
   }
+  // the layer itself
+  list.push_back( layer );
 }
 
 
@@ -147,6 +148,17 @@ void PF::LayerManager::get_input_layers( Layer* layer, std::list<Layer*>& inputs
   std::list<PF::Layer*>* clist = get_list( layer );
   if( !clist ) return;
   get_input_layers( layer, *clist, inputs );
+}
+
+
+void PF::LayerManager::get_flattened_layers_tree( std::list<Layer*>& inputs )
+{
+  if( layers.empty() ) return;
+  PF::Layer* top_layer = layers.back();
+  if( !top_layer ) return;
+  get_input_layers( top_layer, layers, inputs );
+  //inputs.push_back(top_layer);
+  expand_layer( top_layer, inputs );
 }
 
 
@@ -653,6 +665,14 @@ void PF::LayerManager::update_ui( std::list<Layer*>& list )
 
 
 
+void PF::LayerManager::update_ui()
+{
+  update_ui( layers );
+}
+
+
+
+
 bool PF::insert_layer( std::list<Layer*>& layers, Layer* layer, int32_t lid )
 {  
   if( lid < 0 ) {
@@ -662,7 +682,7 @@ bool PF::insert_layer( std::list<Layer*>& layers, Layer* layer, int32_t lid )
 
   std::list<Layer*>::iterator it;
   for( it = layers.begin(); it != layers.end(); ++it )
-    if( (*it)->get_id() == lid ) break;
+    if( (int32_t)(*it)->get_id() == lid ) break;
 
   if( it == layers.end() ) return false;
   it++;
@@ -974,7 +994,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
           continue;
         }
         VipsImage* extra_img = NULL;
-        // std::cout<<"  imgid="<<imgid<<"  extra_node->images.size()="<<extra_node->images.size()<<std::endl;
+        std::cout<<"  imgid="<<imgid<<"  extra_node->images.size()="<<extra_node->images.size()<<std::endl;
         if( l->extra_inputs[iextra].second == true ) {
           extra_img = extra_node->blended;
         } else {
@@ -1200,6 +1220,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
     if( newimg ) {
       VipsImage* blendedimg;
+      std::cout<<"rebuild_chain(): Layer \""<<l->get_name()<<"\" newimgvec.size()="<<newimgvec.size()<<std::endl;
       pipeline->set_images( newimgvec, l->get_id() );
       if( par->has_opacity() && blender && pipelineblender) {
         unsigned int level = pipeline->get_level();
@@ -1275,7 +1296,7 @@ bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, 
 bool PF::LayerManager::rebuild_finalize( bool ui_update )
 {
   reset_dirty( layers );
-  if( ui_update ) update_ui( layers );
+  //if( ui_update ) update_ui( layers );
   return true;
 }
 

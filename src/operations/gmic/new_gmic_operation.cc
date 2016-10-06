@@ -41,6 +41,8 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_blur_bilateral();
   } else if( op_type == "gmic_denoise" ) {
     processor = new_gmic_denoise();
+  } else if( op_type == "gmic_smooth_nlmeans" ) {
+    processor = new_gmic_smooth_nlmeans();
   } else if( op_type == "gmic_smooth_anisotropic" ) {
     processor = new_gmic_smooth_anisotropic();
   } else if( op_type == "gmic_smooth_diffusion" ) {

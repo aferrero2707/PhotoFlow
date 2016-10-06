@@ -40,6 +40,8 @@ namespace PF
   ProcessorBase* new_raw_loader();
   ProcessorBase* new_raw_developer();
   ProcessorBase* new_raw_output();
+  ProcessorBase* new_raw_developer_v1();
+  ProcessorBase* new_raw_output_v1();
   ProcessorBase* new_buffer();
   ProcessorBase* new_blender();
   ProcessorBase* new_clip();
@@ -73,6 +75,10 @@ namespace PF
   ProcessorBase* new_tone_mapping();
   ProcessorBase* new_volume();
   ProcessorBase* new_path_mask();
+  ProcessorBase* new_shadows_highlights();
+  ProcessorBase* new_defringe();
+  ProcessorBase* new_split_details();
+  ProcessorBase* new_subtrimg();
   //ProcessorBase* new_vips_operation( std::string op_type );
 }
 

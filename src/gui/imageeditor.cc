@@ -38,7 +38,8 @@
     #include <sys/resource.h>
     #include <unistd.h>
     #define GetCurrentDir getcwd
- #endif
+#endif
+#include <unistd.h>
 #include <libgen.h>
 #include <dirent.h>
 
@@ -120,6 +121,37 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
 
 
 
+typedef struct {
+  PF::ImageEditor* editor;
+} EditorCBData;
+
+
+static gboolean editor_on_image_modified_cb ( EditorCBData* data)
+{
+  if( data ) {
+    data->editor->on_image_modified();
+    g_free( data );
+  }
+  return false;
+}
+
+
+static gboolean editor_on_image_updated_cb ( EditorCBData* data)
+{
+  if( data ) {
+    data->editor->on_image_updated();
+    g_free( data );
+  }
+  return false;
+}
+
+
+
+
+
+
+
+
 PF::ImageEditor::ImageEditor( std::string fname ):
   filename( fname ),
   image( new PF::Image() ),
@@ -129,8 +161,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //imageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) ),
   layersWidget( image, this ),
   aux_controls( NULL ),
-  sim_black_ink_button( _("sim. black ink") ),
-  sim_paper_color_button( _("sim. paper color") ),
+  soft_proof_enable_button( _("soft proof.") ),
+  softproof_dialog( NULL ),
   img_zoom_in(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"),
   img_zoom_out(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-out.png"),
   img_zoom_fit(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-fit.png"),
@@ -216,8 +248,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonZoomIn.set_size_request(26,0);
   controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
 
-  soft_proof_box.pack_start( sim_black_ink_button, Gtk::PACK_SHRINK );
-  soft_proof_box.pack_start( sim_paper_color_button, Gtk::PACK_SHRINK );
+  soft_proof_box.pack_start( soft_proof_enable_button, Gtk::PACK_SHRINK );
   soft_proof_frame.add( soft_proof_box );
   controlsBox.pack_end( soft_proof_frame, Gtk::PACK_SHRINK );
 
@@ -247,10 +278,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   controls_group_scrolled_window.set_size_request( 280, 0 );
   //main_panel.pack_start( layersWidget.get_controls_group(), Gtk::PACK_SHRINK );
 
-  sim_black_ink_button.signal_toggled().connect( sigc::mem_fun(*this,
-      &PF::ImageEditor::on_sim_black_ink_toggled) );
-  sim_paper_color_button.signal_toggled().connect( sigc::mem_fun(*this,
-      &PF::ImageEditor::on_sim_paper_color_toggled) );
+  soft_proof_enable_button.signal_toggled().connect( sigc::mem_fun(*this,
+      &PF::ImageEditor::on_soft_proof_toggled) );
 
   button_highlights_warning.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::ImageEditor::toggle_highlights_warning) );
@@ -308,6 +337,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_caching) );
   PF::ImageProcessor::Instance().signal_status_processing.
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_processing) );
+  PF::ImageProcessor::Instance().signal_status_updating.
+      connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_updating) );
   PF::ImageProcessor::Instance().signal_status_exporting.
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_exporting) );
 
@@ -318,17 +349,22 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
 PF::ImageEditor::~ImageEditor()
 {
-	/**/
+  /**/
   std::cout<<"~ImageEditor(): deleting image"<<std::endl;
-  if( image )
+  if( image ) {
+    image->destroy();
     delete image;
+  }
   std::cout<<"~ImageEditor(): image deleted"<<std::endl;
-	/**/
+  /**/
   /*
+  // Images need to be destroyed by the processing thread
   ProcessRequestInfo request;
   request.image = image;
   request.request = PF::IMAGE_DESTROY;
-  PF::ImageProcessor::Instance().submit_request( request );	
+  PF::ImageProcessor::Instance().submit_request( request );
+  // Ugly temporary solution to make sure that the image is destroyed before continuing
+  sleep(1);	
   */
 }
 
@@ -584,8 +620,17 @@ void PF::ImageEditor::build_image()
   image->set_loaded( true );
 
   image->clear_modified();
-  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified) );
+  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified_idle_cb) );
+  image->signal_updated.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_updated_idle_cb) );
   //Gtk::Paned::on_map();
+}
+
+
+void PF::ImageEditor::on_image_modified_idle_cb()
+{
+  EditorCBData * update = g_new (EditorCBData, 1);
+  update->editor = this;
+  g_idle_add ((GSourceFunc) editor_on_image_modified_cb, update);
 }
 
 
@@ -598,6 +643,22 @@ void PF::ImageEditor::on_image_modified()
   Glib::ustring label = "*";
   label = label + fname;
   tab_label_widget->set_label( label );
+}
+
+
+void PF::ImageEditor::on_image_updated_idle_cb()
+{
+  std::cout<<"ImageEditor::on_image_updated_idle_cb() called"<<std::endl;
+  EditorCBData * update = g_new (EditorCBData, 1);
+  update->editor = this;
+  g_idle_add ((GSourceFunc) editor_on_image_updated_cb, update);
+}
+
+
+void PF::ImageEditor::on_image_updated()
+{
+  std::cout<<"ImageEditor::on_image_updated() called."<<std::endl;
+  layersWidget.update_controls();
 }
 
 
@@ -691,21 +752,25 @@ void PF::ImageEditor::toggle_shadows_warning()
 }
 
 
-void PF::ImageEditor::on_sim_black_ink_toggled()
+void PF::ImageEditor::on_soft_proof_toggled()
 {
-  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
-  imageArea->set_sim_black_ink( sim_black_ink_button.get_active() );
-  image->update();
-}
+  if( !softproof_dialog ) softproof_dialog = new SoftProofDialog(this);
+  if( !softproof_dialog ) return;
+
+  Gtk::Container* toplevel = get_toplevel();
+#ifdef GTKMM_3
+  if( toplevel->get_is_toplevel() ) {
+#else
+  if( toplevel->is_toplevel() ) {
+#endif
+    softproof_dialog->set_transient_for( *((Gtk::Window*)toplevel) );
+  }
 
 
-void PF::ImageEditor::on_sim_paper_color_toggled()
-{
-  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
-  imageArea->set_sim_paper_color( sim_paper_color_button.get_active() );
-  image->update();
+  if( soft_proof_enable_button.get_active() )
+    softproof_dialog->show();
+  else
+    softproof_dialog->hide();
 }
 
 
@@ -779,7 +844,7 @@ bool PF::ImageEditor::zoom_fit()
 	float shrink_h = area_hsize/image_size_updater->get_image_width();
 	float shrink_v = area_vsize/image_size_updater->get_image_height();
 	float shrink_min = (shrink_h<shrink_v) ? shrink_h : shrink_v;
-	int target_level = 0;
+	unsigned int target_level = 0;
 	//std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
 	while( shrink_min < 0.5 ) {
 		target_level++;
