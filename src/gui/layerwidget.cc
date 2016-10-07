@@ -56,7 +56,9 @@ void PF::ControlsGroup::clear()
 
 void PF::ControlsGroup::populate()
 {
-  editor->get_image()->rebuild_done_wait( false );
+  //editor->get_image()->rebuild_done_wait( false );
+  // Make sure the image is not being rebuilt
+  editor->get_image()->lock();
 
   // temporarely remove all controls
   for( unsigned int i = 0; i < controls.size(); i++ ) {
@@ -87,7 +89,8 @@ void PF::ControlsGroup::populate()
     }
   }
 
-  editor->get_image()->rebuild_unlock();
+  //editor->get_image()->rebuild_unlock();
+  editor->get_image()->unlock();
 }
 
 
@@ -104,12 +107,15 @@ void PF::ControlsGroup::update()
 
 void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gui)
 {
-  editor->get_image()->rebuild_done_wait( false );
+  //editor->get_image()->rebuild_done_wait( false );
+  // Make sure the image is not being rebuilt
+  editor->get_image()->lock();
   collapse_all();
   for( unsigned int i = 0; i < guis.size(); i++ ) {
     if( guis[i] == gui ) {
       guis[i]->expand();
-      editor->get_image()->rebuild_unlock();
+      //editor->get_image()->rebuild_unlock();
+      editor->get_image()->unlock();
       return;
     }
   }
@@ -117,7 +123,8 @@ void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gu
   Gtk::Frame* control = gui->get_frame();
   controls.push_back( control );
   //pack_end( *control, Gtk::PACK_SHRINK );
-  editor->get_image()->rebuild_unlock();
+  //editor->get_image()->rebuild_unlock();
+  editor->get_image()->unlock();
   populate();
   editor->update_controls();
 }
