@@ -334,8 +334,8 @@ PF::RawImage::RawImage( const std::string _fname ):
     for(col=0; col<iwidth; col++) {
       int col2 = col + crop_x;
       int row2 = row + crop_y;
-      //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : r->cfa.getColorAt(col,row);
-      unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
+      unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : r->cfa.getColorAt(col,row);
+      //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
       float val = 0;
       float nval = 0;
       switch(r->getDataType()) {
