@@ -67,6 +67,13 @@ namespace PF {
     Gtk::CheckButton sim_black_ink_button;
     Gtk::CheckButton sim_paper_color_button;
 
+    Gtk::Frame clipping_frame;
+    Gtk::VBox clipping_vbox;
+    Gtk::CheckButton clip_negative_button;
+    Gtk::CheckButton clip_overflow_button;
+
+    Gtk::HBox sim_clipping_hbox;
+
     Gtk::CheckButton gamut_warning_button;
 
     Gtk::Image profile_open_img;
@@ -94,6 +101,8 @@ namespace PF {
     void on_intent_selector_changed();
     void on_sim_black_ink_toggled();
     void on_bpc_toggled();
+    void on_clip_negative_toggled();
+    void on_clip_overflow_toggled();
     void on_sim_paper_color_toggled();
     void on_gamut_warning_toggled();
     void on_button_profile_open_clicked();

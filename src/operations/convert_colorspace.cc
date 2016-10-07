@@ -343,14 +343,23 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
         gw->get_par()->set_image_hints( out );
         gw->get_par()->set_format( get_format() );
 
+        {
+          char tstr[1024];
+          cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+          std::cout<<"ConvertColorspacePar::build(): output profile="<<tstr
+              <<"  cmsIsMatrixShaper(out_profile)="<<cmsIsMatrixShaper(out_profile)<<std::endl;
+        }
+
         PF::GamutWarningPar* gw2 = dynamic_cast<PF::GamutWarningPar*>( gw->get_par() );
         if( gw2 ) {
-        if( !cmsIsMatrixShaper(out_profile) ) {
+          if( !cmsIsMatrixShaper(out_profile) ) {
             gw2->set_delta( 4.9999 );
             gw2->set_dest_is_matrix( false );
+
+          } else {
+            gw2->set_dest_is_matrix( true );
           }
-        } else {
-          gw2->set_dest_is_matrix( true );
+          std::cout<<"ConvertColorspacePar::build(): gw2->get_dest_is_matrix(): "<<gw2->get_dest_is_matrix()<<std::endl;
         }
 
         out2 = gw->get_par()->build( in2, 0, NULL, NULL, level );

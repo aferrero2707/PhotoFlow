@@ -188,6 +188,8 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   sim_black_ink_enabled( false ),
   sim_paper_color_enabled( false ),
   gamut_warning_enabled( false ),
+  softproof_clip_negative_enabled( true ),
+  softproof_clip_overflow_enabled( true ),
   display_merged( true ),
   active_layer( -1 ),
   edited_layer( -1 ),
@@ -1048,11 +1050,9 @@ void PF::ImageArea::update( VipsRect* area )
     PF::ConvertColorspacePar* cc_par =
         dynamic_cast<PF::ConvertColorspacePar*>( softproof_conversion->get_par() );
     if( cc_par ) {
-      if( gamut_warning_enabled ) {
-        cc_par->set_gamut_warning( true );
-      } else {
-        cc_par->set_gamut_warning( false );
-      }
+      cc_par->set_gamut_warning( gamut_warning_enabled );
+      cc_par->set_clip_negative( softproof_clip_negative_enabled );
+      cc_par->set_clip_overflow( softproof_clip_overflow_enabled );
       cc_par->set_bpc(softproof_bpc_enabled);
     }
     softproof_conversion->get_par()->set_image_hints( wclipimg );

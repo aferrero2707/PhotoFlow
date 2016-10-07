@@ -40,6 +40,9 @@ PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
       paper_sim_frame( _("paper simulation") ),
       sim_black_ink_button( _("sim. black ink") ),
       sim_paper_color_button( _("sim. paper color") ),
+      clipping_frame( _("clipping") ),
+      clip_negative_button( _("clip negative") ),
+      clip_overflow_button( _("clip overflow") ),
       gamut_warning_button( _("gamut warning") ),
       profile_open_button(Gtk::Stock::OPEN),
       editor( ed )
@@ -137,8 +140,16 @@ PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
   paper_sim_vbox.pack_start( sim_black_ink_button, Gtk::PACK_SHRINK, 5 );
   paper_sim_vbox.pack_start( sim_paper_color_button, Gtk::PACK_SHRINK, 5 );
   paper_sim_frame.add( paper_sim_vbox );
-  get_vbox()->pack_start( paper_sim_frame, Gtk::PACK_SHRINK, 5 );
+  sim_clipping_hbox.pack_start( paper_sim_frame, Gtk::PACK_SHRINK, 5 );
 
+  clip_negative_button.set_active( true );
+  clip_overflow_button.set_active( true );
+  clipping_vbox.pack_start( clip_negative_button, Gtk::PACK_SHRINK, 5 );
+  clipping_vbox.pack_start( clip_overflow_button, Gtk::PACK_SHRINK, 5 );
+  clipping_frame.add( clipping_vbox );
+  sim_clipping_hbox.pack_start( clipping_frame, Gtk::PACK_SHRINK, 5 );
+
+  get_vbox()->pack_start( sim_clipping_hbox, Gtk::PACK_SHRINK, 5 );
   get_vbox()->pack_start( gamut_warning_button, Gtk::PACK_SHRINK, 5 );
 
 
@@ -155,6 +166,11 @@ PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
       &PF::SoftProofDialog::on_sim_black_ink_toggled) );
   sim_paper_color_button.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::SoftProofDialog::on_sim_paper_color_toggled) );
+
+  clip_negative_button.signal_toggled().connect( sigc::mem_fun(*this,
+      &PF::SoftProofDialog::on_clip_negative_toggled) );
+  clip_overflow_button.signal_toggled().connect( sigc::mem_fun(*this,
+      &PF::SoftProofDialog::on_clip_overflow_toggled) );
 
   gamut_warning_button.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::SoftProofDialog::on_gamut_warning_toggled) );
@@ -247,6 +263,7 @@ void PF::SoftProofDialog::on_profile_selector_changed()
         profile_box.hide();
         intent_selector.hide();
         bpc_button.hide();
+        clipping_frame.hide();
         gamut_warning_button.hide();
         break;
       case -200:
@@ -260,6 +277,7 @@ void PF::SoftProofDialog::on_profile_selector_changed()
         profile_box.show();
         intent_selector.show();
         bpc_button.show();
+        clipping_frame.show();
         gamut_warning_button.show();
         break;
       default: {
@@ -271,6 +289,7 @@ void PF::SoftProofDialog::on_profile_selector_changed()
         profile_box.hide();
         intent_selector.show();
         bpc_button.show();
+        clipping_frame.show();
         gamut_warning_button.show();
         break;
       }
@@ -337,6 +356,32 @@ void PF::SoftProofDialog::on_sim_paper_color_toggled()
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   imageArea->set_sim_paper_color( sim_paper_color_button.get_active() );
+  image->update();
+}
+
+
+void PF::SoftProofDialog::on_clip_negative_toggled()
+{
+  PF::Image* image = editor->get_image();
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !image ) return;
+  if( !imageArea ) return;
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
+  if( !pipeline ) return;
+  imageArea->set_clip_negative( clip_negative_button.get_active() );
+  image->update();
+}
+
+
+void PF::SoftProofDialog::on_clip_overflow_toggled()
+{
+  PF::Image* image = editor->get_image();
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !image ) return;
+  if( !imageArea ) return;
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
+  if( !pipeline ) return;
+  imageArea->set_clip_overflow( clip_overflow_button.get_active() );
   image->update();
 }
 
