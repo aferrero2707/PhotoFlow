@@ -186,4 +186,5 @@ void PF::Slider::set_value()
   double val = adjustment->get_value()/multiplier;
 #endif
   get_prop()->update(val);
+  //std::cout<<"PF::Slider::set_value(): property=\""<<get_prop_name()<<"\"(0x"<<get_prop()<<")  val="<<val<<std::endl;
 }

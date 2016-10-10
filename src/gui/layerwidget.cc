@@ -56,6 +56,7 @@ void PF::ControlsGroup::clear()
 
 void PF::ControlsGroup::populate()
 {
+  //editor->get_image()->rebuild_lock();
   //editor->get_image()->rebuild_done_wait( false );
   // Make sure the image is not being rebuilt
   editor->get_image()->lock();
@@ -107,6 +108,7 @@ void PF::ControlsGroup::update()
 
 void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gui)
 {
+  //editor->get_image()->rebuild_lock();
   //editor->get_image()->rebuild_done_wait( false );
   // Make sure the image is not being rebuilt
   editor->get_image()->lock();

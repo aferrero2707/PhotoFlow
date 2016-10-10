@@ -31,15 +31,16 @@
 #include "imageeditor.hh"
 
 #include "../base/new_operation.hh"
+#include "../base/photoflow.hh"
 
-#include "operations/raw_developer_config.hh"
 #include "../legacy/gui/operations/raw_developer_config.hh"
+#include "../legacy/gui/operations/hue_saturation_config.hh"
 #include "../legacy/gui/operations/brightness_contrast_config.hh"
+#include "operations/raw_developer_config.hh"
 #include "operations/clip_config.hh"
 #include "operations/white_balance_config.hh"
 #include "operations/levels_config.hh"
 #include "operations/basic_adjustments_config.hh"
-#include "../legacy/gui/operations/hue_saturation_config.hh"
 #include "operations/hsl_mask_config.hh"
 #include "operations/imageread_config.hh"
 #include "operations/raw_loader_config.hh"
