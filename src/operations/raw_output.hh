@@ -551,6 +551,11 @@ enum hlreco_mode_t {
           //  std::cout<<"RGB_out["<<xi%3<<"]="<<pout[xi]<<std::endl;
           pout[xi] = CLIPOUT(pout[xi]);
         }
+        for( int xi = 0; xi < line_size; xi+=3 ) {
+          if(false && r->left<20 && r->top<20 && y<4 && xi<12) {
+            std::cout<<"("<<y<<","<<xi/3<<")  "<<pout[xi]<<","<<pout[xi+1]<<","<<pout[xi+2]<<"   "<<std::endl;
+          }
+        }
       }
       delete line; delete line2;
     }

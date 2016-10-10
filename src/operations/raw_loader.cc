@@ -88,8 +88,8 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
     new_raw_image->ref();
   }
 
-  if( raw_image ) std::cout<<"raw_image->get_nref(): "<<raw_image->get_nref()<<std::endl;
-  if( new_raw_image ) std::cout<<"new_raw_image->get_nref(): "<<new_raw_image->get_nref()<<std::endl;
+  //if( raw_image ) std::cout<<"raw_image->get_nref(): "<<raw_image->get_nref()<<std::endl;
+  //if( new_raw_image ) std::cout<<"new_raw_image->get_nref(): "<<new_raw_image->get_nref()<<std::endl;
 
   if( raw_image ) {
     raw_image->unref();
