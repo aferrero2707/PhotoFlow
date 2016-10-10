@@ -54,10 +54,12 @@ void PF::ControlsGroup::clear()
 }
 
 
-void PF::ControlsGroup::update()
+void PF::ControlsGroup::populate()
 {
-  editor->get_image()->rebuild_lock();
-  editor->get_image()->rebuild_done_wait( false );
+  //editor->get_image()->rebuild_lock();
+  //editor->get_image()->rebuild_done_wait( false );
+  // Make sure the image is not being rebuilt
+  editor->get_image()->lock();
 
   // temporarely remove all controls
   for( unsigned int i = 0; i < controls.size(); i++ ) {
@@ -88,18 +90,34 @@ void PF::ControlsGroup::update()
     }
   }
 
-  editor->get_image()->rebuild_unlock();
+  //editor->get_image()->rebuild_unlock();
+  editor->get_image()->unlock();
 }
+
+
+void PF::ControlsGroup::update()
+{
+  std::cout<<"ControlsGroup::update() called"<<std::endl;
+  editor->get_image()->lock();
+  for( unsigned int i = 0; i < guis.size(); i++ ) {
+    guis[i]->update();
+  }
+  editor->get_image()->unlock();
+}
+
 
 void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gui)
 {
-  editor->get_image()->rebuild_lock();
-  editor->get_image()->rebuild_done_wait( false );
+  //editor->get_image()->rebuild_lock();
+  //editor->get_image()->rebuild_done_wait( false );
+  // Make sure the image is not being rebuilt
+  editor->get_image()->lock();
   collapse_all();
   for( unsigned int i = 0; i < guis.size(); i++ ) {
     if( guis[i] == gui ) {
       guis[i]->expand();
-      editor->get_image()->rebuild_unlock();
+      //editor->get_image()->rebuild_unlock();
+      editor->get_image()->unlock();
       return;
     }
   }
@@ -107,8 +125,9 @@ void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gu
   Gtk::Frame* control = gui->get_frame();
   controls.push_back( control );
   //pack_end( *control, Gtk::PACK_SHRINK );
-  editor->get_image()->rebuild_unlock();
-  update();
+  //editor->get_image()->rebuild_unlock();
+  editor->get_image()->unlock();
+  populate();
   editor->update_controls();
 }
 
@@ -210,7 +229,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( path_mask_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( draw_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( clone_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 8 );
 
 
   LayerTree* view = new LayerTree( editor );
@@ -340,6 +359,12 @@ bool PF::LayerWidget::on_button_event( GdkEventButton* button )
   return true;
 }
 */
+
+
+void PF::LayerWidget::update_controls()
+{
+  controls_group.update();
+}
 
 
 void PF::LayerWidget::on_selection_changed()
@@ -963,8 +988,9 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   }
 */
 
-
+  std::cout<<"LayerWidget::add_layer(): submitting image update request..."<<std::endl;
   update();
+  std::cout<<"LayerWidget::add_layer(): image update request submitted"<<std::endl;
   layer_views[page]->unselect_all();
   select_row( layer->get_id() );
 

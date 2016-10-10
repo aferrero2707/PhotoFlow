@@ -125,10 +125,21 @@ typedef struct {
   PF::ImageEditor* editor;
 } EditorCBData;
 
+
 static gboolean editor_on_image_modified_cb ( EditorCBData* data)
 {
   if( data ) {
     data->editor->on_image_modified();
+    g_free( data );
+  }
+  return false;
+}
+
+
+static gboolean editor_on_image_updated_cb ( EditorCBData* data)
+{
+  if( data ) {
+    data->editor->on_image_updated();
     g_free( data );
   }
   return false;
@@ -600,6 +611,7 @@ void PF::ImageEditor::build_image()
 
   image->clear_modified();
   image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified_idle_cb) );
+  image->signal_updated.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_updated_idle_cb) );
   //Gtk::Paned::on_map();
 }
 
@@ -621,6 +633,22 @@ void PF::ImageEditor::on_image_modified()
   Glib::ustring label = "*";
   label = label + fname;
   tab_label_widget->set_label( label );
+}
+
+
+void PF::ImageEditor::on_image_updated_idle_cb()
+{
+  std::cout<<"ImageEditor::on_image_updated_idle_cb() called"<<std::endl;
+  EditorCBData * update = g_new (EditorCBData, 1);
+  update->editor = this;
+  g_idle_add ((GSourceFunc) editor_on_image_updated_cb, update);
+}
+
+
+void PF::ImageEditor::on_image_updated()
+{
+  std::cout<<"ImageEditor::on_image_updated() called."<<std::endl;
+  layersWidget.update_controls();
 }
 
 

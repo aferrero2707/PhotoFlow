@@ -485,10 +485,14 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
 
 void PF::Image::do_sample( int layer_id, VipsRect& area )
 {
-  std::cout<<"Image::do_sample(): waiting for rebuild_done..."<<std::endl;
-  rebuild_lock();
-  rebuild_done_wait( true );
-  std::cout<<"Image::do_sample(): rebuild_done received"<<std::endl;
+  //std::cout<<"Image::do_sample(): waiting for rebuild_done..."<<std::endl;
+  //rebuild_lock();
+  //rebuild_done_wait( true );
+  //std::cout<<"Image::do_sample(): rebuild_done received"<<std::endl;
+
+  std::cout<<"Image::do_sample(): locking image..."<<std::endl;
+  lock();
+  std::cout<<"Image::do_sample(): image locked"<<std::endl;
 
   // Get the default pipeline of the image 
   // (it is supposed to be at 1:1 zoom level 
@@ -496,6 +500,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   PF::Pipeline* pipeline = get_pipeline( 0 );
   if( !pipeline ) {
     std::cout<<"Image::do_sample(): NULL pipeline"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
 
@@ -503,6 +509,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   PF::PipelineNode* node = pipeline->get_node( layer_id );
   if( !node ) {
     std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
 
@@ -510,6 +518,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   VipsImage* image = node->image;
   if( !image ) {
     std::cout<<"Image::do_sample(): NULL image"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
 
@@ -550,6 +560,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   VipsImage* outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
   if( outimg == NULL ) {
     std::cout<<"Image::do_sample(): NULL image after convert_format"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
   //PF_UNREF( spot, "Image::do_sample() spot unref" )
@@ -560,6 +572,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   VipsRegion* region = vips_region_new( outimg );
   if (vips_region_prepare (region, &rspot)) {
     std::cout<<"Image::do_sample(): vips_region_prepare() failed"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after vips_region_new()" )
@@ -595,6 +609,9 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   PF_UNREF( region, "Image::do_sample(): region unref" );
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after region unref" );
   PF_UNREF( outimg, "Image::do_sample(): outimg unref" );
+
+  std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+  unlock();
 }
 
 
@@ -621,7 +638,7 @@ void PF::Image::destroy()
     std::cout<<"Image::destroy(): waiting for done."<<std::endl;
     //destroy_cond.wait();
     //destroy_unlock();
-    rebuild_done_wait();
+    rebuild_done_wait( true );
     std::cout<<"Image::destroy(): done received."<<std::endl;
 
   }

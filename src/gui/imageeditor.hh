@@ -174,6 +174,9 @@ public:
   void on_image_modified();
   void on_image_modified_idle_cb();
 
+  void on_image_updated();
+  void on_image_updated_idle_cb();
+
   void on_map();
   void on_realize();
 

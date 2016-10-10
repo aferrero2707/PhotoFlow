@@ -56,6 +56,7 @@ public:
   size_t size() { return controls.size(); }
   /**/
   void clear();
+  void populate();
   void update();
   void add_control(PF::Layer* layer, PF::OperationConfigGUI* control);
   void remove_control(PF::OperationConfigGUI* control);
@@ -139,6 +140,8 @@ public:
       layer_views[i]->select_row( id );
     }
   }
+
+  void update_controls();
 
   static gboolean update_cb(PF::LayerWidget* w)
   {

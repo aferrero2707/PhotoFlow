@@ -481,6 +481,7 @@ void PF::LayerTree::on_cell_toggled( const Glib::ustring& path )
 }
 
 
+
 void PF::LayerTree::update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l )
 {
   if( l->get_processor()->get_par()->has_intensity() ) {

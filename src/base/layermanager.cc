@@ -665,6 +665,14 @@ void PF::LayerManager::update_ui( std::list<Layer*>& list )
 
 
 
+void PF::LayerManager::update_ui()
+{
+  update_ui( layers );
+}
+
+
+
+
 bool PF::insert_layer( std::list<Layer*>& layers, Layer* layer, int32_t lid )
 {  
   if( lid < 0 ) {
@@ -1288,7 +1296,7 @@ bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, 
 bool PF::LayerManager::rebuild_finalize( bool ui_update )
 {
   reset_dirty( layers );
-  if( ui_update ) update_ui( layers );
+  //if( ui_update ) update_ui( layers );
   return true;
 }
 

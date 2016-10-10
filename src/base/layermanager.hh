@@ -127,6 +127,8 @@ namespace PF
 
     bool rebuild_all(Pipeline* pipeline, colorspace_t cs, int width, int height);
 
+    void update_ui();
+
     sigc::signal<void> signal_modified;
     void modified() { signal_modified.emit(); }
 

@@ -936,9 +936,11 @@ void PF::OperationConfigGUI::update()
 {
   if( !is_expanded() ) return;
 
-  gdk_threads_add_idle ((GSourceFunc) config_update_cb, this);
+  do_update();
+
+  //gdk_threads_add_idle ((GSourceFunc) config_update_cb, this);
   //std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): waiting for semaphore"<<std::endl;
-  vips_semaphore_down( &update_done_sem );
+  //vips_semaphore_down( &update_done_sem );
   //std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): semaphore ready"<<std::endl;
 }
 
