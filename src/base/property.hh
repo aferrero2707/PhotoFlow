@@ -388,6 +388,7 @@ namespace PF
     {
       std::string old = value;
 			getline( str, value );
+      //std::cout<<"Property<std::string>::from_stream() called: new value = "<<value<<std::endl;
       if( value != old )
         modified();
       //str>>value;

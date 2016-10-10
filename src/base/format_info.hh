@@ -43,6 +43,7 @@ namespace PF
     typedef T SIGNED;
     static T MIN, MAX, HALF;
     static PROMOTED RANGE;
+    static bool IS_FLOAT;
   };
 
   template<class T>
@@ -56,6 +57,9 @@ namespace PF
 
   template<class T>
   typename FormatInfo<T>::PROMOTED FormatInfo<T>::RANGE = 1;
+
+  template<class T>
+  bool FormatInfo<T>::IS_FLOAT = false;
 
 
 

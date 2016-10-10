@@ -67,12 +67,12 @@ PF::HSLMaskPar::HSLMaskPar():
 void PF::HSLMaskPar::update_curve( PF::Property<PF::SplineCurve>* curve, float* vec )
 {
   curve->get().lock();
-  //std::cout<<"CurvesPar::update_curve() called. # of points="<<curve.get().get_npoints()<<std::endl;std::cout.flush();
+  //std::cout<<"HSLMaskPar::update_curve() called. # of points="<<curve->get().get_npoints()<<std::endl;
   for(int i = 0; i <= 65535; i++) {
     float x = ((float)i)/65535;
     float y = curve->get().get_value( x );
     vec[i] = y;
-    //std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec8[i]="<<vec8[i]<<std::endl;
+    //std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec[i]="<<vec[i]<<std::endl;
   }
   curve->get().unlock();
 }
@@ -86,8 +86,10 @@ VipsImage* PF::HSLMaskPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
 
   for( int id = 0; id < 3; id++ ) {
-    if( eq_vec[id]->is_modified() )
+    if( eq_vec[id]->is_modified() ) {
+      std::cout<<"HSLMaskPar::build(): updating curve #"<<id<<std::endl;
       update_curve( eq_vec[id], vec[id] );
+    }
     eq_enabled[id] = false;
     //std::cout<<"eq_vec["<<id<<"]->get().get_npoints()="<<eq_vec[id]->get().get_npoints()<<std::endl;
     //for( size_t pi = 0; pi < eq_vec[id]->get().get_npoints(); pi++ ) {

@@ -56,38 +56,38 @@ extern "C" {
  */
 
 #define generate_mat3inv_body(c_type, A, B)                                                                  \
-  static int mat3inv_##c_type(c_type *const dst, const c_type *const src)                                           \
-  {                                                                                                          \
-                                                                                                             \
-    const c_type det = A(1, 1) * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3))                                     \
-                       - A(2, 1) * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3))                                   \
-                       + A(3, 1) * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                  \
-                                                                                                             \
-    const c_type epsilon = 1e-7f;                                                                            \
-    if(fabs(det) < epsilon) return 1;                                                                        \
-                                                                                                             \
-    const c_type invDet = 1.0 / det;                                                                         \
-                                                                                                             \
-    B(1, 1) = invDet * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3));                                              \
-    B(1, 2) = -invDet * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3));                                             \
-    B(1, 3) = invDet * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                              \
-                                                                                                             \
-    B(2, 1) = -invDet * (A(3, 3) * A(2, 1) - A(3, 1) * A(2, 3));                                             \
-    B(2, 2) = invDet * (A(3, 3) * A(1, 1) - A(3, 1) * A(1, 3));                                              \
-    B(2, 3) = -invDet * (A(2, 3) * A(1, 1) - A(2, 1) * A(1, 3));                                             \
-                                                                                                             \
-    B(3, 1) = invDet * (A(3, 2) * A(2, 1) - A(3, 1) * A(2, 2));                                              \
-    B(3, 2) = -invDet * (A(3, 2) * A(1, 1) - A(3, 1) * A(1, 2));                                             \
-    B(3, 3) = invDet * (A(2, 2) * A(1, 1) - A(2, 1) * A(1, 2));                                              \
-    return 0;                                                                                                \
-  }
+    static int mat3inv_##c_type(c_type *const dst, const c_type *const src)                                           \
+    {                                                                                                          \
+  \
+  const c_type det = A(1, 1) * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3))                                     \
+  - A(2, 1) * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3))                                   \
+  + A(3, 1) * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                  \
+  \
+  const c_type epsilon = 1e-7f;                                                                            \
+  if(fabs(det) < epsilon) return 1;                                                                        \
+  \
+  const c_type invDet = 1.0 / det;                                                                         \
+  \
+  B(1, 1) = invDet * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3));                                              \
+  B(1, 2) = -invDet * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3));                                             \
+  B(1, 3) = invDet * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                              \
+  \
+  B(2, 1) = -invDet * (A(3, 3) * A(2, 1) - A(3, 1) * A(2, 3));                                             \
+  B(2, 2) = invDet * (A(3, 3) * A(1, 1) - A(3, 1) * A(1, 3));                                              \
+  B(2, 3) = -invDet * (A(2, 3) * A(1, 1) - A(2, 1) * A(1, 3));                                             \
+  \
+  B(3, 1) = invDet * (A(3, 2) * A(2, 1) - A(3, 1) * A(2, 2));                                              \
+  B(3, 2) = -invDet * (A(3, 2) * A(1, 1) - A(3, 1) * A(1, 2));                                             \
+  B(3, 3) = invDet * (A(2, 2) * A(1, 1) - A(2, 1) * A(1, 2));                                              \
+  return 0;                                                                                                \
+    }
 
 #define A(y, x) src[(y - 1) * 3 + (x - 1)]
 #define B(y, x) dst[(y - 1) * 3 + (x - 1)]
 /** inverts the given 3x3 matrix */
 generate_mat3inv_body(float, A, B)
 
-    int mat3inv(float *const dst, const float *const src)
+int mat3inv(float *const dst, const float *const src)
 {
   return mat3inv_float(dst, src);
 }
@@ -122,20 +122,20 @@ static double spd_blackbody(unsigned long int wavelength, double TempK)
   // convert wavelength from nm to m
   const long double lambda = (double)wavelength * 1e-9;
 
-/*
- * these 2 constants were computed using following Sage code:
- *
- * (from http://physics.nist.gov/cgi-bin/cuu/Value?h)
- * h = 6.62606957 * 10^-34 # Planck
- * c= 299792458 # speed of light in vacuum
- * k = 1.3806488 * 10^-23 # Boltzmann
- *
- * c_1 = 2 * pi * h * c^2
- * c_2 = h * c / k
- *
- * print 'c_1 = ', c_1, ' ~= ', RealField(128)(c_1)
- * print 'c_2 = ', c_2, ' ~= ', RealField(128)(c_2)
- */
+  /*
+   * these 2 constants were computed using following Sage code:
+   *
+   * (from http://physics.nist.gov/cgi-bin/cuu/Value?h)
+   * h = 6.62606957 * 10^-34 # Planck
+   * c= 299792458 # speed of light in vacuum
+   * k = 1.3806488 * 10^-23 # Boltzmann
+   *
+   * c_1 = 2 * pi * h * c^2
+   * c_2 = h * c / k
+   *
+   * print 'c_1 = ', c_1, ' ~= ', RealField(128)(c_1)
+   * print 'c_2 = ', c_2, ' ~= ', RealField(128)(c_2)
+   */
 
 #define c1 3.7417715246641281639549488324352159753e-16L
 #define c2 0.014387769599838156481252937624049081933L
@@ -162,15 +162,15 @@ static double spd_daylight(unsigned long int wavelength, double TempK)
   cmsWhitePointFromTemp(&WhitePoint, TempK);
 
   const double M = (0.0241 + 0.2562 * WhitePoint.x - 0.7341 * WhitePoint.y),
-               m1 = (-1.3515 - 1.7703 * WhitePoint.x + 5.9114 * WhitePoint.y) / M,
-               m2 = (0.0300 - 31.4424 * WhitePoint.x + 30.0717 * WhitePoint.y) / M;
+      m1 = (-1.3515 - 1.7703 * WhitePoint.x + 5.9114 * WhitePoint.y) / M,
+      m2 = (0.0300 - 31.4424 * WhitePoint.x + 30.0717 * WhitePoint.y) / M;
 
   const unsigned long int j
-      = ((wavelength - cie_daylight_components[0].wavelength)
-         / (cie_daylight_components[1].wavelength - cie_daylight_components[0].wavelength));
+  = ((wavelength - cie_daylight_components[0].wavelength)
+      / (cie_daylight_components[1].wavelength - cie_daylight_components[0].wavelength));
 
   return (cie_daylight_components[j].S[0] + m1 * cie_daylight_components[j].S[1]
-          + m2 * cie_daylight_components[j].S[2]);
+                                                                              + m2 * cie_daylight_components[j].S[2]);
 }
 
 /*
@@ -188,8 +188,8 @@ static cmsCIEXYZ spectrum_to_XYZ(double TempK, spd I)
   for(size_t i = 0; i < cie_1931_std_colorimetric_observer_count; i++)
   {
     const unsigned long int lambda = cie_1931_std_colorimetric_observer[0].wavelength
-                                     + (cie_1931_std_colorimetric_observer[1].wavelength
-                                        - cie_1931_std_colorimetric_observer[0].wavelength) * i;
+        + (cie_1931_std_colorimetric_observer[1].wavelength
+            - cie_1931_std_colorimetric_observer[0].wavelength) * i;
     const double P = I(lambda, TempK);
     Source.X += P * cie_1931_std_colorimetric_observer[i].xyz.X;
     Source.Y += P * cie_1931_std_colorimetric_observer[i].xyz.Y;
@@ -329,44 +329,44 @@ bool PF::WBSelector::check_value( int id, const std::string& name, const std::st
 
 
 PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
-  OperationConfigGUI( layer, "Raw Developer" ),
-  wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
-  wbTempSlider( this, "", _("temperature"), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
-  wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
-  wbRedSlider( this, "wb_red", "Red WB mult.", 1, 0, 10, 0.05, 0.1, 1),
-  wbGreenSlider( this, "wb_green", "Green WB mult.", 1, 0, 10, 0.05, 0.1, 1),
-  wbBlueSlider( this, "wb_blue", "Blue WB mult.", 1, 0, 10, 0.05, 0.1, 1),
-  wbRedCorrSlider( this, "camwb_corr_red", "Red WB correction", 1, 0, 10, 0.05, 0.1, 1),
-  wbGreenCorrSlider( this, "camwb_corr_green", "Green WB correction", 1, 0, 10, 0.05, 0.1, 1),
-  wbBlueCorrSlider( this, "camwb_corr_blue", "Blue WB correction", 1, 0, 10, 0.05, 0.1, 1),
-  wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
-  wb_target_a_slider( this, "wb_target_a", "a: ", 10, -1000000, 1000000, 0.05, 0.1, 1),
-  wb_target_b_slider( this, "wb_target_b", "b: ", 12, -1000000, 1000000, 0.05, 0.1, 1),
-  enable_ca_checkbox( this, "enable_ca", _("enable CA correction"), false ),
-  auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
-  ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
-  ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
-  ca_frame( _("CA correction") ),
-  hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
-  hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
-  hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
-  hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ),
-  hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ),
-  hotp_frame( _("hot pixels filter") ),
-  demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
-  fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
-  exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
-  saturationLevelSlider( this, "raw_white_level_correction", _("RAW white level %"), 0, -100, 100, 0.5, 5, 100 ),
-  blackLevelSlider( this, "raw_black_level_correction", _("RAW black level %"), 0, -100, 100, 0.5, 5, 100 ),
-  hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
-  profileModeSelector( this, "profile_mode", _("input: "), 0 ),
-  camProfOpenButton(Gtk::Stock::OPEN),
-  gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
-  inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
-  inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-  outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
-  outProfOpenButton(Gtk::Stock::OPEN),
-  ignore_temp_tint_change( false )
+      OperationConfigGUI( layer, "Raw Developer" ),
+      wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
+      wbTempSlider( this, "", _("temperature"), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
+      wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
+      wbRedSlider( this, "wb_red", "Red WB mult.", 1, 0, 10, 0.05, 0.1, 1),
+      wbGreenSlider( this, "wb_green", "Green WB mult.", 1, 0, 10, 0.05, 0.1, 1),
+      wbBlueSlider( this, "wb_blue", "Blue WB mult.", 1, 0, 10, 0.05, 0.1, 1),
+      wbRedCorrSlider( this, "camwb_corr_red", "Red WB correction", 1, 0, 10, 0.05, 0.1, 1),
+      wbGreenCorrSlider( this, "camwb_corr_green", "Green WB correction", 1, 0, 10, 0.05, 0.1, 1),
+      wbBlueCorrSlider( this, "camwb_corr_blue", "Blue WB correction", 1, 0, 10, 0.05, 0.1, 1),
+      wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
+      wb_target_a_slider( this, "wb_target_a", "a: ", 10, -1000000, 1000000, 0.05, 0.1, 1),
+      wb_target_b_slider( this, "wb_target_b", "b: ", 12, -1000000, 1000000, 0.05, 0.1, 1),
+      enable_ca_checkbox( this, "enable_ca", _("enable CA correction"), false ),
+      auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
+      ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
+      ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
+      ca_frame( _("CA correction") ),
+      hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
+      hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
+      hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
+      hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ),
+      hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ),
+      hotp_frame( _("hot pixels filter") ),
+      demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
+      fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
+      exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
+      saturationLevelSlider( this, "raw_white_level_correction", _("RAW white level %"), 0, -100, 100, 0.5, 5, 100 ),
+      blackLevelSlider( this, "raw_black_level_correction", _("RAW black level %"), 0, -100, 100, 0.5, 5, 100 ),
+      hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
+      profileModeSelector( this, "profile_mode", _("input: "), 0 ),
+      camProfOpenButton(Gtk::Stock::OPEN),
+      gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
+      inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
+      inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
+      outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
+      outProfOpenButton(Gtk::Stock::OPEN),
+      ignore_temp_tint_change( false )
 {
   wbControlsBox.pack_start( wbModeSelector, Gtk::PACK_SHRINK );
 
@@ -452,21 +452,21 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   notebook.append_page( demoControlsBox, "Demo" );
   notebook.append_page( outputControlsBox, "Color" );
   //notebook.append_page( hotpixelsControlsBox, "Hot Pixels" );
-    
+
   add_widget( notebook );
 
 
   camProfFileEntry.signal_activate().
-    connect(sigc::mem_fun(*this,
-			  &RawDeveloperConfigGUI::on_cam_filename_changed));
+      connect(sigc::mem_fun(*this,
+          &RawDeveloperConfigGUI::on_cam_filename_changed));
   camProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
-							   &RawDeveloperConfigGUI::on_cam_button_open_clicked) );
+      &RawDeveloperConfigGUI::on_cam_button_open_clicked) );
 
   outProfFileEntry.signal_activate().
-    connect(sigc::mem_fun(*this,
-			  &RawDeveloperConfigGUI::on_out_filename_changed));
+      connect(sigc::mem_fun(*this,
+          &RawDeveloperConfigGUI::on_out_filename_changed));
   outProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
-							   &RawDeveloperConfigGUI::on_out_button_open_clicked) );
+      &RawDeveloperConfigGUI::on_out_button_open_clicked) );
 
   wbTempSlider.get_adjustment()->signal_value_changed().
       connect(sigc::mem_fun(*this,&PF::RawDeveloperConfigGUI::temp_tint_changed));
@@ -485,7 +485,7 @@ void PF::RawDeveloperConfigGUI::temp_tint_changed()
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     PF::RawDeveloperPar* par =
-      dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
+        dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
     if( !par ) return;
 
     PropertyBase* prop = par->get_property( "wb_mode" );
@@ -545,8 +545,8 @@ void PF::RawDeveloperConfigGUI::do_update()
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
-    PF::RawDeveloperPar* par = 
-      dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
+    PF::RawDeveloperPar* par =
+        dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
     if( !par ) return;
 
     PropertyBase* prop = par->get_property( "wb_mode" );
@@ -664,45 +664,45 @@ void PF::RawDeveloperConfigGUI::do_update()
     if( wb_best_match_label.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wb_best_match_label );
 
-		if( wbRedSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbRedSlider );
-		if( wbGreenSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbGreenSlider );
-		if( wbBlueSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbBlueSlider );
+    if( wbRedSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbRedSlider );
+    if( wbGreenSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbGreenSlider );
+    if( wbBlueSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbBlueSlider );
 
-		if( wbRedCorrSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbRedCorrSlider );
-		if( wbGreenCorrSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbGreenCorrSlider );
-		if( wbBlueCorrSlider.get_parent() == &wbControlsBox )
-			wbControlsBox.remove( wbBlueCorrSlider );
+    if( wbRedCorrSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbRedCorrSlider );
+    if( wbGreenCorrSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbGreenCorrSlider );
+    if( wbBlueCorrSlider.get_parent() == &wbControlsBox )
+      wbControlsBox.remove( wbBlueCorrSlider );
 
     switch( prop->get_enum_value().first ) {
     case PF::WB_SPOT:
-			if( wbTargetBox.get_parent() == &wbControlsBox )
-				wbControlsBox.remove( wbTargetBox );
-			if( wb_best_match_label.get_parent() == &wbControlsBox )
-				wbControlsBox.remove( wb_best_match_label );
-			if( wbRedSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
-			if( wbGreenSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
-			if( wbBlueSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
-			break;
+      if( wbTargetBox.get_parent() == &wbControlsBox )
+        wbControlsBox.remove( wbTargetBox );
+      if( wb_best_match_label.get_parent() == &wbControlsBox )
+        wbControlsBox.remove( wb_best_match_label );
+      if( wbRedSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
+      if( wbGreenSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
+      if( wbBlueSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+      break;
     case PF::WB_COLOR_SPOT:
-			if( wbTargetBox.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbTargetBox, Gtk::PACK_SHRINK );
-			if( wb_best_match_label.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wb_best_match_label, Gtk::PACK_SHRINK );
-			if( wbRedSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
-			if( wbGreenSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
-			if( wbBlueSlider.get_parent() != &wbControlsBox )
-				wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
-			break;
+      if( wbTargetBox.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbTargetBox, Gtk::PACK_SHRINK );
+      if( wb_best_match_label.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wb_best_match_label, Gtk::PACK_SHRINK );
+      if( wbRedSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
+      if( wbGreenSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
+      if( wbBlueSlider.get_parent() != &wbControlsBox )
+        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+      break;
     default:
       if( wbRedCorrSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
@@ -711,7 +711,7 @@ void PF::RawDeveloperConfigGUI::do_update()
       if( wbBlueCorrSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
       break;
-		}
+    }
 
     if( is_xtrans ) demoMethodSelector.hide();
     else demoMethodSelector.show();
@@ -761,7 +761,7 @@ void PF::RawDeveloperConfigGUI::pointer_press_event( int button, double x, doubl
 {
   if( button != 1 ) return;
 }
-*/
+ */
 
 bool PF::RawDeveloperConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
@@ -802,15 +802,15 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   // Get the image the layer belongs to
   PF::Image* img = l->get_image();
   if( !img ) return;
-  
+
   // Get the default pipeline of the image 
   // (it is supposed to be at 1:1 zoom level 
   // and floating point accuracy)
   PF::Pipeline* pipeline = img->get_pipeline( 0 );
   if( !pipeline ) return;
 
-	// Make sure the first pipeline is up-to-date
-	//img->update( pipeline, false );
+  // Make sure the first pipeline is up-to-date
+  //img->update( pipeline, false );
   //img->unlock();
 
   // Get the node associated to the layer
@@ -833,7 +833,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   if( !node_par ) return;
 
   par->set_caching( false );
-  
+
   int sample_size = 7;
 
   float rgb_check[3] = { 0, 0, 0 };
@@ -848,29 +848,29 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     int height = 7;
 
     float rgb_avg[3] = {0, 0, 0};
-		std::vector<float> values;
+    std::vector<float> values;
 
     //std::cout<<"RawDeveloperConfigGUI: getting spot WB ("<<x<<","<<y<<")"<<std::endl;
-		img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
-							 <<values.size()<<" (!= 3)"<<std::endl;
-			return;
-		}
-		rgb_avg[0] = values[0];
-		rgb_avg[1] = values[1];
-		rgb_avg[2] = values[2];
+    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    if( values.size() != 3 ) {
+      std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
+          <<values.size()<<" (!= 3)"<<std::endl;
+      return;
+    }
+    rgb_avg[0] = values[0];
+    rgb_avg[1] = values[1];
+    rgb_avg[2] = values[2];
 
-		std::cout<<" sampled("<<i<<"): "<<rgb_avg[0]<<" "<<rgb_avg[1]<<" "<<rgb_avg[2]<<std::endl;
+    std::cout<<" sampled("<<i<<"): "<<rgb_avg[0]<<" "<<rgb_avg[1]<<" "<<rgb_avg[2]<<std::endl;
 
 
     float rgb_out[3] = {0, 0, 0};
     float Lab_in[3] = {0, 0, 0};
     float Lab_out[3] = {0, 0, 0};
     float Lab_wb[3] = {
-      static_cast<float>(wb_target_L_slider.get_adjustment()->get_value()),
-      static_cast<float>(wb_target_a_slider.get_adjustment()->get_value()),
-      static_cast<float>(wb_target_b_slider.get_adjustment()->get_value())
+        static_cast<float>(wb_target_L_slider.get_adjustment()->get_value()),
+        static_cast<float>(wb_target_a_slider.get_adjustment()->get_value()),
+        static_cast<float>(wb_target_b_slider.get_adjustment()->get_value())
     };
 
     const float epsilon = 1.0e-5;
@@ -878,12 +878,12 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     float wb_green_mul;
     float wb_blue_mul;
 
-		// The target color is gray, so we simply neutralize the spot value
-		// The green channel is kept fixed and the other two are scaled to 
-		// the green value
-		wb_red_mul = rgb_avg[1]/rgb_avg[0];
-		wb_blue_mul = rgb_avg[1]/rgb_avg[2];
-		wb_green_mul = 1;
+    // The target color is gray, so we simply neutralize the spot value
+    // The green channel is kept fixed and the other two are scaled to
+    // the green value
+    wb_red_mul = rgb_avg[1]/rgb_avg[0];
+    wb_blue_mul = rgb_avg[1]/rgb_avg[2];
+    wb_green_mul = 1;
 
     PropertyBase* wb_red_prop = wbRedSlider.get_prop();
     PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
@@ -901,8 +901,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
       scale = 1;
       //std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-			//				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-			//				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      //				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+      //				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
       //std::cout<<"  scale: "<<scale<<std::endl;
       //float scale = wb_green_mul;
       wb_red_out /= scale;
@@ -913,8 +913,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       wb_blue_prop->update( wb_blue_out );
 
       //std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-			//				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-			//				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      //				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+      //				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
       wbRedSlider.init();
       wbGreenSlider.init();
@@ -931,15 +931,15 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     }
 
     //std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
-		img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
-							 <<values.size()<<" (!= 3)"<<std::endl;
-			return;
-		}
-		rgb_check[0] = values[0];
-		rgb_check[1] = values[1];
-		rgb_check[2] = values[2];
+    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    if( values.size() != 3 ) {
+      std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
+          <<values.size()<<" (!= 3)"<<std::endl;
+      return;
+    }
+    rgb_check[0] = values[0];
+    rgb_check[1] = values[1];
+    rgb_check[2] = values[2];
 
     std::cout<<" rgb check("<<i<<"): "<<rgb_check[0]<<" "<<rgb_check[1]<<" "<<rgb_check[2]<<std::endl;
 
@@ -955,8 +955,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   }
 
   par->set_caching( true );
-	// Update the prepipeline to reflect the new settings
-	img->update();
+  // Update the prepipeline to reflect the new settings
+  img->update();
 }
 
 
@@ -975,16 +975,16 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   // Get the image the layer belongs to
   PF::Image* img = l->get_image();
   if( !img ) return;
-  
+
   // Get the default pipeline of the image 
   // (it is supposed to be at 1:1 zoom level 
   // and same accuracy as the preview one)
   PF::Pipeline* pipeline = img->get_pipeline( 0 );
   if( !pipeline ) return;
 
-	// Make sure the first pipeline is up-to-date
-	//img->update( pipeline, true );
-	//img->update( NULL, true );
+  // Make sure the first pipeline is up-to-date
+  //img->update( pipeline, true );
+  //img->update( NULL, true );
   //img->unlock();
 
   // Get the node associated to the layer
@@ -1005,13 +1005,13 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   void *data;
   size_t data_length;
   if( vips_image_get_blob( image, VIPS_META_ICC_NAME, 
-			   &data, &data_length ) )
+      &data, &data_length ) )
     return;
 
   cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
   if( !profile_in ) 
     return;
-  
+
   //#ifndef NDEBUG
   char tstr2[1024];
   cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr2, 1024);
@@ -1027,18 +1027,18 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   cmsUInt32Number outfmt = TYPE_Lab_FLT;
 
   cmsHTRANSFORM transform = cmsCreateTransform( profile_in, 
-						infmt,
-						profile_out, 
-						outfmt,
-						INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+      infmt,
+      profile_out,
+      outfmt,
+      INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
   if( !transform )
     return;
 
   cmsHTRANSFORM transform_inv = cmsCreateTransform( profile_out, 
-						    outfmt,
-						    profile_in, 
-						    infmt,
-						    INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+      outfmt,
+      profile_in,
+      infmt,
+      INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
   if( !transform_inv )
     return;
 
@@ -1047,7 +1047,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   PF::raw_preproc_sample_x = x;
   PF::raw_preproc_sample_y = y;
 
-  
+
   float wb_red_mul = 1;
   float wb_green_mul = 1;
   float wb_blue_mul = 1;
@@ -1083,12 +1083,12 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     float wb_green_out;
     float wb_blue_out;
 
-		/*
+    /*
     VipsRect crop = {left, top, width, height};
     VipsRect all = {0 ,0, image->Xsize, image->Ysize};
     VipsRect clipped;
     vips_rect_intersectrect( &crop, &all, &clipped );
-  
+
     if( vips_crop( image, &spot, 
 									 clipped.left, clipped.top, 
 									 clipped.width, clipped.height, 
@@ -1105,7 +1105,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     VipsRegion* region = vips_region_new( outimg );
     if (vips_region_prepare (region, &rspot))
       return;
-		*/
+     */
     //if( vips_sink_memory( spot ) )
     //  return;
 
@@ -1114,11 +1114,11 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     float* p;
     float red, green, blue;
     float rgb_avg[3] = {0, 0, 0};
-		std::vector<float> values;
+    std::vector<float> values;
 
     std::cout<<std::endl<<std::endl<<"==============================================="<<std::endl;
-   std::cout<<"RawDeveloperConfigGUI: getting color spot WB"<<std::endl;
-		/*
+    std::cout<<"RawDeveloperConfigGUI: getting color spot WB"<<std::endl;
+    /*
     int line_size = clipped.width*3;
     for( row = 0; row < rspot.height; row++ ) {
       p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
@@ -1132,18 +1132,18 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     rgb_avg[0] /= rspot.width*rspot.height;
     rgb_avg[1] /= rspot.width*rspot.height;
     rgb_avg[2] /= rspot.width*rspot.height;
-		*/
+     */
     std::cout<<"RawDeveloperConfigGUI: getting color spot WB ("<<x<<","<<y<<")"<<std::endl;
-		img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		//values.clear(); img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
-							 <<values.size()<<" (!= 3)"<<std::endl;
-			return;
-		}
-		rgb_avg[0] = values[0];
-		rgb_avg[1] = values[1];
-		rgb_avg[2] = values[2];
+    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    //values.clear(); img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    if( values.size() != 3 ) {
+      std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
+          <<values.size()<<" (!= 3)"<<std::endl;
+      return;
+    }
+    rgb_avg[0] = values[0];
+    rgb_avg[1] = values[1];
+    rgb_avg[2] = values[2];
 
     std::cout<<" RGB in: "<<rgb_avg[0]*255<<" "<<rgb_avg[1]*255<<" "<<rgb_avg[2]*255<<std::endl;
 
@@ -1151,9 +1151,9 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     float Lab_in[3] = {0, 0, 0};
     float Lab_out[3] = {0, 0, 0};
     float Lab_wb[3] = {
-      static_cast<float>(wb_target_L_slider.get_adjustment()->get_value()),
-      static_cast<float>(wb_target_a_slider.get_adjustment()->get_value()),
-      static_cast<float>(wb_target_b_slider.get_adjustment()->get_value())
+        static_cast<float>(wb_target_L_slider.get_adjustment()->get_value()),
+        static_cast<float>(wb_target_a_slider.get_adjustment()->get_value()),
+        static_cast<float>(wb_target_b_slider.get_adjustment()->get_value())
     };
     //float Lab_wb[3] = {70, 15, 10};
     // Now we convert the average RGB values in the WB spot region to Lab
@@ -1172,7 +1172,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     float wb_delta2 = Lab_wb[2] - ab_zero;
 
     if( (fabs(wb_delta1) < epsilon) &&
-				(fabs(wb_delta2) < epsilon) ) {
+        (fabs(wb_delta2) < epsilon) ) {
 
       // The target color is gray, so we simply neutralize the spot value
       // The green channel is kept fixed and the other two are scaled to 
@@ -1191,7 +1191,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
       Lab_out[1] = Lab_wb[1];
       Lab_out[2] = Lab_in[2];
       if( delta2*wb_delta2 < 0 )
-				Lab_out[2] = -Lab_in[2];
+        Lab_out[2] = -Lab_in[2];
 
       // Now we convert back to RGB and we compute the multiplicative
       // factors that bring from the current WB to the target one
@@ -1210,7 +1210,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
       Lab_out[1] = Lab_in[1];
       Lab_out[2] = Lab_wb[2];
       if( delta1*wb_delta1 < 0 )
-				Lab_out[1] = -Lab_in[1];
+        Lab_out[1] = -Lab_in[1];
 
       // Now we convert back to RGB and we compute the multiplicative
       // factors that bring from the current WB to the target one
@@ -1230,11 +1230,11 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
 
       Lab_out[0] = Lab_in[0];
       if( fabs(wb_delta1) > fabs(wb_delta2) ) {
-				Lab_out[1] = sign1*delta1 + ab_zero;
-				Lab_out[2] = sign2*delta2*ab_ratio/wb_ab_ratio + ab_zero;
+        Lab_out[1] = sign1*delta1 + ab_zero;
+        Lab_out[2] = sign2*delta2*ab_ratio/wb_ab_ratio + ab_zero;
       } else {
-				Lab_out[1] = sign1*delta1*wb_ab_ratio/ab_ratio + ab_zero;
-				Lab_out[2] = sign2*delta2 + ab_zero;
+        Lab_out[1] = sign1*delta1*wb_ab_ratio/ab_ratio + ab_zero;
+        Lab_out[2] = sign2*delta2 + ab_zero;
       }
       Lab_out[1] = Lab_wb[1];
       Lab_out[2] = Lab_wb[2];
@@ -1280,11 +1280,11 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
         // factors that bring from the current WB to the target one
         cmsDoTransform( transform_inv, Lab_out, rgb_out, 1 );
         std::cout<<" RGB out: "<<rgb_out[0]*255<<" "<<rgb_out[1]*255<<" "<<rgb_out[2]*255<<std::endl;
-        
+
         wb_red_mul = rgb_out[0]/rgb_avg[0];
         wb_green_mul = rgb_out[1]/rgb_avg[1];
         wb_blue_mul = rgb_out[2]/rgb_avg[2];
-        
+
         float f = 1.5;
         wb_red_out = (f*wb_red_mul+1-f)*wb_red_in;
         wb_green_out = (f*wb_green_mul+1-f)*wb_green_in;
@@ -1292,7 +1292,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
         float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
         std::cout<<" scale: "<<scale<<std::endl;
       //float norm_out = MIN3(wb_red_out,wb_green_out,wb_blue_out);
-      */
+       */
       /*
       // Scale target L channel according to norm_out
       Lab_out[0] /= norm_out*1.01;
@@ -1305,11 +1305,11 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
       wb_red_mul = rgb_out[0]/rgb_avg[0];
       wb_green_mul = rgb_out[1]/rgb_avg[1];
       wb_blue_mul = rgb_out[2]/rgb_avg[2];
-    
+
       wb_red_out = wb_red_mul*wb_red_in;
       wb_green_out = wb_green_mul*wb_green_in;
       wb_blue_out = wb_blue_mul*wb_blue_in;
-      */
+       */
     }
 
     /*
@@ -1329,7 +1329,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     wb_red_mul_prev = wb_red_mul;
     wb_green_mul_prev = wb_green_mul;
     wb_blue_mul_prev = wb_blue_mul;
-    */
+     */
     /*
     // The WB multiplicative factors are scaled so that their product is equal to 1
     float scale = wb_red_mul*wb_green_mul*wb_blue_mul;
@@ -1337,7 +1337,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     wb_red_mul /= scale;
     wb_green_mul /= scale;
     wb_blue_mul /= scale;
-    */
+     */
 
     //float wb_red_out = wb_red_mul*wb_red_in;
     // float wb_green_out = wb_green_mul*wb_green_in;
@@ -1347,8 +1347,8 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     float scale = MIN3(wb_red_out,wb_green_out,wb_blue_out);
     //scale = 1;
     std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-             <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-             <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+        <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+        <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
     std::cout<<"  scale: "<<scale<<std::endl;
     //float scale = wb_green_mul;
     wb_red_out /= scale;
@@ -1359,8 +1359,8 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     wb_blue_prop->update( wb_blue_out );
 
     std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-             <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-             <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+        <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+        <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
     wbRedSlider.init();
     wbGreenSlider.init();
@@ -1374,7 +1374,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     //img->set_async( async );
 
 
-		/*
+    /*
     g_object_unref( spot );
     g_object_unref( outimg );
     g_object_unref( region );
@@ -1393,7 +1393,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     region = vips_region_new( outimg );
     if (vips_region_prepare (region, &rspot))
       return;
-  
+
     std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
     rgb_avg[0] = rgb_avg[1] = rgb_avg[2] = 0;
     for( row = 0; row < rspot.height; row++ ) {
@@ -1408,28 +1408,28 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
     rgb_avg[0] /= rspot.width*rspot.height;
     rgb_avg[1] /= rspot.width*rspot.height;
     rgb_avg[2] /= rspot.width*rspot.height;
-		*/
+     */
     std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
-		img->sample( l->get_id(), x, y, sample_size, NULL, values );
-		if( values.size() != 3 ) {
-			std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
-							 <<values.size()<<" (!= 3)"<<std::endl;
-			return;
-		}
-		rgb_avg[0] = values[0];
-		rgb_avg[1] = values[1];
-		rgb_avg[2] = values[2];
+    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    if( values.size() != 3 ) {
+      std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
+          <<values.size()<<" (!= 3)"<<std::endl;
+      return;
+    }
+    rgb_avg[0] = values[0];
+    rgb_avg[1] = values[1];
+    rgb_avg[2] = values[2];
 
     std::cout<<" RGB check: "<<rgb_avg[0]*255<<" "<<rgb_avg[1]*255<<" "<<rgb_avg[2]*255<<std::endl;
     // Now we convert the average RGB values in the WB spot region to Lab
     cmsDoTransform( transform, rgb_avg, Lab_check, 1 );
     std::cout<<" Lab check("<<i<<"): "<<Lab_check[0]<<" "<<Lab_check[1]<<" "<<Lab_check[2]<<std::endl;
 
-		/*
+    /*
     g_object_unref( spot );
     g_object_unref( outimg );
     g_object_unref( region );
-		*/
+     */
 
     if( i == 0 ) continue;
     float delta_a = Lab_check[1] - Lab_prev[1];
@@ -1446,7 +1446,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
 
   char tstr[500];
   snprintf( tstr, 499, "Best match: L=%0.2f a=%0.2f b=%0.2f",
-						Lab_check[0], Lab_check[1], Lab_check[2] );
+      Lab_check[0], Lab_check[1], Lab_check[2] );
   wb_best_match_label.set_text( tstr );
 
   cmsDeleteTransform( transform );
@@ -1455,8 +1455,8 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   cmsCloseProfile( profile_out );
 
   par->set_caching( true );
-	// Update the preview to reflect the new settings
-	img->update();
+  // Update the preview to reflect the new settings
+  img->update();
 }
 
 
@@ -1464,9 +1464,9 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
 void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
 {
   Gtk::FileChooserDialog dialog("Please choose a file",
-																Gtk::FILE_CHOOSER_ACTION_OPEN);
+      Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
-  
+
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
@@ -1477,26 +1477,26 @@ void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
   //Handle the response:
   switch(result) {
   case(Gtk::RESPONSE_OK): 
-    {
-      std::cout << "Open clicked." << std::endl;
+      {
+    std::cout << "Open clicked." << std::endl;
 
-      //Notice that this is a std::string, not a Glib::ustring.
-      std::string filename = dialog.get_filename();
-      std::cout << "File selected: " <<  filename << std::endl;
-      camProfFileEntry.set_text( filename.c_str() );
-      on_cam_filename_changed();
-      break;
-    }
+    //Notice that this is a std::string, not a Glib::ustring.
+    std::string filename = dialog.get_filename();
+    std::cout << "File selected: " <<  filename << std::endl;
+    camProfFileEntry.set_text( filename.c_str() );
+    on_cam_filename_changed();
+    break;
+      }
   case(Gtk::RESPONSE_CANCEL): 
-    {
-      std::cout << "Cancel clicked." << std::endl;
-      break;
-    }
+      {
+    std::cout << "Cancel clicked." << std::endl;
+    break;
+      }
   default: 
-    {
-      std::cout << "Unexpected button clicked." << std::endl;
-      break;
-    }
+  {
+    std::cout << "Unexpected button clicked." << std::endl;
+    break;
+  }
   }
 }
 
@@ -1505,9 +1505,9 @@ void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
 void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
 {
   Gtk::FileChooserDialog dialog("Please choose a file",
-																Gtk::FILE_CHOOSER_ACTION_OPEN);
+      Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
-  
+
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
@@ -1518,26 +1518,26 @@ void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
   //Handle the response:
   switch(result) {
   case(Gtk::RESPONSE_OK): 
-    {
-      std::cout << "Open clicked." << std::endl;
+      {
+    std::cout << "Open clicked." << std::endl;
 
-      //Notice that this is a std::string, not a Glib::ustring.
-      std::string filename = dialog.get_filename();
-      std::cout << "File selected: " <<  filename << std::endl;
-      outProfFileEntry.set_text( filename.c_str() );
-      on_out_filename_changed();
-      break;
-    }
+    //Notice that this is a std::string, not a Glib::ustring.
+    std::string filename = dialog.get_filename();
+    std::cout << "File selected: " <<  filename << std::endl;
+    outProfFileEntry.set_text( filename.c_str() );
+    on_out_filename_changed();
+    break;
+      }
   case(Gtk::RESPONSE_CANCEL): 
-    {
-      std::cout << "Cancel clicked." << std::endl;
-      break;
-    }
+      {
+    std::cout << "Cancel clicked." << std::endl;
+    break;
+      }
   default: 
-    {
-      std::cout << "Unexpected button clicked." << std::endl;
-      break;
-    }
+  {
+    std::cout << "Unexpected button clicked." << std::endl;
+    break;
+  }
   }
 }
 
@@ -1553,7 +1553,7 @@ void PF::RawDeveloperConfigGUI::on_cam_filename_changed()
       return;
     //std::cout<<"New input profile name: "<<filename<<std::endl;
     PF::RawDeveloperPar* par = 
-      dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
+        dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
     if( !par )
       return;
     PropertyBase* prop = par->get_property( "cam_profile_name" );
@@ -1578,7 +1578,7 @@ void PF::RawDeveloperConfigGUI::on_out_filename_changed()
       return;
     //std::cout<<"New output profile name: "<<filename<<std::endl;
     PF::RawDeveloperPar* par = 
-      dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
+        dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
     if( !par )
       return;
     PropertyBase* prop = par->get_property( "out_profile_name" );

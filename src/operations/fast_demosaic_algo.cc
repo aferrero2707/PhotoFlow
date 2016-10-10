@@ -54,8 +54,7 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
   int height = r->height;
 
 #ifndef NDEBUG
-  //if(r->left==0)
-    std::cout<<"fast_demosaic(): left="<<r->left<<"  top="<<r->top<<std::endl;
+  if(r->left==0)std::cout<<"fast_demosaic(): left="<<r->left<<"  top="<<r->top<<std::endl;
 #endif
 
   // Size of border region where to apply simple bilinear interpolation
@@ -272,8 +271,8 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
       }
     }//i
   }//j
-   */
-
+  */
+	
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   // interpolate G using gradient weights

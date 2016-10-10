@@ -125,8 +125,9 @@ public:
 };
 
 
-inline bool operator ==(const SplineCurve& l, const SplineCurve& r)
-      {
+inline
+bool operator ==(const SplineCurve& l, const SplineCurve& r)
+{
 #ifdef SPLINE_USE_STDVEC
   if( l.get_points() != r.get_points() ) return false;
 #else
@@ -136,12 +137,13 @@ inline bool operator ==(const SplineCurve& l, const SplineCurve& r)
   }
 #endif
   return true;
-      }
+}
 
-inline bool operator !=(const SplineCurve& l, const SplineCurve& r)
-      {
+inline
+bool operator !=(const SplineCurve& l, const SplineCurve& r)
+{
   return( !(l==r) );
-      }
+}
 
 
 
