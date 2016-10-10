@@ -997,7 +997,7 @@ void PF::Image::do_export_merged( std::string filename )
       if( outimg ) {
         Glib::Timer timer;
         timer.start();
-        vips_jpegsave( outimg, filename.c_str(), "Q", 100, NULL );
+        vips_jpegsave( outimg, filename.c_str(), "Q", 75, NULL );
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
         saved = true;
