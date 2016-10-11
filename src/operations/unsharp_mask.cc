@@ -66,11 +66,11 @@ VipsImage* PF::UnsharpMaskPar::build(std::vector<VipsImage*>& in, int first,
 
 	VipsImage* blurred = blur->get_par()->build( in, first, NULL, NULL, level );
 	if( !blurred )
-		return NULL;
+	  return NULL;
 
 	std::vector<VipsImage*> in2;
-	in2.push_back(srcimg);
 	in2.push_back(blurred);
+	in2.push_back(srcimg);
 	VipsImage* out = PF::OpParBase::build( in2, 0, imap, omap, level );
 	PF_UNREF( blurred, "PF::GaussBlurPar::build(): blurred unref" );
 
