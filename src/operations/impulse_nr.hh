@@ -137,6 +137,153 @@ public:
 /* Impulse noise reduction tool, adapted from Rawtherapee's impulse_denoise.h:
  * https://code.google.com/p/rawtherapee/source/browse/rtengine/impulse_denoise.h
 */
+
+template<class T>
+void ImpulseNR_RTAlgo(VipsRegion** ireg, int n, int in_first,
+    VipsRegion* imap, VipsRegion* omap,
+    VipsRegion* oreg, OpParBase* par)
+{
+  //std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB) called: n="<<n<<std::endl;
+  if( n != 3 ) return;
+  if( ireg[0] == NULL ) {std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB): ireg[0]==NULL"<<std::endl;return;}
+  if( ireg[1] == NULL ) {std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB): ireg[1]==NULL"<<std::endl;return;}
+  if( ireg[2] == NULL ) {std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB): ireg[2]==NULL"<<std::endl;return;}
+
+  //The cleaning algorithm starts here
+
+  ImpulseNR_RTAlgo_Par* opar = dynamic_cast<ImpulseNR_RTAlgo_Par*>(par);
+  if( !opar ) {
+    std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB): opar==NULL"<<std::endl;
+    return;
+  }
+
+  int padding = opar->get_padding();
+  Rect *r = &oreg->valid;
+  //Rect *ir = &ireg[0]->valid;
+  VipsRect ir = {r->left-padding, r->top-padding, r->width+2*padding, r->height+2*padding};
+  int iwidth = ir.width;
+  int iheight = ir.height;
+  VipsRect roi = {ireg[0]->valid.left+padding, ireg[0]->valid.top+padding, ireg[0]->valid.width-2*padding, ireg[0]->valid.height-2*padding};
+  vips_rect_intersectrect( &roi, r, &roi );
+  int line_size = roi.width * oreg->im->Bands;
+  int width = roi.width;
+  int height = roi.height;
+  int dx = r->left - ir.left;
+  int dy = r->top - ir.top;
+
+  // buffer for the highpass image
+  float ** impish = new float *[iheight];
+  for (int i = 0; i < iheight; i++) {
+    impish[i] = new float [iwidth];
+    memset (impish[i], 0, iwidth*sizeof(float));
+  }
+  //std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB):"<<std::endl
+  //    <<"ir: "<<ir.width<<","<<ir.height<<"+"<<ir.left<<"+"<<ir.top<<std::endl
+  //    <<"r:  "<<r->width<<","<<r->height<<"+"<<r->left<<"+"<<r->top<<std::endl
+  //    <<"dx: "<<dx<<"  dy: "<<dy<<std::endl;
+
+  T* pin0;
+  T* pin1;
+  T* pin2;
+  T* pin20;
+  T* pin21;
+  T* pin22;
+  T* pout;
+  int x, y, oy, x1, y1, pos, ipos, pos1;
+  //float threshold = opar->get_threshold()*FormatInfo<T>::RANGE;
+
+  const float eps = 1.0;
+  float impthr = MAX(1.0, 5.5 - opar->get_threshold());
+  float impthrDiv24 = impthr / 24.0f;
+  float hpfabs, hfnbrave;
+
+  for( y = padding; y < iheight-padding; y++ ) {
+    pin1 = (T*)VIPS_REGION_ADDR( ireg[1], ir.left, ir.top + y );
+    pin2 = (T*)VIPS_REGION_ADDR( ireg[2], ir.left, ir.top + y );
+
+    for( x = 2; x < iwidth-2; x++ ) {
+      //intensity = 0;
+      hpfabs = fabs( (float)pin1[x] - (float)pin2[x] );
+
+      //block average of high pass data
+      for( y1 = y-2, hfnbrave = 0; y1 <= y+2; y1++ ) {
+        pin21 = (T*)VIPS_REGION_ADDR( ireg[1], ir.left+x-2, ir.top + y1 );
+        pin22 = (T*)VIPS_REGION_ADDR( ireg[2], ir.left+x-2, ir.top + y1 );
+        for (x1 = 0; x1 < 5; x1++) {
+          if( y1 == y && x1 == 2) continue;
+          hfnbrave += fabs( (float)pin21[x1] - (float)pin22[x1] );
+        }
+      }
+
+      impish[y][x] = (hpfabs > ((hfnbrave - hpfabs) * impthrDiv24));
+      //std::cout<<y<<","<<x<<"  hpfabs="<<hpfabs
+      //    <<"  ((hfnbrave - hpfabs) * impthrDiv24)="<<((hfnbrave - hpfabs) * impthrDiv24)
+      //    <<"  impish="<<impish[y][x]<<std::endl;
+    }
+  }
+
+  //now impulsive values have been identified
+  float wtdsum[3], dirwt, norm, delta;
+  for( y = 2, oy = 2 - dy; y < iheight-2; y++, oy++ ) {
+    pin0 = (T*)VIPS_REGION_ADDR( ireg[0], ir.left, ir.top + y );
+    pin1 = (T*)VIPS_REGION_ADDR( ireg[1], ir.left, ir.top + y );
+    pin2 = (T*)VIPS_REGION_ADDR( ireg[2], ir.left, ir.top + y );
+    pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + oy );
+
+    for( x = 2, ipos = 2*ireg[0]->im->Bands, pos = (2-dx)*oreg->im->Bands;
+        x < iwidth-2; x++, ipos += ireg[0]->im->Bands, pos += oreg->im->Bands ) {
+
+      //std::cout<<"Filling "<<r->left+(pos/oreg->im->Bands)<<","<<r->top+oy<<std::endl;
+
+      if( !impish[y][x] ) {
+        pout[pos] = pin0[ipos];
+        pout[pos+1] = pin0[ipos+1];
+        pout[pos+2] = pin0[ipos+2];
+        continue;
+      }
+
+      norm = 0.0;
+      wtdsum[0] = wtdsum[1] = wtdsum[2] = 0.0;
+
+      for( y1 = y-2; y1 <= y+2; y1++ ) {
+        pin20 = (T*)VIPS_REGION_ADDR( ireg[0], ir.left+x-2, ir.top + y1 );
+        pin21 = (T*)VIPS_REGION_ADDR( ireg[1], ir.left+x-2, ir.top + y1 );
+        pin22 = (T*)VIPS_REGION_ADDR( ireg[2], ir.left+x-2, ir.top + y1 );
+        for (x1 = 0, pos1 = 0; x1 <= 5; x1++, pos1 += ireg[0]->im->Bands) {
+          if( y1 == y && x1 == 2)
+            continue;
+          if (impish[y1][x+x1-2])
+            continue;
+
+          delta = (float)pin21[x1] - (float)pin1[x];
+          dirwt = 1.0f/( delta*delta + eps ); //use more sophisticated rangefn???
+          //std::cout<<"pin21["<<x1<<"]="<<pin21[x1]<<"  pin1["<<x<<"]="<<pin1[x]<<std::endl;
+          //std::cout<<"  SQR((float)pin21[x1] - (float)pin1[x])="<<SQR((float)pin21[x1] - (float)pin1[x])
+          //    <<"  dirwt="<<dirwt<<std::endl;
+          wtdsum[0] += dirwt * pin20[pos1];
+          wtdsum[1] += dirwt * pin20[pos1+1];
+          wtdsum[2] += dirwt * pin20[pos1+2];
+          norm += dirwt;
+        }
+      }
+
+      //std::cout<<"norm="<<norm<<std::endl;
+
+      if (norm) {
+        pout[pos] = wtdsum[0] / norm; //low pass filter
+        pout[pos+1] = wtdsum[1] / norm; //low pass filter
+        pout[pos+2] = wtdsum[2] / norm; //low pass filter
+      }
+    }
+  }
+
+  for (int i = 0; i < iheight; i++) {
+    delete[] impish[i];
+  }
+  delete[] impish;
+}
+
+
 template < OP_TEMPLATE_DEF_CS_SPEC >
 class ImpulseNR_RTAlgo_Proc< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_RGB) >
 {
@@ -145,142 +292,7 @@ public:
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, OpParBase* par)
   {
-    //std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB) called: n="<<n<<std::endl;
-    if( n != 3 ) return;
-    if( ireg[0] == NULL ) {std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB): ireg[0]==NULL"<<std::endl;return;}
-    if( ireg[1] == NULL ) {std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB): ireg[1]==NULL"<<std::endl;return;}
-    if( ireg[2] == NULL ) {std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB): ireg[2]==NULL"<<std::endl;return;}
-
-    int iwidth = ireg[0]->valid.width;
-    int iheight = ireg[0]->valid.height;
-
-    //The cleaning algorithm starts here
-
-    ImpulseNR_RTAlgo_Par* opar = dynamic_cast<ImpulseNR_RTAlgo_Par*>(par);
-    if( !opar ) {
-      std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB): opar==NULL"<<std::endl;
-      return;
-    }
-
-    Rect *ir = &ireg[0]->valid;
-    VipsRect roi = {ir->left+2, ir->top+2, ir->width-4, ir->height-4};
-    Rect *r = &oreg->valid;
-    vips_rect_intersectrect( &roi, r, &roi );
-    int line_size = roi.width * oreg->im->Bands;
-    int width = roi.width;
-    int height = roi.height;
-    int dx = r->left - ir->left;
-    int dy = r->top - ir->top;
-
-    // buffer for the highpass image
-    float ** impish = new float *[iheight];
-    for (int i = 0; i < iheight; i++) {
-      impish[i] = new float [iwidth];
-      memset (impish[i], 0, iwidth*sizeof(float));
-    }
-    //std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB):"<<std::endl
-    //    <<"ir: "<<ir->width<<","<<ir->height<<"+"<<ir->left<<"+"<<ir->top<<std::endl
-    //    <<"r:  "<<r->width<<","<<r->height<<"+"<<r->left<<"+"<<r->top<<std::endl;
-
-    T* pin0;
-    T* pin1;
-    T* pin2;
-    T* pin20;
-    T* pin21;
-    T* pin22;
-    T* pout;
-    int x, y, oy, x1, y1, pos, ipos, pos1;
-    //float threshold = opar->get_threshold()*FormatInfo<T>::RANGE;
-
-    const float eps = 1.0;
-    float impthr = MAX(1.0, 5.5 - opar->get_threshold());
-    float impthrDiv24 = impthr / 24.0f;
-    float hpfabs, hfnbrave;
-
-    for( y = 2; y < iheight-2; y++ ) {
-      pin1 = (T*)VIPS_REGION_ADDR( ireg[1], ir->left, ir->top + y );
-      pin2 = (T*)VIPS_REGION_ADDR( ireg[2], ir->left, ir->top + y );
-
-      for( x = 2; x < iwidth-2; x++ ) {
-        //intensity = 0;
-        hpfabs = fabs( (float)pin1[x] - (float)pin2[x] );
-
-        //block average of high pass data
-        for( y1 = y-2, hfnbrave = 0; y1 <= y+2; y1++ ) {
-          pin21 = (T*)VIPS_REGION_ADDR( ireg[1], ir->left+x-2, ir->top + y1 );
-          pin22 = (T*)VIPS_REGION_ADDR( ireg[2], ir->left+x-2, ir->top + y1 );
-          for (x1 = 0; x1 <= 5; x1++) {
-            if( y1 == y && x1 == 2) continue;
-            hfnbrave += fabs( (float)pin21[x1] - (float)pin22[x1] );
-          }
-        }
-
-        impish[y][x] = (hpfabs > ((hfnbrave - hpfabs) * impthrDiv24));
-        //std::cout<<y<<","<<x<<"  hpfabs="<<hpfabs
-        //    <<"  ((hfnbrave - hpfabs) * impthrDiv24)="<<((hfnbrave - hpfabs) * impthrDiv24)
-        //    <<"  impish="<<impish[y][x]<<std::endl;
-      }
-    }
-
-    //now impulsive values have been identified
-    float wtdsum[3], dirwt, norm, delta;
-    for( y = 2, oy = 2 - dy; y < iheight-2; y++, oy++ ) {
-      pin0 = (T*)VIPS_REGION_ADDR( ireg[0], ir->left, ir->top + y );
-      pin1 = (T*)VIPS_REGION_ADDR( ireg[1], ir->left, ir->top + y );
-      pin2 = (T*)VIPS_REGION_ADDR( ireg[2], ir->left, ir->top + y );
-      pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + oy );
-
-      for( x = 2, ipos = 2*ireg[0]->im->Bands, pos = (2-dx)*oreg->im->Bands;
-          x < iwidth-2; x++, ipos += ireg[0]->im->Bands, pos += oreg->im->Bands ) {
-
-        //std::cout<<"Filling "<<r->left+(pos/oreg->im->Bands)<<","<<r->top+oy<<std::endl;
-
-        if( !impish[y][x] ) {
-          pout[pos] = pin0[ipos];
-          pout[pos+1] = pin0[ipos+1];
-          pout[pos+2] = pin0[ipos+2];
-          continue;
-        }
-
-        norm = 0.0;
-        wtdsum[0] = wtdsum[1] = wtdsum[2] = 0.0;
-
-        for( y1 = y-2; y1 <= y+2; y1++ ) {
-          pin20 = (T*)VIPS_REGION_ADDR( ireg[0], ir->left+x-2, ir->top + y1 );
-          pin21 = (T*)VIPS_REGION_ADDR( ireg[1], ir->left+x-2, ir->top + y1 );
-          pin22 = (T*)VIPS_REGION_ADDR( ireg[2], ir->left+x-2, ir->top + y1 );
-          for (x1 = 0, pos1 = 0; x1 <= 5; x1++, pos1 += ireg[0]->im->Bands) {
-            if( y1 == y && x1 == 2)
-              continue;
-            if (impish[y1][x+x1-2])
-              continue;
-
-            delta = (float)pin21[x1] - (float)pin1[x];
-            dirwt = 1.0f/( delta*delta + eps ); //use more sophisticated rangefn???
-            //std::cout<<"pin21["<<x1<<"]="<<pin21[x1]<<"  pin1["<<x<<"]="<<pin1[x]<<std::endl;
-            //std::cout<<"  SQR((float)pin21[x1] - (float)pin1[x])="<<SQR((float)pin21[x1] - (float)pin1[x])
-            //    <<"  dirwt="<<dirwt<<std::endl;
-            wtdsum[0] += dirwt * pin20[pos1];
-            wtdsum[1] += dirwt * pin20[pos1+1];
-            wtdsum[2] += dirwt * pin20[pos1+2];
-            norm += dirwt;
-          }
-        }
-
-        //std::cout<<"norm="<<norm<<std::endl;
-
-        if (norm) {
-          pout[pos] = wtdsum[0] / norm; //low pass filter
-          pout[pos+1] = wtdsum[1] / norm; //low pass filter
-          pout[pos+2] = wtdsum[2] / norm; //low pass filter
-        }
-      }
-    }
-
-    for (int i = 0; i < iheight; i++) {
-      delete[] impish[i];
-    }
-    delete[] impish;
+    ImpulseNR_RTAlgo<T>(ireg, n, in_first, imap, omap, oreg, par);
   }
 };
 
@@ -297,142 +309,7 @@ public:
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, OpParBase* par)
   {
-    //std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB) called: n="<<n<<std::endl;
-    if( n != 3 ) return;
-    if( ireg[0] == NULL ) {std::cout<<"ImpulseNR_RTAlgo_Proc::render(Lab): ireg[0]==NULL"<<std::endl;return;}
-    if( ireg[1] == NULL ) {std::cout<<"ImpulseNR_RTAlgo_Proc::render(Lab): ireg[1]==NULL"<<std::endl;return;}
-    if( ireg[2] == NULL ) {std::cout<<"ImpulseNR_RTAlgo_Proc::render(Lab): ireg[2]==NULL"<<std::endl;return;}
-
-    int iwidth = ireg[0]->valid.width;
-    int iheight = ireg[0]->valid.height;
-
-    //The cleaning algorithm starts here
-
-    ImpulseNR_RTAlgo_Par* opar = dynamic_cast<ImpulseNR_RTAlgo_Par*>(par);
-    if( !opar ) {
-      std::cout<<"ImpulseNR_RTAlgo_Proc::render(Lab): opar==NULL"<<std::endl;
-      return;
-    }
-
-    Rect *ir = &ireg[0]->valid;
-    VipsRect roi = {ir->left+2, ir->top+2, ir->width-4, ir->height-4};
-    Rect *r = &oreg->valid;
-    vips_rect_intersectrect( &roi, r, &roi );
-    int line_size = roi.width * oreg->im->Bands;
-    int width = roi.width;
-    int height = roi.height;
-    int dx = r->left - ir->left;
-    int dy = r->top - ir->top;
-
-    // buffer for the highpass image
-    float ** impish = new float *[iheight];
-    for (int i = 0; i < iheight; i++) {
-      impish[i] = new float [iwidth];
-      memset (impish[i], 0, iwidth*sizeof(float));
-    }
-    //std::cout<<"ImpulseNR_RTAlgo_Proc::render(RGB):"<<std::endl
-    //    <<"ir: "<<ir->width<<","<<ir->height<<"+"<<ir->left<<"+"<<ir->top<<std::endl
-    //    <<"r:  "<<r->width<<","<<r->height<<"+"<<r->left<<"+"<<r->top<<std::endl;
-
-    T* pin0;
-    T* pin1;
-    T* pin2;
-    T* pin20;
-    T* pin21;
-    T* pin22;
-    T* pout;
-    int x, y, oy, x1, y1, pos, ipos, pos1;
-    //float threshold = opar->get_threshold()*FormatInfo<T>::RANGE;
-
-    const float eps = 1.0;
-    float impthr = MAX(1.0, 5.5 - opar->get_threshold());
-    float impthrDiv24 = impthr / 24.0f;
-    float hpfabs, hfnbrave;
-
-    for( y = 2; y < iheight-2; y++ ) {
-      pin1 = (T*)VIPS_REGION_ADDR( ireg[1], ir->left, ir->top + y );
-      pin2 = (T*)VIPS_REGION_ADDR( ireg[2], ir->left, ir->top + y );
-
-      for( x = 2; x < iwidth-2; x++ ) {
-        //intensity = 0;
-        hpfabs = fabs( (float)pin1[x] - (float)pin2[x] );
-
-        //block average of high pass data
-        for( y1 = y-2, hfnbrave = 0; y1 <= y+2; y1++ ) {
-          pin21 = (T*)VIPS_REGION_ADDR( ireg[1], ir->left+x-2, ir->top + y1 );
-          pin22 = (T*)VIPS_REGION_ADDR( ireg[2], ir->left+x-2, ir->top + y1 );
-          for (x1 = 0; x1 <= 5; x1++) {
-            if( y1 == y && x1 == 2) continue;
-            hfnbrave += fabs( (float)pin21[x1] - (float)pin22[x1] );
-          }
-        }
-
-        impish[y][x] = (hpfabs > ((hfnbrave - hpfabs) * impthrDiv24));
-        //std::cout<<y<<","<<x<<"  hpfabs="<<hpfabs
-        //    <<"  ((hfnbrave - hpfabs) * impthrDiv24)="<<((hfnbrave - hpfabs) * impthrDiv24)
-        //    <<"  impish="<<impish[y][x]<<std::endl;
-      }
-    }
-
-    //now impulsive values have been identified
-    float wtdsum[3], dirwt, norm, delta;
-    for( y = 2, oy = 2 - dy; y < iheight-2; y++, oy++ ) {
-      pin0 = (T*)VIPS_REGION_ADDR( ireg[0], ir->left, ir->top + y );
-      pin1 = (T*)VIPS_REGION_ADDR( ireg[1], ir->left, ir->top + y );
-      pin2 = (T*)VIPS_REGION_ADDR( ireg[2], ir->left, ir->top + y );
-      pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + oy );
-
-      for( x = 2, ipos = 2*ireg[0]->im->Bands, pos = (2-dx)*oreg->im->Bands;
-          x < iwidth-2; x++, ipos += ireg[0]->im->Bands, pos += oreg->im->Bands ) {
-
-        //std::cout<<"Filling "<<r->left+(pos/oreg->im->Bands)<<","<<r->top+oy<<std::endl;
-
-        if( !impish[y][x] ) {
-          pout[pos] = pin0[ipos];
-          pout[pos+1] = pin0[ipos+1];
-          pout[pos+2] = pin0[ipos+2];
-          continue;
-        }
-
-        norm = 0.0;
-        wtdsum[0] = wtdsum[1] = wtdsum[2] = 0.0;
-
-        for( y1 = y-2; y1 <= y+2; y1++ ) {
-          pin20 = (T*)VIPS_REGION_ADDR( ireg[0], ir->left+x-2, ir->top + y1 );
-          pin21 = (T*)VIPS_REGION_ADDR( ireg[1], ir->left+x-2, ir->top + y1 );
-          pin22 = (T*)VIPS_REGION_ADDR( ireg[2], ir->left+x-2, ir->top + y1 );
-          for (x1 = 0, pos1 = 0; x1 <= 5; x1++, pos1 += ireg[0]->im->Bands) {
-            if( y1 == y && x1 == 2)
-              continue;
-            if (impish[y1][x+x1-2])
-              continue;
-
-            delta = (float)pin21[x1] - (float)pin1[x];
-            dirwt = 1.0f/( delta*delta + eps ); //use more sophisticated rangefn???
-            //std::cout<<"pin21["<<x1<<"]="<<pin21[x1]<<"  pin1["<<x<<"]="<<pin1[x]<<std::endl;
-            //std::cout<<"  SQR((float)pin21[x1] - (float)pin1[x])="<<SQR((float)pin21[x1] - (float)pin1[x])
-            //    <<"  dirwt="<<dirwt<<std::endl;
-            wtdsum[0] += dirwt * pin20[pos1];
-            wtdsum[1] += dirwt * pin20[pos1+1];
-            wtdsum[2] += dirwt * pin20[pos1+2];
-            norm += dirwt;
-          }
-        }
-
-        //std::cout<<"norm="<<norm<<std::endl;
-
-        if (norm) {
-          pout[pos] = wtdsum[0] / norm; //low pass filter
-          pout[pos+1] = wtdsum[1] / norm; //low pass filter
-          pout[pos+2] = wtdsum[2] / norm; //low pass filter
-        }
-      }
-    }
-
-    for (int i = 0; i < iheight; i++) {
-      delete[] impish[i];
-    }
-    delete[] impish;
+    ImpulseNR_RTAlgo<T>(ireg, n, in_first, imap, omap, oreg, par);
   }
 };
 
