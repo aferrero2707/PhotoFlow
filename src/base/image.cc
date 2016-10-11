@@ -985,6 +985,22 @@ void PF::Image::do_export_merged( std::string filename )
     VipsImage* image = pipeline->get_output();
     VipsImage* outimg = NULL;
 
+    int tw = 128;
+    int th = tw;
+    int nt = (image->Xsize/tw + 1);
+    VipsAccess acc = VIPS_ACCESS_RANDOM;
+    int threaded = 1, persistent = 0;
+    VipsImage* cached;
+    if( !vips_tilecache(image, &cached,
+        "tile_width", tw, "tile_height", th, "max_tiles", nt,
+        "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+      //PF_UNREF( image, "Image::do_export_merged(): image unref" );
+      image = cached;
+    } else {
+      std::cout<<"Image::do_export_merged(): vips_tilecache() failed."<<std::endl;
+    }
+
+
     bool saved = false;
 
     std::vector<VipsImage*> in;
