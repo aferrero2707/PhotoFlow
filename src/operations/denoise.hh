@@ -61,8 +61,12 @@ namespace PF
     Property<float> sigma;
 		PropertyBase nr_mode;
 
+	  ProcessorBase* convert2lab;
+	  ProcessorBase* convert2input;
     ProcessorBase* impulse_nr;
     ProcessorBase* nlmeans;
+
+    cmsHPROFILE in_profile;
 
   public:
     DenoisePar();
