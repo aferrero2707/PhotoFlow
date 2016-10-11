@@ -998,6 +998,7 @@ void PF::Image::do_export_merged( std::string filename )
       image = cached;
     } else {
       std::cout<<"Image::do_export_merged(): vips_tilecache() failed."<<std::endl;
+      PF_REF( image, "Image::do_export_merged(): image ref" );
     }
 
 
@@ -1010,6 +1011,7 @@ void PF::Image::do_export_merged( std::string filename )
       convert_format->get_par()->set_image_hints( image );
       convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+      PF_UNREF( image, "Image::do_export_merged(): image unref" );
       if( outimg ) {
         Glib::Timer timer;
         timer.start();
@@ -1027,6 +1029,7 @@ void PF::Image::do_export_merged( std::string filename )
       convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
       //convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+      PF_UNREF( image, "Image::do_export_merged(): image unref" );
       if( outimg ) {
         int predictor = 2;
         vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
