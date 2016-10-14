@@ -1282,10 +1282,10 @@ void PF::LayerWidget::remove_layers()
     if( editor ) {
       std::cout<<"editor->get_active_layer()="<<editor->get_active_layer()<<"  l->get_id()="<<l->get_id()<<std::endl;
     }
-    if( editor && (editor->get_active_layer() == (int)(l->get_id())) ) {
+    //if( editor && (editor->get_active_layer() == (int)(l->get_id())) ) {
       std::cout<<"editor->set_active_layer( -1 );"<<std::endl;
       editor->set_active_layer( -1 );
-    }
+    //}
 
     //std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
     unset_sticky_and_editing( l );
