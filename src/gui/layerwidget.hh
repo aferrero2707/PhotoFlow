@@ -86,8 +86,9 @@ class LayerWidget : public Gtk::VBox
   OperationsTreeDialog operationsDialog;
 
   Gtk::VBox tool_buttons_box;
-  ToolButton add_button, group_button, trash_button, insert_image_button, curves_button, uniform_button, gradient_button, path_mask_button, desaturate_button, crop_button,
-  basic_edits_button, draw_button, clone_button, perspective_button, scale_button;
+  ToolButton add_button, group_button, trash_button, insert_image_button, curves_button;
+  ToolButton uniform_button, gradient_button, path_mask_button, desaturate_button, crop_button;
+  ToolButton basic_edits_button, levels_button, draw_button, clone_button, perspective_button, scale_button;
 
   std::vector<Gtk::ScrolledWindow*> layer_frames;
   std::vector<LayerTree*> layer_views;

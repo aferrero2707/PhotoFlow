@@ -189,7 +189,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   path_mask_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/path-mask.png", "path_mask", image, this),
   desaturate_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/desaturate.png", "desaturate", image, this),
   crop_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/crop.png", "crop", image, this),
-  basic_edits_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "levels", image, this),
+  basic_edits_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "basic_adjustments", image, this),
+  levels_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "levels", image, this),
   draw_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/draw.png", "draw", image, this),
   clone_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/clone.png", "clone_stamp", image, this),
   scale_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/scale.png", "scale", image, this),
@@ -203,7 +204,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   group_button.set_tooltip_text( _("new group layer") );
   trash_button.set_tooltip_text( _("delete layer") );
   insert_image_button.set_tooltip_text( _("insert image as layer") );
-  basic_edits_button.set_tooltip_text( _("basic editing") );
+  basic_edits_button.set_tooltip_text( _("basic adjustments") );
+  levels_button.set_tooltip_text( _("levels") );
   curves_button.set_tooltip_text( _("curves tool") );
   uniform_button.set_tooltip_text( _("uniform fill") );
   gradient_button.set_tooltip_text( _("gradient tool") );
@@ -218,7 +220,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( add_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( group_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( insert_image_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( levels_button, Gtk::PACK_SHRINK, 2 );
+  //tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( uniform_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( gradient_button, Gtk::PACK_SHRINK, 2 );
@@ -1282,10 +1285,10 @@ void PF::LayerWidget::remove_layers()
     if( editor ) {
       std::cout<<"editor->get_active_layer()="<<editor->get_active_layer()<<"  l->get_id()="<<l->get_id()<<std::endl;
     }
-    if( editor && (editor->get_active_layer() == (int)(l->get_id())) ) {
+    //if( editor && (editor->get_active_layer() == (int)(l->get_id())) ) {
       std::cout<<"editor->set_active_layer( -1 );"<<std::endl;
       editor->set_active_layer( -1 );
-    }
+    //}
 
     //std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
     unset_sticky_and_editing( l );
