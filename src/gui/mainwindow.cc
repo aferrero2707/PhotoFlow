@@ -38,6 +38,7 @@
 #endif
 
 #include "../base/file_util.hh"
+#include "../base/fileutils.hh"
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
 #include "tablabelwidget.hh"
@@ -617,48 +618,48 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/x-srf");
   filter_tiff.add_mime_type("image/x-x3f");
   filter_tiff.add_mime_type("image/x-exr");*/
-  filter_tiff.add_pattern("*.exr");
-  filter_tiff.add_pattern("*.3fr");
-  filter_tiff.add_pattern("*.ari");
-  filter_tiff.add_pattern("*.arw");
-  filter_tiff.add_pattern("*.cap");
-  filter_tiff.add_pattern("*.cine");
-  filter_tiff.add_pattern("*.cr2");
-  filter_tiff.add_pattern("*.crw");
-  filter_tiff.add_pattern("*.cs1");
-  filter_tiff.add_pattern("*.dc2");
-  filter_tiff.add_pattern("*.dcr");
-  filter_tiff.add_pattern("*.dng");
-  filter_tiff.add_pattern("*.erf");
-  filter_tiff.add_pattern("*.fff");
-  filter_tiff.add_pattern("*.ia");
-  filter_tiff.add_pattern("*.iiq");
-  filter_tiff.add_pattern("*.k25");
-  filter_tiff.add_pattern("*.kc2");
-  filter_tiff.add_pattern("*.kdc");
-  filter_tiff.add_pattern("*.mdc");
-  filter_tiff.add_pattern("*.mef");
-  filter_tiff.add_pattern("*.mos");
-  filter_tiff.add_pattern("*.mrw");
-  filter_tiff.add_pattern("*.nef");
-  filter_tiff.add_pattern("*.nrw");
-  filter_tiff.add_pattern("*.orf");
-  filter_tiff.add_pattern("*.ori");
-  filter_tiff.add_pattern("*.pef");
-  filter_tiff.add_pattern("*.pxn");
-  filter_tiff.add_pattern("*.qtk");
-  filter_tiff.add_pattern("*.r3d");
-  filter_tiff.add_pattern("*.raf");
-  filter_tiff.add_pattern("*.raw");
-  filter_tiff.add_pattern("*.rdc");
-  filter_tiff.add_pattern("*.rw2");
-  filter_tiff.add_pattern("*.rwl");
-  filter_tiff.add_pattern("*.sr2");
-  filter_tiff.add_pattern("*.srf");
-  filter_tiff.add_pattern("*.srw");
-  filter_tiff.add_pattern("*.sti");
-  filter_tiff.add_pattern("*.x3f");
-  filter_tiff.add_pattern("*.pfi");
+  filter_tiff.add_pattern("*.EXR");
+  filter_tiff.add_pattern("*.3FR");
+  filter_tiff.add_pattern("*.ARI");
+  filter_tiff.add_pattern("*.ARW");
+  filter_tiff.add_pattern("*.CAP");
+  filter_tiff.add_pattern("*.CINE");
+  filter_tiff.add_pattern("*.CR2");
+  filter_tiff.add_pattern("*.CRW");
+  filter_tiff.add_pattern("*.CS1");
+  filter_tiff.add_pattern("*.DC2");
+  filter_tiff.add_pattern("*.DCR");
+  filter_tiff.add_pattern("*.DNG");
+  filter_tiff.add_pattern("*.EFR");
+  filter_tiff.add_pattern("*.FFF");
+  filter_tiff.add_pattern("*.IA");
+  filter_tiff.add_pattern("*.IIQ");
+  filter_tiff.add_pattern("*.K25");
+  filter_tiff.add_pattern("*.KC2");
+  filter_tiff.add_pattern("*.KDC");
+  filter_tiff.add_pattern("*.MDC");
+  filter_tiff.add_pattern("*.MEF");
+  filter_tiff.add_pattern("*.MOS");
+  filter_tiff.add_pattern("*.MRW");
+  filter_tiff.add_pattern("*.NEF");
+  filter_tiff.add_pattern("*.NRW");
+  filter_tiff.add_pattern("*.ORF");
+  filter_tiff.add_pattern("*.ORI");
+  filter_tiff.add_pattern("*.PEF");
+  filter_tiff.add_pattern("*.PXN");
+  filter_tiff.add_pattern("*.QTK");
+  filter_tiff.add_pattern("*.R3D");
+  filter_tiff.add_pattern("*.RAF");
+  filter_tiff.add_pattern("*.RAW");
+  filter_tiff.add_pattern("*.RDC");
+  filter_tiff.add_pattern("*.RW2");
+  filter_tiff.add_pattern("*.RWL");
+  filter_tiff.add_pattern("*.SR2");
+  filter_tiff.add_pattern("*.SRF");
+  filter_tiff.add_pattern("*.SRW");
+  filter_tiff.add_pattern("*.STI");
+  filter_tiff.add_pattern("*.X3F");
+  filter_tiff.add_pattern("*.PFI");
   Gtk::FileFilter filter_all;
   filter_all.set_name( _("All files") );
   filter_all.add_pattern("*.*");
@@ -669,7 +670,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_mime_type("image/tiff");
   filter_tiff->add_mime_type("image/jpeg");
   filter_tiff->add_mime_type("image/png");
-  /*filter_tiff->add_mime_type("image/x-3fr");
+  filter_tiff->add_mime_type("image/x-3fr");
   filter_tiff->add_mime_type("image/x-adobe-dng");
   filter_tiff->add_mime_type("image/x-arw;image/x-bay");
   filter_tiff->add_mime_type("image/x-canon-cr2");
@@ -716,7 +717,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_mime_type("image/x-sr2");
   filter_tiff->add_mime_type("image/x-srf");
   filter_tiff->add_mime_type("image/x-x3f");
-  filter_tiff->add_mime_type("image/x-exr");*/
+  filter_tiff->add_mime_type("image/x-exr");
   filter_tiff->add_pattern("*.exr");
   filter_tiff->add_pattern("*.3fr");
   filter_tiff->add_pattern("*.ari");
@@ -940,6 +941,12 @@ void PF::MainWindow::on_button_saveas_clicked()
 
 void PF::MainWindow::on_button_export_clicked()
 {
+  int page = viewerNotebook.get_current_page();
+  Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
+  if( !widget ) return;
+
+  PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+
   Gtk::FileChooserDialog dialog( _("Export image as..."),
       Gtk::FILE_CHOOSER_ACTION_SAVE);
   dialog.set_transient_for(*this);
@@ -947,6 +954,20 @@ void PF::MainWindow::on_button_export_clicked()
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+
+#ifdef GTKMM_2
+  Gtk::FileFilter filter_all;
+  filter_all.set_name( _("All supported formats") );
+  filter_all.add_mime_type("image/jpeg");
+  filter_all.add_mime_type("image/tiff");
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::FileFilter> filter_all = Gtk::FileFilter::create();
+  filter_all->set_name( _("All supported formats") );
+  filter_all->add_mime_type("image/jpeg");
+  filter_all->add_mime_type("image/tiff");
+#endif
+  dialog.add_filter(filter_all);
 
 #ifdef GTKMM_2
   Gtk::FileFilter filter_jpeg;
@@ -975,6 +996,20 @@ void PF::MainWindow::on_button_export_clicked()
   Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
   if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
+  Glib::ustring last_saved = editor->get_last_exported_file();
+  if( !last_saved.empty() ) {
+    dialog.set_filename( last_saved );
+  } else {
+    if( editor->get_image() ) {
+      std::string image_filename;
+      PF::getFileName( "", editor->get_image()->get_filename(), image_filename );
+      image_filename = image_filename + ".jpg";
+      dialog.set_current_name( image_filename );
+    } else {
+      dialog.set_current_name( "untitled.jpg" );
+    }
+  }
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -988,13 +1023,35 @@ void PF::MainWindow::on_button_export_clicked()
     last_dir = dialog.get_current_folder();
     PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
     std::string filename = dialog.get_filename();
+#ifdef GTKMM_2
+    Gtk::FileFilter* filter_cur = dialog.get_filter();
+#endif
+#ifdef GTKMM_3
+    Glib::RefPtr<Gtk::FileFilter> filter_cur = dialog.get_filter();
+#endif
+
+    if( filter_cur->get_name() == _("TIFF files") ) {
+      std::string ext;
+      if( getFileExtension( "/", filename, ext ) ) {
+        if( ext != "tiff" && ext != "tif" ) {
+          filename = filename + ".tif";
+        }
+      }
+    }
+
+    if( filter_cur->get_name() == _("JPEG files") ) {
+      std::string ext;
+      if( getFileExtension( "/", filename, ext ) ) {
+        if( ext != "jpeg" && ext != "jpg" ) {
+          filename = filename + ".jpg";
+        }
+      }
+    }
+
     std::cout << "File selected: " <<  filename << std::endl;
-    int page = viewerNotebook.get_current_page();
-    Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
-    if( widget ) {
-      PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
-      if( editor && editor->get_image() )
-        editor->get_image()->export_merged( filename );
+    if( editor && editor->get_image() ) {
+      editor->get_image()->export_merged( filename );
+      editor->set_last_exported_file( filename );
     }
     break;
       }
