@@ -1257,20 +1257,25 @@ void PF::LayerWidget::remove_layers()
     refTreeSelection->get_selected_rows();
   Gtk::TreeModel::iterator iter;
 
+
+  // make sure that we wait for completion of any image update before continuing
+  bool force_synced_update = image->get_force_synced_update();
+  image->set_force_synced_update( true );
+
+  if( !sel_rows.empty() ) {
+    std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
+  }
+
   // Clear the selection, since we are going to remove all selected layers
   //layer_views[page]->select_row( -1 );
   refTreeSelection->unselect_all();
 
-  if( !sel_rows.empty() ) {
-    std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
-    //iter = model->get_iter( sel_rows[0] );
-    signal_active_layer_changed.emit(-1);
-  }
   /*
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
     layer_views[page]->get_tree().get_selection();
   Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
   */
+
   bool removed = false;
   for( unsigned int ri = 0; ri < sel_rows.size(); ri++ ) {
     iter = model->get_iter( sel_rows[ri] );
@@ -1279,14 +1284,6 @@ void PF::LayerWidget::remove_layers()
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*iter)[columns.col_layer];
 
-    if( editor ) {
-      std::cout<<"editor->get_active_layer()="<<editor->get_active_layer()<<"  l->get_id()="<<l->get_id()<<std::endl;
-    }
-    //if( editor && (editor->get_active_layer() == (int)(l->get_id())) ) {
-      std::cout<<"editor->set_active_layer( -1 );"<<std::endl;
-      editor->set_active_layer( -1 );
-    //}
-
     //std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
     unset_sticky_and_editing( l );
     //std::cout<<"Calling detach_controls(\""<<l->get_name()<<"\")"<<std::endl;
@@ -1294,14 +1291,29 @@ void PF::LayerWidget::remove_layers()
     //std::cout<<"Calling close_map_tabs(\""<<l->get_name()<<"\")"<<std::endl;
     close_map_tabs( l );
 
-    //std::cout<<"Calling image->remove_layer(\""<<l->get_name()<<"\")"<<std::endl;
+    std::cout<<"LayerWidget::remove_layers(): calling image->remove_layer(\""<<l->get_name()<<"\")"<<std::endl;
     image->remove_layer( l );
-    image->get_layer_manager().modified();
+    std::cout<<"LayerWidget::remove_layers(): calling image->get_layer_manager().modified()"<<std::endl;
     removed = true;
   }
 
-  if( removed )
+  if( removed ) {
+    image->get_layer_manager().modified();
+    signal_active_layer_changed.emit(-1);
+    if( editor ) {
+      //std::cout<<"LayerWidget::remove_layers(): editor->get_active_layer()="<<editor->get_active_layer()<<"  l->get_id()="<<l->get_id()<<std::endl;
+      //if( editor && (editor->get_active_layer() == (int)(l->get_id())) ) {
+      std::cout<<"LayerWidget::remove_layers(): editor->set_active_layer( -1 );"<<std::endl;
+      editor->set_active_layer( -1 );
+      //}
+    }
+    std::cout<<"LayerWidget::remove_layers(): calling update()"<<std::endl;
     update();
+    std::cout<<"LayerWidget::remove_layers(): update() finished"<<std::endl;
+  }
+
+  // restore the previous state
+  image->set_force_synced_update( force_synced_update );
 }
 
 
