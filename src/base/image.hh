@@ -95,6 +95,8 @@ class Image: public sigc::trackable
   GCond* rebuild_done;
   PF::Condition rebuild_cond;
 
+  bool force_synced_update;
+
   GMutex* export_mutex;
   GCond* export_done;
 
@@ -170,6 +172,9 @@ public:
 
   bool is_rebuilding() { return rebuilding; }
   void set_rebuilding( bool flag ) { rebuilding = flag; }
+
+  bool get_force_synced_update() { return force_synced_update; }
+  void set_force_synced_update( bool flag ) { force_synced_update = flag; }
 
   bool is_loaded() { return loaded; }
   void set_loaded( bool flag ) { loaded = flag; }

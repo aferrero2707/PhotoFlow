@@ -96,7 +96,8 @@ PF::Image::Image():
       modified_flag( false ),
       rebuilding( false ),
       loaded( false ),
-      disable_update( false )
+      disable_update( false ),
+      force_synced_update( false )
 {
   rebuild_mutex = vips_g_mutex_new();
   //g_mutex_lock( rebuild_mutex );
@@ -237,6 +238,9 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
   std::cout<<"Image::update( "<<target_pipeline<<", "<<sync<<" ) called."<<std::endl;
 //#endif
   if( disable_update ) return;
+
+  if( force_synced_update )
+    sync = true;
 
   if( PF::PhotoFlow::Instance().is_batch() ) {
     do_update( target_pipeline );
