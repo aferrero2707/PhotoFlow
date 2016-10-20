@@ -76,13 +76,15 @@ PF::SettingsDialog::SettingsDialog():
   row[cm_display_profile_columns.col_id] = 0;
   row[cm_display_profile_columns.col_value] = "sRGB";
 
-#if !defined(__MACOSX__) && !defined(__APPLE__)
-/*
   ri = cm_display_profile_model->append();
   row = *(ri);
   row[cm_display_profile_columns.col_id] = 1;
-  row[cm_display_profile_columns.col_value] = "System (not working)";
-*/
+#ifdef __APPLE__
+  row[cm_display_profile_columns.col_value] = _("System");
+#else
+  row[cm_display_profile_columns.col_value] = _("System (not working)");
+#endif
+
   ri = cm_display_profile_model->append();
   row = *(ri);
   row[cm_display_profile_columns.col_id] = 2;
@@ -93,7 +95,6 @@ PF::SettingsDialog::SettingsDialog():
   cm_display_profile_box.pack_start( cm_display_profile_open_label, Gtk::PACK_SHRINK );
   cm_display_profile_box.pack_start( cm_display_profile_entry, Gtk::PACK_SHRINK, 4 );
   cm_display_profile_box.pack_start( cm_display_profile_open_button, Gtk::PACK_SHRINK );
-#endif
 
   cm_display_profile_type_selector.set_active( 0 );
 

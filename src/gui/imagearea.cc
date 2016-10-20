@@ -26,6 +26,7 @@
 
 
 #include "../base/imageprocessor.hh"
+#include "../base/print_display_profile.hh"
 #include "../operations/icc_transform.hh"
 #include "imagearea.hh"
 
@@ -1046,8 +1047,21 @@ void PF::ImageArea::update( VipsRect* area )
       //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
       //    <<" -> "<<current_display_profile<<std::endl;
       break;
-    default:
+    case PF_DISPLAY_PROF_SYSTEM: {
+#ifdef __APPLE__
+      current_display_profile = PF::get_display_ICC_profile();
+      if( !current_display_profile ) {
+        std::cout<<"ImageArea::update(): system display profile not set, reverting to sRGB"<<std::endl;
+        current_display_profile = dt_colorspaces_create_srgb_profile();
+      }
+      char tstr[1024];
+      cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+  //#ifndef NDEBUG
+      std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
+  //#endif
+#endif
       break;
+    }
     }
   }
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );

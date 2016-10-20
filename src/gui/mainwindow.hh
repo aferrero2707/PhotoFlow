@@ -90,6 +90,8 @@ public:
   MainWindow();
   virtual ~MainWindow();
 
+  void on_map();
+
   void on_button_open_clicked();
 
   void on_button_save_clicked();

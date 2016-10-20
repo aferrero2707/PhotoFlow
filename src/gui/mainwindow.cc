@@ -46,6 +46,7 @@
 #include "settingsdialog.hh"
 #include "mainwindow.hh"
 
+#include "../base/print_display_profile.hh"
 
 typedef struct {
   Gtk::Widget* widget;
@@ -248,6 +249,19 @@ PF::MainWindow::~MainWindow()
   PF::ImageProcessor::Instance().submit_request( request );	
   */
   //delete pf_image;
+}
+
+
+void PF::MainWindow::on_map()
+{
+  Gtk::Window::on_map();
+#ifdef __APPLE__
+  Glib::RefPtr< Gdk::Screen > screen = get_screen();
+  Glib::RefPtr< Gdk::Window > window = get_window();
+  cairo_current_display_id = screen->get_monitor_at_window(window);
+
+  print_display_profile();
+#endif
 }
 
 
@@ -570,7 +584,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/jpeg");
   filter_tiff.add_mime_type("image/png");
   //filter_tiff.add_mime_type("image/exr");
-  /*filter_tiff.add_mime_type("image/x-3fr");
+  filter_tiff.add_mime_type("image/x-3fr");
   filter_tiff.add_mime_type("image/x-adobe-dng");
   filter_tiff.add_mime_type("image/x-arw;image/x-bay");
   filter_tiff.add_mime_type("image/x-canon-cr2");
@@ -617,8 +631,8 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/x-sr2");
   filter_tiff.add_mime_type("image/x-srf");
   filter_tiff.add_mime_type("image/x-x3f");
-  filter_tiff.add_mime_type("image/x-exr");*/
-  filter_tiff.add_pattern("*.EXR");
+  filter_tiff.add_mime_type("image/x-exr");
+  /*filter_tiff.add_pattern("*.EXR");
   filter_tiff.add_pattern("*.3FR");
   filter_tiff.add_pattern("*.ARI");
   filter_tiff.add_pattern("*.ARW");
@@ -658,8 +672,10 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_pattern("*.SRF");
   filter_tiff.add_pattern("*.SRW");
   filter_tiff.add_pattern("*.STI");
-  filter_tiff.add_pattern("*.X3F");
+  filter_tiff.add_pattern("*.X3F");*/
+  filter_tiff.add_pattern("*.pfi");
   filter_tiff.add_pattern("*.PFI");
+  filter_tiff.add_pattern("*.Pfi");
   Gtk::FileFilter filter_all;
   filter_all.set_name( _("All files") );
   filter_all.add_pattern("*.*");
@@ -718,7 +734,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_mime_type("image/x-srf");
   filter_tiff->add_mime_type("image/x-x3f");
   filter_tiff->add_mime_type("image/x-exr");
-  filter_tiff->add_pattern("*.exr");
+  /*filter_tiff->add_pattern("*.exr");
   filter_tiff->add_pattern("*.3fr");
   filter_tiff->add_pattern("*.ari");
   filter_tiff->add_pattern("*.arw");
@@ -758,8 +774,10 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_pattern("*.srf");
   filter_tiff->add_pattern("*.srw");
   filter_tiff->add_pattern("*.sti");
-  filter_tiff->add_pattern("*.x3f");
+  filter_tiff->add_pattern("*.x3f");*/
   filter_tiff->add_pattern("*.pfi");
+  filter_tiff->add_pattern("*.PFI");
+  filter_tiff->add_pattern("*.Pfi");
   Glib::RefPtr<Gtk::FileFilter> filter_all = Gtk::FileFilter::create();
   filter_all->set_name( _("All files") );
   filter_all->add_pattern("*.*");

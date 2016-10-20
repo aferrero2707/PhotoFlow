@@ -192,6 +192,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
       float cam_xyz[12];
       cam_xyz[0] = NAN;
+      std::cout<<"Getting default camera matrix for makermodel=\""<<exif_data->camera_makermodel<<"\""<<std::endl;
       dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])cam_xyz);
       if(std::isnan(cam_xyz[0])) {
         std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
