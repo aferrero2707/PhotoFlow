@@ -143,7 +143,11 @@ PF::SettingsDialog::SettingsDialog():
   ri = cm_display_profile_model->append();
   row = *(ri);
   row[cm_display_profile_columns.col_id] = 1;
+#ifdef __APPLE__
+  row[cm_display_profile_columns.col_value] = "System";
+#else
   row[cm_display_profile_columns.col_value] = "System (not working)";
+#endif
 
   ri = cm_display_profile_model->append();
   row = *(ri);

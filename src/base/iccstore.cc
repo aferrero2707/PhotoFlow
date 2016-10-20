@@ -493,6 +493,8 @@ PF::ICCStore::ICCStore()
   Lab_profile = new LabProfile( PF::PF_TRC_PERCEPTUAL );
   Lab_profile->ref(); profiles.push_back( Lab_profile );
 
+  system_monitor_profile = NULL;
+
   /*
   std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-g10.icc";
   profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
@@ -675,6 +677,11 @@ PF::ICCProfile* PF::ICCStore::get_profile( cmsHPROFILE prof )
 }
 
 
+void PF::ICCStore::set_system_monitor_profile( cmsHPROFILE icc_profile )
+{
+  PF::ICCProfile* profile = get_profile( icc_profile );
+  system_monitor_profile = profile;
+}
 
 
 PF::ICCStore* PF::ICCStore::instance = NULL;

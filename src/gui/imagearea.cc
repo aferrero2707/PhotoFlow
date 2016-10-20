@@ -1027,7 +1027,7 @@ void PF::ImageArea::update( VipsRect* area )
 
     std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
     switch( current_display_profile_type ) {
-    case PF_DISPLAY_PROF_sRGB:
+    case PF_DISPLAY_PROF_sRGB: {
       current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_STANDARD );
       icc_display_profile = current_display_profile->get_profile();
       char tstr[1024];
@@ -1036,12 +1036,29 @@ void PF::ImageArea::update( VipsRect* area )
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
   //#endif
       break;
+    }
     case PF_DISPLAY_PROF_CUSTOM:
       current_display_profile = PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() );
       icc_display_profile = current_display_profile->get_profile();
       std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
           <<" -> "<<current_display_profile<<std::endl;
       break;
+    case PF_DISPLAY_PROF_SYSTEM: {
+#ifdef __APPLE__
+      current_display_profile = PF::ICCStore::Instance().get_system_monitor_profile();
+      if( !current_display_profile ) {
+        std::cout<<"ImageArea::update(): system display profile not set, reverting to sRGB"<<std::endl;
+        current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_STANDARD );
+      }
+      icc_display_profile = current_display_profile->get_profile();
+      char tstr[1024];
+      cmsGetProfileInfoASCII(icc_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+  //#ifndef NDEBUG
+      std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
+  //#endif
+#endif
+      break;
+    }
     }
   }
 

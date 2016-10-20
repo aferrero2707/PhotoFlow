@@ -45,6 +45,7 @@
 #include "settingsdialog.hh"
 #include "mainwindow.hh"
 
+#include "../base/print_display_profile.hh"
 
 typedef struct {
   Gtk::Widget* widget;
@@ -247,6 +248,49 @@ PF::MainWindow::~MainWindow()
   PF::ImageProcessor::Instance().submit_request( request );	
   */
   //delete pf_image;
+}
+
+
+void PF::MainWindow::on_map()
+{
+  Gtk::Window::on_map();
+#ifdef __APPLE__
+  Glib::RefPtr< Gdk::Screen > screen = get_screen();
+  Glib::RefPtr< Gdk::Window > window = get_window();
+  cairo_current_display_id = screen->get_monitor_at_window(window);
+
+  print_display_profile();
+  cmsHPROFILE dpy_profile = PF::get_display_ICC_profile();
+  PF::ICCStore::Instance().set_system_monitor_profile( dpy_profile );
+  /*
+  int monitor = 0;
+  CGDirectDisplayID ids[monitor + 1];
+  uint32_t total_ids;
+  CMProfileRef prof = NULL;
+  if(CGGetOnlineDisplayList(monitor + 1, &ids[0], &total_ids) == kCGErrorSuccess && total_ids == monitor + 1)
+    CMGetProfileByAVID(ids[monitor], &prof);
+  if(prof != NULL)
+  {
+    CFDataRef data;
+    data = CMProfileCopyICCData(NULL, prof);
+    CMCloseProfile(prof);
+
+    UInt8 *tmp_buffer = (UInt8 *)g_malloc(CFDataGetLength(data));
+    CFDataGetBytes(data, CFRangeMake(0, CFDataGetLength(data)), tmp_buffer);
+
+    buffer = (guint8 *)tmp_buffer;
+    buffer_size = CFDataGetLength(data);
+
+    cmsHPROFILE icc_profile = cmsOpenProfileFromMem( buffer, buffer_size );
+    char tstr[1024];
+    cmsGetProfileInfoASCII(icc_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+    std::cout<<"Display profile: "<<tstr<<std::endl;
+
+    CFRelease(data);
+    return;
+  }
+  */
+#endif
 }
 
 

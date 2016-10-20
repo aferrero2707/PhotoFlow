@@ -68,7 +68,8 @@ enum profile_type_t {
   PROF_TYPE_ACEScg,
   PROF_TYPE_ACES,
   PROF_TYPE_LAB,
-  PROF_TYPE_CUSTOM
+  PROF_TYPE_CUSTOM,
+  PROF_TYPE_NONE,
 };
 
 
@@ -236,6 +237,7 @@ class ICCStore
   ICCProfile* acescg_profiles[3];
   ICCProfile* adobe_profiles[3];
   ICCProfile* prophoto_profiles[3];
+  ICCProfile* system_monitor_profile;
   std::vector<ICCProfile*> profiles;
 
   ICCProfile* Lab_profile;
@@ -260,6 +262,9 @@ public:
 
   cmsToneCurve* get_Lstar_trc() {return Lstar_trc; }
   cmsToneCurve* get_iLstar_trc() {return iLstar_trc; }
+
+  void set_system_monitor_profile( cmsHPROFILE profile );
+  ICCProfile* get_system_monitor_profile() { return system_monitor_profile; }
 };
 }
 
