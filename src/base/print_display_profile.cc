@@ -33,12 +33,15 @@
 
 #include <glibmm.h>
 #include <cairo.h>
+#ifdef __APPLE__
 #include <Carbon/Carbon.h>
 #include <ApplicationServices/ApplicationServices.h>
+#endif
 
 
 void PF::print_display_profile()
 {
+#ifdef __APPLE__
   //ColorSyncProfileRef cs_prof = ColorSyncProfileCreateWithDisplayID (0);
 
   guint8 *buffer = NULL;
@@ -111,6 +114,7 @@ void PF::print_display_profile()
   char tstr[1024];
   cmsGetProfileInfoASCII(icc_profile, cmsInfoDescription, "en", "US", tstr, 1024);
   std::cout<<"Display profile: "<<tstr<<std::endl;
+#endif
 }
 
 
@@ -119,6 +123,7 @@ void* PF::get_display_profile()
   //ColorSyncProfileRef cs_prof = ColorSyncProfileCreateWithDisplayID (0);
   void* profile = NULL;
 
+#ifdef __APPLE__
   int monitor = 0;
   CGDirectDisplayID ids[monitor + 1];
   uint32_t total_ids;
@@ -135,6 +140,7 @@ void* PF::get_display_profile()
       CFRelease(data);
     }
   }
+#endif
   return profile;
 }
 
@@ -145,6 +151,7 @@ cmsHPROFILE PF::get_display_ICC_profile()
   guint8 *buffer = NULL;
   gint buffer_size = 0;
 
+#ifdef __APPLE__
   int monitor = cairo_current_display_id;
   CGColorSpaceRef space = NULL;
   space = CGDisplayCopyColorSpace (monitor);
@@ -165,5 +172,6 @@ cmsHPROFILE PF::get_display_ICC_profile()
       CFRelease(data);
     }
   }
+#endif
   return icc_profile;
 }
