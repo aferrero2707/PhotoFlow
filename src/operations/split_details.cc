@@ -170,11 +170,12 @@
 
 PF::SplitDetailsPar::SplitDetailsPar():
   PF::OpParBase(),
-  blur_type("blur_type", this, PF::SPLIT_DETAILS_BLUR_GAUSS, "BLUR_GAUSS", _("gaussian")),
+  blur_type("blur_type", this, PF::SPLIT_DETAILS_BLUR_WAVELETS, "BLUR_WAVELETS", _("wavelets")),
   prop_nscales("nscales",this,1),
-  prop_base_scale("base_scale",this,5)
+  prop_base_scale("base_scale",this,5),
+  output_residual_image("output_residual_image",this,true)
 {	
-  blur_type.add_enum_value( PF::SPLIT_DETAILS_BLUR_WAVELETS, "BLUR_WAVELETS", _("wavelets") );
+  blur_type.add_enum_value( PF::SPLIT_DETAILS_BLUR_GAUSS, "BLUR_GAUSS", _("gaussian") );
   
   set_type( "split_details");
   set_default_name( _("split details") );
@@ -240,7 +241,13 @@ std::vector<VipsImage*> PF::SplitDetailsPar::build_many(std::vector<VipsImage*>&
   }
 
   // Add the base level as first element of the output vector
+  if( output_residual_image.get() ) {
   outvec.push_back( prev_scale );
+  } else {
+    PF_UNREF( prev_scale, "SplitDetailsPar::build_many(): prev_scale unref at output" );
+    PF_REF( srcimg, "SplitDetailsPar::build_many(): srcimg ref at output" );
+    outvec.push_back( srcimg );
+  }
 
   // Add scale levels in reverse order
   for( int i = scalevec.size()-1; i >= 0; i-- ) {

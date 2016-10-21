@@ -35,13 +35,15 @@ PF::SplitDetailsConfigGUI::SplitDetailsConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Multi-Scale Decomposition"  ),
   blur_type_selector( this, "blur_type", _("blur type: "), PF::SPLIT_DETAILS_BLUR_GAUSS ),
   prop_nscales_slider( this, "nscales", "scales: ", 4, 1, 10, 1, 5, 1),
-  prop_base_scale_slider( this, "base_scale", "base scale %", 1, 0, 1000000, .01, 1, 1)
+  prop_base_scale_slider( this, "base_scale", "base scale %", 1, 0, 1000000, .01, 1, 1),
   //prop_detail_scale_slider( this, "detail_scale", "detail scale %", 0.01, 0, 1000000, .01, 1, 1)
+  prop_output_residual_image_checkbox( this, "output_residual_image", _("output residual"), true )
 {
   controlsBox.pack_start( blur_type_selector, Gtk::PACK_SHRINK, 5 );
   controlsBox.pack_start( prop_nscales_slider, Gtk::PACK_SHRINK, 5 );
   controlsBox.pack_start( prop_base_scale_slider, Gtk::PACK_SHRINK, 5 );
   //controlsBox.pack_start( prop_detail_scale_slider );
+  controlsBox.pack_start( prop_output_residual_image_checkbox, Gtk::PACK_SHRINK, 5 );
   
   add_widget( controlsBox );
 }
