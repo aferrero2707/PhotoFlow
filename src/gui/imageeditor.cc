@@ -148,7 +148,39 @@ static gboolean editor_on_image_updated_cb ( EditorCBData* data)
 
 
 
+class Layout2: public Gtk::HBox
+{
+  Gtk::Widget* histogram_widget;
+  Gtk::Widget* buttons_widget;
+  Gtk::Widget* layers_widget;
+  Gtk::Widget* controls_widget;
+  Gtk::Widget* preview_widget;
 
+  Gtk::HBox hbox;
+  Gtk::VBox vbox;
+  Gtk::VPaned paned;
+
+public:
+  Layout2(Gtk::Widget* h, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
+  histogram_widget(h), buttons_widget(b), layers_widget(l),
+  controls_widget(c), preview_widget(p)
+  //paned(Gtk::ORIENTATION_VERTICAL)
+  {
+    paned.add1( *layers_widget );
+    paned.add2( *controls_widget );
+
+    hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
+    hbox.pack_start( paned, Gtk::PACK_EXPAND_WIDGET );
+
+    vbox.pack_start( *histogram_widget, Gtk::PACK_SHRINK );
+    vbox.pack_start( hbox, Gtk::PACK_EXPAND_WIDGET );
+
+    pack_start( vbox, Gtk::PACK_SHRINK );
+    pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
+
+    paned.set_position(150);
+}
+};
 
 
 
@@ -255,21 +287,30 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   hist_expander.set_expanded(true);
   hist_expander.add(*histogram);
 
-  layersWidget_box.pack_start( hist_expander, Gtk::PACK_SHRINK );
+  //layersWidget_box.pack_start( hist_expander, Gtk::PACK_SHRINK );
   aux_controlsBox.set_size_request(-1,70);
-  layersWidget_box.pack_start( aux_controlsBox, Gtk::PACK_SHRINK );
+  //layersWidget_box.pack_start( aux_controlsBox, Gtk::PACK_SHRINK );
   layersWidget_box.pack_start( layersWidget, Gtk::PACK_EXPAND_WIDGET );
 
-  pack_start( main_panel );
-  //main_panel.pack1( imageBox );
-  //main_panel.pack2( layersWidget, false, false );
-  main_panel.pack_start( layersWidget_box, Gtk::PACK_SHRINK );
-  main_panel.pack_start( controls_group_scrolled_window, Gtk::PACK_SHRINK );
-  main_panel.pack_start( imageBox, Gtk::PACK_EXPAND_WIDGET );
   controls_group_scrolled_window.add( layersWidget.get_controls_group() );
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
   controls_group_scrolled_window.set_size_request( 280, 0 );
+
+  //controls_group_vbox.pack_start( hist_expander, Gtk::PACK_SHRINK );
+  //controls_group_vbox.pack_start( controls_group_scrolled_window, Gtk::PACK_EXPAND_WIDGET );
+
+  main_panel = new Layout2( &hist_expander, &(layersWidget.get_tool_buttons_box()),
+      &layersWidget_box, &controls_group_scrolled_window, &imageBox );
+
+  pack_start( *main_panel );
+  //main_panel.pack1( imageBox );
+  //main_panel.pack2( layersWidget, false, false );
+  //main_panel.pack_start( controls_group_scrolled_window, Gtk::PACK_SHRINK );
   //main_panel.pack_start( layersWidget.get_controls_group(), Gtk::PACK_SHRINK );
+
+  //main_panel.pack_start( layersWidget_box, Gtk::PACK_SHRINK );
+  //main_panel.pack_start( imageBox, Gtk::PACK_EXPAND_WIDGET );
+  //main_panel.pack_start( controls_group_vbox, Gtk::PACK_SHRINK );
 
   button_highlights_warning.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::ImageEditor::toggle_highlights_warning) );
@@ -333,7 +374,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_exporting) );
 
   show_all_children();
-  controls_group_scrolled_window.hide();
+  //controls_group_scrolled_window.hide();
 }
 
 
@@ -661,14 +702,14 @@ void PF::ImageEditor::update_controls()
     //  main_panel.show_all_children();
     //  if( fit_image ) fit_image_needed = true;
     //}
-    controls_group_scrolled_window.show();
+    //controls_group_scrolled_window.show();
   } else {
     //if( controls_group_scrolled_window.get_parent() == &main_panel ) {
     //  main_panel.remove( controls_group_scrolled_window );
     //  main_panel.show_all_children();
     //  if( fit_image ) fit_image_needed = true;
     //}
-    controls_group_scrolled_window.hide();
+    //controls_group_scrolled_window.hide();
   }
 }
 
@@ -719,7 +760,7 @@ void PF::ImageEditor::on_realize()
 {
   std::cout<<"ImageEditor::on_realize() called."<<std::endl;
   build_image();
-  controls_group_scrolled_window.hide();
+  controls_group_scrolled_window.show();
   Gtk::HBox::on_realize();
 }
 

@@ -329,6 +329,16 @@ PF::LayersTreeView::LayersTreeView(PF::LayerWidget* lw): Gtk::TreeView(), layer_
     sigc::mem_fun(*layer_widget, &PF::LayerWidget::delete_selected_layers) );
   popupMenu.append(*item);
 
+  item = Gtk::manage(new Gtk::MenuItem("Load preset", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::on_button_load) );
+  popupMenu.append(*item);
+
+  item = Gtk::manage(new Gtk::MenuItem("Save preset", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::on_button_save) );
+  popupMenu.append(*item);
+
   popupMenu.accelerate(*this);
   popupMenu.show_all(); //Show all menu items when the menu pops up
 }

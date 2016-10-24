@@ -86,7 +86,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   blendSelector2( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH ),
   intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   intensitySlider2( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
-  opacitySlider( this, layer->get_blender(), "opacity", _("Opacity"), 100, 0, 100, 1, 10, 100),
+  opacitySlider( this, layer->get_blender(), "opacity", "", 100, 0, 100, 1, 10, 100, 100),
   opacitySlider2( this, layer->get_blender(), "opacity", _("Opacity"), 100, 0, 100, 1, 10, 100),
   imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
   omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
@@ -148,7 +148,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   //frame_box_top.set_spacing(5);
   nameEntry.set_has_frame( false );
-  frame_top_buttons_box.pack_start( frame_visible, Gtk::PACK_SHRINK, 5 );
+  //frame_top_buttons_box.pack_start( frame_visible, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1.pack_start( frame_preview, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_box.pack_start( frame_mask, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_box.pack_start( frame_sticky, Gtk::PACK_SHRINK, 5 );
@@ -165,24 +165,27 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   if(par && par->has_opacity() ) {
     frame_top_box_1_1.pack_start( frame_box_2_padding, Gtk::PACK_EXPAND_WIDGET );
-    frame_top_box_1_1.pack_start( blendSelector, Gtk::PACK_SHRINK );
+    //frame_top_box_1_1.pack_start( blendSelector, Gtk::PACK_SHRINK );
   }
 
-  frame_top_box_1_2.pack_start( frame_expander, Gtk::PACK_SHRINK, 5 );
-  frame_top_box_1_2.pack_start( nameEntry, Gtk::PACK_EXPAND_WIDGET );
+  //frame_top_box_1_2.pack_start( frame_expander, Gtk::PACK_SHRINK, 5 );
+  frame_top_box_1_1.pack_start( nameEntry, Gtk::PACK_EXPAND_WIDGET );
   //frame_top_box_1_2.pack_start( frame_box_1_padding, Gtk::PACK_EXPAND_WIDGET );
-  frame_top_box_1_2.pack_start( frame_close, Gtk::PACK_SHRINK, 5 );
+  frame_top_box_1_1.pack_start( frame_close, Gtk::PACK_SHRINK, 5 );
 
   nameEntry.set_text( "layer name" );
 
-  frame_top_vbox_1.pack_start( frame_top_box_1_2, Gtk::PACK_SHRINK );
+  //frame_top_vbox_1.pack_start( frame_top_box_1_2, Gtk::PACK_SHRINK );
   frame_top_vbox_1.pack_start( frame_top_box_1_1, Gtk::PACK_SHRINK );
   frame_top_box_1.pack_start( frame_top_vbox_1, Gtk::PACK_EXPAND_WIDGET );
 
 
   if(par && par->has_opacity() ) {
     //opacitySlider.set_width( 200 );
-    frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_EXPAND_WIDGET );
+    opacity_box.pack_end( opacitySlider, Gtk::PACK_SHRINK, 0 );
+    opacity_box.pack_end( blendSelector, Gtk::PACK_SHRINK, 0 );
+    frame_top_box_2.pack_start( opacity_box, Gtk::PACK_EXPAND_WIDGET );
+    //frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( blendSelector, Gtk::PACK_SHRINK );
   }
   controls_box.pack_start( frame_top_box_2, Gtk::PACK_SHRINK, 0 );
@@ -199,12 +202,12 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   }
   if(par && par->has_opacity() ) {
     if( par && par->has_target_channel() ) {
-      frame_shift_box.pack_start( shift_x, Gtk::PACK_SHRINK, 2 );
-      frame_shift_box.pack_start( shift_y, Gtk::PACK_SHRINK, 2 );
+      //frame_shift_box.pack_start( shift_x, Gtk::PACK_SHRINK, 2 );
+      //frame_shift_box.pack_start( shift_y, Gtk::PACK_SHRINK, 2 );
       frame_top_box_3.pack_start( frame_shift_box, Gtk::PACK_SHRINK, 5 );
     } else {
-      frame_top_box_3.pack_start( shift_x, Gtk::PACK_SHRINK, 5 );
-      frame_top_box_3.pack_start( shift_y, Gtk::PACK_SHRINK, 5 );
+      //frame_top_box_3.pack_start( shift_x, Gtk::PACK_SHRINK, 5 );
+      //frame_top_box_3.pack_start( shift_y, Gtk::PACK_SHRINK, 5 );
     }
   }
 

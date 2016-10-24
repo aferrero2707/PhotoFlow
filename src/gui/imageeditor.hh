@@ -112,7 +112,7 @@ class ImageEditor: public Gtk::HBox
 
   Gtk::VBox imageArea_scrolledWindow_box;
   //Gtk::HPaned main_panel;
-  Gtk::HBox main_panel;
+  Gtk::HBox* main_panel;
   LayerWidget layersWidget;
   Gtk::VBox layersWidget_box;
   Gtk::Widget* aux_controls;
@@ -125,6 +125,7 @@ class ImageEditor: public Gtk::HBox
   Gtk::ToggleButton button_shadows_warning, button_highlights_warning;
   Gtk::VBox radioBox;
   Gtk::RadioButton buttonShowMerged, buttonShowActive;
+  Gtk::VBox controls_group_vbox;
   Gtk::ScrolledWindow controls_group_scrolled_window;
 
   HTabLabelWidget* tab_label_widget;
