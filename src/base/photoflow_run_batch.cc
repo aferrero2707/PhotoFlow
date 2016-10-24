@@ -220,8 +220,9 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
 
   return 0;
 	
+  /*
 #if defined(__MINGW32__) || defined(__MINGW64__)
-	for (int i = 0; i < _getmaxstdio(); ++i) close (i);
+	for (int i = 0; i < _getmaxstdio(); ++i) ::close (i);
 #else
 	rlimit rlim;
 	getrlimit(RLIMIT_NOFILE, &rlim);
@@ -230,7 +231,7 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
 	std::list<std::string>::iterator fi;
 	for(fi = cache_files.begin(); fi != cache_files.end(); fi++)
 		unlink( fi->c_str() );
-
+*/
   return 0;
 }
 
