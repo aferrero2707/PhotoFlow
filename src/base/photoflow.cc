@@ -39,6 +39,9 @@
 #if defined(__MINGW32__) || defined(__MINGW64__)
 #include <direct.h>
 #include <shlobj.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #define GetCurrentDir _getcwd
 #else
 #include <sys/time.h>
@@ -201,6 +204,11 @@ PF::PhotoFlow::PhotoFlow():
   if( getenv("PROGRAMDATA") ) {
     dataPath = getenv("PROGRAMDATA");
     dataPath += "\\photoflow";
+    Glib::ustring testPath = dataPath + "\\gmic_def.gmic";
+    struct stat stat_buf;
+    if( stat(testPath.c_str(), &stat_buf) ) {
+      dataPath = exePath + "\\..\\share\\photoflow";
+    }
   } else {
     dataPath = exePath + "\\..\\share\\photoflow";
   }
