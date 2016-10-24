@@ -127,6 +127,8 @@ namespace PF
 		void obj_unref( GObject* obj, char* msg=NULL );
 		void obj_unref( VipsImage* obj, char* msg=NULL ) { obj_unref( (GObject*)obj, msg ); }
 		void obj_unref( VipsRegion* obj, char* msg=NULL ) { obj_unref( (GObject*)obj, msg ); }
+
+		int run_batch(int argc, char *argv[]);
   };
 
 
