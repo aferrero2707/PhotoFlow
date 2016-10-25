@@ -122,7 +122,7 @@ public:
   ControlsGroup& get_controls_group() { return controls_group; }
   Gtk::VBox& get_tool_buttons_box() { return tool_buttons_box; }
 
-  void add_layer( Layer* layer );
+  void add_layer( Layer* layer, bool do_update=true  );
   void insert_image( std::string filename );
   void insert_preset( std::string filename );
   void remove_layers();
