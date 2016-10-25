@@ -464,12 +464,14 @@ void PF::WhiteBalanceConfigGUI::do_update()
       PF::exif_data_t* exif_data;
       if( !vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) &&
           blobsz == sizeof(PF::exif_data_t) ) {
-        char makermodel[1024];
-        char *tmodel = makermodel;
-        dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &tmodel,
-            exif_data->exif_maker, exif_data->exif_model );
-        maker = makermodel;
-        model = tmodel;
+        //char makermodel[1024];
+        //char *tmodel = makermodel;
+        //dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &tmodel,
+        //    exif_data->exif_maker, exif_data->exif_model );
+        //maker = makermodel;
+        //model = tmodel;
+        maker = exif_data->camera_maker;
+        model = exif_data->camera_model;
         wbModeSelector.set_maker_model( maker, model );
         //std::cout<<"WhiteBalanceConfigGUI::do_update(): maker="<<maker<<" model="<<model<<std::endl;
 
@@ -477,11 +479,12 @@ void PF::WhiteBalanceConfigGUI::do_update()
           PF::WhiteBalancePar* par2 =
               dynamic_cast<PF::WhiteBalancePar*>(processor->get_par());
           if( par2 ) {
-            dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
+            //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
             //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
             float xyz_to_cam[4][3];
             xyz_to_cam[0][0] = NAN;
-            dt_dcraw_adobe_coeff(makermodel, (float(*)[12])xyz_to_cam);
+            //dt_dcraw_adobe_coeff(makermodel, (float(*)[12])xyz_to_cam);
+            dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])xyz_to_cam);
             if(!isnan(xyz_to_cam[0][0])) {
               for(int i = 0; i < 3; i++) {
                 for(int j = 0; j < 3; j++) {

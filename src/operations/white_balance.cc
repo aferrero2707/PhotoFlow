@@ -134,12 +134,13 @@ VipsImage* PF::WhiteBalancePar::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
       return NULL;
     }
-    char makermodel[1024];
-    char *model = makermodel;
-    dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &model,
-        exif_data->exif_maker, exif_data->exif_model );
+    //char makermodel[1024];
+    //char *model = makermodel;
+    //dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &model,
+    //    exif_data->exif_maker, exif_data->exif_model );
     for(int i = 0; i < wb_preset_count; i++) {
-      if( !strcmp(wb_preset[i].make, makermodel) && !strcmp(wb_preset[i].model, model) ) {
+      if( !strcmp(wb_preset[i].make, exif_data->camera_maker) &&
+          !strcmp(wb_preset[i].model, exif_data->camera_model) ) {
         if( wb_mode.get_enum_value().second.second == wb_preset[i].name &&
             wb_preset[i].tuning == 0 ) {
           wb_red_current = wb_preset[i].channel[0];
@@ -176,15 +177,18 @@ VipsImage* PF::WhiteBalancePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   for(int i = 0; i < 4; i++) {
-    //mul[i] = mul[i] * min_mul_in / min_mul;
-    mul[i] = mul[i] / min_mul;
+    mul[i] = mul[i] * min_mul_in / min_mul;
+    //mul[i] = mul[i] / min_mul;
   }
+
+  std::cout<<"WhiteBalancePar::build(): CAM WB="<<image_data->color.cam_mul[0]<<","<<image_data->color.cam_mul[1]<<","<<image_data->color.cam_mul[2]<<endl;
+  std::cout<<"WhiteBalancePar::build(): USR WB="<<image_data->color.wb_mul[0]<<","<<image_data->color.wb_mul[1]<<","<<image_data->color.wb_mul[2]<<endl;
+  std::cout<<"WhiteBalancePar::build(): WB cur="<<wb_red_current<<","<<wb_green_current<<","<<wb_blue_current<<endl;
+  std::cout<<"WhiteBalancePar::build(): WB mul="<<mul[0]<<","<<mul[1]<<","<<mul[2]<<endl;
 
   wb_red_current = mul[0] / image_data->color.wb_mul[0];
   wb_green_current = mul[1] / image_data->color.wb_mul[1];
   wb_blue_current = mul[2] / image_data->color.wb_mul[2];
-
-  std::cout<<"WhiteBalancePar::build(): WB mul="<<wb_red_current<<","<<wb_green_current<<","<<wb_blue_current<<endl;
 
   VipsImage* image = OpParBase::build( in, first, NULL, NULL, level );
   if( !image )
