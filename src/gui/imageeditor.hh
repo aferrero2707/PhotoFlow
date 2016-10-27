@@ -136,6 +136,8 @@ class ImageEditor: public Gtk::HBox
 
   HTabLabelWidget* tab_label_widget;
 
+  Glib::ustring last_exported_file;
+
 
   bool fit_image;
   bool fit_image_needed;
@@ -251,6 +253,9 @@ public:
   void zoom_out();
   bool zoom_fit();
   void zoom_actual_size();
+
+  Glib::ustring get_last_exported_file() { return last_exported_file; }
+  void set_last_exported_file( Glib::ustring name ) { last_exported_file = name; }
 };
 
 }
