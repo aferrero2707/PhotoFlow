@@ -157,6 +157,12 @@ int main (int argc, char *argv[])
 
   //vips__leak = 1;
 
+  if( argc > 2 && std::string(argv[1]) == "-b" ) {
+    argc--;
+    argv++;
+    return PF::PhotoFlow::Instance().run_batch(argc, argv);
+  }
+
   if(!Glib::thread_supported()) 
     Glib::thread_init();
 
