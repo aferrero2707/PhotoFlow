@@ -563,6 +563,7 @@ PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_typ
   case PF::PROF_TYPE_ACEScg: return acescg_profiles[trc_type];
   case PF::PROF_TYPE_ADOBE: return adobe_profiles[trc_type];
   case PF::PROF_TYPE_PROPHOTO: return prophoto_profiles[trc_type];
+  case PF::PROF_TYPE_LAB: return Lab_profile;
   default: return NULL;
   }
 }
