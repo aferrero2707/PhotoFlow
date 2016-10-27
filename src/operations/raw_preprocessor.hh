@@ -364,10 +364,10 @@ namespace PF
       default:
         //render_camwb(ireg, n, in_first, imap, omap, oreg, rdpar);
         //std::cout<<"render_camwb() called"<<std::endl;
-        mul[0] = rdpar->get_wb_red();//*rdpar->get_camwb_corr_red();
-        mul[1] = rdpar->get_wb_green();//*rdpar->get_camwb_corr_green();
-        mul[2] = rdpar->get_wb_blue();//*rdpar->get_camwb_corr_blue();
-        mul[3] = rdpar->get_wb_green();//*rdpar->get_camwb_corr_green();
+        mul[0] = rdpar->get_wb_red()*rdpar->get_camwb_corr_red();
+        mul[1] = rdpar->get_wb_green()*rdpar->get_camwb_corr_green();
+        mul[2] = rdpar->get_wb_blue()*rdpar->get_camwb_corr_blue();
+        mul[3] = rdpar->get_wb_green()*rdpar->get_camwb_corr_green();
         break;
       }
 
