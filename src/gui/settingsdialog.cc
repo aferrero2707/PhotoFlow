@@ -144,15 +144,15 @@ PF::SettingsDialog::SettingsDialog():
   row = *(ri);
   row[cm_display_profile_columns.col_id] = 1;
 #ifdef __APPLE__
-  row[cm_display_profile_columns.col_value] = "System";
+  row[cm_display_profile_columns.col_value] = _("System");
 #else
-  row[cm_display_profile_columns.col_value] = "System (not working)";
+  row[cm_display_profile_columns.col_value] = _("System (not working)");
 #endif
 
   ri = cm_display_profile_model->append();
   row = *(ri);
   row[cm_display_profile_columns.col_id] = 2;
-  row[cm_display_profile_columns.col_value] = "Custom";
+  row[cm_display_profile_columns.col_value] = _("Custom");
 
   //cm_display_profile_type_selector.insert( 0, "sRGB" );
   //cm_display_profile_type_selector.insert( 1, "System (not working)" );
