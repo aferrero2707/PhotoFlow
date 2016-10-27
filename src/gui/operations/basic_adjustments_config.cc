@@ -84,17 +84,12 @@ public:
 
 PF::BasicAdjustmentsConfigGUI::BasicAdjustmentsConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Base Adjustments" ),
-  black_level_slider( this, "black_level", _("black"), 0, -100, 100, 5, 10, 100),
-  white_level_slider( this, "white_level", _("white"), 0, -100, 1600, 5, 10, 100),
-  brightnessSlider( this, "brightness", _("brightness"), 0, -100, 100, 5, 10, 100),
-  brightness2Slider( this, "brightness_eq", "Brightness (curve)", 0, -100, 100, 5, 10, 100),
   contrastSlider( this, "contrast", _("Contrast"), 0, -100, 100, 5, 10, 100),
   contrast2Slider( this, "contrast_eq", "Contrast(curve)", 0, -100, 100, 5, 10, 100),
   saturationSlider( this, "saturation", _("Saturation"), 0, -100, 100, 5, 10, 100),
   saturation2Slider( this, "saturation_eq", "Saturation (curve)", 0, -100, 100, 5, 10, 100),
   hueSlider( this, "hue", _("Hue"), 0, -180, 180, 0.1, 10, 1),
   hue2Slider( this, "hue_eq", "Hue (curve)", 0, -180, 180, 0.1, 10, 1),
-  exposureSlider( this, "exposure", _("exposure"), 0, -10, 10, 0.1, 1 ),
   mask_enable( this, "show_mask", _("show mask"), false ),
   hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
   hueSeq( this, "hue_S_equalizer", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
@@ -112,11 +107,6 @@ PF::BasicAdjustmentsConfigGUI::BasicAdjustmentsConfigGUI( PF::Layer* layer ):
   featherRadiusSlider( this, "feather_radius", _("radius "), 1, 0, 1000000, 1, 5, 1),
   mask_invert( this, "invert_mask", _("invert mask"), false )
 {
-  controlsBox.pack_start( black_level_slider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( white_level_slider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK );
-  //controlsBox.pack_start( brightness2Slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( sep1, Gtk::PACK_SHRINK );
   controlsBox.pack_start( contrastSlider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( contrast2Slider, Gtk::PACK_SHRINK );

@@ -57,12 +57,6 @@ PF::BasicAdjustmentsPar::BasicAdjustmentsPar():
   saturation_eq("saturation_eq",this,0),
   contrast("contrast",this,0),
   contrast_eq("contrast_eq",this,0),
-  brightness("brightness",this,0),
-  brightness_eq("brightness_eq",this,0),
-  brightness_is_gamma("brightness_is_gamma",this,false),
-  exposure("exposure",this,1),
-  white_level("white_level",this,0),
-  black_level("black_level",this,0),
   hue_H_equalizer( "hue_H_equalizer", this ),
   hue_S_equalizer( "hue_S_equalizer", this ),
   hue_L_equalizer( "hue_L_equalizer", this ),
@@ -75,15 +69,12 @@ PF::BasicAdjustmentsPar::BasicAdjustmentsPar():
   contrast_H_equalizer( "contrast_H_equalizer", this ),
   contrast_S_equalizer( "contrast_S_equalizer", this ),
   contrast_L_equalizer( "contrast_L_equalizer", this ),
-  brightness_H_equalizer( "brightness_H_equalizer", this ),
-  brightness_S_equalizer( "brightness_S_equalizer", this ),
-  brightness_L_equalizer( "brightness_L_equalizer", this ),
   show_mask("show_mask",this,false),
   invert_mask("invert_mask",this,false),
   feather_mask("feather_mask",this,false),
   feather_radius("feather_radius",this,5.0f)
 {
-  set_type("hue_saturation" );
+  set_type("basic_adjustments" );
 
   set_default_name( _("basic adjustments") );
 

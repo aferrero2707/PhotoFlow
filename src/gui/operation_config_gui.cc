@@ -1068,7 +1068,7 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   } else if( op_type == "raw_developer" ) {
 
-    dialog = new PF::RawDeveloperConfigGUI( current_layer );
+    dialog = new PF::RawDeveloperConfigGUIV1( current_layer );
 
   } else if( op_type == "raw_output_v2" ) {
 
@@ -1137,6 +1137,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "levels" ) {
 
     dialog = new PF::LevelsConfigGUI( current_layer );
+
+  } else if( op_type == "basic_adjustments" ) {
+
+    dialog = new PF::BasicAdjustmentsConfigGUI( current_layer );
 
   } else if( op_type == "brightness_contrast" ) {
 

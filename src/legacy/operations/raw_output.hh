@@ -131,7 +131,8 @@ enum hlreco_mode_t {
     // Either from xyz_cam or from icc 
     Property<std::string> cam_profile_name;
     std::string current_cam_profile_name;
-    cmsHPROFILE cam_profile;
+    //cmsHPROFILE cam_profile;
+    PF::ICCProfile* cam_profile;
 
     // Input gamma 
     PropertyBase gamma_mode;
@@ -140,10 +141,11 @@ enum hlreco_mode_t {
 
     // output color profile
     PropertyBase out_profile_mode;
-    output_profile_mode_t current_out_profile_mode;
+    //output_profile_mode_t current_out_profile_mode;
     Property<std::string> out_profile_name;
     std::string current_out_profile_name;
-    cmsHPROFILE out_profile;
+    //cmsHPROFILE out_profile;
+    PF::ICCProfile* out_profile;
 
     cmsHTRANSFORM transform;
 

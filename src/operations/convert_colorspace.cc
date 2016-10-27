@@ -254,15 +254,19 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     output_cs_type = cmsGetColorSpace(out_profile);
     switch( output_cs_type ) {
     case cmsSigGrayData:
+      std::cout<<"ConvertColorspacePar::build(): image mode set to GRAYSCALE"<<std::endl;
       grayscale_image( get_xsize(), get_ysize() );
       break;
     case cmsSigRgbData:
+      std::cout<<"ConvertColorspacePar::build(): image mode set to RGB"<<std::endl;
       rgb_image( get_xsize(), get_ysize() );
       break;
     case cmsSigLabData:
+      std::cout<<"ConvertColorspacePar::build(): image mode set to LAB"<<std::endl;
       lab_image( get_xsize(), get_ysize() );
       break;
     case cmsSigCmykData:
+      std::cout<<"ConvertColorspacePar::build(): image mode set to CMYK"<<std::endl;
       cmyk_image( get_xsize(), get_ysize() );
       break;
     default:

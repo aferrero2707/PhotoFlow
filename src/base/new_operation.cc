@@ -50,7 +50,7 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
   } else if( op_type == "raw_developer" ) {
 
     //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
-    processor = new_raw_developer();
+    processor = new_raw_developer_v1();
 
   } else if( op_type == "raw_output" ) {
 
@@ -141,6 +141,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
     processor = new_levels();
+
+  } else if( op_type == "basic_adjustments" ) {
+
+    //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
+    processor = new_basic_adjustments();
 
   } else if( op_type == "brightness_contrast" ) {
 

@@ -51,11 +51,6 @@ namespace PF
     Property<float> hue, hue_eq;
     Property<float> saturation, saturation_eq;
     Property<float> contrast, contrast_eq;
-    Property<float> brightness, brightness_eq;
-    Property<bool> brightness_is_gamma;
-    Property<float> exposure;
-    Property<float> white_level;
-    Property<float> black_level;
     Property<SplineCurve> hue_H_equalizer;
     Property<SplineCurve> hue_S_equalizer;
     Property<SplineCurve> hue_L_equalizer;
@@ -68,9 +63,6 @@ namespace PF
     Property<SplineCurve> contrast_H_equalizer;
     Property<SplineCurve> contrast_S_equalizer;
     Property<SplineCurve> contrast_L_equalizer;
-    Property<SplineCurve> brightness_H_equalizer;
-    Property<SplineCurve> brightness_S_equalizer;
-    Property<SplineCurve> brightness_L_equalizer;
 
     Property<bool> show_mask;
     Property<bool> invert_mask;
@@ -107,12 +99,6 @@ namespace PF
     float get_saturation_eq() { return saturation_eq.get(); }
     float get_contrast() { return contrast.get(); }
     float get_contrast_eq() { return contrast_eq.get(); }
-    float get_brightness() { return brightness.get(); }
-    float get_brightness_eq() { return brightness_eq.get(); }
-    bool get_brightness_is_gamma() { return brightness_is_gamma.get(); }
-    float get_exposure() { return exposure.get(); }
-    float get_white_level() { return white_level.get(); }
-    float get_black_level() { return black_level.get(); }
 
     bool get_show_mask() { return show_mask.get(); }
     bool get_invert_mask() { return invert_mask.get(); }
@@ -160,10 +146,6 @@ namespace PF
       float hue = opar->get_hue();
       float saturation = opar->get_saturation();
       float contrast = opar->get_contrast();
-      float brightness = opar->get_brightness();
-      float exposure = opar->get_exposure();
-      float black_level = opar->get_black_level();
-      float white_level = opar->get_white_level();
       bool inv = opar->get_invert_mask();
 
       float* pin;
@@ -174,6 +156,10 @@ namespace PF
       float h_in, s_in, v_in, l_in;
       float h, s, v, l;
       int x, y, k;
+
+      float midpoint = 0.5;
+      if( opar->get_icc_data() && (opar->get_icc_data()->is_linear()) )
+        midpoint = 0.18;
 
       if( PREVIEW && opar->get_show_mask() ) {
         for( y = 0; y < height; y++ ) {
@@ -205,13 +191,9 @@ namespace PF
 
             //std::cout<<"h_in="<<h_in<<"  h_eq="<<h_eq<<" ("<<h_eq1<<" "<<h_eq2<<" "<<h_eq3<<")"<<std::endl;
 
-            float black_level2 = black_level;
-            float white_level2 = white_level;
             float hue2 = hue;
             float saturation2 = saturation;
-            float brightness2 = brightness;
             float contrast2 = contrast;
-            float exposure2 = exposure;
 
             //if( back_level2 >= 1.f ) black_level2 = 0.9999f;
             //if( white_level2 <= -1.f ) white_level2 = -0.9999f;
@@ -242,41 +224,19 @@ namespace PF
           }
              */
 
-            if( (black_level2 != 0) || (white_level2 != 0) ) {
-              float delta = (white_level2 + 1.f - black_level2);
-              if( fabs(delta) < 0.0001f ) {
-                if( delta > 0 ) delta = 0.0001f;
-                else delta = -0.0001f;
-              }
-              for( k=0; k < 3; k++) {
-                RGB[k] = (RGB[k] - black_level2) / delta;
-                //clip( exposure*RGB[k], RGB[k] );
-              }
-            }
-
-            if( exposure2 != 0 ) {
-              for( k=0; k < 3; k++) {
-                RGB[k] *= exposure;
-                //clip( exposure*RGB[k], RGB[k] );
-              }
-            }
-
-            if( brightness2 != 0 || contrast2 != 0 ) {
-              float midpoint = 0.5;
-              if( opar->get_icc_data() && (opar->get_icc_data()->is_linear()) )
-                midpoint = 0.18;
+            if( contrast2 != 0 ) {
               for( k=0; k < 3; k++) {
                 tempval = (typename FormatInfo<float>::SIGNED)RGB[k] - midpoint;
-                RGB[k] = (contrast2+1.0f)*tempval+brightness2*FormatInfo<float>::RANGE + midpoint;
+                RGB[k] = (contrast2+1.0f)*tempval + midpoint;
                 //clip( (contrast2+1.0f)*tempval+brightness2*FormatInfo<float>::RANGE+FormatInfo<float>::HALF, RGB[k] );
               }
             }
 
-            //rgb2hsv( R, G, B, h, s, v );
-            rgb2hsv( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
-            //rgb2hsl( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
-
-            //std::cout<<"in RGB: "<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<"  HSL: "<<h_in<<" "<<s_in<<" "<<l_in<<std::endl;
+            if( hue2 != 0 || saturation2 != 0 ) {
+              rgb2hsv( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
+              //rgb2hsl( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
+              //std::cout<<"in RGB: "<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<"  HSL: "<<h_in<<" "<<s_in<<" "<<l_in<<std::endl;
+            }
             /*
             unsigned short int hid = static_cast<unsigned short int>( h_in*65535/360 );
             unsigned short int sid = static_cast<unsigned short int>( s_in*65535 );
@@ -285,7 +245,7 @@ namespace PF
             float h_eq2 = opar->eq_enabled[1] ? opar->vec[1][sid] : 1;
             float h_eq3 = opar->eq_enabled[2] ? opar->vec[2][lid] : 1;
             float h_eq = MIN3( h_eq1, h_eq2, h_eq3 );
-            */
+             */
 
             /*
           //h = h_in + hue + opar->get_hue_eq()*h_eq;
