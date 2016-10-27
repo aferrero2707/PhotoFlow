@@ -940,7 +940,7 @@ void PF::LayerWidget::on_button_add_image()
 
 
 
-void PF::LayerWidget::add_layer( PF::Layer* layer )
+void PF::LayerWidget::add_layer( PF::Layer* layer, bool do_update )
 {
   int page = notebook.get_current_page();
   if( page < 0 ) page = 0;
@@ -958,9 +958,9 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
   Glib::RefPtr<Gtk::TreeStore> model = layer_views[page]->get_model();
 
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
-    layer_views[page]->get_tree().get_selection();
-  std::vector<Gtk::TreeModel::Path> sel_rows = 
-    refTreeSelection->get_selected_rows();
+      layer_views[page]->get_tree().get_selection();
+  std::vector<Gtk::TreeModel::Path> sel_rows =
+      refTreeSelection->get_selected_rows();
   Gtk::TreeModel::iterator iter;
   if( !sel_rows.empty() ) {
     std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
@@ -979,45 +979,46 @@ void PF::LayerWidget::add_layer( PF::Layer* layer )
       pl->sublayers_insert( layer, l ? l->get_id() : -1 );
       image->get_layer_manager().modified();
     } else {
-      
+
       std::cout<<"Adding layer \""<<layer->get_name()
-               <<" above layer \""<<l->get_name()<<"\""<<std::endl;
-      
+                       <<" above layer \""<<l->get_name()<<"\""<<std::endl;
+
       //image->get_layer_manager().insert_layer( layer, l->get_id() );
       PF::insert_layer( *(layer_views[page]->get_layers()), layer, l->get_id() );
-      image->get_layer_manager().modified();
     }
   } else {
     // Nothing selected, we add the layer on top of the stack
     //image->get_layer_manager().insert_layer( layer );
     PF::insert_layer( *(layer_views[page]->get_layers()), layer, -1 );
-    image->get_layer_manager().modified();
   }
 
-  //layer->signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
-/*
+  if( do_update ) {
+    image->get_layer_manager().modified();
+
+    //layer->signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
+    /*
   if( layer->get_processor() && layer->get_processor()->get_par() ) {
     PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( layer->get_processor()->get_par()->get_config_ui() );
     if( ui ) ui->set_editor( editor );
   }
-*/
+     */
+    std::cout<<"LayerWidget::add_layer(): submitting image update request..."<<std::endl;
+    update();
+    std::cout<<"LayerWidget::add_layer(): image update request submitted"<<std::endl;
 
-  std::cout<<"LayerWidget::add_layer(): submitting image update request..."<<std::endl;
-  update();
-  std::cout<<"LayerWidget::add_layer(): image update request submitted"<<std::endl;
-  layer_views[page]->unselect_all();
-  select_row( layer->get_id() );
+    layer_views[page]->unselect_all();
+    select_row( layer->get_id() );
 
-  PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
-  if( ui ) {
-    PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
-    if( gui && gui->get_frame() ) {
-      controls_group.add_control( layer, gui );
-      gui->open();
+    PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
+    if( ui ) {
+      PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+      if( gui && gui->get_frame() ) {
+        controls_group.add_control( layer, gui );
+        gui->open();
+      }
+      controls_group.show_all_children();
     }
-    controls_group.show_all_children();
   }
-
 }
 
 
