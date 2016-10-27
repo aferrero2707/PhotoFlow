@@ -112,7 +112,8 @@ void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gu
   //editor->get_image()->rebuild_done_wait( false );
   // Make sure the image is not being rebuilt
   editor->get_image()->lock();
-  collapse_all();
+  //collapse_all();
+  remove_all_controls();
   for( unsigned int i = 0; i < guis.size(); i++ ) {
     if( guis[i] == gui ) {
       guis[i]->expand();
@@ -153,6 +154,15 @@ void PF::ControlsGroup::remove_control(PF::OperationConfigGUI* gui)
     remove( *control );
   }
   editor->update_controls();
+}
+
+
+void PF::ControlsGroup::remove_all_controls()
+{
+  std::vector<PF::OperationConfigGUI*> tmp_guis = guis;
+  for( unsigned int i = 0; i < tmp_guis.size(); i++ ) {
+    remove_control( tmp_guis[i] );
+  }
 }
 
 
@@ -197,7 +207,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   perspective_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/perspective.png", "perspective", image, this)
 {
   set_size_request(250,-1);
-  notebook.set_tab_pos(Gtk::POS_LEFT);
+  //notebook.set_tab_pos(Gtk::POS_LEFT);
   //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
 
   add_button.set_tooltip_text( _("new layer") );
@@ -232,7 +242,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( path_mask_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( draw_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( clone_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 8 );
+  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 20 );
 
 
   LayerTree* view = new LayerTree( editor );
@@ -244,7 +254,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   notebook.append_page(*view,_("Layers"));
   Widget* page = notebook.get_nth_page(-1);
   Gtk::Label* label = (Gtk::Label*)notebook.get_tab_label(*page);
-  label->set_angle(90);
+  //label->set_angle(90);
 
   //top_box.pack_start(buttonAdd, Gtk::PACK_SHRINK);
   //top_box.pack_start(buttonbox, Gtk::PACK_SHRINK);
@@ -281,11 +291,12 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //layers_panel.pack2( controls_scrolled_window, true, true );
   //pack_start(layers_panel);
 
-  main_box.pack_start(tool_buttons_box, Gtk::PACK_SHRINK);
+  //main_box.pack_start(tool_buttons_box, Gtk::PACK_SHRINK);
   main_box.pack_start(vbox, Gtk::PACK_EXPAND_WIDGET);
   vbox.set_spacing(4);
   vbox.pack_start(notebook, Gtk::PACK_EXPAND_WIDGET);
-  vbox.pack_start( buttonbox, Gtk::PACK_SHRINK );
+  //vbox.pack_start( buttonbox, Gtk::PACK_SHRINK );
+  //vbox.pack_start( tool_buttons_box, Gtk::PACK_SHRINK );
   top_box.pack_start( main_box, Gtk::PACK_EXPAND_WIDGET );
   //top_box.pack_start( buttonbox, Gtk::PACK_SHRINK );
   pack_start( top_box );
@@ -514,8 +525,8 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
         cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_cell_toggled) ); 
       */
 
-      VTabLabelWidget* tabwidget = 
-        new VTabLabelWidget( std::string(_("intensity ("))+l->get_name()+")",
+      HTabLabelWidget* tabwidget =
+        new HTabLabelWidget( std::string(_("intensity ("))+l->get_name()+")",
                             view );
       tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::LayerWidget::remove_tab) ); 
       notebook.append_page( *view, *tabwidget );
@@ -562,8 +573,8 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
         cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_cell_toggled) ); 
       */
 
-      VTabLabelWidget* tabwidget = 
-        new VTabLabelWidget( std::string(_("opacity ("))+l->get_name()+")",
+      HTabLabelWidget* tabwidget =
+        new HTabLabelWidget( std::string(_("opacity ("))+l->get_name()+")",
                             view );
       tabwidget->signal_close.connect( sigc::mem_fun(*this, &PF::LayerWidget::remove_tab) ); 
       notebook.append_page( *view, *tabwidget );
@@ -1023,8 +1034,23 @@ void PF::LayerWidget::insert_image( std::string filename )
     if( !image ) return;
 
     PF::LayerManager& layer_manager = image->get_layer_manager();
-    PF::Layer* layer = layer_manager.new_layer();
-    if( !layer ) return;
+    PF::Layer* gl = layer_manager.new_layer();
+    if( !gl ) return;
+    gl->set_name( _("image") );
+    gl->set_normal( false );
+
+    PF::ProcessorBase* processor = new_buffer();
+    gl->set_processor( processor );
+
+    PF::ProcessorBase* blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    gl->set_blender( blender );
+
+    PF::OperationConfigGUI* dialog =
+      new PF::OperationConfigGUI( gl, Glib::ustring(_("Group Layer Config")) );
+    processor->get_par()->set_config_ui( dialog );
+
+    //PF::Layer* layer = layer_manager.new_layer();
+    //if( !layer ) return;
 
     PF::Layer* limg = layer_manager.new_layer();
     PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "imageread", limg );
@@ -1032,8 +1058,9 @@ void PF::LayerWidget::insert_image( std::string filename )
       proc->get_par()->get_property( "file_name" )->set_str( filename );
     limg->set_processor( proc );
     limg->set_name( _("image file") );
+    gl->sublayers_insert( limg, -1 );
 
-    add_layer( limg );
+    add_layer( gl );
   } else {
 
     std::cout<<"Inserting raw image "<<filename<<std::endl;

@@ -59,13 +59,13 @@ namespace PF {
     
     void create_widgets( std::string l, double val,
         double min, double max,
-        double sincr, double pincr );
+        double sincr, double pincr, int size );
 
   public:
     Slider(OperationConfigGUI* dialog, std::string pname, std::string l,
-	   double val, double min, double max, double sincr, double pincr, double mult);
+	   double val, double min, double max, double sincr, double pincr, double mult, int size=120);
     Slider(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l,
-	   double val, double min, double max, double sincr, double pincr, double mult);
+	   double val, double min, double max, double sincr, double pincr, double mult, int size=120);
 
     ~Slider() {}
 

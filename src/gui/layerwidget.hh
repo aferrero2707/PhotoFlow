@@ -60,6 +60,7 @@ public:
   void update();
   void add_control(PF::Layer* layer, PF::OperationConfigGUI* control);
   void remove_control(PF::OperationConfigGUI* control);
+  void remove_all_controls();
   void collapse_all();
   /**/
   //void set_controls( std::vector<Gtk::Frame*>& new_controls);
@@ -120,6 +121,7 @@ public:
   }
   */
   ControlsGroup& get_controls_group() { return controls_group; }
+  Gtk::VBox& get_tool_buttons_box() { return tool_buttons_box; }
 
   void add_layer( Layer* layer );
   void insert_image( std::string filename );
