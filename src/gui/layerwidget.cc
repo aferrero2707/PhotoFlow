@@ -404,8 +404,11 @@ void PF::LayerWidget::on_selection_changed()
   std::cout<<"LayerWidget::on_selection_chaged(): "<<selected_rows.size()<<" selected rows."<<std::endl;
 #endif
   std::vector<Gtk::TreeModel::Path>::iterator row_it = selected_rows.begin();
-  if( row_it == selected_rows.end() )
+  if( row_it == selected_rows.end() ) {
+    std::cout<<"LayerWidget::on_selection_changed(): calling controls_group.remove_all_controls()"<<std::endl;
+    controls_group.remove_all_controls();
     return;
+  }
 
   Gtk::TreeModel::iterator iter = layer_views[page]->get_model()->get_iter( *row_it );
   if (iter) {
@@ -424,8 +427,16 @@ void PF::LayerWidget::on_selection_changed()
         if( gui && editor ) {
           editor->set_aux_controls( &(gui->get_aux_controls()) );
         }
+        if( gui && gui->get_frame() ) {
+          controls_group.add_control( l, gui );
+          gui->open();
+          gui->expand();
+        }
       }
     }
+  } else {
+    std::cout<<"LayerWidget::on_selection_changed(): calling controls_group.remove_all_controls()"<<std::endl;
+    controls_group.remove_all_controls();
   }
 
   return;
@@ -1679,6 +1690,7 @@ void PF::LayerWidget::on_switch_page(_GtkNotebookPage* page, guint page_num)
 #endif
 {
   int layer_id = get_selected_layer_id();
+  on_selection_changed();
 #ifndef NDEBUG
   std::cout<<"LayerWidget::on_switch_page( "<<page_num<<" ) called."<<std::endl;
   std::cout<<"Selected layer id: "<<layer_id<<std::endl;
