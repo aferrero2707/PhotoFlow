@@ -1365,10 +1365,30 @@ void PF::LayerWidget::on_button_add_group()
   int page = notebook.get_current_page();
   if( page < 0 ) return;
   
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+      layer_views[page]->get_tree().get_selection();
+
+  std::cout<<"LayerWidget::on_button_add_group(): refTreeSelection->count_selected_rows()="<<refTreeSelection->count_selected_rows()<<std::endl;
+
+  Glib::RefPtr<Gtk::TreeStore> model = layer_views[page]->get_model();
+  std::vector<Gtk::TreeModel::Path> sel_rows =
+      refTreeSelection->get_selected_rows();
+  std::vector<PF::Layer*> sel_layers;
+  Gtk::TreeModel::iterator iter;
+
+  for( int ri = sel_rows.size()-1; ri >= 0; ri-- ) {
+    iter = model->get_iter( sel_rows[ri] );
+    if( !iter ) continue;
+    Gtk::TreeModel::Row row = *iter;
+    PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
+    PF::Layer* l = (*iter)[columns.col_layer];
+    sel_layers.push_back(l);
+  }
+
   PF::LayerManager& layer_manager = image->get_layer_manager();
   PF::Layer* layer = layer_manager.new_layer();
   if( !layer ) return;
-  layer->set_name( _("New Group Layer") );
+  layer->set_name( _("Group Layer") );
   layer->set_normal( false );
 
   PF::ProcessorBase* processor = new_buffer();
@@ -1378,11 +1398,61 @@ void PF::LayerWidget::on_button_add_group()
   layer->set_blender( blender );
 
   PF::OperationConfigGUI* dialog =
-    new PF::OperationConfigGUI( layer, Glib::ustring(_("Group Layer Config")) );
+      new PF::OperationConfigGUI( layer, Glib::ustring(_("Group Layer Config")) );
   processor->get_par()->set_config_ui( dialog );
 
-  add_layer( layer );
+  add_layer( layer, false );
 
+  if( sel_layers.size() > 1 ) {
+    image->lock();
+
+    for( unsigned int li = 0; li < sel_layers.size(); li++ ) {
+      PF::Layer* l = sel_layers[li];
+
+      std::list<Layer*> children;
+      layer_manager.get_child_layers( l, children );
+      for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
+        if( !(*i) ) continue;
+        (*i)->get_processor()->get_par()->modified();
+      }
+      l->get_processor()->get_par()->modified();
+
+      layer_manager.remove_layer( l );
+      std::cout<<"LayerWidget::on_button_add_group(): layer \""<<l->get_name()<<"\" removed"<<std::endl;
+      layer->sublayers_insert( l, -1 );
+      std::cout<<"LayerWidget::on_button_add_group(): layer \""<<l->get_name()<<"\" added to group"<<std::endl;
+    }
+    //layer_manager.modified();
+    image->unlock();
+  }
+
+  //layer_manager.modified();
+
+  //image->get_layer_manager().modified();
+
+  //layer->signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
+  /*
+if( layer->get_processor() && layer->get_processor()->get_par() ) {
+  PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( layer->get_processor()->get_par()->get_config_ui() );
+  if( ui ) ui->set_editor( editor );
+}
+   */
+  std::cout<<"LayerWidget::on_button_add_group(): submitting image update request..."<<std::endl;
+  update();
+  std::cout<<"LayerWidget::on_button_add_group(): image update request submitted"<<std::endl;
+
+  layer_views[page]->unselect_all();
+  select_row( layer->get_id() );
+
+  PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
+  if( ui ) {
+    PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+    if( gui && gui->get_frame() ) {
+      controls_group.add_control( layer, gui );
+      gui->open();
+    }
+    controls_group.show_all_children();
+  }
   //dialog->update();
   dialog->open();
 }
@@ -1623,6 +1693,7 @@ void PF::LayerWidget::on_switch_page(_GtkNotebookPage* page, guint page_num)
 #endif
 {
   int layer_id = get_selected_layer_id();
+  on_selection_changed();
 #ifndef NDEBUG
   std::cout<<"LayerWidget::on_switch_page( "<<page_num<<" ) called."<<std::endl;
   std::cout<<"Selected layer id: "<<layer_id<<std::endl;
