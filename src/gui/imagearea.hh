@@ -248,9 +248,9 @@ public:
     int old_id = edited_layer;
     edited_layer = id;
     if( old_id != edited_layer ) {
-      //update( NULL );
-      if( get_pipeline() && get_pipeline()->get_image() )
-        get_pipeline()->get_image()->update();
+      ////update( NULL );
+      //if( get_pipeline() && get_pipeline()->get_image() )
+      //  get_pipeline()->get_image()->update();
     }
   }
   int get_edited_layer() { return edited_layer; }

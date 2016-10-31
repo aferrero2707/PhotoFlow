@@ -388,7 +388,8 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
   treeView(&(e->get_layer_widget())),
   editor( e ),
   layers( NULL ),
-  map_flag( is_map )
+  map_flag( is_map ),
+  tree_modified(true)
 {
   treeModel = PF::LayerTreeModel::create();
   treeView.set_model(treeModel);
@@ -432,6 +433,8 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
 
   treeModel->signal_dnd_done.
     connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_idle_cb) );
+  treeModel->signal_dnd_done.
+    connect( sigc::mem_fun(*this, &PF::LayerTree::set_tree_modified) );
 
   add( treeView );
 
@@ -577,6 +580,12 @@ void PF::LayerTree::update_model_idle_cb()
 
 void PF::LayerTree::update_model()
 {
+  std::cout<<"LayerTree::update_model(): get_tree_modified()="<<get_tree_modified()<<std::endl;
+  if( get_tree_modified() == false )
+    return;
+
+  tree_modified = false;
+
   //std::cout<<"LayerTree::update_model() called"<<std::endl;
   treeModel->clear();
   std::list<PF::Layer*>::iterator li;

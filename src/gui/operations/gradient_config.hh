@@ -70,6 +70,7 @@ namespace PF {
     GradientConfigGUI( Layer* l );
     void switch_curve();
     void do_update();
+    bool has_editing_mode() { return true; }
 
     bool pointer_press_event( int button, double x, double y, int mod_key );
     bool pointer_release_event( int button, double x, double y, int mod_key );

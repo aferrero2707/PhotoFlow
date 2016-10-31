@@ -332,13 +332,12 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonShowActive.signal_clicked().connect( sigc::bind( sigc::mem_fun(imageArea,
 								       &PF::ImageArea::set_display_merged), false) );
   //set_position( get_allocation().get_width()-200 );
-
+  */
   layersWidget.signal_active_layer_changed.connect( sigc::mem_fun(imageArea,
-								  &PF::ImageArea::set_active_layer) );
+								  &PF::ImageArea::set_edited_layer) );
 
   layersWidget.signal_active_layer_changed.connect( sigc::mem_fun(this,
 								  &PF::ImageEditor::set_active_layer) );
-  */
 
   //imageArea_eventBox.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
   //main_panel.set_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
@@ -642,7 +641,7 @@ void PF::ImageEditor::build_image()
   int level = 0;
   pipeline->set_level( level );
   imageArea->set_shrink_factor( 1 );
-  layersWidget.update();
+  layersWidget.update(true);
   std::cout<<"ImageEditor::open_image(): updating image"<<std::endl;
   image->set_loaded( false );
   image->update();
@@ -905,7 +904,7 @@ void PF::ImageEditor::set_active_layer( int id )
   active_layer = NULL;
   if( image )
     active_layer = image->get_layer_manager().get_layer( id );
-  //std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
+  std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
   if( old_active != active_layer ) {
     /*
     if( old_active &&

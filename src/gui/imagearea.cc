@@ -406,7 +406,7 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
     return current_pxbuf;
   }
 
-  //std::cout<<"ImageArea::modify_preview() called. edited_layer="<<edited_layer<<std::endl;
+  std::cout<<"ImageArea::modify_preview() called. edited_layer="<<edited_layer<<std::endl;
   if( edited_layer >= 0 ) {
     PF::Image* image = get_pipeline()->get_image();
     if( image ) {
