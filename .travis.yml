@@ -1,6 +1,31 @@
-language: php
-php:
-  - 5.5
-  - 5.4
-  - hhvm
-script: phpunit Test.php
+language: cpp
+
+compiler:
+    - g++
+
+sudo: required
+
+dist: trusty
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y
+          automake gtk-doc-tools
+          gobject-introspection
+          libfftw3-dev libjpeg-turbo8-dev
+          libpng12-dev libwebp-dev libtiff4-dev libxml2-dev
+          swig libmagick++-dev bc
+          libcfitsio3-dev libgsl0-dev libmatio-dev
+          liborc-0.4-dev liblcms2-dev libpoppler-glib-dev
+          librsvg2-dev libgif-dev
+          libpango1.0-dev libgsf-1-dev libopenslide-dev
+          python-dev python-gi-dev libgirepository1.0-dev
+
+before_script:
+  - ./autogen.sh
+    --disable-dependency-tracking
+    --with-jpeg-includes=$JPEG/include
+    --with-jpeg-libraries=$JPEG/lib
+  - make -j$JOBS -s V=0
+script:
+  - make -Ctest -j$JOBS -s V=0 VERBOSE=1 check
