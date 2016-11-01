@@ -1,47 +1,6 @@
-language: cpp
-compiler:
-  - gcc
-sudo: false
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - boost-latest
-    packages:
-      - gcc-4.8
-      - g++-4.8
-      - libboost-filesystem1.55-dev
-      - libboost-program-options1.55-dev
-      - libboost-regex1.55-dev
-      - libboost-date-time1.55-dev
-      - libboost-thread1.55-dev
-      - libboost-log1.55-dev
-      - libboost-locale1.55-dev
-      - libboost-chrono1.55-dev
-
-before_install:
-  # Use a predefined install location; cppcheck requires the cfg location is defined at compile-time.
-  - mkdir -p $USERDIR
-  # grab a pre-built cmake 3.2.3
-  - wget https://s3.amazonaws.com/kylo-pl-bucket/cmake-3.2.3-Linux-x86_64.tar.gz
-  - tar xzvf cmake-3.2.3-Linux-x86_64.tar.gz --strip 1 -C $USERDIR
-  # grab a released leatherman tarball
-  - wget https://github.com/puppetlabs/leatherman/releases/download/${LEATHERMAN_VERSION}/leatherman.tar.gz
-  - tar xzvf leatherman.tar.gz -C $USERDIR
-
-script:
-  - ./.travis_target.sh
-
-env:
-  global:
-    - USERDIR=/tmp/userdir
-    - PYTHONUSERBASE=$USERDIR
-    - PATH=$USERDIR/bin:$PATH
-    - LD_LIBRARY_PATH=$USERDIR/lib:$LD_LIBRARY_PATH
-    - LEATHERMAN_VERSION=0.7.1
-  matrix:
-    - TRAVIS_TARGET=DEBUG
-    - TRAVIS_TARGET=RELEASE
-
-notifications:
-  email: false
+language: php
+php:
+  - 5.5
+  - 5.4
+  - hhvm
+script: phpunit Test.php
