@@ -1,31 +1,50 @@
 language: cpp
-
 compiler:
-    - g++
-
-sudo: required
-
-dist: trusty
+  - gcc
+sudo: false
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - boost-latest
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - libboost-filesystem1.55-dev
+      - libboost-program-options1.55-dev
+      - libboost-regex1.55-dev
+      - libboost-date-time1.55-dev
+      - libboost-thread1.55-dev
+      - libboost-log1.55-dev
+      - libboost-locale1.55-dev
+      - libboost-chrono1.55-dev
 
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y
-          automake gtk-doc-tools
-          gobject-introspection
-          libfftw3-dev libjpeg-turbo8-dev
-          libpng12-dev libwebp-dev libtiff4-dev libxml2-dev
-          swig libmagick++-dev bc
-          libcfitsio3-dev libgsl0-dev libmatio-dev
-          liborc-0.4-dev liblcms2-dev libpoppler-glib-dev
-          librsvg2-dev libgif-dev
-          libpango1.0-dev libgsf-1-dev libopenslide-dev
-          python-dev python-gi-dev libgirepository1.0-dev
+  # Use a predefined install location; cppcheck requires the cfg location is defined at compile-time.
+  - mkdir -p $USERDIR
+  # grab a pre-built cmake 3.2.3
+  - wget https://s3.amazonaws.com/kylo-pl-bucket/cmake-3.2.3-Linux-x86_64.tar.gz
+  - tar xzvf cmake-3.2.3-Linux-x86_64.tar.gz --strip 1 -C $USERDIR
+  # grab a released leatherman tarball
+  - wget https://github.com/puppetlabs/leatherman/releases/download/${LEATHERMAN_VERSION}/leatherman.tar.gz
+  - tar xzvf leatherman.tar.gz -C $USERDIR
 
-before_script:
-  - ./autogen.sh
-    --disable-dependency-tracking
-    --with-jpeg-includes=$JPEG/include
-    --with-jpeg-libraries=$JPEG/lib
-  - make -j$JOBS -s V=0
 script:
-  - make -Ctest -j$JOBS -s V=0 VERBOSE=1 check
+  - ./.travis_target.sh
+
+env:
+  global:
+    - USERDIR=/tmp/userdir
+    - PYTHONUSERBASE=$USERDIR
+    - PATH=$USERDIR/bin:$PATH
+    - LD_LIBRARY_PATH=$USERDIR/lib:$LD_LIBRARY_PATH
+    - LEATHERMAN_VERSION=0.7.1
+  matrix:
+    - TRAVIS_TARGET=DOXYGEN
+    - TRAVIS_TARGET=CPPLINT
+    - TRAVIS_TARGET=CPPCHECK
+    - TRAVIS_TARGET=RELEASE
+    - TRAVIS_TARGET=DEBUG
+
+notifications:
+  email: false
