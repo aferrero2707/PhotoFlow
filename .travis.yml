@@ -1,4 +1,4 @@
-language: generic
+language: cpp
 
 compiler:
     - gcc
@@ -39,5 +39,3 @@ before_script:
 
 script:
     - scons
-    - nosetests --with-doctest lib
-    - tests/run_all_basic_tests.sh
