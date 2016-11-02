@@ -54,6 +54,7 @@ addons:
       - libpangoft2-1.0-0
       - libglib2.0-dev
       - libglibmm-2.4-dev
+      - libgtkmm-2.4-dev
 
 
 before_script:
