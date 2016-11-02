@@ -45,6 +45,10 @@ addons:
       - libpango1.0-dev
       - python-dev
       - libgtk2.0-dev
+      - libfftw3-dev
+      - libexiv2-dev
+      - libgexiv2-dev
+      
 
 
 before_script:
