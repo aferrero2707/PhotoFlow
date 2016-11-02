@@ -77,4 +77,4 @@ before_script:
     - sudo rm -fr PhotoFlow
 
 script:
-    - bash -ex appimage/appimage.sh
+    - bash appimage/appimage.sh

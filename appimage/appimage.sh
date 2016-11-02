@@ -94,7 +94,7 @@ VERSION=git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}.glibc$GLIBC_NEEDED
 ########################################################################
 
 find usr/ -type f -exec sed -i -e 's|/usr|././|g' {} \;
-find usr/ -type f -exec sed -i -e 's@././/bin/env@/usr/bin/env@g' {} \;
+find usr/ -type f -exec sed -i -e 's|/app|././|g' {} \;
 
 ########################################################################
 # AppDir complete
