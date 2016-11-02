@@ -48,7 +48,12 @@ addons:
       - libfftw3-dev
       - libexiv2-dev
       - libgexiv2-dev
-      
+      - libsigc++-2.0-dev
+      - libpixman1-dev
+      - libpango1.0-dev
+      - libpangoft2-1.0-0
+      - libglib2.0-dev
+      - libglibmm-2.4-dev
 
 
 before_script:
