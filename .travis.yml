@@ -55,7 +55,7 @@ addons:
       - libglib2.0-dev
       - libglibmm-2.4-dev
       - libgtkmm-2.4-dev
-      - libpigixml-dev
+      - libpugixml-dev
 
 
 before_script:
