@@ -66,12 +66,12 @@ before_script:
     - cd libvips
     - ./autogen.sh
     - FLAGS="-O2 -msse4.2 -ffast-math -ftree-vectorize" CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS} -fpermissive" ./configure --prefix=/app --disable-gtk-doc --disable-gtk-doc-html --disable-introspection --enable-debug=no --without-python --without-magick --without-libwebp --enable-pyvips8=no --enable-shared=yes --enable-static=no
-    - make -j$JOBS
+    - make -j2
     - sudo make install
     - cd ..
     - rm -rf libvips
     - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DINSTALL_PREFIX=/app -DBUNDLED_LENSFUN=ON ..
-    - make -j$JOBS
+    - make -j2
     - sudo make install
     - cd ..
     - sudo rm -fr PhotoFlow
