@@ -49,7 +49,7 @@ addons:
       - libexiv2-dev
       - libgexiv2-dev
       - libsigc++-2.0-dev
-      - libpixman1-dev
+      - libpixman-1-dev
       - libpango1.0-dev
       - libpangoft2-1.0-0
       - libglib2.0-dev
