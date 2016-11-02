@@ -44,7 +44,7 @@ addons:
       - libgif-dev
       - libpango1.0-dev
       - python-dev
-      - libgtk-2.0-dev
+      - libgtk2.0-dev
 
 
 before_script:
