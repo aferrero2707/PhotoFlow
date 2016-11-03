@@ -82,7 +82,7 @@ static gboolean config_update_cb (PF::OperationConfigGUI * config)
 PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring& title, bool chsel ):
   PF::OperationConfigUI(layer),
   editor( NULL ),
-  blendSelector( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH ),
+  blendSelector( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH, 60 ),
   blendSelector2( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH ),
   intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   intensitySlider2( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),

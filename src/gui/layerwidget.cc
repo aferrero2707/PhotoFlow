@@ -1168,7 +1168,7 @@ void PF::LayerWidget::insert_preset( std::string filename )
 
   layer_views[page]->set_tree_modified();
 
-  #ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::add_layer(): layer_views.size()="<<layer_views.size()<<std::endl;
 #endif
 
@@ -1515,7 +1515,7 @@ if( layer->get_processor() && layer->get_processor()->get_par() ) {
   std::cout<<"LayerWidget::on_button_add_group(): calling image->get_layer_manager().modified()"<<std::endl;
   image->get_layer_manager().modified();
 
-/*
+  /*
   layer_views[page]->unselect_all();
   select_row( layer->get_id() );
 

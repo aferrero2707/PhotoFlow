@@ -110,19 +110,19 @@ PF::HueSaturationConfigGUI::HueSaturationConfigGUI( PF::Layer* layer ):
   featherRadiusSlider( this, "feather_radius", _("radius "), 1, 0, 1000000, 1, 5, 1),
   mask_invert( this, "invert_mask", _("invert mask"), false )
 {
-  controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK, 4 );
+  controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK, 0 );
   //controlsBox.pack_start( brightness2Slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( sep1, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( contrastSlider, Gtk::PACK_SHRINK, 4 );
+  controlsBox.pack_start( contrastSlider, Gtk::PACK_SHRINK, 0 );
   //controlsBox.pack_start( contrast2Slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( sep2, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( saturationSlider, Gtk::PACK_SHRINK, 4 );
+  controlsBox.pack_start( saturationSlider, Gtk::PACK_SHRINK, 0 );
   //controlsBox.pack_start( saturation2Slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( sep3, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( hueSlider, Gtk::PACK_SHRINK, 4 );
+  controlsBox.pack_start( hueSlider, Gtk::PACK_SHRINK, 0 );
   //controlsBox.pack_start( hue2Slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( sep4, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( gammaSlider, Gtk::PACK_SHRINK, 4 );
+  controlsBox.pack_start( gammaSlider, Gtk::PACK_SHRINK, 0 );
 
   curves_nb[0].append_page( hueHeq_box, _("H curve") );
   curves_nb[0].append_page( hueSeq_box, _("S curve") );

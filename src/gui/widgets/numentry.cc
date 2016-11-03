@@ -39,6 +39,7 @@ button_step_down(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-
 digits(1), inhibited(false)
 {
   pack_start( entry, Gtk::PACK_SHRINK );
+  //entry.set_size_request(50,50);
   //pack_start( button_box, Gtk::PACK_SHRINK );
 
   //button_step_up.add( step_up );

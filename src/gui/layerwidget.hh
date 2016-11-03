@@ -127,8 +127,6 @@ public:
   void insert_preset( std::string filename );
   void remove_layers();
 
-
-
   void update( bool force_rebuild=false ) {
 #ifndef NDEBUG
     std::cout<<"LayerWidget::update() called."<<std::endl;

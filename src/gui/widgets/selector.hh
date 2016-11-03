@@ -59,8 +59,8 @@ namespace PF {
     Glib::RefPtr<Gtk::ListStore> model;
 
   public:
-    Selector(OperationConfigGUI* dialog, std::string pname, std::string l, int val);
-    Selector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val);
+    Selector(OperationConfigGUI* dialog, std::string pname, std::string l, int val, int width=0);
+    Selector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val, int width=0);
 
     ~Selector() {}
 
