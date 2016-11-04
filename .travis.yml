@@ -3,10 +3,10 @@ language: cpp
 osx_image: xcode7.3
 env:
         - PYTHON=/usr/local/bin/python
-        - JPEG=/usr/local/opt/mozjpeg
-        - PKG_CONFIG_PATH=/usr/local/opt/libffi/lib/pkgconfig
-        - JOBS="`sysctl -n hw.ncpu`"
-        - PATH="/usr/local/opt/ccache/libexec:$PATH"
+          JPEG=/usr/local/opt/mozjpeg
+          PKG_CONFIG_PATH=/usr/local/opt/libffi/lib/pkgconfig
+          JOBS="`sysctl -n hw.ncpu`"
+          PATH="/usr/local/opt/ccache/libexec:$PATH"
 cache: ccache
 before_install:
         - brew tap homebrew/science
