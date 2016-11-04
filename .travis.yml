@@ -23,7 +23,7 @@ before_install:
           pango libgsf openslide
           librsvg giflib openexr
           python pygobject3
-          vips gtkmm
+          vips gexiv2 gtkmm
 
 before_script:
   - cd build
