@@ -364,7 +364,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
       gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
       inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
       inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-      outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
+      outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1, 80 ),
       outProfOpenButton(Gtk::Stock::OPEN),
       ignore_temp_tint_change( false )
 {

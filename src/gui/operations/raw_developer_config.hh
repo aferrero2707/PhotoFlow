@@ -43,11 +43,11 @@ class WBSelector: public Selector
   std::string maker, model;
 public:
   WBSelector(OperationConfigGUI* dialog, std::string pname, std::string l, int val):
-    Selector( dialog, pname, l, val )
+    Selector( dialog, pname, l, val, 100 )
   {
   }
   WBSelector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val):
-    Selector( dialog, processor, pname, l, val )
+    Selector( dialog, processor, pname, l, val, 100 )
   {
   }
 
