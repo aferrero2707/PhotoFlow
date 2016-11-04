@@ -26,10 +26,8 @@ before_install:
           vips gtkmm
 
 before_script:
-  - ./autogen.sh
-    --disable-dependency-tracking
-    --with-jpeg-includes=$JPEG/include
-    --with-jpeg-libraries=$JPEG/lib
-  - make -j$JOBS -s V=0
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DINSTALL_PREFIX=/usr -DBUNDLED_LENSFUN=ON ..
+  - make -j2
 script:
-  - make -Ctest -j$JOBS -s V=0 VERBOSE=1 check
+  - make -j2 check
