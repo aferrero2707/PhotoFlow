@@ -14,6 +14,16 @@ dtdir=$HOME/Source/dt-git/darktable
 cd "$wd"
 
 rm -rf src/external/rawspeed
+
+echo "cp $dtdir/cmake/modules/CheckCompilerFlagAndEnableIt.cmake cmake/modules"
+cp "$dtdir/cmake/modules/CheckCompilerFlagAndEnableIt.cmake" cmake/modules
+
+echo "cp $dtdir/cmake/modules/CheckCCompilerFlagAndEnableIt.cmake cmake/modules"
+cp "$dtdir/cmake/modules/CheckCCompilerFlagAndEnableIt.cmake" cmake/modules 
+
+echo "cp $dtdir/cmake/modules/CheckCXXCompilerFlagAndEnableIt.cmake cmake/modules"
+cp "$dtdir/cmake/modules/CheckCXXCompilerFlagAndEnableIt.cmake" cmake/modules 
+
 cp -a "$dtdir/src/external/rawspeed" src/external
 cp "$dtdir/src/external/adobe_coeff.c" "$dtdir/src/external/wb_presets.c" src/dt/external
 cp "$dtdir/src/common/colormatrices.c" src/dt/common
@@ -26,7 +36,7 @@ sed -i .bak 's/TRUE/(boolean)TRUE/g' src/external/rawspeed/RawSpeed/DngDecoderSl
 sed -i .bak 's/return true/return (boolean)TRUE/g' src/external/rawspeed/RawSpeed/X3fDecoder.cpp
 sed -i .bak 's/return false/return (boolean)FALSE/g' src/external/rawspeed/RawSpeed/X3fDecoder.cpp
 #rm -f src/external/rawspeed/RawSpeed/DngDecoderSlices.cpp.bak
-sed -i .bak 's%darktable%share/photoflow%g' src/external/rawspeed/CMakeLists.txt
+sed -i .bak 's%darktable%photoflow%g' src/external/rawspeed/CMakeLists.txt
 #rm -f src/external/rawspeed/CMakeLists.txt.bak
 
 rm -rf /tmp/dt-git
