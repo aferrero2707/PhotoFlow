@@ -23,11 +23,21 @@ before_install:
           pango libgsf openslide
           librsvg giflib openexr
           python pygobject3
-          vips gexiv2 gtkmm
+          gexiv2 gtkmm
 
 before_script:
   - cd build
+  - git clone -b v8.4.2 --depth 1 https://github.com/jcupitt/libvips.git libvips
+  - cd libvips
+  - ./autogen.sh
+    --disable-dependency-tracking
+    --with-jpeg-includes=$JPEG/include
+    --with-jpeg-libraries=$JPEG/lib
+  - make -j$JOBS -s V=0
+  - make install
+  - cd ..
+  - rm -rf libvips
   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DINSTALL_PREFIX=/usr -DBUNDLED_LENSFUN=ON ..
   - make -j2
 script:
-  - make -j2 check
+  - make install
