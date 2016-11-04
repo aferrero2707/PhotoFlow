@@ -589,11 +589,14 @@ PF::RawImage::~RawImage()
 VipsImage* PF::RawImage::get_image(unsigned int& level)
 {
   if( level == 0 ) {
-    GType type = vips_image_get_typeof(image, PF_META_EXIF_NAME );
-    if( type ) {
-      //std::cout<<"RawImage::get_image(): exif_custom_data found in image("<<image<<")"<<std::endl;
-      //print_exif();
-    } else std::cout<<"RawImage::get_image(): exif_custom_data not found in image("<<image<<")"<<std::endl;
+    std::cout<<"RawImage::get_image(): checking exif_custom_data for image("<<image<<")"<<std::endl;
+    if( image ) {
+      GType type = vips_image_get_typeof(image, PF_META_EXIF_NAME );
+      if( type ) {
+        //std::cout<<"RawImage::get_image(): exif_custom_data found in image("<<image<<")"<<std::endl;
+        //print_exif();
+      } else std::cout<<"RawImage::get_image(): exif_custom_data not found in image("<<image<<")"<<std::endl;
+    }
     /*
 #ifdef DO_WARNINGS
 #warning "RawImage::get_image(): refreshing of exif metadata needed. This is not normal!"
