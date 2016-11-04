@@ -23,7 +23,7 @@ before_install:
           pango libgsf openslide
           librsvg giflib openexr
           python pygobject3
-          gexiv2 gtkmm
+          gexiv2 gtkmm gtk-mac-integration
 
 before_script:
   - cd build
@@ -37,7 +37,7 @@ before_script:
   - make install
   - cd ..
   - rm -rf libvips
-  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DINSTALL_PREFIX=/usr -DBUNDLED_LENSFUN=ON ..
+  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DINSTALL_PREFIX=/usr/local -DBUNDLED_LENSFUN=ON ..
   - make -j2
 script:
   - make install
