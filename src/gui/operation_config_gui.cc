@@ -394,6 +394,7 @@ void PF::OperationConfigGUI::expand()
       par->set_editing_flag( true );
       //get_layer()->get_image()->update();
     }
+    update();
     //std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
   }
 }
@@ -790,7 +791,7 @@ void PF::OperationConfigGUI::update_buttons()
 
 void PF::OperationConfigGUI::init()
 {
-  //std::cout<<"OperationConfigGUI::init(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
+  std::cout<<"OperationConfigGUI::init(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
   update_buttons();
   for( unsigned int i = 0; i < controls.size(); i++ )
     controls[i]->init();
