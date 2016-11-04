@@ -26,6 +26,7 @@ before_install:
           gexiv2 gtkmm gtk-mac-integration
 
 before_script:
+  - brew info gtk-mac-integrationz
   - cd build
   - git clone -b v8.4.2 --depth 1 https://github.com/jcupitt/libvips.git libvips
   - cd libvips
