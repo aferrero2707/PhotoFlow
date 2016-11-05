@@ -69,6 +69,7 @@ function transfer() {
   rm -f $tmpfile; 
 }
 
+pwd
 transfer ../icon/photoflow.png
 
 exit
