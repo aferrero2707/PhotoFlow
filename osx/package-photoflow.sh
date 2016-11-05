@@ -91,6 +91,8 @@ export PATH=$HOME/.local/bin:$PATH
 rm -rf $dst 
 rm -rf $(pwd)/PhotoFlow/photoflow-$version.app
 
+ls $(pwd)/PhotoFlow
+
 PKG_CONFIG_PATH=$src/lib/pkgconfig PATH=$src/bin:$PATH JHBUILD_PREFIX=$src basedir=$(pwd)/PhotoFlow gtk-mac-bundler photoflow.bundle
 
 
