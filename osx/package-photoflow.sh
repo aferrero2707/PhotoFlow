@@ -16,8 +16,8 @@ dst=$(pwd)/PhotoFlow/photoflow.app
 dst_prefix=$dst/Contents/Resources
 
 # jhbuild installs to here
-src=~/gtk/inst
-#src=/usr/local
+#src=~/gtk/inst
+src=/usr/local
 
 function escape () {
         # escape slashes
