@@ -84,6 +84,7 @@ patch Info.plist
 git clone git://git.gnome.org/gtk-mac-bundler
 cd gtk-mac-bundler
 make install
+cd ..
 
 export PATH=$HOME/.local/bin:$PATH
 
