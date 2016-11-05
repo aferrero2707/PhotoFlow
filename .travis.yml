@@ -67,6 +67,8 @@ before_install:
         - brew info  gtkmm 
         - brew reinstall  gtk-mac-integration
         - brew info  gtk-mac-integration
+        - brew reinstall  pugixm
+        - brew info  pugixml
           
 
 before_script:
