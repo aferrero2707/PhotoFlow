@@ -92,6 +92,8 @@ rm -rf $dst
 rm -rf $(pwd)/PhotoFlow/photoflow-$version.app
 
 ls $(pwd)/PhotoFlow
+mkdir -p $HOME/gtk/inst/lib
+cp charset.alias $HOME/gtk/inst/lib
 
 PKG_CONFIG_PATH=$src/lib/pkgconfig PATH=$src/bin:$PATH JHBUILD_PREFIX=$src basedir=$(pwd)/PhotoFlow gtk-mac-bundler photoflow.bundle
 
