@@ -60,7 +60,7 @@ function transfer() {
 #  if tty -s; then 
     basefile=$(basename "$1" | sed -e 's/[^a-zA-Z0-9._-]/-/g'); 
     echo "curl --progress-bar --upload-file \"$1\" \"https://transfer.sh/$basefile\""
-    curl --verbose --progress-bar --upload-file "$1" "https://transfer.sh/$basefile" >> $tmpfile;   
+    curl --progress-bar --upload-file "$1" "https://transfer.sh/$basefile" >> $tmpfile;   
 #  else 
 #    echo "curl --progress-bar --upload-file \"-\" \"https://transfer.sh/$1\""
 #    curl --verbose --progress-bar --upload-file "-" "https://transfer.sh/$1" >> $tmpfile ; 
