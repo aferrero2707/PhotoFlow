@@ -70,9 +70,8 @@ function transfer() {
 }
 
 pwd
-transfer ../icons/photoflow.png
-
-exit
+#transfer ../icons/photoflow.png
+#exit
 
 
 cp Info.plist.in Info.plist
