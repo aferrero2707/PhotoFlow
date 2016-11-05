@@ -13,7 +13,7 @@ before_install:
         - brew update
         - brew install ccache pkg-config automake
         - brew install --ignore-dependencies gtk-doc
-        - brew reinstall
+        - brew reinstall --verbose
           gobject-introspection
           fftw mozjpeg libexif
           libpng webp libtiff
