@@ -23,7 +23,9 @@ before_install:
           pango libgsf openslide
           librsvg giflib openexr
           python pygobject3
-          gexiv2 gtkmm gtk-mac-integration
+          gexiv2 gtk+ pygtk gtkmm 
+          gtk-mac-integration
+          
 
 before_script:
   - brew info gtk-mac-integration
