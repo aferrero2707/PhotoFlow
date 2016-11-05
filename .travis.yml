@@ -69,22 +69,24 @@ before_install:
         - brew info  gtk-mac-integration
         - brew reinstall  pugixml
         - brew info  pugixml
+        - brew reinstall  vips
+        - brew info  vips
           
 
 before_script:
-  - brew info gtk-mac-integration
+#  - brew info gtk-mac-integration
   - cd build
-  - git clone -b v8.4.2 --depth 1 https://github.com/jcupitt/libvips.git libvips
-  - cd libvips
-  - ./autogen.sh
-    --disable-dependency-tracking
-    --with-jpeg-includes=$JPEG/include
-    --with-jpeg-libraries=$JPEG/lib
-  - make -j$JOBS -s V=0
-  - make install
-  - cd ..
-  - rm -rf libvips
-  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DINSTALL_PREFIX=/usr/local -DBUNDLED_LENSFUN=ON ..
-  - make -j1 VERBOSE=1
+#  - git clone -b v8.4.2 --depth 1 https://github.com/jcupitt/libvips.git libvips
+#  - cd libvips
+#  - ./autogen.sh
+#    --disable-dependency-tracking
+#    --with-jpeg-includes=$JPEG/include
+#    --with-jpeg-libraries=$JPEG/lib
+#  - make -j$JOBS -s V=0
+#  - make install
+#  - cd ..
+#  - rm -rf libvips
+#  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local #-DINSTALL_PREFIX=/usr/local -DBUNDLED_LENSFUN=ON ..
+#  - make -j1 VERBOSE=1
 script:
   - make install
