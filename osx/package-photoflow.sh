@@ -1,6 +1,6 @@
 #!/bin/bash
 
-long_version="$(date +%Y%m%d)"
+long_version="-${TRAVIS_BRANCH}-$(date +%Y%m%d)-${TRAVIS_COMMIT}"
 #long_version="0.2.7"
 version=${long_version}
 year=`date +%Y`
@@ -16,7 +16,8 @@ dst=$(pwd)/PhotoFlow/photoflow.app
 dst_prefix=$dst/Contents/Resources
 
 # jhbuild installs to here
-src=~/gtk/inst
+#src=~/gtk/inst
+src=/usr/local
 
 function escape () {
         # escape slashes
@@ -51,6 +52,12 @@ function patch () {
 
 	sed -f script.sed -i "" "$1"
 }
+
+# transfer.sh
+function transfer() { if [ $# -eq 0 ]; then echo "No arguments specified. Usage:\necho transfer /tmp/test.md\ncat /tmp/test.md | transfer test.md"; return 1; fi 
+tmpfile=$( mktemp -t transferXXX ); if tty -s; then basefile=$(basename "$1" | sed -e 's/[^a-zA-Z0-9._-]/-/g'); curl --progress-bar --upload-file "$1" "https://transfer.sh/$basefile" >> $tmpfile; else curl --progress-bar --upload-file "-" "https://transfer.sh/$1" >> $tmpfile ; fi; cat $tmpfile; rm -f $tmpfile; }
+
+
 
 cp Info.plist.in Info.plist
 new
@@ -93,3 +100,10 @@ size_MB=$((size_MB+5))
 echo "hdiutil create -megabytes ${size_MB} -srcfolder $(pwd)/PhotoFlow -o $(pwd)/photoflow-$version.app.dmg"
 hdiutil create -megabytes ${size_MB} -verbose -srcfolder $(pwd)/PhotoFlow -o $(pwd)/photoflow-$version.app.dmg
 echo built $(pwd)/photoflow-$version.app.dmg
+
+########################################################################
+# Upload the AppDir
+########################################################################
+
+transfer $(pwd)/photoflow-$version.app.dmg
+echo "DMG has been uploaded to the URL above; use something like GitHub Releases for permanent storage"
