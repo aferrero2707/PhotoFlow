@@ -89,5 +89,8 @@ before_script:
   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local -DINSTALL_PREFIX=/usr/local -DBUNDLED_LENSFUN=ON ..
 #  - travis_wait 50 make -j2
   - make -j1
-script:
   - make install
+  - cd ..
+script:
+  - cd osx
+  - ./package-photoflow.sh
