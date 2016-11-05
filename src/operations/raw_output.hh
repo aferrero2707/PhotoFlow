@@ -557,7 +557,7 @@ enum hlreco_mode_t {
           }
         }
       }
-      delete line; delete line2;
+      delete[] line; delete[] line2;
     }
   };
 
