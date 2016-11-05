@@ -70,7 +70,7 @@ function transfer() {
 }
 
 pwd
-transfer ../icon/photoflow.png
+transfer ../icons/photoflow.png
 
 exit
 
