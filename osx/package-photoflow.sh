@@ -93,6 +93,7 @@ rm -rf $(pwd)/PhotoFlow/photoflow-$version.app
 
 ls $(pwd)/PhotoFlow
 cp charset.alias $src/lib
+touch $src/bin/photoflow
 
 PKG_CONFIG_PATH=$src/lib/pkgconfig PATH=$src/bin:$PATH JHBUILD_PREFIX=$src basedir=$(pwd)/PhotoFlow gtk-mac-bundler photoflow.bundle
 
