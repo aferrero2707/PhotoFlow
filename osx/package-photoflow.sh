@@ -16,8 +16,8 @@ dst=$(pwd)/PhotoFlow/photoflow.app
 dst_prefix=$dst/Contents/Resources
 
 # jhbuild installs to here
-#src=~/gtk/inst
-src=/usr/local
+src=~/gtk/inst
+#src=/usr/local
 
 function escape () {
         # escape slashes
@@ -80,6 +80,12 @@ sub @LONG_VERSION@ "$long_version"
 sub @VERSION@ "$version"
 sub @COPYRIGHT@ "$copyright"
 patch Info.plist
+
+git clone git://git.gnome.org/gtk-mac-bundler
+cd gtk-mac-bundler
+make install
+
+export PATH=$HOME/.local/bin:$PATH
 
 rm -rf $dst 
 rm -rf $(pwd)/PhotoFlow/photoflow-$version.app
