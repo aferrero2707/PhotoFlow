@@ -255,7 +255,7 @@ PF::MainWindow::~MainWindow()
 void PF::MainWindow::on_map()
 {
   Gtk::Window::on_map();
-#ifdef __APPLE__
+#ifdef ___APPLE__
   Glib::RefPtr< Gdk::Screen > screen = get_screen();
   Glib::RefPtr< Gdk::Window > window = get_window();
   cairo_current_display_id = screen->get_monitor_at_window(window);
