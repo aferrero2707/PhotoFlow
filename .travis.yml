@@ -86,7 +86,7 @@ before_script:
 #  - make install
 #  - cd ..
 #  - rm -rf libvips
-#  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local #-DINSTALL_PREFIX=/usr/local -DBUNDLED_LENSFUN=ON ..
-#  - make -j1 VERBOSE=1
+  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DINSTALL_PREFIX=/usr/local -DBUNDLED_LENSFUN=ON ..
+  - make -j2
 script:
   - make install

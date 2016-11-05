@@ -188,7 +188,7 @@ render(VipsRegion** ir, int n, int in_first,
       }
     }
 
-    delete valvec;
+    delete[] valvec;
     break;
   }
   case GRADIENT_RADIAL:
