@@ -61,10 +61,10 @@
   </binary>
 
   <!-- The pango modules.
-  -->
   <binary>
      ${prefix}/lib/pango/1.8.0/modules/*.so
   </binary>
+  -->
 
   <!-- Copy in GTK+ theme engines and print backends. Note the use of the
        "${pkg:module:variable}" macro, which evaluates to a pkg-config
