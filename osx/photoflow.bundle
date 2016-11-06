@@ -62,7 +62,7 @@
 
   <!-- The pango modules.
   <binary>
-     ${prefix}/lib/pango/1.8.0/modules/*.so
+     ${prefix}/lib/pango/${pkg:pango:pango_module_version}/modules/*.so
   </binary>
   -->
 
