@@ -9,68 +9,6 @@ env:
           PATH="/usr/local/opt/ccache/libexec:$PATH"
 cache: ccache
 before_install:
-        - brew tap homebrew/science
-        - brew update
-        - brew install ccache pkg-config automake
-        - brew install --ignore-dependencies gtk-doc
-        - brew reinstall   gobject-introspection
-        - brew reinstall   gobject-introspection
-        - brew reinstall   fftw
-        - brew info   fftw
-        - brew reinstall  mozjpeg
-        - brew info  mozjpeg
-        - brew reinstall  libexif
-        - brew info  libexif
-        - brew reinstall   libpng
-        - brew info   libpng
-        - brew reinstall  webp
-        - brew info  webp
-        - brew reinstall  libtiff
-        - brew info  libtiff
-        - brew reinstall   swig
-        - brew info   swig
-        - brew reinstall  imagemagick
-        - brew info  imagemagick
-        - brew reinstall   cfitsio
-        - brew info   cfitsio
-        - brew reinstall  libmatio
-        - brew info  libmatio
-        - brew reinstall   orc
-        - brew info   orc
-        - brew reinstall  little-cms2
-        - brew info  little-cms2
-        - brew reinstall  poppler
-        - brew info  poppler
-        - brew reinstall   pango
-        - brew info   pango
-        - brew reinstall  libgsf
-        - brew info  libgsf
-        - brew reinstall  openslide
-        - brew info  openslide
-        - brew reinstall   librsvg
-        - brew info   librsvg
-        - brew reinstall  giflib
-        - brew info  giflib
-        - brew reinstall  openexr
-        - brew info  openexr
-        - brew reinstall   python
-        - brew info   python
-        - brew reinstall  pygobject3
-        - brew info  pygobject3
-        - brew reinstall   gexiv2
-        - brew info   gexiv2
-        - brew reinstall  gtk+
-        - brew info  gtk+
-        - brew reinstall  pygtk
-        - brew info  pygtk
-        - brew reinstall  gtkmm 
-        - brew info  gtkmm 
-        - brew reinstall  gtk-mac-integration
-        - brew info  gtk-mac-integration
-        - brew reinstall  pugixml
-        - brew info  pugixml
-        - brew reinstall  vips
-        - brew info  vips
           
 install:
 # - stty rows 40 columns 80 # set rows, columns in terminal
@@ -81,6 +19,7 @@ install:
  - export PATH=/opt/local/bin:$PATH
  - sudo port -v selfupdate
  - sudo port install gtkmm 
+ - sudo port install vips
 
 before_script:
 #  - brew info gtk-mac-integration
