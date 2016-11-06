@@ -96,7 +96,14 @@ cp charset.alias $src/lib
 touch $src/bin/photoflow
 mkdir -p /usr/local/share/photoflow
 
-PKG_CONFIG_PATH=$src/lib/pkgconfig PATH=$src/bin:$PATH JHBUILD_PREFIX=$src basedir=$(pwd)/PhotoFlow gtk-mac-bundler photoflow.bundle
+mkdir /usr/local.app
+cp -RL /usr/local/bin /usr/local.app
+cp -RL /usr/local/lib /usr/local.app
+cp -RL /usr/local/etc /usr/local.app
+cp -RL /usr/local/share /usr/local.app
+
+src2=/usr/local.app
+PKG_CONFIG_PATH=$src/lib/pkgconfig PATH=$src/bin:$PATH JHBUILD_PREFIX=$src2 basedir=$(pwd)/PhotoFlow gtk-mac-bundler photoflow.bundle
 
 
 ln -s /Applications $(pwd)/PhotoFlow
