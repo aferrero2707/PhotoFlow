@@ -72,6 +72,15 @@ before_install:
         - brew reinstall  vips
         - brew info  vips
           
+install:
+# - stty rows 40 columns 80 # set rows, columns in terminal
+ - wget https://distfiles.macports.org/MacPorts/MacPorts-2.3.3.tar.bz2
+ - tar xvfj MacPorts-2.3.3.tar.bz2
+ - cd MacPorts-2.3.3
+ - ./configure && sudo make install
+ - export PATH=/opt/local/bin:$PATH
+ - sudo port -v selfupdate
+ - sudo port install gtkmm 
 
 before_script:
 #  - brew info gtk-mac-integration
@@ -88,9 +97,9 @@ before_script:
 #  - rm -rf libvips
   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local -DINSTALL_PREFIX=/usr/local -DBUNDLED_LENSFUN=ON ..
 #  - travis_wait 50 make -j2
-  - make -j1 VERBOSE=1
-  - make install
+#  - make -j1 VERBOSE=1
+#  - make install
   - cd ..
 script:
   - cd osx
-  - ./package-photoflow.sh
+#  - ./package-photoflow.sh
