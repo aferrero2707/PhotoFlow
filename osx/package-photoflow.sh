@@ -108,6 +108,7 @@ PKG_CONFIG_PATH=$src/lib/pkgconfig PATH=$src/bin:$PATH JHBUILD_PREFIX=$src2 base
 
 ln -s /Applications $(pwd)/PhotoFlow
 
+
 #cp $src/lib/pango/1.8.0/modules.cache $dst_prefix/lib/pango/1.8.0
 #new
 #sub "$src/lib/pango/1.8.0/modules/" ""
