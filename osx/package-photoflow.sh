@@ -94,15 +94,15 @@ rm -rf $(pwd)/PhotoFlow/photoflow-$version.app
 ls $(pwd)/PhotoFlow
 cp charset.alias $src/lib
 touch $src/bin/photoflow
-mkdir -p /usr/local/share/photoflow
+mkdir -p $src/share/photoflow
 
-mkdir /usr/local.app
-cp -RL /usr/local/bin /usr/local.app
-cp -RL /usr/local/lib /usr/local.app
-cp -RL /usr/local/etc /usr/local.app
-cp -RL /usr/local/share /usr/local.app
+src2=$HOME/inst
+mkdir -p $src2
+cp -RL /usr/local/bin $src2
+cp -RL /usr/local/lib $src2
+cp -RL /usr/local/etc $src2
+cp -RL /usr/local/share $src2
 
-src2=/usr/local.app
 PKG_CONFIG_PATH=$src/lib/pkgconfig PATH=$src/bin:$PATH JHBUILD_PREFIX=$src2 basedir=$(pwd)/PhotoFlow gtk-mac-bundler photoflow.bundle
 
 
