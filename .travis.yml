@@ -20,7 +20,8 @@ install:
  - ./configure &&  sudo make install
  - export PATH=/opt/local/bin:$PATH
  - sudo port -v selfupdate
- - sudo port install gtkmm 
+ - sudo port install gtk2 +bundle
+ - sudo port install gtkmm +quartz
  - sudo port install vips
  - sudo port install gexiv2
  - sudo port install pugixml
