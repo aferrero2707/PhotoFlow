@@ -24,6 +24,7 @@ install:
  - sudo port install vips
  - sudo port install gexiv2
  - sudo port install pugixml
+ - sudo port install gtk-osx-application-gtk2 
 
 before_script:
 #  - brew info gtk-mac-integration
