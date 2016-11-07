@@ -27,7 +27,7 @@ install:
 
 before_script:
 #  - brew info gtk-mac-integration
-  - cd $TRAVIS_BUILD_DIR/build
+  - cd ${TRAVIS_BUILD_DIR}/build
 #  - git clone -b v8.4.2 --depth 1 https://github.com/jcupitt/libvips.git libvips
 #  - cd libvips
 #  - ./autogen.sh
