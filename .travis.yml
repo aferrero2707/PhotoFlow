@@ -11,7 +11,9 @@ cache: ccache
 before_install:
           
 install:
- - stty rows 40 columns 80 # set rows, columns in terminal
+# - stty rows 40 columns 80 # set rows, columns in terminal
+ - export COLUMNS=80
+ - export ROWS=40
  - wget https://distfiles.macports.org/MacPorts/MacPorts-2.3.3.tar.bz2
  - tar xvfj MacPorts-2.3.3.tar.bz2
  - cd MacPorts-2.3.3
