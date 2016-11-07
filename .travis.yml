@@ -19,6 +19,7 @@ install:
  - cd MacPorts-2.3.3
  - ./configure &&  sudo make install
  - export PATH=/opt/local/bin:$PATH
+ - sudo mv /usr/local /usr/_local
  - sudo port -v selfupdate
  - sudo port install gtk2 -x11 +quartz +bundle
  - sudo port install gtkmm -x11 +quartz
@@ -26,6 +27,7 @@ install:
  - sudo port install gexiv2
  - sudo port install pugixml
  - sudo port install gtk-osx-application-gtk2 
+ - sudo mv /usr/_local /usr/local
 
 before_script:
 #  - brew info gtk-mac-integration
