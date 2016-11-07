@@ -27,7 +27,7 @@ install:
 
 before_script:
 #  - brew info gtk-mac-integration
-  - cd build
+  - cd $TRAVIS_BUILD_DIR/build
 #  - git clone -b v8.4.2 --depth 1 https://github.com/jcupitt/libvips.git libvips
 #  - cd libvips
 #  - ./autogen.sh
@@ -41,8 +41,9 @@ before_script:
   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local -DINSTALL_PREFIX=/usr/local -DBUNDLED_LENSFUN=ON ..
 #  - travis_wait 50 make -j2
 #  - make -j1 VERBOSE=1
-#  - make install
+  - make -j2
+  - make install
   - cd ..
 script:
   - cd osx
-#  - ./package-photoflow.sh
+  - ./package-photoflow.sh
