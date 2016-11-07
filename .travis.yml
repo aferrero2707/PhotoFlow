@@ -29,10 +29,10 @@ install:
  - sudo port -v selfupdate
  - sudo port install gtk2 -x11 +quartz +bundle
  - sudo port install gtkmm -x11 +quartz
- - sudo port install vips
- - sudo port install gexiv2
- - sudo port install pugixml
- - sudo port install gtk-osx-application-gtk2 
+ #- sudo port install vips
+ #- sudo port install gexiv2
+ #- sudo port install pugixml
+ #- sudo port install gtk-osx-application-gtk2 
  - sudo mv /usr/local/_lib /usr/local/lib
  - sudo mv /usr/local/_include /usr/local/include
 
