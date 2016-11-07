@@ -14,12 +14,13 @@ install:
 # - stty rows 40 columns 80 # set rows, columns in terminal
  - export COLUMNS=80
  - export ROWS=40
+ - sudo mv /usr/local/lib /usr/local/_lib
+ - sudo mv /usr/local/include /usr/local/_include
  - wget https://distfiles.macports.org/MacPorts/MacPorts-2.3.3.tar.bz2
  - tar xvfj MacPorts-2.3.3.tar.bz2
  - cd MacPorts-2.3.3
  - ./configure &&  sudo make install
  - export PATH=/opt/local/bin:$PATH
- - sudo mv /usr/local /usr/_local
  - sudo port -v selfupdate
  - sudo port install gtk2 -x11 +quartz +bundle
  - sudo port install gtkmm -x11 +quartz
@@ -27,7 +28,8 @@ install:
  - sudo port install gexiv2
  - sudo port install pugixml
  - sudo port install gtk-osx-application-gtk2 
- - sudo mv /usr/_local /usr/local
+ - sudo mv /usr/local/_lib /usr/local/lib
+ - sudo mv /usr/local/_include /usr/local/include
 
 before_script:
 #  - brew info gtk-mac-integration
