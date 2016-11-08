@@ -57,5 +57,5 @@ before_script:
 #  - make install
   - cd ..
 script:
-  - cd osx
+  - cd osx 
 #  - ./package-photoflow.sh
