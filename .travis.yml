@@ -35,7 +35,9 @@ install:
  - sudo port install gnome-common
  - sudo port install docbook-xml
  - sudo port install perl5
- - sudo port install gtk2 -x11 +quartz +bundle
+ - sudo port install gtk-doc
+ - sudo port install cairo
+ #- sudo port install gtk2 -x11 +quartz +bundle
  #- sudo port install gtkmm -x11 +quartz
  #- sudo port install vips
  #- sudo port install gexiv2
