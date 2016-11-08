@@ -27,38 +27,32 @@
 
  */
 
-#include "buffer.hh"
-#include "../base/processor.hh"
 
-//#include "../vips/vips_layer.h"
+#ifndef PF_IMAGE_HIERARCHY__HH
+#define PF_IMAGE_HIERARCHY__HH
 
-VipsImage* PF::BufferPar::build(std::vector<VipsImage*>& in, int first, 
-				VipsImage* imap, VipsImage* omap, 
-				unsigned int& level)
+#include <vips/vips.h>
+#include <vector>
+
+namespace PF
 {
-  if( in.size() != 1 ) {
-    std::cerr<<"PF::BufferPar::build(): wrong number of input images: "
-	     <<in.size()<<" (should be 1)"<<std::endl;
-    return NULL;
-  } 
+  struct IHElement
+  {
+    VipsImage* image;
+    int padding;
+  };
 
-#ifndef NDEBUG    
-  std::cout<<"BufferPar::build(): type="<<get_type()<<"  format="<<get_format()<<std::endl;
+  struct IHArray
+  {
+    unsigned int size;
+    IHElement* vec;
+  };
+
+  void image_hierarchy_free(IHArray* array);
+  IHArray* image_hierarchy_new();
+  void image_hierarchy_add_element(IHArray* array, VipsImage* el, int padding);
+  void image_hierarchy_fill(VipsImage* dest, int padding, std::vector<VipsImage*>& parents);
+  int image_hierarchy_compare_images(VipsImage* i0, VipsImage* i1);
+}
+
 #endif
-
-  //set_image_hints( in[0] );
-  //VipsImage* out = PF::OpParBase::build( in, first, NULL, NULL, level );
-  //return out;
-
-  g_object_ref( in[0] );
-  return in[0];
-}
-
-
-
-
-
-PF::ProcessorBase* PF::new_buffer()
-{
-  return( new PF::Processor<PF::BufferPar,PF::BufferProc>() );
-}

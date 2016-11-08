@@ -28,6 +28,7 @@
 */
 
 #include "blender.hh"
+#include "../base/image_hierarchy.hh"
 #include "../base/processor.hh"
 #include "../base/new_operation.hh"
 
@@ -238,9 +239,20 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       adjust_geom( omap_in, &omap2,
                    background->Xsize, background->Ysize, level );
     }
+
+    int ih_comp = image_hierarchy_compare_images(foreground2, background);
+    //ih_comp = 0;
+    std::cout<<"PF::BlenderPar::build(): ih_comp="<<ih_comp<<std::endl;
+
     std::vector<VipsImage*> in_;
-    in_.push_back( foreground2 );
-    in_.push_back( background );
+    if( ih_comp == 1 ) {
+      in_.push_back( background ); bgd_id = 0;
+      in_.push_back( foreground2 ); fgd_id = 1;
+    } else {
+    in_.push_back( foreground2 ); fgd_id = 0;
+    in_.push_back( background ); bgd_id = 1;
+    }
+
 #ifndef NDEBUG
     std::cout<<"background("<<background<<")->Xsize="<<background->Xsize<<"    background->Ysize="<<background->Ysize<<std::endl;
     std::cout<<"foreground("<<foreground<<")->Xsize="<<foreground->Xsize<<"    foreground->Ysize="<<foreground->Ysize<<std::endl;

@@ -65,9 +65,24 @@ namespace PF
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
-		VipsRegion* imap, VipsRegion* omap, 
-		VipsRegion* oreg, OpParBase* par)
+        VipsRegion* imap, VipsRegion* omap,
+        VipsRegion* oreg, OpParBase* par)
     {
+      Rect *r = &oreg->valid;
+      int width = r->width;
+      int height = r->height;
+      int line_size = sizeof(T) * width * oreg->im->Bands; //layer->in_all[0]->Bands;
+      T* p;
+      T* pout;
+      int y;
+
+      std::cout<<"BufferProc::render(): region: "<<r->width<<","<<r->height<<"+"<<r->left<<"+"<<r->top<<std::endl;
+
+      for( y = 0; y < height; y++ ) {
+        p = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+        memcpy( pout, p, line_size );
+      }
     }
   };
 
