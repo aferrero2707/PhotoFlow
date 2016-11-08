@@ -11,7 +11,7 @@ env:
 cache:
   ccache: true
   directories:
-    - /opt/local
+    - $HOME/macports
 
 before_install:
           
@@ -24,8 +24,8 @@ install:
  - wget https://distfiles.macports.org/MacPorts/MacPorts-2.3.3.tar.bz2
  - tar xvfj MacPorts-2.3.3.tar.bz2
  - cd MacPorts-2.3.3
- - ./configure &&  sudo make install
- - export PATH=/opt/local/bin:$PATH
+ - ./configure --prefix=$HOME/macports && sudo make install
+ - export PATH=$HOME/macports/bin:$PATH
  - sudo port -v selfupdate
  - sudo port install gtk2 -x11 +quartz +bundle
  - sudo port install gtkmm -x11 +quartz
