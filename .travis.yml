@@ -33,7 +33,8 @@ install:
  - sudo port -v selfupdate
  - sudo port install libpng
  - sudo port install gnome-common
- - sudo port install gtk2 -x11 +quartz +bundle
+ - sudo port install docbook-xml
+ #- sudo port install gtk2 -x11 +quartz +bundle
  #- sudo port install gtkmm -x11 +quartz
  #- sudo port install vips
  #- sudo port install gexiv2
