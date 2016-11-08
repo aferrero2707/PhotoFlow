@@ -249,8 +249,8 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       in_.push_back( background ); bgd_id = 0;
       in_.push_back( foreground2 ); fgd_id = 1;
     } else {
-    in_.push_back( foreground2 ); fgd_id = 0;
-    in_.push_back( background ); bgd_id = 1;
+      in_.push_back( foreground2 ); fgd_id = 0;
+      in_.push_back( background ); bgd_id = 1;
     }
 
 #ifndef NDEBUG
@@ -263,6 +263,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
 
     set_image_hints( background );
     outnew = PF::OpParBase::build( in_, first, NULL, omap2, level );
+    PF::image_hierarchy_fill( outnew, 0, in_ );
     if( foreground2 != foreground ) PF_UNREF( foreground2, "BlenderPar::build(): foreground2 unref" );
     if( omap2 != omap ) PF_UNREF( omap2, "BlenderPar::build(): omap2 unref" );
   } else if( (background != NULL) && (foreground != NULL) && is_passthrough ) {
