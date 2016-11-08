@@ -22,14 +22,18 @@ install:
  - export ROWS=40
  - sudo mv /usr/local/lib /usr/local/_lib
  - sudo mv /usr/local/include /usr/local/_include
- - wget https://distfiles.macports.org/MacPorts/MacPorts-2.3.3.tar.bz2
- - tar xvfj MacPorts-2.3.3.tar.bz2
- - cd MacPorts-2.3.3
- - ./configure --prefix=$HOME/macports && sudo make install
+ - if [ ! -e $HOME/macports/bin/port ]; then
+     wget https://distfiles.macports.org/MacPorts/MacPorts-2.3.3.tar.bz2
+     tar xvfj MacPorts-2.3.3.tar.bz2
+     cd MacPorts-2.3.3
+     ./configure --prefix=$HOME/macports && sudo make install
+     cd ..
+     fi
  - export PATH=$HOME/macports/bin:$PATH
  - sudo port -v selfupdate
  - sudo port install libpng
- - sudo port install gtk2 -x11 +quartz +bundle
+ - sudo port install gnome-common
+ #- sudo port install gtk2 -x11 +quartz +bundle
  #- sudo port install gtkmm -x11 +quartz
  #- sudo port install vips
  #- sudo port install gexiv2
