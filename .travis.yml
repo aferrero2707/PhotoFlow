@@ -7,6 +7,7 @@ env:
           PKG_CONFIG_PATH=/usr/local/opt/libffi/lib/pkgconfig
           JOBS="`sysctl -n hw.ncpu`"
           PATH="/usr/local/opt/ccache/libexec:$PATH"
+          CASHER_TIME_OUT=600
 
 cache:
   ccache: true
