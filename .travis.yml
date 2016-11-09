@@ -51,7 +51,7 @@ install:
  - sudo port install jpeg
  - sudo port install tiff
  - sudo port install pango
- #- sudo port install gtk2 -x11 +quartz +bundle
+ - sudo port install gtk2 -x11 +quartz +bundle
  #- sudo port install gtkmm -x11 +quartz
  #- sudo port install vips
  #- sudo port install gexiv2
