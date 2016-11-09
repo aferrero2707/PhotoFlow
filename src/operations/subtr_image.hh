@@ -74,7 +74,7 @@ public:
   }
   
   float get_blendFactor() { return (float)blendFactor; }
-  float set_blendFactor(float a) { blendFactor=a; }
+  void set_blendFactor(float a) { blendFactor=a; }
 
 
 };
