@@ -56,7 +56,7 @@ install:
  - sudo port install  jasper
  - sudo port install  shared-mime-info
  - sudo port install  intltool
- #- sudo port install gtk2 -x11 +quartz +bundle
+ - sudo port install gtk2 -x11 +quartz +bundle
  #- sudo port install gtkmm -x11 +quartz
  #- sudo port install vips
  #- sudo port install gexiv2
