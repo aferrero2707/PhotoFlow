@@ -42,6 +42,9 @@ install:
  - sudo port install libffi
  - sudo port install readline
  - sudo port install boost
+ - sudo port install openssl
+ - sudo port install libtool
+ - sudo port install source-highlight
  #- sudo port install 
  #- sudo port install gtk-doc
  #- sudo port install cairo
