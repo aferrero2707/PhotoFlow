@@ -48,6 +48,9 @@ install:
  #- sudo port install 
  - sudo port install gtk-doc
  - sudo port install cairo
+ - sudo port install jpeg
+ - sudo port install tiff
+ - sudo port install pango
  - sudo port install atk
  - sudo port install  gdk-pixbuf2
  - sudo port install  jasper
