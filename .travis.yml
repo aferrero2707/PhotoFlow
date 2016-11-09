@@ -29,7 +29,7 @@ install:
      cd MacPorts-2.3.3;
      ./configure --prefix=$HOME/macports && sudo make install;
      cd ..;
-     sudo port -v selfupdate
+     sudo port -v selfupdate;
      fi
  - sudo port install libpng
  - sudo port install gnome-common
