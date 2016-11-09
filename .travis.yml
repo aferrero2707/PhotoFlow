@@ -38,6 +38,11 @@ install:
  - sudo port install libxml2
  - sudo port install sqlite3
  - sudo port install python27
+ - sudo port install glib2
+ - sudo port install libffi
+ - sudo port install readline
+ - sudo port install boost
+ #- sudo port install 
  #- sudo port install gtk-doc
  #- sudo port install cairo
  #- sudo port install gtk2 -x11 +quartz +bundle
