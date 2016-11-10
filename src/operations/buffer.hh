@@ -30,6 +30,7 @@
 #ifndef VIPS_BUFFER_H
 #define VIPS_BUFFER_H
 
+#include <string.h>
 #include <string>
 
 #include "../base/operation.hh"
