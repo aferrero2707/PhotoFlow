@@ -57,7 +57,11 @@ addons:
       - libgtkmm-2.4-dev
       - libpugixml-dev
 
-
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous)$/
+    
 before_script:
     - cd build
     - export PKG_CONFIG_PATH=/app/lib/pkgconfig:${PKG_CONFIG_PATH}
