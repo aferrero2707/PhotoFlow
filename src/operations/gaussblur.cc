@@ -36,7 +36,8 @@
 PF::GaussBlurPar::GaussBlurPar(): 
   OpParBase(),
   radius("radius",this,5),
-	blur_mode("blur_mode",this,PF_BLUR_FAST,"FAST","Fast")
+	blur_mode("blur_mode",this,PF_BLUR_FAST,"FAST","Fast"),
+	padding(0)
 {
 	blur_mode.add_enum_value(PF_BLUR_FAST,"FAST","Fast");
 	blur_mode.add_enum_value(PF_BLUR_EXACT,"ACCURATE","Accurate");
@@ -130,13 +131,16 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
     }
     PF_UNREF( blurred, "GaussBlurPar::build(): blurred unref" );
 
-    std::vector<VipsImage*> parents; parents.push_back(srcimg);
-    PF::image_hierarchy_fill( cropped, gpar->get_padding(), parents );
+    padding = gpar->get_padding();
+
+    //std::vector<VipsImage*> parents; parents.push_back(srcimg);
+    //PF::image_hierarchy_fill( cropped, gpar->get_padding(), parents );
 
 		return cropped;
 	}
 	
-
+  // reset padding value, in case the gaussian blur operation fails;
+  padding = 0;
   if( srcimg ) {
     int size = (srcimg->Xsize > srcimg->Ysize) ? srcimg->Xsize : srcimg->Ysize;
   
@@ -175,6 +179,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
         return NULL;
       }
       */
+      std::cout<<"GaussBlurPar::build(): convsep mask size="<<mask->Xsize<<" "<<mask->Ysize<<std::endl;
       result = vips_convsep( srcimg, &tmp, mask,
 			     "precision", precision,
 			     NULL );
@@ -189,6 +194,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 					return NULL;
 				}
         PF_UNREF( tmp, "PF::GaussBlurPar::build(): tmp unref" );
+        padding = mask->Xsize;
 			}
 			//blurred = tmp;
     }

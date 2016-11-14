@@ -246,9 +246,11 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
 
     std::vector<VipsImage*> in_;
     if( ih_comp == 1 ) {
+      std::cout<<"PF::BlenderPar::build(): processing background before foreground"<<std::endl;
       in_.push_back( background ); bgd_id = 0;
       in_.push_back( foreground2 ); fgd_id = 1;
     } else {
+      std::cout<<"PF::BlenderPar::build(): processing foreground before background"<<std::endl;
       in_.push_back( foreground2 ); fgd_id = 0;
       in_.push_back( background ); bgd_id = 1;
     }

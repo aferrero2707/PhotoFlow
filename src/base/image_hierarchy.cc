@@ -86,7 +86,8 @@ void PF::image_hierarchy_fill(VipsImage* dest, int padding, std::vector<VipsImag
     PF::IHArray* parray;
     size_t length;
 
-    std::cout<<"image_hierarchy_fill(): i="<<i<<" array="<<array<<std::endl;
+    std::cout<<"image_hierarchy_fill(): i="<<i<<" array="<<array<<" parents[i]="<<parents[i]<<std::endl;
+    if( !parents[i] ) continue;
     if( vips_image_get_blob( parents[i], "pf-image-hierarchy", (void**)&parray, &length) ) {
       std::cout<<"image_hierarchy_fill(): parent image "<<i<<" does not have hierarchy information"<<std::endl;
       std::cout<<"image_hierarchy_fill(): i="<<i<<" array="<<array<<std::endl;
@@ -141,13 +142,25 @@ int PF::image_hierarchy_compare_images(VipsImage* i0, VipsImage* i1)
   if( parray1 == NULL ) return 0;
   if( length != sizeof(PF::IHArray) ) return 0;
 
+  std::cout<<"image_hierarchy_compare_images(): parray0->size="<<parray0->size
+      <<"  parray1->size="<<parray1->size<<std::endl;
+
+  if( parray0->size==0 && parray1->size!=0 ) return 1;
+  if( parray1->size==0 && parray0->size!=0 ) return 0;
+
   int padding_tot0 = 0;
   int padding_tot1 = 0;
 
   for( unsigned int i = 0; i < parray0->size; i++ ) {
     for( unsigned int j = 0; j < parray1->size; j++ ) {
+      std::cout<<"image_hierarchy_compare_images(): i="<<i<<" j="<<j
+          <<"  parray0->vec[i].image="<<parray0->vec[i].image
+          <<"  parray1->vec[j].image="<<parray1->vec[j].image<<std::endl;
       if( parray0->vec[i].image != parray1->vec[j].image )
         continue;
+      std::cout<<"image_hierarchy_compare_images(): i="<<i<<" j="<<j
+          <<"  parray0->vec[i].padding="<<parray0->vec[i].padding
+          <<"  parray1->vec[j].padding="<<parray1->vec[j].padding<<std::endl;
       if( parray0->vec[i].padding > parray1->vec[j].padding )
         padding_tot0 += parray0->vec[i].padding - parray1->vec[j].padding;
       else

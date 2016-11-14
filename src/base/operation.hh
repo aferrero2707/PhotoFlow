@@ -294,6 +294,8 @@ namespace PF
     virtual bool needs_caching() { return false; }
     virtual bool init_hidden() { return false; }
 
+    virtual int get_padding() { return 0; }
+
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }
 
@@ -305,6 +307,8 @@ namespace PF
         VipsImage* imap, VipsImage* omap, unsigned int& level);
     std::vector<VipsImage*> build_many_internal(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap, unsigned int& level);
+    virtual void fill_image_hierarchy(std::vector<VipsImage*>& in,
+        VipsImage* imap, VipsImage* omap, std::vector<VipsImage*>& out);
 
 
     PropertyBase* get_property(std::string name);
