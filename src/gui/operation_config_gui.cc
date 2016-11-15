@@ -375,7 +375,7 @@ void PF::OperationConfigGUI::on_unmap()
 
 void PF::OperationConfigGUI::expand()
 {
-  //std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
+  std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
   if( controls_frame.get_parent() == NULL ) {
     //std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
     if( editor ) {
@@ -394,9 +394,11 @@ void PF::OperationConfigGUI::expand()
       par->set_editing_flag( true );
       //get_layer()->get_image()->update();
     }
-    update();
-    //std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
+    std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
   }
+  std::cout<<"OperationConfigGUI::expand(): calling update()"<<std::endl;
+  update();
+  std::cout<<"OperationConfigGUI::expand() finished."<<std::endl;
 }
 
 

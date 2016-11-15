@@ -337,7 +337,9 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
       snprintf(tstr,499,"PF::ImagePyramid::get_level(%d) level #%d (after write_to_memory)",level, (int)levels.size());
       PF_UNREF( out, tstr );
       in = vips_image_new_from_memory( mem_array, array_sz, width, height, img->Bands, img->BandFmt );
-      g_signal_connect( in, "postclose", G_CALLBACK(free_mem_array), mem_array );
+      std::cout<<"ImagePyramid: cache buffer loaded."<<std::endl;
+     g_signal_connect( in, "postclose", G_CALLBACK(free_mem_array), mem_array );
+     std::cout<<"ImagePyramid: postclose callback attached to cache buffer."<<std::endl;
     } else {
       sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
       fd = pf_mkstemp( fname );
