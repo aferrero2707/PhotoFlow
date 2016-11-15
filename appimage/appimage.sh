@@ -104,8 +104,12 @@ find usr/ -type f -exec sed -i -e 's|/app|././|g' {} \;
 cd .. # Go out of AppImage
 
 mkdir -p ../out/
+ARCH="x86_64"
 generate_appimage
 #generate_type2_appimage
+
+pwd
+ls ../out/*
 
 ########################################################################
 # Upload the AppDir
