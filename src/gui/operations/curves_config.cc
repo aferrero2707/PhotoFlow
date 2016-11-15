@@ -186,7 +186,7 @@ void PF::CurvesConfigGUI::activate_curve( PF::CurveEditor& curve )
       curvesBox.remove( KCurveEditor );
 
     if( curve.get_parent() != (&curvesBox) ) {
-      curvesBox.pack_start( curve, Gtk::PACK_SHRINK );
+      curvesBox.pack_start( curve, Gtk::PACK_EXPAND_PADDING );
       curve.show();
     }
   }
