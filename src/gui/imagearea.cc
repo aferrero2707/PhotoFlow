@@ -1167,9 +1167,14 @@ void PF::ImageArea::update( VipsRect* area )
 		//if( vips_shrink( outimg, &outimg2, 
 		//										 1.0d/shrink_factor, 1.0d/shrink_factor, NULL ) )
 //	return;
-			if( vips_affine( outimg, &outimg2, 
-											 shrink_factor, 0, 0, shrink_factor, NULL ) )
-				return;
+//    if( vips_affine( outimg, &outimg2,
+//                     shrink_factor, 0, 0, shrink_factor, NULL ) )
+//      return;
+    if( vips_reduce( outimg, &outimg2, 1.0/shrink_factor, 1.0/shrink_factor,
+        "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
+      std::cout<<std::endl<<std::endl<<"VIPS_REDUCE FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
+      return;
+    }
 			//std::cout<<"outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
 			PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
 			outimg = outimg2;

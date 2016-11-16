@@ -300,20 +300,28 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   VipsImage* in = levels.back().image;
   if( !in )
     return NULL;
+  VipsImage* fullres = in;
 
   int width = in->Xsize;
   int height = in->Ysize;
   int size = (width>height) ? width : height;
   int nbands = in->Bands;
+  double scale = 1;
 
   while( size > 256 ) {
+    VipsImage* out;
+    /*
     VipsImage* blurred;
     if( vips_gaussblur( in, &blurred, 0.7, NULL ) )
       return NULL;
-    VipsImage* out;
     if( vips_subsample( blurred, &out, 2, 2, NULL ) )
       return NULL;
     PF_UNREF( blurred, "ImagePyramid::get_level(): blurred unref" );
+    */
+    scale /= 2;
+    if( vips_resize( fullres, &out, scale, NULL) )
+      return NULL;
+    //PF_UNREF( in, "ImagePyramid::get_level(): in unref" );
 #ifndef NDEBUG
     std::cout<<"ImagePyramid::get_level("<<level<<") subsample in="<<in<<"  out="<<out<<std::endl;
 #endif
