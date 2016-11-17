@@ -580,7 +580,7 @@ void PF::LayerTree::update_model_idle_cb()
 
 void PF::LayerTree::update_model()
 {
-  std::cout<<"LayerTree::update_model(): get_tree_modified()="<<get_tree_modified()<<std::endl;
+  //std::cout<<"LayerTree::update_model(): get_tree_modified()="<<get_tree_modified()<<std::endl;
   if( get_tree_modified() == false )
     return;
 

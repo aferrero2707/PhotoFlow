@@ -751,7 +751,7 @@ void PF::OperationConfigGUI::on_layer_name_changed()
     get_layer()->set_name( nameEntry.get_text() );
     nameEntry2.set_text( nameEntry.get_text() );
     if( editor ) {
-      editor->get_layer_widget().update();
+      editor->get_layer_widget().update(true);
       int pos = nameEntry.get_position();
       nameEntry.grab_focus();
       nameEntry.select_region(0,0);
