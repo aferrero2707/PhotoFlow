@@ -94,4 +94,4 @@ after_success:
     #- wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
     #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
     - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-    - bash  ./upload.sh out/*
+    - bash  ./upload_rotate.sh out/*
