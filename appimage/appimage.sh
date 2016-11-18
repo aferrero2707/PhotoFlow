@@ -86,7 +86,7 @@ get_desktopintegration $LOWERAPP
 ########################################################################
 
 GLIBC_NEEDED=$(glibc_needed)
-VERSION=git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}.glibc$GLIBC_NEEDED
+VERSION=$(date +%Y%m%d)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}.glibc$GLIBC_NEEDED
 #VERSION=${RELEASE_VERSION}-glibc$GLIBC_NEEDED
 
 ########################################################################
