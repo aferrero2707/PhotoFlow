@@ -79,6 +79,8 @@ void PF::image_hierarchy_add_element(PF::IHArray* array, VipsImage* el, int padd
 
 void PF::image_hierarchy_fill(VipsImage* dest, int padding, std::vector<VipsImage*>& parents)
 {
+  if( !dest ) return;
+
   PF::IHArray* array = PF::image_hierarchy_new();
   std::cout<<"image_hierarchy_fill(): array="<<(void*)array<<" size="<<array->size<<std::endl;
 

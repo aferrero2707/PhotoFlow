@@ -349,7 +349,7 @@ void PF::OpParBase::fill_image_hierarchy(std::vector<VipsImage*>& in,
     if( is_dup ) continue;
 
     if( get_padding() > 0 ) {
-      std::cout<<"OpParBase::fill_image_hierarchy(): filling hierarchy with padding "<<get_padding()<<std::endl;
+      std::cout<<"OpParBase::fill_image_hierarchy(): filling hierarchy for image "<<i<<"("<<out[i]<<") with padding "<<get_padding()<<std::endl;
     }
     PF::image_hierarchy_fill( out[i], get_padding(), in );
     std::vector<VipsImage*> maps;
