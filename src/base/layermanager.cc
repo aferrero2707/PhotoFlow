@@ -1039,7 +1039,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       pipelinepar->import_settings( par );
 
       unsigned int level = pipeline->get_level();
-      newimgvec = pipelinepar->build_many( in, 0, imap, omap, level );
+      newimgvec = pipelinepar->build_many_internal( in, 0, imap, omap, level );
       newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
       //cs = PF::convert_colorspace( pipelinepar->get_interpretation() );
       //std::cout<<"  par: "<<pipelinepar<<std::endl;
@@ -1157,7 +1157,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 #endif
       unsigned int level = pipeline->get_level();
       pipelinepar->import_settings( par );
-      newimgvec = pipelinepar->build_many( in, 0, imap, omap, level );
+      newimgvec = pipelinepar->build_many_internal( in, 0, imap, omap, level );
       newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
 
       if( false && (newimg != NULL) && (newimgvec.size() == 1) && !image->is_loaded() && l->is_cached() &&
