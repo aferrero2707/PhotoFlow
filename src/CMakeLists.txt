@@ -211,7 +211,7 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc legacy/operations/*.cc)
 # so we do a custom dependency and pretend an imported librawsped.a so no other -l are
 # appended.
 #
-set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX})
+set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/share)
 add_library(rawspeed_static STATIC IMPORTED)
 set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
 # compile rawspeed

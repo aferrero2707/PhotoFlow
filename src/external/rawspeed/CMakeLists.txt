@@ -8,7 +8,7 @@ if(USE_XMLLINT)
 	)
 endif(USE_XMLLINT)
 
-install(FILES data/cameras.xml data/showcameras.xsl DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/share/photoflow/rawspeed)
+install(FILES data/cameras.xml data/showcameras.xsl DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/photoflow/rawspeed)
 
 FILE(GLOB RAWSPEED_SOURCES
         "RawSpeed/AriDecoder.cpp"
