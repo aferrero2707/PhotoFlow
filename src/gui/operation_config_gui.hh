@@ -201,6 +201,8 @@ public:
   virtual void show_help();
   virtual void close_config();
 
+  virtual bool has_editing_mode() { return false; }
+
   void on_layer_name_changed();
   void on_layer_name2_changed();
 

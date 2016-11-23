@@ -116,6 +116,8 @@ class LayerWidget;
 
     bool map_flag;
 
+    bool tree_modified;
+
     void update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l );
     void update_model(Gtk::TreeModel::Row parent_row);
 
@@ -143,6 +145,9 @@ class LayerWidget;
 
     bool is_map() { return map_flag; }
 
+    void set_tree_modified() { tree_modified = true; }
+    bool get_tree_modified() { return tree_modified; }
+
     //Image* get_image() { return image; }
     //void set_image(Image* img) { image = img; update_model(); }
 
@@ -156,6 +161,7 @@ class LayerWidget;
     std::list<Layer*>* get_layers() { return layers; }
     void set_layers( std::list<Layer*>* l ) {
       layers = l;
+      set_tree_modified();
       update_model();
     }
 

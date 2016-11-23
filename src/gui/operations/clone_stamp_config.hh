@@ -58,6 +58,9 @@ public:
 
   void open();
 
+  bool has_editing_mode() { return true; }
+
+
   unsigned int get_pen_size() { return 100; };
   float get_pen_opacity() { return 0.5; }
 

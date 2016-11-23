@@ -181,7 +181,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame_top_box_1_2.pack_start( frame_expander, Gtk::PACK_SHRINK, 5 );
   frame_top_box_1_1.pack_start( nameEntry, Gtk::PACK_EXPAND_WIDGET );
   //frame_top_box_1_2.pack_start( frame_box_1_padding, Gtk::PACK_EXPAND_WIDGET );
-  frame_top_box_1_1.pack_start( frame_close, Gtk::PACK_SHRINK, 5 );
+  //frame_top_box_1_1.pack_start( frame_close, Gtk::PACK_SHRINK, 5 );
 
   nameEntry.set_text( "layer name" );
 
@@ -394,7 +394,7 @@ void PF::OperationConfigGUI::on_unmap()
 
 void PF::OperationConfigGUI::expand()
 {
-  //std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
+  std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
   if( controls_frame.get_parent() == NULL ) {
     //std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
     if( editor ) {
@@ -411,9 +411,9 @@ void PF::OperationConfigGUI::expand()
     PF::OpParBase* par = get_par();
     if( par ) {
       par->set_editing_flag( true );
-      get_layer()->get_image()->update();
+      //get_layer()->get_image()->update();
     }
-    //std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
+    std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
   }
 }
 
@@ -425,15 +425,16 @@ void PF::OperationConfigGUI::collapse()
     frame_vbox.remove( controls_frame );
     frame_expander.set_active(false);
     //std::cout<<"OperationConfigGUI::collapse(): controls hidden"<<std::endl;
-    if( editor ) {
-      editor->set_active_layer( -1 );
-    }
+    //if( editor ) {
+    //  editor->set_active_layer( -1 );
+    //}
+  }
 
-    PF::OpParBase* par = get_par();
-    if( par ) {
-      par->set_editing_flag( false );
-      get_layer()->get_image()->update();
-    }
+  PF::OpParBase* par = get_par();
+  if( par ) {
+    std::cout<<"OperationConfigGUI::collapse(): resetting editing flag"<<std::endl;
+    par->set_editing_flag( false );
+    //get_layer()->get_image()->update();
   }
 }
 

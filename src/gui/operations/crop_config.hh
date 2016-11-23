@@ -76,6 +76,7 @@ public:
   bool has_preview() { return true; }
 
   void open();
+  bool has_editing_mode() { return true; }
 
   bool pointer_press_event( int button, double x, double y, int mod_key );
   bool pointer_release_event( int button, double x, double y, int mod_key );

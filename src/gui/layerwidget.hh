@@ -60,7 +60,7 @@ public:
   void update();
   void add_control(PF::Layer* layer, PF::OperationConfigGUI* control);
   void remove_control(PF::OperationConfigGUI* control);
-  void remove_all_controls();
+  bool remove_all_controls();
   void collapse_all();
   /**/
   //void set_controls( std::vector<Gtk::Frame*>& new_controls);
@@ -128,7 +128,7 @@ public:
   void insert_preset( std::string filename );
   void remove_layers();
 
-  void update() {
+  void update( bool force_rebuild=false ) {
 #ifndef NDEBUG
     std::cout<<"LayerWidget::update() called."<<std::endl;
     if( layer_views.size() > 0 )
@@ -139,6 +139,8 @@ public:
 #ifndef NDEBUG
       std::cout<<"LayerWidget::update() view #"<<i<<"  selected layer id="<<id<<std::endl;
 #endif
+      if( force_rebuild )
+        layer_views[i]->set_tree_modified();
       layer_views[i]->update_model();
       layer_views[i]->select_row( id );
     }
