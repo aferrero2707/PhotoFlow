@@ -317,23 +317,27 @@ public:
             line[x] = (cmsFloat32Number) (p[x] * 100.0);
             line[x+1] = (cmsFloat32Number) (p[x+1]*255.0 - 127.5);
             line[x+2] = (cmsFloat32Number) (p[x+2]*255.0 - 127.5);
-            if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+            if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
               std::cout<<"ConvertColorspace::render(): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<std::endl;
             }
           }
           cmsDoTransform( opar->get_transform(), line, pout, width );
-          if( r->left==0 && r->top==0 && y==0 ) {
+          if( false && r->left==0 && r->top==0 && y==0 ) {
             std::cout<<"ConvertColorspace::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
           }
         } else {
           cmsDoTransform( opar->get_transform(), p, pout, width );
+          if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+            std::cout<<"ConvertColorspace::render(): p=   "<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
+            std::cout<<"ConvertColorspace::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+          }
           if( opar->get_output_cs_type() == cmsSigLabData ) {
             for( x = 0; x < line_size; x+= 3 ) {
               pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
               pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 127.5) / 255.0);
               pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 127.5) / 255.0);
 
-              if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
                 std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
               }
             }

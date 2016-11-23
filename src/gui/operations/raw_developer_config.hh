@@ -43,11 +43,11 @@ class WBSelector: public Selector
   std::string maker, model;
 public:
   WBSelector(OperationConfigGUI* dialog, std::string pname, std::string l, int val):
-    Selector( dialog, pname, l, val )
+    Selector( dialog, pname, l, val, 100 )
   {
   }
   WBSelector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val):
-    Selector( dialog, processor, pname, l, val )
+    Selector( dialog, processor, pname, l, val, 100 )
   {
   }
 
@@ -77,9 +77,15 @@ public:
     WBSelector wbModeSelector;
     Slider wbTempSlider;
     Slider wbTintSlider;
-    Slider wbRedSlider;
-    Slider wbGreenSlider;
-    Slider wbBlueSlider;
+    //Slider wbRedSlider;
+    //Slider wbGreenSlider;
+    //Slider wbBlueSlider;
+    Slider* wbRedSliders[WB_LAST];
+    Slider* wbGreenSliders[WB_LAST];
+    Slider* wbBlueSliders[WB_LAST];
+    Gtk::VBox wbSliderBoxes[WB_LAST];
+    Gtk::VBox wbSliderBox;
+
     Slider wbRedCorrSlider;
     Slider wbGreenCorrSlider;
     Slider wbBlueCorrSlider;

@@ -93,6 +93,9 @@ namespace PF
     void set_caching( bool flag ) { caching_enabled = flag; }
 
     dcraw_data_t* get_image_data() {return image_data; }
+    RawPreprocessorPar* get_rawpreprocessor_par() {
+      return dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+    }
 
     wb_mode_t get_wb_mode();
     void get_wb(float* mul);

@@ -160,7 +160,8 @@ namespace PF
     WB_FLASH_AUTO,
     WB_EVENING_SUN,
     WB_UNDERWATER,
-    WB_BACK_AND_WHITE
+    WB_BACK_AND_WHITE,
+    WB_LAST
   };
 
 

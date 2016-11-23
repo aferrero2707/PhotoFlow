@@ -248,6 +248,15 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
       cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
       //cmsCloseProfile( cam_prof_temp );
+      /*
+      std::cout<<"profile colorants:"<<std::endl;
+      for(int i = 0, ci = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++, ci++) {
+          std::cout<<cam_profile->get_colorants()[ci]<<" ";
+        }
+        std::cout<<std::endl;
+      }
+      */
       break;
     }
     case PF::IN_PROF_ICC:

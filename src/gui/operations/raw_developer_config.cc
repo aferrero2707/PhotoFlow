@@ -332,9 +332,9 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
       wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
       wbTempSlider( this, "", _("temperature"), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
       wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
-      wbRedSlider( this, "wb_red", "Red mult.", 1, 0, 10, 0.05, 0.1, 1),
-      wbGreenSlider( this, "wb_green", "Green mult.", 1, 0, 10, 0.05, 0.1, 1),
-      wbBlueSlider( this, "wb_blue", "Blue mult.", 1, 0, 10, 0.05, 0.1, 1),
+      //wbRedSlider( this, "wb_red", "Red mult.", 1, 0, 10, 0.05, 0.1, 1),
+      //wbGreenSlider( this, "wb_green", "Green mult.", 1, 0, 10, 0.05, 0.1, 1),
+      //wbBlueSlider( this, "wb_blue", "Blue mult.", 1, 0, 10, 0.05, 0.1, 1),
       wbRedCorrSlider( this, "camwb_corr_red", "Red corr.", 1, 0, 10, 0.05, 0.1, 1),
       wbGreenCorrSlider( this, "camwb_corr_green", "Green corr.", 1, 0, 10, 0.05, 0.1, 1),
       wbBlueCorrSlider( this, "camwb_corr_blue", "Blue corr.", 1, 0, 10, 0.05, 0.1, 1),
@@ -364,9 +364,9 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
       gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
       inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
       inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-      outProfileModeSelector( this, "out_profile_mode", _("type: "), 1 ),
-      outProfileTypeSelector( this, "out_profile_type", _("gamut: "), 1 ),
-      outTRCTypeSelector( this, "out_trc_type", _("encoding: "), 1 ),
+      outProfileModeSelector( this, "out_profile_mode", _("type: "), 1, 80 ),
+      outProfileTypeSelector( this, "out_profile_type", _("gamut: "), 1, 80 ),
+      outTRCTypeSelector( this, "out_trc_type", _("encoding: "), 1, 80 ),
       outProfOpenButton(Gtk::Stock::OPEN),
       inProfFrame( _("camera profile") ),
       outProfFrame( _("working profile") ),
@@ -374,6 +374,8 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
       clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
       ignore_temp_tint_change( false )
 {
+  char tstr[100];
+
   wbControlsBox.pack_start( wbModeSelector, Gtk::PACK_SHRINK );
 
   wb_target_L_slider.set_passive( true );
@@ -387,12 +389,28 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
 
   wbControlsBox.pack_start( wbTempSlider, Gtk::PACK_SHRINK );
   wbControlsBox.pack_start( wbTintSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
+
+  for( unsigned int i = 0; i < PF::WB_LAST; i++ ) {
+    snprintf(tstr,99,"wb_red_%d", i);
+    wbRedSliders[i] = new PF::Slider( this, tstr, "red mult.", 1, 0, 10, 0.05, 0.1, 1);
+    snprintf(tstr,99,"wb_green_%d", i);
+    wbGreenSliders[i] = new PF::Slider( this, tstr, "green mult.", 1, 0, 10, 0.05, 0.1, 1);
+    snprintf(tstr,99,"wb_blue_%d", i);
+    wbBlueSliders[i] = new PF::Slider( this, tstr, "blue mult.", 1, 0, 10, 0.05, 0.1, 1);
+
+    wbSliderBoxes[i].pack_start(*wbRedSliders[i]);
+    wbSliderBoxes[i].pack_start(*wbGreenSliders[i]);
+    wbSliderBoxes[i].pack_start(*wbBlueSliders[i]);
+    wbSliderBox.pack_start( wbSliderBoxes[i], Gtk::PACK_SHRINK );
+    wbSliderBoxes[i].hide();
+  }
+  wbControlsBox.pack_start( wbSliderBox, Gtk::PACK_SHRINK );
 
   black_level_label_align.set( 0, 0.5, 0, 0 );
   white_level_label_align.set( 0, 0.5, 0, 0 );
@@ -535,7 +553,21 @@ void PF::RawDeveloperConfigGUI::temp_tint_changed()
     for( int i = 0; i < 3; i++ ) cam_mul[i] /= min_mul;
     std::cout<<"temp_tint_changed(): temp="<<temp<<"  tint="<<tint
         <<"  mul="<<cam_mul[0]<<","<<cam_mul[1]<<","<<cam_mul[2]<<std::endl;
-    switch( prop->get_enum_value().first ) {
+    int wb_id = prop->get_enum_value().first;
+    wbRedSliders[wb_id]->set_inhibit(true);
+    wbRedSliders[wb_id]->get_adjustment()->set_value(cam_mul[0]);
+    wbRedSliders[wb_id]->set_value();
+    wbRedSliders[wb_id]->set_inhibit(false);
+    wbGreenSliders[wb_id]->set_inhibit(true);
+    wbGreenSliders[wb_id]->get_adjustment()->set_value(cam_mul[1]);
+    wbGreenSliders[wb_id]->set_value();
+    wbGreenSliders[wb_id]->set_inhibit(false);
+    wbBlueSliders[wb_id]->set_inhibit(true);
+    wbBlueSliders[wb_id]->get_adjustment()->set_value(cam_mul[2]);
+    wbBlueSliders[wb_id]->set_value();
+    wbBlueSliders[wb_id]->set_inhibit(false);
+/*
+    switch( wb_id ) {
     case PF::WB_SPOT:
     case PF::WB_COLOR_SPOT:
       // In the spot WB case we directly set the WB multitpliers
@@ -543,7 +575,7 @@ void PF::RawDeveloperConfigGUI::temp_tint_changed()
       wbRedSlider.get_adjustment()->set_value(cam_mul[0]);
       wbRedSlider.set_value();
       wbRedSlider.set_inhibit(false);
-      wbGreenSlider.set_inhibit(true);
+      wbGreenSliders.set_inhibit(true);
       wbGreenSlider.get_adjustment()->set_value(cam_mul[1]);
       wbGreenSlider.set_value();
       wbGreenSlider.set_inhibit(false);
@@ -568,7 +600,7 @@ void PF::RawDeveloperConfigGUI::temp_tint_changed()
       wbBlueCorrSlider.set_inhibit(false);
       break;
     }
-
+*/
     get_layer()->get_image()->update();
   }
 }
@@ -601,6 +633,7 @@ void PF::RawDeveloperConfigGUI::do_update()
     if( inode && inode->image) {
       size_t blobsz;
       PF::exif_data_t* exif_data;
+
       if( !vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) &&
           blobsz == sizeof(PF::exif_data_t) ) {
         //char makermodel[1024];
@@ -610,12 +643,31 @@ void PF::RawDeveloperConfigGUI::do_update()
         maker = exif_data->camera_maker;
         model = exif_data->camera_model;
         wbModeSelector.set_maker_model( maker, model );
-        //std::cout<<"RawDeveloperConfigGUI::do_update(): maker="<<maker<<" model="<<model<<std::endl;
+        std::cout<<"RawDeveloperConfigGUI::do_update(): maker="<<maker<<" model="<<model<<std::endl;
 
         if( processor ) {
           PF::RawDeveloperPar* par2 =
               dynamic_cast<PF::RawDeveloperPar*>(processor->get_par());
           if( par2 ) {
+            // Initialize the WB coefficients from pipeline #0 the first time
+            // we update the widgets
+
+            PF::RawPreprocessorPar* rppar = par->get_rawpreprocessor_par();
+            std::cout<<std::endl<<std::endl<<std::endl<<std::endl<<std::endl;
+            std::cout<<"RawDeveloperConfigGUI::do_update(): rppar="<<rppar<<std::endl;
+            if( rppar ) {
+              std::cout<<"RawDeveloperConfigGUI::do_update(): rppar->get_preset_wb_red(PF::WB_CAMERA)="
+                  <<rppar->get_preset_wb_red(PF::WB_CAMERA)<<std::endl;
+              if( rppar->get_preset_wb_red(PF::WB_CAMERA) <= 0 ) {
+                rppar->init_wb_coefficients( par2->get_image_data(), maker, model );
+                for( unsigned int i = 0; i < PF::WB_LAST; i++ ) {
+                  wbRedSliders[i]->init();
+                  wbGreenSliders[i]->init();
+                  wbBlueSliders[i]->init();
+                }
+              }
+            }
+
             //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
             //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
             float xyz_to_cam[4][3];
@@ -698,13 +750,18 @@ void PF::RawDeveloperConfigGUI::do_update()
       wbControlsBox.remove( wbTargetBox );
     if( wb_best_match_label.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wb_best_match_label );
-
+/*
     if( wbRedSlider.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wbRedSlider );
     if( wbGreenSlider.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wbGreenSlider );
     if( wbBlueSlider.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wbBlueSlider );
+*/
+    for( unsigned int i = 0; i < PF::WB_LAST; i++ ) {
+      wbSliderBoxes[i].hide();
+    }
+    wbSliderBoxes[prop->get_enum_value().first].show();
 
     if( wbRedCorrSlider.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wbRedCorrSlider );
@@ -719,32 +776,32 @@ void PF::RawDeveloperConfigGUI::do_update()
         wbControlsBox.remove( wbTargetBox );
       if( wb_best_match_label.get_parent() == &wbControlsBox )
         wbControlsBox.remove( wb_best_match_label );
-      if( wbRedSlider.get_parent() != &wbControlsBox )
+      /*if( wbRedSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
       if( wbGreenSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
       if( wbBlueSlider.get_parent() != &wbControlsBox )
-        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );*/
       break;
     case PF::WB_COLOR_SPOT:
       if( wbTargetBox.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbTargetBox, Gtk::PACK_SHRINK );
       if( wb_best_match_label.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wb_best_match_label, Gtk::PACK_SHRINK );
-      if( wbRedSlider.get_parent() != &wbControlsBox )
+      /*if( wbRedSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
       if( wbGreenSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
       if( wbBlueSlider.get_parent() != &wbControlsBox )
-        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );*/
       break;
     default:
-      if( wbRedCorrSlider.get_parent() != &wbControlsBox )
+      /*if( wbRedCorrSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
       if( wbGreenCorrSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
       if( wbBlueCorrSlider.get_parent() != &wbControlsBox )
-        wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
+        wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );*/
       break;
     }
 
@@ -885,11 +942,19 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   VipsImage* image = node->image;
   if( !image ) return;
 
-  PF::PropertyBase* pwb_red = node->processor->get_par()->get_property("wb_red");
-  PF::PropertyBase* pwb_green = node->processor->get_par()->get_property("wb_green");
-  PF::PropertyBase* pwb_blue = node->processor->get_par()->get_property("wb_blue");
+  //PF::PropertyBase* pwb_red = node->processor->get_par()->get_property("wb_red");
+  //PF::PropertyBase* pwb_green = node->processor->get_par()->get_property("wb_green");
+  //PF::PropertyBase* pwb_blue = node->processor->get_par()->get_property("wb_blue");
 
-  if( !pwb_red || !pwb_green || !pwb_blue ) return;
+  //if( !pwb_red || !pwb_green || !pwb_blue ) return;
+
+  PropertyBase* prop = par->get_property( "wb_mode" );
+  if( !prop )  return;
+  int wb_id = prop->get_enum_value().first;
+
+  PropertyBase* wb_red_prop = wbRedSliders[wb_id]->get_prop();
+  PropertyBase* wb_green_prop = wbGreenSliders[wb_id]->get_prop();
+  PropertyBase* wb_blue_prop = wbBlueSliders[wb_id]->get_prop();
 
   PF::RawDeveloperPar* node_par = dynamic_cast<PF::RawDeveloperPar*>( node->processor->get_par() );
   if( !node_par ) return;
@@ -947,9 +1012,9 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     wb_blue_mul = rgb_avg[1]/rgb_avg[2];
     wb_green_mul = 1;
 
-    PropertyBase* wb_red_prop = wbRedSlider.get_prop();
-    PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
-    PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
+    //PropertyBase* wb_red_prop = wbRedSlider.get_prop();
+    //PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
+    //PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
     if( wb_red_prop && wb_green_prop && wb_blue_prop ) {
       float wb_red_in;
       float wb_green_in;
@@ -978,9 +1043,9 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       //         <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
       //         <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
-      wbRedSlider.init();
-      wbGreenSlider.init();
-      wbBlueSlider.init();
+      wbRedSliders[wb_id]->init();
+      wbGreenSliders[wb_id]->init();
+      wbBlueSliders[wb_id]->init();
 
       //pwb_red->update( wbRedSlider.get_adjustment()->get_value() );
       //pwb_green->update( wbGreenSlider.get_adjustment()->get_value() );
@@ -1057,9 +1122,13 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   VipsImage* image = node->image;
   if( !image ) return;
 
-  PropertyBase* wb_red_prop = wbRedSlider.get_prop();
-  PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
-  PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
+  PropertyBase* prop = par->get_property( "wb_mode" );
+  if( !prop )  return;
+  int wb_id = prop->get_enum_value().first;
+
+  PropertyBase* wb_red_prop = wbRedSliders[wb_id]->get_prop();
+  PropertyBase* wb_green_prop = wbGreenSliders[wb_id]->get_prop();
+  PropertyBase* wb_blue_prop = wbBlueSliders[wb_id]->get_prop();
   if( !wb_red_prop || !wb_green_prop || !wb_blue_prop ) 
     return;
 
@@ -1424,9 +1493,9 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
         <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
         <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
-    wbRedSlider.init();
-    wbGreenSlider.init();
-    wbBlueSlider.init();
+    wbRedSliders[wb_id]->init();
+    wbGreenSliders[wb_id]->init();
+    wbBlueSliders[wb_id]->init();
 
     //bool async = img->is_async();
     //img->set_async( false );

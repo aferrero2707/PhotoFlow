@@ -56,9 +56,9 @@ namespace PF
 
     PropertyBase wb_mode;
 
-    Property<float> wb_red;
-    Property<float> wb_green;
-    Property<float> wb_blue;
+    Property<float>* wb_red[WB_LAST];
+    Property<float>* wb_green[WB_LAST];
+    Property<float>* wb_blue[WB_LAST];
 
     Property<float> camwb_corr_red;
     Property<float> camwb_corr_green;
@@ -89,10 +89,16 @@ namespace PF
 
     dcraw_data_t* get_image_data() {return image_data; }
 
+    void init_wb_coefficients( dcraw_data_t* idata, std::string camera_maker, std::string camera_model );
+
     wb_mode_t get_wb_mode() { return (wb_mode_t)(wb_mode.get_enum_value().first); }
     float get_wb_red() { return wb_red_current; /*wb_red.get();*/ }
     float get_wb_green() { return wb_green_current; /*wb_green.get();*/ }
     float get_wb_blue() { return wb_blue_current; /*wb_blue.get();*/ }
+
+    float get_preset_wb_red(int id) { return wb_red[id]->get(); }
+    float get_preset_wb_green(int id ) { return wb_green[id]->get(); }
+    float get_preset_wb_blue(int id) { return wb_blue[id]->get(); }
 
     float get_camwb_corr_red() { return camwb_corr_red.get(); }
     float get_camwb_corr_green() { return camwb_corr_green.get(); }
