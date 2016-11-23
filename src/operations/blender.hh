@@ -46,6 +46,8 @@ namespace PF
     Property<int> shift_x;
     Property<int> shift_y;
 
+    int fgd_id, bgd_id;
+
     ProcessorBase* white;
 
     cmsHPROFILE profile_bottom, profile_top;
@@ -73,6 +75,9 @@ namespace PF
 
     void set_opacity(float val) { opacity.set(val); }
     float get_opacity() { return opacity.get(); }
+
+    int get_fgd_id() { return fgd_id; }
+    int get_bgd_id() { return bgd_id; }
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for a blending operation, 
@@ -115,7 +120,7 @@ namespace PF
       std::cout<<"BlenderProc::render(): opacity="<<opacity<<std::endl;
       std::cout<<"BlenderProc::render(): CS="<<CS<<"  CHMIN="<<CHMIN<<"  CHMAX="<<CHMAX<<std::endl;
 #endif
-      blender.blend( ireg[0], ireg[1], oreg, omap );
+      blender.blend( ireg[bpar->get_bgd_id()], ireg[bpar->get_fgd_id()], oreg, omap );
     }
   };
 

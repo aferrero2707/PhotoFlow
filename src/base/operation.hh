@@ -44,13 +44,10 @@
 //#include <vips/vips>
 
 #include "pftypes.hh"
-
 #include "format_info.hh"
-
 #include "property.hh"
-
 #include "color.hh"
-
+#include "image_hierarchy.hh"
 #include "photoflow.hh"
 
 

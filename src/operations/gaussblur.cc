@@ -129,6 +129,12 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
       return NULL;
     }
     PF_UNREF( blurred, "GaussBlurPar::build(): blurred unref" );
+
+    padding = gpar->get_padding();
+
+    //std::vector<VipsImage*> parents; parents.push_back(srcimg);
+    //PF::image_hierarchy_fill( cropped, gpar->get_padding(), parents );
+
 		return cropped;
 	}
 	
