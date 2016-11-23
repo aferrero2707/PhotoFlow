@@ -1,7 +1,20 @@
+include(CheckCompilerFlagAndEnableIt)
+
+CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-error=shadow)
+
+# should be < 64Kb
+math(EXPR MAX_MEANINGFUL_SIZE 16*1024)
+CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wframe-larger-than=${MAX_MEANINGFUL_SIZE})
+CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wstack-usage=${MAX_MEANINGFUL_SIZE})
+
+# as small as possible, but 1Mb+ is ok.
+math(EXPR MAX_MEANINGFUL_SIZE 16*1024)
+CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wlarger-than=${MAX_MEANINGFUL_SIZE})
+
 if(USE_XMLLINT)
 	add_custom_target(
 		validate_cameras_xml ALL
-		COMMAND ${Xmllint_BIN} --valid --noout ${CMAKE_CURRENT_SOURCE_DIR}/data/cameras.xml
+		COMMAND ${Xmllint_BIN} --nonet --valid --noout --schema ${CMAKE_CURRENT_SOURCE_DIR}/data/cameras.xsd ${CMAKE_CURRENT_SOURCE_DIR}/data/cameras.xml
 		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/data/cameras.xml
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 		COMMENT "Checking validity of external/rawspeed/data/cameras.xml"
@@ -83,48 +96,50 @@ FILE(GLOB RAWSPEED_SOURCES
 #
 if(WIN32)
   set(RAWSPEED_LIBS "msvcrt")
-else(WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif(WIN32)
 
-#
-# set development flags for rawspeed
-#
-if(NOT SOURCE_PACKAGE AND NOT APPLE)
-  # apple build fails on deprecated warnings..
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Werror=type-limits")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Werror=type-limits")
-elseif(SOURCE_PACKAGE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_RELEASE")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_RELEASE")
-endif()
-
 add_library(rawspeed STATIC ${RAWSPEED_SOURCES})
+
+set_target_properties(rawspeed
+  PROPERTIES
+    POSITION_INDEPENDENT_CODE True
+)
+
 if(USE_XMLLINT)
   add_dependencies(rawspeed validate_cameras_xml)
 endif(USE_XMLLINT)
-target_link_libraries(rawspeed ${RAWSPEED_LIBS})
+
+target_link_libraries(rawspeed ${RAWSPEED_LIBS} ${Pugixml_LIBRARIES} ${JPEG_LIBRARIES})
+
+#
+# the rawspeed part is a bit of a hack:
+# the static linking didn't work since it was pulling -lstdc++ and -lm into linker flags.
+# so we do a custom dependency and pretend an imported librawsped.a so no other -l are
+# appended.
+#
+add_library(rawspeed_static STATIC IMPORTED GLOBAL)
+set_target_properties(rawspeed_static
+  PROPERTIES
+    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/librawspeed.a
+    INTERFACE_LINK_LIBRARIES $<TARGET_PROPERTY:rawspeed,INTERFACE_LINK_LIBRARIES>
+    POSITION_INDEPENDENT_CODE True
+)
+
+add_dependencies(rawspeed_static rawspeed)
 
 # Adapted from src/cli/CMakeLists.txt
 if (BUILD_RS_IDENTIFY)
-  add_definitions(-DRS_CAMERAS_XML_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/share/photoflow/rawspeed/cameras.xml")
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../..)
-  include_directories(${CMAKE_CURRENT_BINARY_DIR}/../..)
+  add_executable(photoflow-rs-identify rawspeed-identify.cpp)
 
-  add_executable(share/photoflow-rs-identify rawspeed-identify.cpp)
-  # set_target_properties(share/photoflow-rs-identify PROPERTIES CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-  # set_target_properties(share/photoflow-rs-identify PROPERTIES CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-  # set_target_properties(share/photoflow-rs-identify PROPERTIES INSTALL_RPATH ${RPATH_DT}/../${CMAKE_INSTALL_LIBDIR}/share/photoflow)
-  set_target_properties(share/photoflow-rs-identify PROPERTIES LINKER_LANGUAGE CXX)
-  if(CMAKE_COMPILER_IS_GNUCC)
-	  if (CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.3)
-		  if (CMAKE_SYSTEM_NAME MATCHES "^(DragonFly|FreeBSD|NetBSD|OpenBSD)$")
-			  message("-- Force link to libintl on *BSD with GCC 4.3+")
-			  target_link_libraries(share/photoflow-rs-identify -lintl)
-		  endif()
-	  endif()
-  endif()
-  add_dependencies(share/photoflow-rs-identify rawspeed)
-  target_link_libraries(share/photoflow-rs-identify rawspeed_static ${Pugixml_LIBRARIES} ${JPEG_LIBRARIES})
-  install(TARGETS share/photoflow-rs-identify DESTINATION ${CMAKE_INSTALL_BINDIR})
+  target_compile_definitions(photoflow-rs-identify
+    PRIVATE -DRS_CAMERAS_XML_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/photoflow/rawspeed/cameras.xml"
+  )
+
+  set_target_properties(photoflow-rs-identify
+    PROPERTIES
+      LINKER_LANGUAGE CXX)
+
+  target_link_libraries(photoflow-rs-identify rawspeed_static)
+
+  install(TARGETS photoflow-rs-identify DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
