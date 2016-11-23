@@ -35,7 +35,7 @@
 PF::GmicEmulateFilmInstantProConfigGUI::GmicEmulateFilmInstantProConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Film Emulation [instant pro] (G'MIC)"  ),
   iterations_slider( this, "iterations", "Iterations", 1, 1, 10, 1, 1, 1),
-  prop_preset_selector( this, "preset", "preset", 0),
+  prop_preset_selector( this, "preset", "", 0, 200),
   prop_opacity_slider( this, "opacity", "opacity", 100, 0, 100, 1, 10, 1),
   prop_gamma_slider( this, "gamma", "gamma", 0, -100, 100, 1, 10, 1),
   prop_contrast_slider( this, "contrast", "contrast", 0, -100, 100, 1, 10, 1),
@@ -44,15 +44,15 @@ PF::GmicEmulateFilmInstantProConfigGUI::GmicEmulateFilmInstantProConfigGUI( PF::
   prop_saturation_slider( this, "saturation", "saturation", 0, -100, 100, 1, 10, 1),
   prop_post_normalize_slider( this, "post_normalize", "post_normalize", 0, 0, 1, 1, 5, 1)
 {
-  controlsBox.pack_start( iterations_slider );
   controlsBox.pack_start( prop_preset_selector );
+  controlsBox.pack_start( iterations_slider );
   controlsBox.pack_start( prop_opacity_slider );
   controlsBox.pack_start( prop_gamma_slider );
   controlsBox.pack_start( prop_contrast_slider );
   controlsBox.pack_start( prop_brightness_slider );
   controlsBox.pack_start( prop_hue_slider );
   controlsBox.pack_start( prop_saturation_slider );
-  controlsBox.pack_start( prop_post_normalize_slider );
+  //controlsBox.pack_start( prop_post_normalize_slider );
   
   add_widget( controlsBox );
 }
