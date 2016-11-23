@@ -52,7 +52,7 @@ void PF::Slider::create_widgets( std::string l, double val,
   spinButton.set_size_request( 50, -1 );
   spinButton.set_has_frame( false );
 
-  //numentry.set_size_request( 30, -1 );
+  //numentry.set_size_request( 30, 50 );
   //numentry.set_has_frame( false );
 
   int layout = 2;
@@ -93,13 +93,27 @@ void PF::Slider::create_widgets( std::string l, double val,
     }
 
     if(layout == 2 ) {
+      reset_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      reset_align.add( reset_button );
       scale.set_draw_value( false );
-      vbox2.pack_start( reset_button, Gtk::PACK_SHRINK );
-      hbox.pack_start( numentry, Gtk::PACK_SHRINK, 0 );
-      hbox.pack_start( vbox2, Gtk::PACK_SHRINK );
-      pack_end( hbox, Gtk::PACK_SHRINK );
-      pack_end( scale, Gtk::PACK_SHRINK );
-      pack_end( label, Gtk::PACK_SHRINK );
+      scale_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      scale_align.add( scale );
+      numentry_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      numentry_align.add( numentry );
+      label_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      label_align.add( label );
+      //vbox2.pack_start( reset_button, Gtk::PACK_SHRINK );
+      //hbox.pack_start( numentry, Gtk::PACK_SHRINK, 0 );
+      //hbox.pack_start( vbox2, Gtk::PACK_SHRINK );
+      //pack_end( hbox, Gtk::PACK_SHRINK );
+      hbox.pack_start( label_align, Gtk::PACK_SHRINK );
+      hbox.pack_start( scale_align, Gtk::PACK_SHRINK );
+      hbox.pack_start( numentry_align, Gtk::PACK_SHRINK );
+      hbox.pack_start( reset_align, Gtk::PACK_SHRINK );
+      align.set( Gtk::ALIGN_RIGHT, Gtk::ALIGN_CENTER, 0, 0 );
+      align.set_padding(4,4,4,4);
+      align.add( hbox );
+      pack_end( align, Gtk::PACK_SHRINK );
     }
 
   } else {

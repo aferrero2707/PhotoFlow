@@ -175,6 +175,7 @@ public:
     vbox.pack_start( *histogram_widget, Gtk::PACK_SHRINK );
     vbox.pack_start( hbox, Gtk::PACK_EXPAND_WIDGET );
 
+    //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
     pack_start( vbox, Gtk::PACK_SHRINK );
     pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
 

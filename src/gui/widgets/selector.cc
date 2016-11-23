@@ -30,7 +30,7 @@
 #include "selector.hh"
 
 
-PF::Selector::Selector( OperationConfigGUI* dialog, std::string pname, std::string l, int val ):
+PF::Selector::Selector( OperationConfigGUI* dialog, std::string pname, std::string l, int val, int width ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname )
 {
@@ -43,7 +43,15 @@ PF::Selector::Selector( OperationConfigGUI* dialog, std::string pname, std::stri
   pack_start( label, Gtk::PACK_SHRINK );
   pack_start( cbox, Gtk::PACK_SHRINK );
 
-  cbox.set_size_request( 150, -1 );
+  //cbox.set_size_request( 100, -1 );
+
+  if( width > 0 ) {
+    Glib::ListHandle< Gtk::CellRenderer* > cells = cbox.get_cells();
+    Glib::ListHandle< Gtk::CellRenderer* >::iterator ci = cells.begin();
+    for( ci = cells.begin(); ci != cells.end(); ci++ ) {
+      (*ci)->set_fixed_size( width, -1 );
+    }
+  }
 
   //pack_start( vbox, Gtk::PACK_SHRINK );
 
@@ -55,7 +63,7 @@ PF::Selector::Selector( OperationConfigGUI* dialog, std::string pname, std::stri
 }
 
 
-PF::Selector::Selector( OperationConfigGUI* dialog, PF::ProcessorBase* processor, std::string pname, std::string l, int val ):
+PF::Selector::Selector( OperationConfigGUI* dialog, PF::ProcessorBase* processor, std::string pname, std::string l, int val, int width ):
   Gtk::HBox(),
   PF::PFWidget( dialog, processor, pname )
 {
@@ -67,6 +75,14 @@ PF::Selector::Selector( OperationConfigGUI* dialog, PF::ProcessorBase* processor
 
   pack_start( label, Gtk::PACK_SHRINK );
   pack_start( cbox, Gtk::PACK_SHRINK );
+
+  if( width > 0 ) {
+    Glib::ListHandle< Gtk::CellRenderer* > cells = cbox.get_cells();
+    Glib::ListHandle< Gtk::CellRenderer* >::iterator ci = cells.begin();
+    for( ci = cells.begin(); ci != cells.end(); ci++ ) {
+      (*ci)->set_fixed_size( width, -1 );
+    }
+  }
 
   //pack_start( vbox, Gtk::PACK_SHRINK );
 

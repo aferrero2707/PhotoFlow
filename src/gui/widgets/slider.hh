@@ -42,6 +42,10 @@ namespace PF {
     Gtk::VBox vbox, vbox2;
     Gtk::Label label;
     Gtk::Alignment align;
+    Gtk::Alignment label_align;
+    Gtk::Alignment scale_align;
+    Gtk::Alignment numentry_align;
+    Gtk::Alignment reset_align;
 #ifdef GTKMM_2
     Gtk::Adjustment adjustment;
 #endif
