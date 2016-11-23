@@ -97,17 +97,17 @@ PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
   curves_nb[0].append_page( hueSeq_hbox, "S curve" );
   curves_nb[0].append_page( hueLeq_hbox, "L curve" );
 
-  hueHeq_hbox.pack_start( hueHeq_box, Gtk::PACK_SHRINK );
+  hueHeq_hbox.pack_start( hueHeq_box, Gtk::PACK_EXPAND_PADDING );
   hueHeq_box.pack_start( hueHeq, Gtk::PACK_SHRINK );
   hueHeq_box.pack_start( hueHeq_enable_box, Gtk::PACK_SHRINK );
   hueHeq_enable_box.pack_end( hueHeq_enable, Gtk::PACK_SHRINK );
 
-  hueSeq_hbox.pack_start( hueSeq_box, Gtk::PACK_SHRINK );
+  hueSeq_hbox.pack_start( hueSeq_box, Gtk::PACK_EXPAND_PADDING );
   hueSeq_box.pack_start( hueSeq, Gtk::PACK_SHRINK );
   hueSeq_box.pack_start( hueSeq_enable_box, Gtk::PACK_SHRINK );
   hueSeq_enable_box.pack_end( hueSeq_enable, Gtk::PACK_SHRINK );
 
-  hueLeq_hbox.pack_start( hueLeq_box, Gtk::PACK_SHRINK );
+  hueLeq_hbox.pack_start( hueLeq_box, Gtk::PACK_EXPAND_PADDING );
   hueLeq_box.pack_start( hueLeq, Gtk::PACK_SHRINK );
   hueLeq_box.pack_start( hueLeq_enable_box, Gtk::PACK_SHRINK );
   hueLeq_enable_box.pack_end( hueLeq_enable, Gtk::PACK_SHRINK );

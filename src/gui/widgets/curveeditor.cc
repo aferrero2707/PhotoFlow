@@ -79,7 +79,7 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
   spin_buttons_box.pack_start( yspinButton, Gtk::PACK_SHRINK );
   box.pack_start( spin_buttons_box );
 
-  pack_start( box, Gtk::PACK_SHRINK );
+  pack_end( box, Gtk::PACK_SHRINK );
 
   curve_area->signal_event().connect( sigc::mem_fun(*this, &PF::CurveEditor::handle_curve_events) );
   // adjustment.signal_value_changed().
