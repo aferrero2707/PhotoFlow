@@ -29,7 +29,7 @@
 
 #include "curves_config.hh"
 
-#define CURVE_SIZE 260
+#define CURVE_SIZE 206
 
 PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   PF::OperationConfigGUI( layer, "Curves Configuration", false ),
@@ -49,7 +49,7 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   MCurveEditor( this, "M_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
   YCurveEditor( this, "Y_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
   KCurveEditor( this, "K_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
-  outputModeSlider( this, "color_blend", "Output mode", 0, 0, 1, 0.05, 0.2, 1)
+  outputModeSlider( this, "color_blend", _("Output mode"), 0, 0, 1, 0.05, 0.2, 1)
 {
 
   //rgbCurveSelector.init(); 
@@ -288,9 +288,9 @@ void PF::CurvesConfigGUI::do_update()
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"CurvesConfigGUI::do_update() for "<<get_layer()->get_name()<<" called"<<std::endl;
-//#endif
+#endif
     if( rgbCurveSelector.get_parent() == &selectorsBox ) {
       selectorsBox.remove( rgbCurveSelector );
       selectorsBox.remove( RGB_is_linear_check );

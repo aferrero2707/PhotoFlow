@@ -128,6 +128,7 @@ namespace PF {
 
     int curve_area_width, curve_area_height;
     CurveArea* curve_area;
+    Gtk::EventBox curve_area_ebox;
 
     PF::ICCProfile* icc_data;
     bool is_linear;
@@ -139,6 +140,7 @@ namespace PF {
     bool inhibit_value_changed;
 
     bool handle_curve_events(GdkEvent* event);
+    bool on_key_press_or_release_event(GdkEventKey* event);
 
   public:
     CurveEditor(OperationConfigGUI* dialog, std::string pname, CurveArea* ca,
