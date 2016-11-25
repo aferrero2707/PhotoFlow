@@ -150,8 +150,6 @@ public:
     const float halfmax = lmax / 2.0;
     const float doublemax = lmax * 2.0;
 
-    float highlights2 = highlights * highlights;
-
     Rect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands;
     //int width = r->width;
@@ -193,6 +191,7 @@ public:
         tb[0] = tb[0] > 0.0f ? tb[0] / whitepoint : tb[0];
 
         // overlay highlights
+        float highlights2 = highlights * highlights;
         float highlights_xform = CLAMP_RANGE(1.0f - tb[0] / (1.0f - compress), 0.0f, 1.0f);
 
         while(highlights2 > 0.0f)
