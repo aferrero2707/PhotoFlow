@@ -62,9 +62,11 @@ enum profile_type_t {
   PROF_TYPE_FROM_SETTINGS,
   PROF_TYPE_FROM_DISK,
   PROF_TYPE_sRGB,
+  PROF_TYPE_sRGB_D50,
   PROF_TYPE_REC2020,
   PROF_TYPE_ADOBE,
   PROF_TYPE_PROPHOTO,
+  PROF_TYPE_PROPHOTO_D65,
   PROF_TYPE_ACEScg,
   PROF_TYPE_ACES,
   PROF_TYPE_LAB,
@@ -222,6 +224,27 @@ public:
 };
 
 
+class sRGBProfileD50: public ICCProfile
+{
+public:
+  sRGBProfileD50(TRC_type type);
+};
+
+
+class ProPhotoProfile: public ICCProfile
+{
+public:
+  ProPhotoProfile(TRC_type type);
+};
+
+
+class ProPhotoProfileD65: public ICCProfile
+{
+public:
+  ProPhotoProfileD65(TRC_type type);
+};
+
+
 class LabProfile: public ICCProfile
 {
 public:
@@ -232,11 +255,13 @@ public:
 class ICCStore
 {
   ICCProfile* srgb_profiles[3];
+  ICCProfile* srgb_d50_profiles[3];
   ICCProfile* rec2020_profiles[3];
   ICCProfile* aces_profiles[3];
   ICCProfile* acescg_profiles[3];
   ICCProfile* adobe_profiles[3];
   ICCProfile* prophoto_profiles[3];
+  ICCProfile* prophoto_d65_profiles[3];
   ICCProfile* system_monitor_profile;
   std::vector<ICCProfile*> profiles;
 

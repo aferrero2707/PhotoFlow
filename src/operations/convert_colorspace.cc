@@ -86,6 +86,7 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
 
   //out_profile_type.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
   out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB,"sRGB","sRGB");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB_D50,"sRGB_D50","sRGB D50");
   out_profile_type.add_enum_value(PF::PROF_TYPE_REC2020,"REC2020","Rec.2020");
   out_profile_type.add_enum_value(PF::PROF_TYPE_ACES,"ACES","ACES");
   out_profile_type.add_enum_value(PF::PROF_TYPE_ACEScg,"ACEScg","ACEScg");

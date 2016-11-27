@@ -32,30 +32,33 @@
 #include "../iccstore.hh"
 
 
-/* ***** Make profile: sRGB, D65, sRGB TRC */
-/* http://en.wikipedia.org/wiki/Srgb */
-/* Hewlett-Packard and Microsoft designed sRGB to match
- * the color gamut of consumer-grade CRTs from the 1990s
- * and to be the standard color space for the world wide web.
- * When made using the standard sRGB TRC, this sRGB profile
- * can be applied to DCF R03 camera-generated jpegs and
- * is an excellent color space for editing 8-bit images.
- * When made using the linear gamma TRC, the resulting profile
- * should only be used for high bit depth image editing.
- * */
-static cmsCIExyYTRIPLE srgb_primaries = {
-    {0.6400, 0.3300, 1.0},
-    {0.3000, 0.6000, 1.0},
-    {0.1500, 0.0600, 1.0}
+/* ***** Make profile: Romm/Prophoto, D50, gamma=1.80 */
+/* Reference Input/Output Medium Metric RGB Color Encodings (RIMM/ROMM RGB)
+ * Kevin E. Spaulding, Geoffrey J. Woolfe and Edward J. Giorgianni
+ * Eastman Kodak Company, Rochester, New York, U.S.A.
+ * Above document is available at http://photo-lovers.org/pdf/color/romm.pdf
+ * Kodak designed the Romm (ProPhoto) color gamut to include all printable
+ * and most real world colors. It includes some imaginary colors and excludes
+ * some of the real world blues and violet blues that can be captured by
+ * digital cameras. For high bit depth image editing only.
+ */
+static cmsCIExyYTRIPLE romm_primaries = {
+    {0.7347, 0.2653, 1.0},
+    {0.1596, 0.8404, 1.0},
+    {0.0366, 0.0001, 1.0}
 };
 
-static cmsCIExyYTRIPLE srgb_primaries_pre_quantized = {
-    {0.639998686, 0.330010138, 1.0},
-    {0.300003784, 0.600003357, 1.0},
-    {0.150002046, 0.059997204, 1.0}
-};
 
 /* ************************** WHITE POINTS ************************** */
+
+/* D50 WHITE POINTS */
+
+static cmsCIExyY d50_romm_spec= {0.3457, 0.3585, 1.0};
+/* http://photo-lovers.org/pdf/color/romm.pdf */
+
+static cmsCIExyY d50_illuminant_specs = {0.345702915, 0.358538597, 1.0};
+/* calculated from D50 illuminant XYZ values in ICC specs */
+
 
 /* D65 WHITE POINTS */
 
@@ -80,46 +83,27 @@ static cmsCIExyY  d65_srgb_adobe_specs = {0.3127, 0.3290, 1.0};
  * */
 
 
-PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
+PF::ProPhotoProfileD65::ProPhotoProfileD65(TRC_type type): ICCProfile()
 {
   set_trc_type( type );
 
-  /*
-  if( type == PF::PF_TRC_STANDARD ) {
-    // sRGB TRC
-    cmsFloat64Number srgb_parameters[5] =
-    { 2.4, 1.0 / 1.055,  0.055 / 1.055, 1.0 / 12.92, 0.04045 };
-    cmsToneCurve *srgb_parametic_curve =
-        cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
-    cmsToneCurve *srgb_parametic_curve_inv =
-        cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
-    srgb_parametic_curve_inv = cmsReverseToneCurve( srgb_parametic_curve_inv );
-    //init_trc( srgb_parametic_curve, srgb_parametic_curve_inv );
-  } else {
-    // LAB "L" (perceptually uniform) TRC
-    cmsFloat64Number labl_parameters[5] =
-    { 3.0, 0.862076,  0.137924, 0.110703, 0.080002 };
-    cmsToneCurve *labl_parametic_curve =
-        cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
-    cmsToneCurve *labl_parametic_curve_inv =
-        cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
-    labl_parametic_curve_inv = cmsReverseToneCurve( labl_parametic_curve_inv );
-    //init_trc( labl_parametic_curve, labl_parametic_curve_inv );
-  }
-  */
-
-  /* ***** Make profile: sRGB, D65, sRGB TRC */
+  /* ***** Make profile: ProPhoto, D50, gamma=1.8 TRC */
   /*
    * */
-  cmsCIExyYTRIPLE primaries = srgb_primaries_pre_quantized;
-  cmsCIExyY whitepoint = d65_srgb_adobe_specs;
+  cmsCIExyYTRIPLE primaries = romm_primaries;
+  //cmsCIExyY whitepoint = d65_srgb_adobe_specs;
+  cmsCIExyY whitepoint = d50_romm_spec;
   cmsToneCurve* tone_curve[3];
   switch( type ) {
   case PF::PF_TRC_STANDARD: {
-    /* sRGB TRC */
-    cmsFloat64Number srgb_parameters[5] =
-    { 2.4, 1.0 / 1.055,  0.055 / 1.055, 1.0 / 12.92, 0.04045 };
-    cmsToneCurve *curve = cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
+    /* gamma=1.80078125 tone response curve */
+    /* http://www.color.org/chardata/rgb/ROMMRGB.pdf indicates that
+     * the official tone response curve for ROMM isn't a simple gamma curve
+     * but rather has a linear portion in shadows, just like sRGB.
+     * Most ProPhotoRGB profiles use a gamma curve equal to 1.80078125.
+     * This odd value is because of hexadecimal rounding.
+     * */
+    cmsToneCurve *curve = cmsBuildGamma (NULL, 1.80078125);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
     break;
   }
@@ -143,14 +127,8 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
   cmsWriteTag(profile, cmsSigCopyrightTag, copyright);
   /* V4 */
   cmsMLU *description = cmsMLUalloc(NULL, 1);
-  cmsMLUsetASCII(description, "en", "US", "sRGB-elle-V4.icc");
+  cmsMLUsetASCII(description, "en", "US", "LargeRGB-elle-V4.icc");
   cmsWriteTag(profile, cmsSigProfileDescriptionTag, description);
-
-  if( type == PF::PF_TRC_STANDARD ) {
-    const char* filename = "sRGB-elle-V4.icc";
-    cmsSaveProfileToFile(profile, filename);
-  }
-
   //const char* filename = "sRGB-elle-V4-rec709.icc";
   //cmsSaveProfileToFile(profile, filename);
   cmsMLUfree(description);

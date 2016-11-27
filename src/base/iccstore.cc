@@ -464,6 +464,13 @@ PF::ICCStore::ICCStore()
   srgb_profiles[1]->ref(); profiles.push_back( srgb_profiles[1] );
   srgb_profiles[2]->ref(); profiles.push_back( srgb_profiles[2] );
 
+  srgb_d50_profiles[0] = new sRGBProfileD50( PF::PF_TRC_STANDARD );
+  srgb_d50_profiles[1] = new sRGBProfileD50( PF::PF_TRC_PERCEPTUAL );
+  srgb_d50_profiles[2] = new sRGBProfileD50( PF::PF_TRC_LINEAR );
+  srgb_d50_profiles[0]->ref(); profiles.push_back( srgb_d50_profiles[0] );
+  srgb_d50_profiles[1]->ref(); profiles.push_back( srgb_d50_profiles[1] );
+  srgb_d50_profiles[2]->ref(); profiles.push_back( srgb_d50_profiles[2] );
+
   rec2020_profiles[0] = new Rec2020Profile( PF::PF_TRC_STANDARD );
   rec2020_profiles[1] = new Rec2020Profile( PF::PF_TRC_PERCEPTUAL );
   rec2020_profiles[2] = new Rec2020Profile( PF::PF_TRC_LINEAR );
@@ -486,9 +493,12 @@ PF::ICCStore::ICCStore()
   adobe_profiles[1] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/ClayRGB-elle-V4-labl.icc");
   adobe_profiles[2] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/ClayRGB-elle-V4-g10.icc");
 
-  prophoto_profiles[0] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-g18.icc");
-  prophoto_profiles[1] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-labl.icc");
-  prophoto_profiles[2] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-g10.icc");
+  //prophoto_profiles[0] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-g18.icc");
+  //prophoto_profiles[1] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-labl.icc");
+  //prophoto_profiles[2] = get_profile(PF::PhotoFlow::Instance().get_data_dir() + "/icc/LargeRGB-elle-V4-g10.icc");
+  prophoto_profiles[0] = new ProPhotoProfile( PF::PF_TRC_STANDARD );
+  prophoto_profiles[1] = new ProPhotoProfile( PF::PF_TRC_PERCEPTUAL );
+  prophoto_profiles[2] = new ProPhotoProfile( PF::PF_TRC_LINEAR );
 
   Lab_profile = new LabProfile( PF::PF_TRC_PERCEPTUAL );
   Lab_profile->ref(); profiles.push_back( Lab_profile );
@@ -558,6 +568,7 @@ PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_typ
 {
   switch( ptype ) {
   case PF::PROF_TYPE_sRGB: return srgb_profiles[trc_type];
+  case PF::PROF_TYPE_sRGB_D50: return srgb_d50_profiles[trc_type];
   case PF::PROF_TYPE_REC2020: return rec2020_profiles[trc_type];
   case PF::PROF_TYPE_ACES: return aces_profiles[trc_type];
   case PF::PROF_TYPE_ACEScg: return acescg_profiles[trc_type];

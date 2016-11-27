@@ -43,10 +43,10 @@
  * When made using the linear gamma TRC, the resulting profile
  * should only be used for high bit depth image editing.
  * */
-static cmsCIExyYTRIPLE srgb_primaries = {
-    {0.6400, 0.3300, 1.0},
-    {0.3000, 0.6000, 1.0},
-    {0.1500, 0.0600, 1.0}
+static cmsCIExyYTRIPLE srgb_d50_primaries = {
+    {0.648431, 0.330856, 1.0},
+    {0.321152, 0.597871, 1.0},
+    {0.155886, 0.066044, 1.0}
 };
 
 static cmsCIExyYTRIPLE srgb_primaries_pre_quantized = {
@@ -56,6 +56,9 @@ static cmsCIExyYTRIPLE srgb_primaries_pre_quantized = {
 };
 
 /* ************************** WHITE POINTS ************************** */
+
+static cmsCIExyY d50_illuminant_specs = {0.345702915, 0.358538597, 1.0};
+/* calculated from D50 illuminant XYZ values in ICC specs */
 
 /* D65 WHITE POINTS */
 
@@ -80,7 +83,7 @@ static cmsCIExyY  d65_srgb_adobe_specs = {0.3127, 0.3290, 1.0};
  * */
 
 
-PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
+PF::sRGBProfileD50::sRGBProfileD50(TRC_type type): ICCProfile()
 {
   set_trc_type( type );
 
@@ -111,8 +114,10 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
   /* ***** Make profile: sRGB, D65, sRGB TRC */
   /*
    * */
-  cmsCIExyYTRIPLE primaries = srgb_primaries_pre_quantized;
-  cmsCIExyY whitepoint = d65_srgb_adobe_specs;
+  //cmsCIExyYTRIPLE primaries = srgb_primaries_pre_quantized;
+  cmsCIExyYTRIPLE primaries = srgb_d50_primaries;
+  //cmsCIExyY whitepoint = d65_srgb_adobe_specs;
+  cmsCIExyY whitepoint = d50_illuminant_specs;
   cmsToneCurve* tone_curve[3];
   switch( type ) {
   case PF::PF_TRC_STANDARD: {
@@ -147,12 +152,10 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
   cmsWriteTag(profile, cmsSigProfileDescriptionTag, description);
 
   if( type == PF::PF_TRC_STANDARD ) {
-    const char* filename = "sRGB-elle-V4.icc";
+    const char* filename = "sRGB-elle-V4-D50.icc";
     cmsSaveProfileToFile(profile, filename);
   }
 
-  //const char* filename = "sRGB-elle-V4-rec709.icc";
-  //cmsSaveProfileToFile(profile, filename);
   cmsMLUfree(description);
 
   std::cout<<"Initializing sRGB profile"<<std::endl;
