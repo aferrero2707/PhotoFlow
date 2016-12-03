@@ -134,6 +134,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   bool softproof_bpc_enabled, sim_black_ink_enabled, sim_paper_color_enabled, gamut_warning_enabled;
   bool softproof_clip_negative_enabled, softproof_clip_overflow_enabled;
   cmsUInt32Number softproof_intent;
+  float adaptation_state;
 
   bool display_merged;
   int active_layer;
@@ -218,6 +219,7 @@ public:
   void set_clip_overflow( bool flag ) { softproof_clip_overflow_enabled = flag; }
   void set_gamut_warning( bool flag ) { gamut_warning_enabled = flag; }
   void set_softproof_intent( cmsUInt32Number i ) { softproof_intent = i; }
+  void set_softproof_adaptation_state( float s ) { adaptation_state = s; }
   void enable_softproof() { softproof_enabled = true; }
   void disable_softproof() { softproof_enabled = false; }
   PF::ProcessorBase* get_softproof_conversion() { return softproof_conversion; }

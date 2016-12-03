@@ -36,6 +36,7 @@ PF::ICCTransformPar::ICCTransformPar():
   out_profile( NULL ),
   intent( INTENT_RELATIVE_COLORIMETRIC ),
   bpc( true ),
+  adaptation_state(-1),
   transform( NULL ),
   input_cs_type( cmsSigRgbData ),
   output_cs_type( cmsSigRgbData )
@@ -108,12 +109,14 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
     std::cout<<"icc_transform: get_bpc()="<<get_bpc()<<std::endl;
     if( get_bpc() ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
+    cmsFloat64Number old_state = cmsSetAdaptationState( adaptation_state );
     transform = cmsCreateTransform( in_profile->get_profile(),
         infmt,
         out_profile->get_profile(),
         outfmt,
         intent,
         flags );
+    cmsSetAdaptationState( old_state );
     std::cout<<"icc_transform: transform: "<<transform<<std::endl;
     std::cout<<"icc_transform: in_profile: "<<in_profile<<std::endl;
     std::cout<<"icc_transform: infmt: "<<infmt<<std::endl;

@@ -51,6 +51,7 @@ namespace PF
     ICCProfile* out_profile;
     cmsUInt32Number intent;
     bool bpc;
+    float adaptation_state;
     cmsHTRANSFORM transform;
 
     cmsColorSpaceSignature input_cs_type;
@@ -65,6 +66,7 @@ namespace PF
 
     bool get_bpc() { return bpc; }
     void set_bpc( bool flag ) { bpc = flag; }
+    void set_adaptation_state( float s ) { adaptation_state = s; }
 
     cmsHTRANSFORM get_transform() { return transform; }
 

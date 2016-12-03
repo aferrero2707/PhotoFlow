@@ -61,6 +61,8 @@ namespace PF {
     Gtk::ComboBox intent_selector;
 
     Gtk::CheckButton bpc_button;
+    Gtk::HScale adaptation_slider;
+
 
     Gtk::Frame paper_sim_frame;
     Gtk::VBox paper_sim_vbox;
@@ -101,6 +103,7 @@ namespace PF {
     void on_intent_selector_changed();
     void on_sim_black_ink_toggled();
     void on_bpc_toggled();
+    void on_adaptation_changed();
     void on_clip_negative_toggled();
     void on_clip_overflow_toggled();
     void on_sim_paper_color_toggled();

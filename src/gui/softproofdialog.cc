@@ -131,11 +131,18 @@ PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
   row[intent_columns.col_text] = "saturation";
 
   intent_selector.pack_start(intent_columns.col_text);
-  //intent_selector.set_active( 0 );
+  intent_selector.set_active( 0 );
 
   get_vbox()->pack_start( intent_selector, Gtk::PACK_SHRINK, 5 );
 
+  bpc_button.set_active();
   get_vbox()->pack_start( bpc_button, Gtk::PACK_SHRINK, 5 );
+
+  adaptation_slider.set_range(0,1);
+  adaptation_slider.set_value(1);
+  adaptation_slider.set_digits(2);
+  adaptation_slider.set_increments(0.1,0.01);
+  get_vbox()->pack_start( adaptation_slider, Gtk::PACK_SHRINK, 5 );
 
   paper_sim_vbox.pack_start( sim_black_ink_button, Gtk::PACK_SHRINK, 5 );
   paper_sim_vbox.pack_start( sim_paper_color_button, Gtk::PACK_SHRINK, 5 );
@@ -166,6 +173,11 @@ PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
       &PF::SoftProofDialog::on_sim_black_ink_toggled) );
   sim_paper_color_button.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::SoftProofDialog::on_sim_paper_color_toggled) );
+
+  adaptation_slider.signal_value_changed().
+    connect(sigc::mem_fun(*this,
+        &PF::SoftProofDialog::on_adaptation_changed));
+
 
   clip_negative_button.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::SoftProofDialog::on_clip_negative_toggled) );
@@ -330,6 +342,19 @@ void PF::SoftProofDialog::on_bpc_toggled()
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   imageArea->set_softproof_bpc( bpc_button.get_active() );
+  image->update();
+}
+
+
+void PF::SoftProofDialog::on_adaptation_changed()
+{
+  PF::Image* image = editor->get_image();
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !image ) return;
+  if( !imageArea ) return;
+  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
+  if( !pipeline ) return;
+  imageArea->set_softproof_adaptation_state( adaptation_slider.get_value() );
   image->update();
 }
 

@@ -190,6 +190,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   gamut_warning_enabled( false ),
   softproof_clip_negative_enabled( true ),
   softproof_clip_overflow_enabled( true ),
+  adaptation_state(1),
   display_merged( true ),
   active_layer( -1 ),
   edited_layer( -1 ),
@@ -1089,12 +1090,16 @@ void PF::ImageArea::update( VipsRect* area )
   }
   icc_par->set_intent( options.get_display_profile_intent() );
   icc_par->set_bpc( options.get_display_profile_bpc() );
+  icc_par->set_adaptation_state( 1.0 );
+  //icc_par->set_bpc( true );
   if( softproof_enabled && sim_paper_color_enabled ) {
     icc_par->set_intent( INTENT_ABSOLUTE_COLORIMETRIC );
     icc_par->set_bpc( false );
+    icc_par->set_adaptation_state( adaptation_state );
   } else if( softproof_enabled && sim_black_ink_enabled ) {
     icc_par->set_intent( INTENT_RELATIVE_COLORIMETRIC );
     icc_par->set_bpc( false );
+    //icc_par->set_adaptation_state( adaptation_state );
   }
   convert2display->get_par()->set_image_hints( wclipimg );
   convert2display->get_par()->set_format( get_pipeline()->get_format() );
