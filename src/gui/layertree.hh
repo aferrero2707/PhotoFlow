@@ -117,6 +117,7 @@ class LayerWidget;
     bool map_flag;
 
     bool tree_modified;
+    bool updating;
 
     void update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l );
     void update_model(Gtk::TreeModel::Row parent_row);

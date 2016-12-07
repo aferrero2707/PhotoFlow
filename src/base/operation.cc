@@ -61,7 +61,8 @@ PF::OpParBase::OpParBase():
   rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
   lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
-  mask_enabled("mask_enabled",this,true)
+  mask_enabled("mask_enabled",this,true),
+  file_format_version( PF_FILE_VERSION )
 {
   //blend_mode.set_internal(true);
   intensity.set_internal(true);

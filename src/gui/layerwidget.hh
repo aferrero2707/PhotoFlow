@@ -71,12 +71,23 @@ class LayerWidget : public Gtk::VBox
 {
   Image* image;
   ImageEditor* editor;
+  int selected_layer_id;
+
+  LayerTree layers_view, mask_view;
+  Gtk::VBox mask_view_box;
+  Gtk::HBox mask_view_top_box;
+  Gtk::Button mask_view_back_button;
+  Gtk::CheckButton mask_view_show_button;
+  Gtk::Label mask_view_show_label1;
+  Gtk::Label mask_view_show_label2;
+  Gtk::VBox mask_view_show_label_box;
+  int active_view;
 
   Gtk::VPaned layers_panel;
   Gtk::VBox top_box;
   Gtk::HBox main_box;
   Gtk::VBox vbox;
-  Gtk::Notebook notebook;
+  //Gtk::Notebook notebook;
   Gtk::ScrolledWindow controls_scrolled_window;
   ControlsGroup controls_group;
   //Gtk::HButtonBox buttonbox;
@@ -102,11 +113,11 @@ class LayerWidget : public Gtk::VBox
   void unset_sticky_and_editing( std::list<Layer*>& layers );
   void detach_controls( Layer* l );
   void detach_controls( std::list<Layer*>& layers );
-  int get_map_tab( std::list<Layer*>* map_layers );
-  void close_map_tabs( Layer* l );
+  //int get_map_tab( std::list<Layer*>* map_layers );
+  //void close_map_tabs( Layer* l );
 
 public:
-  sigc::signal<void,int> signal_active_layer_changed;
+  sigc::signal<void,int> signal_edited_layer_changed;
 
   LayerWidget( Image* image, ImageEditor* editor );
   virtual ~LayerWidget( );
@@ -127,17 +138,23 @@ public:
   void insert_preset( std::string filename );
   void remove_layers();
 
+  void switch_to_layers_view();
+  void switch_to_mask_view();
+  void toggle_mask();
+
+  void on_map();
+
   void update( bool force_rebuild=false ) {
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"LayerWidget::update() called."<<std::endl;
     if( layer_views.size() > 0 )
       std::cout<<"layer_views.size() > 0"<<std::endl;
-#endif
+//#endif
     for(unsigned int i = 0; i < layer_views.size(); i++) {
       int id = layer_views[i]->get_selected_layer_id();
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"LayerWidget::update() view #"<<i<<"  selected layer id="<<id<<std::endl;
-#endif
+//#endif
       if( force_rebuild )
         layer_views[i]->set_tree_modified();
       layer_views[i]->update_model();
@@ -191,7 +208,10 @@ public:
   void on_switch_page(_GtkNotebookPage* page, guint page_num);
 #endif
 
-  void remove_tab( Gtk::Widget* widget );
+  bool on_key_press_event(GdkEventKey* event);
+
+
+  //void remove_tab( Gtk::Widget* widget );
 
   void modified() { /*if(image) image->modified();*/ }
 };

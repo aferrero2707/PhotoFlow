@@ -88,8 +88,9 @@ class ImageEditor: public Gtk::HBox
   bool image_opened;
 
   Layer* displayed_layer;
-  Layer* active_layer;
-  std::list<PF::Layer*> active_layer_children;
+  Layer* edited_layer;
+  int selected_layer_id;
+  std::list<PF::Layer*> edited_layer_children;
 
   ImageSizeUpdater* image_size_updater;
 
@@ -159,14 +160,18 @@ public:
   void set_aux_controls( Gtk::Widget* aux );
   Gtk::Widget* get_aux_controls() { return aux_controls; }
 
-  int get_active_layer() {
-    //std::cout<<"ImageEditor::get_active_layer(): active_layer="<<active_layer;
-    //if(active_layer) std::cout<<"(\""<<active_layer->get_name()<<"\", "<<active_layer->get_id()<<")"<<std::endl;
-    return( (active_layer) ? active_layer->get_id() : -1 );
+  int get_edited_layer() {
+    //std::cout<<"ImageEditor::get_edited_layer(): edited_layer="<<edited_layer;
+    //if(edited_layer) std::cout<<"(\""<<edited_layer->get_name()<<"\", "<<edited_layer->get_id()<<")"<<std::endl;
+    return( (edited_layer) ? edited_layer->get_id() : -1 );
   }
-  void set_active_layer( int id );
+  void set_edited_layer( int id );
   int get_displayed_layer() { return (displayed_layer) ? displayed_layer->get_id() : -1; }
   void set_displayed_layer( int id );
+  void set_selected_layer( int id );
+
+  void set_display_mask( bool val );
+
 
   void set_hide_background_layer( bool flag ) { hide_background_layer = flag; }
   bool get_hide_background_layer() { return hide_background_layer; }
@@ -198,6 +203,7 @@ public:
   bool my_button_press_event( GdkEventButton* button );
   bool my_button_release_event( GdkEventButton* button );
   bool my_motion_notify_event( GdkEventMotion* button );
+  bool on_key_press_event(GdkEventKey* event);
 
   // Handler for the widget size change
   //bool on_preview_configure_event( GdkEventConfigure* event );

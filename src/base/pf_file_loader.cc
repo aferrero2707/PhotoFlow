@@ -61,6 +61,8 @@
 
 #include "pf_file_loader.hh"
 
+#define DEBUG_PF_LOAD 1
+
 static PF::Image* image = NULL;
 static std::deque<PF::Layer*> layers_stack;
 static std::deque< std::pair<std::list<PF::Layer*>*,bool> > containers_stack;
@@ -302,7 +304,8 @@ void start_element (GMarkupParseContext *context,
     }
 
 #ifdef DEBUG_PF_LOAD
-    std::cout<<"PF::pf_file_loader(): current_container_map_flag="<<current_container_map_flag<<std::endl;
+    std::cout<<"PF::pf_file_loader(): current_container_map_flag="<<current_container_map_flag
+        <<"  current_op="<<current_op<<std::endl;
 #endif
     if( current_op )
       current_op->set_map_flag( current_container_map_flag );
@@ -367,6 +370,16 @@ void end_element (GMarkupParseContext *context,
   // If element is a layer, pop it from the stack
   if( strcmp (element_name, "layer") == 0 ) {
 
+    if( current_layer && current_layer->get_processor() &&
+        current_layer->get_processor()->get_par() ) {
+      current_layer->get_processor()->get_par()->set_file_format_version( version );
+      current_layer->get_processor()->get_par()->finalize();
+    }
+    if( current_layer && current_layer->get_blender() &&
+        current_layer->get_blender()->get_par() ) {
+      current_layer->get_blender()->get_par()->set_file_format_version( version );
+      current_layer->get_blender()->get_par()->finalize();
+    }
     if( current_layer && current_layer->get_processor() &&
         current_layer->get_processor()->get_par() &&
         current_layer->get_processor()->get_par()->get_config_ui() ) {

@@ -42,6 +42,7 @@ namespace PF
   class BlenderPar: public OpParBase
   {
     Property<blendmode_t> blend_mode;
+    Property<mask_blendmode_t> mask_blend_mode;
     Property<float> opacity;
     Property<int> shift_x;
     Property<int> shift_y;
@@ -56,8 +57,13 @@ namespace PF
   public:
     BlenderPar();
 
-    blendmode_t get_blend_mode() { 
-      return( (blendmode_t)blend_mode.get_enum_value().first ); 
+    void finalize();
+
+    int get_blend_mode() {
+      return( blend_mode.get_enum_value().first );
+    }
+    int get_mask_blend_mode() {
+      return( mask_blend_mode.get_enum_value().first );
     }
     void set_blend_mode(blendmode_t mode) { 
       blend_mode.set_enum_value( (int)mode ); 
@@ -100,8 +106,12 @@ namespace PF
 
       BlenderPar* bpar = dynamic_cast<BlenderPar*>(par);
       float opacity = 1; if(bpar) opacity = bpar->get_opacity();
-      Blender<T,CS,CHMIN,CHMAX,has_omap> blender( bpar->get_blend_mode(), opacity );
+      int mode = bpar->is_map() ? bpar->get_mask_blend_mode() : bpar->get_blend_mode();
+      Blender<T,CS,CHMIN,CHMAX,has_omap> blender( mode, opacity );
 #ifndef NDEBUG
+      std::cout<<"BlenderProc::render(): mode="<<mode<<"  bpar->is_map()="<<bpar->is_map()<<std::endl;
+      std::cout<<"BlenderProc::render(): bpar->get_blend_mode()="<<bpar->get_blend_mode()
+          <<"  bpar->get_mask_blend_mode()="<<bpar->get_mask_blend_mode()<<std::endl;
       //usleep(1000);
       std::cout<<"BlenderProc::render(): opacity="<<opacity<<std::endl;
       std::cout<<"BlenderProc::render(): CS="<<CS<<"  CHMIN="<<CHMIN<<"  CHMAX="<<CHMAX<<std::endl;

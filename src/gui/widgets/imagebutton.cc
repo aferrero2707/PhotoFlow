@@ -105,7 +105,8 @@ bool PF::ImageButton::on_button_release_event( GdkEventButton* button )
 PF::ToggleImageButton::ToggleImageButton(Glib::ustring active, Glib::ustring inactive,
     bool t, bool a):
 active(true),
-do_toggle(t)
+do_toggle(t),
+pressed(false)
 {
   active_img.set( active );
   inactive_img.set( inactive );
@@ -163,6 +164,9 @@ bool PF::ToggleImageButton::on_button_press_event( GdkEventButton* button )
 #ifndef NDEBUG
   std::cout<<"PF::ToggleImageButton::on_button_press_event(): button "<<button->button<<" pressed."<<std::endl;
 #endif
+  if( button->button != 1 ) return false;
+  pressed = true;
+  signal_pressed.emit();
   return true;
 }
 
@@ -174,12 +178,42 @@ bool PF::ToggleImageButton::on_button_release_event( GdkEventButton* button )
 #endif
   if( button->button != 1 ) return false;
 
+  pressed = false;
+
   if( do_toggle ) {
     toggle();
   } else {
     if( active ) signal_clicked.emit();
   }
   return true;
+}
+
+
+void PF::ToggleImageButtonsBox::add_button( PF::ToggleImageButton* button )
+{
+  buttons.push_back(button);
+  pack_start( *button, Gtk::PACK_SHRINK, 4 );
+
+  button->signal_pressed.connect(sigc::mem_fun(*this,
+          &ToggleImageButtonsBox::on_button_pressed) );
+}
+
+
+void PF::ToggleImageButtonsBox::on_button_pressed()
+{
+  for( unsigned int i = 0; i < buttons.size(); i++ ) {
+    if( buttons[i]->is_active() ) {
+      if( !(buttons[i]->is_pressed()) ) {
+        // de-activate the button, except if it is the pressed one
+        buttons[i]->toggle();
+      }
+    } else {
+      if( buttons[i]->is_pressed() ) {
+        // if it is the pressed one, activate it
+        buttons[i]->toggle();
+      }
+    }
+  }
 }
 
 

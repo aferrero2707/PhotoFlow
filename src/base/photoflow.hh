@@ -46,7 +46,7 @@
 #endif
 #endif
 
-#define PF_FILE_VERSION 4
+#define PF_FILE_VERSION 5
 
 namespace PF
 {

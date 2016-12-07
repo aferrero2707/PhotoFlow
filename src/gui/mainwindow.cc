@@ -230,9 +230,9 @@ buttonSavePreset()
    */
 
 
+  add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
+
   show_all_children();
-
-
 }
 
 PF::MainWindow::~MainWindow()
@@ -404,6 +404,24 @@ bool PF::MainWindow::on_delete_event( GdkEventAny* event )
   remove_all_tabs();
   return false;
 }
+
+
+bool PF::MainWindow::on_key_press_event(GdkEventKey* event)
+{
+  std::cout<<"MainWindow::on_key_press_event() called"<<std::endl;
+  int page = viewerNotebook.get_current_page();
+  Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
+  if( widget ) {
+    PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+    if( editor ) {
+      if( editor->on_key_press_event(event) )
+        return true;
+    }
+  }
+
+  return Gtk::Window::on_key_press_event(event);
+}
+
 
 
 #define LOAD_PFI

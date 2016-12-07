@@ -111,7 +111,16 @@ namespace PF
     PF_BLEND_SEP7=1007,
     PF_BLEND_SEP8=1008,
     PF_BLEND_SEP9=1009,
-    PF_BLEND_UNKNOWN
+    PF_BLEND_LAST
+  };
+
+  enum mask_blendmode_t {
+    PF_MASK_BLEND_NORMAL = PF_BLEND_NORMAL,
+    PF_MASK_BLEND_MULTIPLY = PF_BLEND_MULTIPLY,
+    PF_MASK_BLEND_INTERSECTION = PF_BLEND_LAST+1,
+    PF_MASK_BLEND_UNION,
+    PF_MASK_BLEND_EXCLUSION,
+    PF_MASK_BLEND_UNKNOWN
   };
 
   enum rendermode_t {
@@ -134,6 +143,14 @@ namespace PF
 
   template<>
   class Property<blendmode_t>: public PropertyBase
+  {
+  public:
+    Property(std::string name, OpParBase* par);
+  };
+
+
+  template<>
+  class Property<mask_blendmode_t>: public PropertyBase
   {
   public:
     Property(std::string name, OpParBase* par);

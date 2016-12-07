@@ -103,6 +103,7 @@ public:
 
   bool on_delete_event( GdkEventAny* event );
 
+  bool on_key_press_event(GdkEventKey* event);
 
   void open_image(std::string filename);
 

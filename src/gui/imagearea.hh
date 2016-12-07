@@ -131,7 +131,9 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   bool highlights_warning_enabled, shadows_warning_enabled;
 
   bool display_merged;
-  int active_layer;
+  bool display_mask;
+  int displayed_layer;
+  int selected_layer;
   int edited_layer;
 
 	float shrink_factor;
@@ -256,18 +258,32 @@ public:
   int get_edited_layer() { return edited_layer; }
 
   void set_displayed_layer( int id ) {
-    int old_id = active_layer;
-    active_layer = id; 
+    int old_id = displayed_layer;
+    displayed_layer = id;
     std::cout<<"ImageArea::set_displayed_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
-    if( !display_merged && (old_id != active_layer) ) {
+    if( !display_merged && (old_id != displayed_layer) ) {
       //update( NULL );
-			if( get_pipeline() && get_pipeline()->get_image() ) {
+      if( get_pipeline() && get_pipeline()->get_image() ) {
         std::cout<<"ImageArea::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
-				get_pipeline()->get_image()->update();
-			}
-		}
+        get_pipeline()->get_image()->update();
+      }
+    }
   }
-  int get_active_layer() { return active_layer; }
+  int get_displayed_layer() { return displayed_layer; }
+
+  void set_selected_layer( int id ) {
+    int old_id = selected_layer;
+    selected_layer = id;
+    std::cout<<"ImageArea::set_displayed_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
+    if( !display_merged && (old_id != selected_layer) ) {
+      //update( NULL );
+      if( get_pipeline() && get_pipeline()->get_image() ) {
+        std::cout<<"ImageArea::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
+        get_pipeline()->get_image()->update();
+      }
+    }
+  }
+  int get_selected_layer() { return selected_layer; }
 
   void set_display_merged( bool val )
   {
@@ -276,13 +292,28 @@ public:
     std::cout<<"ImageArea::set_displayed_merged(): val="<<val<<"  old_val="<<old_val<<std::endl;
     if( display_merged != old_val ) {
       //update( NULL );
-			if( get_pipeline() && get_pipeline()->get_image() ) {
-			  std::cout<<"ImageArea::set_displayed_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
-				get_pipeline()->get_image()->update();
-			}
-		}
+      if( get_pipeline() && get_pipeline()->get_image() ) {
+        std::cout<<"ImageArea::set_displayed_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
+        get_pipeline()->get_image()->update();
+      }
+    }
   }
   bool get_display_merged() { return display_merged; }
+
+  void set_display_mask( bool val )
+  {
+    bool old_val = display_mask;
+    display_mask = val;
+    std::cout<<"ImageArea::set_displayed_mask(): val="<<val<<"  old_val="<<old_val<<std::endl;
+    if( display_mask != old_val ) {
+      //update( NULL );
+      if( get_pipeline() && get_pipeline()->get_image() ) {
+        std::cout<<"ImageArea::set_displayed_mask(): get_pipeline()->get_image()->update() called."<<std::endl;
+        get_pipeline()->get_image()->update();
+      }
+    }
+  }
+  bool get_display_mask() { return display_mask; }
 
   virtual void on_realize() 
   {
