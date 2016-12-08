@@ -78,3 +78,16 @@ PF::PropertyBase(name, par)
 };
 
 
+
+
+PF::Property<PF::mask_blendmode_t>::Property(std::string name, PF::OpParBase* par):
+PF::PropertyBase(name, par)
+{
+  add_enum_value(PF_MASK_BLEND_NORMAL,"PF_MASK_BLEND_NORMAL",_("Mix"));
+  add_enum_value(PF_MASK_BLEND_UNION,"PF_MASK_BLEND_UNION",_("Union"));
+  add_enum_value(PF_MASK_BLEND_INTERSECTION,"PF_MASK_BLEND_INTERSECTION",_("Intersection"));
+  add_enum_value(PF_MASK_BLEND_MULTIPLY,"PF_MASK_BLEND_MULTIPLY",_("Multiply"));
+  add_enum_value(PF_MASK_BLEND_EXCLUSION,"PF_MASK_BLEND_EXCLUSION",_("Exclusion"));
+};
+
+

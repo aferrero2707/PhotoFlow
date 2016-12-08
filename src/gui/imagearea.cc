@@ -192,7 +192,9 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   softproof_clip_overflow_enabled( true ),
   adaptation_state(1),
   display_merged( true ),
-  active_layer( -1 ),
+  display_mask( false ),
+  displayed_layer( -1 ),
+  selected_layer( -1 ),
   edited_layer( -1 ),
 	shrink_factor( 1 ),
 	target_area_center_x( -1 ),
@@ -445,10 +447,10 @@ void PF::ImageArea::draw_area()
   Glib::RefPtr< Gdk::Pixbuf > current_pxbuf = modify_preview();
   /*
   Glib::RefPtr< Gdk::Pixbuf > current_pxbuf = double_buffer.get_active().get_pxbuf();
-  if( active_layer >= 0 ) {
+  if( displayed_layer >= 0 ) {
     PF::Image* image = get_pipeline()->get_image();
     if( image ) {
-      PF::Layer* layer = image->get_layer_manager().get_layer( active_layer );
+      PF::Layer* layer = image->get_layer_manager().get_layer( displayed_layer );
       if( layer &&
           layer->get_processor() &&
           layer->get_processor()->get_par() ) {
@@ -893,21 +895,28 @@ void PF::ImageArea::update( VipsRect* area )
   //return;
 
   VipsImage* image = NULL;
-  bool do_merged = display_merged;
-  //std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
+  bool do_merged = display_merged && (!display_mask);
+  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  display_merged="<<display_merged<<"  displayed_layer="<<displayed_layer<<"  display_mask="<<display_mask<<std::endl;
   if( !do_merged ) {
-    if( active_layer < 0 ) do_merged = true;
+    if( displayed_layer < 0 && (!display_mask) ) do_merged = true;
     else {
-      PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
+      int layer_id = -1;
+      if( display_mask ) {
+        layer_id = selected_layer;
+      } else {
+        layer_id = displayed_layer;
+      }
+      PF::PipelineNode* node = get_pipeline()->get_node( layer_id );
+      std::cout<<"ImageArea::update(): layer_id="<<layer_id<<"  node="<<node<<std::endl;
       if( !node ) do_merged = true;
-      //std::cout<<"ImageArea::update(): node="<<node<<std::endl;
       if( get_pipeline()->get_image() ) {
-        PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( active_layer );
+        PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( layer_id );
         if( !temp_layer ) do_merged = true;
         if( !(temp_layer->is_visible()) ) do_merged = true;
       }
     }
   }
+  std::cout<<"ImageArea::update(): do_merged(2)="<<do_merged<<std::endl;
   if( do_merged ) {
     image = get_pipeline()->get_output();
 #ifdef DEBUG_DISPLAY
@@ -925,14 +934,22 @@ void PF::ImageArea::update( VipsRect* area )
       image = convert_raw_data( image );
     }
   } else {
-    PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
+    int layer_id = -1;
+    if( display_mask ) {
+      layer_id = selected_layer;
+    } else {
+      layer_id = displayed_layer;
+    }
+    PF::PipelineNode* node = get_pipeline()->get_node( layer_id );
+    //PF::PipelineNode* node = get_pipeline()->get_node( displayed_layer );
     if( !node ) return;
     if( !(node->blended) ) return;
 
     if( node->processor &&
 				node->processor->get_par() &&
-				!(node->processor->get_par()->is_map()) ) {
+				!(display_mask) ) {
       image = node->blended;
+      std::cout<<"ImageArea::update(): displaying layer "<<layer_id<<std::endl;
 #ifdef DEBUG_DISPLAY
       std::cout<<"ImageArea::update(): node->image("<<node->image<<")->Xsize="<<node->image->Xsize
                <<"    node->image->Ysize="<<node->image->Ysize<<std::endl;    
@@ -941,8 +958,9 @@ void PF::ImageArea::update( VipsRect* area )
 #endif
     } else {
       // We need to find the first non-mask layer that contains the active mask layer
+      /*
       PF::Layer* container_layer = NULL;
-      int temp_id = active_layer;
+      int temp_id = displayed_layer;
       while( !container_layer ) {
 				container_layer = 
           get_pipeline()->get_image()->get_layer_manager().
@@ -957,13 +975,20 @@ void PF::ImageArea::update( VipsRect* area )
 
       PF::PipelineNode* container_node = 
 				get_pipeline()->get_node( container_layer->get_id() );
-      if( !container_node ) return;
-      if( container_layer->get_processor()->get_par()->needs_input() ) {
-        if( container_node->input_id < 0 ) return;
+				*/
+      PF::Layer* ll = get_pipeline()->get_image()->get_layer_manager().
+          get_layer( selected_layer );
+      if( !ll ) return;
+      std::cout<<"ImageArea::update(): displaying mask of layer \""<<ll->get_name()<<"\""<<std::endl;
+      PF::PipelineNode* selected_node =
+        get_pipeline()->get_node( selected_layer );
+      if( !selected_node ) return;
+      if( ll->get_processor()->get_par()->needs_input() ) {
+        if( selected_node->input_id < 0 ) return;
 
         PF::Layer* input_layer = 
           get_pipeline()->get_image()->get_layer_manager().
-          get_layer( container_node->input_id );
+          get_layer( selected_node->input_id );
         if( !input_layer ) return;
         
         PF::PipelineNode* input_node = 
@@ -973,9 +998,9 @@ void PF::ImageArea::update( VipsRect* area )
         
         image = input_node->image;
       } else {
-        if( !container_node->image ) return;
+        if( !selected_node->image ) return;
 
-        image = container_node->image;
+        image = selected_node->image;
       }
 
       /*
@@ -990,6 +1015,7 @@ void PF::ImageArea::update( VipsRect* area )
       image = convert_raw_data( image );
     }
   }
+  std::cout<<"ImageArea::update(): image="<<image<<std::endl;
   if( !image ) return;
 
   unsigned int level = get_pipeline()->get_level();
@@ -1118,19 +1144,28 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"ImageArea::update(): image="<<image<<"   ref_count="<<G_OBJECT( image )->ref_count<<std::endl;
 #endif
   //outimg = srgbimg;
-    
-  if( !display_merged && (active_layer>=0) ) {
-    PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
-    if( !node ) return;
-    if( !(node->blended) ) return;
 
-    if( node->processor &&
-				node->processor->get_par() &&
-				node->processor->get_par()->is_map() ) {
+  if( /*!display_merged &&*/ display_mask && (selected_layer>=0) ) {
+    PF::Layer* l = get_pipeline()->get_image()->get_layer_manager().get_layer( selected_layer );
+    if( !l ) return;
+    std::list<PF::Layer*> mask_layers = l->get_omap_layers();
+    PF::Layer* first_visible = NULL;
+    for( std::list<PF::Layer*>::reverse_iterator li = mask_layers.rbegin();
+        li != mask_layers.rend(); li++ ) {
+      if( (*li) == NULL || !(*li)->is_visible() ) continue;
+      first_visible = *li;
+      break;
+    }
+    if( first_visible ) {
+      PF::Layer* ml = first_visible;
+      if( !ml ) return;
+      PF::PipelineNode* node = get_pipeline()->get_node( ml->get_id() );
+      if( !node ) return;
+      if( !(node->blended) ) return;
 
 #ifdef DEBUG_DISPLAY
       std::cout<<"ImageArea::update(): node->blended("<<node->blended<<")->Xsize="<<node->blended->Xsize
-               <<"    node->blended->Ysize="<<node->blended->Ysize<<std::endl;    
+          <<"    node->blended->Ysize="<<node->blended->Ysize<<std::endl;
 #endif
       invert->get_par()->set_image_hints( node->blended );
       invert->get_par()->set_format( get_pipeline()->get_format() );

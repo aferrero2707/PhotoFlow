@@ -66,9 +66,11 @@ class ToggleImageButton: public Gtk::VBox
 
   bool active;
   bool do_toggle;
+  bool pressed;
 
 public:
   sigc::signal<void> signal_clicked;
+  sigc::signal<void> signal_pressed;
   sigc::signal<void> signal_activated, signal_deactivated;
 
   ToggleImageButton(Glib::ustring active, Glib::ustring inactive,
@@ -76,6 +78,8 @@ public:
 
   bool is_active() { return active; }
   void set_active( bool a );
+
+  bool is_pressed() { return pressed; }
 
   void set_active_image(Glib::ustring img)
   {
@@ -98,6 +102,15 @@ public:
   bool on_button_release_event( GdkEventButton* button );
 };
 
+
+
+class ToggleImageButtonsBox: public Gtk::HBox
+{
+  std::vector<ToggleImageButton*> buttons;
+public:
+  void add_button( ToggleImageButton* );
+  void on_button_pressed();
+};
 
 }
 

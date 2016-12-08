@@ -389,14 +389,17 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
   editor( e ),
   layers( NULL ),
   map_flag( is_map ),
-  tree_modified(true)
+  tree_modified(true),
+  updating(false)
 {
   treeModel = PF::LayerTreeModel::create();
   treeView.set_model(treeModel);
   treeView.append_column_editable("V", treeModel->columns.col_visible);
   treeView.append_column("Name", treeModel->columns.col_name);
-  treeView.append_column("map1", treeModel->columns.col_omap);
-  treeView.append_column("map2", treeModel->columns.col_imap);
+  if( !map_flag ) {
+    treeView.append_column("map1", treeModel->columns.col_omap);
+    //treeView.append_column("map2", treeModel->columns.col_imap);
+  }
 
   treeView.set_headers_visible(false);
 
@@ -405,14 +408,20 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
   col->set_resizable(false); col->set_expand(true);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   //col->set_fixed_width(35);
-  col = treeView.get_column(2);
-  col->set_resizable(false); col->set_expand(false);
-  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
-  col->set_fixed_width(30);
+
+  if( !map_flag ) {
+    col = treeView.get_column(2);
+    col->set_resizable(false); col->set_expand(false);
+    //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+    col->set_fixed_width(30);
+    /*
   col = treeView.get_column(3);
   col->set_resizable(false); col->set_expand(false);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   col->set_fixed_width(30);
+     */
+  }
+
   col = treeView.get_column(1);
   col->set_resizable(false); col->set_expand(true);
   //col->set_max_width(50);
@@ -497,6 +506,7 @@ void PF::LayerTree::on_cell_toggled( const Glib::ustring& path )
 
 void PF::LayerTree::update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l )
 {
+  /*
   if( l->get_processor()->get_par()->has_intensity() ) {
     if( l->get_imap_layers().empty() ) {
       row[treeModel->columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_white.pixel_data,Gdk::COLORSPACE_RGB,
@@ -511,6 +521,7 @@ void PF::LayerTree::update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l )
       }
     }
   }
+  */
   if( l->get_processor()->get_par()->has_opacity() ) {
     if( l->get_omap_layers().empty() ) {
       row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_white.pixel_data,Gdk::COLORSPACE_RGB,
@@ -580,17 +591,22 @@ void PF::LayerTree::update_model_idle_cb()
 
 void PF::LayerTree::update_model()
 {
-  //std::cout<<"LayerTree::update_model(): get_tree_modified()="<<get_tree_modified()<<std::endl;
+  std::cout<<"LayerTree::update_model(): get_tree_modified()="<<get_tree_modified()<<std::endl;
   if( get_tree_modified() == false )
     return;
 
   if( !layers ) return;
 
-  tree_modified = false;
+  if( updating ) return;
 
-  //std::cout<<"LayerTree::update_model() called"<<std::endl;
+  tree_modified = false;
+  updating = true;
+
+  std::cout<<"LayerTree::update_model(): treeModel->clear() called."<<std::endl;
   treeModel->clear();
+  std::cout<<"LayerTree::update_model(): after treeModel->clear()"<<std::endl;
   std::list<PF::Layer*>::iterator li;
+  std::cout<<"LayerTree::update_model(): layers->size()="<<layers->size()<<""<<std::endl;
   for( li = layers->begin(); li != layers->end(); li++ ) {
     PF::Layer* l = *li;
     if( !l ) continue;
@@ -602,6 +618,7 @@ void PF::LayerTree::update_model()
       std::cout<<"LayerTree::update_model(): NULL operation for layer \""<<l->get_name()<<"\""<<std::endl;
       continue;
     }
+    std::cout<<"LayerTree::update_model(): adding layer \""<<l->get_name()<<"\""<<std::endl;
     Gtk::TreeModel::iterator iter = treeModel->prepend();
     Gtk::TreeModel::Row row = *(iter);
     row[treeModel->columns.col_visible] = l->is_enabled();
@@ -630,6 +647,8 @@ void PF::LayerTree::update_model()
   treeView.columns_autosize();
 
   signal_updated.emit();
+
+  updating = false;
 
   //std::cout<<"LayerTree::update_model() finished"<<std::endl;
 /*

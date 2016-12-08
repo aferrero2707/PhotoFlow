@@ -190,7 +190,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   image( new PF::Image() ),
   image_opened( false ),
   displayed_layer( NULL ),
-  active_layer( NULL ),
+  edited_layer( NULL ),
+  selected_layer_id( -1 ),
   //imageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) ),
   layersWidget( image, this ),
   aux_controls( NULL ),
@@ -343,11 +344,11 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 								       &PF::ImageArea::set_display_merged), false) );
   //set_position( get_allocation().get_width()-200 );
   */
-  layersWidget.signal_active_layer_changed.connect( sigc::mem_fun(imageArea,
+  layersWidget.signal_edited_layer_changed.connect( sigc::mem_fun(imageArea,
 								  &PF::ImageArea::set_edited_layer) );
 
-  layersWidget.signal_active_layer_changed.connect( sigc::mem_fun(this,
-								  &PF::ImageEditor::set_active_layer) );
+  layersWidget.signal_edited_layer_changed.connect( sigc::mem_fun(this,
+								  &PF::ImageEditor::set_edited_layer) );
 
   //imageArea_eventBox.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
   //main_panel.set_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK  | Gdk::POINTER_MOTION_HINT_MASK | Gdk::STRUCTURE_MASK );
@@ -381,6 +382,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_updating) );
   PF::ImageProcessor::Instance().signal_status_exporting.
       connect( sigc::mem_fun(*this, &PF::ImageEditor::set_status_exporting) );
+
+  add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
 
   show_all_children();
   //controls_group_scrolled_window.hide();
@@ -513,10 +516,10 @@ void PF::ImageEditor::get_child_layers( Layer* layer, std::list<PF::Layer*>& con
 
 void PF::ImageEditor::get_child_layers()
 {
-  if( !active_layer ) return;
-  std::list<PF::Layer*>* clist = image->get_layer_manager().get_list( active_layer );
+  if( !edited_layer ) return;
+  std::list<PF::Layer*>* clist = image->get_layer_manager().get_list( edited_layer );
   if( !clist ) return;
-  get_child_layers( active_layer, *clist, active_layer_children );
+  get_child_layers( edited_layer, *clist, edited_layer_children );
 }
 
 
@@ -930,14 +933,14 @@ void PF::ImageEditor::zoom_actual_size()
 }
 
 
-void PF::ImageEditor::set_active_layer( int id )
+void PF::ImageEditor::set_edited_layer( int id )
 {
-  PF::Layer* old_active = active_layer;
-  active_layer = NULL;
+  PF::Layer* old_active = edited_layer;
+  edited_layer = NULL;
   if( image )
-    active_layer = image->get_layer_manager().get_layer( id );
-  std::cout<<"ImageEditor::set_active_layer("<<id<<"): old_active="<<old_active<<"  active_layer="<<active_layer<<std::endl;
-  if( old_active != active_layer ) {
+    edited_layer = image->get_layer_manager().get_layer( id );
+  std::cout<<"ImageEditor::set_edited_layer("<<id<<"): old_active="<<old_active<<"  edited_layer="<<edited_layer<<std::endl;
+  if( old_active != edited_layer ) {
     /*
     if( old_active &&
         old_active->get_processor() &&
@@ -950,12 +953,12 @@ void PF::ImageEditor::set_active_layer( int id )
       }
     }
     */
-    if( active_layer &&
-        active_layer->get_processor() &&
-        active_layer->get_processor()->get_par() &&
-        active_layer->get_processor()->get_par()->get_config_ui() ) {
+    if( edited_layer &&
+        edited_layer->get_processor() &&
+        edited_layer->get_processor()->get_par() &&
+        edited_layer->get_processor()->get_par()->get_config_ui() ) {
       /*
-      PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
+      PF::OperationConfigUI* ui = edited_layer->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if( dialog ) {
         dialog->set_editor( this );
@@ -964,8 +967,8 @@ void PF::ImageEditor::set_active_layer( int id )
         }
       }
       */
-      active_layer_children.clear();
-      //image->get_layer_manager().get_child_layers( active_layer, active_layer_children );
+      edited_layer_children.clear();
+      //image->get_layer_manager().get_child_layers( edited_layer, edited_layer_children );
       get_child_layers();
       imageArea->set_edited_layer( id );
     } else {
@@ -993,6 +996,23 @@ void PF::ImageEditor::set_displayed_layer( int id )
       imageArea->set_displayed_layer( -1 );
     }
   }
+}
+
+
+void PF::ImageEditor::set_selected_layer( int id )
+{
+  int old_id = selected_layer_id;
+  selected_layer_id = id;
+  std::cout<<"ImageEditor::set_selected_layer("<<id<<"): old_id="<<old_id<<"  selected_layer_id="<<selected_layer_id<<std::endl;
+  if( old_id != selected_layer_id ) {
+    imageArea->set_selected_layer( id );
+  }
+}
+
+
+void PF::ImageEditor::set_display_mask( bool val )
+{
+  imageArea->set_display_mask( val );
 }
 
 
@@ -1045,11 +1065,11 @@ void PF::ImageEditor::screen2image( gdouble& x, gdouble& y, gdouble& w, gdouble&
 void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
 {
   if( !image ) return;
-  if( !active_layer ) return;
+  if( !edited_layer ) return;
 
 #ifndef NDEBUG
   std::cout<<"PF::ImageEditor::image2layer(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
-  std::cout<<"  active_layer_children.size()="<<active_layer_children.size()<<std::endl;
+  std::cout<<"  edited_layer_children.size()="<<edited_layer_children.size()<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = image->get_pipeline( 0 );
@@ -1060,7 +1080,7 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
 
   if( imageArea->get_display_merged() ) {
     std::list<PF::Layer*>::reverse_iterator li;
-    for(li = active_layer_children.rbegin(); li != active_layer_children.rend(); ++li) {
+    for(li = edited_layer_children.rbegin(); li != edited_layer_children.rend(); ++li) {
       PF::Layer* l = *li;
       if( l && l->is_enabled() ) {
         // Get the node associated to the layer
@@ -1095,10 +1115,10 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   }
 
 #ifndef NDEBUG
-  std::cout<<"PF::ImageEditor::image2layer(): active layer: "<<active_layer->get_name()<<std::endl;
+  std::cout<<"PF::ImageEditor::image2layer(): active layer: "<<edited_layer->get_name()<<std::endl;
 #endif
 
-  PF::PipelineNode* node = pipeline->get_node( active_layer->get_id() );
+  PF::PipelineNode* node = pipeline->get_node( edited_layer->get_id() );
   if( !node ) {
     std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
     return;
@@ -1172,7 +1192,7 @@ void PF::ImageEditor::image2screen( gdouble& x, gdouble& y, gdouble& w, gdouble&
 void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& h )
 {
   if( !image ) return;
-  if( !active_layer ) return;
+  if( !edited_layer ) return;
 
   PF::Pipeline* pipeline = image->get_pipeline( 0 );
   if( !pipeline ) {
@@ -1180,7 +1200,7 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
     return;
   }
 
-  PF::PipelineNode* node = pipeline->get_node( active_layer->get_id() );
+  PF::PipelineNode* node = pipeline->get_node( edited_layer->get_id() );
   if( !node ) {
     std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
     return;
@@ -1213,7 +1233,7 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
 
   if( imageArea->get_display_merged() ) {
     std::list<PF::Layer*>::iterator li;
-    for(li = active_layer_children.begin(); li != active_layer_children.end(); ++li) {
+    for(li = edited_layer_children.begin(); li != edited_layer_children.end(); ++li) {
       PF::Layer* l = *li;
       if( l && l->is_enabled() ) {
         // Get the node associated to the layer
@@ -1271,7 +1291,7 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
 
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
-  std::cout<<"  active_layer: "<<active_layer<<std::endl;
+  std::cout<<"  edited_layer: "<<edited_layer<<std::endl;
 #endif
 
   // Handle CTRL-double-click events separately
@@ -1300,11 +1320,11 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
     return false;
   }
 
-  std::cout<<"ImageEditor::my_button_press_event(): active_layer="<<active_layer<<std::endl;
-  if( active_layer &&
-      active_layer->get_processor() &&
-      active_layer->get_processor()->get_par() ) {
-    PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
+  std::cout<<"ImageEditor::my_button_press_event(): edited_layer="<<edited_layer<<std::endl;
+  if( edited_layer &&
+      edited_layer->get_processor() &&
+      edited_layer->get_processor()->get_par() ) {
+    PF::OperationConfigUI* ui = edited_layer->get_processor()->get_par()->get_config_ui();
     PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
     //std::cout<<"ImageEditor::my_button_press_event(): dialog="<<dialog<<std::endl;
     //if( dialog ) std::cout<<"ImageEditor::my_button_press_event(): dialog->get_editing_flag()="<<dialog->get_editing_flag()<<std::endl;
@@ -1342,12 +1362,12 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 
 #ifndef NDEBUG
   std::cout<<"  pointer @ "<<x<<","<<y<<std::endl;
-  std::cout<<"ImageEditor::my_button_release_event(): active_layer="<<active_layer<<std::endl;
+  std::cout<<"ImageEditor::my_button_release_event(): edited_layer="<<edited_layer<<std::endl;
 #endif
-  if( active_layer &&
-      active_layer->get_processor() &&
-      active_layer->get_processor()->get_par() ) {
-    PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
+  if( edited_layer &&
+      edited_layer->get_processor() &&
+      edited_layer->get_processor()->get_par() ) {
+    PF::OperationConfigUI* ui = edited_layer->get_processor()->get_par()->get_config_ui();
     PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
     if( dialog /*&& dialog->get_editing_flag() == true*/ ) {
 //#ifndef NDEBUG
@@ -1430,12 +1450,12 @@ return false;
              <<"  hint: "<<event->is_hint<<"  state: "<<event->state
              <<std::endl;
 #endif
-    //std::cout<<"PF::ImageEditor::on_motion_notify_event(): active_layer="<<active_layer;
-    //if(active_layer) std::cout<<" ("<<active_layer->get_name()<<")"<<std::endl;
-    if( active_layer &&
-        active_layer->get_processor() &&
-        active_layer->get_processor()->get_par() ) {
-      PF::OperationConfigUI* ui = active_layer->get_processor()->get_par()->get_config_ui();
+    //std::cout<<"PF::ImageEditor::on_motion_notify_event(): edited_layer="<<edited_layer;
+    //if(edited_layer) std::cout<<" ("<<edited_layer->get_name()<<")"<<std::endl;
+    if( edited_layer &&
+        edited_layer->get_processor() &&
+        edited_layer->get_processor()->get_par() ) {
+      PF::OperationConfigUI* ui = edited_layer->get_processor()->get_par()->get_config_ui();
       PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if( dialog /*&& dialog->get_editing_flag() == true*/ ) {
 #ifndef NDEBUG
@@ -1455,6 +1475,25 @@ return false;
   }
 	return true;
 }
+
+
+
+bool PF::ImageEditor::on_key_press_event(GdkEventKey* event)
+{
+  std::cout<<"ImageEditor::on_key_press_event() called"<<std::endl;
+  if( event->type == GDK_KEY_PRESS &&
+      (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK)) == (GDK_MOD2_MASK+GDK_SHIFT_MASK) ) {
+    if( event->keyval == 'N' ) {
+      std::cout<<"ImageEditor: Ctrl+Shift+N pressed"<<std::endl;
+    }
+  }
+
+  if( layersWidget.on_key_press_event(event) )
+    return true;
+
+  return false;
+}
+
 
 
 //bool PF::ImageEditor::on_preview_configure_event( GdkEventConfigure* event )

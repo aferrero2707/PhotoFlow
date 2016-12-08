@@ -120,6 +120,7 @@ vips_layer( VipsImage **in, int n, VipsImage **out, int first,
 PF::BlenderPar::BlenderPar(): 
   OpParBase(),
   blend_mode("blend_mode",this),
+  mask_blend_mode("mask_blend_mode",this),
   opacity("opacity",this,1),
   shift_x("shift_x",this,0),
   shift_y("shift_y",this,0),
@@ -140,7 +141,34 @@ PF::BlenderPar::BlenderPar():
   //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
   blend_mode.set_enum_value( PF_BLEND_NORMAL );
   blend_mode.store_default();
+  mask_blend_mode.set_enum_value( PF_MASK_BLEND_NORMAL );
+  mask_blend_mode.store_default();
   set_type( "blender" );
+}
+
+
+void PF::BlenderPar::finalize()
+{
+  if( get_file_format_version() > 4 ) return;
+
+  std::cout<<std::endl<<std::endl<<std::endl<<std::endl;
+  std::cout<<"BlenderPar::finalize() called"<<std::endl;
+  std::cout<<std::endl<<std::endl<<std::endl<<std::endl;
+
+  switch( blend_mode.get_enum_value().first ) {
+  case PF_BLEND_MULTIPLY:
+    mask_blend_mode.set_enum_value( PF_MASK_BLEND_MULTIPLY );
+    break;
+  case PF_BLEND_LIGHTEN:
+    mask_blend_mode.set_enum_value( PF_MASK_BLEND_UNION );
+    break;
+  case PF_BLEND_DARKEN:
+    mask_blend_mode.set_enum_value( PF_MASK_BLEND_INTERSECTION );
+    break;
+  default:
+    mask_blend_mode.set_enum_value( PF_MASK_BLEND_NORMAL );
+    break;
+  }
 }
 
 
@@ -229,8 +257,9 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   // the opacity is 100% and the opacity map is NULL, since in this case the underlying
   // image is useless. This improves performance for the default layer settings.
   bool is_passthrough = false;
-  if( get_blend_mode() == PF_BLEND_PASSTHROUGH ) is_passthrough = true;
-  if( (get_blend_mode() == PF_BLEND_NORMAL) && 
+  int cur_blend_mode = is_map() ? get_mask_blend_mode() : get_blend_mode();
+  if( cur_blend_mode == PF_BLEND_PASSTHROUGH ) is_passthrough = true;
+  if( (cur_blend_mode == PF_BLEND_NORMAL) &&
       (get_opacity() > 0.999999f) &&
       same_size && (do_shift == false) &&
       (omap == NULL) && (transform == NULL) ) is_passthrough = true;
@@ -240,7 +269,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   if( background && foreground && (background->BandFmt != foreground->BandFmt) )
     is_passthrough = true;
 
-    if( is_passthrough && (get_blend_mode() != PF_BLEND_PASSTHROUGH) ) {
+    if( is_passthrough && (cur_blend_mode != PF_BLEND_PASSTHROUGH) ) {
     switch( get_colorspace() ) {
     case PF_COLORSPACE_RGB:
       if( get_rgb_target_channel()>= 0 )

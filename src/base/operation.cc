@@ -63,6 +63,7 @@ PF::OpParBase::OpParBase():
   lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
   mask_enabled("mask_enabled",this,true),
+  file_format_version( PF_FILE_VERSION ),
   previous_channel_is_input("previous_channel_is_input",this,true)
 {
   //blend_mode.set_internal(true);

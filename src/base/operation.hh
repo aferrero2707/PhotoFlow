@@ -163,6 +163,8 @@ namespace PF
 
     Property<bool> mask_enabled;
 
+    int file_format_version;
+
     Property<bool> previous_channel_is_input;
 
   public:
@@ -240,6 +242,9 @@ namespace PF
     std::string get_default_name() { return default_name; }
     void set_default_name( std::string n ) { default_name = n; }
 
+    void set_file_format_version(int v) { file_format_version = v; }
+    int get_file_format_version() { return file_format_version; }
+
 
     int get_rgb_target_channel() 
     {
@@ -300,6 +305,9 @@ namespace PF
 
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }
+
+    // called after all properties have been loaded from .pfi file
+    virtual void finalize() {}
 
     virtual void pre_build( rendermode_t /*mode*/ ) {}
 
@@ -476,6 +484,7 @@ namespace PF
   #include "blend_luminosity.hh"
   #include "blend_luminance.hh"
   #include "blend_color.hh"
+  #include "blend_exclusion.hh"
 
   int vips_copy_metadata( VipsImage* in, VipsImage* out );
 

@@ -63,13 +63,13 @@ namespace PF
   template<typename T, colorspace_t colorspace, int CHMIN, int CHMAX, bool has_omap>
   class Blender
   {
-    blendmode_t mode;
+    int mode;
     float opacity;
     cmsHTRANSFORM transform;
     ICCProfile* data;
 
   public:
-    Blender( blendmode_t m, float o ):
+    Blender( int m, float o ):
       mode( m ), opacity( o ), transform( NULL ), data( NULL )
     {
     }
@@ -89,6 +89,7 @@ namespace PF
       BlendScreen<T,colorspace,CHMIN,CHMAX,has_omap> blend_screen;
       BlendLighten<T,colorspace,CHMIN,CHMAX,has_omap> blend_lighten;
       BlendDarken<T,colorspace,CHMIN,CHMAX,has_omap> blend_darken;
+      BlendExclusion<T,colorspace,CHMIN,CHMAX,has_omap> blend_exclusion;
       BlendOverlay<T,colorspace,CHMIN,CHMAX,has_omap> blend_overlay;
       BlendOverlayGimp<T,colorspace,CHMIN,CHMAX,has_omap> blend_overlay_gimp;
       BlendSoftLight<T,colorspace,CHMIN,CHMAX,has_omap> blend_soft_light;
@@ -124,6 +125,7 @@ namespace PF
         case PF_BLEND_PASSTHROUGH:
           break;
         case PF_BLEND_NORMAL:
+        //case PF_MASK_BLEND_NORMAL:
           BLEND_LOOP(blend_normal);
           break;
         case PF_BLEND_ADD:
@@ -160,10 +162,15 @@ namespace PF
           BLEND_LOOP(blend_screen);
           break;
         case PF_BLEND_LIGHTEN:
+        case PF_MASK_BLEND_UNION:
           BLEND_LOOP(blend_lighten);
           break;
         case PF_BLEND_DARKEN:
+        case PF_MASK_BLEND_INTERSECTION:
           BLEND_LOOP(blend_darken);
+          break;
+        case PF_MASK_BLEND_EXCLUSION:
+          BLEND_LOOP(blend_exclusion);
           break;
         case PF_BLEND_LUMI:
           BLEND_LOOP2(blend_lumi);
@@ -175,7 +182,7 @@ namespace PF
         case PF_BLEND_COLOR:
           BLEND_LOOP2(blend_color);
           break;
-        case PF_BLEND_UNKNOWN:
+        case PF_BLEND_LAST:
           break;
         default:
           break;

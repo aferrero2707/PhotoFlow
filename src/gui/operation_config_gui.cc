@@ -88,8 +88,8 @@ static gboolean config_update_cb (PF::OperationConfigGUI * config)
 PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring& title, bool chsel ):
   PF::OperationConfigUI(layer),
   editor( NULL ),
-  blendSelector( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH, 60 ),
-  blendSelector2( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH ),
+  blendSelector( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH, 55 ),
+  blendSelector2( this, layer->get_blender(), "mask_blend_mode", "", PF_BLEND_NORMAL, 55 ),
   intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   intensitySlider2( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   opacitySlider( this, layer->get_blender(), "opacity", "", 100, 0, 100, 1, 10, 100, 100),
@@ -150,11 +150,19 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame->add( frame_hbox );
   frame->add( frame_vbox );
 
+  frame_vbox.set_spacing(4);
   frame_vbox.pack_start( frame_top_box_1, Gtk::PACK_SHRINK, 0 );
   //frame_vbox.pack_start( controls_frame, Gtk::PACK_SHRINK, 0 );
   //frame_vbox.pack_start( hline, Gtk::PACK_SHRINK, 5 );
 
   //blendSelector.set_size_request( -1, 22 );
+
+  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_blend_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_blend_inactive.png",false,true) );
+  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_union_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_union_inactive.png",false,false) );
+  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_intersection_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_intersection_inactive.png",false,false) );
+  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_exclusion_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_exclusion_inactive.png",false,false) );
+
+  //frame_top_box_1_1.pack_start( map_buttons, Gtk::PACK_SHRINK );
 
   //frame_box_top.set_spacing(5);
   nameEntry.set_has_frame( false );
@@ -185,14 +193,17 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   nameEntry.set_text( "layer name" );
 
-  //frame_top_vbox_1.pack_start( frame_top_box_1_2, Gtk::PACK_SHRINK );
-  frame_top_vbox_1.pack_start( frame_top_box_1_1, Gtk::PACK_SHRINK );
+  //frame_top_box_1_2.pack_start( map_buttons, Gtk::PACK_SHRINK, 5 );
+
+  frame_top_vbox_1.pack_start( frame_top_box_1_1, Gtk::PACK_SHRINK, 4 );
+  frame_top_vbox_1.pack_start( frame_top_box_1_2, Gtk::PACK_SHRINK );
   frame_top_box_1.pack_start( frame_top_vbox_1, Gtk::PACK_EXPAND_WIDGET );
 
 
   if(par && par->has_opacity() ) {
     //opacitySlider.set_width( 200 );
     opacity_box.pack_end( opacitySlider, Gtk::PACK_SHRINK, 0 );
+    opacity_box.pack_end( blendSelector2, Gtk::PACK_SHRINK, 0 );
     opacity_box.pack_end( blendSelector, Gtk::PACK_SHRINK, 0 );
     frame_top_box_2.pack_start( opacity_box, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_EXPAND_WIDGET );
@@ -262,10 +273,11 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   aux_controls_hbox.pack_start( frame_top_buttons_alignment2, Gtk::PACK_SHRINK );
 
+  nameEntry.set_width_chars(10);
   nameEntry2.set_width_chars(10);
   aux_controls_hbox.pack_start( nameEntry2, Gtk::PACK_EXPAND_WIDGET );
   if(par && par->has_opacity() ) {
-    aux_controls_hbox.pack_start( blendSelector2, Gtk::PACK_SHRINK );
+    //aux_controls_hbox.pack_start( blendSelector2, Gtk::PACK_SHRINK );
     aux_controls_box.pack_start( opacitySlider2, Gtk::PACK_SHRINK );
   }
   if(false && par && par->has_intensity() ) {
@@ -338,6 +350,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
       &OperationConfigGUI::on_layer_name_changed) );
   nameEntry2.signal_changed().connect(sigc::mem_fun(*this,
       &OperationConfigGUI::on_layer_name2_changed) );
+
+  blendSelector.hide();
 }
 
 
@@ -405,7 +419,7 @@ void PF::OperationConfigGUI::expand()
     controls_frame.show();
     frame_expander.set_active(true);
     if( editor && get_layer()) {
-      editor->set_active_layer( get_layer()->get_id() );
+      editor->set_edited_layer( get_layer()->get_id() );
     }
 
     PF::OpParBase* par = get_par();
@@ -429,7 +443,7 @@ void PF::OperationConfigGUI::collapse()
     frame_expander.set_active(false);
     //std::cout<<"OperationConfigGUI::collapse(): controls hidden"<<std::endl;
     //if( editor ) {
-    //  editor->set_active_layer( -1 );
+    //  editor->set_edited_layer( -1 );
     //}
   }
 
@@ -800,6 +814,27 @@ void PF::OperationConfigGUI::on_layer_name2_changed()
 void PF::OperationConfigGUI::update_buttons()
 {
   //std::cout<<"OperationConfigGUI::update_buttons(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
+  PF::OpParBase* par = get_par();
+  if( par ) {
+    if( par->is_map() ) {
+      blendSelector.hide();
+      blendSelector2.show();
+      //frame_top_buttons_alignment.hide();
+      //map_buttons.hide();
+      frame_mask.hide();
+      frame_edit.hide();
+      frame_sticky.hide();
+    } else {
+      blendSelector.show();
+      blendSelector2.hide();
+      //frame_top_buttons_alignment.show();
+      //map_buttons.hide();
+      frame_mask.show();
+      frame_edit.show();
+      frame_sticky.show();
+    }
+  }
+
   if( get_layer() ) {
     frame_visible.set_active( get_layer()->is_enabled() );
     //std::cout<<"OperationConfigGUI::update_buttons(): frame_visible.set_active("<<get_layer()->is_enabled()<<");"<<std::endl;
@@ -812,7 +847,7 @@ void PF::OperationConfigGUI::update_buttons()
 
 void PF::OperationConfigGUI::init()
 {
-  //std::cout<<"OperationConfigGUI::init(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
+  std::cout<<"OperationConfigGUI::init(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
   update_buttons();
   for( unsigned int i = 0; i < controls.size(); i++ )
     controls[i]->init();
@@ -827,6 +862,9 @@ void PF::OperationConfigGUI::open()
     controls[i]->init();
   */
   PF::OpParBase* par = get_par();
+
+  if( PF::PhotoFlow::Instance().is_single_win_mode() && frame )
+    frame->show_all();
 
   if( par ) {
     nameEntry.set_text( get_layer()->get_name().c_str() );
@@ -843,8 +881,6 @@ void PF::OperationConfigGUI::open()
   }
   PF::OperationConfigUI::open();
 
-  if( PF::PhotoFlow::Instance().is_single_win_mode() && frame )
-    frame->show_all();
   expand();
   //show_all();
   //show();
