@@ -35,11 +35,11 @@ OperationConfigGUI( layer, "Shadows/highlights" ),
 modeSelector( this, "method", _("soften with: "), 0 ),
 sh_slider( this, "shadows", _("shadows"), 50, -100, 100, 2, 10, 1),
 hi_slider( this, "highlights", _("highlights"), 50, -100, 100, 2, 10, 1),
-wp_adj_slider( this, "wp_adjustment", _("whithe point adjustment"), 0, -10, 10, 0.2, 1, 1),
+wp_adj_slider( this, "wp_adjustment", _("white pt. adj."), 0, -10, 10, 0.2, 1, 1),
 radius_slider( this, "radius", _("radius"), 100, 0, 200, 2, 10, 1),
 compress_slider( this, "compress", _("compress"), 50, 0, 100, 2, 10, 1),
-sh_color_adj_slider( this, "sh_color_adjustment", _("shadows color adjustment"), 100, 0, 100, 2, 10, 1),
-hi_color_adj_slider( this, "hi_color_adjustment", _("highlights color adjustment"), 50, 0, 100, 2, 10, 1)
+sh_color_adj_slider( this, "sh_color_adjustment", _("SH color adj."), 100, 0, 100, 2, 10, 1),
+hi_color_adj_slider( this, "hi_color_adjustment", _("HL color adj."), 50, 0, 100, 2, 10, 1)
 {
   controlsBox.pack_start( sh_slider, Gtk::PACK_SHRINK, 5 );
   controlsBox.pack_start( hi_slider, Gtk::PACK_SHRINK, 5 );

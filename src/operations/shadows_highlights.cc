@@ -63,7 +63,7 @@ in_profile( NULL )
 
 bool PF::ShadowsHighlightsPar::needs_caching()
 {
-  return false;
+  return true;
 }
 
 
