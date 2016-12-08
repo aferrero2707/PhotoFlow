@@ -51,6 +51,11 @@ extern "C" {
 
 PF::BasicAdjustmentsPar::BasicAdjustmentsPar():
   OpParBase(),
+  brightness("brightness",this,0),
+  exposure("exposure",this,0),
+  gamma("gamma",this,0),
+  white_level("white_level",this,0),
+  black_level("black_level",this,0),
   hue("hue",this,0),
   hue_eq("hue_eq",this,0),
   saturation("saturation",this,0),
@@ -167,6 +172,9 @@ VipsImage* PF::BasicAdjustmentsPar::build(std::vector<VipsImage*>& in, int first
   eq_enabled[1] = hue_S_equalizer_enabled.get();
   eq_enabled[2] = hue_L_equalizer_enabled.get();
 
+
+  exposure_pow = powf( 2.f, exposure.get() );
+  exponent = 1.f/powf( 10.f, gamma.get() );
 
   icc_data = PF::get_icc_profile( in[0] );
 

@@ -84,6 +84,11 @@ public:
 
 PF::BasicAdjustmentsConfigGUI::BasicAdjustmentsConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Base Adjustments" ),
+  black_level_slider( this, "black_level", _("black"), 0, -100, 100, 5, 10, 100),
+  white_level_slider( this, "white_level", _("white"), 0, -100, 1600, 5, 10, 100),
+  brightnessSlider( this, "brightness", _("brightness"), 0, -100, 100, 5, 10, 100),
+  exposureSlider( this, "exposure", _("exposure"), 0, -10, 10, 0.1, 1, 1 ),
+  gamma_slider( this, "gamma", _("gamma adjustment"), 0, -1, 1, 0.01, 0.1, 1 ),
   contrastSlider( this, "contrast", _("Contrast"), 0, -100, 100, 5, 10, 100),
   contrast2Slider( this, "contrast_eq", "Contrast(curve)", 0, -100, 100, 5, 10, 100),
   saturationSlider( this, "saturation", _("Saturation"), 0, -100, 100, 5, 10, 100),
@@ -107,7 +112,11 @@ PF::BasicAdjustmentsConfigGUI::BasicAdjustmentsConfigGUI( PF::Layer* layer ):
   featherRadiusSlider( this, "feather_radius", _("radius "), 1, 0, 1000000, 1, 5, 1),
   mask_invert( this, "invert_mask", _("invert mask"), false )
 {
-  //controlsBox.pack_start( sep1, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( black_level_slider, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( gamma_slider, Gtk::PACK_SHRINK );
+ //controlsBox.pack_start( sep1, Gtk::PACK_SHRINK );
   controlsBox.pack_start( contrastSlider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( contrast2Slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( sep2, Gtk::PACK_SHRINK );

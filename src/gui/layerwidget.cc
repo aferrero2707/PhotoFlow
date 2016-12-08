@@ -305,8 +305,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( add_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( group_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( insert_image_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( levels_button, Gtk::PACK_SHRINK, 2 );
-  //tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
+  //tool_buttons_box.pack_start( levels_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( uniform_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( gradient_button, Gtk::PACK_SHRINK, 2 );

@@ -48,6 +48,15 @@ namespace PF
 
   class BasicAdjustmentsPar: public OpParBase
   {
+    Property<float> brightness;
+    Property<float> exposure;
+    Property<float> gamma;
+    Property<float> white_level;
+    Property<float> black_level;
+
+    float exposure_pow;
+    float exponent;
+
     Property<float> hue, hue_eq;
     Property<float> saturation, saturation_eq;
     Property<float> contrast, contrast_eq;
@@ -92,6 +101,12 @@ namespace PF
     cmsHTRANSFORM get_transform_inv() { return transform_inv; }
 
     ICCProfile* get_icc_data() { return icc_data; }
+
+    float get_brightness() { return brightness.get(); }
+    float get_exposure() { return exposure_pow; }
+    float get_gamma() { return exponent; }
+    float get_white_level() { return white_level.get(); }
+    float get_black_level() { return black_level.get(); }
 
     float get_hue() { return hue.get(); }
     float get_hue_eq() { return hue_eq.get(); }
@@ -143,6 +158,12 @@ namespace PF
       //int width = r->width;
       int height = r->height;
 
+      float brightness = opar->get_brightness();
+      float exposure = opar->get_exposure();
+      float gamma = opar->get_gamma();
+      float black_level = opar->get_black_level();
+      float white_level = opar->get_white_level();
+
       float hue = opar->get_hue();
       float saturation = opar->get_saturation();
       float contrast = opar->get_contrast();
@@ -188,6 +209,46 @@ namespace PF
 
             float h_eq;
             to_float( pmask[x], h_eq );
+
+            float black_level2 = black_level;
+            float white_level2 = white_level;
+            float brightness2 = brightness;
+            float exposure2 = exposure;
+            float gamma2 = gamma;
+
+
+            if( (black_level2 != 0) || (white_level2 != 0) ) {
+              float delta = (white_level2 + 1.f - black_level2);
+              if( fabs(delta) < 0.0001f ) {
+                if( delta > 0 ) delta = 0.0001f;
+                else delta = -0.0001f;
+              }
+              for( k=0; k < 3; k++) {
+                RGB[k] = (RGB[k] - black_level2) / delta;
+                //clip( exposure*RGB[k], RGB[k] );
+              }
+            }
+
+            if( brightness2 != 0 ) {
+              for( k=0; k < 3; k++) {
+                RGB[k] += brightness2*FormatInfo<float>::RANGE;
+                //clip( (contrast2+1.0f)*tempval+brightness2*FormatInfo<float>::RANGE+FormatInfo<float>::HALF, RGB[k] );
+              }
+            }
+
+            if( exposure2 != 0 ) {
+              for( k=0; k < 3; k++) {
+                RGB[k] *= exposure;
+                //clip( exposure*RGB[k], RGB[k] );
+              }
+            }
+
+            if( gamma2 != 1 ) {
+              for( k=0; k < 3; k++) {
+                RGB[k] = powf( RGB[k], gamma );
+                //clip( exposure*RGB[k], RGB[k] );
+              }
+            }
 
             //std::cout<<"h_in="<<h_in<<"  h_eq="<<h_eq<<" ("<<h_eq1<<" "<<h_eq2<<" "<<h_eq3<<")"<<std::endl;
 

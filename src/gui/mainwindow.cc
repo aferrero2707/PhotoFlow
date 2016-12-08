@@ -1250,10 +1250,12 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   } else {
     WidgetDestroyData * update = g_new (WidgetDestroyData, 1);
     update->widget = widget;
+    std::cout<<"MainWindow::remove_tab(): submitting idle callback for image editor deletetion"<<std::endl;
     g_idle_add ((GSourceFunc) widget_destroy_cb, update);
 
     update = g_new (WidgetDestroyData, 1);
     update->widget = tabwidget;
+    std::cout<<"MainWindow::remove_tab(): submitting idle callback for tab widget deletetion"<<std::endl;
     g_idle_add ((GSourceFunc) widget_destroy_cb, update);
   }
 
