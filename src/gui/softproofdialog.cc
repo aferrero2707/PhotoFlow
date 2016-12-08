@@ -36,11 +36,14 @@
 
 PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
       Gtk::Dialog( _("Soft Proofing Setup"),false),
+      proofed_profile_frame( _("proofed profile settings") ),
       bpc_button( _("black point compensation") ),
+      adaptation_label(_("adaptation state")),
+      display_profile_frame( _("display profile settings") ),
       paper_sim_frame( _("paper simulation") ),
       sim_black_ink_button( _("sim. black ink") ),
       sim_paper_color_button( _("sim. paper color") ),
-      clipping_frame( _("clipping") ),
+      //clipping_frame( _("clipping") ),
       clip_negative_button( _("clip negative") ),
       clip_overflow_button( _("clip overflow") ),
       gamut_warning_button( _("gamut warning") ),
@@ -97,12 +100,17 @@ PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
   profile_selector.pack_start(profile_columns.col_text);
   //profile_selector.set_active( 0 );
 
-  get_vbox()->pack_start( profile_selector, Gtk::PACK_SHRINK, 5 );
-
+  proofed_profile_box.pack_start( profile_selector, Gtk::PACK_SHRINK, 5 );
   profile_box.pack_start( profile_entry, Gtk::PACK_SHRINK );
   profile_box.pack_start( profile_open_button, Gtk::PACK_SHRINK );
+  proofed_profile_box.pack_start( profile_box, Gtk::PACK_SHRINK, 5 );
 
-  get_vbox()->pack_start( profile_box, Gtk::PACK_SHRINK, 5 );
+  clip_negative_button.set_active( true );
+  clip_overflow_button.set_active( true );
+  clipping_hbox.pack_start( clip_negative_button, Gtk::PACK_SHRINK, 5 );
+  clipping_hbox.pack_start( clip_overflow_button, Gtk::PACK_SHRINK, 5 );
+  //clipping_frame.add( clipping_hbox );
+  //sim_clipping_hbox.pack_start( clipping_frame, Gtk::PACK_SHRINK, 5 );
 
   // rendering intent settings
   intent_model = Gtk::ListStore::create(intent_columns);
@@ -133,32 +141,39 @@ PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
   intent_selector.pack_start(intent_columns.col_text);
   intent_selector.set_active( 0 );
 
-  get_vbox()->pack_start( intent_selector, Gtk::PACK_SHRINK, 5 );
+  proofed_profile_box.pack_start( intent_selector, Gtk::PACK_SHRINK, 5 );
 
   bpc_button.set_active();
-  get_vbox()->pack_start( bpc_button, Gtk::PACK_SHRINK, 5 );
+  proofed_profile_box.pack_start( bpc_button, Gtk::PACK_SHRINK, 5 );
 
-  adaptation_slider.set_range(0,1);
-  adaptation_slider.set_value(1);
-  adaptation_slider.set_digits(2);
-  adaptation_slider.set_increments(0.1,0.01);
-  get_vbox()->pack_start( adaptation_slider, Gtk::PACK_SHRINK, 5 );
+  //get_vbox()->pack_start( sim_clipping_hbox, Gtk::PACK_SHRINK, 5 );
+  proofed_profile_box.pack_start( clipping_hbox, Gtk::PACK_SHRINK, 5 );
+  //proofed_profile_box.pack_start( clipping_frame, Gtk::PACK_SHRINK, 5 );
+
+  proofed_profile_box.pack_start( gamut_warning_button, Gtk::PACK_SHRINK, 5 );
+  proofed_profile_frame.add( proofed_profile_box );
+
+  get_vbox()->pack_start( proofed_profile_frame, Gtk::PACK_SHRINK, 5 );
+
 
   paper_sim_vbox.pack_start( sim_black_ink_button, Gtk::PACK_SHRINK, 5 );
   paper_sim_vbox.pack_start( sim_paper_color_button, Gtk::PACK_SHRINK, 5 );
-  paper_sim_frame.add( paper_sim_vbox );
-  sim_clipping_hbox.pack_start( paper_sim_frame, Gtk::PACK_SHRINK, 5 );
+  //paper_sim_frame.add( paper_sim_vbox );
+  //sim_clipping_hbox.pack_start( paper_sim_frame, Gtk::PACK_SHRINK, 5 );
 
-  clip_negative_button.set_active( true );
-  clip_overflow_button.set_active( true );
-  clipping_vbox.pack_start( clip_negative_button, Gtk::PACK_SHRINK, 5 );
-  clipping_vbox.pack_start( clip_overflow_button, Gtk::PACK_SHRINK, 5 );
-  clipping_frame.add( clipping_vbox );
-  sim_clipping_hbox.pack_start( clipping_frame, Gtk::PACK_SHRINK, 5 );
+  display_profile_box.pack_start( paper_sim_vbox, Gtk::PACK_SHRINK, 5 );
+  //display_profile_box.pack_start( paper_sim_frame, Gtk::PACK_SHRINK, 5 );
 
-  get_vbox()->pack_start( sim_clipping_hbox, Gtk::PACK_SHRINK, 5 );
-  get_vbox()->pack_start( gamut_warning_button, Gtk::PACK_SHRINK, 5 );
+  adaptation_slider.set_range(0,1);
+  adaptation_slider.set_value(0);
+  adaptation_slider.set_digits(2);
+  adaptation_slider.set_increments(0.1,0.01);
 
+  display_profile_box.pack_start( adaptation_label, Gtk::PACK_SHRINK, 0 );
+  display_profile_box.pack_start( adaptation_slider, Gtk::PACK_SHRINK, 0 );
+  display_profile_frame.add( display_profile_box );
+
+  get_vbox()->pack_start( display_profile_frame, Gtk::PACK_SHRINK, 15 );
 
   profile_selector.signal_changed().
     connect(sigc::mem_fun(*this, &SoftProofDialog::on_profile_selector_changed));

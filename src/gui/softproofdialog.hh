@@ -60,9 +60,16 @@ namespace PF {
     Glib::RefPtr<Gtk::ListStore> intent_model;
     Gtk::ComboBox intent_selector;
 
+    Gtk::Frame proofed_profile_frame;
+    Gtk::VBox proofed_profile_box;
+
     Gtk::CheckButton bpc_button;
+    Gtk::Label adaptation_label;
     Gtk::HScale adaptation_slider;
 
+
+    Gtk::Frame display_profile_frame;
+    Gtk::VBox display_profile_box;
 
     Gtk::Frame paper_sim_frame;
     Gtk::VBox paper_sim_vbox;
@@ -70,7 +77,7 @@ namespace PF {
     Gtk::CheckButton sim_paper_color_button;
 
     Gtk::Frame clipping_frame;
-    Gtk::VBox clipping_vbox;
+    Gtk::HBox clipping_hbox;
     Gtk::CheckButton clip_negative_button;
     Gtk::CheckButton clip_overflow_button;
 

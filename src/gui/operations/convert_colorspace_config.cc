@@ -42,6 +42,7 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
   clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
   bpcButton( this, "bpc", _("black point compensation"), false ),
+  adaptationStateSlider( this, "adaptation_state", _("adapt. state"), 0, 0, 1, 0.01, 0.05, 1 ),
   gamutWarningButton( _("gamut warning") ),
   assignButton( this, "assign", _("assign profile"), false ),
   outProfOpenButton(Gtk::Stock::OPEN)
@@ -73,6 +74,9 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
 
   bpcButtonBox.pack_start( bpcButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( bpcButtonBox, Gtk::PACK_SHRINK );
+
+  adaptationStateBox.pack_end( adaptationStateSlider, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( adaptationStateBox, Gtk::PACK_SHRINK );
 
   assignButtonBox.pack_start( assignButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( assignButtonBox, Gtk::PACK_SHRINK );
@@ -126,6 +130,12 @@ void PF::ConvertColorspaceConfigGUI::do_update()
       //outProfileTypeSelectorBox.show();
       outTRCTypeSelectorBox.show();
       outProfHBox.hide();
+    }
+
+    if( ccpar->get_intent() == INTENT_ABSOLUTE_COLORIMETRIC ) {
+      adaptationStateBox.show();
+    } else {
+      adaptationStateBox.hide();
     }
   }
 

@@ -65,6 +65,7 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
       out_profile_name("profile_name", this),
       intent("rendering_intent",this,INTENT_RELATIVE_COLORIMETRIC,"INTENT_RELATIVE_COLORIMETRIC","relative colorimetric"),
       bpc("bpc", this, true),
+      adaptation_state("adaptation_state", this, 1.f),
       assign("assign", this, false),
       clip_negative("clip_negative",this,true),
       clip_overflow("clip_overflow",this,true),
@@ -242,12 +243,17 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 
       cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
       if( bpc.get() ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
+
+      cmsFloat64Number old_state = cmsSetAdaptationState( adaptation_state.get() );
+      std::cout<<"ConvertColorspacePar::build(): adaptation_state="<<adaptation_state.get()
+          <<"  old_state="<<old_state<<std::endl;
       transform = cmsCreateTransform( in_profile, 
           infmt,
           out_profile,
           outfmt,
           intent.get_enum_value().first,//INTENT_RELATIVE_COLORIMETRIC,
           flags); //cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+      cmsSetAdaptationState( old_state );
     }
   }
 

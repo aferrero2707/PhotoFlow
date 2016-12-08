@@ -157,6 +157,7 @@ class ConvertColorspacePar: public OpParBase
   Property<std::string> out_profile_name;
   PropertyBase intent;
   Property<bool> bpc;
+  Property<float> adaptation_state;
   Property<bool> assign;
 
   Property<bool> clip_negative, clip_overflow;
@@ -192,6 +193,8 @@ public:
     out_profile_data_length = length;
   }
   std::string get_out_profile_name() { return out_profile_name.get(); }
+
+  int get_intent() { return intent.get_enum_value().first; }
 
   bool get_clip_negative() { return clip_negative.get(); }
   bool get_clip_overflow() { return clip_overflow.get(); }

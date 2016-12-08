@@ -62,6 +62,9 @@ namespace PF {
     CheckBox bpcButton;
     Gtk::HBox bpcButtonBox;
 
+    Slider adaptationStateSlider;
+    Gtk::HBox adaptationStateBox;
+
     CheckBox assignButton;
     Gtk::HBox assignButtonBox;
 
