@@ -105,7 +105,8 @@ namespace PF
       }
 
       BlenderPar* bpar = dynamic_cast<BlenderPar*>(par);
-      float opacity = 1; if(bpar) opacity = bpar->get_opacity();
+      if( !bpar ) return;
+      float opacity = bpar->get_opacity();
       int mode = bpar->is_map() ? bpar->get_mask_blend_mode() : bpar->get_blend_mode();
       Blender<T,CS,CHMIN,CHMAX,has_omap> blender( mode, opacity );
 #ifndef NDEBUG
