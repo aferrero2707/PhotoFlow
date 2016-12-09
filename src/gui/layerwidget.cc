@@ -416,6 +416,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //layer_frames.push_back( frame );
   layer_views.push_back( &layers_view );
   layer_views.push_back( &mask_view );
+  active_view = 0;
 
   layer_views[0]->set_layers( &(image->get_layer_manager().get_layers()) );
   //image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
@@ -763,6 +764,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       return;
     }
 
+    /*
     PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
     if( ui ) {
       PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
@@ -773,6 +775,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       }
       controls_group.show_all_children();
     }
+    */
   }
 }
 
