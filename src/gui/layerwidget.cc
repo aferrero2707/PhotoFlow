@@ -767,6 +767,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       return;
     }
 
+    /*
     PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
     if( ui ) {
       PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
@@ -777,6 +778,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       }
       controls_group.show_all_children();
     }
+    */
   }
 }
 
