@@ -419,6 +419,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //layer_frames.push_back( frame );
   layer_views.push_back( &layers_view );
   layer_views.push_back( &mask_view );
+  active_view = 0;
 
   layer_views[0]->set_layers( &(image->get_layer_manager().get_layers()) );
   //image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
