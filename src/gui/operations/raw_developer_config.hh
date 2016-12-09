@@ -140,6 +140,12 @@ public:
     Gtk::Entry camDCPProfFileEntry;
     Gtk::Button camDCPProfOpenButton;
 
+    CheckBox apply_hue_sat_map_checkbox;
+    CheckBox apply_look_table_checkbox;
+    CheckBox use_tone_curve_checkbox;
+    CheckBox apply_baseline_exposure_offset_checkbox;
+    Gtk::VBox dcp_options_box;
+
     Gtk::HBox gammaModeHBox;
     Gtk::VBox gammaModeVBox;
     Selector gammaModeSelector;

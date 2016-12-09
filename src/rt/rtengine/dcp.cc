@@ -16,15 +16,15 @@
 *  You should have received a copy of the GNU General Public License
 *  along with RawTherapee.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <cstring>
+
 #include <iostream>
+#include <cstring>
 
 //#include <stdio.h>
 #include <glib/gstdio.h>
 
 
 #include "dcp.h"
-//#include "safegtk.h"
 //#include "iccmatrices.h"
 //#include "iccstore.h"
 //#include "rawimagesource.h"
@@ -740,6 +740,8 @@ DCPProfile::DCPProfile(const Glib::ustring& filename) :
     temperature_1 = calibrationIlluminantToTemperature(light_source_1);
     temperature_2 = calibrationIlluminantToTemperature(light_source_2);
 
+    std::cout<<"DCPProfile(): light_source_1="<<light_source_1<<"  light_source_2="<<light_source_2<<std::endl;
+
     const bool has_second_hue_sat = tagDir->getTag(toUnderlying(TagKey::PROFILE_HUE_SAT_MAP_DATA_2)); // Some profiles have two matrices, but just one huesat
 
     // Fetch Forward Matrices, if any
@@ -790,6 +792,10 @@ DCPProfile::DCPProfile(const Glib::ustring& filename) :
         look_info.sat_divisions = tag->toInt(4);
         look_info.val_divisions = tag->toInt(8);
 
+        std::cout<<"DCPProfile(): look_info.hue_divisions="<<look_info.hue_divisions<<std::endl;
+        std::cout<<"DCPProfile(): look_info.sat_divisions="<<look_info.sat_divisions<<std::endl;
+        std::cout<<"DCPProfile(): look_info.val_divisions="<<look_info.val_divisions<<std::endl;
+
         tag = tagDir->getTag(toUnderlying(TagKey::PROFILE_LOOK_TABLE_ENCODING));
         look_info.srgb_gamma = tag && tag->toInt(0);
 
@@ -824,6 +830,10 @@ DCPProfile::DCPProfile(const Glib::ustring& filename) :
         delta_info.hue_divisions = tag->toInt(0);
         delta_info.sat_divisions = tag->toInt(4);
         delta_info.val_divisions = tag->toInt(8);
+
+        std::cout<<"DCPProfile(): delta_info.hue_divisions="<<delta_info.hue_divisions<<std::endl;
+        std::cout<<"DCPProfile(): delta_info.sat_divisions="<<delta_info.sat_divisions<<std::endl;
+        std::cout<<"DCPProfile(): delta_info.val_divisions="<<delta_info.val_divisions<<std::endl;
 
         tag = tagDir->getTag(toUnderlying(TagKey::PROFILE_HUE_SAT_MAP_ENCODING));
         delta_info.srgb_gamma = tag && tag->toInt(0);
@@ -1331,6 +1341,9 @@ DCPProfile::Matrix DCPProfile::makeXyzCam(double cam_wb[3], double camWbMatrix[3
 std::vector<DCPProfile::HsbModify> DCPProfile::makeHueSatMap(/*const ColorTemp& white_balance*/ const double cam_wb[3], int preferred_illuminant) const
 {
   ColorTemp white_balance( camwb_to_temp(cam_wb, preferred_illuminant) );
+
+  std::cout<<"DCPProfile::makeHueSatMap(): deltas_1.empty()="<<deltas_1.empty()
+      <<"  deltas_2.empty()="<<deltas_2.empty()<<std::endl;
 
     if (deltas_1.empty()) {
         return std::vector<HsbModify>();

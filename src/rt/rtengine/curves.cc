@@ -43,7 +43,7 @@ using namespace std;
 namespace rtengine
 {
 
-Curve::Curve () : N(0), x(NULL), y(NULL), ypp(NULL), hashSize(1000 /* has to be initialized to the maximum value */ ) {}
+Curve::Curve () : N(0), ppn(0), x(NULL), y(NULL), mc(0.0), mfc(0.0), msc(0.0), mhc(0.0), ypp(nullptr), x1(0.0), y1(0.0), x2(0.0), y2(0.0), x3(0.0), y3(0.0), firstPointIncluded(false), increment(0.0), nbr_points(0), hashSize(1000 /* has to be initialized to the maximum value */) {}
 
 void Curve::AddPolygons ()
 {
@@ -1775,7 +1775,7 @@ float PerceptualToneCurve::get_curve_val(float x, float range[2], float lut[], s
 }
 
 // calculate a single value that represents the contrast of the tone curve
-float PerceptualToneCurve::calculateToneCurveContrastValue(void) const
+float PerceptualToneCurve::calculateToneCurveContrastValue() const
 {
 
     // find linear y = k*x the best approximates the curve, which is the linear scaling/exposure component that does not contribute any contrast

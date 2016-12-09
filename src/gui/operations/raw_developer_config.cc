@@ -361,6 +361,10 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
       profileModeSelector( this, "profile_mode", _("input: "), 0 ),
       camProfOpenButton(Gtk::Stock::OPEN),
       camDCPProfOpenButton(Gtk::Stock::OPEN),
+      apply_hue_sat_map_checkbox( this, "apply_hue_sat_map", _("base table"), true ),
+      apply_look_table_checkbox( this, "apply_look_table", _("look table"), true ),
+      use_tone_curve_checkbox( this, "use_tone_curve", _("tone curve"), true ),
+      apply_baseline_exposure_offset_checkbox( this, "apply_baseline_exposure_offset", _("baseline exposure"), true ),
       gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
       inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
       inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
@@ -450,37 +454,43 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   inProfFrame.add( inProfBox );
   outProfFrame.add( outProfBox );
 
-  inProfBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK );
-  profileModeSelectorBox.pack_end( profileModeSelector, Gtk::PACK_SHRINK );
+  inProfBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK, 4 );
+  profileModeSelectorBox.pack_end( profileModeSelector, Gtk::PACK_SHRINK, 4 );
 
   gammaModeVBox.pack_start( gammaModeSelector, Gtk::PACK_SHRINK );
   //gammaModeVBox.pack_start( inGammaLinSlider );
   gammaModeVBox.pack_start( inGammaExpSlider, Gtk::PACK_SHRINK );
   gammaModeHBox.pack_end( gammaModeVBox, Gtk::PACK_SHRINK );
-  inProfBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
+  inProfBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK, 4 );
 
   camProfLabel.set_text( "camera profile name:" );
   camProfVBox.pack_start( camProfLabel, Gtk::PACK_SHRINK );
   camProfVBox.pack_start( camProfFileEntry, Gtk::PACK_SHRINK );
-  camProfHBox.pack_start( camProfVBox, Gtk::PACK_SHRINK );
-  camProfHBox.pack_start( camProfOpenButton, Gtk::PACK_SHRINK );
-  inProfBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
+  camProfHBox.pack_end( camProfOpenButton, Gtk::PACK_SHRINK, 4 );
+  camProfHBox.pack_end( camProfVBox, Gtk::PACK_SHRINK, 4 );
+  inProfBox.pack_start( camProfHBox, Gtk::PACK_SHRINK, 4 );
 
   camDCPProfLabel.set_text( "DCP profile name:" );
   camDCPProfVBox.pack_start( camDCPProfLabel, Gtk::PACK_SHRINK );
   camDCPProfVBox.pack_start( camDCPProfFileEntry, Gtk::PACK_SHRINK );
-  camDCPProfHBox.pack_start( camDCPProfVBox, Gtk::PACK_SHRINK );
-  camDCPProfHBox.pack_start( camDCPProfOpenButton, Gtk::PACK_SHRINK );
-  inProfBox.pack_start( camDCPProfHBox, Gtk::PACK_SHRINK );
+  camDCPProfHBox.pack_end( camDCPProfOpenButton, Gtk::PACK_SHRINK, 4 );
+  camDCPProfHBox.pack_end( camDCPProfVBox, Gtk::PACK_SHRINK, 4 );
+  inProfBox.pack_start( camDCPProfHBox, Gtk::PACK_SHRINK, 4 );
 
-  outProfileModeSelectorBox.pack_end( outProfileModeSelector, Gtk::PACK_SHRINK );
-  outProfBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
+  dcp_options_box.pack_start( use_tone_curve_checkbox, Gtk::PACK_SHRINK );
+  dcp_options_box.pack_start( apply_hue_sat_map_checkbox, Gtk::PACK_SHRINK );
+  dcp_options_box.pack_start( apply_look_table_checkbox, Gtk::PACK_SHRINK );
+  dcp_options_box.pack_start( apply_baseline_exposure_offset_checkbox, Gtk::PACK_SHRINK );
+  inProfBox.pack_start( dcp_options_box, Gtk::PACK_SHRINK, 4 );
+
+  outProfileModeSelectorBox.pack_end( outProfileModeSelector, Gtk::PACK_SHRINK, 4 );
+  outProfBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK, 4 );
 
   //outProfileTypeSelectorBox.pack_end( outProfileTypeSelector, Gtk::PACK_SHRINK );
   //outProfBox.pack_start( outProfileTypeSelectorBox, Gtk::PACK_SHRINK );
 
-  outTRCTypeSelectorBox.pack_end( outTRCTypeSelector, Gtk::PACK_SHRINK );
-  outProfBox.pack_start( outTRCTypeSelectorBox, Gtk::PACK_SHRINK );
+  outTRCTypeSelectorBox.pack_end( outTRCTypeSelector, Gtk::PACK_SHRINK, 4 );
+  outProfBox.pack_start( outTRCTypeSelectorBox, Gtk::PACK_SHRINK, 4 );
 
   outProfBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
   outProfLabel.set_text( "output profile name:" );
@@ -831,24 +841,28 @@ void PF::RawDeveloperConfigGUI::do_update()
       camProfHBox.hide();
       gammaModeHBox.show();
       camDCPProfHBox.hide();
+      dcp_options_box.hide();
       outProfFrame.hide();
       break;
     case PF::IN_PROF_MATRIX:
       camProfHBox.hide();
       gammaModeHBox.hide();
       camDCPProfHBox.hide();
+      dcp_options_box.hide();
       outProfFrame.show();
       break;
     case PF::IN_PROF_ICC:
       camProfHBox.show();
       gammaModeHBox.show();
       camDCPProfHBox.hide();
+      dcp_options_box.hide();
       outProfFrame.show();
       break;
     case PF::IN_PROF_DCP:
       camProfHBox.hide();
       gammaModeHBox.hide();
       camDCPProfHBox.show();
+      dcp_options_box.show();
       outProfFrame.show();
       break;
     }

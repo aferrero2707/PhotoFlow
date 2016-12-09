@@ -34,6 +34,8 @@ namespace rtengine
 
 //extern const Settings* settings;
 
+bool Color::initialized = false;
+
 cmsToneCurve* Color::linearGammaTRC;
 LUTf Color::cachef;
 LUTf Color::gamma2curve;
@@ -140,6 +142,9 @@ void Color::init ()
 {
 
     /*******************************************/
+
+    if( initialized ) return;
+    initialized = true;
 
     constexpr auto maxindex = 65536;
 

@@ -136,7 +136,12 @@ enum hlreco_mode_t {
     rtengine::DCPProfile::HsdTableInfo look_info;
 
     float prophoto_cam[3][3];
-    bool apply_hue_sat_map;
+    Property<bool> apply_hue_sat_map;
+    Property<bool> apply_look_table;
+    Property<bool> use_tone_curve;
+    Property<bool> apply_baseline_exposure_offset;
+
+    float dcp_exp_scale;
 
     // Input gamma 
     PropertyBase gamma_mode;
@@ -202,7 +207,11 @@ enum hlreco_mode_t {
       m[2][1] = prophoto_cam[2][1];
       m[2][2] = prophoto_cam[2][2];
     }
-    bool get_apply_hue_sat_map() { return apply_hue_sat_map; }
+    bool get_apply_hue_sat_map() { return( apply_hue_sat_map.get() && !delta_base.empty() ); }
+    bool get_apply_look_table() { return( apply_look_table.get() && !look_table.empty() ); }
+    bool get_use_tone_curve() { return( use_tone_curve.get() && cam_dcp_profile && cam_dcp_profile->getHasToneCurve() ); }
+    bool get_apply_baseline_exposure_offset() { return( apply_baseline_exposure_offset.get() && cam_dcp_profile && cam_dcp_profile->getHasBaselineExposureOffset() ); }
+    float get_dcp_exp_scale() { return dcp_exp_scale; }
 
     bool get_clip_negative() { return clip_negative.get(); }
     bool get_clip_overflow() { return clip_overflow.get(); }
@@ -573,7 +582,11 @@ enum hlreco_mode_t {
             for( int xi = 0; xi < line_size; xi++ ) {
               line2[xi] = CLIPRAW(line[xi]);
             }
-            if( opar->get_apply_hue_sat_map() && !opar->get_delta_base().empty() ) {
+            if( r->top==0 && r-> left==0 && y<4 ) {
+              std::cout<<"opar->get_apply_hue_sat_map()="<<opar->get_apply_hue_sat_map()
+                  <<" opar->get_delta_base().empty()="<<opar->get_delta_base().empty()<<std::endl;
+            }
+            if( opar->get_apply_hue_sat_map() || opar->get_apply_look_table() || opar->get_use_tone_curve() ) {
               for( int xi = 0; xi < line_size; xi+=3 ) {
                 newr = pro_photo[0][0] * line2[xi] + pro_photo[0][1] * line2[xi+1] + pro_photo[0][2] * line2[xi+2];
                 newg = pro_photo[1][0] * line2[xi] + pro_photo[1][1] * line2[xi+1] + pro_photo[1][2] * line2[xi+2];
@@ -581,11 +594,18 @@ enum hlreco_mode_t {
                 // If point is in negative area, just the matrix, but not the LUT. This is checked inside Color::rgb2hsvdcp
                 if( r->top==0 && r-> left==0 && y<4 && xi<12 )
                   std::cout<<"newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
+                if( opar->get_apply_baseline_exposure_offset() ) {
+                  newr *= opar->get_dcp_exp_scale();
+                  newg *= opar->get_dcp_exp_scale();
+                  newb *= opar->get_dcp_exp_scale();
+                }
                 if(rtengine::Color::rgb2hsvdcp(newr*65535.f, newg*65535.f, newb*65535.f, h , s, v)) {
                   if( r->top==0 && r-> left==0 && y<4 && xi<12 )
                     std::cout<<"  h="<<h<<" s="<<s<<" v="<<v<<std::endl;
-                  hsdApply(opar->get_delta_info(), opar->get_delta_base(), h, s, v);
-                  hsdApply(opar->get_look_info(), opar->get_look_table(), h, s, v);
+                  if( opar->get_apply_hue_sat_map() )
+                    hsdApply(opar->get_delta_info(), opar->get_delta_base(), h, s, v);
+                  if( opar->get_apply_look_table() )
+                    hsdApply(opar->get_look_info(), opar->get_look_table(), h, s, v);
                   if( r->top==0 && r-> left==0 && y<4 && xi<12 )
                     std::cout<<"    h="<<h<<" s="<<s<<" v="<<v<<std::endl;
                   // RT range correction
@@ -597,7 +617,8 @@ enum hlreco_mode_t {
                   rtengine::Color::hsv2rgbdcp(h, s, v, newr, newg, newb);
                   if( r->top==0 && r-> left==0 && y<4 && xi<12 )
                     std::cout<<"    newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
-                  opar->apply_dcp_tone_curve(newr, newg, newb);
+                  if( opar->get_use_tone_curve() )
+                    opar->apply_dcp_tone_curve(newr, newg, newb);
                   if( r->top==0 && r-> left==0 && y<4 && xi<12 )
                     std::cout<<"      newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
                 }

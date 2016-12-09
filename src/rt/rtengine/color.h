@@ -56,6 +56,7 @@ class Color
 {
 
 private:
+    static bool initialized;
     // Jacques' 195 LUTf for Munsell Lch correction
     static LUTf _4P10, _4P20, _4P30, _4P40, _4P50, _4P60;
     static LUTf _1P10, _1P20, _1P30, _1P40, _1P50, _1P60;

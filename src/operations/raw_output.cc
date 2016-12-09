@@ -65,7 +65,10 @@ PF::RawOutputPar::RawOutputPar():
       cam_profile_name("cam_profile_name", this),
       cam_dcp_profile_name("cam_dcp_profile_name", this),
       cam_profile( NULL ),
-      apply_hue_sat_map( true ),
+      apply_hue_sat_map( "apply_hue_sat_map", this, true ),
+      apply_look_table( "apply_look_table", this, true ),
+      use_tone_curve( "use_tone_curve", this, true ),
+      apply_baseline_exposure_offset( "apply_baseline_exposure_offset", this, true ),
       gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","linear"),
       gamma_lin("gamma_lin", this, 0),
       gamma_exp("gamma_exp", this, 2.2),
@@ -264,6 +267,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         cam_profile = PF::ICCStore::Instance().get_profile( cam_profile_name.get() );
       break;
     case PF::IN_PROF_DCP:
+      rtengine::Color::init();
       if( !cam_dcp_profile_name.get().empty() ) {
         std::cout<<"dcam_xyz:"<<std::endl;
         for(int i = 0; i < 3; i++) {
@@ -298,8 +302,11 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         look_table = cam_dcp_profile->get_look_table();
         look_info = cam_dcp_profile->get_look_info();
 
-        bool apply_hue_sat_map = true;
-        if( apply_hue_sat_map && !delta_base.empty() ) {
+        dcp_exp_scale = 1.f;
+        if( get_apply_baseline_exposure_offset() ) {
+          dcp_exp_scale = powf(2, cam_dcp_profile->baseline_exposure_offset);
+        }
+        if( get_apply_hue_sat_map() || get_apply_look_table() || get_use_tone_curve() ) {
           // LUT available --> Calculate matrix for conversion raw>ProPhoto
           for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
