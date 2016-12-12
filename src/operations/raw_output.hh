@@ -625,6 +625,8 @@ enum hlreco_mode_t {
                 line2[xi] = newr/65535.f;
                 line2[xi+1] = newg/65535.f;
                 line2[xi+2] = newb/65535.f;
+                if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                  std::cout<<"line2[xi]="<<line2[xi]<<" line2[xi+1]="<<line2[xi+1]<<" line2[xi+2]="<<line2[xi+2]<<std::endl;
               }
             }
             cmsDoTransform( opar->get_transform(), line2, pout, width );

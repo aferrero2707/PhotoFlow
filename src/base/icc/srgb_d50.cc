@@ -151,10 +151,10 @@ PF::sRGBProfileD50::sRGBProfileD50(TRC_type type): ICCProfile()
   cmsMLUsetASCII(description, "en", "US", "sRGB-elle-V4.icc");
   cmsWriteTag(profile, cmsSigProfileDescriptionTag, description);
 
-  if( type == PF::PF_TRC_STANDARD ) {
-    const char* filename = "sRGB-elle-V4-D50.icc";
-    cmsSaveProfileToFile(profile, filename);
-  }
+  //if( type == PF::PF_TRC_STANDARD ) {
+  //  const char* filename = "sRGB-elle-V4-D50.icc";
+  //  cmsSaveProfileToFile(profile, filename);
+  //}
 
   cmsMLUfree(description);
 
