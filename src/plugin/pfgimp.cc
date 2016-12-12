@@ -695,6 +695,8 @@ void run(const gchar *name,
       }
     }
 
+    pluginwin->close_editor();
+
     std::cout<<"+++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Plug-in: stopping image processor"<<std::endl;
     PF::ProcessRequestInfo request;
@@ -702,12 +704,17 @@ void run(const gchar *name,
     PF::ImageProcessor::Instance().submit_request( request );
     PF::ImageProcessor::Instance().join();
     std::cout<<"Plug-in: image processor stopped"<<std::endl;
+
+    app->iteration( false );
+
     std::cout<<"Plug-in: deleting main window"<<std::endl;
     delete pluginwin;
     std::cout<<"Plug-in: main window deleted"<<std::endl;
+
     std::cout<<"Plug-in: deleting application"<<std::endl;
     delete app;
     std::cout<<"Plug-in: application deleted"<<std::endl;
+
     std::cout<<"Plug-in: closing photoflow"<<std::endl;
     PF::PhotoFlow::Instance().close();
     std::cout<<"Plug-in: photoflow closed"<<std::endl;

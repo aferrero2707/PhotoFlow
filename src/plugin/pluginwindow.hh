@@ -86,6 +86,8 @@ public:
   PluginWindow();
   virtual ~PluginWindow();
 
+  void close_editor();
+
   void on_button_export_clicked();
 
   void on_button_ok();

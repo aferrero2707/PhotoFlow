@@ -41,6 +41,23 @@
 #include "pluginwindow.hh"
 
 
+typedef struct {
+  PF::ImageEditor* editor;
+} EditorDestroyData;
+
+static gboolean editor_destroy_cb (EditorDestroyData * data)
+{
+  if( data ) {
+    std::cout<<"editor_destroy_cb() called."<<std::endl;
+    std::cout<<"editor_destroy_cb(): destroying editor..."<<std::endl;
+    delete( data->editor );
+    std::cout<<"editor_destroy_cb(): ...editor destroyed."<<std::endl;
+    g_free( data );
+  }
+  return false;
+}
+
+
 PF::PluginWindow::PluginWindow():
 #ifdef GTKMM_2
   mainBox(),
@@ -108,10 +125,10 @@ PF::PluginWindow::PluginWindow():
 
 PF::PluginWindow::~PluginWindow()
 {
-  PF::PhotoFlow::Instance().set_active_image( NULL );
-  std::cout<<"~PluginWindow(): deleting image editor"<<std::endl;
-  if( image_editor ) delete( image_editor );
-  std::cout<<"~PluginWindow(): image editor deleted"<<std::endl;
+  //PF::PhotoFlow::Instance().set_active_image( NULL );
+  //std::cout<<"~PluginWindow(): deleting image editor"<<std::endl;
+  //if( image_editor ) delete( image_editor );
+  //std::cout<<"~PluginWindow(): image editor deleted"<<std::endl;
 
   /*
   std::cout<<"~PluginWindow(): submitting end request for image processor"<<std::endl;
@@ -124,11 +141,41 @@ PF::PluginWindow::~PluginWindow()
 }
 
 
+
+void PF::PluginWindow::close_editor()
+{
+  //#ifndef NDEBUG
+  std::cout<<"PF::PluginWindow::close_editor() called."<<std::endl;
+  //#endif
+  if( !image_editor ) return;
+
+  g_assert( image_editor->get_image() != NULL );
+
+  PF::PhotoFlow::Instance().set_active_image( NULL );
+  if( image_editor->get_image() ) {
+    // Make sure that aching of current image is stopped
+    PF::Pipeline* pipeline = image_editor->get_image()->get_pipeline( 0 );
+    if( pipeline ) {
+      image_editor->get_image()->update( pipeline, true );
+    }
+  }
+  
+  EditorDestroyData * update = g_new (EditorDestroyData, 1);
+  update->editor = image_editor;
+  std::cout<<"MainWindow::remove_tab(): submitting idle callback for image editor deletetion"<<std::endl;
+  g_idle_add ((GSourceFunc) editor_destroy_cb, update);
+}
+
+
+
+
+
 void PF::PluginWindow::on_button_ok()
 {
   if( image_editor && image_editor->get_image() )
   {
     image_editor->get_image()->export_merged_to_mem( &imgbuf, gimp_iccdata, gimp_iccsize );
+    std::cout<<"PluginWindow::on_button_ok(): export_merged_to_mem() finished"<<std::endl;
     if( imgbuf.buf ) {
       for( int i = 0; i < imgbuf.width*imgbuf.height*3; i++ ) {
         //std::cout<<"imgbuf.buf["<<i<<"]="<<imgbuf.buf[i]<<std::endl;
