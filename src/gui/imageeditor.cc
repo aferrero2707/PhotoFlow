@@ -856,6 +856,9 @@ bool PF::ImageEditor::zoom_fit()
 	float shrink_h = area_hsize/image_size_updater->get_image_width();
 	float shrink_v = area_vsize/image_size_updater->get_image_height();
 	float shrink_min = (shrink_h<shrink_v) ? shrink_h : shrink_v;
+
+	if( shrink_min > 1 ) shrink_min = 1;
+
 	unsigned int target_level = 0;
 	//std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
 	while( shrink_min < 0.5 ) {
