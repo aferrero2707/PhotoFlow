@@ -148,7 +148,7 @@ PF::sRGBProfileD50::sRGBProfileD50(TRC_type type): ICCProfile()
   cmsWriteTag(profile, cmsSigCopyrightTag, copyright);
   /* V4 */
   cmsMLU *description = cmsMLUalloc(NULL, 1);
-  cmsMLUsetASCII(description, "en", "US", "sRGB-elle-V4.icc");
+  cmsMLUsetASCII(description, "en", "US", "sRGB-D50-elle-V4.icc");
   cmsWriteTag(profile, cmsSigProfileDescriptionTag, description);
 
   //if( type == PF::PF_TRC_STANDARD ) {

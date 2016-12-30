@@ -180,6 +180,22 @@ void PF::ICCProfile::init_colorants()
   colorants[8]=blue_colorant.Z;
 
   //for( int i = 0; i < 9; i++ ) std::cout<<"colorants["<<i<<"]="<<colorants[i]<<std::endl;
+  std::cout<<"colorants:"<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<colorants[i]<<" ";
+  std::cout<<std::endl;
+  for( int i = 3; i < 6; i++ ) std::cout<<colorants[i]<<" ";
+  std::cout<<std::endl;
+  for( int i = 6; i < 9; i++ ) std::cout<<colorants[i]<<" ";
+  std::cout<<std::endl;
+  //getchar();
+
+  std::cout<<"RGB -> XYZ:"<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<colorants[i*3]<<" ";
+  std::cout<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<colorants[i*3+i]<<" ";
+  std::cout<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<colorants[i*3+2]<<" ";
+  std::cout<<std::endl;
   //getchar();
 
   Y_R = colorants[1];
@@ -187,6 +203,14 @@ void PF::ICCProfile::init_colorants()
   Y_B = colorants[7];
 
   has_colorants = true;
+
+  cmsCIEXYZ *chad            = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigChromaticAdaptationTag);
+  std::cout<<"chad tag: "<<chad<<std::endl;
+  if( chad ) {
+    for( int i = 0; i < 3; i++ ) {
+      std::cout<<chad[i].X<<" "<<chad[i].Y<<" "<<chad[i].Z<<std::endl;
+    }
+  }
 
 /*
   std::string xyzprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/XYZ-D50-Identity-elle-V4.icc";
@@ -612,10 +636,10 @@ PF::ICCProfile* PF::ICCStore::get_profile( Glib::ustring pname )
       }
     }
 
+    std::cout<<"ICCStore::get_profile(): loading profile from \""<<pname<<"\""<<std::endl;
     PF::ICCProfile* new_profile = new PF::ICCProfile();
     new_profile->set_profile( temp_profile );
     new_profile->set_file_name( pname );
-    new_profile->ref();
 
     profiles.push_back( new_profile );
     return new_profile;
