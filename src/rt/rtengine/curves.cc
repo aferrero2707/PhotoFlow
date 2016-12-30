@@ -479,6 +479,7 @@ void CurveFactory::complexsgnCurve (bool & autili,  bool & butili, bool & ccutil
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 //SSEFUNCTION
+#ifdef __NO_PHF__
 void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, double hlcomprthresh,
         double shcompr, double br, double contr,
         procparams::ToneCurveParams::eTCModeId curveMode, const std::vector<double>& curvePoints,
@@ -754,6 +755,7 @@ void CurveFactory::complexCurve (double ecomp, double black, double hlcompr, dou
         }
     }
 }
+#endif
 
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

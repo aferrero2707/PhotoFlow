@@ -19,18 +19,24 @@
 #ifndef _PROCPARAMS_H_
 #define _PROCPARAMS_H_
 
-#include <glibmm.h>
 #include <vector>
 #include <cstdio>
 #include <cmath>
+#include <type_traits>
+
+#include <glibmm.h>
+#include <lcms2.h>
+
+#ifdef __NO_PHF__
 #include "LUT.h"
 #include "coord.h"
 
 class ParamsEdited;
-
+#endif
 namespace rtengine
 {
 
+#ifdef __NO_PHF__
 class ColorGradientCurve;
 class OpacityCurve;
 class NoiseCurve;
@@ -39,7 +45,18 @@ class WavOpacityCurveRG;
 class WavOpacityCurveBY;
 class WavOpacityCurveW;
 class WavOpacityCurveWL;
+class RetinextransmissionCurve;
+class RetinexgaintransmissionCurve;
+#endif
 
+enum RenderingIntent {
+    RI_PERCEPTUAL = INTENT_PERCEPTUAL,
+    RI_RELATIVE = INTENT_RELATIVE_COLORIMETRIC,
+    RI_SATURATION = INTENT_SATURATION,
+    RI_ABSOLUTE = INTENT_ABSOLUTE_COLORIMETRIC,
+    RI__COUNT
+};
+#ifdef __NO_PHF__
 namespace procparams
 {
 
@@ -52,9 +69,7 @@ public:
 protected:
     bool initEq1;
     bool _isDouble;
-#ifndef NDEBUG
-    unsigned int part[5];
-#endif
+
 public:
     Threshold (T bottom, T top, bool startAtOne)
     {
@@ -195,7 +210,7 @@ public:
         }
     }*/
 
-    Threshold<T> & operator= (const Threshold<T> &rhs)
+    Threshold<T>& operator =(const Threshold<T> &rhs)
     {
         value[0] = rhs.value[0];
         value[1] = rhs.value[1];
@@ -206,16 +221,34 @@ public:
         return *this;
     }
 
-    bool operator== (const Threshold<T> &rhs) const
+    template<typename U = T>
+    typename std::enable_if<std::is_floating_point<U>::value, bool>::type operator ==(const Threshold<U> &rhs) const
     {
-        if (_isDouble)
-            return fabs(value[0] - rhs.value[0]) < 1e-10
-                   && fabs(value[1] - rhs.value[1]) < 1e-10
-                   && fabs(value[2] - rhs.value[2]) < 1e-10
-                   && fabs(value[3] - rhs.value[3]) < 1e-10;
-        else
-            return fabs(value[0] - rhs.value[0]) < 1e-10
-                   && fabs(value[1] - rhs.value[1]) < 1e-10;
+        if (_isDouble) {
+            return std::fabs(value[0] - rhs.value[0]) < 1e-10
+                   && std::fabs(value[1] - rhs.value[1]) < 1e-10
+                   && std::fabs(value[2] - rhs.value[2]) < 1e-10
+                   && std::fabs(value[3] - rhs.value[3]) < 1e-10;
+        } else {
+            return std::fabs(value[0] - rhs.value[0]) < 1e-10
+                   && std::fabs(value[1] - rhs.value[1]) < 1e-10;
+        }
+    }
+
+    template<typename U = T>
+    typename std::enable_if<std::is_integral<U>::value, bool>::type operator ==(const Threshold<U> &rhs) const
+    {
+        if (_isDouble) {
+            return
+                value[0] == rhs.value[0]
+                && value[1] == rhs.value[1]
+                && value[2] == rhs.value[2]
+                && value[3] == rhs.value[3];
+        } else {
+            return
+                value[0] == rhs.value[0]
+                && value[1] == rhs.value[1];
+        }
     }
 };
 
@@ -259,6 +292,55 @@ public:
     }
     void setDefaults();
     static bool HLReconstructionNecessary(LUTu &histRedRaw, LUTu &histGreenRaw, LUTu &histBlueRaw);
+};
+/**
+  * Parameters of Retinex
+  */
+class RetinexParams
+{
+
+public:
+    bool enabled;
+    std::vector<double>   cdcurve;
+    std::vector<double>   cdHcurve;
+    std::vector<double>   lhcurve;
+    std::vector<double> transmissionCurve;
+    std::vector<double> gaintransmissionCurve;
+    std::vector<double>   mapcurve;
+    int     str;
+    int     scal;
+    int     iter;
+    int     grad;
+    int     grads;
+    double  gam;
+    double  slope;
+    int     neigh;
+    int     gain;
+    int     offs;
+    int     highlights;
+    int     htonalwidth;
+    int     shadows;
+    int     stonalwidth;
+    int     radius;
+
+    Glib::ustring retinexMethod;
+    Glib::ustring retinexcolorspace;
+    Glib::ustring gammaretinex;
+    Glib::ustring mapMethod;
+    Glib::ustring viewMethod;
+    int     vart;
+    int     limd;
+    int     highl;
+    double     baselog;
+    int     skal;
+    bool    medianmap;
+    RetinexParams ();
+    void setDefaults();
+    //void getCurves(RetinextransmissionCurve &transmissionCurveLUT, RetinexgaintransmissionCurve &gaintransmissionCurveLUT) const;
+
+    static void getDefaultgaintransmissionCurve(std::vector<double> &curve);
+
+    static void getDefaulttransmissionCurve(std::vector<double> &curve);
 };
 
 
@@ -358,7 +440,7 @@ public:
     /// @brief Specifically transform the sliders values to their curve equivalences
     void slidersToCurve(std::vector<double> &colorCurve, std::vector<double> &opacityCurve) const;
     /// @brief Fill the ColorGradientCurve and OpacityCurve LUTf from the control points curve or sliders value
-    void getCurves(ColorGradientCurve &colorCurveLUT, OpacityCurve &opacityCurveLUT, const double xyz_rgb[3][3], const double rgb_xyz[3][3], bool &opautili) const;
+    //void getCurves(ColorGradientCurve &colorCurveLUT, OpacityCurve &opacityCurveLUT, const double xyz_rgb[3][3], const double rgb_xyz[3][3], bool &opautili) const;
 
     static void getDefaultColorCurve(std::vector<double> &curve);
     static void getDefaultOpacityCurve(std::vector<double> &curve);
@@ -468,7 +550,7 @@ public:
     double green;
     double equal;
 
-    WBEntry(Glib::ustring p, enum WBTypes t, Glib::ustring l, int temp, double green, double equal) : ppLabel(p), type(t), GUILabel(l), temperature(temp), green(green), equal(equal) {};
+    WBEntry(const Glib::ustring &p, enum WBTypes t, const Glib::ustring &l, int temp, double green, double equal) : ppLabel(p), type(t), GUILabel(l), temperature(temp), green(green), equal(equal) {};
 };
 
 class WBParams
@@ -630,7 +712,7 @@ public:
 
     DirPyrDenoiseParams ();
     void setDefaults();  // SHOULD BE GENERALIZED TO ALL CLASSES!
-    void getCurves(NoiseCurve &lCurve, NoiseCurve &cCurve) const;
+    //void getCurves(NoiseCurve &lCurve, NoiseCurve &cCurve) const;
 
     static void getDefaultNoisCurve(std::vector<double> &curve);
     static void getDefaultCCCurve(std::vector<double> &curve);
@@ -906,6 +988,8 @@ public:
     int dcpIlluminant;
     Glib::ustring working;
     Glib::ustring output;
+    RenderingIntent outputIntent;
+    bool outputBPC;
     static const Glib::ustring NoICMString;
 
     Glib::ustring gamma;
@@ -1025,7 +1109,7 @@ public:
 
     WaveletParams ();
     void setDefaults();
-    void getCurves(WavCurve &cCurve, WavOpacityCurveRG &opacityCurveLUTRG , WavOpacityCurveBY &opacityCurveLUTBY, WavOpacityCurveW &opacityCurveLUTW, WavOpacityCurveWL &opacityCurveLUTWL) const;
+    //void getCurves(WavCurve &cCurve, WavOpacityCurveRG &opacityCurveLUTRG , WavOpacityCurveBY &opacityCurveLUTBY, WavOpacityCurveW &opacityCurveLUTW, WavOpacityCurveWL &opacityCurveLUTWL) const;
     static void getDefaultCCWCurve(std::vector<double> &curve);
     static void getDefaultOpacityCurveRG(std::vector<double> &curve);
     static void getDefaultOpacityCurveBY(std::vector<double> &curve);
@@ -1049,7 +1133,7 @@ public:
     double skinprotect;
     Threshold<int> hueskin;
     //Glib::ustring algo;
-
+    Glib::ustring cbdlMethod;
     DirPyrEqualizerParams() : hueskin(20, 80, 2000, 1200, false) {};
 };
 
@@ -1161,6 +1245,7 @@ public:
     int ff_clipControl;
 
     bool ca_autocorrect;
+    double caautostrength;
     double cared;
     double cablue;
 
@@ -1188,6 +1273,7 @@ class ProcParams
 public:
     ToneCurveParams         toneCurve;       ///< Tone curve parameters
     LCurveParams            labCurve;        ///< CIELAB luminance curve parameters
+    RetinexParams             retinex;           ///< Retinex parameters
     RGBCurvesParams         rgbCurves;       ///< RGB curves parameters
     ColorToningParams       colorToning;     ///< Color Toning parameters
     SharpeningParams        sharpening;      ///< Sharpening parameters
@@ -1253,14 +1339,14 @@ public:
       * @param pedited pointer to a ParamsEdited object (optional) to store which values has to be saved
       * @return Error code (=0 if all supplied filenames where created correctly)
       */
-    int     save        (Glib::ustring fname, Glib::ustring fname2 = "", bool fnameAbsolute = true, ParamsEdited* pedited = NULL);
+    //int     save        (const Glib::ustring &fname, const Glib::ustring &fname2 = "", bool fnameAbsolute = true, ParamsEdited* pedited = nullptr);
     /**
       * Loads the parameters from a file.
       * @param fname the name of the file
       * @params pedited pointer to a ParamsEdited object (optional) to store which values has been loaded
       * @return Error code (=0 if no error)
       */
-    int     load        (Glib::ustring fname, ParamsEdited* pedited = NULL);
+    //int     load        (const Glib::ustring &fname, ParamsEdited* pedited = nullptr);
 
     /** Creates a new instance of ProcParams.
       * @return a pointer to the new ProcParams instance. */
@@ -1282,7 +1368,7 @@ private:
     * @param content the text to write
     * @return Error code (=0 if no error)
     * */
-    int write (Glib::ustring &fname, Glib::ustring &content) const;
+    int write (const Glib::ustring &fname, const Glib::ustring &content) const;
 
 };
 
@@ -1300,7 +1386,7 @@ class PartialProfile
 public:
     rtengine::procparams::ProcParams* pparams;
     ParamsEdited* pedited;
-    PartialProfile& operator=(PartialProfile& rhs)
+    PartialProfile& operator =(const PartialProfile& rhs)
     {
         pparams = rhs.pparams;
         pedited = rhs.pedited;
@@ -1308,11 +1394,11 @@ public:
     };
 
     PartialProfile      (bool createInstance = false, bool paramsEditedValue = false);
-    PartialProfile      (ProcParams* pp, ParamsEdited* pe = NULL, bool fullCopy = false);
-    PartialProfile      (const ProcParams* pp, const ParamsEdited* pe = NULL);
+    PartialProfile      (ProcParams* pp, ParamsEdited* pe = nullptr, bool fullCopy = false);
+    PartialProfile      (const ProcParams* pp, const ParamsEdited* pe = nullptr);
     void deleteInstance ();
     void clearGeneral   ();
-    int  load           (Glib::ustring fName);
+    int  load           (const Glib::ustring &fName);
     void set            (bool v);
     const void applyTo  (ProcParams *destParams) const ;
 };
@@ -1333,5 +1419,6 @@ public:
 };
 
 }
+#endif
 }
 #endif

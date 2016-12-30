@@ -76,8 +76,8 @@ PF::RawOutputPar::RawOutputPar():
       out_profile_mode("out_profile_mode2",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
       out_profile_type("out_profile_mode",this,PF::PROF_TYPE_REC2020,"REC2020","Rec.2020"),
       //out_profile_type("out_profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","sRGB"),
-      //out_trc_type("out_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
-      out_trc_type("out_trc_type",this,PF::PF_TRC_STANDARD,"TRC_STANDARD",_("standard")),
+      out_trc_type("out_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+      //out_trc_type("out_trc_type",this,PF::PF_TRC_STANDARD,"TRC_STANDARD",_("standard")),
       current_out_profile_type( PROF_TYPE_sRGB ),
       current_out_trc_type( PF::PF_TRC_STANDARD ),
       out_profile_name("out_profile_name", this),
@@ -115,7 +115,7 @@ PF::RawOutputPar::RawOutputPar():
 
   out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");
   out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
-  //out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
+  out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
 
   gamma_mode.add_enum_value(PF::IN_GAMMA_NONE,"NONE","linear");
   gamma_mode.add_enum_value(PF::IN_GAMMA_sRGB,"sRGB","sRGB");
@@ -224,6 +224,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     //char makermodel[1024];
     //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
     //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
+    /*
     float cam_xyz[12];
     cam_xyz[0] = NAN;
     dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])cam_xyz);
@@ -232,10 +233,11 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
       return image;
     }
+    */
     double dcam_xyz[3][3];
     for(int i = 0; i < 3; i++)
       for(int j = 0; j < 3; j++)
-        dcam_xyz[i][j] = cam_xyz[i*3+j];
+        dcam_xyz[i][j] = image_data->color.cam_xyz[i][j];
 
     std::cout<<"dcam_xyz:"<<std::endl;
     for(int i = 0; i < 3; i++) {
@@ -248,10 +250,13 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     switch( profile_mode.get_enum_value().first ) {
     case PF::IN_PROF_MATRIX: {
       //cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
+      /*
       cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
       cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
       //cmsCloseProfile( cam_prof_temp );
-      /*
+      */
+      cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
+      cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
       std::cout<<"profile colorants:"<<std::endl;
       for(int i = 0, ci = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++, ci++) {
@@ -259,7 +264,6 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         }
         std::cout<<std::endl;
       }
-      */
       break;
     }
     case PF::IN_PROF_ICC:

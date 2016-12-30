@@ -173,6 +173,15 @@ endif (AUTOMATED_VERSION_CHECK)
 FILE(GLOB RTIncludes 
   rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h
   rt/rtengine/dcp.h rt/rtexif/rtexif.h
+  rt/rtengine/dcraw.h 
+  rt/rtengine/myfile.h 
+  rt/rtengine/rtengine.h 
+  rt/rtengine/opthelper.h 
+  rt/rtengine/rawimage.h 
+  rt/rtengine/noncopyable.h
+  rt/rtengine/imageio.h
+  rt/rtengine/camconst.h
+  rt/rtengine/cJSON.h
 )
 FILE(GLOB RTSources 
   rt/rtengine/rawimagesource.cc
@@ -182,6 +191,12 @@ FILE(GLOB RTSources
   rt/rtengine/lmmse_demosaic_RT.cc
   rt/rtengine/xtrans_demosaic_RT.cc
   rt/rtengine/dcp.cc rt/rtengine/curves.cc rt/rtengine/diagonalcurves.cc rt/rtengine/flatcurves.cc rt/rtengine/color.cc rt/rtexif/*.cc
+  rt/rtengine/dcraw.cc
+  rt/rtengine/myfile.cc
+  rt/rtengine/rawimage.cc
+  rt/rtengine/camconst.cc
+  rt/rtengine/cJSON.c
+  rt/rtengine/settings.cc
 )
 
 FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)
