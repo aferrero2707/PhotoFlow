@@ -46,6 +46,7 @@ enum clone_channel {
   CLONE_CHANNEL_R,
   CLONE_CHANNEL_G,
   CLONE_CHANNEL_B,
+  CLONE_CHANNEL_MAX_RGB,
   CLONE_CHANNEL_Lab,
   CLONE_CHANNEL_L,
   CLONE_CHANNEL_a,
@@ -66,10 +67,12 @@ enum clone_channel {
     ProcessorBase* convert2lab;
     ProcessorBase* convert_cs;
     ProcessorBase* desaturate;
+    ProcessorBase* maxrgb;
 
     VipsImage* Lab2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* rgb2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* rgb2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
+    VipsImage* rgb2maxrgb(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* Lab2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* L2rgb(VipsImage* in, unsigned int& level);
     VipsImage* grey2rgb(VipsImage* in, unsigned int& level);

@@ -35,6 +35,7 @@
 #include "../operations/convert_colorspace.hh"
 #include "../operations/convert2srgb.hh"
 #include "../operations/desaturate.hh"
+#include "../operations/maxrgb.hh"
 #include "clone.hh"
 
 
@@ -47,6 +48,7 @@ PF::ClonePar::ClonePar():
   source_channel.add_enum_value(PF::CLONE_CHANNEL_R,"R","R");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_G,"G","G");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_B,"B","B");
+  source_channel.add_enum_value(PF::CLONE_CHANNEL_MAX_RGB,"MAX_RGB","max(R,G,B)");
   //source_channel.add_enum_value(PF::CLONE_CHANNEL_Lab,"Lab","Lab");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_L,"L","L");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_a,"a","a");
@@ -58,6 +60,7 @@ PF::ClonePar::ClonePar():
   convert_cs = PF::new_convert_colorspace();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   desaturate = PF::new_desaturate();
+  maxrgb = PF::new_maxrgb();
 
   set_type( "clone" );
 
@@ -291,6 +294,24 @@ VipsImage* PF::ClonePar::rgb2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
   }
 
   return out;
+}
+
+
+VipsImage* PF::ClonePar::rgb2maxrgb(VipsImage* srcimg, clone_channel ch, unsigned int& level)
+{
+  colorspace_t csin = PF::PF_COLORSPACE_UNKNOWN;
+  if( srcimg )
+    csin = PF::convert_colorspace( srcimg->Type );
+
+  if( csin != PF::PF_COLORSPACE_RGB ) {
+    return NULL;
+  }
+
+  maxrgb->get_par()->set_image_hints( srcimg );
+  maxrgb->get_par()->set_format( get_format() );
+  std::vector<VipsImage*> in2; in2.push_back( srcimg );
+  VipsImage* tempimg = maxrgb->get_par()->build( in2, 0, NULL, NULL, level );
+  return tempimg;
 }
 
 
