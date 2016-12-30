@@ -43,9 +43,9 @@ for i in $(seq 1 $nimg); do
 	tifflist="$tifflist $img.tif"
 done
 
-echo "align_image_stack -v --use-given-order -l -s 0 -a aligned $tifflist"
+echo "align_image_stack -v --use-given-order -s 0 -a aligned $tifflist"
 rm -f aligned*.tif
-align_image_stack -v --use-given-order -l -s 0 -a aligned $tifflist
+align_image_stack -v --use-given-order -s 0 -a aligned $tifflist
 ls -1 aligned*.tif > aligned.txt
 
 #exit
