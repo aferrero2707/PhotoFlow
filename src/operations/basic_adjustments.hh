@@ -103,7 +103,7 @@ namespace PF
     ICCProfile* get_icc_data() { return icc_data; }
 
     float get_brightness() { return brightness.get(); }
-    float get_exposure() { return exposure_pow; }
+    float get_exposure() { return exposure.get(); /*exposure_pow*/; }
     float get_gamma() { return exponent; }
     float get_white_level() { return white_level.get(); }
     float get_black_level() { return black_level.get(); }
