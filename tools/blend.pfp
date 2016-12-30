@@ -1,5 +1,5 @@
 <preset version="5">
-  <layer name="image" id="7" visible="1" expanded="1" normal="0" extra_inputs="">
+  <layer name="image" id="1" visible="1" expanded="1" normal="0" extra_inputs="">
     <operation type="buffer">
       <property name="intensity" value="1">
       </property>
@@ -43,7 +43,7 @@
       </property>
     </operation>
     <sublayers type="child">
-      <layer name="image file" id="8" visible="1" expanded="1" normal="1" extra_inputs="">
+      <layer name="image file" id="2" visible="1" expanded="1" normal="1" extra_inputs="">
         <operation type="imageread">
           <property name="intensity" value="1">
           </property>
@@ -111,7 +111,7 @@
         <sublayers type="omap">
         </sublayers>
       </layer>
-      <layer name="exposure adjustments" id="9" visible="1" expanded="1" normal="1" extra_inputs="">
+      <layer name="exposure adjustments" id="3" visible="1" expanded="1" normal="1" extra_inputs="">
         <operation type="basic_adjustments">
           <property name="intensity" value="1">
           </property>
@@ -219,7 +219,7 @@
     <sublayers type="imap">
     </sublayers>
     <sublayers type="omap">
-      <layer name="layer clone" id="10" visible="1" expanded="1" normal="1" extra_inputs="8 0 0">
+      <layer name="layer clone" id="4" visible="1" expanded="1" normal="1" extra_inputs="2 0 0">
         <operation type="clone">
           <property name="intensity" value="1">
           </property>
@@ -271,8 +271,8 @@
         <sublayers type="omap">
         </sublayers>
       </layer>
-      <layer name="invert" id="11" visible="1" expanded="1" normal="1" extra_inputs="">
-        <operation type="invert">
+      <layer name="curves" id="5" visible="1" expanded="1" normal="1" extra_inputs="">
+        <operation type="curves">
           <property name="intensity" value="1">
           </property>
           <property name="grey_target_channel" value="Grey">
@@ -289,59 +289,37 @@
           </property>
           <property name="color_blend" value="0">
           </property>
-        </operation>
-        <operation type="blender">
-          <property name="intensity" value="1">
+          <property name="grey_curve" value="2 0.504854 1 0.742718 0">
           </property>
-          <property name="grey_target_channel" value="Grey">
+          <property name="RGB_curve" value="2 0 0 1 1">
           </property>
-          <property name="rgb_target_channel" value="RGB">
+          <property name="R_curve" value="2 0 0 1 1">
           </property>
-          <property name="lab_target_channel" value="Lab">
+          <property name="G_curve" value="2 0 0 1 1">
           </property>
-          <property name="cmyk_target_channel" value="CMYK">
+          <property name="B_curve" value="2 0 0 1 1">
           </property>
-          <property name="mask_enabled" value="1">
+          <property name="L_curve" value="2 0 0 1 1">
           </property>
-          <property name="previous_channel_is_input" value="1">
+          <property name="a_curve" value="2 0 0 1 1">
           </property>
-          <property name="blend_mode" value="PF_BLEND_NORMAL">
+          <property name="b_curve" value="2 0 0 1 1">
           </property>
-          <property name="mask_blend_mode" value="PF_MASK_BLEND_NORMAL">
+          <property name="C_curve" value="2 0 0 1 1">
           </property>
-          <property name="opacity" value="1">
+          <property name="M_curve" value="2 0 0 1 1">
           </property>
-          <property name="shift_x" value="0">
+          <property name="Y_curve" value="2 0 0 1 1">
           </property>
-          <property name="shift_y" value="0">
+          <property name="K_curve" value="2 0 0 1 1">
           </property>
-        </operation>
-        <sublayers type="child">
-        </sublayers>
-        <sublayers type="imap">
-        </sublayers>
-        <sublayers type="omap">
-        </sublayers>
-      </layer>
-      <layer name="threshold" id="12" visible="1" expanded="1" normal="1" extra_inputs="">
-        <operation type="threshold">
-          <property name="intensity" value="1">
+          <property name="RGB_active_curve" value="RGB">
           </property>
-          <property name="grey_target_channel" value="Grey">
+          <property name="Lab_active_curve" value="L">
           </property>
-          <property name="rgb_target_channel" value="RGB">
+          <property name="CMYK_active_curve" value="C">
           </property>
-          <property name="lab_target_channel" value="Lab">
-          </property>
-          <property name="cmyk_target_channel" value="CMYK">
-          </property>
-          <property name="mask_enabled" value="1">
-          </property>
-          <property name="previous_channel_is_input" value="1">
-          </property>
-          <property name="threshold" value="0.5">
-          </property>
-          <property name="invert" value="0">
+          <property name="RGB_is_linear" value="0">
           </property>
         </operation>
         <operation type="blender">

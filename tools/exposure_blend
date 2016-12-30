@@ -37,13 +37,15 @@ tifflist=""
 for i in $(seq 1 $nimg); do
 	imgid=$(head -n $i exposures.txt | tail -n 1 | cut -d" " -f 2)
 	img=$(cat images.txt | sed -n ${imgid}p)
-	pfbatch "$img" "$rawpreset" "$img.tif"
+	echo -n "Converting $img..."
+	pfbatch "$img" "$rawpreset" "$img.tif" >& "$img.log"
+	echo " done."
 	tifflist="$tifflist $img.tif"
 done
 
 echo "align_image_stack -v --use-given-order -l -s 0 -a aligned $tifflist"
-#rm -f aligned*.tif
-#align_image_stack -v --use-given-order -l -s 0 -a aligned $tifflist
+rm -f aligned*.tif
+align_image_stack -v --use-given-order -l -s 0 -a aligned $tifflist
 ls -1 aligned*.tif > aligned.txt
 
 #exit
@@ -66,4 +68,6 @@ for i in $(seq 2 $nimg); do
 
 done
 
-pfbatch $(ls -1 aligned*.tif | head -n 1) $plist blend.pfi
+pfbatch $(ls -1 aligned*.tif | head -n 1) $plist blend.pfi >& blend.pfi.log
+
+rm $plist aligned.txt exposures.txt images.txt
