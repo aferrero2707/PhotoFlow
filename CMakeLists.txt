@@ -148,3 +148,5 @@ set(THEME_DIRECTORY ${CMAKE_INSTALL_PREFIX}/share/icons/${THEME})
 
 add_subdirectory(src) 
 add_subdirectory(data)
+
+INSTALL(FILES tools/exposure_blend tools/blend.pfp DESTINATION share/photoflow/tools)
