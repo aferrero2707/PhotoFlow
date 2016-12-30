@@ -307,8 +307,16 @@ VipsImage* PF::ClonePar::rgb2maxrgb(VipsImage* srcimg, clone_channel ch, unsigne
     return NULL;
   }
 
+  colorspace_t cs = get_colorspace();
+
   maxrgb->get_par()->set_image_hints( srcimg );
   maxrgb->get_par()->set_format( get_format() );
+  if( cs == PF::PF_COLORSPACE_GRAYSCALE ) {
+    maxrgb->get_par()->grayscale_image(srcimg->Xsize, srcimg->Ysize);
+  }
+  if( cs == PF::PF_COLORSPACE_RGB ) {
+    maxrgb->get_par()->rgb_image(srcimg->Xsize, srcimg->Ysize);
+  }
   std::vector<VipsImage*> in2; in2.push_back( srcimg );
   VipsImage* tempimg = maxrgb->get_par()->build( in2, 0, NULL, NULL, level );
   return tempimg;
@@ -528,6 +536,11 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
         std::cout<<"ClonePar::build(): calling rgb2grayscale()"<<std::endl;
         out = rgb2grayscale( srcimg, ch, level2 );
       }
+      if( ch==PF::CLONE_CHANNEL_MAX_RGB ) {
+        unsigned int level2 = level;
+        std::cout<<"ClonePar::build(): calling rgb2maxrgb()"<<std::endl;
+        out = rgb2maxrgb( srcimg, ch, level2 );
+      }
     }
 
     if( !out ) {
@@ -570,6 +583,11 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
         unsigned int level2 = level;
         //std::cout<<"ClonePar::build(): calling rgb2rgb()"<<std::endl;
         out = rgb2rgb( srcimg, ch, level2 );
+      }
+      if( ch==PF::CLONE_CHANNEL_MAX_RGB ) {
+        unsigned int level2 = level;
+        std::cout<<"ClonePar::build(): calling rgb2maxrgb()"<<std::endl;
+        out = rgb2maxrgb( srcimg, ch, level2 );
       }
       if( ch==PF::CLONE_CHANNEL_L ||
           ch==PF::CLONE_CHANNEL_a ||
