@@ -12,6 +12,10 @@ rm -f exposures.txt images.txt
 for i in $(seq 1 $nimg); do
 	img="$1"
 	aperture=$(exiftool -T -aperture "$img")
+	if [ x"${aperture}"x = "x-x" ]; then aperture=8; fi
+	
+	speed=$(exiftool -T -SonyExposureTime2 "$img")
+	echo "SonyExposureTime2: $speed"
 	speed=$(exiftool -T -shutterspeed "$img")
 	speeds=$(echo "$speed" | bc -l)
 	exposure=$(echo "scale=20; $aperture * $aperture / $speeds" | bc -l)
@@ -26,6 +30,8 @@ for i in $(seq 1 $nimg); do
 	echo "$img" >> images.txt
 	shift
 done
+
+exit
 
 sort -r -n exposures.txt > tmp.txt
 rm exposures.txt
