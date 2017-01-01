@@ -16,7 +16,10 @@ for i in $(seq 1 $nimg); do
 	
 	speed=$(exiftool -T -SonyExposureTime2 "$img")
 	echo "SonyExposureTime2: $speed"
-	speed=$(exiftool -T -shutterspeed "$img")
+	if [ x"${speed}"x = "x-x" ]; then
+		speed=$(exiftool -T -shutterspeed "$img")
+	fi
+
 	speeds=$(echo "$speed" | bc -l)
 	exposure=$(echo "scale=20; $aperture * $aperture / $speeds" | bc -l)
 	nc=$(echo "$exposure" | wc -c)
@@ -31,7 +34,7 @@ for i in $(seq 1 $nimg); do
 	shift
 done
 
-exit
+#exit
 
 sort -r -n exposures.txt > tmp.txt
 rm exposures.txt
@@ -51,7 +54,7 @@ done
 
 echo "align_image_stack -v --use-given-order -s 0 -a aligned $tifflist"
 rm -f aligned*.tif
-align_image_stack -v --use-given-order -s 0 -a aligned $tifflist
+align_image_stack -v --use-given-order -s 0 -a aligned $tifflist >& align.log
 ls -1 aligned*.tif > aligned.txt
 
 #exit
