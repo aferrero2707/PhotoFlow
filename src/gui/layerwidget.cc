@@ -936,8 +936,15 @@ void PF::LayerWidget::remove_tab( Gtk::Widget* widget )
 
 void PF::LayerWidget::on_button_add()
 {
+  Gtk::Container* toplevel = get_toplevel();
+#ifdef GTKMM_2
+  if( toplevel && toplevel->is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+#endif
+#ifdef GTKMM_3
+  if( toplevel && toplevel->get_is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
+#endif
+    operationsDialog.set_transient_for( *(dynamic_cast<Gtk::Window*>(toplevel)) );
   operationsDialog.open();
-  //operationsDialog.set_transient_for( (get_window()) );
 }
 
 
