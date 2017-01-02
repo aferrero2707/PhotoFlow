@@ -28,20 +28,19 @@
  */
 
 
-#include "gmic.hh"
 #include "blur_bilateral.hh"
 
 
 
 PF::GmicBlurBilateralPar::GmicBlurBilateralPar(): 
-  OpParBase(),
-  iterations("iterations",this,1),
-  sigma_s("sigma_s",this,10),
-  sigma_r("sigma_r",this,7),
-  bgrid_s("bgrid_s",this,-33), 
-  bgrid_r("bgrid_r",this,32)
+GMicPar(),
+//iterations("iterations",this,1),
+sigma_s("sigma_s",this,10),
+sigma_r("sigma_r",this,7),
+bgrid_s("bgrid_s",this,-33),
+bgrid_r("bgrid_r",this,32)
 {	
-  gmic = PF::new_gmic();
+  //gmic = PF::new_gmic();
   set_type( "gmic_blur_bilateral" );
 }
 
@@ -68,14 +67,19 @@ VipsImage* PF::GmicBlurBilateralPar::build(std::vector<VipsImage*>& in, int firs
 
   if( !out ) return NULL;
   
+  /*
   if( !(gmic->get_par()) ) return NULL;
   PF::GMicPar* gpar = dynamic_cast<PF::GMicPar*>( gmic->get_par() );
   if( !gpar ) return NULL;
+  */
 
   float ss = sigma_s.get(), sr = sigma_r.get();
 	for( int l = 1; l <= level; l++ ) {
 		ss /= 2; //sr /= 2;
   }
+
+  cur_padding = get_padding(level);
+
 	/*
 	char command[500], ssstr[100], srstr[100];
   snprintf(ssstr,99,"%0.1f", ss);
@@ -87,13 +91,13 @@ VipsImage* PF::GmicBlurBilateralPar::build(std::vector<VipsImage*>& in, int firs
   */
   std::string command = "-bilateral ";
   command = command + to_string( ss ) + "," + to_string( sr );
-  gpar->set_command( command );
-  gpar->set_iterations( iterations.get() );
+  /*gpar->*/set_command( command );
+  //gpar->set_iterations( iterations.get() );
   //gpar->set_padding( (int)( MAX(ss,sr)*1.5 ) );
-  gpar->set_padding( get_padding(level) );
-  gpar->set_x_scale( 1.0f );
-  gpar->set_y_scale( 1.0f );
-  gpar->set_cache_tiles( true );
+  /*gpar->*/set_padding( cur_padding );
+  /*gpar->*/set_x_scale( 1.0f );
+  /*gpar->*/set_y_scale( 1.0f );
+  /*gpar->*/set_cache_tiles( false );
   /*
 	if( (get_render_mode() == PF_RENDER_PREVIEW && level>0) ) {
 		PF_REF( out, "PF::CimgBlurBilateralPar::build(): out ref" );
@@ -101,10 +105,10 @@ VipsImage* PF::GmicBlurBilateralPar::build(std::vector<VipsImage*>& in, int firs
 	}
   */
 
-  gpar->set_image_hints( srcimg );
-  gpar->set_format( get_format() );
+  /*gpar->*/set_image_hints( srcimg );
+  /*gpar->*/set_format( get_format() );
 
-  out = gpar->build( in, first, imap, omap, level );
+  out = /*gpar->*/GMicPar::build( in, first, imap, omap, level );
   if( !out ) {
     std::cout<<"gmic.build() failed!!!!!!!"<<std::endl;
   }
@@ -115,5 +119,6 @@ VipsImage* PF::GmicBlurBilateralPar::build(std::vector<VipsImage*>& in, int firs
 
 PF::ProcessorBase* PF::new_gmic_blur_bilateral()
 {
-  return( new PF::Processor<PF::GmicBlurBilateralPar,PF::GmicBlurBilateralProc>() );
+//  return( new PF::Processor<PF::GmicBlurBilateralPar,PF::GmicBlurBilateralProc>() );
+  return( new PF::Processor<PF::GmicBlurBilateralPar,PF::GMicProc>() );
 }

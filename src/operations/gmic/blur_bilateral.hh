@@ -34,33 +34,37 @@
 #include <string>
 
 #include "../base/processor.hh"
+#include "gmic.hh"
 
 
 namespace PF 
 {
 
-  class GmicBlurBilateralPar: public OpParBase
+  class GmicBlurBilateralPar: public GMicPar
   {
-    Property<int> iterations;
+    //Property<int> iterations;
     Property<float> sigma_s;
     Property<float> sigma_r; 
     Property<int> bgrid_s;
     Property<int> bgrid_r; 
 
-    ProcessorBase* gmic;
+    //ProcessorBase* gmic;
+
+    int cur_padding;
 
   public:
     GmicBlurBilateralPar();
 
-    void set_iterations( int i ) { iterations.set( i ); }
+    //void set_iterations( int i ) { iterations.set( i ); }
     void set_sigma_s( float s ) { sigma_s.set( s ); }
     void set_sigma_r( float s ) { sigma_r.set( s ); }
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
-    bool needs_caching() { return true; }
+    bool needs_caching() { return false; }
 
     int get_padding( int level );
+    int get_padding() { return(cur_padding); }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 
