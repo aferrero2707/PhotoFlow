@@ -74,14 +74,16 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 
   std::vector<VipsImage*> in2;
   bool do_caching = false;
+  if( radius2 > 20 ) do_caching = true;
   int tw = 128, th = 128, nt = 1000;
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   int threaded = 1, persistent = 0;
 
   bool do_fast_blur = false;
+  if( radius2 > 5 ) do_fast_blur = true;
   //if( radius2 > 20 ) do_fast_blur = true;
   //if( (get_render_mode() == PF_RENDER_PREVIEW) && (radius2 > 5) ) do_fast_blur = true;
-  if( (blur_mode.get_enum_value().first == PF_BLUR_FAST) && (radius2 > 5) ) do_fast_blur = true;
+  //if( (blur_mode.get_enum_value().first == PF_BLUR_FAST) && (radius2 > 5) ) do_fast_blur = true;
 
   //if( (get_render_mode() == PF_RENDER_PREVIEW) &&
   //    (blur_mode.get_enum_value().first == PF_BLUR_FAST) &&
