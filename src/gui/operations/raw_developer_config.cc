@@ -566,8 +566,17 @@ void PF::RawDeveloperConfigGUI::do_update()
     if( inode && inode->image) {
       size_t blobsz;
       PF::exif_data_t* exif_data;
-      if( !vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) &&
-          blobsz == sizeof(PF::exif_data_t) ) {
+      if( vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) ||
+                blobsz != sizeof(PF::exif_data_t) ) {
+        exif_data = NULL;
+      }
+      dcraw_data_t* raw_data;
+      if( vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data,&blobsz ) ||
+          blobsz != sizeof(dcraw_data_t) ) {
+        raw_data = NULL;
+      }
+
+      if( exif_data && raw_data ) {
         //char makermodel[1024];
         //char *tmodel = makermodel;
         //dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &tmodel,
@@ -583,20 +592,21 @@ void PF::RawDeveloperConfigGUI::do_update()
           if( par2 ) {
             //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
             //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
-            float xyz_to_cam[4][3];
-            xyz_to_cam[0][0] = NAN;
-            dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])xyz_to_cam);
-            if(!isnan(xyz_to_cam[0][0])) {
+            //float xyz_to_cam[4][3];
+            //xyz_to_cam[0][0] = NAN;
+            //dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])xyz_to_cam);
+            if(!isnan(raw_data->color.cam_xyz[0][0])) {
               for(int i = 0; i < 3; i++) {
                 for(int j = 0; j < 3; j++) {
-                  XYZ_to_CAM[i][j] = (double)xyz_to_cam[i][j];
+                  XYZ_to_CAM[i][j] = (double)raw_data->color.cam_xyz[i][j];
                 }
               }
             }
             printf("RawDeveloperConfigGUI::do_update(): xyz_to_cam:\n");
             for(int k = 0; k < 3; k++)
             {
-              printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
+              //printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
+              printf("    %.4f %.4f %.4f\n",raw_data->color.cam_xyz[k][0],raw_data->color.cam_xyz[k][1],raw_data->color.cam_xyz[k][2]);
             }
 
             // and inverse matrix
@@ -628,9 +638,8 @@ void PF::RawDeveloperConfigGUI::do_update()
         }
       }
 
-      dcraw_data_t* raw_data;
-      if( !vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data, &blobsz ) &&
-          blobsz == sizeof(dcraw_data_t) ) {
+      //dcraw_data_t* raw_data;
+      if( raw_data ) {
         is_xtrans = PF::check_xtrans( raw_data->idata.filters );
 
         float black_level = raw_data->color.black;

@@ -1168,7 +1168,9 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
 
     vips_sink( outimg, memsave_start, memsave_scan, memsave_stop, imgbuf, NULL );
 
+    std::cout<<"Image::export_merged_to_mem(): vips_sink() finished"<<std::endl;
     if( out_iccprofile ) cmsCloseProfile( out_iccprofile );
+    std::cout<<"Image::export_merged_to_mem(): output profile closed"<<std::endl;
 
     void *iccdata;
     size_t iccsize;

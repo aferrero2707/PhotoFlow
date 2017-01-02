@@ -190,6 +190,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       //char makermodel[1024];
       //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
       //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
+      /*
       float cam_xyz[12];
       cam_xyz[0] = NAN;
       std::cout<<"Getting default camera matrix for makermodel=\""<<exif_data->camera_makermodel<<"\""<<std::endl;
@@ -200,6 +201,8 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         return image;
       }
       cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
+      */
+      cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
       break;
     }
     case PF::IN_PROF_ICC:

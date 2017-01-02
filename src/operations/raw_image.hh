@@ -91,6 +91,18 @@ struct dcraw_data_t
 	dcraw_sizes_data_t sizes;
 };
 
+class ImageMatrices
+{
+
+public:
+    double rgb_cam[3][3] = {};
+    double cam_rgb[3][3] = {};
+    double xyz_cam[3][3] = {};
+    double cam_xyz[3][3] = {};
+};
+
+
+
 #endif
 
 
@@ -107,9 +119,14 @@ bool check_xtrans( unsigned filters );
 		std::string cache_file_name;
 		std::string cache_file_name2;
 
-	  dcraw_data_t dcraw_data;
+    dcraw_data_t dcraw_data;
+    dcraw_data_t* pdata;
+
+    int iwidth, iheight, crop_x, crop_y;
 
 	  float c_black[4];
+
+	  ImageMatrices imatrices;
 
 #ifdef PF_USE_RAWSPEED
 		RawSpeed::CameraMetaData *meta;
@@ -125,6 +142,8 @@ bool check_xtrans( unsigned filters );
     VipsImage* demo_image;
     PF::ProcessorBase* fast_demosaic;
 
+    int* raw_hist;
+
     exif_data_t exif_data;
 
     Array2D<float> rawData;  // holds preprocessed pixel values, rowData[i][j] corresponds to the ith row and jth column
@@ -137,6 +156,9 @@ bool check_xtrans( unsigned filters );
     int LinEqSolve(int nDim, double* pfMatr, double* pfVect, double* pfSolution);
     void CA_correct_RT();
 
+    bool load_rawspeed();
+    bool load_rawtherapee();
+
   public:
     RawImage( const std::string name );
     ~RawImage();
@@ -144,6 +166,8 @@ bool check_xtrans( unsigned filters );
     void ref() { nref += 1; }
     void unref() { nref -= 1; }
     int get_nref() { return nref; }
+
+    static void inverse33 (const double (*coeff)[3], double (*icoeff)[3]);
 
     bool is_xtrans() { return check_xtrans( dcraw_data.idata.filters ); }
 
