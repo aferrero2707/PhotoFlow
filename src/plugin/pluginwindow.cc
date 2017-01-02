@@ -129,6 +129,7 @@ void PF::PluginWindow::on_button_ok()
   if( image_editor && image_editor->get_image() )
   {
     image_editor->get_image()->export_merged_to_mem( &imgbuf, gimp_iccdata, gimp_iccsize );
+    std::cout<<"PluginWindow::on_button_ok(): export_merged_to_mem() finished"<<std::endl;
     if( imgbuf.buf ) {
       for( int i = 0; i < imgbuf.width*imgbuf.height*3; i++ ) {
         //std::cout<<"imgbuf.buf["<<i<<"]="<<imgbuf.buf[i]<<std::endl;
