@@ -123,9 +123,9 @@ bool PF::check_xtrans( unsigned filters )
 
 
 PF::RawImage::RawImage( const std::string _fname ):
-    nref(1), file_name( _fname ),
-    image( NULL ), demo_image( NULL ),
-    raw_hist( NULL ), pdata( NULL )
+        nref(1), file_name( _fname ),
+        image( NULL ), demo_image( NULL ),
+        raw_hist( NULL ), pdata( NULL )
 {
   std::cout<<"RawImage::RawImage(): opening file \""<<file_name<<"\""<<std::endl;
   //dcraw_data_t* pdata;
@@ -186,7 +186,7 @@ PF::RawImage::RawImage( const std::string _fname ):
 
 
         float d65_color_matrix[9];
-        d65_color_matrix[0] = NAN;
+        d65_color_matrix[0] = INFINITY;
         // use the d65 (type == 21) matrix if we found it, otherwise use whatever we got
         Exiv2::ExifData::const_iterator cm1_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.ColorMatrix1"));
         Exiv2::ExifData::const_iterator cm2_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.ColorMatrix2"));
@@ -200,7 +200,9 @@ PF::RawImage::RawImage( const std::string _fname ):
           for(int i = 0; i < 9; i++) d65_color_matrix[i] = cm2_pos->toFloat(i);
 
         printf("d65_color_matrix[0]: %.4f\n", d65_color_matrix[0]);
-        if( !isnan(d65_color_matrix[0]) ) {
+        printf("isnan(d65_color_matrix[0]): %d\n", isnan(d65_color_matrix[0]));
+        printf("isfinite(d65_color_matrix[0]): %d\n", isfinite(d65_color_matrix[0]));
+        if( !isfinite(d65_color_matrix[0]) ) {
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[0][i] = d65_color_matrix[i];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[1][i] = d65_color_matrix[i+3];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[3][i] = d65_color_matrix[i+3];
@@ -485,7 +487,7 @@ bool PF::RawImage::load_rawspeed()
     for(int i = 0; i < 3; i++) pdata->color.cam_mul[i] = r->metadata.wbCoeffs[i];
     pdata->color.cam_mul[3] = pdata->color.cam_mul[1];
     std::cout<<"RawSpeed camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]
-             <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
+                                                                                                      <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
     std::cout<<"RawSpeed black="<<pdata->color.black<<"  white="<<pdata->color.maximum<<std::endl;
 
     // dimensions of uncropped image
@@ -550,15 +552,15 @@ bool PF::RawImage::load_rawspeed()
 
   //#ifndef NDEBUG
   std::cout<<"Saving raw data to buffer..."<<std::endl;
-//#endif
+  //#endif
   int row, col, col2;
   //size_t pxsize = sizeof(PF::RawPixel);
   //size_t pxsize = sizeof(float)+sizeof(guint8);
   size_t pxsize = sizeof(float)*2;
   guint8* rawbuf = (guint8*)malloc( pxsize*iwidth*iheight );
-//#ifndef NDEBUG
+  //#ifndef NDEBUG
   std::cout<<"Raw buffer allocated: "<<(void*)rawbuf<<std::endl;
-//#endif
+  //#endif
   /* Normalized raw data to 65535 and build raw histogram
    * */
   // Allocate raw histogram and fill it with zero
