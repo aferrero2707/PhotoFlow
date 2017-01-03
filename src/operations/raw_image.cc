@@ -187,22 +187,27 @@ PF::RawImage::RawImage( const std::string _fname ):
 
         float d65_color_matrix[9];
         d65_color_matrix[0] = INFINITY;
+        bool has_embedded = false;
         // use the d65 (type == 21) matrix if we found it, otherwise use whatever we got
         Exiv2::ExifData::const_iterator cm1_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.ColorMatrix1"));
         Exiv2::ExifData::const_iterator cm2_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.ColorMatrix2"));
-        if(is_1_65 == 1 && cm1_pos != exifData.end() && cm1_pos->count() == 9 && cm1_pos->size())
+        if(is_1_65 == 1 && cm1_pos != exifData.end() && cm1_pos->count() == 9 && cm1_pos->size()) {
           for(int i = 0; i < 9; i++) d65_color_matrix[i] = cm1_pos->toFloat(i);
-        else if(is_2_65 == 1 && cm2_pos != exifData.end() && cm2_pos->count() == 9 && cm2_pos->size())
+          has_embedded = true;
+        } else if(is_2_65 == 1 && cm2_pos != exifData.end() && cm2_pos->count() == 9 && cm2_pos->size()) {
           for(int i = 0; i < 9; i++) d65_color_matrix[i] = cm2_pos->toFloat(i);
-        else if(cm1_pos != exifData.end() && cm1_pos->count() == 9 && cm1_pos->size())
+          has_embedded = true;
+        } else if(cm1_pos != exifData.end() && cm1_pos->count() == 9 && cm1_pos->size()) {
           for(int i = 0; i < 9; i++) d65_color_matrix[i] = cm1_pos->toFloat(i);
-        else if(cm2_pos != exifData.end() && cm2_pos->count() == 9 && cm2_pos->size())
+          has_embedded = true;
+        } else if(cm2_pos != exifData.end() && cm2_pos->count() == 9 && cm2_pos->size()) {
           for(int i = 0; i < 9; i++) d65_color_matrix[i] = cm2_pos->toFloat(i);
-
+          has_embedded = true;
+        }
         printf("d65_color_matrix[0]: %.4f\n", d65_color_matrix[0]);
-        printf("isnan(d65_color_matrix[0]): %d\n", isnan(d65_color_matrix[0]));
+        printf("isnan(d65_color_matrix[0])has_embedded: %d\n", (int)has_embedded);
         printf("isfinite(d65_color_matrix[0]): %d\n", isfinite(d65_color_matrix[0]));
-        if( !isfinite(d65_color_matrix[0]) ) {
+        if( has_embedded ) {
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[0][i] = d65_color_matrix[i];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[1][i] = d65_color_matrix[i+3];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[3][i] = d65_color_matrix[i+3];
