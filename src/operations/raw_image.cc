@@ -199,6 +199,7 @@ PF::RawImage::RawImage( const std::string _fname ):
         else if(cm2_pos != exifData.end() && cm2_pos->count() == 9 && cm2_pos->size())
           for(int i = 0; i < 9; i++) d65_color_matrix[i] = cm2_pos->toFloat(i);
 
+        printf("d65_color_matrix[0]: %.4f\n", d65_color_matrix[0]);
         if( !isnan(d65_color_matrix[0]) ) {
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[0][i] = d65_color_matrix[i];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[1][i] = d65_color_matrix[i+3];
