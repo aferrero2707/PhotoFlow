@@ -186,6 +186,7 @@ PF::RawImage::RawImage( const std::string _fname ):
 
 
         float d65_color_matrix[9];
+        d65_color_matrix[0] = NAN;
         // use the d65 (type == 21) matrix if we found it, otherwise use whatever we got
         Exiv2::ExifData::const_iterator cm1_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.ColorMatrix1"));
         Exiv2::ExifData::const_iterator cm2_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.ColorMatrix2"));
@@ -198,10 +199,19 @@ PF::RawImage::RawImage( const std::string _fname ):
         else if(cm2_pos != exifData.end() && cm2_pos->count() == 9 && cm2_pos->size())
           for(int i = 0; i < 9; i++) d65_color_matrix[i] = cm2_pos->toFloat(i);
 
-        for(int i = 0; i < 3; i++) pdata->color.cam_xyz[0][i] = d65_color_matrix[i];
-        for(int i = 0; i < 3; i++) pdata->color.cam_xyz[1][i] = d65_color_matrix[i+3];
-        for(int i = 0; i < 3; i++) pdata->color.cam_xyz[3][i] = d65_color_matrix[i+3];
-        for(int i = 0; i < 3; i++) pdata->color.cam_xyz[2][i] = d65_color_matrix[i+6];
+        if( !isnan(d65_color_matrix[0]) ) {
+          for(int i = 0; i < 3; i++) pdata->color.cam_xyz[0][i] = d65_color_matrix[i];
+          for(int i = 0; i < 3; i++) pdata->color.cam_xyz[1][i] = d65_color_matrix[i+3];
+          for(int i = 0; i < 3; i++) pdata->color.cam_xyz[3][i] = d65_color_matrix[i+3];
+          for(int i = 0; i < 3; i++) pdata->color.cam_xyz[2][i] = d65_color_matrix[i+6];
+          printf("pdata->color.cam_xyz (embedded):\n");
+          for(int k = 0; k < 3; k++)
+          {
+            //printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
+            printf("    %.4f %.4f %.4f\n",pdata->color.cam_xyz[k][0],pdata->color.cam_xyz[k][1],pdata->color.cam_xyz[k][2]);
+          }
+
+        }
       }
 
 
@@ -632,6 +642,12 @@ bool PF::RawImage::load_rawspeed()
   std::cout<<"Getting default camera matrix for makermodel=\""<<exif_data.camera_makermodel<<"\""<<std::endl;
   dt_dcraw_adobe_coeff(exif_data.camera_makermodel, (float(*)[12])pdata->color.cam_xyz);
 
+  printf("pdata->color.cam_xyz:\n");
+  for(int k = 0; k < 3; k++)
+  {
+    //printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
+    printf("    %.4f %.4f %.4f\n",pdata->color.cam_xyz[k][0],pdata->color.cam_xyz[k][1],pdata->color.cam_xyz[k][2]);
+  }
 
   /* free auto pointers on spot */
   d.reset();
