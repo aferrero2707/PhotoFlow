@@ -252,6 +252,13 @@ PF::PhotoFlow::PhotoFlow():
   write_escaped(dataPath, dataPathEscaped);
   Glib::setenv("GMIC_PATH", dataPathEscaped.c_str(), 1);
 
+  lensfun_db_dir = dataPath;
+#if defined(WIN32)
+  lensfun_db_dir += "\\lensfun\\version_1\\";
+#else
+  lensfun_db_dir += "/lensfun/version_1/";
+#endif
+
   Glib::ustring localePath;
 #if defined(__APPLE__) && defined (__MACH__)
   if( dataPath_env ) {

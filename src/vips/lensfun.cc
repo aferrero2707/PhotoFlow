@@ -494,7 +494,7 @@ vips_lensfun_init( VipsLensFun *lensfun )
 #ifdef PF_HAS_LENSFUN
   lensfun->ldb = lf_db_new();
 #if (BUNDLED_LENSFUN == 1)
-  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_data_dir() + "/lensfun/version_1/";
+  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_lensfun_db_dir();
   lensfun->ldb->LoadDirectory( lfdb.c_str() );
   std::cout<<"LensFun database loaded from "<<lfdb<<std::endl;
 #else

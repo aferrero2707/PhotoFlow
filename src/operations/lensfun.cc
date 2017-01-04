@@ -42,7 +42,7 @@ PF::LensFunPar::LensFunPar():
 #ifdef PF_HAS_LENSFUN
   ldb = lf_db_new();
 #if (BUNDLED_LENSFUN == 1)
-  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_data_dir() + "/lensfun/version_1/";
+  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_lensfun_db_dir();
   ldb->LoadDirectory( lfdb.c_str() );
   std::cout<<"LensFun database loaded from "<<lfdb<<std::endl;
 #else

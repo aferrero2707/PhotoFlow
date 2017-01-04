@@ -68,6 +68,7 @@ namespace PF
     std::string cache_dir;
     std::string base_dir;
     std::string data_dir;
+    std::string lensfun_db_dir;
     std::string locale_dir;
 
     int preview_pipeline_id;
@@ -115,6 +116,8 @@ namespace PF
 
     void set_data_dir(std::string dir) { data_dir = dir; }
     std::string get_data_dir() { return data_dir; }
+
+    std::string get_lensfun_db_dir() { return lensfun_db_dir; }
 
     void set_locale_dir(std::string dir) { locale_dir = dir; }
     std::string get_locale_dir() { return locale_dir; }
