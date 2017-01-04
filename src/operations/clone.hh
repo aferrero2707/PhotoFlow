@@ -68,6 +68,7 @@ enum clone_channel {
     ProcessorBase* convert_cs;
     ProcessorBase* desaturate;
     ProcessorBase* maxrgb;
+    ProcessorBase* trcconv;
 
     VipsImage* Lab2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* rgb2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);

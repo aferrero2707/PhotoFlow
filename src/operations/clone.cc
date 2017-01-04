@@ -36,6 +36,7 @@
 #include "../operations/convert2srgb.hh"
 #include "../operations/desaturate.hh"
 #include "../operations/maxrgb.hh"
+#include "../operations/trcconv.hh"
 #include "clone.hh"
 
 
@@ -61,6 +62,7 @@ PF::ClonePar::ClonePar():
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   desaturate = PF::new_desaturate();
   maxrgb = PF::new_maxrgb();
+  trcconv = PF::new_trcconv();
 
   set_type( "clone" );
 
@@ -319,7 +321,14 @@ VipsImage* PF::ClonePar::rgb2maxrgb(VipsImage* srcimg, clone_channel ch, unsigne
   }
   std::vector<VipsImage*> in2; in2.push_back( srcimg );
   VipsImage* tempimg = maxrgb->get_par()->build( in2, 0, NULL, NULL, level );
-  return tempimg;
+
+  trcconv->get_par()->set_image_hints( tempimg );
+  trcconv->get_par()->set_format( get_format() );
+  in2.clear(); in2.push_back( tempimg );
+  VipsImage* out = trcconv->get_par()->build( in2, 0, NULL, NULL, level );
+  if( out ) PF_UNREF(tempimg, "ClonePar::rgb2maxrgb(): tempimg unref");
+
+  return out;
 }
 
 

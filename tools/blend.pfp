@@ -235,7 +235,7 @@
           </property>
           <property name="previous_channel_is_input" value="1">
           </property>
-          <property name="source_channel" value="SOURCE">
+          <property name="source_channel" value="MAX_RGB">
           </property>
         </operation>
         <operation type="blender">
@@ -289,7 +289,7 @@
           </property>
           <property name="color_blend" value="0">
           </property>
-          <property name="grey_curve" value="2 0.504854 1 0.742718 0">
+          <property name="grey_curve" value="2 0.626214 1 0.873786 0">
           </property>
           <property name="RGB_curve" value="2 0 0 1 1">
           </property>
