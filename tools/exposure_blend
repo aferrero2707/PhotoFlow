@@ -71,7 +71,8 @@ for i in $(seq 2 $nimg); do
 	r=$(echo "scale=20; $exp / $refexp" | bc -l)
 	echo "r: $r"
 	cat "$scriptdir/blend.pfp" | sed "s/<property name=\"exposure\" value=\"1\">/<property name=\"exposure\" value=\"$r\">/g" > blend${i}.pfp
-	sed -i.bak "s|%image%|$(pwd)/$img|g" blend${i}.pfp
+	#sed -i.bak "s|%image%|$(pwd)/$img|g" blend${i}.pfp
+	sed -i.bak "s|%image%|$img|g" blend${i}.pfp
 	
 	plist="$plist blend${i}.pfp"
 
