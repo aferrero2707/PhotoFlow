@@ -98,13 +98,13 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   for( unsigned int i = 0; i < PF::WB_LAST; i++ ) {
     snprintf(tstr,99,"wb_red_%d", i);
     wb_red[i] = new Property<float>(tstr, this, -1);
-    add_property( wb_red[i ]);
+    //add_property( wb_red[i ]);
     snprintf(tstr,99,"wb_green_%d", i);
     wb_green[i] = new Property<float>(tstr, this, -1);
-    add_property( wb_green[i ]);
+    //add_property( wb_green[i ]);
     snprintf(tstr,99,"wb_blue_%d", i);
     wb_blue[i] = new Property<float>(tstr, this, -1);
-    add_property( wb_blue[i ]);
+    //add_property( wb_blue[i ]);
   }
 
   set_type("raw_preprocessor" );
