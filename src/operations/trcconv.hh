@@ -78,7 +78,7 @@ namespace PF
       int height = r->height;
       int x, y;
 
-      std::cout<<"TRCConv: PF_COLORSPACE_ANY"<<std::endl;
+      if( false ) std::cout<<"TRCConv: PF_COLORSPACE_ANY"<<std::endl;
 
       float* pin;
       float* pout;
@@ -92,7 +92,7 @@ namespace PF
           pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
           for( x = 0; x < line_size; x++ ) {
             pout[x] = cmsEvalToneCurveFloat( perceptual_trc_inv, pin[x] );
-            if( true && r->left==0 && r->top==0 )
+            if( false && r->left==0 && r->top==0 )
               std::cout<<"TRCConv: in="<<pin[x]<<"    out="<<pout[x]<<std::endl;
           }
         }
@@ -117,7 +117,7 @@ namespace PF
       int height = r->height;
       int x, y;
 
-      std::cout<<"TRCConv: PF_COLORSPACE_RGB"<<std::endl;
+      if( false ) std::cout<<"TRCConv: PF_COLORSPACE_RGB"<<std::endl;
 
       float* pin;
       float* pout;
@@ -131,7 +131,7 @@ namespace PF
           pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
           for( x = 0; x < line_size; x++ ) {
             pout[x] = cmsEvalToneCurveFloat( perceptual_trc_inv, pin[x] );
-            if( true && r->left==0 && r->top==0 )
+            if( false && r->left==0 && r->top==0 )
               std::cout<<"TRCConv: in="<<pin[x]<<"    out="<<pout[x]<<std::endl;
           }
         }

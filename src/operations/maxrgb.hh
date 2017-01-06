@@ -76,7 +76,7 @@ namespace PF
       int height = r->height;
       int x, y;
 
-      std::cout<<"MaxRGB: PF_COLORSPACE_RGB"<<std::endl;
+      if( false ) std::cout<<"MaxRGB: PF_COLORSPACE_RGB"<<std::endl;
 
       float* pin;
       float* pout;
@@ -88,7 +88,7 @@ namespace PF
         for( x = 0; x < line_size; x+=3 ) {
           max = MAX3(pin[x],pin[x+1],pin[x+2]);
           pout[x+2] = pout[x+1] = pout[x] = max;
-          if( true && r->left==0 && r->top==0 )
+          if( false && r->left==0 && r->top==0 )
           std::cout<<"MaxRGB: in="<<pin[x]<<","<<pin[x+1]<<","<<pin[x+2]<<"    out="<<pout[x]<<std::endl;
         }
       }
@@ -113,7 +113,7 @@ namespace PF
       int height = r->height;
       int x, y, xout;
 
-      std::cout<<"MaxRGB: PF_COLORSPACE_GRAYSCALE"<<std::endl;
+      if( false ) std::cout<<"MaxRGB: PF_COLORSPACE_GRAYSCALE"<<std::endl;
 
       float* pin;
       float* pout;
@@ -125,7 +125,7 @@ namespace PF
         for( x = 0, xout = 0; xout < line_size; x+=3, xout+=1 ) {
           max = MAX3(pin[x],pin[x+1],pin[x+2]);
           pout[xout] = max;
-          if( true && r->left==0 && r->top==0 )
+          if( false && r->left==0 && r->top==0 )
           std::cout<<"MaxRGB(grayscale): in="<<pin[x]<<","<<pin[x+1]<<","<<pin[x+2]<<"    out["<<xout<<"]="<<pout[xout]<<std::endl;
         }
       }
