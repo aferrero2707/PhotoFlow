@@ -198,11 +198,13 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, in_profile );
       cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, out_profile );
 
+      cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
+      flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
       transform = cmsCreateTransform( in_profile, 
                                       infmt,
                                       out_profile, 
                                       outfmt,
-                                      INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+                                      INTENT_PERCEPTUAL, flags );
     }
 
     if( out_profile) {

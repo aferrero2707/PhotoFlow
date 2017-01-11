@@ -102,6 +102,8 @@ VipsImage* PF::GmicEmulateFilmColorslidePar::build(std::vector<VipsImage*>& in, 
 		scalefac *= 2;
 
   std::string command = "-gimp_emulate_film_colorslide  ";
+  //std::string command = "-v + -v + -v + -e $_path_rc -gimp_emulate_film_colorslide  ";
+  //std::string command = "-v + -v + -v + -gimp_emulate_film_colorslide  ";
   command = command + prop_preset.get_enum_value_str();
   command = command + std::string(",") + prop_opacity.get_str();
   command = command + std::string(",") + prop_brightness.get_str();

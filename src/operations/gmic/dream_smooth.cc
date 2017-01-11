@@ -108,6 +108,7 @@ VipsImage* PF::GmicDreamSmoothPar::build(std::vector<VipsImage*>& in, int first,
     std::string tempfile = save_image( srcimg, IM_BANDFMT_FLOAT );
 
     std::string command = "-verbose - -input ";
+    //std::string command = "-verbose + -verbose + -input ";
     command = command + tempfile + std::string(" -n 0,255 -gimp_dreamsmooth ");
     command = command + prop_interations.get_str();
     command = command + std::string(",") + prop_equalize.get_str();
