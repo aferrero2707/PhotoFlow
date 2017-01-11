@@ -262,6 +262,10 @@ int main (int argc, char *argv[])
   }
   app->run(*mainWindow);
 
+  //std::cout<<"Executing an idle iteration..."<<std::endl;
+  //app->iteration( false );
+  //std::cout<<"Idle iteration done."<<std::endl;
+
   PF::ProcessRequestInfo request;
   request.request = PF::PROCESSOR_END;
   PF::ImageProcessor::Instance().submit_request( request );
@@ -269,7 +273,6 @@ int main (int argc, char *argv[])
 
   std::cout<<"Image processing thread finished"<<std::endl;
 
-  app->iteration( false );
   delete mainWindow;
   delete app;
 
