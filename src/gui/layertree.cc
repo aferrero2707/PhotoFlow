@@ -277,7 +277,7 @@ static const struct {
   "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377",
 };
 
-
+/*
 typedef struct {
   PF::LayerTree* tree;
 } TreeUpdateData;
@@ -290,7 +290,7 @@ static gboolean tree_update_cb ( TreeUpdateData* data)
   }
   return false;
 }
-
+*/
 
 
 
@@ -441,9 +441,12 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
   cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerTree::on_cell_toggled) ); 
 
   treeModel->signal_dnd_done.
-    connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_idle_cb) );
+    connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_async) );
   treeModel->signal_dnd_done.
     connect( sigc::mem_fun(*this, &PF::LayerTree::set_tree_modified) );
+
+  signal_update_model.connect(sigc::mem_fun(*this, &LayerTree::update_model));
+
 
   add( treeView );
 
@@ -540,7 +543,7 @@ void PF::LayerTree::update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l )
 
 
 
-void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
+void PF::LayerTree::update_model_int( Gtk::TreeModel::Row parent_row )
 {
   //PF::LayerTreeColumns& columns = columns;
   PF::Layer* parent_layer = parent_row[treeModel->columns.col_layer];
@@ -568,7 +571,7 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
     }
 
     if( l->is_group() ) {
-      update_model( row );
+      update_model_int( row );
       Gtk::TreeModel::Path path = treeModel->get_path( iter );
       if( l->is_expanded() ) {
         treeView.expand_row( path, true );
@@ -581,11 +584,9 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
 
 
 
-void PF::LayerTree::update_model_idle_cb()
+void PF::LayerTree::update_model_async()
 {
-  TreeUpdateData * update = g_new (TreeUpdateData, 1);
-  update->tree = this;
-  g_idle_add ((GSourceFunc) tree_update_cb, update);
+  signal_update_model.emit();
 }
 
 
@@ -632,7 +633,7 @@ void PF::LayerTree::update_model()
     }
 
     if( l->is_group() ) {
-      update_model( row );
+      update_model_int( row );
       Gtk::TreeModel::Path path = treeModel->get_path( iter );
       if( l->is_expanded() ) {
         //std::cout<<"LayerTree::update_model(): expanding row"<<std::endl;

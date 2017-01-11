@@ -420,7 +420,9 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
 
   layer_views[0]->set_layers( &(image->get_layer_manager().get_layers()) );
   //image->get_layer_manager().signal_modified.connect(sigc::mem_fun(this, &LayerWidget::update) );
-  image->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::update_idle) );
+  image->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::update_async) );
+
+  signal_update.connect( sigc::bind(sigc::mem_fun(*this, &LayerWidget::update),false) );
 
   mask_view_back_button.signal_clicked().connect( sigc::mem_fun(*this,
                                                     &PF::LayerWidget::switch_to_layers_view) );

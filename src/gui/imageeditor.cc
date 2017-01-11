@@ -121,30 +121,6 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
 
 
 
-typedef struct {
-  PF::ImageEditor* editor;
-} EditorCBData;
-
-
-static gboolean editor_on_image_modified_cb ( EditorCBData* data)
-{
-  if( data ) {
-    data->editor->on_image_modified();
-    g_free( data );
-  }
-  return false;
-}
-
-
-static gboolean editor_on_image_updated_cb ( EditorCBData* data)
-{
-  if( data ) {
-    data->editor->on_image_updated();
-    g_free( data );
-  }
-  return false;
-}
-
 
 
 
@@ -390,6 +366,8 @@ PF::ImageEditor::~ImageEditor()
     delete image;
   }
   std::cout<<"~ImageEditor(): image deleted"<<std::endl;
+  delete imageArea;
+  delete histogram;
   /**/
   /*
   // Images need to be destroyed by the processing thread
@@ -654,17 +632,18 @@ void PF::ImageEditor::build_image()
   image->set_loaded( true );
 
   image->clear_modified();
-  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified_idle_cb) );
-  image->signal_updated.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_updated_idle_cb) );
+  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified_async) );
+  image->signal_updated.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_updated_async) );
+
+  signal_image_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified) );
+  signal_image_updated.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_updated) );
   //Gtk::Paned::on_map();
 }
 
 
-void PF::ImageEditor::on_image_modified_idle_cb()
+void PF::ImageEditor::on_image_modified_async()
 {
-  EditorCBData * update = g_new (EditorCBData, 1);
-  update->editor = this;
-  g_idle_add ((GSourceFunc) editor_on_image_modified_cb, update);
+  signal_image_modified.emit();
 }
 
 
@@ -680,12 +659,10 @@ void PF::ImageEditor::on_image_modified()
 }
 
 
-void PF::ImageEditor::on_image_updated_idle_cb()
+void PF::ImageEditor::on_image_updated_async()
 {
-  std::cout<<"ImageEditor::on_image_updated_idle_cb() called"<<std::endl;
-  EditorCBData * update = g_new (EditorCBData, 1);
-  update->editor = this;
-  g_idle_add ((GSourceFunc) editor_on_image_updated_cb, update);
+  std::cout<<"ImageEditor::on_image_updated_async() called"<<std::endl;
+  signal_image_updated.emit();
 }
 
 

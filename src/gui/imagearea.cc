@@ -101,69 +101,76 @@ gboolean PF::ImageArea::queue_draw_cb (PF::ImageArea::Update * update)
 
 
 
-gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
+//gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
+void PF::ImageArea::set_size_cb ()
 {
   //std::cout<<"set_size_cb() called."<<std::endl;
   /*
-  std::cout<<"set_size_cb(1): update->image_area->get_hadj()->get_value()="<<update->image_area->get_hadj()->get_value()<<std::endl;
-  std::cout<<"                get_lower()="<<update->image_area->get_hadj()->get_lower()<<std::endl;
-  std::cout<<"                get_upper()="<<update->image_area->get_hadj()->get_upper()<<std::endl;
-  std::cout<<"                get_page_size()="<<update->image_area->get_hadj()->get_page_size()<<std::endl;
-  std::cout<<"set_size_cb(1): update->image_area->get_vadj()->get_value()="<<update->image_area->get_vadj()->get_value()<<std::endl;
-  std::cout<<"                get_lower()="<<update->image_area->get_vadj()->get_lower()<<std::endl;
-  std::cout<<"                get_upper()="<<update->image_area->get_vadj()->get_upper()<<std::endl;
-  std::cout<<"                get_page_size()="<<update->image_area->get_vadj()->get_page_size()<<std::endl;
-  std::cout<<"update->image_area->set_size_request("<<update->rect.width<<","<<update->rect.height<<")"<<std::endl;
+  std::cout<<"set_size_cb(1): ->get_hadj()->get_value()="<<->get_hadj()->get_value()<<std::endl;
+  std::cout<<"                get_lower()="<<->get_hadj()->get_lower()<<std::endl;
+  std::cout<<"                get_upper()="<<->get_hadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<->get_hadj()->get_page_size()<<std::endl;
+  std::cout<<"set_size_cb(1): ->get_vadj()->get_value()="<<get_vadj()->get_value()<<std::endl;
+  std::cout<<"                get_lower()="<<get_vadj()->get_lower()<<std::endl;
+  std::cout<<"                get_upper()="<<get_vadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<get_vadj()->get_page_size()<<std::endl;
+  std::cout<<"set_size_request("<<preview_size.width<<","<<preview_size.height<<")"<<std::endl;
   */
-  //std::cout<<"set_size_cb(): update->rect="<<update->rect<<std::endl;
+  //std::cout<<"set_size_cb(): preview_size="<<preview_size<<std::endl;
 
-  update->image_area->set_size_request(update->rect.width,update->rect.height);
+  g_mutex_lock(preview_size_mutex);
+
+  set_size_request(preview_size.width,preview_size.height);
   // We need to change the upper limits explicitely, since the adjustments are not updated immediately
   // when calling set_size_request(). Otherwise the subsequent set_value() calls might modify the values
   // internally to make sure that value+page_size does not exceed the upper limit.
-  if( update->rect.width > update->image_area->get_hadj()->get_page_size() )
-      update->image_area->get_hadj()->set_upper( update->rect.width );
+  if( preview_size.width > get_hadj()->get_page_size() )
+      get_hadj()->set_upper( preview_size.width );
   else
-    update->image_area->get_hadj()->set_upper( update->image_area->get_hadj()->get_page_size() );
-  if( update->rect.height > update->image_area->get_vadj()->get_page_size() )
-      update->image_area->get_vadj()->set_upper( update->rect.height );
+    get_hadj()->set_upper( get_hadj()->get_page_size() );
+  if( preview_size.height > get_vadj()->get_page_size() )
+      get_vadj()->set_upper( preview_size.height );
   else
-    update->image_area->get_vadj()->set_upper( update->image_area->get_vadj()->get_page_size() );
+    get_vadj()->set_upper( get_vadj()->get_page_size() );
   /*
-  std::cout<<"set_size_cb(2): update->rect.left="<<update->rect.left<<std::endl;
-  std::cout<<"set_size_cb(2): update->rect.top="<<update->rect.top<<std::endl;
+  std::cout<<"set_size_cb(2): preview_size.left="<<preview_size.left<<std::endl;
+  std::cout<<"set_size_cb(2): preview_size.top="<<preview_size.top<<std::endl;
   */
-  update->image_area->get_hadj()->set_value( update->rect.left );
-  update->image_area->get_vadj()->set_value( update->rect.top );
+  get_hadj()->set_value( preview_size.left );
+  get_vadj()->set_value( preview_size.top );
+
+  g_mutex_unlock(preview_size_mutex);
+
   /*
-  std::cout<<"set_size_cb(2): update->image_area->get_hadj()->get_value()="<<update->image_area->get_hadj()->get_value()<<std::endl;
-  std::cout<<"                get_lower()="<<update->image_area->get_hadj()->get_lower()<<std::endl;
-  std::cout<<"                get_upper()="<<update->image_area->get_hadj()->get_upper()<<std::endl;
-  std::cout<<"                get_page_size()="<<update->image_area->get_hadj()->get_page_size()<<std::endl;
-  std::cout<<"set_size_cb(2): update->image_area->get_vadj()->get_value()="<<update->image_area->get_vadj()->get_value()<<std::endl;
-  std::cout<<"                get_lower()="<<update->image_area->get_vadj()->get_lower()<<std::endl;
-  std::cout<<"                get_upper()="<<update->image_area->get_vadj()->get_upper()<<std::endl;
-  std::cout<<"                get_page_size()="<<update->image_area->get_vadj()->get_page_size()<<std::endl;
+  std::cout<<"set_size_cb(2): get_hadj()->get_value()="<<get_hadj()->get_value()<<std::endl;
+  std::cout<<"                get_lower()="<<get_hadj()->get_lower()<<std::endl;
+  std::cout<<"                get_upper()="<<get_hadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<get_hadj()->get_page_size()<<std::endl;
+  std::cout<<"set_size_cb(2): get_vadj()->get_value()="<<get_vadj()->get_value()<<std::endl;
+  std::cout<<"                get_lower()="<<get_vadj()->get_lower()<<std::endl;
+  std::cout<<"                get_upper()="<<get_vadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<get_vadj()->get_page_size()<<std::endl;
   std::cout<<std::endl;
   */
 
-  //update->image_area->queue_draw();
+  //queue_draw();
   //std::cout<<"set_size_cb(): queue_draw() called."<<std::endl;
 
+  /*
   // Rectangle corresponding to the preview area
   VipsRect preview_area = {
-      static_cast<int>(update->image_area->get_hadj()->get_value()),
-      static_cast<int>(update->image_area->get_vadj()->get_value()),
-      static_cast<int>(update->image_area->get_hadj()->get_page_size()),
-      static_cast<int>(update->image_area->get_vadj()->get_page_size())
-  };
+      static_cast<int>(get_hadj()->get_value()),
+      static_cast<int>(get_vadj()->get_value()),
+      static_cast<int>(get_hadj()->get_page_size()),
+      static_cast<int>(get_vadj()->get_page_size())
+  };*/
 
-  //update->image_area->queue_draw_area (preview_area.left,//+update->image_area->get_xoffset(),
-  //                                     preview_area.top,//+update->image_area->get_yoffset(),
+  //queue_draw_area (preview_area.left,//+get_xoffset(),
+  //                                     preview_area.top,//+get_yoffset(),
   //                                     preview_area.width,
   //                                     preview_area.height);
-  update->image_area->queue_draw();
-  //std::cout<<"set_size_cb(): update->image_area->queue_draw() called"<<std::endl;
+  queue_draw();
+  //std::cout<<"set_size_cb(): queue_draw() called"<<std::endl;
 
   /*
   PF::ImageArea::Update* update2 = g_new (Update, 1);
@@ -179,8 +186,8 @@ gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
   std::cout<<"set_size_cb(): queue_draw() called"<<std::endl;
 #endif
   */
-  g_free (update);
-  return FALSE;
+  //g_free (update);
+  //return FALSE;
 }
 
 
@@ -229,24 +236,34 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   draw_done = vips_g_cond_new();
   draw_mutex = vips_g_mutex_new();
 
+  preview_size_mutex = vips_g_mutex_new();
+  signal_set_size.connect(sigc::mem_fun(*this, &ImageArea::set_size_cb));
+
   //get_window()->set_back_pixmap( Glib::RefPtr<Gdk::Pixmap>(), FALSE );
   //set_double_buffered( TRUE );
 
-  //signal_queue_draw.connect(sigc::mem_fun(*this, &ImageArea::queue_draw));
+  signal_queue_draw.connect(sigc::mem_fun(*this, &ImageArea::queue_draw));
 }
 
 PF::ImageArea::~ImageArea ()
 {
   std::cout<<"Deleting image area"<<std::endl;
-  PF_UNREF( region, "ImageArea::~ImageArea()" );
-  PF_UNREF( display_image, "ImageArea::~ImageArea()" );
-  PF_UNREF( outimg, "ImageArea::~ImageArea()" );
+  std::cout<<"~ImageArea finished"<<std::endl;
+  //delete pf_image;
+}
+
+
+void PF::ImageArea::dispose()
+{
+  std::cout<<"mageArea::dispose() called"<<std::endl;
+  PF_UNREF( region, "ImageArea::dispose()" );
+  PF_UNREF( display_image, "ImageArea::dispose()" );
+  PF_UNREF( outimg, "ImageArea::dispose()" );
   delete convert2display;
   delete convert_format;
   delete invert;
   delete uniform;
-  std::cout<<"~ImageArea finished"<<std::endl;
-  //delete pf_image;
+  std::cout<<"mageArea::dispose() fnished"<<std::endl;
 }
 
 
@@ -353,6 +370,16 @@ void PF::ImageArea::process_end( const VipsRect& area )
   std::cout<<"Buffer swapped"<<std::endl;
 #endif
 
+  //g_mutex_lock(draw_mutex);
+  //draw_area.left = area.left;
+  //draw_area.top = area.top;
+  //draw_area.width = area.width;
+  //draw_area.height = area.height;
+  //g_mutex_unlock(draw_mutex);
+
+  signal_queue_draw.emit();
+
+  /*
   Update * update = g_new (Update, 1);
   update->image_area = this;
   update->rect.left = area.left;
@@ -363,6 +390,7 @@ void PF::ImageArea::process_end( const VipsRect& area )
   std::cout<<"PF::ImageArea::process_end(): installing draw callback."<<std::endl;
 #endif
   gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
+  */
   double_buffer.unlock();
 }
 
@@ -1348,17 +1376,25 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"#4 area_left="<<area_left<<"  area_top="<<area_top<<std::endl;
 #endif
 
-  Update * update = g_new (Update, 1);
-  update->image_area = this;
-  update->rect.left = area_left;
-  update->rect.top = area_top;
-  update->rect.width = outimg->Xsize;
-  update->rect.height = outimg->Ysize;
+  //Update * update = g_new (Update, 1);
+  //update->image_area = this;
+  //update->rect.left = area_left;
+  //update->rect.top = area_top;
+  //update->rect.width = outimg->Xsize;
+  //update->rect.height = outimg->Ysize;
+
+  g_mutex_lock(preview_size_mutex);
+  preview_size.left = area_left;
+  preview_size.top = area_top;
+  preview_size.width = outimg->Xsize;
+  preview_size.height = outimg->Ysize;
+  g_mutex_unlock(preview_size_mutex);
 #ifdef DEBUG_DISPLAY
   std::cout<<"   update->rect: "<<update->rect<<std::endl;
   std::cout<<"PF::ImageArea::update(): installing set_size callback."<<std::endl;
 #endif
-  gdk_threads_add_idle ((GSourceFunc) set_size_cb, update);
+  //gdk_threads_add_idle ((GSourceFunc) set_size_cb, update);
+  signal_set_size.emit();
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): set_size() called"<<std::endl;
 #endif
@@ -1499,3 +1535,4 @@ void PF::ImageArea::sink( const VipsRect& area )
 	draw_area();
 	*/
 }
+

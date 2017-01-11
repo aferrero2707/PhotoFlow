@@ -62,7 +62,7 @@ static int histogram_stop( void* seq, void *a, void *b )
     histogram->hist[i] += hist[i];
   }
   delete hist;
-  return 1;
+  return 0;
 }
 
 
@@ -119,14 +119,6 @@ static int histogram_scan( VipsRegion *region,
   return( 0 );
 }
 
-gboolean PF::Histogram::queue_draw_cb (PF::Histogram::Update * update)
-{
-  update->histogram->queue_draw();
-  //std::cout<<"update->histogram->queue_draw() called"<<std::endl;
-  g_free (update);
-  return FALSE;
-}
-
 
 
 PF::Histogram::Histogram( Pipeline* v ):
@@ -137,6 +129,8 @@ PF::Histogram::Histogram( Pipeline* v ):
   hist = new unsigned long int[65536*3];
   //std::cout<<"Histogram::Histogram(): hist="<<hist<<std::endl;
   set_size_request( 290, 100 );
+  signal_queue_draw.connect(sigc::mem_fun(*this, &Histogram::queue_draw));
+
 }
 
 PF::Histogram::~Histogram ()
@@ -389,9 +383,7 @@ void PF::Histogram::update( VipsRect* area )
   //std::cout<<"after vips_sink()"<<std::endl;
   PF_UNREF( image, "Histogram::update(): image unref after vips_sink()" );
 
-  Update * update = g_new (Update, 1);
-  update->histogram = this;
-  gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
+  signal_queue_draw.emit();
 }
 
 
