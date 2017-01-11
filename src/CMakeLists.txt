@@ -274,6 +274,19 @@ link_directories(${GEXIV2_LIBRARY_DIRS})
 
 MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
+
+# Film CLUTs
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/gmic_film_cluts_download.cmake "file(DOWNLOAD http://gmic.eu/gmic_film_cluts.gmz ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz)")
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz
+  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/gmic_film_cluts_download.cmake
+  #COMMAND ${WGET_EXECUTABLE} http://gmic.eu/gmic_stdlib.h -O ${CMAKE_SOURCE_DIR}/src/gmic_stdlib.h
+  COMMAND touch ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz
+)
+add_custom_target(gmic_film_cluts_download ALL DEPENDS ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz)
+
+
+
 add_library (pfbase STATIC
   ${BaseIncludes}
   ${BaseSources}
@@ -290,7 +303,7 @@ add_library (pfbase STATIC
 )
 
 
-add_dependencies(pfbase ${LIB_DEPS})
+add_dependencies(pfbase ${LIB_DEPS} gmic_film_cluts_download)
 
 
 FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
@@ -404,7 +417,10 @@ INSTALL(DIRECTORY ../icc DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
-
+#INSTALL(FILES ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz DESTINATION share/photoflow/gmic)
+INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow)
+#INSTALL(FILES ${CMAKE_BINARY_DIR}/pluginrc DESTINATION share/photoflow/gimp-2.8)
+#INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow/gimp-2.8)
 
 #--------------------------------------------------
 #

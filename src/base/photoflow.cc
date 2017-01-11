@@ -220,9 +220,9 @@ PF::PhotoFlow::PhotoFlow():
 #if defined(__APPLE__) && defined (__MACH__)
   char* dataPath_env = getenv("PF_DATA_DIR");
   if( dataPath_env ) {
-    dataPath = Glib::ustring(dataPath_env) + "/photoflow";
+    dataPath = Glib::ustring(dataPath_env) + "/photoflow/";
   } else {
-    dataPath = exePath + "/../share/photoflow";
+    dataPath = exePath + "/../share/photoflow/";
   }
 #elif defined(WIN32)
   //if( getenv("LOCALAPPDATA") ) {
@@ -241,16 +241,16 @@ PF::PhotoFlow::PhotoFlow():
 #else
   char* dataPath_env = getenv("PF_DATA_DIR");
   if( dataPath_env ) {
-    dataPath = Glib::ustring(dataPath_env) + "/photoflow";
+    dataPath = Glib::ustring(dataPath_env) + "/photoflow/";
   } else {
-    dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
+    dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow/";
   }
 #endif
   std::cout<<"dataPath: "<<dataPath<<std::endl;
 
   std::string dataPathEscaped;
   write_escaped(dataPath, dataPathEscaped);
-  Glib::setenv("GMIC_PATH", dataPathEscaped.c_str(), 1);
+  Glib::setenv("GMIC_SYSTEM_PATH", dataPathEscaped.c_str(), 1);
 
   lensfun_db_dir = dataPath;
 #if defined(WIN32)
