@@ -71,6 +71,7 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_mode.add_enum_value(PF::WB_CAMERA,"CAMERA","CAMERA");
   wb_mode.add_enum_value(PF::WB_SPOT,"SPOT","Spot");
   wb_mode.add_enum_value(PF::WB_COLOR_SPOT,"COLOR_SPOT","Color spot");
+  wb_mode.add_enum_value(PF::WB_UNIWB,"UNIWB","Uni WB");
   wb_mode.add_enum_value(PF::WB_DAYLIGHT,"DAYLIGHT",Daylight);
   wb_mode.add_enum_value(PF::WB_DIRECT_SUNLIGHT,"DIRECT_SUNLIGHT",DirectSunlight);
   wb_mode.add_enum_value(PF::WB_CLOUDY,"CLOUDY",Cloudy);
@@ -124,6 +125,7 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
 
 void PF::RawPreprocessorPar::init_wb_coefficients( dcraw_data_t* idata, std::string camera_maker, std::string camera_model )
 {
+  std::cout<<"RawPreprocessorPar::init_wb_coefficients() called"<<std::endl;
   std::map< int, std::pair<std::string,std::string> > wb_modes = wb_mode.get_enum_values();
   std::map< int, std::pair<std::string,std::string> >::iterator wbi;
   for( wbi = wb_modes.begin(); wbi != wb_modes.end(); wbi++ ) {

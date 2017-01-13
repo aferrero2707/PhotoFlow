@@ -311,7 +311,7 @@ void PF::RawDeveloperConfigGUI::mul2temp(float coeffs[3], double *TempK, double 
 
 bool PF::WBSelector::check_value( int id, const std::string& name, const std::string& val )
 {
-  if( id < 3 ) return true;
+  if( id < 4 ) return true;
   //std::cout<<"WBSelector::check_value(): maker="<<maker<<" model="<<model<<std::endl;
   for(int i = 0; i < wb_preset_count; i++) {
     //std::cout<<"  wb_preset[i].make="<<wb_preset[i].make<<" wb_preset[i].model="<<wb_preset[i].model<<std::endl;

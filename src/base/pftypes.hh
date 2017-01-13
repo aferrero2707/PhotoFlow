@@ -148,6 +148,7 @@ namespace PF
     WB_CAMERA=0,
     WB_SPOT=1,
     WB_COLOR_SPOT=2,
+    WB_UNIWB=3,
     WB_DAYLIGHT,
     WB_DIRECT_SUNLIGHT,
     WB_CLOUDY,

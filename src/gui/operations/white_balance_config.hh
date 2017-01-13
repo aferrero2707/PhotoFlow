@@ -71,9 +71,15 @@ public:
     WBSelector2 wbModeSelector;
     Slider wbTempSlider;
     Slider wbTintSlider;
-    Slider wbRedSlider;
-    Slider wbGreenSlider;
-    Slider wbBlueSlider;
+    //Slider wbRedSlider;
+    //Slider wbGreenSlider;
+    //Slider wbBlueSlider;
+    Slider* wbRedSliders[WB_LAST];
+    Slider* wbGreenSliders[WB_LAST];
+    Slider* wbBlueSliders[WB_LAST];
+    Gtk::VBox wbSliderBoxes[WB_LAST];
+    Gtk::VBox wbSliderBox;
+
     Slider wbRedCorrSlider;
     Slider wbGreenCorrSlider;
     Slider wbBlueCorrSlider;
