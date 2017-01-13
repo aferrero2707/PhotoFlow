@@ -192,6 +192,7 @@ void PF::Slider::get_value()
   if( !get_prop() ) return;
   double val;
   get_prop()->get(val);
+  //std::cout<<"PF::Slider::get_value(): property=\""<<get_prop_name()<<"\"="<<val<<std::endl;
 #ifdef GTKMM_2
   adjustment.set_value( val*multiplier );
 #endif
