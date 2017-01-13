@@ -31,6 +31,7 @@
 #include "../base/pf_mkstemp.hh"
 #include "raster_image.hh"
 
+#include "rawspeed/RawSpeed/RawSpeed-API.h"
 
 
 PF::RasterImage::RasterImage( const std::string f ):
@@ -222,7 +223,48 @@ image( NULL )
         sizeof(GExiv2Metadata) );
   }
 
+
   PF::exif_read( &exif_data, file_name_real.c_str() );
+
+  #ifdef __WIN32__
+  std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "\\rawspeed\\cameras.xml";
+#else
+  std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "/rawspeed/cameras.xml";
+#endif
+  std::cout<<"RawImage::RawImage(): RAWSpeed camera file: "<<camfile<<std::endl;
+  RawSpeed::CameraMetaData *meta;
+  meta = new RawSpeed::CameraMetaData( camfile.c_str() );
+
+  if( meta ) {
+    std::map<std::string,RawSpeed::Camera*>::iterator iter;
+    for( iter = meta->cameras.begin(); iter != meta->cameras.end(); iter++ ) {
+      RawSpeed::Camera* camera = iter->second;
+      if( camera && camera->make == std::string(exif_data.exif_maker) && camera->model == std::string(exif_data.exif_model) ) {
+        g_strlcpy(exif_data.camera_maker, camera->canonical_make.c_str(), sizeof(exif_data.camera_maker));
+        g_strlcpy(exif_data.camera_model, camera->canonical_model.c_str(), sizeof(exif_data.camera_model));
+        g_strlcpy(exif_data.camera_alias, camera->canonical_alias.c_str(), sizeof(exif_data.camera_alias));
+
+        // Now we just create a makermodel by concatenation
+        g_strlcpy(exif_data.camera_makermodel, exif_data.camera_maker, sizeof(exif_data.camera_makermodel));
+        int maker_len = strlen(exif_data.camera_maker);
+        exif_data.camera_makermodel[maker_len] = ' ';
+        g_strlcpy(exif_data.camera_makermodel+maker_len+1, exif_data.camera_model, sizeof(exif_data.camera_makermodel)-maker_len-1);
+
+        std::cout<<"RasterImage: Camera maker/model data:"<<std::endl
+            <<"  exif_data.exif_maker: "<<exif_data.exif_maker<<std::endl
+            <<"  exif_data.exif_model: "<<exif_data.exif_model<<std::endl
+            <<"  exif_data.camera_maker: "<<exif_data.camera_maker<<std::endl
+            <<"  exif_data.camera_model: "<<exif_data.camera_model<<std::endl
+            <<"  exif_data.camera_alias: "<<exif_data.camera_alias<<std::endl
+            <<"  exif_data.camera_makermodel: "<<exif_data.camera_makermodel<<std::endl;
+
+        break;
+      }
+
+    }
+  }
+
+
   void* buf = malloc( sizeof(PF::exif_data_t) );
   if( !buf ) return;
   memcpy( buf, &exif_data, sizeof(PF::exif_data_t) );
