@@ -201,7 +201,7 @@ PF::PhotoFlow::PhotoFlow():
 #elif defined(WIN32)
   //if( getenv("LOCALAPPDATA") ) {
   //  dataPath = getenv("LOCALAPPDATA");
-  if( getenv("PROGRAMDATA") ) {
+  if( false && getenv("PROGRAMDATA") ) {
     dataPath = getenv("PROGRAMDATA");
     dataPath += "\\photoflow";
     Glib::ustring testPath = dataPath + "\\gmic_def.gmic";
@@ -229,6 +229,8 @@ PF::PhotoFlow::PhotoFlow():
   } else {
     localePath = exePath + "/../share/locale";
   }
+#elif defined(WIN32)
+  localePath = exePath + "\\..\\share\\locale\\";
 #else
   localePath = Glib::ustring(INSTALL_PREFIX) + "/share/locale";
 #endif
