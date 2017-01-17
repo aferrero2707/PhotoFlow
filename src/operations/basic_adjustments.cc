@@ -52,7 +52,7 @@ extern "C" {
 PF::BasicAdjustmentsPar::BasicAdjustmentsPar():
   OpParBase(),
   brightness("brightness",this,0),
-  exposure("exposure",this,0),
+  exposure("exposure",this,1),
   gamma("gamma",this,0),
   white_level("white_level",this,0),
   black_level("black_level",this,0),
