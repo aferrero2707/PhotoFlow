@@ -79,7 +79,6 @@ Camera* CameraMetaData::getCamera(string make, string model, string mode) {
 
 Camera* CameraMetaData::getCamera(string make, string model) {
   string id = getId(make, model, "");
-  printf("CameraMetaData::getCamera(): id=%s\n", id.c_str());
 
   // do a prefix match, i.e. the make and model match, but not mode.
   std::map<string,Camera*>::iterator iter = cameras.lower_bound(id);
@@ -87,7 +86,6 @@ Camera* CameraMetaData::getCamera(string make, string model) {
   if (iter == cameras.find(id))
     return NULL;
 
-  printf("CameraMetaData::getCamera(): iter->first=%s\n", iter->first.c_str());
   return cameras[iter->first];
 }
 
