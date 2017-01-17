@@ -151,6 +151,7 @@ void PF::ControlsGroup::update()
     guis[i]->update();
   }
   editor->get_image()->unlock();
+  std::cout<<"ControlsGroup::update() finished"<<std::endl;
 }
 
 

@@ -56,6 +56,8 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
 #ifndef NDEBUG
   if(r->left==0)std::cout<<"fast_demosaic(): left="<<r->left<<"  top="<<r->top<<std::endl;
 #endif
+  if(r->top<10 && r->left<10)
+    std::cout<<"fast_demosaic(): r="<<r->width<<","<<r->height<<"+"<<r->left<<"+"<<r->top<<std::endl;
 
   // Size of border region where to apply simple bilinear interpolation
   int bord = 4;
