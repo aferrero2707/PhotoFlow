@@ -52,6 +52,8 @@ class LensFunConfigGUI: public OperationConfigGUI
 
   Gtk::Label label1, label2, label3;
   Gtk::Entry makerEntry, modelEntry, lensEntry;
+
+  CheckBox enable_distortion_button, enable_tca_button, enable_vignetting_button;
   //#endif
 
 #ifdef PF_HAS_LENSFUN

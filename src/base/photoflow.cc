@@ -78,6 +78,32 @@ char* _lf_get_database_dir()
 }
 #endif
 
+static void write_escaped(std::string const& s, std::string& s2) {
+  //s2 += '"';
+  for (std::string::const_iterator i = s.begin(), end = s.end(); i != end; ++i) {
+    unsigned char c = *i;
+    if (' ' <= c and c <= '~' and c != '\\' and c != '"') {
+      s2 += c;
+    }
+    else {
+      s2 += '\\';
+      switch(c) {
+      case '"':  s2 += '"';  break;
+      case '\\': s2 += '\\'; break;
+      case '\t': s2 += 't';  break;
+      case '\r': s2 += 'r';  break;
+      case '\n': s2 += 'n';  break;
+      default:
+        char const* const hexdig = "0123456789ABCDEF";
+        s2 += 'x';
+        s2 += hexdig[c >> 4];
+        s2 += hexdig[c & 0xF];
+      }
+    }
+  }
+  //s2 += '"';
+}
+
 PF::PhotoFlow::PhotoFlow(): 
   active_image( NULL ),
   batch(true),
@@ -194,33 +220,44 @@ PF::PhotoFlow::PhotoFlow():
 #if defined(__APPLE__) && defined (__MACH__)
   char* dataPath_env = getenv("PF_DATA_DIR");
   if( dataPath_env ) {
-    dataPath = Glib::ustring(dataPath_env) + "/photoflow";
+    dataPath = Glib::ustring(dataPath_env) + "/photoflow/";
   } else {
-    dataPath = exePath + "/../share/photoflow";
+    dataPath = exePath + "/../share/photoflow/";
   }
 #elif defined(WIN32)
   //if( getenv("LOCALAPPDATA") ) {
   //  dataPath = getenv("LOCALAPPDATA");
   if( false && getenv("PROGRAMDATA") ) {
     dataPath = getenv("PROGRAMDATA");
-    dataPath += "\\photoflow";
+    dataPath += "\\photoflow\\";
     Glib::ustring testPath = dataPath + "\\gmic_def.gmic";
     struct stat stat_buf;
     if( stat(testPath.c_str(), &stat_buf) ) {
-      dataPath = exePath + "\\..\\share\\photoflow";
+      dataPath = exePath + "\\..\\share\\photoflow\\";
     }
   } else {
-    dataPath = exePath + "\\..\\share\\photoflow";
+    dataPath = exePath + "\\..\\share\\photoflow\\";
   }
 #else
   char* dataPath_env = getenv("PF_DATA_DIR");
   if( dataPath_env ) {
-    dataPath = Glib::ustring(dataPath_env) + "/photoflow";
+    dataPath = Glib::ustring(dataPath_env) + "/photoflow/";
   } else {
-    dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow";
+    dataPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow/";
   }
 #endif
   std::cout<<"dataPath: "<<dataPath<<std::endl;
+
+  std::string dataPathEscaped;
+  write_escaped(dataPath, dataPathEscaped);
+  Glib::setenv("GMIC_SYSTEM_PATH", dataPathEscaped.c_str(), 1);
+
+  lensfun_db_dir = dataPath;
+#if defined(WIN32)
+  lensfun_db_dir += "\\lensfun\\version_1\\";
+#else
+  lensfun_db_dir += "/lensfun/version_1/";
+#endif
 
   Glib::ustring localePath;
 #if defined(__APPLE__) && defined (__MACH__)

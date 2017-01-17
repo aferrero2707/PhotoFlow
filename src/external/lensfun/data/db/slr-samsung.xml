@@ -1,4 +1,5 @@
-<lensdatabase version="1">
+<!DOCTYPE lensdatabase SYSTEM "lensfun-database.dtd">
+<lensdatabase version="2">
 
     <camera>
         <maker>Samsung Techwin Co.</maker>

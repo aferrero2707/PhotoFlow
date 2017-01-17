@@ -19,16 +19,14 @@
     Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-//#warning "lensfun.h header"
-
-//khkfhsdghiuahguh
-
 #ifndef __LENSFUN_H__
 #define __LENSFUN_H__
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
+
 extern "C" {
 /** Helper macro to make C/C++ work similarly */
 #  define C_TYPEDEF(t,c)
@@ -60,8 +58,10 @@ extern "C" {
 /// Full library version
 #define LF_VERSION	((LF_VERSION_MAJOR << 24) | (LF_VERSION_MINOR << 16) | (LF_VERSION_MICRO << 8) | LF_VERSION_BUGFIX)
 
+/// Oldest database version supported by this release
+#define LF_MIN_DATABASE_VERSION	0
 /// Latest database version supported by this release
-#define LF_MAX_DATABASE_VERSION	1
+#define LF_MAX_DATABASE_VERSION	2
 
 #if defined CONF_LENSFUN_STATIC
 /// This macro expands to an appropiate symbol visibility declaration
@@ -218,6 +218,11 @@ struct LF_EXPORT lfMount
      * @brief Initialize a new mount object. All fields are set to 0.
      */
     lfMount ();
+
+    /**
+     * Copy constructor
+     */
+    lfMount (const lfMount &other);
 
     /**
      * Assignment operator
@@ -491,6 +496,23 @@ enum lfDistortionModel
      * default to 0.
      */
     LF_DIST_MODEL_PTLENS,
+    /**
+     * @brief Adobe Camera Model.  The coordinate system is different here.
+     * Everything is measured in units of the focal length of the lens.
+     *
+     * @f[\begin{aligned}
+     * x_d &= x_u (1 + k_1 r_u^2 + k_2 r_u^4 + k_3 r_u^6) + 2x_u(k_4y_u + k_5x_u) + k_5 r_u^2, \\
+     * y_d &= y_u (1 + k_1 r_u^2 + k_2 r_u^4 + k_3 r_u^6) + 2y_u(k_4y_u + k_5x_u) + k_4 r_u^2,
+     * \end{aligned}
+     * @f]
+     * with \f$r_u^2 = x_u^2 + y_u^2\f$.  The corresponding XML attributes
+     * are called “k1”, “k2”, “k3”, “k4”, and “k5”.  They default to 0.  Note
+     * that Adobe's fisheye model is also covered by this by setting the lens
+     * type to "fisheye" and using only the \f$k_1\f$ and \f$k_2\f$ parameters.
+     * Ref:
+     * http://download.macromedia.com/pub/labs/lensprofile_creator/lensprofile_creator_cameramodel.pdf
+     */
+    LF_DIST_MODEL_ACM,
 };
 
 C_TYPEDEF (enum, lfDistortionModel)
@@ -505,10 +527,32 @@ struct lfLensCalibDistortion
 {
     /** @brief The type of distortion model used */
     enum lfDistortionModel Model;
-    /** @brief Focal length in mm at which this calibration data was taken */
+    /** @brief Nominal focal length in mm at which this calibration data was
+     * taken */
     float Focal;
+    /** @brief Real focal length in mm for this nominal focal length
+     *
+     * When Lensfun speaks of “focal length”, the *nominal* focal length from
+     * the EXIF data or the gravure on the lens barrel is meant.  However,
+     * especially for fisheye lenses, the real focal length generally differs
+     * from that nominal focal length.  With “real focal length”, Lensfun means
+     * the focal length in the paraxial approximation, see
+     * <http://en.wikipedia.org/wiki/Paraxial_approximation>.  Note that Hugin
+     * (as of 2014) implements the calculation of the real focal length
+     * wrongly, see <http://article.gmane.org/gmane.comp.misc.ptx/34865>.
+     *
+     * The default value usually is the nominal focal length.  Only for
+     * Hugin-based distortion models, the default is the nominal focal length
+     * multiplied by the "d" parameter (i.e. linear in r) in the Hugin
+     * polynomial.  This is because it is this focal length that Hugin assumes
+     * in its fit.
+     */
+    float RealFocal;
+    /** @brief Whether the real focal length was actually measured.
+     */
+    cbool RealFocalMeasured;
     /** @brief Distortion coefficients, dependent on model (a,b,c or k1 or k1,k2) */
-    float Terms [3];
+    float Terms [5];
 };
 
 C_TYPEDEF (struct, lfLensCalibDistortion)
@@ -542,7 +586,6 @@ enum lfTCAModel
      * Ref: http://cipa.icomos.org/fileadmin/template/doc/TURIN/403.pdf
      */
     LF_TCA_MODEL_LINEAR,
-
     /**
      * @brief Third order polynomial.
      *
@@ -554,7 +597,35 @@ enum lfTCAModel
      * “vr”, “bb”, “cb”, and “vb”.  vr and vb default to 1, the rest to 0.
      * Ref: http://wiki.panotools.org/Tca_correct
      */
-    LF_TCA_MODEL_POLY3
+    LF_TCA_MODEL_POLY3,
+    /**
+     * @brief Adobe camera model for TCA.  The coordinate system is different
+     * here.  Everything is measured in units of the focal length of the lens.
+     *
+     * \f[\begin{aligned}
+     * x_{d,R} &= \alpha_0 \left(\left(1 + \alpha_1 r_{u,R}^2 +
+                  \alpha_2 r_{u,R}^4 + \alpha_3 r_{u,R}^6\right) x_{u,R} +
+                  2(\alpha_4 y_{u,R} + \alpha_5 x_{u,R}) x_{u,R} +
+                  \alpha_5 r_{u,R}^2\right), \\
+     * y_{d,R} &= \alpha_0 \left(\left(1 + \alpha_1 r_{u,R}^2 +
+                  \alpha_2 r_{u,R}^4 + \alpha_3 r_{u,R}^6\right) y_{u,R} +
+                  2(\alpha_4 y_{u,R} + \alpha_5 x_{u,R}) y_{u,R} +
+                  \alpha_4 r_{u,R}^2\right), \\
+     * x_{d,B} &= \beta_0 \left(\left(1 + \beta_1 r_{u,B}^2 +
+                  \beta_2 r_{u,B}^4 + \beta_3 r_{u,B}^6\right) x_{u,B} +
+                  2(\beta_4 y_{u,B} + \beta_5 x_{u,B}) x_{u,B} +
+                  \beta_5 r_{u,B}^2\right), \\
+     * y_{d,B} &= \beta_0 \left(\left(1 + \beta_1 r_{u,B}^2 +
+                  \beta_2 r_{u,B}^4 + \beta_3 r_{u,B}^6\right) y_{u,B} +
+                  2(\beta_4 y_{u,B} + \beta_5 x_{u,B}) y_{u,B} +
+                  \beta_4 r_{u,B}^2\right),
+     * \end{aligned}\f]
+     * with \f$r_{u,\ast} = \sqrt{x_{u,\ast}^2 + y_{u,\ast}^2}\f$.  The
+     * corresponding XML attributes are called “alpha0” to “alpha5”, and
+     * “beta0” to “beta5”.  alpha0 and beta0 default to 1, the rest to 0.  Ref:
+     * http://download.macromedia.com/pub/labs/lensprofile_creator/lensprofile_creator_cameramodel.pdf
+     */
+    LF_TCA_MODEL_ACM
 };
 
 C_TYPEDEF (enum, lfTCAModel)
@@ -573,7 +644,7 @@ struct lfLensCalibTCA
     /** @brief Focal length in mm at which this calibration data was taken */
     float Focal;
     /** @brief The coefficients for TCA, dependent on model; separate for R and B */
-    float Terms [6];
+    float Terms [12];
 };
 
 C_TYPEDEF (struct, lfLensCalibTCA)
@@ -602,12 +673,23 @@ enum lfVignettingModel
      * @brief Pablo D'Angelo vignetting model
      * (which is a more general variant of the \f$\cos^4\f$ law).
      *
-     * \f[C_d = C_s \cdot (1 + k_1 r^2 + k_2 r^4 + k_3 r^6)\f]
+     * \f[C_d = C_s / (1 + k_1 r^2 + k_2 r^4 + k_3 r^6)\f]
      * The corresponding XML attributes are called “k1”, “k2”, and “k3”.  They
      * default to 0.
      * Ref: http://hugin.sourceforge.net/tech/
      */
-    LF_VIGNETTING_MODEL_PA
+    LF_VIGNETTING_MODEL_PA,
+    /**
+     * @brief Adobe's vignetting model.  It differs from D'Angelo's model only
+     * in the coordinate system.  Everything is measured in units of the focal
+     * length of the lens.
+     *
+     * \f[C_d = C_s \cdot (1 + \alpha_1 r^2 + \alpha_2 r^4 + \alpha_3 r^6).\f]
+     * The corresponding XML attributes are called “alpha1”, “alpha2”, and
+     * “alpha3”.  They default to 0.  Ref:
+     * http://download.macromedia.com/pub/labs/lensprofile_creator/lensprofile_creator_cameramodel.pdf
+     */
+    LF_VIGNETTING_MODEL_ACM
 };
 
 C_TYPEDEF (enum, lfVignettingModel)
@@ -698,30 +780,6 @@ struct lfLensCalibFov
 C_TYPEDEF (struct, lfLensCalibFov)
 
 /**
- *  @brief Struct to save real focal length, which can depends on the (nominal)
- *  focal length
- */
-struct lfLensCalibRealFocal
-{
-    /** Nominal focal length in mm at which this calibration data was taken */
-    float Focal;
-    /** @brief Real focal length
-     *
-     *  When Lensfun speaks of “focal length”, the *nominal* focal length from
-     *  the EXIF data or the gravure on the lens barrel is meant.  However,
-     *  especially for fisheye lenses, the real focal length generally differs
-     *  from that nominal focal length.  With “real focal length” I mean the
-     *  focal length in the paraxial approximation, see
-     *  <http://en.wikipedia.org/wiki/Paraxial_approximation>.  Note that Hugin
-     *  (as of 2014) implements the calculation of the real focal length
-     *  wrongly, see <http://article.gmane.org/gmane.comp.misc.ptx/34865>.
-     */
-    float RealFocal;
-};
-
-C_TYPEDEF (struct, lfLensCalibRealFocal)
-
-/**
  * @brief This structure describes a single parameter for some lens model.
  */
 struct lfParameter
@@ -790,11 +848,10 @@ C_TYPEDEF (enum, lfLensType)
  * @brief Lens data.
  * Unknown fields are set to NULL or 0.
  *
- * To create a new lens object, use the lfLens::Create() or lf_lens_new()
- * functions. After that fill the fields for which you have data, and
- * invoke the lfLens::Check or lf_lens_check() function, which will
- * check if existing data is enough and will fill some fields using
- * information extracted from lens name.
+ * To manually create a new lens object, fill the fields for which you 
+ * have data, and invoke the lfLens::Check() or lf_lens_check() function, 
+ * which will check if existing data is enough and will automatically fill
+ * some fields using information extracted from lens name.
  */
 struct LF_EXPORT lfLens
 {
@@ -808,7 +865,7 @@ struct LF_EXPORT lfLens
     float MaxFocal;
     /** Smallest f-number possible (ex: 3.5). */
     float MinAperture;
-    /** Biggest f-number possible (ex: 22). Can be equal to MinAperture. */
+    /** Biggest f-number possible (ex: 22). */
     float MaxAperture;
     /** Available mounts (NULL-terminated list) (ex: { "QBM", NULL }) */
     char **Mounts;
@@ -840,8 +897,6 @@ struct LF_EXPORT lfLens
     lfLensCalibCrop **CalibCrop;
     /** Field of view calibration data, NULL-terminated (unsorted) */
     lfLensCalibFov **CalibFov;
-    /** Real focal length calibration data, NULL-terminated (unsorted) */
-    lfLensCalibRealFocal **CalibRealFocal;
     /** Lens matching score, used while searching: not actually a lens parameter */
     int Score;
 
@@ -991,24 +1046,6 @@ struct LF_EXPORT lfLens
      *     The lens information data index (zero-based).
      */
     DEPRECATED bool RemoveCalibFov (int idx);
-
-    /**
-     * @brief Add a new lens real focal length structure to the pool.
-     *
-     * The objects is copied, thus you can reuse it as soon as
-     * this function returns.
-     * @param cf
-     *     The lens real focal length structure.
-     */
-    void AddCalibRealFocal (const lfLensCalibRealFocal *cf);
-
-    /**
-     * @brief Remove a real focal length entry from the lens real focal length
-     * structure.
-     * @param idx
-     *     The lens information data index (zero-based).
-     */
-    bool RemoveCalibRealFocal (int idx);
 
     /**
      * @brief This method fills some fields if they are missing but
@@ -1166,19 +1203,6 @@ struct LF_EXPORT lfLens
      *     The resulting interpolated information data.
      */
     DEPRECATED bool InterpolateFov (float focal, lfLensCalibFov &res) const;
-
-    /**
-     * @brief Interpolate lens real focal length data for given focal length.
-     *
-     * The Field of View (FOV) database entry is deprecated since Lensfun 
-     * version 0.3 and will be removed in future releases.
-     *
-     * @param focal
-     *     The nominal focal length in mm at which we need image parameters.
-     * @param res
-     *     The resulting interpolated information data.
-     */
-    bool InterpolateRealFocal (float focal, lfLensCalibRealFocal &res) const;
 #endif
 };
 
@@ -1260,10 +1284,6 @@ LF_EXPORT cbool lf_lens_interpolate_crop (const lfLens *lens, float focal,
 DEPRECATED LF_EXPORT cbool lf_lens_interpolate_fov (const lfLens *lens, float focal,
     lfLensCalibFov *res);
 
-/** @sa lfLens::InterpolateRealFocal */
-LF_EXPORT cbool lf_lens_interpolate_real_focal (const lfLens *lens, float focal,
-    lfLensCalibRealFocal *res);
-
 /** @sa lfLens::AddCalibDistortion */
 LF_EXPORT void lf_lens_add_calib_distortion (lfLens *lens, const lfLensCalibDistortion *dc);
 
@@ -1293,12 +1313,6 @@ DEPRECATED LF_EXPORT void lf_lens_add_calib_fov (lfLens *lens, const lfLensCalib
 
 /** @sa lfLens::RemoveCalibFov */
 DEPRECATED LF_EXPORT cbool lf_lens_remove_calib_fov (lfLens *lens, int idx);
-
-/** @sa lfLens::AddCalibRealFocal */
-LF_EXPORT void lf_lens_add_calib_real_focal (lfLens *lens, const lfLensCalibRealFocal *cf);
-
-/** @sa lfLens::RemoveCalibRealFocal */
-LF_EXPORT cbool lf_lens_remove_calib_real_focal (lfLens *lens, int idx);
 
 /** @} */
 
@@ -1342,79 +1356,108 @@ enum
  *
  * This object contains a list of mounts, cameras and lenses through
  * which you can search. The objects are loaded from XML files
- * located in (default configuration):
- *
-\verbatim
-/usr/share/lensfun/
-/usr/local/share/lensfun/
-~/.local/share/lensfun/
-\endverbatim
+ * (see @ref dbsearch).
  *
  * Objects loaded later override objects loaded earlier.
  * Thus, if user modifies a object you must save it to its home directory
- * (see lfDatabase::HomeDataDir), where it will override any definitions
+ * (see lfDatabase::UserLocation), where it will override any definitions
  * from the system-wide database.
  *
- * You cannot create and destroy objects of this type directly; instead
- * use the lf_db_new() / lf_db_destroy() functions or the
- * lfDatabase::Create() / lfDatabase::Destroy() methods.
  */
 struct LF_EXPORT lfDatabase
 {
-    /** @brief Home lens database directory (something like "~/.local/share/lensfun") */
-    char *HomeDataDir;
-    /** @brief Home lens database directory for automatic updates (something
-     * like "~/.local/share/lensfun/updates") */
-    char *UserUpdatesDir;
+    /** @brief Home lens database directory (deprecated). Replaced by lfDatabase::UserLocation. */
+    DEPRECATED char *HomeDataDir;
+    /** @brief Home lens database directory for automatic updates (deprecated). Replaced by lfDatabase::UserUpdatesLocation.*/
+    DEPRECATED char *UserUpdatesDir;
 
 #ifdef __cplusplus
+
+    /** @brief Home lens database directory (something like "~/.local/share/lensfun") */
+    static const char *const UserLocation;
+    /** @brief Home lens database directory for automatic updates (something
+     * like "~/.local/share/lensfun/updates") */
+    static const char *const UserUpdatesLocation;
+    /** @brief System lens database directory (something like "/usr/share/lensfun") */
+    static const char *const SystemLocation;
+    /** @brief System lens database directory for automatic updates (something
+    * like "/var/lib/lensfun-updates") */
+    static const char *const SystemUpdatesLocation;
+
     lfDatabase ();
     ~lfDatabase ();
 
     /**
      * @brief Create a new empty database object.
+     *
+     * This function is deprecated and will be removed in the future.
+     * Please use the standard constructor instead.
      */
-    static lfDatabase *Create ();
+    DEPRECATED static lfDatabase *Create ();
 
     /**
      * @brief Destroy the database object and free all loaded data.
+     *
+     * This function is deprecated and will be removed in the future. 
+     * Please use the standard destructor instead.
      */
-    void Destroy ();
+    DEPRECATED void Destroy ();
 
     /**
-     * @brief Load all XML files from a directory.
+     * @brief Scans for the timestamp of a Lensfun database.
      *
-     * This is an internal function used by lfDatabase::Load ().  It ignores
-     * all errors.
+     * "database" means here a directory containing XML files.  If it also contains
+     * a file timestamp.txt, its content is interpreted as a string-encoded
+     * floating point value, representing the timestamp in seconds since the Epoch
+     * (UNIX time).  If it is not present, 0 is returned.  If the directory is not
+     * found or empty, a negative value is returned.
      * @param dirname
-     *     The directory to be read.
+     *     the name of the directory containing a Lensfun database
      * @return
-     *     True if valid lensfun XML data was succesfully loaded.
+     *     the UNIX timestamp when database was last updated.
      */
-    bool LoadDirectory (const char *dirname);
+     static long int ReadTimestamp (const char *dirname);
+
+     /**
+      * @brief Open and parse all XML files in a given directory.
+      *
+      * Returns true if valid Lensfun XML data was found and loaded
+      * sucessfully.
+      *
+      * This function is deprecated and will be removed in the future.
+      * Please use the lfDatabase::Load(const char *pathname) syntax instead.
+      *
+      * @param dirname
+      *     The directory to be read.
+      * @return
+      *     True if valid lensfun XML data was succesfully loaded.
+      */
+     DEPRECATED bool LoadDirectory (const char *dirname);
 
     /**
      * @brief Find and load the lens database.
      * 
-     * See @ref dbsearch for more information.
+     * This function automatically tries to determine the location of the 
+     * lens database on the system. See @ref dbsearch for more information.
      * @return
      *     LF_NO_ERROR or a error code.
      */
     lfError Load ();
 
     /**
-     * @brief Load just a specific XML file.
+     * @brief Load the database from specific path (directory or file).
      *
-     * If the loaded file contains the specification of a camera/lens that's
+     * If the given path is a folder, all included XML files will be parsed for
+     * valid lens data. If a loaded file contains the specification of a camera/lens that's
      * already in memory, it overrides that data.
-     * @param filename
+     * @param pathname
      *     The name of a XML file to load. Note that Lensfun does not support
      *     the full XML specification as it uses the glib's simple XML parser,
      *     so advanced XML features are not available.
      * @return
      *     LF_NO_ERROR or a error code.
      */
-    lfError Load (const char *filename);
+    lfError Load (const char *pathname);
 
     /**
      * @brief Load a set of camera/lenses from a memory array.
@@ -1658,6 +1701,15 @@ private:
 
 C_TYPEDEF (struct, lfDatabase)
 
+/** @sa lfDatabase::SystemLocation() */
+extern const char* const lf_db_system_location;
+/** @sa lfDatabase::SystemUpdatesLocation() */
+extern const char* const lf_db_system_updates_location;
+/** @sa lfDatabase::UserLocation() */
+extern const char* const lf_db_user_location;
+/** @sa lfDatabase::UserUpdatesLocation() */
+extern const char* const lf_db_user_updates_location;
+
 /**
  * @brief Create a new empty database object.
  *
@@ -1681,11 +1733,20 @@ LF_EXPORT lfDatabase *lf_db_new (void);
  */
 LF_EXPORT void lf_db_destroy (lfDatabase *db);
 
+/** @sa lfDatabase::ReadTimestamp() */
+LF_EXPORT long int lf_db_read_timestamp (lfDatabase *db, const char *dirname);
+
 /** @sa lfDatabase::Load() */
 LF_EXPORT lfError lf_db_load (lfDatabase *db);
 
+/** @sa lfDatabase::Load(const char *). Deprecated, use lf_db_load_path() instead. */
+DEPRECATED LF_EXPORT lfError lf_db_load_file (lfDatabase *db, const char *filename);
+
+/** @sa lfDatabase::LoadDirectory(const char *). Deprecated, use lf_db_load_path() instead. */
+DEPRECATED LF_EXPORT cbool lf_db_load_directory (lfDatabase *db, const char *dirname);
+
 /** @sa lfDatabase::Load(const char *) */
-LF_EXPORT lfError lf_db_load_file (lfDatabase *db, const char *filename);
+LF_EXPORT lfError lf_db_load_path (lfDatabase *db, const char *pathname);
 
 /** @sa lfDatabase::Load(const char *, const char *, size_t) */
 LF_EXPORT lfError lf_db_load_data (lfDatabase *db, const char *errcontext,
@@ -1903,7 +1964,6 @@ typedef void (*lfModifyCoordFunc) (void *data, float *iocoord, int count);
 
 // @cond
     
-#pragma warning "lfCallbackData declaration"
 /// Common ancestor for lfCoordCallbackData and lfColorCallbackData
 struct lfCallbackData
 {
@@ -1926,7 +1986,7 @@ typedef struct { float angle, dist; } lfPoint;
  * a lens object, which contains a set of correction models, and
  * create a modifier object from it.
  *
- * Normally, you will create an instance with lfModifier::Create and initilise
+ * Normally, you will create an instance of lfModifier and initialise
  * immediately it with lfModifier::Initialize, passing a valid lens object in
  * both cases.  Users of the plain C interface will use lf_modifier_new() and
  * lf_modifier_initialize() instead.
@@ -1941,6 +2001,7 @@ typedef struct { float angle, dist; } lfPoint;
  * <li>Fix chromatic aberrations (TCA)
  * <li>Fix lens distortion
  * <li>Fix lens geometry
+ * <li>Fix perspective
  * <li>Scale the image
  * </ol>
  *
@@ -1953,6 +2014,7 @@ typedef struct { float angle, dist; } lfPoint;
  * </ol>
  * <li>Coordinates<ol>
  * <li>Scale the image
+ * <li>Fix perspective
  * <li>Fix lens geometry
  * <li>Fix lens distortion
  * </ol>
@@ -1968,9 +2030,11 @@ typedef struct { float angle, dist; } lfPoint;
  * in place.
  *
  * Then, the distortions introduced by the lens are removed (distortion and
- * geometry), and an additional scaling factor is applied if required.  This
- * operation requires building new image in a new allocated buffer: you cannot
- * modify the image in place, or bad things will happen.
+ * geometry), perspective is corrected if desired, and an additional scaling
+ * factor is applied if required.  This operation requires building new image
+ * in a new allocated buffer: you cannot modify the image in place, or bad
+ * things will happen.  Note that Lensfun does not provide pixel interpolation
+ * routines.  You have to implement the lookup in the original image yourself.
  *
  * And finally, in the subpixel distortion stage, application corrects
  * transversal chromatic aberrations. For every target pixel coordinate the
@@ -2004,7 +2068,7 @@ struct LF_EXPORT lfModifier
 {
 #ifdef __cplusplus
     /**
-     * @brief Create a empty image modifier object.
+     * @brief Create an empty image modifier object.
      *
      * Before using the returned object you must add the required
      * modifier callbacks (see methods AddXXXCallback below).
@@ -2028,13 +2092,16 @@ struct LF_EXPORT lfModifier
     ~lfModifier ();
 
     /**
-     * @brief Create a empty image modifier object.
+     * @brief Create an empty image modifier object.
      *
      * Before using the returned object you must add the required
      * modifier callbacks (see methods AddXXXCallback below).
      *
      * You must provide the original image width/height even if you
      * plan to correct just a part of the image.
+     *
+     * This function is deprecated and will be removed in the future. 
+     * Please use the standard constructor instead.
      *
      * @param lens
      *     For all modifications, the crop factor, aspect ratio, and
@@ -2050,7 +2117,7 @@ struct LF_EXPORT lfModifier
      * @return
      *     A new empty image modifier object.
      */
-    static lfModifier *Create (const lfLens *lens, float crop, int width, int height);
+    DEPRECATED static lfModifier *Create (const lfLens *lens, float crop, int width, int height);
 
     /**
      * @brief Initialize the process of correcting aberrations in a image.
@@ -2068,7 +2135,7 @@ struct LF_EXPORT lfModifier
      * @param lens
      *     The lens which aberrations you want to correct in a image.
      *     It should be the same lens object as the one passed to
-     *     lfModifier::Create.
+     *     the lfModifier constructor.
      * @param format
      *     Pixel format of your image (bits per pixel component)
      * @param focal
@@ -2102,11 +2169,64 @@ struct LF_EXPORT lfModifier
         float distance, float scale, lfLensType targeom, int flags, bool reverse);
 
     /**
+     * @brief Enable the perspective correction.
+     *
+     * Depending on the number of control points given, there are three
+     * possible modes:
+     *
+     * 4 control points: c0 and c1 define one vertical lines, c2 and c3 the
+     * other.  The focal length defined in the creation of the modifier is used
+     * to get the proper aspect ratio.
+     *
+     * 6 control points: c0 to c3 like above.  c4 and c5 define a horizontal
+     * line.  The focal length is used to get the proper aspect ratio.
+     *
+     * 8 control points: c0 to c5 like above.  c6 and c7 define a second
+     * horizontal line.  The focal length is not used.
+     *
+     * 5 control points: They all must lie on an ellipse that is actually a
+     * rotated circle.  If they lie in a clockwise ordering, the vertex is
+     * assumed to be above the ellipse centre in the image.  If they lie in a
+     * counter-clockwise ordering, the vertex is assumed to be below the
+     * ellipse.  The focal length is needed to find the proper vertex.
+     *
+     * 7 control points: c0 to c4 like above.  c5 and c6 define a horizontal
+     * line which is used to rotate the final image nicely.
+     *
+     * If the lines constructed from the first four control points for the 4, 6
+     * and 8 points case (or the last two for the 7 points case) are more
+     * horizontal than vertical, in all of the above, "horizontal" and
+     * "vertical" need to be swapped.
+     *
+     * All control points must be given as pixel coordinates in the original
+     * image.  For best precision, anti-distortion should have been applied
+     * before taking the coordinates.  Moreover, fisheye images must have been
+     * transformed into rectilinear of the same focal length.  In contrast,
+     * cropping, rotating, shifting, or scaling must be switched off.
+     *
+     * @param x
+     *     The x coordinates of the control points.
+     * @param y
+     *     The y coordinates of the control points.
+     * @param count
+     *     The number of control points.
+     * @param d
+     *     This parameter is supposed to be offered to the user as a slider.
+     *     It can take values from -1 to +1.  0 denotes the perfect correction.
+     *     -1 is the unchanged image.  +1 is an increase of the tilting angle
+     *     by 25%.
+     * @return
+     *     True if the perspective correction was enabled.
+     */
+    bool EnablePerspectiveCorrection (float *x, float *y, int count, float d);
+
+    /**
      * @brief Destroy the modifier object.
      *
-     * This is the only correct way to destroy a lfModifier object.
+     * This function is deprecated and will be removed in the future. 
+     * Please use the standard destructor instead.
      */
-    void Destroy ();
+    DEPRECATED void Destroy ();
 
     /**
      * @brief Add a user-defined callback to the coordinate correction chain.
@@ -2224,11 +2344,11 @@ struct LF_EXPORT lfModifier
      * @param to
      *     The lens model for target image.
      * @param focal
-     *     Lens focal length in mm.
+     *     Lens focal length in mm.  Deprecated.
      * @return
      *     True if a library has a callback for given from->to conversion.
      */
-    bool AddCoordCallbackGeometry (lfLensType from, lfLensType to, float focal);
+    bool AddCoordCallbackGeometry (lfLensType from, lfLensType to, float focal = 0);
 
     /**
      * @brief Add the stock image scaling callback into the chain.
@@ -2465,6 +2585,7 @@ private:
     static void ModifyCoord_TCA_Linear (void *data, float *iocoord, int count);
     static void ModifyCoord_UnTCA_Poly3 (void *data, float *iocoord, int count);
     static void ModifyCoord_TCA_Poly3 (void *data, float *iocoord, int count);
+    static void ModifyCoord_TCA_ACM (void *data, float *iocoord, int count);
 
     static void ModifyCoord_UnDist_Poly3 (void *data, float *iocoord, int count);
     static void ModifyCoord_Dist_Poly3 (void *data, float *iocoord, int count);
@@ -2479,6 +2600,7 @@ private:
     static void ModifyCoord_UnDist_PTLens_SSE (void *data, float *iocoord, int count);
     static void ModifyCoord_Dist_PTLens_SSE (void *data, float *iocoord, int count);
 #endif
+    static void ModifyCoord_Dist_ACM (void *data, float *iocoord, int count);
     static void ModifyCoord_Geom_FishEye_Rect (void *data, float *iocoord, int count);
     static void ModifyCoord_Geom_Panoramic_Rect (void *data, float *iocoord, int count);
     static void ModifyCoord_Geom_ERect_Rect (void *data, float *iocoord, int count);
@@ -2499,6 +2621,7 @@ private:
     static void ModifyCoord_Geom_ERect_Equisolid (void *data, float *iocoord, int count);
     static void ModifyCoord_Geom_Thoby_ERect (void *data, float *iocoord, int count);
     static void ModifyCoord_Geom_ERect_Thoby (void *data, float *iocoord, int count);
+    static void ModifyCoord_Perspective_Correction (void *data, float *iocoord, int count);
 #ifdef VECTORIZATION_SSE
     static void ModifyColor_DeVignetting_PA_SSE (
       void *data, float _x, float _y, lf_f32 *pixels, int comp_role, int count);
@@ -2515,14 +2638,16 @@ private:
 
     static void ModifyCoord_Scale (void *data, float *iocoord, int count);
 #endif
-    /// Image width and height
-    int Width, Height;
+    /// Coordinate grid width and height; these are the original image
+    /// dimensions minus one.
+    double Width, Height;
     /// The center of distortions in normalized coordinates
     double CenterX, CenterY;
     /// The coefficients for conversion to and from normalized coords
     double NormScale, NormUnScale;
     /// Factor to transform from normalized into absolute coords (mm).  Needed
-    /// for geometry transformation.
+    /// for calculating the real focal length from the FOV, and for calculating
+    /// FocalLengthNormalized.
     double NormalizedInMillimeters;
     /// Used for conversion from distortion to vignetting coordinate system of
     /// the calibration sensor
@@ -2537,6 +2662,15 @@ private:
 
     /// Maximal x and y value in normalized coordinates for the original image
     double MaxX, MaxY;
+
+    /// Nominal focal length (usually taken from EXIF data) in normalized
+    /// units.  Currently, it is needed for geometry transformation, the Adobe
+    /// camera models, and perspective correction.  On the long run, /all/
+    /// image data will be stored in lfModifier, once the Enable... methods are
+    /// written.
+    double FocalLengthNormalized;
+    /// Whether the transformations are applied reversely
+    bool Reverse;
 };
 
 #ifdef __cplusplus
@@ -2557,6 +2691,10 @@ LF_EXPORT int lf_modifier_initialize (
     lfModifier *modifier, const lfLens *lens, lfPixelFormat format,
     float focal, float aperture, float distance, float scale,
     lfLensType targeom, int flags, cbool reverse);
+
+/** @sa lfModifier::EnablePerspectiveCorrection */
+LF_EXPORT cbool lf_modifier_enable_perspective_correction (
+    lfModifier *modifier, float *x, float *y, int count, float d);
 
 /** @sa lfModifier::AddCoordCallback */
 LF_EXPORT void lf_modifier_add_coord_callback (
@@ -2588,7 +2726,7 @@ LF_EXPORT cbool lf_modifier_add_coord_callback_distortion (
 
 /** @sa lfModifier::AddCoordCallbackGeometry */
 LF_EXPORT cbool lf_modifier_add_coord_callback_geometry (
-    lfModifier *modifier, lfLensType from, lfLensType to, float focal);
+    lfModifier *modifier, lfLensType from, lfLensType to);
 
 /** @sa lfModifier::AddCoordCallbackScale */
 LF_EXPORT cbool lf_modifier_add_coord_callback_scale (

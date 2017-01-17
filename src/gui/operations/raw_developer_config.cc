@@ -330,7 +330,7 @@ bool PF::WBSelector::check_value( int id, const std::string& name, const std::st
 PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
       OperationConfigGUI( layer, "Raw Developer" ),
       wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
-      wbTempSlider( this, "", _("temperature"), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
+      wbTempSlider( this, "", _("temp."), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
       wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
       //wbRedSlider( this, "wb_red", "Red mult.", 1, 0, 10, 0.05, 0.1, 1),
       //wbGreenSlider( this, "wb_green", "Green mult.", 1, 0, 10, 0.05, 0.1, 1),
@@ -342,16 +342,22 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
       wb_target_a_slider( this, "wb_target_a", "a: ", 10, -1000000, 1000000, 0.05, 0.1, 1),
       wb_target_b_slider( this, "wb_target_b", "b: ", 12, -1000000, 1000000, 0.05, 0.1, 1),
       enable_ca_checkbox( this, "enable_ca", _("enable CA correction"), false ),
-      auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
-      ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
-      ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
-      ca_frame( _("CA correction") ),
       hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
       hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
       hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
       hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ),
       hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ),
       hotp_frame( _("hot pixels filter") ),
+      ca_mode_selector( this, "tca_method", _("CA correction: "), PF::PF_TCA_CORR_AUTO ),
+      auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
+      ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
+      ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
+      ca_frame( _("CA correction") ),
+      lf_enable_distortion_button( this, "lf_enable_distortion", _("distortion"), false ),
+      lf_enable_tca_button( this, "lf_enable_tca", _("chromatic aberrations (CA)"), false ),
+      lf_enable_vignetting_button( this, "lf_enable_vignetting", _("vignetting"), false ),
+      lf_enable_all_button( this, "lf_enable_all", _("all corrections"), false ),
+      lens_frame( _("lens corrections") ),
       demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
       fcsSlider( this, "fcs_steps", "FCC steps", 1, 0, 4, 1, 1, 1 ),
       exposureSlider( this, "exposure", "Exp. comp.", 0, -5, 5, 0.05, 0.5 ),
@@ -402,11 +408,11 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
 
   for( unsigned int i = 0; i < PF::WB_LAST; i++ ) {
     snprintf(tstr,99,"wb_red_%d", i);
-    wbRedSliders[i] = new PF::Slider( this, tstr, "red mult.", 1, 0, 10, 0.05, 0.1, 1);
+    wbRedSliders[i] = new PF::Slider( this, tstr, "red", 1, 0, 10, 0.05, 0.1, 1);
     snprintf(tstr,99,"wb_green_%d", i);
-    wbGreenSliders[i] = new PF::Slider( this, tstr, "green mult.", 1, 0, 10, 0.05, 0.1, 1);
+    wbGreenSliders[i] = new PF::Slider( this, tstr, "green", 1, 0, 10, 0.05, 0.1, 1);
     snprintf(tstr,99,"wb_blue_%d", i);
-    wbBlueSliders[i] = new PF::Slider( this, tstr, "blue mult.", 1, 0, 10, 0.05, 0.1, 1);
+    wbBlueSliders[i] = new PF::Slider( this, tstr, "blue", 1, 0, 10, 0.05, 0.1, 1);
 
     wbSliderBoxes[i].pack_start(*wbRedSliders[i]);
     wbSliderBoxes[i].pack_start(*wbGreenSliders[i]);
@@ -429,20 +435,44 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
   exposureControlsBox.pack_start( hlrecoModeSelector, Gtk::PACK_SHRINK, 2 );
 
-  lensControlsBox.pack_start( ca_frame, Gtk::PACK_SHRINK, 10 );
   lensControlsBox.pack_start( hotp_frame, Gtk::PACK_SHRINK, 10 );
-  ca_frame.add( ca_box );
-  ca_box.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
-  ca_box.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
-  ca_box.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
-  ca_box.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
-
+  lensControlsBox.pack_start( lens_frame, Gtk::PACK_SHRINK, 10 );
+  //lensControlsBox.pack_start( ca_frame, Gtk::PACK_SHRINK, 10 );
   hotp_frame.add( hotp_box );
   hotp_box.pack_start( hotp_enable_checkbox, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_threshold_slider, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_strength_slider, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_permissive_checkbox, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
+
+  lens_frame.add( lf_box );
+  lf_label1.set_text( _("cam. maker: ") );
+  lf_hbox1.pack_start( lf_label1 );
+  lf_hbox1.pack_start( lf_makerEntry );
+  lf_label2.set_text( _("cam. model: ") );
+  lf_hbox2.pack_start( lf_label2 );
+  lf_hbox2.pack_start( lf_modelEntry );
+  lf_label3.set_text( _("lens: ") );
+  lf_hbox3.pack_start( lf_label3 );
+  lf_hbox3.pack_start( lf_lensEntry );
+  lf_box.pack_start( lf_hbox1 );
+  lf_box.pack_start( lf_hbox2 );
+  lf_box.pack_start( lf_hbox3 );
+  lf_box.pack_start( lf_enable_all_button );
+  lf_box.pack_start( lf_enable_vignetting_button );
+  lf_box.pack_start( lf_enable_distortion_button );
+  lf_box.pack_start( lf_enable_tca_button );
+  lf_makerEntry.set_editable( false );
+  lf_modelEntry.set_editable( false );
+  lf_lensEntry.set_editable( false );
+
+
+  //lf_box.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
+  lf_box.pack_start( ca_mode_selector, Gtk::PACK_SHRINK );
+  //lf_box.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
+  lf_box.pack_start( ca_box, Gtk::PACK_SHRINK );
+  ca_box.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
+  ca_box.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
 
   demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
   demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
@@ -643,9 +673,17 @@ void PF::RawDeveloperConfigGUI::do_update()
     if( inode && inode->image) {
       size_t blobsz;
       PF::exif_data_t* exif_data;
+      if( vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) ||
+                blobsz != sizeof(PF::exif_data_t) ) {
+        exif_data = NULL;
+      }
+      dcraw_data_t* raw_data;
+      if( vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data,&blobsz ) ||
+          blobsz != sizeof(dcraw_data_t) ) {
+        raw_data = NULL;
+      }
 
-      if( !vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) &&
-          blobsz == sizeof(PF::exif_data_t) ) {
+      if( exif_data && raw_data ) {
         //char makermodel[1024];
         //char *tmodel = makermodel;
         //dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &tmodel,
@@ -725,9 +763,8 @@ void PF::RawDeveloperConfigGUI::do_update()
         }
       }
 
-      dcraw_data_t* raw_data;
-      if( !vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data, &blobsz ) &&
-          blobsz == sizeof(dcraw_data_t) ) {
+      //dcraw_data_t* raw_data;
+      if( raw_data ) {
         is_xtrans = PF::check_xtrans( raw_data->idata.filters );
 
         float black_level = raw_data->color.black;
@@ -817,6 +854,33 @@ void PF::RawDeveloperConfigGUI::do_update()
 
     if( is_xtrans ) demoMethodSelector.hide();
     else demoMethodSelector.show();
+
+
+// Lens corrections
+    if( processor ) {
+      PF::RawDeveloperPar* par2 =
+          dynamic_cast<PF::RawDeveloperPar*>(processor->get_par());
+      if( par2 ) {
+        lf_makerEntry.set_text( par2->get_lf_maker() );
+        lf_makerEntry.set_tooltip_text( par2->get_lf_maker() );
+
+        lf_modelEntry.set_text( par2->get_lf_model() );
+        lf_modelEntry.set_tooltip_text( par2->get_lf_model() );
+
+        lf_lensEntry.set_text( par2->get_lf_lens() );
+        lf_lensEntry.set_tooltip_text( par2->get_lf_lens() );
+      }
+    }
+    if( par->get_tca_enabled() || par->get_all_enabled() ) {
+      ca_mode_selector.show();
+      if( par->get_tca_method() == PF::PF_TCA_CORR_MANUAL )
+        ca_box.show();
+      else
+        ca_box.hide();
+    } else {
+      ca_mode_selector.hide();
+      ca_box.hide();
+    }
 
     prop = par->get_property( "cam_profile_name" );
     if( !prop )  return;

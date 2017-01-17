@@ -58,12 +58,14 @@
 
 #include <vips/dispatch.h>
 
+/*
 #warning "Now including lensfun.hh"
 #ifdef PF_LENSFUN_HH
 #warning "PF_LENSFUN_HH already defined!!!"
 #else
 #warning "PF_LENSFUN_HH not defined."
 #endif
+*/
 #include "../operations/lensfun.hh"
 //#include "../base/processor.hh"
 
@@ -111,6 +113,7 @@ typedef struct _VipsLensFun {
 #ifdef PF_HAS_LENSFUN
   lfDatabase* ldb;
   lfModifier* modifier;
+  int modflags;
 #endif
 } VipsLensFun;
 
@@ -134,6 +137,7 @@ G_DEFINE_TYPE( VipsLensFun, vips_lensfun, VIPS_TYPE_OPERATION );
 
 static void *malloc_aligned(size_t size)
 {
+  return NULL;
 }
 
 #define MIN_MAX( MIN, MAX, VAL) { if(VAL<MIN) MIN=VAL; if(VAL>MAX) MAX=VAL;}
@@ -153,7 +157,9 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 
   /* Output area we are building.
    */
+  VipsRect rimg = { 0, 0, ir->im->Xsize, ir->im->Ysize };
   const VipsRect *r = &oreg->valid;
+  int line_size = r->width * lensfun->in->Bands;
   VipsRect s, r_in;
   int i;
   int x, xx, y, k;
@@ -171,21 +177,50 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
      <<" width="<<oreg->valid.width
      <<" height="<<oreg->valid.height<<std::endl;
 #endif
+  bool do_vignetting = false;
+  bool do_interpolation = false;
+#ifdef PF_HAS_LENSFUN
+  if( lensfun->modflags & LF_MODIFY_VIGNETTING )
+    do_vignetting = true;
+  if( !do_vignetting ) {
+    if( (lensfun->modflags & LF_MODIFY_TCA) ||
+        (lensfun->modflags & LF_MODIFY_DISTORTION) )
+      do_interpolation = true;
+  }
+#endif
+
   //float* buf = new float[r->width*r->height*2*3];
-  void* ptr = malloc( sizeof(float)*r->width*r->height*2*3 + 32 );
-  intptr_t iptr = (intptr_t)ptr;
-  iptr = (iptr >> 4)<<4;
-  float* buf = (float *)iptr;
+  void* ptr = NULL;
+  float* buf = NULL;
+  T* Tbuf = NULL;
+  float* pos = NULL;
+  T* Tpos = NULL;
+
+  if( do_vignetting ) {
+    ptr = malloc( sizeof(T)*line_size + 32 );
+    intptr_t iptr = (intptr_t)ptr;
+    iptr = (iptr >> 4)<<4;
+    Tbuf = (T *)iptr;
+    Tpos = Tbuf;
+  }
+  if( do_interpolation ) {
+    ptr = malloc( sizeof(float)*r->height*line_size*2 + 32 );
+    intptr_t iptr = (intptr_t)ptr;
+    iptr = (iptr >> 4)<<4;
+    buf = (float *)iptr;
+    pos = buf;
+  }
+
   //float* buf = (float *)(((intptr_t)(ptr) + 16-1) & ~16);
   //std::cout<<"ptr="<<ptr<<" buf="<<(void*)buf<<std::endl;
+
+  if( do_interpolation ) {
+    int xmin=2000000000, xmax = -2000000000, ymin = 2000000000, ymax = -2000000000;
 #ifdef PF_HAS_LENSFUN
   //std::cout<<"ApplySubpixelGeometryDistortion( "<<r->left<<", "<<r->top<<", "<<r->width<<", "<<r->height
   //    <<", "<<(void*)buf<<" ) called"<<std::endl;
   bool ok = lensfun->modifier->ApplySubpixelGeometryDistortion( r->left, r->top, r->width, r->height, buf );
   if(!ok) return( -1 );
-#endif
-  int xmin=2000000000, xmax = -2000000000, ymin = 2000000000, ymax = -2000000000;
-  float* pos = buf;
   for( x = 0; x < r->width; x++ ) {
     for( y = 0; y < r->height; y++ ) {
       for( k = 0; k < 3; k++ ) {
@@ -196,6 +231,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
       }
     }
   }
+#endif
 
 #ifndef NDEBUG
   std::cout<<"vips_lensfun_gen(): xmin="<<xmin<<" ymin="<<ymin<<" xmax="<<xmax<<" ymax="<<ymax<<std::endl;
@@ -206,13 +242,25 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   s.width = xmax-xmin+window_size+11-1;
   s.height = ymax-ymin+window_size+11-1;
 
-  VipsRect rimg = { 0, 0, ir->im->Xsize, ir->im->Ysize };
   vips_rect_intersectrect( &rimg, &s, &s );
 
   r_in.left = s.left + window_offset;
   r_in.top = s.top + window_offset;
   r_in.width = s.width - window_size + 1;
   r_in.height = s.height - window_size + 1;
+} else {
+  s.left = r->left;
+  s.top = r->top;
+  s.width = r->width;
+  s.height = r->height;
+
+  vips_rect_intersectrect( &rimg, &s, &s );
+
+  r_in.left = s.left;
+  r_in.top = s.top;
+  r_in.width = s.width;
+  r_in.height = s.height;
+}
 
   /**/
 #ifndef NDEBUG
@@ -243,28 +291,54 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 
   /* Do the actual processing
    */
+
+  if( !do_vignetting && !do_interpolation ) {
+    //vips_region_region( ir, oreg, &s, 0, 0 );
+    for( y = 0; y < s.height; y++ ) {
+      T *p = (T *)VIPS_REGION_ADDR( ir, s.left, s.top + y );
+      T* q = (T *)VIPS_REGION_ADDR( oreg, s.left, s.top + y );
+      memcpy( q, p, sizeof(T)*line_size );
+    }
+  }
+
 #ifndef NDEBUG
   std::cout<<"lensfun->in->Bands="<<lensfun->in->Bands<<std::endl;
 #endif
-  VipsInterpolateMethod interp_method =
-      vips_interpolate_get_method ( lensfun->interpolate );
-  int line_size = r->width * lensfun->in->Bands;
-  pos = buf;
-  for( y = 0; y < r->height; y++ ) {
-    T *q = (T *)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
-    for( x = 0; x < line_size; x+=lensfun->in->Bands ) {
-      for( xx = 0; xx < lensfun->in->Bands; xx++ ) {
-        int srcx = pos[0];
-        int srcy = pos[1];
-        if( vips_rect_includespoint(&r_in, srcx, srcy) ) {
-          interp_method( lensfun->interpolate, &(q[x]), ir, pos[0], pos[1] );
-          //T *p = (T *)VIPS_REGION_ADDR( ir, srcx, srcy );
-          //q[x+xx] = p[xx];
-        } else {
-          q[x+xx] = PF::FormatInfo<T>::MIN;
+  // Vignetting correction
+  if( do_vignetting ) {
+    for( y = 0; y < s.height; y++ ) {
+      T *q = (T *)VIPS_REGION_ADDR( ir, s.left, s.top + y );
+      memcpy( Tbuf, q, sizeof(T)*line_size );
+      lensfun->modifier->ApplyColorModification (Tbuf, s.left, s.top+y, s.width, 1,
+          LF_CR_3 (RED, GREEN, BLUE), 0);
+      q = (T *)VIPS_REGION_ADDR( oreg, s.left, s.top + y );
+      memcpy( q, Tbuf, sizeof(T)*line_size );
+    }
+  }
+
+  if( do_interpolation ) {
+    VipsInterpolateMethod interp_method =
+        vips_interpolate_get_method ( lensfun->interpolate );
+    pos = buf;
+    T px[3];
+    for( y = 0; y < r->height; y++ ) {
+      T *q = (T *)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+      for( x = 0; x < line_size; x+=lensfun->in->Bands ) {
+        for( xx = 0; xx < lensfun->in->Bands; xx++ ) {
+          int srcx = pos[0];
+          int srcy = pos[1];
+          //if( r->left<4 && r->top<4 && y<4 && x<12 ) std::cout<<"lensfun: ch="<<xx<<"  srcx="<<srcx<<"  srcy="<<srcy<<std::endl;
+          if( vips_rect_includespoint(&r_in, srcx, srcy) ) {
+            interp_method( lensfun->interpolate, &(px[0]), ir, pos[0], pos[1] );
+            //T *p = (T *)VIPS_REGION_ADDR( ir, srcx, srcy );
+            //q[x+xx] = p[xx];
+          } else {
+            q[x+xx] = PF::FormatInfo<T>::MIN;
+          }
+          pos += 2;
+          q[x+xx] = px[xx];
+          //std::cout<<"x="<<x<<"  p["<<x<<"]="<<(uint32_t)p[x]<<"  pout["<<x<<"]="<<(uint32_t)q[x]<<std::endl;
         }
-        pos += 2;
-        //std::cout<<"x="<<x<<"  p["<<x<<"]="<<(uint32_t)p[x]<<"  pout["<<x<<"]="<<(uint32_t)q[x]<<std::endl;
       }
     }
   }
@@ -277,7 +351,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 #endif
   /**/
   //delete[] buf;
-  free( ptr );
+  if( ptr ) free( ptr );
 
   return( 0 );
 }
@@ -303,6 +377,8 @@ vips_lensfun_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop 
     break;
   case VIPS_FORMAT_DOUBLE:
     result = vips_lensfun_gen_template<double>( oreg, seq, a, b, stop );
+    break;
+  default:
     break;
   }
 
@@ -339,8 +415,10 @@ vips_lensfun_build( VipsObject *object )
       vips_check_coding_known( klass->nickname, lensfun->in ) )
     return( -1 );
 
-#ifdef PF_HAS_LENSFUN
-  PF::LensFunPar* lfpar = dynamic_cast<PF::LensFunPar*>( lensfun->processor->get_par() );
+  lensfun->modflags = 0;
+
+  #ifdef PF_HAS_LENSFUN
+  PF::LensFunParStep* lfpar = dynamic_cast<PF::LensFunParStep*>( lensfun->processor->get_par() );
 
   const lfCamera** cameras = lensfun->ldb->FindCameras( lfpar->camera_maker().c_str(),
       lfpar->camera_model().c_str() );
@@ -369,17 +447,23 @@ vips_lensfun_build( VipsObject *object )
 
   g_print ("Lens `%s' found in database\n", lfpar->lens().c_str());
 
+  int flags = 0;
+  if( lfpar->distortion_enabled() ) flags |= LF_MODIFY_DISTORTION;
+  if( lfpar->tca_enabled() ) flags |= LF_MODIFY_TCA;
+  if( lfpar->vignetting_enabled() ) flags |= LF_MODIFY_VIGNETTING;
   std::cout<<"lfModifier::Create( lens, "<<lens->CropFactor<<", "
       <<lensfun->in->Xsize<<", "<<lensfun->in->Ysize<<" );"<<std::endl;
   lensfun->modifier = lfModifier::Create( lens, lens->CropFactor,
       lensfun->in->Xsize, lensfun->in->Ysize );
   std::cout<<"lensfun->modifier->Initialize( lens, LF_PF_U8, "<<lfpar->get_focal_length()<<", "
       <<lfpar->get_aperture()<<", "<<lfpar->get_distance()
-      <<", 1.0, lens->Type, LF_MODIFY_ALL, false );"<<std::endl;
+      <<", 1.0, lens->Type, "<<flags<<", false );"<<std::endl;
   int modflags = lensfun->modifier->Initialize(
-      lens, LF_PF_U8, lfpar->get_focal_length(),
+      lens, LF_PF_F32, lfpar->get_focal_length(),
       lfpar->get_aperture(), lfpar->get_distance(), 1.0, lens->Type,
-      LF_MODIFY_ALL, false );
+      flags, false );
+
+  lensfun->modflags = modflags;
 
   g_print("modflags: %d", modflags);
 
@@ -489,7 +573,7 @@ vips_lensfun_init( VipsLensFun *lensfun )
 #ifdef PF_HAS_LENSFUN
   lensfun->ldb = lf_db_new();
 #if (BUNDLED_LENSFUN == 1)
-  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_data_dir() + "/lensfun/version_1/";
+  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_lensfun_db_dir();
   lensfun->ldb->LoadDirectory( lfdb.c_str() );
   std::cout<<"LensFun database loaded from "<<lfdb<<std::endl;
 #else
