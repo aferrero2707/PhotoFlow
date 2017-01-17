@@ -62,7 +62,7 @@ static int histogram_stop( void* seq, void *a, void *b )
     histogram->hist[i] += hist[i];
   }
   delete hist;
-  return 1;
+  return 0;
 }
 
 
