@@ -41,6 +41,7 @@
 #include "fast_demosaic.hh"
 #include "fast_demosaic_xtrans.hh"
 #include "false_color_correction.hh"
+#include "lensfun.hh"
 #include "raw_output.hh"
 #include "hotpixels.hh"
 
@@ -49,12 +50,25 @@
 
 PF::RawDeveloperPar::RawDeveloperPar(): 
   OpParBase(), output_format( VIPS_FORMAT_NOTSET ),
+  lf_prop_camera_maker( "lf_camera_maker", this ),
+  lf_prop_camera_model( "lf_camera_model", this ),
+  lf_prop_lens( "lf_lens", this ),
+  enable_distortion( "lf_enable_distortion", this, false ),
+  enable_tca( "lf_enable_tca", this, false ),
+  enable_vignetting( "lf_enable_vignetting", this, false ),
+  enable_all( "lf_enable_all", this, false ),
+  tca_method("tca_method",this,PF::PF_TCA_CORR_PROFILED_AUTO,"TCA_CORR_PROFILED_AUTO",_("profiled + auto")),
   demo_method("demo_method",this,PF::PF_DEMO_AMAZE,"AMAZE","Amaze"),
 	fcs_steps("fcs_steps",this,0),
 	caching_enabled( true )
 {
-	demo_method.add_enum_value(PF::PF_DEMO_AMAZE,"AMAZE","Amaze");
-	//demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
+  tca_method.add_enum_value(PF::PF_TCA_CORR_AUTO,"TCA_CORR_AUTO",_("auto"));
+  tca_method.add_enum_value(PF::PF_TCA_CORR_PROFILED,"TCA_CORR_PROFILED",_("profiled"));
+  tca_method.add_enum_value(PF::PF_TCA_CORR_PROFILED_AUTO,"TCA_CORR_PROFILED_AUTO",_("profiled + auto"));
+  tca_method.add_enum_value(PF::PF_TCA_CORR_MANUAL,"TCA_CORR_MANUAL",_("manual"));
+
+  demo_method.add_enum_value(PF::PF_DEMO_AMAZE,"AMAZE","Amaze");
+  //demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
   demo_method.add_enum_value(PF::PF_DEMO_LMMSE,"LMMSE","LMMSE");
   demo_method.add_enum_value(PF::PF_DEMO_IGV,"IGV","Igv");
 
@@ -69,6 +83,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   if( xtrans_par ) xtrans_par->set_normalize( true );
   raw_preprocessor = new_raw_preprocessor();
   ca_correct = new_ca_correct();
+  lensfun = new_lensfun();
   raw_output = new_raw_output();
   hotpixels = new_hotpixels();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
@@ -121,6 +136,42 @@ void PF::RawDeveloperPar::get_wb(float* mul)
 }
 
 
+std::string PF::RawDeveloperPar::get_lf_maker()
+{
+  std::string result;
+  LensFunPar* lfpar = dynamic_cast<LensFunPar*>( lensfun->get_par() );
+  if( !lfpar ) {
+    std::cout<<"RawDeveloperPar::build(): could not get LensFunPar object."<<std::endl;
+    return result;
+  }
+  return lfpar->camera_maker();
+}
+
+
+std::string PF::RawDeveloperPar::get_lf_model()
+{
+  std::string result;
+  LensFunPar* lfpar = dynamic_cast<LensFunPar*>( lensfun->get_par() );
+  if( !lfpar ) {
+    std::cout<<"RawDeveloperPar::build(): could not get LensFunPar object."<<std::endl;
+    return result;
+  }
+  return lfpar->camera_model();
+}
+
+
+std::string PF::RawDeveloperPar::get_lf_lens()
+{
+  std::string result;
+  LensFunPar* lfpar = dynamic_cast<LensFunPar*>( lensfun->get_par() );
+  if( !lfpar ) {
+    std::cout<<"RawDeveloperPar::build(): could not get LensFunPar object."<<std::endl;
+    return result;
+  }
+  return lfpar->lens();
+}
+
+
 VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first, 
 				     VipsImage* imap, VipsImage* omap, 
 				     unsigned int& level)
@@ -145,6 +196,13 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   }
   
   
+  LensFunPar* lfpar = dynamic_cast<LensFunPar*>( lensfun->get_par() );
+  if( !lfpar ) {
+    std::cout<<"RawDeveloperPar::build(): could not get LensFunPar object."<<std::endl;
+    return NULL;
+  }
+  int lf_modflags = lfpar->get_flags( in[0] );
+
   VipsImage* input_img = in[0];
   //std::cout<<"RawDeveloperPar::build(): input_img->Bands="<<input_img->Bands<<std::endl;
   if( input_img->Bands != 3 ) {
@@ -171,6 +229,35 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
       VipsImage* out_hotp = hotpixels->get_par()->build( in2, 0, NULL, NULL, level );
       g_object_unref( image );
       //VipsImage* out_hotp = image;
+
+      CACorrectPar* capar = dynamic_cast<CACorrectPar*>( ca_correct->get_par() );
+      if( !capar ) {
+        std::cout<<"RawDeveloperPar::build(): could not get CACorrectPar object."<<std::endl;
+        return NULL;
+      }
+
+      capar->set_enable_ca( false );
+      capar->set_auto_ca( false );
+      if( enable_tca.get() || enable_all.get() ) {
+        switch(tca_method.get_enum_value().first) {
+        case PF::PF_TCA_CORR_AUTO:
+          capar->set_enable_ca( true );
+          capar->set_auto_ca( true );
+          break;
+        case PF::PF_TCA_CORR_PROFILED_AUTO:
+          if( (lf_modflags & LF_MODIFY_TCA) == 0) {
+            capar->set_enable_ca( true );
+            capar->set_auto_ca( true );
+          }
+          break;
+        case PF::PF_TCA_CORR_MANUAL:
+          capar->set_enable_ca( true );
+          capar->set_auto_ca( false );
+          break;
+        default:
+          break;
+        }
+      }
 
       in2.clear(); in2.push_back( out_hotp );
       ca_correct->get_par()->set_image_hints( out_hotp );
@@ -216,7 +303,30 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   /**/
-  raw_output->get_par()->set_image_hints( out_demo );
+  lensfun->get_par()->set_image_hints( out_demo );
+  lensfun->get_par()->set_format( VIPS_FORMAT_FLOAT );
+  lfpar->set_vignetting_enabled( enable_vignetting.get() || enable_all.get() );
+  lfpar->set_distortion_enabled( enable_distortion.get() || enable_all.get() );
+  lfpar->set_tca_enabled( false );
+  if( enable_tca.get() || enable_all.get() ) {
+    switch(tca_method.get_enum_value().first) {
+    case PF::PF_TCA_CORR_PROFILED:
+      lfpar->set_tca_enabled( true );
+      break;
+    case PF::PF_TCA_CORR_PROFILED_AUTO:
+      if( lf_modflags & LF_MODIFY_TCA )
+        lfpar->set_tca_enabled( true );
+      break;
+    default:
+      break;
+    }
+  }
+  in2.clear(); in2.push_back( out_demo );
+  VipsImage* out_lf = lensfun->get_par()->build( in2, 0, NULL, NULL, level );
+  g_object_unref( out_demo );
+
+
+  raw_output->get_par()->set_image_hints( out_lf );
   raw_output->get_par()->set_format( VIPS_FORMAT_FLOAT );
   RawPreprocessorPar* rppar = dynamic_cast<RawPreprocessorPar*>( raw_preprocessor->get_par() );
   RawOutputPar* ropar = dynamic_cast<RawOutputPar*>( raw_output->get_par() );
@@ -234,9 +344,9 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
     }
   }
 
-  in2.clear(); in2.push_back( out_demo );
+  in2.clear(); in2.push_back( out_lf );
   VipsImage* out = raw_output->get_par()->build( in2, 0, NULL, NULL, level );
-  g_object_unref( out_demo );
+  g_object_unref( out_lf );
   /**/
 
   //VipsImage* gamma_in = out_demo;

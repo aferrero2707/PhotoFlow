@@ -4,9 +4,7 @@
 */
 
 #include "lensfun/config.h"
-#warning "Before lensfun.h"
 #include "lensfun/lensfun.h"
-#warning "Before lensfunprv.h"
 #include "lensfunprv.h"
 
 lfCamera::lfCamera ()
@@ -24,6 +22,15 @@ lfCamera::~lfCamera ()
     lf_free (Model);
     lf_free (Variant);
     lf_free (Mount);
+}
+
+lfCamera::lfCamera (const lfCamera &other)
+{
+    Maker = lf_mlstr_dup (other.Maker);
+    Model = lf_mlstr_dup (other.Model);
+    Variant = lf_mlstr_dup (other.Variant);
+    Mount = g_strdup (other.Mount);
+    CropFactor = other.CropFactor;
 }
 
 lfCamera &lfCamera::operator = (const lfCamera &other)

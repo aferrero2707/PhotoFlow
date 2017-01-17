@@ -8,6 +8,7 @@
 
 #include <glib.h>
 #include <string.h>
+#include <vector>
 
 #define MEMBER_OFFSET(s,f)   ((unsigned int)(char *)&((s *)0)->f)
 #define ARRAY_LEN(a)         (sizeof (a) / sizeof (a [0]))
@@ -329,23 +330,6 @@ extern gint _lf_lens_compare (gconstpointer a, gconstpointer b);
 extern float _lf_interpolate (float y1, float y2, float y3, float y4, float t);
 
 /**
- * @brief Scans for the timestamp of a Lensfun database.
- *
- * "database" means here a directory containing XML files.  If it also contains
- * a file timestamp.txt, its content is interpreted as a string-encoded
- * floating point value, representing the timestamp in seconds since the Epoch
- * (UNIX time).  If it is not present, 0 is returned.  If the directory is not
- * found or empty, a negative value is returned.
- * @param dirname
- *     the name of the directory containing a Lensfun database; the "version_x"
- *     suffix is implicitly appended
- * @return
- *     the number of seconds since the Epoch when this database was last
- *     updated.
- */
-extern long int _lf_read_database_timestamp(const gchar *dirname);
-
-/**
  * @brief Compare a lens with a pattern and return a matching score.
  *
  * The comparison is quasi-intelligent: the order of words in a name
@@ -473,5 +457,13 @@ struct lfColorCallbackData : public lfCallbackData
 {
     lfModifyColorFunc callback;
 };
+
+// `dvector`, `matrix`, and `svg` are declared here to be able to test `svd` in
+// unit tests.
+
+typedef std::vector<double> dvector;
+typedef std::vector<dvector> matrix;
+
+dvector svd (matrix M);
 
 #endif /* __LENSFUNPRV_H__ */

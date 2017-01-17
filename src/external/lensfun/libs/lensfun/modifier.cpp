@@ -9,22 +9,6 @@
 #include <math.h>
 #include "windows/mathconstants.h"
 
-/* Takes into account that the Hugin models (Poly3, PTLens), use a wrong focal
- * length (see the thread http://thread.gmane.org/gmane.comp.misc.ptx/34865).
- */
-float get_hugin_focal_correction (const lfLens *lens, float focal)
-{
-    lfLensCalibDistortion res;
-    if (lens->InterpolateDistortion(focal, res))
-    {
-        if (res.Model == LF_DIST_MODEL_POLY3)
-            return 1 - res.Terms[0];
-        else if (res.Model == LF_DIST_MODEL_PTLENS)
-            return 1 - res.Terms[0] - res.Terms[1] - res.Terms[2];
-    }
-    return 1;
-}
-
 lfModifier *lfModifier::Create (const lfLens *lens, float crop, int width, int height)
 {
     return new lfModifier (lens, crop, width, height);
@@ -34,6 +18,8 @@ int lfModifier::Initialize (
     const lfLens *lens, lfPixelFormat format, float focal, float aperture,
     float distance, float scale, lfLensType targeom, int flags, bool reverse)
 {
+    FocalLengthNormalized = GetRealFocalLength (lens, focal) / NormalizedInMillimeters;
+
     int oflags = 0;
 
     if (flags & LF_MODIFY_TCA)
@@ -63,11 +49,9 @@ int lfModifier::Initialize (
     if (flags & LF_MODIFY_GEOMETRY &&
         lens->Type != targeom)
     {
-        float real_focal_length = GetRealFocalLength (lens, focal);
-        real_focal_length /= get_hugin_focal_correction (lens, focal);
         if (reverse ?
-            AddCoordCallbackGeometry (targeom, lens->Type, real_focal_length) :
-            AddCoordCallbackGeometry (lens->Type, targeom, real_focal_length))
+            AddCoordCallbackGeometry (targeom, lens->Type) :
+            AddCoordCallbackGeometry (lens->Type, targeom))
             oflags |= LF_MODIFY_GEOMETRY;
     }
 
@@ -76,13 +60,13 @@ int lfModifier::Initialize (
         if (AddCoordCallbackScale (scale, reverse))
             oflags |= LF_MODIFY_SCALE;
 
+    Reverse = reverse;
+
     return oflags;
 }
 
 float lfModifier::GetRealFocalLength (const lfLens *lens, float focal)
 {
-    lfLensCalibRealFocal real_focal;
-    if (lens && lens->InterpolateRealFocal (focal, real_focal)) return real_focal.RealFocal;
     float result = focal;
     lfLensCalibFov fov_raw;
     if (lens && lens->InterpolateFov (focal, fov_raw))
@@ -123,19 +107,15 @@ float lfModifier::GetRealFocalLength (const lfLens *lens, float focal)
 
             default:
                 // This should never happen
-                return NAN;
+                result = NAN;
         }
+        return result;
     }
-    /* It may be surprising that get_hugin_focal_correction is applied even if
-     * only the nominal focal length is found and used.  The reason is twofold:
-     * First, many lens manufacturers seem to use a focal length closer to
-     * Hugin's quirky definition.  And secondly, we have better
-     * backwards-compatibility this way.  In particular, one can use Hugin
-     * results (using the nominal focal length) out-of-the-box.  If the nominal
-     * focal length is used, it is guesswork anyway, so this compromise is
-     * acceptable.
-     */
-    return result * get_hugin_focal_correction (lens, focal);
+    lfLensCalibDistortion lcd;
+    if (lens && lens->InterpolateDistortion (focal, lcd))
+        if (lcd.RealFocal > 0)
+            return lcd.RealFocal;
+    return result;
 }
 
 void lfModifier::Destroy ()
@@ -158,7 +138,8 @@ void lfModifier::Destroy ()
 
   (2) For vignetting, r = 1 is the corner of the image.
 
-  (3) For geometry transformation, the unit length is the focal length.
+  (3) For geometry transformation and for all Adobe camera models, the unit
+      length is the focal length.
 
   The constructor lfModifier::lfModifier is the central method that
   handles the coordinate systems.  It does so by providing the scaling factors
@@ -174,13 +155,13 @@ void lfModifier::Destroy ()
   work, the coordinates are finally divided by NormScale again.  Done.
 
   But the devil is in the details.  Geometry transformation has to happen in
-  (3), so for only this step, all coordinates are scaled by focal /
-  NormalizedInMillimeters in lfModifier::AddCoordCallbackGeometry.  Moreover,
-  it is important to see that the conversion into (1) is pretty irrelevant.
-  (It is performed for that the resulting image is not ridiculously small; but
-  this could also be achieved with proper auto-scaling.)  Instead, really
-  critical is only the *back-transformation* from (1) into the pixel coordinate
-  system of the uncorrected, original bitmap.  This must be exactly correct.
+  (3), so for only this step, all coordinates are scaled by
+  FocalLengthNormalized in lfModifier::AddCoordCallbackGeometry.  Moreover, it
+  is important to see that the conversion into (1) is pretty irrelevant.  (It
+  is performed for that the resulting image is not ridiculously small; but this
+  could also be achieved with proper auto-scaling.)  Instead, really critical
+  is only the *back-transformation* from (1) into the pixel coordinate system
+  of the uncorrected, original bitmap.  This must be exactly correct.
   Otherwise, the strength of correction does not match with the position in the
   picture, and the correction cannot work.
 
@@ -206,25 +187,28 @@ lfModifier::lfModifier (const lfLens *lens, float crop, int width, int height)
     ColorCallbacks = g_ptr_array_new ();
     CoordCallbacks = g_ptr_array_new ();
 
-    // Avoid divide overflows on singular cases
-    Width = (width >= 2 ? width : 2);
-    Height = (height >= 2 ? height : 2);
+    // Avoid divide overflows on singular cases.  The "- 1" is due to the fact
+    // that `Width` and `Height` are measured at the pixel centres (they are
+    // actually transformed) instead at their outer rims.
+    Width = double (width >= 2 ? width - 1 : 1);
+    Height = double (height >= 2 ? height - 1 : 1);
 
     // Image "size"
-    float size = float ((Width < Height) ? Width : Height);
-    float image_aspect_ratio = (Width < Height) ?
-        float (Height) / float (Width) : float (Width) / float (Height);
+    double size = Width < Height ? Width : Height;
+    double image_aspect_ratio = Width < Height ? Height / Width : Width / Height;
 
-    float calibration_cropfactor;
+    double calibration_cropfactor;
+    double calibration_aspect_ratio;
     if (lens)
     {
         calibration_cropfactor = lens->CropFactor;
-        AspectRatioCorrection = sqrt (lens->AspectRatio * lens->AspectRatio + 1);
+        calibration_aspect_ratio = lens->AspectRatio;
     }
     else
-        AspectRatioCorrection = calibration_cropfactor = NAN;
+        calibration_cropfactor = calibration_aspect_ratio = NAN;
+    AspectRatioCorrection = sqrt (calibration_aspect_ratio * calibration_aspect_ratio + 1);
 
-    float coordinate_correction =
+    double coordinate_correction =
         1.0 / sqrt (image_aspect_ratio * image_aspect_ratio + 1) *
         calibration_cropfactor / crop *
         AspectRatioCorrection;
@@ -232,22 +216,22 @@ lfModifier::lfModifier (const lfLens *lens, float crop, int width, int height)
     // In NormalizedInMillimeters, we un-do all factors of
     // coordinate_correction that refer to the calibration sensor because
     // NormalizedInMillimeters is supposed to transform to image coordinates.
-    NormalizedInMillimeters = sqrt(36.0*36.0 + 24.0*24.0) / 2.0 /
+    NormalizedInMillimeters = sqrt (36.0*36.0 + 24.0*24.0) / 2.0 /
         AspectRatioCorrection / calibration_cropfactor;
 
     // The scale to transform {-size/2 .. 0 .. size/2-1} to {-1 .. 0 .. +1}
-    NormScale = 2.0 / (size - 1) * coordinate_correction;
+    NormScale = 2.0 / size * coordinate_correction;
 
     // The scale to transform {-1 .. 0 .. +1} to {-size/2 .. 0 .. size/2-1}
-    NormUnScale = (size - 1) * 0.5 / coordinate_correction;
+    NormUnScale = size * 0.5 / coordinate_correction;
 
     // Geometric lens center in normalized coordinates
-    CenterX = (Width / size + (lens ? lens->CenterX : 0.0)) * coordinate_correction;
-    CenterY = (Height / size + (lens ? lens->CenterY : 0.0)) * coordinate_correction;
+    CenterX = Width / size * coordinate_correction + (lens ? lens->CenterX : 0.0);
+    CenterY = Height / size * coordinate_correction + (lens ? lens->CenterY : 0.0);
 
     // Used for autoscaling
-    MaxX = double (Width) / 2.0 * NormScale;
-    MaxY = double (Height) / 2.0 * NormScale;
+    MaxX = Width / 2.0 * NormScale;
+    MaxY = Height / 2.0 * NormScale;
 }
 
 static void free_callback_list (void *arr)
@@ -300,7 +284,7 @@ void lfModifier::AddCallback (void *arr, lfCallbackData *d,
 lfModifier *lf_modifier_new (
     const lfLens *lens, float crop, int width, int height)
 {
-    return lfModifier::Create (lens, crop, width, height);
+    return new lfModifier (lens, crop, width, height);
 }
 
 void lf_modifier_destroy (lfModifier *modifier)

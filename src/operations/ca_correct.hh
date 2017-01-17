@@ -59,7 +59,9 @@ namespace PF
 
     dcraw_data_t* get_image_data() { return image_data; }
 
+    void set_enable_ca(bool flag) { enable_ca.update(flag); }
     bool get_auto_ca() { return auto_ca.get(); }
+    void set_auto_ca(bool flag) { auto_ca.update(flag); }
     float get_ca_red() { return ca_red.get(); }
     float get_ca_blue() { return ca_blue.get(); }
 

@@ -11,6 +11,9 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <glib/gstdio.h>
+#include <math.h>
+#include <fstream>
+#include "windows/mathconstants.h"
 
 #ifdef PLATFORM_WINDOWS
 #  include <io.h>
@@ -18,11 +21,23 @@
 #  include <unistd.h>
 #endif
 
+const char* const lfDatabase::UserLocation = g_build_filename (g_get_user_data_dir (),
+                                CONF_PACKAGE, NULL);
+const char* const lfDatabase::UserUpdatesLocation = g_build_filename (lfDatabase::UserLocation, "updates",
+                                   DATABASE_SUBDIR, NULL);
+const char* const lfDatabase::SystemLocation = g_build_filename (SYSTEM_DB_PATH, DATABASE_SUBDIR,
+                                   NULL);
+const char* const lfDatabase::SystemUpdatesLocation = g_build_filename (SYSTEM_DB_UPDATE_PATH,
+                                          DATABASE_SUBDIR, NULL);
+
 lfDatabase::lfDatabase ()
 {
-    HomeDataDir = g_build_filename (g_get_user_data_dir (),
-                                    CONF_PACKAGE, NULL);
-    UserUpdatesDir = g_build_filename (HomeDataDir, "updates", DATABASE_SUBDIR, NULL);
+
+    // Take care to replace all occurences with the respective static variables
+    // when the deprecated HomeDataDir and UserUpdatesDir variables are removed.
+    HomeDataDir = strdup(lfDatabase::UserLocation);
+    UserUpdatesDir = strdup(lfDatabase::UserUpdatesLocation);
+
     Mounts = g_ptr_array_new ();
     g_ptr_array_add ((GPtrArray *)Mounts, NULL);
     Cameras = g_ptr_array_new ();
@@ -45,9 +60,6 @@ lfDatabase::~lfDatabase ()
     for (i = 0; i < ((GPtrArray *)Lenses)->len - 1; i++)
          delete static_cast<lfLens *> (g_ptr_array_index ((GPtrArray *)Lenses, i));
     g_ptr_array_free ((GPtrArray *)Lenses, TRUE);
-
-    g_free (HomeDataDir);
-    g_free (UserUpdatesDir);
 }
 
 lfDatabase *lfDatabase::Create ()
@@ -60,11 +72,74 @@ void lfDatabase::Destroy ()
     delete this;
 }
 
+long int lfDatabase::ReadTimestamp (const char *dirname)
+{
+    long int timestamp = -1;
+    GDir *dir = g_dir_open (dirname, 0, NULL);
+    if (dir)
+    {
+        if (g_dir_read_name (dir))
+        {
+            gchar *filename = g_build_filename (dirname, "timestamp.txt", NULL);
+            std::ifstream timestamp_file (filename);
+            g_free (filename);
+            if (!timestamp_file.fail ())
+                timestamp_file >> timestamp;
+            else
+                timestamp = 0;
+        }
+        g_dir_close (dir);
+    }
+
+    return timestamp;
+}
+
 bool lfDatabase::LoadDirectory (const gchar *dirname)
 {
+    return Load(dirname) == LF_NO_ERROR;
+}
+
+lfError lfDatabase::Load ()
+{
+  lfError err = LF_NO_ERROR;
+
     bool database_found = false;
 
-    GDir *dir = g_dir_open (dirname, 0, NULL);
+    const int timestamp_system =
+        ReadTimestamp (SystemLocation);
+    const int timestamp_system_updates =
+        ReadTimestamp (SystemUpdatesLocation);
+    const int timestamp_user_updates =
+        ReadTimestamp (UserUpdatesDir);
+    if (timestamp_system > timestamp_system_updates)
+        if (timestamp_user_updates > timestamp_system)
+            err = Load (UserUpdatesDir);
+        else
+            err = Load (SystemLocation);
+    else
+        if (timestamp_user_updates > timestamp_system_updates)
+            err = Load (UserUpdatesDir);
+        else
+            err = Load (SystemUpdatesLocation);
+
+    Load (HomeDataDir);
+
+    return err == LF_NO_ERROR ? LF_NO_ERROR : LF_NO_DATABASE;
+}
+
+lfError lfDatabase::Load (const char *pathname)
+{
+
+  if (pathname == NULL)
+    return Load();
+
+  lfError e;
+
+  if (g_file_test (pathname, G_FILE_TEST_IS_DIR)) {
+
+    // if filename is a directory, try to open all XML files inside
+    bool database_found = false;
+    GDir *dir = g_dir_open (pathname, 0, NULL);
     if (dir)
     {
         GPatternSpec *ps = g_pattern_spec_new ("*.xml");
@@ -76,7 +151,7 @@ bool lfDatabase::LoadDirectory (const gchar *dirname)
                 size_t sl = strlen (fn);
                 if (g_pattern_match (ps, sl, fn, NULL))
                 {
-                    gchar *ffn = g_build_filename (dirname, fn, NULL);
+                    gchar *ffn = g_build_filename (pathname, fn, NULL);
                     /* Ignore errors */
                     if (Load (ffn) == LF_NO_ERROR)
                         database_found = true;
@@ -87,60 +162,24 @@ bool lfDatabase::LoadDirectory (const gchar *dirname)
         }
         g_dir_close (dir);
     }
+    e = database_found ? LF_NO_ERROR : LF_NO_DATABASE;
 
-    return database_found;
-}
+  } else {
 
-lfError lfDatabase::Load ()
-{
-    bool database_found = false;
-
-#ifndef PLATFORM_WINDOWS
-    gchar *main_dirname = g_build_filename (CONF_DATADIR, DATABASE_SUBDIR, NULL);
-    const gchar *system_updates_dirname = g_build_filename ("/var/lib/lensfun-updates", DATABASE_SUBDIR, NULL);
-#else
-    /* windows based OS */
-    extern gchar *_lf_get_database_dir ();
-    gchar *main_dirname = _lf_get_database_dir ();
-    const gchar *system_updates_dirname = "C:\\to\\be\\defined\\lensfun-updates";
-#endif
-    printf("lfDatabase::Load(): main_dirname=%s\n", main_dirname);
-    const int timestamp_main =
-        _lf_read_database_timestamp (main_dirname);
-    const int timestamp_system_updates =
-        _lf_read_database_timestamp (system_updates_dirname);
-    const int timestamp_user_updates =
-        _lf_read_database_timestamp (UserUpdatesDir);
-    if (timestamp_main > timestamp_system_updates)
-        if (timestamp_user_updates > timestamp_main)
-            database_found |= LoadDirectory (UserUpdatesDir);
-        else
-            database_found |= LoadDirectory (main_dirname);
-    else
-        if (timestamp_user_updates > timestamp_system_updates)
-            database_found |= LoadDirectory (UserUpdatesDir);
-        else
-            database_found |= LoadDirectory (system_updates_dirname);
-    g_free (main_dirname);
-
-    database_found |= LoadDirectory (HomeDataDir);
-
-    return database_found ? LF_NO_ERROR : LF_NO_DATABASE;
-}
-
-lfError lfDatabase::Load (const char *filename)
-{
+    // if filename is not a folder, load the file directly
     gchar *contents;
     gsize length;
     GError *err = NULL;
-    if (!g_file_get_contents (filename, &contents, &length, &err))
+    if (!g_file_get_contents (pathname, &contents, &length, &err))
         return lfError (err->code == G_FILE_ERROR_ACCES ? -EACCES : -ENOENT);
 
-    lfError e = Load (filename, contents, length);
+    e = Load (pathname, contents, length);
 
     g_free (contents);
 
-    return e;
+  }
+
+  return e;
 }
 
 //-----------------------------// XML parser //-----------------------------//
@@ -208,10 +247,17 @@ static void _xml_start_element (GMarkupParseContext *context,
                 version = atoi (attribute_values [i]);
             else
                 goto bad_attr;
+        if (version < LF_MIN_DATABASE_VERSION)
+        {
+            g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
+                         "Database version is %d, but oldest supported is only %d!\n",
+                         version, LF_MIN_DATABASE_VERSION);
+            return;
+        }
         if (version > LF_MAX_DATABASE_VERSION)
         {
             g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
-                         "Database version is %d, but supported is only %d!\n",
+                         "Database version is %d, but newest supported is only %d!\n",
                          version, LF_MAX_DATABASE_VERSION);
             return;
         }
@@ -324,6 +370,8 @@ static void _xml_start_element (GMarkupParseContext *context,
                     dc.Model = LF_DIST_MODEL_POLY5;
                 else if (!strcmp (attribute_values [i], "ptlens"))
                     dc.Model = LF_DIST_MODEL_PTLENS;
+                else if (!strcmp (attribute_values [i], "acm"))
+                    dc.Model = LF_DIST_MODEL_ACM;
                 else
                 {
                 bad_attr:
@@ -335,14 +383,21 @@ static void _xml_start_element (GMarkupParseContext *context,
             }
             else if (!strcmp (attribute_names [i], "focal"))
                 dc.Focal = atof (attribute_values [i]);
+            else if (!strcmp (attribute_names [i], "real-focal"))
+                dc.RealFocal = atof (attribute_values [i]);
             else if (!strcmp (attribute_names [i], "a") ||
                      !strcmp (attribute_names [i], "k1"))
                 dc.Terms [0] = atof (attribute_values [i]);
             else if (!strcmp (attribute_names [i], "b") ||
                      !strcmp (attribute_names [i], "k2"))
                 dc.Terms [1] = atof (attribute_values [i]);
-            else if (!strcmp (attribute_names [i], "c"))
+            else if (!strcmp (attribute_names [i], "c") ||
+                     !strcmp (attribute_names [i], "k3"))
                 dc.Terms [2] = atof (attribute_values [i]);
+            else if (!strcmp (attribute_names [i], "k4"))
+                dc.Terms [3] = atof (attribute_values [i]);
+            else if (!strcmp (attribute_names [i], "k5"))
+                dc.Terms [4] = atof (attribute_values [i]);
             else
             {
             unk_attr:
@@ -351,6 +406,14 @@ static void _xml_start_element (GMarkupParseContext *context,
                              attribute_names [i], element_name);
                 return;
             }
+        if (dc.RealFocal > 0)
+            dc.RealFocalMeasured = true;
+        else if (dc.Model == LF_DIST_MODEL_PTLENS)
+            dc.RealFocal = dc.Focal * (1 - dc.Terms [0] - dc.Terms [1] - dc.Terms [2]);
+        else if (dc.Model == LF_DIST_MODEL_POLY3)
+            dc.RealFocal = dc.Focal * (1 - dc.Terms [0]);
+        else
+            dc.RealFocal = dc.Focal;
 
         pd->lens->AddCalibDistortion (&dc);
     }
@@ -371,25 +434,45 @@ static void _xml_start_element (GMarkupParseContext *context,
                     tcac.Model = LF_TCA_MODEL_LINEAR;
                 else if (!strcmp (attribute_values [i], "poly3"))
                     tcac.Model = LF_TCA_MODEL_POLY3;
+                else if (!strcmp (attribute_values [i], "acm"))
+                    tcac.Model = LF_TCA_MODEL_ACM;
                 else
                     goto bad_attr;
             }
             else if (!strcmp (attribute_names [i], "focal"))
                 tcac.Focal = atof (attribute_values [i]);
             else if (!strcmp (attribute_names [i], "kr") ||
-                     !strcmp (attribute_names [i], "vr"))
+                     !strcmp (attribute_names [i], "vr") ||
+                     !strcmp (attribute_names [i], "alpha0"))
                 tcac.Terms [0] = atof (attribute_values [i]);
             else if (!strcmp (attribute_names [i], "kb") ||
-                     !strcmp (attribute_names [i], "vb"))
+                     !strcmp (attribute_names [i], "vb") ||
+                     !strcmp (attribute_names [i], "beta0"))
                 tcac.Terms [1] = atof (attribute_values [i]);
-            else if (!strcmp (attribute_names [i], "cr"))
+            else if (!strcmp (attribute_names [i], "cr") ||
+                     !strcmp (attribute_names [i], "alpha1"))
                 tcac.Terms [2] = atof (attribute_values [i]);
-            else if (!strcmp (attribute_names [i], "cb"))
+            else if (!strcmp (attribute_names [i], "cb") ||
+                     !strcmp (attribute_names [i], "beta1"))
                 tcac.Terms [3] = atof (attribute_values [i]);
-            else if (!strcmp (attribute_names [i], "br"))
+            else if (!strcmp (attribute_names [i], "br") ||
+                     !strcmp (attribute_names [i], "alpha2"))
                 tcac.Terms [4] = atof (attribute_values [i]);
-            else if (!strcmp (attribute_names [i], "bb"))
+            else if (!strcmp (attribute_names [i], "bb") ||
+                     !strcmp (attribute_names [i], "beta2"))
                 tcac.Terms [5] = atof (attribute_values [i]);
+            else if (!strcmp (attribute_names [i], "alpha3"))
+                tcac.Terms [6] = atof (attribute_values [i]);
+            else if (!strcmp (attribute_names [i], "beta3"))
+                tcac.Terms [7] = atof (attribute_values [i]);
+            else if (!strcmp (attribute_names [i], "alpha4"))
+                tcac.Terms [8] = atof (attribute_values [i]);
+            else if (!strcmp (attribute_names [i], "beta4"))
+                tcac.Terms [9] = atof (attribute_values [i]);
+            else if (!strcmp (attribute_names [i], "alpha5"))
+                tcac.Terms [10] = atof (attribute_values [i]);
+            else if (!strcmp (attribute_names [i], "beta5"))
+                tcac.Terms [11] = atof (attribute_values [i]);
             else
                 goto unk_attr;
 
@@ -409,6 +492,8 @@ static void _xml_start_element (GMarkupParseContext *context,
                     vc.Model = LF_VIGNETTING_MODEL_NONE;
                 else if (!strcmp (attribute_values [i], "pa"))
                     vc.Model = LF_VIGNETTING_MODEL_PA;
+                else if (!strcmp (attribute_values [i], "acm"))
+                    vc.Model = LF_VIGNETTING_MODEL_ACM;
                 else
                     goto bad_attr;
             }
@@ -418,11 +503,14 @@ static void _xml_start_element (GMarkupParseContext *context,
                 vc.Aperture = atof (attribute_values [i]);
             else if (!strcmp (attribute_names [i], "distance"))
                 vc.Distance = atof (attribute_values [i]);
-            else if (!strcmp (attribute_names [i], "k1"))
+            else if (!strcmp (attribute_names [i], "k1") ||
+                     !strcmp (attribute_names [i], "alpha1"))
                 vc.Terms [0] = atof (attribute_values [i]);
-            else if (!strcmp (attribute_names [i], "k2"))
+            else if (!strcmp (attribute_names [i], "k2") ||
+                     !strcmp (attribute_names [i], "alpha2"))
                 vc.Terms [1] = atof (attribute_values [i]);
-            else if (!strcmp (attribute_names [i], "k3"))
+            else if (!strcmp (attribute_names [i], "k3") ||
+                     !strcmp (attribute_names [i], "alpha3"))
                 vc.Terms [2] = atof (attribute_values [i]);
             else
                 goto unk_attr;
@@ -474,7 +562,7 @@ static void _xml_start_element (GMarkupParseContext *context,
 
         gint line, col;
         g_markup_parse_context_get_position (context, &line, &col);
-        g_warning ("[Lensfun] %s:%d:%d: <field_of_view> tag is deprecated.  Use <real-focal-length> instead",
+        g_warning ("[Lensfun] %s:%d:%d: <field_of_view> tag is deprecated.  Use <real-focal> attribute instead",
                    pd->errcontext, line, col);
 
         lfLensCalibFov lcf;
@@ -490,25 +578,6 @@ static void _xml_start_element (GMarkupParseContext *context,
             }
 
         pd->lens->AddCalibFov (&lcf);
-    }
-    else if (!strcmp (element_name, "real-focal-length"))
-    {
-        if (!ctx || strcmp (ctx, "calibration"))
-            goto bad_ctx;
-
-        lfLensCalibRealFocal lcf;
-        memset (&lcf, 0, sizeof (lcf));
-        for (i = 0; attribute_names [i]; i++)
-            if (!strcmp (attribute_names [i], "focal"))
-                lcf.Focal = atof (attribute_values [i]);
-            else if (!strcmp (attribute_names [i], "real-focal"))
-                lcf.RealFocal = atof (attribute_values [i]);
-            else
-            {
-                goto unk_attr;
-            }
-
-        pd->lens->AddCalibRealFocal (&lcf);
     }
     /* Handle multi-language strings */
     else if (!strcmp (element_name, "maker") ||
@@ -791,13 +860,6 @@ lfError lfDatabase::Save (const char *filename,
                           const lfCamera *const *cameras,
                           const lfLens *const *lenses) const
 {
-    /* Special case: if filename begins with HomeDataDir and HomeDataDir
-     * does not exist, try to create it (since we're in charge for this dir).
-     */
-    if (g_str_has_prefix (filename, HomeDataDir) &&
-        g_file_test (HomeDataDir, G_FILE_TEST_IS_DIR))
-        g_mkdir (HomeDataDir, 0777);
-
     char *output = Save (mounts, cameras, lenses);
     if (!output)
         return lfError (-ENOMEM);
@@ -830,6 +892,7 @@ char *lfDatabase::Save (const lfMount *const *mounts,
     int i, j;
     GString *output = g_string_sized_new (1024);
 
+    g_string_append (output, "<!DOCTYPE lensdatabase SYSTEM \"lensfun-database.dtd\">\n");
     g_string_append (output, "<lensdatabase>\n\n");
 
     if (mounts)
@@ -913,8 +976,8 @@ char *lfDatabase::Save (const lfMount *const *mounts,
                             lenses [i]->AspectRatio);
 
             if (lenses [i]->CalibDistortion || lenses [i]->CalibTCA ||
-                lenses [i]->CalibVignetting || lenses [i]->CalibCrop || 
-                lenses [i]->CalibFov || lenses [i]->CalibRealFocal)
+                lenses [i]->CalibVignetting || lenses [i]->CalibCrop ||
+                lenses [i]->CalibFov)
                 g_string_append (output, "\t\t<calibration>\n");
 
             if (lenses [i]->CalibDistortion)
@@ -925,6 +988,8 @@ char *lfDatabase::Save (const lfMount *const *mounts,
 
                     _lf_xml_printf (output, "\t\t\t<distortion focal=\"%g\" ",
                                     cd->Focal);
+                    if (cd->RealFocal > 0)
+                    _lf_xml_printf (output, "real-focal=\"%g\" ", cd->RealFocal);
                     switch (cd->Model)
                     {
                         case LF_DIST_MODEL_POLY3:
@@ -943,6 +1008,12 @@ char *lfDatabase::Save (const lfMount *const *mounts,
                             _lf_xml_printf (
                                 output, "model=\"ptlens\" a=\"%g\" b=\"%g\" c=\"%g\" />\n",
                                 cd->Terms [0], cd->Terms [1], cd->Terms [2]);
+                            break;
+
+                        case LF_DIST_MODEL_ACM:
+                            _lf_xml_printf (
+                                output, "model=\"acm\" k1=\"%g\" k2=\"%g\" k3=\"%g\" k4=\"%g\" k5=\"%g\" />\n",
+                                cd->Terms [0], cd->Terms [1], cd->Terms [2], cd->Terms [3], cd->Terms [4]);
                             break;
 
                         default:
@@ -972,6 +1043,18 @@ char *lfDatabase::Save (const lfMount *const *mounts,
                                             ctca->Terms [3], ctca->Terms [4], ctca->Terms [5]);
                             break;
 
+                        case LF_TCA_MODEL_ACM:
+                            _lf_xml_printf (output, "model=\"acm\" alpha0=\"%g\" beta0=\"%g\" "
+                                            "alpha1=\"%g\" beta1=\"%g\" alpha2=\"%g\" "
+                                            "beta2=\"%g\" alpha3=\"%g\" beta3=\"%g\" "
+                                            "alpha4=\"%g\" beta4=\"%g\" alpha5=\"%g\" "
+                                            "beta5=\"%g\" />\n",
+                                            ctca->Terms [0], ctca->Terms [1], ctca->Terms [2],
+                                            ctca->Terms [3], ctca->Terms [4], ctca->Terms [5],
+                                            ctca->Terms [6], ctca->Terms [7], ctca->Terms [8],
+                                            ctca->Terms [9], ctca->Terms [10], ctca->Terms [11]);
+                            break;
+
                         default:
                             _lf_xml_printf (output, "model=\"none\" />\n");
                             break;
@@ -990,6 +1073,11 @@ char *lfDatabase::Save (const lfMount *const *mounts,
                     {
                         case LF_VIGNETTING_MODEL_PA:
                             _lf_xml_printf (output, "model=\"pa\" k1=\"%g\" k2=\"%g\" k3=\"%g\" />\n",
+                                            cv->Terms [0], cv->Terms [1], cv->Terms [2]);
+                            break;
+
+                        case LF_VIGNETTING_MODEL_ACM:
+                            _lf_xml_printf (output, "model=\"acm\" alpha1=\"%g\" alpha2=\"%g\" alpha3=\"%g\" />\n",
                                             cv->Terms [0], cv->Terms [1], cv->Terms [2]);
                             break;
 
@@ -1044,23 +1132,9 @@ char *lfDatabase::Save (const lfMount *const *mounts,
                 }
             }
 
-            if (lenses [i]->CalibRealFocal)
-            {
-                for (j = 0; lenses [i]->CalibRealFocal [j]; j++)
-                {
-                    lfLensCalibRealFocal *lcf = lenses [i]->CalibRealFocal [j];
-
-                    if (lcf->RealFocal>0)
-                    {
-                        _lf_xml_printf (output, "\t\t\t<real-focal-length focal=\"%g\" real-focal=\"%g\" />\n",
-                            lcf->Focal, lcf->RealFocal);
-                    };
-                }
-            }
-
             if (lenses [i]->CalibDistortion || lenses [i]->CalibTCA ||
                 lenses [i]->CalibVignetting || lenses [i]->CalibCrop ||
-                lenses [i]->CalibFov || lenses [i]->CalibRealFocal)
+                lenses [i]->CalibFov)
                 g_string_append (output, "\t\t</calibration>\n");
 
             g_string_append (output, "\t</lens>\n\n");
@@ -1340,14 +1414,24 @@ void lfDatabase::AddLens (lfLens *lens)
 
 //---------------------------// The C interface //---------------------------//
 
+const char* const lf_db_system_location = lfDatabase::SystemLocation;
+const char* const lf_db_system_updates_location = lfDatabase::SystemUpdatesLocation;
+const char* const lf_db_user_location = lfDatabase::UserLocation;
+const char* const lf_db_user_updates_location = lfDatabase::UserUpdatesLocation;
+
 lfDatabase *lf_db_new ()
 {
-    return lfDatabase::Create ();
+    return new lfDatabase ();
 }
 
 void lf_db_destroy (lfDatabase *db)
 {
     db->Destroy ();
+}
+
+long int lf_db_read_timestamp (const char *dirname)
+{
+    return lfDatabase::ReadTimestamp(dirname);
 }
 
 lfError lf_db_load (lfDatabase *db)
@@ -1358,6 +1442,16 @@ lfError lf_db_load (lfDatabase *db)
 lfError lf_db_load_file (lfDatabase *db, const char *filename)
 {
     return db->Load (filename);
+}
+
+cbool lf_db_load_directory (lfDatabase *db, const char *dirname)
+{
+    return db->Load (dirname);
+}
+
+lfError lf_db_load_path (lfDatabase *db, const char *pathname)
+{
+    return db->Load (pathname);
 }
 
 lfError lf_db_load_data (lfDatabase *db, const char *errcontext,

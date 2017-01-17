@@ -51,6 +51,14 @@ namespace PF
 		PF_DEMO_IGV
 	};
 
+	enum TCA_correction_mode_t
+	{
+    PF_TCA_CORR_PROFILED_AUTO,
+    PF_TCA_CORR_PROFILED,
+	  PF_TCA_CORR_AUTO,
+	  PF_TCA_CORR_MANUAL
+	};
+
   class RawDeveloperPar: public OpParBase
   {
     VipsBandFormat output_format;
@@ -63,13 +71,21 @@ namespace PF
     PF::ProcessorBase* fast_demosaic_xtrans;
     PF::ProcessorBase* raw_preprocessor;
     PF::ProcessorBase* ca_correct;
+    PF::ProcessorBase* lensfun;
     PF::ProcessorBase* raw_output;
     PF::ProcessorBase* convert_format;
     PF::ProcessorBase* fcs[4];
     PF::ProcessorBase* hotpixels;
 
-		// False color suppression steps
-		PropertyBase demo_method;
+    Property<std::string> lf_prop_camera_maker;
+    Property<std::string> lf_prop_camera_model;
+    Property<std::string> lf_prop_lens;
+
+    Property<bool> enable_distortion, enable_tca, enable_vignetting, enable_all;
+   // False color suppression steps
+    PropertyBase tca_method;
+    // False color suppression steps
+    PropertyBase demo_method;
 		// False color suppression steps
 		Property<int> fcs_steps;
 
@@ -98,6 +114,14 @@ namespace PF
     void get_wb(float* mul);
     void set_wb(float r, float g, float b);
     int get_hotp_fixed();
+
+    int get_tca_method() { return tca_method.get_enum_value().first; }
+    bool get_tca_enabled() { return enable_tca.get(); }
+    bool get_all_enabled() { return enable_all.get(); }
+
+    std::string get_lf_maker();
+    std::string get_lf_model();
+    std::string get_lf_lens();
 
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 

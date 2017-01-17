@@ -38,6 +38,7 @@
 
 namespace PF {
 
+
 class WBSelector: public Selector
 {
   std::string maker, model;
@@ -105,12 +106,6 @@ public:
     Gtk::Alignment white_level_label_align;
     Gtk::HSeparator separator;
 
-    CheckBox enable_ca_checkbox;
-    CheckBox auto_ca_checkbox;
-    Slider ca_red_slider, ca_blue_slider;
-    Gtk::VBox ca_box;
-    Gtk::Frame ca_frame;
-
     CheckBox hotp_enable_checkbox;
     Slider hotp_strength_slider;
     Slider hotp_threshold_slider;
@@ -118,6 +113,21 @@ public:
     CheckBox hotp_markfixed_checkbox;
     Gtk::VBox hotp_box;
     Gtk::Frame hotp_frame;
+
+    Selector ca_mode_selector;
+    CheckBox enable_ca_checkbox;
+    CheckBox auto_ca_checkbox;
+    Slider ca_red_slider, ca_blue_slider;
+    Gtk::VBox ca_box;
+    Gtk::Frame ca_frame;
+
+    Gtk::HBox lf_hbox1, lf_hbox2, lf_hbox3;
+    Gtk::Label lf_label1, lf_label2, lf_label3;
+    Gtk::Entry lf_makerEntry, lf_modelEntry, lf_lensEntry;
+    CheckBox lf_enable_distortion_button, lf_enable_tca_button, lf_enable_vignetting_button, lf_enable_all_button;
+    Gtk::VBox lf_box;
+    Gtk::Frame lens_frame;
+
 
     Selector profileModeSelector;
     Gtk::HBox profileModeSelectorBox;
