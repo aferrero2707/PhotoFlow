@@ -315,13 +315,30 @@ PF::RawImage::RawImage( const std::string _fname ):
   VipsImage* out_demo = fast_demosaic->get_par()->build( in2, 0, NULL, NULL, level );
   //g_object_unref( image );
 
-  vips_copy( out_demo, &demo_image,
+  VipsImage* out_demo2;
+
+  vips_copy( out_demo, &out_demo2,
       "format", VIPS_FORMAT_FLOAT,
       "bands", (int)3,
       "coding", VIPS_CODING_NONE,
       "interpretation", VIPS_INTERPRETATION_RGB,
       NULL );
   g_object_unref( out_demo );
+
+  int tw = 64, th = 64;
+  // reserve two complete rows of tiles
+  int nt = out_demo2->Xsize*2/tw;
+  VipsAccess acc = VIPS_ACCESS_RANDOM;
+  int threaded = 1, persistent = 0;
+
+  if( vips_tilecache(out_demo2, &demo_image,
+      "tile_width", tw, "tile_height", th, "max_tiles", nt,
+      "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+    std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
+    demo_image = out_demo2;
+  } else {
+    PF_UNREF( out_demo2, "OpParBase::build_many(): out_demo2 unref" );
+  }
 
   pyramid.init( demo_image );
   return;
