@@ -62,6 +62,8 @@
 #include "imageprocessor.hh"
 #include "photoflow.hh"
 
+#include "../vips/gmic/gmic/src/gmic.h"
+
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
 char* _lf_get_database_dir()
@@ -227,7 +229,7 @@ PF::PhotoFlow::PhotoFlow():
 #elif defined(WIN32)
   //if( getenv("LOCALAPPDATA") ) {
   //  dataPath = getenv("LOCALAPPDATA");
-  if( getenv("PROGRAMDATA") ) {
+  if( false && getenv("PROGRAMDATA") ) {
     dataPath = getenv("PROGRAMDATA");
     dataPath += "\\photoflow\\";
     Glib::ustring testPath = dataPath + "\\gmic_def.gmic";
@@ -266,10 +268,14 @@ PF::PhotoFlow::PhotoFlow():
   } else {
     localePath = exePath + "/../share/locale";
   }
+#elif defined(WIN32)
+  localePath = exePath + "\\..\\share\\locale\\";
 #else
   localePath = Glib::ustring(INSTALL_PREFIX) + "/share/locale";
 #endif
   std::cout<<"localePath: "<<localePath<<std::endl;
+
+  gmic::init_rc();
 
   set_base_dir( exePath );
   set_data_dir( dataPath );
@@ -293,7 +299,6 @@ void PF::PhotoFlow::close()
 
   //im_close_plugins();
   std::cout<<"PhotoFlow::close(): calling vips shutdown"<<std::endl;
-  sleep(1);
   vips_shutdown();
   std::cout<<"PhotoFlow::close(): vips shutdown done"<<std::endl;
 
