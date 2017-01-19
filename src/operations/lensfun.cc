@@ -105,12 +105,12 @@ int PF::LensFunParStep::get_flags( VipsImage* img )
       const lfLens *lens = lenses[0];
       lf_free (lenses);
 
-      lfModifier* modifier = lfModifier::Create( lens, lens->CropFactor,
+      lfModifier* modifier = new lfModifier( lens, lens->CropFactor,
           img->Xsize, img->Ysize );
       flags = modifier->Initialize(
           lens, LF_PF_F32, focal_length, aperture, distance, 1.0, lens->Type,
           LF_MODIFY_ALL, false );
-      lf_free (modifier);
+      delete modifier;
     }
   }
 #endif

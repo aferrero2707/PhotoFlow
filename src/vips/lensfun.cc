@@ -38,6 +38,7 @@
 //#endif /*HAVE_CONFIG_H*/
 //#include <vips/intl.h>
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -198,28 +199,32 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 
   if( do_vignetting ) {
     ptr = malloc( sizeof(T)*line_size + 32 );
-    intptr_t iptr = (intptr_t)ptr;
-    iptr = (iptr >> 4)<<4;
-    Tbuf = (T *)iptr;
+    Tbuf = (T *)(((uintptr_t)ptr+15) & ~ (uintptr_t)0x0F);
+//    ptr = malloc( sizeof(T)*line_size + 32 );
+//    intptr_t iptr = (intptr_t)ptr;
+//    iptr = (iptr >> 4)<<4;
+//    Tbuf = (T *)iptr;
     Tpos = Tbuf;
   }
   if( do_interpolation ) {
     ptr = malloc( sizeof(float)*r->height*line_size*2 + 32 );
-    intptr_t iptr = (intptr_t)ptr;
-    iptr = (iptr >> 4)<<4;
-    buf = (float *)iptr;
+    buf = (float *)(((uintptr_t)ptr+15) & ~ (uintptr_t)0x0F);
+//    intptr_t iptr = (intptr_t)ptr;
+//    iptr = (iptr >> 4)<<4;
+//    buf = (float *)iptr;
     pos = buf;
   }
 
   //float* buf = (float *)(((intptr_t)(ptr) + 16-1) & ~16);
-  //std::cout<<"ptr="<<ptr<<" buf="<<(void*)buf<<std::endl;
+  //std::cout<<"vips_lensfun_gen(): do_vignetting="<<do_vignetting<<" do_interpolation="<<do_interpolation<<std::endl;
+  //std::cout<<"ptr="<<ptr<<"  buf="<<(void*)buf<<"  Tbuf="<<(void*)Tbuf<<std::endl;
 
   if( do_interpolation ) {
     int xmin=2000000000, xmax = -2000000000, ymin = 2000000000, ymax = -2000000000;
 #ifdef PF_HAS_LENSFUN
-  //std::cout<<"ApplySubpixelGeometryDistortion( "<<r->left<<", "<<r->top<<", "<<r->width<<", "<<r->height
-  //    <<", "<<(void*)buf<<" ) called"<<std::endl;
   bool ok = lensfun->modifier->ApplySubpixelGeometryDistortion( r->left, r->top, r->width, r->height, buf );
+  //std::cout<<"ApplySubpixelGeometryDistortion( "<<r->left<<", "<<r->top<<", "<<r->width<<", "<<r->height
+  //    <<", "<<(void*)buf<<" ) called, ok="<<ok<<std::endl;
   if(!ok) return( -1 );
   for( x = 0; x < r->width; x++ ) {
     for( y = 0; y < r->height; y++ ) {
@@ -287,6 +292,12 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
     /**/
     if( vips_region_prepare( ir, &s ) )
       return( -1 );
+#ifndef NDEBUG
+        std::cout<<"  region ir:  top="<<s.top
+            <<" left="<<s.left
+            <<" width="<<s.width
+            <<" height="<<s.height<<"  prepared"<<std::endl;
+#endif
   }
 
   /* Do the actual processing
@@ -303,6 +314,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 
 #ifndef NDEBUG
   std::cout<<"lensfun->in->Bands="<<lensfun->in->Bands<<std::endl;
+  std::cout<<"lensfun->modifier="<<lensfun->modifier<<std::endl;
 #endif
   // Vignetting correction
   if( do_vignetting ) {
@@ -351,7 +363,9 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
 #endif
   /**/
   //delete[] buf;
+  //std::cout<<"vips_lensfun_gen(): freeing buffer ("<<ptr<<")..."<<std::endl;
   if( ptr ) free( ptr );
+  //std::cout<<"vips_lensfun_gen(): ... done"<<std::endl;
 
   return( 0 );
 }
@@ -434,8 +448,8 @@ vips_lensfun_build( VipsObject *object )
 
   const lfLens **lenses = lensfun->ldb->FindLenses (camera, NULL, lfpar->lens().c_str());
   if (!lenses) {
-	  g_print ("Cannot find the lens `%s' in database\n", lfpar->lens().c_str());
-	  return 1;
+    g_print ("Cannot find the lens `%s' in database\n", lfpar->lens().c_str());
+    return 1;
   }
   int li = 0;
   while( lenses[li] != NULL ) {
@@ -453,7 +467,7 @@ vips_lensfun_build( VipsObject *object )
   if( lfpar->vignetting_enabled() ) flags |= LF_MODIFY_VIGNETTING;
   std::cout<<"lfModifier::Create( lens, "<<lens->CropFactor<<", "
       <<lensfun->in->Xsize<<", "<<lensfun->in->Ysize<<" );"<<std::endl;
-  lensfun->modifier = lfModifier::Create( lens, lens->CropFactor,
+  lensfun->modifier = new lfModifier( lens, lens->CropFactor,
       lensfun->in->Xsize, lensfun->in->Ysize );
   std::cout<<"lensfun->modifier->Initialize( lens, LF_PF_U8, "<<lfpar->get_focal_length()<<", "
       <<lfpar->get_aperture()<<", "<<lfpar->get_distance()
@@ -489,7 +503,7 @@ vips_lensfun_build( VipsObject *object )
   std::cout<<"vips_lensfun_build(): lensfun->in="<<lensfun->in<<std::endl;
   VipsImage* invec[2] = {lensfun->in, NULL};
   if( vips_image_pipelinev( lensfun->out,
-				 hint, lensfun->in, NULL ) )
+         hint, lensfun->in, NULL ) )
     return( -1 );
 
   PF::OpParBase* par = lensfun->processor->get_par();
@@ -503,7 +517,7 @@ vips_lensfun_build( VipsObject *object )
       lensfun->in->Bands, lensfun->in->BandFmt,
       lensfun->in->Coding,
       lensfun->in->Type,
-			  1.0, 1.0);
+        1.0, 1.0);
 */
   vips_image_init_fields( lensfun->out,
         par->get_xsize(), par->get_ysize(),
@@ -522,12 +536,27 @@ vips_lensfun_build( VipsObject *object )
 
 
 static void
+vips_lensfun_dispose( GObject *gobject )
+{
+  VipsLensFun *lensfun = (VipsLensFun *) gobject;
+  int i;
+
+#ifdef PF_HAS_LENSFUN
+  delete lensfun->modifier;
+#endif
+
+  G_OBJECT_CLASS( vips_lensfun_parent_class )->dispose( gobject );
+}
+
+
+static void
 vips_lensfun_class_init( VipsLensFunClass *klass )
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS( klass );
   VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( klass );
   VipsOperationClass *operation_class = VIPS_OPERATION_CLASS( klass );
 
+  gobject_class->dispose = vips_lensfun_dispose;
   gobject_class->set_property = vips_object_set_property;
   gobject_class->get_property = vips_object_get_property;
 
