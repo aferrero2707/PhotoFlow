@@ -64,12 +64,15 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
   // local variables
   int width = winw, height = winh;
   //temporary array to store simple interpolation of G
-  float (*Gtmp);
-  Gtmp = (float (*)) calloc ((height) * (width), sizeof * Gtmp);
+  //float (*Gtmp);
+  //Gtmp = (float (*)) calloc ((height) * (width), sizeof * Gtmp);
 
   // temporary array to avoid race conflicts, only every second pixel needs to be saved here
   float (*RawDataTmp);
-  RawDataTmp = (float*) malloc( height * width * sizeof(float) / 2);
+//  RawDataTmp = (float*) malloc( height * width * sizeof(float) / 2);
+//  size_t RawDataTmp_sz = height * width / 2;
+  RawDataTmp = (float*) malloc( tileh * tilew * sizeof(float) / 2);
+  size_t RawDataTmp_sz = tileh * tilew / 2;
 
   float   blockave[2][3] = {{0, 0, 0}, {0, 0, 0}}, blocksqave[2][3] = {{0, 0, 0}, {0, 0, 0}}, blockdenom[2][3] = {{0, 0, 0}, {0, 0, 0}}, blockvar[2][3];
 
@@ -225,8 +228,6 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
     //  for (left = -border; left < width; left += TS - border2) {
     for (top = tiley-border; top < tiley+tileh; top += TS - border2)
       for (left = tilex-border; left < tilex+tilew; left += TS - border2) {
-
-        //std::cout<<"CA_correct_RT: top="<<top<<" left="<<left<<std::endl;
         vblock = ((top + border) / (TS - border2)) + 1;
         hblock = ((left + border) / (TS - border2)) + 1;
         //int bottom = min(top + TS, height + border);
@@ -235,6 +236,11 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
         int right  = min(left + TS, tilex + tilew + border);
         int rr1 = bottom - top;
         int cc1 = right - left;
+
+        if( tilex < 10 && tiley < 10 )
+          std::cout<<"CA_correct_RT: left="<<left<<" top="<<top<<"    tilex="<<tilex<<" tiley="<<tiley<<"    tilew="<<tilew<<" tileh="<<tileh
+          <<"    border="<<border
+          <<"    rr1="<<rr1<<" cc1="<<cc1<<std::endl;
 
         //t1_init = clock();
         if (top < 0) {
@@ -281,6 +287,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
             //}
           }
 
+        /*
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         //fill borders
         if (rrmin > 0) {
@@ -369,6 +376,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
         }
 
         //end of border fill
+        */
 
         for (rr = 3; rr < rr1 - 3; rr++)
           for (row = rr + top, cc = 3, indx = rr * TS + cc; cc < cc1 - 3; cc++, indx++) {
@@ -412,7 +420,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
               }
 
               if (row > -1 && row < height && col > -1 && col < width) {
-                Gtmp[row * width + col] = rgb[1][indx];
+                //Gtmp[row * width + col] = rgb[1][indx];
               }
             }
 
@@ -534,10 +542,14 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
           //c = FC(rr + top, left + border + FC(rr + top, 2) & 1);
           c = FC(rr, left + FC(rr, 2) & 1);
 
-          for (row = rr + top, cc = border + (FC(rr, 2) & 1), indx = (row * width + cc + left) >> 1; cc < cc1 - border; cc += 2, indx++) {
+          //for (row = rr + top, cc = border + (FC(rr, 2) & 1), indx = (row * width + cc + left) >> 1; cc < cc1 - border; cc += 2, indx++) {
+          for (row = rr + top, cc = border + (FC(rr, 2) & 1), indx = ((row-tiley) * tilew + cc + left - tilex) >> 1; cc < cc1 - border; cc += 2, indx++) {
             col = cc + left;
+            if( indx >= RawDataTmp_sz ) {
+              std::cout<<"CA_correct_RT: row="<<row<<"  cc="<<cc<<"  left="<<left<<"  indx="<<indx<<"  border="<<border<<std::endl;
+            }
             RawDataTmp[indx] = 65535.0f * rgb[c][(rr) * TS + cc] + 0.5f;
-            //if(top==0&&left==0 && row<16 && col<16) std::cout<<"(1) row="<<row<<" col="<<cc+left<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
+            if(top==0&&left==0 && row<16) std::cout<<"(1) row="<<row<<" col="<<cc+left<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
             //image[indx][c] = CLIP((int)(65535.0*rgb[(rr)*TS+cc][c] + 0.5));//for dcraw implementation
           }
         }
@@ -567,10 +579,11 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
     //for(row = 0; row < height; row++)
     //  for(col = 0 + (FC(row, 0) & 1), indx = (row * width + col) >> 1; col < width; col += 2, indx++) {
     for(row = 0; row < tileh; row++)
-      for(col = 0 + (FC(row, 0) & 1), indx = ((row+tiley) * width + (col+tilex)) >> 1; col < tilew; col += 2, indx++) {
+      //for(col = 0 + (FC(row, 0) & 1), indx = ((row+tiley) * width + (col+tilex)) >> 1; col < tilew; col += 2, indx++) {
+      for(col = 0 + (FC(row, 0) & 1), indx = (row * tilew + col) >> 1; col < tilew; col += 2, indx++) {
     //for(row = tiley; row < tiley+tileh; row++)
     //  for(col = tilex + (FC(row, 0) & 1), indx = (row * width + col) >> 1; col < tilex+tilew; col += 2, indx++) {
-        //if(tiley==8&&tilex==8 && row<16 && col<16) std::cout<<"(2) row="<<row<<" col="<<col<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
+        if(tiley==8&&tilex==8 && row<16 && col<16) std::cout<<"(2) row="<<row<<" col="<<col<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
         rawData[row+tiley][col+tilex] = RawDataTmp[indx];
       }
 
@@ -581,7 +594,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
 
   }
 
-  free(Gtmp);
+  //free(Gtmp);
   free(buffer1);
   free(RawDataTmp);
 
