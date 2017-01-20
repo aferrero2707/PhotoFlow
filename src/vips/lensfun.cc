@@ -329,6 +329,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   }
 
   if( do_interpolation ) {
+    vips_region_black( oreg );
     VipsInterpolateMethod interp_method =
         vips_interpolate_get_method ( lensfun->interpolate );
     pos = buf;
