@@ -319,7 +319,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     PF_UNREF( blurred, "ImagePyramid::get_level(): blurred unref" );
     */
     scale /= 2;
-    if( vips_resize( fullres, &out, scale, NULL) )
+    if( vips_resize( in/*fullres*/, &out, 0.5/*scale*/, NULL) )
       return NULL;
     //PF_UNREF( in, "ImagePyramid::get_level(): in unref" );
 #ifndef NDEBUG
