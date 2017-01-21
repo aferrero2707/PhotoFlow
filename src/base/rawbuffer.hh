@@ -233,8 +233,19 @@ public:
   std::list< std::pair<int, int> >& get_points() { return points; }
   const std::list< std::pair<int, int> >& get_points() const { return points; }
   std::list< Segment >& get_segments() { return segments; }
+  const std::list< Segment >& get_segments() const { return segments; }
   VipsRect& get_area() { return area; }
   void compute_area();
+
+  Stroke& operator=(const Stroke& s)
+  {
+    std::cout<<"Calling Stroke& operator=(const Stroke& s)"<<std::endl;
+    pen = s.get_pen();
+    segments = s.get_segments();
+    points = s.get_points();
+    std::cout<<"Stroke& operator=(const Stroke& s) finished"<<std::endl;
+    return *this;
+  }
 };
 
 
