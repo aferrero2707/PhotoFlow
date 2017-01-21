@@ -159,7 +159,7 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   /* Output area we are building.
    */
   VipsRect rimg = { 0, 0, ir->im->Xsize, ir->im->Ysize };
-  const VipsRect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
   int line_size = r->width * lensfun->in->Bands;
   VipsRect s, r_in;
   int i;
@@ -329,7 +329,9 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
   }
 
   if( do_interpolation ) {
-    vips_region_black( oreg );
+    float red[3] = {1,0,0};
+    //vips_region_black( oreg );
+    //vips_region_paint( oreg, r, 255 );
     VipsInterpolateMethod interp_method =
         vips_interpolate_get_method ( lensfun->interpolate );
     pos = buf;
@@ -345,11 +347,11 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
             interp_method( lensfun->interpolate, &(px[0]), ir, pos[0], pos[1] );
             //T *p = (T *)VIPS_REGION_ADDR( ir, srcx, srcy );
             //q[x+xx] = p[xx];
+            q[x+xx] = px[xx];
           } else {
             q[x+xx] = PF::FormatInfo<T>::MIN;
           }
           pos += 2;
-          q[x+xx] = px[xx];
           //std::cout<<"x="<<x<<"  p["<<x<<"]="<<(uint32_t)p[x]<<"  pout["<<x<<"]="<<(uint32_t)q[x]<<std::endl;
         }
       }
