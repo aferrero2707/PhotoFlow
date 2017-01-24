@@ -72,6 +72,8 @@ void PF::CropConfigGUI::open()
 }
 
 
+#define HANDLE_SIZE 20
+
 bool PF::CropConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
   if( !get_editing_flag() ) return false;
@@ -133,11 +135,23 @@ bool PF::CropConfigGUI::pointer_press_event( int button, double sx, double sy, i
   double dy1 = y - crop_top; dy1 /= scale;
   double dy2 = y - crop_bottom; dy2 /= scale;
 
-  bool is_right = ( (dx2 >= -10) && (dx2 <= 5) ) ? true : false;
-  bool is_bottom = ( (dy2 >= -10) && (dy2 <= 5) ) ? true : false;
+  bool is_left = ( (dx1 >= 0) && (dx1 <= HANDLE_SIZE) ) ? true : false;
+  bool is_top = ( (dy1 >= 0) && (dy1 <= HANDLE_SIZE) ) ? true : false;
+  bool is_right = ( (dx2 >= -HANDLE_SIZE) && (dx2 <= 0) ) ? true : false;
+  bool is_bottom = ( (dy2 >= -HANDLE_SIZE) && (dy2 <= 0) ) ? true : false;
 
   if( is_right && is_bottom )
     handle = CROP_HANDLE_BOTTOMRIGHT;
+  else if( is_left && is_top )
+    handle = CROP_HANDLE_TOPLEFT;
+  else if( is_left && is_bottom )
+    handle = CROP_HANDLE_BOTTOMLEFT;
+  else if( is_right && is_top )
+    handle = CROP_HANDLE_TOPRIGHT;
+  else if( is_left )
+    handle = CROP_HANDLE_LEFT;
+  else if( is_top )
+    handle = CROP_HANDLE_TOP;
   else if( is_right )
     handle = CROP_HANDLE_RIGHT;
   else if( is_bottom )
@@ -174,11 +188,298 @@ bool PF::CropConfigGUI::pointer_release_event( int button, double x, double y, i
 }
 
 
-void PF::CropConfigGUI::move_handle( int x, int y )
+void PF::CropConfigGUI::move_left_handle( int x, int y )
 {
+  if( !get_layer() ) return;
+  if( !get_layer()->get_image() ) return;
+  if( !get_layer()->get_image()->get_pipeline(0) ) return;
+  PF::PipelineNode* node = get_layer()->get_image()->get_pipeline(0)->get_node( get_layer()->get_id() );
+  if( !node ) return;
+  if( node->input_id < 0 ) return;
+  PF::PipelineNode* node2 = get_layer()->get_image()->get_pipeline(0)->get_node( node->input_id );
+  if( !node2 ) return;
+  if( !node2->blended ) return;
+
   int x0 = cropLeftSlider.get_adjustment()->get_value();
   int y0 = cropTopSlider.get_adjustment()->get_value();
+  int w = cropWidthSlider.get_adjustment()->get_value();
+  int h = cropHeightSlider.get_adjustment()->get_value();
+
+  int new_x = x;
+  if( x < 0 ) new_x = 0;
+  if( x >= x0+w ) new_x = x0+w;
+  int new_y = y0;
+  int new_w = (new_x < x0+w) ? w+x0-new_x : 1;
+  int new_h = cropHeightSlider.get_adjustment()->get_value();
+  if( keepARCheckBox.get_active() ) {
+    //int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+    //    cropARHeightSlider.get_adjustment()->get_value();
+    int ar_h = new_w * cropARHeightSlider.get_adjustment()->get_value()/
+        cropARWidthSlider.get_adjustment()->get_value();
+    //if( ar_w>new_w ) new_w = ar_w;
+    new_h = ar_h;
+    new_y = y0+h-new_h;
+    if( new_y < 0 ) {
+      new_y = 0;
+      new_h = y0+h;
+      new_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+          cropARHeightSlider.get_adjustment()->get_value();
+      new_x = x0+w-new_w;
+    }
+  }
+  cropLeftSlider.get_adjustment()->set_value( new_x );
+  cropTopSlider.get_adjustment()->set_value( new_y );
+  cropWidthSlider.get_adjustment()->set_value( new_w );
+  cropHeightSlider.get_adjustment()->set_value( new_h );
+}
+
+
+void PF::CropConfigGUI::move_top_handle( int x, int y )
+{
+  if( !get_layer() ) return;
+  if( !get_layer()->get_image() ) return;
+  if( !get_layer()->get_image()->get_pipeline(0) ) return;
+  PF::PipelineNode* node = get_layer()->get_image()->get_pipeline(0)->get_node( get_layer()->get_id() );
+  if( !node ) return;
+  if( node->input_id < 0 ) return;
+  PF::PipelineNode* node2 = get_layer()->get_image()->get_pipeline(0)->get_node( node->input_id );
+  if( !node2 ) return;
+  if( !node2->blended ) return;
+
+  int x0 = cropLeftSlider.get_adjustment()->get_value();
+  int y0 = cropTopSlider.get_adjustment()->get_value();
+  int w = cropWidthSlider.get_adjustment()->get_value();
+  int h = cropHeightSlider.get_adjustment()->get_value();
+
+  int new_x = x0;
+  int new_y = y;
+  if( new_y < 0 ) new_y = 0;
+  if( new_y >= y0+h ) new_y = y0+h;
+  int new_h = (new_y < y0+h) ? h+y0-new_y : 1;
+  int new_w = w;
+  if( keepARCheckBox.get_active() ) {
+    //int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+    //    cropARHeightSlider.get_adjustment()->get_value();
+    int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+        cropARHeightSlider.get_adjustment()->get_value();
+    //if( ar_w>new_w ) new_w = ar_w;
+    new_w = ar_w;
+    new_x = x0+w-new_w;
+    if( new_x < 0 ) {
+      new_x = 0;
+      new_w = x0+w;
+      new_h = new_w * cropARHeightSlider.get_adjustment()->get_value()/
+          cropARWidthSlider.get_adjustment()->get_value();
+      new_y = y0+h-new_h;
+    }
+  }
+  cropLeftSlider.get_adjustment()->set_value( new_x );
+  cropTopSlider.get_adjustment()->set_value( new_y );
+  cropWidthSlider.get_adjustment()->set_value( new_w );
+  cropHeightSlider.get_adjustment()->set_value( new_h );
+}
+
+
+void PF::CropConfigGUI::move_topleft_handle( int x, int y )
+{
+  if( !get_layer() ) return;
+  if( !get_layer()->get_image() ) return;
+  if( !get_layer()->get_image()->get_pipeline(0) ) return;
+  PF::PipelineNode* node = get_layer()->get_image()->get_pipeline(0)->get_node( get_layer()->get_id() );
+  if( !node ) return;
+  if( node->input_id < 0 ) return;
+  PF::PipelineNode* node2 = get_layer()->get_image()->get_pipeline(0)->get_node( node->input_id );
+  if( !node2 ) return;
+  if( !node2->blended ) return;
+
+  int x0 = cropLeftSlider.get_adjustment()->get_value();
+  int y0 = cropTopSlider.get_adjustment()->get_value();
+  int w = cropWidthSlider.get_adjustment()->get_value();
+  int h = cropHeightSlider.get_adjustment()->get_value();
+  float ar_w = cropARWidthSlider.get_adjustment()->get_value();
+  float ar_h = cropARHeightSlider.get_adjustment()->get_value();
+
+  int new_x = x;
+  if( x < 0 ) new_x = 0;
+  if( x >= x0+w ) new_x = x0+w;
+  int new_w = (new_x < x0+w) ? w+x0-new_x : 1;
+
+  int new_y = y;
+  if( new_y < 0 ) new_y = 0;
+  if( new_y >= y0+h ) new_y = y0+h;
+  int new_h = (new_y < y0+h) ? h+y0-new_y : 1;
+
+  if( keepARCheckBox.get_active() ) {
+    int t_w = new_h * ar_w / ar_h;
+    if( t_w > new_w ) {
+      new_w = t_w;
+      new_x = x0+w-new_w;
+      if( new_x < 0 ) {
+        new_x = 0;
+        new_w = x0+w;
+      }
+    }
+
+    int t_h = new_w * ar_h / ar_w;
+
+    if( t_h > new_h ) {
+      new_h = t_h;
+      new_y = y0+h-new_h;
+      if( new_y < 0 ) {
+        new_y = 0;
+        new_h = y0+h;
+        new_w = new_h * ar_w / ar_h;
+        new_x = x0+w-new_w;
+      }
+    }
+  }
+  cropLeftSlider.get_adjustment()->set_value( new_x );
+  cropTopSlider.get_adjustment()->set_value( new_y );
+  cropWidthSlider.get_adjustment()->set_value( new_w );
+  cropHeightSlider.get_adjustment()->set_value( new_h );
+}
+
+
+void PF::CropConfigGUI::move_topright_handle( int x, int y )
+{
+  if( !get_layer() ) return;
+  if( !get_layer()->get_image() ) return;
+  if( !get_layer()->get_image()->get_pipeline(0) ) return;
+  PF::PipelineNode* node = get_layer()->get_image()->get_pipeline(0)->get_node( get_layer()->get_id() );
+  if( !node ) return;
+  if( node->input_id < 0 ) return;
+  PF::PipelineNode* node2 = get_layer()->get_image()->get_pipeline(0)->get_node( node->input_id );
+  if( !node2 ) return;
+  if( !node2->blended ) return;
+
+  int x0 = cropLeftSlider.get_adjustment()->get_value();
+  int y0 = cropTopSlider.get_adjustment()->get_value();
+  int w = cropWidthSlider.get_adjustment()->get_value();
+  int h = cropHeightSlider.get_adjustment()->get_value();
+  float ar_w = cropARWidthSlider.get_adjustment()->get_value();
+  float ar_h = cropARHeightSlider.get_adjustment()->get_value();
+
+  int new_w = (x >= x0) ? x+1-x0 : 1;
+  if( (x0 + new_w) > node2->blended->Xsize ) {
+    new_w = node2->blended->Xsize - x0;
+  }
+
+  int new_y = y;
+  if( new_y < 0 ) new_y = 0;
+  if( new_y >= y0+h ) new_y = y0+h;
+  int new_h = (new_y < y0+h) ? h+y0-new_y : 1;
+
+  if( keepARCheckBox.get_active() ) {
+    int t_w = new_h * ar_w / ar_h;
+    if( t_w > new_w ) {
+      new_w = t_w;
+      if( (x0 + new_w) > node2->blended->Xsize ) {
+        new_w = node2->blended->Xsize - x0;
+        new_h = new_w * ar_h / ar_w;
+      }
+    }
+
+    int t_h = new_w * ar_h / ar_w;
+
+    if( t_h > new_h ) {
+      new_h = t_h;
+      new_y = y0+h-new_h;
+      if( new_y < 0 ) {
+        new_y = 0;
+        new_h = y0+h;
+        new_w = new_h * ar_w / ar_h;
+      }
+    }
+  }
+  cropTopSlider.get_adjustment()->set_value( new_y );
+  cropWidthSlider.get_adjustment()->set_value( new_w );
+  cropHeightSlider.get_adjustment()->set_value( new_h );
+}
+
+
+void PF::CropConfigGUI::move_bottomleft_handle( int x, int y )
+{
+  if( !get_layer() ) return;
+  if( !get_layer()->get_image() ) return;
+  if( !get_layer()->get_image()->get_pipeline(0) ) return;
+  PF::PipelineNode* node = get_layer()->get_image()->get_pipeline(0)->get_node( get_layer()->get_id() );
+  if( !node ) return;
+  if( node->input_id < 0 ) return;
+  PF::PipelineNode* node2 = get_layer()->get_image()->get_pipeline(0)->get_node( node->input_id );
+  if( !node2 ) return;
+  if( !node2->blended ) return;
+
+  int x0 = cropLeftSlider.get_adjustment()->get_value();
+  int y0 = cropTopSlider.get_adjustment()->get_value();
+  int w = cropWidthSlider.get_adjustment()->get_value();
+  int h = cropHeightSlider.get_adjustment()->get_value();
+  float ar_w = cropARWidthSlider.get_adjustment()->get_value();
+  float ar_h = cropARHeightSlider.get_adjustment()->get_value();
+
+  int new_h = (y >= y0) ? y+1-y0 : 1;
+  if( (y0 + new_h) > node2->blended->Ysize ) {
+    new_h = node2->blended->Ysize - y0;
+  }
+
+  int new_x = x;
+  if( new_x < 0 ) new_x = 0;
+  if( new_x >= x0+w ) new_x = x0+w;
+  int new_w = (new_x < x0+w) ? w+x0-new_x : 1;
+
+  if( keepARCheckBox.get_active() ) {
+    int t_h = new_w * ar_h / ar_w;
+    if( t_h > new_h ) {
+      new_h = t_h;
+      if( (y0 + new_h) > node2->blended->Ysize ) {
+        new_h = node2->blended->Ysize - y0;
+        new_w = new_h * ar_w / ar_h;
+      }
+    }
+
+    int t_w = new_h * ar_w / ar_h;
+
+    if( t_w > new_w ) {
+      new_w = t_w;
+      new_x = x0+w-new_w;
+      if( new_x < 0 ) {
+        new_x = 0;
+        new_w = x0+w;
+        new_h = new_w * ar_h / ar_w;
+      }
+    }
+  }
+  cropLeftSlider.get_adjustment()->set_value( new_x );
+  cropWidthSlider.get_adjustment()->set_value( new_w );
+  cropHeightSlider.get_adjustment()->set_value( new_h );
+}
+
+
+void PF::CropConfigGUI::move_handle( int x, int y )
+{
+  if( !get_layer() ) return;
+  if( !get_layer()->get_image() ) return;
+  if( !get_layer()->get_image()->get_pipeline(0) ) return;
+  PF::PipelineNode* node = get_layer()->get_image()->get_pipeline(0)->get_node( get_layer()->get_id() );
+  if( !node ) return;
+  if( node->input_id < 0 ) return;
+  PF::PipelineNode* node2 = get_layer()->get_image()->get_pipeline(0)->get_node( node->input_id );
+  if( !node2 ) return;
+  if( !node2->blended ) return;
+
+  int x0 = cropLeftSlider.get_adjustment()->get_value();
+  int y0 = cropTopSlider.get_adjustment()->get_value();
+  int w = cropWidthSlider.get_adjustment()->get_value();
+  int h = cropHeightSlider.get_adjustment()->get_value();
   switch( handle ) {
+  case CROP_HANDLE_TOPLEFT:
+    move_topleft_handle( x, y );
+    break;
+  case CROP_HANDLE_BOTTOMLEFT:
+    move_bottomleft_handle( x, y );
+    break;
+  case CROP_HANDLE_TOPRIGHT:
+    move_topright_handle( x, y );
+    break;
   case CROP_HANDLE_BOTTOMRIGHT: {
     int new_w = (x >= x0) ? x+1-x0 : 1;
     int new_h = (y >= y0) ? y+1-y0 : 1;
@@ -194,9 +495,15 @@ void PF::CropConfigGUI::move_handle( int x, int y )
     cropHeightSlider.get_adjustment()->set_value( new_h );
     break;
   }
-  case CROP_HANDLE_RIGHT: {
+  case CROP_HANDLE_LEFT: {
+    move_left_handle( x, y );
+    break;
     //int x0 = cropLeftSlider.get_adjustment()->get_value();
-    int new_w = (x >= x0) ? x+1-x0 : 1;
+    int new_x = x;
+    if( x < 0 ) new_x = 0;
+    if( x >= x0+w ) new_x = x0+w;
+    int new_y = y0;
+    int new_w = (new_x < x0+w) ? w+x0-new_x : 1;
     int new_h = cropHeightSlider.get_adjustment()->get_value();
     if( keepARCheckBox.get_active() ) {
       //int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
@@ -205,6 +512,76 @@ void PF::CropConfigGUI::move_handle( int x, int y )
           cropARWidthSlider.get_adjustment()->get_value();
       //if( ar_w>new_w ) new_w = ar_w;
       new_h = ar_h;
+      new_y = y0+h-new_h;
+      if( new_y < 0 ) {
+        new_y = 0;
+        new_h = y0+h;
+        new_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+            cropARHeightSlider.get_adjustment()->get_value();
+        new_x = x0+w-new_w;
+      }
+    }
+    cropLeftSlider.get_adjustment()->set_value( new_x );
+    cropTopSlider.get_adjustment()->set_value( new_y );
+    cropWidthSlider.get_adjustment()->set_value( new_w );
+    cropHeightSlider.get_adjustment()->set_value( new_h );
+    //if( x >= x0 ) cropWidthSlider.get_adjustment()->set_value( x+1-x0 );
+    //else cropWidthSlider.get_adjustment()->set_value( 1 );
+    break;
+  }
+  case CROP_HANDLE_TOP: {
+    move_top_handle( x, y );
+    break;
+    //int x0 = cropLeftSlider.get_adjustment()->get_value();
+    int new_x = x;
+    int new_y = y;
+    if( y < 0 ) new_y = 0;
+    if( y >= y0+h ) new_y = y0+h;
+    int new_h = (new_y < y0+h) ? h+y0-new_y : 1;
+    int new_w = w;
+    if( keepARCheckBox.get_active() ) {
+      //int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+      //    cropARHeightSlider.get_adjustment()->get_value();
+      int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+          cropARHeightSlider.get_adjustment()->get_value();
+      //if( ar_w>new_w ) new_w = ar_w;
+      new_w = ar_w;
+      new_x = x0+w-new_w;
+      if( new_x < 0 ) {
+        new_x = 0;
+        new_w = x0+w;
+        new_h = new_w * cropARHeightSlider.get_adjustment()->get_value()/
+            cropARWidthSlider.get_adjustment()->get_value();
+        new_y = y0+h-new_h;
+      }
+    }
+    cropLeftSlider.get_adjustment()->set_value( new_x );
+    cropTopSlider.get_adjustment()->set_value( new_y );
+    cropWidthSlider.get_adjustment()->set_value( new_w );
+    cropHeightSlider.get_adjustment()->set_value( new_h );
+    //if( x >= x0 ) cropWidthSlider.get_adjustment()->set_value( x+1-x0 );
+    //else cropWidthSlider.get_adjustment()->set_value( 1 );
+    break;
+  }
+  case CROP_HANDLE_RIGHT: {
+    //int x0 = cropLeftSlider.get_adjustment()->get_value();
+    int new_w = (x >= x0) ? x+1-x0 : 1;
+    int new_h = cropHeightSlider.get_adjustment()->get_value();
+    if( (x0 + new_w) > node2->blended->Xsize ) {
+      new_w = node2->blended->Xsize - x0;
+    }
+    if( keepARCheckBox.get_active() ) {
+      //int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+      //    cropARHeightSlider.get_adjustment()->get_value();
+      int ar_h = new_w * cropARHeightSlider.get_adjustment()->get_value()/
+          cropARWidthSlider.get_adjustment()->get_value();
+      //if( ar_w>new_w ) new_w = ar_w;
+      new_h = ar_h;
+      if( (y0 + new_h) > node2->blended->Ysize ) {
+        new_h = node2->blended->Ysize - y0;
+        new_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
+            cropARHeightSlider.get_adjustment()->get_value();
+      }
     }
     cropWidthSlider.get_adjustment()->set_value( new_w );
     cropHeightSlider.get_adjustment()->set_value( new_h );
@@ -216,6 +593,9 @@ void PF::CropConfigGUI::move_handle( int x, int y )
     //int y0 = cropTopSlider.get_adjustment()->get_value();
     int new_w = cropWidthSlider.get_adjustment()->get_value();
     int new_h = (y >= y0) ? y+1-y0 : 1;
+    if( (y0 + new_h) > node2->blended->Ysize ) {
+      new_h = node2->blended->Ysize - y0;
+    }
     if( keepARCheckBox.get_active() ) {
       int ar_w = new_h * cropARWidthSlider.get_adjustment()->get_value()/
           cropARHeightSlider.get_adjustment()->get_value();
@@ -223,6 +603,11 @@ void PF::CropConfigGUI::move_handle( int x, int y )
       //    cropARWidthSlider.get_adjustment()->get_value();
       //if( ar_w>new_w ) new_w = ar_w;
       new_w = ar_w;
+      if( (x0 + new_w) > node2->blended->Xsize ) {
+        new_w = node2->blended->Xsize - x0;
+        new_h = new_w * cropARHeightSlider.get_adjustment()->get_value()/
+            cropARWidthSlider.get_adjustment()->get_value();
+      }
     }
     cropWidthSlider.get_adjustment()->set_value( new_w );
     cropHeightSlider.get_adjustment()->set_value( new_h );
@@ -231,16 +616,6 @@ void PF::CropConfigGUI::move_handle( int x, int y )
     break;
   }
   case CROP_HANDLE_CENTER: {
-    if( !get_layer() ) return;
-    if( !get_layer()->get_image() ) return;
-    if( !get_layer()->get_image()->get_pipeline(0) ) return;
-    PF::PipelineNode* node = get_layer()->get_image()->get_pipeline(0)->get_node( get_layer()->get_id() );
-    if( !node ) return;
-    if( node->input_id < 0 ) return;
-    PF::PipelineNode* node2 = get_layer()->get_image()->get_pipeline(0)->get_node( node->input_id );
-    if( !node2 ) return;
-    if( !node2->blended ) return;
-    
     int x0 = cropLeftSlider.get_adjustment()->get_value();
     int xc = x0 + cropWidthSlider.get_adjustment()->get_value()/2;
     int y0 = cropTopSlider.get_adjustment()->get_value();
@@ -283,8 +658,6 @@ bool PF::CropConfigGUI::pointer_motion_event( int button, double sx, double sy, 
 
   return true;
 }
-
-
 
 
 bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
@@ -372,12 +745,20 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
     }
   }
 
-  if( crop_height > 10 ) {
-    if( buf_top < (crop_bottom-10) ) {
+  if( crop_height > HANDLE_SIZE ) {
+    if( buf_top < (crop_bottom-HANDLE_SIZE) ) {
       int left = (crop_left > buf_left) ? crop_left : buf_left;
       int right = (crop_right < buf_right) ? crop_right : buf_right;
-      for( y = crop_bottom-10; y <= crop_bottom-9; y++) {
-        guint8* p = px + rs*(y-buf_out.get_rect().top) + (left-buf_left)*bl;
+      for( y = HANDLE_SIZE-1; y <= HANDLE_SIZE; y++) {
+        guint8* p = px + rs*(y+crop_top-buf_out.get_rect().top) + (left-buf_left)*bl;
+        for( x = left; x <= right; x++, p += bl ) {
+          p[0] = 255-p[0];
+          p[1] = 255-p[1];
+          p[2] = 255-p[2];
+        }
+      }
+      for( y = HANDLE_SIZE-1; y <= HANDLE_SIZE; y++) {
+        guint8* p = px + rs*(crop_bottom-y-buf_out.get_rect().top) + (left-buf_left)*bl;
         for( x = left; x <= right; x++, p += bl ) {
           p[0] = 255-p[0];
           p[1] = 255-p[1];
@@ -414,13 +795,20 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
     }
   }
 
-  if( crop_width > 10 ) {
-    if( (buf_left < (crop_right-10)) &&
-        (buf_right > (crop_right-10)) ) {
+  if( crop_width > HANDLE_SIZE ) {
+    if( (buf_left < (crop_right-HANDLE_SIZE)) &&
+        (buf_right > (crop_right-HANDLE_SIZE)) ) {
       int top = (crop_top > buf_top) ? crop_top : buf_top;
       int bottom = (crop_bottom < buf_bottom) ? crop_bottom : buf_bottom;
       for( y = top; y <= bottom; y++ ) {
-        guint8* p = px + rs*(y-buf_out.get_rect().top) + (crop_right-10-buf_left)*bl;
+        guint8* p = px + rs*(y-buf_out.get_rect().top) + (crop_left+HANDLE_SIZE-1)*bl;
+        p[0] = 255-p[0];
+        p[1] = 255-p[1];
+        p[2] = 255-p[2];
+        p[3] = 255-p[3];
+        p[4] = 255-p[4];
+        p[5] = 255-p[5];
+        p = px + rs*(y-buf_out.get_rect().top) + (crop_right-HANDLE_SIZE-buf_left)*bl;
         p[0] = 255-p[0];
         p[1] = 255-p[1];
         p[2] = 255-p[2];
@@ -431,15 +819,15 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
     }
   }
 
-  if( crop_width > 10 && crop_height > 10 ) {
-    buf_out.draw_line( crop_left + crop_width/3, crop_top,
-        crop_left + crop_width/3, crop_bottom, buf_in );
-    buf_out.draw_line( crop_left + crop_width*2/3, crop_top,
-        crop_left + crop_width*2/3, crop_bottom, buf_in );
-    buf_out.draw_line( crop_left, crop_top + crop_height/3,
-        crop_right, crop_top + crop_height/3, buf_in );
-    buf_out.draw_line( crop_left, crop_top + crop_height*2/3,
-        crop_right, crop_top + crop_height*2/3, buf_in );
+  if( crop_width > HANDLE_SIZE*2 && crop_height > HANDLE_SIZE*2 ) {
+    buf_out.draw_line( crop_left + crop_width/3, crop_top+HANDLE_SIZE,
+        crop_left + crop_width/3, crop_bottom-HANDLE_SIZE, buf_in );
+    buf_out.draw_line( crop_left + crop_width*2/3, crop_top+HANDLE_SIZE,
+        crop_left + crop_width*2/3, crop_bottom-HANDLE_SIZE, buf_in );
+    buf_out.draw_line( crop_left+HANDLE_SIZE, crop_top + crop_height/3,
+        crop_right-HANDLE_SIZE, crop_top + crop_height/3, buf_in );
+    buf_out.draw_line( crop_left+HANDLE_SIZE, crop_top + crop_height*2/3,
+        crop_right-HANDLE_SIZE, crop_top + crop_height*2/3, buf_in );
   }
   return true;
 
