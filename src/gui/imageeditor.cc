@@ -190,7 +190,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
   // First pipeline is for full-res rendering, second one is for on-screen preview, third one is
   // for calculating the histogram
-  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW/*PF_RENDER_NORMAL*/ );
   image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
   PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
   if( p ) {
