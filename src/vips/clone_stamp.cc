@@ -130,11 +130,11 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   /* Output area we are building.
    */
   VipsRect *r = &oreg->valid;
-  VipsRect in_area, out_area;
+  VipsRect in_area = {0, 0, 0, 0}, out_area = {0, 0, 0, 0};
   int i;
-  VipsRect point_area;
-  VipsRect point_clip;
-  int point_clip_right, point_clip_bottom;
+  VipsRect point_area = {0, 0, 0, 0};
+  VipsRect point_clip = {0, 0, 0, 0};
+  int point_clip_right = 0, point_clip_bottom = 0;
   int x, x0, y, y0, ch, row1, row2, col, mx, my1, my2;
   int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
 
@@ -178,16 +178,23 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
     */
   }
 
+  par->lock();
   std::vector<PF::StrokesGroup>& groups = par->get_strokes();
   std::list< std::pair<int, int> >::iterator pi;
 
 #ifndef NDEBUG
   std::cout<<"vips_clone_stamp_gen(): n. of groups: "<<groups.size()<<std::endl;
 #endif
-  if( clone_stamp->group_num < 0 ) return 1;
-  if( (int)groups.size() <= clone_stamp->group_num )
-      return 1;
+  if( clone_stamp->group_num < 0 ) {
+    par->unlock();
+    return 1;
+  }
+  if( (int)groups.size() <= clone_stamp->group_num ) {
+    par->unlock();
+    return 1;
+  }
   PF::StrokesGroup& group = groups[clone_stamp->group_num];
+  PF::Stroke<PF::Stamp> stroke = group.get_strokes()[clone_stamp->stroke_num];
 
   bool prepared = false;
   int delta_row = group.get_delta_row()/par->get_scale_factor();
@@ -197,6 +204,7 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
   std::cout<<"  n. of strokes: "<<group.get_strokes().size()<<std::endl;
   std::cout<<"  Drow: "<<delta_row<<"  Dcol: "<<delta_col<<std::endl;
 #endif
+  par->unlock();
 
   // Input area = oreg area translated by (delta_row, delta_col)
   // and intersected with the image area
@@ -231,11 +239,9 @@ vips_clone_stamp_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gb
     }
   }
 
-  PF::Stroke<PF::Stamp>& stroke = group.get_strokes()[clone_stamp->stroke_num];
-
   std::list< std::pair<int, int> >& points = stroke.get_points();
 #ifndef NDEBUG
-  std::cout<<"vips_clone_stamp_gen(): starting stroke"<<std::endl;
+  std::cout<<"vips_clone_stamp_gen(): starting stroke #"<<clone_stamp->stroke_num<<std::endl;
   std::cout<<"  n. of points: "<<points.size()<<std::endl;
 #endif
 

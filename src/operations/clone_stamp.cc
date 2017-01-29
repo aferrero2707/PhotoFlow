@@ -41,6 +41,7 @@ PF::CloneStampPar::CloneStampPar():
   stamp_smoothness( "stamp_smoothness", this, 1 ),
   strokes( "strokes", this )
 {
+  mutex = vips_g_mutex_new();
   set_type( "clone_stamp" );
 
   set_default_name( _("clone stamp") );
@@ -69,6 +70,7 @@ VipsImage* PF::CloneStampPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* outnew = in[0];
   PF_REF( outnew, "CloneStampPar::build(): initial outnew ref" );
 
+  lock();
   for( unsigned int i = 0; i < strokes.get().size(); i++) {
     PF::StrokesGroup& group = strokes.get()[i];
     for( unsigned int j = 0; j < group.get_strokes().size(); j++ ) {
@@ -80,6 +82,7 @@ VipsImage* PF::CloneStampPar::build(std::vector<VipsImage*>& in, int first,
       //std::cout<<"CloneStampPar::build(): stroke "<<i<<","<<j<<" built"<<std::endl;
     }
   }
+  unlock();
 
   /*
 #ifndef NDEBUG    
