@@ -56,7 +56,7 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
 #ifndef NDEBUG
   if(r->left==0)std::cout<<"fast_demosaic(): left="<<r->left<<"  top="<<r->top<<std::endl;
 #endif
-  if(r->top<10 && r->left<10)
+  if(false && r->top<10 && r->left<100000)
     std::cout<<"fast_demosaic(): r="<<r->width<<","<<r->height<<"+"<<r->left<<"+"<<r->top<<std::endl;
 
   // Size of border region where to apply simple bilinear interpolation
@@ -141,6 +141,10 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
   red.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
   green.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
   blue.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
+
+  if(false && r->top<10 && r->left<100000)
+    std::cout<<"fast_demosaic(): xend2="<<xend2<<"  right="<<right<<std::endl;
+
 
 
   /*
@@ -343,7 +347,7 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
               <<std::endl;
         }
       }
-      if(false && i<14 && j<14)
+      if(false && i<20 && j>7370)
         std::cout<<"step #1	i="<<i<<"  j="<<j<<"  green[i][j]="<<green[i][j]<<std::endl;
     }
   }
@@ -355,6 +359,8 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
     int dx = color&1;
     for (int j=xstart1+dx; j <= xend1; j+=2) {
       color = rawData[i].color(j);
+      if(false && i<20 && j>7370)
+        std::cout<<"step #2 i="<<i<<"  j="<<j<<"  color="<<color<<std::endl;
       if( (color&1) != 0 )
         continue;
       //interpolate B/R colors at R/B sites
@@ -367,9 +373,9 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
             PF::min(static_cast<float>(clip_pt),rawData[i-1][j-1]+rawData[i-1][j+1]+rawData[i+1][j+1]+rawData[i+1][j-1]));
         blue[i][j] = rawData[i][j];
       }
-      if(false && i<14 && j<14)
+      if(false && i<20 && j>7370)
         std::cout<<"step #2	i="<<i<<"  j="<<j
-        <<"  red[i][j]="<<red[i][j]
+        <<"  red[i][j]="<<red[i][j]<<"  green[i][j]="<<green[i][j]
                                  <<"  blue[i][j]="<<blue[i][j]
                                                             <<std::endl;
     }
@@ -391,11 +397,34 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
           (green[i][j-1]-red[i][j-1])+(green[i][j+1]-red[i][j+1]));
       blue[i][j] = green[i][j] - 0.25f*((green[i-1][j]-blue[i-1][j])+(green[i+1][j]-blue[i+1][j])+
           (green[i][j-1]-blue[i][j-1])+(green[i][j+1]-blue[i][j+1]));
-      if(false && i<14 && j<14)
-        std::cout<<"step #3	i="<<i<<"  j="<<j
-        <<"  red[i][j]="<<red[i][j]
-                                 <<"  blue[i][j]="<<blue[i][j]
-                                                            <<std::endl;
+      if(false && i<100 && j>7380) {
+        std::cout<<"step #3 i="<<i<<"  j="<<j<<std::endl;
+        for( int ii = i-1; ii <= i+1; ii++) {
+          std::cout<<"  ";
+          for( int jj = j-1; jj <= j+1; jj++) {
+            std::cout<<red[ii][jj]<<" ";
+          }
+          std::cout<<std::endl<<std::endl;
+        }
+        for( int ii = i-1; ii <= i+1; ii++) {
+          std::cout<<"  ";
+          for( int jj = j-1; jj <= j+1; jj++) {
+            std::cout<<green[ii][jj]<<" ";
+          }
+          std::cout<<std::endl<<std::endl;
+        }
+        for( int ii = i-1; ii <= i+1; ii++) {
+          std::cout<<"  ";
+          for( int jj = j-1; jj <= j+1; jj++) {
+            std::cout<<blue[ii][jj]<<" ";
+          }
+          std::cout<<std::endl<<std::endl;
+        }
+//        std::cout<<"step #3	i="<<i<<"  j="<<j
+//        <<"  red[i][j]="<<red[i][j]<<"  green[i][j]="<<green[i][j]
+//                                 <<"  blue[i][j]="<<blue[i][j]
+//                                                            <<std::endl;
+      }
     }
   }
 

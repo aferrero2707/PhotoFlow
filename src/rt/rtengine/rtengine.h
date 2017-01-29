@@ -22,6 +22,7 @@
 #include <string>
 #include <glibmm.h>
 #include "opthelper.h"
+#include "progresslistener.h"
 /**
  * @file
  * This file contains the main functionality of the RawTherapee engine.
@@ -31,25 +32,6 @@
 namespace rtengine
 {
 
-/** This listener interface is used to indicate the progress of time consuming operations */
-class ProgressListener
-{
-
-public:
-    virtual ~ProgressListener() {}
-    /** This member function is called when the percentage of the progress has been changed.
-      * @param p is a number between 0 and 1 */
-    virtual void setProgress (double p) {}
-    /** This member function is called when a textual information corresponding to the progress has been changed.
-      * @param str is the textual information corresponding to the progress */
-    virtual void setProgressStr (Glib::ustring str) {}
-    /** This member function is called when the state of the processing has been changed.
-      * @param inProcessing =true if the processing has been started, =false if it has been stopped */
-    virtual void setProgressState (bool inProcessing) {}
-    /** This member function is called when an error occurs during the operation.
-      * @param descr is the error message */
-    virtual void error (Glib::ustring descr) {}
-};
 
 }
 

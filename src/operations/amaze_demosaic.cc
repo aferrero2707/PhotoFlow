@@ -99,7 +99,7 @@ VipsImage* PF::AmazeDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   //  BOTTOM BAND
   i0 += 3;
   // Extract an horizontal bottom band at (0,in[0]->Ysize-border-2) and with size (in[0]->Xsize,border)
-  if( vips_crop(in[0], &t[i0], 0, in[0]->Ysize-border-2, in[0]->Xsize, border, NULL) ) {
+  if( vips_crop(in[0], &t[i0], 0, in[0]->Ysize-border-1, in[0]->Xsize, border, NULL) ) {
     std::cout<<"AmazeDemosaicPar::build(): vip_crop(#2) failed"<<std::endl;
     return NULL;
   }
@@ -147,7 +147,7 @@ VipsImage* PF::AmazeDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   //  RIGHT BAND
   i0 += 3;
   // Extract a vertical right band at (t[i0-1]->Xsize-2,0) and with size (border,t[i0-1]->Ysize)
-  if( vips_crop(t[i0-1], &t[i0], t[i0-1]->Xsize-border-2, 0, border, t[i0-1]->Ysize, NULL) ) {
+  if( vips_crop(t[i0-1], &t[i0], t[i0-1]->Xsize-border-1, 0, border, t[i0-1]->Ysize, NULL) ) {
     std::cout<<"AmazeDemosaicPar::build(): vip_crop(#4) failed"<<std::endl;
     return NULL;
   }

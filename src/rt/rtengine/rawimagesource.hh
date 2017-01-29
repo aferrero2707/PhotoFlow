@@ -35,6 +35,7 @@
 #include "../../base/rawmatrix.hh"
 
 #include "LUT.h"
+#include "progresslistener.h"
 #include "../../operations/raw_image.hh"
 
 
@@ -42,12 +43,6 @@
 namespace rtengine {
 
 
-class ProgressListener
-{
-public:
-  void setProgress(float val) {}
-  void setProgressStr(char* str) {}
-};
 	
 	class RawImageSource
 	{
