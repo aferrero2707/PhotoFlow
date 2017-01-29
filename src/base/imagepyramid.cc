@@ -308,6 +308,8 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   int nbands = in->Bands;
   double scale = 1;
 
+//  std::cout<<"ImagePyramid::get_level("<<level<<") scale="<<scale
+//      <<"  image size: "<<in->Xsize<<" x "<<in->Ysize<<std::endl;
   while( size > 256 ) {
     VipsImage* out;
     /*
@@ -320,10 +322,13 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     */
     scale /= 2;
     if( vips_resize( in/*fullres*/, &out, 0.5/*scale*/, NULL) )
+    //if( vips_subsample( in, &out, 2, 2, NULL ) )
       return NULL;
     //PF_UNREF( in, "ImagePyramid::get_level(): in unref" );
 #ifndef NDEBUG
     std::cout<<"ImagePyramid::get_level("<<level<<") subsample in="<<in<<"  out="<<out<<std::endl;
+    std::cout<<"ImagePyramid::get_level("<<level<<") scale="<<scale
+        <<"  image size: "<<out->Xsize<<" x "<<out->Ysize<<std::endl;
 #endif
     //g_object_unref( in );
     width = out->Xsize;

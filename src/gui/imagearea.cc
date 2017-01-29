@@ -436,7 +436,7 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
     return current_pxbuf;
   }
 
-  std::cout<<"ImageArea::modify_preview() called. edited_layer="<<edited_layer<<std::endl;
+  //std::cout<<"ImageArea::modify_preview() called. edited_layer="<<edited_layer<<std::endl;
   if( edited_layer >= 0 ) {
     PF::Image* image = get_pipeline()->get_image();
     if( image ) {
@@ -452,14 +452,14 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
           for( unsigned int i = 0; i < level; i++ )
             zoom_fact /= 2.0f;
           zoom_fact *= get_shrink_factor();
-          std::cout<<"Calling config->modify_preview()"<<std::endl;
+          //std::cout<<"Calling config->modify_preview()"<<std::endl;
           if( config->modify_preview(double_buffer.get_active(), temp_buffer, zoom_fact, xoffset, yoffset) )
             current_pxbuf = temp_buffer.get_pxbuf();
         }
       }
     }
   }
-  std::cout<<"ImageArea::modify_preview() finished."<<std::endl;
+  //std::cout<<"ImageArea::modify_preview() finished."<<std::endl;
 
   return current_pxbuf;
 }
@@ -546,7 +546,7 @@ void PF::ImageArea::draw_area()
 bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
 {
   //return true;
-  std::cout<<"ImageArea::on_expose_event() called"<<std::endl;
+  //std::cout<<"ImageArea::on_expose_event() called"<<std::endl;
 
   // We draw only if there is already a VipsImage attached to this display
   if( !display_image ) return true;
@@ -558,7 +558,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   int draw_area_right = draw_area.left + draw_area.width - 1;
   int draw_area_bottom = draw_area.top + draw_area.height - 1;
 
-  std::cout<<"ImageArea::on_expose_event(): draw_area="<<draw_area<<std::endl;
+  //std::cout<<"ImageArea::on_expose_event(): draw_area="<<draw_area<<std::endl;
   // Immediately draw the buffered image, to avoid flickering
   // If the requested area is fully contained witin the current preview buffer,
   // we do not submit any further redraw request
@@ -589,7 +589,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   if( double_buffer.get_active().is_dirty() )
     repaint_needed = true;
   double_buffer.unlock();
-  std::cout<<"  repaint_needed="<<repaint_needed<<std::endl;
+  //std::cout<<"  repaint_needed="<<repaint_needed<<std::endl;
   draw_requested = repaint_needed;
   if( !repaint_needed )
     return true;
@@ -610,7 +610,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   area_tot.top = MIN( draw_area.top, preview_area.top );
   area_tot.width = MAX( draw_area_right, preview_area_right ) - area_tot.left + 1;
   area_tot.height = MAX( draw_area_bottom, preview_area_bottom ) - area_tot.top + 1;
-  std::cout<<"ImageArea::on_expose_event(): area_tot="<<area_tot<<std::endl;
+  //std::cout<<"ImageArea::on_expose_event(): area_tot="<<area_tot<<std::endl;
 
   /* OBSOLETE
   if( display_image->Xsize < hadj->get_page_size() ) {
@@ -633,10 +633,10 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   request.sink = this;
   request.area = area_tot;
   request.request = PF::IMAGE_REDRAW_START;
-  std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_start request."<<std::endl;
+  //std::cout<<"PF::ImageArea::on_expose_event(): submitting redraw_start request."<<std::endl;
   //std::cout<<"ImageArea::on_expose_event(): request.area="<<request.area<<std::endl;
   PF::ImageProcessor::Instance().submit_request( request );
-  std::cout<<"PF::ImageArea::on_draw(): redraw_start request submitted."<<std::endl;
+  //std::cout<<"PF::ImageArea::on_draw(): redraw_start request submitted."<<std::endl;
 
 #ifdef OPTIMIZE_SCROLLING
   GdkRectangle *expose;

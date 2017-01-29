@@ -239,11 +239,11 @@ public:
 
   Stroke& operator=(const Stroke& s)
   {
-    std::cout<<"Calling Stroke& operator=(const Stroke& s)"<<std::endl;
+    //std::cout<<"Calling Stroke& operator=(const Stroke& s)"<<std::endl;
     pen = s.get_pen();
     segments = s.get_segments();
     points = s.get_points();
-    std::cout<<"Stroke& operator=(const Stroke& s) finished"<<std::endl;
+    //std::cout<<"Stroke& operator=(const Stroke& s) finished"<<std::endl;
     return *this;
   }
 };

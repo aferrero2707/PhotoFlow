@@ -298,6 +298,7 @@ void PF::PhotoFlow::close()
   //PF::ImageProcessor::Instance().join();
 
   //im_close_plugins();
+  //sleep(10);
   std::cout<<"PhotoFlow::close(): calling vips shutdown"<<std::endl;
   vips_shutdown();
   std::cout<<"PhotoFlow::close(): vips shutdown done"<<std::endl;
