@@ -161,6 +161,18 @@ public:
     smoothness = s.get_smoothness();
     init_mask();
   }
+
+  Stamp& operator =(const Stamp& s)
+  {
+    //std::cout<<"Calling Stamp& operator =(const Stamp& s)"<<std::endl;
+    size = s.get_size();
+    opacity = s.get_opacity();
+    smoothness = s.get_smoothness();
+    init_mask();
+    //std::cout<<"Stamp& operator =(const Stamp& s) finished"<<std::endl;
+    return *this;
+  }
+
   void set_size( unsigned int s ) { size = s; init_mask(); }
   unsigned int get_size() const { return size; }
 
@@ -175,17 +187,6 @@ public:
     mask.init( size*2+1, opacity, smoothness );
   }
   StampMask& get_mask() { return mask; }
-
-  Stamp& operator =(const Stamp& s)
-  {
-    //std::cout<<"Calling Stamp& operator =(const Stamp& s)"<<std::endl;
-    size = s.get_size();
-    opacity = s.get_opacity();
-    smoothness = s.get_smoothness();
-    init_mask();
-    //std::cout<<"Stamp& operator =(const Stamp& s) finished"<<std::endl;
-    return *this;
-  }
 };
 
 
@@ -326,9 +327,12 @@ public:
 
   bool import_settings( OpParBase* pin )
   {
+    CloneStampPar* ppin = dynamic_cast<CloneStampPar*>(pin);
+    if( ppin ) ppin->lock();
     lock();
     bool result = OpParBase::import_settings( pin );
     unlock();
+    if( ppin ) ppin->unlock();
     return result;
   }
 

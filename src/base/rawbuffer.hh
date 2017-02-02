@@ -65,6 +65,7 @@ class PencilMask
 public:
   PencilMask(): size(0), opacity(1), smoothness(0), mask(NULL)
 {
+    //std::cout<<"PencilMask() called"<<std::endl;
 }
 
   PencilMask( const PencilMask& sm ):
@@ -74,22 +75,25 @@ public:
     mask(NULL)
   {
     init( sm.get_size(), sm.get_opacity(), sm.get_smoothness() );
+    //std::cout<<"PencilMask(const PencilMask& sm) called"<<std::endl;
   }
 
   ~PencilMask()
   {
-    //std::cout<<"~PencilMask() called. mask="<<mask<<std::endl;
+    //std::cout<<"~PencilMask() called. this="<<(void*)this<<"  mask="<<mask<<"  size="<<size<<std::endl;
     //return;
     if( mask ) {
       for( unsigned int i = 0; i < size; i++) delete[] mask[i];
       delete[] mask;
       mask = NULL;
     }
+    //std::cout<<"~PencilMask() finished"<<std::endl;
   }
 
   PencilMask& operator=( const PencilMask& sm )
   {
     init( sm.get_size(), sm.get_opacity(), sm.get_smoothness() );
+    //std::cout<<"PencilMask& operator=(const PencilMask& sm) called"<<std::endl;
     return ( *this );
   }
 
@@ -226,7 +230,42 @@ class Stroke
   VipsRect area;
 
 public:
-  Stroke() {}
+  Stroke()
+  {
+    //std::cout<<"Calling Stroke()"<<std::endl;
+  }
+
+  Stroke(const Stroke& s)
+  {
+    //std::cout<<"Calling Stroke(const Stroke& s)"<<std::endl;
+    pen = s.get_pen();
+    segments = s.get_segments();
+    points = s.get_points();
+    area.width = s.get_area().width;
+    area.height = s.get_area().height;
+    area.left = s.get_area().left;
+    area.top = s.get_area().top;
+    //std::cout<<"Stroke(const Stroke& s) finished"<<std::endl;
+  }
+
+  Stroke& operator=(const Stroke& s)
+  {
+    //std::cout<<"Calling Stroke& operator=(const Stroke& s)"<<std::endl;
+    pen = s.get_pen();
+    segments = s.get_segments();
+    points = s.get_points();
+    area.width = s.get_area().width;
+    area.height = s.get_area().height;
+    area.left = s.get_area().left;
+    area.top = s.get_area().top;
+    //std::cout<<"Stroke& operator=(const Stroke& s) finished"<<std::endl;
+    return *this;
+  }
+
+  ~Stroke()
+  {
+    //std::cout<<"Calling ~Stroke()"<<std::endl;
+  }
 
   Pen& get_pen() { return pen; }
   const Pen& get_pen() const { return pen; }
@@ -235,17 +274,8 @@ public:
   std::list< Segment >& get_segments() { return segments; }
   const std::list< Segment >& get_segments() const { return segments; }
   VipsRect& get_area() { return area; }
+  const VipsRect& get_area() const { return area; }
   void compute_area();
-
-  Stroke& operator=(const Stroke& s)
-  {
-    //std::cout<<"Calling Stroke& operator=(const Stroke& s)"<<std::endl;
-    pen = s.get_pen();
-    segments = s.get_segments();
-    points = s.get_points();
-    //std::cout<<"Stroke& operator=(const Stroke& s) finished"<<std::endl;
-    return *this;
-  }
 };
 
 
