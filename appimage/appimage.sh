@@ -23,6 +23,18 @@ cd $APP.AppDir
 sudo chown -R $USER /app/
 
 cp -r /app/* ./usr/
+rm -f ./usr/bin/$LOWERAPP.real
+mv ./usr/bin/$LOWERAPP ./usr/bin/$LOWERAPP.real
+cat > usr/bin/$LOWERAPP <<\EOF
+#! /bin/bash
+HERE="$(dirname "$(readlink -f "${0}")")"
+echo "$HERE/LOWERAPP.real \"$@\""
+gdb -ex "run \"$@\"" $HERE/LOWERAPP.real
+#$HERE/LOWERAPP.real "$@"
+EOF
+sed -i -e "s|LOWERAPP|$LOWERAPP|g" usr/bin/$LOWERAPP
+chmod u+x usr/bin/$LOWERAPP
+
 
 ########################################################################
 # Copy desktop and icon file to AppDir for AppRun to pick them up
@@ -86,7 +98,7 @@ get_desktopintegration $LOWERAPP
 ########################################################################
 
 GLIBC_NEEDED=$(glibc_needed)
-VERSION=$(date +%Y%m%d)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}.glibc$GLIBC_NEEDED
+VERSION=$(date +%Y%m%d)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}.glibc${GLIBC_NEEDED}-dbg
 #VERSION=${RELEASE_VERSION}-glibc$GLIBC_NEEDED
 
 ########################################################################
