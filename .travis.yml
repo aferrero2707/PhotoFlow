@@ -68,9 +68,9 @@ before_script:
     - export LD_LIBRARY_PATH=/app/lib:${LD_LIBRARY_PATH}
     #- git clone -b v8.4.1 --depth 1 https://github.com/jcupitt/libvips.git libvips
     #- cd libvips
-    - wget http://www.vips.ecs.soton.ac.uk/supported/8.4/vips-8.4.1.tar.gz
-    - tar xzvf vips-8.4.1.tar.gz
-    - cd vips-8.4.1
+    - wget http://www.vips.ecs.soton.ac.uk/supported/8.4/vips-8.4.5.tar.gz
+    - tar xzvf vips-8.4.5.tar.gz
+    - cd vips-8.4.5
     - ./autogen.sh
     - FLAGS="-g -O2 -msse4.2 -ffast-math -ftree-vectorize" CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS} -fpermissive" ./configure --prefix=/app --disable-gtk-doc --disable-gtk-doc-html --disable-introspection --enable-debug=no --without-python --without-magick --without-libwebp --enable-pyvips8=no --enable-shared=yes --enable-static=no
     - make -j2
