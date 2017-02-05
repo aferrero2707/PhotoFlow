@@ -72,7 +72,7 @@ before_script:
     - tar xzvf vips-8.4.1.tar.gz
     - cd vips-8.4.1
     - ./autogen.sh
-    - FLAGS="-O2 -msse4.2 -ffast-math -ftree-vectorize" CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS} -fpermissive" ./configure --prefix=/app --disable-gtk-doc --disable-gtk-doc-html --disable-introspection --enable-debug=no --without-python --without-magick --without-libwebp --enable-pyvips8=no --enable-shared=yes --enable-static=no
+    - FLAGS="-g -O2 -msse4.2 -ffast-math -ftree-vectorize" CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS} -fpermissive" ./configure --prefix=/app --disable-gtk-doc --disable-gtk-doc-html --disable-introspection --enable-debug=no --without-python --without-magick --without-libwebp --enable-pyvips8=no --enable-shared=yes --enable-static=no
     - make -j2
     - sudo make install
     - cd ..
