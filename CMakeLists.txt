@@ -15,6 +15,7 @@ ELSE(MINGW)
   option(USE_NLS "Build Native Language Support (using gettext)" ON)
 ENDIF(MINGW)
 option(BABL_FLIPS_DISABLED "BABL flips disabled" OFF)
+option(BUILD_PLUGIN "Build GIMP plug-in" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
 #set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)

@@ -298,6 +298,8 @@ add_dependencies(pfbase ${LIB_DEPS})
 
 FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh legacy/gui/operations/*.hh)
 FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc legacy/gui/operations/*.cc)
+#FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh legacy/gui/operations/*.hh plugin/*.hh)
+#FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc legacy/gui/operations/*.cc plugin/pluginwindow.cc)
 
 add_library (pfgui STATIC
   ${GuiIncludes}
@@ -413,6 +415,7 @@ INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflo
 #
 # GIMP plug-in
 #
+if (BUILD_PLUGIN)
 if (GIMP_FOUND)
   FILE(GLOB PluginIncludes plugin/*.hh)
   FILE(GLOB PluginSources plugin/pluginwindow.cc plugin/pfgimp.cc)
@@ -505,7 +508,23 @@ if (GIMP_FOUND)
   )
   
   INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION ${GIMP_2_9_PREFIX}/lib/gimp/2.0/plug-ins)
+
+#  add_executable(file-photoflow plugin/file-photoflow.cc)
+
+#  target_link_libraries(file-photoflow ${LIBS} 
+#    ${GIMP_2_9_LIBRARIES}
+#    ${GIMPUI_LIBRARIES}
+#    ${GTKMM_LIBRARIES} 
+#    ${GLIBMM_LIBRARIES} 
+#    ${GLIB_LIBRARIES} 
+#    ${GMODULE_LIBRARIES} 
+#    ${GOBJECT_LIBRARIES} 
+#    ${GTHREAD_LIBRARIES} 
+#  )
+  
+#  INSTALL(TARGETS file-photoflow RUNTIME DESTINATION ${GIMP_2_9_PREFIX}/lib/gimp/2.0/plug-ins)
 endif (GIMP_FOUND)
+endif (BUILD_PLUGIN)
 
 
   get_property(idirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
