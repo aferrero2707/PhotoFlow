@@ -69,11 +69,19 @@ image( NULL )
     return;
   }
 
-#ifndef NDEBUG
-  std::cout<<"RasterImage::RasterImage(): # of bands="<<image->Bands<<std::endl;
-  std::cout<<"RasterImage::RasterImage(): type="<<image->Type<<std::endl;
-#endif
+  //#ifndef NDEBUG
+    std::cout<<"RasterImage::RasterImage(): # of bands="<<image->Bands<<std::endl;
+    std::cout<<"RasterImage::RasterImage(): type="<<image->Type<<std::endl;
+    std::cout<<"RasterImage::RasterImage(): colorspace="<<convert_colorspace(image->Type)<<std::endl;
+  //#endif
 
+/*
+  std::cout<<"RasterImage::RasterImage(): saving test buffer (image="<<image<<")..."<<std::endl;
+  size_t array_sz;
+  void* mem_array = vips_image_write_to_memory( image, &array_sz );
+  std::cout<<"RasterImage::RasterImage(): test buffer saved (mem_array="<<mem_array<<", array_sz="<<array_sz<<")."<<std::endl;
+  free(mem_array);
+*/
   int out_nbands = 0;
   if( (convert_colorspace(image->Type) == PF_COLORSPACE_GRAYSCALE) &&
       (image->Bands > 1) ) {
@@ -82,6 +90,10 @@ image( NULL )
   if( (convert_colorspace(image->Type) == PF_COLORSPACE_RGB) &&
       (image->Bands > 3) ) {
     out_nbands = 3;
+  }
+  if( (convert_colorspace(image->Type) == PF_COLORSPACE_RGB) &&
+      (image->Bands < 3) ) {
+    out_nbands = 1;
   }
   if( (convert_colorspace(image->Type) == PF_COLORSPACE_LAB) &&
       (image->Bands > 3) ) {
@@ -92,18 +104,18 @@ image( NULL )
     out_nbands = 4;
   }
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RasterImage::RasterImage(): out_nbands="<<out_nbands<<std::endl;
-#endif
+//#endif
   if( out_nbands > 0 ) {
     VipsImage* out;
     if( vips_extract_band( image, &out, 0, "n", out_nbands, NULL ) ) {
       std::cout<<"RasterImage::RasterImage(): vips_extract_band() failed"<<std::endl;
       return;
     }
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"RasterImage::RasterImage(): # of output bands="<<out->Bands<<std::endl;
-#endif
+//#endif
 
     PF_UNREF( image, "RasterImage::RasterImage(): image unref" );
     vips_image_init_fields( out,
@@ -114,9 +126,9 @@ image( NULL )
         1.0, 1.0);
     image = out;
   }
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RasterImage::RasterImage(): # of output bands="<<image->Bands<<std::endl;
-#endif
+//#endif
 
   // We make a copy of the original image to make sure that custom metadata is not deleted
   VipsImage* image_copy;
@@ -288,6 +300,7 @@ image( NULL )
   }
 #endif
 
+  std::cout<<"RasterImage::RasterImage(): calling pyramid.init( "<<image<<" )"<<std::endl;
   pyramid.init( image );
 }
 

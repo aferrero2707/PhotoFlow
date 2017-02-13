@@ -176,6 +176,35 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   PF_UNREF( image, "ImageReaderPar::build(): image unref after vips_copy" );
   image = tmp;
 
+  if( image->Bands == 1 ) {
+
+    VipsImage* out;
+    VipsImage* bandv[3];
+    bandv[0] = image;
+    bandv[1] = image;
+    bandv[2] = image;
+    if( vips_bandjoin( bandv, &out, 3, NULL ) ) {
+      PF_UNREF( image, "ImageReaderPar::build(): image unref after bandjoin failure" );
+      return NULL;
+    }
+    PF_UNREF( image, "ImageReaderPar::build(): image unref" );
+    rgb_image( out->Xsize, out->Ysize );
+
+    vips_image_init_fields( out,
+        image->Xsize, image->Ysize,
+        3, image->BandFmt,
+        VIPS_CODING_NONE,
+        VIPS_INTERPRETATION_RGB,
+        1.0, 1.0);
+
+    image = out;
+    std::cout<<"ImageReaderPar::build(): converted from 1 to 3 bands"<<std::endl;
+    std::cout<<"ImageReaderPar::build(): image->Type"<<image->Type<<std::endl;
+
+  }
+
+
+
   /*
   {
     size_t exifsz;
@@ -188,15 +217,15 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     }
   }
    */
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): "<<std::endl
       <<"input images:"<<std::endl;
   for(int i = 0; i < in.size(); i++) {
     std::cout<<"  "<<(void*)in[i]<<std::endl;
   }
-  std::cout<<"image->Interpretation: "<<image->Type<<std::endl;
+  std::cout<<"image: "<<image<<"    image->Interpretation: "<<image->Type<<std::endl;
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
-#endif
+//#endif
 
   if( is_map() && image->Bands > 1 ) {
     VipsImage* out;
