@@ -73,6 +73,8 @@ protected:
   ImageEditor* image_editor;
 
   std::string last_dir;
+  Glib::ustring filename_out;
+  Glib::ustring pfiname_out;
 
   ImageBuffer imgbuf;
 
@@ -85,6 +87,9 @@ protected:
 public:
   PluginWindow();
   virtual ~PluginWindow();
+
+  void set_filename_out(Glib::ustring f) { filename_out = f; }
+  void set_pfiname_out(Glib::ustring f) { pfiname_out = f; }
 
   void close_editor();
 

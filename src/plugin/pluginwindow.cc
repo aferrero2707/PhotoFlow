@@ -125,10 +125,10 @@ PF::PluginWindow::PluginWindow():
 
 PF::PluginWindow::~PluginWindow()
 {
-  //PF::PhotoFlow::Instance().set_active_image( NULL );
-  //std::cout<<"~PluginWindow(): deleting image editor"<<std::endl;
-  //if( image_editor ) delete( image_editor );
-  //std::cout<<"~PluginWindow(): image editor deleted"<<std::endl;
+  PF::PhotoFlow::Instance().set_active_image( NULL );
+  std::cout<<"~PluginWindow(): deleting image editor"<<std::endl;
+  if( image_editor ) delete( image_editor );
+  std::cout<<"~PluginWindow(): image editor deleted"<<std::endl;
 
   /*
   std::cout<<"~PluginWindow(): submitting end request for image processor"<<std::endl;
@@ -174,14 +174,10 @@ void PF::PluginWindow::on_button_ok()
 {
   if( image_editor && image_editor->get_image() )
   {
-    image_editor->get_image()->export_merged_to_mem( &imgbuf, gimp_iccdata, gimp_iccsize );
-    std::cout<<"PluginWindow::on_button_ok(): export_merged_to_mem() finished"<<std::endl;
-    if( imgbuf.buf ) {
-      for( int i = 0; i < imgbuf.width*imgbuf.height*3; i++ ) {
-        //std::cout<<"imgbuf.buf["<<i<<"]="<<imgbuf.buf[i]<<std::endl;
-        //imgbuf.buf[i] *= 65535;
-      }
-    }
+    std::cout<<"PluginWindow::on_button_ok(): calling export_merged()"<<std::endl;
+    image_editor->get_image()->save( pfiname_out );
+    image_editor->get_image()->export_merged_to_tiff( filename_out );
+    std::cout<<"PluginWindow::on_button_ok(): export_merged() called"<<std::endl;
   }
 
   hide();

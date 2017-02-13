@@ -796,7 +796,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
     //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
     file_name = filename;
 
-  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" || ext=="exr" ) {
+  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" || ext=="exr" || ext=="fits" || ext=="fts" || ext=="fit" ) {
 
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
@@ -1015,11 +1015,14 @@ void PF::Image::do_export_merged( std::string filename )
       convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
       //convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+      std::cout<<"Image::do_export_merged(): saving TIFF file "<<filename<<"   outimg="<<outimg<<std::endl;
       if( outimg ) {
         int predictor = 2;
+        std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
         vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
-        //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
-            "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
+            "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
+        //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
+        std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
         //vips_image_write_to_file( outimg, filename.c_str(), NULL );
         saved = true;
       }
@@ -1184,6 +1187,79 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
     } else {
       imgbuf->exif_buf = NULL;
     }
+
+    msg = std::string("PF::Image::export_merged_to_mem(): outimg unref");
+    PF_UNREF( outimg, msg.c_str() );
+  }
+
+  remove_pipeline( pipeline );
+  delete pipeline;
+  //layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
+  std::cout<<"Image saved to memory "<<std::endl;
+}
+
+
+
+void PF::Image::export_merged_to_tiff( const std::string filename )
+{
+  std::cout<<"Image::export_merged_to_mem(): waiting for caching completion..."<<std::endl;
+  PF::ImageProcessor::Instance().wait_for_caching();
+  std::cout<<"Image::export_merged_to_mem(): ... caching completed"<<std::endl;
+
+  unsigned int level = 0;
+  PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+  update( pipeline, true );
+  std::cout<<"Image::export_merged_to_mem(): image updated."<<std::endl;
+
+  void* out_iccdata;
+  size_t out_iccsize;
+
+  PF::Layer* layer = get_layer_manager().get_layers().front();
+  if( !layer ) return;
+
+  PipelineNode* node = pipeline->get_node( layer->get_id() );
+  if( !node ) return;
+
+  VipsImage* bgdimg = node->image;
+  cmsHPROFILE in_profile = NULL;
+  PF::ICCProfile* iccprof_in = PF::get_icc_profile( bgdimg );
+  if( iccprof_in )  {
+    in_profile = iccprof_in->get_profile();
+  }
+
+
+  std::string msg;
+  VipsImage* image = pipeline->get_output();
+  VipsImage* outimg = NULL;
+
+  std::vector<VipsImage*> in;
+  in.clear();
+  in.push_back( image );
+  convert_format->get_par()->set_image_hints( image );
+  convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
+  VipsImage* floatimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+
+  outimg = floatimg;
+  PF::ICCTransformPar* conv_par =
+      dynamic_cast<PF::ICCTransformPar*>( convert2outprof->get_par() );
+  std::cout<<"Image::export_merged_to_mem(): conv_par="<<(void*)conv_par<<std::endl;
+  if( conv_par ) {
+    in.clear();
+    in.push_back( floatimg );
+    conv_par->set_image_hints( floatimg );
+    conv_par->set_format( VIPS_FORMAT_FLOAT );
+    conv_par->set_out_profile( iccprof_in );
+    outimg = convert2outprof->get_par()->build( in, 0, NULL, NULL, level );
+    PF_UNREF( floatimg, "" );
+  }
+
+  std::cout<<"Image::export_merged_to_mem(): outimg="<<outimg<<std::endl;
+  if( outimg ) {
+    std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
+    vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
+        "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
+    //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
+    std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
 
     msg = std::string("PF::Image::export_merged_to_mem(): outimg unref");
     PF_UNREF( outimg, msg.c_str() );
