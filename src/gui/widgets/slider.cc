@@ -93,14 +93,14 @@ void PF::Slider::create_widgets( std::string l, double val,
     }
 
     if(layout == 2 ) {
-      reset_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      reset_align.set( Gtk::ALIGN_START, Gtk::ALIGN_CENTER, 0, 0 );
       reset_align.add( reset_button );
       scale.set_draw_value( false );
-      scale_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      scale_align.set( Gtk::ALIGN_START, Gtk::ALIGN_CENTER, 0, 0 );
       scale_align.add( scale );
-      numentry_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      numentry_align.set( Gtk::ALIGN_START, Gtk::ALIGN_CENTER, 0, 0 );
       numentry_align.add( numentry );
-      label_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      label_align.set( Gtk::ALIGN_START, Gtk::ALIGN_CENTER, 0, 0 );
       label_align.add( label );
       //vbox2.pack_start( reset_button, Gtk::PACK_SHRINK );
       //hbox.pack_start( numentry, Gtk::PACK_SHRINK, 0 );
