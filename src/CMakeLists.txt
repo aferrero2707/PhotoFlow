@@ -308,8 +308,10 @@ add_library (pfbase STATIC
 add_dependencies(pfbase ${LIB_DEPS} gmic_film_cluts_download)
 
 
-FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
-FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc)
+#FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
+#FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc)
+FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh plugin/*.hh)
+FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc plugin/pluginwindow.cc)
 
 add_library (pfgui STATIC
   ${GuiIncludes}
@@ -375,43 +377,7 @@ target_link_libraries(photoflow ${LIBS}
 
 
 
-#--------------------------------------------------
-#
-# pfbatch executable
-#
-add_executable(pfbatch pfbatch.cc)
-
-target_link_libraries(pfbatch ${LIBS} 
-  pfbase 
-  pfdt
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${STATIC_LIBS}
-  ${OPENEXR_LIBRARIES}
-  ${XML2_LIBRARIES}
-  ${EXIF_LIBRARIES}
-  ${EXIV2_LIBRARIES}
-  ${GEXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
-  ${SIGC2_LIBRARIES}
-  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-  ${GLIBMM_LIBRARIES} 
-  ${GLIB_LIBRARIES} 
-  ${GMODULE_LIBRARIES} 
-  ${GOBJECT_LIBRARIES} 
-  ${GTHREAD_LIBRARIES} 
-  ${ZLIB_LIBRARIES}
-  #${LIBRAW_LIBRARIES}  
-  ${ORC_LIBRARIES}
-  fftw3
-  ${ADDITIONAL_LIBS}
-  #gmon
-  )
-
-
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
-INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 
 INSTALL(DIRECTORY ../presets DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
@@ -424,103 +390,7 @@ INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow)
 #INSTALL(FILES ${CMAKE_BINARY_DIR}/pluginrc DESTINATION share/photoflow/gimp-2.8)
 #INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow/gimp-2.8)
 
-#--------------------------------------------------
-#
-# GIMP plug-in
-#
-if (GIMP_FOUND)
-  FILE(GLOB PluginIncludes plugin/*.hh)
-  FILE(GLOB PluginSources plugin/pluginwindow.cc plugin/pfgimp.cc)
 
-  include_directories(${GIMP_2_9_INCLUDE_DIRS})
-  link_directories(${GIMP_2_9_LIBRARY_DIRS})
-  include_directories(${GIMPUI_INCLUDE_DIRS})
-  link_directories(${GIMPUI_LIBRARY_DIRS})
-
-  add_executable(pfgimp ${PluginSources})
-
-  set_target_properties(pfgimp PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
-
-  target_link_libraries(pfgimp ${LIBS} 
-    pfgui
-    pfbase 
-    pfdt
-    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-    ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-    ${STATIC_LIBS}
-    ${OPENEXR_LIBRARIES}
-    ${XML2_LIBRARIES}
-    ${EXIF_LIBRARIES}
-    ${EXIV2_LIBRARIES}
-    ${GEXIV2_LIBRARIES}
-    ${LENSFUN_LIBRARIES}
-    ${SIGC2_LIBRARIES}
-    ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-    ${PIXMAN_LIBRARIES} 
-    ${MACINTEG_LIBS}
-    #${GIMP_LIBS}
-    ${GIMP_2_9_LIBRARIES}
-    ${GIMPUI_LIBRARIES}
-    ${GTKMM_LIBRARIES} 
-    ${GLIBMM_LIBRARIES} 
-    ${GLIB_LIBRARIES} 
-    ${GMODULE_LIBRARIES} 
-    ${GOBJECT_LIBRARIES} 
-    ${GTHREAD_LIBRARIES} 
-    ${ZLIB_LIBRARIES}
-    #${LIBRAW_LIBRARIES}  
-    ${ORC_LIBRARIES}
-    fftw3
-    ${ADDITIONAL_LIBS}
-    #gmon
-  )
-  
-  
-  FILE(GLOB LoadPluginIncludes plugin/*.hh)
-  FILE(GLOB LoadPluginSources plugin/pluginwindow.cc plugin/pfgimp-load.cc)
-
-  add_executable(pfgimp-load ${LoadPluginSources})
-
-  set_target_properties(pfgimp-load PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
-
-  target_link_libraries(pfgimp-load ${LIBS} 
-    pfgui
-    pfbase 
-    pfdt
-    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-    ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-    ${STATIC_LIBS}
-    ${OPENEXR_LIBRARIES}
-    ${XML2_LIBRARIES}
-    ${EXIF_LIBRARIES}
-    ${EXIV2_LIBRARIES}
-    ${GEXIV2_LIBRARIES}
-    ${LENSFUN_LIBRARIES}
-    ${SIGC2_LIBRARIES}
-    ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-    ${PIXMAN_LIBRARIES} 
-    ${MACINTEG_LIBS}
-    #${GIMP_LIBS}
-    ${GIMP_2_9_LIBRARIES}
-    ${GIMPUI_LIBRARIES}
-    ${GTKMM_LIBRARIES} 
-    ${GLIBMM_LIBRARIES} 
-    ${GLIB_LIBRARIES} 
-    ${GMODULE_LIBRARIES} 
-    ${GOBJECT_LIBRARIES} 
-    ${GTHREAD_LIBRARIES} 
-    ${ZLIB_LIBRARIES}
-    #${LIBRAW_LIBRARIES}  
-    ${ORC_LIBRARIES}
-    fftw3
-    ${ADDITIONAL_LIBS}
-    #gmon
-  )
-  
-  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION ${GIMP_2_9_PREFIX}/lib/gimp/2.0/plug-ins)
-endif (GIMP_FOUND)
 
 
   get_property(idirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)

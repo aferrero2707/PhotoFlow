@@ -68,8 +68,10 @@
 #include "base/pf_mkstemp.hh"
 #include "base/imageprocessor.hh"
 #include "gui/mainwindow.hh"
+#include "plugin/pluginwindow.hh"
 
 #include "base/new_operation.hh"
+#include "base/pf_file_loader.hh"
 
 extern int vips__leak;
 
@@ -110,6 +112,25 @@ void handler(int sig) {
 
 int main (int argc, char *argv[])
 {
+  if( argc > 1 && std::string(argv[1]) == "--version" ) {
+    std::cout<<"this is photoflow 0.2.8"<<std::endl;
+    return 0;
+  }
+
+#if defined(WIN32)
+  std::string mimePath = (std::string)(PF::PhotoFlow::Instance().get_base_dir()) + "\\..\\share";
+  std::string mimeVar = "XDG_DATA_HOME";
+  std::cout<<"Setting XDG_DATA_HOME to "<<mimePath<<std::endl;
+  Glib::setenv( mimeVar, mimePath, true );
+  const gchar * const * system_data_dirs = g_get_system_data_dirs();
+  std::cout<<"System data dirs: "<<std::endl;
+  int di = 0;
+  while( system_data_dirs[di] != NULL ) {
+    std::cout<<"  "<<system_data_dirs[di]<<std::endl;
+    di++;
+  }
+  std::cout<<"User data dir: "<<g_get_user_data_dir()<<std::endl;
+#endif
   //return 0;
 
   /*
@@ -143,10 +164,19 @@ int main (int argc, char *argv[])
 
   //vips__leak = 1;
 
-  if( argc > 2 && std::string(argv[1]) == "-b" ) {
+  bool is_plugin = false;
+
+  if( argc > 2 && std::string(argv[1]) == "--batch" ) {
     argc--;
     argv++;
     return PF::PhotoFlow::Instance().run_batch(argc, argv);
+  }
+
+  if( argc >= 5 && argc <= 6 && std::string(argv[1]) == "--plugin" ) {
+    argc--;
+    argv++;
+    is_plugin = true;
+    printf("PhF plugin: argc=%d\n", argc);
   }
 
   if(!Glib::thread_supported()) 
@@ -222,7 +252,12 @@ int main (int argc, char *argv[])
 #endif
   //#endif
 
-  PF::MainWindow* mainWindow = new PF::MainWindow();
+  PF::MainWindow* mainWindow = NULL;
+  PF::PluginWindow* pluginwin = NULL;
+  if( is_plugin )
+    pluginwin = new PF::PluginWindow();
+  else
+    mainWindow = new PF::MainWindow();
 #ifdef GTKMM_3
   Gtk::Settings::get_default()->property_gtk_application_prefer_dark_theme().set_value(true);
 
@@ -249,22 +284,52 @@ int main (int argc, char *argv[])
   }
 #endif
 
-  //Shows the window and returns when it is closed.
-  mainWindow->show_all();
-  if( argc > 1 ) {
-    fullpath = realpath( argv[argc-1], NULL );
+  if( is_plugin ) {
+    fullpath = realpath( argv[1], NULL );
     if(!fullpath)
       return 1;
-    mainWindow->open_image( fullpath );
+    std::cout<<"filename: "<<fullpath<<std::endl;
+    if( argc == 5 ) {
+      std::cout<<"pfiname: "<<argv[2]<<std::endl;
+      std::cout<<"filename_out: "<<argv[3]<<std::endl;
+      std::cout<<"pfiname_out: "<<argv[4]<<std::endl;
+      std::string pfiname = argv[2];
+      pluginwin->open_image( fullpath, true );
+      if( pfiname != "none" ) {
+        g_assert( pluginwin->get_image_editor() != NULL );
+        PF::ImageEditor* pfeditor = pluginwin->get_image_editor();
+        g_assert( pfeditor != NULL );
+        PF::Image* pfimage = pfeditor->get_image();
+        g_assert( pfimage != NULL );
+        PF::insert_pf_preset( pfiname, pfimage, NULL, &(pfimage->get_layer_manager().get_layers()), false );
+      }
+      pluginwin->set_filename_out( argv[3] );
+      pluginwin->set_pfiname_out( argv[4] );
+    } else {
+      pluginwin->open_image( fullpath, false );
+      pluginwin->set_filename_out( argv[2] );
+      pluginwin->set_pfiname_out( argv[3] );
+    }
+    pluginwin->show_all();
     free(fullpath);
+    app->run(*pluginwin);
   } else {
-    mainWindow->on_button_open_clicked();
+    //Shows the window and returns when it is closed.
+    mainWindow->show_all();
+    if( argc > 1 ) {
+      fullpath = realpath( argv[argc-1], NULL );
+      if(!fullpath)
+        return 1;
+      mainWindow->open_image( fullpath );
+      free(fullpath);
+    } else {
+      mainWindow->on_button_open_clicked();
+    }
+    app->run(*mainWindow);
   }
-  app->run(*mainWindow);
 
-  //std::cout<<"Executing an idle iteration..."<<std::endl;
-  //app->iteration( false );
-  //std::cout<<"Idle iteration done."<<std::endl;
+  if( mainWindow ) delete mainWindow;
+  if( pluginwin ) delete pluginwin;
 
   PF::ProcessRequestInfo request;
   request.request = PF::PROCESSOR_END;
@@ -273,7 +338,6 @@ int main (int argc, char *argv[])
 
   std::cout<<"Image processing thread finished"<<std::endl;
 
-  delete mainWindow;
   delete app;
 
   PF::PhotoFlow::Instance().close();
