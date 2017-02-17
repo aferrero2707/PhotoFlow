@@ -29,8 +29,8 @@ cat > usr/bin/$LOWERAPP <<\EOF
 #! /bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
 echo "$HERE/LOWERAPP.real \"$@\""
-gdb -ex "run" $HERE/LOWERAPP.real
-#$HERE/LOWERAPP.real "$@"
+#gdb -ex "run" $HERE/LOWERAPP.real
+$HERE/LOWERAPP.real "$@"
 EOF
 sed -i -e "s|LOWERAPP|$LOWERAPP|g" usr/bin/$LOWERAPP
 chmod u+x usr/bin/$LOWERAPP

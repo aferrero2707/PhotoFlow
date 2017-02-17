@@ -77,7 +77,7 @@ before_script:
     - sudo make install
     - cd ..
     - rm -rf libvips
-    - cmake -DCMAKE_BUILD_TYPE=Test -DCMAKE_INSTALL_PREFIX=/app -DINSTALL_PREFIX=/app -DBUNDLED_LENSFUN=ON ..
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DINSTALL_PREFIX=/app -DBUNDLED_LENSFUN=ON ..
     - echo "#include <version.hh>" > ../src/version.cc
     - echo "const char* PF::version_string = \"PhotoFlow git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}\";" >> ../src/version.cc
     - make -j2
