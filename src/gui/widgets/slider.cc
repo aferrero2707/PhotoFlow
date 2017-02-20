@@ -110,7 +110,7 @@ void PF::Slider::create_widgets( std::string l, double val,
       hbox.pack_start( scale_align, Gtk::PACK_SHRINK );
       hbox.pack_start( numentry_align, Gtk::PACK_SHRINK );
       hbox.pack_start( reset_align, Gtk::PACK_SHRINK );
-      align.set( Gtk::ALIGN_RIGHT, Gtk::ALIGN_CENTER, 0, 0 );
+      align.set( Gtk::ALIGN_START, Gtk::ALIGN_CENTER, 0, 0 );
       align.set_padding(4,4,4,4);
       align.add( hbox );
       pack_end( align, Gtk::PACK_SHRINK );
