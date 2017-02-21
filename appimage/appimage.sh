@@ -28,7 +28,8 @@ mv ./usr/bin/$LOWERAPP ./usr/bin/$LOWERAPP.real
 cat > usr/bin/$LOWERAPP <<\EOF
 #! /bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
-echo "$HERE/LOWERAPP.real \"$@\""
+echo -n "$HERE/LOWERAPP.real "
+echo "$@"
 #gdb -ex "run" $HERE/LOWERAPP.real
 $HERE/LOWERAPP.real "$@"
 EOF
