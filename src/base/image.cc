@@ -989,6 +989,23 @@ void PF::Image::do_export_merged( std::string filename )
     VipsImage* image = pipeline->get_output();
     VipsImage* outimg = NULL;
 
+    int tw = 128;
+    int th = tw;
+    int nt = (image->Xsize/tw + 1);
+    VipsAccess acc = VIPS_ACCESS_RANDOM;
+    int threaded = 1, persistent = 0;
+    VipsImage* cached;
+    if( !vips_tilecache(image, &cached,
+        "tile_width", tw, "tile_height", th, "max_tiles", nt,
+        "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+      //PF_UNREF( image, "Image::do_export_merged(): image unref" );
+      image = cached;
+    } else {
+      std::cout<<"Image::do_export_merged(): vips_tilecache() failed."<<std::endl;
+      PF_REF( image, "Image::do_export_merged(): image ref" );
+    }
+
+
     bool saved = false;
 
     std::vector<VipsImage*> in;
@@ -998,10 +1015,11 @@ void PF::Image::do_export_merged( std::string filename )
       convert_format->get_par()->set_image_hints( image );
       convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+      PF_UNREF( image, "Image::do_export_merged(): image unref" );
       if( outimg ) {
         Glib::Timer timer;
         timer.start();
-        vips_jpegsave( outimg, filename.c_str(), "Q", 100, NULL );
+        vips_jpegsave( outimg, filename.c_str(), "Q", 75, NULL );
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
         saved = true;
@@ -1015,13 +1033,14 @@ void PF::Image::do_export_merged( std::string filename )
       convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
       //convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+      PF_UNREF( image, "Image::do_export_merged(): image unref" );
       std::cout<<"Image::do_export_merged(): saving TIFF file "<<filename<<"   outimg="<<outimg<<std::endl;
       if( outimg ) {
         int predictor = 2;
         std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
         vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
-            "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
-        //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
+        //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
+            "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
         std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
         //vips_image_write_to_file( outimg, filename.c_str(), NULL );
         saved = true;
