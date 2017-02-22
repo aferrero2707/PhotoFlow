@@ -115,7 +115,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_help(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info-pressed.png"),
   frame_help2(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info-pressed.png"),
   frame_close(PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_inactive.png"),
-  frame_expander(PF::PhotoFlow::Instance().get_data_dir()+"/icons/expand.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/collapse.png",true)
+  frame_expander(PF::PhotoFlow::Instance().get_data_dir()+"/icons/expand.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/collapse.png",true),
+  expert_ctrls_expander(_("more"))
 {
   vips_semaphore_init( &update_done_sem, 0, (char*)"update_done_sem" );
 
@@ -203,26 +204,27 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   if(par && par->has_intensity() ) {
     //intensitySlider.set_width( 200 );
-    frame_top_box_4.pack_start( intensitySlider, Gtk::PACK_EXPAND_WIDGET );
+    frame_top_box_3.pack_start( intensitySlider, Gtk::PACK_EXPAND_WIDGET );
   }
-  frame_top_box_4.pack_start( frame_box_4_padding, Gtk::PACK_EXPAND_WIDGET );
-  controls_box.pack_start( frame_top_box_4, Gtk::PACK_SHRINK, 0 );
+  frame_top_box_3.pack_start( frame_box_4_padding, Gtk::PACK_EXPAND_WIDGET );
+  //controls_box.pack_start( frame_top_box_4, Gtk::PACK_SHRINK, 0 );
 
   if(par && par->has_target_channel() ) {
     frame_top_box_3.pack_start( frame_chsel_box, Gtk::PACK_SHRINK, 5 );
   }
   if(par && par->has_opacity() ) {
     if( par && par->has_target_channel() ) {
-      //frame_shift_box.pack_start( shift_x, Gtk::PACK_SHRINK, 2 );
-      //frame_shift_box.pack_start( shift_y, Gtk::PACK_SHRINK, 2 );
+      frame_shift_box.pack_start( shift_x, Gtk::PACK_SHRINK, 2 );
+      frame_shift_box.pack_start( shift_y, Gtk::PACK_SHRINK, 2 );
       frame_top_box_3.pack_start( frame_shift_box, Gtk::PACK_SHRINK, 5 );
     } else {
-      //frame_top_box_3.pack_start( shift_x, Gtk::PACK_SHRINK, 5 );
-      //frame_top_box_3.pack_start( shift_y, Gtk::PACK_SHRINK, 5 );
+      frame_top_box_3.pack_start( shift_x, Gtk::PACK_SHRINK, 5 );
+      frame_top_box_3.pack_start( shift_y, Gtk::PACK_SHRINK, 5 );
     }
   }
 
-  controls_box.pack_start( frame_top_box_3, Gtk::PACK_SHRINK, 0 );
+  expert_ctrls_expander.add(frame_top_box_3);
+  controls_box.pack_start( expert_ctrls_expander, Gtk::PACK_SHRINK, 0 );
 
   //middle_padding.set_size_request(-1,5);
   //controls_box.pack_start( middle_padding, Gtk::PACK_SHRINK, 0 );
