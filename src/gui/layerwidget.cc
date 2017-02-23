@@ -2012,6 +2012,24 @@ bool PF::LayerWidget::on_key_press_event(GdkEventKey* event)
       on_button_save();
       return true;
     }
+    if( event->keyval == 'C' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+C pressed"<<std::endl;
+      //notebook.set_current_page(0);
+      copy_selected_layers();
+      return true;
+    }
+    if( event->keyval == 'X' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+X pressed"<<std::endl;
+      //notebook.set_current_page(0);
+      cut_selected_layers();
+      return true;
+    }
+    if( event->keyval == 'V' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+V pressed"<<std::endl;
+      //notebook.set_current_page(0);
+      paste_layers();
+      return true;
+    }
   }
   return false;
 }
