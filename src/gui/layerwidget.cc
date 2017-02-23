@@ -1983,6 +1983,11 @@ bool PF::LayerWidget::on_key_press_event(GdkEventKey* event)
       on_button_add_group();
       return true;
     }
+    if( event->keyval == 'D' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+D pressed"<<std::endl;
+      on_button_del();
+      return true;
+    }
     if( event->keyval == 'M' ) {
       std::cout<<"LayerWidget: Ctrl+Shift+M pressed"<<std::endl;
       //notebook.set_current_page(1);
@@ -1990,7 +1995,7 @@ bool PF::LayerWidget::on_key_press_event(GdkEventKey* event)
       return true;
     }
     if( event->keyval == 'L' ) {
-      std::cout<<"LayerWidget: Ctrl+Shift+M pressed"<<std::endl;
+      std::cout<<"LayerWidget: Ctrl+Shift+L pressed"<<std::endl;
       //notebook.set_current_page(0);
       switch_to_layers_view();
       return true;
