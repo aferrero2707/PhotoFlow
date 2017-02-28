@@ -47,7 +47,10 @@ PF::GmicSmoothMedianPar::GmicSmoothMedianPar():
 
 int PF::GmicSmoothMedianPar::get_padding( int level )
 {
-  return 0;
+  float scalefac = 1;
+  for( unsigned int l = 1; l <= level; l++ )
+    scalefac /= 2;
+  return scalefac * prop_radius.get() * iterations.get();
 }
 
 
@@ -75,6 +78,7 @@ VipsImage* PF::GmicSmoothMedianPar::build(std::vector<VipsImage*>& in, int first
   command = command + std::string(",") + prop_threshold.get_str();
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
+  gpar->set_padding( get_padding(level) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 
