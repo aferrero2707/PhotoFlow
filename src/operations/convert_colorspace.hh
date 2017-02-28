@@ -330,7 +330,7 @@ public:
           }
         } else {
           cmsDoTransform( opar->get_transform(), p, pout, width );
-          if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+          if( true && r->left==0 && r->top==0 && x==0 && y==0 ) {
             std::cout<<"ConvertColorspace::render(): p=   "<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
             std::cout<<"ConvertColorspace::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
           }

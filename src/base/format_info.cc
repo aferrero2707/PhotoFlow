@@ -135,6 +135,9 @@ cmsUInt32Number PF::vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE 
     case cmsSigCmykData:
       result = TYPE_CMYK_16;
       break;
+    case cmsSigXYZData:
+      result = TYPE_XYZ_16;
+      break;
     default: break;
     }
 #endif
@@ -152,6 +155,9 @@ cmsUInt32Number PF::vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE 
     case cmsSigCmykData:
       result = TYPE_CMYK_16;
       break;
+    case cmsSigXYZData:
+      result = TYPE_XYZ_16;
+      break;
     default: break;
     }
 #endif
@@ -167,6 +173,9 @@ cmsUInt32Number PF::vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE 
     case cmsSigCmykData:
       result = TYPE_CMYK_FLT;
       break;
+    case cmsSigXYZData:
+      result = TYPE_XYZ_FLT;
+      break;
     default: break;
     }
     break;    
@@ -180,6 +189,9 @@ cmsUInt32Number PF::vips2lcms_pixel_format( VipsBandFormat vipsFmt, cmsHPROFILE 
       break;
     case cmsSigCmykData:
       result = TYPE_CMYK_DBL;
+      break;
+    case cmsSigXYZData:
+      result = TYPE_XYZ_DBL;
       break;
     default: break;
     }
