@@ -35,6 +35,7 @@
 #include "../../base/rawmatrix.hh"
 
 #include "LUT.h"
+#include "progresslistener.h"
 #include "../../operations/raw_image.hh"
 
 
