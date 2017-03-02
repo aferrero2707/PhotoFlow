@@ -309,6 +309,8 @@ class CloneStampPar: public OpParBase
 
   Stamp pen;
 
+  GMutex* mutex;
+
 public:
   CloneStampPar();
   ~CloneStampPar();
@@ -316,9 +318,23 @@ public:
   bool has_intensity() { return false; }
   bool needs_input() { return true; }
 
+  void lock() { g_mutex_lock(mutex); }
+  void unlock() { g_mutex_unlock(mutex); }
+
   Stamp& get_pen() { return pen; }
 
   int get_scale_factor() { return scale_factor; }
+
+  bool import_settings( OpParBase* pin )
+  {
+    CloneStampPar* ppin = dynamic_cast<CloneStampPar*>(pin);
+    if( ppin ) ppin->lock();
+    lock();
+    bool result = OpParBase::import_settings( pin );
+    unlock();
+    if( ppin ) ppin->unlock();
+    return result;
+  }
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,
       VipsImage* imap, VipsImage* omap,
