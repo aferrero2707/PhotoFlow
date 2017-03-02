@@ -338,6 +338,7 @@ public:
           {
             // edge-detect on color channels
             // method: difference of original to gaussian blurred image:
+            //std::cout<<"defringe: t="<<t<<"  ilsz="<<ilsz<<std::endl;
             float a = in[t + 1] - pblur[t + 1];
             float b = in[t + 2] - pblur[t + 2];
     
