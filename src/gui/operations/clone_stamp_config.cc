@@ -154,6 +154,12 @@ void PF::CloneStampConfigGUI::start_stroke( double x, double y )
     par->start_stroke();
     par->unlock();
   }
+
+  if( srcpt_changed ) {
+    // A new source point was defined, so we need to re-build the pileines
+    image->update();
+  }
+
   srcpt_changed = false;
   stroke_started = true;
 }
@@ -261,10 +267,6 @@ bool PF::CloneStampConfigGUI::pointer_press_event( int button, double x, double 
   double lx = x, ly = y, lw = 1, lh = 1;
   screen2layer( lx, ly, lw, lh );
   start_stroke( lx, ly );
-
-  PF::Image* image = get_layer()->get_image();
-  if( !image ) return false;
-  image->update();
 
   draw_point( lx, ly );
   return true;
