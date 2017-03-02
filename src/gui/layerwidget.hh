@@ -167,17 +167,9 @@ public:
 
   void update_controls();
 
-  static gboolean update_cb(PF::LayerWidget* w)
+  void update_async()
   {
-    //std::cout<<"LayerWidget::update_cb() called."<<std::endl;
-    if( w ) w->update();
-    return( FALSE );
-  }
-
-  void update_idle()
-  {
-    //std::cout<<"LayerWidget::update_idle() called."<<std::endl;
-    gdk_threads_add_idle ((GSourceFunc) LayerWidget::update_cb, this);
+    signal_update.emit();
   }
 
 
