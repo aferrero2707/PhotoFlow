@@ -333,7 +333,6 @@ int main (int argc, char *argv[])
 
   std::cout<<"Image processing thread finished"<<std::endl;
 
-  app->iteration( false );
   delete mainWindow;
   delete app;
 
