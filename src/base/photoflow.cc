@@ -62,6 +62,8 @@
 #include "imageprocessor.hh"
 #include "photoflow.hh"
 
+#include "../vips/gmic/gmic/src/gmic.h"
+
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
 char* _lf_get_database_dir()
@@ -273,6 +275,8 @@ PF::PhotoFlow::PhotoFlow():
 #endif
   std::cout<<"localePath: "<<localePath<<std::endl;
 
+  gmic::init_rc();
+
   set_base_dir( exePath );
   set_data_dir( dataPath );
   set_locale_dir( localePath );
@@ -294,6 +298,7 @@ void PF::PhotoFlow::close()
   //PF::ImageProcessor::Instance().join();
 
   //im_close_plugins();
+  //sleep(10);
   std::cout<<"PhotoFlow::close(): calling vips shutdown"<<std::endl;
   vips_shutdown();
   std::cout<<"PhotoFlow::close(): vips shutdown done"<<std::endl;
