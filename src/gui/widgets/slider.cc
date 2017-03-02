@@ -93,14 +93,14 @@ void PF::Slider::create_widgets( std::string l, double val,
     }
 
     if(layout == 2 ) {
-      reset_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      reset_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
       reset_align.add( reset_button );
       scale.set_draw_value( false );
-      scale_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      scale_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
       scale_align.add( scale );
-      numentry_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      numentry_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
       numentry_align.add( numentry );
-      label_align.set( Gtk::ALIGN_LEFT, Gtk::ALIGN_CENTER, 0, 0 );
+      label_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
       label_align.add( label );
       //vbox2.pack_start( reset_button, Gtk::PACK_SHRINK );
       //hbox.pack_start( numentry, Gtk::PACK_SHRINK, 0 );
@@ -110,7 +110,7 @@ void PF::Slider::create_widgets( std::string l, double val,
       hbox.pack_start( scale_align, Gtk::PACK_SHRINK );
       hbox.pack_start( numentry_align, Gtk::PACK_SHRINK );
       hbox.pack_start( reset_align, Gtk::PACK_SHRINK );
-      align.set( Gtk::ALIGN_RIGHT, Gtk::ALIGN_CENTER, 0, 0 );
+      align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
       align.set_padding(4,4,4,4);
       align.add( hbox );
       pack_end( align, Gtk::PACK_SHRINK );
@@ -192,7 +192,6 @@ void PF::Slider::get_value()
   if( !get_prop() ) return;
   double val;
   get_prop()->get(val);
-  //std::cout<<"PF::Slider::get_value(): property=\""<<get_prop_name()<<"\"="<<val<<std::endl;
 #ifdef GTKMM_2
   adjustment.set_value( val*multiplier );
 #endif
