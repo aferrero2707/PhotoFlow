@@ -156,23 +156,6 @@ PF::RawImage::RawImage( const std::string _fname ):
   }
 
 
-  std::cout<<"Starting CA correction..."<<std::endl;
-  CA_correct_RT();
-  std::cout<<"... CA correction finished"<<std::endl;
-  memcpy( pdata->color.ca_fitparams, fitparams, sizeof(fitparams) );
-  for(int i = 0; i < 3; i++) {
-    for(int j = 0; j < 2; j++) {
-      printf("i=%d j=%d par:",i,j);
-      for(int k = 0; k < 16; k++)
-        printf(" %f",fitparams[i][j][k]);
-      printf("\n");
-    }
-  }
-  rawData.Reset();
-  //getchar();
-
-
-
   //==================================================================
   // Save the raw histogram into the image
   vips_image_set_blob( image, "raw-hist",
@@ -599,6 +582,22 @@ bool PF::RawImage::load_rawspeed()
   //==================================================================
   // Load the RAW image data into a vips image
   std::cout<<"RawImage: rawData.GetBuffer()="<<(void*)rawData.GetBuffer()<<std::endl;
+  std::cout<<"Starting CA correction..."<<std::endl;
+  CA_correct_RT();
+  std::cout<<"... CA correction finished"<<std::endl;
+  memcpy( pdata->color.ca_fitparams, fitparams, sizeof(fitparams) );
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 2; j++) {
+      printf("i=%d j=%d par:",i,j);
+      for(int k = 0; k < 16; k++)
+        printf(" %f",fitparams[i][j][k]);
+      printf("\n");
+    }
+  }
+  rawData.Reset();
+  //getchar();
+
+
   std::cout<<"  buffer size: "<<sizeof(float)*iwidth*iheight<<" bytes"<<std::endl;
   VipsImage* ti = vips_image_new_from_memory_copy(
       rawbuf, sizeof(float)*2*iwidth*iheight,
@@ -824,6 +823,22 @@ bool PF::RawImage::load_rawtherapee()
   //==================================================================
   // Load the RAW image data into a vips image
   std::cout<<"RawImage: rawData.GetBuffer()="<<(void*)rawData.GetBuffer()<<std::endl;
+  std::cout<<"Starting CA correction..."<<std::endl;
+  CA_correct_RT();
+  std::cout<<"... CA correction finished"<<std::endl;
+  memcpy( pdata->color.ca_fitparams, fitparams, sizeof(fitparams) );
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 2; j++) {
+      printf("i=%d j=%d par:",i,j);
+      for(int k = 0; k < 16; k++)
+        printf(" %f",fitparams[i][j][k]);
+      printf("\n");
+    }
+  }
+  rawData.Reset();
+  //getchar();
+
+
   std::cout<<"  buffer size: "<<sizeof(float)*iwidth*iheight<<" bytes"<<std::endl;
   VipsImage* ti = vips_image_new_from_memory_copy(
       rawbuf, sizeof(float)*2*iwidth*iheight,
