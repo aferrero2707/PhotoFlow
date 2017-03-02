@@ -130,6 +130,8 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::VBox controls_box;
   Gtk::HSeparator hline, hline2;
 
+  Gtk::Expander expert_ctrls_expander;
+
   //ToggleImageButtonsBox map_buttons;
 
   Gtk::VBox aux_controls_box;
