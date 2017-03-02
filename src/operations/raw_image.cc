@@ -41,6 +41,9 @@ typedef uint32_t uint32;
 #include "../rt/rtengine/camconst.h"
 #include "raw_image.hh"
 
+#include "amaze_demosaic.hh"
+#include "fast_demosaic_xtrans.hh"
+
 #include "../dt/external/adobe_coeff.c"
 
 // Color space conversion to/from XYZ; color spaces adapted to D50 using Bradford transform

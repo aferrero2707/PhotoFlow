@@ -44,7 +44,6 @@
 #include "../base/array2d.hh"
 
 #include "fast_demosaic.hh"
-#include "fast_demosaic_xtrans.hh"
 
 //#define PF_USE_LIBRAW
 #define PF_USE_RAWSPEED
