@@ -866,25 +866,33 @@ bool PF::ImageEditor::zoom_fit()
   area_hsize -= 20;
   area_vsize -= 20;
 
+  if( area_hsize < 0 || area_vsize < 0 ) {
+    imageArea->set_shrink_factor( 1 );
+    image->set_pipeline_level( pipeline, 0 );
+    //pipeline2->set_level( target_level );
+    image->update();
+    return false;
+  }
+
 	float shrink_h = area_hsize/image_size_updater->get_image_width();
 	float shrink_v = area_vsize/image_size_updater->get_image_height();
 	float shrink_min = (shrink_h<shrink_v) ? shrink_h : shrink_v;
 
-  if( shrink_min > 1 ) shrink_min = 1;
+	if( shrink_min > 1 ) shrink_min = 1;
 
 	unsigned int target_level = 0;
-	//std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
+	std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
 	while( shrink_min < 0.5 ) {
 		target_level++;
 		shrink_min *= 2;
-	  //std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
+	  std::cout<<"ImageEditor::zoom_fit(): target_level="<<target_level<<"  shrink_min="<<shrink_min<<std::endl;
 	}
 
-  //std::cout<<"ImageEditor::zoom_fit(): image area size="
-  //         <<area_hsize<<","<<area_vsize
-  //         <<"  image size="<<image_size_updater->get_image_width()
-  //         <<","<<image_size_updater->get_image_height()
-  //         <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
+  std::cout<<"ImageEditor::zoom_fit(): image area size="
+           <<area_hsize<<","<<area_vsize
+           <<"  image size="<<image_size_updater->get_image_width()
+           <<","<<image_size_updater->get_image_height()
+           <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
 
 	if( (imageArea->get_shrink_factor() != shrink_min) ||
 	    (pipeline->get_level() != target_level) ) {
@@ -1484,8 +1492,8 @@ bool PF::ImageEditor::on_key_press_event(GdkEventKey* event)
 //bool PF::ImageEditor::on_preview_configure_event( GdkEventConfigure* event )
 void PF::ImageEditor::on_my_size_allocate(Gtk::Allocation& allocation)
 {
-	//std::cout<<"ImageEditor::on_my_size_allocate() called: fit_image="<<fit_image<<" fit_image_needed="<<fit_image_needed<<std::endl;
-	//std::cout<<"  allocation width="<<allocation.get_width()<<" height="<<allocation.get_height()<<std::endl;
+	std::cout<<"ImageEditor::on_my_size_allocate() called: fit_image="<<fit_image<<" fit_image_needed="<<fit_image_needed<<std::endl;
+	std::cout<<"  allocation width="<<allocation.get_width()<<" height="<<allocation.get_height()<<std::endl;
 	if( fit_image /*&& fit_image_needed*/ ) {
 	  if( zoom_fit() )
 	    fit_image_needed = false;
