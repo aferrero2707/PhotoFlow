@@ -65,7 +65,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   tca_method.add_enum_value(PF::PF_TCA_CORR_AUTO,"TCA_CORR_AUTO",_("auto"));
   tca_method.add_enum_value(PF::PF_TCA_CORR_PROFILED,"TCA_CORR_PROFILED",_("profiled"));
   tca_method.add_enum_value(PF::PF_TCA_CORR_PROFILED_AUTO,"TCA_CORR_PROFILED_AUTO",_("profiled + auto"));
-  tca_method.add_enum_value(PF::PF_TCA_CORR_MANUAL,"TCA_CORR_MANUAL",_("manual"));
+  //tca_method.add_enum_value(PF::PF_TCA_CORR_MANUAL,"TCA_CORR_MANUAL",_("manual"));
 
   demo_method.add_enum_value(PF::PF_DEMO_AMAZE,"AMAZE","Amaze");
   //demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
