@@ -1981,6 +1981,16 @@ bool PF::LayerWidget::on_key_press_event(GdkEventKey* event)
       on_button_add();
       return true;
     }
+    if( event->keyval == 'G' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+G pressed"<<std::endl;
+      on_button_add_group();
+      return true;
+    }
+    if( event->keyval == 'D' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+D pressed"<<std::endl;
+      on_button_del();
+      return true;
+    }
     if( event->keyval == 'M' ) {
       std::cout<<"LayerWidget: Ctrl+Shift+M pressed"<<std::endl;
       //notebook.set_current_page(1);
@@ -1988,9 +1998,39 @@ bool PF::LayerWidget::on_key_press_event(GdkEventKey* event)
       return true;
     }
     if( event->keyval == 'L' ) {
-      std::cout<<"LayerWidget: Ctrl+Shift+M pressed"<<std::endl;
+      std::cout<<"LayerWidget: Ctrl+Shift+L pressed"<<std::endl;
       //notebook.set_current_page(0);
       switch_to_layers_view();
+      return true;
+    }
+    if( event->keyval == 'O' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+O pressed"<<std::endl;
+      //notebook.set_current_page(0);
+      on_button_load();
+      return true;
+    }
+    if( event->keyval == 'S' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+S pressed"<<std::endl;
+      //notebook.set_current_page(0);
+      on_button_save();
+      return true;
+    }
+    if( event->keyval == 'C' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+C pressed"<<std::endl;
+      //notebook.set_current_page(0);
+      copy_selected_layers();
+      return true;
+    }
+    if( event->keyval == 'X' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+X pressed"<<std::endl;
+      //notebook.set_current_page(0);
+      cut_selected_layers();
+      return true;
+    }
+    if( event->keyval == 'V' ) {
+      std::cout<<"LayerWidget: Ctrl+Shift+V pressed"<<std::endl;
+      //notebook.set_current_page(0);
+      paste_layers();
       return true;
     }
   }
