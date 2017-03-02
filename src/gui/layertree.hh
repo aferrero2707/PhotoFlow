@@ -119,8 +119,10 @@ class LayerWidget;
     bool tree_modified;
     bool updating;
 
+    Glib::Dispatcher signal_update_model;
+
     void update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l );
-    void update_model(Gtk::TreeModel::Row parent_row);
+    void update_model_int(Gtk::TreeModel::Row parent_row);
 
     bool get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::TreeModel::iterator& iter);
     bool get_row(int id, Gtk::TreeModel::iterator& iter);
@@ -157,7 +159,7 @@ class LayerWidget;
     // Updates the tree model with the layers from the associated image
     void update_model();
     void update_model_cb() { update_model(); }
-    void update_model_idle_cb();
+    void update_model_async();
 
     std::list<Layer*>* get_layers() { return layers; }
     void set_layers( std::list<Layer*>* l ) {

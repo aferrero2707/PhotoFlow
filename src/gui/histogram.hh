@@ -64,6 +64,8 @@ class Histogram : public PipelineSink, public Gtk::DrawingArea
   int active_layer;
   int edited_layer;
 
+  Glib::Dispatcher signal_queue_draw;
+
 public:
 
   /* We send this packet of data from the bg worker thread to the main GUI
@@ -78,7 +80,7 @@ public:
 
   ulong_p hist;
 
-  static gboolean queue_draw_cb (Update * update);
+  //static gboolean queue_draw_cb (Update * update);
 
   Histogram( Pipeline* v );
   virtual ~Histogram();

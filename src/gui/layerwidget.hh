@@ -117,6 +117,8 @@ class LayerWidget : public Gtk::VBox
   //int get_map_tab( std::list<Layer*>* map_layers );
   //void close_map_tabs( Layer* l );
 
+  Glib::Dispatcher signal_update;
+
 public:
   sigc::signal<void,int> signal_edited_layer_changed;
 

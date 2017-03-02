@@ -85,11 +85,12 @@ PF::Pipeline::~Pipeline()
   std::cout<<"Pipeline::~Pipeline(): deleting sinks"<<std::endl;
   for( unsigned int i = 0; i < sinks.size(); i++ ) {
     if( sinks[i] == NULL ) continue;
-    std::cout<<"Pipeline::~Pipeline(): deleting sink #"<<i<<std::endl;
-		delete( sinks[i] );
-    std::cout<<"Pipeline::~Pipeline(): sink #"<<i<<" deleted"<<std::endl;
+    std::cout<<"Pipeline::~Pipeline(): cleaning sink #"<<i<<std::endl;
+		//delete( sinks[i] );
+    sinks[i]->dispose();
+    std::cout<<"Pipeline::~Pipeline(): sink #"<<i<<" cleaned"<<std::endl;
 	}
-  std::cout<<"Pipeline::~Pipeline(): all sinks deleted"<<std::endl;
+  std::cout<<"Pipeline::~Pipeline(): all sinks cleaned"<<std::endl;
 }
 
 

@@ -424,6 +424,50 @@ void PF::MainWindow::remove_all_tabs()
 
 void PF::MainWindow::on_button_exit()
 {
+  int npages = viewerNotebook.get_n_pages();
+  std::cout<<"MainWindow::on_button_exit(): npages="<<npages<<std::endl;
+  bool modified = false;
+  for( int i = 0; i < npages; i++ ) {
+    Gtk::Widget* w = viewerNotebook.get_nth_page(i);
+    std::cout<<"MainWindow::on_button_exit(): tab="<<i<<"  w="<<w<<std::endl;
+    if( !w ) continue;
+
+    PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( w );
+    if( !editor ) continue;
+
+    if( editor->get_image() != NULL ) {
+      std::cout<<"  editor->get_image()->is_modified(): "<<editor->get_image()->is_modified()<<std::endl;
+      if( editor->get_image()->is_modified() ) {
+        modified = true;
+        break;
+      }
+    }
+  }
+
+  if( modified ) {
+    Gtk::MessageDialog dialog(_("Modified buffers existing, do you really want to exit?"),
+        false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+    dialog.set_transient_for(*this);
+    dialog.set_default_response( Gtk::RESPONSE_YES );
+
+    //Show the dialog and wait for a user response:
+    int result = dialog.run();
+
+    //Handle the response:
+    switch(result) {
+    case Gtk::RESPONSE_YES:
+      std::cout<<"PF::MainWindow::on_button_exit(): response=YES"<<std::endl;
+      break;
+    case Gtk::RESPONSE_NO:
+      std::cout<<"PF::MainWindow::on_button_exit(): response=NO"<<std::endl;
+      return;
+      break;
+    default:
+      break;
+    }
+
+  }
+
   remove_all_tabs();
   hide();
 }
@@ -468,7 +512,7 @@ PF::MainWindow::open_image( std::string filename )
   HTabLabelWidget* tabwidget = 
       new HTabLabelWidget( std::string(fname),
           editor );
-  tabwidget->signal_close.connect( sigc::bind<bool>(sigc::mem_fun(*this, &PF::MainWindow::remove_tab), false) );
+  tabwidget->signal_close.connect( sigc::bind<bool>(sigc::mem_fun(*this, &PF::MainWindow::remove_tab), true) );
   viewerNotebook.append_page( *editor, *tabwidget );
   //std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
   free(fullpath);
@@ -1223,13 +1267,16 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   bckname += ".info";
   unlink( bckname.c_str() );
 
+  std::cout<<"MainWindow::remove_tab(): preparing for deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
   if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() ) {
     PF::PhotoFlow::Instance().set_active_image( NULL );
     if( editor->get_image() ) {
       // Make sure that aching of current image is stopped
       PF::Pipeline* pipeline = editor->get_image()->get_pipeline( 0 );
       if( pipeline ) {
+        std::cout<<"MainWindow::remove_tab(): updating image "<<editor->get_image()<<"..."<<std::endl;
         editor->get_image()->update( pipeline, true );
+        std::cout<<"MainWindow::remove_tab(): image "<<editor->get_image()<<" updated"<<std::endl;
       }
     }
   }
@@ -1244,6 +1291,7 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   widget->hide();
 
   if(immediate) {
+    std::cout<<"MainWindow::remove_tab(): preparing for deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
     delete( widget );
     if( tabwidget )
       delete( tabwidget );

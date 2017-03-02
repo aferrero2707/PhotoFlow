@@ -59,6 +59,7 @@
 #include "../gui/operations/imageread_config.hh"
 
 #include "doublebuffer.hh"
+#include "sampler.hh"
 
 
 /*
@@ -103,9 +104,13 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   GCond* draw_done;
   GMutex* draw_mutex;
 
+  GMutex* preview_size_mutex;
+  VipsRect preview_size;
+  Glib::Dispatcher signal_set_size;
+
   bool draw_requested;
 
-  //Glib::Dispatcher signal_queue_draw;
+  Glib::Dispatcher signal_queue_draw;
 
   /* The cache mask. 
    */
@@ -148,6 +153,8 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 
   long int pending_pixels;
 
+  SamplerGroup* samplers;
+
   /* We send this packet of data from the bg worker thread to the main GUI
    * thread when a tile has been calculated.
    */
@@ -158,29 +165,10 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
     int lsk;
   } Update;
 
-  static gboolean set_size_cb (Update * update);
+  //static gboolean set_size_cb (Update * update);
+  void set_size_cb ();
 
   static gboolean queue_draw_cb (Update * update);
-
-  /* Come here from the vips_sink_screen() background thread when a tile has 
-   * been calculated. 
-   *
-   * We can't paint the screen directly since the main GUI thread might be 
-   * doing something. Instead, we add an idle callback which will be
-   * run by the main GUI thread when it next hits the mainloop.
-
-  static void
-  sink_notify (VipsImage *image, VipsRect *rect, void *client)
-  {
-    ImageArea * image_area = (ImageArea *) client;
-    Update * update = g_new (Update, 1);
-
-    update->rect = *rect;
-    update->image_area = image_area;
-
-    g_idle_add ((GSourceFunc) render_cb, update);
-  }
-  */
 
 public:
 
@@ -263,6 +251,10 @@ public:
   void update( VipsRect* area );
 
   void sink( const VipsRect& area );
+
+  void dispose();
+
+  void set_samplers(SamplerGroup* s) { samplers = s; }
 
   void set_edited_layer( int id ) {
     int old_id = edited_layer;

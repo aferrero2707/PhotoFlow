@@ -121,30 +121,6 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
 
 
 
-typedef struct {
-  PF::ImageEditor* editor;
-} EditorCBData;
-
-
-static gboolean editor_on_image_modified_cb ( EditorCBData* data)
-{
-  if( data ) {
-    data->editor->on_image_modified();
-    g_free( data );
-  }
-  return false;
-}
-
-
-static gboolean editor_on_image_updated_cb ( EditorCBData* data)
-{
-  if( data ) {
-    data->editor->on_image_updated();
-    g_free( data );
-  }
-  return false;
-}
-
 
 
 
@@ -247,6 +223,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   imageArea_scrolledWindow_box.pack_start( imageArea_scrolledWindow );
 
   histogram = new PF::Histogram( image->get_pipeline(HISTOGRAM_PIPELINE_ID) );
+  samplers = new PF::SamplerGroup( image->get_pipeline(0) );
 
 
   radioBox.pack_start( buttonShowMerged );
@@ -292,11 +269,15 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   imageBox.pack_start( imageArea_scrolledWindow_box );
   imageBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
 
-  hist_expander.set_label( _("histogram") );
-  hist_expander.set_expanded(true);
-  hist_expander.add(*histogram);
+  stat_expander.set_label( _("image info") );
+  stat_expander.set_expanded(true);
+  stat_notebook.append_page( *histogram, _("histogram") );
+  stat_notebook.append_page( *samplers, _("samplers") );
+  stat_expander.add(stat_notebook);
 
-  //layersWidget_box.pack_start( hist_expander, Gtk::PACK_SHRINK );
+  imageArea->set_samplers( samplers );
+
+  //layersWidget_box.pack_start( stat_expander, Gtk::PACK_SHRINK );
   aux_controlsBox.set_size_request(-1,70);
   //layersWidget_box.pack_start( aux_controlsBox, Gtk::PACK_SHRINK );
   layersWidget_box.pack_start( layersWidget, Gtk::PACK_EXPAND_WIDGET );
@@ -305,10 +286,10 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
   controls_group_scrolled_window.set_size_request( 280, 0 );
 
-  //controls_group_vbox.pack_start( hist_expander, Gtk::PACK_SHRINK );
+  //controls_group_vbox.pack_start( stat_expander, Gtk::PACK_SHRINK );
   //controls_group_vbox.pack_start( controls_group_scrolled_window, Gtk::PACK_EXPAND_WIDGET );
 
-  main_panel = new Layout2( &hist_expander, &(layersWidget.get_tool_buttons_box()),
+  main_panel = new Layout2( &stat_expander, &(layersWidget.get_tool_buttons_box()),
       &layersWidget_box, &controls_group_scrolled_window, &imageBox );
 
   pack_start( *main_panel );
@@ -399,6 +380,8 @@ PF::ImageEditor::~ImageEditor()
     delete image;
   }
   std::cout<<"~ImageEditor(): image deleted"<<std::endl;
+  delete imageArea;
+  delete histogram;
   /**/
   /*
   // Images need to be destroyed by the processing thread
@@ -663,17 +646,18 @@ void PF::ImageEditor::build_image()
   image->set_loaded( true );
 
   image->clear_modified();
-  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified_idle_cb) );
-  image->signal_updated.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_updated_idle_cb) );
+  image->signal_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified_async) );
+  image->signal_updated.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_updated_async) );
+
+  signal_image_modified.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_modified) );
+  signal_image_updated.connect(sigc::mem_fun(this, &PF::ImageEditor::on_image_updated) );
   //Gtk::Paned::on_map();
 }
 
 
-void PF::ImageEditor::on_image_modified_idle_cb()
+void PF::ImageEditor::on_image_modified_async()
 {
-  EditorCBData * update = g_new (EditorCBData, 1);
-  update->editor = this;
-  g_idle_add ((GSourceFunc) editor_on_image_modified_cb, update);
+  signal_image_modified.emit();
 }
 
 
@@ -689,12 +673,10 @@ void PF::ImageEditor::on_image_modified()
 }
 
 
-void PF::ImageEditor::on_image_updated_idle_cb()
+void PF::ImageEditor::on_image_updated_async()
 {
-  std::cout<<"ImageEditor::on_image_updated_idle_cb() called"<<std::endl;
-  EditorCBData * update = g_new (EditorCBData, 1);
-  update->editor = this;
-  g_idle_add ((GSourceFunc) editor_on_image_updated_cb, update);
+  std::cout<<"ImageEditor::on_image_updated_async() called"<<std::endl;
+  signal_image_updated.emit();
 }
 
 
@@ -860,13 +842,13 @@ void PF::ImageEditor::zoom_in()
 
 bool PF::ImageEditor::zoom_fit()
 {
-  //std::cout<<"ImageEditor::zoom_fit(): image="<<image<<std::endl;
+  std::cout<<"ImageEditor::zoom_fit(): image="<<image<<std::endl;
   if( !image ) return false;
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  //std::cout<<"ImageEditor::zoom_fit(): pipeline="<<pipeline<<std::endl;
+  std::cout<<"ImageEditor::zoom_fit(): pipeline="<<pipeline<<std::endl;
   if( !pipeline ) return false;
-  //std::cout<<"image_size_updater->get_image_width()="<<image_size_updater->get_image_width()
-  //    <<" get_image_height()="<<image_size_updater->get_image_height()<<std::endl;
+  std::cout<<"image_size_updater->get_image_width()="<<image_size_updater->get_image_width()
+      <<" get_image_height()="<<image_size_updater->get_image_height()<<std::endl;
   if( image_size_updater->get_image_width() < 1 ||
       image_size_updater->get_image_height() < 1 ) return false;
 
@@ -880,7 +862,7 @@ bool PF::ImageEditor::zoom_fit()
   float area_hsize = imageArea_scrolledWindow.get_allocated_width();
   float area_vsize = imageArea_scrolledWindow.get_allocated_height();
 #endif
-  //std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
+  std::cout<<"ImageEditor::zoom_fit(): area_hsize="<<area_hsize<<"  area_vsize="<<area_vsize<<std::endl;
   area_hsize -= 20;
   area_vsize -= 20;
 

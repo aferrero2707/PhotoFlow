@@ -38,6 +38,7 @@
 
 #include "imagearea.hh"
 #include "histogram.hh"
+#include "sampler.hh"
 #include "layerwidget.hh"
 #include "tablabelwidget.hh"
 #include "softproofdialog.hh"
@@ -99,8 +100,11 @@ class ImageEditor: public Gtk::HBox
   ImageArea* imageArea;
   Gtk::EventBox imageArea_eventBox;
 
-  Gtk::Expander hist_expander;
+
+  Gtk::Expander stat_expander;
+  Gtk::Notebook stat_notebook;
   Histogram* histogram;
+  SamplerGroup* samplers;
 
   // Boxes for aligning the image area inside the scrolled window.
   // The image area gets inserted into an HBox which in turn
@@ -148,6 +152,8 @@ class ImageEditor: public Gtk::HBox
 
   int preview_drag_start_x, preview_drag_start_y, adjustment_drag_start_x, adjustment_drag_start_y;
 
+  Glib::Dispatcher signal_image_modified, signal_image_updated;
+
   void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
   void get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
       std::list<Layer*>& children );
@@ -188,10 +194,10 @@ public:
   void build_image();
 
   void on_image_modified();
-  void on_image_modified_idle_cb();
+  void on_image_modified_async();
 
   void on_image_updated();
-  void on_image_updated_idle_cb();
+  void on_image_updated_async();
 
   void on_map();
   void on_realize();
