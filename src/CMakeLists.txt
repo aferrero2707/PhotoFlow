@@ -2,7 +2,7 @@ IF(MINGW)
   SET(GMIC_FLAGS "-mwindows -std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -stdlib=libc++ -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
@@ -38,12 +38,14 @@ if(GTKMM3_FOUND)
   set(GTKMM_LIBRARIES ${GTKMM3_LIBRARIES})
 endif()
 
-SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_VERBDEBUG "-Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
-#SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
-SET(CMAKE_CXX_FLAGS_RELWITHDEBUGINFO "-g -O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
-SET(CMAKE_CXX_FLAGS_TEST "-O3 -g -DNDEBUG ${COMPILE_FLAGS}") 
+#SET(CMAKE_CXX_FLAGS_DEBUG " -Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_DEBUG " -O0 -g -DNDEBUG ${COMPILE_FLAGS} -Wno-unused-parameter") 
+SET(CMAKE_CXX_FLAGS_VERBDEBUG " -Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
+#SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+#SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ffast-math -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+SET(CMAKE_CXX_FLAGS_RELWITHDEBUGINFO "-g -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -277,6 +279,19 @@ link_directories(${GEXIV2_LIBRARY_DIRS})
 
 MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
+
+# Film CLUTs
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/gmic_film_cluts_download.cmake "file(DOWNLOAD http://gmic.eu/gmic_film_cluts.gmz ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz)")
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz
+  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/gmic_film_cluts_download.cmake
+  #COMMAND ${WGET_EXECUTABLE} http://gmic.eu/gmic_stdlib.h -O ${CMAKE_SOURCE_DIR}/src/gmic_stdlib.h
+  COMMAND touch ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz
+)
+add_custom_target(gmic_film_cluts_download ALL DEPENDS ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz)
+
+
+
 add_library (pfbase STATIC
   ${BaseIncludes}
   ${BaseSources}
@@ -293,6 +308,7 @@ add_library (pfbase STATIC
 )
 
 
+#add_dependencies(pfbase ${LIB_DEPS} gmic_film_cluts_download)
 add_dependencies(pfbase ${LIB_DEPS})
 
 
@@ -373,6 +389,10 @@ INSTALL(DIRECTORY ../icc DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
+#INSTALL(FILES ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz DESTINATION share/photoflow/gmic)
+INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow)
+#INSTALL(FILES ${CMAKE_BINARY_DIR}/pluginrc DESTINATION share/photoflow/gimp-2.8)
+#INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow/gimp-2.8)
 
 
 
