@@ -43,13 +43,6 @@
 namespace rtengine {
 
 
-class ProgressListener
-{
-public:
-  void setProgress(float val) {}
-  void setProgressStr(char* str) {}
-};
-	
 	class RawImageSource
 	{
 		PF::RawMatrix rawData;
