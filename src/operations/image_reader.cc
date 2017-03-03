@@ -54,7 +54,7 @@ raster_image( NULL )
 {
   in_profile_mode.add_enum_value(PF::PROF_MODE_NONE,"NONE",_("none"));
   in_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
-  in_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
+  in_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC from disk"));
 
   //in_profile_type.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
   in_profile_type.add_enum_value(PF::PROF_TYPE_sRGB,"sRGB","sRGB");
@@ -63,13 +63,14 @@ raster_image( NULL )
   in_profile_type.add_enum_value(PF::PROF_TYPE_ACEScg,"ACEScg","ACEScg");
   in_profile_type.add_enum_value(PF::PROF_TYPE_ADOBE,"ADOBE","Adobe RGB 1998");
   in_profile_type.add_enum_value(PF::PROF_TYPE_PROPHOTO,"PROPHOTO","ProPhoto RGB");
-  //in_profile_type.add_enum_value(PF::PROF_TYPE_LAB,"LAB","Lab");
+  in_profile_type.add_enum_value(PF::PROF_TYPE_LAB,"LAB","Lab");
+  in_profile_type.add_enum_value(PF::PROF_TYPE_XYZ,"XYZ","XYZ D50");
   //in_profile_type.add_enum_value(PF::PROF_TYPE_CUSTOM,"CUSTOM","Custom");
 
   //out_profile_mode.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
   out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use embedded"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
-  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC from disk"));
 
   out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB,"sRGB","sRGB");
   out_profile_type.add_enum_value(PF::PROF_TYPE_REC2020,"REC2020","Rec.2020");
@@ -79,8 +80,9 @@ raster_image( NULL )
   out_profile_type.add_enum_value(PF::PROF_TYPE_ACES,"ACES","ACES");
   //out_profile_type.add_enum_value(PF::PROF_TYPE_CUSTOM,"CUSTOM","Custom");
   out_profile_type.add_enum_value(PF::PROF_TYPE_LAB,"LAB","Lab");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_XYZ,"XYZ","XYZ D50");
   out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_SETTINGS,"FROM_SETTINGS","from settings");
-  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_DISK,"FROM_DISK","open from disk");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_DISK,"FROM_DISK","ICC from disk");
 
 
   //in_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR","linear");

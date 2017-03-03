@@ -83,19 +83,20 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   //out_profile_mode.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
   //out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use input"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
-  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC"));
+  out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC from disk"));
 
   //out_profile_type.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
   out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB,"sRGB","sRGB");
-  out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB_D50,"sRGB_D50","sRGB D50");
+  //out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB_D50,"sRGB_D50","sRGB D50");
   out_profile_type.add_enum_value(PF::PROF_TYPE_REC2020,"REC2020","Rec.2020");
   out_profile_type.add_enum_value(PF::PROF_TYPE_ACES,"ACES","ACES");
   out_profile_type.add_enum_value(PF::PROF_TYPE_ACEScg,"ACEScg","ACEScg");
   out_profile_type.add_enum_value(PF::PROF_TYPE_ADOBE,"ADOBE","Adobe RGB 1998");
   out_profile_type.add_enum_value(PF::PROF_TYPE_PROPHOTO,"PROPHOTO","ProPhoto RGB");
   out_profile_type.add_enum_value(PF::PROF_TYPE_LAB,"LAB","Lab");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_XYZ,"XYZ","XYZ D50");
   out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_SETTINGS,"FROM_SETTINGS","from settings");
-  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_DISK,"FROM_DISK","open from disk");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_DISK,"FROM_DISK","ICC from disk");
 
   out_trc_type.add_enum_value(PF::PF_TRC_LINEAR,"TRC_LINEAR",_("linear"));
   out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL",_("perceptual"));
@@ -266,6 +267,10 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       break;
     case cmsSigRgbData:
       std::cout<<"ConvertColorspacePar::build(): image mode set to RGB"<<std::endl;
+      rgb_image( get_xsize(), get_ysize() );
+      break;
+    case cmsSigXYZData:
+      std::cout<<"ConvertColorspacePar::build(): image mode set to XYZ"<<std::endl;
       rgb_image( get_xsize(), get_ysize() );
       break;
     case cmsSigLabData:

@@ -527,6 +527,9 @@ PF::ICCStore::ICCStore()
   Lab_profile = new LabProfile( PF::PF_TRC_PERCEPTUAL );
   Lab_profile->ref(); profiles.push_back( Lab_profile );
 
+  XYZ_profile = new XYZProfile( PF::PF_TRC_LINEAR );
+  XYZ_profile->ref(); profiles.push_back( XYZ_profile );
+
   system_monitor_profile = NULL;
 
   /*
@@ -590,6 +593,7 @@ PF::ICCStore::ICCStore()
 
 PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_type trc_type)
 {
+  std::cout<<"ICCStore::get_profile("<<ptype<<", "<<trc_type<<")"<<std::endl;
   switch( ptype ) {
   case PF::PROF_TYPE_sRGB: return srgb_profiles[trc_type];
   case PF::PROF_TYPE_sRGB_D50: return srgb_d50_profiles[trc_type];
@@ -599,6 +603,9 @@ PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_typ
   case PF::PROF_TYPE_ADOBE: return adobe_profiles[trc_type];
   case PF::PROF_TYPE_PROPHOTO: return prophoto_profiles[trc_type];
   case PF::PROF_TYPE_LAB: return Lab_profile;
+  case PF::PROF_TYPE_XYZ:
+    std::cout<<"  PROF_TYPE_XYZ: XYZ_profile="<<(void*)XYZ_profile<<std::endl;
+    return XYZ_profile;
   default: return NULL;
   }
 }

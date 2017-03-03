@@ -70,6 +70,7 @@ enum profile_type_t {
   PROF_TYPE_ACEScg,
   PROF_TYPE_ACES,
   PROF_TYPE_LAB,
+  PROF_TYPE_XYZ,
   PROF_TYPE_CUSTOM,
   PROF_TYPE_NONE,
 };
@@ -249,6 +250,13 @@ class LabProfile: public ICCProfile
 {
 public:
   LabProfile(TRC_type type);
+};
+
+
+class XYZProfile: public ICCProfile
+{
+public:
+  XYZProfile(TRC_type type);
 };
 
 
