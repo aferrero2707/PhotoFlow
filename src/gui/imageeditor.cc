@@ -382,6 +382,7 @@ PF::ImageEditor::~ImageEditor()
   std::cout<<"~ImageEditor(): image deleted"<<std::endl;
   delete imageArea;
   delete histogram;
+  delete samplers;
   /**/
   /*
   // Images need to be destroyed by the processing thread
@@ -1332,6 +1333,15 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
       }
     }
   }
+
+  double img_x = x, img_y = y, img_w = 10, img_h = 10;
+  screen2image( img_x, img_y, img_w, img_h );
+  if( samplers ) {
+    for(int i = 0; i < samplers->get_sampler_num(); i++) {
+      samplers->get_sampler(i).pointer_press_event( button->button, img_x, img_y, img_w, mod_key );
+    }
+  }
+
   return false;
 }
 
@@ -1374,6 +1384,15 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
       }
     }
   }
+
+  double img_x = x, img_y = y, img_w = 10, img_h = 10;
+  screen2image( img_x, img_y, img_w, img_h );
+  if( samplers ) {
+    for(int i = 0; i < samplers->get_sampler_num(); i++) {
+      samplers->get_sampler(i).pointer_release_event( button->button, img_x, img_y, mod_key );
+    }
+  }
+
   return false;
 }
 
@@ -1466,7 +1485,18 @@ return false;
       }
     }
   }
-	return true;
+
+  double img_x = x, img_y = y, img_w = 10, img_h = 10;
+  screen2image( img_x, img_y, img_w, img_h );
+  if( samplers ) {
+    for(int i = 0; i < samplers->get_sampler_num(); i++) {
+      if( samplers->get_sampler(i).pointer_motion_event( button, img_x, img_y, mod_key ) ) {
+        imageArea->queue_draw();
+      }
+    }
+  }
+
+  return true;
 }
 
 
