@@ -41,7 +41,7 @@
 
 void PF::print_display_profile()
 {
-#ifdef ___APPLE__
+#ifdef __APPLE__
   //ColorSyncProfileRef cs_prof = ColorSyncProfileCreateWithDisplayID (0);
 
   guint8 *buffer = NULL;
@@ -123,7 +123,7 @@ void* PF::get_display_profile()
   //ColorSyncProfileRef cs_prof = ColorSyncProfileCreateWithDisplayID (0);
   void* profile = NULL;
 
-#ifdef ___APPLE__
+#ifdef __APPLE__
   int monitor = 0;
   CGDirectDisplayID ids[monitor + 1];
   uint32_t total_ids;
@@ -151,7 +151,7 @@ cmsHPROFILE PF::get_display_ICC_profile()
   guint8 *buffer = NULL;
   gint buffer_size = 0;
 
-#ifdef ___APPLE__
+#ifdef __APPLE__
   int monitor = cairo_current_display_id;
   CGColorSpaceRef space = NULL;
   space = CGDisplayCopyColorSpace (monitor);
