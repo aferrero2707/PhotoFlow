@@ -43,7 +43,6 @@
 namespace rtengine {
 
 
-	
 	class RawImageSource
 	{
 		PF::RawMatrix rawData;
