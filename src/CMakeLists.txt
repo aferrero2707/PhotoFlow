@@ -383,6 +383,28 @@ target_link_libraries(photoflow ${LIBS}
 
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 
+#--------------------------------------------------
+#
+# phf_stack executable
+#
+add_executable(phf_stack phf_stack.c)
+IF(APPLE)
+  set_target_properties(phf_stack PROPERTIES LINK_FLAGS " -framework ApplicationServices ")
+ENDIF(APPLE)
+
+target_link_libraries(phf_stack ${LIBS} 
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  ${ADDITIONAL_LIBS}
+  #gmon
+  )
+
+
+
+INSTALL(TARGETS phf_stack RUNTIME DESTINATION bin)
+
 INSTALL(DIRECTORY ../presets DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icc DESTINATION share/photoflow)
