@@ -46,6 +46,12 @@
 
 #define PF_CACHE_BUFFER_TILE_SIZE 128
 
+#if VIPS_MAJOR_VERSION > 8 || (VIPS_MAJOR_VERSION == 8 && VIPS_MINOR_VERSION > 4)
+#  define VIPS_THREADED_REGION_PREPARE 1
+#else
+#  define VIPS_THREADED_REGION_PREPARE 0
+#endif
+
 
 static void free_mem_array (VipsObject *object, gpointer user_data)
 {
@@ -98,7 +104,12 @@ void PF::CacheBuffer::step()
   
   bool result = false;
 
+#if VIPS_THREADED_REGION_PREPARE == 1
   int nthreads = im_concurrency_get();
+#else
+  int nthreads = 1;
+#endif
+  //std::cout<<"CacheBuffer::step(): nthreads="<<nthreads<<std::endl;
 
   std::vector<_ThreadInfo> threads;
   for( int t = 0; t < nthreads; t++ ) {
@@ -106,7 +117,11 @@ void PF::CacheBuffer::step()
     //memset(buf, 0, VIPS_IMAGE_SIZEOF_PEL(image)*PF_CACHE_BUFFER_TILE_SIZE*PF_CACHE_BUFFER_TILE_SIZE);
     _ThreadInfo info;
     threads.push_back( info );
+#if VIPS_THREADED_REGION_PREPARE == 1
     threads[t].thread = Glib::Threads::Thread::create( sigc::bind(sigc::mem_fun(*this, &PF::CacheBuffer::step_cb), step_x, step_y, buf) );
+#else
+    threads[t].thread = NULL;
+#endif
     threads[t].x = step_x;
     threads[t].y = step_y;
     threads[t].buf = buf;
@@ -155,7 +170,11 @@ void PF::CacheBuffer::step()
 
   //std::cout<<"threads.size: "<<threads.size()<<std::endl;
   for( unsigned int t = 0; t < threads.size(); t++ ) {
+#if VIPS_THREADED_REGION_PREPARE == 1
     threads[t].thread->join();
+#else
+    step_cb( threads[t].x, threads[t].y, threads[t].buf );
+#endif
     VipsRect tile_area = { threads[t].x, threads[t].y, PF_CACHE_BUFFER_TILE_SIZE, PF_CACHE_BUFFER_TILE_SIZE };
     vips_rect_intersectrect( &image_area, &tile_area, &tile_area );
     if( tile_area.width>0 && tile_area.height>0 ) {
