@@ -560,7 +560,7 @@ enum hlreco_mode_t {
           } else {
             memcpy( pout, line, sizeof(float)*line_size );
             for( int xi = 0; xi < line_size; xi++ ) {
-              pout[xi] = CLIPRAW(pout[xi]*exposure);
+              pout[xi] = CLIPRAW(pout[xi]);
             }
           }
 
