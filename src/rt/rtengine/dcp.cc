@@ -1167,9 +1167,9 @@ DCPProfile::Matrix DCPProfile::makeXyzCam(double cam_wb[3], double camWbMatrix[3
         neutral[1] = camwb_green / pre_mul[1];
         neutral[2] = camwb_blue / pre_mul[2];
         */
-      neutral[0] = cam_wb[0];
-      neutral[1] = cam_wb[1];
-      neutral[2] = cam_wb[2];
+      neutral[0] = 1.0f/cam_wb[0];
+      neutral[1] = 1.0f/cam_wb[1];
+      neutral[2] = 1.0f/cam_wb[2];
 
         const double maxentry = std::max({neutral[0], neutral[1], neutral[2]});
 
@@ -1178,11 +1178,14 @@ DCPProfile::Matrix DCPProfile::makeXyzCam(double cam_wb[3], double camWbMatrix[3
         }
     }
 
+    //std::cout<<"neutral: "<<neutral[0]<<" "<<neutral[1]<<" "<<neutral[2]<<std::endl;
+
     /* Calculate what the RGB multipliers corresponds to as a white XY coordinate, based on the
        DCP ColorMatrix or ColorMatrices if dual-illuminant. This is the DNG reference code way to
        do it, which is a bit different from RT's own white balance model at the time of writing.
        When RT's white balance can make use of the DCP color matrices we could use that instead. */
     const std::array<double, 2> white_xy = neutralToXy(neutral, preferred_illuminant);
+    //std::cout<<"white_xy: "<<white_xy[0]<<" "<<white_xy[1]<<std::endl;
 
     bool has_fwd_1 = has_forward_matrix_1;
     bool has_fwd_2 = has_forward_matrix_2;
@@ -1210,6 +1213,9 @@ DCPProfile::Matrix DCPProfile::makeXyzCam(double cam_wb[3], double camWbMatrix[3
     // Mix if we have two matrices
     double mix = 1.0;
 
+    //std::cout<<"has_col_1="<<has_col_1<<" has_col_2="<<has_col_2
+    //    <<"  has_fwd_1="<<has_fwd_1<<" has_fwd_2="<<has_fwd_2<<std::endl;
+
     if ((has_col_1 && has_col_2) || (has_fwd_1 && has_fwd_2)) {
         /* DNG ref way to convert XY to temperature, which affect matrix mixing. A different model here
            typically does not affect the result too much, ie it's probably not strictly necessary to
@@ -1224,6 +1230,7 @@ DCPProfile::Matrix DCPProfile::makeXyzCam(double cam_wb[3], double camWbMatrix[3
             const double& invT = 1.0 / wbtemp;
             mix = (invT - (1.0 / temperature_2)) / ((1.0 / temperature_1) - (1.0 / temperature_2));
         }
+        //std::cout<<"wbtemp="<<wbtemp<<"  mix="<<mix<<std::endl;
     }
 
     // Colormatrix
@@ -1253,6 +1260,7 @@ DCPProfile::Matrix DCPProfile::makeXyzCam(double cam_wb[3], double camWbMatrix[3
     */
 
     const Triple white_xyz = xyToXyz(white_xy);
+    //std::cout<<"white_xyz: "<<white_xyz[0]<<" "<<white_xyz[1]<<" "<<white_xyz[2]<<std::endl;
 
     Matrix cam_xyz;
 
@@ -1342,8 +1350,8 @@ std::vector<DCPProfile::HsbModify> DCPProfile::makeHueSatMap(/*const ColorTemp& 
 {
   ColorTemp white_balance( camwb_to_temp(cam_wb, preferred_illuminant) );
 
-  std::cout<<"DCPProfile::makeHueSatMap(): deltas_1.empty()="<<deltas_1.empty()
-      <<"  deltas_2.empty()="<<deltas_2.empty()<<std::endl;
+  //std::cout<<"DCPProfile::makeHueSatMap(): deltas_1.empty()="<<deltas_1.empty()
+  //    <<"  deltas_2.empty()="<<deltas_2.empty()<<std::endl;
 
     if (deltas_1.empty()) {
         return std::vector<HsbModify>();
@@ -1388,6 +1396,8 @@ std::vector<DCPProfile::HsbModify> DCPProfile::makeHueSatMap(/*const ColorTemp& 
         const double invT = 1.0 / white_balance.getTemp();
         mix = (invT - (1.0 / t2)) / ((1.0 / t1) - (1.0 / t2));
     }
+
+    //std::cout<<"DCPProfile::makeHueSatMap(): mix="<<mix<<"  reverse="<<reverse<<std::endl;
 
     if (reverse) {
         mix = 1.0 - mix;
