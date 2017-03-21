@@ -208,7 +208,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   // create input camera profile based on Adobe matrices
-  if( mode_changed || (cam_profile == NULL) ) {
+  if( true || mode_changed || (cam_profile == NULL) ) {
 
     PF::exif_data_t* exif_data;
     if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
