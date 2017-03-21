@@ -164,6 +164,8 @@ namespace PF
       float black_level = opar->get_black_level();
       float white_level = opar->get_white_level();
 
+      if( exposure != 1 ) std::cout<<"EXPOSURE: "<<exposure<<std::endl;
+
       float hue = opar->get_hue();
       float saturation = opar->get_saturation();
       float contrast = opar->get_contrast();
@@ -236,7 +238,7 @@ namespace PF
               }
             }
 
-            if( exposure2 != 0 ) {
+            if( exposure2 != 1 ) {
               for( k=0; k < 3; k++) {
                 RGB[k] *= exposure;
                 //clip( exposure*RGB[k], RGB[k] );
@@ -379,15 +381,26 @@ namespace PF
       //int width = r->width;
       int height = r->height;
 
+      float brightness = opar->get_brightness();
+      float exposure = opar->get_exposure();
+      float gamma = opar->get_gamma();
+      float black_level = opar->get_black_level();
+      float white_level = opar->get_white_level();
+
+      float hue = opar->get_hue();
+      float saturation = opar->get_saturation();
+      float contrast = opar->get_contrast();
+      bool inv = opar->get_invert_mask();
+
       T* pin;
       T* pout;
-      typename PF::FormatInfo<T>::SIGNED a, b;
+      typename PF::FormatInfo<T>::SIGNED L, a, b;
       int x, y;
 
       float sat = 1.0f;
-      if( opar->get_saturation() > 0 ) sat += opar->get_saturation();
+      if( saturation > 0 ) sat += opar->get_saturation();
       else {
-        sat -= opar->get_saturation();
+        sat -= saturation;
         sat = 1.0f / sat;
       }
 
@@ -396,8 +409,15 @@ namespace PF
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
         for( x = 0; x < line_size; x+=3 ) {
+
+          L = pin[x];
           a = pin[x+1];
           b = pin[x+2];
+          if( exposure != 1.0f ) {
+            L *= exposure;
+          }
+
+          if( sat != 1.0f ) {
 
           a -= PF::FormatInfo<T>::HALF;
           b -= PF::FormatInfo<T>::HALF;
@@ -407,8 +427,9 @@ namespace PF
 
           a += PF::FormatInfo<T>::HALF;
           b += PF::FormatInfo<T>::HALF;
+          }
 
-          pout[x] = pin[x];
+          pout[x] = L;
           clip( a, pout[x+1] );
           clip( b, pout[x+2] );
         }
