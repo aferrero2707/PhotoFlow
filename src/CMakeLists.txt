@@ -387,7 +387,7 @@ INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 #
 # phf_stack executable
 #
-add_executable(phf_stack phf_stack.c)
+add_executable(phf_stack phf_stack.cc)
 IF(APPLE)
   set_target_properties(phf_stack PROPERTIES LINK_FLAGS " -framework ApplicationServices ")
 ENDIF(APPLE)
@@ -396,6 +396,11 @@ target_link_libraries(phf_stack ${LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${EXIV2_LIBRARIES}
+  ${GEXIV2_LIBRARIES}
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
   ${ZLIB_LIBRARIES}
   ${ADDITIONAL_LIBS}
   #gmon

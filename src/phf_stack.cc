@@ -42,6 +42,8 @@
 #include <vips/vips.h>
 #include <vips/debug.h>
 
+#include <gexiv2/gexiv2-metadata.h>
+
 typedef struct _VipsArraystack {
   VipsOperation parent_instance;
 
@@ -54,7 +56,15 @@ typedef struct _VipsArraystack {
 
 typedef VipsOperationClass VipsArraystackClass;
 
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
 G_DEFINE_TYPE( VipsArraystack, vips_arraystack, VIPS_TYPE_OPERATION );
+
+#ifdef __cplusplus
+}
+#endif /*__cplusplus*/
 
 #define PROCESS_PEL(TYPE) { \
     for( c = 0; c < bands; c++ ) { \
@@ -294,6 +304,15 @@ int main(int argc, char** argv)
   printf("argv[1]: %s\n",argv[1]);
 
   vips_tiffsave( out, argv[1], NULL );
+
+  void* gexiv2_buf;
+  size_t gexiv2_buf_length;
+  if( vips_image_get_blob( out, "gexiv2-data",
+                           &gexiv2_buf, &gexiv2_buf_length ) )
+    gexiv2_buf = NULL;
+  if( gexiv2_buf && (gexiv2_buf_length==sizeof(GExiv2Metadata)) ) {
+    gexiv2_metadata_save_file( (GExiv2Metadata*)gexiv2_buf, argv[1], NULL );
+  }
 
   vips_shutdown();
 
