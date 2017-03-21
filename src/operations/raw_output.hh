@@ -584,7 +584,10 @@ enum hlreco_mode_t {
             }
             if( r->top==0 && r-> left==0 && y<4 ) {
               std::cout<<"opar->get_apply_hue_sat_map()="<<opar->get_apply_hue_sat_map()
-                  <<" opar->get_delta_base().empty()="<<opar->get_delta_base().empty()<<std::endl;
+                      <<" opar->get_delta_base().empty()="<<opar->get_delta_base().empty()
+                      <<" opar->get_apply_look_table()="<<opar->get_apply_look_table()
+                      <<" opar->get_use_tone_curve()="<<opar->get_use_tone_curve()
+                  <<std::endl;
             }
             if( opar->get_apply_hue_sat_map() || opar->get_apply_look_table() || opar->get_use_tone_curve() ) {
               for( int xi = 0; xi < line_size; xi+=3 ) {
@@ -630,8 +633,9 @@ enum hlreco_mode_t {
               }
             }
             cmsDoTransform( opar->get_transform(), line2, pout, width );
-            //std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
-            //    <<pout[0]<<","<<pout[1]<<","<<pout[2]<<std::endl;
+            if( r->top==0 && r-> left==0 && y<4 )
+              std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
+              <<pout[0]<<","<<pout[1]<<","<<pout[2]<<std::endl;
           } else {
             memcpy( pout, line, sizeof(float)*line_size );
           }
