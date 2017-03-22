@@ -98,6 +98,9 @@ PF::SettingsDialog::SettingsDialog():
   row = *(ri);
   row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_ACES;
   row[cm_working_profile_columns.col_value] = "ACES";
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_XYZ;
+  row[cm_working_profile_columns.col_value] = "XYZ D50";
 
   cm_working_trc_model = Gtk::ListStore::create(cm_working_trc_columns);
   cm_working_trc_type_selector.set_model( cm_working_trc_model );
@@ -106,11 +109,11 @@ PF::SettingsDialog::SettingsDialog():
   ri = cm_working_trc_model->append();
   row = *(ri);
   row[cm_working_trc_columns.col_id] = PF::PF_TRC_LINEAR;
-  row[cm_working_trc_columns.col_value] = "linear";
+  row[cm_working_trc_columns.col_value] = _("linear");
   ri = cm_working_trc_model->append();
   row = *(ri);
-  row[cm_working_trc_columns.col_id] = PF::PF_TRC_PERCEPTUAL;
-  row[cm_working_trc_columns.col_value] = "perceptual";
+  row[cm_working_trc_columns.col_id] = PF::PF_TRC_STANDARD;
+  row[cm_working_trc_columns.col_value] = _("standard");
   //ri = cm_working_trc_model->append();
   //row = *(ri);
   //row[cm_working_trc_columns.col_id] = PF::PF_TRC_sRGB;
