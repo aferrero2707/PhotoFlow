@@ -106,6 +106,7 @@ PF::RawOutputPar::RawOutputPar():
   out_profile_type.add_enum_value(PF::PROF_TYPE_ACES,"ACES","ACES");
   //out_profile_type.add_enum_value(PF::PROF_TYPE_CUSTOM,"CUSTOM","Custom");
   out_profile_type.add_enum_value(PF::PROF_TYPE_LAB,"LAB","Lab");
+  out_profile_type.add_enum_value(PF::PROF_TYPE_XYZ,"XYZ","XYZ D50");
   out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_SETTINGS,"FROM_SETTINGS","from settings");
   out_profile_type.add_enum_value(PF::PROF_TYPE_FROM_DISK,"FROM_DISK","open from disk");
 
