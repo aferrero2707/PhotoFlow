@@ -81,19 +81,19 @@ G_DEFINE_TYPE( VipsArraystack, vips_arraystack, VIPS_TYPE_OPERATION );
         median = (double)(px[c]); \
         delta = D; \
       } \
-      TYPE* pout = (TYPE*)VIPS_REGION_ADDR( or, r->left + x, r->top + y ); \
+      TYPE* pout = (TYPE*)VIPS_REGION_ADDR( oreg, r->left + x, r->top + y ); \
       pout[c] = (TYPE)(median); \
       if(c==3) pout[c] = 1; \
     } \
 }
 
 static int
-vips_arraystack_gen( VipsRegion *or, void *seq,
+vips_arraystack_gen( VipsRegion *oreg, void *seq,
 	void *a, void *b, gboolean *stop )
 {
 	VipsRegion **ir = (VipsRegion **) seq;
 	VipsArraystack *stack = (VipsArraystack *) b;
-	VipsRect *r = &or->valid;
+	VipsRect *r = &oreg->valid;
 	int n = ((VipsArea *) stack->in)->n;
   const int bands = vips_image_get_bands( ir[0]->im );
   int sz = r->width * bands;
@@ -132,7 +132,7 @@ vips_arraystack_gen( VipsRegion *or, void *seq,
 static int
 vips_arraystack_build( VipsObject *object )
 {
-	VipsObjectClass *class = VIPS_OBJECT_GET_CLASS( object );
+	VipsObjectClass *klass = VIPS_OBJECT_GET_CLASS( object );
 	VipsOperation *conversion = VIPS_OPERATION( object );
 	VipsArraystack *stack = (VipsArraystack *) object;
 
@@ -200,11 +200,11 @@ vips_arraystack_build( VipsObject *object )
 }
 
 static void
-vips_arraystack_class_init( VipsArraystackClass *class )
+vips_arraystack_class_init( VipsArraystackClass *klass )
 {
-	GObjectClass *gobject_class = G_OBJECT_CLASS( class );
-	VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( class );
-	VipsOperationClass *operation_class = VIPS_OPERATION_CLASS( class );
+	GObjectClass *gobject_class = G_OBJECT_CLASS( klass );
+	VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( klass );
+	VipsOperationClass *operation_class = VIPS_OPERATION_CLASS( klass );
 
   VIPS_DEBUG_MSG( "vips_arraystack_class_init\n" );
   printf( "vips_arraystack_class_init\n" );
@@ -218,14 +218,14 @@ vips_arraystack_class_init( VipsArraystackClass *class )
 
 	operation_class->flags = VIPS_OPERATION_SEQUENTIAL_UNBUFFERED;
 
-	VIPS_ARG_BOXED( class, "in", -1, 
+	VIPS_ARG_BOXED( klass, "in", -1,
 		_( "Input" ), 
 		_( "Array of input images" ),
 		VIPS_ARGUMENT_REQUIRED_INPUT,
 		G_STRUCT_OFFSET( VipsArraystack, in ),
 		VIPS_TYPE_ARRAY_IMAGE );
 
-  VIPS_ARG_IMAGE( class, "out", 1,
+  VIPS_ARG_IMAGE( klass, "out", 1,
     _( "Output" ),
     _( "Output image" ),
     VIPS_ARGUMENT_REQUIRED_OUTPUT,
