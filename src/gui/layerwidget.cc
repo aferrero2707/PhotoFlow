@@ -127,7 +127,7 @@ void PF::ControlsGroup::populate()
             pack_start( *control, Gtk::PACK_SHRINK );
             PF::OpParBase* par = gui->get_par();
             if( gui->is_expanded() && par ) {
-              std::cout<<"ControlsGroup::remove_control(): resetting editing flag"<<std::endl;
+              std::cout<<"ControlsGroup::populate(): setting editing flag"<<std::endl;
               par->set_editing_flag( true );
               //get_layer()->get_image()->update();
             }

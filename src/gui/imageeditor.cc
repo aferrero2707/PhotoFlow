@@ -1088,7 +1088,8 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
           continue;
         }
 
-        PF::OpParBase* par = node->processor->get_par();
+        //PF::OpParBase* par = node->processor->get_par();
+        PF::OpParBase* par = l->get_processor()->get_par();
         VipsRect rin, rout;
         rout.left = x;
         rout.top = y;
@@ -1126,7 +1127,8 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   std::cout<<"PF::ImageEditor::image2layer(): before active layer: x'="<<x<<"  y'="<<y<<std::endl;
 #endif
 
-  PF::OpParBase* par = node->processor->get_par();
+  //PF::OpParBase* par = node->processor->get_par();
+  PF::OpParBase* par = edited_layer->get_processor()->get_par();
   VipsRect rin, rout;
   rout.left = x;
   rout.top = y;
@@ -1208,7 +1210,8 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   std::cout<<"PF::ImageEditor::layer2image(): before layer corrections: x'="<<x<<"  y'="<<y<<std::endl;
 #endif
 
-  PF::OpParBase* par = node->processor->get_par();
+  //PF::OpParBase* par = node->processor->get_par();
+  PF::OpParBase* par = edited_layer->get_processor()->get_par();
   VipsRect rin, rout;
   rin.left = x;
   rin.top = y;
