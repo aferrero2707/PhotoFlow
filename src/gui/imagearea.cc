@@ -408,11 +408,11 @@ void PF::ImageArea::process_area( const VipsRect& area )
 
   VipsRect* parea = (VipsRect*)(&area);
   //vips_invalidate_area( display_image, parea );
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"Preparing area "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" for display"<<std::endl;
   std::cout<<"  display_image: w="<<display_image->Xsize<<" h="<<display_image->Ysize<<std::endl;
   std::cout<<"  region->im: w="<<region->im->Xsize<<" h="<<region->im->Ysize<<std::endl;
-#endif
+//#endif
   //if( region && region->buffer ) region->buffer->done = 0;
   if (vips_region_prepare (region, parea))
     return;
@@ -420,10 +420,13 @@ void PF::ImageArea::process_area( const VipsRect& area )
   VipsRect area_clip;
   vips_rect_intersectrect (&(region->valid), &area, &area_clip);
 
+  //#ifdef DEBUG_DISPLAY
+    std::cout<<"Before copying region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" into inactive buffer"<<std::endl;
+  //#endif
   double_buffer.get_inactive().copy( region, area_clip, xoffset, yoffset );
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into inactive buffer"<<std::endl;
-#endif
+//#endif
 }
 
 
@@ -1234,14 +1237,19 @@ void PF::ImageArea::update( VipsRect* area )
 //    if( vips_affine( outimg, &outimg2,
 //                     shrink_factor, 0, 0, shrink_factor, NULL ) )
 //      return;
-    if( vips_reduce( outimg, &outimg2, 1.0/shrink_factor, 1.0/shrink_factor,
-        "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
-      std::cout<<std::endl<<std::endl<<"VIPS_REDUCE FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
+//    if( vips_reduce( outimg, &outimg2, 1.0/shrink_factor, 1.0/shrink_factor,
+//        "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
+//      std::cout<<std::endl<<std::endl<<"VIPS_REDUCE FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
+//      return;
+//    }
+		std::cout<<"ImageArea::update(): before vips_resize()"<<std::endl;
+    if( vips_resize( outimg, &outimg2, shrink_factor, NULL) ) {
+      std::cout<<std::endl<<std::endl<<"vips_resize() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
       return;
     }
-			//std::cout<<"outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
-			PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
-			outimg = outimg2;
+    std::cout<<"ImageArea::update(): before vips_resize(), outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
+    PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
+    outimg = outimg2;
 	}
 
 	/*
