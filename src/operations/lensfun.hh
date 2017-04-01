@@ -55,6 +55,10 @@
 namespace PF
 {
 
+#ifdef PF_HAS_LENSFUN
+const lfLens* lf_get_lens( VipsImage* img, lfDatabase* ldb );
+#endif
+
 class LensFunParStep: public OpParBase
 {
   std::string prop_camera_maker;
