@@ -27,6 +27,7 @@
 
  */
 
+#include <string.h>
 #include "lensfun.hh"
 
 int vips_lensfun( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, VipsInterpolate* interpolate, ... );
