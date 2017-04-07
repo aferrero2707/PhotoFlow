@@ -27,16 +27,17 @@
 
  */
 
+#include <string.h>
 #include "lensfun.hh"
 
 int vips_lensfun( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, VipsInterpolate* interpolate, ... );
 
 
 PF::LensFunParStep::LensFunParStep():
-    OpParBase(),
-    enable_distortion( true ),
-    enable_tca( true ),
-    enable_vignetting( true )
+        OpParBase(),
+        enable_distortion( true ),
+        enable_tca( true ),
+        enable_vignetting( true )
 {
 #ifdef PF_HAS_LENSFUN
   ldb = lf_db_new();
@@ -50,14 +51,93 @@ PF::LensFunParStep::LensFunParStep():
   //  ldb->LoadDirectory( lfdb.c_str() );
   //  std::cout<<"LensFun database loaded from "<<lfdb_env<<std::endl;
   //} else {
-    ldb->Load ();
-    std::cout<<"LensFun database loaded from default location"<<std::endl;
+  ldb->Load ();
+  std::cout<<"LensFun database loaded from default location"<<std::endl;
   //}
 #endif //(BUNDLED_LENSFUN == 1)
 #endif
 
   set_type("lensfun_step" );
 }
+
+
+#ifdef PF_HAS_LENSFUN
+const lfLens* PF::lf_get_lens( VipsImage* img, lfDatabase* ldb )
+{
+  if( !img ) return NULL;
+
+  size_t blobsz;
+  PF::exif_data_t* exif_data;
+  if( vips_image_get_blob( img, PF_META_EXIF_NAME, (void**)&exif_data, &blobsz ) ) {
+    std::cout<<"LensFunPar::get_flags() could not extract exif_custom_data."<<std::endl;
+    return NULL;
+  }
+  if( blobsz != sizeof(PF::exif_data_t) ) {
+    std::cout<<"LensFunPar::get_flags() wrong exif_custom_data size."<<std::endl;
+    return NULL;
+  }
+
+  float focal_length = exif_data->exif_focal_length;
+  float aperture = exif_data->exif_aperture;
+  float distance = exif_data->exif_focus_distance;
+
+  const lfCamera** cameras = ldb->FindCameras( exif_data->exif_maker,
+      exif_data->exif_model );
+  if( !cameras ) {
+    g_print ("Cannot find the camera `%s %s' in database\n",
+        exif_data->exif_maker, exif_data->exif_model);
+    return NULL;
+  }
+  g_print("Camera `%s %s' found in database\n",
+      exif_data->exif_maker, exif_data->exif_model);
+  const lfCamera *camera = cameras[0];
+  lf_free (cameras);
+
+  char exif_lens[128];
+  g_strlcpy(exif_lens, exif_data->exif_lens, sizeof(exif_lens));
+
+  const lfLens **lenses = ldb->FindLenses (camera, NULL, exif_lens);
+  if (!lenses) {
+    if(islower(camera->Mount[0])) {
+      // This is a fixed-lens camera, and LF returned no lens.
+      // Let's unset lens name and re-run lens query
+      g_print("Camera `%s %s' is fixed-lens\n",
+            exif_data->exif_maker, exif_data->exif_model);
+      g_strlcpy(exif_lens, "", sizeof(exif_lens));
+      lenses = ldb->FindLenses (camera, NULL, exif_lens);
+    }
+  }
+
+  if (!lenses) {
+      g_print ("Cannot find the lens `%s' in database\n", exif_data->exif_lens);
+      return NULL;
+  }
+
+  int lens_i = 0;
+  if(islower(camera->Mount[0]) && !exif_lens[0]) {
+    // no lens info in EXIF, and this is fixed-lens camera,
+    // let's find shortest lens model in the list of possible lenses
+    g_print("Camera `%s %s' is fixed-lens, searching for lens with shortest lens model\n",
+          exif_data->exif_maker, exif_data->exif_model);
+   size_t min_model_len = SIZE_MAX;
+    for(int i = 0; lenses[i]; i++) {
+      if(strlen(lenses[i]->Model) < min_model_len) {
+        min_model_len = strlen(lenses[i]->Model);
+        g_print("  Lens with shortest model name: `%d %s'\n",
+                  i, lenses[i]->Model);
+        lens_i = i;
+      }
+    }
+  }
+
+  const lfLens *lens = lenses[lens_i];
+  lf_free (lenses);
+  g_print("Found lens: `%d %s'\n", lens_i, lens->Model);
+  return lens;
+}
+#endif
+
+
 
 
 int PF::LensFunParStep::get_flags( VipsImage* img )
@@ -123,7 +203,7 @@ VipsImage* PF::LensFunParStep::build(std::vector<VipsImage*>& in, int first,
     VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
   VipsImage* outnew = NULL;
-std::cout<<"LensFunPar::build() called."<<std::endl;
+  std::cout<<"LensFunPar::build() called."<<std::endl;
   if( (in.size() < 1) || (in[0] == NULL) )
     return NULL;
 
@@ -161,9 +241,12 @@ std::cout<<"LensFunPar::build() called."<<std::endl;
     const lfCamera *camera = cameras[0];
     lf_free (cameras);
 
-    prop_camera_maker = camera->Maker;
-    prop_camera_model = camera->Model;
+    if( camera ) {
+      prop_camera_maker = camera->Maker;
+      prop_camera_model = camera->Model;
+    }
 
+    /*
     const lfLens **lenses = ldb->FindLenses (camera, NULL, exif_data->exif_lens);
     if (!lenses) {
       g_print ("Cannot find the lens `%s' in database\n", exif_data->exif_lens);
@@ -175,6 +258,10 @@ std::cout<<"LensFunPar::build() called."<<std::endl;
 
       prop_lens = lens->Model;
     }
+    */
+
+    const lfLens *lens = PF::lf_get_lens( in[0], ldb );
+    if( lens ) prop_lens = lens->Model;
   }
 #endif
 
@@ -207,22 +294,22 @@ std::cout<<"LensFunPar::build() called."<<std::endl;
   //outnew = in[0];
   //PF_REF( outnew, "LensFunPar::build(): in[0] ref")
 
-//#ifndef NDEBUG
+  //#ifndef NDEBUG
   std::cout<<"LensFunPar::build(): outnew refcount ("<<(void*)outnew<<") = "<<G_OBJECT(outnew)->ref_count<<std::endl;
-//#endif
+  //#endif
   return outnew;
 }
 
 
 PF::LensFunPar::LensFunPar():
-    OpParBase(),
-    prop_camera_maker( "camera_maker", this ),
-    prop_camera_model( "camera_model", this ),
-    prop_lens( "lens", this ),
-    enable_distortion( "enable_distortion", this, true ),
-    enable_tca( "enable_tca", this, true ),
-    enable_vignetting( "enable_vignetting", this, false ),
-    enable_all( "enable_all", this, false )
+        OpParBase(),
+        prop_camera_maker( "camera_maker", this ),
+        prop_camera_model( "camera_model", this ),
+        prop_lens( "lens", this ),
+        enable_distortion( "enable_distortion", this, true ),
+        enable_tca( "enable_tca", this, true ),
+        enable_vignetting( "enable_vignetting", this, false ),
+        enable_all( "enable_all", this, false )
 {
   set_type("lensfun" );
 

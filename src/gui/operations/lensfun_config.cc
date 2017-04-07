@@ -107,6 +107,26 @@ void PF::LensFunConfigGUI::do_update()
       PF::PipelineNode* node = pipeline->get_node( get_layer()->get_id() );
       if( node && node->image ) {
 
+        PF::ProcessorBase* processor = NULL;
+        std::string maker, model;
+        if( node ) processor = node->processor;
+
+        if( processor ) {
+          PF::LensFunPar* par2 =
+              dynamic_cast<PF::LensFunPar*>(processor->get_par());
+          if( par2 ) {
+            makerEntry.set_text( par2->camera_maker() );
+            makerEntry.set_tooltip_text( par2->camera_maker() );
+
+            modelEntry.set_text( par2->camera_model() );
+            modelEntry.set_tooltip_text( par2->camera_model() );
+
+            lensEntry.set_text( par2->lens() );
+            lensEntry.set_tooltip_text( par2->lens() );
+          }
+        }
+
+        /*
         size_t blobsz;
         PF::exif_data_t* exif_data;
         if( !vips_image_get_blob( node->image, PF_META_EXIF_NAME,
@@ -145,6 +165,7 @@ void PF::LensFunConfigGUI::do_update()
 #endif
           }
         }
+        */
       }
     }
   }
