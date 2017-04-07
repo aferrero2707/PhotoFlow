@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <sigc++/sigc++.h>
 
-#include <gexiv2/gexiv2-metadata.h>
+//#include <gexiv2/gexiv2-metadata.h>
 
 #include "condition.hh"
 
@@ -57,7 +57,7 @@ struct ImageBuffer
 {
   float* buf;
   int width, height;
-  GExiv2Metadata* exif_buf;
+  //GExiv2Metadata* exif_buf;
   void* iccdata;
   size_t iccsize;
 };

@@ -40,7 +40,7 @@ typedef uint32_t uint32;
 #include <exiv2/preview.hpp>
 #include <exiv2/xmp.hpp>
 
-#include <gexiv2/gexiv2-metadata.h>
+//#include <gexiv2/gexiv2-metadata.h>
 
 #include "../base/pf_mkstemp.hh"
 #include "../base/rawmatrix.hh"
@@ -53,6 +53,9 @@ typedef uint32_t uint32;
 #include "fast_demosaic_xtrans.hh"
 
 #include "../dt/external/adobe_coeff.c"
+
+
+
 
 static bool dt_exif_read_exif_tag(Exiv2::ExifData &exifData, Exiv2::ExifData::const_iterator *pos, string key)
 {
@@ -165,18 +168,21 @@ PF::RawImage::RawImage( const std::string _fname ):
     }
   }
 
+  PF::exiv2_data_t* exiv2_buf = new PF::exiv2_data_t;
   // read embedded color matrix as used in DNGs
   {
     try
     {
       Exiv2::ExifData::const_iterator pos;
-      std::unique_ptr<Exiv2::Image> image(Exiv2::ImageFactory::open(file_name_real));
-      assert(image.get() != 0);
-      image->readMetadata();
+      Exiv2::BasicIo::AutoPtr file (new Exiv2::FileIo (file_name_real));
+      //std::unique_ptr<Exiv2::Image> image(Exiv2::ImageFactory::open(file));
+      exiv2_buf->image = Exiv2::ImageFactory::open(file);
+      assert(exiv2_buf->image.get() != 0);
+      exiv2_buf->image->readMetadata();
       bool res = true;
 
       // EXIF metadata
-      Exiv2::ExifData &exifData = image->exifData();
+      Exiv2::ExifData &exifData = exiv2_buf->image->exifData();
       if(!exifData.empty()) {
         int is_1_65 = -1, is_2_65 = -1; // -1: not found, 0: some random type, 1: D65
         if(FIND_EXIF_TAG("Exif.Image.CalibrationIlluminant1"))
@@ -222,8 +228,34 @@ PF::RawImage::RawImage( const std::string _fname ):
             //printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
             printf("    %.4f %.4f %.4f\n",pdata->color.cam_xyz[k][0],pdata->color.cam_xyz[k][1],pdata->color.cam_xyz[k][2]);
           }
-
         }
+
+        Exiv2::ExifData::const_iterator orient_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.Orientation"));
+        if( orient_pos != exifData.end() && orient_pos->count() == 1 && orient_pos->size() ) {
+          PF::ExifOrientation orientation = (PF::ExifOrientation)orient_pos->toLong(0);
+          switch( orientation ) {
+          case PF_EXIF_ORIENTATION_ROT_90:
+            pdata->sizes.flip = 6; break;
+          case PF_EXIF_ORIENTATION_ROT_180:
+            pdata->sizes.flip = 3; break;
+          case PF_EXIF_ORIENTATION_ROT_270:
+            pdata->sizes.flip = 5; break;
+          default:
+            break;
+          }
+
+          Exiv2::XmpData& xmp_data = exiv2_buf->image->xmpData();
+          exifData["Exif.Image.Orientation"] = static_cast<uint16_t> (PF_EXIF_ORIENTATION_NORMAL);
+          xmp_data["Xmp.tiff.Orientation"] = static_cast<uint16_t> (PF_EXIF_ORIENTATION_NORMAL);
+        }
+
+        // Erase thumbnail data
+        Exiv2::ExifThumb exifThumb(exifData);
+        std::string thumbExt = exifThumb.extension();
+        if(!thumbExt.empty()) {
+          exifThumb.erase();
+        }
+
       }
 
 
@@ -244,6 +276,12 @@ PF::RawImage::RawImage( const std::string _fname ):
       (VipsCallbackFn) g_free, raw_hist,
       sizeof(int)*65535*3 );
 
+
+  vips_image_set_blob( image, "exiv2-data",
+      (VipsCallbackFn) exiv2_free, exiv2_buf, sizeof(PF::exiv2_data_t) );
+
+
+  /*
   // We read the EXIF data and store it in the image as a custom blob
   GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
   gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name_real.c_str(), NULL);
@@ -265,7 +303,7 @@ PF::RawImage::RawImage( const std::string _fname ):
         (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
         sizeof(GExiv2Metadata) );
   }
-
+  */
 
   void* exifdata_buf = malloc( sizeof(exif_data_t) );
   if( !exifdata_buf ) return;
@@ -388,10 +426,14 @@ bool PF::RawImage::load_rawspeed()
 #else
   std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "/rawspeed/cameras.xml";
 #endif
-  std::cout<<"RawImage::RawImage(): RAWSpeed camera file: "<<camfile<<std::endl;
+  std::cout<<"RawImage::load_rawspeed(): RAWSpeed camera file: "<<camfile<<std::endl;
   meta = new RawSpeed::CameraMetaData( camfile.c_str() );
+  std::cout<<"RawImage::load_rawspeed(): meta="<<(void*)meta<<std::endl;
 
-  if( !meta ) return false;
+  if( !meta ) {
+    std::cout<<"RawImage::load_rawspeed(): unable to load camera metadata"<<std::endl;
+    return false;
+  }
 
   //for(int i = 0; i < 4; i++)
   //	for(int j = 0; j < 3; j++)
@@ -423,6 +465,11 @@ bool PF::RawImage::load_rawspeed()
 #else
     m = unique_ptr<RawSpeed::FileMap>(f.readFile());
 #endif
+    std::cout<<"RawImage::load_rawspeed(): FileMap object: "<<(void*)m.get()<<std::endl;
+    //if(!m.get()) {
+    //  std::cout<<"RawImage::load_rawspeed(): unable to create FileMap object"<<std::endl;
+    //  return false;
+    //}
 
     RawSpeed::RawParser t(m.get());
 #ifdef __APPLE__
@@ -431,7 +478,10 @@ bool PF::RawImage::load_rawspeed()
     d = unique_ptr<RawSpeed::RawDecoder>(t.getDecoder(meta));
 #endif
 
-    if(!d.get()) return false;
+    if(!d.get()) {
+      std::cout<<"RawImage::load_rawspeed(): unable to create RawDecoder object"<<std::endl;
+      return false;
+    }
 
     d->failOnUnknown = true;
     d->checkSupport(meta);
@@ -568,15 +618,20 @@ bool PF::RawImage::load_rawspeed()
   size_t pxsize = sizeof(float)*2;
   guint8* rawbuf = (guint8*)malloc( pxsize*iwidth*iheight );
   //#ifndef NDEBUG
-  std::cout<<"Raw buffer allocated: "<<(void*)rawbuf<<std::endl;
+  std::cout<<"Raw buffer allocated: "<<(void*)rawbuf<<"    size: "<<pxsize*iwidth*iheight/(1024*1024)<<"MB"<<std::endl;
+  //if( !rawbuf ) return false;
   //#endif
   /* Normalized raw data to 65535 and build raw histogram
    * */
   // Allocate raw histogram and fill it with zero
   raw_hist = (int*)malloc( 65536*3*sizeof(int) );
+  std::cout<<"Raw histogram buffer allocated: "<<(void*)raw_hist<<std::endl;
+  //if( !raw_hist ) return false;
   memset( raw_hist, 0, 65536*3*sizeof(int) );
 
+  std::cout<<"Initialising rawData structure..."<<std::endl;
   rawData.Init( iwidth, iheight, 0, 0 );
+  std::cout<<"... rawData structure initialised"<<std::endl;
 
   guint8* ptr = rawbuf;
   float* fptr;
@@ -684,20 +739,20 @@ bool PF::RawImage::load_rawspeed()
     }
   }
   rawData.Reset();
-  //getchar();
+  std::cout<<"RawImage: rawData.Reset() called"<<std::endl;
 
 
   std::cout<<"  buffer size: "<<sizeof(float)*iwidth*iheight<<" bytes"<<std::endl;
   VipsImage* ti = vips_image_new_from_memory_copy(
       rawbuf, sizeof(float)*2*iwidth*iheight,
       iwidth, iheight, 2, VIPS_FORMAT_FLOAT );
-#ifndef NDEBUG
-  std::cout<<"Deleting Raw buffer: "<<(void*)rowbuf<<std::endl;
-#endif
+//#ifndef NDEBUG
+  std::cout<<"Deleting Raw buffer: "<<(void*)rawbuf<<std::endl;
+//#endif
   free( rawbuf );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"Raw buffer deleted"<<std::endl;
-#endif
+//#endif
   if( !ti ) {
     std::cout<<"RawImage: ERROR creating Vips image from memory"<<std::endl;
     return false;
@@ -716,12 +771,15 @@ bool PF::RawImage::load_rawspeed()
       NULL );
   g_object_unref( ti );
 
+  std::cout<<"RawImage: after vips_copy()"<<std::endl;
+
   if (!exif_data.camera_maker[0] || !exif_data.camera_model[0] || !exif_data.camera_alias[0]) {
     RawSpeed::Camera *cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "");
     if (!cam) {
       std::cout<<"RawImage: getting rawspeed camera in DNG mode"<<std::endl;
       cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "dng");
     }
+    std::cout<<"RawImage: calling rawspeed_lookup_makermodel()"<<std::endl;
     // We need to use the exif values, so let's get rawspeed to munge them
     rawspeed_lookup_makermodel(cam, exif_data.exif_maker, exif_data.exif_model,
         exif_data.camera_maker, sizeof(exif_data.camera_maker),
@@ -729,6 +787,7 @@ bool PF::RawImage::load_rawspeed()
         exif_data.camera_alias, sizeof(exif_data.camera_alias));
   }
 
+  std::cout<<"RawImage::load_rawspeed() finished"<<std::endl;
   return true;
 }
 
@@ -923,7 +982,6 @@ bool PF::RawImage::load_rawtherapee()
     }
   }
   rawData.Reset();
-  //getchar();
 
 
   std::cout<<"  buffer size: "<<sizeof(float)*iwidth*iheight<<" bytes"<<std::endl;

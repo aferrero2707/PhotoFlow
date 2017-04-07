@@ -345,3 +345,17 @@ void PF::exif_free (gpointer mem)
   g_free( mem );
 }
 
+
+void PF::exiv2_free (gpointer mem)
+{
+#ifndef NDEBUG
+  std::cout<<"Freeing exiv2 data structure"<<std::endl;
+#endif
+  if( mem ) {
+    exiv2_data_t* ptr = (exiv2_data_t*)mem;
+    if(ptr->image.get() != NULL)
+      ptr->image.reset();
+    delete( ptr );
+  }
+}
+
