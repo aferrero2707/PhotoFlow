@@ -26,6 +26,7 @@
     These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
  */
+#include <assert.h>
 #include <string.h>
 
 #include "../base/pf_mkstemp.hh"
@@ -141,6 +142,134 @@ image( NULL )
   image = image_copy;
 
   // We read the EXIF data and store it in the image as a custom blob
+  PF::exiv2_data_t* exiv2_buf = new PF::exiv2_data_t;
+  try
+  {
+    Exiv2::ExifData::const_iterator pos;
+    Exiv2::BasicIo::AutoPtr file (new Exiv2::FileIo (file_name_real));
+    //std::unique_ptr<Exiv2::Image> image(Exiv2::ImageFactory::open(file));
+    exiv2_buf->image = Exiv2::ImageFactory::open(file);
+    assert(exiv2_buf->image.get() != 0);
+    exiv2_buf->image->readMetadata();
+    bool res = true;
+
+    // EXIF metadata
+    Exiv2::ExifData &exifData = exiv2_buf->image->exifData();
+    if(!exifData.empty()) {
+      Exiv2::ExifData::const_iterator orient_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.Orientation"));
+      if( orient_pos != exifData.end() && orient_pos->count() == 1 && orient_pos->size() ) {
+        PF::ExifOrientation orientation = (PF::ExifOrientation)orient_pos->toLong(0);
+        VipsImage* temp = image;
+        switch( orientation ) {
+        case PF_EXIF_ORIENTATION_HFLIP:
+          if( vips_flip( image, &temp, VIPS_DIRECTION_HORIZONTAL, NULL ) ) {
+            PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip() failed." );
+            image = NULL;
+            return;
+          }
+          PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip()." );
+          image = temp;
+          break;
+        case PF_EXIF_ORIENTATION_ROT_180:
+          if( vips_rot( image, &temp, VIPS_ANGLE_D180, NULL ) ) {
+            PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180) failed." );
+            image = NULL;
+            return;
+          }
+          PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180)." );
+          image = temp;
+          break;
+        case PF_EXIF_ORIENTATION_VFLIP:
+          if( vips_flip( image, &temp, VIPS_DIRECTION_VERTICAL, NULL ) ) {
+            PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip() failed." );
+            image = NULL;
+            return;
+          }
+          PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip()." );
+          image = temp;
+          break;
+        case PF_EXIF_ORIENTATION_ROT_90_HFLIP:
+          if( vips_rot( image, &temp, VIPS_ANGLE_D90, NULL ) ) {
+            PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180) failed." );
+            image = NULL;
+            return;
+          }
+          PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180)." );
+          image = temp;
+          if( vips_flip( image, &temp, VIPS_DIRECTION_HORIZONTAL, NULL ) ) {
+            PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip() failed." );
+            image = NULL;
+            return;
+          }
+          PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip()." );
+          image = temp;
+          break;
+        case PF_EXIF_ORIENTATION_ROT_90:
+          if( vips_rot( image, &temp, VIPS_ANGLE_D90, NULL ) ) {
+            PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180) failed." );
+            image = NULL;
+            return;
+          }
+          PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180)." );
+          image = temp;
+          break;
+        case PF_EXIF_ORIENTATION_ROT_90_VFLIP:
+          if( vips_rot( image, &temp, VIPS_ANGLE_D90, NULL ) ) {
+            PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180) failed." );
+            image = NULL;
+            return;
+          }
+          PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(180)." );
+          image = temp;
+          if( vips_flip( image, &temp, VIPS_DIRECTION_VERTICAL, NULL ) ) {
+            PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip() failed." );
+            image = NULL;
+            return;
+          }
+          PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_flip()." );
+          image = temp;
+          break;
+        case PF_EXIF_ORIENTATION_ROT_270:
+          if( vips_rot( image, &temp, VIPS_ANGLE_D270, NULL ) ) {
+            PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(270) failed." );
+            image = NULL;
+            return;
+          }
+          PF_UNREF( image, "RasterImage::RasterImage(): image unref after vips_rot(270)." );
+          image = temp;
+          break;
+        default:
+          break;
+        }
+
+        Exiv2::XmpData& xmp_data = exiv2_buf->image->xmpData();
+        exifData["Exif.Image.Orientation"] = static_cast<uint16_t> (PF_EXIF_ORIENTATION_NORMAL);
+        xmp_data["Xmp.tiff.Orientation"] = static_cast<uint16_t> (PF_EXIF_ORIENTATION_NORMAL);
+      }
+
+      // Erase thumbnail data
+      Exiv2::ExifThumb exifThumb(exifData);
+      std::string thumbExt = exifThumb.extension();
+      if(!thumbExt.empty()) {
+        exifThumb.erase();
+      }
+
+    }
+
+
+  }
+  catch(Exiv2::AnyError &e)
+  {
+    std::string s(e.what());
+    std::cerr << "[exiv2] " << file_name_real << ": " << s << std::endl;
+    //return 1;
+  }
+
+  vips_image_set_blob( image, "exiv2-data",
+      (VipsCallbackFn) exiv2_free, exiv2_buf, sizeof(PF::exiv2_data_t) );
+
+
+  /*
   GExiv2Metadata* gexiv2_buf = gexiv2_metadata_new();
   gboolean gexiv2_success = gexiv2_metadata_open_path(gexiv2_buf, file_name_real.c_str(), NULL);
   if( gexiv2_success ) {
@@ -234,6 +363,7 @@ image( NULL )
         (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
         sizeof(GExiv2Metadata) );
   }
+  */
 
 
   PF::exif_read( &exif_data, file_name_real.c_str() );

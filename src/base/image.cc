@@ -34,6 +34,7 @@
 
 #include "fileutils.hh"
 //#include "pf_mkstemp.hh"
+#include "exif_data.hh"
 #include "image.hh"
 #include "imageprocessor.hh"
 #include "pf_file_loader.hh"
@@ -1049,6 +1050,29 @@ void PF::Image::do_export_merged( std::string filename )
     /**/
 
     if( saved ) {
+
+      try {
+        PF::exiv2_data_t* exiv2_buf;
+        size_t exiv2_buf_length;
+        if( vips_image_get_blob( outimg, "exiv2-data",
+            (void**)(&exiv2_buf), &exiv2_buf_length ) )
+          exiv2_buf = NULL;
+        if( exiv2_buf && (exiv2_buf_length==sizeof(PF::exiv2_data_t)) && exiv2_buf->image.get() != NULL ) {
+          Exiv2::BasicIo::AutoPtr file (new Exiv2::FileIo (filename));
+          Exiv2::Image::AutoPtr exiv2_image = Exiv2::ImageFactory::open(file);
+          if(exiv2_image.get() != 0) {
+            //exiv2_image->readMetadata();
+            exiv2_image->setExifData( exiv2_buf->image->exifData() );
+            exiv2_image->writeMetadata();
+          }
+        }
+      } catch(Exiv2::AnyError &e) {
+        std::string s(e.what());
+        std::cerr << "[exiv2] " << filename << ": " << s << std::endl;
+        //return 1;
+      }
+
+      /*
       void* gexiv2_buf;
       size_t gexiv2_buf_length;
       if( vips_image_get_blob( outimg, "gexiv2-data",
@@ -1057,6 +1081,7 @@ void PF::Image::do_export_merged( std::string filename )
       if( gexiv2_buf && (gexiv2_buf_length==sizeof(GExiv2Metadata)) ) {
         gexiv2_metadata_save_file( (GExiv2Metadata*)gexiv2_buf, filename.c_str(), NULL );
       }
+      */
     }
 
     if( outimg ) {
@@ -1193,6 +1218,7 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
     ICCProfile* iccinfo  = get_icc_profile( outimg );
     if( iccinfo ) imgbuf->trc_type = iccinfo->get_trc_type();
 
+    /*
     void* gexiv2_buf;
     size_t gexiv2_buf_length;
     if( !vips_image_get_blob( outimg, "gexiv2-data",
@@ -1206,6 +1232,7 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
     } else {
       imgbuf->exif_buf = NULL;
     }
+    */
 
     msg = std::string("PF::Image::export_merged_to_mem(): outimg unref");
     PF_UNREF( outimg, msg.c_str() );
