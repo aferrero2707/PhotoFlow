@@ -241,8 +241,10 @@ VipsImage* PF::LensFunParStep::build(std::vector<VipsImage*>& in, int first,
     const lfCamera *camera = cameras[0];
     lf_free (cameras);
 
-    prop_camera_maker = camera->Maker;
-    prop_camera_model = camera->Model;
+    if( camera ) {
+      prop_camera_maker = camera->Maker;
+      prop_camera_model = camera->Model;
+    }
 
     /*
     const lfLens **lenses = ldb->FindLenses (camera, NULL, exif_data->exif_lens);
@@ -259,7 +261,7 @@ VipsImage* PF::LensFunParStep::build(std::vector<VipsImage*>& in, int first,
     */
 
     const lfLens *lens = PF::lf_get_lens( in[0], ldb );
-    prop_lens = lens->Model;
+    if( lens ) prop_lens = lens->Model;
   }
 #endif
 
