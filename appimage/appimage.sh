@@ -28,6 +28,9 @@ mv ./usr/bin/$LOWERAPP ./usr/bin/$LOWERAPP.real
 cat > usr/bin/$LOWERAPP <<\EOF
 #! /bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
+echo $LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$HERE/../lib:$HERE/../lib/x86_64-linux-gnu:$HERE/../../lib:$LD_LIBRARY_PATH
+ldd "$HERE/LOWERAPP.real"
 echo -n "$HERE/LOWERAPP.real "
 echo "$@"
 $HERE/LOWERAPP.real "$@"
