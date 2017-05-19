@@ -951,6 +951,13 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     wb_blue_mul = rgb_avg[1]/rgb_avg[2];
     wb_green_mul = 1;
 
+    // Limit the values of correction coefficients
+    // to compensate for non-linear RGB values
+    if(wb_red_mul > 1.5) wb_red_mul = 1.5;
+    if(wb_blue_mul > 1.5) wb_blue_mul = 1.5;
+    if(wb_red_mul < 0.66) wb_red_mul = 0.66;
+    if(wb_blue_mul < 0.66) wb_blue_mul = 0.66;
+
     PropertyBase* wb_red_prop = wbRedSlider.get_prop();
     PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
     PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
@@ -965,11 +972,11 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       float wb_green_out = wb_green_mul*wb_green_in;
       float wb_blue_out = wb_blue_mul*wb_blue_in;
       float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
-      scale = 1;
-      //std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-      //				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-      //				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
-      //std::cout<<"  scale: "<<scale<<std::endl;
+      //scale = 1;
+      std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+      				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+      				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      std::cout<<"  scale: "<<scale<<std::endl;
       //float scale = wb_green_mul;
       wb_red_out /= scale;
       wb_green_out /= scale;
@@ -978,9 +985,9 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
       wb_green_prop->update( wb_green_out );
       wb_blue_prop->update( wb_blue_out );
 
-      //std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-      //				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-      //				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+      				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+      				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
       wbRedSlider.init();
       wbGreenSlider.init();
