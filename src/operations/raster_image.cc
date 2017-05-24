@@ -45,15 +45,18 @@ image( NULL )
   if( ifd < 0 ) {
     char* fullpath = strdup( file_name_real.c_str() );
     gchar* fname = g_path_get_basename( fullpath );
-    ifd = open( fname, O_RDONLY );
+    gchar* fname2 = g_build_filename( PF::PhotoFlow::Instance().get_current_image_dir().c_str(),
+        fname, NULL );
+    ifd = open( fname2, O_RDONLY );
     if( ifd < 0 ) {
       std::cout<<"RasterImage::RasterImage(): \""<<file_name<<"\" not found"<<std::endl;
       return;
     } else {
       close(ifd);
     }
-    file_name_real = fname;
+    file_name_real = fname2;
     g_free( fname );
+    g_free( fname2 );
   } else {
     close(ifd);
   }
