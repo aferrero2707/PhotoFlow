@@ -70,6 +70,7 @@ namespace PF
     std::string data_dir;
     std::string lensfun_db_dir;
     std::string locale_dir;
+    std::string current_image_dir;
 
     int preview_pipeline_id;
 
@@ -124,6 +125,9 @@ namespace PF
 
     std::string get_cache_dir() { return cache_dir; }
     std::string get_config_dir() { return config_dir; }
+
+    void set_current_image_dir(std::string d) { current_image_dir = d; }
+    std::string get_current_image_dir() { return current_image_dir; }
 
     void close();
 

@@ -36,6 +36,7 @@
 PF::Options::Options()
 {
   display_profile_type = PF::PF_DISPLAY_PROF_sRGB;
+  save_sidecar_files = 0;
 }
 
 void PF::Options::set_display_profile_type(int t)
@@ -70,6 +71,12 @@ void PF::Options::load()
         }
       }
 
+      if (keyFile.has_group ("Output")) {
+        if (keyFile.has_key ("Output", "save_sidecar_files")) {
+          save_sidecar_files = keyFile.get_integer ("Output", "save_sidecar_files");
+        }
+      }
+
       if (keyFile.has_group ("Color Management")) {
         if (keyFile.has_key ("Color Management", "DisplayProfileType")) {
           int keyval = keyFile.get_integer ("Color Management", "DisplayProfileType");
@@ -89,6 +96,7 @@ void PF::Options::load()
     printf("Options::readFromFile / Unknown exception while trying to load \"%s\"!\n", fname.c_str());
   }
   std::cout<<"... custom settings loaded."<<std::endl; //getchar();
+  std::cout<<"get_save_sidecar_files(): "<<get_save_sidecar_files()<<std::endl;
 }
 
 
@@ -103,6 +111,8 @@ void PF::Options::save()
   keyFile.set_string ("Folders", "last_visited_image_folder", last_visited_image_folder);
   keyFile.set_string ("Folders", "last_visited_preset_folder", last_visited_preset_folder);
   keyFile.set_string ("Folders", "last_visited_icc_folder", last_visited_icc_folder);
+
+  keyFile.set_integer ("Output", "save_sidecar_files", (int)save_sidecar_files);
 
   keyFile.set_integer ("Color Management", "DisplayProfileType", (int)display_profile_type);
   keyFile.set_string ("Color Management", "CustomDisplayProfileName", custom_display_profile_name);
