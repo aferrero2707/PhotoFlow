@@ -201,7 +201,9 @@ void PF::CacheBuffer::step()
 
 
   if( completed ) {
+#ifndef NDEBUG
     std::cout<<"CacheBuffer:  size: "<<imgsz/1024/1024<<"MB (max="<<imgmax/1024/1024<<"MB)"<<std::endl;
+#endif
     /*
     void *profile_data;
     size_t profile_length;
@@ -283,7 +285,9 @@ void PF::CacheBuffer::step()
 */
 
     pyramid.init( cached );
+#ifndef NDEBUG
     std::cout<<"CacheBuffer: caching completed"<<std::endl;
+#endif
     result = true;
   }
 
@@ -325,7 +329,9 @@ void PF::CacheBuffer::step_cb(int x0, int y0, guchar* buf)
 
 void PF::CacheBuffer::write()
 {
+#ifndef NDEBUG
   std::cout<<"CacheBuffer::write(): complete="<<completed<<"  image="<<image<<std::endl;
+#endif
   if( completed ) return;
   if( !image ) return;
 
@@ -342,7 +348,9 @@ void PF::CacheBuffer::write()
   }
   if( fd < 0 ) return;
 
+#ifndef NDEBUG
   std::cout<<"CacheBuffer::write(): saving image 0x"<<image<<" into "<<filename<<std::endl;
+#endif
 
   int fail = vips_rawsave_fd( image, fd, NULL );
   if( fail ) {

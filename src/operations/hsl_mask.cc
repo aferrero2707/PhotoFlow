@@ -87,7 +87,9 @@ VipsImage* PF::HSLMaskPar::build(std::vector<VipsImage*>& in, int first,
 
   for( int id = 0; id < 3; id++ ) {
     if( eq_vec[id]->is_modified() ) {
+#ifndef NDEBUG
       std::cout<<"HSLMaskPar::build(): updating curve #"<<id<<std::endl;
+#endif
       update_curve( eq_vec[id], vec[id] );
     }
     eq_enabled[id] = false;

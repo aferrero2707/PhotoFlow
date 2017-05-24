@@ -114,7 +114,9 @@ void PF::ControlsGroup::populate()
   editor->get_image()->get_layer_manager().get_flattened_layers_tree( layers );
 
   // loop over the layers, and re-insert in the controls group those that are in the guis list
+#ifndef NDEBUG
   std::cout<<"ControlsGroup::update(): layers.size()="<<layers.size()<<std::endl;
+#endif
   for( std::list<Layer*>::reverse_iterator li = layers.rbegin(); li != layers.rend(); li++ ) {
     PF::Layer* l = *li;
     PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
@@ -127,7 +129,9 @@ void PF::ControlsGroup::populate()
             pack_start( *control, Gtk::PACK_SHRINK );
             PF::OpParBase* par = gui->get_par();
             if( gui->is_expanded() && par ) {
+#ifndef NDEBUG
               std::cout<<"ControlsGroup::remove_control(): resetting editing flag"<<std::endl;
+#endif
               par->set_editing_flag( true );
               //get_layer()->get_image()->update();
             }
@@ -145,20 +149,26 @@ void PF::ControlsGroup::populate()
 
 void PF::ControlsGroup::update()
 {
+#ifndef NDEBUG
   std::cout<<"ControlsGroup::update() called"<<std::endl;
+#endif
   editor->get_image()->lock();
   for( unsigned int i = 0; i < guis.size(); i++ ) {
     guis[i]->update();
   }
   editor->get_image()->unlock();
+#ifndef NDEBUG
   std::cout<<"ControlsGroup::update() finished"<<std::endl;
+#endif
 }
 
 
 void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gui)
 {
+#ifndef NDEBUG
   std::cout<<std::endl<<std::endl;
   std::cout<<"ControlsGroup::add_control() called."<<std::endl;
+#endif
   //editor->get_image()->rebuild_lock();
   //editor->get_image()->rebuild_done_wait( false );
   // Make sure the image is not being rebuilt
@@ -187,8 +197,10 @@ void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gu
   editor->get_image()->unlock();
   populate();
   editor->update_controls();
+#ifndef NDEBUG
   std::cout<<"ControlsGroup::add_control(): needs_update="<<needs_update
       <<" gui->has_editing_mode()="<<gui->has_editing_mode()<<std::endl;
+#endif
   if( needs_update || gui->has_editing_mode() )
     editor->get_image()->update();
 }
@@ -197,25 +209,35 @@ void PF::ControlsGroup::add_control(PF::Layer* layer, PF::OperationConfigGUI* gu
 void PF::ControlsGroup::remove_control(PF::OperationConfigGUI* gui)
 {
   Gtk::Frame* control = gui->get_frame();
+#ifndef NDEBUG
   std::cout<<"ControlsGroup::remove_control() called."<<std::endl;
+#endif
   if( control->get_parent() == this ) {
     PF::OpParBase* par = gui->get_par();
     if( par ) {
+#ifndef NDEBUG
       std::cout<<"ControlsGroup::remove_control(): resetting editing flag"<<std::endl;
+#endif
       par->set_editing_flag( false );
       //get_layer()->get_image()->update();
     }
     std::vector<PF::OperationConfigGUI*> new_guis;
     std::vector<Gtk::Frame*> new_controls;
     for( unsigned int i = 0; i < controls.size(); i++ ) {
+#ifndef NDEBUG
       std::cout<<"  controls["<<i<<"]="<<controls[i]<<" (control="<<control<<")"<<std::endl;
+#endif
       if( controls[i] == control )
         continue;
+#ifndef NDEBUG
       std::cout<<"  new_controls.push_back("<<controls[i]<<")"<<std::endl;
+#endif
       new_guis.push_back( guis[i] );
       new_controls.push_back( controls[i] );
     }
+#ifndef NDEBUG
     std::cout<<"ControlsGroup::remove_control(): controls.size()="<<controls.size()<<"  new_controls.size()="<<new_controls.size()<<std::endl;
+#endif
     guis = new_guis;
     controls = new_controls;
     remove( *control );
@@ -506,12 +528,12 @@ void PF::LayerWidget::on_map()
 
 void PF::LayerWidget::on_selection_changed()
 {
-//#ifndef NDEBUG
   //int page = notebook.get_current_page();
   int page = active_view;
   if( page < 0 ) return;
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_chaged() called, page="<<page<<std::endl;
-//#endif
+#endif
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
       layer_views[page]->get_tree().get_selection();
   /*
@@ -522,9 +544,9 @@ void PF::LayerWidget::on_selection_changed()
   }
 */
   int layer_id = get_selected_layer_id();
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_changed(): selected layer id="<<layer_id<<std::endl;
-//#endif
+#endif
 
   std::vector<Gtk::TreeModel::Path> selected_rows = refTreeSelection->get_selected_rows();
 #ifndef NDEBUG
@@ -532,9 +554,13 @@ void PF::LayerWidget::on_selection_changed()
 #endif
   std::vector<Gtk::TreeModel::Path>::iterator row_it = selected_rows.begin();
   if( row_it == selected_rows.end() ) {
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_selection_changed(): calling controls_group.remove_all_controls()"<<std::endl;
+#endif
     controls_group.remove_all_controls();
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_selection_changed(): emitting signal_edited_layer_changed(-1)"<<std::endl;
+#endif
     signal_edited_layer_changed.emit( -1 );
     return;
   }
@@ -545,11 +571,10 @@ void PF::LayerWidget::on_selection_changed()
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"Selected row "<<l->get_name()<<std::endl;
-//#endif
-
     std::cout<<"LayerWidget::on_selection_changed(): emitting signal_edited_layer_changed("<<layer_id<<")"<<std::endl;
+#endif
     signal_edited_layer_changed.emit( layer_id );
     if( PF::PhotoFlow::Instance().is_single_win_mode() ) {
       PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
@@ -594,9 +619,13 @@ void PF::LayerWidget::on_selection_changed()
   } else {
     if( page == 0 )
       selected_layer_id = -1;
-   std::cout<<"LayerWidget::on_selection_changed(): calling controls_group.remove_all_controls()"<<std::endl;
+#ifndef NDEBUG
+    std::cout<<"LayerWidget::on_selection_changed(): calling controls_group.remove_all_controls()"<<std::endl;
+#endif
     controls_group.remove_all_controls();
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_selection_changed(): emitting signal_edited_layer_changed(-1)"<<std::endl;
+#endif
     signal_edited_layer_changed.emit( -1 );
   }
 
@@ -667,11 +696,15 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
+#ifndef NDEBUG
     std::cout<<"Activated row "<<l->get_name()<<std::endl;
+#endif
     if( column == layer_views[page]->get_tree().get_column(IMAP_COL_NUM) ) {
       if( !l->get_processor()->get_par()->has_intensity() )
         return;
+#ifndef NDEBUG
       std::cout<<"Activated IMap column of row "<<l->get_name()<<std::endl;
+#endif
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
       int tab_id = -1;//get_map_tab( &(l->get_imap_layers()) );
@@ -719,7 +752,9 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     if( column == layer_views[page]->get_tree().get_column(OMAP_COL_NUM) ) {
       if( !l->get_processor()->get_par()->has_opacity() )
         return;
+#ifndef NDEBUG
       std::cout<<"Activated OMap column of row "<<l->get_name()<<std::endl;
+#endif
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
       int tab_id = -1;//get_map_tab( &(l->get_omap_layers()) );
@@ -789,7 +824,9 @@ void PF::LayerWidget::on_row_expanded( const Gtk::TreeModel::iterator& iter, con
   int page = active_view;
   if( page < 0 ) return;
   if (iter) {
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_row_expanded() called"<<std::endl;
+#endif
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
@@ -809,7 +846,9 @@ void PF::LayerWidget::on_row_collapsed( const Gtk::TreeModel::iterator& iter, co
   int page = active_view;
   if( page < 0 ) return;
   if (iter) {
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_row_collapsed() called"<<std::endl;
+#endif
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
@@ -899,7 +938,9 @@ void PF::LayerWidget::select_row(int id)
   Gtk::TreeModel::iterator iter;
   if( get_row( id, iter ) ) {
     refTreeSelection->select( iter );
+#ifndef NDEBUG
     std::cout<<"LayerWidget::select_row("<<id<<"): emitting signal_edited_layer_changed"<<std::endl;
+#endif
     signal_edited_layer_changed.emit( id );
   }
 }
@@ -1106,14 +1147,17 @@ void PF::LayerWidget::on_button_add_image()
   switch(result) {
   case(Gtk::RESPONSE_OK):
         {
+#ifndef NDEBUG
     std::cout << "Open clicked." << std::endl;
-
+#endif
     last_dir = dialog.get_current_folder();
     PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
 
     //Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
+#ifndef NDEBUG
     std::cout << "File selected: " <<  filename << std::endl;
+#endif
     char* fullpath = realpath( filename.c_str(), NULL );
     if(!fullpath)
       return;
@@ -1123,11 +1167,15 @@ void PF::LayerWidget::on_button_add_image()
         }
   case(Gtk::RESPONSE_CANCEL):
         {
+#ifndef NDEBUG
     std::cout << "Cancel clicked." << std::endl;
+#endif
     break;
         }
   default:
+#ifndef NDEBUG
     std::cout << "Unexpected button clicked." << std::endl;
+#endif
     break;
   }
 }
@@ -1148,10 +1196,10 @@ void PF::LayerWidget::add_layer( PF::Layer* layer, bool do_update )
   layer->get_blender()->get_par()->
     set_map_flag( is_map );
     
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<std::endl<<std::endl;
   std::cout<<"LayerWidget::add_layer(): layer_views.size()="<<layer_views.size()<<"  page="<<page<<std::endl;
-//#endif
+#endif
 
   Glib::RefPtr<Gtk::TreeStore> model = layer_views[page]->get_model();
 
@@ -1161,7 +1209,9 @@ void PF::LayerWidget::add_layer( PF::Layer* layer, bool do_update )
       refTreeSelection->get_selected_rows();
   Gtk::TreeModel::iterator iter;
   if( !sel_rows.empty() ) {
+#ifndef NDEBUG
     std::cout<<"LayerWidget::add_layer(): Selected path: "<<sel_rows[0].to_string()<<std::endl;
+#endif
     iter = model->get_iter( sel_rows[0] );
   }
   if(iter) {//If anything is selected
@@ -1178,19 +1228,25 @@ void PF::LayerWidget::add_layer( PF::Layer* layer, bool do_update )
       image->get_layer_manager().modified();
     } else {
 
+#ifndef NDEBUG
       std::cout<<"LayerWidget::add_layer(): Adding layer \""<<layer->get_name()
                        <<" above layer \""<<l->get_name()<<"\""<<std::endl;
+#endif
 
       //image->get_layer_manager().insert_layer( layer, l->get_id() );
       PF::insert_layer( *(layer_views[page]->get_layers()), layer, l->get_id() );
     }
   } else {
     // Nothing selected, we add the layer on top of the stack
+#ifndef NDEBUG
     std::cout<<"LayerWidget::add_layer(): Adding layer \""<<layer->get_name()
                      <<"\" on top of stack"<<std::endl;
+#endif
     //image->get_layer_manager().insert_layer( layer );
     PF::insert_layer( *(layer_views[page]->get_layers()), layer, -1 );
+#ifndef NDEBUG
     std::cout<<"LayerWidget::add_layer(): layer_views[page]->get_layers()->size()="<<layer_views[page]->get_layers()->size()<<std::endl;
+#endif
   }
 
   if( do_update ) {
@@ -1202,7 +1258,9 @@ void PF::LayerWidget::add_layer( PF::Layer* layer, bool do_update )
     if( ui ) ui->set_editor( editor );
   }
      */
+#ifndef NDEBUG
     std::cout<<"LayerWidget::add_layer(): calling update() to update layers tree"<<std::endl;
+#endif
     update();
     //std::cout<<"LayerWidget::add_layer(): image update request submitted"<<std::endl;
 
@@ -1215,14 +1273,20 @@ void PF::LayerWidget::add_layer( PF::Layer* layer, bool do_update )
       PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if( gui && gui->get_frame() ) {
         controls_group.add_control( layer, gui );
+#ifndef NDEBUG
         std::cout<<"LayerWidget::add_layer(): calling gui->open()"<<std::endl;
+#endif
         gui->open();
+#ifndef NDEBUG
         std::cout<<"LayerWidget::add_layer(): calling gui->expand()"<<std::endl;
+#endif
         gui->expand();
       }
       controls_group.show_all_children();
     }
+#ifndef NDEBUG
     std::cout<<"LayerWidget::add_layer(): calling image->get_layer_manager().modified()"<<std::endl;
+#endif
     image->get_layer_manager().modified();
   }
 }
@@ -1331,7 +1395,9 @@ void PF::LayerWidget::insert_preset( std::string filename )
     refTreeSelection->get_selected_rows();
   Gtk::TreeModel::iterator iter;
   if( !sel_rows.empty() ) {
+#ifndef NDEBUG
     std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
+#endif
     iter = model->get_iter( sel_rows[0] );
   }
   if(iter) {//If anything is selected
@@ -1348,8 +1414,10 @@ void PF::LayerWidget::insert_preset( std::string filename )
       image->get_layer_manager().modified();
     } else {
       
+#ifndef NDEBUG
       std::cout<<"Adding preset \""<<filename<<"\""
                <<" above layer \""<<l->get_name()<<"\""<<std::endl;
+#endif
       
       //image->get_layer_manager().insert_layer( layer, l->get_id() );
       PF::insert_pf_preset( filename, image, l, layer_views[page]->get_layers(), layer_views[page]->is_map() );
@@ -1419,7 +1487,9 @@ void PF::LayerWidget::close_map_tabs( Layer* l )
 void PF::LayerWidget::detach_controls( Layer* l )
 {
   if( !l ) return;
+#ifndef NDEBUG
   std::cout<<"LayerWidget::detach_controls(\""<<l->get_name()<<"\") called."<<std::endl;
+#endif
   PF::ProcessorBase* processor = l->get_processor();
   if( processor ) {
     PF::OpParBase* par = processor->get_par();
@@ -1429,7 +1499,9 @@ void PF::LayerWidget::detach_controls( Layer* l )
           dynamic_cast<PF::OperationConfigGUI*>( ui );
       if( gui ) {
         get_controls_group().remove_control( gui );
+#ifndef NDEBUG
         std::cout<<"LayerWidget::detach_controls(\""<<l->get_name()<<"\"): controls removed."<<std::endl;
+#endif
         if( editor ) {
           if( editor->get_aux_controls() == &(gui->get_aux_controls()) )
             editor->set_aux_controls( NULL );
@@ -1446,7 +1518,9 @@ void PF::LayerWidget::detach_controls( Layer* l )
 
 void PF::LayerWidget::detach_controls( std::list<Layer*>& layers )
 {
+#ifndef NDEBUG
   std::cout<<"LayerWidget::detach_controls( std::list<Layer*>& layers ): layers.size()="<<layers.size()<<std::endl;
+#endif
   for( std::list<Layer*>::iterator li = layers.begin(); li != layers.end(); li++ ) {
     if( !(*li) ) continue;
     detach_controls( *li );
@@ -1458,7 +1532,9 @@ void PF::LayerWidget::detach_controls( std::list<Layer*>& layers )
 void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
 {
   if( !l ) return;
+#ifndef NDEBUG
   std::cout<<"LayerWidget::unset_sticky_and_editing(\""<<l->get_name()<<"\") called."<<std::endl;
+#endif
 
   if( editor ) {
     //if( editor->get_edited_layer() == l->get_id() )
@@ -1475,7 +1551,9 @@ void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
 
 void PF::LayerWidget::unset_sticky_and_editing( std::list<Layer*>& layers )
 {
+#ifndef NDEBUG
   std::cout<<"LayerWidget::unset_sticky_and_editing( std::list<Layer*>& layers ): layers.size()="<<layers.size()<<std::endl;
+#endif
   for( std::list<Layer*>::iterator li = layers.begin(); li != layers.end(); li++ ) {
     if( !(*li) ) continue;
     unset_sticky_and_editing( *li );
@@ -1505,10 +1583,10 @@ void PF::LayerWidget::remove_layers()
   bool force_synced_update = image->get_force_synced_update();
   image->set_force_synced_update( true );
 
-  if( !sel_rows.empty() ) {
+#ifndef NDEBUG
+  if( !sel_rows.empty() )
     std::cout<<"Selected path: "<<sel_rows[0].to_string()<<std::endl;
-  }
-
+#endif
   // Clear the selection, since we are going to remove all selected layers
   //layer_views[page]->select_row( -1 );
   refTreeSelection->unselect_all();
@@ -1534,9 +1612,13 @@ void PF::LayerWidget::remove_layers()
     //std::cout<<"Calling close_map_tabs(\""<<l->get_name()<<"\")"<<std::endl;
     //close_map_tabs( l );
 
+#ifndef NDEBUG
     std::cout<<"LayerWidget::remove_layers(): calling image->remove_layer(\""<<l->get_name()<<"\")"<<std::endl;
+#endif
     image->remove_layer( l );
+#ifndef NDEBUG
     std::cout<<"LayerWidget::remove_layers(): calling image->get_layer_manager().modified()"<<std::endl;
+#endif
     removed = true;
   }
 
@@ -1546,13 +1628,19 @@ void PF::LayerWidget::remove_layers()
     if( editor ) {
       //std::cout<<"LayerWidget::remove_layers(): editor->get_edited_layer()="<<editor->get_edited_layer()<<"  l->get_id()="<<l->get_id()<<std::endl;
       //if( editor && (editor->get_edited_layer() == (int)(l->get_id())) ) {
+#ifndef NDEBUG
       std::cout<<"LayerWidget::remove_layers(): editor->set_edited_layer( -1 );"<<std::endl;
+#endif
       editor->set_edited_layer( -1 );
       //}
     }
+#ifndef NDEBUG
     std::cout<<"LayerWidget::remove_layers(): calling update()"<<std::endl;
+#endif
     update();
+#ifndef NDEBUG
     std::cout<<"LayerWidget::remove_layers(): update() finished"<<std::endl;
+#endif
   }
 
   // restore the previous state
@@ -1586,7 +1674,9 @@ void PF::LayerWidget::switch_to_mask_view()
 
 void PF::LayerWidget::toggle_mask()
 {
+#ifndef NDEBUG
   std::cout<<"Toggling mask visualization "<<(mask_view_show_button.get_active()?"ON":"OFF")<<std::endl;
+#endif
   editor->set_display_mask( mask_view_show_button.get_active() );
 }
 
@@ -1602,7 +1692,9 @@ void PF::LayerWidget::on_button_add_group()
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
       layer_views[page]->get_tree().get_selection();
 
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_button_add_group(): refTreeSelection->count_selected_rows()="<<refTreeSelection->count_selected_rows()<<std::endl;
+#endif
 
   Glib::RefPtr<Gtk::TreeStore> model = layer_views[page]->get_model();
   std::vector<Gtk::TreeModel::Path> sel_rows =
@@ -1654,9 +1746,13 @@ void PF::LayerWidget::on_button_add_group()
       l->get_processor()->get_par()->modified();
 
       layer_manager.remove_layer( l );
+#ifndef NDEBUG
       std::cout<<"LayerWidget::on_button_add_group(): layer \""<<l->get_name()<<"\" removed"<<std::endl;
+#endif
       layer->sublayers_insert( l, -1 );
+#ifndef NDEBUG
       std::cout<<"LayerWidget::on_button_add_group(): layer \""<<l->get_name()<<"\" added to group"<<std::endl;
+#endif
     }
     //layer_manager.modified();
     image->unlock();
@@ -1677,7 +1773,9 @@ if( layer->get_processor() && layer->get_processor()->get_par() ) {
   //update();
   //std::cout<<"LayerWidget::on_button_add_group(): image update request submitted"<<std::endl;
 
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_button_add_group(): calling update() to update layers tree"<<std::endl;
+#endif
   update();
   //std::cout<<"LayerWidget::add_layer(): image update request submitted"<<std::endl;
 
@@ -1690,14 +1788,20 @@ if( layer->get_processor() && layer->get_processor()->get_par() ) {
     PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
     if( gui && gui->get_frame() ) {
       controls_group.add_control( layer, gui );
+#ifndef NDEBUG
       std::cout<<"LayerWidget::on_button_add_group(): calling gui->open()"<<std::endl;
+#endif
       gui->open();
+#ifndef NDEBUG
       std::cout<<"LayerWidget::on_button_add_group(): calling gui->expand()"<<std::endl;
+#endif
       gui->expand();
     }
     controls_group.show_all_children();
   }
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_button_add_group(): calling image->get_layer_manager().modified()"<<std::endl;
+#endif
   image->get_layer_manager().modified();
 
   /*
@@ -1799,7 +1903,9 @@ void PF::LayerWidget::on_button_load()
 
       //Notice that this is a std::string, not a Glib::ustring.
       filename = dialog.get_filename();
+#ifndef NDEBUG
       std::cout << "File selected: " <<  filename << std::endl;
+#endif
       break;
     }
   case(Gtk::RESPONSE_CANCEL): 
@@ -1877,7 +1983,9 @@ void PF::LayerWidget::on_button_save()
         if( extension != "pfp" )
           filename += ".pfp";
       }
+#ifndef NDEBUG
       std::cout << "File selected: " <<  filename << std::endl;
+#endif
       break;
     }
   case(Gtk::RESPONSE_CANCEL): 
@@ -1933,7 +2041,9 @@ void PF::LayerWidget::save_preset(std::string filename)
       }
       if( selected ) {
         PF::Layer* pl = (*parent)[columns.col_layer];
+#ifndef NDEBUG
         if(l) std::cout<<"PF::LayerWidget::on_button_save(): container of layer \""<<l->get_name()<<"\" is selected... skipped."<<std::endl;
+#endif
         continue;
       }
     }
@@ -1941,7 +2051,9 @@ void PF::LayerWidget::save_preset(std::string filename)
 
     int level = 1;
     if( !l->save( of, level ) ) return;      
+#ifndef NDEBUG
     std::cout<<"PF::LayerWidget::on_button_save(): layer \""<<l->get_name()<<"\" saved."<<std::endl;
+#endif
   }
   of<<"</preset>"<<std::endl;
 }

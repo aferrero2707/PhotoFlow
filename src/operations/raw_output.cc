@@ -49,26 +49,26 @@ extern "C" {
 
 
 PF::RawOutputPar::RawOutputPar(): 
-          OpParBase(),
-          image_data( NULL ),
-          exposure("exposure",this,1),
-          exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
-          exposure_clip_amount("exposure_clip_amount",this,0),
-          hlreco_mode("hlreco_mode",this,PF::HLRECO_CLIP,"HLRECO_CLIP",_("clip")),
-          profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
-          //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
-          current_profile_mode( IN_PROF_MATRIX ),
-          gamma_curve( NULL ),
-          cam_profile_name("cam_profile_name", this),
-          cam_profile( NULL ),
-          gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","linear"),
-          gamma_lin("gamma_lin", this, 0),
-          gamma_exp("gamma_exp", this, 2.2),
-          out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","sRGB"),
-          current_out_profile_mode( OUT_PROF_sRGB ),
-          out_profile_name("out_profile_name", this),
-          out_profile( NULL ),
-          transform( NULL )
+              OpParBase(),
+              image_data( NULL ),
+              exposure("exposure",this,1),
+              exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
+              exposure_clip_amount("exposure_clip_amount",this,0),
+              hlreco_mode("hlreco_mode",this,PF::HLRECO_CLIP,"HLRECO_CLIP",_("clip")),
+              profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
+              //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
+              current_profile_mode( IN_PROF_MATRIX ),
+              gamma_curve( NULL ),
+              cam_profile_name("cam_profile_name", this),
+              cam_profile( NULL ),
+              gamma_mode("gamma_mode",this,PF::IN_GAMMA_NONE,"NONE","linear"),
+              gamma_lin("gamma_lin", this, 0),
+              gamma_exp("gamma_exp", this, 2.2),
+              out_profile_mode("out_profile_mode",this,PF::OUT_PROF_sRGB,"sRGB","sRGB"),
+              current_out_profile_mode( OUT_PROF_sRGB ),
+              out_profile_name("out_profile_name", this),
+              out_profile( NULL ),
+              transform( NULL )
 {
   exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
 
@@ -102,12 +102,18 @@ void PF::RawOutputPar::set_image_hints( VipsImage* img )
 {
   if( !img ) return;
   PF::OpParBase::set_image_hints( img );
+#ifndef NDEBUG
   std::cout<<"RawOutputPar::set_image_hints(): out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
+#endif
   if( out_profile_mode.get_enum_value().first == PF::OUT_PROF_LAB ) {
+#ifndef NDEBUG
     std::cout<<"RawOutputPar::set_image_hints(): calling lab_image()"<<std::endl;
+#endif
     lab_image( get_xsize(), get_ysize() );
   } else {
+#ifndef NDEBUG
     std::cout<<"RawOutputPar::set_image_hints(): calling rgb_image()"<<std::endl;
+#endif
     rgb_image( get_xsize(), get_ysize() );
   }
 }
@@ -201,7 +207,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         return image;
       }
       cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
-      */
+       */
       cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
       break;
     }
@@ -257,9 +263,12 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   if( changed ) {
+#ifndef NDEBUG
     std::cout<<"RawOutputPar::build(): color conversion changed, rebuilding transform"<<std::endl;
     std::cout<<"  cam_profile="<<(void*)cam_profile<<"  out_profile="<<(void*)out_profile<<std::endl;
+#endif
     char tstr[1024];
+#ifndef NDEBUG
     if( cam_profile ) {
       cmsGetProfileInfoASCII(cam_profile, cmsInfoDescription, "en", "US", tstr, 1024);
       std::cout<<"  cam_profile description: "<<tstr<<std::endl;
@@ -270,6 +279,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"  out_profile description: "<<tstr<<std::endl;
       std::cout<<"  out_profile colorspace: "<<cmsGetColorSpace(out_profile)<<std::endl;
     }
+#endif
     if( transform ) {
       cmsDeleteTransform( transform );  
     }
@@ -286,10 +296,14 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
           out_lcms_type,
           INTENT_RELATIVE_COLORIMETRIC,
           cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
+#ifndef NDEBUG
       std::cout<<"RawOutputPar::build(): new transform="<<transform<<std::endl;
+#endif
     }
   }
+#ifndef NDEBUG
   std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
+#endif
 
   if( gamma_curve )
     cmsFreeToneCurve( gamma_curve );

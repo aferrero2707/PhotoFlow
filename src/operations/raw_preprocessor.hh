@@ -131,7 +131,9 @@ namespace PF
       wb_red_current = r;
       wb_green_current = g;
       wb_blue_current = b;
+#ifndef NDEBUG
       std::cout<<"RawPreprocessorPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
+#endif
     }
 
     float get_saturation_level_correction() { return saturation_level_correction.get(); }

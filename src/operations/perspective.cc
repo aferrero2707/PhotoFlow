@@ -62,7 +62,9 @@ VipsImage* PF::PerspectivePar::build(std::vector<VipsImage*>& in, int first,
   if( srcimg == NULL ) return NULL;
   VipsImage* out, *rotated;
 
+#ifndef NDEBUG
   std::cout<<"PerspectivePar::build(): is_editing()="<<is_editing()<<std::endl;
+#endif
   if( (get_render_mode() == PF_RENDER_PREVIEW) && is_editing() ) {
     //std::cout<<"PerspectivePar::build(): editing, returning source image"<<std::endl;
     PF_REF( srcimg, "PerspectivePar::build(): srcimg ref (editing mode)" );

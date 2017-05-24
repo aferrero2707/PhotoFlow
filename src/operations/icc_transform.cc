@@ -32,10 +32,10 @@
 
 
 PF::ICCTransformPar::ICCTransformPar():
-  OpParBase(),
-  transform( NULL ),
-  input_cs_type( cmsSigRgbData ),
-  output_cs_type( cmsSigRgbData )
+OpParBase(),
+transform( NULL ),
+input_cs_type( cmsSigRgbData ),
+output_cs_type( cmsSigRgbData )
 {
   set_type("icc_transform" );
 
@@ -44,8 +44,8 @@ PF::ICCTransformPar::ICCTransformPar():
 
 
 VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
-				     VipsImage* imap, VipsImage* omap, 
-				     unsigned int& level)
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
 {
   if( (int)in.size() < first+1 ) {
     return NULL;
@@ -58,10 +58,10 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
 
   void *data;
   size_t data_length;
-  
+
   in_profile = NULL;
   if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
-                           &data, &data_length ) ) {
+      &data, &data_length ) ) {
     void *data_out;
     cmsUInt32Number data_out_length;
     cmsSaveProfileToMem( out_profile, NULL, &data_out_length );
@@ -80,7 +80,9 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
 
     if( matching ) {
       PF_REF( in[first], "ICCTransformPar::build(): input image ref for equal input and output profiles" );
+#ifndef NDEBUG
       std::cout<<"ICCTransformPar::build(): matching input and output profiles, no transform needed"<<std::endl;
+#endif
       return in[first];
     }
 
@@ -93,10 +95,10 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
   if( in_profile ) {
     char tstr[1024];
     cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"icc_transform: Embedded profile found: "<<tstr<<std::endl;
-    //#endif
-    
+#endif
+
     if( in_profile_name != tstr ) {
       in_changed = true;
     }
@@ -112,11 +114,11 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     //std::cout<<"icc_transform: output profile: "<<out_profile<<std::endl;
     char tstr[1024];
     cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"icc_transform: output profile: "<<tstr<<std::endl;
-    //#endif
- 
-   cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, in_profile );
+#endif
+
+    cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, in_profile );
     cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, out_profile );
 
     transform = cmsCreateTransform( in_profile,
@@ -126,7 +128,9 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
         INTENT_RELATIVE_COLORIMETRIC,
         cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
   }
+#ifndef NDEBUG
   std::cout<<"icc_transform: transform: "<<transform<<std::endl;
+#endif
 
   if( out_profile) {
     output_cs_type = cmsGetColorSpace(out_profile);
@@ -160,7 +164,7 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     void* buf = malloc( out_length );
     cmsSaveProfileToMem( out_profile, buf, &out_length);
     vips_image_set_blob( out, VIPS_META_ICC_NAME, 
-			 (VipsCallbackFn) g_free, buf, out_length );
+        (VipsCallbackFn) g_free, buf, out_length );
     //char tstr[1024];
     //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //std::cout<<"ICCTransformPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;

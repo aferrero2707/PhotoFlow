@@ -324,7 +324,9 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
 {
   std::vector<VipsImage*> result = build_many( in, first, imap, omap, level );
 
+#ifndef NDEBUG
   std::cout<<"OpParBase::build_many_internal(): filling hierarchy with padding "<<get_padding()<<std::endl;
+#endif
   fill_image_hierarchy( in, imap, omap, result );
 
   //for(unsigned int i = 0; i < outvec.size(); i++ ) {
@@ -349,9 +351,11 @@ void PF::OpParBase::fill_image_hierarchy(std::vector<VipsImage*>& in,
     }
     if( is_dup ) continue;
 
+#ifndef NDEBUG
     if( get_padding() > 0 ) {
       std::cout<<"OpParBase::fill_image_hierarchy(): filling hierarchy for image "<<i<<"("<<out[i]<<") with padding "<<get_padding()<<std::endl;
     }
+#endif
     PF::image_hierarchy_fill( out[i], get_padding(), in );
     std::vector<VipsImage*> maps;
     if( imap ) maps.push_back(imap);

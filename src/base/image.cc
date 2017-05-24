@@ -271,7 +271,9 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 #endif
 
     if( sync ) {
+#ifndef NDEBUG
       std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
+#endif
       //unlock(); //g_mutex_unlock( rebuild_mutex );
       //g_cond_wait( rebuild_done, rebuild_mutex );
       //rebuild_cond.wait();

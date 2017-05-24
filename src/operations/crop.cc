@@ -58,7 +58,9 @@ VipsImage* PF::CropPar::build(std::vector<VipsImage*>& in, int first,
 	VipsImage* out;
 
   if( (get_render_mode() == PF_RENDER_PREVIEW) && is_editing() ) {
+#ifndef NDEBUG
     std::cout<<"CropPar::build(): editing, returning source image"<<std::endl;
+#endif
     PF_REF( srcimg, "CropPar::build(): srcimg ref (editing mode)" );
     return srcimg;
   }

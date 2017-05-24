@@ -592,7 +592,9 @@ void PF::LayerTree::update_model_async()
 
 void PF::LayerTree::update_model()
 {
+#ifndef NDEBUG
   std::cout<<"LayerTree::update_model(): get_tree_modified()="<<get_tree_modified()<<std::endl;
+#endif
   if( get_tree_modified() == false )
     return;
 
@@ -603,11 +605,15 @@ void PF::LayerTree::update_model()
   tree_modified = false;
   updating = true;
 
+#ifndef NDEBUG
   std::cout<<"LayerTree::update_model(): treeModel->clear() called."<<std::endl;
+#endif
   treeModel->clear();
+#ifndef NDEBUG
   std::cout<<"LayerTree::update_model(): after treeModel->clear()"<<std::endl;
-  std::list<PF::Layer*>::iterator li;
   std::cout<<"LayerTree::update_model(): layers->size()="<<layers->size()<<""<<std::endl;
+#endif
+  std::list<PF::Layer*>::iterator li;
   for( li = layers->begin(); li != layers->end(); li++ ) {
     PF::Layer* l = *li;
     if( !l ) continue;
@@ -619,7 +625,9 @@ void PF::LayerTree::update_model()
       std::cout<<"LayerTree::update_model(): NULL operation for layer \""<<l->get_name()<<"\""<<std::endl;
       continue;
     }
+#ifndef NDEBUG
     std::cout<<"LayerTree::update_model(): adding layer \""<<l->get_name()<<"\""<<std::endl;
+#endif
     Gtk::TreeModel::iterator iter = treeModel->prepend();
     Gtk::TreeModel::Row row = *(iter);
     row[treeModel->columns.col_visible] = l->is_enabled();

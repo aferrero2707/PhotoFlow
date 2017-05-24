@@ -782,7 +782,9 @@ void PF::ImageEditor::set_aux_controls( Gtk::Widget* aux )
 
 void PF::ImageEditor::on_map()
 {
+#ifndef NDEBUG
   std::cout<<"ImageEditor::on_map() called."<<std::endl;
+#endif
   Gtk::Container* toplevel = get_toplevel();
   if(
 #ifdef GTKMM_3
@@ -793,14 +795,18 @@ void PF::ImageEditor::on_map()
   ) {
     toplevel->add_events( Gdk::STRUCTURE_MASK );
     //toplevel->signal_configure_event().connect_notify( sigc::mem_fun(*this, &PF::ImageEditor::on_preview_configure_event) );
+#ifndef NDEBUG
     std::cout<<"ImageEditor::on_map(): toplevel window configured."<<std::endl;
+#endif
   }
   Glib::RefPtr< Gdk::Window > win = get_window();
   if( win ) {
     Gdk::EventMask events = win->get_events ();
     win->set_events( events | Gdk::STRUCTURE_MASK );
     //win->signal_configure_event().connect_notify( sigc::mem_fun(*this, &PF::ImageEditor::on_preview_configure_event) );
+#ifndef NDEBUG
     std::cout<<"ImageEditor::on_map(): parent window configured."<<std::endl;
+#endif
   }
   //open_image();
 

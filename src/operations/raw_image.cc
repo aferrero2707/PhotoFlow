@@ -110,7 +110,9 @@ static void rawspeed_lookup_makermodel(RawSpeed::Camera *cam, const char *maker,
     printf("[rawspeed] %s\n", exc.what());
   }
 
+#ifndef NDEBUG
   std::cout<<"rawspeed_lookup_makermodel: cam="<<cam<<"  got_it_done="<<got_it_done<<std::endl;
+#endif
   if (!got_it_done)
   {
     // We couldn't find the camera or caught some exception, just punt and pass
@@ -130,11 +132,13 @@ bool PF::check_xtrans( unsigned filters )
 
 
 PF::RawImage::RawImage( const std::string _fname ):
-        nref(1), file_name( _fname ),
-        image( NULL ), demo_image( NULL ),
-        raw_hist( NULL ), pdata( NULL )
+            nref(1), file_name( _fname ),
+            image( NULL ), demo_image( NULL ),
+            raw_hist( NULL ), pdata( NULL )
 {
+#ifndef NDEBUG
   std::cout<<"RawImage::RawImage(): opening file \""<<file_name<<"\""<<std::endl;
+#endif
   //dcraw_data_t* pdata;
   file_name_real = file_name;
   int ifd = open( file_name_real.c_str(), O_RDONLY );
@@ -161,7 +165,9 @@ PF::RawImage::RawImage( const std::string _fname ):
 
   PF::exif_read( &exif_data, file_name_real.c_str() );
 
+#ifndef NDEBUG
   std::cout<<"maker: \""<<exif_data.exif_maker<<"\" model: \""<<exif_data.exif_model<<"\""<<std::endl;
+#endif
 
   if( !load_rawspeed() ) {
     std::cout<<"RawImage::RawImage(): failed to load file \""<<file_name<<"\" using RawSpeed"<<std::endl;
@@ -217,20 +223,24 @@ PF::RawImage::RawImage( const std::string _fname ):
           for(int i = 0; i < 9; i++) d65_color_matrix[i] = cm2_pos->toFloat(i);
           has_embedded = true;
         }
+#ifndef NDEBUG
         printf("d65_color_matrix[0]: %.4f\n", d65_color_matrix[0]);
         printf("isnan(d65_color_matrix[0])has_embedded: %d\n", (int)has_embedded);
         printf("isfinite(d65_color_matrix[0]): %d\n", isfinite(d65_color_matrix[0]));
+#endif
         if( has_embedded ) {
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[0][i] = d65_color_matrix[i];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[1][i] = d65_color_matrix[i+3];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[3][i] = d65_color_matrix[i+3];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[2][i] = d65_color_matrix[i+6];
+#ifndef NDEBUG
           printf("pdata->color.cam_xyz (embedded):\n");
           for(int k = 0; k < 3; k++)
           {
             //printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
             printf("    %.4f %.4f %.4f\n",pdata->color.cam_xyz[k][0],pdata->color.cam_xyz[k][1],pdata->color.cam_xyz[k][2]);
           }
+#endif
         }
 
         Exiv2::ExifData::const_iterator orient_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.Orientation"));
@@ -306,7 +316,7 @@ PF::RawImage::RawImage( const std::string _fname ):
         (VipsCallbackFn) gexiv2_metadata_free, gexiv2_buf,
         sizeof(GExiv2Metadata) );
   }
-  */
+   */
 
   void* exifdata_buf = malloc( sizeof(exif_data_t) );
   if( !exifdata_buf ) return;
@@ -429,9 +439,13 @@ bool PF::RawImage::load_rawspeed()
 #else
   std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "/rawspeed/cameras.xml";
 #endif
+#ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed(): RAWSpeed camera file: "<<camfile<<std::endl;
+#endif
   meta = new RawSpeed::CameraMetaData( camfile.c_str() );
+#ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed(): meta="<<(void*)meta<<std::endl;
+#endif
 
   if( !meta ) {
     std::cout<<"RawImage::load_rawspeed(): unable to load camera metadata"<<std::endl;
@@ -468,11 +482,13 @@ bool PF::RawImage::load_rawspeed()
 #else
     m = unique_ptr<RawSpeed::FileMap>(f.readFile());
 #endif
+#ifndef NDEBUG
     std::cout<<"RawImage::load_rawspeed(): FileMap object: "<<(void*)m.get()<<std::endl;
-    //if(!m.get()) {
-    //  std::cout<<"RawImage::load_rawspeed(): unable to create FileMap object"<<std::endl;
-    //  return false;
-    //}
+#endif
+    if(!m.get()) {
+      std::cout<<"RawImage::load_rawspeed(): unable to create FileMap object"<<std::endl;
+      return false;
+    }
 
     RawSpeed::RawParser t(m.get());
 #ifdef __APPLE__
@@ -548,9 +564,10 @@ bool PF::RawImage::load_rawspeed()
     // Grab the WB
     for(int i = 0; i < 3; i++) pdata->color.cam_mul[i] = r->metadata.wbCoeffs[i];
     pdata->color.cam_mul[3] = pdata->color.cam_mul[1];
-    std::cout<<"RawSpeed camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]
-                                                                                                      <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
+#ifndef NDEBUG
+    std::cout<<"RawSpeed camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]                                                                                                     <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
     std::cout<<"RawSpeed black="<<pdata->color.black<<"  white="<<pdata->color.maximum<<std::endl;
+#endif
 
     // dimensions of uncropped image
     RawSpeed::iPoint2D dimUncropped = r->getUncroppedDim();
@@ -581,7 +598,9 @@ bool PF::RawImage::load_rawspeed()
     // crop - Bottom,Right corner
     RawSpeed::iPoint2D cropBR = dimUncropped - dimCropped - cropTL;
 
+#ifndef NDEBUG
     std::cout<<"original width: "<<dimUncropped.x<<"  crop offset: "<<cropTL.x<<"  cropped width: "<<dimCropped.x<<std::endl;
+#endif
   }
 
   catch(const std::exception &exc)
@@ -612,33 +631,47 @@ bool PF::RawImage::load_rawspeed()
 	cache_file_name = fname;
    */
 
-  //#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"Saving raw data to buffer..."<<std::endl;
-  //#endif
+#endif
   int row, col, col2;
   //size_t pxsize = sizeof(PF::RawPixel);
   //size_t pxsize = sizeof(float)+sizeof(guint8);
   size_t pxsize = sizeof(float)*2;
   guint8* rawbuf = (guint8*)malloc( pxsize*iwidth*iheight );
-  //#ifndef NDEBUG
+  if( !rawbuf ) {
+    std::cout<<"RawImage::load_rawspeed(): cannot allocate raw buffer, size: "<<pxsize*iwidth*iheight/(1024*1024)<<"MB"<<std::endl;
+    return false;
+  }
+#ifndef NDEBUG
   std::cout<<"Raw buffer allocated: "<<(void*)rawbuf<<"    size: "<<pxsize*iwidth*iheight/(1024*1024)<<"MB"<<std::endl;
-  //if( !rawbuf ) return false;
-  //#endif
+#endif
   /* Normalized raw data to 65535 and build raw histogram
    * */
   // Allocate raw histogram and fill it with zero
   raw_hist = (int*)malloc( 65536*3*sizeof(int) );
+  if( !raw_hist ) {
+    std::cout<<"RawImage::load_rawspeed(): cannot allocate raw histogram buffer"<<std::endl;
+    return false;
+  }
+#ifndef NDEBUG
   std::cout<<"Raw histogram buffer allocated: "<<(void*)raw_hist<<std::endl;
-  //if( !raw_hist ) return false;
+#endif
   memset( raw_hist, 0, 65536*3*sizeof(int) );
 
+#ifndef NDEBUG
   std::cout<<"Initialising rawData structure..."<<std::endl;
+#endif
   rawData.Init( iwidth, iheight, 0, 0 );
+#ifndef NDEBUG
   std::cout<<"... rawData structure initialised"<<std::endl;
+#endif
 
   guint8* ptr = rawbuf;
   float* fptr;
+#ifndef NDEBUG
   std::cout<<"RawImage: crop_x="<<crop_x<<" crop_y="<<crop_y<<std::endl;
+#endif
   RawSpeed::RawImage& r = d->mRaw;
   for(row=0;row<iheight;row++) {
     unsigned int row_offset = row*iwidth;
@@ -697,6 +730,7 @@ bool PF::RawImage::load_rawspeed()
   exif_data.camera_makermodel[maker_len] = ' ';
   g_strlcpy(exif_data.camera_makermodel+maker_len+1, exif_data.camera_model, sizeof(exif_data.camera_makermodel)-maker_len-1);
 
+#ifndef NDEBUG
   std::cout<<"RawImage: Camera maker/model data:"<<std::endl
       <<"  exif_data.exif_maker: "<<exif_data.exif_maker<<std::endl
       <<"  exif_data.exif_model: "<<exif_data.exif_model<<std::endl
@@ -704,20 +738,25 @@ bool PF::RawImage::load_rawspeed()
       <<"  exif_data.camera_model: "<<exif_data.camera_model<<std::endl
       <<"  exif_data.camera_alias: "<<exif_data.camera_alias<<std::endl
       <<"  exif_data.camera_makermodel: "<<exif_data.camera_makermodel<<std::endl;
+#endif
 
 
   //float cam_xyz[12];
   float cam_xyz[4][3];
   pdata->color.cam_xyz[0][0] = NAN;
+#ifndef NDEBUG
   std::cout<<"Getting default camera matrix for makermodel=\""<<exif_data.camera_makermodel<<"\""<<std::endl;
+#endif
   dt_dcraw_adobe_coeff(exif_data.camera_makermodel, (float(*)[12])pdata->color.cam_xyz);
 
+#ifndef NDEBUG
   printf("pdata->color.cam_xyz:\n");
   for(int k = 0; k < 3; k++)
   {
     //printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
     printf("    %.4f %.4f %.4f\n",pdata->color.cam_xyz[k][0],pdata->color.cam_xyz[k][1],pdata->color.cam_xyz[k][2]);
   }
+#endif
 
   /* free auto pointers on spot */
   d.reset();
@@ -728,11 +767,16 @@ bool PF::RawImage::load_rawspeed()
   //   <<"row="<<row<<"  sizeof(PF::raw_pixel_t)="<<sizeof(PF::raw_pixel_t)<<std::endl;
   //==================================================================
   // Load the RAW image data into a vips image
+#ifndef NDEBUG
   std::cout<<"RawImage: rawData.GetBuffer()="<<(void*)rawData.GetBuffer()<<std::endl;
   std::cout<<"Starting CA correction..."<<std::endl;
+#endif
   CA_correct_RT();
+#ifndef NDEBUG
   std::cout<<"... CA correction finished"<<std::endl;
+#endif
   memcpy( pdata->color.ca_fitparams, fitparams, sizeof(fitparams) );
+#ifndef NDEBUG
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 2; j++) {
       printf("i=%d j=%d par:",i,j);
@@ -741,21 +785,26 @@ bool PF::RawImage::load_rawspeed()
       printf("\n");
     }
   }
+#endif
   rawData.Reset();
+#ifndef NDEBUG
   std::cout<<"RawImage: rawData.Reset() called"<<std::endl;
+#endif
 
 
+#ifndef NDEBUG
   std::cout<<"  buffer size: "<<sizeof(float)*iwidth*iheight<<" bytes"<<std::endl;
+#endif
   VipsImage* ti = vips_image_new_from_memory_copy(
       rawbuf, sizeof(float)*2*iwidth*iheight,
       iwidth, iheight, 2, VIPS_FORMAT_FLOAT );
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"Deleting Raw buffer: "<<(void*)rawbuf<<std::endl;
-//#endif
+#endif
   free( rawbuf );
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"Raw buffer deleted"<<std::endl;
-//#endif
+#endif
   if( !ti ) {
     std::cout<<"RawImage: ERROR creating Vips image from memory"<<std::endl;
     return false;
@@ -774,7 +823,9 @@ bool PF::RawImage::load_rawspeed()
       NULL );
   g_object_unref( ti );
 
+#ifndef NDEBUG
   std::cout<<"RawImage: after vips_copy()"<<std::endl;
+#endif
 
   if (!exif_data.camera_maker[0] || !exif_data.camera_model[0] || !exif_data.camera_alias[0]) {
     RawSpeed::Camera *cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "");
@@ -782,7 +833,9 @@ bool PF::RawImage::load_rawspeed()
       std::cout<<"RawImage: getting rawspeed camera in DNG mode"<<std::endl;
       cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "dng");
     }
+#ifndef NDEBUG
     std::cout<<"RawImage: calling rawspeed_lookup_makermodel()"<<std::endl;
+#endif
     // We need to use the exif values, so let's get rawspeed to munge them
     rawspeed_lookup_makermodel(cam, exif_data.exif_maker, exif_data.exif_model,
         exif_data.camera_maker, sizeof(exif_data.camera_maker),
@@ -790,7 +843,9 @@ bool PF::RawImage::load_rawspeed()
         exif_data.camera_alias, sizeof(exif_data.camera_alias));
   }
 
+#ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed() finished"<<std::endl;
+#endif
   return true;
 }
 
@@ -803,13 +858,17 @@ bool PF::RawImage::load_rawtherapee()
   rtengine::RawImage rt_image(file_name_real);
   rtengine::RawImage* ri = &rt_image;
   int errCode = rt_image.loadRaw();
+#ifndef NDEBUG
   std::cout<<"RawImage::load_rawtherapee(): errCode="<<errCode<<std::endl;
+#endif
   if (errCode) {
     return false;
   }
 
   rt_image.compress_image();
+#ifndef NDEBUG
   std::cout<<"RawImage::load_rawtherapee(): compress_image() finished."<<std::endl;
+#endif
 
   pdata = &dcraw_data;
 
@@ -831,9 +890,10 @@ bool PF::RawImage::load_rawtherapee()
   for(int i = 0; i < 4; i++) pdata->color.cam_mul[i] = ri->get_cam_mul(i);
   if(pdata->color.cam_mul[3] < 0.00000001)
     pdata->color.cam_mul[3] = pdata->color.cam_mul[1];
-  std::cout<<"RawTherapee camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]
-                                                                                                       <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
+#ifndef NDEBUG
+  std::cout<<"RawTherapee camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]                                                                                                       <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
   std::cout<<"RawTherapee black="<<pdata->color.black<<"  white="<<pdata->color.maximum<<std::endl;
+#endif
 
   //for(int i = 0; i < 4; i++)
   //  for(int j = 0; j < 3; j++)
@@ -882,17 +942,17 @@ bool PF::RawImage::load_rawtherapee()
       pdata->color.cam_xyz[i][j] = imatrices.cam_xyz[i][j];
 
 
-  //#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"Saving raw data to buffer..."<<std::endl;
-  //#endif
+#endif
   int row, col, col2;
   //size_t pxsize = sizeof(PF::RawPixel);
   //size_t pxsize = sizeof(float)+sizeof(guint8);
   size_t pxsize = sizeof(float)*2;
   guint8* rawbuf = (guint8*)malloc( pxsize*iwidth*iheight );
-  //#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"Raw buffer allocated: "<<(void*)rawbuf<<std::endl;
-  //#endif
+#endif
   /* Normalized raw data to 65535 and build raw histogram
    * */
   // Allocate raw histogram and fill it with zero
@@ -903,7 +963,9 @@ bool PF::RawImage::load_rawtherapee()
 
   guint8* ptr = rawbuf;
   float* fptr;
+#ifndef NDEBUG
   std::cout<<"RawImage: crop_x="<<crop_x<<" crop_y="<<crop_y<<std::endl;
+#endif
   for(row=0;row<iheight;row++) {
     unsigned int row_offset = row*iwidth;
     //#ifndef NDEBUG
@@ -957,6 +1019,7 @@ bool PF::RawImage::load_rawtherapee()
     exif_data.camera_makermodel[maker_len] = ' ';
     g_strlcpy(exif_data.camera_makermodel+maker_len+1, exif_data.camera_model, sizeof(exif_data.camera_makermodel)-maker_len-1);
    */
+#ifndef NDEBUG
   std::cout<<"RawImage: Camera maker/model data:"<<std::endl
       <<"  exif_data.exif_maker: "<<exif_data.exif_maker<<std::endl
       <<"  exif_data.exif_model: "<<exif_data.exif_model<<std::endl
@@ -964,6 +1027,7 @@ bool PF::RawImage::load_rawtherapee()
       <<"  exif_data.camera_model: "<<exif_data.camera_model<<std::endl
       <<"  exif_data.camera_alias: "<<exif_data.camera_alias<<std::endl
       <<"  exif_data.camera_makermodel: "<<exif_data.camera_makermodel<<std::endl;
+#endif
 
 
   //std::cout<<"iwidth="<<iwidth<<std::endl
@@ -971,11 +1035,16 @@ bool PF::RawImage::load_rawtherapee()
   //   <<"row="<<row<<"  sizeof(PF::raw_pixel_t)="<<sizeof(PF::raw_pixel_t)<<std::endl;
   //==================================================================
   // Load the RAW image data into a vips image
+#ifndef NDEBUG
   std::cout<<"RawImage: rawData.GetBuffer()="<<(void*)rawData.GetBuffer()<<std::endl;
   std::cout<<"Starting CA correction..."<<std::endl;
+#endif
   CA_correct_RT();
+#ifndef NDEBUG
   std::cout<<"... CA correction finished"<<std::endl;
+#endif
   memcpy( pdata->color.ca_fitparams, fitparams, sizeof(fitparams) );
+#ifndef NDEBUG
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 2; j++) {
       printf("i=%d j=%d par:",i,j);
@@ -984,10 +1053,13 @@ bool PF::RawImage::load_rawtherapee()
       printf("\n");
     }
   }
+#endif
   rawData.Reset();
 
 
+#ifndef NDEBUG
   std::cout<<"  buffer size: "<<sizeof(float)*iwidth*iheight<<" bytes"<<std::endl;
+#endif
   VipsImage* ti = vips_image_new_from_memory_copy(
       rawbuf, sizeof(float)*2*iwidth*iheight,
       iwidth, iheight, 2, VIPS_FORMAT_FLOAT );
@@ -1025,7 +1097,9 @@ PF::RawImage::~RawImage()
   if( image ) PF_UNREF( image, "RawImage::~RawImage() image" );
   if( demo_image ) PF_UNREF( demo_image, "RawImage::~RawImage() demo_image" );
   if( fast_demosaic ) delete fast_demosaic;
+#ifndef NDEBUG
   std::cout<<"RawImage::~RawImage() called."<<std::endl;
+#endif
   if( !(cache_file_name.empty()) )
     unlink( cache_file_name.c_str() );
   if( !(cache_file_name2.empty()) )
@@ -1054,7 +1128,9 @@ void PF::RawImage::inverse33 (const double (*rgb_cam)[3], double (*cam_rgb)[3])
 VipsImage* PF::RawImage::get_image(unsigned int& level)
 {
   if( level == 0 ) {
+#ifndef NDEBUG
     std::cout<<"RawImage::get_image(): checking exif_custom_data for image("<<image<<")"<<std::endl;
+#endif
     if( image ) {
       GType type = vips_image_get_typeof(image, PF_META_EXIF_NAME );
       if( type ) {
@@ -1419,8 +1495,10 @@ void PF::RawImage::CA_correct_RT()
 
 
     if (autoCA) {
+#ifndef NDEBUG
       //printf("width=%d  height=%d filters=%d\n",width,height,dcraw_data.idata.filters);
       std::cout<<"width="<<width<<"  height="<<height<<"  filters="<<dcraw_data.idata.filters<<std::endl;
+#endif
       // Main algorithm: Tile loop
       //#pragma omp for collapse(2) schedule(dynamic) nowait
       for (top = -border ; top < height; top += TS - border2)
@@ -1916,8 +1994,9 @@ void PF::RawImage::CA_correct_RT()
                   processpasstwo = false;
                 }
               }
+#ifndef NDEBUG
           printf("CA correction parameters fitted.\n");
-
+#endif
         }
 
         //fitparams[polyord*i+j] gives the coefficients of (vblock^i hblock^j) in a polynomial fit for i,j<=4

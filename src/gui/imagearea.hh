@@ -60,6 +60,11 @@
 
 #include "doublebuffer.hh"
 
+#ifndef NDEBUG
+#define DEBUG_DISPLAY
+#endif
+
+
 
 /*
   The ImageArea performs the image update aynchronously, inside a dedicated thread.
@@ -247,11 +252,15 @@ public:
   void set_displayed_layer( int id ) {
     int old_id = displayed_layer;
     displayed_layer = id;
+#ifdef DEBUG_DISPLAY
     std::cout<<"ImageArea::set_displayed_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
+#endif
     if( !display_merged && (old_id != displayed_layer) ) {
       //update( NULL );
       if( get_pipeline() && get_pipeline()->get_image() ) {
+#ifdef DEBUG_DISPLAY
         std::cout<<"ImageArea::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
+#endif
         get_pipeline()->get_image()->update();
       }
     }
@@ -261,11 +270,15 @@ public:
   void set_selected_layer( int id ) {
     int old_id = selected_layer;
     selected_layer = id;
-    std::cout<<"ImageArea::set_displayed_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
+#ifdef DEBUG_DISPLAY
+    std::cout<<"ImageArea::set_selected_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
+#endif
     if( !display_merged && (old_id != selected_layer) ) {
       //update( NULL );
       if( get_pipeline() && get_pipeline()->get_image() ) {
-        std::cout<<"ImageArea::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
+#ifdef DEBUG_DISPLAY
+        std::cout<<"ImageArea::set_selected_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
+#endif
         get_pipeline()->get_image()->update();
       }
     }
@@ -276,11 +289,15 @@ public:
   {
     bool old_val = display_merged;
     display_merged = val;
-    std::cout<<"ImageArea::set_displayed_merged(): val="<<val<<"  old_val="<<old_val<<std::endl;
+#ifdef DEBUG_DISPLAY
+    std::cout<<"ImageArea::set_display_merged(): val="<<val<<"  old_val="<<old_val<<std::endl;
+#endif
     if( display_merged != old_val ) {
       //update( NULL );
       if( get_pipeline() && get_pipeline()->get_image() ) {
-        std::cout<<"ImageArea::set_displayed_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
+#ifdef DEBUG_DISPLAY
+        std::cout<<"ImageArea::set_display_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
+#endif
         get_pipeline()->get_image()->update();
       }
     }
@@ -291,11 +308,15 @@ public:
   {
     bool old_val = display_mask;
     display_mask = val;
-    std::cout<<"ImageArea::set_displayed_mask(): val="<<val<<"  old_val="<<old_val<<std::endl;
+#ifdef DEBUG_DISPLAY
+    std::cout<<"ImageArea::set_display_mask(): val="<<val<<"  old_val="<<old_val<<std::endl;
+#endif
     if( display_mask != old_val ) {
       //update( NULL );
       if( get_pipeline() && get_pipeline()->get_image() ) {
-        std::cout<<"ImageArea::set_displayed_mask(): get_pipeline()->get_image()->update() called."<<std::endl;
+#ifdef DEBUG_DISPLAY
+        std::cout<<"ImageArea::set_display_mask(): get_pipeline()->get_image()->update() called."<<std::endl;
+#endif
         get_pipeline()->get_image()->update();
       }
     }

@@ -109,11 +109,11 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
   if( vips_image_get_blob( in[0], "raw_image_data",
 			   (void**)&image_data, 
 			   &blobsz ) ) {
-    std::cout<<"RawOutputPar::build(): could not extract raw_image_data."<<std::endl;
+    std::cout<<"RawPreprocessorPar::build(): could not extract raw_image_data."<<std::endl;
     return NULL;
   }
   if( blobsz != sizeof(dcraw_data_t) ) {
-    std::cout<<"RawOutputPar::build(): wrong raw_image_data size."<<std::endl;
+    std::cout<<"RawPreprocessorPar::build(): wrong raw_image_data size."<<std::endl;
     return NULL;
   }
 
@@ -137,11 +137,11 @@ VipsImage* PF::RawPreprocessorPar::build(std::vector<VipsImage*>& in, int first,
     if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
         (void**)&exif_data,
         &blobsz ) ) {
-      std::cout<<"RawOutputPar::build() could not extract exif_custom_data."<<std::endl;
+      std::cout<<"RawPreprocessorPar::build() could not extract exif_custom_data."<<std::endl;
       return NULL;
     }
     if( blobsz != sizeof(PF::exif_data_t) ) {
-      std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
+      std::cout<<"RawPreprocessorPar::build() wrong exif_custom_data size."<<std::endl;
       return NULL;
     }
     //char makermodel[1024];

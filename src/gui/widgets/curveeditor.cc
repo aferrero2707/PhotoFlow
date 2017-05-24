@@ -19,13 +19,13 @@
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-*/
+ */
 
 /*
 
   These files are distributed with PhotoFlow - http://aferrero2707.github.io/PhotoFlow/
 
-*/
+ */
 
 #include "curveeditor.hh"
 
@@ -37,23 +37,23 @@
 PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
     CurveArea* ca, float _xmin, float _xmax, float _ymin, float _ymax,
     int width, int height, int border_size ):
-  Gtk::HBox(),
-  PF::PFWidget( dialog, pname ),
-  xlabel( _("in: ") ),
-  ylabel( _("out: ") ),
-  xmin( _xmin ), xmax( _xmax ), ymin( _ymin ), ymax( _ymax ),
+    Gtk::HBox(),
+    PF::PFWidget( dialog, pname ),
+    xlabel( _("in: ") ),
+    ylabel( _("out: ") ),
+    xmin( _xmin ), xmax( _xmax ), ymin( _ymin ), ymax( _ymax ),
 #ifdef GTKMM_2
-  xadjustment( xmax, xmin, xmax, 1, 10, 0),
-  yadjustment( ymax, ymin, ymax, 1, 10, 0),
-  xspinButton(xadjustment),
-  yspinButton(yadjustment),
+    xadjustment( xmax, xmin, xmax, 1, 10, 0),
+    yadjustment( ymax, ymin, ymax, 1, 10, 0),
+    xspinButton(xadjustment),
+    yspinButton(yadjustment),
 #endif
-  curve_area_width( width ),
-  curve_area_height( height ),
-  curve_area( ca ),
-  grabbed_point( -1 ),
-  button_pressed( false ),
-  inhibit_value_changed( false )
+    curve_area_width( width ),
+    curve_area_height( height ),
+    curve_area( ca ),
+    grabbed_point( -1 ),
+    button_pressed( false ),
+    inhibit_value_changed( false )
 {
 #ifdef GTKMM_3
   xadjustment = Gtk::Adjustment::create( xmax, xmin, xmax, 1, 10, 0 );
@@ -62,7 +62,7 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
   yspinButton.set_adjustment( yadjustment );
 #endif
   curve_area->set_size_request( curve_area_width+border_size*2,
-                              curve_area_height+border_size*2 );
+      curve_area_height+border_size*2 );
   curve_area->set_border_size( border_size );
 
   xspinButton.set_digits( 1 );
@@ -97,12 +97,12 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
   // 			  &PFWidget::changed));
 
   xspinButton.signal_value_changed().
-    connect(sigc::mem_fun(*this,
-                          &CurveEditor::update_point));
+      connect(sigc::mem_fun(*this,
+          &CurveEditor::update_point));
 
   yspinButton.signal_value_changed().
-    connect(sigc::mem_fun(*this,
-                          &CurveEditor::update_point));
+      connect(sigc::mem_fun(*this,
+          &CurveEditor::update_point));
 
   show_all_children();
 }
@@ -204,140 +204,140 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
   const int height = allocation.get_height();
 
   SplineCurve& curve = curve_area->get_curve();
-  
+
   //if( !curve ) return false;
   //curve.lock();
-  
+
   switch( event->type ) {
 
   case Gdk::BUTTON_PRESS: 
-    {
+  {
 #ifndef NDEBUG
-      std::cout<<"PF::CurveArea::handle_events(): button pressed @ "
-               <<event->button.x<<","<<event->button.y<<std::endl;
+    std::cout<<"PF::CurveArea::handle_events(): button pressed @ "
+        <<event->button.x<<","<<event->button.y<<std::endl;
 #endif
-      button_pressed = true;
-      
-      curve_area_ebox.grab_focus();
+    button_pressed = true;
 
-      // Look for a point close to the mouse click
-      double xpt = double(event->button.x-1)/(width-3);
-      double ypt = double(height-event->button.y-1)/(height-3);
-      //#ifndef NDEBUG
-              std::cout<<"  xpt="<<xpt<<"  ypt="<<ypt<<std::endl;
-      //#endif
-      //std::vector< std::pair<float,float> > points = curve.get_points();
-      //std::pair<float,float>* points = curve.get_points();
-      bool found = false;
-      int ipt = -1;
-      for( unsigned int i = 0; i < curve.get_npoints(); i++ ) {
-        double dx = fabs( xpt - curve.get_point(i).first);
-        double dy = fabs( ypt - curve.get_point(i).second);
+    curve_area_ebox.grab_focus();
+
+    // Look for a point close to the mouse click
+    double xpt = double(event->button.x-1)/(width-3);
+    double ypt = double(height-event->button.y-1)/(height-3);
 #ifndef NDEBUG
-        std::cout<<"  point #"<<i<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
+    std::cout<<"  xpt="<<xpt<<"  ypt="<<ypt<<std::endl;
 #endif
-        if( (dx<0.05) && (dy<0.05) ) {
-          ipt = i;
-          found = true;
-          break;
-        }
+    //std::vector< std::pair<float,float> > points = curve.get_points();
+    //std::pair<float,float>* points = curve.get_points();
+    bool found = false;
+    int ipt = -1;
+    for( unsigned int i = 0; i < curve.get_npoints(); i++ ) {
+      double dx = fabs( xpt - curve.get_point(i).first);
+      double dy = fabs( ypt - curve.get_point(i).second);
+#ifndef NDEBUG
+      std::cout<<"  point #"<<i<<"  dx="<<dx<<"  dy="<<dy<<std::endl;
+#endif
+      if( (dx<0.05) && (dy<0.05) ) {
+        ipt = i;
+        found = true;
+        break;
       }
-      if( found ) {
-        if( event->button.button == 1 ) {
-          // We left-clicked on one existing point, so we grab it
-          curve_area->set_selected_point( ipt );
-          grabbed_point = ipt;
+    }
+    if( found ) {
+      if( event->button.button == 1 ) {
+        // We left-clicked on one existing point, so we grab it
+        curve_area->set_selected_point( ipt );
+        grabbed_point = ipt;
 #ifndef NDEBUG
-          std::cout<<"  point #"<<ipt<<" grabbed"<<std::endl;
+        std::cout<<"  point #"<<ipt<<" grabbed"<<std::endl;
 #endif
-          inhibit_value_changed = true;
+        inhibit_value_changed = true;
 #ifdef GTKMM_2
-          xadjustment.set_value( curve.get_point(ipt).first*(xmax-xmin)+xmin );
-          yadjustment.set_value( curve.get_point(ipt).second*(ymax-ymin)+ymin );
+        xadjustment.set_value( curve.get_point(ipt).first*(xmax-xmin)+xmin );
+        yadjustment.set_value( curve.get_point(ipt).second*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-          xadjustment->set_value( curve.get_point(ipt).first*(xmax-xmin)+xmin );
-          yadjustment->set_value( curve.get_point(ipt).second*(ymax-ymin)+ymin );
+        xadjustment->set_value( curve.get_point(ipt).first*(xmax-xmin)+xmin );
+        yadjustment->set_value( curve.get_point(ipt).second*(ymax-ymin)+ymin );
 #endif
-          inhibit_value_changed = false;
-          curve_area->queue_draw();
-        } else if( event->button.button == 3 ) {
-          curve.remove_point( ipt );
-          curve.update_spline();
-          curve_area->set_selected_point( 0 );
-          curve_area->queue_draw();
-          inhibit_value_changed = true;
-#ifdef GTKMM_2
-          xadjustment.set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
-          yadjustment.set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
-#endif
-#ifdef GTKMM_3
-          xadjustment->set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
-          yadjustment->set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
-#endif
-          inhibit_value_changed = false;
-          changed();
-        }
-      } else {
-        if( event->button.button == 1 ) {
-          // The click was far from any existing point, let's see if
-          // it is on the curve and if we have to add one more point
-          double ycurve = curve.get_value( xpt );
-          double dy = fabs( ypt - ycurve);
-          if( dy<0.05 ) {
-            add_point( xpt, ycurve );
-          }
-        }
-      }
-      break;
-    }
-  case Gdk::BUTTON_RELEASE: 
-    {
-      if( (event->button.button==1) && (grabbed_point>=0) ) {
-        changed();
-        get_prop()->modified();
-      }
-#ifndef NDEBUG
-      std::cout<<"Grabbed point cleared"<<std::endl;
-#endif
-      grabbed_point = -1;
-    }
-  case (Gdk::MOTION_NOTIFY) : 
-    {
-      //std::cout<<"grabbed point: "<<grabbed_point<<std::endl;
-      if( /*!curve ||*/ (grabbed_point<0) ) break;
-
-      int tx, ty;
-      Gdk::ModifierType mod_type;
-      if (event->motion.is_hint) {
-        curve_area->get_window()->get_pointer (tx, ty, mod_type);
-      }
-      else {
-        tx = int(event->button.x);
-        ty = int(event->button.y);
-        mod_type = (Gdk::ModifierType)event->button.state;
-      }
-
-      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      float px = double(tx-1)/(width-3);
-      float py = double(height-ty-1)/(height-3);
-      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if( curve.set_point( grabbed_point, px, py ) ) {
+        inhibit_value_changed = false;
+        curve_area->queue_draw();
+      } else if( event->button.button == 3 ) {
+        curve.remove_point( ipt );
         curve.update_spline();
+        curve_area->set_selected_point( 0 );
         curve_area->queue_draw();
         inhibit_value_changed = true;
 #ifdef GTKMM_2
-        xadjustment.set_value( px*(xmax-xmin)+xmin );
-        yadjustment.set_value( py*(ymax-ymin)+ymin );
+        xadjustment.set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
+        yadjustment.set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-        xadjustment->set_value( px*(xmax-xmin)+xmin );
-        yadjustment->set_value( py*(ymax-ymin)+ymin );
+        xadjustment->set_value( curve.get_points()[0].first*(xmax-xmin)+xmin );
+        yadjustment->set_value( curve.get_points()[0].second*(ymax-ymin)+ymin );
 #endif
         inhibit_value_changed = false;
+        changed();
       }
-      break;
+    } else {
+      if( event->button.button == 1 ) {
+        // The click was far from any existing point, let's see if
+        // it is on the curve and if we have to add one more point
+        double ycurve = curve.get_value( xpt );
+        double dy = fabs( ypt - ycurve);
+        if( dy<0.05 ) {
+          add_point( xpt, ycurve );
+        }
+      }
     }
+    break;
+  }
+  case Gdk::BUTTON_RELEASE: 
+  {
+    if( (event->button.button==1) && (grabbed_point>=0) ) {
+      changed();
+      get_prop()->modified();
+    }
+#ifndef NDEBUG
+    std::cout<<"Grabbed point cleared"<<std::endl;
+#endif
+    grabbed_point = -1;
+  }
+  case (Gdk::MOTION_NOTIFY) : 
+      {
+    //std::cout<<"grabbed point: "<<grabbed_point<<std::endl;
+    if( /*!curve ||*/ (grabbed_point<0) ) break;
+
+    int tx, ty;
+    Gdk::ModifierType mod_type;
+    if (event->motion.is_hint) {
+      curve_area->get_window()->get_pointer (tx, ty, mod_type);
+    }
+    else {
+      tx = int(event->button.x);
+      ty = int(event->button.y);
+      mod_type = (Gdk::ModifierType)event->button.state;
+    }
+
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    float px = double(tx-1)/(width-3);
+    float py = double(height-ty-1)/(height-3);
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if( curve.set_point( grabbed_point, px, py ) ) {
+      curve.update_spline();
+      curve_area->queue_draw();
+      inhibit_value_changed = true;
+#ifdef GTKMM_2
+      xadjustment.set_value( px*(xmax-xmin)+xmin );
+      yadjustment.set_value( py*(ymax-ymin)+ymin );
+#endif
+#ifdef GTKMM_3
+      xadjustment->set_value( px*(xmax-xmin)+xmin );
+      yadjustment->set_value( py*(ymax-ymin)+ymin );
+#endif
+      inhibit_value_changed = false;
+    }
+    break;
+      }
   default:
     break;
   }
@@ -431,7 +431,7 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
     // clip to the area indicated by the expose event so that we only
     // redraw the portion of the window that needs to be redrawn
     cr->rectangle(event->area.x, event->area.y,
-                  event->area.width, event->area.height);
+        event->area.width, event->area.height);
     cr->clip();
   }
 #endif
@@ -496,7 +496,7 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
       }
       curve.unlock();
     }
-  
+
     return true;
   }
 
