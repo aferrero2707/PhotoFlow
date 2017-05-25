@@ -56,7 +56,7 @@ typedef libraw_data_t dcraw_data_t;
 #endif
 
 #ifdef PF_USE_RAWSPEED
-#include "rawspeed/RawSpeed/RawSpeed-API.h"
+#include "rawspeed/src/librawspeed/RawSpeed-API.h"
 
 struct dcraw_iparams_t
 {
@@ -128,7 +128,7 @@ bool check_xtrans( unsigned filters );
 	  ImageMatrices imatrices;
 
 #ifdef PF_USE_RAWSPEED
-		RawSpeed::CameraMetaData *meta;
+		rawspeed::CameraMetaData *meta;
 #endif
 
 		// VipsImages storing the raw data, one band for the pixel values and a nother for the colors

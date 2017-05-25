@@ -52,12 +52,12 @@ typedef uint32_t uint32;
 #include "amaze_demosaic.hh"
 #include "fast_demosaic_xtrans.hh"
 
-#include "../dt/external/adobe_coeff.c"
+#include "../external/darktable/src/external/adobe_coeff.c"
 
 
 
 
-static bool dt_exif_read_exif_tag(Exiv2::ExifData &exifData, Exiv2::ExifData::const_iterator *pos, string key)
+static bool dt_exif_read_exif_tag(Exiv2::ExifData &exifData, Exiv2::ExifData::const_iterator *pos, std::string key)
 {
   try
   {
@@ -91,7 +91,7 @@ int rawspeed_get_number_of_processor_cores()
 }
 
 
-static void rawspeed_lookup_makermodel(RawSpeed::Camera *cam, const char *maker, const char *model,
+static void rawspeed_lookup_makermodel(const rawspeed::Camera *cam, const char *maker, const char *model,
     char *mk, int mk_len, char *md, int md_len,
     char *al, int al_len)
 {
@@ -442,7 +442,7 @@ bool PF::RawImage::load_rawspeed()
 #ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed(): RAWSpeed camera file: "<<camfile<<std::endl;
 #endif
-  meta = new RawSpeed::CameraMetaData( camfile.c_str() );
+  meta = new rawspeed::CameraMetaData( camfile.c_str() );
 #ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed(): meta="<<(void*)meta<<std::endl;
 #endif
@@ -465,23 +465,23 @@ bool PF::RawImage::load_rawspeed()
   char filen[PATH_MAX] = { 0 };
   snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
 #endif
-  RawSpeed::FileReader f(filen);
+  rawspeed::FileReader f(filen);
 
-#ifdef __APPLE__
-  std::auto_ptr<RawSpeed::RawDecoder> d;
-  std::auto_ptr<RawSpeed::FileMap> m;
-#else
-  std::unique_ptr<RawSpeed::RawDecoder> d;
-  std::unique_ptr<RawSpeed::FileMap> m;
-#endif
+//#ifdef __APPLE__
+//  std::auto_ptr<rawspeed::RawDecoder> d;
+//  std::auto_ptr<rawspeed::Buffer> m;
+//#else
+  std::unique_ptr<rawspeed::RawDecoder> d;
+  std::unique_ptr<rawspeed::Buffer> m;
+//#endif
 
   try
   {
-#ifdef __APPLE__
-    m = auto_ptr<RawSpeed::FileMap>(f.readFile());
-#else
-    m = unique_ptr<RawSpeed::FileMap>(f.readFile());
-#endif
+//#ifdef __APPLE__
+//    m = std::auto_ptr<rawspeed::Buffer>(f.readFile());
+//#else
+    m = std::unique_ptr<rawspeed::Buffer>(f.readFile());
+//#endif
 #ifndef NDEBUG
     std::cout<<"RawImage::load_rawspeed(): FileMap object: "<<(void*)m.get()<<std::endl;
 #endif
@@ -490,12 +490,12 @@ bool PF::RawImage::load_rawspeed()
       return false;
     }
 
-    RawSpeed::RawParser t(m.get());
-#ifdef __APPLE__
-    d = auto_ptr<RawSpeed::RawDecoder>(t.getDecoder(meta));
-#else
-    d = unique_ptr<RawSpeed::RawDecoder>(t.getDecoder(meta));
-#endif
+    rawspeed::RawParser t(m.get());
+//#ifdef __APPLE__
+//    d = std::auto_ptr<rawspeed::RawDecoder>(t.getDecoder(meta));
+//#else
+    d = std::unique_ptr<rawspeed::RawDecoder>(t.getDecoder(meta));
+//#endif
 
     if(!d.get()) {
       std::cout<<"RawImage::load_rawspeed(): unable to create RawDecoder object"<<std::endl;
@@ -506,10 +506,10 @@ bool PF::RawImage::load_rawspeed()
     d->checkSupport(meta);
     d->decodeRaw();
     d->decodeMetaData(meta);
-    RawSpeed::RawImage& r = d->mRaw;
+    rawspeed::RawImage& r = d->mRaw;
 
-    for (uint32 i=0; i<r->errors.size(); i++)
-      fprintf(stderr, "[rawspeed] %s\n", r->errors[i]);
+    for (uint32 i=0; i<r->getErrors().size(); i++)
+      fprintf(stderr, "[rawspeed] %s\n", r->getErrors()[i].c_str());
 
     // Get CFA pattern
     pdata->idata.filters = r->cfa.getDcrawFilter();
@@ -523,7 +523,7 @@ bool PF::RawImage::load_rawspeed()
       // (currently) aligned with the top left of the raw data, and
       // hence it is shifted here to align with the top left of the
       // cropped image.
-      RawSpeed::iPoint2D tl_margin = r->getCropOffset();
+      rawspeed::iPoint2D tl_margin = r->getCropOffset();
       for(int i = 0; i < 6; ++i)
         for(int j = 0; j < 6; ++j)
         {
@@ -570,7 +570,7 @@ bool PF::RawImage::load_rawspeed()
 #endif
 
     // dimensions of uncropped image
-    RawSpeed::iPoint2D dimUncropped = r->getUncroppedDim();
+    rawspeed::iPoint2D dimUncropped = r->getUncroppedDim();
     //iwidth = dimUncropped.x;
     //iheight = dimUncropped.y;
 
@@ -578,7 +578,7 @@ bool PF::RawImage::load_rawspeed()
     pdata->sizes.raw_height = dimUncropped.y;
 
     // dimensions of cropped image
-    RawSpeed::iPoint2D dimCropped = r->dim;
+    rawspeed::iPoint2D dimCropped = r->dim;
     iwidth = dimCropped.x;
     iheight = dimCropped.y;
 
@@ -588,7 +588,7 @@ bool PF::RawImage::load_rawspeed()
     pdata->sizes.flip = 0;
 
     // crop - Top,Left corner
-    RawSpeed::iPoint2D cropTL = r->getCropOffset();
+    rawspeed::iPoint2D cropTL = r->getCropOffset();
     crop_x = cropTL.x;
     crop_y = cropTL.y;
 
@@ -596,7 +596,7 @@ bool PF::RawImage::load_rawspeed()
     pdata->sizes.top_margin = crop_y;
 
     // crop - Bottom,Right corner
-    RawSpeed::iPoint2D cropBR = dimUncropped - dimCropped - cropTL;
+    rawspeed::iPoint2D cropBR = dimUncropped - dimCropped - cropTL;
 
 #ifndef NDEBUG
     std::cout<<"original width: "<<dimUncropped.x<<"  crop offset: "<<cropTL.x<<"  cropped width: "<<dimCropped.x<<std::endl;
@@ -672,7 +672,7 @@ bool PF::RawImage::load_rawspeed()
 #ifndef NDEBUG
   std::cout<<"RawImage: crop_x="<<crop_x<<" crop_y="<<crop_y<<std::endl;
 #endif
-  RawSpeed::RawImage& r = d->mRaw;
+  rawspeed::RawImage& r = d->mRaw;
   for(row=0;row<iheight;row++) {
     unsigned int row_offset = row*iwidth;
     //#ifndef NDEBUG
@@ -687,8 +687,8 @@ bool PF::RawImage::load_rawspeed()
       float val = 0;
       float nval = 0;
       switch(r->getDataType()) {
-      case RawSpeed::TYPE_USHORT16: val = *((uint16_t*)r->getDataUncropped(col2,row2)); break;
-      case RawSpeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
+      case rawspeed::TYPE_USHORT16: val = *((uint16_t*)r->getDataUncropped(col2,row2)); break;
+      case rawspeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
       }
       if(false && row<8 && col<8) {
         std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<std::endl;
@@ -828,7 +828,7 @@ bool PF::RawImage::load_rawspeed()
 #endif
 
   if (!exif_data.camera_maker[0] || !exif_data.camera_model[0] || !exif_data.camera_alias[0]) {
-    RawSpeed::Camera *cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "");
+    const rawspeed::Camera *cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "");
     if (!cam) {
       std::cout<<"RawImage: getting rawspeed camera in DNG mode"<<std::endl;
       cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "dng");

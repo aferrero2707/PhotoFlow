@@ -53,7 +53,7 @@
 #include "../base/processor.hh"
 #include "../operations/perspective.hh"
 
-#include "../dt/iop/clipping.cc"
+#include "../external/darktable/src/iop/clipping.cc"
 
 #define PF_MAX_INPUT_IMAGES 10
 

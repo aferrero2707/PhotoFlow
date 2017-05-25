@@ -38,13 +38,13 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-#include "../dt/common/colorspaces.h"
+#include "../external/darktable/src/common/colorspaces.h"
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 
-#include "../dt/external/adobe_coeff.c"
+#include "../external/darktable/src/external/adobe_coeff.c"
 //#include "../vips/vips_layer.h"
 
 

@@ -154,8 +154,8 @@ endif (AUTOMATED_VERSION_CHECK)
 
 
 
-FILE(GLOB DTIncludes dt/common/*.h dt/develop/*.h)
-FILE(GLOB DTSources dt/common/*.c dt/develop/masks/*.c)
+FILE(GLOB DTIncludes external/darktable/src/common/*.h external/darktable/src/develop/*.h)
+FILE(GLOB DTSources external/darktable/src/common/*.c external/darktable/src/develop/masks/*.c)
 
 add_library (pfdt STATIC
   ${DTIncludes}
@@ -230,9 +230,15 @@ set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/share)
 #add_library(rawspeed_static STATIC IMPORTED)
 #set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
 # compile rawspeed
+set(BUILD_TESTING OFF)
+set(BUILD_TOOLS OFF)
 add_subdirectory(external/rawspeed)
 list(APPEND LIB_DEPS rawspeed)
 list(APPEND STATIC_LIBS rawspeed_static)
+include_directories( ${CMAKE_SOURCE_DIR}/src/external/rawspeed/src/librawspeed  )  
+include_directories( ${CMAKE_SOURCE_DIR}/src/external/rawspeed/src/external  )  
+message( "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR} )
+include_directories( ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/src  )  
 
 
 

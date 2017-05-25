@@ -39,13 +39,13 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-#include "../dt/common/colorspaces.h"
+#include "../external/darktable/src/common/colorspaces.h"
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 
-#include "../dt/external/wb_presets.c"
+#include "../external/darktable/src/external/wb_presets.c"
 
 #include "../base/exif_data.hh"
 #include "raw_preprocessor.hh"

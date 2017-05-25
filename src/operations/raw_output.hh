@@ -39,7 +39,7 @@
 #include "../base/processor.hh"
 
 //#include "../rt/iccmatrices.hh"
-#include "../dt/common/srgb_tone_curve_values.h"
+#include "../external/darktable/src/common/srgb_tone_curve_values.h"
 
 #include "raw_image.hh"
 
