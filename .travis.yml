@@ -15,7 +15,7 @@ addons:
     - binutils-mingw-w64-x86-64
     - python3
     - python3-pip
-    - python-dev
+    - python3-docutils
 
 branches:
   except:
