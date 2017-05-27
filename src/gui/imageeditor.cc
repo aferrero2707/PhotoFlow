@@ -45,6 +45,7 @@
 
 #include <gdk/gdk.h>
 
+#include "../base/fileutils.hh"
 #include "../base/pf_mkstemp.hh"
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
@@ -593,14 +594,31 @@ void PF::ImageEditor::open_image()
 #endif
 
   // Test the existence of a valid sidecar file
-  PF::Image* tmpimg = new PF::Image();
   bool load_sidecar = false;
-  std::string sidecar_name = filename+".pfi";
-  if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() &&
-      PF::load_pf_image( sidecar_name, tmpimg ) ) {
+  int sidecar_id = -1;
+  std::string sidecar_name[2];
+  std::string ext;
+  if( getFileExtensionLowcase( "/", filename, ext ) ) {
+    std::string basename = filename.substr(0,filename.size()-ext.size()-1);
+    sidecar_name[0] = basename+".pfi";
+  }
+  sidecar_name[1] = filename+".pfi";
+  for(int fi = 0; fi < 2; fi++) {
+    PF::Image* tmpimg = new PF::Image();
+    if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() &&
+        !load_sidecar && !sidecar_name[fi].empty() &&
+        PF::load_pf_image( sidecar_name[fi], tmpimg ) ) {
+      load_sidecar = true;
+      sidecar_id = fi;
+    }
+    delete tmpimg;
+    if(load_sidecar) break;
+  }
+
+  if(load_sidecar) {
     char tstr[501];
-    snprintf( tstr, 500, _("Sidecar file detected.\n Do you want to open it?"),
-        filename.c_str());
+    snprintf( tstr, 500, _("Sidecar file \"%s\"detected.\nDo you want to open it?"),
+        sidecar_name[sidecar_id].c_str());
     Gtk::MessageDialog dialog(tstr,
         false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
     if(toplevelwin) dialog.set_transient_for(*toplevelwin);
@@ -612,18 +630,19 @@ void PF::ImageEditor::open_image()
     //Handle the response:
     switch(result) {
     case Gtk::RESPONSE_YES:
-      load_sidecar = true;
       break;
     case Gtk::RESPONSE_NO:
+      load_sidecar = false;
       break;
     }
   }
-  delete tmpimg;
+
   if(load_sidecar) {
-    image->open( sidecar_name );
+    image->open( sidecar_name[sidecar_id] );
   } else {
     image->open( filename, bckname );
   }
+
   std::list<Layer*>& layers = image->get_layer_manager().get_layers();
 #ifndef NDEBUG
   std::cout<<"ImageEditor::open_image(): ... done. layers.size()="<<layers.size()<<std::endl;
