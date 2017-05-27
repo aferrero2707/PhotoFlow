@@ -1,4 +1,5 @@
 which crossroad
+cat /usr/local/share/crossroad/scripts/cmake/toolchain-w64.cmake
 exit
 
 crossroad install pkg-config libtiff-devel libpng-devel libjpeg8-devel gtkmm2-devel liborc-devel libexiv2-devel liblcms2-devel libxml2-devel libfftw3-3 fftw3-devel libexif-devel 
