@@ -27,6 +27,7 @@ branches:
 before_script:
     - cd build
     - sudo pip3 install crossroad
+    - cat /usr/local/share/crossroad/scripts/cmake/toolchain-w64.cmake
     - sudo echo "" >> /usr/local/share/crossroad/scripts/cmake/toolchain-w64.cmake
     - sudo echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> /usr/local/share/crossroad/scripts/cmake/toolchain-w64.cmake
     - crossroad --help w64
