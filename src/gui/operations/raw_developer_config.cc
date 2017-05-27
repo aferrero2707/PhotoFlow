@@ -627,7 +627,7 @@ void PF::RawDeveloperConfigGUI::do_update()
             //float xyz_to_cam[4][3];
             //xyz_to_cam[0][0] = NAN;
             //dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])xyz_to_cam);
-            if(!isnan(raw_data->color.cam_xyz[0][0])) {
+            if(!std::isnan(raw_data->color.cam_xyz[0][0])) {
               for(int i = 0; i < 3; i++) {
                 for(int j = 0; j < 3; j++) {
                   XYZ_to_CAM[i][j] = (double)raw_data->color.cam_xyz[i][j];

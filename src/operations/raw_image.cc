@@ -457,6 +457,7 @@ bool PF::RawImage::load_rawspeed()
   //		dcraw_data.color.cam_xyz[i][j] = get_cam_xyz(i,j);
   pdata = &dcraw_data;
 
+  std::string filen2;
 #ifdef __WIN32__
   const size_t len = strlen(file_name_real.c_str()) + 1;
   wchar_t filen[len];
@@ -465,7 +466,8 @@ bool PF::RawImage::load_rawspeed()
   char filen[PATH_MAX] = { 0 };
   snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
 #endif
-  rawspeed::FileReader f(filen);
+  filen2 = filen;
+  rawspeed::FileReader f(filen2.c_str());
 
 //#ifdef __APPLE__
 //  std::auto_ptr<rawspeed::RawDecoder> d;
