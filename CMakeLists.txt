@@ -34,7 +34,8 @@ find_package (JPEG REQUIRED)
 
 find_package (ZLIB REQUIRED)
 
-pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
+#pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
+pkg_check_modules(FFTW3 REQUIRED fftw3)
 
 pkg_check_modules(XML2 REQUIRED libxml-2.0)
 
