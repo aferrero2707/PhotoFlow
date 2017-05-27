@@ -1,3 +1,6 @@
+which crossroad
+exit
+
 crossroad install pkg-config libtiff-devel libpng-devel libjpeg8-devel gtkmm2-devel liborc-devel libexiv2-devel liblcms2-devel libxml2-devel libfftw3-3 fftw3-devel libexif-devel 
 ls ~/.local/share/crossroad/roads/w64/phf-build/lib/pkgconfig
 cat ~/.local/share/crossroad/roads/w64/phf-build/lib/pkgconfig/fftw3.pc
