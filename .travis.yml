@@ -26,5 +26,4 @@ before_script:
     - cd build
     - sudo pip3 install crossroad
     - crossroad --help w64
-    - crossroad w64 phf-build
-    - 
+    - crossroad w64 phf-build --run ../windows/build-w64.sh
