@@ -24,5 +24,7 @@ branches:
     
 before_script:
     - cd build
-    - pip3 install crossroad
-
+    - sudo pip3 install crossroad
+    - crossroad --help w64
+    - crossroad w64 phf-build
+    - 
