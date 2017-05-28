@@ -373,9 +373,9 @@ IF(APPLE)
 ENDIF(APPLE)
 
 target_link_libraries(photoflow ${LIBS} 
-  pfgmic
   pfgui
   pfbase 
+  pfgmic
   pfdt
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
