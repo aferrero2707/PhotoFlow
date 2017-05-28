@@ -12,7 +12,7 @@ basedir=`pwd`
 packagedir=packages
 
 # unzip to here
-installdir=$HOME/.local/share/crossroad/roads/w32/phf-build
+installdir=$HOME/.local/share/crossroad/roads/w64/phf-build
 
 # jhbuild will download sources to here 
 checkoutdir=source
