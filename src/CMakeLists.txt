@@ -58,6 +58,8 @@ SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -W
 SET(CMAKE_CXX_FLAGS_RELWITHDEBUGINFO "-g -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
 SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
 
+link_directories("/this/is/a/test/path")
+
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
 include_directories(${GMODULE_INCLUDE_DIRS})
