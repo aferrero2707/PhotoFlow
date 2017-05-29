@@ -324,6 +324,8 @@ add_library (pfbase STATIC
   ${OpSources}
   ${LibRawIncludes}
   ${LibRawSources}
+  ${GMicIncludes}
+  ${GMicSources}
 )
 
 
@@ -375,7 +377,7 @@ ENDIF(APPLE)
 target_link_libraries(photoflow ${LIBS} 
   pfgui
   pfbase 
-  pfgmic
+#  pfgmic
   pfdt
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
