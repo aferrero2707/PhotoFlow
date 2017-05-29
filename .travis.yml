@@ -36,5 +36,5 @@ before_script:
     - $HOME/inst/bin/crossroad --help w64
     - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-install.sh
     #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
-    #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
+    - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
     #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/package-w64.sh
