@@ -1,5 +1,6 @@
 rm -rf cmake_test
 git clone https://github.com/aferrero2707/cmake_test.git && cd cmake_test && mkdir build && cd build && $HOME/inst/bin/crossroad cmake .. 
+ls -l CMakeFiles/main.dir/link.txt
 cat CMakeFiles/main.dir/link.txt
 make VERBOSE=1
 
