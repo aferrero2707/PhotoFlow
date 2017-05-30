@@ -382,7 +382,6 @@ target_link_libraries(photoflow ${LIBS}
   pfgmic
   pfdt
   ${STATIC_LIBS}
-  ${GTKMM2_LIBRARIES_FULLPATH} 
   ${TIFF_LIBRARIES} 
   ${PNG_LIBRARIES} 
   ${JPEG_LIBRARIES} 

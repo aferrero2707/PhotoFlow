@@ -1,10 +1,12 @@
 rm -rf cmake_test
 git clone https://github.com/aferrero2707/cmake_test.git && cd cmake_test && mkdir build && cd build && $HOME/inst/bin/crossroad cmake .. 
+echo "================="
 ls -l CMakeFiles/main.dir/link.txt
 cat CMakeFiles/main.dir/link.txt
+echo "================="
 make VERBOSE=1
 
-exit 0 
+#exit 0 
 
 # PugiXML
 git clone https://github.com/zeux/pugixml.git && cd pugixml 
