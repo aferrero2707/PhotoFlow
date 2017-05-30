@@ -1,5 +1,5 @@
 rm -rf cmake_test
-git clone https://github.com/aferrero2707/cmake_test.git && cd cmake_test && mkdir build && cd build && $HOME/inst/bin/crossroad cmake .. 
+git clone https://github.com/aferrero2707/cmake_test.git && cd cmake_test && mkdir build && cd build && $HOME/inst/bin/crossroad cmake -DCMAKE_BUILD_TYPE=Release .. 
 echo "================="
 ls -l CMakeFiles/main.dir/link.txt
 cat CMakeFiles/main.dir/link.txt
