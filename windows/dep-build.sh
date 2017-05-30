@@ -1,4 +1,6 @@
-#git clone https://github.com/aferrero2707/pugixml.git && cd pugixml 
+git clone https://github.com/aferrero2707/cmake_test.git && cd cmake_test && mkdir build && cd build && cmake .. && make VERBOSE=1
+
+exit 0 
 
 # PugiXML
 git clone https://github.com/zeux/pugixml.git && cd pugixml 
