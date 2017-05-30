@@ -7,7 +7,7 @@ ls /usr/lib/gcc
 $HOME/inst/bin/crossroad install libxml2-devel libxml2-tools
 
 ls $HOME/.local/share/crossroad/roads/w64/phf-build/lib/pkgconfig
-cat $HOME/.local/share/crossroad/roads/w64/phf-build/lib/pkgconfig/glib-2.0.pc
+cat $HOME/.local/share/crossroad/roads/w64/phf-build/lib/pkgconfig/libxml-2.0.pc
 
 if [ $? -ne 0 ]; then 
 	exit 1
