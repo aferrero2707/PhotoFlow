@@ -7,7 +7,7 @@ cat CMakeFiles/main.dir/link.txt
 echo "================="
 make VERBOSE=1
 
-exit 0
+#exit 0
 
 # PugiXML
 git clone https://github.com/zeux/pugixml.git && cd pugixml 
