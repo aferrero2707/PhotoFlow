@@ -1,3 +1,12 @@
+    - cd build
+    - wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
+    - tar xzvf crossroad-0.6.tar.gz
+    - cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+    #- sudo pip3 install crossroad
+    - cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
+    - sudo echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
+    - sudo echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
+
 rm -rf cmake_test
 git clone https://github.com/aferrero2707/cmake_test.git && cd cmake_test && mkdir build && cd build && $HOME/inst/bin/crossroad cmake -DCMAKE_BUILD_TYPE=Release .. 
 echo "================="

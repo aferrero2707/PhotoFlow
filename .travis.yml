@@ -10,14 +10,14 @@ dist: trusty
 addons:
   apt:
     packages:
-    - gcc-mingw-w64-x86-64
-    - g++-mingw-w64-x86-64
-    - binutils-mingw-w64-x86-64
-    - python3
-    - python3-pip
-    - python3-docutils
-    - rpm2cpio
-    - libfile-mimeinfo-perl
+    #- gcc-mingw-w64-x86-64
+    #- g++-mingw-w64-x86-64
+    #- binutils-mingw-w64-x86-64
+    #- python3
+    #- python3-pip
+    #- python3-docutils
+    #- rpm2cpio
+    #- libfile-mimeinfo-perl
 
 branches:
   except:
@@ -25,6 +25,12 @@ branches:
     - /^(?i:continuous)$/
     
 before_script:
+    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+    - sudo add-apt-repository ppa:adrozdoff/mingw -y
+    - sudo apt-get update
+    - sudo apt-get install gcc-5-mingw-w64 g++-5-mingw-w64 binutils-mingw-w64-x86-64 python3 python3-docutils rpm2cpio libfile-mimeinfo-perl
+    - sudo ln -s /usr/bin/x86_64-w64-mingw32-gcc-5 /usr/bin/x86_64-w64-mingw32-gcc
+    - sudo ln -s /usr/bin/x86_64-w64-mingw32-g++-5 /usr/bin/x86_64-w64-mingw32-g++
     - cd build
     - wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
     - tar xzvf crossroad-0.6.tar.gz
