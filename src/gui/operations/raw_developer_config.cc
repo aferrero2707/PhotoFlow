@@ -907,8 +907,44 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
 
   par->set_caching( false );
 
+  cmsHTRANSFORM transform = NULL;
+  std::string outprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/ACES-elle-V4-g10.icc";
+  cmsHPROFILE profile_out = cmsOpenProfileFromFile( outprofname.c_str(), "r" );
+  if( !profile_out )
+    return;
+
+  // We need to retrieve the input ICC profile for the RGB conversion later on
+  cmsHPROFILE profile_in = NULL;
+  void *data;
+  size_t data_length;
+  if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
+      &data, &data_length ) ) {
+
+    profile_in = cmsOpenProfileFromMem( data, data_length );
+  }
+  if( profile_in ) {
+
+//#ifndef NDEBUG
+    char tstr2[1024];
+    cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr2, 1024);
+    std::cout<<"raw_developer: embedded profile found: "<<tstr2<<std::endl;
+//#endif
+
+    cmsUInt32Number infmt = vips2lcms_pixel_format( image->BandFmt, profile_in );
+    cmsUInt32Number outfmt = TYPE_RGB_FLT;
+
+    transform = cmsCreateTransform( profile_in,
+        infmt,
+        profile_out,
+        outfmt,
+        INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE );
+  }
+
+  std::cout<<"profile_in: "<<profile_in<<std::endl;
+  std::cout<<"transform:  "<<transform<<std::endl;
   int sample_size = 7;
 
+  float in_check[3] = { 0, 0, 0 };
   float rgb_check[3] = { 0, 0, 0 };
   float rgb_prev[3] = { 1000, 1000, 1000 };
   for( int i = 0; i < 100; i++ ) {
@@ -920,6 +956,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     int width = 7;
     int height = 7;
 
+    float in_avg[3] = {0, 0, 0};
     float rgb_avg[3] = {0, 0, 0};
     std::vector<float> values;
 
@@ -930,22 +967,24 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
           <<values.size()<<" (!= 3)"<<std::endl;
       return;
     }
-    rgb_avg[0] = values[0];
-    rgb_avg[1] = values[1];
-    rgb_avg[2] = values[2];
+    in_avg[0] = values[0];
+    in_avg[1] = values[1];
+    in_avg[2] = values[2];
+    if( transform ) {
+      if( cmsGetColorSpace(profile_in) == cmsSigLabData )
+          PF::Lab_pf2lcms( in_avg );
+      cmsDoTransform( transform, in_avg, rgb_avg, 1 );
+    } else {
+      rgb_avg[0] = in_avg[0];
+      rgb_avg[1] = in_avg[1];
+      rgb_avg[2] = in_avg[2];
+    }
 
     //#ifndef NDEBUG
     std::cout<<" sampled("<<i<<"): "<<rgb_avg[0]<<" "<<rgb_avg[1]<<" "<<rgb_avg[2]<<std::endl;
     //#endif
 
     float rgb_out[3] = {0, 0, 0};
-    float Lab_in[3] = {0, 0, 0};
-    float Lab_out[3] = {0, 0, 0};
-    float Lab_wb[3] = {
-        static_cast<float>(wb_target_L_slider.get_adjustment()->get_value()),
-        static_cast<float>(wb_target_a_slider.get_adjustment()->get_value()),
-        static_cast<float>(wb_target_b_slider.get_adjustment()->get_value())
-    };
 
     const float epsilon = 1.0e-5;
     float wb_red_mul;
@@ -1018,9 +1057,16 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
           <<values.size()<<" (!= 3)"<<std::endl;
       return;
     }
-    rgb_check[0] = values[0];
-    rgb_check[1] = values[1];
-    rgb_check[2] = values[2];
+    in_check[0] = values[0];
+    in_check[1] = values[1];
+    in_check[2] = values[2];
+    if( transform ) {
+    cmsDoTransform( transform, in_check, rgb_check, 1 );
+    } else {
+      rgb_check[0] = in_check[0];
+      rgb_check[1] = in_check[1];
+      rgb_check[2] = in_check[2];
+    }
 
     std::cout<<" rgb check("<<i<<"): "<<rgb_check[0]<<" "<<rgb_check[1]<<" "<<rgb_check[2]<<std::endl;
 
@@ -1034,6 +1080,10 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     rgb_prev[1] = rgb_check[1];
     rgb_prev[2] = rgb_check[2];
   }
+
+  cmsDeleteTransform( transform );
+  cmsCloseProfile( profile_in );
+  cmsCloseProfile( profile_out );
 
   par->set_caching( true );
   // Update the prepipeline to reflect the new settings
