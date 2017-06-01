@@ -48,6 +48,22 @@ namespace PF
   }
 }
 
+void PF::Lab_pf2lcms(float* p)
+{
+  p[0] = (cmsFloat32Number) (p[0] * 100.0);
+  p[1] = (cmsFloat32Number) (p[1]*256.0f - 128.0f);
+  p[2] = (cmsFloat32Number) (p[2]*256.0f - 128.0f);
+
+}
+
+void PF::Lab_pf2lcms(float* pin, float* pout)
+{
+  pout[0] = (cmsFloat32Number) (pin[0] * 100.0);
+  pout[1] = (cmsFloat32Number) (pin[1]*256.0f - 128.0f);
+  pout[2] = (cmsFloat32Number) (pin[2]*256.0f - 128.0f);
+
+}
+
 float PF::hsl_value( float n1, float n2, float hue)
 {
   float val;
