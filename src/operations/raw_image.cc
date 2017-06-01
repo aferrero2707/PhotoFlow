@@ -463,17 +463,18 @@ bool PF::RawImage::load_rawspeed()
   pdata = &dcraw_data;
 
   std::string filen2;
-#ifdef __WIN32__
-  const size_t len = strlen(file_name_real.c_str()) + 1;
-  wchar_t filen[len];
-  mbstowcs(filen, file_name_real.c_str(), len);
-#else
+//#ifdef __WIN32__
+//  const size_t len = strlen(file_name_real.c_str()) + 1;
+//  wchar_t filen[len];
+//  mbstowcs(filen, file_name_real.c_str(), len);
+//#else
   char filen[PATH_MAX] = { 0 };
   snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
-#endif
+//#endif
   filen2 = filen;
-  std::cout<<"RawImage::load_rawspeed(): input file: "<<filen2.c_str()<<std::endl;
-  rawspeed::FileReader f(filen2.c_str());
+  std::cout<<"RawImage::load_rawspeed(): input file: "<<filen.c_str()<<std::endl;
+  rawspeed::FileReader f(filen.c_str());
+  //rawspeed::FileReader f(filen2.c_str());
 
 //#ifdef __APPLE__
 //  std::auto_ptr<rawspeed::RawDecoder> d;
