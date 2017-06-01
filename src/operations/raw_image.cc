@@ -444,16 +444,16 @@ bool PF::RawImage::load_rawspeed()
 #else
   std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "/rawspeed/cameras.xml";
 #endif
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed(): RAWSpeed camera file: "<<camfile<<std::endl;
-#endif
+//#endif
   meta = new rawspeed::CameraMetaData( camfile.c_str() );
 #ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed(): meta="<<(void*)meta<<std::endl;
 #endif
 
   if( !meta ) {
-    std::cout<<"RawImage::load_rawspeed(): unable to load camera metadata"<<std::endl;
+    std::cout<<"RawImage::load_rawspeed(): unable to load camera metadata from \""<<camfile<<"\""<<std::endl;
     return false;
   }
 
