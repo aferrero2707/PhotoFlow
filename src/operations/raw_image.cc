@@ -147,9 +147,11 @@ PF::RawImage::RawImage( const std::string _fname ):
     gchar* fname = g_path_get_basename( fullpath );
     gchar* fname2 = g_build_filename( PF::PhotoFlow::Instance().get_current_image_dir().c_str(),
         fname, NULL );
+    std::cout<<"RawImage::RawImage(): file \""<<file_name_real<<"\" not found"<<std::endl;
+    std::cout<<"                      trying with \""<<fname2<<"\""<<std::endl;
     ifd = open( fname2, O_RDONLY );
     if( ifd < 0 ) {
-      std::cout<<"RawImage::RawImage(): \""<<file_name<<"\" not found"<<std::endl;
+      std::cout<<"RawImage::RawImage(): \""<<fname2<<"\" not found"<<std::endl;
       return;
     } else {
       close(ifd);
@@ -160,6 +162,9 @@ PF::RawImage::RawImage( const std::string _fname ):
   } else {
     close(ifd);
   }
+//#ifndef NDEBUG
+  std::cout<<"RawImage::RawImage(): opening file \""<<file_name_real<<"\""<<std::endl;
+//#endif
 
   iwidth = 0, iheight = 0, crop_x = 0, crop_y = 0;
 

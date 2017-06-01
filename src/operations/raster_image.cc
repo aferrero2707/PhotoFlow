@@ -47,6 +47,8 @@ image( NULL )
     gchar* fname = g_path_get_basename( fullpath );
     gchar* fname2 = g_build_filename( PF::PhotoFlow::Instance().get_current_image_dir().c_str(),
         fname, NULL );
+    std::cout<<"RasterImage::RasterImage(): file \""<<file_name_real<<"\" not found"<<std::endl;
+    std::cout<<"                      trying with \""<<fname2<<"\""<<std::endl;
     ifd = open( fname2, O_RDONLY );
     if( ifd < 0 ) {
       std::cout<<"RasterImage::RasterImage(): \""<<file_name<<"\" not found"<<std::endl;
@@ -60,6 +62,9 @@ image( NULL )
   } else {
     close(ifd);
   }
+//#ifndef NDEBUG
+  std::cout<<"RasterImage::RasterImage(): opening file \""<<file_name_real<<"\""<<std::endl;
+//#endif
 
   // Create VipsImage from given file
 #if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
