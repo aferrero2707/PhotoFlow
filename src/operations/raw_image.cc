@@ -448,9 +448,9 @@ bool PF::RawImage::load_rawspeed()
   std::cout<<"RawImage::load_rawspeed(): RAWSpeed camera file: "<<camfile<<std::endl;
 //#endif
   meta = new rawspeed::CameraMetaData( camfile.c_str() );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed(): meta="<<(void*)meta<<std::endl;
-#endif
+//#endif
 
   if( !meta ) {
     std::cout<<"RawImage::load_rawspeed(): unable to load camera metadata from \""<<camfile<<"\""<<std::endl;
@@ -472,6 +472,7 @@ bool PF::RawImage::load_rawspeed()
   snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
 #endif
   filen2 = filen;
+  std::cout<<"RawImage::load_rawspeed(): input file: "<<filen2.c_str()<<std::endl;
   rawspeed::FileReader f(filen2.c_str());
 
 //#ifdef __APPLE__
@@ -489,9 +490,9 @@ bool PF::RawImage::load_rawspeed()
 //#else
     m = std::unique_ptr<rawspeed::Buffer>(f.readFile());
 //#endif
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"RawImage::load_rawspeed(): FileMap object: "<<(void*)m.get()<<std::endl;
-#endif
+//#endif
     if(!m.get()) {
       std::cout<<"RawImage::load_rawspeed(): unable to create FileMap object"<<std::endl;
       return false;
