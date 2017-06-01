@@ -147,9 +147,11 @@ PF::RawImage::RawImage( const std::string _fname ):
     gchar* fname = g_path_get_basename( fullpath );
     gchar* fname2 = g_build_filename( PF::PhotoFlow::Instance().get_current_image_dir().c_str(),
         fname, NULL );
+    std::cout<<"RawImage::RawImage(): file \""<<file_name_real<<"\" not found"<<std::endl;
+    std::cout<<"                      trying with \""<<fname2<<"\""<<std::endl;
     ifd = open( fname2, O_RDONLY );
     if( ifd < 0 ) {
-      std::cout<<"RawImage::RawImage(): \""<<file_name<<"\" not found"<<std::endl;
+      std::cout<<"RawImage::RawImage(): \""<<fname2<<"\" not found"<<std::endl;
       return;
     } else {
       close(ifd);
@@ -160,6 +162,9 @@ PF::RawImage::RawImage( const std::string _fname ):
   } else {
     close(ifd);
   }
+//#ifndef NDEBUG
+  std::cout<<"RawImage::RawImage(): opening file \""<<file_name_real<<"\""<<std::endl;
+//#endif
 
   iwidth = 0, iheight = 0, crop_x = 0, crop_y = 0;
 
@@ -439,16 +444,16 @@ bool PF::RawImage::load_rawspeed()
 #else
   std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "/rawspeed/cameras.xml";
 #endif
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed(): RAWSpeed camera file: "<<camfile<<std::endl;
-#endif
+//#endif
   meta = new rawspeed::CameraMetaData( camfile.c_str() );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed(): meta="<<(void*)meta<<std::endl;
-#endif
+//#endif
 
   if( !meta ) {
-    std::cout<<"RawImage::load_rawspeed(): unable to load camera metadata"<<std::endl;
+    std::cout<<"RawImage::load_rawspeed(): unable to load camera metadata from \""<<camfile<<"\""<<std::endl;
     return false;
   }
 
@@ -457,17 +462,10 @@ bool PF::RawImage::load_rawspeed()
   //		dcraw_data.color.cam_xyz[i][j] = get_cam_xyz(i,j);
   pdata = &dcraw_data;
 
-  std::string filen2;
-#ifdef __WIN32__
-  const size_t len = strlen(file_name_real.c_str()) + 1;
-  wchar_t filen[len];
-  mbstowcs(filen, file_name_real.c_str(), len);
-#else
   char filen[PATH_MAX] = { 0 };
   snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
-#endif
-  filen2 = filen;
-  rawspeed::FileReader f(filen2.c_str());
+  std::cout<<"RawImage::load_rawspeed(): input file: "<<filen<<std::endl;
+  rawspeed::FileReader f(filen);
 
 //#ifdef __APPLE__
 //  std::auto_ptr<rawspeed::RawDecoder> d;
@@ -484,9 +482,9 @@ bool PF::RawImage::load_rawspeed()
 //#else
     m = std::unique_ptr<rawspeed::Buffer>(f.readFile());
 //#endif
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"RawImage::load_rawspeed(): FileMap object: "<<(void*)m.get()<<std::endl;
-#endif
+//#endif
     if(!m.get()) {
       std::cout<<"RawImage::load_rawspeed(): unable to create FileMap object"<<std::endl;
       return false;
