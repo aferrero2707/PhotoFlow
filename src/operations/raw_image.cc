@@ -472,8 +472,8 @@ bool PF::RawImage::load_rawspeed()
   snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
 //#endif
   filen2 = filen;
-  std::cout<<"RawImage::load_rawspeed(): input file: "<<filen.c_str()<<std::endl;
-  rawspeed::FileReader f(filen.c_str());
+  std::cout<<"RawImage::load_rawspeed(): input file: "<<filen<<std::endl;
+  rawspeed::FileReader f(filen);
   //rawspeed::FileReader f(filen2.c_str());
 
 //#ifdef __APPLE__
