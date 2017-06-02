@@ -91,6 +91,7 @@ echo cleaning build $repackagedir
 if [ ! -e $repackagedir/bin ]; then echo "$repackagedir/bin not found."; exit; fi
 if [ ! -e $repackagedir/lib ]; then echo "$repackagedir/lib not found."; exit; fi
 
+(cd $repackagedir/bin; wget ftp://ftp.equation.com/gdb/64/gdb.exe)
 
 echo "Before cleaning $repackagedir/bin"
 #read dummy
