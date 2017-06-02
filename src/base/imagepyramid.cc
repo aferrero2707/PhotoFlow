@@ -44,7 +44,12 @@ GObject* PF::pyramid_test_obj = NULL;
 
 static void free_mem_array (VipsObject *object, gpointer user_data)
 {
-  if( user_data ) free( user_data );
+  if( user_data ) {
+    free( user_data );
+#ifndef NDEBUG
+    std::cout<<"free_mem_array(): free("<<user_data<<") called"<<std::endl;
+#endif
+  }
 }
 
 
@@ -325,11 +330,11 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     //if( vips_subsample( in, &out, 2, 2, NULL ) )
       return NULL;
     //PF_UNREF( in, "ImagePyramid::get_level(): in unref" );
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"ImagePyramid::get_level("<<level<<") subsample in="<<in<<"  out="<<out<<std::endl;
     std::cout<<"ImagePyramid::get_level("<<level<<") scale="<<scale
         <<"  image size: "<<out->Xsize<<" x "<<out->Ysize<<std::endl;
-#endif
+//#endif
     //g_object_unref( in );
     width = out->Xsize;
     height = out->Ysize;
@@ -341,28 +346,28 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     int fd = -1;
     char fname[500]; fname[0] = '\0';
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"ImagePyramid: level #"<<levels.size()<<" size: "<<imgsz/1024/1024<<"MB (max="<<imgmax/1024/1024<<"MB)"<<std::endl;
-#endif
+//#endif
     if( memory_storage ) {
       size_t array_sz;
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"ImagePyramid: saving cache buffer..."<<std::endl;
-#endif
+//#endif
       void* mem_array = vips_image_write_to_memory( out, &array_sz );
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache buffer saved."<<std::endl;
-#endif
+//#endif
       snprintf(tstr,499,"PF::ImagePyramid::get_level(%d) level #%d (after write_to_memory)",level, (int)levels.size());
       PF_UNREF( out, tstr );
       in = vips_image_new_from_memory( mem_array, array_sz, width, height, img->Bands, img->BandFmt );
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache buffer loaded."<<std::endl;
-#endif
+//#endif
       g_signal_connect( in, "postclose", G_CALLBACK(free_mem_array), mem_array );
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"ImagePyramid: postclose callback attached to cache buffer."<<std::endl;
-#endif
+//#endif
     } else {
       sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
       fd = pf_mkstemp( fname );
