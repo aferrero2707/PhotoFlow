@@ -603,16 +603,19 @@ void PF::ImageEditor::open_image()
     sidecar_name[0] = basename+".pfi";
   }
   sidecar_name[1] = filename+".pfi";
-  for(int fi = 0; fi < 2; fi++) {
-    PF::Image* tmpimg = new PF::Image();
-    if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() &&
-        !load_sidecar && !sidecar_name[fi].empty() &&
-        PF::load_pf_image( sidecar_name[fi], tmpimg ) ) {
-      load_sidecar = true;
-      sidecar_id = fi;
+
+  if( ext != "pfi" ) {
+    for(int fi = 0; fi < 2; fi++) {
+      PF::Image* tmpimg = new PF::Image();
+      if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() &&
+          !load_sidecar && !sidecar_name[fi].empty() &&
+          PF::load_pf_image( sidecar_name[fi], tmpimg ) ) {
+        load_sidecar = true;
+        sidecar_id = fi;
+      }
+      delete tmpimg;
+      if(load_sidecar) break;
     }
-    delete tmpimg;
-    if(load_sidecar) break;
   }
 
   if(load_sidecar) {
