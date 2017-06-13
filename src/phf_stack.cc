@@ -5,7 +5,7 @@
 /*
 
     This file is part of VIPS.
-    
+
     VIPS is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
@@ -42,15 +42,17 @@
 #include <vips/vips.h>
 #include <vips/debug.h>
 
-#include <gexiv2/gexiv2-metadata.h>
+#include <base/exif_data.hh>
+
+
 
 typedef struct _VipsArraystack {
   VipsOperation parent_instance;
 
-	/* Params.
-	 */
-	VipsArrayImage *in;
-	VipsImage* out;
+  /* Params.
+   */
+  VipsArrayImage *in;
+  VipsImage* out;
 
 } VipsArraystack;
 
@@ -89,17 +91,17 @@ G_DEFINE_TYPE( VipsArraystack, vips_arraystack, VIPS_TYPE_OPERATION );
 
 static int
 vips_arraystack_gen( VipsRegion *oreg, void *seq,
-	void *a, void *b, gboolean *stop )
+    void *a, void *b, gboolean *stop )
 {
-	VipsRegion **ir = (VipsRegion **) seq;
-	VipsArraystack *stack = (VipsArraystack *) b;
-	VipsRect *r = &oreg->valid;
-	int n = ((VipsArea *) stack->in)->n;
+  VipsRegion **ir = (VipsRegion **) seq;
+  VipsArraystack *stack = (VipsArraystack *) b;
+  VipsRect *r = &oreg->valid;
+  int n = ((VipsArea *) stack->in)->n;
   const int bands = vips_image_get_bands( ir[0]->im );
   int sz = r->width * bands;
   //printf("vips_arraystack_gen(): bands=%d\n", bands);
 
-	int i, x, y, c;
+  int i, x, y, c;
   double avg = 0, delta = 10000000000000, D, median; int N = 0;
 
   for( i = 0; i < n; i++) {
@@ -107,72 +109,72 @@ vips_arraystack_gen( VipsRegion *oreg, void *seq,
       return( -1 );
   }
 
-	/* Output requires more than one input. Paste all touching inputs into
-	 * the output.
-	 */
-	for( y = 0; y < r->height; y++ ) {
-	  for( x = 0; x < r->width; x++ ) {
+  /* Output requires more than one input. Paste all touching inputs into
+   * the output.
+   */
+  for( y = 0; y < r->height; y++ ) {
+    for( x = 0; x < r->width; x++ ) {
 
-	    switch( vips_image_get_format( ir[0]->im ) ) {
-	    case VIPS_FORMAT_CHAR:    PROCESS_PEL( signed char ); break;
-	    case VIPS_FORMAT_SHORT:   PROCESS_PEL( signed short ); break;
-	    case VIPS_FORMAT_INT:     PROCESS_PEL( signed int ); break;
-	    case VIPS_FORMAT_FLOAT:   PROCESS_PEL( float ); break;
-	    case VIPS_FORMAT_DOUBLE:  PROCESS_PEL( double ); break;
+      switch( vips_image_get_format( ir[0]->im ) ) {
+      case VIPS_FORMAT_CHAR:    PROCESS_PEL( signed char ); break;
+      case VIPS_FORMAT_SHORT:   PROCESS_PEL( signed short ); break;
+      case VIPS_FORMAT_INT:     PROCESS_PEL( signed int ); break;
+      case VIPS_FORMAT_FLOAT:   PROCESS_PEL( float ); break;
+      case VIPS_FORMAT_DOUBLE:  PROCESS_PEL( double ); break;
 
-	    default:
-	      g_assert_not_reached();
-	    }
-	  }
-	}
+      default:
+        g_assert_not_reached();
+      }
+    }
+  }
 
-	return( 0 );
+  return( 0 );
 }
 
 static int
 vips_arraystack_build( VipsObject *object )
 {
-	VipsObjectClass *klass = VIPS_OBJECT_GET_CLASS( object );
-	VipsOperation *conversion = VIPS_OPERATION( object );
-	VipsArraystack *stack = (VipsArraystack *) object;
+  VipsObjectClass *klass = VIPS_OBJECT_GET_CLASS( object );
+  VipsOperation *conversion = VIPS_OPERATION( object );
+  VipsArraystack *stack = (VipsArraystack *) object;
 
-	VipsImage **in;
-	int n;
+  VipsImage **in;
+  int n;
 
-	VipsImage **format;
-	VipsImage **band;
-	VipsImage **size;
+  VipsImage **format;
+  VipsImage **band;
+  VipsImage **size;
 
-	int i;
+  int i;
 
   printf("stack->out: %p\n",(void*)stack->out);
 
   if( VIPS_OBJECT_CLASS( vips_arraystack_parent_class )->build( object ) )
-		return( -1 );
+    return( -1 );
 
-	in = vips_array_image_get( stack->in, &n );
-	/* Array length zero means error.
-	 */
-	if( n == 0 )
-		return( -1 ); 
+  in = vips_array_image_get( stack->in, &n );
+  /* Array length zero means error.
+   */
+  if( n == 0 )
+    return( -1 );
 
-	/* Move all input images to a common format and number of bands.
-	 *//*
+  /* Move all input images to a common format and number of bands.
+   *//*
 	format = (VipsImage **) vips_object_local_array( object, n );
 	if( vips__formatalike_vec( in, format, n ) )
 		return( -1 );
 	in = format;
-	*/
+    */
 
-	/* We have to include the number of bands in @background in our
-	 * calculation.
-	 *//*
+  /* We have to include the number of bands in @background in our
+   * calculation.
+   *//*
 	band = (VipsImage **) vips_object_local_array( object, n );
 	if( vips__bandalike_vec( class->nickname, 
 		in, band, n, stack->background->n ) )
 		return( -1 );
 	in = band;
-	*/
+    */
 
 
   /* Get ready to write to @out. @out must be set via g_object_set() so
@@ -182,54 +184,54 @@ vips_arraystack_build( VipsObject *object )
   g_object_set( stack, "out", vips_image_new(), NULL );
 
 
-	if( vips_image_pipeline_array( stack->out,
-		VIPS_DEMAND_STYLE_THINSTRIP, in ) )
-		return( -1 );
+  if( vips_image_pipeline_array( stack->out,
+      VIPS_DEMAND_STYLE_THINSTRIP, in ) )
+    return( -1 );
 
-	printf("stack->out: %p   n=%d\n",(void*)stack->out, n);
+  printf("stack->out: %p   n=%d\n",(void*)stack->out, n);
 
-	//stack->out->Xsize = in[0]->Xsize;
-	//stack->out->Ysize = in[0]->Ysize;
+  //stack->out->Xsize = in[0]->Xsize;
+  //stack->out->Ysize = in[0]->Ysize;
 
-	if( vips_image_generate( stack->out,
-		vips_start_many, vips_arraystack_gen, vips_stop_many,
-		in, stack ) )
-		return( -1 );
+  if( vips_image_generate( stack->out,
+      vips_start_many, vips_arraystack_gen, vips_stop_many,
+      in, stack ) )
+    return( -1 );
 
-	return( 0 );
+  return( 0 );
 }
 
 static void
 vips_arraystack_class_init( VipsArraystackClass *klass )
 {
-	GObjectClass *gobject_class = G_OBJECT_CLASS( klass );
-	VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( klass );
-	VipsOperationClass *operation_class = VIPS_OPERATION_CLASS( klass );
+  GObjectClass *gobject_class = G_OBJECT_CLASS( klass );
+  VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( klass );
+  VipsOperationClass *operation_class = VIPS_OPERATION_CLASS( klass );
 
   VIPS_DEBUG_MSG( "vips_arraystack_class_init\n" );
   printf( "vips_arraystack_class_init\n" );
 
-	gobject_class->set_property = vips_object_set_property;
-	gobject_class->get_property = vips_object_get_property;
+  gobject_class->set_property = vips_object_set_property;
+  gobject_class->get_property = vips_object_get_property;
 
-	vobject_class->nickname = "arraystack";
-	vobject_class->description = _( "stack an array of images" );
-	vobject_class->build = vips_arraystack_build;
+  vobject_class->nickname = "arraystack";
+  vobject_class->description = _( "stack an array of images" );
+  vobject_class->build = vips_arraystack_build;
 
-	operation_class->flags = VIPS_OPERATION_SEQUENTIAL_UNBUFFERED;
+  operation_class->flags = VIPS_OPERATION_SEQUENTIAL_UNBUFFERED;
 
-	VIPS_ARG_BOXED( klass, "in", -1,
-		_( "Input" ), 
-		_( "Array of input images" ),
-		VIPS_ARGUMENT_REQUIRED_INPUT,
-		G_STRUCT_OFFSET( VipsArraystack, in ),
-		VIPS_TYPE_ARRAY_IMAGE );
+  VIPS_ARG_BOXED( klass, "in", -1,
+      _( "Input" ),
+      _( "Array of input images" ),
+      VIPS_ARGUMENT_REQUIRED_INPUT,
+      G_STRUCT_OFFSET( VipsArraystack, in ),
+      VIPS_TYPE_ARRAY_IMAGE );
 
   VIPS_ARG_IMAGE( klass, "out", 1,
-    _( "Output" ),
-    _( "Output image" ),
-    VIPS_ARGUMENT_REQUIRED_OUTPUT,
-    G_STRUCT_OFFSET( VipsArraystack, out ) );
+      _( "Output" ),
+      _( "Output image" ),
+      VIPS_ARGUMENT_REQUIRED_OUTPUT,
+      G_STRUCT_OFFSET( VipsArraystack, out ) );
 }
 
 static void
@@ -240,14 +242,14 @@ vips_arraystack_init( VipsArraystack *stack )
 static int
 vips_arraystackv( VipsImage **in, VipsImage **out, int n, va_list ap )
 {
-	VipsArrayImage *array; 
-	int result;
+  VipsArrayImage *array;
+  int result;
 
-	array = vips_array_image_new( in, n ); 
-	result = vips_call_split( "arraystack", ap, array, out );
-	vips_area_unref( VIPS_AREA( array ) );
+  array = vips_array_image_new( in, n );
+  result = vips_call_split( "arraystack", ap, array, out );
+  vips_area_unref( VIPS_AREA( array ) );
 
-	return( result );
+  return( result );
 }
 
 /**
@@ -264,14 +266,14 @@ vips_arraystackv( VipsImage **in, VipsImage **out, int n, va_list ap )
 int
 vips_arraystack( VipsImage **in, VipsImage **out, int n, ... )
 {
-	va_list ap;
-	int result;
+  va_list ap;
+  int result;
 
-	va_start( ap, n );
-	result = vips_arraystackv( in, out, n, ap );
-	va_end( ap );
+  va_start( ap, n );
+  result = vips_arraystackv( in, out, n, ap );
+  va_end( ap );
 
-	return( result );
+  return( result );
 }
 
 
@@ -305,6 +307,37 @@ int main(int argc, char** argv)
 
   vips_tiffsave( out, argv[1], NULL );
 
+  try {
+    PF::exiv2_data_t* exiv2_buf;
+    size_t exiv2_buf_length;
+    if( vips_image_get_blob( out, "exiv2-data",
+        (void**)(&exiv2_buf), &exiv2_buf_length ) )
+      exiv2_buf = NULL;
+    if( exiv2_buf && (exiv2_buf_length==sizeof(PF::exiv2_data_t)) && exiv2_buf->image.get() != NULL ) {
+      Exiv2::BasicIo::AutoPtr file (new Exiv2::FileIo (argv[1]));
+      Exiv2::Image::AutoPtr exiv2_image = Exiv2::ImageFactory::open(file);
+      if(exiv2_image.get() != 0) {
+        //exiv2_image->readMetadata();
+        exiv2_image->setMetadata( *(exiv2_buf->image.get()) );
+
+        void *iccdata;
+        size_t iccdata_length;
+
+        if( !vips_image_get_blob( out, VIPS_META_ICC_NAME,
+            &iccdata, &iccdata_length ) ) {
+          Exiv2::byte *iccdata2 = (Exiv2::byte *)iccdata;
+          Exiv2::DataBuf iccbuf(iccdata2, iccdata_length);
+          exiv2_image->setIccProfile( iccbuf, true );
+        }
+        exiv2_image->writeMetadata();
+      }
+    }
+  } catch(Exiv2::AnyError &e) {
+    std::string s(e.what());
+    std::cerr << "[exiv2] " << argv[1] << ": " << s << std::endl;
+    //return 1;
+  }
+  /*
   void* gexiv2_buf;
   size_t gexiv2_buf_length;
   if( vips_image_get_blob( out, "gexiv2-data",
@@ -313,7 +346,7 @@ int main(int argc, char** argv)
   if( gexiv2_buf && (gexiv2_buf_length==sizeof(GExiv2Metadata)) ) {
     gexiv2_metadata_save_file( (GExiv2Metadata*)gexiv2_buf, argv[1], NULL );
   }
-
+   */
   vips_shutdown();
 
 
