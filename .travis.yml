@@ -9,6 +9,9 @@ dist: trusty
 
 addons:
   apt:
+    sources:
+    #- sourceline: 'ppa:dhor/myway'
+    - sourceline: 'ppa:otto-kesselgulasch/gimp-edge'
     packages:
       - g++
       - gettext
