@@ -1062,7 +1062,17 @@ void PF::Image::do_export_merged( std::string filename )
           Exiv2::Image::AutoPtr exiv2_image = Exiv2::ImageFactory::open(file);
           if(exiv2_image.get() != 0) {
             //exiv2_image->readMetadata();
-            exiv2_image->setExifData( exiv2_buf->image->exifData() );
+            exiv2_image->setMetadata( *(exiv2_buf->image.get()) );
+
+            void *iccdata;
+            size_t iccdata_length;
+
+            if( !vips_image_get_blob( outimg, VIPS_META_ICC_NAME,
+                                     &iccdata, &iccdata_length ) ) {
+              Exiv2::byte *iccdata2 = (Exiv2::byte *)iccdata;
+              Exiv2::DataBuf iccbuf(iccdata2, iccdata_length);
+              exiv2_image->setIccProfile( iccbuf, true );
+            }
             exiv2_image->writeMetadata();
           }
         }
