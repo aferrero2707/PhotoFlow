@@ -172,10 +172,16 @@ bool check_xtrans( unsigned filters );
 
     std::string get_file_name() { return file_name_real; }
 
+    unsigned int BL(const int row, const int col)
+    {
+      return ((((row+dcraw_data.sizes.top_margin) & 1) << 1) + ((col+dcraw_data.sizes.left_margin) & 1));
+    }
+
     unsigned FC (unsigned row, unsigned col) const
     {
-      return( dcraw_data.idata.filters >> ((((row+dcraw_data.sizes.top_margin) << 1 & 14) +
-          ((col+dcraw_data.sizes.left_margin) & 1)) << 1) & 3 );
+      //return( dcraw_data.idata.filters >> ((((row+dcraw_data.sizes.top_margin) << 1 & 14) +
+      //    ((col+dcraw_data.sizes.left_margin) & 1)) << 1) & 3 );
+      return( dcraw_data.idata.filters >> ((((row) << 1 & 14) + ((col) & 1)) << 1) & 3 );
     }
 
     unsigned FC_xtrans (unsigned row, unsigned col) const

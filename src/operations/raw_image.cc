@@ -131,6 +131,7 @@ bool PF::check_xtrans( unsigned filters )
 }
 
 
+
 PF::RawImage::RawImage( const std::string _fname ):
             nref(1), file_name( _fname ),
             image( NULL ), demo_image( NULL ),
@@ -532,28 +533,20 @@ bool PF::RawImage::load_rawspeed()
         }
     }
 
-    pdata->color.black = r->blackLevel;
-    pdata->color.maximum = r->whitePoint;
-
     if(r->blackLevelSeparate[0] == -1 || r->blackLevelSeparate[1] == -1 || r->blackLevelSeparate[2] == -1
         || r->blackLevelSeparate[3] == -1)
     {
       r->calculateBlackAreas();
     }
 
-    for(uint8_t i = 0; i < 4; i++) pdata->color.cblack[i] = r->blackLevelSeparate[i];
-
-    if(r->blackLevel == -1)
-    {
-      float black = 0.0f;
-      for(uint8_t i = 0; i < 4; i++)
-      {
-        black += pdata->color.cblack[i];
-      }
-      black /= 4.0f;
-
-      pdata->color.black = CLAMP(black, 0, UINT16_MAX);
+    std::cout<<"RawSpeed: r->blackLevel="<<r->blackLevel<<std::endl
+        <<"r->blackLevelSeparate=";
+    for(uint8_t i = 0; i < 4; i++) {
+      std::cout<<r->blackLevelSeparate[i]<<" ";
     }
+    std::cout<<std::endl;
+
+    //for(uint8_t i = 0; i < 4; i++) pdata->color.cblack[i] = pdata->color.black;
 
     /*
      * FIXME
@@ -598,9 +591,43 @@ bool PF::RawImage::load_rawspeed()
     // crop - Bottom,Right corner
     rawspeed::iPoint2D cropBR = dimUncropped - dimCropped - cropTL;
 
-#ifndef NDEBUG
-    std::cout<<"original width: "<<dimUncropped.x<<"  crop offset: "<<cropTL.x<<"  cropped width: "<<dimCropped.x<<std::endl;
-#endif
+//#ifndef NDEBUG
+    std::cout<<"original width: "<<dimUncropped.x<<"  crop offset: "<<cropTL.y<<","<<cropTL.x<<"  cropped width: "<<dimCropped.x<<std::endl;
+//#endif
+
+    pdata->color.black = r->blackLevel;
+    pdata->color.maximum = r->whitePoint;
+
+    if( !is_xtrans() ) {
+      for(int row = 0; row < 2; row++) {
+        for(int col = 0; col < 2; col++) {
+          unsigned int color = FC(row,col);
+          if( color == 1 && FC(row,col+1) == 2 ) color = 3;
+          if(color > 3) color = 0;
+          unsigned int color2 = BL(row,col);
+          if(color2 > 3) color2 = 0;
+          pdata->color.cblack[color] = r->blackLevelSeparate[color2];
+        }
+      }
+
+      if(r->blackLevel <= 0) {
+        float black = 0.0f;
+        for(uint8_t i = 0; i < 4; i++) {
+          black += pdata->color.cblack[i];
+        }
+        black /= 4.0f;
+
+        pdata->color.black = CLAMP(black, 0, UINT16_MAX);
+//      } else {
+//        if( pdata->color.cblack[0]<=0 && pdata->color.cblack[1]<=0 &&
+//            pdata->color.cblack[2]<=0 && pdata->color.cblack[3]<=0 ) {
+//          pdata->color.cblack[0] = pdata->color.black;
+//          pdata->color.cblack[1] = pdata->color.black;
+//          pdata->color.cblack[2] = pdata->color.black;
+//          pdata->color.cblack[3] = pdata->color.black;
+//        }
+      }
+    }
   }
 
   catch(const std::exception &exc)
@@ -682,27 +709,31 @@ bool PF::RawImage::load_rawspeed()
     for(col=0; col<iwidth; col++) {
       int col2 = col + crop_x;
       int row2 = row + crop_y;
-      unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : r->cfa.getColorAt(col,row);
-      //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
+      //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : r->cfa.getColorAt(col,row);
+      unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
+      unsigned char color4 = color;
+      if( color4 == 1 && FC(row,col+1) == 2 ) color4 = 3;
+      color = color4;
       float val = 0;
       float nval = 0;
       switch(r->getDataType()) {
       case rawspeed::TYPE_USHORT16: val = *((uint16_t*)r->getDataUncropped(col2,row2)); break;
       case rawspeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
       }
-      if(false && row<8 && col<8) {
-        std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<std::endl;
+      if(true && row<4 && col<4) {
+        std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<","<<(int)color4<<","<<(int)BL(row,col)<<std::endl;
       }
-      nval = val - pdata->color.black;
-      nval /= (pdata->color.maximum - pdata->color.black);
+      float black = pdata->color.cblack[color];
+      nval = val - black;
+      nval /= (pdata->color.maximum - black);
       nval *= 65535;
 
 
       // Fill raw histogram
       int hist_id = -1;
       int ch = -1;
-      if( ch < 3 ) ch = color;
-      else if( ch == 3 ) ch = 1;
+      if( color < 3 ) ch = color;
+      else if( color == 3 ) ch = 1;
       if( ch >= 0 ) hist_id = static_cast<int>( val*3 + ch );
       if( hist_id >= 65536*3 ) hist_id = 65536*3-1;
       if( hist_id >= 0 ) {
@@ -977,21 +1008,23 @@ bool PF::RawImage::load_rawtherapee()
       int row2 = row + crop_y;
       unsigned char color = ri->FC(row,col);
       //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
+      if( color > 3 ) color = 0;
       float val = ri->data[row][col];
       float nval = 0;
       if(false && row<8 && col<8) {
         std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<std::endl;
       }
-      nval = val - pdata->color.black;
-      nval /= (pdata->color.maximum - pdata->color.black);
+      float black = pdata->color.cblack[color];
+      nval = val - black;
+      nval /= (pdata->color.maximum - black);
       nval *= 65535;
 
 
       // Fill raw histogram
       int hist_id = -1;
       int ch = -1;
-      if( ch < 3 ) ch = color;
-      else if( ch == 3 ) ch = 1;
+      if( color < 3 ) ch = color;
+      else if( color == 3 ) ch = 1;
       if( ch >= 0 ) hist_id = static_cast<int>( val*3 + ch );
       if( hist_id >= 65536*3 ) hist_id = 65536*3-1;
       if( hist_id >= 0 ) {
