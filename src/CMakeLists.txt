@@ -60,6 +60,9 @@ SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parame
 
 #link_directories("/this/is/a/test/path")
 
+include_directories(${EXPAT_INCLUDE_DIRS})
+include_directories(${ICONV_INCLUDE_DIRS})
+
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
 include_directories(${GMODULE_INCLUDE_DIRS})
@@ -101,8 +104,8 @@ link_directories(${LCMS22_LIBRARY_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
-include_directories(${EXIV2_INCLUDE_DIRS})
-link_directories(${EXIV2_LIBRARY_DIRS})
+#include_directories(${EXIV2_INCLUDE_DIRS})
+#link_directories(${EXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 link_directories(${ORC_LIBRARY_DIRS})
@@ -260,6 +263,38 @@ message( "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR} )
 include_directories( ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/src  )  
 
 
+if(BUNDLED_EXIV2)
+#  include(ExternalProject)
+#  ExternalProject_Add(exiv2
+#    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2
+#    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
+#    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
+#    BUILD_COMMAND ${MAKE})
+#  set(EXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/include)
+#  set(EXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib)
+#  set(EXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib/libexiv2.a)
+  LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/exiv2/config ")
+  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include/exiv2)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/include/exiv2)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/include)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/src)
+  set( EXIV2_ENABLE_SHARED OFF CACHE BOOL "Build exiv2 as a shared library (dll)" FORCE )
+  set( EXIV2_ENABLE_BUILD_SAMPLES OFF CACHE BOOL "Build the unit tests" FORCE )
+  set( EXIV2_ENABLE_CURL OFF CACHE BOOL "USE Libcurl for HttpIo" FORCE )
+  set( EXIV2_ENABLE_SSH OFF CACHE BOOL "USE Libssh for SshIo" FORCE )
+  add_library(exiv2_static STATIC IMPORTED)
+  set_target_properties(exiv2_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/src/libexiv2.a)
+  add_subdirectory(external/exiv2)
+  list(APPEND LIB_DEPS exiv2lib)
+  #list(APPEND STATIC_LIBS exiv2_static)
+  list(APPEND EXIV2_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/src/libexiv2.a")
+  list(APPEND EXIV2_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/xmpsdk/libxmp.a")
+endif(BUNDLED_EXIV2)
+include_directories(${EXIV2_INCLUDE_DIRS})
+#link_directories(${EXIV2_LIBRARY_DIRS})
+MESSAGE( STATUS "EXIV2_LIBRARIES: " ${EXIV2_LIBRARIES} )
+
+
 
 if(BUNDLED_LENSFUN)
   LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
@@ -299,7 +334,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 #endif(BUNDLED_GEXIV2)
 #include_directories(${GEXIV2_INCLUDE_DIRS})
 #link_directories(${GEXIV2_LIBRARY_DIRS})
-
 #MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
 
@@ -380,11 +414,13 @@ target_link_libraries(photoflow ${LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${EXIV2_LIBRARIES}
+  ${EXPAT_LIBRARIES}
+  ${ICONV_LIBRARIES}
   ${STATIC_LIBS}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
-  ${EXIV2_LIBRARIES}
   #${GEXIV2_LIBRARIES}
   ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}

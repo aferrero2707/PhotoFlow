@@ -1122,9 +1122,10 @@ void PF::Image::do_export_merged( std::string filename )
             if( !vips_image_get_blob( outimg, VIPS_META_ICC_NAME,
                                      &iccdata, &iccdata_length ) ) {
               Exiv2::byte *iccdata2 = (Exiv2::byte *)iccdata;
-              //Exiv2::DataBuf iccbuf(iccdata2, iccdata_length);
-              //exiv2_image->setIccProfile( iccbuf, true );
+              Exiv2::DataBuf iccbuf(iccdata2, iccdata_length);
+              exiv2_image->setIccProfile( iccbuf, true );
 
+              /*
               Exiv2::ExifKey            key("Exif.Image.InterColorProfile");
               Exiv2::ExifData::iterator pos   = exiv2_image->exifData().findKey(key);
               bool                      found = pos != exiv2_image->exifData().end();
@@ -1135,6 +1136,7 @@ void PF::Image::do_export_merged( std::string filename )
               } else {
                   if ( found ) exiv2_image->exifData().erase(pos);
               }
+              */
             }
             exiv2_image->writeMetadata();
           }
