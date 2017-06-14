@@ -392,7 +392,7 @@ IF(MINGW)
 ELSEIF(APPLE)
   list(APPEND ADDITIONAL_LIBS)
 ELSE(MINGW)
-  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread)
+  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread dl)
 ENDIF(MINGW)
 
 list(APPEND ADDITIONAL_LIBS pugixml)
