@@ -54,7 +54,7 @@ matrix:
                 - libgtkmm-2.4-dev
                 - libpugixml-dev    
           before_script:
-              - cd build
+              - cd build_
               - export PKG_CONFIG_PATH=/app/lib/pkgconfig:${PKG_CONFIG_PATH}
               - export LD_LIBRARY_PATH=/app/lib:${LD_LIBRARY_PATH}
               #- git clone -b v8.4.1 --depth 1 https://github.com/jcupitt/libvips.git libvips
