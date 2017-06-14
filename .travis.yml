@@ -9,10 +9,10 @@ matrix:
           dist: trusty
           addons:
             apt:
-              - sources:
+              sources:
                 #- sourceline: 'ppa:dhor/myway'
                     - sourceline: 'ppa:otto-kesselgulasch/gimp-edge'
-              - packages:
+              packages:
                 - g++
                 - gettext
                 - intltool
