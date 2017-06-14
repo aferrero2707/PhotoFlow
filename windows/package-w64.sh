@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# transfer.sh
+transfer() 
+{ 
+	if [ $# -eq 0 ]; then 
+		echo "No arguments specified. Usage:\necho transfer /tmp/test.md\ncat /tmp/test.md | transfer test.md"; 		
+		return 1; 
+	fi
+	tmpfile=$( mktemp -t transferXXX ); 
+	if tty -s; then 
+		basefile=$(basename "$1" | sed -e 's/[^a-zA-Z0-9._-]/-/g'); 
+		curl --progress-bar --upload-file "$1" "https://transfer.sh/$basefile" >> $tmpfile; 
+	else 
+		curl --progress-bar --upload-file "-" "https://transfer.sh/$1" >> $tmpfile ; 
+	fi; 
+	cat $tmpfile; 
+	rm -f $tmpfile; 
+}
+
 photoflow_package=photoflow
 photoflow_version="$(date +%Y%m%d)"
 #photoflow_version=0.2.7
@@ -73,6 +91,7 @@ echo cleaning build $repackagedir
 if [ ! -e $repackagedir/bin ]; then echo "$repackagedir/bin not found."; exit; fi
 if [ ! -e $repackagedir/lib ]; then echo "$repackagedir/lib not found."; exit; fi
 
+(cd $repackagedir/bin; wget ftp://ftp.equation.com/gdb/64/gdb.exe)
 
 echo "Before cleaning $repackagedir/bin"
 #read dummy
@@ -134,6 +153,8 @@ rm $repackagedir/share/mime/application/vnd.ms-*
 rm -f $photoflow_package-$photoflow_version.zip
 zip -r $photoflow_package-$photoflow_version.zip $photoflow_package-$photoflow_version
 
+transfer $photoflow_package-$photoflow_version.zip
+
 exit
 
 # have to make in a subdir to make sure makensis does not grab other stuff
@@ -150,24 +171,3 @@ zip -r $photoflow_package-$photoflow_version.zip $photoflow_package-$photoflow_v
 rm -rf $photoflow_package-$photoflow_version
 rm -f $photoflow_package-$photoflow_version-setup.zip
 #zip $photoflow_package-$photoflow_version-setup.zip $photoflow_package-$photoflow_version-setup.exe
-
-# transfer.sh
-transfer() 
-{ 
-	if [ $# -eq 0 ]; then 
-		echo "No arguments specified. Usage:\necho transfer /tmp/test.md\ncat /tmp/test.md | transfer test.md"; 		
-		return 1; 
-	fi
-	tmpfile=$( mktemp -t transferXXX ); 
-	if tty -s; then 
-		basefile=$(basename "$1" | sed -e 's/[^a-zA-Z0-9._-]/-/g'); 
-		curl --progress-bar --upload-file "$1" "https://transfer.sh/$basefile" >> $tmpfile; 
-	else 
-		curl --progress-bar --upload-file "-" "https://transfer.sh/$1" >> $tmpfile ; 
-	fi; 
-	cat $tmpfile; 
-	rm -f $tmpfile; 
-}
-
-
-transfer $photoflow_package-$photoflow_version.zip
