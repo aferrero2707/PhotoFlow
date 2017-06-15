@@ -207,7 +207,16 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
       PF::insert_pf_preset( argv[i], image, NULL, &(image->get_layer_manager().get_layers()), false );
     }
 
-    image->export_merged( img_out );
+    std::string oext;
+    if( !PF::getFileExtension( "", img_out, oext ) ) {
+      std::cout<<"Cannot detemine input file extension. Exiting."<<std::endl;
+      return 1;
+    }
+    if( oext == "pfi") {
+      image->save( img_out );
+    } else {
+      image->export_merged( img_out );
+    }
   }
   //Shows the window and returns when it is closed.
 
