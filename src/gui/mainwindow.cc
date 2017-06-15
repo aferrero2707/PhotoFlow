@@ -893,6 +893,8 @@ void PF::MainWindow::on_button_save_clicked()
     PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
     if( editor && editor->get_image() ) {
       bool saved = false;
+      std::cout<<"MainWindow::on_button_save_clicked(): editor->get_image()->get_filename()=\""
+          <<editor->get_image()->get_filename()<<"\""<<std::endl;
       if( !(editor->get_image()->get_filename().empty()) ) {
         std::string ext;
         PF::get_file_extension( editor->get_image()->get_filename(), ext );

@@ -215,11 +215,13 @@ public:
 
   bool open( std::string filename, std::string bckname="" );
 
+  void set_filename(std::string name) { file_name = name; }
+  std::string get_filename() { return file_name; }
+
   void set_backup_filename(std::string name) { backup_file_name = name; }
   std::string get_backup_filename() { return backup_file_name; }
   bool save_backup();
 
-  std::string get_filename() { return file_name; }
   bool save( std::string filename, bool do_clear=true );
   void export_merged( std::string filename );
   void do_export_merged( std::string filename );

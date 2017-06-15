@@ -597,12 +597,12 @@ void PF::ImageEditor::open_image()
   bool load_sidecar = false;
   int sidecar_id = -1;
   std::string sidecar_name[2];
+  sidecar_name[0] = filename+".pfi";
   std::string ext;
   if( getFileExtensionLowcase( "/", filename, ext ) ) {
     std::string basename = filename.substr(0,filename.size()-ext.size()-1);
-    sidecar_name[0] = basename+".pfi";
+    sidecar_name[1] = basename+".pfi";
   }
-  sidecar_name[1] = filename+".pfi";
 
   if( ext != "pfi" ) {
     for(int fi = 0; fi < 2; fi++) {
@@ -620,7 +620,7 @@ void PF::ImageEditor::open_image()
 
   if(load_sidecar) {
     char tstr[501];
-    snprintf( tstr, 500, _("Sidecar file \"%s\"detected.\nDo you want to open it?"),
+    snprintf( tstr, 500, _("Sidecar file \"%s\" detected.\nDo you want to open it?"),
         sidecar_name[sidecar_id].c_str());
     Gtk::MessageDialog dialog(tstr,
         false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
@@ -642,6 +642,7 @@ void PF::ImageEditor::open_image()
 
   if(load_sidecar) {
     image->open( sidecar_name[sidecar_id] );
+    image->set_filename(filename);
   } else {
     image->open( filename, bckname );
   }
