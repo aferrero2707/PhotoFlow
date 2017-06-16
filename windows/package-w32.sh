@@ -19,7 +19,7 @@ transfer()
 }
 
 photoflow_package=photoflow
-photoflow_version="w64-$(date +%Y%m%d)_$(date +%H%M)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}"
+photoflow_version="w32-$(date +%Y%m%d)_$(date +%H%M)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}"
 #photoflow_version=0.2.7
 #photoflow_version=$(cat checkout/PhotoFlow/VERSION | head -n 1)
 
@@ -30,12 +30,12 @@ basedir=`pwd`
 packagedir=packages
 
 # unzip to here
-installdir=$HOME/.local/share/crossroad/roads/w64/phf-build
+installdir=$HOME/.local/share/crossroad/roads/w32/phf-build
 
 # jhbuild will download sources to here 
 checkoutdir=source
 
-mingw_prefix=x86_64-w64-mingw32-
+mingw_prefix=i686-w64-mingw32-
 
 repackagedir=$photoflow_package-$photoflow_version
 
@@ -91,7 +91,7 @@ echo cleaning build $repackagedir
 if [ ! -e $repackagedir/bin ]; then echo "$repackagedir/bin not found."; exit; fi
 if [ ! -e $repackagedir/lib ]; then echo "$repackagedir/lib not found."; exit; fi
 
-(cd $repackagedir/bin; wget ftp://ftp.equation.com/gdb/64/gdb.exe)
+(cd $repackagedir/bin; wget ftp://ftp.equation.com/gdb/32/gdb.exe)
 
 echo "Before cleaning $repackagedir/bin"
 #read dummy
@@ -127,8 +127,8 @@ echo "Before cleaning $repackagedir/bin"
 ( cd $repackagedir ; rm -rf src )
 
 # we need to copy the C++ runtime dlls in there
-gccmingwlibdir=/usr/lib/gcc/x86_64-w64-mingw32/4.8
-mingwlibdir=/usr/x86_64-w64-mingw32/lib
+gccmingwlibdir=/usr/lib/gcc/i686-w64-mingw32/4.8
+mingwlibdir=/usr/i686-w64-mingw32/lib
 cp -L $gccmingwlibdir/*.dll $repackagedir/bin
 cp -L $mingwlibdir/*.dll $repackagedir/bin
 

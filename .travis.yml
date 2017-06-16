@@ -79,7 +79,7 @@ matrix:
               - cd ..
               - sudo rm -fr PhotoFlow
           script:
-              #- bash appimage/appimage.sh
+              - bash appimage/appimage.sh
           after_success:
               - cd $HOME
               - pwd
@@ -88,13 +88,43 @@ matrix:
               #- wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
               #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
               - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-              #- bash  ./upload_rotate.sh out/*
+              - bash  ./upload_rotate.sh out/*
         - os: linux
           dist: trusty
           compiler: g++
           sudo: required
           dist: trusty
           before_script:
+            - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+            - sudo add-apt-repository ppa:adrozdoff/mingw -y
+            - sudo apt-get update
+            - sudo apt-get install gcc-5-mingw-w64 g++-5-mingw-w64 binutils-mingw-w64-x86-64 python3 python3-docutils rpm2cpio libfile-mimeinfo-perl
+            - sudo ln -s /usr/bin/i686-w64-mingw32-gcc-5 /usr/bin/i686-w64-mingw32-gcc
+            - sudo ln -s /usr/bin/i686-w64-mingw32-g++-5 /usr/bin/i686-w64-mingw32-g++
+            - ls -l /usr/bin/i686-w64-mingw32*
+            - cd build
+            - wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
+            - tar xzvf crossroad-0.6.tar.gz
+            - find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
+            - cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+            - cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
+            - echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
+            - echo "SET(PKG_CONFIG_EXECUTABLE i686-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
+            - $HOME/inst/bin/crossroad --help w32
+            - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/dep-install.sh
+            - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/dep-build.sh
+            - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/phf-build.sh
+            - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/package-w32.sh
+            #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
+            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - bash  ./upload_rotate.sh photoflow*.zip
+        - os: linux
+          dist: trusty
+          compiler: g++
+          sudo: required
+          dist: trusty
+          before_script:
+            - cd non_existent_folder
             - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
             - sudo add-apt-repository ppa:adrozdoff/mingw -y
             - sudo apt-get update
@@ -114,10 +144,10 @@ matrix:
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-install.sh
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
-            #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/package-w64.sh
+            - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/package-w64.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
-            #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            #- bash  ./upload_rotate.sh photoflow*.zip
+            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - bash  ./upload_rotate.sh photoflow*.zip
 
 
 branches:
