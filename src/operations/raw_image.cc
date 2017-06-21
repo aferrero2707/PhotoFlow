@@ -33,12 +33,7 @@
 
 typedef uint32_t uint32;
 
-#include <exiv2/easyaccess.hpp>
-#include <exiv2/error.hpp>
-#include <exiv2/exif.hpp>
-#include <exiv2/image.hpp>
-#include <exiv2/preview.hpp>
-#include <exiv2/xmp.hpp>
+#include "../base/exif_data.hh"
 
 //#include <gexiv2/gexiv2-metadata.h>
 
