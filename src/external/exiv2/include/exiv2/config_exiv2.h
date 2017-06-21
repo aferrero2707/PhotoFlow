@@ -85,7 +85,7 @@ typedef int pid_t;
 #  include "exv_msvc.h"
 # endif
 #else
-# include "exv_conf.h"
+# include "include/exiv2/exv_conf.h"
 #endif
 ////////////////////////////////////////
 

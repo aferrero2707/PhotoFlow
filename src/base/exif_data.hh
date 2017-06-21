@@ -33,12 +33,19 @@
 
 #include <glib.h>
 
+#ifdef BUNDLED_EXIV2
+#include <external/exiv2/include/exiv2/easyaccess.hpp>
+#include <external/exiv2/include/exiv2/xmp.hpp>
+#include <external/exiv2/include/exiv2/error.hpp>
+#include <external/exiv2/include/exiv2/image.hpp>
+#include <external/exiv2/include/exiv2/exif.hpp>
+#else
 #include <exiv2/easyaccess.hpp>
-#include <exiv2/error.hpp>
-#include <exiv2/exif.hpp>
-#include <exiv2/image.hpp>
-#include <exiv2/preview.hpp>
 #include <exiv2/xmp.hpp>
+#include <exiv2/error.hpp>
+#include <exiv2/image.hpp>
+#include <exiv2/exif.hpp>
+#endif
 
 
 #define PF_META_EXIF_NAME "custom-exif-data"

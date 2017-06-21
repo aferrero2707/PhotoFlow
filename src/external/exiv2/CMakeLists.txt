@@ -20,6 +20,8 @@ endif()
 CMAKE_MINIMUM_REQUIRED( VERSION 3.1.0 )
 PROJECT( exiv2 )
 
+  LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/exiv2/config ")
+
 if( POLICY CMP0042 )
     cmake_policy(SET CMP0042 NEW) # enable MACOSX_RPATH support
 else()
@@ -106,7 +108,10 @@ if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 2.8)
 endif()
 
 # binary as first, since it workarounds old VS solution compatibility problems
-INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/include/  ${CMAKE_SOURCE_DIR}/include/exiv2/)
+#INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/include/  ${CMAKE_SOURCE_DIR}/include/exiv2/)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/include/exiv2)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/include)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/src)
 
 if( MSVC )
     # cmake_policy(SET CMP0008)

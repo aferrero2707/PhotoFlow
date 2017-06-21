@@ -33,12 +33,6 @@
 #include <math.h>
 
 
-#include <exiv2/easyaccess.hpp>
-#include <exiv2/xmp.hpp>
-#include <exiv2/error.hpp>
-#include <exiv2/image.hpp>
-#include <exiv2/exif.hpp>
-
 #include <glib.h>
 
 #include "exif_data.hh"
