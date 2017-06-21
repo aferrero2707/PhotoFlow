@@ -387,6 +387,9 @@ INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
 #
 # phf_stack executable
 #
+set(BUILD_PHF_STACK 0)
+
+IF(BUILD_PHF_STACK)
 add_executable(phf_stack phf_stack.cc)
 IF(APPLE)
   set_target_properties(phf_stack PROPERTIES LINK_FLAGS " -framework ApplicationServices ")
@@ -406,9 +409,9 @@ target_link_libraries(phf_stack ${LIBS}
   #gmon
   )
 
-
-
 INSTALL(TARGETS phf_stack RUNTIME DESTINATION bin)
+ENDIF(BUILD_PHF_STACK)
+
 
 INSTALL(DIRECTORY ../presets DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
