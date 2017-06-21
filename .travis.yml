@@ -66,6 +66,7 @@ matrix:
               #- tar xzvf vips-8.4.5.tar.gz
               #- cd vips-8.4.5
               - wget https://github.com/jcupitt/libvips/releases/download/v8.5.6/vips-8.5.6.tar.gz
+              - tar xzvf vips-8.5.6.tar.gz
               - cd vips-8.5.6
               - ./autogen.sh
               - FLAGS="-g -O2 -msse4.2 -ffast-math -ftree-vectorize" CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS} -fpermissive" ./configure --prefix=/app --disable-gtk-doc --disable-gtk-doc-html --disable-introspection --enable-debug=no --without-python --without-magick --without-libwebp --enable-pyvips8=no --enable-shared=yes --enable-static=no
