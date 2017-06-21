@@ -58,13 +58,15 @@ matrix:
               - export PKG_CONFIG_PATH=/app/lib/pkgconfig:${PKG_CONFIG_PATH}
               - export LD_LIBRARY_PATH=/app/lib:${LD_LIBRARY_PATH}
               #- git clone -b v8.4.1 --depth 1 https://github.com/jcupitt/libvips.git libvips
-              - git clone https://github.com/jcupitt/libvips.git libvips
-              - cd libvips
+              #- git clone https://github.com/jcupitt/libvips.git libvips
+              #- cd libvips
               # revert to git version of 9/2/2017
-              - git reset --hard 6691e07d72c284468c77f4a95139ac43bf0cdc6f
+              #- git reset --hard 6691e07d72c284468c77f4a95139ac43bf0cdc6f
               #- wget http://www.vips.ecs.soton.ac.uk/supported/8.4/vips-8.4.5.tar.gz
               #- tar xzvf vips-8.4.5.tar.gz
               #- cd vips-8.4.5
+              - wget https://github.com/jcupitt/libvips/releases/download/v8.5.6/vips-8.5.6.tar.gz
+              cd vips-8.5.6
               - ./autogen.sh
               - FLAGS="-g -O2 -msse4.2 -ffast-math -ftree-vectorize" CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS} -fpermissive" ./configure --prefix=/app --disable-gtk-doc --disable-gtk-doc-html --disable-introspection --enable-debug=no --without-python --without-magick --without-libwebp --enable-pyvips8=no --enable-shared=yes --enable-static=no
               - make -j2
