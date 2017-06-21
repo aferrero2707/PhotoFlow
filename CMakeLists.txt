@@ -96,7 +96,7 @@ pkg_check_modules(GLIBMM glibmm-2.4)
 MESSAGE( STATUS "GLIB_INCLUDE_DIRS:         " ${GLIB_INCLUDE_DIRS} )
 MESSAGE( STATUS "GLIB_LIBRARY_DIRS:         " ${GLIB_LIBRARY_DIRS} )
 
-pkg_check_modules(VIPS REQUIRED vips>=8.3.3)
+pkg_check_modules(VIPS REQUIRED vips>=8.5.1)
 #pkg_check_modules(VIPSCC REQUIRED vipsCC)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
