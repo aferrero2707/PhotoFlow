@@ -88,6 +88,9 @@ echo "GTK_PATH=${GTK_PATH}"
 export PANGO_LIBDIR=$HERE/../lib
 echo "PANGO_LIBDIR=${PANGO_LIBDIR}"
 
+export GCONV_PATH=$HERE/../lib/gconv
+echo "GCONV_PATH=${GCONV_PATH}"
+
 GDK_PIXBUF_MODULEDIR=$HERE/../lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 GDK_PIXBUF_MODULE_FILE=$HERE/../lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders.cache
 echo "GDK_PIXBUF_MODULEDIR: $GDK_PIXBUF_MODULEDIR"
@@ -138,6 +141,9 @@ cd ./$APP.AppDir/
 
 # Compile Glib schemas
 ( mkdir -p usr/share/glib-2.0/schemas/ ; cd usr/share/glib-2.0/schemas/ ; glib-compile-schemas . )
+
+
+cp -a /usr/lib/x86_64-linux-gnu/gconv usr/lib
 
 
 ########################################################################
