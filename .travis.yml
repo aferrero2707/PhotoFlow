@@ -92,6 +92,7 @@ matrix:
               #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
               - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
               - bash  ./upload_rotate.sh out/*
+              - find /usr -name gconv
         - os: linux
           dist: trusty
           compiler: g++
