@@ -38,6 +38,10 @@ if(GTKMM3_FOUND)
   set(GTKMM_LIBRARIES ${GTKMM3_LIBRARIES})
 endif()
 
+if(BUNDLED_EXIV2)
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBUNDLED_EXIV2=1")  
+endif(BUNDLED_EXIV2)
+
 # Check for openmp
 find_package(OpenMP)
 if(OpenMP_C_FLAGS AND USE_OPENMP)
@@ -253,28 +257,28 @@ list(APPEND LIB_DEPS rawspeed)
 list(APPEND STATIC_LIBS rawspeed_static)
 
 
+if(BUNDLED_EXIV2_)
+  include(ExternalProject)
+  ExternalProject_Add(exiv2
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
+    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
+    BUILD_COMMAND ${MAKE})
+  #set(EXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/include)
+  set(EXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR})
+  set(EXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib)
+  set(EXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib/libexiv2.a)
+endif(BUNDLED_EXIV2_)
 if(BUNDLED_EXIV2)
-#  include(ExternalProject)
-#  ExternalProject_Add(exiv2
-#    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2
-#    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
-#    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
-#    BUILD_COMMAND ${MAKE})
-#  set(EXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/include)
-#  set(EXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib)
-#  set(EXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib/libexiv2.a)
-  LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/exiv2/config ")
-  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include/exiv2)
-  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/include/exiv2)
-  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/include)
-  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/src)
   set( EXIV2_ENABLE_SHARED OFF CACHE BOOL "Build exiv2 as a shared library (dll)" FORCE )
   set( EXIV2_ENABLE_BUILD_SAMPLES OFF CACHE BOOL "Build the unit tests" FORCE )
   set( EXIV2_ENABLE_CURL OFF CACHE BOOL "USE Libcurl for HttpIo" FORCE )
   set( EXIV2_ENABLE_SSH OFF CACHE BOOL "USE Libssh for SshIo" FORCE )
+  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
   add_library(exiv2_static STATIC IMPORTED)
   set_target_properties(exiv2_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/src/libexiv2.a)
   add_subdirectory(external/exiv2)
+  set(EXIV2_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/)
   list(APPEND LIB_DEPS exiv2lib)
   #list(APPEND STATIC_LIBS exiv2_static)
   list(APPEND EXIV2_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/src/libexiv2.a")
