@@ -341,28 +341,41 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     int fd = -1;
     char fname[500]; fname[0] = '\0';
 
+#ifndef NDEBUG
     std::cout<<"ImagePyramid: level #"<<levels.size()<<" size: "<<imgsz/1024/1024<<"MB (max="<<imgmax/1024/1024<<"MB)"<<std::endl;
+#endif
     if( memory_storage ) {
       size_t array_sz;
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: saving cache buffer..."<<std::endl;
+#endif
       void* mem_array = vips_image_write_to_memory( out, &array_sz );
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache buffer saved."<<std::endl;
+#endif
       snprintf(tstr,499,"PF::ImagePyramid::get_level(%d) level #%d (after write_to_memory)",level, (int)levels.size());
       PF_UNREF( out, tstr );
       in = vips_image_new_from_memory( mem_array, array_sz, width, height, img->Bands, img->BandFmt );
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache buffer loaded."<<std::endl;
+#endif
       g_signal_connect( in, "postclose", G_CALLBACK(free_mem_array), mem_array );
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: postclose callback attached to cache buffer."<<std::endl;
+#endif
     } else {
       sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
       fd = pf_mkstemp( fname );
       if( fd < 0 )
         return NULL;
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
-
       std::cout<<"ImagePyramid: saving cache file..."<<std::endl;
+#endif
       vips_rawsave_fd( out, fd, NULL );
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache file saved."<<std::endl;
+#endif
       //char tifname[500];
       //sprintf(tifname,"/tmp/level_%d-1.tif",(int)levels.size());
       //vips_image_write_to_file( out, tifname );
@@ -371,7 +384,9 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
       PF_UNREF( out, tstr );
 
       vips_rawload( fname, &in, width, height, VIPS_IMAGE_SIZEOF_PEL( img ), NULL );
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache file loaded."<<std::endl;
+#endif
       //unlink( fname );
     }
 

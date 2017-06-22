@@ -1284,14 +1284,23 @@ void PF::ImageArea::update( VipsRect* area )
 //    if( vips_affine( outimg, &outimg2,
 //                     shrink_factor, 0, 0, shrink_factor, NULL ) )
 //      return;
-    if( vips_reduce( outimg, &outimg2, 1.0/shrink_factor, 1.0/shrink_factor,
-        "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
-      std::cout<<std::endl<<std::endl<<"VIPS_REDUCE FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
+//    if( vips_reduce( outimg, &outimg2, 1.0/shrink_factor, 1.0/shrink_factor,
+//        "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
+//      std::cout<<std::endl<<std::endl<<"VIPS_REDUCE FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
+//      return;
+//    }
+#ifdef DEBUG_DISPLAY
+		std::cout<<"ImageArea::update(): before vips_resize()"<<std::endl;
+#endif
+		if( vips_resize( outimg, &outimg2, shrink_factor, NULL) ) {
+      std::cout<<std::endl<<std::endl<<"vips_resize() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
       return;
     }
-			//std::cout<<"outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
-			PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
-			outimg = outimg2;
+#ifdef DEBUG_DISPLAY
+    std::cout<<"ImageArea::update(): before vips_resize(), outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
+#endif
+    PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
+    outimg = outimg2;
 	}
 
 	/*

@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.9)
 project(photoflow CXX C)
 
 # options controlling the build process
+option(BUNDLED_EXIV2 "Use bundled Exiv2 library" ON)
 IF(MINGW)
   option(BUNDLED_LENSFUN "Use bundled LensFun library" ON)
   option(USE_NLS "Build Native Language Support (using gettext)" ON)
@@ -21,7 +22,18 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
 #set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 set(CMAKE_POSITION_INDEPENDENT_CODE True)
 
+#set(CMAKE_C_USE_RESPONSE_FILE_FOR_OBJECTS 0)
+#set(CMAKE_C_USE_RESPONSE_FILE_FOR_LIBRARIES 0)
+#set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_OBJECTS 0)
+#set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_LIBRARIES 0)
+
+
 find_package(PkgConfig)
+
+find_package (EXPAT REQUIRED)
+find_package (Iconv REQUIRED)
+MESSAGE( STATUS "ICONV_INCLUDE_DIRS:         " ${Iconv_INCLUDE_DIRS} )
+MESSAGE( STATUS "ICONV_LIBRARIES:            " ${ICONV_LIBRARIES} )
 
 MESSAGE(STATUS "Check for LCMS2 availability...")
 #FIND_PACKAGE(LCMS2)
@@ -35,13 +47,17 @@ find_package (JPEG REQUIRED)
 
 find_package (ZLIB REQUIRED)
 
-pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
+#pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
+pkg_check_modules(FFTW3 REQUIRED fftw3)
 
 pkg_check_modules(XML2 REQUIRED libxml-2.0)
 
 pkg_check_modules(EXIF REQUIRED libexif)
-pkg_check_modules(EXIV2 REQUIRED exiv2>=0.26)
-#find_package (Exiv2)
+if(NOT BUNDLED_EXIV2)
+  pkg_check_modules(EXIV2 REQUIRED exiv2>=0.26)
+  #find_package (Exiv2)
+endif(NOT BUNDLED_EXIV2)
+
 #if(NOT BUNDLED_GEXIV2)
 #  pkg_check_modules(GEXIV2 REQUIRED gexiv2)
 #  MESSAGE( STATUS "GEXIV2_INCLUDE_DIRS:         " ${GEXIV2_INCLUDE_DIRS} )
@@ -69,11 +85,6 @@ pkg_check_modules(ORC orc-0.4)
 
 pkg_check_modules(SIGC2 REQUIRED sigc++-2.0)
 
-pkg_check_modules(VIPS REQUIRED vips>=8.2.0)
-#pkg_check_modules(VIPSCC REQUIRED vipsCC)
-MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
-MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
-
 pkg_check_modules(PIXMAN pixman-1 REQUIRED) 
 pkg_check_modules(PANGO pango) 
 pkg_check_modules(PANGOFT2 pangoft2) 
@@ -83,6 +94,13 @@ pkg_check_modules(GTHREAD gthread-2.0)
 pkg_check_modules(GOBJECT gobject-2.0) 
 pkg_check_modules(GLIBMM glibmm-2.4) 
 #pkg_check_modules(GTKMM3 gtkmm-3.0<=3.4.0) 
+MESSAGE( STATUS "GLIB_INCLUDE_DIRS:         " ${GLIB_INCLUDE_DIRS} )
+MESSAGE( STATUS "GLIB_LIBRARY_DIRS:         " ${GLIB_LIBRARY_DIRS} )
+
+pkg_check_modules(VIPS REQUIRED vips>=8.5.1)
+#pkg_check_modules(VIPSCC REQUIRED vipsCC)
+MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
+MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
 
 if (APPLE)
     find_package (MacIntegration REQUIRED)

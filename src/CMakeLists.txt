@@ -2,8 +2,8 @@ IF(MINGW)
   SET(GMIC_FLAGS "-mwindows -std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -stdlib=libc++ -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -stdlib=libc++ -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
@@ -38,14 +38,30 @@ if(GTKMM3_FOUND)
   set(GTKMM_LIBRARIES ${GTKMM3_LIBRARIES})
 endif()
 
+# Check for openmp
+find_package(OpenMP)
+if(OpenMP_C_FLAGS AND USE_OPENMP)
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} ${OpenMP_C_FLAGS}")
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} ${OpenMP_CXX_FLAGS}")
+  if(WIN32)
+    list(APPEND ADDITIONAL_LIBS gomp)
+  endif(WIN32)
+endif(OpenMP_C_FLAGS AND USE_OPENMP)
+
+
 #SET(CMAKE_CXX_FLAGS_DEBUG " -Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
 SET(CMAKE_CXX_FLAGS_DEBUG " -O0 -g -DNDEBUG ${COMPILE_FLAGS} -Wno-unused-parameter") 
 SET(CMAKE_CXX_FLAGS_VERBDEBUG " -Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
 #SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
 #SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ffast-math -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
-SET(CMAKE_CXX_FLAGS_RELWITHDEBUGINFO "-g -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
-SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_RELEASE        "   -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter -Wno-deprecated-declarations")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter -Wno-deprecated-declarations")
+SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
+
+#link_directories("/this/is/a/test/path")
+
+include_directories(${EXPAT_INCLUDE_DIRS})
+include_directories(${ICONV_INCLUDE_DIRS})
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -88,8 +104,8 @@ link_directories(${LCMS22_LIBRARY_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
-include_directories(${EXIV2_INCLUDE_DIRS})
-link_directories(${EXIV2_LIBRARY_DIRS})
+#include_directories(${EXIV2_INCLUDE_DIRS})
+#link_directories(${EXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 link_directories(${ORC_LIBRARY_DIRS})
@@ -237,6 +253,38 @@ list(APPEND LIB_DEPS rawspeed)
 list(APPEND STATIC_LIBS rawspeed_static)
 
 
+if(BUNDLED_EXIV2)
+#  include(ExternalProject)
+#  ExternalProject_Add(exiv2
+#    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2
+#    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
+#    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
+#    BUILD_COMMAND ${MAKE})
+#  set(EXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/include)
+#  set(EXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib)
+#  set(EXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib/libexiv2.a)
+  LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/exiv2/config ")
+  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include/exiv2)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/include/exiv2)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/include)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/external/exiv2/src)
+  set( EXIV2_ENABLE_SHARED OFF CACHE BOOL "Build exiv2 as a shared library (dll)" FORCE )
+  set( EXIV2_ENABLE_BUILD_SAMPLES OFF CACHE BOOL "Build the unit tests" FORCE )
+  set( EXIV2_ENABLE_CURL OFF CACHE BOOL "USE Libcurl for HttpIo" FORCE )
+  set( EXIV2_ENABLE_SSH OFF CACHE BOOL "USE Libssh for SshIo" FORCE )
+  add_library(exiv2_static STATIC IMPORTED)
+  set_target_properties(exiv2_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/src/libexiv2.a)
+  add_subdirectory(external/exiv2)
+  list(APPEND LIB_DEPS exiv2lib)
+  #list(APPEND STATIC_LIBS exiv2_static)
+  list(APPEND EXIV2_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/src/libexiv2.a")
+  list(APPEND EXIV2_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/xmpsdk/libxmp.a")
+endif(BUNDLED_EXIV2)
+include_directories(${EXIV2_INCLUDE_DIRS})
+#link_directories(${EXIV2_LIBRARY_DIRS})
+MESSAGE( STATUS "EXIV2_LIBRARIES: " ${EXIV2_LIBRARIES} )
+
+
 
 if(BUNDLED_LENSFUN)
   LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
@@ -276,7 +324,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 #endif(BUNDLED_GEXIV2)
 #include_directories(${GEXIV2_INCLUDE_DIRS})
 #link_directories(${GEXIV2_LIBRARY_DIRS})
-
 #MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
 
@@ -303,6 +350,12 @@ add_library (pfbase STATIC
   ${OpSources}
   ${LibRawIncludes}
   ${LibRawSources}
+#  ${GMicIncludes}
+#  ${GMicSources}
+)
+
+
+add_library (pfgmic STATIC
   ${GMicIncludes}
   ${GMicSources}
 )
@@ -329,7 +382,7 @@ IF(MINGW)
 ELSEIF(APPLE)
   list(APPEND ADDITIONAL_LIBS)
 ELSE(MINGW)
-  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
+  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread dl)
 ENDIF(MINGW)
 
 list(APPEND ADDITIONAL_LIBS pugixml)
@@ -349,16 +402,19 @@ ENDIF(APPLE)
 
 target_link_libraries(photoflow ${LIBS} 
   pfgui
-  pfbase 
+  pfbase
+  pfgmic 
   pfdt
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${EXIV2_LIBRARIES}
+  ${EXPAT_LIBRARIES}
+  ${ICONV_LIBRARIES}
   ${STATIC_LIBS}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
-  ${EXIV2_LIBRARIES}
   #${GEXIV2_LIBRARIES}
   ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
