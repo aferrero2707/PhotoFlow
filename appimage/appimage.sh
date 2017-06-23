@@ -119,20 +119,11 @@ get_icon
 # Other application-specific finishing touches
 ########################################################################
 
-# Bundle Python and all the plugins needed
-
 cd ..
 
 generate_status
 
-#echo "deb http://archive.ubuntu.com/ubuntu/ trusty main universe" > sources.list
-#apt-get $OPTIONS update
-#URLS=$(apt-get $OPTIONS -y install --print-uris python-gi gir1.2-gtk-3.0 python-gi-cairo libgtk-3-0 python-numpy unity-gtk3-module libcanberra-gtk3-module | cut -d "'" -f 2 | grep -e "^http")
-#wget -c $URLS
-
 cd ./$APP.AppDir/
-
-#find ../*.deb -exec dpkg -x {} . \; || true
 
 # Workaround for:
 # python2.7: symbol lookup error: /usr/lib/x86_64-linux-gnu/libgtk-3.so.0: undefined symbol: gdk__private__
@@ -144,6 +135,10 @@ cd ./$APP.AppDir/
 
 
 cp -a /usr/lib/x86_64-linux-gnu/gconv usr/lib
+
+mkdir -p usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0
+cp -a /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0
+cp -a /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders.cache usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0
 
 
 ########################################################################
