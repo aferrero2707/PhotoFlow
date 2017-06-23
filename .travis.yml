@@ -91,7 +91,7 @@ matrix:
               #- wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
               #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
               - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-              - bash  ./upload_rotate.sh out/*
+              - bash  ./upload_rotate.sh "continuous" out/*
               - find /usr -name gconv
         - os: linux
           dist: trusty
@@ -122,7 +122,7 @@ matrix:
             - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/package-w32.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh photoflow*.zip
+            - bash  ./upload_rotate.sh "continuous" photoflow*.zip
         - os: linux
           dist: trusty
           compiler: g++
@@ -152,7 +152,7 @@ matrix:
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/package-w64.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh photoflow*.zip
+            - bash  ./upload_rotate.sh "continuous" photoflow*.zip
 
 
 branches:
