@@ -76,6 +76,9 @@ cat > usr/bin/$LOWERAPP <<\EOF
 #! /bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
 
+export PF_DATA_DIR=$HERE/../share
+echo "PF_DATA_DIR=${PF_DATA_DIR}"
+
 export LD_LIBRARY_PATH=$HERE/../lib:$HERE/../lib/x86_64-linux-gnu:$HERE/../../lib:$LD_LIBRARY_PATH
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
