@@ -82,7 +82,7 @@ echo "PF_DATA_DIR=${PF_DATA_DIR}"
 export LD_LIBRARY_PATH=$HERE/../lib:$HERE/../lib/x86_64-linux-gnu:$HERE/../../lib:$LD_LIBRARY_PATH
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-export XDG_DATA_DIRS=$HERE/../share/mime:$XDG_DATA_DIRS
+export XDG_DATA_DIRS=$HERE/../share/:$HERE/../share/mime/:$XDG_DATA_DIRS
 echo "XDG_DATA_DIRS=$XDG_DATA_DIRS"
 
 export GTK_PATH=$HERE/../lib/gtk-2.0:$GTK_PATH
@@ -143,6 +143,9 @@ mkdir -p usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0
 cp -a /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0
 cp -a /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders.cache usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0
 
+
+mkdir -p usr/share
+cp -a /usr/share/mime usr/share
 
 ########################################################################
 # Copy in the dependencies that cannot be assumed to be available
