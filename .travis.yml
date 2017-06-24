@@ -80,8 +80,10 @@ matrix:
               - make -j2
               - sudo make install
               - cd ..
-              - sudo rm -fr PhotoFlow
+              #- sudo rm -fr PhotoFlow
           script:
+              - cd $TRAVIS_BUILD_DIR
+              - pwd
               - bash appimage/appimage.sh
           after_success:
               - cd $HOME

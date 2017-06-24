@@ -55,14 +55,16 @@ strip_binaries()
 
 export ARCH=$(arch)
 
+export APPIMAGEBASE=$(pwd)
+
 APP=PhotoFlow
 LOWERAPP=${APP,,}
 
-mkdir -p $HOME/$APP/$APP.AppDir/usr/
+#mkdir -p $HOME/$APP/$APP.AppDir/usr/
+#cd $HOME/$APP/
 
-cd $HOME/$APP/
+mkdir -p $APP.AppDir/usr/
 
-export APPIMAGEBASE=$(pwd)
 wget -q https://github.com/probonopd/AppImages/raw/master/functions.sh -O ./functions.sh
 . ./functions.sh
 
@@ -75,6 +77,7 @@ sudo chown -R $USER /${PREFIX}/
 cp -r /${PREFIX}/* ./usr/
 rm -f ./usr/bin/$LOWERAPP.real
 mv ./usr/bin/$LOWERAPP ./usr/bin/$LOWERAPP.real
+
 cat > usr/bin/$LOWERAPP <<\EOF
 #! /bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
