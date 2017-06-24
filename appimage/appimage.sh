@@ -17,7 +17,7 @@ if [ x"$FULL_BUNDLING" = "x1" ]; then
   BLACKLISTED_FILES=$(cat $APPIMAGEBASE/AppImages/excludelist | sed '/^\s*$/d' | sed '/^#.*$/d')
 else
   #BLACKLISTED_FILES=$(wget -q https://github.com/probonopd/AppImages/raw/master/excludelist -O - | sed '/^\s*$/d' | sed '/^#.*$/d')
-  BLACKLISTED_FILES=$(cat "$APPIMAGEBASE/excludelist" | sed '/^\s*$/d' | sed '/^#.*$/d')
+  BLACKLISTED_FILES=$(cat "$APPIMAGEBASE/appimage/excludelist" | sed '/^\s*$/d' | sed '/^#.*$/d')
 fi
   echo $BLACKLISTED_FILES
   for FILE in $BLACKLISTED_FILES ; do
