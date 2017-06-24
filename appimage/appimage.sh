@@ -23,9 +23,9 @@ fi
   for FILE in $BLACKLISTED_FILES ; do
     FOUND=$(find . -type f -name "${FILE}" 2>/dev/null)
     if [ ! -z "$FOUND" ] ; then
-      echo "Moving blacklisted ${FOUND}"
-      #rm -f "${FOUND}"
-      mv "${FOUND}" ./usr/lib-blacklisted
+      echo "Removing blacklisted ${FOUND}"
+      rm -f "${FOUND}"
+      #mv "${FOUND}" ./usr/lib-blacklisted
     fi
   done
 }
