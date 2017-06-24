@@ -16,6 +16,9 @@ move_blacklisted()
 if [ x"$FULL_BUNDLING" = "x1" ]; then
   BLACKLISTED_FILES=$(cat $APPIMAGEBASE/AppImages/excludelist | sed '/^\s*$/d' | sed '/^#.*$/d')
 else
+  echo "APPIMAGEBASE: $APPIMAGEBASE"
+  ls $APPIMAGEBASE
+  ls $APPIMAGEBASE/appimage
   #BLACKLISTED_FILES=$(wget -q https://github.com/probonopd/AppImages/raw/master/excludelist -O - | sed '/^\s*$/d' | sed '/^#.*$/d')
   BLACKLISTED_FILES=$(cat "$APPIMAGEBASE/appimage/excludelist" | sed '/^\s*$/d' | sed '/^#.*$/d')
 fi
@@ -52,14 +55,16 @@ strip_binaries()
 
 export ARCH=$(arch)
 
+export APPIMAGEBASE=$(pwd)
+
 APP=PhotoFlow
 LOWERAPP=${APP,,}
 
-mkdir -p $HOME/$APP/$APP.AppDir/usr/
+#mkdir -p $HOME/$APP/$APP.AppDir/usr/
+#cd $HOME/$APP/
 
-cd $HOME/$APP/
+mkdir -p $APP.AppDir/usr/
 
-export APPIMAGEBASE=$(pwd)
 wget -q https://github.com/probonopd/AppImages/raw/master/functions.sh -O ./functions.sh
 . ./functions.sh
 
@@ -72,6 +77,7 @@ sudo chown -R $USER /${PREFIX}/
 cp -r /${PREFIX}/* ./usr/
 rm -f ./usr/bin/$LOWERAPP.real
 mv ./usr/bin/$LOWERAPP ./usr/bin/$LOWERAPP.real
+
 cat > usr/bin/$LOWERAPP <<\EOF
 #! /bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
