@@ -1031,8 +1031,8 @@ void PF::Image::do_export_merged( std::string filename )
       in.clear();
       in.push_back( image );
       convert_format->get_par()->set_image_hints( image );
-      convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
-      //convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
+      //convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
+      convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       PF_UNREF( image, "Image::do_export_merged(): image unref" );
       std::cout<<"Image::do_export_merged(): saving TIFF file "<<filename<<"   outimg="<<outimg<<std::endl;
