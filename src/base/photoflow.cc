@@ -271,7 +271,11 @@ PF::PhotoFlow::PhotoFlow():
 #elif defined(WIN32)
   localePath = exePath + "\\..\\share\\locale\\";
 #else
-  localePath = Glib::ustring(INSTALL_PREFIX) + "/share/locale";
+  if( dataPath_env ) {
+    localePath = Glib::ustring(dataPath_env) + "/locale";
+  } else {
+    localePath = Glib::ustring(INSTALL_PREFIX) + "/share/locale";
+  }
 #endif
   std::cout<<"localePath: "<<localePath<<std::endl;
 
