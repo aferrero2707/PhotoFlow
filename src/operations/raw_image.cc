@@ -709,7 +709,7 @@ bool PF::RawImage::load_rawspeed()
       //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
       unsigned char color4 = color;
       if( color4 == 1 && FC(row,col+1) == 2 ) color4 = 3;
-      //color = color4;
+      color = color4;
       float val = 0;
       float nval = 0;
       switch(r->getDataType()) {
