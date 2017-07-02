@@ -694,6 +694,7 @@ bool PF::RawImage::load_rawspeed()
 #ifndef NDEBUG
   std::cout<<"RawImage: crop_x="<<crop_x<<" crop_y="<<crop_y<<std::endl;
 #endif
+  std::cout<<"RawImage: filters="<<dcraw_data.idata.filters<<std::endl;
   rawspeed::RawImage& r = d->mRaw;
   for(row=0;row<iheight;row++) {
     unsigned int row_offset = row*iwidth;
@@ -704,11 +705,11 @@ bool PF::RawImage::load_rawspeed()
     for(col=0; col<iwidth; col++) {
       int col2 = col + crop_x;
       int row2 = row + crop_y;
-      //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : r->cfa.getColorAt(col,row);
-      unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
+      unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : r->cfa.getColorAt(col,row);
+      //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
       unsigned char color4 = color;
       if( color4 == 1 && FC(row,col+1) == 2 ) color4 = 3;
-      color = color4;
+      //color = color4;
       float val = 0;
       float nval = 0;
       switch(r->getDataType()) {
@@ -716,9 +717,9 @@ bool PF::RawImage::load_rawspeed()
       case rawspeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
       }
       if(true && row<4 && col<4) {
-        std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<","<<(int)color4<<","<<(int)BL(row,col)<<std::endl;
+        std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<","<<(int)color4<<","<<(int)FC(row,col)<<","<<(int)BL(row,col)<<std::endl;
       }
-      float black = pdata->color.cblack[color];
+      float black = pdata->color.cblack[color4];
       nval = val - black;
       nval /= (pdata->color.maximum - black);
       nval *= 65535;
