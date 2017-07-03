@@ -185,7 +185,7 @@ ENDIF( HAVE_STDBOOL_H )
 IF( HAVE_SYS_TIME_H )
     CHECK_C_SOURCE_COMPILES( "#include <sys/time.h>
 int main() {
-struct tm t;
+struct tm* t;
 return 0;
 }" TM_IN_SYS_TIME )
 ENDIF( HAVE_SYS_TIME_H )
