@@ -158,7 +158,7 @@ matrix:
             #- echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
             #- echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
             - $HOME/inst/bin/crossroad --help w64
-            - $HOME/inst/bin/crossroad w64 phf-build
+            #- $HOME/inst/bin/crossroad w64 phf-build
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-install.sh
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
