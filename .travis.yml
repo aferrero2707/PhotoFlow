@@ -112,10 +112,14 @@ matrix:
             - sudo ln -s /usr/bin/i686-w64-mingw32-g++-5 /usr/bin/i686-w64-mingw32-g++
             - ls -l /usr/bin/i686-w64-mingw32*
             - cd build
-            - wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
-            - tar xzvf crossroad-0.6.tar.gz
-            - find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
-            - cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+            #- wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
+            #- tar xzvf crossroad-0.6.tar.gz
+            #- find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
+            #- cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+            - wget https://pypi.python.org/packages/c4/3e/f6a66a52cdd3340a9ae5a581fbc7ccffdfabe307e50282794bd7d93e5420/crossroad-0.7.tar.gz
+            - tar xzvf crossroad-0.7.tar.gz
+            #- find crossroad-0.7 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
+            - cd crossroad-0.7 && ./setup.py install --prefix=$HOME/inst && cd ..
             - cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
             - echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
             - echo "SET(PKG_CONFIG_EXECUTABLE i686-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
@@ -142,10 +146,14 @@ matrix:
             - sudo ln -s /usr/bin/x86_64-w64-mingw32-g++-5 /usr/bin/x86_64-w64-mingw32-g++
             - ls -l /usr/bin/x86_64-w64-mingw32*
             - cd build
-            - wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
-            - tar xzvf crossroad-0.6.tar.gz
-            - find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
-            - cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+            #- wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
+            #- tar xzvf crossroad-0.6.tar.gz
+            #- find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
+            #- cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+            - wget https://pypi.python.org/packages/c4/3e/f6a66a52cdd3340a9ae5a581fbc7ccffdfabe307e50282794bd7d93e5420/crossroad-0.7.tar.gz
+            - tar xzvf crossroad-0.7.tar.gz
+            #- find crossroad-0.7 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
+            - cd crossroad-0.7 && ./setup.py install --prefix=$HOME/inst && cd ..
             - cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
             - echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
             - echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
