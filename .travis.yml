@@ -155,8 +155,8 @@ matrix:
             #- find crossroad-0.7 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
             - cd crossroad-0.7 && ./setup.py install --prefix=$HOME/inst && cd ..
             - cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
-            - echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
-            - echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
+            #- echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
+            #- echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
             - $HOME/inst/bin/crossroad --help w64
             - $HOME/inst/bin/crossroad w64 phf-build
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-install.sh
