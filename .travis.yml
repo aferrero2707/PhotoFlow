@@ -159,10 +159,10 @@ matrix:
             #- echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
             - $HOME/inst/bin/crossroad --help w64
             #- $HOME/inst/bin/crossroad w64 phf-build
-            - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-install.sh
-            - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
-            - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
-            - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/package-w64.sh
+            - travis_wait $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-install.sh
+            - travis_wait $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
+            - travis_wait $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
+            - travis_wait $HOME/inst/bin/crossroad w64 phf-build --run ../windows/package-w64.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
             - bash  ./upload_rotate.sh "continuous" photoflow*.zip
