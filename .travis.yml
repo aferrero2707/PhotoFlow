@@ -78,7 +78,7 @@ matrix:
               - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DINSTALL_PREFIX=/app -DBUNDLED_LENSFUN=ON ..
               - echo "#include <version.hh>" > ../src/version.cc
               - echo "const char* PF::version_string = \"PhotoFlow git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}\";" >> ../src/version.cc
-              - make -j2
+              - make VERBOSE=1 -j2
               - sudo make install
               - cd ..
               #- sudo rm -fr PhotoFlow
