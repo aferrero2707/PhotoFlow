@@ -250,6 +250,7 @@ set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/share)
 #add_library(rawspeed_static STATIC IMPORTED)
 #set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
 # compile rawspeed
+SET(BINARY_PACKAGE_BUILD ON CACHE BOOL "Sets march optimization to generic" FORCE)
 SET(BUILD_TESTING OFF CACHE BOOL "Build the testing tree." FORCE)
 SET(BUILD_TOOLS OFF CACHE BOOL "Build some tools (identify, rstest)." FORCE)
 SET(BUILD_BENCHMARKING OFF CACHE BOOL "Build some benchmarks." FORCE)
