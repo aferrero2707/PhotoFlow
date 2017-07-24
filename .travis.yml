@@ -161,8 +161,8 @@ matrix:
             - $HOME/inst/bin/crossroad --help w64
             #- $HOME/inst/bin/crossroad w64 phf-build
             - pwd
-            - cat ../windows/test_cmd.sh w64
-            - ../windows/test_cmd.sh
+            - cat ../windows/test_cmd.sh
+            - ../windows/test_cmd.sh w64
             - $HOME/inst/bin/crossroad w64 phf-build --run $(pwd)/../windows/dep-install.sh
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
             - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
