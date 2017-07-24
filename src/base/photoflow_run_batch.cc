@@ -166,7 +166,7 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
 
   std::cout<<"PhotoFlow::run_batch(): argc="<<argc<<std::endl;
   for(int i = 0; i < argc; i++)
-    std::cout<<"  argv["<<i<<"]: \""<<argv[i]<<"\""<<srd::endl;
+    std::cout<<"  argv["<<i<<"]: \""<<argv[i]<<"\""<<std::endl;
 
   if( argc >= 2 ) {
     std::string img_in, img_out;
