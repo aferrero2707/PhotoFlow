@@ -108,9 +108,9 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
   }
 */
 
-  if (vips_init (argv[0]))
+  //if (vips_init (argv[0]))
     //vips::verror ();
-    return 1;
+  //  return 1;
 
   vips_layer_get_type();
   vips_gmic_get_type();
@@ -163,6 +163,11 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
   }
 
   //argv++;
+
+  std::cout<<"PhotoFlow::run_batch(): argc="<<argc<<std::endl;
+  for(int i = 0; i < argc; i++)
+    std::cout<<"  argv["<<i<<"]: \""<<argv[i]<<"\""<<srd::endl;
+
   if( argc >= 2 ) {
     std::string img_in, img_out;
     std::vector< std::string > presets;

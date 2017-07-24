@@ -166,6 +166,11 @@ int main (int argc, char *argv[])
 
   bool is_plugin = false;
 
+
+  std::cout<<"PhotoFlow::main(): argc="<<argc<<std::endl;
+  for(int i = 0; i < argc; i++)
+    std::cout<<"  argv["<<i<<"]: \""<<argv[i]<<"\""<<srd::endl;
+
   if( argc > 2 && std::string(argv[1]) == "--batch" ) {
     argc--;
     argv++;
