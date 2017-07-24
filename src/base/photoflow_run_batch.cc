@@ -168,12 +168,17 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
   for(int i = 0; i < argc; i++)
     std::cout<<"  argv["<<i<<"]: \""<<argv[i]<<"\""<<std::endl;
 
+  if( argc < 2 ) std::cout<<"PhotoFlow::run_batch(): too few arguments: argc="<<argc<<std::endl;
   if( argc >= 2 ) {
     std::string img_in, img_out;
     std::vector< std::string > presets;
 
     fullpath = realpath( argv[1], NULL );
-    if(!fullpath) return 1;
+    if(!fullpath) {
+      std::cout<<"PhotoFlow::run_batch(): input file not found: "<<argv[1]<<", full path=\""<<fullpath<<"\""<<std::endl;
+      return 1;
+    }
+    std::cout<<"PhotoFlow::run_batch(): input image=\""<<fullpath<<"\""<<std::endl;
     img_in = fullpath;
     char* str1 = strdup(fullpath);
     char* str2 = strdup(fullpath);
@@ -187,12 +192,12 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
     std::cout<<"bname="<<bname<<std::endl;
     std::string ext;
     if( !PF::getFileExtension( "", bname, ext ) ) {
-      std::cout<<"Cannot detemine input file extension. Exiting."<<std::endl;
+      std::cout<<"PhotoFlow::run_batch(): Cannot detemine input file extension. Exiting."<<std::endl;
       return 1;
     }
     std::string iname;
     if( !PF::getFileName( "", bname, iname ) ) {
-      std::cout<<"Cannot detemine input file name. Exiting."<<std::endl;
+      std::cout<<"PhotoFlow::run_batch(): Cannot detemine input file name. Exiting."<<std::endl;
       return 1;
     }
     std::cout<<"iname="<<iname<<std::endl;
