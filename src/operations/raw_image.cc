@@ -552,10 +552,10 @@ bool PF::RawImage::load_rawspeed()
     // Grab the WB
     for(int i = 0; i < 3; i++) pdata->color.cam_mul[i] = r->metadata.wbCoeffs[i];
     pdata->color.cam_mul[3] = pdata->color.cam_mul[1];
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"RawSpeed camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]                                                                                                     <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
     std::cout<<"RawSpeed black="<<pdata->color.black<<"  white="<<pdata->color.maximum<<std::endl;
-#endif
+//#endif
 
     // dimensions of uncropped image
     rawspeed::iPoint2D dimUncropped = r->getUncroppedDim();
@@ -621,6 +621,10 @@ bool PF::RawImage::load_rawspeed()
 //          pdata->color.cblack[2] = pdata->color.black;
 //          pdata->color.cblack[3] = pdata->color.black;
 //        }
+      }
+    } else {
+      for(uint8_t i = 0; i < 4; i++) {
+        pdata->color.cblack[i] = pdata->color.black;
       }
     }
   }
@@ -705,11 +709,13 @@ bool PF::RawImage::load_rawspeed()
     for(col=0; col<iwidth; col++) {
       int col2 = col + crop_x;
       int row2 = row + crop_y;
-      unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : r->cfa.getColorAt(col,row);
-      //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(col,row);
+      //unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : r->cfa.getColorAt(col,row);
+      unsigned char color = (is_xtrans()) ? r->cfa.getColorAt(col2,row2) : FC(row,col);
       unsigned char color4 = color;
-      if( color4 == 1 && FC(row,col+1) == 2 ) color4 = 3;
-      color = color4;
+      if( !is_xtrans() ) {
+        if( color4 == 1 && FC(row,col+1) == 2 ) color4 = 3;
+        color = color4;
+      }
       float val = 0;
       float nval = 0;
       switch(r->getDataType()) {
@@ -717,7 +723,7 @@ bool PF::RawImage::load_rawspeed()
       case rawspeed::TYPE_FLOAT32: val = *((float*)r->getDataUncropped(col2,row2)); break;
       }
       if(true && row<4 && col<4) {
-        std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<","<<(int)color<<","<<(int)color4<<","<<(int)FC(row,col)<<","<<(int)BL(row,col)<<std::endl;
+        std::cout<<"  raw("<<row<<","<<col<<"): "<<val<<"  color="<<(int)color<<"  color4="<<(int)color4<<"  getColorAt()="<<(int)r->cfa.getColorAt(col,row)<<"  FC="<<(int)FC(row,col)<<"  BL="<<(int)BL(row,col)<<std::endl;
       }
       float black = pdata->color.cblack[color4];
       nval = val - black;
