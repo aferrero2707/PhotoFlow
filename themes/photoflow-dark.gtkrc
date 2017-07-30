@@ -433,9 +433,9 @@ style "gimp-dark-tooltips-style" = "gimp-dark-default-style"
   xthickness = 4
   ythickness = 4
 
-  bg[NORMAL] = "#383838"
+  bg[NORMAL] = "#FFFFAF"
   bg[SELECTED] = "#828282"
-  fg[NORMAL] = "#F0F0F0"
+  fg[NORMAL] = "#000000"
 }
 
 widget "gtk-tooltip*" style "gimp-dark-tooltips-style"
