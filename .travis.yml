@@ -52,7 +52,8 @@ matrix:
                 - libglib2.0-dev
                 - libglibmm-2.4-dev
                 - libgtkmm-2.4-dev
-                - libpugixml-dev    
+                - libpugixml-dev
+                - zenity
           before_script:
               #- cd non_existent_dir
               - cd build
