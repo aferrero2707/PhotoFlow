@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.9)
 project(photoflow CXX C)
 
 # options controlling the build process
-option(BUNDLED_EXIV2 "Use bundled Exiv2 library" ON)
+option(BUNDLED_EXIV2 "Use bundled Exiv2 library" OFF)
 IF(MINGW)
   option(BUNDLED_LENSFUN "Use bundled LensFun library" ON)
   option(USE_NLS "Build Native Language Support (using gettext)" ON)
@@ -29,7 +29,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE True)
 
 find_package(PkgConfig)
 
-find_package (EXPAT REQUIRED)
+find_package (EXPAT)
 MESSAGE( STATUS "EXPAT_INCLUDE_DIRS:         " ${EXPAT_INCLUDE_DIRS} )
 MESSAGE( STATUS "EXPAT_LIBRARIES:            " ${EXPAT_LIBRARIES} )
 find_package (Iconv REQUIRED)
@@ -54,9 +54,14 @@ pkg_check_modules(FFTW3 REQUIRED fftw3)
 pkg_check_modules(XML2 REQUIRED libxml-2.0)
 
 pkg_check_modules(EXIF REQUIRED libexif)
+
 if(NOT BUNDLED_EXIV2)
-  pkg_check_modules(EXIV2 REQUIRED exiv2>=0.26)
+  pkg_check_modules(EXIV2 exiv2>=0.26)
   #find_package (Exiv2)
+  MESSAGE( STATUS "EXIV2_FOUND:         " ${EXIV2_FOUND} )
+  if(NOT EXIV2_FOUND)
+    set( BUNDLED_EXIV2 ON CACHE BOOL "Use bundled Exiv2 library" FORCE )
+  endif(NOT EXIV2_FOUND)
 endif(NOT BUNDLED_EXIV2)
 
 #if(NOT BUNDLED_GEXIV2)
