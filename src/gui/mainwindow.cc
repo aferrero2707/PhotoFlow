@@ -694,7 +694,8 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/x-srf");
   filter_tiff.add_mime_type("image/x-x3f");
   filter_tiff.add_mime_type("image/x-exr");
-  /*filter_tiff.add_pattern("*.EXR");
+#ifdef WIN32
+  /*filter_tiff.add_pattern("*.EXR");*/
   filter_tiff.add_pattern("*.3FR");
   filter_tiff.add_pattern("*.ARI");
   filter_tiff.add_pattern("*.ARW");
@@ -734,7 +735,8 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_pattern("*.SRF");
   filter_tiff.add_pattern("*.SRW");
   filter_tiff.add_pattern("*.STI");
-  filter_tiff.add_pattern("*.X3F");*/
+  filter_tiff.add_pattern("*.X3F");
+#endif
   filter_tiff.add_pattern("*.pfi");
   filter_tiff.add_pattern("*.PFI");
   filter_tiff.add_pattern("*.Pfi");
@@ -796,7 +798,8 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_mime_type("image/x-srf");
   filter_tiff->add_mime_type("image/x-x3f");
   filter_tiff->add_mime_type("image/x-exr");
-  /*filter_tiff->add_pattern("*.exr");
+#ifdef WIN32
+  /*filter_tiff->add_pattern("*.exr");*/
   filter_tiff->add_pattern("*.3fr");
   filter_tiff->add_pattern("*.ari");
   filter_tiff->add_pattern("*.arw");
@@ -836,7 +839,8 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_pattern("*.srf");
   filter_tiff->add_pattern("*.srw");
   filter_tiff->add_pattern("*.sti");
-  filter_tiff->add_pattern("*.x3f");*/
+  filter_tiff->add_pattern("*.x3f");
+#endif
   filter_tiff->add_pattern("*.pfi");
   filter_tiff->add_pattern("*.PFI");
   filter_tiff->add_pattern("*.Pfi");
