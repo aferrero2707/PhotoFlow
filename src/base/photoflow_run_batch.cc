@@ -175,7 +175,7 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
 
     fullpath = realpath( argv[1], NULL );
     if(!fullpath) {
-      std::cout<<"PhotoFlow::run_batch(): input file not found: "<<argv[1]<<", full path=\""<<fullpath<<"\""<<std::endl;
+      std::cout<<"PhotoFlow::run_batch(): input file not found: \""<<argv[1]<<"\""<<std::endl;
       return 1;
     }
     std::cout<<"PhotoFlow::run_batch(): input image=\""<<fullpath<<"\""<<std::endl;
