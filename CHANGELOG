@@ -7,18 +7,25 @@ Version 0.2.8
   Used for example for opening floating-point DNGs not supported by RawSpeed
 - [film CLUTs] added support for reading bundled gmic_film_cluts.gmz file
 - [plugin] moved GIMP plugin to external project
-- Added support for sidecar files. When exporting an image to TIFF or Jpeg format,
+- Added optional support for sidecar files. 
+  When exporting an image to TIFF or Jpeg format,
   the editing configuration is saved into a file named .tif.pfi or .jpg.pfi.
   Also, when opening an image named image.ext, the program looks for a sidecar
   file named image.pfi or image.ext.pfi (in this order) in the same folder.
   If a sidecar .pfi file is found it is opened instead of image.ext.
+  The sidecar files functionality is disabled by default, and can be enabled
+  via the settings dialog.
 
 * Improvements:
 
+- Re-worked the UI layout, now with a single left panel showing both the layers tree and
+  the controls for the active tool. Masks editing is now also performed in the same panel.
 - Various improvements and polishing of widgets layout
-- Removed dependency on GExiv2. Code now only depends on Exiv2.
+- Removed dependency on GExiv2. Code now only depends on Exiv2. A bundled 0.2.6 version is used if
+  not found on the system.
 - [tools/raw processing] reduced memory usage during RAW image loading
 - [tools/raw processing] RAW decoding updated to current RawSpeed/DT git version (as of 2017-05-25)
+- [tools/raw processing] added support for per-cahnnel black levels
 - [tools/lens corrections] completed optical corrections support, now also included in the RAW processing module
 - [tools/lens corrections] added support for fixed-lens camera (from Darktable)
 - [tools/crop] added top/left handles and fixed handling of image boundaries
@@ -26,12 +33,14 @@ Version 0.2.8
 - [gui] added expander for grouping additional tool controls, like horizontal/vertical shifts
 - [gui] added more keyboard shortcuts (layer copy/cut/paste/deletion)
 - [gui] using vips_resize() for fit-to-screen scaling
+- [batch] enable outputting of .PFI files
 - [build] moved GMIC code into a separate static library, to speed up parallel compilation
 
 * Bug fixes:
 
 - [base] fixed threading of cache buffers for VIPS versions 8.4.*
 - [tools/raw processing] fixed issue with SPOT WB when output is gamma-encoded
+- [tools/raw processing] fixed spot WB when output image is in Lab colorspace
 - [tools/shadows-highlights] Fixed processing of highlights
 - [tools/clone-stamp] fixed various bugs leading to unpredictable crashes
 - [tools/uniform fill] fixed initialisation of color selector button in UI
