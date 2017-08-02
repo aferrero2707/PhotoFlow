@@ -198,8 +198,14 @@ VERSION=$(date +%Y%m%d)_$(date +%H%M)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}.glib
 # Patch away absolute paths; it would be nice if they were relative
 ########################################################################
 
-find usr/ -type f -exec sed -i -e 's|/usr|././|g' {} \;
-find usr/ -type f -exec sed -i -e 's|/${PREFIX}|././|g' {} \;
+echo "INSTALL_PREFIX before patching:"
+strings ./usr/bin/$LOWERAPP.real | grep INSTALL_PREFIX
+
+find usr/ -type f -exec sed -i -e 's|/usr/|././/|g' {} \;
+find usr/ -type f -exec sed -i -e 's|/${PREFIX}/|././/|g' {} \;
+
+echo "INSTALL_PREFIX after patching:"
+strings ./usr/bin/$LOWERAPP.real | grep INSTALL_PREFIX
 
 # The fonts configuration should not be patched, copy back original one
 cp /$PREFIX/etc/fonts/fonts.conf usr/etc/fonts/fonts.conf
