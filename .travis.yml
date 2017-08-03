@@ -53,6 +53,7 @@ matrix:
                 - libglibmm-2.4-dev
                 - libgtkmm-2.4-dev
                 - libpugixml-dev
+                - gtk2-engines-pixbuf
                 - zenity
           before_script:
               #- cd non_existent_dir
