@@ -167,7 +167,7 @@ gmic* PF::GmicExtractForegroundPar::new_gmic()
 #else
   if( getenv("HOME") ) {
     //snprintf( fname, 499, "%s/.photoflow/gmic_update.gmic", getenv("HOME") );
-    snprintf( fname, 499, "%s/share/photoflow/gmic_def.gmic", INSTALL_PREFIX );
+    snprintf( fname, 499, "%s/gmic_def.gmic", PF::PhotoFlow::Instance().get_data_dir().c_str() );
     std::cout<<"G'MIC custom commands file: "<<fname<<std::endl;
     struct stat buffer;   
     int stat_result = stat( fname, &buffer );

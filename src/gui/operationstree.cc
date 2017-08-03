@@ -192,7 +192,7 @@ void PF::OperationsTree::add_op( Glib::ustring name, const std::string nik)
   row = *(treeModel->append());
   row[columns.col_name] = name;
   row[columns.col_nickname] = nik;
-  Glib::ustring helpPath = Glib::ustring(INSTALL_PREFIX) + "/share/photoflow/help/en/" + nik + ".hlp";
+  Glib::ustring helpPath = Glib::ustring(PF::PhotoFlow::Instance().get_data_dir()) + "/help/en/" + nik + ".hlp";
   std::ifstream file(helpPath.c_str());
   Glib::ustring help;
   char ch;
