@@ -149,6 +149,14 @@ mkdir -p usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0
 cp -a /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0
 cp -a /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders.cache usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0
 
+# Copy the pixmap theme engine, needed by the default photoflow theme
+mkdir -p usr/lib/gtk-2.0/engines
+gtk_libdir=$(pkg-config --variable=libdir gtk+-2.0)
+pixmap_lib=$(find ${gtk_libdir}/gtk-2.0 -name libpixmap.so)
+if [ x"${pixmap_lib}" != "x" ]; then
+	cp -L "${pixmap_lib}" usr/lib/gtk-2.0/engines
+fi
+
 
 mkdir -p usr/share
 cp -a /usr/share/mime usr/share
@@ -198,8 +206,14 @@ VERSION=$(date +%Y%m%d)_$(date +%H%M)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}.glib
 # Patch away absolute paths; it would be nice if they were relative
 ########################################################################
 
-find usr/ -type f -exec sed -i -e 's|/usr|././|g' {} \;
-find usr/ -type f -exec sed -i -e 's|/${PREFIX}|././|g' {} \;
+echo "INSTALL_PREFIX before patching:"
+strings ./usr/bin/$LOWERAPP.real | grep INSTALL_PREFIX
+
+find usr/ -type f -exec sed -i -e 's|/usr/|././/|g' {} \;
+find usr/ -type f -exec sed -i -e 's|/${PREFIX}/|././/|g' {} \;
+
+echo "INSTALL_PREFIX after patching:"
+strings ./usr/bin/$LOWERAPP.real | grep INSTALL_PREFIX
 
 # The fonts configuration should not be patched, copy back original one
 cp /$PREFIX/etc/fonts/fonts.conf usr/etc/fonts/fonts.conf
