@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-03-10 22:48+0100\n"
+"POT-Creation-Date: 2017-08-05 14:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -78,7 +78,7 @@ msgstr ""
 
 #: src/operations/draw.cc:67 src/operations/draw.cc:69
 #: src/gui/layerwidget.cc:152 src/gui/layerwidget.cc:151
-#: src/gui/layerwidget.cc:298
+#: src/gui/layerwidget.cc:298 src/gui/layerwidget.cc:320
 msgid "freehand drawing"
 msgstr ""
 
@@ -100,7 +100,7 @@ msgid "invert"
 msgstr ""
 
 #: src/operations/lensfun.cc:49 src/operations/lensfun.cc:62
-#: src/operations/lensfun.cc:229
+#: src/operations/lensfun.cc:229 src/operations/lensfun.cc:342
 msgid "optical corrections"
 msgstr ""
 
@@ -120,6 +120,7 @@ msgstr ""
 
 #: src/operations/uniform.cc:49 src/gui/layerwidget.cc:148
 #: src/gui/layerwidget.cc:147 src/gui/layerwidget.cc:294
+#: src/gui/layerwidget.cc:316
 msgid "uniform fill"
 msgstr ""
 
@@ -149,16 +150,19 @@ msgstr ""
 
 #: src/gui/imageeditor.cc:138 src/gui/imageeditor.cc:141
 #: src/gui/imageeditor.cc:142 src/gui/imageeditor.cc:183
+#: src/gui/imageeditor.cc:187
 msgid "show merged layers"
 msgstr ""
 
 #: src/gui/imageeditor.cc:139 src/gui/imageeditor.cc:142
 #: src/gui/imageeditor.cc:143 src/gui/imageeditor.cc:184
+#: src/gui/imageeditor.cc:188
 msgid "show active layer"
 msgstr ""
 
 #: src/gui/imageeditor.cc:424 src/gui/imageeditor.cc:481
 #: src/gui/imageeditor.cc:485 src/gui/imageeditor.cc:540
+#: src/gui/imageeditor.cc:568
 #, c-format
 msgid "Crash recovery found for file \"%s\". Do you want to restore it?"
 msgstr ""
@@ -178,26 +182,31 @@ msgstr ""
 
 #: src/gui/layerwidget.cc:123 src/gui/layerwidget.cc:192
 #: src/gui/layerwidget.cc:191 src/gui/layerwidget.cc:353
+#: src/gui/layerwidget.cc:375
 msgid "Add a new layer"
 msgstr ""
 
 #: src/gui/layerwidget.cc:125 src/gui/layerwidget.cc:194
 #: src/gui/layerwidget.cc:193 src/gui/layerwidget.cc:355
+#: src/gui/layerwidget.cc:377
 msgid "Add a new layer group"
 msgstr ""
 
 #: src/gui/layerwidget.cc:127 src/gui/layerwidget.cc:196
 #: src/gui/layerwidget.cc:195 src/gui/layerwidget.cc:357
+#: src/gui/layerwidget.cc:379
 msgid "Remove selected layers"
 msgstr ""
 
 #: src/gui/layerwidget.cc:129 src/gui/layerwidget.cc:198
 #: src/gui/layerwidget.cc:197 src/gui/layerwidget.cc:359
+#: src/gui/layerwidget.cc:381
 msgid "Load an existing preset"
 msgstr ""
 
 #: src/gui/layerwidget.cc:130 src/gui/layerwidget.cc:200
 #: src/gui/layerwidget.cc:199 src/gui/layerwidget.cc:361
+#: src/gui/layerwidget.cc:383
 msgid "Save the selected layers as a preset"
 msgstr ""
 
@@ -210,6 +219,8 @@ msgstr ""
 #: src/gui/layerwidget.cc:1260 src/gui/layerwidget.cc:985
 #: src/gui/layerwidget.cc:1259 src/gui/layerwidget.cc:1256
 #: src/gui/layerwidget.cc:1290 src/gui/layerwidget.cc:1637
+#: src/gui/layerwidget.cc:1406 src/gui/layerwidget.cc:1440
+#: src/gui/layerwidget.cc:1815
 msgid "Group Layer Config"
 msgstr ""
 
@@ -221,11 +232,14 @@ msgstr ""
 #: src/gui/layerwidget.cc:1361 src/gui/layerwidget.cc:1366
 #: src/gui/layerwidget.cc:1773 src/gui/layerwidget.cc:1778
 #: src/gui/layerwidget.cc:1846 src/gui/layerwidget.cc:1851
+#: src/gui/layerwidget.cc:1963 src/gui/layerwidget.cc:1968
+#: src/gui/layerwidget.cc:2038 src/gui/layerwidget.cc:2043
 msgid "Photoflow presets"
 msgstr ""
 
 #: src/gui/layerwidget.cc:959 src/gui/layerwidget.cc:1352
 #: src/gui/layerwidget.cc:1351 src/gui/layerwidget.cc:1836
+#: src/gui/layerwidget.cc:2028
 msgid "Save preset as..."
 msgstr ""
 
@@ -237,7 +251,8 @@ msgstr ""
 msgid "Save as"
 msgstr ""
 
-#: src/gui/mainwindow.cc:59 src/gui/mainwindow.cc:266 src/gui/mainwindow.cc:281
+#: src/gui/mainwindow.cc:59 src/gui/mainwindow.cc:266
+#: src/gui/mainwindow.cc:281
 msgid "Export"
 msgstr ""
 
@@ -248,7 +263,7 @@ msgstr ""
 #: src/gui/mainwindow.cc:359 src/gui/operationstree.cc:295
 #: src/gui/layerwidget.cc:683 src/gui/mainwindow.cc:552
 #: src/gui/layerwidget.cc:682 src/gui/layerwidget.cc:957
-#: src/gui/mainwindow.cc:629
+#: src/gui/mainwindow.cc:629 src/gui/layerwidget.cc:998
 msgid "Open image"
 msgstr ""
 
@@ -258,6 +273,8 @@ msgstr ""
 #: src/gui/layerwidget.cc:705 src/gui/layerwidget.cc:764
 #: src/gui/layerwidget.cc:980 src/gui/layerwidget.cc:1039
 #: src/gui/mainwindow.cc:644 src/gui/mainwindow.cc:747
+#: src/gui/layerwidget.cc:1021 src/gui/layerwidget.cc:1123
+#: src/gui/mainwindow.cc:749
 msgid "Image files"
 msgstr ""
 
@@ -267,41 +284,46 @@ msgstr ""
 #: src/gui/layerwidget.cc:759 src/gui/layerwidget.cc:818
 #: src/gui/layerwidget.cc:1034 src/gui/layerwidget.cc:1093
 #: src/gui/mainwindow.cc:742 src/gui/mainwindow.cc:844
+#: src/gui/layerwidget.cc:1118 src/gui/layerwidget.cc:1220
+#: src/gui/mainwindow.cc:744 src/gui/mainwindow.cc:848
 msgid "All files"
 msgstr ""
 
 #: src/gui/mainwindow.cc:463 src/gui/mainwindow.cc:752
-#: src/gui/mainwindow.cc:918
+#: src/gui/mainwindow.cc:918 src/gui/mainwindow.cc:924
 msgid "Save image as..."
 msgstr ""
 
 #: src/gui/mainwindow.cc:479 src/gui/mainwindow.cc:484
 #: src/gui/mainwindow.cc:768 src/gui/mainwindow.cc:773
 #: src/gui/mainwindow.cc:934 src/gui/mainwindow.cc:939
+#: src/gui/mainwindow.cc:940 src/gui/mainwindow.cc:945
 msgid "Photoflow files"
 msgstr ""
 
 #: src/gui/mainwindow.cc:566 src/gui/mainwindow.cc:858
-#: src/gui/mainwindow.cc:1030
+#: src/gui/mainwindow.cc:1030 src/gui/mainwindow.cc:1036
 msgid "Export image as..."
 msgstr ""
 
 #: src/gui/mainwindow.cc:576 src/gui/mainwindow.cc:581
 #: src/gui/mainwindow.cc:880 src/gui/mainwindow.cc:885
 #: src/gui/mainwindow.cc:1066 src/gui/mainwindow.cc:1071
-#: src/gui/mainwindow.cc:1113
+#: src/gui/mainwindow.cc:1113 src/gui/mainwindow.cc:1072
+#: src/gui/mainwindow.cc:1077 src/gui/mainwindow.cc:1119
 msgid "TIFF files"
 msgstr ""
 
 #: src/gui/mainwindow.cc:588 src/gui/mainwindow.cc:593
 #: src/gui/mainwindow.cc:868 src/gui/mainwindow.cc:873
 #: src/gui/mainwindow.cc:1054 src/gui/mainwindow.cc:1059
-#: src/gui/mainwindow.cc:1122
+#: src/gui/mainwindow.cc:1122 src/gui/mainwindow.cc:1060
+#: src/gui/mainwindow.cc:1065 src/gui/mainwindow.cc:1128
 msgid "JPEG files"
 msgstr ""
 
 #: src/gui/mainwindow.cc:663 src/gui/mainwindow.cc:988
-#: src/gui/mainwindow.cc:1210
+#: src/gui/mainwindow.cc:1210 src/gui/mainwindow.cc:1216
 #, c-format
 msgid ""
 "Image \"%s\" contains unsaved data. Do you want to save it before closing?"
@@ -465,10 +487,12 @@ msgid "Add New Layer"
 msgstr ""
 
 #: src/gui/operationstree.cc:252 src/gui/settingsdialog.cc:61
+#: src/gui/settingsdialog.cc:62
 msgid "OK"
 msgstr ""
 
 #: src/gui/operationstree.cc:253 src/gui/settingsdialog.cc:62
+#: src/gui/settingsdialog.cc:63
 msgid "Cancel"
 msgstr ""
 
@@ -762,6 +786,7 @@ msgstr ""
 
 #: src/operations/perspective.cc:51 src/gui/layerwidget.cc:154
 #: src/gui/layerwidget.cc:153 src/gui/layerwidget.cc:300
+#: src/gui/layerwidget.cc:322
 msgid "perspective correction"
 msgstr ""
 
@@ -786,118 +811,118 @@ msgid "updating"
 msgstr ""
 
 #: src/gui/imageeditor.cc:191 src/gui/imageeditor.cc:192
-#: src/gui/imageeditor.cc:233
+#: src/gui/imageeditor.cc:233 src/gui/imageeditor.cc:239
 msgid "Toggle highlights clipping warning on/off"
 msgstr ""
 
 #: src/gui/imageeditor.cc:195 src/gui/imageeditor.cc:196
-#: src/gui/imageeditor.cc:237
+#: src/gui/imageeditor.cc:237 src/gui/imageeditor.cc:243
 msgid "Toggle shadows clipping warning on/off"
 msgstr ""
 
 #: src/gui/imageeditor.cc:201 src/gui/imageeditor.cc:202
-#: src/gui/imageeditor.cc:243
+#: src/gui/imageeditor.cc:243 src/gui/imageeditor.cc:249
 msgid "Zoom to 100%"
 msgstr ""
 
 #: src/gui/imageeditor.cc:205 src/gui/imageeditor.cc:206
-#: src/gui/imageeditor.cc:247
+#: src/gui/imageeditor.cc:247 src/gui/imageeditor.cc:253
 msgid "Fit image to preview area"
 msgstr ""
 
 #: src/gui/imageeditor.cc:209 src/gui/imageeditor.cc:210
-#: src/gui/imageeditor.cc:251
+#: src/gui/imageeditor.cc:251 src/gui/imageeditor.cc:257
 msgid "Zoom out"
 msgstr ""
 
 #: src/gui/imageeditor.cc:213 src/gui/imageeditor.cc:214
-#: src/gui/imageeditor.cc:255
+#: src/gui/imageeditor.cc:255 src/gui/imageeditor.cc:261
 msgid "Zoom in"
 msgstr ""
 
 #: src/gui/imageeditor.cc:222 src/gui/imageeditor.cc:223
-#: src/gui/imageeditor.cc:264
+#: src/gui/imageeditor.cc:264 src/gui/imageeditor.cc:270
 msgid "histogram"
 msgstr ""
 
 #: src/gui/layerwidget.cc:116 src/gui/mainwindow.cc:100
 #: src/gui/layerwidget.cc:115 src/gui/layerwidget.cc:262
-#: src/gui/mainwindow.cc:102
+#: src/gui/mainwindow.cc:102 src/gui/layerwidget.cc:284
 msgid "New Adjustment"
 msgstr ""
 
 #: src/gui/layerwidget.cc:119 src/gui/layerwidget.cc:118
-#: src/gui/layerwidget.cc:265
+#: src/gui/layerwidget.cc:265 src/gui/layerwidget.cc:287
 msgid "Load preset"
 msgstr ""
 
 #: src/gui/layerwidget.cc:120 src/gui/layerwidget.cc:119
-#: src/gui/layerwidget.cc:266
+#: src/gui/layerwidget.cc:266 src/gui/layerwidget.cc:288
 msgid "Save preset"
 msgstr ""
 
 #: src/gui/layerwidget.cc:142 src/gui/layerwidget.cc:141
-#: src/gui/layerwidget.cc:288
+#: src/gui/layerwidget.cc:288 src/gui/layerwidget.cc:310
 msgid "new layer"
 msgstr ""
 
 #: src/gui/layerwidget.cc:143 src/gui/layerwidget.cc:142
-#: src/gui/layerwidget.cc:289
+#: src/gui/layerwidget.cc:289 src/gui/layerwidget.cc:311
 msgid "new group layer"
 msgstr ""
 
 #: src/gui/layerwidget.cc:144 src/gui/layerwidget.cc:143
-#: src/gui/layerwidget.cc:290
+#: src/gui/layerwidget.cc:290 src/gui/layerwidget.cc:312
 msgid "delete layer"
 msgstr ""
 
 #: src/gui/layerwidget.cc:145 src/gui/layerwidget.cc:144
-#: src/gui/layerwidget.cc:291
+#: src/gui/layerwidget.cc:291 src/gui/layerwidget.cc:313
 msgid "insert image as layer"
 msgstr ""
 
 #: src/gui/layerwidget.cc:146 src/gui/layerwidget.cc:145
-#: src/gui/layerwidget.cc:292
+#: src/gui/layerwidget.cc:292 src/gui/layerwidget.cc:314
 msgid "basic editing"
 msgstr ""
 
 #: src/gui/layerwidget.cc:147 src/gui/layerwidget.cc:146
-#: src/gui/layerwidget.cc:293
+#: src/gui/layerwidget.cc:293 src/gui/layerwidget.cc:315
 msgid "curves tool"
 msgstr ""
 
 #: src/gui/layerwidget.cc:149 src/gui/layerwidget.cc:148
-#: src/gui/layerwidget.cc:295
+#: src/gui/layerwidget.cc:295 src/gui/layerwidget.cc:317
 msgid "gradient tool"
 msgstr ""
 
 #: src/gui/layerwidget.cc:150 src/gui/layerwidget.cc:149
-#: src/gui/layerwidget.cc:296
+#: src/gui/layerwidget.cc:296 src/gui/layerwidget.cc:318
 msgid "desaturate tool"
 msgstr ""
 
 #: src/gui/layerwidget.cc:151 src/gui/layerwidget.cc:150
-#: src/gui/layerwidget.cc:297
+#: src/gui/layerwidget.cc:297 src/gui/layerwidget.cc:319
 msgid "crop tool"
 msgstr ""
 
 #: src/gui/layerwidget.cc:153 src/gui/layerwidget.cc:152
-#: src/gui/layerwidget.cc:299
+#: src/gui/layerwidget.cc:299 src/gui/layerwidget.cc:321
 msgid "clone stamp tool"
 msgstr ""
 
 #: src/gui/layerwidget.cc:155 src/gui/layerwidget.cc:154
-#: src/gui/layerwidget.cc:301
+#: src/gui/layerwidget.cc:301 src/gui/layerwidget.cc:323
 msgid "scale/rotate tool"
 msgstr ""
 
 #: src/gui/layerwidget.cc:156 src/gui/layerwidget.cc:155
-#: src/gui/layerwidget.cc:302
+#: src/gui/layerwidget.cc:302 src/gui/layerwidget.cc:324
 msgid "path tool"
 msgstr ""
 
 #: src/gui/layerwidget.cc:976 src/gui/layerwidget.cc:975
-#: src/gui/layerwidget.cc:1280
+#: src/gui/layerwidget.cc:1280 src/gui/layerwidget.cc:1430
 msgid "RAW image"
 msgstr ""
 
@@ -982,7 +1007,7 @@ msgid "show information on current tool"
 msgstr ""
 
 #: src/gui/operation_config_gui.cc:707 src/gui/operation_config_gui.cc:708
-#: src/gui/operation_config_gui.cc:737
+#: src/gui/operation_config_gui.cc:737 src/gui/operation_config_gui.cc:747
 msgid "Close"
 msgstr ""
 
@@ -1111,10 +1136,12 @@ msgid "method: "
 msgstr ""
 
 #: src/gui/operations/raw_developer_config.cc:359
+#: src/gui/operations/raw_developer_config.cc:365
 msgid "RAW white level %"
 msgstr ""
 
 #: src/gui/operations/raw_developer_config.cc:360
+#: src/gui/operations/raw_developer_config.cc:366
 msgid "RAW black level %"
 msgstr ""
 
@@ -1256,10 +1283,12 @@ msgid "Settings"
 msgstr ""
 
 #: src/gui/settingsdialog.cc:92 src/gui/settingsdialog.cc:94
+#: src/gui/settingsdialog.cc:96
 msgid "custom display profile name: "
 msgstr ""
 
 #: src/gui/settingsdialog.cc:100 src/gui/settingsdialog.cc:101
+#: src/gui/settingsdialog.cc:103
 msgid "display profile type: "
 msgstr ""
 
@@ -1267,7 +1296,7 @@ msgstr ""
 msgid "preserve colors"
 msgstr ""
 
-#: src/base/image.cc:688 src/base/image.cc:811
+#: src/base/image.cc:688 src/base/image.cc:811 src/base/image.cc:855
 msgid "background"
 msgstr ""
 
@@ -1323,15 +1352,16 @@ msgstr ""
 msgid "Color"
 msgstr ""
 
-#: src/gui/settingsdialog.cc:67
+#: src/gui/settingsdialog.cc:67 src/gui/settingsdialog.cc:68
 msgid "Color management"
 msgstr ""
 
-#: src/gui/settingsdialog.cc:68
+#: src/gui/settingsdialog.cc:68 src/gui/settingsdialog.cc:70
 msgid "About"
 msgstr ""
 
 #: src/gui/settingsdialog.cc:212 src/gui/settingsdialog.cc:213
+#: src/gui/settingsdialog.cc:230
 msgid "Please choose an ICC profile"
 msgstr ""
 
@@ -1462,6 +1492,7 @@ msgstr ""
 
 #: src/gui/operationstree.cc:208 src/gui/operation_config_gui.cc:688
 #: src/gui/operation_config_gui.cc:689 src/gui/operation_config_gui.cc:718
+#: src/gui/operation_config_gui.cc:728
 msgid "This help is not yet available. Sorry."
 msgstr ""
 
@@ -1470,11 +1501,12 @@ msgid "opacity ("
 msgstr ""
 
 #: src/gui/settingsdialog.cc:89 src/gui/settingsdialog.cc:91
+#: src/gui/settingsdialog.cc:93
 msgid "Custom"
 msgstr ""
 
 #: src/gui/layerwidget.cc:1280 src/gui/layerwidget.cc:1279
-#: src/gui/layerwidget.cc:1763
+#: src/gui/layerwidget.cc:1763 src/gui/layerwidget.cc:1953
 msgid "Open preset"
 msgstr ""
 
@@ -1492,7 +1524,7 @@ msgid "Output mode"
 msgstr ""
 
 #: src/gui/operation_config_gui.cc:669 src/gui/operation_config_gui.cc:670
-#: src/gui/operation_config_gui.cc:699
+#: src/gui/operation_config_gui.cc:699 src/gui/operation_config_gui.cc:709
 msgid "help"
 msgstr ""
 
@@ -1501,7 +1533,7 @@ msgid "intensity ("
 msgstr ""
 
 #: src/gui/layerwidget.cc:964 src/gui/layerwidget.cc:963
-#: src/gui/layerwidget.cc:1267
+#: src/gui/layerwidget.cc:1267 src/gui/layerwidget.cc:1417
 msgid "image file"
 msgstr ""
 
@@ -1537,23 +1569,23 @@ msgstr ""
 msgid "Layer mask   "
 msgstr ""
 
-#: src/gui/layerwidget.cc:257
+#: src/gui/layerwidget.cc:257 src/gui/layerwidget.cc:279
 msgid "back"
 msgstr ""
 
-#: src/gui/layerwidget.cc:258
+#: src/gui/layerwidget.cc:258 src/gui/layerwidget.cc:280
 msgid "show"
 msgstr ""
 
-#: src/gui/layerwidget.cc:259
+#: src/gui/layerwidget.cc:259 src/gui/layerwidget.cc:281
 msgid "mask"
 msgstr ""
 
-#: src/gui/layerwidget.cc:1246
+#: src/gui/layerwidget.cc:1246 src/gui/layerwidget.cc:1396
 msgid "image"
 msgstr ""
 
-#: src/gui/layerwidget.cc:1625
+#: src/gui/layerwidget.cc:1625 src/gui/layerwidget.cc:1803
 msgid "Group Layer"
 msgstr ""
 
@@ -1562,6 +1594,7 @@ msgid "Modified buffers existing, do you really want to exit?"
 msgstr ""
 
 #: src/gui/mainwindow.cc:1040 src/gui/mainwindow.cc:1046
+#: src/gui/mainwindow.cc:1052
 msgid "All supported formats"
 msgstr ""
 
@@ -1639,10 +1672,37 @@ msgstr ""
 msgid "Optical corrections"
 msgstr ""
 
-#: src/gui/settingsdialog.cc:83
+#: src/gui/settingsdialog.cc:83 src/gui/settingsdialog.cc:85
 msgid "System"
 msgstr ""
 
-#: src/gui/settingsdialog.cc:85
+#: src/gui/settingsdialog.cc:85 src/gui/settingsdialog.cc:87
 msgid "System (not working)"
+msgstr ""
+
+#: src/gui/imageeditor.cc:623
+#, c-format
+msgid ""
+"Sidecar file \"%s\" detected.\n"
+"Do you want to open it?"
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:334
+msgid "temp."
+msgstr ""
+
+#: src/gui/operations/raw_developer_config.cc:364
+msgid "exposure compensation"
+msgstr ""
+
+#: src/gui/settingsdialog.cc:58
+msgid "save sidecar files"
+msgstr ""
+
+#: src/gui/settingsdialog.cc:69
+msgid "Output"
+msgstr ""
+
+#: src/gui/settingsdialog.cc:114
+msgid "Save sidecar files when exporting to raster formats"
 msgstr ""
