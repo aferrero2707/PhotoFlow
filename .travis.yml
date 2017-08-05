@@ -1,6 +1,6 @@
 language: generic
 
-env:
+#env:
 matrix:
     allow_failures:
         - env: TARGET_SYSTEM=Windows
