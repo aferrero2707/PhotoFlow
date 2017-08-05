@@ -45,7 +45,9 @@ PF::PipelineNode::~PipelineNode()
   for( size_t j = 0; j < images.size(); j++ ) {
     snprintf( tstr, 499, "~PipelineNode() unref images[%d]", (int)j );
     PF_UNREF( images[j], tstr );
+#ifndef NDEBUG
     std::cout<<"~PipelineNode(): unref of images["<<j<<"]"<<std::endl;
+#endif
   }
 
   if( blended != NULL ) {
@@ -57,39 +59,60 @@ PF::PipelineNode::~PipelineNode()
   }
 
   if( processor != NULL ) {
+#ifndef NDEBUG
     std::cout<<"~PipelineNode(): deleting processor"<<std::endl;
+#endif
     delete( processor );
+#ifndef NDEBUG
     std::cout<<"~PipelineNode(): processor deleted"<<std::endl;
+#endif
   }
 
   if( blender != NULL ) {
+#ifndef NDEBUG
     std::cout<<"~PipelineNode(): deleting blender"<<std::endl;
+#endif
     delete( blender );
+#ifndef NDEBUG
     std::cout<<"~PipelineNode(): blender deleted"<<std::endl;
+#endif
   }
 }
 
 
 PF::Pipeline::~Pipeline()
 {
+#ifndef NDEBUG
   std::cout<<"Pipeline::~Pipeline() called."<<std::endl;
+#endif
   char tstr[500];
   for( unsigned int i = 0; i < nodes.size(); i++ ) {
     if( nodes[i] != NULL ) {
       PF::Layer* l = image->get_layer_manager().get_layer( i );
+#ifndef NDEBUG
       std::cout<<"Pipeline::~Pipeline(): deleting node of layer \""
           <<(l ? l->get_name() : "")<<"\""<<std::endl;
+#endif
       delete nodes[i];
     }
   }
+#ifndef NDEBUG
   std::cout<<"Pipeline::~Pipeline(): deleting sinks"<<std::endl;
+#endif
   for( unsigned int i = 0; i < sinks.size(); i++ ) {
     if( sinks[i] == NULL ) continue;
-    std::cout<<"Pipeline::~Pipeline(): deleting sink #"<<i<<std::endl;
-		delete( sinks[i] );
-    std::cout<<"Pipeline::~Pipeline(): sink #"<<i<<" deleted"<<std::endl;
-	}
-  std::cout<<"Pipeline::~Pipeline(): all sinks deleted"<<std::endl;
+#ifndef NDEBUG
+    std::cout<<"Pipeline::~Pipeline(): cleaning sink #"<<i<<std::endl;
+#endif
+    //delete( sinks[i] );
+    sinks[i]->dispose();
+#ifndef NDEBUG
+    std::cout<<"Pipeline::~Pipeline(): sink #"<<i<<" cleaned"<<std::endl;
+#endif
+  }
+#ifndef NDEBUG
+  std::cout<<"Pipeline::~Pipeline(): all sinks cleaned"<<std::endl;
+#endif
 }
 
 

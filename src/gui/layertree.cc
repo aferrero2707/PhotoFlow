@@ -30,6 +30,7 @@
 #include "../base/image.hh"
 
 #include "imageeditor.hh"
+#include "layerwidget.hh"
 
 #include "layertree.hh"
 
@@ -276,7 +277,7 @@ static const struct {
   "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377",
 };
 
-
+/*
 typedef struct {
   PF::LayerTree* tree;
 } TreeUpdateData;
@@ -289,7 +290,7 @@ static gboolean tree_update_cb ( TreeUpdateData* data)
   }
   return false;
 }
-
+*/
 
 
 
@@ -305,17 +306,100 @@ Glib::RefPtr<PF::LayerTreeModel> PF::LayerTreeModel::create()
 }
 
 
-PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
+PF::LayersTreeView::LayersTreeView(PF::LayerWidget* lw): Gtk::TreeView(), layer_widget(lw)
+{
+  //Fill popup menu:
+  auto item = Gtk::manage(new Gtk::MenuItem("_Cut", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::cut_selected_layers) );
+  popupMenu.append(*item);
+
+  item = Gtk::manage(new Gtk::MenuItem("_Copy", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::copy_selected_layers) );
+  popupMenu.append(*item);
+
+  item = Gtk::manage(new Gtk::MenuItem("_Paste", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::paste_layers) );
+  popupMenu.append(*item);
+
+  item = Gtk::manage(new Gtk::MenuItem("_Delete", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::delete_selected_layers) );
+  popupMenu.append(*item);
+
+  item = Gtk::manage(new Gtk::MenuItem("Load preset", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::on_button_load) );
+  popupMenu.append(*item);
+
+  item = Gtk::manage(new Gtk::MenuItem("Save preset", true));
+  item->signal_activate().connect(
+    sigc::mem_fun(*layer_widget, &PF::LayerWidget::on_button_save) );
+  popupMenu.append(*item);
+
+  popupMenu.accelerate(*this);
+  popupMenu.show_all(); //Show all menu items when the menu pops up
+}
+
+
+bool PF::LayersTreeView::on_button_press_event(GdkEventButton* button_event)
+{
+  bool return_value = false;
+
+  //Call base class, to allow normal handling,
+  //such as allowing the row to be selected by the right-click:
+  //return_value = TreeView::on_button_press_event(button_event);
+
+  //Then do our custom stuff:
+  if( (button_event->type == GDK_BUTTON_PRESS) && (button_event->button == 3) ) {
+    popupMenu.popup(button_event->button, button_event->time);
+
+  } else {
+    return_value = TreeView::on_button_press_event(button_event);
+  }
+
+  return return_value;
+
+}
+
+
+void PF::LayersTreeView::on_menu_cut()
+{
+
+}
+
+
+void PF::LayersTreeView::on_menu_copy()
+{
+
+}
+
+
+void PF::LayersTreeView::on_menu_paste()
+{
+
+}
+
+
+
+PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
+  treeView(&(e->get_layer_widget())),
   editor( e ),
   layers( NULL ),
-  map_flag( is_map )
+  map_flag( is_map ),
+  tree_modified(true),
+  updating(false)
 {
   treeModel = PF::LayerTreeModel::create();
   treeView.set_model(treeModel);
   treeView.append_column_editable("V", treeModel->columns.col_visible);
   treeView.append_column("Name", treeModel->columns.col_name);
-  treeView.append_column("map1", treeModel->columns.col_omap);
-  treeView.append_column("map2", treeModel->columns.col_imap);
+  if( !map_flag ) {
+    treeView.append_column("map1", treeModel->columns.col_omap);
+    //treeView.append_column("map2", treeModel->columns.col_imap);
+  }
 
   treeView.set_headers_visible(false);
 
@@ -324,14 +408,20 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
   col->set_resizable(false); col->set_expand(true);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   //col->set_fixed_width(35);
-  col = treeView.get_column(2);
-  col->set_resizable(false); col->set_expand(false);
-  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
-  col->set_fixed_width(30);
+
+  if( !map_flag ) {
+    col = treeView.get_column(2);
+    col->set_resizable(false); col->set_expand(false);
+    //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+    col->set_fixed_width(30);
+    /*
   col = treeView.get_column(3);
   col->set_resizable(false); col->set_expand(false);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   col->set_fixed_width(30);
+     */
+  }
+
   col = treeView.get_column(1);
   col->set_resizable(false); col->set_expand(true);
   //col->set_max_width(50);
@@ -351,7 +441,12 @@ PF::LayerTree::LayerTree( ImageEditor* e, bool is_map ):
   cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerTree::on_cell_toggled) ); 
 
   treeModel->signal_dnd_done.
-    connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_idle_cb) );
+    connect( sigc::mem_fun(*this, &PF::LayerTree::update_model_async) );
+  treeModel->signal_dnd_done.
+    connect( sigc::mem_fun(*this, &PF::LayerTree::set_tree_modified) );
+
+  signal_update_model.connect(sigc::mem_fun(*this, &LayerTree::update_model));
+
 
   add( treeView );
 
@@ -414,6 +509,7 @@ void PF::LayerTree::on_cell_toggled( const Glib::ustring& path )
 
 void PF::LayerTree::update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l )
 {
+  /*
   if( l->get_processor()->get_par()->has_intensity() ) {
     if( l->get_imap_layers().empty() ) {
       row[treeModel->columns.col_imap] = Gdk::Pixbuf::create_from_data(icon_white.pixel_data,Gdk::COLORSPACE_RGB,
@@ -428,6 +524,7 @@ void PF::LayerTree::update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l )
       }
     }
   }
+  */
   if( l->get_processor()->get_par()->has_opacity() ) {
     if( l->get_omap_layers().empty() ) {
       row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_white.pixel_data,Gdk::COLORSPACE_RGB,
@@ -446,7 +543,7 @@ void PF::LayerTree::update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l )
 
 
 
-void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
+void PF::LayerTree::update_model_int( Gtk::TreeModel::Row parent_row )
 {
   //PF::LayerTreeColumns& columns = columns;
   PF::Layer* parent_layer = parent_row[treeModel->columns.col_layer];
@@ -474,7 +571,7 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
     }
 
     if( l->is_group() ) {
-      update_model( row );
+      update_model_int( row );
       Gtk::TreeModel::Path path = treeModel->get_path( iter );
       if( l->is_expanded() ) {
         treeView.expand_row( path, true );
@@ -487,18 +584,35 @@ void PF::LayerTree::update_model( Gtk::TreeModel::Row parent_row )
 
 
 
-void PF::LayerTree::update_model_idle_cb()
+void PF::LayerTree::update_model_async()
 {
-  TreeUpdateData * update = g_new (TreeUpdateData, 1);
-  update->tree = this;
-  g_idle_add ((GSourceFunc) tree_update_cb, update);
+  signal_update_model.emit();
 }
 
 
 void PF::LayerTree::update_model()
 {
-  //std::cout<<"LayerTree::update_model() called"<<std::endl;
+#ifndef NDEBUG
+  std::cout<<"LayerTree::update_model(): get_tree_modified()="<<get_tree_modified()<<std::endl;
+#endif
+  if( get_tree_modified() == false )
+    return;
+
+  if( !layers ) return;
+
+  if( updating ) return;
+
+  tree_modified = false;
+  updating = true;
+
+#ifndef NDEBUG
+  std::cout<<"LayerTree::update_model(): treeModel->clear() called."<<std::endl;
+#endif
   treeModel->clear();
+#ifndef NDEBUG
+  std::cout<<"LayerTree::update_model(): after treeModel->clear()"<<std::endl;
+  std::cout<<"LayerTree::update_model(): layers->size()="<<layers->size()<<""<<std::endl;
+#endif
   std::list<PF::Layer*>::iterator li;
   for( li = layers->begin(); li != layers->end(); li++ ) {
     PF::Layer* l = *li;
@@ -511,6 +625,9 @@ void PF::LayerTree::update_model()
       std::cout<<"LayerTree::update_model(): NULL operation for layer \""<<l->get_name()<<"\""<<std::endl;
       continue;
     }
+#ifndef NDEBUG
+    std::cout<<"LayerTree::update_model(): adding layer \""<<l->get_name()<<"\""<<std::endl;
+#endif
     Gtk::TreeModel::iterator iter = treeModel->prepend();
     Gtk::TreeModel::Row row = *(iter);
     row[treeModel->columns.col_visible] = l->is_enabled();
@@ -524,7 +641,7 @@ void PF::LayerTree::update_model()
     }
 
     if( l->is_group() ) {
-      update_model( row );
+      update_model_int( row );
       Gtk::TreeModel::Path path = treeModel->get_path( iter );
       if( l->is_expanded() ) {
         //std::cout<<"LayerTree::update_model(): expanding row"<<std::endl;
@@ -539,6 +656,8 @@ void PF::LayerTree::update_model()
   treeView.columns_autosize();
 
   signal_updated.emit();
+
+  updating = false;
 
   //std::cout<<"LayerTree::update_model() finished"<<std::endl;
 /*

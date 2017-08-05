@@ -33,12 +33,6 @@
 #include <math.h>
 
 
-#include <exiv2/easyaccess.hpp>
-#include <exiv2/xmp.hpp>
-#include <exiv2/error.hpp>
-#include <exiv2/image.hpp>
-#include <exiv2/exif.hpp>
-
 #include <glib.h>
 
 #include "exif_data.hh"
@@ -257,16 +251,22 @@ bool PF::exif_read(exif_data_t* data, const char* path)
       dt_strlcpy_to_utf8(data->exif_maker, sizeof(data->exif_maker), pos, exifData);
     }
 
+#ifndef NDEBUG
     printf( "data->exif_maker before stripping: \"%s\"\n", data->exif_maker );
+#endif
     size_t slen = strnlen( data->exif_maker, sizeof(data->exif_maker)-2 );
     for(char *c=data->exif_maker+slen; c >= data->exif_maker; c--) {
+#ifndef NDEBUG
       std::cout<<"c: \""<<*c<<"\"("<<(int)*c<<")"<<std::endl;
+#endif
       if(*c != ' ' && *c != '\0') {
         *(c+1) = '\0';
         break;
       }
     }
+#ifndef NDEBUG
     printf( "data->exif_maker after stripping: \"%s\"\n", data->exif_maker );
+#endif
 
     if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.Image.Model")))
          != exifData.end() && pos->size())
@@ -280,7 +280,9 @@ bool PF::exif_read(exif_data_t* data, const char* path)
     }
 
     //g_print("read_exif(): model=%s\n",data->exif_model);
+#ifndef NDEBUG
     printf( "data->exif_model before stripping: \"%s\"\n", data->exif_model );
+#endif
     slen = strnlen( data->exif_model, sizeof(data->exif_model)-2 );
     for(char *c=data->exif_model+slen; c >= data->exif_model; c--) {
       if(*c != ' ' && *c != '\0') {
@@ -288,8 +290,10 @@ bool PF::exif_read(exif_data_t* data, const char* path)
         break;
       }
     }
+#ifndef NDEBUG
     printf( "data->exif_model after stripping: \"%s\"\n", data->exif_model );
     //g_print("read_exif(): model=%s\n",data->exif_model);
+#endif
 
     if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.Image.DateTimeOriginal")))
          != exifData.end() && pos->size())
@@ -343,5 +347,19 @@ void PF::exif_free (gpointer mem)
   std::cout<<"Freeing exif data structure"<<std::endl;
 #endif
   g_free( mem );
+}
+
+
+void PF::exiv2_free (gpointer mem)
+{
+#ifndef NDEBUG
+  std::cout<<"Freeing exiv2 data structure"<<std::endl;
+#endif
+  if( mem ) {
+    exiv2_data_t* ptr = (exiv2_data_t*)mem;
+    if(ptr->image.get() != NULL)
+      ptr->image.reset();
+    delete( ptr );
+  }
 }
 

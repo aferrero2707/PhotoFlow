@@ -34,6 +34,7 @@
 
 #include "fileutils.hh"
 //#include "pf_mkstemp.hh"
+#include "exif_data.hh"
 #include "image.hh"
 #include "imageprocessor.hh"
 #include "pf_file_loader.hh"
@@ -91,12 +92,13 @@ gint PF::image_rebuild_callback( gpointer data )
 
 
 PF::Image::Image(): 
-      layer_manager( this ),
-      async( false ),
-      modified_flag( false ),
-      rebuilding( false ),
-      loaded( false ),
-      disable_update( false )
+          layer_manager( this ),
+          async( false ),
+          modified_flag( false ),
+          rebuilding( false ),
+          loaded( false ),
+          disable_update( false ),
+          force_synced_update( false )
 {
   rebuild_mutex = vips_g_mutex_new();
   //g_mutex_lock( rebuild_mutex );
@@ -136,7 +138,7 @@ PF::Image::~Image()
     if( pipelines[vi] != NULL )
       delete pipelines[vi];
   }
-  */
+   */
 }
 
 
@@ -238,6 +240,9 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 #endif
   if( disable_update ) return;
 
+  if( force_synced_update )
+    sync = true;
+
   if( PF::PhotoFlow::Instance().is_batch() ) {
     do_update( target_pipeline );
   } else {
@@ -256,7 +261,7 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     request.area.width = request.area.height = 0;
     //}
 
-    if( sync && target_pipeline ) rebuild_cond.lock(); //g_mutex_lock( rebuild_mutex );
+    if( sync ) rebuild_done_reset(); //rebuild_cond.lock(); //g_mutex_lock( rebuild_mutex );
 #ifndef NDEBUG
     std::cout<<"PF::Image::update(): submitting rebuild request..."<<std::endl;
 #endif
@@ -265,13 +270,18 @@ void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
     std::cout<<"PF::Image::update(): request submitted."<<std::endl;
 #endif
 
-    if( sync && target_pipeline ) {
+    if( sync ) {
+#ifndef NDEBUG
       std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
+#endif
       //unlock(); //g_mutex_unlock( rebuild_mutex );
       //g_cond_wait( rebuild_done, rebuild_mutex );
-      rebuild_cond.wait();
-      rebuild_cond.unlock();
-      //std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
+      //rebuild_cond.wait();
+      //rebuild_cond.unlock();
+      rebuild_done_wait( true );
+#ifndef NDEBUG
+      std::cout<<"PF::Image::update(): ... rebuild_done received."<<std::endl;
+#endif
     }
 
     // In sync mode, the image is left in a locked state to allow further 
@@ -295,6 +305,9 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
 {
   //std::cout<<"PF::Image::do_update(): is_modified()="<<is_modified()<<std::endl;
   //if( !is_modified() ) return;
+
+  // Set the rebuild condition to FALSE
+  //rebuild_done_reset();
 
 #ifndef NDEBUG
   std::cout<<std::endl<<"============================================"<<std::endl;
@@ -386,6 +399,7 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
   }
 
   //std::cout<<"PF::Image::update(): waiting for rebuild_done...."<<std::endl;
+  // Set the rebuild condition to TRUE and emit the signal
   rebuild_done_signal();
   //rebuild_cond.unlock();
   //std::cout<<"PF::Image::do_update(): signaling done condition."<<std::endl;
@@ -434,7 +448,7 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
   int height = size;
   VipsRect area = {left, top, width, height};
 
-  if( PF::PhotoFlow::Instance().is_batch() ) {
+  if( true || PF::PhotoFlow::Instance().is_batch() ) {
     do_sample( layer_id, area );
   } else {
     ProcessRequestInfo request;
@@ -447,27 +461,30 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
     request.area.height = area.height;
 
     sample_lock(); //g_mutex_lock( sample_mutex );
-    #ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::Image::sample(): submitting sample request..."<<std::endl;
-    #endif
+#endif
     PF::ImageProcessor::Instance().submit_request( request );
-    #ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::Image::sample(): request submitted."<<std::endl;
-    #endif
+#endif
 
     //g_cond_wait( sample_done, sample_mutex );
     //std::cout<<"Image::sample(): unlocking mutex."<<std::endl;
     //sample_unlock(); //g_mutex_unlock( sample_mutex );
+#ifndef NDEBUG
     std::cout<<"Image::sample(): waiting for done."<<std::endl;
+#endif
     sample_cond.wait();
     sample_unlock();
+#ifndef NDEBUG
     std::cout<<"Image::sample(): done received."<<std::endl;
-
-    if(image)
-      *image = sampler_image;
-    values.clear();
-    values = sampler_values;
+#endif
   }
+
+  if(image) *image = sampler_image;
+  values.clear();
+  values = sampler_values;
 
   /*
   if( is_async() )
@@ -480,12 +497,27 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
 
 void PF::Image::do_sample( int layer_id, VipsRect& area )
 {
+  //std::cout<<"Image::do_sample(): waiting for rebuild_done..."<<std::endl;
+  //rebuild_lock();
+  //rebuild_done_wait( true );
+  //std::cout<<"Image::do_sample(): rebuild_done received"<<std::endl;
+
+#ifndef NDEBUG
+  std::cout<<"Image::do_sample(): locking image..."<<std::endl;
+#endif
+  lock();
+#ifndef NDEBUG
+  std::cout<<"Image::do_sample(): image locked"<<std::endl;
+#endif
+
   // Get the default pipeline of the image 
   // (it is supposed to be at 1:1 zoom level 
   // and floating point accuracy)
   PF::Pipeline* pipeline = get_pipeline( 0 );
   if( !pipeline ) {
     std::cout<<"Image::do_sample(): NULL pipeline"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
 
@@ -493,6 +525,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   PF::PipelineNode* node = pipeline->get_node( layer_id );
   if( !node ) {
     std::cout<<"Image::do_sample(): NULL pipeline node"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
 
@@ -500,6 +534,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   VipsImage* image = node->image;
   if( !image ) {
     std::cout<<"Image::do_sample(): NULL image"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
 
@@ -540,6 +576,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   VipsImage* outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
   if( outimg == NULL ) {
     std::cout<<"Image::do_sample(): NULL image after convert_format"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
   //PF_UNREF( spot, "Image::do_sample() spot unref" )
@@ -550,6 +588,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   VipsRegion* region = vips_region_new( outimg );
   if (vips_region_prepare (region, &rspot)) {
     std::cout<<"Image::do_sample(): vips_region_prepare() failed"<<std::endl;
+    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+    unlock();
     return;
   }
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after vips_region_new()" )
@@ -573,17 +613,27 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   sampler_values.clear();
   for( b = 0; b < image->Bands; b++ ) {
     avg[b] /= clipped.width*clipped.height;
+#ifndef NDEBUG
+    std::cout<<"sampler_values.push_back("<<avg[b]<<")"<<std::endl;
+#endif
     sampler_values.push_back( avg[b] );
   }
   sampler_image = image;
 
+#ifndef NDEBUG
   std::cout<<"Image::do_sample() finished."<<std::endl;
+#endif
 
   //g_object_unref( spot );
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount before region unref" );
   PF_UNREF( region, "Image::do_sample(): region unref" );
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after region unref" );
   PF_UNREF( outimg, "Image::do_sample(): outimg unref" );
+
+#ifndef NDEBUG
+  std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+#endif
+  unlock();
 }
 
 
@@ -596,33 +646,72 @@ void PF::Image::destroy()
     request.image = this;
     request.request = PF::IMAGE_DESTROY;
 
-    destroy_lock(); //g_mutex_lock( sample_mutex );
-    #ifndef NDEBUG
+    // Set the rebuild condition to FALSE
+    rebuild_done_reset();
+    //destroy_lock(); //g_mutex_lock( sample_mutex );
+#ifndef NDEBUG
     std::cout<<"PF::Image::destroy(): submitting destroy request..."<<std::endl;
-    #endif
+#endif
     PF::ImageProcessor::Instance().submit_request( request );
-    #ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::Image::destroy(): request submitted."<<std::endl;
-    #endif
+#endif
 
+#ifndef NDEBUG
     std::cout<<"Image::destroy(): waiting for done."<<std::endl;
-    destroy_cond.wait();
-    destroy_unlock();
+#endif
+    //destroy_cond.wait();
+    //destroy_unlock();
+    rebuild_done_wait( true );
+#ifndef NDEBUG
     std::cout<<"Image::destroy(): done received."<<std::endl;
-
+#endif
   }
 }
 
 
 void PF::Image::do_destroy()
 {
+#ifndef NDEBUG
+  std::cout<<"Image::do_destroy() called."<<std::endl;
+#endif
+  // Set the rebuild condition to FALSE
+  //rebuild_done_reset();
+
   for( unsigned int vi = 0; vi < pipelines.size(); vi++ ) {
-    if( pipelines[vi] != NULL )
+    if( pipelines[vi] != NULL ) {
+#ifndef NDEBUG
+      std::cout<<"Image::do_destroy(): deleting pipeline #"<<vi<<std::endl;
+#endif
       delete pipelines[vi];
+#ifndef NDEBUG
+      std::cout<<"Image::do_destroy(): pipeline #"<<vi<<" delete"<<std::endl;
+#endif
+    }
   }
+#ifndef NDEBUG
+  std::cout<<"Image::do_destroy(): deleting convert2srgb"<<std::endl;
+#endif
   delete convert2srgb;
+#ifndef NDEBUG
+  std::cout<<"Image::do_destroy(): convert2srgb deleted"<<std::endl;
+  std::cout<<"Image::do_destroy(): deleting convert_format"<<std::endl;
+#endif
   delete convert_format;
+#ifndef NDEBUG
+  std::cout<<"Image::do_destroy(): convert_format deleted"<<std::endl;
+  std::cout<<"Image::do_destroy(): deleting convert2outprof"<<std::endl;
+#endif
   delete convert2outprof;
+#ifndef NDEBUG
+  std::cout<<"Image::do_destroy(): convert2outprof deleted"<<std::endl;
+#endif
+
+  // Set the rebuild condition to TRUE and emit the signal
+#ifndef NDEBUG
+  std::cout<<"Image::do_destroy() finished."<<std::endl;
+#endif
+  rebuild_done_signal();
 }
 
 
@@ -645,6 +734,9 @@ void PF::Image::remove_layer( PF::Layer* layer )
 
 void PF::Image::do_remove_layer( PF::Layer* layer )
 {
+  // Set the rebuild condition to FALSE
+  //rebuild_done_reset();
+
   std::list<Layer*> children;
   layer_manager.get_child_layers( layer, children );
   for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
@@ -656,6 +748,9 @@ void PF::Image::do_remove_layer( PF::Layer* layer )
   std::list<Layer*>* list = layer_manager.get_list( layer );
   if( list )
     remove_layer( layer, *list );
+
+  // The rebuild condition will be cleared and signaled when updating the image
+  //rebuild_done_signal();
 }
 
 
@@ -680,7 +775,9 @@ void PF::Image::remove_from_inputs( PF::Layer* layer, std::list<Layer*>& list )
 
 void PF::Image::remove_layer( PF::Layer* layer, std::list<Layer*>& list )
 {
+#ifndef NDEBUG
   if( layer ) std::cout<<"Image::remove_layer(\""<<layer->get_name()<<"\") called."<<std::endl;
+#endif
   std::vector<Pipeline*>::iterator vi;
   for( vi = pipelines.begin(); vi != pipelines.end(); vi++ ) {
     (*vi)->remove_node( layer->get_id() );
@@ -721,7 +818,9 @@ bool PF::Image::open( std::string filename, std::string bckname )
   if( !getFileExtensionLowcase( "/", filename, ext ) ) return false;
   disable_update = true;
 
+#ifndef NDEBUG
   std::cout<<"ext: "<<ext<<std::endl;
+#endif
 
   if( !bckname.empty() ) {
 
@@ -732,16 +831,21 @@ bool PF::Image::open( std::string filename, std::string bckname )
   } else if( ext == "pfi" ) {
 
     loaded = false;
-    PF::load_pf_image( filename, this );
+    if( PF::load_pf_image( filename, this ) ) {
+      //PF::PhotoFlow::Instance().set_image( pf_image );
+      //layersWidget.set_image( pf_image );
+      //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
+      file_name = filename;
+    } else {
+      return false;
+    }
+
+  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" || ext=="exr" ) {
+
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
-    //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
-    file_name = filename;
 
-  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" ) {
-
-    //PF::PhotoFlow::Instance().set_image( pf_image );
-    //layersWidget.set_image( pf_image );
+    std::cout<<"Opening raster image "<<filename<<std::endl;
 
     PF::Layer* limg = layer_manager.new_layer();
     PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "imageread", limg );
@@ -750,7 +854,6 @@ bool PF::Image::open( std::string filename, std::string bckname )
     limg->set_processor( proc );
     limg->set_name( _("background") );
     layer_manager.get_layers().push_back( limg );
-
     file_name = filename;
 
     /*
@@ -833,7 +936,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
 }
 
 
-bool PF::Image::save( std::string filename )
+bool PF::Image::save( std::string filename, bool do_clear )
 {
   std::string ext;
   if( getFileExtension( "/", filename, ext ) &&
@@ -846,7 +949,7 @@ bool PF::Image::save( std::string filename )
     layer_manager.save( of );
     of<<"</image>"<<std::endl;
     file_name = filename;
-    clear_modified();
+    if(do_clear) clear_modified();
     return true;
   } else {
     return false;
@@ -881,21 +984,21 @@ void PF::Image::export_merged( std::string filename )
     request.area.width = request.area.height = 0;
     request.filename = filename;
 
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): locking mutex..."<<std::endl;
-    //#endif
+#endif
     //g_mutex_lock( export_mutex );
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): submitting export request..."<<std::endl;
-    //#endif
+#endif
     PF::ImageProcessor::Instance().submit_request( request );
-    //#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): request submitted."<<std::endl;
-    //#endif
+#endif
 
-    std::cout<<"PF::Image::export_merged(): waiting for export_done...."<<std::endl;
+    //std::cout<<"PF::Image::export_merged(): waiting for export_done...."<<std::endl;
     //g_cond_wait( export_done, export_mutex );
-    std::cout<<"PF::Image::export_merged(): ... export_done received."<<std::endl;
+    //std::cout<<"PF::Image::export_merged(): ... export_done received."<<std::endl;
 
     //g_mutex_unlock( export_mutex );
   }
@@ -929,6 +1032,23 @@ void PF::Image::do_export_merged( std::string filename )
     VipsImage* image = pipeline->get_output();
     VipsImage* outimg = NULL;
 
+    int tw = 128;
+    int th = tw;
+    int nt = (image->Xsize/tw + 1);
+    VipsAccess acc = VIPS_ACCESS_RANDOM;
+    int threaded = 1, persistent = 0;
+    VipsImage* cached;
+    if( !vips_tilecache(image, &cached,
+        "tile_width", tw, "tile_height", th, "max_tiles", nt,
+        "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+      //PF_UNREF( image, "Image::do_export_merged(): image unref" );
+      image = cached;
+    } else {
+      std::cout<<"Image::do_export_merged(): vips_tilecache() failed."<<std::endl;
+      PF_REF( image, "Image::do_export_merged(): image ref" );
+    }
+
+
     bool saved = false;
 
     std::vector<VipsImage*> in;
@@ -938,12 +1058,16 @@ void PF::Image::do_export_merged( std::string filename )
       convert_format->get_par()->set_image_hints( image );
       convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+      PF_UNREF( image, "Image::do_export_merged(): image unref" );
       if( outimg ) {
         Glib::Timer timer;
         timer.start();
-        vips_jpegsave( outimg, filename.c_str(), "Q", 100, NULL );
+        vips_jpegsave( outimg, filename.c_str(), "Q", 75, NULL );
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
+        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 ) {
+          save(filename+".pfi", false);
+        }
         saved = true;
       }
     }
@@ -955,18 +1079,75 @@ void PF::Image::do_export_merged( std::string filename )
       convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
       //convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+      PF_UNREF( image, "Image::do_export_merged(): image unref" );
+      std::cout<<"Image::do_export_merged(): saving TIFF file "<<filename<<"   outimg="<<outimg<<std::endl;
       if( outimg ) {
         int predictor = 2;
+#ifndef NDEBUG
+        std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
+#endif
         vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
-        //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
+            //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
             "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
+#ifndef NDEBUG
+        std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
+#endif
         //vips_image_write_to_file( outimg, filename.c_str(), NULL );
+        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 ) {
+          save(filename+".pfi", false);
+        }
         saved = true;
       }
     }
     /**/
 
     if( saved ) {
+
+      try {
+        PF::exiv2_data_t* exiv2_buf;
+        size_t exiv2_buf_length;
+        if( vips_image_get_blob( outimg, "exiv2-data",
+            (void**)(&exiv2_buf), &exiv2_buf_length ) )
+          exiv2_buf = NULL;
+        if( exiv2_buf && (exiv2_buf_length==sizeof(PF::exiv2_data_t)) && exiv2_buf->image.get() != NULL ) {
+          Exiv2::BasicIo::AutoPtr file (new Exiv2::FileIo (filename));
+          Exiv2::Image::AutoPtr exiv2_image = Exiv2::ImageFactory::open(file);
+          if(exiv2_image.get() != 0) {
+            //exiv2_image->readMetadata();
+            exiv2_image->setMetadata( *(exiv2_buf->image.get()) );
+
+            void *iccdata;
+            size_t iccdata_length;
+
+            if( !vips_image_get_blob( outimg, VIPS_META_ICC_NAME,
+                                     &iccdata, &iccdata_length ) ) {
+              Exiv2::byte *iccdata2 = (Exiv2::byte *)iccdata;
+              Exiv2::DataBuf iccbuf(iccdata2, iccdata_length);
+              exiv2_image->setIccProfile( iccbuf, true );
+
+              /*
+              Exiv2::ExifKey            key("Exif.Image.InterColorProfile");
+              Exiv2::ExifData::iterator pos   = exiv2_image->exifData().findKey(key);
+              bool                      found = pos != exiv2_image->exifData().end();
+              if ( iccdata ) {
+                  Exiv2::DataValue value(iccdata2,iccdata_length);
+                  if ( found ) pos->setValue(&value);
+                  else     exiv2_image->exifData().add(key,&value);
+              } else {
+                  if ( found ) exiv2_image->exifData().erase(pos);
+              }
+              */
+            }
+            exiv2_image->writeMetadata();
+          }
+        }
+      } catch(Exiv2::AnyError &e) {
+        std::string s(e.what());
+        std::cerr << "[exiv2] " << filename << ": " << s << std::endl;
+        //return 1;
+      }
+
+      /*
       void* gexiv2_buf;
       size_t gexiv2_buf_length;
       if( vips_image_get_blob( outimg, "gexiv2-data",
@@ -975,6 +1156,7 @@ void PF::Image::do_export_merged( std::string filename )
       if( gexiv2_buf && (gexiv2_buf_length==sizeof(GExiv2Metadata)) ) {
         gexiv2_metadata_save_file( (GExiv2Metadata*)gexiv2_buf, filename.c_str(), NULL );
       }
+       */
     }
 
     if( outimg ) {
@@ -1039,14 +1221,20 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
   imgbuf->iccsize = 0;
   imgbuf->buf = NULL;
 
+//#ifndef NDEBUG
   std::cout<<"Image::export_merged_to_mem(): waiting for caching completion..."<<std::endl;
+//#endif
   PF::ImageProcessor::Instance().wait_for_caching();
+//#ifndef NDEBUG
   std::cout<<"Image::export_merged_to_mem(): ... caching completed"<<std::endl;
+//#endif
 
   unsigned int level = 0;
   PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
   update( pipeline, true );
+#ifndef NDEBUG
   std::cout<<"Image::export_merged_to_mem(): image updated."<<std::endl;
+#endif
 
   std::string msg;
   VipsImage* image = pipeline->get_output();
@@ -1061,14 +1249,20 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
 
   cmsHPROFILE out_iccprofile = NULL;
   outimg = floatimg;
+#ifndef NDEBUG
   std::cout<<"Image::export_merged_to_mem(): out_iccdata="<<(void*)out_iccdata<<std::endl;
+#endif
   if( floatimg && out_iccdata ) {
     out_iccprofile = cmsOpenProfileFromMem( out_iccdata, out_iccsize );
+#ifndef NDEBUG
     std::cout<<"Image::export_merged_to_mem(): out_iccprofile="<<(void*)out_iccprofile<<std::endl;
+#endif
     if( out_iccprofile ) {
       PF::ICCTransformPar* conv_par =
           dynamic_cast<PF::ICCTransformPar*>( convert2outprof->get_par() );
+#ifndef NDEBUG
       std::cout<<"Image::export_merged_to_mem(): conv_par="<<(void*)conv_par<<std::endl;
+#endif
       if( conv_par ) {
         in.clear();
         in.push_back( floatimg );
@@ -1081,20 +1275,28 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
     }
   }
 
+#ifndef NDEBUG
   std::cout<<"Image::export_merged_to_mem(): outimg="<<outimg<<std::endl;
+#endif
   if( outimg ) {
     imgbuf->buf = (float*)malloc( sizeof(float)*3*outimg->Xsize*outimg->Ysize );
     imgbuf->width = outimg->Xsize;
     imgbuf->height = outimg->Ysize;
 
     vips_sink( outimg, memsave_start, memsave_scan, memsave_stop, imgbuf, NULL );
+#ifndef NDEBUG
+    std::cout<<"Image::export_merged_to_mem(): vips_sink() finished."<<std::endl;
+#endif
 
     if( out_iccprofile ) cmsCloseProfile( out_iccprofile );
+#ifndef NDEBUG
+    std::cout<<"Image::export_merged_to_mem(): output profile closed"<<std::endl;
+#endif
 
     void *iccdata;
     size_t iccsize;
     if( !vips_image_get_blob( outimg, VIPS_META_ICC_NAME,
-           &iccdata, &iccsize ) ) {
+        &iccdata, &iccsize ) ) {
       imgbuf->iccdata = malloc(iccsize);
       if( imgbuf->iccdata ) {
         imgbuf->iccsize = iccsize;
@@ -1105,6 +1307,7 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
       imgbuf->iccsize = 0;
     }
 
+    /*
     void* gexiv2_buf;
     size_t gexiv2_buf_length;
     if( !vips_image_get_blob( outimg, "gexiv2-data",
@@ -1118,10 +1321,98 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
     } else {
       imgbuf->exif_buf = NULL;
     }
+     */
 
     msg = std::string("PF::Image::export_merged_to_mem(): outimg unref");
     PF_UNREF( outimg, msg.c_str() );
   }
+
+  remove_pipeline( pipeline );
+  delete pipeline;
+  //layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
+  std::cout<<"Image saved to memory "<<std::endl;
+}
+
+
+
+void PF::Image::export_merged_to_tiff( const std::string filename )
+{
+  std::cout<<"Image::export_merged_to_mem(): waiting for caching completion..."<<std::endl;
+  PF::ImageProcessor::Instance().wait_for_caching();
+  std::cout<<"Image::export_merged_to_mem(): ... caching completed"<<std::endl;
+
+  unsigned int level = 0;
+  PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+  update( pipeline, true );
+#ifndef NDEBUG
+  std::cout<<"Image::export_merged_to_mem(): image updated."<<std::endl;
+#endif
+
+  void* out_iccdata;
+  size_t out_iccsize;
+
+  PF::Layer* layer = get_layer_manager().get_layers().front();
+  if( !layer ) return;
+
+  PipelineNode* node = pipeline->get_node( layer->get_id() );
+  if( !node ) return;
+
+  VipsImage* bgdimg = node->image;
+  cmsHPROFILE in_profile = NULL;
+  void *iccdata;
+  size_t iccsize;
+  if( !vips_image_get_blob( bgdimg, VIPS_META_ICC_NAME,
+      &iccdata, &iccsize ) ) {
+    in_profile = cmsOpenProfileFromMem( iccdata, iccsize );
+  }
+
+
+  std::string msg;
+  VipsImage* image = pipeline->get_output();
+  VipsImage* outimg = NULL;
+
+  std::vector<VipsImage*> in;
+  in.clear();
+  in.push_back( image );
+  convert_format->get_par()->set_image_hints( image );
+  convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
+  VipsImage* floatimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
+
+  outimg = floatimg;
+  PF::ICCTransformPar* conv_par =
+      dynamic_cast<PF::ICCTransformPar*>( convert2outprof->get_par() );
+#ifndef NDEBUG
+  std::cout<<"Image::export_merged_to_mem(): conv_par="<<(void*)conv_par<<std::endl;
+#endif
+  if( conv_par && in_profile ) {
+    in.clear();
+    in.push_back( floatimg );
+    conv_par->set_image_hints( floatimg );
+    conv_par->set_format( VIPS_FORMAT_FLOAT );
+    conv_par->set_out_profile( in_profile );
+    outimg = convert2outprof->get_par()->build( in, 0, NULL, NULL, level );
+    PF_UNREF( floatimg, "" );
+  }
+
+#ifndef NDEBUG
+  std::cout<<"Image::export_merged_to_mem(): outimg="<<outimg<<std::endl;
+#endif
+  if( outimg ) {
+#ifndef NDEBUG
+    std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
+#endif
+    vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
+        "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
+    //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
+#ifndef NDEBUG
+    std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
+#endif
+
+    msg = std::string("PF::Image::export_merged_to_mem(): outimg unref");
+    PF_UNREF( outimg, msg.c_str() );
+  }
+
+  if( in_profile ) cmsCloseProfile( in_profile );
 
   remove_pipeline( pipeline );
   delete pipeline;

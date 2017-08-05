@@ -39,8 +39,8 @@
 
 
 // bit representations of flags
-#define LUT_CLIP_BELOW 1
-#define LUT_CLIP_ABOVE 2
+#define PF_LUT_CLIP_BELOW 1
+#define PF_LUT_CLIP_ABOVE 2
 
 #define PF_LUTf PF::LUT<float>
 #define PF_LUTi PF::LUT<int>
@@ -137,13 +137,13 @@ public:
     if (((unsigned int)idx) > maxs) {
       if (idx<0)
       {
-        if (clip & LUT_CLIP_BELOW)
+        if (clip & PF_LUT_CLIP_BELOW)
           return data[0];
         idx=0;
       }
       else
       {
-        if (clip & LUT_CLIP_ABOVE)
+        if (clip & PF_LUT_CLIP_ABOVE)
           return data[size - 1];
         idx =maxs;
       }

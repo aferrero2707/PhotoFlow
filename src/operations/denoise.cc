@@ -31,6 +31,7 @@
 
 #include "denoise.hh"
 #include "../base/new_operation.hh"
+#include "icc_transform.hh"
 #include "../operations/impulse_nr.hh"
 #include "../operations/nlmeans.hh"
 
@@ -50,8 +51,11 @@ PF::DenoisePar::DenoisePar():
   anisotropy("anisotropy",this,0.15),
   alpha("alpha",this,0.6),
   sigma("sigma",this,1.1),
-	nr_mode("nr_mode",this,PF_NR_ANIBLUR,"ANIBLUR","Anisotropic Blur (G'Mic)")
+	nr_mode("nr_mode",this,PF_NR_ANIBLUR,"ANIBLUR","Anisotropic Blur (G'Mic)"),
+	in_profile( NULL )
 {	
+  convert2lab = PF::new_operation( "convert2lab", NULL );
+  convert2input = new_icc_transform();
   impulse_nr = PF::new_impulse_nr();
   nlmeans = PF::new_nlmeans();
   set_type( "denoise" );
@@ -73,19 +77,46 @@ VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first,
   if( !out ) return NULL;
 
   PF_REF( out, "PF::DenoisePar::build(): out ref" );
-	if( (get_render_mode() == PF_RENDER_PREVIEW && level>0) ) {
-		return out;
-	}
+  if( (get_render_mode() == PF_RENDER_PREVIEW && level>0) ) {
+    return out;
+  }
+
+  if( !impulse_nr_enable.get() && !nlmeans_enable.get() ) {
+    return out;
+  }
+
+  void *data;
+  size_t data_length;
+
+  if( in_profile ) cmsCloseProfile( in_profile );
+
+  in_profile = NULL;
+  if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
+                           &data, &data_length ) ) {
+    in_profile = cmsOpenProfileFromMem( data, data_length );
+  }
+
+  std::vector<VipsImage*> in2;
+
+  convert2lab->get_par()->set_image_hints( out );
+  convert2lab->get_par()->set_format( get_format() );
+  in2.clear(); in2.push_back( out );
+  VipsImage* labimg = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
+  if( !labimg ) {
+    std::cout<<"DenoisePar::build(): null Lab image"<<std::endl;
+    return out;
+  }
+  PF_UNREF( out, "DenoisePar::build(): out unref after Lab conversion" );
+  out = labimg;
 
   if( impulse_nr_enable.get() && impulse_nr && impulse_nr->get_par() ) {
     PF::ImpulseNRPar* imnrpar = dynamic_cast<PF::ImpulseNRPar*>(impulse_nr->get_par());
     if( !imnrpar ) {
       std::cout<<"DenoisePar::build(): failed to cast to ImpulseNRPar*"<<std::endl;
-      PF_REF( out, "PF::DenoisePar::build(): out ref" );
+      //PF_REF( out, "PF::DenoisePar::build(): out ref" );
       return out;
     }
     imnrpar->set_threshold( impulse_nr_threshold.get() );
-    std::vector<VipsImage*> in2;
     imnrpar->set_image_hints( out );
     imnrpar->set_format( get_format() );
     in2.clear(); in2.push_back( out );
@@ -99,14 +130,13 @@ VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first,
     PF::NonLocalMeansPar* nrpar = dynamic_cast<PF::NonLocalMeansPar*>(nlmeans->get_par());
     if( !nrpar ) {
       std::cout<<"DenoisePar::build(): failed to cast to NonLocalMeansPar*"<<std::endl;
-      PF_REF( out, "PF::DenoisePar::build(): out ref" );
+      //PF_REF( out, "PF::DenoisePar::build(): out ref" );
       return out;
     }
     nrpar->set_radius( nlmeans_radius.get() );
     nrpar->set_strength( nlmeans_strength.get() );
     nrpar->set_luma_frac( nlmeans_luma_frac.get() );
     nrpar->set_chroma_frac( nlmeans_chroma_frac.get() );
-    std::vector<VipsImage*> in2;
     nrpar->set_image_hints( out );
     nrpar->set_format( get_format() );
     in2.clear(); in2.push_back( out );
@@ -114,6 +144,21 @@ VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first,
     PF_UNREF( out, "DenoisePar::build(): out unref after nrpar->build()" );
     out = nrimg;
   }
+
+
+  PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2input->get_par() );
+  //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
+  if( icc_par ) {
+    //std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
+    icc_par->set_out_profile( in_profile );
+  }
+  convert2input->get_par()->set_image_hints( out );
+  convert2input->get_par()->set_format( get_format() );
+  in2.clear(); in2.push_back( out );
+  std::cout<<"DenoisePar::build(): calling convert2input->get_par()->build()"<<std::endl;
+  VipsImage* out2 = convert2input->get_par()->build(in2, 0, NULL, NULL, level );
+  PF_UNREF( out, "DenoisePar::update() out unref" );
+
 
 	/*
   int fast_approx = 0;
@@ -127,7 +172,7 @@ VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   */
 
-	return out;
+	return out2;
 }
 
 

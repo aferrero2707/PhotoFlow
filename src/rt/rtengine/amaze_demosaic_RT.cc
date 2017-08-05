@@ -422,7 +422,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
             indx1=rr*TS+cc;
             cfa[indx1] = (rawData[row][cc+left])/65535.0f;
             if(false && top==0 && left==0 && rr<10 && cc<10) {
-              std::cout<<"rr="<<rr<<"  cc="<<cc<<"    cfa["<<indx1<<"] = "<<cfa[indx1]<<"    c="<<FC(rr,cc)<<std::endl;
+              std::cout<<"amaze: rr="<<rr<<"  cc="<<cc<<"    cfa["<<indx1<<"] = "<<cfa[indx1]<<"    c="<<FC(rr,cc)<<std::endl;
             }
             if(FC(rr,cc)==1)
               rgbgreen[indx1] = cfa[indx1];
@@ -1410,7 +1410,11 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
             indx=rr*TS+cc;
             //std::cout<<"top="<<top<<"  rr1="<<rr1<<"  rr="<<rr<<"  cc="<<cc<<"  left="<<left<<"  row="<<row<<"  col="<<col<<"  indx="<<indx<<std::endl;
             green[row][col] = CLIP(65535.0f*rgbgreen[indx]);
-            //std::cout<<"  green["<<row<<"]["<<col<<"]="<<green[row][col]<<std::endl;
+            if( false && top==0 && left==0 ) {
+              std::cout<<"amaze:    red["<<row<<"]["<<col<<"]="<<red[row][col]<<std::endl;
+              std::cout<<"amaze:  green["<<row<<"]["<<col<<"]="<<green[row][col]<<std::endl;
+              std::cout<<"amaze:   blue["<<row<<"]["<<col<<"]="<<blue[row][col]<<std::endl;
+            }
 
             //for dcraw implementation
             //for (c=0; c<3; c++){

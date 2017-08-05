@@ -44,7 +44,6 @@
 #include "../base/array2d.hh"
 
 #include "fast_demosaic.hh"
-#include "fast_demosaic_xtrans.hh"
 
 //#define PF_USE_LIBRAW
 #define PF_USE_RAWSPEED
@@ -57,7 +56,7 @@ typedef libraw_data_t dcraw_data_t;
 #endif
 
 #ifdef PF_USE_RAWSPEED
-#include "rawspeed/RawSpeed/RawSpeed-API.h"
+#include "rawspeed/src/librawspeed/RawSpeed-API.h"
 
 struct dcraw_iparams_t
 {
@@ -91,6 +90,18 @@ struct dcraw_data_t
 	dcraw_sizes_data_t sizes;
 };
 
+class ImageMatrices
+{
+
+public:
+    double rgb_cam[3][3] = {};
+    double cam_rgb[3][3] = {};
+    double xyz_cam[3][3] = {};
+    double cam_xyz[3][3] = {};
+};
+
+
+
 #endif
 
 
@@ -107,12 +118,17 @@ bool check_xtrans( unsigned filters );
 		std::string cache_file_name;
 		std::string cache_file_name2;
 
-	  dcraw_data_t dcraw_data;
+    dcraw_data_t dcraw_data;
+    dcraw_data_t* pdata;
+
+    int iwidth, iheight, crop_x, crop_y;
 
 	  float c_black[4];
 
+	  ImageMatrices imatrices;
+
 #ifdef PF_USE_RAWSPEED
-		RawSpeed::CameraMetaData *meta;
+		rawspeed::CameraMetaData *meta;
 #endif
 
 		// VipsImages storing the raw data, one band for the pixel values and a nother for the colors
@@ -124,6 +140,8 @@ bool check_xtrans( unsigned filters );
 		// Demosaiced image
     VipsImage* demo_image;
     PF::ProcessorBase* fast_demosaic;
+
+    int* raw_hist;
 
     exif_data_t exif_data;
 
@@ -137,6 +155,9 @@ bool check_xtrans( unsigned filters );
     int LinEqSolve(int nDim, double* pfMatr, double* pfVect, double* pfSolution);
     void CA_correct_RT();
 
+    bool load_rawspeed();
+    bool load_rawtherapee();
+
   public:
     RawImage( const std::string name );
     ~RawImage();
@@ -145,14 +166,22 @@ bool check_xtrans( unsigned filters );
     void unref() { nref -= 1; }
     int get_nref() { return nref; }
 
+    static void inverse33 (const double (*coeff)[3], double (*icoeff)[3]);
+
     bool is_xtrans() { return check_xtrans( dcraw_data.idata.filters ); }
 
     std::string get_file_name() { return file_name_real; }
 
+    unsigned int BL(const int row, const int col)
+    {
+      return ((((row+dcraw_data.sizes.top_margin) & 1) << 1) + ((col+dcraw_data.sizes.left_margin) & 1));
+    }
+
     unsigned FC (unsigned row, unsigned col) const
     {
-      return( dcraw_data.idata.filters >> ((((row+dcraw_data.sizes.top_margin) << 1 & 14) +
-          ((col+dcraw_data.sizes.left_margin) & 1)) << 1) & 3 );
+      //return( dcraw_data.idata.filters >> ((((row+dcraw_data.sizes.top_margin) << 1 & 14) +
+      //    ((col+dcraw_data.sizes.left_margin) & 1)) << 1) & 3 );
+      return( dcraw_data.idata.filters >> ((((row) << 1 & 14) + ((col) & 1)) << 1) & 3 );
     }
 
     unsigned FC_xtrans (unsigned row, unsigned col) const

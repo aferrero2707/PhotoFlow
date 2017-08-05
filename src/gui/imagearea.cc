@@ -26,6 +26,7 @@
 
 
 #include "../base/imageprocessor.hh"
+#include "../base/print_display_profile.hh"
 #include "../operations/icc_transform.hh"
 #include "imagearea.hh"
 
@@ -57,17 +58,13 @@ extern "C" {
 extern "C" {
 #endif /*__cplusplus*/
 
-#include "../dt/common/colorspaces.h"
+#include "../external/darktable/src/common/colorspaces.h"
 //#include "../base/colorspaces.h"
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 
-
-#ifndef NDEBUG
-#define DEBUG_DISPLAY
-#endif
 
 //#define OPTIMIZE_SCROLLING
 
@@ -100,69 +97,76 @@ gboolean PF::ImageArea::queue_draw_cb (PF::ImageArea::Update * update)
 
 
 
-gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
+//gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
+void PF::ImageArea::set_size_cb ()
 {
   //std::cout<<"set_size_cb() called."<<std::endl;
   /*
-  std::cout<<"set_size_cb(1): update->image_area->get_hadj()->get_value()="<<update->image_area->get_hadj()->get_value()<<std::endl;
-  std::cout<<"                get_lower()="<<update->image_area->get_hadj()->get_lower()<<std::endl;
-  std::cout<<"                get_upper()="<<update->image_area->get_hadj()->get_upper()<<std::endl;
-  std::cout<<"                get_page_size()="<<update->image_area->get_hadj()->get_page_size()<<std::endl;
-  std::cout<<"set_size_cb(1): update->image_area->get_vadj()->get_value()="<<update->image_area->get_vadj()->get_value()<<std::endl;
-  std::cout<<"                get_lower()="<<update->image_area->get_vadj()->get_lower()<<std::endl;
-  std::cout<<"                get_upper()="<<update->image_area->get_vadj()->get_upper()<<std::endl;
-  std::cout<<"                get_page_size()="<<update->image_area->get_vadj()->get_page_size()<<std::endl;
-  std::cout<<"update->image_area->set_size_request("<<update->rect.width<<","<<update->rect.height<<")"<<std::endl;
+  std::cout<<"set_size_cb(1): ->get_hadj()->get_value()="<<->get_hadj()->get_value()<<std::endl;
+  std::cout<<"                get_lower()="<<->get_hadj()->get_lower()<<std::endl;
+  std::cout<<"                get_upper()="<<->get_hadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<->get_hadj()->get_page_size()<<std::endl;
+  std::cout<<"set_size_cb(1): ->get_vadj()->get_value()="<<get_vadj()->get_value()<<std::endl;
+  std::cout<<"                get_lower()="<<get_vadj()->get_lower()<<std::endl;
+  std::cout<<"                get_upper()="<<get_vadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<get_vadj()->get_page_size()<<std::endl;
+  std::cout<<"set_size_request("<<preview_size.width<<","<<preview_size.height<<")"<<std::endl;
   */
-  //std::cout<<"set_size_cb(): update->rect="<<update->rect<<std::endl;
+  //std::cout<<"set_size_cb(): preview_size="<<preview_size<<std::endl;
 
-  update->image_area->set_size_request(update->rect.width,update->rect.height);
+  g_mutex_lock(preview_size_mutex);
+
+  set_size_request(preview_size.width,preview_size.height);
   // We need to change the upper limits explicitely, since the adjustments are not updated immediately
   // when calling set_size_request(). Otherwise the subsequent set_value() calls might modify the values
   // internally to make sure that value+page_size does not exceed the upper limit.
-  if( update->rect.width > update->image_area->get_hadj()->get_page_size() )
-      update->image_area->get_hadj()->set_upper( update->rect.width );
+  if( preview_size.width > get_hadj()->get_page_size() )
+      get_hadj()->set_upper( preview_size.width );
   else
-    update->image_area->get_hadj()->set_upper( update->image_area->get_hadj()->get_page_size() );
-  if( update->rect.height > update->image_area->get_vadj()->get_page_size() )
-      update->image_area->get_vadj()->set_upper( update->rect.height );
+    get_hadj()->set_upper( get_hadj()->get_page_size() );
+  if( preview_size.height > get_vadj()->get_page_size() )
+      get_vadj()->set_upper( preview_size.height );
   else
-    update->image_area->get_vadj()->set_upper( update->image_area->get_vadj()->get_page_size() );
+    get_vadj()->set_upper( get_vadj()->get_page_size() );
   /*
-  std::cout<<"set_size_cb(2): update->rect.left="<<update->rect.left<<std::endl;
-  std::cout<<"set_size_cb(2): update->rect.top="<<update->rect.top<<std::endl;
+  std::cout<<"set_size_cb(2): preview_size.left="<<preview_size.left<<std::endl;
+  std::cout<<"set_size_cb(2): preview_size.top="<<preview_size.top<<std::endl;
   */
-  update->image_area->get_hadj()->set_value( update->rect.left );
-  update->image_area->get_vadj()->set_value( update->rect.top );
+  get_hadj()->set_value( preview_size.left );
+  get_vadj()->set_value( preview_size.top );
+
+  g_mutex_unlock(preview_size_mutex);
+
   /*
-  std::cout<<"set_size_cb(2): update->image_area->get_hadj()->get_value()="<<update->image_area->get_hadj()->get_value()<<std::endl;
-  std::cout<<"                get_lower()="<<update->image_area->get_hadj()->get_lower()<<std::endl;
-  std::cout<<"                get_upper()="<<update->image_area->get_hadj()->get_upper()<<std::endl;
-  std::cout<<"                get_page_size()="<<update->image_area->get_hadj()->get_page_size()<<std::endl;
-  std::cout<<"set_size_cb(2): update->image_area->get_vadj()->get_value()="<<update->image_area->get_vadj()->get_value()<<std::endl;
-  std::cout<<"                get_lower()="<<update->image_area->get_vadj()->get_lower()<<std::endl;
-  std::cout<<"                get_upper()="<<update->image_area->get_vadj()->get_upper()<<std::endl;
-  std::cout<<"                get_page_size()="<<update->image_area->get_vadj()->get_page_size()<<std::endl;
+  std::cout<<"set_size_cb(2): get_hadj()->get_value()="<<get_hadj()->get_value()<<std::endl;
+  std::cout<<"                get_lower()="<<get_hadj()->get_lower()<<std::endl;
+  std::cout<<"                get_upper()="<<get_hadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<get_hadj()->get_page_size()<<std::endl;
+  std::cout<<"set_size_cb(2): get_vadj()->get_value()="<<get_vadj()->get_value()<<std::endl;
+  std::cout<<"                get_lower()="<<get_vadj()->get_lower()<<std::endl;
+  std::cout<<"                get_upper()="<<get_vadj()->get_upper()<<std::endl;
+  std::cout<<"                get_page_size()="<<get_vadj()->get_page_size()<<std::endl;
   std::cout<<std::endl;
   */
 
-  //update->image_area->queue_draw();
+  //queue_draw();
   //std::cout<<"set_size_cb(): queue_draw() called."<<std::endl;
 
+  /*
   // Rectangle corresponding to the preview area
   VipsRect preview_area = {
-      static_cast<int>(update->image_area->get_hadj()->get_value()),
-      static_cast<int>(update->image_area->get_vadj()->get_value()),
-      static_cast<int>(update->image_area->get_hadj()->get_page_size()),
-      static_cast<int>(update->image_area->get_vadj()->get_page_size())
-  };
+      static_cast<int>(get_hadj()->get_value()),
+      static_cast<int>(get_vadj()->get_value()),
+      static_cast<int>(get_hadj()->get_page_size()),
+      static_cast<int>(get_vadj()->get_page_size())
+  };*/
 
-  //update->image_area->queue_draw_area (preview_area.left,//+update->image_area->get_xoffset(),
-  //                                     preview_area.top,//+update->image_area->get_yoffset(),
+  //queue_draw_area (preview_area.left,//+get_xoffset(),
+  //                                     preview_area.top,//+get_yoffset(),
   //                                     preview_area.width,
   //                                     preview_area.height);
-  update->image_area->queue_draw();
-  //std::cout<<"set_size_cb(): update->image_area->queue_draw() called"<<std::endl;
+  queue_draw();
+  //std::cout<<"set_size_cb(): queue_draw() called"<<std::endl;
 
   /*
   PF::ImageArea::Update* update2 = g_new (Update, 1);
@@ -178,8 +182,8 @@ gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
   std::cout<<"set_size_cb(): queue_draw() called"<<std::endl;
 #endif
   */
-  g_free (update);
-  return FALSE;
+  //g_free (update);
+  //return FALSE;
 }
 
 
@@ -197,7 +201,9 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   highlights_warning_enabled( false ),
   shadows_warning_enabled( false ),
   display_merged( true ),
-  active_layer( -1 ),
+  display_mask( false ),
+  displayed_layer( -1 ),
+  selected_layer( -1 ),
   edited_layer( -1 ),
 	shrink_factor( 1 ),
 	target_area_center_x( -1 ),
@@ -226,24 +232,36 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   draw_done = vips_g_cond_new();
   draw_mutex = vips_g_mutex_new();
 
+  preview_size_mutex = vips_g_mutex_new();
+  signal_set_size.connect(sigc::mem_fun(*this, &ImageArea::set_size_cb));
+
   //get_window()->set_back_pixmap( Glib::RefPtr<Gdk::Pixmap>(), FALSE );
   //set_double_buffered( TRUE );
 
-  //signal_queue_draw.connect(sigc::mem_fun(*this, &ImageArea::queue_draw));
+  signal_queue_draw.connect(sigc::mem_fun(*this, &ImageArea::queue_draw));
 }
 
 PF::ImageArea::~ImageArea ()
 {
+#ifndef NDEBUG
   std::cout<<"Deleting image area"<<std::endl;
-  PF_UNREF( region, "ImageArea::~ImageArea()" );
-  PF_UNREF( display_image, "ImageArea::~ImageArea()" );
-  PF_UNREF( outimg, "ImageArea::~ImageArea()" );
+  std::cout<<"~ImageArea finished"<<std::endl;
+#endif
+  //delete pf_image;
+}
+
+
+void PF::ImageArea::dispose()
+{
+  std::cout<<"mageArea::dispose() called"<<std::endl;
+  PF_UNREF( region, "ImageArea::dispose()" );
+  PF_UNREF( display_image, "ImageArea::dispose()" );
+  PF_UNREF( outimg, "ImageArea::dispose()" );
   delete convert2display;
   delete convert_format;
   delete invert;
   delete uniform;
-  std::cout<<"~ImageArea finished"<<std::endl;
-  //delete pf_image;
+  std::cout<<"mageArea::dispose() fnished"<<std::endl;
 }
 
 
@@ -350,6 +368,16 @@ void PF::ImageArea::process_end( const VipsRect& area )
   std::cout<<"Buffer swapped"<<std::endl;
 #endif
 
+  //g_mutex_lock(draw_mutex);
+  //draw_area.left = area.left;
+  //draw_area.top = area.top;
+  //draw_area.width = area.width;
+  //draw_area.height = area.height;
+  //g_mutex_unlock(draw_mutex);
+
+  signal_queue_draw.emit();
+
+  /*
   Update * update = g_new (Update, 1);
   update->image_area = this;
   update->rect.left = area.left;
@@ -360,6 +388,7 @@ void PF::ImageArea::process_end( const VipsRect& area )
   std::cout<<"PF::ImageArea::process_end(): installing draw callback."<<std::endl;
 #endif
   gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
+  */
   double_buffer.unlock();
 }
 
@@ -389,6 +418,9 @@ void PF::ImageArea::process_area( const VipsRect& area )
   VipsRect area_clip;
   vips_rect_intersectrect (&(region->valid), &area, &area_clip);
 
+  #ifdef DEBUG_DISPLAY
+    std::cout<<"Before copying region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" into inactive buffer"<<std::endl;
+  #endif
   double_buffer.get_inactive().copy( region, area_clip, xoffset, yoffset );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into inactive buffer"<<std::endl;
@@ -428,6 +460,7 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
       }
     }
   }
+  //std::cout<<"ImageArea::modify_preview() finished."<<std::endl;
 
   return current_pxbuf;
 }
@@ -436,7 +469,9 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
 // Copy the given buffer to screen
 void PF::ImageArea::draw_area()
 {
-  //std::cout<<"PF::ImageArea::draw_area(): before drawing pixbuf"<<std::endl;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::draw_area(): before drawing pixbuf"<<std::endl;
+#endif
   //getchar();
   double_buffer.lock();
 
@@ -449,10 +484,10 @@ void PF::ImageArea::draw_area()
   Glib::RefPtr< Gdk::Pixbuf > current_pxbuf = modify_preview();
   /*
   Glib::RefPtr< Gdk::Pixbuf > current_pxbuf = double_buffer.get_active().get_pxbuf();
-  if( active_layer >= 0 ) {
+  if( displayed_layer >= 0 ) {
     PF::Image* image = get_pipeline()->get_image();
     if( image ) {
-      PF::Layer* layer = image->get_layer_manager().get_layer( active_layer );
+      PF::Layer* layer = image->get_layer_manager().get_layer( displayed_layer );
       if( layer &&
           layer->get_processor() &&
           layer->get_processor()->get_par() ) {
@@ -504,7 +539,9 @@ void PF::ImageArea::draw_area()
   cr->paint();
   draw_requested = false;
   double_buffer.unlock();
-  //std::cout<<"PF::ImageArea::draw_area(): after drawing pixbuf"<<std::endl;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::draw_area(): after drawing pixbuf"<<std::endl;
+#endif
   //getchar();
 }
 
@@ -897,21 +934,34 @@ void PF::ImageArea::update( VipsRect* area )
   //return;
 
   VipsImage* image = NULL;
-  bool do_merged = display_merged;
-  //std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
+  bool do_merged = display_merged && (!display_mask);
+#ifdef DEBUG_DISPLAY
+  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  display_merged="<<display_merged<<"  displayed_layer="<<displayed_layer<<"  display_mask="<<display_mask<<std::endl;
+#endif
   if( !do_merged ) {
-    if( active_layer < 0 ) do_merged = true;
+    if( displayed_layer < 0 && (!display_mask) ) do_merged = true;
     else {
-      PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
+      int layer_id = -1;
+      if( display_mask ) {
+        layer_id = selected_layer;
+      } else {
+        layer_id = displayed_layer;
+      }
+      PF::PipelineNode* node = get_pipeline()->get_node( layer_id );
+#ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): layer_id="<<layer_id<<"  node="<<node<<std::endl;
+#endif
       if( !node ) do_merged = true;
-      //std::cout<<"ImageArea::update(): node="<<node<<std::endl;
       if( get_pipeline()->get_image() ) {
-        PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( active_layer );
+        PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( layer_id );
         if( !temp_layer ) do_merged = true;
         if( !(temp_layer->is_visible()) ) do_merged = true;
       }
     }
   }
+#ifdef DEBUG_DISPLAY
+  std::cout<<"ImageArea::update(): do_merged(2)="<<do_merged<<std::endl;
+#endif
   if( do_merged ) {
     image = get_pipeline()->get_output();
 #ifdef DEBUG_DISPLAY
@@ -929,14 +979,22 @@ void PF::ImageArea::update( VipsRect* area )
       image = convert_raw_data( image );
     }
   } else {
-    PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
+    int layer_id = -1;
+    if( display_mask ) {
+      layer_id = selected_layer;
+    } else {
+      layer_id = displayed_layer;
+    }
+    PF::PipelineNode* node = get_pipeline()->get_node( layer_id );
+    //PF::PipelineNode* node = get_pipeline()->get_node( displayed_layer );
     if( !node ) return;
     if( !(node->blended) ) return;
 
     if( node->processor &&
 				node->processor->get_par() &&
-				!(node->processor->get_par()->is_map()) ) {
+				!(display_mask) ) {
       image = node->blended;
+      std::cout<<"ImageArea::update(): displaying layer "<<layer_id<<std::endl;
 #ifdef DEBUG_DISPLAY
       std::cout<<"ImageArea::update(): node->image("<<node->image<<")->Xsize="<<node->image->Xsize
                <<"    node->image->Ysize="<<node->image->Ysize<<std::endl;    
@@ -945,8 +1003,9 @@ void PF::ImageArea::update( VipsRect* area )
 #endif
     } else {
       // We need to find the first non-mask layer that contains the active mask layer
+      /*
       PF::Layer* container_layer = NULL;
-      int temp_id = active_layer;
+      int temp_id = displayed_layer;
       while( !container_layer ) {
 				container_layer = 
           get_pipeline()->get_image()->get_layer_manager().
@@ -961,13 +1020,22 @@ void PF::ImageArea::update( VipsRect* area )
 
       PF::PipelineNode* container_node = 
 				get_pipeline()->get_node( container_layer->get_id() );
-      if( !container_node ) return;
-      if( container_layer->get_processor()->get_par()->needs_input() ) {
-        if( container_node->input_id < 0 ) return;
+				*/
+      PF::Layer* ll = get_pipeline()->get_image()->get_layer_manager().
+          get_layer( selected_layer );
+      if( !ll ) return;
+#ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): displaying mask of layer \""<<ll->get_name()<<"\""<<std::endl;
+#endif
+      PF::PipelineNode* selected_node =
+        get_pipeline()->get_node( selected_layer );
+      if( !selected_node ) return;
+      if( ll->get_processor()->get_par()->needs_input() ) {
+        if( selected_node->input_id < 0 ) return;
 
         PF::Layer* input_layer = 
           get_pipeline()->get_image()->get_layer_manager().
-          get_layer( container_node->input_id );
+          get_layer( selected_node->input_id );
         if( !input_layer ) return;
         
         PF::PipelineNode* input_node = 
@@ -977,9 +1045,9 @@ void PF::ImageArea::update( VipsRect* area )
         
         image = input_node->image;
       } else {
-        if( !container_node->image ) return;
+        if( !selected_node->image ) return;
 
-        image = container_node->image;
+        image = selected_node->image;
       }
 
       /*
@@ -994,6 +1062,9 @@ void PF::ImageArea::update( VipsRect* area )
       image = convert_raw_data( image );
     }
   }
+#ifdef DEBUG_DISPLAY
+  std::cout<<"ImageArea::update(): image="<<image<<std::endl;
+#endif
   if( !image ) return;
 
   unsigned int level = get_pipeline()->get_level();
@@ -1036,9 +1107,9 @@ void PF::ImageArea::update( VipsRect* area )
       current_display_profile = dt_colorspaces_create_srgb_profile();
       char tstr[1024];
       cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-      //#ifndef NDEBUG
+      #ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
-      //#endif
+      #endif
       break;
     case PF_DISPLAY_PROF_CUSTOM:
       current_display_profile =
@@ -1046,8 +1117,22 @@ void PF::ImageArea::update( VipsRect* area )
       //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
       //    <<" -> "<<current_display_profile<<std::endl;
       break;
-    default:
+    case PF_DISPLAY_PROF_SYSTEM: {
+#ifdef __APPLE__
+      current_display_profile = PF::get_display_ICC_profile();
+      if( !current_display_profile ) {
+        std::cout<<"ImageArea::update(): system display profile not set, reverting to sRGB"<<std::endl;
+        current_display_profile = dt_colorspaces_create_srgb_profile();
+      }
+      char tstr[1024];
+      cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+  #ifndef NDEBUG
+      std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
+  #endif
+#endif
       break;
+    }
+    default: break;
     }
   }
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
@@ -1073,19 +1158,28 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"ImageArea::update(): image="<<image<<"   ref_count="<<G_OBJECT( image )->ref_count<<std::endl;
 #endif
   //outimg = srgbimg;
-    
-  if( !display_merged && (active_layer>=0) ) {
-    PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
-    if( !node ) return;
-    if( !(node->blended) ) return;
 
-    if( node->processor &&
-				node->processor->get_par() &&
-				node->processor->get_par()->is_map() ) {
+  if( /*!display_merged &&*/ display_mask && (selected_layer>=0) ) {
+    PF::Layer* l = get_pipeline()->get_image()->get_layer_manager().get_layer( selected_layer );
+    if( !l ) return;
+    std::list<PF::Layer*> mask_layers = l->get_omap_layers();
+    PF::Layer* first_visible = NULL;
+    for( std::list<PF::Layer*>::reverse_iterator li = mask_layers.rbegin();
+        li != mask_layers.rend(); li++ ) {
+      if( (*li) == NULL || !(*li)->is_visible() ) continue;
+      first_visible = *li;
+      break;
+    }
+    if( first_visible ) {
+      PF::Layer* ml = first_visible;
+      if( !ml ) return;
+      PF::PipelineNode* node = get_pipeline()->get_node( ml->get_id() );
+      if( !node ) return;
+      if( !(node->blended) ) return;
 
 #ifdef DEBUG_DISPLAY
       std::cout<<"ImageArea::update(): node->blended("<<node->blended<<")->Xsize="<<node->blended->Xsize
-               <<"    node->blended->Ysize="<<node->blended->Ysize<<std::endl;    
+          <<"    node->blended->Ysize="<<node->blended->Ysize<<std::endl;
 #endif
       invert->get_par()->set_image_hints( node->blended );
       invert->get_par()->set_format( get_pipeline()->get_format() );
@@ -1153,12 +1247,26 @@ void PF::ImageArea::update( VipsRect* area )
 		//if( vips_shrink( outimg, &outimg2, 
 		//										 1.0d/shrink_factor, 1.0d/shrink_factor, NULL ) )
 //	return;
-			if( vips_affine( outimg, &outimg2, 
-											 shrink_factor, 0, 0, shrink_factor, NULL ) )
-				return;
-			//std::cout<<"outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
-			PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
-			outimg = outimg2;
+//    if( vips_affine( outimg, &outimg2,
+//                     shrink_factor, 0, 0, shrink_factor, NULL ) )
+//      return;
+//    if( vips_reduce( outimg, &outimg2, 1.0/shrink_factor, 1.0/shrink_factor,
+//        "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
+//      std::cout<<std::endl<<std::endl<<"VIPS_REDUCE FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
+//      return;
+//    }
+#ifdef DEBUG_DISPLAY
+		std::cout<<"ImageArea::update(): before vips_resize()"<<std::endl;
+#endif
+		if( vips_resize( outimg, &outimg2, shrink_factor, NULL) ) {
+      std::cout<<std::endl<<std::endl<<"vips_resize() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
+      return;
+    }
+#ifdef DEBUG_DISPLAY
+    std::cout<<"ImageArea::update(): before vips_resize(), outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
+#endif
+    PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
+    outimg = outimg2;
 	}
 
 	/*
@@ -1294,17 +1402,25 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"#4 area_left="<<area_left<<"  area_top="<<area_top<<std::endl;
 #endif
 
-  Update * update = g_new (Update, 1);
-  update->image_area = this;
-  update->rect.left = area_left;
-  update->rect.top = area_top;
-  update->rect.width = outimg->Xsize;
-  update->rect.height = outimg->Ysize;
+  //Update * update = g_new (Update, 1);
+  //update->image_area = this;
+  //update->rect.left = area_left;
+  //update->rect.top = area_top;
+  //update->rect.width = outimg->Xsize;
+  //update->rect.height = outimg->Ysize;
+
+  g_mutex_lock(preview_size_mutex);
+  preview_size.left = area_left;
+  preview_size.top = area_top;
+  preview_size.width = outimg->Xsize;
+  preview_size.height = outimg->Ysize;
+  g_mutex_unlock(preview_size_mutex);
 #ifdef DEBUG_DISPLAY
   std::cout<<"   update->rect: "<<update->rect<<std::endl;
   std::cout<<"PF::ImageArea::update(): installing set_size callback."<<std::endl;
 #endif
-  gdk_threads_add_idle ((GSourceFunc) set_size_cb, update);
+  //gdk_threads_add_idle ((GSourceFunc) set_size_cb, update);
+  signal_set_size.emit();
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): set_size() called"<<std::endl;
 #endif
@@ -1445,3 +1561,4 @@ void PF::ImageArea::sink( const VipsRect& area )
 	draw_area();
 	*/
 }
+

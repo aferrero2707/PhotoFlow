@@ -161,6 +161,18 @@ public:
     smoothness = s.get_smoothness();
     init_mask();
   }
+
+  Stamp& operator =(const Stamp& s)
+  {
+    //std::cout<<"Calling Stamp& operator =(const Stamp& s)"<<std::endl;
+    size = s.get_size();
+    opacity = s.get_opacity();
+    smoothness = s.get_smoothness();
+    init_mask();
+    //std::cout<<"Stamp& operator =(const Stamp& s) finished"<<std::endl;
+    return *this;
+  }
+
   void set_size( unsigned int s ) { size = s; init_mask(); }
   unsigned int get_size() const { return size; }
 
@@ -229,6 +241,16 @@ public:
   void set_delta_col( int d ) { delta_col = d; }
   std::vector< Stroke<Stamp> >& get_strokes() { return strokes; }
   const std::vector< Stroke<Stamp> >& get_strokes() const { return strokes; }
+
+  StrokesGroup& operator = (const StrokesGroup& s)
+  {
+    //std::cout<<"Calling StrokesGroup& operator = (const StrokesGroup& s)"<<std::endl;
+    delta_row = s.get_delta_row();
+    delta_col = s.get_delta_col();
+    strokes = s.get_strokes();
+    //std::cout<<"StrokesGroup& operator = (const StrokesGroup& s) finished"<<std::endl;
+    return *this;
+  }
 };
 
 
@@ -287,6 +309,8 @@ class CloneStampPar: public OpParBase
 
   Stamp pen;
 
+  GMutex* mutex;
+
 public:
   CloneStampPar();
   ~CloneStampPar();
@@ -294,9 +318,23 @@ public:
   bool has_intensity() { return false; }
   bool needs_input() { return true; }
 
+  void lock() { g_mutex_lock(mutex); }
+  void unlock() { g_mutex_unlock(mutex); }
+
   Stamp& get_pen() { return pen; }
 
   int get_scale_factor() { return scale_factor; }
+
+  bool import_settings( OpParBase* pin )
+  {
+    CloneStampPar* ppin = dynamic_cast<CloneStampPar*>(pin);
+    if( ppin ) ppin->lock();
+    lock();
+    bool result = OpParBase::import_settings( pin );
+    unlock();
+    if( ppin ) ppin->unlock();
+    return result;
+  }
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,
       VipsImage* imap, VipsImage* omap,

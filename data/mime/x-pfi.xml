@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="image/x-pfi">
+    <comment xml:lang="en">Photoflow image</comment>
+    <glob pattern="*.pfi" />
+  </mime-type>
+</mime-info>

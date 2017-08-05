@@ -27,8 +27,6 @@
 
  */
 
-#include "../../operations/brightness_contrast.hh"
-
 #include "raw_loader_config.hh"
 
 

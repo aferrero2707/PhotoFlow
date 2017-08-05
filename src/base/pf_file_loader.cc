@@ -61,6 +61,8 @@
 
 #include "pf_file_loader.hh"
 
+#define DEBUG_PF_LOAD 1
+
 static PF::Image* image = NULL;
 static std::deque<PF::Layer*> layers_stack;
 static std::deque< std::pair<std::list<PF::Layer*>*,bool> > containers_stack;
@@ -302,7 +304,8 @@ void start_element (GMarkupParseContext *context,
     }
 
 #ifdef DEBUG_PF_LOAD
-    std::cout<<"PF::pf_file_loader(): current_container_map_flag="<<current_container_map_flag<<std::endl;
+    std::cout<<"PF::pf_file_loader(): current_container_map_flag="<<current_container_map_flag
+        <<"  current_op="<<current_op<<std::endl;
 #endif
     if( current_op )
       current_op->set_map_flag( current_container_map_flag );
@@ -368,6 +371,16 @@ void end_element (GMarkupParseContext *context,
   if( strcmp (element_name, "layer") == 0 ) {
 
     if( current_layer && current_layer->get_processor() &&
+        current_layer->get_processor()->get_par() ) {
+      current_layer->get_processor()->get_par()->set_file_format_version( version );
+      current_layer->get_processor()->get_par()->finalize();
+    }
+    if( current_layer && current_layer->get_blender() &&
+        current_layer->get_blender()->get_par() ) {
+      current_layer->get_blender()->get_par()->set_file_format_version( version );
+      current_layer->get_blender()->get_par()->finalize();
+    }
+    if( current_layer && current_layer->get_processor() &&
         current_layer->get_processor()->get_par() &&
         current_layer->get_processor()->get_par()->get_config_ui() ) {
       // Load initial values into config UI.
@@ -428,7 +441,7 @@ static GMarkupParser parser = {
 
 
 
-void PF::load_pf_image( std::string filename, PF::Image* img ) {
+bool PF::load_pf_image( std::string filename, PF::Image* img ) {
   char *text;
   gsize length;
   GMarkupParseContext *context = g_markup_parse_context_new (&parser,
@@ -451,24 +464,26 @@ void PF::load_pf_image( std::string filename, PF::Image* img ) {
 
   if (g_file_get_contents (filename.c_str(), &text, &length, NULL) == FALSE) {
     printf("Couldn't load XML\n");
-    exit(255);
+    return false;
   }
 
   char* fname = strdup(filename.c_str());
   char* dname = dirname( fname );
   if( dname ) {
-    if( chdir( dname ) != 0 )
-      std::cout<<"Cannot change current directory to \""<<dname<<"\""<<std::endl;
+    PF::PhotoFlow::Instance().set_current_image_dir(dname);
+//    if( chdir( dname ) != 0 )
+//      std::cout<<"Cannot change current directory to \""<<dname<<"\""<<std::endl;
   }
   free( fname );
 
   if (g_markup_parse_context_parse (context, text, length, NULL) == FALSE) {
     printf("Parse failed\n");
-    exit(255);
+    return false;
   }
 
   g_free(text);
   g_markup_parse_context_free (context);
+  return true;
 }
 
 

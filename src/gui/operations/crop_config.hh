@@ -69,6 +69,11 @@ namespace PF {
   int crop_center_dx, crop_center_dy;
 
   void move_handle( int x, int y );
+  void move_left_handle( int x, int y );
+  void move_top_handle( int x, int y );
+  void move_topleft_handle( int x, int y );
+  void move_bottomleft_handle( int x, int y );
+  void move_topright_handle( int x, int y );
 
 public:
   CropConfigGUI( Layer* l );
@@ -76,6 +81,7 @@ public:
   bool has_preview() { return true; }
 
   void open();
+  bool has_editing_mode() { return true; }
 
   bool pointer_press_event( int button, double x, double y, int mod_key );
   bool pointer_release_event( int button, double x, double y, int mod_key );

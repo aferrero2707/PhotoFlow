@@ -54,8 +54,10 @@ static void complete_caching( PF::Image* image )
 
 static gpointer run_image_processor( gpointer /*data*/ )
 {
+#ifndef NDEBUG
 	std::cout<<"Calling ImageProcessor::instance().run()"<<std::endl;
-  PF::ImageProcessor::Instance().run();
+#endif
+	PF::ImageProcessor::Instance().run();
   return NULL;
   //return data;
 }
@@ -74,7 +76,9 @@ PF::ImageProcessor::ImageProcessor(): caching_completed( false )
 
 void PF::ImageProcessor::start()
 {
+#ifndef NDEBUG
   std::cout<<"ImageProcessor::ImageProcessor(): starting thread"<<std::endl;
+#endif
 #if defined(__APPLE__)
   pthread_attr_t thread_attr;
   if( (pthread_attr_init(&thread_attr) == 0) &&
@@ -89,7 +93,9 @@ void PF::ImageProcessor::start()
 #else
   thread = vips_g_thread_new( "image_processor", run_image_processor, NULL );
 #endif
+#ifndef NDEBUG
   std::cout<<"ImageProcessor::ImageProcessor(): thread started"<<std::endl;
+#endif
 }
 
 
@@ -157,8 +163,10 @@ void PF::ImageProcessor::optimize_requests()
 
 void PF::ImageProcessor::run()
 {
+#ifndef NDEBUG
   std::cout<<"ImageProcessor started."<<std::endl;
-	bool running = true;
+#endif
+  bool running = true;
   while( running ) {
     /*
     g_mutex_lock( requests_mutex );
@@ -346,8 +354,10 @@ void PF::ImageProcessor::run()
         if( !request.image ) continue;
         //delete request.image;
         request.image->do_destroy();
-        request.image->destroy_done_signal();
+        //request.image->destroy_done_signal();
+#ifndef NDEBUG
         std::cout<<"PF::ImageProcessor::run(): image destroyed."<<std::endl;
+#endif
         break;
       case PROCESSOR_END:
         running = false;

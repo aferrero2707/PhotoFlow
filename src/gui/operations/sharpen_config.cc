@@ -31,11 +31,13 @@
 
 
 PF::SharpenConfigGUI::SharpenConfigGUI( PF::Layer* layer ):
-  OperationConfigGUI( layer, "Sharpen" ),
-  modeSelector( this, "method", "Sharpen method: ", 0 ),
-  usmRadiusSlider( this, "usm_radius", "Radius", 1, 0, 100, 0.05, 0.1, 1),
+OperationConfigGUI( layer, "Sharpen" ),
+modeSelector( this, "method", "Sharpen method: ", 0 ),
+usmRadiusSlider( this, "usm_radius", "Radius", 1, 0, 100, 0.05, 0.1, 1),
 rlSigmaSlider( this, "rl_sigma", "Sigma", 1, 0, 100, 0.05, 0.1, 1),
-rlIterationsSlider( this, "rl_iterations", "Iterations", 10, 1, 100, 1, 5, 1)
+rlIterationsSlider( this, "rl_iterations", "Iterations", 10, 1, 100, 1, 5, 1),
+textureStrengthSlider( this, "texture_strength", _("strength"), 1, 0, 4, 0.05, 0.5, 1),
+textureRadiusSlider( this, "texture_radius", _("radius"), 4, 0, 32, 0.1, 1, 1)
 {
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK );
 
@@ -43,6 +45,9 @@ rlIterationsSlider( this, "rl_iterations", "Iterations", 10, 1, 100, 1, 5, 1)
 
   rlControlsBox.pack_start( rlSigmaSlider, Gtk::PACK_SHRINK );
   rlControlsBox.pack_start( rlIterationsSlider, Gtk::PACK_SHRINK );
+
+  textureControlsBox.pack_start( textureStrengthSlider, Gtk::PACK_SHRINK );
+  textureControlsBox.pack_start( textureRadiusSlider, Gtk::PACK_SHRINK );
 
   add_widget( controlsBox );
 
@@ -68,6 +73,8 @@ void PF::SharpenConfigGUI::do_update()
       controlsBox.remove( usmControlsBox );
     if( rlControlsBox.get_parent() == &controlsBox )
       controlsBox.remove( rlControlsBox );
+    if( textureControlsBox.get_parent() == &controlsBox )
+      controlsBox.remove( textureControlsBox );
 
     switch( prop->get_enum_value().first ) {
     case PF::SHARPEN_USM:
@@ -77,9 +84,11 @@ void PF::SharpenConfigGUI::do_update()
     case PF::SHARPEN_DECONV:
       controlsBox.pack_start( rlControlsBox, Gtk::PACK_SHRINK );
       rlControlsBox.show();
-			break;
-    case PF::SHARPEN_MICRO:
-			break;
+      break;
+    case PF::SHARPEN_TEXTURE:
+      controlsBox.pack_start( textureControlsBox, Gtk::PACK_SHRINK );
+      textureControlsBox.show();
+      break;
 		}
   }
   controlsBox.show_all_children();

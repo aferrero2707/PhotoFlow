@@ -1,0 +1,19 @@
+include(CheckCXXCompilerFlag)
+
+macro (CHECK_CXX_COMPILER_FLAG_AND_ENABLE_IT _FLAG)
+  string(TOUPPER "${_FLAG}" _RESULT)
+  string(REPLACE "-" "_" _RESULT "${_RESULT}")
+  string(REPLACE "=" "_" _RESULT "${_RESULT}")
+  set(_RESULT "HAVE_CXX_FLAG${_RESULT}")
+
+  set(CMAKE_REQUIRED_FLAGS_ORIG "${CMAKE_REQUIRED_FLAGS}")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
+
+  CHECK_CXX_COMPILER_FLAG("${_FLAG}" ${_RESULT})
+
+  if(${${_RESULT}})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_FLAG}")
+  endif()
+
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_ORIG}")
+endmacro ()

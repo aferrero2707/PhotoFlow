@@ -42,6 +42,10 @@ namespace PF {
     Gtk::VBox vbox, vbox2;
     Gtk::Label label;
     Gtk::Alignment align;
+    Gtk::Alignment label_align;
+    Gtk::Alignment scale_align;
+    Gtk::Alignment numentry_align;
+    Gtk::Alignment reset_align;
 #ifdef GTKMM_2
     Gtk::Adjustment adjustment;
 #endif
@@ -59,13 +63,13 @@ namespace PF {
     
     void create_widgets( std::string l, double val,
         double min, double max,
-        double sincr, double pincr );
+        double sincr, double pincr, int size, int layout );
 
   public:
     Slider(OperationConfigGUI* dialog, std::string pname, std::string l,
-	   double val, double min, double max, double sincr, double pincr, double mult);
+	   double val, double min, double max, double sincr, double pincr, double mult, int size=120, int layout=2);
     Slider(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l,
-	   double val, double min, double max, double sincr, double pincr, double mult);
+	   double val, double min, double max, double sincr, double pincr, double mult, int size=120, int layout=2);
 
     ~Slider() {}
 

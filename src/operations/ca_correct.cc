@@ -73,7 +73,9 @@ VipsImage* PF::CACorrectPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   }
 
+#ifndef NDEBUG
   std::cout<<"CACorrectPar::build(): filters="<<image_data->idata.filters<<std::endl;
+#endif
 
   int border = 8;
 

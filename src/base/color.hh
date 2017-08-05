@@ -55,13 +55,20 @@ namespace PF
     float f = static_cast<float>(in);
     out= (f+FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
   }
+  template<>
+    void to_float<float>( const float& in, float& out );
 
   template<class T>
   void from_float( const float& in, T& out )
   {
     out = static_cast<T>( (in*FormatInfo<T>::RANGE)-FormatInfo<T>::MIN );
   }
+  template<>
+    void from_float<float>( const float& in, float& out );
 
+
+  void Lab_pf2lcms(float* p);
+  void Lab_pf2lcms(float* pin, float* pout);
 
   // 
   template<class T>

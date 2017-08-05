@@ -75,8 +75,8 @@ namespace PF
     void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T*& pout) 
     {
       for( int ch = CHMIN; ch <= CHMAX; ch++ ) {
-				typename FormatInfo<T>::SIGNED diff = ((typename FormatInfo<T>::SIGNED)p[first][x+ch]) - ((typename FormatInfo<T>::SIGNED)p[first+1][x+ch]);
-				double val = amount*intensity*diff + p[first][x+ch];
+				typename FormatInfo<T>::SIGNED diff = ((typename FormatInfo<T>::SIGNED)p[first+1][x+ch]) - ((typename FormatInfo<T>::SIGNED)p[first][x+ch]);
+				double val = amount*intensity*diff + p[first+1][x+ch];
 				if( val < FormatInfo<T>::MIN ) val = FormatInfo<T>::MIN;
 				else if( val > FormatInfo<T>::MAX ) val = FormatInfo<T>::MAX;
 				pout[x+ch] = (T)(val);

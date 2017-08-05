@@ -46,7 +46,7 @@
 #endif
 #endif
 
-#define PF_FILE_VERSION 4
+#define PF_FILE_VERSION 5
 
 namespace PF
 {
@@ -68,7 +68,9 @@ namespace PF
     std::string cache_dir;
     std::string base_dir;
     std::string data_dir;
+    std::string lensfun_db_dir;
     std::string locale_dir;
+    std::string current_image_dir;
 
     int preview_pipeline_id;
 
@@ -86,7 +88,7 @@ namespace PF
     Options& get_options() { return options; }
 
     Image* get_active_image() { return active_image; }
-    void set_active_image(Image* i) { active_image = i; std::cout<<"Active image: "<<i<<std::endl; }
+    void set_active_image(Image* i) { active_image = i; /*std::cout<<"Active image: "<<i<<std::endl;*/ }
 
     void set_new_op_func( new_op_func_t f ) { new_op_func = f; }
     void set_new_op_func_nogui( new_op_func_t f ) { new_op_func_nogui = f; }
@@ -116,17 +118,24 @@ namespace PF
     void set_data_dir(std::string dir) { data_dir = dir; }
     std::string get_data_dir() { return data_dir; }
 
+    std::string get_lensfun_db_dir() { return lensfun_db_dir; }
+
     void set_locale_dir(std::string dir) { locale_dir = dir; }
     std::string get_locale_dir() { return locale_dir; }
 
     std::string get_cache_dir() { return cache_dir; }
     std::string get_config_dir() { return config_dir; }
 
+    void set_current_image_dir(std::string d) { current_image_dir = d; }
+    std::string get_current_image_dir() { return current_image_dir; }
+
     void close();
 
 		void obj_unref( GObject* obj, char* msg=NULL );
 		void obj_unref( VipsImage* obj, char* msg=NULL ) { obj_unref( (GObject*)obj, msg ); }
 		void obj_unref( VipsRegion* obj, char* msg=NULL ) { obj_unref( (GObject*)obj, msg ); }
+
+		int run_batch(int argc, char *argv[]);
   };
 
 

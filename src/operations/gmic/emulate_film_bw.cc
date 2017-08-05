@@ -37,9 +37,9 @@ PF::GmicEmulateFilmBEPar::GmicEmulateFilmBEPar():
 OpParBase(),
   iterations("iterations",this,1),
   prop_preset("preset", this, 0, "None", "None"),
-  prop_opacity("opacity",this,1),
+  prop_opacity("opacity",this,100),
   prop_gamma("gamma",this,0),
-  prop_contrast("contrast",this,1),
+  prop_contrast("contrast",this,0),
   prop_brightness("brightness",this,0),
   prop_hue("hue",this,0),
   prop_saturation("saturation",this,0),
@@ -103,9 +103,9 @@ VipsImage* PF::GmicEmulateFilmBEPar::build(std::vector<VipsImage*>& in, int firs
   std::string command = "-gimp_emulate_film_bw  ";
   command = command + prop_preset.get_enum_value_str();
   command = command + std::string(",") + prop_opacity.get_str();
-  command = command + std::string(",") + prop_gamma.get_str();
-  command = command + std::string(",") + prop_contrast.get_str();
   command = command + std::string(",") + prop_brightness.get_str();
+  command = command + std::string(",") + prop_contrast.get_str();
+  command = command + std::string(",") + prop_gamma.get_str();
   command = command + std::string(",") + prop_hue.get_str();
   command = command + std::string(",") + prop_saturation.get_str();
   command = command + std::string(",") + prop_post_normalize.get_str();

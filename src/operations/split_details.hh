@@ -49,6 +49,8 @@ enum split_details_blur_type
     Property<int> prop_nscales;
     Property<float> prop_base_scale;
 
+    Property<bool> output_residual_image;
+
     std::vector<ProcessorBase*> levels;
 
   public:

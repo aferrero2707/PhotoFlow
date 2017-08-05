@@ -141,7 +141,9 @@ void PF::GradientConfigGUI::switch_curve()
     if( node && node->processor && node->processor->get_par() ) {
       PF::OpParBase* par = node->processor->get_par();
       cs = PF::convert_colorspace( par->get_interpretation() );
-      //std::cout<<"OperationConfigGUI::update() par: "<<par<<std::endl;
+#ifndef NDEBUG
+      std::cout<<"GradientConfigGUI::switch_curve() cs="<<cs<<std::endl;
+#endif
     }
 
     switch( cs ) {

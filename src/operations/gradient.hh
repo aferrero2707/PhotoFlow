@@ -127,10 +127,10 @@ render(VipsRegion** ir, int n, int in_first,
   T* pout;
   int x, y, c, pos;
 
-  int width = oreg->im->Xsize - oreg->im->Xoffset;
-  int height = oreg->im->Ysize - oreg->im->Yoffset;
+  int width = oreg->im->Xsize;// - oreg->im->Xoffset;
+  int height = oreg->im->Ysize;// - oreg->im->Yoffset;
 
-  //std::cout<<"Gradient::render: height="<<height<<std::endl;
+  //std::cout<<"Gradient::render: height="<<height<<"  offset="<<oreg->im->Yoffset<<std::endl;
 
   switch( par->get_gradient_type() ) {
   case GRADIENT_VERTICAL:
@@ -139,6 +139,7 @@ render(VipsRegion** ir, int n, int in_first,
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
       float fval = static_cast<float>(height - r->top - y)/height;
       float fval2;
+      //std::cout<<"y="<<y+r->top<<" ("<<y<<")"<<std::endl;
       for( x = 0, pos = 0; x < r->width; x++, pos+=bands) {
         fval2 = MIN( MAX(fval+par->modvec[r->left+x]-0.5f,0), 1 );
         if( par->get_invert() == true ) fval2 = 1.0f - fval2;
@@ -179,16 +180,16 @@ render(VipsRegion** ir, int n, int in_first,
     }
     for( y = 0; y < r->height; y++ ) {
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
-      //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
       for( x = 0, pos = 0; x < r->width; ++x, pos+=bands ) {
         fval = MIN( MAX(valvec[x]+par->modvec[r->top+y]-0.5f,0), 1 );
         val = (T)(fval*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
+        if(false && y==0) std::cout<<"  x="<<r->left+x<<" ("<<x<<")  fval="<<fval<<"  val="<<val<<std::endl;
         for( c = 0; c < bands; c++ )
           pout[pos+c] = val;
       }
     }
 
-    delete valvec;
+    delete[] valvec;
     break;
   }
   case GRADIENT_RADIAL:

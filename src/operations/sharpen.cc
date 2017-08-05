@@ -33,6 +33,7 @@
 
 #include "unsharp_mask.hh"
 #include "gmic/sharpen_rl.hh"
+#include "gmic/sharpen_texture.hh"
 #include "sharpen.hh"
 
 
@@ -41,17 +42,21 @@ PF::SharpenPar::SharpenPar():
   method("method",this,PF::SHARPEN_USM,"USM","Unsharp Mask"),
   usm_radius("usm_radius",this,1),
   rl_sigma("rl_sigma",this,1),
-  rl_iterations("rl_iterations",this,10)
+  rl_iterations("rl_iterations",this,10),
+  texture_radius("texture_radius",this,4),
+  texture_strength("texture_strength",this,1)
 {
 	//method.add_enum_value(PF::SHARPEN_USM,"USM","Unsharp Mask");
 #ifndef PF_DISABLE_GMIC
-	method.add_enum_value(PF::SHARPEN_DECONV,"DECONV","RL Deconvolution");
+  method.add_enum_value(PF::SHARPEN_DECONV,"DECONV","RL Deconvolution");
+  method.add_enum_value(PF::SHARPEN_TEXTURE,"TEXTURE","texture");
 #endif
 	//method.add_enum_value(PF::SHARPEN_MICRO,"MICRO","Micro Contrast");
 
   usm = new_unsharp_mask();
 #ifndef PF_DISABLE_GMIC
   rl = new_gmic_sharpen_rl();
+  texture = new_gmic_sharpen_texture();
 #endif
 
   set_type("sharpen" );
@@ -67,6 +72,8 @@ bool PF::SharpenPar::needs_caching()
     return false; break;
 #ifndef PF_DISABLE_GMIC
   case PF::SHARPEN_DECONV:
+    return true; break;
+  case PF::SHARPEN_TEXTURE:
     return true; break;
 #endif
   default:
@@ -105,6 +112,17 @@ VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first,
       rlpar->set_image_hints( in[0] );
       rlpar->set_format( get_format() );
       out = rlpar->build( in, first, imap, omap, level );
+    }
+    break;
+  }
+  case PF::SHARPEN_TEXTURE: {
+    GmicSharpenTexturePar* par = dynamic_cast<GmicSharpenTexturePar*>( texture->get_par() );
+    if( par ) {
+      par->set_radius( texture_radius.get() );
+      par->set_strength( texture_strength.get() );
+      par->set_image_hints( in[0] );
+      par->set_format( get_format() );
+      out = par->build( in, first, imap, omap, level );
     }
     break;
   }

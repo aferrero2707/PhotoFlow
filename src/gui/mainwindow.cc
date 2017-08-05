@@ -38,6 +38,7 @@
 #endif
 
 #include "../base/file_util.hh"
+#include "../base/fileutils.hh"
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
 #include "tablabelwidget.hh"
@@ -45,6 +46,7 @@
 #include "settingsdialog.hh"
 #include "mainwindow.hh"
 
+#include "../base/print_display_profile.hh"
 
 typedef struct {
   Gtk::Widget* widget;
@@ -228,9 +230,9 @@ buttonSavePreset()
    */
 
 
+  add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
+
   show_all_children();
-
-
 }
 
 PF::MainWindow::~MainWindow()
@@ -247,6 +249,19 @@ PF::MainWindow::~MainWindow()
   PF::ImageProcessor::Instance().submit_request( request );	
   */
   //delete pf_image;
+}
+
+
+void PF::MainWindow::on_map()
+{
+  Gtk::Window::on_map();
+#ifdef ___APPLE__
+  Glib::RefPtr< Gdk::Screen > screen = get_screen();
+  Glib::RefPtr< Gdk::Window > window = get_window();
+  cairo_current_display_id = screen->get_monitor_at_window(window);
+
+  print_display_profile();
+#endif
 }
 
 
@@ -379,6 +394,50 @@ void PF::MainWindow::remove_all_tabs()
 
 void PF::MainWindow::on_button_exit()
 {
+  int npages = viewerNotebook.get_n_pages();
+  std::cout<<"MainWindow::on_button_exit(): npages="<<npages<<std::endl;
+  bool modified = false;
+  for( int i = 0; i < npages; i++ ) {
+    Gtk::Widget* w = viewerNotebook.get_nth_page(i);
+    std::cout<<"MainWindow::on_button_exit(): tab="<<i<<"  w="<<w<<std::endl;
+    if( !w ) continue;
+
+    PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( w );
+    if( !editor ) continue;
+
+    if( editor->get_image() != NULL ) {
+      std::cout<<"  editor->get_image()->is_modified(): "<<editor->get_image()->is_modified()<<std::endl;
+      if( editor->get_image()->is_modified() ) {
+        modified = true;
+        break;
+      }
+    }
+  }
+
+  if( modified ) {
+    Gtk::MessageDialog dialog(_("Modified buffers existing, do you really want to exit?"),
+        false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+    dialog.set_transient_for(*this);
+    dialog.set_default_response( Gtk::RESPONSE_YES );
+
+    //Show the dialog and wait for a user response:
+    int result = dialog.run();
+
+    //Handle the response:
+    switch(result) {
+    case Gtk::RESPONSE_YES:
+      std::cout<<"PF::MainWindow::on_button_exit(): response=YES"<<std::endl;
+      break;
+    case Gtk::RESPONSE_NO:
+      std::cout<<"PF::MainWindow::on_button_exit(): response=NO"<<std::endl;
+      return;
+      break;
+    default:
+      break;
+    }
+
+  }
+
   remove_all_tabs();
   hide();
 }
@@ -389,6 +448,24 @@ bool PF::MainWindow::on_delete_event( GdkEventAny* event )
   remove_all_tabs();
   return false;
 }
+
+
+bool PF::MainWindow::on_key_press_event(GdkEventKey* event)
+{
+  std::cout<<"MainWindow::on_key_press_event() called"<<std::endl;
+  int page = viewerNotebook.get_current_page();
+  Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
+  if( widget ) {
+    PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+    if( editor ) {
+      if( editor->on_key_press_event(event) )
+        return true;
+    }
+  }
+
+  return Gtk::Window::on_key_press_event(event);
+}
+
 
 
 #define LOAD_PFI
@@ -405,7 +482,7 @@ PF::MainWindow::open_image( std::string filename )
   HTabLabelWidget* tabwidget = 
       new HTabLabelWidget( std::string(fname),
           editor );
-  tabwidget->signal_close.connect( sigc::bind<bool>(sigc::mem_fun(*this, &PF::MainWindow::remove_tab), false) );
+  tabwidget->signal_close.connect( sigc::bind<bool>(sigc::mem_fun(*this, &PF::MainWindow::remove_tab), true) );
   viewerNotebook.append_page( *editor, *tabwidget );
   //std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
   free(fullpath);
@@ -568,6 +645,7 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/tiff");
   filter_tiff.add_mime_type("image/jpeg");
   filter_tiff.add_mime_type("image/png");
+  //filter_tiff.add_mime_type("image/exr");
   filter_tiff.add_mime_type("image/x-3fr");
   filter_tiff.add_mime_type("image/x-adobe-dng");
   filter_tiff.add_mime_type("image/x-arw;image/x-bay");
@@ -615,7 +693,53 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/x-sr2");
   filter_tiff.add_mime_type("image/x-srf");
   filter_tiff.add_mime_type("image/x-x3f");
+  filter_tiff.add_mime_type("image/x-exr");
+#ifdef WIN32
+  /*filter_tiff.add_pattern("*.EXR");*/
+  filter_tiff.add_pattern("*.3FR");
+  filter_tiff.add_pattern("*.ARI");
+  filter_tiff.add_pattern("*.ARW");
+  filter_tiff.add_pattern("*.CAP");
+  filter_tiff.add_pattern("*.CINE");
+  filter_tiff.add_pattern("*.CR2");
+  filter_tiff.add_pattern("*.CRW");
+  filter_tiff.add_pattern("*.CS1");
+  filter_tiff.add_pattern("*.DC2");
+  filter_tiff.add_pattern("*.DCR");
+  filter_tiff.add_pattern("*.DNG");
+  filter_tiff.add_pattern("*.EFR");
+  filter_tiff.add_pattern("*.FFF");
+  filter_tiff.add_pattern("*.IA");
+  filter_tiff.add_pattern("*.IIQ");
+  filter_tiff.add_pattern("*.K25");
+  filter_tiff.add_pattern("*.KC2");
+  filter_tiff.add_pattern("*.KDC");
+  filter_tiff.add_pattern("*.MDC");
+  filter_tiff.add_pattern("*.MEF");
+  filter_tiff.add_pattern("*.MOS");
+  filter_tiff.add_pattern("*.MRW");
+  filter_tiff.add_pattern("*.NEF");
+  filter_tiff.add_pattern("*.NRW");
+  filter_tiff.add_pattern("*.ORF");
+  filter_tiff.add_pattern("*.ORI");
+  filter_tiff.add_pattern("*.PEF");
+  filter_tiff.add_pattern("*.PXN");
+  filter_tiff.add_pattern("*.QTK");
+  filter_tiff.add_pattern("*.R3D");
+  filter_tiff.add_pattern("*.RAF");
+  filter_tiff.add_pattern("*.RAW");
+  filter_tiff.add_pattern("*.RDC");
+  filter_tiff.add_pattern("*.RW2");
+  filter_tiff.add_pattern("*.RWL");
+  filter_tiff.add_pattern("*.SR2");
+  filter_tiff.add_pattern("*.SRF");
+  filter_tiff.add_pattern("*.SRW");
+  filter_tiff.add_pattern("*.STI");
+  filter_tiff.add_pattern("*.X3F");
+#endif
   filter_tiff.add_pattern("*.pfi");
+  filter_tiff.add_pattern("*.PFI");
+  filter_tiff.add_pattern("*.Pfi");
   Gtk::FileFilter filter_all;
   filter_all.set_name( _("All files") );
   filter_all.add_pattern("*.*");
@@ -673,7 +797,53 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_mime_type("image/x-sr2");
   filter_tiff->add_mime_type("image/x-srf");
   filter_tiff->add_mime_type("image/x-x3f");
+  filter_tiff->add_mime_type("image/x-exr");
+#ifdef WIN32
+  /*filter_tiff->add_pattern("*.exr");*/
+  filter_tiff->add_pattern("*.3fr");
+  filter_tiff->add_pattern("*.ari");
+  filter_tiff->add_pattern("*.arw");
+  filter_tiff->add_pattern("*.cap");
+  filter_tiff->add_pattern("*.cine");
+  filter_tiff->add_pattern("*.cr2");
+  filter_tiff->add_pattern("*.crw");
+  filter_tiff->add_pattern("*.cs1");
+  filter_tiff->add_pattern("*.dc2");
+  filter_tiff->add_pattern("*.dcr");
+  filter_tiff->add_pattern("*.dng");
+  filter_tiff->add_pattern("*.erf");
+  filter_tiff->add_pattern("*.fff");
+  filter_tiff->add_pattern("*.ia");
+  filter_tiff->add_pattern("*.iiq");
+  filter_tiff->add_pattern("*.k25");
+  filter_tiff->add_pattern("*.kc2");
+  filter_tiff->add_pattern("*.kdc");
+  filter_tiff->add_pattern("*.mdc");
+  filter_tiff->add_pattern("*.mef");
+  filter_tiff->add_pattern("*.mos");
+  filter_tiff->add_pattern("*.mrw");
+  filter_tiff->add_pattern("*.nef");
+  filter_tiff->add_pattern("*.nrw");
+  filter_tiff->add_pattern("*.orf");
+  filter_tiff->add_pattern("*.ori");
+  filter_tiff->add_pattern("*.pef");
+  filter_tiff->add_pattern("*.pxn");
+  filter_tiff->add_pattern("*.qtk");
+  filter_tiff->add_pattern("*.r3d");
+  filter_tiff->add_pattern("*.raf");
+  filter_tiff->add_pattern("*.raw");
+  filter_tiff->add_pattern("*.rdc");
+  filter_tiff->add_pattern("*.rw2");
+  filter_tiff->add_pattern("*.rwl");
+  filter_tiff->add_pattern("*.sr2");
+  filter_tiff->add_pattern("*.srf");
+  filter_tiff->add_pattern("*.srw");
+  filter_tiff->add_pattern("*.sti");
+  filter_tiff->add_pattern("*.x3f");
+#endif
   filter_tiff->add_pattern("*.pfi");
+  filter_tiff->add_pattern("*.PFI");
+  filter_tiff->add_pattern("*.Pfi");
   Glib::RefPtr<Gtk::FileFilter> filter_all = Gtk::FileFilter::create();
   filter_all->set_name( _("All files") );
   filter_all->add_pattern("*.*");
@@ -727,6 +897,8 @@ void PF::MainWindow::on_button_save_clicked()
     PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
     if( editor && editor->get_image() ) {
       bool saved = false;
+      std::cout<<"MainWindow::on_button_save_clicked(): editor->get_image()->get_filename()=\""
+          <<editor->get_image()->get_filename()<<"\""<<std::endl;
       if( !(editor->get_image()->get_filename().empty()) ) {
         std::string ext;
         PF::get_file_extension( editor->get_image()->get_filename(), ext );
@@ -855,6 +1027,12 @@ void PF::MainWindow::on_button_saveas_clicked()
 
 void PF::MainWindow::on_button_export_clicked()
 {
+  int page = viewerNotebook.get_current_page();
+  Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
+  if( !widget ) return;
+
+  PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
+
   Gtk::FileChooserDialog dialog( _("Export image as..."),
       Gtk::FILE_CHOOSER_ACTION_SAVE);
   dialog.set_transient_for(*this);
@@ -862,6 +1040,20 @@ void PF::MainWindow::on_button_export_clicked()
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+
+#ifdef GTKMM_2
+  Gtk::FileFilter filter_all;
+  filter_all.set_name( _("All supported formats") );
+  filter_all.add_mime_type("image/jpeg");
+  filter_all.add_mime_type("image/tiff");
+#endif
+#ifdef GTKMM_3
+  Glib::RefPtr<Gtk::FileFilter> filter_all = Gtk::FileFilter::create();
+  filter_all->set_name( _("All supported formats") );
+  filter_all->add_mime_type("image/jpeg");
+  filter_all->add_mime_type("image/tiff");
+#endif
+  dialog.add_filter(filter_all);
 
 #ifdef GTKMM_2
   Gtk::FileFilter filter_jpeg;
@@ -890,6 +1082,20 @@ void PF::MainWindow::on_button_export_clicked()
   Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
   if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
+  Glib::ustring last_saved = editor->get_last_exported_file();
+  if( !last_saved.empty() ) {
+    dialog.set_filename( last_saved );
+  } else {
+    if( editor->get_image() ) {
+      std::string image_filename;
+      PF::getFileName( "", editor->get_image()->get_filename(), image_filename );
+      image_filename = image_filename + ".jpg";
+      dialog.set_current_name( image_filename );
+    } else {
+      dialog.set_current_name( "untitled.jpg" );
+    }
+  }
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -903,13 +1109,35 @@ void PF::MainWindow::on_button_export_clicked()
     last_dir = dialog.get_current_folder();
     PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
     std::string filename = dialog.get_filename();
+#ifdef GTKMM_2
+    Gtk::FileFilter* filter_cur = dialog.get_filter();
+#endif
+#ifdef GTKMM_3
+    Glib::RefPtr<Gtk::FileFilter> filter_cur = dialog.get_filter();
+#endif
+
+    if( filter_cur->get_name() == _("TIFF files") ) {
+      std::string ext;
+      if( getFileExtension( "/", filename, ext ) ) {
+        if( ext != "tiff" && ext != "tif" ) {
+          filename = filename + ".tif";
+        }
+      }
+    }
+
+    if( filter_cur->get_name() == _("JPEG files") ) {
+      std::string ext;
+      if( getFileExtension( "/", filename, ext ) ) {
+        if( ext != "jpeg" && ext != "jpg" ) {
+          filename = filename + ".jpg";
+        }
+      }
+    }
+
     std::cout << "File selected: " <<  filename << std::endl;
-    int page = viewerNotebook.get_current_page();
-    Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
-    if( widget ) {
-      PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
-      if( editor && editor->get_image() )
-        editor->get_image()->export_merged( filename );
+    if( editor && editor->get_image() ) {
+      editor->get_image()->export_merged( filename );
+      editor->set_last_exported_file( filename );
     }
     break;
       }
@@ -1015,13 +1243,16 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   bckname += ".info";
   unlink( bckname.c_str() );
 
+  std::cout<<"MainWindow::remove_tab(): preparing for deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
   if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() ) {
     PF::PhotoFlow::Instance().set_active_image( NULL );
     if( editor->get_image() ) {
       // Make sure that aching of current image is stopped
       PF::Pipeline* pipeline = editor->get_image()->get_pipeline( 0 );
       if( pipeline ) {
+        std::cout<<"MainWindow::remove_tab(): updating image "<<editor->get_image()<<"..."<<std::endl;
         editor->get_image()->update( pipeline, true );
+        std::cout<<"MainWindow::remove_tab(): image "<<editor->get_image()<<" updated"<<std::endl;
       }
     }
   }
@@ -1036,16 +1267,19 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   widget->hide();
 
   if(immediate) {
+    std::cout<<"MainWindow::remove_tab(): preparing for deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
     delete( widget );
     if( tabwidget )
       delete( tabwidget );
   } else {
     WidgetDestroyData * update = g_new (WidgetDestroyData, 1);
     update->widget = widget;
+    std::cout<<"MainWindow::remove_tab(): submitting idle callback for image editor deletetion"<<std::endl;
     g_idle_add ((GSourceFunc) widget_destroy_cb, update);
 
     update = g_new (WidgetDestroyData, 1);
     update->widget = tabwidget;
+    std::cout<<"MainWindow::remove_tab(): submitting idle callback for tab widget deletetion"<<std::endl;
     g_idle_add ((GSourceFunc) widget_destroy_cb, update);
   }
 

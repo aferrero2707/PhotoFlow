@@ -80,8 +80,12 @@ class StatusIndicatorWidget: public Gtk::HBox
   int cur_status;
   std::string cur_label;
 
+  GMutex* mutex;
+  Glib::Dispatcher dispatcher;
+
 public:
   StatusIndicatorWidget();
+  ~StatusIndicatorWidget();
 
   void set_status( std::string label, int status );
 

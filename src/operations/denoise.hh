@@ -61,8 +61,12 @@ namespace PF
     Property<float> sigma;
 		PropertyBase nr_mode;
 
+	  ProcessorBase* convert2lab;
+	  ProcessorBase* convert2input;
     ProcessorBase* impulse_nr;
     ProcessorBase* nlmeans;
+
+    cmsHPROFILE in_profile;
 
   public:
     DenoisePar();
@@ -70,6 +74,7 @@ namespace PF
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool has_target_channel() { return true; }
+    bool needs_caching() { return( nlmeans_enable.get() ); }
 
       
 

@@ -35,7 +35,10 @@
 
 
 PF::LensFunConfigGUI::LensFunConfigGUI( PF::Layer* layer ):
-  OperationConfigGUI( layer, "Optical corrections" )
+  OperationConfigGUI( layer, "Optical corrections" ),
+  enable_distortion_button( this, "enable_distortion", _("distortion"), false ),
+  enable_tca_button( this, "enable_tca", _("chromatic aberrations"), false ),
+  enable_vignetting_button( this, "enable_vignetting", _("vignetting"), false )
 {
   label1.set_text( "Camera maker: " );
   hbox1.pack_start( label1 );
@@ -52,6 +55,10 @@ PF::LensFunConfigGUI::LensFunConfigGUI( PF::Layer* layer ):
   controlsBox.pack_start( hbox2 );
   controlsBox.pack_start( hbox3 );
   
+  controlsBox.pack_start( enable_distortion_button );
+  controlsBox.pack_start( enable_tca_button );
+  //controlsBox.pack_start( enable_vignetting_button );
+
   makerEntry.set_editable( false );
   modelEntry.set_editable( false );
   lensEntry.set_editable( false );
@@ -61,8 +68,8 @@ PF::LensFunConfigGUI::LensFunConfigGUI( PF::Layer* layer ):
 #ifdef PF_HAS_LENSFUN
   ldb = lf_db_new();
 #if (BUNDLED_LENSFUN == 1)
-  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_data_dir() + "/lensfun/version_1/";
-  ldb->LoadDirectory( lfdb.c_str() );
+  Glib::ustring lfdb = PF::PhotoFlow::Instance().get_lensfun_db_dir();
+  ldb->Load( lfdb.c_str() );
   std::cout<<"LensFun database loaded from "<<lfdb<<std::endl;
 #else
   //char* lfdb_env = getenv("PF_LENSFUN_DATA_DIR");
@@ -100,6 +107,26 @@ void PF::LensFunConfigGUI::do_update()
       PF::PipelineNode* node = pipeline->get_node( get_layer()->get_id() );
       if( node && node->image ) {
 
+        PF::ProcessorBase* processor = NULL;
+        std::string maker, model;
+        if( node ) processor = node->processor;
+
+        if( processor ) {
+          PF::LensFunPar* par2 =
+              dynamic_cast<PF::LensFunPar*>(processor->get_par());
+          if( par2 ) {
+            makerEntry.set_text( par2->camera_maker() );
+            makerEntry.set_tooltip_text( par2->camera_maker() );
+
+            modelEntry.set_text( par2->camera_model() );
+            modelEntry.set_tooltip_text( par2->camera_model() );
+
+            lensEntry.set_text( par2->lens() );
+            lensEntry.set_tooltip_text( par2->lens() );
+          }
+        }
+
+        /*
         size_t blobsz;
         PF::exif_data_t* exif_data;
         if( !vips_image_get_blob( node->image, PF_META_EXIF_NAME,
@@ -119,7 +146,10 @@ void PF::LensFunConfigGUI::do_update()
               lf_free (cameras);
 
               makerEntry.set_text( camera->Maker );
+              makerEntry.set_tooltip_text( camera->Maker );
+
               modelEntry.set_text( camera->Model );
+              modelEntry.set_tooltip_text( camera->Model );
 
               const lfLens **lenses = ldb->FindLenses (camera, NULL, exif_data->exif_lens);
               if (!lenses) {
@@ -129,11 +159,13 @@ void PF::LensFunConfigGUI::do_update()
                 lf_free (lenses);
 
                 lensEntry.set_text( lens->Model );
+                lensEntry.set_tooltip_text( lens->Model );
               }
             }
 #endif
           }
         }
+        */
       }
     }
   }

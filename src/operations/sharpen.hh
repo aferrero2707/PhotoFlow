@@ -38,7 +38,7 @@ namespace PF
   {
     SHARPEN_USM,
     SHARPEN_DECONV,
-    SHARPEN_MICRO
+    SHARPEN_TEXTURE
   };
 
   class SharpenPar: public OpParBase
@@ -47,8 +47,11 @@ namespace PF
     Property<float> usm_radius;
     Property<float> rl_sigma;
     Property<int> rl_iterations;
+    Property<float> texture_radius;
+    Property<float> texture_strength;
     ProcessorBase* usm;
     ProcessorBase* rl;
+    ProcessorBase* texture;
   public:
     SharpenPar();
 

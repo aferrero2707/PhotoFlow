@@ -60,6 +60,11 @@
 
 #include "doublebuffer.hh"
 
+#ifndef NDEBUG
+#define DEBUG_DISPLAY
+#endif
+
+
 
 /*
   The ImageArea performs the image update aynchronously, inside a dedicated thread.
@@ -103,9 +108,13 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   GCond* draw_done;
   GMutex* draw_mutex;
 
+  GMutex* preview_size_mutex;
+  VipsRect preview_size;
+  Glib::Dispatcher signal_set_size;
+
   bool draw_requested;
 
-  //Glib::Dispatcher signal_queue_draw;
+  Glib::Dispatcher signal_queue_draw;
 
   /* The cache mask. 
    */
@@ -131,7 +140,9 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   bool highlights_warning_enabled, shadows_warning_enabled;
 
   bool display_merged;
-  int active_layer;
+  bool display_mask;
+  int displayed_layer;
+  int selected_layer;
   int edited_layer;
 
 	float shrink_factor;
@@ -150,29 +161,10 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
     int lsk;
   } Update;
 
-  static gboolean set_size_cb (Update * update);
+  //static gboolean set_size_cb (Update * update);
+  void set_size_cb ();
 
   static gboolean queue_draw_cb (Update * update);
-
-  /* Come here from the vips_sink_screen() background thread when a tile has 
-   * been calculated. 
-   *
-   * We can't paint the screen directly since the main GUI thread might be 
-   * doing something. Instead, we add an idle callback which will be
-   * run by the main GUI thread when it next hits the mainloop.
-
-  static void
-  sink_notify (VipsImage *image, VipsRect *rect, void *client)
-  {
-    ImageArea * image_area = (ImageArea *) client;
-    Update * update = g_new (Update, 1);
-
-    update->rect = *rect;
-    update->image_area = image_area;
-
-    g_idle_add ((GSourceFunc) render_cb, update);
-  }
-  */
 
 public:
 
@@ -244,45 +236,92 @@ public:
 
   void sink( const VipsRect& area );
 
+  void dispose();
+
   void set_edited_layer( int id ) {
     int old_id = edited_layer;
     edited_layer = id;
     if( old_id != edited_layer ) {
-      //update( NULL );
-      if( get_pipeline() && get_pipeline()->get_image() )
-        get_pipeline()->get_image()->update();
+      ////update( NULL );
+      //if( get_pipeline() && get_pipeline()->get_image() )
+      //  get_pipeline()->get_image()->update();
     }
   }
   int get_edited_layer() { return edited_layer; }
 
   void set_displayed_layer( int id ) {
-    int old_id = active_layer;
-    active_layer = id; 
+    int old_id = displayed_layer;
+    displayed_layer = id;
+#ifdef DEBUG_DISPLAY
     std::cout<<"ImageArea::set_displayed_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
-    if( !display_merged && (old_id != active_layer) ) {
+#endif
+    if( !display_merged && (old_id != displayed_layer) ) {
       //update( NULL );
-			if( get_pipeline() && get_pipeline()->get_image() ) {
+      if( get_pipeline() && get_pipeline()->get_image() ) {
+#ifdef DEBUG_DISPLAY
         std::cout<<"ImageArea::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
-				get_pipeline()->get_image()->update();
-			}
-		}
+#endif
+        get_pipeline()->get_image()->update();
+      }
+    }
   }
-  int get_active_layer() { return active_layer; }
+  int get_displayed_layer() { return displayed_layer; }
+
+  void set_selected_layer( int id ) {
+    int old_id = selected_layer;
+    selected_layer = id;
+#ifdef DEBUG_DISPLAY
+    std::cout<<"ImageArea::set_selected_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
+#endif
+    if( !display_merged && (old_id != selected_layer) ) {
+      //update( NULL );
+      if( get_pipeline() && get_pipeline()->get_image() ) {
+#ifdef DEBUG_DISPLAY
+        std::cout<<"ImageArea::set_selected_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
+#endif
+        get_pipeline()->get_image()->update();
+      }
+    }
+  }
+  int get_selected_layer() { return selected_layer; }
 
   void set_display_merged( bool val )
   {
     bool old_val = display_merged;
     display_merged = val;
-    std::cout<<"ImageArea::set_displayed_merged(): val="<<val<<"  old_val="<<old_val<<std::endl;
+#ifdef DEBUG_DISPLAY
+    std::cout<<"ImageArea::set_display_merged(): val="<<val<<"  old_val="<<old_val<<std::endl;
+#endif
     if( display_merged != old_val ) {
       //update( NULL );
-			if( get_pipeline() && get_pipeline()->get_image() ) {
-			  std::cout<<"ImageArea::set_displayed_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
-				get_pipeline()->get_image()->update();
-			}
-		}
+      if( get_pipeline() && get_pipeline()->get_image() ) {
+#ifdef DEBUG_DISPLAY
+        std::cout<<"ImageArea::set_display_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
+#endif
+        get_pipeline()->get_image()->update();
+      }
+    }
   }
   bool get_display_merged() { return display_merged; }
+
+  void set_display_mask( bool val )
+  {
+    bool old_val = display_mask;
+    display_mask = val;
+#ifdef DEBUG_DISPLAY
+    std::cout<<"ImageArea::set_display_mask(): val="<<val<<"  old_val="<<old_val<<std::endl;
+#endif
+    if( display_mask != old_val ) {
+      //update( NULL );
+      if( get_pipeline() && get_pipeline()->get_image() ) {
+#ifdef DEBUG_DISPLAY
+        std::cout<<"ImageArea::set_display_mask(): get_pipeline()->get_image()->update() called."<<std::endl;
+#endif
+        get_pipeline()->get_image()->update();
+      }
+    }
+  }
+  bool get_display_mask() { return display_mask; }
 
   virtual void on_realize() 
   {

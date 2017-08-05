@@ -1,4 +1,4 @@
-PhotoFlow
+PhotoFlow [![Build Status](https://travis-ci.org/aferrero2707/PhotoFlow.svg?branch=stable)](https://travis-ci.org/aferrero2707/PhotoFlow)
 =========
 
 The aim of the project is to provide a fully non-destructive photo retouching program with a complete workflow including RAW image development.

@@ -70,6 +70,7 @@ namespace PF {
   public:
     PathMaskConfigGUI( Layer* l );
     void do_update();
+    bool has_editing_mode() { return true; }
 
     void parameters_reset();
 

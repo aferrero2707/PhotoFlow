@@ -32,7 +32,7 @@
 #include <math.h>
 #include <vips/vips.h>
 
-#include "../dt/develop/masks.h"
+#include "../external/darktable/src/develop/masks.h"
 #include "splinecurve.hh"
 
 PF::ClosedSplineCurve::ClosedSplineCurve():

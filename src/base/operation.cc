@@ -61,7 +61,8 @@ PF::OpParBase::OpParBase():
   rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
   lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
-  mask_enabled("mask_enabled",this,true)
+  mask_enabled("mask_enabled",this,true),
+  file_format_version( PF_FILE_VERSION )
 {
   //blend_mode.set_internal(true);
   intensity.set_internal(true);
@@ -323,12 +324,44 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
 {
   std::vector<VipsImage*> result = build_many( in, first, imap, omap, level );
 
+#ifndef NDEBUG
+  std::cout<<"OpParBase::build_many_internal(): filling hierarchy with padding "<<get_padding()<<std::endl;
+#endif
+  fill_image_hierarchy( in, imap, omap, result );
+
   //for(unsigned int i = 0; i < outvec.size(); i++ ) {
   //  PF_UNREF( outvec[i], "OpParBase::build_many_internal(): previous outputs unref" );
   //}
   //outvec = result;
 
   return result;
+}
+
+
+void PF::OpParBase::fill_image_hierarchy(std::vector<VipsImage*>& in,
+        VipsImage* imap, VipsImage* omap, std::vector<VipsImage*>& out)
+{
+  for( unsigned int i = 0; i < out.size(); i++ ) {
+    bool is_dup = false;
+    for( unsigned int j = 0; j < in.size(); j++ ) {
+      if( out[i] == in[j] ) {
+        is_dup = true;
+        break;
+      }
+    }
+    if( is_dup ) continue;
+
+#ifndef NDEBUG
+    if( get_padding() > 0 ) {
+      std::cout<<"OpParBase::fill_image_hierarchy(): filling hierarchy for image "<<i<<"("<<out[i]<<") with padding "<<get_padding()<<std::endl;
+    }
+#endif
+    PF::image_hierarchy_fill( out[i], get_padding(), in );
+    std::vector<VipsImage*> maps;
+    if( imap ) maps.push_back(imap);
+    if( omap ) maps.push_back(omap);
+    if( !maps.empty() ) PF::image_hierarchy_fill( out[i], 0, maps );
+  }
 }
 
 

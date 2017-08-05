@@ -28,6 +28,7 @@
 */
 
 #include "blender.hh"
+#include "../base/image_hierarchy.hh"
 #include "../base/processor.hh"
 #include "../base/new_operation.hh"
 
@@ -109,6 +110,7 @@ vips_layer( VipsImage **in, int n, VipsImage **out, int first,
 PF::BlenderPar::BlenderPar(): 
   OpParBase(),
   blend_mode("blend_mode",this),
+  mask_blend_mode("mask_blend_mode",this),
   opacity("opacity",this,1),
   shift_x("shift_x",this,0),
   shift_y("shift_y",this,0)
@@ -124,7 +126,34 @@ PF::BlenderPar::BlenderPar():
   //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
   blend_mode.set_enum_value( PF_BLEND_NORMAL );
   blend_mode.store_default();
+  mask_blend_mode.set_enum_value( PF_MASK_BLEND_NORMAL );
+  mask_blend_mode.store_default();
   set_type( "blender" );
+}
+
+
+void PF::BlenderPar::finalize()
+{
+  if( get_file_format_version() > 4 ) return;
+
+  std::cout<<std::endl<<std::endl<<std::endl<<std::endl;
+  std::cout<<"BlenderPar::finalize() called"<<std::endl;
+  std::cout<<std::endl<<std::endl<<std::endl<<std::endl;
+
+  switch( blend_mode.get_enum_value().first ) {
+  case PF_BLEND_MULTIPLY:
+    mask_blend_mode.set_enum_value( PF_MASK_BLEND_MULTIPLY );
+    break;
+  case PF_BLEND_LIGHTEN:
+    mask_blend_mode.set_enum_value( PF_MASK_BLEND_UNION );
+    break;
+  case PF_BLEND_DARKEN:
+    mask_blend_mode.set_enum_value( PF_MASK_BLEND_INTERSECTION );
+    break;
+  default:
+    mask_blend_mode.set_enum_value( PF_MASK_BLEND_NORMAL );
+    break;
+  }
 }
 
 
@@ -180,8 +209,9 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   // the opacity is 100% and the opacity map is NULL, since in this case the underlying
   // image is useless. This improves performance for the default layer settings.
   bool is_passthrough = false;
-  if( get_blend_mode() == PF_BLEND_PASSTHROUGH ) is_passthrough = true;
-  if( (get_blend_mode() == PF_BLEND_NORMAL) && 
+  int cur_blend_mode = is_map() ? get_mask_blend_mode() : get_blend_mode();
+  if( cur_blend_mode == PF_BLEND_PASSTHROUGH ) is_passthrough = true;
+  if( (cur_blend_mode == PF_BLEND_NORMAL) &&
       (get_opacity() > 0.999999f) &&
       same_size && (do_shift == false) &&
       (omap == NULL) ) is_passthrough = true;
@@ -191,7 +221,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   if( background && foreground && (background->BandFmt != foreground->BandFmt) )
     is_passthrough = true;
 
-    if( is_passthrough && (get_blend_mode() != PF_BLEND_PASSTHROUGH) ) {
+    if( is_passthrough && (cur_blend_mode != PF_BLEND_PASSTHROUGH) ) {
     switch( get_colorspace() ) {
     case PF_COLORSPACE_RGB:
       if( get_rgb_target_channel()>= 0 )
@@ -238,9 +268,22 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       adjust_geom( omap_in, &omap2,
                    background->Xsize, background->Ysize, level );
     }
+
+    int ih_comp = image_hierarchy_compare_images(foreground2, background);
+    //ih_comp = 0;
+    std::cout<<"PF::BlenderPar::build(): ih_comp="<<ih_comp<<std::endl;
+
     std::vector<VipsImage*> in_;
-    in_.push_back( foreground2 );
-    in_.push_back( background );
+    if( ih_comp == 1 ) {
+      std::cout<<"PF::BlenderPar::build(): processing background before foreground"<<std::endl;
+      in_.push_back( background ); bgd_id = 0;
+      in_.push_back( foreground2 ); fgd_id = 1;
+    } else {
+      std::cout<<"PF::BlenderPar::build(): processing foreground before background"<<std::endl;
+      in_.push_back( foreground2 ); fgd_id = 0;
+      in_.push_back( background ); bgd_id = 1;
+    }
+
 #ifndef NDEBUG
     std::cout<<"background("<<background<<")->Xsize="<<background->Xsize<<"    background->Ysize="<<background->Ysize<<std::endl;
     std::cout<<"foreground("<<foreground<<")->Xsize="<<foreground->Xsize<<"    foreground->Ysize="<<foreground->Ysize<<std::endl;
@@ -251,6 +294,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
 
     set_image_hints( background );
     outnew = PF::OpParBase::build( in_, first, NULL, omap2, level );
+    PF::image_hierarchy_fill( outnew, 0, in_ );
     if( foreground2 != foreground ) PF_UNREF( foreground2, "BlenderPar::build(): foreground2 unref" );
     if( omap2 != omap ) PF_UNREF( omap2, "BlenderPar::build(): omap2 unref" );
   } else if( (background != NULL) && (foreground != NULL) && is_passthrough ) {

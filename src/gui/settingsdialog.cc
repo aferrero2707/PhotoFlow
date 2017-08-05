@@ -53,8 +53,9 @@
  */
 
 PF::SettingsDialog::SettingsDialog():
-      Gtk::Dialog( _("Settings"),true),
-      cm_display_profile_open_button(Gtk::Stock::OPEN)
+Gtk::Dialog( _("Settings"),true),
+cm_display_profile_open_button(Gtk::Stock::OPEN),
+save_sidecar_files_label(_("save sidecar files"))
 {
   set_default_size(600,400);
 
@@ -65,6 +66,7 @@ PF::SettingsDialog::SettingsDialog():
       &SettingsDialog::on_button_clicked) );
 
   notebook.append_page( color_box, _("Color management") );
+  notebook.append_page( output_box, _("Output") );
   notebook.append_page( about_box, _("About") );
 
   cm_display_profile_model = Gtk::ListStore::create(cm_display_profile_columns);
@@ -76,13 +78,15 @@ PF::SettingsDialog::SettingsDialog():
   row[cm_display_profile_columns.col_id] = 0;
   row[cm_display_profile_columns.col_value] = "sRGB";
 
-#if !defined(__MACOSX__) && !defined(__APPLE__)
-/*
   ri = cm_display_profile_model->append();
   row = *(ri);
   row[cm_display_profile_columns.col_id] = 1;
-  row[cm_display_profile_columns.col_value] = "System (not working)";
-*/
+#ifdef __APPLE__
+  row[cm_display_profile_columns.col_value] = _("System");
+#else
+  row[cm_display_profile_columns.col_value] = _("System (not working)");
+#endif
+
   ri = cm_display_profile_model->append();
   row = *(ri);
   row[cm_display_profile_columns.col_id] = 2;
@@ -93,7 +97,6 @@ PF::SettingsDialog::SettingsDialog():
   cm_display_profile_box.pack_start( cm_display_profile_open_label, Gtk::PACK_SHRINK );
   cm_display_profile_box.pack_start( cm_display_profile_entry, Gtk::PACK_SHRINK, 4 );
   cm_display_profile_box.pack_start( cm_display_profile_open_button, Gtk::PACK_SHRINK );
-#endif
 
   cm_display_profile_type_selector.set_active( 0 );
 
@@ -105,6 +108,12 @@ PF::SettingsDialog::SettingsDialog():
   color_box.pack_start( cm_display_profile_box, Gtk::PACK_SHRINK, 4 );
 
   //cm_display_profile_type_selector.set_size_request( 30, -1 );
+
+  save_sidecar_files_hbox.pack_start( save_sidecar_files_check, Gtk::PACK_SHRINK );
+  save_sidecar_files_hbox.pack_start( save_sidecar_files_label, Gtk::PACK_SHRINK );
+  save_sidecar_files_label.set_tooltip_text(_("Save sidecar files when exporting to raster formats"));
+  output_box.pack_start( save_sidecar_files_hbox, Gtk::PACK_SHRINK );
+
 
   Glib::ustring about = PF::version_string;
   Glib::RefPtr< Gtk::TextBuffer > buf = about_textview.get_buffer ();
@@ -120,7 +129,7 @@ PF::SettingsDialog::SettingsDialog():
   get_vbox()->pack_start( notebook );
 
   cm_display_profile_open_button.signal_clicked().connect(sigc::mem_fun(*this,
-                &SettingsDialog::on_button_display_profile_open_clicked) );
+      &SettingsDialog::on_button_display_profile_open_clicked) );
 
   show_all_children();
 
@@ -157,6 +166,9 @@ void PF::SettingsDialog::load_settings()
 
   //cm_display_profile_type_selector.set_active( PF::PhotoFlow::Instance().get_options().get_display_profile_type() );
   cm_display_profile_entry.set_text( PF::PhotoFlow::Instance().get_options().get_custom_display_profile_name() );
+
+  std::cout<<"PF::PhotoFlow::Instance().get_options().get_save_sidecar_files(): "<<PF::PhotoFlow::Instance().get_options().get_save_sidecar_files()<<std::endl;
+  save_sidecar_files_check.set_active( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 );
 }
 
 
@@ -187,6 +199,12 @@ void PF::SettingsDialog::save_settings()
   //std::cout<<"cm_display_profile_type_selector.get_active_row_number(): "<<cm_display_profile_type_selector.get_active_row_number()<<std::endl;
   PF::PhotoFlow::Instance().get_options().set_display_profile_type( dpy_prof_id );
   PF::PhotoFlow::Instance().get_options().set_custom_display_profile_name( cm_display_profile_entry.get_text() );
+
+  if( save_sidecar_files_check.get_active() )
+    PF::PhotoFlow::Instance().get_options().set_save_sidecar_files( 1 );
+  else
+    PF::PhotoFlow::Instance().get_options().set_save_sidecar_files( 0 );
+
   PF::PhotoFlow::Instance().get_options().save();
 }
 
@@ -210,7 +228,7 @@ void PF::SettingsDialog::on_button_clicked(int id)
 void PF::SettingsDialog::on_button_display_profile_open_clicked()
 {
   Gtk::FileChooserDialog dialog(_("Please choose an ICC profile"),
-        Gtk::FILE_CHOOSER_ACTION_OPEN);
+      Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
 
   //Add response buttons the the dialog:
@@ -229,24 +247,24 @@ void PF::SettingsDialog::on_button_display_profile_open_clicked()
   //Handle the response:
   switch(result) {
   case(Gtk::RESPONSE_OK):
-    {
-      std::cout << "Open clicked." << std::endl;
+      {
+    std::cout << "Open clicked." << std::endl;
 
-      //Notice that this is a std::string, not a Glib::ustring.
-      std::string filename = dialog.get_filename();
-      std::cout << "File selected: " <<  filename << std::endl;
-      cm_display_profile_entry.set_text( filename.c_str() );
-      break;
-    }
+    //Notice that this is a std::string, not a Glib::ustring.
+    std::string filename = dialog.get_filename();
+    std::cout << "File selected: " <<  filename << std::endl;
+    cm_display_profile_entry.set_text( filename.c_str() );
+    break;
+      }
   case(Gtk::RESPONSE_CANCEL):
-    {
-      std::cout << "Cancel clicked." << std::endl;
-      break;
-    }
+      {
+    std::cout << "Cancel clicked." << std::endl;
+    break;
+      }
   default:
-    {
-      std::cout << "Unexpected button clicked." << std::endl;
-      break;
-    }
+  {
+    std::cout << "Unexpected button clicked." << std::endl;
+    break;
+  }
   }
 }

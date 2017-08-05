@@ -40,6 +40,7 @@
 namespace PF {
 
 class ImageEditor;
+class LayerWidget;
 
   class LayerTreeModel: public Gtk::TreeStore
   {
@@ -86,12 +87,26 @@ class ImageEditor;
 
 
 
+  class LayersTreeView: public Gtk::TreeView
+  {
+    Gtk::Menu popupMenu;
+    LayerWidget* layer_widget;
+  public:
+    LayersTreeView(LayerWidget* layer_widget);
+    bool on_button_press_event(GdkEventButton* button_event) override;
+    void on_menu_cut();
+    void on_menu_copy();
+    void on_menu_paste();
+  };
+
+
+
   class LayerTree : public Gtk::ScrolledWindow
   {
     // Tree model to be filled with individial layers informations
     Glib::RefPtr<PF::LayerTreeModel> treeModel;
 
-    Gtk::TreeView treeView;
+    LayersTreeView treeView;
 
     ImageEditor* editor;
 
@@ -101,8 +116,13 @@ class ImageEditor;
 
     bool map_flag;
 
+    bool tree_modified;
+    bool updating;
+
+    Glib::Dispatcher signal_update_model;
+
     void update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l );
-    void update_model(Gtk::TreeModel::Row parent_row);
+    void update_model_int(Gtk::TreeModel::Row parent_row);
 
     bool get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::TreeModel::iterator& iter);
     bool get_row(int id, Gtk::TreeModel::iterator& iter);
@@ -128,6 +148,9 @@ class ImageEditor;
 
     bool is_map() { return map_flag; }
 
+    void set_tree_modified() { tree_modified = true; }
+    bool get_tree_modified() { return tree_modified; }
+
     //Image* get_image() { return image; }
     //void set_image(Image* img) { image = img; update_model(); }
 
@@ -136,11 +159,12 @@ class ImageEditor;
     // Updates the tree model with the layers from the associated image
     void update_model();
     void update_model_cb() { update_model(); }
-    void update_model_idle_cb();
+    void update_model_async();
 
     std::list<Layer*>* get_layers() { return layers; }
     void set_layers( std::list<Layer*>* l ) {
       layers = l;
+      set_tree_modified();
       update_model();
     }
 

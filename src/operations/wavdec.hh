@@ -237,7 +237,7 @@ public:
       wd_scales = wd_max_scales;
       std::cout<<"WavDecAlgoProc::render: max scale is "<<wd_max_scales<<" for this image preview size"<<std::endl;
     }
-    if (wd_return_layer > wd_scales+1) wd_return_layer = wd_scales+1;
+    if (wd_return_layer > (wd_scales+1)) wd_return_layer = wd_scales+1;
 
 //    std::cout<<"WavDecAlgoProc::render: max scale is "<<wd_max_scales<<" for this image preview size"<<std::endl;
 
@@ -263,7 +263,7 @@ private:
   {  
     /* this function prepares for decomposing, which is done in the function dwt_wavelet_decompose() */
     if (wd_scales > wd_max_scales) wd_scales = wd_max_scales;
-    if (wd_return_layer > wd_scales+1) wd_return_layer = wd_scales+1;
+    if (wd_return_layer > (wd_scales+1)) wd_return_layer = wd_scales+1;
     
     if (wd_return_layer == 0) {
       wd_layers = (float *)malloc(wd_width * wd_height * wd_ch * sizeof(float));
@@ -359,7 +359,7 @@ private:
       {
         dwt_add_layer(buffer[hpass], lev + 1);
       }
-      else if (wd_return_layer == lev + 1)
+      else if (wd_return_layer == ((int)(lev + 1)))
       {
         dwt_get_image_layer(buffer[hpass]);
     
@@ -370,7 +370,7 @@ private:
     }
 
     //  Wavelet residual
-    if (wd_return_layer == wd_scales+1)
+    if (wd_return_layer == (wd_scales+1))
     {
       dwt_get_image_layer(buffer[lpass]);
     }

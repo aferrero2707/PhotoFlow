@@ -29,14 +29,16 @@
  */
 
 #include <algorithm>
+#include <glibmm.h>
 #include "fileutils.hh"
 
 bool PF::getFileExtension(const std::string dir_separator, const std::string file, std::string & ext)
 {
   std::size_t ext_pos = file.rfind(".");
-  std::size_t dir_pos = (dir_separator.empty()) ? 0 : file.rfind(dir_separator);
+  //std::size_t dir_pos = (dir_separator.empty()) ? 0 : file.rfind(dir_separator);
 
-  if(ext_pos>dir_pos+1) {
+  //if(ext_pos>dir_pos+1) {
+  if(ext_pos>0) {
     ext.append(file.begin()+ext_pos+1,file.end());
     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
     return true;
@@ -58,11 +60,16 @@ bool PF::getFileExtensionLowcase(const std::string dir_separator, const std::str
 
 bool PF::getFileName(const std::string dir_separator, const std::string file, std::string & name)
 {
-  std::size_t ext_pos = file.rfind(".");
-  std::size_t dir_pos = (dir_separator.empty()) ? 0 : file.rfind(dir_separator);
+  gchar* basename = g_path_get_basename( file.c_str() );
+  std::string tname = basename;
+  g_free( basename );
+  std::size_t ext_pos = tname.rfind(".");
+  //std::size_t dir_pos = (dir_separator.empty()) ? 0 : file.rfind(dir_separator);
 
-  if(ext_pos>dir_pos+1) {
-    name.append(file.begin()+dir_pos, file.begin()+ext_pos);
+  //if(ext_pos>dir_pos+1) {
+  //  name.append(file.begin()+dir_pos, file.begin()+ext_pos);
+  if(ext_pos>0) {
+    name.append(tname.begin(), tname.begin()+ext_pos);
     //std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
     return true;
   }

@@ -1,11 +1,11 @@
 IF(MINGW)
-  SET(GMIC_FLAGS "-mwindows -std=gnu++11 -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+  SET(GMIC_FLAGS "-mwindows -std=gnu++11 -march=nocona -mno-sse3 -mtune=generic -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -stdlib=libc++ -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+   #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
-  SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+  SET(GMIC_FLAGS "-std=gnu++11 -march=nocona -mno-sse3 -mtune=generic -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
 
 set(COMPILE_FLAGS " ${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
@@ -38,10 +38,34 @@ if(GTKMM3_FOUND)
   set(GTKMM_LIBRARIES ${GTKMM3_LIBRARIES})
 endif()
 
-SET(CMAKE_CXX_FLAGS_DEBUG " -Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
+if(BUNDLED_EXIV2)
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBUNDLED_EXIV2=1")  
+endif(BUNDLED_EXIV2)
+
+# Check for openmp
+find_package(OpenMP)
+if(OpenMP_C_FLAGS AND USE_OPENMP)
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} ${OpenMP_C_FLAGS}")
+  set(COMPILE_FLAGS "${COMPILE_FLAGS} ${OpenMP_CXX_FLAGS}")
+  if(WIN32)
+    list(APPEND ADDITIONAL_LIBS gomp)
+  endif(WIN32)
+endif(OpenMP_C_FLAGS AND USE_OPENMP)
+
+
+#SET(CMAKE_CXX_FLAGS_DEBUG " -Wall -O0 -g -DNDEBUG -DDO_WARNINGS ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_DEBUG " -O0 -g -DNDEBUG ${COMPILE_FLAGS} -Wno-unused-parameter") 
 SET(CMAKE_CXX_FLAGS_VERBDEBUG " -Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
-SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ffast-math -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
+#SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
+#SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ffast-math -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
+SET(CMAKE_CXX_FLAGS_RELEASE        "   -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter -Wno-deprecated-declarations")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter -Wno-deprecated-declarations")
+SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
+
+#link_directories("/this/is/a/test/path")
+
+include_directories(${EXPAT_INCLUDE_DIRS})
+include_directories(${ICONV_INCLUDE_DIRS})
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -84,8 +108,8 @@ link_directories(${LCMS22_LIBRARY_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
-include_directories(${EXIV2_INCLUDE_DIRS})
-link_directories(${EXIV2_LIBRARY_DIRS})
+#include_directories(${EXIV2_INCLUDE_DIRS})
+#link_directories(${EXIV2_LIBRARY_DIRS})
 
 include_directories(${ORC_INCLUDE_DIRS})
 link_directories(${ORC_LIBRARY_DIRS})
@@ -150,8 +174,8 @@ endif (AUTOMATED_VERSION_CHECK)
 
 
 
-FILE(GLOB DTIncludes dt/common/*.h dt/develop/*.h)
-FILE(GLOB DTSources dt/common/*.c dt/develop/masks/*.c)
+FILE(GLOB DTIncludes external/darktable/src/common/*.h external/darktable/src/develop/*.h)
+FILE(GLOB DTSources external/darktable/src/common/*.c external/darktable/src/develop/masks/*.c)
 
 add_library (pfdt STATIC
   ${DTIncludes}
@@ -170,6 +194,15 @@ endif (AUTOMATED_VERSION_CHECK)
 
 FILE(GLOB RTIncludes 
   rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h
+  rt/rtengine/dcraw.h 
+  rt/rtengine/myfile.h 
+  rt/rtengine/rtengine.h 
+  rt/rtengine/opthelper.h 
+  rt/rtengine/rawimage.h 
+  rt/rtengine/noncopyable.h
+  rt/rtengine/imageio.h
+  rt/rtengine/camconst.h
+  rt/rtengine/cJSON.h
 )
 FILE(GLOB RTSources 
   rt/rtengine/rawimagesource.cc
@@ -178,6 +211,12 @@ FILE(GLOB RTSources
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
   rt/rtengine/xtrans_demosaic_RT.cc
+  rt/rtengine/dcraw.cc
+  rt/rtengine/myfile.cc
+  rt/rtengine/rawimage.cc
+  rt/rtengine/camconst.cc
+  rt/rtengine/cJSON.c
+  rt/rtengine/settings.cc
 )
 
 FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)
@@ -207,13 +246,58 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 # so we do a custom dependency and pretend an imported librawsped.a so no other -l are
 # appended.
 #
-set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX})
-add_library(rawspeed_static STATIC IMPORTED)
-set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
+set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/share)
+#add_library(rawspeed_static STATIC IMPORTED)
+#set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
 # compile rawspeed
+SET(BINARY_PACKAGE_BUILD ON CACHE BOOL "Sets march optimization to generic" FORCE)
+SET(BUILD_TESTING OFF CACHE BOOL "Build the testing tree." FORCE)
+SET(BUILD_TOOLS OFF CACHE BOOL "Build some tools (identify, rstest)." FORCE)
+SET(BUILD_BENCHMARKING OFF CACHE BOOL "Build some benchmarks." FORCE)
+SET(BUILD_DOCS OFF CACHE BOOL "Build the documentation (mainly, using Doxygen)." FORCE)
+SET(BUILD_FUZZERS OFF CACHE BOOL "Build the fuzzing tree." FORCE)
+SET(USE_XMLLINT OFF CACHE BOOL "" FORCE)
+message( "BEFORE add_subdirectory(external/rawspeed)" )
 add_subdirectory(external/rawspeed)
+message( "AFTER add_subdirectory(external/rawspeed)" )
 list(APPEND LIB_DEPS rawspeed)
 list(APPEND STATIC_LIBS rawspeed_static)
+include_directories( ${CMAKE_SOURCE_DIR}/src/external/rawspeed/src/librawspeed  )  
+include_directories( ${CMAKE_SOURCE_DIR}/src/external/rawspeed/src/external  )  
+message( "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR} )
+include_directories( ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/src  )  
+
+
+if(BUNDLED_EXIV2_)
+  include(ExternalProject)
+  ExternalProject_Add(exiv2
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
+    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/exiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/exiv2-install
+    BUILD_COMMAND ${MAKE})
+  #set(EXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/include)
+  set(EXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR})
+  set(EXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib)
+  set(EXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib/libexiv2.a)
+endif(BUNDLED_EXIV2_)
+if(BUNDLED_EXIV2)
+  set( EXIV2_ENABLE_SHARED OFF CACHE BOOL "Build exiv2 as a shared library (dll)" FORCE )
+  set( EXIV2_ENABLE_BUILD_SAMPLES OFF CACHE BOOL "Build the unit tests" FORCE )
+  set( EXIV2_ENABLE_CURL OFF CACHE BOOL "USE Libcurl for HttpIo" FORCE )
+  set( EXIV2_ENABLE_SSH OFF CACHE BOOL "USE Libssh for SshIo" FORCE )
+  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
+  add_library(exiv2_static STATIC IMPORTED)
+  set_target_properties(exiv2_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/src/libexiv2.a)
+  add_subdirectory(external/exiv2)
+  set(EXIV2_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/)
+  list(APPEND LIB_DEPS exiv2lib)
+  #list(APPEND STATIC_LIBS exiv2_static)
+  list(APPEND EXIV2_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/src/libexiv2.a")
+  list(APPEND EXIV2_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/external/exiv2/xmpsdk/libxmp.a")
+endif(BUNDLED_EXIV2)
+include_directories(${EXIV2_INCLUDE_DIRS})
+#link_directories(${EXIV2_LIBRARY_DIRS})
+MESSAGE( STATUS "EXIV2_LIBRARIES: " ${EXIV2_LIBRARIES} )
 
 
 
@@ -242,21 +326,33 @@ endif(BUNDLED_LENSFUN)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 
 
-if(BUNDLED_GEXIV2)
-  include(ExternalProject)
-  ExternalProject_Add(gexiv2
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
-    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
-    BUILD_COMMAND ${MAKE})
-  set(GEXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/include)
-  set( GEXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib)
-  set(GEXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib/libgexiv2.a)
-endif(BUNDLED_GEXIV2)
-include_directories(${GEXIV2_INCLUDE_DIRS})
-link_directories(${GEXIV2_LIBRARY_DIRS})
+#if(BUNDLED_GEXIV2)
+#  include(ExternalProject)
+#  ExternalProject_Add(gexiv2
+#    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2
+#    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
+#    #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/external/gexiv2/configure --enable-static=yes --enable-shared=yes --prefix=${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install
+#    BUILD_COMMAND ${MAKE})
+#  set(GEXIV2_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/include)
+#  set( GEXIV2_LIBRARY_DIRS ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib)
+#  set(GEXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/gexiv2-install/lib/libgexiv2.a)
+#endif(BUNDLED_GEXIV2)
+#include_directories(${GEXIV2_INCLUDE_DIRS})
+#link_directories(${GEXIV2_LIBRARY_DIRS})
+#MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
-MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
+
+# Film CLUTs
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/gmic_film_cluts_download.cmake "file(DOWNLOAD http://gmic.eu/gmic_film_cluts.gmz ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz)")
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz
+  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/gmic_film_cluts_download.cmake
+  #COMMAND ${WGET_EXECUTABLE} http://gmic.eu/gmic_stdlib.h -O ${CMAKE_SOURCE_DIR}/src/gmic_stdlib.h
+  COMMAND touch ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz
+)
+add_custom_target(gmic_film_cluts_download ALL DEPENDS ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz)
+
+
 
 add_library (pfbase STATIC
   ${BaseIncludes}
@@ -269,16 +365,25 @@ add_library (pfbase STATIC
   ${OpSources}
   ${LibRawIncludes}
   ${LibRawSources}
+#  ${GMicIncludes}
+#  ${GMicSources}
+)
+
+
+add_library (pfgmic STATIC
   ${GMicIncludes}
   ${GMicSources}
 )
 
 
+#add_dependencies(pfbase ${LIB_DEPS} gmic_film_cluts_download)
 add_dependencies(pfbase ${LIB_DEPS})
 
 
-FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
-FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc)
+#FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
+#FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc)
+FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh plugin/*.hh)
+FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc plugin/pluginwindow.cc)
 
 add_library (pfgui STATIC
   ${GuiIncludes}
@@ -287,12 +392,16 @@ add_library (pfgui STATIC
 
 
 IF(MINGW)
-  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  IF(HAVE_REGEX_H)
+    list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
+  ELSE(HAVE_REGEX_H)
+    list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  ENDIF(MHAVE_REGEX_HINGW)
   #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
 ELSEIF(APPLE)
   list(APPEND ADDITIONAL_LIBS)
 ELSE(MINGW)
-  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread gomp)
+  list(APPEND ADDITIONAL_LIBS fftw3_threads pthread dl)
 ENDIF(MINGW)
 
 list(APPEND ADDITIONAL_LIBS pugixml)
@@ -306,20 +415,27 @@ ENDIF(APPLE)
 # photoflow executable
 #
 add_executable(photoflow main.cc)
+IF(APPLE)
+  set_target_properties(photoflow PROPERTIES LINK_FLAGS " -framework ApplicationServices ")
+ENDIF(APPLE)
 
 target_link_libraries(photoflow ${LIBS} 
+  fftw3
   pfgui
   pfbase 
+  pfgmic
   pfdt
+  ${STATIC_LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${STATIC_LIBS}
+  ${EXPAT_LIBRARIES}
+  ${ICONV_LIBRARIES}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
-  ${GEXIV2_LIBRARIES}
+  #${GEXIV2_LIBRARIES}
   ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
   ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
@@ -341,43 +457,7 @@ target_link_libraries(photoflow ${LIBS}
 
 
 
-#--------------------------------------------------
-#
-# pfbatch executable
-#
-add_executable(pfbatch pfbatch.cc)
-
-target_link_libraries(pfbatch ${LIBS} 
-  pfbase 
-  pfdt
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${STATIC_LIBS}
-  ${OPENEXR_LIBRARIES}
-  ${XML2_LIBRARIES}
-  ${EXIF_LIBRARIES}
-  ${EXIV2_LIBRARIES}
-  ${GEXIV2_LIBRARIES}
-  ${LENSFUN_LIBRARIES}
-  ${SIGC2_LIBRARIES}
-  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-  ${GLIBMM_LIBRARIES} 
-  ${GLIB_LIBRARIES} 
-  ${GMODULE_LIBRARIES} 
-  ${GOBJECT_LIBRARIES} 
-  ${GTHREAD_LIBRARIES} 
-  ${ZLIB_LIBRARIES}
-  #${LIBRAW_LIBRARIES}  
-  ${ORC_LIBRARIES}
-  fftw3
-  ${ADDITIONAL_LIBS}
-  #gmon
-  )
-
-
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
-INSTALL(TARGETS pfbatch RUNTIME DESTINATION bin)
 
 INSTALL(DIRECTORY ../presets DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)
@@ -385,105 +465,12 @@ INSTALL(DIRECTORY ../icc DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../icons DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../help DESTINATION share/photoflow)
 INSTALL(FILES ../src/vips/gmic/gmic/src/gmic_def.gmic DESTINATION share/photoflow)
+#INSTALL(FILES ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz DESTINATION share/photoflow/gmic)
+INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow)
+#INSTALL(FILES ${CMAKE_BINARY_DIR}/pluginrc DESTINATION share/photoflow/gimp-2.8)
+#INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow/gimp-2.8)
 
 
-#--------------------------------------------------
-#
-# GIMP plug-in
-#
-if (GIMP_FOUND)
-  FILE(GLOB PluginIncludes plugin/*.hh)
-  FILE(GLOB PluginSources plugin/pluginwindow.cc plugin/pfgimp.cc)
-
-  include_directories(${GIMP_2_9_INCLUDE_DIRS})
-  link_directories(${GIMP_2_9_LIBRARY_DIRS})
-  include_directories(${GIMPUI_INCLUDE_DIRS})
-  link_directories(${GIMPUI_LIBRARY_DIRS})
-
-  add_executable(pfgimp ${PluginSources})
-
-  set_target_properties(pfgimp PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
-
-  target_link_libraries(pfgimp ${LIBS} 
-    pfgui
-    pfbase 
-    pfdt
-    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-    ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-    ${STATIC_LIBS}
-    ${OPENEXR_LIBRARIES}
-    ${XML2_LIBRARIES}
-    ${EXIF_LIBRARIES}
-    ${EXIV2_LIBRARIES}
-    ${GEXIV2_LIBRARIES}
-    ${LENSFUN_LIBRARIES}
-    ${SIGC2_LIBRARIES}
-    ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-    ${PIXMAN_LIBRARIES} 
-    ${MACINTEG_LIBS}
-    #${GIMP_LIBS}
-    ${GIMP_2_9_LIBRARIES}
-    ${GIMPUI_LIBRARIES}
-    ${GTKMM_LIBRARIES} 
-    ${GLIBMM_LIBRARIES} 
-    ${GLIB_LIBRARIES} 
-    ${GMODULE_LIBRARIES} 
-    ${GOBJECT_LIBRARIES} 
-    ${GTHREAD_LIBRARIES} 
-    ${ZLIB_LIBRARIES}
-    #${LIBRAW_LIBRARIES}  
-    ${ORC_LIBRARIES}
-    fftw3
-    ${ADDITIONAL_LIBS}
-    #gmon
-  )
-  
-  
-  FILE(GLOB LoadPluginIncludes plugin/*.hh)
-  FILE(GLOB LoadPluginSources plugin/pluginwindow.cc plugin/pfgimp-load.cc)
-
-  add_executable(pfgimp-load ${LoadPluginSources})
-
-  set_target_properties(pfgimp-load PROPERTIES COMPILE_FLAGS " -DHAVE_GIMP_2_9=${HAVE_GIMP_2_9} ")
-
-  target_link_libraries(pfgimp-load ${LIBS} 
-    pfgui
-    pfbase 
-    pfdt
-    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-    ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-    ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-    ${STATIC_LIBS}
-    ${OPENEXR_LIBRARIES}
-    ${XML2_LIBRARIES}
-    ${EXIF_LIBRARIES}
-    ${EXIV2_LIBRARIES}
-    ${GEXIV2_LIBRARIES}
-    ${LENSFUN_LIBRARIES}
-    ${SIGC2_LIBRARIES}
-    ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
-    ${PIXMAN_LIBRARIES} 
-    ${MACINTEG_LIBS}
-    #${GIMP_LIBS}
-    ${GIMP_2_9_LIBRARIES}
-    ${GIMPUI_LIBRARIES}
-    ${GTKMM_LIBRARIES} 
-    ${GLIBMM_LIBRARIES} 
-    ${GLIB_LIBRARIES} 
-    ${GMODULE_LIBRARIES} 
-    ${GOBJECT_LIBRARIES} 
-    ${GTHREAD_LIBRARIES} 
-    ${ZLIB_LIBRARIES}
-    #${LIBRAW_LIBRARIES}  
-    ${ORC_LIBRARIES}
-    fftw3
-    ${ADDITIONAL_LIBS}
-    #gmon
-  )
-  
-  INSTALL(TARGETS pfgimp pfgimp-load RUNTIME DESTINATION ${GIMP_2_9_PREFIX}/lib/gimp/2.0/plug-ins)
-endif (GIMP_FOUND)
 
 
   get_property(idirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)

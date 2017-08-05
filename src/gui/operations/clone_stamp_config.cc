@@ -118,6 +118,7 @@ void PF::CloneStampConfigGUI::start_stroke( double x, double y )
   // The source point needs to be set before we can do anything...
   if( !srcpt_ready ) return;
 
+  par->lock();
   //std::cout<<"CloneStampConfigGUI::start_stroke(): srcpt_changed="<<srcpt_changed<<std::endl;
   if( srcpt_changed ) {
     // A new source point was defined, so we need to start a new strokes group
@@ -128,6 +129,7 @@ void PF::CloneStampConfigGUI::start_stroke( double x, double y )
 
   //par->start_stroke( get_pen_size(), get_pen_opacity() );
   par->start_stroke();
+  par->unlock();
 
   for( unsigned int vi = 0; vi < image->get_npipelines(); vi++ ) {
     PF::Pipeline* pipeline = image->get_pipeline( vi );
@@ -142,6 +144,7 @@ void PF::CloneStampConfigGUI::start_stroke( double x, double y )
     par = dynamic_cast<PF::CloneStampPar*>( processor->get_par() );
     if( !par ) continue;
 
+    par->lock();
     if( srcpt_changed ) {
       // A new source point was defined, so we need to start a new strokes group
       par->new_group( (int)(y-srcpt_row), (int)(x-srcpt_col) );
@@ -149,7 +152,14 @@ void PF::CloneStampConfigGUI::start_stroke( double x, double y )
 
     //par->start_stroke( get_pen_size(), get_pen_opacity() );
     par->start_stroke();
+    par->unlock();
   }
+
+  if( srcpt_changed ) {
+    // A new source point was defined, so we need to re-build the pileines
+    image->update();
+  }
+
   srcpt_changed = false;
   stroke_started = true;
 }
@@ -172,7 +182,9 @@ void PF::CloneStampConfigGUI::draw_point( double x, double y )
   if( !srcpt_ready ) return;
 
   VipsRect update = {0,0,0,0};
+  par->lock();
   par->draw_point( x, y, update );
+  par->unlock();
 
   if( (update.width < 1) || (update.height < 1) )  
     return;
@@ -201,7 +213,9 @@ void PF::CloneStampConfigGUI::draw_point( double x, double y )
     par = dynamic_cast<PF::CloneStampPar*>( processor->get_par() );
     if( !par ) continue;
 
+    par->lock();
     par->draw_point( x, y, update );
+    par->unlock();
 
     if( (int)(vi) != PF::PhotoFlow::Instance().get_preview_pipeline_id() )
       continue;
@@ -253,10 +267,6 @@ bool PF::CloneStampConfigGUI::pointer_press_event( int button, double x, double 
   double lx = x, ly = y, lw = 1, lh = 1;
   screen2layer( lx, ly, lw, lh );
   start_stroke( lx, ly );
-
-  PF::Image* image = get_layer()->get_image();
-  if( !image ) return false;
-  image->update();
 
   draw_point( lx, ly );
   return true;

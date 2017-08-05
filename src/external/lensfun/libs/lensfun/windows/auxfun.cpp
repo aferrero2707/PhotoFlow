@@ -3,7 +3,7 @@
     Copyright (C) 2008 by Andrew Zabolotny
 */
 
-#include "config.h"
+#include "lensfun/config.h"
 #include <windows.h>
 #include <glib/gstdio.h>
 
@@ -24,7 +24,7 @@ char *_lf_get_database_dir ()
         eos--;
     *eos = 0;
 
-    dir = g_build_filename (buff, CONF_DATADIR, NULL);
+    dir = g_build_filename (buff, SYSTEM_DB_PATH, DATABASE_SUBDIR, NULL);
 
     return dir;
 }

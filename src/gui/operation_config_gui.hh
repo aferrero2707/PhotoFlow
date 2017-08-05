@@ -121,6 +121,10 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::VBox controls_box;
   Gtk::HSeparator hline, hline2;
 
+  Gtk::Expander expert_ctrls_expander;
+
+  //ToggleImageButtonsBox map_buttons;
+
   Gtk::VBox aux_controls_box;
   Gtk::HBox aux_controls_hbox;
 
@@ -168,6 +172,7 @@ public:
 
   void expand();
   void collapse();
+  bool is_expanded();
 
   void enable_preview();
   void disable_preview();
@@ -190,6 +195,8 @@ public:
   virtual void parameters_reset();
   virtual void show_help();
   virtual void close_config();
+
+  virtual bool has_editing_mode() { return false; }
 
   void on_layer_name_changed();
   void on_layer_name2_changed();

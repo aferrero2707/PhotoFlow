@@ -44,13 +44,10 @@
 //#include <vips/vips>
 
 #include "pftypes.hh"
-
 #include "format_info.hh"
-
 #include "property.hh"
-
 #include "color.hh"
-
+#include "image_hierarchy.hh"
 #include "photoflow.hh"
 
 
@@ -166,6 +163,8 @@ namespace PF
 
     Property<bool> mask_enabled;
 
+    int file_format_version;
+
     //std::vector<VipsImage*> outvec;
 
   public:
@@ -178,7 +177,9 @@ namespace PF
       //for(unsigned int i = 0; i < outvec.size(); i++ ) {
       //  PF_UNREF( outvec[i], "~OpParBase(): previous outputs unref" );
       //}
+#ifndef NDEBUG
       std::cout<<"~OpParBase(): deleting operation "<<(void*)this<<std::endl;
+#endif
     }
 
     std::string get_type() { return type; }
@@ -243,6 +244,9 @@ namespace PF
     std::string get_default_name() { return default_name; }
     void set_default_name( std::string n ) { default_name = n; }
 
+    void set_file_format_version(int v) { file_format_version = v; }
+    int get_file_format_version() { return file_format_version; }
+
 
     int get_rgb_target_channel() 
     {
@@ -297,8 +301,13 @@ namespace PF
     virtual bool needs_caching() { return false; }
     virtual bool init_hidden() { return false; }
 
+    virtual int get_padding() { return 0; }
+
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }
+
+    // called after all properties have been loaded from .pfi file
+    virtual void finalize() {}
 
     virtual void pre_build( rendermode_t /*mode*/ ) {}
 
@@ -308,6 +317,8 @@ namespace PF
         VipsImage* imap, VipsImage* omap, unsigned int& level);
     std::vector<VipsImage*> build_many_internal(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap, unsigned int& level);
+    virtual void fill_image_hierarchy(std::vector<VipsImage*>& in,
+        VipsImage* imap, VipsImage* omap, std::vector<VipsImage*>& out);
 
 
     PropertyBase* get_property(std::string name);
@@ -459,7 +470,8 @@ namespace PF
   #include "blend_hard_light.hh"
   #include "blend_vivid_light.hh"
   #include "blend_luminosity.hh"
-  #include "blend_color.hh"
+#include "blend_color.hh"
+#include "blend_exclusion.hh"
 
   int vips_copy_metadata( VipsImage* in, VipsImage* out );
 };

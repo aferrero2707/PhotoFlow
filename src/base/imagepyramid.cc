@@ -300,22 +300,35 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
   VipsImage* in = levels.back().image;
   if( !in )
     return NULL;
+  VipsImage* fullres = in;
 
   int width = in->Xsize;
   int height = in->Ysize;
   int size = (width>height) ? width : height;
   int nbands = in->Bands;
+  double scale = 1;
 
+//  std::cout<<"ImagePyramid::get_level("<<level<<") scale="<<scale
+//      <<"  image size: "<<in->Xsize<<" x "<<in->Ysize<<std::endl;
   while( size > 256 ) {
+    VipsImage* out;
+    /*
     VipsImage* blurred;
     if( vips_gaussblur( in, &blurred, 0.7, NULL ) )
       return NULL;
-    VipsImage* out;
     if( vips_subsample( blurred, &out, 2, 2, NULL ) )
       return NULL;
     PF_UNREF( blurred, "ImagePyramid::get_level(): blurred unref" );
+    */
+    scale /= 2;
+    if( vips_resize( in/*fullres*/, &out, 0.5/*scale*/, NULL) )
+    //if( vips_subsample( in, &out, 2, 2, NULL ) )
+      return NULL;
+    //PF_UNREF( in, "ImagePyramid::get_level(): in unref" );
 #ifndef NDEBUG
     std::cout<<"ImagePyramid::get_level("<<level<<") subsample in="<<in<<"  out="<<out<<std::endl;
+    std::cout<<"ImagePyramid::get_level("<<level<<") scale="<<scale
+        <<"  image size: "<<out->Xsize<<" x "<<out->Ysize<<std::endl;
 #endif
     //g_object_unref( in );
     width = out->Xsize;
@@ -328,26 +341,41 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
     int fd = -1;
     char fname[500]; fname[0] = '\0';
 
+#ifndef NDEBUG
     std::cout<<"ImagePyramid: level #"<<levels.size()<<" size: "<<imgsz/1024/1024<<"MB (max="<<imgmax/1024/1024<<"MB)"<<std::endl;
+#endif
     if( memory_storage ) {
       size_t array_sz;
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: saving cache buffer..."<<std::endl;
+#endif
       void* mem_array = vips_image_write_to_memory( out, &array_sz );
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache buffer saved."<<std::endl;
+#endif
       snprintf(tstr,499,"PF::ImagePyramid::get_level(%d) level #%d (after write_to_memory)",level, (int)levels.size());
       PF_UNREF( out, tstr );
       in = vips_image_new_from_memory( mem_array, array_sz, width, height, img->Bands, img->BandFmt );
+#ifndef NDEBUG
+      std::cout<<"ImagePyramid: cache buffer loaded."<<std::endl;
+#endif
       g_signal_connect( in, "postclose", G_CALLBACK(free_mem_array), mem_array );
+#ifndef NDEBUG
+      std::cout<<"ImagePyramid: postclose callback attached to cache buffer."<<std::endl;
+#endif
     } else {
       sprintf( fname,"%spfraw-XXXXXX", PF::PhotoFlow::Instance().get_cache_dir().c_str() );
       fd = pf_mkstemp( fname );
       if( fd < 0 )
         return NULL;
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache file: "<<fname<<std::endl;
-
       std::cout<<"ImagePyramid: saving cache file..."<<std::endl;
+#endif
       vips_rawsave_fd( out, fd, NULL );
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache file saved."<<std::endl;
+#endif
       //char tifname[500];
       //sprintf(tifname,"/tmp/level_%d-1.tif",(int)levels.size());
       //vips_image_write_to_file( out, tifname );
@@ -356,7 +384,9 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
       PF_UNREF( out, tstr );
 
       vips_rawload( fname, &in, width, height, VIPS_IMAGE_SIZEOF_PEL( img ), NULL );
+#ifndef NDEBUG
       std::cout<<"ImagePyramid: cache file loaded."<<std::endl;
+#endif
       //unlink( fname );
     }
 

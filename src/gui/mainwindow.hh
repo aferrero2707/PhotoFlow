@@ -90,6 +90,8 @@ public:
   MainWindow();
   virtual ~MainWindow();
 
+  void on_map();
+
   void on_button_open_clicked();
 
   void on_button_save_clicked();
@@ -101,6 +103,7 @@ public:
 
   bool on_delete_event( GdkEventAny* event );
 
+  bool on_key_press_event(GdkEventKey* event);
 
   void open_image(std::string filename);
 

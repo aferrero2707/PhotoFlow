@@ -44,6 +44,8 @@ namespace PF {
   uint8_t FormatInfo<uint8_t>::HALF = UCHAR_MAX/2;
   FormatInfo<uint8_t>::PROMOTED FormatInfo<uint8_t>::RANGE = FormatInfo<uint8_t>::MAX;
 
+  template<>
+  bool FormatInfo<float>::IS_FLOAT = true;
 
   // 16-bit base types
 #if (USHRT_MAX == 65535U)

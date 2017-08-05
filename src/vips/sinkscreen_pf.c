@@ -146,20 +146,20 @@ typedef struct _Render {
 
 /* Our per-thread state.
  */
-typedef struct _RenderThreadState {
+typedef struct _PFRenderThreadState {
 	VipsThreadState parent_object;
 
 	/* The tile that should be calculated.
 	 */
 	Tile *tile;
-} RenderThreadState;
+} PFRenderThreadState;
 
-typedef struct _RenderThreadStateClass {
+typedef struct _PFRenderThreadStateClass {
 	VipsThreadStateClass parent_class;
 
-} RenderThreadStateClass;
+} PFRenderThreadStateClass;
 
-G_DEFINE_TYPE( RenderThreadState, pfrender_thread_state, VIPS_TYPE_THREAD_STATE );
+G_DEFINE_TYPE( PFRenderThreadState, pfrender_thread_state, VIPS_TYPE_THREAD_STATE );
 
 /* The BG thread which sits waiting to do some calculations.
  */
@@ -183,16 +183,16 @@ static GSList *render_dirty_all = NULL;
 static gboolean render_reschedule = FALSE;
 
 static void
-pfrender_thread_state_class_init( RenderThreadStateClass *class )
+pfrender_thread_state_class_init( PFRenderThreadStateClass *class )
 {
 	VipsObjectClass *object_class = VIPS_OBJECT_CLASS( class );
 
-	object_class->nickname = "renderthreadstate";
+	object_class->nickname = "pfrenderthreadstate";
 	object_class->description = _( "per-thread state for render" );
 }
 
 static void
-pfrender_thread_state_init( RenderThreadState *state )
+pfrender_thread_state_init( PFRenderThreadState *state )
 {
 	state->tile = NULL;
 }
@@ -397,7 +397,7 @@ static int
 render_allocate( VipsThreadState *state, void *a, gboolean *stop )
 {
 	Render *render = (Render *) a;
-	RenderThreadState *rstate = (RenderThreadState *) state;
+	PFRenderThreadState *rstate = (PFRenderThreadState *) state;
 	Tile *tile;
 
 	g_mutex_lock( render->lock );
@@ -422,7 +422,7 @@ static int
 render_work( VipsThreadState *state, void *a )
 {
 	Render *render = (Render *) a;
-	RenderThreadState *rstate = (RenderThreadState *) state;
+	PFRenderThreadState *rstate = (PFRenderThreadState *) state;
 	Tile *tile = rstate->tile;
 	int y;
 	void* p;

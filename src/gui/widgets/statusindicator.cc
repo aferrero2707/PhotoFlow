@@ -25,6 +25,7 @@
  */
 
 
+#include <vips/vips.h>
 #include "statusindicator.hh"
 
 
@@ -93,21 +94,36 @@ PF::StatusIndicatorWidget::StatusIndicatorWidget(): cur_status(0)
   led_alignment.set( 0, 0.5, 0, 0 );
   pack_start( led_alignment, Gtk::PACK_SHRINK, 10 );
 
+  mutex = vips_g_mutex_new();
+
+  dispatcher.connect(sigc::mem_fun(*this, &StatusIndicatorWidget::update));
+
   show_all();
+}
+
+
+PF::StatusIndicatorWidget::~StatusIndicatorWidget()
+{
+  if(mutex) vips_g_mutex_free( mutex );
 }
 
 
 void PF::StatusIndicatorWidget::set_status( std::string l, int s )
 {
+  g_mutex_lock( mutex );
   cur_label = l;
   cur_status = s;
-  gdk_threads_add_idle ((GSourceFunc) pf_status_indicator_update, this);
+  g_mutex_unlock( mutex );
+  //gdk_threads_add_idle ((GSourceFunc) pf_status_indicator_update, this);
+  dispatcher.emit();
 }
 
 
 void PF::StatusIndicatorWidget::update()
 {
+  g_mutex_lock( mutex );
   label.set_text( cur_label.c_str() );
   led.set_status( cur_status );
+  g_mutex_unlock( mutex );
 }
 

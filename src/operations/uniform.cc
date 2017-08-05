@@ -55,7 +55,9 @@ VipsImage* PF::UniformPar::build(std::vector<VipsImage*>& in, int first,
 				     VipsImage* imap, VipsImage* omap, 
 				     unsigned int& level)
 {
+#ifndef NDEBUG
   std::cout<<"UniformPar::build(): colorspace="<<get_colorspace()<<std::endl;
+#endif
   grey.set( R.get() );
   return PF::OpParBase::build( in, first, imap, omap, level );
 }

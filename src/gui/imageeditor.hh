@@ -88,8 +88,9 @@ class ImageEditor: public Gtk::HBox
   bool image_opened;
 
   Layer* displayed_layer;
-  Layer* active_layer;
-  std::list<PF::Layer*> active_layer_children;
+  Layer* edited_layer;
+  int selected_layer_id;
+  std::list<PF::Layer*> edited_layer_children;
 
   ImageSizeUpdater* image_size_updater;
 
@@ -112,7 +113,7 @@ class ImageEditor: public Gtk::HBox
 
   Gtk::VBox imageArea_scrolledWindow_box;
   //Gtk::HPaned main_panel;
-  Gtk::HBox main_panel;
+  Gtk::HBox* main_panel;
   LayerWidget layersWidget;
   Gtk::VBox layersWidget_box;
   Gtk::Widget* aux_controls;
@@ -125,9 +126,12 @@ class ImageEditor: public Gtk::HBox
   Gtk::ToggleButton button_shadows_warning, button_highlights_warning;
   Gtk::VBox radioBox;
   Gtk::RadioButton buttonShowMerged, buttonShowActive;
+  Gtk::VBox controls_group_vbox;
   Gtk::ScrolledWindow controls_group_scrolled_window;
 
   HTabLabelWidget* tab_label_widget;
+
+  Glib::ustring last_exported_file;
 
 
   bool fit_image;
@@ -136,6 +140,8 @@ class ImageEditor: public Gtk::HBox
   bool hide_background_layer;
 
   int preview_drag_start_x, preview_drag_start_y, adjustment_drag_start_x, adjustment_drag_start_y;
+
+  Glib::Dispatcher signal_image_modified, signal_image_updated;
 
   void expand_layer( PF::Layer* layer, std::list<PF::Layer*>& list );
   void get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
@@ -156,14 +162,18 @@ public:
   void set_aux_controls( Gtk::Widget* aux );
   Gtk::Widget* get_aux_controls() { return aux_controls; }
 
-  int get_active_layer() {
-    //std::cout<<"ImageEditor::get_active_layer(): active_layer="<<active_layer;
-    //if(active_layer) std::cout<<"(\""<<active_layer->get_name()<<"\", "<<active_layer->get_id()<<")"<<std::endl;
-    return( (active_layer) ? active_layer->get_id() : -1 );
+  int get_edited_layer() {
+    //std::cout<<"ImageEditor::get_edited_layer(): edited_layer="<<edited_layer;
+    //if(edited_layer) std::cout<<"(\""<<edited_layer->get_name()<<"\", "<<edited_layer->get_id()<<")"<<std::endl;
+    return( (edited_layer) ? edited_layer->get_id() : -1 );
   }
-  void set_active_layer( int id );
+  void set_edited_layer( int id );
   int get_displayed_layer() { return (displayed_layer) ? displayed_layer->get_id() : -1; }
   void set_displayed_layer( int id );
+  void set_selected_layer( int id );
+
+  void set_display_mask( bool val );
+
 
   void set_hide_background_layer( bool flag ) { hide_background_layer = flag; }
   bool get_hide_background_layer() { return hide_background_layer; }
@@ -172,7 +182,10 @@ public:
   void build_image();
 
   void on_image_modified();
-  void on_image_modified_idle_cb();
+  void on_image_modified_async();
+
+  void on_image_updated();
+  void on_image_updated_async();
 
   void on_map();
   void on_realize();
@@ -192,6 +205,7 @@ public:
   bool my_button_press_event( GdkEventButton* button );
   bool my_button_release_event( GdkEventButton* button );
   bool my_motion_notify_event( GdkEventMotion* button );
+  bool on_key_press_event(GdkEventKey* event);
 
   // Handler for the widget size change
   //bool on_preview_configure_event( GdkEventConfigure* event );
@@ -234,6 +248,9 @@ public:
   void zoom_out();
   bool zoom_fit();
   void zoom_actual_size();
+
+  Glib::ustring get_last_exported_file() { return last_exported_file; }
+  void set_last_exported_file( Glib::ustring name ) { last_exported_file = name; }
 };
 
 }

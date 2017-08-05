@@ -194,6 +194,7 @@ namespace PF
 
     virtual void update( VipsRect* area ) = 0;
     virtual void sink( const VipsRect& /*area*/ ) { }
+    virtual void dispose() { }
 
     virtual void process_area( const VipsRect& /*area*/ ) {}
     virtual void process_start( const VipsRect& /*area*/ ) {}

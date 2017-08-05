@@ -54,6 +54,8 @@ namespace PF
     Glib::ustring last_visited_preset_folder;
     Glib::ustring last_visited_icc_folder;
 
+    int save_sidecar_files;
+
   public:
     Options();
 
@@ -73,6 +75,9 @@ namespace PF
     std::string get_last_visited_preset_folder() { return last_visited_preset_folder; }
     void set_last_visited_icc_folder( std::string f ) { last_visited_icc_folder = f; }
     std::string get_last_visited_icc_folder() { return last_visited_icc_folder; }
+
+    void set_save_sidecar_files(int val) { save_sidecar_files = val; }
+    int get_save_sidecar_files() { return save_sidecar_files; }
 
     void load();
     void save();

@@ -37,7 +37,7 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-#include "../dt/common/colorspaces.h"
+#include "../external/darktable/src/common/colorspaces.h"
 //#include "../base/colorspaces.h"
 
 #ifdef __cplusplus
@@ -62,7 +62,7 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   out_profile_mode.add_enum_value(PF::OUT_PROF_NONE,"NONE","NONE");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_sRGB,"sRGB","Built-in sRGB");
   out_profile_mode.add_enum_value(PF::OUT_PROF_ADOBE,"ADOBE","Built-in Adobe RGB 1998");
-  //out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
+  out_profile_mode.add_enum_value(PF::OUT_PROF_PROPHOTO,"PROPHOTO","Built-in ProPhoto RGB");
   out_profile_mode.add_enum_value(PF::OUT_PROF_LAB,"LAB","Lab");
   //out_profile_mode.add_enum_value(PF::OUT_PROF_CMYK,"CMYK","CMYK");
   out_profile_mode.add_enum_value(PF::OUT_PROF_CUSTOM,"CUSTOM","Custom");
@@ -198,11 +198,13 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, in_profile );
       cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, out_profile );
 
+      cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
+      flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
       transform = cmsCreateTransform( in_profile, 
                                       infmt,
                                       out_profile, 
                                       outfmt,
-                                      INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE );
+                                      INTENT_PERCEPTUAL, flags );
     }
 
     if( out_profile) {

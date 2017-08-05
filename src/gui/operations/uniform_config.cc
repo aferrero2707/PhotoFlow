@@ -34,13 +34,13 @@
 
 
 PF::UniformConfigGUI::UniformConfigGUI( PF::Layer* layer ):
-  OperationConfigGUI( layer, "Uniform" ),
-  color_label(_("Color:              ")),
+OperationConfigGUI( layer, "Uniform" ),
+color_label(_("Color:              ")),
 #ifdef GTKMM_2
-  color_button( Gdk::Color("white") )
+color_button( Gdk::Color("white") )
 #endif
 #ifdef GTKMM_3
-  color_button( Gdk::RGBA("white") )
+color_button( Gdk::RGBA("white") )
 #endif
 {
   colorButtonsBox1.pack_start( color_label, Gtk::PACK_SHRINK );
@@ -48,7 +48,7 @@ PF::UniformConfigGUI::UniformConfigGUI( PF::Layer* layer ):
   controlsBox.pack_start( colorButtonsBox1 );
 
   color_button.signal_color_set().
-    connect( sigc::mem_fun(this, &PF::UniformConfigGUI::on_color_changed) );
+      connect( sigc::mem_fun(this, &PF::UniformConfigGUI::on_color_changed) );
 
   add_widget( controlsBox );
 }
@@ -60,6 +60,22 @@ void PF::UniformConfigGUI::open()
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
+    // Pointer to the associated Layer object
+    PF::Layer* layer = get_layer();
+    PF::ProcessorBase* processor = layer->get_processor();
+    PF::UniformPar* par = dynamic_cast<PF::UniformPar*>( processor->get_par() );
+    if( par ) {
+#ifdef GTKMM_2
+      Gdk::Color color;
+      color.set_rgb( par->get_R().get()*65535, par->get_G().get()*65535, par->get_B().get()*65535 );
+      color_button.set_color( color );
+#endif
+#ifdef GTKMM_3
+      Gdk::RGBA color;
+      color.set_rgba( par->get_R().get(), par->get_G().get(), par->get_B().get() );
+      color_button.set_rgba( color );
+#endif
+    }
   }
   OperationConfigGUI::open();
 }
@@ -74,10 +90,10 @@ void PF::UniformConfigGUI::on_color_changed()
   // First of all, the new stroke is recorded by the "master" operation
   PF::ProcessorBase* processor = layer->get_processor();
   if( !processor || !(processor->get_par()) ) return;
-  
+
   PF::UniformPar* par = dynamic_cast<PF::UniformPar*>( processor->get_par() );
   if( !par ) return;
-  
+
 #ifdef GTKMM_2
   float value = color_button.get_color().get_red();
   par->get_R().set( value/65535 );

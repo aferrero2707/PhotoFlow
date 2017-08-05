@@ -46,8 +46,11 @@ VipsImage* PF::BufferPar::build(std::vector<VipsImage*>& in, int first,
   std::cout<<"BufferPar::build(): type="<<get_type()<<"  format="<<get_format()<<std::endl;
 #endif
 
-  g_object_ref( in[0] );
-  return in[0];
+  g_object_ref( in[0] ); return in[0];
+
+  set_image_hints( in[0] );
+  VipsImage* out = PF::OpParBase::build( in, first, NULL, NULL, level );
+  return out;
 }
 
 

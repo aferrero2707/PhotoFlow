@@ -45,6 +45,8 @@ namespace PF {
     Slider prop_nscales_slider;
     Slider prop_base_scale_slider;
     //Slider prop_detail_scale_slider;
+
+    CheckBox prop_output_residual_image_checkbox;
        
   public:
     SplitDetailsConfigGUI( Layer* l );
