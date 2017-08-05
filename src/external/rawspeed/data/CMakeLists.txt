@@ -7,4 +7,4 @@ if(USE_XMLLINT)
   check_xml(${CMAKE_CURRENT_SOURCE_DIR}/cameras.xml ${CMAKE_CURRENT_SOURCE_DIR}/cameras.xsd)
 endif(USE_XMLLINT)
 
-install(FILES cameras.xml showcameras.xsl DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/photoflow/rawspeed)
+install(FILES cameras.xml showcameras.xsl DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/rawspeed)

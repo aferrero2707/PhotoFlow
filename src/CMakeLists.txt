@@ -246,7 +246,7 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
 # so we do a custom dependency and pretend an imported librawsped.a so no other -l are
 # appended.
 #
-set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/share)
+set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/share/photoflow)
 #add_library(rawspeed_static STATIC IMPORTED)
 #set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
 # compile rawspeed
@@ -281,6 +281,7 @@ if(BUNDLED_EXIV2_)
   set(EXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib/libexiv2.a)
 endif(BUNDLED_EXIV2_)
 if(BUNDLED_EXIV2)
+  message( STATUS "Using bundled EXIV2 library" )
   set( EXIV2_ENABLE_SHARED OFF CACHE BOOL "Build exiv2 as a shared library (dll)" FORCE )
   set( EXIV2_ENABLE_BUILD_SAMPLES OFF CACHE BOOL "Build the unit tests" FORCE )
   set( EXIV2_ENABLE_CURL OFF CACHE BOOL "USE Libcurl for HttpIo" FORCE )
@@ -302,6 +303,7 @@ MESSAGE( STATUS "EXIV2_LIBRARIES: " ${EXIV2_LIBRARIES} )
 
 
 if(BUNDLED_LENSFUN)
+  message( STATUS "Using bundled LensFun library" )
   LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
   set(BUILD_STATIC "ON")
   add_library(lensfun_static STATIC IMPORTED)
