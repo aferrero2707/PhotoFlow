@@ -552,10 +552,6 @@ bool PF::RawImage::load_rawspeed()
     // Grab the WB
     for(int i = 0; i < 3; i++) pdata->color.cam_mul[i] = r->metadata.wbCoeffs[i];
     pdata->color.cam_mul[3] = pdata->color.cam_mul[1];
-//#ifndef NDEBUG
-    std::cout<<"RawSpeed camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]                                                                                                     <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
-    std::cout<<"RawSpeed black="<<pdata->color.black<<"  white="<<pdata->color.maximum<<std::endl;
-//#endif
 
     // dimensions of uncropped image
     rawspeed::iPoint2D dimUncropped = r->getUncroppedDim();
@@ -627,6 +623,10 @@ bool PF::RawImage::load_rawspeed()
         pdata->color.cblack[i] = pdata->color.black;
       }
     }
+    //#ifndef NDEBUG
+        std::cout<<"RawSpeed camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]                                                                                                     <<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
+        std::cout<<"RawSpeed black="<<pdata->color.black<<"  white="<<pdata->color.maximum<<std::endl;
+    //#endif
   }
 
   catch(const std::exception &exc)
@@ -763,7 +763,7 @@ bool PF::RawImage::load_rawspeed()
   exif_data.camera_makermodel[maker_len] = ' ';
   g_strlcpy(exif_data.camera_makermodel+maker_len+1, exif_data.camera_model, sizeof(exif_data.camera_makermodel)-maker_len-1);
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RawImage: Camera maker/model data:"<<std::endl
       <<"  exif_data.exif_maker: "<<exif_data.exif_maker<<std::endl
       <<"  exif_data.exif_model: "<<exif_data.exif_model<<std::endl
@@ -771,7 +771,7 @@ bool PF::RawImage::load_rawspeed()
       <<"  exif_data.camera_model: "<<exif_data.camera_model<<std::endl
       <<"  exif_data.camera_alias: "<<exif_data.camera_alias<<std::endl
       <<"  exif_data.camera_makermodel: "<<exif_data.camera_makermodel<<std::endl;
-#endif
+//#endif
 
 
   //float cam_xyz[12];

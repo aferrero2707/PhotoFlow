@@ -91,8 +91,8 @@ VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int firs
   in2.clear(); in2.push_back( in[0] );
   VipsImage* labimg = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
   if( !labimg ) {
-    std::cout<<"ImpulseNRPar::build(): null Lab image"<<std::endl;
-    PF_REF( in[0], "ImpulseNRPar::build(): null Lab image" );
+    std::cout<<"ShadowsHighlightsPar::build(): null Lab image"<<std::endl;
+    PF_REF( in[0], "ShadowsHighlightsPar::build(): null Lab image" );
     return in[0];
   }
   //std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  extended->Xsize="<<extended->Xsize<<std::endl;
@@ -109,7 +109,7 @@ VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int firs
       gausspar->set_format( get_format() );
       in2.clear(); in2.push_back( labimg );
       blurred = gausspar->build( in2, 0, NULL, NULL, level );
-      PF_UNREF( labimg, "ImageReaderPar::build(): extended unref after convert2lab" );
+      PF_UNREF( labimg, "ShadowsHighlightsPar::build(): extended unref after convert2lab" );
     }
     break;
   }
@@ -118,8 +118,8 @@ VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int firs
   }
 
   if( !blurred ) {
-    std::cout<<"ImpulseNRPar::build(): null Lab image"<<std::endl;
-    PF_REF( in[0], "ImpulseNRPar::build(): null Lab image" );
+    std::cout<<"ShadowsHighlightsPar::build(): null Lab image"<<std::endl;
+    PF_REF( in[0], "ShadowsHighlightsPar::build(): null Lab image" );
     return in[0];
   }
 
@@ -127,8 +127,8 @@ VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int firs
   in2.push_back(blurred);
   in2.push_back(labimg);
   VipsImage* shahi = OpParBase::build( in2, 0, imap, omap, level );
-  //PF_UNREF( labimg, "ImageArea::update() labimg unref" );
-  PF_UNREF( blurred, "ImageArea::update() blurred unref" );
+  //PF_UNREF( labimg, "ShadowsHighlightsPar::update() labimg unref" );
+  PF_UNREF( blurred, "ShadowsHighlightsPar::build() blurred unref" );
 
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2input->get_par() );
   //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
@@ -139,9 +139,11 @@ VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int firs
   convert2input->get_par()->set_image_hints( in[0] );
   convert2input->get_par()->set_format( get_format() );
   in2.clear(); in2.push_back( shahi );
-  std::cout<<"NonLocalmeansPar::build(): calling convert2input->get_par()->build()"<<std::endl;
+#ifndef NDEBUG
+  std::cout<<"ShadowsHighlightsPar::build(): calling convert2input->get_par()->build()"<<std::endl;
+#endif
   out = convert2input->get_par()->build(in2, 0, NULL, NULL, level );
-  PF_UNREF( shahi, "ImageArea::update() cropped unref" );
+  PF_UNREF( shahi, "ShadowsHighlightsPar::build() cropped unref" );
 
 
   set_image_hints( in[0] );

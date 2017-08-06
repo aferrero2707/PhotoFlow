@@ -1414,6 +1414,12 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
 #ifndef NDEBUG
       std::cout<<"  sending button press event to dialog"<<std::endl;
 #endif
+      //#ifndef NDEBUG
+      std::cout<<"PF::ImageEditor::on_button_press_event(): button "<<button->button<<" pressed."<<std::endl;
+      std::cout<<"PF::ImageEditor::on_button_press_event(): type "<<button->type<<std::endl;
+      if( button->type == GDK_BUTTON_PRESS ) std::cout<<"  single-click"<<std::endl;
+      if( button->type == GDK_2BUTTON_PRESS ) std::cout<<"  double-click"<<std::endl;
+      //#endif
       if( dialog->pointer_press_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
         // to refresh the preview
@@ -1455,6 +1461,15 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
 #ifndef NDEBUG
       std::cout<<"  sending button release event to dialog"<<std::endl;
 #endif
+      //#ifndef NDEBUG
+      std::cout<<"PF::ImageEditor::on_button_release_event(): button "<<button->button
+          <<" pressed, type="<<button->type<<", state="<<button->state<<std::endl;
+      if( button->type == GDK_BUTTON_PRESS ) std::cout<<"  single-click"<<std::endl;
+      if( button->type == GDK_2BUTTON_PRESS ) std::cout<<"  double-click"<<std::endl;
+      if( mod_key & PF::MOD_KEY_CTRL ) std::cout<<"  CTRL key pressed"<<std::endl;
+      if( mod_key & PF::MOD_KEY_ALT ) std::cout<<"  ALT key pressed"<<std::endl;
+      if( mod_key & PF::MOD_KEY_SHIFT ) std::cout<<"  SHIFT key pressed"<<std::endl;
+      //#endif
       //std::cout<<"dialog->pointer_release_event( "<<button->button<<", "<<x<<", "<<y<<", "<<mod_key<<" )"<<std::endl;
       if( dialog->pointer_release_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 

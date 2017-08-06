@@ -40,7 +40,7 @@ IF( EXIV2_ENABLE_XMP AND EXIV2_ENABLE_LIBXMP )
         TARGET_LINK_LIBRARIES(xmp Threads::Threads ${EXPAT_LIBRARIES})
     endif()
     # 1119  Install libxmp.a for use by third party applications (Thanks, Emmanuel)
-    INSTALL(TARGETS xmp ${INSTALL_TARGET_STANDARD_ARGS} )
+    #INSTALL(TARGETS xmp ${INSTALL_TARGET_STANDARD_ARGS} )
 ENDIF()
 
 # That's all Folks!

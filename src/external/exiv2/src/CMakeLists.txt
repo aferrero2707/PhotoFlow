@@ -308,7 +308,7 @@ IF (CYGWIN OR MINGW)
     TARGET_LINK_LIBRARIES( exiv2lib ${PRIVATE_VAR}  psapi ws2_32 )
 ENDIF(CYGWIN OR MINGW)
 
-INSTALL( TARGETS exiv2lib ${INSTALL_TARGET_STANDARD_ARGS} )
+#INSTALL( TARGETS exiv2lib ${INSTALL_TARGET_STANDARD_ARGS} )
 
 include(../CMake_msvc.txt)
 msvc_runtime_configure(${EXIV2_ENABLE_SHARED} ${EXIV2_ENABLE_DYNAMIC_RUNTIME})
@@ -336,11 +336,11 @@ msvc_runtime_configure(${EXIV2_ENABLE_SHARED} ${EXIV2_ENABLE_DYNAMIC_RUNTIME})
 
 # ******************************************************************************
 # Headers
-INSTALL( FILES ${LIBEXIV2_HDR} DESTINATION include/exiv2 )
+#INSTALL( FILES ${LIBEXIV2_HDR} DESTINATION include/exiv2 )
 
 # ******************************************************************************
 # Man page
-INSTALL( FILES exiv2.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 )
+#INSTALL( FILES exiv2.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 )
 
 # That's all Folks!
 ##
