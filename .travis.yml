@@ -104,8 +104,10 @@ matrix:
               #- wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
               #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
               - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-              - bash  ./upload_rotate.sh "continuous" out/*
-              - find /usr -name gconv
+              - 'if [ x"${TRAVIS_BRANCH}" = "stable" ]; then
+                  bash  ./upload_rotate.sh "continuous" out/*
+                fi'
+              #- find /usr -name gconv
         - os: linux
           dist: trusty
           compiler: g++
