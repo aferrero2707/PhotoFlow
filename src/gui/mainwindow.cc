@@ -229,6 +229,16 @@ buttonSavePreset()
     label->set_angle(90);
    */
 
+  if( set_icon_from_file( PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png" ) ) {
+    std::cout<<"Application window icon set from \""
+        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<"\""<<std::endl;
+  } else {
+    std::cout<<"Failed to set application window icon from \""
+        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<"\""<<std::endl;
+  }
+
 
   add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
 
