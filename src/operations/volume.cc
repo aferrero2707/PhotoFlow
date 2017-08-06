@@ -78,7 +78,6 @@ PF::VolumePar::VolumePar():
 VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
 				     VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
-  std::cout<<"VolumePar::build(): in[0]="<<in[0]<<std::endl;
   if( (in.size()<1) || (in[0]==NULL) )
     return NULL;
 
@@ -144,7 +143,9 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
   in2.push_back(in[0]);
   VipsImage* out = OpParBase::build( in2, 0, imap, omap, level );
 
+#ifndef NDEBUG
   std::cout<<"VolumePar::build(): out="<<out<<std::endl;
+#endif
   PF_UNREF( smoothed, "VolumePar::build(): smoothed unref" );
 
   return out;

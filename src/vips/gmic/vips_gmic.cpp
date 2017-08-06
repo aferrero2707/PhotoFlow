@@ -626,7 +626,9 @@ vips_gmic( VipsImage **in, VipsImage **out, int n,
 	va_list ap;
 	int result;
 
+#ifndef NDEBUG
 	printf("vips_gmic(): padding=%d\n", padding);
+#endif
 
 	array = vips_array_image_new( in, n ); 
 	va_start( ap, command );

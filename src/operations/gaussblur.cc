@@ -88,7 +88,9 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   //if( (get_render_mode() == PF_RENDER_PREVIEW) &&
   //    (blur_mode.get_enum_value().first == PF_BLUR_FAST) &&
   //    (radius2 > 5) ){
+#ifndef NDEBUG
   std::cout<<"GaussBlurPar::build(): do_fast_blur="<<do_fast_blur<<std::endl;
+#endif
   if( do_fast_blur ) {
     // Fast approximate gaussian blur method
     GaussBlurSiiPar* gpar = dynamic_cast<GaussBlurSiiPar*>( blur_sii->get_par() );
@@ -181,7 +183,9 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
         return NULL;
       }
       */
+#ifndef NDEBUG
       std::cout<<"GaussBlurPar::build(): convsep mask size="<<mask->Xsize<<" "<<mask->Ysize<<std::endl;
+#endif
       result = vips_convsep( srcimg, &tmp, mask,
 			     "precision", precision,
 			     NULL );

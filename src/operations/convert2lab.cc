@@ -67,7 +67,9 @@ VipsImage* PF::Convert2LabPar::build(std::vector<VipsImage*>& in, int first,
   
   if( in[0]->Type == VIPS_INTERPRETATION_LAB ) {
     PF_REF( in[0], "Convert2LabPar::build(): ref input Lab image" );
+#ifndef NDEBUG
     std::cout<<"Convert2LabPar::build(): input image already in Lab colorspace, no transform needed"<<std::endl;
+#endif
     return in[0];
   }
 
