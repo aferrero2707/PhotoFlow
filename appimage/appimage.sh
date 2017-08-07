@@ -83,32 +83,32 @@ cat > usr/bin/$LOWERAPP <<\EOF
 HERE="$(dirname "$(readlink -f "${0}")")"
 
 export PF_DATA_DIR=$HERE/../share
-echo "PF_DATA_DIR=${PF_DATA_DIR}"
+#echo "PF_DATA_DIR=${PF_DATA_DIR}"
 
 export LD_LIBRARY_PATH=$HERE/../lib:$HERE/../lib/x86_64-linux-gnu:$HERE/../../lib:$LD_LIBRARY_PATH
-echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+#echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
 export XDG_DATA_DIRS=$HERE/../share/:$HERE/../share/mime/:$XDG_DATA_DIRS
-echo "XDG_DATA_DIRS=$XDG_DATA_DIRS"
+#echo "XDG_DATA_DIRS=$XDG_DATA_DIRS"
 
 export GTK_PATH=$HERE/../lib/gtk-2.0:$GTK_PATH
-echo "GTK_PATH=${GTK_PATH}"
+#echo "GTK_PATH=${GTK_PATH}"
 
 export PANGO_LIBDIR=$HERE/../lib
-echo "PANGO_LIBDIR=${PANGO_LIBDIR}"
+#echo "PANGO_LIBDIR=${PANGO_LIBDIR}"
 
 export GCONV_PATH=$HERE/../lib/gconv
-echo "GCONV_PATH=${GCONV_PATH}"
+#echo "GCONV_PATH=${GCONV_PATH}"
 
 GDK_PIXBUF_MODULEDIR=$HERE/../lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 GDK_PIXBUF_MODULE_FILE=$HERE/../lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders.cache
-echo "GDK_PIXBUF_MODULEDIR: $GDK_PIXBUF_MODULEDIR"
-echo "GDK_PIXBUF_MODULE_FILE: $GDK_PIXBUF_MODULE_FILE"
-cat $GDK_PIXBUF_MODULE_FILE
+#echo "GDK_PIXBUF_MODULEDIR: $GDK_PIXBUF_MODULEDIR"
+#echo "GDK_PIXBUF_MODULE_FILE: $GDK_PIXBUF_MODULE_FILE"
+#cat $GDK_PIXBUF_MODULE_FILE
 
-ldd "$HERE/LOWERAPP.real"
-echo -n "$HERE/LOWERAPP.real "
-echo "$@"
+#ldd "$HERE/LOWERAPP.real"
+#echo -n "$HERE/LOWERAPP.real "
+#echo "$@"
 $HERE/LOWERAPP.real "$@"
 #gdb -ex "run" $HERE/LOWERAPP.real
 EOF
