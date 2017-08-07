@@ -105,6 +105,11 @@ typedef unsigned long long UINT64;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 
+static unsigned int abs(unsigned int v)
+{
+  return( (unsigned int)std::abs( (long int)v ) );
+}
+
 #include "dcraw.h"
 /*
    RT All global variables are defined here, and all functions that
