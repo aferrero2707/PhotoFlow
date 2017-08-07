@@ -65,7 +65,7 @@ SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parame
 #link_directories("/this/is/a/test/path")
 
 include_directories(${EXPAT_INCLUDE_DIRS})
-include_directories(${ICONV_INCLUDE_DIRS})
+#include_directories(${ICONV_INCLUDE_DIRS})
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -432,7 +432,7 @@ target_link_libraries(photoflow ${LIBS}
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${EXPAT_LIBRARIES}
-  ${ICONV_LIBRARIES}
+  #${ICONV_LIBRARIES}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
