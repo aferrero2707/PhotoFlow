@@ -142,7 +142,9 @@ void PF::ICCProfile::set_profile( cmsHPROFILE p )
 
   char tstr[1024];
   cmsGetProfileInfoASCII(profile, cmsInfoDescription, "en", "US", tstr, 1024);
+#ifndef NDEBUG
   std::cout<<"ICCProfile::set_profile(): data="<<profile_data<<" size="<<profile_size<<"  name="<<tstr<<std::endl;
+#endif
 
   init_colorants();
   init_trc();
@@ -179,6 +181,7 @@ void PF::ICCProfile::init_colorants()
   colorants[7]=blue_colorant.Y;
   colorants[8]=blue_colorant.Z;
 
+#ifndef NDEBUG
   //for( int i = 0; i < 9; i++ ) std::cout<<"colorants["<<i<<"]="<<colorants[i]<<std::endl;
   std::cout<<"colorants:"<<std::endl;
   for( int i = 0; i < 3; i++ ) std::cout<<colorants[i]<<" ";
@@ -197,6 +200,7 @@ void PF::ICCProfile::init_colorants()
   for( int i = 0; i < 3; i++ ) std::cout<<colorants[i*3+2]<<" ";
   std::cout<<std::endl;
   //getchar();
+#endif
 
   Y_R = colorants[1];
   Y_G = colorants[4];
@@ -205,12 +209,14 @@ void PF::ICCProfile::init_colorants()
   has_colorants = true;
 
   cmsCIEXYZ *chad            = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigChromaticAdaptationTag);
+#ifndef NDEBUG
   std::cout<<"chad tag: "<<chad<<std::endl;
   if( chad ) {
     for( int i = 0; i < 3; i++ ) {
       std::cout<<chad[i].X<<" "<<chad[i].Y<<" "<<chad[i].Z<<std::endl;
     }
   }
+#endif
 
 /*
   std::string xyzprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/XYZ-D50-Identity-elle-V4.icc";
