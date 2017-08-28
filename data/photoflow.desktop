@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=PhotoFlow
-_GenericName=RAW and bitmap photo editing
-_Comment=Edit images from digital cameras
+GenericName=RAW and bitmap photo editing
+Comment=Edit images from digital cameras
 
 X-GNOME-FullName=PhotoFlow Photo Editing Software
 
@@ -10,7 +10,7 @@ Version=1.0
 Type=Application
 Categories=Graphics;Photography;GTK;
 # TRANSLATORS: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
-_Keywords=graphics;photography;raw;
+Keywords=graphics;photography;raw;
 
 Exec=photoflow %U
 TryExec=photoflow
