@@ -831,11 +831,14 @@ bool PF::Image::open( std::string filename, std::string bckname )
   } else if( ext == "pfi" ) {
 
     loaded = false;
-    PF::load_pf_image( filename, this );
-    //PF::PhotoFlow::Instance().set_image( pf_image );
-    //layersWidget.set_image( pf_image );
-    //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
-    file_name = filename;
+    if( PF::load_pf_image( filename, this ) ) {
+      //PF::PhotoFlow::Instance().set_image( pf_image );
+      //layersWidget.set_image( pf_image );
+      //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
+      file_name = filename;
+    } else {
+      return false;
+    }
 
   } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" || ext=="exr" || ext=="fits" || ext=="fts" || ext=="fit" ) {
 
@@ -933,7 +936,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
 }
 
 
-bool PF::Image::save( std::string filename )
+bool PF::Image::save( std::string filename, bool do_clear )
 {
   std::string ext;
   if( getFileExtension( "/", filename, ext ) &&
@@ -946,7 +949,7 @@ bool PF::Image::save( std::string filename )
     layer_manager.save( of );
     of<<"</image>"<<std::endl;
     file_name = filename;
-    clear_modified();
+    if(do_clear) clear_modified();
     return true;
   } else {
     return false;
@@ -1062,6 +1065,9 @@ void PF::Image::do_export_merged( std::string filename )
         vips_jpegsave( outimg, filename.c_str(), "Q", 75, NULL );
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
+        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 ) {
+          save(filename+".pfi", false);
+        }
         saved = true;
       }
     }
@@ -1087,6 +1093,9 @@ void PF::Image::do_export_merged( std::string filename )
         std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
 #endif
         //vips_image_write_to_file( outimg, filename.c_str(), NULL );
+        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 ) {
+          save(filename+".pfi", false);
+        }
         saved = true;
       }
     }
@@ -1115,6 +1124,19 @@ void PF::Image::do_export_merged( std::string filename )
               Exiv2::byte *iccdata2 = (Exiv2::byte *)iccdata;
               Exiv2::DataBuf iccbuf(iccdata2, iccdata_length);
               exiv2_image->setIccProfile( iccbuf, true );
+
+              /*
+              Exiv2::ExifKey            key("Exif.Image.InterColorProfile");
+              Exiv2::ExifData::iterator pos   = exiv2_image->exifData().findKey(key);
+              bool                      found = pos != exiv2_image->exifData().end();
+              if ( iccdata ) {
+                  Exiv2::DataValue value(iccdata2,iccdata_length);
+                  if ( found ) pos->setValue(&value);
+                  else     exiv2_image->exifData().add(key,&value);
+              } else {
+                  if ( found ) exiv2_image->exifData().erase(pos);
+              }
+              */
             }
             exiv2_image->writeMetadata();
           }

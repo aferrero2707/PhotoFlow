@@ -441,7 +441,7 @@ static GMarkupParser parser = {
 
 
 
-void PF::load_pf_image( std::string filename, PF::Image* img ) {
+bool PF::load_pf_image( std::string filename, PF::Image* img ) {
   char *text;
   gsize length;
   GMarkupParseContext *context = g_markup_parse_context_new (&parser,
@@ -464,24 +464,26 @@ void PF::load_pf_image( std::string filename, PF::Image* img ) {
 
   if (g_file_get_contents (filename.c_str(), &text, &length, NULL) == FALSE) {
     printf("Couldn't load XML\n");
-    exit(255);
+    return false;
   }
 
   char* fname = strdup(filename.c_str());
   char* dname = dirname( fname );
   if( dname ) {
-    if( chdir( dname ) != 0 )
-      std::cout<<"Cannot change current directory to \""<<dname<<"\""<<std::endl;
+    PF::PhotoFlow::Instance().set_current_image_dir(dname);
+//    if( chdir( dname ) != 0 )
+//      std::cout<<"Cannot change current directory to \""<<dname<<"\""<<std::endl;
   }
   free( fname );
 
   if (g_markup_parse_context_parse (context, text, length, NULL) == FALSE) {
     printf("Parse failed\n");
-    exit(255);
+    return false;
   }
 
   g_free(text);
   g_markup_parse_context_free (context);
+  return true;
 }
 
 
