@@ -1,11 +1,11 @@
 IF(MINGW)
-  SET(GMIC_FLAGS "-mwindows -std=gnu++11 -march=nocona -mno-sse3 -mtune=generic -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+  SET(GMIC_FLAGS "-std=gnu++11 -march=nocona -mno-sse3 -mtune=generic -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
    #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -stdlib=libc++ -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
    #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
-  SET(GMIC_FLAGS "-std=gnu++11 -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+  SET(GMIC_FLAGS "-std=gnu++11 -march=nocona -mno-sse3 -mtune=generic -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
 
 set(COMPILE_FLAGS " ${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
@@ -65,7 +65,9 @@ SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parame
 #link_directories("/this/is/a/test/path")
 
 include_directories(${EXPAT_INCLUDE_DIRS})
-include_directories(${ICONV_INCLUDE_DIRS})
+IF(NOT MINGW)
+  include_directories(${ICONV_INCLUDE_DIRS})
+ENDIF(NOT MINGW)
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -174,8 +176,8 @@ endif (AUTOMATED_VERSION_CHECK)
 
 
 
-FILE(GLOB DTIncludes dt/common/*.h dt/develop/*.h)
-FILE(GLOB DTSources dt/common/*.c dt/develop/masks/*.c)
+FILE(GLOB DTIncludes external/darktable/src/common/*.h external/darktable/src/develop/*.h)
+FILE(GLOB DTSources external/darktable/src/common/*.c external/darktable/src/develop/masks/*.c)
 
 add_library (pfdt STATIC
   ${DTIncludes}
@@ -248,13 +250,26 @@ FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc legacy/operations/*.cc)
 # so we do a custom dependency and pretend an imported librawsped.a so no other -l are
 # appended.
 #
-set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/share)
+set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_INSTALL_PREFIX}/share/photoflow)
 #add_library(rawspeed_static STATIC IMPORTED)
 #set_target_properties(rawspeed_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/librawspeed.a)
 # compile rawspeed
+SET(BINARY_PACKAGE_BUILD ON CACHE BOOL "Sets march optimization to generic" FORCE)
+SET(BUILD_TESTING OFF CACHE BOOL "Build the testing tree." FORCE)
+SET(BUILD_TOOLS OFF CACHE BOOL "Build some tools (identify, rstest)." FORCE)
+SET(BUILD_BENCHMARKING OFF CACHE BOOL "Build some benchmarks." FORCE)
+SET(BUILD_DOCS OFF CACHE BOOL "Build the documentation (mainly, using Doxygen)." FORCE)
+SET(BUILD_FUZZERS OFF CACHE BOOL "Build the fuzzing tree." FORCE)
+SET(USE_XMLLINT OFF CACHE BOOL "" FORCE)
+message( "BEFORE add_subdirectory(external/rawspeed)" )
 add_subdirectory(external/rawspeed)
+message( "AFTER add_subdirectory(external/rawspeed)" )
 list(APPEND LIB_DEPS rawspeed)
 list(APPEND STATIC_LIBS rawspeed_static)
+include_directories( ${CMAKE_SOURCE_DIR}/src/external/rawspeed/src/librawspeed  )  
+include_directories( ${CMAKE_SOURCE_DIR}/src/external/rawspeed/src/external  )  
+message( "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR} )
+include_directories( ${CMAKE_CURRENT_BINARY_DIR}/external/rawspeed/src  )  
 
 
 if(BUNDLED_EXIV2_)
@@ -270,6 +285,7 @@ if(BUNDLED_EXIV2_)
   set(EXIV2_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/exiv2-install/lib/libexiv2.a)
 endif(BUNDLED_EXIV2_)
 if(BUNDLED_EXIV2)
+  message( STATUS "Using bundled EXIV2 library" )
   set( EXIV2_ENABLE_SHARED OFF CACHE BOOL "Build exiv2 as a shared library (dll)" FORCE )
   set( EXIV2_ENABLE_BUILD_SAMPLES OFF CACHE BOOL "Build the unit tests" FORCE )
   set( EXIV2_ENABLE_CURL OFF CACHE BOOL "USE Libcurl for HttpIo" FORCE )
@@ -291,6 +307,7 @@ MESSAGE( STATUS "EXIV2_LIBRARIES: " ${EXIV2_LIBRARIES} )
 
 
 if(BUNDLED_LENSFUN)
+  message( STATUS "Using bundled LensFun library" )
   LIST(APPEND CMAKE_MODULE_PATH " ${CMAKE_SOURCE_DIR}/src/external/lensfun/cmake/modules ")
   set(BUILD_STATIC "ON")
   add_library(lensfun_static STATIC IMPORTED)
@@ -381,7 +398,11 @@ add_library (pfgui STATIC
 
 
 IF(MINGW)
-  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  IF(HAVE_REGEX_H)
+    list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
+  ELSE(HAVE_REGEX_H)
+    list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  ENDIF(MHAVE_REGEX_HINGW)
   #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
 ELSEIF(APPLE)
   list(APPEND ADDITIONAL_LIBS)
@@ -405,20 +426,21 @@ IF(APPLE)
 ENDIF(APPLE)
 
 target_link_libraries(photoflow ${LIBS} 
+  fftw3
   pfgui
-  pfbase
-  pfgmic 
+  pfbase 
+  pfgmic
   pfdt
+  ${STATIC_LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
-  ${EXIV2_LIBRARIES}
   ${EXPAT_LIBRARIES}
   ${ICONV_LIBRARIES}
-  ${STATIC_LIBS}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
   #${GEXIV2_LIBRARIES}
   ${LENSFUN_LIBRARIES}
   ${SIGC2_LIBRARIES}
