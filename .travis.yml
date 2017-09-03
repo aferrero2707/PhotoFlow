@@ -1,12 +1,16 @@
 language: generic
 
+#env:
 matrix:
+    allow_failures:
+        - env: TARGET_SYSTEM=Windows
     include:
         - os: linux
           dist: trusty
           compiler: g++
           sudo: required
           dist: trusty
+          env: TARGET_SYSTEM=Linux
           addons:
             apt:
               sources:
@@ -72,14 +76,16 @@ matrix:
               - tar xzvf vips-8.5.6.tar.gz
               - cd vips-8.5.6
               - ./autogen.sh
-              - FLAGS="-g -O2 -msse4.2 -ffast-math -ftree-vectorize" CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS} -fpermissive" ./configure --prefix=/app --disable-gtk-doc --disable-gtk-doc-html --disable-introspection --enable-debug=no --without-python --without-magick --without-libwebp --enable-pyvips8=no --enable-shared=yes --enable-static=no
+              - FLAGS="-g -O2 -march=nocona -mno-sse3 -mtune=generic -ftree-vectorize" CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS} -fpermissive" ./configure --prefix=/app --disable-gtk-doc --disable-gtk-doc-html --disable-introspection --enable-debug=no --without-python --without-magick --without-libwebp --enable-pyvips8=no --enable-shared=yes --enable-static=no
               - make -j2
               - sudo make install
               - cd ..
               - rm -rf libvips
               - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DINSTALL_PREFIX=/app -DBUNDLED_LENSFUN=ON ..
-              - echo "#include <version.hh>" > ../src/version.cc
-              - echo "const char* PF::version_string = \"PhotoFlow git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}\";" >> ../src/version.cc
+              - 'if [ x"${TRAVIS_BRANCH}" != "xmaster" ]; then
+                  echo "#include <version.hh>" > ../src/version.cc || travis_terminate 1;
+                  echo "const char* PF::version_string = \"PhotoFlow git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}\";" >> ../src/version.cc || travis_terminate 1;
+                fi'
               - make -j2
               - sudo make install
               - cd ..
@@ -98,13 +104,19 @@ matrix:
               #- wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
               #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
               - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-              - bash  ./upload_rotate.sh "unstable" out/*
-              - find /usr -name gconv
+              - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                  bash  ./upload_rotate.sh "continuous" out/*
+                fi'
+              - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                  bash  ./upload_rotate.sh "unstable" out/*
+                fi'
+              #- find /usr -name gconv
         - os: linux
           dist: trusty
           compiler: g++
           sudo: required
           dist: trusty
+          env: TARGET_SYSTEM=Windows
           before_script:
             - cd non_existent_dir
             - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
@@ -115,10 +127,14 @@ matrix:
             - sudo ln -s /usr/bin/i686-w64-mingw32-g++-5 /usr/bin/i686-w64-mingw32-g++
             - ls -l /usr/bin/i686-w64-mingw32*
             - cd build
-            - wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
-            - tar xzvf crossroad-0.6.tar.gz
-            - find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
-            - cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+            #- wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
+            #- tar xzvf crossroad-0.6.tar.gz
+            #- find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
+            #- cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+            - wget https://pypi.python.org/packages/c4/3e/f6a66a52cdd3340a9ae5a581fbc7ccffdfabe307e50282794bd7d93e5420/crossroad-0.7.tar.gz
+            - tar xzvf crossroad-0.7.tar.gz
+            #- find crossroad-0.7 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
+            - cd crossroad-0.7 && ./setup.py install --prefix=$HOME/inst && cd ..
             - cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
             - echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
             - echo "SET(PKG_CONFIG_EXECUTABLE i686-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
@@ -129,12 +145,18 @@ matrix:
             - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/package-w32.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh "unstable" photoflow*.zip
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" photoflow*.zip
+              fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                bash  ./upload_rotate.sh "unstable" photoflow*.zip
+              fi'
         - os: linux
           dist: trusty
           compiler: g++
           sudo: required
           dist: trusty
+          env: TARGET_SYSTEM=Windows
           before_script:
             #- cd non_existent_dir
             - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
@@ -145,24 +167,41 @@ matrix:
             - sudo ln -s /usr/bin/x86_64-w64-mingw32-g++-5 /usr/bin/x86_64-w64-mingw32-g++
             - ls -l /usr/bin/x86_64-w64-mingw32*
             - cd build
-            - wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
-            - tar xzvf crossroad-0.6.tar.gz
-            - find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
-            - cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+            #- wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
+            #- tar xzvf crossroad-0.6.tar.gz
+            #- find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
+            #- cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
+            - wget https://pypi.python.org/packages/c4/3e/f6a66a52cdd3340a9ae5a581fbc7ccffdfabe307e50282794bd7d93e5420/crossroad-0.7.tar.gz
+            - tar xzvf crossroad-0.7.tar.gz
+            #- find crossroad-0.7 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
+            - cd crossroad-0.7 && ./setup.py install --prefix=$HOME/inst && cd ..
             - cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
-            - echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
-            - echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
+            #- echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
+            # - echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
             - $HOME/inst/bin/crossroad --help w64
-            - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-install.sh
-            - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
-            - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
-            - $HOME/inst/bin/crossroad w64 phf-build --run ../windows/package-w64.sh
+            #- $HOME/inst/bin/crossroad w64 phf-build
+            - pwd
+            - cat ../windows/test_cmd.sh
+            - ../windows/test_cmd.sh w64
+            - ../windows/dep-install.sh w64
+            - ../windows/dep-build.sh w64
+            - ../windows/phf-build.sh w64
+            #- $HOME/inst/bin/crossroad w64 phf-build --run $(pwd)/../windows/dep-install.sh
+            #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
+            #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
+            - ../windows/package-w64.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh "unstable" photoflow*.zip
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" photoflow*.zip
+              fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                bash  ./upload_rotate.sh "unstable" photoflow*.zip
+              fi'
 
 
 branches:
   except:
     - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous)$/
     - /^(?i:unstable)$/
