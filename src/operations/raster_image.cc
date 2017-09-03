@@ -29,10 +29,11 @@
 #include <assert.h>
 #include <string.h>
 
+#include "rawspeed/src/librawspeed/RawSpeed-API.h"
+
 #include "../base/pf_mkstemp.hh"
 #include "raster_image.hh"
 
-#include "rawspeed/RawSpeed/RawSpeed-API.h"
 
 
 PF::RasterImage::RasterImage( const std::string f ):
@@ -46,18 +47,26 @@ image( NULL )
   if( ifd < 0 ) {
     char* fullpath = strdup( file_name_real.c_str() );
     gchar* fname = g_path_get_basename( fullpath );
-    ifd = open( fname, O_RDONLY );
+    gchar* fname2 = g_build_filename( PF::PhotoFlow::Instance().get_current_image_dir().c_str(),
+        fname, NULL );
+    std::cout<<"RasterImage::RasterImage(): file \""<<file_name_real<<"\" not found"<<std::endl;
+    std::cout<<"                      trying with \""<<fname2<<"\""<<std::endl;
+    ifd = open( fname2, O_RDONLY );
     if( ifd < 0 ) {
       std::cout<<"RasterImage::RasterImage(): \""<<file_name<<"\" not found"<<std::endl;
       return;
     } else {
       close(ifd);
     }
-    file_name_real = fname;
+    file_name_real = fname2;
     g_free( fname );
+    g_free( fname2 );
   } else {
     close(ifd);
   }
+//#ifndef NDEBUG
+  std::cout<<"RasterImage::RasterImage(): opening file \""<<file_name_real<<"\""<<std::endl;
+//#endif
 
   // Create VipsImage from given file
 #if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
@@ -70,11 +79,11 @@ image( NULL )
     return;
   }
 
-  //#ifndef NDEBUG
-    std::cout<<"RasterImage::RasterImage(): # of bands="<<image->Bands<<std::endl;
-    std::cout<<"RasterImage::RasterImage(): type="<<image->Type<<std::endl;
+#ifndef NDEBUG
+  std::cout<<"RasterImage::RasterImage(): # of bands="<<image->Bands<<std::endl;
+  std::cout<<"RasterImage::RasterImage(): type="<<image->Type<<std::endl;
     std::cout<<"RasterImage::RasterImage(): colorspace="<<convert_colorspace(image->Type)<<std::endl;
-  //#endif
+#endif
 
 /*
   std::cout<<"RasterImage::RasterImage(): saving test buffer (image="<<image<<")..."<<std::endl;
@@ -105,18 +114,18 @@ image( NULL )
     out_nbands = 4;
   }
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"RasterImage::RasterImage(): out_nbands="<<out_nbands<<std::endl;
-//#endif
+#endif
   if( out_nbands > 0 ) {
     VipsImage* out;
     if( vips_extract_band( image, &out, 0, "n", out_nbands, NULL ) ) {
       std::cout<<"RasterImage::RasterImage(): vips_extract_band() failed"<<std::endl;
       return;
     }
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"RasterImage::RasterImage(): # of output bands="<<out->Bands<<std::endl;
-//#endif
+#endif
 
     PF_UNREF( image, "RasterImage::RasterImage(): image unref" );
     vips_image_init_fields( out,
@@ -127,9 +136,9 @@ image( NULL )
         1.0, 1.0);
     image = out;
   }
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"RasterImage::RasterImage(): # of output bands="<<image->Bands<<std::endl;
-//#endif
+#endif
 
   // We make a copy of the original image to make sure that custom metadata is not deleted
   VipsImage* image_copy;
@@ -374,13 +383,13 @@ image( NULL )
   std::string camfile = PF::PhotoFlow::Instance().get_data_dir() + "/rawspeed/cameras.xml";
 #endif
   std::cout<<"RawImage::RawImage(): RAWSpeed camera file: "<<camfile<<std::endl;
-  RawSpeed::CameraMetaData *meta;
-  meta = new RawSpeed::CameraMetaData( camfile.c_str() );
+  rawspeed::CameraMetaData *meta;
+  meta = new rawspeed::CameraMetaData( camfile.c_str() );
 
   if( meta ) {
-    std::map<std::string,RawSpeed::Camera*>::iterator iter;
+    std::map< rawspeed::CameraId, std::unique_ptr<rawspeed::Camera> >::iterator iter;
     for( iter = meta->cameras.begin(); iter != meta->cameras.end(); iter++ ) {
-      RawSpeed::Camera* camera = iter->second;
+      rawspeed::Camera* camera = iter->second.get();
       if( camera && camera->make == std::string(exif_data.exif_maker) && camera->model == std::string(exif_data.exif_model) ) {
         g_strlcpy(exif_data.camera_maker, camera->canonical_make.c_str(), sizeof(exif_data.camera_maker));
         g_strlcpy(exif_data.camera_model, camera->canonical_model.c_str(), sizeof(exif_data.camera_model));
@@ -430,7 +439,6 @@ image( NULL )
   }
 #endif
 
-  std::cout<<"RasterImage::RasterImage(): calling pyramid.init( "<<image<<" )"<<std::endl;
   pyramid.init( image );
 }
 

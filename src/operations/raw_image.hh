@@ -56,7 +56,7 @@ typedef libraw_data_t dcraw_data_t;
 #endif
 
 #ifdef PF_USE_RAWSPEED
-#include "rawspeed/RawSpeed/RawSpeed-API.h"
+#include "rawspeed/src/librawspeed/RawSpeed-API.h"
 
 struct dcraw_iparams_t
 {
@@ -130,7 +130,7 @@ dcraw_data_t* get_raw_data( VipsImage* image );
 	  ImageMatrices imatrices;
 
 #ifdef PF_USE_RAWSPEED
-		RawSpeed::CameraMetaData *meta;
+		rawspeed::CameraMetaData *meta;
 #endif
 
 		// VipsImages storing the raw data, one band for the pixel values and a nother for the colors
@@ -174,10 +174,16 @@ dcraw_data_t* get_raw_data( VipsImage* image );
 
     std::string get_file_name() { return file_name_real; }
 
+    unsigned int BL(const int row, const int col)
+    {
+      return ((((row+dcraw_data.sizes.top_margin) & 1) << 1) + ((col+dcraw_data.sizes.left_margin) & 1));
+    }
+
     unsigned FC (unsigned row, unsigned col) const
     {
-      return( dcraw_data.idata.filters >> ((((row+dcraw_data.sizes.top_margin) << 1 & 14) +
-          ((col+dcraw_data.sizes.left_margin) & 1)) << 1) & 3 );
+      //return( dcraw_data.idata.filters >> ((((row+dcraw_data.sizes.top_margin) << 1 & 14) +
+      //    ((col+dcraw_data.sizes.left_margin) & 1)) << 1) & 3 );
+      return( dcraw_data.idata.filters >> ((((row) << 1 & 14) + ((col) & 1)) << 1) & 3 );
     }
 
     unsigned FC_xtrans (unsigned row, unsigned col) const
