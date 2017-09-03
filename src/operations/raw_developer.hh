@@ -40,6 +40,7 @@
 
 #include "raw_image.hh"
 #include "raw_preprocessor.hh"
+#include "lensfun.hh"
 
 namespace PF 
 {
