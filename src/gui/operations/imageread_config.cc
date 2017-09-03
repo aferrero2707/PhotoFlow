@@ -31,8 +31,9 @@
 
 
 PF::ImageReadConfigGUI::ImageReadConfigGUI( PF::Layer* layer ):
-OperationConfigGUI( layer, "Open an image" ),
-openButton(Gtk::Stock::OPEN),
+  OperationConfigGUI( layer, "Open an image" ),
+  img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-folder-open.png" ),
+  openButton(/*Gtk::Stock::OPEN*/),
 inProfileModeSelector( this, "in_profile_mode", "type: ", 1 ),
 inProfileTypeSelector( this, "in_profile_type", "gamut: ", 1 ),
 inTRCModeSelector( this, "in_trc_type", _("encoding: "), 1 ),
@@ -44,13 +45,13 @@ outProfOpenButton(Gtk::Stock::OPEN),
 inProfFrame( _("input profile") ),
 outProfFrame( _("working profile") )
 {
-  label.set_text( "file name:" );
-  fileEntry.set_width_chars(15);
+  label.set_text( _("file name:") );
+  openButton.set_image( img_open );
+  fileEntry.set_width_chars(20);
 
-  controlsBox.pack_start( label );
-  controlsBox.pack_start( fileEntry );
-  controlsBox.pack_start( openButton );
-  //controlsBox.set_size_request(200,-1);
+  controlsBox.pack_start( label, Gtk::PACK_SHRINK, 0 );
+  controlsBox.pack_start( fileEntry, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( openButton, Gtk::PACK_SHRINK, 0 );
   
   outputControlsBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
   spacing1.set_size_request(0,20);
@@ -101,9 +102,9 @@ outProfFrame( _("working profile") )
 
   fileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
-        &ImageReadConfigGUI::on_filename_changed));
+			  &ImageReadConfigGUI::on_filename_changed));
   openButton.signal_clicked().connect(sigc::mem_fun(*this,
-                &ImageReadConfigGUI::on_button_open_clicked) );
+						    &ImageReadConfigGUI::on_button_open_clicked) );
 
   inProfFileEntry.signal_activate().
     connect(sigc::mem_fun(*this,
@@ -345,7 +346,7 @@ void PF::ImageReadConfigGUI::on_out_button_open_clicked()
 void PF::ImageReadConfigGUI::on_button_open_clicked()
 {
   Gtk::FileChooserDialog dialog("Please choose a file",
-        Gtk::FILE_CHOOSER_ACTION_OPEN);
+				Gtk::FILE_CHOOSER_ACTION_OPEN);
   //dialog.set_transient_for(*this);
   
   //Add response buttons the the dialog:
