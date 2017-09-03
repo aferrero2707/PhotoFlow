@@ -131,10 +131,10 @@ render(VipsRegion** ir, int n, int in_first,
   T* pout;
   int x, y, c, pos;
 
-  int width = oreg->im->Xsize - oreg->im->Xoffset;
-  int height = oreg->im->Ysize - oreg->im->Yoffset;
+  int width = oreg->im->Xsize;// - oreg->im->Xoffset;
+  int height = oreg->im->Ysize;// - oreg->im->Yoffset;
 
-  //std::cout<<"Gradient::render: height="<<height<<std::endl;
+  //std::cout<<"Gradient::render: height="<<height<<"  offset="<<oreg->im->Yoffset<<std::endl;
 
   switch( par->get_gradient_type() ) {
   case GRADIENT_VERTICAL:

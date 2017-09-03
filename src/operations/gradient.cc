@@ -121,7 +121,6 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
         modvec[i] = vmod.get().get_value( x );
       if( get_gradient_type() == GRADIENT_HORIZONTAL )
         modvec[i] = 1.0f-hmod.get().get_value( x );
-
     }
     //modulation.get().unlock();
   }
