@@ -546,5 +546,6 @@ PF::Sampler& PF::SamplerGroup::get_sampler(int i)
   case 5: return s6;
   case 6: return s7;
   case 7: return s8;
+  default: return s1;
   }
 }

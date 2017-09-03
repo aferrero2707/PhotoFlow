@@ -40,7 +40,7 @@
 #include "../gui/settingsdialog.hh"
 #include "pluginwindow.hh"
 
-
+/*
 typedef struct {
   PF::ImageEditor* editor;
 } EditorDestroyData;
@@ -56,7 +56,7 @@ static gboolean editor_destroy_cb (EditorDestroyData * data)
   }
   return false;
 }
-
+*/
 
 PF::PluginWindow::PluginWindow():
 #ifdef GTKMM_2
@@ -141,7 +141,7 @@ PF::PluginWindow::~PluginWindow()
 }
 
 
-
+/*
 void PF::PluginWindow::close_editor()
 {
   //#ifndef NDEBUG
@@ -165,7 +165,7 @@ void PF::PluginWindow::close_editor()
   std::cout<<"MainWindow::remove_tab(): submitting idle callback for image editor deletetion"<<std::endl;
   g_idle_add ((GSourceFunc) editor_destroy_cb, update);
 }
-
+*/
 
 
 

@@ -91,7 +91,7 @@ public:
   void set_filename_out(Glib::ustring f) { filename_out = f; }
   void set_pfiname_out(Glib::ustring f) { pfiname_out = f; }
 
-  void close_editor();
+  //void close_editor();
 
   void on_button_export_clicked();
 

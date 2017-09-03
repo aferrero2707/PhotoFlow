@@ -180,7 +180,7 @@ VipsImage* PF::CurvesPar::build(std::vector<VipsImage*>& in, int first,
     for(int i = 0; i <= FormatInfo<unsigned char>::RANGE; i++) {
       for(int j = 0; j < 3; j++) RGBvec8[j][i] += RGBvec8[3][i];
     }
-    for(int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
+    for(unsigned int i = 0; i <= FormatInfo<unsigned short int>::RANGE; i++) {
       for(int j = 0; j < 3; j++) {
         RGBvec16[j][i] += RGBvec16[3][i];
         //if(i%1000 == 0) std::cout<<"i="<<i<<"  RGBvec16["<<j<<"][i]="<<RGBvec16[j][i]<<std::endl;
