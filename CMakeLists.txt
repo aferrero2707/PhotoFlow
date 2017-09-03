@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.9)
 project(photoflow CXX C)
 
 # options controlling the build process
-option(BUNDLED_EXIV2 "Use bundled Exiv2 library" ON)
+option(BUNDLED_EXIV2 "Use bundled Exiv2 library" OFF)
 IF(MINGW)
   option(BUNDLED_LENSFUN "Use bundled LensFun library" ON)
   option(USE_NLS "Build Native Language Support (using gettext)" ON)
@@ -16,7 +16,12 @@ ELSE(MINGW)
   option(USE_NLS "Build Native Language Support (using gettext)" ON)
 ENDIF(MINGW)
 option(BABL_FLIPS_DISABLED "BABL flips disabled" OFF)
-option(BUILD_PLUGIN "Build GIMP plug-in" OFF)
+
+if(NOT INSTALL_PREFIX)
+	set(INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+	MESSAGE( STATUS "Setting INSTALL_PREFIX from CMAKE_INSTALL_PREFIX" )
+endif(NOT INSTALL_PREFIX)
+MESSAGE( STATUS "INSTALL_PREFIX:         " ${INSTALL_PREFIX} )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
 #set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
@@ -30,12 +35,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE True)
 
 find_package(PkgConfig)
 
-find_package (EXPAT REQUIRED)
+find_package (EXPAT)
 MESSAGE( STATUS "EXPAT_INCLUDE_DIRS:         " ${EXPAT_INCLUDE_DIRS} )
 MESSAGE( STATUS "EXPAT_LIBRARIES:            " ${EXPAT_LIBRARIES} )
-find_package (Iconv REQUIRED)
-MESSAGE( STATUS "ICONV_INCLUDE_DIRS:         " ${Iconv_INCLUDE_DIRS} )
-MESSAGE( STATUS "ICONV_LIBRARIES:            " ${ICONV_LIBRARIES} )
+
+IF(NOT MINGW)
+  find_package (ICONV REQUIRED)
+  MESSAGE( STATUS "ICONV_INCLUDE_DIRS:         " ${ICONV_INCLUDE_DIRS} )
+  MESSAGE( STATUS "ICONV_LIBRARIES:            " ${ICONV_LIBRARIES} )
+ENDIF(NOT MINGW)
 
 MESSAGE(STATUS "Check for LCMS2 availability...")
 #FIND_PACKAGE(LCMS2)
@@ -55,9 +63,14 @@ pkg_check_modules(FFTW3 REQUIRED fftw3)
 pkg_check_modules(XML2 REQUIRED libxml-2.0)
 
 pkg_check_modules(EXIF REQUIRED libexif)
+
 if(NOT BUNDLED_EXIV2)
-  pkg_check_modules(EXIV2 REQUIRED exiv2>=0.26)
+  pkg_check_modules(EXIV2 exiv2>=0.26)
   #find_package (Exiv2)
+  MESSAGE( STATUS "EXIV2_FOUND:         " ${EXIV2_FOUND} )
+  if(NOT EXIV2_FOUND)
+    set( BUNDLED_EXIV2 ON CACHE BOOL "Use bundled Exiv2 library" FORCE )
+  endif(NOT EXIV2_FOUND)
 endif(NOT BUNDLED_EXIV2)
 
 #if(NOT BUNDLED_GEXIV2)
