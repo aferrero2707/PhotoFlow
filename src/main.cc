@@ -166,6 +166,11 @@ int main (int argc, char *argv[])
 
   bool is_plugin = false;
 
+
+  std::cout<<"PhotoFlow::main(): argc="<<argc<<std::endl;
+  for(int i = 0; i < argc; i++)
+    std::cout<<"  argv["<<i<<"]: \""<<argv[i]<<"\""<<std::endl;
+
   if( argc > 2 && std::string(argv[1]) == "--batch" ) {
     argc--;
     argv++;
@@ -296,8 +301,11 @@ int main (int argc, char *argv[])
   }
 #endif
 
+  std::cout<<"PhotoFlow: is_plugin="<<is_plugin<<std::endl;
+
   if( is_plugin ) {
     fullpath = realpath( argv[1], NULL );
+    std::cout<<"PhotoFlow plug-in: argv[1]=\""<<argv[1]<<"\"  fullpath="<<(void*)fullpath<<std::endl;
     if(!fullpath)
       return 1;
     std::cout<<"filename: "<<fullpath<<std::endl;
@@ -340,6 +348,9 @@ int main (int argc, char *argv[])
     app->run(*mainWindow);
   }
 
+  if( mainWindow ) delete mainWindow;
+  if( pluginwin ) delete pluginwin;
+
   PF::ProcessRequestInfo request;
   request.request = PF::PROCESSOR_END;
   PF::ImageProcessor::Instance().submit_request( request );
@@ -347,7 +358,6 @@ int main (int argc, char *argv[])
 
   std::cout<<"Image processing thread finished"<<std::endl;
 
-  delete mainWindow;
   delete app;
 
   PF::PhotoFlow::Instance().close();
