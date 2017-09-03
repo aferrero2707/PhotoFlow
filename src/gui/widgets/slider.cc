@@ -32,7 +32,7 @@
 
 void PF::Slider::create_widgets( std::string l, double val,
     double min, double max,
-    double sincr, double pincr, int size )
+    double sincr, double pincr, int size, int layout )
 {
 #ifdef GTKMM_2
   numentry.set_adjustment( &adjustment );
@@ -55,7 +55,7 @@ void PF::Slider::create_widgets( std::string l, double val,
   //numentry.set_size_request( 30, 50 );
   //numentry.set_has_frame( false );
 
-  int layout = 2;
+  //int layout = 3;
 
   if( (max-min) < 1000000 ) {
     // Full widget with slider and spin button
@@ -93,6 +93,7 @@ void PF::Slider::create_widgets( std::string l, double val,
     }
 
     if(layout == 2 ) {
+      // label on the left of the slider
       reset_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
       reset_align.add( reset_button );
       scale.set_draw_value( false );
@@ -114,8 +115,33 @@ void PF::Slider::create_widgets( std::string l, double val,
       align.set_padding(4,4,4,4);
       align.add( hbox );
       pack_end( align, Gtk::PACK_SHRINK );
-    }
 
+    } else if(layout == 3 ) {
+      // label above the slider
+      reset_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
+      reset_align.add( reset_button );
+      scale.set_draw_value( false );
+      scale_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
+      scale_align.add( scale );
+      numentry_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
+      numentry_align.add( numentry );
+      label_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
+      label_align.add( label );
+      //vbox2.pack_start( reset_button, Gtk::PACK_SHRINK );
+      //hbox.pack_start( numentry, Gtk::PACK_SHRINK, 0 );
+      //hbox.pack_start( vbox2, Gtk::PACK_SHRINK );
+      //pack_end( hbox, Gtk::PACK_SHRINK );
+      hbox.pack_start( label_align, Gtk::PACK_SHRINK );
+      hbox2.pack_start( scale_align, Gtk::PACK_SHRINK );
+      hbox2.pack_start( numentry_align, Gtk::PACK_SHRINK );
+      hbox2.pack_start( reset_align, Gtk::PACK_SHRINK );
+      vbox.pack_start( hbox, Gtk::PACK_SHRINK );
+      vbox.pack_start( hbox2, Gtk::PACK_SHRINK );
+      align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
+      align.set_padding(4,4,4,4);
+      align.add( vbox );
+      pack_end( align, Gtk::PACK_SHRINK );
+    }
   } else {
     //hbox.pack_start( label, Gtk::PACK_SHRINK );
     //hbox.pack_start( spinButton, Gtk::PACK_SHRINK );
@@ -154,7 +180,7 @@ void PF::Slider::create_widgets( std::string l, double val,
 
 PF::Slider::Slider( OperationConfigGUI* dialog, std::string pname, std::string l,
 		    double val, double min, double max, double sincr, double pincr,
-		    double mult, int size ):
+		    double mult, int size, int layout ):
   PF::PFWidget( dialog, pname ),
 #ifdef GTKMM_2
   adjustment( val, min, max, sincr, pincr, 0),
@@ -164,14 +190,14 @@ PF::Slider::Slider( OperationConfigGUI* dialog, std::string pname, std::string l
   reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore-pressed.png"),
   multiplier(mult)
 {
-  create_widgets( l, val, min, max, sincr, pincr, size );
+  create_widgets( l, val, min, max, sincr, pincr, size, layout );
   value_changed.connect( sigc::mem_fun(*this, &PF::Slider::update_gui) );
 }
 
 
 PF::Slider::Slider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, std::string pname, std::string l,
 		    double val, double min, double max, double sincr, double pincr,
-		    double mult, int size ):
+		    double mult, int size, int layout ):
   PF::PFWidget( dialog, processor, pname ),
 #ifdef GTKMM_2
   adjustment( val, min, max, sincr, pincr, 0),
@@ -181,7 +207,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, st
   reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore-pressed.png"),
   multiplier(mult)
 {
-  create_widgets( l, val, min, max, sincr, pincr, size );
+  create_widgets( l, val, min, max, sincr, pincr, size, layout );
   value_changed.connect( sigc::mem_fun(*this, &PF::Slider::update_gui) );
 }
 
