@@ -125,7 +125,7 @@ VipsImage* PF::DesaturatePar::build(std::vector<VipsImage*>& in, int first,
 
       out = rgbimg;
 
-      if( true || get_render_mode() == PF_RENDER_PREVIEW ) {
+      if( false || get_render_mode() == PF_RENDER_PREVIEW ) {
         // Not valid anymore, since we now process the preview in floating point precision
 
         // We have to circumvent the fact that in 16-bits integer precision,
