@@ -33,21 +33,19 @@
 #include "../base/iccstore.hh"
 #include "raw_output.hh"
 
-
-
 /* We need C linkage for this.
  */
 #ifdef __cplusplus
 extern "C" {
 #endif /*__cplusplus*/
 
-#include "../dt/common/colorspaces.h"
+#include "../external/darktable/src/common/colorspaces.h"
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 
-#include "../dt/external/adobe_coeff.c"
+#include "../external/darktable/src/external/adobe_coeff.c"
 //#include "../vips/vips_layer.h"
 
 
@@ -134,12 +132,18 @@ void PF::RawOutputPar::set_image_hints( VipsImage* img )
 {
   if( !img ) return;
   PF::OpParBase::set_image_hints( img );
+#ifndef NDEBUG
   std::cout<<"RawOutputPar::set_image_hints(): out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
+#endif
   if( out_profile_mode.get_enum_value().first == PF::PROF_TYPE_LAB ) {
+#ifndef NDEBUG
     std::cout<<"RawOutputPar::set_image_hints(): calling lab_image()"<<std::endl;
+#endif
     lab_image( get_xsize(), get_ysize() );
   } else {
+#ifndef NDEBUG
     std::cout<<"RawOutputPar::set_image_hints(): calling rgb_image()"<<std::endl;
+#endif
     rgb_image( get_xsize(), get_ysize() );
   }
 }
@@ -211,48 +215,39 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   // create input camera profile based on Adobe matrices
   if( true || mode_changed || (cam_profile == NULL) ) {
 
-    PF::exif_data_t* exif_data;
-    if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
-        (void**)&exif_data,
-        &blobsz ) ) {
-      std::cout<<"RawOutputPar::build() could not extract exif_custom_data."<<std::endl;
-      return NULL;
-    }
-    if( blobsz != sizeof(PF::exif_data_t) ) {
-      std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
-      return NULL;
-    }
-    //char makermodel[1024];
-    //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
-    //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
-    /*
-    float cam_xyz[12];
-    cam_xyz[0] = NAN;
-    dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])cam_xyz);
-    if(std::isnan(cam_xyz[0])) {
-      std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
-      PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
-      return image;
-    }
-    */
     double dcam_xyz[3][3];
     for(int i = 0; i < 3; i++)
       for(int j = 0; j < 3; j++)
         dcam_xyz[i][j] = image_data->color.cam_xyz[i][j];
 
-    std::cout<<"dcam_xyz:"<<std::endl;
-    for(int i = 0; i < 3; i++) {
-      for(int j = 0; j < 3; j++) {
-        std::cout<<dcam_xyz[i][j]<<" ";
-      }
-      std::cout<<std::endl;
-    }
-
     switch( profile_mode.get_enum_value().first ) {
     case PF::IN_PROF_MATRIX: {
       //cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
+      PF::exif_data_t* exif_data;
+      if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
+          (void**)&exif_data,
+          &blobsz ) ) {
+        std::cout<<"RawOutputPar::build() could not extract exif_custom_data."<<std::endl;
+        return NULL;
+      }
+      if( blobsz != sizeof(PF::exif_data_t) ) {
+        std::cout<<"RawOutputPar::build() wrong exif_custom_data size."<<std::endl;
+        return NULL;
+      }
+      //char makermodel[1024];
+      //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
+      //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
       /*
-      cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
+      float cam_xyz[12];
+      cam_xyz[0] = NAN;
+      std::cout<<"Getting default camera matrix for makermodel=\""<<exif_data->camera_makermodel<<"\""<<std::endl;
+      dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])cam_xyz);
+      if(std::isnan(cam_xyz[0])) {
+        std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
+        PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
+        return image;
+      }
+      cmsHPROFILE cam_prof_temp =  = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
       cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
       //cmsCloseProfile( cam_prof_temp );
       */
@@ -392,9 +387,14 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
           TYPE_RGB_FLT,
           INTENT_RELATIVE_COLORIMETRIC,
           cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
+#ifndef NDEBUG
+      std::cout<<"RawOutputPar::build(): new transform="<<transform<<std::endl;
+#endif
     }
   }
+#ifndef NDEBUG
   std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
+#endif
 
   if( gamma_curve )
     cmsFreeToneCurve( gamma_curve );

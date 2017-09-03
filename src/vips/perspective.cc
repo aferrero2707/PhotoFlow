@@ -53,7 +53,7 @@
 #include "../base/processor.hh"
 #include "../operations/perspective.hh"
 
-#include "../dt/iop/clipping.cc"
+#include "../external/darktable/src/iop/clipping.cc"
 
 #define PF_MAX_INPUT_IMAGES 10
 
@@ -282,6 +282,8 @@ vips_perspective_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *s
     break;
   case VIPS_FORMAT_DOUBLE:
     result = vips_perspective_gen_template<double>( oreg, seq, a, b, stop );
+    break;
+  default:
     break;
   }
 
