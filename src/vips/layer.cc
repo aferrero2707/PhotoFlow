@@ -160,17 +160,24 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   int i;
   int x, y;
   int ninput = layer->ninput;
-  
+  bool verbose = false;
+  //if( layer->processor->get_par() &&
+  //    layer->processor->get_par()->get_type() == "impulse_nr_RT" )
+  //  verbose = true;
   /**/
-#ifndef NDEBUG
+//#ifndef NDEBUG
+  if( verbose ) {
   std::cout<<"vips_layer_gen(): "<<std::endl;
+  if( layer->processor->get_par() )
+    std::cout<<"  type: "<<layer->processor->get_par()->get_type()<<std::endl;
   if( layer->processor->get_par()->get_config_ui() )
     std::cout<<"  name: "<<layer->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
   std::cout<<"  output region: top="<<oreg->valid.top
       <<" left="<<oreg->valid.left
       <<" width="<<oreg->valid.width
       <<" height="<<oreg->valid.height<<std::endl;
-#endif
+  }
+//#endif
   /**/
   /* Prepare the input images
    */
@@ -183,16 +190,25 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
 
       VipsRect r_img = {0, 0, ir[i]->im->Xsize, ir[i]->im->Ysize};
       vips_rect_intersectrect (&s, &r_img, &s);
-#ifndef NDEBUG
+//#ifndef NDEBUG
+      if( verbose ) {
       std::cout<<"  preparing region ir["<<i<<"]:  im="<<ir[i]->im
           <<"  top="<<s.top
 	       <<" left="<<s.left
 	       <<" width="<<s.width
 	       <<" height="<<s.height<<std::endl;
-#endif
+      }
+//#endif
       /**/
       if( vips_region_prepare( ir[i], &s ) )
 	return( -1 );
+      if( verbose ) {
+      std::cout<<"  region ir["<<i<<"]->valid: "
+          <<"  top="<<ir[i]->valid.top
+         <<" left="<<ir[i]->valid.left
+         <<" width="<<ir[i]->valid.width
+         <<" height="<<ir[i]->valid.height<<std::endl;
+      }
     }
   }
 

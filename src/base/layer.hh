@@ -89,7 +89,9 @@ namespace PF
     Layer(uint32_t id, bool cached=false);
     virtual ~Layer()
     {
+#ifndef NDEBUG
       std::cout<<"~Layer(): \""<<name<<"\" destructor called."<<std::endl;
+#endif
       std::map<rendermode_t,CacheBuffer*>::iterator i;
       for(i = cache_buffers.begin(); i != cache_buffers.end(); i++ ) {
         if( i->second )

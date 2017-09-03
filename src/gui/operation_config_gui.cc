@@ -410,7 +410,9 @@ void PF::OperationConfigGUI::on_unmap()
 
 void PF::OperationConfigGUI::expand()
 {
+#ifndef NDEBUG
   std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
+#endif
   if( controls_frame.get_parent() == NULL ) {
     //std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
     if( editor ) {
@@ -429,11 +431,17 @@ void PF::OperationConfigGUI::expand()
       par->set_editing_flag( true );
       //get_layer()->get_image()->update();
     }
+#ifndef NDEBUG
     std::cout<<"OperationConfigGUI::expand(): controls shown"<<std::endl;
+#endif
   }
+#ifndef NDEBUG
   std::cout<<"OperationConfigGUI::expand(): calling update()"<<std::endl;
+#endif
   update();
+#ifndef NDEBUG
   std::cout<<"OperationConfigGUI::expand() finished."<<std::endl;
+#endif
 }
 
 
@@ -451,7 +459,9 @@ void PF::OperationConfigGUI::collapse()
 
   PF::OpParBase* par = get_par();
   if( par ) {
+#ifndef NDEBUG
     std::cout<<"OperationConfigGUI::collapse(): resetting editing flag"<<std::endl;
+#endif
     par->set_editing_flag( false );
     //get_layer()->get_image()->update();
   }
@@ -849,7 +859,9 @@ void PF::OperationConfigGUI::update_buttons()
 
 void PF::OperationConfigGUI::init()
 {
+#ifndef NDEBUG
   std::cout<<"OperationConfigGUI::init(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
+#endif
   update_buttons();
   for( unsigned int i = 0; i < controls.size(); i++ )
     controls[i]->init();

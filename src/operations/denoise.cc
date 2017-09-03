@@ -115,7 +115,7 @@ VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first,
     out = imnrimg;
   }
 
-  std::cout<<"DenoisePar::build(): nlmeans_enable.get()="<<nlmeans_enable.get()<<std::endl;
+  //std::cout<<"DenoisePar::build(): nlmeans_enable.get()="<<nlmeans_enable.get()<<std::endl;
   if( nlmeans_enable.get() && nlmeans && nlmeans->get_par() ) {
     PF::NonLocalMeansPar* nrpar = dynamic_cast<PF::NonLocalMeansPar*>(nlmeans->get_par());
     if( !nrpar ) {
@@ -145,7 +145,7 @@ VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first,
   convert2input->get_par()->set_image_hints( out );
   convert2input->get_par()->set_format( get_format() );
   in2.clear(); in2.push_back( out );
-  std::cout<<"DenoisePar::build(): calling convert2input->get_par()->build()"<<std::endl;
+  //std::cout<<"DenoisePar::build(): calling convert2input->get_par()->build()"<<std::endl;
   VipsImage* out2 = convert2input->get_par()->build(in2, 0, NULL, NULL, level );
   PF_UNREF( out, "DenoisePar::update() out unref" );
 

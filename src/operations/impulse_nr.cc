@@ -177,7 +177,7 @@ VipsImage* PF::ImpulseNRPar::build(std::vector<VipsImage*>& in, int first,
   convert2input->get_par()->set_image_hints( cropped );
   convert2input->get_par()->set_format( get_format() );
   in2.clear(); in2.push_back( cropped );
-  std::cout<<"ImpulseNRPar::build(): calling convert2input->get_par()->build()"<<std::endl;
+  //std::cout<<"ImpulseNRPar::build(): calling convert2input->get_par()->build()"<<std::endl;
   VipsImage* out = convert2input->get_par()->build(in2, 0, NULL, NULL, level );
   PF_UNREF( cropped, "ImpulseNRPar::update() cropped unref" );
 

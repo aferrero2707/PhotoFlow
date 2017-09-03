@@ -320,15 +320,21 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
 
     int ih_comp = image_hierarchy_compare_images(foreground2, background);
     //ih_comp = 0;
+#ifndef NDEBUG
     std::cout<<"PF::BlenderPar::build(): ih_comp="<<ih_comp<<std::endl;
+#endif
 
     std::vector<VipsImage*> in_;
     if( ih_comp == 1 ) {
+#ifndef NDEBUG
       std::cout<<"PF::BlenderPar::build(): processing background before foreground"<<std::endl;
+#endif
       in_.push_back( background ); bgd_id = 0;
       in_.push_back( foreground2 ); fgd_id = 1;
     } else {
+#ifndef NDEBUG
       std::cout<<"PF::BlenderPar::build(): processing foreground before background"<<std::endl;
+#endif
       in_.push_back( foreground2 ); fgd_id = 0;
       in_.push_back( background ); bgd_id = 1;
     }

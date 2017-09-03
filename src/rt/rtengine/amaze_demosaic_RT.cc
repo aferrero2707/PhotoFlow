@@ -1411,9 +1411,9 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
             //std::cout<<"top="<<top<<"  rr1="<<rr1<<"  rr="<<rr<<"  cc="<<cc<<"  left="<<left<<"  row="<<row<<"  col="<<col<<"  indx="<<indx<<std::endl;
             green[row][col] = CLIP(65535.0f*rgbgreen[indx]);
             if( false && top==0 && left==0 ) {
-            std::cout<<"amaze:    red["<<row<<"]["<<col<<"]="<<red[row][col]<<std::endl;
-            std::cout<<"amaze:  green["<<row<<"]["<<col<<"]="<<green[row][col]<<std::endl;
-            std::cout<<"amaze:   blue["<<row<<"]["<<col<<"]="<<blue[row][col]<<std::endl;
+              std::cout<<"amaze:    red["<<row<<"]["<<col<<"]="<<red[row][col]<<std::endl;
+              std::cout<<"amaze:  green["<<row<<"]["<<col<<"]="<<green[row][col]<<std::endl;
+              std::cout<<"amaze:   blue["<<row<<"]["<<col<<"]="<<blue[row][col]<<std::endl;
             }
 
             //for dcraw implementation

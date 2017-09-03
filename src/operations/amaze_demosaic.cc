@@ -64,7 +64,9 @@ VipsImage* PF::AmazeDemosaicPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   }
 
+#ifndef NDEBUG
   std::cout<<"AmazeDemosaicPar::build(): filters="<<image_data->idata.filters<<std::endl;
+#endif
 
   int border = 16;
 

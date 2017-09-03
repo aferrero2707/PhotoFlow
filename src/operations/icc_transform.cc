@@ -81,10 +81,10 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
   if( in_profile && in_profile->get_profile() ) {
     char tstr[1024];
     cmsGetProfileInfoASCII(in_profile->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"icc_transform: embedded profile: "<<in_profile<<std::endl;
     std::cout<<"icc_transform: embedded profile name: "<<tstr<<std::endl;
-//#endif
+#endif
     
     if( in_profile_name != tstr ) {
       in_changed = true;
@@ -93,8 +93,10 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     input_cs_type = cmsGetColorSpace( in_profile->get_profile() );
   }
 
+//#ifndef NDEBUG
   if( out_profile )
     std::cout<<"icc_transform: out_profile="<<out_profile<<" ("<<out_profile->get_profile()<<")"<<std::endl;
+//#endif
 
   if( transform )
     cmsDeleteTransform( transform );

@@ -125,7 +125,6 @@ namespace PF
     float h_eq = MIN3( h_eq1, h_eq2, h_eq3 );
     if( inv ) h_eq = 1.0f - h_eq;
 
-
     T val = FormatInfo<T>::RANGE*h_eq + FormatInfo<T>::MIN;
     //std::cout<<"  lid: "<<lid<<"   h_eq3: "<<h_eq3<<"   h_eq: "<<h_eq<<"   val: "<<val<<std::endl;
     return val;

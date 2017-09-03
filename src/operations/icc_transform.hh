@@ -171,14 +171,14 @@ namespace PF
               line[x] = (cmsFloat32Number) (p[x] * 100.0);
               line[x+1] = (cmsFloat32Number) (p[x+1]*256.0f - 128.0f);
               line[x+2] = (cmsFloat32Number) (p[x+2]*256.0f - 128.0f);
-              if( r->left==0 && r->top==0 && x==0 && y==0 ) {
-                std::cout<<"ICCTransform::render(): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<std::endl;
-              }
+              //if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+              //  std::cout<<"ICCTransform::render(): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<std::endl;
+              //}
             }
             cmsDoTransform( opar->get_transform(), line, pout, width );
-            if( r->left==0 && r->top==0 && y==0 ) {
-              std::cout<<"ICCTransform::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
-            }
+            //if( r->left==0 && r->top==0 && y==0 ) {
+            //  std::cout<<"ICCTransform::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+            //}
           } else {
             cmsDoTransform( opar->get_transform(), p, pout, width );
             if( opar->get_output_cs_type() == cmsSigLabData ) {
@@ -240,8 +240,8 @@ namespace PF
           if( opar->get_input_cs_type() == cmsSigLabData ) {
             for( x = 0; x < line_size; x+= 3 ) {
               line[x] = (cmsFloat64Number) (pin[x] * 100.0); 
-              line[x+1] = (cmsFloat64Number) (pin[x+1]*256.0f - 128.0f); 
-              line[x+2] = (cmsFloat64Number) (pin[x+2]*256.0f - 128.0f); 
+              line[x+1] = (cmsFloat64Number) (pin[x+1]*256.0 - 128.0);
+              line[x+2] = (cmsFloat64Number) (pin[x+2]*256.0 - 128.0);
             }
             cmsDoTransform( opar->get_transform(), line, pout, width );
           } else {

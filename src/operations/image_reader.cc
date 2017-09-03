@@ -138,6 +138,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   if( i == raster_images.end() ) {
     std::cout<<"ImageReaderPar::build(): creating new RasterImage for file "<<file_name.get()<<std::endl;
     new_raster_image = new RasterImage( file_name.get() );
+    std::cout<<"ImageReaderPar::build(): RasterImage for file "<<file_name.get()<<" created"<<std::endl;
     if( new_raster_image ) 
       raster_images.insert( make_pair(file_name.get(), new_raster_image) );
   } else {
@@ -155,7 +156,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     //std::cout<<"ImageReaderPar::build(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
     if( raster_image->get_nref() == 0 ) {
       std::map<Glib::ustring, RasterImage*>::iterator i = 
-          raster_images.find( file_name.get() );
+        raster_images.find( file_name.get() );
       if( i != raster_images.end() ) 
         raster_images.erase( i );
       delete raster_image;
@@ -219,15 +220,15 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     }
   }
    */
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"ImageReaderPar::build(): "<<std::endl
-      <<"input images:"<<std::endl;
+	   <<"input images:"<<std::endl;
   for(int i = 0; i < in.size(); i++) {
     std::cout<<"  "<<(void*)in[i]<<std::endl;
   }
   std::cout<<"image: "<<image<<"    image->Interpretation: "<<image->Type<<std::endl;
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
-//#endif
+#endif
 
   if( is_map() && image->Bands > 1 ) {
     VipsImage* out;
@@ -265,10 +266,10 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 #endif
 
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<std::endl<<"================="<<std::endl;
   std::cout<<"ImageReaderPar::build(): get_format()="<<get_format()<<"  image->BandFmt="<<image->BandFmt<<std::endl;
-//#endif
+#endif
   VipsImage* out = image;
   std::vector<VipsImage*> in2;
   in2.push_back( image );

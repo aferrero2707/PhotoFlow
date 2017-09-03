@@ -52,10 +52,12 @@ PF::UniformPar::UniformPar():
 
 
 VipsImage* PF::UniformPar::build(std::vector<VipsImage*>& in, int first, 
-    VipsImage* imap, VipsImage* omap,
-    unsigned int& level)
+				     VipsImage* imap, VipsImage* omap, 
+				     unsigned int& level)
 {
+#ifndef NDEBUG
   std::cout<<"UniformPar::build(): colorspace="<<get_colorspace()<<std::endl;
+#endif
   grey.set( R.get() );
 
   if( get_colorspace() == PF::PF_COLORSPACE_RGB ) {

@@ -59,7 +59,9 @@ VipsImage* PF::NonLocalMeansPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* srcimg = NULL;
   if( in.size() > 0 ) srcimg = in[0];
 
+#ifndef NDEBUG
   std::cout<<"NonLocalMeansPar::build() called"<<std::endl;
+#endif
 
   float scale = 1;
 	for( unsigned int l = 1; l <= level; l++ ) scale /= 2;
@@ -68,7 +70,9 @@ VipsImage* PF::NonLocalMeansPar::build(std::vector<VipsImage*>& in, int first,
   P = ceilf(radius.get() * fmin(scale, 2.0f)); // pixel filter size
   K = ceilf(7.f * fmin(scale, 2.0f));         // nbhood
   sharpness = 3000.0f / (1.0f + strength.get());
+#ifndef NDEBUG
   std::cout<<"NonLocalMeansPar::build(): P="<<P<<" K="<<K<<" sharpness="<<sharpness<<std::endl;
+#endif
 
   in_profile = PF::get_icc_profile( in[0] );
 
@@ -125,8 +129,10 @@ VipsImage* PF::NonLocalMeansPar::build(std::vector<VipsImage*>& in, int first,
 
   // Final cropping to remove the padding pixels
   VipsImage* cropped;
+#ifndef NDEBUG
   std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  impnrimg->Xsize="<<impnrimg->Xsize<<std::endl;
   std::cout<<"srcimg->Ysize="<<srcimg->Ysize<<"  impnrimg->Ysize="<<impnrimg->Ysize<<std::endl;
+#endif
   if( vips_crop(impnrimg, &cropped, get_padding(), get_padding(),
       impnrimg->Xsize-2*get_padding(), impnrimg->Ysize-2*get_padding(), NULL) ) {
     std::cout<<"GaussBlurPar::build(): vips_crop() failed."<<std::endl;
@@ -135,9 +141,10 @@ VipsImage* PF::NonLocalMeansPar::build(std::vector<VipsImage*>& in, int first,
     return in[0];
   }
   PF_UNREF( impnrimg, "GaussBlurPar::build(): out unref" );
+#ifndef NDEBUG
   std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  cropped->Xsize="<<cropped->Xsize<<std::endl;
   std::cout<<"srcimg->Ysize="<<srcimg->Ysize<<"  cropped->Ysize="<<cropped->Ysize<<std::endl;
-
+#endif
 
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2input->get_par() );
   //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
@@ -148,7 +155,9 @@ VipsImage* PF::NonLocalMeansPar::build(std::vector<VipsImage*>& in, int first,
   convert2input->get_par()->set_image_hints( cropped );
   convert2input->get_par()->set_format( get_format() );
   in2.clear(); in2.push_back( cropped );
+#ifndef NDEBUG
   std::cout<<"NonLocalmeansPar::build(): calling convert2input->get_par()->build()"<<std::endl;
+#endif
   VipsImage* out = convert2input->get_par()->build(in2, 0, NULL, NULL, level );
   PF_UNREF( cropped, "ImageArea::update() cropped unref" );
 

@@ -148,16 +148,16 @@ public:
   void on_map();
 
   void update( bool force_rebuild=false ) {
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::update() called."<<std::endl;
     if( layer_views.size() > 0 )
       std::cout<<"layer_views.size() > 0"<<std::endl;
-//#endif
+#endif
     for(unsigned int i = 0; i < layer_views.size(); i++) {
       int id = layer_views[i]->get_selected_layer_id();
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"LayerWidget::update() view #"<<i<<"  selected layer id="<<id<<std::endl;
-//#endif
+#endif
       if( force_rebuild )
         layer_views[i]->set_tree_modified();
       layer_views[i]->update_model();

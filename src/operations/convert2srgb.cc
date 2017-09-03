@@ -91,9 +91,6 @@ VipsImage* PF::Convert2sRGBPar::build(std::vector<VipsImage*>& in, int first,
       transform = cmsCreateTransform( profile_in, 
 				      infmt, profile_out, outfmt, INTENT_RELATIVE_COLORIMETRIC,
 				      cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
-      //#ifndef NDEBUG
-            std::cout<<"convert2srgb: transform created."<<std::endl;
-      //#endif
     } else {
       std::cout<<"Convert2sRGBPar::build(): NULL input profile"<<std::endl;
     }

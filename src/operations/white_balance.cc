@@ -278,11 +278,11 @@ VipsImage* PF::WhiteBalancePar::build(std::vector<VipsImage*>& in, int first,
   wb_blue_current = mul[2] / ((image_data != NULL) ? image_data->color.wb_mul[2] : 1);
 
   if( image_data ) {
-    std::cout<<"WhiteBalancePar::build(): CAM WB="<<image_data->color.cam_mul[0]<<","<<image_data->color.cam_mul[1]<<","<<image_data->color.cam_mul[2]<<endl;
-    std::cout<<"WhiteBalancePar::build(): USR WB="<<image_data->color.wb_mul[0]<<","<<image_data->color.wb_mul[1]<<","<<image_data->color.wb_mul[2]<<endl;
+    std::cout<<"WhiteBalancePar::build(): CAM WB="<<image_data->color.cam_mul[0]<<","<<image_data->color.cam_mul[1]<<","<<image_data->color.cam_mul[2]<<std::endl;
+    std::cout<<"WhiteBalancePar::build(): USR WB="<<image_data->color.wb_mul[0]<<","<<image_data->color.wb_mul[1]<<","<<image_data->color.wb_mul[2]<<std::endl;
   }
-  std::cout<<"WhiteBalancePar::build(): WB mul="<<mul[0]<<","<<mul[1]<<","<<mul[2]<<endl;
-  std::cout<<"WhiteBalancePar::build(): WB cur="<<wb_red_current<<","<<wb_green_current<<","<<wb_blue_current<<endl;
+  std::cout<<"WhiteBalancePar::build(): WB mul="<<mul[0]<<","<<mul[1]<<","<<mul[2]<<std::endl;
+  std::cout<<"WhiteBalancePar::build(): WB cur="<<wb_red_current<<","<<wb_green_current<<","<<wb_blue_current<<std::endl;
 
   VipsImage* image = OpParBase::build( in, first, NULL, NULL, level );
   if( !image )
