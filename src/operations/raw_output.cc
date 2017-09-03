@@ -247,7 +247,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         PF_REF(image,"RawOutputPar::build(): isnan(cam_xyz[0])");
         return image;
       }
-      cmsHPROFILE cam_prof_temp =  = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
+      cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
       cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
       //cmsCloseProfile( cam_prof_temp );
       */
