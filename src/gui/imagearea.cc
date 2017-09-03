@@ -242,8 +242,10 @@ PF::ImageArea::ImageArea( Pipeline* v ):
 
 PF::ImageArea::~ImageArea ()
 {
+#ifndef NDEBUG
   std::cout<<"Deleting image area"<<std::endl;
   std::cout<<"~ImageArea finished"<<std::endl;
+#endif
   //delete pf_image;
 }
 
@@ -415,6 +417,9 @@ void PF::ImageArea::process_area( const VipsRect& area )
   VipsRect area_clip;
   vips_rect_intersectrect (&(region->valid), &area, &area_clip);
 
+  #ifdef DEBUG_DISPLAY
+    std::cout<<"Before copying region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" into inactive buffer"<<std::endl;
+  #endif
   double_buffer.get_inactive().copy( region, area_clip, xoffset, yoffset );
 #ifdef DEBUG_DISPLAY
   std::cout<<"Region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" copied into inactive buffer"<<std::endl;
@@ -444,8 +449,7 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
   temp_buffer.copy( double_buffer.get_active() );
   current_pxbuf = temp_buffer.get_pxbuf();
 
-
-  std::cout<<"ImageArea::modify_preview() called. edited_layer="<<edited_layer<<std::endl;
+  //std::cout<<"ImageArea::modify_preview() called. edited_layer="<<edited_layer<<std::endl;
   if( edited_layer >= 0 ) {
     PF::Image* image = get_pipeline()->get_image();
     if( image ) {
@@ -478,7 +482,9 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
 // Copy the given buffer to screen
 void PF::ImageArea::draw_area()
 {
-  //std::cout<<"PF::ImageArea::draw_area(): before drawing pixbuf"<<std::endl;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::draw_area(): before drawing pixbuf"<<std::endl;
+#endif
   //getchar();
   double_buffer.lock();
 
@@ -546,7 +552,9 @@ void PF::ImageArea::draw_area()
   cr->paint();
   draw_requested = false;
   double_buffer.unlock();
-  //std::cout<<"PF::ImageArea::draw_area(): after drawing pixbuf"<<std::endl;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"PF::ImageArea::draw_area(): after drawing pixbuf"<<std::endl;
+#endif
   //getchar();
 }
 
@@ -940,7 +948,9 @@ void PF::ImageArea::update( VipsRect* area )
 
   VipsImage* image = NULL;
   bool do_merged = display_merged && (!display_mask);
+#ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  display_merged="<<display_merged<<"  displayed_layer="<<displayed_layer<<"  display_mask="<<display_mask<<std::endl;
+#endif
   if( !do_merged ) {
     if( displayed_layer < 0 && (!display_mask) ) do_merged = true;
     else {
@@ -951,7 +961,9 @@ void PF::ImageArea::update( VipsRect* area )
         layer_id = displayed_layer;
       }
       PF::PipelineNode* node = get_pipeline()->get_node( layer_id );
+#ifdef DEBUG_DISPLAY
       std::cout<<"ImageArea::update(): layer_id="<<layer_id<<"  node="<<node<<std::endl;
+#endif
       if( !node ) do_merged = true;
       if( get_pipeline()->get_image() ) {
         PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( layer_id );
@@ -960,7 +972,9 @@ void PF::ImageArea::update( VipsRect* area )
       }
     }
   }
+#ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::update(): do_merged(2)="<<do_merged<<std::endl;
+#endif
   if( do_merged ) {
     image = get_pipeline()->get_output();
 #ifdef DEBUG_DISPLAY
@@ -1023,7 +1037,9 @@ void PF::ImageArea::update( VipsRect* area )
       PF::Layer* ll = get_pipeline()->get_image()->get_layer_manager().
           get_layer( selected_layer );
       if( !ll ) return;
+#ifdef DEBUG_DISPLAY
       std::cout<<"ImageArea::update(): displaying mask of layer \""<<ll->get_name()<<"\""<<std::endl;
+#endif
       PF::PipelineNode* selected_node =
         get_pipeline()->get_node( selected_layer );
       if( !selected_node ) return;
@@ -1059,7 +1075,9 @@ void PF::ImageArea::update( VipsRect* area )
       image = convert_raw_data( image );
     }
   }
+#ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::update(): image="<<image<<std::endl;
+#endif
   if( !image ) return;
 
   unsigned int level = get_pipeline()->get_level();
@@ -1096,23 +1114,23 @@ void PF::ImageArea::update( VipsRect* area )
     current_display_profile_type = options.get_display_profile_type();
     current_display_profile_name = options.get_custom_display_profile_name().c_str();
 
-    std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
+    //std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
     switch( current_display_profile_type ) {
     case PF_DISPLAY_PROF_sRGB: {
       current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_STANDARD );
       icc_display_profile = current_display_profile->get_profile();
       char tstr[1024];
       cmsGetProfileInfoASCII(icc_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-  //#ifndef NDEBUG
+  #ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
-  //#endif
+  #endif
       break;
     }
     case PF_DISPLAY_PROF_CUSTOM:
       current_display_profile = PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() );
       icc_display_profile = current_display_profile->get_profile();
-      std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
-          <<" -> "<<current_display_profile<<std::endl;
+      //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
+      //    <<" -> "<<current_display_profile<<std::endl;
       break;
     case PF_DISPLAY_PROF_SYSTEM: {
 #ifdef __APPLE__
@@ -1124,12 +1142,13 @@ void PF::ImageArea::update( VipsRect* area )
       icc_display_profile = current_display_profile->get_profile();
       char tstr[1024];
       cmsGetProfileInfoASCII(icc_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-  //#ifndef NDEBUG
+  #ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
-  //#endif
+  #endif
 #endif
       break;
     }
+    default: break;
     }
   }
 
@@ -1152,10 +1171,10 @@ void PF::ImageArea::update( VipsRect* area )
   }
 
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
-  std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
+  //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
   if( icc_par && current_display_profile ) {
-    std::cout<<"ImageArea::update(): setting display profile: PhF profile="<<current_display_profile
-        <<"  ICC profile="<<icc_display_profile<<std::endl;
+    //std::cout<<"ImageArea::update(): setting display profile: PhF profile="<<current_display_profile
+    //    <<"  ICC profile="<<icc_display_profile<<std::endl;
     icc_par->set_out_profile( current_display_profile );
   }
   icc_par->set_intent( options.get_display_profile_intent() );
@@ -1238,9 +1257,13 @@ void PF::ImageArea::update( VipsRect* area )
       std::cout<<"ImageArea::update(): srgbimg->Xsize="<<srgbimg->Xsize<<"    srgbimg->Ysize="<<srgbimg->Ysize<<std::endl;    
       std::cout<<"ImageArea::update(): redimage->Xsize="<<redimage->Xsize<<"    redimage->Ysize="<<redimage->Ysize<<std::endl;    
 #endif      
+#ifdef DEBUG_DISPLAY
       std::cout<<"ImageArea::update(): building maskblend operation..."<<std::endl;
+#endif
       VipsImage* blendimage = maskblend->get_par()->build(in, 0, NULL, mapinverted, level );
+#ifdef DEBUG_DISPLAY
       std::cout<<"ImageArea::update(): ... maskblend done"<<std::endl;
+#endif
       PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
       PF_UNREF( mapinverted, "ImageArea::update() mapinverted unref" );
       PF_UNREF( redimage, "ImageArea::update() redimage unref" );
