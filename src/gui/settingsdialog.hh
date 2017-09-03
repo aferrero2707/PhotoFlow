@@ -66,7 +66,7 @@ class SettingsDialog : public Gtk::Dialog
 
   Gtk::Notebook notebook;
 
-  Gtk::VBox about_box, color_box, output_box;
+  Gtk::VBox about_box, color_box, general_box;
 
   Gtk::TextView about_textview;
 
@@ -88,6 +88,10 @@ class SettingsDialog : public Gtk::Dialog
 
   Gtk::Frame cm_working_profile_frame, cm_display_profile_frame;
   Gtk::VBox cm_working_profile_frame_box, cm_display_profile_frame_box;
+
+  Gtk::HBox apply_default_preset_hbox;
+  Gtk::Label apply_default_preset_label;
+  Gtk::CheckButton apply_default_preset_check;
 
   Gtk::HBox save_sidecar_files_hbox;
   Gtk::Label save_sidecar_files_label;
