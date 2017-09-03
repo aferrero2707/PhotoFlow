@@ -472,14 +472,8 @@ bool PF::RawImage::load_rawspeed()
   //		dcraw_data.color.cam_xyz[i][j] = get_cam_xyz(i,j);
   pdata = &dcraw_data;
 
-#ifdef __WIN32__
-  const size_t len = strlen(file_name_real.c_str()) + 1;
-  wchar_t filen[len];
-  mbstowcs(filen, file_name_real.c_str(), len);
-#else
   char filen[PATH_MAX] = { 0 };
   snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
-#endif
   std::cout<<"RawImage::load_rawspeed(): input file: "<<filen<<std::endl;
   rawspeed::FileReader f(filen);
 
