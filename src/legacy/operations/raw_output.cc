@@ -41,13 +41,13 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-#include "../dt/common/colorspaces.h"
+#include "../../external/darktable/src/common/colorspaces.h"
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 
-#include "../dt/external/adobe_coeff.c"
+#include "../../external/darktable/src/external/adobe_coeff.c"
 //#include "../vips/vips_layer.h"
 
 
@@ -105,12 +105,18 @@ void PF::RawOutputV1Par::set_image_hints( VipsImage* img )
 {
   if( !img ) return;
   PF::OpParBase::set_image_hints( img );
+#ifndef NDEBUG
   std::cout<<"RawOutputPar::set_image_hints(): out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
+#endif
   if( out_profile_mode.get_enum_value().first == PF::PROF_TYPE_LAB ) {
+#ifndef NDEBUG
     std::cout<<"RawOutputPar::set_image_hints(): calling lab_image()"<<std::endl;
+#endif
     lab_image( get_xsize(), get_ysize() );
   } else {
+#ifndef NDEBUG
     std::cout<<"RawOutputPar::set_image_hints(): calling rgb_image()"<<std::endl;
+#endif
     rgb_image( get_xsize(), get_ysize() );
   }
 }
@@ -193,8 +199,10 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
       //char makermodel[1024];
       //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
       //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
+      /*
       float cam_xyz[12];
       cam_xyz[0] = NAN;
+      std::cout<<"Getting default camera matrix for makermodel=\""<<exif_data->camera_makermodel<<"\""<<std::endl;
       dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])cam_xyz);
       if(std::isnan(cam_xyz[0])) {
         std::cout<<"RawOutputPar::build(): isnan(cam_xyz[0])"<<std::endl;
@@ -202,7 +210,8 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
         return image;
       }
       //cam_profile = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
-      cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])cam_xyz);
+       */
+      cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
       cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
       //cmsCloseProfile( cam_prof_temp );
       break;
@@ -261,9 +270,12 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
   }
 
   if( changed ) {
+#ifndef NDEBUG
     std::cout<<"RawOutputPar::build(): color conversion changed, rebuilding transform"<<std::endl;
     std::cout<<"  cam_profile="<<(void*)cam_profile<<"  out_profile="<<(void*)out_profile<<std::endl;
+#endif
     char tstr[1024];
+#ifndef NDEBUG
     if( cam_profile ) {
       cmsGetProfileInfoASCII(cam_profile->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
       std::cout<<"  cam_profile description: "<<tstr<<std::endl;
@@ -274,6 +286,7 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"  out_profile description: "<<tstr<<std::endl;
       std::cout<<"  out_profile colorspace: "<<cmsGetColorSpace(out_profile->get_profile())<<std::endl;
     }
+#endif
     if( transform ) {
       cmsDeleteTransform( transform );  
     }
@@ -290,10 +303,14 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
           out_lcms_type,
           INTENT_RELATIVE_COLORIMETRIC,
           cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE );
+#ifndef NDEBUG
       std::cout<<"RawOutputPar::build(): new transform="<<transform<<std::endl;
+#endif
     }
   }
+#ifndef NDEBUG
   std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
+#endif
 
   if( gamma_curve )
     cmsFreeToneCurve( gamma_curve );

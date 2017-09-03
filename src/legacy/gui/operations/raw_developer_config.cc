@@ -33,15 +33,15 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-#include "../../../dt/common/colorspaces.h"
+#include "../../../external/darktable/src/common/colorspaces.h"
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 
-#include "../../../dt/external/wb_presets.c"
-#include "../../../dt/external/adobe_coeff.c"
-#include "../../../dt/external/cie_colorimetric_tables.c"
+#include "../../../external/darktable/src/external/wb_presets.c"
+#include "../../../external/darktable/src/external/adobe_coeff.c"
+#include "../../../external/darktable/src/external/cie_colorimetric_tables.c"
 
 #include "../../../base/exif_data.hh"
 #include "../../../operations/raw_image.hh"
@@ -87,7 +87,7 @@ extern "C" {
 /** inverts the given 3x3 matrix */
 generate_mat3inv_body(float, A, B)
 
-int mat3inv(float *const dst, const float *const src)
+static int mat3inv(float *const dst, const float *const src)
 {
   return mat3inv_float(dst, src);
 }
@@ -271,13 +271,13 @@ void PF::RawDeveloperConfigGUIV1::mul2temp(float coeffs[3], double *TempK, doubl
 {
   //dt_iop_temperature_gui_data_t *g = (dt_iop_temperature_gui_data_t *)self->gui_data;
 
+#ifndef NDEBUG
   //std::cout<<"mul2temp(): coeffs="<<coeffs[0]<<","<<coeffs[1]<<","<<coeffs[2]<<std::endl;
   printf("mul2temp: coeffs[]=%f,%f,%f\nCAM_to_XYZ:\n",coeffs[0],coeffs[1],coeffs[2]);
-  for(int k = 0; k < 3; k++)
-  {
+  for(int k = 0; k < 3; k++) {
     printf("    %.4f %.4f %.4f\n",CAM_to_XYZ[k][0],CAM_to_XYZ[k][1],CAM_to_XYZ[k][2]);
   }
-
+#endif
   double CAM[3];
   for(int k = 0; k < 3; k++) CAM[k] = 1.0 / coeffs[k];
 
@@ -329,44 +329,50 @@ bool PF::WBSelectorV1::check_value( int id, const std::string& name, const std::
 
 
 PF::RawDeveloperConfigGUIV1::RawDeveloperConfigGUIV1( PF::Layer* layer ):
-      OperationConfigGUI( layer, "Raw Developer" ),
-      wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
-      wbTempSlider( this, "", _("temp."), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
-      wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
-      wbRedSlider( this, "wb_red", "R mult.", 1, 0, 10, 0.05, 0.1, 1),
-      wbGreenSlider( this, "wb_green", "G mult.", 1, 0, 10, 0.05, 0.1, 1),
-      wbBlueSlider( this, "wb_blue", "B mult.", 1, 0, 10, 0.05, 0.1, 1),
-      wbRedCorrSlider( this, "camwb_corr_red", "R. corr", 1, 0, 10, 0.05, 0.1, 1),
-      wbGreenCorrSlider( this, "camwb_corr_green", "G corr.", 1, 0, 10, 0.05, 0.1, 1),
-      wbBlueCorrSlider( this, "camwb_corr_blue", "B corr.", 1, 0, 10, 0.05, 0.1, 1),
-      wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
-      wb_target_a_slider( this, "wb_target_a", "a: ", 10, -1000000, 1000000, 0.05, 0.1, 1),
-      wb_target_b_slider( this, "wb_target_b", "b: ", 12, -1000000, 1000000, 0.05, 0.1, 1),
-      enable_ca_checkbox( this, "enable_ca", _("enable CA correction"), false ),
-      auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
-      ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
-      ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
-      ca_frame( _("CA correction") ),
-      hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
-      hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
-      hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
-      hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ),
-      hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ),
-      hotp_frame( _("hot pixels filter") ),
-      demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
-      fcsSlider( this, "fcs_steps", "False color suppression steps", 1, 0, 4, 1, 1, 1 ),
-      exposureSlider( this, "exposure", "Exp. compensation", 0, -5, 5, 0.05, 0.5 ),
-      saturationLevelSlider( this, "raw_white_level_correction", _("RAW white level %"), 0, -100, 100, 0.5, 5, 100 ),
-      blackLevelSlider( this, "raw_black_level_correction", _("RAW black level %"), 0, -100, 100, 0.5, 5, 100 ),
-      hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
-      profileModeSelector( this, "profile_mode", _("input: "), 0 ),
-      camProfOpenButton(Gtk::Stock::OPEN),
-      gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
-      inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
-      inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-      outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1 ),
-      outProfOpenButton(Gtk::Stock::OPEN),
-      ignore_temp_tint_change( false )
+    OperationConfigGUI( layer, "Raw Developer" ),
+    wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
+    wbTempSlider( this, "", _("temp."), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
+    wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
+    wbRedSlider( this, "wb_red", "R mult.", 1, 0, 10, 0.05, 0.1, 1),
+    wbGreenSlider( this, "wb_green", "G mult.", 1, 0, 10, 0.05, 0.1, 1),
+    wbBlueSlider( this, "wb_blue", "B mult.", 1, 0, 10, 0.05, 0.1, 1),
+    wbRedCorrSlider( this, "camwb_corr_red", "R corr.", 1, 0, 10, 0.05, 0.1, 1),
+    wbGreenCorrSlider( this, "camwb_corr_green", "G corr.", 1, 0, 10, 0.05, 0.1, 1),
+    wbBlueCorrSlider( this, "camwb_corr_blue", "B corr.", 1, 0, 10, 0.05, 0.1, 1),
+    wb_target_L_slider( this, "wb_target_L", "Target: ", 50, 0, 1000000, 0.05, 0.1, 1),
+    wb_target_a_slider( this, "wb_target_a", "a: ", 10, -1000000, 1000000, 0.05, 0.1, 1),
+    wb_target_b_slider( this, "wb_target_b", "b: ", 12, -1000000, 1000000, 0.05, 0.1, 1),
+    enable_ca_checkbox( this, "enable_ca", _("enable CA correction"), false ),
+    hotp_enable_checkbox( this, "hotp_enable", _("enable hot pixels correction"), false ),
+    hotp_threshold_slider( this, "hotp_threshold", _("threshold"), 0, 0.0, 1.0, 0.01, 0.01, 1), // "lower threshold increases removal for hot pixel"
+    hotp_strength_slider( this, "hotp_strength", _("strength"), 0, 0.0, 1.0, 0.005, 0.005, 1), // "strength of hot pixel correction"
+    hotp_permissive_checkbox( this, "hotp_permissive", _("detect by 3 neighbors"), false ),
+    hotp_markfixed_checkbox( this, "hotp_markfixed", _("mark fixed pixels"), false ),
+    hotp_frame( _("hot pixels filter") ),
+    ca_mode_selector( this, "tca_method", _("CA correction: "), PF::PF_TCA_CORR_AUTO ),
+    auto_ca_checkbox( this, "auto_ca", _("auto"), true ),
+    ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
+    ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
+    ca_frame( _("CA correction") ),
+    lf_enable_distortion_button( this, "lf_enable_distortion", _("distortion"), false ),
+    lf_enable_tca_button( this, "lf_enable_tca", _("chromatic aberrations (CA)"), false ),
+    lf_enable_vignetting_button( this, "lf_enable_vignetting", _("vignetting"), false ),
+    lf_enable_all_button( this, "lf_enable_all", _("all corrections"), false ),
+    lens_frame( _("lens corrections") ),
+    demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
+    fcsSlider( this, "fcs_steps", "FCC steps", 1, 0, 4, 1, 1, 1 ),
+    exposureSlider( this, "exposure", _("exposure compensation"), 0, -5, 5, 0.05, 0.5 ),
+    saturationLevelSlider( this, "raw_white_level_correction", _("RAW white level %"), 0, -100, 100, 0.5, 5, 100, 120, 3 ),
+    blackLevelSlider( this, "raw_black_level_correction", _("RAW black level %"), 0, -100, 100, 0.5, 5, 100, 120, 3 ),
+    hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
+    profileModeSelector( this, "profile_mode", _("input: "), 0 ),
+    camProfOpenButton(Gtk::Stock::OPEN),
+    gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
+    inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
+    inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
+    outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1, 80 ),
+    outProfOpenButton(Gtk::Stock::OPEN),
+    ignore_temp_tint_change( false )
 {
   wbControlsBox.pack_start( wbModeSelector, Gtk::PACK_SHRINK );
 
@@ -401,20 +407,44 @@ PF::RawDeveloperConfigGUIV1::RawDeveloperConfigGUIV1( PF::Layer* layer ):
   exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
   exposureControlsBox.pack_start( hlrecoModeSelector, Gtk::PACK_SHRINK, 2 );
 
-  lensControlsBox.pack_start( ca_frame, Gtk::PACK_SHRINK, 10 );
   lensControlsBox.pack_start( hotp_frame, Gtk::PACK_SHRINK, 10 );
-  ca_frame.add( ca_box );
-  ca_box.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
-  ca_box.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
-  ca_box.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
-  ca_box.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
-
+  lensControlsBox.pack_start( lens_frame, Gtk::PACK_SHRINK, 10 );
+  //lensControlsBox.pack_start( ca_frame, Gtk::PACK_SHRINK, 10 );
   hotp_frame.add( hotp_box );
   hotp_box.pack_start( hotp_enable_checkbox, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_threshold_slider, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_strength_slider, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_permissive_checkbox, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
+
+  lens_frame.add( lf_box );
+  lf_label1.set_text( _("cam. maker: ") );
+  lf_hbox1.pack_start( lf_label1 );
+  lf_hbox1.pack_start( lf_makerEntry );
+  lf_label2.set_text( _("cam. model: ") );
+  lf_hbox2.pack_start( lf_label2 );
+  lf_hbox2.pack_start( lf_modelEntry );
+  lf_label3.set_text( _("lens: ") );
+  lf_hbox3.pack_start( lf_label3 );
+  lf_hbox3.pack_start( lf_lensEntry );
+  lf_box.pack_start( lf_hbox1 );
+  lf_box.pack_start( lf_hbox2 );
+  lf_box.pack_start( lf_hbox3 );
+  lf_box.pack_start( lf_enable_all_button );
+  lf_box.pack_start( lf_enable_vignetting_button );
+  lf_box.pack_start( lf_enable_distortion_button );
+  lf_box.pack_start( lf_enable_tca_button );
+  lf_makerEntry.set_editable( false );
+  lf_modelEntry.set_editable( false );
+  lf_lensEntry.set_editable( false );
+
+
+  //lf_box.pack_start( enable_ca_checkbox, Gtk::PACK_SHRINK );
+  lf_box.pack_start( ca_mode_selector, Gtk::PACK_SHRINK );
+  //lf_box.pack_start( auto_ca_checkbox, Gtk::PACK_SHRINK );
+  lf_box.pack_start( ca_box, Gtk::PACK_SHRINK );
+  ca_box.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
+  ca_box.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
 
   demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
   demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
@@ -498,8 +528,10 @@ void PF::RawDeveloperConfigGUIV1::temp_tint_changed()
     temp2mul( temp, tint, cam_mul );
     double min_mul = MIN3(cam_mul[0], cam_mul[1], cam_mul[2]);
     for( int i = 0; i < 3; i++ ) cam_mul[i] /= min_mul;
+#ifndef NDEBUG
     std::cout<<"temp_tint_changed(): temp="<<temp<<"  tint="<<tint
         <<"  mul="<<cam_mul[0]<<","<<cam_mul[1]<<","<<cam_mul[2]<<std::endl;
+#endif
     switch( prop->get_enum_value().first ) {
     case PF::WB_SPOT:
     case PF::WB_COLOR_SPOT:
@@ -566,8 +598,17 @@ void PF::RawDeveloperConfigGUIV1::do_update()
     if( inode && inode->image) {
       size_t blobsz;
       PF::exif_data_t* exif_data;
-      if( !vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) &&
-          blobsz == sizeof(PF::exif_data_t) ) {
+      if( vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) ||
+          blobsz != sizeof(PF::exif_data_t) ) {
+        exif_data = NULL;
+      }
+      dcraw_data_t* raw_data;
+      if( vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data,&blobsz ) ||
+          blobsz != sizeof(dcraw_data_t) ) {
+        raw_data = NULL;
+      }
+
+      if( exif_data && raw_data ) {
         //char makermodel[1024];
         //char *tmodel = makermodel;
         //dt_colorspaces_get_makermodel_split(makermodel, sizeof(makermodel), &tmodel,
@@ -583,29 +624,33 @@ void PF::RawDeveloperConfigGUIV1::do_update()
           if( par2 ) {
             //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
             //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
-            float xyz_to_cam[4][3];
-            xyz_to_cam[0][0] = NAN;
-            dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])xyz_to_cam);
-            if(!isnan(xyz_to_cam[0][0])) {
+            //float xyz_to_cam[4][3];
+            //xyz_to_cam[0][0] = NAN;
+            //dt_dcraw_adobe_coeff(exif_data->camera_makermodel, (float(*)[12])xyz_to_cam);
+            if(!std::isnan(raw_data->color.cam_xyz[0][0])) {
               for(int i = 0; i < 3; i++) {
                 for(int j = 0; j < 3; j++) {
-                  XYZ_to_CAM[i][j] = (double)xyz_to_cam[i][j];
+                  XYZ_to_CAM[i][j] = (double)raw_data->color.cam_xyz[i][j];
                 }
               }
             }
+#ifndef NDEBUG
             printf("RawDeveloperConfigGUIV1::do_update(): xyz_to_cam:\n");
-            for(int k = 0; k < 3; k++)
-            {
-              printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
+            for(int k = 0; k < 3; k++) {
+              //printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
+              printf("    %.4f %.4f %.4f\n",raw_data->color.cam_xyz[k][0],raw_data->color.cam_xyz[k][1],raw_data->color.cam_xyz[k][2]);
             }
+#endif
 
             // and inverse matrix
             mat3inv_double((double *)CAM_to_XYZ, (double *)XYZ_to_CAM);
 
             double temp, tint;
             par2->get_wb( preset_wb );
+#ifndef NDEBUG
             std::cout<<"PF::RawDeveloperConfigGUIV1::do_update(): preset WB="
                 <<preset_wb[0]<<","<<preset_wb[1]<<","<<preset_wb[2]<<std::endl;
+#endif
             float real_wb[3];
             for( int i = 0; i < 3; i++ ) real_wb[i] = preset_wb[i];
             if( par2->get_wb_mode() != PF::WB_SPOT &&
@@ -616,8 +661,10 @@ void PF::RawDeveloperConfigGUIV1::do_update()
               real_wb[1] *= wbGreenCorrSlider.get_adjustment()->get_value();
               real_wb[2] *= wbBlueCorrSlider.get_adjustment()->get_value();
             }
+#ifndef NDEBUG
             std::cout<<"PF::RawDeveloperConfigGUIV1::do_update(): real WB="
                 <<real_wb[0]<<","<<real_wb[1]<<","<<real_wb[2]<<std::endl;
+#endif
             mul2temp( real_wb, &temp, &tint );
 
             ignore_temp_tint_change = true;
@@ -628,9 +675,8 @@ void PF::RawDeveloperConfigGUIV1::do_update()
         }
       }
 
-      dcraw_data_t* raw_data;
-      if( !vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data, &blobsz ) &&
-          blobsz == sizeof(dcraw_data_t) ) {
+      //dcraw_data_t* raw_data;
+      if( raw_data ) {
         is_xtrans = PF::check_xtrans( raw_data->idata.filters );
 
         float black_level = raw_data->color.black;
@@ -715,6 +761,33 @@ void PF::RawDeveloperConfigGUIV1::do_update()
 
     if( is_xtrans ) demoMethodSelector.hide();
     else demoMethodSelector.show();
+
+
+    // Lens corrections
+    if( processor ) {
+      PF::RawDeveloperV1Par* par2 =
+          dynamic_cast<PF::RawDeveloperV1Par*>(processor->get_par());
+      if( par2 ) {
+        lf_makerEntry.set_text( par2->get_lf_maker() );
+        lf_makerEntry.set_tooltip_text( par2->get_lf_maker() );
+
+        lf_modelEntry.set_text( par2->get_lf_model() );
+        lf_modelEntry.set_tooltip_text( par2->get_lf_model() );
+
+        lf_lensEntry.set_text( par2->get_lf_lens() );
+        lf_lensEntry.set_tooltip_text( par2->get_lf_lens() );
+      }
+    }
+    if( par->get_tca_enabled() || par->get_all_enabled() ) {
+      ca_mode_selector.show();
+      if( par->get_tca_method() == PF::PF_TCA_CORR_MANUAL )
+        ca_box.show();
+      else
+        ca_box.hide();
+    } else {
+      ca_mode_selector.hide();
+      ca_box.hide();
+    }
 
     prop = par->get_property( "cam_profile_name" );
     if( !prop )  return;
@@ -834,8 +907,45 @@ void PF::RawDeveloperConfigGUIV1::spot_wb( double x, double y )
 
   par->set_caching( false );
 
+  // We need to retrieve the input ICC profile for the RGB conversion later on
+  cmsHPROFILE profile_in = NULL;
+  cmsHPROFILE profile_out = NULL;
+  cmsHTRANSFORM transform = NULL;
+  void *data;
+  size_t data_length;
+  if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
+      &data, &data_length ) ) {
+
+    profile_in = cmsOpenProfileFromMem( data, data_length );
+  }
+  if( profile_in ) {
+
+    //#ifndef NDEBUG
+    char tstr2[1024];
+    cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr2, 1024);
+    std::cout<<"raw_developer: embedded profile found: "<<tstr2<<std::endl;
+    //#endif
+
+    std::string outprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/ACES-elle-V4-g10.icc";
+    profile_out = cmsOpenProfileFromFile( outprofname.c_str(), "r" );
+    if( !profile_out )
+      return;
+
+    cmsUInt32Number infmt = vips2lcms_pixel_format( image->BandFmt, profile_in );
+    cmsUInt32Number outfmt = TYPE_RGB_FLT;
+
+    transform = cmsCreateTransform( profile_in,
+        infmt,
+        profile_out,
+        outfmt,
+        INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE );
+  }
+
+  std::cout<<"profile_in: "<<profile_in<<std::endl;
+  std::cout<<"transform:  "<<transform<<std::endl;
   int sample_size = 7;
 
+  float in_check[3] = { 0, 0, 0 };
   float rgb_check[3] = { 0, 0, 0 };
   float rgb_prev[3] = { 1000, 1000, 1000 };
   for( int i = 0; i < 100; i++ ) {
@@ -847,6 +957,7 @@ void PF::RawDeveloperConfigGUIV1::spot_wb( double x, double y )
     int width = 7;
     int height = 7;
 
+    float in_avg[3] = {0, 0, 0};
     float rgb_avg[3] = {0, 0, 0};
     std::vector<float> values;
 
@@ -857,21 +968,24 @@ void PF::RawDeveloperConfigGUIV1::spot_wb( double x, double y )
           <<values.size()<<" (!= 3)"<<std::endl;
       return;
     }
-    rgb_avg[0] = values[0];
-    rgb_avg[1] = values[1];
-    rgb_avg[2] = values[2];
+    in_avg[0] = values[0];
+    in_avg[1] = values[1];
+    in_avg[2] = values[2];
+    if( transform ) {
+      if( cmsGetColorSpace(profile_in) == cmsSigLabData )
+        PF::Lab_pf2lcms( in_avg );
+      cmsDoTransform( transform, in_avg, rgb_avg, 1 );
+    } else {
+      rgb_avg[0] = in_avg[0];
+      rgb_avg[1] = in_avg[1];
+      rgb_avg[2] = in_avg[2];
+    }
 
+    //#ifndef NDEBUG
     std::cout<<" sampled("<<i<<"): "<<rgb_avg[0]<<" "<<rgb_avg[1]<<" "<<rgb_avg[2]<<std::endl;
-
+    //#endif
 
     float rgb_out[3] = {0, 0, 0};
-    float Lab_in[3] = {0, 0, 0};
-    float Lab_out[3] = {0, 0, 0};
-    float Lab_wb[3] = {
-        static_cast<float>(wb_target_L_slider.get_adjustment()->get_value()),
-        static_cast<float>(wb_target_a_slider.get_adjustment()->get_value()),
-        static_cast<float>(wb_target_b_slider.get_adjustment()->get_value())
-    };
 
     const float epsilon = 1.0e-5;
     float wb_red_mul;
@@ -884,6 +998,13 @@ void PF::RawDeveloperConfigGUIV1::spot_wb( double x, double y )
     wb_red_mul = rgb_avg[1]/rgb_avg[0];
     wb_blue_mul = rgb_avg[1]/rgb_avg[2];
     wb_green_mul = 1;
+
+    // Limit the values of correction coefficients
+    // to compensate for non-linear RGB values
+    if(wb_red_mul > 1.5) wb_red_mul = 1.5;
+    if(wb_blue_mul > 1.5) wb_blue_mul = 1.5;
+    if(wb_red_mul < 0.66) wb_red_mul = 0.66;
+    if(wb_blue_mul < 0.66) wb_blue_mul = 0.66;
 
     PropertyBase* wb_red_prop = wbRedSlider.get_prop();
     PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
@@ -899,11 +1020,11 @@ void PF::RawDeveloperConfigGUIV1::spot_wb( double x, double y )
       float wb_green_out = wb_green_mul*wb_green_in;
       float wb_blue_out = wb_blue_mul*wb_blue_in;
       float scale = (wb_red_out+wb_green_out+wb_blue_out)/3.0f;
-      scale = 1;
-      //std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-      //				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-      //				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
-      //std::cout<<"  scale: "<<scale<<std::endl;
+      //scale = 1;
+      std::cout<<" WB coefficients (1): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+          <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+          <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      std::cout<<"  scale: "<<scale<<std::endl;
       //float scale = wb_green_mul;
       wb_red_out /= scale;
       wb_green_out /= scale;
@@ -912,9 +1033,9 @@ void PF::RawDeveloperConfigGUIV1::spot_wb( double x, double y )
       wb_green_prop->update( wb_green_out );
       wb_blue_prop->update( wb_blue_out );
 
-      //std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
-      //				 <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
-      //				 <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
+      std::cout<<" WB coefficients (2): "<<wb_red_in<<"*"<<wb_red_mul<<" -> "<<wb_red_out<<std::endl
+          <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
+          <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
       wbRedSlider.init();
       wbGreenSlider.init();
@@ -937,9 +1058,16 @@ void PF::RawDeveloperConfigGUIV1::spot_wb( double x, double y )
           <<values.size()<<" (!= 3)"<<std::endl;
       return;
     }
-    rgb_check[0] = values[0];
-    rgb_check[1] = values[1];
-    rgb_check[2] = values[2];
+    in_check[0] = values[0];
+    in_check[1] = values[1];
+    in_check[2] = values[2];
+    if( transform ) {
+      cmsDoTransform( transform, in_check, rgb_check, 1 );
+    } else {
+      rgb_check[0] = in_check[0];
+      rgb_check[1] = in_check[1];
+      rgb_check[2] = in_check[2];
+    }
 
     std::cout<<" rgb check("<<i<<"): "<<rgb_check[0]<<" "<<rgb_check[1]<<" "<<rgb_check[2]<<std::endl;
 
@@ -953,6 +1081,10 @@ void PF::RawDeveloperConfigGUIV1::spot_wb( double x, double y )
     rgb_prev[1] = rgb_check[1];
     rgb_prev[2] = rgb_check[2];
   }
+
+  cmsDeleteTransform( transform );
+  cmsCloseProfile( profile_in );
+  cmsCloseProfile( profile_out );
 
   par->set_caching( true );
   // Update the prepipeline to reflect the new settings
@@ -1012,11 +1144,11 @@ void PF::RawDeveloperConfigGUIV1::color_spot_wb( double x, double y )
   if( !profile_in ) 
     return;
 
-  //#ifndef NDEBUG
+#ifndef NDEBUG
   char tstr2[1024];
   cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr2, 1024);
   std::cout<<"raw_developer: embedded profile found: "<<tstr2<<std::endl;
-  //#endif
+#endif
 
   cmsCIExyY white;
   cmsWhitePointFromTemp( &white, 6500 );
@@ -1090,17 +1222,17 @@ void PF::RawDeveloperConfigGUIV1::color_spot_wb( double x, double y )
     vips_rect_intersectrect( &crop, &all, &clipped );
 
     if( vips_crop( image, &spot, 
-									 clipped.left, clipped.top, 
-									 clipped.width, clipped.height, 
-									 NULL ) )
+                   clipped.left, clipped.top,
+                   clipped.width, clipped.height,
+                   NULL ) )
       return;
 
     VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
 
     VipsImage* outimg = im_open( "spot_wb_img", "p" );
     if (vips_sink_screen (spot, outimg, NULL,
-													64, 64, 1, 
-													0, NULL, this))
+                          64, 64, 1,
+                          0, NULL, this))
       return;
     VipsRegion* region = vips_region_new( outimg );
     if (vips_region_prepare (region, &rspot))
@@ -1123,10 +1255,10 @@ void PF::RawDeveloperConfigGUIV1::color_spot_wb( double x, double y )
     for( row = 0; row < rspot.height; row++ ) {
       p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
       for( col = 0; col < line_size; col += 3 ) {
-				red = p[col];      rgb_avg[0] += red;
-				green = p[col+1];  rgb_avg[1] += green;
-				blue = p[col+2];   rgb_avg[2] += blue;
-				//std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
+        red = p[col];      rgb_avg[0] += red;
+        green = p[col+1];  rgb_avg[1] += green;
+        blue = p[col+2];   rgb_avg[2] += blue;
+        //std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
       }
     }
     rgb_avg[0] /= rspot.width*rspot.height;
@@ -1380,15 +1512,15 @@ void PF::RawDeveloperConfigGUIV1::color_spot_wb( double x, double y )
     g_object_unref( region );
 
     if( vips_crop( image, &spot, 
-									 clipped.left, clipped.top, 
-									 clipped.width, clipped.height, 
-									 NULL ) )
+                   clipped.left, clipped.top,
+                   clipped.width, clipped.height,
+                   NULL ) )
       return;
 
     outimg = im_open( "spot_wb_img", "p" );
     if (vips_sink_screen (spot, outimg, NULL,
-													64, 64, 1, 
-													0, NULL, this))
+                          64, 64, 1,
+                          0, NULL, this))
       return;
     region = vips_region_new( outimg );
     if (vips_region_prepare (region, &rspot))
@@ -1399,10 +1531,10 @@ void PF::RawDeveloperConfigGUIV1::color_spot_wb( double x, double y )
     for( row = 0; row < rspot.height; row++ ) {
       p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top );
       for( col = 0; col < line_size; col += 3 ) {
-				red = p[col];      rgb_avg[0] += red;
-				green = p[col+1];  rgb_avg[1] += green;
-				blue = p[col+2];   rgb_avg[2] += blue;
-				//std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
+        red = p[col];      rgb_avg[0] += red;
+        green = p[col+1];  rgb_avg[1] += green;
+        blue = p[col+2];   rgb_avg[2] += blue;
+        //std::cout<<"  pixel="<<row<<","<<col<<"    red="<<red<<"  green="<<green<<"  blue="<<blue<<std::endl;
       }
     }
     rgb_avg[0] /= rspot.width*rspot.height;
@@ -1476,8 +1608,8 @@ void PF::RawDeveloperConfigGUIV1::on_cam_button_open_clicked()
 
   //Handle the response:
   switch(result) {
-  case(Gtk::RESPONSE_OK): 
-      {
+  case(Gtk::RESPONSE_OK):
+          {
     std::cout << "Open clicked." << std::endl;
 
     //Notice that this is a std::string, not a Glib::ustring.
@@ -1486,13 +1618,13 @@ void PF::RawDeveloperConfigGUIV1::on_cam_button_open_clicked()
     camProfFileEntry.set_text( filename.c_str() );
     on_cam_filename_changed();
     break;
-      }
-  case(Gtk::RESPONSE_CANCEL): 
-      {
+          }
+  case(Gtk::RESPONSE_CANCEL):
+          {
     std::cout << "Cancel clicked." << std::endl;
     break;
-      }
-  default: 
+          }
+  default:
   {
     std::cout << "Unexpected button clicked." << std::endl;
     break;
@@ -1517,8 +1649,8 @@ void PF::RawDeveloperConfigGUIV1::on_out_button_open_clicked()
 
   //Handle the response:
   switch(result) {
-  case(Gtk::RESPONSE_OK): 
-      {
+  case(Gtk::RESPONSE_OK):
+          {
     std::cout << "Open clicked." << std::endl;
 
     //Notice that this is a std::string, not a Glib::ustring.
@@ -1527,13 +1659,13 @@ void PF::RawDeveloperConfigGUIV1::on_out_button_open_clicked()
     outProfFileEntry.set_text( filename.c_str() );
     on_out_filename_changed();
     break;
-      }
-  case(Gtk::RESPONSE_CANCEL): 
-      {
+          }
+  case(Gtk::RESPONSE_CANCEL):
+          {
     std::cout << "Cancel clicked." << std::endl;
     break;
-      }
-  default: 
+          }
+  default:
   {
     std::cout << "Unexpected button clicked." << std::endl;
     break;
@@ -1545,7 +1677,7 @@ void PF::RawDeveloperConfigGUIV1::on_out_button_open_clicked()
 
 void PF::RawDeveloperConfigGUIV1::on_cam_filename_changed()
 {
-  if( get_layer() && get_layer()->get_image() && 
+  if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     std::string filename = camProfFileEntry.get_text();
@@ -1557,7 +1689,7 @@ void PF::RawDeveloperConfigGUIV1::on_cam_filename_changed()
     if( !par )
       return;
     PropertyBase* prop = par->get_property( "cam_profile_name" );
-    if( !prop ) 
+    if( !prop )
       return;
     prop->update( filename );
     get_layer()->set_dirty( true );
@@ -1570,7 +1702,7 @@ void PF::RawDeveloperConfigGUIV1::on_cam_filename_changed()
 
 void PF::RawDeveloperConfigGUIV1::on_out_filename_changed()
 {
-  if( get_layer() && get_layer()->get_image() && 
+  if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     std::string filename = outProfFileEntry.get_text();
@@ -1582,7 +1714,7 @@ void PF::RawDeveloperConfigGUIV1::on_out_filename_changed()
     if( !par )
       return;
     PropertyBase* prop = par->get_property( "out_profile_name" );
-    if( !prop ) 
+    if( !prop )
       return;
     prop->update( filename );
     get_layer()->set_dirty( true );

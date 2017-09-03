@@ -39,7 +39,7 @@
 #include "../../base/processor.hh"
 
 //#include "../rt/iccmatrices.hh"
-#include "../../dt/common/srgb_tone_curve_values.h"
+#include "../../external/darktable/src/common/srgb_tone_curve_values.h"
 
 #include "../../operations/raw_image.hh"
 
@@ -161,7 +161,9 @@ enum hlreco_mode_t {
       wb_red_current = r;
       wb_green_current = g;
       wb_blue_current = b;
+#ifndef NDEBUG
       std::cout<<"RawPreprocessorPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
+#endif
     }
 
     float get_exposure() { return exposure.get(); }
@@ -554,12 +556,12 @@ enum hlreco_mode_t {
           pout[xi] = CLIPOUT(pout[xi]);
         }
         for( int xi = 0; xi < line_size; xi+=3 ) {
-          if(true && r->left<20 && r->top<20 && y<4 && xi<12) {
+          if(false && r->left<20 && r->top<20 && y<4 && xi<12) {
             std::cout<<"("<<y<<","<<xi/3<<")  "<<pout[xi]<<","<<pout[xi+1]<<","<<pout[xi+2]<<"   "<<std::endl;
           }
         }
       }
-      delete line; delete line2;
+      delete[] line; delete[] line2;
     }
   };
 
