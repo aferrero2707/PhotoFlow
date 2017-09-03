@@ -1,145 +1,120 @@
-include(CheckCompilerFlagAndEnableIt)
+cmake_minimum_required(VERSION 3.0)
 
-CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-error=shadow)
+cmake_policy(SET CMP0011 NEW)
+cmake_policy(SET CMP0025 NEW)
 
-# should be < 64Kb
-math(EXPR MAX_MEANINGFUL_SIZE 16*1024)
-CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wframe-larger-than=${MAX_MEANINGFUL_SIZE})
-CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wstack-usage=${MAX_MEANINGFUL_SIZE})
+# Avoid source tree pollution
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-# as small as possible, but 1Mb+ is ok.
-math(EXPR MAX_MEANINGFUL_SIZE 16*1024)
-CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wlarger-than=${MAX_MEANINGFUL_SIZE})
+If(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR "In-source builds are not permitted. Make a separate folder for building:\nmkdir build; cd build; cmake ..\nBefore that, remove the files already created:\nrm -rf CMakeCache.txt CMakeFiles")
+endif(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
 
-if(USE_XMLLINT)
-	add_custom_target(
-		validate_cameras_xml ALL
-		COMMAND ${Xmllint_BIN} --nonet --valid --noout --schema ${CMAKE_CURRENT_SOURCE_DIR}/data/cameras.xsd ${CMAKE_CURRENT_SOURCE_DIR}/data/cameras.xml
-		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/data/cameras.xml
-		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
-		COMMENT "Checking validity of external/rawspeed/data/cameras.xml"
-	)
-endif(USE_XMLLINT)
+include(GNUInstallDirs)
 
-install(FILES data/cameras.xml data/showcameras.xsl DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/photoflow/rawspeed)
+if(NOT (CMAKE_VERSION VERSION_LESS 3.4.0-rc1))
+  project(rawspeed CXX)
+else()
+  # FindThreads.cmake issue
+  project(rawspeed CXX C)
+endif()
 
-FILE(GLOB RAWSPEED_SOURCES
-        "RawSpeed/AriDecoder.cpp"
-        "RawSpeed/ArwDecoder.cpp"
-        "RawSpeed/BitPumpJPEG.cpp"
-        "RawSpeed/BitPumpMSB.cpp"
-        "RawSpeed/BitPumpMSB16.cpp"
-        "RawSpeed/BitPumpMSB32.cpp"
-        "RawSpeed/BitPumpPlain.cpp"
-        "RawSpeed/BlackArea.cpp"
-        "RawSpeed/ByteStream.cpp"
-        "RawSpeed/ByteStreamSwap.cpp"
-        "RawSpeed/Camera.cpp"
-        "RawSpeed/CameraMetaData.cpp"
-        "RawSpeed/CameraMetadataException.cpp"
-        "RawSpeed/CameraSensorInfo.cpp"
-        "RawSpeed/CiffEntry.cpp"
-        "RawSpeed/CiffIFD.cpp"
-        "RawSpeed/CiffParser.cpp"
-        "RawSpeed/CiffParserException.cpp"
-        "RawSpeed/ColorFilterArray.cpp"
-        "RawSpeed/Common.cpp"
-        "RawSpeed/Cr2Decoder.cpp"
-        "RawSpeed/CrwDecoder.cpp"
-        "RawSpeed/DcrDecoder.cpp"
-        "RawSpeed/DcsDecoder.cpp"
-        "RawSpeed/DngDecoder.cpp"
-        "RawSpeed/DngDecoderSlices.cpp"
-        "RawSpeed/DngOpcodes.cpp"
-        "RawSpeed/ErfDecoder.cpp"
-        "RawSpeed/FileIOException.cpp"
-        "RawSpeed/FileMap.cpp"
-        "RawSpeed/FileReader.cpp"
-        "RawSpeed/FileWriter.cpp"
-        "RawSpeed/HasselbladDecompressor.cpp"
-        "RawSpeed/IOException.cpp"
-        "RawSpeed/KdcDecoder.cpp"
-        "RawSpeed/LJpegDecompressor.cpp"
-        "RawSpeed/LJpegPlain.cpp"
-        "RawSpeed/MefDecoder.cpp"
-        "RawSpeed/MosDecoder.cpp"
-        "RawSpeed/MrwDecoder.cpp"
-        "RawSpeed/NakedDecoder.cpp"
-        "RawSpeed/NefDecoder.cpp"
-        "RawSpeed/NikonDecompressor.cpp"
-        "RawSpeed/OrfDecoder.cpp"
-        "RawSpeed/PefDecoder.cpp"
-        "RawSpeed/PentaxDecompressor.cpp"
-        "RawSpeed/RafDecoder.cpp"
-        "RawSpeed/RawDecoder.cpp"
-        "RawSpeed/RawDecoderException.cpp"
-        "RawSpeed/RawImage.cpp"
-        "RawSpeed/RawImageDataFloat.cpp"
-        "RawSpeed/RawImageDataU16.cpp"
-        "RawSpeed/RawParser.cpp"
-        "RawSpeed/Rw2Decoder.cpp"
-        "RawSpeed/SrwDecoder.cpp"
-        "RawSpeed/StdAfx.cpp"
-        "RawSpeed/ThreefrDecoder.cpp"
-        "RawSpeed/TiffEntry.cpp"
-        "RawSpeed/TiffEntryBE.cpp"
-        "RawSpeed/TiffIFD.cpp"
-        "RawSpeed/TiffIFDBE.cpp"
-        "RawSpeed/TiffParser.cpp"
-        "RawSpeed/TiffParserException.cpp"
-        "RawSpeed/X3fDecoder.cpp"
-        "RawSpeed/X3fParser.cpp"
-)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/")
 
-#
-# build librawspeed
-#
-if(WIN32)
-  set(RAWSPEED_LIBS "msvcrt")
-endif(WIN32)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_library(rawspeed STATIC ${RAWSPEED_SOURCES})
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set_target_properties(rawspeed
-  PROPERTIES
-    POSITION_INDEPENDENT_CODE True
-)
+set(INTERPROCEDURAL_OPTIMIZATION ON)
 
-if(USE_XMLLINT)
-  add_dependencies(rawspeed validate_cameras_xml)
-endif(USE_XMLLINT)
+option(BINARY_PACKAGE_BUILD "Sets march optimization to generic" OFF)
+option(WITH_PTHREADS "Enable threading support through pthread. Highly recommended" ON)
+option(WITH_OPENMP "Enable OpenMP support. Only used for tools, not the library itself." ON)
+set(WITH_PUGIXML ON CACHE BOOL "Enable XML support for cameras.xml reading" FORCE)
+if(WITH_PUGIXML)
+  option(USE_BUNDLED_PUGIXML "Build and use pugixml in-tree" OFF)
+else()
+  set(USE_BUNDLED_PUGIXML OFF CACHE BOOL "Build and use pugixml in-tree" FORCE)
+endif()
+if(WITH_PUGIXML AND USE_BUNDLED_PUGIXML)
+  option(ALLOW_DOWNLOADING_PUGIXML "If pugixml src tree is not found in location specified by PUGIXML_PATH, do fetch the archive from internet" OFF)
+else()
+  set(ALLOW_DOWNLOADING_PUGIXML OFF CACHE BOOL "If pugixml src tree is not found in location specified by PUGIXML_PATH, do fetch the archive from internet" FORCE)
+endif()
+option(WITH_JPEG "Enable JPEG support for DNG Lossy JPEG support" ON)
+option(WITH_ZLIB "Enable ZLIB support for DNG deflate support" ON)
+if(WITH_ZLIB)
+  option(USE_BUNDLED_ZLIB "Build and use zlib in-tree" OFF)
+else()
+  set(USE_BUNDLED_ZLIB OFF CACHE BOOL "Build and use zlib in-tree" FORCE)
+endif()
+if(WITH_ZLIB AND USE_BUNDLED_ZLIB)
+  option(ALLOW_DOWNLOADING_ZLIB "If ZLIB src tree is not found in location specified by ZLIB_PATH, do fetch the archive from internet" OFF)
+else()
+  set(ALLOW_DOWNLOADING_ZLIB OFF CACHE BOOL "If ZLIB src tree is not found in location specified by ZLIB_PATH, do fetch the archive from internet" FORCE)
+endif()
+option(USE_XMLLINT "Run xmllint to test if data/cameras.xml is valid" ON)
+option(USE_IWYU "Run iwyu tool when compiling sources" OFF)
+option(USE_CLANG_TIDY "Run clang-tidy tool when compiling sources" OFF)
+option(BUILD_TESTING "Build the testing tree." ON)
+if(BUILD_TESTING)
+  option(ALLOW_DOWNLOADING_GOOGLETEST "If googletest src tree is not found in location specified by GOOGLETEST_PATH, do fetch the archive from internet" OFF)
+else()
+  set(ALLOW_DOWNLOADING_GOOGLETEST OFF CACHE BOOL "If googletest src tree is not found in location specified by GOOGLETEST_PATH, do fetch the archive from internet" FORCE)
+endif()
+option(BUILD_TOOLS "Build some tools (identify, rstest)." ON)
+option(BUILD_BENCHMARKING "Build some benchmarks." OFF)
+if(BUILD_BENCHMARKING)
+  option(ALLOW_DOWNLOADING_GOOGLEBENCHMARK "If googlebenchmark src tree is not found in location specified by GOOGLEBENCHMARK_PATH, do fetch the archive from internet" OFF)
+else()
+  set(ALLOW_DOWNLOADING_GOOGLEBENCHMARK OFF CACHE BOOL "If googlebenchmark src tree is not found in location specified by GOOGLEBENCHMARK_PATH, do fetch the archive from internet" FORCE)
+endif()
+option(BUILD_DOCS "Build the documentation (mainly, using Doxygen)." OFF)
+option(BUILD_FUZZERS "Build the fuzzing tree." ON)
 
-target_link_libraries(rawspeed ${RAWSPEED_LIBS} ${Pugixml_LIBRARIES} ${JPEG_LIBRARIES})
+set(GOOGLETEST_PATH "/usr/src/googletest" CACHE PATH
+                    "Path to the googletest root tree. Should contain googletest and googlemock subdirs. And CMakeLists.txt in root, and in both of these subdirs")
 
-#
-# the rawspeed part is a bit of a hack:
-# the static linking didn't work since it was pulling -lstdc++ and -lm into linker flags.
-# so we do a custom dependency and pretend an imported librawsped.a so no other -l are
-# appended.
-#
-add_library(rawspeed_static STATIC IMPORTED GLOBAL)
-set_target_properties(rawspeed_static
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/librawspeed.a
-    INTERFACE_LINK_LIBRARIES $<TARGET_PROPERTY:rawspeed,INTERFACE_LINK_LIBRARIES>
-    POSITION_INDEPENDENT_CODE True
-)
+set(PUGIXML_PATH "/usr/src/pugixml" CACHE PATH "Path to the pugixml root tree.")
 
-add_dependencies(rawspeed_static rawspeed)
+set(ZLIB_PATH "/usr/src/zlib" CACHE PATH "Path to the zlib root tree.")
 
-# Adapted from src/cli/CMakeLists.txt
-if (BUILD_RS_IDENTIFY)
-  add_executable(photoflow-rs-identify rawspeed-identify.cpp)
+set(GOOGLEBENCHMARK_PATH "/usr/src/googlebenchmark" CACHE PATH
+                    "Path to the googlebenchmark root tree.")
 
-  target_compile_definitions(photoflow-rs-identify
-    PRIVATE -DRS_CAMERAS_XML_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/photoflow/rawspeed/cameras.xml"
-  )
+set(LIBFUZZER_ARCHIVE "/usr/local/lib/llvm/lib/libFuzzer.a" CACHE FILEPATH "Filepath to the libFuzzer.a archive.")
 
-  set_target_properties(photoflow-rs-identify
-    PROPERTIES
-      LINKER_LANGUAGE CXX)
+include(build-type)
 
-  target_link_libraries(photoflow-rs-identify rawspeed_static)
+if(USE_IWYU)
+  include(iwyu)
+endif()
 
-  install(TARGETS photoflow-rs-identify DESTINATION ${CMAKE_INSTALL_BINDIR})
+if((UNIX OR APPLE) AND USE_CLANG_TIDY)
+  include(clang-tidy)
+endif()
+
+if(BUILD_TESTING)
+  enable_testing()
+endif()
+
+include(compiler-versions)
+include(compiler-flags)
+
+add_custom_target(check ALL)
+add_custom_target(dependencies ALL)
+
+add_subdirectory(src)
+add_subdirectory(data)
+
+if(BUILD_DOCS)
+  add_subdirectory(docs)
+endif()
+
+if(BUILD_TESTING AND CMAKE_BUILD_TYPE STREQUAL "COVERAGE")
+  include(CodeCoverage)
+  setup_target_for_coverage(coverage ctest coverage)
+  include(GCOV)
 endif()

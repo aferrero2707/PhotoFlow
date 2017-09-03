@@ -11,9 +11,9 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
   <xs:simpleType name="IDTypeType">
     <xs:restriction base="xs:string">
-      <xs:pattern value="[a-zA-Z0-9 \-*()]{2,28}"/>
+      <xs:pattern value="[a-zA-Z0-9 \-*()]{2,38}"/>
       <xs:minLength value="2"/>
-      <xs:maxLength value="28"/>
+      <xs:maxLength value="38"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="IDTypeMakeType">
@@ -32,6 +32,7 @@
       <xs:enumeration value="Mamiya"/>
       <xs:enumeration value="Minolta"/>
       <xs:enumeration value="Nikon"/>
+      <xs:enumeration value="Nokia"/>
       <xs:enumeration value="Olympus"/>
       <xs:enumeration value="OnePlus"/>
       <xs:enumeration value="Panasonic"/>
@@ -290,7 +291,6 @@
       <xs:maxLength value="26"/>
       <xs:enumeration value="coolpixmangled"/>
       <xs:enumeration value="coolpixsplit"/>
-      <xs:enumeration value="double_line_ljpeg"/>
       <xs:enumeration value="double_width_unpacked"/>
       <xs:enumeration value="easyshare_offset_hack"/>
       <xs:enumeration value="filesize"/>
@@ -304,7 +304,6 @@
       <xs:enumeration value="nikon_wb_adjustment"/>
       <xs:enumeration value="no_decompressed_lowbits"/>
       <xs:enumeration value="offset"/>
-      <xs:enumeration value="old_format"/>
       <xs:enumeration value="packed_with_control"/>
       <xs:enumeration value="pixel_aspect_ratio"/>
       <xs:enumeration value="real_bpp"/>
@@ -315,7 +314,6 @@
       <xs:enumeration value="swapped_wb"/>
       <xs:enumeration value="wb_mangle"/>
       <xs:enumeration value="wb_offset"/>
-      <xs:enumeration value="wrapped_cr2_slices"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="HintType">
@@ -347,6 +345,7 @@
       <xs:enumeration value="Creo/Leaf"/>
       <xs:enumeration value="DJI"/>
       <xs:enumeration value="EASTMAN KODAK COMPANY"/>
+      <xs:enumeration value="Eastman Kodak Company"/>
       <xs:enumeration value="FUJIFILM"/>
       <xs:enumeration value="Foculus"/>
       <xs:enumeration value="GITUP"/>
@@ -358,6 +357,7 @@
       <xs:enumeration value="Konica Minolta Camera, Inc."/>
       <xs:enumeration value="LEICA"/>
       <xs:enumeration value="Leaf"/>
+      <xs:enumeration value="LEICA CAMERA AG"/>
       <xs:enumeration value="Leica Camera AG"/>
       <xs:enumeration value="Mamiya-OP Co.,Ltd."/>
       <xs:enumeration value="Matrix"/>
@@ -367,6 +367,7 @@
       <xs:enumeration value="NIKON CORPORATION"/>
       <xs:enumeration value="NIKON"/>
       <xs:enumeration value="Nikon"/>
+      <xs:enumeration value="Nokia"/>
       <xs:enumeration value="OLYMPUS CORPORATION"/>
       <xs:enumeration value="OLYMPUS IMAGING CORP."/>
       <xs:enumeration value="OLYMPUS OPTICAL CO.,LTD"/>
