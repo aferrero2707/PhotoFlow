@@ -13,22 +13,35 @@ main( int argc, char **argv )
   VipsImage *image2;
   VipsImage *out;
  
-  if( !(image = vips_image_new_from_file( argv[1] )) )
-    vips_error_exit( NULL );
- 
-  if( vips_rawsave( image, argv[2], NULL ) )
-    vips_error_exit( NULL );
+  // Create VipsImage from given file
+#if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
+  image = vips_image_new_from_file( argv[1] );
+#else
+  image = vips_image_new_from_file( argv[1], NULL );
+#endif
+  if( !image ) {
+    printf("Failed to load \"%s\"\n",argv[1]);
+    return 1;
+  }
 
-  vips_rawload( argv[2], &image2, image->Xsize, image->Ysize, image->Bands, NULL );
-  vips_copy( image2, &out, 
-	     "format", image->BandFmt,
-	     "coding", image->Coding,
-	     "interpretation", image->Type,
-	     NULL );
+  printf("image:            %p\n",image);
+  printf("# of bands:       %d\n",image->Bands);
+  printf("band format:      %d\n",image->BandFmt);
+  printf("type:             %d\n",image->Type);
+  printf("image dimensions: %d x %d\n",image->Xsize,image->Ysize);
+
+  printf("saving test buffer (image=%p)...\n",image);
+  size_t array_sz;
+  void* mem_array = vips_image_write_to_memory( image, &array_sz );
+  printf("test buffer saved (mem_array=%p, array_sz=%d).\n",mem_array,(int)array_sz);
+  if( mem_array ) free(mem_array);
+
+  //if( !mem_array )
+
+  vips_tiffsave( image, "test.tif", "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
+      "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
+
   g_object_unref( image );
-  g_object_unref( image2 );
-  vips_image_write_to_file( out, argv[3] );
-  g_object_unref( out );
 
   return( 0 );
 }
