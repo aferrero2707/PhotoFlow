@@ -229,6 +229,16 @@ buttonSavePreset()
     label->set_angle(90);
    */
 
+  if( set_icon_from_file( PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png" ) ) {
+    std::cout<<"Application window icon set from \""
+        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<"\""<<std::endl;
+  } else {
+    std::cout<<"Failed to set application window icon from \""
+        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<"\""<<std::endl;
+  }
+
 
   add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
 
@@ -724,7 +734,8 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_mime_type("image/x-srf");
   filter_tiff.add_mime_type("image/x-x3f");
   filter_tiff.add_mime_type("image/x-exr");
-  /*filter_tiff.add_pattern("*.EXR");
+#ifdef WIN32
+  /*filter_tiff.add_pattern("*.EXR");*/
   filter_tiff.add_pattern("*.3FR");
   filter_tiff.add_pattern("*.ARI");
   filter_tiff.add_pattern("*.ARW");
@@ -764,7 +775,8 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff.add_pattern("*.SRF");
   filter_tiff.add_pattern("*.SRW");
   filter_tiff.add_pattern("*.STI");
-  filter_tiff.add_pattern("*.X3F");*/
+  filter_tiff.add_pattern("*.X3F");
+#endif
   filter_tiff.add_pattern("*.pfi");
   filter_tiff.add_pattern("*.PFI");
   filter_tiff.add_pattern("*.Pfi");
@@ -826,7 +838,8 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_mime_type("image/x-srf");
   filter_tiff->add_mime_type("image/x-x3f");
   filter_tiff->add_mime_type("image/x-exr");
-  /*filter_tiff->add_pattern("*.exr");
+#ifdef WIN32
+  /*filter_tiff->add_pattern("*.exr");*/
   filter_tiff->add_pattern("*.3fr");
   filter_tiff->add_pattern("*.ari");
   filter_tiff->add_pattern("*.arw");
@@ -866,7 +879,8 @@ void PF::MainWindow::on_button_open_clicked()
   filter_tiff->add_pattern("*.srf");
   filter_tiff->add_pattern("*.srw");
   filter_tiff->add_pattern("*.sti");
-  filter_tiff->add_pattern("*.x3f");*/
+  filter_tiff->add_pattern("*.x3f");
+#endif
   filter_tiff->add_pattern("*.pfi");
   filter_tiff->add_pattern("*.PFI");
   filter_tiff->add_pattern("*.Pfi");
@@ -923,6 +937,8 @@ void PF::MainWindow::on_button_save_clicked()
     PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
     if( editor && editor->get_image() ) {
       bool saved = false;
+      std::cout<<"MainWindow::on_button_save_clicked(): editor->get_image()->get_filename()=\""
+          <<editor->get_image()->get_filename()<<"\""<<std::endl;
       if( !(editor->get_image()->get_filename().empty()) ) {
         std::string ext;
         PF::get_file_extension( editor->get_image()->get_filename(), ext );
