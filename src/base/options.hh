@@ -55,6 +55,7 @@ namespace PF
     Glib::ustring last_visited_icc_folder;
 
     int save_sidecar_files;
+    int use_default_preset;
 
   public:
     Options();
@@ -78,6 +79,9 @@ namespace PF
 
     void set_save_sidecar_files(int val) { save_sidecar_files = val; }
     int get_save_sidecar_files() { return save_sidecar_files; }
+
+    void set_apply_default_preset(int val) { use_default_preset = val; }
+    int get_apply_default_preset() { return use_default_preset; }
 
     void load();
     void save();

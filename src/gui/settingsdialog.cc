@@ -55,6 +55,7 @@
 PF::SettingsDialog::SettingsDialog():
 Gtk::Dialog( _("Settings"),true),
 cm_display_profile_open_button(Gtk::Stock::OPEN),
+apply_default_preset_label(_("apply default processing profile")),
 save_sidecar_files_label(_("save sidecar files"))
 {
   set_default_size(600,400);
@@ -65,8 +66,8 @@ save_sidecar_files_label(_("save sidecar files"))
   signal_response().connect( sigc::mem_fun(*this,
       &SettingsDialog::on_button_clicked) );
 
+  notebook.append_page( general_box, _("General") );
   notebook.append_page( color_box, _("Color management") );
-  notebook.append_page( output_box, _("Output") );
   notebook.append_page( about_box, _("About") );
 
   cm_display_profile_model = Gtk::ListStore::create(cm_display_profile_columns);
@@ -109,10 +110,15 @@ save_sidecar_files_label(_("save sidecar files"))
 
   //cm_display_profile_type_selector.set_size_request( 30, -1 );
 
+  apply_default_preset_hbox.pack_start( apply_default_preset_check, Gtk::PACK_SHRINK );
+  apply_default_preset_hbox.pack_start( apply_default_preset_label, Gtk::PACK_SHRINK );
+  apply_default_preset_label.set_tooltip_text(_("Apply default processing preset to RAW files"));
+  general_box.pack_start( apply_default_preset_hbox, Gtk::PACK_SHRINK );
+
   save_sidecar_files_hbox.pack_start( save_sidecar_files_check, Gtk::PACK_SHRINK );
   save_sidecar_files_hbox.pack_start( save_sidecar_files_label, Gtk::PACK_SHRINK );
   save_sidecar_files_label.set_tooltip_text(_("Save sidecar files when exporting to raster formats"));
-  output_box.pack_start( save_sidecar_files_hbox, Gtk::PACK_SHRINK );
+  general_box.pack_start( save_sidecar_files_hbox, Gtk::PACK_SHRINK );
 
 
   Glib::ustring about = PF::version_string;
@@ -167,6 +173,9 @@ void PF::SettingsDialog::load_settings()
   //cm_display_profile_type_selector.set_active( PF::PhotoFlow::Instance().get_options().get_display_profile_type() );
   cm_display_profile_entry.set_text( PF::PhotoFlow::Instance().get_options().get_custom_display_profile_name() );
 
+  std::cout<<"PF::PhotoFlow::Instance().get_options().get_apply_default_preset(): "<<PF::PhotoFlow::Instance().get_options().get_apply_default_preset()<<std::endl;
+  apply_default_preset_check.set_active( PF::PhotoFlow::Instance().get_options().get_apply_default_preset() != 0 );
+
   std::cout<<"PF::PhotoFlow::Instance().get_options().get_save_sidecar_files(): "<<PF::PhotoFlow::Instance().get_options().get_save_sidecar_files()<<std::endl;
   save_sidecar_files_check.set_active( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 );
 }
@@ -199,6 +208,11 @@ void PF::SettingsDialog::save_settings()
   //std::cout<<"cm_display_profile_type_selector.get_active_row_number(): "<<cm_display_profile_type_selector.get_active_row_number()<<std::endl;
   PF::PhotoFlow::Instance().get_options().set_display_profile_type( dpy_prof_id );
   PF::PhotoFlow::Instance().get_options().set_custom_display_profile_name( cm_display_profile_entry.get_text() );
+
+  if( apply_default_preset_check.get_active() )
+    PF::PhotoFlow::Instance().get_options().set_apply_default_preset( 1 );
+  else
+    PF::PhotoFlow::Instance().get_options().set_apply_default_preset( 0 );
 
   if( save_sidecar_files_check.get_active() )
     PF::PhotoFlow::Instance().get_options().set_save_sidecar_files( 1 );

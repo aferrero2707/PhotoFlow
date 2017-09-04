@@ -64,6 +64,7 @@ namespace PF
     new_op_func_t new_op_func;
     new_op_func_t new_op_func_nogui;
 
+    std::string presets_dir;
     std::string config_dir;
     std::string cache_dir;
     std::string base_dir;
@@ -124,6 +125,7 @@ namespace PF
     std::string get_locale_dir() { return locale_dir; }
 
     std::string get_cache_dir() { return cache_dir; }
+    std::string get_presets_dir() { return presets_dir; }
     std::string get_config_dir() { return config_dir; }
 
     void set_current_image_dir(std::string d) { current_image_dir = d; }
