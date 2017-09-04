@@ -130,7 +130,7 @@ void PF::ControlsGroup::populate()
             PF::OpParBase* par = gui->get_par();
             if( gui->is_expanded() && par ) {
 #ifndef NDEBUG
-              std::cout<<"ControlsGroup::remove_control(): resetting editing flag"<<std::endl;
+              std::cout<<"ControlsGroup::populate(): setting editing flag"<<std::endl;
 #endif
               par->set_editing_flag( true );
               //get_layer()->get_image()->update();

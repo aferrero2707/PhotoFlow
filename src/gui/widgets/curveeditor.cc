@@ -303,7 +303,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
     grabbed_point = -1;
   }
   case (Gdk::MOTION_NOTIFY) : 
-      {
+        {
     //std::cout<<"grabbed point: "<<grabbed_point<<std::endl;
     if( /*!curve ||*/ (grabbed_point<0) ) break;
 
@@ -337,7 +337,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       inhibit_value_changed = false;
     }
     break;
-      }
+        }
   default:
     break;
   }

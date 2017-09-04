@@ -78,4 +78,3 @@ float PF::hsl_value( float n1, float n2, float hue)
 
   return val;
 }
-

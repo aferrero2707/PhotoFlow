@@ -952,6 +952,7 @@ bool PF::RawImage::load_rawtherapee()
   for (int i = 0; i < 3; i++)
     for (int j = 0; j < 3; j++) {
       imatrices.rgb_cam[i][j] = ri->get_rgb_cam(i, j);
+      std::cout<<"RawImage::load_rawtherapee(): imatrices.rgb_cam["<<i<<"]["<<j<<"]="<<imatrices.rgb_cam[i][j]<<std::endl;
     }
 
   // compute inverse of the color transformation matrix
@@ -971,8 +972,10 @@ bool PF::RawImage::load_rawtherapee()
 
   pdata->color.cam_xyz[0][0] = NAN;
   for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++)
+    for (int j = 0; j < 3; j++) {
       pdata->color.cam_xyz[i][j] = imatrices.cam_xyz[i][j];
+      std::cout<<"RawImage::load_rawtherapee(): pdata->color.cam_xyz["<<i<<"]["<<j<<"]="<<pdata->color.cam_xyz[i][j]<<std::endl;
+    }
 
 
 #ifndef NDEBUG

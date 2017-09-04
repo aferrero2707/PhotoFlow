@@ -1,2 +1,2 @@
 #include <version.hh>
-const char* PF::version_string = "\nPhotoFlow release v0.2.8\n";
+const char* PF::version_string = "\nPhotoFlow 0.2.8\n";

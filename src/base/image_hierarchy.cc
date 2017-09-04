@@ -99,7 +99,7 @@ void PF::image_hierarchy_fill(VipsImage* dest, int padding, std::vector<VipsImag
         std::cout<<"image_hierarchy_fill(): i="<<i<<" array="<<array<<std::endl;
       } else {
         if( length != sizeof(PF::IHArray) ) {
-          std::cout<<"image_hierarchy_fill(): parent image "<<i<<" wromg size of hierarchy information"<<std::endl;
+          std::cout<<"image_hierarchy_fill(): parent image "<<i<<" wrong size of hierarchy information"<<std::endl;
           std::cout<<"image_hierarchy_fill(): i="<<i<<" array="<<array<<std::endl;
         } else {
           //std::cout<<"image_hierarchy_fill(): adding array from parent image "<<i<<std::endl;

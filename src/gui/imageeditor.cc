@@ -71,11 +71,11 @@ bool PF::PreviewScrolledWindow::on_configure_event(GdkEventConfigure*event)
 
 
 PF::ImageSizeUpdater::ImageSizeUpdater( Pipeline* v ):
-              PipelineSink( v ),
-              displayed_layer_id( -1 ),
-              image( NULL ),
-              image_width( 0 ),
-              image_height( 0 )
+    PipelineSink( v ),
+    displayed_layer_id( -1 ),
+    image( NULL ),
+    image_width( 0 ),
+    image_height( 0 )
 {
 }
 
@@ -166,30 +166,30 @@ public:
 
 
 PF::ImageEditor::ImageEditor( std::string fname ):
-              filename( fname ),
-              image( new PF::Image() ),
-              image_opened( false ),
-              displayed_layer( NULL ),
-              edited_layer( NULL ),
-              selected_layer_id( -1 ),
-              //imageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) ),
-              layersWidget( image, this ),
-              aux_controls( NULL ),
-              img_zoom_in(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"),
-              img_zoom_out(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-out.png"),
-              img_zoom_fit(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-fit.png"),
-              //buttonZoomIn( "Zoom +" ),
-              //buttonZoomOut( "Zoom -" ),
-              buttonZoom100( "1:1" ),
-              //buttonZoomFit( "Fit" ),
-              img_highlights_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/highlights_clip_warning.png"),
-              img_shadows_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/shadows_clip_warning.png"),
-              buttonShowMerged( _("show merged layers") ),
-              buttonShowActive( _("show active layer") ),
-              tab_label_widget( NULL ),
-              fit_image( true ),
-              fit_image_needed( true ),
-              hide_background_layer( false )
+    filename( fname ),
+    image( new PF::Image() ),
+    image_opened( false ),
+    displayed_layer( NULL ),
+    edited_layer( NULL ),
+    selected_layer_id( -1 ),
+    //imageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) ),
+    layersWidget( image, this ),
+    aux_controls( NULL ),
+    img_zoom_in(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"),
+    img_zoom_out(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-out.png"),
+    img_zoom_fit(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-fit.png"),
+    //buttonZoomIn( "Zoom +" ),
+    //buttonZoomOut( "Zoom -" ),
+    buttonZoom100( "1:1" ),
+    //buttonZoomFit( "Fit" ),
+    img_highlights_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/highlights_clip_warning.png"),
+    img_shadows_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/shadows_clip_warning.png"),
+    buttonShowMerged( _("show merged layers") ),
+    buttonShowActive( _("show active layer") ),
+    tab_label_widget( NULL ),
+    fit_image( true ),
+    fit_image_needed( true ),
+    hide_background_layer( false )
 {
 #ifndef NDEBUG
   std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
@@ -919,7 +919,7 @@ bool PF::ImageEditor::zoom_fit()
   if( !pipeline ) return false;
 #ifndef NDEBUG
   std::cout<<"image_size_updater->get_image_width()="<<image_size_updater->get_image_width()
-                      <<" get_image_height()="<<image_size_updater->get_image_height()<<std::endl;
+                                  <<" get_image_height()="<<image_size_updater->get_image_height()<<std::endl;
 #endif
   if( image_size_updater->get_image_width() < 1 ||
       image_size_updater->get_image_height() < 1 ) return false;
@@ -1188,7 +1188,7 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
         h = rin.height;
 #ifndef NDEBUG
         std::cout<<"PF::ImageEditor::image2layer(): after \""<<l->get_name()
-                              <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
+                                          <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
       }
     }
@@ -1343,7 +1343,7 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
         h = rout.height;
 #ifndef NDEBUG
         std::cout<<"PF::ImageEditor::layer2image(): after \""<<l->get_name()
-                              <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
+                                          <<"\"("<<par->get_type()<<"): x'="<<x<<"  y'="<<y<<std::endl;
 #endif
       }
     }

@@ -33,38 +33,38 @@
 
 PF::ImageReaderPar::~ImageReaderPar()
 {
-	std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image="<<(void*)raster_image<<std::endl;
+  std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image="<<(void*)raster_image<<std::endl;
   if( raster_image ) {
     raster_image->unref();
-		std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
+    std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image->get_nref()="<<raster_image->get_nref()<<std::endl;
     if( raster_image->get_nref() == 0 ) {
       std::map<Glib::ustring, RasterImage*>::iterator i = 
-				raster_images.find( raster_image->get_file_name() );
+          raster_images.find( raster_image->get_file_name() );
       if( i != raster_images.end() ) 
-				raster_images.erase( i );
+        raster_images.erase( i );
       delete raster_image;
-			std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image deleted"<<std::endl;
-			raster_image = 0;
+      std::cout<<"ImageReaderPar::~ImageReaderPar(): raster_image deleted"<<std::endl;
+      raster_image = 0;
     }
   }
 }
 
 
 VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first, 
-				     VipsImage* imap, VipsImage* omap, 
-				     unsigned int& level)
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
 {
   bool modified = false;
 
   if( file_name.get().empty() )
     return NULL;
 
-  
+
   std::map<Glib::ustring, RasterImage*>::iterator i = 
-    raster_images.find( file_name.get() );
+      raster_images.find( file_name.get() );
 
   RasterImage* new_raster_image = NULL;
-  
+
   if( i == raster_images.end() ) {
     std::cout<<"ImageReaderPar::build(): creating new RasterImage for file "<<file_name.get()<<std::endl;
     new_raster_image = new RasterImage( file_name.get() );
@@ -99,9 +99,9 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
 
   if( !raster_image )
     return NULL;
-  
+
   VipsImage* image = raster_image->get_image( level );
-  
+
   if( !image ) return NULL;
 
   /*
@@ -122,7 +122,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   for(int i = 0; i < in.size(); i++) {
     std::cout<<"  "<<(void*)in[i]<<std::endl;
   }
-  std::cout<<"image->Interpretation: "<<image->Type<<std::endl;
+  std::cout<<"image: "<<image<<"    image->Interpretation: "<<image->Type<<std::endl;
   std::cout<<"imap: "<<(void*)imap<<std::endl<<"omap: "<<(void*)omap<<std::endl;
 #endif
 
@@ -135,11 +135,11 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     }
 
     vips_image_init_fields( out,
-                            image->Xsize, image->Ysize, 
-                            nbands, image->BandFmt,
-                            image->Coding,
-                            image->Type,
-                            1.0, 1.0);
+        image->Xsize, image->Ysize,
+        nbands, image->BandFmt,
+        image->Coding,
+        image->Type,
+        1.0, 1.0);
     PF_UNREF( image, "ImageReaderPar::build(): image unref after extract_band" );
     image = out;
   }
@@ -150,7 +150,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   void *data;
   size_t data_length;
   if( !vips_image_get_blob( image, VIPS_META_ICC_NAME, 
-			    &data, &data_length ) ) {
+      &data, &data_length ) ) {
     cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
     if( profile_in ) {  
       char tstr[1024];
