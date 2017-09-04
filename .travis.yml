@@ -104,10 +104,13 @@ matrix:
               #- wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
               #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
               - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-              - 'if [ x"${TRAVIS_BRANCH}" = "stable" ]; then
-                  bash  ./upload_rotate.sh "continuous" out/*
+              - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                  bash  ./upload_rotate.sh "continuous" out/*;
                 fi'
-              #- find /usr -name gconv
+              - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                  bash  ./upload_rotate.sh "unstable" out/*;
+                fi'
+              - find /usr -name gconv
         - os: linux
           dist: trusty
           compiler: g++
@@ -142,7 +145,12 @@ matrix:
             - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/package-w32.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh "continuous" photoflow*.zip
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" photoflow*.zip
+              fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                bash  ./upload_rotate.sh "unstable" photoflow*.zip
+              fi'
         - os: linux
           dist: trusty
           compiler: g++
@@ -184,10 +192,16 @@ matrix:
             - ../windows/package-w64.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh "continuous" photoflow*.zip
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" photoflow*.zip
+              fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                bash  ./upload_rotate.sh "unstable" photoflow*.zip
+              fi'
 
 
 branches:
   except:
     - # Do not build tags that we create when we upload to GitHub Releases
     - /^(?i:continuous)$/
+    - /^(?i:unstable)$/
