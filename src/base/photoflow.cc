@@ -161,6 +161,45 @@ PF::PhotoFlow::PhotoFlow():
 
     if (SHGetSpecialFolderPathW(NULL, pathW, CSIDL_LOCAL_APPDATA, false)) {
       WideCharToMultiByte(CP_UTF8, 0, pathW, -1, pathA, MAX_PATH, 0, 0);
+      presets_dir = Glib::build_filename(Glib::ustring(pathA), "photoflow");
+      int result = mkdir(presets_dir.c_str());
+      if( (result == 0) || (errno == EEXIST) ) {
+        presets_dir = Glib::build_filename(presets_dir, "presets");
+        result = mkdir(presets_dir.c_str());
+        if( (result != 0) && (errno != EEXIST) ) {
+          perror("mkdir");
+          std::cout<<"Cannot create "<<presets_dir<<"    exiting."<<std::endl;
+          exit( 1 );
+        }
+      }
+    }
+#else
+    if( getenv("HOME") ) {
+      sprintf( fname,"%s/.photoflow", getenv("HOME") );
+      int result = mkdir(fname, 0755);
+      if( (result == 0) || (errno == EEXIST) ) {
+        sprintf( fname,"%s/.photoflow/presets/", getenv("HOME") );
+        result = mkdir(fname, 0755);
+        if( (result != 0) && (errno != EEXIST) ) {
+          perror("mkdir");
+          std::cout<<"Cannot create "<<fname<<"    exiting."<<std::endl;
+          exit( 1 );
+        }
+      } else {
+        perror("mkdir");
+        std::cout<<"Cannot create "<<fname<<" (result="<<result<<")   exiting."<<std::endl;
+        exit( 1 );
+      }
+      presets_dir = fname;
+    }
+#endif
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+    WCHAR pathW[MAX_PATH] = {0};
+    char pathA[MAX_PATH];
+
+    if (SHGetSpecialFolderPathW(NULL, pathW, CSIDL_LOCAL_APPDATA, false)) {
+      WideCharToMultiByte(CP_UTF8, 0, pathW, -1, pathA, MAX_PATH, 0, 0);
       config_dir = Glib::build_filename(Glib::ustring(pathA), "photoflow");
       int result = mkdir(config_dir.c_str());
       if( (result == 0) || (errno == EEXIST) ) {

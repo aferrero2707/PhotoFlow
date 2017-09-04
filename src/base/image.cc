@@ -886,17 +886,17 @@ bool PF::Image::open( std::string filename, std::string bckname )
 
     if( !PF::PhotoFlow::Instance().is_batch() ) {
       Glib::ustring profile;
-#ifndef WIN32
-      char* home = getenv("HOME");
-      if( home ) {
-        struct stat buffer;
-        profile = home;
-        profile = profile + "/.photoflow/presets/default.pfp";
-        int stat_result = stat(profile.c_str(), &buffer);
-        if( stat_result != 0 ) profile = "";
-      }
+#ifdef __WIN32__
+      profile = PF::PhotoFlow::Instance().get_presets_dir() + "\\default.pfp";
+#else
+      profile = PF::PhotoFlow::Instance().get_presets_dir() + "/default.pfp";
 #endif
-      if( !profile.empty() ) {
+      struct stat buffer;
+      int stat_result = stat(profile.c_str(), &buffer);
+      if( stat_result != 0 ) profile = "";
+
+      if( !profile.empty() &&
+          PF::PhotoFlow::Instance().get_options().get_apply_default_preset() ) {
         PF::insert_pf_preset( profile.c_str(), this, NULL, &(layer_manager.get_layers()), false );
       } else {
         PF::Layer* limg2 = layer_manager.new_layer();
