@@ -122,12 +122,15 @@ VipsImage* PF::DesaturatePar::build(std::vector<VipsImage*>& in, int first,
         csconvpar->set_out_profile_mode( PF::OUT_PROF_CUSTOM );
         csconvpar->set_out_profile_data( profile_data, profile_length );
       }
+
       VipsImage* rgbimg = convert_cs->get_par()->build( in2, 0, NULL, NULL, level );
       PF_UNREF( greyimg, "ClonePar::L2rgb(): greyimg unref" );
 
       out = rgbimg;
 
-      if( get_render_mode() == PF_RENDER_PREVIEW ) {
+      if( false || get_render_mode() == PF_RENDER_PREVIEW ) {
+        // Not valid anymore, since we now process the preview in floating point precision
+
         // We have to circumvent the fact that in 16-bits integer precision,
         // LCMS does not produce a perfectly neutral RGB image
         // in the Lab -> RGB conversion when a=b=0
