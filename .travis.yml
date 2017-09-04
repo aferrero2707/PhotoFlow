@@ -105,12 +105,12 @@ matrix:
               #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
               - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
               - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
-                  bash  ./upload_rotate.sh "continuous" out/*
+                  bash  ./upload_rotate.sh "continuous" out/*;
                 fi'
               - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
-                  bash  ./upload_rotate.sh "unstable" out/*
+                  bash  ./upload_rotate.sh "unstable" out/*;
                 fi'
-              #- find /usr -name gconv
+              - find /usr -name gconv
         - os: linux
           dist: trusty
           compiler: g++
