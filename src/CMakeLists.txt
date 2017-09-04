@@ -65,7 +65,9 @@ SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parame
 #link_directories("/this/is/a/test/path")
 
 include_directories(${EXPAT_INCLUDE_DIRS})
-include_directories(${ICONV_INCLUDE_DIRS})
+IF(NOT MINGW)
+  include_directories(${ICONV_INCLUDE_DIRS})
+ENDIF(NOT MINGW)
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
