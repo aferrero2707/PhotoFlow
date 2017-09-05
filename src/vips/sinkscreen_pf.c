@@ -1242,6 +1242,9 @@ vips_invalidate_area( VipsImage *image, VipsRect* r  )
 	VIPS_DEBUG_MSG_RED( "vips_invalidate_area: left = %d, top = %d, "
 									"width = %d, height = %d\n",
 									r->left, r->top, r->width, r->height );
+	//printf("vips_invalidate_area: left = %d, top = %d, "
+  //                "width = %d, height = %d\n",
+  //                r->left, r->top, r->width, r->height);
 
   g_mutex_lock( render->lock );
 
@@ -1259,6 +1262,10 @@ vips_invalidate_area( VipsImage *image, VipsRect* r  )
       if( tile ) {
 				tile->region->invalid = 1;
 				VIPS_DEBUG_MSG_RED( "vips_invalidate_area(): tile invalidated\n" );
+				//printf("vips_invalidate_area(): tile invalidated\n");
+			  //printf("  tile area: left = %d, top = %d, "
+			  //                "width = %d, height = %d\n",
+			  //                tile->area.left, tile->area.top, tile->area.width, tile->area.height);
       }
     }
   }

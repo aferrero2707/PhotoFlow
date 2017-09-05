@@ -1237,9 +1237,9 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"PF::ImageArea::update(): vips_sink_screen() called"<<std::endl;
 #endif
 #ifdef DEBUG_DISPLAY
-  std::cout<<"Image size: "<<outimg->Xsize<<","
+  std::cout<<"ImageArea::update(): Image size: "<<outimg->Xsize<<","
 					 <<outimg->Ysize<<std::endl;
-  std::cout<<"Shrink factor: "<<shrink_factor<<std::endl;
+  std::cout<<"ImageArea::update(): Shrink factor: "<<shrink_factor<<std::endl;
 #endif
 
 	if( shrink_factor != 1 ) {
@@ -1446,7 +1446,12 @@ void PF::ImageArea::sink( const VipsRect& area )
 {
 #ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::sink( const VipsRect& area ) called"<<std::endl;
-    std::cout<<"area="<<area.left<<","<<area.top<<"+"<<area.width<<"+"<<area.height<<std::endl;
+  std::cout<<"area="<<area.left<<","<<area.top<<"+"<<area.width<<"+"<<area.height<<std::endl;
+#endif
+#ifdef DEBUG_DISPLAY
+  std::cout<<"ImageArea::sink(): Image size: "<<outimg->Xsize<<","
+      <<outimg->Ysize<<std::endl;
+  std::cout<<"ImageArea::sink(): Shrink factor: "<<shrink_factor<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = get_pipeline();
@@ -1457,6 +1462,7 @@ void PF::ImageArea::sink( const VipsRect& area )
   for( unsigned int i = 0; i < level; i++ )
     fact /= 2.0f;
   fact *= shrink_factor;
+  std::cout<<"ImageArea::sink(): total factor: "<<fact<<std::endl;
 
   VipsRect scaled_area;
   scaled_area.left = area.left * fact;
@@ -1465,6 +1471,7 @@ void PF::ImageArea::sink( const VipsRect& area )
   scaled_area.height = area.height * fact + 1;
 
   //vips_image_invalidate_all( pipeline->get_output() );
+  //vips_image_invalidate_all( display_image );
 
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update( area ): called"<<std::endl;
