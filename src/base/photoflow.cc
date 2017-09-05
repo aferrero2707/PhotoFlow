@@ -195,9 +195,6 @@ PF::PhotoFlow::PhotoFlow():
 #endif
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
-    WCHAR pathW[MAX_PATH] = {0};
-    char pathA[MAX_PATH];
-
     if (SHGetSpecialFolderPathW(NULL, pathW, CSIDL_LOCAL_APPDATA, false)) {
       WideCharToMultiByte(CP_UTF8, 0, pathW, -1, pathA, MAX_PATH, 0, 0);
       config_dir = Glib::build_filename(Glib::ustring(pathA), "photoflow");
