@@ -746,9 +746,9 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
   }
 
   if( crop_height > HANDLE_SIZE ) {
-    if( buf_top < (crop_bottom-HANDLE_SIZE) ) {
-      int left = (crop_left > buf_left) ? crop_left : buf_left;
-      int right = (crop_right < buf_right) ? crop_right : buf_right;
+    int left = (crop_left > buf_left) ? crop_left : buf_left;
+    int right = (crop_right < buf_right) ? crop_right : buf_right;
+    if( buf_top < (crop_top+HANDLE_SIZE-1) && buf_bottom > (crop_top+HANDLE_SIZE)) {
       for( y = HANDLE_SIZE-1; y <= HANDLE_SIZE; y++) {
         guint8* p = px + rs*(y+crop_top-buf_out.get_rect().top) + (left-buf_left)*bl;
         for( x = left; x <= right; x++, p += bl ) {
@@ -757,6 +757,8 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
           p[2] = 255-p[2];
         }
       }
+    }
+    if( buf_top < (crop_bottom-HANDLE_SIZE-1) && buf_bottom > (crop_bottom-HANDLE_SIZE) ) {
       for( y = HANDLE_SIZE-1; y <= HANDLE_SIZE; y++) {
         guint8* p = px + rs*(crop_bottom-y-buf_out.get_rect().top) + (left-buf_left)*bl;
         for( x = left; x <= right; x++, p += bl ) {
