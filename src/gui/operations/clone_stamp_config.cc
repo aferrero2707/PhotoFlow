@@ -258,6 +258,9 @@ void PF::CloneStampConfigGUI::draw_point( double x, double y )
 
 bool PF::CloneStampConfigGUI::pointer_press_event( int button, double x, double y, int mod_key )
 {
+  // temporarely disabled
+  return false;
+
   if( !get_editing_flag() ) return false;
 
   if( button != 1 ) return false;
@@ -275,6 +278,9 @@ bool PF::CloneStampConfigGUI::pointer_press_event( int button, double x, double 
 
 bool PF::CloneStampConfigGUI::pointer_release_event( int button, double x, double y, int mod_key )
 {
+  // temporarely disabled
+  return false;
+
   if( !get_editing_flag() ) return false;
 
   if( button != 1 ) return false;
@@ -297,6 +303,9 @@ bool PF::CloneStampConfigGUI::pointer_release_event( int button, double x, doubl
 
 bool PF::CloneStampConfigGUI::pointer_motion_event( int button, double x, double y, int mod_key )
 {
+  // temporarely disabled
+  return false;
+
   if( !get_editing_flag() ) return false;
 
   mouse_x = x; mouse_y = y;
@@ -317,6 +326,9 @@ bool PF::CloneStampConfigGUI::pointer_motion_event( int button, double x, double
 bool PF::CloneStampConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
                                            float scale, int xoffset, int yoffset )
 {
+  // temporarely disabled
+  return false;
+
   /*
 #if defined(_WIN32) || defined(WIN32)
   if( !is_mapped() )

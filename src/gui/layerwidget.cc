@@ -339,7 +339,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( scale_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( path_mask_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( draw_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( clone_button, Gtk::PACK_SHRINK, 2 );
+  //tool_buttons_box.pack_start( clone_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 20 );
 
 
