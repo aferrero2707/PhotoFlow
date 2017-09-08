@@ -62,7 +62,9 @@ namespace PF {
 
     void set_display_mode( bool lin )
     {
+      bool redraw = (lin != is_linear) ? true : false;
       is_linear = lin;
+      if( redraw ) queue_draw();
     }
 
     void set_icc_data( PF::ICCProfile* d )
