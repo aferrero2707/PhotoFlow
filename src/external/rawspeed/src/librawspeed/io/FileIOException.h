@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "common/RawspeedException.h"     // IWYU pragma: keep
+#include "common/RawspeedException.h"     // for ThrowExceptionHelper
 #include "decoders/RawDecoderException.h" // for RawDecoderException
 #include <string>                         // for string
 
@@ -34,9 +34,6 @@ public:
 };
 
 #define ThrowFIE(...)                                                          \
-  do {                                                                         \
-    ThrowExceptionHelper(rawspeed::FileIOException, __VA_ARGS__);              \
-    __builtin_unreachable();                                                   \
-  } while (false)
+  ThrowExceptionHelper(rawspeed::FileIOException, __VA_ARGS__);
 
 } // namespace rawspeed

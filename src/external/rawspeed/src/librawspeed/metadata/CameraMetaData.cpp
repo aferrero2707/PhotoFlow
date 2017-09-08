@@ -24,21 +24,30 @@
 #include "metadata/CameraMetadataException.h" // for ThrowCME
 #include <algorithm>                          // for find_if
 #include <map>                                // for _Rb_tree_iterator, map
-#include <pugixml.hpp>                        // for xml_document, xml_pars...
 #include <string>                             // for string, operator==
 #include <utility>                            // for pair
 #include <vector>                             // for vector
 
-using std::string;
+#ifdef HAVE_PUGIXML
+#include <pugixml.hpp> // for xml_document, xml_pars...
 using pugi::xml_node;
 using pugi::xml_document;
 using pugi::xml_parse_result;
+#endif
+
+using std::string;
 
 namespace rawspeed {
 
+#ifdef HAVE_PUGIXML
 CameraMetaData::CameraMetaData(const char *docname) {
   xml_document doc;
+
+#if defined(__unix__) || defined(__APPLE__)
   xml_parse_result result = doc.load_file(docname);
+#else
+  xml_parse_result result = doc.load_file(pugi::as_wide(docname).c_str());
+#endif
 
   if (!result) {
     ThrowCME(
@@ -47,17 +56,18 @@ CameraMetaData::CameraMetaData(const char *docname) {
   }
 
   for (xml_node camera : doc.child("Cameras").children("Camera")) {
-    const auto* cam = addCamera(make_unique<Camera>(camera));
+    const auto* cam = addCamera(std::make_unique<Camera>(camera));
 
     if (cam == nullptr)
       continue;
 
     // Create cameras for aliases.
     for (uint32 i = 0; i < cam->aliases.size(); i++) {
-      addCamera(make_unique<Camera>(cam, i));
+      addCamera(std::make_unique<Camera>(cam, i));
     }
   }
 }
+#endif
 
 static inline CameraId getId(const string& make, const string& model,
                              const string& mode) {

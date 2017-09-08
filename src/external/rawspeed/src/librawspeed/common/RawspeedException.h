@@ -35,9 +35,9 @@ template <typename T>
 [[noreturn]] void __attribute__((noreturn, format(printf, 1, 2)))
 ThrowException(const char* fmt, ...) {
   static constexpr size_t bufSize = 8192;
-#if defined(HAVE_THREAD_LOCAL)
+#if defined(HAVE_CXX_THREAD_LOCAL)
   static thread_local char buf[bufSize];
-#elif defined(HAVE___THREAD)
+#elif defined(HAVE_GCC_THREAD_LOCAL)
   static __thread char buf[bufSize];
 #else
 #pragma message                                                                \
@@ -76,24 +76,15 @@ public:
 
 #ifndef DEBUG
 #define ThrowExceptionHelper(CLASS, fmt, ...)                                  \
-  do {                                                                         \
-    rawspeed::ThrowException<CLASS>("%s, line " STR(__LINE__) ": " fmt,        \
-                                    __PRETTY_FUNCTION__, ##__VA_ARGS__);       \
-    __builtin_unreachable();                                                   \
-  } while (false)
+  rawspeed::ThrowException<CLASS>("%s, line " STR(__LINE__) ": " fmt,          \
+                                  __PRETTY_FUNCTION__, ##__VA_ARGS__)
 #else
 #define ThrowExceptionHelper(CLASS, fmt, ...)                                  \
-  do {                                                                         \
-    rawspeed::ThrowException<CLASS>(__FILE__ ":" STR(__LINE__) ": %s: " fmt,   \
-                                    __PRETTY_FUNCTION__, ##__VA_ARGS__);       \
-    __builtin_unreachable();                                                   \
-  } while (false)
+  rawspeed::ThrowException<CLASS>(__FILE__ ":" STR(__LINE__) ": %s: " fmt,     \
+                                  __PRETTY_FUNCTION__, ##__VA_ARGS__)
 #endif
 
 #define ThrowRSE(...)                                                          \
-  do {                                                                         \
-    ThrowExceptionHelper(rawspeed::RawspeedException, __VA_ARGS__);            \
-    __builtin_unreachable();                                                   \
-  } while (false)
+  ThrowExceptionHelper(rawspeed::RawspeedException, __VA_ARGS__)
 
 } // namespace rawspeed

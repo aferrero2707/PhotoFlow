@@ -28,9 +28,10 @@
 #include "decompressors/JpegDecompressor.h"         // for JpegDecompressor
 #include "decompressors/LJpegDecompressor.h"        // for LJpegDecompressor
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
+#include "io/Buffer.h"                              // for Buffer (ptr only)
+#include "io/ByteStream.h"                          // for ByteStream
 #include "io/Endianness.h"                          // for Endianness::big
 #include "io/IOException.h"                         // for IOException
-#include "tiff/TiffEntry.h"                         // IWYU pragma: keep
 #include "tiff/TiffIFD.h"                           // for getTiffEndianness
 #include <algorithm>                                // for move
 #include <cassert>                                  // for assert
@@ -85,7 +86,7 @@ void DngDecoderSlices::startDecoding() {
   threads.reserve(nThreads);
 
   for (uint32 i = 0; i < nThreads; i++) {
-    auto t = make_unique<DngDecoderThread>(this);
+    auto t = std::make_unique<DngDecoderThread>(this);
     for (int j = 0; j < slicesPerThread ; j++) {
       if (!slices.empty()) {
         t->slices.emplace(move(slices.front()));
@@ -125,10 +126,16 @@ void DngDecoderSlices::decodeSlice(DngDecoderThread* t) {
               ? mRaw->dim.y - e->offY
               : e->height;
 
+      if (thisTileLength == 0)
+        ThrowRDE("Tile is empty. Can not decode!");
+
       iPoint2D tileSize(mRaw->dim.x, thisTileLength);
       iPoint2D pos(0, e->offY);
 
-      bool big_endian = (getTiffEndianness(mFile) == big);
+      const DataBuffer db(*mFile);
+      const ByteStream bs(db);
+
+      bool big_endian = (getTiffByteOrder(bs, 0) == Endianness::big);
       // DNG spec says that if not 8 or 16 bit/sample, always use big endian
       if (mBps != 8 && mBps != 16)
         big_endian = true;
@@ -166,7 +173,7 @@ void DngDecoderSlices::decodeSlice(DngDecoderThread* t) {
     /* Deflate compression */
   } else if (compression == 8) {
 #ifdef HAVE_ZLIB
-    unsigned char *uBuffer = nullptr;
+    std::unique_ptr<unsigned char[]> uBuffer;
     while (!t->slices.empty()) {
       auto e = move(t->slices.front());
       t->slices.pop();
@@ -181,7 +188,6 @@ void DngDecoderSlices::decodeSlice(DngDecoderThread* t) {
         mRaw->setError(err.what());
       }
     }
-    delete [] uBuffer;
 #else
 #pragma message                                                                \
     "ZLIB is not present! Deflate compression will not be supported!"

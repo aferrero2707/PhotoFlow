@@ -26,13 +26,12 @@
 #include "common/RawImage.h"                   // for RawImage, RawImageData
 #include "io/Buffer.h"                         // for Buffer
 #include <algorithm>                           // for move
-#include <benchmark/benchmark_api.h>           // for Benchmark, BENCHMARK_...
+#include <benchmark/benchmark.h>               // for Benchmark, BENCHMARK_...
 #include <cassert>                             // for assert
 #include <cstddef>                             // for size_t
 #include <memory>                              // for unique_ptr
 #include <type_traits>                         // for integral_constant
 #include <zlib.h>
-// IWYU pragma: no_include <zconf.h>
 
 #ifndef NDEBUG
 #include <limits> // for numeric_limits
@@ -109,15 +108,13 @@ static inline void BM_DeflateDecompressor(benchmark::State& state) {
     break;
   }
 
-  unsigned char* uBuffer = nullptr;
+  std::unique_ptr<unsigned char[]> uBuffer;
 
   while (state.KeepRunning()) {
     DeflateDecompressor d(buf, 0, buf.getSize(), mRaw, predictor, BPS::value);
 
     d.decode(&uBuffer, mRaw->dim.x, mRaw->dim.y, 0, 0);
   }
-
-  delete[] uBuffer;
 
   state.SetComplexityN(dim.area());
   state.SetItemsProcessed(state.complexity_length_n() * state.iterations());

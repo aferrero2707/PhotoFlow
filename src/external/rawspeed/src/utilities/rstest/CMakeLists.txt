@@ -1,7 +1,9 @@
 add_executable(rstest rstest.cpp md5.cpp)
-set_target_properties(rstest PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(rstest rawspeed_static)
-target_include_directories(rstest PUBLIC "${CONFIG_INCLUDE_PATH}")
+target_link_libraries(rstest rawspeed)
+
+if(WITH_OPENMP AND OPENMP_FOUND AND TARGET OpenMP::OpenMP)
+  target_link_libraries(rstest OpenMP::OpenMP)
+endif()
 
 if(BUILD_TESTING)
   CHECK_CXX_COMPILER_FLAG_AND_ENABLE_IT(-Wno-suggest-attribute=const)
@@ -38,4 +40,8 @@ if(BUILD_BENCHMARKING)
   target_link_libraries(MD5Benchmark benchmark)
 
   add_dependencies(benchmarks MD5Benchmark)
+endif()
+
+if(ENABLE_SAMPLEBASED_TESTING)
+  include(sample-based-testing)
 endif()

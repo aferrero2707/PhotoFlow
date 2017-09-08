@@ -41,7 +41,7 @@ using std::numeric_limits;
 
 namespace rawspeed {
 
-FiffParser::FiffParser(Buffer* inputData) : RawParser(inputData) {}
+FiffParser::FiffParser(const Buffer* inputData) : RawParser(inputData) {}
 
 void FiffParser::parseData() {
   const uchar8* data = mInput->getData(0, 104);
@@ -56,7 +56,7 @@ void FiffParser::parseData() {
   uint32 third_ifd = getU32BE(data + 0x5C);
 
   rootIFD = TiffParser::parse(mInput->getSubView(first_ifd));
-  TiffIFDOwner subIFD = make_unique<TiffIFD>();
+  TiffIFDOwner subIFD = std::make_unique<TiffIFD>(rootIFD.get());
 
   if (mInput->isValid(second_ifd)) {
     // RAW Tiff on newer models, pointer to raw data on older models
@@ -71,13 +71,13 @@ void FiffParser::parseData() {
         ThrowFPE("Fiff is corrupted: second IFD is not after the first IFD");
 
       uint32 rawOffset = second_ifd - first_ifd;
-      subIFD->add(
-          make_unique<TiffEntry>(subIFD.get(), FUJI_STRIPOFFSETS, TIFF_OFFSET,
-                                 1, ByteStream::createCopy(&rawOffset, 4)));
+      subIFD->add(std::make_unique<TiffEntry>(
+          subIFD.get(), FUJI_STRIPOFFSETS, TIFF_OFFSET, 1,
+          ByteStream::createCopy(&rawOffset, 4)));
       uint32 max_size = mInput->getSize() - second_ifd;
-      subIFD->add(make_unique<TiffEntry>(subIFD.get(), FUJI_STRIPBYTECOUNTS,
-                                         TIFF_LONG, 1,
-                                         ByteStream::createCopy(&max_size, 4)));
+      subIFD->add(std::make_unique<TiffEntry>(
+          subIFD.get(), FUJI_STRIPBYTECOUNTS, TIFF_LONG, 1,
+          ByteStream::createCopy(&max_size, 4)));
     }
   }
 
@@ -88,7 +88,7 @@ void FiffParser::parseData() {
     // differences:
     //   a) no type info and b) data is always stored in place.
     // 4b: # of entries, for each entry: 2b tag, 2b len, xb data
-    ByteStream bytes(mInput, third_ifd, getHostEndianness() == big);
+    ByteStream bytes(mInput, third_ifd, Endianness::big);
     uint32 entries = bytes.getU32();
 
     if (entries > 255)
@@ -103,7 +103,7 @@ void FiffParser::parseData() {
         type = TIFF_SHORT;
 
       uint32 count = type == TIFF_SHORT ? length / 2 : length;
-      subIFD->add(make_unique<TiffEntry>(
+      subIFD->add(std::make_unique<TiffEntry>(
           subIFD.get(), static_cast<TiffTag>(tag), type, count,
           bytes.getSubStream(bytes.getPosition(), length)));
 

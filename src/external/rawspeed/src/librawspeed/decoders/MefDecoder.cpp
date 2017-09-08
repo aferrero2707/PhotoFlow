@@ -20,9 +20,9 @@
 */
 
 #include "decoders/MefDecoder.h"
+#include "decoders/RawDecoderException.h" // for RawDecoderException (ptr o...
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
 #include "io/Endianness.h"                          // for Endianness::big
-#include "tiff/TiffEntry.h"                         // IWYU pragma: keep
 #include <string>                                   // for operator==, string
 
 namespace rawspeed {
@@ -37,12 +37,17 @@ bool MefDecoder::isAppropriateDecoder(const TiffRootIFD* rootIFD,
   return make == "Mamiya-OP Co.,Ltd.";
 }
 
+void MefDecoder::checkImageDimensions() {
+  if (width > 4016 || height > 5344)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+}
+
 RawImage MefDecoder::decodeRawInternal() {
   SimpleTiffDecoder::prepareForRawDecoding();
 
   UncompressedDecompressor u(*mFile, off, mRaw);
 
-  u.decode12BitRaw<big>(width, height);
+  u.decode12BitRaw<Endianness::big>(width, height);
 
   return mRaw;
 }

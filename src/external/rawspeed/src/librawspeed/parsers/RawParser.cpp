@@ -20,7 +20,6 @@
 */
 
 #include "parsers/RawParser.h"
-#include "common/Common.h"                // for make_unique
 #include "decoders/AriDecoder.h"          // for AriDecoder
 #include "decoders/MrwDecoder.h"          // for MrwDecoder
 #include "decoders/NakedDecoder.h"        // for NakedDecoder
@@ -35,8 +34,6 @@
 #include "parsers/FiffParserException.h"  // for FiffParserException
 #include "parsers/TiffParser.h"           // for TiffParser
 #include "parsers/TiffParserException.h"  // for TiffParserException
-#include "parsers/X3fParser.h"            // for X3fParser
-#include "tiff/TiffEntry.h"               // IWYU pragma: keep
 
 namespace rawspeed {
 
@@ -52,14 +49,14 @@ std::unique_ptr<RawDecoder> RawParser::getDecoder(const CameraMetaData* meta) {
   // MRW images are easy to check for, let's try that first
   if (MrwDecoder::isMRW(mInput)) {
     try {
-      return make_unique<MrwDecoder>(mInput);
+      return std::make_unique<MrwDecoder>(mInput);
     } catch (RawDecoderException &) {
     }
   }
 
   if (AriDecoder::isARI(mInput)) {
     try {
-      return make_unique<AriDecoder>(mInput);
+      return std::make_unique<AriDecoder>(mInput);
     } catch (RawDecoderException &) {
     }
   }
@@ -76,20 +73,14 @@ std::unique_ptr<RawDecoder> RawParser::getDecoder(const CameraMetaData* meta) {
 
   // Ordinary TIFF images
   try {
-    return TiffParser::makeDecoder(TiffParser::parse(*mInput), *mInput);
+    TiffParser p(mInput);
+    return p.getDecoder(meta);
   } catch (TiffParserException &) {
-  }
-
-  try {
-    X3fParser parser(mInput);
-    return parser.getDecoder(meta);
-  } catch (RawDecoderException &) {
   }
 
   // CIFF images
   try {
     CiffParser p(mInput);
-    p.parseData();
     return p.getDecoder(meta);
   } catch (CiffParserException &) {
   }
@@ -99,14 +90,13 @@ std::unique_ptr<RawDecoder> RawParser::getDecoder(const CameraMetaData* meta) {
     const Camera* c = meta->getChdkCamera(mInput->getSize());
 
     try {
-      return make_unique<NakedDecoder>(mInput, c);
+      return std::make_unique<NakedDecoder>(mInput, c);
     } catch (RawDecoderException &) {
     }
   }
 
   // File could not be decoded, so no further options for now.
   ThrowRDE("No decoder found. Sorry.");
-  return nullptr;
 }
 
 } // namespace rawspeed

@@ -31,14 +31,13 @@
 #include "io/IOException.h"                         // for IOException
 #include "metadata/Camera.h"                        // for Hints
 #include "metadata/ColorFilterArray.h"              // for ColorFilterArray
-#include "parsers/TiffParserException.h"            // for TiffParserException
 #include "tiff/TiffEntry.h"                         // for TiffEntry
 #include "tiff/TiffIFD.h"                           // for TiffRootIFD, Tif...
 #include "tiff/TiffTag.h"                           // for TiffTag, TiffTag...
 #include <algorithm>                                // for min
+#include <cassert>                                  // for assert
 #include <cmath>                                    // for signbit
 #include <cstdlib>                                  // for abs
-#include <cstring>                                  // for memset
 #include <memory>                                   // for unique_ptr
 #include <string>                                   // for operator==, string
 
@@ -89,6 +88,9 @@ RawImage OrfDecoder::decodeRawInternal() {
   uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
 
+  if (!width || !height || width % 2 != 0 || width > 9280 || height > 6932)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
   mRaw->dim = iPoint2D(width, height);
   mRaw->createData();
 
@@ -111,18 +113,19 @@ void OrfDecoder::decodeUncompressed(const ByteStream& s, uint32 w, uint32 h,
                                     uint32 size) {
   UncompressedDecompressor u(s, mRaw);
   if (hints.has("packed_with_control"))
-    u.decode12BitRaw<little, false, true>(w, h);
+    u.decode12BitRaw<Endianness::little, false, true>(w, h);
   else if (hints.has("jpeg32_bitorder")) {
     iPoint2D dimensions(w, h);
     iPoint2D pos(0, 0);
     u.readUncompressedRaw(dimensions, pos, w * 12 / 8, 12, BitOrder_MSB32);
-  } else if (size >= w*h*2) { // We're in an unpacked raw
-    if (s.isInNativeByteOrder())
-      u.decodeRawUnpacked<12, little>(w, h);
+  } else if (size >= w * h * 2) { // We're in an unpacked raw
+    // FIXME: seems fishy
+    if (s.getByteOrder() == getHostEndianness())
+      u.decodeRawUnpacked<12, Endianness::little>(w, h);
     else
-      u.decode12BitRawUnpackedLeftAligned<big>(w, h);
+      u.decode12BitRawUnpackedLeftAligned<Endianness::big>(w, h);
   } else if (size >= w*h*3/2) { // We're in one of those weird interlaced packed raws
-    u.decode12BitRaw<big, true>(w, h);
+    u.decode12BitRaw<Endianness::big, true>(w, h);
   } else {
     ThrowRDE("Don't know how to handle the encoding in this file");
   }
@@ -136,17 +139,19 @@ void OrfDecoder::decodeUncompressed(const ByteStream& s, uint32 w, uint32 h,
  */
 
 void OrfDecoder::decodeCompressed(ByteStream* s, uint32 w, uint32 h) {
+  assert(h > 0);
+  assert(w > 0);
+  assert(w % 2 == 0);
+
   int nbits;
   int sign;
   int low;
   int high;
   int i;
-  int left0;
-  int nw0;
-  int left1;
-  int nw1;
-  int acarry0[3];
-  int acarry1[3];
+  int left0 = 0;
+  int nw0 = 0;
+  int left1 = 0;
+  int nw1 = 0;
   int pred;
   int diff;
 
@@ -163,14 +168,14 @@ void OrfDecoder::decodeCompressed(ByteStream* s, uint32 w, uint32 h) {
         break;
     bittable[i] = min(12,high);
   }
-  left0 = nw0 = left1 = nw1 = 0;
 
   s->skipBytes(7);
   BitPumpMSB bits(*s);
 
   for (uint32 y = 0; y < h; y++) {
-    memset(acarry0, 0, sizeof acarry0);
-    memset(acarry1, 0, sizeof acarry1);
+    int acarry0[3] = {};
+    int acarry1[3] = {};
+
     auto* dest = reinterpret_cast<ushort16*>(&data[y * pitch]);
     bool y_border = y < 2;
     bool border = true;
@@ -311,57 +316,51 @@ void OrfDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
     mRaw->metadata.wbCoeffs[1] = 256.0F;
     mRaw->metadata.wbCoeffs[2] = static_cast<float>(
         mRootIFD->getEntryRecursive(OLYMPUSBLUEMULTIPLIER)->getU16());
-  } else {
+  } else if (mRootIFD->hasEntryRecursive(OLYMPUSIMAGEPROCESSING)) {
     // Newer cameras process the Image Processing SubIFD in the makernote
-    if(mRootIFD->hasEntryRecursive(OLYMPUSIMAGEPROCESSING)) {
-      TiffEntry *img_entry = mRootIFD->getEntryRecursive(OLYMPUSIMAGEPROCESSING);
-      try {
-        // get makernote ifd with containing Buffer
-        TiffRootIFD image_processing(nullptr, img_entry->getRootIfdData(),
-                                     img_entry->getU32());
+    TiffEntry* img_entry = mRootIFD->getEntryRecursive(OLYMPUSIMAGEPROCESSING);
+    // get makernote ifd with containing Buffer
+    TiffRootIFD image_processing(nullptr, nullptr, img_entry->getRootIfdData(),
+                                 img_entry->getU32());
 
-        // Get the WB
-        if (image_processing.hasEntry(static_cast<TiffTag>(0x0100))) {
-          TiffEntry* wb =
-              image_processing.getEntry(static_cast<TiffTag>(0x0100));
-          if (wb->count == 2 || wb->count == 4) {
-            mRaw->metadata.wbCoeffs[0] = wb->getFloat(0);
-            mRaw->metadata.wbCoeffs[1] = 256.0F;
-            mRaw->metadata.wbCoeffs[2] = wb->getFloat(1);
+    // Get the WB
+    if (image_processing.hasEntry(static_cast<TiffTag>(0x0100))) {
+      TiffEntry* wb = image_processing.getEntry(static_cast<TiffTag>(0x0100));
+      if (wb->count == 2 || wb->count == 4) {
+        mRaw->metadata.wbCoeffs[0] = wb->getFloat(0);
+        mRaw->metadata.wbCoeffs[1] = 256.0F;
+        mRaw->metadata.wbCoeffs[2] = wb->getFloat(1);
+      }
+    }
+
+    // Get the black levels
+    if (image_processing.hasEntry(static_cast<TiffTag>(0x0600))) {
+      TiffEntry* blackEntry =
+          image_processing.getEntry(static_cast<TiffTag>(0x0600));
+      // Order is assumed to be RGGB
+      if (blackEntry->count == 4) {
+        for (int i = 0; i < 4; i++) {
+          auto c = mRaw->cfa.getColorAt(i & 1, i >> 1);
+          int j;
+          switch (c) {
+          case CFA_RED:
+            j = 0;
+            break;
+          case CFA_GREEN:
+            j = i < 2 ? 1 : 2;
+            break;
+          case CFA_BLUE:
+            j = 3;
+            break;
+          default:
+            ThrowRDE("Unexpected CFA color: %u", c);
           }
-        }
 
-        // Get the black levels
-        if (image_processing.hasEntry(static_cast<TiffTag>(0x0600))) {
-          TiffEntry* blackEntry =
-              image_processing.getEntry(static_cast<TiffTag>(0x0600));
-          // Order is assumed to be RGGB
-          if (blackEntry->count == 4) {
-            for (int i = 0; i < 4; i++) {
-              auto c = mRaw->cfa.getColorAt(i & 1, i >> 1);
-              int j;
-              switch (c) {
-              case CFA_RED:
-                j = 0;
-                break;
-              case CFA_GREEN:
-                j = i < 2 ? 1 : 2;
-                break;
-              case CFA_BLUE:
-                j = 3;
-                break;
-              default:
-                ThrowRDE("Unexpected CFA color: %u", c);
-              }
-
-              mRaw->blackLevelSeparate[i] = blackEntry->getU16(j);
-            }
-            // Adjust whitelevel based on the read black (we assume the dynamic range is the same)
-            mRaw->whitePoint -= (mRaw->blackLevel - mRaw->blackLevelSeparate[0]);
-          }
+          mRaw->blackLevelSeparate[i] = blackEntry->getU16(j);
         }
-      } catch (TiffParserException &e) {
-        mRaw->setError(e.what());
+        // Adjust whitelevel based on the read black (we assume the dynamic
+        // range is the same)
+        mRaw->whitePoint -= (mRaw->blackLevel - mRaw->blackLevelSeparate[0]);
       }
     }
   }

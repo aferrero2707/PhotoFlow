@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
 cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0025 NEW)
@@ -11,7 +11,16 @@ If(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "In-source builds are not permitted. Make a separate folder for building:\nmkdir build; cd build; cmake ..\nBefore that, remove the files already created:\nrm -rf CMakeCache.txt CMakeFiles")
 endif(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
 
+# if rawspeed is added as a submodule to another build,
+# this CMakeLists.txt should be added via add_subdirectory().
+if(${CMAKE_SOURCE_DIR} EQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  set(RAWSPEED_SOURCE_DIR "${CMAKE_SOURCE_DIR}" CACHE BOOL "" FORCE)
+else()
+  set(RAWSPEED_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE BOOL "" FORCE)
+endif()
+
 include(GNUInstallDirs)
+include(FeatureSummary)
 
 if(NOT (CMAKE_VERSION VERSION_LESS 3.4.0-rc1))
   project(rawspeed CXX)
@@ -27,12 +36,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(INTERPROCEDURAL_OPTIMIZATION ON)
-
 option(BINARY_PACKAGE_BUILD "Sets march optimization to generic" OFF)
+option(WITH_SSE2 "If SSE2 support is avaliable, do build SSE2 codepaths" ON)
 option(WITH_PTHREADS "Enable threading support through pthread. Highly recommended" ON)
 option(WITH_OPENMP "Enable OpenMP support. Only used for tools, not the library itself." ON)
-set(WITH_PUGIXML ON CACHE BOOL "Enable XML support for cameras.xml reading" FORCE)
+option(WITH_PUGIXML "Enable XML support for cameras.xml reading" ON)
 if(WITH_PUGIXML)
   option(USE_BUNDLED_PUGIXML "Build and use pugixml in-tree" OFF)
 else()
@@ -71,8 +79,13 @@ if(BUILD_BENCHMARKING)
 else()
   set(ALLOW_DOWNLOADING_GOOGLEBENCHMARK OFF CACHE BOOL "If googlebenchmark src tree is not found in location specified by GOOGLEBENCHMARK_PATH, do fetch the archive from internet" FORCE)
 endif()
-option(BUILD_DOCS "Build the documentation (mainly, using Doxygen)." OFF)
+option(BUILD_DOCS "Build the documentation (Sphinx+Doxygen)." OFF)
 option(BUILD_FUZZERS "Build the fuzzing tree." ON)
+if(BUILD_TOOLS AND BUILD_TESTING)
+  option(ENABLE_SAMPLEBASED_TESTING "If enabled, allows to use rstest to check the samples specified by REFERENCE_SAMPLE_ARCHIVE" OFF)
+else()
+  set(ENABLE_SAMPLEBASED_TESTING OFF CACHE BOOL "If enabled, allows to use rstest to check the samples specified by REFERENCE_SAMPLE_ARCHIVE" FORCE)
+endif()
 
 set(GOOGLETEST_PATH "/usr/src/googletest" CACHE PATH
                     "Path to the googletest root tree. Should contain googletest and googlemock subdirs. And CMakeLists.txt in root, and in both of these subdirs")
@@ -85,6 +98,8 @@ set(GOOGLEBENCHMARK_PATH "/usr/src/googlebenchmark" CACHE PATH
                     "Path to the googlebenchmark root tree.")
 
 set(LIBFUZZER_ARCHIVE "/usr/local/lib/llvm/lib/libFuzzer.a" CACHE FILEPATH "Filepath to the libFuzzer.a archive.")
+
+set(REFERENCE_SAMPLE_ARCHIVE "~/raw-camera-samples/raw.pixls.us-unique" CACHE PATH "The location of the reference sample set to use. Should contain filelist.sha1 and timestamp.txt")
 
 include(build-type)
 
@@ -105,8 +120,23 @@ include(compiler-flags)
 
 add_custom_target(check ALL)
 add_custom_target(dependencies ALL)
+add_custom_target(tests ALL)
+
+include(compiler-warnings)
+set_directory_properties(PROPERTIES COMPILE_OPTIONS "-Werror")
 
 add_subdirectory(src)
+
+include(OpenMP)
+
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
+
+if(BUILD_FUZZERS)
+  add_subdirectory(fuzz)
+endif()
+
 add_subdirectory(data)
 
 if(BUILD_DOCS)
@@ -118,3 +148,5 @@ if(BUILD_TESTING AND CMAKE_BUILD_TYPE STREQUAL "COVERAGE")
   setup_target_for_coverage(coverage ctest coverage)
   include(GCOV)
 endif()
+
+feature_summary(WHAT ALL)

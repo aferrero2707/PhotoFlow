@@ -84,7 +84,7 @@ RawImage KdcDecoder::decodeRawInternal() {
 
   UncompressedDecompressor u(*mFile, off, mRaw);
 
-  u.decode12BitRaw<big>(width, height);
+  u.decode12BitRaw<Endianness::big>(width, height);
 
   return mRaw;
 }
@@ -96,10 +96,10 @@ void KdcDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
   if (mRootIFD->hasEntryRecursive(KODAK_IFD2)) {
     TiffEntry *ifdoffset = mRootIFD->getEntryRecursive(KODAK_IFD2);
     try {
-      TiffRootIFD kodakifd(nullptr, ifdoffset->getRootIfdData(),
+      TiffRootIFD kodakifd(nullptr, nullptr, ifdoffset->getRootIfdData(),
                            ifdoffset->getU32());
 
-     if (kodakifd.hasEntryRecursive(KODAK_KDC_WB)) {
+      if (kodakifd.hasEntryRecursive(KODAK_KDC_WB)) {
         TiffEntry *wb = kodakifd.getEntryRecursive(KODAK_KDC_WB);
         if (wb->count == 3) {
           mRaw->metadata.wbCoeffs[0] = wb->getFloat(0);

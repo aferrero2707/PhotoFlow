@@ -72,7 +72,7 @@ RawImage Cr2Decoder::decodeOldFormat() {
     offset = ifd->getEntry(STRIPOFFSETS)->getU32();
   }
 
-  ByteStream b(mFile, offset+41, getHostEndianness() == big);
+  ByteStream b(mFile, offset + 41, Endianness::big);
   int height = b.getU16();
   int width = b.getU16();
 
@@ -83,6 +83,9 @@ RawImage Cr2Decoder::decodeOldFormat() {
     width /= 2;
   }
   width *= 2; // components
+
+  if (!width || !height || width > 4082 || height > 2718)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
 
   mRaw = RawImage::create({width, height});
 
@@ -97,16 +100,11 @@ RawImage Cr2Decoder::decodeOldFormat() {
   TiffEntry* curve = mRootIFD->getEntryRecursive(static_cast<TiffTag>(0x123));
   if (curve && curve->type == TIFF_SHORT && curve->count == 4096) {
     auto table = curve->getU16Array(curve->count);
-    if (!uncorrectedRawValues) {
-      mRaw->setTable(table.data(), table.size(), true);
-      // Apply table
+    RawImageCurveGuard curveHandler(&mRaw, table, uncorrectedRawValues);
+
+    // Apply table
+    if (!uncorrectedRawValues)
       mRaw->sixteenBitLookup();
-      // Delete table
-      mRaw->setTable(nullptr);
-    } else {
-      // We want uncorrected, but we store the table.
-      mRaw->setTable(table.data(), table.size(), false);
-    }
   }
 
   return mRaw;
@@ -120,7 +118,14 @@ RawImage Cr2Decoder::decodeNewFormat() {
     ThrowTPE("failed to get SensorInfo from MakerNote");
 
   assert(sensorInfoE != nullptr);
-  iPoint2D dim(sensorInfoE->getU16(1), sensorInfoE->getU16(2));
+
+  const ushort16 width = sensorInfoE->getU16(1);
+  const ushort16 height = sensorInfoE->getU16(2);
+
+  if (!width || !height || width > 8896 || height > 5920)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
+  iPoint2D dim(width, height);
 
   int componentsPerPixel = 1;
   TiffIFD* raw = mRootIFD->getSubIFDs()[3].get();
@@ -131,12 +136,37 @@ RawImage Cr2Decoder::decodeNewFormat() {
   mRaw = RawImage::create(dim, TYPE_USHORT16, componentsPerPixel);
 
   vector<int> s_width;
+  // there are four cases:
+  // * there is a tag with three components,
+  //   $ last two components are non-zero: all fine then.
+  //   $ first two components are zero, last component is non-zero
+  //     we let Cr2Decompressor guess it (it'll throw if fails)
+  //   $ else the image is considered corrupt.
+  // * there is a tag with not three components, the image is considered
+  // corrupt. $ there is no tag, we let Cr2Decompressor guess it (it'll throw if
+  // fails)
   TiffEntry* cr2SliceEntry = raw->getEntryRecursive(CANONCR2SLICE);
-  if (cr2SliceEntry && cr2SliceEntry->getU16(0) > 0) {
-    for (int i = 0; i < cr2SliceEntry->getU16(0); i++)
-      s_width.push_back(cr2SliceEntry->getU16(1));
-    s_width.push_back(cr2SliceEntry->getU16(2));
-  }
+  if (cr2SliceEntry) {
+    if (cr2SliceEntry->count != 3) {
+      ThrowRDE("Found RawImageSegmentation tag with %d elements, should be 3.",
+               cr2SliceEntry->count);
+    }
+
+    if (cr2SliceEntry->getU16(1) != 0 && cr2SliceEntry->getU16(2) != 0) {
+      // first component can be either zero or non-zero, don't care
+      s_width.reserve(1 + cr2SliceEntry->getU16(0));
+      for (int i = 0; i < cr2SliceEntry->getU16(0); i++)
+        s_width.emplace_back(cr2SliceEntry->getU16(1));
+      s_width.emplace_back(cr2SliceEntry->getU16(2));
+    } else if (cr2SliceEntry->getU16(0) == 0 && cr2SliceEntry->getU16(1) == 0 &&
+               cr2SliceEntry->getU16(2) != 0) {
+      // PowerShot G16, PowerShot S120, let Cr2Decompressor guess.
+    } else {
+      ThrowRDE("Strange RawImageSegmentation tag: (%d, %d, %d), image corrupt.",
+               cr2SliceEntry->getU16(0), cr2SliceEntry->getU16(1),
+               cr2SliceEntry->getU16(2));
+    }
+  } // EOS 20D, EOS-1D Mark II, let Cr2Decompressor guess.
 
   TiffEntry* offsets = raw->getEntry(STRIPOFFSETS);
   TiffEntry* counts = raw->getEntry(STRIPBYTECOUNTS);

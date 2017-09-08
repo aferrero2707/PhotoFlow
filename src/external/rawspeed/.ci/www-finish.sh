@@ -15,12 +15,11 @@ REPO="https://github.com/LebedevRI/www.rawspeed.org.git"
 SSH_REPO="git@github.com:LebedevRI/www.rawspeed.org.git"
 
 # Now let's go have some fun with the cloned repo
-cd "$TRAVIS_BUILD_DIR/build/docs/doxygen/html"
+cd "$TRAVIS_BUILD_DIR/build/docs/html"
 git config user.name "Travis CI"
 git config user.email "travis@travis-ci.org"
 
 date > .timestamp
-touch .nojekyll
 echo "rawspeed.org" > CNAME
 
 # # If there are no changes (e.g. this is a README update) then just bail.

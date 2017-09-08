@@ -49,7 +49,10 @@ public:
   void decodeThreaded(RawDecoderThread *t) override;
 
 protected:
+  void ParseA100WB();
+
   int getDecoderVersion() const override { return 1; }
+  RawImage decodeSRF(const TiffIFD* raw);
   void DecodeARW(const ByteStream& input, uint32 w, uint32 h);
   void DecodeARW2(const ByteStream& input, uint32 w, uint32 h, uint32 bpp);
   void DecodeUncompressed(const TiffIFD* raw);

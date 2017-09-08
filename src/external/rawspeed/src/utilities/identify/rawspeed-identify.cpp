@@ -26,6 +26,10 @@
 #include <string>     // for string, operator+
 #include <sys/stat.h> // for stat
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -126,7 +130,7 @@ using rawspeed::TYPE_FLOAT32;
 using rawspeed::RawspeedException;
 using rawspeed::identify::find_cameras_xml;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) { // NOLINT
 
   if (argc != 2) {
     fprintf(stderr, "Usage: darktable-rs-identify <file>\n");
@@ -138,24 +142,43 @@ int main(int argc, char *argv[]) {
     // fprintf(stderr, "ERROR: Couldn't find cameras.xml\n");
     return 2;
   }
-  // fprintf(stderr, "Using cameras.xml from '%s'\n", camfile);
+  // fprintf(stderr, "Using cameras.xml from '%s'\n", camfile.c_str());
 
   try {
-    std::unique_ptr<const CameraMetaData> meta(
-        new CameraMetaData(camfile.c_str()));
+    std::unique_ptr<const CameraMetaData> meta;
+
+#ifdef HAVE_PUGIXML
+    meta = std::make_unique<CameraMetaData>(camfile.c_str());
+#else
+    meta = std::make_unique<CameraMetaData>();
+#endif
 
     if (!meta.get()) {
       fprintf(stderr, "ERROR: Couldn't get a CameraMetaData instance\n");
       return 2;
     }
 
-#ifdef __AFL_HAVE_MANUAL_CONTROL
-    __AFL_INIT();
+#ifndef _WIN32
+    char* imageFileName = argv[1];
+#else
+    // turn the locale ANSI encoded string into UTF-8 so that FileReader can
+    // turn it into UTF-16 later
+    int size = MultiByteToWideChar(CP_ACP, 0, argv[1], -1, NULL, 0);
+    std::wstring wImageFileName;
+    wImageFileName.resize(size);
+    MultiByteToWideChar(CP_ACP, 0, argv[1], -1, &wImageFileName[0], size);
+    size = WideCharToMultiByte(CP_UTF8, 0, &wImageFileName[0], -1, NULL, 0,
+                               NULL, NULL);
+    std::string _imageFileName;
+    _imageFileName.resize(size);
+    char* imageFileName = &_imageFileName[0];
+    WideCharToMultiByte(CP_UTF8, 0, &wImageFileName[0], -1, imageFileName, size,
+                        NULL, NULL);
 #endif
 
-    fprintf(stderr, "Loading file: \"%s\"\n", argv[1]);
+    fprintf(stderr, "Loading file: \"%s\"\n", imageFileName);
 
-    FileReader f(argv[1]);
+    FileReader f(imageFileName);
 
     auto m(f.readFile());
 
@@ -171,6 +194,7 @@ int main(int argc, char *argv[]) {
     d->applyCrop = false;
     d->failOnUnknown = true;
     RawImage r = d->mRaw;
+    const RawImage* const raw = &r;
 
     d->decodeMetaData(meta.get());
 
@@ -208,7 +232,7 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "filters: %d (0x%x)\n", filters, filters);
     const uint32 bpp = r->getBpp();
     fprintf(stdout, "bpp: %d\n", bpp);
-    uint32 cpp = r->getCpp();
+    const uint32 cpp = r->getCpp();
     fprintf(stdout, "cpp: %d\n", cpp);
     fprintf(stdout, "dataType: %d\n", r->getDataType());
 
@@ -228,17 +252,14 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "pixel_aspect_ratio: %f\n", r->metadata.pixelAspectRatio);
 
     double sum = 0.0F;
-    {
-      uchar8 *const data = r->getDataUncropped(0, 0);
-
 #ifdef _OPENMP
 #pragma omp parallel for default(none) schedule(static) reduction(+ : sum)
 #endif
-      for (size_t k = 0;
-           k < (static_cast<size_t>(dimUncropped.y) * dimUncropped.x * bpp);
-           k++) {
-        sum += static_cast<double>(data[k]);
-      }
+    for (int y = 0; y < dimUncropped.y; ++y) {
+      uchar8* const data = (*raw)->getDataUncropped(0, y);
+
+      for (unsigned x = 0; x < bpp * dimUncropped.x; ++x)
+        sum += static_cast<double>(data[x]);
     }
     fprintf(stdout, "Image byte sum: %lf\n", sum);
     fprintf(stdout, "Image byte avg: %lf\n",
@@ -246,14 +267,16 @@ int main(int argc, char *argv[]) {
 
     if (r->getDataType() == TYPE_FLOAT32) {
       sum = 0.0F;
-      auto* const data = reinterpret_cast<float*>(r->getDataUncropped(0, 0));
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) schedule(static) reduction(+ : sum)
 #endif
-      for (size_t k = 0;
-           k < (static_cast<size_t>(dimUncropped.y) * dimUncropped.x); k++) {
-        sum += static_cast<double>(data[k]);
+      for (int y = 0; y < dimUncropped.y; ++y) {
+        auto* const data =
+            reinterpret_cast<float*>((*raw)->getDataUncropped(0, y));
+
+        for (unsigned x = 0; x < cpp * dimUncropped.x; ++x)
+          sum += static_cast<double>(data[x]);
       }
 
       fprintf(stdout, "Image float sum: %lf\n", sum);
@@ -261,14 +284,16 @@ int main(int argc, char *argv[]) {
               sum / static_cast<double>(dimUncropped.y * dimUncropped.x));
     } else if (r->getDataType() == TYPE_USHORT16) {
       sum = 0.0F;
-      auto* const data = reinterpret_cast<uint16_t*>(r->getDataUncropped(0, 0));
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) schedule(static) reduction(+ : sum)
 #endif
-      for (size_t k = 0;
-           k < (static_cast<size_t>(dimUncropped.y) * dimUncropped.x); k++) {
-        sum += static_cast<double>(data[k]);
+      for (int y = 0; y < dimUncropped.y; ++y) {
+        auto* const data =
+            reinterpret_cast<uint16_t*>((*raw)->getDataUncropped(0, y));
+
+        for (unsigned x = 0; x < cpp * dimUncropped.x; ++x)
+          sum += static_cast<double>(data[x]);
       }
 
       fprintf(stdout, "Image uint16_t sum: %lf\n", sum);
@@ -280,7 +305,7 @@ int main(int argc, char *argv[]) {
 
     /* if an exception is raised lets not retry or handle the
      specific ones, consider the file as corrupted */
-    return 0;
+    return 2;
   }
 
   return 0;

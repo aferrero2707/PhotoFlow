@@ -21,12 +21,15 @@
 
 #pragma once
 
+#include "rawspeedconfig.h" // for ASAN_REGION_IS_POISONED
 #include "common/Common.h"  // for uchar8, int32, uint32, ushort16, roundUp
 #include "common/Memory.h"  // for alignedMalloc
 #include "io/Buffer.h"      // for Buffer::size_type, Buffer, DataBuffer
+#include "io/Endianness.h"  // for Endianness, Endianness::little
 #include "io/IOException.h" // for IOException (ptr only), ThrowIOE
 #include <cassert>          // for assert
 #include <cstring>          // for memcmp, memcpy
+#include <limits>           // for numeric_limits
 
 namespace rawspeed {
 
@@ -38,30 +41,36 @@ protected:
 public:
   ByteStream() = default;
   explicit ByteStream(const DataBuffer& buffer) : DataBuffer(buffer) {}
-  ByteStream(const Buffer &buffer, size_type offset, size_type size_,
-             bool inNativeByteOrder_ = true)
-      : DataBuffer(buffer.getSubView(0, offset + size_), inNativeByteOrder_),
+  ByteStream(const Buffer& buffer, size_type offset, size_type size_,
+             Endianness endianness_ = Endianness::little)
+      : DataBuffer(buffer.getSubView(0, offset + size_), endianness_),
         pos(offset) {}
-  ByteStream(const Buffer &buffer, size_type offset,
-             bool inNativeByteOrder_ = true)
-      : DataBuffer(buffer, inNativeByteOrder_), pos(offset) {}
+  ByteStream(const Buffer& buffer, size_type offset,
+             Endianness endianness_ = Endianness::little)
+      : DataBuffer(buffer, endianness_), pos(offset) {}
 
   // deprecated:
   ByteStream(const Buffer* f, size_type offset, size_type size_,
-             bool inNativeByteOrder_ = true)
-      : ByteStream(*f, offset, size_, inNativeByteOrder_) {}
-  ByteStream(const Buffer* f, size_type offset, bool inNativeByteOrder_ = true)
-      : ByteStream(*f, offset, inNativeByteOrder_) {}
+             Endianness endianness_ = Endianness::little)
+      : ByteStream(*f, offset, size_, endianness_) {}
+  ByteStream(const Buffer* f, size_type offset,
+             Endianness endianness_ = Endianness::little)
+      : ByteStream(*f, offset, endianness_) {}
 
   // return ByteStream that starts at given offset
   // i.e. this->data + offset == getSubStream(offset).data
   ByteStream getSubStream(size_type offset, size_type size_) const {
-    return ByteStream(getSubView(offset, size_), 0, isInNativeByteOrder());
+    return ByteStream(getSubView(offset, size_), 0, getByteOrder());
+  }
+
+  ByteStream getSubStream(size_type offset) const {
+    return ByteStream(getSubView(offset), 0, getByteOrder());
   }
 
   inline void check(size_type bytes) const {
     if (static_cast<uint64>(pos) + bytes > size)
       ThrowIOE("Out of bounds access in ByteStream");
+    assert(!ASAN_REGION_IS_POISONED(data + pos, bytes));
   }
 
   inline size_type getPosition() const { return pos; }
@@ -83,8 +92,19 @@ public:
     pos += size_;
     return ret;
   }
+  inline ByteStream getStream(size_type size_) {
+    ByteStream ret = getSubStream(pos, size_);
+    pos += size_;
+    return ret;
+  }
+  inline ByteStream getStream(size_type nmemb, size_type size_) {
+    if (size_ && nmemb > std::numeric_limits<size_type>::max() / size_)
+      ThrowIOE("Integer overflow when calculating stream lenght");
+    return getStream(nmemb * size_);
+  }
 
   inline uchar8 peekByte(size_type i = 0) const {
+    assert(data);
     check(i+1);
     return data[pos+i];
   }
@@ -96,6 +116,7 @@ public:
 
   inline bool hasPatternAt(const char *pattern, size_type size_,
                            size_type relPos) const {
+    assert(data);
     if (!isValid(pos + relPos, size_))
       return false;
     return memcmp(&data[pos + relPos], pattern, size_) == 0;
@@ -113,6 +134,7 @@ public:
   }
 
   inline uchar8 getByte() {
+    assert(data);
     check(1);
     return data[pos++];
   }
@@ -133,6 +155,7 @@ public:
   inline float getFloat() { return get<float>(); }
 
   const char* peekString() const {
+    assert(data);
     if (memchr(peekData(getRemainSize()), 0, getRemainSize()) == nullptr)
       ThrowIOE("String is not null-terminated");
     return reinterpret_cast<const char*>(&data[pos]);
@@ -141,10 +164,14 @@ public:
   // Increments the stream to after the next zero byte and returns the bytes in between (not a copy).
   // If the first byte is zero, stream is incremented one.
   const char* getString() {
+    assert(data);
     size_type start = pos;
+    bool isNullTerminator = false;
     do {
       check(1);
-    } while (data[pos++] != 0);
+      isNullTerminator = (data[pos] == '\0');
+      pos++;
+    } while (!isNullTerminator);
     return reinterpret_cast<const char*>(&data[start]);
   }
 

@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/bash -v
 
 wd=$(pwd)
 
@@ -28,9 +28,9 @@ cp "$dtdir/cmake/modules/CheckCXXCompilerFlagAndEnableIt.cmake" cmake/Modules
 cp -a "$dtdir/src/external/rawspeed" src/external
 cp src/external/rawspeed/cmake/Modules/*.cmake cmake/Modules
 
-cp "$dtdir/src/external/adobe_coeff.c" "$dtdir/src/external/wb_presets.c" src/dt/external
-cp "$dtdir/src/common/colormatrices.c" src/dt/common
-cp "$dtdir/src/common/srgb_tone_curve_values.h" src/dt/common
+cp "$dtdir/src/external/adobe_coeff.c" "$dtdir/src/external/wb_presets.c" src/external/darktable/src/external
+cp "$dtdir/src/common/colormatrices.c" src/external/darktable/src/common
+cp "$dtdir/src/common/srgb_tone_curve_values.h" src/external/darktable/src/common
 #"$dtdir/src/common/colorspaces.h"
 #"$dtdir/src/common/colorspaces.c"
 

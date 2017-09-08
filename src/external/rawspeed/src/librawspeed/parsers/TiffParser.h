@@ -20,20 +20,26 @@
 
 #pragma once
 
-#include "parsers/RawParser.h" // for RawParser
-#include "tiff/TiffIFD.h"      // for TiffRootIFDOwner
-#include <array>               // for array
-#include <memory>              // for unique_ptr
-#include <utility>             // for pair
+#include "decoders/RawDecoder.h" // IWYU pragma: keep
+#include "parsers/RawParser.h"   // for RawParser
+#include "tiff/TiffIFD.h"        // for TiffRootIFDOwner
+#include <array>                 // for array
+#include <memory>                // for unique_ptr
+#include <utility>               // for pair
 
 namespace rawspeed {
 
 class Buffer;
 
-class RawDecoder;
+class CameraMetaData;
 
 class TiffParser final : public RawParser {
 public:
+  explicit TiffParser(const Buffer* file);
+
+  std::unique_ptr<RawDecoder>
+  getDecoder(const CameraMetaData* meta = nullptr) override;
+
   // TiffRootIFDOwner contains pointers into 'data' but if is is non-owning, it
   // may be deleted immediately
   static TiffRootIFDOwner parse(const Buffer& data);
@@ -48,7 +54,7 @@ public:
   using checker_t = bool (*)(const TiffRootIFD* root, const Buffer* data);
   using constructor_t = std::unique_ptr<RawDecoder> (*)(TiffRootIFDOwner&& root,
                                                         const Buffer* data);
-  static const std::array<std::pair<checker_t, constructor_t>, 16> Map;
+  static const std::array<std::pair<checker_t, constructor_t>, 17> Map;
 };
 
 } // namespace rawspeed

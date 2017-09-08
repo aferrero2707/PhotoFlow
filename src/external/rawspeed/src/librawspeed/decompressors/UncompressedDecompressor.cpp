@@ -42,7 +42,7 @@ void UncompressedDecompressor::sanityCheck(uint32* h, int bpl) {
   assert(h != nullptr);
   assert(*h > 0);
   assert(bpl > 0);
-  assert(input.getRemainSize() > 0);
+  assert(input.getSize() > 0);
 
   if (input.getRemainSize() >= bpl * *h)
     return; // all good!
@@ -167,15 +167,15 @@ void UncompressedDecompressor::readUncompressedRaw(const iPoint2D& size,
       bits.skipBits(skipBits);
     }
   } else {
-    if (bitPerPixel == 16 && getHostEndianness() == little) {
+    if (bitPerPixel == 16 && getHostEndianness() == Endianness::little) {
       copyPixels(&data[offset.x * sizeof(ushort16) * cpp + y * outPitch],
                  outPitch, input.getData(inputPitch * (h - y)), inputPitch,
                  w * mRaw->getBpp(), h - y);
       return;
     }
     if (bitPerPixel == 12 && static_cast<int>(w) == inputPitch * 8 / 12 &&
-        getHostEndianness() == little) {
-      decode12BitRaw<little>(w, h);
+        getHostEndianness() == Endianness::little) {
+      decode12BitRaw<Endianness::little>(w, h);
       return;
     }
     BitPumpLSB bits(input);
@@ -219,7 +219,8 @@ template <Endianness e, bool interlaced, bool skips>
 void UncompressedDecompressor::decode12BitRaw(uint32 w, uint32 h) {
   static constexpr const auto bits = 12;
 
-  static_assert(e == little || e == big, "unknown endiannes");
+  static_assert(e == Endianness::little || e == Endianness::big,
+                "unknown endiannes");
 
   static constexpr const auto shift = 16 - bits;
   static constexpr const auto pack = 8 - shift;
@@ -229,12 +230,14 @@ void UncompressedDecompressor::decode12BitRaw(uint32 w, uint32 h) {
 
   static_assert(bits == 12 && mask == 0x0f, "wrong mask");
 
-  uint32 perline = bytesPerLine(w, false);
+  uint32 perline = bytesPerLine(w, skips);
 
   sanityCheck(&h, perline);
 
   uchar8* data = mRaw->getData();
   uint32 pitch = mRaw->pitch;
+
+  // FIXME: maybe check size of interlaced data?
   const uchar8* in = input.peekData(perline * h);
   uint32 half = (h + 1) >> 1;
   for (uint32 row = 0; row < h; row++) {
@@ -243,10 +246,9 @@ void UncompressedDecompressor::decode12BitRaw(uint32 w, uint32 h) {
 
     if (interlaced && y == 1) {
       // The second field starts at a 2048 byte aligment
-      uint32 offset = ((half * w * 3 / 2 >> 11) + 1) << 11;
-      if (offset > input.getRemainSize())
-        ThrowIOE("Trying to jump to invalid offset %d", offset);
-      in = input.peekData(input.getRemainSize()) + offset;
+      const uint32 offset = ((half * w * 3 / 2 >> 11) + 1) << 11;
+      input.skipBytes(offset);
+      in = input.peekData(perline * (h - row));
     }
 
     for (uint32 x = 0; x < w; x += 2, in += 3) {
@@ -254,7 +256,7 @@ void UncompressedDecompressor::decode12BitRaw(uint32 w, uint32 h) {
       uint32 g2 = in[1];
 
       auto process = [dest](uint32 i, bool invert, uint32 p1, uint32 p2) {
-        if (!(invert ^ (e == little)))
+        if (!(invert ^ (e == Endianness::little)))
           dest[i] = (p1 << pack) | (p2 >> pack);
         else
           dest[i] = ((p2 & mask) << 8) | p1;
@@ -273,16 +275,26 @@ void UncompressedDecompressor::decode12BitRaw(uint32 w, uint32 h) {
   input.skipBytes(input.getRemainSize());
 }
 
-template void UncompressedDecompressor::decode12BitRaw<little, false, false>(uint32 w, uint32 h);
-template void UncompressedDecompressor::decode12BitRaw<big, false, false>(uint32 w, uint32 h);
-template void UncompressedDecompressor::decode12BitRaw<big, true, false>(uint32 w, uint32 h);
-template void UncompressedDecompressor::decode12BitRaw<little, false, true>(uint32 w, uint32 h);
-template void UncompressedDecompressor::decode12BitRaw<big, false, true>(uint32 w, uint32 h);
+template void
+UncompressedDecompressor::decode12BitRaw<Endianness::little, false, false>(
+    uint32 w, uint32 h);
+template void
+UncompressedDecompressor::decode12BitRaw<Endianness::big, false, false>(
+    uint32 w, uint32 h);
+template void
+UncompressedDecompressor::decode12BitRaw<Endianness::big, true, false>(
+    uint32 w, uint32 h);
+template void
+UncompressedDecompressor::decode12BitRaw<Endianness::little, false, true>(
+    uint32 w, uint32 h);
+template void
+UncompressedDecompressor::decode12BitRaw<Endianness::big, false, true>(
+    uint32 w, uint32 h);
 
 template <Endianness e>
 void UncompressedDecompressor::decode12BitRawUnpackedLeftAligned(uint32 w,
                                                                  uint32 h) {
-  static_assert(e == big, "unknown endiannes");
+  static_assert(e == Endianness::big, "unknown endiannes");
 
   sanityCheck(w, &h, 2);
 
@@ -296,20 +308,21 @@ void UncompressedDecompressor::decode12BitRawUnpackedLeftAligned(uint32 w,
       uint32 g1 = in[0];
       uint32 g2 = in[1];
 
-      if (e == big)
+      if (e == Endianness::big)
         dest[x] = (((g1 << 8) | (g2 & 0xf0)) >> 4);
     }
   }
 }
 
 template void
-UncompressedDecompressor::decode12BitRawUnpackedLeftAligned<big>(uint32 w,
-                                                                 uint32 h);
+UncompressedDecompressor::decode12BitRawUnpackedLeftAligned<Endianness::big>(
+    uint32 w, uint32 h);
 
 template <int bits, Endianness e>
 void UncompressedDecompressor::decodeRawUnpacked(uint32 w, uint32 h) {
   static_assert(bits == 12 || bits == 14 || bits == 16, "unhandled bitdepth");
-  static_assert(e == little || e == big, "unknown endiannes");
+  static_assert(e == Endianness::little || e == Endianness::big,
+                "unknown endiannes");
 
   static constexpr const auto shift = 16 - bits;
   static constexpr const auto mask = (1 << (8 - shift)) - 1;
@@ -330,7 +343,7 @@ void UncompressedDecompressor::decodeRawUnpacked(uint32 w, uint32 h) {
       uint32 g1 = in[0];
       uint32 g2 = in[1];
 
-      if (e == little)
+      if (e == Endianness::little)
         dest[x] = ((g2 << 8) | g1) >> shift;
       else
         dest[x] = ((g1 & mask) << 8) | g2;
@@ -338,10 +351,20 @@ void UncompressedDecompressor::decodeRawUnpacked(uint32 w, uint32 h) {
   }
 }
 
-template void UncompressedDecompressor::decodeRawUnpacked<12, little>(uint32 w, uint32 h);
-template void UncompressedDecompressor::decodeRawUnpacked<12, big>(uint32 w, uint32 h);
-template void UncompressedDecompressor::decodeRawUnpacked<14, big>(uint32 w, uint32 h);
-template void UncompressedDecompressor::decodeRawUnpacked<16, little>(uint32 w, uint32 h);
-template void UncompressedDecompressor::decodeRawUnpacked<16, big>(uint32 w, uint32 h);
+template void
+UncompressedDecompressor::decodeRawUnpacked<12, Endianness::little>(uint32 w,
+                                                                    uint32 h);
+template void
+UncompressedDecompressor::decodeRawUnpacked<12, Endianness::big>(uint32 w,
+                                                                 uint32 h);
+template void
+UncompressedDecompressor::decodeRawUnpacked<14, Endianness::big>(uint32 w,
+                                                                 uint32 h);
+template void
+UncompressedDecompressor::decodeRawUnpacked<16, Endianness::little>(uint32 w,
+                                                                    uint32 h);
+template void
+UncompressedDecompressor::decodeRawUnpacked<16, Endianness::big>(uint32 w,
+                                                                 uint32 h);
 
 } // namespace rawspeed

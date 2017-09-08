@@ -31,8 +31,7 @@
 
 #if defined(HAVE_MM_MALLOC)
 // for _mm_malloc, _mm_free
-#include <xmmintrin.h> // IWYU pragma: keep
-// IWYU pragma: no_include <mm_malloc.h>
+#include <xmmintrin.h>
 #elif defined(HAVE_ALIGNED_MALLOC)
 extern "C" {
 #include <malloc.h> // for _aligned_malloc, _aligned_free
@@ -52,9 +51,10 @@ void* alignedMalloc(size_t size, size_t alignment) {
 
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
   // workaround ASAN's broken allocator_may_return_null option
-  // if trying to alloc more than 4GB, just return null.
+  // plus, avoidance of libFuzzer's rss_limit_mb option
+  // if trying to alloc more than 2GB, just return null.
   // else it would abort() the whole program...
-  if (size > 4UL << 30UL)
+  if (size > 2UL << 30UL)
     return ptr;
 #endif
 

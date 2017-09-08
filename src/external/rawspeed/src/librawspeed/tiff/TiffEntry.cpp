@@ -67,7 +67,7 @@ TiffEntry::TiffEntry(TiffIFD* parent_, ByteStream* bs) : parent(parent_) {
       // preserve offset for SUB_IFD/EXIF/MAKER_NOTE data
 #if 0
       // limit access to range from 0 to data_offset+byte_size
-      data = ByteStream(bs, data_offset, byte_size, bs.isInNativeByteOrder());
+      data = ByteStream(bs, data_offset, byte_size, bs.getByteOrder());
 #else
       // allow access to whole file, necesary if offsets inside the maker note
       // point to outside data, which is forbidden due to the TIFF/DNG spec but
@@ -159,7 +159,6 @@ uint32 TiffEntry::getU32(uint32 index) const {
     ThrowTPE("Wrong type %u encountered. Expected Long, Offset, Rational or "
              "Undefined on 0x%x",
              type, tag);
-    break;
   }
 
   return data.peek<uint32>(index);

@@ -19,6 +19,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
+#include "rawspeedconfig.h"
 #include "io/Buffer.h"
 #include "common/Common.h"  // for uchar8, roundUp
 #include "common/Memory.h"  // for alignedFree, alignedMalloc
@@ -40,6 +41,8 @@ unique_ptr<uchar8, decltype(&alignedFree)> Buffer::Create(size_type size) {
   if (!data.get())
     ThrowIOE("Failed to allocate %uz bytes memory buffer.", size);
 
+  assert(!ASAN_REGION_IS_POISONED(data.get(), size));
+
   return data;
 }
 
@@ -56,10 +59,10 @@ Buffer::Buffer(unique_ptr<uchar8, decltype(&alignedFree)> data_,
   if (!data)
     ThrowIOE("Memory buffer is nonexistant");
 
+  assert(!ASAN_REGION_IS_POISONED(data, size));
+
   isOwner = true;
 }
-
-Buffer::Buffer(size_type size_) : Buffer(Create(size_), size_) {}
 
 Buffer::~Buffer() {
   if (isOwner) {
@@ -68,8 +71,10 @@ Buffer::~Buffer() {
 }
 
 Buffer& Buffer::operator=(Buffer&& rhs) noexcept {
-  if (this == &rhs)
+  if (this == &rhs) {
+    assert(!ASAN_REGION_IS_POISONED(data, size));
     return *this;
+  }
 
   if (isOwner)
     alignedFreeConstPtr(data);
@@ -78,18 +83,23 @@ Buffer& Buffer::operator=(Buffer&& rhs) noexcept {
   size = rhs.size;
   isOwner = rhs.isOwner;
 
+  assert(!ASAN_REGION_IS_POISONED(data, size));
+
   rhs.isOwner = false;
 
   return *this;
 }
 
 Buffer& Buffer::operator=(const Buffer& rhs) {
-  if (this == &rhs)
+  if (this == &rhs) {
+    assert(!ASAN_REGION_IS_POISONED(data, size));
     return *this;
+  }
 
   Buffer unOwningTmp(rhs.data, rhs.size);
   *this = std::move(unOwningTmp);
   assert(!isOwner);
+  assert(!ASAN_REGION_IS_POISONED(data, size));
 
   return *this;
 }

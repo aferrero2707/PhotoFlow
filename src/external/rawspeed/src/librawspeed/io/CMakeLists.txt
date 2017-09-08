@@ -1,4 +1,4 @@
-FILE(GLOB IO_SOURCES
+FILE(GLOB SOURCES
   "BitPumpJPEG.h"
   "BitPumpLSB.h"
   "BitPumpMSB.h"
@@ -9,6 +9,7 @@ FILE(GLOB IO_SOURCES
   "Buffer.h"
   "ByteStream.h"
   "Endianness.h"
+  "FileIO.h"
   "FileIOException.h"
   "FileReader.cpp"
   "FileReader.h"
@@ -17,4 +18,6 @@ FILE(GLOB IO_SOURCES
   "IOException.h"
 )
 
-set(RAWSPEED_SOURCES "${RAWSPEED_SOURCES};${IO_SOURCES}" PARENT_SCOPE)
+target_sources(rawspeed PRIVATE
+  ${SOURCES}
+)

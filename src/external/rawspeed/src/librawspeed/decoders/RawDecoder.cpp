@@ -28,7 +28,6 @@
 #include "io/Buffer.h"                              // for Buffer
 #include "io/FileIOException.h"                     // for FileIOException
 #include "io/IOException.h"                         // for IOException
-#include "metadata/BlackArea.h"                     // for BlackArea
 #include "metadata/Camera.h"                        // for Camera, Hints
 #include "metadata/CameraMetaData.h"                // for CameraMetaData
 #include "metadata/CameraSensorInfo.h"              // for CameraSensorInfo
@@ -67,6 +66,9 @@ void RawDecoder::decodeUncompressed(const TiffIFD *rawIFD, BitOrder order) {
   uint32 height = rawIFD->getEntry(IMAGELENGTH)->getU32();
   uint32 bitPerPixel = rawIFD->getEntry(BITSPERSAMPLE)->getU32();
 
+  if (width == 0 || height == 0 || width > 5632 || height > 3720)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
   vector<RawSlice> slices;
   uint32 offY = 0;
 
@@ -90,7 +92,9 @@ void RawDecoder::decodeUncompressed(const TiffIFD *rawIFD, BitOrder order) {
 
   mRaw->dim = iPoint2D(width, offY);
   mRaw->createData();
-  mRaw->whitePoint = (1<<bitPerPixel)-1;
+
+  // Default white level is (2 ** BitsPerSample) - 1
+  mRaw->whitePoint = (1UL << bitPerPixel) - 1UL;
 
   offY = 0;
   for (uint32 i = 0; i < slices.size(); i++) {
@@ -101,9 +105,11 @@ void RawDecoder::decodeUncompressed(const TiffIFD *rawIFD, BitOrder order) {
     bitPerPixel = static_cast<int>(
         static_cast<uint64>(static_cast<uint64>(slice.count) * 8U) /
         (slice.h * width));
+    const auto inputPitch = width * bitPerPixel / 8;
+    if (!inputPitch)
+      ThrowRDE("Bad input pitch. Can not decode anything.");
     try {
-      u.readUncompressedRaw(size, pos, width * bitPerPixel / 8, bitPerPixel,
-                            order);
+      u.readUncompressedRaw(size, pos, inputPitch, bitPerPixel, order);
     } catch (RawDecoderException &e) {
       if (i>0)
         mRaw->setError(e.what());
@@ -308,7 +314,6 @@ rawspeed::RawImage RawDecoder::decodeRaw() {
   } catch (IOException &e) {
     ThrowRDE("%s", e.what());
   }
-  return RawImage(nullptr);
 }
 
 void RawDecoder::decodeMetaData(const CameraMetaData* meta) {

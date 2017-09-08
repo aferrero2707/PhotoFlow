@@ -86,7 +86,8 @@ struct BitStreamCacheRightInLeftOut : BitStreamCacheBase
   }
 };
 
-template <typename Tag, typename Cache> class BitStream : public ByteStream {
+template <typename Tag, typename Cache>
+class BitStream final : public ByteStream {
   Cache cache;
 
   // this method hase to be implemented in the concrete BitStream template
@@ -95,6 +96,8 @@ template <typename Tag, typename Cache> class BitStream : public ByteStream {
   size_type fillCache(const uchar8* input);
 
 public:
+  BitStream() = default;
+
   explicit BitStream(const ByteStream& s)
       : ByteStream(s.getSubStream(s.getPosition(), s.getRemainSize())) {}
 
@@ -104,6 +107,7 @@ public:
 
 private:
   inline void fillSafe() {
+    assert(data);
     if (pos + BitStreamCacheBase::MaxProcessBytes <= size) {
       uchar8 tmp[BitStreamCacheBase::MaxProcessBytes] = {0};
       assert(!(size - pos < BitStreamCacheBase::MaxProcessBytes));
@@ -127,6 +131,7 @@ private:
 
 public:
   inline void fill(uint32 nbits = Cache::MaxGetBits) {
+    assert(data);
     assert(nbits <= Cache::MaxGetBits);
     if (cache.fillLevel < nbits) {
 #if defined(DEBUG)

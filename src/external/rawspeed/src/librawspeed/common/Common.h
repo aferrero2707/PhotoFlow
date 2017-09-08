@@ -22,12 +22,10 @@
 
 #include "rawspeedconfig.h"
 
-#include <algorithm>        // for forward
 #include <cassert>          // for assert
 #include <cstdint>          // for uintptr_t
 #include <cstring>          // for memcpy, size_t
 #include <initializer_list> // for initializer_list
-#include <memory>           // for unique_ptr, allocator
 #include <string>           // for string
 #include <type_traits>      // for enable_if, is_pointer
 #include <vector>           // for vector
@@ -81,6 +79,11 @@ roundUp(size_t value, size_t multiple) {
              : value + multiple - (value % multiple);
 }
 
+constexpr inline size_t __attribute__((const))
+roundUpDivision(size_t value, size_t div) {
+  return (value + (div - 1)) / div;
+}
+
 template <class T>
 inline constexpr __attribute__((const)) bool
 isAligned(T value, size_t multiple,
@@ -107,14 +110,6 @@ isIn(const T value, const std::initializer_list<T2>& list) {
       return true;
   return false;
 }
-
-// until we allow c++14 code
-#if __cplusplus < 201402L
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
-  return std::unique_ptr<T>(new T(std::forward<Args>(args)...)); // NOLINT
-}
-#endif
 
 inline uint32 getThreadCount()
 {
@@ -161,13 +156,16 @@ inline std::vector<std::string> splitString(const std::string& input,
   while (true) {
     const char* begin = str;
 
-    while (*str != c && *str)
+    while (*str != c && *str != '\0')
       str++;
 
     if (begin != str)
       result.emplace_back(begin, str);
 
-    if (0 == *str++)
+    const bool isNullTerminator = (*str == '\0');
+    str++;
+
+    if (isNullTerminator)
       break;
   }
 

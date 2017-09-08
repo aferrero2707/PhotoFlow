@@ -32,12 +32,13 @@
 #include "tiff/CiffIFD.h"                  // for CiffIFD
 #include "tiff/CiffTag.h"                  // for CiffTag, CiffTag::CIFF_MA...
 #include <algorithm>                       // for move
+#include <array>                           // for array
 #include <cassert>                         // for assert
 #include <cmath>                           // for copysignf, expf, logf
-#include <cstdlib>                         // for abs
 #include <memory>                          // for unique_ptr
 #include <string>                          // for string
 #include <vector>                          // for vector
+// IWYU pragma: no_include <bits/std_abs.h>
 
 using std::vector;
 using std::string;
@@ -47,11 +48,12 @@ namespace rawspeed {
 
 class CameraMetaData;
 
-CrwDecoder::CrwDecoder(std::unique_ptr<CiffIFD> rootIFD, Buffer* file)
+CrwDecoder::CrwDecoder(std::unique_ptr<const CiffIFD> rootIFD,
+                       const Buffer* file)
     : RawDecoder(file), mRootIFD(move(rootIFD)) {}
 
 RawImage CrwDecoder::decodeRawInternal() {
-  CiffEntry *sensorInfo = mRootIFD->getEntryRecursive(CIFF_SENSORINFO);
+  const CiffEntry* sensorInfo = mRootIFD->getEntryRecursive(CIFF_SENSORINFO);
 
   if (!sensorInfo || sensorInfo->count < 6 || sensorInfo->type != CIFF_SHORT)
     ThrowRDE("Couldn't find image sensor info");
@@ -60,7 +62,10 @@ RawImage CrwDecoder::decodeRawInternal() {
   uint32 width = sensorInfo->getU16(1);
   uint32 height = sensorInfo->getU16(2);
 
-  CiffEntry *decTable = mRootIFD->getEntryRecursive(CIFF_DECODERTABLE);
+  if (width == 0 || height == 0 || width > 4104 || height > 3048)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
+  const CiffEntry* decTable = mRootIFD->getEntryRecursive(CIFF_DECODERTABLE);
   if (!decTable || decTable->type != CIFF_LONG)
     ThrowRDE("Couldn't find decoder table");
 
@@ -79,7 +84,7 @@ RawImage CrwDecoder::decodeRawInternal() {
 }
 
 void CrwDecoder::checkSupportInternal(const CameraMetaData* meta) {
-  vector<CiffIFD*> data = mRootIFD->getIFDsWithTag(CIFF_MAKEMODEL);
+  vector<const CiffIFD*> data = mRootIFD->getIFDsWithTag(CIFF_MAKEMODEL);
   if (data.empty())
     ThrowRDE("Model name not found");
   vector<string> makemodel = data[0]->getEntry(CIFF_MAKEMODEL)->getStrings();
@@ -111,7 +116,7 @@ float __attribute__((const)) CrwDecoder::canonEv(const long in) {
 void CrwDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
   int iso = 0;
   mRaw->cfa.setCFA(iPoint2D(2,2), CFA_RED, CFA_GREEN, CFA_GREEN, CFA_BLUE);
-  vector<CiffIFD*> data = mRootIFD->getIFDsWithTag(CIFF_MAKEMODEL);
+  vector<const CiffIFD*> data = mRootIFD->getIFDsWithTag(CIFF_MAKEMODEL);
   if (data.empty())
     ThrowRDE("Model name not found");
   vector<string> makemodel = data[0]->getEntry(CIFF_MAKEMODEL)->getStrings();
@@ -122,7 +127,7 @@ void CrwDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
   string mode;
 
   if (mRootIFD->hasEntryRecursive(CIFF_SHOTINFO)) {
-    CiffEntry *shot_info = mRootIFD->getEntryRecursive(CIFF_SHOTINFO);
+    const CiffEntry* shot_info = mRootIFD->getEntryRecursive(CIFF_SHOTINFO);
     if (shot_info->type == CIFF_SHORT && shot_info->count >= 2) {
       // os << exp(canonEv(value.toLong()) * log(2.0)) * 100.0 / 32.0;
       ushort16 iso_index = shot_info->getU16(2);
@@ -134,18 +139,23 @@ void CrwDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
   // Fetch the white balance
   try{
     if (mRootIFD->hasEntryRecursive(static_cast<CiffTag>(0x0032))) {
-      CiffEntry* wb = mRootIFD->getEntryRecursive(static_cast<CiffTag>(0x0032));
+      const CiffEntry* wb =
+          mRootIFD->getEntryRecursive(static_cast<CiffTag>(0x0032));
       if (wb->type == CIFF_BYTE && wb->count == 768) {
         // We're in a D30 file, values are RGGB
         // This will probably not get used anyway as a 0x102c tag should exist
-        mRaw->metadata.wbCoeffs[0] =
-            static_cast<float>(1024.0 / wb->getByte(72));
+        std::array<uchar8, 4> wbMuls{{wb->getByte(72), wb->getByte(73),
+                                      wb->getByte(74), wb->getByte(75)}};
+        for (const auto& mul : wbMuls) {
+          if (0 == mul)
+            ThrowRDE("WB coeffient is zero!");
+        }
+
+        mRaw->metadata.wbCoeffs[0] = static_cast<float>(1024.0 / wbMuls[0]);
         mRaw->metadata.wbCoeffs[1] =
-            static_cast<float>((1024.0 / wb->getByte(73)) +
-                               (1024.0 / wb->getByte(74))) /
+            static_cast<float>((1024.0 / wbMuls[1]) + (1024.0 / wbMuls[2])) /
             2.0F;
-        mRaw->metadata.wbCoeffs[2] =
-            static_cast<float>(1024.0 / wb->getByte(75));
+        mRaw->metadata.wbCoeffs[2] = static_cast<float>(1024.0 / wbMuls[3]);
       } else if (wb->type == CIFF_BYTE && wb->count > 768) { // Other G series and S series cameras
         // correct offset for most cameras
         int offset = hints.get("wb_offset", 120);
@@ -164,7 +174,7 @@ void CrwDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
       }
     }
     if (mRootIFD->hasEntryRecursive(static_cast<CiffTag>(0x102c))) {
-      CiffEntry* entry =
+      const CiffEntry* entry =
           mRootIFD->getEntryRecursive(static_cast<CiffTag>(0x102c));
       if (entry->type == CIFF_SHORT && entry->getU16() > 512) {
         // G1/Pro90 CYGM pattern
@@ -182,9 +192,9 @@ void CrwDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
       }
     }
     if (mRootIFD->hasEntryRecursive(CIFF_SHOTINFO) && mRootIFD->hasEntryRecursive(CIFF_WHITEBALANCE)) {
-      CiffEntry *shot_info = mRootIFD->getEntryRecursive(CIFF_SHOTINFO);
+      const CiffEntry* shot_info = mRootIFD->getEntryRecursive(CIFF_SHOTINFO);
       ushort16 wb_index = shot_info->getU16(7);
-      CiffEntry *wb_data = mRootIFD->getEntryRecursive(CIFF_WHITEBALANCE);
+      const CiffEntry* wb_data = mRootIFD->getEntryRecursive(CIFF_WHITEBALANCE);
       /* CANON EOS D60, CANON EOS 10D, CANON EOS 300D */
       if (wb_index > 9)
         ThrowRDE("Invalid white balance index");

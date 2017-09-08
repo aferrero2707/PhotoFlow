@@ -34,12 +34,12 @@
 
 namespace rawspeed {
 
-AriDecoder::AriDecoder(Buffer* file) : RawDecoder(file) {
+AriDecoder::AriDecoder(const Buffer* file) : RawDecoder(file) {
   if (mFile->getSize() < 4096) {
     ThrowRDE("File too small (no header)");
   }
   try {
-    ByteStream s(mFile, 8, getHostEndianness() == little);
+    ByteStream s(mFile, 8, Endianness::little);
     mDataOffset = s.getU32();
     uint32 someNumber = s.getU32(); // Value: 3?
     uint32 segmentLength = s.getU32(); // Value: 0x3c = length
@@ -70,7 +70,7 @@ AriDecoder::AriDecoder(Buffer* file) : RawDecoder(file) {
   }
 }
 
-bool AriDecoder::isARI(Buffer* input) {
+bool AriDecoder::isARI(const Buffer* input) {
   static const char magic[] = "ARRI\x12\x34\x56\x78";
   static const size_t magic_size = sizeof(magic) - 1; // excluding \0
   const unsigned char* data = input->getData(0, magic_size);

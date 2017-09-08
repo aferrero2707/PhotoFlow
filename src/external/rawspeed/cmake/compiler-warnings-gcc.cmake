@@ -30,7 +30,7 @@ set (GCC_WARNING_FLAGS
 
 # cleanup this once we no longer need to support gcc-4.9
 # disabled for now, see https://github.com/darktable-org/rawspeed/issues/32
-if(CMAKE_CXX_COMPILER_ID AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0))
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
   list(APPEND GCC_WARNING_FLAGS "shadow")
 endif()
 
@@ -43,8 +43,13 @@ endif()
 
 set (GCC_DISABLED_WARNING_FLAGS
   "unused-parameter"
-  "error=suggest-final-types"
-  "error=suggest-final-methods"
+)
+
+set (GCC_NOERROR_WARNING_FLAGS
+  "suggest-final-methods"
+  "suggest-final-types"
+  "suggest-override"
+  "suggest-attribute=noreturn"
 )
 
 foreach(warning ${GCC_WARNING_FLAGS})
@@ -53,4 +58,8 @@ endforeach()
 
 foreach(warning ${GCC_DISABLED_WARNING_FLAGS})
   CHECK_CXX_COMPILER_FLAG_AND_ENABLE_IT(-Wno-${warning})
+endforeach()
+
+foreach(warning ${GCC_NOERROR_WARNING_FLAGS})
+  CHECK_CXX_COMPILER_FLAG_AND_ENABLE_IT(-Wno-error=${warning})
 endforeach()

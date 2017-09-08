@@ -22,10 +22,12 @@
 #pragma once
 
 #include "common/Common.h"               // for uint32, ushort16
+#include "common/NORangesSet.h"          // for NORangesSet
 #include "io/Buffer.h"                   // for Buffer (ptr only), DataBuffer
 #include "io/ByteStream.h"               // for ByteStream
 #include "io/Endianness.h"               // for getHostEndianness, Endianne...
 #include "parsers/TiffParserException.h" // for ThrowTPE
+#include "tiff/TiffEntry.h"              // IWYU pragma: keep
 #include "tiff/TiffTag.h"                // for TiffTag
 #include <map>                           // for map, _Rb_tree_const_iterator
 #include <memory>                        // for unique_ptr
@@ -33,8 +35,6 @@
 #include <vector>                        // for vector
 
 namespace rawspeed {
-
-class TiffEntry;
 
 class TiffIFD;
 
@@ -58,13 +58,16 @@ class TiffIFD
   void checkOverflow();
   void add(TiffIFDOwner subIFD);
   void add(TiffEntryOwner entry);
-  TiffRootIFDOwner parseDngPrivateData(TiffEntry *t);
-  TiffRootIFDOwner parseMakerNote(TiffEntry *t);
-  void parseIFDEntry(ByteStream* bs);
+  TiffRootIFDOwner parseDngPrivateData(NORangesSet<Buffer>* ifds, TiffEntry* t);
+  TiffRootIFDOwner parseMakerNote(NORangesSet<Buffer>* ifds, TiffEntry* t);
+  void parseIFDEntry(NORangesSet<Buffer>* ifds, ByteStream* bs);
 
 public:
-  TiffIFD() = default;
-  TiffIFD(TiffIFD* parent, const DataBuffer& data, uint32 offset);
+  explicit TiffIFD(TiffIFD* parent);
+
+  TiffIFD(TiffIFD* parent, NORangesSet<Buffer>* ifds, const DataBuffer& data,
+          uint32 offset);
+
   virtual ~TiffIFD() = default;
 
   // make sure we never copy-constuct/assign a TiffIFD to keep the owning
@@ -96,31 +99,23 @@ class TiffRootIFD final : public TiffIFD {
 public:
   const DataBuffer rootBuffer;
 
-  TiffRootIFD(TiffIFD* parent_, const DataBuffer& data, uint32 offset)
-      : TiffIFD(parent_, data, offset), rootBuffer(data) {}
+  TiffRootIFD(TiffIFD* parent_, NORangesSet<Buffer>* ifds,
+              const DataBuffer& data, uint32 offset)
+      : TiffIFD(parent_, ifds, data, offset), rootBuffer(data) {}
 
   // find the MAKE and MODEL tags identifying the camera
   // note: the returned strings are trimmed automatically
   TiffID getID() const;
 };
 
-inline bool isTiffInNativeByteOrder(const ByteStream& bs, uint32 pos, const char* context = "") {
+inline Endianness getTiffByteOrder(const ByteStream& bs, uint32 pos,
+                                   const char* context = "") {
   if (bs.hasPatternAt("II", 2, pos))
-    return getHostEndianness() == little;
+    return Endianness::little;
   if (bs.hasPatternAt("MM", 2, pos))
-    return getHostEndianness() == big;
+    return Endianness::big;
 
   ThrowTPE("Failed to parse TIFF endianess information in %s.", context);
-}
-
-inline Endianness getTiffEndianness(const Buffer* file) {
-  ushort16 magic = *reinterpret_cast<const ushort16*>(file->getData(0, 2));
-  if (magic == 0x4949)
-    return little;
-  if (magic == 0x4d4d)
-    return big;
-
-  ThrowTPE("Failed to parse TIFF endianess information.");
 }
 
 } // namespace rawspeed

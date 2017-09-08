@@ -27,7 +27,6 @@
 #include "decoders/DngDecoderSlices.h"    // for DngDecoderSlices, DngSlice...
 #include "decoders/RawDecoderException.h" // for ThrowRDE, RawDecoderException
 #include "io/Buffer.h"                    // for Buffer
-#include "metadata/BlackArea.h"           // for BlackArea
 #include "metadata/Camera.h"              // for Camera
 #include "metadata/CameraMetaData.h"      // for CameraMetaData
 #include "metadata/ColorFilterArray.h"    // for CFAColor, ColorFilterArray
@@ -57,6 +56,9 @@ DngDecoder::isAppropriateDecoder(const TiffRootIFD* rootIFD,
 
 DngDecoder::DngDecoder(TiffRootIFDOwner&& rootIFD, const Buffer* file)
     : AbstractTiffDecoder(move(rootIFD), file) {
+  if (!mRootIFD->hasEntryRecursive(DNGVERSION))
+    ThrowRDE("DNG, but version tag is missing. Will not guess.");
+
   const uchar8* v = mRootIFD->getEntryRecursive(DNGVERSION)->getData(4);
 
   if (v[0] != 1)
@@ -90,8 +92,6 @@ void DngDecoder::dropUnsuportedChunks(std::vector<const TiffIFD*>* data) {
       // bit 2 is on if image contains transparency information.
       // the value itself can be either 4 or 5
       isAlpha = NewSubFileType & (1 << 2);
-
-      assert((NewSubFileType == 0) || isSubsampled || isAlpha);
     }
 
     // normal raw?
@@ -180,9 +180,23 @@ void DngDecoder::parseCFA(const TiffIFD* raw) {
       mRaw->cfa.setColorAt(iPoint2D(x, y), c2);
     }
   }
+
+  // the cfa is specified relative to the ActiveArea. we want it relative (0,0)
+  // Since in handleMetadata(), in subFrame() we unconditionally shift CFA by
+  // activearea+DefaultCropOrigin; here we need to undo the 'ACTIVEAREA' part.
+  if (!raw->hasEntry(ACTIVEAREA))
+    return;
+
+  TiffEntry* active_area = raw->getEntry(ACTIVEAREA);
+  if (active_area->count != 4)
+    ThrowRDE("active area has %d values instead of 4", active_area->count);
+
+  auto aa = active_area->getFloatArray(2);
+  mRaw->cfa.shiftLeft(aa[1]);
+  mRaw->cfa.shiftDown(aa[0]);
 }
 
-void DngDecoder::decodeData(const TiffIFD* raw, int compression, uint32 sample_format) {
+void DngDecoder::decodeData(const TiffIFD* raw, uint32 sample_format) {
   if (compression == 8 && sample_format != 3) {
     ThrowRDE("Only float format is supported for "
              "deflate-compressed data.");
@@ -194,8 +208,7 @@ void DngDecoder::decodeData(const TiffIFD* raw, int compression, uint32 sample_f
 
   DngDecoderSlices slices(mFile, mRaw, compression);
   if (raw->hasEntry(PREDICTOR)) {
-    uint32 predictor = raw->getEntry(PREDICTOR)->getU32();
-    slices.mPredictor = predictor;
+    slices.mPredictor = raw->getEntry(PREDICTOR)->getU32();
   }
   slices.mBps = bps;
   if (raw->hasEntry(TILEOFFSETS)) {
@@ -207,14 +220,17 @@ void DngDecoder::decodeData(const TiffIFD* raw, int compression, uint32 sample_f
 
     assert(tilew > 0);
     uint32 tilesX = (mRaw->dim.x + tilew - 1) / tilew;
-    assert(tilesX > 0);
+    if (!tilesX)
+      ThrowRDE("Zero tiles horizontally");
 
     assert(tileh > 0);
     uint32 tilesY = (mRaw->dim.y + tileh - 1) / tileh;
-    assert(tilesY > 0);
+    if (!tilesY)
+      ThrowRDE("Zero tiles vertically");
 
     uint32 nTiles = tilesX * tilesY;
-    assert(nTiles > 0);
+    if (!nTiles || tilesX * tilesY != nTiles)
+      ThrowRDE("Uncorrect total number of slices");
 
     TiffEntry* offsets = raw->getEntry(TILEOFFSETS);
     TiffEntry* counts = raw->getEntry(TILEBYTECOUNTS);
@@ -238,8 +254,8 @@ void DngDecoder::decodeData(const TiffIFD* raw, int compression, uint32 sample_f
         const uint32 offX = tilew * x;
         const uint32 offY = tileh * y;
 
-        auto e = make_unique<DngSliceElement>(offset, count, offX, offY, tilew,
-                                              tileh);
+        auto e = std::make_unique<DngSliceElement>(offset, count, offX, offY,
+                                                   tilew, tileh);
 
         // Only decode if size is valid
         if (mFile->isValid(e->byteOffset, e->byteCount))
@@ -270,8 +286,8 @@ void DngDecoder::decodeData(const TiffIFD* raw, int compression, uint32 sample_f
       if (count < 1)
         continue;
 
-      auto e = make_unique<DngSliceElement>(offset, count, 0, offY, mRaw->dim.x,
-                                            yPerSlice);
+      auto e = std::make_unique<DngSliceElement>(offset, count, 0, offY,
+                                                 mRaw->dim.x, yPerSlice);
 
       offY += yPerSlice;
 
@@ -320,7 +336,7 @@ RawImage DngDecoder::decodeRawInternal() {
   if (raw->hasEntry(SAMPLEFORMAT))
     sample_format = raw->getEntry(SAMPLEFORMAT)->getU32();
 
-  int compression = raw->getEntry(COMPRESSION)->getU16();
+  compression = raw->getEntry(COMPRESSION)->getU16();
 
   switch (sample_format) {
   case 1:
@@ -363,8 +379,14 @@ RawImage DngDecoder::decodeRawInternal() {
   mRaw->setCpp(cpp);
 
   // Now load the image
-  decodeData(raw, compression, sample_format);
+  decodeData(raw, sample_format);
 
+  handleMetadata(raw);
+
+  return mRaw;
+}
+
+void DngDecoder::handleMetadata(const TiffIFD* raw) {
   // Crop
   if (raw->hasEntry(ACTIVEAREA)) {
     iPoint2D new_size(mRaw->dim.x, mRaw->dim.y);
@@ -424,11 +446,9 @@ RawImage DngDecoder::decodeRawInternal() {
       raw->getEntry(LINEARIZATIONTABLE)->count > 0) {
     TiffEntry *lintable = raw->getEntry(LINEARIZATIONTABLE);
     auto table = lintable->getU16Array(lintable->count);
-    mRaw->setTable(table.data(), table.size(), !uncorrectedRawValues);
-    if (!uncorrectedRawValues) {
+    RawImageCurveGuard curveHandler(&mRaw, table, uncorrectedRawValues);
+    if (!uncorrectedRawValues)
       mRaw->sixteenBitLookup();
-      mRaw->setTable(nullptr);
-    }
   }
 
  // Default white level is (2 ** BitsPerSample) - 1
@@ -463,8 +483,6 @@ RawImage DngDecoder::decodeRawInternal() {
         mRaw->blackLevelSeparate[2] = mRaw->blackLevelSeparate[3] = 0;
     mRaw->whitePoint = 65535;
   }
-
-  return mRaw;
 }
 
 void DngDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {

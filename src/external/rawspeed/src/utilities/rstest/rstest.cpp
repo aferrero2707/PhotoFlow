@@ -20,21 +20,23 @@
 
 #include "RawSpeed-API.h"
 
-#include "md5.h"           // for md5_hash
-#include <cassert>         // for assert
-#include <chrono>          // for milliseconds, steady_clock, duration, dur...
-#include <cstdint>         // for uint8_t
-#include <cstdio>          // for snprintf, size_t, fclose, fopen, fprintf
-#include <cstdlib>         // for system
-#include <fstream>         // IWYU pragma: keep
-#include <iostream>        // for cout, cerr, left, internal
-#include <map>             // for map
-#include <memory>          // for unique_ptr, allocator
-#include <sstream>         // IWYU pragma: keep
-#include <string>          // for string, char_traits, operator+, operator<<
-#include <type_traits>     // for enable_if<>::type
-#include <utility>         // for pair
-#include <vector>          // for vector
+#include "md5.h"       // for md5_hash
+#include <cassert>     // for assert
+#include <chrono>      // for milliseconds, steady_clock, duration, dur...
+#include <cstdarg>     // for va_end, va_list, va_start
+#include <cstdint>     // for uint8_t
+#include <cstdio>      // for snprintf, size_t, fclose, fopen, fprintf
+#include <cstdlib>     // for system
+#include <fstream>     // IWYU pragma: keep
+#include <iostream>    // for cout, cerr, left, internal
+#include <map>         // for map
+#include <memory>      // for unique_ptr, allocator
+#include <sstream>     // IWYU pragma: keep
+#include <string>      // for string, char_traits, operator+, operator<<
+#include <type_traits> // for enable_if<>::type
+#include <utility>     // for pair
+#include <vector>      // for vector
+
 // IWYU pragma: no_include <ext/alloc_traits.h>
 
 #if !defined(__has_feature) || !__has_feature(thread_sanitizer)
@@ -101,15 +103,23 @@ md5::md5_state imgDataHash(const rawspeed::RawImage& raw);
 
 void writeImage(const rawspeed::RawImage& raw, const std::string& fn);
 
+struct options {
+  bool create;
+  bool force;
+  bool dump;
+};
+
 size_t process(const std::string& filename,
-               const rawspeed::CameraMetaData* metadata, bool create,
-               bool dump);
+               const rawspeed::CameraMetaData* metadata, const options& o);
 
 class RstestHashMismatch final : public rawspeed::RawspeedException {
 public:
-  explicit RstestHashMismatch(const std::string& msg)
-      : RawspeedException(msg) {}
-  explicit RstestHashMismatch(const char* msg) : RawspeedException(msg) {}
+  size_t time;
+
+  explicit RstestHashMismatch(const std::string& msg, size_t time_)
+      : RawspeedException(msg), time(time_) {}
+  explicit RstestHashMismatch(const char* msg, size_t time_)
+      : RawspeedException(msg), time(time_) {}
 };
 
 struct Timer {
@@ -152,119 +162,127 @@ md5::md5_state imgDataHash(const RawImage& raw) {
 #pragma GCC diagnostic ignored "-Wframe-larger-than="
 #pragma GCC diagnostic ignored "-Wstack-usage="
 
-string img_hash(const RawImage& r) {
-  ostringstream oss;
+static void __attribute__((format(printf, 2, 3)))
+APPEND(ostringstream* oss, const char* format, ...) {
   char line[1024];
 
-#define APPEND(...)                                                            \
-  do {                                                                         \
-    snprintf(line, sizeof(line), __VA_ARGS__);                                 \
-    oss << line;                                                               \
-  } while (false)
+  va_list args;
+  va_start(args, format);
+  vsnprintf(line, sizeof(line), format, args);
+  va_end(args);
 
-  APPEND("make: %s\n", r->metadata.make.c_str());
-  APPEND("model: %s\n", r->metadata.model.c_str());
-  APPEND("mode: %s\n", r->metadata.mode.c_str());
+  *oss << line;
+}
 
-  APPEND("canonical_make: %s\n", r->metadata.canonical_make.c_str());
-  APPEND("canonical_model: %s\n", r->metadata.canonical_model.c_str());
-  APPEND("canonical_alias: %s\n", r->metadata.canonical_alias.c_str());
-  APPEND("canonical_id: %s\n", r->metadata.canonical_id.c_str());
+string img_hash(const RawImage& r) {
+  ostringstream oss;
 
-  APPEND("isoSpeed: %d\n", r->metadata.isoSpeed);
-  APPEND("blackLevel: %d\n", r->blackLevel);
-  APPEND("whitePoint: %d\n", r->whitePoint);
+  APPEND(&oss, "make: %s\n", r->metadata.make.c_str());
+  APPEND(&oss, "model: %s\n", r->metadata.model.c_str());
+  APPEND(&oss, "mode: %s\n", r->metadata.mode.c_str());
 
-  APPEND("blackLevelSeparate: %d %d %d %d\n", r->blackLevelSeparate[0],
+  APPEND(&oss, "canonical_make: %s\n", r->metadata.canonical_make.c_str());
+  APPEND(&oss, "canonical_model: %s\n", r->metadata.canonical_model.c_str());
+  APPEND(&oss, "canonical_alias: %s\n", r->metadata.canonical_alias.c_str());
+  APPEND(&oss, "canonical_id: %s\n", r->metadata.canonical_id.c_str());
+
+  APPEND(&oss, "isoSpeed: %d\n", r->metadata.isoSpeed);
+  APPEND(&oss, "blackLevel: %d\n", r->blackLevel);
+  APPEND(&oss, "whitePoint: %d\n", r->whitePoint);
+
+  APPEND(&oss, "blackLevelSeparate: %d %d %d %d\n", r->blackLevelSeparate[0],
          r->blackLevelSeparate[1], r->blackLevelSeparate[2],
          r->blackLevelSeparate[3]);
 
-  APPEND("wbCoeffs: %f %f %f %f\n", r->metadata.wbCoeffs[0],
+  APPEND(&oss, "wbCoeffs: %f %f %f %f\n", r->metadata.wbCoeffs[0],
          r->metadata.wbCoeffs[1], r->metadata.wbCoeffs[2],
          r->metadata.wbCoeffs[3]);
 
-  APPEND("isCFA: %d\n", r->isCFA);
-  APPEND("cfa: %s\n", r->cfa.asString().c_str());
-  APPEND("filters: 0x%x\n", r->cfa.getDcrawFilter());
-  APPEND("bpp: %d\n", r->getBpp());
-  APPEND("cpp: %d\n", r->getCpp());
-  APPEND("dataType: %d\n", r->getDataType());
+  APPEND(&oss, "isCFA: %d\n", r->isCFA);
+  APPEND(&oss, "cfa: %s\n", r->cfa.asString().c_str());
+  APPEND(&oss, "filters: 0x%x\n", r->cfa.getDcrawFilter());
+  APPEND(&oss, "bpp: %d\n", r->getBpp());
+  APPEND(&oss, "cpp: %d\n", r->getCpp());
+  APPEND(&oss, "dataType: %d\n", r->getDataType());
 
   const iPoint2D dimUncropped = r->getUncroppedDim();
-  APPEND("dimUncropped: %dx%d\n", dimUncropped.x, dimUncropped.y);
-  APPEND("dimCropped: %dx%d\n", r->dim.x, r->dim.y);
+  APPEND(&oss, "dimUncropped: %dx%d\n", dimUncropped.x, dimUncropped.y);
+  APPEND(&oss, "dimCropped: %dx%d\n", r->dim.x, r->dim.y);
   const iPoint2D cropTL = r->getCropOffset();
-  APPEND("cropOffset: %dx%d\n", cropTL.x, cropTL.y);
+  APPEND(&oss, "cropOffset: %dx%d\n", cropTL.x, cropTL.y);
 
   // NOTE: pitch is internal property, a function of dimUncropped.x, bpp and
   // some additional padding overhead, to align each line lenght to be a
   // multiple of (currently) 16 bytes. And maybe with some additional
   // const offset. there is no point in showing it here, it may differ.
-  // APPEND("pitch: %d\n", r->pitch);
+  // APPEND(&oss, "pitch: %d\n", r->pitch);
 
-  APPEND("blackAreas: ");
+  APPEND(&oss, "blackAreas: ");
   for (auto ba : r->blackAreas)
-    APPEND("%d:%dx%d, ", ba.isVertical, ba.offset, ba.size);
-  APPEND("\n");
+    APPEND(&oss, "%d:%dx%d, ", ba.isVertical, ba.offset, ba.size);
+  APPEND(&oss, "\n");
 
-  APPEND("fuji_rotation_pos: %d\n", r->metadata.fujiRotationPos);
-  APPEND("pixel_aspect_ratio: %f\n", r->metadata.pixelAspectRatio);
+  APPEND(&oss, "fuji_rotation_pos: %d\n", r->metadata.fujiRotationPos);
+  APPEND(&oss, "pixel_aspect_ratio: %f\n", r->metadata.pixelAspectRatio);
 
-  APPEND("badPixelPositions: ");
+  APPEND(&oss, "badPixelPositions: ");
   {
     MutexLocker guard(&r->mBadPixelMutex);
     for (uint32 p : r->mBadPixelPositions)
-      APPEND("%d, ", p);
+      APPEND(&oss, "%d, ", p);
   }
 
-  APPEND("\n");
+  APPEND(&oss, "\n");
 
   rawspeed::md5::md5_state hash_of_line_hashes = imgDataHash(r);
-  APPEND("md5sum of per-line md5sums: %s\n",
+  APPEND(&oss, "md5sum of per-line md5sums: %s\n",
          rawspeed::md5::hash_to_string(hash_of_line_hashes).c_str());
 
   const auto errors = r->getErrors();
   for (const string& e : errors)
-    APPEND("WARNING: [rawspeed] %s\n", e.c_str());
+    APPEND(&oss, "WARNING: [rawspeed] %s\n", e.c_str());
 
 #undef APPEND
 
   return oss.str();
 }
 
-void writePPM(const RawImage& raw, const string& fn) {
-  FILE* f = fopen((fn + ".ppm").c_str(), "wb");
+using file_ptr = std::unique_ptr<FILE, decltype(&fclose)>;
 
-  int width = raw->dim.x;
-  int height = raw->dim.y;
+void writePPM(const RawImage& raw, const string& fn) {
+  file_ptr f(fopen((fn + ".ppm").c_str(), "wb"), &fclose);
+
+  const iPoint2D dimUncropped = raw->getUncroppedDim();
+  int width = dimUncropped.x;
+  int height = dimUncropped.y;
   string format = raw->getCpp() == 1 ? "P5" : "P6";
 
   // Write PPM header
-  fprintf(f, "%s\n%d %d\n65535\n", format.c_str(), width, height);
+  fprintf(f.get(), "%s\n%d %d\n65535\n", format.c_str(), width, height);
 
   width *= raw->getCpp();
 
   // Write pixels
   for (int y = 0; y < height; ++y) {
-    auto* row = reinterpret_cast<unsigned short*>(raw->getData(0, y));
+    auto* row = reinterpret_cast<unsigned short*>(raw->getDataUncropped(0, y));
     // PPM is big-endian
     for (int x = 0; x < width; ++x)
       row[x] = getU16BE(row + x);
 
-    fwrite(row, sizeof(*row), width, f);
+    fwrite(row, sizeof(*row), width, f.get());
   }
-  fclose(f);
 }
 
 void writePFM(const RawImage& raw, const string& fn) {
-  FILE* f = fopen((fn + ".pfm").c_str(), "wb");
+  file_ptr f(fopen((fn + ".pfm").c_str(), "wb"), &fclose);
 
-  int width = raw->dim.x;
-  int height = raw->dim.y;
+  const iPoint2D dimUncropped = raw->getUncroppedDim();
+  int width = dimUncropped.x;
+  int height = dimUncropped.y;
   string format = raw->getCpp() == 1 ? "Pf" : "PF";
 
   // Write PFM header. if scale < 0, it is little-endian, if >= 0 - big-endian
-  int len = fprintf(f, "%s\n%d %d\n-1.0", format.c_str(), width, height);
+  int len = fprintf(f.get(), "%s\n%d %d\n-1.0", format.c_str(), width, height);
 
   // make sure that data starts at aligned offset. for sse
   static const auto dataAlignment = 16;
@@ -282,13 +300,13 @@ void writePFM(const RawImage& raw, const string& fn) {
   assert(isAligned(realLen + padding, dataAlignment));
 
   // and actually write padding + new line
-  len += fprintf(f, "%0*i\n", padding, 0);
+  len += fprintf(f.get(), "%0*i\n", padding, 0);
   assert(paddedLen == len);
 
   // did we write a multiple of an alignment value?
   assert(isAligned(len, dataAlignment));
-  assert(ftell(f) == len);
-  assert(isAligned(ftell(f), dataAlignment));
+  assert(ftell(f.get()) == len);
+  assert(isAligned(ftell(f.get()), dataAlignment));
 
   width *= raw->getCpp();
 
@@ -296,15 +314,14 @@ void writePFM(const RawImage& raw, const string& fn) {
   for (int y = 0; y < height; ++y) {
     // NOTE: pfm has rows in reverse order
     const int row_in = height - 1 - y;
-    auto* row = reinterpret_cast<float*>(raw->getData(0, row_in));
+    auto* row = reinterpret_cast<float*>(raw->getDataUncropped(0, row_in));
 
     // PFM can have any endiannes, let's write little-endian
     for (int x = 0; x < width; ++x)
       row[x] = getU32LE(row + x);
 
-    fwrite(row, sizeof(*row), width, f);
+    fwrite(row, sizeof(*row), width, f.get());
   }
-  fclose(f);
 }
 
 void writeImage(const RawImage& raw, const string& fn) {
@@ -321,20 +338,21 @@ void writeImage(const RawImage& raw, const string& fn) {
 }
 
 size_t process(const string& filename, const CameraMetaData* metadata,
-               bool create, bool dump) {
+               const options& o) {
 
   const string hashfile(filename + ".hash");
 
   // if creating hash and hash exists -> skip current file
   // if not creating and hash is missing -> skip as well
+  // unless in force mode
   ifstream hf(hashfile);
-  if (hf.good() == create) {
+  if (hf.good() == o.create && !o.force) {
 #if !defined(__has_feature) || !__has_feature(thread_sanitizer)
 #ifdef _OPENMP
 #pragma omp critical(io)
 #endif
     cout << left << setw(55) << filename << ": hash "
-         << (create ? "exists" : "missing") << ", skipping" << endl;
+         << (o.create ? "exists" : "missing") << ", skipping" << endl;
 #endif
     return 0;
   }
@@ -376,20 +394,28 @@ size_t process(const string& filename, const CameraMetaData* metadata,
        << endl;
 #endif
 
-  if (create) {
+  if (o.create) {
+    // write the hash. if force is set, then we are potentially overwriting here
     ofstream f(hashfile);
     f << img_hash(raw);
-    if (dump)
+    if (o.dump)
       writeImage(raw, filename);
   } else {
-    string truth((istreambuf_iterator<char>(hf)), istreambuf_iterator<char>());
+    // do generate the hash string regardless.
     string h = img_hash(raw);
+
+    // normally, here we would compare the old hash with the new one
+    // but if the force is set, and the hash does not exist, do nothing.
+    if (!hf.good() && o.force)
+      return time;
+
+    string truth((istreambuf_iterator<char>(hf)), istreambuf_iterator<char>());
     if (h != truth) {
       ofstream f(filename + ".hash.failed");
       f << h;
-      if (dump)
+      if (o.dump)
         writeImage(raw, filename + ".failed");
-      throw RstestHashMismatch("hash/metadata mismatch");
+      throw RstestHashMismatch("hash/metadata mismatch", time);
     }
   }
 
@@ -398,15 +424,20 @@ size_t process(const string& filename, const CameraMetaData* metadata,
 
 #pragma GCC diagnostic pop
 
-static int results(const map<string, string>& failedTests) {
+static int results(const map<string, string>& failedTests, const options& o) {
   if (failedTests.empty()) {
-    cout << "All good, no tests failed!" << endl;
+    cout << "All good, ";
+    if (!o.create)
+      cout << "no tests failed!" << endl;
+    else
+      cout << "all hashes created!" << endl;
     return 0;
   }
 
   cerr << "WARNING: the following " << failedTests.size()
        << " tests have failed:\n";
 
+  bool rstestlog = false;
   for (const auto& i : failedTests) {
     cerr << i.second << "\n";
 #ifndef WIN32
@@ -420,6 +451,8 @@ static int results(const map<string, string>& failedTests) {
     if (!(oldfile.good() || newfile.good()))
       continue;
 
+    rstestlog = true;
+
     // DIFF(1): -N, --new-file  treat absent files as empty
     string cmd(R"(diff -N -u0 ")");
     cmd += oldhash;
@@ -431,7 +464,8 @@ static int results(const map<string, string>& failedTests) {
   }
 #endif
 
-  cerr << "See rstest.log for details.\n";
+  if (rstestlog)
+    cerr << "See rstest.log for details.\n";
 
   return 1;
 }
@@ -440,13 +474,16 @@ static int usage(const char* progname) {
   cout << "usage: " << progname << R"(
   [-h] print this help
   [-c] for each file: decode, compute hash and store it.
-       If hash exists, it does not recompute it!
+       If hash exists, it does not recompute it, unless option -f is set!
+  [-f] if -c is set, then it will override the existing hashes.
+       If -c is not set, and the hash does not exist, then just decode,
+       but do not write the hash!
   [-d] store decoded image as PPM
   <FILE[S]> the file[s] to work on.
 
   With no options given, each raw with an accompanying hash will be decoded
-  and compared to the existing hash. A summary of all errors/failed hash
-  comparisons will be reported at the end.
+  and compared (unless option -f is set!) to the existing hash. A summary of
+  all errors/failed hash comparisons will be reported at the end.
 
   Suggested workflow for easy regression testing:
     1. remove all .hash files and build 'trusted' version of this program
@@ -464,6 +501,7 @@ static int usage(const char* progname) {
 } // namespace rawspeed
 
 using rawspeed::rstest::usage;
+using rawspeed::rstest::options;
 using rawspeed::rstest::process;
 using rawspeed::rstest::results;
 
@@ -480,14 +518,19 @@ int main(int argc, char **argv) {
     return found;
   };
 
-  bool help = hasFlag("-h");
-  bool create = hasFlag("-c");
-  bool dump = hasFlag("-d");
-
-  if (1 == argc || help)
+  if (1 == argc || hasFlag("-h"))
     return usage(argv[0]);
 
+  options o;
+  o.create = hasFlag("-c");
+  o.force = hasFlag("-f");
+  o.dump = hasFlag("-d");
+
+#ifdef HAVE_PUGIXML
   const CameraMetaData metadata(CMAKE_SOURCE_DIR "/data/cameras.xml");
+#else
+  const CameraMetaData metadata{};
+#endif
 
   size_t time = 0;
   map<string, string> failedTests;
@@ -499,7 +542,12 @@ int main(int argc, char **argv) {
       continue;
 
     try {
-      time += process(argv[i], &metadata, create, dump);
+      try {
+        time += process(argv[i], &metadata, o);
+      } catch (rawspeed::rstest::RstestHashMismatch& e) {
+        time += e.time;
+        throw;
+      }
     } catch (RawspeedException& e) {
 #ifdef _OPENMP
 #pragma omp critical(io)
@@ -516,5 +564,5 @@ int main(int argc, char **argv) {
 
   cout << "Total decoding time: " << time / 1000.0 << "s" << endl << endl;
 
-  return results(failedTests);
+  return results(failedTests, o);
 }
