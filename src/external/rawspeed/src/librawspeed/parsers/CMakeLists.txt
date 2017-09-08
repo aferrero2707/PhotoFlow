@@ -1,17 +1,18 @@
-FILE(GLOB PARSER_SOURCES
+FILE(GLOB SOURCES
   "CiffParser.cpp"
   "CiffParser.h"
   "CiffParserException.h"
-  "RawParser.cpp"
-  "RawParser.h"
-  "TiffParser.cpp"
-  "TiffParser.h"
-  "TiffParserException.h"
   "FiffParser.cpp"
   "FiffParser.h"
   "FiffParserException.h"
-  "X3fParser.cpp"
-  "X3fParser.h"
+  "RawParser.cpp"
+  "RawParser.h"
+  "RawParserException.h"
+  "TiffParser.cpp"
+  "TiffParser.h"
+  "TiffParserException.h"
 )
 
-set(RAWSPEED_SOURCES "${RAWSPEED_SOURCES};${PARSER_SOURCES}" PARENT_SCOPE)
+target_sources(rawspeed PRIVATE
+  ${SOURCES}
+)

@@ -21,10 +21,9 @@
 
 #pragma once
 
-#include "common/Common.h"                // for uint32
 #include "common/RawImage.h"              // for RawImage
 #include "decoders/AbstractTiffDecoder.h" // for AbstractTiffDecoder
-#include "tiff/TiffIFD.h"                 // for TiffRootIFDOwner
+#include "tiff/TiffIFD.h"                 // for TiffRootIFD (ptr only)
 #include <string>                         // for string
 
 namespace rawspeed {
@@ -45,10 +44,8 @@ public:
 
 protected:
   int getDecoderVersion() const override { return 0; }
-  uint32 black_level;
   std::string make, model;
   std::string getXMPTag(const std::string &xmp, const std::string &tag);
-  void DecodePhaseOneC(uint32 data_offset, uint32 strip_offset, uint32 width, uint32 height);
 };
 
 } // namespace rawspeed

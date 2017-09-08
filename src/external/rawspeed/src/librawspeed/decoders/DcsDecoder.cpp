@@ -28,7 +28,6 @@
 #include <cassert>                                  // for assert
 #include <memory>                                   // for unique_ptr
 #include <string>                                   // for operator==, string
-#include <vector>                                   // for vector
 
 namespace rawspeed {
 
@@ -44,6 +43,11 @@ bool DcsDecoder::isAppropriateDecoder(const TiffRootIFD* rootIFD,
   return make == "KODAK";
 }
 
+void DcsDecoder::checkImageDimensions() {
+  if (width > 3072 || height > 2048)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+}
+
 RawImage DcsDecoder::decodeRawInternal() {
   SimpleTiffDecoder::prepareForRawDecoding();
 
@@ -54,8 +58,7 @@ RawImage DcsDecoder::decodeRawInternal() {
   assert(linearization != nullptr);
   auto table = linearization->getU16Array(256);
 
-  if (!uncorrectedRawValues)
-    mRaw->setTable(table.data(), table.size(), true);
+  RawImageCurveGuard curveHandler(&mRaw, table, uncorrectedRawValues);
 
   UncompressedDecompressor u(*mFile, off, c2, mRaw);
 
@@ -63,13 +66,6 @@ RawImage DcsDecoder::decodeRawInternal() {
     u.decode8BitRaw<true>(width, height);
   else
     u.decode8BitRaw<false>(width, height);
-
-  // Set the table, if it should be needed later.
-  if (uncorrectedRawValues) {
-    mRaw->setTable(table.data(), table.size(), false);
-  } else {
-    mRaw->setTable(nullptr);
-  }
 
   return mRaw;
 }

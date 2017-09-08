@@ -18,12 +18,13 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
+#include "common/RawImage.h"              // for RawImageDataFloat, RawImag...
 #include "common/Common.h"                // for uchar8, uint32, writeLog
 #include "common/Point.h"                 // for iPoint2D
-#include "common/RawImage.h"              // for RawImageDataFloat, RawImag...
 #include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "metadata/BlackArea.h"           // for BlackArea
 #include <algorithm>                      // for max, min
+#include <memory>                         // for operator==, unique_ptr
 #include <vector>                         // for vector
 
 using std::min;
@@ -140,21 +141,21 @@ RawImageDataFloat::RawImageDataFloat() {
     startWorker(RawImageWorker::SCALE_VALUES, true);
 }
 
-#if 0 // (defined(_MSC_VER) && _MSC_VER > 1399) || defined(__SSE2__)
+#if 0 // def WITH_SSE2
 
   void RawImageDataFloat::scaleValues(int start_y, int end_y) {
-    bool use_sse2;
+    bool WITH_SSE2;
 #ifdef _MSC_VER
     int info[4];
     __cpuid(info, 1);
-    use_sse2 = !!(info[3]&(1 << 26));
+    WITH_SSE2 = !!(info[3]&(1 << 26));
 #else
-    use_sse2 = true;
+    WITH_SSE2 = true;
 #endif
 
     float app_scale = 65535.0F / (whitePoint - blackLevelSeparate[0]);
     // Check SSE2
-    if (use_sse2 && app_scale < 63) {
+    if (WITH_SSE2 && app_scale < 63) {
 
       __m128i sseround;
       __m128i ssesub2;

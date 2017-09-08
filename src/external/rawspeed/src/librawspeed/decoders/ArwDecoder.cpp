@@ -46,7 +46,6 @@
 
 using std::vector;
 using std::string;
-using std::max;
 
 namespace rawspeed {
 
@@ -58,6 +57,53 @@ bool ArwDecoder::isAppropriateDecoder(const TiffRootIFD* rootIFD,
   // FIXME: magic
 
   return make == "SONY";
+}
+
+RawImage ArwDecoder::decodeSRF(const TiffIFD* raw) {
+  raw = mRootIFD->getIFDWithTag(IMAGEWIDTH);
+
+  uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
+  uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
+
+  if (width == 0 || height == 0 || width > 3360 || height > 2460)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
+  uint32 len = width * height * 2;
+
+  // Constants taken from dcraw
+  uint32 off = 862144;
+  uint32 key_off = 200896;
+  uint32 head_off = 164600;
+
+  // Replicate the dcraw contortions to get the "decryption" key
+  const uchar8* keyData = mFile->getData(key_off, 1);
+  uint32 offset = (*keyData) * 4;
+  keyData = mFile->getData(key_off + offset, 4);
+  uint32 key = getU32BE(keyData);
+  static const size_t head_size = 40;
+  const uchar8* head_orig = mFile->getData(head_off, head_size);
+  vector<uchar8> head(head_size);
+  SonyDecrypt(reinterpret_cast<const uint32*>(head_orig),
+              reinterpret_cast<uint32*>(&head[0]), 10, key);
+  for (int i = 26; i > 22; i--)
+    key = key << 8 | head[i - 1];
+
+  // "Decrypt" the whole image buffer
+  auto image_data = mFile->getData(off, len);
+  auto image_decoded = Buffer::Create(len);
+  SonyDecrypt(reinterpret_cast<const uint32*>(image_data),
+              reinterpret_cast<uint32*>(image_decoded.get()), len / 4, key);
+
+  Buffer di(move(image_decoded), len);
+
+  // And now decode as a normal 16bit raw
+  mRaw->dim = iPoint2D(width, height);
+  mRaw->createData();
+
+  UncompressedDecompressor u(di, 0, len, mRaw);
+  u.decodeRawUnpacked<16, Endianness::big>(width, height);
+
+  return mRaw;
 }
 
 RawImage ArwDecoder::decodeRawInternal() {
@@ -90,48 +136,8 @@ RawImage ArwDecoder::decodeRawInternal() {
       return mRaw;
     }
 
-    if (hints.has("srf_format")) {
-      raw = mRootIFD->getIFDWithTag(IMAGEWIDTH);
-
-      uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
-      uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
-      uint32 len = width*height*2;
-
-      // Constants taken from dcraw
-      uint32 off = 862144;
-      uint32 key_off = 200896;
-      uint32 head_off = 164600;
-
-      // Replicate the dcraw contortions to get the "decryption" key
-      const uchar8 *keyData = mFile->getData(key_off, 1);
-      uint32 offset = (*keyData) * 4;
-      keyData = mFile->getData(key_off + offset, 4);
-      uint32 key = getU32BE(keyData);
-      static const size_t head_size = 40;
-      const uchar8* head_orig = mFile->getData(head_off, head_size);
-      vector<uchar8> head(head_size);
-      SonyDecrypt(reinterpret_cast<const uint32*>(head_orig),
-                  reinterpret_cast<uint32*>(&head[0]), 10, key);
-      for (int i = 26; i > 22; i--)
-        key = key << 8 | head[i - 1];
-
-      // "Decrypt" the whole image buffer
-      auto image_data = mFile->getData(off, len);
-      auto image_decoded = Buffer::Create(len);
-      SonyDecrypt(reinterpret_cast<const uint32*>(image_data),
-                  reinterpret_cast<uint32*>(image_decoded.get()), len / 4, key);
-
-      Buffer di(move(image_decoded), len);
-
-      // And now decode as a normal 16bit raw
-      mRaw->dim = iPoint2D(width, height);
-      mRaw->createData();
-
-      UncompressedDecompressor u(di, 0, len, mRaw);
-      u.decodeRawUnpacked<16, big>(width, height);
-
-      return mRaw;
-    }
+    if (hints.has("srf_format"))
+      return decodeSRF(raw);
 
     ThrowRDE("No image data found");
   }
@@ -184,10 +190,13 @@ RawImage ArwDecoder::decodeRawInternal() {
   if (arw1)
     height += 8;
 
+  if (width == 0 || height == 0 || width > 8000 || height > 5320)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
   mRaw->dim = iPoint2D(width, height);
   mRaw->createData();
 
-  auto *curve = new ushort16[0x4001];
+  std::vector<ushort16> curve(0x4001);
   TiffEntry *c = raw->getEntry(SONY_CURVE);
   uint32 sony_curve[] = { 0, 0, 0, 0, 0, 4095 };
 
@@ -201,8 +210,7 @@ RawImage ArwDecoder::decodeRawInternal() {
     for (uint32 j = sony_curve[i] + 1; j <= sony_curve[i+1]; j++)
       curve[j] = curve[j-1] + (1 << i);
 
-  if (!uncorrectedRawValues)
-    mRaw->setTable(curve, 0x4000, true);
+  RawImageCurveGuard curveHandler(&mRaw, curve, uncorrectedRawValues);
 
   uint32 c2 = counts->getU32();
   uint32 off = offsets->getU32();
@@ -225,15 +233,6 @@ RawImage ArwDecoder::decodeRawInternal() {
     // Let's ignore it, it may have delivered somewhat useful data.
   }
 
-  // Set the table, if it should be needed later.
-  if (uncorrectedRawValues) {
-    mRaw->setTable(curve, 0x4000, false);
-  } else {
-    mRaw->setTable(nullptr);
-  }
-
-  delete[] curve;
-
   return mRaw;
 }
 
@@ -244,14 +243,23 @@ void ArwDecoder::DecodeUncompressed(const TiffIFD* raw) {
   uint32 c2 = raw->getEntry(STRIPBYTECOUNTS)->getU32();
 
   mRaw->dim = iPoint2D(width, height);
+
+  if (width == 0 || height == 0 || width > 8000 || height > 5320)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
+  if (c2 == 0)
+    ThrowRDE("Strip is empty, nothing to decode!");
+
+  const Buffer buf(mFile->getSubView(off, c2));
+
   mRaw->createData();
 
-  UncompressedDecompressor u(*mFile, off, c2, mRaw);
+  UncompressedDecompressor u(buf, mRaw);
 
   if (hints.has("sr2_format"))
-    u.decodeRawUnpacked<14, big>(width, height);
+    u.decodeRawUnpacked<14, Endianness::big>(width, height);
   else
-    u.decodeRawUnpacked<16, little>(width, height);
+    u.decodeRawUnpacked<16, Endianness::little>(width, height);
 }
 
 void ArwDecoder::DecodeARW(const ByteStream& input, uint32 w, uint32 h) {
@@ -282,7 +290,9 @@ void ArwDecoder::DecodeARW(const ByteStream& input, uint32 w, uint32 h) {
       int diff = bits.getBits(len);
       diff = len != 0 ? HuffmanTable::signExtended(diff, len) : diff;
       sum += diff;
-      assert(!(sum >> 12));
+
+      if ((sum >> 12) > 0)
+        ThrowRDE("Error decompressing");
 
       if (y < h)
         dest[x + y * pitch] = sum;
@@ -301,13 +311,68 @@ void ArwDecoder::DecodeARW2(const ByteStream& input, uint32 w, uint32 h,
 
   if (bpp == 12) {
     UncompressedDecompressor u(input, mRaw);
-    u.decode12BitRaw<little>(w, h);
+    u.decode12BitRaw<Endianness::little>(w, h);
 
     // Shift scales, since black and white are the same as compressed precision
     mShiftDownScale = 2;
     return;
   }
   ThrowRDE("Unsupported bit depth");
+}
+
+void ArwDecoder::ParseA100WB() {
+  if (!mRootIFD->hasEntryRecursive(DNGPRIVATEDATA))
+    return;
+
+  // only contains the offset, not the length!
+  TiffEntry* priv = mRootIFD->getEntryRecursive(DNGPRIVATEDATA);
+  ByteStream bs = priv->getData();
+  bs.setByteOrder(Endianness::little);
+  const uint32 off = bs.getU32();
+
+  bs = ByteStream(*mFile, off);
+
+  // MRW style, see MrwDecoder
+
+  bs.setByteOrder(Endianness::big);
+  uint32 tag = bs.getU32();
+  if (0x4D5249 != tag) // MRI
+    ThrowRDE("Can not parse DNGPRIVATEDATA, invalid tag (0x%x).", tag);
+
+  bs.setByteOrder(Endianness::little);
+  uint32 len = bs.getU32();
+
+  bs = bs.getSubStream(bs.getPosition(), len);
+
+  while (bs.getRemainSize() > 0) {
+    bs.setByteOrder(Endianness::big);
+    tag = bs.getU32();
+    bs.setByteOrder(Endianness::little);
+    len = bs.getU32();
+    bs.check(len);
+    if (!len)
+      ThrowRDE("Found entry of zero lenght, corrupt.");
+
+    if (0x574247 != tag) { // WBG
+      // not the tag we are interested in, skip
+      bs.skipBytes(len);
+      continue;
+    }
+
+    bs.skipBytes(4);
+
+    ushort16 tmp[4];
+    bs.setByteOrder(Endianness::little);
+    for (auto& coeff : tmp)
+      coeff = bs.getU16();
+
+    mRaw->metadata.wbCoeffs[0] = static_cast<float>(tmp[0]);
+    mRaw->metadata.wbCoeffs[1] = static_cast<float>(tmp[1]);
+    mRaw->metadata.wbCoeffs[2] = static_cast<float>(tmp[3]);
+
+    // only need this one block, no need to process any further
+    break;
+  }
 }
 
 void ArwDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
@@ -326,37 +391,15 @@ void ArwDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
   mRaw->blackLevel >>= mShiftDownScale;
 
   // Set the whitebalance
-  if (id.model == "DSLR-A100") { // Handle the MRW style WB of the A100
-    if (mRootIFD->hasEntryRecursive(DNGPRIVATEDATA)) {
-      TiffEntry *priv = mRootIFD->getEntryRecursive(DNGPRIVATEDATA);
-      const uchar8 *offdata = priv->getData(4);
-      uint32 off = getU32LE(offdata);
-      uint32 length = mFile->getSize()-off;
-      const unsigned char *dpd = mFile->getData(off, length);
-      uint32 currpos = 8;
-      while (currpos+20 < length) {
-        uint32 tag = getU32BE(dpd + currpos + 0);
-        uint32 len = getU32LE(dpd + currpos + 4);
-        if (tag == 0x574247) { /* WBG */
-          ushort16 tmp[4];
-          for(uint32 i=0; i<4; i++)
-            tmp[i] = getU16LE(dpd + currpos + 12 + i * 2);
-
-          mRaw->metadata.wbCoeffs[0] = static_cast<float>(tmp[0]);
-          mRaw->metadata.wbCoeffs[1] = static_cast<float>(tmp[1]);
-          mRaw->metadata.wbCoeffs[2] = static_cast<float>(tmp[3]);
-          break;
-        }
-        currpos += max(len + 8, 1U); // max(,1) to make sure we make progress
-      }
-    }
-  } else { // Everything else but the A100
-    try {
+  try {
+    if (id.model == "DSLR-A100") { // Handle the MRW style WB of the A100
+      ParseA100WB();
+    } else { // Everything else but the A100
       GetWB();
-    } catch (RawspeedException& e) {
-      mRaw->setError(e.what());
-      // We caught an exception reading WB, just ignore it
     }
+  } catch (RawspeedException& e) {
+    mRaw->setError(e.what());
+    // We caught an exception reading WB, just ignore it
   }
 }
 
@@ -401,7 +444,8 @@ void ArwDecoder::GetWB() {
   // Set the whitebalance for all the modern ARW formats (everything after A100)
   if (mRootIFD->hasEntryRecursive(DNGPRIVATEDATA)) {
     TiffEntry *priv = mRootIFD->getEntryRecursive(DNGPRIVATEDATA);
-    TiffRootIFD makerNoteIFD(nullptr, priv->getRootIfdData(), priv->getU32());
+    TiffRootIFD makerNoteIFD(nullptr, nullptr, priv->getRootIfdData(),
+                             priv->getU32());
 
     TiffEntry *sony_offset = makerNoteIFD.getEntryRecursive(SONY_OFFSET);
     TiffEntry *sony_length = makerNoteIFD.getEntryRecursive(SONY_LENGTH);
@@ -429,8 +473,8 @@ void ArwDecoder::GetWB() {
                 key);
 
     Buffer decIFD(move(ifd_decoded), ifd_size);
-    DataBuffer dbIDD(decIFD, priv->getRootIfdData().isInNativeByteOrder());
-    TiffRootIFD encryptedIFD(nullptr, dbIDD, off);
+    DataBuffer dbIDD(decIFD, priv->getRootIfdData().getByteOrder());
+    TiffRootIFD encryptedIFD(nullptr, nullptr, dbIDD, off);
 
     if (encryptedIFD.hasEntry(SONYGRBGLEVELS)){
       TiffEntry *wb = encryptedIFD.getEntry(SONYGRBGLEVELS);

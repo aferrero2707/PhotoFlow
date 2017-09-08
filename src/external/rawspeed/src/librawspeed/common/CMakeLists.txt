@@ -1,4 +1,4 @@
-FILE(GLOB COMMON_SOURCES
+FILE(GLOB SOURCES
   "Common.cpp"
   "Common.h"
   "Cpuid.cpp"
@@ -9,12 +9,18 @@ FILE(GLOB COMMON_SOURCES
   "Memory.cpp"
   "Memory.h"
   "Mutex.h"
+  "NORangesSet.h"
   "Point.h"
+  "Range.h"
   "RawImage.cpp"
   "RawImage.h"
   "RawImageDataFloat.cpp"
   "RawImageDataU16.cpp"
   "RawspeedException.h"
+  "TableLookUp.cpp"
+  "TableLookUp.h"
 )
 
-set(RAWSPEED_SOURCES "${RAWSPEED_SOURCES};${COMMON_SOURCES}" PARENT_SCOPE)
+target_sources(rawspeed PRIVATE
+  ${SOURCES}
+)

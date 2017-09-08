@@ -20,6 +20,14 @@
 
 #pragma once
 
+#if defined(__SSE2__)
+#cmakedefine WITH_SSE2
+#else
+/* #undef WITH_SSE2 */
+#endif
+
+#cmakedefine HAVE_PUGIXML
+
 #cmakedefine HAVE_PTHREAD
 
 #cmakedefine HAVE_PUGIXML
@@ -29,8 +37,8 @@
 #cmakedefine HAVE_JPEG
 #cmakedefine HAVE_JPEG_MEM_SRC
 
-#cmakedefine HAVE_THREAD_LOCAL
-#cmakedefine HAVE___THREAD
+#cmakedefine HAVE_CXX_THREAD_LOCAL
+#cmakedefine HAVE_GCC_THREAD_LOCAL
 
 // which aligned memory allocation function is avaliable, if any?
 // only the first one found will be enabled
@@ -52,7 +60,20 @@
 // see https://github.com/google/sanitizers/wiki/AddressSanitizerManualPoisoning
 #if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
 #include <sanitizer/asan_interface.h> // IWYU pragma: export
+#include <type_traits>                // for remove_cv
+template <typename T> struct remove_all_const : std::remove_const<T> {};
+template <typename T> struct remove_all_const<T *> {
+  using type = typename remove_all_const<T>::type *;
+};
+template <typename T> struct remove_all_const<T *const> {
+  using type = typename remove_all_const<T>::type *;
+};
+#define ASAN_REGION_IS_POISONED(addr, size)                                    \
+  __asan_region_is_poisoned(                                                   \
+      const_cast<remove_all_const<decltype(addr)>::type>(addr),  /* NOLINT */  \
+      (size))
 #else
 #define ASAN_POISON_MEMORY_REGION(addr, size) ((void)(addr), (void)(size))
 #define ASAN_UNPOISON_MEMORY_REGION(addr, size) ((void)(addr), (void)(size))
+#define ASAN_REGION_IS_POISONED(addr, size) (0)
 #endif

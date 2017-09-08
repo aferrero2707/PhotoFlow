@@ -27,8 +27,10 @@
 #include "common/ErrorLog.h"           // for ErrorLog
 #include "common/Mutex.h"              // for Mutex
 #include "common/Point.h"              // for iPoint2D, iRectangle2D (ptr o...
+#include "common/TableLookUp.h"        // for TableLookUp
 #include "metadata/BlackArea.h"        // for BlackArea
 #include "metadata/ColorFilterArray.h" // for ColorFilterArray
+#include <memory>                      // for unique_ptr, operator==
 #include <string>                      // for string
 #include <vector>                      // for vector
 
@@ -72,18 +74,6 @@ public:
 };
 
 void* RawImageWorkerThread(void* _this);
-
-class TableLookUp {
-public:
-  TableLookUp(int ntables, bool dither);
-  ~TableLookUp();
-  void setTable(int ntable, const ushort16* table, int nfilled);
-  ushort16* getTable(int n);
-  const int ntables;
-  ushort16* tables;
-  const bool dither;
-};
-
 
 class ImageMetaData {
 public:
@@ -143,8 +133,8 @@ public:
   void transferBadPixelsToMap() REQUIRES(!mBadPixelMutex);
   void fixBadPixels() REQUIRES(!mBadPixelMutex);
   void expandBorder(iRectangle2D validData);
-  void setTable(const ushort16* table, int nfilled, bool dither);
-  void setTable(TableLookUp *t);
+  void setTable(const std::vector<ushort16>& table_, bool dither);
+  void setTable(std::unique_ptr<TableLookUp> t);
 
   bool isAllocated() {return !!data;}
   void createBadPixelMap();
@@ -193,7 +183,7 @@ protected:
   friend class RawImage;
   iPoint2D mOffset;
   iPoint2D uncropped_dim;
-  TableLookUp* table = nullptr;
+  std::unique_ptr<TableLookUp> table;
   Mutex mymutex;
 };
 
@@ -205,7 +195,7 @@ public:
 
 protected:
   void scaleValues_plain(int start_y, int end_y);
-#if (defined(_MSC_VER) && _MSC_VER > 1399) || defined(__SSE2__)
+#ifdef WITH_SSE2
   void scaleValues_SSE2(int start_y, int end_y);
 #endif
   void scaleValues(int start_y, int end_y) override;
@@ -288,7 +278,7 @@ inline void RawImageDataU16::setWithLookUp(ushort16 value, uchar8* dst, uint32* 
     return;
   }
   if (table->dither) {
-    auto* t = reinterpret_cast<const uint32*>(table->tables);
+    auto* t = reinterpret_cast<const uint32*>(table->tables.data());
     uint32 lookup = t[value];
     uint32 base = lookup & 0xffff;
     uint32 delta = lookup >> 16;
@@ -299,8 +289,31 @@ inline void RawImageDataU16::setWithLookUp(ushort16 value, uchar8* dst, uint32* 
     *dest = pix;
     return;
   }
-  auto* t = table->tables;
-  *dest = t[value];
+  *dest = table->tables[value];
 }
+
+class RawImageCurveGuard final {
+  RawImage* mRaw;
+  const std::vector<ushort16>& curve;
+  const bool uncorrectedRawValues;
+
+public:
+  RawImageCurveGuard(RawImage* raw, const std::vector<ushort16>& curve_,
+                     bool uncorrectedRawValues_)
+      : mRaw(raw), curve(curve_), uncorrectedRawValues(uncorrectedRawValues_) {
+    if (uncorrectedRawValues)
+      return;
+
+    (*mRaw)->setTable(curve, true);
+  }
+
+  ~RawImageCurveGuard() {
+    // Set the table, if it should be needed later.
+    if (uncorrectedRawValues)
+      (*mRaw)->setTable(curve, false);
+    else
+      (*mRaw)->setTable(nullptr);
+  }
+};
 
 } // namespace rawspeed

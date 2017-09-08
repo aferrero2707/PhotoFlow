@@ -20,7 +20,6 @@
 */
 
 #include "io/FileReader.h"
-#include "common/Common.h"      // for make_unique
 #include "io/Buffer.h"          // for Buffer
 #include "io/FileIOException.h" // for FileIOException (ptr only), ThrowFIE
 #include <algorithm>            // for move
@@ -31,6 +30,7 @@
 #include <type_traits>          // for make_unsigned
 
 #if !(defined(__unix__) || defined(__APPLE__))
+#include "io/FileIO.h" // for widenFileName
 #include <io.h>
 #include <tchar.h>
 #include <windows.h>
@@ -38,7 +38,7 @@
 
 namespace rawspeed {
 
-std::unique_ptr<Buffer> FileReader::readFile() {
+std::unique_ptr<const Buffer> FileReader::readFile() {
   size_t fileSize = 0;
 
 #if defined(__unix__) || defined(__APPLE__)
@@ -73,10 +73,13 @@ std::unique_ptr<Buffer> FileReader::readFile() {
 
 #else // __unix__
 
+  auto wFileName = widenFileName(fileName);
+
   using file_ptr = std::unique_ptr<std::remove_pointer<HANDLE>::type,
                                    decltype(&CloseHandle)>;
-  file_ptr file(CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, nullptr,
-                           OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr),
+  file_ptr file(CreateFileW(wFileName.data(), GENERIC_READ, FILE_SHARE_READ,
+                            nullptr, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN,
+                            nullptr),
                 &CloseHandle);
 
   if (file.get() == INVALID_HANDLE_VALUE)
@@ -108,7 +111,7 @@ std::unique_ptr<Buffer> FileReader::readFile() {
 
 #endif // __unix__
 
-  return make_unique<Buffer>(move(dest), fileSize);
+  return std::make_unique<Buffer>(move(dest), fileSize);
 }
 
 } // namespace rawspeed

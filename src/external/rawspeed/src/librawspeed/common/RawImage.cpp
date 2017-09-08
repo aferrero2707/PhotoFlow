@@ -18,8 +18,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "rawspeedconfig.h"
-
+#include "rawspeedconfig.h" // for WITH_SSE2
 #include "common/RawImage.h"
 #include "common/Memory.h"                // for alignedFree, alignedMalloc...
 #include "decoders/RawDecoderException.h" // for ThrowRDE, RawDecoderException
@@ -59,8 +58,6 @@ ImageMetaData::ImageMetaData() {
 RawImageData::~RawImageData() {
   assert(dataRefCount == 0);
   mOffset = iPoint2D(0, 0);
-
-  delete table;
 
   destroyData();
 }
@@ -388,30 +385,24 @@ void RawImageData::startWorker(RawImageWorker::RawImageWorkerTask task, bool cro
 #endif
 }
 
-void RawImageData::fixBadPixelsThread( int start_y, int end_y )
-{
+void RawImageData::fixBadPixelsThread(int start_y, int end_y) {
   int gw = (uncropped_dim.x + 15) / 32;
-#ifdef __AFL_COMPILER
-  int bad_count = 0;
-#endif
+
   for (int y = start_y; y < end_y; y++) {
     auto* bad_map =
         reinterpret_cast<const uint32*>(&mBadPixelMap[y * mBadPixelMapPitch]);
-    for (int x = 0 ; x < gw; x++) {
+    for (int x = 0; x < gw; x++) {
       // Test if there is a bad pixel within these 32 pixels
-      if (bad_map[x] != 0) {
-        auto* bad = reinterpret_cast<const uchar8*>(&bad_map[x]);
-        // Go through each pixel
-        for (int i = 0; i < 4; i++) {
-          for (int j = 0; j < 8; j++) {
-            if (1 == ((bad[i]>>j) & 1)) {
-#ifdef __AFL_COMPILER
-              if (bad_count++ > 100)
-                ThrowRDE("The bad pixels are too damn high!");
-#endif
-              fixBadPixel(x*32+i*8+j, y, 0);
-            }
-          }
+      if (bad_map[x] == 0)
+        continue;
+      auto* bad = reinterpret_cast<const uchar8*>(&bad_map[x]);
+      // Go through each pixel
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 8; j++) {
+          if (1 != ((bad[i] >> j) & 1))
+            continue;
+
+          fixBadPixel(x * 32 + i * 8 + j, y, 0);
         }
       }
     }
@@ -579,78 +570,16 @@ void RawImageData::sixteenBitLookup() {
   startWorker(RawImageWorker::APPLY_LOOKUP, true);
 }
 
-void RawImageData::setTable( TableLookUp *t )
-{
-  delete table;
-
-  table = t;
+void RawImageData::setTable(std::unique_ptr<TableLookUp> t) {
+  table = std::move(t);
 }
 
-void RawImageData::setTable(const ushort16 *table_, int nfilled, bool dither) {
-  assert(table_);
-  assert(nfilled > 0);
+void RawImageData::setTable(const std::vector<ushort16>& table_, bool dither) {
+  assert(!table_.empty());
 
-  auto *t = new TableLookUp(1, dither);
-  t->setTable(0, table_, nfilled);
-  this->setTable(t);
-}
-
-const int TABLE_SIZE = 65536 * 2;
-
-// Creates n numre of tables.
-TableLookUp::TableLookUp( int _ntables, bool _dither ) : ntables(_ntables), dither(_dither) {
-  tables = nullptr;
-  if (ntables < 1) {
-    ThrowRDE("Cannot construct 0 tables");
-  }
-  tables = new ushort16[ntables * TABLE_SIZE];
-  memset(tables, 0, sizeof(ushort16) * ntables * TABLE_SIZE);
-}
-
-TableLookUp::~TableLookUp()
-{
-  delete[] tables;
-  tables = nullptr;
-}
-
-
-void TableLookUp::setTable(int ntable, const ushort16 *table , int nfilled) {
-  assert(table);
-  assert(nfilled > 0);
-
-  if (ntable > ntables) {
-    ThrowRDE("Table lookup with number greater than number of tables.");
-  }
-  ushort16* t = &tables[ntable* TABLE_SIZE];
-  if (!dither) {
-    for (int i = 0; i < 65536; i++) {
-      t[i] = (i < nfilled) ? table[i] : table[nfilled-1];
-    }
-    return;
-  }
-  for (int i = 0; i < nfilled; i++) {
-    int center = table[i];
-    int lower = i > 0 ? table[i-1] : center;
-    int upper = i < (nfilled-1) ? table[i+1] : center;
-    int delta = upper - lower;
-    t[i*2] = center - ((upper - lower + 2) / 4);
-    t[i*2+1] = delta;
-  }
-
-  for (int i = nfilled; i < 65536; i++) {
-    t[i*2] = table[nfilled-1];
-    t[i*2+1] = 0;
-  }
-  t[0] = t[1];
-  t[TABLE_SIZE - 1] = t[TABLE_SIZE - 2];
-}
-
-
-ushort16* TableLookUp::getTable(int n) {
-  if (n > ntables) {
-    ThrowRDE("Table lookup with number greater than number of tables.");
-  }
-  return &tables[n * TABLE_SIZE];
+  auto t = std::make_unique<TableLookUp>(1, dither);
+  t->setTable(0, table_);
+  this->setTable(std::move(t));
 }
 
 } // namespace rawspeed

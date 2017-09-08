@@ -482,7 +482,7 @@ bool PF::RawImage::load_rawspeed()
 //  std::auto_ptr<rawspeed::Buffer> m;
 //#else
   std::unique_ptr<rawspeed::RawDecoder> d;
-  std::unique_ptr<rawspeed::Buffer> m;
+  std::unique_ptr<const rawspeed::Buffer> m;
 //#endif
 
   try
@@ -490,7 +490,7 @@ bool PF::RawImage::load_rawspeed()
 //#ifdef __APPLE__
 //    m = std::auto_ptr<rawspeed::Buffer>(f.readFile());
 //#else
-    m = std::unique_ptr<rawspeed::Buffer>(f.readFile());
+    m = std::unique_ptr<const rawspeed::Buffer>(f.readFile());
 //#endif
 //#ifndef NDEBUG
     std::cout<<"RawImage::load_rawspeed(): FileMap object: "<<(void*)m.get()<<std::endl;

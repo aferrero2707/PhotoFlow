@@ -22,6 +22,7 @@
 #include "decoders/ThreefrDecoder.h"
 #include "common/Common.h"                        // for uint32
 #include "common/Point.h"                         // for iPoint2D
+#include "decoders/RawDecoderException.h"         // for ThrowRDE
 #include "decompressors/HasselbladDecompressor.h" // for HasselbladDecompre...
 #include "io/IOException.h"                       // for IOException
 #include "metadata/Camera.h"                      // for Hints
@@ -52,6 +53,11 @@ RawImage ThreefrDecoder::decodeRawInternal() {
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
   uint32 off = raw->getEntry(STRIPOFFSETS)->getU32();
 
+  // FIXME: could be wrong. max "active pixels" - "100 MP"
+  if (width == 0 || height == 0 || width % 2 != 0 || width > 11600 ||
+      height > 8700)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
   mRaw->dim = iPoint2D(width, height);
   mRaw->createData();
 
@@ -77,8 +83,13 @@ void ThreefrDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
   if (mRootIFD->hasEntryRecursive(ASSHOTNEUTRAL)) {
     TiffEntry *wb = mRootIFD->getEntryRecursive(ASSHOTNEUTRAL);
     if (wb->count == 3) {
-      for (uint32 i=0; i<3; i++)
-        mRaw->metadata.wbCoeffs[i] = 1.0F / wb->getFloat(i);
+      for (uint32 i = 0; i < 3; i++) {
+        const float div = wb->getFloat(i);
+        if (div == 0.0f)
+          ThrowRDE("Can not decode WB, multiplier is zero/");
+
+        mRaw->metadata.wbCoeffs[i] = 1.0F / div;
+      }
     }
   }
 }

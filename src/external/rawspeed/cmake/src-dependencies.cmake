@@ -20,28 +20,23 @@ endif()
 if(WITH_PTHREADS)
   message(STATUS "Looking for PThreads")
   set(CMAKE_THREAD_PREFER_PTHREAD 1)
-  find_package(Threads REQUIRED)
+  find_package(Threads)
   if(NOT CMAKE_USE_PTHREADS_INIT)
     message(SEND_ERROR "Did not found POSIX Threads! Either make it find PThreads, or pass -DWITH_PTHREADS=OFF to disable threading.")
   else()
     message(STATUS "Looking for PThreads - found")
     set(HAVE_PTHREAD 1)
+    target_link_libraries(rawspeed PUBLIC Threads::Threads)
+    set_package_properties(Threads PROPERTIES
+                           TYPE RECOMMENDED
+                           DESCRIPTION "POSIX Threads"
+                           PURPOSE "Used for parallelization of the library itself")
   endif()
 else()
   message(STATUS "PThread-based threading is disabled. Not searching for PThreads")
 endif()
 
-if(WITH_OPENMP)
-  message(STATUS "Looking for OpenMP")
-  find_package(OpenMP)
-  if(OPENMP_FOUND)
-    message(STATUS "Looking for OpenMP - found")
-  else()
-    message(WARNING "Looking for OpenMP - failed. utilities will not use openmp-based parallelization")
-  endif()
-else()
-  message(STATUS "OpenMP is disabled, utilities will not use openmp-based parallelization")
-endif()
+include(OpenMP)
 
 if(WITH_PUGIXML)
   message(STATUS "Looking for pugixml")
@@ -64,19 +59,44 @@ if(WITH_PUGIXML)
 
   if(Pugixml_FOUND)
     set(HAVE_PUGIXML 1)
-    include_directories(SYSTEM ${Pugixml_INCLUDE_DIRS})
+
+    if(NOT TARGET Pugixml::Pugixml)
+      add_library(Pugixml::Pugixml INTERFACE IMPORTED)
+      set_property(TARGET Pugixml::Pugixml PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${Pugixml_INCLUDE_DIRS}")
+      set_property(TARGET Pugixml::Pugixml PROPERTY INTERFACE_LINK_LIBRARIES "${Pugixml_LIBRARIES}")
+    endif()
+
+    target_link_libraries(rawspeed PUBLIC Pugixml::Pugixml)
+    set_package_properties(Pugixml PROPERTIES
+                           TYPE REQUIRED
+                           URL http://pugixml.org/
+                           DESCRIPTION "Light-weight, simple and fast XML parser"
+                           PURPOSE "Used for loading of data/cameras.xml")
   endif()
+else()
+  message(STATUS "Pugixml library support is disabled. I hope you know what you are doing.")
 endif()
 
 if(WITH_JPEG)
   message(STATUS "Looking for JPEG")
-  find_package(JPEG REQUIRED)
+  find_package(JPEG)
   if(NOT JPEG_FOUND)
     message(SEND_ERROR "Did not find JPEG! Either make it find JPEG, or pass -DWITH_JPEG=OFF to disable JPEG.")
   else()
     message(STATUS "Looking for JPEG - found")
-    include_directories(SYSTEM ${JPEG_INCLUDE_DIRS})
     set(HAVE_JPEG 1)
+
+    if(NOT TARGET JPEG::JPEG)
+      add_library(JPEG::JPEG INTERFACE IMPORTED)
+      set_property(TARGET JPEG::JPEG PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${JPEG_INCLUDE_DIRS}")
+      set_property(TARGET JPEG::JPEG PROPERTY INTERFACE_LINK_LIBRARIES "${JPEG_LIBRARIES}")
+    endif()
+
+    target_link_libraries(rawspeed PUBLIC JPEG::JPEG)
+    set_package_properties(JPEG PROPERTIES
+                           TYPE RECOMMENDED
+                           DESCRIPTION "free library for handling the JPEG image data format, implements a JPEG codec"
+                           PURPOSE "Used for decoding DNG Lossy JPEG compression")
 
     include(CheckJPEGSymbols)
   endif()
@@ -92,7 +112,6 @@ if (WITH_ZLIB)
       message(SEND_ERROR "Did not find ZLIB! Either make it find ZLIB, or pass -DWITH_ZLIB=OFF to disable ZLIB, or pass -DUSE_BUNDLED_ZLIB=ON to enable in-tree ZLIB.")
     else()
       message(STATUS "Looking for ZLIB - found (system)")
-      include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
     endif()
   else()
     include(Zlib)
@@ -106,7 +125,12 @@ if (WITH_ZLIB)
 
   if(ZLIB_FOUND)
     set(HAVE_ZLIB 1)
-  endif()
+    target_link_libraries(rawspeed PUBLIC ZLIB::ZLIB)
+    set_package_properties(ZLIB PROPERTIES
+                           TYPE RECOMMENDED
+                           DESCRIPTION "software library used for data compression"
+                           PURPOSE "Used for decoding DNG Deflate compression")
+    endif()
 else()
   message(STATUS "ZLIB is disabled, DNG deflate support won't be available.")
 endif()

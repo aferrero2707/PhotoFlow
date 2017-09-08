@@ -34,6 +34,8 @@
 #include <cmath>                          // for pow
 #include <stdexcept>                      // for out_of_range
 #include <tuple>                          // for tie, tuple
+// IWYU pragma: no_include <ext/alloc_traits.h>
+// IWYU pragma: no_include <type_traits>
 
 using std::vector;
 using std::fill_n;
@@ -342,17 +344,32 @@ public:
 
 DngOpcodes::DngOpcodes(TiffEntry* entry) {
   ByteStream bs = entry->getData();
+
   // DNG opcodes are always stored in big-endian byte order.
-  bs.setInNativeByteOrder(getHostEndianness() == big);
+  bs.setByteOrder(Endianness::big);
 
   const auto opcode_count = bs.getU32();
+  auto origPos = bs.getPosition();
+
+  // validate opcode count. we either have to do this, or we can't preallocate
+  for (auto i = 0U; i < opcode_count; i++) {
+    bs.skipBytes(4); // code
+    bs.skipBytes(4); // version
+    bs.skipBytes(4); // flags
+    const auto opcode_size = bs.getU32();
+    bs.skipBytes(opcode_size);
+  }
+
+  bs.setPosition(origPos);
+
+  // okay, we may indeed have that many opcodes in here. now let's reserve
   opcodes.reserve(opcode_count);
 
   for (auto i = 0U; i < opcode_count; i++) {
     auto code = bs.getU32();
-    bs.getU32(); // ignore version
+    bs.skipBytes(4); // ignore version
 #ifdef DEBUG
-    bs.getU32(); // ignore flags
+    bs.skipBytes(4); // ignore flags
 #else
     auto flags = bs.getU32();
 #endif
@@ -380,7 +397,9 @@ DngOpcodes::DngOpcodes(TiffEntry* entry) {
       ThrowRDE("Inconsistent length of opcode");
   }
 
+#ifdef DEBUG
   assert(opcodes.size() == opcode_count);
+#endif
 }
 
 // defined here as empty destrutor, otherwise we'd need a complete definition
@@ -396,7 +415,7 @@ void DngOpcodes::applyOpCodes(const RawImage& ri) {
 
 template <class Opcode>
 std::unique_ptr<DngOpcodes::DngOpcode> DngOpcodes::constructor(ByteStream* bs) {
-  return make_unique<Opcode>(bs);
+  return std::make_unique<Opcode>(bs);
 }
 
 // ALL opcodes specified in DNG Specification MUST be listed here.

@@ -21,11 +21,13 @@
 
 #pragma once
 
+#include "rawspeedconfig.h"
 #include "common/Common.h"  // for uchar8, uint32, uint64
 #include "common/Memory.h"  // for alignedFree
 #include "io/Endianness.h"  // for getByteSwapped
 #include "io/IOException.h" // for ThrowIOE
 #include <algorithm>        // for swap
+#include <cassert>          // for assert
 #include <memory>           // for unique_ptr
 
 namespace rawspeed {
@@ -57,17 +59,26 @@ class Buffer
 public:
   using size_type = uint32;
 
+protected:
+  const uchar8* data = nullptr;
+  size_type size = 0;
+  bool isOwner = false;
+
+public:
   // allocates the databuffer, and returns owning non-const pointer.
   static std::unique_ptr<uchar8, decltype(&alignedFree)> Create(size_type size);
 
   // constructs an empty buffer
   Buffer() = default;
+
+  // Allocates the memory
+  explicit Buffer(size_type size_) : Buffer(Create(size_), size_) {
+    assert(!ASAN_REGION_IS_POISONED(data, size));
+  }
+
   // creates buffer from owning unique_ptr
   Buffer(std::unique_ptr<uchar8, decltype(&alignedFree)> data_,
          size_type size_);
-
-  // Allocates the memory
-  explicit Buffer(size_type size);
 
   // Data already allocated
   explicit Buffer(const uchar8* data_, size_type size_)
@@ -75,27 +86,40 @@ public:
     static_assert(BUFFER_PADDING == 0, "please do make sure that you do NOT "
                                        "call this function from YOUR code, and "
                                        "then comment-out this assert.");
+    assert(!ASAN_REGION_IS_POISONED(data, size));
   }
+
   // creates a (non-owning) copy / view of rhs
-  Buffer(const Buffer& rhs)
-    : data(rhs.data), size(rhs.size) {}
+  Buffer(const Buffer& rhs) : data(rhs.data), size(rhs.size) {
+    assert(!ASAN_REGION_IS_POISONED(data, size));
+  }
+
   // Move data and ownership from rhs to this
   Buffer(Buffer&& rhs) noexcept
-    : data(rhs.data), size(rhs.size), isOwner(rhs.isOwner) { rhs.isOwner = false; }
+      : data(rhs.data), size(rhs.size), isOwner(rhs.isOwner) {
+    assert(!ASAN_REGION_IS_POISONED(data, size));
+    rhs.isOwner = false;
+  }
+
   // Frees memory if owned
   ~Buffer();
+
   Buffer& operator=(Buffer&& rhs) noexcept;
   Buffer& operator=(const Buffer& rhs);
 
   Buffer getSubView(size_type offset, size_type size_) const {
+    if (!isValid(0, offset))
+      ThrowIOE("Buffer overflow: image file may be truncated");
+
     return Buffer(getData(offset, size_), size_);
   }
+
   Buffer getSubView(size_type offset) const {
     if (!isValid(0, offset))
       ThrowIOE("Buffer overflow: image file may be truncated");
 
     size_type newSize = size - offset;
-    return Buffer(getData(offset, newSize), newSize);
+    return getSubView(offset, newSize);
   }
 
   // get pointer to memory at 'offset', make sure at least 'count' bytes are accessable
@@ -103,7 +127,10 @@ public:
     if (!isValid(offset, count))
       ThrowIOE("Buffer overflow: image file may be truncated");
 
-    return &data[offset];
+    assert(data);
+    assert(!ASAN_REGION_IS_POISONED(data + offset, count));
+
+    return data + offset;
   }
 
   // convenience getter for single bytes
@@ -113,9 +140,13 @@ public:
 
   // std begin/end iterators to allow for range loop
   const uchar8* begin() const {
+    assert(data);
+    assert(!ASAN_REGION_IS_POISONED(data, 0));
     return data;
   }
   const uchar8* end() const {
+    assert(data);
+    assert(!ASAN_REGION_IS_POISONED(data, size));
     return data + size;
   }
 
@@ -128,6 +159,7 @@ public:
   }
 
   inline size_type getSize() const {
+    assert(!ASAN_REGION_IS_POISONED(data, size));
     return size;
   }
 
@@ -140,11 +172,6 @@ public:
 //  /* For testing purposes */
 //  void corrupt(int errors);
 //  Buffer* cloneRandomSize();
-
-protected:
-  const uchar8* data = nullptr;
-  size_type size = 0;
-  bool isOwner = false;
 };
 
 /*
@@ -152,26 +179,33 @@ protected:
  * of its contents and can therefore provide save access to larger than
  * byte sized data, like int, float, etc.
  */
-class DataBuffer : public Buffer
-{
-  bool inNativeByteOrder = true;
+class DataBuffer : public Buffer {
+  // FIXME: default should be Endianness::unknown !
+
+  Endianness endianness = Endianness::little;
+
 public:
   DataBuffer() = default;
-  explicit DataBuffer(const Buffer& data_, bool inNativeByteOrder_ = true)
-      : Buffer(data_), inNativeByteOrder(inNativeByteOrder_) {}
 
-  // get memory of type T from byte offset 'offset + sizeof(T)*index' and swap byte order if required
-  template<typename T> inline T get(size_type offset, size_type index = 0) const {
-    return Buffer::get<T>(inNativeByteOrder, offset, index);
+  explicit DataBuffer(const Buffer& data_,
+                      Endianness endianness_ = Endianness::little)
+      : Buffer(data_), endianness(endianness_) {}
+
+  // get memory of type T from byte offset 'offset + sizeof(T)*index' and swap
+  // byte order if required
+  template <typename T>
+  inline T get(size_type offset, size_type index = 0) const {
+    assert(Endianness::unknown != endianness);
+    assert(Endianness::little == endianness || Endianness::big == endianness);
+
+    return Buffer::get<T>(getHostEndianness() == endianness, offset, index);
   }
 
-  inline bool isInNativeByteOrder() const {
-    return inNativeByteOrder;
-  }
+  inline Endianness getByteOrder() const { return endianness; }
 
-  inline bool setInNativeByteOrder(bool value) {
-    std::swap(inNativeByteOrder, value);
-    return value;
+  inline Endianness setByteOrder(Endianness endianness_) {
+    std::swap(endianness, endianness_);
+    return endianness_;
   }
 };
 

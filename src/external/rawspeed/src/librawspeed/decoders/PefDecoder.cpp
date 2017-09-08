@@ -24,7 +24,6 @@
 #include "common/Point.h"                     // for iPoint2D
 #include "decoders/RawDecoderException.h"     // for RawDecoderException (p...
 #include "decompressors/PentaxDecompressor.h" // for PentaxDecompressor
-#include "io/Buffer.h"                        // for Buffer
 #include "io/ByteStream.h"                    // for ByteStream
 #include "io/IOException.h"                   // for IOException
 #include "metadata/ColorFilterArray.h"        // for CFAColor::CFA_GREEN
@@ -71,18 +70,19 @@ RawImage PefDecoder::decodeRawInternal() {
         "Byte count number does not match strip size: count:%u, strips:%u ",
         counts->count, offsets->count);
   }
-  if (!mFile->isValid(offsets->getU32(), counts->getU32()))
-    ThrowRDE("Truncated file.");
+  ByteStream bs(mFile, offsets->getU32(), counts->getU32());
 
   uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
 
+  if (!width || !height || width % 2 != 0 || width > 7392 || height > 4950)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
   mRaw->dim = iPoint2D(width, height);
-  mRaw->createData();
   try {
-    PentaxDecompressor::decompress(
-        mRaw, ByteStream(mFile, offsets->getU32(), counts->getU32()),
-        getRootIFD());
+    PentaxDecompressor p(mRaw, getRootIFD());
+    mRaw->createData();
+    p.decompress(bs);
   } catch (IOException &e) {
     mRaw->setError(e.what());
     // Let's ignore it, it may have delivered somewhat useful data.

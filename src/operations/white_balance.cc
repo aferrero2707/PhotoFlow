@@ -40,13 +40,13 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-#include "../dt/common/colorspaces.h"
+#include "../external/darktable/src/common/colorspaces.h"
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 
-#include "../dt/external/wb_presets.c"
+#include "../external/darktable/src/external/wb_presets.c"
 
 int PF::wb_sample_x = 0;
 int PF::wb_sample_y = 0;

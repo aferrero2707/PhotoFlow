@@ -24,31 +24,30 @@
 #include "common/Common.h" // for uint32, ushort16, uint64, int32, short16
 #include <cassert>         // for assert
 #include <cstring>         // for memcpy
-// IWYU pragma: no_include "io/EndiannessTest.h"
 
 namespace rawspeed {
 
-enum Endianness { big, little, unknown };
+enum class Endianness { little = 0xDEAD, big = 0xBEEF, unknown = 0x0BAD };
 
 inline Endianness getHostEndiannessRuntime() {
   ushort16 testvar = 0xfeff;
   uint32 firstbyte = (reinterpret_cast<uchar8*>(&testvar))[0];
   if (firstbyte == 0xff)
-    return little;
+    return Endianness::little;
   if (firstbyte == 0xfe)
-    return big;
+    return Endianness::big;
 
   assert(false);
 
   // Return something to make compilers happy
-  return unknown;
+  return Endianness::unknown;
 }
 
 inline Endianness getHostEndianness() {
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-  return little;
+  return Endianness::little;
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-  return big;
+  return Endianness::big;
 #elif defined(__BYTE_ORDER__)
 #error "uhm, __BYTE_ORDER__ has some strange value"
 #else
@@ -107,11 +106,11 @@ template <typename T> inline T getByteSwapped(const void* data, bool bswap) {
 // Buffer/DataBuffer classes is available.
 
 template <typename T> inline T getBE(const void* data) {
-  return getByteSwapped<T>(data, getHostEndianness() == little);
+  return getByteSwapped<T>(data, getHostEndianness() == Endianness::little);
 }
 
 template <typename T> inline T getLE(const void* data) {
-  return getByteSwapped<T>(data, getHostEndianness() == big);
+  return getByteSwapped<T>(data, getHostEndianness() == Endianness::big);
 }
 
 inline ushort16 getU16BE(const void* data) { return getBE<ushort16>(data); }

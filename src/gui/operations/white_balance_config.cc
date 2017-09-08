@@ -39,15 +39,15 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-#include "../dt/common/colorspaces.h"
+#include "../external/darktable/src/common/colorspaces.h"
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 
-#include "../dt/external/wb_presets.c"
-#include "../dt/external/adobe_coeff.c"
-#include "../dt/external/cie_colorimetric_tables.c"
+#include "../external/darktable/src/external/wb_presets.c"
+#include "../external/darktable/src/external/adobe_coeff.c"
+#include "../external/darktable/src/external/cie_colorimetric_tables.c"
 
 #include "white_balance_config.hh"
 

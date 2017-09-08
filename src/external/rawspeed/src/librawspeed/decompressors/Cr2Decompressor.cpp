@@ -38,8 +38,18 @@ void Cr2Decompressor::decodeScan()
   if (predictorMode != 1)
     ThrowRDE("Unsupported predictor mode.");
 
-  if (slicesWidths.empty())
-    slicesWidths.push_back(frame.w * frame.cps);
+  if (slicesWidths.empty()) {
+    const int slicesWidth = frame.w * frame.cps;
+    if (slicesWidth > mRaw->dim.x)
+      ThrowRDE("Don't know slicing pattern, and failed to guess it.");
+
+    slicesWidths.push_back(slicesWidth);
+  }
+
+  for (const auto& slicesWidth : slicesWidths) {
+    if (slicesWidth > mRaw->dim.x)
+      ThrowRDE("Slice is longer than image's height, which is unsupported.");
+  }
 
   bool isSubSampled = false;
   for (uint32 i = 0; i < frame.cps;  i++)
@@ -171,7 +181,7 @@ void Cr2Decompressor::decodeN_X_Y()
 
         if (X_S_F == 1) { // will be optimized out
           unroll_loop<N_COMP>([&](int i) {
-            *dest++ = pred[i] += ht[i]->decodeNext(bitStream);
+            dest[i] = pred[i] += ht[i]->decodeNext(bitStream);
           });
         } else {
           unroll_loop<Y_S_F>([&](int i) {
@@ -181,15 +191,15 @@ void Cr2Decompressor::decodeN_X_Y()
 
           dest[1] = pred[1] += ht[1]->decodeNext(bitStream);
           dest[2] = pred[2] += ht[2]->decodeNext(bitStream);
-
-          dest += xStepSize;
         }
+
+        dest += xStepSize;
         processedPixels += X_S_F;
       }
+
       processedLineSlices += yStepSize;
     }
   }
-  input.skipBytes(bitStream.getBufferPosition());
 }
 
 } // namespace rawspeed

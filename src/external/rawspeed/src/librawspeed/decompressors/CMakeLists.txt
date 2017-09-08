@@ -1,13 +1,18 @@
-FILE(GLOB DECOMPRESSOR_SOURCES
+FILE(GLOB SOURCES
   "AbstractDecompressor.h"
   "AbstractLJpegDecompressor.cpp"
   "AbstractLJpegDecompressor.h"
+  "AbstractParallelizedDecompressor.cpp"
+  "AbstractParallelizedDecompressor.h"
+  "AbstractSamsungDecompressor.h"
   "Cr2Decompressor.cpp"
   "Cr2Decompressor.h"
   "CrwDecompressor.cpp"
   "CrwDecompressor.h"
   "DeflateDecompressor.cpp"
   "DeflateDecompressor.h"
+  "FujiDecompressor.cpp"
+  "FujiDecompressor.h"
   "HasselbladDecompressor.cpp"
   "HasselbladDecompressor.h"
   "HuffmanTable.h"
@@ -19,8 +24,16 @@ FILE(GLOB DECOMPRESSOR_SOURCES
   "NikonDecompressor.h"
   "PentaxDecompressor.cpp"
   "PentaxDecompressor.h"
+  "SamsungV0Decompressor.cpp"
+  "SamsungV0Decompressor.h"
+  "SamsungV1Decompressor.cpp"
+  "SamsungV1Decompressor.h"
+  "SamsungV2Decompressor.cpp"
+  "SamsungV2Decompressor.h"
   "UncompressedDecompressor.cpp"
   "UncompressedDecompressor.h"
 )
 
-set(RAWSPEED_SOURCES "${RAWSPEED_SOURCES};${DECOMPRESSOR_SOURCES}" PARENT_SCOPE)
+target_sources(rawspeed PRIVATE
+  ${SOURCES}
+)

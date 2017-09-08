@@ -2,13 +2,33 @@ include(CheckCXXCompilerFlag)
 include(CpuMarch)
 include(CheckCXXCompilerFlagAndEnableIt)
 
-message(STATUS "Checking for -std=c++11 support")
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-if(NOT COMPILER_SUPPORTS_CXX11)
-        message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+# yes, need to keep both the CMAKE_CXX_FLAGS and CMAKE_CXX_STANDARD.
+# with just the CMAKE_CXX_STANDARD, try_compile() breaks:
+#   https://gitlab.kitware.com/cmake/cmake/issues/16456
+# with just the CMAKE_CXX_FLAGS, 'bundled' pugixml breaks tests
+#   https://github.com/darktable-org/rawspeed/issues/112#issuecomment-321517003
+
+message(STATUS "Checking for -std=c++14 support")
+CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
+if(NOT COMPILER_SUPPORTS_CXX14)
+  message(WARNING "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support.")
+
+  message(STATUS "Checking for -std=c++1y support")
+  CHECK_CXX_COMPILER_FLAG("-std=c++1y" COMPILER_SUPPORTS_CXX1Y)
+  if(NOT COMPILER_SUPPORTS_CXX1Y)
+    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
+    message(STATUS "Checking for -std=c++1y support - works")
+  endif()
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  message(STATUS "Checking for -std=c++14 support - works")
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-message(STATUS "Checking for -std=c++11 support - works")
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # always debug info
 add_definitions(-g3)
@@ -100,8 +120,15 @@ MARK_AS_ADVANCED(
     CMAKE_C_FLAGS_SANITIZE )
 
 set(fuzz "-O3 -ffast-math")
-set(fuzz "${fuzz} ${asan} ${ubsan}")
-set(fuzz "${fuzz} -fsanitize-coverage=trace-pc-guard,indirect-calls,trace-cmp")
+
+if(NOT DEFINED ENV{LIB_FUZZING_ENGINE})
+  # specialhandling: oss-fuzz provides all the needed flags already.
+  set(fuzz "${fuzz} ${asan} ${ubsan}")
+  set(fuzz "${fuzz} -fsanitize-coverage=trace-pc-guard,indirect-calls,trace-cmp")
+else()
+  message(STATUS "LIB_FUZZING_ENGINE env variable is set, assuming this is oss-fuzz, not setting special compiler flags.")
+endif()
+
 set(fuzz "${fuzz} -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION")
 SET(CMAKE_CXX_FLAGS_FUZZ
     "${fuzz}"
