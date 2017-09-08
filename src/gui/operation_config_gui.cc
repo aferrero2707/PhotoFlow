@@ -104,7 +104,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   labchSelector( this, "lab_target_channel", _("Target channel: "), -1 ),
   cmykchSelector( this, "cmyk_target_channel", _("Target channel:"), -1 ),
   input_source_expander( _("input source") ),
-  input_source_checkbox( this, "previous_channel_is_input", _("process previous layer"), true),
+  input_source_checkbox( this, "previous_layer_is_input", _("process previous layer"), true),
   layer_list( this, "Layer name:"),
   sourceSelector( this, "source_channel", "Source channel: ", 1 ),
   previewButton(_("preview")),
@@ -955,7 +955,7 @@ void PF::OperationConfigGUI::do_update()
   }
 
   if( get_par() ) {
-    if( get_par()->get_previous_channel_is_input() ) layer_list.hide();
+    if( get_par()->get_previous_layer_is_input() ) layer_list.hide();
     else layer_list.show();
   }
 

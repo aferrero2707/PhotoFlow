@@ -64,7 +64,7 @@ PF::OpParBase::OpParBase():
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
   mask_enabled("mask_enabled",this,true),
   file_format_version( PF_FILE_VERSION ),
-  previous_channel_is_input("previous_channel_is_input",this,true)
+  previous_layer_is_input("previous_layer_is_input",this,true)
 {
   //blend_mode.set_internal(true);
   intensity.set_internal(true);
@@ -324,12 +324,26 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
 std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
-  std::vector<VipsImage*> result = build_many( in, first, imap, omap, level );
+  std::vector<VipsImage*> in_temp;
+  if( !(previous_layer_is_input.get()) && in.size() > 1 && in[1] ) {
+    for(unsigned int i = 1; i < in.size(); i++) {
+      in_temp.push_back(in[i]);
+    }
+  }
+
+  std::vector<VipsImage*> result;
+  if( in_temp.empty() )
+    result = build_many( in, first, imap, omap, level );
+  else
+    result = build_many( in_temp, first, imap, omap, level );
 
 #ifndef NDEBUG
   std::cout<<"OpParBase::build_many_internal(): filling hierarchy with padding "<<get_padding()<<std::endl;
 #endif
-  fill_image_hierarchy( in, imap, omap, result );
+  if( in_temp.empty() )
+    fill_image_hierarchy( in, imap, omap, result );
+  else
+    fill_image_hierarchy( in_temp, imap, omap, result );
 
   //for(unsigned int i = 0; i < outvec.size(); i++ ) {
   //  PF_UNREF( outvec[i], "OpParBase::build_many_internal(): previous outputs unref" );

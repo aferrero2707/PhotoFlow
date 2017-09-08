@@ -165,7 +165,7 @@ namespace PF
 
     int file_format_version;
 
-    Property<bool> previous_channel_is_input;
+    Property<bool> previous_layer_is_input;
 
   public:
     sigc::signal<void> signal_modified;
@@ -272,7 +272,7 @@ namespace PF
 				return -1;
     } 
 
-    bool get_previous_channel_is_input() { return previous_channel_is_input.get(); }
+    bool get_previous_layer_is_input() { return previous_layer_is_input.get(); }
 
     /* Function to derive the output area from the input area
     */
