@@ -49,7 +49,7 @@ PF::DrawConfigGUI::DrawConfigGUI( PF::Layer* layer ):
   pen_size( this, "pen_size", _("Pen size: "), 5, 0, 1000000, 1, 10, 1),
   pen_opacity( this, "pen_opacity", _("Pen opacity: "), 100, 0, 100, 0.1, 1, 100),
   pen_smoothness( this, "pen_smoothness", _("pen smoothness: "), 0, 0, 100, 1, 10, 100),
-  undoButton(_("Undo")), inhibit( false )
+  undoButton(_("Undo")), inhibit( false ), stroke_started( false ), stroke_active( false )
 {
   colorButtonsBox1.pack_start( bgd_color_label, Gtk::PACK_SHRINK );
   colorButtonsBox1.pack_start( bgd_color_button, Gtk::PACK_SHRINK );
@@ -271,6 +271,29 @@ void PF::DrawConfigGUI::start_stroke()
 }
 
 
+void PF::DrawConfigGUI::end_stroke()
+{
+  // Pointer to the associated Layer object
+  PF::Layer* layer = get_layer();
+  if( !layer ) return;
+
+  // First of all, the new stroke is recorded by the "master" operation
+  PF::ProcessorBase* processor = layer->get_processor();
+  if( !processor || !(processor->get_par()) ) return;
+
+  PF::DrawPar* par = dynamic_cast<PF::DrawPar*>( processor->get_par() );
+  if( !par ) return;
+
+  //par->start_stroke( get_pen_size(), get_pen_opacity() );
+  par->end_stroke();
+
+  PF::Image* image = layer->get_image();
+  if( !image ) return;
+
+  image->update();
+}
+
+
 void PF::DrawConfigGUI::draw_point( double x, double y )
 {
   // Pointer to the associated Layer object
@@ -292,6 +315,8 @@ void PF::DrawConfigGUI::draw_point( double x, double y )
   //double ix = lx, iy = ly, iw = 1, ih = 1;
   //layer2image( ix, iy, iw, ih );
   //std::cout<<"DrawConfigGUI::draw_point(): ix="<<ix<<"  iy="<<iy<<std::endl;
+
+  return;
 
   if( (update.width < 1) || (update.height < 1) )  
     return;
@@ -367,11 +392,16 @@ bool PF::DrawConfigGUI::pointer_press_event( int button, double x, double y, int
 {
   if( !get_editing_flag() ) return false;
 
+  //std::cout<<"DrawConfigGUI::pointer_press_event() called"<<std::endl;
+
   if( button != 1 ) return false;
-  if( mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) )
+  if( mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) ) {
+    stroke_started = true;
+    stroke_active = true;
     start_stroke();
+  }
   draw_point( x, y );
-  return false;
+  return true;
 }
 
 
@@ -380,6 +410,11 @@ bool PF::DrawConfigGUI::pointer_release_event( int button, double x, double y, i
   if( !get_editing_flag() ) return false;
 
   if( button != 1 ) return false;
+  if( mod_key != (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) ) {
+    end_stroke();
+    stroke_started = false;
+    stroke_active = false;
+  }
   //draw_point( x, y );
   return false;
 }
@@ -423,8 +458,20 @@ bool PF::DrawConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
 
   // Resize the output buffer to match the input one
   buf_out.resize( buf_in.get_rect() );
-  // Copy pixel data from input to output
-  buf_out.copy( buf_in );
+
+  //std::cout<<"DrawConfigGUI::modify_preview(): stroke_started="<<stroke_started<<" stroke_active="<<stroke_active<<std::endl;
+
+  if( stroke_started ) {
+    // Resize the temp buffer to match the input one
+    buf_temp.resize( buf_in.get_rect() );
+    // Copy pixel data from input to temp
+    buf_temp.copy( buf_in );
+    stroke_started = false;
+  } else if( !stroke_active ){
+    // Copy pixel data from input to output
+    buf_out.copy( buf_in );
+    buf_temp.resize( 0,0,1,1 );
+  }
 
   int pensize = pen_size.get_adjustment()->get_value();//*scale;
   double tx = 0, ty = 0, tw = pensize, th = pensize;
@@ -435,6 +482,12 @@ bool PF::DrawConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
   int x0 = mouse_x;//*scale + xoffset;
   int y0 = mouse_y;//*scale + yoffset;
 
-  buf_out.draw_circle( x0, y0, pensize, buf_in );
+  if( stroke_active ) {
+    //buf_temp.draw_circle( x0, y0, pensize, buf_in );
+    buf_temp.draw_circle( x0, y0, pensize, 255, 0, 0, true );
+    buf_out.copy( buf_temp );
+  } else {
+    buf_out.draw_circle( x0, y0, pensize, buf_in );
+  }
   return true;
 }

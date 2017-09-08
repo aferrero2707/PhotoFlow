@@ -1425,7 +1425,9 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
       if( dialog->pointer_press_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
         // to refresh the preview
-        imageArea->draw_area();
+        //imageArea->draw_area();
+        imageArea->queue_draw();
+        //std::cout<<"PF::ImageEditor::on_button_press_event(): imageArea->draw_area() called."<<std::endl;
       }
     }
   }
@@ -1476,7 +1478,8 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
       if( dialog->pointer_release_event( button->button, x, y, mod_key ) ) {
         // The dialog requires to draw on top of the preview image, so we call draw_area() 
         // to refresh the preview
-        imageArea->draw_area();
+        //imageArea->draw_area();
+        imageArea->queue_draw();
       }
     }
   }

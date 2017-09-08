@@ -62,8 +62,12 @@ namespace PF {
   Slider pen_smoothness;
   Gtk::Button undoButton;
 
+  PixelBuffer buf_temp;
+
   double mouse_x, mouse_y;
   bool inhibit;
+  bool stroke_started;
+  bool stroke_active;
 
 public:
   DrawConfigGUI( Layer* l );
@@ -80,6 +84,7 @@ public:
   void on_undo();
 
   void start_stroke();
+  void end_stroke();
   void draw_point( double x, double y );
 
   bool pointer_press_event( int button, double x, double y, int mod_key );

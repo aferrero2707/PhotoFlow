@@ -189,7 +189,7 @@ public:
 
   void fill( const VipsRect& area, PixelBuffer& inbuf );
 
-  void draw_circle( int x0, int y0, int radius, guint8 r, guint8 g, guint8 b );
+  void draw_circle( int x0, int y0, int radius, guint8 r, guint8 g, guint8 b, bool filled=false );
   void draw_circle( int x0, int y0, int radius, PixelBuffer& inbuf );
 
   void draw_line( int x1, int y1, int x2, int y2, PixelBuffer& inbuf );
