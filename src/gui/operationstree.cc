@@ -384,7 +384,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
 
   op_misc.get_tree().add_op( _("Draw"), "draw" );
-  op_misc.get_tree().add_op( _("Clone stamp"), "clone_stamp" );
+  //op_misc.get_tree().add_op( _("Clone stamp"), "clone_stamp" );
   op_misc.get_tree().add_op( _("Clone layer"), "clone" );
   op_misc.get_tree().add_op( _("Buffer layer"), "buffer" );
   op_misc.get_tree().add_op( _("Digital watermark"), "gmic_watermark_fourier" );
