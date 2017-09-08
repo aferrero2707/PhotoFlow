@@ -147,7 +147,7 @@ void PF::PixelBuffer::fill( const VipsRect& area, PixelBuffer& inbuf )
 }
 
 
-void PF::PixelBuffer::draw_circle( int x0, int y0, int radius, guint8 r, guint8 g, guint8 b )
+void PF::PixelBuffer::draw_circle( int x0, int y0, int radius, guint8 r, guint8 g, guint8 b, bool filled )
 {
 
   guint8* px = get_pxbuf()->get_pixels();
@@ -198,7 +198,7 @@ void PF::PixelBuffer::draw_circle( int x0, int y0, int radius, guint8 r, guint8 
     /**/
     if( (row1 >= buf_top) && (row1 <= buf_bottom) ) {
       guint8* p = px + rs*(row1-buf_top) + (left-buf_left)*bl;
-      if( left2 <= right ) {
+      if( left2 <= right && (!filled) ) {
         for( int x = left; x <= left2; x++, p += bl ) {
           p[0] = r; p[1] = g; p[2] = b;
         }
@@ -214,7 +214,7 @@ void PF::PixelBuffer::draw_circle( int x0, int y0, int radius, guint8 r, guint8 
     }
     if( (row2 != row1) && (row2 >= buf_top) && (row2 <= buf_bottom) ) {
       guint8* p = px + rs*(row2-buf_top) + (left-buf_left)*bl;
-      if( left2 <= right ) {
+      if( left2 <= right && (!filled) ) {
         for( int x = left; x <= left2; x++, p += bl ) {
           p[0] = r; p[1] = g; p[2] = b;
         }
