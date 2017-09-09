@@ -15,9 +15,11 @@ matrix:
             apt:
               sources:
                 #- sourceline: 'ppa:dhor/myway'
-                    - sourceline: 'ppa:otto-kesselgulasch/gimp-edge'
+                - sourceline: 'ppa:otto-kesselgulasch/gimp-edge'
+                - sourceline: 'ppa:ubuntu-toolchain-r/test'
               packages:
-                - g++
+                - gcc-5
+                - g++-5
                 - gettext
                 - intltool
                 - gir1.2-gtk-3.0
@@ -61,6 +63,7 @@ matrix:
                 - zenity
           before_script:
               #- cd non_existent_dir
+              - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
               - cd build
               - export PKG_CONFIG_PATH=/app/lib/pkgconfig:${PKG_CONFIG_PATH}
               - export LD_LIBRARY_PATH=/app/lib:${LD_LIBRARY_PATH}
