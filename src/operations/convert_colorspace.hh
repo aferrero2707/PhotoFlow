@@ -87,14 +87,16 @@ public:
     if( opar == NULL ) return;
 
     Rect *r = &oreg->valid;
-    int line_size = r->width * oreg->im->Bands;
+    int line_size  = r->width * 3;
+    int line_size2 = r->width * oreg->im->Bands;
     int height = r->height;
+    int nchan = oreg->im->Bands;
 
     T* p1;
     T* p2;
     T* pin;
     T* pout;
-    int x, y/*, pos*/;
+    int x, x2, y/*, pos*/;
     float diff1, diff2, diff3;
     float delta, delta_max = opar->get_delta(); //0.0001;
 
@@ -104,7 +106,7 @@ public:
       pin = (T*)VIPS_REGION_ADDR( ireg[2], r->left, r->top + y );
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
-      for( x = 0; x < line_size; x+=3 ) {
+      for( x = 0, x2 = 0; x < line_size; x+=3, x2+=nchan ) {
         if( opar->get_dest_is_matrix() ) {
           diff1 = (static_cast< float >(p1[x]) - static_cast< float >(p2[x]));
           diff2 = (static_cast< float >(p1[x+1]) - static_cast< float >(p2[x+1]));
@@ -134,11 +136,16 @@ public:
           }
         }
         if( delta > delta_max /*diff > delta*/ ) {
-          pout[x] = pout[x+1] = pout[x+2] = PF::FormatInfo<T>::HALF;
+          switch(nchan) {
+          case 3: pout[x2] = pout[x2+1] = pout[x2+2] = PF::FormatInfo<T>::HALF; break;
+          case 4: pout[x2] = pout[x2+1] = pout[x2+2] = pout[x2+3] = PF::FormatInfo<T>::HALF; break;
+          default: break;
+          }
         } else {
-          pout[x] = pin[x];
-          pout[x+1] = pin[x+1];
-          pout[x+2] = pin[x+2];
+          pout[x2] = pin[x2];
+          pout[x2+1] = pin[x2+1];
+          pout[x2+2] = pin[x2+2];
+          if(nchan==4) pout[x2+3] = pin[x2+3];
         }
       }
     }
@@ -296,7 +303,9 @@ public:
     ConvertColorspacePar* opar = dynamic_cast<ConvertColorspacePar*>(par);
     if( !opar ) return;
     Rect *r = &oreg->valid;
-    int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
+    int line_size_in = ireg[in_first]->valid.width * ireg[in_first]->im->Bands; //layer->in_all[0]->Bands;
+    int line_size_out = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
+    int line_size_max = (line_size_in > line_size_out) ? line_size_in : line_size_out;
     int width = r->width;
     int height = r->height;
 
@@ -306,8 +315,12 @@ public:
     int x, y;
 
     float* line = NULL;
-    if( opar->get_input_cs_type() == cmsSigLabData ) {
-      line = new float[line_size];
+    if( opar->get_input_cs_type() == cmsSigLabData ||
+        opar->get_input_cs_type() == cmsSigCmykData ) {
+      line = new float[line_size_max];
+    }
+    if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+      std::cout<<"ConvertColorspace::render(): line="<<(void*)line<<std::endl;
     }
 
     for( y = 0; y < height; y++ ) {
@@ -316,7 +329,7 @@ public:
 
       if(opar->get_transform()) {
         if( opar->get_input_cs_type() == cmsSigLabData ) {
-          for( x = 0; x < line_size; x+= 3 ) {
+          for( x = 0; x < line_size_in; x+= 3 ) {
             line[x] = (cmsFloat32Number) (p[x] * 100.0);
             line[x+1] = (cmsFloat32Number) (p[x+1]*255.0 - 127.5);
             line[x+2] = (cmsFloat32Number) (p[x+2]*255.0 - 127.5);
@@ -325,19 +338,33 @@ public:
             }
           }
           cmsDoTransform( opar->get_transform(), line, pout, width );
-          if( true && r->left==0 && r->top==0 && y==0 ) {
+          if( false && r->left==0 && r->top==0 && y==0 ) {
             std::cout<<"ConvertColorspace::render(): from Lab: pout="<<pout[0]*255<<" "<<pout[1]*255<<" "<<pout[2]*255<<std::endl;
+          }
+        } else if( opar->get_input_cs_type() == cmsSigCmykData ) {
+          for( x = 0; x < line_size_in; x+= 4 ) {
+            line[x] = (cmsFloat32Number) (p[x] * 100.0);
+            line[x+1] = (cmsFloat32Number) (p[x+1] * 100.0);
+            line[x+2] = (cmsFloat32Number) (p[x+2] * 100.0);
+            line[x+3] = (cmsFloat32Number) (p[x+3] * 100.0);
+            if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+              std::cout<<"ConvertColorspace::render(CMYK in): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<" "<<line[x+3]<<std::endl;
+            }
+          }
+          cmsDoTransform( opar->get_transform(), line, pout, width );
+          if( false && r->left==0 && r->top==0 && y==0 ) {
+            std::cout<<"ConvertColorspace::render(CMYK in): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
           }
         } else {
           cmsDoTransform( opar->get_transform(), p, pout, width );
-          if( true && r->left==0 && r->top==0 && x==0 && y==0 ) {
+          if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
             std::cout<<"ConvertColorspace::render(): p=   "<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
             std::cout<<"ConvertColorspace::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
           }
           if( opar->get_output_cs_type() == cmsSigLabData ) {
-            for( x = 0; x < line_size; x+= 3 ) {
-              if( true && r->left==0 && r->top==0 && x==0 && y==0 ) {
-                std::cout<<"ConvertColorspace::render(): to Lab: pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
+            for( x = 0; x < line_size_out; x+= 3 ) {
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ConvertColorspace::render(Lab out): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
               }
 
               pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
@@ -345,16 +372,30 @@ public:
               pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 127.5) / 255.0);
 
               if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
-                std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
+                std::cout<<"ConvertColorspace::render(Lab out): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
+              }
+            }
+          }
+          if( opar->get_output_cs_type() == cmsSigCmykData ) {
+            for( x = 0; x < line_size_out; x+= 4 ) {
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ConvertColorspace::render(CMYK out): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<" "<<pout[x+3]<<std::endl;
+              }
+              pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+              pout[x+1] = (cmsFloat32Number) (pout[x+1] / 100.0);
+              pout[x+2] = (cmsFloat32Number) (pout[x+2] / 100.0);
+              pout[x+3] = (cmsFloat32Number) (pout[x+3] / 100.0);
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ConvertColorspace::render(CMYK out): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<" "<<pout[x+3]<<std::endl;
               }
             }
           }
         }
       } else {
-        memcpy( pout, p, sizeof(float)*line_size );
+        memcpy( pout, p, sizeof(float)*line_size_in );
       }
       if( opar->get_clip_negative() || opar->get_clip_overflow() ) {
-        for( x = 0; x < line_size; x+= 1 ) {
+        for( x = 0; x < line_size_out; x+= 1 ) {
           if( opar->get_clip_negative() ) pout[x] = MAX( pout[x], 0.f );
           if( opar->get_clip_overflow() ) pout[x] = MIN( pout[x], 1.f );
         }

@@ -147,7 +147,9 @@ namespace PF
       ICCTransformPar* opar = dynamic_cast<ICCTransformPar*>(par);
       if( !opar ) return;
       Rect *r = &oreg->valid;
-      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
+      int line_size_in = ireg[in_first]->valid.width * ireg[in_first]->im->Bands; //layer->in_all[0]->Bands;
+      int line_size_out = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
+      int line_size_max = (line_size_in > line_size_out) ? line_size_in : line_size_out;
       int width = r->width;
       int height = r->height;
 
@@ -157,8 +159,9 @@ namespace PF
       int x, y;
 
       float* line = NULL;
-      if( opar->get_input_cs_type() == cmsSigLabData ) {
-        line = new float[line_size];
+      if( opar->get_input_cs_type() == cmsSigLabData ||
+          opar->get_input_cs_type() == cmsSigCmykData ) {
+        line = new float[line_size_max];
       }
 
       for( y = 0; y < height; y++ ) {
@@ -167,7 +170,7 @@ namespace PF
 
         if(opar->get_transform()) {
           if( opar->get_input_cs_type() == cmsSigLabData ) {
-            for( x = 0; x < line_size; x+= 3 ) {
+            for( x = 0; x < line_size_in; x+= 3 ) {
               line[x] = (cmsFloat32Number) (p[x] * 100.0);
               line[x+1] = (cmsFloat32Number) (p[x+1]*256.0f - 128.0f);
               line[x+2] = (cmsFloat32Number) (p[x+2]*256.0f - 128.0f);
@@ -176,25 +179,55 @@ namespace PF
               //}
             }
             cmsDoTransform( opar->get_transform(), line, pout, width );
-            //if( r->left==0 && r->top==0 && y==0 ) {
-            //  std::cout<<"ICCTransform::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
-            //}
+            if( false && r->left==0 && r->top==0 && y==0 ) {
+              std::cout<<"ICCTransform::render(Lab): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+            }
+          } else if( opar->get_input_cs_type() == cmsSigCmykData ) {
+            for( x = 0; x < line_size_in; x+= 4 ) {
+              line[x] = (cmsFloat32Number) (p[x] * 100.0);
+              line[x+1] = (cmsFloat32Number) (p[x+1] * 100.0);
+              line[x+2] = (cmsFloat32Number) (p[x+2] * 100.0);
+              line[x+3] = (cmsFloat32Number) (p[x+3] * 100.0);
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ICCTransform::render(CMYK in): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<" "<<line[x+3]<<std::endl;
+              }
+            }
+            cmsDoTransform( opar->get_transform(), line, pout, width );
+            if( false && r->left==0 && r->top==0 && y==0 ) {
+              std::cout<<"ICCTransform::render(CMYK in): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+            }
           } else {
             cmsDoTransform( opar->get_transform(), p, pout, width );
-            if( opar->get_output_cs_type() == cmsSigLabData ) {
-              for( x = 0; x < line_size; x+= 3 ) {
-                pout[x] = (cmsFloat32Number) (pout[x] / 100.0); 
-                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0f) / 256.0f);
-                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0f) / 256.0f);
-                
-                //if( r->left==0 && r->top==0 && x==0 && y==0 ) {
-                //  std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
-                //}
+            if( false && r->left==0 && r->top==0 && y==0 ) {
+              std::cout<<"ICCTransform::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+            }
+          }
+          if( opar->get_output_cs_type() == cmsSigLabData ) {
+            for( x = 0; x < line_size_out; x+= 3 ) {
+              pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+              pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0f) / 256.0f);
+              pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0f) / 256.0f);
+
+              //if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+              //  std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
+              //}
+            }
+          } else if( opar->get_output_cs_type() == cmsSigCmykData ) {
+            for( x = 0; x < line_size_out; x+= 4 ) {
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ICCTransform::render(CMYK out): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<" "<<pout[x+3]<<std::endl;
+              }
+              pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+              pout[x+1] = (cmsFloat32Number) (pout[x+1] / 100.0);
+              pout[x+2] = (cmsFloat32Number) (pout[x+2] / 100.0);
+              pout[x+3] = (cmsFloat32Number) (pout[x+3] / 100.0);
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ICCTransform::render(CMYK out): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<" "<<pout[x+3]<<std::endl;
               }
             }
           }
         } else {
-          memcpy( pout, p, sizeof(float)*line_size );
+          memcpy( pout, p, sizeof(float)*line_size_in );
         }
       }
 

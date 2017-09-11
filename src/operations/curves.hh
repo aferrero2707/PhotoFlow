@@ -118,6 +118,9 @@ namespace PF
     void process(T**p, const int& n, const int& first, const int& nch, int& x, const double& intensity, T* pout)
     {
       //std::cout<<"CurvesProc::process() called, PREVIEW="<<PREVIEW<<std::endl;
+      //if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+        //std::cout<<"CurvesProc::process(): CHMIN="<<CHMIN<<" CHMAX="<<CHMAX<<std::endl;
+      //}
       T* pp = p[first];
       float nin, nout;
       //int id;
@@ -128,6 +131,7 @@ namespace PF
         if( nout > 1 ) nout = 1;
         else if ( nout < 0 ) nout = 0;
         pout[pos] = T(nout*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
+        //if(i==CHMIN) std::cout<<"  nin="<<nin<<" nout="<<nout<<" pout[pos]="<<pout[pos]<<std::endl;
         /*
         id = (int)(nin*1000);
         if( id<0 || id > 1000 )
