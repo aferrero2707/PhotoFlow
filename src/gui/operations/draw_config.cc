@@ -455,6 +455,9 @@ bool PF::DrawConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
   if( !get_layer()->get_processor()->get_par() ) return false;
 
   PF::OpParBase* par = get_layer()->get_processor()->get_par();
+  PF::DrawPar* dpar = dynamic_cast<PF::DrawPar*>( par );
+  if( !dpar ) return false;
+
 
   // Resize the output buffer to match the input one
   buf_out.resize( buf_in.get_rect() );
@@ -484,7 +487,11 @@ bool PF::DrawConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
 
   if( stroke_active ) {
     //buf_temp.draw_circle( x0, y0, pensize, buf_in );
-    buf_temp.draw_circle( x0, y0, pensize, 255, 0, 0, true );
+    buf_temp.draw_circle( x0, y0, pensize,
+        dpar->get_pen_color().get().r*255,
+        dpar->get_pen_color().get().g*255,
+        dpar->get_pen_color().get().b*255,
+        true );
     buf_out.copy( buf_temp );
   } else {
     buf_out.draw_circle( x0, y0, pensize, buf_in );
