@@ -72,6 +72,7 @@
 
 #include "base/new_operation.hh"
 #include "base/pf_file_loader.hh"
+#include "rt/rtengine/rawimagesource.hh"
 
 extern int vips__leak;
 
@@ -161,6 +162,8 @@ int main (int argc, char *argv[])
 #ifndef NDEBUG
   vips_cache_set_trace( true );
 #endif
+
+  rtengine::Color::Init();
 
   //vips__leak = 1;
 

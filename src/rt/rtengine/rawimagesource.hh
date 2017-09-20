@@ -43,6 +43,16 @@
 namespace rtengine {
 
 
+class Color
+{
+public:
+  static LUTf igammatab_24_17;
+  static LUTf gammatab_24_17a;
+
+  static void Init();
+};
+
+
 	class RawImageSource
 	{
 		PF::RawMatrix rawData;
@@ -51,8 +61,6 @@ namespace rtengine {
 		int tile_top, tile_left;
 
 		int FC_roffset, FC_coffset;
-    LUTf igammatab_24_17;
-    LUTf gammatab_24_17a;
 
     double fitparams[3][2][16];
     dcraw_data_t* image_data;

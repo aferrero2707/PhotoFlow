@@ -31,7 +31,6 @@
 
 #define RT_EMU
 
-
     /**
     * @brief Get the gamma value for Gamma=2.4 Slope=17
     * @param x red, green or blue channel's value [0 ; 1]
@@ -54,22 +53,29 @@
     }
 
 
+    LUTf rtengine::Color::igammatab_24_17;
+    LUTf rtengine::Color::gammatab_24_17a;
+
+    void rtengine::Color::Init()
+    {
+      igammatab_24_17(65536, 0);
+      gammatab_24_17a(65536, LUT_CLIP_ABOVE | LUT_CLIP_BELOW);
+      for (int i = 0; i < 65536; i++) {
+        float j = (float)i / 65535.0f;
+        gammatab_24_17a[i] = gamma24_17(j);
+      }
+
+      for (int i = 0; i < 65536; i++) {
+        igammatab_24_17[i] = (65535.0 * igamma24_17 (i / 65535.0));
+      }
+    }
+
+
+
 
 
 rtengine::RawImageSource::RawImageSource(): FC_roffset(0), FC_coffset(0), image_data(NULL)
 {
-  igammatab_24_17(65536, 0);
-  gammatab_24_17a(65536, LUT_CLIP_ABOVE | LUT_CLIP_BELOW);
-  for (int i = 0; i < 65536; i++) {
-    float j = (float)i / 65535.0f;
-    gammatab_24_17a[i] = gamma24_17(j);
-  }
-
-  for (int i = 0; i < 65536; i++) {
-    igammatab_24_17[i] = (65535.0 * igamma24_17 (i / 65535.0));
-  }
-
-
 }
 
 
