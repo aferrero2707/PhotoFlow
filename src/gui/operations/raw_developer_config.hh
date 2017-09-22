@@ -30,10 +30,9 @@
 #ifndef RAW_DEVELOPER_CONFIG_DIALOG_HH
 #define RAW_DEVELOPER_CONFIG_DIALOG_HH
 
-#include <gtkmm.h>
+#include "../../operations/raw_developer.hh"
 
 #include "../operation_config_gui.hh"
-#include "../../operations/raw_developer.hh"
 
 
 namespace PF {

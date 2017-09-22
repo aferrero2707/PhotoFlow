@@ -43,6 +43,7 @@
 #include "../../operations/false_color_correction.hh"
 #include "raw_output.hh"
 #include "../../operations/hotpixels.hh"
+#include "../../operations/lensfun.hh"
 
 #include "raw_developer.hh"
 

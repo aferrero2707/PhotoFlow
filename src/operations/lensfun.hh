@@ -35,8 +35,8 @@
 #endif
 */
 
-#ifndef PF_LENSFUN_HH
-#define PF_LENSFUN_HH
+#ifndef PF_LENSFUNOP_HH
+#define PF_LENSFUNOP_HH
 
 #include <string>
 
