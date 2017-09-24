@@ -63,7 +63,7 @@ namespace PF
     void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
 
     bool has_intensity() { return false; }
-    bool needs_caching() { return false; return( radius.get() >= 50 ); }
+    bool needs_caching() { return( radius.get() >= 50 ); }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 
