@@ -69,7 +69,7 @@ namespace PF
     bool needs_caching() { return false; }
 
 
-    int get_padding( int level );      
+    int get_gmic_padding( int level );
 
     void pre_build( rendermode_t mode );
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
