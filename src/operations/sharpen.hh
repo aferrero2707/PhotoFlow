@@ -59,6 +59,9 @@ namespace PF
     bool needs_caching();
     bool has_target_channel() { return true; }
       
+    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
+    void propagate_settings();
+
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 
 		     unsigned int& level);

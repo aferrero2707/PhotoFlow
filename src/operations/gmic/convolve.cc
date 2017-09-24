@@ -65,7 +65,7 @@ OpParBase(),
 }
 
 
-int PF::GmicConvolvePar::get_padding( int level )
+int PF::GmicConvolvePar::get_gmic_padding( int level )
 {
   return 0;
 }
@@ -99,7 +99,7 @@ VipsImage* PF::GmicConvolvePar::build(std::vector<VipsImage*>& in, int first,
   command = command + std::string(",0");
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
-  gpar->set_padding( get_padding( level ) );
+  gpar->set_gmic_padding( get_gmic_padding( level ) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 

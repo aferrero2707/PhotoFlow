@@ -46,7 +46,7 @@ OpParBase(),
 
 
 
-int PF::GmicSmoothWaveletsHaarPar::get_padding()
+int PF::GmicSmoothWaveletsHaarPar::get_gmic_padding(int level)
 {
   int scalefac = 1;
 	for( int l = 1; l <= prop_scales.get(); l++ )
@@ -85,7 +85,7 @@ VipsImage* PF::GmicSmoothWaveletsHaarPar::build(std::vector<VipsImage*>& in, int
   gpar->set_command( command.c_str() );
   //gpar->set_iterations( iterations.get() );
   gpar->set_iterations( (int)1 );
-  gpar->set_padding( get_padding() );
+  gpar->set_gmic_padding( get_gmic_padding(level) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 

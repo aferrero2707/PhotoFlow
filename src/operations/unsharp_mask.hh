@@ -50,7 +50,13 @@ namespace PF
     float get_amount() { return amount.get(); }
 
     //bool needs_caching() { return true; }
-      
+    void propagate_settings();
+    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+    {
+      g_assert(blur->get_par() != NULL);
+      blur->get_par()->compute_padding(full_res, id, level);
+      set_padding( blur->get_par()->get_padding(id), id );
+    }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 

@@ -81,7 +81,7 @@ namespace PF
     bool auto_zoom;
     int auto_zoom_width, auto_zoom_height;
 
-    bool force_rebuild;
+    bool force_rebuild, op_caching_enabled;
 
     //Glib::Threads::Mutex mutex;
 
@@ -89,10 +89,12 @@ namespace PF
     Pipeline():
       modified(false), image(NULL), output(NULL), format(VIPS_FORMAT_UCHAR),
       level(0), render_mode(PF_RENDER_PREVIEW), output_layer_id(-1),
-      auto_zoom(false), auto_zoom_width(0), auto_zoom_height(0), force_rebuild(false) {}
+      auto_zoom(false), auto_zoom_width(0), auto_zoom_height(0),
+      force_rebuild(false), op_caching_enabled(false) {}
     Pipeline( Image* img, VipsBandFormat fmt, int l, rendermode_t m ):
       image(img), output(NULL), format(fmt), level(l), render_mode(m), output_layer_id(-1),
-      auto_zoom(false), auto_zoom_width(0), auto_zoom_height(0), force_rebuild(false) {}
+      auto_zoom(false), auto_zoom_width(0), auto_zoom_height(0),
+      force_rebuild(false), op_caching_enabled(false) {}
 
     ~Pipeline();
 
@@ -135,6 +137,9 @@ namespace PF
     bool get_force_rebuild() { return force_rebuild; }
     void set_force_rebuild() { force_rebuild = true; }
     void clear_force_rebuild() { force_rebuild = false; }
+
+    bool get_op_caching_enabled() { return op_caching_enabled; }
+    void set_op_caching_enabled(bool flag) { op_caching_enabled = flag; }
 
     PipelineNode* set_node( Layer* layer, Layer* input_layer );
     void set_image( VipsImage* img, unsigned int id );

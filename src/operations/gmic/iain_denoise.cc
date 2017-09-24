@@ -55,7 +55,7 @@ OpParBase(),
 }
 
 
-int PF::GmicIainDenoisePar::get_padding( int level )
+int PF::GmicIainDenoisePar::get_gmic_padding( int level )
 {
   return 5;
 }
@@ -95,7 +95,7 @@ VipsImage* PF::GmicIainDenoisePar::build(std::vector<VipsImage*>& in, int first,
   command = command + std::string(",") + prop_sharpen_edges.get_str();
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
-  gpar->set_padding( get_padding( level ) );
+  gpar->set_gmic_padding( get_gmic_padding( level ) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 

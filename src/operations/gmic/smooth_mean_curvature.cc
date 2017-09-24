@@ -45,7 +45,7 @@ OpParBase(),
 
 
 
-int PF::GmicSmoothMeanCurvaturePar::get_padding( int level )
+int PF::GmicSmoothMeanCurvaturePar::get_gmic_padding( int level )
 {
   return 0;
 }

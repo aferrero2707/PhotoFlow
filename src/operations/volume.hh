@@ -73,10 +73,14 @@ namespace PF
 
     bool has_intensity() { return false; }
     bool needs_caching() {
+      return false;
       if( method.get_enum_value().first==VOLUME_BILATERAL ||
           gauss_radius.get() > 50 ) return true;
       return false;
     }
+
+    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
+    void propagate_settings();
 
     float get_amount() { return amount.get(); }
     float get_threshold() { return threshold.get(); }

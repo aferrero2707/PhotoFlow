@@ -32,6 +32,7 @@
 #include "layer.hh"
 //#include "../vips/vips_layer.h"
 
+
 int
 vips_layer( int n, VipsImage **out, 
             PF::ProcessorBase* proc,
@@ -52,7 +53,8 @@ void PF::OperationConfigUI::open()
 
 
 PF::OpParBase::OpParBase():
-	render_mode(PF_RENDER_PREVIEW), 
+  output_caching_enabled(false),
+	render_mode(PF_RENDER_PREVIEW),
   map_flag( false ),
   editing_flag( false ),
   modified_flag(false),
@@ -62,6 +64,7 @@ PF::OpParBase::OpParBase():
   lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
   mask_enabled("mask_enabled",this,true),
+  cache_input("__cache_input__",this,false),
   file_format_version( PF_FILE_VERSION )
 {
   //blend_mode.set_internal(true);
@@ -221,6 +224,9 @@ bool PF::OpParBase::import_settings( OpParBase* pin )
     }
   }
 
+  // update properties of sub-operations
+  propagate_settings();
+
   set_map_flag( pin->is_map() );
   //std::cout<<"OpParBase::import_settings(): set_editing_flag("<<pin->is_editing()<<")"<<std::endl;
   set_editing_flag( pin->is_editing() );
@@ -296,6 +302,7 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
 {
   std::vector<VipsImage*> result;
   VipsImage* out = build( in, first, imap, omap, level );
+  //std::cout<<"OpParBase::build_many(): padding="<<get_padding()<<std::endl;
 
   VipsImage* cached = out;
   if( out && false && needs_caching() ) {
@@ -322,19 +329,63 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
 std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
-  std::vector<VipsImage*> result = build_many( in, first, imap, omap, level );
+  std::vector<VipsImage*> result;
+  result = build_many( in, first, imap, omap, level );
 
 #ifndef NDEBUG
   std::cout<<"OpParBase::build_many_internal(): filling hierarchy with padding "<<get_padding()<<std::endl;
 #endif
   fill_image_hierarchy( in, imap, omap, result );
 
-  //for(unsigned int i = 0; i < outvec.size(); i++ ) {
+  // add output caching if needed
+  if( !output_caching_enabled ) return result;
+
+  std::vector<VipsImage*> result_cached;
+  for( unsigned int i = 0; i < result.size(); i++ ) {
+    bool is_dup = false;
+    VipsImage* out = result[i];
+    for( unsigned int j = 0; j < in.size(); j++ ) {
+      if( out == in[j] ) {
+        is_dup = true;
+        break;
+      }
+    }
+    if( is_dup ) {
+      result_cached.push_back( out );
+      continue;
+    }
+
+    int p = get_output_padding( i );
+    if( p > 0 ) {
+      int nt = out->Xsize*(p/PF_OUPUT_CACHE_TS + 3)/PF_OUPUT_CACHE_TS;
+      VipsAccess acc = VIPS_ACCESS_RANDOM;
+      int threaded = 1, persistent = 0;
+      VipsImage* cached;
+      if( !vips_tilecache(out, &cached,
+          "tile_width", PF_OUPUT_CACHE_TS,
+          "tile_height", PF_OUPUT_CACHE_TS,
+          "max_tiles", nt,
+          "access", acc, "threaded", threaded,
+          "persistent", persistent, NULL) ) {
+        result_cached.push_back( cached );
+        PF_UNREF( out, "OpParBase::build_many_internal(): out unref" );
+        std::cout<<"OpParBase::build_many_internal(): added tilecache for output image #"
+            <<i<<", padding="<<p<<std::endl;
+      } else {
+        std::cout<<"OpParBase::build_many_internal(): vips_tilecache() failed."<<std::endl;
+        result_cached.push_back( out );
+      }
+    } else {
+      result_cached.push_back( out );
+    }
+  }
+
+    //for(unsigned int i = 0; i < outvec.size(); i++ ) {
   //  PF_UNREF( outvec[i], "OpParBase::build_many_internal(): previous outputs unref" );
   //}
   //outvec = result;
 
-  return result;
+  return result_cached;
 }
 
 

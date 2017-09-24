@@ -41,6 +41,13 @@ PF::UnsharpMaskPar::UnsharpMaskPar():
 }
 
 
+void PF::UnsharpMaskPar::propagate_settings()
+{
+  PropertyBase* pradius = blur->get_par()->get_property("radius");
+  if(!pradius) return;
+  pradius->import( &radius );
+  blur->get_par()->propagate_settings();
+}
 
 
 
@@ -60,9 +67,6 @@ VipsImage* PF::UnsharpMaskPar::build(std::vector<VipsImage*>& in, int first,
 		radius2 /= 2;
 
 	blur->get_par()->set_image_hints( this );
-	PropertyBase* pradius = blur->get_par()->get_property("radius");
-	if(!pradius) return NULL;
-	pradius->import( &radius );
 
 	VipsImage* blurred = blur->get_par()->build( in, first, NULL, NULL, level );
 	if( !blurred )

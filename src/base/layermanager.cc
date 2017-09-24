@@ -647,6 +647,57 @@ void PF::LayerManager::reset_dirty( std::list<Layer*>& list )
 
 
 
+void PF::LayerManager::init_pipeline( PF::Pipeline* pipeline, std::list<Layer*>& list, PF::Layer* previous_layer )
+{
+  std::list<PF::Layer*>::iterator li = list.begin();
+  for(li = list.begin(); li != list.end(); ++li) {
+    PF::Layer* l = *li;
+
+    if( !l ) continue;
+
+    // Detect "pathological" conditions
+    g_assert( l->get_processor() != NULL );
+    g_assert( l->get_processor()->get_par() != NULL );
+    g_assert( l->get_blender() != NULL );
+    g_assert( l->get_blender()->get_par() != NULL );
+
+    // Create the node if it does not yet exist, and copy the parameters
+    // from the operation associated with the layer to the
+    // operation associated with the node
+    PF::PipelineNode* node = pipeline->set_node( l, previous_layer );
+    g_assert( node != NULL );
+    g_assert( node->processor != NULL );
+    g_assert( node->processor->get_par() != NULL );
+    g_assert( node->blender != NULL );
+    g_assert( node->blender->get_par() != NULL );
+
+    PF::OpParBase* par = l->get_processor()->get_par();
+    PF::OpParBase* pipelinepar = node->processor->get_par();
+    PF::OpParBase* blender = l->get_blender()->get_par();
+    PF::OpParBase* pipelineblender = node->blender->get_par();
+
+    // We import the parameters from the "master" operation associated to the layer,
+    // and which is directly connected with the GUI controls
+    std::cout<<"LayerManager::init_pipeline(): calling import_settings() for layer \""
+        <<l->get_name()<<"\""<<std::endl;
+    pipelinepar->import_settings( par );
+    pipelineblender->import_settings( blender );
+    std::cout<<"  settings imported."<<std::endl;
+
+    pipelinepar->set_output_caching( pipeline->get_op_caching_enabled() );
+    pipelineblender->set_output_caching( pipeline->get_op_caching_enabled() );
+
+    init_pipeline( pipeline, l->imap_layers, NULL );
+    init_pipeline( pipeline, l->omap_layers, NULL );
+    init_pipeline( pipeline, l->sublayers, previous_layer );
+
+    previous_layer = l;
+  }
+}
+
+
+
+
 void PF::LayerManager::update_ui( std::list<Layer*>& list )
 {
   std::list<PF::Layer*>::iterator li = list.begin();
@@ -670,6 +721,181 @@ void PF::LayerManager::update_ui( std::list<Layer*>& list )
 void PF::LayerManager::update_ui()
 {
   update_ui( layers );
+}
+
+
+
+
+void PF::LayerManager::reset_op_caching( PF::Pipeline* pipeline )
+{
+  if( !pipeline || !(pipeline->get_op_caching_enabled()) ) return;
+  reset_op_caching(pipeline, layers);
+}
+
+
+void PF::LayerManager::reset_op_caching( PF::Pipeline* pipeline, std::list<Layer*>& list )
+{
+  std::list<PF::Layer*>::iterator li = list.begin();
+  for(li = list.begin(); li != list.end(); ++li) {
+    PF::Layer* l = *li;
+
+    if( !l ) continue;
+    if( !l->is_enabled() ) continue;
+    //std::cout<<"LayerManager::get_cache_buffer(): checking layer "<<l->get_name()<<std::endl;
+
+    reset_op_caching( pipeline, l->imap_layers );
+
+    reset_op_caching( pipeline, l->omap_layers );
+
+    // Finally we walk through the sub-layers
+    reset_op_caching( pipeline, l->sublayers );
+
+    //for( unsigned int pi = 0; pi < l->get_image()->get_npipelines(); pi++ ) {
+    //  PF::Pipeline* pipeline = l->get_image()->get_pipeline( pi );
+    //  if( !pipeline || !(pipeline->get_op_caching_enabled()) ) continue;
+
+      PF::PipelineNode* node = pipeline->get_node(l->get_id());
+      if( !node ) continue;
+      if( !node->processor ) continue;
+      if( !node->processor->get_par() ) continue;
+      node->processor->get_par()->reset_output_padding();
+      if( !node->blender ) continue;
+      if( !node->blender->get_par() ) continue;
+      node->blender->get_par()->reset_output_padding();
+    //}
+  }
+}
+
+
+
+
+void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline )
+{
+  if( !pipeline || !(pipeline->get_op_caching_enabled()) ) return;
+
+  reset_op_caching( pipeline );
+
+  std::cout<<std::endl<<"LayerManager::update_op_caching():"<<std::endl;
+  update_op_caching( pipeline, layers, NULL );
+}
+
+
+
+
+void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Layer*>& list, PF::Layer* input )
+{
+  PF::Pipeline* pipeline0 = get_image()->get_pipeline( 0 );
+  if( pipeline == pipeline0 ) return;
+
+  std::list<PF::Layer*>::reverse_iterator li;
+  for(li = layers.rbegin(); li != layers.rend(); ++li) {
+    PF::Layer* l = *li;
+    if(!l) continue;
+    if(!l->is_visible()) continue;
+
+    PF::PipelineNode* node0 = pipeline0->get_node(l->get_id());
+    if( !node0 ) continue;
+
+    PF::PipelineNode* node = pipeline->get_node(l->get_id());
+    if( !node ) continue;
+    if( !node->processor ) continue;
+    if( !node->processor->get_par() ) continue;
+    PF::OpParBase* par = node->processor->get_par();
+
+    par->compute_padding( node0->image, 0, pipeline->get_level() );
+    int padding = par->get_padding(0);
+
+    std::cout<<"  current layer: \""<<l->get_name()<<"\", padding="<<padding<<std::endl;
+
+    PF::PipelineNode* pnode0 = NULL;
+    PF::PipelineNode* pnode = NULL;
+    PF::OpParBase* ppar = NULL;
+    std::list<PF::Layer*>::reverse_iterator lj = li; ++lj;
+    PF::Layer* lprev = NULL;
+    for( ; lj != layers.rend(); ++lj ) {
+      lprev = *lj;
+      if(!lprev) continue;
+      if(!lprev->is_visible()) continue;
+
+      pnode0 = pipeline0->get_node(lprev->get_id());
+      if( !pnode0 ) continue;
+
+      pnode = pipeline->get_node(lprev->get_id());
+      if( !pnode ) continue;
+      if( !pnode->processor ) continue;
+      if( !pnode->blender ) continue;
+      if( !pnode->processor->get_par() ) continue;
+      if( !pnode->blender->get_par() ) continue;
+      ppar = pnode->processor->get_par();
+
+      // for the moment we keep the logic simple:
+      // if the operation allows opacity blending, we cache the blender
+      // output instead of the operation output
+      if( ppar->has_opacity() ) {
+        ppar = pnode->blender->get_par();
+      }
+
+      // check if the current operation is a mere transfer of images
+      // currently only buffer layers fall under this category
+      // in the NoOp case we walk one step more down the hierarchy
+      bool is_noop = ppar->is_noop( pnode0->image, 0, pipeline->get_level() );
+      std::cout<<"    layer: \""<<lprev->get_name()<<"\", is_noop="<<is_noop<<std::endl;
+      if( !is_noop ) break;
+    }
+    if( !lprev ) {
+      lprev = input;
+      if( lprev ) {
+        pnode0 = pipeline0->get_node(lprev->get_id());
+        if( !pnode0 ) continue;
+
+        pnode = pipeline->get_node(lprev->get_id());
+        if( !pnode ) continue;
+        if( !pnode->processor ) continue;
+        if( !pnode->blender ) continue;
+        if( !pnode->processor->get_par() ) continue;
+        if( !pnode->blender->get_par() ) continue;
+        ppar = pnode->processor->get_par();
+
+        // for the moment we keep the logic simple:
+        // if the operation allows opacity blending, we cache the blender
+        // output instead of the operation output
+        if( ppar->has_opacity() ) {
+          ppar = pnode->blender->get_par();
+        }
+
+        // check if the current operation is a mere transfer of images
+        // currently only buffer layers fall under this category
+        // in the NoOp case we walk one step more down the hierarchy
+        bool is_noop = ppar->is_noop( pnode0->image, 0, pipeline->get_level() );
+        if( is_noop ) { lprev = NULL; ppar = NULL; }
+      }
+    }
+
+    if( lprev )
+      std::cout<<"    previous layer: \""<<lprev->get_name()<<"\""<<std::endl;
+
+
+    // Once more, we keep this preliminary implementation simple, and we ignore
+    // the case where an operation oututs more than one image
+    // currently only the wavelet decomposition tool does it
+    if( padding > 0 && lprev && ppar ) {
+      ppar->set_output_padding( padding, 0 );
+      std::cout<<"      ppar->get_output_padding(0)="<<ppar->get_output_padding(0)
+          <<"  ppar->get_output_caching()="<<ppar->get_output_caching()<<std::endl;
+    }
+
+    if( !(l->get_sublayers().empty()) ) {
+      update_op_caching( pipeline, l->get_sublayers(), lprev );
+    }
+
+    if( !(l->get_imap_layers().empty()) ) {
+      update_op_caching( pipeline, l->get_imap_layers(), NULL );
+    }
+
+    if( !(l->get_omap_layers().empty()) ) {
+      update_op_caching( pipeline, l->get_omap_layers(), NULL );
+    }
+  }
 }
 
 
@@ -800,7 +1026,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
           if( node->blended ) vips_image_invalidate_all( node->blended );
 
           unsigned int level = pipeline->get_level();
-          pipelineblender->import_settings( blender );
+          //pipelineblender->import_settings( blender );
 
           VipsImage* omap = NULL;
           if( previous && !l->omap_layers.empty() && pipelineblender->get_mask_enabled()==true ) {
@@ -891,7 +1117,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         VipsImage* blendedimg;
         pipeline->set_image( newimg, l->get_id() );
         if( par->has_opacity() && blender && pipelineblender) {
-          pipelineblender->import_settings( blender );
+          //pipelineblender->import_settings( blender );
           VipsImage* omap = NULL;
           if( previous && !l->omap_layers.empty() ) {
             omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
@@ -1040,7 +1266,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 
       // We import the parameters from the "master" operation associated to the layer,
       // and which is directly connected with the GUI controls
-      pipelinepar->import_settings( par );
+      //pipelinepar->import_settings( par );
 
       unsigned int level = pipeline->get_level();
       newimgvec = pipelinepar->build_many_internal( in, 0, imap, omap, level );
@@ -1160,7 +1386,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
 #endif
       unsigned int level = pipeline->get_level();
-      pipelinepar->import_settings( par );
+      //pipelinepar->import_settings( par );
       newimgvec = pipelinepar->build_many_internal( in, 0, imap, omap, level );
       newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
 
@@ -1234,7 +1460,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       pipeline->set_images( newimgvec, l->get_id() );
       if( par->has_opacity() && blender && pipelineblender) {
         unsigned int level = pipeline->get_level();
-        pipelineblender->import_settings( blender );
+        //pipelineblender->import_settings( blender );
 
         //std::cout<<"rebuild_chain(): blending images for layer \""<<l->get_name()<<"\""<<std::endl;
         std::vector<VipsImage*> in;
@@ -1289,6 +1515,10 @@ bool PF::LayerManager::rebuild_prepare()
 bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, int height, VipsRect* area )
 {
   //Glib::Threads::Mutex::Lock lock( pipeline->get_mutex() );
+
+  init_pipeline( pipeline, layers, NULL );
+
+  update_op_caching( pipeline );
 
   if( pipeline && pipeline->get_output() ) {
     //vips_image_invalidate_all( pipeline->get_output() );

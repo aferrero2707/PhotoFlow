@@ -93,6 +93,9 @@
   T, BLENDER, CS, CHMIN, CHMAX, has_imap, has_omap, PREVIEW_SPEC
 
 
+#define PF_OUPUT_CACHE_TS 128
+
+
 
 namespace PF 
 {
@@ -141,6 +144,13 @@ namespace PF
     VipsCoding coding;
     VipsInterpretation interpretation;
 
+    // Padding required by the operation when processing input images
+    std::vector<int> input_paddings;
+    // Total padding requested to the output of the operation by all the
+    // child operations in the pipeline
+    std::vector<int> output_paddings;
+    bool output_caching_enabled;
+
     rendermode_t render_mode;
 
     bool map_flag;
@@ -162,6 +172,7 @@ namespace PF
     PropertyBase cmyk_target_channel;
 
     Property<bool> mask_enabled;
+    Property<bool> cache_input;
 
     int file_format_version;
 
@@ -210,6 +221,8 @@ namespace PF
     void restore_properties(const std::list<std::string>& plist);
 
     virtual bool import_settings( OpParBase* pin );
+    // update properties of sub-operations
+    virtual void propagate_settings() {}
 
     void set_processor(ProcessorBase* p) { processor = p; }
     ProcessorBase* get_processor() { return processor; }
@@ -276,10 +289,15 @@ namespace PF
     */
     virtual void transform(const Rect* rin, Rect* rout)
     {
-      rout->left = rin->left;
+      int pad = get_test_padding();
+      rout->left = rin->left+pad;
+      rout->top = rin->top+pad;
+      rout->width = rin->width-pad*2;
+      rout->height = rin->height-pad*2;
+      /*rout->left = rin->left;
       rout->top = rin->top;
       rout->width = rin->width;
-      rout->height = rin->height;
+      rout->height = rin->height;*/
     }
 
     /* Function to derive the area to be read from input images,
@@ -287,10 +305,15 @@ namespace PF
     */
     virtual void transform_inv(const Rect* rout, Rect* rin)
     {
-      rin->left = rout->left;
+      int pad = get_test_padding();
+      rin->left = rout->left-pad;
+      rin->top = rout->top-pad;
+      rin->width = rout->width+pad*2;
+      rin->height = rout->height+pad*2;
+      /*rin->left = rout->left;
       rin->top = rout->top;
       rin->width = rout->width;
-      rin->height = rout->height;
+      rin->height = rout->height;*/
     }
 
 
@@ -301,7 +324,45 @@ namespace PF
     virtual bool needs_caching() { return false; }
     virtual bool init_hidden() { return false; }
 
-    virtual int get_padding() { return 0; }
+    // whether the operation returns an input image at a given zoom level
+    // id is the output image index
+    virtual bool is_noop( VipsImage* full_res, unsigned int id, unsigned int level )
+    {
+      return false;
+    }
+    virtual void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+    {
+      set_padding( 0, id );
+    }
+    void set_padding( int p, unsigned int id )
+    {
+      for( unsigned int i = input_paddings.size(); i <= id; i++ ) input_paddings.push_back(0);
+      input_paddings[id] = p;
+    }
+    int get_padding( unsigned int id = 0 )
+    {
+      return( (input_paddings.size()>id) ? input_paddings[id] : 0 );
+    }
+    int get_output_padding( unsigned int id = 0 )
+    {
+      return( (output_paddings.size()>id) ? output_paddings[id] : 0 );
+    }
+    bool set_output_padding( int p, unsigned int id = 0 )
+    {
+      for( unsigned int i = output_paddings.size(); i <= id; i++ ) output_paddings.push_back(0);
+      if( output_paddings[id] < p ) {
+        output_paddings[id] = p;
+        return true;
+      }
+      return false;
+    }
+    void reset_output_padding() { output_paddings.clear(); }
+    void set_output_caching(bool flag) { output_caching_enabled = flag; }
+    bool get_output_caching() { return output_caching_enabled; }
+    virtual int get_test_padding() { return 0; }
+
+    // return the number of output images. Equal to 1 in most cases
+    virtual int get_output_num() { return 1; }
 
     rendermode_t get_render_mode() { return render_mode; }
     void set_render_mode(rendermode_t m) { render_mode = m; }

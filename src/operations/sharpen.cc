@@ -79,7 +79,58 @@ bool PF::SharpenPar::needs_caching()
   default:
     return false; break;
   }
+}
 
+
+void PF::SharpenPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+{
+  std::cout<<"SharpenPar::compute_padding(): method.get_enum_value().first="<<method.get_enum_value().first<<std::endl;
+  switch( method.get_enum_value().first ) {
+  case PF::SHARPEN_USM:
+    g_assert(usm->get_par() != NULL);
+    usm->get_par()->compute_padding(full_res, id, level);
+    set_padding( usm->get_par()->get_padding(id), id );
+    break;
+#ifndef PF_DISABLE_GMIC
+  case PF::SHARPEN_DECONV:
+    g_assert(rl->get_par() != NULL);
+    rl->get_par()->compute_padding(full_res, id, level);
+    set_padding( rl->get_par()->get_padding(id), id );
+    break;
+  case PF::SHARPEN_TEXTURE:
+    g_assert(texture->get_par() != NULL);
+    texture->get_par()->compute_padding(full_res, id, level);
+    set_padding( texture->get_par()->get_padding(id), id );
+    break;
+#endif
+  default: break;
+  }
+}
+
+
+
+void PF::SharpenPar::propagate_settings()
+{
+  UnsharpMaskPar* usmpar = dynamic_cast<UnsharpMaskPar*>( usm->get_par() );
+  if( usmpar ) {
+    std::cout<<"SharpenPar::propagate_settings(): usm_radius="<<usm_radius.get()<<std::endl;
+    usmpar->set_radius( usm_radius.get() );
+    usmpar->propagate_settings();
+  }
+
+  GmicSharpenRLPar* rlpar = dynamic_cast<GmicSharpenRLPar*>( rl->get_par() );
+  if( rlpar ) {
+    rlpar->set_sigma( rl_sigma.get() );
+    rlpar->set_iterations( rl_iterations.get() );
+    rlpar->propagate_settings();
+  }
+
+  GmicSharpenTexturePar* tpar = dynamic_cast<GmicSharpenTexturePar*>( texture->get_par() );
+  if( tpar ) {
+    tpar->set_radius( texture_radius.get() );
+    tpar->set_strength( texture_strength.get() );
+    tpar->propagate_settings();
+  }
 }
 
 
@@ -96,7 +147,6 @@ VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first,
   case PF::SHARPEN_USM: {
     UnsharpMaskPar* usmpar = dynamic_cast<UnsharpMaskPar*>( usm->get_par() );
     if( usmpar ) {
-      usmpar->set_radius( usm_radius.get() );
       usmpar->set_image_hints( in[0] );
       usmpar->set_format( get_format() );
       out = usmpar->build( in, first, imap, omap, level );
@@ -107,8 +157,6 @@ VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first,
   case PF::SHARPEN_DECONV: {
     GmicSharpenRLPar* rlpar = dynamic_cast<GmicSharpenRLPar*>( rl->get_par() );
     if( rlpar ) {
-      rlpar->set_sigma( rl_sigma.get() );
-      rlpar->set_iterations( rl_iterations.get() );
       rlpar->set_image_hints( in[0] );
       rlpar->set_format( get_format() );
       out = rlpar->build( in, first, imap, omap, level );
@@ -118,8 +166,6 @@ VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first,
   case PF::SHARPEN_TEXTURE: {
     GmicSharpenTexturePar* par = dynamic_cast<GmicSharpenTexturePar*>( texture->get_par() );
     if( par ) {
-      par->set_radius( texture_radius.get() );
-      par->set_strength( texture_strength.get() );
       par->set_image_hints( in[0] );
       par->set_format( get_format() );
       out = par->build( in, first, imap, omap, level );

@@ -51,7 +51,7 @@ bool PF::GmicSharpenRLPar::needs_caching() { return true; }
 
 
 
-int PF::GmicSharpenRLPar::get_padding( int level )
+int PF::GmicSharpenRLPar::get_gmic_padding( int level )
 {
   return(padding);
 }
@@ -85,7 +85,7 @@ VipsImage* PF::GmicSharpenRLPar::build(std::vector<VipsImage*>& in, int first,
   command = command + std::string(" -cut 0,255");
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
-  gpar->set_padding( get_padding( level ) );
+  gpar->set_gmic_padding( get_gmic_padding( level ) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 

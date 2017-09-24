@@ -75,6 +75,51 @@ PF::VolumePar::VolumePar():
 }
 
 
+void PF::VolumePar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+{
+  std::cout<<"VolumePar::compute_padding(): method.get_enum_value().first="<<method.get_enum_value().first<<std::endl;
+  switch( method.get_enum_value().first ) {
+  case PF::VOLUME_GAUSS: {
+    GaussBlurPar* gausspar = dynamic_cast<GaussBlurPar*>( gauss->get_par() );
+    if( gausspar ) {
+      gausspar->compute_padding(full_res, id, level);
+      set_padding( gausspar->get_padding(id), id );
+    }
+    break;
+  }
+  case PF::VOLUME_BILATERAL: {
+    GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
+    if( bilateralpar ) {
+      bilateralpar->compute_padding(full_res, id, level);
+      set_padding( bilateralpar->get_padding(id), id );
+    }
+    break;
+  }
+  default: break;
+  }
+}
+
+
+
+void PF::VolumePar::propagate_settings()
+{
+  GaussBlurPar* gausspar = dynamic_cast<GaussBlurPar*>( gauss->get_par() );
+  if( gausspar ) {
+    gausspar->set_radius( gauss_radius.get() );
+    gausspar->propagate_settings();
+  }
+
+  GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
+  if( bilateralpar ) {
+    bilateralpar->set_iterations( bilateral_iterations.get() );
+    bilateralpar->set_sigma_s( bilateral_sigma_s.get() );
+    bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
+    bilateralpar->propagate_settings();
+  }
+}
+
+
+
 VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
 				     VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
@@ -110,7 +155,6 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
   case PF::VOLUME_GAUSS: {
     GaussBlurPar* gausspar = dynamic_cast<GaussBlurPar*>( gauss->get_par() );
     if( gausspar ) {
-      gausspar->set_radius( gauss_radius.get() );
       gausspar->set_image_hints( in[0] );
       gausspar->set_format( get_format() );
       smoothed = gausspar->build( in, first, imap, omap, level );
@@ -120,9 +164,6 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
   case PF::VOLUME_BILATERAL: {
     GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
     if( bilateralpar ) {
-      bilateralpar->set_iterations( bilateral_iterations.get() );
-      bilateralpar->set_sigma_s( bilateral_sigma_s.get() );
-      bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
       bilateralpar->set_image_hints( in[0] );
       bilateralpar->set_format( get_format() );
       smoothed = bilateralpar->build( in, first, imap, omap, level );

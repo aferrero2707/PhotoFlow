@@ -194,14 +194,16 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 #ifndef NDEBUG
   std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
 #endif
+  PF::Pipeline* p;
   // First pipeline is for full-res rendering, second one is for on-screen preview, third one is
   // for calculating the histogram
-  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW/*PF_RENDER_NORMAL*/ );
-  image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
-  PF::Pipeline* p = image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
-  if( p ) {
-    p->set_auto_zoom( true, 256, 256 );
-  }
+  p = image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW/*PF_RENDER_NORMAL*/ );
+  if( p ) p->set_op_caching_enabled( false );
+  p = image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
+  if( p ) p->set_op_caching_enabled( true );
+  p = image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW );
+  if( p ) p->set_op_caching_enabled( false );
+  if( p ) p->set_auto_zoom( true, 256, 256 );
 
   image_size_updater = new PF::ImageSizeUpdater( image->get_pipeline(0) );
 
