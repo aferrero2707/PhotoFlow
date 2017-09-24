@@ -771,11 +771,12 @@ void PF::LayerManager::reset_op_caching( PF::Pipeline* pipeline, std::list<Layer
 
 void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline )
 {
+  std::cout<<std::endl<<"LayerManager::update_op_caching():"<<std::endl;
+  if(pipeline) std::cout<<"  pipeline->get_op_caching_enabled()="<<pipeline->get_op_caching_enabled()<<std::endl;
   if( !pipeline || !(pipeline->get_op_caching_enabled()) ) return;
 
   reset_op_caching( pipeline );
 
-  std::cout<<std::endl<<"LayerManager::update_op_caching():"<<std::endl;
   update_op_caching( pipeline, layers, NULL );
 }
 
