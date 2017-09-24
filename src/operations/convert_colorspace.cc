@@ -55,30 +55,30 @@ extern "C" {
 
 
 PF::ConvertColorspacePar::ConvertColorspacePar(): 
-      OpParBase(),
-      //out_profile_mode("profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","Built-in sRGB"),
-      out_profile_mode("profile_mode2",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
-      out_profile_type("profile_mode",this,PF::PROF_TYPE_REC2020,"REC2020","Rec.2020"),
-      //out_profile_type("profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","sRGB"),
-      //out_trc_type("trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
-      out_trc_type("trc_type",this,PF::PF_TRC_STANDARD,"TRC_STANDARD",_("standard")),
-      out_profile_name("profile_name", this),
-      intent("rendering_intent",this,INTENT_RELATIVE_COLORIMETRIC,"INTENT_RELATIVE_COLORIMETRIC","relative colorimetric"),
-      bpc("bpc", this, true),
-      adaptation_state("adaptation_state", this, 0.f),
-      assign("assign", this, false),
-      clip_negative("clip_negative",this,true),
-      clip_overflow("clip_overflow",this,true),
-      out_profile_data( NULL ),
-      transform( NULL ),
-      gw_transform_in( NULL ),
-      gw_transform_out( NULL ),
-      softproof( false ),
-      gamut_warning( false ),
-      input_cs_type( cmsSigRgbData ),
-      output_cs_type( cmsSigRgbData )
+          OpParBase(),
+          //out_profile_mode("profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","Built-in sRGB"),
+          out_profile_mode("profile_mode2",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
+          out_profile_type("profile_mode",this,PF::PROF_TYPE_REC2020,"REC2020","Rec.2020"),
+          //out_profile_type("profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","sRGB"),
+          //out_trc_type("trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
+          out_trc_type("trc_type",this,PF::PF_TRC_STANDARD,"TRC_STANDARD",_("standard")),
+          out_profile_name("profile_name", this),
+          intent("rendering_intent",this,INTENT_RELATIVE_COLORIMETRIC,"INTENT_RELATIVE_COLORIMETRIC","relative colorimetric"),
+          bpc("bpc", this, true),
+          adaptation_state("adaptation_state", this, 0.f),
+          assign("assign", this, false),
+          clip_negative("clip_negative",this,true),
+          clip_overflow("clip_overflow",this,true),
+          out_profile_data( NULL ),
+          transform( NULL ),
+          gw_transform_in( NULL ),
+          gw_transform_out( NULL ),
+          softproof( false ),
+          gamut_warning( false ),
+          input_cs_type( cmsSigRgbData ),
+          output_cs_type( cmsSigRgbData )
 {
-  convert2lab = PF::new_convert2lab();
+  //convert2lab = PF::new_convert2lab();
 
   //out_profile_mode.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
   //out_profile_mode.add_enum_value(PF::PROF_MODE_EMBEDDED,"EMBEDDED",_("use input"));
@@ -106,7 +106,8 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   intent.add_enum_value( INTENT_ABSOLUTE_COLORIMETRIC, "INTENT_ABSOLUTE_COLORIMETRIC", "absolute colorimetric" );
   intent.add_enum_value( INTENT_SATURATION, "INTENT_SATURATION", "saturation" );
 
-  gw_transform_in = new_icc_transform();
+  cs_transform     = new_icc_transform();
+  gw_transform_in  = new_icc_transform();
   gw_transform_out = new_icc_transform();
   gw = new PF::Processor<PF::GamutWarningPar,PF::GamutWarningProc>();
 
@@ -199,40 +200,21 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   std::cout<<"ConvertColorspacePar::build(): out_mode_changed="<<out_mode_changed
       <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
   std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
-  if( changed ) {
 
-    /*
-    std::cout<<"ConvertColorspacePar::build(): out_mode_changed="<<out_mode_changed
-             <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
-    std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
-    switch( out_profile_mode.get_enum_value().first ) {
-    case PROF_TYPE_sRGB:
-      out_profile = dt_colorspaces_create_srgb_profile();
-      //std::cout<<"ConvertColorspacePar::build(): created sRGB output profile"<<std::endl;
-      break;
-    case PROF_TYPE_ADOBE:
-      out_profile = dt_colorspaces_create_adobergb_profile();
-      //std::cout<<"ConvertColorspacePar::build(): created AdobeRGB output profile"<<std::endl;
-      break;
-    case PROF_TYPE_PROPHOTO:
-      out_profile = dt_colorspaces_create_prophotorgb_profile();
-      //std::cout<<"ConvertColorspacePar::build(): created ProPhoto output profile"<<std::endl;
-      break;
-    case PROF_TYPE_LAB:
-      out_profile = dt_colorspaces_create_lab_profile();
-      //std::cout<<"ConvertColorspacePar::build(): created Lab output profile"<<std::endl;
-      break;
-    case PROF_TYPE_CUSTOM:
-      //std::cout<<"  custom profile selected: \""<<cam_profile_name.get()<<"\""<<std::endl;
-      if( out_profile_data && out_profile_data_length>0 ) 
-        out_profile = cmsOpenProfileFromMem( out_profile_data, out_profile_data_length );
-      else if( !out_profile_name.get().empty() )
-        out_profile = cmsOpenProfileFromFile( out_profile_name.get().c_str(), "r" );
-      break;
-    default:
-      break;
-    }
-     */
+  bool matching = false;
+  if( iccprof_in && iccprof && iccprof_in->equals_to(iccprof) ) {
+    matching = true;
+  }
+
+  if( matching ) {
+    PF_REF( in[first], "ConvertColorspacePar::build(): input image ref for equal input and output profiles" );
+    std::cout<<"ConvertColorspacePar::build(): matching input and output profiles, no transform needed"<<std::endl;
+    return in[first];
+  }
+
+
+  /*
+  if( changed ) {
 
     if( transform )
       cmsDeleteTransform( transform );  
@@ -285,6 +267,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       break;
     }
   }
+   */
   //std::cout<<"ConvertColorspacePar::build(): transform="<<transform<<std::endl;
 
   //if( !in_profile && out_profile ) {
@@ -292,6 +275,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   // profile without any conversion
   //}
 
+  /*
   if( in_profile && out_profile && !assign.get() && !transform ) {
     //if( in_profile )  cmsCloseProfile( in_profile );
     //if( out_profile ) cmsCloseProfile( out_profile );
@@ -300,9 +284,23 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     out_profile_data_length = 0;
     return NULL;
   }
+  */
 
-  VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
-  /*
+  VipsImage* out = NULL;
+  if( !assign.get() ) {
+    PF::ICCTransformPar* tr_par =
+        dynamic_cast<PF::ICCTransformPar*>( cs_transform->get_par() );
+    std::vector<VipsImage*> in2;
+    in2.push_back( image );
+    tr_par->set_image_hints( image );
+    tr_par->set_format( get_format() );
+    tr_par->set_out_profile( iccprof );
+    tr_par->set_bpc( bpc.get() );
+    tr_par->set_adaptation_state( adaptation_state.get() );
+    out = tr_par->build( in2, 0, NULL, NULL, level );
+    std::cout<<"ConvertColorspacePar::build(): tr_par output: "<<out<<std::endl;
+
+    /*
   if( out_profile ) {
     cmsUInt32Number out_length;
     cmsSaveProfileToMem( out_profile, NULL, &out_length);
@@ -315,79 +313,82 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     std::cout<<"ConvertColorspacePar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
     if( assign.get() ) std::cout<<"    profile assigned"<<std::endl;
   }
-   */
-  if( iccprof ) PF::set_icc_profile( out, iccprof );
+     */
+    if( iccprof ) PF::set_icc_profile( out, iccprof );
 
-  std::cout<<"ConvertColorspacePar::build(): gamut_warning="<<gamut_warning<<"  get_render_mode()="<<get_render_mode()<<std::endl;
-  if( gamut_warning && (get_render_mode() == PF_RENDER_PREVIEW) ) {
-    PF::ICCProfile* aces_prof =
-        PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_ACES, PF::PF_TRC_LINEAR );
-    PF::ICCProfile* Lab_prof =
-        PF::ICCStore::Instance().get_Lab_profile();
-    PF::ICCProfile* gw_prof = aces_prof;
-    if( !cmsIsMatrixShaper(out_profile) ) {
-      gw_prof = Lab_prof;
-    }
-    std::cout<<"ConvertColorspacePar::build(): gw_prof="<<(void*)gw_prof<<std::endl;
-    if( gw_prof && gw_prof->get_profile() ) {
-      PF::ICCTransformPar* tr_in =
-          dynamic_cast<PF::ICCTransformPar*>( gw_transform_in->get_par() );
-      PF::ICCTransformPar* tr_out =
-          dynamic_cast<PF::ICCTransformPar*>( gw_transform_out->get_par() );
-      VipsImage* gw_in = NULL, *gw_out = NULL, *out2 = NULL;
-      if( tr_in && tr_out ) {
-        std::vector<VipsImage*> in2;
-        in2.push_back( image );
-        tr_in->set_image_hints( image );
-        tr_in->set_format( get_format() );
-        tr_in->set_out_profile( gw_prof );
-        tr_in->set_bpc( false );
-        gw_in = tr_in->build( in2, 0, NULL, NULL, level );
+    std::cout<<"ConvertColorspacePar::build(): gamut_warning="<<gamut_warning<<"  get_render_mode()="<<get_render_mode()<<std::endl;
+    if( gamut_warning && (get_render_mode() == PF_RENDER_PREVIEW) ) {
+      PF::ICCProfile* aces_prof =
+          PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_ACES, PF::PF_TRC_LINEAR );
+      PF::ICCProfile* Lab_prof =
+          PF::ICCStore::Instance().get_Lab_profile();
+      PF::ICCProfile* gw_prof = aces_prof;
+      if( !cmsIsMatrixShaper(out_profile) ) {
+        gw_prof = Lab_prof;
+      }
+      std::cout<<"ConvertColorspacePar::build(): gw_prof="<<(void*)gw_prof<<std::endl;
+      if( gw_prof && gw_prof->get_profile() ) {
+        PF::ICCTransformPar* tr_in =
+            dynamic_cast<PF::ICCTransformPar*>( gw_transform_in->get_par() );
+        PF::ICCTransformPar* tr_out =
+            dynamic_cast<PF::ICCTransformPar*>( gw_transform_out->get_par() );
+        VipsImage* gw_in = NULL, *gw_out = NULL, *out2 = NULL;
+        if( tr_in && tr_out ) {
+          std::vector<VipsImage*> in2;
+          in2.push_back( image );
+          tr_in->set_image_hints( image );
+          tr_in->set_format( get_format() );
+          tr_in->set_out_profile( gw_prof );
+          tr_in->set_bpc( false );
+          gw_in = tr_in->build( in2, 0, NULL, NULL, level );
 
-        in2.clear(); in2.push_back( out );
-        tr_out->set_image_hints( out );
-        tr_out->set_format( get_format() );
-        tr_out->set_out_profile( gw_prof );
-        tr_out->set_bpc( bpc.get() );
-        gw_out = tr_out->build( in2, 0, NULL, NULL, level );
-        PF_UNREF( out, "ConvertColorspacePar::build(): out unref after gamut warning transform" );
+          in2.clear(); in2.push_back( out );
+          tr_out->set_image_hints( out );
+          tr_out->set_format( get_format() );
+          tr_out->set_out_profile( gw_prof );
+          tr_out->set_bpc( bpc.get() );
+          gw_out = tr_out->build( in2, 0, NULL, NULL, level );
+          PF_UNREF( out, "ConvertColorspacePar::build(): out unref after gamut warning transform" );
 
-        in2.clear();
-        in2.push_back( gw_in );
-        in2.push_back( gw_out );
-        in2.push_back( out );
-        gw->get_par()->set_image_hints( out );
-        gw->get_par()->set_format( get_format() );
+          in2.clear();
+          in2.push_back( gw_in );
+          in2.push_back( gw_out );
+          in2.push_back( out );
+          gw->get_par()->set_image_hints( out );
+          gw->get_par()->set_format( get_format() );
 
-        {
-          char tstr[1024];
-          cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-          std::cout<<"ConvertColorspacePar::build(): output profile="<<tstr
-              <<"  cmsIsMatrixShaper(out_profile)="<<cmsIsMatrixShaper(out_profile)<<std::endl;
-        }
-
-        PF::GamutWarningPar* gw2 = dynamic_cast<PF::GamutWarningPar*>( gw->get_par() );
-        if( gw2 ) {
-          if( !cmsIsMatrixShaper(out_profile) ) {
-            gw2->set_delta( 4.9999 );
-            gw2->set_dest_is_matrix( false );
-
-          } else {
-            gw2->set_dest_is_matrix( true );
+          {
+            char tstr[1024];
+            cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+            std::cout<<"ConvertColorspacePar::build(): output profile="<<tstr
+                <<"  cmsIsMatrixShaper(out_profile)="<<cmsIsMatrixShaper(out_profile)<<std::endl;
           }
-          std::cout<<"ConvertColorspacePar::build(): gw2->get_dest_is_matrix(): "<<gw2->get_dest_is_matrix()<<std::endl;
+
+          PF::GamutWarningPar* gw2 = dynamic_cast<PF::GamutWarningPar*>( gw->get_par() );
+          if( gw2 ) {
+            if( !cmsIsMatrixShaper(out_profile) ) {
+              gw2->set_delta( 4.9999 );
+              gw2->set_dest_is_matrix( false );
+
+            } else {
+              gw2->set_dest_is_matrix( true );
+            }
+            std::cout<<"ConvertColorspacePar::build(): gw2->get_dest_is_matrix(): "<<gw2->get_dest_is_matrix()<<std::endl;
+          }
+
+          out2 = gw->get_par()->build( in2, 0, NULL, NULL, level );
+          PF_UNREF( gw_in, "ConvertColorspacePar::build(): gw_in unref after gamut warning process" );
+          PF_UNREF( gw_out, "ConvertColorspacePar::build(): gw_out unref after gamut warning process" );
+          //PF_UNREF( out, "ConvertColorspacePar::build(): out unref after gamut warning process" );
+
+          out = out2;
         }
-
-        out2 = gw->get_par()->build( in2, 0, NULL, NULL, level );
-        PF_UNREF( gw_in, "ConvertColorspacePar::build(): gw_in unref after gamut warning process" );
-        PF_UNREF( gw_out, "ConvertColorspacePar::build(): gw_out unref after gamut warning process" );
-        //PF_UNREF( out, "ConvertColorspacePar::build(): out unref after gamut warning process" );
-
-        out = out2;
-        if( iccprof ) PF::set_icc_profile( out, iccprof );
       }
     }
+  } else {
+
   }
+  if( iccprof ) PF::set_icc_profile( out, iccprof );
 
 
   //if( in_profile )  cmsCloseProfile( in_profile );

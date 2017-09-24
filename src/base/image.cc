@@ -38,10 +38,13 @@
 #include "image.hh"
 #include "imageprocessor.hh"
 #include "pf_file_loader.hh"
-#include "../operations/convert2srgb.hh"
+//#include "../operations/convert2srgb.hh"
 #include "../operations/convertformat.hh"
 #include "../operations/icc_transform.hh"
 //#include "../operations/gmic/gmic_untiled_op.hh"
+
+#define BENCHMARK
+#include "../rt/rtengine/StopWatch.h"
 
 
 
@@ -118,7 +121,7 @@ PF::Image::Image():
 
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update_all) );
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::modified) );
-  convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
+  //convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   convert2outprof = new_icc_transform();
 
@@ -387,14 +390,14 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
       }
     }
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<std::endl;
-#endif
+//#endif
     //get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, area );
     get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): pipeline #"<<i<<" updated."<<std::endl;
-#endif
+//#endif
     //pipeline->update();
   }
 
@@ -690,9 +693,9 @@ void PF::Image::do_destroy()
     }
   }
 #ifndef NDEBUG
-  std::cout<<"Image::do_destroy(): deleting convert2srgb"<<std::endl;
+  //std::cout<<"Image::do_destroy(): deleting convert2srgb"<<std::endl;
 #endif
-  delete convert2srgb;
+  //delete convert2srgb;
 #ifndef NDEBUG
   std::cout<<"Image::do_destroy(): convert2srgb deleted"<<std::endl;
   std::cout<<"Image::do_destroy(): deleting convert_format"<<std::endl;
@@ -1007,6 +1010,8 @@ void PF::Image::export_merged( std::string filename )
 
 void PF::Image::do_export_merged( std::string filename )
 {
+  BENCHFUN
+
   std::string ext;
   if( getFileExtension( "/", filename, ext ) &&
       ext != "pfi" ) {
@@ -1014,6 +1019,7 @@ void PF::Image::do_export_merged( std::string filename )
     //Glib::Threads::Mutex::Lock lock( rebuild_mutex );
     unsigned int level = 0;
     PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+    if( pipeline ) pipeline->set_op_caching_enabled( true );
     //PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_USHORT, 0, PF_RENDER_NORMAL );
     do_update();
     /*
@@ -1032,6 +1038,7 @@ void PF::Image::do_export_merged( std::string filename )
     VipsImage* image = pipeline->get_output();
     VipsImage* outimg = NULL;
 
+    /*
     int tw = 128;
     int th = tw;
     int nt = (image->Xsize/tw + 1);
@@ -1047,7 +1054,8 @@ void PF::Image::do_export_merged( std::string filename )
       std::cout<<"Image::do_export_merged(): vips_tilecache() failed."<<std::endl;
       PF_REF( image, "Image::do_export_merged(): image ref" );
     }
-
+    */
+    PF_REF( image, "Image::do_export_merged(): image ref" );
 
     bool saved = false;
 
@@ -1086,7 +1094,10 @@ void PF::Image::do_export_merged( std::string filename )
 #ifndef NDEBUG
         std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
 #endif
-        vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
+
+        vips_tiffsave( outimg, filename.c_str(), "compression",
+            //VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
+            VIPS_FOREIGN_TIFF_COMPRESSION_NONE,
             //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
             "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
 #ifndef NDEBUG
@@ -1231,6 +1242,7 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
 
   unsigned int level = 0;
   PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+  if( pipeline ) pipeline->set_op_caching_enabled( true );
   update( pipeline, true );
 #ifndef NDEBUG
   std::cout<<"Image::export_merged_to_mem(): image updated."<<std::endl;
@@ -1345,6 +1357,7 @@ void PF::Image::export_merged_to_tiff( const std::string filename )
 
   unsigned int level = 0;
   PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
+  if( pipeline ) pipeline->set_op_caching_enabled( true );
   update( pipeline, true );
 #ifndef NDEBUG
   std::cout<<"Image::export_merged_to_tiff(): image updated."<<std::endl;

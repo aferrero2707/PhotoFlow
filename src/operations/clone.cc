@@ -33,7 +33,7 @@
 #include "../base/new_operation.hh"
 #include "../operations/convertformat.hh"
 #include "../operations/convert_colorspace.hh"
-#include "../operations/convert2srgb.hh"
+//#include "../operations/convert2srgb.hh"
 #include "../operations/desaturate.hh"
 #include "../operations/maxrgb.hh"
 #include "../operations/trcconv.hh"
@@ -57,12 +57,19 @@ PF::ClonePar::ClonePar():
 
   source_channel.set_enum_value(PF::CLONE_CHANNEL_SOURCE);
 
-  convert2lab = PF::new_operation( "convert2lab", NULL );
+  //convert2lab = PF::new_operation( "convert2lab", NULL );
   convert_cs = PF::new_convert_colorspace();
   convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
   desaturate = PF::new_desaturate();
   maxrgb = PF::new_maxrgb();
   trcconv = PF::new_trcconv();
+
+  convert2lab = PF::new_convert_colorspace();
+  PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+  if(csconvpar) {
+    csconvpar->set_out_profile_mode( PF::PROF_MODE_DEFAULT );
+    csconvpar->set_out_profile_type( PF::PROF_TYPE_LAB );
+  }
 
   set_type( "clone" );
 
@@ -82,6 +89,7 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   if( csin != PF::PF_COLORSPACE_LAB ) {
     convert2lab->get_par()->set_image_hints( srcimg );
     convert2lab->get_par()->set_format( get_format() );
+    convert2lab->get_par()->lab_image( get_xsize(), get_ysize() );
     std::vector<VipsImage*> in2; in2.push_back( srcimg );
     VipsImage* tempimg = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
     if( !tempimg ) 
@@ -161,6 +169,7 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
     {
       convert2lab->get_par()->set_image_hints( srcimg );
       convert2lab->get_par()->set_format( get_format() );
+      convert2lab->get_par()->lab_image( get_xsize(), get_ysize() );
       std::vector<VipsImage*> in2; in2.push_back( srcimg );
       VipsImage* luma = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
 
@@ -357,6 +366,7 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
   if( csin != PF::PF_COLORSPACE_LAB ) {
     convert2lab->get_par()->set_image_hints( srcimg );
     convert2lab->get_par()->set_format( get_format() );
+    convert2lab->get_par()->lab_image( get_xsize(), get_ysize() );
     std::vector<VipsImage*> in2; in2.push_back( srcimg );
     VipsImage* tempimg = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
     if( !tempimg ) 
@@ -439,6 +449,7 @@ VipsImage* PF::ClonePar::L2rgb(VipsImage* srcimg, unsigned int& level)
 
   convert2lab->get_par()->set_image_hints( srcimg );
   convert2lab->get_par()->set_format( get_format() );
+  convert2lab->get_par()->lab_image( get_xsize(), get_ysize() );
   in.clear(); in.push_back( srcimg );
   VipsImage* labimg = convert2lab->get_par()->build( in, 0, NULL, NULL, level );
   if( !labimg ) 

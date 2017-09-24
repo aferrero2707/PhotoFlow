@@ -30,6 +30,7 @@
 #include "../base/processor.hh"
 #include "../base/new_operation.hh"
 #include "icc_transform.hh"
+#include "convert_colorspace.hh"
 #include "desaturate.hh"
 
 PF::DesaturatePar::DesaturatePar(): 
@@ -44,8 +45,14 @@ PF::DesaturatePar::DesaturatePar():
   proc_lightness = PF::new_desaturate_lightness();
   proc_average = PF::new_desaturate_average();
   proc_average2 = PF::new_desaturate_average();
-  convert2lab = PF::new_operation( "convert2lab", NULL );
+  //convert2lab = PF::new_operation( "convert2lab", NULL );
   convert_cs = PF::new_icc_transform();
+  convert2lab = PF::new_convert_colorspace();
+  PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+  if(csconvpar) {
+    csconvpar->set_out_profile_mode( PF::PROF_MODE_DEFAULT );
+    csconvpar->set_out_profile_type( PF::PROF_TYPE_LAB );
+  }
   set_type( "desaturate" );
 
   set_default_name( _("desaturate") );
@@ -95,8 +102,10 @@ VipsImage* PF::DesaturatePar::build(std::vector<VipsImage*>& in, int first,
   
       std::vector<VipsImage*> in2; 
 
+      std::cout<<"DesaturatePar::build(): DESAT_LAB"<<std::endl;
       convert2lab->get_par()->set_image_hints( srcimg );
       convert2lab->get_par()->set_format( get_format() );
+      convert2lab->get_par()->lab_image( get_xsize(), get_ysize() );
       in2.clear(); in2.push_back( srcimg );
       VipsImage* labimg = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
       if( !labimg ) {
