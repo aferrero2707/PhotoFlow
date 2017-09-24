@@ -73,7 +73,6 @@ namespace PF
 
     bool has_intensity() { return false; }
     bool needs_caching() {
-      return false;
       if( method.get_enum_value().first==VOLUME_BILATERAL ||
           gauss_radius.get() > 50 ) return true;
       return false;
