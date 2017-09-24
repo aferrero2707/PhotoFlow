@@ -74,7 +74,7 @@
 
 
 
-rtengine::RawImageSource::RawImageSource(): FC_roffset(0), FC_coffset(0), image_data(NULL)
+rtengine::RawImageSource::RawImageSource(): FC_roffset(0), FC_coffset(0), image_data(NULL), plistener(NULL)
 {
 }
 

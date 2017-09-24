@@ -278,11 +278,29 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
       //PF::ProcessorBase* demo = fast_demosaic;
     }
     if( !demo ) return NULL;
-    in2.clear(); in2.push_back( out_ca );
-    demo->get_par()->set_image_hints( out_ca );
+
+    bool enable_demo_input_caching = false;
+    VipsImage* cached = out_ca;
+    if( enable_demo_input_caching ) {
+      int tw = 64;
+      int th = tw;
+      int nt = (out_ca->Xsize/tw + 1) * 3;
+      VipsAccess acc = VIPS_ACCESS_RANDOM;
+      int threaded = 1, persistent = 0;
+      if( vips_tilecache(out_ca, &cached,
+          "tile_width", tw, "tile_height", th, "max_tiles", nt,
+          "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+        std::cout<<"RawDeveloperPar::build(): vips_tilecache() failed."<<std::endl;
+        return NULL;
+      }
+      PF_UNREF( out_ca, "RawDeveloperPar::build(): out_ca unref" );
+    }
+
+    in2.clear(); in2.push_back( cached );
+    demo->get_par()->set_image_hints( cached );
     demo->get_par()->set_format( VIPS_FORMAT_FLOAT );
     out_demo = demo->get_par()->build( in2, 0, NULL, NULL, level );
-    g_object_unref( out_ca );
+    g_object_unref( cached );
 
     for(int ifcs = 0; ifcs < VIPS_MIN(fcs_steps.get(),4); ifcs++) {
       VipsImage* temp = out_demo;

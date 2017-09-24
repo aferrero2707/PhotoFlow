@@ -1,3 +1,12 @@
+////////////////////////////////////////////////////////////////
+//
+//  this code was taken from http://shibatch.sourceforge.net/
+//  Many thanks to the author of original version: Naoki Shibata
+//
+//  This version contains modifications made by Ingo Weyrich
+//
+////////////////////////////////////////////////////////////////
+
 #ifndef _SLEEFC_
 #define _SLEEFC_
 
@@ -58,7 +67,9 @@ __inline double ldexpk(double x, int q) {
   m = (((m + q) >> 9) - m) << 7;
   q = q - (m << 2);
   u = longBitsToDouble(((int64_t)(m + 0x3ff)) << 52);
-  x = x * u * u * u * u;
+  double u2 = u*u;
+  u2 = u2 * u2;
+  x = x * u2;
   u = longBitsToDouble(((int64_t)(q + 0x3ff)) << 52);
   return x * u;
 }
@@ -885,6 +896,7 @@ __inline double xlog1p(double a) {
 
 #define R_LN2f 1.442695040888963407359924681001892137426645954152985934135449406931f
 #define M_PIf ((float)M_PI)
+#define M_PIf_2 ((float)M_PI_2)
 
 #define INFINITYf ((float)INFINITY)
 #define NANf ((float)NAN)
@@ -939,7 +951,8 @@ __inline float ldexpkf(float x, int q) {
   m = (((m + q) >> 6) - m) << 4;
   q = q - (m << 2);
   u = intBitsToFloat(((int32_t)(m + 0x7f)) << 23);
-  x = x * u * u * u * u;
+  u = u * u;
+  x = x * u * u;
   u = intBitsToFloat(((int32_t)(q + 0x7f)) << 23);
   return x * u;
 }
@@ -1124,10 +1137,10 @@ __inline float xatanf(float s) {
 
 __inline float atan2kf(float y, float x) {
   float s, t, u;
-  int q = 0;
+  float q = 0.f;
 
-  if (x < 0) { x = -x; q = -2; }
-  if (y > x) { t = x; x = y; y = -t; q += 1; }
+  if (x < 0) { x = -x; q = -2.f; }
+  if (y > x) { t = x; x = y; y = -t; q += 1.f; }
 
   s = y / x;
   t = s * s;
@@ -1141,18 +1154,17 @@ __inline float atan2kf(float y, float x) {
   u = mlaf(u, t, 0.199926957488059997558594f);
   u = mlaf(u, t, -0.333331018686294555664062f);
 
-  t = u * t * s + s;
-  t = q * (float)(M_PI/2) + t;
-
-  return t;
+  t = u * t;
+  t = mlaf(t,s,s);
+  return mlaf(q,(float)(M_PIf_2),t);
 }
 
 __inline float xatan2f(float y, float x) {
   float r = atan2kf(xfabsf(y), x);
 
   r = mulsignf(r, x);
-  if (xisinff(x) || x == 0) r = M_PIf/2 - (xisinff(x) ? (signf(x) * (float)(M_PI  /2)) : 0);
-  if (xisinff(y)          ) r = M_PIf/2 - (xisinff(x) ? (signf(x) * (float)(M_PI*1/4)) : 0);
+  if (xisinff(x) || x == 0) r = M_PIf/2 - (xisinff(x) ? (signf(x) * (float)(M_PIf*.5f)) : 0);
+  if (xisinff(y)          ) r = M_PIf/2 - (xisinff(x) ? (signf(x) * (float)(M_PIf*.25f)) : 0);
   if (              y == 0) r = (signf(x) == -1 ? M_PIf : 0);
 
   return xisnanf(x) || xisnanf(y) ? NANf : mulsignf(r, y);
@@ -1206,32 +1218,46 @@ __inline float xexpf(float d) {
   u = mlaf(u, s, 0.166665524244308471679688f);
   u = mlaf(u, s, 0.499999850988388061523438f);
 
-  u = s * s * u + s + 1.0f;
-  u = ldexpkf(u, q);
+  u = mlaf( s, mlaf(s,u,1.f),1.f);
+  return ldexpkf(u, q);
 
-//  if (xisminff(d)) u = 0;
-  return u;
 }
+
 __inline float xmul2f(float d) {
-	if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
-		*(int*)&d += 1 << 23; // add 1 to the exponent
-		}
-	return d;
+	union {
+		float floatval;
+		int intval;
+	} uflint;
+	uflint.floatval = d;
+	if (uflint.intval & 0x7FFFFFFF) { // if f==0 do nothing
+		uflint.intval += 1 << 23; // add 1 to the exponent
+	}
+	return uflint.floatval;
 }
 
 __inline float xdiv2f(float d) {
-	if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
-		*(int*)&d -= 1 << 23; // sub 1 from the exponent
+	union {
+		float floatval;
+		int intval;
+	} uflint;
+	uflint.floatval = d;
+	if (uflint.intval & 0x7FFFFFFF) { // if f==0 do nothing
+		uflint.intval -= 1 << 23; // sub 1 from the exponent
 		}
-	return d;
+	return uflint.floatval;
 }
 
 __inline float xdivf( float d, int n){
-	if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
-		*(int*)&d -= n << 23; // add n to the exponent
+	union {
+		float floatval;
+		int intval;
+	} uflint;
+	uflint.floatval = d;
+	if (uflint.intval & 0x7FFFFFFF) { // if f==0 do nothing
+		uflint.intval -= n << 23; // add n to the exponent
 		}
-	return d;
-}	
+	return uflint.floatval;
+}
 
 
 

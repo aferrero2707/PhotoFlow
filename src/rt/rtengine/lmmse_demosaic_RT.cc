@@ -550,9 +550,9 @@ void RawImageSource::lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
                 float Y = v0 + xdiv2f(rix[0][0]);
 
                 if (rix[4][0] > 1.75f * Y) {
-                    rix[0][0] = ULIM(rix[0][0], rix[4][ -1], rix[4][ 1]);
+                    rix[0][0] = rtengine::ULIM(rix[0][0], rix[4][ -1], rix[4][ 1]);
                 } else {
-                    rix[0][0] = LIM(rix[0][0], 0.0f, 1.0f);
+                    rix[0][0] = rtengine::LIM(rix[0][0], 0.0f, 1.0f);
                 }
 
                 rix[0][0] -= rix[4][0];
