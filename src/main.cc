@@ -72,7 +72,7 @@
 
 #include "base/new_operation.hh"
 #include "base/pf_file_loader.hh"
-#include "rt/rtengine/rawimagesource.hh"
+#include "rt/rtengine/color.h"
 
 extern int vips__leak;
 
@@ -164,7 +164,7 @@ int main (int argc, char *argv[])
   vips_cache_set_trace( true );
 #endif
 
-  rtengine::Color::Init();
+  rtengine::Color::init();
 
   //vips__leak = 1;
 

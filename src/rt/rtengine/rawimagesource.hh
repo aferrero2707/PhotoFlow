@@ -42,17 +42,6 @@
 
 namespace rtengine {
 
-
-class Color
-{
-public:
-  static LUTf igammatab_24_17;
-  static LUTf gammatab_24_17a;
-
-  static void Init();
-};
-
-
 	class RawImageSource
 	{
 		PF::RawMatrix rawData;

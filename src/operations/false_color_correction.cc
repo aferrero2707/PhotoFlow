@@ -154,7 +154,8 @@ void PF::false_color_correction(VipsRegion* ir, VipsRegion* oreg)
 	vips_rect_intersectrect( &img_rect, &in_rect, &in_rect );
 	vips_rect_intersectrect( &(ir->valid), &in_rect, &in_rect );
 
-	int W = in_rect.width;
+	const int W = in_rect.width;
+  constexpr float onebynine = 1.f / 9.f;
 
 	int row_from = mf_rect.top;
 	int row_to = VIPS_RECT_BOTTOM(&mf_rect);
@@ -168,17 +169,11 @@ void PF::false_color_correction(VipsRegion* ir, VipsRegion* oreg)
   float* row_I = new float[W];
   float* row_Q = new float[W];
 
-  float* pre1_I = new float[3];
-  float* pre2_I = new float[3];
-  float* post1_I = new float[3];
-  float* post2_I = new float[3];
-  float middle_I[6];
-  float* pre1_Q = new float[3];
-  float* pre2_Q = new float[3];
-  float* post1_Q = new float[3];
-  float* post2_Q = new float[3];
-  float middle_Q[6];
-  float* tmp;
+  float buffer[12];
+  float* pre1 = &buffer[0];
+  float* pre2 = &buffer[3];
+  float* post1 = &buffer[6];
+  float* post2 = &buffer[9];
 
   int px=(row_from-1)%3, cx=row_from%3, nx=0;
 
@@ -189,69 +184,67 @@ void PF::false_color_correction(VipsRegion* ir, VipsRegion* oreg)
 	p = (float*)VIPS_REGION_ADDR( ir, in_rect.left, row_from );  
 	convert_row_to_YIQ( p, rbconv_Y[cx], rbconv_I[cx], rbconv_Q[cx], W );
 
-	for (int j=0; j<W; j++) {
-		rbout_I[px][j] = rbconv_I[px][j];
-		rbout_Q[px][j] = rbconv_Q[px][j];
-	}
+  for (int j = 0; j < W; j++) {
+      rbout_I[px][j] = rbconv_I[px][j];
+      rbout_Q[px][j] = rbconv_Q[px][j];
+  }
 
-	for (int i=row_from; i<row_to; i++) {
-		
-		px = (i-1)%3;
-		cx = i%3;
-		nx = (i+1)%3;
+  for (int i = row_from; i < row_to; i++) {
+
+      px = (i - 1) % 3;
+      cx = i % 3;
+      nx = (i + 1) % 3;
 		
 		p = (float*)VIPS_REGION_ADDR( ir, in_rect.left, i+1 );  
 		convert_row_to_YIQ( p, rbconv_Y[nx], rbconv_I[nx], rbconv_Q[nx], W );
 
-		SORT3(rbconv_I[px][0],rbconv_I[cx][0],rbconv_I[nx][0],pre1_I[0],pre1_I[1],pre1_I[2]);
-		SORT3(rbconv_I[px][1],rbconv_I[cx][1],rbconv_I[nx][1],pre2_I[0],pre2_I[1],pre2_I[2]);
-		SORT3(rbconv_Q[px][0],rbconv_Q[cx][0],rbconv_Q[nx][0],pre1_Q[0],pre1_Q[1],pre1_Q[2]);
-		SORT3(rbconv_Q[px][1],rbconv_Q[cx][1],rbconv_Q[nx][1],pre2_Q[0],pre2_Q[1],pre2_Q[2]);
+    pre1[0] = rbconv_I[px][0], pre1[1] = rbconv_I[cx][0], pre1[2] = rbconv_I[nx][0];
+     pre2[0] = rbconv_I[px][1], pre2[1] = rbconv_I[cx][1], pre2[2] = rbconv_I[nx][1];
 
-		// median I channel
-		for (int j=1; j<W-2; j+=2) {
-			SORT3(rbconv_I[px][j+1],rbconv_I[cx][j+1],rbconv_I[nx][j+1],post1_I[0],post1_I[1],post1_I[2]);
-			SORT3(rbconv_I[px][j+2],rbconv_I[cx][j+2],rbconv_I[nx][j+2],post2_I[0],post2_I[1],post2_I[2]);
-			MERGESORT(pre2_I[0],pre2_I[1],pre2_I[2],post1_I[0],post1_I[1],post1_I[2],middle_I[0],middle_I[1],middle_I[2],middle_I[3],middle_I[4],middle_I[5]);
-			MEDIAN7(pre1_I[0],pre1_I[1],pre1_I[2],middle_I[1],middle_I[2],middle_I[3],middle_I[4],rbout_I[cx][j]);
-			MEDIAN7(post2_I[0],post2_I[1],post2_I[2],middle_I[1],middle_I[2],middle_I[3],middle_I[4],rbout_I[cx][j+1]);
-			tmp = pre1_I;
-			pre1_I = post1_I;
-			post1_I = tmp;
-			tmp = pre2_I;
-			pre2_I = post2_I;
-			post2_I = tmp;	
-		}
-		// median Q channel
-		for (int j=1; j<W-2; j+=2) {
-			SORT3(rbconv_Q[px][j+1],rbconv_Q[cx][j+1],rbconv_Q[nx][j+1],post1_Q[0],post1_Q[1],post1_Q[2]);
-			SORT3(rbconv_Q[px][j+2],rbconv_Q[cx][j+2],rbconv_Q[nx][j+2],post2_Q[0],post2_Q[1],post2_Q[2]);
-			MERGESORT(pre2_Q[0],pre2_Q[1],pre2_Q[2],post1_Q[0],post1_Q[1],post1_Q[2],middle_Q[0],middle_Q[1],middle_Q[2],middle_Q[3],middle_Q[4],middle_Q[5]);
-			MEDIAN7(pre1_Q[0],pre1_Q[1],pre1_Q[2],middle_Q[1],middle_Q[2],middle_Q[3],middle_Q[4],rbout_Q[cx][j]);
-			MEDIAN7(post2_Q[0],post2_Q[1],post2_Q[2],middle_Q[1],middle_Q[2],middle_Q[3],middle_Q[4],rbout_Q[cx][j+1]);
-			tmp = pre1_Q;
-			pre1_Q = post1_Q;
-			post1_Q = tmp;
-			tmp = pre2_Q;
-			pre2_Q = post2_Q;
-			post2_Q = tmp;
-		}
+     // fill first element in rbout_I
+     rbout_I[cx][0] = rbconv_I[cx][0];
 
-		// fill first and last element in rbout
-		/*
-		rbout_I[cx][0] = rbconv_I[cx][0];
-		rbout_I[cx][W-1] = rbconv_I[cx][W-1];
-		rbout_I[cx][W-2] = rbconv_I[cx][W-2];
-		rbout_Q[cx][0] = rbconv_Q[cx][0];
-		rbout_Q[cx][W-1] = rbconv_Q[cx][W-1];
-		rbout_Q[cx][W-2] = rbconv_Q[cx][W-2];
-		*/
+     // median I channel
+     for (int j = 1; j < W - 2; j += 2) {
+         post1[0] = rbconv_I[px][j + 1], post1[1] = rbconv_I[cx][j + 1], post1[2] = rbconv_I[nx][j + 1];
+         const auto middle = middle4of6(pre2[0], pre2[1], pre2[2], post1[0], post1[1], post1[2]);
+         rbout_I[cx][j] = median(pre1[0], pre1[1], pre1[2], middle[0], middle[1], middle[2], middle[3]);
+         post2[0] = rbconv_I[px][j + 2], post2[1] = rbconv_I[cx][j + 2], post2[2] = rbconv_I[nx][j + 2];
+         rbout_I[cx][j + 1] = median(post2[0], post2[1], post2[2], middle[0], middle[1], middle[2], middle[3]);
+         std::swap(pre1, post1);
+         std::swap(pre2, post2);
+     }
+
+     // fill last elements in rbout_I
+     rbout_I[cx][W - 1] = rbconv_I[cx][W - 1];
+     rbout_I[cx][W - 2] = rbconv_I[cx][W - 2];
+
+     pre1[0] = rbconv_Q[px][0], pre1[1] = rbconv_Q[cx][0], pre1[2] = rbconv_Q[nx][0];
+     pre2[0] = rbconv_Q[px][1], pre2[1] = rbconv_Q[cx][1], pre2[2] = rbconv_Q[nx][1];
+
+     // fill first element in rbout_Q
+     rbout_Q[cx][0] = rbconv_Q[cx][0];
+
+     // median Q channel
+     for (int j = 1; j < W - 2; j += 2) {
+         post1[0] = rbconv_Q[px][j + 1], post1[1] = rbconv_Q[cx][j + 1], post1[2] = rbconv_Q[nx][j + 1];
+         const auto middle = middle4of6(pre2[0], pre2[1], pre2[2], post1[0], post1[1], post1[2]);
+         rbout_Q[cx][j] = median(pre1[0], pre1[1], pre1[2], middle[0], middle[1], middle[2], middle[3]);
+         post2[0] = rbconv_Q[px][j + 2], post2[1] = rbconv_Q[cx][j + 2], post2[2] = rbconv_Q[nx][j + 2];
+         rbout_Q[cx][j + 1] = median(post2[0], post2[1], post2[2], middle[0], middle[1], middle[2], middle[3]);
+         std::swap(pre1, post1);
+         std::swap(pre2, post2);
+     }
+
+     // fill last elements in rbout_Q
+     rbout_Q[cx][W - 1] = rbconv_Q[cx][W - 1];
+     rbout_Q[cx][W - 2] = rbconv_Q[cx][W - 2];
 		
 		// blur i-1th row
 		if (i>(row_from+1)) {
 			for (int j=2; j<W-2; j++) {
-				row_I[j] = (rbout_I[px][j-1]+rbout_I[px][j]+rbout_I[px][j+1]+rbout_I[cx][j-1]+rbout_I[cx][j]+rbout_I[cx][j+1]+rbout_I[nx][j-1]+rbout_I[nx][j]+rbout_I[nx][j+1])/9;
-				row_Q[j] = (rbout_Q[px][j-1]+rbout_Q[px][j]+rbout_Q[px][j+1]+rbout_Q[cx][j-1]+rbout_Q[cx][j]+rbout_Q[cx][j+1]+rbout_Q[nx][j-1]+rbout_Q[nx][j]+rbout_Q[nx][j+1])/9;
+				row_I[j] = (rbout_I[px][j - 1] + rbout_I[px][j] + rbout_I[px][j + 1] + rbout_I[cx][j - 1] + rbout_I[cx][j] + rbout_I[cx][j + 1] + rbout_I[nx][j - 1] + rbout_I[nx][j] + rbout_I[nx][j + 1]) * onebynine;
+				row_Q[j] = (rbout_Q[px][j - 1] + rbout_Q[px][j] + rbout_Q[px][j + 1] + rbout_Q[cx][j - 1] + rbout_Q[cx][j] + rbout_Q[cx][j + 1] + rbout_Q[nx][j - 1] + rbout_Q[nx][j] + rbout_Q[nx][j + 1]) * onebynine;
 			}
 			row_I[0] = rbout_I[px][0];
 			row_Q[0] = rbout_Q[px][0];
@@ -274,17 +267,6 @@ void PF::false_color_correction(VipsRegion* ir, VipsRegion* oreg)
 	row_Q[W-1] = rbout_Q[cx][W-1];
 	convert_row_to_RGB (im->r(row_to-1), im->g(row_to-1), im->b(row_to-1), rbconv_Y[cx], row_I, row_Q, W);
 	*/
-
-  delete [] row_I;
-  delete [] row_Q;
-  delete [] pre1_I;
-  delete [] pre2_I;
-  delete [] post1_I;
-  delete [] post2_I;
-  delete [] pre1_Q;
-  delete [] pre2_Q;
-  delete [] post1_Q;
-  delete [] post2_Q;
 }
 
 PF::ProcessorBase* PF::new_false_color_correction()

@@ -31,49 +31,6 @@
 
 #define RT_EMU
 
-    /**
-    * @brief Get the gamma value for Gamma=2.4 Slope=17
-    * @param x red, green or blue channel's value [0 ; 1]
-    * @return the gamma modified's value [0 ; 1]
-    */
-    static inline double gamma24_17     (double x)
-    {
-        return x <= 0.001867 ? x * 17.0 : 1.044445 * exp(log(x) / 2.4) - 0.044445;
-    }
-
-
-    /**
-    * @brief Get the inverse gamma value for Gamma=2.4 Slope=17
-    * @param x red, green or blue channel's value [0 ; 1]
-    * @return the inverse gamma modified's value [0 ; 1]
-    */
-    static inline double igamma24_17    (double x)
-    {
-        return x <= 0.031746 ? x / 17.0 : exp(log((x + 0.044445) / 1.044445) * 2.4);
-    }
-
-
-    LUTf rtengine::Color::igammatab_24_17;
-    LUTf rtengine::Color::gammatab_24_17a;
-
-    void rtengine::Color::Init()
-    {
-      igammatab_24_17(65536, 0);
-      gammatab_24_17a(65536, LUT_CLIP_ABOVE | LUT_CLIP_BELOW);
-      for (int i = 0; i < 65536; i++) {
-        float j = (float)i / 65535.0f;
-        gammatab_24_17a[i] = gamma24_17(j);
-      }
-
-      for (int i = 0; i < 65536; i++) {
-        igammatab_24_17[i] = (65535.0 * igamma24_17 (i / 65535.0));
-      }
-    }
-
-
-
-
-
 rtengine::RawImageSource::RawImageSource(): FC_roffset(0), FC_coffset(0), image_data(NULL), plistener(NULL)
 {
 }
