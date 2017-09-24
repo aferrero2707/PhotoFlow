@@ -496,7 +496,7 @@ void RawImageSource::lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
     LUTf *gamtab;
 
     if(applyGamma) {
-        gamtab = &(/*Color::*/gammatab_24_17a);
+        gamtab = &(Color::gammatab_24_17a);
     } else {
         gamtab = new LUTf(65536, LUT_CLIP_ABOVE | LUT_CLIP_BELOW);
 
@@ -561,9 +561,9 @@ void RawImageSource::lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
                 float Y = v0 + xdiv2f(rix[0][0]);
 
                 if (rix[4][0] > 1.75f * Y) {
-                    rix[0][0] = ULIM(rix[0][0], rix[4][ -1], rix[4][ 1]);
+                    rix[0][0] = rtengine::ULIM(rix[0][0], rix[4][ -1], rix[4][ 1]);
                 } else {
-                    rix[0][0] = LIM(rix[0][0], 0.0f, 1.0f);
+                    rix[0][0] = rtengine::LIM(rix[0][0], 0.0f, 1.0f);
                 }
 
                 rix[0][0] -= rix[4][0];
@@ -1027,7 +1027,7 @@ void RawImageSource::lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
     }
 */
     if(applyGamma) {
-        gamtab = &(/*Color::*/igammatab_24_17);
+        gamtab = &(Color::igammatab_24_17);
     } else {
         for(int i = 0; i < 65536; i++) {
             (*gamtab)[i] = (float)i + 0.5f;

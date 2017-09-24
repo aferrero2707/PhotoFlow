@@ -72,6 +72,7 @@
 
 #include "base/new_operation.hh"
 #include "base/pf_file_loader.hh"
+#include "rt/rtengine/rawimagesource.hh"
 
 extern int vips__leak;
 
@@ -157,14 +158,19 @@ int main (int argc, char *argv[])
   vips_lensfun_get_type();
   vips_perspective_get_type();
 
+  //vips_profile_set(true);
   //im_concurrency_set( 1 );
 #ifndef NDEBUG
   vips_cache_set_trace( true );
 #endif
 
+  rtengine::Color::Init();
+
   //vips__leak = 1;
 
   bool is_plugin = false;
+
+  PF::ICCStore::Instance();
 
 
   std::cout<<"PhotoFlow::main(): argc="<<argc<<std::endl;
@@ -200,7 +206,6 @@ int main (int argc, char *argv[])
   //PF::PhotoFlow::Instance().set_base_dir( fullpath );
   free( fullpath );
 
-  PF::ICCStore::Instance();
   Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
   Glib::ustring configPath = PF::PhotoFlow::Instance().get_config_dir();
 #if defined(WIN32)

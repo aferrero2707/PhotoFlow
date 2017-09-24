@@ -1,3 +1,13 @@
+////////////////////////////////////////////////////////////////
+//
+//  this code was taken from http://shibatch.sourceforge.net/
+//  Many thanks to the author of original version: Naoki Shibata
+//
+//  This version contains modifications made by Ingo Weyrich
+//
+////////////////////////////////////////////////////////////////
+
+
 #ifndef SLEEFSSEAVX
 #define SLEEFSSEAVX
 
@@ -902,12 +912,50 @@ typedef struct {
   vfloat x, y;
 } vfloat2;
 
-static INLINE vfloat vmlaf(vfloat x, vfloat y, vfloat z) { return vaddf(vmulf(x, y), z); }
 static INLINE vfloat vabsf(vfloat f) { return (vfloat)vandnotm((vmask)vcast_vf_f(-0.0f), (vmask)f); }
 static INLINE vfloat vnegf(vfloat f) { return (vfloat)vxorm((vmask)f, (vmask)vcast_vf_f(-0.0f)); }
 
-static INLINE vfloat vself(vmask mask, vfloat x, vfloat y) {
-  return (vfloat)vorm(vandm(mask, (vmask)x), vandnotm(mask, (vmask)y));
+#if defined( __SSE4_1__ ) && defined( __x86_64__ )
+	// only one instruction when using SSE4.1
+	static INLINE vfloat vself(vmask mask, vfloat x, vfloat y) {
+		return _mm_blendv_ps(y,x,(vfloat)mask);
+	}
+
+	static INLINE vint vselc(vmask mask, vint x, vint y) {
+		return _mm_blendv_epi8(y,x,mask);
+	}
+
+#else
+	// three instructions when using SSE2
+	static INLINE vfloat vself(vmask mask, vfloat x, vfloat y) {
+		return (vfloat)vorm(vandm(mask, (vmask)x), vandnotm(mask, (vmask)y));
+	}
+
+	static INLINE vint vselc(vmask mask, vint x, vint y) {
+	    return vorm(vandm(mask, (vmask)x), vandnotm(mask, (vmask)y));
+	}
+#endif
+
+static INLINE vfloat vselfzero(vmask mask, vfloat x) {
+     // returns value of x if corresponding mask bits are 1, else returns 0
+     // faster than vself(mask, x, ZEROV)
+    return _mm_and_ps((vfloat)mask, x);
+}
+static INLINE vfloat vselfnotzero(vmask mask, vfloat x) {
+    // returns value of x if corresponding mask bits are 0, else returns 0
+    // faster than vself(mask, ZEROV, x)
+    return _mm_andnot_ps((vfloat)mask, x);
+}
+
+static INLINE vint vselizero(vmask mask, vint x) {
+     // returns value of x if corresponding mask bits are 1, else returns 0
+     // faster than vselc(mask, x, ZEROV)
+    return _mm_and_si128(mask, x);
+}
+static INLINE vint vselinotzero(vmask mask, vint x) {
+    // returns value of x if corresponding mask bits are 0, else returns 0
+    // faster than vselc(mask, ZEROV, x)
+    return _mm_andnot_si128(mask, x);
 }
 
 static INLINE vint2 vseli2_lt(vfloat f0, vfloat f1, vint2 x, vint2 y) {
@@ -1160,7 +1208,7 @@ static INLINE vfloat xatan2f(vfloat y, vfloat x) {
   r = vmulsignf(r, x);
   r = vself(vorm(vmaskf_isinf(x), vmaskf_eq(x, vcast_vf_f(0.0f))), vsubf(vcast_vf_f((float)(M_PI/2)), visinf2f(x, vmulsignf(vcast_vf_f((float)(M_PI/2)), x))), r);
   r = vself(vmaskf_isinf(y), vsubf(vcast_vf_f((float)(M_PI/2)), visinf2f(x, vmulsignf(vcast_vf_f((float)(M_PI/4)), x))), r);
-  r = vself(vmaskf_eq(y, vcast_vf_f(0.0f)), vself(vmaskf_eq(vsignf(x), vcast_vf_f(-1.0f)), vcast_vf_f((float)M_PI), vcast_vf_f(0.0f)), r);
+  r = vself(vmaskf_eq(y, vcast_vf_f(0.0f)), vselfzero(vmaskf_eq(vsignf(x), vcast_vf_f(-1.0f)), vcast_vf_f((float)M_PI)), r);
 
   return vself(vorm(vmaskf_isnan(x), vmaskf_isnan(y)), vcast_vf_f(NANf), vmulsignf(r, y));
 }
@@ -1237,13 +1285,32 @@ static INLINE vfloat xlogf0(vfloat d) {
   return x;
 }
 
+static INLINE vfloat xlogfNoCheck(vfloat d) { // this version does not check input values. Use it only when you know the input values are > 0 e.g. when filling a lookup table
+  vfloat x, x2, t, m;
+  vint2 e;
+
+  e = vilogbp1f(vmulf(d, vcast_vf_f(0.7071f)));
+  m = vldexpf(d, vsubi2(vcast_vi2_i(0), e));
+
+  x = vdivf(vaddf(vcast_vf_f(-1.0f), m), vaddf(vcast_vf_f(1.0f), m));
+  x2 = vmulf(x, x);
+
+  t = vcast_vf_f(0.2371599674224853515625f);
+  t = vmlaf(t, x2, vcast_vf_f(0.285279005765914916992188f));
+  t = vmlaf(t, x2, vcast_vf_f(0.400005519390106201171875f));
+  t = vmlaf(t, x2, vcast_vf_f(0.666666567325592041015625f));
+  t = vmlaf(t, x2, vcast_vf_f(2.0f));
+
+  return vaddf(vmulf(x, t), vmulf(vcast_vf_f(0.693147180559945286226764f), vcast_vf_vi2(e)));
+
+}
 
 static INLINE vfloat xexpf(vfloat d) {
   vint2 q = vrint_vi2_vf(vmulf(d, vcast_vf_f(R_LN2f)));
   vfloat s, u;
 
-  s = vaddf(d, vmulf(vcast_vf_vi2(q), vcast_vf_f(-L2Uf)));
-  s = vaddf(s, vmulf(vcast_vf_vi2(q), vcast_vf_f(-L2Lf)));
+  s = vmlaf(vcast_vf_vi2(q), vcast_vf_f(-L2Uf),d);
+  s = vmlaf(vcast_vf_vi2(q), vcast_vf_f(-L2Lf),s);
 
   u = vcast_vf_f(0.00136324646882712841033936f);
   u = vmlaf(u, s, vcast_vf_f(0.00836596917361021041870117f));
@@ -1251,7 +1318,7 @@ static INLINE vfloat xexpf(vfloat d) {
   u = vmlaf(u, s, vcast_vf_f(0.166665524244308471679688f));
   u = vmlaf(u, s, vcast_vf_f(0.499999850988388061523438f));
 
-  u = vaddf(vcast_vf_f(1.0f), vaddf(s, vmulf(vmulf(s, s), u)));
+  u = vaddf(vcast_vf_f(1.0f), vmlaf(vmulf(s, s), u, s));
 
   u = vldexpf(u, q);
 
@@ -1259,6 +1326,24 @@ static INLINE vfloat xexpf(vfloat d) {
 // -104.0
   u = vself(vmaskf_gt(vcast_vf_f(-104), d), vcast_vf_f(0), u);
   return u;
+}
+
+static INLINE vfloat xexpfNoCheck(vfloat d) { // this version does not check input values. Use it only when you know the input values are > -104.f e.g. when filling a lookup table
+  vint2 q = vrint_vi2_vf(vmulf(d, vcast_vf_f(R_LN2f)));
+  vfloat s, u;
+
+  s = vmlaf(vcast_vf_vi2(q), vcast_vf_f(-L2Uf),d);
+  s = vmlaf(vcast_vf_vi2(q), vcast_vf_f(-L2Lf),s);
+
+  u = vcast_vf_f(0.00136324646882712841033936f);
+  u = vmlaf(u, s, vcast_vf_f(0.00836596917361021041870117f));
+  u = vmlaf(u, s, vcast_vf_f(0.0416710823774337768554688f));
+  u = vmlaf(u, s, vcast_vf_f(0.166665524244308471679688f));
+  u = vmlaf(u, s, vcast_vf_f(0.499999850988388061523438f));
+
+  u = vaddf(vcast_vf_f(1.0f), vmlaf(vmulf(s, s), u, s));
+
+  return vldexpf(u, q);
 }
 
 static INLINE vfloat xcbrtf(vfloat d) {
@@ -1293,15 +1378,62 @@ static INLINE vfloat xcbrtf(vfloat d) {
 }
 
 static INLINE vfloat LIMV( vfloat a, vfloat b, vfloat c ) {
-return _mm_max_ps( b, _mm_min_ps(a,c));
-}
-
-static INLINE vfloat ULIMV( vfloat a, vfloat b, vfloat c  ){
-	return vself( vmaskf_lt(b,c), LIMV(a,b,c), LIMV(a,c,b));
+return vmaxf( b, vminf(a,c));
 }
 
 static INLINE vfloat SQRV(vfloat a){
-	return _mm_mul_ps( a,a );
+	return a * a;
+}
+
+static inline void vswap( vmask condition, vfloat &a, vfloat &b) {
+    // conditional swap the elements of two vfloats
+    vfloat temp = vself(condition, a, b); // the values which fit to condition
+    condition = vnotm(condition); // invert the condition
+    a = vself(condition, a, b); // the values which fit to inverted condition
+    b = temp;
+}
+
+static inline float vhadd( vfloat a ) {
+    // returns a[0] + a[1] + a[2] + a[3]
+    a += _mm_movehl_ps(a, a);
+    return _mm_cvtss_f32(_mm_add_ss(a, _mm_shuffle_ps(a, a, 1)));
+}
+
+static INLINE vfloat vmul2f(vfloat a){
+    // fastest way to multiply by 2
+	return a + a;
+}
+
+static INLINE vfloat vintpf(vfloat a, vfloat b, vfloat c) {
+    // calculate a * b + (1 - a) * c (interpolate two values)
+    // following is valid:
+    // vintpf(a, b+x, c+x) = vintpf(a, b, c) + x
+    // vintpf(a, b*x, c*x) = vintpf(a, b, c) * x
+    return a * (b-c) + c;
+}
+
+static INLINE vfloat vdup(vfloat a){
+    // returns { a[0],a[0],a[1],a[1] }
+    return _mm_unpacklo_ps( a, a );
+}
+
+static INLINE vfloat vaddc2vfu(float &a)
+{
+    // loads a[0]..a[7] and returns { a[0]+a[1], a[2]+a[3], a[4]+a[5], a[6]+a[7] }
+    vfloat a1 = _mm_loadu_ps( &a );
+    vfloat a2 = _mm_loadu_ps( (&a) + 4 );
+    return _mm_shuffle_ps(a1,a2,_MM_SHUFFLE( 2,0,2,0 )) + _mm_shuffle_ps(a1,a2,_MM_SHUFFLE( 3,1,3,1 ));
+}
+
+static INLINE vfloat vadivapb (vfloat a, vfloat b) {
+    return a / (a+b);
+}
+
+static INLINE void vconvertrgbrgbrgbrgb2rrrrggggbbbb (const float * src, vfloat &rv, vfloat &gv, vfloat &bv) { // cool function name, isn't it ? :P
+    // converts a sequence of 4 float RGB triplets to 3 red, green and blue quadruples
+    rv = _mm_setr_ps(src[0],src[3],src[6],src[9]);
+    gv = _mm_setr_ps(src[1],src[4],src[7],src[10]);
+    bv = _mm_setr_ps(src[2],src[5],src[8],src[11]);
 }
 
 #endif // __SSE2__
