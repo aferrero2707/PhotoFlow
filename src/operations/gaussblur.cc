@@ -60,7 +60,7 @@ void PF::GaussBlurPar::compute_padding( VipsImage* full_res, unsigned int id, un
   std::cout<<"GaussBlurPar::compute_padding(): radius="<<radius.get()<<" level="<<level<<" radius2="<<radius2<<std::endl;
 
   bool do_fast_blur = false;
-  if( radius2 > 10 ) do_fast_blur = true;
+  if( radius2 > 5 ) do_fast_blur = true;
 
   if( do_fast_blur ) {
     // Fast approximate gaussian blur method
@@ -110,12 +110,6 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   */
 
   std::vector<VipsImage*> in2;
-  bool do_caching = false;
-  if( radius2 > 20 ) do_caching = true;
-  int tw = 128, th = 128, nt = 1000;
-  VipsAccess acc = VIPS_ACCESS_RANDOM;
-  int threaded = 1, persistent = 0;
-
   bool do_fast_blur = false;
   if( radius2 > 5 ) do_fast_blur = true;
   //if( radius2 > 20 ) do_fast_blur = true;
@@ -144,23 +138,11 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
       return NULL;
     }
 
-    // Memory caching of the padded image
-    VipsImage* cached = extended;
-    if( do_caching ) {
-      if( vips_tilecache(extended, &cached,
-          "tile_width", tw, "tile_height", th, "max_tiles", nt,
-          "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
-        std::cout<<"GaussBlurPar::build(): vips_tilecache() failed."<<std::endl;
-        return NULL;
-      }
-      PF_UNREF( extended, "GaussBlurPar::build(): extended unref" );
-    }
-
     // Fast blurring
-    gpar->set_image_hints( cached ); gpar->set_format( get_format() );
-    in2.clear(); in2.push_back( cached );
+    gpar->set_image_hints( extended ); gpar->set_format( get_format() );
+    in2.clear(); in2.push_back( extended );
     VipsImage* blurred = gpar->build( in2, 0, NULL, omap, level );
-    PF_UNREF( cached, "GaussBlurPar::build(): cached unref" );
+    PF_UNREF( extended, "GaussBlurPar::build(): extended unref" );
 
     // Final cropping to remove the padding pixels
     VipsImage* cropped;
