@@ -1,28 +1,29 @@
 ////////////////////////////////////////////////////////////////
 //
-//			AMaZE demosaic algorithm
-// (Aliasing Minimization and Zipper Elimination)
+//      Chromatic Aberration Auto-correction
 //
-//	copyright (c) 2008-2010  Emil Martinec <ejmartin@uchicago.edu>
+//      Original code from RawTherapee, adapted to PhotoFlow by A. Ferrero
 //
-// incorporating ideas of Luis Sanz Rodrigues and Paul Lee
+//      copyright (c) 2008-2010  Emil Martinec <ejmartin@uchicago.edu>
 //
-// code dated: May 27, 2010
 //
-//	amaze_interpolate_RT.cc is free software: you can redistribute it and/or modify
-//	it under the terms of the GNU General Public License as published by
-//	the Free Software Foundation, either version 3 of the License, or
-//	(at your option) any later version.
+// code dated: November 26, 2010
 //
-//	This program is distributed in the hope that it will be useful,
-//	but WITHOUT ANY WARRANTY; without even the implied warranty of
-//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//	GNU General Public License for more details.
+//  CA_correct_RT.cc is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
 //
-//	You should have received a copy of the GNU General Public License
-//	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 ////////////////////////////////////////////////////////////////
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #include <string.h>
 
