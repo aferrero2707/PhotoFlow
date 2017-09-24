@@ -30,6 +30,8 @@
 #include <string>
 #include <iostream>
 #include "../iccstore.hh"
+#include "../../external/darktable/src/common/srgb_tone_curve_values.h"
+
 
 
 /* ***** Make profile: sRGB, D65, sRGB TRC */
@@ -120,6 +122,7 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
     cmsFloat64Number srgb_parameters[5] =
     { 2.4, 1.0 / 1.055,  0.055 / 1.055, 1.0 / 12.92, 0.04045 };
     cmsToneCurve *curve = cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
+    //cmsToneCurve *curve = cmsBuildTabulatedToneCurve16(NULL, dt_srgb_tone_curve_values_n, dt_srgb_tone_curve_values);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
     break;
   }
