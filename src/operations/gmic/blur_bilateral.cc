@@ -46,7 +46,7 @@ bgrid_r("bgrid_r",this,32)
 
 
 
-int PF::GmicBlurBilateralPar::get_padding( int level )
+int PF::GmicBlurBilateralPar::get_gmic_padding( int level )
 {
   float ss = sigma_s.get();
   for( int l = 1; l <= level; l++ ) {
@@ -78,7 +78,7 @@ VipsImage* PF::GmicBlurBilateralPar::build(std::vector<VipsImage*>& in, int firs
 		ss /= 2; //sr /= 2;
   }
 
-  cur_padding = get_padding(level);
+  cur_padding = get_gmic_padding(level);
 
 	/*
 	char command[500], ssstr[100], srstr[100];
@@ -94,7 +94,7 @@ VipsImage* PF::GmicBlurBilateralPar::build(std::vector<VipsImage*>& in, int firs
   /*gpar->*/set_command( command );
   //gpar->set_iterations( iterations.get() );
   //gpar->set_padding( (int)( MAX(ss,sr)*1.5 ) );
-  /*gpar->*/set_padding( cur_padding );
+  /*gpar->*/set_gmic_padding( cur_padding );
   /*gpar->*/set_x_scale( 1.0f );
   /*gpar->*/set_y_scale( 1.0f );
   /*gpar->*/set_cache_tiles( false );

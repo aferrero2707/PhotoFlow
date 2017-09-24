@@ -46,7 +46,7 @@ OpParBase(),
 }
 
 
-int PF::GmicGradientNormPar::get_padding( int level )
+int PF::GmicGradientNormPar::get_gmic_padding( int level )
 {
   return 20;
 }
@@ -80,7 +80,7 @@ VipsImage* PF::GmicGradientNormPar::build(std::vector<VipsImage*>& in, int first
   command = command + std::string(" -cut 0,255");
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
-  gpar->set_padding( get_padding( level ) );
+  gpar->set_gmic_padding( get_gmic_padding( level ) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 

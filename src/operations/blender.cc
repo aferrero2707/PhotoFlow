@@ -381,7 +381,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   std::cout<<"PF::BlenderPar::build(): input: "<<background<<" "<<foreground<<"   output: "<<outnew<<std::endl;
 #endif
   //set_image( outnew );
-  /*
+#ifndef NDEBUG
   if( outnew ) {
     if( !vips_image_get_blob( outnew, VIPS_META_ICC_NAME, 
                               &data, &data_length ) ) {
@@ -390,14 +390,32 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       if( profile_in ) {
         char tstr[1024];
         cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
-#ifndef NDEBUG
         std::cout<<"BlenderPar::build(): Output profile: "<<tstr<<std::endl;
-#endif
         cmsCloseProfile( profile_in );
       }
     }  
   }
-  */
+#endif
+
+  if( outnew && get_output_caching() ) {
+    int p = get_output_padding( 0 );
+    if( p > 0 ) {
+      int nt = outnew->Xsize*(p/PF_OUPUT_CACHE_TS + 3)/PF_OUPUT_CACHE_TS;
+      VipsAccess acc = VIPS_ACCESS_RANDOM;
+      int threaded = 1, persistent = 0;
+      VipsImage* cached;
+      if( !vips_tilecache(outnew, &cached,
+          "tile_width", PF_OUPUT_CACHE_TS,
+          "tile_height", PF_OUPUT_CACHE_TS,
+          "max_tiles", nt,
+          "access", acc, "threaded", threaded,
+          "persistent", persistent, NULL) ) {
+        PF_UNREF( outnew, "BlenderPar::build(): outnew unref" );
+        outnew = cached;
+        std::cout<<"BlenderPar::build(): added tilecache for output image, padding="<<p<<std::endl;
+      }
+    }
+  }
 
   return outnew;
 }

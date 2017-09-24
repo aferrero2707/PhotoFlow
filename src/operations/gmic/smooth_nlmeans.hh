@@ -57,7 +57,12 @@ namespace PF
     float get_size( unsigned int level );
 
       
-    int get_padding( unsigned int level );
+    int get_gmic_padding( unsigned int level );
+
+    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+    {
+      set_padding( get_gmic_padding(level), id);
+    }
 
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 

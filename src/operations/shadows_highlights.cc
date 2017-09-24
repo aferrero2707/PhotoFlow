@@ -68,6 +68,35 @@ bool PF::ShadowsHighlightsPar::needs_caching()
 
 
 
+void PF::ShadowsHighlightsPar::propagate_settings()
+{
+  GaussBlurPar* gausspar = dynamic_cast<GaussBlurPar*>( gauss->get_par() );
+  if( gausspar ) {
+    gausspar->set_radius( radius.get() );
+    gausspar->propagate_settings();
+  }
+}
+
+
+void PF::ShadowsHighlightsPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+{
+  std::cout<<"ShadowsHighlightsPar::compute_padding(): method.get_enum_value().first="<<method.get_enum_value().first<<std::endl;
+  switch( method.get_enum_value().first ) {
+  case PF::SHAHI_GAUSSIAN: {
+    GaussBlurPar* gausspar = dynamic_cast<GaussBlurPar*>( gauss->get_par() );
+    if( gausspar ) {
+      gausspar->compute_padding(full_res, id, level);
+      set_padding( gausspar->get_padding(id), id );
+    }
+    break;
+  }
+  default: break;
+  }
+}
+
+
+
+
 VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int first,
     VipsImage* imap, VipsImage* omap,
     unsigned int& level)

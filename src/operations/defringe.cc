@@ -63,6 +63,27 @@ bool PF::DefringePar::needs_caching()
   return false;
 }
 
+
+
+
+void PF::DefringePar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+{
+  double radius2 = radius.get();
+  for( unsigned int l = 1; l <= level; l++ )
+    radius2 /= 2;
+
+  DefringeAlgoPar* defringepar = dynamic_cast<DefringeAlgoPar*>( defringe_algo->get_par() );
+  defringepar->set_sigma( radius2 );
+  defringepar->set_threshold( threshold.get() );
+  defringepar->set_op_mode( (defringe_method_t)(op_mode.get_enum_value().first) );
+  defringepar->fb_init();
+
+  int padding = defringepar->get_padding();
+
+  set_padding( padding, id );
+}
+
+
 VipsImage* PF::DefringePar::build(std::vector<VipsImage*>& in, int first,
     VipsImage* imap, VipsImage* omap,
     unsigned int& level)
@@ -81,10 +102,10 @@ VipsImage* PF::DefringePar::build(std::vector<VipsImage*>& in, int first,
   in_profile = PF::get_icc_profile( in[0] );
 
   DefringeAlgoPar* defringepar = dynamic_cast<DefringeAlgoPar*>( defringe_algo->get_par() );
-  defringepar->set_sigma( radius2 );
-  defringepar->set_threshold( threshold.get() );
-  defringepar->set_op_mode( (defringe_method_t)(op_mode.get_enum_value().first) );
-  defringepar->fb_init();
+  //defringepar->set_sigma( radius2 );
+  //defringepar->set_threshold( threshold.get() );
+  //defringepar->set_op_mode( (defringe_method_t)(op_mode.get_enum_value().first) );
+  //defringepar->fb_init();
 
   int padding = defringepar->get_padding();
 

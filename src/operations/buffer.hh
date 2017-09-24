@@ -46,14 +46,10 @@ namespace PF
       set_type( "buffer" );
     }
 
-    /* Set processing hints:
-       1. the intensity parameter makes no sense for a blending operation, 
-          creation of an intensity map is not allowed
-       2. the operation can work without an input image;
-          the blending will be set in this case to "passthrough" and the image
-	  data will be simply linked to the output
-     */
     bool has_intensity() { return false; }
+    bool has_opacity() { return false; }
+
+    bool is_noop( VipsImage* full_res, unsigned int id, unsigned int level ) { return true; }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 

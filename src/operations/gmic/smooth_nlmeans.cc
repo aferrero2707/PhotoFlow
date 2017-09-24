@@ -63,7 +63,7 @@ float PF::GmicSmoothNonLocalMeansPar::get_size( unsigned int level )
 }
 
 
-int PF::GmicSmoothNonLocalMeansPar::get_padding( unsigned int level )
+int PF::GmicSmoothNonLocalMeansPar::get_gmic_padding( unsigned int level )
 {
   return MAX( get_radius(level)*4, get_size(level)*2 );
   //return prop_padding.get();
@@ -96,13 +96,12 @@ VipsImage* PF::GmicSmoothNonLocalMeansPar::build(std::vector<VipsImage*>& in, in
   gpar->set_command( command.c_str() );
   //gpar->set_iterations( iterations.get() );
   gpar->set_iterations( 1 );
+  gpar->set_gmic_padding( get_gmic_padding(level) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 
   gpar->set_image_hints( srcimg );
   gpar->set_format( get_format() );
-
-  gpar->set_padding( get_padding(level) );
 
   out = gpar->build( in, first, imap, omap, level );
   if( !out ) {

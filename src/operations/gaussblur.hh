@@ -54,15 +54,13 @@ namespace PF
     ProcessorBase* convert_format;
     ProcessorBase* blur_sii;
 
-    int padding;
-
   public:
     GaussBlurPar();
 
     void set_radius( float r ) { radius.set( r ); }
     float get_radius() { return radius.get(); }
 
-    int get_padding() { return padding; }
+    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
 
     bool has_intensity() { return false; }
     bool needs_caching() { return( radius.get() >= 50 ); }

@@ -161,6 +161,8 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
     std::cout<<"Cannot create image object. Exiting."<<std::endl;
     return 1;
   }
+  PF::Pipeline* pipeline = image->add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_PREVIEW/*PF_RENDER_NORMAL*/ );
+  if( pipeline ) pipeline->set_op_caching_enabled( false );
 
   //argv++;
 
@@ -232,6 +234,7 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
 
 	//PF::ImageProcessor::Instance().join();
 
+  image->destroy();
   delete image;
 
   //im_close_plugins();

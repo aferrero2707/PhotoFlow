@@ -67,8 +67,8 @@ namespace PF
     void set_command( std::string cmd ) { command.set( cmd ); }
     void set_post_command( std::string cmd ) { post_command.set( cmd ); }
     void set_iterations( int it ) { iterations.set( it ); };
-    void set_padding( int p ) { padding.set( p ); };
-    int get_padding() { return padding.get(); };
+    void set_gmic_padding( int p ) { padding.set( p ); };
+    int get_gmic_padding() { return padding.get(); };
     void set_x_scale(float xs ) { x_scale.set( xs ); }
     void set_y_scale(float ys ) { x_scale.set( ys ); }
 

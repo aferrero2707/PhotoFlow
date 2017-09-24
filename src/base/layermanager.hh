@@ -67,6 +67,9 @@ namespace PF
 
     PF::CacheBuffer* get_cache_buffer( std::list<Layer*>& list );
 
+    // Walk through the given layer chain and import settings from "master" operations
+    void init_pipeline( PF::Pipeline* pipeline, std::list<Layer*>& list, Layer* previous_layer );
+
     // Walk through the given layer chain and set the "visible" flag
     void update_visible( std::list<Layer*>& list, bool visible );
 
@@ -74,6 +77,11 @@ namespace PF
     void update_dirty( std::list<Layer*>& list, bool& dirty );
 
     void reset_dirty( std::list<Layer*>& list );
+
+    void reset_op_caching( PF::Pipeline* pipeline, std::list<Layer*>& list );
+    void reset_op_caching(PF::Pipeline* pipeline );
+    void update_op_caching(PF::Pipeline* pipeline );
+    void update_op_caching( PF::Pipeline* pipeline, std::list<Layer*>& list, PF::Layer* input );
     
     void update_ui( std::list<Layer*>& list );
 

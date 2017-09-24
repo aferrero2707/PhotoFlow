@@ -53,7 +53,12 @@ namespace PF
     bool needs_caching() { return false; }
 
       
-    int get_padding();      
+    int get_gmic_padding(int level);
+
+    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+    {
+      set_padding( get_gmic_padding(level), id);
+    }
 
     /* Function to derive the output area from the input area
      */

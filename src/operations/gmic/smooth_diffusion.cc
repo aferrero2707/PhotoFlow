@@ -49,7 +49,7 @@ OpParBase(),
 
 
 
-int PF::GmicSmoothDiffusionPar::get_padding( int level )
+int PF::GmicSmoothDiffusionPar::get_gmic_padding( int level )
 {
   return 0;
 }

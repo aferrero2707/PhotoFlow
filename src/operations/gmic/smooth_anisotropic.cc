@@ -56,7 +56,7 @@ prop_fast_approximation("fast_approximation",this,1),
 
 
 
-int PF::GmicSmoothAnisotropicPar::get_padding( int level )
+int PF::GmicSmoothAnisotropicPar::get_gmic_padding( int level )
 {
   return( prop_padding.get() );
 }
@@ -98,7 +98,7 @@ VipsImage* PF::GmicSmoothAnisotropicPar::build(std::vector<VipsImage*>& in, int 
   command = command + std::string(",") + prop_fast_approximation.get_str();
   gpar->set_command( command.c_str() );
   gpar->set_iterations( iterations.get() );
-  gpar->set_padding( get_padding( level ) );
+  gpar->set_gmic_padding( get_gmic_padding( level ) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 

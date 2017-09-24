@@ -91,6 +91,9 @@ public:
   float get_sh_color_adjustment() { return sh_color_adjustment.get(); }
   float get_hi_color_adjustment() { return hi_color_adjustment.get(); }
 
+  void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
+  void propagate_settings();
+
   VipsImage* build(std::vector<VipsImage*>& in, int first,
       VipsImage* imap, VipsImage* omap,
       unsigned int& level);

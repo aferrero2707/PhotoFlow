@@ -48,9 +48,13 @@ bool PF::GmicSharpenTexturePar::needs_caching() { return true; }
 
 
 
-int PF::GmicSharpenTexturePar::get_padding( int level )
+int PF::GmicSharpenTexturePar::get_gmic_padding( int level )
 {
-  return(padding);
+  float scalefac = 1;
+  for( unsigned int l = 1; l <= level; l++ )
+    scalefac *= 2;
+
+  return( prop_radius.get()*2.0/scalefac );
 }
 
 
@@ -75,16 +79,23 @@ VipsImage* PF::GmicSharpenTexturePar::build(std::vector<VipsImage*>& in, int fir
 
 	padding = prop_radius.get()*2.0/scalefac;
 	float radius = prop_radius.get()/scalefac;
+	int iradius = (int)radius;
 
-	std::cout<<"GmicSharpenTexturePar::build() called, padding="<<padding<<std::endl;
+	if(iradius < 1) {
+	  PF_REF(srcimg,"GmicSharpenTexturePar::build(): radius<1");
+	  return srcimg;
+	}
+
+	std::cout<<"GmicSharpenTexturePar::build() called, padding="<<padding<<", radius="<<radius<<std::endl;
 
   std::string command = "-gimp_sharpen_texture ";
   command = command + prop_strength.get_str();
   command = command + std::string(",") + to_string(radius); //prop_radius.get_str();
   command = command + std::string(",0 -cut 0,255");
+  std::cout<<"command: "<<command<<std::endl;
   gpar->set_command( command.c_str() );
   gpar->set_iterations( 1 );
-  gpar->set_padding( get_padding( level ) );
+  gpar->set_gmic_padding( get_gmic_padding( level ) );
   gpar->set_x_scale( 1.0f );
   gpar->set_y_scale( 1.0f );
 

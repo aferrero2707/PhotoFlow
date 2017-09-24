@@ -78,6 +78,9 @@ namespace PF
       return false;
     }
 
+    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
+    void propagate_settings();
+
     float get_amount() { return amount.get(); }
     float get_threshold() { return threshold.get(); }
     bool get_equalizer_enabled() { return enable_equalizer.get(); }
