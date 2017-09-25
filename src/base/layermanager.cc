@@ -771,12 +771,11 @@ void PF::LayerManager::reset_op_caching( PF::Pipeline* pipeline, std::list<Layer
 
 void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline )
 {
-  std::cout<<std::endl<<"LayerManager::update_op_caching():"<<std::endl;
-  if(pipeline) std::cout<<"  pipeline->get_op_caching_enabled()="<<pipeline->get_op_caching_enabled()<<std::endl;
   if( !pipeline || !(pipeline->get_op_caching_enabled()) ) return;
 
   reset_op_caching( pipeline );
 
+  std::cout<<std::endl<<"LayerManager::update_op_caching():"<<std::endl;
   update_op_caching( pipeline, layers, NULL );
 }
 
@@ -789,7 +788,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Laye
   if( pipeline == pipeline0 ) return;
 
   std::list<PF::Layer*>::reverse_iterator li;
-  for(li = layers.rbegin(); li != layers.rend(); ++li) {
+  for(li = list.rbegin(); li != list.rend(); ++li) {
     PF::Layer* l = *li;
     if(!l) continue;
     if(!l->is_visible()) continue;
@@ -813,7 +812,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Laye
     PF::OpParBase* ppar = NULL;
     std::list<PF::Layer*>::reverse_iterator lj = li; ++lj;
     PF::Layer* lprev = NULL;
-    for( ; lj != layers.rend(); ++lj ) {
+    for( ; lj != list.rend(); ++lj ) {
       lprev = *lj;
       if(!lprev) continue;
       if(!lprev->is_visible()) continue;
