@@ -788,7 +788,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Laye
   if( pipeline == pipeline0 ) return;
 
   std::list<PF::Layer*>::reverse_iterator li;
-  for(li = layers.rbegin(); li != layers.rend(); ++li) {
+  for(li = list.rbegin(); li != list.rend(); ++li) {
     PF::Layer* l = *li;
     if(!l) continue;
     if(!l->is_visible()) continue;
@@ -812,7 +812,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Laye
     PF::OpParBase* ppar = NULL;
     std::list<PF::Layer*>::reverse_iterator lj = li; ++lj;
     PF::Layer* lprev = NULL;
-    for( ; lj != layers.rend(); ++lj ) {
+    for( ; lj != list.rend(); ++lj ) {
       lprev = *lj;
       if(!lprev) continue;
       if(!lprev->is_visible()) continue;
