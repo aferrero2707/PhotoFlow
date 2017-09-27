@@ -47,7 +47,7 @@ namespace PF
     }
 
     bool has_intensity() { return false; }
-    bool has_opacity() { return false; }
+    //bool has_opacity() { return false; }
 
     bool is_noop( VipsImage* full_res, unsigned int id, unsigned int level ) { return true; }
 
