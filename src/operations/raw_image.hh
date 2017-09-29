@@ -154,6 +154,7 @@ bool check_xtrans( unsigned filters );
 
     int LinEqSolve(int nDim, double* pfMatr, double* pfVect, double* pfSolution);
     void CA_correct_RT();
+    void CA_correct_RT_old();
 
     bool load_rawspeed();
     bool load_rawtherapee();

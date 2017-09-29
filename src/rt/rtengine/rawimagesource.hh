@@ -72,6 +72,9 @@ public:
     void CA_correct_RT(int winx, int winy, int winw, int winh,
                            int tilex, int tiley, int tilew, int tileh,
                            bool autoCA, float cared, float cablue);
+    void CA_correct_RT_old(int winx, int winy, int winw, int winh,
+                           int tilex, int tiley, int tilew, int tileh,
+                           bool autoCA, float cared, float cablue);
     void amaze_demosaic_RT(int winx, int winy, int winw, int winh, int tilex, int tiley, int tilew, int tileh);//Emil's code for AMaZE
 		void igv_demosaic_RT(int winx, int winy, int winw, int winh,
 													 int tilex, int tiley, int tilew, int tileh);

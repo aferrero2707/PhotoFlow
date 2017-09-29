@@ -209,6 +209,7 @@ FILE(GLOB RTIncludes
 FILE(GLOB RTSources 
   rt/rtengine/rawimagesource.cc
   rt/rtengine/CA_correct_RT.cc
+  rt/rtengine/CA_correct_RT_old.cc
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
