@@ -57,6 +57,9 @@ enum split_details_blur_type
     SplitDetailsPar();
     ~SplitDetailsPar() { std::cout<<"~SplitDetailsPar() called."<<std::endl; }
 
+    void propagate_settings();
+    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
+
     std::vector<VipsImage*> build_many(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap,
         unsigned int& level);

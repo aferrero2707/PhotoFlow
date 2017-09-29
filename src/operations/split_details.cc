@@ -49,6 +49,9 @@
     void set_initial_lev(int r) { initial_lev = r; }
     void set_blur_type(int r) { blur_type = r; }
 
+    void propagate_settings();
+    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
+
     std::vector<VipsImage*> build_many(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap,
         unsigned int& level);
@@ -64,6 +67,41 @@
     wavdec = PF::new_wavdec();
 
     set_type("decompose_level");
+  }
+
+
+
+  void SplitDetailsLevelPar::propagate_settings()
+  {
+    if (blur_type == PF::SPLIT_DETAILS_BLUR_GAUSS) {
+      PF::GaussBlurPar* gausspar = dynamic_cast<PF::GaussBlurPar*>( gauss->get_par() );
+      if( gausspar )
+        gausspar->set_radius( blur_radius );
+    } else if (blur_type == PF::SPLIT_DETAILS_BLUR_WAVELETS) {
+      PF::WavDecPar* wavdecpar = dynamic_cast<PF::WavDecPar*>( wavdec->get_par() );
+      if( wavdecpar ) {
+        wavdecpar->set_initial_lev( initial_lev );
+        wavdecpar->set_numScales( 1 );
+        wavdecpar->set_currScale( 2 );
+        wavdecpar->set_blendFactor( .5f );
+      }
+    }
+  }
+
+
+
+  void SplitDetailsLevelPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+  {
+    PF::OpParBase* par = NULL;
+    if (blur_type == PF::SPLIT_DETAILS_BLUR_GAUSS) {
+      par = gauss->get_par();
+    } else if (blur_type == PF::SPLIT_DETAILS_BLUR_WAVELETS) {
+      par = wavdec->get_par();
+    }
+    if( par ) {
+      par->compute_padding( full_res, id, level );
+      set_padding( par->get_padding(id), id );
+    }
   }
 
 
@@ -84,8 +122,6 @@
       if( gausspar ) {
         in2.push_back( srcimg );
         
-        gausspar->set_radius( blur_radius );
-        
         gausspar->set_image_hints( srcimg );
         gausspar->set_format( get_format() );
         VipsImage* smoothed = gausspar->build( in2, 0, NULL, NULL, level );
@@ -103,11 +139,7 @@
       if( wavdecpar ) {
         in2.push_back( srcimg );
         
-        wavdecpar->set_initial_lev( initial_lev );
         wavdecpar->set_preview_scale( level );
-        wavdecpar->set_numScales( 1 );
-        wavdecpar->set_currScale( 2 );
-        wavdecpar->set_blendFactor( .5f );
       
         wavdecpar->set_image_hints( srcimg );
         wavdecpar->set_format( get_format() );
@@ -182,14 +214,9 @@ PF::SplitDetailsPar::SplitDetailsPar():
 }
 
 
-std::vector<VipsImage*> PF::SplitDetailsPar::build_many(std::vector<VipsImage*>& in, int first,
-    VipsImage* imap, VipsImage* omap,
-    unsigned int& level)
-{
-  VipsImage* srcimg = NULL;
-  if( in.size() > 0 ) srcimg = in[0];
-  std::vector<VipsImage*> outvec, scalevec;
 
+void PF::SplitDetailsPar::propagate_settings()
+{
   // Fill the vector of level decomposing operations with as many elemens as the number of
   // requested scales. If the vector already contains a sufficient number of entries,
   // nothing happens
@@ -198,10 +225,51 @@ std::vector<VipsImage*> PF::SplitDetailsPar::build_many(std::vector<VipsImage*>&
     levels.push_back( l );
   }
 
+  float blur_radius = prop_base_scale.get();
+  for( int i = 0; i < prop_nscales.get(); i++ ) {
+    PF::ProcessorBase* l = levels[i];
+    SplitDetailsLevelPar* lpar = dynamic_cast<SplitDetailsLevelPar*>( l->get_par() );
+    if( !lpar ) continue;
+    lpar->set_blur_type( blur_type.get_enum_value().first );
+    // gasussian
+    lpar->set_blur_radius( blur_radius );
+    // wavelets
+    lpar->set_initial_lev( i );
+    lpar->propagate_settings();
+
+    // gaussian
+    blur_radius *= 2;
+  }
+}
+
+
+
+void PF::SplitDetailsPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+{
+  int padding = 0;
+  for( int i = 0; i < levels.size(); i++ ) {
+    PF::ProcessorBase* l = levels[i];
+    SplitDetailsLevelPar* lpar = dynamic_cast<SplitDetailsLevelPar*>( l->get_par() );
+    if( !lpar ) continue;
+    lpar->compute_padding(full_res, id, level);
+    padding += lpar->get_padding(id);
+  }
+
+  set_padding( padding, id );
+}
+
+
+std::vector<VipsImage*> PF::SplitDetailsPar::build_many(std::vector<VipsImage*>& in, int first,
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
+{
+  VipsImage* srcimg = NULL;
+  if( in.size() > 0 ) srcimg = in[0];
+  std::vector<VipsImage*> outvec, scalevec;
+
   if( !srcimg ) return outvec;
 
 //  std::cout<<"SplitDetailsPar::build_many(): number of scales = "<<prop_nscales.get()<<std::endl;
-  float blur_radius = prop_base_scale.get();
   VipsImage* prev_scale = srcimg;
   PF_REF( prev_scale, "SplitDetailsPar::build_many(): initial prev_scale ref" );
   
@@ -213,14 +281,6 @@ std::vector<VipsImage*> PF::SplitDetailsPar::build_many(std::vector<VipsImage*>&
     }
     
     SplitDetailsLevelPar* lpar = dynamic_cast<SplitDetailsLevelPar*>( l->get_par() );
-    
-    lpar->set_blur_type( blur_type.get_enum_value().first );
-    
-    // gasussian
-    lpar->set_blur_radius( blur_radius );
-    // wavelets
-    lpar->set_initial_lev( i );
-    
     lpar->set_image_hints( prev_scale );
     lpar->set_format( get_format() );
     
@@ -235,9 +295,6 @@ std::vector<VipsImage*> PF::SplitDetailsPar::build_many(std::vector<VipsImage*>&
     
     prev_scale = lout[0];
     scalevec.push_back( lout[1] );
-    
-    // gaussian
-    blur_radius *= 2;
   }
 
   // Add the base level as first element of the output vector

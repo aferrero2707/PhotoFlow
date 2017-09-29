@@ -49,6 +49,16 @@ blendFactor("blendFactor",this,0.5f)
   set_default_name( _("Wavelet Decompose") );
 }
 
+
+
+void PF::WavDecPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+{
+  int padding = get_padding(numScales.get(), get_initial_lev());
+  set_padding( padding, id );
+}
+
+
+
 VipsImage* PF::WavDecPar::build(std::vector<VipsImage*>& in, int first,
     VipsImage* imap, VipsImage* omap,
     unsigned int& level)
