@@ -75,6 +75,26 @@ PF::VolumePar::VolumePar():
 }
 
 
+
+void PF::VolumePar::propagate_settings()
+{
+  GaussBlurPar* gausspar = dynamic_cast<GaussBlurPar*>( gauss->get_par() );
+  if( gausspar ) {
+    gausspar->set_radius( gauss_radius.get() );
+    gausspar->propagate_settings();
+  }
+
+  GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
+  if( bilateralpar ) {
+    bilateralpar->set_iterations( bilateral_iterations.get() );
+    bilateralpar->set_sigma_s( bilateral_sigma_s.get() );
+    bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
+    bilateralpar->propagate_settings();
+  }
+}
+
+
+
 void PF::VolumePar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
 {
   std::cout<<"VolumePar::compute_padding(): method.get_enum_value().first="<<method.get_enum_value().first<<std::endl;
@@ -96,25 +116,6 @@ void PF::VolumePar::compute_padding( VipsImage* full_res, unsigned int id, unsig
     break;
   }
   default: break;
-  }
-}
-
-
-
-void PF::VolumePar::propagate_settings()
-{
-  GaussBlurPar* gausspar = dynamic_cast<GaussBlurPar*>( gauss->get_par() );
-  if( gausspar ) {
-    gausspar->set_radius( gauss_radius.get() );
-    gausspar->propagate_settings();
-  }
-
-  GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
-  if( bilateralpar ) {
-    bilateralpar->set_iterations( bilateral_iterations.get() );
-    bilateralpar->set_sigma_s( bilateral_sigma_s.get() );
-    bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
-    bilateralpar->propagate_settings();
   }
 }
 
