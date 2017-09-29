@@ -201,7 +201,7 @@ namespace PF
         //std::cout<<"black="<<rdpar->get_black_level_correction()<<" * 65535 * "
         //    <<exposure<<" / "<<(image_data->color.maximum - image_data->color.black)
         //    <<"="<<black[i]<<std::endl;
-        if(true && r->left==0 && r->top==0)
+        if(false && r->left==0 && r->top==0)
           std::cout<<"black["<<i<<"]="<<black[i]<<"  white["<<i<<"]="<<white[i]<<std::endl;
       }
 
@@ -245,7 +245,7 @@ namespace PF
             //rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
             int c = rp.icolor(x);
             rpout[x] = __CLIP( (rp[x]-black[c]) * mul[c] * 65535.f / (white[c]-black[c]) );
-            if(true && r->left==0 && r->top==0 && y<4 && x<4)
+            if(false && r->left==0 && r->top==0 && y<4 && x<4)
               std::cout<<"("<<y<<","<<x<<")  c="<<rp.color(x) //c
               <<"  rp[x]="<<rp[x]
                                <<"  mul[ c ]="<<mul[ c ]

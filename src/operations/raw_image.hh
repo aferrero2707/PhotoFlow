@@ -156,6 +156,7 @@ dcraw_data_t* get_raw_data( VipsImage* image );
 
     int LinEqSolve(int nDim, double* pfMatr, double* pfVect, double* pfSolution);
     void CA_correct_RT();
+    void CA_correct_RT_old();
 
     bool load_rawspeed();
     bool load_rawtherapee();

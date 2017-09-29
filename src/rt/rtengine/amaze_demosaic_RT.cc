@@ -41,7 +41,7 @@
 #undef CLIP
 #define CLIP(x) x
 
-#undef __SSE2__
+//#undef __SSE2__
 #undef _OPENMP
 
 namespace rtengine
