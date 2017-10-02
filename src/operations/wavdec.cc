@@ -101,12 +101,12 @@ VipsImage* PF::WavDecPar::build(std::vector<VipsImage*>& in, int first,
   wav_dec_par->set_initial_lev( get_initial_lev() );
   wav_dec_par->set_preview_scale( get_preview_scale() );
   
-  wav_dec_par->set_image_hints( cached );
+  wav_dec_par->set_image_hints( extended );
   wav_dec_par->set_format( get_format() );
   in2.clear();
-  in2.push_back( cached );
+  in2.push_back( extended );
   VipsImage* wavdec = wav_dec_par->build( in2, 0, NULL, NULL, level );
-  PF_UNREF( cached, "WavDecPar::build(): cached unref" );
+  PF_UNREF( extended, "WavDecPar::build(): extended unref" );
   
   // crop the decomposed image to remove the padding pixels in order to return it
   VipsImage* cropped;
