@@ -186,14 +186,15 @@ IF(EXISTS "${CMAKE_SOURCE_DIR}/.svn")
   ENDIF()
 ENDIF()
 
-CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/src/svn_version.h.in
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/svn_version.h @ONLY)
-MESSAGE(STATUS  "SVN version:  ${SVN_REVISION}")
+#CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/src/svn_version.h.in
+#                ${CMAKE_CURRENT_SOURCE_DIR}/src/svn_version.h @ONLY)
+#MESSAGE(STATUS  "SVN version:  ${SVN_REVISION}")
 
 IF( NOT MSVC )
   IF ( NOT MINGW )
     # Issue #722: out of source builds compiled against standard include files such as /usr/local/lib/include/exiv2
     # do not use CREATE_SYMLINK or CMAKE_CAN_SYMLINK as they don't work on CYGWIN
+    EXECUTE_PROCESS( WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}           COMMAND rm -f exiv2)
     EXECUTE_PROCESS( WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}           COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/src exiv2)
 
     IF( EXIV2_ENABLE_BUILD_SAMPLES )
