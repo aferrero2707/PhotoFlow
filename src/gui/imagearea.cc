@@ -1244,9 +1244,11 @@ void PF::ImageArea::update( VipsRect* area )
 
 	if( shrink_factor != 1 ) {
 		VipsImage* outimg2;
-		//if( vips_shrink( outimg, &outimg2, 
-		//										 1.0d/shrink_factor, 1.0d/shrink_factor, NULL ) )
-//	return;
+//		if( vips_shrink( outimg, &outimg2,
+//												 1.0/shrink_factor, 1.0/shrink_factor, NULL ) ) {
+//	    std::cout<<std::endl<<std::endl<<"vips_shrink() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
+//	    return;
+//		}
 //    if( vips_affine( outimg, &outimg2,
 //                     shrink_factor, 0, 0, shrink_factor, NULL ) )
 //      return;
@@ -1258,7 +1260,8 @@ void PF::ImageArea::update( VipsRect* area )
 #ifdef DEBUG_DISPLAY
 		std::cout<<"ImageArea::update(): before vips_resize()"<<std::endl;
 #endif
-		if( vips_resize( outimg, &outimg2, shrink_factor, NULL) ) {
+    std::cout<<"ImageArea::update(): shrink_factor="<<shrink_factor<<std::endl;
+		if( vips_resize( outimg, &outimg2, shrink_factor, "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
       std::cout<<std::endl<<std::endl<<"vips_resize() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
       return;
     }
