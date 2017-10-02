@@ -117,19 +117,46 @@
 
     std::vector<VipsImage*> in2;
     
+    int padding = 0;
+    if (blur_type == PF::SPLIT_DETAILS_BLUR_GAUSS) padding = gauss->get_par()->get_padding(0);
+    if (blur_type == PF::SPLIT_DETAILS_BLUR_WAVELETS) padding = wavdec->get_par()->get_padding(0);
+
+   // FIXME: disable caching, it seems to slow down the process???
+    bool do_caching = false;
+    int tw = 128, th = 128, nt = (srcimg->Xsize/tw)*( (padding/tw)*2 + 3 );
+    VipsAccess acc = VIPS_ACCESS_RANDOM;
+    int threaded = 1, persistent = 0;
+
+    // Memory caching of the padded image
+    VipsImage* cached = srcimg;
+    if( do_caching ) {
+      if( vips_tilecache(srcimg, &cached,
+          "tile_width", tw, "tile_height", th, "max_tiles", nt,
+          "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
+        std::cout<<"WavDecPar::build(): vips_tilecache() failed."<<std::endl;
+        PF_REF( srcimg, "WavDecPar::build(): vips_tilecache() failed." );
+        outvec.push_back(srcimg);
+        return outvec;
+      }
+      //PF_UNREF( extended, "SplitDetailsLevelPar::build(): extended unref" );
+    } else {
+      PF_REF( srcimg, "SplitDetailsLevelPar::build(): srcimg ref" );
+    }
+
     if (blur_type == PF::SPLIT_DETAILS_BLUR_GAUSS) { 
       PF::GaussBlurPar* gausspar = dynamic_cast<PF::GaussBlurPar*>( gauss->get_par() );
       if( gausspar ) {
         in2.push_back( srcimg );
         
-        gausspar->set_image_hints( srcimg );
+        gausspar->set_image_hints( cached );
         gausspar->set_format( get_format() );
         VipsImage* smoothed = gausspar->build( in2, 0, NULL, NULL, level );
   
         in2.clear();
         in2.push_back( smoothed );
-        in2.push_back( srcimg );
+        in2.push_back( cached );
         VipsImage* out = PF::OpParBase::build( in2, 0, NULL, NULL, level );
+        PF_UNREF( cached, "SplitDetailsLevelPar::build(): cached unref" );
   
         outvec.push_back( smoothed );
         outvec.push_back( out );
@@ -139,20 +166,17 @@
       if( wavdecpar ) {
         in2.push_back( srcimg );
         
-        wavdecpar->set_initial_lev( initial_lev );
         wavdecpar->set_preview_scale( level );
-        wavdecpar->set_numScales( 1 );
-        wavdecpar->set_currScale( 2 );
-        wavdecpar->set_blendFactor( .5f );
       
-        wavdecpar->set_image_hints( srcimg );
+        wavdecpar->set_image_hints( cached );
         wavdecpar->set_format( get_format() );
         VipsImage* smoothed = wavdecpar->build( in2, 0, NULL, NULL, level );
   
         in2.clear();
         in2.push_back( smoothed );
-        in2.push_back( srcimg );
+        in2.push_back( cached );
         VipsImage* out = PF::OpParBase::build( in2, 0, NULL, NULL, level );
+        PF_UNREF( cached, "SplitDetailsLevelPar::build(): cached unref" );
   
         outvec.push_back( smoothed );
         outvec.push_back( out );
@@ -257,6 +281,7 @@ void PF::SplitDetailsPar::compute_padding( VipsImage* full_res, unsigned int id,
     if( !lpar ) continue;
     lpar->compute_padding(full_res, id, level);
     padding += lpar->get_padding(id);
+    //padding = lpar->get_padding(id);
   }
 
   set_padding( padding, id );

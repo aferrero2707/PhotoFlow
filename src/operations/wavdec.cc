@@ -69,12 +69,6 @@ VipsImage* PF::WavDecPar::build(std::vector<VipsImage*>& in, int first,
   
   std::vector<VipsImage*> in2;
 
-  // FIXME: disable caching, it seems to slow down the process???
-  bool do_caching = false;
-  int tw = 128, th = 128, nt = 1000;
-  VipsAccess acc = VIPS_ACCESS_RANDOM;
-  int threaded = 1, persistent = 0;
-
   WavDecAlgoPar* wav_dec_par = dynamic_cast<WavDecAlgoPar*>( wavdec_algo->get_par() );
   int max_scales = wav_dec_par->get_maxScales(srcimg->Xsize, srcimg->Ysize);
   if (numScales.get() > max_scales) {
@@ -100,19 +94,6 @@ VipsImage* PF::WavDecPar::build(std::vector<VipsImage*>& in, int first,
     return in[0];
   }
   
-  // Memory caching of the padded image
-  VipsImage* cached = extended;
-  if( do_caching ) {
-    if( vips_tilecache(extended, &cached,
-        "tile_width", tw, "tile_height", th, "max_tiles", nt,
-        "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
-      std::cout<<"WavDecPar::build(): vips_tilecache() failed."<<std::endl;
-      PF_REF( in[0], "WavDecPar::build(): vips_tilecache() failed." );
-      return in[0];
-    }
-    PF_UNREF( extended, "WavDecPar::build(): extended unref" );
-  }
-  
   // decompose the nscale
   wav_dec_par->set_numScales( get_numScales() );
   wav_dec_par->set_currScale( get_currScale() );
@@ -120,12 +101,12 @@ VipsImage* PF::WavDecPar::build(std::vector<VipsImage*>& in, int first,
   wav_dec_par->set_initial_lev( get_initial_lev() );
   wav_dec_par->set_preview_scale( get_preview_scale() );
   
-  wav_dec_par->set_image_hints( cached );
+  wav_dec_par->set_image_hints( extended );
   wav_dec_par->set_format( get_format() );
   in2.clear();
-  in2.push_back( cached );
+  in2.push_back( extended );
   VipsImage* wavdec = wav_dec_par->build( in2, 0, NULL, NULL, level );
-  PF_UNREF( cached, "WavDecPar::build(): cached unref" );
+  PF_UNREF( extended, "WavDecPar::build(): extended unref" );
   
   // crop the decomposed image to remove the padding pixels in order to return it
   VipsImage* cropped;
