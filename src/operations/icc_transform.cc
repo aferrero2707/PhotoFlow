@@ -39,7 +39,9 @@ PF::ICCTransformPar::ICCTransformPar():
   adaptation_state(-1),
   transform( NULL ),
   input_cs_type( cmsSigRgbData ),
-  output_cs_type( cmsSigRgbData )
+  output_cs_type( cmsSigRgbData ),
+  clip_negative(false),
+  clip_overflow(false)
 {
   set_type("icc_transform" );
 

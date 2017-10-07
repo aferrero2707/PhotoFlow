@@ -297,6 +297,8 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     tr_par->set_out_profile( iccprof );
     tr_par->set_bpc( bpc.get() );
     tr_par->set_adaptation_state( adaptation_state.get() );
+    tr_par->set_clip_negative(clip_negative.get());
+    tr_par->set_clip_overflow(clip_overflow.get());
     out = tr_par->build( in2, 0, NULL, NULL, level );
     std::cout<<"ConvertColorspacePar::build(): tr_par output: "<<out<<std::endl;
 

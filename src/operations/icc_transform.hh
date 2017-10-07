@@ -57,6 +57,8 @@ namespace PF
     cmsColorSpaceSignature input_cs_type;
     cmsColorSpaceSignature output_cs_type;
 
+    bool clip_negative, clip_overflow;
+
   public:
 
     ICCTransformPar();
@@ -91,6 +93,11 @@ namespace PF
     bool has_intensity() { return false; }
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
+
+    bool get_clip_negative() { return clip_negative; }
+    bool get_clip_overflow() { return clip_overflow; }
+    void set_clip_negative( bool flag ) { clip_negative = flag; }
+    void set_clip_overflow( bool flag ) { clip_overflow = flag; }
 
     //cmsHPROFILE create_profile_from_matrix (const double matrix[3][3], bool gamma, Glib::ustring name);
 
@@ -228,6 +235,12 @@ namespace PF
           }
         } else {
           memcpy( pout, p, sizeof(float)*line_size_in );
+        }
+        if( opar->get_clip_negative() || opar->get_clip_overflow() ) {
+          for( x = 0; x < line_size_out; x+= 1 ) {
+            if( opar->get_clip_negative() ) pout[x] = MAX( pout[x], 0.f );
+            if( opar->get_clip_overflow() ) pout[x] = MIN( pout[x], 1.f );
+          }
         }
       }
 
