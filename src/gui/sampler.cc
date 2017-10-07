@@ -424,11 +424,18 @@ void PF::Sampler::update( VipsRect* area )
   VIPS_UNREF( reg );
   PF_UNREF( image, "Sampler::update(): image unref after vips_region_prepare()" );
 
+  for( int c = 0; c < image->Bands; c++ ) tot[c] /= sampler_area;
+  if( vips_image_get_interpretation(image) == VIPS_INTERPRETATION_LAB ) {
+    PF::Lab_pf2lcms( tot );
+  } else {
+    for( int c = 0; c < image->Bands; c++ ) tot[c] *= 100;
+  }
+
   Update * update = g_new (Update, 1);
   update->sampler = this;
   for( int c = 0; c < image->Bands; c++ ) {
     std::cout<<"PF::Sampler::update(): tot["<<c<<"]="<<tot[c]<<std::endl;
-    update->val[c] = tot[c] / sampler_area;
+    update->val[c] = tot[c];
     std::cout<<"PF::Sampler::update(): val["<<c<<"]="<<update->val[c]<<std::endl;
   }
   gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
@@ -524,12 +531,12 @@ PF::SamplerGroup::SamplerGroup( Pipeline* v ):
 {
   row1.pack_start(s1,Gtk::PACK_SHRINK,10);
   row1.pack_start(s2,Gtk::PACK_SHRINK,10);
-  row1.pack_start(s3,Gtk::PACK_SHRINK,10);
-  row1.pack_start(s4,Gtk::PACK_SHRINK,10);
-  row2.pack_start(s5,Gtk::PACK_SHRINK,10);
-  row2.pack_start(s6,Gtk::PACK_SHRINK,10);
-  row2.pack_start(s7,Gtk::PACK_SHRINK,10);
-  row2.pack_start(s8,Gtk::PACK_SHRINK,10);
+  row2.pack_start(s3,Gtk::PACK_SHRINK,10);
+  row2.pack_start(s4,Gtk::PACK_SHRINK,10);
+  //row2.pack_start(s5,Gtk::PACK_SHRINK,10);
+  //row2.pack_start(s6,Gtk::PACK_SHRINK,10);
+  //row2.pack_start(s7,Gtk::PACK_SHRINK,10);
+  //row2.pack_start(s8,Gtk::PACK_SHRINK,10);
   pack_start(row1,Gtk::PACK_SHRINK,10);
   pack_start(row2,Gtk::PACK_SHRINK,10);
 }
