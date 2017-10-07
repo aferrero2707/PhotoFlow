@@ -89,7 +89,7 @@ PF::BasicAdjustmentsConfigGUI::BasicAdjustmentsConfigGUI( PF::Layer* layer ):
   brightnessSlider( this, "brightness", _("brightness"), 0, -100, 100, 5, 10, 100),
   //exposureSlider( this, "exposure", _("exposure"), 0, -10, 10, 0.1, 1, 1 ),
   exposureSlider( this, "exposure", "Exp. comp.", 0, -10, 10, 0.05, 0.5 ),
-  gamma_slider( this, "gamma", _("gamma adjustment"), 0, -1, 1, 0.01, 0.1, 1 ),
+  gamma_slider( this, "gamma", _("gamma"), 0, -1, 1, 0.01, 0.1, 1 ),
   contrastSlider( this, "contrast", _("Contrast"), 0, -100, 100, 5, 10, 100),
   contrast2Slider( this, "contrast_eq", "Contrast(curve)", 0, -100, 100, 5, 10, 100),
   saturationSlider( this, "saturation", _("Saturation"), 0, -100, 100, 5, 10, 100),
