@@ -358,7 +358,8 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
     int p = get_output_padding( i );
     if( p > 0 ) {
       int nt = out->Xsize*(p/PF_OUPUT_CACHE_TS + 3)/PF_OUPUT_CACHE_TS;
-      VipsAccess acc = VIPS_ACCESS_RANDOM;
+      VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
+      //VipsAccess acc = VIPS_ACCESS_RANDOM;
       int threaded = 1, persistent = 0;
       VipsImage* cached;
       if( !vips_tilecache(out, &cached,
