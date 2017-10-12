@@ -6,6 +6,7 @@ matrix:
           dist: trusty
           compiler: g++
           sudo: required
+          services: docker
           dist: trusty
           addons:
             apt:
