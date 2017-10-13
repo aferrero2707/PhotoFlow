@@ -4,7 +4,7 @@ RUN yum -y install devtoolset-3-gcc devtoolset-3-gcc-c++
 
 RUN yum -y install epel-release 
 
-RUN yum -y install git make autoconf automake libtool coreutils \
+RUN yum -y --enablerepo=epel install git make autoconf automake libtool coreutils \
         libzip-devel libxml2-devel \
         tar gzip which grep wget \
         cmake gtkmm24-devel lcms2-devel libpng10-devel libtiff-devel libjpeg-turbo-devel \
