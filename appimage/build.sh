@@ -6,7 +6,7 @@ export LD_LIBRARY_PATH=/app/lib:${LD_LIBRARY_PATH}
 wget https://github.com/jcupitt/libvips/releases/download/v8.5.6/vips-8.5.6.tar.gz
 tar xzvf vips-8.5.6.tar.gz
 cd vips-8.5.6
-./autogen.sh
+#./autogen.sh
 FLAGS="-g -O2 -march=nocona -mno-sse3 -mtune=generic -ftree-vectorize" CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS} -fpermissive" ./configure --prefix=/app --disable-gtk-doc --disable-gtk-doc-html --disable-introspection --enable-debug=no --without-python --without-magick --without-libwebp --enable-pyvips8=no --enable-shared=yes --enable-static=no
 make -j2
 sudo make install
