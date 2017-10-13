@@ -32,6 +32,7 @@
 #define PF_IMAGE_HH
 
 #include <stdlib.h>
+#include <cstddef>
 #include <sigc++/sigc++.h>
 
 //#include <gexiv2/gexiv2-metadata.h>
