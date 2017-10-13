@@ -3,6 +3,16 @@
 cd /sources/build
 export PKG_CONFIG_PATH=/app/lib/pkgconfig:${PKG_CONFIG_PATH}
 export LD_LIBRARY_PATH=/app/lib:${LD_LIBRARY_PATH}
+
+wget http://github.com/zeux/pugixml/releases/download/v1.8/pugixml-1.8.tar.gz
+tar xzvf pugixml-1.8.tar.gz
+cd pugixml-1.8
+mkdir build
+cd build
+cmake -DBUILD_SHARED_LIBS=ON -DBUILD_PKGCONFIG=ON -DCMAKE_INSTALL_PREFIX=/app ..
+make install
+cd ../..
+
 wget https://github.com/jcupitt/libvips/releases/download/v8.5.6/vips-8.5.6.tar.gz
 tar xzvf vips-8.5.6.tar.gz
 cd vips-8.5.6
