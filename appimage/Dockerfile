@@ -7,4 +7,4 @@ RUN yum -y install epel-release git make autoconf automake libtool \
         libudev-devel libusbx-devel libcurl-devel libssh2-devel mesa-libGL-devel sqlite-devel \
         tar gzip which make autoconf automake gstreamer-devel mesa-libEGL coreutils grep wget
 
-RUN scl enable devtoolset-3 bash
+RUN scl enable devtoolset-3 'g++ -v'
