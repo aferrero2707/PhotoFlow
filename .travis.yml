@@ -15,7 +15,7 @@ matrix:
                 - gettext
           before_script:
                 - sudo docker build -f appimage/Dockerfile -t phf-appimage .
-                - sudo docker run -it -v $(pwd):/sources phf-appimage scl enable devtoolset-3 '/sources/appimage/build.sh'
+                - sudo docker run -it -v $(pwd):/sources phf-appimage scl enable devtoolset-3 'bash /sources/appimage/build.sh'
 
 branches:
   except:
