@@ -11,3 +11,5 @@ RUN yum -y --enablerepo=epel install sudo git make autoconf automake libtool cor
         gobject-introspection swig libexif-devel fftw-devel expat-devel orc-devel
 
 RUN scl enable devtoolset-3 'g++ -v'
+RUN rm -f /usr/bin/cmake
+RUN ln -s $(which cmake3) /usr/bin/cmake
