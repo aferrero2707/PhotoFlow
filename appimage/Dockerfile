@@ -8,6 +8,6 @@ RUN yum -y --enablerepo=epel install git make autoconf automake libtool coreutil
         libzip-devel libxml2-devel \
         tar gzip which grep wget \
         cmake gtkmm24-devel lcms2-devel libpng10-devel libtiff-devel libjpeg-turbo-devel \
-        gobject-introspection swig libexif-devel fftw-devel
+        gobject-introspection swig libexif-devel fftw-devel expat-devel
 
 RUN scl enable devtoolset-3 'g++ -v'
