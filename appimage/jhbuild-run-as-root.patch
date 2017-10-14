@@ -1,0 +1,25 @@
+Les fichiers binaires jhbuild/.git/index et jhbuild.new/.git/index sont différents
+diff -c -r jhbuild/jhbuild/main.py jhbuild.new/jhbuild/main.py
+*** jhbuild/jhbuild/main.py	2017-10-14 10:45:48.603046595 +0200
+--- jhbuild.new/jhbuild/main.py	2017-10-14 19:21:45.470905602 +0200
+***************
+*** 94,102 ****
+          localedir = None
+      gettext.install('jhbuild', localedir=localedir, unicode=True)
+  
+!     if not 'JHBUILD_RUN_AS_ROOT' in os.environ and hasattr(os, 'getuid') and os.getuid() == 0:
+!         sys.stderr.write(_('You should not run jhbuild as root.\n').encode(_encoding, 'replace'))
+!         sys.exit(1)
+  
+      logging.getLogger().setLevel(logging.INFO)
+      logging_handler = logging.StreamHandler()
+--- 94,102 ----
+          localedir = None
+      gettext.install('jhbuild', localedir=localedir, unicode=True)
+  
+! #    if not 'JHBUILD_RUN_AS_ROOT' in os.environ and hasattr(os, 'getuid') and os.getuid() == 0:
+! #        sys.stderr.write(_('You should not run jhbuild as root.\n').encode(_encoding, 'replace'))
+! #        sys.exit(1)
+  
+      logging.getLogger().setLevel(logging.INFO)
+      logging_handler = logging.StreamHandler()

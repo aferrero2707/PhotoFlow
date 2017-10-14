@@ -1,6 +1,24 @@
 #! /bin/bash
 
-cd /sources/build
+mkdir -p /work/checkout
+mkdir -p /work/build
+cd /work
+WD=$(pwd)
+prefix=$WD/inst
+
+export PATH=$prefix/bin:$PATH
+export LD_LIBRARY_PATH=$prefix/lib:$LD_LIBRARY_PATH
+
+(rm -rf Python-2.7.13* && wget https://www.python.org/ftp/python/2.7.13/Python-2.7.13.tar.xz && tar xJvf Python-2.7.13.tar.xz && cd Python-2.7.13 && ./configure --prefix=$prefix --enable-shared --enable-unicode=ucs2 && make && make install)
+
+(rm -rf jhbuild && git clone https://github.com/GNOME/jhbuild.git && cd jhbuild && patch -p1 -i /sources/appimage/jhbuild-run-as-root.patch && ./autogen.sh --prefix=$prefix && make && make install)
+
+which -a jhbuild
+
+jhbuild -f "/sources/appimage/jhbuildrc" -m "$(pwd)/jhbuild/modulesets/gnome-suites-core-3.28.modules" build gtkmm-3
+
+exit
+
 export PKG_CONFIG_PATH=/app/lib/pkgconfig:${PKG_CONFIG_PATH}
 export LD_LIBRARY_PATH=/app/lib:${LD_LIBRARY_PATH}
 

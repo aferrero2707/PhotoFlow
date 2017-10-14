@@ -1,0 +1,39 @@
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
+
+# edit this file to match your settings and copy it to ~/.config/jhbuildrc
+
+# if you have a GNOME git account, uncomment this line
+# repos['git.gnome.org'] = 'ssh://user@git.gnome.org/git/'
+
+# what module set should be used.  The default can be found in
+# jhbuild/defaults.jhbuildrc, but can be any file in the modulesets directory
+# or a URL of a module set file on a web server.
+# moduleset = 'gnome-apps-3.12'
+#
+# A list of the modules to build.  Defaults to the GNOME core and tested apps.
+# modules = [ 'meta-gnome-core', 'meta-gnome-apps-tested' ]
+
+# Or to build the old GNOME 2.32:
+# moduleset = 'gnome2/gnome-2.32'
+# modules = ['meta-gnome-desktop']
+
+# what directory should the source be checked out to?
+checkoutroot = '/work/checkout'
+buildroot = '/work/build'
+
+# the prefix to configure/install modules to (must have write access)
+prefix = '/app'
+
+# custom CFLAGS / environment pieces for the build
+# os.environ['CFLAGS'] = '-Wall -g -O0'
+
+# extra arguments to pass to all autogen.sh scripts
+# to speed up builds of GNOME, try '--disable-static --disable-gtk-doc'
+#autogenargs='--enable-introspection=no --disable-static --disable-gtk-doc'
+
+# A string listing additional arguments to be passed to make.
+# Set makeargs to 'V=1' for verbose build output.
+makeargs = '-j 2'
+
+module_makeargs['gimp'] = 'CFLAGS="-std=gnu99"'
