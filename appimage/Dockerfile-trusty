@@ -1,0 +1,27 @@
+FROM ubuntu:14.04
+
+RUN apt-get update
+RUN apt-get install -y software-properties-common
+RUN sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+RUN apt-get -y update
+
+#RUN adduser --debug --system --group --home /var/lib/colord colord \
+#	    --quiet --gecos "colord colour management daemon"
+RUN adduser --debug --system --group --home /var/lib/colord colord \
+	    --quiet 
+RUN apt-get install -y colord
+
+RUN apt-get install -y gcc-5 g++-5 gettext intltool \
+gir1.2-gtk-3.0 libgtk2.0-dev \
+liblcms2-dev \
+libpng12-dev \
+python-dev python-gi-dev python-gi-cairo python-nose python-numpy \
+automake gtk-doc-tools gobject-introspection libfftw3-dev libjpeg-turbo8-dev \
+libpng12-dev libwebp-dev libtiff4-dev libxml2-dev swig libmagick++-dev \
+bc libcfitsio3-dev libgsl0-dev libmatio-dev liborc-0.4-dev libpoppler-glib-dev \
+librsvg2-dev libgif-dev python-dev libsigc++-2.0-dev libpixman-1-dev \
+libpango1.0-dev libpangoft2-1.0-0 libglib2.0-dev libglibmm-2.4-dev \
+libgtkmm-2.4-dev libpugixml-dev gtk2-engines-pixbuf wget git itstool \
+bison flex
+
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
