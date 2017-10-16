@@ -22,6 +22,29 @@ bc libcfitsio3-dev libgsl0-dev libmatio-dev liborc-0.4-dev libpoppler-glib-dev \
 librsvg2-dev libgif-dev python-dev libsigc++-2.0-dev libpixman-1-dev \
 libpango1.0-dev libpangoft2-1.0-0 libglib2.0-dev libglibmm-2.4-dev \
 libgtkmm-2.4-dev libpugixml-dev gtk2-engines-pixbuf wget git itstool \
-bison flex
+bison flex ragel unzip libdbus-1-dev
 
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
+
+ENV PATH=/work/inst/bin:$PATH LD_LIBRARY_PATH=/work/inst/lib:$LD_LIBRARY_PATH
+
+RUN mkdir /work && cd /work && rm -rf Python-* && wget https://www.python.org/ftp/python/3.6.3/Python-3.6.3.tar.xz && tar xJvf Python-3.6.3.tar.xz && cd Python-3.6.3 && ./configure --prefix=/work/inst --enable-shared --enable-unicode=ucs2 && make -j 2 install
+
+ADD appimage/jhbuild-run-as-root.patch /work
+
+RUN cd /work && rm -rf jhbuild && git clone https://github.com/GNOME/jhbuild.git && cd jhbuild && patch -p1 -i /work/jhbuild-run-as-root.patch && ./autogen.sh --prefix=/work/inst && make install
+
+RUN cd /work && rm -f ninja* && wget https://github.com/ninja-build/ninja/releases/download/v1.6.0/ninja-linux.zip && unzip ninja-linux.zip && cp -a ninja /work/inst/bin
+
+ADD appimage/jhbuildrc /work
+
+RUN echo "$PATH"
+RUN which jhbuild
+
+ENV PATH=/app/bin:$PATH LD_LIBRARY_PATH=/app/lib:$LD_LIBRARY_PATH
+
+RUN jhbuild -f "/work/jhbuildrc" -m "/work/jhbuild/modulesets/gnome-suites-core-3.28.modules" build --nodeps gettext
+RUN jhbuild -f "/work/jhbuildrc" -m "/work/jhbuild/modulesets/gnome-suites-core-3.28.modules" build --nodeps glibmm-2.4
+RUN jhbuild -f "/work/jhbuildrc" -m "/work/jhbuild/modulesets/gnome-suites-core-3.28.modules" build --nodeps --skip=glib gobject-introspection
+RUN jhbuild -f "/work/jhbuildrc" -m "/work/jhbuild/modulesets/gnome-suites-core-3.28.modules" build --nodeps --skip=glib atkmm-1.6
+

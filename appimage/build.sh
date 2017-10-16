@@ -9,13 +9,25 @@ prefix=$WD/inst
 export PATH=$prefix/bin:$PATH
 export LD_LIBRARY_PATH=$prefix/lib:$LD_LIBRARY_PATH
 
-(rm -rf Python-2.7.13* && wget https://www.python.org/ftp/python/2.7.13/Python-2.7.13.tar.xz && tar xJvf Python-2.7.13.tar.xz && cd Python-2.7.13 && ./configure --prefix=$prefix --enable-shared --enable-unicode=ucs2 && make && make install)
+ls /work
 
-(rm -rf jhbuild && git clone https://github.com/GNOME/jhbuild.git && cd jhbuild && patch -p1 -i /sources/appimage/jhbuild-run-as-root.patch && ./autogen.sh --prefix=$prefix && make && make install)
+#(rm -rf Python-2.7.13* && wget https://www.python.org/ftp/python/2.7.13/Python-2.7.13.tar.xz && tar xJvf Python-2.7.13.tar.xz && cd Python-2.7.13 && ./configure --prefix=$prefix --enable-shared --enable-unicode=ucs2 && make && make install)
+
+#(rm -rf jhbuild && git clone https://github.com/GNOME/jhbuild.git && cd jhbuild && patch -p1 -i /sources/appimage/jhbuild-run-as-root.patch && ./autogen.sh --prefix=$prefix && make && make install)
+
+apt-get install -y ragel unzip libdbus-1-dev
+
+wget https://github.com/ninja-build/ninja/releases/download/v1.6.0/ninja-linux.zip && unzip ninja-linux.zip && cp -a ninja $prefix/bin
+
+#ls /usr/bin | grep python
+
+which python3-config
+
+#exit
 
 which -a jhbuild
 
-jhbuild -f "/sources/appimage/jhbuildrc" -m "$(pwd)/jhbuild/modulesets/gnome-suites-core-3.28.modules" build gtkmm-3
+jhbuild -f "/sources/appimage/jhbuildrc" -m "$(pwd)/jhbuild/modulesets/gnome-suites-core-3.28.modules" build --nodeps gtkmm-3
 
 exit
 
