@@ -468,7 +468,7 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
     }
   }
 
-  std::cout<<"ImageArea::modify_preview() called. samplers="<<samplers<<std::endl;
+  //std::cout<<"ImageArea::modify_preview() called. samplers="<<samplers<<std::endl;
   if( samplers ) {
     for(int i = 0; i < samplers->get_sampler_num(); i++) {
       samplers->get_sampler(i).modify_preview(temp_buffer, zoom_fact, xoffset, yoffset);

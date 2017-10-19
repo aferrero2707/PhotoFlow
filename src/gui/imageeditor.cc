@@ -139,6 +139,15 @@ class Layout2: public Gtk::HBox
   Gtk::HBox hbox;
   Gtk::VBox vbox;
   Gtk::VPaned paned;
+  Gtk::HPaned main_paned;
+
+  void on_paned_size_allocate(Gtk::Allocation& allocation)
+  {
+    //Gtk::HBox::on_size_allocate(allocation);
+    //std::cout<<"Layout2::on_paned_size_allocate() called, width=   "<<allocation.get_width()<<std::endl;
+    //std::cout<<"Layout2::on_paned_size_allocate() called, position="<<main_paned.get_position()<<std::endl;
+    PF::PhotoFlow::Instance().get_options().set_layerlist_widget_width( main_paned.get_position() );
+  }
 
 public:
   Layout2(Gtk::Widget* h, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
@@ -156,10 +165,18 @@ public:
     vbox.pack_start( hbox, Gtk::PACK_EXPAND_WIDGET );
 
     //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
-    pack_start( vbox, Gtk::PACK_SHRINK );
-    pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
+    //pack_start( vbox, Gtk::PACK_SHRINK );
+    //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
+    main_paned.add1( vbox );
+    main_paned.add2( *preview_widget );
+    pack_start( main_paned, Gtk::PACK_EXPAND_WIDGET );
 
     paned.set_position(150);
+    main_paned.set_position( PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width() );
+
+    vbox.signal_size_allocate().
+        connect( sigc::mem_fun(*this, &Layout2::on_paned_size_allocate) );
+
   }
 };
 

@@ -41,6 +41,7 @@ PF::Options::Options()
   display_profile_intent = INTENT_RELATIVE_COLORIMETRIC;
   save_sidecar_files = 0;
   use_default_preset = 0;
+  layerlist_widget_width = 250;
 }
 
 void PF::Options::set_working_profile_type(int t)
@@ -90,6 +91,12 @@ void PF::Options::load()
       if (keyFile.has_group ("Processing")) {
         if (keyFile.has_key ("Processing", "use_default_preset")) {
           use_default_preset = keyFile.get_integer ("Processing", "apply_default_preset");
+        }
+      }
+
+      if (keyFile.has_group ("GUI")) {
+        if (keyFile.has_key ("GUI", "layerlist_widget_width")) {
+          layerlist_widget_width = keyFile.get_integer ("GUI", "layerlist_widget_width");
         }
       }
 
@@ -187,6 +194,8 @@ void PF::Options::save()
   keyFile.set_string ("Folders", "last_visited_icc_folder", last_visited_icc_folder);
 
   keyFile.set_integer ("Processing", "apply_default_preset", (int)use_default_preset);
+
+  keyFile.set_integer ("GUI", "layerlist_widget_width", (int)layerlist_widget_width);
 
   keyFile.set_integer ("Output", "save_sidecar_files", (int)save_sidecar_files);
 

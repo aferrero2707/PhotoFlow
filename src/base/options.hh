@@ -64,6 +64,8 @@ enum display_profile_t
     int save_sidecar_files;
     int use_default_preset;
 
+    int layerlist_widget_width;
+
   public:
     Options();
 
@@ -112,6 +114,9 @@ enum display_profile_t
 
     void set_apply_default_preset(int val) { use_default_preset = val; }
     int get_apply_default_preset() { return use_default_preset; }
+
+    int get_layerlist_widget_width() { return layerlist_widget_width; }
+    void set_layerlist_widget_width(int w) { layerlist_widget_width = w; }
 
     void load();
     void save();
