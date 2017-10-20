@@ -173,6 +173,7 @@ namespace PF
           BLEND_LOOP(blend_exclusion);
           break;
         case PF_BLEND_LUMI:
+          blend_lumi.set_icc_data( data );
           BLEND_LOOP2(blend_lumi);
           break;
         case PF_BLEND_LUMINANCE:
@@ -180,6 +181,7 @@ namespace PF
           BLEND_LOOP2(blend_luminance);
           break;
         case PF_BLEND_COLOR:
+          blend_color.set_icc_data( data );
           BLEND_LOOP2(blend_color);
           break;
         case PF_BLEND_LAST:
