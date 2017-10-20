@@ -269,7 +269,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   if( background && foreground && (background->BandFmt != foreground->BandFmt) )
     is_passthrough = true;
 
-    if( is_passthrough && (cur_blend_mode != PF_BLEND_PASSTHROUGH) ) {
+  if( is_passthrough && (cur_blend_mode != PF_BLEND_PASSTHROUGH) ) {
     switch( get_colorspace() ) {
     case PF_COLORSPACE_RGB:
       if( get_rgb_target_channel()>= 0 )
@@ -287,7 +287,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       break;
     }
   }
-    std::cout<<"BlenderPar::build(): is_passthrough="<<is_passthrough<<std::endl;
+  std::cout<<"BlenderPar::build(): is_passthrough="<<is_passthrough<<std::endl;
 
   // If both images are not NULL and the blending mode is not "passthrough-equivalent",
   // we activate the blending code.
@@ -356,6 +356,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     //PF_UNREF( background, "BlenderPar::build() background unref" );
     //PF_UNREF( foreground, "BlenderPar::build() foreground unref" );
     PF_UNREF( foreground2, "BlenderPar::build() foreground2 unref" );
+    if( outnew && icc_data_bottom ) PF::set_icc_profile( outnew, icc_data_bottom );
     std::cout<<"BlenderPar::build(): doing explicit layer blending"<<std::endl;
   } else if( (background != NULL) && (foreground != NULL) && is_passthrough ) {
     outnew = foreground;
@@ -383,17 +384,8 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   //set_image( outnew );
 #ifndef NDEBUG
   if( outnew ) {
-    if( !vips_image_get_blob( outnew, VIPS_META_ICC_NAME, 
-                              &data, &data_length ) ) {
-    
-      profile_in = cmsOpenProfileFromMem( data, data_length );
-      if( profile_in ) {
-        char tstr[1024];
-        cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
-        std::cout<<"BlenderPar::build(): Output profile: "<<tstr<<std::endl;
-        cmsCloseProfile( profile_in );
-      }
-    }  
+    std::cout<<"BlenderPar::build(): Output profile: "<<std::endl;
+    PF::print_embedded_profile(outnew);
   }
 #endif
 
@@ -401,7 +393,8 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     int p = get_output_padding( 0 );
     if( p > 0 ) {
       int nt = outnew->Xsize*(p/PF_OUPUT_CACHE_TS + 3)/PF_OUPUT_CACHE_TS;
-      VipsAccess acc = VIPS_ACCESS_RANDOM;
+      VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
+      //VipsAccess acc = VIPS_ACCESS_RANDOM; // gives worst performances
       int threaded = 1, persistent = 0;
       VipsImage* cached;
       if( !vips_tilecache(outnew, &cached,
@@ -412,7 +405,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
           "persistent", persistent, NULL) ) {
         PF_UNREF( outnew, "BlenderPar::build(): outnew unref" );
         outnew = cached;
-        std::cout<<"BlenderPar::build(): added tilecache for output image, padding="<<p<<std::endl;
+        std::cout<<"BlenderPar::build(): added tilecache for output image, padding="<<p<<", nt="<<nt<<std::endl;
       }
     }
   }
