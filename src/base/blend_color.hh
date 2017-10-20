@@ -35,6 +35,7 @@ class BlendColor: public BlendBase<T, colorspace, CHMIN, CHMAX, has_omap>
 {
   int pos, ch;
 public:
+  void set_icc_data( ICCProfile* d ) { }
   void blend(const float& , T* , T* top, T* out, const int& x, int& )
   {
     pos = x;
@@ -53,13 +54,17 @@ template<typename T, int CHMIN, int CHMAX>
 class BlendColor<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>: 
   public BlendBase<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>
 {
+  BlendLuminosity<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false> blend_lumi;
   int pos, ch;
   double temp_top;
   double irgb[3], rgb[3];
 public:
-  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
+  void set_icc_data( ICCProfile* d ) { blend_lumi.set_icc_data(d); }
+  void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap)
   {
-    // RGB values of the bottom layer
+    blend_lumi.blend( opacity, top, bottom, out, x, xomap );
+    return;
+
     // RGB values of the bottom layer
     irgb[0] = (double(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
     irgb[1] = (double(bottom[x+1]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
@@ -91,6 +96,7 @@ class BlendColor<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, true>:
   BlendColor<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false> blender;
   float opacity_real;
 public:
+  void set_icc_data( ICCProfile* d ) { blender.set_icc_data(d); }
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     float opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);
@@ -113,6 +119,7 @@ class BlendColor<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false>:
   double temp_top;
   double rgb[3];
 public:
+  void set_icc_data( ICCProfile* d ) { }
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
     pos = x;
@@ -130,6 +137,7 @@ class BlendColor<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, true>:
   BlendColor<T, PF_COLORSPACE_LAB, CHMIN, CHMAX, false> blender;
   float opacity_real;
 public:
+  void set_icc_data( ICCProfile* d ) { }
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& xomap) 
   {
     float opacity_real = opacity*(this->pmap[xomap]+FormatInfo<T>::MIN)/(FormatInfo<T>::RANGE);
