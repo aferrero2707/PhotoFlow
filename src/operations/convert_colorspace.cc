@@ -388,7 +388,8 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
       }
     }
   } else {
-
+    out = image;
+    PF_REF( out, "ConvertColorspacePar::build(): out ref for profile assignment" );
   }
   if( iccprof ) PF::set_icc_profile( out, iccprof );
 
