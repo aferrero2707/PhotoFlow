@@ -43,12 +43,18 @@ PF::ToneMappingPar::ToneMappingPar():
   filmic_E("filmic_E",this,0.01),
   filmic_F("filmic_F",this,0.30),
   filmic_W("filmic_W",this,11.2),
+  filmic2_TS("filmic2_TS",this,0.5),
+  filmic2_TL("filmic2_TL",this,0.5),
+  filmic2_SS("filmic2_SS",this,2.0),
+  filmic2_SL("filmic2_SL",this,0.5),
+  filmic2_SA("filmic2_SA",this,1.0),
   lumi_blend_frac("lumi_blend_frac",this,0),
   icc_data( NULL )
 {
   method.add_enum_value(PF::TONE_MAPPING_REINHARD,"TONE_MAPPING_REINHARD","Reinhard");
   method.add_enum_value(PF::TONE_MAPPING_HEJL,"TONE_MAPPING_HEJL","Hejl-Dawson");
   method.add_enum_value(PF::TONE_MAPPING_FILMIC,"TONE_MAPPING_FILMIC","filmic");
+  method.add_enum_value(PF::TONE_MAPPING_FILMIC2,"TONE_MAPPING_FILMIC2","filmic new");
   set_type("tone_mapping" );
 
   set_default_name( _("tone mapping") );

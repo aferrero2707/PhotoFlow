@@ -230,8 +230,8 @@ FILE(GLOB VipsSources vips/*.c vips/*.cc vips/gmic/*.c vips/gmic/*.cpp)
 FILE(GLOB GMicIncludes vips/gmic/gmic/src/*.h)
 FILE(GLOB GMicSources vips/gmic/gmic/src/gmic.cpp)
 
-FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh legacy/operations/*.hh)
-FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc legacy/operations/*.cc)
+FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh legacy/operations/*.hh operations/Filmic/Core/CoreHelpers.h operations/Filmic/FilmicCurve/FilmicToneCurve.h)
+FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc legacy/operations/*.cc operations/Filmic/Core/CoreHelpers.cpp operations/Filmic/FilmicCurve/FilmicToneCurve.cpp)
 
 #
 # the libraw part is a bit of a hack:

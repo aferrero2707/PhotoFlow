@@ -35,6 +35,7 @@
 //#include <glibmm.h>
 
 #include "../base/processor.hh"
+#include "Filmic/FilmicCurve/FilmicToneCurve.h"
 
 
 namespace PF 
@@ -46,7 +47,8 @@ enum tone_mapping_method_t
   TONE_MAPPING_EXP_GAMMA,
   TONE_MAPPING_REINHARD,
   TONE_MAPPING_HEJL,
-  TONE_MAPPING_FILMIC
+  TONE_MAPPING_FILMIC,
+  TONE_MAPPING_FILMIC2
 };
 
 
@@ -63,6 +65,12 @@ class ToneMappingPar: public OpParBase
   Property<float> filmic_E;
   Property<float> filmic_F;
   Property<float> filmic_W;
+
+  Property<float> filmic2_TS;
+  Property<float> filmic2_TL;
+  Property<float> filmic2_SS;
+  Property<float> filmic2_SL;
+  Property<float> filmic2_SA;
 
   Property<float> lumi_blend_frac;
 
@@ -85,6 +93,12 @@ public:
   float get_filmic_E() { return filmic_E.get(); }
   float get_filmic_F() { return filmic_F.get(); }
   float get_filmic_W() { return filmic_W.get(); }
+
+  float get_filmic2_TS() { return filmic2_TS.get(); }
+  float get_filmic2_TL() { return filmic2_TL.get(); }
+  float get_filmic2_SS() { return filmic2_SS.get(); }
+  float get_filmic2_SL() { return filmic2_SL.get(); }
+  float get_filmic2_SA() { return filmic2_SA.get(); }
 
   float get_lumi_blend_frac() { return lumi_blend_frac.get(); }
 
@@ -149,6 +163,21 @@ public:
     float F = opar->get_filmic_F();
     float W = opar->get_filmic_W();
 
+
+    // Filmic #2 parameters
+    FilmicToneCurve::CurveParamsUser filmic2_user;
+    filmic2_user.m_toeStrength      = opar->get_filmic2_TS();
+    filmic2_user.m_toeLength        = opar->get_filmic2_TL();
+    filmic2_user.m_shoulderStrength = opar->get_filmic2_SS();
+    filmic2_user.m_shoulderLength   = opar->get_filmic2_SL();
+    if(filmic2_user.m_shoulderLength > 0.9999) filmic2_user.m_shoulderLength = 0.9999;
+    filmic2_user.m_shoulderAngle    = opar->get_filmic2_SA();
+    filmic2_user.m_gamma            = 1;
+    FilmicToneCurve::CurveParamsDirect filmic2_direct;
+    FilmicToneCurve::CalcDirectParamsFromUser(filmic2_direct, filmic2_user);
+    FilmicToneCurve::FullCurve filmic2_curve;
+    FilmicToneCurve::CreateCurve(filmic2_curve, filmic2_direct);
+
     for( y = 0; y < height; y++ ) {
       pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
       pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
@@ -198,6 +227,12 @@ public:
             RGB[k] *= 2;
             RGB[k] = ((RGB[k]*(A*RGB[k]+C*B)+D*E)/(RGB[k]*(A*RGB[k]+B)+D*F))-E/F;
             RGB[k] *= whiteScale;
+          }
+          break;
+        }
+        case TONE_MAPPING_FILMIC2: {
+          for( k=0; k < 3; k++) {
+          RGB[k] = filmic2_curve.Eval(RGB[k]);
           }
           break;
         }

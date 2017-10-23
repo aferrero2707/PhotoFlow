@@ -42,6 +42,11 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
   filmic_E_slider( this, "filmic_E", _("toe num."), 0.5, 0, 0.1, 0.002, 0.01, 1 ),
   filmic_F_slider( this, "filmic_F", _("toe den."), 0.5, 0, 1, 0.02, 0.1, 1 ),
   filmic_W_slider( this, "filmic_W", _("lin. white point"), 10, 1, 100, 2, 10, 1 ),
+  filmic2_TS_slider( this, "filmic2_TS", _("toe strength"), 0.5, 0, 1, 0.02, 0.1, 1 ),
+  filmic2_TL_slider( this, "filmic2_TL", _("toe lenght"), 0.5, 0, 1, 0.02, 0.1, 1 ),
+  filmic2_SS_slider( this, "filmic2_SS", _("shoulder strength"), 0.5, 0, 1, 0.02, 0.1, 0.1 ),
+  filmic2_SL_slider( this, "filmic2_SL", _("shoulder lenght"), 0.5, 0, 1, 0.02, 0.1, 1 ),
+  filmic2_SA_slider( this, "filmic2_SA", _("shoulder angle"), 0.5, 0, 1, 0.02, 0.1, 1 ),
   lumi_blend_frac_slider( this, "lumi_blend_frac", _("preserve colors"), 1, 0, 1, 0.02, 0.1, 1 )
 {
   gammaControlsBox.pack_start( gamma_slider, Gtk::PACK_SHRINK );
@@ -53,6 +58,12 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
   filmicControlsBox.pack_start( filmic_E_slider, Gtk::PACK_SHRINK );
   filmicControlsBox.pack_start( filmic_F_slider, Gtk::PACK_SHRINK );
   filmicControlsBox.pack_start( filmic_W_slider, Gtk::PACK_SHRINK );
+
+  filmic2ControlsBox.pack_start( filmic2_TS_slider, Gtk::PACK_SHRINK );
+  filmic2ControlsBox.pack_start( filmic2_TL_slider, Gtk::PACK_SHRINK );
+  filmic2ControlsBox.pack_start( filmic2_SS_slider, Gtk::PACK_SHRINK );
+  filmic2ControlsBox.pack_start( filmic2_SL_slider, Gtk::PACK_SHRINK );
+  filmic2ControlsBox.pack_start( filmic2_SA_slider, Gtk::PACK_SHRINK );
 
   controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 10 );
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK, 10 );
@@ -85,31 +96,41 @@ void PF::ToneMappingConfigGUI::do_update()
 
     if( prop->get_enum_value().first == PF::TONE_MAPPING_EXP_GAMMA ) {
       if( gammaControlsBox.get_parent() != &controlsBox2 )
-	need_update = true;
+        need_update = true;
     } else if( prop->get_enum_value().first == PF::TONE_MAPPING_FILMIC ) {
       if( filmicControlsBox.get_parent() != &controlsBox2 )
-	need_update = true;
+        need_update = true;
+    } else if( prop->get_enum_value().first == PF::TONE_MAPPING_FILMIC2 ) {
+      if( filmic2ControlsBox.get_parent() != &controlsBox2 )
+        need_update = true;
     } else {
-      if( (gammaControlsBox.get_parent() == &controlsBox2) || 
-	  (filmicControlsBox.get_parent() == &controlsBox2) )
-	need_update = true;
+      if( (gammaControlsBox.get_parent() == &controlsBox2) ||
+          (filmicControlsBox.get_parent() == &controlsBox2) ||
+          (filmic2ControlsBox.get_parent() == &controlsBox2) )
+        need_update = true;
     }
 
     if( need_update ) {
       if( gammaControlsBox.get_parent() == &controlsBox2 )
-	controlsBox2.remove( gammaControlsBox );
+        controlsBox2.remove( gammaControlsBox );
       if( filmicControlsBox.get_parent() == &controlsBox2 )
-	controlsBox2.remove( filmicControlsBox );
-      
+        controlsBox2.remove( filmicControlsBox );
+      if( filmic2ControlsBox.get_parent() == &controlsBox2 )
+        controlsBox2.remove( filmic2ControlsBox );
+
       switch( prop->get_enum_value().first ) {
       case PF::TONE_MAPPING_EXP_GAMMA:
-	controlsBox2.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
-	gammaControlsBox.show();
-	break;
+        controlsBox2.pack_start( gammaControlsBox, Gtk::PACK_SHRINK );
+        gammaControlsBox.show();
+        break;
       case PF::TONE_MAPPING_FILMIC:
-	controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
-	filmicControlsBox.show();
-	break;
+        controlsBox2.pack_start( filmicControlsBox, Gtk::PACK_SHRINK );
+        filmicControlsBox.show();
+        break;
+      case PF::TONE_MAPPING_FILMIC2:
+        controlsBox2.pack_start( filmic2ControlsBox, Gtk::PACK_SHRINK );
+        filmic2ControlsBox.show();
+        break;
       }
     }
     controlsBox2.show_all_children();

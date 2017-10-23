@@ -60,6 +60,13 @@ namespace PF {
     Slider filmic_F_slider;
     Slider filmic_W_slider;
 
+    Gtk::VBox filmic2ControlsBox;
+    Slider filmic2_TL_slider;
+    Slider filmic2_TS_slider;
+    Slider filmic2_SL_slider;
+    Slider filmic2_SS_slider;
+    Slider filmic2_SA_slider;
+
     Slider lumi_blend_frac_slider;
 
   public:
