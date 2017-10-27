@@ -1,6 +1,7 @@
 #! /bin/bash
 arch=$1
 
+/usr/bin/x86_64-w64-mingw32-gcc -v
 mkdir -p /work/phf-build && cd /work/phf-build
 echo "Compiling photoflow"
 #$HOME/inst/bin/crossroad $arch phf-build <<EOF
