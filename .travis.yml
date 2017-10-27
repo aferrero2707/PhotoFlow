@@ -177,7 +177,7 @@ matrix:
             - wget https://pypi.python.org/packages/c4/3e/f6a66a52cdd3340a9ae5a581fbc7ccffdfabe307e50282794bd7d93e5420/crossroad-0.7.tar.gz
             - tar xzvf crossroad-0.7.tar.gz
             #- find crossroad-0.7 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
-            - cd crossroad-0.7 && ./setup.py install --prefix=$HOME/inst && cd ..
+            - cd crossroad-0.7 && patch -p1 < ../windows/crossroad-interactive-shell.patch && ./setup.py install --prefix=$HOME/inst && cd ..
             - cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
             #- echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
             # - echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
