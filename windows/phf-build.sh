@@ -1,7 +1,11 @@
 #! /bin/bash
 arch=$1
 
+update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
+update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+
 /usr/bin/x86_64-w64-mingw32-gcc -v
+
 mkdir -p /work/phf-build && cd /work/phf-build
 echo "Compiling photoflow"
 #$HOME/inst/bin/crossroad $arch phf-build <<EOF
