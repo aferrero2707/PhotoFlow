@@ -96,7 +96,7 @@ if [ ! -e $repackagedir/lib ]; then echo "$repackagedir/lib not found."; exit; f
 echo "Before cleaning $repackagedir/bin"
 #read dummy
 
-( cd $repackagedir/bin ; mkdir poop ; mv *photoflow* pfbatch.exe gdb.exe phf_stack.exe gdk-pixbuf-query-loaders.exe update-mime-database.exe camconst.json gmic_def.gmic poop ; mv *.dll poop ; rm -f * ; mv poop/* . ; rmdir poop )
+( cd $repackagedir/bin ; echo "$repackagedir/bin before cleaning:"; ls $repackagedir/bin; mkdir poop ; mv *photoflow* pfbatch.exe gdb.exe phf_stack.exe gdk-pixbuf-query-loaders.exe update-mime-database.exe camconst.json gmic_def.gmic poop ; mv *.dll poop ; rm -f * ; mv poop/* . ; rmdir poop )
 
 ( cd $repackagedir/bin ; rm -f libvipsCC-15.dll run-nip2.sh *-vc100-*.dll *-vc80-*.dll *-vc90-*.dll  )
 

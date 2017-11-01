@@ -4,6 +4,8 @@ arch=$1
 update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
 update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
 
+sudo apt-get install wine curl zip wget
+
 /usr/bin/x86_64-w64-mingw32-gcc -v
 
 mkdir -p /work/phf-build && cd /work/phf-build
