@@ -73,10 +73,12 @@ cp -a $installdir/share/photoflow/gmic_def.gmic $installdir/bin/gmic_def.gmic
 #ls -l gdb.exe
 #cp -a gdb.exe $installdir/bin
 #read dummy
+
+echo "Contents of \"$installdir/bin\":"
 ls -l $installdir/bin
+echo "================="; echo ""
 
-
-echo copying install area $installdir
+echo "copying install area \"$installdir\"
 
 rm -rf $repackagedir
 cp -r $installdir $repackagedir
@@ -85,8 +87,16 @@ rm -rf $repackagedir/wine
 mkdir $repackagedir/bin
 cp -L $installdir/bin/* $repackagedir/bin
 cp -L $installdir/lib/*.dll $repackagedir/bin
+echo "================="; echo ""
 
-echo cleaning build $repackagedir
+echo "Contents of \"$repackagedir\":"
+ls -l $repackagedir
+echo "================="; echo ""
+echo "Contents of \"$repackagedir/bin\":"
+ls -l $repackagedir/bin
+echo "================="; echo ""
+
+echo "cleaning build \"$repackagedir\""
 
 if [ ! -e $repackagedir/bin ]; then echo "$repackagedir/bin not found."; exit; fi
 if [ ! -e $repackagedir/lib ]; then echo "$repackagedir/lib not found."; exit; fi
@@ -125,6 +135,7 @@ echo "Before cleaning $repackagedir/bin"
 ( cd $repackagedir ; rm -rf manifest )
 
 ( cd $repackagedir ; rm -rf src )
+echo "================="; echo ""
 
 # we need to copy the C++ runtime dlls in there
 gccmingwlibdir=/usr/lib/gcc/x86_64-w64-mingw32/4.8
