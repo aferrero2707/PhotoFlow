@@ -78,7 +78,7 @@ echo "Contents of \"$installdir/bin\":"
 ls -l $installdir/bin
 echo "================="; echo ""
 
-echo "copying install area \"$installdir\"
+echo "copying install area \"$installdir\""
 
 rm -rf $repackagedir
 cp -r $installdir $repackagedir
