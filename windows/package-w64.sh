@@ -18,6 +18,17 @@ transfer()
 	rm -f $tmpfile; 
 }
 
+update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
+update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+
+sudo apt-get install wine curl zip wget
+
+/usr/bin/x86_64-w64-mingw32-gcc -v
+
+cd /sources
+
+crossroad w64 w64-build --run=./windows/phf-build.sh
+
 photoflow_package=photoflow
 photoflow_version="w64-$(date +%Y%m%d)_$(date +%H%M)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}"
 #photoflow_version=0.2.7
@@ -138,9 +149,9 @@ echo "Before cleaning $repackagedir/bin"
 echo "================="; echo ""
 
 # we need to copy the C++ runtime dlls in there
-gccmingwlibdir=/usr/lib/gcc/x86_64-w64-mingw32/4.8
+gccmingwlibdir=/usr/lib/gcc/x86_64-w64-mingw32
 mingwlibdir=/usr/x86_64-w64-mingw32/lib
-cp -L $gccmingwlibdir/*.dll $repackagedir/bin
+cp -L $gccmingwlibdir/*/*.dll $repackagedir/bin
 cp -L $mingwlibdir/*.dll $repackagedir/bin
 
 # turn on the theme

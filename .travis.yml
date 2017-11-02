@@ -193,7 +193,7 @@ matrix:
             #- $HOME/inst/bin/crossroad w64 phf-build --run $(pwd)/../windows/dep-install.sh
             #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
             #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
-            - sudo docker run -it -v $(pwd):/sources photoflow/docker-zesty-mingw crossroad w64 w64-build --run=/sources/windows/phf-build.sh
+            - sudo docker run -it -v $(pwd):/sources photoflow/docker-zesty-mingw bash -c /sources/windows/package-w64.sh
 
             #- ../windows/package-w64.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
