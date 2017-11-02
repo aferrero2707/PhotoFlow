@@ -21,13 +21,19 @@ transfer()
 update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
 update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
 
-sudo apt-get install wine curl zip wget
+apt-get install -y wine-stable curl zip wget
 
 /usr/bin/x86_64-w64-mingw32-gcc -v
 
-cd /sources
+mkdir -p /work/w64-build && cd /work/w64-build
 
-crossroad w64 w64-build --run=./windows/phf-build.sh
+#crossroad w64 w64-build --run=$TRAVIS_BUILD_DIR/windows/phf-build.sh
+echo "Compiling photoflow"
+crossroad w64 w64-build <<EOF
+crossroad cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUNDLED_LENSFUN=ON $TRAVIS_BUILD_DIR && make -j 2 && make install
+if [ $? -ne 0 ]; then exit 1; fi
+exit 0
+EOF
 
 photoflow_package=photoflow
 photoflow_version="w64-$(date +%Y%m%d)_$(date +%H%M)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}"
@@ -44,11 +50,11 @@ packagedir=packages
 installdir=$HOME/.local/share/crossroad/roads/w64/w64-build
 
 # jhbuild will download sources to here 
-checkoutdir=source
+#checkoutdir=source
 
 mingw_prefix=x86_64-w64-mingw32-
 
-repackagedir=$photoflow_package-$photoflow_version
+repackagedir=/work/w64-build/$photoflow_package-$photoflow_version
 
 if [ -e $installdir/Photoflow/bin/photoflow ]; then
     echo "cp -a $installdir/bin/photoflow $installdir/bin/photoflow.exe"
@@ -115,6 +121,7 @@ if [ ! -e $repackagedir/lib ]; then echo "$repackagedir/lib not found."; exit; f
 (cd $repackagedir/bin; wget ftp://ftp.equation.com/gdb/64/gdb.exe)
 
 echo "Before cleaning $repackagedir/bin"
+pwd
 #read dummy
 
 ( cd $repackagedir/bin ; echo "$repackagedir/bin before cleaning:"; ls $repackagedir/bin; mkdir poop ; mv *photoflow* pfbatch.exe gdb.exe phf_stack.exe gdk-pixbuf-query-loaders.exe update-mime-database.exe camconst.json gmic_def.gmic poop ; mv *.dll poop ; rm -f * ; mv poop/* . ; rmdir poop )
@@ -172,10 +179,10 @@ rm $repackagedir/share/mime/application/vnd.ms-*
 #rm -f $photoflow_package-$photoflow_version.zip
 #zip -r -qq $photoflow_package-$photoflow_version.zip $photoflow_package-$photoflow_version
 
-rm -f $photoflow_package-$photoflow_version.zip
-zip -r $photoflow_package-$photoflow_version.zip $photoflow_package-$photoflow_version
+rm -f $TRAVIS_BUILD_DIR/$photoflow_package-$photoflow_version.zip
+zip -r $photoflow_package-$photoflow_version.zip $TRAVIS_BUILD_DIR/$photoflow_package-$photoflow_version
 
-transfer $photoflow_package-$photoflow_version.zip
+transfer $TRAVIS_BUILD_DIR/$photoflow_package-$photoflow_version.zip
 
 exit
 
