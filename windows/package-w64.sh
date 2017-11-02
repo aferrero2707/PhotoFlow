@@ -180,7 +180,8 @@ rm $repackagedir/share/mime/application/vnd.ms-*
 #zip -r -qq $photoflow_package-$photoflow_version.zip $photoflow_package-$photoflow_version
 
 rm -f $TRAVIS_BUILD_DIR/$photoflow_package-$photoflow_version.zip
-zip -r $TRAVIS_BUILD_DIR/$photoflow_package-$photoflow_version.zip $repackagedir
+cd $repackagedir/../
+zip -r $TRAVIS_BUILD_DIR/$photoflow_package-$photoflow_version.zip $photoflow_package-$photoflow_version
 
 transfer $TRAVIS_BUILD_DIR/$photoflow_package-$photoflow_version.zip
 
