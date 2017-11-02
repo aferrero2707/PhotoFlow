@@ -27,13 +27,13 @@ apt-get install -y wine-stable curl zip wget
 
 mkdir -p /work/w64-build && cd /work/w64-build
 
-#crossroad w64 w64-build --run=$TRAVIS_BUILD_DIR/windows/phf-build.sh
-echo "Compiling photoflow"
-crossroad w64 w64-build <<EOF
-crossroad cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUNDLED_LENSFUN=ON $TRAVIS_BUILD_DIR && make -j 2 && make install
-if [ $? -ne 0 ]; then exit 1; fi
-exit 0
-EOF
+crossroad w64 w64-build --run=$TRAVIS_BUILD_DIR/windows/phf-build.sh
+#echo "Compiling photoflow"
+#crossroad w64 w64-build <<EOF
+#crossroad cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUNDLED_LENSFUN=ON $TRAVIS_BUILD_DIR && make -j 2 && make install
+#if [ $? -ne 0 ]; then exit 1; fi
+#exit 0
+#EOF
 
 photoflow_package=photoflow
 photoflow_version="w64-$(date +%Y%m%d)_$(date +%H%M)-git-${TRAVIS_BRANCH}-${TRAVIS_COMMIT}"
