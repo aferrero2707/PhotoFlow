@@ -206,12 +206,11 @@ matrix:
                 bash  ./upload_rotate.sh "unstable" photoflow*.zip
               fi'
         - os: osx
-          language: cpp
           compiler: g++
           osx_image: xcode7.3
-          cache:
-            directories:
-            - /usr/local
+          #cache:
+          #  directories:
+          #  - /usr/local
           env: 
           - TARGET_SYSTEM=OSX
             PYTHON=/usr/local/bin/python
@@ -238,10 +237,10 @@ matrix:
             - brew info  webp
             - brew reinstall  libtiff
             - brew info  libtiff
-            - brew reinstall   swig
-            - brew info   swig
-            - brew reinstall  imagemagick
-            - brew info  imagemagick
+            #- brew reinstall   swig
+            #- brew info   swig
+            #- brew reinstall  imagemagick
+            #- brew info  imagemagick
             - brew reinstall   cfitsio
             - brew info   cfitsio
             - brew reinstall  libmatio
@@ -250,30 +249,30 @@ matrix:
             - brew info   orc
             - brew reinstall  little-cms2
             - brew info  little-cms2
-            - brew reinstall  poppler
-            - brew info  poppler
-            - brew reinstall   pango
-            - brew info   pango
-            - brew reinstall  libgsf
-            - brew info  libgsf
-            - brew reinstall  openslide
-            - brew info  openslide
-            - brew reinstall   librsvg
-            - brew info   librsvg
-            - brew reinstall  giflib
-            - brew info  giflib
+            #- brew reinstall  poppler
+            #- brew info  poppler
+            #- brew reinstall   pango
+            #- brew info   pango
+            #- brew reinstall  libgsf
+            #- brew info  libgsf
+            #- brew reinstall  openslide
+            #- brew info  openslide
+            #- brew reinstall   librsvg
+            #- brew info   librsvg
+            #- brew reinstall  giflib
+            #- brew info  giflib
             - brew reinstall  openexr
             - brew info  openexr
-            - brew reinstall   python
-            - brew info   python
-            - brew reinstall  pygobject3
-            - brew info  pygobject3
-            - brew reinstall   gexiv2
-            - brew info   gexiv2
+            #- brew reinstall   python
+            #- brew info   python
+            #- brew reinstall  pygobject3
+            #- brew info  pygobject3
+            #- brew reinstall   gexiv2
+            #- brew info   gexiv2
             - brew reinstall  gtk+
             - brew info  gtk+
-            - brew reinstall  pygtk
-            - brew info  pygtk
+            #- brew reinstall  pygtk
+            #- brew info  pygtk
             - brew reinstall  gtkmm 
             - brew info  gtkmm 
             - brew reinstall  gtk-mac-integration
