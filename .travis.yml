@@ -63,7 +63,6 @@ matrix:
                 - gtk2-engines-pixbuf
                 - zenity
           before_script:
-<<<<<<< HEAD
               - cd non_existent_dir
               - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
               - cd build
@@ -281,10 +280,6 @@ matrix:
         - brew reinstall  vips
         - brew info  vips
 
-=======
-                - sudo docker build -f appimage/Dockerfile -t phf-appimage .
-                - sudo docker run -it -v $(pwd):/sources phf-appimage scl enable devtoolset-3 'bash /sources/appimage/build.sh'
->>>>>>> 94fcb27dc6bd2300bceeff6abbc06bdc42f3cf48
 
 branches:
   except:
