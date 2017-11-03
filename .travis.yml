@@ -216,6 +216,7 @@ matrix:
             JOBS="`sysctl -n hw.ncpu`"
             PATH="/usr/local/opt/ccache/libexec:$PATH"
           before_script:
+          - brew update
           - brew tap homebrew/science
           - brew update
           - brew install ccache pkg-config automake
