@@ -29,6 +29,7 @@
 
 #include <string>
 #include "photoflow.hh"
+#include "format_info.hh"
 #include "iccstore.hh"
 
 
@@ -400,6 +401,53 @@ cmsFloat32Number PF::perceptual2linear( ICCProfileData* data, cmsFloat32Number v
   return cmsEvalToneCurveFloat( data->perceptual_trc, val );
 }
 */
+
+
+void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat band_fmt,
+    cmsUInt32Number _intent, bool _bpc, float _adaptation_state)
+{
+  if( transform ) {
+    cmsDeleteTransform( transform );
+    transform = NULL;
+  }
+
+  in_profile = pin;
+  out_profile = pout;
+  bpc = _bpc;
+  intent = _intent;
+  adaptation_state = _adaptation_state;
+  input_cs_type = cmsGetColorSpace( in_profile->get_profile() );
+  output_cs_type = cmsGetColorSpace( out_profile->get_profile() );
+
+  if( !pin || !pout) return;
+
+  transform = NULL;
+  if( in_profile && out_profile && out_profile->get_profile() ) {
+    std::cout<<"ICCTransform::init(): getting input profile format"<<std::endl;
+    cmsUInt32Number infmt = vips2lcms_pixel_format( band_fmt, in_profile->get_profile() );
+    std::cout<<"ICCTransform::init(): getting output profile format"<<std::endl;
+    cmsUInt32Number outfmt = vips2lcms_pixel_format( band_fmt, out_profile->get_profile() );
+
+    cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
+    std::cout<<"ICCTransform::init(): bpc="<<bpc<<std::endl;
+    if( bpc ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
+    cmsFloat64Number old_state = cmsSetAdaptationState( adaptation_state );
+    transform = cmsCreateTransform( in_profile->get_profile(), infmt,
+        out_profile->get_profile(), outfmt, intent, flags );
+    cmsSetAdaptationState( old_state );
+    std::cout<<"ICCTransform::init(): transform: "<<transform<<std::endl;
+    std::cout<<"ICCTransform::init(): in_profile: "<<in_profile<<std::endl;
+    std::cout<<"ICCTransform::init(): infmt: "<<infmt<<std::endl;
+    std::cout<<"ICCTransform::init(): outfmt: "<<outfmt<<std::endl;
+  }
+}
+
+
+void PF::ICCTransform::apply(float* in, float* out, int n)
+{
+  if( !transform ) return;
+  cmsDoTransform( transform, in, out, n );
+}
 
 
 struct ICCProfileContainer

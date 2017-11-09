@@ -260,6 +260,27 @@ public:
 };
 
 
+class ICCTransform
+{
+  ICCProfile* in_profile;
+  ICCProfile* out_profile;
+  cmsUInt32Number intent;
+  bool bpc;
+  float adaptation_state;
+  cmsHTRANSFORM transform;
+
+  cmsColorSpaceSignature input_cs_type;
+  cmsColorSpaceSignature output_cs_type;
+
+public:
+  ICCTransform(): in_profile(NULL), out_profile(NULL), transform(NULL) {}
+  void init(ICCProfile* in_profile, ICCProfile* out_profile, VipsBandFormat band_fmt,
+      cmsUInt32Number intent=INTENT_RELATIVE_COLORIMETRIC,
+      bool bpc=true, float adaptation_state=0);
+  void apply(float* in, float* out, int n=1);
+};
+
+
 class ICCStore
 {
   ICCProfile* srgb_profiles[3];
