@@ -219,69 +219,11 @@ matrix:
             JOBS="`sysctl -n hw.ncpu`"
             PATH="/usr/local/opt/ccache/libexec:$PATH"
           before_script:
-            - brew update
-            - brew tap homebrew/science
-            - brew update
-            - brew reinstall ccache pkg-config automake
-            - brew reinstall --ignore-dependencies gtk-doc
-            - brew reinstall   gobject-introspection
-            - brew reinstall   fftw
-            - brew info   fftw
-            - brew reinstall  mozjpeg
-            - brew info  mozjpeg
-            - brew reinstall  libexif
-            - brew info  libexif
-            - brew reinstall   libpng
-            - brew info   libpng
-            - brew reinstall  webp
-            - brew info  webp
-            - brew reinstall  libtiff
-            - brew info  libtiff
-            #- brew reinstall   swig
-            #- brew info   swig
-            #- brew reinstall  imagemagick
-            #- brew info  imagemagick
-            - brew reinstall   cfitsio
-            - brew info   cfitsio
-            - brew reinstall  libmatio
-            - brew info  libmatio
-            - brew reinstall   orc
-            - brew info   orc
-            - brew reinstall  little-cms2
-            - brew info  little-cms2
-            #- brew reinstall  poppler
-            #- brew info  poppler
-            #- brew reinstall   pango
-            #- brew info   pango
-            #- brew reinstall  libgsf
-            #- brew info  libgsf
-            #- brew reinstall  openslide
-            #- brew info  openslide
-            #- brew reinstall   librsvg
-            #- brew info   librsvg
-            #- brew reinstall  giflib
-            #- brew info  giflib
-            - brew reinstall  openexr
-            - brew info  openexr
-            #- brew reinstall   python
-            #- brew info   python
-            #- brew reinstall  pygobject3
-            #- brew info  pygobject3
-            #- brew reinstall   gexiv2
-            #- brew info   gexiv2
-            - brew reinstall  gtk+
-            - brew info  gtk+
-            #- brew reinstall  pygtk
-            #- brew info  pygtk
-            - brew reinstall  gtkmm 
-            - brew info  gtkmm 
-            - brew reinstall  gtk-mac-integration
-            - brew info  gtk-mac-integration
-            - brew reinstall  pugixml
-            - brew info  pugixml
-            - brew reinstall  vips
-            - brew info  vips
-            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - rm -rf osx
+            - git clone https://github.com/aferrero2707/pf-build-osx.git osx
+            - cd /usr/local
+            - $TRAVIS_BUILD_DIR/osx/dep-install.sh
+            #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
 
 
 branches:
