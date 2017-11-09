@@ -101,12 +101,18 @@ link_directories(${JPEG_LIBRARY_DIRS})
 include_directories(${PNG_INCLUDE_DIRS})
 link_directories(${PNG_LIBRARY_DIRS})
 
+include_directories(${FFTW3_INCLUDE_DIRS})
+link_directories(${FFTW3_LIBRARY_DIRS})
+
 
 include_directories(${XML2_INCLUDE_DIRS})
 link_directories(${XML2_LIBRARY_DIRS})
 
-include_directories(${LCMS22_INCLUDE_DIRS})
-link_directories(${LCMS22_LIBRARY_DIRS})
+include_directories(${LCMS2_INCLUDE_DIRS})
+link_directories(${LCMS2_LIBRARY_DIRS})
+
+include_directories(${PUGIXML_INCLUDE_DIRS})
+link_directories(${PUGIXML_LIBRARY_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
@@ -411,7 +417,7 @@ ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread dl)
 ENDIF(MINGW)
 
-list(APPEND ADDITIONAL_LIBS pugixml)
+#list(APPEND ADDITIONAL_LIBS pugixml)
 
 IF(APPLE)
   list(APPEND LIBS "-framework CoreServices")
@@ -427,7 +433,6 @@ IF(APPLE)
 ENDIF(APPLE)
 
 target_link_libraries(photoflow ${LIBS} 
-  fftw3
   pfgui
   pfbase 
   pfgmic
@@ -437,7 +442,9 @@ target_link_libraries(photoflow ${LIBS}
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${EXPAT_LIBRARIES}
+  ${PUGIXML_LIBRARIES}
   ${ICONV_LIBRARIES}
+  ${FFTW3_LIBRARIES}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
   ${EXIF_LIBRARIES}
@@ -457,7 +464,6 @@ target_link_libraries(photoflow ${LIBS}
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${ORC_LIBRARIES}
-  fftw3
   ${ADDITIONAL_LIBS}
   #gmon
   )
