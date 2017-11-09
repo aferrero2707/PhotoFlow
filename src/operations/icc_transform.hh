@@ -108,7 +108,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class ICCTransform
+  class ICCTransformProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -144,7 +144,7 @@ namespace PF
 
 
   template < OP_TEMPLATE_DEF_TYPE_SPEC > 
-  class ICCTransform< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
+  class ICCTransformProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -254,7 +254,7 @@ namespace PF
 
 
   template < OP_TEMPLATE_DEF_TYPE_SPEC > 
-  class ICCTransform< OP_TEMPLATE_IMP_TYPE_SPEC(double) >
+  class ICCTransformProc< OP_TEMPLATE_IMP_TYPE_SPEC(double) >
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
