@@ -221,7 +221,8 @@ matrix:
           before_script:
             - rm -rf osx
             - git clone https://github.com/aferrero2707/pf-build-osx.git osx
-            - cd /usr/local
+            - brew config
+            - cd /usr/local/Homebrew
             - $TRAVIS_BUILD_DIR/osx/dep-install.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
 
