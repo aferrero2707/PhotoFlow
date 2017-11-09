@@ -74,11 +74,17 @@ class Sampler : public PipelineSink, public Gtk::Frame
   Gtk::Label label_value3;
   Gtk::Label label_value4;
   Gtk::VBox labels_box;
+  Gtk::Label LCH_label_value1;
+  Gtk::Label LCH_label_value2;
+  Gtk::Label LCH_label_value3;
+  Gtk::VBox LCH_labels_box;
 
   Gtk::CheckButton check;
   bool enabled;
   bool grabbed;
   int id;
+
+  ICCTransform transform;
 
 public:
 
@@ -88,6 +94,7 @@ public:
   typedef struct {
     Sampler * sampler;
     float val[4];
+    float lch[3];
   } Update;
 
   static gboolean queue_draw_cb (Update * update);
@@ -97,7 +104,7 @@ public:
 
 	VipsImage* get_display_image() { return display_image; }
 
-	void set_values(float val[4]);
+	void set_values(float val[4], float lch[3]);
 
   void update( VipsRect* area );
 

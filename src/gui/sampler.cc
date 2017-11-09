@@ -181,7 +181,7 @@ static int pxm_[8][16][16] = {
 
 gboolean PF::Sampler::queue_draw_cb (PF::Sampler::Update * update)
 {
-  update->sampler->set_values(update->val);
+  update->sampler->set_values(update->val, update->lch);
   //std::cout<<"update->histogram->queue_draw() called"<<std::endl;
   g_free (update);
   return FALSE;
@@ -207,6 +207,14 @@ PF::Sampler::Sampler( Pipeline* v, Glib::ustring title, int i ):
   labels_box.pack_start(label_value3,Gtk::PACK_SHRINK);
   //labels_box.pack_start(label_value1);
 
+  LCH_label_value1.set_text("L=0.0");
+  LCH_label_value2.set_text("C=0.0");
+  LCH_label_value3.set_text("H=0.0");
+
+  labels_box.pack_start(LCH_label_value1,Gtk::PACK_SHRINK);
+  labels_box.pack_start(LCH_label_value2,Gtk::PACK_SHRINK);
+  labels_box.pack_start(LCH_label_value3,Gtk::PACK_SHRINK);
+
   hbox.pack_start(labels_box,Gtk::PACK_SHRINK);
 
   check.set_active( enabled );
@@ -224,17 +232,24 @@ PF::Sampler::~Sampler ()
 }
 
 
-void PF::Sampler::set_values(float val[4])
+void PF::Sampler::set_values(float val[4], float lch[3])
 {
   char tstr[500];
-  snprintf(tstr,499,"%0.2f",val[0]);
+  snprintf(tstr,499,"R=%0.2f",val[0]);
   label_value1.set_text(tstr);
-  snprintf(tstr,499,"%0.2f",val[1]);
+  snprintf(tstr,499,"G=%0.2f",val[1]);
   label_value2.set_text(tstr);
-  snprintf(tstr,499,"%0.2f",val[2]);
+  snprintf(tstr,499,"B=%0.2f",val[2]);
   label_value3.set_text(tstr);
   snprintf(tstr,499,"%0.2f",val[3]);
   label_value4.set_text(tstr);
+
+  snprintf(tstr,499,"L=%0.2f",lch[0]);
+  LCH_label_value1.set_text(tstr);
+  snprintf(tstr,499,"C=%0.2f",lch[1]);
+  LCH_label_value2.set_text(tstr);
+  snprintf(tstr,499,"H=%0.2f",lch[2]);
+  LCH_label_value3.set_text(tstr);
 }
 
 
@@ -387,6 +402,8 @@ void PF::Sampler::update( VipsRect* area )
   }
   if( !image ) return;
 
+  PF::ICCProfile* img_profile = PF::get_icc_profile( image );
+
   VipsRect tile_area = { sampler_x-sampler_size/2, sampler_y-sampler_size/2, sampler_size, sampler_size };
   VipsRect image_area = { 0, 0, image->Xsize, image->Ysize };
 
@@ -424,10 +441,15 @@ void PF::Sampler::update( VipsRect* area )
   VIPS_UNREF( reg );
   PF_UNREF( image, "Sampler::update(): image unref after vips_region_prepare()" );
 
+  transform.init(img_profile, PF::ICCStore::Instance().get_Lab_profile(),
+      image->BandFmt, INTENT_RELATIVE_COLORIMETRIC, true, 0);
+
+  float lch[3];
   for( int c = 0; c < image->Bands; c++ ) tot[c] /= sampler_area;
   if( vips_image_get_interpretation(image) == VIPS_INTERPRETATION_LAB ) {
     PF::Lab_pf2lcms( tot );
   } else {
+    transform.apply(tot, lch, 1);
     for( int c = 0; c < image->Bands; c++ ) tot[c] *= 100;
   }
 
@@ -436,7 +458,12 @@ void PF::Sampler::update( VipsRect* area )
   for( int c = 0; c < image->Bands; c++ ) {
     std::cout<<"PF::Sampler::update(): tot["<<c<<"]="<<tot[c]<<std::endl;
     update->val[c] = tot[c];
-    std::cout<<"PF::Sampler::update(): val["<<c<<"]="<<update->val[c]<<std::endl;
+    std::cout<<"PF::Sampler::update(): update->val["<<c<<"]="<<update->val[c]<<std::endl;
+  }
+  for( int c = 0; c < 3; c++ ) {
+    std::cout<<"PF::Sampler::update(): lch["<<c<<"]="<<lch[c]<<std::endl;
+    update->lch[c] = lch[c];
+    std::cout<<"PF::Sampler::update(): update->lch["<<c<<"]="<<update->lch[c]<<std::endl;
   }
   gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
 }
