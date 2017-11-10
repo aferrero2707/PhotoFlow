@@ -140,8 +140,8 @@ matrix:
                 bash  ./upload_rotate.sh "unstable" photoflow*.zip;
               fi'
         - os: osx
-          compiler: g++
-          osx_image: xcode7.3
+          cache: ccache
+          osx_image: xcode9.1
           env: 
           - TARGET_SYSTEM=OSX
             PYTHON=/usr/local/bin/python
@@ -155,10 +155,13 @@ matrix:
             - brew config
             - cd /usr/local/Homebrew
             - $TRAVIS_BUILD_DIR/osx/dep-install.sh
+            - brew install ccache
+            - export PATH="/usr/local/opt/ccache/libexec:$PATH"
             - cd $TRAVIS_BUILD_DIR
             - mkdir -p build
             - cd build
-            - cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr/local ..
+            #- cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr/local ..
+            - cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local ..
             - make -j 3
             - make install
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
