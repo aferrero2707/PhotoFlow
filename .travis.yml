@@ -3,7 +3,7 @@ language: generic
 #env:
 matrix:
     allow_failures:
-        - env: TARGET_SYSTEM=Windows
+        - env: TARGET_SYSTEM=OSX
     include:
         - os: linux
           dist: trusty
@@ -159,7 +159,7 @@ matrix:
             - mkdir -p build
             - cd build
             - cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr/local ..
-            - make -j 2
+            - make -j 3
             - make install
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
 

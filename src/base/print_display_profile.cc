@@ -41,7 +41,7 @@
 
 void PF::print_display_profile()
 {
-#ifdef __APPLE__
+#ifdef __APPLE___
   //ColorSyncProfileRef cs_prof = ColorSyncProfileCreateWithDisplayID (0);
 
   guint8 *buffer = NULL;
