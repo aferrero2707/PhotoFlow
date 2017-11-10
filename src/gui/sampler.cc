@@ -181,7 +181,7 @@ static int pxm_[8][16][16] = {
 
 gboolean PF::Sampler::queue_draw_cb (PF::Sampler::Update * update)
 {
-  update->sampler->set_values(update->val, update->lch);
+  update->sampler->set_values(update->val, update->lch, update->type);
   //std::cout<<"update->histogram->queue_draw() called"<<std::endl;
   g_free (update);
   return FALSE;
@@ -197,23 +197,24 @@ PF::Sampler::Sampler( Pipeline* v, Glib::ustring title, int i ):
 {
   //set_size_request( 290, 100 );
 
-  label_value1.set_text("0.0");
-  label_value2.set_text("0.0");
-  label_value3.set_text("0.0");
-  label_value4.set_text("0.0");
+  Pango::FontDescription font_desc("monospace 11");
+
+  label_value1.modify_font(font_desc);
+  label_value2.modify_font(font_desc);
+  label_value3.modify_font(font_desc);
+  label_value4.modify_font(font_desc);
 
   labels_box.pack_start(label_value1,Gtk::PACK_SHRINK);
   labels_box.pack_start(label_value2,Gtk::PACK_SHRINK);
   labels_box.pack_start(label_value3,Gtk::PACK_SHRINK);
   //labels_box.pack_start(label_value1);
 
-  LCH_label_value1.set_text("L=0.0");
-  LCH_label_value2.set_text("C=0.0");
-  LCH_label_value3.set_text("H=0.0");
+  float tmp[4] = {0,0,0,0};
+  set_values(tmp, tmp, VIPS_INTERPRETATION_RGB);
 
-  labels_box.pack_start(LCH_label_value1,Gtk::PACK_SHRINK);
-  labels_box.pack_start(LCH_label_value2,Gtk::PACK_SHRINK);
-  labels_box.pack_start(LCH_label_value3,Gtk::PACK_SHRINK);
+  //labels_box.pack_start(LCH_label_value1,Gtk::PACK_SHRINK);
+  //labels_box.pack_start(LCH_label_value2,Gtk::PACK_SHRINK);
+  //labels_box.pack_start(LCH_label_value3,Gtk::PACK_SHRINK);
 
   hbox.pack_start(labels_box,Gtk::PACK_SHRINK);
 
@@ -232,14 +233,25 @@ PF::Sampler::~Sampler ()
 }
 
 
-void PF::Sampler::set_values(float val[4], float lch[3])
+void PF::Sampler::set_values(float val[4], float lch[3], VipsInterpretation type)
 {
   char tstr[500];
-  snprintf(tstr,499,"R=%0.2f",val[0]);
+  char ch[4] = {'x','x','x','x'};
+  switch(type) {
+  case VIPS_INTERPRETATION_RGB:
+  case VIPS_INTERPRETATION_sRGB:
+  case VIPS_INTERPRETATION_MULTIBAND:
+    ch[0] = 'R'; ch[1] = 'G'; ch[2] = 'B'; break;
+  case VIPS_INTERPRETATION_LAB:
+    ch[0] = 'L'; ch[1] = 'a'; ch[2] = 'b'; break;
+  case VIPS_INTERPRETATION_CMYK:
+    ch[0] = 'C'; ch[1] = 'M'; ch[2] = 'Y'; ch[2] = 'K'; break;
+  }
+  snprintf(tstr,499,"%c=%7.2 f  L=%7.2 f",ch[0], val[0], lch[0]);
   label_value1.set_text(tstr);
-  snprintf(tstr,499,"G=%0.2f",val[1]);
+  snprintf(tstr,499,"%c=%7.2 f  C=%7.2 f",ch[1], val[1], lch[1]);
   label_value2.set_text(tstr);
-  snprintf(tstr,499,"B=%0.2f",val[2]);
+  snprintf(tstr,499,"%c=%7.2 f  H=%7.2 f",ch[2], val[2], lch[2]);
   label_value3.set_text(tstr);
   snprintf(tstr,499,"%0.2f",val[3]);
   label_value4.set_text(tstr);
@@ -448,13 +460,23 @@ void PF::Sampler::update( VipsRect* area )
   for( int c = 0; c < image->Bands; c++ ) tot[c] /= sampler_area;
   if( vips_image_get_interpretation(image) == VIPS_INTERPRETATION_LAB ) {
     PF::Lab_pf2lcms( tot );
+    lch[0] = tot[0];
+    lch[1] = std::sqrt(tot[1]*tot[1] + tot[2]*tot[2]);
+    lch[2] = std::atan2(tot[2],tot[1])*180.f/M_PI;
+    if(lch[2] < 0) lch[2] += 360;
   } else {
-    transform.apply(tot, lch, 1);
+    float lab[3];
+    transform.apply(tot, lab, 1);
+    lch[0] = lab[0];
+    lch[1] = std::sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
+    lch[2] = std::atan2(lab[2],lab[1])*180.f/M_PI;
+    if(lch[2] < 0) lch[2] += 360;
     for( int c = 0; c < image->Bands; c++ ) tot[c] *= 100;
   }
 
   Update * update = g_new (Update, 1);
   update->sampler = this;
+  update->type = vips_image_get_interpretation(image);
   for( int c = 0; c < image->Bands; c++ ) {
     std::cout<<"PF::Sampler::update(): tot["<<c<<"]="<<tot[c]<<std::endl;
     update->val[c] = tot[c];
@@ -556,16 +578,27 @@ PF::SamplerGroup::SamplerGroup( Pipeline* v ):
         s5(v, _("sampler 5"), 4),s6(v, _("sampler 6"), 5),
         s7(v, _("sampler 7"), 6),s8(v, _("sampler 8"), 7)
 {
-  row1.pack_start(s1,Gtk::PACK_SHRINK,10);
-  row1.pack_start(s2,Gtk::PACK_SHRINK,10);
-  row2.pack_start(s3,Gtk::PACK_SHRINK,10);
-  row2.pack_start(s4,Gtk::PACK_SHRINK,10);
+  row1.pack_start(s1,Gtk::PACK_SHRINK,2);
+  row2.pack_start(s2,Gtk::PACK_SHRINK,2);
+  row3.pack_start(s3,Gtk::PACK_SHRINK,2);
+  row4.pack_start(s4,Gtk::PACK_SHRINK,2);
   //row2.pack_start(s5,Gtk::PACK_SHRINK,10);
   //row2.pack_start(s6,Gtk::PACK_SHRINK,10);
   //row2.pack_start(s7,Gtk::PACK_SHRINK,10);
   //row2.pack_start(s8,Gtk::PACK_SHRINK,10);
-  pack_start(row1,Gtk::PACK_SHRINK,10);
-  pack_start(row2,Gtk::PACK_SHRINK,10);
+  box.pack_start(row1,Gtk::PACK_SHRINK,0);
+  box.pack_start(row2,Gtk::PACK_SHRINK,0);
+  box.pack_start(row3,Gtk::PACK_SHRINK,0);
+  box.pack_start(row4,Gtk::PACK_SHRINK,0);
+
+  add(box);
+  set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
+  set_shadow_type( Gtk::SHADOW_NONE );
+
+  //pack_start(s1,Gtk::PACK_SHRINK,5);
+  //pack_start(s2,Gtk::PACK_SHRINK,5);
+  //pack_start(s3,Gtk::PACK_SHRINK,5);
+  //pack_start(s4,Gtk::PACK_SHRINK,5);
 }
 
 

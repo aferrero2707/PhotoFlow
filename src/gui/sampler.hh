@@ -95,6 +95,7 @@ public:
     Sampler * sampler;
     float val[4];
     float lch[3];
+    VipsInterpretation type;
   } Update;
 
   static gboolean queue_draw_cb (Update * update);
@@ -104,7 +105,7 @@ public:
 
 	VipsImage* get_display_image() { return display_image; }
 
-	void set_values(float val[4], float lch[3]);
+	void set_values(float val[4], float lch[3], VipsInterpretation type);
 
   void update( VipsRect* area );
 
@@ -156,9 +157,10 @@ public:
 };
 
 
-class SamplerGroup: public Gtk::VBox
+class SamplerGroup: public Gtk::ScrolledWindow
 {
-  Gtk::HBox row1, row2;
+  Gtk::HBox row1, row2, row3, row4;
+  Gtk::VBox box;
   Sampler s1, s2, s3, s4, s5, s6, s7, s8;
 
 public:
