@@ -65,9 +65,9 @@ SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parame
 #link_directories("/this/is/a/test/path")
 
 include_directories(${EXPAT_INCLUDE_DIRS})
-IF(NOT MINGW)
+#IF(NOT MINGW)
   include_directories(${ICONV_INCLUDE_DIRS})
-ENDIF(NOT MINGW)
+#ENDIF(NOT MINGW)
 
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
@@ -111,8 +111,8 @@ link_directories(${XML2_LIBRARY_DIRS})
 include_directories(${LCMS2_INCLUDE_DIRS})
 link_directories(${LCMS2_LIBRARY_DIRS})
 
-include_directories(${PUGIXML_INCLUDE_DIRS})
-link_directories(${PUGIXML_LIBRARY_DIRS})
+include_directories(${Pugixml_INCLUDE_DIRS})
+link_directories(${Pugixml_LIBRARY_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
@@ -442,7 +442,7 @@ target_link_libraries(photoflow ${LIBS}
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${EXPAT_LIBRARIES}
-  ${PUGIXML_LIBRARIES}
+  ${Pugixml_LIBRARIES}
   ${ICONV_LIBRARIES}
   ${FFTW3_LIBRARIES}
   ${OPENEXR_LIBRARIES}
