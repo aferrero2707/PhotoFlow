@@ -160,8 +160,8 @@ matrix:
             - cd $TRAVIS_BUILD_DIR
             - mkdir -p build
             - cd build
-            #- cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr/local ..
-            - cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local ..
+            - cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr/local ..
+            #- cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local ..
             - make -j 3
             - make install
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
