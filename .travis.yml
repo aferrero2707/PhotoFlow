@@ -164,7 +164,16 @@ matrix:
             #- cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local ..
             - make -j 3
             - make install
+            - cd $TRAVIS_BUILD_DIR
+            - ./osx/package-photoflow-hb.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" $HOME/photoflow-osx-*.zip;
+              fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                bash  ./upload_rotate.sh "unstable" $HOME/photoflow-osx-*.zip;
+              fi'
 
 
 branches:
