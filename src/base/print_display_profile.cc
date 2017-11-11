@@ -123,7 +123,7 @@ void* PF::get_display_profile()
   //ColorSyncProfileRef cs_prof = ColorSyncProfileCreateWithDisplayID (0);
   void* profile = NULL;
 
-#ifdef __APPLE__
+#ifdef __APPLE___
   int monitor = 0;
   CGDirectDisplayID ids[monitor + 1];
   uint32_t total_ids;
