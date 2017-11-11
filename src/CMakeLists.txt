@@ -388,6 +388,9 @@ add_library (pfgmic STATIC
   ${GMicSources}
 )
 
+#IF(APPLE)
+SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-O1")
+#ENDIF(APPLE)
 
 #add_dependencies(pfbase ${LIB_DEPS} gmic_film_cluts_download)
 add_dependencies(pfbase ${LIB_DEPS})
