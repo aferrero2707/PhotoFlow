@@ -28,7 +28,6 @@
  */
 
 #include "scale.hh"
-#include "../base/new_operation.hh"
 
 /*
  * Post-rotation auto-cropping
@@ -422,10 +421,4 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
 
   set_image_hints( out );
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_scale()
-{
-  return( new PF::Processor<PF::ScalePar,PF::ScaleProc>() );
 }

@@ -93,8 +93,8 @@ raster_image( NULL )
   out_trc_type.add_enum_value(PF::PF_TRC_PERCEPTUAL,"TRC_PERCEPTUAL","perceptual");
   out_trc_type.add_enum_value(PF::PF_TRC_STANDARD,"TRC_STANDARD","standard");
 
-  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
-  blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+  convert_format = new_convert_format();
+  blender = new_blender();
   set_type("imageread" );
 
   set_default_name( _("image layer") );
@@ -474,10 +474,4 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_image_reader()
-{
-  return new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
 }

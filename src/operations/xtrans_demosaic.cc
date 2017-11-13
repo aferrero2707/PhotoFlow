@@ -29,8 +29,8 @@
 
 #include <stdlib.h>
 
-#include "xtrans_demosaic.hh"
 #include "../base/processor.hh"
+#include "xtrans_demosaic.hh"
 
 //#define RT_EMU 1
 
@@ -212,11 +212,4 @@ VipsImage* PF::XTransDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   PF_UNREF( out, "PF::XTransDemosaicPar::build(): out unref" );
 
   return cached;
-}
-
-
-
-PF::ProcessorBase* PF::new_xtrans_demosaic()
-{
-  return( new PF::Processor<PF::XTransDemosaicPar,PF::XTransDemosaicProc>() );
 }

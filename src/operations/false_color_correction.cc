@@ -46,10 +46,10 @@
 
 #include <stdlib.h>
 
-#include "false_color_correction.hh"
 #include "../base/array2d.hh"
 #include "../base/processor.hh"
 #include "../rt/rtengine/median.h"
+#include "false_color_correction.hh"
 
 //#define RT_EMU 1
 
@@ -267,10 +267,5 @@ void PF::false_color_correction(VipsRegion* ir, VipsRegion* oreg)
 	row_Q[W-1] = rbout_Q[cx][W-1];
 	convert_row_to_RGB (im->r(row_to-1), im->g(row_to-1), im->b(row_to-1), rbconv_Y[cx], row_I, row_Q, W);
 	*/
-}
-
-PF::ProcessorBase* PF::new_false_color_correction()
-{
-  return( new PF::Processor<PF::FalseColorCorrectionPar,PF::FalseColorCorrectionProc>() );
 }
 

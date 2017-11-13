@@ -99,10 +99,3 @@ VipsImage* PF::TRCConvPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
   return out;
 }
-
-
-
-PF::ProcessorBase* PF::new_trcconv()
-{
-  return( new PF::Processor<PF::TRCConvPar,PF::TRCConvProc>() );
-}

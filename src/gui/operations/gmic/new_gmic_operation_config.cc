@@ -41,24 +41,8 @@ PF::OperationConfigGUI* PF::new_gmic_operation_config( std::string op_type, PF::
     dialog = new PF::GMicConfigGUI( current_layer );
   } else if( op_type == "gmic_blur_bilateral" ) {
     dialog = new PF::BlurBilateralConfigGUI( current_layer );
-  } else if( op_type == "gmic_denoise" ) {
-    dialog = new PF::GmicDenoiseConfigGUI( current_layer );
-  } else if( op_type == "gmic_smooth_nlmeans" ) {
-    dialog = new PF::GmicSmoothNonLocalMeansConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_anisotropic" ) {
     dialog = new PF::GmicSmoothAnisotropicConfigGUI( current_layer );
-  } else if( op_type == "gmic_smooth_diffusion" ) {
-    dialog = new PF::GmicSmoothDiffusionConfigGUI( current_layer );
-  } else if( op_type == "gmic_smooth_mean_curvature" ) {
-    dialog = new PF::GmicSmoothMeanCurvatureConfigGUI( current_layer );
-  } else if( op_type == "gmic_smooth_wavelets_haar" ) {
-    dialog = new PF::GmicSmoothWaveletsHaarConfigGUI( current_layer );
-  } else if( op_type == "gmic_smooth_median" ) {
-    dialog = new PF::GmicSmoothMedianConfigGUI( current_layer );
-  } else if( op_type == "gmic_smooth_selective_gaussian" ) {
-    dialog = new PF::GmicSmoothSelectiveGaussianConfigGUI( current_layer );
-  } else if( op_type == "gmic_smooth_total_variation" ) {
-    dialog = new PF::GmicSmoothTotalVariationConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_colorslide" ) {
     dialog = new PF::GmicEmulateFilmColorslideConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_bw" ) {
@@ -79,6 +63,33 @@ PF::OperationConfigGUI* PF::new_gmic_operation_config( std::string op_type, PF::
     dialog = new PF::GmicEmulateFilmVariousConfigGUI( current_layer );
   } else if( op_type == "gmic_emulate_film_user_defined" ) {
     dialog = new PF::GmicEmulateFilmUserDefinedConfigGUI( current_layer );
+  } else if( op_type == "gmic_tone_mapping" ) {
+    dialog = new PF::GmicToneMappingConfigGUI( current_layer );
+  } else if( op_type == "gmic_convolve" ) {
+    dialog = new PF::GmicConvolveConfigGUI( current_layer );
+  } else if( op_type == "gmic_gradient_norm" ) {
+    dialog = new PF::GmicGradientNormConfigGUI( current_layer );
+  } else if( op_type == "gmic_sharpen_rl" ) {
+    dialog = new PF::GmicSharpenRLConfigGUI( current_layer );
+  } else if( op_type == "gmic_transfer_colors" ) {
+    dialog = new PF::GmicTransferColorsConfigGUI( current_layer );
+  /*
+  } else if( op_type == "gmic_denoise" ) {
+    dialog = new PF::GmicDenoiseConfigGUI( current_layer );
+  } else if( op_type == "gmic_smooth_nlmeans" ) {
+    dialog = new PF::GmicSmoothNonLocalMeansConfigGUI( current_layer );
+  } else if( op_type == "gmic_smooth_diffusion" ) {
+    dialog = new PF::GmicSmoothDiffusionConfigGUI( current_layer );
+  } else if( op_type == "gmic_smooth_mean_curvature" ) {
+    dialog = new PF::GmicSmoothMeanCurvatureConfigGUI( current_layer );
+  } else if( op_type == "gmic_smooth_wavelets_haar" ) {
+    dialog = new PF::GmicSmoothWaveletsHaarConfigGUI( current_layer );
+  } else if( op_type == "gmic_smooth_median" ) {
+    dialog = new PF::GmicSmoothMedianConfigGUI( current_layer );
+  } else if( op_type == "gmic_smooth_selective_gaussian" ) {
+    dialog = new PF::GmicSmoothSelectiveGaussianConfigGUI( current_layer );
+  } else if( op_type == "gmic_smooth_total_variation" ) {
+    dialog = new PF::GmicSmoothTotalVariationConfigGUI( current_layer );
   } else if( op_type == "gmic_gcd_despeckle" ) {
     dialog = new PF::GmicGcdDespeckleConfigGUI( current_layer );
   } else if( op_type == "gmic_smooth_guided" ) {
@@ -89,22 +100,13 @@ PF::OperationConfigGUI* PF::new_gmic_operation_config( std::string op_type, PF::
     dialog = new PF::GmicDreamSmoothConfigGUI( current_layer );
   } else if( op_type == "gmic_extract_foreground" ) {
     dialog = new PF::GmicExtractForegroundConfigGUI( current_layer );
-  } else if( op_type == "gmic_tone_mapping" ) {
-    dialog = new PF::GmicToneMappingConfigGUI( current_layer );
   } else if( op_type == "gmic_inpaint" ) {
     dialog = new PF::GmicInpaintConfigGUI( current_layer );
-  } else if( op_type == "gmic_convolve" ) {
-    dialog = new PF::GmicConvolveConfigGUI( current_layer );
-  } else if( op_type == "gmic_gradient_norm" ) {
-    dialog = new PF::GmicGradientNormConfigGUI( current_layer );
-  } else if( op_type == "gmic_sharpen_rl" ) {
-    dialog = new PF::GmicSharpenRLConfigGUI( current_layer );
   } else if( op_type == "gmic_split_details" ) {
     dialog = new PF::GmicSplitDetailsConfigGUI( current_layer );
-  } else if( op_type == "gmic_transfer_colors" ) {
-    dialog = new PF::GmicTransferColorsConfigGUI( current_layer );
   } else if( op_type == "gmic_watermark_fourier" ) {
     dialog = new PF::GmicWatermarkFourierConfigGUI( current_layer );
+  */
     //insert new operations here
   }
 

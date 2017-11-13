@@ -40,8 +40,8 @@ PF::UntiledOperationPar::UntiledOperationPar():
   cache_files_num( 0 )
 {	
   set_cache_files_num(1);
-  convert_format_in = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
-  convert_format_out = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  convert_format_in = new_convert_format();
+  convert_format_out = new_convert_format();
 }
 
 

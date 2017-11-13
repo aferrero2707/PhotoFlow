@@ -206,13 +206,6 @@ VipsImage* PF::FastDemosaicPar::build(std::vector<VipsImage*>& in, int first,
 
 
 
-PF::ProcessorBase* PF::new_fast_demosaic()
-{
-  return( new PF::Processor<PF::FastDemosaicPar,PF::FastDemosaicProc>() );
-}
-
-
-
 
 /*
 void fast_demosaic(VipsRegion** ir, int n, int in_first,

@@ -313,10 +313,3 @@ void PF::DrawPar::draw_point( int x, int y, VipsRect& update )
     update.width = update.height = pen.get_size()*2 + 1;
   }
 }
-
-
-
-PF::ProcessorBase* PF::new_draw()
-{
-  return( new PF::Processor<PF::DrawPar,PF::DrawProc>() );
-}

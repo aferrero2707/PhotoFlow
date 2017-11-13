@@ -404,6 +404,7 @@ public:
 };
 
 
+ProcessorBase* new_nlmeans_algo();
 
 ProcessorBase* new_nlmeans();
 

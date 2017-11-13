@@ -96,9 +96,3 @@ VipsImage* PF::MultiRawDeveloperPar::build(std::vector<VipsImage*>& in, int firs
   
   return out;
 }
-
-
-PF::ProcessorBase* PF::new_multiraw_developer()
-{
-  return new PF::Processor<PF::MultiRawDeveloperPar,PF::MultiRawDeveloper>();
-}

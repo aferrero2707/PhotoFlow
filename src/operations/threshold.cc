@@ -38,9 +38,3 @@ invert( "invert", this, false )
   set_type( "threshold" );
   set_default_name( _("threshold") );
 }
-
-
-PF::ProcessorBase* PF::new_threshold()
-{
-  return( new PF::Processor<PF::ThresholdPar,PF::Threshold>() );
-}

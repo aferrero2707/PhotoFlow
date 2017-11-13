@@ -28,7 +28,6 @@
  */
 
 #include "perspective.hh"
-#include "../base/new_operation.hh"
 
 int vips_perspective( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, VipsInterpolate* interpolate, ... );
 
@@ -87,10 +86,4 @@ VipsImage* PF::PerspectivePar::build(std::vector<VipsImage*>& in, int first,
 
   return out;
 
-}
-
-
-PF::ProcessorBase* PF::new_perspective()
-{
-  return( new PF::Processor<PF::PerspectivePar,PF::PerspectiveProc>() );
 }

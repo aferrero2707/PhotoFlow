@@ -28,6 +28,7 @@
  */
 
 
+#include "../../base/processor_imp.hh"
 #include "gmic.hh"
 #include "transfer_colors.hh"
 

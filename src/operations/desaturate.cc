@@ -28,7 +28,7 @@
  */
 
 #include "../base/processor.hh"
-#include "../base/new_operation.hh"
+//#include "../base/new_operation.hh"
 #include "icc_transform.hh"
 #include "convert_colorspace.hh"
 #include "desaturate.hh"
@@ -151,28 +151,4 @@ VipsImage* PF::DesaturatePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_desaturate_luminosity()
-{
-  return( new PF::Processor<PF::PixelProcessorPar,PF::DesaturateLuminosity>() );
-}
-
-
-PF::ProcessorBase* PF::new_desaturate_lightness()
-{
-  return( new PF::Processor<PF::PixelProcessorPar,PF::DesaturateLightness>() );
-}
-
-
-PF::ProcessorBase* PF::new_desaturate_average()
-{
-  return( new PF::Processor<PF::PixelProcessorPar,PF::DesaturateAverage>() );
-}
-
-
-PF::ProcessorBase* PF::new_desaturate()
-{
-  return( new PF::Processor<PF::DesaturatePar,PF::DesaturateProc>() );
 }

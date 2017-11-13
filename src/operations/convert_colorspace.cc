@@ -109,7 +109,7 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
   cs_transform     = new_icc_transform();
   gw_transform_in  = new_icc_transform();
   gw_transform_out = new_icc_transform();
-  gw = new PF::Processor<PF::GamutWarningPar,PF::GamutWarningProc>();
+  gw = new_gamut_warning();
 
   set_type("convert_colorspace" );
 
@@ -401,11 +401,4 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   out_profile_data_length = 0;
 
   return out;
-}
-
-
-
-PF::ProcessorBase* PF::new_convert_colorspace()
-{
-  return new PF::Processor<PF::ConvertColorspacePar,PF::ConvertColorspace>();
 }

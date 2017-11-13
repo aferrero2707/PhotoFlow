@@ -233,10 +233,3 @@ VipsImage* PF::AmazeDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   //return out;
 }
 
-
-
-PF::ProcessorBase* PF::new_amaze_demosaic()
-{
-  return( new PF::Processor<PF::AmazeDemosaicPar,PF::AmazeDemosaicProc>() );
-}
-

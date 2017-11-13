@@ -86,7 +86,7 @@ PF::RawDeveloperV1Par::RawDeveloperV1Par():
   lensfun = new_lensfun();
   raw_output = new_raw_output_v1();
   hotpixels = new_hotpixels();
-  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  convert_format = new_convert_format();
 	for(int ifcs = 0; ifcs < 4; ifcs++) 
 		fcs[ifcs] = new_false_color_correction();
 
@@ -405,10 +405,4 @@ VipsImage* PF::RawDeveloperV1Par::build(std::vector<VipsImage*>& in, int first,
 
 //std::cout<<"RawDeveloperV1::build(): output image: "<<out2<<std::endl;
   return out2;
-}
-
-
-PF::ProcessorBase* PF::new_raw_developer_v1()
-{
-  return new PF::Processor<PF::RawDeveloperV1Par,PF::RawDeveloperV1>();
 }

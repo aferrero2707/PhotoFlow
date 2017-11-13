@@ -39,10 +39,3 @@ PF::ClipPar::ClipPar():
 
   set_default_name( _("clip values") );
 }
-
-
-
-PF::ProcessorBase* PF::new_clip()
-{
-  return( new PF::Processor<PF::ClipPar,PF::ClipOp>() );
-}

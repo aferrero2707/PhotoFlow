@@ -380,7 +380,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_mask.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
   //#if !defined(__APPLE__) && !defined(__MACH__)
 #ifndef PF_DISABLE_GMIC
-  //op_gmic.get_tree().add_op( _("G'MIC Interpreter"), "gmic" );
+  op_gmic.get_tree().add_op( _("G'MIC Interpreter"), "gmic" );
   op_mask.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
 #endif
   op_mask.get_tree().add_op( _("Draw"), "draw" );

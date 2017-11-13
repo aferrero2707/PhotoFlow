@@ -251,9 +251,3 @@ VipsImage* PF::BasicAdjustmentsPar::build(std::vector<VipsImage*>& in, int first
 
   return out;
 }
-
-
-PF::ProcessorBase* PF::new_basic_adjustments()
-{
-  return new PF::Processor<PF::BasicAdjustmentsPar,PF::BasicAdjustments>();
-}

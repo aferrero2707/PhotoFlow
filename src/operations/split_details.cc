@@ -28,10 +28,10 @@
  */
 
 
+#include "../base/processor_imp.hh"
 #include "gaussblur.hh"
 #include "wavdec.hh"
 #include "split_details.hh"
-
 
   class SplitDetailsLevelPar: public PF::OpParBase
   {

@@ -121,9 +121,3 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
   }
   return image;
 }
-
-
-PF::ProcessorBase* PF::new_raw_loader()
-{
-  return new PF::Processor<PF::RawLoaderPar,PF::RawLoader>();
-}

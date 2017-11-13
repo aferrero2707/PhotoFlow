@@ -31,7 +31,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "../base/new_operation.hh"
+#include "convert_colorspace.hh"
 #include "icc_transform.hh"
 #include "gaussblur.hh"
 #include "shadows_highlights.hh"
@@ -52,7 +52,12 @@ in_profile( NULL )
   //method.add_enum_value(PF::SHAHI_BILATERAL,"SHAHI_BILATERAL","bilateral");
 
   gauss = new_gaussblur();
-  convert2lab = PF::new_operation( "convert2lab", NULL );
+  convert2lab = PF::new_convert_colorspace();
+  PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+  if(csconvpar) {
+    csconvpar->set_out_profile_mode( PF::PROF_MODE_DEFAULT );
+    csconvpar->set_out_profile_type( PF::PROF_TYPE_LAB );
+  }
   convert2input = new_icc_transform();
 
   set_type("shadows_highlights" );
@@ -171,10 +176,4 @@ VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int firs
   set_image_hints( in[0] );
 
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_shadows_highlights()
-{
-  return new PF::Processor<PF::ShadowsHighlightsPar,PF::ShadowsHighlightsProc>();
 }

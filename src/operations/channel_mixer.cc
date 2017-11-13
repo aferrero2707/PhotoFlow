@@ -29,10 +29,3 @@
 
 #include "../base/processor.hh"
 #include "channel_mixer.hh"
-
-
-PF::ProcessorBase* PF::new_channel_mixer()
-{
-  return ( new PF::Processor<PF::ChannelMixerPar,PF::ChannelMixer>() );
-}
-

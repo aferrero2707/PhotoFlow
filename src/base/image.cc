@@ -38,8 +38,9 @@
 #include "image.hh"
 #include "imageprocessor.hh"
 #include "pf_file_loader.hh"
+#include "../operations/operations.hh"
 //#include "../operations/convert2srgb.hh"
-#include "../operations/convertformat.hh"
+//#include "../operations/convertformat.hh"
 #include "../operations/icc_transform.hh"
 //#include "../operations/gmic/gmic_untiled_op.hh"
 
@@ -122,7 +123,7 @@ PF::Image::Image():
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update_all) );
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::modified) );
   //convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
-  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  convert_format = new_convert_format();
   convert2outprof = new_icc_transform();
 
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
@@ -570,7 +571,7 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   //												0, NULL, this))
   //	return;
 
-  PF::ProcessorBase* convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  PF::ProcessorBase* convert_format = new_convert_format();
   std::vector<VipsImage*> in;
   in.push_back( spot );
   convert_format->get_par()->set_image_hints( spot );
@@ -1010,8 +1011,6 @@ void PF::Image::export_merged( std::string filename )
 
 void PF::Image::do_export_merged( std::string filename )
 {
-  BENCHFUN
-
   std::string ext;
   if( getFileExtension( "/", filename, ext ) &&
       ext != "pfi" ) {
@@ -1068,6 +1067,7 @@ void PF::Image::do_export_merged( std::string filename )
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       PF_UNREF( image, "Image::do_export_merged(): image unref" );
       if( outimg ) {
+        BENCHFUN
         Glib::Timer timer;
         timer.start();
         vips_jpegsave( outimg, filename.c_str(), "Q", 75, NULL );

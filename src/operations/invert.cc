@@ -37,10 +37,3 @@ PF::InvertPar::InvertPar():
 
   set_default_name( _("invert") );
 }
-
-
-
-PF::ProcessorBase* PF::new_invert()
-{
-  return( new PF::Processor<PF::InvertPar,PF::Invert>() );
-}

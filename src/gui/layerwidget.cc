@@ -1402,7 +1402,7 @@ void PF::LayerWidget::insert_image( std::string filename )
     PF::ProcessorBase* processor = new_buffer();
     gl->set_processor( processor );
 
-    PF::ProcessorBase* blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    PF::ProcessorBase* blender = new_blender();
     gl->set_blender( blender );
 
     PF::OperationConfigGUI* dialog =
@@ -1436,7 +1436,7 @@ void PF::LayerWidget::insert_image( std::string filename )
     PF::ProcessorBase* processor = new_buffer();
     gl->set_processor( processor );
 
-    PF::ProcessorBase* blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    PF::ProcessorBase* blender = new_blender();
     gl->set_blender( blender );
 
     PF::OperationConfigGUI* dialog =
@@ -1811,7 +1811,7 @@ void PF::LayerWidget::on_button_add_group()
   PF::ProcessorBase* processor = new_buffer();
   layer->set_processor( processor );
 
-  PF::ProcessorBase* blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+  PF::ProcessorBase* blender = new_blender();
   layer->set_blender( blender );
 
   PF::OperationConfigGUI* dialog =

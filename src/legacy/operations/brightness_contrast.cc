@@ -29,10 +29,3 @@
 
 #include "../base/processor.hh"
 #include "brightness_contrast.hh"
-
-
-PF::ProcessorBase* PF::new_brightness_contrast()
-{
-  return ( new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>() );
-}
-

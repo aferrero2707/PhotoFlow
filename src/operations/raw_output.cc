@@ -488,10 +488,3 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   /**/
   return out;
 }
-
-
-
-PF::ProcessorBase* PF::new_raw_output()
-{
-  return new PF::Processor<PF::RawOutputPar,PF::RawOutput>();
-}

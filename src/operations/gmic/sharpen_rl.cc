@@ -28,6 +28,7 @@
  */
 
 
+#include "../../base/processor_imp.hh"
 #include "gmic.hh"
 #include "sharpen_rl.hh"
 

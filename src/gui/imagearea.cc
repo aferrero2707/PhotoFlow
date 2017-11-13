@@ -26,6 +26,7 @@
 
 
 #include "../base/imageprocessor.hh"
+#include "../operations/operations.hh"
 #include "../operations/icc_transform.hh"
 #include "../operations/convert_colorspace.hh"
 #include "imagearea.hh"
@@ -215,15 +216,18 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   //convert2display = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   softproof_conversion = new_convert_colorspace();
   convert2display = new_icc_transform();
-  uniform = new PF::Processor<PF::UniformPar,PF::Uniform>();
+  uniform = new_uniform();
   if( uniform->get_par() ) {
-    uniform->get_par()->get_R().set( 1 );
-    uniform->get_par()->get_G().set( 0 );
-    uniform->get_par()->get_B().set( 0 );
+    PF::UniformPar* uniform_par = dynamic_cast<PF::UniformPar*>( uniform->get_par() );
+    if( uniform_par ) {
+      uniform_par->get_R().set( 1 );
+      uniform_par->get_G().set( 0 );
+      uniform_par->get_B().set( 0 );
+    }
   }
-  maskblend = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
-  invert = new PF::Processor<PF::InvertPar,PF::Invert>();
-  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  maskblend = new_blender();
+  invert = new_invert();
+  convert_format = new_convert_format();
   clipping_warning = new_clipping_warning();
 
   set_size_request( 1, 1 );
@@ -1246,10 +1250,13 @@ void PF::ImageArea::update( VipsRect* area )
 
       PF::set_icc_profile( redimage, current_display_profile );
 
-      maskblend->get_par()->set_image_hints( srgbimg );
-      maskblend->get_par()->set_format( get_pipeline()->get_format() );
-      maskblend->get_par()->set_blend_mode( PF::PF_BLEND_NORMAL );
-      maskblend->get_par()->set_opacity( 0.8 );
+      PF::BlenderPar* maskblend_par = dynamic_cast<PF::BlenderPar*>( maskblend->get_par() );
+      if( maskblend_par ) {
+        maskblend_par->set_image_hints( srgbimg );
+        maskblend_par->set_format( get_pipeline()->get_format() );
+        maskblend_par->set_blend_mode( PF::PF_BLEND_NORMAL );
+        maskblend_par->set_opacity( 0.8 );
+      }
       in.clear(); 
       in.push_back( srgbimg );
       in.push_back( redimage );

@@ -290,9 +290,3 @@ VipsImage* PF::WhiteBalancePar::build(std::vector<VipsImage*>& in, int first,
 
   return image;
 }
-
-
-PF::ProcessorBase* PF::new_white_balance()
-{
-  return new PF::Processor<PF::WhiteBalancePar,PF::WhiteBalance>();
-}

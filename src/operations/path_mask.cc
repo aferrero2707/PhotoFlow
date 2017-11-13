@@ -27,8 +27,8 @@
 
  */
 
-#include "path_mask.hh"
 #include "../base/processor.hh"
+#include "path_mask.hh"
 
 template<>
 void PF::get_falloff_curve<unsigned short int>( float* vec, float val, unsigned short int& out ) {
@@ -436,12 +436,6 @@ VipsImage* PF::PathMaskPar::build(std::vector<VipsImage*>& in, int first,
   PF_UNREF( out, "GaussBlurPar::build(): iter_in unref" );
   /**/
   return cached;
-}
-
-
-PF::ProcessorBase* PF::new_path_mask()
-{
-  return( new PF::Processor<PF::PathMaskPar,PF::PathMask>() );
 }
 
 

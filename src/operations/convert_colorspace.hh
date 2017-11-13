@@ -176,7 +176,7 @@ class ConvertColorspacePar: public OpParBase
   ProcessorBase* cs_transform;
   ProcessorBase* gw_transform_in;
   ProcessorBase* gw_transform_out;
-  Processor<GamutWarningPar,GamutWarningProc>* gw;
+  ProcessorBase* gw;
 
   //ProcessorBase* convert2lab;
 
@@ -466,6 +466,8 @@ public:
 
 
 
+
+ProcessorBase* new_gamut_warning();
 
 ProcessorBase* new_convert_colorspace();
 }

@@ -132,14 +132,12 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   Glib::ustring current_display_profile_name;
   ICCProfile* current_display_profile;
 
-  PF::Processor<PF::UniformPar,PF::Uniform>* uniform;
-  PF::Processor<PF::BlenderPar,PF::BlenderProc>* maskblend;
-
+  PF::ProcessorBase* uniform;
+  PF::ProcessorBase* maskblend;
   PF::ProcessorBase* invert;
-
   PF::ProcessorBase* convert_format;
-
   PF::ProcessorBase* clipping_warning;
+
   bool highlights_warning_enabled, shadows_warning_enabled;
   bool softproof_bpc_enabled, sim_black_ink_enabled, sim_paper_color_enabled, gamut_warning_enabled;
   bool softproof_clip_negative_enabled, softproof_clip_overflow_enabled;

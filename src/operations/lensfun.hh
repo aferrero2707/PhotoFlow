@@ -123,11 +123,15 @@ class LensFunPar: public OpParBase
 
   Property<bool> enable_distortion, enable_tca, enable_vignetting, enable_all;
 
-  Processor<LensFunParStep,PF::LensFunProc> step1;
-  Processor<LensFunParStep,PF::LensFunProc> step2;
+  ProcessorBase* step1;
+  ProcessorBase* step2;
 
 public:
   LensFunPar();
+  ~LensFunPar()
+  {
+    delete step1; delete step2;
+  }
 
   bool has_intensity() { return false; }
   bool has_opacity() { return false; }
@@ -138,11 +142,11 @@ public:
   std::string camera_model() { return prop_camera_model.get(); }
   std::string lens() { return prop_lens.get(); }
 
-  float get_focal_length() { return( step1.get_par()->get_focal_length() ); }
-  float get_aperture() { return( step1.get_par()->get_aperture() ); }
-  float get_distance() { return( step1.get_par()->get_distance() ); }
+  float get_focal_length();
+  float get_aperture();
+  float get_distance();
 
-  int get_flags( VipsImage* img ) { return( step1.get_par()->get_flags(img) ); }
+  int get_flags( VipsImage* img );
 
   bool distortion_enabled() { return enable_distortion.get(); }
   bool tca_enabled() { return enable_tca.get(); }
@@ -157,6 +161,8 @@ public:
 };
 
 
+
+ProcessorBase* new_lensfun_step();
 
 ProcessorBase* new_lensfun();
 }

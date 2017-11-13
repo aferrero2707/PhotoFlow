@@ -412,12 +412,3 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
 
   return outnew;
 }
-
-
-
-
-
-PF::ProcessorBase* PF::new_blender()
-{
-  return( new PF::Processor<PF::BlenderPar,PF::BlenderProc>() );
-}

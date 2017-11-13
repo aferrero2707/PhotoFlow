@@ -37,10 +37,3 @@ PF::MaxRGBPar::MaxRGBPar():
 
   set_default_name( _("max(R,G,B)") );
 }
-
-
-
-PF::ProcessorBase* PF::new_maxrgb()
-{
-  return( new PF::Processor<PF::MaxRGBPar,PF::MaxRGBProc>() );
-}

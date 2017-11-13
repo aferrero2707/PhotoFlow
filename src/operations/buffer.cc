@@ -52,12 +52,3 @@ VipsImage* PF::BufferPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = PF::OpParBase::build( in, first, NULL, NULL, level );
   return out;
 }
-
-
-
-
-
-PF::ProcessorBase* PF::new_buffer()
-{
-  return( new PF::Processor<PF::BufferPar,PF::BufferProc>() );
-}

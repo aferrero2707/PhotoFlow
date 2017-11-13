@@ -487,6 +487,8 @@ public:
 
 ProcessorBase* new_defringe();
 
+ProcessorBase* new_defringe_algo();
+
 }
 
 #endif 

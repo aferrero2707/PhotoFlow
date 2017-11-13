@@ -29,11 +29,12 @@
 
 #include <vips/cimg_funcs.h>
 
-#include "denoise.hh"
 #include "../base/new_operation.hh"
+#include "convert_colorspace.hh"
 #include "icc_transform.hh"
 #include "../operations/impulse_nr.hh"
 #include "../operations/nlmeans.hh"
+#include "denoise.hh"
 
 
 PF::DenoisePar::DenoisePar(): 
@@ -53,7 +54,12 @@ PF::DenoisePar::DenoisePar():
   sigma("sigma",this,1.1),
 	nr_mode("nr_mode",this,PF_NR_ANIBLUR,"ANIBLUR","Anisotropic Blur (G'Mic)")
 {	
-  convert2lab = PF::new_operation( "convert2lab", NULL );
+  convert2lab = PF::new_convert_colorspace();
+  PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+  if(csconvpar) {
+    csconvpar->set_out_profile_mode( PF::PROF_MODE_DEFAULT );
+    csconvpar->set_out_profile_type( PF::PROF_TYPE_LAB );
+  }
   convert2input = new_icc_transform();
   impulse_nr = PF::new_impulse_nr();
   nlmeans = PF::new_nlmeans();
@@ -163,10 +169,4 @@ VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first,
   */
 
 	return out2;
-}
-
-
-PF::ProcessorBase* PF::new_denoise()
-{
-  return( new PF::Processor<PF::DenoisePar,PF::DenoiseProc>() );
 }

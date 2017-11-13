@@ -169,9 +169,3 @@ VipsImage* PF::RawPreprocessorV1Par::build(std::vector<VipsImage*>& in, int firs
 
   return image;
 }
-
-
-PF::ProcessorBase* PF::new_raw_preprocessor_v1()
-{
-  return new PF::Processor<PF::RawPreprocessorV1Par,PF::RawPreprocessorV1>();
-}

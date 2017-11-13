@@ -199,9 +199,3 @@ VipsImage* PF::HueSaturationPar::build(std::vector<VipsImage*>& in, int first,
 
   return out;
 }
-
-
-PF::ProcessorBase* PF::new_hue_saturation()
-{
-  return new PF::Processor<PF::HueSaturationPar,PF::HueSaturation>();
-}

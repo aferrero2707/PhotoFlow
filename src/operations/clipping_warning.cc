@@ -35,9 +35,3 @@ OpParBase()
 {
   set_type( "clipping_warning" );
 }
-
-
-PF::ProcessorBase* PF::new_clipping_warning()
-{
-  return( new PF::Processor<PF::ClippingWarningPar,PF::ClippingWarning>() );
-}

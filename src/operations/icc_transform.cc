@@ -163,10 +163,3 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
 
   return out;
 }
-
-
-
-PF::ProcessorBase* PF::new_icc_transform()
-{
-  return new PF::Processor<PF::ICCTransformPar,PF::ICCTransformProc>();
-}

@@ -30,6 +30,7 @@
 #include "../../base/pf_mkstemp.hh"
 #include "../../base/fileutils.hh"
 
+#include "../../base/processor_imp.hh"
 #include "gmic.hh"
 #include "emulate_film_user_defined.hh"
 

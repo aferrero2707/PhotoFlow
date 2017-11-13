@@ -27,8 +27,8 @@
 
  */
 
-#include "gradient.hh"
 #include "../base/processor.hh"
+#include "gradient.hh"
 
 
 PF::GradientPar::GradientPar():
@@ -169,10 +169,4 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   return out2;
-}
-
-
-PF::ProcessorBase* PF::new_gradient()
-{
-  return( new PF::Processor<PF::GradientPar,PF::Gradient>() );
 }

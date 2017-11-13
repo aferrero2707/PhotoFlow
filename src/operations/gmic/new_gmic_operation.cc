@@ -39,24 +39,8 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic();
   } else if( op_type == "gmic_blur_bilateral" ) {
     processor = new_gmic_blur_bilateral();
-  } else if( op_type == "gmic_denoise" ) {
-    processor = new_gmic_denoise();
-  } else if( op_type == "gmic_smooth_nlmeans" ) {
-    processor = new_gmic_smooth_nlmeans();
   } else if( op_type == "gmic_smooth_anisotropic" ) {
     processor = new_gmic_smooth_anisotropic();
-  } else if( op_type == "gmic_smooth_diffusion" ) {
-    processor = new_gmic_smooth_diffusion();
-  } else if( op_type == "gmic_smooth_mean_curvature" ) {
-    processor = new_gmic_smooth_mean_curvature();
-  } else if( op_type == "gmic_smooth_wavelets_haar" ) {
-    processor = new_gmic_smooth_wavelets_haar();
-  } else if( op_type == "gmic_smooth_median" ) {
-    processor = new_gmic_smooth_median();
-  } else if( op_type == "gmic_smooth_selective_gaussian" ) {
-    processor = new_gmic_smooth_selective_gaussian();
-  } else if( op_type == "gmic_smooth_total_variation" ) {
-    processor = new_gmic_smooth_total_variation();
   } else if( op_type == "gmic_emulate_film_colorslide" ) {
     processor = new_gmic_emulate_film_colorslide();
   } else if( op_type == "gmic_emulate_film_bw" ) {
@@ -77,6 +61,27 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_emulate_film_various();
   } else if( op_type == "gmic_emulate_film_user_defined" ) {
     processor = new_gmic_emulate_film_user_defined();
+  } else if( op_type == "gmic_tone_mapping" ) {
+    processor = new_gmic_tone_mapping();
+  } else if( op_type == "gmic_transfer_colors" ) {
+    processor = new_gmic_transfer_colors();
+/*
+  } else if( op_type == "gmic_denoise" ) {
+    processor = new_gmic_denoise();
+  } else if( op_type == "gmic_smooth_nlmeans" ) {
+    processor = new_gmic_smooth_nlmeans();
+  } else if( op_type == "gmic_smooth_diffusion" ) {
+    processor = new_gmic_smooth_diffusion();
+  } else if( op_type == "gmic_smooth_mean_curvature" ) {
+    processor = new_gmic_smooth_mean_curvature();
+  } else if( op_type == "gmic_smooth_wavelets_haar" ) {
+    processor = new_gmic_smooth_wavelets_haar();
+  } else if( op_type == "gmic_smooth_median" ) {
+    processor = new_gmic_smooth_median();
+  } else if( op_type == "gmic_smooth_selective_gaussian" ) {
+    processor = new_gmic_smooth_selective_gaussian();
+  } else if( op_type == "gmic_smooth_total_variation" ) {
+    processor = new_gmic_smooth_total_variation();
   } else if( op_type == "gmic_gcd_despeckle" ) {
     processor = new_gmic_gcd_despeckle();
   } else if( op_type == "gmic_smooth_guided" ) {
@@ -87,8 +92,6 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_dream_smooth();
   } else if( op_type == "gmic_extract_foreground" ) {
     processor = new_gmic_extract_foreground();
-  } else if( op_type == "gmic_tone_mapping" ) {
-    processor = new_gmic_tone_mapping();
   } else if( op_type == "gmic_inpaint" ) {
     processor = new_gmic_inpaint();
   } else if( op_type == "gmic_convolve" ) {
@@ -99,10 +102,9 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_sharpen_rl();
   } else if( op_type == "gmic_split_details" ) {
     processor = new_gmic_split_details();
-  } else if( op_type == "gmic_transfer_colors" ) {
-    processor = new_gmic_transfer_colors();
   } else if( op_type == "gmic_watermark_fourier" ) {
     processor = new_gmic_watermark_fourier();
+  */
     //insert new operations here
   }
 

@@ -77,10 +77,3 @@ VipsImage* PF::ToneMappingPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
   return out;
 }
-
-
-
-PF::ProcessorBase* PF::new_tone_mapping()
-{
-  return new PF::Processor<PF::ToneMappingPar,PF::ToneMapping>();
-}

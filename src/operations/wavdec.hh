@@ -448,6 +448,7 @@ private:
 };
 
 
+ProcessorBase* new_wavdec_algo();
 ProcessorBase* new_wavdec();
 
 }

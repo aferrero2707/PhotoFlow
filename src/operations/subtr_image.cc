@@ -39,7 +39,7 @@ PF::SubtrImgPar::SubtrImgPar():
 OpParBase(),
 blendFactor("blendFactor",this,0.5f)
 {
-  subtrimg_algo = new PF::Processor<PF::SubtrImgAlgoPar,PF::SubtrImgAlgoProc>();
+  subtrimg_algo = PF::new_subtrimg_algo();
 
   set_type("subtrimg" );
   set_default_name( _("Subtract Image") );
@@ -71,9 +71,3 @@ VipsImage* PF::SubtrImgPar::build(std::vector<VipsImage*>& in, int first,
   return subtrimg;
 
 }
-
-PF::ProcessorBase* PF::new_subtrimg()
-{
-  return new PF::Processor<PF::SubtrImgPar,PF::SubtrImgProc>();
-}
-

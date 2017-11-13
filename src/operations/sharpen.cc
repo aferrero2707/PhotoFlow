@@ -179,9 +179,3 @@ VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first,
   
   return out;
 }
-
-
-PF::ProcessorBase* PF::new_sharpen()
-{
-  return new PF::Processor<PF::SharpenPar,PF::SharpenProc>();
-}

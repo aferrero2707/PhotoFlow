@@ -27,7 +27,7 @@
 
  */
 
-#include "../base/new_operation.hh"
+#include "convert_colorspace.hh"
 #include "icc_transform.hh"
 #include "nlmeans.hh"
 
@@ -43,9 +43,14 @@ PF::NonLocalMeansPar::NonLocalMeansPar():
   set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type( "nlmeans" );
 
-  convert2lab = PF::new_operation( "convert2lab", NULL );
+  convert2lab = PF::new_convert_colorspace();
+  PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+  if(csconvpar) {
+    csconvpar->set_out_profile_mode( PF::PROF_MODE_DEFAULT );
+    csconvpar->set_out_profile_type( PF::PROF_TYPE_LAB );
+  }
   convert2input = new_icc_transform();
-  nlmeans_algo = new PF::Processor<PF::NonLocalMeans_DTAlgo_Par,PF::NonLocalMeans_DTAlgo_Proc>();
+  nlmeans_algo = new_nlmeans_algo();
 
   set_default_name( _("NL means") );
 }
@@ -165,10 +170,4 @@ VipsImage* PF::NonLocalMeansPar::build(std::vector<VipsImage*>& in, int first,
   set_image_hints( out );
 
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_nlmeans()
-{
-  return( new PF::Processor<PF::NonLocalMeansPar,PF::NonLocalMeansProc>() );
 }

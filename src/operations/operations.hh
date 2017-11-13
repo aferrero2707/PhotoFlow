@@ -55,10 +55,8 @@ namespace PF
   ProcessorBase* new_crop();
   ProcessorBase* new_scale();
   ProcessorBase* new_perspective();
-  ProcessorBase* new_convert2rgb();
-  ProcessorBase* new_convert2srgb();
-  ProcessorBase* new_convert2lab();
   ProcessorBase* new_convert_colorspace();
+  ProcessorBase* new_icc_transform();
   ProcessorBase* new_curves();
   ProcessorBase* new_channel_mixer();
   ProcessorBase* new_gradient();

@@ -57,7 +57,7 @@ namespace PF
 
     VipsImage* image;
     PF::ProcessorBase* convert_format;
-    PF::Processor<PF::BlenderPar,PF::BlenderProc>* blender;
+    PF::ProcessorBase* blender;
 
     std::string current_file;
     VipsBandFormat current_format;

@@ -29,8 +29,8 @@
 
 #include <stdlib.h>
 
-#include "fast_demosaic_xtrans.hh"
 #include "../base/processor.hh"
+#include "fast_demosaic_xtrans.hh"
 
 //#define RT_EMU 1
 
@@ -198,13 +198,6 @@ VipsImage* PF::FastDemosaicXTransPar::build(std::vector<VipsImage*>& in, int fir
   PF_UNREF( cropped, "PF::FastDemosaicXTransPar::build(): img unref" );
 
   return out;
-}
-
-
-
-PF::ProcessorBase* PF::new_fast_demosaic_xtrans()
-{
-  return( new PF::Processor<PF::FastDemosaicXTransPar,PF::FastDemosaicXTransProc>() );
 }
 
 

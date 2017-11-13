@@ -50,9 +50,3 @@ VipsImage* PF::GaussBlurSiiPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* blurred = PF::OpParBase::build( in, first, NULL, omap, level );
   return blurred;
 }
-
-
-PF::ProcessorBase* PF::new_gaussblur_sii()
-{
-  return( new PF::Processor<PF::GaussBlurSiiPar,PF::GaussBlurSiiProc>() );
-}

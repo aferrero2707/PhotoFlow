@@ -29,6 +29,7 @@
 
 //#include <vips/cimg_funcs.h>
 
+#include "../../base/processor_imp.hh"
 #include "../convertformat.hh"
 #include "gmic.hh"
 

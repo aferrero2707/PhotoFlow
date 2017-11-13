@@ -59,7 +59,7 @@ PF::ClonePar::ClonePar():
 
   //convert2lab = PF::new_operation( "convert2lab", NULL );
   convert_cs = PF::new_convert_colorspace();
-  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  convert_format = new_convert_format();
   desaturate = PF::new_desaturate();
   maxrgb = PF::new_maxrgb();
   trcconv = PF::new_trcconv();
@@ -632,10 +632,4 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_clone()
-{
-  return( new PF::Processor<PF::ClonePar,PF::CloneProc>() );
 }

@@ -28,6 +28,7 @@
  */
 
 
+#include "../../base/processor_imp.hh"
 #include "blur_bilateral.hh"
 
 

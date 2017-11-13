@@ -29,8 +29,8 @@
 
 #include <stdlib.h>
 
-#include "lmmse_demosaic.hh"
 #include "../base/processor.hh"
+#include "lmmse_demosaic.hh"
 
 //#define RT_EMU 1
 
@@ -197,12 +197,5 @@ VipsImage* PF::LMMSEDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   PF_UNREF( cropped, "PF::LMMSEDemosaicPar::build(): cropped unref" );
 
   return out;
-}
-
-
-
-PF::ProcessorBase* PF::new_lmmse_demosaic()
-{
-  return( new PF::Processor<PF::LMMSEDemosaicPar,PF::LMMSEDemosaicProc>() );
 }
 

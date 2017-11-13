@@ -59,10 +59,3 @@ VipsImage* PF::LevelsPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
   return out;
 }
-
-
-
-PF::ProcessorBase* PF::new_levels()
-{
-  return new PF::Processor<PF::LevelsPar,PF::Levels>();
-}
