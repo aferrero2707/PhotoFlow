@@ -34,7 +34,7 @@
 
 void PF::PixelBuffer::copy( VipsRegion* region, VipsRect src_rect, int xoffs, int yoffs )
 {
-  guint8 *px1 = (guchar *) VIPS_REGION_ADDR( region, src_rect.left, src_rect.top );
+  //float *px1 = (float *) VIPS_REGION_ADDR( region, src_rect.left, src_rect.top );
   int rs1 = VIPS_REGION_LSKIP( region );
   int bl1 = 3; /*buf->get_byte_length();*/
 
@@ -77,11 +77,15 @@ void PF::PixelBuffer::copy( VipsRegion* region, VipsRect src_rect, int xoffs, in
 
     //guint8* p1 = px1 + rs1*dy1 + dx1*bl1;
     //std::cout<<"VIPS_REGION_ADDR( region, "<<xstart<<", "<<y<<" );"<<std::endl;
-    guint8* p1 = (guchar *) VIPS_REGION_ADDR( region, xstart, y );
+    float* p1 = (float *) VIPS_REGION_ADDR( region, xstart, y );
     guint8* p2 = px2 + rs2*dy2 + dx2*bl2;
-
+    for( int x = 0; x < clip.width*bl2; x++ ) {
+      if(p1[x] >= 1) p2[x] = 255;
+      else if(p1[x] <= 0) p2[x] = 0;
+      else p2[x] = static_cast<guint8>(p1[x]*255);
+    }
     //std::cout<<"y="<<y<<",  memcpy( "<<(void*)p2<<", "<<(void*)p1<<", "<<clip.width*bl2<<" );"<<std::endl;
-    memcpy( p2, p1, clip.width*bl2 );
+    //memcpy( p2, p1, clip.width*bl2 );
   }
 }
 

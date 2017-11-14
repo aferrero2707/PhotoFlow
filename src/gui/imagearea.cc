@@ -1279,7 +1279,7 @@ void PF::ImageArea::update( VipsRect* area )
     }
   }
 
-
+/*
   in.clear();
   in.push_back( srgbimg );
   convert_format->get_par()->set_image_hints( srgbimg );
@@ -1287,6 +1287,8 @@ void PF::ImageArea::update( VipsRect* area )
   outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
   //g_object_unref( srgbimg );
   PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
+*/
+  outimg = srgbimg;
 #ifndef NDEBUG
   std::cout<<"ImageArea::update(): srgbimg="<<srgbimg<<"   ref_count="<<G_OBJECT( srgbimg )->ref_count<<std::endl;
 #endif

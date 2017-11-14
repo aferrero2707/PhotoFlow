@@ -197,15 +197,17 @@ namespace PF
     */
 
     switch(fmt) {
-    case PF_BANDFMT_UCHAR:
+    /*case PF_BANDFMT_UCHAR:
       CS_SWITCH( uint8_t );
       break;
     case PF_BANDFMT_USHORT:
       CS_SWITCH( unsigned short int );
-      break;
+      break;*/
     case PF_BANDFMT_FLOAT:
       CS_SWITCH( float );
       break;
+    case PF_BANDFMT_UCHAR:
+    case PF_BANDFMT_USHORT:
     case PF_BANDFMT_CHAR:
     case PF_BANDFMT_SHORT:
     case PF_BANDFMT_UINT:
