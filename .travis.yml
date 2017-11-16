@@ -148,16 +148,15 @@ matrix:
             JPEG=/usr/local/opt/mozjpeg
             PKG_CONFIG_PATH=/usr/local/opt/libffi/lib/pkgconfig
             JOBS="`sysctl -n hw.ncpu`"
+            MACOSX_DEPLOYMENT_TARGET=10.8
+            HOMEBREW_NO_AUTO_UPDATE=1
             PATH=$HOME/homebrew/bin:$PATH
             LD_LIBRARY_PATH=$HOME/homebrew/lib:$LD_LIBRARY_PATH
             PKG_CONFIG_PATH=$HOME/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH
           before_script:
             - rm -rf osx
             - git clone https://github.com/aferrero2707/pf-build-osx.git osx
-            - brew config
-            - cd /usr/local/Homebrew
-            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 3
-            - brew install ccache
+            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 4
             #- export PATH="/usr/local/opt/ccache/libexec:$PATH"
             - cd $TRAVIS_BUILD_DIR
             - mkdir -p build
