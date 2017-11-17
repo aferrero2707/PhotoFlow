@@ -96,6 +96,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   opacitySlider2( this, layer->get_blender(), "opacity", _("Opacity"), 100, 0, 100, 1, 10, 100),
   imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
   omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
+  test_padding_enable_box( this, "enable_padding", _("enable padding"), false),
   shift_x( this, layer->get_blender(), "shift_x", _("X shift "), 0, -1000000, 1000000, 1, 10, 1),
   shift_y( this, layer->get_blender(), "shift_y", _("Y shift "), 0, -1000000, 1000000, 1, 10, 1),
   has_ch_sel(chsel),
@@ -223,6 +224,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
     frame_top_box_3.pack_start( frame_chsel_box, Gtk::PACK_SHRINK, 5 );
   }
   if(par && par->has_opacity() ) {
+    //frame_shift_box.pack_start( test_padding_enable_box, Gtk::PACK_SHRINK, 2 );
     if( par && par->has_target_channel() ) {
       frame_shift_box.pack_start( shift_x, Gtk::PACK_SHRINK, 2 );
       frame_shift_box.pack_start( shift_y, Gtk::PACK_SHRINK, 2 );

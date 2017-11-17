@@ -65,7 +65,8 @@ PF::OpParBase::OpParBase():
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
   mask_enabled("mask_enabled",this,true),
   file_format_version( PF_FILE_VERSION ),
-  previous_layer_is_input("previous_layer_is_input",this,true)
+  previous_layer_is_input("previous_layer_is_input",this,true),
+  enable_padding( "enable_padding", this, false ), test_padding(64)
 {
   //blend_mode.set_internal(true);
   intensity.set_internal(true);
@@ -150,6 +151,13 @@ void PF::OpParBase::restore_properties(const std::list<std::string>& plist)
       pi++, si++) {
     (*pi)->set_str(*si);
   }
+}
+
+
+void PF::OpParBase::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
+{
+  int p = enable_padding.get() ? test_padding : 0;
+  set_padding( p, id );
 }
 
 
@@ -371,7 +379,8 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
     int p = get_output_padding( i );
     if( p > 0 ) {
       int nt = out->Xsize*(p/PF_OUPUT_CACHE_TS + 3)/PF_OUPUT_CACHE_TS;
-      VipsAccess acc = VIPS_ACCESS_RANDOM;
+      VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
+      //VipsAccess acc = VIPS_ACCESS_RANDOM; // gives worst performances
       int threaded = 1, persistent = 0;
       VipsImage* cached;
       if( !vips_tilecache(out, &cached,
@@ -383,7 +392,7 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
         result_cached.push_back( cached );
         PF_UNREF( out, "OpParBase::build_many_internal(): out unref" );
         std::cout<<"OpParBase::build_many_internal(): added tilecache for output image #"
-            <<i<<", padding="<<p<<std::endl;
+            <<i<<", padding="<<p<<", nt="<<nt<<std::endl;
       } else {
         std::cout<<"OpParBase::build_many_internal(): vips_tilecache() failed."<<std::endl;
         result_cached.push_back( out );

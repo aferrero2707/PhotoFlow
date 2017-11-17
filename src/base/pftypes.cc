@@ -72,6 +72,9 @@ PF::PropertyBase(name, par)
   //add_enum_value(PF_BLEND_LUMI,"PF_BLEND_LUMI","Luminosity");
   add_enum_value(PF_BLEND_LUMINANCE,"PF_BLEND_LUMINANCE",_("Luminance"));
   add_enum_value(PF_BLEND_COLOR,"PF_BLEND_COLOR",_("Color"));
+  add_enum_value(PF_BLEND_LCH_L,"PF_BLEND_LCH_L",_("L (LCH)"));
+  add_enum_value(PF_BLEND_LCH_C,"PF_BLEND_LCH_C",_("C (LCH)"));
+  add_enum_value(PF_BLEND_LCH_H,"PF_BLEND_LCH_H",_("H (LCH)"));
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");

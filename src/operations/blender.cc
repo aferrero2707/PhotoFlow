@@ -138,6 +138,9 @@ PF::BlenderPar::BlenderPar():
   PropertyBase* B = white->get_par()->get_property( "B" );
   if( B ) B->update( (float)1 );
 
+  img2lab = new PF::ICCTransform;
+  lab2img = new PF::ICCTransform;
+
   //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
   blend_mode.set_enum_value( PF_BLEND_NORMAL );
   blend_mode.store_default();
@@ -375,6 +378,13 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   }
   /**/
+
+  if( background ) {
+    img2lab->init(icc_data_bottom, PF::ICCStore::Instance().get_Lab_profile(),
+        background->BandFmt, INTENT_RELATIVE_COLORIMETRIC, true, 0);
+    lab2img->init(PF::ICCStore::Instance().get_Lab_profile(), icc_data_bottom,
+        background->BandFmt, INTENT_RELATIVE_COLORIMETRIC, true, 0);
+  }
 
   //VipsImage* invec[2] = {background, foreground};
   //vips_layer( invec, 2, &outnew, 0, get_processor(), NULL, omap, get_demand_hint() );

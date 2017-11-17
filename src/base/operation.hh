@@ -176,6 +176,8 @@ namespace PF
     int file_format_version;
 
     Property<bool> previous_layer_is_input;
+    Property<bool> enable_padding;
+    int test_padding;
 
   public:
     sigc::signal<void> signal_modified;
@@ -287,13 +289,14 @@ namespace PF
     bool get_previous_layer_is_input() { return previous_layer_is_input.get(); }
 
     /* Function to derive the output area from the input area
-    */
+     */
     virtual void transform(const Rect* rin, Rect* rout)
     {
-      rout->left = rin->left;
-      rout->top = rin->top;
-      rout->width = rin->width;
-      rout->height = rin->height;
+      int p = enable_padding.get() ? test_padding : 0;
+      rout->left = rin->left+p;
+      rout->top = rin->top+p;
+      rout->width = rin->width-p*2;
+      rout->height = rin->height-p*2;
     }
 
     /* Function to derive the area to be read from input images,
@@ -301,10 +304,11 @@ namespace PF
     */
     virtual void transform_inv(const Rect* rout, Rect* rin)
     {
-      rin->left = rout->left;
-      rin->top = rout->top;
-      rin->width = rout->width;
-      rin->height = rout->height;
+      int p = enable_padding.get() ? test_padding : 0;
+      rin->left = rout->left-p;
+      rin->top = rout->top-p;
+      rin->width = rout->width+p*2;
+      rin->height = rout->height+p*2;
     }
 
 
@@ -321,10 +325,7 @@ namespace PF
     {
       return false;
     }
-    virtual void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
-    {
-      set_padding( 0, id );
-    }
+    virtual void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
     void set_padding( int p, unsigned int id )
     {
       for( unsigned int i = input_paddings.size(); i <= id; i++ ) input_paddings.push_back(0);
@@ -536,7 +537,8 @@ namespace PF
   #include "blend_luminosity.hh"
   #include "blend_luminance.hh"
   #include "blend_color.hh"
-  #include "blend_exclusion.hh"
+#include "blend_exclusion.hh"
+#include "blend_lch.hh"
 
   int vips_copy_metadata( VipsImage* in, VipsImage* out );
 
