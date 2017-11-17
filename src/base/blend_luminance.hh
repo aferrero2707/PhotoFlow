@@ -121,8 +121,8 @@ public:
     for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
       //temp_out = (T)(( (rgb[ch]*opacity)+(irgb[ch]*(1.0f-opacity)) )*FormatInfo<T>::RANGE - FormatInfo<T>::MIN);
       temp_out = (rgb[ch]*opacity)+(irgb[ch]*(1.0f-opacity));
-      if( temp_out<0 ) temp_out = 0;
-      if( temp_out>1 ) temp_out = 1;
+      //if( temp_out<0 ) temp_out = 0;
+      //if( temp_out>1 ) temp_out = 1;
       if( data->get_trc_type()!=PF_TRC_LINEAR ) {
         temp_out = data->linear2perceptual( temp_out );
         //temp_out = data->perceptual_trc_inv_vec[ (int)(temp_out*65535) ];
