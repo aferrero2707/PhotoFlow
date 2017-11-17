@@ -1060,12 +1060,19 @@ void PF::Image::do_export_merged( std::string filename )
 
     std::vector<VipsImage*> in;
     if( ext == "jpg" || ext == "jpeg" ) {
+      /*
       in.clear();
       in.push_back( image );
       convert_format->get_par()->set_image_hints( image );
       convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       PF_UNREF( image, "Image::do_export_merged(): image unref" );
+      */
+      //outimg = image;
+      if( vips_linear1(image, &outimg, 255, 0, NULL) ) {
+        std::cout<<"WARNING!!! Image::do_export_merged(): vips_linear1() failed"<<std::endl;
+        outimg = image;
+      }
       if( outimg ) {
         BENCHFUN
         Glib::Timer timer;
