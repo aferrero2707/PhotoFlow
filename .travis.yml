@@ -156,7 +156,7 @@ matrix:
             - git clone https://github.com/aferrero2707/pf-build-osx.git osx
             - brew config
             - cd /usr/local/Homebrew
-            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 3
+            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 4
             - brew install ccache
             #- export PATH="/usr/local/opt/ccache/libexec:$PATH"
             - cd $TRAVIS_BUILD_DIR
