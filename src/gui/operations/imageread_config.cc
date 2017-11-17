@@ -213,6 +213,7 @@ void PF::ImageReadConfigGUI::do_update()
   PF::ImageReaderPar* irpar = dynamic_cast<PF::ImageReaderPar*>( par );
   if( irpar ) {
     if( irpar->get_in_profile_mode() == PF::PROF_MODE_EMBEDDED ||
+        irpar->get_in_profile_mode() == PF::PROF_MODE_EMBEDDED_sRGB ||
         irpar->get_in_profile_mode() == PF::PROF_MODE_NONE ) {
       inProfileTypeSelectorBox.hide();
       inTRCModeSelectorBox.hide();
