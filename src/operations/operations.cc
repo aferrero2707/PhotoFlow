@@ -46,6 +46,7 @@
 #include "defringe.hh"
 #include "denoise.hh"
 #include "desaturate.hh"
+#include "desaturate_luminance.hh"
 #include "draw.hh"
 #include "false_color_correction.hh"
 #include "fast_demosaic.hh"
@@ -135,6 +136,8 @@ PF::ProcessorBase* PF::new_defringe_algo()
 PF::ProcessorBase* PF::new_denoise()
 { return( new PF::Processor<PF::DenoisePar,PF::DenoiseProc>() ); }
 
+PF::ProcessorBase* PF::new_desaturate_luminance()
+{ return( new PF::Processor<PF::DesaturateLuminancePar,PF::DesaturateLuminanceProc>() ); }
 PF::ProcessorBase* PF::new_desaturate_luminosity()
 { return( new PF::Processor<PF::PixelProcessorPar,PF::DesaturateLuminosity>() ); }
 PF::ProcessorBase* PF::new_desaturate_lightness()

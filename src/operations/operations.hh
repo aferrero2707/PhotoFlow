@@ -68,6 +68,8 @@ namespace PF
   ProcessorBase* new_threshold();
   ProcessorBase* new_uniform();
   ProcessorBase* new_desaturate();
+  ProcessorBase* new_desaturate_luminance();
+  ProcessorBase* new_desaturate_average();
   ProcessorBase* new_draw();
   ProcessorBase* new_clone_stamp();
   ProcessorBase* new_lensfun();

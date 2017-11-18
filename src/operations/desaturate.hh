@@ -51,6 +51,7 @@ namespace PF
   {
     PropertyBase method;
 
+    ProcessorBase* proc_luminance;
     ProcessorBase* proc_luminosity;
     ProcessorBase* proc_lightness;
     ProcessorBase* proc_average;

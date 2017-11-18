@@ -31,17 +31,21 @@
 //#include "../base/new_operation.hh"
 #include "icc_transform.hh"
 #include "convert_colorspace.hh"
+
+#include "desaturate_luminance.hh"
+
 #include "desaturate.hh"
 
 PF::DesaturatePar::DesaturatePar(): 
   OpParBase(),
-  method( "method", this, PF::DESAT_LAB, "DESAT_LAB",  _("Luminance") )
+  method( "method", this, PF::DESAT_LAB, "DESAT_LAB",  _("luminance (LCh)") )
 {
-  method.add_enum_value( PF::DESAT_LIGHTNESS, "DESAT_LIGHTNESS", _("Lightness") );
-  method.add_enum_value( PF::DESAT_AVERAGE, "DESAT_AVERAGE", _("Average") );
+  method.add_enum_value( PF::DESAT_LIGHTNESS, "DESAT_LIGHTNESS", _("lightness (HSL)") );
+  method.add_enum_value( PF::DESAT_AVERAGE, "DESAT_AVERAGE", _("average") );
   //method.add_enum_value( PF::DESAT_LUMINOSITY, "DESAT_LUMINOSITY", _("Luminosity") );
 
   proc_luminosity = PF::new_desaturate_luminosity();
+  proc_luminance = PF::new_desaturate_luminance();
   proc_lightness = PF::new_desaturate_lightness();
   proc_average = PF::new_desaturate_average();
   proc_average2 = PF::new_desaturate_average();
@@ -87,65 +91,10 @@ VipsImage* PF::DesaturatePar::build(std::vector<VipsImage*>& in, int first,
     }
     break;
   case PF::DESAT_LAB:
-    {
-      void *profile_data;
-      size_t profile_length;
-      VipsImage* srcimg = in[0];
-      if( !srcimg ) return NULL;
-      PF::ICCProfile* iccprof_in = PF::get_icc_profile( srcimg );
-
-      // No Lab conversion possible if the input image has no ICC profile
-      if( !iccprof_in ) {
-        std::cout<<"DesaturatePar::build(): no profile data"<<std::endl;
-        return NULL;
-      }
-  
-      std::vector<VipsImage*> in2; 
-
-      std::cout<<"DesaturatePar::build(): DESAT_LAB"<<std::endl;
-      convert2lab->get_par()->set_image_hints( srcimg );
-      convert2lab->get_par()->set_format( get_format() );
-      convert2lab->get_par()->lab_image( get_xsize(), get_ysize() );
-      in2.clear(); in2.push_back( srcimg );
-      VipsImage* labimg = convert2lab->get_par()->build( in2, 0, NULL, NULL, level );
-      if( !labimg ) {
-        std::cout<<"DesaturatePar::build(): null lab image"<<std::endl;
-        return NULL;
-      }
-
-      in2.clear(); in2.push_back( labimg );
-      proc_average->get_par()->set_image_hints( labimg );
-      proc_average->get_par()->set_format( get_format() );
-      VipsImage* greyimg = proc_average->get_par()->build( in2, 0, NULL, NULL, level );
-      PF_UNREF( labimg, "ClonePar::L2rgb(): labimg unref" );
-      //VipsImage* greyimg = labimg;
-
-      in2.clear(); in2.push_back( greyimg );
-      convert_cs->get_par()->set_image_hints( greyimg );
-      convert_cs->get_par()->set_format( get_format() );
-  
-      PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert_cs->get_par() );
-      if( icc_par ) {
-        icc_par->set_out_profile( iccprof_in );
-      }
-
-      VipsImage* rgbimg = convert_cs->get_par()->build( in2, 0, NULL, NULL, level );
-      PF_UNREF( greyimg, "ClonePar::L2rgb(): greyimg unref" );
-
-      out = rgbimg;
-
-      if( false || get_render_mode() == PF_RENDER_PREVIEW ) {
-        // Not valid anymore, since we now process the preview in floating point precision
-
-        // We have to circumvent the fact that in 16-bits integer precision,
-        // LCMS does not produce a perfectly neutral RGB image
-        // in the Lab -> RGB conversion when a=b=0
-        in2.clear(); in2.push_back( rgbimg );
-        proc_average2->get_par()->set_image_hints( rgbimg );
-        proc_average2->get_par()->set_format( get_format() );
-        out = proc_average2->get_par()->build( in2, 0, NULL, NULL, level );
-        PF_UNREF( rgbimg, "ClonePar::L2rgb(): rgbimg unref" );
-      }
+    if( proc_luminance->get_par() ) {
+      proc_luminance->get_par()->set_image_hints( in[0] );
+      proc_luminance->get_par()->set_format( get_format() );
+      out = proc_luminance->get_par()->build( in, first, imap, omap, level );
     }
     break;
   }
