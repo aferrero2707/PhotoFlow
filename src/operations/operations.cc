@@ -73,6 +73,7 @@
 #include "raw_loader.hh"
 #include "raw_output.hh"
 #include "raw_preprocessor.hh"
+#include "rcd_demosaic.hh"
 #include "scale.hh"
 #include "shadows_highlights.hh"
 #include "sharpen.hh"
@@ -229,6 +230,9 @@ PF::ProcessorBase* PF::new_raw_output()
 
 PF::ProcessorBase* PF::new_raw_preprocessor()
 { return new PF::Processor<PF::RawPreprocessorPar,PF::RawPreprocessor>(); }
+
+PF::ProcessorBase* PF::new_rcd_demosaic()
+{ return( new PF::Processor<PF::RCDDemosaicPar,PF::RCDDemosaicProc>() ); }
 
 PF::ProcessorBase* PF::new_scale()
 { return( new PF::Processor<PF::ScalePar,PF::ScaleProc>() ); }

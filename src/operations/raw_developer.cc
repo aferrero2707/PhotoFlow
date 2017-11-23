@@ -37,6 +37,7 @@
 #include "amaze_demosaic.hh"
 #include "lmmse_demosaic.hh"
 #include "igv_demosaic.hh"
+#include "rcd_demosaic.hh"
 #include "xtrans_demosaic.hh"
 #include "fast_demosaic.hh"
 #include "fast_demosaic_xtrans.hh"
@@ -68,6 +69,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   //tca_method.add_enum_value(PF::PF_TCA_CORR_MANUAL,"TCA_CORR_MANUAL",_("manual"));
 
   demo_method.add_enum_value(PF::PF_DEMO_AMAZE,"AMAZE","Amaze");
+  demo_method.add_enum_value(PF::PF_DEMO_RCD,"RCD","RCD");
   //demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
   demo_method.add_enum_value(PF::PF_DEMO_LMMSE,"LMMSE","LMMSE");
   demo_method.add_enum_value(PF::PF_DEMO_IGV,"IGV","Igv");
@@ -75,6 +77,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   amaze_demosaic = new_amaze_demosaic();
   lmmse_demosaic = new_lmmse_demosaic();
   igv_demosaic = new_igv_demosaic();
+  rcd_demosaic = new_rcd_demosaic();
   xtrans_demosaic = new_xtrans_demosaic();
   fast_demosaic = new_fast_demosaic();
   fast_demosaic_xtrans = new_fast_demosaic_xtrans();
@@ -271,6 +274,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
       case PF::PF_DEMO_AMAZE: demo = amaze_demosaic; break;
       case PF::PF_DEMO_LMMSE: demo = lmmse_demosaic; break;
       case PF::PF_DEMO_IGV: demo = igv_demosaic; break;
+      case PF::PF_DEMO_RCD: demo = rcd_demosaic; break;
       default: break;
       }
       //PF::ProcessorBase* demo = amaze_demosaic;

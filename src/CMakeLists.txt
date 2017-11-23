@@ -227,6 +227,7 @@ FILE(GLOB RTSources
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
+  rt/rtengine/rcd_demosaic_RT.cc
   rt/rtengine/xtrans_demosaic_RT.cc
   rt/rtengine/dcp.cc rt/rtengine/curves.cc rt/rtengine/diagonalcurves.cc rt/rtengine/flatcurves.cc rt/rtengine/color.cc rt/rtexif/*.cc
   rt/rtengine/dcraw.cc
