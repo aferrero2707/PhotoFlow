@@ -38,6 +38,42 @@
 
 namespace PF {
 
+class ToneMappingCurveArea: public Gtk::DrawingArea
+{
+  int border_size;
+
+  bool is_linear;
+
+  tone_mapping_method_t method;
+  float gamma, exponent;
+  float A, B, C, D, E, F, W;
+  float TS, TL, SS, SL, SA;
+  FilmicToneCurve::FullCurve filmic2_curve;
+
+#ifdef GTKMM_2
+  bool on_expose_event(GdkEventExpose* event);
+#endif
+#ifdef GTKMM_3
+  bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+#endif
+public:
+  ToneMappingCurveArea();
+
+  void set_params(PF::ToneMappingPar* tmpar);
+
+  float get_curve_value( float );
+
+  void set_display_mode( bool lin )
+  {
+    bool redraw = (lin != is_linear) ? true : false;
+    is_linear = lin;
+    if( redraw ) queue_draw();
+  }
+
+  virtual void draw_background(const Cairo::RefPtr<Cairo::Context>& cr);
+};
+
+
   class ToneMappingConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
@@ -45,6 +81,9 @@ namespace PF {
     Gtk::HBox globalBox;
     Gtk::HSeparator separator;
     
+    Gtk::HBox curve_area_box;
+    ToneMappingCurveArea curve_area;
+
     ExposureSlider exposureSlider;
     Selector modeSelector;
 

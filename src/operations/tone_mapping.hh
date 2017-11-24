@@ -84,7 +84,8 @@ public:
 
   tone_mapping_method_t get_method() { return (tone_mapping_method_t)method.get_enum_value().first; }
   float get_exposure() { return exposure.get(); }
-  float get_gamma() { return exponent; }
+  float get_gamma() { return gamma.get(); }
+  float get_exponent() { return exponent; }
 
   float get_filmic_A() { return filmic_A.get(); }
   float get_filmic_B() { return filmic_B.get(); }
@@ -146,7 +147,7 @@ public:
     tone_mapping_method_t method = opar->get_method();
 
     float exposure = opar->get_exposure();
-    float gamma = opar->get_gamma();
+    float gamma = opar->get_exponent();
     float lumi_blend_frac = opar->get_lumi_blend_frac();
     ICCProfile* prof = opar->get_icc_data();
 
@@ -198,6 +199,8 @@ public:
           }
         }
 
+        float minus = -1.f;
+
         switch( method ) {
         case TONE_MAPPING_EXP_GAMMA:
           if( gamma2 != 1 ) {
@@ -232,7 +235,8 @@ public:
         }
         case TONE_MAPPING_FILMIC2: {
           for( k=0; k < 3; k++) {
-          RGB[k] = filmic2_curve.Eval(RGB[k]);
+            if(RGB[k] < 0) RGB[k] = minus*filmic2_curve.Eval(minus*RGB[k]);
+            else RGB[k] = filmic2_curve.Eval(RGB[k]);
           }
           break;
         }
