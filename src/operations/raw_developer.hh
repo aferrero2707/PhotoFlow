@@ -90,6 +90,8 @@ namespace PF
     PropertyBase demo_method;
     // False color suppression steps
     Property<int> fcs_steps;
+    // Highlights reconstruction mode
+    PropertyBase hlreco_mode;
 
     bool caching_enabled;
 

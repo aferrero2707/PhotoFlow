@@ -61,13 +61,6 @@ enum exposure_mode_t {
 };
 
 
-enum hlreco_mode_t {
-  HLRECO_NONE,
-  HLRECO_CLIP,
-  HLRECO_BLEND
-};
-
-
  enum input_profile_mode_t {
     IN_PROF_NONE,
     IN_PROF_MATRIX,

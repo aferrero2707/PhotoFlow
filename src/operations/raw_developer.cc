@@ -61,7 +61,8 @@ PF::RawDeveloperPar::RawDeveloperPar():
   tca_method("tca_method",this,PF::PF_TCA_CORR_PROFILED_AUTO,"TCA_CORR_PROFILED_AUTO",_("profiled + auto")),
   demo_method("demo_method",this,PF::PF_DEMO_AMAZE,"AMAZE","Amaze"),
 	fcs_steps("fcs_steps",this,0),
-	caching_enabled( true )
+  hlreco_mode("hlreco_mode",this,PF::HLRECO_CLIP,"HLRECO_CLIP",_("clip")),
+	caching_enabled( false )
 {
   tca_method.add_enum_value(PF::PF_TCA_CORR_AUTO,"TCA_CORR_AUTO",_("auto"));
   tca_method.add_enum_value(PF::PF_TCA_CORR_PROFILED,"TCA_CORR_PROFILED",_("profiled"));
@@ -73,6 +74,9 @@ PF::RawDeveloperPar::RawDeveloperPar():
   //demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
   demo_method.add_enum_value(PF::PF_DEMO_LMMSE,"LMMSE","LMMSE");
   demo_method.add_enum_value(PF::PF_DEMO_IGV,"IGV","Igv");
+
+  hlreco_mode.add_enum_value(PF::HLRECO_BLEND,"HLRECO_BLEND",_("blend"));
+  hlreco_mode.add_enum_value(PF::HLRECO_NONE,"HLRECO_NONE",_("none"));
 
   amaze_demosaic = new_amaze_demosaic();
   lmmse_demosaic = new_lmmse_demosaic();
@@ -346,6 +350,8 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
           rppar->get_wb_blue()*rppar->get_camwb_corr_blue() );
       break;
     }
+    rppar->set_hlreco_mode( (hlreco_mode_t)hlreco_mode.get_enum_value().first );
+    ropar->set_hlreco_mode( (hlreco_mode_t)hlreco_mode.get_enum_value().first );
   }
 
   in2.clear(); in2.push_back( out_lf );

@@ -55,6 +55,7 @@ namespace PF
     dcraw_data_t* image_data;
 
     PropertyBase wb_mode;
+    hlreco_mode_t hlreco_mode;
 
     Property<float>* wb_red[WB_LAST];
     Property<float>* wb_green[WB_LAST];
@@ -88,6 +89,9 @@ namespace PF
     bool needs_input() { return true; }
 
     dcraw_data_t* get_image_data() {return image_data; }
+
+    void set_hlreco_mode(hlreco_mode_t m) { hlreco_mode = m; }
+    hlreco_mode_t get_hlreco_mode() { return hlreco_mode; }
 
     void init_wb_coefficients( dcraw_data_t* idata, std::string camera_maker, std::string camera_model );
 
@@ -135,6 +139,8 @@ namespace PF
 
       float mul[4] = {1,1,1,1};
 
+      hlreco_mode_t hlreco_mode = rdpar->get_hlreco_mode();
+
       //std::cout<<"RawPreprocessor::render(): rdpar->get_wb_mode()="<<rdpar->get_wb_mode()<<std::endl;
       switch( rdpar->get_wb_mode() ) {
       case WB_SPOT:
@@ -177,14 +183,16 @@ namespace PF
         if( mul[i] > max_mul )
           max_mul = mul[i];
       }
-      //std::cout<<"range="<<range<<"  min_mul="<<min_mul<<"  new range="<<range*min_mul<<std::endl;
 #ifdef RT_EMU
       /* RawTherapee emulation */
       range *= max_mul;
 #else
-      //range *= min_mul;
-      range *= max_mul;
+      if( hlreco_mode == HLRECO_CLIP )
+        range *= min_mul;
+      else
+        range *= max_mul;
 #endif
+      //std::cout<<"range="<<range<<"  min_mul="<<min_mul<<"  max_mul="<<max_mul<<std::endl;
 
       float white_corr = rdpar->get_saturation_level_correction();
       float black_corr = rdpar->get_black_level_correction();
@@ -217,9 +225,14 @@ namespace PF
             //pout[x] = __CLIP( (p[x]-black[0]) * sat_corr * mul[0] - black[0]);
             //pout[x+1] = __CLIP(p[x+1] * sat_corr * mul[1] - black[1]);
             //pout[x+2] = __CLIP(p[x+2] * sat_corr * mul[2] - black[2]);
-            pout[x] = __CLIP( (p[x]-black[0]) * mul[0] / (white[0]-black[0]) );
-            pout[x+1] = __CLIP( (p[x+1]-black[1]) * mul[1] / (white[1]-black[1]) );
-            pout[x+2] = __CLIP( (p[x+2]-black[2]) * mul[2] / (white[2]-black[2]) );
+            pout[x] = (p[x]-black[0]) * mul[0] / (white[0]-black[0]);
+            pout[x+1] = (p[x+1]-black[1]) * mul[1] / (white[1]-black[1]);
+            pout[x+2] = (p[x+2]-black[2]) * mul[2] / (white[2]-black[2]);
+            if( hlreco_mode == HLRECO_CLIP ) {
+              pout[x] = CLIP( pout[x] );
+              pout[x+1] = CLIP( pout[x+1] );
+              pout[x+2] = CLIP( pout[x+2] );
+            }
             if(false && r->left==0 && r->top==0) std::cout<<"  p["<<x<<"]="<<p[x]<<"  pout["<<x<<"]="<<pout[x]<<std::endl;
 #ifdef RT_EMU
             /* RawTherapee emulation */
@@ -244,7 +257,10 @@ namespace PF
             rpout.color(x) = rp.color(x);
             //rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
             int c = rp.icolor(x);
-            rpout[x] = __CLIP( (rp[x]-black[c]) * mul[c] * 65535.f / (white[c]-black[c]) );
+            rpout[x] = (rp[x]-black[c]) * mul[c] * 65535.f / (white[c]-black[c]);
+            if( hlreco_mode == HLRECO_CLIP ) {
+              rpout[x] = CLIP( rpout[x] );
+            }
             if(false && r->left==0 && r->top==0 && y<4 && x<4)
               std::cout<<"("<<y<<","<<x<<")  c="<<rp.color(x) //c
               <<"  rp[x]="<<rp[x]

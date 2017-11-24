@@ -55,7 +55,6 @@ PF::RawOutputPar::RawOutputPar():
       exposure("exposure",this,1),
       exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
       exposure_clip_amount("exposure_clip_amount",this,0),
-      hlreco_mode("hlreco_mode",this,PF::HLRECO_CLIP,"HLRECO_CLIP",_("clip")),
       profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
       //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
       current_profile_mode( IN_PROF_MATRIX ),
@@ -85,9 +84,6 @@ PF::RawOutputPar::RawOutputPar():
       clip_overflow("clip_overflow",this,true)
 {
   exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
-
-  hlreco_mode.add_enum_value(PF::HLRECO_BLEND,"HLRECO_BLEND",_("blend"));
-  hlreco_mode.add_enum_value(PF::HLRECO_NONE,"HLRECO_NONE",_("none"));
 
   profile_mode.add_enum_value(PF::IN_PROF_NONE,"NONE","Raw color");
   profile_mode.add_enum_value(PF::IN_PROF_MATRIX,"MATRIX","Standard profile");

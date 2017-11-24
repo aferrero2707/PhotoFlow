@@ -63,13 +63,6 @@ enum exposure_mode_t {
 };
 
 
-enum hlreco_mode_t {
-  HLRECO_NONE,
-  HLRECO_CLIP,
-  HLRECO_BLEND
-};
-
-
  enum input_profile_mode_t {
     IN_PROF_NONE,
     IN_PROF_MATRIX,
@@ -110,7 +103,7 @@ enum hlreco_mode_t {
     Property<float> exposure;
     PropertyBase exposure_mode;
     Property<float> exposure_clip_amount;
-    PropertyBase hlreco_mode;
+    hlreco_mode_t hlreco_mode;
 
     float wb_red_current, wb_green_current, wb_blue_current, exposure_current;
 
@@ -180,7 +173,8 @@ enum hlreco_mode_t {
 
     float get_exposure() { return exposure.get(); }
 
-    hlreco_mode_t get_hlreco_mode() { return (hlreco_mode_t)hlreco_mode.get_enum_value().first; }
+    void set_hlreco_mode(hlreco_mode_t m) { hlreco_mode = m; }
+    hlreco_mode_t get_hlreco_mode() { return hlreco_mode; }
 
     input_profile_mode_t get_camera_profile_mode() { return (input_profile_mode_t)profile_mode.get_enum_value().first; }
     input_gamma_mode_t get_gamma_mode() { return (input_gamma_mode_t)gamma_mode.get_enum_value().first; }
@@ -452,8 +446,12 @@ enum hlreco_mode_t {
         mul[i] /= max_mul;
         sat[i] = mul[i];
       }
-      float sat_min = min_mul/max_mul;
-      float mul_corr = max_mul/min_mul;
+      float sat_min = 1;
+      float mul_corr = 1;
+      if( opar->get_hlreco_mode() != HLRECO_CLIP ) {
+        sat_min = min_mul/max_mul;
+        mul_corr = max_mul/min_mul;
+      }
       //exposure = exposure * mul_corr;
       for( int i = 0; i < 3; i++ ) {
         satcorr[i] = sat[i]*mul_corr;

@@ -178,6 +178,14 @@ namespace PF
   };
 
 
+  enum hlreco_mode_t {
+    HLRECO_NONE,
+    HLRECO_CLIP,
+    HLRECO_BLEND
+  };
+
+
+
   template<>
   class Property<blendmode_t>: public PropertyBase
   {
