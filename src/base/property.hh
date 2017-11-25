@@ -328,6 +328,8 @@ namespace PF
 
     void store_default() { default_value = value;}
 
+    void store_default(const T& newval) { default_value = newval;}
+
     void set(const T& newval) 
     { 
       if( value != newval )

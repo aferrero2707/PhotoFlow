@@ -122,6 +122,20 @@ static void rawspeed_lookup_makermodel(const rawspeed::Camera *cam, const char *
 
 
 
+dcraw_data_t* PF::get_raw_data( VipsImage* image )
+{
+  if( !image ) return NULL;
+  dcraw_data_t* raw_data;
+  size_t blobsz;
+  if( !vips_image_get_blob( image, "raw_image_data",(void**)&raw_data, &blobsz ) &&
+      blobsz == sizeof(dcraw_data_t) ) {
+    return raw_data;
+  }
+  return NULL;
+}
+
+
+
 bool PF::check_xtrans( unsigned filters )
 {
   return( filters == 9u);

@@ -32,6 +32,7 @@
 #include <fcntl.h>
 
 #include "../base/new_operation.hh"
+#include "convert_colorspace.hh"
 #include "icc_transform.hh"
 #include "gaussblur.hh"
 #include "defringe.hh"
@@ -48,9 +49,14 @@ in_profile( NULL )
   op_mode.add_enum_value(PF::MODE_STATIC,"MODE_STATIC","static threshold (fast)");
 
   gauss = new_gaussblur();
-  convert2lab = PF::new_operation( "convert2lab", NULL );
+  convert2lab = PF::new_convert_colorspace();
+  PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+  if(csconvpar) {
+    csconvpar->set_out_profile_mode( PF::PROF_MODE_DEFAULT );
+    csconvpar->set_out_profile_type( PF::PROF_TYPE_LAB );
+  }
   convert2input = new_icc_transform();
-  defringe_algo = new PF::Processor<PF::DefringeAlgoPar,PF::DefringeAlgoProc>();
+  defringe_algo = new_defringe_algo();
 
   set_type("defringe" );
 
@@ -99,13 +105,7 @@ VipsImage* PF::DefringePar::build(std::vector<VipsImage*>& in, int first,
 
   std::vector<VipsImage*> in2;
 
-  void *data;
-  size_t data_length;
-  if( in_profile ) cmsCloseProfile( in_profile );
-  in_profile = NULL;
-  if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME, &data, &data_length ) ) {
-    in_profile = cmsOpenProfileFromMem( data, data_length );
-  }
+  in_profile = PF::get_icc_profile( in[0] );
 
   DefringeAlgoPar* defringepar = dynamic_cast<DefringeAlgoPar*>( defringe_algo->get_par() );
   //defringepar->set_sigma( radius2 );
@@ -213,10 +213,4 @@ VipsImage* PF::DefringePar::build(std::vector<VipsImage*>& in, int first,
   set_image_hints( out );
 
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_defringe()
-{
-  return new PF::Processor<PF::DefringePar,PF::DefringeProc>();
 }

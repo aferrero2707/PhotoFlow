@@ -37,6 +37,7 @@
 #include "amaze_demosaic.hh"
 #include "lmmse_demosaic.hh"
 #include "igv_demosaic.hh"
+#include "rcd_demosaic.hh"
 #include "xtrans_demosaic.hh"
 #include "fast_demosaic.hh"
 #include "fast_demosaic_xtrans.hh"
@@ -60,6 +61,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   tca_method("tca_method",this,PF::PF_TCA_CORR_PROFILED_AUTO,"TCA_CORR_PROFILED_AUTO",_("profiled + auto")),
   demo_method("demo_method",this,PF::PF_DEMO_AMAZE,"AMAZE","Amaze"),
 	fcs_steps("fcs_steps",this,0),
+  hlreco_mode("hlreco_mode",this,PF::HLRECO_CLIP,"HLRECO_CLIP",_("clip")),
 	caching_enabled( true )
 {
   tca_method.add_enum_value(PF::PF_TCA_CORR_AUTO,"TCA_CORR_AUTO",_("auto"));
@@ -68,13 +70,18 @@ PF::RawDeveloperPar::RawDeveloperPar():
   //tca_method.add_enum_value(PF::PF_TCA_CORR_MANUAL,"TCA_CORR_MANUAL",_("manual"));
 
   demo_method.add_enum_value(PF::PF_DEMO_AMAZE,"AMAZE","Amaze");
+  demo_method.add_enum_value(PF::PF_DEMO_RCD,"RCD","RCD");
   //demo_method.add_enum_value(PF::PF_DEMO_FAST,"FAST","Fast");
   demo_method.add_enum_value(PF::PF_DEMO_LMMSE,"LMMSE","LMMSE");
   demo_method.add_enum_value(PF::PF_DEMO_IGV,"IGV","Igv");
 
+  hlreco_mode.add_enum_value(PF::HLRECO_BLEND,"HLRECO_BLEND",_("blend"));
+  hlreco_mode.add_enum_value(PF::HLRECO_NONE,"HLRECO_NONE",_("none"));
+
   amaze_demosaic = new_amaze_demosaic();
   lmmse_demosaic = new_lmmse_demosaic();
   igv_demosaic = new_igv_demosaic();
+  rcd_demosaic = new_rcd_demosaic();
   xtrans_demosaic = new_xtrans_demosaic();
   fast_demosaic = new_fast_demosaic();
   fast_demosaic_xtrans = new_fast_demosaic_xtrans();
@@ -86,7 +93,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   lensfun = new_lensfun();
   raw_output = new_raw_output();
   hotpixels = new_hotpixels();
-  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  convert_format = new_convert_format();
 	for(int ifcs = 0; ifcs < 4; ifcs++) 
 		fcs[ifcs] = new_false_color_correction();
 
@@ -95,7 +102,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   map_properties( raw_output->get_par()->get_properties() );
   map_properties( hotpixels->get_par()->get_properties() );
 
-  set_type("raw_developer" );
+  set_type("raw_developer_v2" );
 
   set_default_name( _("RAW developer") );
 }
@@ -271,6 +278,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
       case PF::PF_DEMO_AMAZE: demo = amaze_demosaic; break;
       case PF::PF_DEMO_LMMSE: demo = lmmse_demosaic; break;
       case PF::PF_DEMO_IGV: demo = igv_demosaic; break;
+      case PF::PF_DEMO_RCD: demo = rcd_demosaic; break;
       default: break;
       }
       //PF::ProcessorBase* demo = amaze_demosaic;
@@ -278,29 +286,11 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
       //PF::ProcessorBase* demo = fast_demosaic;
     }
     if( !demo ) return NULL;
-
-    bool enable_demo_input_caching = false;
-    VipsImage* cached = out_ca;
-    if( enable_demo_input_caching ) {
-      int tw = 64;
-      int th = tw;
-      int nt = (out_ca->Xsize/tw + 1) * 3;
-      VipsAccess acc = VIPS_ACCESS_RANDOM;
-      int threaded = 1, persistent = 0;
-      if( vips_tilecache(out_ca, &cached,
-          "tile_width", tw, "tile_height", th, "max_tiles", nt,
-          "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
-        std::cout<<"RawDeveloperPar::build(): vips_tilecache() failed."<<std::endl;
-        return NULL;
-      }
-      PF_UNREF( out_ca, "RawDeveloperPar::build(): out_ca unref" );
-    }
-
-    in2.clear(); in2.push_back( cached );
-    demo->get_par()->set_image_hints( cached );
+    in2.clear(); in2.push_back( out_ca );
+    demo->get_par()->set_image_hints( out_ca );
     demo->get_par()->set_format( VIPS_FORMAT_FLOAT );
     out_demo = demo->get_par()->build( in2, 0, NULL, NULL, level );
-    g_object_unref( cached );
+    g_object_unref( out_ca );
 
     for(int ifcs = 0; ifcs < VIPS_MIN(fcs_steps.get(),4); ifcs++) {
       VipsImage* temp = out_demo;
@@ -360,6 +350,8 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
           rppar->get_wb_blue()*rppar->get_camwb_corr_blue() );
       break;
     }
+    rppar->set_hlreco_mode( (hlreco_mode_t)hlreco_mode.get_enum_value().first );
+    ropar->set_hlreco_mode( (hlreco_mode_t)hlreco_mode.get_enum_value().first );
   }
 
   in2.clear(); in2.push_back( out_lf );
@@ -423,10 +415,4 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
 
 //std::cout<<"RawDeveloper::build(): output image: "<<out2<<std::endl;
   return out2;
-}
-
-
-PF::ProcessorBase* PF::new_raw_developer()
-{
-  return new PF::Processor<PF::RawDeveloperPar,PF::RawDeveloper>();
 }

@@ -46,6 +46,7 @@ PF::GradientConfigGUI::GradientConfigGUI( PF::Layer* layer ):
       OperationConfigGUI( layer, _("Gradient tool") ),
       typeSelector( this, "gradient_type", _("Type: "), 1 ),
       invert_box( this, "invert", _("Invert"), true ),
+      perceptual_box( this, "perceptual", "Perceptual", true ),
       center_x( this, "gradient_center_x", _("Center X (%)"), 100, 0, 100, 1, 10, 100),
       center_y( this, "gradient_center_y", _("Center Y (%)"), 100, 0, 100, 1, 10, 100),
       greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
@@ -58,8 +59,10 @@ PF::GradientConfigGUI::GradientConfigGUI( PF::Layer* layer ):
       bCurveEditor( this, "b_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
       active_point_id( -1 )
 {
-  hbox.pack_start( typeSelector, Gtk::PACK_SHRINK );
+  //hbox.pack_start( typeSelector, Gtk::PACK_SHRINK );
   hbox.pack_start( invert_box, Gtk::PACK_SHRINK, 5 );
+  hbox.pack_start( perceptual_box, Gtk::PACK_SHRINK );
+  add_widget( typeSelector );
   add_widget( hbox );
   add_widget( center_x );
   add_widget( center_y );

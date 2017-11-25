@@ -95,9 +95,3 @@ VipsImage* PF::CropPar::build(std::vector<VipsImage*>& in, int first,
   //std::cout<<"outimg->Xsize="<<out->Xsize<<"  outimg->Ysize="<<out->Ysize<<std::endl;
   return out;
 }
-
-
-PF::ProcessorBase* PF::new_crop()
-{
-  return( new PF::Processor<PF::CropPar,PF::CropProc>() );
-}

@@ -33,6 +33,7 @@
 
 #include "property.hh"
 #include "curve.hh"
+#include "iccstore.hh"
 
 #define SPLINE_USE_STDVEC 1
 
@@ -56,6 +57,11 @@ class SplineCurve: public Curve
   unsigned int ypp_size;
 
   bool circular;
+  //bool needs_gamma_correction;
+
+  TRC_type trc_type;
+  cmsToneCurve* p2l_trc;
+  cmsToneCurve* l2p_trc;
 
 public:
   SplineCurve();
@@ -92,6 +98,18 @@ public:
 #endif
   std::pair<float,float> get_point(int n) const { return points[n]; }
 
+  //void set_needs_gamma_correction( bool flag ) { needs_gamma_correction = flag; }
+  //const bool get_needs_gamma_correction() const { return needs_gamma_correction; }
+
+  void set_trc_type( TRC_type type ) { trc_type = type; }
+  const TRC_type get_trc_type() const { return trc_type; }
+  const bool is_linear() const { return( trc_type == PF_TRC_LINEAR ); }
+
+  void set_p2l_trc( cmsToneCurve* c ) { p2l_trc = c; }
+  void set_l2p_trc( cmsToneCurve* c ) { l2p_trc = c; }
+  cmsToneCurve* get_p2l_trc() const { return p2l_trc; }
+  cmsToneCurve* get_l2p_trc() const { return l2p_trc; }
+
   void update_spline();
 
   // Get the output value corresponding to an input value x (normalized to the [0,1] range)
@@ -109,6 +127,10 @@ public:
   {
     lock();
     set_circular( b.is_circular() );
+    //set_needs_gamma_correction( b.get_needs_gamma_correction() );
+    set_trc_type( b.get_trc_type() );
+    set_p2l_trc( b.get_p2l_trc() );
+    set_l2p_trc( b.get_l2p_trc() );
 #ifdef SPLINE_USE_STDVEC
     points = b.get_points();
 #else
@@ -128,6 +150,9 @@ public:
 inline
 bool operator ==(const SplineCurve& l, const SplineCurve& r)
 {
+  //if( l.get_needs_gamma_correction() != r.get_needs_gamma_correction() ) return false;
+  if( l.get_trc_type() != r.get_trc_type() )
+    return false;
 #ifdef SPLINE_USE_STDVEC
   if( l.get_points() != r.get_points() ) return false;
 #else

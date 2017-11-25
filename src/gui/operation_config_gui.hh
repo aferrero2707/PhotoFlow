@@ -41,12 +41,14 @@
 #include "widgets/selector.hh"
 #include "widgets/exposure_slider.hh"
 #include "widgets/imagebutton.hh"
+#include "widgets/layerlist.hh"
 
 #include "doublebuffer.hh"
 
 namespace PF {
 
 class ImageEditor;
+
 
 
 class OperationConfigGUI: public OperationConfigUI
@@ -69,10 +71,17 @@ class OperationConfigGUI: public OperationConfigUI
   Selector blendSelector, blendSelector2;
   Gtk::HBox intensity_box, opacity_box;
   Slider intensitySlider, intensitySlider2, opacitySlider, opacitySlider2;
-  CheckBox imap_enabled_box, omap_enabled_box;
+  CheckBox imap_enabled_box, omap_enabled_box, test_padding_enable_box;
   Slider shift_x, shift_y;
   bool has_ch_sel;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
+
+  Gtk::Expander input_source_expander;
+  CheckBox input_source_checkbox;
+  Gtk::VBox layer_selector_box;
+  LayerList layer_list;
+  Selector sourceSelector;
+
 
   Gtk::CheckButton previewButton;
 

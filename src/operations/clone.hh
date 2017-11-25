@@ -39,22 +39,25 @@
 namespace PF 
 {
 
-  enum clone_channel {
-    CLONE_CHANNEL_GREY,
-    CLONE_CHANNEL_RGB,
-    CLONE_CHANNEL_R,
-    CLONE_CHANNEL_G,
-    CLONE_CHANNEL_B,
-    CLONE_CHANNEL_Lab,
-    CLONE_CHANNEL_L,
-    CLONE_CHANNEL_a,
-    CLONE_CHANNEL_b,
-    CLONE_CHANNEL_CMYK,
-    CLONE_CHANNEL_C,
-    CLONE_CHANNEL_M,
-    CLONE_CHANNEL_Y,
-    CLONE_CHANNEL_K
-  }; 
+enum clone_channel {
+  CLONE_CHANNEL_SOURCE,
+  CLONE_CHANNEL_GREY,
+  CLONE_CHANNEL_RGB,
+  CLONE_CHANNEL_R,
+  CLONE_CHANNEL_G,
+  CLONE_CHANNEL_B,
+  CLONE_CHANNEL_MAX_RGB,
+  CLONE_CHANNEL_Lab,
+  CLONE_CHANNEL_L,
+  CLONE_CHANNEL_a,
+  CLONE_CHANNEL_b,
+  CLONE_CHANNEL_CMYK,
+  CLONE_CHANNEL_C,
+  CLONE_CHANNEL_M,
+  CLONE_CHANNEL_Y,
+  CLONE_CHANNEL_K
+};
+
 
   class ClonePar: public OpParBase
   {
@@ -64,10 +67,13 @@ namespace PF
     ProcessorBase* convert2lab;
     ProcessorBase* convert_cs;
     ProcessorBase* desaturate;
+    ProcessorBase* maxrgb;
+    ProcessorBase* trcconv;
 
     VipsImage* Lab2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* rgb2grayscale(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* rgb2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
+    VipsImage* rgb2maxrgb(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* Lab2rgb(VipsImage* in, clone_channel ch, unsigned int& level);
     VipsImage* L2rgb(VipsImage* in, unsigned int& level);
     VipsImage* grey2rgb(VipsImage* in, unsigned int& level);

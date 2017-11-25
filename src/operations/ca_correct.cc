@@ -230,10 +230,3 @@ VipsImage* PF::CACorrectPar::build(std::vector<VipsImage*>& in, int first,
   return cropped;
 }
 
-
-
-PF::ProcessorBase* PF::new_ca_correct()
-{
-  return( new PF::Processor<PF::CACorrectPar,PF::CACorrectProc>() );
-}
-

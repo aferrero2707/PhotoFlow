@@ -29,8 +29,8 @@
 
 #include <stdlib.h>
 
-#include "igv_demosaic.hh"
 #include "../base/processor.hh"
+#include "igv_demosaic.hh"
 
 //#define RT_EMU 1
 
@@ -197,12 +197,5 @@ VipsImage* PF::IgvDemosaicPar::build(std::vector<VipsImage*>& in, int first,
   PF_UNREF( cropped, "PF::IgvDemosaicPar::build(): img unref" );
 
   return out;
-}
-
-
-
-PF::ProcessorBase* PF::new_igv_demosaic()
-{
-  return( new PF::Processor<PF::IgvDemosaicPar,PF::IgvDemosaicProc>() );
 }
 

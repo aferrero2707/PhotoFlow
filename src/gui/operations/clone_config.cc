@@ -27,8 +27,6 @@
 
  */
 
-#include "../../operations/brightness_contrast.hh"
-
 #include "clone_config.hh"
 
 

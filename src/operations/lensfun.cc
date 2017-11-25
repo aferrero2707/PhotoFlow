@@ -337,9 +337,44 @@ PF::LensFunPar::LensFunPar():
             enable_vignetting( "enable_vignetting", this, false ),
             enable_all( "enable_all", this, false )
 {
+  step1 = new_lensfun_step();
+  step2 = new_lensfun_step();
+
   set_type("lensfun" );
 
   set_default_name( _("optical corrections") );
+}
+
+
+float PF::LensFunPar::get_focal_length()
+{
+  PF::LensFunParStep* step1_par = dynamic_cast<PF::LensFunParStep*>( step1->get_par() );
+  if( !step1_par ) return 0;
+  return( step1_par->get_focal_length() );
+}
+
+
+float PF::LensFunPar::get_aperture()
+{
+  PF::LensFunParStep* step1_par = dynamic_cast<PF::LensFunParStep*>( step1->get_par() );
+  if( !step1_par ) return 0;
+  return( step1_par->get_aperture() );
+}
+
+
+float PF::LensFunPar::get_distance()
+{
+  PF::LensFunParStep* step1_par = dynamic_cast<PF::LensFunParStep*>( step1->get_par() );
+  if( !step1_par ) return 0;
+  return( step1_par->get_distance() );
+}
+
+
+int PF::LensFunPar::get_flags( VipsImage* img )
+{
+  PF::LensFunParStep* step1_par = dynamic_cast<PF::LensFunParStep*>( step1->get_par() );
+  if( !step1_par ) return 0;
+  return( step1_par->get_flags(img) );
 }
 
 
@@ -349,33 +384,37 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = NULL;
 
   std::vector<VipsImage*> in2;
-  step1.get_par()->set_image_hints( in[0] );
-  step1.get_par()->set_format( get_format() );
-  step1.get_par()->set_vignetting_enabled( enable_vignetting.get() );
-  step1.get_par()->set_distortion_enabled( false );
-  step1.get_par()->set_tca_enabled( false );
+  PF::LensFunParStep* step1_par = dynamic_cast<PF::LensFunParStep*>( step1->get_par() );
+  if( !step1_par ) {
+    std::cerr<<"LensFunPar::build(): NULL step1_par"<<std::endl;
+    PF_REF(in[0], "LensFunPar::build(): in[0] ref after NULL step1_par");
+    return(in[0]);
+  }
+  step1_par->set_image_hints( in[0] );
+  step1_par->set_format( get_format() );
+  step1_par->set_vignetting_enabled( enable_vignetting.get() );
+  step1_par->set_distortion_enabled( false );
+  step1_par->set_tca_enabled( false );
   in2.clear(); in2.push_back( in[0] );
-  VipsImage* out1 = step1.get_par()->build( in2, 0, NULL, NULL, level );
+  VipsImage* out1 = step1_par->build( in2, 0, NULL, NULL, level );
 
-  prop_camera_maker.update( step1.get_par()->camera_maker() );
-  prop_camera_model.update( step1.get_par()->camera_model() );
-  prop_lens.update( step1.get_par()->lens() );
+  prop_camera_maker.update( step1_par->camera_maker() );
+  prop_camera_model.update( step1_par->camera_model() );
+  prop_lens.update( step1_par->lens() );
 
-  step2.get_par()->set_image_hints( out1 );
-  step2.get_par()->set_format( get_format() );
-  step2.get_par()->set_vignetting_enabled( false );
-  step2.get_par()->set_distortion_enabled( enable_distortion.get() );
-  step2.get_par()->set_tca_enabled( enable_tca.get() );
+  PF::LensFunParStep* step2_par = dynamic_cast<PF::LensFunParStep*>( step2->get_par() );
+  if( !step2_par ) {
+    std::cerr<<"LensFunPar::build(): NULL step2_par"<<std::endl;
+    return(out1);
+  }
+  step2_par->set_image_hints( out1 );
+  step2_par->set_format( get_format() );
+  step2_par->set_vignetting_enabled( false );
+  step2_par->set_distortion_enabled( enable_distortion.get() );
+  step2_par->set_tca_enabled( enable_tca.get() );
   in2.clear(); in2.push_back( out1 );
-  out = step2.get_par()->build( in2, 0, NULL, NULL, level );
+  out = step2_par->build( in2, 0, NULL, NULL, level );
   g_object_unref( out1 );
 
   return out;
-}
-
-
-
-PF::ProcessorBase* PF::new_lensfun()
-{
-  return new PF::Processor<PF::LensFunPar,PF::LensFunProc>();
 }

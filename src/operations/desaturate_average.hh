@@ -55,6 +55,8 @@
       for(int i = CHMIN; i <= CHMAX; i++) {
         pout[x+i] = val;
       }
+      //if( x == 0 ) std::cout<<"DesaturateAverageProc(RGB): pin="
+      //    <<pp[x]<<","<<pp[x+1]<<","<<pp[x+2]<<"  pout="<<pout[x]<<std::endl;
     }
   };
 
@@ -72,6 +74,7 @@
       for(int i = CHMIN; i <= CHMAX; i++) {
         pout[x+i] = ( (i==0) ? pp[x] : FormatInfo<T>::HALF );
       }
+      //if( x == 0 ) std::cout<<"DesaturateAverageProc(Lab): pout="<<pout[x]<<","<<pout[x+1]<<","<<pout[x+2]<<std::endl;
     }
   };
 

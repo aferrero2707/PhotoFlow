@@ -174,6 +174,8 @@ public:
 };
 
 
+ProcessorBase* new_subtrimg_algo();
+
 ProcessorBase* new_subtrimg();
 
 }

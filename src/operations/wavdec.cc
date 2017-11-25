@@ -43,7 +43,7 @@ preview_scale("preview_scale",this,1),
 initial_lev("initial_lev",this,0),
 blendFactor("blendFactor",this,0.5f)
 {
-  wavdec_algo = new PF::Processor<PF::WavDecAlgoPar,PF::WavDecAlgoProc>();
+  wavdec_algo = PF::new_wavdec_algo();
 
   set_type("wavdec" );
   set_default_name( _("Wavelet Decompose") );
@@ -123,9 +123,4 @@ VipsImage* PF::WavDecPar::build(std::vector<VipsImage*>& in, int first,
   
   return cropped;
 
-}
-
-PF::ProcessorBase* PF::new_wavdec()
-{
-  return new PF::Processor<PF::WavDecPar,PF::WavDecProc>();
 }

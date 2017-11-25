@@ -191,9 +191,3 @@ VipsImage* PF::HotPixelsPar::build(std::vector<VipsImage*>& in, int first,
 
   return cropped;
 }
-
-
-PF::ProcessorBase* PF::new_hotpixels()
-{
-  return new PF::Processor<PF::HotPixelsPar,PF::HotPixels>();
-}

@@ -53,8 +53,12 @@
  */
 
 PF::SettingsDialog::SettingsDialog():
-Gtk::Dialog( _("Settings"),true),
-cm_display_profile_open_button(Gtk::Stock::OPEN),
+      Gtk::Dialog( _("Settings"),true),
+      cm_working_profile_open_button(Gtk::Stock::OPEN),
+      cm_display_profile_open_button(Gtk::Stock::OPEN),
+      cm_working_profile_frame( _("Working RGB Colorspace") ),
+      cm_display_profile_frame( _("Display Profile") ),
+      cm_display_profile_bpc_selector( _("black point compensation") ),
 apply_default_preset_label(_("apply default processing profile")),
 save_sidecar_files_label(_("save sidecar files"))
 {
@@ -70,12 +74,78 @@ save_sidecar_files_label(_("save sidecar files"))
   notebook.append_page( color_box, _("Color management") );
   notebook.append_page( about_box, _("About") );
 
+
+  // Working colorspace settings
+  cm_working_profile_model = Gtk::ListStore::create(cm_working_profile_columns);
+  cm_working_profile_type_selector.set_model( cm_working_profile_model );
+  cm_working_profile_type_selector.pack_start(cm_working_profile_columns.col_value);
+
+  Gtk::TreeModel::iterator ri = cm_working_profile_model->append();
+  Gtk::TreeModel::Row row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_sRGB;
+  row[cm_working_profile_columns.col_value] = "sRGB";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_REC2020;
+  row[cm_working_profile_columns.col_value] = "Rec.2020";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_ADOBE;
+  row[cm_working_profile_columns.col_value] = "AdobeRGB";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_PROPHOTO;
+  row[cm_working_profile_columns.col_value] = "ProPhotoRGB";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_ACEScg;
+  row[cm_working_profile_columns.col_value] = "ACEScg";
+  ri = cm_working_profile_model->append();
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_ACES;
+  row[cm_working_profile_columns.col_value] = "ACES";
+  row = *(ri);
+  row[cm_working_profile_columns.col_id] = PF::PROF_TYPE_XYZ;
+  row[cm_working_profile_columns.col_value] = "XYZ D50";
+
+  cm_working_trc_model = Gtk::ListStore::create(cm_working_trc_columns);
+  cm_working_trc_type_selector.set_model( cm_working_trc_model );
+  cm_working_trc_type_selector.pack_start(cm_working_trc_columns.col_value);
+
+  ri = cm_working_trc_model->append();
+  row = *(ri);
+  row[cm_working_trc_columns.col_id] = PF::PF_TRC_LINEAR;
+  row[cm_working_trc_columns.col_value] = _("linear");
+  ri = cm_working_trc_model->append();
+  row = *(ri);
+  row[cm_working_trc_columns.col_id] = PF::PF_TRC_STANDARD;
+  row[cm_working_trc_columns.col_value] = _("standard");
+  //ri = cm_working_trc_model->append();
+  //row = *(ri);
+  //row[cm_working_trc_columns.col_id] = PF::PF_TRC_sRGB;
+  //row[cm_working_trc_columns.col_value] = "sRGB";
+
+  //cm_working_profile_type_selector.set_active( 1 );
+  cm_working_profile_type_selector.set_size_request( 150, -1 );
+  cm_working_trc_type_selector.set_active( 0 );
+  cm_working_trc_type_selector.set_size_request( 150, -1 );
+
+  cm_working_profile_box2.pack_start(cm_working_profile_type_selector, Gtk::PACK_SHRINK);
+  cm_working_profile_box2.pack_start(cm_working_trc_type_selector, Gtk::PACK_SHRINK);
+  cm_working_profile_box.pack_start( cm_working_profile_entry, Gtk::PACK_SHRINK );
+  cm_working_profile_box.pack_start( cm_working_profile_open_button, Gtk::PACK_SHRINK );
+
+  cm_working_profile_frame_box.pack_start( cm_working_profile_box2, Gtk::PACK_SHRINK, 5 );
+  //cm_working_profile_frame_box.pack_start( cm_working_profile_box, Gtk::PACK_SHRINK, 5 );
+  cm_working_profile_frame.add( cm_working_profile_frame_box );
+
+  // Display profile settings
   cm_display_profile_model = Gtk::ListStore::create(cm_display_profile_columns);
   cm_display_profile_type_selector.set_model( cm_display_profile_model );
   cm_display_profile_type_selector.pack_start(cm_display_profile_columns.col_value);
 
-  Gtk::TreeModel::iterator ri = cm_display_profile_model->append();
-  Gtk::TreeModel::Row row = *(ri);
+  ri = cm_display_profile_model->append();
+  row = *(ri);
   row[cm_display_profile_columns.col_id] = 0;
   row[cm_display_profile_columns.col_value] = "sRGB";
 
@@ -93,22 +163,56 @@ save_sidecar_files_label(_("save sidecar files"))
   row[cm_display_profile_columns.col_id] = 2;
   row[cm_display_profile_columns.col_value] = _("Custom");
 
+  //cm_display_profile_type_selector.insert( 0, "sRGB" );
+  //cm_display_profile_type_selector.insert( 1, "System (not working)" );
+  //cm_display_profile_type_selector.insert( 2, "Custom" );
+  //cm_display_profile_type_selector.set_active( 0 );
+  cm_display_profile_type_selector.set_size_request( 30, -1 );
+
   //cm_display_profile_button.add( cm_display_profile_img );
-  cm_display_profile_open_label.set_text( _("custom display profile name: ") );
-  cm_display_profile_box.pack_start( cm_display_profile_open_label, Gtk::PACK_SHRINK );
-  cm_display_profile_box.pack_start( cm_display_profile_entry, Gtk::PACK_SHRINK, 4 );
+  cm_display_profile_box.pack_start( cm_display_profile_entry, Gtk::PACK_SHRINK );
   cm_display_profile_box.pack_start( cm_display_profile_open_button, Gtk::PACK_SHRINK );
 
-  cm_display_profile_type_selector.set_active( 0 );
+  cm_display_profile_frame_box.pack_start( cm_display_profile_type_selector, Gtk::PACK_SHRINK, 5 );
+  cm_display_profile_frame_box.pack_start( cm_display_profile_box, Gtk::PACK_SHRINK, 5 );
 
-  cm_display_profile_type_label.set_text( _("display profile type: ") );
-  cm_display_profile_type_box.pack_start( cm_display_profile_type_label, Gtk::PACK_SHRINK );
-  cm_display_profile_type_box.pack_start( cm_display_profile_type_selector, Gtk::PACK_SHRINK, 4 );
+  cm_display_profile_intent_model = Gtk::ListStore::create(cm_display_profile_intent_columns);
+  cm_display_profile_intent_selector.set_model( cm_display_profile_intent_model );
+  cm_display_profile_intent_selector.pack_start(cm_display_profile_intent_columns.col_value);
 
-  color_box.pack_start( cm_display_profile_type_box, Gtk::PACK_SHRINK, 4 );
-  color_box.pack_start( cm_display_profile_box, Gtk::PACK_SHRINK, 4 );
+  ri = cm_display_profile_intent_model->append();
+  row = *(ri);
+  row[cm_display_profile_intent_columns.col_id] = 0;
+  row[cm_display_profile_intent_columns.col_value] = "perceptual";
 
-  //cm_display_profile_type_selector.set_size_request( 30, -1 );
+  ri = cm_display_profile_intent_model->append();
+  row = *(ri);
+  row[cm_display_profile_intent_columns.col_id] = 1;
+  row[cm_display_profile_intent_columns.col_value] = "relative colorimetric";
+
+  ri = cm_display_profile_intent_model->append();
+  row = *(ri);
+  row[cm_display_profile_intent_columns.col_id] = 2;
+  row[cm_display_profile_intent_columns.col_value] = "absolute colorimetric";
+
+  ri = cm_display_profile_intent_model->append();
+  row = *(ri);
+  row[cm_display_profile_intent_columns.col_id] = 3;
+  row[cm_display_profile_intent_columns.col_value] = "saturation";
+
+  cm_display_profile_intent_selector.set_active( 0 );
+  cm_display_profile_intent_selector.set_size_request( 30, -1 );
+
+  cm_display_profile_frame_box.pack_start( cm_display_profile_bpc_selector, Gtk::PACK_SHRINK, 5 );
+
+  cm_display_profile_frame_box.pack_start( cm_display_profile_intent_selector, Gtk::PACK_SHRINK, 5 );
+
+
+  cm_display_profile_frame.add( cm_display_profile_frame_box );
+
+
+  color_box.pack_start( cm_working_profile_frame, Gtk::PACK_SHRINK,10 );
+  color_box.pack_start( cm_display_profile_frame, Gtk::PACK_SHRINK,0 );
 
   apply_default_preset_hbox.pack_start( apply_default_preset_check, Gtk::PACK_SHRINK );
   apply_default_preset_hbox.pack_start( apply_default_preset_label, Gtk::PACK_SHRINK );
@@ -157,21 +261,44 @@ void PF::SettingsDialog::open()
 
 void PF::SettingsDialog::load_settings()
 {
-  cm_display_profile_type_selector.set_active( 0 );
-
-  Gtk::TreeModel::Children children = cm_display_profile_model->children();
-  Gtk::TreeModel::Children::iterator iter;
-  int row_id = 0;
-  for( iter = children.begin(), row_id = 0; iter != children.end(); iter++, row_id++ ) {
-    Gtk::TreeModel::Row row = *iter;
-    if( row && (row[cm_display_profile_columns.col_id] == (int)PF::PhotoFlow::Instance().get_options().get_display_profile_type()) ) {
-      cm_display_profile_type_selector.set_active( row_id );
+  profile_type_t ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
+  Glib::RefPtr< Gtk::TreeModel > model = cm_working_profile_type_selector.get_model();
+  Gtk::TreeModel::Children rows = model->children();
+  Gtk::TreeModel::iterator ri = cm_working_profile_model->append();
+  for( ri = rows.begin(); ri != rows.end(); ri++ ) {
+    Gtk::TreeModel::Row row = *(ri);
+    if( row[cm_working_profile_columns.col_id] == (int)(ptype) ) {
+      cm_working_profile_type_selector.set_active( ri );
       break;
     }
   }
 
-  //cm_display_profile_type_selector.set_active( PF::PhotoFlow::Instance().get_options().get_display_profile_type() );
+  TRC_type ttype = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
+  model = cm_working_trc_type_selector.get_model();
+  rows = model->children();
+  ri = cm_working_trc_model->append();
+  for( ri = rows.begin(); ri != rows.end(); ri++ ) {
+    Gtk::TreeModel::Row row = *(ri);
+    if( row[cm_working_trc_columns.col_id] == (int)(ttype) ) {
+      cm_working_trc_type_selector.set_active( ri );
+      break;
+    }
+  }
+
+  cm_display_profile_type_selector.set_active( PF::PhotoFlow::Instance().get_options().get_display_profile_type() );
   cm_display_profile_entry.set_text( PF::PhotoFlow::Instance().get_options().get_custom_display_profile_name() );
+
+  switch( PF::PhotoFlow::Instance().get_options().get_display_profile_intent() ){
+  case INTENT_PERCEPTUAL: cm_display_profile_intent_selector.set_active(0); break;
+  case INTENT_RELATIVE_COLORIMETRIC: cm_display_profile_intent_selector.set_active(1); break;
+  case INTENT_ABSOLUTE_COLORIMETRIC: cm_display_profile_intent_selector.set_active(2); break;
+  case INTENT_SATURATION: cm_display_profile_intent_selector.set_active(3); break;
+  }
+
+  if( PF::PhotoFlow::Instance().get_options().get_display_profile_bpc() > 0 )
+    cm_display_profile_bpc_selector.set_active( true );
+  else
+    cm_display_profile_bpc_selector.set_active( false );
 
   std::cout<<"PF::PhotoFlow::Instance().get_options().get_apply_default_preset(): "<<PF::PhotoFlow::Instance().get_options().get_apply_default_preset()<<std::endl;
   apply_default_preset_check.set_active( PF::PhotoFlow::Instance().get_options().get_apply_default_preset() != 0 );
@@ -185,29 +312,46 @@ void PF::SettingsDialog::save_settings()
 {
   bool cm_dpy_modified = false;
 
-  int dpy_prof_id = (int)PF::PhotoFlow::Instance().get_options().get_display_profile_type();
+  Gtk::TreeModel::iterator ri = cm_working_profile_type_selector.get_active();
+  Gtk::TreeModel::Row row = *(ri);
+  int ptype = row[cm_working_profile_columns.col_id];
+  PF::PhotoFlow::Instance().get_options().set_working_profile_type( ptype );
 
-  Gtk::TreeModel::iterator iter = cm_display_profile_type_selector.get_active();
-  if( iter ) {
-    Gtk::TreeModel::Row row = *iter;
-    if( row ) {
-      //Get the data for the selected row, using our knowledge of the tree
-      //model:
-      dpy_prof_id = row[cm_display_profile_columns.col_id];
-    }
-  }
+  ri = cm_working_trc_type_selector.get_active();
+  row = *(ri);
+  int ttype = row[cm_working_trc_columns.col_id];
+  PF::PhotoFlow::Instance().get_options().set_working_trc_type( ttype );
 
-  if( dpy_prof_id != (int)PF::PhotoFlow::Instance().get_options().get_display_profile_type() ) {
+  if( cm_display_profile_type_selector.get_active_row_number() != (int)PF::PhotoFlow::Instance().get_options().get_display_profile_type() ) {
     cm_dpy_modified = true;
   }
   if( cm_display_profile_entry.get_text() != PF::PhotoFlow::Instance().get_options().get_custom_display_profile_name() ) {
     cm_dpy_modified = true;
   }
-  if( cm_dpy_modified ) signal_cm_modified.emit();
 
-  //std::cout<<"cm_display_profile_type_selector.get_active_row_number(): "<<cm_display_profile_type_selector.get_active_row_number()<<std::endl;
-  PF::PhotoFlow::Instance().get_options().set_display_profile_type( dpy_prof_id );
+  std::cout<<"cm_display_profile_type_selector.get_active_row_number(): "<<cm_display_profile_type_selector.get_active_row_number()<<std::endl;
+  PF::PhotoFlow::Instance().get_options().set_display_profile_type( cm_display_profile_type_selector.get_active_row_number() );
   PF::PhotoFlow::Instance().get_options().set_custom_display_profile_name( cm_display_profile_entry.get_text() );
+
+  int new_display_profile_intent;
+  switch( cm_display_profile_intent_selector.get_active_row_number() ){
+  case 0: new_display_profile_intent = INTENT_PERCEPTUAL; break;
+  case 1: new_display_profile_intent = INTENT_RELATIVE_COLORIMETRIC; break;
+  case 2: new_display_profile_intent = INTENT_ABSOLUTE_COLORIMETRIC; break;
+  case 3: new_display_profile_intent = INTENT_SATURATION; break;
+  }
+  if( new_display_profile_intent != PF::PhotoFlow::Instance().get_options().get_display_profile_intent() ) {
+    cm_dpy_modified = true;
+  }
+  PF::PhotoFlow::Instance().get_options().set_display_profile_intent( new_display_profile_intent );
+
+  if( cm_display_profile_bpc_selector.get_active() !=
+      PF::PhotoFlow::Instance().get_options().get_display_profile_bpc() ) {
+    cm_dpy_modified = true;
+  }
+  PF::PhotoFlow::Instance().get_options().set_display_profile_bpc( cm_display_profile_bpc_selector.get_active() );
+
+  if( cm_dpy_modified ) signal_cm_modified.emit();
 
   if( apply_default_preset_check.get_active() )
     PF::PhotoFlow::Instance().get_options().set_apply_default_preset( 1 );

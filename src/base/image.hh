@@ -60,6 +60,7 @@ struct ImageBuffer
   //GExiv2Metadata* exif_buf;
   void* iccdata;
   size_t iccsize;
+  TRC_type trc_type;
 };
 
 
@@ -109,7 +110,7 @@ class Image: public sigc::trackable
   GMutex* remove_layer_mutex;
   GCond* remove_layer_done;
 
-  ProcessorBase* convert2srgb;
+  //ProcessorBase* convert2srgb;
   ProcessorBase* convert_format;
   ProcessorBase* convert2outprof;
 

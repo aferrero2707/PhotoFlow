@@ -50,14 +50,51 @@ namespace PF {
   Gtk::Button openButton;
   //#endif
 
+  Gtk::Alignment spacing1, spacing2;
+  Gtk::VBox outputControlsBox;
+
+  Selector inProfileModeSelector;
+  Gtk::HBox inProfileModeSelectorBox;
+  Selector inProfileTypeSelector;
+  Gtk::HBox inProfileTypeSelectorBox;
+  Selector inTRCModeSelector;
+  Gtk::HBox inTRCModeSelectorBox;
+
+  Gtk::HBox inProfHBox;
+  Gtk::VBox inProfVBox;
+  Gtk::Label inProfLabel;
+  Gtk::Entry inProfFileEntry;
+  Gtk::Button inProfOpenButton;
+
+  Selector outProfileModeSelector;
+  Gtk::HBox outProfileModeSelectorBox;
+  Selector outProfileTypeSelector;
+  Gtk::HBox outProfileTypeSelectorBox;
+  Selector outTRCModeSelector;
+  Gtk::HBox outTRCModeSelectorBox;
+
+  Gtk::HBox outProfHBox;
+  Gtk::VBox outProfVBox;
+  Gtk::Label outProfLabel;
+  Gtk::Entry outProfFileEntry;
+  Gtk::Button outProfOpenButton;
+
+  Gtk::VBox inProfBox, outProfBox;
+  Gtk::Frame inProfFrame, outProfFrame;
+
 public:
   ImageReadConfigGUI( Layer* l );
 
   void on_button_open_clicked();
+  void on_in_button_open_clicked();
+  void on_out_button_open_clicked();
 
   void on_filename_changed();
+  void on_in_filename_changed();
+  void on_out_filename_changed();
 
   void open();
+  void do_update();
 };
 
 }

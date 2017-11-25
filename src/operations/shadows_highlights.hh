@@ -76,7 +76,7 @@ class ShadowsHighlightsPar: public OpParBase
   ProcessorBase* convert2lab;
   ProcessorBase* convert2input;
 
-  cmsHPROFILE in_profile;
+  PF::ICCProfile* in_profile;
 
 public:
   ShadowsHighlightsPar();

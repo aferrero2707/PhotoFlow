@@ -51,11 +51,26 @@ namespace PF
 
     ProcessorBase* white;
 
+    cmsHPROFILE profile_bottom, profile_top;
+    cmsHTRANSFORM transform;
+    ICCProfile* icc_data_bottom;
+    ICCProfile* icc_data_top;
+    ICCTransform* img2lab;
+    ICCTransform* lab2img;
+
     bool adjust_geom( VipsImage* in, VipsImage** out,
                       int width, int height, unsigned int level );
 
   public:
     BlenderPar();
+
+    ICCProfile* get_icc_data_top() { return icc_data_top; }
+    ICCProfile* get_icc_data_bottom() { return icc_data_bottom; }
+    ICCProfile* get_icc_data() { return icc_data_bottom; }
+    cmsHTRANSFORM get_transform() { return transform; }
+
+    ICCTransform* get_img2lab_transform() { return img2lab; }
+    ICCTransform* get_lab2img_transform() { return lab2img; }
 
     void finalize();
 
@@ -109,6 +124,11 @@ namespace PF
       float opacity = bpar->get_opacity();
       int mode = bpar->is_map() ? bpar->get_mask_blend_mode() : bpar->get_blend_mode();
       Blender<T,CS,CHMIN,CHMAX,has_omap> blender( mode, opacity );
+      //std::cout<<"BlenderProc::render(): bpar->get_icc_data()="<<bpar->get_icc_data()<<std::endl;
+      blender.set_transform( bpar->get_transform() );
+      blender.set_icc_data( bpar->get_icc_data() );
+      blender.set_img2lab_transform( bpar->get_img2lab_transform() );
+      blender.set_lab2img_transform( bpar->get_lab2img_transform() );
 #ifndef NDEBUG
       std::cout<<"BlenderProc::render(): mode="<<mode<<"  bpar->is_map()="<<bpar->is_map()<<std::endl;
       std::cout<<"BlenderProc::render(): bpar->get_blend_mode()="<<bpar->get_blend_mode()

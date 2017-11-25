@@ -44,7 +44,8 @@ namespace PF {
   Gtk::HBox selectorsBox;
   //#endif
 
- Gtk::ComboBoxText rgbCurveSelector, labCurveSelector, cmykCurveSelector;
+  Gtk::ComboBoxText rgbCurveSelector, labCurveSelector, cmykCurveSelector;
+  CheckBox RGB_is_linear_check;
 
   CurveEditor greyCurveEditor;
 

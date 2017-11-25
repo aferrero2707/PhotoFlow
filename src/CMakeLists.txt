@@ -1,14 +1,21 @@
 IF(MINGW)
-  SET(GMIC_FLAGS "-std=c++11 -march=nocona -mno-sse3 -mtune=generic -DWIN32 -D_USE_MATH_DEFINES -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
+  SET(GMIC_FLAGS "-std=gnu++11 -march=nocona -mno-sse3 -mtune=generic -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ELSEIF(APPLE)
-   #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   SET(GMIC_FLAGS "-mmacosx-version-min=10.8 -stdlib=libc++ -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions -Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
-   #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+  #SET(GMIC_FLAGS "-DPF_DISABLE_GMIC -std=c++11 -Wno-error=c++11-narrowing -Dgmic_build -W  -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+  SET(GMIC_FLAGS "-Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
+  #SET(GMIC_FLAGS "-Wno-error=c++11-narrowing -Dgmic_build -Dcimg_use_vt100 -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -Dcimg_use_fftw3_singlethread -fpermissive")
 ELSE(MINGW)
   SET(GMIC_FLAGS "-std=gnu++11 -march=nocona -mno-sse3 -mtune=generic -Wno-error=narrowing -Dgmic_build -Dcimg_use_vt100 -Dgmic_is_parallel -Dcimg_use_fftw3 -Dcimg_use_tiff -Dcimg_use_zlib -Dcimg_display=0 -fno-ipa-sra -fpermissive")
 ENDIF(MINGW)
 
 set(COMPILE_FLAGS " ${GMIC_FLAGS} -I${CMAKE_SOURCE_DIR}/src/dt -DLIBRAW_NODLL -DINSTALL_PREFIX='\"${INSTALL_PREFIX}\"' ")
+IF(APPLE)
+  IF("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
+	set(COMPILE_FLAGS "${COMPILE_FLAGS} -mmacosx-version-min=10.8 -stdlib=libc++ -std=c++11 -Wno-error=c++11-narrowing -Wc++11-extensions")
+  ELSE("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
+	set(COMPILE_FLAGS "${COMPILE_FLAGS} -mmacosx-version-min=10.8 -std=c++11")
+  ENDIF("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
+ENDIF()
 
 if(Msgfmt_FOUND)
 	set(COMPILE_FLAGS "${COMPILE_FLAGS} -DLOCALEDIR=\"${LOCALE_DIR}\"")
@@ -111,8 +118,8 @@ link_directories(${XML2_LIBRARY_DIRS})
 include_directories(${LCMS2_INCLUDE_DIRS})
 link_directories(${LCMS2_LIBRARY_DIRS})
 
-include_directories(${PUGIXML_INCLUDE_DIRS})
-link_directories(${PUGIXML_LIBRARY_DIRS})
+include_directories(${Pugixml_INCLUDE_DIRS})
+link_directories(${Pugixml_LIBRARY_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
@@ -195,13 +202,14 @@ SET_TARGET_PROPERTIES(pfdt PROPERTIES COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/src/d
 
 FILE(GLOB BaseIncludes version.hh base/*.hh)
 if (AUTOMATED_VERSION_CHECK)
-  FILE(GLOB BaseSources ${CMAKE_CURRENT_BINARY_DIR}/version.cc base/*.cc)
+  FILE(GLOB BaseSources ${CMAKE_CURRENT_BINARY_DIR}/version.cc base/*.cc base/icc/*.cc)
 else (AUTOMATED_VERSION_CHECK)
-  FILE(GLOB BaseSources version.cc base/*.cc)
+  FILE(GLOB BaseSources version.cc base/*.cc base/icc/*.cc)
 endif (AUTOMATED_VERSION_CHECK)
 
 FILE(GLOB RTIncludes 
   rt/rtengine/rawimagesource.h #rt/rtengine/rt_math.h rt/rtengine/opthelper.h rt/rtengine/sleef.c rt/rtengine/sleefsseavx.c rt/rtengine/helpersse2.h
+  rt/rtengine/dcp.h rt/rtexif/rtexif.h
   rt/rtengine/dcraw.h 
   rt/rtengine/myfile.h 
   rt/rtengine/rtengine.h 
@@ -219,7 +227,9 @@ FILE(GLOB RTSources
   rt/rtengine/amaze_demosaic_RT.cc
   rt/rtengine/igv_demosaic_RT.cc
   rt/rtengine/lmmse_demosaic_RT.cc
+  rt/rtengine/rcd_demosaic_RT.cc
   rt/rtengine/xtrans_demosaic_RT.cc
+  rt/rtengine/dcp.cc rt/rtengine/curves.cc rt/rtengine/diagonalcurves.cc rt/rtengine/flatcurves.cc rt/rtengine/color.cc rt/rtexif/*.cc
   rt/rtengine/dcraw.cc
   rt/rtengine/myfile.cc
   rt/rtengine/rawimage.cc
@@ -234,8 +244,8 @@ FILE(GLOB VipsSources vips/*.c vips/*.cc vips/gmic/*.c vips/gmic/*.cpp)
 FILE(GLOB GMicIncludes vips/gmic/gmic/src/*.h)
 FILE(GLOB GMicSources vips/gmic/gmic/src/gmic.cpp)
 
-FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh)
-FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc)
+FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh legacy/operations/*.hh operations/Filmic/Core/CoreHelpers.h operations/Filmic/FilmicCurve/FilmicToneCurve.h)
+FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc legacy/operations/*.cc operations/Filmic/Core/CoreHelpers.cpp operations/Filmic/FilmicCurve/FilmicToneCurve.cpp)
 
 #
 # the libraw part is a bit of a hack:
@@ -386,15 +396,17 @@ add_library (pfgmic STATIC
   ${GMicSources}
 )
 
+#IF(APPLE)
+SET_TARGET_PROPERTIES(pfgmic PROPERTIES COMPILE_FLAGS "-O1")
+#ENDIF(APPLE)
 
 #add_dependencies(pfbase ${LIB_DEPS} gmic_film_cluts_download)
 add_dependencies(pfbase ${LIB_DEPS})
 
-
-#FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh)
-#FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc)
-FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh plugin/*.hh)
-FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc plugin/pluginwindow.cc)
+#FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh legacy/gui/operations/*.hh)
+#FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc legacy/gui/operations/*.cc)
+FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh legacy/gui/operations/*.hh plugin/*.hh)
+FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc legacy/gui/operations/*.cc plugin/pluginwindow.cc)
 
 add_library (pfgui STATIC
   ${GuiIncludes}
@@ -440,7 +452,7 @@ target_link_libraries(photoflow ${LIBS}
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${EXPAT_LIBRARIES}
-  ${PUGIXML_LIBRARIES}
+  ${Pugixml_LIBRARIES}
   ${ICONV_LIBRARIES}
   ${FFTW3_LIBRARIES}
   ${OPENEXR_LIBRARIES}
@@ -469,6 +481,36 @@ target_link_libraries(photoflow ${LIBS}
 
 
 INSTALL(TARGETS photoflow RUNTIME DESTINATION bin)
+
+#--------------------------------------------------
+#
+# phf_stack executable
+#
+set(BUILD_PHF_STACK 0)
+
+IF(BUILD_PHF_STACK)
+add_executable(phf_stack phf_stack.cc)
+IF(APPLE)
+  set_target_properties(phf_stack PROPERTIES LINK_FLAGS " -framework ApplicationServices ")
+ENDIF(APPLE)
+
+target_link_libraries(phf_stack ${LIBS} 
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${EXIV2_LIBRARIES}
+  #${GEXIV2_LIBRARIES}
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  ${ADDITIONAL_LIBS}
+  #gmon
+  )
+
+INSTALL(TARGETS phf_stack RUNTIME DESTINATION bin)
+ENDIF(BUILD_PHF_STACK)
+
 
 INSTALL(DIRECTORY ../presets DESTINATION share/photoflow)
 INSTALL(DIRECTORY ../themes DESTINATION share/photoflow)

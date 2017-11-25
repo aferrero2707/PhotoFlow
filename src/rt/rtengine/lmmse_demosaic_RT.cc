@@ -11,6 +11,7 @@
 //#include "rtengine.h"
 #include "rawimagesource.hh"
 #include "rt_math.h"
+#include "color.h"
 //#include "../rtgui/multilangmgr.h"
 //#include "procparams.h"
 #include "sleef.c"
@@ -513,6 +514,7 @@ void RawImageSource::lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
         #pragma omp for
 #endif
 
+      if(applyGamma) {
         for (int rrr = 0/*ba*/; rrr < rr1/* - ba*/; rrr++) {
             for (int ccc = 0/*ba*/, row = /*rrr - ba*/tiley+rrr-ba; ccc < cc1/* - ba*/; ccc++) {
                 int col = /*ccc - ba*/ccc + tilex - ba;
@@ -521,6 +523,16 @@ void RawImageSource::lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
                 rix[0] = (*gamtab)[ (int)(rawData[row][col]) ];
             }
         }
+      } else {
+        for (int rrr = 0/*ba*/; rrr < rr1/* - ba*/; rrr++) {
+            for (int ccc = 0/*ba*/, row = /*rrr - ba*/tiley+rrr-ba; ccc < cc1/* - ba*/; ccc++) {
+                int col = /*ccc - ba*/ccc + tilex - ba;
+                float *rix = qix[4] + rrr * cc1 + ccc;
+                if(row<20&&col<20) printf("rawData[%d][%d]=%f\n",row,col,(float)rawData[row][col]);
+                rix[0] = rawData[row][col] / 65535.0f;
+            }
+        }
+      }
 
 #ifdef _OPENMP
         #pragma omp single
@@ -773,10 +785,10 @@ void RawImageSource::lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
                 rix[c] = qix[c] + rr * cc1 + cc;
 
                 if ((row >= 0) & (row < iheight) & (col >= 0) & (col < iwidth)) {
-                    rix[c][0] =
-                        (*gamtab)[
-                                  rawData[row][col]
-                                               ];
+                  if( applyGamma )
+                    rix[c][0] = (*gamtab)[ rawData[row][col] ];
+                  else
+                    rix[c][0] = rawData[row][col] / 65535.f;
                 } else {
                     rix[c][0] = 0.f;
                 }
@@ -1033,21 +1045,40 @@ void RawImageSource::lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
     #pragma omp parallel for
 #endif
 
-    for (int row = 0, row2 = row+tiley; row < height; row++, row2++) {
+    if(applyGamma) {
+      for (int row = 0, row2 = row+tiley; row < height; row++, row2++) {
         for (int col = 0, rr = row + ba, col2 = col+tilex; col < width; col++, col2++) {
-            int cc = col + ba;
-            int c = FC(row, col);
+          int cc = col + ba;
+          int c = FC(row, col);
 
-            for (int ii = 0; ii < 3; ii++)
-                if (ii != c) {
-                    float *rix = qix[ii] + rr * cc1 + cc;
-                    if(row2<30&&col2<30) printf("(*(rgb[5d]))[%d][%d] = %f (rix)\n",row,col,(float)((*gamtab)[65535.f * rix[0]]));
-                    (*(rgb[ii]))[row2][col2] = (*gamtab)[65535.f * rix[0]];
-                } else {
-                  if(row2<30&&col2<30) printf("(*(rgb[5d]))[%d][%d] = %f (rawData)\n",row,col,(float)CLIP(rawData[row2][col2]));
-                    (*(rgb[ii]))[row2][col2] = CLIP(rawData[row2][col2]);
-                }
+          for (int ii = 0; ii < 3; ii++)
+            if (ii != c) {
+              float *rix = qix[ii] + rr * cc1 + cc;
+              if(row2<30&&col2<30) printf("(*(rgb[5d]))[%d][%d] = %f (rix)\n",row,col,(float)((*gamtab)[65535.f * rix[0]]));
+              (*(rgb[ii]))[row2][col2] = (*gamtab)[65535.f * rix[0]];
+            } else {
+              if(row2<30&&col2<30) printf("(*(rgb[5d]))[%d][%d] = %f (rawData)\n",row,col,(float)CLIP(rawData[row2][col2]));
+              (*(rgb[ii]))[row2][col2] = CLIP(rawData[row2][col2]);
+            }
         }
+      }
+    } else {
+      for (int row = 0, row2 = row+tiley; row < height; row++, row2++) {
+        for (int col = 0, rr = row + ba, col2 = col+tilex; col < width; col++, col2++) {
+          int cc = col + ba;
+          int c = FC(row, col);
+
+          for (int ii = 0; ii < 3; ii++)
+            if (ii != c) {
+              float *rix = qix[ii] + rr * cc1 + cc;
+              //if(row2<30&&col2<30) printf("(*(rgb[5d]))[%d][%d] = %f (rix)\n",row,col,(float)((*gamtab)[65535.f * rix[0]]));
+              (*(rgb[ii]))[row2][col2] = CLIP(65535.f * rix[0]);
+            } else {
+              //if(row2<30&&col2<30) printf("(*(rgb[5d]))[%d][%d] = %f (rawData)\n",row,col,(float)CLIP(rawData[row2][col2]));
+              (*(rgb[ii]))[row2][col2] = CLIP(rawData[row2][col2]);
+            }
+        }
+      }
     }
 /*
     if (plistener) {

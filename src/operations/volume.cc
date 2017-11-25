@@ -192,9 +192,3 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
 
   return out;
 }
-
-
-PF::ProcessorBase* PF::new_volume()
-{
-  return new PF::Processor<PF::VolumePar,PF::VolumeProc>();
-}

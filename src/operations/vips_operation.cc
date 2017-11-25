@@ -369,10 +369,3 @@ VipsImage* PF::VipsOperationPar::build(std::vector<VipsImage*>& in, int first,
 
   return out2;
 }
-
-
-
-PF::ProcessorBase* PF::new_vips_operation()
-{
-  return( new PF::Processor<PF::VipsOperationPar,PF::VipsOperationProc>() );
-}

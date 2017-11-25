@@ -29,11 +29,12 @@
 
 #include <vips/cimg_funcs.h>
 
-#include "denoise.hh"
 #include "../base/new_operation.hh"
+#include "convert_colorspace.hh"
 #include "icc_transform.hh"
 #include "../operations/impulse_nr.hh"
 #include "../operations/nlmeans.hh"
+#include "denoise.hh"
 
 
 PF::DenoisePar::DenoisePar(): 
@@ -51,10 +52,14 @@ PF::DenoisePar::DenoisePar():
   anisotropy("anisotropy",this,0.15),
   alpha("alpha",this,0.6),
   sigma("sigma",this,1.1),
-	nr_mode("nr_mode",this,PF_NR_ANIBLUR,"ANIBLUR","Anisotropic Blur (G'Mic)"),
-	in_profile( NULL )
+	nr_mode("nr_mode",this,PF_NR_ANIBLUR,"ANIBLUR","Anisotropic Blur (G'Mic)")
 {	
-  convert2lab = PF::new_operation( "convert2lab", NULL );
+  convert2lab = PF::new_convert_colorspace();
+  PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+  if(csconvpar) {
+    csconvpar->set_out_profile_mode( PF::PROF_MODE_DEFAULT );
+    csconvpar->set_out_profile_type( PF::PROF_TYPE_LAB );
+  }
   convert2input = new_icc_transform();
   impulse_nr = PF::new_impulse_nr();
   nlmeans = PF::new_nlmeans();
@@ -66,8 +71,8 @@ PF::DenoisePar::DenoisePar():
 
 
 VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first, 
-				   VipsImage* imap, VipsImage* omap, 
-				   unsigned int& level)
+    VipsImage* imap, VipsImage* omap,
+    unsigned int& level)
 {
   VipsImage* srcimg = NULL;
   if( in.size() > 0 ) srcimg = in[0];
@@ -85,16 +90,7 @@ VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first,
     return out;
   }
 
-  void *data;
-  size_t data_length;
-
-  if( in_profile ) cmsCloseProfile( in_profile );
-
-  in_profile = NULL;
-  if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
-                           &data, &data_length ) ) {
-    in_profile = cmsOpenProfileFromMem( data, data_length );
-  }
+  ICCProfile* in_profile = PF::get_icc_profile( srcimg );
 
   std::vector<VipsImage*> in2;
 
@@ -173,10 +169,4 @@ VipsImage* PF::DenoisePar::build(std::vector<VipsImage*>& in, int first,
   */
 
 	return out2;
-}
-
-
-PF::ProcessorBase* PF::new_denoise()
-{
-  return( new PF::Processor<PF::DenoisePar,PF::DenoiseProc>() );
 }

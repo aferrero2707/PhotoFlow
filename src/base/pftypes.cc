@@ -55,6 +55,8 @@ PF::PropertyBase(name, par)
 {
   add_enum_value(PF_BLEND_PASSTHROUGH,"PF_BLEND_PASSTHROUGH",_("Passthrough"));
   add_enum_value(PF_BLEND_NORMAL,"PF_BLEND_NORMAL",_("Normal"));
+  add_enum_value(PF_BLEND_ADD,"PF_BLEND_ADD","Add");
+  add_enum_value(PF_BLEND_SUBTRACT,"PF_BLEND_SUBTRACT","Subtract");
   //add_enum_value(PF_BLEND_SEP1,"PF_BLEND_SEP1","Separator");
   add_enum_value(PF_BLEND_GRAIN_EXTRACT,"PF_BLEND_GRAIN_EXTRACT",_("Grain extract"));
   add_enum_value(PF_BLEND_GRAIN_MERGE,"PF_BLEND_GRAIN_MERGE",_("Grain merge"));
@@ -67,8 +69,12 @@ PF::PropertyBase(name, par)
   add_enum_value(PF_BLEND_SCREEN,"PF_BLEND_SCREEN",_("Screen"));
   add_enum_value(PF_BLEND_LIGHTEN,"PF_BLEND_LIGHTEN",_("Lighten"));
   add_enum_value(PF_BLEND_DARKEN,"PF_BLEND_DARKEN",_("Darken"));
-  add_enum_value(PF_BLEND_LUMI,"PF_BLEND_LUMI",_("Luminosity"));
+  //add_enum_value(PF_BLEND_LUMI,"PF_BLEND_LUMI","Luminosity");
+  add_enum_value(PF_BLEND_LUMINANCE,"PF_BLEND_LUMINANCE",_("Luminance"));
   add_enum_value(PF_BLEND_COLOR,"PF_BLEND_COLOR",_("Color"));
+  add_enum_value(PF_BLEND_LCH_L,"PF_BLEND_LCH_L",_("L (LCH)"));
+  add_enum_value(PF_BLEND_LCH_C,"PF_BLEND_LCH_C",_("C (LCH)"));
+  add_enum_value(PF_BLEND_LCH_H,"PF_BLEND_LCH_H",_("H (LCH)"));
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");
   //set_enum_value(PF_BLEND_OV,"PF_BLEND_OV","Ov");

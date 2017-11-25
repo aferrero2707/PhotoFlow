@@ -67,13 +67,19 @@ bool PF::BlenderPar::adjust_geom( VipsImage* in, VipsImage** out,
     
     std::cout<<"in->Xsize="<<in->Xsize<<"  in->Ysize="<<in->Ysize<<std::endl;
     std::cout<<"vips_embed(in, &image, "<<dx2<<", "<<dy2<<", "<<embed_width<<", "<<embed_height<<", NULL)"<<std::endl;
+    PF_PRINT_REF( in, "BlenderPar::shift_image(): in before embed:" );
+    /**/
     if( vips_embed(in, &image, dx2, dy2, embed_width, embed_height, NULL) ) {
       std::cout<<"vips_embed() failed"<<std::endl;
       return false;
     }
-    std::cout<<"image after embed: "<<image<<std::endl;
+    /**/
+    //std::cout<<"image after embed: "<<image<<std::endl;
+    PF_UNREF( in, "BlenderPar::shift_image(): in unref after enbed" );
+    PF_PRINT_REF( in, "BlenderPar::shift_image(): in after embed:" );
+    std::cout<<"BlenderPar::shift_image(): Image embedded"<<std::endl;
   } else {
-    PF_REF( image, "BlenderPar::shift_image(): image ref before crop" );
+    //PF_REF( image, "BlenderPar::shift_image(): image ref before crop" );
   }
 
   VipsImage* cropped = image;
@@ -85,10 +91,14 @@ bool PF::BlenderPar::adjust_geom( VipsImage* in, VipsImage** out,
     
     std::cout<<"image->Xsize="<<image->Xsize<<"  image->Ysize="<<image->Ysize<<std::endl;
     std::cout<<"vips_crop(image, &cropped, "<<dx2<<", "<<dy2<<", "<<width<<", "<<height<<", NULL)"<<std::endl;
+    PF_PRINT_REF( image, "BlenderPar::shift_image(): image before crop:" );
     if( vips_crop(image, &cropped, dx2, dy2, width, height, NULL) ) {
       std::cout<<"vips_crop() failed"<<std::endl;
       return false;
     }
+    PF_UNREF( image, "BlenderPar::shift_image(): image unref after crop" );
+    PF_PRINT_REF( image, "BlenderPar::shift_image(): image after crop:" );
+    std::cout<<"BlenderPar::shift_image(): Image cropped"<<std::endl;
   }
   //PF_UNREF( image, "BlenderPar::shift_image(): image unref after crop" );
 
@@ -113,7 +123,12 @@ PF::BlenderPar::BlenderPar():
   mask_blend_mode("mask_blend_mode",this),
   opacity("opacity",this,1),
   shift_x("shift_x",this,0),
-  shift_y("shift_y",this,0)
+  shift_y("shift_y",this,0),
+  profile_bottom( NULL ),
+  profile_top( NULL ),
+  transform( NULL ),
+  icc_data_bottom( NULL ),
+  icc_data_top( NULL )
 {
   white = PF::new_operation( "uniform", NULL );
   PropertyBase* R = white->get_par()->get_property( "R" );
@@ -122,6 +137,9 @@ PF::BlenderPar::BlenderPar():
   if( G ) G->update( (float)1 );
   PropertyBase* B = white->get_par()->get_property( "B" );
   if( B ) B->update( (float)1 );
+
+  img2lab = new PF::ICCTransform;
+  lab2img = new PF::ICCTransform;
 
   //blend_mode.set_enum_value( PF_BLEND_PASSTHROUGH );
   blend_mode.set_enum_value( PF_BLEND_NORMAL );
@@ -164,29 +182,62 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* outnew;
   VipsImage* background = NULL;
   VipsImage* foreground = NULL;
-  void *data;
-  size_t data_length;
-  cmsHPROFILE profile_in;
+  void *prof_data_bottom;
+  size_t prof_data_length_bottom;
+  void *prof_data_top;
+  size_t prof_data_length_top;
+  //cmsHPROFILE profile_in;
 
   if( in.empty() ) return NULL;
   if( in.size() > 0 ) background = in[0];
   if( in.size() > 1 ) foreground = in[1];
 
-  if( background ) {
-    if( !vips_image_get_blob( background, VIPS_META_ICC_NAME, 
-                              &data, &data_length ) ) {
-    
-      profile_in = cmsOpenProfileFromMem( data, data_length );
-      if( profile_in ) {
-        char tstr[1024];
-        cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
-#ifndef NDEBUG
-        std::cout<<"BlenderPar::build(): Input profile: "<<tstr<<std::endl;
-#endif
-        cmsCloseProfile( profile_in );
+
+  //PF_REF(background, "BlenderPar::build(): initial background ref");
+  PF_REF(foreground, "BlenderPar::build(): initial foreground ref");
+  PF_REF(omap, "BlenderPar::build(): initial omap ref");
+
+  //if( profile_bottom ) cmsCloseProfile( profile_bottom );
+  //if( profile_top ) cmsCloseProfile( profile_top );
+  profile_bottom = NULL;
+  profile_top = NULL;
+  icc_data_bottom = NULL;
+  icc_data_top = NULL;
+
+  std::cout<<"BlenderPar::build(): background="<<background<<std::endl;
+  if(background) {std::cout<<"bottom profile: "; PF::print_embedded_profile(background);}
+  if(foreground) {std::cout<<"top profile:    "; PF::print_embedded_profile(foreground);}
+  if( !is_map() && background ) {
+    // Colorspace data of background and foreground layers are compared.
+    // If they differ, an explicit ICC transform is operated from foreground to background.
+    // Colorspace data is ignored for map layers, which are not colormanaged.
+    icc_data_bottom = PF::get_icc_profile( background );
+    std::cout<<"BlenderPar::build(): icc_data_bottom="<<icc_data_bottom<<std::endl;
+
+    if( foreground ) {
+      icc_data_top = PF::get_icc_profile( foreground );
+      std::cout<<"BlenderPar::build(): icc_data_top="<<icc_data_top<<std::endl;
+      if( icc_data_bottom != icc_data_top ) {
+        if( icc_data_bottom ) profile_bottom = icc_data_bottom->get_profile();
+        if( icc_data_top ) profile_top = icc_data_top->get_profile();
       }
-    }  
+    }
   }
+
+  if( transform ) cmsDeleteTransform( transform );
+  transform = NULL;
+  if( profile_bottom && profile_top ) {
+    cmsUInt32Number infmt = vips2lcms_pixel_format( background->BandFmt, profile_top );
+    cmsUInt32Number outfmt = vips2lcms_pixel_format( foreground->BandFmt, profile_bottom );
+
+    transform = cmsCreateTransform( profile_top, infmt,
+        profile_bottom, outfmt,
+        INTENT_RELATIVE_COLORIMETRIC,
+        cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
+
+    std::cout<<"BlenderPar::build(): blending images with different ICC profiles"<<std::endl;
+  }
+
 
   bool same_size = true;
   if( background && foreground ) {
@@ -214,14 +265,14 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   if( (cur_blend_mode == PF_BLEND_NORMAL) &&
       (get_opacity() > 0.999999f) &&
       same_size && (do_shift == false) &&
-      (omap == NULL) ) is_passthrough = true;
+      (omap == NULL) && (transform == NULL) ) is_passthrough = true;
 
   if( background && foreground && (background->Bands != foreground->Bands) )
     is_passthrough = true;
   if( background && foreground && (background->BandFmt != foreground->BandFmt) )
     is_passthrough = true;
 
-    if( is_passthrough && (cur_blend_mode != PF_BLEND_PASSTHROUGH) ) {
+  if( is_passthrough && (cur_blend_mode != PF_BLEND_PASSTHROUGH) ) {
     switch( get_colorspace() ) {
     case PF_COLORSPACE_RGB:
       if( get_rgb_target_channel()>= 0 )
@@ -239,6 +290,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       break;
     }
   }
+  std::cout<<"BlenderPar::build(): is_passthrough="<<is_passthrough<<std::endl;
 
   // If both images are not NULL and the blending mode is not "passthrough-equivalent",
   // we activate the blending code.
@@ -301,15 +353,22 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     set_image_hints( background );
     outnew = PF::OpParBase::build( in_, first, NULL, omap2, level );
     PF::image_hierarchy_fill( outnew, 0, in_ );
-    if( foreground2 != foreground ) PF_UNREF( foreground2, "BlenderPar::build(): foreground2 unref" );
-    if( omap2 != omap ) PF_UNREF( omap2, "BlenderPar::build(): omap2 unref" );
+    //if( foreground2 != foreground ) PF_UNREF( foreground2, "BlenderPar::build(): foreground2 unref" );
+    //if( omap2 != omap )
+      PF_UNREF( omap2, "BlenderPar::build(): omap2 unref" );
+    //PF_UNREF( background, "BlenderPar::build() background unref" );
+    //PF_UNREF( foreground, "BlenderPar::build() foreground unref" );
+    PF_UNREF( foreground2, "BlenderPar::build() foreground2 unref" );
+    if( outnew && icc_data_bottom ) PF::set_icc_profile( outnew, icc_data_bottom );
+    std::cout<<"BlenderPar::build(): doing explicit layer blending"<<std::endl;
   } else if( (background != NULL) && (foreground != NULL) && is_passthrough ) {
     outnew = foreground;
-    PF_REF( outnew, "BlenderPar::build() foreground ref" );
+    //PF_REF( outnew, "BlenderPar::build() foreground ref" );
+    //PF_UNREF( background, "BlenderPar::build() background unref" );
   } else if( (background == NULL) && (foreground != NULL) ) {
     // background is NULL, force mode to PASSTHROUGH and copy foreground to output
     outnew = foreground;
-    PF_REF( outnew, "BlenderPar::build() foreground ref" );
+    //PF_REF( outnew, "BlenderPar::build() foreground ref" );
   } else if( (foreground == NULL) && (background != NULL) ) {
     // foreground is NULL, force mode to PASSTHROUGH and copy background to output
     outnew = background;
@@ -320,6 +379,13 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   }
   /**/
 
+  if( background ) {
+    img2lab->init(icc_data_bottom, PF::ICCStore::Instance().get_Lab_profile(),
+        background->BandFmt, INTENT_RELATIVE_COLORIMETRIC, true, 0);
+    lab2img->init(PF::ICCStore::Instance().get_Lab_profile(), icc_data_bottom,
+        background->BandFmt, INTENT_RELATIVE_COLORIMETRIC, true, 0);
+  }
+
   //VipsImage* invec[2] = {background, foreground};
   //vips_layer( invec, 2, &outnew, 0, get_processor(), NULL, omap, get_demand_hint() );
 #ifndef NDEBUG
@@ -328,17 +394,8 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   //set_image( outnew );
 #ifndef NDEBUG
   if( outnew ) {
-    if( !vips_image_get_blob( outnew, VIPS_META_ICC_NAME, 
-                              &data, &data_length ) ) {
-    
-      profile_in = cmsOpenProfileFromMem( data, data_length );
-      if( profile_in ) {
-        char tstr[1024];
-        cmsGetProfileInfoASCII(profile_in, cmsInfoDescription, "en", "US", tstr, 1024);
-        std::cout<<"BlenderPar::build(): Output profile: "<<tstr<<std::endl;
-        cmsCloseProfile( profile_in );
-      }
-    }  
+    std::cout<<"BlenderPar::build(): Output profile: "<<std::endl;
+    PF::print_embedded_profile(outnew);
   }
 #endif
 
@@ -347,7 +404,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     if( p > 0 ) {
       int nt = outnew->Xsize*(p/PF_OUPUT_CACHE_TS + 3)/PF_OUPUT_CACHE_TS;
       VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
-      //VipsAccess acc = VIPS_ACCESS_RANDOM;
+      //VipsAccess acc = VIPS_ACCESS_RANDOM; // gives worst performances
       int threaded = 1, persistent = 0;
       VipsImage* cached;
       if( !vips_tilecache(outnew, &cached,
@@ -358,19 +415,10 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
           "persistent", persistent, NULL) ) {
         PF_UNREF( outnew, "BlenderPar::build(): outnew unref" );
         outnew = cached;
-        std::cout<<"BlenderPar::build(): added tilecache for output image, padding="<<p<<std::endl;
+        std::cout<<"BlenderPar::build(): added tilecache for output image, padding="<<p<<", nt="<<nt<<std::endl;
       }
     }
   }
 
   return outnew;
-}
-
-
-
-
-
-PF::ProcessorBase* PF::new_blender()
-{
-  return( new PF::Processor<PF::BlenderPar,PF::BlenderProc>() );
 }

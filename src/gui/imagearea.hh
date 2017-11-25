@@ -59,6 +59,7 @@
 #include "../gui/operations/imageread_config.hh"
 
 #include "doublebuffer.hh"
+#include "sampler.hh"
 
 #ifndef NDEBUG
 #define DEBUG_DISPLAY
@@ -124,20 +125,24 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
    */
   VipsRegion* mask_region;
 
+  bool softproof_enabled;
+  PF::ProcessorBase* softproof_conversion;
   PF::ProcessorBase* convert2display;
   display_profile_t current_display_profile_type;
   Glib::ustring current_display_profile_name;
-  cmsHPROFILE current_display_profile;
+  ICCProfile* current_display_profile;
 
-  PF::Processor<PF::UniformPar,PF::Uniform>* uniform;
-  PF::Processor<PF::BlenderPar,PF::BlenderProc>* maskblend;
-
+  PF::ProcessorBase* uniform;
+  PF::ProcessorBase* maskblend;
   PF::ProcessorBase* invert;
-
   PF::ProcessorBase* convert_format;
-
   PF::ProcessorBase* clipping_warning;
+
   bool highlights_warning_enabled, shadows_warning_enabled;
+  bool softproof_bpc_enabled, sim_black_ink_enabled, sim_paper_color_enabled, gamut_warning_enabled;
+  bool softproof_clip_negative_enabled, softproof_clip_overflow_enabled;
+  cmsUInt32Number softproof_intent;
+  float adaptation_state;
 
   bool display_merged;
   bool display_mask;
@@ -150,6 +155,8 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 	float target_area_center_x, target_area_center_y;
 
   long int pending_pixels;
+
+  SamplerGroup* samplers;
 
   /* We send this packet of data from the bg worker thread to the main GUI
    * thread when a tile has been calculated.
@@ -198,6 +205,18 @@ public:
   void set_highlights_warning( bool flag ) { highlights_warning_enabled = flag; }
   void set_shadows_warning( bool flag ) { shadows_warning_enabled = flag; }
 
+  void set_softproof_bpc( bool flag ) { softproof_bpc_enabled = flag; }
+  void set_sim_black_ink( bool flag ) { sim_black_ink_enabled = flag; }
+  void set_sim_paper_color( bool flag ) { sim_paper_color_enabled = flag; }
+  void set_clip_negative( bool flag ) { softproof_clip_negative_enabled = flag; }
+  void set_clip_overflow( bool flag ) { softproof_clip_overflow_enabled = flag; }
+  void set_gamut_warning( bool flag ) { gamut_warning_enabled = flag; }
+  void set_softproof_intent( cmsUInt32Number i ) { softproof_intent = i; }
+  void set_softproof_adaptation_state( float s ) { adaptation_state = s; }
+  void enable_softproof() { softproof_enabled = true; }
+  void disable_softproof() { softproof_enabled = false; }
+  PF::ProcessorBase* get_softproof_conversion() { return softproof_conversion; }
+
 	float get_shrink_factor() { return shrink_factor; }
 	void set_shrink_factor( float val ) { shrink_factor = val; }
 	void set_target_area_center( float x, float y ) {
@@ -237,6 +256,8 @@ public:
   void sink( const VipsRect& area );
 
   void dispose();
+
+  void set_samplers(SamplerGroup* s) { samplers = s; }
 
   void set_edited_layer( int id ) {
     int old_id = edited_layer;

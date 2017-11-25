@@ -173,10 +173,3 @@ void PF::CloneStampPar::draw_point( unsigned int x, unsigned int y, VipsRect& up
   update.top = y - pen.get_size();
   update.width = update.height = pen.get_size()*2 + 1;
 }
-
-
-
-PF::ProcessorBase* PF::new_clone_stamp()
-{
-  return( new PF::Processor<PF::CloneStampPar,PF::CloneStampProc>() );
-}

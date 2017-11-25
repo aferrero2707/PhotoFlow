@@ -50,44 +50,16 @@ namespace PF
   extern int raw_preproc_sample_x;
   extern int raw_preproc_sample_y;
 
-  enum wb_mode_t {
-    WB_CAMERA=0,
-    WB_SPOT=1,
-    WB_COLOR_SPOT=2,
-    WB_DAYLIGHT,
-    WB_DIRECT_SUNLIGHT,
-    WB_CLOUDY,
-    WB_SHADE,
-    WB_INCANDESCENT,
-    WB_INCANDESCENT_WARM,
-    WB_TUNGSTEN,
-    WB_FLUORESCENT,
-    WB_FLUORESCENT_HIGH,
-    WB_COOL_WHITE_FLUORESCENT,
-    WB_WARM_WHITE_FLUORESCENT,
-    WB_DAYLIGHT_FLUORESCENT,
-    WB_NEUTRAL_FLUORESCENT,
-    WB_WHITE_FLUORESCENT,
-    WB_SODIUM_VAPOR_FLUORESCENT,
-    WB_DAY_WHITE_FLUORESCENT,
-    WB_HIGH_TEMP_MERCURY_VAPOR_FLUORESCENT,
-    WB_FLASH,
-    WB_FLASH_AUTO,
-    WB_EVENING_SUN,
-    WB_UNDERWATER,
-    WB_BACK_AND_WHITE
-  }; 
-
-
   class RawPreprocessorPar: public OpParBase
   {
     dcraw_data_t* image_data;
 
     PropertyBase wb_mode;
+    hlreco_mode_t hlreco_mode;
 
-    Property<float> wb_red;
-    Property<float> wb_green;
-    Property<float> wb_blue;
+    Property<float>* wb_red[WB_LAST];
+    Property<float>* wb_green[WB_LAST];
+    Property<float>* wb_blue[WB_LAST];
 
     Property<float> camwb_corr_red;
     Property<float> camwb_corr_green;
@@ -118,10 +90,19 @@ namespace PF
 
     dcraw_data_t* get_image_data() {return image_data; }
 
+    void set_hlreco_mode(hlreco_mode_t m) { hlreco_mode = m; }
+    hlreco_mode_t get_hlreco_mode() { return hlreco_mode; }
+
+    void init_wb_coefficients( dcraw_data_t* idata, std::string camera_maker, std::string camera_model );
+
     wb_mode_t get_wb_mode() { return (wb_mode_t)(wb_mode.get_enum_value().first); }
     float get_wb_red() { return wb_red_current; /*wb_red.get();*/ }
     float get_wb_green() { return wb_green_current; /*wb_green.get();*/ }
     float get_wb_blue() { return wb_blue_current; /*wb_blue.get();*/ }
+
+    float get_preset_wb_red(int id) { return wb_red[id]->get(); }
+    float get_preset_wb_green(int id ) { return wb_green[id]->get(); }
+    float get_preset_wb_blue(int id) { return wb_blue[id]->get(); }
 
     float get_camwb_corr_red() { return camwb_corr_red.get(); }
     float get_camwb_corr_green() { return camwb_corr_green.get(); }
@@ -157,6 +138,8 @@ namespace PF
       if( !rdpar ) return;
 
       float mul[4] = {1,1,1,1};
+
+      hlreco_mode_t hlreco_mode = rdpar->get_hlreco_mode();
 
       //std::cout<<"RawPreprocessor::render(): rdpar->get_wb_mode()="<<rdpar->get_wb_mode()<<std::endl;
       switch( rdpar->get_wb_mode() ) {
@@ -200,17 +183,19 @@ namespace PF
         if( mul[i] > max_mul )
           max_mul = mul[i];
       }
-      //std::cout<<"range="<<range<<"  min_mul="<<min_mul<<"  new range="<<range*min_mul<<std::endl;
 #ifdef RT_EMU
       /* RawTherapee emulation */
       range *= max_mul;
 #else
-      //range *= min_mul;
-      range *= max_mul;
+      if( hlreco_mode == HLRECO_CLIP )
+        range *= min_mul;
+      else
+        range *= max_mul;
 #endif
+      //std::cout<<"range="<<range<<"  min_mul="<<min_mul<<"  max_mul="<<max_mul<<std::endl;
 
-      float white_corr = rdpar->get_saturation_level_correction() + 1.f;
-      float black_corr = rdpar->get_black_level_correction() + 1.f;
+      float white_corr = rdpar->get_saturation_level_correction();
+      float black_corr = rdpar->get_black_level_correction();
 
       //if(r->top==0 && r->left==0) std::cout<<"white_corr="<<white_corr<<std::endl;
 
@@ -240,9 +225,14 @@ namespace PF
             //pout[x] = __CLIP( (p[x]-black[0]) * sat_corr * mul[0] - black[0]);
             //pout[x+1] = __CLIP(p[x+1] * sat_corr * mul[1] - black[1]);
             //pout[x+2] = __CLIP(p[x+2] * sat_corr * mul[2] - black[2]);
-            pout[x] = __CLIP( (p[x]-black[0]) * mul[0] / (white[0]-black[0]) );
-            pout[x+1] = __CLIP( (p[x+1]-black[1]) * mul[1] / (white[1]-black[1]) );
-            pout[x+2] = __CLIP( (p[x+2]-black[2]) * mul[2] / (white[2]-black[2]) );
+            pout[x] = (p[x]-black[0]) * mul[0] / (white[0]-black[0]);
+            pout[x+1] = (p[x+1]-black[1]) * mul[1] / (white[1]-black[1]);
+            pout[x+2] = (p[x+2]-black[2]) * mul[2] / (white[2]-black[2]);
+            if( hlreco_mode == HLRECO_CLIP ) {
+              pout[x] = CLIP( pout[x] );
+              pout[x+1] = CLIP( pout[x+1] );
+              pout[x+2] = CLIP( pout[x+2] );
+            }
             if(false && r->left==0 && r->top==0) std::cout<<"  p["<<x<<"]="<<p[x]<<"  pout["<<x<<"]="<<pout[x]<<std::endl;
 #ifdef RT_EMU
             /* RawTherapee emulation */
@@ -255,6 +245,7 @@ namespace PF
       } else {
         PF::raw_pixel_t* p;
         PF::raw_pixel_t* pout;
+        float rval;
         for( y = 0; y < r->height; y++ ) {
           p = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
           pout = (PF::raw_pixel_t*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
@@ -267,7 +258,13 @@ namespace PF
             rpout.color(x) = rp.color(x);
             //rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
             int c = rp.icolor(x);
-            rpout[x] = __CLIP( (rp[x]-black[c]) * mul[c] * 65535.f / (white[c]-black[c]) );
+            rval = (rp[x]-black[c]) * 65535.f / (white[c]-black[c]);
+            if( hlreco_mode == HLRECO_CLIP ) {
+              rpout[x] = CLIP( rval * mul[c] );
+            } else {
+              if( rval > 65500.f ) rpout[x] = 65535.f;
+              else rpout[x] = rval * mul[c];
+            }
             if(false && r->left==0 && r->top==0 && y<4 && x<4)
               std::cout<<"("<<y<<","<<x<<")  c="<<rp.color(x) //c
               <<"  rp[x]="<<rp[x]

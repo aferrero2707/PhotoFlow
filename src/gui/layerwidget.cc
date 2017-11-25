@@ -297,7 +297,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   path_mask_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/path-mask.png", "path_mask", image, this),
   desaturate_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/desaturate.png", "desaturate", image, this),
   crop_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/crop.png", "crop", image, this),
-  basic_edits_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "hue_saturation", image, this),
+  basic_edits_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "basic_adjustments", image, this),
+  levels_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "levels", image, this),
   draw_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/draw.png", "draw", image, this),
   clone_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/clone.png", "clone_stamp", image, this),
   scale_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/scale.png", "scale", image, this),
@@ -311,7 +312,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   group_button.set_tooltip_text( _("new group layer") );
   trash_button.set_tooltip_text( _("delete layer") );
   insert_image_button.set_tooltip_text( _("insert image as layer") );
-  basic_edits_button.set_tooltip_text( _("basic editing") );
+  basic_edits_button.set_tooltip_text( _("basic adjustments") );
+  levels_button.set_tooltip_text( _("levels") );
   curves_button.set_tooltip_text( _("curves tool") );
   uniform_button.set_tooltip_text( _("uniform fill") );
   gradient_button.set_tooltip_text( _("gradient tool") );
@@ -326,6 +328,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( add_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( group_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( insert_image_button, Gtk::PACK_SHRINK, 2 );
+  //tool_buttons_box.pack_start( levels_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( uniform_button, Gtk::PACK_SHRINK, 2 );
@@ -1399,7 +1402,7 @@ void PF::LayerWidget::insert_image( std::string filename )
     PF::ProcessorBase* processor = new_buffer();
     gl->set_processor( processor );
 
-    PF::ProcessorBase* blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    PF::ProcessorBase* blender = new_blender();
     gl->set_blender( blender );
 
     PF::OperationConfigGUI* dialog =
@@ -1433,7 +1436,7 @@ void PF::LayerWidget::insert_image( std::string filename )
     PF::ProcessorBase* processor = new_buffer();
     gl->set_processor( processor );
 
-    PF::ProcessorBase* blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    PF::ProcessorBase* blender = new_blender();
     gl->set_blender( blender );
 
     PF::OperationConfigGUI* dialog =
@@ -1451,7 +1454,7 @@ void PF::LayerWidget::insert_image( std::string filename )
 
     // RAW processor
     PF::Layer* limg2 = layer_manager.new_layer();
-    PF::ProcessorBase* proc2 = PF::PhotoFlow::Instance().new_operation( "raw_developer", limg2 );
+    PF::ProcessorBase* proc2 = PF::PhotoFlow::Instance().new_operation( "raw_developer_v2", limg2 );
     limg2->set_processor( proc2 );
     limg2->set_name( "RAW developer" );
     gl->sublayers_insert( limg2, -1 );
@@ -1808,7 +1811,7 @@ void PF::LayerWidget::on_button_add_group()
   PF::ProcessorBase* processor = new_buffer();
   layer->set_processor( processor );
 
-  PF::ProcessorBase* blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+  PF::ProcessorBase* blender = new_blender();
   layer->set_blender( blender );
 
   PF::OperationConfigGUI* dialog =
@@ -2166,11 +2169,9 @@ void PF::LayerWidget::on_switch_page(_GtkNotebookPage* page, guint page_num)
 
 bool PF::LayerWidget::on_key_press_event(GdkEventKey* event)
 {
-#ifndef NDEBUG
   std::cout<<"LayerWidget: event->state="<<(event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK))<<std::endl;
   std::cout<<"  GDK_SHIFT_MASK="<<GDK_SHIFT_MASK<<std::endl;
   std::cout<<"  GDK_MOD2_MASK="<<GDK_MOD2_MASK<<std::endl;
-#endif
   if( event->type == GDK_KEY_PRESS &&
       (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK)) == (GDK_MOD2_MASK+GDK_SHIFT_MASK) ) {
     if( event->keyval == 'N' ) {

@@ -27,14 +27,15 @@
 
  */
 
-#include "gradient.hh"
 #include "../base/processor.hh"
+#include "gradient.hh"
 
 
 PF::GradientPar::GradientPar():
 OpParBase(),
 gradient_type("gradient_type",this,GRADIENT_VERTICAL,"vertical",_("Vertical")),
 invert("invert",this,false),
+perceptual("perceptual",this,true),
 gradient_center_x("gradient_center_x",this,0.5),
 gradient_center_y("gradient_center_y",this,0.5),
 grey_curve( "grey_curve", this ), // 0
@@ -95,6 +96,9 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
   VipsImage* out2 = out;
 
+  //PF::ICCProfileData* data;
+  icc_data = PF::get_icc_profile( out );
+
   int modlen = 0, modh = 0;
   switch( get_gradient_type() ) {
   case GRADIENT_VERTICAL:
@@ -121,6 +125,26 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
     //modulation.get().unlock();
   }
 
+  //std::cout<<"GradientPar::build(): is_map()="<<is_map()<<std::endl;
+  for( int i = 0; i < 65536; i++ ) {
+    float fval = i;
+    fval /= 65535;
+    if( perceptual.get() ) {
+      if( !is_map() && icc_data && icc_data->is_linear() ) {
+        float lval = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_Lstar_trc(), fval );
+        //std::cout<<"modvec["<<i<<"]: perceptual="<<fval<<"  linear="<<lval<<std::endl;
+        fval = lval;
+      }
+    } else {
+      if( is_map() || !icc_data || !icc_data->is_linear() ) {
+            float lval = cmsEvalToneCurveFloat( PF::ICCStore::Instance().get_iLstar_trc(), fval );
+            //std::cout<<"modvec["<<i<<"]: perceptual="<<fval<<"  linear="<<lval<<std::endl;
+            fval = lval;
+          }
+    }
+    //std::cout<<"trc_vec["<<i<<"]: "<<fval<<std::endl;
+    trc_vec[i] = fval;
+  }
 
   CurvesPar* curvepar = dynamic_cast<CurvesPar*>( curve->get_par() );
   if( curvepar ) {
@@ -145,10 +169,4 @@ VipsImage* PF::GradientPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   return out2;
-}
-
-
-PF::ProcessorBase* PF::new_gradient()
-{
-  return( new PF::Processor<PF::GradientPar,PF::Gradient>() );
 }

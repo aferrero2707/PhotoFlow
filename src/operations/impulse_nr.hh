@@ -27,8 +27,8 @@
 
  */
 
-#ifndef PF_VOLUME_H
-#define PF_VOLUME_H
+#ifndef PF_IMPULSE_NR_H
+#define PF_IMPULSE_NR_H
 
 #include <string.h>
 
@@ -47,7 +47,7 @@ class ImpulseNRPar: public OpParBase
   ProcessorBase* gauss_blur;
   ProcessorBase* impulse_nr_algo;
 
-  cmsHPROFILE in_profile;
+  PF::ICCProfile* in_profile;
 
 public:
   ImpulseNRPar();
@@ -314,6 +314,8 @@ public:
 };
 
 
+
+ProcessorBase* new_impulse_nr_algo();
 
 ProcessorBase* new_impulse_nr();
 

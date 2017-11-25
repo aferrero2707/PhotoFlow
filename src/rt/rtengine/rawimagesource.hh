@@ -42,17 +42,6 @@
 
 namespace rtengine {
 
-
-class Color
-{
-public:
-  static LUTf igammatab_24_17;
-  static LUTf gammatab_24_17a;
-
-  static void Init();
-};
-
-
 	class RawImageSource
 	{
 		PF::RawMatrix rawData;
@@ -78,9 +67,11 @@ public:
     void amaze_demosaic_RT(int winx, int winy, int winw, int winh, int tilex, int tiley, int tilew, int tileh);//Emil's code for AMaZE
 		void igv_demosaic_RT(int winx, int winy, int winw, int winh,
 													 int tilex, int tiley, int tilew, int tileh);
-		void lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
-		                       int tilex, int tiley, int tilew, int tileh,
+    void lmmse_demosaic_RT(int winx, int winy, int winw, int winh,
+                           int tilex, int tiley, int tilew, int tileh,
                            int iterations);
+    void rcd_demosaic_RT(int winx, int winy, int winw, int winh,
+                           int tilex, int tiley, int tilew, int tileh);
     void xtrans_demosaic_RT(int winx, int winy, int winw, int winh,
                            int tilex, int tiley, int tilew, int tileh);
 
@@ -141,6 +132,7 @@ public:
     void amaze_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void igv_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void lmmse_demosaic(VipsRegion* ir, VipsRegion* oreg);
+    void rcd_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void xtrans_demosaic(VipsRegion* ir, VipsRegion* oreg);
 		void false_color_correction(VipsRegion* ir, VipsRegion* oreg);
 	};

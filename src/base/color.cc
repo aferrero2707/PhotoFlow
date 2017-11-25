@@ -27,6 +27,7 @@
 
  */
 
+#include <cmath>
 
 #include "color.hh"
 
@@ -63,6 +64,30 @@ void PF::Lab_pf2lcms(float* pin, float* pout)
   pout[2] = (cmsFloat32Number) (pin[2]*256.0f - 128.0f);
 
 }
+
+
+
+void PF::Lab2LCH(float* lab, float* lch, int n)
+{
+  for( int i = 0; i < n; i++ ) {
+    lch[0] = lab[0];
+    lch[1] = std::sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
+    lch[2] = std::atan2(lab[2],lab[1]);
+    if(lch[2] < 0) lch[2] += M_PI * 2;
+    lab += 3; lch += 3;
+  }
+}
+
+void PF::LCH2Lab(float* lch, float* lab, int n)
+{
+  for( int i = 0; i < n; i++ ) {
+    lab[0] = lch[0];
+    lch[1] = lch[1] * std::cos(lch[2]);
+    lch[2] = lch[1] * std::sin(lch[2]);
+    lab += 3; lch += 3;
+  }
+}
+
 
 float PF::hsl_value( float n1, float n2, float hue)
 {

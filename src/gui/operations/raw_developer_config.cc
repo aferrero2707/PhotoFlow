@@ -312,7 +312,7 @@ void PF::RawDeveloperConfigGUI::mul2temp(float coeffs[3], double *TempK, double 
 
 bool PF::WBSelector::check_value( int id, const std::string& name, const std::string& val )
 {
-  if( id < 3 ) return true;
+  if( id < 4 ) return true;
   //std::cout<<"WBSelector::check_value(): maker="<<maker<<" model="<<model<<std::endl;
   for(int i = 0; i < wb_preset_count; i++) {
     //std::cout<<"  wb_preset[i].make="<<wb_preset[i].make<<" wb_preset[i].model="<<wb_preset[i].model<<std::endl;
@@ -333,9 +333,9 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
     wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
     wbTempSlider( this, "", _("temp."), 15000, DT_IOP_LOWEST_TEMPERATURE, DT_IOP_HIGHEST_TEMPERATURE, 10, 100, 1),
     wbTintSlider( this, "", _("tint"), 1, DT_IOP_LOWEST_TINT, DT_IOP_HIGHEST_TINT, 0.01, 0.1, 1),
-    wbRedSlider( this, "wb_red", "R mult.", 1, 0, 10, 0.05, 0.1, 1),
-    wbGreenSlider( this, "wb_green", "G mult.", 1, 0, 10, 0.05, 0.1, 1),
-    wbBlueSlider( this, "wb_blue", "B mult.", 1, 0, 10, 0.05, 0.1, 1),
+    //wbRedSlider( this, "wb_red", "Red mult.", 1, 0, 10, 0.05, 0.1, 1),
+    //wbGreenSlider( this, "wb_green", "Green mult.", 1, 0, 10, 0.05, 0.1, 1),
+    //wbBlueSlider( this, "wb_blue", "Blue mult.", 1, 0, 10, 0.05, 0.1, 1),
     wbRedCorrSlider( this, "camwb_corr_red", "R corr.", 1, 0, 10, 0.05, 0.1, 1),
     wbGreenCorrSlider( this, "camwb_corr_green", "G corr.", 1, 0, 10, 0.05, 0.1, 1),
     wbBlueCorrSlider( this, "camwb_corr_blue", "B corr.", 1, 0, 10, 0.05, 0.1, 1),
@@ -361,19 +361,32 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
     lens_frame( _("lens corrections") ),
     demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
     fcsSlider( this, "fcs_steps", "FCC steps", 1, 0, 4, 1, 1, 1 ),
-    exposureSlider( this, "exposure", _("exposure compensation"), 0, -5, 5, 0.05, 0.5 ),
-    saturationLevelSlider( this, "raw_white_level_correction", _("RAW white level %"), 0, -100, 100, 0.5, 5, 100, 120, 3 ),
-    blackLevelSlider( this, "raw_black_level_correction", _("RAW black level %"), 0, -100, 100, 0.5, 5, 100, 120, 3 ),
+    exposureSlider( this, "exposure", "Exp. comp.", 0, -5, 5, 0.05, 0.5 ),
+    saturationLevelSlider( this, "saturation_level_correction", _("white level %"), 100, 0, 200, 0.5, 5, 100 ),
+    blackLevelSlider( this, "black_level_correction", _("black level %"), 100, 0, 200, 0.5, 5, 100 ),
     hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
     profileModeSelector( this, "profile_mode", _("input: "), 0 ),
     camProfOpenButton(Gtk::Stock::OPEN),
+    camDCPProfOpenButton(Gtk::Stock::OPEN),
+    apply_hue_sat_map_checkbox( this, "apply_hue_sat_map", _("base table"), true ),
+    apply_look_table_checkbox( this, "apply_look_table", _("look table"), true ),
+    use_tone_curve_checkbox( this, "use_tone_curve", _("tone curve"), true ),
+    apply_baseline_exposure_offset_checkbox( this, "apply_baseline_exposure_offset", _("baseline exposure"), true ),
     gammaModeSelector( this, "gamma_mode", "raw curve: ", 0 ),
     inGammaLinSlider( this, "gamma_lin", "Gamma linear", 0, 0, 100000, 0.05, 0.1, 1),
     inGammaExpSlider( this, "gamma_exp", "Gamma exponent", 2.2, 0, 100000, 0.05, 0.1, 1),
-    outProfileModeSelector( this, "out_profile_mode", _("working profile: "), 1, 80 ),
+    outProfileModeSelector( this, "out_profile_mode", _("type: "), 1, 80 ),
+    outProfileTypeSelector( this, "out_profile_type", _("gamut: "), 1, 80 ),
+    outTRCTypeSelector( this, "out_trc_type", _("encoding: "), 1, 80 ),
     outProfOpenButton(Gtk::Stock::OPEN),
+    inProfFrame( _("camera profile") ),
+    outProfFrame( _("working profile") ),
+    clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
+    clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
     ignore_temp_tint_change( false )
 {
+  char tstr[100];
+
   wbControlsBox.pack_start( wbModeSelector, Gtk::PACK_SHRINK );
 
   wb_target_L_slider.set_passive( true );
@@ -387,12 +400,28 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
 
   wbControlsBox.pack_start( wbTempSlider, Gtk::PACK_SHRINK );
   wbControlsBox.pack_start( wbTintSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
-  wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
+  //wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
+
+  for( unsigned int i = 0; i < PF::WB_LAST; i++ ) {
+    snprintf(tstr,99,"wb_red_%d", i);
+    wbRedSliders[i] = new PF::Slider( this, tstr, "red", 1, 0, 10, 0.05, 0.1, 1);
+    snprintf(tstr,99,"wb_green_%d", i);
+    wbGreenSliders[i] = new PF::Slider( this, tstr, "green", 1, 0, 10, 0.05, 0.1, 1);
+    snprintf(tstr,99,"wb_blue_%d", i);
+    wbBlueSliders[i] = new PF::Slider( this, tstr, "blue", 1, 0, 10, 0.05, 0.1, 1);
+
+    wbSliderBoxes[i].pack_start(*wbRedSliders[i]);
+    wbSliderBoxes[i].pack_start(*wbGreenSliders[i]);
+    wbSliderBoxes[i].pack_start(*wbBlueSliders[i]);
+    wbSliderBox.pack_start( wbSliderBoxes[i], Gtk::PACK_SHRINK );
+    wbSliderBoxes[i].hide();
+  }
+  wbControlsBox.pack_start( wbSliderBox, Gtk::PACK_SHRINK );
 
   black_level_label_align.set( 0, 0.5, 0, 0 );
   white_level_label_align.set( 0, 0.5, 0, 0 );
@@ -449,31 +478,61 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
   demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
 
-  profileModeSelectorBox.pack_start( profileModeSelector, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK );
+  //===================
+  // Input camera profile
+  outputControlsBox.pack_start( inProfFrame, Gtk::PACK_SHRINK, 10 );
+  outputControlsBox.pack_start( outProfFrame, Gtk::PACK_SHRINK, 10 );
+  inProfFrame.add( inProfBox );
+  outProfFrame.add( outProfBox );
 
-  camProfLabel.set_text( "camera profile name:" );
-  camProfVBox.pack_start( camProfLabel, Gtk::PACK_SHRINK );
-  camProfVBox.pack_start( camProfFileEntry, Gtk::PACK_SHRINK );
-  camProfHBox.pack_start( camProfVBox, Gtk::PACK_SHRINK );
-  camProfHBox.pack_start( camProfOpenButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
+  inProfBox.pack_start( profileModeSelectorBox, Gtk::PACK_SHRINK, 4 );
+  profileModeSelectorBox.pack_end( profileModeSelector, Gtk::PACK_SHRINK, 4 );
 
   gammaModeVBox.pack_start( gammaModeSelector, Gtk::PACK_SHRINK );
   //gammaModeVBox.pack_start( inGammaLinSlider );
   gammaModeVBox.pack_start( inGammaExpSlider, Gtk::PACK_SHRINK );
-  gammaModeHBox.pack_start( gammaModeVBox, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
+  gammaModeHBox.pack_end( gammaModeVBox, Gtk::PACK_SHRINK );
+  inProfBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK, 4 );
 
-  outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
+  camProfLabel.set_text( "camera profile name:" );
+  camProfVBox.pack_start( camProfLabel, Gtk::PACK_SHRINK );
+  camProfVBox.pack_start( camProfFileEntry, Gtk::PACK_SHRINK );
+  camProfHBox.pack_end( camProfOpenButton, Gtk::PACK_SHRINK, 4 );
+  camProfHBox.pack_end( camProfVBox, Gtk::PACK_SHRINK, 4 );
+  inProfBox.pack_start( camProfHBox, Gtk::PACK_SHRINK, 4 );
 
+  camDCPProfLabel.set_text( "DCP profile name:" );
+  camDCPProfVBox.pack_start( camDCPProfLabel, Gtk::PACK_SHRINK );
+  camDCPProfVBox.pack_start( camDCPProfFileEntry, Gtk::PACK_SHRINK );
+  camDCPProfHBox.pack_end( camDCPProfOpenButton, Gtk::PACK_SHRINK, 4 );
+  camDCPProfHBox.pack_end( camDCPProfVBox, Gtk::PACK_SHRINK, 4 );
+  inProfBox.pack_start( camDCPProfHBox, Gtk::PACK_SHRINK, 4 );
+
+  dcp_options_box.pack_start( use_tone_curve_checkbox, Gtk::PACK_SHRINK );
+  dcp_options_box.pack_start( apply_hue_sat_map_checkbox, Gtk::PACK_SHRINK );
+  dcp_options_box.pack_start( apply_look_table_checkbox, Gtk::PACK_SHRINK );
+  dcp_options_box.pack_start( apply_baseline_exposure_offset_checkbox, Gtk::PACK_SHRINK );
+  inProfBox.pack_start( dcp_options_box, Gtk::PACK_SHRINK, 4 );
+
+  outProfileModeSelectorBox.pack_end( outProfileModeSelector, Gtk::PACK_SHRINK, 4 );
+  outProfBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK, 4 );
+
+  //outProfileTypeSelectorBox.pack_end( outProfileTypeSelector, Gtk::PACK_SHRINK );
+  //outProfBox.pack_start( outProfileTypeSelectorBox, Gtk::PACK_SHRINK );
+
+  outTRCTypeSelectorBox.pack_end( outTRCTypeSelector, Gtk::PACK_SHRINK, 4 );
+  outProfBox.pack_start( outTRCTypeSelectorBox, Gtk::PACK_SHRINK, 4 );
+
+  outProfBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
   outProfLabel.set_text( "output profile name:" );
   outProfVBox.pack_start( outProfLabel, Gtk::PACK_SHRINK );
   outProfVBox.pack_start( outProfFileEntry, Gtk::PACK_SHRINK );
   outProfHBox.pack_start( outProfVBox, Gtk::PACK_SHRINK );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
+  //outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
+
+  outputControlsBox.pack_start( clip_negative_checkbox, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( clip_overflow_checkbox, Gtk::PACK_SHRINK );
 
 
   notebook.append_page( wbControlsBox, "WB" );
@@ -481,7 +540,6 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   notebook.append_page( lensControlsBox, "Corr" );
   notebook.append_page( demoControlsBox, "Demo" );
   notebook.append_page( outputControlsBox, "Color" );
-  //notebook.append_page( hotpixelsControlsBox, "Hot Pixels" );
 
   add_widget( notebook );
 
@@ -491,6 +549,12 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
           &RawDeveloperConfigGUI::on_cam_filename_changed));
   camProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
       &RawDeveloperConfigGUI::on_cam_button_open_clicked) );
+
+  camDCPProfFileEntry.signal_activate().
+      connect(sigc::mem_fun(*this,
+          &RawDeveloperConfigGUI::on_cam_dcp_filename_changed));
+  camDCPProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
+      &RawDeveloperConfigGUI::on_cam_dcp_button_open_clicked) );
 
   outProfFileEntry.signal_activate().
       connect(sigc::mem_fun(*this,
@@ -528,11 +592,23 @@ void PF::RawDeveloperConfigGUI::temp_tint_changed()
     temp2mul( temp, tint, cam_mul );
     double min_mul = MIN3(cam_mul[0], cam_mul[1], cam_mul[2]);
     for( int i = 0; i < 3; i++ ) cam_mul[i] /= min_mul;
-#ifndef NDEBUG
     std::cout<<"temp_tint_changed(): temp="<<temp<<"  tint="<<tint
         <<"  mul="<<cam_mul[0]<<","<<cam_mul[1]<<","<<cam_mul[2]<<std::endl;
-#endif
-    switch( prop->get_enum_value().first ) {
+    int wb_id = prop->get_enum_value().first;
+    wbRedSliders[wb_id]->set_inhibit(true);
+    wbRedSliders[wb_id]->get_adjustment()->set_value(cam_mul[0]);
+    wbRedSliders[wb_id]->set_value();
+    wbRedSliders[wb_id]->set_inhibit(false);
+    wbGreenSliders[wb_id]->set_inhibit(true);
+    wbGreenSliders[wb_id]->get_adjustment()->set_value(cam_mul[1]);
+    wbGreenSliders[wb_id]->set_value();
+    wbGreenSliders[wb_id]->set_inhibit(false);
+    wbBlueSliders[wb_id]->set_inhibit(true);
+    wbBlueSliders[wb_id]->get_adjustment()->set_value(cam_mul[2]);
+    wbBlueSliders[wb_id]->set_value();
+    wbBlueSliders[wb_id]->set_inhibit(false);
+    /*
+    switch( wb_id ) {
     case PF::WB_SPOT:
     case PF::WB_COLOR_SPOT:
       // In the spot WB case we directly set the WB multitpliers
@@ -540,7 +616,7 @@ void PF::RawDeveloperConfigGUI::temp_tint_changed()
       wbRedSlider.get_adjustment()->set_value(cam_mul[0]);
       wbRedSlider.set_value();
       wbRedSlider.set_inhibit(false);
-      wbGreenSlider.set_inhibit(true);
+      wbGreenSliders.set_inhibit(true);
       wbGreenSlider.get_adjustment()->set_value(cam_mul[1]);
       wbGreenSlider.set_value();
       wbGreenSlider.set_inhibit(false);
@@ -565,7 +641,7 @@ void PF::RawDeveloperConfigGUI::temp_tint_changed()
       wbBlueCorrSlider.set_inhibit(false);
       break;
     }
-
+     */
     get_layer()->get_image()->update();
   }
 }
@@ -622,6 +698,25 @@ void PF::RawDeveloperConfigGUI::do_update()
           PF::RawDeveloperPar* par2 =
               dynamic_cast<PF::RawDeveloperPar*>(processor->get_par());
           if( par2 ) {
+            // Initialize the WB coefficients from pipeline #0 the first time
+            // we update the widgets
+
+            PF::RawPreprocessorPar* rppar = par->get_rawpreprocessor_par();
+            std::cout<<std::endl<<std::endl<<std::endl<<std::endl<<std::endl;
+            std::cout<<"RawDeveloperConfigGUI::do_update(): rppar="<<rppar<<std::endl;
+            if( rppar ) {
+              std::cout<<"RawDeveloperConfigGUI::do_update(): rppar->get_preset_wb_red(PF::WB_CAMERA)="
+                  <<rppar->get_preset_wb_red(PF::WB_CAMERA)<<std::endl;
+              if( rppar->get_preset_wb_red(PF::WB_CAMERA) <= 0 ) {
+                rppar->init_wb_coefficients( par2->get_image_data(), maker, model );
+                for( unsigned int i = 0; i < PF::WB_LAST; i++ ) {
+                  wbRedSliders[i]->init();
+                  wbGreenSliders[i]->init();
+                  wbBlueSliders[i]->init();
+                }
+              }
+            }
+
             //dt_colorspaces_get_makermodel( makermodel, sizeof(makermodel), exif_data->exif_maker, exif_data->exif_model );
             //std::cout<<"RawOutputPar::build(): makermodel="<<makermodel<<std::endl;
             //float xyz_to_cam[4][3];
@@ -709,13 +804,18 @@ void PF::RawDeveloperConfigGUI::do_update()
       wbControlsBox.remove( wbTargetBox );
     if( wb_best_match_label.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wb_best_match_label );
-
+    /*
     if( wbRedSlider.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wbRedSlider );
     if( wbGreenSlider.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wbGreenSlider );
     if( wbBlueSlider.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wbBlueSlider );
+     */
+    for( unsigned int i = 0; i < PF::WB_LAST; i++ ) {
+      wbSliderBoxes[i].hide();
+    }
+    wbSliderBoxes[prop->get_enum_value().first].show();
 
     if( wbRedCorrSlider.get_parent() == &wbControlsBox )
       wbControlsBox.remove( wbRedCorrSlider );
@@ -730,32 +830,32 @@ void PF::RawDeveloperConfigGUI::do_update()
         wbControlsBox.remove( wbTargetBox );
       if( wb_best_match_label.get_parent() == &wbControlsBox )
         wbControlsBox.remove( wb_best_match_label );
-      if( wbRedSlider.get_parent() != &wbControlsBox )
+      /*if( wbRedSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
       if( wbGreenSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
       if( wbBlueSlider.get_parent() != &wbControlsBox )
-        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );*/
       break;
     case PF::WB_COLOR_SPOT:
       if( wbTargetBox.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbTargetBox, Gtk::PACK_SHRINK );
       if( wb_best_match_label.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wb_best_match_label, Gtk::PACK_SHRINK );
-      if( wbRedSlider.get_parent() != &wbControlsBox )
+      /*if( wbRedSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbRedSlider, Gtk::PACK_SHRINK );
       if( wbGreenSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbGreenSlider, Gtk::PACK_SHRINK );
       if( wbBlueSlider.get_parent() != &wbControlsBox )
-        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );
+        wbControlsBox.pack_start( wbBlueSlider, Gtk::PACK_SHRINK );*/
       break;
     default:
-      if( wbRedCorrSlider.get_parent() != &wbControlsBox )
+      /*if( wbRedCorrSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbRedCorrSlider, Gtk::PACK_SHRINK );
       if( wbGreenCorrSlider.get_parent() != &wbControlsBox )
         wbControlsBox.pack_start( wbGreenCorrSlider, Gtk::PACK_SHRINK );
       if( wbBlueCorrSlider.get_parent() != &wbControlsBox )
-        wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );
+        wbControlsBox.pack_start( wbBlueCorrSlider, Gtk::PACK_SHRINK );*/
       break;
     }
 
@@ -794,6 +894,11 @@ void PF::RawDeveloperConfigGUI::do_update()
     std::string filename = prop->get_str();
     camProfFileEntry.set_text( filename.c_str() );
 
+    prop = par->get_property( "cam_dcp_profile_name" );
+    if( !prop )  return;
+    filename = prop->get_str();
+    camDCPProfFileEntry.set_text( filename.c_str() );
+
     prop = par->get_property( "out_profile_name" );
     if( !prop )  return;
     filename = prop->get_str();
@@ -802,27 +907,53 @@ void PF::RawDeveloperConfigGUI::do_update()
     prop = par->get_property( "profile_mode" );
     if( !prop )  return;
 
-    if( camProfHBox.get_parent() == &outputControlsBox )
-      outputControlsBox.remove( camProfHBox );
-
-    if( outProfHBox.get_parent() == &outputControlsBox )
-      outputControlsBox.remove( outProfHBox );
-
-    if( gammaModeHBox.get_parent() == &outputControlsBox )
-      outputControlsBox.remove( gammaModeHBox );
-
     switch( prop->get_enum_value().first ) {
     case PF::IN_PROF_NONE:
-      outputControlsBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
+      camProfHBox.hide();
+      gammaModeHBox.show();
+      camDCPProfHBox.hide();
+      dcp_options_box.hide();
+      outProfFrame.hide();
       break;
     case PF::IN_PROF_MATRIX:
-      outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
+      camProfHBox.hide();
+      gammaModeHBox.hide();
+      camDCPProfHBox.hide();
+      dcp_options_box.hide();
+      outProfFrame.show();
       break;
     case PF::IN_PROF_ICC:
-      outputControlsBox.pack_start( gammaModeHBox, Gtk::PACK_SHRINK );
-      outputControlsBox.pack_start( camProfHBox, Gtk::PACK_SHRINK );
-      outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK );
+      camProfHBox.show();
+      gammaModeHBox.show();
+      camDCPProfHBox.hide();
+      dcp_options_box.hide();
+      outProfFrame.show();
       break;
+    case PF::IN_PROF_DCP:
+      camProfHBox.hide();
+      gammaModeHBox.hide();
+      camDCPProfHBox.show();
+      dcp_options_box.show();
+      outProfFrame.show();
+      break;
+    }
+
+    prop = par->get_property( "out_profile_mode" );
+    if( !prop )  return;
+
+    if( prop->get_enum_value().first == PF::PROF_TYPE_EMBEDDED ||
+        prop->get_enum_value().first == PF::PROF_TYPE_FROM_SETTINGS ) {
+      outProfileTypeSelectorBox.hide();
+      outTRCTypeSelectorBox.hide();
+      outProfHBox.hide();
+    } else if( prop->get_enum_value().first == PF::PROF_TYPE_FROM_DISK ) {
+      outProfileTypeSelectorBox.hide();
+      outTRCTypeSelectorBox.hide();
+      outProfHBox.show();
+    } else {//if( prop->get_enum_value().first == PF::PROF_MODE_CUSTOM ) {
+      outProfileTypeSelectorBox.show();
+      outTRCTypeSelectorBox.show();
+      outProfHBox.hide();
     }
   }
   OperationConfigGUI::do_update();
@@ -896,11 +1027,21 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   VipsImage* image = node->image;
   if( !image ) return;
 
-  PF::PropertyBase* pwb_red = node->processor->get_par()->get_property("wb_red");
-  PF::PropertyBase* pwb_green = node->processor->get_par()->get_property("wb_green");
-  PF::PropertyBase* pwb_blue = node->processor->get_par()->get_property("wb_blue");
+  //PF::PropertyBase* pwb_red = node->processor->get_par()->get_property("wb_red");
+  //PF::PropertyBase* pwb_green = node->processor->get_par()->get_property("wb_green");
+  //PF::PropertyBase* pwb_blue = node->processor->get_par()->get_property("wb_blue");
 
-  if( !pwb_red || !pwb_green || !pwb_blue ) return;
+  //if( !pwb_red || !pwb_green || !pwb_blue ) return;
+
+  PropertyBase* prop = par->get_property( "wb_mode" );
+  if( !prop )  return;
+  int wb_id = prop->get_enum_value().first;
+
+  PropertyBase* wb_red_prop = wbRedSliders[wb_id]->get_prop();
+  PropertyBase* wb_green_prop = wbGreenSliders[wb_id]->get_prop();
+  PropertyBase* wb_blue_prop = wbBlueSliders[wb_id]->get_prop();
+  if( !wb_red_prop || !wb_green_prop || !wb_blue_prop )
+    return;
 
   PF::RawDeveloperPar* node_par = dynamic_cast<PF::RawDeveloperPar*>( node->processor->get_par() );
   if( !node_par ) return;
@@ -1006,9 +1147,9 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     if(wb_red_mul < 0.66) wb_red_mul = 0.66;
     if(wb_blue_mul < 0.66) wb_blue_mul = 0.66;
 
-    PropertyBase* wb_red_prop = wbRedSlider.get_prop();
-    PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
-    PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
+    //PropertyBase* wb_red_prop = wbRedSlider.get_prop();
+    //PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
+    //PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
     if( wb_red_prop && wb_green_prop && wb_blue_prop ) {
       float wb_red_in;
       float wb_green_in;
@@ -1037,9 +1178,9 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
           <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
           <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
-      wbRedSlider.init();
-      wbGreenSlider.init();
-      wbBlueSlider.init();
+      wbRedSliders[wb_id]->init();
+      wbGreenSliders[wb_id]->init();
+      wbBlueSliders[wb_id]->init();
 
       //pwb_red->update( wbRedSlider.get_adjustment()->get_value() );
       //pwb_green->update( wbGreenSlider.get_adjustment()->get_value() );
@@ -1127,9 +1268,13 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   VipsImage* image = node->image;
   if( !image ) return;
 
-  PropertyBase* wb_red_prop = wbRedSlider.get_prop();
-  PropertyBase* wb_green_prop = wbGreenSlider.get_prop();
-  PropertyBase* wb_blue_prop = wbBlueSlider.get_prop();
+  PropertyBase* prop = par->get_property( "wb_mode" );
+  if( !prop )  return;
+  int wb_id = prop->get_enum_value().first;
+
+  PropertyBase* wb_red_prop = wbRedSliders[wb_id]->get_prop();
+  PropertyBase* wb_green_prop = wbGreenSliders[wb_id]->get_prop();
+  PropertyBase* wb_blue_prop = wbBlueSliders[wb_id]->get_prop();
   if( !wb_red_prop || !wb_green_prop || !wb_blue_prop ) 
     return;
 
@@ -1494,9 +1639,9 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
         <<"                      "<<wb_green_in<<"*"<<wb_green_mul<<" -> "<<wb_green_out<<std::endl
         <<"                      "<<wb_blue_in<<"*"<<wb_blue_mul<<" -> "<<wb_blue_out<<std::endl;
 
-    wbRedSlider.init();
-    wbGreenSlider.init();
-    wbBlueSlider.init();
+    wbRedSliders[wb_id]->init();
+    wbGreenSliders[wb_id]->init();
+    wbBlueSliders[wb_id]->init();
 
     //bool async = img->is_async();
     //img->set_async( false );
@@ -1603,6 +1748,9 @@ void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_icc_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -1612,11 +1760,61 @@ void PF::RawDeveloperConfigGUI::on_cam_button_open_clicked()
           {
     std::cout << "Open clicked." << std::endl;
 
+    last_dir = dialog.get_current_folder();
+    PF::PhotoFlow::Instance().get_options().set_last_visited_icc_folder( last_dir );
+
     //Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
     std::cout << "File selected: " <<  filename << std::endl;
     camProfFileEntry.set_text( filename.c_str() );
     on_cam_filename_changed();
+    break;
+          }
+  case(Gtk::RESPONSE_CANCEL):
+          {
+    std::cout << "Cancel clicked." << std::endl;
+    break;
+          }
+  default:
+  {
+    std::cout << "Unexpected button clicked." << std::endl;
+    break;
+  }
+  }
+}
+
+
+
+void PF::RawDeveloperConfigGUI::on_cam_dcp_button_open_clicked()
+{
+  Gtk::FileChooserDialog dialog("Please choose a DCP profile",
+      Gtk::FILE_CHOOSER_ACTION_OPEN);
+  //dialog.set_transient_for(*this);
+
+  //Add response buttons the the dialog:
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_icc_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
+  //Show the dialog and wait for a user response:
+  int result = dialog.run();
+
+  //Handle the response:
+  switch(result) {
+  case(Gtk::RESPONSE_OK):
+          {
+    std::cout << "Open clicked." << std::endl;
+
+    last_dir = dialog.get_current_folder();
+    PF::PhotoFlow::Instance().get_options().set_last_visited_icc_folder( last_dir );
+
+    //Notice that this is a std::string, not a Glib::ustring.
+    std::string filename = dialog.get_filename();
+    std::cout << "File selected: " <<  filename << std::endl;
+    camDCPProfFileEntry.set_text( filename.c_str() );
+    on_cam_dcp_filename_changed();
     break;
           }
   case(Gtk::RESPONSE_CANCEL):
@@ -1644,6 +1842,9 @@ void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_icc_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -1652,6 +1853,9 @@ void PF::RawDeveloperConfigGUI::on_out_button_open_clicked()
   case(Gtk::RESPONSE_OK):
           {
     std::cout << "Open clicked." << std::endl;
+
+    last_dir = dialog.get_current_folder();
+    PF::PhotoFlow::Instance().get_options().set_last_visited_icc_folder( last_dir );
 
     //Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
@@ -1694,6 +1898,31 @@ void PF::RawDeveloperConfigGUI::on_cam_filename_changed()
     prop->update( filename );
     get_layer()->set_dirty( true );
     //std::cout<<"  updating image"<<std::endl;
+    get_layer()->get_image()->update();
+  }
+}
+
+
+
+void PF::RawDeveloperConfigGUI::on_cam_dcp_filename_changed()
+{
+  if( get_layer() && get_layer()->get_image() &&
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+    std::string filename = camDCPProfFileEntry.get_text();
+    if( filename.empty() )
+      return;
+    std::cout<<"New DCP profile name: "<<filename<<std::endl;
+    PF::RawDeveloperPar* par =
+        dynamic_cast<PF::RawDeveloperPar*>(get_layer()->get_processor()->get_par());
+    if( !par )
+      return;
+    PropertyBase* prop = par->get_property( "cam_dcp_profile_name" );
+    if( !prop )
+      return;
+    prop->update( filename );
+    get_layer()->set_dirty( true );
+    std::cout<<"  updating image"<<std::endl;
     get_layer()->get_image()->update();
   }
 }

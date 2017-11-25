@@ -34,7 +34,7 @@
 #include <cstring>
 
 #include "gaussblur.hh"
-#include "../base/new_operation.hh"
+#include "convert_colorspace.hh"
 #include "icc_transform.hh"
 #include "impulse_nr.hh"
 
@@ -45,10 +45,15 @@ PF::ImpulseNRPar::ImpulseNRPar():
   in_profile( NULL )
 {
 
-  convert2lab = PF::new_operation( "convert2lab", NULL );
+  convert2lab = PF::new_convert_colorspace();
+  PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+  if(csconvpar) {
+    csconvpar->set_out_profile_mode( PF::PROF_MODE_DEFAULT );
+    csconvpar->set_out_profile_type( PF::PROF_TYPE_LAB );
+  }
   convert2input = new_icc_transform();
   gauss_blur = new_gaussblur();
-  impulse_nr_algo = new PF::Processor<PF::ImpulseNR_RTAlgo_Par,PF::ImpulseNR_RTAlgo_Proc>();
+  impulse_nr_algo = new_impulse_nr_algo();
 
   set_type("impulse_nr" );
 
@@ -64,16 +69,7 @@ VipsImage* PF::ImpulseNRPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   VipsImage* srcimg = in[0];
 
-  void *data;
-  size_t data_length;
-
-  if( in_profile ) cmsCloseProfile( in_profile );
-
-  in_profile = NULL;
-  if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
-                           &data, &data_length ) ) {
-    in_profile = cmsOpenProfileFromMem( data, data_length );
-  }
+  in_profile = PF::get_icc_profile( in[first] );
 
   std::vector<VipsImage*> in2;
 
@@ -197,10 +193,4 @@ VipsImage* PF::ImpulseNRPar::build(std::vector<VipsImage*>& in, int first,
   //std::cout<<"ImpulseNRPar::build(): out="<<out<<std::endl;
 
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_impulse_nr()
-{
-  return new PF::Processor<PF::ImpulseNRPar,PF::ImpulseNRProc>();
 }

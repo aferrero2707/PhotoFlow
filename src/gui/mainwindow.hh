@@ -43,6 +43,7 @@
 #include <gtkmm.h>
 
 #include "imageeditor.hh"
+#include "exportdialog.hh"
 
 
 namespace PF {
@@ -77,6 +78,9 @@ protected:
   Gtk::Button buttonNewLayer, buttonNewGroup, buttonDelLayer, buttonLoadPreset, buttonSavePreset;
 
   std::vector<ImageEditor*> image_editors;
+
+  // Global export dialog to remember the settings
+  ExportDialog export_dialog;
 
   //Gtk::ScrolledWindow treeFrame;
   //Gtk::TreeView layerTree;

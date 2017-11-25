@@ -72,7 +72,7 @@
 
 #include "base/new_operation.hh"
 #include "base/pf_file_loader.hh"
-#include "rt/rtengine/rawimagesource.hh"
+#include "rt/rtengine/color.h"
 
 extern int vips__leak;
 
@@ -164,11 +164,13 @@ int main (int argc, char *argv[])
   vips_cache_set_trace( true );
 #endif
 
-  rtengine::Color::Init();
+  rtengine::Color::init();
 
   //vips__leak = 1;
 
   bool is_plugin = false;
+
+  PF::ICCStore::Instance();
 
 
   std::cout<<"PhotoFlow::main(): argc="<<argc<<std::endl;
@@ -205,10 +207,13 @@ int main (int argc, char *argv[])
   free( fullpath );
 
   Glib::ustring dataPath = PF::PhotoFlow::Instance().get_data_dir();
+  Glib::ustring configPath = PF::PhotoFlow::Instance().get_config_dir();
 #if defined(WIN32)
   Glib::ustring themesPath = dataPath + "\\themes";
+  Glib::ustring themesPath2 = configPath + "\\themes";
 #else
   Glib::ustring themesPath = dataPath + "/themes";
+  Glib::ustring themesPath2 = configPath + "/themes";
 #endif
 
   PF::PhotoFlow::Instance().set_new_op_func( PF::new_operation_with_gui );
@@ -242,15 +247,26 @@ int main (int argc, char *argv[])
 #ifdef GTKMM_2
 #if defined(WIN32)
   Glib::ustring themerc = themesPath + "\\photoflow-dark.gtkrc";
+  Glib::ustring themerc2 = themesPath2 + "\\photoflow-dark.gtkrc";
 #else
   Glib::ustring themerc = themesPath + "/photoflow-dark.gtkrc";
+  Glib::ustring themerc2 = themesPath2 + "/photoflow-dark.gtkrc";
 #endif
   int stat_result = stat(themerc.c_str(), &buffer);
+  int stat_result2 = stat(themerc2.c_str(), &buffer);
 #ifdef WIN32
   //stat_result = 1;
 #endif
   std::cout<<"stat_result="<<stat_result<<std::endl;
-  if( stat_result == 0 ) {
+  std::cout<<"stat_result2="<<stat_result2<<std::endl;
+  if( stat_result2 == 0 ) {
+    std::vector<Glib::ustring> files;
+    files.push_back (themerc2);
+    Gtk::RC::set_default_files (files);
+    Gtk::RC::reparse_all (Gtk::Settings::get_default());
+    GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
+    //gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
+  } else if( stat_result == 0 ) {
     std::vector<Glib::ustring> files;
     files.push_back (themerc);
     Gtk::RC::set_default_files (files);

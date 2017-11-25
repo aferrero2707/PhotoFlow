@@ -192,16 +192,17 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
       vips_rect_intersectrect (&s, &r_img, &s);
 //#ifndef NDEBUG
       if( verbose ) {
-      std::cout<<"  preparing region ir["<<i<<"]:  im="<<ir[i]->im
-          <<"  top="<<s.top
-	       <<" left="<<s.left
-	       <<" width="<<s.width
-	       <<" height="<<s.height<<std::endl;
+        if( layer->processor->get_par()->get_config_ui() )
+          std::cout<<"["<<layer->processor->get_par()->get_config_ui()->get_layer()->get_name()<<"]"<<std::endl;
+        if( layer->processor->get_par() )
+          std::cout<<"["<<layer->processor->get_par()->get_type()<<"]: ";
+        std::cout<<r->top<<","<<r->left<<","<<r->width<<","<<r->height;
+        std::cout<<" -> ["<<i<<"] "<<s.top<<","<<s.left<<","<<s.width<<","<<s.height<<std::endl;
       }
 //#endif
       /**/
       if( vips_region_prepare( ir[i], &s ) )
-	return( -1 );
+        return( -1 );
       if( verbose ) {
       std::cout<<"  region ir["<<i<<"]->valid: "
           <<"  top="<<ir[i]->valid.top

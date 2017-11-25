@@ -228,7 +228,7 @@ buttonSavePreset()
     Gtk::Label* label = (Gtk::Label*)treeNotebook.get_tab_label(*page);
     label->set_angle(90);
    */
-
+  try {
   if( set_icon_from_file( PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png" ) ) {
     std::cout<<"Application window icon set from \""
         <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
@@ -237,6 +237,27 @@ buttonSavePreset()
     std::cout<<"Failed to set application window icon from \""
         <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
         <<"\""<<std::endl;
+  }
+  }
+  catch (const Gdk::PixbufError& e) {
+    std::cout << "Failed to set application window icon from \""
+        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<"\": "<<e.what()<<std::endl;
+  }
+  catch (const Glib::FileError& e) {
+    std::cout << "Failed to set application window icon from \""
+        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<"\": "<<e.what()<<std::endl;
+  }
+  catch (const Glib::Error& e) {
+    std::cout << "Failed to set application window icon from \""
+        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<"\": "<<e.what()<<std::endl;
+  }
+  catch (...) {
+    std::cout << "Failed to set application window icon from \""
+        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<"\": uncaught exception"<<std::endl;
   }
 
 
@@ -265,12 +286,42 @@ PF::MainWindow::~MainWindow()
 void PF::MainWindow::on_map()
 {
   Gtk::Window::on_map();
-#ifdef ___APPLE__
+#ifdef __APPLE__
   Glib::RefPtr< Gdk::Screen > screen = get_screen();
   Glib::RefPtr< Gdk::Window > window = get_window();
   cairo_current_display_id = screen->get_monitor_at_window(window);
 
   print_display_profile();
+  cmsHPROFILE dpy_profile = PF::get_display_ICC_profile();
+  PF::ICCStore::Instance().set_system_monitor_profile( dpy_profile );
+  /*
+  int monitor = 0;
+  CGDirectDisplayID ids[monitor + 1];
+  uint32_t total_ids;
+  CMProfileRef prof = NULL;
+  if(CGGetOnlineDisplayList(monitor + 1, &ids[0], &total_ids) == kCGErrorSuccess && total_ids == monitor + 1)
+    CMGetProfileByAVID(ids[monitor], &prof);
+  if(prof != NULL)
+  {
+    CFDataRef data;
+    data = CMProfileCopyICCData(NULL, prof);
+    CMCloseProfile(prof);
+
+    UInt8 *tmp_buffer = (UInt8 *)g_malloc(CFDataGetLength(data));
+    CFDataGetBytes(data, CFRangeMake(0, CFDataGetLength(data)), tmp_buffer);
+
+    buffer = (guint8 *)tmp_buffer;
+    buffer_size = CFDataGetLength(data);
+
+    cmsHPROFILE icc_profile = cmsOpenProfileFromMem( buffer, buffer_size );
+    char tstr[1024];
+    cmsGetProfileInfoASCII(icc_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+    std::cout<<"Display profile: "<<tstr<<std::endl;
+
+    CFRelease(data);
+    return;
+  }
+  */
 #endif
 }
 
@@ -462,9 +513,7 @@ bool PF::MainWindow::on_delete_event( GdkEventAny* event )
 
 bool PF::MainWindow::on_key_press_event(GdkEventKey* event)
 {
-#ifndef NDEBUG
   std::cout<<"MainWindow::on_key_press_event() called"<<std::endl;
-#endif
   int page = viewerNotebook.get_current_page();
   Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
   if( widget ) {
@@ -1146,11 +1195,11 @@ void PF::MainWindow::on_button_export_clicked()
       }
     }
 
-    std::cout << "File selected: " <<  filename << std::endl;
-    if( editor && editor->get_image() ) {
-      editor->get_image()->export_merged( filename );
-      editor->set_last_exported_file( filename );
-    }
+    export_dialog.set_editor( editor );
+    export_dialog.set_export_format(PF::EXPORT_FORMAT_JPEG);
+    export_dialog.set_file_name(filename);
+    export_dialog.set_transient_for(*this);
+    export_dialog.run();
     break;
       }
   case(Gtk::RESPONSE_CANCEL): 

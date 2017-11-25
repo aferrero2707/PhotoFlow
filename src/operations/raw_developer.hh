@@ -47,6 +47,7 @@ namespace PF
   enum demo_method_t {
     PF_DEMO_FAST,
     PF_DEMO_AMAZE,
+    PF_DEMO_RCD,
     PF_DEMO_LMMSE,
     PF_DEMO_IGV
   };
@@ -66,6 +67,7 @@ namespace PF
     PF::ProcessorBase* amaze_demosaic;
     PF::ProcessorBase* lmmse_demosaic;
     PF::ProcessorBase* igv_demosaic;
+    PF::ProcessorBase* rcd_demosaic;
     PF::ProcessorBase* xtrans_demosaic;
     PF::ProcessorBase* fast_demosaic;
     PF::ProcessorBase* fast_demosaic_xtrans;
@@ -88,6 +90,8 @@ namespace PF
     PropertyBase demo_method;
     // False color suppression steps
     Property<int> fcs_steps;
+    // Highlights reconstruction mode
+    PropertyBase hlreco_mode;
 
     bool caching_enabled;
 
@@ -109,6 +113,9 @@ namespace PF
     void set_caching( bool flag ) { caching_enabled = flag; }
 
     dcraw_data_t* get_image_data() {return image_data; }
+    RawPreprocessorPar* get_rawpreprocessor_par() {
+      return dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+    }
 
     wb_mode_t get_wb_mode();
     void get_wb(float* mul);

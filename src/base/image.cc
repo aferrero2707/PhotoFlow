@@ -38,8 +38,9 @@
 #include "image.hh"
 #include "imageprocessor.hh"
 #include "pf_file_loader.hh"
-#include "../operations/convert2srgb.hh"
-#include "../operations/convertformat.hh"
+#include "../operations/operations.hh"
+//#include "../operations/convert2srgb.hh"
+//#include "../operations/convertformat.hh"
 #include "../operations/icc_transform.hh"
 //#include "../operations/gmic/gmic_untiled_op.hh"
 
@@ -121,8 +122,8 @@ PF::Image::Image():
 
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update_all) );
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::modified) );
-  convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
-  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  //convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
+  convert_format = new_convert_format();
   convert2outprof = new_icc_transform();
 
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
@@ -570,7 +571,7 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   //												0, NULL, this))
   //	return;
 
-  PF::ProcessorBase* convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  PF::ProcessorBase* convert_format = new_convert_format();
   std::vector<VipsImage*> in;
   in.push_back( spot );
   convert_format->get_par()->set_image_hints( spot );
@@ -693,9 +694,9 @@ void PF::Image::do_destroy()
     }
   }
 #ifndef NDEBUG
-  std::cout<<"Image::do_destroy(): deleting convert2srgb"<<std::endl;
+  //std::cout<<"Image::do_destroy(): deleting convert2srgb"<<std::endl;
 #endif
-  delete convert2srgb;
+  //delete convert2srgb;
 #ifndef NDEBUG
   std::cout<<"Image::do_destroy(): convert2srgb deleted"<<std::endl;
   std::cout<<"Image::do_destroy(): deleting convert_format"<<std::endl;
@@ -843,7 +844,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
       return false;
     }
 
-  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" || ext=="exr" ) {
+  } else if( ext=="tiff" || ext=="tif" || ext=="jpg" || ext=="jpeg" || ext=="png" || ext=="exr" || ext=="fits" || ext=="fts" || ext=="fit" ) {
 
     //PF::PhotoFlow::Instance().set_image( pf_image );
     //layersWidget.set_image( pf_image );
@@ -903,7 +904,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
         PF::insert_pf_preset( profile.c_str(), this, NULL, &(layer_manager.get_layers()), false );
       } else {
         PF::Layer* limg2 = layer_manager.new_layer();
-        PF::ProcessorBase* proc2 = PF::PhotoFlow::Instance().new_operation( "raw_developer", limg2 );
+        PF::ProcessorBase* proc2 = PF::PhotoFlow::Instance().new_operation( "raw_developer_v2", limg2 );
         limg2->set_processor( proc2 );
         limg2->set_name( "RAW developer" );
         layer_manager.get_layers().push_back( limg2 );
@@ -1010,8 +1011,6 @@ void PF::Image::export_merged( std::string filename )
 
 void PF::Image::do_export_merged( std::string filename )
 {
-  BENCHFUN
-
   std::string ext;
   if( getFileExtension( "/", filename, ext ) &&
       ext != "pfi" ) {
@@ -1061,13 +1060,21 @@ void PF::Image::do_export_merged( std::string filename )
 
     std::vector<VipsImage*> in;
     if( ext == "jpg" || ext == "jpeg" ) {
+      /*
       in.clear();
       in.push_back( image );
       convert_format->get_par()->set_image_hints( image );
       convert_format->get_par()->set_format( VIPS_FORMAT_UCHAR );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       PF_UNREF( image, "Image::do_export_merged(): image unref" );
+      */
+      //outimg = image;
+      if( vips_linear1(image, &outimg, 255, 0, NULL) ) {
+        std::cout<<"WARNING!!! Image::do_export_merged(): vips_linear1() failed"<<std::endl;
+        outimg = image;
+      }
       if( outimg ) {
+        BENCHFUN
         Glib::Timer timer;
         timer.start();
         vips_jpegsave( outimg, filename.c_str(), "Q", 75, NULL );
@@ -1084,8 +1091,8 @@ void PF::Image::do_export_merged( std::string filename )
       in.clear();
       in.push_back( image );
       convert_format->get_par()->set_image_hints( image );
-      convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
-      //convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
+      //convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
+      convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       PF_UNREF( image, "Image::do_export_merged(): image unref" );
       std::cout<<"Image::do_export_merged(): saving TIFF file "<<filename<<"   outimg="<<outimg<<std::endl;
@@ -1096,8 +1103,8 @@ void PF::Image::do_export_merged( std::string filename )
 #endif
 
         vips_tiffsave( outimg, filename.c_str(), "compression",
-            VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
-            //VIPS_FOREIGN_TIFF_COMPRESSION_NONE,
+            //VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
+            VIPS_FOREIGN_TIFF_COMPRESSION_NONE,
             //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
             "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
 #ifndef NDEBUG
@@ -1259,13 +1266,13 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
   convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
   VipsImage* floatimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
 
-  cmsHPROFILE out_iccprofile = NULL;
+  PF::ICCProfile* out_iccprofile = NULL;
   outimg = floatimg;
 #ifndef NDEBUG
   std::cout<<"Image::export_merged_to_mem(): out_iccdata="<<(void*)out_iccdata<<std::endl;
 #endif
   if( floatimg && out_iccdata ) {
-    out_iccprofile = cmsOpenProfileFromMem( out_iccdata, out_iccsize );
+    out_iccprofile = PF::ICCStore::Instance().get_profile( out_iccdata, out_iccsize );
 #ifndef NDEBUG
     std::cout<<"Image::export_merged_to_mem(): out_iccprofile="<<(void*)out_iccprofile<<std::endl;
 #endif
@@ -1300,10 +1307,8 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
     std::cout<<"Image::export_merged_to_mem(): vips_sink() finished."<<std::endl;
 #endif
 
-    if( out_iccprofile ) cmsCloseProfile( out_iccprofile );
-#ifndef NDEBUG
-    std::cout<<"Image::export_merged_to_mem(): output profile closed"<<std::endl;
-#endif
+    //if( out_iccprofile ) cmsCloseProfile( out_iccprofile );
+    //std::cout<<"Image::export_merged_to_mem(): output profile closed."<<std::endl;
 
     void *iccdata;
     size_t iccsize;
@@ -1318,6 +1323,10 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
       imgbuf->iccdata = NULL;
       imgbuf->iccsize = 0;
     }
+
+    imgbuf->trc_type = PF_TRC_STANDARD;
+    ICCProfile* iccinfo  = get_icc_profile( outimg );
+    if( iccinfo ) imgbuf->trc_type = iccinfo->get_trc_type();
 
     /*
     void* gexiv2_buf;
@@ -1372,11 +1381,9 @@ void PF::Image::export_merged_to_tiff( const std::string filename )
 
   VipsImage* bgdimg = node->image;
   cmsHPROFILE in_profile = NULL;
-  void *iccdata;
-  size_t iccsize;
-  if( !vips_image_get_blob( bgdimg, VIPS_META_ICC_NAME,
-      &iccdata, &iccsize ) ) {
-    in_profile = cmsOpenProfileFromMem( iccdata, iccsize );
+  PF::ICCProfile* iccprof_in = PF::get_icc_profile( bgdimg );
+  if( iccprof_in )  {
+    in_profile = iccprof_in->get_profile();
   }
 
 
@@ -1394,41 +1401,33 @@ void PF::Image::export_merged_to_tiff( const std::string filename )
   outimg = floatimg;
   PF::ICCTransformPar* conv_par =
       dynamic_cast<PF::ICCTransformPar*>( convert2outprof->get_par() );
-#ifndef NDEBUG
-  std::cout<<"Image::export_merged_to_mem(): conv_par="<<(void*)conv_par<<std::endl;
-#endif
-  if( conv_par && in_profile ) {
+//#ifndef NDEBUG
+  std::cout<<"Image::export_merged_to_tiff(): conv_par="<<(void*)conv_par<<std::endl;
+//#endif
+  if( conv_par ) {
     in.clear();
     in.push_back( floatimg );
     conv_par->set_image_hints( floatimg );
     conv_par->set_format( VIPS_FORMAT_FLOAT );
-    conv_par->set_out_profile( in_profile );
+    conv_par->set_out_profile( iccprof_in );
     outimg = convert2outprof->get_par()->build( in, 0, NULL, NULL, level );
     PF_UNREF( floatimg, "" );
   }
 
-#ifndef NDEBUG
-  std::cout<<"Image::export_merged_to_mem(): outimg="<<outimg<<std::endl;
-#endif
+  std::cout<<"Image::export_merged_to_tiff(): outimg="<<outimg<<std::endl;
   if( outimg ) {
-#ifndef NDEBUG
     std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
-#endif
     vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
         "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
     //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
-#ifndef NDEBUG
     std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
-#endif
 
-    msg = std::string("PF::Image::export_merged_to_mem(): outimg unref");
+    msg = std::string("PF::Image::export_merged_to_tiff(): outimg unref");
     PF_UNREF( outimg, msg.c_str() );
   }
-
-  if( in_profile ) cmsCloseProfile( in_profile );
 
   remove_pipeline( pipeline );
   delete pipeline;
   //layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
-  std::cout<<"Image saved to memory "<<std::endl;
+  std::cout<<"Image saved to TIFF: \""<<filename<<"\""<<std::endl;
 }

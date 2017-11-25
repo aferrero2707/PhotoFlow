@@ -172,11 +172,12 @@ namespace PF
     PropertyBase cmyk_target_channel;
 
     Property<bool> mask_enabled;
-    Property<bool> cache_input;
 
     int file_format_version;
 
-    //std::vector<VipsImage*> outvec;
+    Property<bool> previous_layer_is_input;
+    Property<bool> enable_padding;
+    int test_padding;
 
   public:
     sigc::signal<void> signal_modified;
@@ -285,19 +286,17 @@ namespace PF
 				return -1;
     } 
 
+    bool get_previous_layer_is_input() { return previous_layer_is_input.get(); }
+
     /* Function to derive the output area from the input area
-    */
+     */
     virtual void transform(const Rect* rin, Rect* rout)
     {
-      int pad = get_test_padding();
-      rout->left = rin->left+pad;
-      rout->top = rin->top+pad;
-      rout->width = rin->width-pad*2;
-      rout->height = rin->height-pad*2;
-      /*rout->left = rin->left;
-      rout->top = rin->top;
-      rout->width = rin->width;
-      rout->height = rin->height;*/
+      int p = enable_padding.get() ? test_padding : 0;
+      rout->left = rin->left+p;
+      rout->top = rin->top+p;
+      rout->width = rin->width-p*2;
+      rout->height = rin->height-p*2;
     }
 
     /* Function to derive the area to be read from input images,
@@ -305,15 +304,11 @@ namespace PF
     */
     virtual void transform_inv(const Rect* rout, Rect* rin)
     {
-      int pad = get_test_padding();
-      rin->left = rout->left-pad;
-      rin->top = rout->top-pad;
-      rin->width = rout->width+pad*2;
-      rin->height = rout->height+pad*2;
-      /*rin->left = rout->left;
-      rin->top = rout->top;
-      rin->width = rout->width;
-      rin->height = rout->height;*/
+      int p = enable_padding.get() ? test_padding : 0;
+      rin->left = rout->left-p;
+      rin->top = rout->top-p;
+      rin->width = rout->width+p*2;
+      rin->height = rout->height+p*2;
     }
 
 
@@ -330,10 +325,7 @@ namespace PF
     {
       return false;
     }
-    virtual void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
-    {
-      set_padding( 0, id );
-    }
+    virtual void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
     void set_padding( int p, unsigned int id )
     {
       for( unsigned int i = input_paddings.size(); i <= id; i++ ) input_paddings.push_back(0);
@@ -383,6 +375,16 @@ namespace PF
 
 
     PropertyBase* get_property(std::string name);
+
+    template<typename T> bool set_property_value(std::string name, const T& newval)
+    {
+      PropertyBase* prop = get_property(name);
+      if( !prop ) return false;
+      prop->update( newval );
+      return true;
+    }
+
+
 
     OperationConfigUI* get_config_ui() { return config_ui; }
     void set_config_ui( OperationConfigUI* ui ) { config_ui = ui; }
@@ -519,7 +521,9 @@ namespace PF
 
 
   #include "blend_passthrough.hh"
-  #include "blend_normal.hh"
+#include "blend_normal.hh"
+#include "blend_add.hh"
+#include "blend_subtract.hh"
   #include "blend_grain_extract.hh"
   #include "blend_grain_merge.hh"
   #include "blend_multiply.hh"
@@ -531,10 +535,14 @@ namespace PF
   #include "blend_hard_light.hh"
   #include "blend_vivid_light.hh"
   #include "blend_luminosity.hh"
-#include "blend_color.hh"
+  #include "blend_luminance.hh"
+  #include "blend_color.hh"
 #include "blend_exclusion.hh"
+#include "blend_lch.hh"
 
   int vips_copy_metadata( VipsImage* in, VipsImage* out );
+
+  void print_embedded_profile( VipsImage* img );
 };
 
 

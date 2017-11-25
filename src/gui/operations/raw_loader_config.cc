@@ -97,6 +97,9 @@ void PF::RawLoaderConfigGUI::on_button_open_clicked()
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -105,6 +108,9 @@ void PF::RawLoaderConfigGUI::on_button_open_clicked()
   case(Gtk::RESPONSE_OK): 
     {
       std::cout << "Open clicked." << std::endl;
+
+      last_dir = dialog.get_current_folder();
+      PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
 
       //Notice that this is a std::string, not a Glib::ustring.
       std::string filename = dialog.get_filename();

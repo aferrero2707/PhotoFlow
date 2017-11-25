@@ -55,7 +55,7 @@ class DefringePar: public OpParBase
   ProcessorBase* convert2input;
   ProcessorBase* defringe_algo;
 
-  cmsHPROFILE in_profile;
+  PF::ICCProfile* in_profile;
 
 public:
   DefringePar();
@@ -486,6 +486,8 @@ public:
 
 
 ProcessorBase* new_defringe();
+
+ProcessorBase* new_defringe_algo();
 
 }
 

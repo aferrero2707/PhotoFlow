@@ -32,7 +32,7 @@
 
 PF::DesaturateConfigGUI::DesaturateConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Desaturate" ),
-  modeSelector( this, "method", _("Desaturate method: "), 0 )
+  modeSelector( this, "method", _("method: "), 0 )
 {
   controlsBox.pack_start( modeSelector, Gtk::PACK_SHRINK );
   add_widget( controlsBox );

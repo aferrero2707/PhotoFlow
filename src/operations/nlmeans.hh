@@ -48,7 +48,7 @@ class NonLocalMeansPar: public OpParBase
   ProcessorBase* convert2input;
   ProcessorBase* nlmeans_algo;
 
-  cmsHPROFILE in_profile;
+  PF::ICCProfile* in_profile;
 
 public:
   NonLocalMeansPar();
@@ -404,6 +404,7 @@ public:
 };
 
 
+ProcessorBase* new_nlmeans_algo();
 
 ProcessorBase* new_nlmeans();
 

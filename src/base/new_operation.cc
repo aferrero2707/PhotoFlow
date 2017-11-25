@@ -50,9 +50,19 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
   } else if( op_type == "raw_developer" ) {
 
     //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
-    processor = new_raw_developer();
+    processor = new_raw_developer_v1();
 
   } else if( op_type == "raw_output" ) {
+
+    //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    processor = new_raw_output_v1();
+
+  } else if( op_type == "raw_developer_v2" ) {
+
+    //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
+    processor = new_raw_developer();
+
+  } else if( op_type == "raw_output_v2" ) {
 
     //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
     processor = new_raw_output();
@@ -66,6 +76,16 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     //processor = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
     processor = new_blender();
+
+  } else if( op_type == "white_balance" ) {
+
+    //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    processor = new_white_balance();
+
+  } else if( op_type == "clip" ) {
+
+    //processor = new PF::Processor<PF::ClonePar,PF::CloneProc>();
+    processor = new_clip();
 
   } else if( op_type == "clone" ) {
 
@@ -117,6 +137,16 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::GradientPar,PF::Gradient>();
     processor = new_path_mask();
 
+  } else if( op_type == "levels" ) {
+
+    //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
+    processor = new_levels();
+
+  } else if( op_type == "basic_adjustments" ) {
+
+    //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
+    processor = new_basic_adjustments();
+
   } else if( op_type == "brightness_contrast" ) {
 
     //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
@@ -155,11 +185,6 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
     processor = new_sharpen();
 
-  } else if( op_type == "convert2lab" ) {
-
-    //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
-    processor = new_convert2lab();
-
   } else if( op_type == "convert_colorspace" ) {
 
     //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
@@ -189,6 +214,8 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   } else if( op_type == "subtrimg" ) {
     processor = new_subtrimg();
+  } else if( op_type == "tone_mapping" ) {
+    processor = new_tone_mapping();
 
   } else if( op_type == "volume" ) {
     processor = new_volume();

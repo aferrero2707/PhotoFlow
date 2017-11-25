@@ -30,10 +30,9 @@
 #ifndef RAW_DEVELOPER_CONFIG_DIALOG_HH
 #define RAW_DEVELOPER_CONFIG_DIALOG_HH
 
-#include <gtkmm.h>
+#include "../../operations/raw_developer.hh"
 
 #include "../operation_config_gui.hh"
-#include "../../operations/raw_developer.hh"
 
 
 namespace PF {
@@ -78,9 +77,15 @@ public:
     WBSelector wbModeSelector;
     Slider wbTempSlider;
     Slider wbTintSlider;
-    Slider wbRedSlider;
-    Slider wbGreenSlider;
-    Slider wbBlueSlider;
+    //Slider wbRedSlider;
+    //Slider wbGreenSlider;
+    //Slider wbBlueSlider;
+    Slider* wbRedSliders[WB_LAST];
+    Slider* wbGreenSliders[WB_LAST];
+    Slider* wbBlueSliders[WB_LAST];
+    Gtk::VBox wbSliderBoxes[WB_LAST];
+    Gtk::VBox wbSliderBox;
+
     Slider wbRedCorrSlider;
     Slider wbGreenCorrSlider;
     Slider wbBlueCorrSlider;
@@ -138,6 +143,18 @@ public:
     Gtk::Entry camProfFileEntry;
     Gtk::Button camProfOpenButton;
 
+    Gtk::HBox camDCPProfHBox;
+    Gtk::VBox camDCPProfVBox;
+    Gtk::Label camDCPProfLabel;
+    Gtk::Entry camDCPProfFileEntry;
+    Gtk::Button camDCPProfOpenButton;
+
+    CheckBox apply_hue_sat_map_checkbox;
+    CheckBox apply_look_table_checkbox;
+    CheckBox use_tone_curve_checkbox;
+    CheckBox apply_baseline_exposure_offset_checkbox;
+    Gtk::VBox dcp_options_box;
+
     Gtk::HBox gammaModeHBox;
     Gtk::VBox gammaModeVBox;
     Selector gammaModeSelector;
@@ -147,11 +164,25 @@ public:
     Selector outProfileModeSelector;
     Gtk::HBox outProfileModeSelectorBox;
 
+    Selector outProfileTypeSelector;
+    Gtk::HBox outProfileTypeSelectorBox;
+
+    Selector outTRCTypeSelector;
+    Gtk::HBox outTRCTypeSelectorBox;
+
     Gtk::HBox outProfHBox;
     Gtk::VBox outProfVBox;
     Gtk::Label outProfLabel;
     Gtk::Entry outProfFileEntry;
     Gtk::Button outProfOpenButton;
+
+    Gtk::VBox inProfBox, outProfBox;
+    Gtk::Frame inProfFrame, outProfFrame;
+
+
+    CheckBox clip_negative_checkbox;
+    CheckBox clip_overflow_checkbox;
+
 
     double XYZ_to_CAM[3][3], CAM_to_XYZ[3][3];
     float preset_wb[3];
@@ -170,6 +201,8 @@ public:
 
     void on_cam_button_open_clicked();
     void on_cam_filename_changed();
+    void on_cam_dcp_button_open_clicked();
+    void on_cam_dcp_filename_changed();
     void on_out_button_open_clicked();
     void on_out_filename_changed();
 

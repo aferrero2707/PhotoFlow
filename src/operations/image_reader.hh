@@ -45,36 +45,45 @@ namespace PF
   class ImageReaderPar: public OpParBase
   {
     Property<std::string> file_name;
+    // output color profile
+    PropertyBase in_profile_mode;
+    PropertyBase in_profile_type;
+    PropertyBase in_trc_type;
+    Property<std::string> in_profile_name;
+    PropertyBase out_profile_mode;
+    PropertyBase out_profile_type;
+    PropertyBase out_trc_type;
+    Property<std::string> out_profile_name;
+
     VipsImage* image;
     PF::ProcessorBase* convert_format;
-    PF::Processor<PF::BlenderPar,PF::BlenderProc>* blender;
+    PF::ProcessorBase* blender;
 
     std::string current_file;
     VipsBandFormat current_format;
+
+    cmsHPROFILE in_profile;
+    cmsHPROFILE out_profile;
+    cmsHTRANSFORM transform;
 
     RasterImage* raster_image;
 
     ImagePyramid pyramid;
 
   public:
-    ImageReaderPar(): 
-      OpParBase(), 
-      file_name("file_name", this),
-      image(NULL),
-      current_format(VIPS_FORMAT_NOTSET),
-      raster_image( NULL )
-    {
-      convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
-      blender = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
-      set_type("imageread" );
-
-      set_default_name( _("image layer") );
-    }
+    ImageReaderPar();
     ~ImageReaderPar();
+
+    cmsHTRANSFORM get_transform() { return transform; }
 
     std::string get_file_name() { return file_name.get_str(); }
     void set_file_name( const std::string& name ) { file_name.set_str( name ); }
     void set_file_name( const char* name ) { set_file_name( std::string( name ) ); }
+
+    profile_mode_t get_in_profile_mode() { return (profile_mode_t)in_profile_mode.get_enum_value().first; }
+    profile_mode_t get_out_profile_mode() { return (profile_mode_t)out_profile_mode.get_enum_value().first; }
+    profile_type_t get_in_profile_type() { return (profile_type_t)in_profile_type.get_enum_value().first; }
+    profile_type_t get_out_profile_type() { return (profile_type_t)out_profile_type.get_enum_value().first; }
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 
@@ -100,6 +109,28 @@ namespace PF
 		VipsRegion* imap, VipsRegion* omap, 
 		VipsRegion* oreg, OpParBase* par)
     {
+      ImageReaderPar* opar = dynamic_cast<ImageReaderPar*>(par);
+      if( !opar ) return;
+      Rect *r = &oreg->valid;
+      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
+      int width = r->width;
+      int height = r->height;
+
+      T* p;
+      T* pin;
+      T* pout;
+      int x, y;
+
+      for( y = 0; y < height; y++ ) {
+        p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+
+        pin = p;
+        if(opar->get_transform())
+          cmsDoTransform( opar->get_transform(), pin, pout, width );
+        else
+          memcpy( pout, pin, sizeof(T)*line_size );
+      }
     }
   };
 

@@ -33,36 +33,42 @@
 #include "../base/new_operation.hh"
 #include "../base/photoflow.hh"
 
-#include "../gui/operations/raw_developer_config.hh"
-#include "../gui/operations/brightness_contrast_config.hh"
-#include "../gui/operations/hue_saturation_config.hh"
-#include "../gui/operations/hsl_mask_config.hh"
-#include "../gui/operations/imageread_config.hh"
-#include "../gui/operations/raw_loader_config.hh"
-#include "../gui/operations/vips_operation_config.hh"
-#include "../gui/operations/clone_config.hh"
-#include "../gui/operations/crop_config.hh"
-#include "../gui/operations/scale_config.hh"
-#include "../gui/operations/perspective_config.hh"
-#include "../gui/operations/gradient_config.hh"
-#include "../gui/operations/path_mask_config.hh"
-#include "../gui/operations/uniform_config.hh"
-#include "../gui/operations/curves_config.hh"
-#include "../gui/operations/channel_mixer_config.hh"
-#include "../gui/operations/gaussblur_config.hh"
-#include "../gui/operations/denoise_config.hh"
-#include "../gui/operations/desaturate_config.hh"
-#include "../gui/operations/sharpen_config.hh"
-#include "../gui/operations/draw_config.hh"
-#include "../gui/operations/clone_stamp_config.hh"
-#include "../gui/operations/convert_colorspace_config.hh"
-#include "../gui/operations/lensfun_config.hh"
-#include "../gui/operations/volume_config.hh"
-#include "../gui/operations/threshold_config.hh"
-#include "../gui/operations/shadows_highlights_config.hh"
-#include "../gui/operations/defringe_config.hh"
-#include "../gui/operations/split_details_config.hh"
-#include "../gui/operations/wavdec_config.hh"
+#include "../legacy/gui/operations/raw_developer_config.hh"
+#include "../legacy/gui/operations/hue_saturation_config.hh"
+#include "../legacy/gui/operations/brightness_contrast_config.hh"
+#include "operations/raw_developer_config.hh"
+#include "operations/clip_config.hh"
+#include "operations/white_balance_config.hh"
+#include "operations/levels_config.hh"
+#include "operations/basic_adjustments_config.hh"
+#include "operations/hsl_mask_config.hh"
+#include "operations/imageread_config.hh"
+#include "operations/raw_loader_config.hh"
+#include "operations/vips_operation_config.hh"
+#include "operations/clone_config.hh"
+#include "operations/crop_config.hh"
+#include "operations/scale_config.hh"
+#include "operations/perspective_config.hh"
+#include "operations/gradient_config.hh"
+#include "operations/path_mask_config.hh"
+#include "operations/uniform_config.hh"
+#include "operations/curves_config.hh"
+#include "operations/channel_mixer_config.hh"
+#include "operations/gaussblur_config.hh"
+#include "operations/denoise_config.hh"
+#include "operations/desaturate_config.hh"
+#include "operations/sharpen_config.hh"
+#include "operations/draw_config.hh"
+#include "operations/clone_stamp_config.hh"
+#include "operations/convert_colorspace_config.hh"
+#include "operations/lensfun_config.hh"
+#include "operations/volume_config.hh"
+#include "operations/threshold_config.hh"
+#include "operations/shadows_highlights_config.hh"
+#include "operations/defringe_config.hh"
+#include "operations/split_details_config.hh"
+#include "operations/wavdec_config.hh"
+#include "operations/tone_mapping_config.hh"
 
 #include "operations/gmic/new_gmic_operation_config.hh"
 
@@ -90,6 +96,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   opacitySlider2( this, layer->get_blender(), "opacity", _("Opacity"), 100, 0, 100, 1, 10, 100),
   imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
   omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
+  test_padding_enable_box( this, "enable_padding", _("enable padding"), false),
   shift_x( this, layer->get_blender(), "shift_x", _("X shift "), 0, -1000000, 1000000, 1, 10, 1),
   shift_y( this, layer->get_blender(), "shift_y", _("Y shift "), 0, -1000000, 1000000, 1, 10, 1),
   has_ch_sel(chsel),
@@ -97,6 +104,10 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   rgbchSelector( this, "rgb_target_channel", _("Target channel: "), -1 ),
   labchSelector( this, "lab_target_channel", _("Target channel: "), -1 ),
   cmykchSelector( this, "cmyk_target_channel", _("Target channel:"), -1 ),
+  input_source_expander( _("input source") ),
+  input_source_checkbox( this, "previous_layer_is_input", _("process previous layer"), true),
+  layer_list( this, "Layer name:"),
+  sourceSelector( this, "source_channel", "Source channel: ", 1 ),
   previewButton(_("preview")),
   dialog( NULL ),
   frame( NULL ),
@@ -213,6 +224,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
     frame_top_box_3.pack_start( frame_chsel_box, Gtk::PACK_SHRINK, 5 );
   }
   if(par && par->has_opacity() ) {
+    //frame_shift_box.pack_start( test_padding_enable_box, Gtk::PACK_SHRINK, 2 );
     if( par && par->has_target_channel() ) {
       frame_shift_box.pack_start( shift_x, Gtk::PACK_SHRINK, 2 );
       frame_shift_box.pack_start( shift_y, Gtk::PACK_SHRINK, 2 );
@@ -230,7 +242,16 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //controls_box.pack_start( middle_padding, Gtk::PACK_SHRINK, 0 );
   controls_box.pack_start( hline, Gtk::PACK_SHRINK, 5 );
 
+  layer_selector_box.pack_start( input_source_checkbox, Gtk::PACK_SHRINK, 5 );
+  layer_selector_box.pack_start( layer_list, Gtk::PACK_SHRINK, 5 );
+  //layer_selector_box.pack_start( sourceSelector, Gtk::PACK_SHRINK, 5 );
+  input_source_expander.add( layer_selector_box );
+  input_source_expander.set_expanded( false );
+  controls_box.pack_end( input_source_expander, Gtk::PACK_SHRINK, 5 );
+
+  //controls_box.pack_end( layer_selector_checkbox, Gtk::PACK_SHRINK, 5 );
   controls_box.pack_end( hline2, Gtk::PACK_SHRINK, 5 );
+
 
 #ifdef GTKMM_2
   Gdk::Color bg;
@@ -901,6 +922,8 @@ void PF::OperationConfigGUI::do_update()
   //std::cout<<"PF::OperationConfigGUI::do_update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
   update_buttons();
 
+  layer_list.update_model();
+
   bool old_inhibit;
   PF::PFWidget* w;
 
@@ -931,6 +954,11 @@ void PF::OperationConfigGUI::do_update()
   if( get_layer() ) {
     nameEntry.set_text( get_layer()->get_name() );
     nameEntry2.set_text( get_layer()->get_name() );
+  }
+
+  if( get_par() ) {
+    if( get_par()->get_previous_layer_is_input() ) layer_list.hide();
+    else layer_list.show();
   }
 
   // Update target channel selector
@@ -1093,9 +1121,17 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::RawLoaderConfigGUI( current_layer );
 
-  } else if( op_type == "raw_developer" ) {
+  } else if( op_type == "raw_developer_v2" ) {
 
     dialog = new PF::RawDeveloperConfigGUI( current_layer );
+
+  } else if( op_type == "raw_developer" ) {
+
+    dialog = new PF::RawDeveloperConfigGUIV1( current_layer );
+
+  } else if( op_type == "raw_output_v2" ) {
+
+    dialog = new PF::OperationConfigGUI( current_layer, "RAW output" );
 
   } else if( op_type == "raw_output" ) {
 
@@ -1112,6 +1148,14 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "clone" ) {
 
     dialog = new PF::CloneConfigGUI( current_layer );
+
+  } else if( op_type == "clip" ) {
+
+    dialog = new PF::ClipConfigGUI( current_layer );
+
+  } else if( op_type == "white_balance" ) {
+
+    dialog = new PF::WhiteBalanceConfigGUI( current_layer );
 
   } else if( op_type == "crop" ) {
 
@@ -1148,6 +1192,14 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "path_mask" ) {
 
     dialog = new PF::PathMaskConfigGUI( current_layer );
+
+  } else if( op_type == "levels" ) {
+
+    dialog = new PF::LevelsConfigGUI( current_layer );
+
+  } else if( op_type == "basic_adjustments" ) {
+
+    dialog = new PF::BasicAdjustmentsConfigGUI( current_layer );
 
   } else if( op_type == "brightness_contrast" ) {
 
@@ -1216,6 +1268,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "split_details" ) {
 
     dialog = new PF::SplitDetailsConfigGUI( current_layer );
+
+  } else if( op_type == "tone_mapping" ) {
+
+    dialog = new PF::ToneMappingConfigGUI( current_layer );
 
   }
 

@@ -104,8 +104,12 @@ namespace PF
   T RGB2HSLMask( T* RGB, HSLMaskPar* opar, bool inv )
   {
     float h_in, s_in, v_in, l_in;
-    rgb2hsl( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
+    rgb2hsv( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
+    //rgb2hsl( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
     //std::cout<<"in RGB: "<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<"  HSL: "<<h_in<<" "<<s_in<<" "<<l_in<<std::endl;
+
+    if( s_in<0 ) s_in = 0; if( s_in>1 ) s_in = 1;
+    if( l_in<0 ) l_in = 0; if( l_in>1 ) l_in = 1;
 
     unsigned short int hid = static_cast<unsigned short int>( h_in*65535/360 );
     unsigned short int sid = static_cast<unsigned short int>( s_in*65535 );
@@ -116,10 +120,13 @@ namespace PF
     float h_eq2 = opar->eq_enabled[1] ? opar->vec[1][sid] : 1;
     float h_eq3 = opar->eq_enabled[2] ? opar->vec[2][lid] : 1;
 
+    //std::cout<<"opar->vec[2][65535]="<<opar->vec[2][65535]<<std::endl;
+
     float h_eq = MIN3( h_eq1, h_eq2, h_eq3 );
     if( inv ) h_eq = 1.0f - h_eq;
 
     T val = FormatInfo<T>::RANGE*h_eq + FormatInfo<T>::MIN;
+    //std::cout<<"  lid: "<<lid<<"   h_eq3: "<<h_eq3<<"   h_eq: "<<h_eq<<"   val: "<<val<<std::endl;
     return val;
   }
 

@@ -80,10 +80,3 @@ VipsImage* PF::UnsharpMaskPar::build(std::vector<VipsImage*>& in, int first,
 
 	return out;
 }
-
-
-PF::ProcessorBase* PF::new_unsharp_mask()
-{
-  return ( new PF::Processor<PF::UnsharpMaskPar,PF::UnsharpMask>() );
-}
-

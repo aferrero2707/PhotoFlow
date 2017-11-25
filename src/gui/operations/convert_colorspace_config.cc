@@ -35,19 +35,54 @@
 
 PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Convert to profile" ),
-  outProfileModeSelector( this, "profile_mode", "working profile: ", 1 ),
+  outProfileModeSelector( this, "profile_mode", _("type: "), 1 ),
+  outProfileTypeSelector( this, "profile_type", _("gamut: "), 1 ),
+  outTRCTypeSelector( this, "trc_type", _("encoding: "), 1 ),
+  intentSelector( this, "rendering_intent", _("intent: "), 1 ),
+  clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
+  clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
+  bpcButton( this, "bpc", _("black point compensation"), false ),
+  adaptationStateSlider( this, "adaptation_state", _("adapt. state"), 0, 0, 1, 0.01, 0.05, 1 ),
+  gamutWarningButton( _("gamut warning") ),
+  assignButton( this, "assign", _("assign profile"), false ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
 
   outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
-  outProfLabel.set_text( "output profile name:" );
+  //outProfileTypeSelectorBox.pack_start( outProfileTypeSelector, Gtk::PACK_SHRINK );
+  //outputControlsBox.pack_start( outProfileTypeSelectorBox, Gtk::PACK_SHRINK );
+
+  outTRCTypeSelectorBox.pack_start( outTRCTypeSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( outTRCTypeSelectorBox, Gtk::PACK_SHRINK );
+
+  outProfLabel.set_text( _("working profile name:") );
   outProfVBox.pack_start( outProfLabel );
   outProfVBox.pack_start( outProfFileEntry );
   outProfHBox.pack_start( outProfVBox );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfHBox );
+
+  intentSelectorBox.pack_start( intentSelector, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( intentSelectorBox, Gtk::PACK_SHRINK );
+
+  clip_negative_box.pack_start( clip_negative_checkbox, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( clip_negative_box, Gtk::PACK_SHRINK );
+  clip_overflow_box.pack_start( clip_overflow_checkbox, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( clip_overflow_box, Gtk::PACK_SHRINK );
+
+  bpcButtonBox.pack_start( bpcButton, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( bpcButtonBox, Gtk::PACK_SHRINK );
+
+  adaptationStateBox.pack_end( adaptationStateSlider, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( adaptationStateBox, Gtk::PACK_SHRINK );
+
+  assignButtonBox.pack_start( assignButton, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( assignButtonBox, Gtk::PACK_SHRINK );
+
+  gamutWarningButtonBox.pack_start( gamutWarningButton, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( gamutWarningButtonBox, Gtk::PACK_SHRINK );
 
   add_widget( outputControlsBox );
 
@@ -56,11 +91,56 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
     connect(sigc::mem_fun(*this,
 			  &ConvertColorspaceConfigGUI::on_out_filename_changed));
   outProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
-							   &ConvertColorspaceConfigGUI::on_out_button_open_clicked) );
+                 &ConvertColorspaceConfigGUI::on_out_button_open_clicked) );
+
+  gamutWarningButton.signal_clicked().connect(sigc::mem_fun(*this,
+                 &ConvertColorspaceConfigGUI::on_gamut_warning_toggled) );
 
   get_main_box().show_all_children();
 }
 
+
+
+void PF::ConvertColorspaceConfigGUI::open()
+{
+  PF::OpParBase* par = get_par();
+  PF::ConvertColorspacePar* ccpar = dynamic_cast<PF::ConvertColorspacePar*>( par );
+  if( ccpar ) {
+    outProfFileEntry.set_text( ccpar->get_out_profile_name() );
+  }
+  OperationConfigGUI::open();
+}
+
+
+
+void PF::ConvertColorspaceConfigGUI::do_update()
+{
+  PF::OpParBase* par = get_par();
+  PF::ConvertColorspacePar* ccpar = dynamic_cast<PF::ConvertColorspacePar*>( par );
+  if( ccpar ) {
+    if( ccpar->get_out_profile_type() == PF::PROF_TYPE_FROM_SETTINGS ) {
+      //outProfileTypeSelectorBox.hide();
+      outTRCTypeSelectorBox.hide();
+      outProfHBox.hide();
+    } else if( ccpar->get_out_profile_type() == PF::PROF_TYPE_FROM_DISK ) {
+      //outProfileTypeSelectorBox.hide();
+      outTRCTypeSelectorBox.hide();
+      outProfHBox.show();
+    } else {//if( ccpar->get_out_profile_mode() == PF::PROF_MODE_CUSTOM ) {
+      //outProfileTypeSelectorBox.show();
+      outTRCTypeSelectorBox.show();
+      outProfHBox.hide();
+    }
+
+    if( ccpar->get_intent() == INTENT_ABSOLUTE_COLORIMETRIC ) {
+      adaptationStateBox.show();
+    } else {
+      adaptationStateBox.hide();
+    }
+  }
+
+  OperationConfigGUI::do_update();
+}
 
 
 void PF::ConvertColorspaceConfigGUI::on_out_button_open_clicked()
@@ -73,6 +153,9 @@ void PF::ConvertColorspaceConfigGUI::on_out_button_open_clicked()
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
+  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_icc_folder();
+  if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
+
   //Show the dialog and wait for a user response:
   int result = dialog.run();
 
@@ -81,6 +164,9 @@ void PF::ConvertColorspaceConfigGUI::on_out_button_open_clicked()
   case(Gtk::RESPONSE_OK): 
     {
       std::cout << "Open clicked." << std::endl;
+
+      last_dir = dialog.get_current_folder();
+      PF::PhotoFlow::Instance().get_options().set_last_visited_icc_folder( last_dir );
 
       //Notice that this is a std::string, not a Glib::ustring.
       std::string filename = dialog.get_filename();
@@ -115,13 +201,29 @@ void PF::ConvertColorspaceConfigGUI::on_out_filename_changed()
     std::cout<<"New output profile name: "<<filename<<std::endl;
     PF::ConvertColorspacePar* par = 
       dynamic_cast<PF::ConvertColorspacePar*>(get_layer()->get_processor()->get_par());
-    if( !par )
-      return;
+    if( !par ) return;
     PropertyBase* prop = par->get_property( "profile_name" );
-    if( !prop ) 
-      return;
+    if( !prop ) return;
     prop->update( filename );
     get_layer()->set_dirty( true );
+    std::cout<<"  updating image"<<std::endl;
+    get_layer()->get_image()->update();
+  }
+}
+
+
+
+void PF::ConvertColorspaceConfigGUI::on_gamut_warning_toggled()
+{
+  if( get_layer() && get_layer()->get_image() &&
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+
+    PF::ConvertColorspacePar* par =
+      dynamic_cast<PF::ConvertColorspacePar*>(get_layer()->get_processor()->get_par());
+    if( !par ) return;
+    par->set_gamut_warning( gamutWarningButton.get_active() );
+
     std::cout<<"  updating image"<<std::endl;
     get_layer()->get_image()->update();
   }

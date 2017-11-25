@@ -26,8 +26,9 @@
 
 
 #include "../base/imageprocessor.hh"
-#include "../base/print_display_profile.hh"
+#include "../operations/operations.hh"
 #include "../operations/icc_transform.hh"
+#include "../operations/convert_colorspace.hh"
 #include "imagearea.hh"
 
 
@@ -52,19 +53,9 @@ extern "C" {
 #endif /*__cplusplus*/
 
 
-/* We need C linkage for this.
- */
-#ifdef __cplusplus
-extern "C" {
-#endif /*__cplusplus*/
-
-#include "../external/darktable/src/common/colorspaces.h"
-//#include "../base/colorspaces.h"
-
-#ifdef __cplusplus
-}
-#endif /*__cplusplus*/
-
+#ifndef NDEBUG
+#define DEBUG_DISPLAY
+#endif
 
 //#define OPTIMIZE_SCROLLING
 
@@ -196,10 +187,18 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   yoffset( 0 ),
   pending_pixels( 0 ),
   draw_requested( false ),
+  softproof_enabled( false ),
   current_display_profile_type( PF_DISPLAY_PROF_MAX ),
   current_display_profile( NULL ),
   highlights_warning_enabled( false ),
   shadows_warning_enabled( false ),
+  softproof_bpc_enabled( false ),
+  sim_black_ink_enabled( false ),
+  sim_paper_color_enabled( false ),
+  gamut_warning_enabled( false ),
+  softproof_clip_negative_enabled( true ),
+  softproof_clip_overflow_enabled( true ),
+  adaptation_state(1),
   display_merged( true ),
   display_mask( false ),
   displayed_layer( -1 ),
@@ -215,16 +214,20 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   mask = NULL;
   mask_region = NULL;
   //convert2display = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
+  softproof_conversion = new_convert_colorspace();
   convert2display = new_icc_transform();
-  uniform = new PF::Processor<PF::UniformPar,PF::Uniform>();
+  uniform = new_uniform();
   if( uniform->get_par() ) {
-    uniform->get_par()->get_R().set( 1 );
-    uniform->get_par()->get_G().set( 0 );
-    uniform->get_par()->get_B().set( 0 );
+    PF::UniformPar* uniform_par = dynamic_cast<PF::UniformPar*>( uniform->get_par() );
+    if( uniform_par ) {
+      uniform_par->get_R().set( 1 );
+      uniform_par->get_G().set( 0 );
+      uniform_par->get_B().set( 0 );
+    }
   }
-  maskblend = new PF::Processor<PF::BlenderPar,PF::BlenderProc>();
-  invert = new PF::Processor<PF::InvertPar,PF::Invert>();
-  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  maskblend = new_blender();
+  invert = new_invert();
+  convert_format = new_convert_format();
   clipping_warning = new_clipping_warning();
 
   set_size_request( 1, 1 );
@@ -437,6 +440,19 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
     return current_pxbuf;
   }
 
+  unsigned int level = get_pipeline()->get_level();
+  float zoom_fact = 1.0f;
+  for( unsigned int i = 0; i < level; i++ )
+    zoom_fact /= 2.0f;
+  zoom_fact *= get_shrink_factor();
+
+  // Resize the output buffer to match the input one
+  temp_buffer.resize( double_buffer.get_active().get_rect() );
+
+  // Copy pixel data from input to outout
+  temp_buffer.copy( double_buffer.get_active() );
+  current_pxbuf = temp_buffer.get_pxbuf();
+
   //std::cout<<"ImageArea::modify_preview() called. edited_layer="<<edited_layer<<std::endl;
   if( edited_layer >= 0 ) {
     PF::Image* image = get_pipeline()->get_image();
@@ -448,11 +464,6 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
         PF::OperationConfigUI* ui = layer->get_processor()->get_par()->get_config_ui();
         PF::OperationConfigGUI* config = dynamic_cast<PF::OperationConfigGUI*>( ui );
         if( config && config->get_editing_flag() == true ) {
-          unsigned int level = get_pipeline()->get_level();
-          float zoom_fact = 1.0f;
-          for( unsigned int i = 0; i < level; i++ )
-            zoom_fact /= 2.0f;
-          zoom_fact *= get_shrink_factor();
           //std::cout<<"Calling config->modify_preview()"<<std::endl;
           if( config->modify_preview(double_buffer.get_active(), temp_buffer, zoom_fact, xoffset, yoffset) )
             current_pxbuf = temp_buffer.get_pxbuf();
@@ -460,7 +471,13 @@ Glib::RefPtr< Gdk::Pixbuf > PF::ImageArea::modify_preview()
       }
     }
   }
-  //std::cout<<"ImageArea::modify_preview() finished."<<std::endl;
+
+  //std::cout<<"ImageArea::modify_preview() called. samplers="<<samplers<<std::endl;
+  if( samplers ) {
+    for(int i = 0; i < samplers->get_sampler_num(); i++) {
+      samplers->get_sampler(i).modify_preview(temp_buffer, zoom_fact, xoffset, yoffset);
+    }
+  }
 
   return current_pxbuf;
 }
@@ -1089,43 +1106,46 @@ void PF::ImageArea::update( VipsRect* area )
   PF_UNREF( image, "ImageArea::update() image unref after clipping warning" );
   /**/
 
+  std::cout<<"ImageArea::update(): embedded profile:"<<std::endl;
+  print_embedded_profile( wclipimg );
+
   // Display profile management
+  cmsHPROFILE icc_display_profile;
   PF::Options& options = PF::PhotoFlow::Instance().get_options();
   if( options.get_display_profile_type() != current_display_profile_type ||
       options.get_custom_display_profile_name().c_str() != current_display_profile_name ) {
-
-    if( current_display_profile_type==PF_DISPLAY_PROF_CUSTOM && current_display_profile ) {
-      cmsCloseProfile( current_display_profile );
-    }
 
     current_display_profile_type = options.get_display_profile_type();
     current_display_profile_name = options.get_custom_display_profile_name().c_str();
 
     //std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
     switch( current_display_profile_type ) {
-    case PF_DISPLAY_PROF_sRGB:
-      current_display_profile = dt_colorspaces_create_srgb_profile();
+    case PF_DISPLAY_PROF_sRGB: {
+      current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_STANDARD );
+      icc_display_profile = current_display_profile->get_profile();
       char tstr[1024];
-      cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-      #ifndef NDEBUG
+      cmsGetProfileInfoASCII(icc_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+  #ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
-      #endif
+  #endif
       break;
+    }
     case PF_DISPLAY_PROF_CUSTOM:
-      current_display_profile =
-          cmsOpenProfileFromFile( options.get_custom_display_profile_name().c_str(), "r" );
+      current_display_profile = PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() );
+      icc_display_profile = current_display_profile->get_profile();
       //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
       //    <<" -> "<<current_display_profile<<std::endl;
       break;
     case PF_DISPLAY_PROF_SYSTEM: {
 #ifdef __APPLE__
-      current_display_profile = PF::get_display_ICC_profile();
+      current_display_profile = PF::ICCStore::Instance().get_system_monitor_profile();
       if( !current_display_profile ) {
         std::cout<<"ImageArea::update(): system display profile not set, reverting to sRGB"<<std::endl;
-        current_display_profile = dt_colorspaces_create_srgb_profile();
+        current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_STANDARD );
       }
+      icc_display_profile = current_display_profile->get_profile();
       char tstr[1024];
-      cmsGetProfileInfoASCII(current_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      cmsGetProfileInfoASCII(icc_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
   #ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
   #endif
@@ -1135,11 +1155,44 @@ void PF::ImageArea::update( VipsRect* area )
     default: break;
     }
   }
+
+  std::cout<<"ImageArea::update(): softproof_enabled="<<softproof_enabled<<std::endl;
+  if( softproof_enabled ) {
+    PF::ConvertColorspacePar* cc_par =
+        dynamic_cast<PF::ConvertColorspacePar*>( softproof_conversion->get_par() );
+    if( cc_par ) {
+      cc_par->set_gamut_warning( gamut_warning_enabled );
+      cc_par->set_clip_negative( softproof_clip_negative_enabled );
+      cc_par->set_clip_overflow( softproof_clip_overflow_enabled );
+      cc_par->set_bpc(softproof_bpc_enabled);
+    }
+    softproof_conversion->get_par()->set_image_hints( wclipimg );
+    softproof_conversion->get_par()->set_format( get_pipeline()->get_format() );
+    in.clear(); in.push_back( wclipimg );
+    VipsImage* tmpimg = softproof_conversion->get_par()->build(in, 0, NULL, NULL, level );
+    PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref after softproof_conversion" );
+    wclipimg = tmpimg;
+  }
+
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
   //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
-  if( icc_par ) {
-    //std::cout<<"ImageArea::update(): setting display profile: "<<current_display_profile<<std::endl;
+  if( icc_par && current_display_profile ) {
+    //std::cout<<"ImageArea::update(): setting display profile: PhF profile="<<current_display_profile
+    //    <<"  ICC profile="<<icc_display_profile<<std::endl;
     icc_par->set_out_profile( current_display_profile );
+  }
+  icc_par->set_intent( options.get_display_profile_intent() );
+  icc_par->set_bpc( options.get_display_profile_bpc() );
+  icc_par->set_adaptation_state( 1.0 );
+  //icc_par->set_bpc( true );
+  if( softproof_enabled && sim_paper_color_enabled ) {
+    icc_par->set_intent( INTENT_ABSOLUTE_COLORIMETRIC );
+    icc_par->set_bpc( false );
+    icc_par->set_adaptation_state( adaptation_state );
+  } else if( softproof_enabled && sim_black_ink_enabled ) {
+    icc_par->set_intent( INTENT_RELATIVE_COLORIMETRIC );
+    icc_par->set_bpc( false );
+    //icc_par->set_adaptation_state( adaptation_state );
   }
   convert2display->get_par()->set_image_hints( wclipimg );
   convert2display->get_par()->set_format( get_pipeline()->get_format() );
@@ -1195,10 +1248,15 @@ void PF::ImageArea::update( VipsRect* area )
       //g_object_unref( srgbimg );
       //g_object_unref( mapinverted );
 
-      maskblend->get_par()->set_image_hints( srgbimg );
-      maskblend->get_par()->set_format( get_pipeline()->get_format() );
-      maskblend->get_par()->set_blend_mode( PF::PF_BLEND_NORMAL );
-      maskblend->get_par()->set_opacity( 0.8 );
+      PF::set_icc_profile( redimage, current_display_profile );
+
+      PF::BlenderPar* maskblend_par = dynamic_cast<PF::BlenderPar*>( maskblend->get_par() );
+      if( maskblend_par ) {
+        maskblend_par->set_image_hints( srgbimg );
+        maskblend_par->set_format( get_pipeline()->get_format() );
+        maskblend_par->set_blend_mode( PF::PF_BLEND_NORMAL );
+        maskblend_par->set_opacity( 0.8 );
+      }
       in.clear(); 
       in.push_back( srgbimg );
       in.push_back( redimage );
@@ -1206,7 +1264,13 @@ void PF::ImageArea::update( VipsRect* area )
       std::cout<<"ImageArea::update(): srgbimg->Xsize="<<srgbimg->Xsize<<"    srgbimg->Ysize="<<srgbimg->Ysize<<std::endl;    
       std::cout<<"ImageArea::update(): redimage->Xsize="<<redimage->Xsize<<"    redimage->Ysize="<<redimage->Ysize<<std::endl;    
 #endif      
+#ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): building maskblend operation..."<<std::endl;
+#endif
       VipsImage* blendimage = maskblend->get_par()->build(in, 0, NULL, mapinverted, level );
+#ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): ... maskblend done"<<std::endl;
+#endif
       PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
       PF_UNREF( mapinverted, "ImageArea::update() mapinverted unref" );
       PF_UNREF( redimage, "ImageArea::update() redimage unref" );
@@ -1215,7 +1279,7 @@ void PF::ImageArea::update( VipsRect* area )
     }
   }
 
-
+/*
   in.clear();
   in.push_back( srgbimg );
   convert_format->get_par()->set_image_hints( srgbimg );
@@ -1223,6 +1287,8 @@ void PF::ImageArea::update( VipsRect* area )
   outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
   //g_object_unref( srgbimg );
   PF_UNREF( srgbimg, "ImageArea::update() srgbimg unref" );
+*/
+  outimg = srgbimg;
 #ifndef NDEBUG
   std::cout<<"ImageArea::update(): srgbimg="<<srgbimg<<"   ref_count="<<G_OBJECT( srgbimg )->ref_count<<std::endl;
 #endif
@@ -1237,18 +1303,16 @@ void PF::ImageArea::update( VipsRect* area )
   std::cout<<"PF::ImageArea::update(): vips_sink_screen() called"<<std::endl;
 #endif
 #ifdef DEBUG_DISPLAY
-  std::cout<<"ImageArea::update(): Image size: "<<outimg->Xsize<<","
+  std::cout<<"Image size: "<<outimg->Xsize<<","
 					 <<outimg->Ysize<<std::endl;
-  std::cout<<"ImageArea::update(): Shrink factor: "<<shrink_factor<<std::endl;
+  std::cout<<"Shrink factor: "<<shrink_factor<<std::endl;
 #endif
 
 	if( shrink_factor != 1 ) {
 		VipsImage* outimg2;
-//		if( vips_shrink( outimg, &outimg2,
-//												 1.0/shrink_factor, 1.0/shrink_factor, NULL ) ) {
-//	    std::cout<<std::endl<<std::endl<<"vips_shrink() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
-//	    return;
-//		}
+		//if( vips_shrink( outimg, &outimg2, 
+		//										 1.0d/shrink_factor, 1.0d/shrink_factor, NULL ) )
+//	return;
 //    if( vips_affine( outimg, &outimg2,
 //                     shrink_factor, 0, 0, shrink_factor, NULL ) )
 //      return;
@@ -1260,8 +1324,7 @@ void PF::ImageArea::update( VipsRect* area )
 #ifdef DEBUG_DISPLAY
 		std::cout<<"ImageArea::update(): before vips_resize()"<<std::endl;
 #endif
-    std::cout<<"ImageArea::update(): shrink_factor="<<shrink_factor<<std::endl;
-		if( vips_resize( outimg, &outimg2, shrink_factor, "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
+		if( vips_resize( outimg, &outimg2, shrink_factor, NULL) ) {
       std::cout<<std::endl<<std::endl<<"vips_resize() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
       return;
     }
@@ -1449,12 +1512,7 @@ void PF::ImageArea::sink( const VipsRect& area )
 {
 #ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::sink( const VipsRect& area ) called"<<std::endl;
-  std::cout<<"area="<<area.left<<","<<area.top<<"+"<<area.width<<"+"<<area.height<<std::endl;
-#endif
-#ifdef DEBUG_DISPLAY
-  std::cout<<"ImageArea::sink(): Image size: "<<outimg->Xsize<<","
-      <<outimg->Ysize<<std::endl;
-  std::cout<<"ImageArea::sink(): Shrink factor: "<<shrink_factor<<std::endl;
+    std::cout<<"area="<<area.left<<","<<area.top<<"+"<<area.width<<"+"<<area.height<<std::endl;
 #endif
 
   PF::Pipeline* pipeline = get_pipeline();
@@ -1465,7 +1523,6 @@ void PF::ImageArea::sink( const VipsRect& area )
   for( unsigned int i = 0; i < level; i++ )
     fact /= 2.0f;
   fact *= shrink_factor;
-  std::cout<<"ImageArea::sink(): total factor: "<<fact<<std::endl;
 
   VipsRect scaled_area;
   scaled_area.left = area.left * fact;
@@ -1474,7 +1531,6 @@ void PF::ImageArea::sink( const VipsRect& area )
   scaled_area.height = area.height * fact + 1;
 
   //vips_image_invalidate_all( pipeline->get_output() );
-  //vips_image_invalidate_all( display_image );
 
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update( area ): called"<<std::endl;

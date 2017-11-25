@@ -53,6 +53,7 @@ class GradientPar: public OpParBase
 {
   PropertyBase gradient_type;
   Property<bool> invert;
+  Property<bool> perceptual;
   Property<float> gradient_center_x;
   Property<float> gradient_center_y;
 
@@ -74,10 +75,13 @@ class GradientPar: public OpParBase
 
   Property<SplineCurve> hmod, vmod;
 
+  ICCProfile* icc_data;
+
   ProcessorBase* curve;
 
 public:
   float* modvec;
+  float trc_vec[65536];
 
   GradientPar();
 
@@ -138,12 +142,13 @@ render(VipsRegion** ir, int n, int in_first,
     for( y = 0; y < r->height; y++ ) {
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
       float fval = static_cast<float>(height - r->top - y)/height;
-      float fval2;
-      //std::cout<<"y="<<y+r->top<<" ("<<y<<")"<<std::endl;
+      float fval2, fval3;
       for( x = 0, pos = 0; x < r->width; x++, pos+=bands) {
         fval2 = MIN( MAX(fval+par->modvec[r->left+x]-0.5f,0), 1 );
         if( par->get_invert() == true ) fval2 = 1.0f - fval2;
-        T val = static_cast<T>( fval2*FormatInfo<T>::RANGE + FormatInfo<T>::MIN );
+        fval3 = par->trc_vec[(int)(fval2*65535)];
+        //std::cout<<"fval2="<<fval2<<"  par->trc_vec["<<(int)(fval2*65535)<<"]="<<par->trc_vec[(int)fval2*65535]<<std::endl;
+        T val = static_cast<T>( fval3*FormatInfo<T>::RANGE + FormatInfo<T>::MIN );
         for( c = 0; c < bands; c++ )
           pout[pos+c] = val;
       }
@@ -180,16 +185,17 @@ render(VipsRegion** ir, int n, int in_first,
     }
     for( y = 0; y < r->height; y++ ) {
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+      //std::cout<<"  y="<<r->top+y<<" ("<<y<<")  val="<<(int)val<<std::endl;
       for( x = 0, pos = 0; x < r->width; ++x, pos+=bands ) {
         fval = MIN( MAX(valvec[x]+par->modvec[r->top+y]-0.5f,0), 1 );
-        val = (T)(fval*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
-        if(false && y==0) std::cout<<"  x="<<r->left+x<<" ("<<x<<")  fval="<<fval<<"  val="<<val<<std::endl;
+        fval2 = par->trc_vec[(int)(fval*65535)];
+        val = (T)(fval2*FormatInfo<T>::RANGE + FormatInfo<T>::MIN);
         for( c = 0; c < bands; c++ )
           pout[pos+c] = val;
       }
     }
 
-    delete[] valvec;
+    delete valvec;
     break;
   }
   case GRADIENT_RADIAL:

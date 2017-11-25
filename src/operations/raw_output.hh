@@ -41,6 +41,8 @@
 //#include "../rt/iccmatrices.hh"
 #include "../external/darktable/src/common/srgb_tone_curve_values.h"
 
+#include "../rt/rtengine/dcp.h"
+
 #include "raw_image.hh"
 
 //#define CLIPRAW(a) ((a)>0.0?((a)<1.0?(a):1.0):0.0)
@@ -61,27 +63,11 @@ enum exposure_mode_t {
 };
 
 
-enum hlreco_mode_t {
-  HLRECO_NONE,
-  HLRECO_CLIP,
-  HLRECO_BLEND
-};
-
-
  enum input_profile_mode_t {
     IN_PROF_NONE,
     IN_PROF_MATRIX,
-    IN_PROF_ICC
-  }; 
-
-
-  enum output_profile_mode_t {
-    OUT_PROF_NONE,
-    OUT_PROF_sRGB,
-    OUT_PROF_ADOBE,
-    OUT_PROF_PROPHOTO,
-    OUT_PROF_LAB,
-    OUT_PROF_CUSTOM
+    IN_PROF_ICC,
+    IN_PROF_DCP
   }; 
 
 
@@ -117,7 +103,7 @@ enum hlreco_mode_t {
     Property<float> exposure;
     PropertyBase exposure_mode;
     Property<float> exposure_clip_amount;
-    PropertyBase hlreco_mode;
+    hlreco_mode_t hlreco_mode;
 
     float wb_red_current, wb_green_current, wb_blue_current, exposure_current;
 
@@ -131,7 +117,24 @@ enum hlreco_mode_t {
     // Either from xyz_cam or from icc 
     Property<std::string> cam_profile_name;
     std::string current_cam_profile_name;
-    cmsHPROFILE cam_profile;
+    //cmsHPROFILE cam_profile;
+    PF::ICCProfile* cam_profile;
+
+    Property<std::string> cam_dcp_profile_name;
+    std::string current_cam_dcp_profile_name;
+    rtengine::DCPProfile* cam_dcp_profile;
+    std::vector<rtengine::DCPProfile::HsbModify> delta_base;
+    rtengine::DCPProfile::HsdTableInfo delta_info;
+    std::vector<rtengine::DCPProfile::HsbModify> look_table;
+    rtengine::DCPProfile::HsdTableInfo look_info;
+
+    float prophoto_cam[3][3];
+    Property<bool> apply_hue_sat_map;
+    Property<bool> apply_look_table;
+    Property<bool> use_tone_curve;
+    Property<bool> apply_baseline_exposure_offset;
+
+    float dcp_exp_scale;
 
     // Input gamma 
     PropertyBase gamma_mode;
@@ -140,12 +143,18 @@ enum hlreco_mode_t {
 
     // output color profile
     PropertyBase out_profile_mode;
-    output_profile_mode_t current_out_profile_mode;
+    PropertyBase out_profile_type;
+    PropertyBase out_trc_type;
+    profile_type_t current_out_profile_type;
+    TRC_type current_out_trc_type;
     Property<std::string> out_profile_name;
     std::string current_out_profile_name;
-    cmsHPROFILE out_profile;
+    //cmsHPROFILE out_profile;
+    PF::ICCProfile* out_profile;
 
     cmsHTRANSFORM transform;
+
+    Property<bool> clip_negative, clip_overflow;
 
   public:
 
@@ -159,24 +168,60 @@ enum hlreco_mode_t {
       wb_red_current = r;
       wb_green_current = g;
       wb_blue_current = b;
-#ifndef NDEBUG
-      std::cout<<"RawPreprocessorPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
-#endif
+      std::cout<<"RawOutputPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
     }
 
     float get_exposure() { return exposure.get(); }
 
-    hlreco_mode_t get_hlreco_mode() { return (hlreco_mode_t)hlreco_mode.get_enum_value().first; }
+    void set_hlreco_mode(hlreco_mode_t m) { hlreco_mode = m; }
+    hlreco_mode_t get_hlreco_mode() { return hlreco_mode; }
 
     input_profile_mode_t get_camera_profile_mode() { return (input_profile_mode_t)profile_mode.get_enum_value().first; }
     input_gamma_mode_t get_gamma_mode() { return (input_gamma_mode_t)gamma_mode.get_enum_value().first; }
     cmsToneCurve* get_gamma_curve() { return gamma_curve; }
     cmsToneCurve* get_srgb_curve() { return srgb_curve; }
     cmsHTRANSFORM get_transform() { return transform; }
+    TRC_type get_trc_type() { return (TRC_type)out_trc_type.get_enum_value().first; }
 
-    void set_image_hints( VipsImage* img );
+    const std::vector<rtengine::DCPProfile::HsbModify>& get_delta_base() { return delta_base; }
+    const rtengine::DCPProfile::HsdTableInfo& get_delta_info() { return delta_info; }
 
-    int get_out_profile_mode() { return out_profile_mode.get_enum_value().first; }
+    const std::vector<rtengine::DCPProfile::HsbModify>& get_look_table() { return look_table; }
+    const rtengine::DCPProfile::HsdTableInfo& get_look_info() { return look_info; }
+
+    typedef float _matrix3x3[3][3];
+    void get_prophoto_cam_dcp( _matrix3x3& m ) {
+      m[0][0] = prophoto_cam[0][0];
+      m[0][1] = prophoto_cam[0][1];
+      m[0][2] = prophoto_cam[0][2];
+      m[1][0] = prophoto_cam[1][0];
+      m[1][1] = prophoto_cam[1][1];
+      m[1][2] = prophoto_cam[1][2];
+      m[2][0] = prophoto_cam[2][0];
+      m[2][1] = prophoto_cam[2][1];
+      m[2][2] = prophoto_cam[2][2];
+    }
+    bool get_apply_hue_sat_map() { return( apply_hue_sat_map.get() && !delta_base.empty() ); }
+    bool get_apply_look_table() { return( apply_look_table.get() && !look_table.empty() ); }
+    bool get_use_tone_curve() { return( use_tone_curve.get() && cam_dcp_profile && cam_dcp_profile->getHasToneCurve() ); }
+    bool get_apply_baseline_exposure_offset() { return( apply_baseline_exposure_offset.get() && cam_dcp_profile && cam_dcp_profile->getHasBaselineExposureOffset() ); }
+    float get_dcp_exp_scale() { return dcp_exp_scale; }
+
+    bool get_clip_negative() { return clip_negative.get(); }
+    bool get_clip_overflow() { return clip_overflow.get(); }
+
+    void apply_dcp_tone_curve( float& r, float& g, float& b )
+    {
+      if( cam_dcp_profile && cam_dcp_profile->getHasToneCurve() )
+        cam_dcp_profile->get_tone_curve().Apply(r, g, b);
+    }
+
+    void set_image_hints( VipsImage* img )
+    {
+      if( !img ) return;
+      OpParBase::set_image_hints( img );
+      rgb_image( get_xsize(), get_ysize() );
+    }
 
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 
@@ -401,8 +446,12 @@ enum hlreco_mode_t {
         mul[i] /= max_mul;
         sat[i] = mul[i];
       }
-      float sat_min = min_mul/max_mul;
-      float mul_corr = max_mul/min_mul;
+      float sat_min = 1;
+      float mul_corr = 1;
+      if( opar->get_hlreco_mode() != HLRECO_CLIP ) {
+        sat_min = min_mul/max_mul;
+        mul_corr = max_mul/min_mul;
+      }
       //exposure = exposure * mul_corr;
       for( int i = 0; i < 3; i++ ) {
         satcorr[i] = sat[i]*mul_corr;
@@ -429,6 +478,18 @@ enum hlreco_mode_t {
         }
       }
       std::cout<<"("<<r->left<<","<<r->top<<"): max = "<<max[0]<<"  "<<max[1]<<"  "<<max[2]<<std::endl;
+      */
+
+      float pro_photo[3][3];
+      opar->get_prophoto_cam_dcp(pro_photo);
+      /*
+      std::cout<<"pro_photo:"<<std::endl;
+      for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+          std::cout<<pro_photo[i][j]<<" ";
+        }
+        std::cout<<std::endl;
+      }
       */
 
       for( y = 0; y < height; y++ ) {
@@ -498,14 +559,6 @@ enum hlreco_mode_t {
               std::cout<<"in: "<<line[0]<<","<<line[1]<<","<<line[2]<<"   ";
               std::cout<<"out: "<<pout[0]<<","<<pout[1]<<","<<pout[2]<<"   "<<std::endl;
             }
-
-            if( opar->get_out_profile_mode() == OUT_PROF_LAB ) {
-              for( x = 0; x < line_size; x+= 3 ) {
-                pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
-                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0) / 256.0);
-                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 256.0);
-              }
-            }
           } else {
             memcpy( pout, line, sizeof(float)*line_size );
             for( int xi = 0; xi < line_size; xi++ ) {
@@ -521,14 +574,70 @@ enum hlreco_mode_t {
             cmsDoTransform( opar->get_transform(), line2, pout, width );
             //std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
             //    <<pout[0]<<","<<pout[1]<<","<<pout[2]<<std::endl;
+          } else {
+            memcpy( pout, line, sizeof(float)*line_size );
+          }
+        } else if( opar->get_camera_profile_mode() == IN_PROF_DCP ) {
+          if(opar->get_transform()) {
+            float newr, newg, newb, h, s, v;
 
-            if( opar->get_out_profile_mode() == OUT_PROF_LAB ) {
-              for( x = 0; x < line_size; x+= 3 ) {
-                pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
-                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0) / 256.0);
-                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 256.0);
+            for( int xi = 0; xi < line_size; xi++ ) {
+              line2[xi] = CLIPRAW(line[xi]);
+            }
+            if( r->top==0 && r-> left==0 && y<4 ) {
+              std::cout<<"opar->get_apply_hue_sat_map()="<<opar->get_apply_hue_sat_map()
+                      <<" opar->get_delta_base().empty()="<<opar->get_delta_base().empty()
+                      <<" opar->get_apply_look_table()="<<opar->get_apply_look_table()
+                      <<" opar->get_use_tone_curve()="<<opar->get_use_tone_curve()
+                  <<std::endl;
+            }
+            if( opar->get_apply_hue_sat_map() || opar->get_apply_look_table() || opar->get_use_tone_curve() ) {
+              for( int xi = 0; xi < line_size; xi+=3 ) {
+                newr = pro_photo[0][0] * line2[xi] + pro_photo[0][1] * line2[xi+1] + pro_photo[0][2] * line2[xi+2];
+                newg = pro_photo[1][0] * line2[xi] + pro_photo[1][1] * line2[xi+1] + pro_photo[1][2] * line2[xi+2];
+                newb = pro_photo[2][0] * line2[xi] + pro_photo[2][1] * line2[xi+1] + pro_photo[2][2] * line2[xi+2];
+                // If point is in negative area, just the matrix, but not the LUT. This is checked inside Color::rgb2hsvdcp
+                if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                  std::cout<<"newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
+                if( opar->get_apply_baseline_exposure_offset() ) {
+                  newr *= opar->get_dcp_exp_scale();
+                  newg *= opar->get_dcp_exp_scale();
+                  newb *= opar->get_dcp_exp_scale();
+                }
+                if(rtengine::Color::rgb2hsvdcp(newr*65535.f, newg*65535.f, newb*65535.f, h , s, v)) {
+                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                    std::cout<<"  h="<<h<<" s="<<s<<" v="<<v<<std::endl;
+                  if( opar->get_apply_hue_sat_map() )
+                    hsdApply(opar->get_delta_info(), opar->get_delta_base(), h, s, v);
+                  if( opar->get_apply_look_table() )
+                    hsdApply(opar->get_look_info(), opar->get_look_table(), h, s, v);
+                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                    std::cout<<"    h="<<h<<" s="<<s<<" v="<<v<<std::endl;
+                  // RT range correction
+                  if (h < 0.0f) {
+                    h += 6.0f;
+                  } else if (h >= 6.0f) {
+                    h -= 6.0f;
+                  }
+                  rtengine::Color::hsv2rgbdcp(h, s, v, newr, newg, newb);
+                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                    std::cout<<"    newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
+                  if( opar->get_use_tone_curve() )
+                    opar->apply_dcp_tone_curve(newr, newg, newb);
+                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                    std::cout<<"      newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
+                }
+                line2[xi] = newr/65535.f;
+                line2[xi+1] = newg/65535.f;
+                line2[xi+2] = newb/65535.f;
+                if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                  std::cout<<"line2[xi]="<<line2[xi]<<" line2[xi+1]="<<line2[xi+1]<<" line2[xi+2]="<<line2[xi+2]<<std::endl;
               }
             }
+            cmsDoTransform( opar->get_transform(), line2, pout, width );
+            if( r->top==0 && r-> left==0 && y<4 )
+              std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
+              <<pout[0]<<","<<pout[1]<<","<<pout[2]<<std::endl;
           } else {
             memcpy( pout, line, sizeof(float)*line_size );
           }
@@ -551,15 +660,12 @@ enum hlreco_mode_t {
         for( int xi = 0; xi < line_size; xi++ ) {
           //if(pout[xi] > 1 || pout[xi] < 0)
           //  std::cout<<"RGB_out["<<xi%3<<"]="<<pout[xi]<<std::endl;
-          pout[xi] = CLIPOUT(pout[xi]);
-        }
-        for( int xi = 0; xi < line_size; xi+=3 ) {
-          if(false && r->left<20 && r->top<20 && y<4 && xi<12) {
-            std::cout<<"("<<y<<","<<xi/3<<")  "<<pout[xi]<<","<<pout[xi+1]<<","<<pout[xi+2]<<"   "<<std::endl;
-          }
+          if( opar->get_clip_negative() ) pout[xi] = MAX( pout[xi], 0.f );
+          if( opar->get_clip_overflow() ) pout[xi] = MIN( pout[xi], 1.f );
+          //pout[xi] = CLIPOUT(pout[xi]);
         }
       }
-      delete[] line; delete[] line2;
+      delete line; delete line2;
     }
   };
 

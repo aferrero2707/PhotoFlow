@@ -3,7 +3,7 @@ language: generic
 #env:
 matrix:
     allow_failures:
-        - env: TARGET_SYSTEM=Windows
+        - env: TARGET_SYSTEM=OSX
     include:
         - os: linux
           dist: trusty
@@ -121,78 +121,8 @@ matrix:
           dist: trusty
           env: TARGET_SYSTEM=Windows
           before_script:
-            - cd non_existent_dir
-            - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-            - sudo add-apt-repository ppa:adrozdoff/mingw -y
-            - sudo apt-get update
-            - sudo apt-get install gcc-5-mingw-w64 g++-5-mingw-w64 binutils-mingw-w64-x86-64 python3 python3-docutils rpm2cpio libfile-mimeinfo-perl
-            - sudo ln -s /usr/bin/i686-w64-mingw32-gcc-5 /usr/bin/i686-w64-mingw32-gcc
-            - sudo ln -s /usr/bin/i686-w64-mingw32-g++-5 /usr/bin/i686-w64-mingw32-g++
-            - ls -l /usr/bin/i686-w64-mingw32*
-            - cd build
-            #- wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
-            #- tar xzvf crossroad-0.6.tar.gz
-            #- find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
-            #- cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
-            - wget https://pypi.python.org/packages/c4/3e/f6a66a52cdd3340a9ae5a581fbc7ccffdfabe307e50282794bd7d93e5420/crossroad-0.7.tar.gz
-            - tar xzvf crossroad-0.7.tar.gz
-            #- find crossroad-0.7 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
-            - cd crossroad-0.7 && ./setup.py install --prefix=$HOME/inst && cd ..
-            - cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
-            - echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
-            - echo "SET(PKG_CONFIG_EXECUTABLE i686-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w32.cmake
-            - $HOME/inst/bin/crossroad --help w32
-            - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/dep-install.sh
-            - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/dep-build.sh
-            - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/phf-build.sh
-            - $HOME/inst/bin/crossroad w32 phf-build --run ../windows/package-w32.sh
-            #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
-            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
-                bash  ./upload_rotate.sh "continuous" photoflow*.zip
-              fi'
-            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
-                bash  ./upload_rotate.sh "unstable" photoflow*.zip
-              fi'
-        - os: linux
-          dist: trusty
-          compiler: g++
-          sudo: required
-          dist: trusty
-          env: TARGET_SYSTEM=Windows
-          before_script:
             #- cd non_existent_dir
-            #- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-            #- sudo add-apt-repository ppa:adrozdoff/mingw -y
-            #- sudo apt-get update
-            #- sudo apt-get install gcc-5-mingw-w64 g++-5-mingw-w64 binutils-mingw-w64-x86-64 python3 python3-docutils rpm2cpio libfile-mimeinfo-perl
-            #- sudo ln -s /usr/bin/x86_64-w64-mingw32-gcc-5 /usr/bin/x86_64-w64-mingw32-gcc
-            #- sudo ln -s /usr/bin/x86_64-w64-mingw32-g++-5 /usr/bin/x86_64-w64-mingw32-g++
-            #- ls -l /usr/bin/x86_64-w64-mingw32*
-            #- cd build
-            #- wget https://pypi.python.org/packages/f4/ea/4faf47f49928ba276fc555b4ebd8432a77494a63fd7ee25b6bccb5820c67/crossroad-0.6.tar.gz
-            #- tar xzvf crossroad-0.6.tar.gz
-            #- find crossroad-0.6 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
-            #- cd crossroad-0.6 && ./setup.py install --prefix=$HOME/inst && cd ..
-            #- wget https://pypi.python.org/packages/c4/3e/f6a66a52cdd3340a9ae5a581fbc7ccffdfabe307e50282794bd7d93e5420/crossroad-0.7.tar.gz
-            #- tar xzvf crossroad-0.7.tar.gz
-            #- find crossroad-0.7 -type f -print0 | xargs -0 sed -i 's/openSUSE_42.1/openSUSE_Leap_42.1/g'
-            #- cd crossroad-0.7 && pwd && patch -p1 < ../../windows/crossroad-interactive-shell.patch && ./setup.py install --prefix=$HOME/inst && cd ..
-            #- cat $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
-            #- echo "" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
-            # - echo "SET(PKG_CONFIG_EXECUTABLE x86_64-w64-mingw32-pkg-config)" >> $HOME/inst/share/crossroad/scripts/cmake/toolchain-w64.cmake
-            
-            #- $HOME/inst/bin/crossroad --help w64
-            #- $HOME/inst/bin/crossroad w64 phf-build
             - pwd
-            #- cat ../windows/test_cmd.sh
-            #- ../windows/test_cmd.sh w64
-            #- ../windows/dep-install.sh w64
-            #- ../windows/dep-build.sh w64
-            #- ../windows/phf-build.sh w64
-            #- $HOME/inst/bin/crossroad w64 phf-build --run $(pwd)/../windows/dep-install.sh
-            #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/dep-build.sh
-            #- $HOME/inst/bin/crossroad w64 phf-build --run ../windows/phf-build.sh
             - rm -rf windows && git clone https://github.com/aferrero2707/pf-build-win.git windows
             - sudo docker run -it -e "TRAVIS_BUILD_DIR=/sources" -e "TRAVIS_BRANCH=${TRAVIS_BRANCH}" -e "TRAVIS_COMMIT=${TRAVIS_COMMIT}" -v $(pwd):/sources photoflow/docker-zesty-mingw bash -c /sources/windows/package-w64.sh
             - # check if zip file was successfully created
@@ -201,18 +131,16 @@ matrix:
           after_success:
             - cd $TRAVIS_BUILD_DIR
             - pwd
-            #- ../windows/package-w64.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
             - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
-                bash  ./upload_rotate.sh "continuous" photoflow*.zip
+                bash  ./upload_rotate.sh "continuous" photoflow*.zip;
               fi'
             - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
-                bash  ./upload_rotate.sh "unstable" photoflow*.zip
+                bash  ./upload_rotate.sh "unstable" photoflow*.zip;
               fi'
         - os: osx
-          language: cpp
-          compiler: g++
+          cache: ccache
           osx_image: xcode7.3
           env: 
           - TARGET_SYSTEM=OSX
@@ -220,71 +148,33 @@ matrix:
             JPEG=/usr/local/opt/mozjpeg
             PKG_CONFIG_PATH=/usr/local/opt/libffi/lib/pkgconfig
             JOBS="`sysctl -n hw.ncpu`"
-            PATH="/usr/local/opt/ccache/libexec:$PATH"
+            MACOSX_DEPLOYMENT_TARGET=10.8
+            HOMEBREW_NO_AUTO_UPDATE=1
+            PATH=$HOME/homebrew/bin:$PATH
+            LD_LIBRARY_PATH=$HOME/homebrew/lib:$LD_LIBRARY_PATH
+            PKG_CONFIG_PATH=$HOME/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH
           before_script:
-          - brew update
-          - brew tap homebrew/science
-          - brew update
-          - brew install ccache pkg-config automake
-        - brew install --ignore-dependencies gtk-doc
-        - brew reinstall   gobject-introspection
-        - brew reinstall   gobject-introspection
-        - brew reinstall   fftw
-        - brew info   fftw
-        - brew reinstall  mozjpeg
-        - brew info  mozjpeg
-        - brew reinstall  libexif
-        - brew info  libexif
-        - brew reinstall   libpng
-        - brew info   libpng
-        - brew reinstall  webp
-        - brew info  webp
-        - brew reinstall  libtiff
-        - brew info  libtiff
-        - brew reinstall   swig
-        - brew info   swig
-        - brew reinstall  imagemagick
-        - brew info  imagemagick
-        - brew reinstall   cfitsio
-        - brew info   cfitsio
-        - brew reinstall  libmatio
-        - brew info  libmatio
-        - brew reinstall   orc
-        - brew info   orc
-        - brew reinstall  little-cms2
-        - brew info  little-cms2
-        - brew reinstall  poppler
-        - brew info  poppler
-        - brew reinstall   pango
-        - brew info   pango
-        - brew reinstall  libgsf
-        - brew info  libgsf
-        - brew reinstall  openslide
-        - brew info  openslide
-        - brew reinstall   librsvg
-        - brew info   librsvg
-        - brew reinstall  giflib
-        - brew info  giflib
-        - brew reinstall  openexr
-        - brew info  openexr
-        - brew reinstall   python
-        - brew info   python
-        - brew reinstall  pygobject3
-        - brew info  pygobject3
-        - brew reinstall   gexiv2
-        - brew info   gexiv2
-        - brew reinstall  gtk+
-        - brew info  gtk+
-        - brew reinstall  pygtk
-        - brew info  pygtk
-        - brew reinstall  gtkmm 
-        - brew info  gtkmm 
-        - brew reinstall  gtk-mac-integration
-        - brew info  gtk-mac-integration
-        - brew reinstall  pugixml
-        - brew info  pugixml
-        - brew reinstall  vips
-        - brew info  vips
+            - rm -rf osx
+            - git clone https://github.com/aferrero2707/pf-build-osx.git osx
+            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 4
+            #- export PATH="/usr/local/opt/ccache/libexec:$PATH"
+            - cd $TRAVIS_BUILD_DIR
+            - mkdir -p build
+            - cd build
+            - cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$HOME/homebrew ..
+            #- cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local ..
+            - make -j 3
+            - make install
+            - cd $TRAVIS_BUILD_DIR/osx
+            - ./package-photoflow-hb.sh
+            #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" $HOME/photoflow-osx-*.zip > /dev/null;
+              fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                bash  ./upload_rotate.sh "unstable" $HOME/photoflow-osx-*.zip > /dev/null;
+              fi'
 
 
 branches:

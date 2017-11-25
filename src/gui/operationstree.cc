@@ -300,7 +300,11 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_conv.get_tree().add_op( "Lab conversion"), "convert2lab" );
 
   op_color.get_tree().add_op( _("Color profile conversion"), "convert_colorspace" );
-  op_color.get_tree().add_op( _("Basic Adjustments"), "hue_saturation" );
+  op_color.get_tree().add_op( _("Clip values"), "clip" );
+  op_color.get_tree().add_op( _("White Balance"), "white_balance" );
+  op_color.get_tree().add_op( _("Levels"), "levels" );
+  op_color.get_tree().add_op( _("Basic Adjustments"), "basic_adjustments" );
+  op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights" );
   op_color.get_tree().add_op( _("Defringe"), "defringe" );
@@ -312,6 +316,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Uniform Fill"), "uniform");
   op_color.get_tree().add_op( _("Gradient"), "gradient");
   op_color.get_tree().add_op( _("H/S/L Mask"), "hsl_mask" );
+  op_color.get_tree().add_op( _("Apply LUT"), "gmic_emulate_film_user_defined" );
   op_color.get_tree().add_op( _("Emulate film [color slide]"), "gmic_emulate_film_colorslide" );
   op_color.get_tree().add_op( _("Emulate film [B&W]"), "gmic_emulate_film_bw" );
   op_color.get_tree().add_op( _("Emulate film [instant consumer]"), "gmic_emulate_film_instant_consumer" );
@@ -375,7 +380,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_mask.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
   //#if !defined(__APPLE__) && !defined(__MACH__)
 #ifndef PF_DISABLE_GMIC
-  //op_gmic.get_tree().add_op( _("G'MIC Interpreter"), "gmic" );
+  op_gmic.get_tree().add_op( _("G'MIC Interpreter"), "gmic" );
   op_mask.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
 #endif
   op_mask.get_tree().add_op( _("Draw"), "draw" );

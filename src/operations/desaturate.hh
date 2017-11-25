@@ -40,10 +40,10 @@ namespace PF
 
 
   enum desaturate_method_t {
+    DESAT_LAB,
     DESAT_LUMINOSITY,
     DESAT_LIGHTNESS,
-    DESAT_AVERAGE,
-    DESAT_LAB
+    DESAT_AVERAGE
   };
 
 
@@ -51,6 +51,7 @@ namespace PF
   {
     PropertyBase method;
 
+    ProcessorBase* proc_luminance;
     ProcessorBase* proc_luminosity;
     ProcessorBase* proc_lightness;
     ProcessorBase* proc_average;

@@ -195,6 +195,23 @@ PF::PluginWindow::open_image( std::string filename, bool hidden )
 	free(fullpath);
   editorBox.pack_start( *image_editor );
   PF::PhotoFlow::Instance().set_active_image( image_editor->get_image() );
+
+  PF::Image* image = image_editor->get_image();
+  if( !image ) return;
+
+  PF::Layer* layer = image->get_layer_manager().get_layers().front();
+  if( !layer ) return;
+
+  PF::ProcessorBase* proc = layer->get_processor();
+  if( !proc ) return;
+
+  PF::OpParBase* op = proc->get_par();
+  if( !op ) return;
+
+  PF::PropertyBase* prop = op->get_property( "out_profile_mode" );
+  if( !prop ) return;
+
+  prop->set_enum_value( PROF_MODE_EMBEDDED );
   //image_editor->show();
 }
 

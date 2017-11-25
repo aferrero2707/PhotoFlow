@@ -41,7 +41,7 @@ PF::GaussBlurPar::GaussBlurPar():
 	blur_mode.add_enum_value(PF_BLUR_FAST,"FAST","Fast");
 	blur_mode.add_enum_value(PF_BLUR_EXACT,"ACCURATE","Accurate");
 	
-  convert_format = new PF::Processor<PF::ConvertFormatPar,PF::ConvertFormatProc>();
+  convert_format = new_convert_format();
   blur_sii = new_gaussblur_sii();
 
   //set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
@@ -252,10 +252,4 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   //g_object_unref( converted );
   PF_UNREF( converted, "PF::GaussBlurPar::build(): converted unref" );
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_gaussblur()
-{
-  return( new PF::Processor<PF::GaussBlurPar,PF::GaussBlurProc>() );
 }

@@ -38,8 +38,10 @@
 
 #include "imagearea.hh"
 #include "histogram.hh"
+#include "sampler.hh"
 #include "layerwidget.hh"
 #include "tablabelwidget.hh"
+#include "softproofdialog.hh"
 #include "widgets/statusindicator.hh"
 
 
@@ -98,8 +100,11 @@ class ImageEditor: public Gtk::HBox
   ImageArea* imageArea;
   Gtk::EventBox imageArea_eventBox;
 
-  Gtk::Expander hist_expander;
+
+  Gtk::Expander stat_expander;
+  Gtk::Notebook stat_notebook;
   Histogram* histogram;
+  SamplerGroup* samplers;
 
   // Boxes for aligning the image area inside the scrolled window.
   // The image area gets inserted into an HBox which in turn
@@ -119,6 +124,12 @@ class ImageEditor: public Gtk::HBox
   Gtk::Widget* aux_controls;
   Gtk::VBox aux_controlsBox;
   Gtk::HBox controlsBox;
+
+  Gtk::Frame soft_proof_frame;
+  Gtk::VBox soft_proof_box;
+  Gtk::CheckButton soft_proof_enable_button;
+  SoftProofDialog* softproof_dialog;
+
   StatusIndicatorWidget status_indicator;
   Gtk::Image  img_zoom_in, img_zoom_out, img_zoom_fit;
   Gtk::Button buttonZoomIn, buttonZoomOut, buttonZoom100, buttonZoomFit;
@@ -153,6 +164,7 @@ public:
   ~ImageEditor();
 
   Image* get_image() { return image; }
+  ImageArea* get_image_area() { return imageArea; }
 
   LayerWidget& get_layer_widget() { return layersWidget; }
 
@@ -243,6 +255,12 @@ public:
 
   void toggle_highlights_warning();
   void toggle_shadows_warning();
+
+  void on_soft_proof_toggled();
+  void soft_proof_disable()
+  {
+    soft_proof_enable_button.set_active(false);
+  }
 
   void zoom_in();
   void zoom_out();

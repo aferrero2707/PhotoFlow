@@ -66,8 +66,6 @@ namespace PF
     ProcessorBase* impulse_nr;
     ProcessorBase* nlmeans;
 
-    cmsHPROFILE in_profile;
-
   public:
     DenoisePar();
 

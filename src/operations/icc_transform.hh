@@ -47,19 +47,32 @@ namespace PF
   {
     std::string in_profile_name;
 
-    cmsHPROFILE in_profile, out_profile;
+    ICCProfile* in_profile;
+    ICCProfile* out_profile;
+    cmsUInt32Number intent;
+    bool bpc;
+    float adaptation_state;
     cmsHTRANSFORM transform;
 
     cmsColorSpaceSignature input_cs_type;
     cmsColorSpaceSignature output_cs_type;
 
+    bool clip_negative, clip_overflow;
+
   public:
 
     ICCTransformPar();
 
+    cmsUInt32Number get_intent() { return intent; }
+    void set_intent( cmsUInt32Number i ) { intent = i; }
+
+    bool get_bpc() { return bpc; }
+    void set_bpc( bool flag ) { bpc = flag; }
+    void set_adaptation_state( float s ) { adaptation_state = s; }
+
     cmsHTRANSFORM get_transform() { return transform; }
 
-    void set_out_profile( cmsHPROFILE p ) { out_profile = p; }
+    void set_out_profile( ICCProfile* p ) { out_profile = p; }
     void set_image_hints( VipsImage* img )
     {
       if( !img ) return;
@@ -81,6 +94,11 @@ namespace PF
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
 
+    bool get_clip_negative() { return clip_negative; }
+    bool get_clip_overflow() { return clip_overflow; }
+    void set_clip_negative( bool flag ) { clip_negative = flag; }
+    void set_clip_overflow( bool flag ) { clip_overflow = flag; }
+
     //cmsHPROFILE create_profile_from_matrix (const double matrix[3][3], bool gamma, Glib::ustring name);
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
@@ -90,7 +108,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class ICCTransform
+  class ICCTransformProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -126,7 +144,7 @@ namespace PF
 
 
   template < OP_TEMPLATE_DEF_TYPE_SPEC > 
-  class ICCTransform< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
+  class ICCTransformProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -136,7 +154,9 @@ namespace PF
       ICCTransformPar* opar = dynamic_cast<ICCTransformPar*>(par);
       if( !opar ) return;
       Rect *r = &oreg->valid;
-      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
+      int line_size_in = ireg[in_first]->valid.width * ireg[in_first]->im->Bands; //layer->in_all[0]->Bands;
+      int line_size_out = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
+      int line_size_max = (line_size_in > line_size_out) ? line_size_in : line_size_out;
       int width = r->width;
       int height = r->height;
 
@@ -146,8 +166,9 @@ namespace PF
       int x, y;
 
       float* line = NULL;
-      if( opar->get_input_cs_type() == cmsSigLabData ) {
-        line = new float[line_size];
+      if( opar->get_input_cs_type() == cmsSigLabData ||
+          opar->get_input_cs_type() == cmsSigCmykData ) {
+        line = new float[line_size_max];
       }
 
       for( y = 0; y < height; y++ ) {
@@ -156,38 +177,70 @@ namespace PF
 
         if(opar->get_transform()) {
           if( opar->get_input_cs_type() == cmsSigLabData ) {
-            for( x = 0; x < line_size; x+= 3 ) {
+            for( x = 0; x < line_size_in; x+= 3 ) {
               line[x] = (cmsFloat32Number) (p[x] * 100.0);
               line[x+1] = (cmsFloat32Number) (p[x+1]*256.0f - 128.0f);
               line[x+2] = (cmsFloat32Number) (p[x+2]*256.0f - 128.0f);
-              //line[x+1] = (cmsFloat32Number) ((p[x+1] - 0.5f) * 128.f);
-              //line[x+2] = (cmsFloat32Number) ((p[x+2] - 0.5f) * 128.f);
               //if( r->left==0 && r->top==0 && x==0 && y==0 ) {
               //  std::cout<<"ICCTransform::render(): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<std::endl;
               //}
             }
             cmsDoTransform( opar->get_transform(), line, pout, width );
-            //if( r->left==0 && r->top==0 && y==0 ) {
-            //  std::cout<<"ICCTransform::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
-            //}
+            if( false && r->left==0 && r->top==0 && y==0 ) {
+              std::cout<<"ICCTransform::render(Lab): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+            }
+          } else if( opar->get_input_cs_type() == cmsSigCmykData ) {
+            for( x = 0; x < line_size_in; x+= 4 ) {
+              line[x] = (cmsFloat32Number) (p[x] * 100.0);
+              line[x+1] = (cmsFloat32Number) (p[x+1] * 100.0);
+              line[x+2] = (cmsFloat32Number) (p[x+2] * 100.0);
+              line[x+3] = (cmsFloat32Number) (p[x+3] * 100.0);
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ICCTransform::render(CMYK in): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<" "<<line[x+3]<<std::endl;
+              }
+            }
+            cmsDoTransform( opar->get_transform(), line, pout, width );
+            if( false && r->left==0 && r->top==0 && y==0 ) {
+              std::cout<<"ICCTransform::render(CMYK in): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+            }
           } else {
             cmsDoTransform( opar->get_transform(), p, pout, width );
-            if( opar->get_output_cs_type() == cmsSigLabData ) {
-              for( x = 0; x < line_size; x+= 3 ) {
-                pout[x] = (cmsFloat32Number) (pout[x] / 100.0); 
-                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0f) / 256.0f);
-                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0f) / 256.0f);
-                //pout[x+1] = (cmsFloat32Number) ((pout[x+1] / 128.f) + 0.5f);
-                //pout[x+2] = (cmsFloat32Number) ((pout[x+2] / 128.f) + 0.5f);
-                
-                //if( r->left==0 && r->top==0 && x==0 && y==0 ) {
-                //  std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
-                //}
+            if( false && r->left==0 && r->top==0 && y==0 ) {
+              std::cout<<"ICCTransform::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
+            }
+          }
+          if( opar->get_output_cs_type() == cmsSigLabData ) {
+            for( x = 0; x < line_size_out; x+= 3 ) {
+              pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+              pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0f) / 256.0f);
+              pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0f) / 256.0f);
+
+              //if( r->left==0 && r->top==0 && x==0 && y==0 ) {
+              //  std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
+              //}
+            }
+          } else if( opar->get_output_cs_type() == cmsSigCmykData ) {
+            for( x = 0; x < line_size_out; x+= 4 ) {
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ICCTransform::render(CMYK out): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<" "<<pout[x+3]<<std::endl;
+              }
+              pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+              pout[x+1] = (cmsFloat32Number) (pout[x+1] / 100.0);
+              pout[x+2] = (cmsFloat32Number) (pout[x+2] / 100.0);
+              pout[x+3] = (cmsFloat32Number) (pout[x+3] / 100.0);
+              if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
+                std::cout<<"ICCTransform::render(CMYK out): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<" "<<pout[x+3]<<std::endl;
               }
             }
           }
         } else {
-          memcpy( pout, p, sizeof(float)*line_size );
+          memcpy( pout, p, sizeof(float)*line_size_in );
+        }
+        if( opar->get_clip_negative() || opar->get_clip_overflow() ) {
+          for( x = 0; x < line_size_out; x+= 1 ) {
+            if( opar->get_clip_negative() ) pout[x] = MAX( pout[x], 0.f );
+            if( opar->get_clip_overflow() ) pout[x] = MIN( pout[x], 1.f );
+          }
         }
       }
 
@@ -201,7 +254,7 @@ namespace PF
 
 
   template < OP_TEMPLATE_DEF_TYPE_SPEC > 
-  class ICCTransform< OP_TEMPLATE_IMP_TYPE_SPEC(double) >
+  class ICCTransformProc< OP_TEMPLATE_IMP_TYPE_SPEC(double) >
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,

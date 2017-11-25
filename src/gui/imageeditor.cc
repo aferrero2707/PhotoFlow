@@ -139,6 +139,15 @@ class Layout2: public Gtk::HBox
   Gtk::HBox hbox;
   Gtk::VBox vbox;
   Gtk::VPaned paned;
+  Gtk::HPaned main_paned;
+
+  void on_paned_size_allocate(Gtk::Allocation& allocation)
+  {
+    //Gtk::HBox::on_size_allocate(allocation);
+    //std::cout<<"Layout2::on_paned_size_allocate() called, width=   "<<allocation.get_width()<<std::endl;
+    //std::cout<<"Layout2::on_paned_size_allocate() called, position="<<main_paned.get_position()<<std::endl;
+    PF::PhotoFlow::Instance().get_options().set_layerlist_widget_width( main_paned.get_position() );
+  }
 
 public:
   Layout2(Gtk::Widget* h, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
@@ -156,40 +165,50 @@ public:
     vbox.pack_start( hbox, Gtk::PACK_EXPAND_WIDGET );
 
     //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
-    pack_start( vbox, Gtk::PACK_SHRINK );
-    pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
+    //pack_start( vbox, Gtk::PACK_SHRINK );
+    //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
+    main_paned.add1( vbox );
+    main_paned.add2( *preview_widget );
+    pack_start( main_paned, Gtk::PACK_EXPAND_WIDGET );
 
     paned.set_position(150);
+    main_paned.set_position( PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width() );
+
+    vbox.signal_size_allocate().
+        connect( sigc::mem_fun(*this, &Layout2::on_paned_size_allocate) );
+
   }
 };
 
 
 
 PF::ImageEditor::ImageEditor( std::string fname ):
-    filename( fname ),
-    image( new PF::Image() ),
-    image_opened( false ),
-    displayed_layer( NULL ),
-    edited_layer( NULL ),
-    selected_layer_id( -1 ),
-    //imageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) ),
-    layersWidget( image, this ),
-    aux_controls( NULL ),
-    img_zoom_in(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"),
-    img_zoom_out(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-out.png"),
-    img_zoom_fit(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-fit.png"),
-    //buttonZoomIn( "Zoom +" ),
-    //buttonZoomOut( "Zoom -" ),
-    buttonZoom100( "1:1" ),
-    //buttonZoomFit( "Fit" ),
-    img_highlights_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/highlights_clip_warning.png"),
-    img_shadows_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/shadows_clip_warning.png"),
-    buttonShowMerged( _("show merged layers") ),
-    buttonShowActive( _("show active layer") ),
-    tab_label_widget( NULL ),
-    fit_image( true ),
-    fit_image_needed( true ),
-    hide_background_layer( false )
+        filename( fname ),
+        image( new PF::Image() ),
+        image_opened( false ),
+        displayed_layer( NULL ),
+        edited_layer( NULL ),
+        selected_layer_id( -1 ),
+        //imageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) ),
+        layersWidget( image, this ),
+        aux_controls( NULL ),
+        soft_proof_enable_button( _("soft proof.") ),
+        softproof_dialog( NULL ),
+        img_zoom_in(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"),
+        img_zoom_out(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-out.png"),
+        img_zoom_fit(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-fit.png"),
+        //buttonZoomIn( "Zoom +" ),
+        //buttonZoomOut( "Zoom -" ),
+        buttonZoom100( "1:1" ),
+        //buttonZoomFit( "Fit" ),
+        img_highlights_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/highlights_clip_warning.png"),
+        img_shadows_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/shadows_clip_warning.png"),
+        buttonShowMerged( _("show merged layers") ),
+        buttonShowActive( _("show active layer") ),
+        tab_label_widget( NULL ),
+        fit_image( true ),
+        fit_image_needed( true ),
+        hide_background_layer( false )
 {
 #ifndef NDEBUG
   std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
@@ -229,6 +248,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   imageArea_scrolledWindow_box.pack_start( imageArea_scrolledWindow );
 
   histogram = new PF::Histogram( image->get_pipeline(HISTOGRAM_PIPELINE_ID) );
+  samplers = new PF::SamplerGroup( image->get_pipeline(0) );
 
 
   radioBox.pack_start( buttonShowMerged );
@@ -263,17 +283,26 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   buttonZoomIn.set_tooltip_text( _("Zoom in") );
   buttonZoomIn.set_size_request(26,0);
   controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
+
+  soft_proof_box.pack_start( soft_proof_enable_button, Gtk::PACK_SHRINK );
+  soft_proof_frame.add( soft_proof_box );
+  controlsBox.pack_end( soft_proof_frame, Gtk::PACK_SHRINK );
+
   controlsBox.pack_end( status_indicator, Gtk::PACK_SHRINK );
 
   //imageBox.pack_start( imageArea_eventBox );
   imageBox.pack_start( imageArea_scrolledWindow_box );
   imageBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
 
-  hist_expander.set_label( _("histogram") );
-  hist_expander.set_expanded(true);
-  hist_expander.add(*histogram);
+  stat_expander.set_label( _("image info") );
+  stat_expander.set_expanded(true);
+  stat_notebook.append_page( *histogram, _("histogram") );
+  stat_notebook.append_page( *samplers, _("samplers") );
+  stat_expander.add(stat_notebook);
 
-  //layersWidget_box.pack_start( hist_expander, Gtk::PACK_SHRINK );
+  imageArea->set_samplers( samplers );
+
+  //layersWidget_box.pack_start( stat_expander, Gtk::PACK_SHRINK );
   aux_controlsBox.set_size_request(-1,70);
   //layersWidget_box.pack_start( aux_controlsBox, Gtk::PACK_SHRINK );
   layersWidget_box.pack_start( layersWidget, Gtk::PACK_EXPAND_WIDGET );
@@ -282,10 +311,10 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   controls_group_scrolled_window.set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
   controls_group_scrolled_window.set_size_request( 280, 0 );
 
-  //controls_group_vbox.pack_start( hist_expander, Gtk::PACK_SHRINK );
+  //controls_group_vbox.pack_start( stat_expander, Gtk::PACK_SHRINK );
   //controls_group_vbox.pack_start( controls_group_scrolled_window, Gtk::PACK_EXPAND_WIDGET );
 
-  main_panel = new Layout2( &hist_expander, &(layersWidget.get_tool_buttons_box()),
+  main_panel = new Layout2( &stat_expander, &(layersWidget.get_tool_buttons_box()),
       &layersWidget_box, &controls_group_scrolled_window, &imageBox );
 
   pack_start( *main_panel );
@@ -297,6 +326,8 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //main_panel.pack_start( layersWidget_box, Gtk::PACK_SHRINK );
   //main_panel.pack_start( imageBox, Gtk::PACK_EXPAND_WIDGET );
   //main_panel.pack_start( controls_group_vbox, Gtk::PACK_SHRINK );
+  soft_proof_enable_button.signal_toggled().connect( sigc::mem_fun(*this,
+      &PF::ImageEditor::on_soft_proof_toggled) );
 
   button_highlights_warning.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::ImageEditor::toggle_highlights_warning) );
@@ -380,6 +411,7 @@ PF::ImageEditor::~ImageEditor()
 #endif
   delete imageArea;
   delete histogram;
+  delete samplers;
   /**/
   /*
   // Images need to be destroyed by the processing thread
@@ -515,9 +547,9 @@ void PF::ImageEditor::open_image()
   if( toplevel && toplevel->is_toplevel() )
 #endif
 #ifdef GTKMM_3
-  if( toplevel && toplevel->get_is_toplevel() )
+    if( toplevel && toplevel->get_is_toplevel() )
 #endif
-    toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
+      toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
 
   std::string bckname;
   char* fullpath = realpath( filename.c_str(), NULL );
@@ -864,6 +896,30 @@ void PF::ImageEditor::toggle_shadows_warning()
   if( !pipeline ) return;
   imageArea->set_shadows_warning( button_shadows_warning.get_active() );
   image->update();
+}
+
+
+void PF::ImageEditor::on_soft_proof_toggled()
+{
+  if( !softproof_dialog ) softproof_dialog = new SoftProofDialog(this);
+  if( !softproof_dialog ) return;
+
+  Gtk::Container* toplevel = get_toplevel();
+  if(
+#ifdef GTKMM_3
+      toplevel->get_is_toplevel()
+#else
+      toplevel->is_toplevel()
+#endif
+  ) {
+    softproof_dialog->set_transient_for( *((Gtk::Window*)toplevel) );
+  }
+
+
+  if( soft_proof_enable_button.get_active() )
+    softproof_dialog->show();
+  else
+    softproof_dialog->hide();
 }
 
 
@@ -1433,6 +1489,15 @@ bool PF::ImageEditor::my_button_press_event( GdkEventButton* button )
       }
     }
   }
+
+  double img_x = x, img_y = y, img_w = 10, img_h = 10;
+  screen2image( img_x, img_y, img_w, img_h );
+  if( samplers ) {
+    for(int i = 0; i < samplers->get_sampler_num(); i++) {
+      samplers->get_sampler(i).pointer_press_event( button->button, img_x, img_y, img_w, mod_key );
+    }
+  }
+
   return false;
 }
 
@@ -1485,6 +1550,15 @@ bool PF::ImageEditor::my_button_release_event( GdkEventButton* button )
       }
     }
   }
+
+  double img_x = x, img_y = y, img_w = 10, img_h = 10;
+  screen2image( img_x, img_y, img_w, img_h );
+  if( samplers ) {
+    for(int i = 0; i < samplers->get_sampler_num(); i++) {
+      samplers->get_sampler(i).pointer_release_event( button->button, img_x, img_y, mod_key );
+    }
+  }
+
   return false;
 }
 
@@ -1574,6 +1648,16 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
           //imageArea->draw_area();
           imageArea->queue_draw();
         }
+      }
+    }
+  }
+
+  double img_x = x, img_y = y, img_w = 10, img_h = 10;
+  screen2image( img_x, img_y, img_w, img_h );
+  if( samplers ) {
+    for(int i = 0; i < samplers->get_sampler_num(); i++) {
+      if( samplers->get_sampler(i).pointer_motion_event( button, img_x, img_y, mod_key ) ) {
+        imageArea->queue_draw();
       }
     }
   }

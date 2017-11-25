@@ -28,7 +28,6 @@
  */
 
 #include "scale.hh"
-#include "../base/new_operation.hh"
 
 /*
  * Post-rotation auto-cropping
@@ -399,12 +398,19 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     float scale = MIN( scale_width, scale_height );
     scale_mult = scale;
 
-    //VipsInterpolate* interpolate = vips_interpolate_new( "nohalo" );
-    //if( !interpolate )
-    //  interpolate = vips_interpolate_new( "bicubic" );
-    //if( !interpolate )
-    //  interpolate = vips_interpolate_new( "bilinear" );
-
+    VipsInterpolate* interpolate = NULL;
+    /*
+    if( scale < 1 ) {
+      interpolate = vips_interpolate_new( "nohalo" );
+      if( !interpolate )
+        interpolate = vips_interpolate_new( "bicubic" );
+      if( !interpolate )
+        interpolate = vips_interpolate_new( "bilinear" );
+    } else {
+      interpolate = vips_interpolate_new( "nearest" );
+    }
+    std::cout<<"ScalePar::build(): scale="<<scale<<"  interpolate="<<interpolate<<std::endl;
+    */
     //if( vips_resize(srcimg, &out, scale, "interpolate", interpolate, NULL) ) {
     if( vips_resize(srcimg, &out, scale, NULL) ) {
       std::cout<<"ScalePar::build(): vips_resize() failed."<<std::endl;
@@ -422,10 +428,4 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
 
   set_image_hints( out );
   return out;
-}
-
-
-PF::ProcessorBase* PF::new_scale()
-{
-  return( new PF::Processor<PF::ScalePar,PF::ScaleProc>() );
 }

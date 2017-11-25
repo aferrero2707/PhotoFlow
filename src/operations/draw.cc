@@ -284,8 +284,6 @@ void PF::DrawPar::start_stroke( unsigned int pen_size, float opacity, float smoo
 
 void PF::DrawPar::end_stroke()
 {
-  std::cout<<"DrawPar::end_stroke() called"<<std::endl;
-  strokes.modified();
 }
 
 
@@ -303,7 +301,7 @@ void PF::DrawPar::draw_point( int x, int y, VipsRect& update )
   stroke.get_points().push_back( std::make_pair(x, y) );
   stroke.compute_area();
 
-  //strokes.modified();
+  strokes.modified();
 
   PF::Pencil& pen = stroke.get_pen();
 
@@ -314,11 +312,4 @@ void PF::DrawPar::draw_point( int x, int y, VipsRect& update )
     update.top = y - pen.get_size();
     update.width = update.height = pen.get_size()*2 + 1;
   }
-}
-
-
-
-PF::ProcessorBase* PF::new_draw()
-{
-  return( new PF::Processor<PF::DrawPar,PF::DrawProc>() );
 }

@@ -45,18 +45,49 @@ namespace PF {
     Selector outProfileModeSelector;
     Gtk::HBox outProfileModeSelectorBox;
 
+    Selector outProfileTypeSelector;
+    Gtk::HBox outProfileTypeSelectorBox;
+
+    Selector outTRCTypeSelector;
+    Gtk::HBox outTRCTypeSelectorBox;
+
+    Selector intentSelector;
+    Gtk::HBox intentSelectorBox;
+
+    CheckBox clip_negative_checkbox;
+    CheckBox clip_overflow_checkbox;
+    Gtk::HBox clip_negative_box;
+    Gtk::HBox clip_overflow_box;
+
+    CheckBox bpcButton;
+    Gtk::HBox bpcButtonBox;
+
+    Slider adaptationStateSlider;
+    Gtk::HBox adaptationStateBox;
+
+    CheckBox assignButton;
+    Gtk::HBox assignButtonBox;
+
     Gtk::HBox outProfHBox;
     Gtk::VBox outProfVBox;
     Gtk::Label outProfLabel;
     Gtk::Entry outProfFileEntry;
     Gtk::Button outProfOpenButton;
 
+    Gtk::CheckButton gamutWarningButton;
+    Gtk::HBox gamutWarningButtonBox;
+
     
   public:
     ConvertColorspaceConfigGUI( Layer* l );
     
+    void open();
+    void do_update();
+
     void on_out_button_open_clicked();
     void on_out_filename_changed();
+
+    void on_gamut_warning_toggled();
   };
 
 }
