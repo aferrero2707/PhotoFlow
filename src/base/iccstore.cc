@@ -413,13 +413,14 @@ void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat ba
 
   in_profile = pin;
   out_profile = pout;
+  if( !pin || !pout) return;
+
   bpc = _bpc;
   intent = _intent;
   adaptation_state = _adaptation_state;
+
   input_cs_type = cmsGetColorSpace( in_profile->get_profile() );
   output_cs_type = cmsGetColorSpace( out_profile->get_profile() );
-
-  if( !pin || !pout) return;
 
   transform = NULL;
   if( in_profile && out_profile && out_profile->get_profile() ) {
