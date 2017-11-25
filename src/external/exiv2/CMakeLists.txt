@@ -194,7 +194,6 @@ IF( NOT MSVC )
   IF ( NOT MINGW )
     # Issue #722: out of source builds compiled against standard include files such as /usr/local/lib/include/exiv2
     # do not use CREATE_SYMLINK or CMAKE_CAN_SYMLINK as they don't work on CYGWIN
-    MESSAGE(STATUS  "EXIV2: CMAKE_CURRENT_BINARY_DIR:  ${CMAKE_CURRENT_BINARY_DIR}")
     EXECUTE_PROCESS( WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}           COMMAND rm -f exiv2)
     EXECUTE_PROCESS( WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}           COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/src exiv2)
 
