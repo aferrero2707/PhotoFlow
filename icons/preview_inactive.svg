@@ -13,8 +13,8 @@
    inkscape:version="0.91 r13725"
    width="100%"
    height="100%"
-   sodipodi:docname="preview_active.svg"
-   inkscape:export-filename="/Users/aferrero/Projects/PhotoFlow/Git/Default/PhotoFlow/icons/preview_active.png"
+   sodipodi:docname="preview_inactive.svg"
+   inkscape:export-filename="/Users/aferrero/Projects/PhotoFlow/Git/Default/PhotoFlow/icons/preview_inactive.png"
    inkscape:export-xdpi="0.77999997"
    inkscape:export-ydpi="0.77999997">
   <metadata
@@ -25,6 +25,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -51,7 +52,7 @@
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2" />
   <path
-     style="fill:#c8c8c8;fill-opacity:1"
+     style="fill:#c8c8c8;fill-opacity:0.39215687"
      inkscape:connector-curvature="0"
      id="path6"
      d="m 1694.3729,683.8983 q -152,-236 -381,-353 61,104 61,225 0,185 -131.5,316.5 -131.5,131.5 -316.50002,131.5 -185,0 -316.5,-131.5 -131.5,-131.5 -131.5,-316.5 0,-121 61,-225 -229,117 -381,353 133,205 333.5,326.5 200.5,121.5 434.5,121.5 234.00002,0 434.50002,-121.5 200.5,-121.5 333.5,-326.5 z m -720.00002,-384 q 0,-20 -14,-34 -14,-14 -34,-14 -125,0 -214.5,89.5 -89.5,89.5 -89.5,214.5 0,20 14,34 14,14 34,14 20,0 34,-14 14,-14 14,-34 0,-86 61,-147 61,-61 147,-61 20,0 34,-14 14,-14 14,-34 z m 848.00002,384 q 0,34 -20,69 -140,230 -376.5,368.5 -236.5,138.5 -499.50002,138.5 -263,0 -499.5,-139 -236.5,-139 -376.499999,-368 -20,-35 -20,-69 0,-34 20,-69 139.999999,-229 376.499999,-368 236.5,-139 499.5,-139 263.00002,0 499.50002,139 236.5,139 376.5,368 20,35 20,69 z" />
