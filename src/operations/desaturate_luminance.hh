@@ -110,6 +110,35 @@ namespace PF
     }
   };
 
+
+  template < class BLENDER, int CHMIN, int CHMAX, bool has_imap, bool has_omap, bool PREVIEW >
+  class DesaturateLuminanceProc< float, BLENDER, PF_COLORSPACE_LAB, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
+  {
+  public:
+    void render(VipsRegion** ireg, int n, int in_first,
+        VipsRegion* imap, VipsRegion* omap,
+        VipsRegion* oreg, DesaturateLuminancePar* par)
+    {
+      Rect *r = &oreg->valid;
+      //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
+      int x, y, y0;
+      int width = r->width;
+      int line_size = width * oreg->im->Bands;
+      float* pin;
+      float* pout;
+      for( y = 0; y < r->height; y++ ) {
+        y0 = r->top + y;
+        pin = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, y0 );
+        pout = (float*)VIPS_REGION_ADDR( oreg, r->left, y0 );
+        for( x = 0; x < line_size; x += 3 ) {
+          pout[x] = pin[x];
+          pout[x+1] = pout[x+2] = FormatInfo<float>::HALF;
+        }
+      }
+    }
+  };
+
+
   ProcessorBase* new_desaturate_luminance();
 }
 
