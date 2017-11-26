@@ -1195,11 +1195,17 @@ void PF::MainWindow::on_button_export_clicked()
       }
     }
 
-    export_dialog.set_editor( editor );
-    export_dialog.set_export_format(PF::EXPORT_FORMAT_JPEG);
-    export_dialog.set_file_name(filename);
-    export_dialog.set_transient_for(*this);
-    export_dialog.run();
+    std::cout << "File selected: " <<  filename << std::endl;
+    if( editor && editor->get_image() ) {
+      editor->get_image()->export_merged( filename );
+      editor->set_last_exported_file( filename );
+    }
+
+    //export_dialog.set_editor( editor );
+    //export_dialog.set_export_format(PF::EXPORT_FORMAT_JPEG);
+    //export_dialog.set_file_name(filename);
+    //export_dialog.set_transient_for(*this);
+    //export_dialog.run();
     break;
       }
   case(Gtk::RESPONSE_CANCEL): 
