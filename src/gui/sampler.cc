@@ -199,10 +199,18 @@ PF::Sampler::Sampler( Pipeline* v, Glib::ustring title, int i ):
 
   Pango::FontDescription font_desc("monospace 11");
 
+#ifdef GTKMM_2
   label_value1.modify_font(font_desc);
   label_value2.modify_font(font_desc);
   label_value3.modify_font(font_desc);
   label_value4.modify_font(font_desc);
+#endif
+#ifdef GTKMM_3
+  label_value1.override_font(font_desc);
+  label_value2.override_font(font_desc);
+  label_value3.override_font(font_desc);
+  label_value4.override_font(font_desc);
+#endif
 
   labels_box.pack_start(label_value1,Gtk::PACK_SHRINK);
   labels_box.pack_start(label_value2,Gtk::PACK_SHRINK);
