@@ -31,12 +31,13 @@
 
 #include "../base/photoflow.hh"
 #include "../base/new_operation.hh"
-#include "../operations/convertformat.hh"
-#include "../operations/convert_colorspace.hh"
+#include "convertformat.hh"
+#include "convert_colorspace.hh"
 //#include "../operations/convert2srgb.hh"
-#include "../operations/desaturate.hh"
-#include "../operations/maxrgb.hh"
-#include "../operations/trcconv.hh"
+//#include "desaturate.hh"
+#include "desaturate_luminance.hh"
+#include "maxrgb.hh"
+#include "trcconv.hh"
 #include "clone.hh"
 
 
@@ -60,7 +61,7 @@ PF::ClonePar::ClonePar():
   //convert2lab = PF::new_operation( "convert2lab", NULL );
   convert_cs = PF::new_convert_colorspace();
   convert_format = new_convert_format();
-  desaturate = PF::new_desaturate();
+  desaturate = PF::new_desaturate_luminance();
   maxrgb = PF::new_maxrgb();
   trcconv = PF::new_trcconv();
 
@@ -447,14 +448,17 @@ VipsImage* PF::ClonePar::L2rgb(VipsImage* srcimg, unsigned int& level)
   
   std::vector<VipsImage*> in; 
 
+  /*
   convert2lab->get_par()->set_image_hints( srcimg );
   convert2lab->get_par()->set_format( get_format() );
   convert2lab->get_par()->lab_image( get_xsize(), get_ysize() );
   in.clear(); in.push_back( srcimg );
   VipsImage* labimg = convert2lab->get_par()->build( in, 0, NULL, NULL, level );
-  if( !labimg ) 
-    return NULL;
+  if( !labimg ) return NULL;
   //PF_UNREF( srcimg, "ClonePar::L2rgb(): srcimg unref" );
+  */
+  VipsImage* labimg = srcimg;
+  PF_REF( srcimg, "ClonePar::L2rgb(): srcimg ref" );
 
   in.clear(); in.push_back( labimg );
   desaturate->get_par()->set_image_hints( labimg );
