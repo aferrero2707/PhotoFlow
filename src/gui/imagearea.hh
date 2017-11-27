@@ -48,16 +48,6 @@
 #include "../base/pipeline.hh"
 #include "../base/image.hh"
 
-#include "../operations/image_reader.hh"
-//#include "../operations/convert2srgb.hh"
-#include "../operations/uniform.hh"
-#include "../operations/invert.hh"
-#include "../operations/blender.hh"
-#include "../operations/convertformat.hh"
-#include "../operations/clipping_warning.hh"
-
-#include "../gui/operations/imageread_config.hh"
-
 #include "doublebuffer.hh"
 #include "sampler.hh"
 

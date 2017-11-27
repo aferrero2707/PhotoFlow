@@ -49,6 +49,7 @@
 #include "../base/pf_mkstemp.hh"
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
+#include "../operations/blender.hh"
 #include "imageeditor.hh"
 
 

@@ -29,6 +29,17 @@
 #include "../operations/operations.hh"
 #include "../operations/icc_transform.hh"
 #include "../operations/convert_colorspace.hh"
+//#include "../operations/image_reader.hh"
+//#include "../operations/convert2srgb.hh"
+#include "../operations/uniform.hh"
+#include "../operations/invert.hh"
+#include "../operations/blender.hh"
+#include "../operations/convertformat.hh"
+#include "../operations/clipping_warning.hh"
+
+#include "../gui/operation_config_gui.hh"
+//#include "../gui/operations/imageread_config.hh"
+
 #include "imagearea.hh"
 
 
