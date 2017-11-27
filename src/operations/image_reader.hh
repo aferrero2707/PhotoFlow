@@ -62,9 +62,6 @@ namespace PF
     std::string current_file;
     VipsBandFormat current_format;
 
-    cmsHPROFILE in_profile;
-    cmsHPROFILE out_profile;
-    cmsHTRANSFORM transform;
     ProcessorBase* cs_transform;
 
     RasterImage* raster_image;
@@ -74,8 +71,6 @@ namespace PF
   public:
     ImageReaderPar();
     ~ImageReaderPar();
-
-    cmsHTRANSFORM get_transform() { return transform; }
 
     std::string get_file_name() { return file_name.get_str(); }
     void set_file_name( const std::string& name ) { file_name.set_str( name ); }
@@ -110,28 +105,6 @@ namespace PF
 		VipsRegion* imap, VipsRegion* omap, 
 		VipsRegion* oreg, OpParBase* par)
     {
-      ImageReaderPar* opar = dynamic_cast<ImageReaderPar*>(par);
-      if( !opar ) return;
-      Rect *r = &oreg->valid;
-      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
-      int width = r->width;
-      int height = r->height;
-
-      T* p;
-      T* pin;
-      T* pout;
-      int x, y;
-
-      for( y = 0; y < height; y++ ) {
-        p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
-        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
-
-        pin = p;
-        if(opar->get_transform())
-          cmsDoTransform( opar->get_transform(), pin, pout, width );
-        else
-          memcpy( pout, pin, sizeof(T)*line_size );
-      }
     }
   };
 
