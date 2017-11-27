@@ -444,7 +444,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   hotp_box.pack_start( hotp_threshold_slider, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_strength_slider, Gtk::PACK_SHRINK );
   hotp_box.pack_start( hotp_permissive_checkbox, Gtk::PACK_SHRINK );
-  hotp_box.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
+  //hotp_box.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
 
   lens_frame.add( lf_box );
   lf_label1.set_text( _("cam. maker: ") );
