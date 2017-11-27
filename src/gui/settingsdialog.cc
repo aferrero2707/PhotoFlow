@@ -35,23 +35,6 @@
 #include "settingsdialog.hh"
 
 
-/*
-#include "../operations/vips_operation.hh"
-#include "../operations/image_reader.hh"
-#include "../operations/brightness_contrast.hh"
-#include "../operations/invert.hh"
-#include "../operations/gradient.hh"
-#include "../operations/convert2lab.hh"
-#include "../operations/clone.hh"
-#include "../operations/curves.hh"
-
-#include "../gui/operations/brightness_contrast_config.hh"
-#include "../gui/operations/imageread_config.hh"
-#include "../gui/operations/vips_operation_config.hh"
-#include "../gui/operations/clone_config.hh"
-#include "../gui/operations/curves_config.hh"
- */
-
 PF::SettingsDialog::SettingsDialog():
       Gtk::Dialog( _("Settings"),true),
       cm_working_profile_open_button(Gtk::Stock::OPEN),
