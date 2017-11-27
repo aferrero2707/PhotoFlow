@@ -28,6 +28,7 @@
  */
 
 #include "../base/exif_data.hh"
+#include "icc_transform.hh"
 #include "image_reader.hh"
 
 
@@ -96,6 +97,8 @@ raster_image( NULL )
 
   convert_format = new_convert_format();
   blender = new_blender();
+  cs_transform = new_icc_transform();
+
   set_type("imageread" );
 
   set_default_name( _("image layer") );
@@ -398,6 +401,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   transform = NULL;
   PF::ICCProfile* out_iccprof = NULL;
   if( (profile_mode_t)in_profile_mode.get_enum_value().first != PF::PROF_MODE_NONE ) {
+    PF::set_icc_profile( out, in_iccprof );
     // only retrieve the working profile if the image is color managed
     pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
     if( pmode == PF::PROF_TYPE_EMBEDDED ) {
@@ -425,7 +429,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"... FAILED"<<std::endl;
     }
 
-    //if( changed ) {
+    /*//if( changed ) {
     if( in_profile && out_profile && out_profile != in_profile ) {
       cmsUInt32Number infmt = vips2lcms_pixel_format( out->BandFmt, in_profile );
       cmsUInt32Number outfmt = vips2lcms_pixel_format( out->BandFmt, out_profile );
@@ -439,9 +443,29 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     //} else if( !out_profile ) {
     //  out_iccprof = in_iccprof;
     //  out_profile = in_profile;
+    }*/
+    if( in_iccprof && out_iccprof && in_iccprof->get_profile() != out_iccprof->get_profile() ) {
+      PF::ICCTransformPar* tr_par =
+          dynamic_cast<PF::ICCTransformPar*>( cs_transform->get_par() );
+      std::vector<VipsImage*> in2;
+      in2.push_back( out );
+      tr_par->set_image_hints( out );
+      tr_par->set_format( get_format() );
+      tr_par->set_out_profile( out_iccprof );
+      tr_par->set_bpc( false );
+      tr_par->set_adaptation_state( 0.f );
+      tr_par->set_clip_negative(false);
+      tr_par->set_clip_overflow(false);
+      VipsImage* out2 = tr_par->build( in2, 0, NULL, NULL, level );
+      if( out2 ) {
+        PF_UNREF( out, "RawOutputPar::build(): out unref" );
+      }
+      out = out2;
     }
   }
 
+  PF::print_embedded_profile( out );
+  return out;
 
   std::cout<<"ImageReaderPar::build(): out_profile="<<out_profile<<std::endl;
   std::cout<<"ImageReaderPar::build(): transform="<<transform<<std::endl;

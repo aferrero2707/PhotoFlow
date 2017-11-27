@@ -65,6 +65,7 @@ namespace PF
     cmsHPROFILE in_profile;
     cmsHPROFILE out_profile;
     cmsHTRANSFORM transform;
+    ProcessorBase* cs_transform;
 
     RasterImage* raster_image;
 
