@@ -31,6 +31,7 @@
 
 #include "../base/exif_data.hh"
 #include "../base/iccstore.hh"
+#include "icc_transform.hh"
 #include "raw_output.hh"
 
 /* We need C linkage for this.
@@ -79,7 +80,7 @@ PF::RawOutputPar::RawOutputPar():
       current_out_trc_type( PF::PF_TRC_STANDARD ),
       out_profile_name("out_profile_name", this),
       out_profile( NULL ),
-      transform( NULL ),
+      //transform( NULL ),
       clip_negative("clip_negative",this,true),
       clip_overflow("clip_overflow",this,true)
 {
@@ -119,6 +120,8 @@ PF::RawOutputPar::RawOutputPar():
   cmsToneCurve* curve = Build_sRGBGamma(NULL);
   srgb_curve = cmsReverseToneCurve( curve );
   cmsFreeToneCurve( curve );
+
+  cs_transform = new_icc_transform();
 
   set_type("raw_output_v2" );
 }
@@ -345,9 +348,11 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     out_profile = NULL;
   }
 
+  /*
   if( transform )
     cmsDeleteTransform( transform );
   transform = NULL;
+  */
 
   profile_type_t ptype;
   profile_mode_t pmode;
@@ -373,7 +378,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       out_profile = PF::ICCStore::Instance().get_profile( ptype, trc_type );
     }
 
-    if( cam_profile && out_profile && out_profile->get_profile() != cam_profile->get_profile() ) {
+    /*if( cam_profile && out_profile && out_profile->get_profile() != cam_profile->get_profile() ) {
       bool supported = cmsIsIntentSupported(cam_profile->get_profile(),
           INTENT_RELATIVE_COLORIMETRIC,LCMS_USED_AS_INPUT);
       std::cout<<"Relative calorimetric supported by input profile: "<<supported<<std::endl;
@@ -386,7 +391,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
 #ifndef NDEBUG
       std::cout<<"RawOutputPar::build(): new transform="<<transform<<std::endl;
 #endif
-    }
+    }*/
   }
 #ifndef NDEBUG
   std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
@@ -427,6 +432,25 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   }
   /**/
   if( out_profile ) {
+    if( cam_profile && out_profile && out_profile->get_profile() != cam_profile->get_profile() ) {
+      PF::set_icc_profile( out, cam_profile );
+      PF::ICCTransformPar* tr_par =
+          dynamic_cast<PF::ICCTransformPar*>( cs_transform->get_par() );
+      std::vector<VipsImage*> in2;
+      in2.push_back( out );
+      tr_par->set_image_hints( out );
+      tr_par->set_format( get_format() );
+      tr_par->set_out_profile( out_profile );
+      tr_par->set_bpc( false );
+      tr_par->set_adaptation_state( 0.f );
+      tr_par->set_clip_negative(clip_negative.get());
+      tr_par->set_clip_overflow(clip_overflow.get());
+      VipsImage* out2 = tr_par->build( in2, 0, NULL, NULL, level );
+      if( out2 ) {
+        PF_UNREF( out, "RawOutputPar::build(): out unref" );
+      }
+      out = out2;
+    }
     /*
     cmsUInt32Number out_length;
     cmsSaveProfileToMem( out_profile, NULL, &out_length);
@@ -444,7 +468,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
      */
     std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, out_profile ) called"<<std::endl;
-    if( out_profile ) {
+    if( out_profile->get_profile() ) {
       char tstr[1024];
       cmsGetProfileInfoASCII(out_profile->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
       std::cout<<"RawOutputPar::build(): output profile: "<<tstr<<std::endl;

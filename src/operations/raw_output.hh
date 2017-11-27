@@ -152,7 +152,8 @@ enum exposure_mode_t {
     //cmsHPROFILE out_profile;
     PF::ICCProfile* out_profile;
 
-    cmsHTRANSFORM transform;
+    //cmsHTRANSFORM transform;
+    ProcessorBase* cs_transform;
 
     Property<bool> clip_negative, clip_overflow;
 
@@ -180,7 +181,7 @@ enum exposure_mode_t {
     input_gamma_mode_t get_gamma_mode() { return (input_gamma_mode_t)gamma_mode.get_enum_value().first; }
     cmsToneCurve* get_gamma_curve() { return gamma_curve; }
     cmsToneCurve* get_srgb_curve() { return srgb_curve; }
-    cmsHTRANSFORM get_transform() { return transform; }
+    //cmsHTRANSFORM get_transform() { return transform; }
     TRC_type get_trc_type() { return (TRC_type)out_trc_type.get_enum_value().first; }
 
     const std::vector<rtengine::DCPProfile::HsbModify>& get_delta_base() { return delta_base; }
@@ -550,7 +551,7 @@ enum exposure_mode_t {
             }
           }
 
-          if(opar->get_transform()) {
+          /*if(opar->get_transform()) {
             for( int xi = 0; xi < line_size; xi++ ) {
               line2[xi] = CLIPRAW(line[xi]);
             }
@@ -559,26 +560,26 @@ enum exposure_mode_t {
               std::cout<<"in: "<<line[0]<<","<<line[1]<<","<<line[2]<<"   ";
               std::cout<<"out: "<<pout[0]<<","<<pout[1]<<","<<pout[2]<<"   "<<std::endl;
             }
-          } else {
+          } else*/ {
             memcpy( pout, line, sizeof(float)*line_size );
-            for( int xi = 0; xi < line_size; xi++ ) {
-              pout[xi] = CLIPRAW(pout[xi]*exposure);
-            }
+            //for( int xi = 0; xi < line_size; xi++ ) {
+            //  pout[xi] = CLIPRAW(pout[xi]);
+            //}
           }
 
         } else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ) {
-          if(opar->get_transform()) {
+          /*if(opar->get_transform()) {
             for( int xi = 0; xi < line_size; xi++ ) {
               line2[xi] = CLIPRAW(line[xi]);
             }
             cmsDoTransform( opar->get_transform(), line2, pout, width );
             //std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
             //    <<pout[0]<<","<<pout[1]<<","<<pout[2]<<std::endl;
-          } else {
+          } else*/ {
             memcpy( pout, line, sizeof(float)*line_size );
           }
         } else if( opar->get_camera_profile_mode() == IN_PROF_DCP ) {
-          if(opar->get_transform()) {
+          //if(opar->get_transform()) {
             float newr, newg, newb, h, s, v;
 
             for( int xi = 0; xi < line_size; xi++ ) {
@@ -634,13 +635,14 @@ enum exposure_mode_t {
                   std::cout<<"line2[xi]="<<line2[xi]<<" line2[xi+1]="<<line2[xi+1]<<" line2[xi+2]="<<line2[xi+2]<<std::endl;
               }
             }
-            cmsDoTransform( opar->get_transform(), line2, pout, width );
+            memcpy( pout, line2, sizeof(float)*line_size );
+            //cmsDoTransform( opar->get_transform(), line2, pout, width );
             if( r->top==0 && r-> left==0 && y<4 )
               std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
               <<pout[0]<<","<<pout[1]<<","<<pout[2]<<std::endl;
-          } else {
-            memcpy( pout, line, sizeof(float)*line_size );
-          }
+          //} else {
+          //  memcpy( pout, line, sizeof(float)*line_size );
+          //}
         } else {
 
           if( false && r->top==0 && r->left==0 ) {
@@ -660,8 +662,8 @@ enum exposure_mode_t {
         for( int xi = 0; xi < line_size; xi++ ) {
           //if(pout[xi] > 1 || pout[xi] < 0)
           //  std::cout<<"RGB_out["<<xi%3<<"]="<<pout[xi]<<std::endl;
-          if( opar->get_clip_negative() ) pout[xi] = MAX( pout[xi], 0.f );
-          if( opar->get_clip_overflow() ) pout[xi] = MIN( pout[xi], 1.f );
+          //if( opar->get_clip_negative() ) pout[xi] = MAX( pout[xi], 0.f );
+          //if( opar->get_clip_overflow() ) pout[xi] = MIN( pout[xi], 1.f );
           //pout[xi] = CLIPOUT(pout[xi]);
         }
       }
