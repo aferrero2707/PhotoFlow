@@ -140,7 +140,8 @@ enum exposure_mode_t {
     //cmsHPROFILE out_profile;
     PF::ICCProfile* out_profile;
 
-    cmsHTRANSFORM transform;
+    //cmsHTRANSFORM transform;
+    ProcessorBase* cs_transform;
 
   public:
 
@@ -167,7 +168,7 @@ enum exposure_mode_t {
     input_gamma_mode_t get_gamma_mode() { return (input_gamma_mode_t)gamma_mode.get_enum_value().first; }
     cmsToneCurve* get_gamma_curve() { return gamma_curve; }
     cmsToneCurve* get_srgb_curve() { return srgb_curve; }
-    cmsHTRANSFORM get_transform() { return transform; }
+    //cmsHTRANSFORM get_transform() { return transform; }
 
     void set_image_hints( VipsImage* img );
 
@@ -484,7 +485,7 @@ enum exposure_mode_t {
             }
           }
 
-          if(opar->get_transform()) {
+          /*if(opar->get_transform()) {
             for( int xi = 0; xi < line_size; xi++ ) {
               line2[xi] = CLIPRAW(line[xi]);
             }
@@ -501,15 +502,15 @@ enum exposure_mode_t {
                 pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 256.0);
               }
             }
-          } else {
+          } else*/ {
             memcpy( pout, line, sizeof(float)*line_size );
-            for( int xi = 0; xi < line_size; xi++ ) {
-              pout[xi] = CLIPRAW(pout[xi]*exposure);
-            }
+            //for( int xi = 0; xi < line_size; xi++ ) {
+            //  pout[xi] = CLIPRAW(pout[xi]*exposure);
+            //}
           }
 
         } else if( opar->get_camera_profile_mode() == IN_PROF_MATRIX ) {
-          if(opar->get_transform()) {
+          /*if(opar->get_transform()) {
             for( int xi = 0; xi < line_size; xi++ ) {
               line2[xi] = CLIPRAW(line[xi]);
             }
@@ -524,7 +525,7 @@ enum exposure_mode_t {
                 pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0) / 256.0);
               }
             }
-          } else {
+          } else*/ {
             memcpy( pout, line, sizeof(float)*line_size );
           }
         } else {

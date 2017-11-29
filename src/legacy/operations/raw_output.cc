@@ -29,8 +29,9 @@
 
 #include <cmath>
 
-#include "../base/exif_data.hh"
-#include "../base/iccstore.hh"
+#include "../../base/exif_data.hh"
+#include "../../base/iccstore.hh"
+#include "../../operations/icc_transform.hh"
 #include "raw_output.hh"
 
 
@@ -70,8 +71,8 @@ PF::RawOutputV1Par::RawOutputV1Par():
           out_profile_mode("out_profile_mode",this,PF::PROF_TYPE_sRGB,"sRGB","sRGB"),
           //current_out_profile_mode( PF::PROF_TYPE_sRGB ),
           out_profile_name("out_profile_name", this),
-          out_profile( NULL ),
-          transform( NULL )
+          out_profile( NULL )
+          //transform( NULL )
 {
   exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
 
@@ -96,6 +97,8 @@ PF::RawOutputV1Par::RawOutputV1Par():
   cmsToneCurve* curve = Build_sRGBGamma(NULL);
   srgb_curve = cmsReverseToneCurve( curve );
   cmsFreeToneCurve( curve );
+
+  cs_transform = new_icc_transform();
 
   set_type("raw_output" );
 }
@@ -175,7 +178,7 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
       (cam_profile==NULL) || (out_profile==NULL);
 
   if( cam_profile && (mode_changed || cam_changed) ) {
-    cmsCloseProfile( cam_profile );
+    //cmsCloseProfile( cam_profile );
     cam_profile = NULL;
   }
 
@@ -287,7 +290,7 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"  out_profile colorspace: "<<cmsGetColorSpace(out_profile->get_profile())<<std::endl;
     }
 #endif
-    if( transform ) {
+    /*if( transform ) {
       cmsDeleteTransform( transform );  
     }
     transform = NULL;
@@ -306,7 +309,7 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
 #ifndef NDEBUG
       std::cout<<"RawOutputPar::build(): new transform="<<transform<<std::endl;
 #endif
-    }
+    }*/
   }
 #ifndef NDEBUG
   std::cout<<"RawOutputPar::build(): transform="<<transform<<std::endl;
@@ -347,6 +350,25 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
   }
   /**/
   if( out_profile ) {
+    if( cam_profile && out_profile && out_profile->get_profile() != cam_profile->get_profile() ) {
+      PF::set_icc_profile( out, cam_profile );
+      PF::ICCTransformPar* tr_par =
+          dynamic_cast<PF::ICCTransformPar*>( cs_transform->get_par() );
+      std::vector<VipsImage*> in2;
+      in2.push_back( out );
+      tr_par->set_image_hints( out );
+      tr_par->set_format( get_format() );
+      tr_par->set_out_profile( out_profile );
+      tr_par->set_bpc( false );
+      tr_par->set_adaptation_state( 0.f );
+      tr_par->set_clip_negative(true);
+      tr_par->set_clip_overflow(true);
+      VipsImage* out2 = tr_par->build( in2, 0, NULL, NULL, level );
+      if( out2 ) {
+        PF_UNREF( out, "RawOutputPar::build(): out unref" );
+      }
+      out = out2;
+    }
     /*
     cmsUInt32Number out_length;
     cmsSaveProfileToMem( out_profile, NULL, &out_length);
@@ -364,7 +386,7 @@ VipsImage* PF::RawOutputV1Par::build(std::vector<VipsImage*>& in, int first,
     //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
      */
     std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, out_profile ) called"<<std::endl;
-    if( out_profile ) {
+    if( out_profile->get_profile() ) {
       char tstr[1024];
       cmsGetProfileInfoASCII(out_profile->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
       std::cout<<"RawOutputPar::build(): output profile: "<<tstr<<std::endl;
