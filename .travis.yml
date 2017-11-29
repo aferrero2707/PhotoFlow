@@ -150,7 +150,7 @@ matrix:
             JOBS="`sysctl -n hw.ncpu`"
             MACOSX_DEPLOYMENT_TARGET=10.8
             HOMEBREW_NO_AUTO_UPDATE=1
-            PATH=$HOME/homebrew/bin:$PATH
+            PATH=$HOME/homebrew/opt/python/libexec/bin:$HOME/homebrew/bin:$PATH
             LD_LIBRARY_PATH=$HOME/homebrew/lib:$LD_LIBRARY_PATH
             PKG_CONFIG_PATH=$HOME/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH
           before_script:
