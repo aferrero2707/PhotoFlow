@@ -120,6 +120,9 @@ namespace PF
     wb_mode_t get_wb_mode();
     void get_wb(float* mul);
     void set_wb(float r, float g, float b);
+    void add_wb_area(std::vector<int>& area);
+    std::vector< std::vector<int> >& get_wb_areas();
+
     int get_hotp_fixed();
 
     int get_tca_method() { return tca_method.get_enum_value().first; }

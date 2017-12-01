@@ -354,9 +354,9 @@ void PF::Sampler::update( VipsRect* area )
 
   if( !enabled ) return;
 
-  //#ifdef DEBUG_DISPLAY
+#ifndef NDEBUG
   std::cout<<"PF::Sampler::update(): called"<<std::endl;
-  //#endif
+#endif
   if( !get_pipeline() ) {
     std::cout<<"Sampler::update(): error: NULL pipeline"<<std::endl;
     return;
@@ -390,12 +390,12 @@ void PF::Sampler::update( VipsRect* area )
   }
   if( do_merged ) {
     image = get_pipeline()->get_output();
-    //#ifdef DEBUG_DISPLAY
+#ifndef NDEBUG
     std::cout<<"Sampler::update(): image="<<image<<std::endl;
     std::cout<<"                     image->Bands="<<image->Bands<<std::endl;
     std::cout<<"                     image->BandFmt="<<image->BandFmt<<std::endl;
     std::cout<<"                     image size: "<<image->Xsize<<"x"<<image->Ysize<<std::endl;
-    //#endif
+#endif
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "Sampler::update(): merged image ref" );
       std::cout<<"PF_REF(image) called"<<std::endl;
@@ -408,12 +408,12 @@ void PF::Sampler::update( VipsRect* area )
     if( !(node->blended) ) return;
 
     image = node->blended;
-    //#ifdef DEBUG_DISPLAY
+#ifndef NDEBUG
     std::cout<<"Sampler::update(): node->image("<<node->image<<")->Xsize="<<node->image->Xsize
         <<"    node->image->Ysize="<<node->image->Ysize<<std::endl;
     std::cout<<"Sampler::update(): node->blended("<<node->blended<<")->Xsize="<<node->blended->Xsize
         <<"    node->blended->Ysize="<<image->Ysize<<std::endl;
-    //#endif
+#endif
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "Sampler::update(): active image ref" );
     } else {
@@ -486,14 +486,18 @@ void PF::Sampler::update( VipsRect* area )
   update->sampler = this;
   update->type = vips_image_get_interpretation(image);
   for( int c = 0; c < image->Bands; c++ ) {
-    std::cout<<"PF::Sampler::update(): tot["<<c<<"]="<<tot[c]<<std::endl;
     update->val[c] = tot[c];
+#ifndef NDEBUG
+    std::cout<<"PF::Sampler::update(): tot["<<c<<"]="<<tot[c]<<std::endl;
     std::cout<<"PF::Sampler::update(): update->val["<<c<<"]="<<update->val[c]<<std::endl;
+#endif
   }
   for( int c = 0; c < 3; c++ ) {
-    std::cout<<"PF::Sampler::update(): lch["<<c<<"]="<<lch[c]<<std::endl;
     update->lch[c] = lch[c];
+#ifndef NDEBUG
+    std::cout<<"PF::Sampler::update(): lch["<<c<<"]="<<lch[c]<<std::endl;
     std::cout<<"PF::Sampler::update(): update->lch["<<c<<"]="<<update->lch[c]<<std::endl;
+#endif
   }
   gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
 }
@@ -526,7 +530,9 @@ bool PF::Sampler::pointer_release_event( int button, double x, double y, int mod
   grabbed = false;
 
   if( get_pipeline() && get_pipeline()->get_image() ) {
+#ifndef NDEBUG
     std::cout<<"Sampler::pointer_release_event(): get_pipeline()->get_image()->update() called."<<std::endl;
+#endif
     get_pipeline()->get_image()->update();
   }
   return true;
@@ -549,10 +555,12 @@ bool PF::Sampler::modify_preview( PF::PixelBuffer& buf_out, float scale, int xof
 {
   if( !enabled ) return false;
 
+#ifndef NDEBUG
   std::cout<<"Sampler::modify_preview() called"<<std::endl
       <<"  scale="<<scale<<std::endl
       <<"  sampler_x="<<sampler_x<<std::endl
       <<"  sampler_y="<<sampler_y<<std::endl;
+#endif
 
   double cx = sampler_x * scale;
   double cy = sampler_y * scale;

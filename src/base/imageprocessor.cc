@@ -273,8 +273,8 @@ void PF::ImageProcessor::run()
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         //request.image->sample_lock();
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): image locked."<<std::endl;
-        if( (request.area.width!=0) && (request.area.height!=0) )
-          request.image->do_sample( request.layer_id, request.area );
+        if( !(request.areas.empty()) )
+          request.image->do_sample( request.layer_id, request.areas, request.weighted_average );
         request.image->sample_done_signal();
         //request.image->sample_unlock();
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;

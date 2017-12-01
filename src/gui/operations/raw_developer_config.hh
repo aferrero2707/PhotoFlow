@@ -96,6 +96,8 @@ public:
     Gtk::Label wb_best_match_label;
     Gtk::HBox wbTargetBox;
 
+    std::vector<int> tmp_area;
+
 		// Demosaicing method selector
 		Selector demoMethodSelector;
 		// False color suppression steps slider
@@ -186,6 +188,7 @@ public:
 
     double XYZ_to_CAM[3][3], CAM_to_XYZ[3][3];
     float preset_wb[3];
+    int selected_wb_area_id, wb_area_dx, wb_area_dy, selected_wb_area_point;
     
     void temp2mul(double TempK, double tint, double mul[3]);
     void mul2temp(float coeffs[3], double *TempK, double *tint);
@@ -193,6 +196,8 @@ public:
     bool ignore_temp_tint_change;
     void temp_tint_changed();
 
+    void draw_point(int px, int py, int point_size, PF::PixelBuffer& buf_out);
+    void draw_area(std::vector<int>& area, PF::PixelBuffer& buf_in, PF::PixelBuffer& buf_out);
 
   public:
     RawDeveloperConfigGUI( Layer* l );
@@ -206,11 +211,16 @@ public:
     void on_out_button_open_clicked();
     void on_out_filename_changed();
 
+    bool is_area_wb();
+
     void spot_wb( double x, double y );
     void color_spot_wb( double x, double y );
     
-    //bool pointer_press_event( int button, double x, double y, int mod_key );
+    bool pointer_press_event( int button, double x, double y, int mod_key );
     bool pointer_release_event( int button, double x, double y, int mod_key );
+    bool pointer_motion_event( int button, double x, double y, int mod_key );
+    bool modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out,
+        float scale, int xoffset, int yoffset );
   };
 
 }

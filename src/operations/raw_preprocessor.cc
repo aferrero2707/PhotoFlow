@@ -65,12 +65,14 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_target_L("wb_target_L",this,-100), 
   wb_target_a("wb_target_a",this,10), 
   wb_target_b("wb_target_b",this,12), 
+  wb_areas("wb_areas",this),
   saturation_level_correction( "saturation_level_correction", this, 1),
   black_level_correction( "black_level_correction", this, 1)
 {
   wb_mode.add_enum_value(PF::WB_CAMERA,"CAMERA","CAMERA");
   wb_mode.add_enum_value(PF::WB_SPOT,"SPOT","Spot");
   wb_mode.add_enum_value(PF::WB_COLOR_SPOT,"COLOR_SPOT","Color spot");
+  wb_mode.add_enum_value(PF::WB_AREA_SPOT,"AREA_SPOT","Area spot");
   wb_mode.add_enum_value(PF::WB_UNIWB,"UNIWB","Uni WB");
   wb_mode.add_enum_value(PF::WB_DAYLIGHT,"DAYLIGHT",Daylight);
   wb_mode.add_enum_value(PF::WB_DIRECT_SUNLIGHT,"DIRECT_SUNLIGHT",DirectSunlight);
@@ -107,6 +109,8 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
     wb_blue[i] = new Property<float>(tstr, this, -1);
     //add_property( wb_blue[i ]);
   }
+
+  wb_areas.set_passive(true);
 
   set_type("raw_preprocessor" );
 }

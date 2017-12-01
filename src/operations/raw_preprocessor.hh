@@ -69,6 +69,8 @@ namespace PF
     Property<float> wb_target_a;
     Property<float> wb_target_b;
 
+    Property< std::vector< std::vector<int> > > wb_areas;
+
     Property<float> saturation_level_correction;
     Property<float> black_level_correction;
 
@@ -116,6 +118,8 @@ namespace PF
       std::cout<<"RawPreprocessorPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
 #endif
     }
+    void add_wb_area(std::vector<int>& area) { wb_areas.get().push_back(area); }
+    std::vector< std::vector<int> >& get_wb_areas() { return wb_areas.get(); }
 
     float get_saturation_level_correction() { return saturation_level_correction.get(); }
     float get_black_level_correction() { return black_level_correction.get(); }

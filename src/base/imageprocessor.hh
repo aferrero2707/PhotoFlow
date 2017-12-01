@@ -69,6 +69,8 @@ namespace PF
     std::list<Layer*>* dnd_dest_layer_list;
 		int level;
     VipsRect area;
+    std::vector<VipsRect> areas;
+    bool weighted_average;
     unsigned char* buf;
     process_request_t request;
     GCond* done;

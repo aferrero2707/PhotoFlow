@@ -536,7 +536,7 @@ void PF::WhiteBalanceConfigGUI::do_update()
             // Initialize the WB coefficients of the master operation the first time
             // we update the widgets
 
-            std::cout<<std::endl<<std::endl<<std::endl<<std::endl<<std::endl;
+            //std::cout<<std::endl<<std::endl<<std::endl<<std::endl<<std::endl;
             std::cout<<"WhiteBalanceConfigGUI::do_update(): par->get_preset_wb_red(PF::WB_CAMERA)="
                 <<par->get_preset_wb_red(PF::WB_CAMERA)<<std::endl;
             std::cout<<"WhiteBalanceConfigGUI::do_update(): par2->get_preset_wb_red(PF::WB_CAMERA)="

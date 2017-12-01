@@ -443,26 +443,32 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
 
 
 
-void PF::Image::sample( int layer_id, int x, int y, int size, 
-    VipsImage** image, std::vector<float>& values )
-{
+void PF::Image::sample( int layer_id, int x, int y, int size,
+    VipsImage** image, std::vector<float>& values ) {
   int left = (int)x-size/2;
   int top = (int)y-size/2;
   int width = size;
   int height = size;
   VipsRect area = {left, top, width, height};
+  std::vector<VipsRect> areas; areas.push_back(area);
+  sample(layer_id, areas, false, image, values);
+}
+
+
+
+void PF::Image::sample( int layer_id, std::vector<VipsRect>& areas, bool weighted,
+    VipsImage** image, std::vector<float>& values )
+{
 
   if( true || PF::PhotoFlow::Instance().is_batch() ) {
-    do_sample( layer_id, area );
+    do_sample( layer_id, areas, weighted );
   } else {
     ProcessRequestInfo request;
     request.image = this;
     request.layer_id = layer_id;
     request.request = PF::IMAGE_SAMPLE;
-    request.area.left = area.left;
-    request.area.top = area.top;
-    request.area.width = area.width;
-    request.area.height = area.height;
+    request.areas = areas;
+    request.weighted_average = weighted;
 
     sample_lock(); //g_mutex_lock( sample_mutex );
 #ifndef NDEBUG
@@ -499,7 +505,7 @@ void PF::Image::sample( int layer_id, int x, int y, int size,
 }
 
 
-void PF::Image::do_sample( int layer_id, VipsRect& area )
+void PF::Image::do_sample( int layer_id, std::vector<VipsRect>& areas, bool weighted )
 {
   //std::cout<<"Image::do_sample(): waiting for rebuild_done..."<<std::endl;
   //rebuild_lock();
@@ -545,10 +551,8 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
 
   // Now we have to process a small portion of the image
   // to get the corresponding Lab values
-  VipsImage* spot;
+  VipsImage* spot = image;
   VipsRect all = {0 ,0, image->Xsize, image->Ysize};
-  VipsRect clipped;
-  vips_rect_intersectrect( &area, &all, &clipped );
 
   /*
 	if( vips_crop( image, &spot, 
@@ -560,10 +564,6 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   }
 	VipsRect rspot = {0 ,0, spot->Xsize, spot->Ysize};
    */
-  spot = image;
-
-  VipsRect rspot = {clipped.left, clipped.top, clipped.width+1, clipped.height+1};
-  //std::cout<<"Image::do_sample(): rspot="<<rspot.width<<","<<rspot.height<<"+"<<rspot.left<<"+"<<rspot.top<<std::endl;
 
   //VipsImage* outimg = im_open( "spot_wb_img", "p" );
   //if (vips_sink_screen (spot, outimg, NULL,
@@ -588,49 +588,80 @@ void PF::Image::do_sample( int layer_id, VipsRect& area )
   //if( vips_sink_memory( spot ) )
   //  return;
 
-  //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount before vips_region_new()" )
-  VipsRegion* region = vips_region_new( outimg );
-  if (vips_region_prepare (region, &rspot)) {
-    std::cout<<"Image::do_sample(): vips_region_prepare() failed"<<std::endl;
-    std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
-    unlock();
-    return;
-  }
-  //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after vips_region_new()" )
+  float wtot = 0;
+  std::vector< std::vector<float> > sumv;
+  std::vector<float> weights;
+  for(unsigned int ai = 0; ai < areas.size(); ai++) {
+    VipsRect& area = areas[ai];
+    VipsRect clipped;
+    vips_rect_intersectrect( &area, &all, &clipped );
+    VipsRect rspot = {clipped.left, clipped.top, clipped.width+1, clipped.height+1};
+    //std::cout<<"Image::do_sample(): rspot="<<rspot.width<<","<<rspot.height<<"+"<<rspot.left<<"+"<<rspot.top<<std::endl;
 
-  int row, col, b;
-  int line_size = clipped.width*image->Bands;
-  float* p;
-  float avg[16];
-  for( int i = 0; i < 16; i++ ) avg[i] = 0;
-  for( row = 0; row < clipped.height; row++ ) {
-    p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top+row );
-    //std::cout<<"do_sample(): rspot.left="<<rspot.left<<"  rspot.top+row="<<rspot.top+row<<std::endl;
-    for( col = 0; col < line_size; col += image->Bands ) {
-      for( b = 0; b < image->Bands; b++ ) {
-        avg[b] += p[col+b];
-        //std::cout<<"do_sample(): p["<<row<<"]["<<col+b<<"]="<<p[col+b]<<std::endl;
+    //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount before vips_region_new()" )
+    VipsRegion* region = vips_region_new( outimg );
+    if (vips_region_prepare (region, &rspot)) {
+      std::cout<<"Image::do_sample(): vips_region_prepare() failed"<<std::endl;
+      std::cout<<"Image::do_sample(): unlocking image."<<std::endl;
+      unlock();
+      return;
+    }
+    //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after vips_region_new()" )
+
+    int row, col, b;
+    int line_size = clipped.width*image->Bands;
+    float* p;
+    std::vector<float> sum;
+    for( int i = 0; i < 16; i++ ) sum.push_back(0);
+    for( row = 0; row < clipped.height; row++ ) {
+      p = (float*)VIPS_REGION_ADDR( region, rspot.left, rspot.top+row );
+      //std::cout<<"do_sample(): rspot.left="<<rspot.left<<"  rspot.top+row="<<rspot.top+row<<std::endl;
+      for( col = 0; col < line_size; col += image->Bands ) {
+        for( b = 0; b < image->Bands; b++ ) {
+          sum[b] += p[col+b];
+          //std::cout<<"do_sample(): p["<<row<<"]["<<col+b<<"]="<<p[col+b]<<std::endl;
+        }
       }
     }
+    sumv.push_back(sum);
+    weights.push_back(clipped.width*clipped.height);
+    wtot += clipped.width*clipped.height;
+
+    PF_UNREF( region, "Image::do_sample(): region unref" );
   }
 
   sampler_values.clear();
-  for( b = 0; b < image->Bands; b++ ) {
-    avg[b] /= clipped.width*clipped.height;
+  if( weighted ) {
+    for( int b = 0; b < image->Bands; b++ ) {
+      float bsum = 0;
+      for(int ai = 0; ai < sumv.size(); ai++) {
+        bsum += sumv[ai][b];
+      }
 #ifndef NDEBUG
-    std::cout<<"sampler_values.push_back("<<avg[b]<<")"<<std::endl;
+      std::cout<<"sampler_values.push_back("<<sum/(sumv.size())<<")"<<std::endl;
 #endif
-    sampler_values.push_back( avg[b] );
+      sampler_values.push_back( bsum/wtot );
+    }
+    sampler_image = image;
+  } else {
+    for( int b = 0; b < image->Bands; b++ ) {
+      float bsum = 0;
+      for(int ai = 0; ai < sumv.size(); ai++) {
+        bsum += sumv[ai][b] / weights[ai];
+      }
+#ifndef NDEBUG
+      std::cout<<"sampler_values.push_back("<<sum/(sumv.size())<<")"<<std::endl;
+#endif
+      sampler_values.push_back( bsum/(sumv.size()) );
+    }
+    sampler_image = image;
   }
-  sampler_image = image;
-
 #ifndef NDEBUG
   std::cout<<"Image::do_sample() finished."<<std::endl;
 #endif
 
   //g_object_unref( spot );
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount before region unref" );
-  PF_UNREF( region, "Image::do_sample(): region unref" );
   //PF_PRINT_REF( outimg, "Image::do_sample(): outimg refcount after region unref" );
   PF_UNREF( outimg, "Image::do_sample(): outimg unref" );
 

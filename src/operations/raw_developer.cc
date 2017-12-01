@@ -124,6 +124,23 @@ void PF::RawDeveloperPar::set_wb(float r, float g, float b)
   if( par ) par->set_wb(r,g,b);
 }
 
+
+void PF::RawDeveloperPar::add_wb_area(std::vector<int>& area)
+{
+  PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  g_assert( par != NULL );
+  return par->add_wb_area(area);
+}
+
+
+std::vector< std::vector<int> >& PF::RawDeveloperPar::get_wb_areas()
+{
+  PF::RawPreprocessorPar* par = dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );
+  g_assert( par != NULL );
+  return par->get_wb_areas();
+}
+
+
 int PF::RawDeveloperPar::get_hotp_fixed()
 {
   int result = 0;

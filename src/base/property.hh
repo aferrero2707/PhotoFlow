@@ -182,6 +182,7 @@ namespace PF
     std::map< int, std::pair<std::string,std::string> > enum_values;
 
     bool internal;
+    bool passive;
 
     bool modified_flag;
 
@@ -207,6 +208,9 @@ namespace PF
 
     bool is_internal() { return internal; }
     void set_internal(bool i) { internal = i; }
+
+    bool is_passive() { return passive; }
+    void set_passive(bool p) { passive = p; }
 
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }
@@ -282,7 +286,7 @@ namespace PF
 			}
     */
 
-    virtual void modified() { set_modified(); signal_modified.emit(); }
+    virtual void modified() { if(passive) return; set_modified(); signal_modified.emit(); }
   };
 
   std::istream& operator >>(std::istream& str, PropertyBase& p);

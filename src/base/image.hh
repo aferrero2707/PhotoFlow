@@ -207,9 +207,11 @@ public:
   void do_update( PF::Pipeline* pipeline=NULL, bool update_gui=true );
 
 
+  void sample( int layer_id, std::vector<VipsRect>& areas, bool weighted,
+      VipsImage** image, std::vector<float>& values );
   void sample( int layer_id, int x, int y, int size,
       VipsImage** image, std::vector<float>& values );
-  void do_sample( int layer_id, VipsRect& area);
+  void do_sample( int layer_id, std::vector<VipsRect>& areas, bool weighted );
 
   void destroy();
   void do_destroy();

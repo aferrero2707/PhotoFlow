@@ -16,7 +16,7 @@ std::ostream& operator <<(std::ostream& str, PF::PropertyBase& p)
 
 
 PF::PropertyBase::PropertyBase(std::string n, OpParBase* par): 
-  name(n), internal(false), modified_flag(true)
+  name(n), internal(false), passive(false), modified_flag(true)
 {
   par->add_property(this);
   //std::cout<<std::endl<<std::endl<<std::endl<<"=========================="
@@ -28,7 +28,7 @@ PF::PropertyBase::PropertyBase(std::string n, OpParBase* par):
 PF::PropertyBase::PropertyBase(std::string n, OpParBase* par, 
                                int val, std::string strval, 
                                std::string valname): 
-  name(n), internal(false), modified_flag(true)
+  name(n), internal(false), passive(false), modified_flag(true)
 {
   par->add_property(this);
   add_enum_value( val, strval, valname );

@@ -383,6 +383,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
     outProfFrame( _("working profile") ),
     clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
     clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
+    selected_wb_area_id(-1),
     ignore_temp_tint_change( false )
 {
   char tstr[100];
@@ -649,6 +650,7 @@ void PF::RawDeveloperConfigGUI::temp_tint_changed()
 
 void PF::RawDeveloperConfigGUI::do_update()
 {
+  tmp_area.clear();
   //std::cout<<"RawDeveloperConfigGUI::do_update() called."<<std::endl;
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
@@ -702,11 +704,15 @@ void PF::RawDeveloperConfigGUI::do_update()
             // we update the widgets
 
             PF::RawPreprocessorPar* rppar = par->get_rawpreprocessor_par();
+#ifndef NDEBUG
             std::cout<<std::endl<<std::endl<<std::endl<<std::endl<<std::endl;
             std::cout<<"RawDeveloperConfigGUI::do_update(): rppar="<<rppar<<std::endl;
+#endif
             if( rppar ) {
+#ifndef NDEBUG
               std::cout<<"RawDeveloperConfigGUI::do_update(): rppar->get_preset_wb_red(PF::WB_CAMERA)="
                   <<rppar->get_preset_wb_red(PF::WB_CAMERA)<<std::endl;
+#endif
               if( rppar->get_preset_wb_red(PF::WB_CAMERA) <= 0 ) {
                 rppar->init_wb_coefficients( par2->get_image_data(), maker, model );
                 for( unsigned int i = 0; i < PF::WB_LAST; i++ ) {
@@ -967,30 +973,6 @@ void PF::RawDeveloperConfigGUI::pointer_press_event( int button, double x, doubl
 }
  */
 
-bool PF::RawDeveloperConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
-{
-  if( button != 1 ) return false;
-
-  if( wbModeSelector.get_prop() &&
-      wbModeSelector.get_prop()->is_enum() &&
-      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_SPOT) ) {
-    double x = sx, y = sy, w = 1, h = 1;
-    screen2layer( x, y, w, h );
-    spot_wb( x, y );
-  }
-
-  if( wbModeSelector.get_prop() &&
-      wbModeSelector.get_prop()->is_enum() &&
-      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_COLOR_SPOT) ) {
-    double x = sx, y = sy, w = 1, h = 1;
-    screen2layer( x, y, w, h );
-    color_spot_wb( x, y );
-  }
-
-  return false;
-}
-
-
 
 void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
 {
@@ -1089,21 +1071,37 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   float in_check[3] = { 0, 0, 0 };
   float rgb_check[3] = { 0, 0, 0 };
   float rgb_prev[3] = { 1000, 1000, 1000 };
-  for( int i = 0; i < 100; i++ ) {
-    // Now we have to process a small portion of the image 
-    // to get the corresponding Lab values
-    VipsImage* spot;
+
+  std::vector<VipsRect> areas;
+  if( is_area_wb() ) {
+    for(int ai = 0; ai < par->get_wb_areas().size(); ai++) {
+      int left = par->get_wb_areas()[ai][0];
+      int top = par->get_wb_areas()[ai][1];
+      int width = par->get_wb_areas()[ai][2] - par->get_wb_areas()[ai][0] + 1;
+      int height = par->get_wb_areas()[ai][3] - par->get_wb_areas()[ai][1] + 1;
+      VipsRect area = {left, top, width, height};
+      areas.push_back(area);
+    }
+  } else {
     int left = (int)x-3;
     int top = (int)y-3;
     int width = 7;
     int height = 7;
+    VipsRect area = {left, top, width, height};
+    areas.push_back(area);
+    //std::cout<<"RawDeveloperConfigGUI: getting spot WB ("<<x<<","<<y<<")"<<std::endl;
+  }
+
+  for( int i = 0; i < 100; i++ ) {
+    // Now we have to process a small portion of the image 
+    // to get the corresponding Lab values
+    VipsImage* spot;
 
     float in_avg[3] = {0, 0, 0};
     float rgb_avg[3] = {0, 0, 0};
     std::vector<float> values;
 
-    //std::cout<<"RawDeveloperConfigGUI: getting spot WB ("<<x<<","<<y<<")"<<std::endl;
-    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    img->sample( l->get_id(), areas, is_area_wb(), NULL, values );
     if( values.size() != 3 ) {
       std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
           <<values.size()<<" (!= 3)"<<std::endl;
@@ -1193,7 +1191,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
     }
 
     //std::cout<<"RawDeveloperConfigGUI: checking spot WB"<<std::endl;
-    img->sample( l->get_id(), x, y, sample_size, NULL, values );
+    img->sample( l->get_id(), areas, is_area_wb(), NULL, values );
     if( values.size() != 3 ) {
       std::cout<<"RawDeveloperConfigGUI::pointer_relese_event(): values.size() "
           <<values.size()<<" (!= 3)"<<std::endl;
@@ -1950,4 +1948,244 @@ void PF::RawDeveloperConfigGUI::on_out_filename_changed()
     //std::cout<<"  updating image"<<std::endl;
     get_layer()->get_image()->update();
   }
+}
+
+
+bool PF::RawDeveloperConfigGUI::is_area_wb()
+{
+  if( wbModeSelector.get_prop() &&
+      wbModeSelector.get_prop()->is_enum() &&
+      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_AREA_SPOT) )
+    return true;
+  return false;
+}
+
+
+
+bool PF::RawDeveloperConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
+{
+  if( !get_editing_flag() ) return false;
+
+  //if( button != 1 ) return false;
+
+  PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>(get_par());
+  if( !par ) return false;
+
+  double x = sx, y = sy, w = 1, h = 1;
+  screen2layer( x, y, w, h );
+
+  selected_wb_area_id = -1;
+  selected_wb_area_point = -1;
+  wb_area_dx = 0;
+  wb_area_dy = 0;
+  double wb_point_D = 1000000000;
+
+  if( is_area_wb() ) {
+    // Find handle point
+    std::vector< std::vector<int> >& wb_areas = par->get_wb_areas();
+
+    for(unsigned int ai = 0; ai < wb_areas.size(); ai++) {
+      std::vector<int>& area = wb_areas[ai];
+      if( area.size() != 4 ) continue;
+
+      double px1 = area[0], py1 = area[1];
+      double px2 = area[2], py2 = area[3];
+
+      double D[4];
+      D[0] = (x-px1)*(x-px1) + (y-py1)*(y-py1);
+      D[1] = (x-px2)*(x-px2) + (y-py1)*(y-py1);
+      D[2] = (x-px1)*(x-px1) + (y-py2)*(y-py2);
+      D[3] = (x-px2)*(x-px2) + (y-py2)*(y-py2);
+
+      for(int pi = 0; pi < 4; pi++) {
+        if(D[pi] >= wb_point_D) continue;
+        wb_point_D = D[pi];
+        double dx = wb_point_D, dy = wb_point_D;
+        w = 1; h = 1;
+        layer2screen(dx, dy, w, h);
+        if(dx < 5) selected_wb_area_point = ai*10 + pi;
+      }
+    }
+    if( selected_wb_area_point >= 0 ) {
+      std::cout<<"RawDeveloperConfigGUI: selected WB area point "<<selected_wb_area_point<<std::endl;
+      return true;
+    }
+
+    for(unsigned int ai = 0; ai < wb_areas.size(); ai++) {
+      std::vector<int>& area = wb_areas[ai];
+      if( area.size() != 4 ) continue;
+
+      double px1 = area[0], py1 = area[1];
+      double px2 = area[2], py2 = area[3];
+      if( x<px1 || y<py1 || x>px2 || y>py2) continue;
+
+      selected_wb_area_id = ai;
+      wb_area_dx = (int)(x - px1);
+      wb_area_dy = (int)(y - py1);
+
+      std::cout<<"RawDeveloperConfigGUI: selected WB area "<<selected_wb_area_id<<std::endl;
+      break;
+    }
+  }
+  return false;
+}
+
+
+bool PF::RawDeveloperConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
+{
+  if( button == 1 ) {
+
+  if( wbModeSelector.get_prop() &&
+      wbModeSelector.get_prop()->is_enum() &&
+      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_SPOT) ) {
+    double x = sx, y = sy, w = 1, h = 1;
+    screen2layer( x, y, w, h );
+    spot_wb( x, y );
+  }
+
+  if( wbModeSelector.get_prop() &&
+      wbModeSelector.get_prop()->is_enum() &&
+      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_COLOR_SPOT) ) {
+    double x = sx, y = sy, w = 1, h = 1;
+    screen2layer( x, y, w, h );
+    color_spot_wb( x, y );
+  }
+
+  if( wbModeSelector.get_prop() &&
+      wbModeSelector.get_prop()->is_enum() &&
+      (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_AREA_SPOT) ) {
+    double x = sx, y = sy, w = 1, h = 1;
+    screen2layer( x, y, w, h );
+    if( tmp_area.size() == 4 ) {
+      PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>(get_par());
+      if( !par ) return false;
+      par->add_wb_area(tmp_area);
+      spot_wb(0,0);
+      return true;
+    }
+  }
+
+  } else if( button == 3 && is_area_wb() && selected_wb_area_id >= 0 ) {
+    PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>(get_par());
+    if( !par ) return false;
+    std::vector< std::vector<int> >& wb_areas = par->get_wb_areas();
+    std::vector< std::vector<int> > wb_areas_new;
+    for(int ai = 0; ai < wb_areas.size(); ai++) {
+      if( ai == selected_wb_area_id ) continue;
+      wb_areas_new.push_back( wb_areas[ai] );
+    }
+    par->get_wb_areas() = wb_areas_new;
+    selected_wb_area_id = -1;
+    spot_wb(0,0);
+    return true;
+  }
+
+  return false;
+}
+
+
+bool PF::RawDeveloperConfigGUI::pointer_motion_event( int button, double sx, double sy, int mod_key )
+{
+  if( !get_editing_flag() ) return false;
+
+  PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>(get_par());
+  if( !par ) return false;
+
+  double x = sx, y = sy, w = 1, h = 1;
+  screen2layer( x, y, w, h );
+
+  int ix = x;
+  int iy = y;
+
+  if( is_area_wb() ) {
+    // Find handle point
+    std::vector< std::vector<int> >& wb_areas = par->get_wb_areas();
+    tmp_area.clear();
+
+    if( selected_wb_area_id >= 0 ) {
+      std::vector<int>& area = wb_areas[selected_wb_area_id];
+    }
+
+    std::cout<<"selected_wb_area_id: "<<selected_wb_area_id<<std::endl;
+    if( selected_wb_area_id < 0 ) {
+      // No WB areas defined yet, we suggest the placement of the first one
+      if( button < 0 ) {
+        x = sx-10; y=sy-10; w=1; h=1;
+        screen2layer( x, y, w, h );
+        tmp_area.push_back(x); tmp_area.push_back(y);
+        x = sx+10; y=sy+10; w=1; h=1;
+        screen2layer( x, y, w, h );
+        tmp_area.push_back(x); tmp_area.push_back(y);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+
+void PF::RawDeveloperConfigGUI::draw_point(int px, int py, int point_size, PF::PixelBuffer& buf_out)
+{
+  VipsRect point = { (int)px-point_size-1,
+      (int)py-point_size-1,
+      point_size*2+3, point_size*2+3};
+  VipsRect point2 = { (int)px-point_size,
+      (int)py-point_size,
+      point_size*2+1, point_size*2+1};
+  buf_out.fill( point, 0, 0, 0 );
+  buf_out.fill( point2, 255, 0, 0 );
+}
+
+
+void PF::RawDeveloperConfigGUI::draw_area(std::vector<int>& area,
+    PF::PixelBuffer& buf_in, PF::PixelBuffer& buf_out)
+{
+  if( area.size() != 4 ) return;
+
+  int point_size = 2;
+
+  double pw1 = 1, ph1 = 1;
+  double px1 = area[0], py1 = area[1];
+  layer2screen( px1, py1, pw1, ph1 );
+
+  pw1 = 1, ph1 = 1;
+  double px2 = area[2], py2 = area[3];
+  layer2screen( px2, py2, pw1, ph1 );
+
+  buf_out.draw_line( px1, py1, px2, py1, buf_in );
+  buf_out.draw_line( px1, py1, px1, py2, buf_in );
+  buf_out.draw_line( px1, py2, px2, py2, buf_in );
+  buf_out.draw_line( px2, py1, px2, py2, buf_in );
+
+  draw_point(px1, py1, point_size, buf_out);
+  draw_point(px2, py1, point_size, buf_out);
+  draw_point(px1, py2, point_size, buf_out);
+  draw_point(px2, py2, point_size, buf_out);
+}
+
+
+bool PF::RawDeveloperConfigGUI::modify_preview( PF::PixelBuffer& buf_in, PF::PixelBuffer& buf_out,
+                                                            float scale, int xoffset, int yoffset )
+{
+  PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>(get_par());
+  if( !par ) return false;
+
+  // Resize the output buffer to match the input one
+  buf_out.resize( buf_in.get_rect() );
+
+  // Copy pixel data from input to output
+  buf_out.copy( buf_in );
+
+  if( is_area_wb() ) {
+    std::vector< std::vector<int> >& wb_areas = par->get_wb_areas();
+
+    for(unsigned int ai = 0; ai < wb_areas.size(); ai++) {
+      std::vector<int>& area = wb_areas[ai];
+      draw_area( area, buf_in, buf_out );
+    }
+    if( tmp_area.size() == 4) {
+      draw_area( tmp_area, buf_in, buf_out );
+    }
+  }
+  return true;
 }
