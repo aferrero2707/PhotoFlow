@@ -208,7 +208,8 @@ PF::ScalePar::ScalePar():
       scale_width_inches("scale_width_inches",this,0),
       scale_height_inches("scale_height_inches",this,0),
       scale_resolution("scale_resolution",this,300),
-      rotation_points("rotation_points",this)
+      rotation_points("rotation_points",this),
+      sin_angle(0), cos_angle(1), scale_mult(1)
 {
   //scale_mode.add_enum_value( SCALE_MODE_FILL, "SCALE_MODE_FILL", "Fill" );
   //scale_mode.add_enum_value( SCALE_MODE_RESIZE, "SCALE_MODE_RESIZE", "Resize" );
@@ -276,6 +277,8 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     srcimg = flipped;
   }
 
+  sin_angle = 0;
+  cos_angle = 1;
 
   if( rotate_angle.get() != 0 ) {
     sin_angle = sin( rotate_angle.get() * 3.141592653589793 / 180.0 );

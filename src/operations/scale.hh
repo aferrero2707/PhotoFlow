@@ -121,7 +121,7 @@ enum scale_unit_t
       float yin = minus*sin_angle*((float)rout->left-out_w2) + cos_angle*((float)rout->top-out_h2) + in_h2 + crop.top;
       //std::cout<<"xin = "<<xin<<" = "<<cos_angle<<"*("<<rout->left<<"-"<<out_w2<<") - "<<sin_angle<<"*("<<rout->top<<"-"<<out_h2<<") + "<<in_w2<<" + "<<crop.left<<std::endl;
       //std::cout<<"yin = "<<yin<<" = minus*"<<cos_angle<<"*("<<rout->left<<"-"<<out_w2<<") + "<<cos_angle<<"*("<<rout->top<<"-"<<out_h2<<") + "<<in_h2<<" + "<<crop.top<<std::endl;
-      //std::cout<<"sin_angle="<<sin_angle<<" cos_angle="<<cos_angle<<"  xin="<<xin<<" yin="<<yin<<std::endl;
+      //std::cout<<"sin_angle="<<sin_angle<<" cos_angle="<<cos_angle<<"  xin="<<xin<<" yin="<<yin<<" scale_mult="<<scale_mult<<std::endl;
       rin->left = xin/scale_mult;
       rin->top = yin/scale_mult;
       rin->width = rout->width/scale_mult;
