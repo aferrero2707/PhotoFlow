@@ -72,7 +72,7 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_mode.add_enum_value(PF::WB_CAMERA,"CAMERA","CAMERA");
   wb_mode.add_enum_value(PF::WB_SPOT,"SPOT","Spot");
   wb_mode.add_enum_value(PF::WB_COLOR_SPOT,"COLOR_SPOT","Color spot");
-  wb_mode.add_enum_value(PF::WB_AREA_SPOT,"AREA_SPOT","Area spot");
+  wb_mode.add_enum_value(PF::WB_AREA_SPOT,"AREA_SPOT","Area");
   wb_mode.add_enum_value(PF::WB_UNIWB,"UNIWB","Uni WB");
   wb_mode.add_enum_value(PF::WB_DAYLIGHT,"DAYLIGHT",Daylight);
   wb_mode.add_enum_value(PF::WB_DIRECT_SUNLIGHT,"DIRECT_SUNLIGHT",DirectSunlight);
