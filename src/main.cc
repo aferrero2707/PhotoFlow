@@ -74,6 +74,7 @@
 #include "base/pf_file_loader.hh"
 #include "rt/rtengine/color.h"
 
+
 extern int vips__leak;
 
 /* We need C linkage for this.
@@ -285,12 +286,25 @@ int main (int argc, char *argv[])
     mainWindow = new PF::MainWindow();
 #ifdef GTKMM_3
   Gtk::Settings::get_default()->property_gtk_application_prefer_dark_theme().set_value(true);
+#if defined(WIN32)
+  Glib::ustring themerc = themesPath + "\\photoflow-dark.css";
+  Glib::ustring themerc2 = themesPath2 + "\\photoflow-dark.css";
+#else
+  Glib::ustring themerc = themesPath + "/photoflow-dark.css";
+  Glib::ustring themerc2 = themesPath2 + "/photoflow-dark.css";
+#endif
+  std::cout<<"themerc2: "<<themerc2<<std::endl;
 
-  int stat_result = stat((themesPath + "/photoflow-dark.css").c_str(), &buffer);
+  int stat_result = stat(themerc.c_str(), &buffer);
+  int stat_result2 = stat(themerc2.c_str(), &buffer);
   //int stat_result = stat((themesPath + "/RawTherapee.css").c_str(), &buffer);
   //int stat_result = stat((themesPath + "/gtk-3.0/gtk.css").c_str(), &buffer);
   //stat_result = 1;
-  if( stat_result == 0 ) {
+  Glib::ustring themerc_real;
+  if( stat_result2 == 0 ) themerc_real = themerc2;
+  else if( stat_result == 0 ) themerc_real = themerc;
+
+  if( !themerc_real.empty() ) {
     Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
     //Glib::RefPtr<Gtk::StyleContext> cntx = mainWindow->get_style_context();
     Glib::RefPtr<Gtk::StyleContext> cntx = Gtk::StyleContext::create();
@@ -300,8 +314,8 @@ int main (int argc, char *argv[])
     //cntx->add_provider(css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     cntx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     //cntx->invalidate();
-    std::cout<<"Loading theme file "<<themesPath + "/photoflow-dark.css"<<std::endl;
-    css->load_from_path(themesPath + "/photoflow-dark.css");
+    std::cout<<"Loading theme file "<<themerc_real<<std::endl;
+    css->load_from_path(themerc_real.c_str());
     //std::cout<<"Loading theme file "<<themesPath + "/RawTherapee.css"<<std::endl;
     //css->load_from_path(themesPath + "/RawTherapee.css");
     //css->load_from_path(themesPath + "/gtk-3.0/gtk.css");
@@ -345,7 +359,7 @@ int main (int argc, char *argv[])
     //Shows the window and returns when it is closed.
     mainWindow->show_all();
     if( argc > 1 ) {
-      fullpath = realpath( argv[argc-1], NULL );
+      fullpath = PF::resolve_filename( argv[argc-1] );
       if(!fullpath)
         return 1;
       mainWindow->open_image( fullpath );
