@@ -62,6 +62,7 @@ PF::RawOutputPar::RawOutputPar():
       gamma_curve( NULL ),
       cam_profile_name("cam_profile_name", this),
       cam_dcp_profile_name("cam_dcp_profile_name", this),
+      cam_dcp_profile( NULL ),
       cam_profile( NULL ),
       apply_hue_sat_map( "apply_hue_sat_map", this, true ),
       apply_look_table( "apply_look_table", this, true ),
