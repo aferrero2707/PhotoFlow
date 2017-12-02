@@ -141,6 +141,7 @@ namespace PF
 		int run_batch(int argc, char *argv[]);
   };
 
+  gchar* resolve_filename(gchar* filename);
 
   void pf_object_ref(GObject* object, const char* msg);
 #define PF_REF( object, msg ) PF::pf_object_ref( G_OBJECT(object), msg );

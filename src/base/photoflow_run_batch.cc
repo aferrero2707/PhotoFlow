@@ -99,6 +99,26 @@ bool replace_string(std::string& str, const std::string& from, const std::string
     return true;
 }
 
+
+gchar* PF::resolve_filename(gchar* filename)
+{
+  if( !filename ) return NULL;
+  const gchar* appimage_path = g_getenv("APPIMAGE_OWD");
+  gchar* filename_full = filename;
+  if(appimage_path && !g_path_is_absolute(filename)) {
+    filename_full = g_build_filename( appimage_path, filename, NULL );
+  }
+  gchar* fullpath = realpath( filename_full, NULL );
+  if(filename) std::cout<<"filename: \""<<filename<<"\"  ";
+  if(appimage_path) std::cout<<"APPIMAGE_OWD=\""<<appimage_path<<"\"  ";
+  if(fullpath) std::cout<<"fullpath=\""<<fullpath<<"\"";
+  std::cout<<std::endl;
+  if( filename_full != filename ) g_free(filename_full);
+
+  return fullpath;
+}
+
+
 int PF::PhotoFlow::run_batch(int argc, char *argv[])
 {
 /*
@@ -175,7 +195,7 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
     std::string img_in, img_out;
     std::vector< std::string > presets;
 
-    fullpath = realpath( argv[1], NULL );
+    fullpath = resolve_filename( argv[1] );
     if(!fullpath) {
       std::cout<<"PhotoFlow::run_batch(): input file not found: \""<<argv[1]<<"\""<<std::endl;
       return 1;
@@ -210,13 +230,22 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
     std::string patt = "%name%";
     replace_string( img_out, patt, iname );
     std::cout<<"img_out(2)= "<<img_out<<std::endl;
+    fullpath = resolve_filename((gchar*)(img_out.c_str()));
+    if( fullpath ) {
+      img_out = fullpath;
+      free(fullpath);
+    }
+    std::cout<<"img_out(3)= "<<img_out<<std::endl;
 
 
     image->open( img_in );
 
     for( int i = 2; i < argc-1; i++ ) {
-      presets.push_back( std::string(argv[i]) );
-      PF::insert_pf_preset( argv[i], image, NULL, &(image->get_layer_manager().get_layers()), false );
+      fullpath = resolve_filename(argv[i]);
+      if( !fullpath ) continue;
+      presets.push_back( std::string(fullpath) );
+      PF::insert_pf_preset( fullpath, image, NULL, &(image->get_layer_manager().get_layers()), false );
+      free(fullpath);
     }
 
     std::string oext;
