@@ -122,6 +122,8 @@ matrix:
           env: TARGET_SYSTEM=Linux-GTK3
           before_script:
                 - travis_wait 120 sleep infinity & sudo docker pull photoflow/docker-trusty-gtk3
+                - rm -rf appimage
+                - git clone https://github.com/aferrero2707/pf-build-appimage.git appimage
                 - sudo docker run -it -v $(pwd):/sources photoflow/docker-trusty-gtk3 bash /sources/appimage/appimage2.sh
                 - bash appimage/package-appimage.sh
           after_success:
