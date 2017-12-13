@@ -1,5 +1,0 @@
-[
- { include: ["@<gtest/.*>", "private", "<gtest/gtest.h>", "public"] },
- { include: ["@<gmock/.*>", "private", "<gmock/gmock.h>", "public"] },
- { include: ["<ThreadSafetyAnalysis.h>", "private", "\"ThreadSafetyAnalysis.h\"", "public"] }
-]
