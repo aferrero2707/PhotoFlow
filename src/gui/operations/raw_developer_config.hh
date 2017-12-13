@@ -191,6 +191,7 @@ public:
     int selected_wb_area_id, wb_area_dx, wb_area_dy, selected_wb_area_point;
     
     void find_handle_point(int x, int y);
+    void find_area(int x, int y);
 
     void temp2mul(double TempK, double tint, double mul[3]);
     void mul2temp(float coeffs[3], double *TempK, double *tint);
