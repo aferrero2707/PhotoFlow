@@ -1996,6 +1996,33 @@ void PF::RawDeveloperConfigGUI::find_handle_point(int x, int y)
 
 
 
+void PF::RawDeveloperConfigGUI::find_area(int x, int y)
+{
+  double wb_point_D = 1000000000;
+  PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>(get_par());
+  if( !par ) return;
+  std::vector< std::vector<int> >& wb_areas = par->get_wb_areas();
+  selected_wb_area_id = -1;
+
+  for(unsigned int ai = 0; ai < wb_areas.size(); ai++) {
+    std::vector<int>& area = wb_areas[ai];
+    if( area.size() != 4 ) continue;
+
+    double px1 = area[0], py1 = area[1];
+    double px2 = area[2], py2 = area[3];
+    std::cout<<"x="<<x<<" y="<<y<<" px1="<<px1<<" py1="<<py1<<" px2="<<px2<<" py2="<<py2<<std::endl;
+    if( x<px1 || y<py1 || x>px2 || y>py2) continue;
+
+    selected_wb_area_id = ai;
+    wb_area_dx = (int)(x - px1);
+    wb_area_dy = (int)(y - py1);
+
+    break;
+  }
+}
+
+
+
 
 bool PF::RawDeveloperConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
@@ -2023,22 +2050,20 @@ bool PF::RawDeveloperConfigGUI::pointer_press_event( int button, double sx, doub
       return true;
     }
 
-    std::vector< std::vector<int> >& wb_areas = par->get_wb_areas();
-    for(unsigned int ai = 0; ai < wb_areas.size(); ai++) {
-      continue;
-      std::vector<int>& area = wb_areas[ai];
-      if( area.size() != 4 ) continue;
+    find_area(x, y);
+    if( selected_wb_area_id >= 0 ) {
+      std::cout<<"RawDeveloperConfigGUI: selected WB area id "<<selected_wb_area_point<<std::endl;
+      tmp_area.clear();
+      return true;
+    }
+  }
 
-      double px1 = area[0], py1 = area[1];
-      double px2 = area[2], py2 = area[3];
-      if( x<px1 || y<py1 || x>px2 || y>py2) continue;
-
-      selected_wb_area_id = ai;
-      wb_area_dx = (int)(x - px1);
-      wb_area_dy = (int)(y - py1);
-
-      std::cout<<"RawDeveloperConfigGUI: selected WB area "<<selected_wb_area_id<<std::endl;
-      break;
+  if( is_area_wb() && button == 3 ) {
+    find_area(x, y);
+    if( selected_wb_area_id >= 0 ) {
+      std::cout<<"RawDeveloperConfigGUI: selected WB area id "<<selected_wb_area_point<<std::endl;
+      tmp_area.clear();
+      return true;
     }
   }
   return false;
@@ -2047,6 +2072,9 @@ bool PF::RawDeveloperConfigGUI::pointer_press_event( int button, double sx, doub
 
 bool PF::RawDeveloperConfigGUI::pointer_release_event( int button, double sx, double sy, int mod_key )
 {
+  std::cout<<"release: button="<<button<<"  selected_wb_area_point: "<<selected_wb_area_point
+      <<" selected_wb_area_id: "<<selected_wb_area_id<<std::endl;
+
   if( button == 1 ) {
     if( wbModeSelector.get_prop() &&
         wbModeSelector.get_prop()->is_enum() &&
@@ -2068,6 +2096,11 @@ bool PF::RawDeveloperConfigGUI::pointer_release_event( int button, double sx, do
         wbModeSelector.get_prop()->is_enum() &&
         (wbModeSelector.get_prop()->get_enum_value().first == (int)PF::WB_AREA_SPOT) ) {
       if( selected_wb_area_point >= 0 ) {
+        spot_wb(0,0);
+        return true;
+      }
+      if( selected_wb_area_id >= 0 ) {
+        spot_wb(0,0);
         return true;
       }
 
@@ -2075,6 +2108,7 @@ bool PF::RawDeveloperConfigGUI::pointer_release_event( int button, double sx, do
       screen2layer( x, y, w, h );
       if( tmp_area.size() == 4 ) {
         PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>(get_par());
+        if( par->get_wb_areas().empty() || mod_key == (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) )
         if( !par ) return false;
         par->add_wb_area(tmp_area);
         spot_wb(0,0);
@@ -2118,6 +2152,9 @@ bool PF::RawDeveloperConfigGUI::pointer_motion_event( int button, double sx, dou
     std::vector< std::vector<int> >& wb_areas = par->get_wb_areas();
     tmp_area.clear();
 
+    //std::cout<<"selected_wb_area_point: "<<selected_wb_area_point
+    //    <<" selected_wb_area_id: "<<selected_wb_area_id<<std::endl;
+
     if( selected_wb_area_point >= 0 && button == 1 ) {
       int aid = selected_wb_area_point/10;
       if( aid < 0 || aid >= wb_areas.size() ) return false;
@@ -2147,20 +2184,21 @@ bool PF::RawDeveloperConfigGUI::pointer_motion_event( int button, double sx, dou
       return true;
     }
 
-    if( selected_wb_area_id >= 0 ) {
+    if( selected_wb_area_id >= 0 && button == 1) {
       std::vector<int>& area = wb_areas[selected_wb_area_id];
+      int dx = area[2] - area[0];
+      int dy = area[3] - area[1];
+      area[0] = x - wb_area_dx;
+      area[1] = y - wb_area_dy;
+      area[2] = area[0] + dx;
+      area[3] = area[1] + dx;
+      return true;
     }
 
     //std::cout<<"selected_wb_area_id: "<<selected_wb_area_id<<std::endl;
     if( button < 0 ) {
-      // Find handle point
-      find_handle_point(x, y);
-      if( selected_wb_area_point >= 0 ) {
-        tmp_area.clear();
-        return true;
-      }
-
-      // The pointer is far from any handle points, so we suggest a new placement
+      if( par->get_wb_areas().empty() ) {
+      // There are no placed areas yet, so we suggest a new placement
       x = sx-10; y=sy-10; w=1; h=1;
       screen2layer( x, y, w, h );
       tmp_area.push_back(x); tmp_area.push_back(y);
@@ -2168,6 +2206,14 @@ bool PF::RawDeveloperConfigGUI::pointer_motion_event( int button, double sx, dou
       screen2layer( x, y, w, h );
       tmp_area.push_back(x); tmp_area.push_back(y);
       return true;
+      }
+
+      // Find handle point
+      find_handle_point(x, y);
+      if( selected_wb_area_point >= 0 ) {
+        tmp_area.clear();
+        return true;
+      }
     }
   }
   return false;
