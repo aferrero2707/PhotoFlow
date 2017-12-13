@@ -1,0 +1,47 @@
+cmake_minimum_required(VERSION 3.0)
+
+project(googlebenchmark-download NONE)
+
+# Enable ExternalProject CMake module
+include(ExternalProject)
+
+option(ALLOW_DOWNLOADING_GOOGLEBENCHMARK "If GOOGLEBENCHMARK src tree is not found in location specified by GOOGLEBENCHMARK_PATH, do fetch the archive from internet" OFF)
+set(GOOGLEBENCHMARK_PATH "/usr/src/googlebenchmark" CACHE PATH "Path to the googlebenchmark root tree.")
+
+# Download and install GOOGLEBENCHMARK
+
+message(STATUS "Looking for GOOGLEBENCHMARK sources")
+message(STATUS "Looking for GOOGLEBENCHMARK sources in ${GOOGLEBENCHMARK_PATH}")
+if(EXISTS "${GOOGLEBENCHMARK_PATH}" AND IS_DIRECTORY "${GOOGLEBENCHMARK_PATH}" AND EXISTS "${GOOGLEBENCHMARK_PATH}/CMakeLists.txt")
+  message(STATUS "Found GOOGLEBENCHMARK in ${GOOGLEBENCHMARK_PATH}")
+
+  ExternalProject_Add(
+    googlebenchmark
+    URL               "${GOOGLEBENCHMARK_PATH}"
+    PREFIX            "${CMAKE_BINARY_DIR}/googlebenchmark"
+    SOURCE_DIR        "${CMAKE_BINARY_DIR}/googlebenchmark-src"
+    BINARY_DIR        "${CMAKE_BINARY_DIR}/googlebenchmark-build"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND     ""
+    INSTALL_COMMAND   ""
+    TEST_COMMAND      ""
+  )
+else()
+  if(NOT ALLOW_DOWNLOADING_GOOGLEBENCHMARK)
+    message(SEND_ERROR "Did not find GOOGLEBENCHMARK sources! Either pass correct path in GOOGLEBENCHMARK_PATH, or enable ALLOW_DOWNLOADING_GOOGLEBENCHMARK, or disable BUILD_BENCHMARKING.")
+  else()
+    message(WARNING "Did not find GOOGLEBENCHMARK sources! Fetching from web...")
+    ExternalProject_Add(
+      googlebenchmark
+      URL               https://github.com/google/benchmark/archive/v1.2.0.tar.gz
+      URL_HASH          SHA512=859063669fd84e847f04624013f0b2b734d75d90cada247682eaf345b86c88a9bc2320250e128f2361e37f402b3fb56a18c493ec6038973744a005a452d693ba
+      PREFIX            "${CMAKE_BINARY_DIR}/googlebenchmark"
+      SOURCE_DIR        "${CMAKE_BINARY_DIR}/googlebenchmark-src"
+      BINARY_DIR        "${CMAKE_BINARY_DIR}/googlebenchmark-build"
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND     ""
+      INSTALL_COMMAND   ""
+      TEST_COMMAND      ""
+    )
+  endif()
+endif()

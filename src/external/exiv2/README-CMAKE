@@ -1,0 +1,167 @@
+    @@@Marco@@@@@b                   ;mm                       /##Gilles###\
+    j@@@#Robin",                     Brad                     /@@@Thomas@@@@Q
+     @@@#       \                     ##                     @@@b     |@@@b
+     @@@#          .;;;;,     ,;;;, ,;;;;  ,;;;p      .;;;   7@@      ]Alan
+     @@@#           j@@@@,   ]@@#/  '@@@#  j@@@#      ]@@^           ;@@@"
+     @@@Andreas@C     "@@@p @@@"     @@@b   j@@@p     @@b           @@@#/
+     @@@#^7"7%#\       ^@@@@@#~      Benb    1@@@    {@#          s@@@#
+     @@@#                Niels       @@@b     @@@Q  ]@#         ;@@@#/
+     @@@#              ,@@##@@m      @@@b      @@@p @@C        #@@#C
+     @@@#       ,/    s@@#  @@@@     @@@b       Volker       @Tuan@
+    ]@@@Abhinav@@\   /@@@\    \@@@Q  @@@Q       %@@@#      /@@@@Mahesh@@#
+   /@@Raphael@@@@@\ /@@@@@\     C++  Metadata  Library    /@Sridhar@@@v0.26\
+
+-------------------------------------------------------------------------------
+CMake is a cross-platform build system, to control the
+compilation process using platform/compiler independent configuration files.
+
+STATUS:
+
+* CMake scripts are functional and used to perform the daily build on the buildserver
+  for MacOS-X, Cygwin, Linux and Visual Studio (2005, 8, 10, 12, 13 and 15)
+  The daily build on MinGW/32 is performed using autotools for Qt/Windows Users.
+
+* The existing automake (./configure) will continue to be supported by exiv2
+  for at least v0.27 (and probably longer)
+
+  The msvc2003 project/solutions files are deprecated and will not be supported after v0.26.
+  The msvc project/solutions files will continue to be supported by exiv2
+  for at least v0.27 (and probably longer)
+
+  Exiv2 is very difficult to build on MinGW with CMake.
+  This is discussed in TODO-CMAKE
+
+Robin Mills
+robin@clanmills.com
+2016-10-25
+
+-------------------------------------------------------------------------------
+
+
+TABLE OF CONTENTS
+-----------------
+
+1 CMake resources
+2 Building and Installing for Unix type systems
+3 Building and Installing for Visual Studio Users
+4 Building and installing for MinGW Users
+
+1 CMake resources
+=================
+
+You have to install cmake on your target system.
+
+Home: http://www.cmake.org/
+Help: http://www.cmake.org/cmake/help/help.html
+Doc:  http://www.cmake.org/cmake/help/documentation.html
+Wiki: http://www.cmake.org/Wiki/CMake
+FAQ:  http://www.cmake.org/Wiki/CMake_FAQ
+
+2 Building and Installing on Linux
+==================================
+
+This process overs MacOS-X, Linux and Cygwin.
+
+a) From the command line
+
+Run the following commands from the top directory (containing this
+file) to configure, build and install the library and utility:
+
+    $ mkdir build
+    $ cd build
+    $ cmake .. -G "Unix Makefiles"
+    $ make
+    $ make install
+
+To modify the configuration
+
+    $ ccmake ..
+
+Usual CMake options :
+
+-DCMAKE_INSTALL_PREFIX : decide where the program will be install on your computer.
+-DCMAKE_BUILD_TYPE     : decide which type of build you want. You can chose between:
+                         "debugfull".     : for hacking. Include all debug information.
+                         "debug".
+                         "profile".
+                         "relwithdebinfo" : default. use gcc -O2 -g options.
+                         "release"        : generate stripped and optimized bin files. For packaging.
+
+Specific Exiv2 options :
+
+-DEXIV2_ENABLE_SHARED        : Build exiv2 as a shared library (dll).            [default=on ]
+-DEXIV2_ENABLE_XMP           : Build with XMP metadata support.                  [default=on ]
+-DEXIV2_ENABLE_LIBXMP        : Build a static convenience Library for XMP.       [default=on ]
+-DEXIV2_ENABLE_PNG           : Build with png support (requires libz).           [default=on ]
+-DEXIV2_ENABLE_NLS           : Build native language support (requires gettext). [default=on ]
+-DEXIV2_ENABLE_PRINTUCS2     : Build with Printucs2.                             [default=on ]
+-DEXIV2_ENABLE_LENSDATA      : Build including lens data.                        [default=on ]
+-DEXIV2_ENABLE_COMMERCIAL    : Build with the EXV_COMMERCIAL_VERSION symbol set. [default=off]
+-DEXIV2_ENABLE_BUILD_SAMPLES : Build the unit tests.                             [default=off]
+-DEXIV2_ENABLE_BUILD_PO      : Build translations files.                         [default=off]
+-DEXIV2_ENABLE_CURL          : USE Libcurl for HttpIo                            [default=off]
+-DEXIV2_ENABLE_SSH           : USE Libssh for SshIo                              [default=off]
+
+Default install locations
+
+Use -DCMAKE_INSTALL_PREFIX like this :
+
+"cmake . -DCMAKE_INSTALL_PREFIX=/usr"  is equivalent to "./configure --prefix=/usr" with automake/configure.
+
+To uninstall Exiv2, run:
+
+    $ make uninstall
+
+b) Using the cmake GUI
+
+   ccmake
+
+3 Building and installing for Visual Studio Users
+=================================================
+
+exiv2 provides three build environment for users of Visual Studio:
+
+cmake:    This environment
+msvc:     32 bit AND 64 bit build environment for MSVC 2005 and later (2005/2008/10/12/13/15)
+msvc2003: 32 bit build environment for MSVC 2003 (deprecated after v0.26)
+
+CMake doesn't build code.  It generates build environments.
+CMake is a language for describing builds and the CMake interpreter generates
+the build environment for your system.
+
+CMake generates MSVC .sln and .vcproj files for your target environment.
+The files generated by CMake provide 4 configs: Debug|Release|RelWithDebInfo|MinSizeRel
+The current architecture of CMake requires you to decide before running cmake:
+1)  The version of DevStudio
+2)  32bit or 64 bit builds
+3)  Building static or shared libraries
+
+We have two contributed CMake Build Environments:
+
+1 contrib/cmake/msvc
+  Please read contrib/cmake/msvc/ReadMe.txt
+
+2 contrib/build/msvc
+
+  The scripts require:
+  - Cygwin (in order to download all dependencies (zlib, expat, ssl, curl, ssh), including exiv2 trunk from svn)
+  - CMake
+  - SVN (optional)
+
+  Then
+   - put the two scripts (build.cmd and setenv.cmd) into a completely empty directory
+   - adapt the paths in setenv.cmd
+   - open the VS command line shell
+   - execute build.cmd (if there are any errors, the script should tell you)
+
+  Exiv2 should be packaged in the dist directory with all the .lib, include and binary files you need.
+
+4 Building and installing for MinGW Users
+=========================================
+
+  CMake/MinGW has a number of serious issues.  This will be reported to Kitware.
+
+  It is possible to use CMake/MinGW if you put in some effort.  This is documented in TODO-CMAKE.
+
+# That's all Folks
+##

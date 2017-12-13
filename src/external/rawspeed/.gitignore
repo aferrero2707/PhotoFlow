@@ -1,0 +1,49 @@
+# cmake out-of-source build tree
+build*/
+
+# tmp files
+*~
+.DS_Store
+cscope.out
+.*.swp
+
+# project files
+*.kdev4
+*.sln
+*.vcproj
+*.vcxproj
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.pyc
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+testimg
+Release-*
+Debug-*
+
+# sonarqube
+.scannerwork/
+bw-output/
+
+# coverage
+*.gcno
+*.gcda
+*.gcov
