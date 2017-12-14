@@ -210,7 +210,7 @@ namespace PF
       } else {
         for( y = 0; y < height; y++ ) {
           pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
-          //pmask = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
+          pmask = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
           pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
           for( x = 0; x < line_size; x+=3 ) {
@@ -219,15 +219,23 @@ namespace PF
             RGB[2] = pin[x+2];
 
             float h_eq = 1;
-            //to_float( pmask[x], h_eq );
+            to_float( pmask[x], h_eq );
 
             float black_level2 = black_level;
             float white_level2 = white_level;
             float brightness2 = brightness;
             float exposure2 = exposure;
             float gamma2 = gamma;
-
-
+            /*
+            if( h_eq < 1 ) {
+              black_level2 *= h_eq;
+              white_level2 *= h_eq;
+              brightness2 *= h_eq;
+              exposure2 *= h_eq;
+              float dgamma = (gamma2-1) * h_eq;
+              gamma2 = dgamma + 1.f;
+            }
+            */
             if( (black_level2 != 0) || (white_level2 != 0) ) {
               float delta = (white_level2 + 1.f - black_level2);
               if( fabs(delta) < 0.0001f ) {
@@ -249,7 +257,7 @@ namespace PF
 
             if( exposure2 != 1 ) {
               for( k=0; k < 3; k++) {
-                RGB[k] *= exposure;
+                RGB[k] *= exposure2;
                 //clip( exposure*RGB[k], RGB[k] );
               }
             }
@@ -258,7 +266,7 @@ namespace PF
               for(i=0; i<5;i++) {
               for( k=0; k < 3; k++) {
                 //RGB[k] = pin[x+k]; //powf( RGB[k], gamma );
-                RGB[k] = powf( RGB[k], gamma );
+                RGB[k] = powf( RGB[k], gamma2 );
                 //clip( exposure*RGB[k], RGB[k] );
               }
               }
@@ -276,7 +284,6 @@ namespace PF
             if( h_eq < 1 ) {
               hue2 *= h_eq;
               saturation2 *= h_eq;
-              brightness2 *= h_eq;
               contrast2 *= h_eq;
             }
             */
