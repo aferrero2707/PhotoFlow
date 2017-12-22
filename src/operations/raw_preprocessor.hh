@@ -266,8 +266,9 @@ namespace PF
             if( hlreco_mode == HLRECO_CLIP ) {
               rpout[x] = CLIP( rval * mul[c] );
             } else {
-              if( rval > 65500.f ) rpout[x] = 65535.f;
-              else rpout[x] = rval * mul[c];
+              //if( rval > 65500.f ) rpout[x] = 65535.f;
+              //else
+                rpout[x] = rval * mul[c];
             }
             if(false && r->left==0 && r->top==0 && y<4 && x<4)
               std::cout<<"("<<y<<","<<x<<")  c="<<rp.color(x) //c
