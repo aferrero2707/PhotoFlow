@@ -124,13 +124,13 @@ void get_falloff_curve( float* vec, float val, T& out ) {
 
 
 template<> inline
-void PF::get_falloff_curve<unsigned short int>( float* vec, float val, unsigned short int& out ) {
+void get_falloff_curve<unsigned short int>( float* vec, float val, unsigned short int& out ) {
   out = static_cast<unsigned short int>( vec[static_cast<unsigned short int>(val*65535)] * 65535 );
 }
 
 
 template<> inline
-void PF::get_falloff_curve<float>( float* vec, float val, float& out ) {
+void get_falloff_curve<float>( float* vec, float val, float& out ) {
   out = vec[static_cast<unsigned short int>(val*65535)];
   //std::cout<<"get_falloff_curve<float>(): val="<<val<<"  out="<<out<<std::endl;
 }
