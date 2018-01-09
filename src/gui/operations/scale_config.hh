@@ -50,6 +50,7 @@ namespace PF {
 
   Selector scale_mode;
   Selector scale_unit;
+  Selector scale_interp;
 
   Gtk::HBox scale_controls_box;
 

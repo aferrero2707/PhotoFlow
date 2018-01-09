@@ -197,6 +197,7 @@ PF::ScalePar::ScalePar():
       autocrop("autocrop",this,true),
       scale_mode("scale_mode",this, SCALE_MODE_FIT, "SCALE_MODE_FIT", _("Fit")),
       scale_unit("scale_unit", this, SCALE_UNIT_PERCENT, "SCALE_UNIT_PERCENT", _("percent")),
+      scale_interp("scale_interp", this, SCALE_INTERP_LANCZOS3, "SCALE_INTERP_LANCZOS3", _("lanczos3")),
       scale_width_pixels("scale_width_pixels",this,0),
       scale_height_pixels("scale_height_pixels",this,0),
       scale_width_percent("scale_width_percent",this,100),
@@ -218,6 +219,12 @@ PF::ScalePar::ScalePar():
   scale_unit.add_enum_value( SCALE_UNIT_MM, "SCALE_UNIT_MM", _("mm") );
   scale_unit.add_enum_value( SCALE_UNIT_CM, "SCALE_UNIT_CM", _("cm") );
   scale_unit.add_enum_value( SCALE_UNIT_INCHES, "SCALE_UNIT_INCHES", _("inches") );
+
+  scale_interp.add_enum_value( SCALE_INTERP_NEAREST, "SCALE_INTERP_NEAREST", _("nearest") );
+  scale_interp.add_enum_value( SCALE_INTERP_BILINEAR, "SCALE_INTERP_BILINEAR", _("bilinear") );
+  scale_interp.add_enum_value( SCALE_INTERP_BICUBIC, "SCALE_INTERP_BICUBIC", _("bicubic") );
+  scale_interp.add_enum_value( SCALE_INTERP_NOHALO, "SCALE_INTERP_NOHALO", _("nohalo") );
+  scale_interp.add_enum_value( SCALE_INTERP_LANCZOS2, "SCALE_INTERP_LANCZOS2", _("lanczos2") );
 
   set_type( "scale" );
 
@@ -401,8 +408,8 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     float scale = MIN( scale_width, scale_height );
     scale_mult = scale;
 
-    VipsInterpolate* interpolate = NULL;
     /*
+    VipsInterpolate* interpolate = NULL;
     if( scale < 1 ) {
       interpolate = vips_interpolate_new( "nohalo" );
       if( !interpolate )
@@ -414,14 +421,53 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
     }
     std::cout<<"ScalePar::build(): scale="<<scale<<"  interpolate="<<interpolate<<std::endl;
     */
-    //if( vips_resize(srcimg, &out, scale, "interpolate", interpolate, NULL) ) {
-    if( vips_resize(srcimg, &out, scale, NULL) ) {
-      std::cout<<"ScalePar::build(): vips_resize() failed."<<std::endl;
-      //PF_UNREF( interpolate, "ScalePar::build(): interpolate unref" );
-      return srcimg;
+    VipsKernel kernel = VIPS_KERNEL_NEAREST;
+    if(level > 0) {
+      if( vips_resize(srcimg, &out, scale, "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
+        std::cout<<"ScalePar::build(): vips_resize() failed."<<std::endl;
+        return srcimg;
+      }
+    } else {
+      if( scale_interp.get_enum_value().first == PF::SCALE_INTERP_NOHALO ) {
+        VipsInterpolate* interpolate = vips_interpolate_new( "nohalo" );
+        if( interpolate ) {
+          if( vips_affine( srcimg, &out,
+              scale, 0, 0, scale,
+              "interpolate", interpolate, NULL ) ) {
+            PF_UNREF( interpolate, "ScalePar::build(): interpolate unref" );
+            return srcimg;
+          }
+          PF_UNREF( interpolate, "ScalePar::build(): interpolate unref" );
+          std::cout<<"ScalePar::build(): scale="<<scale<<"  interpolate=nohalo"<<std::endl;
+        } else {
+          std::cout<<"ScalePar::build(): vips_affine() failed, reverting to cubic interpolation"<<std::endl;
+          if( vips_resize(srcimg, &out, scale, "kernel", VIPS_KERNEL_CUBIC, NULL) ) {
+            std::cout<<"ScalePar::build(): vips_resize() failed."<<std::endl;
+            return srcimg;
+          }
+          std::cout<<"ScalePar::build(): scale="<<scale<<"  kernel="<<kernel<<std::endl;
+        }
+      } else {
+        switch(scale_interp.get_enum_value().first) {
+        case PF::SCALE_INTERP_NEAREST: kernel = VIPS_KERNEL_NEAREST; break;
+        case PF::SCALE_INTERP_BILINEAR: kernel = VIPS_KERNEL_LINEAR; break;
+        case PF::SCALE_INTERP_BICUBIC: kernel = VIPS_KERNEL_CUBIC; break;
+        case PF::SCALE_INTERP_LANCZOS2: kernel = VIPS_KERNEL_LANCZOS2; break;
+        case PF::SCALE_INTERP_LANCZOS3: kernel = VIPS_KERNEL_LANCZOS3; break;
+        //case PF::SCALE_INTERP_NOHALO: kernel = VIPS_KERNEL_XXX; break;
+        default: kernel = VIPS_KERNEL_NEAREST; break;
+        }
+        if( vips_resize(srcimg, &out, scale, "kernel", kernel, NULL) ) {
+          std::cout<<"ScalePar::build(): vips_resize() failed."<<std::endl;
+          //PF_UNREF( interpolate, "ScalePar::build(): interpolate unref" );
+          return srcimg;
+        }
+        std::cout<<"ScalePar::build(): scale="<<scale<<"  kernel="<<kernel<<std::endl;
+      }
     }
     //PF_UNREF( interpolate, "ScalePar::build(): interpolate unref" );
     PF_UNREF( srcimg, "ScalePar::build(): srcimg unref after vips_resize()" );
+    //if( vips_resize(srcimg, &out, scale, "interpolate", interpolate, NULL) ) {
   } else {
     //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
     //return srcimg;
