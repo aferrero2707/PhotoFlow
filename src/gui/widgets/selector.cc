@@ -40,8 +40,8 @@ PF::Selector::Selector( OperationConfigGUI* dialog, std::string pname, std::stri
   cbox.set_model( model );
   cbox.pack_start(columns.col_name);
 
-  pack_start( label, Gtk::PACK_SHRINK );
-  pack_start( cbox, Gtk::PACK_SHRINK );
+  pack_end( cbox, Gtk::PACK_SHRINK );
+  pack_end( label, Gtk::PACK_SHRINK );
 
   //cbox.set_size_request( 100, -1 );
 
