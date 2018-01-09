@@ -208,6 +208,8 @@ namespace PF
           }
         }
       } else {
+        //for(int ti=0;ti<100;ti++) {
+          //if((ti%10)==0) std::cout<<"basic_adjustments: ti="<<ti<<" corner="<<r->left<<","<<r->top<<std::endl;
         for( y = 0; y < height; y++ ) {
           pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
           pmask = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
@@ -379,6 +381,7 @@ namespace PF
           }
         }
       }
+      //}
     }
   };
 

@@ -461,7 +461,7 @@ render_work( VipsThreadState *state, void *a )
 	if( render->notify ) 
 		render->notify( render->out, &tile->area, render->a );
 
-/*	printf("render_work(): tile done\n");*/
+/*	printf("render_work(): tile %p %d,%d done\n", tile, tile->area.left, tile->area.top);*/
 	vips_semaphore_up( &render->tile_done_sem );
 
 	return( 0 );
@@ -887,19 +887,19 @@ render_tile_request( Render *render, VipsRegion *reg, VipsRect *area )
 		tile_queue( tile, reg );
 	}
 	else {
-		/* Need to reuse a tile. Try for an old painted tile first, 
-		 * then if that fails, reuse a dirty tile. 
-		 */
-		if( !(tile = render_tile_get_painted( render )) &&
-			!(tile = render_tile_dirty_reuse( render )) ) {
-			VIPS_DEBUG_MSG_RED( "render_tile_request: "
-				"no tiles to reuse\n" );
-			return( NULL );
-		}
+	  /* Need to reuse a tile. Try for an old painted tile first,
+	   * then if that fails, reuse a dirty tile.
+	   */
+	  if( !(tile = render_tile_get_painted( render )) &&
+	      !(tile = render_tile_dirty_reuse( render )) ) {
+	    VIPS_DEBUG_MSG_RED( "render_tile_request: "
+	        "no tiles to reuse\n" );
+	    return( NULL );
+	  }
 
-		render_tile_move( tile, area );
+	  render_tile_move( tile, area );
 
-		tile_queue( tile, reg );
+	  tile_queue( tile, reg );
 	}
 
 	return( tile );
