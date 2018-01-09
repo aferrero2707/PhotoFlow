@@ -72,7 +72,10 @@ image( NULL )
 #if VIPS_MAJOR_VERSION < 8 && VIPS_MINOR_VERSION < 40
   image = vips_image_new_from_file( file_name_real.c_str() );
 #else
-  image = vips_image_new_from_file( file_name_real.c_str(), NULL );
+  image = vips_image_new_from_file( file_name_real.c_str(), "access", VIPS_ACCESS_RANDOM, NULL );
+  // Make sure that the sequential access hint is not set for the opened image
+  // see https://github.com/jcupitt/libvips/issues/840
+  vips_image_remove(image, VIPS_META_SEQUENTIAL);
 #endif
   if( !image ) {
     std::cout<<"RasterImage::RasterImage(): Failed to load "<<file_name<<std::endl;
