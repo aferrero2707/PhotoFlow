@@ -162,6 +162,33 @@ matrix:
             - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
                 bash  ./upload_rotate.sh "unstable" photoflow*.zip;
               fi'
+        - os: linux
+          dist: trusty
+          compiler: g++
+          sudo: required
+          dist: trusty
+          env: 
+          - TARGET_SYSTEM=Windows-GTK3
+            TRAVIS_USE_GTKMM3=ON
+          before_script:
+            #- cd non_existent_dir
+            - pwd
+            - rm -rf windows && git clone https://github.com/aferrero2707/pf-build-win.git windows
+            - sudo docker run -it -e "TRAVIS_BUILD_DIR=/sources" -e "TRAVIS_BRANCH=${TRAVIS_BRANCH}" -e "TRAVIS_COMMIT=${TRAVIS_COMMIT}" -v $(pwd):/sources photoflow/docker-zesty-mingw bash -c /sources/windows/package-w64.sh
+            - # check if zip file was successfully created
+            - # abort job with failure if not
+            - ls photoflow-w64*.zip
+          after_success:
+            - cd $TRAVIS_BUILD_DIR
+            - pwd
+            #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
+            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" photoflow*.zip;
+              fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                bash  ./upload_rotate.sh "unstable" photoflow*.zip;
+              fi'
         - os: osx
           cache: ccache
           osx_image: xcode7.3
