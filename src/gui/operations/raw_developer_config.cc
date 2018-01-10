@@ -2110,7 +2110,7 @@ bool PF::RawDeveloperConfigGUI::pointer_release_event( int button, double sx, do
         PF::RawDeveloperPar* par = dynamic_cast<PF::RawDeveloperPar*>(get_par());
         if( !par ) return false;
         if( par->get_wb_areas().empty() || mod_key == (PF::MOD_KEY_CTRL+PF::MOD_KEY_ALT) )
-        par->add_wb_area(tmp_area);
+          par->add_wb_area(tmp_area);
         spot_wb(0,0);
         return true;
       } else {
