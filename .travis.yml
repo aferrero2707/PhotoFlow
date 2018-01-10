@@ -173,7 +173,7 @@ matrix:
           before_script:
             #- cd non_existent_dir
             - pwd
-            - echo "TRAVIS_USE_GTKMM3: ${TRAVIS_USE_GTKMM3}"
+            #- echo "TRAVIS_USE_GTKMM3: ${TRAVIS_USE_GTKMM3}"
             - rm -rf windows && git clone https://github.com/aferrero2707/pf-build-win.git windows
             - sudo docker run -it -e "TRAVIS_BUILD_DIR=/sources" -e "TRAVIS_BRANCH=${TRAVIS_BRANCH}" -e "TRAVIS_COMMIT=${TRAVIS_COMMIT}" -e "TRAVIS_USE_GTKMM3=${TRAVIS_USE_GTKMM3}" -v $(pwd):/sources photoflow/docker-zesty-mingw bash -c /sources/windows/package-w64.sh
             - # check if zip file was successfully created
