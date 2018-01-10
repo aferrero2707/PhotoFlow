@@ -121,26 +121,55 @@ matrix:
           services: docker
           env: TARGET_SYSTEM=Linux-GTK3
           before_script:
-                - travis_wait 120 sleep infinity & sudo docker pull photoflow/docker-trusty-gtk3
-                - rm -rf appimage
-                - git clone https://github.com/aferrero2707/pf-build-appimage.git appimage
-                - sudo docker run -it -v $(pwd):/sources photoflow/docker-trusty-gtk3 bash /sources/appimage/appimage-docker.sh
-                - bash appimage/package-appimage.sh
+            - travis_wait 120 sleep infinity & sudo docker pull photoflow/docker-trusty-gtk3
+            - rm -rf appimage
+            - git clone https://github.com/aferrero2707/pf-build-appimage.git appimage
+            - sudo docker run -it -v $(pwd):/sources photoflow/docker-trusty-gtk3 bash /sources/appimage/appimage-docker.sh
           after_success:
-              - cd $TRAVIS_BUILD_DIR
-              - pwd
-              - ls -lh
-              - ls -lh out/* # Assuming you have some files in out/ that you would like to upload
-              #- wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-              #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
-              #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-              #- bash  ./upload_rotate.sh "continuous" out/*
+            - cd $TRAVIS_BUILD_DIR
+            - ls -lh
+            - bash appimage/package-appimage.sh
+            - ls out/*
+            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" out/*;
+               fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                bash  ./upload_rotate.sh "unstable" out/*;
+               fi'
         - os: linux
           dist: trusty
           compiler: g++
           sudo: required
           dist: trusty
           env: TARGET_SYSTEM=Windows
+          before_script:
+            #- cd non_existent_dir
+            - pwd
+            - rm -rf windows && git clone https://github.com/aferrero2707/pf-build-win.git windows
+            - sudo docker run -it -e "TRAVIS_BUILD_DIR=/sources" -e "TRAVIS_BRANCH=${TRAVIS_BRANCH}" -e "TRAVIS_COMMIT=${TRAVIS_COMMIT}" -v $(pwd):/sources photoflow/docker-zesty-mingw bash -c /sources/windows/package-w64.sh
+            - # check if zip file was successfully created
+            - # abort job with failure if not
+            - ls photoflow-w64*.zip
+          after_success:
+            - cd $TRAVIS_BUILD_DIR
+            - pwd
+            #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
+            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" photoflow*.zip;
+              fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
+                bash  ./upload_rotate.sh "unstable" photoflow*.zip;
+              fi'
+        - os: linux
+          dist: trusty
+          compiler: g++
+          sudo: required
+          dist: trusty
+          env: 
+          - TARGET_SYSTEM=Windows-GTK3
+            TRAVIS_USE_GTKMM3=ON
           before_script:
             #- cd non_existent_dir
             - pwd
@@ -177,7 +206,7 @@ matrix:
           before_script:
             - rm -rf osx
             - git clone https://github.com/aferrero2707/pf-build-osx.git osx
-            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 4
+            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 5
             #- export PATH="/usr/local/opt/ccache/libexec:$PATH"
             - cd $TRAVIS_BUILD_DIR
             - mkdir -p build

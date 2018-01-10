@@ -1103,7 +1103,9 @@ void PF::Image::do_export_merged( std::string filename )
       if( vips_linear1(image, &outimg, 255, 0, NULL) ) {
         std::cout<<"WARNING!!! Image::do_export_merged(): vips_linear1() failed"<<std::endl;
         outimg = image;
+        PF_REF( image, "Image::do_export_merged(): image ref after vips_linear1() failed" );
       }
+      PF_UNREF( image, "Image::do_export_merged(): image unref" );
       if( outimg ) {
         BENCHFUN
         Glib::Timer timer;

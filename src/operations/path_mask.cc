@@ -30,18 +30,6 @@
 #include "../base/processor.hh"
 #include "path_mask.hh"
 
-template<>
-void PF::get_falloff_curve<unsigned short int>( float* vec, float val, unsigned short int& out ) {
-  out = static_cast<unsigned short int>( vec[static_cast<unsigned short int>(val*65535)] * 65535 );
-}
-
-
-template<>
-void PF::get_falloff_curve<float>( float* vec, float val, float& out ) {
-  out = vec[static_cast<unsigned short int>(val*65535)];
-  //std::cout<<"get_falloff_curve<float>(): val="<<val<<"  out="<<out<<std::endl;
-}
-
 
 void PF::get_line_points(int x1, int y1, int x2, int y2, std::vector< std::pair<int,int> >& points)
 {

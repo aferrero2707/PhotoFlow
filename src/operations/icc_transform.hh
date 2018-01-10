@@ -172,6 +172,7 @@ namespace PF
       }
 
       for( y = 0; y < height; y++ ) {
+        //std::cout<<"icc_transform: ti="<<ti<<" y="<<y<<"  corner="<<r->left<<","<<r->top<<std::endl;
         p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
         pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 

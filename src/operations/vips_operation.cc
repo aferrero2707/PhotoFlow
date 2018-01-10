@@ -138,7 +138,8 @@ static int usage( const char *operation_name, PF::VipsOperationPar* par )
 PF::VipsOperationPar::VipsOperationPar(): 
   PF::BlenderPar()
 {
-  set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
+  //set_demand_hint( VIPS_DEMAND_STYLE_THINSTRIP );
+  set_demand_hint( VIPS_DEMAND_STYLE_ANY );
   //blender = new PF::Processor<PF::BlenderProc,PF::BlenderPar>();
   //set_opacity(0.5);
   //PF::PropertyBase* p = blender.get_par()->get_property( "opacity" );

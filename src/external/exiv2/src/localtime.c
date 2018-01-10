@@ -5,7 +5,7 @@
 */
 
 
-#include "config.h"
+#include "config_exiv2.h"
 
 #ifdef  _MSC_VER
 #if     _MSC_VER >= _MSC_VER_2015
