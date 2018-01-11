@@ -254,6 +254,7 @@ void PF::Sampler::set_values(float val[4], float lch[3], VipsInterpretation type
     ch[0] = 'L'; ch[1] = 'a'; ch[2] = 'b'; break;
   case VIPS_INTERPRETATION_CMYK:
     ch[0] = 'C'; ch[1] = 'M'; ch[2] = 'Y'; ch[2] = 'K'; break;
+  default: ch[0] = 'X'; ch[1] = 'X'; ch[2] = 'X'; ch[2] = 'X'; break;
   }
   snprintf(tstr,499,"%c=%7.2f  L=%7.2f",ch[0], val[0], lch[0]);
   label_value1.set_text(tstr);

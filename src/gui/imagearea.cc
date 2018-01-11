@@ -774,8 +774,8 @@ bool PF::ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
   // Rectangle corresponding to the preview area
   VipsRect preview_area = {
-    hadj->get_value(), vadj->get_value(),
-    hadj->get_page_size(), vadj->get_page_size()
+      static_cast<int>(hadj->get_value()), static_cast<int>(vadj->get_value()),
+      static_cast<int>(hadj->get_page_size()), static_cast<int>(vadj->get_page_size())
   };
   int preview_area_right = preview_area.left + preview_area.width - 1;
   int preview_area_bottom = preview_area.top + preview_area.height - 1;
