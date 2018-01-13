@@ -124,7 +124,7 @@ matrix:
             - travis_wait 120 sleep infinity & sudo docker pull photoflow/docker-trusty-gtk3
             - rm -rf appimage
             - git clone https://github.com/aferrero2707/pf-build-appimage.git appimage
-            - sudo docker run -it -v $(pwd):/sources photoflow/docker-trusty-gtk3 bash /sources/appimage/appimage-docker.sh
+            - sudo docker run -it -e USE_GTKMM3=ON -v $(pwd):/sources photoflow/docker-trusty-gtk3 bash /sources/appimage/appimage-docker.sh
           after_success:
             - cd $TRAVIS_BUILD_DIR
             - ls -lh
