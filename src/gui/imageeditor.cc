@@ -142,18 +142,31 @@ class Layout2: public Gtk::HBox
   Gtk::VPaned paned;
   Gtk::HPaned main_paned;
 
+  int old_width;
+
   void on_paned_size_allocate(Gtk::Allocation& allocation)
   {
     //Gtk::HBox::on_size_allocate(allocation);
-    //std::cout<<"Layout2::on_paned_size_allocate() called, width=   "<<allocation.get_width()<<std::endl;
-    //std::cout<<"Layout2::on_paned_size_allocate() called, position="<<main_paned.get_position()<<std::endl;
-    PF::PhotoFlow::Instance().get_options().set_layerlist_widget_width( main_paned.get_position() );
+    int width = allocation.get_width() + main_paned.get_position();
+    std::cout<<"Layout2::on_paned_size_allocate() called, allocation width=   "<<allocation.get_width()<<std::endl;
+    std::cout<<"Layout2::on_paned_size_allocate() called, position="<<main_paned.get_position()<<std::endl;
+    std::cout<<"Layout2::on_paned_size_allocate() called, width="<<width<<std::endl;
+    //PF::PhotoFlow::Instance().get_options().set_layerlist_widget_width( main_paned.get_position() );
+  }
+
+
+  void on_layers_size_allocate(Gtk::Allocation& allocation)
+  {
+    //Gtk::HBox::on_size_allocate(allocation);
+    int width = allocation.get_width() + main_paned.get_position();
+    std::cout<<"Layout2::on_layers_size_allocate() called, allocation width=   "<<allocation.get_width()<<std::endl;
+    PF::PhotoFlow::Instance().get_options().set_layerlist_widget_width( allocation.get_width() );
   }
 
 public:
   Layout2(Gtk::Widget* h, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
   histogram_widget(h), buttons_widget(b), layers_widget(l),
-  controls_widget(c), preview_widget(p)
+  controls_widget(c), preview_widget(p), old_width(0)
   //paned(Gtk::ORIENTATION_VERTICAL)
   {
     paned.add1( *layers_widget );
@@ -168,15 +181,22 @@ public:
     //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
     //pack_start( vbox, Gtk::PACK_SHRINK );
     //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
-    main_paned.add1( vbox );
-    main_paned.add2( *preview_widget );
+    if( PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement() ==
+        PF::PF_LAYERS_LIST_PLACEMENT_LEFT) {
+      main_paned.add1( vbox );
+      main_paned.add2( *preview_widget );
+    } else {
+      main_paned.pack1( *preview_widget, true, true );
+      main_paned.pack2( vbox, false, true );
+    }
     pack_start( main_paned, Gtk::PACK_EXPAND_WIDGET );
 
-    paned.set_position(150);
-    main_paned.set_position( PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width() );
+    //paned.set_position(150);
+    //main_paned.set_position( PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width() );
+    vbox.set_size_request( PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width(), -1 );
 
     vbox.signal_size_allocate().
-        connect( sigc::mem_fun(*this, &Layout2::on_paned_size_allocate) );
+        connect( sigc::mem_fun(*this, &Layout2::on_layers_size_allocate) );
 
   }
 };

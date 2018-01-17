@@ -42,6 +42,8 @@ PF::Options::Options()
   save_sidecar_files = 0;
   use_default_preset = 0;
   layerlist_widget_width = 250;
+  ui_layers_list_placement = PF::PF_LAYERS_LIST_PLACEMENT_RIGHT;
+  ui_floating_tool_dialogs = false;
 }
 
 void PF::Options::set_working_profile_type(int t)
@@ -97,6 +99,13 @@ void PF::Options::load()
       if (keyFile.has_group ("GUI")) {
         if (keyFile.has_key ("GUI", "layerlist_widget_width")) {
           layerlist_widget_width = keyFile.get_integer ("GUI", "layerlist_widget_width");
+        }
+        if (keyFile.has_key ("GUI", "layers_list_placement")) {
+          ui_layers_list_placement =
+              (layers_list_placement_t)keyFile.get_integer ("GUI", "layers_list_placement");
+        }
+        if (keyFile.has_key ("GUI", "floating_tool_dialogs")) {
+          ui_floating_tool_dialogs = (bool)keyFile.get_integer ("GUI", "floating_tool_dialogs");
         }
       }
 
@@ -196,6 +205,8 @@ void PF::Options::save()
   keyFile.set_integer ("Processing", "apply_default_preset", (int)use_default_preset);
 
   keyFile.set_integer ("GUI", "layerlist_widget_width", (int)layerlist_widget_width);
+  keyFile.set_integer ("GUI", "layers_list_placement", (int)ui_layers_list_placement);
+  keyFile.set_integer ("GUI", "floating_tool_dialogs", (int)ui_floating_tool_dialogs);
 
   keyFile.set_integer ("Output", "save_sidecar_files", (int)save_sidecar_files);
 

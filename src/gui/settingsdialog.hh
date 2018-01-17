@@ -97,6 +97,10 @@ class SettingsDialog : public Gtk::Dialog
   Gtk::Label save_sidecar_files_label;
   Gtk::CheckButton save_sidecar_files_check;
 
+  Gtk::HBox ui_layers_list_on_right_hbox;
+  Gtk::Label ui_layers_list_on_right_label;
+  Gtk::CheckButton ui_layers_list_on_right_check;
+
 public:
   sigc::signal<void> signal_cm_modified;
 

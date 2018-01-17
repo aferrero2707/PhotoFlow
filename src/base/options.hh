@@ -46,6 +46,13 @@ enum display_profile_t
 };
 
 
+enum layers_list_placement_t
+{
+  PF_LAYERS_LIST_PLACEMENT_LEFT = 0,
+  PF_LAYERS_LIST_PLACEMENT_RIGHT = 1
+};
+
+
   class Options
   {
     profile_type_t working_profile_type;
@@ -60,6 +67,9 @@ enum display_profile_t
     Glib::ustring last_visited_image_folder;
     Glib::ustring last_visited_preset_folder;
     Glib::ustring last_visited_icc_folder;
+
+    layers_list_placement_t ui_layers_list_placement;
+    bool ui_floating_tool_dialogs;
 
     int save_sidecar_files;
     int use_default_preset;
@@ -117,6 +127,14 @@ enum display_profile_t
 
     int get_layerlist_widget_width() { return layerlist_widget_width; }
     void set_layerlist_widget_width(int w) { layerlist_widget_width = w; }
+
+    // UI options
+    void set_ui_layers_list_placement(layers_list_placement_t p) { ui_layers_list_placement = p; }
+    layers_list_placement_t get_ui_layers_list_placement() { return ui_layers_list_placement; }
+
+    void set_ui_floating_tool_dialogs(bool b) { ui_floating_tool_dialogs = b; }
+    bool get_ui_floating_tool_dialogs() { return ui_floating_tool_dialogs; }
+
 
     void load();
     void save();

@@ -42,8 +42,9 @@ PF::SettingsDialog::SettingsDialog():
       cm_working_profile_frame( _("Working RGB Colorspace") ),
       cm_display_profile_frame( _("Display Profile") ),
       cm_display_profile_bpc_selector( _("black point compensation") ),
-apply_default_preset_label(_("apply default processing profile")),
-save_sidecar_files_label(_("save sidecar files"))
+      apply_default_preset_label(_("apply default processing profile")),
+      save_sidecar_files_label(_("save sidecar files")),
+      ui_layers_list_on_right_label(_("place layers list on the right"))
 {
   set_default_size(600,400);
 
@@ -207,6 +208,11 @@ save_sidecar_files_label(_("save sidecar files"))
   save_sidecar_files_label.set_tooltip_text(_("Save sidecar files when exporting to raster formats"));
   general_box.pack_start( save_sidecar_files_hbox, Gtk::PACK_SHRINK );
 
+  ui_layers_list_on_right_hbox.pack_start( ui_layers_list_on_right_check, Gtk::PACK_SHRINK );
+  ui_layers_list_on_right_hbox.pack_start( ui_layers_list_on_right_label, Gtk::PACK_SHRINK );
+  ui_layers_list_on_right_hbox.set_tooltip_text(_("Put the layers list panel to the right (restart needed)"));
+  general_box.pack_start( ui_layers_list_on_right_hbox, Gtk::PACK_SHRINK );
+
 
   Glib::ustring about = PF::version_string;
   Glib::RefPtr< Gtk::TextBuffer > buf = about_textview.get_buffer ();
@@ -288,6 +294,11 @@ void PF::SettingsDialog::load_settings()
 
   std::cout<<"PF::PhotoFlow::Instance().get_options().get_save_sidecar_files(): "<<PF::PhotoFlow::Instance().get_options().get_save_sidecar_files()<<std::endl;
   save_sidecar_files_check.set_active( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 );
+
+  std::cout<<"PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement(): "<<
+      PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement()<<std::endl;
+  ui_layers_list_on_right_check.set_active( PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement() ==
+      PF::PF_LAYERS_LIST_PLACEMENT_RIGHT );
 }
 
 
@@ -345,6 +356,11 @@ void PF::SettingsDialog::save_settings()
     PF::PhotoFlow::Instance().get_options().set_save_sidecar_files( 1 );
   else
     PF::PhotoFlow::Instance().get_options().set_save_sidecar_files( 0 );
+
+  if( ui_layers_list_on_right_check.get_active() )
+    PF::PhotoFlow::Instance().get_options().set_ui_layers_list_placement( PF::PF_LAYERS_LIST_PLACEMENT_RIGHT );
+  else
+    PF::PhotoFlow::Instance().get_options().set_ui_layers_list_placement( PF::PF_LAYERS_LIST_PLACEMENT_LEFT );
 
   PF::PhotoFlow::Instance().get_options().save();
 }
