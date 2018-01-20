@@ -354,6 +354,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
     ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
     ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
     ca_frame( _("CA correction") ),
+    lf_cam_selector( this, "camera_model", _("camera model: "), 0, 150 ),
     lf_enable_distortion_button( this, "lf_enable_distortion", _("distortion"), false ),
     lf_enable_tca_button( this, "lf_enable_tca", _("chromatic aberrations (CA)"), false ),
     lf_enable_vignetting_button( this, "lf_enable_vignetting", _("vignetting"), false ),
@@ -457,6 +458,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   lf_label3.set_text( _("lens: ") );
   lf_hbox3.pack_start( lf_label3 );
   lf_hbox3.pack_start( lf_lensEntry );
+  //lf_box.pack_start( lf_cam_selector );
   lf_box.pack_start( lf_hbox1 );
   lf_box.pack_start( lf_hbox2 );
   lf_box.pack_start( lf_hbox3 );

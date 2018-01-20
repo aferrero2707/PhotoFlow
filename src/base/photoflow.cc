@@ -62,6 +62,8 @@
 #include "imageprocessor.hh"
 #include "photoflow.hh"
 
+#include "../rt/rtengine/rtlensfun.h"
+
 #include "../vips/gmic/gmic/src/gmic.h"
 
 
@@ -320,6 +322,12 @@ PF::PhotoFlow::PhotoFlow():
   set_base_dir( exePath );
   set_data_dir( dataPath );
   set_locale_dir( localePath );
+
+  Glib::ustring lfdb;
+#if (BUNDLED_LENSFUN == 1)
+  lfdb = get_lensfun_db_dir();
+#endif
+  //rtengine::LFDatabase::init( lfdb );
 }
 
 

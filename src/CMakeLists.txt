@@ -219,6 +219,7 @@ FILE(GLOB RTIncludes
   rt/rtengine/imageio.h
   rt/rtengine/camconst.h
   rt/rtengine/cJSON.h
+  rt/rtengine/rtlensfun.h
 )
 FILE(GLOB RTSources 
   rt/rtengine/rawimagesource.cc
@@ -236,6 +237,7 @@ FILE(GLOB RTSources
   rt/rtengine/camconst.cc
   rt/rtengine/cJSON.c
   rt/rtengine/settings.cc
+  rt/rtengine/rtlensfun.cc
 )
 
 FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)

@@ -33,6 +33,7 @@
 #include "../../operations/raw_developer.hh"
 
 #include "../operation_config_gui.hh"
+#include "../widgets/lensfun_selector.hh"
 
 
 namespace PF {
@@ -131,6 +132,7 @@ public:
     Gtk::HBox lf_hbox1, lf_hbox2, lf_hbox3;
     Gtk::Label lf_label1, lf_label2, lf_label3;
     Gtk::Entry lf_makerEntry, lf_modelEntry, lf_lensEntry;
+    PF::LFCamSelector lf_cam_selector;
     CheckBox lf_enable_distortion_button, lf_enable_tca_button, lf_enable_vignetting_button, lf_enable_all_button;
     Gtk::VBox lf_box;
     Gtk::Frame lens_frame;
