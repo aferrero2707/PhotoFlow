@@ -23,9 +23,13 @@
 #include <memory>
 #include <vector>
 
-#include <glibmm.h>
-
+#if (BUNDLED_LENSFUN == 1)
+#include <lensfun/lensfun.h>
+#else
 #include <lensfun.h>
+#endif
+
+#include <glibmm.h>
 
 //#include "lcp.h"
 #include "noncopyable.h"
