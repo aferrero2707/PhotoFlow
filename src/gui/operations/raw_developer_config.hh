@@ -31,9 +31,9 @@
 #define RAW_DEVELOPER_CONFIG_DIALOG_HH
 
 #include "../../operations/raw_developer.hh"
+#include "../widgets/lensfun_selector.hh"
 
 #include "../operation_config_gui.hh"
-#include "../widgets/lensfun_selector.hh"
 
 
 namespace PF {

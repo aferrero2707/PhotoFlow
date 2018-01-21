@@ -27,6 +27,7 @@
 
  */
 
+#include <gtkmm.h>
 #include "../../rt/rtengine/rtlensfun.h"
 #include "lensfun_selector.hh"
 
