@@ -19,6 +19,7 @@
  */
 
 #include <assert.h>
+#include <string.h>
 #include "rtlensfun.h"
 #include "settings.h"
 #include <iostream>
