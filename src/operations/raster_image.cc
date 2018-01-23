@@ -75,7 +75,11 @@ image( NULL )
   image = vips_image_new_from_file( file_name_real.c_str(), "access", VIPS_ACCESS_RANDOM, NULL );
   // Make sure that the sequential access hint is not set for the opened image
   // see https://github.com/jcupitt/libvips/issues/840
-  vips_image_remove(image, VIPS_META_SEQUENTIAL);
+  std::cout<<"RasterImage::RasterImage(): removing VIPS_META_SEQUENTIAL tag from "<<image<<std::endl;
+  if( vips_image_get_typeof(image, VIPS_META_SEQUENTIAL) ) {
+    vips_image_remove(image, VIPS_META_SEQUENTIAL);
+    std::cout<<"RasterImage::RasterImage(): VIPS_META_SEQUENTIAL tag removed from "<<image<<std::endl;
+  }
 #endif
   if( !image ) {
     std::cout<<"RasterImage::RasterImage(): Failed to load "<<file_name<<std::endl;
