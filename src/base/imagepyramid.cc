@@ -356,11 +356,11 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
       snprintf(tstr,499,"PF::ImagePyramid::get_level(%d) level #%d (after write_to_memory)",level, (int)levels.size());
       PF_UNREF( out, tstr );
       in = vips_image_new_from_memory( mem_array, array_sz, width, height, img->Bands, img->BandFmt );
-      std::cout<<"ImagePyramid: removing VIPS_META_SEQUENTIAL tag from "<<out<<std::endl;
-      if( vips_image_get_typeof(out, VIPS_META_SEQUENTIAL) ) {
-        vips_image_remove(out, VIPS_META_SEQUENTIAL);
-        std::cout<<"ImagePyramid: VIPS_META_SEQUENTIAL tag removed from "<<out<<std::endl;
-      }
+      //std::cout<<"ImagePyramid: removing VIPS_META_SEQUENTIAL tag from "<<out<<std::endl;
+      //if( vips_image_get_typeof(out, VIPS_META_SEQUENTIAL) ) {
+      //  vips_image_remove(out, VIPS_META_SEQUENTIAL);
+      //  std::cout<<"ImagePyramid: VIPS_META_SEQUENTIAL tag removed from "<<out<<std::endl;
+      //}
 #ifndef NDEBUG
       std::cout<<"ImagePyramid: cache buffer loaded."<<std::endl;
 #endif
