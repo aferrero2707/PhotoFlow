@@ -859,11 +859,15 @@ bool PF::Image::open( std::string filename, std::string bckname )
 
   if( !bckname.empty() ) {
 
+    std::cout<<"Opening image backup "<<bckname<<std::endl;
+
     PF::load_pf_image( bckname, this );
     file_name = filename;
     backup_file_name = bckname;
 
   } else if( ext == "pfi" ) {
+
+    std::cout<<"Opening PFI image "<<filename<<std::endl;
 
     loaded = false;
     if( PF::load_pf_image( filename, this ) ) {
@@ -910,6 +914,8 @@ bool PF::Image::open( std::string filename, std::string bckname )
     layersWidget.add_layer( limg );
      */
   } else {
+
+    std::cout<<"Opening RAW image "<<filename<<std::endl;
 
     PF::Layer* limg = layer_manager.new_layer();
     PF::ProcessorBase* proc = PF::PhotoFlow::Instance().new_operation( "raw_loader", limg );
@@ -1113,7 +1119,8 @@ void PF::Image::do_export_merged( std::string filename )
         vips_jpegsave( outimg, filename.c_str(), "Q", 75, NULL );
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
-        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 ) {
+        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
+            !(PF::PhotoFlow::Instance().is_plugin()) ) {
           save(filename+".pfi", false);
         }
         saved = true;
@@ -1144,7 +1151,8 @@ void PF::Image::do_export_merged( std::string filename )
         std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
 #endif
         //vips_image_write_to_file( outimg, filename.c_str(), NULL );
-        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 ) {
+        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
+            !(PF::PhotoFlow::Instance().is_plugin()) ) {
           save(filename+".pfi", false);
         }
         saved = true;

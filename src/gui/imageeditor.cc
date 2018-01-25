@@ -148,11 +148,13 @@ class Layout2: public Gtk::HBox
   void on_paned_size_allocate(Gtk::Allocation& allocation)
   {
     //Gtk::HBox::on_size_allocate(allocation);
+    Glib::RefPtr< Gdk::Window > handle = main_paned.get_handle_window();
     int width = allocation.get_width();
     std::cout<<"Layout2::on_paned_size_allocate() called, allocation width=   "<<allocation.get_width()<<std::endl;
     std::cout<<"Layout2::on_paned_size_allocate() called, position="<<main_paned.get_position()<<std::endl;
-    Glib::RefPtr< Gdk::Window > handle = main_paned.get_handle_window();
-    std::cout<<"Layout2::on_paned_size_allocate() called, handle width="<<handle->get_width()<<std::endl;
+    if( handle ) {
+      std::cout<<"Layout2::on_paned_size_allocate() called, handle width="<<handle->get_width()<<std::endl;
+    }
     std::cout<<"Layout2::on_paned_size_allocate() called, width1="
         <<main_paned.get_child1()->get_allocation().get_width()<<std::endl;
     std::cout<<"Layout2::on_paned_size_allocate() called, width2="
@@ -229,7 +231,7 @@ public:
     paned.set_position(150);
     main_paned.set_position(0);
 #ifdef GTKMM_3
-    main_paned.set_wide_handle(true);
+    //main_paned.set_wide_handle(true);
 #endif
     //main_paned.set_position( PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width() );
     //vbox.set_size_request( PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width(), 0 );
@@ -693,10 +695,11 @@ void PF::ImageEditor::open_image()
   std::cout<<"ImageEditor::open_image(): opening image "<<filename<<" ..."<<std::endl;
 #endif
 
-  // Test the existence of a valid sidecar file
   bool load_sidecar = false;
   int sidecar_id = -1;
   std::string sidecar_name[2];
+  if( !(PF::PhotoFlow::Instance().is_plugin()) ) {
+  // Test the existence of a valid sidecar file
   sidecar_name[0] = filename+".pfi";
   std::string ext;
   if( getFileExtensionLowcase( "/", filename, ext ) ) {
@@ -708,14 +711,17 @@ void PF::ImageEditor::open_image()
     for(int fi = 0; fi < 2; fi++) {
       PF::Image* tmpimg = new PF::Image();
       if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() &&
-          !load_sidecar && !sidecar_name[fi].empty() &&
-          PF::load_pf_image( sidecar_name[fi], tmpimg ) ) {
-        load_sidecar = true;
-        sidecar_id = fi;
+          !load_sidecar && !sidecar_name[fi].empty() ) {
+        std::cout<<"ImageEditor::open_image(): checking sidecar file "<<sidecar_name[fi]<<" ..."<<std::endl;
+        if(  PF::load_pf_image( sidecar_name[fi], tmpimg ) ) {
+          load_sidecar = true;
+          sidecar_id = fi;
+        }
+        delete tmpimg;
+        if(load_sidecar) break;
       }
-      delete tmpimg;
-      if(load_sidecar) break;
     }
+  }
   }
 
   if(load_sidecar) {
@@ -741,9 +747,11 @@ void PF::ImageEditor::open_image()
   }
 
   if(load_sidecar) {
+    std::cout<<"ImageEditor::open_image(): opening sidecar file "<<sidecar_name[sidecar_id]<<" ..."<<std::endl;
     image->open( sidecar_name[sidecar_id] );
     image->set_filename(filename);
   } else {
+    std::cout<<"ImageEditor::open_image(): opening image file "<<filename<<" ..."<<std::endl;
     image->open( filename, bckname );
   }
 

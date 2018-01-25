@@ -189,6 +189,7 @@ int main (int argc, char *argv[])
     argv++;
     is_plugin = true;
     printf("PhF plugin: argc=%d\n", argc);
+    PF::PhotoFlow::Instance().set_plugin( true );
   }
 
   if(!Glib::thread_supported()) 

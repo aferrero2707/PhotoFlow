@@ -110,7 +110,7 @@ static void write_escaped(std::string const& s, std::string& s2) {
 
 PF::PhotoFlow::PhotoFlow(): 
   active_image( NULL ),
-  batch(true),
+  batch(true), plugin(false),
   single_win_mode(true)
 {
   // Create the cache directory if possible
@@ -327,7 +327,7 @@ PF::PhotoFlow::PhotoFlow():
 #if (BUNDLED_LENSFUN == 1)
   lfdb = get_lensfun_db_dir();
 #endif
-  //rtengine::LFDatabase::init( lfdb );
+  rtengine::LFDatabase::init( lfdb );
 }
 
 

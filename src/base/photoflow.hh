@@ -76,7 +76,7 @@ namespace PF
 
     int preview_pipeline_id;
 
-    bool batch;
+    bool batch, plugin;
     bool single_win_mode;
 
     Options options;
@@ -100,6 +100,9 @@ namespace PF
 
     void set_batch( bool val ) { batch = val; }
     bool is_batch() { return batch; }
+
+    void set_plugin( bool val ) { plugin = val; }
+    bool is_plugin() { return plugin; }
 
     bool is_single_win_mode() { return single_win_mode; }
 
