@@ -167,8 +167,9 @@ class Layout2: public Gtk::HBox
     int new_position = main_paned.get_child1()->get_allocation().get_width();
     if( PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement() ==
         PF::PF_LAYERS_LIST_PLACEMENT_RIGHT) {
-      new_position = allocation.get_width() - handle->get_width()
+      new_position = allocation.get_width()
             - PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width();
+      if( handle ) new_position -= handle->get_width();
     }
     std::cout<<"Layout2::on_paned_size_allocate() called, new_position="<<new_position<<std::endl;
     if( position_set == false && new_position != main_paned.get_position() ) {
