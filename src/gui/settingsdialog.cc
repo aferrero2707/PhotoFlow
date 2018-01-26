@@ -211,7 +211,7 @@ PF::SettingsDialog::SettingsDialog():
   ui_layers_list_on_right_hbox.pack_start( ui_layers_list_on_right_check, Gtk::PACK_SHRINK );
   ui_layers_list_on_right_hbox.pack_start( ui_layers_list_on_right_label, Gtk::PACK_SHRINK );
   ui_layers_list_on_right_hbox.set_tooltip_text(_("Put the layers list panel to the right (restart needed)"));
-  general_box.pack_start( ui_layers_list_on_right_hbox, Gtk::PACK_SHRINK );
+  //general_box.pack_start( ui_layers_list_on_right_hbox, Gtk::PACK_SHRINK );
 
 
   Glib::ustring about = PF::version_string;
