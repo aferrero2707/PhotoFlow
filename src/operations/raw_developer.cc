@@ -101,7 +101,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   map_properties( ca_correct->get_par()->get_properties() );
   map_properties( raw_output->get_par()->get_properties() );
   map_properties( hotpixels->get_par()->get_properties() );
-  //map_properties( lensfun->get_par()->get_properties() );
+  map_properties( lensfun->get_par()->get_properties() );
 
   set_type("raw_developer_v2" );
 

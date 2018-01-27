@@ -132,10 +132,15 @@ public:
     Gtk::HBox lf_hbox1, lf_hbox2, lf_hbox3;
     Gtk::Label lf_label1, lf_label2, lf_label3;
     Gtk::Entry lf_makerEntry, lf_modelEntry, lf_lensEntry;
-    PF::LFCamSelector lf_cam_selector;
+    CheckBox lf_auto_matching_checkbox;
+    PF::LFCamSelector2 lf_cam_selector;
+    PF::LFLensSelector2 lf_lens_selector;
+    PF::LFSelector lf_selector;
     CheckBox lf_enable_distortion_button, lf_enable_tca_button, lf_enable_vignetting_button, lf_enable_all_button;
     Gtk::VBox lf_box;
+    Gtk::HBox lf_hbox;
     Gtk::Frame lens_frame;
+    Glib::ustring custom_cam_maker, custom_cam_model, custom_lens_model;
 
 
     Selector profileModeSelector;

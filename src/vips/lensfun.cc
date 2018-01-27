@@ -434,33 +434,10 @@ vips_lensfun_build( VipsObject *object )
 
   lensfun->modflags = 0;
 
-  #ifdef PF_HAS_LENSFUN
   PF::LensFunParStep* lfpar = dynamic_cast<PF::LensFunParStep*>( lensfun->processor->get_par() );
 
-  const lfCamera** cameras = lensfun->ldb->FindCameras( lfpar->camera_maker().c_str(),
-      lfpar->camera_model().c_str() );
-  if( !cameras ) {
-    g_print ("Cannot find the camera `%s %s' in database\n",
-        lfpar->camera_maker().c_str(), lfpar->camera_model().c_str());
-    return 1;
-  }
-  g_print("Camera `%s %s' found in database\n",
-      lfpar->camera_maker().c_str(), lfpar->camera_model().c_str());
-  const lfCamera *camera = cameras[0];
-  lf_free (cameras);
-
-  const lfLens **lenses = lensfun->ldb->FindLenses (camera, NULL, lfpar->lens().c_str());
-  if (!lenses) {
-    g_print ("Cannot find the lens `%s' in database\n", lfpar->lens().c_str());
-    return 1;
-  }
-  int li = 0;
-  while( lenses[li] != NULL ) {
-    std::cout<<"Lens #"<<li<<": "<<lenses[li]->Maker<<" "<<lenses[li]->Model<<std::endl;
-    li++;
-  }
-  const lfLens *lens = lenses[0];
-  lf_free (lenses);
+  const lfCamera *camera = lfpar->get_camera();
+  const lfLens *lens = lfpar->get_lens();
 
   g_print ("Lens `%s' found in database\n", lfpar->lens().c_str());
 
@@ -493,7 +470,6 @@ vips_lensfun_build( VipsObject *object )
   if (modflags & LF_MODIFY_GEOMETRY)
     g_print ("[geom]");
   g_print (" ...\n");
-#endif
 
   /* Get ready to write to @out. @out must be set via g_object_set() so
    * that vips can see the assignment. It'll complain that @out hasn't
@@ -544,9 +520,7 @@ vips_lensfun_dispose( GObject *gobject )
   VipsLensFun *lensfun = (VipsLensFun *) gobject;
   int i;
 
-#ifdef PF_HAS_LENSFUN
   delete lensfun->modifier;
-#endif
 
   G_OBJECT_CLASS( vips_lensfun_parent_class )->dispose( gobject );
 }

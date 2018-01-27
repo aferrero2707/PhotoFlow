@@ -40,11 +40,7 @@
 
 #include <string>
 
-#if (BUNDLED_LENSFUN == 1)
-#include <lensfun/lensfun.h>
-#else
-#include <lensfun.h>
-#endif
+#include "../rt/rtengine/rtlensfun.h"
 
 #include "../base/exif_data.hh"
 #include "../base/property.hh"
@@ -65,10 +61,10 @@ class LensFunParStep: public OpParBase
   std::string prop_camera_model;
   std::string prop_lens;
 
+  bool auto_matching;
   bool enable_distortion, enable_tca, enable_vignetting;
-#ifdef PF_HAS_LENSFUN
-  lfDatabase* ldb;
-#endif
+  rtengine::LFCamera lfcamera;
+  rtengine::LFLens lflens;
   float focal_length, aperture, distance;
 
 public:
@@ -78,6 +74,10 @@ public:
   bool has_opacity() { return false; }
   bool needs_input() { return true; }
   bool needs_caching() { return false; }
+
+  void set_camera_maker(const std::string& m) { prop_camera_maker = m; }
+  void set_camera_model(const std::string& m) { prop_camera_model = m; }
+  void set_lens(const std::string& l) { prop_lens = l; }
 
   std::string camera_maker() { return prop_camera_maker; }
   std::string camera_model() { return prop_camera_model; }
@@ -89,9 +89,18 @@ public:
 
   int get_flags( VipsImage* img );
 
+  void set_lfcamera( rtengine::LFCamera c ) { lfcamera = c; }
+  void set_lflens( rtengine::LFLens l ) { lflens = l; }
+  const lfCamera* get_camera() { return lfcamera.data_; }
+  const lfLens* get_lens() { return lflens.data_; }
+
+  bool auto_matching_enabled() { return auto_matching; }
+
   bool distortion_enabled() { return enable_distortion; }
   bool tca_enabled() { return enable_tca; }
   bool vignetting_enabled() { return enable_vignetting; }
+
+  void set_auto_matching_enabled(bool flag) { auto_matching = flag; }
 
   void set_distortion_enabled(bool flag) { enable_distortion = flag; }
   void set_tca_enabled(bool flag) { enable_tca = flag; }
@@ -121,7 +130,11 @@ class LensFunPar: public OpParBase
   Property<std::string> prop_camera_model;
   Property<std::string> prop_lens;
 
+  Property<bool> auto_matching;
   Property<bool> enable_distortion, enable_tca, enable_vignetting, enable_all;
+
+  rtengine::LFCamera lfcamera;
+  rtengine::LFLens lflens;
 
   ProcessorBase* step1;
   ProcessorBase* step2;

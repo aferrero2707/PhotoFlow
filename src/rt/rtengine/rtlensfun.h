@@ -89,7 +89,7 @@ public:
 
     Glib::ustring getDisplayString() const;
 
-private:
+//private:
     friend class LFDatabase;
     const lfCamera *data_;
 };
@@ -109,7 +109,7 @@ public:
     bool hasDistortionCorrection() const;
     bool hasCACorrection() const;
 
-private:
+//private:
     friend class LFDatabase;
     const lfLens *data_;
 };
