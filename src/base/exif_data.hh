@@ -33,6 +33,8 @@
 
 #include <glib.h>
 
+#include <vips/vips.h>
+
 #ifdef BUNDLED_EXIV2
 #include <external/exiv2/include/exiv2/easyaccess.hpp>
 #include <external/exiv2/include/exiv2/xmp.hpp>
@@ -103,6 +105,8 @@ public:
 };
 
 void exiv2_free (gpointer mem);
+
+exif_data_t* get_exif_data( VipsImage* img );
 
 }
 

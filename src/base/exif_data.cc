@@ -363,3 +363,21 @@ void PF::exiv2_free (gpointer mem)
   }
 }
 
+
+PF::exif_data_t* PF::get_exif_data( VipsImage* img )
+{
+  size_t blobsz;
+  PF::exif_data_t* exif_data = NULL;
+  if( vips_image_get_blob( img, PF_META_EXIF_NAME,
+      (void**)&exif_data,
+      &blobsz ) ) {
+    std::cout<<"get_exif_data: could not extract exif_custom_data."<<std::endl;
+    return NULL;
+  }
+  if( blobsz != sizeof(PF::exif_data_t) ) {
+    std::cout<<"get_exif_data: wrong exif_custom_data size."<<std::endl;
+    return NULL;
+  }
+  return exif_data;
+}
+
