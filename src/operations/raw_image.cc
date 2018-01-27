@@ -1934,7 +1934,7 @@ void PF::RawImage::CA_correct_RT_old()
             }
           }
 
-        printf ("tile variances %f %f %f %f \n",blockvar[0][0],blockvar[1][0],blockvar[0][2],blockvar[1][2] );
+        //printf ("tile variances %f %f %f %f \n",blockvar[0][0],blockvar[1][0],blockvar[0][2],blockvar[1][2] );
 
 
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2011,10 +2011,10 @@ void PF::RawImage::CA_correct_RT_old()
                   PIX_SORT(p[6], p[4]);
                   PIX_SORT(p[4], p[2]);
                   bstemp[dir] = p[4];
-                  if (c==0 && dir==0) printf("vblock= %d hblock= %d blockshiftsmedian= %f \n",vblock,hblock,p[4]);
+                  if (false && c==0 && dir==0) printf("vblock= %d hblock= %d blockshiftsmedian= %f \n",vblock,hblock,p[4]);
                 }
 
-                //if (verbose)
+                if (false)
                 fprintf (stdout,_("tile vshift hshift (%d %d %4f %4f)...\n"),vblock, hblock, blockshifts[(vblock)*hblsz+hblock][c][0], blockshifts[(vblock)*hblsz+hblock][c][1]);
 
                 //now prepare coefficient matrix; use only data points within two std devs of zero
@@ -2036,7 +2036,7 @@ void PF::RawImage::CA_correct_RT_old()
                     }
 
                     //if (c==0 && dir==0) {printf("i= %d j= %d shiftmat= %f \n",i,j,shiftmat[c][dir][(polyord*i+j)]);}
-                    if (c==0 && dir==0) {printf("i= %d j= %d shiftmat= %f \n",i,polyord-1,shiftmat[c][dir][(polyord*i+polyord-1)]);}
+                    if (false && c==0 && dir==0) {printf("i= %d j= %d shiftmat= %f \n",i,polyord-1,shiftmat[c][dir][(polyord*i+polyord-1)]);}
                   }//monomials
                 }//dir
 
