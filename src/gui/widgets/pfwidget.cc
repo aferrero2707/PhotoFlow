@@ -77,6 +77,7 @@ void PF::PFWidget::init()
 
 void PF::PFWidget::changed()
 {
+  //std::cout<<"PFWidget::changed(): property="<<property<<" inhibit="<<inhibit<<" passive="<<passive<<std::endl;
   if( property && !inhibit ) {
     set_value();
     if( !passive ) {

@@ -78,31 +78,186 @@ public:
     LFComboBox ();
 
     void setPreferredWidth (int minimum_width, int natural_width);
+    void set_width(int width, int child_width);
+    void set_font_size(int size);
 };
 
 
 class LFCamSelector: public Gtk::HBox, public PFWidget
+{
+
+  Gtk::VBox vbox;
+  Gtk::Label label;
+  LFComboBox cbox;
+  Glib::RefPtr<Gtk::ListStore> model;
+
+public:
+  LFCamSelector(OperationConfigGUI* dialog, std::string pname, std::string l, int val, int width=100);
+  LFCamSelector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val, int width=100);
+
+  ~LFCamSelector() {}
+
+  virtual bool check_value( int id, const std::string& name, const std::string& val )
   {
+    return true;
+  }
 
-    Gtk::VBox vbox;
-    Gtk::Label label;
-    LFComboBox cbox;
-    Glib::RefPtr<Gtk::ListStore> model;
+  void get_value();
+  void set_value();
+};
 
-  public:
-    LFCamSelector(OperationConfigGUI* dialog, std::string pname, std::string l, int val, int width=100);
-    LFCamSelector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val, int width=100);
 
-    ~LFCamSelector() {}
+class LFLensSelector: public Gtk::HBox, public PFWidget
+{
 
-    virtual bool check_value( int id, const std::string& name, const std::string& val )
-    {
-      return true;
-    }
+  Gtk::VBox vbox;
+  Gtk::Label label;
+  LFComboBox cbox;
+  Glib::RefPtr<Gtk::ListStore> model;
 
-    void get_value();
-    void set_value();
-  };
+public:
+  LFLensSelector(OperationConfigGUI* dialog, std::string pname, std::string l, int val, int width=100);
+  LFLensSelector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val, int width=100);
+
+  ~LFLensSelector() {}
+
+  virtual bool check_value( int id, const std::string& name, const std::string& val )
+  {
+    return true;
+  }
+
+  void get_value();
+  void set_value();
+};
+
+
+class LFCamSelector2: public Gtk::HBox, public PFWidget
+{
+  std::string pname2;
+  PF::PropertyBase* property2;
+  Gtk::Label label;
+  Gtk::Frame frame;
+  Gtk::EventBox ebox;
+  Gtk::Menu menu;
+  Glib::ustring maker_name, model_name;
+
+  bool enabled;
+
+  void update_cam( Glib::ustring maker_new, Glib::ustring model_new );
+
+public:
+  LFCamSelector2(OperationConfigGUI* dialog, std::string pname, std::string pname2, std::string l, int val, int width=100);
+  LFCamSelector2(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val, int width=100);
+
+  ~LFCamSelector2() {}
+
+  void init();
+  void enable() { enabled = true; }
+  void disable() { enabled = false; }
+
+  void fill_menu();
+
+  bool my_button_release_event( GdkEventButton* button );
+
+  void on_item_clicked(Glib::ustring make, Glib::ustring model);
+  void set_cam(Glib::ustring cam_make, Glib::ustring cam_model);
+
+  virtual bool check_value( int id, const std::string& name, const std::string& val )
+  {
+    return true;
+  }
+
+  void get_value();
+  void set_value();
+};
+
+
+class LFLensSelector2: public Gtk::HBox, public PFWidget
+{
+
+  Gtk::Label label;
+  Gtk::Frame frame;
+  Gtk::EventBox ebox;
+  Gtk::Menu menu;
+  Glib::ustring lens_name;
+
+  bool enabled;
+
+  void update_lens(Glib::ustring lens);
+
+public:
+  LFLensSelector2(OperationConfigGUI* dialog, std::string pname, std::string l, int val, int width=100);
+  LFLensSelector2(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val, int width=100);
+
+  ~LFLensSelector2() {}
+
+  void enable() { enabled = true; }
+  void disable() { enabled = false; }
+
+  void fill_menu();
+
+  bool my_button_release_event( GdkEventButton* button );
+
+  void on_item_clicked(Glib::ustring lens, Glib::ustring prettylens);
+  void set_lens(Glib::ustring cam_make, Glib::ustring cam_model, Glib::ustring lens);
+
+  virtual bool check_value( int id, const std::string& name, const std::string& val )
+  {
+    return true;
+  }
+
+  void get_value();
+  void set_value();
+};
+
+
+class LFSelector: public Gtk::HBox, public PFWidget
+{
+  std::string pname2;
+  PF::PropertyBase* property2;
+  std::string pname3;
+  PF::PropertyBase* property3;
+  Gtk::VBox vbox;
+  Gtk::Label cam_label, lens_label;
+  Gtk::Frame cam_frame, lens_frame;
+  Gtk::EventBox cam_ebox, lens_ebox;
+  Gtk::Menu cam_menu, lens_menu;
+  Glib::ustring cam_maker_name, cam_model_name;
+  Glib::ustring lens_maker_name, lens_name;
+
+  bool enabled;
+
+  void update_cam( Glib::ustring maker_new, Glib::ustring model_new );
+  void update_lens( Glib::ustring lens_new );
+
+public:
+  LFSelector(OperationConfigGUI* dialog, std::string pname, std::string pname2, std::string pname3);
+
+  ~LFSelector() {}
+
+  void init();
+  void enable() { enabled = true; }
+  void disable() { enabled = false; }
+
+  void fill_cam_menu();
+  void fill_lens_menu();
+
+  bool my_cam_button_release_event( GdkEventButton* button );
+  bool my_lens_button_release_event( GdkEventButton* button );
+
+  void on_cam_item_clicked(Glib::ustring make, Glib::ustring model);
+  void on_lens_item_clicked(Glib::ustring make, Glib::ustring model);
+  void set_cam(Glib::ustring cam_make, Glib::ustring cam_model);
+  void set_lens(Glib::ustring lens_model);
+
+  virtual bool check_value( int id, const std::string& name, const std::string& val )
+  {
+    return true;
+  }
+
+  void get_value();
+  void set_value();
+};
 
 
 }

@@ -65,7 +65,7 @@ namespace PF {
     std::string get_prop_name() { return pname; }
     PropertyBase* get_prop() { return property; }
 
-    void init();
+    virtual void init();
 
     virtual void get_value() = 0;
     virtual void set_value() = 0;
