@@ -15,6 +15,8 @@
 #include "windows/mathconstants.h"
 #include <algorithm>
 
+#include <iostream>
+
 static struct
 {
     const char *regex;
@@ -1424,12 +1426,16 @@ int _lf_lens_compare_score (const lfLens *pattern, const lfLens *match,
 {
     int score = 0;
 
+    //std::cout<<"_lf_lens_compare_score: comparing \""<<pattern->Model<<"\" and \""<<match->Model<<"\""<<std::endl;
     // Compare numeric fields first since that's easy.
+
+    //std::cout<<"_lf_lens_compare_score: pattern->Type="<<pattern->Type<<" (LF_UNKNOWN="<<LF_UNKNOWN<<")"<<std::endl;
 
     if (pattern->Type != LF_UNKNOWN)
         if (pattern->Type != match->Type)
             return 0;
 
+    //std::cout<<"_lf_lens_compare_score: pattern->CropFactor="<<pattern->CropFactor<<" match->CropFactor="<<match->CropFactor<<std::endl;
     if (pattern->CropFactor > 0.01 && pattern->CropFactor < match->CropFactor * 0.96)
         return 0;
 
@@ -1448,6 +1454,7 @@ int _lf_lens_compare_score (const lfLens *pattern, const lfLens *match,
     else if (pattern->CropFactor >= match->CropFactor * 0.96)
         score += 3;
 
+    //std::cout<<"_lf_lens_compare_score: pattern->MinFocal="<<pattern->MinFocal<<" match->MinFocal="<<match->MinFocal<<std::endl;
     switch (_lf_compare_num (pattern->MinFocal, match->MinFocal))
     {
         case -1:
@@ -1458,6 +1465,7 @@ int _lf_lens_compare_score (const lfLens *pattern, const lfLens *match,
             break;
     }
 
+    //std::cout<<"_lf_lens_compare_score: pattern->MaxFocal="<<pattern->MaxFocal<<" match->MaxFocal="<<match->MaxFocal<<std::endl;
     switch (_lf_compare_num (pattern->MaxFocal, match->MaxFocal))
     {
         case -1:
@@ -1540,10 +1548,12 @@ int _lf_lens_compare_score (const lfLens *pattern, const lfLens *match,
             score += 10; // Good doggy, here's a cookie
     }
 
+    //std::cout<<"_lf_lens_compare_score: pattern->Model="<<pattern->Model<<" match->Model="<<match->Model<<std::endl;
     // And now the most complex part - compare models
     if (pattern->Model && match->Model)
     {
         int _score = fuzzycmp->Compare (match->Model);
+        //std::cout<<"_lf_lens_compare_score: fuzzycmp score="<<_score<<std::endl;
         if (!_score)
             return 0; // Model does not match
         _score = (_score * 4) / 10;
@@ -1551,6 +1561,7 @@ int _lf_lens_compare_score (const lfLens *pattern, const lfLens *match,
             _score = 1;
         score += _score;
     }
+    //std::cout<<"_lf_lens_compare_score: final score="<<score<<std::endl<<std::endl;
 
     return score;
 }
