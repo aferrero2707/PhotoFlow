@@ -16,6 +16,12 @@ ELSE(MINGW)
   option(USE_NLS "Build Native Language Support (using gettext)" ON)
 ENDIF(MINGW)
 option(BABL_FLIPS_DISABLED "BABL flips disabled" OFF)
+option(BUNDLED_LENSFUN_DB "Use bundled LensFun database" OFF)
+
+IF(BUNDLED_LENSFUN)
+  SET(BUNDLED_LENSFUN_DB ON CACHE BOOL "Use bundled LensFun database" FORCE)
+ENDIF(BUNDLED_LENSFUN)
+
 
 if(NOT INSTALL_PREFIX)
 	set(INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})

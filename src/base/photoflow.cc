@@ -324,9 +324,10 @@ PF::PhotoFlow::PhotoFlow():
   set_locale_dir( localePath );
 
   Glib::ustring lfdb;
-#if (BUNDLED_LENSFUN == 1)
+#if (BUNDLED_LENSFUN_DB == 1)
   lfdb = get_lensfun_db_dir();
 #endif
+  std::cout<<"Calling rtengine::LFDatabase::init(\""<<lfdb<<"\")"<<std::endl;
   rtengine::LFDatabase::init( lfdb );
 }
 
