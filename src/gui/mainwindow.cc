@@ -289,7 +289,7 @@ void PF::MainWindow::on_map()
 #ifdef __APPLE__
   Glib::RefPtr< Gdk::Screen > screen = get_screen();
   Glib::RefPtr< Gdk::Window > window = get_window();
-  cairo_current_display_id = screen->get_monitor_at_window(window);
+  //cairo_current_display_id = screen->get_monitor_at_window(window);
 
   print_display_profile();
   cmsHPROFILE dpy_profile = PF::get_display_ICC_profile();

@@ -591,7 +591,7 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   int draw_area_right = draw_area.left + draw_area.width - 1;
   int draw_area_bottom = draw_area.top + draw_area.height - 1;
 
-  //std::cout<<"ImageArea::on_expose_event(): draw_area="<<draw_area<<std::endl;
+  std::cout<<"ImageArea::on_expose_event(): draw_area="<<draw_area<<std::endl;
   // Immediately draw the buffered image, to avoid flickering
   // If the requested area is fully contained witin the current preview buffer,
   // we do not submit any further redraw request
@@ -601,7 +601,10 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
   //std::cout<<"  buffer_dirty: "<<double_buffer.get_active().is_dirty()<<std::endl;
   if( double_buffer.get_active().get_rect().width > 0 &&
       double_buffer.get_active().get_rect().height > 0 ) {
+
     Glib::RefPtr< Gdk::Pixbuf > pixbuf = modify_preview();
+    std::cout<<"ImageArea::on_expose_event(): before get_window()->draw_pixbuf()"<<std::endl;
+    /*
     get_window()->draw_pixbuf( get_style ()->get_white_gc (), pixbuf,
         0, 0,
         double_buffer.get_active().get_rect().left,
@@ -609,6 +612,13 @@ bool PF::ImageArea::on_expose_event (GdkEventExpose * event)
         double_buffer.get_active().get_rect().width,
         double_buffer.get_active().get_rect().height,
         Gdk::RGB_DITHER_MAX, 0, 0 );
+    */
+    Cairo::RefPtr< Cairo::Context > cr = get_window()->create_cairo_context();
+    Gdk::Cairo::set_source_pixbuf( cr, pixbuf,
+        double_buffer.get_active().get_rect().left,
+        double_buffer.get_active().get_rect().top );
+    cr->paint();
+    std::cout<<"ImageArea::on_expose_event(): after get_window()->draw_pixbuf()"<<std::endl;
   }
 
   bool repaint_needed = true;
