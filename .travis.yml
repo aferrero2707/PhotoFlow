@@ -206,7 +206,7 @@ matrix:
           before_script:
             - rm -rf osx
             - git clone https://github.com/aferrero2707/pf-build-osx.git osx
-            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 5
+            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 6
             #- export PATH="/usr/local/opt/ccache/libexec:$PATH"
             - cd $TRAVIS_BUILD_DIR
             - mkdir -p build
