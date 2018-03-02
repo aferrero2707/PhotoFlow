@@ -167,6 +167,8 @@ namespace PF
       float RGB[3];
       int x, y, k, i;
 
+      const float minus = -1.f;
+
       /* Do the actual processing
        */
 
@@ -268,7 +270,8 @@ namespace PF
               for(i=0; i<5;i++) {
               for( k=0; k < 3; k++) {
                 //RGB[k] = pin[x+k]; //powf( RGB[k], gamma );
-                RGB[k] = powf( RGB[k], gamma2 );
+                if(RGB[k] < 0) RGB[k] = powf( RGB[k]*minus, gamma2 )*minus;
+                else RGB[k] = powf( RGB[k], gamma2 );
                 //clip( exposure*RGB[k], RGB[k] );
               }
               }
