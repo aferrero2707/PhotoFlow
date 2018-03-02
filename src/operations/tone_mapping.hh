@@ -156,6 +156,8 @@ public:
     float RGB[3];
     int x, y, k;
 
+    const float minus = -1.f;
+
     float A = opar->get_filmic_A();
     float B = opar->get_filmic_B();
     float C = opar->get_filmic_C();
@@ -203,8 +205,6 @@ public:
             //clip( exposure*RGB[k], RGB[k] );
           }
         }
-
-        float minus = -1.f;
 
         switch( method ) {
         case TONE_MAPPING_EXP_GAMMA:
