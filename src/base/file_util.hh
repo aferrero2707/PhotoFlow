@@ -30,6 +30,7 @@
 
 #include <string>
 #include <algorithm>
+#include <glib.h>
 
 
 namespace PF {
@@ -37,5 +38,9 @@ namespace PF {
 bool get_file_extension(const std::string & file, std::string & ext);
 
 std::string replace_file_extension(std::string file, std::string new_ext);
+
+gchar* pf_path_get_basename( const gchar *file_name );
+
+std::string pf_escape_xml(const std::string str);
 
 }

@@ -72,3 +72,36 @@ std::string PF::replace_file_extension(std::string file, std::string new_ext)
 
   return new_file;
 }
+
+
+gchar* PF::pf_path_get_basename( const gchar *file_name )
+{
+  size_t len = strlen( file_name );
+  for(size_t i = len-1; i >= 0; i--) {
+    if( file_name[i] == '/' || file_name[i] == '\\' ) {
+      if( i == 0 ) return g_strdup( &(file_name[i+1]) );
+      if( file_name[i-1] != '\\' ) {
+        // the slash/backslash is not escaped
+        return g_strdup( &(file_name[i+1]) );
+      } else {
+        i -= 1;
+      }
+    }
+  }
+}
+
+
+std::string PF::pf_escape_xml(const std::string str)
+{
+  std::string result;
+  for(unsigned int i = 0; i < str.size(); i++) {
+    if( str[i] == '&' ) {
+      result.append( "&amp;" );
+    } else if( str[i] == '<' ) {
+      result.append( "&lt;" );
+    } else {
+      result.push_back( str[i] );
+    }
+  }
+  return result;
+}

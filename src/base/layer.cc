@@ -27,8 +27,8 @@
 
  */
 
+#include "file_util.hh"
 #include "layer.hh"
-
 #include "image.hh"
 
 
@@ -200,7 +200,7 @@ bool PF::Layer::save( std::ostream& ostr, int level )
   if( is_hidden() ) return true;
 
   for(int i = 0; i < level; i++) ostr<<"  ";
-  ostr<<"<layer name=\""<<name<<"\" id=\""<<id<<"\" visible=\""<<enabled<<"\" expanded=\""<<expanded
+  ostr<<"<layer name=\""<<PF::pf_escape_xml(name)<<"\" id=\""<<id<<"\" visible=\""<<enabled<<"\" expanded=\""<<expanded
       <<"\" normal=\""<<normal<<"\" extra_inputs=\"";
   int n;
   for( size_t i=0, n=0; i < extra_inputs.size(); i++ ) {

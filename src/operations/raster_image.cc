@@ -31,6 +31,7 @@
 
 #include "rawspeed/src/librawspeed/RawSpeed-API.h"
 
+#include "../base/file_util.hh"
 #include "../base/pf_mkstemp.hh"
 #include "raster_image.hh"
 
@@ -43,10 +44,12 @@ image( NULL )
   if( file_name.empty() ) return;
 
   file_name_real = file_name;
+  std::cout<<"RasterImage::RasterImage(): trying to open file \""<<file_name_real<<"\""<<std::endl;
   int ifd = open( file_name_real.c_str(), O_RDONLY );
   if( ifd < 0 ) {
     char* fullpath = strdup( file_name_real.c_str() );
-    gchar* fname = g_path_get_basename( fullpath );
+    //gchar* fname = g_path_get_basename( fullpath );
+    gchar* fname = PF::pf_path_get_basename( fullpath );
     gchar* fname2 = g_build_filename( PF::PhotoFlow::Instance().get_current_image_dir().c_str(),
         fname, NULL );
     std::cout<<"RasterImage::RasterImage(): file \""<<file_name_real<<"\" not found"<<std::endl;

@@ -29,6 +29,7 @@
 
 #include <lcms2.h>
 
+#include "file_util.hh"
 #include "operation.hh"
 #include "layer.hh"
 //#include "../vips/vips_layer.h"
@@ -445,9 +446,11 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
 
   for( std::list<PropertyBase*>::iterator pi = properties.begin();
        pi != properties.end(); pi++ ) {
+    std::string pvalue = (*pi)->get_str();
     for(int i = 0; i < level+1; i++) ostr<<"  ";
     ostr<<"<property name=\""<<(*pi)->get_name()<<"\" value=\"";
-    (*pi)->to_stream( ostr );
+    //(*pi)->to_stream( ostr );
+    ostr<<PF::pf_escape_xml(pvalue);
     ostr<<"\">"<<std::endl;
     for(int i = 0; i < level+1; i++) ostr<<"  ";
     ostr<<"</property>"<<std::endl;
@@ -455,9 +458,11 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
   
   for( std::list<PropertyBase*>::iterator pi = mapped_properties.begin();
        pi != mapped_properties.end(); pi++ ) {
+    std::string pvalue = (*pi)->get_str();
     for(int i = 0; i < level+1; i++) ostr<<"  ";
     ostr<<"<property name=\""<<(*pi)->get_name()<<"\" value=\"";
-    (*pi)->to_stream( ostr );
+    //(*pi)->to_stream( ostr );
+    ostr<<PF::pf_escape_xml(pvalue);
     ostr<<"\">"<<std::endl;
     for(int i = 0; i < level+1; i++) ostr<<"  ";
     ostr<<"</property>"<<std::endl;

@@ -111,6 +111,9 @@ void start_element (GMarkupParseContext *context,
   const gchar **name_cursor = attribute_names;
   const gchar **value_cursor = attribute_values;
 
+//#ifdef DEBUG_PF_LOAD
+//      std::cout<<"PF::pf_file_loader(): element name = \""<<element_name<<"\""<<std::endl;
+//#endif
   if( strcmp (element_name, "image") == 0 ) {
     while (*name_cursor) {
       if (strcmp (*name_cursor, "version") == 0) {
