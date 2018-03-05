@@ -600,10 +600,16 @@ PF::LFSelector::LFSelector( OperationConfigGUI* dialog, std::string pname, std::
   lens_ebox.add( lens_frame );
   vbox.pack_start(lens_ebox);
 
+  cb_hbox.pack_start(cb, Gtk::PACK_SHRINK);
+  cb_hbox.pack_start(cb_label, Gtk::PACK_SHRINK);
+  cb_label.set_text(_("match camera"));
+  cb.set_active(true);
+  vbox.pack_start(cb_hbox);
+
   pack_start(vbox, Gtk::PACK_EXPAND_WIDGET, 5);
 
   fill_cam_menu();
-  fill_lens_menu();
+  fill_lens_menu_full();
 
   cam_ebox.signal_button_release_event().
       connect( sigc::mem_fun(*this, &PF::LFSelector::my_cam_button_release_event) );
@@ -657,7 +663,12 @@ bool PF::LFSelector::my_cam_button_release_event( GdkEventButton* event )
 bool PF::LFSelector::my_lens_button_release_event( GdkEventButton* event )
 {
   if( !enabled ) return false;
-  lens_menu.popup(event->button, event->time);
+  if( cb.get_active() ) {
+    fill_lens_menu();
+    lens_menu.popup(event->button, event->time);
+  } else {
+    lens_menu_full.popup(event->button, event->time);
+  }
   return false;
 }
 
@@ -711,7 +722,9 @@ void PF::LFSelector::set_lens(Glib::ustring lens)
   rtengine::LFCamera lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_maker_name, cam_model_name);
   rtengine::LFLens lflens;
   if( lfcamera ) {
-    lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens);
+    bool relax = !(cb.get_active());
+    //if( !enabled ) relax = true;
+    lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens, relax);
     if( lflens ) {
       Glib::ustring lens_make = lflens.getMake();
       Glib::ustring lens_model = lflens.getLens();
@@ -727,10 +740,12 @@ void PF::LFSelector::set_lens(Glib::ustring lens)
       update_lens( lens_model );
     } else {
       std::cout<<"LFSelector::set_lens(): cannot find lens \""<<lens<<"\" in database"<<std::endl;
+      update_lens( "" );
     }
   } else {
     std::cout<<"LFSelector::set_lens(): cannot find camera \""
         <<cam_maker_name<<" / "<<cam_model_name<<"\" in database"<<std::endl;
+    update_lens( "" );
   }
 }
 
@@ -767,6 +782,17 @@ void PF::LFSelector::fill_cam_menu()
 
 void PF::LFSelector::fill_lens_menu()
 {
+  rtengine::LFCamera lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_maker_name, cam_model_name);
+
+  std::vector< Gtk::Widget* > children = lens_menu.get_children();
+  for(unsigned int i = 0; i < children.size(); i++) {
+    Gtk::Widget* w = children[i];
+    lens_menu.remove(*w);
+    delete w;
+  }
+
+  if( !lfcamera ) return;
+
     std::cout << "LENSFUN, scanning lenses:" << std::endl;
   std::map<Glib::ustring, std::set<Glib::ustring>> lenses;
   auto lenslist = rtengine::LFDatabase::getInstance()->getLenses();
@@ -775,13 +801,58 @@ void PF::LFSelector::fill_lens_menu()
     auto make = l.getMake();
     lenses[make].insert(name);
 
-      std::cout << "  found: " << l.getDisplayString().c_str() << std::endl;
+      //std::cout << "  found: " << l.getDisplayString().c_str() << std::endl;
           //<< " ("<<l.getLens()<<")" << std::endl;
   }
   for (auto &p : lenses) {
+    Gtk::Menu* cmenu = NULL;
+    for (auto &c : p.second) {
+      rtengine::LFLens lflens;
+      lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, c, false);
+      if( !lflens ) continue;
+      if( !cmenu ) {
+        Gtk::MenuItem* item = new Gtk::MenuItem(p.first);
+        lens_menu.append( *item );
+        cmenu = new Gtk::Menu;
+        item->set_submenu( *cmenu );
+      }
+      Gtk::MenuItem* citem;
+      Glib::ustring cpretty;
+      if (c.find(p.first, p.first.size()+1) == p.first.size()+1) {
+        cpretty = c.substr(p.first.size()+1);
+      } else {
+        cpretty = c;
+      }
+      citem = new Gtk::MenuItem( cpretty );
+      cmenu->append( *citem );
+
+      citem->signal_activate().connect(
+          sigc::bind<Glib::ustring>(
+              sigc::mem_fun(*this,&LFSelector::on_lens_item_clicked), c, cpretty ) );
+    }
+  }
+  lens_menu.show_all();
+}
+
+
+void PF::LFSelector::fill_lens_menu_full()
+{
+    std::cout << "LENSFUN, scanning lenses:" << std::endl;
+  std::map<Glib::ustring, std::set<Glib::ustring>> lenses;
+  auto lenslist = rtengine::LFDatabase::getInstance()->getLenses();
+  for (auto &l : lenslist) {
+    auto name = l.getLens();
+    auto make = l.getMake();
+    lenses[make].insert(name);
+
+      //std::cout << "  found: " << l.getDisplayString().c_str() << std::endl;
+          //<< " ("<<l.getLens()<<")" << std::endl;
+  }
+  for (auto &p : lenses) {
+    Gtk::Menu* cmenu = NULL;
     Gtk::MenuItem* item = new Gtk::MenuItem(p.first);
-    lens_menu.append( *item );
-    Gtk::Menu* cmenu = new Gtk::Menu;
+    lens_menu_full.append( *item );
+    cmenu = new Gtk::Menu;
     item->set_submenu( *cmenu );
     for (auto &c : p.second) {
       Gtk::MenuItem* citem;
@@ -799,7 +870,7 @@ void PF::LFSelector::fill_lens_menu()
               sigc::mem_fun(*this,&LFSelector::on_lens_item_clicked), c, cpretty ) );
     }
   }
-  lens_menu.show_all();
+  lens_menu_full.show_all();
 }
 
 

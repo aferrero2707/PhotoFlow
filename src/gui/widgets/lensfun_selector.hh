@@ -221,9 +221,13 @@ class LFSelector: public Gtk::HBox, public PFWidget
   Gtk::Label cam_label, lens_label;
   Gtk::Frame cam_frame, lens_frame;
   Gtk::EventBox cam_ebox, lens_ebox;
-  Gtk::Menu cam_menu, lens_menu;
+  Gtk::Menu cam_menu, lens_menu, lens_menu_full;
   Glib::ustring cam_maker_name, cam_model_name;
   Glib::ustring lens_maker_name, lens_name;
+
+  Gtk::HBox cb_hbox;
+  Gtk::Label cb_label;
+  Gtk::CheckButton cb;
 
   bool enabled;
 
@@ -241,6 +245,7 @@ public:
 
   void fill_cam_menu();
   void fill_lens_menu();
+  void fill_lens_menu_full();
 
   bool my_cam_button_release_event( GdkEventButton* button );
   bool my_lens_button_release_event( GdkEventButton* button );

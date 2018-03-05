@@ -166,7 +166,7 @@ int PF::LensFunParStep::get_flags( VipsImage* img )
   rtengine::LFLens lflens = rtengine::LFLens();
   if( lfcamera ) {
     std::cout<<"LensFunParStep::get_flags(): camera "<<lfcamera.getMake()<<" / "<<lfcamera.getModel()<<" found in database"<<std::endl;
-    lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model);
+    lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model, !auto_matching);
     if( lflens ) {
       std::cout<<"LensFunParStep::get_flags(): lens "<<lflens.getMake()<<" / "<<lflens.getLens()<<" ("<<exif_data->exif_lens<<") found in database"<<std::endl;
     } else {
@@ -181,7 +181,7 @@ int PF::LensFunParStep::get_flags( VipsImage* img )
   std::cout<<"LensFunParStep::get_flags(): camera="<<camera<<std::endl;
   const lfLens *lens = lflens.data_;
   std::cout<<"LensFunParStep::get_flags(): lens="<<lens<<std::endl;
-  lfModifier* modifier = new lfModifier( lens, lens->CropFactor,
+  lfModifier* modifier = new lfModifier( lens, camera->CropFactor,
       img->Xsize, img->Ysize );
   flags = modifier->Initialize( lens, LF_PF_F32,
       focal_length, aperture, distance, 1.0, lens->Type,
@@ -220,7 +220,7 @@ int PF::LensFunParStep::get_flags( VipsImage* img )
       const lfLens *lens = lenses[0];
       lf_free (lenses);
 
-      lfModifier* modifier = new lfModifier( lens, lens->CropFactor,
+      lfModifier* modifier = new lfModifier( lens, camera->CropFactor,
           img->Xsize, img->Ysize );
       flags = modifier->Initialize(
           lens, LF_PF_F32, focal_length, aperture, distance, 1.0, lens->Type,
@@ -370,7 +370,7 @@ int PF::LensFunPar::get_flags( VipsImage* img )
   rtengine::LFLens lflens = rtengine::LFLens();
   if( lfcamera ) {
     std::cout<<"LensFunPar::get_flags(): camera "<<lfcamera.getMake()<<" / "<<lfcamera.getModel()<<" found in database"<<std::endl;
-    lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model);
+    lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model, !(auto_matching.get()));
     if( lflens ) {
       std::cout<<"LensFunParStep::get_flags(): lens "<<lflens.getMake()<<" / "<<lflens.getLens()<<" ("<<exif_data->exif_lens<<") found in database"<<std::endl;
     } else {
@@ -388,7 +388,7 @@ int PF::LensFunPar::get_flags( VipsImage* img )
   std::cout<<"LensFunPar::get_flags(): camera="<<camera<<std::endl;
   const lfLens *lens = lflens.data_;
   std::cout<<"LensFunPar::get_flags(): lens="<<lens<<std::endl;
-  lfModifier* modifier = new lfModifier( lens, lens->CropFactor,
+  lfModifier* modifier = new lfModifier( lens, camera->CropFactor,
       img->Xsize, img->Ysize );
   flags = modifier->Initialize( lens, LF_PF_F32,
       focal_length, aperture, distance, 1.0, lens->Type,
@@ -445,7 +445,7 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
   lflens = rtengine::LFLens();
   if( lfcamera ) {
     std::cout<<"LensFunPar::build(): camera "<<lfcamera.getMake()<<" / "<<lfcamera.getModel()<<" found in database"<<std::endl;
-    lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model);
+    lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model, !(auto_matching.get()));
     if( lflens ) {
       std::cout<<"LensFunPar::build(): lens "<<lflens.getMake()<<" / "<<lflens.getLens()<<" ("<<exif_data->exif_lens<<") found in database"<<std::endl;
     } else {

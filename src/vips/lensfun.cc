@@ -445,9 +445,9 @@ vips_lensfun_build( VipsObject *object )
   if( lfpar->distortion_enabled() ) flags |= LF_MODIFY_DISTORTION;
   if( lfpar->tca_enabled() ) flags |= LF_MODIFY_TCA;
   if( lfpar->vignetting_enabled() ) flags |= LF_MODIFY_VIGNETTING;
-  std::cout<<"lfModifier::Create( lens, "<<lens->CropFactor<<", "
+  std::cout<<"lfModifier::Create( lens, "<<camera->CropFactor<<", "
       <<lensfun->in->Xsize<<", "<<lensfun->in->Ysize<<" );"<<std::endl;
-  lensfun->modifier = new lfModifier( lens, lens->CropFactor,
+  lensfun->modifier = new lfModifier( lens, camera->CropFactor,
       lensfun->in->Xsize, lensfun->in->Ysize );
   std::cout<<"lensfun->modifier->Initialize( lens, LF_PF_U8, "<<lfpar->get_focal_length()<<", "
       <<lfpar->get_aperture()<<", "<<lfpar->get_distance()

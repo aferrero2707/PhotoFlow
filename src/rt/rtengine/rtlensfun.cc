@@ -437,7 +437,7 @@ LFCamera LFDatabase::findCamera(const Glib::ustring &make, const Glib::ustring &
 }
 
 
-LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name) const
+LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name, bool relax) const
 {
     LFLens ret;
     if (data_) {
@@ -464,30 +464,32 @@ LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name) c
           if (camera.isFixedLens()) {
             found = data_->FindLenses(camera.data_, nullptr, "");
           } else {
-            std::cout<<"LFDatabase::findLens(): cannot find a match for "<<name<<", relaxing criteria"<<std::endl;
-            lfLens tmplens;
-            tmplens.CropFactor = camera.data_->CropFactor;
-            tmplens.SetModel(name.c_str());
-            found = data_->FindLenses(&tmplens/*, LF_SEARCH_LOOSE*/);
-            std::cout<<"LFDatabase::findLens(): found="<<found<<std::endl;
-            for (size_t pos = 0; !found && pos < name.size(); ) {
-              // try to split the maker from the model of the lens -- we have to
-              // guess a bit here, since there are makers with a multi-word name
-              // (e.g. "Leica Camera AG")
-              if (name.find("f/", pos) == 0) {
-                break; // no need to search further
-              }
-              Glib::ustring make, model;
-              auto i = name.find(' ', pos);
-              if (i != Glib::ustring::npos) {
-                make = name.substr(0, i);
-                model = name.substr(i+1);
-                tmplens.SetMaker(make.c_str());
-                tmplens.SetModel(model.c_str());
-                found = data_->FindLenses(&tmplens/*, LF_SEARCH_LOOSE*/);
-                pos = i+1;
-              } else {
-                break;
+            if( relax ) {
+              //std::cout<<"LFDatabase::findLens(): cannot find a match for "<<name<<", relaxing criteria"<<std::endl;
+              lfLens tmplens;
+              //tmplens.CropFactor = camera.data_->CropFactor;
+              tmplens.SetModel(name.c_str());
+              found = data_->FindLenses(&tmplens, LF_SEARCH_LOOSE);
+              //std::cout<<"LFDatabase::findLens(): found="<<found<<std::endl;
+              for (size_t pos = 0; !found && pos < name.size(); ) {
+                // try to split the maker from the model of the lens -- we have to
+                // guess a bit here, since there are makers with a multi-word name
+                // (e.g. "Leica Camera AG")
+                if (name.find("f/", pos) == 0) {
+                  break; // no need to search further
+                }
+                Glib::ustring make, model;
+                auto i = name.find(' ', pos);
+                if (i != Glib::ustring::npos) {
+                  make = name.substr(0, i);
+                  model = name.substr(i+1);
+                  tmplens.SetMaker(make.c_str());
+                  tmplens.SetModel(model.c_str());
+                  found = data_->FindLenses(&tmplens, LF_SEARCH_LOOSE);
+                  pos = i+1;
+                } else {
+                  break;
+                }
               }
             }
           }
