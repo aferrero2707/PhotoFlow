@@ -28,6 +28,7 @@
 
  */
 
+#include <string.h>
 #include <algorithm>
 
 #include "file_util.hh"
