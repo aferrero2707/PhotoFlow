@@ -3,6 +3,7 @@
 
     Copyright (C) 2009-2014 Klaus Post
     Copyright (C) 2014 Pedro Côrte-Real
+    Copyright (C) 2018 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -22,25 +23,34 @@
 #pragma once
 
 #include "common/Common.h"                      // for uint32, uchar8
+#include "common/RawImage.h"                    // for RawImage
 #include "decompressors/AbstractDecompressor.h" // for AbstractDecompressor
+#include "decompressors/HuffmanTable.h"         // for HuffmanTable
 #include "io/BitPumpJPEG.h"                     // for BitPumpJPEG
+#include "io/Buffer.h"                          // for Buffer
+#include "io/ByteStream.h"                      // for ByteStream
 #include <array>                                // for array
+#include <memory>                               // for unique_ptr
 
 namespace rawspeed {
 
-class Buffer;
-
-class RawImage;
-
-class HuffmanTable;
-
 class CrwDecompressor final : public AbstractDecompressor {
+  using crw_hts = std::array<std::array<HuffmanTable, 2>, 2>;
+
+  RawImage mRaw;
+  crw_hts mHuff;
+  const bool lowbits;
+
+  ByteStream lowbitInput;
+  ByteStream rawInput;
+
 public:
-  static void decompress(const RawImage& mRaw, const Buffer* mFile,
-                         uint32 dec_table, bool lowbits);
+  CrwDecompressor(const RawImage& img, uint32 dec_table_, bool lowbits_,
+                  ByteStream rawData);
+
+  void decompress();
 
 private:
-  using crw_hts = std::array<std::array<HuffmanTable, 2>, 2>;
   static HuffmanTable makeDecoder(const uchar8* ncpl, const uchar8* values);
   static crw_hts initHuffTables(uint32 table);
 

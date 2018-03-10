@@ -22,23 +22,33 @@
 */
 
 #include "decompressors/FujiDecompressor.h"
-#include "decoders/RawDecoderException.h" // for RawDecoderException (ptr o...
-#include "io/Endianness.h"                // for Endianness::big
-#include "metadata/ColorFilterArray.h"    // for CFAColor::CFA_BLUE, CFACol...
-#include <algorithm>                      // for min, move
-#include <cstdlib>                        // for abs
-#include <cstring>                        // for memcpy, memset
+#include "common/Common.h"                                  // for roundUpDiv...
+#include "common/RawImage.h"                                // for RawImage
+#include "decoders/RawDecoderException.h"                   // for ThrowRDE
+#include "decompressors/AbstractParallelizedDecompressor.h" // for RawDecom...
+#include "io/Endianness.h"                                  // for Endianness
+#include "metadata/ColorFilterArray.h"                      // for CFAColor...
+#include <algorithm>                                        // for fill, min
+#include <cstdlib>                                          // for abs
+#include <cstring>                                          // for memcpy
 // IWYU pragma: no_include <bits/std_abs.h>
 
 namespace rawspeed {
 
-FujiDecompressor::FujiDecompressor(ByteStream input_, const RawImage& img)
-    : input(std::move(input_)), mImg(img) {
+FujiDecompressor::FujiDecompressor(const RawImage& img, ByteStream input_)
+    : AbstractParallelizedDecompressor(img), input(std::move(input_)) {
+  if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
+      mRaw->getBpp() != 2)
+    ThrowRDE("Unexpected component count / data type");
+
   input.setByteOrder(Endianness::big);
 
   header = FujiHeader(&input);
   if (!header)
     ThrowRDE("compressed RAF header check");
+
+  if (mRaw->dim != iPoint2D(header.raw_width, header.raw_height))
+    ThrowRDE("RAF header specifies different dimensions!");
 
   if (12 == header.raw_bits) {
     ThrowRDE("Aha, finally, a 12-bit compressed RAF! Please consider providing "
@@ -46,9 +56,21 @@ FujiDecompressor::FujiDecompressor(ByteStream input_, const RawImage& img)
   }
 
   for (int i = 0; i < 6; i++) {
-    for (int j = 0; j < 6; j++)
-      CFA[i][j] = mImg->cfa.getColorAt(j, i);
+    for (int j = 0; j < 6; j++) {
+      const CFAColor c = mRaw->cfa.getColorAt(j, i);
+      switch (c) {
+      case CFA_RED:
+      case CFA_GREEN:
+      case CFA_BLUE:
+        CFA[i][j] = c;
+        break;
+      default:
+        ThrowRDE("Got unexpected color %u", c);
+      }
+    }
   }
+
+  fuji_compressed_load_raw();
 }
 
 FujiDecompressor::fuji_compressed_params::fuji_compressed_params(
@@ -165,7 +187,7 @@ void FujiDecompressor::copy_line(fuji_compressed_block* info,
 
   for (int row_count = 0; row_count < FujiStrip::lineHeight(); row_count++) {
     auto* const raw_block_data = reinterpret_cast<ushort16*>(
-        mImg->getData(strip.offsetX(), strip.offsetY(cur_line) + row_count));
+        mRaw->getData(strip.offsetX(), strip.offsetY(cur_line) + row_count));
 
     for (int pixel_count = 0; pixel_count < strip.width(); pixel_count++) {
       ushort16* line_buf = nullptr;
@@ -754,10 +776,15 @@ void FujiDecompressor::fuji_compressed_load_raw() {
   }
 }
 
-void FujiDecompressor::fuji_decode_loop(size_t start, size_t end) const {
+void FujiDecompressor::decompress() const {
+  startThreading(header.blocks_in_row);
+}
+
+void FujiDecompressor::decompressThreaded(
+    const RawDecompressorThread* t) const {
   fuji_compressed_block block_info;
 
-  for (size_t i = start; i < end && i < strips.size(); i++) {
+  for (size_t i = t->start; i < t->end && i < strips.size(); i++) {
     block_info.reset(&common_info);
     fuji_decode_strip(&block_info, strips[i]);
   }
@@ -787,6 +814,7 @@ FujiDecompressor::FujiHeader::operator bool() const {
        raw_rounded_width % block_size ||
        raw_rounded_width - raw_width >= block_size || blocks_in_row > 0x10 ||
        blocks_in_row == 0 || blocks_in_row != raw_rounded_width / block_size ||
+       blocks_in_row != roundUpDivision(raw_width, block_size) ||
        total_lines > 0x800 || total_lines == 0 ||
        total_lines != raw_height / FujiStrip::lineHeight() ||
        (raw_bits != 12 && raw_bits != 14) || (raw_type != 16 && raw_type != 0));

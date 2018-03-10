@@ -38,31 +38,30 @@ using std::min;
 
 namespace rawspeed {
 
-void UncompressedDecompressor::sanityCheck(uint32* h, int bpl) {
+void UncompressedDecompressor::sanityCheck(const uint32* h, int bpl) {
   assert(h != nullptr);
   assert(*h > 0);
   assert(bpl > 0);
   assert(input.getSize() > 0);
 
-  if (input.getRemainSize() >= bpl * *h)
+  // How many multiples of bpl are there in the input buffer?
+  // The remainder is ignored/discarded.
+  const auto fullRows = input.getRemainSize() / bpl;
+
+  // If more than the output height, we are all good.
+  if (fullRows >= *h)
     return; // all good!
 
-  if (static_cast<int>(input.getRemainSize()) < bpl)
+  if (fullRows == 0)
     ThrowIOE("Not enough data to decode a single line. Image file truncated.");
 
-  mRaw->setError("Image truncated (file is too short)");
+  ThrowIOE("Image truncated, only %u of %u lines found", fullRows, *h);
 
-  assert(((int)input.getRemainSize() >= bpl) &&
-         (input.getRemainSize() < bpl * *h));
-
-  const auto min_h = input.getRemainSize() / bpl;
-  assert(min_h < *h);
-  assert(input.getRemainSize() >= bpl * min_h);
-
-  *h = min_h;
+  // FIXME: need to come up with some common variable to allow proceeding here
+  // *h = min_h;
 }
 
-void UncompressedDecompressor::sanityCheck(uint32 w, uint32* h, int bpp) {
+void UncompressedDecompressor::sanityCheck(uint32 w, const uint32* h, int bpp) {
   assert(w > 0);
   assert(bpp > 0);
 
@@ -112,7 +111,18 @@ void UncompressedDecompressor::readUncompressedRaw(const iPoint2D& size,
   if (bitPerPixel > 16 && mRaw->getDataType() == TYPE_USHORT16)
     ThrowRDE("Unsupported bit depth");
 
-  uint32 skipBits = inputPitch - w * cpp * bitPerPixel / 8; // Skip per line
+  const int outPixelBits = w * cpp * bitPerPixel;
+  assert(outPixelBits > 0);
+
+  if (outPixelBits % 8 != 0) {
+    ThrowRDE("Bad combination of cpp (%u), bps (%u) and width (%u), the "
+             "pitch is %u bits, which is not a multiple of 8 (1 byte)",
+             cpp, bitPerPixel, w, outPixelBits);
+  }
+
+  const int outPixelBytes = outPixelBits / 8;
+
+  uint32 skipBits = inputPitch - outPixelBytes; // Skip per line
   if (oy > static_cast<uint64>(mRaw->dim.y))
     ThrowRDE("Invalid y offset");
   if (ox + size.x > static_cast<uint64>(mRaw->dim.x))

@@ -4,6 +4,7 @@
     Copyright (C) 2009-2014 Klaus Post
     Copyright (C) 2015 Pedro Côrte-Real
     Copyright (C) 2017 Axel Waggershauser
+    Copyright (C) 2018 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -41,6 +42,8 @@ using std::vector;
 namespace rawspeed {
 
 void TiffIFD::parseIFDEntry(NORangesSet<Buffer>* ifds, ByteStream* bs) {
+  assert(ifds);
+
   TiffEntryOwner t;
 
   auto origPos = bs->getPosition();
@@ -57,7 +60,13 @@ void TiffIFD::parseIFDEntry(NORangesSet<Buffer>* ifds, ByteStream* bs) {
   try {
     switch (t->tag) {
     case DNGPRIVATEDATA:
-      add(parseDngPrivateData(ifds, t.get()));
+      // These are arbitrairly 'rebased', to preserve the offsets, but as it is
+      // implemented right now, that could trigger UB (pointer arithmetics,
+      // creating pointer to unowned memory, etc). And since this is not even
+      // used anywhere right now, let's not
+      //   add(parseDngPrivateData(ifds, t.get()));
+      // but just add them as entries. (e.g. ArwDecoder uses WB from them)
+      add(move(t));
       break;
 
     case MAKERNOTE:
@@ -80,18 +89,23 @@ void TiffIFD::parseIFDEntry(NORangesSet<Buffer>* ifds, ByteStream* bs) {
   }
 }
 
-TiffIFD::TiffIFD(TiffIFD* parent_) : parent(parent_) {}
+TiffIFD::TiffIFD(TiffIFD* parent_) : parent(parent_) {
+  recursivelyCheckSubIFDs(1);
+  // If we are good (can add this IFD without violating the limits),
+  // we are still here. However, due to the way we add parsed sub-IFD's (lazy),
+  // we need to count this IFD right *NOW*, not when adding it at the end.
+  recursivelyIncrementSubIFDCount();
+}
 
 TiffIFD::TiffIFD(TiffIFD* parent_, NORangesSet<Buffer>* ifds,
                  const DataBuffer& data, uint32 offset)
     : TiffIFD(parent_) {
-
   // see TiffParser::parse: UINT32_MAX is used to mark the "virtual" top level
   // TiffRootIFD in a tiff file
   if (offset == UINT32_MAX)
     return;
 
-  checkOverflow();
+  assert(ifds);
 
   ByteStream bs(data);
   bs.setPosition(offset);
@@ -104,7 +118,7 @@ TiffIFD::TiffIFD(TiffIFD* parent_, NORangesSet<Buffer>* ifds,
   // 4-byte offset to the next IFD at the end
   const auto IFDFullSize = 2 + 4 + 12 * numEntries;
   const Buffer IFDBuf(data.getSubView(offset, IFDFullSize));
-  if (ifds && !ifds->emplace(IFDBuf).second)
+  if (!ifds->emplace(IFDBuf).second)
     ThrowTPE("Two IFD's overlap. Raw corrupt!");
 
   for (uint32 i = 0; i < numEntries; i++)
@@ -115,13 +129,24 @@ TiffIFD::TiffIFD(TiffIFD* parent_, NORangesSet<Buffer>* ifds,
 
 TiffRootIFDOwner TiffIFD::parseDngPrivateData(NORangesSet<Buffer>* ifds,
                                               TiffEntry* t) {
+  assert(ifds);
+
   /*
-  1. Six bytes containing the zero-terminated string "Adobe". (The DNG specification calls for the DNGPrivateData tag to start with an ASCII string identifying the creator/format).
-  2. 4 bytes: an ASCII string ("MakN" for a Makernote),  indicating what sort of data is being stored here. Note that this is not zero-terminated.
-  3. A four-byte count (number of data bytes following); this is the length of the original MakerNote data. (This is always in "most significant byte first" format).
-  4. 2 bytes: the byte-order indicator from the original file (the usual 'MM'/4D4D or 'II'/4949).
-  5. 4 bytes: the original file offset for the MakerNote tag data (stored according to the byte order given above).
-  6. The contents of the MakerNote tag. This is a simple byte-for-byte copy, with no modification.
+  1. Six bytes containing the zero-terminated string "Adobe".
+     (The DNG specification calls for the DNGPrivateData tag to start with an
+      ASCII string identifying the creator/format).
+  2. 4 bytes: an ASCII string ("MakN" for a Makernote), indicating what sort of
+     data is being stored here.
+     Note that this is not zero-terminated.
+  3. A four-byte count (number of data bytes following);
+     This is the length of the original MakerNote data.
+     (This is always in "most significant byte first" format).
+  4. 2 bytes: the byte-order indicator from the original file
+     (the usual 'MM'/4D4D or 'II'/4949).
+  5. 4 bytes: the original file offset for the MakerNote tag data
+     (stored according to the byte order given above).
+  6. The contents of the MakerNote tag.
+     This is a simple byte-for-byte copy, with no modification.
   */
   ByteStream& bs = t->getData();
   if (!bs.skipPrefix("Adobe", 6))
@@ -132,7 +157,7 @@ TiffRootIFDOwner TiffIFD::parseDngPrivateData(NORangesSet<Buffer>* ifds,
 
   bs.setByteOrder(Endianness::big);
   uint32 makerNoteSize = bs.getU32();
-  if (makerNoteSize != bs.getRemainSize())
+  if (makerNoteSize > bs.getRemainSize())
     ThrowTPE("Error reading TIFF structure (invalid size). File Corrupt");
 
   bs.setByteOrder(getTiffByteOrder(bs, 0, "DNG makernote"));
@@ -150,6 +175,8 @@ TiffRootIFDOwner TiffIFD::parseDngPrivateData(NORangesSet<Buffer>* ifds,
 /* This will attempt to parse makernotes and return it as an IFD */
 TiffRootIFDOwner TiffIFD::parseMakerNote(NORangesSet<Buffer>* ifds,
                                          TiffEntry* t) {
+  assert(ifds);
+
   // go up the IFD tree and try to find the MAKE entry on each level.
   // we can not go all the way to the top first because this partial tree
   // is not yet added to the TiffRootIFD.
@@ -253,21 +280,53 @@ TiffEntry* __attribute__((pure)) TiffIFD::getEntryRecursive(TiffTag tag) const {
   return nullptr;
 }
 
-void TiffIFD::checkOverflow() {
-  TiffIFD* p = this;
-  int i = 0;
-  while ((p = p->parent) != nullptr) {
-    i++;
-    if (i > 5)
-      ThrowTPE("TiffIFD cascading overflow.");
+void TiffIFD::recursivelyIncrementSubIFDCount() {
+  TiffIFD* p = this->parent;
+  if (!p)
+    return;
+
+  p->subIFDCount++;
+
+  for (; p != nullptr; p = p->parent)
+    p->subIFDCountRecursive++;
+}
+
+void TiffIFD::checkSubIFDs(int headroom) const {
+  int count = headroom + subIFDCount;
+  if (!headroom)
+    assert(count <= TiffIFD::Limits::SubIFDCount);
+  else if (count > TiffIFD::Limits::SubIFDCount)
+    ThrowTPE("TIFF IFD has %u SubIFDs", count);
+
+  count = headroom + subIFDCountRecursive;
+  if (!headroom)
+    assert(count <= TiffIFD::Limits::RecursiveSubIFDCount);
+  else if (count > TiffIFD::Limits::RecursiveSubIFDCount)
+    ThrowTPE("TIFF IFD file has %u SubIFDs (recursively)", count);
+}
+
+void TiffIFD::recursivelyCheckSubIFDs(int headroom) const {
+  int depth = 0;
+  for (const TiffIFD* p = this; p != nullptr;) {
+    if (!headroom)
+      assert(depth <= TiffIFD::Limits::Depth);
+    else if (depth > TiffIFD::Limits::Depth)
+      ThrowTPE("TiffIFD cascading overflow, found %u level IFD", depth);
+
+    p->checkSubIFDs(headroom);
+
+    // And step up
+    p = p->parent;
+    depth++;
   }
 }
 
 void TiffIFD::add(TiffIFDOwner subIFD) {
-  checkOverflow();
-  if (subIFDs.size() > 100)
-    ThrowTPE("TIFF file has too many SubIFDs, probably broken");
-  subIFD->parent = this;
+  assert(subIFD->parent == this);
+
+  // We are good, and actually can add this sub-IFD, right?
+  subIFD->recursivelyCheckSubIFDs(0);
+
   subIFDs.push_back(move(subIFD));
 }
 

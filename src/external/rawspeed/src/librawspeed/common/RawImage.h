@@ -30,6 +30,7 @@
 #include "common/TableLookUp.h"        // for TableLookUp
 #include "metadata/BlackArea.h"        // for BlackArea
 #include "metadata/ColorFilterArray.h" // for ColorFilterArray
+#include <array>                       // for array
 #include <memory>                      // for unique_ptr, operator==
 #include <string>                      // for string
 #include <vector>                      // for vector
@@ -115,6 +116,8 @@ public:
   void createData();
   void poisonPadding();
   void unpoisonPadding();
+  void checkRowIsInitialized(int row);
+  void checkMemIsInitialized();
   void destroyData();
   void blitFrom(const RawImage& src, const iPoint2D& srcPos,
                 const iPoint2D& size, const iPoint2D& destPos);
@@ -148,7 +151,7 @@ public:
   bool isCFA{true};
   ColorFilterArray cfa;
   int blackLevel = -1;
-  int blackLevelSeparate[4];
+  std::array<int, 4> blackLevelSeparate;
   int whitePoint = 65536;
   std::vector<BlackArea> blackAreas;
 

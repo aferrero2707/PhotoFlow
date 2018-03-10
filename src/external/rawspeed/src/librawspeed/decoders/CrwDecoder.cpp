@@ -3,7 +3,7 @@
 
     Copyright (C) 2009-2014 Klaus Post
     Copyright (C) 2014 Pedro Côrte-Real
-    Copyright (C) 2015 Roman Lebedev
+    Copyright (C) 2015-2018 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -48,22 +48,32 @@ namespace rawspeed {
 
 class CameraMetaData;
 
+bool CrwDecoder::isCRW(const Buffer* input) {
+  static const char magic[] = "HEAPCCDR";
+  static const size_t magic_offset = 6;
+  static const size_t magic_size = sizeof(magic) - 1; // excluding \0
+  static_assert(magic_size == 8, "Wrong magic size!");
+  const unsigned char* data = input->getData(magic_offset, magic_size);
+  return 0 == memcmp(&data[0], magic, magic_size);
+}
+
 CrwDecoder::CrwDecoder(std::unique_ptr<const CiffIFD> rootIFD,
                        const Buffer* file)
     : RawDecoder(file), mRootIFD(move(rootIFD)) {}
 
 RawImage CrwDecoder::decodeRawInternal() {
-  const CiffEntry* sensorInfo = mRootIFD->getEntryRecursive(CIFF_SENSORINFO);
+  const CiffEntry* rawData = mRootIFD->getEntry(CIFF_RAWDATA);
+  if (!rawData)
+    ThrowRDE("Couldn't find the raw data chunk");
 
+  const CiffEntry* sensorInfo = mRootIFD->getEntryRecursive(CIFF_SENSORINFO);
   if (!sensorInfo || sensorInfo->count < 6 || sensorInfo->type != CIFF_SHORT)
     ThrowRDE("Couldn't find image sensor info");
 
   assert(sensorInfo != nullptr);
   uint32 width = sensorInfo->getU16(1);
   uint32 height = sensorInfo->getU16(2);
-
-  if (width == 0 || height == 0 || width > 4104 || height > 3048)
-    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+  mRaw->dim = iPoint2D(width, height);
 
   const CiffEntry* decTable = mRootIFD->getEntryRecursive(CIFF_DECODERTABLE);
   if (!decTable || decTable->type != CIFF_LONG)
@@ -71,14 +81,12 @@ RawImage CrwDecoder::decodeRawInternal() {
 
   assert(decTable != nullptr);
   uint32 dec_table = decTable->getU32();
-  if (dec_table > 2)
-    ThrowRDE("Unknown decoder table %d", dec_table);
-
-  mRaw->dim = iPoint2D(width, height);
-  mRaw->createData();
 
   bool lowbits = ! hints.has("no_decompressed_lowbits");
-  CrwDecompressor::decompress(mRaw, mFile, dec_table, lowbits);
+
+  CrwDecompressor c(mRaw, dec_table, lowbits, rawData->getData());
+  mRaw->createData();
+  c.decompress();
 
   return mRaw;
 }

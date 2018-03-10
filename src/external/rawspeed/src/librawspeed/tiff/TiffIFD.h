@@ -3,6 +3,7 @@
 
     Copyright (C) 2009-2014 Klaus Post
     Copyright (C) 2017 Axel Waggershauser
+    Copyright (C) 2018 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -47,20 +48,51 @@ using TiffEntryOwner = std::unique_ptr<TiffEntry>;
 class TiffIFD
 {
   uint32 nextIFD = 0;
-  TiffIFD* parent;
+
+  TiffIFD* const parent;
+
   std::vector<TiffIFDOwner> subIFDs;
+
+  int subIFDCount = 0;
+  int subIFDCountRecursive = 0;
+
   std::map<TiffTag, TiffEntryOwner> entries;
 
   friend class TiffEntry;
   friend class FiffParser;
   friend class TiffParser;
 
-  void checkOverflow();
+  void recursivelyIncrementSubIFDCount();
+  void checkSubIFDs(int headroom) const;
+  void recursivelyCheckSubIFDs(int headroom) const;
+
   void add(TiffIFDOwner subIFD);
   void add(TiffEntryOwner entry);
   TiffRootIFDOwner parseDngPrivateData(NORangesSet<Buffer>* ifds, TiffEntry* t);
   TiffRootIFDOwner parseMakerNote(NORangesSet<Buffer>* ifds, TiffEntry* t);
   void parseIFDEntry(NORangesSet<Buffer>* ifds, ByteStream* bs);
+
+  // TIFF IFD are tree-like structure, with branches.
+  // A branch (IFD) can have branches (IFDs) of it's own.
+  // We must be careful to weed-out all the degenerative cases that
+  // can be produced e.g. via fuzzing, or other means.
+  struct Limits final {
+    // How many layers of IFD's can there be?
+    // All RPU samples (as of 2018-02-11) are ok with 4.
+    // However, let's be on the safe side, and pad it by one.
+    static constexpr int Depth = 4 + 1;
+
+    // How many sub-IFD's can this IFD have?
+    // NOTE: only for the given IFD, *NOT* recursively including all sub-IFD's!
+    // All RPU samples (as of 2018-02-11) are ok with 5.
+    // However, let's be on the safe side, and double it.
+    static constexpr int SubIFDCount = 5 * 2;
+
+    // How many sub-IFD's can this IFD have, recursively?
+    // All RPU samples (as of 2018-02-11) are ok with 14.
+    // However, let's be on the safe side, and double it.
+    static constexpr int RecursiveSubIFDCount = 14 * 2;
+  };
 
 public:
   explicit TiffIFD(TiffIFD* parent);

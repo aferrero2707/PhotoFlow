@@ -43,11 +43,14 @@ public:
   explicit ByteStream(const DataBuffer& buffer) : DataBuffer(buffer) {}
   ByteStream(const Buffer& buffer, size_type offset, size_type size_,
              Endianness endianness_ = Endianness::little)
-      : DataBuffer(buffer.getSubView(0, offset + size_), endianness_),
-        pos(offset) {}
+      : DataBuffer(buffer.getSubView(offset, size_), endianness_) {
+    check(0);
+  }
   ByteStream(const Buffer& buffer, size_type offset,
              Endianness endianness_ = Endianness::little)
-      : DataBuffer(buffer, endianness_), pos(offset) {}
+      : DataBuffer(buffer, endianness_), pos(offset) {
+    check(0);
+  }
 
   // deprecated:
   ByteStream(const Buffer* f, size_type offset, size_type size_,
@@ -67,18 +70,33 @@ public:
     return ByteStream(getSubView(offset), 0, getByteOrder());
   }
 
-  inline void check(size_type bytes) const {
+  inline size_type check(size_type bytes) const {
     if (static_cast<uint64>(pos) + bytes > size)
       ThrowIOE("Out of bounds access in ByteStream");
     assert(!ASAN_REGION_IS_POISONED(data + pos, bytes));
+    return bytes;
   }
 
-  inline size_type getPosition() const { return pos; }
+  inline size_type check(size_type nmemb, size_type size_) const {
+    if (size_ && nmemb > std::numeric_limits<size_type>::max() / size_)
+      ThrowIOE("Integer overflow when calculating stream lenght");
+    return check(nmemb * size_);
+  }
+
+  inline size_type getPosition() const {
+    assert(size >= pos);
+    check(0);
+    return pos;
+  }
   inline void setPosition(size_type newPos) {
     pos = newPos;
     check(0);
   }
-  inline size_type getRemainSize() const { return size-pos; }
+  inline size_type getRemainSize() const {
+    assert(size >= pos);
+    check(0);
+    return size - pos;
+  }
   inline const uchar8* peekData(size_type count) const {
     return Buffer::getData(pos, count);
   }
@@ -92,8 +110,16 @@ public:
     pos += size_;
     return ret;
   }
+  inline ByteStream peekStream(size_type size_) const {
+    return getSubStream(pos, size_);
+  }
+  inline ByteStream peekStream(size_type nmemb, size_type size_) const {
+    if (size_ && nmemb > std::numeric_limits<size_type>::max() / size_)
+      ThrowIOE("Integer overflow when calculating stream lenght");
+    return peekStream(nmemb * size_);
+  }
   inline ByteStream getStream(size_type size_) {
-    ByteStream ret = getSubStream(pos, size_);
+    ByteStream ret = peekStream(size_);
     pos += size_;
     return ret;
   }
@@ -109,9 +135,9 @@ public:
     return data[pos+i];
   }
 
-  inline void skipBytes(size_type nbytes) {
-    pos += nbytes;
-    check(0);
+  inline void skipBytes(size_type nbytes) { pos += check(nbytes); }
+  inline void skipBytes(size_type nmemb, size_type size_) {
+    pos += check(nmemb, size_);
   }
 
   inline bool hasPatternAt(const char *pattern, size_type size_,
@@ -142,6 +168,8 @@ public:
   template<typename T> inline T peek(size_type i = 0) const {
     return DataBuffer::get<T>(pos, i);
   }
+
+  inline ushort16 peekU16() { return peek<ushort16>(); }
 
   template<typename T> inline T get() {
     auto ret = peek<T>();
@@ -181,23 +209,17 @@ public:
   // in case the private data / maker note has been moved within in the file
   // TODO: could add a lower bound check later if required.
   void rebase(const size_type newPosition, const size_type newSize) {
-// does that pair (position, size) make sense for this buffer? may throw
-#ifndef NDEBUG
-    const uchar8* const dataRebaseCheck = Buffer::getData(newPosition, newSize);
-#endif
+    const uchar8* const oldData = getData(newSize);
 
-    const uchar8* dataAtNewPosition = getData(newSize);
-    data = dataAtNewPosition - newPosition;
-    size = newPosition + newSize;
+    pos = newPosition;
+    size = pos + newSize;
+    data = oldData - pos;
 
 #ifndef NDEBUG
-    // buffer sanity self-check. should not throw, unless there is a mistake
-    const uchar8* const rebasedCheck = peekData(size);
-
     // check that all the assumptions still hold, and we rebased correctly
+    assert(getData(0) == oldData);
     assert(getPosition() == newPosition);
-    assert(getSize() == newSize);
-    assert(dataRebaseCheck == rebasedCheck);
+    assert(getRemainSize() == newSize);
 #endif
   }
 

@@ -20,19 +20,15 @@
 */
 
 #include "decoders/DcrDecoder.h"
-#include "common/Common.h"                // for uint32, uchar8, ushort16
-#include "decoders/RawDecoderException.h" // for RawDecoderException (ptr o...
-#include "decompressors/HuffmanTable.h"   // for HuffmanTable
-#include "io/ByteStream.h"                // for ByteStream
-#include "io/IOException.h"               // for IOException
-#include "tiff/TiffEntry.h"               // for TiffEntry, TiffDataType::T...
-#include "tiff/TiffIFD.h"                 // for TiffRootIFD, TiffIFD
-#include "tiff/TiffTag.h"                 // for TiffTag, TiffTag::COMPRESSION
-#include <cassert>                        // for assert
-#include <memory>                         // for unique_ptr
-#include <string>                         // for operator==, string
-
-using std::min;
+#include "common/NORangesSet.h"              // for NORangesSet
+#include "decoders/RawDecoderException.h"    // for RawDecoderException (ptr ...
+#include "decompressors/KodakDecompressor.h" // for KodakDecompressor
+#include "io/ByteStream.h"                   // for ByteStream
+#include "tiff/TiffEntry.h"                  // for TiffEntry, TiffDataType::...
+#include "tiff/TiffIFD.h"                    // for TiffRootIFD, TiffIFD
+#include "tiff/TiffTag.h"                    // for TiffTag, TiffTag::COMPRES...
+#include <cassert>                           // for assert
+#include <string>                            // for operator==, string
 
 namespace rawspeed {
 
@@ -59,107 +55,47 @@ RawImage DcrDecoder::decodeRawInternal() {
   ByteStream input(mFile, off);
 
   int compression = raw->getEntry(COMPRESSION)->getU32();
-  if (65000 == compression) {
-    TiffEntry *ifdoffset = mRootIFD->getEntryRecursive(KODAK_IFD);
-    if (!ifdoffset)
-      ThrowRDE("Couldn't find the Kodak IFD offset");
-
-    assert(ifdoffset != nullptr);
-    TiffRootIFD kodakifd(nullptr, nullptr, ifdoffset->getRootIfdData(),
-                         ifdoffset->getU32());
-
-    TiffEntry *linearization = kodakifd.getEntryRecursive(KODAK_LINEARIZATION);
-    if (!linearization || linearization->count != 1024 ||
-        linearization->type != TIFF_SHORT)
-      ThrowRDE("Couldn't find the linearization table");
-
-    assert(linearization != nullptr);
-    auto linTable = linearization->getU16Array(1024);
-
-    RawImageCurveGuard curveHandler(&mRaw, linTable, uncorrectedRawValues);
-
-    // FIXME: dcraw does all sorts of crazy things besides this to fetch
-    //        WB from what appear to be presets and calculate it in weird ways
-    //        The only file I have only uses this method, if anybody careas look
-    //        in dcraw.c parse_kodak_ifd() for all that weirdness
-    TiffEntry* blob = kodakifd.getEntryRecursive(static_cast<TiffTag>(0x03fd));
-    if (blob && blob->count == 72) {
-      mRaw->metadata.wbCoeffs[0] = 2048.0F / blob->getU16(20);
-      mRaw->metadata.wbCoeffs[1] = 2048.0F / blob->getU16(21);
-      mRaw->metadata.wbCoeffs[2] = 2048.0F / blob->getU16(22);
-    }
-
-    try {
-      decodeKodak65000(&input, width, height);
-    } catch (IOException &) {
-      mRaw->setError("IO error occurred while reading image. Returning partial result.");
-    }
-  } else
+  if (65000 != compression)
     ThrowRDE("Unsupported compression %d", compression);
 
+  TiffEntry* ifdoffset = mRootIFD->getEntryRecursive(KODAK_IFD);
+  if (!ifdoffset)
+    ThrowRDE("Couldn't find the Kodak IFD offset");
+
+  NORangesSet<Buffer> ifds;
+
+  assert(ifdoffset != nullptr);
+  TiffRootIFD kodakifd(nullptr, &ifds, ifdoffset->getRootIfdData(),
+                       ifdoffset->getU32());
+
+  TiffEntry* linearization = kodakifd.getEntryRecursive(KODAK_LINEARIZATION);
+  if (!linearization || linearization->count != 1024 ||
+      linearization->type != TIFF_SHORT)
+    ThrowRDE("Couldn't find the linearization table");
+
+  assert(linearization != nullptr);
+  auto linTable = linearization->getU16Array(1024);
+
+  RawImageCurveGuard curveHandler(&mRaw, linTable, uncorrectedRawValues);
+
+  // FIXME: dcraw does all sorts of crazy things besides this to fetch
+  //        WB from what appear to be presets and calculate it in weird ways
+  //        The only file I have only uses this method, if anybody careas look
+  //        in dcraw.c parse_kodak_ifd() for all that weirdness
+  TiffEntry* blob = kodakifd.getEntryRecursive(static_cast<TiffTag>(0x03fd));
+  if (blob && blob->count == 72) {
+    for (auto i = 0U; i < 3; i++) {
+      const auto mul = blob->getU16(20 + i);
+      if (0 == mul)
+        ThrowRDE("WB coeffient is zero!");
+      mRaw->metadata.wbCoeffs[i] = 2048.0F / mul;
+    }
+  }
+
+  KodakDecompressor k(mRaw, input, uncorrectedRawValues);
+  k.decompress();
+
   return mRaw;
-}
-
-void DcrDecoder::decodeKodak65000(ByteStream* input, uint32 w, uint32 h) {
-  ushort16 buf[256];
-  uint32 pred[2];
-  uchar8* data = mRaw->getData();
-  uint32 pitch = mRaw->pitch;
-
-  uint32 random = 0;
-  for (uint32 y = 0; y < h; y++) {
-    auto* dest = reinterpret_cast<ushort16*>(&data[y * pitch]);
-    for (uint32 x = 0 ; x < w; x += 256) {
-      pred[0] = pred[1] = 0;
-      uint32 len = min(256U, w - x);
-      decodeKodak65000Segment(input, buf, len);
-      for (uint32 i = 0; i < len; i++) {
-        pred[i & 1] += buf[i];
-
-        ushort16 value = pred[i & 1];
-        if (value > 1023)
-          ThrowRDE("Value out of bounds %d", value);
-        if(uncorrectedRawValues)
-          dest[x+i] = value;
-        else
-          mRaw->setWithLookUp(value, reinterpret_cast<uchar8*>(&dest[x + i]),
-                              &random);
-      }
-    }
-  }
-}
-
-void DcrDecoder::decodeKodak65000Segment(ByteStream* input, ushort16* out,
-                                         uint32 bsize) {
-  uchar8 blen[768];
-  uint64 bitbuf=0;
-  uint32 bits=0;
-
-  bsize = (bsize + 3) & -4;
-  for (uint32 i=0; i < bsize; i+=2) {
-    blen[i] = input->peekByte() & 15;
-    blen[i + 1] = input->getByte() >> 4;
-  }
-  if ((bsize & 7) == 4) {
-    bitbuf = (static_cast<uint64>(input->getByte())) << 8UL;
-    bitbuf += (static_cast<int>(input->getByte()));
-    bits = 16;
-  }
-  for (uint32 i=0; i < bsize; i++) {
-    uint32 len = blen[i];
-    if (bits < len) {
-      for (uint32 j=0; j < 32; j+=8) {
-        bitbuf += static_cast<long long>(static_cast<int>(input->getByte()))
-                  << (bits + (j ^ 8));
-      }
-      bits += 32;
-    }
-    uint32 diff = static_cast<uint32>(bitbuf) & (0xffff >> (16 - len));
-    bitbuf >>= len;
-    bits -= len;
-    diff = len != 0 ? HuffmanTable::signExtended(diff, len) : diff;
-    out[i] = diff;
-  }
 }
 
 void DcrDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {

@@ -47,7 +47,13 @@
 #cmakedefine HAVE_MM_MALLOC
 #cmakedefine HAVE_ALIGNED_MALLOC
 
+#cmakedefine RAWSPEED_STANDALONE_BUILD
+#ifdef RAWSPEED_STANDALONE_BUILD
 #define CMAKE_SOURCE_DIR "@CMAKE_SOURCE_DIR@"
+#else
+// If rawspeed is being built as part of some larger build, we can not retain
+// the CMAKE_SOURCE_DIR, because that would affect the reproducible builds.
+#endif
 
 // see http://clang.llvm.org/docs/LanguageExtensions.html
 #ifndef __has_feature      // Optional of course.
@@ -76,4 +82,12 @@ template <typename T> struct remove_all_const<T *const> {
 #define ASAN_POISON_MEMORY_REGION(addr, size) ((void)(addr), (void)(size))
 #define ASAN_UNPOISON_MEMORY_REGION(addr, size) ((void)(addr), (void)(size))
 #define ASAN_REGION_IS_POISONED(addr, size) (0)
+#endif
+
+#if __has_feature(memory_sanitizer) || defined(__SANITIZE_MEMORY__)
+#include <sanitizer/msan_interface.h> // IWYU pragma: export
+#define MSAN_MEM_IS_INITIALIZED(addr, size)                                    \
+  __msan_check_mem_is_initialized(addr, size)
+#else
+#define MSAN_MEM_IS_INITIALIZED(addr, size) (0)
 #endif

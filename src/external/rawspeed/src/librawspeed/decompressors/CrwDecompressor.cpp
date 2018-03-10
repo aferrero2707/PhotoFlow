@@ -3,7 +3,7 @@
 
     Copyright (C) 2009-2014 Klaus Post
     Copyright (C) 2014 Pedro Côrte-Real
-    Copyright (C) 2015-2017 Roman Lebedev
+    Copyright (C) 2015-2018 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -31,15 +31,42 @@
 #include "io/ByteStream.h"                // for ByteStream
 #include <algorithm>                      // for min
 #include <array>                          // for array
-#include <cassert>                        // for assert
+#include <memory>                         // for make_unique
 
 using std::array;
-using std::min;
 
 namespace rawspeed {
 
-// The rest of this file was ported as is from dcraw.c. I don't claim to
-// understand it but have tried my best to make it work safely
+CrwDecompressor::CrwDecompressor(const RawImage& img, uint32 dec_table,
+                                 bool lowbits_, ByteStream rawData)
+    : mRaw(img), lowbits(lowbits_) {
+  if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
+      mRaw->getBpp() != 2)
+    ThrowRDE("Unexpected component count / data type");
+
+  const uint32 width = mRaw->dim.x;
+  const uint32 height = mRaw->dim.y;
+
+  if (width == 0 || height == 0 || width % 4 != 0 || width > 4104 ||
+      height > 3048 || (height * width) % 64 != 0)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
+  if (lowbits) {
+    // If there are low bits, the first part (size is calculatable) is low bits
+    // Each block is 4 pairs of 2 bits, so we have 1 block per 4 pixels
+    const unsigned lBlocks = 1 * height * width / 4;
+    assert(lBlocks > 0);
+    lowbitInput = rawData.getStream(lBlocks);
+  }
+
+  // We always ignore next 514 bytes of 'padding'. No idea what is in there.
+  rawData.skipBytes(514);
+
+  // Rest is the high bits.
+  rawInput = rawData.getStream(rawData.getRemainSize());
+
+  mHuff = initHuffTables(dec_table);
+}
 
 HuffmanTable CrwDecompressor::makeDecoder(const uchar8* ncpl,
                                           const uchar8* values) {
@@ -54,7 +81,8 @@ HuffmanTable CrwDecompressor::makeDecoder(const uchar8* ncpl,
 }
 
 CrwDecompressor::crw_hts CrwDecompressor::initHuffTables(uint32 table) {
-  assert(table <= 2);
+  if (table > 2)
+    ThrowRDE("Wrong table number: %u", table);
 
   // NCodesPerLength
   static const uchar8 first_tree_ncpl[3][16] = {
@@ -208,37 +236,32 @@ inline void CrwDecompressor::decodeBlock(std::array<int, 64>* diffBuf,
 }
 
 // FIXME: this function is horrible.
-void CrwDecompressor::decompress(const RawImage& mRaw, const Buffer* mFile,
-                                 uint32 dec_table, bool lowbits) {
-  assert(mFile);
-
-  int carry = 0;
-  int base[2];
-
-  auto mHuff = initHuffTables(dec_table);
-
+void CrwDecompressor::decompress() {
   const uint32 height = mRaw->dim.y;
   const uint32 width = mRaw->dim.x;
 
-  uint32 offset = 540;
-  if (lowbits)
-    offset += height * width / 4;
+  {
+    assert(width > 0);
+    assert(width % 4 == 0);
+    assert(height > 0);
 
-  ByteStream input(mFile, offset);
-  // FIXME: fix this to not require two pumps
-  BitPumpJPEG lPump(input);
-  BitPumpJPEG iPump(input);
+    // Each block encodes 64 pixels
 
-  for (uint32 j = 0; j < height;) {
-    const int nBlocks = min(8U, height - j) * width >> 6;
-    if (nBlocks <= 0)
-      ThrowRDE("Image too small, not even a single block.");
+    assert((height * width) % 64 == 0);
+    const unsigned hBlocks = height * width / 64;
+    assert(hBlocks > 0);
 
+    BitPumpJPEG lPump(rawInput);
+    BitPumpJPEG iPump(rawInput);
+
+    int carry = 0;
+    int base[2];
+
+    uint32 j = 0;
     ushort16* dest = nullptr;
-
     uint32 i = 0;
 
-    for (int block = 0; block < nBlocks; block++) {
+    for (unsigned block = 0; block < hBlocks; block++) {
       array<int, 64> diffBuf = {{}};
       decodeBlock(&diffBuf, mHuff, &lPump, &iPump);
 
@@ -249,7 +272,7 @@ void CrwDecompressor::decompress(const RawImage& mRaw, const Buffer* mFile,
 
       for (uint32 k = 0; k < 64; k++) {
         if (i % width == 0) {
-          // new line
+          // new line. sadly, does not always happen when k == 0.
           i = 0;
 
           dest = reinterpret_cast<ushort16*>(mRaw->getData(0, j));
@@ -258,54 +281,40 @@ void CrwDecompressor::decompress(const RawImage& mRaw, const Buffer* mFile,
           base[0] = base[1] = 512;
         }
 
+        assert(dest != nullptr);
         base[k & 1] += diffBuf[k];
 
         if (base[k & 1] >> 10)
           ThrowRDE("Error decompressing");
 
-        assert(dest != nullptr);
         *dest = base[k & 1];
 
         i++;
         dest++;
       }
     }
+    assert(j == height);
+    assert(i == width);
   }
 
   // Add the uncompressed 2 low bits to the decoded 8 high bits
   if (lowbits) {
-    offset = 26;
-    ByteStream lowbitInput(mFile, offset, height * width / 4);
+    assert(width > 0);
+    assert(width % 4 == 0);
+    assert(height > 0);
 
-    for (uint32 j = 0; j < height;) {
-      // Process 8 rows or however are left
-      const uint32 lines = min(height - j, 8U);
+    for (uint32 j = 0; j < height; j++) {
+      auto* dest = reinterpret_cast<ushort16*>(mRaw->getData(0, j));
 
-      // Process 8 rows or however are left
-      const uint32 nBlocks = width / 4 * lines;
-      if (nBlocks <= 0)
-        ThrowRDE("Image too small, not even a single block.");
+      assert(width % 4 == 0);
+      for (uint32 i = 0; i < width; /* NOTE: i += 4 */) {
+        const uchar8 c = lowbitInput.getByte();
+        // LSB-packed: p3 << 6 | p2 << 4 | p1 << 2 | p0 << 0
 
-      ushort16* dest = nullptr;
-
-      uint32 i = 0;
-
-      for (uint32 block = 0; block < nBlocks; block++) {
-        auto c = static_cast<uint32>(lowbitInput.getByte());
-
-        // Process 8 bits in pairs
-        for (uint32 r = 0; r < 8; r += 2) {
-          if (i % width == 0) {
-            // new line
-            i = 0;
-
-            dest = reinterpret_cast<ushort16*>(mRaw->getData(0, j));
-
-            j++;
-          }
-
-          assert(dest);
-          ushort16 val = (*dest << 2) | ((c >> r) & 0x0003);
+        // We have read 8 bits, which is 4 pairs of 2 bits. So process 4 pixels.
+        for (uint32 p = 0; p < 4; p++) {
+          ushort16 low = (c >> (2 * p)) & 0b11;
+          ushort16 val = (*dest << 2) | low;
 
           if (width == 2672 && val < 512)
             val += 2; // No idea why this is needed

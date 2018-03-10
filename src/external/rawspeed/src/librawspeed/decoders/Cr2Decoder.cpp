@@ -72,7 +72,8 @@ RawImage Cr2Decoder::decodeOldFormat() {
     offset = ifd->getEntry(STRIPOFFSETS)->getU32();
   }
 
-  ByteStream b(mFile, offset + 41, Endianness::big);
+  ByteStream b(mFile, offset, Endianness::big);
+  b.skipBytes(41);
   int height = b.getU16();
   int width = b.getU16();
 
@@ -84,17 +85,13 @@ RawImage Cr2Decoder::decodeOldFormat() {
   }
   width *= 2; // components
 
-  if (!width || !height || width > 4082 || height > 2718)
-    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+  mRaw->dim = {width, height};
 
-  mRaw = RawImage::create({width, height});
+  const ByteStream bs(mFile->getSubView(offset), 0);
 
-  Cr2Decompressor l(*mFile, offset, mRaw);
-  try {
-    l.decode({width});
-  } catch (IOException& e) {
-    mRaw->setError(e.what());
-  }
+  Cr2Decompressor l(bs, mRaw);
+  mRaw->createData();
+  l.decode({width});
 
   // deal with D2000 GrayResponseCurve
   TiffEntry* curve = mRootIFD->getEntryRecursive(static_cast<TiffTag>(0x123));
@@ -121,11 +118,7 @@ RawImage Cr2Decoder::decodeNewFormat() {
 
   const ushort16 width = sensorInfoE->getU16(1);
   const ushort16 height = sensorInfoE->getU16(2);
-
-  if (!width || !height || width > 8896 || height > 5920)
-    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
-
-  iPoint2D dim(width, height);
+  mRaw->dim = {width, height};
 
   int componentsPerPixel = 1;
   TiffIFD* raw = mRootIFD->getSubIFDs()[3].get();
@@ -133,7 +126,8 @@ RawImage Cr2Decoder::decodeNewFormat() {
       raw->getEntry(CANON_SRAWTYPE)->getU32() == 4)
     componentsPerPixel = 3;
 
-  mRaw = RawImage::create(dim, TYPE_USHORT16, componentsPerPixel);
+  mRaw->setCpp(componentsPerPixel);
+  mRaw->isCFA = (mRaw->getCpp() == 1);
 
   vector<int> s_width;
   // there are four cases:
@@ -168,25 +162,14 @@ RawImage Cr2Decoder::decodeNewFormat() {
     }
   } // EOS 20D, EOS-1D Mark II, let Cr2Decompressor guess.
 
-  TiffEntry* offsets = raw->getEntry(STRIPOFFSETS);
-  TiffEntry* counts = raw->getEntry(STRIPBYTECOUNTS);
+  const uint32 offset = raw->getEntry(STRIPOFFSETS)->getU32();
+  const uint32 count = raw->getEntry(STRIPBYTECOUNTS)->getU32();
 
-  const uint32 byteOffset = offsets->getU32();
-  const uint32 byteCount = counts->getU32();
+  const ByteStream bs(mFile->getSubView(offset, count), 0);
 
-  if (!mFile->isValid(byteOffset, byteCount))
-    ThrowRDE("Strip is larger than the data; image may be truncated.");
-
-  Cr2Decompressor d(*mFile, byteOffset, byteCount, mRaw);
-
-  try {
-    d.decode(s_width);
-  } catch (RawDecoderException &e) {
-    mRaw->setError(e.what());
-  } catch (IOException &e) {
-    // Let's try to ignore this - it might be truncated data, so something might be useful.
-    mRaw->setError(e.what());
-  }
+  Cr2Decompressor d(bs, mRaw);
+  mRaw->createData();
+  d.decode(s_width);
 
   if (mRaw->metadata.subsampling.x > 1 || mRaw->metadata.subsampling.y > 1)
     sRawInterpolate();

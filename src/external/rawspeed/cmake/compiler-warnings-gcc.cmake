@@ -16,23 +16,17 @@ set (GCC_WARNING_FLAGS
   "old-style-casts"
   "pointer-arith"
   "strict-prototypes"
-  "suggest-attribute=const"
-  "suggest-attribute=noreturn"
-  "suggest-attribute=pure"
-  "suggest-final-methods"
-  "suggest-final-types"
-  "suggest-override"
+#  "suggest-attribute=const"
+#  "suggest-attribute=noreturn"
+#  "suggest-attribute=pure"
+#  "suggest-final-methods"
+#  "suggest-final-types"
+#  "suggest-override"
   "traditional"
   "vla"
 # "cast-align"
 # "conversion"
 )
-
-# cleanup this once we no longer need to support gcc-4.9
-# disabled for now, see https://github.com/darktable-org/rawspeed/issues/32
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
-  list(APPEND GCC_WARNING_FLAGS "shadow")
-endif()
 
 if(UNIX OR APPLE)
   list(APPEND GCC_WARNING_FLAGS
@@ -46,10 +40,12 @@ set (GCC_DISABLED_WARNING_FLAGS
 )
 
 set (GCC_NOERROR_WARNING_FLAGS
-  "suggest-final-methods"
-  "suggest-final-types"
-  "suggest-override"
-  "suggest-attribute=noreturn"
+#  "suggest-attribute=const"
+#  "suggest-attribute=noreturn"
+#  "suggest-attribute=pure"
+#  "suggest-final-methods"
+#  "suggest-final-types"
+#  "suggest-override"
 )
 
 foreach(warning ${GCC_WARNING_FLAGS})

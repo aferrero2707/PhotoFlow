@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include "common/Common.h"                // for uint32, ushort16
 #include "common/RawImage.h"              // for RawImage
 #include "decoders/SimpleTiffDecoder.h"   // for SimpleTiffDecoder
 #include "tiff/TiffIFD.h"                 // for TiffRootIFDOwner
@@ -30,8 +29,6 @@
 namespace rawspeed {
 
 class Buffer;
-
-class ByteStream;
 
 class CameraMetaData;
 
@@ -49,8 +46,6 @@ public:
 
 protected:
   int getDecoderVersion() const override { return 0; }
-  void decodeKodak65000(ByteStream* input, uint32 w, uint32 h);
-  void decodeKodak65000Segment(ByteStream* input, ushort16* out, uint32 bsize);
 };
 
 } // namespace rawspeed

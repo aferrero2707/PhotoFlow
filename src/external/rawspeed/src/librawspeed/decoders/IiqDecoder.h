@@ -57,8 +57,10 @@ class IiqDecoder final : public AbstractTiffDecoder {
   void DecodeStrip(const IiqStrip& strip, uint32 width, uint32 height);
 
 public:
+  static bool isAppropriateDecoder(const Buffer* file);
   static bool isAppropriateDecoder(const TiffRootIFD* rootIFD,
                                    const Buffer* file);
+
   IiqDecoder(TiffRootIFDOwner&& rootIFD, const Buffer* file)
       : AbstractTiffDecoder(move(rootIFD), file) {}
 
@@ -71,6 +73,10 @@ protected:
   uint32 black_level = 0;
   void DecodePhaseOneC(const std::vector<IiqStrip>& strips, uint32 width,
                        uint32 height);
+  void CorrectPhaseOneC(ByteStream meta_data, uint32 split_row,
+                        uint32 split_col);
+  void CorrectQuadrantMultipliersCombined(ByteStream data, uint32 split_row,
+                                          uint32 split_col);
 };
 
 } // namespace rawspeed

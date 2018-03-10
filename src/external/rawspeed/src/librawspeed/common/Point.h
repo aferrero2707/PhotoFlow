@@ -22,13 +22,18 @@
 #pragma once
 
 #include <algorithm> // for max, min
+#include <cassert>   // for assert
+#include <type_traits> // for make_signed
 
 namespace rawspeed {
 
 class iPoint2D {
 public:
+  using value_type = int;
+  using area_type = unsigned long long;
+
   constexpr iPoint2D() = default;
-  constexpr iPoint2D(int a, int b) : x(a), y(b) {}
+  constexpr iPoint2D(value_type a, value_type b) : x(a), y(b) {}
 
   constexpr iPoint2D operator+(const iPoint2D& rhs) const {
     return {x + rhs.x, y + rhs.y};
@@ -67,22 +72,32 @@ public:
     return x <= rhs.x && y <= rhs.y;
   }
 
-  constexpr unsigned int area() const {
-    return (static_cast<long>(x) * y) > 0 ? (static_cast<long>(x) * y)
-                                          : -(static_cast<long>(x) * y);
+  bool hasPositiveArea() const { return operator>({0, 0}); }
+
+  area_type __attribute__((pure)) area() const {
+    using signed_area = std::make_signed<area_type>::type;
+
+    if (x >= 0 && y >= 0)
+      return static_cast<area_type>(x) * static_cast<area_type>(y);
+    if (x >= 0 && y < 0)
+      return static_cast<area_type>(x) * (-1 * static_cast<signed_area>(y));
+    if (y >= 0 && x < 0)
+      return static_cast<area_type>(y) * (-1 * static_cast<signed_area>(x));
+
+    assert(x < 0 && y < 0);
+    return static_cast<signed_area>(x) * static_cast<signed_area>(y);
   }
 
   constexpr bool isThisInside(const iPoint2D& rhs) const {
     return operator<=(rhs);
   }
 
-  // FIXME: constexpr once gcc5+
   constexpr iPoint2D getSmallest(const iPoint2D& rhs) const {
     return {x < rhs.x ? x : rhs.x, y < rhs.y ? y : rhs.y};
   }
 
-  int x = 0;
-  int y = 0;
+  value_type x = 0;
+  value_type y = 0;
 };
 
 /* Helper class for managing a rectangle in 2D space. */
@@ -113,11 +128,11 @@ public:
            getBottomRight() <= otherPoint.getBottomRight();
   }
 
-  constexpr bool isPointInside(const iPoint2D& checkPoint) const {
+  constexpr bool isPointInsideInclusive(const iPoint2D& checkPoint) const {
     return pos <= checkPoint && getBottomRight() >= checkPoint;
   }
 
-  constexpr unsigned int area() const { return dim.area(); }
+  unsigned int area() const { return dim.area(); }
 
   void offset(const iPoint2D& offset_) { pos += offset_; }
 

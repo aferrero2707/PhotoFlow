@@ -59,10 +59,10 @@ namespace rawspeed {
 TiffParser::TiffParser(const Buffer* file) : RawParser(file) {}
 
 std::unique_ptr<RawDecoder> TiffParser::getDecoder(const CameraMetaData* meta) {
-  return TiffParser::makeDecoder(TiffParser::parse(*mInput), *mInput);
+  return TiffParser::makeDecoder(TiffParser::parse(nullptr, *mInput), *mInput);
 }
 
-TiffRootIFDOwner TiffParser::parse(const Buffer& data) {
+TiffRootIFDOwner TiffParser::parse(TiffIFD* parent, const Buffer& data) {
   ByteStream bs(data, 0);
   bs.setByteOrder(getTiffByteOrder(bs, 0, "TIFF header"));
   bs.skipBytes(2);
@@ -72,7 +72,7 @@ TiffRootIFDOwner TiffParser::parse(const Buffer& data) {
     ThrowTPE("Not a TIFF file (magic 42)");
 
   TiffRootIFDOwner root = std::make_unique<TiffRootIFD>(
-      nullptr, nullptr, bs,
+      parent, nullptr, bs,
       UINT32_MAX); // tell TiffIFD constructur not to parse bs as IFD
 
   NORangesSet<Buffer> ifds;
@@ -116,16 +116,19 @@ std::unique_ptr<RawDecoder> TiffParser::constructor(TiffRootIFDOwner&& root,
 }
 
 #define DECODER(name)                                                          \
-  { std::make_pair(&name::isAppropriateDecoder, &constructor<name>) }
+  {                                                                            \
+    std::make_pair(                                                            \
+        static_cast<TiffParser::checker_t>(&name::isAppropriateDecoder),       \
+        &constructor<name>)                                                    \
+  }
 
 const std::array<std::pair<TiffParser::checker_t, TiffParser::constructor_t>,
-                 17>
+                 16>
     TiffParser::Map = {{
         DECODER(DngDecoder),
         DECODER(MosDecoder),
         DECODER(IiqDecoder),
         DECODER(Cr2Decoder),
-        DECODER(RafDecoder),
         DECODER(NefDecoder),
         DECODER(OrfDecoder),
         DECODER(ArwDecoder),

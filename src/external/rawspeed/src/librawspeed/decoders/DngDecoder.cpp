@@ -20,27 +20,28 @@
 
 #include "rawspeedconfig.h" // for HAVE_JPEG, HAVE_ZLIB
 #include "decoders/DngDecoder.h"
-#include "common/Common.h"                // for uint32, uchar8, writeLog
-#include "common/DngOpcodes.h"            // for DngOpcodes
-#include "common/Point.h"                 // for iPoint2D, iRectangle2D
-#include "common/RawspeedException.h"     // for RawspeedException
-#include "decoders/DngDecoderSlices.h"    // for DngDecoderSlices, DngSlice...
-#include "decoders/RawDecoderException.h" // for ThrowRDE, RawDecoderException
-#include "io/Buffer.h"                    // for Buffer
-#include "metadata/Camera.h"              // for Camera
-#include "metadata/CameraMetaData.h"      // for CameraMetaData
-#include "metadata/ColorFilterArray.h"    // for CFAColor, ColorFilterArray
-#include "tiff/TiffEntry.h"               // for TiffEntry, TiffDataType::T...
-#include "tiff/TiffIFD.h"                 // for TiffIFD, TiffRootIFD, TiffID
-#include "tiff/TiffTag.h"                 // for TiffTag::UNIQUECAMERAMODEL
-#include <algorithm>                      // for move
-#include <cassert>                        // for assert
-#include <cstring>                        // for memset
-#include <map>                            // for map
-#include <memory>                         // for unique_ptr, allocator_trai...
-#include <stdexcept>                      // for out_of_range
-#include <string>                         // for string, operator+, basic_s...
-#include <vector>                         // for vector, allocator
+#include "common/Common.h"                         // for uint32, writeLog
+#include "common/DngOpcodes.h"                     // for DngOpcodes
+#include "common/Point.h"                          // for iPoint2D, iRectan...
+#include "common/RawspeedException.h"              // for RawspeedException
+#include "decoders/RawDecoderException.h"          // for ThrowRDE, RawDeco...
+#include "decompressors/AbstractDngDecompressor.h" // for AbstractDngDecomp...
+#include "io/Buffer.h"                             // for Buffer
+#include "metadata/Camera.h"                       // for Camera
+#include "metadata/CameraMetaData.h"               // for CameraMetaData
+#include "metadata/ColorFilterArray.h"             // for CFAColor, ColorFi...
+#include "tiff/TiffEntry.h"                        // for TiffEntry, TiffDa...
+#include "tiff/TiffIFD.h"                          // for TiffIFD, TiffRootIFD
+#include "tiff/TiffTag.h"                          // for TiffTag::ACTIVEAREA
+#include <algorithm>                               // for move
+#include <cassert>                                 // for assert
+#include <cstring>                                 // for memset
+#include <limits>                                  // for numeric_limits
+#include <map>                                     // for map
+#include <memory>                                  // for unique_ptr
+#include <stdexcept>                               // for out_of_range
+#include <string>                                  // for string, operator+
+#include <vector>                                  // for vector, allocator
 
 using std::vector;
 using std::map;
@@ -191,7 +192,13 @@ void DngDecoder::parseCFA(const TiffIFD* raw) {
   if (active_area->count != 4)
     ThrowRDE("active area has %d values instead of 4", active_area->count);
 
-  auto aa = active_area->getFloatArray(2);
+  const auto aa = active_area->getFloatArray(2);
+  if (std::any_of(aa.cbegin(), aa.cend(), [](const auto v) {
+        return v < std::numeric_limits<iPoint2D::value_type>::min() ||
+               v > std::numeric_limits<iPoint2D::value_type>::max();
+      }))
+    ThrowRDE("Error decoding active area");
+
   mRaw->cfa.shiftLeft(aa[1]);
   mRaw->cfa.shiftDown(aa[0]);
 }
@@ -206,41 +213,47 @@ void DngDecoder::decodeData(const TiffIFD* raw, uint32 sample_format) {
              "JPEG-compressed data.");
   }
 
-  DngDecoderSlices slices(mFile, mRaw, compression);
-  if (raw->hasEntry(PREDICTOR)) {
-    slices.mPredictor = raw->getEntry(PREDICTOR)->getU32();
-  }
-  slices.mBps = bps;
+  uint32 predictor = -1;
+  if (raw->hasEntry(PREDICTOR))
+    predictor = raw->getEntry(PREDICTOR)->getU32();
+
+  AbstractDngDecompressor slices(mRaw, compression, mFixLjpeg, bps, predictor);
+
   if (raw->hasEntry(TILEOFFSETS)) {
-    uint32 tilew = raw->getEntry(TILEWIDTH)->getU32();
-    uint32 tileh = raw->getEntry(TILELENGTH)->getU32();
+    const uint32 tilew = raw->getEntry(TILEWIDTH)->getU32();
+    const uint32 tileh = raw->getEntry(TILELENGTH)->getU32();
 
     if (!(tilew > 0 && tileh > 0))
       ThrowRDE("Invalid tile size: (%u, %u)", tilew, tileh);
 
     assert(tilew > 0);
-    uint32 tilesX = (mRaw->dim.x + tilew - 1) / tilew;
+    const uint32 tilesX = roundUpDivision(mRaw->dim.x, tilew);
     if (!tilesX)
       ThrowRDE("Zero tiles horizontally");
 
     assert(tileh > 0);
-    uint32 tilesY = (mRaw->dim.y + tileh - 1) / tileh;
+    const uint32 tilesY = roundUpDivision(mRaw->dim.y, tileh);
     if (!tilesY)
       ThrowRDE("Zero tiles vertically");
 
-    uint32 nTiles = tilesX * tilesY;
-    if (!nTiles || tilesX * tilesY != nTiles)
-      ThrowRDE("Uncorrect total number of slices");
-
     TiffEntry* offsets = raw->getEntry(TILEOFFSETS);
     TiffEntry* counts = raw->getEntry(TILEBYTECOUNTS);
-    if (offsets->count != counts->count || offsets->count != nTiles) {
-      ThrowRDE("Tile count mismatch: offsets:%u count:%u, "
-               "calculated:%u",
-               offsets->count, counts->count, nTiles);
+    if (offsets->count != counts->count) {
+      ThrowRDE("Tile count mismatch: offsets:%u count:%u", offsets->count,
+               counts->count);
     }
 
-    slices.mFixLjpeg = mFixLjpeg;
+    // tilesX * tilesY may overflow, but division is fine, so let's do that.
+    if (offsets->count / tilesX != tilesY ||
+        offsets->count / tilesY != tilesX) {
+      ThrowRDE("Tile X/Y count mismatch: total:%u X:%u, Y:%u", offsets->count,
+               tilesX, tilesY);
+    }
+
+    const uint32 nTiles = tilesX * tilesY;
+    assert(nTiles > 0);
+
+    slices.slices.reserve(nTiles);
 
     for (uint32 y = 0; y < tilesY; y++) {
       for (uint32 x = 0; x < tilesX; x++) {
@@ -249,19 +262,20 @@ void DngDecoder::decodeData(const TiffIFD* raw, uint32 sample_format) {
         const auto count = counts->getU32(s);
 
         if (count < 1)
-          continue;
+          ThrowRDE("Tile %u;%u is empty", x, y);
+
+        ByteStream bs(mFile->getSubView(offset, count), 0,
+                      mRootIFD->rootBuffer.getByteOrder());
 
         const uint32 offX = tilew * x;
         const uint32 offY = tileh * y;
 
-        auto e = std::make_unique<DngSliceElement>(offset, count, offX, offY,
-                                                   tilew, tileh);
-
-        // Only decode if size is valid
-        if (mFile->isValid(e->byteOffset, e->byteCount))
-          slices.addSlice(move(e));
+        DngSliceElement e(bs, offX, offY, tilew, tileh);
+        slices.slices.emplace_back(e);
       }
     }
+
+    assert(slices.slices.size() == nTiles);
   } else { // Strips
     TiffEntry* offsets = raw->getEntry(STRIPOFFSETS);
     TiffEntry* counts = raw->getEntry(STRIPBYTECOUNTS);
@@ -275,8 +289,13 @@ void DngDecoder::decodeData(const TiffIFD* raw, uint32 sample_format) {
     uint32 yPerSlice = raw->hasEntry(ROWSPERSTRIP) ?
           raw->getEntry(ROWSPERSTRIP)->getU32() : mRaw->dim.y;
 
-    if (yPerSlice == 0 || yPerSlice > static_cast<uint32>(mRaw->dim.y))
-      ThrowRDE("Invalid y per slice");
+    if (yPerSlice == 0 || yPerSlice > static_cast<uint32>(mRaw->dim.y) ||
+        roundUpDivision(mRaw->dim.y, yPerSlice) != counts->count) {
+      ThrowRDE("Invalid y per slice %u or strip count %u (height = %u)",
+               yPerSlice, counts->count, mRaw->dim.y);
+    }
+
+    slices.slices.reserve(counts->count);
 
     uint32 offY = 0;
     for (uint32 s = 0; s < counts->count; s++) {
@@ -284,31 +303,28 @@ void DngDecoder::decodeData(const TiffIFD* raw, uint32 sample_format) {
       const auto count = counts->getU32(s);
 
       if (count < 1)
-        continue;
+        ThrowRDE("Slice %u is empty", s);
 
-      auto e = std::make_unique<DngSliceElement>(offset, count, 0, offY,
-                                                 mRaw->dim.x, yPerSlice);
+      assert(offY < static_cast<uint32>(mRaw->dim.y));
 
+      ByteStream bs(mFile->getSubView(offset, count), 0,
+                    mRootIFD->rootBuffer.getByteOrder());
+      DngSliceElement e(bs, /*offsetX=*/0, offY, mRaw->dim.x, yPerSlice);
+
+      slices.slices.emplace_back(e);
       offY += yPerSlice;
-
-      // Only decode if size is valid
-      if (mFile->isValid(e->byteOffset, e->byteCount))
-        slices.addSlice(move(e));
     }
+
+    assert(static_cast<uint32>(mRaw->dim.y) <= offY);
+    assert(slices.slices.size() == counts->count);
   }
-  uint32 nSlices = slices.size();
-  if (!nSlices)
+
+  if (slices.slices.empty())
     ThrowRDE("No valid slices found.");
 
   mRaw->createData();
 
-  slices.startDecoding();
-
-  std::string firstErr;
-  if (mRaw->isTooManyErrors(nSlices, &firstErr)) {
-    ThrowRDE("Too many errors encountered. Giving up. First Error:\n%s",
-             firstErr.c_str());
-  }
+  slices.decompress();
 }
 
 RawImage DngDecoder::decodeRawInternal() {
@@ -368,6 +384,17 @@ RawImage DngDecoder::decodeRawInternal() {
   mRaw->dim.x = raw->getEntry(IMAGEWIDTH)->getU32();
   mRaw->dim.y = raw->getEntry(IMAGELENGTH)->getU32();
 
+  if (mRaw->dim.x == 0 || mRaw->dim.y == 0)
+    ThrowRDE("Image has zero size");
+
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+  // Yeah, sure, here it would be just dumb to leave this for production :)
+  if (mRaw->dim.x > 7424 || mRaw->dim.y > 5552) {
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", mRaw->dim.x,
+             mRaw->dim.y);
+  }
+#endif
+
   if (mRaw->isCFA)
     parseCFA(raw);
 
@@ -389,19 +416,31 @@ RawImage DngDecoder::decodeRawInternal() {
 void DngDecoder::handleMetadata(const TiffIFD* raw) {
   // Crop
   if (raw->hasEntry(ACTIVEAREA)) {
-    iPoint2D new_size(mRaw->dim.x, mRaw->dim.y);
-
     TiffEntry *active_area = raw->getEntry(ACTIVEAREA);
     if (active_area->count != 4)
       ThrowRDE("active area has %d values instead of 4", active_area->count);
 
-    auto corners = active_area->getU32Array(4);
-    if (iPoint2D(corners[1], corners[0]).isThisInside(mRaw->dim) &&
-        iPoint2D(corners[3], corners[2]).isThisInside(mRaw->dim)) {
-      iRectangle2D crop(corners[1], corners[0], corners[3] - corners[1],
-                        corners[2] - corners[0]);
-      mRaw->subFrame(crop);
+    const iRectangle2D fullImage(0, 0, mRaw->dim.x, mRaw->dim.y);
+
+    const auto corners = active_area->getU32Array(4);
+    const iPoint2D topLeft(corners[1], corners[0]);
+    const iPoint2D bottomRight(corners[3], corners[2]);
+
+    if (!(fullImage.isPointInsideInclusive(topLeft) &&
+          fullImage.isPointInsideInclusive(bottomRight) &&
+          bottomRight >= topLeft)) {
+      ThrowRDE("Rectangle (%u, %u, %u, %u) not inside image (%u, %u, %u, %u).",
+               topLeft.x, topLeft.y, bottomRight.x, bottomRight.y,
+               fullImage.getTopLeft().x, fullImage.getTopLeft().y,
+               fullImage.getBottomRight().x, fullImage.getBottomRight().y);
     }
+
+    iRectangle2D crop;
+    crop.setTopLeft(topLeft);
+    crop.setBottomRightAbsolute(bottomRight);
+    assert(fullImage.isThisInside(fullImage));
+
+    mRaw->subFrame(crop);
   }
 
   if (raw->hasEntry(DEFAULTCROPORIGIN) && raw->hasEntry(DEFAULTCROPSIZE)) {
@@ -410,13 +449,27 @@ void DngDecoder::handleMetadata(const TiffIFD* raw) {
     TiffEntry *size_entry = raw->getEntry(DEFAULTCROPSIZE);
 
     /* Read crop position (sometimes is rational so use float) */
-    auto tl = origin_entry->getFloatArray(2);
-    if (iPoint2D(tl[0], tl[1]).isThisInside(mRaw->dim))
-      cropped = iRectangle2D(tl[0], tl[1], 0, 0);
+    const auto tl = origin_entry->getFloatArray(2);
+    if (std::any_of(tl.cbegin(), tl.cend(), [](const auto v) {
+          return v < std::numeric_limits<iPoint2D::value_type>::min() ||
+                 v > std::numeric_limits<iPoint2D::value_type>::max();
+        }))
+      ThrowRDE("Error decoding default crop origin");
+
+    iPoint2D cropOrigin(tl[0], tl[1]);
+    if (cropped.isPointInsideInclusive(cropOrigin))
+      cropped = iRectangle2D(cropOrigin, {0, 0});
 
     cropped.dim = mRaw->dim - cropped.pos;
+
     /* Read size (sometimes is rational so use float) */
-    auto sz = size_entry->getFloatArray(2);
+    const auto sz = size_entry->getFloatArray(2);
+    if (std::any_of(sz.cbegin(), sz.cend(), [](const auto v) {
+          return v < std::numeric_limits<iPoint2D::value_type>::min() ||
+                 v > std::numeric_limits<iPoint2D::value_type>::max();
+        }))
+      ThrowRDE("Error decoding default crop size");
+
     iPoint2D size(sz[0], sz[1]);
     if ((size + cropped.pos).isThisInside(mRaw->dim))
       cropped.dim = size;
@@ -432,7 +485,7 @@ void DngDecoder::handleMetadata(const TiffIFD* raw) {
   // Apply stage 1 opcodes
   if (applyStage1DngOpcodes && raw->hasEntry(OPCODELIST1)) {
     try {
-      DngOpcodes codes(raw->getEntry(OPCODELIST1));
+      DngOpcodes codes(mRaw, raw->getEntry(OPCODELIST1));
       codes.applyOpCodes(mRaw);
     } catch (RawDecoderException& e) {
       // We push back errors from the opcode parser, since the image may still
@@ -470,7 +523,7 @@ void DngDecoder::handleMetadata(const TiffIFD* raw) {
 
     // Apply stage 2 codes
     try {
-      DngOpcodes codes(raw->getEntry(OPCODELIST2));
+      DngOpcodes codes(mRaw, raw->getEntry(OPCODELIST2));
       codes.applyOpCodes(mRaw);
     } catch (RawDecoderException& e) {
       // We push back errors from the opcode parser, since the image may still
@@ -580,11 +633,19 @@ bool DngDecoder::decodeMaskedAreas(const TiffIFD* raw) {
   /* Since we may both have short or int, copy it to int array. */
   auto rects = masked->getU32Array(nrects*4);
 
-  iPoint2D top = mRaw->getCropOffset();
+  const iRectangle2D fullImage(0, 0, mRaw->getUncroppedDim().x,
+                               mRaw->getUncroppedDim().y);
+  const iPoint2D top = mRaw->getCropOffset();
 
   for (uint32 i = 0; i < nrects; i++) {
     iPoint2D topleft = iPoint2D(rects[i * 4UL + 1UL], rects[i * 4UL]);
     iPoint2D bottomright = iPoint2D(rects[i * 4UL + 3UL], rects[i * 4UL + 2UL]);
+
+    if (!(fullImage.isPointInsideInclusive(topleft) &&
+          fullImage.isPointInsideInclusive(bottomright) &&
+          (topleft < bottomright)))
+      ThrowRDE("Bad masked area.");
+
     // Is this a horizontal box, only add it if it covers the active width of the image
     if (topleft.x <= top.x && bottomright.x >= (mRaw->dim.x + top.x)) {
       mRaw->blackAreas.emplace_back(topleft.y, bottomright.y - topleft.y,
@@ -618,20 +679,34 @@ bool DngDecoder::decodeBlackLevels(const TiffIFD* raw) {
     return false;
 
   TiffEntry* black_entry = raw->getEntry(BLACKLEVEL);
-  if (static_cast<int>(black_entry->count) < blackdim.x * blackdim.y)
+  if (black_entry->count < blackdim.area())
     ThrowRDE("BLACKLEVEL entry is too small");
+
+  using BlackType = decltype(mRaw->blackLevelSeparate)::value_type;
 
   if (blackdim.x < 2 || blackdim.y < 2) {
     // We so not have enough to fill all individually, read a single and copy it
     float value = black_entry->getFloat();
+
+    if (value < std::numeric_limits<BlackType>::min() ||
+        value > std::numeric_limits<BlackType>::max())
+      ThrowRDE("Error decoding black level");
+
     for (int y = 0; y < 2; y++) {
       for (int x = 0; x < 2; x++)
         mRaw->blackLevelSeparate[y*2+x] = value;
     }
   } else {
     for (int y = 0; y < 2; y++) {
-      for (int x = 0; x < 2; x++)
-        mRaw->blackLevelSeparate[y*2+x] = black_entry->getFloat(y*blackdim.x+x);
+      for (int x = 0; x < 2; x++) {
+        float value = black_entry->getFloat(y * blackdim.x + x);
+
+        if (value < std::numeric_limits<BlackType>::min() ||
+            value > std::numeric_limits<BlackType>::max())
+          ThrowRDE("Error decoding black level");
+
+        mRaw->blackLevelSeparate[y * 2 + x] = value;
+      }
     }
   }
 
@@ -644,9 +719,17 @@ bool DngDecoder::decodeBlackLevels(const TiffIFD* raw) {
     for (int i = 0; i < mRaw->dim.y; i++)
       black_sum[i&1] += blackleveldeltav->getFloat(i);
 
-    for (int i = 0; i < 4; i++)
-      mRaw->blackLevelSeparate[i] += static_cast<int>(
-          black_sum[i >> 1] / static_cast<float>(mRaw->dim.y) * 2.0F);
+    for (int i = 0; i < 4; i++) {
+      const float value =
+          black_sum[i >> 1] / static_cast<float>(mRaw->dim.y) * 2.0F;
+      if (value < std::numeric_limits<BlackType>::min() ||
+          value > std::numeric_limits<BlackType>::max())
+        ThrowRDE("Error decoding black level");
+
+      if (__builtin_sadd_overflow(mRaw->blackLevelSeparate[i], value,
+                                  &mRaw->blackLevelSeparate[i]))
+        ThrowRDE("Integer overflow when calculating black level");
+    }
   }
 
   if (raw->hasEntry(BLACKLEVELDELTAH)){
@@ -657,9 +740,17 @@ bool DngDecoder::decodeBlackLevels(const TiffIFD* raw) {
     for (int i = 0; i < mRaw->dim.x; i++)
       black_sum[i&1] += blackleveldeltah->getFloat(i);
 
-    for (int i = 0; i < 4; i++)
-      mRaw->blackLevelSeparate[i] += static_cast<int>(
-          black_sum[i & 1] / static_cast<float>(mRaw->dim.x) * 2.0F);
+    for (int i = 0; i < 4; i++) {
+      const float value =
+          black_sum[i & 1] / static_cast<float>(mRaw->dim.x) * 2.0F;
+      if (value < std::numeric_limits<BlackType>::min() ||
+          value > std::numeric_limits<BlackType>::max())
+        ThrowRDE("Error decoding black level");
+
+      if (__builtin_sadd_overflow(mRaw->blackLevelSeparate[i], value,
+                                  &mRaw->blackLevelSeparate[i]))
+        ThrowRDE("Integer overflow when calculating black level");
+    }
   }
   return true;
 }
@@ -670,7 +761,7 @@ void DngDecoder::setBlack(const TiffIFD* raw) {
     return;
 
   // Black defaults to 0
-  memset(mRaw->blackLevelSeparate,0,sizeof(mRaw->blackLevelSeparate));
+  mRaw->blackLevelSeparate.fill(0);
 
   if (raw->hasEntry(BLACKLEVEL))
     decodeBlackLevels(raw);

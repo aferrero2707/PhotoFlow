@@ -2,6 +2,7 @@
     RawSpeed - RAW file decoder.
 
     Copyright (C) 2017 Axel Waggershauser
+    Copyright (C) 2017 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -19,26 +20,49 @@
 */
 
 #include "decompressors/LJpegDecompressor.h"
-#include "common/Common.h"                // for unroll_loop, uint32, ushort16
+#include "common/Common.h"                // for uint32, unroll_loop, ushort16
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
-#include "io/BitPumpJPEG.h"               // for BitStream<>::getBufferPosi...
-#include "io/ByteStream.h"                // for ByteStream
+#include "io/BitPumpJPEG.h"               // for BitPumpJPEG
 #include <algorithm>                      // for min, copy_n
 
 using std::copy_n;
-using std::min;
 
 namespace rawspeed {
 
-void LJpegDecompressor::decode(uint32 offsetX, uint32 offsetY, bool fixDng16Bug_) {
-  if (static_cast<int>(offsetX) >= mRaw->dim.x)
+LJpegDecompressor::LJpegDecompressor(const ByteStream& bs, const RawImage& img)
+    : AbstractLJpegDecompressor(bs, img) {
+  if (mRaw->getDataType() != TYPE_USHORT16)
+    ThrowRDE("Unexpected data type (%u)", mRaw->getDataType());
+
+  if (!((mRaw->getCpp() == 1 && mRaw->getBpp() == 2) ||
+        (mRaw->getCpp() == 3 && mRaw->getBpp() == 6)))
+    ThrowRDE("Unexpected component count (%u)", mRaw->getCpp());
+
+  if (mRaw->dim.x == 0 || mRaw->dim.y == 0)
+    ThrowRDE("Image has zero size");
+
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+  // Yeah, sure, here it would be just dumb to leave this for production :)
+  if (mRaw->dim.x > 7424 || mRaw->dim.y > 5552) {
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", mRaw->dim.x,
+             mRaw->dim.y);
+  }
+#endif
+}
+
+void LJpegDecompressor::decode(uint32 offsetX, uint32 offsetY, uint32 width,
+                               uint32 height, bool fixDng16Bug_) {
+  if (offsetX >= static_cast<unsigned>(mRaw->dim.x))
     ThrowRDE("X offset outside of image");
-  if (static_cast<int>(offsetY) >= mRaw->dim.y)
+  if (offsetY >= static_cast<unsigned>(mRaw->dim.y))
     ThrowRDE("Y offset outside of image");
+
   offX = offsetX;
   offY = offsetY;
+  w = width;
+  h = height;
 
   fixDng16Bug = fixDng16Bug_;
 
@@ -53,6 +77,16 @@ void LJpegDecompressor::decodeScan()
   for (uint32 i = 0; i < frame.cps;  i++)
     if (frame.compInfo[i].superH != 1 || frame.compInfo[i].superV != 1)
       ThrowRDE("Unsupported subsampling");
+
+  assert(static_cast<unsigned>(mRaw->dim.x) > offX);
+  if ((mRaw->getCpp() * (mRaw->dim.x - offX)) < frame.cps)
+    ThrowRDE("Got less pixels than the components per sample");
+
+  const auto frameWidth = frame.cps * frame.w;
+  if (frameWidth < w || frame.h < h) {
+    ThrowRDE("LJpeg frame (%u, %u) is smaller than expected (%u, %u)",
+             frameWidth, frame.h, w, h);
+  }
 
   switch (frame.cps) {
   case 2:
@@ -74,21 +108,28 @@ void LJpegDecompressor::decodeScan()
 template <int N_COMP>
 void LJpegDecompressor::decodeN()
 {
+  assert(mRaw->getCpp() > 0);
+  assert(N_COMP > 0);
+  assert(N_COMP >= mRaw->getCpp());
+  assert((N_COMP / mRaw->getCpp()) > 0);
+
+  assert(mRaw->dim.x >= N_COMP);
+  assert((mRaw->getCpp() * (mRaw->dim.x - offX)) >= N_COMP);
+
   auto ht = getHuffmanTables<N_COMP>();
   auto pred = getInitialPredictors<N_COMP>();
   auto predNext = pred.data();
 
   BitPumpJPEG bitStream(input);
 
-  for (unsigned y = 0; y < frame.h; ++y) {
-    auto destY = offY + y;
-    // A recoded DNG might be split up into tiles of self contained LJpeg
-    // blobs. The tiles at the bottom and the right may extend beyond the
-    // dimension of the raw image buffer. The excessive content has to be
-    // ignored. For y, we can simply stop decoding when we reached the border.
-    if (destY >= static_cast<unsigned>(mRaw->dim.y))
-      break;
+  // A recoded DNG might be split up into tiles of self contained LJpeg blobs.
+  // The tiles at the bottom and the right may extend beyond the dimension of
+  // the raw image buffer. The excessive content has to be ignored.
 
+  // For y, we can simply stop decoding when we reached the border.
+  for (unsigned y = 0; y < std::min(frame.h, std::min(h, mRaw->dim.y - offY));
+       ++y) {
+    auto destY = offY + y;
     auto dest =
         reinterpret_cast<ushort16*>(mRaw->getDataUncropped(offX, destY));
 
@@ -96,8 +137,8 @@ void LJpegDecompressor::decodeN()
     // the predictor for the next line is the start of this line
     predNext = dest;
 
-    unsigned width = min(frame.w,
-                         (mRaw->dim.x - offX) / (N_COMP / mRaw->getCpp()));
+    unsigned width = std::min(
+        frame.w, (mRaw->getCpp() * std::min(w, mRaw->dim.x - offX)) / N_COMP);
 
     // For x, we first process all pixels within the image buffer ...
     for (unsigned x = 0; x < width; ++x) {

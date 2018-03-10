@@ -17,8 +17,10 @@ FILE(GLOB SOURCES
   "RawImageDataFloat.cpp"
   "RawImageDataU16.cpp"
   "RawspeedException.h"
+  "Spline.h"
   "TableLookUp.cpp"
   "TableLookUp.h"
+  "Threading.h"
 )
 
 target_sources(rawspeed PRIVATE

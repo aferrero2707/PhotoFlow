@@ -30,16 +30,16 @@ install:
       echo "oracle-java9-installer hold" | sudo dpkg --set-selections;
       travis_retry sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
       travis_retry sudo apt-get update -q;
-      travis_retry sudo apt-get install -y -q -f --fix-missing cmake g++-4.9 git libjpeg-dev libpugixml-dev libxml2-utils make ninja-build zlib1g-dev;
+      travis_retry sudo apt-get install -y -q -f --fix-missing cmake g++-5 git libjpeg-dev libpugixml-dev libxml2-utils make ninja-build zlib1g-dev;
     fi;
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      travis_retry brew update && brew tap Homebrew/bundle && cd .ci && brew bundle --verbose;
+      travis_retry brew update > /dev/null && brew tap Homebrew/bundle && cd .ci && brew bundle --verbose;
     fi;
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$FLAVOR" == "Coverage" ]]; then
       travis_retry sudo apt-get install -y -q -f --fix-missing rsync;
     fi;
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$EXTRA" != "NODOCKER" ]]; then
-      travis_retry docker pull darktable/rawspeed;
+      travis_retry travis_wait 5 docker pull darktable/rawspeed;
     fi;
 
 before_script:
@@ -79,20 +79,26 @@ jobs:
     cache:
       directories:
         - '$HOME/$RPUU_DST'
-  - os: osx
-    env: CC=cc CXX=c++
-  - os: osx
-    env: CC=cc CXX=c++ FLAVOR=Coverage
+  #- os: osx
+  #  env: CC=cc CXX=c++
+  #- os: osx
+  #  env: CC=cc CXX=c++ FLAVOR=Coverage
   - os: linux
     dist: trusty
     sudo: required
     services:
       - docker
-    env: CC=clang-4.0 CXX=clang++-4.0 ECO="-DWITH_PTHREADS=OFF"
+    env: CC=clang-5.0 CXX=clang++-5.0 TARGET=STATICANALYSIS
   - os: linux
     dist: trusty
     sudo: required
-    env: CC=gcc-4.9 CXX=g++-4.9 EXTRA=NODOCKER
+    services:
+      - docker
+    env: CC=clang-5.0 CXX=clang++-5.0 ECO="-DWITH_PTHREADS=OFF"
+  - os: linux
+    dist: trusty
+    sudo: required
+    env: CC=gcc-5 CXX=g++-5 EXTRA=NODOCKER
   - stage: deploy
     os: linux
     dist: trusty
@@ -111,7 +117,7 @@ jobs:
     sudo: required
     services:
       - docker
-    env: CC=clang-4.0 CXX=clang++-4.0 TARGET=WWW
+    env: CC=clang-5.0 CXX=clang++-5.0 TARGET=WWW
 
 # linux clang Coverage build OOM's in gcov during final codecov report collection
 # OSX gcc Coverage build produces invalid .gcno files
@@ -138,6 +144,10 @@ script:
 
       export TARGET2="$TARGET";
       export CMD="$SRC_DIR/.ci/ci-script.sh";
+      if [[ "$TARGET" == "STATICANALYSIS" ]]; then
+        export TARGET="build";
+        export CMD="scan-build-5.0 --use-cc=\"$CC\" --use-c++=\"$CXX\" --force-analyze-debug-code --status-bugs -disable-checker deadcode.DeadStores $CMD";
+      fi;
       if [[ "$TARGET" == "SONARQUBE" ]]; then
         export TARGET="build";
         export CMD="build-wrapper-linux-x86-64 --out-dir \"$BUILD_DIR/bw-output/\" $CMD";
@@ -146,7 +156,7 @@ script:
       docker run --read-only --tmpfs /tmp --volume $TRAVIS_BUILD_DIR:$SRC_DIR:ro --volume "$TRAVIS_BUILD_DIR/build":$BUILD_DIR --workdir $BUILD_DIR --tmpfs $INSTALL_PREFIX $EXTRA_TMPFS $EXTRA_OPTS --env CC --env CXX --env GCOV --env CFLAGS --env CXXFLAGS --env SRC_DIR --env BUILD_DIR --env INSTALL_PREFIX --env TARGET --env FLAVOR --env ECO darktable/rawspeed sh -c "$CMD";
 
       if [[ "$TARGET2" == "SONARQUBE" ]]; then
-        export CMD="sonar-scanner -X -Dsonar.login=\"$SONAR_TOKEN\" -Dsonar.branch=\"$TRAVIS_BRANCH\" -Dsonar.projectVersion=\"$TRAVIS_COMMIT\"";
+        export CMD="sonar-scanner -X -Dproject.settings=\"$SRC_DIR/.ci/sonar-project.properties\" -Dsonar.login=\"$SONAR_TOKEN\" -Dsonar.branch=\"$TRAVIS_BRANCH\" -Dsonar.projectVersion=\"$TRAVIS_COMMIT\"";
         docker run --read-only --tmpfs /tmp --volume $TRAVIS_BUILD_DIR:$SRC_DIR:ro --volume "$TRAVIS_BUILD_DIR/build":$BUILD_DIR --workdir $SRC_DIR --tmpfs $INSTALL_PREFIX $EXTRA_TMPFS $EXTRA_OPTS --env CC --env CXX --env GCOV --env CFLAGS --env CXXFLAGS --env SRC_DIR --env BUILD_DIR --env INSTALL_PREFIX --env TARGET --env FLAVOR --env ECO darktable/rawspeed sh -c "$CMD";
       fi;
 

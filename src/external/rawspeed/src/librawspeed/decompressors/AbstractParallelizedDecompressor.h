@@ -23,7 +23,9 @@
 #include "rawspeedconfig.h"                     // for HAVE_PTHREAD
 #include "common/Common.h"                      // for uint32, BitOrder
 #include "common/RawImage.h"                    // for RawImage
+#include "decoders/RawDecoderException.h"       // for RawDecoderException
 #include "decompressors/AbstractDecompressor.h" // for AbstractDecompressor
+#include "io/IOException.h"                     // for IOException
 
 #ifdef HAVE_PTHREAD
 #include <pthread.h> // for pthread_t
@@ -33,25 +35,24 @@ namespace rawspeed {
 
 class RawDecompressorThread;
 
-class AbstractParallelizedDecompressor : AbstractDecompressor {
-#ifdef HAVE_PTHREAD
+class AbstractParallelizedDecompressor : public AbstractDecompressor {
   friend class RawDecompressorThread;
   virtual void decompressThreaded(const RawDecompressorThread* t) const = 0;
-#endif
+
+  void decompressOne(uint32 pieces) const;
 
 public:
   explicit AbstractParallelizedDecompressor(const RawImage& img) : mRaw(img) {}
   virtual ~AbstractParallelizedDecompressor() = default;
 
+  virtual void decompress() const;
+
 protected:
   RawImage mRaw;
 
-#ifdef HAVE_PTHREAD
-  virtual void startThreading() const final;
-#endif
+  void startThreading(uint32 pieces) const;
 };
 
-#ifdef HAVE_PTHREAD
 class RawDecompressorThread final {
   const AbstractParallelizedDecompressor* const parent;
 
@@ -60,20 +61,27 @@ public:
                         uint32 tasksTotal_)
       : parent(parent_), tasksTotal(tasksTotal_) {}
 
-  static void* start_routine(void* arg) {
+  static void* start_routine(void* arg) noexcept {
     const auto* this_ = static_cast<const RawDecompressorThread*>(arg);
-    this_->parent->decompressThreaded(this_);
+    try {
+      this_->parent->decompressThreaded(this_);
+    } catch (RawDecoderException& err) {
+      this_->parent->mRaw->setError(err.what());
+    } catch (IOException& err) {
+      this_->parent->mRaw->setError(err.what());
+    }
     return nullptr;
   }
 
   uint32 taskNo = -1;
   const uint32 tasksTotal;
 
-  uint32 start_y = 0;
-  uint32 end_y = 0;
+  uint32 start = 0;
+  uint32 end = 0;
 
+#ifdef HAVE_PTHREAD
   pthread_t threadid;
-};
 #endif
+};
 
 } // namespace rawspeed

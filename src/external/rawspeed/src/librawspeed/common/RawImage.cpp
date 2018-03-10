@@ -29,6 +29,7 @@
 #include <cmath>                          // for NAN
 #include <cstdlib>                        // for free
 #include <cstring>                        // for memset, memcpy, strdup
+#include <limits>                         // for numeric_limits
 #include <memory>                         // for unique_ptr
 
 using std::fill_n;
@@ -37,13 +38,18 @@ using std::string;
 namespace rawspeed {
 
 RawImageData::RawImageData() : cfa(iPoint2D(0, 0)) {
-  fill_n(blackLevelSeparate, 4, -1);
+  blackLevelSeparate.fill(-1);
 }
 
 RawImageData::RawImageData(const iPoint2D& _dim, uint32 _bpc, uint32 _cpp)
-    : dim(_dim), isCFA(_cpp == 1), cfa(iPoint2D(0, 0)), cpp(_cpp),
-      bpp(_bpc * _cpp) {
-  fill_n(blackLevelSeparate, 4, -1);
+    : dim(_dim), isCFA(_cpp == 1), cfa(iPoint2D(0, 0)), cpp(_cpp) {
+  assert(_bpc > 0);
+
+  if (cpp > std::numeric_limits<decltype(bpp)>::max() / _bpc)
+    ThrowRDE("Components-per-pixel is too large.");
+
+  bpp = _bpc * _cpp;
+  blackLevelSeparate.fill(-1);
   createData();
 }
 
@@ -157,6 +163,39 @@ void __attribute__((const)) RawImageData::unpoisonPadding() {
 }
 #endif
 
+#if __has_feature(memory_sanitizer) || defined(__SANITIZE_MEMORY__)
+void RawImageData::checkRowIsInitialized(int row) {
+  const auto rowsize = bpp * uncropped_dim.x;
+
+  const uchar8* const curr_line = getDataUncropped(0, row);
+
+  // and check that image line is initialized.
+  // do note that we are avoiding padding here.
+  MSAN_MEM_IS_INITIALIZED(curr_line, rowsize);
+}
+#else
+void __attribute__((const)) RawImageData::checkRowIsInitialized(int row) {
+  // if we are building without MSAN, then there is no way to check whether
+  // the image row was fully initialized. however, i think it is better to
+  // have such an empty function rather than making this whole function not
+  // exist in MSAN-less builds
+}
+#endif
+
+#if __has_feature(memory_sanitizer) || defined(__SANITIZE_MEMORY__)
+void RawImageData::checkMemIsInitialized() {
+  for (int j = 0; j < uncropped_dim.y; j++)
+    checkRowIsInitialized(j);
+}
+#else
+void __attribute__((const)) RawImageData::checkMemIsInitialized() {
+  // if we are building without MSAN, then there is no way to check whether
+  // the image data was fully initialized. however, i think it is better to
+  // have such an empty function rather than making this whole function not
+  // exist in MSAN-less builds
+}
+#endif
+
 void RawImageData::destroyData() {
   if (data)
     alignedFree(data);
@@ -187,11 +226,10 @@ uchar8* RawImageData::getData() const {
 }
 
 uchar8* RawImageData::getData(uint32 x, uint32 y) {
-  if (static_cast<int>(x) >= dim.x)
+  if (x >= static_cast<unsigned>(uncropped_dim.x))
     ThrowRDE("X Position outside image requested.");
-  if (static_cast<int>(y) >= dim.y) {
+  if (y >= static_cast<unsigned>(uncropped_dim.y))
     ThrowRDE("Y Position outside image requested.");
-  }
 
   x += mOffset.x;
   y += mOffset.y;
@@ -203,11 +241,10 @@ uchar8* RawImageData::getData(uint32 x, uint32 y) {
 }
 
 uchar8* RawImageData::getDataUncropped(uint32 x, uint32 y) {
-  if (static_cast<int>(x) >= uncropped_dim.x)
+  if (x >= static_cast<unsigned>(uncropped_dim.x))
     ThrowRDE("X Position outside image requested.");
-  if (static_cast<int>(y) >= uncropped_dim.y) {
+  if (y >= static_cast<unsigned>(uncropped_dim.y))
     ThrowRDE("Y Position outside image requested.");
-  }
 
   if (!data)
     ThrowRDE("Data not yet allocated.");
@@ -250,7 +287,7 @@ void RawImageData::createBadPixelMap()
 {
   if (!isAllocated())
     ThrowRDE("(internal) Bad pixel map cannot be allocated before image.");
-  mBadPixelMapPitch = roundUp(uncropped_dim.x / 8, 16);
+  mBadPixelMapPitch = roundUp(roundUpDivision(uncropped_dim.x, 8), 16);
   mBadPixelMap =
       alignedMallocArray<uchar8, 16>(uncropped_dim.y, mBadPixelMapPitch);
   memset(mBadPixelMap, 0,
@@ -293,8 +330,12 @@ void RawImageData::transferBadPixelsToMap()
     createBadPixelMap();
 
   for (unsigned int pos : mBadPixelPositions) {
-    uint32 pos_x = pos&0xffff;
-    uint32 pos_y = pos>>16;
+    ushort16 pos_x = pos & 0xffff;
+    ushort16 pos_y = pos >> 16;
+
+    assert(pos_x < static_cast<ushort16>(uncropped_dim.x));
+    assert(pos_y < static_cast<ushort16>(uncropped_dim.y));
+
     mBadPixelMap[mBadPixelMapPitch * pos_y + (pos_x >> 3)] |= 1 << (pos_x&7);
   }
   mBadPixelPositions.clear();

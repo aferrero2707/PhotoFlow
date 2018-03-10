@@ -23,6 +23,7 @@
 #include "common/Common.h"                           // for uint32
 #include "decompressors/AbstractLJpegDecompressor.h" // for AbstractLJpegDe...
 #include "io/Buffer.h"                               // for Buffer, Buffer:...
+#include "io/ByteStream.h"                           // for ByteStream
 
 namespace rawspeed {
 
@@ -37,16 +38,14 @@ class LJpegDecompressor final : public AbstractLJpegDecompressor
 
   uint32 offX = 0;
   uint32 offY = 0;
+  uint32 w = 0;
+  uint32 h = 0;
 
 public:
-  LJpegDecompressor(const Buffer& data, Buffer::size_type offset,
-                    Buffer::size_type size, const RawImage& img)
-      : AbstractLJpegDecompressor(data, offset, size, img) {}
-  LJpegDecompressor(const Buffer& data, Buffer::size_type offset,
-                    const RawImage& img)
-      : AbstractLJpegDecompressor(data, offset, img) {}
+  LJpegDecompressor(const ByteStream& bs, const RawImage& img);
 
-  void decode(uint32 offsetX, uint32 offsetY, bool fixDng16Bug);
+  void decode(uint32 offsetX, uint32 offsetY, uint32 width, uint32 height,
+              bool fixDng16Bug);
 };
 
 } // namespace rawspeed

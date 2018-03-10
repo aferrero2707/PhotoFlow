@@ -29,6 +29,7 @@
 #include "io/ByteStream.h"                // for ByteStream
 #include <algorithm>                      // for max
 #include <cassert>                        // for assert
+#include <type_traits>                    // for underlying_type, underlyin...
 
 namespace rawspeed {
 
@@ -73,6 +74,21 @@ constexpr bool operator&(SamsungV2Decompressor::OptFlags lhs,
 SamsungV2Decompressor::SamsungV2Decompressor(const RawImage& image,
                                              const ByteStream& bs, int bit)
     : AbstractSamsungDecompressor(image), bits(bit) {
+  if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
+      mRaw->getBpp() != 2)
+    ThrowRDE("Unexpected component count / data type");
+
+  switch (bit) {
+  case 12:
+  case 14:
+    break;
+  default:
+    ThrowRDE("Unexpected bit per pixel (%u)", bit);
+  }
+
+  static constexpr const auto headerSize = 16;
+  bs.check(headerSize);
+
   BitPumpMSB32 startpump(bs);
 
   // Process the initial metadata bits, we only really use initVal, width and
@@ -99,6 +115,8 @@ SamsungV2Decompressor::SamsungV2Decompressor(const RawImage& image,
   startpump.getBits(8); // Inc
   startpump.getBits(2); // reserved
   initVal = startpump.getBits(14);
+
+  assert(startpump.getPosition() == headerSize);
 
   if (width == 0 || height == 0 || width % 16 != 0 || width > 6496 ||
       height > 4336)
@@ -157,15 +175,15 @@ void SamsungV2Decompressor::decompress() {
   }
 }
 
+// The format is relatively straightforward. Each line gets encoded as a set
+// of differences from pixels from another line. Pixels are grouped in blocks
+// of 16 (8 green, 8 red or blue). Each block is encoded in three sections.
+// First 1 or 4 bits to specify which reference pixels to use, then a section
+// that specifies for each pixel the number of bits in the difference, then
+// the actual difference bits
+
 template <SamsungV2Decompressor::OptFlags optflags>
 void SamsungV2Decompressor::decompressRow(uint32 row) {
-  // The format is relatively straightforward. Each line gets encoded as a set
-  // of differences from pixels from another line. Pixels are grouped in blocks
-  // of 16 (8 green, 8 red or blue). Each block is encoded in three sections.
-  // First 1 or 4 bits to specify which reference pixels to use, then a section
-  // that specifies for each pixel the number of bits in the difference, then
-  // the actual difference bits
-
   // Align pump to 16byte boundary
   const auto line_offset = data.getPosition();
   if ((line_offset & 0xf) != 0)
@@ -189,9 +207,10 @@ void SamsungV2Decompressor::decompressRow(uint32 row) {
     i[0] = i[1] = (row == 0 || row == 1) ? 7 : 4;
 
   assert(width >= 16);
+  assert(width % 16 == 0);
   for (uint32 col = 0; col < width; col += 16) {
     if (!(optflags & OptFlags::QP) && !(col & 63)) {
-      int32 scalevals[] = {0, -2, 2};
+      static constexpr int32 scalevals[] = {0, -2, 2};
       uint32 i = pump.getBits(2);
       scale = i < 3 ? scale + scalevals[i] : pump.getBits(12);
     }
@@ -217,20 +236,32 @@ void SamsungV2Decompressor::decompressRow(uint32 row) {
         ThrowRDE(
             "Got a previous line lookup on first two lines. File corrupted?");
 
-      int32 motionOffset[7] = {-4, -2, -2, 0, 0, 2, 4};
-      int32 motionDoAverage[7] = {0, 0, 1, 0, 1, 0, 0};
+      static constexpr int32 motionOffset[7] = {-4, -2, -2, 0, 0, 2, 4};
+      static constexpr int32 motionDoAverage[7] = {0, 0, 1, 0, 1, 0, 0};
 
       int32 slideOffset = motionOffset[motion];
       int32 doAverage = motionDoAverage[motion];
 
       for (uint32 i = 0; i < 16; i++) {
+        ushort16* line;
         ushort16* refpixel;
 
-        if ((row + i) & 0x1) // Red or blue pixels use same color two lines up
-          refpixel = img_up2 + i + slideOffset;
-        else // Green pixel N uses Green pixel N from row above (top left or
-             // top right)
-          refpixel = img_up + i + slideOffset + (((i % 2) != 0) ? -1 : 1);
+        if ((row + i) & 0x1) {
+          // Red or blue pixels use same color two lines up
+          line = img_up2;
+          refpixel = line + i + slideOffset;
+        } else {
+          // Green pixel N uses Green pixel N from row above
+          // (top left or top right)
+          line = img_up;
+          refpixel = line + i + slideOffset + (((i % 2) != 0) ? -1 : 1);
+        }
+
+        if (col == 0 && line > refpixel)
+          ThrowRDE("Bad motion %u at the beginning of the row", motion);
+        if (col + 16 == width && ((refpixel >= line + 16) ||
+                                  (doAverage && (refpixel + 2 >= line + 16))))
+          ThrowRDE("Bad motion %u at the end of the row", motion);
 
         // In some cases we use as reference interpolation of this pixel and
         // the next
@@ -261,6 +292,8 @@ void SamsungV2Decompressor::decompressRow(uint32 row) {
           diffBits[i] = diffBitsMode[colornum][0] + 1;
           break;
         case 2:
+          if (diffBitsMode[colornum][0] == 0)
+            ThrowRDE("Difference bits underflow. File corrupted?");
           diffBits[i] = diffBitsMode[colornum][0] - 1;
           break;
         case 3:

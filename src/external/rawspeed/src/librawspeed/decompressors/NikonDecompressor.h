@@ -21,7 +21,9 @@
 #pragma once
 
 #include "common/Common.h"                      // for uint32
+#include "common/RawImage.h"                    // for RawImage
 #include "decompressors/AbstractDecompressor.h" // for AbstractDecompressor
+#include <vector>                               // for vector
 
 namespace rawspeed {
 
@@ -34,13 +36,19 @@ class ByteStream;
 class HuffmanTable;
 
 class NikonDecompressor final : public AbstractDecompressor {
+  RawImage mRaw;
+  uint32 bitsPS;
+
 public:
-  static void decompress(RawImage* mRaw, ByteStream&& data, ByteStream metadata,
-                         const iPoint2D& size, uint32 bitsPS,
-                         bool uncorrectedRawValues);
+  NikonDecompressor(const RawImage& raw, uint32 bitsPS);
+
+  void decompress(ByteStream metadata, const ByteStream& data,
+                  bool uncorrectedRawValues);
 
 private:
   static const uchar8 nikon_tree[][2][16];
+  static std::vector<ushort16> createCurve(ByteStream* metadata, uint32 bitsPS,
+                                           uint32 v0, uint32 v1, uint32* split);
   static HuffmanTable createHuffmanTable(uint32 huffSelect);
 };
 

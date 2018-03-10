@@ -6,7 +6,7 @@ rawspeed |travis-ci| |appveyor-ci| OBS_ |codecov| |coverity status|
 .. |appveyor-ci| image:: https://ci.appveyor.com/api/projects/status/7pqy0gdr9mp16xu2/branch/develop?svg=true
     :target: https://ci.appveyor.com/project/LebedevRI/rawspeed/branch/develop
 
-.. _OBS: https://build.opensuse.org/project/monitor/home:LebedevRI
+.. _OBS: https://build.opensuse.org/project/monitor/graphics:darktable:master
 
 .. |codecov| image:: https://codecov.io/gh/darktable-org/rawspeed/branch/develop/graph/badge.svg
     :target: https://codecov.io/gh/darktable-org/rawspeed
@@ -32,7 +32,8 @@ RawSpeed…
 - can add support for new cameras by adding definitions to an xml file.
 - decodes images from memory, not a file stream.
 - is being continuously fuzzed as part of the `oss-fuzz`_ project.
-- is currently tested on |rpu-button-cameras| unique cameras, on |rpu-button-samples| unique samples. **Please contribute samples**!
+- is currently tested on |rpu-button-cameras| unique cameras, on |rpu-button-samples| unique samples.
+  **Please read** `this <rpu-post_>`_ **for more info on how to contribute samples!**
 - open source under the `LGPL v2`_ license.
 
 .. _oss-fuzz: https://github.com/google/oss-fuzz
@@ -42,6 +43,8 @@ RawSpeed…
 
 .. |rpu-button-samples| image:: https://raw.pixls.us/button-samples.svg
     :target: https://raw.pixls.us/
+
+.. _rpu-post: https://discuss.pixls.us/t/raw-samples-wanted/5420?u=lebedevri
 
 .. _LGPL v2: https://choosealicense.com/licenses/lgpl-2.1/
 

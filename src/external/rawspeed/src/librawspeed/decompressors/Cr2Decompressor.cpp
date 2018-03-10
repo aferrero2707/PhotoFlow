@@ -3,6 +3,7 @@
 
     Copyright (C) 2009-2014 Klaus Post
     Copyright (C) 2017 Axel Waggershauser
+    Copyright (C) 2017-2018 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -20,18 +21,34 @@
 */
 
 #include "decompressors/Cr2Decompressor.h"
-#include "common/Common.h"                // for unroll_loop, uint32, ushort16
+#include "common/Common.h"                // for uint32, unroll_loop, ushort16
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
-#include "io/BitPumpJPEG.h"               // for BitStream<>::getBufferPosi...
-#include "io/ByteStream.h"                // for ByteStream
-#include <algorithm>                      // for min, copy_n, move
+#include "io/BitPumpJPEG.h"               // for BitPumpJPEG
+#include <algorithm>                      // for move, copy_n
 #include <cassert>                        // for assert
+#include <numeric>                        // for accumulate
 
 using std::copy_n;
 
 namespace rawspeed {
+
+Cr2Decompressor::Cr2Decompressor(const ByteStream& bs, const RawImage& img)
+    : AbstractLJpegDecompressor(bs, img) {
+  if (mRaw->getDataType() != TYPE_USHORT16)
+    ThrowRDE("Unexpected data type");
+
+  if (!((mRaw->getCpp() == 1 && mRaw->getBpp() == 2) ||
+        (mRaw->getCpp() == 3 && mRaw->getBpp() == 6)))
+    ThrowRDE("Unexpected cpp: %u", mRaw->getCpp());
+
+  if (!mRaw->dim.x || !mRaw->dim.y || mRaw->dim.x > 8896 ||
+      mRaw->dim.y > 5920) {
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", mRaw->dim.x,
+             mRaw->dim.y);
+  }
+}
 
 void Cr2Decompressor::decodeScan()
 {
@@ -44,11 +61,6 @@ void Cr2Decompressor::decodeScan()
       ThrowRDE("Don't know slicing pattern, and failed to guess it.");
 
     slicesWidths.push_back(slicesWidth);
-  }
-
-  for (const auto& slicesWidth : slicesWidths) {
-    if (slicesWidth > mRaw->dim.x)
-      ThrowRDE("Slice is longer than image's height, which is unsupported.");
   }
 
   bool isSubSampled = false;
@@ -116,6 +128,17 @@ void Cr2Decompressor::decode(std::vector<int> slicesWidths_)
 template <int N_COMP, int X_S_F, int Y_S_F>
 void Cr2Decompressor::decodeN_X_Y()
 {
+  // To understand the CR2 slice handling and sampling factor behavior, see
+  // https://github.com/lclevy/libcraw2/blob/master/docs/cr2_lossless.pdf?raw=true
+
+  // inner loop decodes one group of pixels at a time
+  //  * for <N,1,1>: N  = N*1*1 (full raw)
+  //  * for <3,2,1>: 6  = 3*2*1
+  //  * for <3,2,2>: 12 = 3*2*2
+  // and advances x by N_COMP*X_S_F and y by Y_S_F
+  constexpr int xStepSize = N_COMP * X_S_F;
+  constexpr int yStepSize = Y_S_F;
+
   auto ht = getHuffmanTables<N_COMP>();
   auto pred = getInitialPredictors<N_COMP>();
   auto predNext = reinterpret_cast<ushort16*>(mRaw->getDataUncropped(0, 0));
@@ -139,16 +162,18 @@ void Cr2Decompressor::decodeN_X_Y()
       sliceWidth = sliceWidth * 3 / 2;
   }
 
-  // To understand the CR2 slice handling and sampling factor behavior, see
-  // https://github.com/lclevy/libcraw2/blob/master/docs/cr2_lossless.pdf?raw=true
+  for (const auto& slicesWidth : slicesWidths) {
+    if (slicesWidth > mRaw->dim.x)
+      ThrowRDE("Slice is longer than image's height, which is unsupported.");
+    if (slicesWidth % xStepSize != 0) {
+      ThrowRDE("Slice width (%u) should be multiple of pixel group size (%u)",
+               slicesWidth, xStepSize);
+    }
+  }
 
-  // inner loop decodes one group of pixels at a time
-  //  * for <N,1,1>: N  = N*1*1 (full raw)
-  //  * for <3,2,1>: 6  = 3*2*1
-  //  * for <3,2,2>: 12 = 3*2*2
-  // and advances x by N_COMP*X_S_F and y by Y_S_F
-  constexpr int xStepSize = N_COMP * X_S_F;
-  constexpr int yStepSize = Y_S_F;
+  if (frame.h * std::accumulate(slicesWidths.begin(), slicesWidths.end(), 0) <
+      mRaw->dim.area())
+    ThrowRDE("Incorrrect slice height / slice widths! Less than image size.");
 
   unsigned processedPixels = 0;
   unsigned processedLineSlices = 0;
@@ -168,6 +193,7 @@ void Cr2Decompressor::decodeN_X_Y()
       auto dest =
           reinterpret_cast<ushort16*>(mRaw->getDataUncropped(destX, destY));
 
+      assert(sliceWidth % xStepSize == 0);
       for (unsigned x = 0; x < sliceWidth; x += xStepSize) {
         // check if we processed one full raw row worth of pixels
         if (processedPixels == frame.w) {

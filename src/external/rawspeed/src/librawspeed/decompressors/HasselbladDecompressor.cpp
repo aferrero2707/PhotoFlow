@@ -32,6 +32,21 @@
 
 namespace rawspeed {
 
+HasselbladDecompressor::HasselbladDecompressor(const ByteStream& bs,
+                                               const RawImage& img)
+    : AbstractLJpegDecompressor(bs, img) {
+  if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
+      mRaw->getBpp() != 2)
+    ThrowRDE("Unexpected component count / data type");
+
+  // FIXME: could be wrong. max "active pixels" - "100 MP"
+  if (mRaw->dim.x == 0 || mRaw->dim.y == 0 || mRaw->dim.x % 2 != 0 ||
+      mRaw->dim.x > 11600 || mRaw->dim.y > 8700) {
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", mRaw->dim.x,
+             mRaw->dim.y);
+  }
+}
+
 // Returns len bits as a signed value.
 // Highest bit is a sign bit
 inline int HasselbladDecompressor::getBits(BitPumpMSB32* bs, int len) {
@@ -53,6 +68,8 @@ void HasselbladDecompressor::decodeScan() {
   assert(frame.w > 0);
   assert(frame.w % 2 == 0);
 
+  const auto ht = getHuffmanTables<1>();
+
   BitPumpMSB32 bitStream(input);
   // Pixels are packed two at a time, not like LJPEG:
   // [p1_length_as_huffman][p2_length_as_huffman][p0_diff_with_length][p1_diff_with_length]|NEXT PIXELS
@@ -61,8 +78,8 @@ void HasselbladDecompressor::decodeScan() {
     int p1 = 0x8000 + pixelBaseOffset;
     int p2 = 0x8000 + pixelBaseOffset;
     for (uint32 x = 0; x < frame.w; x += 2) {
-      int len1 = huff[0]->decodeLength(bitStream);
-      int len2 = huff[0]->decodeLength(bitStream);
+      int len1 = ht[0]->decodeLength(bitStream);
+      int len2 = ht[0]->decodeLength(bitStream);
       p1 += getBits(&bitStream, len1);
       p2 += getBits(&bitStream, len2);
       dest[x] = p1;
@@ -75,6 +92,10 @@ void HasselbladDecompressor::decodeScan() {
 void HasselbladDecompressor::decode(int pixelBaseOffset_)
 {
   pixelBaseOffset = pixelBaseOffset_;
+
+  if (pixelBaseOffset < -65536 || pixelBaseOffset > 65535)
+    ThrowRDE("Either the offset %i or the bounds are wrong.", pixelBaseOffset);
+
   // We cannot use fully decoding huffman table,
   // because values are packed two pixels at the time.
   fullDecodeHT = false;

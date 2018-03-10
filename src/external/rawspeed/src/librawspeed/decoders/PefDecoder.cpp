@@ -75,18 +75,23 @@ RawImage PefDecoder::decodeRawInternal() {
   uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
 
-  if (!width || !height || width % 2 != 0 || width > 7392 || height > 4950)
-    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
-
   mRaw->dim = iPoint2D(width, height);
-  try {
-    PentaxDecompressor p(mRaw, getRootIFD());
-    mRaw->createData();
-    p.decompress(bs);
-  } catch (IOException &e) {
-    mRaw->setError(e.what());
-    // Let's ignore it, it may have delivered somewhat useful data.
+
+  ByteStream* metaData = nullptr;
+  ByteStream stream;
+  if (getRootIFD()->hasEntryRecursive(static_cast<TiffTag>(0x220))) {
+    /* Attempt to read huffman table, if found in makernote */
+    TiffEntry* t = getRootIFD()->getEntryRecursive(static_cast<TiffTag>(0x220));
+    if (t->type != TIFF_UNDEFINED)
+      ThrowRDE("Unknown Huffman table type.");
+
+    stream = t->getData();
+    metaData = &stream;
   }
+
+  PentaxDecompressor p(mRaw, metaData);
+  mRaw->createData();
+  p.decompress(bs);
 
   return mRaw;
 }

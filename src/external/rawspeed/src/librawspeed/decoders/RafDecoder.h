@@ -23,15 +23,13 @@
 
 #include "common/RawImage.h"              // for RawImage
 #include "decoders/AbstractTiffDecoder.h" // for AbstractTiffDecoder
-#include "tiff/TiffIFD.h"                 // for TiffRootIFDOwner
+#include "tiff/TiffIFD.h"                 // for TiffRootIFD (ptr only)
 #include <algorithm>                      // for move
 
 namespace rawspeed {
 
 class CameraMetaData;
 class Buffer;
-class FujiDecompressor;
-class RawDecoderThread;
 
 class RafDecoder final : public AbstractTiffDecoder
 {
@@ -50,11 +48,9 @@ public:
 
 protected:
   int getDecoderVersion() const override { return 1; }
-  void decodeThreaded(RawDecoderThread* t) override;
 
 private:
   int isCompressed();
-  const FujiDecompressor* f = nullptr;
 };
 
 } // namespace rawspeed

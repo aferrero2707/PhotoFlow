@@ -3,7 +3,7 @@
 
     Copyright (C) 2009-2014 Klaus Post
     Copyright (C) 2017 Axel Waggershauser
-    Copyright (C) 2017 Roman Lebedev
+    Copyright (C) 2017-2018 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 
 #include "parsers/FiffParser.h"
 #include "common/Common.h"               // for make_unique, uint32, uchar8
+#include "decoders/RafDecoder.h"         // for RafDecoder
 #include "decoders/RawDecoder.h"         // for RawDecoder
 #include "io/Buffer.h"                   // for Buffer
 #include "io/ByteStream.h"               // for ByteStream
@@ -44,25 +45,29 @@ namespace rawspeed {
 FiffParser::FiffParser(const Buffer* inputData) : RawParser(inputData) {}
 
 void FiffParser::parseData() {
-  const uchar8* data = mInput->getData(0, 104);
+  ByteStream bs(DataBuffer(*mInput, Endianness::big));
+  bs.skipBytes(0x54);
 
-  uint32 first_ifd = getU32BE(data + 0x54);
+  uint32 first_ifd = bs.getU32();
   if (first_ifd >= numeric_limits<uint32>::max() - 12)
     ThrowFPE("Not Fiff. First IFD too far away");
 
   first_ifd += 12;
 
-  uint32 second_ifd = getU32BE(data + 0x64);
-  uint32 third_ifd = getU32BE(data + 0x5C);
+  bs.skipBytes(4);
+  const uint32 third_ifd = bs.getU32();
+  bs.skipBytes(4);
+  const uint32 second_ifd = bs.getU32();
 
-  rootIFD = TiffParser::parse(mInput->getSubView(first_ifd));
+  rootIFD = TiffParser::parse(nullptr, mInput->getSubView(first_ifd));
   TiffIFDOwner subIFD = std::make_unique<TiffIFD>(rootIFD.get());
 
   if (mInput->isValid(second_ifd)) {
     // RAW Tiff on newer models, pointer to raw data on older models
     // -> so we try parsing as Tiff first and add it as data if parsing fails
     try {
-      rootIFD->add(TiffParser::parse(mInput->getSubView(second_ifd)));
+      rootIFD->add(
+          TiffParser::parse(rootIFD.get(), mInput->getSubView(second_ifd)));
     } catch (TiffParserException&) {
       // the offset will be interpreted relative to the rootIFD where this
       // subIFD gets inserted
@@ -118,8 +123,14 @@ std::unique_ptr<RawDecoder> FiffParser::getDecoder(const CameraMetaData* meta) {
   if (!rootIFD)
     parseData();
 
+  // WARNING: do *NOT* fallback to ordinary TIFF parser here!
+  // All the FIFF raws are '.RAF' (Fujifilm). Do use RafDecoder directly.
+
   try {
-    return TiffParser::makeDecoder(move(rootIFD), *mInput);
+    if (!RafDecoder::isAppropriateDecoder(rootIFD.get(), mInput))
+      ThrowFPE("Not a FUJIFILM RAF FIFF.");
+
+    return std::make_unique<RafDecoder>(std::move(rootIFD), mInput);
   } catch (TiffParserException&) {
     ThrowFPE("No decoder found. Sorry.");
   }

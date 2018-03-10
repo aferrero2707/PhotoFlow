@@ -73,6 +73,7 @@ void MrwDecoder::parseHeader() {
   bs = bs.getSubStream(0, dataOffset);
   bs.skipBytes(8);
 
+  bool foundPRD = false;
   while (bs.getRemainSize() > 0) {
     uint32 tag = bs.getU32();
     uint32 len = bs.getU32();
@@ -84,15 +85,25 @@ void MrwDecoder::parseHeader() {
 
     switch (tag) {
     case 0x505244: {            // PRD
+      foundPRD = true;
       bs.skipBytes(8);          // Version Number
       raw_height = bs.getU16(); // CCD Size Y
       raw_width = bs.getU16();  // CCD Size X
+
+      if (!raw_width || !raw_height || raw_width > 3280 || raw_height > 2456) {
+        ThrowRDE("Unexpected image dimensions found: (%u; %u)", raw_width,
+                 raw_height);
+      }
+
       bs.skipBytes(2);          // Image Size Y
       bs.skipBytes(2);          // Image Size X
 
       bpp = bs.getByte(); // DataSize
       if (12 != bpp && 16 != bpp)
         ThrowRDE("Unknown data size");
+
+      if ((raw_height * raw_width * bpp) % 8 != 0)
+        ThrowRDE("Bad combination of image size and raw dimensions.");
 
       if (12 != bs.getByte()) // PixelSize
         ThrowRDE("Unexpected pixel size");
@@ -113,7 +124,7 @@ void MrwDecoder::parseHeader() {
     case 0x545457: // TTW
       // Base value for offsets needs to be at the beginning of the TIFF block,
       // not the file
-      rootIFD = TiffParser::parse(bs.getBuffer(len));
+      rootIFD = TiffParser::parse(nullptr, bs.getBuffer(len));
       break;
     case 0x574247:     // WBG
       bs.skipBytes(4); // 4 factors
@@ -133,9 +144,16 @@ void MrwDecoder::parseHeader() {
     bs.setPosition(origPos + len);
   }
 
+  if (!foundPRD)
+    ThrowRDE("Did not find PRD tag. Image corrupt.");
+
   // processed all of the header. the image data is directly next
-  const auto imageSize = raw_height * raw_width * bpp / 8;
-  imageData = db.getSubView(bs.getPosition(), imageSize);
+
+  const auto imageBits = raw_height * raw_width * bpp;
+  assert(imageBits > 0);
+  assert(imageBits % 8 == 0);
+
+  imageData = db.getSubView(bs.getPosition(), imageBits / 8);
 }
 
 RawImage MrwDecoder::decodeRawInternal() {
@@ -146,15 +164,10 @@ RawImage MrwDecoder::decodeRawInternal() {
   ByteStream bs(db);
   UncompressedDecompressor u(bs, mRaw);
 
-  try {
-    if (packed)
-      u.decode12BitRaw<Endianness::big>(raw_width, raw_height);
-    else
-      u.decodeRawUnpacked<12, Endianness::big>(raw_width, raw_height);
-  } catch (IOException &e) {
-    mRaw->setError(e.what());
-    // Let's ignore it, it may have delivered somewhat useful data.
-  }
+  if (packed)
+    u.decode12BitRaw<Endianness::big>(raw_width, raw_height);
+  else
+    u.decodeRawUnpacked<12, Endianness::big>(raw_width, raw_height);
 
   return mRaw;
 }

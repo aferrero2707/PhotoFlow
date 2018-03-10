@@ -13,10 +13,12 @@ endif(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
 
 # if rawspeed is added as a submodule to another build,
 # this CMakeLists.txt should be added via add_subdirectory().
-if(${CMAKE_SOURCE_DIR} EQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-  set(RAWSPEED_SOURCE_DIR "${CMAKE_SOURCE_DIR}" CACHE BOOL "" FORCE)
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+  set(RAWSPEED_SOURCE_DIR "${CMAKE_SOURCE_DIR}" CACHE PATH "" FORCE)
+  set(RAWSPEED_STANDALONE_BUILD TRUE CACHE BOOL "" FORCE)
 else()
-  set(RAWSPEED_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE BOOL "" FORCE)
+  set(RAWSPEED_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "" FORCE)
+  set(RAWSPEED_STANDALONE_BUILD FALSE CACHE BOOL "" FORCE)
 endif()
 
 include(GNUInstallDirs)
@@ -29,8 +31,8 @@ else()
   project(rawspeed CXX C)
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/")
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules/" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/" ${CMAKE_MODULE_PATH})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -38,6 +40,17 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(BINARY_PACKAGE_BUILD "Sets march optimization to generic" OFF)
 option(WITH_SSE2 "If SSE2 support is avaliable, do build SSE2 codepaths" ON)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  option(RAWSPEED_USE_LIBCXX "(Clang only) Build using libc++ as the standard library." OFF)
+
+  # when OSX_DEPLOYMENT_TARGET is 10.9 and newer, the default is libc++,
+  # but for no reason let's always specify/use libc++ for apple.
+  if(APPLE)
+    set(RAWSPEED_USE_LIBCXX ON)
+  endif()
+else()
+  set(RAWSPEED_USE_LIBCXX OFF CACHE BOOL "(Clang only) Build using libc++ as the standard library." FORCE)
+endif()
 option(WITH_PTHREADS "Enable threading support through pthread. Highly recommended" ON)
 option(WITH_OPENMP "Enable OpenMP support. Only used for tools, not the library itself." ON)
 option(WITH_PUGIXML "Enable XML support for cameras.xml reading" ON)
@@ -86,6 +99,11 @@ if(BUILD_TOOLS AND BUILD_TESTING)
 else()
   set(ENABLE_SAMPLEBASED_TESTING OFF CACHE BOOL "If enabled, allows to use rstest to check the samples specified by REFERENCE_SAMPLE_ARCHIVE" FORCE)
 endif()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  option(USE_LLVM_OPT_REPORT "(Clang only) Save compiler optimizations records and show them" OFF)
+else()
+  set(USE_LLVM_OPT_REPORT OFF CACHE BOOL "(Clang only) Save compiler optimizations records and show them" FORCE)
+endif()
 
 set(GOOGLETEST_PATH "/usr/src/googletest" CACHE PATH
                     "Path to the googletest root tree. Should contain googletest and googlemock subdirs. And CMakeLists.txt in root, and in both of these subdirs")
@@ -97,14 +115,48 @@ set(ZLIB_PATH "/usr/src/zlib" CACHE PATH "Path to the zlib root tree.")
 set(GOOGLEBENCHMARK_PATH "/usr/src/googlebenchmark" CACHE PATH
                     "Path to the googlebenchmark root tree.")
 
-set(LIBFUZZER_ARCHIVE "/usr/local/lib/llvm/lib/libFuzzer.a" CACHE FILEPATH "Filepath to the libFuzzer.a archive.")
+set(LIB_FUZZING_ENGINE "OFF" CACHE STRING "Either OFF, or overrides location of prebuilt fuzzing engine library (e.g. libFuzzer) that needs to be linked with all fuzz targets.")
 
 set(REFERENCE_SAMPLE_ARCHIVE "~/raw-camera-samples/raw.pixls.us-unique" CACHE PATH "The location of the reference sample set to use. Should contain filelist.sha1 and timestamp.txt")
 
+option(RAWSPEED_ENABLE_LTO "Add appropriate flag to the compile and link command lines, enabling link-time optimization." OFF)
+
+if(CMAKE_MAKE_PROGRAM MATCHES "ninja")
+  set(RAWSPEED_PARALLEL_LINK_JOBS "" CACHE STRING
+    "Define the maximum number of concurrent link jobs.")
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+     RAWSPEED_ENABLE_LTO AND NOT RAWSPEED_PARALLEL_LINK_JOBS)
+     message(STATUS "Clang's ThinLTO provides its own parallel linking - limiting parallel link jobs to 2.")
+     set(RAWSPEED_PARALLEL_LINK_JOBS "2")
+  endif()
+
+  if(RAWSPEED_PARALLEL_LINK_JOBS)
+    set_property(GLOBAL APPEND PROPERTY
+                 JOB_POOLS link_job_pool=${RAWSPEED_PARALLEL_LINK_JOBS})
+    set(CMAKE_JOB_POOL_LINK link_job_pool)
+  endif()
+else()
+  set(RAWSPEED_PARALLEL_LINK_JOBS "" CACHE STRING
+      "(Ninja-only) Define the maximum number of concurrent link jobs." FORCE)
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND RAWSPEED_ENABLE_LTO)
+    message(WARNING "RAWSPEED_ENABLE_LTO is enabled but RAWSPEED_PARALLEL_LINK_JOBS is only supported for Ninja.\nConsider using Ninja Generator!")
+  endif()
+endif()
+
 include(build-type)
+
+if(RAWSPEED_USE_LIBCXX)
+  include(libc++)
+endif()
 
 if(USE_IWYU)
   include(iwyu)
+endif()
+
+if(USE_LLVM_OPT_REPORT)
+  include(llvm-opt-report)
 endif()
 
 if((UNIX OR APPLE) AND USE_CLANG_TIDY)
@@ -125,12 +177,20 @@ add_custom_target(tests ALL)
 include(compiler-warnings)
 set_directory_properties(PROPERTIES COMPILE_OPTIONS "-Werror")
 
+if(BUILD_BENCHMARKING)
+  add_custom_target(benchmarks ALL)
+endif()
+
 add_subdirectory(src)
 
 include(OpenMP)
 
 if(BUILD_TESTING)
   add_subdirectory(test)
+endif()
+
+if(BUILD_BENCHMARKING)
+  add_subdirectory(bench)
 endif()
 
 if(BUILD_FUZZERS)
@@ -144,9 +204,25 @@ if(BUILD_DOCS)
 endif()
 
 if(BUILD_TESTING AND CMAKE_BUILD_TYPE STREQUAL "COVERAGE")
-  include(CodeCoverage)
-  setup_target_for_coverage(coverage ctest coverage)
-  include(GCOV)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    include(llvm-profdata)
+    include(llvm-cov)
+  elseif(CMAKE_COMPILER_IS_GNUCXX OR
+         CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+    include(gcc-gcov)
+
+    find_package(LCov)
+    find_package(GenHtml)
+
+    if(LCov_FOUND AND GenHtml_FOUND)
+      include(lcov)
+      include(genhtml)
+      include(gcc-coverage)
+    else()
+      message(WARNING "Did not find lcov and genhtml."
+                      "Will not be able to generate HTML reports")
+    endif()
+  endif()
 endif()
 
 feature_summary(WHAT ALL)

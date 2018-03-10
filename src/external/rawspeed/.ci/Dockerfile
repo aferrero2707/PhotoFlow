@@ -37,15 +37,16 @@ RUN echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/80forceyes
 RUN echo 'APT::Get::Fix-Missing "true";' > /etc/apt/apt.conf.d/80fixmissin
 
 ENV GCC_VER=7
-ENV LLVM_VER=4.0
+ENV LLVM_VER=5.0
 
 # pls keep sorted :)
 RUN rm -rf /var/lib/apt/lists/* && apt-get update && \
-    apt-get install clang++-$LLVM_VER clang-tidy-$LLVM_VER cmake curl \
-    default-jdk-headless default-jre-headless dirmngr doxygen g++-$GCC_VER git \
-    gnupg googletest graphviz libjpeg-dev libpugixml-dev libxml2-utils make \
-    ninja-build python3-sphinx python3-sphinx-rtd-theme unzip zlib1g-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get install \
+    clang++-$LLVM_VER clang-tidy-$LLVM_VER clang-tools-$LLVM_VER \
+    cmake curl default-jdk-headless default-jre-headless dirmngr doxygen \
+    g++-$GCC_VER git gnupg googletest graphviz libjpeg-dev libpugixml-dev \
+    libxml2-utils make ninja-build python3-sphinx python3-sphinx-rtd-theme \
+    unzip zlib1g-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # sonarqube support.
 
@@ -66,7 +67,7 @@ RUN set -x \
     && unzip sonar-scanner-cli.zip \
     && mv sonar-scanner-$SONAR_SCANNER_CLI_VERSION $SONARQUBE_HOME \
     && rm sonar-scanner-cli.zip* \
-    && curl -o build-wrapper.zip -fSL https://sonarqube.com/static/cpp/build-wrapper-linux-x86.zip \
+    && curl -o build-wrapper.zip -fSL https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip \
     && unzip build-wrapper.zip \
     && mv build-wrapper-linux-x86/* $SONARQUBE_HOME/bin \
     && rm build-wrapper.zip* \

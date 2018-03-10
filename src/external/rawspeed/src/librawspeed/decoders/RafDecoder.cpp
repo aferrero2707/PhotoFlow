@@ -22,27 +22,24 @@
 #include "decoders/RafDecoder.h"
 #include "common/Common.h"                          // for uint32, ushort16
 #include "common/Point.h"                           // for iPoint2D, iRecta...
-#include "decoders/RawDecoder.h"                    // for RawDecoderThread
-#include "decoders/RawDecoderException.h"           // for RawDecoderExcept...
+#include "decoders/RawDecoderException.h"           // for ThrowRDE
 #include "decompressors/FujiDecompressor.h"         // for FujiDecompressor
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
 #include "io/Buffer.h"                              // for Buffer
 #include "io/ByteStream.h"                          // for ByteStream
-#include "io/Endianness.h"                          // for getHostEndianness
+#include "io/Endianness.h"                          // for Endianness, getH...
 #include "metadata/Camera.h"                        // for Camera, Hints
 #include "metadata/CameraMetaData.h"                // for CameraMetaData
 #include "metadata/CameraSensorInfo.h"              // for CameraSensorInfo
 #include "metadata/ColorFilterArray.h"              // for ColorFilterArray
 #include "tiff/TiffEntry.h"                         // for TiffEntry
 #include "tiff/TiffIFD.h"                           // for TiffRootIFD, Tif...
-#include "tiff/TiffTag.h"                           // for TiffTag::FUJIOLDWB
+#include "tiff/TiffTag.h"                           // for TiffTag::FUJI_RA...
 #include <cassert>                                  // for assert
 #include <cstdio>                                   // for size_t
 #include <cstring>                                  // for memcmp
-#include <iterator>                                 // for next
-#include <memory>                                   // for unique_ptr, allo...
-#include <numeric>                                  // for accumulate
-#include <string>                                   // for string
+#include <memory>                                   // for unique_ptr
+#include <string>                                   // for string, operator==
 #include <vector>                                   // for vector
 
 namespace rawspeed {
@@ -79,8 +76,8 @@ RawImage RafDecoder::decodeRawInternal() {
   } else
     ThrowRDE("Unable to locate image size");
 
-  if (height < 1 || width < 1)
-    ThrowRDE("Bad image dimensions");
+  if (width == 0 || height == 0 || width > 9216 || height > 6210)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
 
   if (raw->hasEntry(FUJI_LAYOUT)) {
     TiffEntry *e = raw->getEntry(FUJI_LAYOUT);
@@ -101,21 +98,11 @@ RawImage RafDecoder::decodeRawInternal() {
 
     mRaw->dim = iPoint2D(width, height);
 
-    FujiDecompressor _f(input, mRaw);
-    f = &_f;
-
-    const iPoint2D hDim(f->header.raw_width, f->header.raw_height);
-
-    if (mRaw->dim != hDim)
-      ThrowRDE("RAF header specifies different dimensions!");
+    FujiDecompressor f(mRaw, input);
 
     mRaw->createData();
 
-    _f.fuji_compressed_load_raw();
-
-    startTasks(std::min(getThreadCount(), uint32(f->header.blocks_in_row)));
-
-    f = nullptr;
+    f.decompress();
 
     return mRaw;
   }
@@ -180,43 +167,6 @@ RawImage RafDecoder::decodeRawInternal() {
   }
 
   return mRaw;
-}
-
-void RafDecoder::decodeThreaded(RawDecoderThread* t) {
-  assert(f);
-
-  const auto nThreads = getThreadCount();
-  assert(t->taskNo < nThreads);
-  assert(t->taskNo < f->header.blocks_in_row);
-
-  std::vector<int> slicesPerThread;
-  slicesPerThread.resize(nThreads, 0);
-
-  // split all the slices between all the threads 'evenly'
-  int slicesLeft = f->header.blocks_in_row;
-  while (slicesLeft > 0) {
-    for (auto& bucket : slicesPerThread) {
-      --slicesLeft;
-      ++bucket;
-      if (0 == slicesLeft)
-        break;
-    }
-  }
-  assert(slicesLeft == 0);
-  assert(std::accumulate(slicesPerThread.begin(), slicesPerThread.end(), 0) ==
-         f->header.blocks_in_row);
-
-  const auto spti = slicesPerThread.begin();
-  int startSlice = std::accumulate(spti, std::next(spti, t->taskNo), 0);
-  int endSlice = std::accumulate(spti, std::next(spti, t->taskNo + 1), 0);
-
-  assert(startSlice >= 0);
-  assert(startSlice < f->header.blocks_in_row);
-  assert(endSlice > 0);
-  assert(endSlice > startSlice);
-  assert(endSlice <= f->header.blocks_in_row);
-
-  f->fuji_decode_loop(startSlice, endSlice);
 }
 
 void RafDecoder::checkSupportInternal(const CameraMetaData* meta) {
@@ -383,12 +333,17 @@ int RafDecoder::isCompressed() {
   } else
     ThrowRDE("Unable to locate image size");
 
-  if (!width || !height)
-    ThrowRDE("Image has zero size");
+  if (width == 0 || height == 0 || width > 9216 || height > 6210)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
 
   uint32 count = raw->getEntry(FUJI_STRIPBYTECOUNTS)->getU32();
 
-  return count * 8 / (width * height) < 10;
+  // The uncompressed raf's can be 12/14 bpp, so if it is less than that,
+  // then we are likely in compressed raf.
+  // FIXME: this can't be the correct way to detect this. But i'm not seeing
+  // anything in the diff between exiv2/exiftool dumps of {un,}compressed raws.
+  // Maybe we are supposed to check for valid FujiDecompressor::FujiHeader ?
+  return count * 8 / (width * height) < 12;
 }
 
 } // namespace rawspeed

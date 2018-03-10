@@ -107,19 +107,7 @@ RawImage NefDecoder::decodeRawInternal() {
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
   uint32 bitPerPixel = raw->getEntry(BITSPERSAMPLE)->getU32();
 
-  if (width == 0 || height == 0 || width > 7424 || height > 4928)
-    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
-
-  switch (bitPerPixel) {
-  case 12:
-  case 14:
-    break;
-  default:
-    ThrowRDE("Invalid bpp found: %u", bitPerPixel);
-  }
-
   mRaw->dim = iPoint2D(width, height);
-  mRaw->createData();
 
   raw = mRootIFD->getIFDWithTag(static_cast<TiffTag>(0x8c));
 
@@ -130,14 +118,11 @@ RawImage NefDecoder::decodeRawInternal() {
     meta = raw->getEntry(static_cast<TiffTag>(0x8c)); // Fall back
   }
 
-  try {
-    NikonDecompressor::decompress(
-        &mRaw, ByteStream(mFile, offsets->getU32(), counts->getU32()),
-        meta->getData(), mRaw->dim, bitPerPixel, uncorrectedRawValues);
-  } catch (IOException &e) {
-    mRaw->setError(e.what());
-    // Let's ignore it, it may have delivered somewhat useful data.
-  }
+  ByteStream rawData(mFile, offsets->getU32(), counts->getU32());
+
+  NikonDecompressor n(mRaw, bitPerPixel);
+  mRaw->createData();
+  n.decompress(meta->getData(), rawData, uncorrectedRawValues);
 
   return mRaw;
 }
@@ -167,23 +152,30 @@ bool NefDecoder::NEFIsUncompressed(const TiffIFD* raw) {
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
   uint32 bitPerPixel = raw->getEntry(BITSPERSAMPLE)->getU32();
 
-  return counts->getU32(0) == width*height*bitPerPixel/8;
+  const uint64 bitCount = uint64(8) * counts->getU32(0);
+  if (!bitPerPixel || bitCount % bitPerPixel != 0)
+    return false;
+
+  const auto pixelCount = bitCount / bitPerPixel;
+  return pixelCount == iPoint2D(width, height).area();
 }
 
 /* At least the D810 has a broken firmware that tags uncompressed images
    as if they were compressed. For those cases we set uncompressed mode
    by figuring out that the image is the size of uncompressed packing */
 bool NefDecoder::NEFIsUncompressedRGB(const TiffIFD* raw) {
-  TiffEntry *counts = raw->getEntry(STRIPBYTECOUNTS);
+  uint32 byteCount = raw->getEntry(STRIPBYTECOUNTS)->getU32(0);
   uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
 
-  return counts->getU32(0) == width*height*3;
+  if (byteCount % 3 != 0)
+    return false;
+
+  return byteCount / 3 == iPoint2D(width, height).area();
 }
 
 void NefDecoder::DecodeUncompressed() {
   auto raw = getIFDWithLargestImage(CFAPATTERN);
-  uint32 nslices = raw->getEntry(STRIPOFFSETS)->count;
   TiffEntry *offsets = raw->getEntry(STRIPOFFSETS);
   TiffEntry *counts = raw->getEntry(STRIPBYTECOUNTS);
   uint32 yPerSlice = raw->getEntry(ROWSPERSTRIP)->getU32();
@@ -191,13 +183,35 @@ void NefDecoder::DecodeUncompressed() {
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
   uint32 bitPerPixel = raw->getEntry(BITSPERSAMPLE)->getU32();
 
+  mRaw->dim = iPoint2D(width, height);
+
+  if (width == 0 || height == 0 || width > 8288 || height > 5520)
+    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
+
+  if (counts->count != offsets->count) {
+    ThrowRDE("Byte count number does not match strip size: "
+             "count:%u, stips:%u ",
+             counts->count, offsets->count);
+  }
+
+  if (yPerSlice == 0 || yPerSlice > static_cast<uint32>(mRaw->dim.y) ||
+      roundUpDivision(mRaw->dim.y, yPerSlice) != counts->count) {
+    ThrowRDE("Invalid y per slice %u or strip count %u (height = %u)",
+             yPerSlice, counts->count, mRaw->dim.y);
+  }
+
   vector<NefSlice> slices;
+  slices.reserve(counts->count);
   uint32 offY = 0;
 
-  for (uint32 s = 0; s < nslices; s++) {
+  for (uint32 s = 0; s < counts->count; s++) {
     NefSlice slice;
     slice.offset = offsets->getU32(s);
     slice.count = counts->getU32(s);
+
+    if (slice.count < 1)
+      ThrowRDE("Slice %u is empty", s);
+
     if (offY + yPerSlice > height)
       slice.h = height - offY;
     else
@@ -205,19 +219,17 @@ void NefDecoder::DecodeUncompressed() {
 
     offY = min(height, offY + yPerSlice);
 
-    if (mFile->isValid(slice.offset, slice.count)) // Only decode if size is valid
-      slices.push_back(slice);
+    if (!mFile->isValid(slice.offset, slice.count))
+      ThrowRDE("Slice offset/count invalid");
+
+    slices.push_back(slice);
   }
 
   if (slices.empty())
     ThrowRDE("No valid slices found. File probably truncated.");
 
-  height = offY;
-
-  if (width == 0 || height == 0 || width > 7424 || height > 4928)
-    ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
-
-  mRaw->dim = iPoint2D(width, height);
+  assert(height == offY);
+  assert(slices.size() == counts->count);
 
   mRaw->createData();
   if (bitPerPixel == 14 && width*slices[0].h*2 == slices[0].count)
@@ -237,39 +249,25 @@ void NefDecoder::DecodeUncompressed() {
   bool bitorder = ! hints.has("msb_override");
 
   offY = 0;
-  for (uint32 i = 0; i < slices.size(); i++) {
-    NefSlice slice = slices[i];
+  for (const NefSlice& slice : slices) {
     ByteStream in(mFile, slice.offset, slice.count);
     iPoint2D size(width, slice.h);
     iPoint2D pos(0, offY);
-    try {
-      if (hints.has("coolpixmangled")) {
-        UncompressedDecompressor u(in, mRaw);
-        u.readUncompressedRaw(size, pos, width * bitPerPixel / 8, 12,
-                              BitOrder_MSB32);
-      } else {
-        if (hints.has("coolpixsplit"))
-          readCoolpixSplitRaw(in, size, pos, width * bitPerPixel / 8);
-        else {
-          UncompressedDecompressor u(in, mRaw);
-          u.readUncompressedRaw(size, pos, width * bitPerPixel / 8, bitPerPixel,
-                                bitorder ? BitOrder_MSB : BitOrder_LSB);
-        }
-      }
-    } catch (RawDecoderException &e) {
-      if (i>0)
-        mRaw->setError(e.what());
-      else
-        throw;
-    } catch (IOException &e) {
-      if (i>0)
-        mRaw->setError(e.what());
+
+    if (hints.has("coolpixmangled")) {
+      UncompressedDecompressor u(in, mRaw);
+      u.readUncompressedRaw(size, pos, width * bitPerPixel / 8, 12,
+                            BitOrder_MSB32);
+    } else {
+      if (hints.has("coolpixsplit"))
+        readCoolpixSplitRaw(in, size, pos, width * bitPerPixel / 8);
       else {
-        ThrowRDE("IO error occurred in first slice, unable to decode more. "
-                 "Error is: %s",
-                 e.what());
+        UncompressedDecompressor u(in, mRaw);
+        u.readUncompressedRaw(size, pos, width * bitPerPixel / 8, bitPerPixel,
+                              bitorder ? BitOrder_MSB : BitOrder_LSB);
       }
     }
+
     offY += slice.h;
   }
 }
@@ -332,14 +330,14 @@ void NefDecoder::DecodeD100Uncompressed() {
   u.decode12BitRaw<Endianness::big, false, true>(width, height);
 }
 
-// FIXME: RPU has just one sample (./Nikon/D810/D810_Small.NEF)
 void NefDecoder::DecodeSNefUncompressed() {
   auto raw = getIFDWithLargestImage(CFAPATTERN);
   uint32 offset = raw->getEntry(STRIPOFFSETS)->getU32();
   uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
 
-  if (width == 0 || height == 0 || width > 3680 || height > 2456)
+  if (width == 0 || height == 0 || width % 2 != 0 || width > 3680 ||
+      height > 2456)
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
 
   mRaw->dim = iPoint2D(width, height);
@@ -464,8 +462,13 @@ void NefDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
     TiffEntry* wb = mRootIFD->getEntryRecursive(static_cast<TiffTag>(0x0097));
     if (wb->count > 4) {
       uint32 version = 0;
-      for (uint32 i=0; i<4; i++)
-        version = (version << 4) + wb->getByte(i)-'0';
+      for (uint32 i = 0; i < 4; i++) {
+        const auto v = wb->getByte(i);
+        if (v < '0' || v > '9')
+          ThrowRDE("Bad version component: %c - not a digit", v);
+        version = (version << 4) + v - '0';
+      }
+
       if (version == 0x100 && wb->count >= 80 && wb->type == TIFF_UNDEFINED) {
         mRaw->metadata.wbCoeffs[0] = static_cast<float>(wb->getU16(36));
         mRaw->metadata.wbCoeffs[2] = static_cast<float>(wb->getU16(37));
@@ -482,8 +485,10 @@ void NefDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
         string serial =
             mRootIFD->getEntryRecursive(static_cast<TiffTag>(0x001d))
                 ->getString();
+        if (serial.length() > 9)
+          ThrowRDE("Serial number is too long (%zu)", serial.length());
         uint32 serialno = 0;
-        for (char c : serial) {
+        for (unsigned char c : serial) {
           if (c >= '0' && c <= '9')
             serialno = serialno*10 + c-'0';
           else
@@ -523,28 +528,27 @@ void NefDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
     }
   } else if (mRootIFD->hasEntryRecursive(static_cast<TiffTag>(0x0014))) {
     TiffEntry* wb = mRootIFD->getEntryRecursive(static_cast<TiffTag>(0x0014));
-    auto* tmp = wb->getData(wb->count);
+    ByteStream bs = wb->getData();
     if (wb->count == 2560 && wb->type == TIFF_UNDEFINED) {
-      mRaw->metadata.wbCoeffs[0] =
-          static_cast<float>(getU16BE(tmp + 1248)) / 256.0F;
+      bs.skipBytes(1248);
+      bs.setByteOrder(Endianness::big);
+      mRaw->metadata.wbCoeffs[0] = static_cast<float>(bs.getU16()) / 256.0;
       mRaw->metadata.wbCoeffs[1] = 1.0F;
-      mRaw->metadata.wbCoeffs[2] =
-          static_cast<float>(getU16BE(tmp + 1250)) / 256.0F;
-    } else if (!strncmp(reinterpret_cast<const char*>(tmp), "NRW ", 4)) {
+      mRaw->metadata.wbCoeffs[2] = static_cast<float>(bs.getU16()) / 256.0;
+    } else if (bs.hasPatternAt("NRW ", 4, 0)) {
       uint32 offset = 0;
-      if (strncmp(reinterpret_cast<const char*>(tmp) + 4, "0100", 4) != 0 &&
-          wb->count > 72)
+      if (!bs.hasPatternAt("0100", 4, 4) && wb->count > 72)
         offset = 56;
       else if (wb->count > 1572)
         offset = 1556;
 
       if (offset) {
-        tmp += offset;
-        mRaw->metadata.wbCoeffs[0] = static_cast<float>(getU32LE(tmp + 0) << 2);
-        mRaw->metadata.wbCoeffs[1] =
-            static_cast<float>(getU32LE(tmp + 4) + getU32LE(tmp + 8));
-        mRaw->metadata.wbCoeffs[2] =
-            static_cast<float>(getU32LE(tmp + 12) << 2);
+        bs.skipBytes(offset);
+        bs.setByteOrder(Endianness::little);
+        mRaw->metadata.wbCoeffs[0] = 4.0 * bs.getU32();
+        mRaw->metadata.wbCoeffs[1] = bs.getU32();
+        mRaw->metadata.wbCoeffs[1] += bs.getU32();
+        mRaw->metadata.wbCoeffs[2] = 4.0 * bs.getU32();
       }
     }
   }
@@ -580,14 +584,8 @@ void NefDecoder::DecodeNikonSNef(ByteStream* input, uint32 w, uint32 h) {
   if (w < 6)
     ThrowIOE("got a %u wide sNEF, aborting", w);
 
-  if (input->getRemainSize() < (w * h * 3)) {
-    if (static_cast<uint32>(input->getRemainSize()) > w * 3) {
-      h = input->getRemainSize() / (w * 3) - 1;
-      mRaw->setError("Image truncated (file is too short)");
-    } else
-      ThrowIOE(
-          "Not enough data to decode a single line. Image file truncated.");
-  }
+  if (input->getRemainSize() < (w * h * 3))
+    ThrowIOE("Not enough data to decode. Image file truncated.");
 
   // We need to read the applied whitebalance, since we should return
   // data before whitebalance, so we "unapply" it.
@@ -602,8 +600,10 @@ void NefDecoder::DecodeNikonSNef(ByteStream* input, uint32 w, uint32 h) {
   float wb_r = wb->getFloat(0);
   float wb_b = wb->getFloat(1);
 
-  if (wb_r <= 0.0F || wb_b <= 0.0F)
-    ThrowRDE("Whitebalance has zero value");
+  // ((1024/x)*((1<<16)-1)+(1<<9))<=((1<<31)-1), x>0  gives: (0.0312495)
+  const float lower_limit = 13'421'568.0 / 429'496'627.0;
+  if (wb_r < lower_limit || wb_b < lower_limit || wb_r > 10.0F || wb_b > 10.0F)
+    ThrowRDE("Whitebalance has bad values (%f, %f)", wb_r, wb_b);
 
   mRaw->metadata.wbCoeffs[0] = wb_r;
   mRaw->metadata.wbCoeffs[1] = 1.0F;

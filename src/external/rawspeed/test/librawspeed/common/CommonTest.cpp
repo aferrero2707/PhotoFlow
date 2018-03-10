@@ -117,10 +117,33 @@ protected:
   size_t expected; // expected output
 };
 static const RoundUpDivisionType RoundUpDivisionValues[] = {
-    make_tuple(0, 10, 0), make_tuple(10, 10, 1), make_tuple(10, 1, 10),
-    make_tuple(10, 2, 5), make_tuple(10, 3, 4),  make_tuple(10, 4, 3),
-    make_tuple(10, 5, 2), make_tuple(10, 6, 2),  make_tuple(10, 7, 2),
-    make_tuple(10, 8, 2), make_tuple(10, 9, 2),
+    make_tuple(0, 10, 0),
+    make_tuple(10, 10, 1),
+    make_tuple(10, 1, 10),
+    make_tuple(10, 2, 5),
+    make_tuple(10, 3, 4),
+    make_tuple(10, 4, 3),
+    make_tuple(10, 5, 2),
+    make_tuple(10, 6, 2),
+    make_tuple(10, 7, 2),
+    make_tuple(10, 8, 2),
+    make_tuple(10, 9, 2),
+    make_tuple(0, 1, 0),
+    make_tuple(1, 1, 1),
+    make_tuple(numeric_limits<size_t>::max() - 1, 1,
+               numeric_limits<size_t>::max() - 1),
+    make_tuple(numeric_limits<size_t>::max(), 1, numeric_limits<size_t>::max()),
+    make_tuple(0, numeric_limits<size_t>::max() - 1, 0),
+    make_tuple(1, numeric_limits<size_t>::max() - 1, 1),
+    make_tuple(numeric_limits<size_t>::max() - 1,
+               numeric_limits<size_t>::max() - 1, 1),
+    make_tuple(numeric_limits<size_t>::max(), numeric_limits<size_t>::max() - 1,
+               2),
+    make_tuple(0, numeric_limits<size_t>::max(), 0),
+    make_tuple(1, numeric_limits<size_t>::max(), 1),
+    make_tuple(numeric_limits<size_t>::max() - 1, numeric_limits<size_t>::max(),
+               1),
+    make_tuple(numeric_limits<size_t>::max(), numeric_limits<size_t>::max(), 1),
 
 };
 INSTANTIATE_TEST_CASE_P(RoundUpDivisionTest, RoundUpDivisionTest,
@@ -303,6 +326,49 @@ TEST(UnrollLoopTest, Test) {
     unroll_loop<3>([&](int i) { cnt++; });
     ASSERT_EQ(cnt, 3);
   });
+}
+
+template <int iterations>
+static void UnrollLoopTestIsMonotonicallyPositiveTest() {
+  static_assert(iterations >= 0, "negative iteration count makes no sense.");
+
+  int invocation = 0;
+
+  std::vector<int> expected;
+  expected.reserve(iterations);
+  invocation = 0;
+  std::generate_n(std::back_inserter(expected), iterations,
+                  [&invocation]() -> int { return invocation++; });
+  if (iterations > 0) {
+    ASSERT_EQ(expected.size(), iterations);
+    ASSERT_EQ(expected.front(), 0);
+    ASSERT_EQ(expected.back(), iterations - 1);
+  }
+
+  std::vector<int> data;
+  data.reserve(iterations);
+  invocation = 0;
+  unroll_loop<iterations>([&](int i) {
+    ASSERT_GE(invocation, 0);
+    ASSERT_GE(i, 0);
+    ASSERT_LT(invocation, iterations);
+    ASSERT_LT(i, iterations);
+    ASSERT_EQ(i, invocation);
+
+    data.emplace_back(i);
+    invocation++;
+  });
+
+  ASSERT_EQ(data.size(), expected.size());
+  ASSERT_EQ(data, expected);
+}
+
+TEST(UnrollLoopTest, IsMonotonicallyPositiveTest) {
+  UnrollLoopTestIsMonotonicallyPositiveTest<0>();
+  UnrollLoopTestIsMonotonicallyPositiveTest<1>();
+  UnrollLoopTestIsMonotonicallyPositiveTest<2>();
+  UnrollLoopTestIsMonotonicallyPositiveTest<3>();
+  UnrollLoopTestIsMonotonicallyPositiveTest<4>();
 }
 
 TEST(GetThreadCountTest, Test) {

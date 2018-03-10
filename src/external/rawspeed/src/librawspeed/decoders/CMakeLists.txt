@@ -1,8 +1,6 @@
 FILE(GLOB SOURCES
   "AbstractTiffDecoder.cpp"
   "AbstractTiffDecoder.h"
-  "AriDecoder.cpp"
-  "AriDecoder.h"
   "ArwDecoder.cpp"
   "ArwDecoder.h"
   "Cr2Decoder.cpp"
@@ -15,8 +13,6 @@ FILE(GLOB SOURCES
   "DcsDecoder.h"
   "DngDecoder.cpp"
   "DngDecoder.h"
-  "DngDecoderSlices.cpp"
-  "DngDecoderSlices.h"
   "ErfDecoder.cpp"
   "ErfDecoder.h"
   "IiqDecoder.cpp"

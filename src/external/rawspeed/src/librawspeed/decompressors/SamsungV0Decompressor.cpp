@@ -40,27 +40,20 @@
 namespace rawspeed {
 
 SamsungV0Decompressor::SamsungV0Decompressor(const RawImage& image,
-                                             const TiffIFD* raw,
-                                             const Buffer* mFile)
+                                             const ByteStream& bso,
+                                             const ByteStream& bsr)
     : AbstractSamsungDecompressor(image) {
+  if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
+      mRaw->getBpp() != 2)
+    ThrowRDE("Unexpected component count / data type");
+
   const uint32 width = mRaw->dim.x;
   const uint32 height = mRaw->dim.y;
 
   if (width == 0 || height == 0 || width < 16 || width > 5546 || height > 3714)
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
 
-  const TiffEntry* sliceOffsets = raw->getEntry(static_cast<TiffTag>(40976));
-  if (sliceOffsets->type != TIFF_LONG || sliceOffsets->count != 1)
-    ThrowRDE("Entry 40976 is corrupt");
-
-  ByteStream bso(mFile, sliceOffsets->getU32(), 4 * height, Endianness::little);
-
-  const uint32 offset = raw->getEntry(STRIPOFFSETS)->getU32();
-  const uint32 count = raw->getEntry(STRIPBYTECOUNTS)->getU32();
-  Buffer rbuf(mFile->getSubView(offset, count));
-  ByteStream bsr(DataBuffer(rbuf, Endianness::little));
-
-  computeStripes(bso, bsr);
+  computeStripes(bso.peekStream(height, 4), bsr);
 }
 
 // FIXME: this is very close to IiqDecoder::computeSripes()
@@ -125,6 +118,7 @@ int32 SamsungV0Decompressor::calcAdj(BitPumpMSB32* bits, int b) {
 void SamsungV0Decompressor::decompressStrip(uint32 y,
                                             const ByteStream& bs) const {
   const uint32 width = mRaw->dim.x;
+  assert(width > 0);
 
   BitPumpMSB32 bits(bs);
 
@@ -175,6 +169,9 @@ void SamsungV0Decompressor::decompressStrip(uint32 y,
 
     if (dir) {
       // Upward prediction
+
+      if (y < 2)
+        ThrowRDE("Upward prediction for the first two rows. Raw corrupt");
 
       if (x + 16 >= width)
         ThrowRDE("Upward prediction for the last block of pixels. Raw corrupt");
