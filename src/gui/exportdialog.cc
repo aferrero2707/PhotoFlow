@@ -527,6 +527,8 @@ void PF::ExportDialog::on_file_button_clicked()
       }
     }
 
+    file_entry.set_text( filename );
+
     //std::cout << "File selected: " <<  filename << std::endl;
     //if( editor && editor->get_image() ) {
     //  editor->get_image()->export_merged( filename );
