@@ -186,6 +186,63 @@ namespace PF
   };
 
 
+  enum jpeg_quant_table_t {
+    JPEG_QUANT_TABLE_DEFAULT = 0,
+    JPEG_QUANT_TABLE_MEDIUM = 2,
+    JPEG_QUANT_TABLE_BEST = 4
+  };
+
+
+  enum export_size_t {
+    SIZE_ORIGINAL,
+    SIZE_800_600,
+    SIZE_1280_720,
+    SIZE_1280_800,
+    SIZE_1280_1024,
+    SIZE_1440_900,
+    SIZE_1600_1200,
+    SIZE_1920_1080,
+    SIZE_1920_1200,
+    SIZE_2K,
+    SIZE_4K,
+    SIZE_5K,
+    SIZE_8K,
+    SIZE_A4_300DPI,
+    SIZE_A4P_300DPI,
+    SIZE_CUSTOM
+  };
+
+
+
+  enum scale_mode_t
+  {
+    SCALE_MODE_FIT,
+    SCALE_MODE_FILL,
+    SCALE_MODE_RESIZE
+  };
+
+
+  enum scale_unit_t
+  {
+    SCALE_UNIT_PX,
+    SCALE_UNIT_PERCENT,
+    SCALE_UNIT_MM,
+    SCALE_UNIT_CM,
+    SCALE_UNIT_INCHES
+  };
+
+
+  enum scale_interpolation_t
+  {
+    SCALE_INTERP_NEAREST,
+    SCALE_INTERP_BILINEAR,
+    SCALE_INTERP_BICUBIC,
+    SCALE_INTERP_LANCZOS2,
+    SCALE_INTERP_LANCZOS3,
+    SCALE_INTERP_NOHALO
+  };
+
+
 
   template<>
   class Property<blendmode_t>: public PropertyBase

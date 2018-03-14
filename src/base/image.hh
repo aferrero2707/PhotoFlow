@@ -64,6 +64,23 @@ struct ImageBuffer
 };
 
 
+struct image_export_opt_t
+{
+  int jpeg_quality;
+  bool jpeg_chroma_subsampling;
+  int jpeg_quant_table;
+  int tiff_format;
+  bool tiff_compress;
+  export_size_t size;
+  float sharpen_radius;
+  float sharpen_amount;
+  profile_type_t profile_type;
+  TRC_type trc_type;
+  bool bpc;
+  Glib::ustring custom_profile_name;
+};
+
+
 class Image: public sigc::trackable
 {
   LayerManager layer_manager;
@@ -112,6 +129,8 @@ class Image: public sigc::trackable
 
   //ProcessorBase* convert2srgb;
   ProcessorBase* convert_format;
+  ProcessorBase* resize;
+  ProcessorBase* sharpen;
   ProcessorBase* convert2outprof;
 
   void remove_from_inputs( PF::Layer* layer );
@@ -226,8 +245,8 @@ public:
   bool save_backup();
 
   bool save( std::string filename, bool do_clear=true );
-  void export_merged( std::string filename );
-  void do_export_merged( std::string filename );
+  void export_merged( std::string filename, image_export_opt_t* export_opt=NULL );
+  void do_export_merged( std::string filename, image_export_opt_t* export_opt=NULL );
   void export_merged_to_mem( ImageBuffer* imgbuf, void* gimp_iccdata, size_t gimp_iccsize );
   void export_merged_to_tiff( const std::string filename );
 };

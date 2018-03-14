@@ -75,6 +75,7 @@ namespace PF
     process_request_t request;
     GCond* done;
     GMutex* mutex;
+    void* data;
   };
 
 

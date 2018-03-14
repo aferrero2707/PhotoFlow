@@ -39,34 +39,6 @@
 namespace PF 
 {
 
-enum scale_mode_t
-{
-  SCALE_MODE_FIT,
-  SCALE_MODE_FILL,
-  SCALE_MODE_RESIZE
-};
-
-
-enum scale_unit_t
-{
-  SCALE_UNIT_PX,
-  SCALE_UNIT_PERCENT,
-  SCALE_UNIT_MM,
-  SCALE_UNIT_CM,
-  SCALE_UNIT_INCHES
-};
-
-
-enum scale_interpolation_t
-{
-  SCALE_INTERP_NEAREST,
-  SCALE_INTERP_BILINEAR,
-  SCALE_INTERP_BICUBIC,
-  SCALE_INTERP_LANCZOS2,
-  SCALE_INTERP_LANCZOS3,
-  SCALE_INTERP_NOHALO
-};
-
 
 class ScalePar: public OpParBase
 {
@@ -96,6 +68,14 @@ public:
 
   bool has_opacity() { return false; }
   bool has_intensity() { return false; }
+
+  void set_scale_mode(scale_mode_t val) { scale_mode.set_enum_value(val); }
+  void set_scale_unit(scale_unit_t val) { scale_unit.set_enum_value(val); }
+  void set_scale_interp(scale_interpolation_t val) { scale_interp.set_enum_value(val); }
+  void set_scale_width_pixels(int val) { scale_width_pixels.update(val); }
+  void set_scale_height_pixels(int val) { scale_height_pixels.update(val); }
+  void set_scale_width_inches(float val) { scale_width_inches.update(val); }
+  void set_scale_height_inches(float val) { scale_height_inches.update(val); }
 
   std::vector< std::pair<int,int> >& get_rotation_points() { return rotation_points.get(); }
 

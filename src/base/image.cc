@@ -42,6 +42,8 @@
 //#include "../operations/convert2srgb.hh"
 //#include "../operations/convertformat.hh"
 #include "../operations/icc_transform.hh"
+#include "../operations/scale.hh"
+#include "../operations/sharpen.hh"
 //#include "../operations/gmic/gmic_untiled_op.hh"
 
 #define BENCHMARK
@@ -125,6 +127,8 @@ PF::Image::Image():
   //convert2srgb = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   convert_format = new_convert_format();
   convert2outprof = new_icc_transform();
+  resize = new_scale();
+  sharpen = new_sharpen();
 
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
@@ -1014,7 +1018,7 @@ bool PF::Image::save_backup()
 
 
 
-void PF::Image::export_merged( std::string filename )
+void PF::Image::export_merged( std::string filename, image_export_opt_t* export_opt )
 {
   if( PF::PhotoFlow::Instance().is_batch() ) {
     do_export_merged( filename );
@@ -1024,6 +1028,11 @@ void PF::Image::export_merged( std::string filename )
     request.request = PF::IMAGE_EXPORT;
     request.area.width = request.area.height = 0;
     request.filename = filename;
+    request.data = NULL;
+    if( export_opt ) {
+      request.data = malloc(sizeof(image_export_opt_t));
+      memcpy(request.data, export_opt, sizeof(image_export_opt_t));
+    }
 
 #ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): locking mutex..."<<std::endl;
@@ -1046,7 +1055,7 @@ void PF::Image::export_merged( std::string filename )
 }
 
 
-void PF::Image::do_export_merged( std::string filename )
+void PF::Image::do_export_merged( std::string filename, image_export_opt_t* export_opt )
 {
   std::string ext;
   if( getFileExtension( "/", filename, ext ) &&
@@ -1096,6 +1105,86 @@ void PF::Image::do_export_merged( std::string filename )
     bool saved = false;
 
     std::vector<VipsImage*> in;
+
+    if( export_opt ) std::cout<<"  output size: "<<export_opt->size<<std::endl;
+    if( export_opt && export_opt->size != PF::SIZE_ORIGINAL ) {
+      PF::ScalePar* op_par =
+          dynamic_cast<PF::ScalePar*>( resize->get_par() );
+      in.clear();
+      in.push_back( image );
+      op_par->set_image_hints( image );
+      op_par->set_format( VIPS_FORMAT_FLOAT );
+      op_par->set_scale_mode(PF::SCALE_MODE_FIT);
+      op_par->set_scale_unit(PF::SCALE_UNIT_PX);
+      op_par->set_scale_interp(PF::SCALE_INTERP_LANCZOS3);
+      int width = 0, height = 0;
+      switch(export_opt->size) {
+      case PF::SIZE_800_600: width=800; height=600; break;
+      case PF::SIZE_1280_720: width=1280; height=720; break;
+      case PF::SIZE_1280_800: width=1280; height=800; break;
+      case PF::SIZE_1280_1024: width=1280; height=1024; break;
+      case PF::SIZE_1440_900: width=1440; height=900; break;
+      case PF::SIZE_1600_1200: width=1600; height=1200; break;
+      case PF::SIZE_2K: width=2048; height=1080; break;
+      case PF::SIZE_4K: width=3840; height=2160; break;
+      case PF::SIZE_5K: width=5120; height=2880; break;
+      case PF::SIZE_8K: width=7680; height=4320; break;
+      case PF::SIZE_A4_300DPI: width=3508; height=2480; break;
+      case PF::SIZE_A4P_300DPI: width=2480; height=3508; break;
+      default: break;
+      }
+      std::cout<<"  width="<<width<<"  height="<<height<<std::endl;
+      if( width>0 && height>0 ) {
+        op_par->set_scale_width_pixels(width);
+        op_par->set_scale_height_pixels(height);
+        VipsImage* out = op_par->build( in, 0, NULL, NULL, level );
+        PF_UNREF( image, "Image::do_export_merged(): image unref" );
+        image = out;
+      }
+    }
+
+    if( export_opt && export_opt->sharpen_amount > 0 ) {
+      VipsImage* base = image;
+      PF::SharpenPar* op_par =
+          dynamic_cast<PF::SharpenPar*>( sharpen->get_par() );
+      in.clear();
+      in.push_back( image );
+      op_par->set_image_hints( image );
+      op_par->set_format( VIPS_FORMAT_FLOAT );
+      op_par->set_usm_radius(export_opt->sharpen_radius);
+      VipsImage* out = op_par->build( in, 0, NULL, NULL, level );
+      PF_UNREF( image, "Image::do_export_merged(): image unref" );
+      image = out;
+    }
+
+    PF::ICCProfile* iccprof = NULL;
+    if( export_opt ) {
+      if( export_opt->profile_type == PF::PROF_TYPE_FROM_DISK ) {
+        iccprof = PF::ICCStore::Instance().get_profile( export_opt->custom_profile_name );
+      } else {//if( pmode == PF::PROF_MODE_CUSTOM ) {
+        iccprof = PF::ICCStore::Instance().get_profile( export_opt->profile_type, export_opt->trc_type );
+      }
+    }
+
+    if( iccprof ) {
+      PF::ICCTransformPar* tr_par =
+          dynamic_cast<PF::ICCTransformPar*>( convert2outprof->get_par() );
+      in.clear();
+      in.push_back( image );
+      tr_par->set_image_hints( image );
+      tr_par->set_format( VIPS_FORMAT_FLOAT );
+      tr_par->set_out_profile( iccprof );
+      tr_par->set_bpc( export_opt->bpc );
+      tr_par->set_adaptation_state( 0 );
+      tr_par->set_clip_negative(false);
+      tr_par->set_clip_overflow(false);
+      VipsImage* out = tr_par->build( in, 0, NULL, NULL, level );
+      PF_UNREF( image, "Image::do_export_merged(): image unref" );
+      image = out;
+      print_embedded_profile( image );
+    }
+
+
     if( ext == "jpg" || ext == "jpeg" ) {
       /*
       in.clear();
@@ -1116,7 +1205,16 @@ void PF::Image::do_export_merged( std::string filename )
         BENCHFUN
         Glib::Timer timer;
         timer.start();
-        vips_jpegsave( outimg, filename.c_str(), "Q", 75, NULL );
+        gint Q = 75;
+        gboolean no_subsample = true;
+        gint quant_table = 0;
+        if( export_opt ) {
+          Q = export_opt->jpeg_quality;
+          no_subsample = export_opt->jpeg_chroma_subsampling;
+          quant_table = export_opt->jpeg_quant_table;
+        }
+        vips_jpegsave( outimg, filename.c_str(), "Q", Q, "no_subsample", no_subsample,
+            "quant_table", quant_table, NULL );
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
         if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
@@ -1128,13 +1226,35 @@ void PF::Image::do_export_merged( std::string filename )
     }
 
     if( ext == "tif" || ext == "tiff" ) {
+      /*
       in.clear();
       in.push_back( image );
       convert_format->get_par()->set_image_hints( image );
       //convert_format->get_par()->set_format( VIPS_FORMAT_USHORT );
       convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
-      PF_UNREF( image, "Image::do_export_merged(): image unref" );
+      */
+      outimg = image;
+      if( export_opt && export_opt->tiff_format != 2 ) {
+        int max = 255;
+        if( export_opt->tiff_format == 1 ) max = 65535;
+        std::cout<<"Image::do_export_merged(): max="<<max<<std::endl;
+        if( !vips_linear1(image, &outimg, max, 0, NULL) ) {
+          PF_UNREF( image, "Image::do_export_merged(): image unref" );
+          image = outimg;
+        } else {
+          std::cout<<"WARNING!!! Image::do_export_merged(): vips_linear1() failed"<<std::endl;
+        }
+
+        VipsBandFormat format = VIPS_FORMAT_UCHAR;
+        if( export_opt->tiff_format == 1 ) format = VIPS_FORMAT_USHORT;
+        if( !vips_cast(image, &outimg, format, NULL) ) {
+          PF_UNREF( image, "Image::do_export_merged(): image unref" );
+          image = outimg;
+        } else {
+          std::cout<<"WARNING!!! Image::do_export_merged(): vips_cast() failed"<<std::endl;
+        }
+      }
       std::cout<<"Image::do_export_merged(): saving TIFF file "<<filename<<"   outimg="<<outimg<<std::endl;
       if( outimg ) {
         int predictor = 2;
@@ -1226,6 +1346,8 @@ void PF::Image::do_export_merged( std::string filename )
     delete pipeline;
     //layer_manager.reset_cache_buffers( PF_RENDER_NORMAL, true );
     std::cout<<"Image saved to file "<<filename<<std::endl;
+
+    if( export_opt ) free(export_opt);
   }
 }
 
@@ -1407,9 +1529,9 @@ void PF::Image::export_merged_to_tiff( const std::string filename )
   PF::Pipeline* pipeline = add_pipeline( VIPS_FORMAT_FLOAT, 0, PF_RENDER_NORMAL );
   if( pipeline ) pipeline->set_op_caching_enabled( true );
   update( pipeline, true );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"Image::export_merged_to_tiff(): image updated."<<std::endl;
-#endif
+//#endif
 
   void* out_iccdata;
   size_t out_iccsize;
@@ -1461,7 +1583,11 @@ void PF::Image::export_merged_to_tiff( const std::string filename )
     vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
         "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
     //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
-    std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
+    std::cout<<"Image::do_export_merged(): vips_tiffsave() finished: "<<filename<<std::endl;
+    char tstr[500];
+    snprintf(tstr, 499, "ls -lh %s", filename.c_str());
+    std::cout<<tstr<<":"<<std::endl;
+    system(tstr);
 
     msg = std::string("PF::Image::export_merged_to_tiff(): outimg unref");
     PF_UNREF( outimg, msg.c_str() );

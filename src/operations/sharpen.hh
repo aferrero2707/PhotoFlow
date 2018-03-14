@@ -58,6 +58,8 @@ namespace PF
     bool has_intensity() { return false; }
     bool needs_caching();
     bool has_target_channel() { return true; }
+
+    void set_usm_radius(float val) { usm_radius.update(val); }
       
     void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
     void propagate_settings();

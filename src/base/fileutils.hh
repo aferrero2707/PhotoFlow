@@ -37,8 +37,10 @@
 namespace PF
 {
 
-  bool getFileExtension(const std::string dir_separator, const std::string file, std::string & ext);
+bool getFileExtension(const std::string dir_separator, const std::string file, std::string & ext);
+std::string replaceFileExtension(const std::string file, std::string ext);
   bool getFileExtensionLowcase(const std::string dir_separator, const std::string file, std::string & ext);
   bool getFileName(const std::string dir_separator, const std::string file, std::string & name);
+  bool getDirName(const std::string dir_separator, const std::string file, std::string & name);
 
 }

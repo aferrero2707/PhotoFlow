@@ -49,6 +49,21 @@ bool PF::getFileExtension(const std::string dir_separator, const std::string fil
 
 
 
+std::string PF::replaceFileExtension(const std::string file, std::string ext)
+{
+  std::string result;
+  std::size_t ext_pos = file.rfind(".");
+
+  if(ext_pos>0) {
+    result.append(file.begin(), file.begin()+ext_pos+1);
+    result += ext;
+  }
+
+  return result;
+}
+
+
+
 bool PF::getFileExtensionLowcase(const std::string dir_separator, const std::string file, std::string & ext)
 {
   if(!getFileExtension(dir_separator, file, ext)) return false;
@@ -75,5 +90,15 @@ bool PF::getFileName(const std::string dir_separator, const std::string file, st
   }
 
   return false;
+}
+
+
+
+bool PF::getDirName(const std::string dir_separator, const std::string file, std::string & name)
+{
+  gchar* dirname = g_path_get_dirname( file.c_str() );
+  name = dirname;
+  g_free( dirname );
+  return true;
 }
 
