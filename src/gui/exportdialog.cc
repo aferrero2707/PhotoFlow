@@ -102,7 +102,7 @@ Glib::ustring PF::TextSelector::get_active_text()
 
 PF::ExportDialog::ExportDialog():
 Gtk::Dialog( _("Export image"),false),
-file_button(_("Open")),
+file_button(_("Export as...")),
 export_format_selector(_("format:")),
 jpeg_quant_table_selector(_("quantization table:")),
 tiff_format_selector(_("file format:")),
