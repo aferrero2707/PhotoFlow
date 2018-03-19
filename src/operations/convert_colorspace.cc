@@ -295,6 +295,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     tr_par->set_image_hints( image );
     tr_par->set_format( get_format() );
     tr_par->set_out_profile( iccprof );
+    tr_par->set_intent(intent.get_enum_value().first);
     tr_par->set_bpc( bpc.get() );
     tr_par->set_adaptation_state( adaptation_state.get() );
     tr_par->set_clip_negative(clip_negative.get());
