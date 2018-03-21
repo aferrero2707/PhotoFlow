@@ -655,6 +655,8 @@ void PF::LayerManager::init_pipeline( PF::Pipeline* pipeline, std::list<Layer*>&
 
     if( !l ) continue;
 
+    std::cout<<"LayerManager::init_pipeline(): adding layer \""
+        <<l->get_name()<<"\""<<std::endl;
     // Detect "pathological" conditions
     g_assert( l->get_processor() != NULL );
     g_assert( l->get_processor()->get_par() != NULL );

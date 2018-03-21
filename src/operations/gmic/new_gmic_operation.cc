@@ -65,6 +65,10 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_tone_mapping();
   } else if( op_type == "gmic_transfer_colors" ) {
     processor = new_gmic_transfer_colors();
+  } else if( op_type == "gmic_gradient_norm" ) {
+    processor = new_gmic_gradient_norm();
+  } else if( op_type == "gmic_sharpen_rl" ) {
+    processor = new_gmic_sharpen_rl();
 /*
   } else if( op_type == "gmic_denoise" ) {
     processor = new_gmic_denoise();
@@ -96,10 +100,6 @@ PF::ProcessorBase* PF::new_gmic_operation( std::string op_type )
     processor = new_gmic_inpaint();
   } else if( op_type == "gmic_convolve" ) {
     processor = new_gmic_convolve();
-  } else if( op_type == "gmic_gradient_norm" ) {
-    processor = new_gmic_gradient_norm();
-  } else if( op_type == "gmic_sharpen_rl" ) {
-    processor = new_gmic_sharpen_rl();
   } else if( op_type == "gmic_split_details" ) {
     processor = new_gmic_split_details();
   } else if( op_type == "gmic_watermark_fourier" ) {

@@ -340,14 +340,14 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_gmic.get_tree().add_op( _("Smooth [non-local means]"), "gmic_smooth_nlmeans" );
   op_gmic.get_tree().add_op( _("Smooth [anisotropic]"), "gmic_smooth_anisotropic" );
   op_gmic.get_tree().add_op( _("Smooth [bilateral]"), "gmic_blur_bilateral" );
-  op_gmic.get_tree().add_op( _("Smooth [diffusion]"), "gmic_smooth_diffusion" );
-  op_gmic.get_tree().add_op( _("Smooth [mean-curvature]"), "gmic_smooth_mean_curvature" );
-  op_gmic.get_tree().add_op( _("Smooth [median]"), "gmic_smooth_median" );
-  op_gmic.get_tree().add_op( _("Smooth [patch-based]"), "gmic_denoise" );
-  op_gmic.get_tree().add_op( _("Smooth [selective gaussian]"), "gmic_smooth_selective_gaussian" );
-  op_gmic.get_tree().add_op( _("Smooth [total variation]"), "gmic_smooth_total_variation" );
-  op_gmic.get_tree().add_op( _("Smooth [wavelets]"), "gmic_smooth_wavelets_haar" );
-  op_gmic.get_tree().add_op( _("Smooth [guided]"), "gmic_smooth_guided" );
+  //op_gmic.get_tree().add_op( _("Smooth [diffusion]"), "gmic_smooth_diffusion" );
+  //op_gmic.get_tree().add_op( _("Smooth [mean-curvature]"), "gmic_smooth_mean_curvature" );
+  //op_gmic.get_tree().add_op( _("Smooth [median]"), "gmic_smooth_median" );
+  //op_gmic.get_tree().add_op( _("Smooth [patch-based]"), "gmic_denoise" );
+  //op_gmic.get_tree().add_op( _("Smooth [selective gaussian]"), "gmic_smooth_selective_gaussian" );
+  //op_gmic.get_tree().add_op( _("Smooth [total variation]"), "gmic_smooth_total_variation" );
+  //op_gmic.get_tree().add_op( _("Smooth [wavelets]"), "gmic_smooth_wavelets_haar" );
+  //op_gmic.get_tree().add_op( _("Smooth [guided]"), "gmic_smooth_guided" );
   op_gmic.get_tree().add_op( _("Tone mapping"), "gmic_tone_mapping" );
   op_gmic.get_tree().add_op( _("Transfer colors [advanced]"), "gmic_transfer_colors" );
 #endif

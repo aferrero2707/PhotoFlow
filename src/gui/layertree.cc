@@ -525,6 +525,18 @@ void PF::LayerTree::update_mask_icons( Gtk::TreeModel::Row row,  PF::Layer* l )
     }
   }
   */
+  if( !l ) {
+    std::cout<<"LayerTree::update_mask_icons(): l==NULL"<<std::endl;
+    return;
+  }
+  if( !l->get_processor() ) {
+    std::cout<<"LayerTree::update_mask_icons(): layer \""<<l->get_name()<<"\" l->get_processor()==NULL"<<std::endl;
+    return;
+  }
+  if( !l->get_processor()->get_par() ) {
+    std::cout<<"LayerTree::update_mask_icons(): layer \""<<l->get_name()<<"\" l->get_processor()->get_par()==NULL"<<std::endl;
+    return;
+  }
   if( l->get_processor()->get_par()->has_opacity() ) {
     if( l->get_omap_layers().empty() ) {
       row[treeModel->columns.col_omap] = Gdk::Pixbuf::create_from_data(icon_white.pixel_data,Gdk::COLORSPACE_RGB,
