@@ -48,7 +48,7 @@ class ImageEditor;
 class ControlsGroup: public Gtk::VBox
 {
   ImageEditor* editor;
-  std::vector<Gtk::Frame*> controls;
+  std::vector<Gtk::Widget*> controls;
   std::vector<PF::OperationConfigGUI*> guis;
 
 public:
@@ -64,6 +64,30 @@ public:
   void collapse_all();
   /**/
   //void set_controls( std::vector<Gtk::Frame*>& new_controls);
+};
+
+class AuxControlsGroup: public Gtk::VBox
+{
+  ImageEditor* editor;
+  Gtk::Widget* controls;
+  PF::OperationConfigGUI* gui;
+
+public:
+  AuxControlsGroup( ImageEditor* editor );
+  void clear();
+  void update();
+  void set_control(PF::Layer* layer, PF::OperationConfigGUI* control);
+};
+
+
+class ControlsDialog: public Gtk::Dialog
+{
+  ImageEditor* editor;
+  PF::OperationConfigGUI* gui;
+public:
+  ControlsDialog( ImageEditor* editor );
+  void set_controls(PF::Layer* l);
+  void update();
 };
 
 
@@ -90,12 +114,15 @@ class LayerWidget : public Gtk::VBox
   //Gtk::Notebook notebook;
   Gtk::ScrolledWindow controls_scrolled_window;
   ControlsGroup controls_group;
+  AuxControlsGroup aux_controls_group;
   //Gtk::HButtonBox buttonbox;
   Gtk::HBox buttonbox;
   Gtk::Button buttonAdd, buttonAddGroup, buttonDel;
   Gtk::Button buttonPresetLoad, buttonPresetSave;
   Gtk::Dialog layersDialog;
   OperationsTreeDialog operationsDialog;
+
+  ControlsDialog* controls_dialog;
 
   Gtk::VBox tool_buttons_box;
   ToolButton add_button, group_button, trash_button, insert_image_button, curves_button;
@@ -104,6 +131,8 @@ class LayerWidget : public Gtk::VBox
 
   std::vector<Gtk::ScrolledWindow*> layer_frames;
   std::vector<LayerTree*> layer_views;
+
+  bool floating_tool_dialogs;
 
   int get_selected_layer_id();
   bool get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::TreeModel::iterator& iter);

@@ -47,12 +47,14 @@ image( NULL )
   std::cout<<"RasterImage::RasterImage(): trying to open file \""<<file_name_real<<"\""<<std::endl;
   int ifd = open( file_name_real.c_str(), O_RDONLY );
   if( ifd < 0 ) {
+    std::cout<<"RasterImage::RasterImage(): file \""<<file_name_real<<"\" not found"<<std::endl;
     char* fullpath = strdup( file_name_real.c_str() );
     //gchar* fname = g_path_get_basename( fullpath );
     gchar* fname = PF::pf_path_get_basename( fullpath );
+    std::cout<<"                      current image dir: \""<<PF::PhotoFlow::Instance().get_current_image_dir().c_str()<<"\""<<std::endl;
+    std::cout<<"                      basename: \""<<fname<<"\""<<std::endl;
     gchar* fname2 = g_build_filename( PF::PhotoFlow::Instance().get_current_image_dir().c_str(),
         fname, NULL );
-    std::cout<<"RasterImage::RasterImage(): file \""<<file_name_real<<"\" not found"<<std::endl;
     std::cout<<"                      trying with \""<<fname2<<"\""<<std::endl;
     ifd = open( fname2, O_RDONLY );
     if( ifd < 0 ) {

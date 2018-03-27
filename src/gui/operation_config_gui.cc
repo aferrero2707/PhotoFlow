@@ -89,11 +89,13 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   PF::OperationConfigUI(layer),
   editor( NULL ),
   blendSelector( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH, 55 ),
-  blendSelector2( this, layer->get_blender(), "mask_blend_mode", "", PF_BLEND_NORMAL, 55 ),
+  blendSelector2( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH, 55 ),
+  blendSelectorMask( this, layer->get_blender(), "mask_blend_mode", "", PF_BLEND_NORMAL, 55 ),
+  blendSelectorMask2( this, layer->get_blender(), "mask_blend_mode", "", PF_BLEND_NORMAL, 55 ),
   intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   intensitySlider2( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   opacitySlider( this, layer->get_blender(), "opacity", "", 100, 0, 100, 1, 10, 100, 100),
-  opacitySlider2( this, layer->get_blender(), "opacity", _("Opacity"), 100, 0, 100, 1, 10, 100),
+  opacitySlider2( this, layer->get_blender(), "opacity", "", 100, 0, 100, 1, 10, 100),
   imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
   omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
   test_padding_enable_box( this, "enable_padding", _("enable padding"), false),
@@ -167,24 +169,43 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame_top_box_1_1.pack_start( map_buttons, Gtk::PACK_SHRINK );
 
   //frame_box_top.set_spacing(5);
+
+  /********************************************************************************
+   * Layer control buttons - main frame
+   */
   nameEntry.set_has_frame( false );
-  //frame_top_buttons_box.pack_start( frame_visible, Gtk::PACK_SHRINK, 5 );
-  //frame_top_box_1.pack_start( frame_preview, Gtk::PACK_SHRINK, 5 );
-  frame_top_buttons_box.pack_start( frame_mask, Gtk::PACK_SHRINK, 5 );
-  frame_top_buttons_box.pack_start( frame_sticky, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_hbox.pack_start( frame_mask, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_hbox.pack_start( frame_sticky, Gtk::PACK_SHRINK, 5 );
   //frame_top_buttons_box.pack_start( frame_edit, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_undo, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_redo, Gtk::PACK_SHRINK, 5 );
-  frame_top_buttons_box.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
-  frame_top_buttons_box.pack_start( frame_help, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_hbox.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_hbox.pack_start( frame_help, Gtk::PACK_SHRINK, 5 );
 
-  frame_top_buttons_alignment.add( frame_top_buttons_box );
+  frame_top_buttons_alignment.add( frame_top_buttons_hbox );
   frame_top_buttons_alignment.set( 0, 0.5, 0, 0 );
 
   frame_top_box_1_1.pack_start( frame_top_buttons_alignment, Gtk::PACK_SHRINK );
 
+  /********************************************************************************
+   * Layer control buttons - aux frame
+   */
+  nameEntry2.set_has_frame( false );
+  aux_top_buttons_hbox.pack_start( frame_mask2, Gtk::PACK_SHRINK, 5 );
+  aux_top_buttons_hbox.pack_start( frame_sticky2, Gtk::PACK_SHRINK, 5 );
+  //aux_top_buttons_hbox.pack_start( frame_reset2, Gtk::PACK_SHRINK, 5 );
+  aux_top_buttons_hbox.pack_start( frame_help2, Gtk::PACK_SHRINK, 5 );
+
+  aux_top_buttons_alignment.add( aux_top_buttons_hbox );
+  aux_top_buttons_alignment.set( 0, 0.5, 0, 0 );
+
+  aux_controls_hbox_1.pack_start( aux_top_buttons_alignment, Gtk::PACK_SHRINK );
+
+
+  /********************************************************************************
+   */
   if(par && par->has_opacity() ) {
-    frame_top_box_1_1.pack_start( frame_box_2_padding, Gtk::PACK_EXPAND_WIDGET );
+    //frame_top_box_1_1.pack_start( frame_box_2_padding, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_1_1.pack_start( blendSelector, Gtk::PACK_SHRINK );
   }
 
@@ -193,7 +214,11 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame_top_box_1_2.pack_start( frame_box_1_padding, Gtk::PACK_EXPAND_WIDGET );
   //frame_top_box_1_1.pack_start( frame_close, Gtk::PACK_SHRINK, 5 );
 
-  nameEntry.set_text( "layer name" );
+  nameEntry.set_text( _("layer name") );
+
+  aux_controls_hbox_1.pack_start( nameEntry2, Gtk::PACK_EXPAND_WIDGET );
+  nameEntry2.set_text( nameEntry.get_text() );
+
 
   //frame_top_box_1_2.pack_start( map_buttons, Gtk::PACK_SHRINK, 5 );
 
@@ -205,11 +230,16 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   if(par && par->has_opacity() ) {
     //opacitySlider.set_width( 200 );
     opacity_box.pack_end( opacitySlider, Gtk::PACK_SHRINK, 0 );
-    opacity_box.pack_end( blendSelector2, Gtk::PACK_SHRINK, 0 );
+    opacity_box.pack_end( blendSelectorMask, Gtk::PACK_SHRINK, 0 );
     opacity_box.pack_end( blendSelector, Gtk::PACK_SHRINK, 0 );
     frame_top_box_2.pack_start( opacity_box, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( blendSelector, Gtk::PACK_SHRINK );
+
+    aux_opacity_box.pack_end( opacitySlider2, Gtk::PACK_EXPAND_WIDGET, 0 );
+    aux_opacity_box.pack_end( blendSelectorMask2, Gtk::PACK_SHRINK, 0 );
+    aux_opacity_box.pack_end( blendSelector2, Gtk::PACK_SHRINK, 0 );
+    aux_controls_hbox_2.pack_start( aux_opacity_box, Gtk::PACK_EXPAND_WIDGET );
   }
   controls_box.pack_start( frame_top_box_2, Gtk::PACK_SHRINK, 0 );
 
@@ -266,26 +296,11 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   controls_frame.add( controls_evbox );
 
 
-  aux_controls_box.pack_start( aux_controls_hbox, Gtk::PACK_SHRINK );
+  aux_controls_box.pack_start( aux_controls_hbox_1, Gtk::PACK_SHRINK, 5 );
+  aux_controls_box.pack_start( aux_controls_hbox_2, Gtk::PACK_SHRINK, 5 );
 
-  frame_top_buttons_box2.pack_start( frame_mask2, Gtk::PACK_SHRINK, 2 );
-  frame_top_buttons_box2.pack_start( frame_sticky2, Gtk::PACK_SHRINK, 2 );
-  frame_top_buttons_box2.pack_start( frame_help2, Gtk::PACK_SHRINK, 2 );
-
-  frame_top_buttons_alignment2.add( frame_top_buttons_box2 );
-  frame_top_buttons_alignment2.set( 0, 0.5, 0, 0 );
-
-  aux_controls_hbox.pack_start( frame_top_buttons_alignment2, Gtk::PACK_SHRINK );
-
-  nameEntry.set_width_chars(10);
-  nameEntry2.set_width_chars(10);
-  aux_controls_hbox.pack_start( nameEntry2, Gtk::PACK_EXPAND_WIDGET );
-  if(par && par->has_opacity() ) {
-    //aux_controls_hbox.pack_start( blendSelector2, Gtk::PACK_SHRINK );
-    aux_controls_box.pack_start( opacitySlider2, Gtk::PACK_SHRINK );
-  }
   if(false && par && par->has_intensity() ) {
-    aux_controls_box.pack_start( intensitySlider2, Gtk::PACK_SHRINK );
+    //aux_controls_box.pack_start( intensitySlider2, Gtk::PACK_SHRINK );
   }
   aux_controls_box.set_size_request(0,80);
 
@@ -815,7 +830,7 @@ void PF::OperationConfigGUI::on_layer_name2_changed()
     get_layer()->set_name( nameEntry2.get_text() );
     nameEntry.set_text( nameEntry2.get_text() );
     if( editor ) {
-      editor->get_layer_widget().update();
+      editor->get_layer_widget().update(true);
       int pos = nameEntry2.get_position();
       nameEntry2.grab_focus();
       nameEntry2.select_region(0,0);
@@ -832,7 +847,9 @@ void PF::OperationConfigGUI::update_buttons()
   if( par ) {
     if( par->is_map() ) {
       blendSelector.hide();
-      blendSelector2.show();
+      blendSelectorMask.show();
+      blendSelector2.hide();
+      blendSelectorMask2.show();
       //frame_top_buttons_alignment.hide();
       //map_buttons.hide();
       frame_mask.hide();
@@ -840,7 +857,9 @@ void PF::OperationConfigGUI::update_buttons()
       frame_sticky.hide();
     } else {
       blendSelector.show();
-      blendSelector2.hide();
+      blendSelectorMask.hide();
+      blendSelector2.show();
+      blendSelectorMask2.hide();
       //frame_top_buttons_alignment.show();
       //map_buttons.hide();
       frame_mask.show();
@@ -884,6 +903,7 @@ void PF::OperationConfigGUI::open()
 
   if( par ) {
     nameEntry.set_text( get_layer()->get_name().c_str() );
+    nameEntry2.set_text( get_layer()->get_name().c_str() );
 
     values_save.clear();
     par->save_properties( values_save );
@@ -931,7 +951,15 @@ void PF::OperationConfigGUI::do_update()
   old_inhibit = w->get_inhibit();
   w->set_inhibit( true ); w->get_value(); w->set_inhibit( old_inhibit );
 
+  w = &blendSelectorMask;
+  old_inhibit = w->get_inhibit();
+  w->set_inhibit( true ); w->get_value(); w->set_inhibit( old_inhibit );
+
   w = &blendSelector2;
+  old_inhibit = w->get_inhibit();
+  w->set_inhibit( true ); w->get_value(); w->set_inhibit( old_inhibit );
+
+  w = &blendSelectorMask2;
   old_inhibit = w->get_inhibit();
   w->set_inhibit( true ); w->get_value(); w->set_inhibit( old_inhibit );
 
@@ -967,7 +995,7 @@ void PF::OperationConfigGUI::do_update()
       get_layer()->get_processor()->get_par() &&
       get_layer()->get_processor()->get_par()->has_target_channel() ) {
 #ifndef NDEBUG
-    std::cout<<"OperationConfigDialog::update() for "<<get_layer()->get_name()<<" called"<<std::endl;
+    std::cout<<"OperationConfigDialog::do_update() for "<<get_layer()->get_name()<<" called"<<std::endl;
 #endif
 
     PF::colorspace_t cs = PF_COLORSPACE_UNKNOWN;
@@ -1019,6 +1047,7 @@ void PF::OperationConfigGUI::do_update()
 
 void PF::OperationConfigGUI::update()
 {
+  std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
   if( !is_expanded() ) return;
 
   do_update();

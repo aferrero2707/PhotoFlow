@@ -34,6 +34,7 @@
 
 #include "../base/layer.hh"
 
+#define LAYER_COL_NUM 1
 #define OMAP_COL_NUM 2
 #define IMAP_COL_NUM 3
 

@@ -68,7 +68,7 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::Label controlsLabel;
   Gtk::ComboBoxText blendmodeCombo;
 
-  Selector blendSelector, blendSelector2;
+  Selector blendSelector, blendSelector2, blendSelectorMask, blendSelectorMask2;
   Gtk::HBox intensity_box, opacity_box;
   Slider intensitySlider, intensitySlider2, opacitySlider, opacitySlider2;
   CheckBox imap_enabled_box, omap_enabled_box, test_padding_enable_box;
@@ -91,7 +91,6 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::Frame* frame;
   Gtk::Alignment frame_box_1_padding;
   Gtk::Alignment frame_top_buttons_alignment;
-  Gtk::Alignment frame_top_buttons_alignment2;
   Gtk::Alignment frame_box_2_padding;
   Gtk::Alignment frame_box_3_padding;
   Gtk::Alignment frame_box_4_padding;
@@ -100,7 +99,7 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::VBox frame_vbox;
   Gtk::VBox frame_shift_box;
   Gtk::VBox frame_chsel_box;
-  Gtk::HBox frame_top_buttons_box;
+  Gtk::HBox frame_top_buttons_hbox;
   Gtk::HBox frame_top_buttons_box2;
   Gtk::HBox frame_top_box_1_1;
   Gtk::HBox frame_top_box_1_2;
@@ -134,8 +133,11 @@ class OperationConfigGUI: public OperationConfigUI
 
   //ToggleImageButtonsBox map_buttons;
 
+  Gtk::HBox aux_top_buttons_hbox;
+  Gtk::HBox aux_opacity_box;
   Gtk::VBox aux_controls_box;
-  Gtk::HBox aux_controls_hbox;
+  Gtk::HBox aux_controls_hbox_1, aux_controls_hbox_2;
+  Gtk::Alignment aux_top_buttons_alignment;
 
   VipsSemaphore update_done_sem;
 

@@ -207,11 +207,16 @@ public:
   controls_widget(c), preview_widget(p), old_width(0)
   //paned(Gtk::ORIENTATION_VERTICAL)
   {
-    paned.add1( *layers_widget );
-    paned.add2( *controls_widget );
+    if( PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs()) {
+      hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
+      hbox.pack_start( *layers_widget, Gtk::PACK_EXPAND_WIDGET );
+    } else {
+      paned.add1( *layers_widget );
+      paned.add2( *controls_widget );
 
-    hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
-    hbox.pack_start( paned, Gtk::PACK_EXPAND_WIDGET );
+      hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
+      hbox.pack_start( paned, Gtk::PACK_EXPAND_WIDGET );
+    }
 
     vbox.pack_start( *histogram_widget, Gtk::PACK_SHRINK );
     vbox.pack_start( hbox, Gtk::PACK_EXPAND_WIDGET );
@@ -698,9 +703,9 @@ void PF::ImageEditor::open_image()
     }
   }
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"ImageEditor::open_image(): opening image "<<filename<<" ..."<<std::endl;
-#endif
+//#endif
 
   bool load_sidecar = false;
   int sidecar_id = -1;
@@ -905,6 +910,7 @@ void PF::ImageEditor::update_controls()
 
 void PF::ImageEditor::set_aux_controls( Gtk::Widget* aux )
 {
+  return;
   if( aux_controls ) {
     if( aux_controls->get_parent() == &aux_controlsBox ) {
       aux_controlsBox.remove( *aux_controls );

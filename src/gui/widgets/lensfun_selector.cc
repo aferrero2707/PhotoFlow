@@ -655,6 +655,7 @@ void PF::LFSelector::update_lens( Glib::ustring lens_new )
 
 bool PF::LFSelector::my_cam_button_release_event( GdkEventButton* event )
 {
+  std::cout<<"LFSelector::my_cam_button_release_event(): enable="<<enabled<<std::endl;
   if( !enabled ) return false;
   cam_menu.popup(event->button, event->time);
   return false;
