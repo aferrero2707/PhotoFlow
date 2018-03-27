@@ -1786,3 +1786,16 @@ void PF::ImageEditor::on_my_size_allocate(Gtk::Allocation& allocation)
   }
   //return false;
 }
+
+
+
+void PF::ImageEditor::enter()
+{
+  layersWidget.controls_dialog_show();
+}
+
+
+void PF::ImageEditor::exit()
+{
+  layersWidget.controls_dialog_hide();
+}

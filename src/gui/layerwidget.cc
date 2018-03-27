@@ -318,7 +318,8 @@ void PF::AuxControlsGroup::set_control(PF::Layer* layer, PF::OperationConfigGUI*
 
 PF::ControlsDialog::ControlsDialog( ImageEditor* e ): Gtk::Dialog(), editor(e), gui(NULL)
 {
-
+  show_all_children();
+  set_deletable ( false );
 }
 
 
@@ -378,6 +379,21 @@ void PF::ControlsDialog::update()
 }
 
 
+void PF::ControlsDialog::on_hide()
+{
+  std::cout<<"ControlsDialog::on_hide() called."<<std::endl;
+  Gtk::Dialog::on_hide();
+}
+
+
+bool PF::ControlsDialog::on_delete_event( GdkEventAny* any_event )
+{
+  std::cout<<"ControlsDialog::on_delete_event() called."<<std::endl;
+  if(editor) editor->get_layer_widget().controls_dialog_close();
+  return true;
+}
+
+
 
 PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   Gtk::VBox(), 
@@ -396,7 +412,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonPresetLoad( _("Load preset") ),
   buttonPresetSave( _("Save preset") ),
   operationsDialog( image, this ),
-  controls_dialog(NULL),
+  controls_dialog(NULL), controls_dialog_visible(false), controls_dialog_x(-1), controls_dialog_y(-1),
   add_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/add-layer.png", "", image, this),
   group_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/group.png", "", image, this),
   trash_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/trash.png", "", image, this),
@@ -828,18 +844,19 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     std::cout<<"Activated row "<<l->get_name()<<std::endl;
 //#endif
     if( column == layer_views[page]->get_tree().get_column(LAYER_COL_NUM) && floating_tool_dialogs ) {
-      int x = -1, y = -1;
       if( controls_dialog ) {
-        controls_dialog->get_position(x,y);
+        controls_dialog->get_position(controls_dialog_x,controls_dialog_y);
         controls_dialog->hide();
         controls_dialog->set_controls(NULL);
         delete controls_dialog;
         controls_dialog = NULL;
+        controls_dialog_visible = false;
       }
       controls_dialog = new ControlsDialog(editor);
       controls_dialog->set_gravity( Gdk::GRAVITY_STATIC );
       controls_dialog->set_controls(l);
-      if(x>=0 && y>=0) controls_dialog->move(x,y);
+      if(controls_dialog_x>=0 && controls_dialog_y>=0)
+        controls_dialog->move(controls_dialog_x,controls_dialog_y);
       Gtk::Container* toplevel = get_toplevel();
       Gtk::Window* toplevelwin = NULL;
     #ifdef GTKMM_2
@@ -850,6 +867,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     #endif
         toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
       if( toplevelwin ) controls_dialog->set_transient_for(*toplevelwin);
+      controls_dialog_visible = true;
       controls_dialog->show();
     }
     if( column == layer_views[page]->get_tree().get_column(IMAP_COL_NUM) ) {
@@ -1129,6 +1147,28 @@ void PF::LayerWidget::remove_tab( Gtk::Widget* widget )
 //#endif
 }
 */
+
+
+void PF::LayerWidget::controls_dialog_show()
+{
+  if( controls_dialog && controls_dialog_visible ) controls_dialog->show();
+}
+
+void PF::LayerWidget::controls_dialog_hide()
+{
+  if( controls_dialog && controls_dialog_visible ) controls_dialog->hide();
+}
+
+void PF::LayerWidget::controls_dialog_close()
+{
+  if( !controls_dialog ) return;
+  controls_dialog->get_position(controls_dialog_x,controls_dialog_y);
+  controls_dialog->hide();
+  controls_dialog->set_controls(NULL);
+  delete controls_dialog;
+  controls_dialog = NULL;
+  controls_dialog_visible = false;
+}
 
 
 void PF::LayerWidget::on_button_add()

@@ -88,6 +88,8 @@ public:
   ControlsDialog( ImageEditor* editor );
   void set_controls(PF::Layer* l);
   void update();
+  void on_hide();
+  bool on_delete_event( GdkEventAny* any_event );
 };
 
 
@@ -123,6 +125,8 @@ class LayerWidget : public Gtk::VBox
   OperationsTreeDialog operationsDialog;
 
   ControlsDialog* controls_dialog;
+  bool controls_dialog_visible;
+  int controls_dialog_x, controls_dialog_y;
 
   Gtk::VBox tool_buttons_box;
   ToolButton add_button, group_button, trash_button, insert_image_button, curves_button;
@@ -201,6 +205,10 @@ public:
     signal_update.emit();
   }
 
+
+  void controls_dialog_show();
+  void controls_dialog_hide();
+  void controls_dialog_close();
 
   //bool on_button_event( GdkEventButton* button );
 

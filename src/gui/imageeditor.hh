@@ -267,6 +267,11 @@ public:
   bool zoom_fit();
   void zoom_actual_size();
 
+  // Functions called when switching in and out of the current editor in the
+  // main window's notebook
+  void enter();
+  void exit();
+
   Glib::ustring get_last_exported_file() { return last_exported_file; }
   void set_last_exported_file( Glib::ustring name ) { last_exported_file = name; }
 };
