@@ -123,6 +123,8 @@ enum export_format_t
 #endif
     NumEntry scale_width_pixels_entry;
     NumEntry scale_height_pixels_entry;
+    Gtk::HBox resize_sharpening_label_hbox;
+    Gtk::CheckButton resize_sharpening_check;
     Gtk::Label resize_sharpening_label;
     Gtk::HBox resize_sh_radius_hbox;
     Gtk::Label resize_sh_radius_label;

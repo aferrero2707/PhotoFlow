@@ -223,8 +223,11 @@ export_format(PF::EXPORT_FORMAT_JPEG)
   //resize_vbox.pack_start( scale_pixels_box, Gtk::PACK_SHRINK );
 
 
+  resize_sharpening_check.set_active(false);
+  resize_sharpening_label_hbox.pack_start( resize_sharpening_check, Gtk::PACK_SHRINK, 5 );
   resize_sharpening_label.set_text(_("post-resize sharpening"));
-  resize_vbox.pack_start( resize_sharpening_label, Gtk::PACK_SHRINK, 5 );
+  resize_sharpening_label_hbox.pack_start( resize_sharpening_label, Gtk::PACK_SHRINK, 5 );
+  resize_vbox.pack_start( resize_sharpening_label_hbox, Gtk::PACK_SHRINK, 5 );
   resize_sh_radius_label.set_text(_("radius:"));
   resize_sh_radius_hbox.pack_start( resize_sh_radius_label, Gtk::PACK_SHRINK, 2 );
   resize_sh_radius_scale.set_range(0,5);
@@ -266,6 +269,7 @@ export_format(PF::EXPORT_FORMAT_JPEG)
   icc_vbox.pack_start( icc_intent, Gtk::PACK_SHRINK, 5 );
   icc_bpc_label.set_text(_("black point compensation:"));
   icc_bpc_hbox.pack_start( icc_bpc_label, Gtk::PACK_SHRINK, 2 );
+  icc_bpc_check.set_active(true);
   icc_bpc_hbox.pack_start( icc_bpc_check, Gtk::PACK_SHRINK, 2 );
   icc_vbox.pack_start( icc_bpc_hbox, Gtk::PACK_SHRINK, 5 );
   icc_file_hbox.pack_start( icc_file_button, Gtk::PACK_SHRINK, 4 );
@@ -408,6 +412,9 @@ void PF::ExportDialog::on_button_clicked(int id)
       options.tiff_format = tiff_format_selector.get_active_id();
       options.tiff_compress = tiff_compressed_check.get_active();
       options.size = (PF::export_size_t)size_selector.get_active_id();
+      options.sharpen_enabled = resize_sharpening_check.get_active();
+      options.sharpen_radius = resize_sh_radius_scale.get_value();
+      options.sharpen_amount = 100;
       options.profile_type = (profile_type_t)icc_profile.get_active_id();
       options.trc_type = (TRC_type)icc_trc.get_active_id();
       options.bpc = icc_bpc_check.get_active();

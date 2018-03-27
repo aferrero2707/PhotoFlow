@@ -1143,7 +1143,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       }
     }
 
-    if( export_opt && export_opt->sharpen_amount > 0 ) {
+    if( export_opt && export_opt->sharpen_enabled ) {
       VipsImage* base = image;
       PF::SharpenPar* op_par =
           dynamic_cast<PF::SharpenPar*>( sharpen->get_par() );

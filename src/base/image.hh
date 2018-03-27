@@ -72,6 +72,7 @@ struct image_export_opt_t
   int tiff_format;
   bool tiff_compress;
   export_size_t size;
+  bool sharpen_enabled;
   float sharpen_radius;
   float sharpen_amount;
   profile_type_t profile_type;
