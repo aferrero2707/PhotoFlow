@@ -42,8 +42,8 @@ in_trc_type("in_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
 in_profile_name("in_profile_name",this),
 //out_profile_mode("out_profile_mode",this,PF::PROF_TYPE_EMBEDDED,"EMBEDDED",_("same")),
 out_profile_mode("out_profile_mode",this,PF::PROF_MODE_DEFAULT,"DEFAULT",_("default")),
-//out_profile_type("out_profile_type",this,PF::PROF_TYPE_REC2020,"REC2020",_("Rec.2020")),
-out_profile_type("out_profile_type",this,PF::PROF_TYPE_EMBEDDED,"EMBEDDED",_("use input")),
+out_profile_type("out_profile_type",this,PF::PROF_TYPE_REC2020,"REC2020",_("Rec.2020")),
+//out_profile_type("out_profile_type",this,PF::PROF_TYPE_EMBEDDED,"EMBEDDED",_("use input")),
 out_trc_type("out_trc_type",this,PF::PF_TRC_LINEAR,"TRC_LINEAR","linear"),
 out_profile_name("out_profile_name",this),
 image(NULL),
@@ -72,6 +72,7 @@ raster_image( NULL )
   out_profile_mode.add_enum_value(PF::PROF_MODE_CUSTOM,"CUSTOM",_("custom"));
   out_profile_mode.add_enum_value(PF::PROF_MODE_ICC,"ICC",_("ICC from disk"));
 
+  out_profile_type.add_enum_value(PF::PROF_TYPE_EMBEDDED,"EMBEDDED",_("use input"));
   out_profile_type.add_enum_value(PF::PROF_TYPE_sRGB,"sRGB","sRGB");
   out_profile_type.add_enum_value(PF::PROF_TYPE_REC2020,"REC2020","Rec.2020");
   out_profile_type.add_enum_value(PF::PROF_TYPE_ADOBE,"ADOBE","Adobe RGB 1998");
