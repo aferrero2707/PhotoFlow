@@ -78,7 +78,8 @@ std::string PF::replace_file_extension(std::string file, std::string new_ext)
 gchar* PF::pf_path_get_basename( const gchar *file_name )
 {
   size_t len = strlen( file_name );
-  for(size_t i = len-1; i >= 0; i--) {
+  for(int i = len-1; i >= 0; i--) {
+    //printf("pf_path_get_basename(): i=%d name=\"%s\"\n",i,&(file_name[i]));
     if( file_name[i] == '/' || file_name[i] == '\\' ) {
       if( i == 0 ) return g_strdup( &(file_name[i+1]) );
       if( file_name[i-1] != '\\' ) {
@@ -89,6 +90,7 @@ gchar* PF::pf_path_get_basename( const gchar *file_name )
       }
     }
   }
+  return g_strdup( &(file_name[0]) );
 }
 
 
