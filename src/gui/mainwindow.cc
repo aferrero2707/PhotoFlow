@@ -1245,11 +1245,13 @@ void PF::MainWindow::on_my_switch_page(
 #endif
     guint page_num)
 {
+  for(unsigned int i = 0; i < image_editors.size(); i++) image_editors[i]->exit();
   Gtk::Widget* widget = viewerNotebook.get_nth_page( page_num );
   if( widget ) {
     PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
     if( editor && editor->get_image() ) {
       PF::PhotoFlow::Instance().set_active_image( editor->get_image() );
+      editor->enter();
       //std::cout<<"MainWindow: image #"<<page_num<<" activated"<<std::endl;
     }
   }
