@@ -101,6 +101,10 @@ class SettingsDialog : public Gtk::Dialog
   Gtk::Label ui_layers_list_on_right_label;
   Gtk::CheckButton ui_layers_list_on_right_check;
 
+  Gtk::HBox ui_floating_tool_dialogs_hbox;
+  Gtk::Label ui_floating_tool_dialogs_label;
+  Gtk::CheckButton ui_floating_tool_dialogs_check;
+
 public:
   sigc::signal<void> signal_cm_modified;
 
