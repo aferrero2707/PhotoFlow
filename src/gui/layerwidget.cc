@@ -325,6 +325,7 @@ PF::ControlsDialog::ControlsDialog( ImageEditor* e ): Gtk::Dialog(), editor(e), 
 
 void PF::ControlsDialog::set_controls(PF::Layer* l)
 {
+  bool needs_update = false;
   if( gui && gui->get_frame()) {
     gui->collapse();
 #ifdef GTKMM_3
@@ -332,25 +333,38 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
 #else
     get_vbox()->remove( *(gui->get_frame()) );
 #endif
+    PF::OpParBase* par = gui->get_par();
+    if( par ) {
+      par->set_editing_flag( false );
+    }
+    if( gui->has_editing_mode() ) needs_update = true;
   }
 
   std::cout<<"ControlsDialog::set_controls(): l="<<l<<std::endl;
-  if( !l ) return;
+  if( !l ) {if(needs_update) editor->get_image()->update(); return;}
   std::cout<<"ControlsDialog::set_controls(): l->get_processor()="<<l->get_processor()<<std::endl;
-  if( !l->get_processor() ) return;
+  if( !l->get_processor() ) {if(needs_update) editor->get_image()->update(); return;}
   std::cout<<"ControlsDialog::set_controls(): l->get_processor()->get_par()="<<l->get_processor()->get_par()<<std::endl;
-  if( !l->get_processor()->get_par() ) return;
+  if( !l->get_processor()->get_par() ) {if(needs_update) editor->get_image()->update(); return;}
   std::cout<<"ControlsDialog::set_controls(): l->get_processor()->get_par()->get_config_ui()="<<l->get_processor()->get_par()->get_config_ui()<<std::endl;
-  if( !l->get_processor()->get_par()->get_config_ui() ) return;
+  if( !l->get_processor()->get_par()->get_config_ui() ) {
+    if(needs_update) editor->get_image()->update(); return;
+  }
   PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
   gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
   std::cout<<"ControlsDialog::set_controls(): gui="<<gui<<std::endl;
-  if( !gui ) return;
+  if( !gui ) {if(needs_update) editor->get_image()->update(); return;}
   std::cout<<"ControlsDialog::set_controls(): gui->get_frame()="<<gui->get_frame()<<std::endl;
-  if( !gui->get_frame() ) return;
+  if( !gui->get_frame() ) {if(needs_update) editor->get_image()->update(); return;}
 
   gui->open();
   gui->expand();
+
+  PF::OpParBase* par = gui->get_par();
+  if( par ) {
+    par->set_editing_flag( true );
+  }
+  if( gui->has_editing_mode() ) needs_update = true;
 
   Gtk::Widget* controls = gui->get_frame();
   std::cout<<"ControlsDialog::set_controls(\""<<l->get_name()<<"\"): controls="<<controls<<std::endl;
@@ -362,6 +376,10 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
 #endif
     //controls->show_all();
   }
+
+  if( needs_update || gui->has_editing_mode() )
+    editor->get_image()->update();
+
 }
 
 
