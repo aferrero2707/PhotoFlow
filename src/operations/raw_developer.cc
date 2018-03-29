@@ -58,7 +58,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   enable_tca( "lf_enable_tca", this, false ),
   enable_vignetting( "lf_enable_vignetting", this, false ),
   enable_all( "lf_enable_all", this, false ),
-  tca_method("tca_method",this,PF::PF_TCA_CORR_PROFILED_AUTO,"TCA_CORR_PROFILED_AUTO",_("profiled + auto")),
+  tca_method("tca_method",this,PF::PF_TCA_CORR_AUTO,"TCA_CORR_AUTO",_("auto")),
   demo_method("demo_method",this,PF::PF_DEMO_AMAZE,"AMAZE","Amaze"),
 	fcs_steps("fcs_steps",this,0),
   hlreco_mode("hlreco_mode",this,PF::HLRECO_CLIP,"HLRECO_CLIP",_("clip")),
