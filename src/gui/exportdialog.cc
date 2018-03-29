@@ -258,13 +258,14 @@ export_format(PF::EXPORT_FORMAT_JPEG)
   icc_profile.add_entry(_("custom"), PF::PROF_TYPE_FROM_DISK);
   icc_profile.set_active(PF::PROF_TYPE_sRGB);
   icc_vbox.pack_start( icc_profile, Gtk::PACK_SHRINK, 5 );
-  icc_trc.add_entry("standard", 0);
-  icc_trc.add_entry("linear", 1);
+  icc_trc.add_entry("standard", PF::PF_TRC_STANDARD);
+  icc_trc.add_entry("linear", PF::PF_TRC_LINEAR);
   icc_trc.set_active(0);
   icc_vbox.pack_start( icc_trc, Gtk::PACK_SHRINK, 5 );
-  icc_intent.add_entry("relative colorimetric", 0);
-  icc_intent.add_entry("perceptual", 1);
-  icc_intent.add_entry("absolute colorimetric", 2);
+  icc_intent.add_entry("relative colorimetric", INTENT_RELATIVE_COLORIMETRIC);
+  icc_intent.add_entry("perceptual", INTENT_PERCEPTUAL);
+  icc_intent.add_entry("saturation", INTENT_SATURATION);
+  icc_intent.add_entry("absolute colorimetric", INTENT_ABSOLUTE_COLORIMETRIC);
   icc_intent.set_active(0);
   icc_vbox.pack_start( icc_intent, Gtk::PACK_SHRINK, 5 );
   icc_bpc_label.set_text(_("black point compensation:"));
@@ -417,6 +418,7 @@ void PF::ExportDialog::on_button_clicked(int id)
       options.sharpen_amount = 100;
       options.profile_type = (profile_type_t)icc_profile.get_active_id();
       options.trc_type = (TRC_type)icc_trc.get_active_id();
+      options.intent = (cmsUInt32Number)icc_intent.get_active_id();
       options.bpc = icc_bpc_check.get_active();
       editor->get_image()->export_merged( file_entry.get_text(), &options );
       editor->set_last_exported_file( file_entry.get_text() );

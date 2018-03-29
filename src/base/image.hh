@@ -77,6 +77,7 @@ struct image_export_opt_t
   float sharpen_amount;
   profile_type_t profile_type;
   TRC_type trc_type;
+  cmsUInt32Number intent;
   bool bpc;
   Glib::ustring custom_profile_name;
 };
