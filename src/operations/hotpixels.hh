@@ -188,7 +188,7 @@ namespace PF
         PF::RawMatrixRow in2( p_in2 );
         PF::RawMatrixRow out( p_out );
 
-        for(int col = 2; col < iwidth - 2; col++)
+        for(int col = 2; col < owidth - 2; col++)
         {
           float mid = in[col] * multiplier;
           if(in[col] > threshold)
