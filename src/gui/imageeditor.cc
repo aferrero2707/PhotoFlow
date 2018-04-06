@@ -274,15 +274,15 @@ PF::ImageEditor::ImageEditor( std::string fname ):
         aux_controls( NULL ),
         soft_proof_enable_button( _("soft proof.") ),
         softproof_dialog( NULL ),
-        img_zoom_in(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"),
-        img_zoom_out(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-out.png"),
-        img_zoom_fit(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-fit.png"),
+        img_zoom_in(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-zoom-in.png"),
+        img_zoom_out(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-zoom-out.png"),
+        img_zoom_fit(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-zoom-fit.png"),
         //buttonZoomIn( "Zoom +" ),
         //buttonZoomOut( "Zoom -" ),
         buttonZoom100( "1:1" ),
         //buttonZoomFit( "Fit" ),
-        img_highlights_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/highlights_clip_warning.png"),
-        img_shadows_warning(PF::PhotoFlow::Instance().get_data_dir()+"/icons/shadows_clip_warning.png"),
+        img_highlights_warning(PF::PhotoFlow::Instance().get_icons_dir()+"/highlights_clip_warning.png"),
+        img_shadows_warning(PF::PhotoFlow::Instance().get_icons_dir()+"/shadows_clip_warning.png"),
         buttonShowMerged( _("show merged layers") ),
         buttonShowActive( _("show active layer") ),
         tab_label_widget( NULL ),
@@ -291,7 +291,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
         hide_background_layer( false )
 {
 #ifndef NDEBUG
-  std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-zoom-in.png"<<std::endl;
+  std::cout<<"img_zoom_in: "<<PF::PhotoFlow::Instance().get_icons_dir()+"/libre-zoom-in.png"<<std::endl;
 #endif
   PF::Pipeline* p;
   // First pipeline is for full-res rendering, second one is for on-screen preview, third one is

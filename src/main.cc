@@ -224,6 +224,18 @@ int main (int argc, char *argv[])
 
   PF::PhotoFlow::Instance().get_options().load();
 
+  Glib::ustring idir = "icons";
+  if( PF::PhotoFlow::Instance().get_options().get_ui_use_inverted_icons() ||
+      !(PF::PhotoFlow::Instance().get_options().get_ui_use_system_theme()) ) {
+    idir = "icons-inverted";
+  }
+  PF::PhotoFlow::Instance().set_icons_dir(
+      Glib::build_filename( Glib::ustring(PF::PhotoFlow::Instance().get_data_dir()), idir ) );
+  std::cout<<"icons dir: "<<PF::PhotoFlow::Instance().get_icons_dir()<<std::endl;
+
+
+
+
   std::cout<<"Starting image processor..."<<std::endl;
   PF::ImageProcessor::Instance().start();
   std::cout<<"Image processor started."<<std::endl;
@@ -261,6 +273,7 @@ int main (int argc, char *argv[])
 #endif
   std::cout<<"stat_result="<<stat_result<<std::endl;
   std::cout<<"stat_result2="<<stat_result2<<std::endl;
+  if( PF::PhotoFlow::Instance().get_options().get_ui_use_system_theme() == false ) {
   if( stat_result2 == 0 ) {
     std::vector<Glib::ustring> files;
     files.push_back (themerc2);
@@ -275,7 +288,7 @@ int main (int argc, char *argv[])
     Gtk::RC::reparse_all (Gtk::Settings::get_default());
     GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
     //gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
-  }
+  }}
 #endif
   //#endif
 
@@ -305,7 +318,8 @@ int main (int argc, char *argv[])
   if( stat_result2 == 0 ) themerc_real = themerc2;
   else if( stat_result == 0 ) themerc_real = themerc;
 
-  if( !themerc_real.empty() ) {
+  if( PF::PhotoFlow::Instance().get_options().get_ui_use_system_theme() == false  &&
+      !themerc_real.empty() ) {
     Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
     //Glib::RefPtr<Gtk::StyleContext> cntx = mainWindow->get_style_context();
     Glib::RefPtr<Gtk::StyleContext> cntx = Gtk::StyleContext::create();

@@ -44,6 +44,9 @@ PF::SettingsDialog::SettingsDialog():
       cm_display_profile_bpc_selector( _("black point compensation") ),
       apply_default_preset_label(_("apply default processing profile")),
       save_sidecar_files_label(_("save sidecar files")),
+      ui_frame(_("User interface options")),
+      ui_use_system_theme_label(_("Use system theme")),
+      ui_use_inverted_icons_label(_("Use inverted icons")),
       ui_layers_list_on_right_label(_("place layers list on the right")),
       ui_floating_tool_dialogs_label(_("Floating tool controls dialogues"))
 {
@@ -203,12 +206,22 @@ PF::SettingsDialog::SettingsDialog():
   apply_default_preset_hbox.pack_start( apply_default_preset_check, Gtk::PACK_SHRINK );
   apply_default_preset_hbox.pack_start( apply_default_preset_label, Gtk::PACK_SHRINK );
   apply_default_preset_label.set_tooltip_text(_("Apply default processing preset to RAW files"));
-  general_box.pack_start( apply_default_preset_hbox, Gtk::PACK_SHRINK );
+  general_box.pack_start( apply_default_preset_hbox, Gtk::PACK_SHRINK, 10 );
 
   save_sidecar_files_hbox.pack_start( save_sidecar_files_check, Gtk::PACK_SHRINK );
   save_sidecar_files_hbox.pack_start( save_sidecar_files_label, Gtk::PACK_SHRINK );
   save_sidecar_files_label.set_tooltip_text(_("Save sidecar files when exporting to raster formats"));
-  general_box.pack_start( save_sidecar_files_hbox, Gtk::PACK_SHRINK );
+  general_box.pack_start( save_sidecar_files_hbox, Gtk::PACK_SHRINK, 10 );
+
+  ui_use_system_theme_hbox.pack_start( ui_use_system_theme_check, Gtk::PACK_SHRINK );
+  ui_use_system_theme_hbox.pack_start( ui_use_system_theme_label, Gtk::PACK_SHRINK );
+  ui_use_system_theme_hbox.set_tooltip_text(_("Use the system-provided GTK theme (restart needed)"));
+  ui_vbox.pack_start( ui_use_system_theme_hbox, Gtk::PACK_SHRINK, 2 );
+
+  ui_use_inverted_icons_hbox.pack_start( ui_use_inverted_icons_check, Gtk::PACK_SHRINK );
+  ui_use_inverted_icons_hbox.pack_start( ui_use_inverted_icons_label, Gtk::PACK_SHRINK );
+  ui_use_inverted_icons_hbox.set_tooltip_text(_("Use inverted icons (restart needed)"));
+  ui_vbox.pack_start( ui_use_inverted_icons_hbox, Gtk::PACK_SHRINK, 2 );
 
   ui_layers_list_on_right_hbox.pack_start( ui_layers_list_on_right_check, Gtk::PACK_SHRINK );
   ui_layers_list_on_right_hbox.pack_start( ui_layers_list_on_right_label, Gtk::PACK_SHRINK );
@@ -218,7 +231,10 @@ PF::SettingsDialog::SettingsDialog():
   ui_floating_tool_dialogs_hbox.pack_start( ui_floating_tool_dialogs_check, Gtk::PACK_SHRINK );
   ui_floating_tool_dialogs_hbox.pack_start( ui_floating_tool_dialogs_label, Gtk::PACK_SHRINK );
   ui_floating_tool_dialogs_hbox.set_tooltip_text(_("Floating tool controls dialogues (restart needed)"));
-  general_box.pack_start( ui_floating_tool_dialogs_hbox, Gtk::PACK_SHRINK );
+  ui_vbox.pack_start( ui_floating_tool_dialogs_hbox, Gtk::PACK_SHRINK, 2 );
+
+  ui_frame.add(ui_vbox);
+  general_box.pack_start( ui_frame, Gtk::PACK_SHRINK, 10 );
 
 
   Glib::ustring about = PF::version_string;
@@ -236,6 +252,9 @@ PF::SettingsDialog::SettingsDialog():
 
   cm_display_profile_open_button.signal_clicked().connect(sigc::mem_fun(*this,
       &SettingsDialog::on_button_display_profile_open_clicked) );
+
+  ui_use_system_theme_check.signal_toggled().connect(
+      sigc::mem_fun(*this,&SettingsDialog::on_use_system_theme_check_toggled) );
 
   show_all_children();
 
@@ -307,9 +326,19 @@ void PF::SettingsDialog::load_settings()
   ui_layers_list_on_right_check.set_active( PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement() ==
       PF::PF_LAYERS_LIST_PLACEMENT_RIGHT );
 
+  std::cout<<"PF::PhotoFlow::Instance().get_options().get_ui_use_system_theme(): "<<
+      PF::PhotoFlow::Instance().get_options().get_ui_use_system_theme()<<std::endl;
+  ui_use_system_theme_check.set_active( PF::PhotoFlow::Instance().get_options().get_ui_use_system_theme() );
+
+  std::cout<<"PF::PhotoFlow::Instance().get_options().get_ui_use_inverted_icons(): "<<
+      PF::PhotoFlow::Instance().get_options().get_ui_use_inverted_icons()<<std::endl;
+  ui_use_inverted_icons_check.set_active( PF::PhotoFlow::Instance().get_options().get_ui_use_inverted_icons() );
+
   std::cout<<"PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs(): "<<
       PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs()<<std::endl;
   ui_floating_tool_dialogs_check.set_active( PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs() );
+
+  on_use_system_theme_check_toggled();
 }
 
 
@@ -372,6 +401,12 @@ void PF::SettingsDialog::save_settings()
     PF::PhotoFlow::Instance().get_options().set_ui_layers_list_placement( PF::PF_LAYERS_LIST_PLACEMENT_RIGHT );
   else
     PF::PhotoFlow::Instance().get_options().set_ui_layers_list_placement( PF::PF_LAYERS_LIST_PLACEMENT_LEFT );
+
+  PF::PhotoFlow::Instance().get_options().
+      set_ui_use_system_theme( ui_use_system_theme_check.get_active() );
+
+  PF::PhotoFlow::Instance().get_options().
+      set_ui_use_inverted_icons( ui_use_inverted_icons_check.get_active() );
 
   PF::PhotoFlow::Instance().get_options().
       set_ui_floating_tool_dialogs( ui_floating_tool_dialogs_check.get_active() );
@@ -438,4 +473,11 @@ void PF::SettingsDialog::on_button_display_profile_open_clicked()
     break;
   }
   }
+}
+
+
+void PF::SettingsDialog::on_use_system_theme_check_toggled()
+{
+  if( ui_use_system_theme_check.get_active() ) ui_use_inverted_icons_hbox.show();
+  else ui_use_inverted_icons_hbox.hide();
 }

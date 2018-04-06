@@ -50,10 +50,10 @@ public:
   MaskTabWidget():
     HBox(),
     image(),
-    button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/preview_active.png", PF::PhotoFlow::Instance().get_data_dir()+"/icons/preview_inactive.png"),
+    button(PF::PhotoFlow::Instance().get_icons_dir()+"/preview_active.png", PF::PhotoFlow::Instance().get_icons_dir()+"/preview_inactive.png"),
     label( _("Layer mask   ") )
   {
-    image.set( PF::PhotoFlow::Instance().get_data_dir()+"/icons/preview_active.png" );
+    image.set( PF::PhotoFlow::Instance().get_icons_dir()+"/preview_active.png" );
     //button.add( image );
     //button.set_relief( Gtk::RELIEF_NONE );
     pack_start( label, Gtk::PACK_SHRINK );
@@ -431,22 +431,22 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonPresetSave( _("Save preset") ),
   operationsDialog( image, this ),
   controls_dialog(NULL), controls_dialog_visible(false), controls_dialog_x(-1), controls_dialog_y(-1),
-  add_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/add-layer.png", "", image, this),
-  group_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/group.png", "", image, this),
-  trash_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/trash.png", "", image, this),
-  insert_image_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-file-image.png", "", image, this),
-  curves_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/curves.png", "curves", image, this),
-  uniform_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/bucket-fill.png", "uniform", image, this),
-  gradient_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/gradient.png", "gradient", image, this),
-  path_mask_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/path-mask.png", "path_mask", image, this),
-  desaturate_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/desaturate.png", "desaturate", image, this),
-  crop_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/crop.png", "crop", image, this),
-  basic_edits_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "basic_adjustments", image, this),
-  levels_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/basic-edits.png", "levels", image, this),
-  draw_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/draw.png", "draw", image, this),
-  clone_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/clone.png", "clone_stamp", image, this),
-  scale_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/scale.png", "scale", image, this),
-  perspective_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/tools/perspective.png", "perspective", image, this)
+  add_button(PF::PhotoFlow::Instance().get_icons_dir()+"//add-layer.png", "", image, this),
+  group_button(PF::PhotoFlow::Instance().get_icons_dir()+"/group.png", "", image, this),
+  trash_button(PF::PhotoFlow::Instance().get_icons_dir()+"/trash.png", "", image, this),
+  insert_image_button(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-file-image.png", "", image, this),
+  curves_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/curves.png", "curves", image, this),
+  uniform_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/bucket-fill.png", "uniform", image, this),
+  gradient_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/gradient.png", "gradient", image, this),
+  path_mask_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/path-mask.png", "path_mask", image, this),
+  desaturate_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/desaturate.png", "desaturate", image, this),
+  crop_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/crop.png", "crop", image, this),
+  basic_edits_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/basic-edits.png", "basic_adjustments", image, this),
+  levels_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/basic-edits.png", "levels", image, this),
+  draw_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/draw.png", "draw", image, this),
+  clone_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/clone.png", "clone_stamp", image, this),
+  scale_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/scale.png", "scale", image, this),
+  perspective_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/perspective.png", "perspective", image, this)
 {
   floating_tool_dialogs = PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs();
 

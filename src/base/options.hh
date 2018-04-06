@@ -68,6 +68,8 @@ enum layers_list_placement_t
     Glib::ustring last_visited_preset_folder;
     Glib::ustring last_visited_icc_folder;
 
+    bool ui_use_system_theme;
+    bool ui_use_inverted_icons;
     layers_list_placement_t ui_layers_list_placement;
     bool ui_floating_tool_dialogs;
 
@@ -129,6 +131,12 @@ enum layers_list_placement_t
     void set_layerlist_widget_width(int w) { layerlist_widget_width = w; }
 
     // UI options
+    void set_ui_use_system_theme(bool b) { ui_use_system_theme = b; }
+    bool get_ui_use_system_theme() { return ui_use_system_theme; }
+
+    void set_ui_use_inverted_icons(bool b) { ui_use_inverted_icons = b; }
+    bool get_ui_use_inverted_icons() { return ui_use_inverted_icons; }
+
     void set_ui_layers_list_placement(layers_list_placement_t p) { ui_layers_list_placement = p; }
     layers_list_placement_t get_ui_layers_list_placement() { return ui_layers_list_placement; }
 

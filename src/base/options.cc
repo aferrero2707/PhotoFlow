@@ -42,6 +42,8 @@ PF::Options::Options()
   save_sidecar_files = 0;
   use_default_preset = 0;
   layerlist_widget_width = 250;
+  ui_use_system_theme = false;
+  ui_use_inverted_icons = true;
   ui_layers_list_placement = PF::PF_LAYERS_LIST_PLACEMENT_RIGHT;
   ui_floating_tool_dialogs = false;
 }
@@ -99,6 +101,12 @@ void PF::Options::load()
       if (keyFile.has_group ("GUI")) {
         if (keyFile.has_key ("GUI", "layerlist_widget_width")) {
           layerlist_widget_width = keyFile.get_integer ("GUI", "layerlist_widget_width");
+        }
+        if (keyFile.has_key ("GUI", "use_system_theme")) {
+          ui_use_system_theme = (bool)keyFile.get_integer ("GUI", "use_system_theme");
+        }
+        if (keyFile.has_key ("GUI", "use_inverted_icons")) {
+          ui_use_inverted_icons = (bool)keyFile.get_integer ("GUI", "use_inverted_icons");
         }
         if (keyFile.has_key ("GUI", "layers_list_placement")) {
           ui_layers_list_placement =
@@ -205,6 +213,8 @@ void PF::Options::save()
   keyFile.set_integer ("Processing", "apply_default_preset", (int)use_default_preset);
 
   keyFile.set_integer ("GUI", "layerlist_widget_width", (int)layerlist_widget_width);
+  keyFile.set_integer ("GUI", "use_system_theme", (int)ui_use_system_theme);
+  keyFile.set_integer ("GUI", "use_inverted_icons", (int)ui_use_inverted_icons);
   keyFile.set_integer ("GUI", "layers_list_placement", (int)ui_layers_list_placement);
   keyFile.set_integer ("GUI", "floating_tool_dialogs", (int)ui_floating_tool_dialogs);
 

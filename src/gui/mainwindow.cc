@@ -80,19 +80,19 @@ topButtonBox2(Gtk::ORIENTATION_HORIZONTAL),
 #endif
 files_frame( _("files") ),
 editing_frame( _("editing") ),
-//img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
-img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-folder-open.png" ),
-//img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
-img_save( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-floppy.png" ),
-//img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save-as.png" ),
-img_save_as( PF::PhotoFlow::Instance().get_data_dir()+"/icons/save-as.png" ),
-//img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-export.png" ),
-img_export( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-file-image.png" ),
-img_settings( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-sliders.png" ),
-img_exit( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-sign-out.png" ),
-img_load_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-open.png" ),
-img_save_preset( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
-img_trash( PF::PhotoFlow::Instance().get_data_dir()+"/icons/actions/16x16/document-save.png" ),
+//img_open( PF::PhotoFlow::Instance().get_icons_dir()+"/actions/16x16/document-open.png" ),
+img_open( PF::PhotoFlow::Instance().get_icons_dir()+"/libre-folder-open.png" ),
+//img_save( PF::PhotoFlow::Instance().get_icons_dir()+"/actions/16x16/document-save.png" ),
+img_save( PF::PhotoFlow::Instance().get_icons_dir()+"/libre-floppy.png" ),
+//img_save_as( PF::PhotoFlow::Instance().get_icons_dir()+"/actions/16x16/document-save-as.png" ),
+img_save_as( PF::PhotoFlow::Instance().get_icons_dir()+"/save-as.png" ),
+//img_export( PF::PhotoFlow::Instance().get_icons_dir()+"/actions/16x16/document-export.png" ),
+img_export( PF::PhotoFlow::Instance().get_icons_dir()+"/libre-file-image.png" ),
+img_settings( PF::PhotoFlow::Instance().get_icons_dir()+"/libre-sliders.png" ),
+img_exit( PF::PhotoFlow::Instance().get_icons_dir()+"/libre-sign-out.png" ),
+img_load_preset( PF::PhotoFlow::Instance().get_icons_dir()+"/actions/16x16/document-open.png" ),
+img_save_preset( PF::PhotoFlow::Instance().get_icons_dir()+"/actions/16x16/document-save.png" ),
+img_trash( PF::PhotoFlow::Instance().get_icons_dir()+"/actions/16x16/document-save.png" ),
 buttonOpen( /*_("Open")*/ ),
 buttonSave( /*_("Save")*/ ),
 buttonSaveAs( /*_("Save as")*/ ),
@@ -229,34 +229,34 @@ buttonSavePreset()
     label->set_angle(90);
    */
   try {
-  if( set_icon_from_file( PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png" ) ) {
+  if( set_icon_from_file( PF::PhotoFlow::Instance().get_icons_dir()+"/photoflow.png" ) ) {
     std::cout<<"Application window icon set from \""
-        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<PF::PhotoFlow::Instance().get_icons_dir()+"/photoflow.png"
         <<"\""<<std::endl;
   } else {
     std::cout<<"Failed to set application window icon from \""
-        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<PF::PhotoFlow::Instance().get_icons_dir()+"/photoflow.png"
         <<"\""<<std::endl;
   }
   }
   catch (const Gdk::PixbufError& e) {
     std::cout << "Failed to set application window icon from \""
-        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<PF::PhotoFlow::Instance().get_icons_dir()+"/photoflow.png"
         <<"\": "<<e.what()<<std::endl;
   }
   catch (const Glib::FileError& e) {
     std::cout << "Failed to set application window icon from \""
-        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<PF::PhotoFlow::Instance().get_icons_dir()+"/photoflow.png"
         <<"\": "<<e.what()<<std::endl;
   }
   catch (const Glib::Error& e) {
     std::cout << "Failed to set application window icon from \""
-        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<PF::PhotoFlow::Instance().get_icons_dir()+"/photoflow.png"
         <<"\": "<<e.what()<<std::endl;
   }
   catch (...) {
     std::cout << "Failed to set application window icon from \""
-        <<PF::PhotoFlow::Instance().get_data_dir()+"/icons/photoflow.png"
+        <<PF::PhotoFlow::Instance().get_icons_dir()+"/photoflow.png"
         <<"\": uncaught exception"<<std::endl;
   }
 

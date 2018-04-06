@@ -113,22 +113,22 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   previewButton(_("preview")),
   dialog( NULL ),
   frame( NULL ),
-  frame_visible(PF::PhotoFlow::Instance().get_data_dir()+"/icons/visible_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/visible_inactive.png",true),
-  //frame_preview(PF::PhotoFlow::Instance().get_data_dir()+"/icons/preview_active.png",
-  //    PF::PhotoFlow::Instance().get_data_dir()+"/icons/preview_inactive.png"),
-  frame_mask(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_inactive.png",true),
-  frame_mask2(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_inactive.png",true),
-  frame_edit(PF::PhotoFlow::Instance().get_data_dir()+"/icons/edit_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/edit_inactive.png",true,false),
-  frame_edit2(PF::PhotoFlow::Instance().get_data_dir()+"/icons/edit_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/edit_inactive.png",true,false),
-  frame_sticky(PF::PhotoFlow::Instance().get_data_dir()+"/icons/pushpin_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/pushpin_inactive.png",true,false),
-  frame_sticky2(PF::PhotoFlow::Instance().get_data_dir()+"/icons/pushpin_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/pushpin_inactive.png",true,false),
-  frame_undo(PF::PhotoFlow::Instance().get_data_dir()+"/icons/undo_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/undo_inactive.png"),
-  frame_redo(PF::PhotoFlow::Instance().get_data_dir()+"/icons/redo_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/redo_inactive.png"),
-  frame_reset(PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/reset_inactive.png"),
-  frame_help(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info-pressed.png"),
-  frame_help2(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-info-pressed.png"),
-  frame_close(PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/close_inactive.png"),
-  frame_expander(PF::PhotoFlow::Instance().get_data_dir()+"/icons/expand.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/collapse.png",true),
+  frame_visible(PF::PhotoFlow::Instance().get_icons_dir()+"/visible_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/visible_inactive.png",true),
+  //frame_preview(PF::PhotoFlow::Instance().get_icons_dir()+"/preview_active.png",
+  //    PF::PhotoFlow::Instance().get_icons_dir()+"/preview_inactive.png"),
+  frame_mask(PF::PhotoFlow::Instance().get_icons_dir()+"/mask_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/mask_inactive.png",true),
+  frame_mask2(PF::PhotoFlow::Instance().get_icons_dir()+"/mask_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/mask_inactive.png",true),
+  frame_edit(PF::PhotoFlow::Instance().get_icons_dir()+"/edit_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/edit_inactive.png",true,false),
+  frame_edit2(PF::PhotoFlow::Instance().get_icons_dir()+"/edit_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/edit_inactive.png",true,false),
+  frame_sticky(PF::PhotoFlow::Instance().get_icons_dir()+"/pushpin_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/pushpin_inactive.png",true,false),
+  frame_sticky2(PF::PhotoFlow::Instance().get_icons_dir()+"/pushpin_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/pushpin_inactive.png",true,false),
+  frame_undo(PF::PhotoFlow::Instance().get_icons_dir()+"/undo_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/undo_inactive.png"),
+  frame_redo(PF::PhotoFlow::Instance().get_icons_dir()+"/redo_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/redo_inactive.png"),
+  frame_reset(PF::PhotoFlow::Instance().get_icons_dir()+"/reset_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/reset_inactive.png"),
+  frame_help(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-info.png",PF::PhotoFlow::Instance().get_icons_dir()+"/libre-info-pressed.png"),
+  frame_help2(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-info.png",PF::PhotoFlow::Instance().get_icons_dir()+"/libre-info-pressed.png"),
+  frame_close(PF::PhotoFlow::Instance().get_icons_dir()+"/close_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/close_inactive.png"),
+  frame_expander(PF::PhotoFlow::Instance().get_icons_dir()+"/expand.png",PF::PhotoFlow::Instance().get_icons_dir()+"/collapse.png",true),
   expert_ctrls_expander(_("more"))
 {
   vips_semaphore_init( &update_done_sem, 0, (char*)"update_done_sem" );
@@ -161,10 +161,10 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   //blendSelector.set_size_request( -1, 22 );
 
-  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_blend_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_blend_inactive.png",false,true) );
-  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_union_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_union_inactive.png",false,false) );
-  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_intersection_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_intersection_inactive.png",false,false) );
-  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_exclusion_active.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/mask_exclusion_inactive.png",false,false) );
+  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_icons_dir()+"/mask_blend_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/mask_blend_inactive.png",false,true) );
+  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_icons_dir()+"/mask_union_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/mask_union_inactive.png",false,false) );
+  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_icons_dir()+"/mask_intersection_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/mask_intersection_inactive.png",false,false) );
+  //map_buttons.add_button( new PF::ToggleImageButton(PF::PhotoFlow::Instance().get_icons_dir()+"/mask_exclusion_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/mask_exclusion_inactive.png",false,false) );
 
   //frame_top_box_1_1.pack_start( map_buttons, Gtk::PACK_SHRINK );
 
@@ -282,7 +282,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //controls_box.pack_end( layer_selector_checkbox, Gtk::PACK_SHRINK, 5 );
   controls_box.pack_end( hline2, Gtk::PACK_SHRINK, 5 );
 
-
+/*
 #ifdef GTKMM_2
   Gdk::Color bg;
   bg.set_grey_p(0.3);
@@ -292,6 +292,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   nameEntry.modify_base( Gtk::STATE_NORMAL, bg );
   //nameEntry.set_alignment(1);
 #endif
+*/
   controls_evbox.add( controls_box );
   controls_frame.add( controls_evbox );
 

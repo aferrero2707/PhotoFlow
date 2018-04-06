@@ -97,6 +97,17 @@ class SettingsDialog : public Gtk::Dialog
   Gtk::Label save_sidecar_files_label;
   Gtk::CheckButton save_sidecar_files_check;
 
+
+  Gtk::Frame ui_frame;
+  Gtk::VBox ui_vbox;
+  Gtk::HBox ui_use_system_theme_hbox;
+  Gtk::Label ui_use_system_theme_label;
+  Gtk::CheckButton ui_use_system_theme_check;
+
+  Gtk::HBox ui_use_inverted_icons_hbox;
+  Gtk::Label ui_use_inverted_icons_label;
+  Gtk::CheckButton ui_use_inverted_icons_check;
+
   Gtk::HBox ui_layers_list_on_right_hbox;
   Gtk::Label ui_layers_list_on_right_label;
   Gtk::CheckButton ui_layers_list_on_right_check;
@@ -118,6 +129,7 @@ public:
 
   void on_button_clicked(int id);
   void on_button_display_profile_open_clicked();
+  void on_use_system_theme_check_toggled();
 };
 
 }
