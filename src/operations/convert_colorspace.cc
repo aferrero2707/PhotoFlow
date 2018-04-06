@@ -325,10 +325,10 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
           PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_ACES, PF::PF_TRC_LINEAR );
       PF::ICCProfile* Lab_prof =
           PF::ICCStore::Instance().get_Lab_profile();
-      PF::ICCProfile* gw_prof = aces_prof;
-      if( !cmsIsMatrixShaper(out_profile) &&
+      PF::ICCProfile* gw_prof = Lab_prof;
+      if( cmsIsMatrixShaper(out_profile) &&
           !cmsIsCLUT(out_profile, intent.get_enum_value().first, LCMS_USED_AS_OUTPUT) ) {
-        gw_prof = Lab_prof;
+        gw_prof = aces_prof;
       }
       std::cout<<"ConvertColorspacePar::build(): gw_prof="<<(void*)gw_prof<<std::endl;
       if( gw_prof && gw_prof->get_profile() ) {
@@ -370,13 +370,13 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 
           PF::GamutWarningPar* gw2 = dynamic_cast<PF::GamutWarningPar*>( gw->get_par() );
           if( gw2 ) {
-            if( !cmsIsMatrixShaper(out_profile) &&
+            if( cmsIsMatrixShaper(out_profile) &&
                 !cmsIsCLUT(out_profile, intent.get_enum_value().first, LCMS_USED_AS_OUTPUT) ) {
-              gw2->set_delta( 4.9999 );
-              gw2->set_dest_is_matrix( false );
+              gw2->set_dest_is_matrix( true );
 
             } else {
-              gw2->set_dest_is_matrix( true );
+              gw2->set_delta( 4.9999 );
+              gw2->set_dest_is_matrix( false );
             }
             std::cout<<"ConvertColorspacePar::build(): gw2->get_dest_is_matrix(): "<<gw2->get_dest_is_matrix()<<std::endl;
           }
