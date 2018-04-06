@@ -249,6 +249,7 @@ export_format(PF::EXPORT_FORMAT_JPEG)
 
   left_vbox.pack_start( size_options_separator, Gtk::PACK_SHRINK );
 
+  icc_profile.add_entry("Working profile", PF::PROF_TYPE_EMBEDDED);
   icc_profile.add_entry("sRGB", PF::PROF_TYPE_sRGB);
   icc_profile.add_entry("Rec.2020", PF::PROF_TYPE_REC2020);
   icc_profile.add_entry("AdobeRGB", PF::PROF_TYPE_ADOBE);

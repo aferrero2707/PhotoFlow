@@ -1162,6 +1162,9 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       std::cout<<"Image::do_export_merged(): profile_type="<<export_opt->profile_type<<"  trc="<<export_opt->trc_type<<std::endl;
       if( export_opt->profile_type == PF::PROF_TYPE_FROM_DISK ) {
         iccprof = PF::ICCStore::Instance().get_profile( export_opt->custom_profile_name );
+      } else if( export_opt->profile_type == PF::PROF_TYPE_EMBEDDED ) {
+        // No ICC conversion in this case
+        iccprof = NULL;
       } else {//if( pmode == PF::PROF_MODE_CUSTOM ) {
         iccprof = PF::ICCStore::Instance().get_profile( export_opt->profile_type, export_opt->trc_type );
       }
