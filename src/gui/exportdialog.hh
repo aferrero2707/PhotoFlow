@@ -159,6 +159,7 @@ enum export_format_t
     //void set_file_name( std::string name ) { file_name = name; }
 
     void on_format_changed();
+    void on_colorspace_changed();
     void on_file_button_clicked();
     void on_button_clicked(int id);
 

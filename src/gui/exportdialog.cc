@@ -295,6 +295,9 @@ export_format(PF::EXPORT_FORMAT_JPEG)
   export_format_selector.get_cbox().signal_changed().connect( sigc::mem_fun(*this,
       &ExportDialog::on_format_changed) );
 
+  icc_profile.get_cbox().signal_changed().connect( sigc::mem_fun(*this,
+      &ExportDialog::on_colorspace_changed) );
+
   signal_response().connect( sigc::mem_fun(*this,
       &ExportDialog::on_button_clicked) );
 
@@ -397,6 +400,26 @@ void PF::ExportDialog::on_format_changed()
     break;
   }
   default: break;
+  }
+}
+
+
+void PF::ExportDialog::on_colorspace_changed()
+{
+  int id = icc_profile.get_active_id();
+  switch( id ) {
+  case PF::PROF_TYPE_EMBEDDED: {
+    icc_trc.hide();
+    icc_intent.hide();
+    icc_bpc_hbox.hide();
+    break;
+  }
+  default: {
+    icc_trc.show();
+    icc_intent.show();
+    icc_bpc_hbox.show();
+    break;
+  }
   }
 }
 
