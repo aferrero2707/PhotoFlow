@@ -70,6 +70,7 @@ namespace PF
     std::string cache_dir;
     std::string base_dir;
     std::string data_dir;
+    std::string icons_dir;
     std::string lensfun_db_dir;
     std::string locale_dir;
     std::string current_image_dir;
@@ -122,6 +123,9 @@ namespace PF
 
     void set_data_dir(std::string dir) { data_dir = dir; }
     std::string get_data_dir() { return data_dir; }
+
+    void set_icons_dir(std::string dir) { icons_dir = dir; }
+    std::string get_icons_dir() { return icons_dir; }
 
     std::string get_lensfun_db_dir() { return lensfun_db_dir; }
 
