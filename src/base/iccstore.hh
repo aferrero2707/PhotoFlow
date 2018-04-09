@@ -131,6 +131,12 @@ public:
   void init_colorants();
   void init_trc();
 
+  bool is_rgb();
+  bool is_grayscale();
+  bool is_lab();
+  bool is_cmyk();
+
+  bool is_matrix();
   double* get_colorants() { return colorants; }
 
   void set_trc_type(TRC_type type) { trc_type = type; }
@@ -270,11 +276,15 @@ class ICCTransform
   float adaptation_state;
   cmsHTRANSFORM transform;
 
+  bool is_rgb2rgb;
+  float rgb2rgb[3][3];
+
   cmsColorSpaceSignature input_cs_type;
   cmsColorSpaceSignature output_cs_type;
 
 public:
   ICCTransform(): in_profile(NULL), out_profile(NULL), transform(NULL) {}
+  bool valid() { return( transform!=NULL || is_rgb2rgb ); }
   void init(ICCProfile* in_profile, ICCProfile* out_profile, VipsBandFormat band_fmt,
       cmsUInt32Number intent=INTENT_RELATIVE_COLORIMETRIC,
       bool bpc=true, float adaptation_state=0);

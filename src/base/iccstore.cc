@@ -296,6 +296,41 @@ void PF::ICCProfile::init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv )
 }
 
 
+bool PF::ICCProfile::is_matrix()
+{
+  if( !has_colorants ) return false;
+  if( !cmsIsMatrixShaper(get_profile()) ) return false;
+  if( cmsIsCLUT(get_profile(), INTENT_PERCEPTUAL, LCMS_USED_AS_INPUT) ) return false;
+  if( cmsIsCLUT(get_profile(), INTENT_PERCEPTUAL, LCMS_USED_AS_OUTPUT) ) return false;
+  return true;
+}
+
+
+bool PF::ICCProfile::is_rgb()
+{
+  cmsColorSpaceSignature cs = cmsGetColorSpace( get_profile() );
+  return( cs == cmsSigRgbData );
+}
+
+bool PF::ICCProfile::is_grayscale()
+{
+  cmsColorSpaceSignature cs = cmsGetColorSpace( get_profile() );
+  return( cs == cmsSigGrayData );
+}
+
+bool PF::ICCProfile::is_lab()
+{
+  cmsColorSpaceSignature cs = cmsGetColorSpace( get_profile() );
+  return( cs == cmsSigLabData );
+}
+
+bool PF::ICCProfile::is_cmyk()
+{
+  cmsColorSpaceSignature cs = cmsGetColorSpace( get_profile() );
+  return( cs == cmsSigCmykData );
+}
+
+
 cmsHPROFILE PF::ICCProfile::get_profile()
 {
   return profile;
@@ -403,6 +438,47 @@ cmsFloat32Number PF::perceptual2linear( ICCProfileData* data, cmsFloat32Number v
 */
 
 
+/* Darktable code starts here
+ */
+
+#define generate_mat3inv_body(c_type, A, B)                                                                  \
+    static int mat3inv_##c_type(c_type dst[3][3], const c_type src[3][3])                                           \
+    {                                                                                                          \
+  \
+  const c_type det = A(1, 1) * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3))                                     \
+  - A(2, 1) * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3))                                   \
+  + A(3, 1) * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                  \
+  \
+  const c_type epsilon = 1e-7f;                                                                            \
+  if(fabs(det) < epsilon) return 1;                                                                        \
+  \
+  const c_type invDet = 1.0 / det;                                                                         \
+  \
+  B(1, 1) = invDet * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3));                                              \
+  B(1, 2) = -invDet * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3));                                             \
+  B(1, 3) = invDet * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                              \
+  \
+  B(2, 1) = -invDet * (A(3, 3) * A(2, 1) - A(3, 1) * A(2, 3));                                             \
+  B(2, 2) = invDet * (A(3, 3) * A(1, 1) - A(3, 1) * A(1, 3));                                              \
+  B(2, 3) = -invDet * (A(2, 3) * A(1, 1) - A(2, 1) * A(1, 3));                                             \
+  \
+  B(3, 1) = invDet * (A(3, 2) * A(2, 1) - A(3, 1) * A(2, 2));                                              \
+  B(3, 2) = -invDet * (A(3, 2) * A(1, 1) - A(3, 1) * A(1, 2));                                             \
+  B(3, 3) = invDet * (A(2, 2) * A(1, 1) - A(2, 1) * A(1, 2));                                              \
+  return 0;                                                                                                \
+    }
+
+#define A(y, x) src[y-1][x-1]
+#define B(y, x) dst[y-1][x-1]
+/** inverts the given 3x3 matrix */
+generate_mat3inv_body(float, A, B)
+
+static int mat3inv(float dst[3][3], const float src[3][3])
+{
+  return mat3inv_float(dst, src);
+}
+
+
 void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat band_fmt,
     cmsUInt32Number _intent, bool _bpc, float _adaptation_state)
 {
@@ -423,31 +499,106 @@ void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat ba
   output_cs_type = cmsGetColorSpace( out_profile->get_profile() );
 
   transform = NULL;
-  if( in_profile && out_profile && out_profile->get_profile() ) {
-    std::cout<<"ICCTransform::init(): getting input profile format"<<std::endl;
-    cmsUInt32Number infmt = vips2lcms_pixel_format( band_fmt, in_profile->get_profile() );
-    std::cout<<"ICCTransform::init(): getting output profile format"<<std::endl;
-    cmsUInt32Number outfmt = vips2lcms_pixel_format( band_fmt, out_profile->get_profile() );
+  is_rgb2rgb = false;
 
-    cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
-    std::cout<<"ICCTransform::init(): bpc="<<bpc<<std::endl;
-    if( bpc ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
-    cmsFloat64Number old_state = cmsSetAdaptationState( adaptation_state );
-    transform = cmsCreateTransform( in_profile->get_profile(), infmt,
-        out_profile->get_profile(), outfmt, intent, flags );
-    cmsSetAdaptationState( old_state );
-    std::cout<<"ICCTransform::init(): transform: "<<transform<<std::endl;
-    std::cout<<"ICCTransform::init(): in_profile: "<<in_profile<<std::endl;
-    std::cout<<"ICCTransform::init(): infmt: "<<infmt<<std::endl;
-    std::cout<<"ICCTransform::init(): outfmt: "<<outfmt<<std::endl;
-  }
+  std::cout<<"ICCTransform::init() called"<<std::endl;
+
+  if( true && in_profile->is_rgb() && out_profile->is_rgb() &&
+      in_profile->is_matrix() && out_profile->is_matrix() &&
+      in_profile->is_linear() && out_profile->is_linear() &&
+      !bpc && intent==INTENT_RELATIVE_COLORIMETRIC ) {
+    // fast path for linear RGB -> RGB matrix conversions
+    // get input profile colorants
+    double* in_colorants = in_profile->get_colorants();
+    float rgb2xyz[3][3];
+    for(int i=0;i<3;i++){
+      for(int j=0;j<3;j++){
+        rgb2xyz[j][i] = static_cast<float>( *in_colorants );
+        in_colorants += 1;
+      }
+    }
+    printf("rgb2xyz:\n");
+    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz[0][0], rgb2xyz[0][1], rgb2xyz[0][2]);
+    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz[1][0], rgb2xyz[1][1], rgb2xyz[1][2]);
+    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz[2][0], rgb2xyz[2][1], rgb2xyz[2][2]);
+    // get output profile colorants, and invert them
+    double* out_colorants = out_profile->get_colorants();
+    float rgb2xyz2[3][3];
+    for(int i=0;i<3;i++){
+      for(int j=0;j<3;j++){
+        rgb2xyz2[j][i] = static_cast<float>( *out_colorants );
+        out_colorants += 1;
+      }
+    }
+    float xyz2rgb[3][3];
+    mat3inv( xyz2rgb, rgb2xyz2 );
+    printf("rgb2xyz2:\n");
+    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz2[0][0], rgb2xyz2[0][1], rgb2xyz2[0][2]);
+    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz2[1][0], rgb2xyz2[1][1], rgb2xyz2[1][2]);
+    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz2[2][0], rgb2xyz2[2][1], rgb2xyz2[2][2]);
+    printf("xyz2rgb:\n");
+    printf("  %0.5f %0.5f %0.5f \n", xyz2rgb[0][0], xyz2rgb[0][1], xyz2rgb[0][2]);
+    printf("  %0.5f %0.5f %0.5f \n", xyz2rgb[1][0], xyz2rgb[1][1], xyz2rgb[1][2]);
+    printf("  %0.5f %0.5f %0.5f \n", xyz2rgb[2][0], xyz2rgb[2][1], xyz2rgb[2][2]);
+
+    // multiply rgb2xyz * xyz2rgb to obtain the rgb2rgb matrix
+    for(int i=0;i<3;i++){
+      for(int j=0;j<3;j++){
+        rgb2rgb[i][j]=0;
+        for(int k=0;k<3;k++){
+          rgb2rgb[i][j]=rgb2rgb[i][j]+(xyz2rgb[i][k] * rgb2xyz[k][j]);
+        }
+      }
+    }
+    printf("rgb2rgb:\n");
+    printf("  %0.5f %0.5f %0.5f \n", rgb2rgb[0][0], rgb2rgb[0][1], rgb2rgb[0][2]);
+    printf("  %0.5f %0.5f %0.5f \n", rgb2rgb[1][0], rgb2rgb[1][1], rgb2rgb[1][2]);
+    printf("  %0.5f %0.5f %0.5f \n", rgb2rgb[2][0], rgb2rgb[2][1], rgb2rgb[2][2]);
+    is_rgb2rgb = true;
+  } //else {
+    if( in_profile && out_profile && out_profile->get_profile() ) {
+      std::cout<<"ICCTransform::init(): getting input profile format"<<std::endl;
+      cmsUInt32Number infmt = vips2lcms_pixel_format( band_fmt, in_profile->get_profile() );
+      std::cout<<"ICCTransform::init(): getting output profile format"<<std::endl;
+      cmsUInt32Number outfmt = vips2lcms_pixel_format( band_fmt, out_profile->get_profile() );
+
+      cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
+      std::cout<<"ICCTransform::init(): bpc="<<bpc<<std::endl;
+      if( bpc ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
+      cmsFloat64Number old_state = cmsSetAdaptationState( adaptation_state );
+      transform = cmsCreateTransform( in_profile->get_profile(), infmt,
+          out_profile->get_profile(), outfmt, intent, flags );
+      cmsSetAdaptationState( old_state );
+      std::cout<<"ICCTransform::init(): transform: "<<transform<<std::endl;
+      std::cout<<"ICCTransform::init(): in_profile: "<<in_profile<<std::endl;
+      std::cout<<"ICCTransform::init(): infmt: "<<infmt<<std::endl;
+      std::cout<<"ICCTransform::init(): outfmt: "<<outfmt<<std::endl;
+    }
+  //}
 }
 
 
 void PF::ICCTransform::apply(float* in, float* out, int n)
 {
+  if( is_rgb2rgb ) {
+    /* std::cout<<"ICCTransform::apply(): in="<<(void*)in<<"  out="<<(void*)out<<std::endl;
+    size_t addr = (size_t)in;
+    float faddr = (float)addr;
+    printf("    %f / 16 = %f\n",faddr,faddr/16);*/
+    float* in2 = in; float* out2 = out;
+    for(int i = 0; i < n; i++) {
+      out2[0] = rgb2rgb[0][0]*in2[0] + rgb2rgb[0][1]*in2[1] + rgb2rgb[0][2]*in2[2];
+      out2[1] = rgb2rgb[1][0]*in2[0] + rgb2rgb[1][1]*in2[1] + rgb2rgb[1][2]*in2[2];
+      out2[2] = rgb2rgb[2][0]*in2[0] + rgb2rgb[2][1]*in2[1] + rgb2rgb[2][2]*in2[2];
+      in2 += 3; out2 += 3;
+    }
+    return;
+    //std::cout<<"out(1): "<<out[0]<<","<<out[1]<<","<<out[2]<<std::endl;
+  }
+
   if( !transform ) return;
   cmsDoTransform( transform, in, out, n );
+  //std::cout<<"out(2): "<<out[0]<<","<<out[1]<<","<<out[2]<<std::endl;
 }
 
 

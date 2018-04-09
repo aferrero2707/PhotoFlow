@@ -52,7 +52,7 @@ namespace PF
     cmsUInt32Number intent;
     bool bpc;
     float adaptation_state;
-    cmsHTRANSFORM transform;
+    PF::ICCTransform transform;
 
     cmsColorSpaceSignature input_cs_type;
     cmsColorSpaceSignature output_cs_type;
@@ -70,7 +70,7 @@ namespace PF
     void set_bpc( bool flag ) { bpc = flag; }
     void set_adaptation_state( float s ) { adaptation_state = s; }
 
-    cmsHTRANSFORM get_transform() { return transform; }
+    PF::ICCTransform& get_transform() { return transform; }
 
     void set_out_profile( ICCProfile* p ) { out_profile = p; }
     void set_image_hints( VipsImage* img )
@@ -132,8 +132,9 @@ namespace PF
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 
         pin = p;
-        if(opar->get_transform()) 
-          cmsDoTransform( opar->get_transform(), pin, pout, width );
+        if(opar->get_transform().valid())
+          //cmsDoTransform( opar->get_transform(), pin, pout, width );
+          opar->get_transform().apply(pin,pout,width);
         else 
           memcpy( pout, pin, sizeof(T)*line_size );
       }
@@ -176,7 +177,7 @@ namespace PF
         p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
         pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 
-        if(opar->get_transform()) {
+        if(opar->get_transform().valid()) {
           if( opar->get_input_cs_type() == cmsSigLabData ) {
             for( x = 0; x < line_size_in; x+= 3 ) {
               line[x] = (cmsFloat32Number) (p[x] * 100.0);
@@ -186,7 +187,8 @@ namespace PF
               //  std::cout<<"ICCTransform::render(): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<std::endl;
               //}
             }
-            cmsDoTransform( opar->get_transform(), line, pout, width );
+            //cmsDoTransform( opar->get_transform(), line, pout, width );
+            opar->get_transform().apply(line,pout,width);
             if( false && r->left==0 && r->top==0 && y==0 ) {
               std::cout<<"ICCTransform::render(Lab): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
             }
@@ -200,12 +202,14 @@ namespace PF
                 std::cout<<"ICCTransform::render(CMYK in): line="<<line[x]<<" "<<line[x+1]<<" "<<line[x+2]<<" "<<line[x+3]<<std::endl;
               }
             }
-            cmsDoTransform( opar->get_transform(), line, pout, width );
+            //cmsDoTransform( opar->get_transform(), line, pout, width );
+            opar->get_transform().apply(line,pout,width);
             if( false && r->left==0 && r->top==0 && y==0 ) {
               std::cout<<"ICCTransform::render(CMYK in): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
             }
           } else {
-            cmsDoTransform( opar->get_transform(), p, pout, width );
+            //cmsDoTransform( opar->get_transform(), p, pout, width );
+            opar->get_transform().apply(p,pout,width);
             if( false && r->left==0 && r->top==0 && y==0 ) {
               std::cout<<"ICCTransform::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
             }
@@ -253,7 +257,7 @@ namespace PF
 
 
 
-
+/*
   template < OP_TEMPLATE_DEF_TYPE_SPEC > 
   class ICCTransformProc< OP_TEMPLATE_IMP_TYPE_SPEC(double) >
   {
@@ -283,16 +287,18 @@ namespace PF
         p = (double*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
         pout = (double*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
 
-        if(opar->get_transform()) {
+        if(opar->get_transform().valid()) {
           if( opar->get_input_cs_type() == cmsSigLabData ) {
             for( x = 0; x < line_size; x+= 3 ) {
               line[x] = (cmsFloat64Number) (pin[x] * 100.0); 
               line[x+1] = (cmsFloat64Number) (pin[x+1]*256.0 - 128.0);
               line[x+2] = (cmsFloat64Number) (pin[x+2]*256.0 - 128.0);
             }
-            cmsDoTransform( opar->get_transform(), line, pout, width );
+            //cmsDoTransform( opar->get_transform(), line, pout, width );
+            opar->get_transform().apply(line,pout,width);
           } else {
-            cmsDoTransform( opar->get_transform(), pin, pout, width );
+            //cmsDoTransform( opar->get_transform(), pin, pout, width );
+            opar->get_transform().apply(pin,pout,width);
           }
         } else {
           memcpy( pout, pin, sizeof(double)*line_size );
@@ -304,7 +310,7 @@ namespace PF
       }
     }
   };
-
+*/
 
 
 

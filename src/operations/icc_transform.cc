@@ -37,7 +37,6 @@ PF::ICCTransformPar::ICCTransformPar():
   intent( INTENT_RELATIVE_COLORIMETRIC ),
   bpc( true ),
   adaptation_state(-1),
-  transform( NULL ),
   input_cs_type( cmsSigRgbData ),
   output_cs_type( cmsSigRgbData ),
   clip_negative(false),
@@ -100,31 +99,8 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     std::cout<<"icc_transform: out_profile="<<out_profile<<" ("<<out_profile->get_profile()<<")"<<std::endl;
 //#endif
 
-  if( transform )
-    cmsDeleteTransform( transform );
-
-  transform = NULL;
   if( in_profile && out_profile && out_profile->get_profile() ) {
-    std::cout<<"icc_transform: getting input profile format"<<std::endl;
-    cmsUInt32Number infmt = vips2lcms_pixel_format( in[0]->BandFmt, in_profile->get_profile() );
-    std::cout<<"icc_transform: getting output profile format"<<std::endl;
-    cmsUInt32Number outfmt = vips2lcms_pixel_format( in[0]->BandFmt, out_profile->get_profile() );
-
-    cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
-    std::cout<<"icc_transform: get_bpc()="<<get_bpc()<<std::endl;
-    if( get_bpc() ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
-    cmsFloat64Number old_state = cmsSetAdaptationState( adaptation_state );
-    transform = cmsCreateTransform( in_profile->get_profile(),
-        infmt,
-        out_profile->get_profile(),
-        outfmt,
-        intent,
-        flags );
-    cmsSetAdaptationState( old_state );
-    std::cout<<"icc_transform: transform: "<<transform<<std::endl;
-    std::cout<<"icc_transform: in_profile: "<<in_profile<<std::endl;
-    std::cout<<"icc_transform: infmt: "<<infmt<<std::endl;
-    std::cout<<"icc_transform: outfmt: "<<outfmt<<std::endl;
+    transform.init( in_profile, out_profile, in[0]->BandFmt, intent, get_bpc(), adaptation_state );
   }
 
   if( out_profile && out_profile->get_profile() ) {
