@@ -127,8 +127,11 @@ link_directories(${Pugixml_LIBRARY_DIRS})
 
 include_directories(${EXIF_INCLUDE_DIRS})
 link_directories(${EXIF_LIBRARY_DIRS})
-#include_directories(${EXIV2_INCLUDE_DIRS})
-#link_directories(${EXIV2_LIBRARY_DIRS})
+
+if(NOT BUNDLED_EXIV2)
+  include_directories(${EXIV2_INCLUDE_DIRS})
+  link_directories(${EXIV2_LIBRARY_DIRS})
+endif(BUNDLED_EXIV2)
 
 include_directories(${ORC_INCLUDE_DIRS})
 link_directories(${ORC_LIBRARY_DIRS})
