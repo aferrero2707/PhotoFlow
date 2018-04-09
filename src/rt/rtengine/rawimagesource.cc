@@ -119,30 +119,51 @@ void rtengine::RawImageSource::ca_correct(VipsRegion* ir, VipsRegion* oreg, bool
 
 
 
+void rtengine::RawImageSource::no_demosaic(VipsRegion* ir, VipsRegion* oreg)
+{
+  int x, xx, y;
+  Rect *r = &oreg->valid;
+  // Initialization of pixel matrices
+  for( y = 0; y < r->height; y++ ) {
+    PF::raw_pixel_t* ptr = ir ? (PF::raw_pixel_t*)VIPS_REGION_ADDR( ir, r->left, y+r->top ) : NULL;
+    float* optr = (float*)VIPS_REGION_ADDR( oreg, r->left, y+r->top );
+    for( x = 0, xx = 0; x < r->width; x++, xx+=3 ) {
+      optr[xx] = ptr[x][0];
+      optr[xx+1] = ptr[x][0];
+      optr[xx+2] = ptr[x][0];
+    }
+  }
+}
+
+
+
+
+
+
 void rtengine::RawImageSource::amaze_demosaic(VipsRegion* ir, VipsRegion* oreg)
 {
-	int x, y;
+  int x, y;
   int border = 16;
 
   Rect *r = &oreg->valid;
-	int raw_left = (r->left/2)*2;
-	int raw_top = (r->top/2)*2;
-	int raw_right = r->left+r->width-1;
-	int raw_bottom = r->top+r->height-1;
+  int raw_left = (r->left/2)*2;
+  int raw_top = (r->top/2)*2;
+  int raw_right = r->left+r->width-1;
+  int raw_bottom = r->top+r->height-1;
 
-	// Make sure the border is entirely processed
+  // Make sure the border is entirely processed
   //if( raw_left < border ) raw_left = 0;
   //if( raw_top < border ) raw_top = 0;
   //if( raw_right > (ir->im->Xsize-border-1) ) raw_right = ir->im->Xsize-1;
   //if( raw_bottom > (ir->im->Ysize-border-1) ) raw_bottom = ir->im->Ysize-1;
 
-	// Portion of the image to be processed (a 16 pixels border is excluded)
+  // Portion of the image to be processed (a 16 pixels border is excluded)
   VipsRect r_img = {16, 16, ir->im->Xsize-32, ir->im->Ysize-32};
   //std::cout<<"image: "<<ir->im->Xsize<<","<<ir->im->Ysize<<"+"<<0<<"+"<<0<<std::endl;
   //std::cout<<"r_img: "<<r_img.width<<","<<r_img.height<<"+"<<r_img.left<<"+"<<r_img.top<<std::endl;
   //VipsRect r_img = {0, 0, ir->im->Xsize, ir->im->Ysize};
 
-	// Output region aligned to Bayer pattern and with 16 pixels border excluded
+  // Output region aligned to Bayer pattern and with 16 pixels border excluded
   VipsRect r_raw = {raw_left, raw_top, raw_right-raw_left+1, raw_bottom-raw_top+1};
   if( (r_raw.width%2) ) r_raw.width += 1;
   if( (r_raw.height%2) ) r_raw.height += 1;
@@ -151,13 +172,13 @@ void rtengine::RawImageSource::amaze_demosaic(VipsRegion* ir, VipsRegion* oreg)
   //std::cout<<"r_raw(2): "<<r_raw.width<<","<<r_raw.height<<"+"<<r_raw.left<<"+"<<r_raw.top<<std::endl;
 
 #ifndef NDEBUG
-	std::cout<<"rawData.init( "<<ir->valid.width<<", "<<ir->valid.height<<", "
-					 <<ir->valid.top<<", "<<ir->valid.left<<" )"<<std::endl;
+  std::cout<<"rawData.init( "<<ir->valid.width<<", "<<ir->valid.height<<", "
+           <<ir->valid.top<<", "<<ir->valid.left<<" )"<<std::endl;
 #endif
 
-	// Initialization of pixel matrices
-	tile_top = ir->valid.top;
-	tile_left = ir->valid.left;
+  // Initialization of pixel matrices
+  tile_top = ir->valid.top;
+  tile_left = ir->valid.left;
   rawData.init( ir->valid.width, ir->valid.height, ir->valid.top, ir->valid.left );
   for( y = 0; y < ir->valid.height; y++ ) {
     PF::raw_pixel_t* ptr = ir ? (PF::raw_pixel_t*)VIPS_REGION_ADDR( ir, ir->valid.left, y+ir->valid.top ) : NULL; 
@@ -167,7 +188,7 @@ void rtengine::RawImageSource::amaze_demosaic(VipsRegion* ir, VipsRegion* oreg)
   green.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
   blue.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
 
-	// Call to demosaicing method
+  // Call to demosaicing method
   amaze_demosaic_RT(0, 0, ir->im->Xsize, ir->im->Ysize,
                     r_raw.left, r_raw.top, r_raw.width, r_raw.height);
 

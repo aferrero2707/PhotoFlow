@@ -129,6 +129,7 @@ namespace rtengine {
 
 		// Interface layer between Photoflow and RT code
     void ca_correct(VipsRegion* ir, VipsRegion* oreg, bool autoCA, float cared, float cablue);
+    void no_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void amaze_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void igv_demosaic(VipsRegion* ir, VipsRegion* oreg);
     void lmmse_demosaic(VipsRegion* ir, VipsRegion* oreg);

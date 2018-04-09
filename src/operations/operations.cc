@@ -29,6 +29,7 @@
 
 #include "../base/processor_imp.hh"
 #include "operations.hh"
+#include "no_demosaic.hh"
 #include "amaze_demosaic.hh"
 #include "basic_adjustments.hh"
 #include "blender.hh"
@@ -82,6 +83,9 @@
 #include "tone_mapping.hh"
 #include "trcconv.hh"
 
+
+PF::ProcessorBase* PF::new_no_demosaic()
+{ return( new PF::Processor<PF::NoDemosaicPar,PF::NoDemosaicProc>() ); }
 
 PF::ProcessorBase* PF::new_amaze_demosaic()
 { return( new PF::Processor<PF::AmazeDemosaicPar,PF::AmazeDemosaicProc>() ); }

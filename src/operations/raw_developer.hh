@@ -49,7 +49,8 @@ namespace PF
     PF_DEMO_AMAZE,
     PF_DEMO_RCD,
     PF_DEMO_LMMSE,
-    PF_DEMO_IGV
+    PF_DEMO_IGV,
+    PF_DEMO_NONE
   };
 
   enum TCA_correction_mode_t
@@ -68,6 +69,7 @@ namespace PF
     PF::ProcessorBase* lmmse_demosaic;
     PF::ProcessorBase* igv_demosaic;
     PF::ProcessorBase* rcd_demosaic;
+    PF::ProcessorBase* no_demosaic;
     PF::ProcessorBase* xtrans_demosaic;
     PF::ProcessorBase* fast_demosaic;
     PF::ProcessorBase* fast_demosaic_xtrans;
