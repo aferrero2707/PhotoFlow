@@ -1262,6 +1262,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       }
       std::cout<<"Image::do_export_merged(): saving TIFF file "<<filename<<"   outimg="<<outimg<<std::endl;
       if( outimg ) {
+        BENCHFUN
         int predictor = 2;
 #ifndef NDEBUG
         std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
