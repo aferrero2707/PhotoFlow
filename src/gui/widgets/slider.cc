@@ -187,7 +187,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, std::string pname, std::string l
   scale(adjustment),
   spinButton(adjustment),
 #endif
-  reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore-pressed.png"),
+  reset_button(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-restore.png",PF::PhotoFlow::Instance().get_icons_dir()+"/libre-restore-pressed.png"),
   multiplier(mult)
 {
   create_widgets( l, val, min, max, sincr, pincr, size, layout );
@@ -204,7 +204,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, st
   scale(adjustment),
   spinButton(adjustment),
 #endif
-  reset_button(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore.png",PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-restore-pressed.png"),
+  reset_button(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-restore.png",PF::PhotoFlow::Instance().get_icons_dir()+"/libre-restore-pressed.png"),
   multiplier(mult)
 {
   create_widgets( l, val, min, max, sincr, pincr, size, layout );

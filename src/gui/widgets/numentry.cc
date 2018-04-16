@@ -32,10 +32,10 @@
 
 PF::NumEntry::NumEntry():
 Gtk::HBox(),
-//step_up(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-down-small.png"),
-//step_down(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-down-small.png"),
-button_step_up(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-up-small.png", PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-up-small-pressed.png"),
-button_step_down(PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-down-small.png", PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-chevron-down-small-pressed.png"),
+//step_up(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-chevron-down-small.png"),
+//step_down(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-chevron-down-small.png"),
+button_step_up(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-chevron-up-small.png", PF::PhotoFlow::Instance().get_icons_dir()+"/libre-chevron-up-small-pressed.png"),
+button_step_down(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-chevron-down-small.png", PF::PhotoFlow::Instance().get_icons_dir()+"/libre-chevron-down-small-pressed.png"),
 digits(1), inhibited(false)
 {
   pack_start( entry, Gtk::PACK_SHRINK );

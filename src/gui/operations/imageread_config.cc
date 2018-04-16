@@ -32,7 +32,7 @@
 
 PF::ImageReadConfigGUI::ImageReadConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Open an image" ),
-  img_open( PF::PhotoFlow::Instance().get_data_dir()+"/icons/libre-folder-open.png" ),
+  img_open( PF::PhotoFlow::Instance().get_icons_dir()+"/libre-folder-open.png" ),
   openButton(/*Gtk::Stock::OPEN*/),
 inProfileModeSelector( this, "in_profile_mode", "type: ", 1 ),
 inProfileTypeSelector( this, "in_profile_type", "gamut: ", 1 ),
