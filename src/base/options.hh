@@ -72,6 +72,7 @@ enum layers_list_placement_t
     bool ui_use_inverted_icons;
     layers_list_placement_t ui_layers_list_placement;
     bool ui_floating_tool_dialogs;
+    bool ui_multiple_tool_dialogs;
 
     int save_sidecar_files;
     int use_default_preset;
@@ -142,6 +143,9 @@ enum layers_list_placement_t
 
     void set_ui_floating_tool_dialogs(bool b) { ui_floating_tool_dialogs = b; }
     bool get_ui_floating_tool_dialogs() { return ui_floating_tool_dialogs; }
+
+    void set_ui_multiple_tool_dialogs(bool b) { ui_multiple_tool_dialogs = b; }
+    bool get_ui_multiple_tool_dialogs() { return ui_multiple_tool_dialogs; }
 
 
     void load();

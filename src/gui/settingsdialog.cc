@@ -48,7 +48,8 @@ PF::SettingsDialog::SettingsDialog():
       ui_use_system_theme_label(_("Use system theme")),
       ui_use_inverted_icons_label(_("Use inverted icons")),
       ui_layers_list_on_right_label(_("place layers list on the right")),
-      ui_floating_tool_dialogs_label(_("Floating tool controls dialogues"))
+      ui_floating_tool_dialogs_label(_("Floating tool controls dialogues")),
+      ui_multiple_tool_dialogs_label(_("Keep tool dialogues opened"))
 {
   set_default_size(600,400);
 
@@ -233,6 +234,13 @@ PF::SettingsDialog::SettingsDialog():
   ui_floating_tool_dialogs_hbox.set_tooltip_text(_("Floating tool controls dialogues (restart needed)"));
   ui_vbox.pack_start( ui_floating_tool_dialogs_hbox, Gtk::PACK_SHRINK, 2 );
 
+  ui_multiple_tool_dialogs_pad.set_size_request(20,0);
+  ui_multiple_tool_dialogs_hbox.pack_start( ui_multiple_tool_dialogs_pad, Gtk::PACK_SHRINK );
+  ui_multiple_tool_dialogs_hbox.pack_start( ui_multiple_tool_dialogs_check, Gtk::PACK_SHRINK );
+  ui_multiple_tool_dialogs_hbox.pack_start( ui_multiple_tool_dialogs_label, Gtk::PACK_SHRINK );
+  ui_multiple_tool_dialogs_hbox.set_tooltip_text(_(""));
+  ui_vbox.pack_start( ui_multiple_tool_dialogs_hbox, Gtk::PACK_SHRINK, 2 );
+
   ui_frame.add(ui_vbox);
   general_box.pack_start( ui_frame, Gtk::PACK_SHRINK, 10 );
 
@@ -255,6 +263,9 @@ PF::SettingsDialog::SettingsDialog():
 
   ui_use_system_theme_check.signal_toggled().connect(
       sigc::mem_fun(*this,&SettingsDialog::on_use_system_theme_check_toggled) );
+
+  ui_floating_tool_dialogs_check.signal_toggled().connect(
+      sigc::mem_fun(*this,&SettingsDialog::on_floating_tool_dialogs_check_toggled) );
 
   show_all_children();
 
@@ -338,7 +349,12 @@ void PF::SettingsDialog::load_settings()
       PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs()<<std::endl;
   ui_floating_tool_dialogs_check.set_active( PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs() );
 
+  std::cout<<"PF::PhotoFlow::Instance().get_options().get_ui_multiple_tool_dialogs(): "<<
+      PF::PhotoFlow::Instance().get_options().get_ui_multiple_tool_dialogs()<<std::endl;
+  ui_multiple_tool_dialogs_check.set_active( PF::PhotoFlow::Instance().get_options().get_ui_multiple_tool_dialogs() );
+
   on_use_system_theme_check_toggled();
+  on_floating_tool_dialogs_check_toggled();
 }
 
 
@@ -411,6 +427,9 @@ void PF::SettingsDialog::save_settings()
   PF::PhotoFlow::Instance().get_options().
       set_ui_floating_tool_dialogs( ui_floating_tool_dialogs_check.get_active() );
 
+  PF::PhotoFlow::Instance().get_options().
+      set_ui_multiple_tool_dialogs( ui_multiple_tool_dialogs_check.get_active() );
+
   PF::PhotoFlow::Instance().get_options().save();
 }
 
@@ -480,4 +499,11 @@ void PF::SettingsDialog::on_use_system_theme_check_toggled()
 {
   if( ui_use_system_theme_check.get_active() ) ui_use_inverted_icons_hbox.show();
   else ui_use_inverted_icons_hbox.hide();
+}
+
+
+void PF::SettingsDialog::on_floating_tool_dialogs_check_toggled()
+{
+  if( ui_floating_tool_dialogs_check.get_active() ) ui_multiple_tool_dialogs_hbox.show();
+  else ui_multiple_tool_dialogs_hbox.hide();
 }

@@ -116,6 +116,11 @@ class SettingsDialog : public Gtk::Dialog
   Gtk::Label ui_floating_tool_dialogs_label;
   Gtk::CheckButton ui_floating_tool_dialogs_check;
 
+  Gtk::HBox ui_multiple_tool_dialogs_hbox;
+  Gtk::Alignment ui_multiple_tool_dialogs_pad;
+  Gtk::Label ui_multiple_tool_dialogs_label;
+  Gtk::CheckButton ui_multiple_tool_dialogs_check;
+
 public:
   sigc::signal<void> signal_cm_modified;
 
@@ -130,6 +135,7 @@ public:
   void on_button_clicked(int id);
   void on_button_display_profile_open_clicked();
   void on_use_system_theme_check_toggled();
+  void on_floating_tool_dialogs_check_toggled();
 };
 
 }

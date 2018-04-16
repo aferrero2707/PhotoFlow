@@ -84,12 +84,17 @@ class ControlsDialog: public Gtk::Dialog
 {
   ImageEditor* editor;
   PF::OperationConfigGUI* gui;
+  bool visible;
+  int x, y;
 public:
   ControlsDialog( ImageEditor* editor );
   void set_controls(PF::Layer* l);
+  bool is_visible() { return visible; }
   void update();
   void on_hide();
   bool on_delete_event( GdkEventAny* any_event );
+  void open();
+  void close();
 };
 
 
@@ -124,7 +129,7 @@ class LayerWidget : public Gtk::VBox
   Gtk::Dialog layersDialog;
   OperationsTreeDialog operationsDialog;
 
-  ControlsDialog* controls_dialog;
+  std::map<PF::OperationConfigGUI*,PF::ControlsDialog*> controls_dialogs;
   bool controls_dialog_visible;
   int controls_dialog_x, controls_dialog_y;
 
@@ -208,7 +213,7 @@ public:
 
   void controls_dialog_show();
   void controls_dialog_hide();
-  void controls_dialog_close();
+  void controls_dialog_delete(PF::OperationConfigGUI* gui);
 
   //bool on_button_event( GdkEventButton* button );
 

@@ -46,6 +46,7 @@ PF::Options::Options()
   ui_use_inverted_icons = true;
   ui_layers_list_placement = PF::PF_LAYERS_LIST_PLACEMENT_RIGHT;
   ui_floating_tool_dialogs = false;
+  ui_multiple_tool_dialogs = true;
 }
 
 void PF::Options::set_working_profile_type(int t)
@@ -114,6 +115,9 @@ void PF::Options::load()
         }
         if (keyFile.has_key ("GUI", "floating_tool_dialogs")) {
           ui_floating_tool_dialogs = (bool)keyFile.get_integer ("GUI", "floating_tool_dialogs");
+        }
+        if (keyFile.has_key ("GUI", "multiple_tool_dialogs")) {
+          ui_multiple_tool_dialogs = (bool)keyFile.get_integer ("GUI", "multiple_tool_dialogs");
         }
       }
 
@@ -217,6 +221,7 @@ void PF::Options::save()
   keyFile.set_integer ("GUI", "use_inverted_icons", (int)ui_use_inverted_icons);
   keyFile.set_integer ("GUI", "layers_list_placement", (int)ui_layers_list_placement);
   keyFile.set_integer ("GUI", "floating_tool_dialogs", (int)ui_floating_tool_dialogs);
+  keyFile.set_integer ("GUI", "multiple_tool_dialogs", (int)ui_multiple_tool_dialogs);
 
   keyFile.set_integer ("Output", "save_sidecar_files", (int)save_sidecar_files);
 

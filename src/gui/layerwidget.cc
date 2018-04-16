@@ -316,7 +316,7 @@ void PF::AuxControlsGroup::set_control(PF::Layer* layer, PF::OperationConfigGUI*
 
 
 
-PF::ControlsDialog::ControlsDialog( ImageEditor* e ): Gtk::Dialog(), editor(e), gui(NULL)
+PF::ControlsDialog::ControlsDialog( ImageEditor* e ): Gtk::Dialog(), editor(e), gui(NULL), x(-1), y(-1)
 {
   show_all_children();
   set_deletable ( false );
@@ -400,6 +400,8 @@ void PF::ControlsDialog::update()
 void PF::ControlsDialog::on_hide()
 {
   std::cout<<"ControlsDialog::on_hide() called."<<std::endl;
+  get_position(x,y);
+  //visible = false;
   Gtk::Dialog::on_hide();
 }
 
@@ -407,9 +409,26 @@ void PF::ControlsDialog::on_hide()
 bool PF::ControlsDialog::on_delete_event( GdkEventAny* any_event )
 {
   std::cout<<"ControlsDialog::on_delete_event() called."<<std::endl;
-  if(editor) editor->get_layer_widget().controls_dialog_close();
+  //if(editor) editor->get_layer_widget().controls_dialog_close(gui);
+  close();
   return true;
 }
+
+
+void PF::ControlsDialog::open()
+{
+  std::cout<<"ControlsDialog::open(): x="<<x<<"  y="<<y<<std::endl;
+  if(x>=0 && y>=0) move(x,y);
+  show();
+  visible=true;
+}
+
+void PF::ControlsDialog::close()
+{
+  hide();
+  visible=false;
+}
+
 
 
 
@@ -430,8 +449,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonPresetLoad( _("Load preset") ),
   buttonPresetSave( _("Save preset") ),
   operationsDialog( image, this ),
-  controls_dialog(NULL), controls_dialog_visible(false), controls_dialog_x(-1), controls_dialog_y(-1),
-  add_button(PF::PhotoFlow::Instance().get_icons_dir()+"//add-layer.png", "", image, this),
+  controls_dialog_visible(false), controls_dialog_x(-1), controls_dialog_y(-1),
+  add_button(PF::PhotoFlow::Instance().get_icons_dir()+"/add-layer.png", "", image, this),
   group_button(PF::PhotoFlow::Instance().get_icons_dir()+"/group.png", "", image, this),
   trash_button(PF::PhotoFlow::Instance().get_icons_dir()+"/trash.png", "", image, this),
   insert_image_button(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-file-image.png", "", image, this),
@@ -640,6 +659,13 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
 
 PF::LayerWidget::~LayerWidget()
 {
+  std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i;
+  for(i = controls_dialogs.begin(); i != controls_dialogs.end(); i++) {
+    i->second->get_position(controls_dialog_x,controls_dialog_y);
+    i->second->hide();
+    //i->second->set_controls(NULL);
+    delete i->second;
+  }
 }
 
 
@@ -666,7 +692,10 @@ bool PF::LayerWidget::on_button_event( GdkEventButton* button )
 void PF::LayerWidget::update_controls()
 {
   controls_group.update();
-  if(controls_dialog) controls_dialog->update();
+  std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i;
+  for(i = controls_dialogs.begin(); i != controls_dialogs.end(); i++) {
+    if( i->second ) i->second->update();
+  }
 }
 
 
@@ -862,31 +891,44 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     std::cout<<"Activated row "<<l->get_name()<<std::endl;
 //#endif
     if( column == layer_views[page]->get_tree().get_column(LAYER_COL_NUM) && floating_tool_dialogs ) {
-      if( controls_dialog ) {
-        controls_dialog->get_position(controls_dialog_x,controls_dialog_y);
-        controls_dialog->hide();
-        controls_dialog->set_controls(NULL);
-        delete controls_dialog;
-        controls_dialog = NULL;
-        controls_dialog_visible = false;
+      // close all dialogs
+      if( l && l->get_processor() && l->get_processor()->get_par() &&
+          l->get_processor()->get_par()->get_config_ui() ) {
+
+        // hide the currently opened dialog, if required in the global options
+        if( PF::PhotoFlow::Instance().get_options().get_ui_multiple_tool_dialogs() == false )
+          controls_dialog_hide();
+
+        // look for an existing dialog for the selected tool
+        PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+        PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+        std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i =
+            controls_dialogs.find(gui);
+        // create the dialog if not existing yet
+        PF::ControlsDialog* dialog = NULL;
+        if( i == controls_dialogs.end() ) {
+          dialog = new ControlsDialog(editor);
+          dialog->set_gravity( Gdk::GRAVITY_STATIC );
+          dialog->set_controls(l);
+          if( gui ) {
+            controls_dialogs.insert( std::make_pair(gui, dialog) );
+          }
+          Gtk::Container* toplevel = get_toplevel();
+          Gtk::Window* toplevelwin = NULL;
+  #ifdef GTKMM_2
+          if( toplevel && toplevel->is_toplevel() )
+  #endif
+  #ifdef GTKMM_3
+            if( toplevel && toplevel->get_is_toplevel() )
+  #endif
+              toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
+          if( toplevelwin ) dialog->set_transient_for(*toplevelwin);
+        } else {
+          dialog = i->second;
+        }
+        controls_dialog_visible = true;
+        dialog->open();
       }
-      controls_dialog = new ControlsDialog(editor);
-      controls_dialog->set_gravity( Gdk::GRAVITY_STATIC );
-      controls_dialog->set_controls(l);
-      if(controls_dialog_x>=0 && controls_dialog_y>=0)
-        controls_dialog->move(controls_dialog_x,controls_dialog_y);
-      Gtk::Container* toplevel = get_toplevel();
-      Gtk::Window* toplevelwin = NULL;
-    #ifdef GTKMM_2
-      if( toplevel && toplevel->is_toplevel() )
-    #endif
-    #ifdef GTKMM_3
-      if( toplevel && toplevel->get_is_toplevel() )
-    #endif
-        toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
-      if( toplevelwin ) controls_dialog->set_transient_for(*toplevelwin);
-      controls_dialog_visible = true;
-      controls_dialog->show();
     }
     if( column == layer_views[page]->get_tree().get_column(IMAP_COL_NUM) ) {
       if( !l->get_processor()->get_par()->has_intensity() )
@@ -1169,23 +1211,30 @@ void PF::LayerWidget::remove_tab( Gtk::Widget* widget )
 
 void PF::LayerWidget::controls_dialog_show()
 {
-  if( controls_dialog && controls_dialog_visible ) controls_dialog->show();
+  std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i;
+  for(i = controls_dialogs.begin(); i != controls_dialogs.end(); i++) {
+    if( i->second && i->second->is_visible() ) i->second->open();
+  }
 }
 
 void PF::LayerWidget::controls_dialog_hide()
 {
-  if( controls_dialog && controls_dialog_visible ) controls_dialog->hide();
+  std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i;
+  for(i = controls_dialogs.begin(); i != controls_dialogs.end(); i++) {
+    if( i->second ) i->second->hide();
+  }
 }
 
-void PF::LayerWidget::controls_dialog_close()
+void PF::LayerWidget::controls_dialog_delete(PF::OperationConfigGUI* gui)
 {
-  if( !controls_dialog ) return;
-  controls_dialog->get_position(controls_dialog_x,controls_dialog_y);
-  controls_dialog->hide();
-  controls_dialog->set_controls(NULL);
-  delete controls_dialog;
-  controls_dialog = NULL;
-  controls_dialog_visible = false;
+  std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i =
+      controls_dialogs.find(gui);
+  if( i == controls_dialogs.end() ) return;
+  i->second->get_position(controls_dialog_x,controls_dialog_y);
+  i->second->hide();
+  i->second->set_controls(NULL);
+  delete i->second;
+  controls_dialogs.erase(gui);
 }
 
 
