@@ -36,6 +36,7 @@ int vips_lensfun( VipsImage* in, VipsImage **out, PF::ProcessorBase* proc, VipsI
 PF::LensFunParStep::LensFunParStep():
             OpParBase(),
             auto_matching( true ),
+            auto_crop( false ),
             enable_distortion( true ),
             enable_tca( true ),
             enable_vignetting( true )
@@ -277,6 +278,45 @@ VipsImage* PF::LensFunParStep::build(std::vector<VipsImage*>& in, int first,
 
   PF_UNREF( interpolate, "vips_lensfun(): interpolate unref" );
 
+
+  g_print("LensFunPar::build(): distortion_enabled()=%d  auto_crop=%d\n", distortion_enabled(), auto_crop);
+
+  if( distortion_enabled() && auto_crop ) {
+    int flags = 0;
+    flags |= LF_MODIFY_DISTORTION;
+    lfModifier* modifier = new lfModifier( get_lens(), get_camera()->CropFactor,
+        outnew->Xsize, outnew->Ysize );
+    int modflags = modifier->Initialize(
+        get_lens(), LF_PF_F32, get_focal_length(),
+        get_aperture(), get_distance(), 1.0, get_lens()->Type,
+        flags, false );
+
+    g_print("LensFunPar::build(): modflags: %d\n", modflags);
+
+    if( modflags & LF_MODIFY_DISTORTION ) {
+      float scale = 1.f/modifier->GetAutoScale(false);
+      g_print("LensFunPar::build(): scale: %f\n", scale);
+      if( scale < 1 ) {
+        int cw = scale * outnew->Xsize - 1;
+        int ch = scale * outnew->Ysize - 1;
+        int cleft = (outnew->Xsize - cw)/2;
+        int ctop = (outnew->Ysize - ch)/2;
+        VipsImage* timg = NULL;
+        if( vips_crop( outnew, &timg, cleft, ctop, cw, ch, NULL ) ) {
+          std::cout<<"WARNIG: LensFunPar::build(): vips_crop() failed."<<std::endl;
+          std::cout<<"outnew->Xsize="<<outnew->Xsize<<"  outnew->Ysize="<<outnew->Ysize<<std::endl;
+          std::cout<<"vips_crop( outnew, &timg, "<<cleft<<", "<<ctop<<", "
+              <<cw<<", "<<ch<<", NULL )"<<std::endl;
+        } else {
+          PF_UNREF( outnew, "vips_lensfun(): outnew unref" );
+          outnew = timg;
+        }
+      }
+    }
+    delete modifier;
+  }
+
+
   //outnew = in[0];
   //PF_REF( outnew, "LensFunPar::build(): in[0] ref")
 
@@ -293,6 +333,7 @@ PF::LensFunPar::LensFunPar():
             prop_camera_model( "camera_model", this ),
             prop_lens( "lens", this ),
             auto_matching( "auto_matching", this, true ),
+            auto_crop( "auto_crop", this, false ),
             enable_distortion( "enable_distortion", this, true ),
             enable_tca( "enable_tca", this, true ),
             enable_vignetting( "enable_vignetting", this, false ),
@@ -480,6 +521,7 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
   step1_par->set_lfcamera( lfcamera );
   step1_par->set_lflens( lflens );
   step1_par->set_auto_matching_enabled( auto_matching.get() );
+  step1_par->set_auto_crop_enabled( false );
   step1_par->set_vignetting_enabled( enable_vignetting.get() );
   step1_par->set_distortion_enabled( false );
   step1_par->set_tca_enabled( false );
@@ -495,6 +537,7 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
     std::cerr<<"LensFunPar::build(): NULL step2_par"<<std::endl;
     return(out1);
   }
+  std::cerr<<"LensFunPar::build(): building step2_par, auto_crop="<<auto_crop.get()<<std::endl;
   step2_par->set_image_hints( out1 );
   step2_par->set_format( get_format() );
   step2_par->set_camera_maker( cam_make );
@@ -503,6 +546,7 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
   step2_par->set_lfcamera( lfcamera );
   step2_par->set_lflens( lflens );
   step2_par->set_auto_matching_enabled( auto_matching.get() );
+  step2_par->set_auto_crop_enabled( auto_crop.get() );
   step2_par->set_vignetting_enabled( false );
   step2_par->set_distortion_enabled( enable_distortion.get() );
   step2_par->set_tca_enabled( enable_tca.get() );

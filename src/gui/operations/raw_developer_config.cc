@@ -355,6 +355,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
         ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
         ca_frame( _("CA correction") ),
         lf_auto_matching_checkbox( this, "auto_matching", _("auto matching"), true ),
+        lf_auto_crop_checkbox( this, "lf_auto_crop", _("auto cropping"), true ),
         lf_cam_selector( this, "camera_maker", "camera_model", _("camera model: "), 0, 150 ),
         lf_lens_selector( this, "lens", _("lens model: "), 0, 150 ),
         lf_selector( this, "camera_maker", "camera_model", "lens" ),
@@ -470,6 +471,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   lf_hbox.pack_start( lf_auto_matching_checkbox );
   lf_hbox.pack_start( lf_enable_all_button );
   lf_box.pack_start( lf_hbox );
+  lf_box.pack_start( lf_auto_crop_checkbox );
   lf_box.pack_start( lf_enable_vignetting_button );
   lf_box.pack_start( lf_enable_distortion_button );
   lf_box.pack_start( lf_enable_tca_button );

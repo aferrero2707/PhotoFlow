@@ -133,6 +133,7 @@ public:
     Gtk::Label lf_label1, lf_label2, lf_label3;
     Gtk::Entry lf_makerEntry, lf_modelEntry, lf_lensEntry;
     CheckBox lf_auto_matching_checkbox;
+    CheckBox lf_auto_crop_checkbox;
     PF::LFCamSelector2 lf_cam_selector;
     PF::LFLensSelector2 lf_lens_selector;
     PF::LFSelector lf_selector;

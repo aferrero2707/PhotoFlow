@@ -59,6 +59,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   enable_tca( "lf_enable_tca", this, false ),
   enable_vignetting( "lf_enable_vignetting", this, false ),
   enable_all( "lf_enable_all", this, false ),
+  auto_crop( "lf_auto_crop", this, false ),
   tca_method("tca_method",this,PF::PF_TCA_CORR_AUTO,"TCA_CORR_AUTO",_("auto")),
   demo_method("demo_method",this,PF::PF_DEMO_AMAZE,"AMAZE","Amaze"),
 	fcs_steps("fcs_steps",this,0),
@@ -335,6 +336,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   /**/
   lensfun->get_par()->set_image_hints( out_demo );
   lensfun->get_par()->set_format( VIPS_FORMAT_FLOAT );
+  lfpar->set_auto_crop_enabled( auto_crop.get() );
   lfpar->set_vignetting_enabled( enable_vignetting.get() || enable_all.get() );
   lfpar->set_distortion_enabled( enable_distortion.get() || enable_all.get() );
   lfpar->set_tca_enabled( false );

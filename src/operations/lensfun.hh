@@ -62,6 +62,7 @@ class LensFunParStep: public OpParBase
   std::string prop_lens;
 
   bool auto_matching;
+  bool auto_crop;
   bool enable_distortion, enable_tca, enable_vignetting;
   rtengine::LFCamera lfcamera;
   rtengine::LFLens lflens;
@@ -102,6 +103,8 @@ public:
 
   void set_auto_matching_enabled(bool flag) { auto_matching = flag; }
 
+  void set_auto_crop_enabled(bool flag) { auto_crop = flag; }
+
   void set_distortion_enabled(bool flag) { enable_distortion = flag; }
   void set_tca_enabled(bool flag) { enable_tca = flag; }
   void set_vignetting_enabled(bool flag) { enable_vignetting = flag; }
@@ -131,6 +134,7 @@ class LensFunPar: public OpParBase
   Property<std::string> prop_lens;
 
   Property<bool> auto_matching;
+  Property<bool> auto_crop;
   Property<bool> enable_distortion, enable_tca, enable_vignetting, enable_all;
 
   rtengine::LFCamera lfcamera;
@@ -164,6 +168,8 @@ public:
   bool distortion_enabled() { return enable_distortion.get(); }
   bool tca_enabled() { return enable_tca.get(); }
   bool vignetting_enabled() { return enable_vignetting.get(); }
+
+  void set_auto_crop_enabled(bool flag) { auto_crop.update(flag); }
 
   void set_distortion_enabled(bool flag) { enable_distortion.update(flag); }
   void set_tca_enabled(bool flag) { enable_tca.update(flag); }

@@ -85,7 +85,7 @@ namespace PF
     Property<std::string> lf_prop_camera_model;
     Property<std::string> lf_prop_lens;
 
-    Property<bool> enable_distortion, enable_tca, enable_vignetting, enable_all;
+    Property<bool> enable_distortion, enable_tca, enable_vignetting, enable_all, auto_crop;
     // False color suppression steps
     PropertyBase tca_method;
     // False color suppression steps
