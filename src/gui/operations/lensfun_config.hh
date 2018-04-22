@@ -39,6 +39,7 @@
 #endif
 
 #include "../operation_config_gui.hh"
+#include "../widgets/lensfun_selector.hh"
 #include "../../operations/lensfun.hh"
 
 
@@ -46,24 +47,17 @@ namespace PF {
 
 class LensFunConfigGUI: public OperationConfigGUI
 {
-  //#ifdef GTKMM_2
   Gtk::VBox controlsBox;
-  Gtk::HBox hbox1, hbox2, hbox3;
+  Gtk::HBox hbox;
 
-  Gtk::Label label1, label2, label3;
-  Gtk::Entry makerEntry, modelEntry, lensEntry;
-
-  CheckBox enable_distortion_button, enable_tca_button, enable_vignetting_button;
-  //#endif
-
-#ifdef PF_HAS_LENSFUN
-  lfDatabase* ldb;
-#endif
+  CheckBox auto_matching_checkbox;
+  CheckBox auto_crop_checkbox;
+  PF::LFSelector lf_selector;
+  CheckBox enable_distortion_button, enable_tca_button, enable_vignetting_button, enable_all_button;
+  Glib::ustring custom_cam_maker, custom_cam_model, custom_lens_model;
 
 public:
   LensFunConfigGUI( Layer* l );
-
-  void on_maker_changed();
 
   void do_update();
 };

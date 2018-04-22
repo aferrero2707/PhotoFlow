@@ -334,8 +334,8 @@ PF::LensFunPar::LensFunPar():
             prop_lens( "lens", this ),
             auto_matching( "auto_matching", this, true ),
             auto_crop( "auto_crop", this, false ),
-            enable_distortion( "enable_distortion", this, true ),
-            enable_tca( "enable_tca", this, true ),
+            enable_distortion( "enable_distortion", this, false ),
+            enable_tca( "enable_tca", this, false ),
             enable_vignetting( "enable_vignetting", this, false ),
             enable_all( "enable_all", this, false )
 {
@@ -522,7 +522,7 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
   step1_par->set_lflens( lflens );
   step1_par->set_auto_matching_enabled( auto_matching.get() );
   step1_par->set_auto_crop_enabled( false );
-  step1_par->set_vignetting_enabled( enable_vignetting.get() );
+  step1_par->set_vignetting_enabled( enable_vignetting.get()||enable_all.get() );
   step1_par->set_distortion_enabled( false );
   step1_par->set_tca_enabled( false );
   in2.clear(); in2.push_back( in[0] );
@@ -548,8 +548,8 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
   step2_par->set_auto_matching_enabled( auto_matching.get() );
   step2_par->set_auto_crop_enabled( auto_crop.get() );
   step2_par->set_vignetting_enabled( false );
-  step2_par->set_distortion_enabled( enable_distortion.get() );
-  step2_par->set_tca_enabled( enable_tca.get() );
+  step2_par->set_distortion_enabled( enable_distortion.get()||enable_all.get() );
+  step2_par->set_tca_enabled( enable_tca.get()||enable_all.get() );
   in2.clear(); in2.push_back( out1 );
   out = step2_par->build( in2, 0, NULL, NULL, level );
   g_object_unref( out1 );
