@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "../base/photoflow.hh"
+#include "../base/processor_imp.hh"
 #include "../base/new_operation.hh"
 #include "convertformat.hh"
 #include "convert_colorspace.hh"
@@ -39,6 +40,43 @@
 #include "maxrgb.hh"
 #include "trcconv.hh"
 #include "clone.hh"
+
+
+
+PF::RGB2MaskPar::RGB2MaskPar(): OpParBase(), ch(PF::CLONE_CHANNEL_RGB)
+{
+  set_type( "rgb2mask" );
+}
+
+
+
+VipsImage* PF::RGB2MaskPar::build(std::vector<VipsImage*>& in, int first,
+    VipsImage* imap, VipsImage* omap, unsigned int& level)
+{
+  VipsImage* out = NULL;
+  void *profile_data;
+  size_t profile_length;
+  VipsImage* srcimg = in[0];
+  if( !srcimg ) return NULL;
+  profile = PF::get_icc_profile( srcimg );
+
+  // No Lab conversion possible if the input image has no ICC profile
+  if( !profile ) {
+    std::cout<<"RGB2MaskPar::build(): no profile data"<<std::endl;
+    PF_REF(srcimg, "RGB2MaskPar::build(): srcimg ref when no profile data");
+    return srcimg;
+  }
+
+  set_image_hints( srcimg );
+  grayscale_image( get_xsize(), get_ysize() );
+  out = PF::OpParBase::build( in, first, imap, omap, level );
+
+  // This is a mask image, so it has no associated color profile
+  if( out )
+    PF::set_icc_profile( out, NULL );
+return out;
+}
+
 
 
 PF::ClonePar::ClonePar(): 
@@ -64,6 +102,7 @@ PF::ClonePar::ClonePar():
   desaturate = PF::new_desaturate_luminance();
   maxrgb = PF::new_maxrgb();
   trcconv = PF::new_trcconv();
+  rgb2mask = new PF::Processor<PF::RGB2MaskPar,PF::RGB2MaskProc>();
 
   convert2lab = PF::new_convert_colorspace();
   PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
@@ -160,10 +199,22 @@ VipsImage* PF::ClonePar::rgb2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   if( srcimg ) 
     csin = PF::convert_colorspace( srcimg->Type );
 
-  std::cout<<"ClonePar::rgb2grayscale(): csin="<<csin<<std::endl;
+  std::cout<<"ClonePar::rgb2grayscale(): csin="<<csin<<"  PF_COLORSPACE_RGB="<<PF::PF_COLORSPACE_RGB<<std::endl;
   if( csin != PF::PF_COLORSPACE_RGB ) {
     return NULL;
   }
+
+  PF::RGB2MaskPar* par = dynamic_cast<PF::RGB2MaskPar*>(rgb2mask->get_par());
+  if( par ) {
+    rgb2mask->get_par()->set_image_hints( srcimg );
+    rgb2mask->get_par()->set_format( get_format() );
+    par->set_clone_channel( ch );
+    std::vector<VipsImage*> in2; in2.push_back( srcimg );
+    out = par->build( in2, 0, NULL, NULL, level );
+  }
+  std::cout<<"ClonePar::rgb2grayscale(): out="<<out<<std::endl;
+  return out;
+
   switch( ch ) {
   case PF::CLONE_CHANNEL_RGB: 
   case PF::CLONE_CHANNEL_SOURCE:
@@ -559,6 +610,7 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
         unsigned int level2 = level;
         std::cout<<"ClonePar::build(): calling rgb2grayscale()"<<std::endl;
         out = rgb2grayscale( srcimg, ch, level2 );
+        std::cout<<"ClonePar::build(): rgb2grayscale() out="<<out<<std::endl;
       }
       if( ch==PF::CLONE_CHANNEL_MAX_RGB ) {
         unsigned int level2 = level;
