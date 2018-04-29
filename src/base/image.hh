@@ -53,6 +53,14 @@ namespace PF
 {
 
 
+enum export_format_t
+{
+  EXPORT_FORMAT_JPEG,
+  EXPORT_FORMAT_TIFF_8,
+  EXPORT_FORMAT_TIFF_16,
+  EXPORT_FORMAT_TIFF_32f
+};
+
 struct ImageBuffer
 {
   float* buf;

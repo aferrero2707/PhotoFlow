@@ -102,11 +102,11 @@ Glib::ustring PF::TextSelector::get_active_text()
 
 PF::ExportDialog::ExportDialog():
 Gtk::Dialog( _("Export image"),false),
-file_button(_("Export as...")),
+file_button(_("Export to...")),
 export_format_selector(_("format:")),
 jpeg_quant_table_selector(_("quantization table:")),
 tiff_format_selector(_("file format:")),
-size_selector(_("")),
+size_selector(_("output size:")),
 units_selector(_("unit:")),
 #ifdef GTKMM_2
 scale_width_pixels_adjustment( 1920, 1, 10000, 1, 10, 0 ),
@@ -123,10 +123,6 @@ export_format(PF::EXPORT_FORMAT_JPEG)
   file_hbox.pack_start( file_button, Gtk::PACK_SHRINK, 4 );
   file_hbox.pack_start( file_entry, Gtk::PACK_EXPAND_WIDGET, 8 );
 
-  export_format_selector.add_entry( _("Jpeg"), PF::EXPORT_FORMAT_JPEG );
-  export_format_selector.add_entry( _("TIFF"), PF::EXPORT_FORMAT_TIFF );
-  export_format_selector.set_active(PF::EXPORT_FORMAT_JPEG);
-  file_hbox.pack_start( export_format_selector, Gtk::PACK_SHRINK, 4 );
   get_vbox()->pack_start( file_hbox, Gtk::PACK_SHRINK, 2 );
 
   get_vbox()->pack_start( top_separator, Gtk::PACK_SHRINK, 2 );
@@ -136,9 +132,17 @@ export_format(PF::EXPORT_FORMAT_JPEG)
 
   left_vbox.set_spacing(5);
 
+  export_format_selector.add_entry( _("JPEG (8 bit)"), PF::EXPORT_FORMAT_JPEG );
+  export_format_selector.add_entry( _("TIFF (8 bit)"), PF::EXPORT_FORMAT_TIFF_8 );
+  export_format_selector.add_entry( _("TIFF (16 bit"), PF::EXPORT_FORMAT_TIFF_16 );
+  export_format_selector.add_entry( _("TIFF (32 bit float)"), PF::EXPORT_FORMAT_TIFF_32f );
+  export_format_selector.set_active(PF::EXPORT_FORMAT_JPEG);
+  left_vbox.pack_start( export_format_selector, Gtk::PACK_SHRINK, 4 );
+  //left_vbox.pack_start( format_type_separator, Gtk::PACK_SHRINK, 0 );
+
   // Jpeg options
   jpeg_options_vbox.set_spacing(2);
-  jpeg_options_label.set_text(_("Jpeg options"));
+  //jpeg_options_label.set_text(_("Jpeg options"));
   jpeg_options_vbox.pack_start( jpeg_options_label, Gtk::PACK_SHRINK );
   jpeg_quality_label.set_text(_("quality:"));
   jpeg_quality_hbox.pack_start( jpeg_quality_label, Gtk::PACK_SHRINK, 2 );
@@ -162,10 +166,10 @@ export_format(PF::EXPORT_FORMAT_JPEG)
   left_vbox.pack_start( jpeg_options_vbox, Gtk::PACK_SHRINK );
 
   tiff_options_vbox.set_spacing(2);
-  tiff_format_selector.add_entry( _("8 bit"), 0 );
-  tiff_format_selector.add_entry( _("16 bit"), 1 );
-  tiff_format_selector.add_entry( _("32 bit float"), 2 );
-  tiff_options_vbox.pack_start( tiff_format_selector, Gtk::PACK_SHRINK );
+  //tiff_format_selector.add_entry( _("8 bit"), 0 );
+  //tiff_format_selector.add_entry( _("16 bit"), 1 );
+  //tiff_format_selector.add_entry( _("32 bit float"), 2 );
+  //tiff_options_vbox.pack_start( tiff_format_selector, Gtk::PACK_SHRINK );
   tiff_compressed_label.set_text(_("compressed"));
   tiff_compressed_hbox.pack_start( tiff_compressed_label, Gtk::PACK_SHRINK, 2 );
   tiff_compressed_hbox.pack_start( tiff_compressed_check, Gtk::PACK_SHRINK, 2 );
@@ -177,8 +181,8 @@ export_format(PF::EXPORT_FORMAT_JPEG)
 
   // output size options
   resize_vbox.set_spacing(2);
-  resize_label.set_text(_("output size"));
-  resize_vbox.pack_start( resize_label, Gtk::PACK_SHRINK );
+  //resize_label.set_text(_("output size"));
+  //resize_vbox.pack_start( resize_label, Gtk::PACK_SHRINK );
 
   size_selector.add_entry(_("original"), PF::SIZE_ORIGINAL);
   size_selector.add_entry(_("800 x 600"), PF::SIZE_800_600);
@@ -347,7 +351,9 @@ void PF::ExportDialog::on_show()
     image_filename = PF::replaceFileExtension(tmp_filename, "jpg");
     break;
   }
-  case PF::EXPORT_FORMAT_TIFF: {
+  case PF::EXPORT_FORMAT_TIFF_8:
+  case PF::EXPORT_FORMAT_TIFF_16:
+  case PF::EXPORT_FORMAT_TIFF_32f: {
     image_filename = PF::replaceFileExtension(tmp_filename, "tif");
     break;
   }
@@ -390,7 +396,9 @@ void PF::ExportDialog::on_format_changed()
     file_entry.set_text( new_filename );
     break;
   }
-  case PF::EXPORT_FORMAT_TIFF: {
+  case PF::EXPORT_FORMAT_TIFF_8:
+  case PF::EXPORT_FORMAT_TIFF_16:
+  case PF::EXPORT_FORMAT_TIFF_32f: {
     jpeg_options_vbox.hide();
     tiff_options_vbox.show_all();
     tiff_options_vbox.show();
@@ -434,7 +442,7 @@ void PF::ExportDialog::on_button_clicked(int id)
       options.jpeg_quality = jpeg_quality_scale.get_value();
       options.jpeg_chroma_subsampling = jpeg_chroma_subsampling_check.get_active();
       options.jpeg_quant_table = jpeg_quant_table_selector.get_active_id();
-      options.tiff_format = tiff_format_selector.get_active_id();
+      options.tiff_format = export_format_selector.get_active_id();
       options.tiff_compress = tiff_compressed_check.get_active();
       options.size = (PF::export_size_t)size_selector.get_active_id();
       options.sharpen_enabled = resize_sharpening_check.get_active();

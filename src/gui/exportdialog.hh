@@ -35,12 +35,6 @@
 
 namespace PF {
 
-enum export_format_t
-{
-  EXPORT_FORMAT_JPEG,
-  EXPORT_FORMAT_TIFF
-};
-
   class ImageEditor;
 
 
@@ -82,6 +76,7 @@ enum export_format_t
     TextSelector export_format_selector;
 
     Gtk::HSeparator top_separator;
+    Gtk::HSeparator format_type_separator;
     Gtk::HSeparator format_options_separator;
     Gtk::HSeparator size_options_separator;
     Gtk::VSeparator vertical_separator;

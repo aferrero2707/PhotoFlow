@@ -1240,9 +1240,9 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       */
       outimg = image;
-      if( export_opt && export_opt->tiff_format != 2 ) {
+      if( export_opt && export_opt->tiff_format != EXPORT_FORMAT_TIFF_32f ) {
         int max = 255;
-        if( export_opt->tiff_format == 1 ) max = 65535;
+        if( export_opt->tiff_format == EXPORT_FORMAT_TIFF_16 ) max = 65535;
         std::cout<<"Image::do_export_merged(): max="<<max<<std::endl;
         if( !vips_linear1(image, &outimg, max, 0, NULL) ) {
           PF_UNREF( image, "Image::do_export_merged(): image unref" );
@@ -1252,7 +1252,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
         }
 
         VipsBandFormat format = VIPS_FORMAT_UCHAR;
-        if( export_opt->tiff_format == 1 ) format = VIPS_FORMAT_USHORT;
+        if( export_opt->tiff_format == EXPORT_FORMAT_TIFF_16 ) format = VIPS_FORMAT_USHORT;
         if( !vips_cast(image, &outimg, format, NULL) ) {
           PF_UNREF( image, "Image::do_export_merged(): image unref" );
           image = outimg;
