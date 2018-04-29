@@ -17,7 +17,7 @@ SET(MACINTEGRATION_FIND_REQUIRED ${MacIntegration_FIND_REQUIRED})
 find_path(MACINTEGRATION_INCLUDE_DIR gtkosxapplication.h PATH_SUFFIXES gtkmacintegration gtkmacintegration-gtk2)
 mark_as_advanced(MACINTEGRATION_INCLUDE_DIR)
 
-set(MACINTEGRATION_NAMES ${MACINTEGRATION_NAMES} gtkmacintegration libgtkmacintegration gtkmacintegration-gtk2 libgtkmacintegration-gtk2)
+set(MACINTEGRATION_NAMES ${MACINTEGRATION_NAMES} gtkmacintegration libgtkmacintegration gtkmacintegration-gtk2 libgtkmacintegration-gtk2 gtkmacintegration-gtk3 libgtkmacintegration-gtk3)
 find_library(MACINTEGRATION_LIBRARY NAMES ${MACINTEGRATION_NAMES})
 mark_as_advanced(MACINTEGRATION_LIBRARY)
 
