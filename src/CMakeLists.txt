@@ -376,7 +376,7 @@ if(WIN32)
   # add icon, version, ... resources for Windows executable
   configure_file("${CMAKE_SOURCE_DIR}/data/pixmaps/phf_logo_128x128.ico" "${CMAKE_BINARY_DIR}/data/pixmaps/phf_logo_128x128.ico" COPYONLY)
   SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
-  set(RESOURCE_OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/win/darktable.rc")
+  set(RESOURCE_OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/win/photoflow.rc")
 endif(WIN32)
 
 
