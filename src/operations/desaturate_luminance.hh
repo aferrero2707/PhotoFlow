@@ -84,29 +84,30 @@ namespace PF
       float* pout;
       float* line = NULL;
       float val;
-      if( profile->get_trc_type()!=PF_TRC_LINEAR ) line = new float[line_size];
+      //if( profile->get_trc_type()!=PF_TRC_LINEAR ) line = new float[line_size];
       for( y = 0; y < r->height; y++ ) {
         y0 = r->top + y;
         pin = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, y0 );
         pout = (float*)VIPS_REGION_ADDR( oreg, r->left, y0 );
-        if( line ) {
-          for( x = 0; x < line_size; x++ ) {
-            line[x] = profile->perceptual2linear( pin[x] );
-          }
-          pin2 = line;
-        } else {
-          pin2 = pin;
-        }
+        //if( line ) {
+        //  for( x = 0; x < line_size; x++ ) {
+        //    line[x] = profile->perceptual2linear( pin[x] );
+        //  }
+        //  pin2 = line;
+        //} else {
+        //  pin2 = pin;
+        //}
 
         for( x = 0; x < line_size; x += 3 ) {
-          val = profile->get_luminance( pin2[x], pin2[x+1], pin2[x+2] );
-          if( profile->get_trc_type()!=PF_TRC_LINEAR )
-            val = profile->linear2perceptual( val );
+          val = profile->get_lightness( pin2[x], pin2[x+1], pin2[x+2] );
+          //if( profile->get_trc_type()!=PF_TRC_LINEAR )
+          //  val = profile->linear2perceptual( val );
           pout[x] = val;
           pout[x+1] = val;
           pout[x+2] = val;
         }
       }
+      //if( line ) delete line;
     }
   };
 
