@@ -70,7 +70,7 @@ SET(CMAKE_CXX_FLAGS_VERBDEBUG " -Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}")
 #SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
 #SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ffast-math -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
 SET(CMAKE_CXX_FLAGS_RELEASE        "   -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter -Wno-deprecated-declarations")
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O3 -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter -Wno-deprecated-declarations")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2 -fomit-frame-pointer -ftree-vectorize -funroll-loops -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter -Wno-deprecated-declarations")
 SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
 
 #link_directories("/this/is/a/test/path")
@@ -372,6 +372,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 #MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
 
+if(WIN32)
+  # add icon, version, ... resources for Windows executable
+  configure_file("${CMAKE_SOURCE_DIR}/data/pixmaps/phf_logo_128x128.ico" "${CMAKE_BINARY_DIR}/data/pixmaps/phf_logo_128x128.ico" COPYONLY)
+  SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
+  set(RESOURCE_OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/win/darktable.rc")
+endif(WIN32)
+
+
+
 # Film CLUTs
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/gmic_film_cluts_download.cmake "file(DOWNLOAD http://gmic.eu/gmic_film_cluts.gmz ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz)")
 add_custom_command(
@@ -535,7 +544,7 @@ INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow)
 
 
 
-
+if( FALSE )
   get_property(idirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
   foreach(dir ${idirs})
     message(STATUS "include dir='${dir}'")
@@ -544,6 +553,10 @@ INSTALL(FILES ../data/gmic_film_cluts.gmz DESTINATION share/photoflow)
   foreach(dir ${ldirs})
     message(STATUS "library dir='${dir}'")
   endforeach()
+endif( FALSE )
+
+add_subdirectory(benchmarks) 
+
 
 #if(GTKMM3_FOUND)
 
