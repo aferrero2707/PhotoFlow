@@ -125,6 +125,7 @@ PF::ICCProfile::ICCProfile()
   trc_type = PF_TRC_STANDARD;
   perceptual_trc = NULL;
   perceptual_trc_inv = NULL;
+  parametric_trc = false;
 }
 
 
@@ -255,9 +256,9 @@ void PF::ICCProfile::init_trc()
 
   cmsBool is_linear = cmsIsToneCurveLinear(red_trc);
   cmsInt32Number tcpt = cmsGetToneCurveParametricType(red_trc);
-  bool is_parametric = (tcpt>0) ? true : false;
+  parametric_trc = (tcpt>0) ? true : false;
 
-  std::cout<<"ICCProfile::init_trc(): is_linear="<<is_linear<<"  is_parametric="<<is_parametric<<std::endl;
+  std::cout<<"ICCProfile::init_trc(): is_linear="<<is_linear<<"  is_parametric="<<is_parametric()<<std::endl;
 
   if( is_linear ) {
     /* LAB "L" (perceptually uniform) TRC */
@@ -281,6 +282,24 @@ void PF::ICCProfile::init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv )
   perceptual_trc = trc;
   perceptual_trc_inv = trc_inv;
 
+  p2l_lut(256,0);
+  l2p_lut(256,0);
+
+  for( int i = 0; i < 256; i++ ) {
+    cmsFloat32Number in=i, out;
+    in /= 255;
+    out = cmsEvalToneCurveFloat( perceptual_trc, in );
+    if( out > 1 ) out = 1;
+    if( out < 0 ) out = 0;
+    p2l_lut[i] = out;
+    std::cout<<"ICCProfile::init_trc(): p2l_lut["<<i<<"] = "<<out<<std::endl;
+    out = cmsEvalToneCurveFloat( perceptual_trc_inv, in );
+    if( out > 1 ) out = 1;
+    if( out < 0 ) out = 0;
+    l2p_lut[i] = out;
+  }
+
+  /*
   for( int i = 0; i < 65536; i++ ) {
     cmsFloat32Number in = i, out;
     in /= 65535;
@@ -293,6 +312,7 @@ void PF::ICCProfile::init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv )
     if( out < 0 ) out = 0;
     perceptual_trc_inv_vec[i] = out;
   }
+  */
 }
 
 
@@ -348,7 +368,26 @@ cmsHPROFILE PF::ICCProfile::get_profile()
 }
 
 
-float PF::ICCProfile::get_lightness( float R, float G, float B )
+cmsFloat32Number PF::ICCProfile::linear2perceptual( cmsFloat32Number val )
+{
+  //return cmsEvalToneCurveFloat( perceptual_trc_inv, val );
+  cmsFloat32Number r = (val>1) ? cmsEvalToneCurveFloat( perceptual_trc_inv, val ) :
+      ( (val<0) ? cmsEvalToneCurveFloat( perceptual_trc_inv, val ) : l2p_lut[val*255] );
+  return r;
+}
+
+cmsFloat32Number PF::ICCProfile::perceptual2linear( cmsFloat32Number val )
+{
+  //return cmsEvalToneCurveFloat( perceptual_trc, val );
+  cmsFloat32Number r = (val>1) ? cmsEvalToneCurveFloat( perceptual_trc, val ) :
+      ( (val<0) ? cmsEvalToneCurveFloat( perceptual_trc, val ) : p2l_lut[val*255] );
+  return r;
+}
+
+
+
+
+float PF::ICCProfile::get_lightness( const float& R, const float& G, const float& B )
 {
   if( !has_colorants ) return 0;
   if( is_linear() ) {
@@ -486,6 +525,8 @@ void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat ba
     cmsDeleteTransform( transform );
     transform = NULL;
   }
+  trc_lut.reset();
+  itrc_lut.reset();
 
   in_profile = pin;
   out_profile = pout;
@@ -501,11 +542,14 @@ void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat ba
   transform = NULL;
   is_rgb2rgb = false;
 
-  std::cout<<"ICCTransform::init() called"<<std::endl;
+  //std::cout<<"ICCTransform::init() called"<<std::endl;
+
+  bool is_matrix = in_profile->is_matrix() && out_profile->is_matrix();
+  bool is_parametric = (in_profile->is_linear() || in_profile->is_parametric()) &&
+      (out_profile->is_linear() || out_profile->is_parametric());
 
   if( true && in_profile->is_rgb() && out_profile->is_rgb() &&
-      in_profile->is_matrix() && out_profile->is_matrix() &&
-      in_profile->is_linear() && out_profile->is_linear() &&
+      is_matrix && is_parametric &&
       !bpc && intent==INTENT_RELATIVE_COLORIMETRIC ) {
     // fast path for linear RGB -> RGB matrix conversions
     // get input profile colorants
@@ -517,10 +561,10 @@ void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat ba
         in_colorants += 1;
       }
     }
-    printf("rgb2xyz:\n");
-    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz[0][0], rgb2xyz[0][1], rgb2xyz[0][2]);
-    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz[1][0], rgb2xyz[1][1], rgb2xyz[1][2]);
-    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz[2][0], rgb2xyz[2][1], rgb2xyz[2][2]);
+    //printf("rgb2xyz:\n");
+    //printf("  %0.5f %0.5f %0.5f \n", rgb2xyz[0][0], rgb2xyz[0][1], rgb2xyz[0][2]);
+    //printf("  %0.5f %0.5f %0.5f \n", rgb2xyz[1][0], rgb2xyz[1][1], rgb2xyz[1][2]);
+    //printf("  %0.5f %0.5f %0.5f \n", rgb2xyz[2][0], rgb2xyz[2][1], rgb2xyz[2][2]);
     // get output profile colorants, and invert them
     double* out_colorants = out_profile->get_colorants();
     float rgb2xyz2[3][3];
@@ -532,14 +576,14 @@ void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat ba
     }
     float xyz2rgb[3][3];
     mat3inv( xyz2rgb, rgb2xyz2 );
-    printf("rgb2xyz2:\n");
-    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz2[0][0], rgb2xyz2[0][1], rgb2xyz2[0][2]);
-    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz2[1][0], rgb2xyz2[1][1], rgb2xyz2[1][2]);
-    printf("  %0.5f %0.5f %0.5f \n", rgb2xyz2[2][0], rgb2xyz2[2][1], rgb2xyz2[2][2]);
-    printf("xyz2rgb:\n");
-    printf("  %0.5f %0.5f %0.5f \n", xyz2rgb[0][0], xyz2rgb[0][1], xyz2rgb[0][2]);
-    printf("  %0.5f %0.5f %0.5f \n", xyz2rgb[1][0], xyz2rgb[1][1], xyz2rgb[1][2]);
-    printf("  %0.5f %0.5f %0.5f \n", xyz2rgb[2][0], xyz2rgb[2][1], xyz2rgb[2][2]);
+    //printf("rgb2xyz2:\n");
+    //printf("  %0.5f %0.5f %0.5f \n", rgb2xyz2[0][0], rgb2xyz2[0][1], rgb2xyz2[0][2]);
+    //printf("  %0.5f %0.5f %0.5f \n", rgb2xyz2[1][0], rgb2xyz2[1][1], rgb2xyz2[1][2]);
+    //printf("  %0.5f %0.5f %0.5f \n", rgb2xyz2[2][0], rgb2xyz2[2][1], rgb2xyz2[2][2]);
+    //printf("xyz2rgb:\n");
+    //printf("  %0.5f %0.5f %0.5f \n", xyz2rgb[0][0], xyz2rgb[0][1], xyz2rgb[0][2]);
+    //printf("  %0.5f %0.5f %0.5f \n", xyz2rgb[1][0], xyz2rgb[1][1], xyz2rgb[1][2]);
+    //printf("  %0.5f %0.5f %0.5f \n", xyz2rgb[2][0], xyz2rgb[2][1], xyz2rgb[2][2]);
 
     // multiply rgb2xyz * xyz2rgb to obtain the rgb2rgb matrix
     for(int i=0;i<3;i++){
@@ -550,29 +594,51 @@ void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat ba
         }
       }
     }
-    printf("rgb2rgb:\n");
-    printf("  %0.5f %0.5f %0.5f \n", rgb2rgb[0][0], rgb2rgb[0][1], rgb2rgb[0][2]);
-    printf("  %0.5f %0.5f %0.5f \n", rgb2rgb[1][0], rgb2rgb[1][1], rgb2rgb[1][2]);
-    printf("  %0.5f %0.5f %0.5f \n", rgb2rgb[2][0], rgb2rgb[2][1], rgb2rgb[2][2]);
+    //printf("rgb2rgb:\n");
+    //printf("  %0.5f %0.5f %0.5f \n", rgb2rgb[0][0], rgb2rgb[0][1], rgb2rgb[0][2]);
+    //printf("  %0.5f %0.5f %0.5f \n", rgb2rgb[1][0], rgb2rgb[1][1], rgb2rgb[1][2]);
+    //printf("  %0.5f %0.5f %0.5f \n", rgb2rgb[2][0], rgb2rgb[2][1], rgb2rgb[2][2]);
     is_rgb2rgb = true;
+
+    if( !in_profile->is_linear() ) {
+      itrc_lut(256,0);
+      itrc_lut.setClip(0);
+      for(int i = 0; i < 256; i++) {
+        cmsFloat32Number in = i, out;
+        in /= 255;
+        out = cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), in );
+        itrc_lut[i] = out;
+      }
+    }
+
+    if( !out_profile->is_linear() ) {
+      trc_lut(256,0);
+      trc_lut.setClip(0);
+      for(int i = 0; i < 256; i++) {
+        cmsFloat32Number in = i, out;
+        in /= 255;
+        out = cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), in );
+        trc_lut[i] = out;
+      }
+    }
   } //else {
     if( in_profile && out_profile && out_profile->get_profile() ) {
-      std::cout<<"ICCTransform::init(): getting input profile format"<<std::endl;
+      //std::cout<<"ICCTransform::init(): getting input profile format"<<std::endl;
       cmsUInt32Number infmt = vips2lcms_pixel_format( band_fmt, in_profile->get_profile() );
-      std::cout<<"ICCTransform::init(): getting output profile format"<<std::endl;
+      //std::cout<<"ICCTransform::init(): getting output profile format"<<std::endl;
       cmsUInt32Number outfmt = vips2lcms_pixel_format( band_fmt, out_profile->get_profile() );
 
       cmsUInt32Number flags = cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE;
-      std::cout<<"ICCTransform::init(): bpc="<<bpc<<std::endl;
+      //std::cout<<"ICCTransform::init(): bpc="<<bpc<<std::endl;
       if( bpc ) flags |= cmsFLAGS_BLACKPOINTCOMPENSATION;
       cmsFloat64Number old_state = cmsSetAdaptationState( adaptation_state );
       transform = cmsCreateTransform( in_profile->get_profile(), infmt,
           out_profile->get_profile(), outfmt, intent, flags );
       cmsSetAdaptationState( old_state );
-      std::cout<<"ICCTransform::init(): transform: "<<transform<<std::endl;
-      std::cout<<"ICCTransform::init(): in_profile: "<<in_profile<<std::endl;
-      std::cout<<"ICCTransform::init(): infmt: "<<infmt<<std::endl;
-      std::cout<<"ICCTransform::init(): outfmt: "<<outfmt<<std::endl;
+      //std::cout<<"ICCTransform::init(): transform: "<<transform<<std::endl;
+      //std::cout<<"ICCTransform::init(): in_profile: "<<in_profile<<std::endl;
+      //std::cout<<"ICCTransform::init(): infmt: "<<infmt<<std::endl;
+      //std::cout<<"ICCTransform::init(): outfmt: "<<outfmt<<std::endl;
     }
   //}
 }
@@ -587,9 +653,30 @@ void PF::ICCTransform::apply(float* in, float* out, int n)
     printf("    %f / 16 = %f\n",faddr,faddr/16);*/
     float* in2 = in; float* out2 = out;
     for(int i = 0; i < n; i++) {
-      out2[0] = rgb2rgb[0][0]*in2[0] + rgb2rgb[0][1]*in2[1] + rgb2rgb[0][2]*in2[2];
-      out2[1] = rgb2rgb[1][0]*in2[0] + rgb2rgb[1][1]*in2[1] + rgb2rgb[1][2]*in2[2];
-      out2[2] = rgb2rgb[2][0]*in2[0] + rgb2rgb[2][1]*in2[1] + rgb2rgb[2][2]*in2[2];
+      float r = in2[0], g = in2[1], b = in2[2];
+      float outr, outg, outb;
+      if(itrc_lut) {
+        r = (r>1) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), r ) :
+            ( (r<0) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), r ) : itrc_lut[r*255] );
+        g = (g>1) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), g ) :
+            ( (g<0) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), g ) : itrc_lut[g*255] );
+        b = (b>1) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), b ) :
+            ( (b<0) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), b ) : itrc_lut[b*255] );
+      }
+      outr = rgb2rgb[0][0]*r + rgb2rgb[0][1]*g + rgb2rgb[0][2]*b;
+      outg = rgb2rgb[1][0]*r + rgb2rgb[1][1]*g + rgb2rgb[1][2]*b;
+      outb = rgb2rgb[2][0]*r + rgb2rgb[2][1]*g + rgb2rgb[2][2]*b;
+      if(trc_lut) {
+        outr = (outr>1) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outr ) :
+            ( (outr<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outr ) : trc_lut[outr*255] );
+        outg = (outg>1) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outg ) :
+            ( (outg<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outg ) : trc_lut[outg*255] );
+        outb = (outb>1) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outb ) :
+            ( (outb<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outb ) : trc_lut[outb*255] );
+      }
+      out2[0] = outr;
+      out2[1] = outg;
+      out2[2] = outb;
       in2 += 3; out2 += 3;
     }
     return;

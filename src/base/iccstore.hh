@@ -36,6 +36,8 @@
 #include <glibmm.h>
 #include <vips/vips.h>
 
+#include "../rt/rtengine/LUT.h"
+
 namespace PF
 {
 
@@ -88,8 +90,8 @@ struct ICCProfileData
   cmsToneCurve* perceptual_trc_inv;
   TRC_type trc_type;
 
-  float perceptual_trc_vec[65536];
-  float perceptual_trc_inv_vec[65536];
+  //float perceptual_trc_vec[65536];
+  //float perceptual_trc_inv_vec[65536];
 
   float Y_R, Y_G, Y_B;
 };
@@ -104,11 +106,14 @@ class ICCProfile
   cmsToneCurve* perceptual_trc;
   cmsToneCurve* perceptual_trc_inv;
   TRC_type trc_type;
+  bool parametric_trc;
 
   Glib::ustring filename;
 
-  float perceptual_trc_vec[65536];
-  float perceptual_trc_inv_vec[65536];
+  //float perceptual_trc_vec[65536];
+  //float perceptual_trc_inv_vec[65536];
+
+  LUTf p2l_lut, l2p_lut;
 
   double colorants[9];
   float Y_R, Y_G, Y_B;
@@ -142,6 +147,7 @@ public:
   void set_trc_type(TRC_type type) { trc_type = type; }
   TRC_type get_trc_type() { return trc_type; }
   bool is_linear() { return( get_trc_type() == PF_TRC_LINEAR ); }
+  bool is_parametric() { return( parametric_trc ); }
   bool is_perceptual() { return( get_trc_type() == PF_TRC_PERCEPTUAL ); }
   bool is_standard() { return( get_trc_type() == PF_TRC_STANDARD ); }
 
@@ -154,17 +160,11 @@ public:
   cmsUInt32Number get_profile_size() { return profile_size; }
   void* get_profile_data() { return profile_data; }
 
-  cmsFloat32Number linear2perceptual( cmsFloat32Number val )
-  {
-    return cmsEvalToneCurveFloat( perceptual_trc_inv, val );
-  }
-  cmsFloat32Number perceptual2linear( cmsFloat32Number val )
-  {
-    return cmsEvalToneCurveFloat( perceptual_trc, val );
-  }
+  cmsFloat32Number linear2perceptual( cmsFloat32Number val );
+  cmsFloat32Number perceptual2linear( cmsFloat32Number val );
 
-  float* get_linear2perceptual_vec() { return perceptual_trc_inv_vec; }
-  float* get_perceptual2linear_vec() { return perceptual_trc_vec; }
+  //float* get_linear2perceptual_vec() { return perceptual_trc_inv_vec; }
+  //float* get_perceptual2linear_vec() { return perceptual_trc_vec; }
 
   float get_luminance( float R, float G, float B )
   {
@@ -172,7 +172,7 @@ public:
   }
   //void get_luminance( float* RGBv, float* Lv, size_t size );
 
-  float get_lightness( float R, float G, float B );
+  float get_lightness( const float& R, const float& G, const float& B );
   void get_lightness( float* RGBv, float* Lv, size_t size );
 
   bool equals_to( PF::ICCProfile* prof);
@@ -181,8 +181,8 @@ public:
   {
     ICCProfileData* data = new ICCProfileData;
     data->trc_type = trc_type;
-    memcpy( data->perceptual_trc_vec, perceptual_trc_vec, sizeof(perceptual_trc_vec) );
-    memcpy( data->perceptual_trc_inv_vec, perceptual_trc_inv_vec, sizeof(perceptual_trc_inv_vec) );
+    //memcpy( data->perceptual_trc_vec, perceptual_trc_vec, sizeof(perceptual_trc_vec) );
+    //memcpy( data->perceptual_trc_inv_vec, perceptual_trc_inv_vec, sizeof(perceptual_trc_inv_vec) );
     data->perceptual_trc =  cmsDupToneCurve( perceptual_trc );
     data->perceptual_trc_inv =  cmsDupToneCurve( perceptual_trc_inv );
     data->Y_R = Y_R;
@@ -275,6 +275,8 @@ class ICCTransform
   bool bpc;
   float adaptation_state;
   cmsHTRANSFORM transform;
+
+  LUTf trc_lut, itrc_lut;
 
   bool is_rgb2rgb;
   float rgb2rgb[3][3];
