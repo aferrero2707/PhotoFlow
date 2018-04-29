@@ -1,0 +1,44 @@
+#--------------------------------------------------
+#
+# 3x3 matrix / vector multiplication test
+#
+add_executable(matrix-3x3 matrix-3x3.cc)
+IF(APPLE)
+  set_target_properties(matrix-3x3 PROPERTIES LINK_FLAGS " -framework ApplicationServices ")
+ENDIF(APPLE)
+
+target_link_libraries(matrix-3x3 ${LIBS} 
+  pfgui
+  pfbase 
+  pfgmic
+  pfdt
+  ${STATIC_LIBS}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
+  ${EXPAT_LIBRARIES}
+  ${Pugixml_LIBRARIES}
+  ${ICONV_LIBRARIES}
+  ${FFTW3_LIBRARIES}
+  ${OPENEXR_LIBRARIES}
+  ${XML2_LIBRARIES}
+  ${EXIF_LIBRARIES}
+  ${EXIV2_LIBRARIES}
+  #${GEXIV2_LIBRARIES}
+  ${LENSFUN_LIBRARIES}
+  ${SIGC2_LIBRARIES}
+  ${PANGO_LIBRARIES} ${PANGOFT2_LIBRARIES} 
+  ${PIXMAN_LIBRARIES} 
+  ${MACINTEG_LIBS}
+  ${GTKMM_LIBRARIES} 
+  ${GLIBMM_LIBRARIES} 
+  ${GLIB_LIBRARIES} 
+  ${GMODULE_LIBRARIES} 
+  ${GOBJECT_LIBRARIES} 
+  ${GTHREAD_LIBRARIES} 
+  ${ZLIB_LIBRARIES}
+  #${LIBRAW_LIBRARIES}  
+  ${ORC_LIBRARIES}
+  ${ADDITIONAL_LIBS}
+  #gmon
+  )
