@@ -64,7 +64,7 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
           out_trc_type("trc_type",this,PF::PF_TRC_STANDARD,"TRC_STANDARD",_("standard")),
           out_profile_name("profile_name", this),
           intent("rendering_intent",this,INTENT_RELATIVE_COLORIMETRIC,"INTENT_RELATIVE_COLORIMETRIC","relative colorimetric"),
-          bpc("bpc", this, true),
+          bpc("bpc", this, false),
           adaptation_state("adaptation_state", this, 0.f),
           assign("assign", this, false),
           clip_negative("clip_negative",this,true),

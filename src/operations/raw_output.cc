@@ -83,7 +83,7 @@ PF::RawOutputPar::RawOutputPar():
       out_profile( NULL ),
       //transform( NULL ),
       clip_negative("clip_negative",this,true),
-      clip_overflow("clip_overflow",this,true)
+      clip_overflow("clip_overflow",this,false)
 {
   exposure_mode.add_enum_value(PF::EXP_AUTO,"AUTO","Auto");
 
