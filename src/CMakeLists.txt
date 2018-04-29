@@ -455,7 +455,7 @@ ENDIF(APPLE)
 #
 # photoflow executable
 #
-add_executable(photoflow main.cc)
+add_executable(photoflow main.cc ${RESOURCE_OBJECT})
 IF(APPLE)
   set_target_properties(photoflow PROPERTIES LINK_FLAGS " -framework ApplicationServices ")
 ENDIF(APPLE)
