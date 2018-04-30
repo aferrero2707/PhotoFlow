@@ -220,11 +220,9 @@ matrix:
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
             - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
-                bash  ./upload_rotate.sh "continuous" $HOME/photoflow-osx-*.zip > /dev/null;
                 bash  ./upload_rotate.sh "continuous" $HOME/photoflow-osx-*.dmg > /dev/null;
               fi'
             - 'if [ x"${TRAVIS_BRANCH}" = "xlinear_gamma" ]; then
-                bash  ./upload_rotate.sh "unstable" $HOME/photoflow-osx-*.zip > /dev/null;
                 bash  ./upload_rotate.sh "unstable" $HOME/photoflow-osx-*.dmg > /dev/null;
               fi'
 
