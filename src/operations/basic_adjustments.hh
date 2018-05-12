@@ -267,13 +267,11 @@ namespace PF
             }
 
             if( gamma2 != 1 ) {
-              for(i=0; i<5;i++) {
               for( k=0; k < 3; k++) {
                 //RGB[k] = pin[x+k]; //powf( RGB[k], gamma );
                 if(RGB[k] < 0) RGB[k] = powf( RGB[k]*minus, gamma2 )*minus;
                 else RGB[k] = powf( RGB[k], gamma2 );
                 //clip( exposure*RGB[k], RGB[k] );
-              }
               }
             }
 
