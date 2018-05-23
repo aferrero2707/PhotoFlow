@@ -366,7 +366,7 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
         lens_frame( _("lens corrections") ),
         demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
         fcsSlider( this, "fcs_steps", "FCC steps", 1, 0, 4, 1, 1, 1 ),
-        exposureSlider( this, "exposure", "Exp. comp.", 0, -5, 5, 0.05, 0.5 ),
+        exposureSlider( this, "exposure", "Exp. comp.", 0, -10, 10, 0.05, 0.5 ),
         saturationLevelSlider( this, "saturation_level_correction", _("white level %"), 100, 0, 200, 0.5, 5, 100 ),
         blackLevelSlider( this, "black_level_correction", _("black level %"), 100, 0, 200, 0.5, 5, 100 ),
         hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
