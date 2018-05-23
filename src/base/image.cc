@@ -1556,22 +1556,24 @@ void PF::Image::export_merged_to_tiff( const std::string filename )
   }
 
 
+  std::vector<VipsImage*> in;
   std::string msg;
   VipsImage* image = pipeline->get_output();
   VipsImage* outimg = NULL;
-
-  std::vector<VipsImage*> in;
+  /*
   in.clear();
   in.push_back( image );
   convert_format->get_par()->set_image_hints( image );
   convert_format->get_par()->set_format( VIPS_FORMAT_FLOAT );
   VipsImage* floatimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
-
+  */
+  VipsImage* floatimg = image; PF_REF( floatimg, "" );
   outimg = floatimg;
   PF::ICCTransformPar* conv_par =
       dynamic_cast<PF::ICCTransformPar*>( convert2outprof->get_par() );
 //#ifndef NDEBUG
   std::cout<<"Image::export_merged_to_tiff(): conv_par="<<(void*)conv_par<<std::endl;
+  std::cout<<"Image::export_merged_to_tiff(): iccprof_in="<<(void*)iccprof_in<<std::endl;
 //#endif
   if( conv_par ) {
     in.clear();
@@ -1586,7 +1588,7 @@ void PF::Image::export_merged_to_tiff( const std::string filename )
   std::cout<<"Image::export_merged_to_tiff(): outimg="<<outimg<<std::endl;
   if( outimg ) {
     std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
-    vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
+    vips_tiffsave( outimg, filename.c_str(), "compression", VIPS_FOREIGN_TIFF_COMPRESSION_NONE,
         "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
     //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
     std::cout<<"Image::do_export_merged(): vips_tiffsave() finished: "<<filename<<std::endl;
