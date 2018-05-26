@@ -34,7 +34,7 @@
 
 #include "desaturate_luminance.hh"
 
-PF::DesaturateLuminancePar::DesaturateLuminancePar(): OpParBase()
+PF::DesaturateLuminancePar::DesaturateLuminancePar(): OpParBase(), profile(NULL)
 {
   proc_average = PF::new_desaturate_average();
   //convert2lab = PF::new_operation( "convert2lab", NULL );
