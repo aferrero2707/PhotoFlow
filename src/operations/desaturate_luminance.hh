@@ -85,10 +85,10 @@ namespace PF
       float* line = NULL;
       float val;
       //if( profile->get_trc_type()!=PF_TRC_LINEAR ) line = new float[line_size];
-      if( false && r->left==0 && r->top==0 ) {
-        std::cout<<"DesaturateLuminanceProc::render(): profile="<<profile<<std::endl;
-        std::cout<<"DesaturateLuminanceProc::render(): profile->has_colorants="<<profile->has_colorants<<std::endl;
-      }
+      //if( false && r->left==0 && r->top==0 ) {
+      //  std::cout<<"DesaturateLuminanceProc::render(): profile="<<profile<<std::endl;
+      //  std::cout<<"DesaturateLuminanceProc::render(): profile->has_colorants="<<profile->has_colorants<<std::endl;
+      //}
       for( y = 0; y < r->height; y++ ) {
         y0 = r->top + y;
         pin = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, y0 );
