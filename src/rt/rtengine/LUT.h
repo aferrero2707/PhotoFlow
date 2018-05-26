@@ -61,6 +61,7 @@
 
 #undef __SSE2__
 
+#include <iostream>
 #include <cstring>
 #include <cstdint>
 #ifndef NDEBUG
@@ -447,13 +448,13 @@ public:
     {
         int idx = (int)index;  // don't use floor! The difference in negative space is no problems here
 
-        if (index < 0.f) {
+        if (index < 0.f || std::isnan(index)) {
             if (clip & LUT_CLIP_BELOW) {
                 return data[0];
             }
 
             idx = 0;
-        } else if (index > maxsf) {
+        } else if (index > maxsf || std::isinf(index)) {
             if (clip & LUT_CLIP_ABOVE) {
                 return data[upperBound];
             }
@@ -462,6 +463,7 @@ public:
         }
 
         float diff = index - (float) idx;
+        //std::cout<<"index="<<index<<"  idx="<<idx<<"  size="<<size<<std::endl;
         T p1 = data[idx];
         T p2 = data[idx + 1] - p1;
         return (p1 + p2 * diff);
