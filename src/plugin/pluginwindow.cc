@@ -208,10 +208,10 @@ PF::PluginWindow::open_image( std::string filename, bool hidden )
   PF::OpParBase* op = proc->get_par();
   if( !op ) return;
 
-  PF::PropertyBase* prop = op->get_property( "out_profile_mode" );
+  PF::PropertyBase* prop = op->get_property( "out_profile_type" );
   if( !prop ) return;
 
-  prop->set_enum_value( PROF_MODE_EMBEDDED );
+  prop->set_enum_value( PF::PROF_TYPE_EMBEDDED );
   //image_editor->show();
 }
 
