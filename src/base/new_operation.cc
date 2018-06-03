@@ -185,10 +185,14 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
     processor = new_sharpen();
 
-  } else if( op_type == "convert_colorspace" ) {
+ } else if( op_type == "convert_colorspace" ) {
 
-    //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
-    processor = new_convert_colorspace();
+   //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
+   processor = new_convert_colorspace();
+
+ } else if( op_type == "dynamic_range_compressor" ) {
+
+   processor = new_dynamic_range_compressor();
 
   } else if( op_type == "draw" ) {
 

@@ -292,7 +292,7 @@ void PF::ICCProfile::init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv )
     if( out > 1 ) out = 1;
     if( out < 0 ) out = 0;
     p2l_lut[i] = out;
-    std::cout<<"ICCProfile::init_trc(): p2l_lut["<<i<<"] = "<<out<<std::endl;
+    //std::cout<<"ICCProfile::init_trc(): p2l_lut["<<i<<"] = "<<out<<std::endl;
     out = cmsEvalToneCurveFloat( perceptual_trc_inv, in );
     if( out > 1 ) out = 1;
     if( out < 0 ) out = 0;

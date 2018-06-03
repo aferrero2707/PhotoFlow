@@ -288,6 +288,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Levels"), "levels" );
   op_color.get_tree().add_op( _("Basic Adjustments"), "basic_adjustments" );
   op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping" );
+  op_color.get_tree().add_op( _("Dynamic range compressor"), "dynamic_range_compressor" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights" );
   op_color.get_tree().add_op( _("Defringe"), "defringe" );

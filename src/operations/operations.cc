@@ -48,6 +48,7 @@
 #include "denoise.hh"
 #include "desaturate.hh"
 #include "desaturate_luminance.hh"
+//#include "dynamic_range_compressor.hh"
 #include "draw.hh"
 #include "false_color_correction.hh"
 #include "fast_demosaic.hh"
@@ -151,6 +152,9 @@ PF::ProcessorBase* PF::new_desaturate_average()
 { return( new PF::Processor<PF::PixelProcessorPar,PF::DesaturateAverage>() ); }
 PF::ProcessorBase* PF::new_desaturate()
 { return( new PF::Processor<PF::DesaturatePar,PF::DesaturateProc>() ); }
+
+//PF::ProcessorBase* PF::new_dynamic_range_compressor()
+//{ return( new PF::Processor<PF::DynamicRangeCompressorPar,PF::DynamicRangeCompressorProc>() ); }
 
 PF::ProcessorBase* PF::new_draw()
 { return( new PF::Processor<PF::DrawPar,PF::DrawProc>() ); }
