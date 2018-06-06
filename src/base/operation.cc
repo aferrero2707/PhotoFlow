@@ -314,6 +314,7 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
   //std::cout<<"OpParBase::build_many(): padding="<<get_padding()<<std::endl;
 
   VipsImage* cached = out;
+  /*
   if( out && false && needs_caching() ) {
     int tw = 64, th = 64;
     // reserve two complete rows of tiles
@@ -329,7 +330,7 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
     }
     PF_UNREF( out, "OpParBase::build_many(): out unref" );
   }
-
+  */
   result.push_back( cached );
   return result;
 }
