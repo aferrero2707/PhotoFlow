@@ -51,9 +51,9 @@ size_t dt_bilateral_singlebuffer_size2(const int width,      // width of input i
 dt_bilateral_t *dt_bilateral_init(const int width,      // width of input image
                                   const int height,     // height of input image
                                   const float sigma_s,  // spatial sigma (blur pixel coords)
-                                  const float sigma_r); // range sigma (blur luma values)
+                                  const float sigma_r, int v); // range sigma (blur luma values)
 
-void dt_bilateral_splat(dt_bilateral_t *b, const float *const in);
+void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int v);
 
 void dt_bilateral_blur(dt_bilateral_t *b);
 

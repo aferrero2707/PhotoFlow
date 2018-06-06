@@ -120,7 +120,7 @@ static void image_to_grid(const dt_bilateral_t *const b, const int i, const int 
 dt_bilateral_t *dt_bilateral_init(const int width,     // width of input image
                                   const int height,    // height of input image
                                   const float sigma_s, // spatial sigma (blur pixel coords)
-                                  const float sigma_r) // range sigma (blur luma values)
+                                  const float sigma_r, int v) // range sigma (blur luma values)
 {
   dt_bilateral_t *b = (dt_bilateral_t *)malloc(sizeof(dt_bilateral_t));
   if(!b) return NULL;
@@ -140,19 +140,22 @@ dt_bilateral_t *dt_bilateral_init(const int width,     // width of input image
   b->buf = dt_alloc_align(16, b->size_x * b->size_y * b->size_z * sizeof(float));
 
   memset(b->buf, 0, b->size_x * b->size_y * b->size_z * sizeof(float));
-#if 0
-  fprintf(stderr, "[bilateral] created grid [%d %d %d]"
-          " with sigma (%f %f) (%f %f)\n", b->size_x, b->size_y, b->size_z,
-          b->sigma_s, sigma_s, b->sigma_r, sigma_r);
-#endif
+  if(v>0)
+  printf("[bilateral (%d %d)] created grid [%d %d %d]"
+          " with sigma (%f %f) (%f %f) - buf size: %d\n", width, height,
+          b->size_x, b->size_y, b->size_z,
+          b->sigma_s, sigma_s, b->sigma_r, sigma_r,
+          b->size_x * b->size_y * b->size_z);
+
   return b;
 }
 
-void dt_bilateral_splat(dt_bilateral_t *b, const float *const in)
+void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int v)
 {
   const int ox = 1;
   const int oy = b->size_x;
   const int oz = b->size_y * b->size_x;
+  const float norm = 100.0f / (b->sigma_s * b->sigma_s);
 // splat into downsampled grid
 #ifdef _OPENMP
 #pragma omp parallel for default(none) shared(b)
@@ -168,25 +171,70 @@ void dt_bilateral_splat(dt_bilateral_t *b, const float *const in)
       const int xi = MIN((int)x, b->size_x - 2);
       const int yi = MIN((int)y, b->size_y - 2);
       const int zi = MIN((int)z, b->size_z - 2);
-      const float xf = x - xi;
-      const float yf = y - yi;
-      const float zf = z - zi;
+      const float xf = x - xi; const float mxf = 1.0f-xf;
+      const float yf = y - yi; const float myf = 1.0f-yf;
+      const float zf = z - zi; const float mzf = 1.0f-zf;
       // nearest neighbour splatting:
       const size_t grid_index = xi + b->size_x * (yi + b->size_y * zi);
+      size_t ii; float contrib;
       // sum up payload here, doesn't have to be same as edge stopping data
       // for cross bilateral applications.
       // also note that this is not clipped (as L->z is), so potentially hdr/out of gamut
       // should not cause clipping here.
+      /*
       for(int k = 0; k < 8; k++)
       {
         const size_t ii = grid_index + ((k & 1) ? ox : 0) + ((k & 2) ? oy : 0) + ((k & 4) ? oz : 0);
         const float contrib = ((k & 1) ? xf : (1.0f - xf)) * ((k & 2) ? yf : (1.0f - yf))
-                              * ((k & 4) ? zf : (1.0f - zf)) * 100.0f / (b->sigma_s * b->sigma_s);
+                              * ((k & 4) ? zf : (1.0f - zf)) * norm;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
         b->buf[ii] += contrib;
+        if(v>0) printf("b->buf[%d] += %f, grid_index=%d, xi=%d yi=%d zi=%d\n", ii, contrib, grid_index, xi, yi, zi);
       }
+      */
+      /**/
+      // k=0
+      ii = grid_index;
+      contrib = mxf * myf * mzf * norm;
+      b->buf[ii] += contrib;
+
+      // k=1
+      ii = grid_index + ox;
+      contrib = xf * myf * mzf * norm;
+      b->buf[ii] += contrib;
+
+      // k=2
+      ii = grid_index + oy;
+      contrib = mxf * yf * mzf * norm;
+      b->buf[ii] += contrib;
+
+      // k=3
+      ii = grid_index + ox + oy;
+      contrib = xf * yf * mzf * norm;
+      b->buf[ii] += contrib;
+
+      // k=4
+      ii = grid_index + oz;
+      contrib = mxf * myf * zf * norm;
+      b->buf[ii] += contrib;
+
+      // k=5
+      ii = grid_index + ox + oz;
+      contrib = xf * myf * zf * norm;
+      b->buf[ii] += contrib;
+
+      // k=6
+      ii = grid_index + oy + oz;
+      contrib = mxf * yf * zf * norm;
+      b->buf[ii] += contrib;
+
+      // k=7
+      ii = grid_index + ox + oy + oz;
+      contrib = xf * yf * zf * norm;
+      b->buf[ii] += contrib;
+      /**/
       index += 1;
     }
   }
