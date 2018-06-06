@@ -74,9 +74,11 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
   std::cout<<"BlurBilateralPar::build(): csin = "<<csin<<std::endl;
 
   int padding = get_padding(0);
+  std::cout<<"BlurBilateralPar::build(): level="<<level<<"  padding="<<padding<<std::endl;
   // Extend the original image by padding pixels
   VipsImage* extended;
   VipsExtend extend = VIPS_EXTEND_COPY;
+  //VipsExtend extend = VIPS_EXTEND_BLACK;
   if( vips_embed(srcimg, &extended, padding, padding,
       srcimg->Xsize+padding*2, srcimg->Ysize+padding*2,
       "extend", extend, NULL) ) {

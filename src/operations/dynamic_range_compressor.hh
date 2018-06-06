@@ -30,6 +30,12 @@
 #ifndef PF_DYNAMIC_RANGE_COMPRESSOR_H
 #define PF_DYNAMIC_RANGE_COMPRESSOR_H
 
+//#ifdef __SSE2__
+//#include "../rt/rtengine/sleefsseavx.c"
+//#else
+#include "../rt/rtengine/sleef.c"
+//#endif
+
 #include "../base/splinecurve.hh"
 #include "../base/processor.hh"
 
@@ -126,12 +132,16 @@ namespace PF
 
       const float gamma = 1.0/(1.0 + 0.09*opar->get_strength());
       const float lc = opar->get_local_contrast() + 1;
+      const float lcm = 1.0f-lc;
 
       Rect *r = &oreg->valid;
       int width = r->width;
       int line_size = r->width * oreg->im->Bands;
       //int width = r->width;
       int height = r->height;
+
+      if( false && r->left<10000 && r->top<10000 )
+        std::cout<<"DynamicRangeCompressorProc::render(): region="<<r->width<<"x"<<r->height<<"+"<<r->left<<","<<r->top<<std::endl;
 
       T* psmooth;
       T* plog;
@@ -142,7 +152,7 @@ namespace PF
       float grey, ngrey, intensity, L, lL;
       int x, y, pos;
       //float threshold = opar->get_threshold()*FormatInfo<T>::RANGE;
-      float bias = 1.0f/profile->perceptual2linear(0.5);
+      float bias = profile->perceptual2linear(0.5);
       //float lbias = log(bias) * inv_log_base;
 
       for( y = 0; y < height; y++ ) {
@@ -164,10 +174,13 @@ namespace PF
           float s = (0.1*psmooth[0]) - 6;
 
           diff = l - s;
+          double exp = lc * ((s * gamma) + diff) + lcm * l * gamma;
+          //double exp = ((s * gamma) + lc*diff);
 
-          //out = psmooth[0]/100; //
-          out = lc * pow( 10.0, (s * gamma) + diff ) + (1.0f-lc) * pow( 10.0, l * gamma );
-          out /= bias;
+          //out = pow( 10.0, l * gamma );
+          //out = pow( 10.0, exp );
+          out = xexp10( exp );
+          out *= bias;
           //out = pow( 10.0, (0.1*psmooth[0]) - 6 + diff/** gamma + diff*/ );
           //out = (((psmooth[0]-50) * gamma) + 50 + diff)/100;
           //out = (((plog[0]-50) * gamma) + 50)/100;
@@ -177,13 +190,12 @@ namespace PF
           //else lout = out;
 
           if(false && x<8 && y==0 && r->left==0 && r->top==0)
-            std::cout<<"L="<<L<<"  plog[0]="<<plog[0]<<"  psmooth[0]="<<psmooth[0]<<"  gamma="<<gamma<<"  diff="<<diff<<"  out="<<out<<std::endl;
+            std::cout<<"L="<<L<<"  l="<<l<<"  plog[0]="<<plog[0]<<"  psmooth[0]="<<psmooth[0]<<"  gamma="<<gamma<<"  diff="<<diff<<"  out="<<out<<std::endl;
 
           const float ratio = out / L;
 
-          pout[0] = pin[0] * ratio;
-          pout[1] = pin[1] * ratio;
-          pout[2] = pin[2] * ratio;
+          //pout[0] = pout[1] = pout[2] = out;
+          pout[0] = pin[0] * ratio; pout[1] = pin[1] * ratio; pout[2] = pin[2] * ratio;
         }
       }
     }

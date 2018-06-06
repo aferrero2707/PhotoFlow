@@ -104,7 +104,8 @@ public:
     if( !profile ) return;
 
     float bias = 1.0f/profile->perceptual2linear(0.5);
-    float lbias = log(bias) * inv_log_base;
+    float scale = 10; //100.f/12.f;
+    //float lbias = log(bias) * inv_log_base;
 
     float L, pL;
     float* pin;
@@ -126,11 +127,12 @@ public:
         if(L <= 1.0e-6) pL = -6;
         else pL = log(L) * inv_log_base;
         if( std::isnan(pL) ) { std::cout<<"pL isnan, L="<<L<<std::endl; pL = -6; }
+        //pL = L;
 
         if(false && x<8 && y==0 && r->left==0 && r->top==0)
           std::cout<<"L="<<L<<"  pL="<<pL<<std::endl;
         //pout[0] = pout[1] = pout[2] = pL;
-        pout[0] = (pL+6)*10;
+        pout[0] = (pL+6) * scale;
       }
     }
   }
@@ -143,15 +145,15 @@ public:
 PF::DynamicRangeCompressorPar::DynamicRangeCompressorPar():
   OpParBase(), 
   amount("amount",this,1),
-  enable_equalizer("enable_equalizer",this,true),
+  enable_equalizer("enable_equalizer",this,false),
   blacks_amount("blacks_amount",this,0),
   shadows_amount("shadows_amount",this,0.7),
   midtones_amount("midtones_amount",this,1),
   highlights_amount("highlights_amount",this,0.7),
   whites_amount("whites_amount",this,0),
   bilateral_iterations("bilateral_iterations",this,1),
-  bilateral_sigma_s("bilateral_sigma_s",this,20),
-  bilateral_sigma_r("bilateral_sigma_r",this,20),
+  bilateral_sigma_s("bilateral_sigma_s",this,2),
+  bilateral_sigma_r("bilateral_sigma_r",this,5),
   strength("strength", this, 50),
   local_contrast("local_contrast", this, 0),
   caching(false)
@@ -183,8 +185,9 @@ void PF::DynamicRangeCompressorPar::propagate_settings()
   //GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
   BlurBilateralPar* bilateralpar = dynamic_cast<BlurBilateralPar*>( bilateral->get_par() );
   if( bilateralpar ) {
-    //bilateralpar->set_iterations( bilateral_iterations.get() );
-    //bilateralpar->set_sigma_s( bilateral_sigma_s.get() );
+    //float ss = 0.01 * bilateral_sigma_s.get() * MIN(full_res->Xsize, full_res->Ysize);
+    //float ss = bilateral_sigma_s.get()*10;
+    //bilateralpar->set_sigma_s( ss );
     //bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
     bilateralpar->propagate_settings();
   }
@@ -196,10 +199,16 @@ void PF::DynamicRangeCompressorPar::compute_padding( VipsImage* full_res, unsign
 {
   //GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
   BlurBilateralPar* bilateralpar = dynamic_cast<BlurBilateralPar*>( bilateral->get_par() );
-    if( bilateralpar ) {
-      bilateralpar->compute_padding(full_res, id, level);
-      set_padding( bilateralpar->get_padding(id), id );
-    }
+  if( bilateralpar ) {
+    float ss = 0.01 * bilateral_sigma_s.get() * MIN(full_res->Xsize, full_res->Ysize);
+    //float ss = bilateral_sigma_s.get()*10;
+    bilateralpar->set_sigma_s( ss );
+    bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
+    bilateralpar->compute_padding(full_res, id, level);
+    set_padding( bilateralpar->get_padding(id), id );
+    std::cout<<"DynamicRangeCompressorPar()::compute_padding(): sigma_s="<<bilateral_sigma_s.get()
+        <<"  level="<<level<<"  padding="<<get_padding(id)<<std::endl;
+  }
 }
 
 
@@ -213,6 +222,7 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   profile = PF::get_icc_profile( in[0] );
   if( !profile ) {printf("DynamicRangeCompressorPar::build(): profile==NULL\n"); return NULL;}
 
+  /*
   tone_curve.lock();
   float xpt, ypt;
   xpt=0.0; ypt=blacks_amount.get(); tone_curve.set_point( 0, xpt, ypt );
@@ -236,6 +246,7 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
    //   std::cout<<"i="<<i<<"  x="<<x<<"  y="<<y<<"  vec16[i]="<<vec16[i]<<"  points="<<curve.get().get_points().size()<<std::endl;
   }
   tone_curve.unlock();
+  */
 
   std::vector<VipsImage*> in2;
   LogLumiPar* logpar = dynamic_cast<LogLumiPar*>( loglumi->get_par() );
@@ -258,7 +269,8 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   if( bilateralpar ) {
     bilateralpar->set_image_hints( in2[0] );
     bilateralpar->set_format( get_format() );
-    bilateralpar->set_sigma_s( 0.01 * bilateral_sigma_s.get() * MIN(logimg->Xsize, logimg->Ysize) );
+    //bilateralpar->set_sigma_s( 0.01 * bilateral_sigma_s.get() * MIN(logimg->Xsize, logimg->Ysize) );
+    //bilateralpar->set_sigma_s( bilateral_sigma_s.get() * 10 );
     bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
     smoothed = bilateralpar->build( in2, first, imap, omap, level );
     PF_UNREF(logimg, "DynamicRangeCompressorPar::build(): logimg unref");

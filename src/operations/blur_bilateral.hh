@@ -70,9 +70,13 @@ public:
     for( int l = 1; l <= level; l++ ) {
       ss /= 2;
     }
-    set_padding( ss*2+1, id );
+    int iss = static_cast<int>(ss*3);
+    //iss /= 16;
+    //iss = (iss+1)*16;
+    //iss = 0;
+    set_padding( iss, id );
     std::cout<<"BlurBilateralAlgoPar()::compute_padding(): sigma_s="<<sigma_s.get()
-        <<"  level="<<level<<"  ss="<<ss<<"  padding="<<get_padding(id)<<std::endl;
+        <<"  level="<<level<<"  ss="<<ss<<"  iss="<<iss<<"  padding="<<get_padding(id)<<std::endl;
   }
 
   /* Function to derive the output area from the input area
@@ -136,9 +140,10 @@ public:
     int y;
     VipsImage* srcimg = ireg[0]->im;
 
-    if(false && ireg[0]->valid.top<10 && ireg[0]->valid.left<10) {
+    if( false && r->left<10000 && r->top<10000 ) {
       std::cout<<"BlurBilateralAlgoProc::render(): ireg="<<ireg[0]->valid.width<<"x"<<ireg[0]->valid.height
-          <<"  oreg="<<r->width<<"x"<<r->height<<std::endl;
+          <<"+"<<ireg[0]->valid.left<<","<<ireg[0]->valid.top<<std::endl;
+      std::cout<<"                                 oreg="<<r->width<<"x"<<r->height<<"+"<<r->left<<","<<r->top<<std::endl;
     }
 
     T* obuf = (T*)malloc( ireg[0]->valid.width * ireg[0]->valid.height * sizeof(T) );
@@ -148,9 +153,11 @@ public:
     T* pout;
     T* p;
 
+    int verb = 0;
+    //if(ireg[0]->valid.left==0 && ireg[0]->valid.top==0) verb = 1;
     dt_bilateral_t* dt_b = dt_bilateral_init(ireg[0]->valid.width, ireg[0]->valid.height,
-        opar->get_ss(), opar->get_sr());
-    dt_bilateral_splat(dt_b, pin);
+        opar->get_ss(), opar->get_sr(), verb);
+      dt_bilateral_splat(dt_b, pin, verb);
     dt_bilateral_blur(dt_b);
     dt_bilateral_slice(dt_b, pin, obuf, -1);
     dt_bilateral_free(dt_b);
