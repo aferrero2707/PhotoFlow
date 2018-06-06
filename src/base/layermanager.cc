@@ -773,7 +773,8 @@ void PF::LayerManager::reset_op_caching( PF::Pipeline* pipeline, std::list<Layer
 
 void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline )
 {
-  if( !pipeline || !(pipeline->get_op_caching_enabled()) ) return;
+  //if( !pipeline || !(pipeline->get_op_caching_enabled()) ) return;
+  if( !pipeline ) return;
 
   reset_op_caching( pipeline );
 
@@ -787,7 +788,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline )
 void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Layer*>& list, PF::Layer* input )
 {
   PF::Pipeline* pipeline0 = get_image()->get_pipeline( 0 );
-  if( pipeline == pipeline0 ) return;
+  //if( pipeline == pipeline0 ) return;
 
   std::list<PF::Layer*>::reverse_iterator li;
   for(li = list.rbegin(); li != list.rend(); ++li) {
@@ -797,6 +798,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Laye
 
     PF::PipelineNode* node0 = pipeline0->get_node(l->get_id());
     if( !node0 ) continue;
+    if( !node0->image ) continue;
 
     PF::PipelineNode* node = pipeline->get_node(l->get_id());
     if( !node ) continue;
@@ -1518,6 +1520,7 @@ bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, 
 {
   //Glib::Threads::Mutex::Lock lock( pipeline->get_mutex() );
 
+  std::cout<<"LayerManager::rebuild(): started."<<std::endl;
   init_pipeline( pipeline, layers, NULL );
 
   update_op_caching( pipeline );
@@ -1526,7 +1529,7 @@ bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, 
     //vips_image_invalidate_all( pipeline->get_output() );
   }
   VipsImage* output = rebuild_chain( pipeline, cs, width, height, layers, NULL );
-  //std::cout<<"LayerManager::rebuild(): chain rebuild finished."<<std::endl;
+  std::cout<<"LayerManager::rebuild(): chain rebuild finished."<<std::endl;
   pipeline->set_output( output );
   pipeline->update( area );
   pipeline->clear_force_rebuild();
