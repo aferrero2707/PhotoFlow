@@ -42,6 +42,8 @@
 
 #include "imagearea.hh"
 
+#define DISPLAY_TILE_SIZE 128
+
 
 /* We need C linkage for this.
  */
@@ -425,6 +427,32 @@ void PF::ImageArea::process_area( const VipsRect& area )
   std::cout<<"  display_image: w="<<display_image->Xsize<<" h="<<display_image->Ysize<<std::endl;
   std::cout<<"  region->im: w="<<region->im->Xsize<<" h="<<region->im->Ysize<<std::endl;
 #endif
+
+  /*
+  for(int y = (parea->top/DISPLAY_TILE_SIZE + 1)*DISPLAY_TILE_SIZE;
+      y < (parea->top+parea->height); y+=DISPLAY_TILE_SIZE) {
+    for(int x = (parea->left/DISPLAY_TILE_SIZE + 1)*DISPLAY_TILE_SIZE;
+        x < (parea->left+parea->width); x+=DISPLAY_TILE_SIZE) {
+
+      VipsRect r = {x, y, DISPLAY_TILE_SIZE, DISPLAY_TILE_SIZE};
+      std::cout<<"Before vips_region_prepare(): "<<r.width<<"x"<<r.height<<"+"<<r.left<<","<<r.top<<std::endl;
+      if (vips_region_prepare (region, &r))
+        return;
+      std::cout<<"After vips_region_prepare()"<<std::endl;
+
+      VipsRect area_clip;
+      vips_rect_intersectrect (&(region->valid), &r, &area_clip);
+
+      #ifdef DEBUG_DISPLAY
+        std::cout<<"Before copying region "<<parea->width<<","<<parea->height<<"+"<<parea->left<<"+"<<parea->top<<" into inactive buffer"<<std::endl;
+      #endif
+      double_buffer.get_inactive().copy( region, area_clip, xoffset, yoffset);
+          //xoffset+(x-parea->left), yoffset+(y-parea->top) );
+    }
+  }
+  return;
+  */
+
   //if( region && region->buffer ) region->buffer->done = 0;
   if (vips_region_prepare (region, parea))
     return;
@@ -1399,7 +1427,7 @@ void PF::ImageArea::update( VipsRect* area )
 
   region = vips_region_new (display_image);
 
-	int tile_size = 128;
+	int tile_size = DISPLAY_TILE_SIZE;
 	// make room for at most a 4k display
 	int max_csreen_width = 128*30;
 	int max_screen_height = 128*20;
@@ -1531,6 +1559,7 @@ void PF::ImageArea::update( VipsRect* area )
 
 void PF::ImageArea::sink( const VipsRect& area ) 
 {
+  return;
 #ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::sink( const VipsRect& area ) called"<<std::endl;
     std::cout<<"area="<<area.left<<","<<area.top<<"+"<<area.width<<"+"<<area.height<<std::endl;
