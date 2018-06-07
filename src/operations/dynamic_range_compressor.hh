@@ -193,8 +193,8 @@ namespace PF
           //  lout = profile->perceptual2linear(out);
           //else lout = out;
 
-          if(false && x<8 && y==0 && r->left==0 && r->top==0)
-            std::cout<<"L="<<L<<"  l="<<l<<"  plog[0]="<<plog[0]<<"  psmooth[0]="<<psmooth[0]<<"  gamma="<<gamma<<"  diff="<<diff<<"  out="<<out<<std::endl;
+          //if(false && x<8 && y==0 && r->left==0 && r->top==0)
+          //  std::cout<<"L="<<L<<"  l="<<l<<"  plog[0]="<<plog[0]<<"  psmooth[0]="<<psmooth[0]<<"  gamma="<<gamma<<"  diff="<<diff<<"  out="<<out<<std::endl;
 
           const float ratio = out / L;
 
