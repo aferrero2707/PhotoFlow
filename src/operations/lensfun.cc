@@ -150,7 +150,8 @@ int PF::LensFunParStep::get_flags( VipsImage* img )
   float aperture = exif_data->exif_aperture;
   float distance = exif_data->exif_focus_distance;
 
-  Glib::ustring cam_make, cam_model, lens_model;
+  //Glib::ustring cam_make, cam_model, lens_model;
+  std::string cam_make, cam_model, lens_model;
   if( auto_matching ) {
     cam_make = exif_data->exif_maker;
     cam_model = exif_data->exif_model;
@@ -162,7 +163,7 @@ int PF::LensFunParStep::get_flags( VipsImage* img )
   }
 
   std::cout<<"LensFunParStep::get_flags(): auto_matching="<<auto_matching
-      <<" cam_make="<<cam_make<<" cam_model="<<cam_model<<" lens_model="<<lens_model<<std::endl;
+      <<" cam_make="<<cam_make<<" cam_model="<<cam_model<<std::endl;//<<" lens_model="<<lens_model<<std::endl;
   rtengine::LFCamera lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_make, cam_model);
   rtengine::LFLens lflens = rtengine::LFLens();
   if( lfcamera ) {
@@ -391,7 +392,8 @@ int PF::LensFunPar::get_flags( VipsImage* img )
   float aperture = exif_data->exif_aperture;
   float distance = exif_data->exif_focus_distance;
 
-  Glib::ustring cam_make, cam_model, lens_model;
+  //Glib::ustring cam_make, cam_model, lens_model;
+  std::string cam_make, cam_model, lens_model;
   if( auto_matching.get() ) {
     cam_make = exif_data->exif_maker;
     cam_model = exif_data->exif_model;
@@ -406,7 +408,7 @@ int PF::LensFunPar::get_flags( VipsImage* img )
   }
 
   std::cout<<"LensFunPar::get_flags(): auto_matching="<<auto_matching.get()
-      <<" cam_make="<<cam_make<<" cam_model="<<cam_model<<" lens_model="<<lens_model<<std::endl;
+      <<" cam_make="<<cam_make<<" cam_model="<<cam_model<<std::endl;//<<" lens_model="<<lens_model<<std::endl;
   rtengine::LFCamera lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_make, cam_model);
   rtengine::LFLens lflens = rtengine::LFLens();
   if( lfcamera ) {
@@ -465,7 +467,8 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
   }
 
 
-  Glib::ustring cam_make, cam_model, lens_model;
+  //Glib::ustring cam_make, cam_model, lens_model;
+  std::string cam_make, cam_model, lens_model;
   if( auto_matching.get() ) {
     cam_make = exif_data->exif_maker;
     cam_model = exif_data->exif_model;
@@ -481,7 +484,7 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
   //lens_model = "Sigma 30mm f/1.4 EX DC HSM";
 
   std::cout<<"LensFunPar::build(): auto_matching="<<auto_matching.get()
-      <<" cam_make="<<cam_make<<" cam_model="<<cam_model<<" lens_model="<<lens_model<<std::endl;
+      <<" cam_make="<<cam_make<<" cam_model="<<cam_model<<std::endl;//<<" lens_model="<<lens_model<<std::endl;
   lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_make, cam_model);
   lflens = rtengine::LFLens();
   if( lfcamera ) {
