@@ -53,7 +53,7 @@ namespace PF {
     Selector modeSelector;
 
     Slider amount_slider;
-    Slider strength_slider;
+    Slider strength_s_slider, strength_h_slider;
     Slider local_contrast_slider;
     CheckBox enable_equalizer_box;
     VSlider blacks_amount_slider;

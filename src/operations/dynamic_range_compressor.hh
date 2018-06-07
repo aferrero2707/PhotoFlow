@@ -56,7 +56,7 @@ namespace PF
     Property<float> bilateral_sigma_s;
     Property<float> bilateral_sigma_r;
 
-    Property<float> strength;
+    Property<float> strength_s, strength_h;
     Property<float> local_contrast;
 
     ProcessorBase* loglumi;
@@ -82,7 +82,8 @@ namespace PF
 
     PF::ICCProfile* get_profile() { return profile; }
 
-    float get_strength() { return strength.get(); }
+    float get_strength_s() { return strength_s.get(); }
+    float get_strength_h() { return strength_h.get(); }
     float get_local_contrast() { return local_contrast.get(); }
 
     float get_amount() { return amount.get(); }
@@ -130,7 +131,8 @@ namespace PF
       PF::ICCProfile* profile = opar->get_profile();
       if( !profile ) return;
 
-      const float gamma = 1.0/(1.0 + 0.09*opar->get_strength());
+      const float gamma_s = 1.0/(1.0 + 0.09*opar->get_strength_s());
+      const float gamma_h = 1.0/(1.0 + 0.09*opar->get_strength_h());
       const float lc = opar->get_local_contrast() + 1;
       const float lcm = 1.0f-lc;
 
@@ -174,7 +176,9 @@ namespace PF
           float s = (0.1*psmooth[0]) - 6;
 
           diff = l - s;
-          double exp = lc * ((s * gamma) + diff) + lcm * l * gamma;
+          float gamma1 = (s>0) ? gamma_h : gamma_s;
+          float gamma2 = (l>0) ? gamma_h : gamma_s;
+          double exp = lc * ((s * gamma1) + diff) + lcm * l * gamma2;
           //double exp = ((s * gamma) + lc*diff);
 
           //out = pow( 10.0, l * gamma );

@@ -152,9 +152,10 @@ PF::DynamicRangeCompressorPar::DynamicRangeCompressorPar():
   highlights_amount("highlights_amount",this,0.7),
   whites_amount("whites_amount",this,0),
   bilateral_iterations("bilateral_iterations",this,1),
-  bilateral_sigma_s("bilateral_sigma_s",this,2),
+  bilateral_sigma_s("bilateral_sigma_s",this,5),
   bilateral_sigma_r("bilateral_sigma_r",this,5),
-  strength("strength", this, 50),
+  strength_s("strength_s", this, 50),
+  strength_h("strength_h", this, 50),
   local_contrast("local_contrast", this, 0),
   caching(false)
 {
