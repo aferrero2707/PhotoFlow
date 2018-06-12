@@ -62,7 +62,7 @@ namespace PF
 
     /* Function to derive the output area from the input area
      */
-    virtual void transform(const Rect* rin, Rect* rout)
+    virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
     {
       int pad = get_padding();
       rout->left = rin->left+pad;
@@ -74,7 +74,7 @@ namespace PF
     /* Function to derive the area to be read from input images,
        based on the requested output area
     */
-    virtual void transform_inv(const Rect* rout, Rect* rin)
+    virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
     {
       int pad = get_padding();
       rin->left = rout->left-pad;

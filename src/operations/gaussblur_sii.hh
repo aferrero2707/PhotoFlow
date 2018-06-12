@@ -57,7 +57,7 @@ namespace PF
 
     /* Function to derive the output area from the input area
      */
-    virtual void transform(const Rect* rin, Rect* rout)
+    virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
     {
 			int pad = get_padding();
       rout->left = rin->left+pad;
@@ -69,7 +69,7 @@ namespace PF
     /* Function to derive the area to be read from input images,
        based on the requested output area
     */
-    virtual void transform_inv(const Rect* rout, Rect* rin)
+    virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
     {
 			int pad = get_padding();
       rin->left = rout->left-pad;
@@ -103,9 +103,9 @@ namespace PF
   class GaussBlurSiiProc<OP_TEMPLATE_IMP_PREVIEW_SPEC(true)>
   {
 		void sii_gaussian_conv_h(sii_coeffs& c, T *dest, double *buffer, const T *src, 
-														 long start, long N, long width);
+														 long start, long N, long width, int NCH);
 		void sii_gaussian_conv_v(sii_coeffs& c, T *dest, double *buffer, const T *src, 
-														 long start, long N, long heigth, long src_stride, long dest_stride);
+														 long start, long N, long heigth, long src_stride, long dest_stride, int NCH);
 
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -118,7 +118,8 @@ namespace PF
 			Rect *r = &oreg->valid;
 			//int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
 			//int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
-			const int NCH = PF::ColorspaceInfo<CS>::NCH;
+      //const int NCH = PF::ColorspaceInfo<CS>::NCH;
+      const int NCH = oreg->im->Bands;
 			const int out_stride = VIPS_REGION_LSKIP( oreg )/sizeof(T)/oreg->im->Bands;
 
 			T* p;
@@ -150,7 +151,7 @@ namespace PF
 				pout = (T*)VIPS_REGION_ADDR( oreg, r->left, ir->top + y ); 
 				row_buf_y = &(row_buf[buf_width2*y]);
 
-				sii_gaussian_conv_h(gpar->get_coeffs(), row_buf_y, tmp_buf, p, r->left, r->width, oreg->im->Xsize);
+				sii_gaussian_conv_h(gpar->get_coeffs(), row_buf_y, tmp_buf, p, r->left, r->width, oreg->im->Xsize, NCH);
 				//sii_gaussian_conv_h(gpar->get_coeffs(), pout, tmp_buf, p, r->left, r->width, oreg->im->Xsize);
 				//row_buf_y += NCH*buf_width;
 			}			
@@ -162,7 +163,7 @@ namespace PF
 				//p = (T*)VIPS_REGION_ADDR( ireg[0], r->left+x, r->top ); 
 				pout = (T*)VIPS_REGION_ADDR( oreg, r->left+x, r->top ); 
 
-				sii_gaussian_conv_v(gpar->get_coeffs(), pout, tmp_buf, row_buf_x, r->top, r->height, oreg->im->Ysize, buf_width, out_stride );
+				sii_gaussian_conv_v(gpar->get_coeffs(), pout, tmp_buf, row_buf_x, r->top, r->height, oreg->im->Ysize, buf_width, out_stride, NCH );
 			}	
 
 			free( row_buf );

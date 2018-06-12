@@ -66,7 +66,7 @@ public:
 
   /* Function to derive the output area from the input area
    */
-  virtual void transform(const Rect* rin, Rect* rout)
+  virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
   {
     int border = 12;
     rout->left = rin->left+border;
@@ -78,7 +78,7 @@ public:
   /* Function to derive the area to be read from input images,
        based on the requested output area
    */
-  virtual void transform_inv(const Rect* rout, Rect* rin)
+  virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
   {
     int border = 12;
     // Output region aligned to the Bayer pattern

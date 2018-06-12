@@ -45,8 +45,8 @@ PF::DynamicRangeCompressorConfigGUI::DynamicRangeCompressorConfigGUI( PF::Layer*
   whites_amount_slider( this, "whites_amount", "whites", 100, 0, 100, 5, 10, 100),
   usmRadiusSlider( this, "gauss_radius", "radius", 1, 0, 100, 0.05, 0.1, 1),
   bilateralIterationsSlider( this, "bilateral_iterations", "iterations", 1, 1, 10, 1, 1, 1),
-  bilateralSigmasSlider( this, "bilateral_sigma_s", "coarseness", 25, 0, 100, 0.1, 1, 1),
-  bilateralSigmarSlider( this, "bilateral_sigma_r", "edge threshold", 20, 0, 100, 0.1, 1, 1)
+  bilateralSigmasSlider( this, "bilateral_sigma_s", "coarseness", 25, 0, 100, 0.5, 5, 1),
+  bilateralSigmarSlider( this, "bilateral_sigma_r", "edge threshold", 20, 0, 100, 0.5, 5, 1)
 {
 
   usmControlsBox.pack_start( usmRadiusSlider, Gtk::PACK_SHRINK );

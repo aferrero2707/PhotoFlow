@@ -53,7 +53,7 @@ namespace PF
 
     /* Function to derive the output area from the input area
     */
-    virtual void transform(const Rect* rin, Rect* rout)
+    virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
     {
       rout->left = (is_editing()==true) ? rin->left : rin->left - crop_left.get();
       rout->top = (is_editing()==true) ? rin->top : rin->top - crop_top.get();
@@ -64,7 +64,7 @@ namespace PF
     /* Function to derive the area to be read from input images,
        based on the requested output area
     */
-    virtual void transform_inv(const Rect* rout, Rect* rin)
+    virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
     {
       rin->left = (is_editing()==true) ? rout->left : rout->left + crop_left.get();
       rin->top = (is_editing()==true) ? rout->top : rout->top + crop_top.get();

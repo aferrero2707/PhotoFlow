@@ -69,9 +69,9 @@
 #include <fstream>
 #endif
 #ifdef __SSE2__
-#include "sleefsseavx.c"
+//#include "sleefsseavx.c"
 #else
-#include "sleef.c"
+//#include "sleef.c"
 #endif
 #include <assert.h>
 #include "rt_math.h"

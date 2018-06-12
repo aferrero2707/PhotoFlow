@@ -113,6 +113,7 @@ namespace PF
 #endif    
     
       const int NMAX = 100;
+      const int nch = oreg->im->Bands;
       T* p[NMAX+1];
       T* pout;
       T* pimap;
@@ -137,7 +138,8 @@ namespace PF
           for( ch=0; ch<CHMIN; ch++, x++ ) pout[x] = p[0][x];
           proc.process( p, n, in_first, sz, x, intensity_real/*get_intensity( intensity, pimap, ximap )*/, pout );
           x += dx;
-          for( ch=CHMAX+1; ch<PF::ColorspaceInfo<CS>::NCH; ch++, x++ ) pout[x] = p[0][x];
+          //for( ch=CHMAX+1; ch<PF::ColorspaceInfo<CS>::NCH; ch++, x++ ) pout[x] = p[0][x];
+          for( ch=CHMAX+1; ch<nch; ch++, x++ ) pout[x] = p[0][x];
           //for( ch=0; ch<PF::ColorspaceInfo<CS>::NCH; ch++, x++ ) pout[x] = p[0][x];
         }
         if( CS != PF_COLORSPACE_RGB || blend == 0 ) continue;

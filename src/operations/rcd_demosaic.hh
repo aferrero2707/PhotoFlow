@@ -64,7 +64,7 @@ namespace PF
 
     /* Function to derive the output area from the input area
      */
-    virtual void transform(const Rect* rin, Rect* rout)
+    virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
     {
       rout->left = rin->left+border;
       rout->top = rin->top+border;
@@ -75,7 +75,7 @@ namespace PF
     /* Function to derive the area to be read from input images,
        based on the requested output area
     */
-    virtual void transform_inv(const Rect* rout, Rect* rin)
+    virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
     {
 			// Output region aligned to the Bayer pattern
 			int raw_left = (rout->left/2)*2;

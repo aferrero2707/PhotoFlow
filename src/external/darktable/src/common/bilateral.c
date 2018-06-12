@@ -20,10 +20,11 @@
 //#include "common/darktable.h" // for CLAMPS, dt_alloc_align, dt_free_align
 #include <glib.h>             // for MIN, MAX
 #include <math.h>             // for roundf
+#include <stdio.h>            // for printf
 #include <stdlib.h>           // for size_t, free, malloc, NULL
 #include <string.h>           // for memset
 
-
+#undef _OPENMP
 
 // NaN-safe clamping (NaN compares false, and will thus result in H)
 #define CLAMPS(A, L, H) ((A) > (L) ? ((A) < (H) ? (A) : (H)) : (L))
@@ -137,9 +138,9 @@ dt_bilateral_t *dt_bilateral_init(const int width,     // width of input image
   b->height = height;
   b->sigma_s = MAX(height / (b->size_y - 1.0f), width / (b->size_x - 1.0f));
   b->sigma_r = 100.0f / (b->size_z - 1.0f);
-  b->buf = dt_alloc_align(16, b->size_x * b->size_y * b->size_z * sizeof(float));
 
-  memset(b->buf, 0, b->size_x * b->size_y * b->size_z * sizeof(float));
+  //b->buf = dt_alloc_align(16, b->size_x * b->size_y * b->size_z * sizeof(float));
+  //memset(b->buf, 0, b->size_x * b->size_y * b->size_z * sizeof(float));
   if(v>0)
   printf("[bilateral (%d %d)] created grid [%d %d %d]"
           " with sigma (%f %f) (%f %f) - buf size: %d\n", width, height,
@@ -150,11 +151,17 @@ dt_bilateral_t *dt_bilateral_init(const int width,     // width of input image
   return b;
 }
 
-void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int v)
+void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int ilskip, int olskip, int v)
 {
-  const int ox = 1;
-  const int oy = b->size_x;
-  const int oz = b->size_y * b->size_x;
+  //const int ox = 1;
+  //const int oy = b->size_x;
+  //const int oz = b->size_y * b->size_x;
+
+  const int oz = 1;
+  const int ox = b->size_z;
+  //const int oy = b->size_x * b->size_z;
+  const int oy = olskip;
+
   const float norm = 100.0f / (b->sigma_s * b->sigma_s);
 // splat into downsampled grid
 #ifdef _OPENMP
@@ -162,21 +169,32 @@ void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int v)
 #endif
   for(int j = 0; j < b->height; j++)
   {
-    size_t index = j * b->width;
+    float x, y, z;
+    //size_t index = j * b->width;
+    size_t index = j * ilskip;
+    //printf("splat: j = %d\n", j);
+    y = CLAMPS(j / b->sigma_s, 0, b->size_y - 1);
+    const int yi = MIN((int)y, b->size_y - 2);
+    const float yf = y - yi; const float myf = 1.0f-yf;
+    const float nyf = yf * norm;
+    const float nmyf = myf * norm;
+    const int Y = olskip * yi;
     for(int i = 0; i < b->width; i++)
     {
-      float x, y, z;
       const float L = in[index];
-      image_to_grid(b, i, j, L, &x, &y, &z);
+      //image_to_grid(b, i, j, L, &x, &y, &z);
+      x = CLAMPS(i / b->sigma_s, 0, b->size_x - 1);
+      z = CLAMPS(L / b->sigma_r, 0, b->size_z - 1);
       const int xi = MIN((int)x, b->size_x - 2);
-      const int yi = MIN((int)y, b->size_y - 2);
       const int zi = MIN((int)z, b->size_z - 2);
       const float xf = x - xi; const float mxf = 1.0f-xf;
-      const float yf = y - yi; const float myf = 1.0f-yf;
       const float zf = z - zi; const float mzf = 1.0f-zf;
       // nearest neighbour splatting:
-      const size_t grid_index = xi + b->size_x * (yi + b->size_y * zi);
+      //const size_t grid_index = xi + b->size_x * (yi + b->size_y * zi);
+      //const size_t grid_index = zi + b->size_z * (xi + b->size_x * yi);
+      const size_t grid_index = zi + b->size_z * xi + Y;
       size_t ii; float contrib;
+      //printf("  xf=%f  yf=%f  zf=%f\n", xf, yf, zf);
       // sum up payload here, doesn't have to be same as edge stopping data
       // for cross bilateral applications.
       // also note that this is not clipped (as L->z is), so potentially hdr/out of gamut
@@ -197,43 +215,45 @@ void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int v)
       /**/
       // k=0
       ii = grid_index;
-      contrib = mxf * myf * mzf * norm;
+      contrib = mxf * nmyf * mzf;
       b->buf[ii] += contrib;
+      //printf("    ii=%d  contrib=%f  sigma_s=%f\n", ii, contrib, b->sigma_s);
 
       // k=1
       ii = grid_index + ox;
-      contrib = xf * myf * mzf * norm;
+      contrib = xf * nmyf * mzf;
       b->buf[ii] += contrib;
 
       // k=2
       ii = grid_index + oy;
-      contrib = mxf * yf * mzf * norm;
+      contrib = mxf * nyf * mzf;
       b->buf[ii] += contrib;
 
       // k=3
       ii = grid_index + ox + oy;
-      contrib = xf * yf * mzf * norm;
+      contrib = xf * nyf * mzf;
       b->buf[ii] += contrib;
 
       // k=4
       ii = grid_index + oz;
-      contrib = mxf * myf * zf * norm;
+      contrib = mxf * nmyf * zf;
       b->buf[ii] += contrib;
 
       // k=5
       ii = grid_index + ox + oz;
-      contrib = xf * myf * zf * norm;
+      contrib = xf * nmyf * zf;
       b->buf[ii] += contrib;
 
       // k=6
       ii = grid_index + oy + oz;
-      contrib = mxf * yf * zf * norm;
+      contrib = mxf * nyf * zf;
       b->buf[ii] += contrib;
 
       // k=7
       ii = grid_index + ox + oy + oz;
-      contrib = xf * yf * zf * norm;
+      contrib = xf * nyf * zf;
       b->buf[ii] += contrib;
+      //if(0 && j<23 && i < 16) printf("  b->buf[%d] = %f, i=%d, j=%d, L=%f, grid_index=%d, xi=%d yi=%d zi=%d\n", grid_index, b->buf[grid_index], i, j, L, grid_index, xi, yi, zi);
       /**/
       index += 1;
     }
@@ -320,31 +340,46 @@ static void blur_line(float *buf, const int offset1, const int offset2, const in
 void dt_bilateral_blur(dt_bilateral_t *b)
 {
   // gaussian up to 3 sigma
-  blur_line(b->buf, b->size_x * b->size_y, b->size_x, 1, b->size_z, b->size_y, b->size_x);
+  //blur_line(b->buf, b->size_x * b->size_y, b->size_x, 1, b->size_z, b->size_y, b->size_x);
+  blur_line(b->buf, 1, b->size_z * b->size_x, b->size_z, b->size_z, b->size_y, b->size_x);
   // gaussian up to 3 sigma
-  blur_line(b->buf, b->size_x * b->size_y, 1, b->size_x, b->size_z, b->size_x, b->size_y);
+  //blur_line(b->buf, b->size_x * b->size_y, 1, b->size_x, b->size_z, b->size_x, b->size_y);
+  blur_line(b->buf, 1, b->size_z, b->size_z * b->size_x, b->size_z, b->size_x, b->size_y);
   // -2 derivative of the gaussian up to 3 sigma: x*exp(-x*x)
-  blur_line_z(b->buf, 1, b->size_x, b->size_x * b->size_y, b->size_x, b->size_y, b->size_z);
+  //blur_line_z(b->buf, 1, b->size_x, b->size_x * b->size_y, b->size_x, b->size_y, b->size_z);
+  blur_line_z(b->buf, b->size_z, b->size_z * b->size_x, 1, b->size_x, b->size_y, b->size_z);
 }
 
 
-void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, float *out, const float detail)
+void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, float *out,
+    const int ilskip, const int lskip, const int olskip, const float detail)
 {
   // detail: 0 is leave as is, -1 is bilateral filtered, +1 is contrast boost
   const float norm = -detail * b->sigma_r * 0.04f;
-  const int ox = 1;
-  const int oy = b->size_x;
-  const int oz = b->size_y * b->size_x;
+
+  //const int ox = 1;
+  //const int oy = b->size_x;
+  //const int oz = b->size_y * b->size_x;
+
+  const int oz = 1;
+  const int ox = b->size_z;
+  //const int oy = b->size_x * b->size_z;
+  const int oy = lskip;
+  //printf("ox=%d  oy=%d\n", ox, oy);
+
 #ifdef _OPENMP
 #pragma omp parallel for default(none) shared(out)
 #endif
   for(int j = 0; j < b->height; j++)
   {
-    size_t index = j * b->width;
+    //size_t index = j * b->width;
+    size_t index_i = j * ilskip;
+    size_t index_o = j * olskip;
+    //printf("slice: j = %d\n", j);
     for(int i = 0; i < b->width; i++)
     {
       float x, y, z;
-      const float L = in[index];
+      const float L = in[index_i];
       image_to_grid(b, i, j, L, &x, &y, &z);
       // trilinear lookup:
       const int xi = MIN((int)x, b->size_x - 2);
@@ -353,8 +388,18 @@ void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, fl
       const float xf = x - xi;
       const float yf = y - yi;
       const float zf = z - zi;
-      const size_t gi = xi + b->size_x * (yi + b->size_y * zi);
-      const float Lout = L
+      //const size_t gi = xi + b->size_x * (yi + b->size_y * zi);
+      //const size_t gi = zi + b->size_z * (xi + b->size_x * yi);
+      const size_t gi = zi + b->size_z * xi + lskip * yi;
+      const float diff = norm * (b->buf[gi] * (1.0f - xf) * (1.0f - yf) * (1.0f - zf)
+          + b->buf[gi + ox] * (xf) * (1.0f - yf) * (1.0f - zf)
+          + b->buf[gi + oy] * (1.0f - xf) * (yf) * (1.0f - zf)
+          + b->buf[gi + ox + oy] * (xf) * (yf) * (1.0f - zf)
+          + b->buf[gi + oz] * (1.0f - xf) * (1.0f - yf) * (zf)
+          + b->buf[gi + ox + oz] * (xf) * (1.0f - yf) * (zf)
+          + b->buf[gi + oy + oz] * (1.0f - xf) * (yf) * (zf)
+          + b->buf[gi + ox + oy + oz] * (xf) * (yf) * (zf));
+      const float Lout = L + diff; /*
                          + norm * (b->buf[gi] * (1.0f - xf) * (1.0f - yf) * (1.0f - zf)
                                    + b->buf[gi + ox] * (xf) * (1.0f - yf) * (1.0f - zf)
                                    + b->buf[gi + oy] * (1.0f - xf) * (yf) * (1.0f - zf)
@@ -362,13 +407,20 @@ void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, fl
                                    + b->buf[gi + oz] * (1.0f - xf) * (1.0f - yf) * (zf)
                                    + b->buf[gi + ox + oz] * (xf) * (1.0f - yf) * (zf)
                                    + b->buf[gi + oy + oz] * (1.0f - xf) * (yf) * (zf)
-                                   + b->buf[gi + ox + oy + oz] * (xf) * (yf) * (zf));
-      out[index] = Lout;
+                                   + b->buf[gi + ox + oy + oz] * (xf) * (yf) * (zf));*/
+      //printf("  index_i=%d  index_o=%d\n", index_i, index_o);
+      //if(j<23)
+        out[index_o] = Lout;
+      //else out[index_o] = 0;
+      if(0 /*&& j<23 && i < 16*/) {
+        printf("  i=%d, j=%d, L=%f, xi=%d yi=%d zi=%d\n    diff=%f  Lout=%f  b->buf[%d]=%f  out[%d] = %f\n", i, j, L, xi, yi, zi, diff, Lout, gi, b->buf[gi], index_o, out[index_o]);
+      }
       // and copy color and mask
       //out[index + 1] = in[index + 1];
       //out[index + 2] = in[index + 2];
       //out[index + 3] = in[index + 3];
-      index += 1;
+      index_i += 1;
+      index_o += 1;
     }
   }
 }
@@ -416,7 +468,7 @@ void dt_bilateral_slice_to_output(const dt_bilateral_t *const b, const float *co
 void dt_bilateral_free(dt_bilateral_t *b)
 {
   if(!b) return;
-  dt_free_align(b->buf);
+  //dt_free_align(b->buf);
   free(b);
 }
 

@@ -30,6 +30,8 @@ PF::colorspace_t PF::convert_colorspace(VipsInterpretation interpretation)
     return PF::PF_COLORSPACE_GRAYSCALE;
     break;
   case VIPS_INTERPRETATION_MULTIBAND:
+    return PF::PF_COLORSPACE_MULTIBAND;
+    break;
   case VIPS_INTERPRETATION_RGB:
   case VIPS_INTERPRETATION_sRGB:
   case VIPS_INTERPRETATION_RGB16:

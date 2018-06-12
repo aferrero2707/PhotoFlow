@@ -172,8 +172,8 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
     std::cout<<"  type: "<<layer->processor->get_par()->get_type()<<std::endl;
   if( layer->processor->get_par()->get_config_ui() )
     std::cout<<"  name: "<<layer->processor->get_par()->get_config_ui()->get_layer()->get_name()<<std::endl;
-  std::cout<<"  output region: top="<<oreg->valid.top
-      <<" left="<<oreg->valid.left
+  std::cout<<"  output region: left="<<oreg->valid.left
+      <<" top="<<oreg->valid.top
       <<" width="<<oreg->valid.width
       <<" height="<<oreg->valid.height<<std::endl;
   }
@@ -186,7 +186,7 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
       /**/
       /* Area of input we need.
        */
-      layer->processor->get_par()->transform_inv(r,&s);
+      layer->processor->get_par()->transform_inv(r, &s, i);
 
       VipsRect r_img = {0, 0, ir[i]->im->Xsize, ir[i]->im->Ysize};
       vips_rect_intersectrect (&s, &r_img, &s);
@@ -196,20 +196,25 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
           std::cout<<"["<<layer->processor->get_par()->get_config_ui()->get_layer()->get_name()<<"]"<<std::endl;
         if( layer->processor->get_par() )
           std::cout<<"["<<layer->processor->get_par()->get_type()<<"]: ";
-        std::cout<<r->top<<","<<r->left<<","<<r->width<<","<<r->height;
-        std::cout<<" -> ["<<i<<"] "<<s.top<<","<<s.left<<","<<s.width<<","<<s.height<<std::endl;
+        std::cout<<r->width<<"x"<<r->height<<"+"<<r->left<<"+"<<r->top;
+        std::cout<<" -> ["<<i<<"] "<<s.width<<"x"<<s.height<<"+"<<s.left<<"+"<<s.top<<std::endl;
       }
 //#endif
-      /**/
       if( vips_region_prepare( ir[i], &s ) )
         return( -1 );
+      /*
       if( verbose ) {
-      std::cout<<"  region ir["<<i<<"]->valid: "
-          <<"  top="<<ir[i]->valid.top
-         <<" left="<<ir[i]->valid.left
-         <<" width="<<ir[i]->valid.width
-         <<" height="<<ir[i]->valid.height<<std::endl;
+        if( layer->processor->get_par()->get_config_ui() )
+          std::cout<<"["<<layer->processor->get_par()->get_config_ui()->get_layer()->get_name()<<"]"<<std::endl;
+        if( layer->processor->get_par() )
+          std::cout<<"["<<layer->processor->get_par()->get_type()<<"]: ";
+        std::cout<<"  region ir["<<i<<"]->valid: "
+            <<"  top="<<ir[i]->valid.top
+            <<" left="<<ir[i]->valid.left
+            <<" width="<<ir[i]->valid.width
+            <<" height="<<ir[i]->valid.height<<std::endl;
       }
+      */
     }
   }
 

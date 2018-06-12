@@ -34,10 +34,15 @@
 
 
 PF::BlurBilateralPar::BlurBilateralPar():
-PF::OpParBase()
+PF::OpParBase(),
+sigma_s("sigma_s",this,50),
+sigma_r("sigma_r",this,20)
 {
-  balgo = new PF::Processor<PF::BlurBilateralAlgoPar,PF::BlurBilateralAlgoProc>();
-  map_properties( balgo->get_par()->get_properties() );
+  bsplat = new PF::Processor<PF::BlurBilateralSplatPar,PF::BlurBilateralSplatProc>();
+  blur = new PF::Processor<PF::BlurBilateralBlurPar,PF::BlurBilateralBlurProc>();
+  slice = new PF::Processor<PF::BlurBilateralSlicePar,PF::BlurBilateralSliceProc>();
+  //balgo = new PF::Processor<PF::BlurBilateralAlgoPar,PF::BlurBilateralAlgoProc>();
+  //map_properties( balgo->get_par()->get_properties() );
   set_type( "blur_bilateral" );
   set_default_name( _("blilateral blur") );
 }
@@ -46,13 +51,15 @@ PF::OpParBase()
 //void set_iterations( int i ) { iterations.set( i ); }
 void PF::BlurBilateralPar::set_sigma_s( float s )
 {
-  BlurBilateralAlgoPar* bop = dynamic_cast<BlurBilateralAlgoPar*>( balgo->get_par() );
-  if(bop) bop->set_sigma_s( s );
+  sigma_s.set( s );
+  //BlurBilateralAlgoPar* bop = dynamic_cast<BlurBilateralAlgoPar*>( balgo->get_par() );
+  //if(bop) bop->set_sigma_s( s );
 }
 void PF::BlurBilateralPar::set_sigma_r( float s )
 {
-  BlurBilateralAlgoPar* bop = dynamic_cast<BlurBilateralAlgoPar*>( balgo->get_par() );
-  if(bop) bop->set_sigma_r( s );
+  sigma_r.set( s );
+  //BlurBilateralAlgoPar* bop = dynamic_cast<BlurBilateralAlgoPar*>( balgo->get_par() );
+  //if(bop) bop->set_sigma_r( s );
 }
 
 
@@ -64,52 +71,142 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* srcimg = NULL;
   if( in.size() > 0 ) srcimg = in[0];
   VipsImage* mask;
-  VipsImage* out = srcimg;
 
-  if( !out ) return NULL;
+  if( !srcimg ) return NULL;
 
   colorspace_t csin = PF::PF_COLORSPACE_UNKNOWN;
   if( srcimg )
     csin = PF::convert_colorspace( srcimg->Type );
   std::cout<<"BlurBilateralPar::build(): csin = "<<csin<<std::endl;
 
-  int padding = get_padding(0);
+  float ss, sr;
+  ss = sigma_s.get();
+  for( int l = 1; l <= level; l++ ) {
+    ss /= 2;
+  }
+  sr = sigma_r.get();
+  ss = roundf(ss); //ss = 20;
+  sr = roundf(sr);
+  int iss = ss, isr = sr;
+
+
+  int bpad = 0;
+  BlurBilateralBlurPar* bop = dynamic_cast<BlurBilateralBlurPar*>( blur->get_par() );
+  if(bop) bpad = bop->get_padding();
+
+
+  int padding = iss*bpad;
   std::cout<<"BlurBilateralPar::build(): level="<<level<<"  padding="<<padding<<std::endl;
   // Extend the original image by padding pixels
   VipsImage* extended;
-  VipsExtend extend = VIPS_EXTEND_COPY;
-  //VipsExtend extend = VIPS_EXTEND_BLACK;
+  //VipsExtend extend = VIPS_EXTEND_COPY;
+  VipsExtend extend = VIPS_EXTEND_BLACK;
   if( vips_embed(srcimg, &extended, padding, padding,
-      srcimg->Xsize+padding*2, srcimg->Ysize+padding*2,
+      srcimg->Xsize+padding*4, srcimg->Ysize+padding*4,
       "extend", extend, NULL) ) {
     std::cout<<"BlurBilateralPar::build(): vips_embed() failed."<<std::endl;
     PF_REF( in[0], "BlurBilateralPar::build(): vips_embed() failed." );
     return in[0];
   }
+  //PF_UNREF( splatted, "BlurBilateralPar::build(): splatted unref" );
 
-  BlurBilateralAlgoPar* bop = dynamic_cast<BlurBilateralAlgoPar*>( balgo->get_par() );
-  balgo->get_par()->set_image_hints( extended );
-  balgo->get_par()->set_format( get_format() );
+
+  BlurBilateralSplatPar* sop = dynamic_cast<BlurBilateralSplatPar*>( bsplat->get_par() );
+  if(sop) {
+    sop->set_sigma_s(iss);
+    sop->set_sigma_r(isr);
+  } else {
+    std::cout<<"BlurBilateralPar::build(): cannot cast to BlurBilateralSplatPar*"<<std::endl;
+    return NULL;
+  }
+  std::cout<<"BlurBilateralPar::build(): sigma_s="<<get_sigma_s()<<"  level="<<level<<std::endl;
+  bsplat->get_par()->set_image_hints( extended );
+  bsplat->get_par()->set_format( get_format() );
   std::vector<VipsImage*> in2;
   in2.clear();
   in2.push_back(extended);
-
-  VipsImage* blurred = balgo->get_par()->build( in2, 0, imap, omap, level );
+  VipsImage* splatted = bsplat->get_par()->build( in2, 0, imap, omap, level );
   PF_UNREF( extended, "BlurBilateralPar::build(): extended unref" );
 
 
-  // Final cropping to remove the padding pixels
-  VipsImage* cropped;
-  if( vips_crop(blurred, &cropped, padding, padding,
-      srcimg->Xsize, srcimg->Ysize, NULL) ) {
-    std::cout<<"BlurBilateralPar::build(): vips_crop() failed."<<std::endl;
-    PF_UNREF( blurred, "BlurBilateralPar::build(): blurred unref" );
-    PF_REF( in[0], "BlurBilateralPar::build(): vips_crop() failed" );
-    return in[0];
+
+
+  int ts = 4;
+  int nt = (splatted->Xsize * splatted->Ysize) / ts + 1;
+  //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
+  VipsAccess acc = VIPS_ACCESS_RANDOM;
+  int threaded = 1, persistent = 0;
+  VipsImage* csplatted;
+  if( vips_tilecache(splatted, &csplatted,
+      "tile_width", ts,
+      "tile_height", ts,
+      "max_tiles", nt,
+      "access", acc, "threaded", threaded,
+      "persistent", persistent, NULL) ) {
+    std::cout<<"BlurBilateralPar::build(): vips_tilecache() failed."<<std::endl;
+    return csplatted;
   }
+  PF_UNREF( splatted, "BlurBilateralPar::build(): splatted unref" );
+
+
+
+  blur->get_par()->set_image_hints( csplatted );
+  blur->get_par()->set_format( get_format() );
+  in2.clear();
+  in2.push_back(csplatted);
+  VipsImage* blurred = blur->get_par()->build( in2, 0, imap, omap, level );
+  PF_UNREF( csplatted, "BlurBilateralPar::build(): csplatted unref" );
+
+  BlurBilateralSlicePar* slop = dynamic_cast<BlurBilateralSlicePar*>( slice->get_par() );
+  if(slop) {
+    slop->set_sigma_s(iss);
+    slop->set_sigma_r(isr);
+  } else {
+    std::cout<<"BlurBilateralPar::build(): cannot cast to BlurBilateralSlicePar*"<<std::endl;
+    return NULL;
+  }
+  slice->get_par()->set_image_hints( extended );
+  slice->get_par()->set_format( get_format() );
+  in2.clear();
+  in2.push_back(blurred);
+  in2.push_back(extended);
+  VipsImage* sliced = slice->get_par()->build( in2, 0, imap, omap, level );
   PF_UNREF( blurred, "BlurBilateralPar::build(): blurred unref" );
 
-  return cropped;
+
+  //padding=0;
+  // Final cropping to remove the padding pixels
+  VipsImage* cropped;
+  if( vips_crop(sliced, &cropped, padding, padding,
+      srcimg->Xsize, srcimg->Ysize, NULL) ) {
+    std::cout<<"BlurBilateralPar::build(): vips_crop() failed."<<std::endl;
+    PF_UNREF( sliced, "BlurBilateralPar::build(): sliced unref" );
+    PF_REF( srcimg, "BlurBilateralPar::build(): vips_crop() failed" );
+    return srcimg;
+  }
+  PF_UNREF( sliced, "BlurBilateralPar::build(): sliced unref" );
+
+
+  int ts2 = iss * 4;
+  int nt2 = (cropped->Xsize/ts) * 1 + 1;
+  //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
+  //VipsAccess acc = VIPS_ACCESS_RANDOM;
+  //int threaded = 1, persistent = 0;
+  VipsImage* cached;
+  if( vips_tilecache(cropped, &cached,
+      "tile_width", ts2,
+      "tile_height", ts2,
+      "max_tiles", nt2,
+      "access", acc, "threaded", threaded,
+      "persistent", persistent, NULL) ) {
+    std::cout<<"BlurBilateralPar::build(): vips_tilecache() failed."<<std::endl;
+    return cropped;
+  }
+  PF_UNREF( cropped, "BlurBilateralPar::build(): cropped unref" );
+
+  std::cout<<"BlurBilateralPar::build(): ts="<<ts<<"  ts2="<<ts2<<std::endl;
+
+  return cached;
 }
 
 

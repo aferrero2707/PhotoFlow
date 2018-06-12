@@ -66,7 +66,7 @@ public:
 
   /* Function to derive the output area from the input area
    */
-   virtual void transform(const Rect* rin, Rect* rout)
+   virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
    {
      rout->left = rin->left+5;
      rout->top = rin->top+5;
@@ -77,7 +77,7 @@ public:
    /* Function to derive the area to be read from input images,
        based on the requested output area
     */
-   virtual void transform_inv(const Rect* rout, Rect* rin)
+   virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
    {
      rin->left = rout->left-5;
      rin->top = rout->top-5;

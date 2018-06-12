@@ -121,10 +121,10 @@ namespace PF
       static const double inv_log_base = 1.0 / log(10.0);
       static const double min_value = -2.5, max_value = 2;
       //static const double gamma = log(50) * inv_log_base / (max_value - min_value);
-      if( n != 3 ) return;
+      //if( n != 3 ) return;
       if( ireg[0] == NULL ) return;
-      if( ireg[1] == NULL ) return;
-      if( ireg[2] == NULL ) return;
+      //if( ireg[1] == NULL ) return;
+      //if( ireg[2] == NULL ) return;
 
       DynamicRangeCompressorPar* opar = dynamic_cast<DynamicRangeCompressorPar*>(par);
       if( !opar ) return;
@@ -164,22 +164,16 @@ namespace PF
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
         for( x = 0; x < width; x++, pin+=3, pout+=3, psmooth++, plog++ ) {
-          //intensity = 0;
-          L = profile->get_lightness(pin[0], pin[1], pin[2]);
-          if( opar->get_equalizer_enabled() ) {
-            ngrey = (L+FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
-            intensity = opar->get_tone_curve().get_value( ngrey ) * opar->get_amount();
-          } else
-            intensity = opar->get_amount();
-
           float l = (0.1*plog[0]) - 6;
           float s = (0.1*psmooth[0]) - 6;
+          //float s = (0.1*(plog[0]+psmooth[0])) - 6;
 
           diff = l - s;
           float gamma1 = (s>0) ? gamma_h : gamma_s;
           float gamma2 = (l>0) ? gamma_h : gamma_s;
-          double exp = lc * ((s * gamma1) + diff) + lcm * l * gamma2;
+          //double exp = s;
           //double exp = ((s * gamma) + lc*diff);
+          double exp = lc * ((s * gamma1) + diff) + lcm * l * gamma2;
 
           //out = pow( 10.0, l * gamma );
           //out = pow( 10.0, exp );
@@ -193,13 +187,23 @@ namespace PF
           //  lout = profile->perceptual2linear(out);
           //else lout = out;
 
-          //if(false && x<8 && y==0 && r->left==0 && r->top==0)
-          //  std::cout<<"L="<<L<<"  l="<<l<<"  plog[0]="<<plog[0]<<"  psmooth[0]="<<psmooth[0]<<"  gamma="<<gamma<<"  diff="<<diff<<"  out="<<out<<std::endl;
-
-          const float ratio = out / L;
+          if(true && x==(width-1) && y==(r->height-1) && r->left==0 && r->top==0)
+            std::cout<<"L="<<L<<"  plog[0]="<<*plog<<"  psmooth[0]="<<*psmooth
+            <<"  l="<<l<<"  s="<<s<<"  gamma_s="<<gamma_s<<"  diff="<<diff<<"  out="<<out<<std::endl;
 
           //pout[0] = pout[1] = pout[2] = out;
+
+          /**/
+          //intensity = 0;
+          L = profile->get_lightness(pin[0], pin[1], pin[2]);
+          if( opar->get_equalizer_enabled() ) {
+            ngrey = (L+FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
+            intensity = opar->get_tone_curve().get_value( ngrey ) * opar->get_amount();
+          } else
+            intensity = opar->get_amount();
+          const float ratio = out / L;
           pout[0] = pin[0] * ratio; pout[1] = pin[1] * ratio; pout[2] = pin[2] * ratio;
+          /**/
         }
       }
     }

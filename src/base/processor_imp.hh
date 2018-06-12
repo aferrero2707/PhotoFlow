@@ -101,6 +101,9 @@ namespace PF
   case PF_COLORSPACE_GRAYSCALE:						\
     MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_GRAYSCALE, 0, 0 );	\
     break;								\
+  case PF_COLORSPACE_MULTIBAND:            \
+    MAPFLAG_SWITCH( TYPE, PF_COLORSPACE_MULTIBAND, 0, 0 ); \
+    break;                \
   case PF_COLORSPACE_RGB:						\
     switch( op_par.get_rgb_target_channel() ) {				\
     case 0:								\

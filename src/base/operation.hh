@@ -290,7 +290,7 @@ namespace PF
 
     /* Function to derive the output area from the input area
      */
-    virtual void transform(const Rect* rin, Rect* rout)
+    virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
     {
       int p = enable_padding.get() ? test_padding : 0;
       rout->left = rin->left+p;
@@ -302,7 +302,7 @@ namespace PF
     /* Function to derive the area to be read from input images,
        based on the requested output area
     */
-    virtual void transform_inv(const Rect* rout, Rect* rin)
+    virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
     {
       int p = enable_padding.get() ? test_padding : 0;
       rin->left = rout->left-p;
@@ -452,6 +452,13 @@ namespace PF
     {
       xsize = w; ysize = h;
       bands = 4; interpretation = VIPS_INTERPRETATION_CMYK;
+      coding = VIPS_CODING_NONE;
+    }
+
+    void multiband_image(int w, int h, int b)
+    {
+      xsize = w; ysize = h;
+      bands = b; interpretation = VIPS_INTERPRETATION_MULTIBAND;
       coding = VIPS_CODING_NONE;
     }
 

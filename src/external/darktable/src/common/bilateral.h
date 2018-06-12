@@ -53,11 +53,12 @@ dt_bilateral_t *dt_bilateral_init(const int width,      // width of input image
                                   const float sigma_s,  // spatial sigma (blur pixel coords)
                                   const float sigma_r, int v); // range sigma (blur luma values)
 
-void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int v);
+void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int ilskip, int olskip, int v);
 
 void dt_bilateral_blur(dt_bilateral_t *b);
 
-void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, float *out, const float detail);
+void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, float *out,
+    const int ilskip, const int lskip, const int olskip, const float detail);
 
 void dt_bilateral_slice_to_output(const dt_bilateral_t *const b, const float *const in, float *out,
                                   const float detail);

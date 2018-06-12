@@ -1325,7 +1325,7 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
         rout.top = y;
         rout.width = w;
         rout.height = h;
-        par->transform_inv( &rout, &rin );
+        par->transform_inv( &rout, &rin, 0 );
 
         x = rin.left;
         y = rin.top;
@@ -1364,7 +1364,7 @@ void PF::ImageEditor::image2layer( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   rout.top = y;
   rout.width = w;
   rout.height = h;
-  par->transform_inv( &rout, &rin );
+  par->transform_inv( &rout, &rin, 0 );
 
   x = rin.left;
   y = rin.top;
@@ -1447,7 +1447,7 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
   rin.top = y;
   rin.width = w;
   rin.height = h;
-  par->transform( &rin, &rout );
+  par->transform( &rin, &rout, 0 );
 
   x = rout.left;
   y = rout.top;
@@ -1480,7 +1480,7 @@ void PF::ImageEditor::layer2image( gdouble& x, gdouble& y, gdouble& w, gdouble& 
         rin.top = y;
         rin.width = w;
         rin.height = h;
-        par->transform( &rin, &rout );
+        par->transform( &rin, &rout, 0 );
 
         x = rout.left;
         y = rout.top;

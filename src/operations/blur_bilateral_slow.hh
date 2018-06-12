@@ -27,8 +27,8 @@
 
  */
 
-#ifndef BLUR_BILATERAL_H
-#define BLUR_BILATERAL_H
+#ifndef BLUR_BILATERAL_SLOW_H
+#define BLUR_BILATERAL_SLOW_H
 
 #include <assert.h>
 #include <string>
@@ -42,12 +42,7 @@ extern "C" {
 namespace PF 
 {
 
-#include "blur_bilateral_splat.hh"
-#include "blur_bilateral_blur.hh"
-#include "blur_bilateral_slice.hh"
-
-
-class BlurBilateralAlgoPar: public OpParBase
+class BlurBilateralSlowAlgoPar: public OpParBase
 {
   Property<float> sigma_s;
   Property<float> sigma_r;
@@ -56,7 +51,7 @@ class BlurBilateralAlgoPar: public OpParBase
   int cur_padding;
 
 public:
-  BlurBilateralAlgoPar();
+  BlurBilateralSlowAlgoPar();
 
   //void set_iterations( int i ) { iterations.set( i ); }
   void set_sigma_s( float s ) { sigma_s.set( s ); }
@@ -64,9 +59,6 @@ public:
 
   float get_ss() { return ss; }
   float get_sr() { return sr; }
-
-  float get_sigma_s() { return sigma_s.get(); }
-  float get_sigma_r() { return sigma_r.get(); }
 
   bool has_intensity() { return false; }
   bool has_opacity() { return true; }
@@ -81,9 +73,9 @@ public:
     int iss = static_cast<int>(ss*3);
     //iss /= 16;
     //iss = (iss+1)*16;
-    iss = 2;
+    //iss = 0;
     set_padding( iss, id );
-    std::cout<<"BlurBilateralAlgoPar()::compute_padding(): sigma_s="<<sigma_s.get()
+    std::cout<<"BlurBilateralSlowAlgoPar()::compute_padding(): sigma_s="<<sigma_s.get()
         <<"  level="<<level<<"  ss="<<ss<<"  iss="<<iss<<"  padding="<<get_padding(id)<<std::endl;
   }
 
@@ -118,19 +110,19 @@ public:
 
 
 template < OP_TEMPLATE_DEF >
-class BlurBilateralAlgoProc
+class BlurBilateralSlowAlgoProc
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, OpParBase* par)
   {
-    std::cout<<"BlurBilateralAlgoProc::render() called"<<std::endl;
+    std::cout<<"BlurBilateralSlowAlgoProc::render() called"<<std::endl;
   }
 };
 
 template < OP_TEMPLATE_DEF_CS_SPEC >
-class BlurBilateralAlgoProc< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_GRAYSCALE) >
+class BlurBilateralSlowAlgoProc< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_GRAYSCALE) >
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -139,7 +131,7 @@ public:
   {
     if( ireg[0] == NULL ) return;
 
-    BlurBilateralAlgoPar* opar = dynamic_cast<BlurBilateralAlgoPar*>(par);
+    BlurBilateralSlowAlgoPar* opar = dynamic_cast<BlurBilateralSlowAlgoPar*>(par);
     if( !opar ) return;
 
     Rect *r = &oreg->valid;
@@ -148,8 +140,8 @@ public:
     int y;
     VipsImage* srcimg = ireg[0]->im;
 
-    if( false && r->left<10000 && r->top<10000 ) {
-      std::cout<<"BlurBilateralAlgoProc::render(): ireg="<<ireg[0]->valid.width<<"x"<<ireg[0]->valid.height
+    if( true && r->left<10000 && r->top<10000 ) {
+      std::cout<<"BlurBilateralSlowAlgoProc::render(): ireg="<<ireg[0]->valid.width<<"x"<<ireg[0]->valid.height
           <<"+"<<ireg[0]->valid.left<<","<<ireg[0]->valid.top<<std::endl;
       std::cout<<"                                 oreg="<<r->width<<"x"<<r->height<<"+"<<r->left<<","<<r->top<<std::endl;
     }
@@ -167,14 +159,13 @@ public:
         opar->get_ss(), opar->get_sr(), verb);
     dt_b->buf = (float*)malloc(dt_b->size_x * dt_b->size_y * dt_b->size_z * sizeof(float));
     memset(dt_b->buf, 0, dt_b->size_x * dt_b->size_y * dt_b->size_z * sizeof(float));
-
     int ilskip = VIPS_REGION_LSKIP( ireg[0] ) / sizeof(T);
-    int lskip = dt_b->size_x * dt_b->size_z;
-    int olskip = VIPS_REGION_LSKIP( oreg ) / sizeof(T);
-
+    int lskip = dt_b->size_z * dt_b->size_x;
+    int olskip = ireg[0]->valid.width;
     dt_bilateral_splat(dt_b, pin, ilskip, lskip, verb);
-    dt_bilateral_blur(dt_b);
+    //dt_bilateral_blur(dt_b);
     dt_bilateral_slice(dt_b, pin, obuf, ilskip, lskip, olskip, -1);
+    //free(dt_b->buf);
     dt_bilateral_free(dt_b);
     int dx = r->left - ireg[0]->valid.left;
     int dy = r->top - ireg[0]->valid.top;
@@ -184,8 +175,8 @@ public:
       pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
       memcpy(pout, p, sizeof(T)*width );
     }
-    free(dt_b->buf);
     free(obuf);
+
   }
 };
 
@@ -193,17 +184,12 @@ public:
 
 
 
-class BlurBilateralPar: public OpParBase
+class BlurBilateralSlowPar: public OpParBase
 {
-  Property<float> sigma_s;
-  Property<float> sigma_r;
-  ProcessorBase* bsplat;
-  ProcessorBase* blur;
-  ProcessorBase* slice;
   ProcessorBase* balgo;
 
 public:
-  BlurBilateralPar();
+  BlurBilateralSlowPar();
 
   bool has_intensity() { return false; }
   bool has_opacity() { return true; }
@@ -211,16 +197,13 @@ public:
 
   void set_sigma_s( float s );
   void set_sigma_r( float s );
-  float get_sigma_s() { return sigma_s.get(); }
-  float get_sigma_r() { return sigma_r.get(); }
 
   void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
   {
-    //g_assert(balgo->get_par() != NULL);
-    //balgo->get_par()->compute_padding(full_res, id, level);
-    //set_padding( balgo->get_par()->get_padding(id), id );
-    set_padding( 0, id );
-    std::cout<<"BlurBilateralPar()::compute_padding(): padding="<<get_padding(id)<<std::endl;
+    g_assert(balgo->get_par() != NULL);
+    balgo->get_par()->compute_padding(full_res, id, level);
+    set_padding( balgo->get_par()->get_padding(id), id );
+    std::cout<<"BlurBilateralSlowPar()::compute_padding(): padding="<<get_padding(id)<<std::endl;
   }
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,
@@ -231,7 +214,7 @@ public:
 
 
 template < OP_TEMPLATE_DEF >
-class BlurBilateralProc
+class BlurBilateralSlowProc
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -242,7 +225,7 @@ public:
 };
 
 
-ProcessorBase* new_blur_bilateral();
+ProcessorBase* new_blur_bilateral_slow();
 }
 
 #endif 
