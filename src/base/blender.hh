@@ -45,7 +45,7 @@ namespace PF
       for( ch=0; ch<CHMIN; ch++, x++ ) pout[x] = pbottom[x];      \
       theblender.blend( opacity, pbottom, tmpline, pout, x, xomap );       \
       x += dx;                                                         \
-      for( ch=CHMAX+1; ch<PF::ColorspaceInfo<colorspace>::NCH; ch++, x++ ) pout[x] = pbottom[x]; \
+      for( ch=CHMAX+1; ch<NCH; ch++, x++ ) pout[x] = pbottom[x]; \
     }                                                                   \
   }
 
@@ -54,7 +54,7 @@ namespace PF
     theblender.init_line( omap, r->left, y0 );                    \
     for( x=0, xomap=0; x < line_size; ) {                         \
       theblender.blend( opacity, pbottom, tmpline, pout, x, xomap ); \
-      x += PF::ColorspaceInfo<colorspace>::NCH;                   \
+      x += NCH;                   \
     }                                                             \
   }
 
@@ -120,6 +120,7 @@ namespace PF
       //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
       int x, y, xomap, y0, dx=CHMAX-CHMIN+1, ch;
       int width = r->width;
+      int NCH = oreg->im->Bands;
       int line_size = width * oreg->im->Bands;
       T* pbottom;
       T* ptop;
