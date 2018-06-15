@@ -158,7 +158,9 @@ int main (int argc, char *argv[])
   vips_clone_stamp_get_type();
   vips_lensfun_get_type();
   vips_perspective_get_type();
+  phf_tile_cache_get_type();
 
+  //vips_profile_set( TRUE );
   //vips_profile_set(true);
   //im_concurrency_set( 1 );
 #ifndef NDEBUG

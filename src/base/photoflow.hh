@@ -49,6 +49,21 @@
 
 #define PF_FILE_VERSION 5
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif /*__cplusplus*/
+
+int
+phf_tilecache( VipsImage *in, VipsImage **out, ... );
+
+GType phf_tile_cache_get_type( void );
+
+#ifdef __cplusplus
+}
+#endif /*__cplusplus*/
+
+
 namespace PF
 {
 
