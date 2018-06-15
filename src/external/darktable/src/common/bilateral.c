@@ -258,7 +258,7 @@ void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int ilskip, in
       // k=7
       ii = grid_index + ox + oy + oz;
       contrib = xf * nyf * zf;
-      //printf("k=7    ii=%d\n", ii);
+      //printf("k=7    ii=%d  ox=%d oy=%d oz=%d\n", ii, ox, oy, oz);
       b->buf[ii] += contrib;
       //if(0 && j<23 && i < 16) printf("  b->buf[%d] = %f, i=%d, j=%d, L=%f, grid_index=%d, xi=%d yi=%d zi=%d\n", grid_index, b->buf[grid_index], i, j, L, grid_index, xi, yi, zi);
       /**/

@@ -91,8 +91,8 @@ public:
     std::cout<<"    rout->top="<<rout->top<<"  t="<<_t
         <<"  rin->top="<<rin->top<<std::endl;
     */
-    float _w = roundf((rout->width-0)  * ss);
-    float _h = roundf((rout->height-0) * ss);
+    float _w = roundf((rout->width-1)  * ss);
+    float _h = roundf((rout->height-1) * ss);
     float _l = roundf(rout->left   * ss);
     float _t = roundf(rout->top    * ss);
     rin->left   = _l;

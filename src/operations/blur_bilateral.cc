@@ -132,7 +132,7 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
 
 
 
-  int ts = 4;
+  int ts = 5;
   int nt = (splatted->Xsize * splatted->Ysize) / ts + 1;
   //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
   VipsAccess acc = VIPS_ACCESS_RANDOM;
@@ -188,7 +188,7 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
   PF_UNREF( sliced, "BlurBilateralPar::build(): sliced unref" );
 
 
-  int ts2 = iss * 4;
+  int ts2 = iss * 5;
   int nt2 = (cropped->Xsize/ts) * 1 + 1;
   //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
   //VipsAccess acc = VIPS_ACCESS_RANDOM;
