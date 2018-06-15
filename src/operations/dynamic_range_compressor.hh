@@ -187,9 +187,9 @@ namespace PF
           //  lout = profile->perceptual2linear(out);
           //else lout = out;
 
-          if(true && x==(width-1) && y==(r->height-1) && r->left==0 && r->top==0)
-            std::cout<<"L="<<L<<"  plog[0]="<<*plog<<"  psmooth[0]="<<*psmooth
-            <<"  l="<<l<<"  s="<<s<<"  gamma_s="<<gamma_s<<"  diff="<<diff<<"  out="<<out<<std::endl;
+          //if(true && x==(width-1) && y==(r->height-1) && r->left==0 && r->top==0)
+          //  std::cout<<"L="<<L<<"  plog[0]="<<*plog<<"  psmooth[0]="<<*psmooth
+          //  <<"  l="<<l<<"  s="<<s<<"  gamma_s="<<gamma_s<<"  diff="<<diff<<"  out="<<out<<std::endl;
 
           //pout[0] = pout[1] = pout[2] = out;
 

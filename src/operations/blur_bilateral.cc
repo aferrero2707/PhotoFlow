@@ -32,7 +32,6 @@
 #include "blur_bilateral.hh"
 
 
-
 PF::BlurBilateralPar::BlurBilateralPar():
 PF::OpParBase(),
 sigma_s("sigma_s",this,50),
@@ -88,6 +87,8 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
   ss = roundf(ss); //ss = 20;
   sr = roundf(sr);
   int iss = ss, isr = sr;
+  if(iss < 1) iss = 1;
+  if(isr < 1) isr = 1;
 
 
   int bpad = 0;

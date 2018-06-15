@@ -32,7 +32,7 @@ class BlurBilateralBlurPar: public OpParBase
   int padding;
 public:
   BlurBilateralBlurPar():
-    OpParBase(), padding(4)
+    OpParBase(), padding(2)
   {
     set_type( "blur_bilateral_blur" );
     set_default_name( _("blilateral blur blur") );

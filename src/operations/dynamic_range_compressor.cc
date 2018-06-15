@@ -111,7 +111,9 @@ public:
     float L, pL;
     float* pin;
     float* pout;
-    int x, y;
+    int x, y, R;
+
+    //for(x=0;x<1000000;x++) for(y=0;y<10;y++) R += rand();
 
     if( false && r->left<10000 && r->top<10000 ) {
       std::cout<<"LogLumiProc::render(): ireg="<<ireg[0]->valid.width<<"x"<<ireg[0]->valid.height
@@ -270,6 +272,7 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   }
   ss = roundf(ss); //ss = 20;
   int iss = ss;
+  if(iss < 1) iss = 1;
 
   std::vector<VipsImage*> in2;
   LogLumiPar* logpar = dynamic_cast<LogLumiPar*>( loglumi->get_par() );

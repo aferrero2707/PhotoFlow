@@ -216,42 +216,49 @@ void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int ilskip, in
       // k=0
       ii = grid_index;
       contrib = mxf * nmyf * mzf;
+      //printf("k=0    ii=%d\n", ii);
       b->buf[ii] += contrib;
-      //printf("    ii=%d  contrib=%f  sigma_s=%f\n", ii, contrib, b->sigma_s);
 
       // k=1
       ii = grid_index + ox;
       contrib = xf * nmyf * mzf;
+      //printf("k=1    ii=%d\n", ii);
       b->buf[ii] += contrib;
 
       // k=2
       ii = grid_index + oy;
       contrib = mxf * nyf * mzf;
+      //printf("k=2    ii=%d\n", ii);
       b->buf[ii] += contrib;
 
       // k=3
       ii = grid_index + ox + oy;
-      contrib = xf * nyf * mzf;
+      //printf("k=3    ii=%d\n", ii);
+      //contrib = xf * nyf * mzf;
       b->buf[ii] += contrib;
 
       // k=4
       ii = grid_index + oz;
       contrib = mxf * nmyf * zf;
+      //printf("k=4    ii=%d\n", ii);
       b->buf[ii] += contrib;
 
       // k=5
       ii = grid_index + ox + oz;
       contrib = xf * nmyf * zf;
+      //printf("k=5    ii=%d\n", ii);
       b->buf[ii] += contrib;
 
       // k=6
       ii = grid_index + oy + oz;
       contrib = mxf * nyf * zf;
+      //printf("k=6    ii=%d\n", ii);
       b->buf[ii] += contrib;
 
       // k=7
       ii = grid_index + ox + oy + oz;
       contrib = xf * nyf * zf;
+      //printf("k=7    ii=%d\n", ii);
       b->buf[ii] += contrib;
       //if(0 && j<23 && i < 16) printf("  b->buf[%d] = %f, i=%d, j=%d, L=%f, grid_index=%d, xi=%d yi=%d zi=%d\n", grid_index, b->buf[grid_index], i, j, L, grid_index, xi, yi, zi);
       /**/
