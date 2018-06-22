@@ -83,10 +83,10 @@ public:
     float _h = roundf(rout->height / ss);
     float _l = roundf(rout->left   / ss);
     float _t = roundf(rout->top    / ss);
-    rin->left   = CLAMPS((int)_l, 0, 6000);
-    rin->top    = CLAMPS((int)_t, 0, 6000);
-    rin->width  = CLAMPS((int)_w, 4, 6000) + 1;
-    rin->height = CLAMPS((int)_h, 4, 6000) + 1;
+    rin->left   = _l - 2; //CLAMPS((int)_l, 0, 6000) - 1;
+    rin->top    = _t - 2; //CLAMPS((int)_t, 0, 6000) - 1;
+    rin->width  = _w + 5; //CLAMPS((int)_w, 4, 6000) + 3;
+    rin->height = _h + 5; //CLAMPS((int)_h, 4, 6000) + 3;
     //rin->left = rout->left/scale_x;
     //rin->top = rout->top/scale_y;
     //rin->width = rout->width/scale_x;
@@ -97,9 +97,11 @@ public:
       rin->width = rout->width;
       rin->height = rout->height;
     }
-    //std::cout<<"BlurBilateralSlicePar::transform_inv(): id="<<id<<"  ss="<<ss<<", ireg="<<rin->width<<"x"<<rin->height
-    //      <<"+"<<rin->left<<","<<rin->top<<std::endl;
-    //std::cout<<"                                       oreg="<<rout->width<<"x"<<rout->height<<"+"<<rout->left<<","<<rout->top<<std::endl;
+    if( false ) {
+    std::cout<<"BlurBilateralSlicePar::transform_inv(): id="<<id<<"  ss="<<ss<<", ireg="<<rin->width<<"x"<<rin->height
+          <<"+"<<rin->left<<","<<rin->top<<std::endl;
+    std::cout<<"                                       oreg="<<rout->width<<"x"<<rout->height<<"+"<<rout->left<<","<<rout->top<<std::endl;
+    }
   }
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,
@@ -150,7 +152,7 @@ public:
     Rect *r = &oreg->valid;
     int width = r->width;
     int height = r->height;
-    int y;
+    int x, y;
     VipsImage* srcimg = ireg[0]->im;
 
     if( false && r->left<10000 && r->top<10000 ) {
@@ -162,7 +164,7 @@ public:
       std::cout<<"                                  oreg="<<r->width<<"x"<<r->height<<"+"<<r->left<<","<<r->top<<std::endl;
     }
 
-    T* pin  = (T*)VIPS_REGION_ADDR( ireg[0], ireg[0]->valid.left, ireg[0]->valid.top );
+    T* pin  = (T*)VIPS_REGION_ADDR( ireg[0], ireg[0]->valid.left+2, ireg[0]->valid.top+2 );
     T* pin2  = (T*)VIPS_REGION_ADDR( ireg[1], r->left, r->top );
     T* pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top );
     int ilskip = VIPS_REGION_LSKIP( ireg[1] ) / sizeof(T);
@@ -176,6 +178,15 @@ public:
     dt_b->buf = pin;
     dt_bilateral_slice(dt_b, pin2, pout, ilskip, lskip, olskip, -1);
     //std::cout<<"pout[0]="<<*pout<<std::endl;
+
+    /*
+    for( y = 0; y < height; y++ ) {
+      pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+      for( x = 0; x < width; x++ ) {
+        pout[x] = 60;
+      }
+    }
+    */
 
     dt_bilateral_free(dt_b);
   }

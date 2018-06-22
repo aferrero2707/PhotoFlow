@@ -164,6 +164,8 @@ namespace PF
         pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
         for( x = 0; x < width; x++, pin+=3, pout+=3, psmooth++, plog++ ) {
+          //pout[0] = pin[0]; pout[1] = pin[1]; pout[2] = pin[2]; continue;
+
           float l = (0.1*plog[0]) - 6;
           float s = (0.1*psmooth[0]) - 6;
           //float s = (0.1*(plog[0]+psmooth[0])) - 6;

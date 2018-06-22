@@ -226,6 +226,10 @@ public:
   VipsImage* build(std::vector<VipsImage*>& in, int first,
       VipsImage* imap, VipsImage* omap,
       unsigned int& level);
+
+  VipsImage* build_(std::vector<VipsImage*>& in, int first,
+      VipsImage* imap, VipsImage* omap,
+      unsigned int& level);
 };
 
 
@@ -238,6 +242,43 @@ public:
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, OpParBase* par)
   {
+  }
+};
+
+
+
+template < OP_TEMPLATE_DEF_CS_SPEC >
+class BlurBilateralProc< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_GRAYSCALE) >
+{
+public:
+  void render(VipsRegion** ireg, int n, int in_first,
+      VipsRegion* imap, VipsRegion* omap,
+      VipsRegion* oreg, OpParBase* par)
+  {
+    if( ireg[0] == NULL ) return;
+
+    BlurBilateralPar* opar = dynamic_cast<BlurBilateralPar*>(par);
+    if( !opar ) return;
+
+    Rect *r = &oreg->valid;
+    int width = r->width;
+    int height = r->height;
+    int y;
+    VipsImage* srcimg = ireg[0]->im;
+
+    if( false && r->left<10000 && r->top<10000 ) {
+      std::cout<<"BlurBilateralProc::render(): ireg="<<ireg[0]->valid.width<<"x"<<ireg[0]->valid.height
+          <<"+"<<ireg[0]->valid.left<<","<<ireg[0]->valid.top<<std::endl;
+      std::cout<<"                                 oreg="<<r->width<<"x"<<r->height<<"+"<<r->left<<","<<r->top<<std::endl;
+    }
+
+    T* pin;
+    T* pout;
+    for( y = 0; y < height; y++ ) {
+      pin = (T*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+      pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+      memcpy(pout, pin, sizeof(T)*width );
+    }
   }
 };
 

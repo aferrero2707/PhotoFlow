@@ -131,8 +131,8 @@ dt_bilateral_t *dt_bilateral_init(const int width,     // width of input image
   float _x = roundf(width / sigma_s);
   float _y = roundf(height / sigma_s);
   float _z = roundf(100.0f / sigma_r);
-  b->size_x = CLAMPS((int)_x, 4, DT_COMMON_BILATERAL_MAX_RES_S) + 1;
-  b->size_y = CLAMPS((int)_y, 4, DT_COMMON_BILATERAL_MAX_RES_S) + 1;
+  b->size_x = CLAMPS((int)_x, 0, DT_COMMON_BILATERAL_MAX_RES_S) + 1;
+  b->size_y = CLAMPS((int)_y, 0, DT_COMMON_BILATERAL_MAX_RES_S) + 1;
   b->size_z = CLAMPS((int)_z, 4, DT_COMMON_BILATERAL_MAX_RES_R) + 1;
   b->width = width;
   b->height = height;

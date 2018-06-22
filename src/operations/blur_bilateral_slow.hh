@@ -56,6 +56,8 @@ public:
   //void set_iterations( int i ) { iterations.set( i ); }
   void set_sigma_s( float s ) { sigma_s.set( s ); }
   void set_sigma_r( float s ) { sigma_r.set( s ); }
+  float get_sigma_s() { return sigma_s.get(); }
+  float get_sigma_r() { return sigma_r.get(); }
 
   float get_ss() { return ss; }
   float get_sr() { return sr; }
@@ -163,7 +165,7 @@ public:
     int lskip = dt_b->size_z * dt_b->size_x;
     int olskip = ireg[0]->valid.width;
     dt_bilateral_splat(dt_b, pin, ilskip, lskip, verb);
-    //dt_bilateral_blur(dt_b);
+    dt_bilateral_blur(dt_b);
     dt_bilateral_slice(dt_b, pin, obuf, ilskip, lskip, olskip, -1);
     //free(dt_b->buf);
     dt_bilateral_free(dt_b);
@@ -197,6 +199,8 @@ public:
 
   void set_sigma_s( float s );
   void set_sigma_r( float s );
+  float get_sigma_s();
+  float get_sigma_r();
 
   void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
   {

@@ -39,6 +39,10 @@
 #include "dynamic_range_compressor.hh"
 
 
+//#define BILATERAL_PAR BlurBilateralSlowPar
+#define BILATERAL_PAR BlurBilateralPar
+
+
 
 class LogLumiPar: public PF::OpParBase
 {
@@ -194,7 +198,7 @@ PF::DynamicRangeCompressorPar::DynamicRangeCompressorPar():
 void PF::DynamicRangeCompressorPar::propagate_settings()
 {
   //GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
-  BlurBilateralPar* bilateralpar = dynamic_cast<BlurBilateralPar*>( bilateral->get_par() );
+  BILATERAL_PAR* bilateralpar = dynamic_cast<BILATERAL_PAR*>( bilateral->get_par() );
   if( bilateralpar ) {
     //float ss = 0.01 * bilateral_sigma_s.get() * MIN(full_res->Xsize, full_res->Ysize);
     //float ss = bilateral_sigma_s.get()*10;
@@ -209,10 +213,10 @@ void PF::DynamicRangeCompressorPar::propagate_settings()
 void PF::DynamicRangeCompressorPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
 {
   //GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
-  BlurBilateralPar* bilateralpar = dynamic_cast<BlurBilateralPar*>( bilateral->get_par() );
+  BILATERAL_PAR* bilateralpar = dynamic_cast<BILATERAL_PAR*>( bilateral->get_par() );
   if( bilateralpar ) {
     float ss = 0.01 * bilateral_sigma_s.get() * MIN(full_res->Xsize, full_res->Ysize);
-    //float ss = bilateral_sigma_s.get()*10;
+    //float ss = bilateral_sigma_s.get();
     bilateralpar->set_sigma_s( ss );
     bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
     bilateralpar->compute_padding(full_res, id, level);
@@ -261,10 +265,10 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   */
 
   //GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
-  BlurBilateralPar* bilateralpar = dynamic_cast<BlurBilateralPar*>( bilateral->get_par() );
+  BILATERAL_PAR* bilateralpar = dynamic_cast<BILATERAL_PAR*>( bilateral->get_par() );
   //BlurBilateralSlowPar* bilateralpar = dynamic_cast<BlurBilateralSlowPar*>( bilateral->get_par() );
   if( !bilateralpar ) {
-    std::cout<<"DynamicRangeCompressorPar::build(): cannot cast to BlurBilateralPar*"<<std::endl;
+    std::cout<<"DynamicRangeCompressorPar::build(): cannot cast to BILATERAL_PAR*"<<std::endl;
   }
   float ss = bilateralpar->get_sigma_s();
   for( int l = 1; l <= level; l++ ) {
@@ -283,19 +287,19 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
     logimg = logpar->build( in, first, imap, omap, level );
   }
 
-  std::cout<<"DynamicRangeCompressorPar::build(): logimg="<<logimg<<std::endl;
+  //std::cout<<"DynamicRangeCompressorPar::build(): logimg="<<logimg<<std::endl;
 
   if( !logimg ) return NULL;
 
 
 
-  int ts = iss * 4;
-  int nt = (logimg->Xsize/ts) * 3 + 1;
+  int ts = 128;
+  int nt = (logimg->Xsize/ts) * 5 + 1;
   //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   int threaded = 1, persistent = 0;
   VipsImage* cached;
-  if( vips_tilecache(logimg, &cached,
+  if( phf_tilecache(logimg, &cached,
       "tile_width", ts,
       "tile_height", ts,
       "max_tiles", nt,
@@ -311,6 +315,7 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
 
   in2.clear();
   in2.push_back(cached);
+  //in2.push_back(logimg);
   VipsImage* smoothed = NULL;
   bilateralpar->set_image_hints( in2[0] );
   bilateralpar->set_format( get_format() );
@@ -324,11 +329,18 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   }
   PF_UNREF(cached, "DynamicRangeCompressorPar::build(): cached unref");
 
+  //set_image_hints(in[0]);
+  //rgb_image(in[0]->Xsize, in[0]->Ysize);
+
   in2.clear();
   in2.push_back(smoothed);
+  //in2.push_back(logimg);
   in2.push_back(cached);
   in2.push_back(in[0]);
   VipsImage* out = OpParBase::build( in2, 0, imap, omap, level );
+
+  //set_image_hints(in[0]);
+  //rgb_image(in[0]->Xsize, in[0]->Ysize);
 
 #ifndef NDEBUG
   std::cout<<"DynamicRangeCompressorPar::build(): out="<<out<<std::endl;

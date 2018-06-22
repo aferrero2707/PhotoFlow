@@ -56,6 +56,20 @@ void PF::BlurBilateralSlowPar::set_sigma_r( float s )
 }
 
 
+float PF::BlurBilateralSlowPar::get_sigma_s()
+{
+  BlurBilateralSlowAlgoPar* bop = dynamic_cast<BlurBilateralSlowAlgoPar*>( balgo->get_par() );
+  if(bop) return bop->get_sigma_s();
+  return 0;
+}
+float PF::BlurBilateralSlowPar::get_sigma_r()
+{
+  BlurBilateralSlowAlgoPar* bop = dynamic_cast<BlurBilateralSlowAlgoPar*>( balgo->get_par() );
+  if(bop) return bop->get_sigma_r();
+  return 0;
+}
+
+
 
 VipsImage* PF::BlurBilateralSlowPar::build(std::vector<VipsImage*>& in, int first,
     VipsImage* imap, VipsImage* omap,

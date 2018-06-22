@@ -45,7 +45,7 @@ PF::DynamicRangeCompressorConfigGUI::DynamicRangeCompressorConfigGUI( PF::Layer*
   whites_amount_slider( this, "whites_amount", "whites", 100, 0, 100, 5, 10, 100),
   usmRadiusSlider( this, "gauss_radius", "radius", 1, 0, 100, 0.05, 0.1, 1),
   bilateralIterationsSlider( this, "bilateral_iterations", "iterations", 1, 1, 10, 1, 1, 1),
-  bilateralSigmasSlider( this, "bilateral_sigma_s", "coarseness", 25, 0, 100, 1, 5, 10),
+  bilateralSigmasSlider( this, "bilateral_sigma_s", "coarseness", 25, 0, 100, 1, 5, 1),
   bilateralSigmarSlider( this, "bilateral_sigma_r", "edge threshold", 20, 0, 100, 1, 5, 1)
 {
 
@@ -89,30 +89,7 @@ void PF::DynamicRangeCompressorConfigGUI::do_update()
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
-
-    OpParBase* par = get_layer()->get_processor()->get_par();
-    PropertyBase* prop = par->get_property( "method" );
-    if( !prop )  return;
-
-    //std::cout<<"PF::DynamicRangeCompressorConfigGUI::do_update() called."<<std::endl;
-
-    if( usmControlsBox.get_parent() == &controlsBox2 )
-      controlsBox2.remove( usmControlsBox );
-    if( bilateralControlsBox.get_parent() == &controlsBox2 )
-      controlsBox2.remove( bilateralControlsBox );
-
-    switch( prop->get_enum_value().first ) {
-    case PF::VOLUME_GAUSS:
-      controlsBox2.pack_start( usmControlsBox, Gtk::PACK_SHRINK );
-      usmControlsBox.show();
-      break;
-    case PF::VOLUME_BILATERAL:
-      controlsBox2.pack_start( bilateralControlsBox, Gtk::PACK_SHRINK );
-      bilateralControlsBox.show();
-      break;
-    }
   }
-  controlsBox2.show_all_children();
 
   OperationConfigGUI::do_update();
 }

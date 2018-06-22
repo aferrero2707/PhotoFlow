@@ -93,15 +93,17 @@ public:
     */
     float _w = roundf((rout->width-1)  * ss);
     float _h = roundf((rout->height-1) * ss);
-    float _l = roundf(rout->left   * ss);
-    float _t = roundf(rout->top    * ss);
+    float _l = roundf((rout->left)   * ss);
+    float _t = roundf((rout->top)    * ss);
     rin->left   = _l;
     rin->top    = _t;
     rin->width  = _w;
     rin->height = _h;
-    //std::cout<<"BlurBilateralSplatPar::transform_inv(): ss="<<ss<<", ireg="<<rin->width<<"x"<<rin->height
-    //      <<"+"<<rin->left<<","<<rin->top<<std::endl;
-    //std::cout<<"                                       oreg="<<rout->width<<"x"<<rout->height<<"+"<<rout->left<<","<<rout->top<<std::endl;
+    if(false) {
+    std::cout<<"BlurBilateralSplatPar::transform_inv(): ss="<<ss<<", ireg="<<rin->width<<"x"<<rin->height
+          <<"+"<<rin->left<<","<<rin->top<<std::endl;
+    std::cout<<"                                       oreg="<<rout->width<<"x"<<rout->height<<"+"<<rout->left<<","<<rout->top<<std::endl;
+    }
   }
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,
@@ -124,10 +126,12 @@ public:
     scale_x = static_cast<float>(dt_b->size_x) / srcimg->Xsize;
     scale_y = static_cast<float>(dt_b->size_y) / srcimg->Ysize;
 
-    std::cout<<"BlurBilateralSplatPar::build(): sigma_s="<<sigma_s<<"  ss="<<ss
+    if( false ) {
+    std::cout<<"BlurBilateralSplatPar::build(): sigma_s="<<sigma_s<<"  ss="<<ss<<"  sr="<<sr
         <<"  W="<<srcimg->Xsize<<"  H="<<srcimg->Ysize
-        <<"  size_x="<<dt_b->size_x<<"  size_y="<<dt_b->size_y
+        <<"  size_x="<<dt_b->size_x<<"  size_y="<<dt_b->size_y<<"  size_z="<<dt_b->size_z
         <<"  scale_x="<<scale_x<<"  scale_y="<<scale_y<<"  level="<<level<<std::endl;
+    }
 
     out = OpParBase::build( in, first, imap, omap, level );
 
