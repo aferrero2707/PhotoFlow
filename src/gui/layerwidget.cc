@@ -714,9 +714,9 @@ void PF::LayerWidget::on_selection_changed()
   //int page = notebook.get_current_page();
   int page = active_view;
   if( page < 0 ) return;
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_chaged() called, page="<<page<<std::endl;
-//#endif
+#endif
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
       layer_views[page]->get_tree().get_selection();
   /*
@@ -727,24 +727,24 @@ void PF::LayerWidget::on_selection_changed()
   }
 */
   int layer_id = get_selected_layer_id();
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_changed(): selected layer id="<<layer_id<<std::endl;
-//#endif
+#endif
 
   std::vector<Gtk::TreeModel::Path> selected_rows = refTreeSelection->get_selected_rows();
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_chaged(): "<<selected_rows.size()<<" selected rows."<<std::endl;
-//#endif
+#endif
   std::vector<Gtk::TreeModel::Path>::iterator row_it = selected_rows.begin();
   if( row_it == selected_rows.end() ) {
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_selection_changed(): calling controls_group.remove_all_controls()"<<std::endl;
-//#endif
+#endif
     controls_group.remove_all_controls();
     aux_controls_group.clear();
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_selection_changed(): emitting signal_edited_layer_changed(-1)"<<std::endl;
-//#endif
+#endif
     signal_edited_layer_changed.emit( -1 );
     return;
   }
@@ -755,10 +755,10 @@ void PF::LayerWidget::on_selection_changed()
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"Selected row "<<l->get_name()<<std::endl;
     std::cout<<"LayerWidget::on_selection_changed(): emitting signal_edited_layer_changed("<<layer_id<<")"<<std::endl;
-//#endif
+#endif
     signal_edited_layer_changed.emit( layer_id );
     if( PF::PhotoFlow::Instance().is_single_win_mode() ) {
       PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
@@ -771,9 +771,9 @@ void PF::LayerWidget::on_selection_changed()
           if( gui->get_frame() && !floating_tool_dialogs ) {
             controls_group.add_control( l, gui );
           }
-//#ifndef NDEBUG
+#ifndef NDEBUG
           std::cout<<"LayerWidget::on_selection_changed(): calling aux_controls_group.set_control( l, gui )"<<std::endl;
-//#endif
+#endif
           aux_controls_group.set_control( l, gui );
           gui->open();
           gui->expand();
@@ -809,14 +809,14 @@ void PF::LayerWidget::on_selection_changed()
   } else {
     if( page == 0 )
       selected_layer_id = -1;
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_selection_changed(): calling controls_group.remove_all_controls()"<<std::endl;
-//#endif
+#endif
     controls_group.remove_all_controls();
     aux_controls_group.clear();
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_selection_changed(): emitting signal_edited_layer_changed(-1)"<<std::endl;
-//#endif
+#endif
     signal_edited_layer_changed.emit( -1 );
   }
 
@@ -887,9 +887,9 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"Activated row "<<l->get_name()<<std::endl;
-//#endif
+#endif
     if( column == layer_views[page]->get_tree().get_column(LAYER_COL_NUM) && floating_tool_dialogs ) {
       // close all dialogs
       if( l && l->get_processor() && l->get_processor()->get_par() &&

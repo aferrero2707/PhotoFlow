@@ -204,19 +204,19 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   icc_data_bottom = NULL;
   icc_data_top = NULL;
 
-  std::cout<<"BlenderPar::build(): background="<<background<<std::endl;
-  if(background) {std::cout<<"bottom profile: "; PF::print_embedded_profile(background);}
-  if(foreground) {std::cout<<"top profile:    "; PF::print_embedded_profile(foreground);}
+  //std::cout<<"BlenderPar::build(): background="<<background<<std::endl;
+  //if(background) {std::cout<<"bottom profile: "; PF::print_embedded_profile(background);}
+  //if(foreground) {std::cout<<"top profile:    "; PF::print_embedded_profile(foreground);}
   if( !is_map() && background ) {
     // Colorspace data of background and foreground layers are compared.
     // If they differ, an explicit ICC transform is operated from foreground to background.
     // Colorspace data is ignored for map layers, which are not colormanaged.
     icc_data_bottom = PF::get_icc_profile( background );
-    std::cout<<"BlenderPar::build(): icc_data_bottom="<<icc_data_bottom<<std::endl;
+    //std::cout<<"BlenderPar::build(): icc_data_bottom="<<icc_data_bottom<<std::endl;
 
     if( foreground ) {
       icc_data_top = PF::get_icc_profile( foreground );
-      std::cout<<"BlenderPar::build(): icc_data_top="<<icc_data_top<<std::endl;
+      //std::cout<<"BlenderPar::build(): icc_data_top="<<icc_data_top<<std::endl;
       if( icc_data_bottom != icc_data_top ) {
         if( icc_data_bottom ) profile_bottom = icc_data_bottom->get_profile();
         if( icc_data_top ) profile_top = icc_data_top->get_profile();
@@ -235,7 +235,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
         INTENT_RELATIVE_COLORIMETRIC,
         cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE );
 
-    std::cout<<"BlenderPar::build(): blending images with different ICC profiles"<<std::endl;
+    //std::cout<<"BlenderPar::build(): blending images with different ICC profiles"<<std::endl;
   }
 
 
@@ -290,7 +290,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       break;
     }
   }
-  std::cout<<"BlenderPar::build(): is_passthrough="<<is_passthrough<<std::endl;
+  //std::cout<<"BlenderPar::build(): is_passthrough="<<is_passthrough<<std::endl;
 
   // If both images are not NULL and the blending mode is not "passthrough-equivalent",
   // we activate the blending code.
@@ -360,7 +360,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
     //PF_UNREF( foreground, "BlenderPar::build() foreground unref" );
     PF_UNREF( foreground2, "BlenderPar::build() foreground2 unref" );
     if( outnew && icc_data_bottom ) PF::set_icc_profile( outnew, icc_data_bottom );
-    std::cout<<"BlenderPar::build(): doing explicit layer blending"<<std::endl;
+    //std::cout<<"BlenderPar::build(): doing explicit layer blending"<<std::endl;
   } else if( (background != NULL) && (foreground != NULL) && is_passthrough ) {
     outnew = foreground;
     //PF_REF( outnew, "BlenderPar::build() foreground ref" );
@@ -394,7 +394,7 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
   //set_image( outnew );
 #ifndef NDEBUG
   if( outnew ) {
-    std::cout<<"BlenderPar::build(): Output profile: "<<std::endl;
+    //std::cout<<"BlenderPar::build(): Output profile: "<<std::endl;
     PF::print_embedded_profile(outnew);
   }
 #endif

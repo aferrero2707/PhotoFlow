@@ -61,7 +61,7 @@
 
 #include "pf_file_loader.hh"
 
-#define DEBUG_PF_LOAD 1
+//#define DEBUG_PF_LOAD 1
 
 static PF::Image* image = NULL;
 static std::deque<PF::Layer*> layers_stack;

@@ -1060,8 +1060,8 @@ void PF::ImageArea::update( VipsRect* area )
 				node->processor->get_par() &&
 				!(display_mask) ) {
       image = node->blended;
-      std::cout<<"ImageArea::update(): displaying layer "<<layer_id<<std::endl;
 #ifdef DEBUG_DISPLAY
+      std::cout<<"ImageArea::update(): displaying layer "<<layer_id<<std::endl;
       std::cout<<"ImageArea::update(): node->image("<<node->image<<")->Xsize="<<node->image->Xsize
                <<"    node->image->Ysize="<<node->image->Ysize<<std::endl;    
       std::cout<<"ImageArea::update(): node->blended("<<node->blended<<")->Xsize="<<node->blended->Xsize
@@ -1155,8 +1155,10 @@ void PF::ImageArea::update( VipsRect* area )
   PF_UNREF( image, "ImageArea::update() image unref after clipping warning" );
   /**/
 
+#ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::update(): embedded profile:"<<std::endl;
   print_embedded_profile( wclipimg );
+#endif
 
   // Display profile management
   cmsHPROFILE icc_display_profile;
@@ -1205,7 +1207,7 @@ void PF::ImageArea::update( VipsRect* area )
     }
   }
 
-  std::cout<<"ImageArea::update(): softproof_enabled="<<softproof_enabled<<std::endl;
+  //std::cout<<"ImageArea::update(): softproof_enabled="<<softproof_enabled<<std::endl;
   if( softproof_enabled ) {
     PF::ConvertColorspacePar* cc_par =
         dynamic_cast<PF::ConvertColorspacePar*>( softproof_conversion->get_par() );

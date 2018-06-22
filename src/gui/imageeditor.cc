@@ -195,9 +195,9 @@ class Layout2: public Gtk::HBox
   {
     //Gtk::HBox::on_size_allocate(allocation);
     int width = allocation.get_width() + main_paned.get_position();
-    std::cout<<"Layout2::on_layers_size_allocate() called, allocation width=   "<<allocation.get_width()<<std::endl;
+    //std::cout<<"Layout2::on_layers_size_allocate() called, allocation width=   "<<allocation.get_width()<<std::endl;
     if( position_set == false ) return;
-    std::cout<<"Layout2::on_layers_size_allocate() called, new size stored: "<<allocation.get_width()<<std::endl;
+    //std::cout<<"Layout2::on_layers_size_allocate() called, new size stored: "<<allocation.get_width()<<std::endl;
     PF::PhotoFlow::Instance().get_options().set_layerlist_widget_width( allocation.get_width() );
   }
 

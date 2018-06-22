@@ -253,6 +253,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
       */
       cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzimatrix_profile((float (*)[3])image_data->color.cam_xyz);
       cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
+      /*
       std::cout<<"profile colorants:"<<std::endl;
       for(int i = 0, ci = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++, ci++) {
@@ -260,6 +261,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         }
         std::cout<<std::endl;
       }
+      */
       break;
     }
     case PF::IN_PROF_ICC:
@@ -269,6 +271,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     case PF::IN_PROF_DCP:
       rtengine::Color::init();
       if( !cam_dcp_profile_name.get().empty() ) {
+        /*
         std::cout<<"dcam_xyz:"<<std::endl;
         for(int i = 0; i < 3; i++) {
           for(int j = 0; j < 3; j++) {
@@ -276,6 +279,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
           }
           std::cout<<std::endl;
         }
+        */
 
         int preferred_illuminant = 0;
         cam_dcp_profile = new rtengine::DCPProfile( cam_dcp_profile_name.get() );
@@ -284,6 +288,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
         //cam_dcp_profile->makeXyzCam( cam_wb, dcam_xyz, 0, mXYZCAM );
         rtengine::DCPProfile::Matrix mXYZCAM;
         mXYZCAM = cam_dcp_profile->makeXyzCam( cam_wb, dcam_xyz, preferred_illuminant );
+        /*
         std::cout<<"mXYZCAM:"<<std::endl;
         for(int i = 0; i < 3; i++) {
           for(int j = 0; j < 3; j++) {
@@ -291,6 +296,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
           }
           std::cout<<std::endl;
         }
+        */
         float xyz_cam_dcp[3][3];
         for(int i = 0; i < 3; i++)
           for(int j = 0; j < 3; j++)
@@ -316,6 +322,7 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
               }
             }
           }
+          /*
           std::cout<<"pro_photo:"<<std::endl;
           for(int i = 0; i < 3; i++) {
             for(int j = 0; j < 3; j++) {
@@ -323,18 +330,21 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
             }
             std::cout<<std::endl;
           }
+          */
           //cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzmatrix_profile((float (*)[3])rtengine::xyz_prophoto);
           //std::cout<<"cam_prof_temp(prophoto): "<<cam_prof_temp<<std::endl;
           cam_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_PROPHOTO, PF::PF_TRC_LINEAR );
-          std::cout<<"cam_profile(prophoto): "<<cam_profile<<std::endl;
+          //std::cout<<"cam_profile(prophoto): "<<cam_profile<<std::endl;
         } else {
           cmsHPROFILE cam_prof_temp = dt_colorspaces_create_xyzmatrix_profile((float (*)[3])xyz_cam_dcp);
           cam_profile = PF::ICCStore::Instance().get_profile( cam_prof_temp );
         }
+        /*
         std::cout<<"RawOutputPar::build(): DCP cam_profile="<<cam_profile;
         if( cam_profile )
           std::cout<<"  cam_profile->get_profile()="<<cam_profile->get_profile();
         std::cout<<std::endl;
+        */
       }
       break;
     default:
@@ -363,19 +373,19 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
     if( pmode == PF::PROF_TYPE_EMBEDDED ) {
       // do nothing
-      std::cout<<"Using embedded profile"<<std::endl;
+      //std::cout<<"Using embedded profile"<<std::endl;
       out_profile = cam_profile;
     } else if( pmode == PF::PROF_TYPE_FROM_SETTINGS && cam_profile ) {
       ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
       trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
-      std::cout<<"Getting output profile..."<<std::endl;
+      //std::cout<<"Getting output profile..."<<std::endl;
       out_profile = PF::ICCStore::Instance().get_profile( ptype, trc_type );
     } else if( pmode == PF::PROF_TYPE_FROM_DISK && cam_profile ) {
       out_profile = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
     } else { //if( pmode == PF::PROF_MODE_CUSTOM && cam_profile ) {
       ptype = (profile_type_t)out_profile_type.get_enum_value().first;
       trc_type = (TRC_type)out_trc_type.get_enum_value().first;
-      std::cout<<"Getting output profile..."<<std::endl;
+      //std::cout<<"Getting output profile..."<<std::endl;
       out_profile = PF::ICCStore::Instance().get_profile( ptype, trc_type );
     }
 
@@ -468,11 +478,11 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     //cmsGetProfileInfoASCII(out_profile, cmsInfoDescription, "en", "US", tstr, 1024);
     //std::cout<<"RawOutputPar::build(): image="<<out<<"  embedded profile: "<<tstr<<std::endl;
      */
-    std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, out_profile ) called"<<std::endl;
+    //std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, out_profile ) called"<<std::endl;
     if( out_profile->get_profile() ) {
       char tstr[1024];
       cmsGetProfileInfoASCII(out_profile->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
-      std::cout<<"RawOutputPar::build(): output profile: "<<tstr<<std::endl;
+      //std::cout<<"RawOutputPar::build(): output profile: "<<tstr<<std::endl;
       //cmsCloseProfile( profile_in );
     }
     PF::set_icc_profile( out, out_profile );
@@ -497,11 +507,11 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
     vips_image_set_blob( out, "pf-icc-profile-data",
        (VipsCallbackFn) PF::free_icc_profile_data, iccdata, sizeof(PF::ICCProfileData) );
      */
-    std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, cam_profile ) called"<<std::endl;
+    //std::cout<<"RawOutputPar::build(): PF::set_icc_profile( out, cam_profile ) called"<<std::endl;
     if( cam_profile ) {
       char tstr[1024];
       cmsGetProfileInfoASCII(cam_profile->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
-      std::cout<<"RawOutputPar::build(): output profile (cam): "<<tstr<<std::endl;
+      //std::cout<<"RawOutputPar::build(): output profile (cam): "<<tstr<<std::endl;
       //cmsCloseProfile( profile_in );
     }
     PF::set_icc_profile( out, cam_profile );

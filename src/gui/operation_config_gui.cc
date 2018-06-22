@@ -844,12 +844,13 @@ void PF::OperationConfigGUI::on_layer_name2_changed()
 
 void PF::OperationConfigGUI::update_buttons()
 {
-  //std::cout<<"OperationConfigGUI::update_buttons(\""<<get_layer()->get_name()<<"\") called"<<std::endl;
   PF::OpParBase* par = get_par();
+  //std::cout<<"OperationConfigGUI::update_buttons(\""<<get_layer()->get_name()<<"\") called, par="<<par<<std::endl;
   if( par ) {
     if( par->is_map() ) {
       blendSelector.hide();
       blendSelectorMask.show();
+      //std::cout<<"  blendSelectorMask.show()"<<std::endl;
       blendSelector2.hide();
       blendSelectorMask2.show();
       //frame_top_buttons_alignment.hide();
@@ -860,6 +861,7 @@ void PF::OperationConfigGUI::update_buttons()
     } else {
       blendSelector.show();
       blendSelectorMask.hide();
+      //std::cout<<"  blendSelectorMask.hide()"<<std::endl;
       blendSelector2.show();
       blendSelectorMask2.hide();
       //frame_top_buttons_alignment.show();
@@ -941,7 +943,9 @@ void PF::OperationConfigGUI::reset_ch_selector()
 
 void PF::OperationConfigGUI::do_update()
 {
-  //std::cout<<"PF::OperationConfigGUI::do_update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
+#ifndef NDEBUG
+  std::cout<<"PF::OperationConfigGUI::do_update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
+#endif
   update_buttons();
 
   layer_list.update_model();
@@ -1049,9 +1053,10 @@ void PF::OperationConfigGUI::do_update()
 
 void PF::OperationConfigGUI::update()
 {
-  std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\") called."<<std::endl;
+  //std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\") called, is_expanded()="
+  //    <<is_expanded()<<std::endl;
   if( !is_expanded() ) return;
-
+  //std::cout<<"PF::OperationConfigGUI::update(\""<<get_layer()->get_name()<<"\"): calling do_update()"<<std::endl;
   do_update();
 
   //gdk_threads_add_idle ((GSourceFunc) config_update_cb, this);

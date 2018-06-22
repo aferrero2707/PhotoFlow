@@ -655,8 +655,8 @@ void PF::LayerManager::init_pipeline( PF::Pipeline* pipeline, std::list<Layer*>&
 
     if( !l ) continue;
 
-    std::cout<<"LayerManager::init_pipeline(): adding layer \""
-        <<l->get_name()<<"\""<<std::endl;
+    //std::cout<<"LayerManager::init_pipeline(): adding layer \""
+    //    <<l->get_name()<<"\""<<std::endl;
     // Detect "pathological" conditions
     g_assert( l->get_processor() != NULL );
     g_assert( l->get_processor()->get_par() != NULL );
@@ -680,11 +680,11 @@ void PF::LayerManager::init_pipeline( PF::Pipeline* pipeline, std::list<Layer*>&
 
     // We import the parameters from the "master" operation associated to the layer,
     // and which is directly connected with the GUI controls
-    std::cout<<"LayerManager::init_pipeline(): calling import_settings() for layer \""
-        <<l->get_name()<<"\""<<std::endl;
+    //std::cout<<"LayerManager::init_pipeline(): calling import_settings() for layer \""
+    //    <<l->get_name()<<"\""<<std::endl;
     pipelinepar->import_settings( par );
     pipelineblender->import_settings( blender );
-    std::cout<<"  settings imported."<<std::endl;
+    //std::cout<<"  settings imported."<<std::endl;
 
     pipelinepar->set_output_caching( pipeline->get_op_caching_enabled() );
     pipelineblender->set_output_caching( pipeline->get_op_caching_enabled() );
@@ -778,7 +778,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline )
 
   reset_op_caching( pipeline );
 
-  std::cout<<std::endl<<"LayerManager::update_op_caching():"<<std::endl;
+  //std::cout<<std::endl<<"LayerManager::update_op_caching():"<<std::endl;
   update_op_caching( pipeline, layers, NULL );
 }
 
@@ -1520,7 +1520,9 @@ bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, 
 {
   //Glib::Threads::Mutex::Lock lock( pipeline->get_mutex() );
 
+#ifndef NDEBUG
   std::cout<<"LayerManager::rebuild(): started."<<std::endl;
+#endif
   init_pipeline( pipeline, layers, NULL );
 
   update_op_caching( pipeline );
@@ -1529,7 +1531,9 @@ bool PF::LayerManager::rebuild( Pipeline* pipeline, colorspace_t cs, int width, 
     //vips_image_invalidate_all( pipeline->get_output() );
   }
   VipsImage* output = rebuild_chain( pipeline, cs, width, height, layers, NULL );
+#ifndef NDEBUG
   std::cout<<"LayerManager::rebuild(): chain rebuild finished."<<std::endl;
+#endif
   pipeline->set_output( output );
   pipeline->update( area );
   pipeline->clear_force_rebuild();

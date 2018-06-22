@@ -401,7 +401,7 @@ PF::PyramidLevel* PF::ImagePyramid::get_level( unsigned int& level )
 	       "coding", img->Coding,
 	       "interpretation", img->Type,
 	       NULL );
-    std::cout<<"ImagePyramid: removing VIPS_META_SEQUENTIAL tag from "<<out<<std::endl;
+    //std::cout<<"ImagePyramid: removing VIPS_META_SEQUENTIAL tag from "<<out<<std::endl;
     if( vips_image_get_typeof(out, VIPS_META_SEQUENTIAL) ) {
       vips_image_remove(out, VIPS_META_SEQUENTIAL);
       std::cout<<"ImagePyramid: VIPS_META_SEQUENTIAL tag removed from "<<out<<std::endl;

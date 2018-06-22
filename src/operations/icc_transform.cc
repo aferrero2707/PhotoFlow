@@ -90,10 +90,10 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
   if( in_profile && in_profile->get_profile() ) {
     char tstr[1024];
     cmsGetProfileInfoASCII(in_profile->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"icc_transform: embedded profile: "<<in_profile<<std::endl;
     std::cout<<"icc_transform: embedded profile name: "<<tstr<<std::endl;
-//#endif
+#endif
     
     if( in_profile_name != tstr ) {
       in_changed = true;
@@ -102,22 +102,22 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     input_cs_type = cmsGetColorSpace( in_profile->get_profile() );
   }
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   if( out_profile )
     std::cout<<"icc_transform: out_profile="<<out_profile<<" ("<<out_profile->get_profile()<<")"<<std::endl;
-//#endif
+#endif
 
   if( in_profile && out_profile && out_profile->get_profile() ) {
     transform.init( in_profile, out_profile, in[0]->BandFmt, intent, get_bpc(), adaptation_state );
   }
 
   if( out_profile && out_profile->get_profile() ) {
+#ifndef NDEBUG
     std::cout<<"icc_transform: output profile: "<<out_profile<<std::endl;
-    //#ifndef NDEBUG
     char tstr[1024];
     cmsGetProfileInfoASCII(out_profile->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
     std::cout<<"icc_transform: output profile: "<<tstr<<std::endl;
-    //#endif
+#endif
     output_cs_type = cmsGetColorSpace( out_profile->get_profile() );
     switch( output_cs_type ) {
     case cmsSigGrayData:

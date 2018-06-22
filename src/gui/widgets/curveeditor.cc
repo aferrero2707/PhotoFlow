@@ -202,7 +202,7 @@ void PF::CurveEditor::update_point()
  */
 void PF::CurveEditor::get_value()
 {
-  std::cout<<"CurveEditor::get_value() called."<<std::endl;
+  //std::cout<<"CurveEditor::get_value() called."<<std::endl;
   if( !get_prop() ) return;
   PF::Property<PF::SplineCurve>* prop = dynamic_cast< PF::Property<PF::SplineCurve>* >( get_prop() );
   if( !prop ) return;

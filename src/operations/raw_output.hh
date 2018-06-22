@@ -169,7 +169,7 @@ enum exposure_mode_t {
       wb_red_current = r;
       wb_green_current = g;
       wb_blue_current = b;
-      std::cout<<"RawOutputPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
+      //std::cout<<"RawOutputPar: setting WB coefficients to "<<r<<","<<g<<","<<b<<std::endl;
     }
 
     float get_exposure() { return exposure.get(); }

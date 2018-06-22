@@ -258,7 +258,7 @@ void PF::ICCProfile::init_trc()
   cmsInt32Number tcpt = cmsGetToneCurveParametricType(red_trc);
   parametric_trc = (tcpt>0) ? true : false;
 
-  std::cout<<"ICCProfile::init_trc(): is_linear="<<is_linear<<"  is_parametric="<<is_parametric()<<std::endl;
+  //std::cout<<"ICCProfile::init_trc(): is_linear="<<is_linear<<"  is_parametric="<<is_parametric()<<std::endl;
 
   if( is_linear ) {
     /* LAB "L" (perceptually uniform) TRC */
@@ -703,11 +703,11 @@ void PF::set_icc_profile( VipsImage* img, PF::ICCProfile* prof )
     return;
   }
 
-  std::cout<<"set_icc_profile: prof="<<prof<<std::endl;
+  //std::cout<<"set_icc_profile: prof="<<prof<<std::endl;
   if( prof->get_profile() ) {
     char tstr[1024];
     cmsGetProfileInfoASCII(prof->get_profile(), cmsInfoDescription, "en", "US", tstr, 1024);
-    std::cout<<"set_icc_profile: profile name : "<<tstr<<std::endl;
+    //std::cout<<"set_icc_profile: profile name : "<<tstr<<std::endl;
   } else {
     std::cout<<"set_icc_profile: prof->get_profile() == NULL"<<std::endl;
   }
@@ -720,7 +720,7 @@ void PF::set_icc_profile( VipsImage* img, PF::ICCProfile* prof )
 
     void* buf = g_malloc( prof->get_profile_size() );
     if( buf ) {
-      std::cout<<"PF::set_icc_profile(): VIPS_META_ICC blob set (size="<<prof->get_profile_size()<<")"<<std::endl;
+      //std::cout<<"PF::set_icc_profile(): VIPS_META_ICC blob set (size="<<prof->get_profile_size()<<")"<<std::endl;
       memcpy( buf, prof->get_profile_data(), prof->get_profile_size() );
       vips_image_set_blob( img, VIPS_META_ICC_NAME,
           (VipsCallbackFn) g_free, buf, prof->get_profile_size() );
@@ -886,7 +886,7 @@ PF::ICCStore::ICCStore()
 
 PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_type trc_type)
 {
-  std::cout<<"ICCStore::get_profile("<<ptype<<", "<<trc_type<<")"<<std::endl;
+  //std::cout<<"ICCStore::get_profile("<<ptype<<", "<<trc_type<<")"<<std::endl;
   switch( ptype ) {
   case PF::PROF_TYPE_sRGB: return srgb_profiles[trc_type];
   case PF::PROF_TYPE_sRGB_D50: return srgb_d50_profiles[trc_type];
@@ -897,7 +897,7 @@ PF::ICCProfile* PF::ICCStore::get_profile( PF::profile_type_t ptype, PF::TRC_typ
   case PF::PROF_TYPE_PROPHOTO: return prophoto_profiles[trc_type];
   case PF::PROF_TYPE_LAB: return Lab_profile;
   case PF::PROF_TYPE_XYZ:
-    std::cout<<"  PROF_TYPE_XYZ: XYZ_profile="<<(void*)XYZ_profile<<std::endl;
+    //std::cout<<"  PROF_TYPE_XYZ: XYZ_profile="<<(void*)XYZ_profile<<std::endl;
     return XYZ_profile;
   default: return NULL;
   }
@@ -966,7 +966,7 @@ PF::ICCProfile* PF::ICCStore::get_profile( void* pdata, cmsUInt32Number psize )
 
   cmsHPROFILE temp_profile = cmsOpenProfileFromMem( buf, psize );
 
-  std::cout<<"ICCStore::get_profile( void* pdata, cmsUInt32Number psize ): temp_profile="<<temp_profile<<std::endl;
+  //std::cout<<"ICCStore::get_profile( void* pdata, cmsUInt32Number psize ): temp_profile="<<temp_profile<<std::endl;
 
   PF::ICCProfile* new_profile = new PF::ICCProfile();
   new_profile->set_profile( temp_profile );

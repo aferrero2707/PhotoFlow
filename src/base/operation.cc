@@ -261,6 +261,9 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
     n++;
   }
   if(n > 100) n = 100;
+#ifndef NDEBUG
+  std::cout<<"OpParBase::build("<<get_type()<<"): size = "<<get_xsize()<<"x"<<get_ysize()<<std::endl;
+#endif
   switch( n ) {
   case 0:
     vips_layer( n, &outnew, processor, imap, omap, 

@@ -310,10 +310,12 @@ void PF::CacheBuffer::step_cb(int x0, int y0, guchar* buf)
 
   // Update the image region corresponding to the current tile
   VipsRegion* reg = vips_region_new( image );
+  //std::cout<<"CacheBuffer::step_cb(): before vips_region_prepare()"<<std::endl;
   if( vips_region_prepare( reg, &tile_area ) ) {
     std::cout<<"CacheBuffer::step_cb(): vips_region_prepare() failed."<<std::endl;
     return;
   }
+  //std::cout<<"CacheBuffer::step_cb(): after vips_region_prepare()"<<std::endl;
 
   guchar* p;
   off_t offset = VIPS_IMAGE_SIZEOF_LINE(image)*tile_area.top+VIPS_IMAGE_SIZEOF_PEL(image)*tile_area.left;

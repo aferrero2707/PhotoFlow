@@ -833,9 +833,17 @@ vips_tile_cache_gen( VipsRegion *or,
 					&tile->pos, 
 					tile->pos.left, tile->pos.top );
 				nprocessed += 1;
-        //printf("vips_tile_cache_gen: thread=%p, iter=%d, vips_region_prepare_to finished\n"
-        //    "                     %dx%d+%d+%d\n", g_thread_self(), iter,
-        //    tile->pos.width, tile->pos.height, tile->pos.left, tile->pos.top);
+				/*
+        printf("vips_tile_cache_gen: thread=%p, iter=%d, vips_region_prepare_to finished\n"
+            "                     in->im=%dx%d\n"
+            "                     in->valid=%dx%d+%d+%d\n"
+            "                     tile->region->valid=%dx%d+%d+%d\n"
+            "                     tile->pos=%dx%d+%d+%d\n", g_thread_self(), iter,
+            in->im->Xsize, in->im->Ysize,
+            in->valid.width, in->valid.height, in->valid.left, in->valid.top,
+            tile->region->valid.width, tile->region->valid.height, tile->region->valid.left, tile->region->valid.top,
+            tile->pos.width, tile->pos.height, tile->pos.left, tile->pos.top);
+				*/
 
 				if( cache->threaded ) {
 					VIPS_GATE_START( "vips_tile_cache_gen: "
@@ -923,8 +931,9 @@ vips_tile_cache_gen( VipsRegion *or,
   locked_tot += tstop - tstart;
   //printf("vips_tile_cache_gen: thread=%p, iter=%d, total time elapsed before end: %d\n",
   //    g_thread_self(), iter, (int)(tstop - tstart));
-  printf("vips_tile_cache_gen: thread=%p, iter=%d, total=%d, waiting=%d, pasted=%d, processed=%d\n",
-          g_thread_self(), iter, (int)(tstop-time), (int)waiting_tot, npasted, nprocessed);
+  //printf("vips_tile_cache_gen: thread=%p, ts=%dx%d, iter=%d, total=%d, waiting=%d, pasted=%d, processed=%d\n",
+  //        g_thread_self(), cache->tile_width, cache->tile_height, iter,
+  //        (int)(tstop-time), (int)waiting_tot, npasted, nprocessed);
   if( 0 && locked_tot > 200 ) {
     printf("vips_tile_cache_gen: thread=%p, iter=%d, total time spend in locked state: %d, pasted=%d, processed=%d",
         g_thread_self(), iter, locked_tot, npasted, nprocessed);
