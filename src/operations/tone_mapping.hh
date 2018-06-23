@@ -44,11 +44,12 @@ namespace PF
 
 enum tone_mapping_method_t
 {
+  TONE_MAPPING_FILMIC2,
+  TONE_MAPPING_FILMIC,
   TONE_MAPPING_EXP_GAMMA,
   TONE_MAPPING_REINHARD,
   TONE_MAPPING_HEJL,
-  TONE_MAPPING_FILMIC,
-  TONE_MAPPING_FILMIC2
+  TONE_MAPPING_ADAPTIVE_LOG
 };
 
 
@@ -71,6 +72,8 @@ class ToneMappingPar: public OpParBase
   Property<float> filmic2_SS;
   Property<float> filmic2_SL;
   Property<float> filmic2_SA;
+
+  Property<float> AL_Lmax, AL_b;
 
   Property<float> lumi_blend_frac;
 
@@ -100,6 +103,9 @@ public:
   float get_filmic2_SS() { return filmic2_SS.get(); }
   float get_filmic2_SL() { return filmic2_SL.get(); }
   float get_filmic2_SA() { return filmic2_SA.get(); }
+
+  float get_AL_Lmax() { return AL_Lmax.get(); }
+  float get_AL_b() { return AL_b.get(); }
 
   float get_lumi_blend_frac() { return lumi_blend_frac.get(); }
 
@@ -171,6 +177,10 @@ public:
     float DF = D*F;
     float EoF = E/F;
 
+    float AL_Lmax = pow(10.0, opar->get_AL_Lmax());
+    float AL_b = opar->get_AL_b();
+    float AL_scale = pow(AL_b-0.85+1, 5);
+
 
     // Filmic #2 parameters
     FilmicToneCurve::CurveParamsUser filmic2_user;
@@ -185,6 +195,8 @@ public:
     FilmicToneCurve::CalcDirectParamsFromUser(filmic2_direct, filmic2_user);
     FilmicToneCurve::FullCurve filmic2_curve;
     FilmicToneCurve::CreateCurve(filmic2_curve, filmic2_direct);
+
+    float filmic2_scale = filmic2_curve.EvalInv(0.1814)/0.1814;
 
     for( y = 0; y < height; y++ ) {
       pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
@@ -232,16 +244,35 @@ public:
         }
         case TONE_MAPPING_FILMIC: {
           for( k=0; k < 3; k++) {
+            //std::cout<<"TONE_MAPPING_FILMIC: in RGB["<<k<<"]="<<RGB[k];
             RGB[k] *= 2;
             RGB[k] = ((RGB[k]*(A*RGB[k]+CB)+DE)/(RGB[k]*(A*RGB[k]+B)+DF))-EoF;
             RGB[k] *= whiteScale;
+            //std::cout<<"    out RGB["<<k<<"]="<<RGB[k]<<std::endl;
           }
           break;
         }
         case TONE_MAPPING_FILMIC2: {
           for( k=0; k < 3; k++) {
-            if(RGB[k] < 0) RGB[k] = minus*filmic2_curve.Eval(minus*RGB[k]);
-            else RGB[k] = filmic2_curve.Eval(RGB[k]);
+            if(RGB[k] < 0) RGB[k] = minus*filmic2_curve.Eval(minus*RGB[k]*filmic2_scale);
+            else RGB[k] = filmic2_curve.Eval(RGB[k]*filmic2_scale);
+          }
+          break;
+        }
+        case TONE_MAPPING_ADAPTIVE_LOG: {
+          float Ldmax = 100;
+          float b = AL_b;
+          float Lwmax = AL_Lmax/AL_scale;
+          float LLwmax = log10(Lwmax+1);
+          float E = log(b)/log(0.5);
+          for( k=0; k < 3; k++) {
+            float Lw = RGB[k]*100/AL_scale;
+            float LLw1p = log1p(Lw);
+            float Rw = Lw/Lwmax;
+            float D = log( (pow(Rw,E))*8 + 2 );
+            float A = 0.01 * Ldmax / LLwmax;
+            float B = LLw1p / D;
+            RGB[k] = A*B;//A * B;
           }
           break;
         }

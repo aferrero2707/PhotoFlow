@@ -44,10 +44,13 @@ class ToneMappingCurveArea: public Gtk::DrawingArea
 
   bool is_linear;
 
+  float exposure;
+
   tone_mapping_method_t method;
   float gamma, exponent;
   float A, B, C, D, E, F, W;
   float TS, TL, SS, SL, SA;
+  float AL_Lmax, AL_b;
   FilmicToneCurve::FullCurve filmic2_curve;
 
 #ifdef GTKMM_2
@@ -105,6 +108,10 @@ public:
     Slider filmic2_SL_slider;
     Slider filmic2_SS_slider;
     Slider filmic2_SA_slider;
+
+    Gtk::VBox ALControlsBox;
+    Slider AL_Lmax_slider;
+    Slider AL_b_slider;
 
     Slider lumi_blend_frac_slider;
 

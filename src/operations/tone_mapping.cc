@@ -33,7 +33,7 @@
 
 PF::ToneMappingPar::ToneMappingPar():
   OpParBase(),
-  method("method",this,PF::TONE_MAPPING_EXP_GAMMA,"TONE_MAPPING_EXP_GAMMA","exposure/gamma"),
+  method("method",this,PF::TONE_MAPPING_FILMIC2,"TONE_MAPPING_FILMIC2","filmic new"),
   exposure("exposure",this,1),
   gamma("gamma",this,2.2),
   filmic_A("filmic_A",this,0.22),
@@ -48,13 +48,17 @@ PF::ToneMappingPar::ToneMappingPar():
   filmic2_SS("filmic2_SS",this,2.0),
   filmic2_SL("filmic2_SL",this,0.5),
   filmic2_SA("filmic2_SA",this,1.0),
+  AL_Lmax("AL_Lmax",this,2),
+  AL_b("AL_b",this,0.85),
   lumi_blend_frac("lumi_blend_frac",this,0),
   icc_data( NULL )
 {
+  method.add_enum_value(PF::TONE_MAPPING_FILMIC2,"TONE_MAPPING_FILMIC2","filmic new");
+  method.add_enum_value(PF::TONE_MAPPING_FILMIC,"TONE_MAPPING_FILMIC","filmic");
+  method.add_enum_value(PF::TONE_MAPPING_EXP_GAMMA,"TONE_MAPPING_EXP_GAMMA","gamma");
   method.add_enum_value(PF::TONE_MAPPING_REINHARD,"TONE_MAPPING_REINHARD","Reinhard");
   method.add_enum_value(PF::TONE_MAPPING_HEJL,"TONE_MAPPING_HEJL","Hejl-Dawson");
-  method.add_enum_value(PF::TONE_MAPPING_FILMIC,"TONE_MAPPING_FILMIC","filmic");
-  method.add_enum_value(PF::TONE_MAPPING_FILMIC2,"TONE_MAPPING_FILMIC2","filmic new");
+  method.add_enum_value(PF::TONE_MAPPING_ADAPTIVE_LOG,"TONE_MAPPING_ADAPTIVE_LOG","adaptive log");
   set_type("tone_mapping" );
 
   set_default_name( _("tone mapping") );
@@ -67,8 +71,6 @@ VipsImage* PF::ToneMappingPar::build(std::vector<VipsImage*>& in, int first,
     unsigned int& level)
 {
   if( in.size()<1 || in[0]==NULL ) return NULL;
-
-  std::cout<<"ToneMappingPar::build(): in.size()="<<in.size()<<std::endl;
 
   exponent = 1.f/gamma.get();
 
