@@ -36,6 +36,7 @@ PF::ToneMappingCurveArea::ToneMappingCurveArea(): border_size( 0 ), is_linear( f
   method = TONE_MAPPING_EXP_GAMMA;
   exposure = 1;
   gamma = 1;
+  f2gamma = 0;
   AL_Lmax =  AL_b = 0;
   set_size_request(250,150);
 }
@@ -44,7 +45,8 @@ PF::ToneMappingCurveArea::ToneMappingCurveArea(): border_size( 0 ), is_linear( f
 void PF::ToneMappingCurveArea::set_params(PF::ToneMappingPar* tmpar)
 {
   bool filmic2_changed =
-      (tmpar->get_filmic2_TS() != TS ||
+      (tmpar->get_filmic2_gamma() != f2gamma ||
+          tmpar->get_filmic2_TS() != TS ||
           tmpar->get_filmic2_TL() != TL ||
           tmpar->get_filmic2_SS() != SS ||
           tmpar->get_filmic2_SL() != SL ||
@@ -78,6 +80,8 @@ void PF::ToneMappingCurveArea::set_params(PF::ToneMappingPar* tmpar)
   F = tmpar->get_filmic_F();
   W = tmpar->get_filmic_W();
 
+  f2gamma = tmpar->get_filmic2_gamma();
+  f2exponent = (f2gamma >= 0) ? 1.f/(f2gamma+1) : (1.f-f2gamma);
   TS = tmpar->get_filmic2_TS();
   TL = tmpar->get_filmic2_TL();
   SS = tmpar->get_filmic2_SS();
@@ -134,9 +138,13 @@ float PF::ToneMappingCurveArea::get_curve_value( float val)
     break;
   }
   case TONE_MAPPING_FILMIC2: {
-    float filmic2_scale = filmic2_curve.EvalInv(0.1814)/0.1814;
+    float midgray = 0.1814;
+    float xmidgray = filmic2_curve.EvalInv(midgray);
+    float filmic2_scale = xmidgray/0.1814;
+    val = powf( val, f2exponent );
     result = filmic2_curve.Eval(val*filmic2_scale);
-    std::cout<<"ToneMappingCurveArea::get_curve_value: val="<<val<<" result="<<result<<std::endl;
+    result = powf( result, 1.f/f2exponent );
+    std::cout<<"ToneMappingCurveArea::get_curve_value: f2exponent="<<f2exponent<<" val="<<val<<" result="<<result<<std::endl;
     break;
   }
   case TONE_MAPPING_ADAPTIVE_LOG: {
@@ -302,6 +310,7 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
           filmic_E_slider( this, "filmic_E", _("toe num."), 0.5, 0, 0.1, 0.002, 0.01, 1 ),
           filmic_F_slider( this, "filmic_F", _("toe den."), 0.5, 0, 1, 0.02, 0.1, 1 ),
           filmic_W_slider( this, "filmic_W", _("lin. white point"), 10, 1, 100, 2, 10, 1 ),
+          filmic2_gamma_slider( this, "filmic2_gamma", _("gamma"), 1.0, -5, 5, 0.02, 0.1, 1 ),
           filmic2_TS_slider( this, "filmic2_TS", _("toe strength"), 0.5, 0, 1, 0.02, 0.1, 1 ),
           filmic2_TL_slider( this, "filmic2_TL", _("toe lenght"), 0.5, 0, 1, 0.02, 0.1, 1 ),
           filmic2_SS_slider( this, "filmic2_SS", _("shoulder strength"), 0.5, 0, 1, 0.02, 0.1, 0.1 ),
@@ -321,6 +330,7 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
   filmicControlsBox.pack_start( filmic_F_slider, Gtk::PACK_SHRINK );
   filmicControlsBox.pack_start( filmic_W_slider, Gtk::PACK_SHRINK );
 
+  filmic2ControlsBox.pack_start( filmic2_gamma_slider, Gtk::PACK_SHRINK );
   filmic2ControlsBox.pack_start( filmic2_TS_slider, Gtk::PACK_SHRINK );
   filmic2ControlsBox.pack_start( filmic2_TL_slider, Gtk::PACK_SHRINK );
   filmic2ControlsBox.pack_start( filmic2_SS_slider, Gtk::PACK_SHRINK );

@@ -67,6 +67,7 @@ class ToneMappingPar: public OpParBase
   Property<float> filmic_F;
   Property<float> filmic_W;
 
+  Property<float> filmic2_gamma;
   Property<float> filmic2_TS;
   Property<float> filmic2_TL;
   Property<float> filmic2_SS;
@@ -79,7 +80,7 @@ class ToneMappingPar: public OpParBase
 
   ICCProfile* icc_data;
 
-  float exponent;
+  float exponent, filmic2_exponent;
 
 public:
 
@@ -98,6 +99,8 @@ public:
   float get_filmic_F() { return filmic_F.get(); }
   float get_filmic_W() { return filmic_W.get(); }
 
+  float get_filmic2_gamma() { return filmic2_gamma.get(); }
+  float get_filmic2_exponent() { return filmic2_exponent; }
   float get_filmic2_TS() { return filmic2_TS.get(); }
   float get_filmic2_TL() { return filmic2_TL.get(); }
   float get_filmic2_SS() { return filmic2_SS.get(); }
@@ -154,6 +157,8 @@ public:
 
     float exposure = opar->get_exposure();
     float gamma = opar->get_exponent();
+    float filmic2_gamma = opar->get_filmic2_exponent();
+    float filmic2_igamma = 1.f/filmic2_gamma;
     float lumi_blend_frac = opar->get_lumi_blend_frac();
     ICCProfile* prof = opar->get_icc_data();
 
@@ -254,8 +259,16 @@ public:
         }
         case TONE_MAPPING_FILMIC2: {
           for( k=0; k < 3; k++) {
+            if(filmic2_gamma != 1) {
+              if(RGB[k] < 0) RGB[k] = powf( RGB[k]*minus, filmic2_gamma )*minus;
+              else RGB[k] = powf( RGB[k], filmic2_gamma );
+            }
             if(RGB[k] < 0) RGB[k] = minus*filmic2_curve.Eval(minus*RGB[k]*filmic2_scale);
             else RGB[k] = filmic2_curve.Eval(RGB[k]*filmic2_scale);
+            if(filmic2_gamma != 1) {
+              if(RGB[k] < 0) RGB[k] = powf( RGB[k]*minus, filmic2_igamma )*minus;
+              else RGB[k] = powf( RGB[k], filmic2_igamma );
+            }
           }
           break;
         }

@@ -43,6 +43,7 @@ PF::ToneMappingPar::ToneMappingPar():
   filmic_E("filmic_E",this,0.01),
   filmic_F("filmic_F",this,0.30),
   filmic_W("filmic_W",this,11.2),
+  filmic2_gamma("filmic2_gamma",this,0),
   filmic2_TS("filmic2_TS",this,0.5),
   filmic2_TL("filmic2_TL",this,0.5),
   filmic2_SS("filmic2_SS",this,2.0),
@@ -73,6 +74,7 @@ VipsImage* PF::ToneMappingPar::build(std::vector<VipsImage*>& in, int first,
   if( in.size()<1 || in[0]==NULL ) return NULL;
 
   exponent = 1.f/gamma.get();
+  filmic2_exponent = (filmic2_gamma.get() >= 0) ? 1.f/(filmic2_gamma.get()+1) : (1.f-filmic2_gamma.get());
 
   icc_data = PF::get_icc_profile( in[0] );
 
