@@ -144,6 +144,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   OpParBase* par = get_par();
 
+  controls_box.set_spacing(5);
 
   frame = new Gtk::Frame;
   //frame->set_size_request(200,-1);
