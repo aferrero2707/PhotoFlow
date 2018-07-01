@@ -54,6 +54,7 @@ namespace PF
     ProcessorBase* texture;
   public:
     SharpenPar();
+    ~SharpenPar();
 
     bool has_intensity() { return false; }
     bool needs_caching();

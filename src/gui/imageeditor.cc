@@ -483,6 +483,7 @@ PF::ImageEditor::~ImageEditor()
   std::cout<<"~ImageEditor(): deleting image"<<std::endl;
 #endif
   if( image ) {
+    std::cout<<"~ImageEditor(): deleting image"<<std::endl;
     image->destroy();
     delete image;
   }
@@ -492,6 +493,8 @@ PF::ImageEditor::~ImageEditor()
   delete imageArea;
   delete histogram;
   delete samplers;
+  delete image_size_updater;
+  delete main_panel;
   /**/
   /*
   // Images need to be destroyed by the processing thread
@@ -711,29 +714,29 @@ void PF::ImageEditor::open_image()
   int sidecar_id = -1;
   std::string sidecar_name[2];
   if( !(PF::PhotoFlow::Instance().is_plugin()) ) {
-  // Test the existence of a valid sidecar file
-  sidecar_name[0] = filename+".pfi";
-  std::string ext;
-  if( getFileExtensionLowcase( "/", filename, ext ) ) {
-    std::string basename = filename.substr(0,filename.size()-ext.size()-1);
-    sidecar_name[1] = basename+".pfi";
-  }
+    // Test the existence of a valid sidecar file
+    sidecar_name[0] = filename+".pfi";
+    std::string ext;
+    if( getFileExtensionLowcase( "/", filename, ext ) ) {
+      std::string basename = filename.substr(0,filename.size()-ext.size()-1);
+      sidecar_name[1] = basename+".pfi";
+    }
 
-  if( ext != "pfi" ) {
-    for(int fi = 0; fi < 2; fi++) {
-      PF::Image* tmpimg = new PF::Image();
-      if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() &&
-          !load_sidecar && !sidecar_name[fi].empty() ) {
-        std::cout<<"ImageEditor::open_image(): checking sidecar file "<<sidecar_name[fi]<<" ..."<<std::endl;
-        if(  PF::load_pf_image( sidecar_name[fi], tmpimg ) ) {
-          load_sidecar = true;
-          sidecar_id = fi;
+    if( ext != "pfi" ) {
+      for(int fi = 0; fi < 2; fi++) {
+        PF::Image* tmpimg = new PF::Image();
+        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() &&
+            !load_sidecar && !sidecar_name[fi].empty() ) {
+          std::cout<<"ImageEditor::open_image(): checking sidecar file "<<sidecar_name[fi]<<" ..."<<std::endl;
+          if(  PF::load_pf_image( sidecar_name[fi], tmpimg ) ) {
+            load_sidecar = true;
+            sidecar_id = fi;
+          }
+          if(load_sidecar) break;
         }
         delete tmpimg;
-        if(load_sidecar) break;
       }
     }
-  }
   }
 
   if(load_sidecar) {

@@ -47,6 +47,7 @@ namespace PF
 
   public:
     GmicSharpenTexturePar();
+    ~GmicSharpenTexturePar();
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }

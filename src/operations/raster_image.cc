@@ -424,8 +424,8 @@ image( NULL )
 
         break;
       }
-
     }
+    delete meta;
   }
 
 

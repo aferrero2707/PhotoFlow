@@ -120,6 +120,10 @@ PF::ImageReaderPar::~ImageReaderPar()
       raster_image = 0;
     }
   }
+
+  delete convert_format;
+  delete blender;
+  delete cs_transform;
 }
 
 

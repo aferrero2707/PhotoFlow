@@ -31,13 +31,19 @@
 
 
 PF::UnsharpMaskPar::UnsharpMaskPar(): 
-	PixelProcessorPar(), 
-	radius("radius",this,1), 
-	amount("amount",this,100)
+  PixelProcessorPar(),
+  radius("radius",this,1),
+  amount("amount",this,100)
 {
-	blur = new_gaussblur();
-	
-	set_type( "unsharp_mask" );
+  blur = new_gaussblur();
+
+  set_type( "unsharp_mask" );
+}
+
+
+PF::UnsharpMaskPar::~UnsharpMaskPar()
+{
+  delete blur;
 }
 
 

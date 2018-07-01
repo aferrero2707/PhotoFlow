@@ -271,8 +271,10 @@ PF::MainWindow::~MainWindow()
   PF::PhotoFlow::Instance().set_active_image( NULL );
   std::cout<<"~MainWindow(): deleting images"<<std::endl;
   for( unsigned int i = 0; i < image_editors.size(); i++ ) {
-    if( image_editors[i] )
+    if( image_editors[i] ) {
+      std::cout<<"~MainWindow(): deleting image editor"<<i<<std::endl;
       delete( image_editors[i] );
+    }
   }
   /*
   ProcessRequestInfo request;
@@ -286,6 +288,10 @@ PF::MainWindow::~MainWindow()
 void PF::MainWindow::on_map()
 {
   Gtk::Window::on_map();
+#ifdef GTKMM_3
+  float scale = get_scale_factor();
+  std::cout<<"MainWindow::on_map(): display scale factor = "<<scale<<std::endl;
+#endif
 #ifdef __APPLE__
   Glib::RefPtr< Gdk::Screen > screen = get_screen();
   Glib::RefPtr< Gdk::Window > window = get_window();

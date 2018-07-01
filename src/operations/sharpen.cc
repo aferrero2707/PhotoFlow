@@ -46,12 +46,12 @@ PF::SharpenPar::SharpenPar():
   texture_radius("texture_radius",this,4),
   texture_strength("texture_strength",this,1)
 {
-	//method.add_enum_value(PF::SHARPEN_USM,"USM","Unsharp Mask");
+  //method.add_enum_value(PF::SHARPEN_USM,"USM","Unsharp Mask");
 #ifndef PF_DISABLE_GMIC
   method.add_enum_value(PF::SHARPEN_DECONV,"DECONV","RL Deconvolution");
   method.add_enum_value(PF::SHARPEN_TEXTURE,"TEXTURE","texture");
 #endif
-	//method.add_enum_value(PF::SHARPEN_MICRO,"MICRO","Micro Contrast");
+  //method.add_enum_value(PF::SHARPEN_MICRO,"MICRO","Micro Contrast");
 
   usm = new_unsharp_mask();
 #ifndef PF_DISABLE_GMIC
@@ -62,6 +62,19 @@ PF::SharpenPar::SharpenPar():
   set_type("sharpen" );
 
   set_default_name( _("sharpening") );
+}
+
+
+PF::SharpenPar::~SharpenPar()
+{
+  std::cout<<"~SharpenPar(): delete usm"<<std::endl;
+  delete usm ;
+#ifndef PF_DISABLE_GMIC
+  std::cout<<"~SharpenPar(): delete rl"<<std::endl;
+  delete rl;
+  std::cout<<"~SharpenPar(): delete texture"<<std::endl;
+  delete texture;
+#endif
 }
 
 

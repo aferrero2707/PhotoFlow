@@ -39,9 +39,15 @@ OpParBase(),
   prop_radius("radius",this,4),
   prop_strength("strength",this,1),
   padding(0)
-{	
+{
   gmic = PF::new_gmic();
   set_type( "gmic_sharpen_texture" );
+}
+
+
+PF::GmicSharpenTexturePar::~GmicSharpenTexturePar()
+{
+  delete gmic;
 }
 
 

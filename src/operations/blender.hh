@@ -63,6 +63,7 @@ namespace PF
 
   public:
     BlenderPar();
+    ~BlenderPar();
 
     ICCProfile* get_icc_data_top() { return icc_data_top; }
     ICCProfile* get_icc_data_bottom() { return icc_data_bottom; }

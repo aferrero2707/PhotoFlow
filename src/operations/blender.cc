@@ -150,6 +150,13 @@ PF::BlenderPar::BlenderPar():
 }
 
 
+PF::BlenderPar::~BlenderPar()
+{
+  if( img2lab ) delete img2lab;
+  if( lab2img) delete lab2img;
+}
+
+
 void PF::BlenderPar::finalize()
 {
   if( get_file_format_version() > 4 ) return;

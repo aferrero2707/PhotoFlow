@@ -147,6 +147,14 @@ PF::Image::~Image()
       delete pipelines[vi];
   }
    */
+  g_mutex_free(rebuild_mutex);
+  g_cond_free(rebuild_done);
+  g_mutex_free(export_mutex);
+  g_cond_free(export_done);
+  g_mutex_free(sample_mutex);
+  g_cond_free(sample_done);
+  g_mutex_free(remove_layer_mutex);
+  g_cond_free(remove_layer_done);
 }
 
 
@@ -688,23 +696,23 @@ void PF::Image::destroy()
     // Set the rebuild condition to FALSE
     rebuild_done_reset();
     //destroy_lock(); //g_mutex_lock( sample_mutex );
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::destroy(): submitting destroy request..."<<std::endl;
-#endif
+//#endif
     PF::ImageProcessor::Instance().submit_request( request );
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::destroy(): request submitted."<<std::endl;
-#endif
+//#endif
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"Image::destroy(): waiting for done."<<std::endl;
-#endif
+//#endif
     //destroy_cond.wait();
     //destroy_unlock();
     rebuild_done_wait( true );
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"Image::destroy(): done received."<<std::endl;
-#endif
+//#endif
   }
 }
 
@@ -745,11 +753,13 @@ void PF::Image::do_destroy()
 #ifndef NDEBUG
   std::cout<<"Image::do_destroy(): convert2outprof deleted"<<std::endl;
 #endif
+  delete resize;
+  delete sharpen;
 
   // Set the rebuild condition to TRUE and emit the signal
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"Image::do_destroy() finished."<<std::endl;
-#endif
+//#endif
   rebuild_done_signal();
 }
 
@@ -1084,13 +1094,13 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
     VipsImage* outimg = NULL;
 
     /*
-    int tw = 128;
-    int th = tw;
-    int nt = (image->Xsize/tw + 1);
+    int th = 1;
+    int tw = image->Xsize;
+    int nt = 3;//(image->Xsize/tw + 1);
     VipsAccess acc = VIPS_ACCESS_RANDOM;
     int threaded = 1, persistent = 0;
     VipsImage* cached;
-    if( !vips_tilecache(image, &cached,
+    if( !phf_tilecache(image, &cached,
         "tile_width", tw, "tile_height", th, "max_tiles", nt,
         "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
       //PF_UNREF( image, "Image::do_export_merged(): image unref" );
