@@ -109,7 +109,8 @@ public:
 
     float iL = data->get_luminance( irgb[0], irgb[1], irgb[2] );
     float oL = data->get_luminance( ored, ogreen, oblue );
-    float r = oL / MAX(iL, 0.0000000000000000001);
+    //float r = oL / MAX(iL, 0.0000000000000000001);
+    float r = oL / MAX(iL, FLT_MIN);
 
     rgb[0] = irgb[0] * r;
     rgb[1] = irgb[1] * r;
