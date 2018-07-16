@@ -61,6 +61,7 @@ namespace PF
   ProcessorBase* new_channel_mixer();
   ProcessorBase* new_gradient();
   ProcessorBase* new_gaussblur();
+  ProcessorBase* new_blur_bilateral();
   ProcessorBase* new_denoise();
   ProcessorBase* new_unsharp_mask();
   ProcessorBase* new_sharpen();

@@ -312,6 +312,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Emulate film [various]"), "gmic_emulate_film_various" );
 
   op_detail.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
+  op_detail.get_tree().add_op( _("Bilateral blur"), "blur_bilateral" );
   op_detail.get_tree().add_op( _("Local contrast"), "volume" );
   op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
   op_detail.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );

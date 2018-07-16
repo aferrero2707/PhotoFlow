@@ -181,7 +181,7 @@ void dt_bilateral_splat(dt_bilateral_t *b, const float *const in, int ilskip, in
     const int Y = olskip * yi;
     for(int i = 0; i < b->width; i++)
     {
-      const float L = in[index];
+      const float L = in[index]*100;
       //image_to_grid(b, i, j, L, &x, &y, &z);
       x = CLAMPS(i / b->sigma_s, 0, b->size_x - 1);
       z = CLAMPS(L / b->sigma_r, 0, b->size_z - 1);
@@ -386,7 +386,7 @@ void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, fl
     for(int i = 0; i < b->width; i++)
     {
       float x, y, z;
-      const float L = in[index_i];
+      const float L = in[index_i] * 100;
       image_to_grid(b, i, j, L, &x, &y, &z);
       // trilinear lookup:
       const int xi = MIN((int)x, b->size_x - 2);
@@ -417,7 +417,7 @@ void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, fl
                                    + b->buf[gi + ox + oy + oz] * (xf) * (yf) * (zf));*/
       //printf("  index_i=%d  index_o=%d\n", index_i, index_o);
       //if(j<23)
-        out[index_o] = Lout;
+        out[index_o] = Lout / 100;
       //else out[index_o] = 0;
       if(0 /*&& j<23 && i < 16*/) {
         printf("  i=%d, j=%d, L=%f, xi=%d yi=%d zi=%d\n    diff=%f  Lout=%f  b->buf[%d]=%f  out[%d] = %f\n", i, j, L, xi, yi, zi, diff, Lout, gi, b->buf[gi], index_o, out[index_o]);

@@ -126,7 +126,7 @@ public:
     scale_x = static_cast<float>(dt_b->size_x) / srcimg->Xsize;
     scale_y = static_cast<float>(dt_b->size_y) / srcimg->Ysize;
 
-    if( false ) {
+    if( true ) {
     std::cout<<"BlurBilateralSplatPar::build(): sigma_s="<<sigma_s<<"  ss="<<ss<<"  sr="<<sr
         <<"  W="<<srcimg->Xsize<<"  H="<<srcimg->Ysize
         <<"  size_x="<<dt_b->size_x<<"  size_y="<<dt_b->size_y<<"  size_z="<<dt_b->size_z

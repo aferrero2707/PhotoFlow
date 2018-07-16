@@ -55,6 +55,7 @@
 #include "operations/curves_config.hh"
 #include "operations/channel_mixer_config.hh"
 #include "operations/gaussblur_config.hh"
+#include "operations/blur_bilateral_config.hh"
 #include "operations/denoise_config.hh"
 #include "operations/desaturate_config.hh"
 #include "operations/dynamic_range_compressor_config.hh"
@@ -1261,6 +1262,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "gaussblur" ) {
 
     dialog = new PF::GaussBlurConfigGUI( current_layer );
+
+  } else if( op_type == "blur_bilateral" ) {
+
+    dialog = new PF::BlurBilateralConfigGUI( current_layer );
 
   } else if( op_type == "denoise" ) {
 

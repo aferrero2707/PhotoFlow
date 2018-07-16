@@ -172,8 +172,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   } else if( op_type == "gaussblur" ) {
       
-    //processor = new PF::Processor<PF::CurvesPar,PF::Curves>();
     processor = new_gaussblur();
+
+  } else if( op_type == "blur_bilateral" ) {
+
+    processor = new_blur_bilateral();
 
    } else if( op_type == "denoise" ) {
       

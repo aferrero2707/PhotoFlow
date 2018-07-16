@@ -219,7 +219,16 @@ public:
     //g_assert(balgo->get_par() != NULL);
     //balgo->get_par()->compute_padding(full_res, id, level);
     //set_padding( balgo->get_par()->get_padding(id), id );
-    set_padding( 0, id );
+    float ss;
+    ss = sigma_s.get();
+    for( int l = 1; l <= level; l++ ) {
+      ss /= 2;
+    }
+    ss = roundf(ss); //ss = 100;
+    int iss = ss;
+    if(iss < 1) iss = 1;
+
+    set_padding( 5*iss, id );
     std::cout<<"BlurBilateralPar()::compute_padding(): padding="<<get_padding(id)<<std::endl;
   }
 
