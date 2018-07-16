@@ -103,6 +103,7 @@ public:
     Slider filmic_W_slider;
 
     Gtk::VBox filmic2ControlsBox;
+    CheckBox filmic2_preserve_midgray_checkbox;
     Slider filmic2_gamma_slider;
     Slider filmic2_TL_slider;
     Slider filmic2_TS_slider;

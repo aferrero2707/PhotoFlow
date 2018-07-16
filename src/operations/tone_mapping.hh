@@ -67,6 +67,7 @@ class ToneMappingPar: public OpParBase
   Property<float> filmic_F;
   Property<float> filmic_W;
 
+  Property<bool> filmic2_preserve_midgray;
   Property<float> filmic2_gamma;
   Property<float> filmic2_TS;
   Property<float> filmic2_TL;
@@ -99,6 +100,7 @@ public:
   float get_filmic_F() { return filmic_F.get(); }
   float get_filmic_W() { return filmic_W.get(); }
 
+  bool get_filmic2_preserve_midgray() { return filmic2_preserve_midgray.get(); }
   float get_filmic2_gamma() { return filmic2_gamma.get(); }
   float get_filmic2_exponent() { return filmic2_exponent; }
   float get_filmic2_TS() { return filmic2_TS.get(); }
@@ -201,7 +203,7 @@ public:
     FilmicToneCurve::FullCurve filmic2_curve;
     FilmicToneCurve::CreateCurve(filmic2_curve, filmic2_direct);
 
-    float filmic2_scale = filmic2_curve.EvalInv(0.1814)/0.1814;
+    float filmic2_scale = opar->get_filmic2_preserve_midgray() ? filmic2_curve.EvalInv(0.1814)/0.1814 : 1.f;
 
     for( y = 0; y < height; y++ ) {
       pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );

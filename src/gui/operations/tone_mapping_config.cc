@@ -110,7 +110,7 @@ void PF::ToneMappingCurveArea::set_params(PF::ToneMappingPar* tmpar)
 
 
 
-float PF::ToneMappingCurveArea::get_curve_value( float val)
+float PF::ToneMappingCurveArea::get_curve_value( float val )
 {
   float result = val;
   switch( method ) {
@@ -231,14 +231,15 @@ bool PF::ToneMappingCurveArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->set_source_rgb( 0.9, 0.9, 0.9 );
   std::vector< std::pair<float,float> > vec;
   //std::cout<<"PF::CurveArea::on_expose_event(): width="<<width<<"  height="<<height<<std::endl;
+  int xmax = 8, ymax = 2;
   for( int i = 0; i < width; i++ ) {
     float fi = i;
     fi /= (width-1);
-    float fil = labprof->perceptual2linear(fi*2);
+    float fil = labprof->perceptual2linear(fi*xmax);
     float yl = get_curve_value( fil*exposure );
     float y = labprof->linear2perceptual(yl);
     std::cout<<"  fi="<<fi<<"  fil="<<fil<<"  yl="<<yl<<"  y="<<y<<std::endl;
-    vec.push_back( std::make_pair( fi, y/2 ) );
+    vec.push_back( std::make_pair( fi, y/ymax ) );
   }
 
   cr->set_source_rgb( 0.9, 0.9, 0.9 );
@@ -310,9 +311,10 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
           filmic_E_slider( this, "filmic_E", _("toe num."), 0.5, 0, 0.1, 0.002, 0.01, 1 ),
           filmic_F_slider( this, "filmic_F", _("toe den."), 0.5, 0, 1, 0.02, 0.1, 1 ),
           filmic_W_slider( this, "filmic_W", _("lin. white point"), 10, 1, 100, 2, 10, 1 ),
+          filmic2_preserve_midgray_checkbox( this, "filmic2_preserve_midgray", _("preserve mid gray"), false ),
           filmic2_gamma_slider( this, "filmic2_gamma", _("gamma"), 1.0, -5, 5, 0.02, 0.1, 1 ),
           filmic2_TS_slider( this, "filmic2_TS", _("toe strength"), 0.5, 0, 1, 0.02, 0.1, 1 ),
-          filmic2_TL_slider( this, "filmic2_TL", _("toe lenght"), 0.5, 0, 1, 0.02, 0.1, 1 ),
+          filmic2_TL_slider( this, "filmic2_TL", _("shadow contrast"), 0.5, 0, 1, 0.02, 0.1, 1 ),
           filmic2_SS_slider( this, "filmic2_SS", _("shoulder strength"), 0.5, 0, 1, 0.02, 0.1, 0.1 ),
           filmic2_SL_slider( this, "filmic2_SL", _("shoulder lenght"), 0.5, 0, 1, 0.02, 0.1, 1 ),
           filmic2_SA_slider( this, "filmic2_SA", _("shoulder angle"), 0.5, 0, 1, 0.02, 0.1, 1 ),
@@ -330,8 +332,9 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
   filmicControlsBox.pack_start( filmic_F_slider, Gtk::PACK_SHRINK );
   filmicControlsBox.pack_start( filmic_W_slider, Gtk::PACK_SHRINK );
 
+  filmic2ControlsBox.pack_start( filmic2_preserve_midgray_checkbox, Gtk::PACK_SHRINK );
   filmic2ControlsBox.pack_start( filmic2_gamma_slider, Gtk::PACK_SHRINK );
-  filmic2ControlsBox.pack_start( filmic2_TS_slider, Gtk::PACK_SHRINK );
+  //filmic2ControlsBox.pack_start( filmic2_TS_slider, Gtk::PACK_SHRINK );
   filmic2ControlsBox.pack_start( filmic2_TL_slider, Gtk::PACK_SHRINK );
   filmic2ControlsBox.pack_start( filmic2_SS_slider, Gtk::PACK_SHRINK );
   filmic2ControlsBox.pack_start( filmic2_SL_slider, Gtk::PACK_SHRINK );

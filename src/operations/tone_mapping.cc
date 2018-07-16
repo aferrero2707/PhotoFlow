@@ -43,6 +43,7 @@ PF::ToneMappingPar::ToneMappingPar():
   filmic_E("filmic_E",this,0.01),
   filmic_F("filmic_F",this,0.30),
   filmic_W("filmic_W",this,11.2),
+  filmic2_preserve_midgray("filmic2_preserve_midgray",this,false),
   filmic2_gamma("filmic2_gamma",this,0),
   filmic2_TS("filmic2_TS",this,0.5),
   filmic2_TL("filmic2_TL",this,0.5),
