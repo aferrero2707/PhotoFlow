@@ -889,8 +889,8 @@ void PF::RawDeveloperConfigGUI::do_update()
     custom_cam_maker = par->get_lf_maker();
     custom_cam_model = par->get_lf_model();
     custom_lens_model = par->get_lf_lens();
-    std::cout<<"RawDeveloperConfigGUI::do_update(): camera=\""<<custom_cam_maker<<"\", \""<<custom_cam_model<<"\""<<std::endl;
-    std::cout<<"RawDeveloperConfigGUI::do_update(): lens=\""<<custom_lens_model<<"\""<<std::endl;
+    //std::cout<<"RawDeveloperConfigGUI::do_update(): camera=\""<<custom_cam_maker<<"\", \""<<custom_cam_model<<"\""<<std::endl;
+    //std::cout<<"RawDeveloperConfigGUI::do_update(): lens=\""<<custom_lens_model<<"\""<<std::endl;
   //}
   if( lf_auto_matching_checkbox.get_active() ) {
     lf_cam_selector.disable();
