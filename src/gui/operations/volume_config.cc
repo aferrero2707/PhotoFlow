@@ -49,7 +49,7 @@ PF::VolumeConfigGUI::VolumeConfigGUI( PF::Layer* layer ):
 
   usmControlsBox.pack_start( usmRadiusSlider, Gtk::PACK_SHRINK );
 
-  bilateralControlsBox.pack_start( bilateralIterationsSlider, Gtk::PACK_SHRINK );
+  //bilateralControlsBox.pack_start( bilateralIterationsSlider, Gtk::PACK_SHRINK );
   bilateralControlsBox.pack_start( bilateralSigmasSlider, Gtk::PACK_SHRINK );
   bilateralControlsBox.pack_start( bilateralSigmarSlider, Gtk::PACK_SHRINK );
 
