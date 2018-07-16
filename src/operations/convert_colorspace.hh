@@ -189,6 +189,7 @@ class ConvertColorspacePar: public OpParBase
 public:
 
   ConvertColorspacePar();
+  ~ConvertColorspacePar();
 
   cmsHTRANSFORM get_transform() { return transform; }
 

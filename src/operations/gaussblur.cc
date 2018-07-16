@@ -36,18 +36,24 @@
 PF::GaussBlurPar::GaussBlurPar(): 
   OpParBase(),
   radius("radius",this,5),
-	blur_mode("blur_mode",this,PF_BLUR_FAST,"FAST","Fast")
+  blur_mode("blur_mode",this,PF_BLUR_FAST,"FAST","Fast")
 {
-	blur_mode.add_enum_value(PF_BLUR_FAST,"FAST","Fast");
-	blur_mode.add_enum_value(PF_BLUR_EXACT,"ACCURATE","Accurate");
-	
-  convert_format = new_convert_format();
+  blur_mode.add_enum_value(PF_BLUR_FAST,"FAST","Fast");
+  blur_mode.add_enum_value(PF_BLUR_EXACT,"ACCURATE","Accurate");
+
+  //convert_format = new_convert_format();
   blur_sii = new_gaussblur_sii();
 
   //set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type( "gaussblur" );
 
   set_default_name( _("gaussian blur") );
+}
+
+
+PF::GaussBlurPar::~GaussBlurPar()
+{
+  delete blur_sii;
 }
 
 
@@ -226,6 +232,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   VipsImage* converted = blurred;
+  /*
   if( false && blurred ) {
     if( get_format() != blurred->BandFmt ) {
       in2.clear(); in2.push_back( blurred );
@@ -236,7 +243,7 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
       PF_UNREF( blurred, "PF::GaussBlurPar::build(): blurred unref" );
     }
   }
-
+  */
 	return converted;
 
   in2.clear();

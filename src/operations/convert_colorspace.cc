@@ -117,6 +117,15 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
 }
 
 
+PF::ConvertColorspacePar::~ConvertColorspacePar()
+{
+  delete cs_transform;
+  delete gw_transform_in;
+  delete gw_transform_out;
+  delete gw;
+}
+
+
 VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int first, 
     VipsImage* imap, VipsImage* omap,
     unsigned int& level)

@@ -96,6 +96,7 @@ namespace PF
     bool eq_enabled[12];
 
     BasicAdjustmentsPar();
+    ~BasicAdjustmentsPar();
 
     cmsHTRANSFORM get_transform() { return transform; }
     cmsHTRANSFORM get_transform_inv() { return transform_inv; }

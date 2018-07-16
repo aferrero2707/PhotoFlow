@@ -50,6 +50,12 @@ public:
     condition = vips_g_cond_new();
   }
 
+  ~Condition()
+  {
+    vips_g_mutex_free(mutex);
+    vips_g_cond_free(condition);
+  }
+
   void lock()
   {
     g_mutex_lock( mutex );

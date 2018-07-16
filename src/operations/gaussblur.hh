@@ -51,11 +51,12 @@ namespace PF
   {
     Property<float> radius;
 		PropertyBase blur_mode;
-    ProcessorBase* convert_format;
+    //ProcessorBase* convert_format;
     ProcessorBase* blur_sii;
 
   public:
     GaussBlurPar();
+    ~GaussBlurPar();
 
     void set_radius( float r ) { radius.set( r ); }
     float get_radius() { return radius.get(); }

@@ -60,6 +60,10 @@ namespace PF
 
   public:
     GMicPar();
+    ~GMicPar() {
+      delete convert_format;
+      delete convert_format2;
+    }
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }

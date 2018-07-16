@@ -134,6 +134,15 @@ PF::BasicAdjustmentsPar::BasicAdjustmentsPar():
 
 
 
+PF::BasicAdjustmentsPar::~BasicAdjustmentsPar()
+{
+  delete mask;
+  delete blur;
+  if( lab_profile ) cmsCloseProfile(lab_profile);
+}
+
+
+
 void PF::BasicAdjustmentsPar::update_curve( PF::Property<PF::SplineCurve>* curve, float* vec )
 {
   curve->get().lock();

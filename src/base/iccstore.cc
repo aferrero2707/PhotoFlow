@@ -965,6 +965,7 @@ PF::ICCProfile* PF::ICCStore::get_profile( void* pdata, cmsUInt32Number psize )
   memcpy( buf, pdata, psize );
 
   cmsHPROFILE temp_profile = cmsOpenProfileFromMem( buf, psize );
+  free( buf );
 
   //std::cout<<"ICCStore::get_profile( void* pdata, cmsUInt32Number psize ): temp_profile="<<temp_profile<<std::endl;
 

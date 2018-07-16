@@ -286,6 +286,11 @@ class ICCTransform
 
 public:
   ICCTransform(): in_profile(NULL), out_profile(NULL), transform(NULL) {}
+  ~ICCTransform() {
+    if( transform ) {
+      cmsDeleteTransform( transform );
+    }
+  }
   bool valid() { return( transform!=NULL || is_rgb2rgb ); }
   void init(ICCProfile* in_profile, ICCProfile* out_profile, VipsBandFormat band_fmt,
       cmsUInt32Number intent=INTENT_RELATIVE_COLORIMETRIC,

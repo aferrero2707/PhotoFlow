@@ -365,6 +365,16 @@ vips_layer_build( VipsObject *object )
 
 
 static void
+vips_layer_dispose( GObject *gobject )
+{
+  VipsLayer *layer = (VipsLayer*)gobject;
+  if( layer->in_all ) free(layer->in_all);
+  G_OBJECT_CLASS( vips_layer_parent_class )->dispose( gobject );
+}
+
+
+
+static void
 vips_layer_class_init( VipsLayerClass *klass )
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS( klass );
@@ -373,6 +383,8 @@ vips_layer_class_init( VipsLayerClass *klass )
 
   gobject_class->set_property = vips_object_set_property;
   gobject_class->get_property = vips_object_get_property;
+  gobject_class->dispose = vips_layer_dispose;
+
 
   vobject_class->nickname = "layer";
   vobject_class->description = _( "Photoflow layer" );
@@ -470,6 +482,7 @@ static void
 vips_layer_init( VipsLayer *layer )
 {
   layer->in[0] = NULL;
+  layer->in_all = NULL;
 }
 
 /**

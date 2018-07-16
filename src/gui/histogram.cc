@@ -135,7 +135,7 @@ PF::Histogram::Histogram( Pipeline* v ):
 
 PF::Histogram::~Histogram ()
 {
-  if(hist) delete hist;
+  if(hist) delete[] hist;
 }
 
 
@@ -233,6 +233,10 @@ bool PF::Histogram::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     }
     cr->stroke();
   }
+
+  if(hh[0]) delete[] hh[0];
+  if(hh[1]) delete[] hh[1];
+  if(hh[2]) delete[] hh[2];
 
   return TRUE;
 }

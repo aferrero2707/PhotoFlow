@@ -152,6 +152,7 @@ PF::BlenderPar::BlenderPar():
 
 PF::BlenderPar::~BlenderPar()
 {
+  if( white ) delete white;
   if( img2lab ) delete img2lab;
   if( lab2img) delete lab2img;
 }

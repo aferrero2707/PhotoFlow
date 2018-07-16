@@ -209,6 +209,11 @@ public:
     mutex = vips_g_mutex_new();
   }
 
+  ~DoubleBuffer()
+  {
+    vips_g_mutex_free(mutex);
+  }
+
   PixelBuffer& get_active() { return buf[active_id]; }
   PixelBuffer& get_inactive() { return buf[1-active_id]; }
 

@@ -263,6 +263,10 @@ PF::ImageArea::~ImageArea ()
   std::cout<<"Deleting image area"<<std::endl;
   std::cout<<"~ImageArea finished"<<std::endl;
 #endif
+  vips_g_mutex_free(preview_size_mutex);
+  vips_g_mutex_free(draw_mutex);
+  vips_g_cond_free(draw_done);
+
   //delete pf_image;
 }
 
@@ -273,10 +277,13 @@ void PF::ImageArea::dispose()
   PF_UNREF( region, "ImageArea::dispose()" );
   PF_UNREF( display_image, "ImageArea::dispose()" );
   PF_UNREF( outimg, "ImageArea::dispose()" );
+  delete softproof_conversion;
   delete convert2display;
   delete convert_format;
   delete invert;
   delete uniform;
+  delete maskblend;
+  delete clipping_warning;
   std::cout<<"mageArea::dispose() fnished"<<std::endl;
 }
 
