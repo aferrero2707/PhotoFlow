@@ -827,17 +827,17 @@ bool PF::RawImage::load_rawspeed()
   //   <<"row="<<row<<"  sizeof(PF::raw_pixel_t)="<<sizeof(PF::raw_pixel_t)<<std::endl;
   //==================================================================
   // Load the RAW image data into a vips image
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RawImage: rawData.GetBuffer()="<<(void*)rawData.GetBuffer()<<std::endl;
   std::cout<<"Starting CA correction..."<<std::endl;
-#endif
+//#endif
   //CA_correct_RT_old();
   CA_correct_RT();
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"... CA correction finished"<<std::endl;
-#endif
+//#endif
   memcpy( pdata->color.ca_fitparams, fitparams, sizeof(fitparams) );
-#ifndef NDEBUG
+//#ifndef NDEBUG
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 2; j++) {
       printf("i=%d j=%d par:",i,j);
@@ -846,7 +846,7 @@ bool PF::RawImage::load_rawspeed()
       printf("\n");
     }
   }
-#endif
+//#endif
   rawData.Reset();
 #ifndef NDEBUG
   std::cout<<"RawImage: rawData.Reset() called"<<std::endl;

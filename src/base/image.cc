@@ -403,14 +403,14 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
       }
     }
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<std::endl;
-//#endif
+#endif
     //get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, area );
     get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): pipeline #"<<i<<" updated."<<std::endl;
-//#endif
+#endif
     //pipeline->update();
   }
 
@@ -719,21 +719,21 @@ void PF::Image::destroy()
 
 void PF::Image::do_destroy()
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"Image::do_destroy() called."<<std::endl;
-#endif
+//#endif
   // Set the rebuild condition to FALSE
   //rebuild_done_reset();
 
   for( unsigned int vi = 0; vi < pipelines.size(); vi++ ) {
     if( pipelines[vi] != NULL ) {
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"Image::do_destroy(): deleting pipeline #"<<vi<<std::endl;
-#endif
+//#endif
       delete pipelines[vi];
-#ifndef NDEBUG
+//#ifndef NDEBUG
       std::cout<<"Image::do_destroy(): pipeline #"<<vi<<" delete"<<std::endl;
-#endif
+//#endif
     }
   }
 #ifndef NDEBUG

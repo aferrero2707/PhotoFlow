@@ -568,10 +568,10 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
   if( srcimg )
     csin = PF::convert_colorspace( srcimg->Type );
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"ClonePar::build(): in.size()="<<in.size()<<"  srcimg="<<srcimg<<std::endl;
   std::cout<<"ClonePar::build(): colorspace="<<cs<<"  input_colorspace="<<csin<<std::endl;
-//#endif
+#endif
 
   if( !srcimg ) {
     if( in.size() > 0 ) {

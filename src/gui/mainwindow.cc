@@ -519,7 +519,7 @@ bool PF::MainWindow::on_delete_event( GdkEventAny* event )
 
 bool PF::MainWindow::on_key_press_event(GdkEventKey* event)
 {
-  std::cout<<"MainWindow::on_key_press_event() called"<<std::endl;
+  //std::cout<<"MainWindow::on_key_press_event() called"<<std::endl;
   int page = viewerNotebook.get_current_page();
   Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
   if( widget ) {

@@ -375,7 +375,7 @@ float PF::LensFunPar::get_distance()
 
 int PF::LensFunPar::get_flags( VipsImage* img )
 {
-  std::cout<<"LensFunPar::get_flags() called"<<std::endl;
+  //std::cout<<"LensFunPar::get_flags() called"<<std::endl;
 
   int flags = 0;
   //std::cout<<"LensFunPar::get_flags(): img="<<img<<std::endl;
@@ -407,30 +407,30 @@ int PF::LensFunPar::get_flags( VipsImage* img )
     if(lens_model.empty()) lens_model = exif_data->exif_lens;
   }
 
-  std::cout<<"LensFunPar::get_flags(): auto_matching="<<auto_matching.get()
-      <<" cam_make="<<cam_make<<" cam_model="<<cam_model<<std::endl;//<<" lens_model="<<lens_model<<std::endl;
+  //std::cout<<"LensFunPar::get_flags(): auto_matching="<<auto_matching.get()
+  //    <<" cam_make="<<cam_make<<" cam_model="<<cam_model<<std::endl;//<<" lens_model="<<lens_model<<std::endl;
   rtengine::LFCamera lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_make, cam_model);
   rtengine::LFLens lflens = rtengine::LFLens();
   if( lfcamera ) {
-    std::cout<<"LensFunPar::get_flags(): camera "<<lfcamera.getMake()<<" / "<<lfcamera.getModel()<<" found in database"<<std::endl;
+    //std::cout<<"LensFunPar::get_flags(): camera "<<lfcamera.getMake()<<" / "<<lfcamera.getModel()<<" found in database"<<std::endl;
     lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model, !(auto_matching.get()));
     if( lflens ) {
-      std::cout<<"LensFunParStep::get_flags(): lens "<<lflens.getMake()<<" / "<<lflens.getLens()<<" ("<<exif_data->exif_lens<<") found in database"<<std::endl;
+      //std::cout<<"LensFunParStep::get_flags(): lens "<<lflens.getMake()<<" / "<<lflens.getLens()<<" ("<<exif_data->exif_lens<<") found in database"<<std::endl;
     } else {
-      g_print ("LensFunPar::get_flags(): cannot find the lens `%s' in database\n", lens_model.c_str());
+      //g_print ("LensFunPar::get_flags(): cannot find the lens `%s' in database\n", lens_model.c_str());
       return flags;
     }
   } else {
-    g_print ("LensFunPar::get_flags(): cannot find the camera `%s %s' in database\n",
-        cam_make.c_str(), cam_model.c_str());
+    //g_print ("LensFunPar::get_flags(): cannot find the camera `%s %s' in database\n",
+    //    cam_make.c_str(), cam_model.c_str());
     return flags;
   }
 
 
   const lfCamera *camera = lfcamera.data_;
-  std::cout<<"LensFunPar::get_flags(): camera="<<camera<<std::endl;
+  //std::cout<<"LensFunPar::get_flags(): camera="<<camera<<std::endl;
   const lfLens *lens = lflens.data_;
-  std::cout<<"LensFunPar::get_flags(): lens="<<lens<<std::endl;
+  //std::cout<<"LensFunPar::get_flags(): lens="<<lens<<std::endl;
   lfModifier* modifier = new lfModifier( lens, camera->CropFactor,
       img->Xsize, img->Ysize );
   flags = modifier->Initialize( lens, LF_PF_F32,
@@ -491,13 +491,13 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
     if( lflens ) {
       //std::cout<<"LensFunPar::build(): lens "<<lflens.getMake()<<" / "<<lflens.getLens()<<" ("<<exif_data->exif_lens<<") found in database"<<std::endl;
     } else {
-      g_print ("LensFunPar::build(): cannot find the lens `%s' in database\n", lens_model.c_str());
+      //g_print ("LensFunPar::build(): cannot find the lens `%s' in database\n", lens_model.c_str());
       PF_REF( in[0], "LensFunPar::build(): lens not found in lensfun database." );
       return( in[0] );
     }
   } else {
-    g_print ("LensFunPar::build(): cannot find the camera `%s %s' in database\n",
-        cam_make.c_str(), cam_model.c_str());
+    //g_print ("LensFunPar::build(): cannot find the camera `%s %s' in database\n",
+    //    cam_make.c_str(), cam_model.c_str());
     PF_REF( in[0], "LensFunPar::build(): camera not found in lensfun database." );
     return( in[0] );
   }
@@ -538,7 +538,7 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
     std::cerr<<"LensFunPar::build(): NULL step2_par"<<std::endl;
     return(out1);
   }
-  std::cerr<<"LensFunPar::build(): building step2_par, auto_crop="<<auto_crop.get()<<std::endl;
+  //std::cerr<<"LensFunPar::build(): building step2_par, auto_crop="<<auto_crop.get()<<std::endl;
   step2_par->set_image_hints( out1 );
   step2_par->set_format( get_format() );
   step2_par->set_camera_maker( cam_make );

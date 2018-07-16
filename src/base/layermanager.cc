@@ -843,7 +843,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Laye
       // currently only buffer layers fall under this category
       // in the NoOp case we walk one step more down the hierarchy
       bool is_noop = ppar->is_noop( pnode0->image, 0, pipeline->get_level() );
-      std::cout<<"    layer: \""<<lprev->get_name()<<"\", is_noop="<<is_noop<<std::endl;
+      //std::cout<<"    layer: \""<<lprev->get_name()<<"\", is_noop="<<is_noop<<std::endl;
       if( !is_noop ) break;
     }
     if( !lprev ) {
@@ -875,8 +875,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Laye
       }
     }
 
-    if( lprev )
-      std::cout<<"    previous layer: \""<<lprev->get_name()<<"\""<<std::endl;
+    //if( lprev ) std::cout<<"    previous layer: \""<<lprev->get_name()<<"\""<<std::endl;
 
 
     // Once more, we keep this preliminary implementation simple, and we ignore

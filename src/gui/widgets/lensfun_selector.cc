@@ -354,7 +354,7 @@ void PF::LFCamSelector2::fill_menu()
 void PF::LFCamSelector2::on_item_clicked(Glib::ustring make_, Glib::ustring model_)
 {
   update_cam( make_, model_ );
-  std::cout<<"LFCamSelector2::on_item_clicked(): model \""<<maker_name + " " + model_name<<"\" selected"<<std::endl;
+  //std::cout<<"LFCamSelector2::on_item_clicked(): model \""<<maker_name + " " + model_name<<"\" selected"<<std::endl;
   label.set_text( model_name );
   label.set_ellipsize( Pango::ELLIPSIZE_MIDDLE );
   label.set_tooltip_text( maker_name + " " + model_name );
@@ -374,7 +374,7 @@ void PF::LFCamSelector2::set_cam(Glib::ustring cam_make, Glib::ustring cam_model
       label.set_text( model_name );
       label.set_tooltip_text( maker_name + " " + model_name );
   } else {
-    std::cout<<"LFCamSelector2::set_lens(): cannot find camera \""<<cam_model<<"\" in database"<<std::endl;
+    //std::cout<<"LFCamSelector2::set_lens(): cannot find camera \""<<cam_model<<"\" in database"<<std::endl;
   }
 }
 
@@ -504,10 +504,10 @@ void PF::LFLensSelector2::set_lens(Glib::ustring cam_make, Glib::ustring cam_mod
       label.set_tooltip_text( lens_model );
       update_lens( lpretty );
     } else {
-      std::cout<<"LFLensSelector2::set_lens(): cannot find lens \""<<lens<<"\" in database"<<std::endl;
+      //std::cout<<"LFLensSelector2::set_lens(): cannot find lens \""<<lens<<"\" in database"<<std::endl;
     }
   } else {
-    std::cout<<"LFLensSelector2::set_lens(): cannot find camera \""<<cam_model<<"\" in database"<<std::endl;
+    //std::cout<<"LFLensSelector2::set_lens(): cannot find camera \""<<cam_model<<"\" in database"<<std::endl;
   }
 }
 
@@ -559,7 +559,7 @@ void PF::LFLensSelector2::get_value()
   std::string str = strprop->get();
   lens_name = str;
 
-  std::cout<<"LFLensSelector2::get_value(): lens_name=\""<<lens_name<<"\""<<std::endl;
+  //std::cout<<"LFLensSelector2::get_value(): lens_name=\""<<lens_name<<"\""<<std::endl;
 
   label.set_text( lens_name );
   label.set_ellipsize( Pango::ELLIPSIZE_MIDDLE );
@@ -709,7 +709,7 @@ void PF::LFSelector::set_cam(Glib::ustring cam_make, Glib::ustring cam_model)
       cam_label.set_text( cam_model_name );
       cam_label.set_tooltip_text( cam_maker_name + " " + cam_model_name );
   } else {
-    std::cout<<"LFSelector::set_lens(): cannot find camera \""<<cam_model<<"\" in database"<<std::endl;
+    //std::cout<<"LFSelector::set_lens(): cannot find camera \""<<cam_model<<"\" in database"<<std::endl;
   }
 }
 
@@ -740,12 +740,12 @@ void PF::LFSelector::set_lens(Glib::ustring lens)
       lens_label.set_tooltip_text( lens_model );
       update_lens( lens_model );
     } else {
-      std::cout<<"LFSelector::set_lens(): cannot find lens \""<<lens<<"\" in database"<<std::endl;
+      //std::cout<<"LFSelector::set_lens(): cannot find lens \""<<lens<<"\" in database"<<std::endl;
       update_lens( "" );
     }
   } else {
-    std::cout<<"LFSelector::set_lens(): cannot find camera \""
-        <<cam_maker_name<<" / "<<cam_model_name<<"\" in database"<<std::endl;
+    //std::cout<<"LFSelector::set_lens(): cannot find camera \""
+    //    <<cam_maker_name<<" / "<<cam_model_name<<"\" in database"<<std::endl;
     update_lens( "" );
   }
 }
@@ -901,7 +901,7 @@ void PF::LFSelector::get_value()
   str = strprop3->get();
   lens_name = str;
 
-  std::cout<<"LFSelector::get_value(): lens_name=\""<<lens_name<<"\""<<std::endl;
+  //std::cout<<"LFSelector::get_value(): lens_name=\""<<lens_name<<"\""<<std::endl;
   set_lens(lens_name);
 }
 
