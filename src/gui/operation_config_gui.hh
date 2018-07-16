@@ -76,6 +76,7 @@ class OperationConfigGUI: public OperationConfigUI
   bool has_ch_sel;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
 
+  bool input_source_visible;
   Gtk::Expander input_source_expander;
   CheckBox input_source_checkbox;
   Gtk::VBox layer_selector_box;
@@ -206,6 +207,9 @@ public:
   virtual void parameters_reset();
   virtual void show_help();
   virtual void close_config();
+
+  void hide_expert_controls() {expert_ctrls_expander.hide();}
+  void hide_input_controls() {input_source_visible = false;}
 
   virtual bool has_editing_mode() { return false; }
 

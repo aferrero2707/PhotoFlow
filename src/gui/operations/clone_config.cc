@@ -38,6 +38,8 @@ PF::CloneConfigGUI::CloneConfigGUI( PF::Layer* layer ):
   add_widget( layer_list );
   add_widget( sourceSelector );
 
+  hide_input_controls();
+
   //fileEntry.signal_activate().
   //  connect(sigc::mem_fun(*this,
   //			  &CloneConfigGUI::on_filename_changed));
