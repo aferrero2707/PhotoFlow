@@ -32,16 +32,18 @@
 #include <fcntl.h>
 
 #include "gaussblur.hh"
+#include "blur_bilateral.hh"
 #include "gmic/blur_bilateral.hh"
 #include "volume.hh"
 
 
 PF::VolumePar::VolumePar():
   OpParBase(), 
-  method("method",this,PF::VOLUME_GAUSS,"USM","Gaussian"),
+  //method("method",this,PF::VOLUME_GAUSS,"USM","Gaussian"),
+  method("method",this,PF::VOLUME_BILATERAL,"BILATERAL","Bilateral"),
   amount("amount",this,1),
   threshold("threshold",this,0.001),
-  enable_equalizer("enable_equalizer",this,true),
+  enable_equalizer("enable_equalizer",this,false),
   blacks_amount("blacks_amount",this,0),
   shadows_amount("shadows_amount",this,0.7),
   midtones_amount("midtones_amount",this,1),
@@ -52,11 +54,12 @@ PF::VolumePar::VolumePar():
   bilateral_sigma_s("bilateral_sigma_s",this,10),
   bilateral_sigma_r("bilateral_sigma_r",this,20)
 {
-	//method.add_enum_value(PF::SHARPEN_GAUSS,"GAUSS","Unsharp Mask");
+	method.add_enum_value(PF::VOLUME_GAUSS,"USM","Gaussian");
 	method.add_enum_value(PF::VOLUME_BILATERAL,"BILATERAL","Bilateral");
 
   gauss = new_gaussblur();
-  bilateral = new_gmic_blur_bilateral();
+  //bilateral = new_gmic_blur_bilateral();
+  bilateral = new_blur_bilateral();
 
   // The tone curve is initialized as a bell-like curve with the
   // mid-tones point at 100% and the shadows/highlights points at 0%
@@ -84,9 +87,10 @@ void PF::VolumePar::propagate_settings()
     gausspar->propagate_settings();
   }
 
-  GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
+  //GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
+  PF::BlurBilateralPar* bilateralpar = dynamic_cast<PF::BlurBilateralPar*>( bilateral->get_par() );
   if( bilateralpar ) {
-    bilateralpar->set_iterations( bilateral_iterations.get() );
+    //bilateralpar->set_iterations( bilateral_iterations.get() );
     bilateralpar->set_sigma_s( bilateral_sigma_s.get() );
     bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
     bilateralpar->propagate_settings();
@@ -108,7 +112,8 @@ void PF::VolumePar::compute_padding( VipsImage* full_res, unsigned int id, unsig
     break;
   }
   case PF::VOLUME_BILATERAL: {
-    GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
+    //GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
+    PF::BlurBilateralPar* bilateralpar = dynamic_cast<PF::BlurBilateralPar*>( bilateral->get_par() );
     if( bilateralpar ) {
       bilateralpar->compute_padding(full_res, id, level);
       set_padding( bilateralpar->get_padding(id), id );
@@ -163,7 +168,7 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
     break;
   }
   case PF::VOLUME_BILATERAL: {
-    GmicBlurBilateralPar* bilateralpar = dynamic_cast<GmicBlurBilateralPar*>( bilateral->get_par() );
+    PF::OpParBase* bilateralpar = bilateral->get_par();
     if( bilateralpar ) {
       bilateralpar->set_image_hints( in[0] );
       bilateralpar->set_format( get_format() );
@@ -183,7 +188,7 @@ VipsImage* PF::VolumePar::build(std::vector<VipsImage*>& in, int first,
   std::vector<VipsImage*> in2;
   in2.push_back(smoothed);
   in2.push_back(in[0]);
-  VipsImage* out = OpParBase::build( in2, 0, imap, omap, level );
+  VipsImage* out = PF::OpParBase::build( in2, 0, imap, omap, level );
 
 #ifndef NDEBUG
   std::cout<<"VolumePar::build(): out="<<out<<std::endl;
