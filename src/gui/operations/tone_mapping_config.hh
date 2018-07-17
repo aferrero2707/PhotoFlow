@@ -49,7 +49,7 @@ class ToneMappingCurveArea: public Gtk::DrawingArea
   tone_mapping_method_t method;
   float gamma, exponent;
   float A, B, C, D, E, F, W;
-  float f2gamma, f2exponent, TS, TL, SS, SL, SA;
+  float f2midgraylock, f2gamma, f2exponent, TS, TL, SS, SL, SA;
   float AL_Lmax, AL_b;
   FilmicToneCurve::FullCurve filmic2_curve;
 

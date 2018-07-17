@@ -37,6 +37,7 @@ PF::ToneMappingCurveArea::ToneMappingCurveArea(): border_size( 0 ), is_linear( f
   exposure = 1;
   gamma = 1;
   f2gamma = 0;
+  f2midgraylock = false;
   AL_Lmax =  AL_b = 0;
   set_size_request(250,150);
 }
@@ -45,7 +46,8 @@ PF::ToneMappingCurveArea::ToneMappingCurveArea(): border_size( 0 ), is_linear( f
 void PF::ToneMappingCurveArea::set_params(PF::ToneMappingPar* tmpar)
 {
   bool filmic2_changed =
-      (tmpar->get_filmic2_gamma() != f2gamma ||
+      (f2midgraylock != tmpar->get_filmic2_preserve_midgray() ||
+          tmpar->get_filmic2_gamma() != f2gamma ||
           tmpar->get_filmic2_TS() != TS ||
           tmpar->get_filmic2_TL() != TL ||
           tmpar->get_filmic2_SS() != SS ||
@@ -80,6 +82,7 @@ void PF::ToneMappingCurveArea::set_params(PF::ToneMappingPar* tmpar)
   F = tmpar->get_filmic_F();
   W = tmpar->get_filmic_W();
 
+  f2midgraylock = tmpar->get_filmic2_preserve_midgray();
   f2gamma = tmpar->get_filmic2_gamma();
   f2exponent = (f2gamma >= 0) ? 1.f/(f2gamma+1) : (1.f-f2gamma);
   TS = tmpar->get_filmic2_TS();
@@ -139,8 +142,8 @@ float PF::ToneMappingCurveArea::get_curve_value( float val )
   }
   case TONE_MAPPING_FILMIC2: {
     float midgray = 0.1814;
-    float xmidgray = filmic2_curve.EvalInv(midgray);
-    float filmic2_scale = xmidgray/0.1814;
+    //float xmidgray = filmic2_curve.EvalInv(midgray);
+    float filmic2_scale = f2midgraylock ? filmic2_curve.EvalInv(midgray)/midgray : 1.f;
     val = powf( val, f2exponent );
     result = filmic2_curve.Eval(val*filmic2_scale);
     result = powf( result, 1.f/f2exponent );
@@ -231,7 +234,7 @@ bool PF::ToneMappingCurveArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->set_source_rgb( 0.9, 0.9, 0.9 );
   std::vector< std::pair<float,float> > vec;
   //std::cout<<"PF::CurveArea::on_expose_event(): width="<<width<<"  height="<<height<<std::endl;
-  int xmax = 8, ymax = 2;
+  int xmax = 2, ymax = 2;
   for( int i = 0; i < width; i++ ) {
     float fi = i;
     fi /= (width-1);
