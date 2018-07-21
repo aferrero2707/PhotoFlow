@@ -232,25 +232,40 @@ bool PF::ToneMappingCurveArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
   // Draw curve
   cr->set_source_rgb( 0.9, 0.9, 0.9 );
-  std::vector< std::pair<float,float> > vec;
+  std::vector< std::pair< std::pair<float,int>, float > > vec;
   //std::cout<<"PF::CurveArea::on_expose_event(): width="<<width<<"  height="<<height<<std::endl;
   int xmax = 2, ymax = 2;
   for( int i = 0; i < width; i++ ) {
     float fi = i;
     fi /= (width-1);
     float fil = labprof->perceptual2linear(fi*xmax);
+    int index = 0;
+    if( method == TONE_MAPPING_FILMIC2 ) {
+      float normX = fil * filmic2_curve.m_invW;
+      index = (normX < filmic2_curve.m_x0) ? 1 : ((normX < filmic2_curve.m_x1) ? 2 : 3);
+      //std::cout<<"x="<<fil<<"  normX="<<normX
+      //    <<"  m_x0="<<filmic2_curve.m_x0<<"  m_x1="<<filmic2_curve.m_x1<<"  index="<<index<<std::endl;
+    }
     float yl = get_curve_value( fil*exposure );
     float y = labprof->linear2perceptual(yl);
-    std::cout<<"  fi="<<fi<<"  fil="<<fil<<"  yl="<<yl<<"  y="<<y<<std::endl;
-    vec.push_back( std::make_pair( fi, y/ymax ) );
+    //std::cout<<"  fi="<<fi<<"  fil="<<fil<<"  yl="<<yl<<"  y="<<y<<std::endl;
+    vec.push_back( std::make_pair( std::make_pair(fi,index), y/ymax ) );
   }
 
   cr->set_source_rgb( 0.9, 0.9, 0.9 );
-  cr->move_to( double(vec[0].first)*width+x0, double(1.0f-vec[0].second)*height+y0 );
+  cr->set_line_width( 2 );
   for (unsigned int i=1; i<vec.size(); i++) {
-    cr->line_to( double(vec[i].first)*width+x0, double(1.0f-vec[i].second)*height+y0 );
+    //std::cout<<"  fi="<<vec[i].first.first<<"  index="<<vec[i].first.second<<std::endl;
+    switch( vec[i].first.second ) {
+    case 1: cr->set_source_rgb( 0.9, 0.0, 0.0 ); break;
+    case 2: cr->set_source_rgb( 0.0, 0.9, 0.0 ); break;
+    case 3: cr->set_source_rgb( 0.2, 0.2, 0.9 ); break;
+    default: cr->set_source_rgb( 0.9, 0.9, 0.9 ); break;
+    }
+    cr->move_to( double(vec[i-1].first.first)*width+x0, double(1.0f-vec[i-1].second)*height+y0 );
+    cr->line_to( double(vec[i].first.first)*width+x0, double(1.0f-vec[i].second)*height+y0 );
+    cr->stroke ();
   }
-  cr->stroke ();
 
   return true;
 }
