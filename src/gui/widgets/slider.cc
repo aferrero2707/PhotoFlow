@@ -145,14 +145,16 @@ void PF::Slider::create_widgets( std::string l, double val,
   } else {
     //hbox.pack_start( label, Gtk::PACK_SHRINK );
     //hbox.pack_start( spinButton, Gtk::PACK_SHRINK );
-    pack_start( label, Gtk::PACK_SHRINK );
+    //set_spacing(4);
+    hbox.pack_start( label, Gtk::PACK_SHRINK, 5 );
     //pack_start( spinButton, Gtk::PACK_SHRINK );
-    pack_start( numentry, Gtk::PACK_SHRINK, 0 );
+    hbox.pack_start( numentry, Gtk::PACK_SHRINK, 0 );
     //reset_button_align.set( Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0 );
     //reset_button_align.add( reset_button );
     //pack_start( reset_button_align, Gtk::PACK_SHRINK );
     vbox2.pack_start( reset_button, Gtk::PACK_EXPAND_WIDGET );
-    pack_start( vbox2, Gtk::PACK_SHRINK );
+    hbox.pack_start( vbox2, Gtk::PACK_SHRINK );
+    pack_end( hbox, Gtk::PACK_SHRINK );
   }
 
   //pack_start( hbox, Gtk::PACK_SHRINK );
