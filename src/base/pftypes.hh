@@ -196,6 +196,7 @@ namespace PF
 
   enum export_size_t {
     SIZE_ORIGINAL,
+    SIZE_400_300,
     SIZE_800_600,
     SIZE_1280_720,
     SIZE_1280_800,
@@ -204,6 +205,8 @@ namespace PF
     SIZE_1600_1200,
     SIZE_1920_1080,
     SIZE_1920_1200,
+    SIZE_2048_1400,
+    SIZE_2048_2048,
     SIZE_2K,
     SIZE_4K,
     SIZE_5K,

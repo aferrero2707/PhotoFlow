@@ -1129,12 +1129,15 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       op_par->set_scale_interp(PF::SCALE_INTERP_LANCZOS3);
       int width = 0, height = 0;
       switch(export_opt->size) {
+      case PF::SIZE_400_300: width=400; height=300; break;
       case PF::SIZE_800_600: width=800; height=600; break;
       case PF::SIZE_1280_720: width=1280; height=720; break;
       case PF::SIZE_1280_800: width=1280; height=800; break;
       case PF::SIZE_1280_1024: width=1280; height=1024; break;
       case PF::SIZE_1440_900: width=1440; height=900; break;
       case PF::SIZE_1600_1200: width=1600; height=1200; break;
+      case PF::SIZE_2048_1400: width=2048; height=1400; break;
+      case PF::SIZE_2048_2048: width=2048; height=2048; break;
       case PF::SIZE_2K: width=2048; height=1080; break;
       case PF::SIZE_4K: width=3840; height=2160; break;
       case PF::SIZE_5K: width=5120; height=2880; break;

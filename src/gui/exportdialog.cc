@@ -185,6 +185,7 @@ export_format(PF::EXPORT_FORMAT_JPEG)
   //resize_vbox.pack_start( resize_label, Gtk::PACK_SHRINK );
 
   size_selector.add_entry(_("original"), PF::SIZE_ORIGINAL);
+  size_selector.add_entry(_("400 x 300"), PF::SIZE_400_300);
   size_selector.add_entry(_("800 x 600"), PF::SIZE_800_600);
   size_selector.add_entry(_("1280 x 720"), PF::SIZE_1280_720);
   size_selector.add_entry(_("1280 x 800"), PF::SIZE_1280_800);
@@ -193,6 +194,8 @@ export_format(PF::EXPORT_FORMAT_JPEG)
   size_selector.add_entry(_("1600 x 1200"), PF::SIZE_1600_1200);
   size_selector.add_entry(_("1920 x 1080"), PF::SIZE_1920_1080);
   size_selector.add_entry(_("1920 x 1200"), PF::SIZE_1920_1200);
+  size_selector.add_entry(_("2048 x 1400"), PF::SIZE_2048_1400);
+  size_selector.add_entry(_("2048 x 2048"), PF::SIZE_2048_2048);
   size_selector.add_entry(_("2K"), PF::SIZE_2K);
   size_selector.add_entry(_("4K"), PF::SIZE_4K);
   size_selector.add_entry(_("5K"), PF::SIZE_5K);
