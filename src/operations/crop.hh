@@ -39,10 +39,29 @@
 namespace PF 
 {
 
+enum crop_ar_t
+{
+  CROP_AR_NONE,
+  CROP_AR_INPUT,
+  CROP_AR_CUSTOM,
+  CROP_AR_1_1,
+  CROP_AR_3_2,
+  CROP_AR_2_3,
+  CROP_AR_4_3,
+  CROP_AR_3_4,
+  CROP_AR_A4,
+  CROP_AR_A4R,
+  CROP_AR_A3,
+  CROP_AR_A3R,
+  CROP_AR_16_9,
+  CROP_AR_16_10
+};
+
   class CropPar: public OpParBase
   {
     Property<int> crop_left, crop_top, crop_width, crop_height;
     Property<bool> keep_ar;
+    PropertyBase ar_mode;
     Property<float> ar_width, ar_height;
 
   public:

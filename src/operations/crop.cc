@@ -38,9 +38,24 @@ PF::CropPar::CropPar():
   crop_width("crop_width",this,0),
   crop_height("crop_height",this,0),
   keep_ar("keep_ar",this,0),
+  ar_mode("ar_mode", this, PF::CROP_AR_NONE,"CROP_AR_NONE","none"),
   ar_width("ar_width",this,100),
   ar_height("ar_height",this,100)
 {
+  ar_mode.add_enum_value(PF::CROP_AR_INPUT,"CROP_AR_INPUT","orignal");
+  ar_mode.add_enum_value(PF::CROP_AR_CUSTOM,"CROP_AR_CUSTOM","custom");
+  ar_mode.add_enum_value(PF::CROP_AR_1_1,"CROP_AR_1_1","1:1");
+  ar_mode.add_enum_value(PF::CROP_AR_3_2,"CROP_AR_3_2","3:2");
+  ar_mode.add_enum_value(PF::CROP_AR_2_3,"CROP_AR_2_3","2:3");
+  ar_mode.add_enum_value(PF::CROP_AR_4_3,"CROP_AR_4_3","4:3");
+  ar_mode.add_enum_value(PF::CROP_AR_3_4,"CROP_AR_3_4","3:4");
+  ar_mode.add_enum_value(PF::CROP_AR_A4,"CROP_AR_A4","A4");
+  ar_mode.add_enum_value(PF::CROP_AR_A4R,"CROP_AR_A4R","A4R");
+  ar_mode.add_enum_value(PF::CROP_AR_A3,"CROP_AR_A3","A3");
+  ar_mode.add_enum_value(PF::CROP_AR_A3R,"CROP_AR_A3R","A3R");
+  ar_mode.add_enum_value(PF::CROP_AR_16_9,"CROP_AR_16_9","16:9");
+  ar_mode.add_enum_value(PF::CROP_AR_16_10,"CROP_AR_16_10","16:10");
+
   set_type( "crop" );
 
   set_default_name( _("crop") );

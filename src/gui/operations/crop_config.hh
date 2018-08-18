@@ -63,10 +63,13 @@ namespace PF {
   Slider cropWidthSlider;
   Slider cropHeightSlider;
   CheckBox keepARCheckBox;
+  Selector cropARmode;
   Slider cropARWidthSlider;
   Slider cropARHeightSlider;
 
   int crop_center_dx, crop_center_dy;
+  float ar;
+  bool keep_ar;
 
   void move_handle( int x, int y );
   void move_left_handle( int x, int y );
@@ -82,6 +85,8 @@ public:
 
   void open();
   bool has_editing_mode() { return true; }
+
+  void do_update();
 
   bool pointer_press_event( int button, double x, double y, int mod_key );
   bool pointer_release_event( int button, double x, double y, int mod_key );
