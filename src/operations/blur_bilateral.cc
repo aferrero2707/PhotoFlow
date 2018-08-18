@@ -141,7 +141,7 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
     std::vector<VipsImage*> in2;
     in2.clear();
     in2.push_back(extended);
-    VipsImage* splatted = bsplat->get_par()->build( in2, 0, imap, omap, level );
+    VipsImage* splatted = bsplat->get_par()->build( in2, 0, NULL, NULL, level );
     PF_UNREF( extended, "BlurBilateralPar::build(): extended unref" );
 
 
@@ -171,7 +171,7 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
     //blur->get_par()->grayscale_image( csplatted->Xsize, csplatted->Ysize );
     in2.clear();
     in2.push_back(csplatted);
-    VipsImage* blurred = blur->get_par()->build( in2, 0, imap, omap, level );
+    VipsImage* blurred = blur->get_par()->build( in2, 0, NULL, NULL, level );
     PF_UNREF( csplatted, "BlurBilateralPar::build(): csplatted unref" );
 
 
@@ -191,7 +191,7 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
     in2.clear();
     in2.push_back(blurred);
     in2.push_back(extended);
-    VipsImage* sliced = slice->get_par()->build( in2, 0, imap, omap, level );
+    VipsImage* sliced = slice->get_par()->build( in2, 0, NULL, NULL, level );
     PF_UNREF( blurred, "BlurBilateralPar::build(): splatted unref" );
     //PF_UNREF( extended, "BlurBilateralPar::build(): extended unref" );
 

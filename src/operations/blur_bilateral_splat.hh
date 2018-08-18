@@ -66,6 +66,7 @@ public:
    */
   virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
   {
+    //std::cout<<"BlurBilateralPlat: scale_x="<<scale_x<<"  scale_y="<<scale_y<<std::endl;
     rout->left = rin->left*scale_x;
     rout->top = rin->top*scale_y;
     rout->width = rin->width*scale_x;
@@ -126,14 +127,15 @@ public:
     scale_x = static_cast<float>(dt_b->size_x) / srcimg->Xsize;
     scale_y = static_cast<float>(dt_b->size_y) / srcimg->Ysize;
 
-    if( true ) {
-    std::cout<<"BlurBilateralSplatPar::build(): sigma_s="<<sigma_s<<"  ss="<<ss<<"  sr="<<sr
-        <<"  W="<<srcimg->Xsize<<"  H="<<srcimg->Ysize
-        <<"  size_x="<<dt_b->size_x<<"  size_y="<<dt_b->size_y<<"  size_z="<<dt_b->size_z
+    out = OpParBase::build( in, first, imap, omap, level );
+
+    if( false ) {
+    std::cout<<"BlurBilateralSplatPar::build(): sigma_s="<<sigma_s<<"  ss="<<ss<<"  sr="<<sr<<std::endl
+        <<"    in "<<(void*)srcimg<<" W="<<srcimg->Xsize<<", H="<<srcimg->Ysize<<std::endl
+        <<"    out "<<(void*)out<<" W="<<out->Xsize<<", H="<<out->Ysize<<std::endl
+        <<"    size_x="<<dt_b->size_x<<"  size_y="<<dt_b->size_y<<"  size_z="<<dt_b->size_z
         <<"  scale_x="<<scale_x<<"  scale_y="<<scale_y<<"  level="<<level<<std::endl;
     }
-
-    out = OpParBase::build( in, first, imap, omap, level );
 
     return out;
   }

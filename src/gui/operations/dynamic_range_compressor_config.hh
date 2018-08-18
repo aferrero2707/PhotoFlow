@@ -55,6 +55,7 @@ namespace PF {
     Slider amount_slider;
     Slider strength_s_slider, strength_h_slider;
     Slider local_contrast_slider;
+    CheckBox show_residual_box;
     CheckBox enable_equalizer_box;
     VSlider blacks_amount_slider;
     VSlider shadows_amount_slider;

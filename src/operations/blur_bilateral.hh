@@ -229,7 +229,7 @@ public:
     if(iss < 1) iss = 1;
 
     set_padding( 5*iss, id );
-    std::cout<<"BlurBilateralPar()::compute_padding(): padding="<<get_padding(id)<<std::endl;
+    //std::cout<<"BlurBilateralPar()::compute_padding(): padding="<<get_padding(id)<<std::endl;
   }
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,

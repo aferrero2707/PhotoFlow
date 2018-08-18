@@ -59,6 +59,9 @@ namespace PF
     Property<float> strength_s, strength_h;
     Property<float> local_contrast;
 
+    Property<bool> show_residual;
+    bool show_residual_;
+
     ProcessorBase* loglumi;
     ProcessorBase* bilateral;
 
@@ -85,6 +88,7 @@ namespace PF
     float get_strength_s() { return strength_s.get(); }
     float get_strength_h() { return strength_h.get(); }
     float get_local_contrast() { return local_contrast.get(); }
+    bool get_show_residual() { return show_residual_; }
 
     float get_amount() { return amount.get(); }
     bool get_equalizer_enabled() { return enable_equalizer.get(); }
@@ -166,8 +170,8 @@ namespace PF
         for( x = 0; x < width; x++, pin+=3, pout+=3, psmooth++, plog++ ) {
           //pout[0] = pin[0]; pout[1] = pin[1]; pout[2] = pin[2]; continue;
 
-          float l = (0.1*plog[0]) - 6;
-          float s = (0.1*psmooth[0]) - 6;
+          float l = ( plog[0]*(6*2+1) ) - 6;
+          float s = ( psmooth[0]*(6*2+1) ) - 6;
           //float s = (0.1*(plog[0]+psmooth[0])) - 6;
 
           diff = l - s;
@@ -175,12 +179,15 @@ namespace PF
           float gamma2 = (l>0) ? gamma_h : gamma_s;
           //double exp = s;
           //double exp = ((s * gamma) + lc*diff);
-          double exp = lc * ((s * gamma1) + diff) + lcm * l * gamma2;
+          double exp = opar->get_show_residual() ? s : ( lc * ((s * gamma1) + diff) + lcm * l * gamma2 );
 
           //out = pow( 10.0, l * gamma );
           //out = pow( 10.0, exp );
+          //out = psmooth[0];
           out = xexp10( exp );
+
           out *= bias;
+
           //out = pow( 10.0, (0.1*psmooth[0]) - 6 + diff/** gamma + diff*/ );
           //out = (((psmooth[0]-50) * gamma) + 50 + diff)/100;
           //out = (((plog[0]-50) * gamma) + 50)/100;
@@ -188,10 +195,6 @@ namespace PF
           //if( profile->is_linear() )
           //  lout = profile->perceptual2linear(out);
           //else lout = out;
-
-          //if(true && x==(width-1) && y==(r->height-1) && r->left==0 && r->top==0)
-          //  std::cout<<"L="<<L<<"  plog[0]="<<*plog<<"  psmooth[0]="<<*psmooth
-          //  <<"  l="<<l<<"  s="<<s<<"  gamma_s="<<gamma_s<<"  diff="<<diff<<"  out="<<out<<std::endl;
 
           //pout[0] = pout[1] = pout[2] = out;
 
@@ -203,8 +206,14 @@ namespace PF
             intensity = opar->get_tone_curve().get_value( ngrey ) * opar->get_amount();
           } else
             intensity = opar->get_amount();
-          const float ratio = out / L;
+          const float ratio = (L>1.0e-12) ? out / L : 0;
           pout[0] = pin[0] * ratio; pout[1] = pin[1] * ratio; pout[2] = pin[2] * ratio;
+          if(false)
+          //if(false && x==(width-1) && y==(r->height-1) && r->left==0 && r->top==0)
+            std::cout<<"L="<<L<<"  plog[0]="<<*plog<<"  psmooth[0]="<<*psmooth
+            <<"  l="<<l<<"  s="<<s<<"  gamma_s="<<gamma_s<<"  diff="<<diff<<"  out="<<out
+            <<"  ratio="<<ratio<<std::endl;
+
           /**/
         }
       }

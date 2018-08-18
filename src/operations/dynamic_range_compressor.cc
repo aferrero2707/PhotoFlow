@@ -71,7 +71,7 @@ public:
     grayscale_image( get_xsize(), get_ysize() );
 
     VipsImage* out = OpParBase::build( in, first, NULL, NULL, level );
-    printf("LogLumiPar::build(): out=%p\n", out);
+    //printf("LogLumiPar::build(): out=%p\n", out);
 
     return out;
   }
@@ -109,7 +109,7 @@ public:
     if( !profile ) return;
 
     float bias = 1.0f/profile->perceptual2linear(0.5);
-    float scale = 10; //100.f/12.f;
+    float scale = 1.f/(6*2+1); //100.f/12.f;
     //float lbias = log(bias) * inv_log_base;
 
     float L, pL;
@@ -137,6 +137,7 @@ public:
         //else pL = L;
 
         if(L <= 1.0e-6) pL = -6;
+        else if(L >= 1.0e6) pL = 6;
         //else pL = xlog10(L);
         else pL = log(L) * inv_log_base;
         if( std::isnan(pL) ) { std::cout<<"pL isnan, L="<<L<<std::endl; pL = -6; }
@@ -145,6 +146,7 @@ public:
         if(false && x<8 && y==0 && r->left==0 && r->top==0)
           std::cout<<"L="<<L<<"  pL="<<pL<<std::endl;
         //pout[0] = pout[1] = pout[2] = pL;
+        //pout[0] = L;
         pout[0] = (pL+6) * scale;
       }
     }
@@ -166,10 +168,11 @@ PF::DynamicRangeCompressorPar::DynamicRangeCompressorPar():
   whites_amount("whites_amount",this,0),
   bilateral_iterations("bilateral_iterations",this,1),
   bilateral_sigma_s("bilateral_sigma_s",this,2),
-  bilateral_sigma_r("bilateral_sigma_r",this,10),
+  bilateral_sigma_r("bilateral_sigma_r",this,5),
   strength_s("strength_s", this, 10),
   strength_h("strength_h", this, 10),
   local_contrast("local_contrast", this, 0),
+  show_residual("show_residual", this, false),
   caching(false)
 {
   loglumi = new PF::Processor<LogLumiPar,LogLumiProc>();
@@ -220,10 +223,12 @@ void PF::DynamicRangeCompressorPar::compute_padding( VipsImage* full_res, unsign
     bilateralpar->set_sigma_s( ss );
     bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
     bilateralpar->compute_padding(full_res, id, level);
-    set_padding( bilateralpar->get_padding(id), id );
-    std::cout<<"DynamicRangeCompressorPar()::compute_padding(): sigma_s="<<bilateral_sigma_s.get()
-        <<"  image size="<<MIN(full_res->Xsize, full_res->Ysize)
-        <<"  ss="<<ss<<"  level="<<level<<"  padding="<<get_padding(id)<<std::endl;
+    //set_padding( bilateralpar->get_padding(id), id );
+    set_padding( 0, id );
+    if(false)
+      std::cout<<"DynamicRangeCompressorPar()::compute_padding(): sigma_s="<<bilateral_sigma_s.get()
+      <<"  image size="<<MIN(full_res->Xsize, full_res->Ysize)
+      <<"  ss="<<ss<<"  level="<<level<<"  padding="<<get_padding(id)<<std::endl;
   }
 }
 
@@ -237,6 +242,11 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
 
   profile = PF::get_icc_profile( in[0] );
   if( !profile ) {printf("DynamicRangeCompressorPar::build(): profile==NULL\n"); return NULL;}
+
+  if( (get_render_mode() == PF_RENDER_PREVIEW) && is_editing() )
+    show_residual_ = show_residual.get();
+  else
+    show_residual_ = false;
 
   /*
   tone_curve.lock();
@@ -284,7 +294,7 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   if(logpar) {
     logpar->set_image_hints( in[0] );
     logpar->set_format( get_format() );
-    logimg = logpar->build( in, first, imap, omap, level );
+    logimg = logpar->build( in, first, NULL, NULL, level );
   }
 
   //std::cout<<"DynamicRangeCompressorPar::build(): logimg="<<logimg<<std::endl;
@@ -310,7 +320,7 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   }
   PF_UNREF( logimg, "DynamicRangeCompressorPar::build(): cropped unref" );
 
-  std::cout<<"DynamicRangeCompressorPar::build(): ts="<<ts<<std::endl;
+  //std::cout<<"DynamicRangeCompressorPar::build(): ts="<<ts<<std::endl;
 
 
   in2.clear();
@@ -322,7 +332,7 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   //bilateralpar->set_sigma_s( 0.01 * bilateral_sigma_s.get() * MIN(logimg->Xsize, logimg->Ysize) );
   //bilateralpar->set_sigma_s( bilateral_sigma_s.get() * 10 );
   bilateralpar->set_sigma_r( bilateral_sigma_r.get() );
-  smoothed = bilateralpar->build( in2, first, imap, omap, level );
+  smoothed = bilateralpar->build( in2, first, NULL, NULL, level );
   if( !smoothed ) {
     std::cout<<"DynamicRangeCompressorPar::build(): NULL local contrast enhanced image"<<std::endl;
     return NULL;
@@ -339,13 +349,16 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   in2.push_back(in[0]);
   VipsImage* out = OpParBase::build( in2, 0, imap, omap, level );
 
-  //set_image_hints(in[0]);
-  //rgb_image(in[0]->Xsize, in[0]->Ysize);
+  set_image_hints(in[0]);
+  rgb_image(in[0]->Xsize, in[0]->Ysize);
 
 #ifndef NDEBUG
   std::cout<<"DynamicRangeCompressorPar::build(): out="<<out<<std::endl;
 #endif
   PF_UNREF( smoothed, "DynamicRangeCompressorPar::build(): smoothed unref" );
+
+  //out = cached;
+  //PF_REF(out, "");
 
   return out;
 }
