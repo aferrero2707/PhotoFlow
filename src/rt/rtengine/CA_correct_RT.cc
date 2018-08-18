@@ -424,6 +424,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
         }//end of setting CA shift parameters
 
         //printf("vblock= %d hblock= %d vshift= %f hshift= %f \n",vblock,hblock,blockshifts[(vblock)*hblsz+hblock][0][0],blockshifts[(vblock)*hblsz+hblock][0][1]);
+        //printf("vblock= %d hblock= %d vshift= %f,%f hshift= %f,%f \n",vblock,hblock,lblockshifts[0][0],lblockshifts[1][0],lblockshifts[0][1],lblockshifts[1][1]);
 
         for (int c = 0; c < 3; c += 2) {
 

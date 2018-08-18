@@ -162,7 +162,7 @@ int main (int argc, char *argv[])
 
   //vips_profile_set( TRUE );
   //vips_profile_set(true);
-  //im_concurrency_set( 1 );
+  //vips_concurrency_set( 1 );
 #ifndef NDEBUG
   vips_cache_set_trace( true );
 #endif

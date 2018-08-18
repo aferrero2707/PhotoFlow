@@ -256,13 +256,13 @@ void PF::Sampler::set_values(float val[4], float lch[3], VipsInterpretation type
     ch[0] = 'C'; ch[1] = 'M'; ch[2] = 'Y'; ch[2] = 'K'; break;
   default: ch[0] = 'X'; ch[1] = 'X'; ch[2] = 'X'; ch[2] = 'X'; break;
   }
-  snprintf(tstr,499,"%c=%7.2f  L=%7.2f",ch[0], val[0], lch[0]);
+  snprintf(tstr,499,"%c=%7.2f%%  L=%7.2f",ch[0], val[0], lch[0]);
   label_value1.set_text(tstr);
-  snprintf(tstr,499,"%c=%7.2f  C=%7.2f",ch[1], val[1], lch[1]);
+  snprintf(tstr,499,"%c=%7.2f%%  C=%7.2f",ch[1], val[1], lch[1]);
   label_value2.set_text(tstr);
-  snprintf(tstr,499,"%c=%7.2f  H=%7.2f",ch[2], val[2], lch[2]);
+  snprintf(tstr,499,"%c=%7.2f%%  H=%7.2f",ch[2], val[2], lch[2]);
   label_value3.set_text(tstr);
-  snprintf(tstr,499,"%0.2f",val[3]);
+  snprintf(tstr,499,"%0.3f",val[3]);
   label_value4.set_text(tstr);
 
   snprintf(tstr,499,"L=%0.2f",lch[0]);
