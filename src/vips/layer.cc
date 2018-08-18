@@ -205,7 +205,8 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
       if( vips_region_prepare( ir[i], &s ) ) {
         printf("vips_layer_gen: %s vips_region_prepare failed.\n", layer->processor->get_par()->get_type().c_str());
         std::cout<<r->width<<"x"<<r->height<<"+"<<r->left<<"+"<<r->top;
-        std::cout<<" -> ["<<i<<"] "<<s.width<<"x"<<s.height<<"+"<<s.left<<"+"<<s.top<<std::endl;
+        std::cout<<" -> ["<<i<<"] "<<s.width<<"x"<<s.height<<"+"<<s.left<<"+"<<s.top;
+        std::cout<<"    img: "<<(void*)(ir[i]->im)<<"    "<<r_img.width<<","<<r_img.height<<std::endl;
         return( -1 );
       }
       /*
@@ -481,7 +482,8 @@ vips_layer_class_init( VipsLayerClass *klass )
 static void
 vips_layer_init( VipsLayer *layer )
 {
-  layer->in[0] = NULL;
+  for(int i = 0; i < PF_MAX_INPUT_IMAGES; i++)
+    layer->in[i] = NULL;
   layer->in_all = NULL;
 }
 

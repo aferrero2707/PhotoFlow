@@ -262,7 +262,8 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
   }
   if(n > 100) n = 100;
 #ifndef NDEBUG
-  std::cout<<"OpParBase::build("<<get_type()<<"): size = "<<get_xsize()<<"x"<<get_ysize()<<std::endl;
+  //std::cout<<"OpParBase::build("<<get_type()<<"): size = "<<get_xsize()<<"x"<<get_ysize()<<std::endl;
+  std::cout<<"OpParBase::build("<<get_type()<<"): in.size()="<<in.size()<<"  n="<<n<<std::endl;
 #endif
   switch( n ) {
   case 0:

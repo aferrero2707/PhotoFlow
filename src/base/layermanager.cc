@@ -809,7 +809,7 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Laye
     par->compute_padding( node0->image, 0, pipeline->get_level() );
     int padding = par->get_padding(0);
 
-    std::cout<<"  current layer: \""<<l->get_name()<<"\", padding="<<padding<<std::endl;
+    //std::cout<<"  current layer: \""<<l->get_name()<<"\", padding="<<padding<<std::endl;
 
     PF::PipelineNode* pnode0 = NULL;
     PF::PipelineNode* pnode = NULL;

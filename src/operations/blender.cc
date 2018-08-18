@@ -65,9 +65,9 @@ bool PF::BlenderPar::adjust_geom( VipsImage* in, VipsImage** out,
     int dx2 = (dx>0) ? dx : 0;
     int dy2 = (dy>0) ? dy : 0;
     
-    std::cout<<"in->Xsize="<<in->Xsize<<"  in->Ysize="<<in->Ysize<<std::endl;
-    std::cout<<"vips_embed(in, &image, "<<dx2<<", "<<dy2<<", "<<embed_width<<", "<<embed_height<<", NULL)"<<std::endl;
-    PF_PRINT_REF( in, "BlenderPar::shift_image(): in before embed:" );
+    //std::cout<<"in->Xsize="<<in->Xsize<<"  in->Ysize="<<in->Ysize<<std::endl;
+    //std::cout<<"vips_embed(in, &image, "<<dx2<<", "<<dy2<<", "<<embed_width<<", "<<embed_height<<", NULL)"<<std::endl;
+    //PF_PRINT_REF( in, "BlenderPar::shift_image(): in before embed:" );
     /**/
     if( vips_embed(in, &image, dx2, dy2, embed_width, embed_height, NULL) ) {
       std::cout<<"vips_embed() failed"<<std::endl;
@@ -76,8 +76,8 @@ bool PF::BlenderPar::adjust_geom( VipsImage* in, VipsImage** out,
     /**/
     //std::cout<<"image after embed: "<<image<<std::endl;
     PF_UNREF( in, "BlenderPar::shift_image(): in unref after enbed" );
-    PF_PRINT_REF( in, "BlenderPar::shift_image(): in after embed:" );
-    std::cout<<"BlenderPar::shift_image(): Image embedded"<<std::endl;
+    //PF_PRINT_REF( in, "BlenderPar::shift_image(): in after embed:" );
+    //std::cout<<"BlenderPar::shift_image(): Image embedded"<<std::endl;
   } else {
     //PF_REF( image, "BlenderPar::shift_image(): image ref before crop" );
   }
@@ -89,16 +89,16 @@ bool PF::BlenderPar::adjust_geom( VipsImage* in, VipsImage** out,
     int dx2 = (dx<0) ? -dx : 0;
     int dy2 = (dy<0) ? -dy : 0;
     
-    std::cout<<"image->Xsize="<<image->Xsize<<"  image->Ysize="<<image->Ysize<<std::endl;
-    std::cout<<"vips_crop(image, &cropped, "<<dx2<<", "<<dy2<<", "<<width<<", "<<height<<", NULL)"<<std::endl;
-    PF_PRINT_REF( image, "BlenderPar::shift_image(): image before crop:" );
+    //std::cout<<"image->Xsize="<<image->Xsize<<"  image->Ysize="<<image->Ysize<<std::endl;
+    //std::cout<<"vips_crop(image, &cropped, "<<dx2<<", "<<dy2<<", "<<width<<", "<<height<<", NULL)"<<std::endl;
+    //PF_PRINT_REF( image, "BlenderPar::shift_image(): image before crop:" );
     if( vips_crop(image, &cropped, dx2, dy2, width, height, NULL) ) {
       std::cout<<"vips_crop() failed"<<std::endl;
       return false;
     }
     PF_UNREF( image, "BlenderPar::shift_image(): image unref after crop" );
-    PF_PRINT_REF( image, "BlenderPar::shift_image(): image after crop:" );
-    std::cout<<"BlenderPar::shift_image(): Image cropped"<<std::endl;
+    //PF_PRINT_REF( image, "BlenderPar::shift_image(): image after crop:" );
+    //std::cout<<"BlenderPar::shift_image(): Image cropped"<<std::endl;
   }
   //PF_UNREF( image, "BlenderPar::shift_image(): image unref after crop" );
 
