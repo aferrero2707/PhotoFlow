@@ -79,7 +79,7 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
   std::map<Glib::ustring, RawImage*>::iterator i = 
     raw_images.find( file_name.get() );
   if( i == raw_images.end() ) {
-    std::cout<<"ImageReaderPar::build(): creating new RawImage for file "<<file_name.get()<<std::endl;
+    std::cout<<"RawLoaderPar::build(): creating new RawImage for file "<<file_name.get()<<std::endl;
     new_raw_image = new RawImage( file_name.get() );
     if( new_raw_image )
       raw_images.insert( make_pair(file_name.get(), new_raw_image) );
@@ -99,7 +99,7 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
       if( i != raw_images.end() )
         raw_images.erase( i );
       delete raw_image;
-      std::cout<<"ImageReaderPar::build(): raw_image deleted"<<std::endl;
+      std::cout<<"RawLoaderPar::build(): raw_image deleted"<<std::endl;
     }
   }
 

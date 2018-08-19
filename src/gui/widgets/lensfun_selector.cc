@@ -585,6 +585,7 @@ PF::LFSelector::LFSelector( OperationConfigGUI* dialog, std::string pname, std::
       PF::PFWidget( dialog, pname ), pname2(pn2), property2(NULL), pname3(pn3), property3(NULL)
 {
   if (!lf) {
+    std::cout<<"LFSelector::LFSelector(): creating new LF DB helper"<<std::endl;
       lf = new PF::LFDbHelper();
   }
 
