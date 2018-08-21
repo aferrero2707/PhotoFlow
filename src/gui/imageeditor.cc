@@ -713,6 +713,7 @@ void PF::ImageEditor::open_image()
   bool load_sidecar = false;
   int sidecar_id = -1;
   std::string sidecar_name[2];
+  /*
   if( !(PF::PhotoFlow::Instance().is_plugin()) ) {
     // Test the existence of a valid sidecar file
     sidecar_name[0] = filename+".pfi";
@@ -738,6 +739,7 @@ void PF::ImageEditor::open_image()
       }
     }
   }
+  */
 
   if(load_sidecar) {
     char tstr[501];
