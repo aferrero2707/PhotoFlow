@@ -147,14 +147,14 @@ PF::Image::~Image()
       delete pipelines[vi];
   }
    */
-  g_mutex_free(rebuild_mutex);
-  g_cond_free(rebuild_done);
-  g_mutex_free(export_mutex);
-  g_cond_free(export_done);
-  g_mutex_free(sample_mutex);
-  g_cond_free(sample_done);
-  g_mutex_free(remove_layer_mutex);
-  g_cond_free(remove_layer_done);
+  vips_g_mutex_free(rebuild_mutex);
+  vips_g_cond_free(rebuild_done);
+  vips_g_mutex_free(export_mutex);
+  vips_g_cond_free(export_done);
+  vips_g_mutex_free(sample_mutex);
+  vips_g_cond_free(sample_done);
+  vips_g_mutex_free(remove_layer_mutex);
+  vips_g_cond_free(remove_layer_done);
 }
 
 

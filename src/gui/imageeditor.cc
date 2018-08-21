@@ -724,17 +724,17 @@ void PF::ImageEditor::open_image()
 
     if( ext != "pfi" ) {
       for(int fi = 0; fi < 2; fi++) {
-        PF::Image* tmpimg = new PF::Image();
         if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() &&
             !load_sidecar && !sidecar_name[fi].empty() ) {
+          PF::Image* tmpimg = new PF::Image();
           std::cout<<"ImageEditor::open_image(): checking sidecar file "<<sidecar_name[fi]<<" ..."<<std::endl;
           if(  PF::load_pf_image( sidecar_name[fi], tmpimg ) ) {
             load_sidecar = true;
             sidecar_id = fi;
           }
+          delete tmpimg;
           if(load_sidecar) break;
         }
-        delete tmpimg;
       }
     }
   }
