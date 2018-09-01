@@ -709,6 +709,38 @@ void PF::LayerWidget::on_map()
 
 
 
+PF::OperationConfigGUI* PF::LayerWidget::get_selected_layer_ui()
+{
+  //int page = notebook.get_current_page();
+  int page = active_view;
+  if( page < 0 ) return NULL;
+  Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+      layer_views[page]->get_tree().get_selection();
+  int layer_id = get_selected_layer_id();
+
+  std::vector<Gtk::TreeModel::Path> selected_rows = refTreeSelection->get_selected_rows();
+  std::vector<Gtk::TreeModel::Path>::iterator row_it = selected_rows.begin();
+  if( row_it == selected_rows.end() ) {
+    return NULL;
+  }
+
+  Gtk::TreeModel::iterator iter = layer_views[page]->get_model()->get_iter( *row_it );
+  if (iter) {
+    PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
+    PF::Layer* l = (*iter)[columns.col_layer];
+    if( !l ) return NULL;
+    PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+    if( ui ) {
+      PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+      return gui;
+    }
+  }
+  return NULL;
+}
+
+
+
+
 void PF::LayerWidget::on_selection_changed()
 {
   //int page = notebook.get_current_page();
@@ -720,12 +752,12 @@ void PF::LayerWidget::on_selection_changed()
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
       layer_views[page]->get_tree().get_selection();
   /*
-  if( refTreeSelection->count_selected_rows() == 0 ) {
-    Gtk::TreeModel::Children children = layer_views[page]->get_model()->children();
-    refTreeSelection->select( children.begin() );
-    return;
-  }
-*/
+          if( refTreeSelection->count_selected_rows() == 0 ) {
+            Gtk::TreeModel::Children children = layer_views[page]->get_model()->children();
+            refTreeSelection->select( children.begin() );
+            return;
+          }
+   */
   int layer_id = get_selected_layer_id();
 #ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_changed(): selected layer id="<<layer_id<<std::endl;
@@ -783,27 +815,27 @@ void PF::LayerWidget::on_selection_changed()
 
     if( page == 0 ) {
       selected_layer_id = layer_id;
-    LayerTree* view = layer_views[1];
-    //view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) );
+      LayerTree* view = layer_views[1];
+      //view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) );
 
-    //view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) );
-    //Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = view->get_tree().get_selection();
-    //refTreeSelection->signal_changed().connect(sigc::mem_fun(*this, &PF::LayerWidget::on_selection_changed));
+      //view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) );
+      //Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = view->get_tree().get_selection();
+      //refTreeSelection->signal_changed().connect(sigc::mem_fun(*this, &PF::LayerWidget::on_selection_changed));
 
-    /*
+      /*
       Gtk::CellRendererToggle* cell =
       dynamic_cast<Gtk::CellRendererToggle*>( view->get_column_cell_renderer(0) );
       cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_cell_toggled) );
-    */
+       */
 
-    view->set_layers( &(l->get_omap_layers()) );
-    view->update_model();
-    //Widget* page = notebook.get_nth_page(-1);
-    //Gtk::Label* label = (Gtk::Label*)notebook.get_tab_label(*page);
-    //label->set_angle(90);
-    //view->show_all();
-    //notebook.set_current_page( 1 );
-    //frame->show();
+      view->set_layers( &(l->get_omap_layers()) );
+      view->update_model();
+      //Widget* page = notebook.get_nth_page(-1);
+      //Gtk::Label* label = (Gtk::Label*)notebook.get_tab_label(*page);
+      //label->set_angle(90);
+      //view->show_all();
+      //notebook.set_current_page( 1 );
+      //frame->show();
     }
 
   } else {
@@ -1630,6 +1662,7 @@ void PF::LayerWidget::add_layer( PF::Layer* layer, bool do_update )
           gui->expand();
         }
         aux_controls_group.set_control( layer, gui );
+        gui->enable_editing();
       }
       controls_group.show_all_children();
     }
@@ -1728,12 +1761,11 @@ void PF::LayerWidget::insert_preset( std::string filename )
 {
   //int page = notebook.get_current_page();
   int page = active_view;
-  if( page < 0 ) page = 0;
 
   layer_views[page]->set_tree_modified();
 
 #ifndef NDEBUG
-  std::cout<<"LayerWidget::add_layer(): layer_views.size()="<<layer_views.size()<<std::endl;
+  std::cout<<"LayerWidget::insert_preset(): layer_views.size()="<<layer_views.size()<<std::endl;
 #endif
 
   Glib::RefPtr<Gtk::TreeStore> model = layer_views[page]->get_model();
@@ -2430,9 +2462,11 @@ void PF::LayerWidget::on_switch_page(_GtkNotebookPage* page, guint page_num)
 
 bool PF::LayerWidget::on_key_press_event(GdkEventKey* event)
 {
-  //std::cout<<"LayerWidget: event->state="<<(event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK))<<std::endl;
-  //std::cout<<"  GDK_SHIFT_MASK="<<GDK_SHIFT_MASK<<std::endl;
-  //std::cout<<"  GDK_MOD2_MASK="<<GDK_MOD2_MASK<<std::endl;
+  std::cout<<"LayerWidget: event->type="<<event->type<<"  event->state="<<(event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK))<<std::endl;
+  std::cout<<"  GDK_KEY_PRESS="<<GDK_KEY_PRESS<<std::endl;
+  std::cout<<"  GDK_SHIFT_MASK="<<GDK_SHIFT_MASK<<std::endl;
+  std::cout<<"  GDK_CONTROL_MASK="<<GDK_CONTROL_MASK<<std::endl;
+  std::cout<<"  GDK_MOD2_MASK="<<GDK_MOD2_MASK<<std::endl;
   if( event->type == GDK_KEY_PRESS &&
       (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK)) == (GDK_MOD2_MASK+GDK_SHIFT_MASK) ) {
     if( event->keyval == 'N' ) {
@@ -2493,5 +2527,20 @@ bool PF::LayerWidget::on_key_press_event(GdkEventKey* event)
       return true;
     }
   }
+
+  if( event->type == GDK_KEY_PRESS &&
+      (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK)) == (GDK_CONTROL_MASK) ) {
+    if( event->keyval == 'e' ) {
+      std::cout<<"LayerWidget: Ctrl+e pressed"<<std::endl;
+      PF::OperationConfigGUI* gui = get_selected_layer_ui();
+      if( !gui ) return false;
+      if( gui->get_editing_flag() )
+        gui->disable_editing();
+      else
+        gui->enable_editing();
+      return true;
+    }
+  }
+
   return false;
 }

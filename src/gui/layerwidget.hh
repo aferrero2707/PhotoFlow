@@ -233,6 +233,8 @@ public:
   void on_button_save();
 
   void on_selection_changed();
+  OperationConfigGUI* get_selected_layer_ui();
+
 
   void on_row_activated( const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
   void on_row_expanded( const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path );

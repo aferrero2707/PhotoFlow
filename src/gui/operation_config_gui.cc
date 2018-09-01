@@ -180,7 +180,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   nameEntry.set_has_frame( false );
   frame_top_buttons_hbox.pack_start( frame_mask, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_hbox.pack_start( frame_sticky, Gtk::PACK_SHRINK, 5 );
-  //frame_top_buttons_box.pack_start( frame_edit, Gtk::PACK_SHRINK, 5 );
+  frame_top_buttons_hbox.pack_start( frame_edit, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_undo, Gtk::PACK_SHRINK, 5 );
   //frame_top_box_1_1.pack_start( frame_redo, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_hbox.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
@@ -348,7 +348,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_sticky2.signal_deactivated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::unset_sticky_cb) );
 
-  /*
+  /**/
   frame_edit.signal_activated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::enable_editing_cb) );
   frame_edit.signal_deactivated.connect(sigc::mem_fun(*this,
@@ -357,7 +357,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
         &OperationConfigGUI::enable_editing_cb) );
   frame_edit2.signal_deactivated.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::disable_editing_cb) );
-  */
+  /**/
 
   frame_reset.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::parameters_reset_cb) );
@@ -450,7 +450,7 @@ void PF::OperationConfigGUI::expand()
 
     PF::OpParBase* par = get_par();
     if( par ) {
-      par->set_editing_flag( true );
+      //par->set_editing_flag( true );
       //get_layer()->get_image()->update();
     }
 #ifndef NDEBUG
@@ -481,11 +481,12 @@ void PF::OperationConfigGUI::collapse()
 
   PF::OpParBase* par = get_par();
   if( par ) {
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"OperationConfigGUI::collapse(): resetting editing flag"<<std::endl;
-#endif
-    par->set_editing_flag( false );
-    //get_layer()->get_image()->update();
+//#endif
+    if( par->is_editing() ) {
+      disable_editing();
+    }
   }
 }
 
@@ -629,7 +630,7 @@ void PF::OperationConfigGUI::enable_editing()
 
   editor->set_edited_layer( get_layer()->get_id() );
 */
-  //std::cout<<"OperationConfigGUI::enable_editing(\""<<get_layer()->get_name()<<"\"): par->set_editing_flag( true )"<<std::endl;
+  std::cout<<"OperationConfigGUI::enable_editing(\""<<get_layer()->get_name()<<"\"): par->set_editing_flag( true )"<<std::endl;
   par->set_editing_flag( true );
 
   get_layer()->get_image()->update();
@@ -651,8 +652,8 @@ void PF::OperationConfigGUI::disable_editing()
   frame_edit.set_active( false );
   frame_edit2.set_active( false );
 
+  std::cout<<"OperationConfigGUI::disable_editing(): setting editing flag to false"<<std::endl;
   par->set_editing_flag( false );
-  //std::cout<<"  Editing flag set to false"<<std::endl;
   //std::cout<<"  updating image"<<std::endl;
   //editor->set_edited_layer( -1 );
   get_layer()->get_image()->update();
@@ -859,7 +860,7 @@ void PF::OperationConfigGUI::update_buttons()
       //frame_top_buttons_alignment.hide();
       //map_buttons.hide();
       frame_mask.hide();
-      frame_edit.hide();
+      frame_edit.show();
       frame_sticky.hide();
     } else {
       blendSelector.show();
@@ -996,6 +997,13 @@ void PF::OperationConfigGUI::do_update()
   if( get_par() ) {
     if( get_par()->get_previous_layer_is_input() ) layer_list.hide();
     else layer_list.show();
+    if( get_par()->is_editing() ) {
+      frame_edit.set_active( true );
+      frame_edit2.set_active( true );
+    } else {
+      frame_edit.set_active( false );
+      frame_edit2.set_active( false );
+    }
   }
 
   if( input_source_visible ) input_source_expander.show();
@@ -1346,8 +1354,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   if( processor ) {
     PF::OpParBase* current_op = processor->get_par();
-    if( current_op && dialog )
+    if( current_op && dialog ) {
       current_op->set_config_ui( dialog );
+      //current_op->set_editing_flag(true);
+    }
   }
 
   return processor;

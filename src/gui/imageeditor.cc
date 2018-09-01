@@ -1760,13 +1760,20 @@ bool PF::ImageEditor::my_motion_notify_event( GdkEventMotion* event )
 
 bool PF::ImageEditor::on_key_press_event(GdkEventKey* event)
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"ImageEditor::on_key_press_event() called"<<std::endl;
-#endif
+//#endif
   if( event->type == GDK_KEY_PRESS &&
       (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK)) == (GDK_MOD2_MASK+GDK_SHIFT_MASK) ) {
     if( event->keyval == 'N' ) {
-      std::cout<<"ImageEditor: Ctrl+Shift+N pressed"<<std::endl;
+      std::cout<<"ImageEditor::on_key_press_event(): Ctrl+Shift+N pressed"<<std::endl;
+    }
+  }
+
+  if( event->type == GDK_KEY_PRESS &&
+      (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK)) == (GDK_MOD2_MASK) ) {
+    if( event->keyval == 'e' ) {
+      std::cout<<"ImageEditor::on_key_press_event(): Ctrl+e pressed"<<std::endl;
     }
   }
 
