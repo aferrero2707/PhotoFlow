@@ -38,10 +38,11 @@ PF::CropPar::CropPar():
   crop_width("crop_width",this,0),
   crop_height("crop_height",this,0),
   keep_ar("keep_ar",this,0),
-  ar_mode("ar_mode", this, PF::CROP_AR_NONE,"CROP_AR_NONE","none"),
+  ar_mode("ar_mode", this, PF::CROP_AR_INPUT,"CROP_AR_INPUT","orignal"),
   ar_width("ar_width",this,100),
   ar_height("ar_height",this,100)
 {
+  ar_mode.add_enum_value(PF::CROP_AR_NONE,"CROP_AR_NONE","none");
   ar_mode.add_enum_value(PF::CROP_AR_INPUT,"CROP_AR_INPUT","orignal");
   ar_mode.add_enum_value(PF::CROP_AR_CUSTOM,"CROP_AR_CUSTOM","custom");
   ar_mode.add_enum_value(PF::CROP_AR_1_1,"CROP_AR_1_1","1:1");
@@ -73,9 +74,9 @@ VipsImage* PF::CropPar::build(std::vector<VipsImage*>& in, int first,
 	VipsImage* out;
 
   if( (get_render_mode() == PF_RENDER_PREVIEW) && is_editing() ) {
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"CropPar::build(): editing, returning source image"<<std::endl;
-#endif
+//#endif
     PF_REF( srcimg, "CropPar::build(): srcimg ref (editing mode)" );
     return srcimg;
   }
