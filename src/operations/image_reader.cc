@@ -322,7 +322,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       in_iccprof = PF::ICCStore::Instance().get_profile( data, data_length );
       if( in_iccprof ) {
         cmsHPROFILE in_profile = in_iccprof->get_profile();
-        if( in_profile ) {
+        if( false && in_profile ) {
           char tstr[1024];
           cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
           std::cout<<"ImageReader: Embedded profile found: "<<tstr<<std::endl;
@@ -333,7 +333,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       in_iccprof = PF::ICCStore::Instance().get_profile( PROF_TYPE_sRGB, PF_TRC_STANDARD );
       if( in_iccprof ) {
         cmsHPROFILE in_profile = in_iccprof->get_profile();
-        if( in_profile ) {
+        if( false && in_profile ) {
           char tstr[1024];
           cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
           std::cout<<"ImageReader: using default profile: "<<tstr<<std::endl;
@@ -345,7 +345,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     in_iccprof = PF::ICCStore::Instance().get_profile( in_profile_name.get() );
     if( in_iccprof ) {
       cmsHPROFILE in_profile = in_iccprof->get_profile();
-      if( in_profile ) {
+      if( false && in_profile ) {
         char tstr[1024];
         cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
         std::cout<<"ImageReader: custom input profile from disk: "<<tstr<<std::endl;
@@ -354,12 +354,12 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   } else {
     ptype = (profile_type_t)in_profile_type.get_enum_value().first;
     trc_type = (TRC_type)in_trc_type.get_enum_value().first;
-    std::cout<<"Getting input profile..."<<std::endl;
+    //std::cout<<"Getting input profile..."<<std::endl;
     in_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
     if( in_iccprof ) {
-      std::cout<<"... OK"<<std::endl;
+      //std::cout<<"... OK"<<std::endl;
     } else {
-      std::cout<<"... FAILED"<<std::endl;
+      std::cout<<"ImageReader: cannot load input profile"<<std::endl;
     }
   }
 
@@ -370,25 +370,25 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
     if( pmode == PF::PROF_TYPE_EMBEDDED ) {
       // do nothing
-      std::cout<<"Using embedded profile"<<std::endl;
+      //std::cout<<"Using embedded profile"<<std::endl;
       out_iccprof = in_iccprof;
     } else if( pmode == PF::PROF_TYPE_FROM_SETTINGS && in_iccprof ) {
       ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
       trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
-      std::cout<<"Getting output profile..."<<std::endl;
+      //std::cout<<"Getting output profile..."<<std::endl;
       out_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
     } else if( pmode == PF::PROF_TYPE_FROM_DISK && in_iccprof ) {
       out_iccprof = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
     } else {//if( pmode == PF::PROF_MODE_CUSTOM && in_iccprof ) {
       ptype = (profile_type_t)out_profile_type.get_enum_value().first;
       trc_type = (TRC_type)out_trc_type.get_enum_value().first;
-      std::cout<<"Getting output profile..."<<std::endl;
+      //std::cout<<"Getting output profile..."<<std::endl;
       out_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
     }
     if( out_iccprof ) {
-      std::cout<<"... OK"<<std::endl;
+      //std::cout<<"... OK"<<std::endl;
     } else {
-      std::cout<<"... FAILED"<<std::endl;
+      std::cout<<"ImageReader: cannot load output profile"<<std::endl;
     }
 
     if( in_iccprof && out_iccprof && in_iccprof->get_profile() != out_iccprof->get_profile() ) {
@@ -411,6 +411,6 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
     }
   }
 
-  PF::print_embedded_profile( out );
+  //PF::print_embedded_profile( out );
   return out;
 }
