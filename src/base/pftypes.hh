@@ -55,6 +55,23 @@ typedef cmsUInt64Number uint64_t;
 typedef cmsFloat32Number float32_t;
 typedef cmsFloat64Number float64_t;
 
+#if defined(__MINGW__) || defined(__MINGW32__) || defined(__MINGW64__)
+// Work arround to fix build issues that may occur with Mingw:
+// error: 'DBL_EPSILON' was not declared in this scope
+// error: 'FLT_EPSILON' was not declared in this scope
+
+#  ifndef LDBL_EPSILON
+#    define LDBL_EPSILON __LDBL_EPSILON__
+#  endif
+#  ifndef DBL_EPSILON
+#    define DBL_EPSILON __DBL_EPSILON__
+#  endif
+#  ifndef FLT_EPSILON
+#    define FLT_EPSILON __FLT_EPSILON__
+#  endif
+#endif
+
+
 
 namespace PF
 {
