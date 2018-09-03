@@ -583,6 +583,7 @@ void PF::CropConfigGUI::move_handle( int x, int y )
   }
   case CROP_HANDLE_TOP: {
     move_top_handle( x, y );
+    break;
   }
   case CROP_HANDLE_RIGHT: {
     //int x0 = cropLeftSlider.get_adjustment()->get_value();
