@@ -15,14 +15,14 @@ matrix:
             - travis_wait 120 sleep infinity & sudo docker pull photoflow/docker-centos7-gtk
             - rm -rf appimage
             - git clone https://github.com/aferrero2707/pf-build-appimage.git appimage
-            - sudo docker run -it -e USE_GTKMM3=OFF -v $(pwd):/sources photoflow/docker-centos7-gtk bash /sources/appimage/mkappimage.sh
+            - sudo docker run -it -e USE_GTKMM3=OFF -e TRAVIS_BRANCH=${TRAVIS_BRANCH} -e TRAVIS_COMMIT=${TRAVIS_COMMIT} -v $(pwd):/sources photoflow/docker-centos7-gtk bash /sources/appimage/mkappimage.sh
           after_success:
             - cd $TRAVIS_BUILD_DIR
             - ls -lh
-            - bash appimage/package-appimage.sh
+            #- bash appimage/package-appimage.sh
             - ls out/*
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            #- bash  ./upload_rotate.sh "continuous" out/*;
+            - bash  ./upload_rotate.sh "continuous" out/*;
         - os: linux
           dist: trusty
           compiler: g++
