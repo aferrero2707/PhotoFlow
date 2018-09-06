@@ -15,7 +15,7 @@ matrix:
             - travis_wait 120 sleep infinity & sudo docker pull photoflow/docker-centos7-gtk
             - rm -rf appimage
             - git clone https://github.com/aferrero2707/pf-build-appimage.git appimage
-            - sudo docker run -it -e USE_GTKMM3=OFF -v $(pwd):/sources photoflow/docker-centos7-gtk bash /sources/appimage/appimage-docker.sh
+            - sudo docker run -it -e USE_GTKMM3=OFF -v $(pwd):/sources photoflow/docker-centos7-gtk bash /sources/appimage/mkappimage.sh
           after_success:
             - cd $TRAVIS_BUILD_DIR
             - ls -lh
