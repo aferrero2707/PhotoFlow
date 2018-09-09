@@ -449,7 +449,8 @@ bool PF::ControlsDialog::on_key_press_event(GdkEventKey* event)
   }
 
   // Forward the event to the image editor
-  return( editor->on_key_press_event(event) );
+  //return( editor->on_key_press_event(event) );
+  return Gtk::Dialog::on_key_press_event(event);
 }
 
 
