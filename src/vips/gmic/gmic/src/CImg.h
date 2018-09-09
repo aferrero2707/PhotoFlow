@@ -32554,6 +32554,7 @@ namespace cimg_library_suffixed {
                                     guide._width,guide._height,guide._depth,guide._spectrum,guide._data);
       if (is_empty() || (!sigma_x && !sigma_y && !sigma_z)) return *this;
       T edge_min, edge_max = guide.max_min(edge_min);
+      //printf("edge_min=%f  edge_max=%f\n", (float)edge_min, (float)edge_max);
       if (edge_min==edge_max) return blur(sigma_x,sigma_y,sigma_z);
       const float
         edge_delta = (float)(edge_max - edge_min),
@@ -32616,6 +32617,7 @@ namespace cimg_library_suffixed {
         } else { // 2d version of the algorithm
           CImg<floatT> bgrid(bx,by,br,2);
           cimg_forC(*this,c) {
+            //printf("c=%d  guide._spectrum=%d\n", c, guide._spectrum);
             const CImg<t> _guide = guide.get_shared_channel(c%guide._spectrum);
             bgrid.fill(0);
             cimg_forXY(*this,x,y) {
@@ -32625,6 +32627,8 @@ namespace cimg_library_suffixed {
                 X = (int)cimg::round(x/_sampling_x) + padding_x,
                 Y = (int)cimg::round(y/_sampling_y) + padding_y,
                 R = (int)cimg::round((edge - edge_min)/_sampling_r) + padding_r;
+              //if( R < 0 ) printf("x=%d y=%d  edge=%f  edge_min=%f  _sampling_r=%f  padding_r=%f  bgrid(%d,%d,%d,0)\n",
+              //      x, y, (float)edge, (float)edge_min, (float)_sampling_r, (float)padding_r, X, Y, R);
               bgrid(X,Y,R,0)+=(float)val;
               bgrid(X,Y,R,1)+=1;
             }
