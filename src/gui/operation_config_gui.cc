@@ -630,7 +630,7 @@ void PF::OperationConfigGUI::enable_editing()
 
   editor->set_edited_layer( get_layer()->get_id() );
 */
-  std::cout<<"OperationConfigGUI::enable_editing(\""<<get_layer()->get_name()<<"\"): par->set_editing_flag( true )"<<std::endl;
+  //std::cout<<"OperationConfigGUI::enable_editing(\""<<get_layer()->get_name()<<"\"): par->set_editing_flag( true )"<<std::endl;
   par->set_editing_flag( true );
 
   get_layer()->get_image()->update();
@@ -1152,6 +1152,7 @@ void PF::OperationConfigGUI::layer2screen( gdouble& x, gdouble& y, gdouble& w, g
 {
   if(editor) editor->layer2screen( x, y, w, h);
 }
+
 
 
 

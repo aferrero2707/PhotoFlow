@@ -95,6 +95,8 @@ public:
   bool on_delete_event( GdkEventAny* any_event );
   void open();
   void close();
+
+  bool on_key_press_event(GdkEventKey* event);
 };
 
 
@@ -211,9 +213,10 @@ public:
   }
 
 
+  void controls_dialog_open(PF::Layer* l);
   void controls_dialog_show();
   void controls_dialog_hide();
-  void controls_dialog_delete(PF::OperationConfigGUI* gui);
+  void controls_dialog_delete(PF::Layer* l);
 
   //bool on_button_event( GdkEventButton* button );
 

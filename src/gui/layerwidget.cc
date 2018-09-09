@@ -320,6 +320,8 @@ PF::ControlsDialog::ControlsDialog( ImageEditor* e ): Gtk::Dialog(), editor(e), 
 {
   show_all_children();
   set_deletable ( false );
+
+  add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
 }
 
 
@@ -340,21 +342,21 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
     if( gui->has_editing_mode() ) needs_update = true;
   }
 
-  std::cout<<"ControlsDialog::set_controls(): l="<<l<<std::endl;
+  //std::cout<<"ControlsDialog::set_controls(): l="<<l<<std::endl;
   if( !l ) {if(needs_update) editor->get_image()->update(); return;}
-  std::cout<<"ControlsDialog::set_controls(): l->get_processor()="<<l->get_processor()<<std::endl;
+  //std::cout<<"ControlsDialog::set_controls(): l->get_processor()="<<l->get_processor()<<std::endl;
   if( !l->get_processor() ) {if(needs_update) editor->get_image()->update(); return;}
-  std::cout<<"ControlsDialog::set_controls(): l->get_processor()->get_par()="<<l->get_processor()->get_par()<<std::endl;
+  //std::cout<<"ControlsDialog::set_controls(): l->get_processor()->get_par()="<<l->get_processor()->get_par()<<std::endl;
   if( !l->get_processor()->get_par() ) {if(needs_update) editor->get_image()->update(); return;}
-  std::cout<<"ControlsDialog::set_controls(): l->get_processor()->get_par()->get_config_ui()="<<l->get_processor()->get_par()->get_config_ui()<<std::endl;
+  //std::cout<<"ControlsDialog::set_controls(): l->get_processor()->get_par()->get_config_ui()="<<l->get_processor()->get_par()->get_config_ui()<<std::endl;
   if( !l->get_processor()->get_par()->get_config_ui() ) {
     if(needs_update) editor->get_image()->update(); return;
   }
   PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
   gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
-  std::cout<<"ControlsDialog::set_controls(): gui="<<gui<<std::endl;
+  //std::cout<<"ControlsDialog::set_controls(): gui="<<gui<<std::endl;
   if( !gui ) {if(needs_update) editor->get_image()->update(); return;}
-  std::cout<<"ControlsDialog::set_controls(): gui->get_frame()="<<gui->get_frame()<<std::endl;
+  //std::cout<<"ControlsDialog::set_controls(): gui->get_frame()="<<gui->get_frame()<<std::endl;
   if( !gui->get_frame() ) {if(needs_update) editor->get_image()->update(); return;}
 
   gui->open();
@@ -367,7 +369,7 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
   if( gui->has_editing_mode() ) needs_update = true;
 
   Gtk::Widget* controls = gui->get_frame();
-  std::cout<<"ControlsDialog::set_controls(\""<<l->get_name()<<"\"): controls="<<controls<<std::endl;
+  //std::cout<<"ControlsDialog::set_controls(\""<<l->get_name()<<"\"): controls="<<controls<<std::endl;
   if( controls ) {
 #ifdef GTKMM_3
     get_content_area()->pack_start( *controls, Gtk::PACK_SHRINK );
@@ -379,7 +381,6 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
 
   if( needs_update || gui->has_editing_mode() )
     editor->get_image()->update();
-
 }
 
 
@@ -399,7 +400,7 @@ void PF::ControlsDialog::update()
 
 void PF::ControlsDialog::on_hide()
 {
-  std::cout<<"ControlsDialog::on_hide() called."<<std::endl;
+  //std::cout<<"ControlsDialog::on_hide() called."<<std::endl;
   get_position(x,y);
   //visible = false;
   Gtk::Dialog::on_hide();
@@ -417,7 +418,7 @@ bool PF::ControlsDialog::on_delete_event( GdkEventAny* any_event )
 
 void PF::ControlsDialog::open()
 {
-  std::cout<<"ControlsDialog::open(): x="<<x<<"  y="<<y<<std::endl;
+  //std::cout<<"ControlsDialog::open(): x="<<x<<"  y="<<y<<std::endl;
   if(x>=0 && y>=0) move(x,y);
   show();
   visible=true;
@@ -428,6 +429,29 @@ void PF::ControlsDialog::close()
   hide();
   visible=false;
 }
+
+
+bool PF::ControlsDialog::on_key_press_event(GdkEventKey* event)
+{
+  //std::cout<<"ControlsDialog: event->type="<<event->type<<"  event->state="<<(event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK))<<std::endl;
+  if( event->type == GDK_KEY_PRESS &&
+      (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK)) == (GDK_CONTROL_MASK) ) {
+    if( event->keyval == 'e' ) {
+      //std::cout<<"ControlsDialog: Ctrl+e pressed"<<std::endl;
+      if( gui ) {
+        if( gui->get_editing_flag() )
+          gui->disable_editing();
+        else
+          gui->enable_editing();
+        return true;
+      }
+    }
+  }
+
+  // Forward the event to the image editor
+  return( editor->on_key_press_event(event) );
+}
+
 
 
 
@@ -919,47 +943,15 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
-#ifndef NDEBUG
-    std::cout<<"Activated row "<<l->get_name()<<std::endl;
-#endif
+//#ifndef NDEBUG
+    std::cout<<"LayerWidget::on_row_activated: activated row "<<l->get_name()<<std::endl;
+//#endif
     if( column == layer_views[page]->get_tree().get_column(LAYER_COL_NUM) && floating_tool_dialogs ) {
       // close all dialogs
       if( l && l->get_processor() && l->get_processor()->get_par() &&
           l->get_processor()->get_par()->get_config_ui() ) {
 
-        // hide the currently opened dialog, if required in the global options
-        if( PF::PhotoFlow::Instance().get_options().get_ui_multiple_tool_dialogs() == false )
-          controls_dialog_hide();
-
-        // look for an existing dialog for the selected tool
-        PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
-        PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
-        std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i =
-            controls_dialogs.find(gui);
-        // create the dialog if not existing yet
-        PF::ControlsDialog* dialog = NULL;
-        if( i == controls_dialogs.end() ) {
-          dialog = new ControlsDialog(editor);
-          dialog->set_gravity( Gdk::GRAVITY_STATIC );
-          dialog->set_controls(l);
-          if( gui ) {
-            controls_dialogs.insert( std::make_pair(gui, dialog) );
-          }
-          Gtk::Container* toplevel = get_toplevel();
-          Gtk::Window* toplevelwin = NULL;
-  #ifdef GTKMM_2
-          if( toplevel && toplevel->is_toplevel() )
-  #endif
-  #ifdef GTKMM_3
-            if( toplevel && toplevel->get_is_toplevel() )
-  #endif
-              toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
-          if( toplevelwin ) dialog->set_transient_for(*toplevelwin);
-        } else {
-          dialog = i->second;
-        }
-        controls_dialog_visible = true;
-        dialog->open();
+        controls_dialog_open(l);
       }
     }
     if( column == layer_views[page]->get_tree().get_column(IMAP_COL_NUM) ) {
@@ -1241,6 +1233,44 @@ void PF::LayerWidget::remove_tab( Gtk::Widget* widget )
 */
 
 
+void PF::LayerWidget::controls_dialog_open(PF::Layer* l)
+{
+  // hide the currently opened dialog, if required in the global options
+  if( PF::PhotoFlow::Instance().get_options().get_ui_multiple_tool_dialogs() == false )
+    controls_dialog_hide();
+
+  // look for an existing dialog for the selected tool
+  PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+  PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
+  std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i =
+      controls_dialogs.find(gui);
+  // create the dialog if not existing yet
+  PF::ControlsDialog* dialog = NULL;
+  if( i == controls_dialogs.end() ) {
+    dialog = new ControlsDialog(editor);
+    dialog->set_gravity( Gdk::GRAVITY_STATIC );
+    dialog->set_controls(l);
+    if( gui ) {
+      controls_dialogs.insert( std::make_pair(gui, dialog) );
+    }
+    Gtk::Container* toplevel = get_toplevel();
+    Gtk::Window* toplevelwin = NULL;
+#ifdef GTKMM_2
+    if( toplevel && toplevel->is_toplevel() )
+#endif
+#ifdef GTKMM_3
+      if( toplevel && toplevel->get_is_toplevel() )
+#endif
+        toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
+    if( toplevelwin ) dialog->set_transient_for(*toplevelwin);
+  } else {
+    dialog = i->second;
+  }
+  controls_dialog_visible = true;
+  dialog->open();
+}
+
+
 void PF::LayerWidget::controls_dialog_show()
 {
   std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i;
@@ -1257,8 +1287,11 @@ void PF::LayerWidget::controls_dialog_hide()
   }
 }
 
-void PF::LayerWidget::controls_dialog_delete(PF::OperationConfigGUI* gui)
+void PF::LayerWidget::controls_dialog_delete(PF::Layer* l)
 {
+  // look for an existing dialog for the selected tool
+  PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
+  PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
   std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i =
       controls_dialogs.find(gui);
   if( i == controls_dialogs.end() ) return;
@@ -1650,19 +1683,23 @@ void PF::LayerWidget::add_layer( PF::Layer* layer, bool do_update )
     if( ui ) {
       PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
       if( gui ) {
-        if( gui->get_frame() && !floating_tool_dialogs ) {
-          controls_group.add_control( layer, gui );
-#ifndef NDEBUG
-          std::cout<<"LayerWidget::add_layer(): calling gui->open()"<<std::endl;
-#endif
-          gui->open();
-#ifndef NDEBUG
-          std::cout<<"LayerWidget::add_layer(): calling gui->expand()"<<std::endl;
-#endif
-          gui->expand();
-        }
-        aux_controls_group.set_control( layer, gui );
         gui->enable_editing();
+        aux_controls_group.set_control( layer, gui );
+        if( gui->get_frame() ) {
+          if( floating_tool_dialogs ) {
+            controls_dialog_open(layer);
+          } else {
+            controls_group.add_control( layer, gui );
+#ifndef NDEBUG
+            std::cout<<"LayerWidget::add_layer(): calling gui->open()"<<std::endl;
+#endif
+            gui->open();
+#ifndef NDEBUG
+            std::cout<<"LayerWidget::add_layer(): calling gui->expand()"<<std::endl;
+#endif
+            gui->expand();
+          }
+        }
       }
       controls_group.show_all_children();
     }
@@ -1992,6 +2029,7 @@ void PF::LayerWidget::remove_layers()
     detach_controls( l );
     //std::cout<<"Calling close_map_tabs(\""<<l->get_name()<<"\")"<<std::endl;
     //close_map_tabs( l );
+    controls_dialog_delete(l);
 
 #ifndef NDEBUG
     std::cout<<"LayerWidget::remove_layers(): calling image->remove_layer(\""<<l->get_name()<<"\")"<<std::endl;
