@@ -94,6 +94,11 @@ void PF::CropConfigGUI::do_update()
     if( node ) nimg = node->image;
     if( node ) inode = pipeline->get_node( node->input_id );
     if( inode ) inimg = inode->image;
+    //if( !node ) std::cout<<"CropConfigGUI::do_update: node is NULL (layer ID="
+    //  <<get_layer()->get_id()<<")"<<std::endl;
+    //if( !inode ) std::cout<<"CropConfigGUI::do_update: inode is NULL"<<std::endl;
+    //if( !nimg ) std::cout<<"CropConfigGUI::do_update: nimg is NULL"<<std::endl;
+    //if( !inimg ) std::cout<<"CropConfigGUI::do_update: inimg is NULL"<<std::endl;
 
     PF::OpParBase* par = get_layer()->get_processor()->get_par();
     PF::PropertyBase* p_ar_mode = par->get_property("ar_mode");
@@ -132,7 +137,9 @@ void PF::CropConfigGUI::do_update()
     int crop_height = cropHeightSlider.get_adjustment()->get_value();
     int crop_bottom = crop_top + crop_height - 1;
     int crop_right = crop_left + crop_width - 1;
-    if( crop_left==0 && crop_top==0 && crop_width==0 && crop_height==0 ) {
+    if( crop_left==0 && crop_top==0 && crop_width==0 && crop_height==0 && nimg ) {
+      //std::cout<<"CropConfigGUI::do_update: cropWidthSlider.get_adjustment()="
+      //    <<cropWidthSlider.get_adjustment()<<"  nimg="<<nimg<<std::endl;
       cropWidthSlider.get_adjustment()->set_value(nimg->Xsize);
       cropHeightSlider.get_adjustment()->set_value(nimg->Ysize);
       cropLeftSlider.set_value();
