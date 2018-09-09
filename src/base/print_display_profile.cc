@@ -33,7 +33,7 @@
 
 #include <glibmm.h>
 #include <cairo.h>
-#ifdef __APPLE___
+#ifdef __APPLE__
 #include <Carbon/Carbon.h>
 #include <ApplicationServices/ApplicationServices.h>
 #endif
@@ -41,7 +41,8 @@
 
 void PF::print_display_profile()
 {
-#ifdef __APPLE___
+#ifdef __APPLE__
+/*
   //ColorSyncProfileRef cs_prof = ColorSyncProfileCreateWithDisplayID (0);
 
   guint8 *buffer = NULL;
@@ -95,25 +96,43 @@ void PF::print_display_profile()
     CFRelease(data);
     return;
   }
-
+*/
 
   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
   if( !colorSpace ) {
     std::cout<<"Cannot get CGColorSpaceCreateDeviceRGB()"<<std::endl;
-    return;
+  } else {
+    std::cout<<"Display profile: "<<CFStringGetCStringPtr(CGColorSpaceCopyName(colorSpace),kCFStringEncodingASCII)<<std::endl;
+    CFDataRef data = CGColorSpaceCopyICCProfile(colorSpace);
+    if( !data ) {
+      std::cout<<"Display profile: cannot get CGColorSpaceCopyICCProfile()"<<std::endl;
+    } else {
+      CFIndex icc_length = CFDataGetLength(data);
+      const UInt8* icc_data = CFDataGetBytePtr(data);
+      cmsHPROFILE icc_profile = cmsOpenProfileFromMem( icc_data, icc_length );
+      char tstr[1024];
+      cmsGetProfileInfoASCII(icc_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"Display profile: "<<tstr<<std::endl;
+    }
   }
-  std::cout<<"Display profile: "<<CFStringGetCStringPtr(CGColorSpaceCopyName(colorSpace),kCFStringEncodingASCII)<<std::endl;
-  CFDataRef data = CGColorSpaceCopyICCProfile(colorSpace);
-  if( !data ) {
-    std::cout<<"Cannot get CGColorSpaceCopyICCProfile()"<<std::endl;
-    return;
+
+  colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+  if( !colorSpace ) {
+    std::cout<<"Cannot get CGColorSpaceCreateWithName(kCGColorSpaceSRGB)"<<std::endl;
+  } else {
+    std::cout<<"sRGB profile: "<<CFStringGetCStringPtr(CGColorSpaceCopyName(colorSpace),kCFStringEncodingASCII)<<std::endl;
+    CFDataRef data = CGColorSpaceCopyICCProfile(colorSpace);
+    if( !data ) {
+      std::cout<<"Cannot get CGColorSpaceCopyICCProfile()"<<std::endl;
+    } else {
+      CFIndex icc_length = CFDataGetLength(data);
+      const UInt8* icc_data = CFDataGetBytePtr(data);
+      cmsHPROFILE icc_profile = cmsOpenProfileFromMem( icc_data, icc_length );
+      char tstr[1024];
+      cmsGetProfileInfoASCII(icc_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"sRGB profile: ICC name = "<<tstr<<std::endl;
+    }
   }
-  CFIndex icc_length = CFDataGetLength(data);
-  const UInt8* icc_data = CFDataGetBytePtr(data);
-  cmsHPROFILE icc_profile = cmsOpenProfileFromMem( icc_data, icc_length );
-  char tstr[1024];
-  cmsGetProfileInfoASCII(icc_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-  std::cout<<"Display profile: "<<tstr<<std::endl;
 #endif
 }
 

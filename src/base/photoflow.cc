@@ -61,6 +61,7 @@
 #include "pf_mkstemp.hh"
 #include "imageprocessor.hh"
 #include "photoflow.hh"
+#include "print_display_profile.hh"
 
 #include "../rt/rtengine/rtlensfun.h"
 
@@ -115,6 +116,8 @@ PF::PhotoFlow::PhotoFlow():
 {
   // Create the cache directory if possible
   char fname[500];
+
+  PF::print_display_profile();
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
   char fname2[500];
