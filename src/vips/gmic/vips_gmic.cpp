@@ -176,6 +176,7 @@ template <typename T>  void vips_from_gmic(const float& in, T& out)
 template<> void vips_from_gmic(const float& val, float& out)
 {
   // clip values to [0..255]
+  out = val/255; return;
   if( val >= 0 && val <= 255 )
     out = val/255;
   else if( val < 0 )
@@ -359,6 +360,7 @@ vips_gmic_gen_template( VipsRegion *oreg,
 			gmic_image<float> &img = images._data[i];
 			img.assign( need.width, need.height, 
 				1, seq->ir[i]->im->Bands );
+			std::cout<<"img.assign("<<need.width<<", "<<need.height<<" ,1, "<<seq->ir[i]->im->Bands<<")"<<std::endl;
 			vips_to_gmic<T>( seq->ir[0], &need, &img );
 		}
 		//std::cout<<"Running G'MIC command: \""<<vipsgmic->command<<"\"  seq="<<seq<<"  gmic_instance="<<seq->gmic_instance<<std::endl;
