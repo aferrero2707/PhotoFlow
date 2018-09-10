@@ -18,16 +18,18 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "common/Common.h" // for uchar8, clampBits, isIn, isPower...
-#include <algorithm>       // for fill, min, equal
-#include <cassert>         // for assert
-#include <cstddef>         // for size_t
-#include <gtest/gtest.h>   // for make_tuple, get, IsNullLiteralHe...
-#include <limits>          // for numeric_limits
-#include <memory>          // for unique_ptr
-#include <string>          // for basic_string, string, allocator
-#include <vector>          // for vector
-// IWYU pragma: no_include <type_traits>
+#include "common/Common.h"  // for uchar8, clampBits, roundUp, isIn, isPowe...
+#include <algorithm>        // for fill, min, equal, generate_n
+#include <cassert>          // for assert
+#include <cstddef>          // for size_t
+#include <gtest/gtest.h>    // for make_tuple, get, ParamIteratorInterface
+#include <initializer_list> // for initializer_list
+#include <iterator>         // for back_inserter
+#include <limits>           // for numeric_limits
+#include <memory>           // for make_unique, unique_ptr
+#include <string>           // for string, operator==, basic_string
+#include <type_traits>      // for __decay_and_strip<>::__type
+#include <vector>           // for vector
 
 using rawspeed::clampBits;
 using rawspeed::copyPixels;
@@ -35,6 +37,7 @@ using rawspeed::getThreadCount;
 using rawspeed::isAligned;
 using rawspeed::isIn;
 using rawspeed::isPowerOfTwo;
+using rawspeed::roundDown;
 using rawspeed::roundUp;
 using rawspeed::roundUpDivision;
 using rawspeed::splitString;
@@ -73,6 +76,34 @@ INSTANTIATE_TEST_CASE_P(PowerOfTwoTest, PowerOfTwoTest,
                         ::testing::ValuesIn(powerOfTwoValues));
 TEST_P(PowerOfTwoTest, PowerOfTwoTest) {
   ASSERT_EQ(isPowerOfTwo(in), expected);
+}
+
+using RoundDownType = std::tr1::tuple<size_t, size_t, size_t>;
+class RoundDownTest : public ::testing::TestWithParam<RoundDownType> {
+protected:
+  RoundDownTest() = default;
+  virtual void SetUp() {
+    in = std::tr1::get<0>(GetParam());
+    multiple = std::tr1::get<1>(GetParam());
+    expected = std::tr1::get<2>(GetParam());
+  }
+
+  size_t in; // input
+  size_t multiple;
+  size_t expected; // expected output
+};
+static const RoundDownType RoundDownValues[] = {
+    make_tuple(0, 0, 0),    make_tuple(0, 10, 0),  make_tuple(10, 0, 10),
+    make_tuple(10, 10, 10), make_tuple(10, 1, 10), make_tuple(10, 2, 10),
+    make_tuple(10, 3, 9),   make_tuple(10, 4, 8),  make_tuple(10, 5, 10),
+    make_tuple(10, 6, 6),   make_tuple(10, 7, 7),  make_tuple(10, 8, 8),
+    make_tuple(10, 9, 9),   make_tuple(10, 11, 0), make_tuple(10, 12, 0),
+
+};
+INSTANTIATE_TEST_CASE_P(RoundDownTest, RoundDownTest,
+                        ::testing::ValuesIn(RoundDownValues));
+TEST_P(RoundDownTest, RoundDownTest) {
+  ASSERT_EQ(roundDown(in, multiple), expected);
 }
 
 using RoundUpType = std::tr1::tuple<size_t, size_t, size_t>;
@@ -245,7 +276,14 @@ INSTANTIATE_TEST_CASE_P(ClampBitsTest, ClampBitsTest,
 TEST_P(ClampBitsTest, ClampBitsTest) { ASSERT_EQ(clampBits(in, n), expected); }
 TEST(ClampBitsDeathTest, Only16Bit) {
 #ifndef NDEBUG
-  ASSERT_DEATH({ ASSERT_EQ(clampBits(0, 17), 0); }, "n <= 16");
+  ASSERT_DEATH({ ASSERT_EQ(clampBits(0, 17), 0); }, "nBits <= 16");
+#endif
+}
+
+TEST(ClampBitsUnsignedDeathTest, NoNopClamps) {
+#ifndef NDEBUG
+  ASSERT_DEATH({ ASSERT_EQ(clampBits<ushort16>(0, 16), 0); },
+               "BitWidthOfT > nBits");
 #endif
 }
 
@@ -403,7 +441,7 @@ protected:
     dst.resize((size_t)dstPitch * height);
 
     fill(src.begin(), src.end(), 0);
-    fill(dst.begin(), dst.end(), -1);
+    fill(dst.begin(), dst.end(), static_cast<decltype(dst)::value_type>(-1));
   }
   void generate() {
     uchar8 v = 0;

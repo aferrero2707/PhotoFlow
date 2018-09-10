@@ -21,12 +21,11 @@
 
 #pragma once
 
-#include "common/Common.h"                // for uint32
 #include "common/RawImage.h"              // for RawImage
 #include "decoders/AbstractTiffDecoder.h" // for AbstractTiffDecoder
-#include "tiff/TiffIFD.h"                 // for TiffRootIFDOwner
-#include <algorithm>                      // for move
+#include "tiff/TiffIFD.h"                 // for TiffRootIFD (ptr only)
 #include <string>                         // for string
+#include <utility>                        // for move
 
 namespace rawspeed {
 
@@ -46,12 +45,10 @@ public:
   void checkSupportInternal(const CameraMetaData* meta) override;
 
 protected:
-  int getDecoderVersion() const override { return 2; }
+  int getDecoderVersion() const override { return 3; }
 
 private:
   std::string guessMode();
-  uint32 offset = 0;
-  uint32 load_flags = 0;
 };
 
 } // namespace rawspeed

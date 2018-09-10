@@ -27,11 +27,8 @@
 #include "io/BitPumpMSB.h"                // for BitPumpMSB, BitStream<>::f...
 #include "io/Buffer.h"                    // for Buffer
 #include "io/ByteStream.h"                // for ByteStream
-#include "tiff/TiffEntry.h"               // for TiffEntry, ::TIFF_UNDEFINED
-#include "tiff/TiffIFD.h"                 // for TiffIFD
-#include "tiff/TiffTag.h"                 // for TiffTag
 #include <cassert>                        // for assert
-#include <vector>                         // for vector, allocator
+#include <vector>                         // for vector
 
 namespace rawspeed {
 
@@ -50,7 +47,7 @@ PentaxDecompressor::PentaxDecompressor(const RawImage& img,
     ThrowRDE("Unexpected component count / data type");
 
   if (!mRaw->dim.x || !mRaw->dim.y || mRaw->dim.x % 2 != 0 ||
-      mRaw->dim.x > 7392 || mRaw->dim.y > 4950) {
+      mRaw->dim.x > 8384 || mRaw->dim.y > 6208) {
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", mRaw->dim.x,
              mRaw->dim.y);
   }

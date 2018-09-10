@@ -21,14 +21,14 @@
 
 #pragma once
 
-#include "rawspeedconfig.h"
-#include "common/Common.h"  // for uchar8, uint32, uint64
-#include "common/Memory.h"  // for alignedFree
-#include "io/Endianness.h"  // for getByteSwapped
-#include "io/IOException.h" // for ThrowIOE
-#include <algorithm>        // for swap
-#include <cassert>          // for assert
-#include <memory>           // for unique_ptr
+#include "AddressSanitizer.h" // for ASan
+#include "common/Common.h"    // for uchar8, uint64, uint32
+#include "common/Memory.h"    // for alignedFree
+#include "io/Endianness.h"    // for Endianness, Endianness::little, getHos...
+#include "io/IOException.h"   // for ThrowIOE
+#include <cassert>            // for assert
+#include <memory>             // for unique_ptr
+#include <utility>            // for swap
 
 namespace rawspeed {
 
@@ -73,7 +73,7 @@ public:
 
   // Allocates the memory
   explicit Buffer(size_type size_) : Buffer(Create(size_), size_) {
-    assert(!ASAN_REGION_IS_POISONED(data, size));
+    assert(!ASan::RegionIsPoisoned(data, size));
   }
 
   // creates buffer from owning unique_ptr
@@ -86,18 +86,18 @@ public:
     static_assert(BUFFER_PADDING == 0, "please do make sure that you do NOT "
                                        "call this function from YOUR code, and "
                                        "then comment-out this assert.");
-    assert(!ASAN_REGION_IS_POISONED(data, size));
+    assert(!ASan::RegionIsPoisoned(data, size));
   }
 
   // creates a (non-owning) copy / view of rhs
   Buffer(const Buffer& rhs) : data(rhs.data), size(rhs.size) {
-    assert(!ASAN_REGION_IS_POISONED(data, size));
+    assert(!ASan::RegionIsPoisoned(data, size));
   }
 
   // Move data and ownership from rhs to this
   Buffer(Buffer&& rhs) noexcept
       : data(rhs.data), size(rhs.size), isOwner(rhs.isOwner) {
-    assert(!ASAN_REGION_IS_POISONED(data, size));
+    assert(!ASan::RegionIsPoisoned(data, size));
     rhs.isOwner = false;
   }
 
@@ -122,13 +122,13 @@ public:
     return getSubView(offset, newSize);
   }
 
-  // get pointer to memory at 'offset', make sure at least 'count' bytes are accessable
+  // get pointer to memory at 'offset', make sure at least 'count' bytes are accessible
   const uchar8* getData(size_type offset, size_type count) const {
     if (!isValid(offset, count))
       ThrowIOE("Buffer overflow: image file may be truncated");
 
     assert(data);
-    assert(!ASAN_REGION_IS_POISONED(data + offset, count));
+    assert(!ASan::RegionIsPoisoned(data + offset, count));
 
     return data + offset;
   }
@@ -141,12 +141,12 @@ public:
   // std begin/end iterators to allow for range loop
   const uchar8* begin() const {
     assert(data);
-    assert(!ASAN_REGION_IS_POISONED(data, 0));
+    assert(!ASan::RegionIsPoisoned(data, 0));
     return data;
   }
   const uchar8* end() const {
     assert(data);
-    assert(!ASAN_REGION_IS_POISONED(data, size));
+    assert(!ASan::RegionIsPoisoned(data, size));
     return data + size;
   }
 
@@ -159,7 +159,7 @@ public:
   }
 
   inline size_type getSize() const {
-    assert(!ASAN_REGION_IS_POISONED(data, size));
+    assert(!ASan::RegionIsPoisoned(data, size));
     return size;
   }
 
@@ -175,7 +175,7 @@ public:
 };
 
 /*
- * DataBuffer is a simple extention to Buffer. It knows about the byte order
+ * DataBuffer is a simple extension to Buffer. It knows about the byte order
  * of its contents and can therefore provide save access to larger than
  * byte sized data, like int, float, etc.
  */

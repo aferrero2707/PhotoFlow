@@ -20,27 +20,32 @@
 
 #include "rawspeedconfig.h" // for HAVE_JPEG, HAVE_ZLIB
 #include "decoders/DngDecoder.h"
-#include "common/Common.h"                         // for uint32, writeLog
+#include "common/Common.h"                         // for uint32, roundUpDi...
 #include "common/DngOpcodes.h"                     // for DngOpcodes
+#include "common/NORangesSet.h"                    // for set
 #include "common/Point.h"                          // for iPoint2D, iRectan...
 #include "common/RawspeedException.h"              // for RawspeedException
 #include "decoders/RawDecoderException.h"          // for ThrowRDE, RawDeco...
-#include "decompressors/AbstractDngDecompressor.h" // for AbstractDngDecomp...
-#include "io/Buffer.h"                             // for Buffer
+#include "decompressors/AbstractDngDecompressor.h" // for DngSliceElement
+#include "io/Buffer.h"                             // for Buffer, DataBuffer
+#include "io/ByteStream.h"                         // for ByteStream
+#include "metadata/BlackArea.h"                    // for BlackArea
 #include "metadata/Camera.h"                       // for Camera
 #include "metadata/CameraMetaData.h"               // for CameraMetaData
 #include "metadata/ColorFilterArray.h"             // for CFAColor, ColorFi...
-#include "tiff/TiffEntry.h"                        // for TiffEntry, TiffDa...
+#include "parsers/TiffParserException.h"           // for ThrowTPE
+#include "tiff/TiffEntry.h"                        // for TiffEntry, TIFF_LONG
 #include "tiff/TiffIFD.h"                          // for TiffIFD, TiffRootIFD
-#include "tiff/TiffTag.h"                          // for TiffTag::ACTIVEAREA
-#include <algorithm>                               // for move
+#include "tiff/TiffTag.h"                          // for ACTIVEAREA, TILEO...
+#include <algorithm>                               // for any_of
+#include <array>                                   // for array, array<>::v...
 #include <cassert>                                 // for assert
-#include <cstring>                                 // for memset
 #include <limits>                                  // for numeric_limits
 #include <map>                                     // for map
 #include <memory>                                  // for unique_ptr
 #include <stdexcept>                               // for out_of_range
 #include <string>                                  // for string, operator+
+#include <utility>                                 // for move, pair
 #include <vector>                                  // for vector, allocator
 
 using std::vector;
@@ -203,22 +208,7 @@ void DngDecoder::parseCFA(const TiffIFD* raw) {
   mRaw->cfa.shiftDown(aa[0]);
 }
 
-void DngDecoder::decodeData(const TiffIFD* raw, uint32 sample_format) {
-  if (compression == 8 && sample_format != 3) {
-    ThrowRDE("Only float format is supported for "
-             "deflate-compressed data.");
-  } else if ((compression == 7 || compression == 0x884c) &&
-             sample_format != 1) {
-    ThrowRDE("Only 16 bit unsigned data supported for "
-             "JPEG-compressed data.");
-  }
-
-  uint32 predictor = -1;
-  if (raw->hasEntry(PREDICTOR))
-    predictor = raw->getEntry(PREDICTOR)->getU32();
-
-  AbstractDngDecompressor slices(mRaw, compression, mFixLjpeg, bps, predictor);
-
+DngTilingDescription DngDecoder::getTilingDescription(const TiffIFD* raw) {
   if (raw->hasEntry(TILEOFFSETS)) {
     const uint32 tilew = raw->getEntry(TILEWIDTH)->getU32();
     const uint32 tileh = raw->getEntry(TILELENGTH)->getU32();
@@ -250,77 +240,85 @@ void DngDecoder::decodeData(const TiffIFD* raw, uint32 sample_format) {
                tilesX, tilesY);
     }
 
-    const uint32 nTiles = tilesX * tilesY;
-    assert(nTiles > 0);
-
-    slices.slices.reserve(nTiles);
-
-    for (uint32 y = 0; y < tilesY; y++) {
-      for (uint32 x = 0; x < tilesX; x++) {
-        const auto s = x + y * tilesX;
-        const auto offset = offsets->getU32(s);
-        const auto count = counts->getU32(s);
-
-        if (count < 1)
-          ThrowRDE("Tile %u;%u is empty", x, y);
-
-        ByteStream bs(mFile->getSubView(offset, count), 0,
-                      mRootIFD->rootBuffer.getByteOrder());
-
-        const uint32 offX = tilew * x;
-        const uint32 offY = tileh * y;
-
-        DngSliceElement e(bs, offX, offY, tilew, tileh);
-        slices.slices.emplace_back(e);
-      }
-    }
-
-    assert(slices.slices.size() == nTiles);
-  } else { // Strips
-    TiffEntry* offsets = raw->getEntry(STRIPOFFSETS);
-    TiffEntry* counts = raw->getEntry(STRIPBYTECOUNTS);
-
-    if (counts->count != offsets->count) {
-      ThrowRDE("Byte count number does not match strip size: "
-               "count:%u, stips:%u ",
-               counts->count, offsets->count);
-    }
-
-    uint32 yPerSlice = raw->hasEntry(ROWSPERSTRIP) ?
-          raw->getEntry(ROWSPERSTRIP)->getU32() : mRaw->dim.y;
-
-    if (yPerSlice == 0 || yPerSlice > static_cast<uint32>(mRaw->dim.y) ||
-        roundUpDivision(mRaw->dim.y, yPerSlice) != counts->count) {
-      ThrowRDE("Invalid y per slice %u or strip count %u (height = %u)",
-               yPerSlice, counts->count, mRaw->dim.y);
-    }
-
-    slices.slices.reserve(counts->count);
-
-    uint32 offY = 0;
-    for (uint32 s = 0; s < counts->count; s++) {
-      const auto offset = offsets->getU32(s);
-      const auto count = counts->getU32(s);
-
-      if (count < 1)
-        ThrowRDE("Slice %u is empty", s);
-
-      assert(offY < static_cast<uint32>(mRaw->dim.y));
-
-      ByteStream bs(mFile->getSubView(offset, count), 0,
-                    mRootIFD->rootBuffer.getByteOrder());
-      DngSliceElement e(bs, /*offsetX=*/0, offY, mRaw->dim.x, yPerSlice);
-
-      slices.slices.emplace_back(e);
-      offY += yPerSlice;
-    }
-
-    assert(static_cast<uint32>(mRaw->dim.y) <= offY);
-    assert(slices.slices.size() == counts->count);
+    return {mRaw->dim, tilew, tileh};
   }
 
+  // Strips
+  TiffEntry* offsets = raw->getEntry(STRIPOFFSETS);
+  TiffEntry* counts = raw->getEntry(STRIPBYTECOUNTS);
+
+  if (counts->count != offsets->count) {
+    ThrowRDE("Byte count number does not match strip size: "
+             "count:%u, stips:%u ",
+             counts->count, offsets->count);
+  }
+
+  uint32 yPerSlice = raw->hasEntry(ROWSPERSTRIP)
+                         ? raw->getEntry(ROWSPERSTRIP)->getU32()
+                         : mRaw->dim.y;
+
+  if (yPerSlice == 0 || yPerSlice > static_cast<uint32>(mRaw->dim.y) ||
+      roundUpDivision(mRaw->dim.y, yPerSlice) != counts->count) {
+    ThrowRDE("Invalid y per slice %u or strip count %u (height = %u)",
+             yPerSlice, counts->count, mRaw->dim.y);
+  }
+
+  return {mRaw->dim, static_cast<uint32>(mRaw->dim.x), yPerSlice};
+}
+
+void DngDecoder::decodeData(const TiffIFD* raw, uint32 sample_format) {
+  if (compression == 8 && sample_format != 3) {
+    ThrowRDE("Only float format is supported for "
+             "deflate-compressed data.");
+  } else if ((compression == 7 || compression == 0x884c) &&
+             sample_format != 1) {
+    ThrowRDE("Only 16 bit unsigned data supported for "
+             "JPEG-compressed data.");
+  }
+
+  uint32 predictor = -1;
+  if (raw->hasEntry(PREDICTOR))
+    predictor = raw->getEntry(PREDICTOR)->getU32();
+
+  AbstractDngDecompressor slices(mRaw, getTilingDescription(raw), compression,
+                                 mFixLjpeg, bps, predictor);
+
+  slices.slices.reserve(slices.dsc.numTiles);
+
+  TiffEntry* offsets = nullptr;
+  TiffEntry* counts = nullptr;
+  if (raw->hasEntry(TILEOFFSETS)) {
+    offsets = raw->getEntry(TILEOFFSETS);
+    counts = raw->getEntry(TILEBYTECOUNTS);
+  } else { // Strips
+    offsets = raw->getEntry(STRIPOFFSETS);
+    counts = raw->getEntry(STRIPBYTECOUNTS);
+  }
+  assert(slices.dsc.numTiles == offsets->count);
+  assert(slices.dsc.numTiles == counts->count);
+
+  NORangesSet<Buffer> tilesLegality;
+  for (auto n = 0U; n < slices.dsc.numTiles; n++) {
+    const auto offset = offsets->getU32(n);
+    const auto count = counts->getU32(n);
+
+    if (count < 1)
+      ThrowRDE("Tile %u is empty", n);
+
+    ByteStream bs(mFile->getSubView(offset, count), 0,
+                  mRootIFD->rootBuffer.getByteOrder());
+
+    if (!tilesLegality.emplace(bs).second)
+      ThrowTPE("Two tiles overlap. Raw corrupt!");
+
+    slices.slices.emplace_back(slices.dsc, n, bs);
+  }
+
+  assert(slices.slices.size() == slices.dsc.numTiles);
   if (slices.slices.empty())
     ThrowRDE("No valid slices found.");
+
+  // FIXME: should we sort the tiles, to linearize the input reading?
 
   mRaw->createData();
 
@@ -384,7 +382,7 @@ RawImage DngDecoder::decodeRawInternal() {
   mRaw->dim.x = raw->getEntry(IMAGEWIDTH)->getU32();
   mRaw->dim.y = raw->getEntry(IMAGELENGTH)->getU32();
 
-  if (mRaw->dim.x == 0 || mRaw->dim.y == 0)
+  if (!mRaw->dim.hasPositiveArea())
     ThrowRDE("Image has zero size");
 
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
@@ -485,8 +483,12 @@ void DngDecoder::handleMetadata(const TiffIFD* raw) {
   // Apply stage 1 opcodes
   if (applyStage1DngOpcodes && raw->hasEntry(OPCODELIST1)) {
     try {
-      DngOpcodes codes(mRaw, raw->getEntry(OPCODELIST1));
-      codes.applyOpCodes(mRaw);
+      TiffEntry* opcodes = raw->getEntry(OPCODELIST1);
+      // The entry might exist, but it might be empty, which means no opcodes
+      if (opcodes->count > 0) {
+        DngOpcodes codes(mRaw, opcodes);
+        codes.applyOpCodes(mRaw);
+      }
     } catch (RawDecoderException& e) {
       // We push back errors from the opcode parser, since the image may still
       // be usable
@@ -504,8 +506,13 @@ void DngDecoder::handleMetadata(const TiffIFD* raw) {
       mRaw->sixteenBitLookup();
   }
 
- // Default white level is (2 ** BitsPerSample) - 1
-  mRaw->whitePoint = (1UL << bps) - 1UL;
+  if (mRaw->getDataType() == TYPE_USHORT16) {
+    // Default white level is (2 ** BitsPerSample) - 1
+    mRaw->whitePoint = (1UL << bps) - 1UL;
+  } else if (mRaw->getDataType() == TYPE_FLOAT32) {
+    // Default white level is 1.0f. But we can't represent that here.
+    mRaw->whitePoint = 65535;
+  }
 
   if (raw->hasEntry(WHITELEVEL)) {
     TiffEntry *whitelevel = raw->getEntry(WHITELEVEL);

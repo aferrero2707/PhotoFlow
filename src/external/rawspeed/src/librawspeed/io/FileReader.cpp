@@ -20,20 +20,23 @@
 */
 
 #include "io/FileReader.h"
-#include "io/Buffer.h"          // for Buffer
-#include "io/FileIOException.h" // for FileIOException (ptr only), ThrowFIE
-#include <algorithm>            // for move
-#include <cstdio>               // for fclose, fseek, fopen, fread, ftell
+#include "io/Buffer.h"          // for Buffer, Buffer::size_type
+#include "io/FileIOException.h" // for ThrowFIE
+#include <cstdio>               // for fseek, fclose, feof, ferror, fopen
 #include <fcntl.h>              // for SEEK_END, SEEK_SET
 #include <limits>               // for numeric_limits
-#include <memory>               // for unique_ptr
-#include <type_traits>          // for make_unsigned
+#include <memory>               // for unique_ptr, make_unique, operator==
+#include <utility>              // for move
 
 #if !(defined(__unix__) || defined(__APPLE__))
+#ifndef NOMINMAX
+#define NOMINMAX // do not want the min()/max() macros!
+#endif
+
 #include "io/FileIO.h" // for widenFileName
+#include <Windows.h>
 #include <io.h>
 #include <tchar.h>
-#include <windows.h>
 #endif
 
 namespace rawspeed {
@@ -54,7 +57,7 @@ std::unique_ptr<const Buffer> FileReader::readFile() {
   if (size <= 0)
     ThrowFIE("File is 0 bytes.");
 
-  fileSize = static_cast<std::make_unsigned<decltype(size)>::type>(size);
+  fileSize = size;
 
   if (fileSize > std::numeric_limits<Buffer::size_type>::max())
     ThrowFIE("File is too big (%zu bytes).", fileSize);

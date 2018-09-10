@@ -41,7 +41,7 @@ HasselbladDecompressor::HasselbladDecompressor(const ByteStream& bs,
 
   // FIXME: could be wrong. max "active pixels" - "100 MP"
   if (mRaw->dim.x == 0 || mRaw->dim.y == 0 || mRaw->dim.x % 2 != 0 ||
-      mRaw->dim.x > 11600 || mRaw->dim.y > 8700) {
+      mRaw->dim.x > 12000 || mRaw->dim.y > 8816) {
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", mRaw->dim.x,
              mRaw->dim.y);
   }
@@ -82,8 +82,10 @@ void HasselbladDecompressor::decodeScan() {
       int len2 = ht[0]->decodeLength(bitStream);
       p1 += getBits(&bitStream, len1);
       p2 += getBits(&bitStream, len2);
-      dest[x] = p1;
-      dest[x+1] = p2;
+      // NOTE: this is rather unusual and weird, but appears to be correct.
+      // clampBits(p, 16) results in completely garbled images.
+      dest[x] = ushort16(p1);
+      dest[x + 1] = ushort16(p2);
     }
   }
   input.skipBytes(bitStream.getBufferPosition());

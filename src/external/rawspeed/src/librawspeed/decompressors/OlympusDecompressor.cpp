@@ -21,19 +21,33 @@
 */
 
 #include "decompressors/OlympusDecompressor.h"
-#include "common/Common.h"                      // for uchar8
-#include "common/Point.h"                       // for iPoint2D
-#include "common/RawImage.h"                    // for RawImage
-#include "decoders/RawDecoderException.h"       // for ThrowRDE
-#include "decompressors/AbstractDecompressor.h" // for RawDecom...
-#include "decompressors/HuffmanTable.h"         // for HuffmanTable
-#include "io/BitPumpMSB.h"                      // for BitPumpMSB
-#include <algorithm>                            // for move
-#include <algorithm>                            // for min
-#include <array>                                // for array
-#include <cmath>                                // for signbit
-#include <cstdlib>                              // for abs
-#include <memory>                               // for unique_ptr
+#include "common/Common.h"                // for uint32, ushort16, uchar8
+#include "common/Point.h"                 // for iPoint2D
+#include "common/RawImage.h"              // for RawImage, RawImageData
+#include "decoders/RawDecoderException.h" // for ThrowRDE
+#include "io/BitPumpMSB.h"                // for BitPumpMSB
+#include "io/ByteStream.h"                // for ByteStream
+#include <algorithm>                      // for min
+#include <array>                          // for array, array<>::value_type
+#include <cassert>                        // for assert
+#include <cmath>                          // for abs
+#include <cstdlib>                        // for abs
+#include <memory>                         // for unique_ptr
+#include <type_traits>                    // for enable_if_t, is_integral
+
+namespace {
+
+// Normally, we'd just use std::signbit(int) here. But, some (non-conforming?)
+// compilers do not provide that overload, so the code simply fails to compile.
+// One could cast the int to the double, but at least right now that results
+// in a horrible code. So let's just provide our own signbit(). It compiles to
+// the exact same code as the std::signbit(int).
+template <typename T, typename = std::enable_if_t<std::is_integral<T>::value>>
+constexpr __attribute__((const)) bool SignBit(T x) {
+  return x < 0;
+}
+
+} // namespace
 
 namespace rawspeed {
 
@@ -131,9 +145,10 @@ void OlympusDecompressor::decompress(ByteStream input) const {
             nw[c] = pred;
           }
         }
-        dest[x] = pred + ((diff * 4) | low);
         // Set predictor
-        left[c] = dest[x];
+        left[c] = pred + ((diff * 4) | low);
+        // Set the pixel
+        dest[x] = left[c];
       } else {
         // Have local variables for values used several tiles
         // (having a "ushort16 *dst_up" that caches dest[-pitch+((int)x)] is
@@ -142,7 +157,7 @@ void OlympusDecompressor::decompress(ByteStream input) const {
         int leftMinusNw = left[c] - nw[c];
         int upMinusNw = up - nw[c];
         // Check if sign is different, and they are both not zero
-        if ((std::signbit(leftMinusNw) ^ std::signbit(upMinusNw)) &&
+        if ((SignBit(leftMinusNw) ^ SignBit(upMinusNw)) &&
             (leftMinusNw != 0 && upMinusNw != 0)) {
           if (std::abs(leftMinusNw) > 32 || std::abs(upMinusNw) > 32)
             pred = left[c] + upMinusNw;
@@ -151,10 +166,11 @@ void OlympusDecompressor::decompress(ByteStream input) const {
         } else
           pred = std::abs(leftMinusNw) > std::abs(upMinusNw) ? left[c] : up;
 
-        dest[x] = pred + ((diff * 4) | low);
         // Set predictors
-        left[c] = dest[x];
+        left[c] = pred + ((diff * 4) | low);
         nw[c] = up;
+        // Set the pixel
+        dest[x] = left[c];
       }
 
       // ODD PIXELS
@@ -193,14 +209,17 @@ void OlympusDecompressor::decompress(ByteStream input) const {
             nw[c] = pred;
           }
         }
-        dest[x] = left[c] = pred + ((diff * 4) | low);
+        // Set predictor
+        left[c] = pred + ((diff * 4) | low);
+        // Set the pixel
+        dest[x] = left[c];
       } else {
         int up = dest[-pitch + (static_cast<int>(x))];
         int leftMinusNw = left[c] - nw[c];
         int upMinusNw = up - nw[c];
 
         // Check if sign is different, and they are both not zero
-        if ((std::signbit(leftMinusNw) ^ std::signbit(upMinusNw)) &&
+        if ((SignBit(leftMinusNw) ^ SignBit(upMinusNw)) &&
             (leftMinusNw != 0 && upMinusNw != 0)) {
           if (std::abs(leftMinusNw) > 32 || std::abs(upMinusNw) > 32)
             pred = left[c] + upMinusNw;
@@ -209,8 +228,11 @@ void OlympusDecompressor::decompress(ByteStream input) const {
         } else
           pred = std::abs(leftMinusNw) > std::abs(upMinusNw) ? left[c] : up;
 
-        dest[x] = left[c] = pred + ((diff * 4) | low);
+        // Set predictors
+        left[c] = pred + ((diff * 4) | low);
         nw[c] = up;
+        // Set the pixel
+        dest[x] = left[c];
       }
       border = y_border;
     }

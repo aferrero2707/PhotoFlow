@@ -24,23 +24,21 @@
 #include "common/Point.h"                           // for iPoint2D
 #include "common/RawspeedException.h"               // for RawspeedException
 #include "decoders/RawDecoderException.h"           // for ThrowRDE
-#include "decompressors/HuffmanTable.h"             // for HuffmanTable
 #include "decompressors/SonyArw1Decompressor.h"     // for SonyArw1Decompre...
 #include "decompressors/SonyArw2Decompressor.h"     // for SonyArw2Decompre...
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
-#include "io/BitPumpMSB.h"                          // for BitPumpMSB
 #include "io/Buffer.h"                              // for Buffer, DataBuffer
 #include "io/ByteStream.h"                          // for ByteStream
 #include "io/Endianness.h"                          // for Endianness, Endi...
-#include "io/IOException.h"                         // for IOException
 #include "metadata/Camera.h"                        // for Hints
-#include "metadata/ColorFilterArray.h"              // for CFAColor::CFA_GREEN
+#include "metadata/ColorFilterArray.h"              // for CFA_GREEN, CFA_BLUE
 #include "tiff/TiffEntry.h"                         // for TiffEntry
 #include "tiff/TiffIFD.h"                           // for TiffRootIFD, Tif...
-#include "tiff/TiffTag.h"                           // for TiffTag::DNGPRIV...
+#include "tiff/TiffTag.h"                           // for DNGPRIVATEDATA
 #include <cassert>                                  // for assert
 #include <cstring>                                  // for memcpy, size_t
 #include <memory>                                   // for unique_ptr
+#include <set>                                      // for set
 #include <string>                                   // for operator==, string
 #include <vector>                                   // for vector
 
@@ -312,7 +310,7 @@ void ArwDecoder::ParseA100WB() {
     len = bs.getU32();
     bs.check(len);
     if (!len)
-      ThrowRDE("Found entry of zero lenght, corrupt.");
+      ThrowRDE("Found entry of zero length, corrupt.");
 
     if (0x574247 != tag) { // WBG
       // not the tag we are interested in, skip
@@ -373,7 +371,7 @@ void ArwDecoder::SonyDecrypt(const uint32* ibuf, uint32* obuf, uint32 len,
 
   // Initialize the decryption pad from the key
   for (int p=0; p < 4; p++)
-    pad[p] = key = key * 48828125UL + 1UL;
+    pad[p] = key = uint32(key * 48828125UL + 1UL);
   pad[3] = pad[3] << 1 | (pad[0]^pad[2]) >> 31;
   for (int p=4; p < 127; p++)
     pad[p] = (pad[p-4]^pad[p-2]) << 1 | (pad[p-3]^pad[p-1]) >> 31;
@@ -420,22 +418,29 @@ void ArwDecoder::GetWB() {
     uint32 off = sony_offset->getU32();
 
     assert(sony_length != nullptr);
-    uint32 len = sony_length->getU32();
+    // The Decryption is done in blocks of 4 bytes.
+    uint32 len = roundDown(sony_length->getU32(), 4);
 
     assert(sony_key != nullptr);
     uint32 key = getU32LE(sony_key->getData(4));
 
     // "Decrypt" IFD
     const auto& ifd_crypt = priv->getRootIfdData();
-    auto ifd_size = ifd_crypt.getSize();
-    auto ifd_decoded = Buffer::Create(ifd_size);
+    const auto EncryptedBuffer = ifd_crypt.getSubView(off, len);
+    // We do have to prepend 'off' padding, because TIFF uses absolute offsets.
+    const auto DecryptedBufferSize = off + EncryptedBuffer.getSize();
+    auto DecryptedBuffer = Buffer::Create(DecryptedBufferSize);
 
-    SonyDecrypt(reinterpret_cast<const uint32*>(ifd_crypt.getData(off, len)),
-                reinterpret_cast<uint32*>(ifd_decoded.get() + off), len / 4,
+    SonyDecrypt(reinterpret_cast<const uint32*>(EncryptedBuffer.begin()),
+                reinterpret_cast<uint32*>(DecryptedBuffer.get() + off), len / 4,
                 key);
 
     NORangesSet<Buffer> ifds_decoded;
-    Buffer decIFD(move(ifd_decoded), ifd_size);
+    Buffer decIFD(std::move(DecryptedBuffer), DecryptedBufferSize);
+    const Buffer Padding(decIFD.getSubView(0, off));
+    // The Decrypted Root Ifd can not point to preceding padding buffer.
+    ifds_decoded.emplace(Padding);
+
     DataBuffer dbIDD(decIFD, priv->getRootIfdData().getByteOrder());
     TiffRootIFD encryptedIFD(nullptr, &ifds_decoded, dbIDD, off);
 

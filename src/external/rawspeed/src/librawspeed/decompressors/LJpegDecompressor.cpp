@@ -20,12 +20,13 @@
 */
 
 #include "decompressors/LJpegDecompressor.h"
-#include "common/Common.h"                // for uint32, unroll_loop, ushort16
+#include "common/Common.h"                // for unroll_loop, uint32, ushort16
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
-#include "io/BitPumpJPEG.h"               // for BitPumpJPEG
-#include <algorithm>                      // for min, copy_n
+#include "io/BitPumpJPEG.h"               // for BitPumpJPEG, BitStream<>::...
+#include <algorithm>                      // for copy_n
+#include <cassert>                        // for assert
 
 using std::copy_n;
 
@@ -59,6 +60,16 @@ void LJpegDecompressor::decode(uint32 offsetX, uint32 offsetY, uint32 width,
   if (offsetY >= static_cast<unsigned>(mRaw->dim.y))
     ThrowRDE("Y offset outside of image");
 
+  if (width > static_cast<unsigned>(mRaw->dim.x))
+    ThrowRDE("Tile wider than image");
+  if (height > static_cast<unsigned>(mRaw->dim.y))
+    ThrowRDE("Tile taller than image");
+
+  if (offsetX + width > static_cast<unsigned>(mRaw->dim.x))
+    ThrowRDE("Tile overflows image horizontally");
+  if (offsetY + height > static_cast<unsigned>(mRaw->dim.y))
+    ThrowRDE("Tile overflows image vertically");
+
   offX = offsetX;
   offY = offsetY;
   w = width;
@@ -71,6 +82,8 @@ void LJpegDecompressor::decode(uint32 offsetX, uint32 offsetY, uint32 width,
 
 void LJpegDecompressor::decodeScan()
 {
+  assert(frame.cps > 0);
+
   if (predictorMode != 1)
     ThrowRDE("Unsupported predictor mode: %u", predictorMode);
 
@@ -82,32 +95,62 @@ void LJpegDecompressor::decodeScan()
   if ((mRaw->getCpp() * (mRaw->dim.x - offX)) < frame.cps)
     ThrowRDE("Got less pixels than the components per sample");
 
-  const auto frameWidth = frame.cps * frame.w;
-  if (frameWidth < w || frame.h < h) {
+  // How many output pixels are we expected to produce, as per DNG tiling?
+  const auto tileRequiredWidth = mRaw->getCpp() * w;
+
+  // How many full pixel blocks do we need to consume for that?
+  const auto blocksToConsume = roundUpDivision(tileRequiredWidth, frame.cps);
+  if (frame.w < blocksToConsume || frame.h < h) {
     ThrowRDE("LJpeg frame (%u, %u) is smaller than expected (%u, %u)",
-             frameWidth, frame.h, w, h);
+             frame.cps * frame.w, frame.h, tileRequiredWidth, h);
   }
 
-  switch (frame.cps) {
-  case 2:
-    decodeN<2>();
-    break;
-  case 3:
-    decodeN<3>();
-    break;
-  case 4:
-    decodeN<4>();
-    break;
-  default:
-    ThrowRDE("Unsupported number of components: %u", frame.cps);
+  // How many full pixel blocks will we produce?
+  fullBlocks = tileRequiredWidth / frame.cps; // Truncating division!
+  // Do we need to also produce part of a block?
+  trailingPixels = tileRequiredWidth % frame.cps;
+
+  if (trailingPixels == 0) {
+    switch (frame.cps) {
+    case 1:
+      decodeN<1>();
+      break;
+    case 2:
+      decodeN<2>();
+      break;
+    case 3:
+      decodeN<3>();
+      break;
+    case 4:
+      decodeN<4>();
+      break;
+    default:
+      ThrowRDE("Unsupported number of components: %u", frame.cps);
+    }
+  } else /* trailingPixels != 0 */ {
+    // FIXME: using different function just for one tile likely causes
+    // i-cache misses and whatnot. Need to check how not splitting it into
+    // two different functions affects performance of the normal case.
+    switch (frame.cps) {
+    // Naturally can't happen for CPS=1.
+    case 2:
+      decodeN<2, /*WeirdWidth=*/true>();
+      break;
+    case 3:
+      decodeN<3, /*WeirdWidth=*/true>();
+      break;
+    case 4:
+      decodeN<4, /*WeirdWidth=*/true>();
+      break;
+    default:
+      ThrowRDE("Unsupported number of components: %u", frame.cps);
+    }
   }
 }
 
 // N_COMP == number of components (2, 3 or 4)
 
-template <int N_COMP>
-void LJpegDecompressor::decodeN()
-{
+template <int N_COMP, bool WeirdWidth> void LJpegDecompressor::decodeN() {
   assert(mRaw->getCpp() > 0);
   assert(N_COMP > 0);
   assert(N_COMP >= mRaw->getCpp());
@@ -126,9 +169,14 @@ void LJpegDecompressor::decodeN()
   // The tiles at the bottom and the right may extend beyond the dimension of
   // the raw image buffer. The excessive content has to be ignored.
 
+  assert(frame.h >= h);
+  assert(frame.cps * frame.w >= mRaw->getCpp() * w);
+
+  assert(offY + h <= static_cast<unsigned>(mRaw->dim.y));
+  assert(offX + w <= static_cast<unsigned>(mRaw->dim.x));
+
   // For y, we can simply stop decoding when we reached the border.
-  for (unsigned y = 0; y < std::min(frame.h, std::min(h, mRaw->dim.y - offY));
-       ++y) {
+  for (unsigned y = 0; y < h; ++y) {
     auto destY = offY + y;
     auto dest =
         reinterpret_cast<ushort16*>(mRaw->getDataUncropped(offX, destY));
@@ -137,17 +185,38 @@ void LJpegDecompressor::decodeN()
     // the predictor for the next line is the start of this line
     predNext = dest;
 
-    unsigned width = std::min(
-        frame.w, (mRaw->getCpp() * std::min(w, mRaw->dim.x - offX)) / N_COMP);
+    unsigned x = 0;
 
-    // For x, we first process all pixels within the image buffer ...
-    for (unsigned x = 0; x < width; ++x) {
+    // For x, we first process all full pixel blocks within the image buffer ...
+    for (; x < fullBlocks; ++x) {
       unroll_loop<N_COMP>([&](int i) {
         *dest++ = pred[i] += ht[i]->decodeNext(bitStream);
       });
     }
+
+    // Sometimes we also need to consume one more block, and produce part of it.
+    if /*constexpr*/ (WeirdWidth) {
+      // FIXME: evaluate i-cache implications due to this being compile-time.
+      static_assert(N_COMP > 1 || !WeirdWidth,
+                    "can't want part of 1-pixel-wide block");
+      // Some rather esoteric DNG's have odd dimensions, e.g. width % 2 = 1.
+      // We may end up needing just part of last N_COMP pixels.
+      assert(trailingPixels > 0);
+      assert(trailingPixels < N_COMP);
+      unsigned c = 0;
+      for (; c < trailingPixels; ++c) {
+        *dest++ = pred[c] += ht[c]->decodeNext(bitStream);
+      }
+      // Discard the rest of the block.
+      assert(c < N_COMP);
+      for (; c < N_COMP; ++c) {
+        ht[c]->decodeNext(bitStream);
+      }
+      ++x; // We did just process one more block.
+    }
+
     // ... and discard the rest.
-    for (unsigned x = width; x < frame.w; ++x) {
+    for (; x < frame.w; ++x) {
       unroll_loop<N_COMP>([&](int i) {
         ht[i]->decodeNext(bitStream);
       });

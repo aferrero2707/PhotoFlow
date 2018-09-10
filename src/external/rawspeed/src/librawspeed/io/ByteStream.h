@@ -21,15 +21,15 @@
 
 #pragma once
 
-#include "rawspeedconfig.h" // for ASAN_REGION_IS_POISONED
-#include "common/Common.h"  // for uchar8, int32, uint32, ushort16, roundUp
-#include "common/Memory.h"  // for alignedMalloc
-#include "io/Buffer.h"      // for Buffer::size_type, Buffer, DataBuffer
-#include "io/Endianness.h"  // for Endianness, Endianness::little
-#include "io/IOException.h" // for IOException (ptr only), ThrowIOE
-#include <cassert>          // for assert
-#include <cstring>          // for memcmp, memcpy
-#include <limits>           // for numeric_limits
+#include "AddressSanitizer.h" // for ASan::RegionIsPoisoned
+#include "common/Common.h"    // for uchar8, int32, uint32, ushort16, roundUp
+#include "common/Memory.h"    // for alignedMalloc
+#include "io/Buffer.h"        // for Buffer::size_type, Buffer, DataBuffer
+#include "io/Endianness.h"    // for Endianness, Endianness::little
+#include "io/IOException.h"   // for IOException (ptr only), ThrowIOE
+#include <cassert>            // for assert
+#include <cstring>            // for memcmp, memcpy
+#include <limits>             // for numeric_limits
 
 namespace rawspeed {
 
@@ -73,13 +73,13 @@ public:
   inline size_type check(size_type bytes) const {
     if (static_cast<uint64>(pos) + bytes > size)
       ThrowIOE("Out of bounds access in ByteStream");
-    assert(!ASAN_REGION_IS_POISONED(data + pos, bytes));
+    assert(!ASan::RegionIsPoisoned(data + pos, bytes));
     return bytes;
   }
 
   inline size_type check(size_type nmemb, size_type size_) const {
     if (size_ && nmemb > std::numeric_limits<size_type>::max() / size_)
-      ThrowIOE("Integer overflow when calculating stream lenght");
+      ThrowIOE("Integer overflow when calculating stream length");
     return check(nmemb * size_);
   }
 
@@ -115,7 +115,7 @@ public:
   }
   inline ByteStream peekStream(size_type nmemb, size_type size_) const {
     if (size_ && nmemb > std::numeric_limits<size_type>::max() / size_)
-      ThrowIOE("Integer overflow when calculating stream lenght");
+      ThrowIOE("Integer overflow when calculating stream length");
     return peekStream(nmemb * size_);
   }
   inline ByteStream getStream(size_type size_) {
@@ -125,7 +125,7 @@ public:
   }
   inline ByteStream getStream(size_type nmemb, size_type size_) {
     if (size_ && nmemb > std::numeric_limits<size_type>::max() / size_)
-      ThrowIOE("Integer overflow when calculating stream lenght");
+      ThrowIOE("Integer overflow when calculating stream length");
     return getStream(nmemb * size_);
   }
 

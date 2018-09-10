@@ -20,7 +20,7 @@
 
 #include "rawspeedconfig.h" // for HAVE_JPEG, HAVE_...
 #include "decompressors/AbstractDngDecompressor.h"
-#include "common/Common.h"                          // for BitOrder::BitOrd...
+#include "common/Common.h"                          // for BitOrder_LSB
 #include "common/Point.h"                           // for iPoint2D
 #include "common/RawImage.h"                        // for RawImageData
 #include "decoders/RawDecoderException.h"           // for RawDecoderException
@@ -28,11 +28,9 @@
 #include "decompressors/JpegDecompressor.h"         // for JpegDecompressor
 #include "decompressors/LJpegDecompressor.h"        // for LJpegDecompressor
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
-#include "io/Buffer.h"                              // for Buffer (ptr only)
 #include "io/ByteStream.h"                          // for ByteStream
 #include "io/Endianness.h"                          // for Endianness, Endi...
-#include "io/IOException.h"                         // for IOException
-#include "tiff/TiffIFD.h"                           // for getTiffByteOrder
+#include "io/IOException.h"                         // for IOException, Thr...
 #include <cassert>                                  // for assert
 #include <cstdio>                                   // for size_t
 #include <limits>                                   // for numeric_limits
@@ -59,20 +57,7 @@ void AbstractDngDecompressor::decompressThreaded(
 
       UncompressedDecompressor decompressor(e->bs, mRaw);
 
-      size_t thisTileLength =
-          e->offY + e->height > static_cast<uint32>(mRaw->dim.y)
-              ? mRaw->dim.y - e->offY
-              : e->height;
-
-      size_t thisTileWidth =
-          e->offX + e->width > static_cast<uint32>(mRaw->dim.x)
-              ? mRaw->dim.x - e->offX
-              : e->width;
-
-      if (thisTileLength == 0)
-        ThrowRDE("Tile is empty. Can not decode!");
-
-      iPoint2D tileSize(thisTileWidth, thisTileLength);
+      iPoint2D tileSize(e->width, e->height);
       iPoint2D pos(e->offX, e->offY);
 
       bool big_endian = e->bs.getByteOrder() == Endianness::big;
@@ -84,10 +69,10 @@ void AbstractDngDecompressor::decompressThreaded(
       try {
         const uint32 inputPixelBits = mRaw->getCpp() * mBps;
 
-        if (e->width > std::numeric_limits<int>::max() / inputPixelBits)
+        if (e->dsc.tileW > std::numeric_limits<int>::max() / inputPixelBits)
           ThrowIOE("Integer overflow when calculating input pitch");
 
-        const int inputPitchBits = inputPixelBits * e->width;
+        const int inputPitchBits = inputPixelBits * e->dsc.tileW;
         assert(inputPitchBits > 0);
 
         if (inputPitchBits % 8 != 0) {
@@ -130,7 +115,8 @@ void AbstractDngDecompressor::decompressThreaded(
 
       DeflateDecompressor z(e->bs, mRaw, mPredictor, mBps);
       try {
-        z.decode(&uBuffer, e->width, e->height, e->offX, e->offY);
+        z.decode(&uBuffer, e->dsc.tileW, e->dsc.tileH, e->width, e->height,
+                 e->offX, e->offY);
       } catch (RawDecoderException& err) {
         mRaw->setError(err.what());
       } catch (IOException& err) {

@@ -22,7 +22,9 @@
 
 #include "rawspeedconfig.h"
 
+#include <algorithm>        // for max, min
 #include <cassert>          // for assert
+#include <climits>          // for CHAR_BIT
 #include <cstdint>          // for uintptr_t
 #include <cstring>          // for memcpy, size_t
 #include <initializer_list> // for initializer_list
@@ -73,10 +75,25 @@ template <typename T> inline constexpr bool isPowerOfTwo(T val) {
 }
 
 constexpr inline size_t __attribute__((const))
+roundToMultiple(size_t value, size_t multiple, bool roundDown) {
+  if ((multiple == 0) || (value % multiple == 0))
+    return value;
+  // Drop remainder.
+  size_t roundedDown = value - (value % multiple);
+  if (roundDown) // If we were rounding down, then that's it.
+    return roundedDown;
+  // Else, just add one multiple.
+  return roundedDown + multiple;
+}
+
+constexpr inline size_t __attribute__((const))
+roundDown(size_t value, size_t multiple) {
+  return roundToMultiple(value, multiple, /*roundDown=*/true);
+}
+
+constexpr inline size_t __attribute__((const))
 roundUp(size_t value, size_t multiple) {
-  return ((multiple == 0) || (value % multiple == 0))
-             ? value
-             : value + multiple - (value % multiple);
+  return roundToMultiple(value, multiple, /*roundDown=*/false);
 }
 
 constexpr inline size_t __attribute__((const))
@@ -122,13 +139,34 @@ inline uint32 getThreadCount()
 #endif
 }
 
-// clampBits clamps the given int to the range 0 .. 2^n-1, with n <= 16
-inline ushort16 __attribute__((const)) clampBits(int x, uint32 n) {
-  assert(n <= 16);
-  const int tmp = (1 << n) - 1;
-  x = x < 0 ? 0 : x;
-  x = x > tmp ? tmp : x;
-  return x;
+// Clamps the given unsigned value to the range 0 .. 2^n-1, with n <= 16
+template <class T>
+inline constexpr __attribute__((const)) ushort16 clampBits(
+    T value, unsigned int nBits,
+    typename std::enable_if<std::is_unsigned<T>::value>::type* /*unused*/ =
+        nullptr) {
+  // We expect to produce ushort16.
+  assert(nBits <= 16);
+  // Check that the clamp is not a no-op. Not of ushort16 to 16 bits e.g.
+  // (Well, not really, if we are called from clampBits<signed>, it's ok..).
+  constexpr auto BitWidthOfT = CHAR_BIT * sizeof(T);
+  (void)BitWidthOfT;
+  assert(BitWidthOfT > nBits); // If nBits >= BitWidthOfT, then shift is UB.
+  const T maxVal = (T(1) << nBits) - T(1);
+  return std::min(value, maxVal);
+}
+
+// Clamps the given signed value to the range 0 .. 2^n-1, with n <= 16
+template <typename T>
+inline constexpr ushort16 __attribute__((const))
+clampBits(T value, unsigned int nBits,
+          typename std::enable_if<std::is_signed<T>::value>::type* /*unused*/ =
+              nullptr) {
+  // If the value is negative, clamp it to zero.
+  value = std::max(value, T(0));
+  // Now, let the unsigned case clamp to the upper limit.
+  using UnsignedT = typename std::make_unsigned<T>::type;
+  return clampBits<UnsignedT>(value, nBits);
 }
 
 // Trim both leading and trailing spaces from the string

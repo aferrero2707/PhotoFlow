@@ -19,16 +19,17 @@
 */
 
 #include "decompressors/NikonDecompressor.h"
-#include "common/Common.h"                // for uint32, ushort16, clampBits
+#include "common/Common.h"                // for uint32, clampBits, ushort16
 #include "common/Point.h"                 // for iPoint2D
-#include "common/RawImage.h"              // for RawImage, RawImageData, RawI...
+#include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "decompressors/HuffmanTable.h"   // for HuffmanTable
-#include "io/BitPumpMSB.h"                // for BitPumpMSB, BitStream<>::fil...
+#include "io/BitPumpMSB.h"                // for BitPumpMSB, BitStream<>::f...
 #include "io/Buffer.h"                    // for Buffer
 #include "io/ByteStream.h"                // for ByteStream
-#include <cstdio>                         // for size_t, NULL
-#include <vector>                         // for vector, allocator
+#include <cassert>                        // for assert
+#include <cstdio>                         // for size_t
+#include <vector>                         // for vector
 
 namespace rawspeed {
 
@@ -58,9 +59,9 @@ std::vector<ushort16> NikonDecompressor::createCurve(ByteStream* metadata,
                                                      uint32 bitsPS, uint32 v0,
                                                      uint32 v1, uint32* split) {
   // 'curve' will hold a peace wise linearly interpolated function.
-  // there are 'csize' segements, each is 'step' values long.
+  // there are 'csize' segments, each is 'step' values long.
   // the very last value is not part of the used table but necessary
-  // to linearly interpolate the last segment, therefor the '+1/-1'
+  // to linearly interpolate the last segment, therefore the '+1/-1'
   // size adjustments of 'curve'.
   std::vector<ushort16> curve((1 << bitsPS & 0x7fff) + 1);
   assert(curve.size() > 1);
@@ -114,15 +115,17 @@ std::vector<ushort16> NikonDecompressor::createCurve(ByteStream* metadata,
   return curve;
 }
 
-HuffmanTable NikonDecompressor::createHuffmanTable(uint32 huffSelect) {
-  HuffmanTable ht;
+template <typename Huffman>
+Huffman NikonDecompressor::createHuffmanTable(uint32 huffSelect) {
+  Huffman ht;
   uint32 count = ht.setNCodesPerLength(Buffer(nikon_tree[huffSelect][0], 16));
   ht.setCodeValues(Buffer(nikon_tree[huffSelect][1], count));
   ht.setup(true, false);
   return ht;
 }
 
-NikonDecompressor::NikonDecompressor(const RawImage& raw, uint32 bitsPS_)
+NikonDecompressor::NikonDecompressor(const RawImage& raw, ByteStream metadata,
+                                     uint32 bitsPS_)
     : mRaw(raw), bitsPS(bitsPS_) {
   if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
       mRaw->getBpp() != 2)
@@ -140,18 +143,9 @@ NikonDecompressor::NikonDecompressor(const RawImage& raw, uint32 bitsPS_)
   default:
     ThrowRDE("Invalid bpp found: %u", bitsPS);
   }
-}
-
-void NikonDecompressor::decompress(ByteStream metadata, const ByteStream& data,
-                                   bool uncorrectedRawValues) {
-  const iPoint2D& size = mRaw->dim;
 
   uint32 v0 = metadata.getByte();
   uint32 v1 = metadata.getByte();
-  uint32 huffSelect = 0;
-  uint32 split = 0;
-  int pUp1[2];
-  int pUp2[2];
 
   writeLog(DEBUG_PRIO_EXTRA, "Nef version v0:%u, v1:%u", v0, v1);
 
@@ -168,33 +162,39 @@ void NikonDecompressor::decompress(ByteStream metadata, const ByteStream& data,
   pUp2[0] = metadata.getU16();
   pUp2[1] = metadata.getU16();
 
-  HuffmanTable ht = createHuffmanTable(huffSelect);
+  curve = createCurve(&metadata, bitsPS, v0, v1, &split);
 
-  auto curve = createCurve(&metadata, bitsPS, v0, v1, &split);
-  RawImageCurveGuard curveHandler(&mRaw, curve, uncorrectedRawValues);
+  // If the 'split' happens outside of the image, it does not actually happen.
+  if (split >= static_cast<unsigned>(mRaw->dim.y))
+    split = 0;
 
-  BitPumpMSB bits(data);
+  if (split)
+    ThrowRDE("Nikon %i-bit lossy-after-split raws are still broken.", bitsPS);
+}
+
+template <typename Huffman>
+void NikonDecompressor::decompress(BitPumpMSB* bits, int start_y, int end_y) {
+  Huffman ht = createHuffmanTable<Huffman>(huffSelect);
+
   uchar8* draw = mRaw->getData();
   uint32 pitch = mRaw->pitch;
 
   int pLeft1 = 0;
   int pLeft2 = 0;
-  uint32 random = bits.peekBits(24);
-  //allow gcc to devirtualize the calls below
+
+  // allow gcc to devirtualize the calls below
   auto* rawdata = reinterpret_cast<RawImageDataU16*>(mRaw.get());
 
+  const iPoint2D& size = mRaw->dim;
   assert(size.x % 2 == 0);
   assert(size.x >= 2);
-  for (uint32 y = 0; y < static_cast<unsigned>(size.y); y++) {
-    if (split && y == split) {
-      ht = createHuffmanTable(huffSelect + 1);
-    }
+  for (uint32 y = start_y; y < static_cast<uint32>(end_y); y++) {
     auto* dest =
         reinterpret_cast<ushort16*>(&draw[y * pitch]); // Adjust destination
-    pUp1[y&1] += ht.decodeNext(bits);
-    pUp2[y&1] += ht.decodeNext(bits);
-    pLeft1 = pUp1[y&1];
-    pLeft2 = pUp2[y&1];
+    pUp1[y & 1] += ht.decodeNext(*bits);
+    pUp2[y & 1] += ht.decodeNext(*bits);
+    pLeft1 = pUp1[y & 1];
+    pLeft2 = pUp2[y & 1];
 
     rawdata->setWithLookUp(clampBits(pLeft1, 15),
                            reinterpret_cast<uchar8*>(dest + 0), &random);
@@ -204,8 +204,8 @@ void NikonDecompressor::decompress(ByteStream metadata, const ByteStream& data,
     dest += 2;
 
     for (uint32 x = 2; x < static_cast<uint32>(size.x); x += 2) {
-      pLeft1 += ht.decodeNext(bits);
-      pLeft2 += ht.decodeNext(bits);
+      pLeft1 += ht.decodeNext(*bits);
+      pLeft2 += ht.decodeNext(*bits);
 
       rawdata->setWithLookUp(clampBits(pLeft1, 15),
                              reinterpret_cast<uchar8*>(dest + 0), &random);
@@ -215,6 +215,19 @@ void NikonDecompressor::decompress(ByteStream metadata, const ByteStream& data,
       dest += 2;
     }
   }
+}
+
+void NikonDecompressor::decompress(const ByteStream& data,
+                                   bool uncorrectedRawValues) {
+  RawImageCurveGuard curveHandler(&mRaw, curve, uncorrectedRawValues);
+
+  BitPumpMSB bits(data);
+
+  random = bits.peekBits(24);
+
+  assert(!split);
+
+  decompress<HuffmanTable>(&bits, 0, mRaw->dim.y);
 }
 
 } // namespace rawspeed

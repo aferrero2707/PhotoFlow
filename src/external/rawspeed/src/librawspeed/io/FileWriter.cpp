@@ -25,10 +25,14 @@
 #include <cstdio>               // for fclose, fopen, fwrite, FILE, NULL
 
 #if !defined(__unix__) && !defined(__APPLE__)
+#ifndef NOMINMAX
+#define NOMINMAX // do not want the min()/max() macros!
+#endif
+
 #include "io/FileIO.h" // for widenFileName
+#include <Windows.h>
 #include <io.h>
 #include <tchar.h>
-#include <windows.h>
 #endif // !defined(__unix__) && !defined(__APPLE__)
 
 namespace rawspeed {

@@ -29,6 +29,11 @@ set (CLANG_DISABLED_WARNING_FLAGS
   "zero-as-null-pointer-constant" # temporary
 )
 
+# Yes, these have to be *re-enabled* after CLANG_DISABLED_WARNING_FLAGS.
+set (CLANG_REENABLED_WARNING_FLAGS
+  "extra-semi"
+)
+
 set(CMAKE_REQUIRED_FLAGS_ORIG "${CMAKE_REQUIRED_FLAGS}")
 set(CMAKE_REQUIRED_FLAGS "-c -Wunreachable-code -Werror=unreachable-code")
 # see https://reviews.llvm.org/D25321
@@ -49,6 +54,8 @@ endif()
 if(NOT (UNIX OR APPLE))
   # bogus warnings about std functions...
   list(APPEND CLANG_DISABLED_WARNING_FLAGS "used-but-marked-unused")
+  # just don't care.
+  list(APPEND CLANG_DISABLED_WARNING_FLAGS "nonportable-system-include-path")
 endif()
 
 foreach(warning ${CLANG_WARNING_FLAGS})
@@ -57,4 +64,8 @@ endforeach()
 
 foreach(warning ${CLANG_DISABLED_WARNING_FLAGS})
   CHECK_CXX_COMPILER_FLAG_AND_ENABLE_IT(-Wno-${warning})
+endforeach()
+
+foreach(warning ${CLANG_REENABLED_WARNING_FLAGS})
+  CHECK_CXX_COMPILER_FLAG_AND_ENABLE_IT(-W${warning})
 endforeach()

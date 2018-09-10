@@ -21,18 +21,20 @@
 */
 
 #include "decompressors/Cr2Decompressor.h"
-#include "common/Common.h"                // for uint32, unroll_loop, ushort16
-#include "common/Point.h"                 // for iPoint2D
+#include "common/Common.h"                // for unroll_loop, uint32, ushort16
+#include "common/Point.h"                 // for iPoint2D, iPoint2D::area_type
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
-#include "io/BitPumpJPEG.h"               // for BitPumpJPEG
-#include <algorithm>                      // for move, copy_n
+#include "io/BitPumpJPEG.h"               // for BitPumpJPEG, BitStream<>::...
+#include <algorithm>                      // for copy_n
 #include <cassert>                        // for assert
-#include <numeric>                        // for accumulate
+#include <initializer_list>               // for initializer_list
 
 using std::copy_n;
 
 namespace rawspeed {
+
+class ByteStream;
 
 Cr2Decompressor::Cr2Decompressor(const ByteStream& bs, const RawImage& img)
     : AbstractLJpegDecompressor(bs, img) {
@@ -55,12 +57,13 @@ void Cr2Decompressor::decodeScan()
   if (predictorMode != 1)
     ThrowRDE("Unsupported predictor mode.");
 
-  if (slicesWidths.empty()) {
+  if (slicing.empty()) {
     const int slicesWidth = frame.w * frame.cps;
     if (slicesWidth > mRaw->dim.x)
       ThrowRDE("Don't know slicing pattern, and failed to guess it.");
 
-    slicesWidths.push_back(slicesWidth);
+    slicing = Cr2Slicing(/*numSlices=*/1, /*sliceWidth=don't care*/ 0,
+                         /*lastSliceWidth=*/slicesWidth);
   }
 
   bool isSubSampled = false;
@@ -115,9 +118,14 @@ void Cr2Decompressor::decodeScan()
   }
 }
 
-void Cr2Decompressor::decode(std::vector<int> slicesWidths_)
-{
-  slicesWidths = move(slicesWidths_);
+void Cr2Decompressor::decode(const Cr2Slicing& slicing_) {
+  slicing = slicing_;
+  for (auto sliceId = 0; sliceId < slicing.numSlices; sliceId++) {
+    const auto sliceWidth = slicing.widthOfSlice(sliceId);
+    if (sliceWidth <= 0)
+      ThrowRDE("Bad slice width: %i", sliceWidth);
+  }
+
   AbstractLJpegDecompressor::decode();
 }
 
@@ -158,26 +166,29 @@ void Cr2Decompressor::decodeN_X_Y()
   if (X_S_F == 2 && Y_S_F == 1)
   {
     // fix the inconsistent slice width in sRaw mode, ask Canon.
-    for (auto& sliceWidth : slicesWidths)
-      sliceWidth = sliceWidth * 3 / 2;
+    for (auto* width : {&slicing.sliceWidth, &slicing.lastSliceWidth})
+      *width = (*width) * 3 / 2;
   }
 
-  for (const auto& slicesWidth : slicesWidths) {
-    if (slicesWidth > mRaw->dim.x)
+  for (const auto& width : {slicing.sliceWidth, slicing.lastSliceWidth}) {
+    if (width > mRaw->dim.x)
       ThrowRDE("Slice is longer than image's height, which is unsupported.");
-    if (slicesWidth % xStepSize != 0) {
+    if (width % xStepSize != 0) {
       ThrowRDE("Slice width (%u) should be multiple of pixel group size (%u)",
-               slicesWidth, xStepSize);
+               width, xStepSize);
     }
   }
 
-  if (frame.h * std::accumulate(slicesWidths.begin(), slicesWidths.end(), 0) <
-      mRaw->dim.area())
+  if (iPoint2D::area_type(frame.h) * slicing.totalWidth() <
+      mRaw->getCpp() * mRaw->dim.area())
     ThrowRDE("Incorrrect slice height / slice widths! Less than image size.");
 
   unsigned processedPixels = 0;
   unsigned processedLineSlices = 0;
-  for (unsigned sliceWidth : slicesWidths) {
+  for (auto sliceId = 0; sliceId < slicing.numSlices; sliceId++) {
+    const unsigned sliceWidth = slicing.widthOfSlice(sliceId);
+
+    assert(frame.h % yStepSize == 0);
     for (unsigned y = 0; y < frame.h; y += yStepSize) {
       // Fix for Canon 80D mraw format.
       // In that format, `frame` is 4032x3402, while `mRaw` is 4536x3024.
@@ -186,14 +197,23 @@ void Cr2Decompressor::decodeN_X_Y()
       // Those would overflow, hence the break.
       // see FIX_CANON_FRAME_VS_IMAGE_SIZE_MISMATCH
       unsigned destY = processedLineSlices % mRaw->dim.y;
-      unsigned destX =
-          processedLineSlices / mRaw->dim.y * slicesWidths[0] / mRaw->getCpp();
+      unsigned destX = processedLineSlices / mRaw->dim.y *
+                       slicing.widthOfSlice(0) / mRaw->getCpp();
       if (destX >= static_cast<unsigned>(mRaw->dim.x))
         break;
       auto dest =
           reinterpret_cast<ushort16*>(mRaw->getDataUncropped(destX, destY));
 
       assert(sliceWidth % xStepSize == 0);
+      if (X_S_F == 1) {
+        if (destX + sliceWidth > static_cast<unsigned>(mRaw->dim.x))
+          ThrowRDE("Bad slice width / frame size / image size combination.");
+        if (((sliceId + 1) == slicing.numSlices) &&
+            ((destX + sliceWidth) < static_cast<unsigned>(mRaw->dim.x)))
+          ThrowRDE("Unsufficient slices - do not fill the entire image");
+      } else {
+        // FIXME.
+      }
       for (unsigned x = 0; x < sliceWidth; x += xStepSize) {
         // check if we processed one full raw row worth of pixels
         if (processedPixels == frame.w) {

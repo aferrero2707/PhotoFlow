@@ -1,3 +1,7 @@
+if(NOT BUILD_TESTING)
+  set_directory_properties(PROPERTIES EXCLUDE_FROM_ALL ON)
+endif()
+
 add_executable(rstest rstest.cpp md5.cpp)
 target_link_libraries(rstest rawspeed)
 
@@ -42,6 +46,6 @@ if(BUILD_BENCHMARKING)
   add_dependencies(benchmarks MD5Benchmark)
 endif()
 
-if(ENABLE_SAMPLEBASED_TESTING)
+if(RAWSPEED_ENABLE_SAMPLE_BASED_TESTING)
   include(sample-based-testing)
 endif()

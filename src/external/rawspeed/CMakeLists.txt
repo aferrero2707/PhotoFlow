@@ -39,7 +39,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(BINARY_PACKAGE_BUILD "Sets march optimization to generic" OFF)
-option(WITH_SSE2 "If SSE2 support is avaliable, do build SSE2 codepaths" ON)
+option(WITH_SSE2 "If SSE2 support is available, do build SSE2 codepaths" ON)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   option(RAWSPEED_USE_LIBCXX "(Clang only) Build using libc++ as the standard library." OFF)
 
@@ -51,6 +51,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL
 else()
   set(RAWSPEED_USE_LIBCXX OFF CACHE BOOL "(Clang only) Build using libc++ as the standard library." FORCE)
 endif()
+option(RAWSPEED_ENABLE_DEBUG_INFO "Whether to generate debug info or not." ON)
 option(WITH_PTHREADS "Enable threading support through pthread. Highly recommended" ON)
 option(WITH_OPENMP "Enable OpenMP support. Only used for tools, not the library itself." ON)
 option(WITH_PUGIXML "Enable XML support for cameras.xml reading" ON)
@@ -94,10 +95,10 @@ else()
 endif()
 option(BUILD_DOCS "Build the documentation (Sphinx+Doxygen)." OFF)
 option(BUILD_FUZZERS "Build the fuzzing tree." ON)
-if(BUILD_TOOLS AND BUILD_TESTING)
-  option(ENABLE_SAMPLEBASED_TESTING "If enabled, allows to use rstest to check the samples specified by REFERENCE_SAMPLE_ARCHIVE" OFF)
+if(BUILD_TOOLS)
+  option(RAWSPEED_ENABLE_SAMPLE_BASED_TESTING "If enabled, allows to use rstest to check the samples specified by RAWSPEED_REFERENCE_SAMPLE_ARCHIVE" OFF)
 else()
-  set(ENABLE_SAMPLEBASED_TESTING OFF CACHE BOOL "If enabled, allows to use rstest to check the samples specified by REFERENCE_SAMPLE_ARCHIVE" FORCE)
+  set(RAWSPEED_ENABLE_SAMPLE_BASED_TESTING OFF CACHE BOOL "If enabled, allows to use rstest to check the samples specified by RAWSPEED_REFERENCE_SAMPLE_ARCHIVE" FORCE)
 endif()
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   option(USE_LLVM_OPT_REPORT "(Clang only) Save compiler optimizations records and show them" OFF)
@@ -117,7 +118,10 @@ set(GOOGLEBENCHMARK_PATH "/usr/src/googlebenchmark" CACHE PATH
 
 set(LIB_FUZZING_ENGINE "OFF" CACHE STRING "Either OFF, or overrides location of prebuilt fuzzing engine library (e.g. libFuzzer) that needs to be linked with all fuzz targets.")
 
-set(REFERENCE_SAMPLE_ARCHIVE "~/raw-camera-samples/raw.pixls.us-unique" CACHE PATH "The location of the reference sample set to use. Should contain filelist.sha1 and timestamp.txt")
+set(RAWSPEED_REFERENCE_SAMPLE_ARCHIVE "~/raw-camera-samples/raw.pixls.us-unique" CACHE PATH "The location of the reference sample set to use. Should contain filelist.sha1 and timestamp.txt")
+
+set(RAWSPEED_PROFDATA_FILE "${PROJECT_BINARY_DIR}/rawspeed.profdata"
+    CACHE FILEPATH "The location of the .profdata file")
 
 option(RAWSPEED_ENABLE_LTO "Add appropriate flag to the compile and link command lines, enabling link-time optimization." OFF)
 
@@ -219,7 +223,7 @@ if(BUILD_TESTING AND CMAKE_BUILD_TYPE STREQUAL "COVERAGE")
       include(genhtml)
       include(gcc-coverage)
     else()
-      message(WARNING "Did not find lcov and genhtml."
+      message(WARNING "Did not find lcov and genhtml. "
                       "Will not be able to generate HTML reports")
     endif()
   endif()

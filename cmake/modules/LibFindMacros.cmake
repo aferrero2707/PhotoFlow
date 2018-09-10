@@ -19,9 +19,9 @@ endmacro()
 # A simple wrapper to make pkg-config searches a bit easier.
 # Works the same as CMake's internal pkg_check_modules but is always quiet.
 macro (libfind_pkg_check_modules)
-#  find_package(PkgConfig)
+#  find_package(PkgConfig QUIET)
   if (PKG_CONFIG_FOUND)
-    pkg_check_modules(${ARGN})
+    pkg_check_modules(${ARGN} QUIET)
   endif()
 endmacro()
 

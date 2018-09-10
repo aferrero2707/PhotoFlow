@@ -20,23 +20,22 @@
 
 #include "RawSpeed-API.h"
 
-#include "md5.h"       // for md5_hash
+#include "md5.h"       // for md5_state, md5_hash, hash_to_string, md5_init
+#include <array>       // for array
 #include <cassert>     // for assert
-#include <chrono>      // for milliseconds, steady_clock, duration, dur...
+#include <chrono>      // for milliseconds, steady_clock, duration_cast
 #include <cstdarg>     // for va_end, va_list, va_start
 #include <cstdint>     // for uint8_t
-#include <cstdio>      // for snprintf, size_t, fclose, fopen, fprintf
+#include <cstdio>      // for fprintf, fclose, size_t, fopen, ftell, fwrite
 #include <cstdlib>     // for system
 #include <fstream>     // IWYU pragma: keep
-#include <iostream>    // for cout, cerr, left, internal
+#include <iostream>    // for cout, left, cerr, internal
 #include <map>         // for map
-#include <memory>      // for unique_ptr, allocator
+#include <memory>      // for allocator, unique_ptr
 #include <sstream>     // IWYU pragma: keep
-#include <string>      // for string, char_traits, operator+, operator<<
-#include <type_traits> // for enable_if<>::type
+#include <string>      // for string, operator+, operator<<, char_traits
 #include <utility>     // for pair
 #include <vector>      // for vector
-
 // IWYU pragma: no_include <ext/alloc_traits.h>
 
 #if !defined(__has_feature) || !__has_feature(thread_sanitizer)
@@ -50,7 +49,7 @@
 // define this function, it is only declared in rawspeed:
 #ifdef _OPENMP
 extern "C" int rawspeed_get_number_of_processor_cores() {
-  return omp_get_num_procs();
+  return omp_get_max_threads();
 }
 #else
 extern "C" int __attribute__((const)) rawspeed_get_number_of_processor_cores() {
@@ -80,7 +79,6 @@ using rawspeed::TYPE_USHORT16;
 using rawspeed::TYPE_FLOAT32;
 using rawspeed::getU16BE;
 using rawspeed::getU32LE;
-using rawspeed::isAligned;
 using rawspeed::roundUp;
 using rawspeed::RawspeedException;
 
@@ -292,21 +290,21 @@ void writePFM(const RawImage& raw, const string& fn) {
   // the first byte after that \n will be aligned
   const int paddedLen = roundUp(realLen, dataAlignment);
   assert(paddedLen > len);
-  assert(isAligned(paddedLen, dataAlignment));
+  assert(rawspeed::isAligned(paddedLen, dataAlignment));
 
   // how much padding?
   const int padding = paddedLen - realLen;
   assert(padding >= 0);
-  assert(isAligned(realLen + padding, dataAlignment));
+  assert(rawspeed::isAligned(realLen + padding, dataAlignment));
 
   // and actually write padding + new line
   len += fprintf(f.get(), "%0*i\n", padding, 0);
   assert(paddedLen == len);
 
   // did we write a multiple of an alignment value?
-  assert(isAligned(len, dataAlignment));
+  assert(rawspeed::isAligned(len, dataAlignment));
   assert(ftell(f.get()) == len);
-  assert(isAligned(ftell(f.get()), dataAlignment));
+  assert(rawspeed::isAligned(ftell(f.get()), dataAlignment));
 
   width *= raw->getCpp();
 

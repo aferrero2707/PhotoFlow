@@ -18,19 +18,25 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "rawspeedconfig.h" // for WITH_SSE2
+#include "rawspeedconfig.h" // for HAVE_PTHREAD
 #include "common/RawImage.h"
+#include "MemorySanitizer.h"              // for MSan
 #include "common/Memory.h"                // for alignedFree, alignedMalloc...
 #include "decoders/RawDecoderException.h" // for ThrowRDE, RawDecoderException
 #include "io/IOException.h"               // for IOException
 #include "parsers/TiffParserException.h"  // for TiffParserException
-#include <algorithm>                      // for min
+#include <algorithm>                      // for fill_n, min
 #include <cassert>                        // for assert
 #include <cmath>                          // for NAN
-#include <cstdlib>                        // for free
-#include <cstring>                        // for memset, memcpy, strdup
+#include <cstdlib>                        // for size_t
+#include <cstring>                        // for memcpy, memset
 #include <limits>                         // for numeric_limits
-#include <memory>                         // for unique_ptr
+#include <memory>                         // for unique_ptr, make_unique
+#include <utility>                        // for move, swap
+
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+#include "AddressSanitizer.h" // for ASan::...
+#endif
 
 using std::fill_n;
 using std::string;
@@ -131,11 +137,11 @@ void RawImageData::poisonPadding() {
         getDataUncropped(uncropped_dim.x - 1, j) + bpp;
 
     // and now poison the padding.
-    ASAN_POISON_MEMORY_REGION(curr_line_end, padding);
+    ASan::PoisonMemoryRegion(curr_line_end, padding);
   }
 }
 #else
-void __attribute__((const)) RawImageData::poisonPadding() {
+void RawImageData::poisonPadding() {
   // if we are building without ASAN, then there is no need/way to poison.
   // however, i think it is better to have such an empty function rather
   // than making this whole function not exist in ASAN-less builds
@@ -152,18 +158,17 @@ void RawImageData::unpoisonPadding() {
         getDataUncropped(uncropped_dim.x - 1, j) + bpp;
 
     // and now unpoison the padding.
-    ASAN_UNPOISON_MEMORY_REGION(curr_line_end, padding);
+    ASan::UnPoisonMemoryRegion(curr_line_end, padding);
   }
 }
 #else
-void __attribute__((const)) RawImageData::unpoisonPadding() {
+void RawImageData::unpoisonPadding() {
   // if we are building without ASAN, then there is no need/way to poison.
   // however, i think it is better to have such an empty function rather
   // than making this whole function not exist in ASAN-less builds
 }
 #endif
 
-#if __has_feature(memory_sanitizer) || defined(__SANITIZE_MEMORY__)
 void RawImageData::checkRowIsInitialized(int row) {
   const auto rowsize = bpp * uncropped_dim.x;
 
@@ -171,16 +176,8 @@ void RawImageData::checkRowIsInitialized(int row) {
 
   // and check that image line is initialized.
   // do note that we are avoiding padding here.
-  MSAN_MEM_IS_INITIALIZED(curr_line, rowsize);
+  MSan::CheckMemIsInitialized(curr_line, rowsize);
 }
-#else
-void __attribute__((const)) RawImageData::checkRowIsInitialized(int row) {
-  // if we are building without MSAN, then there is no way to check whether
-  // the image row was fully initialized. however, i think it is better to
-  // have such an empty function rather than making this whole function not
-  // exist in MSAN-less builds
-}
-#endif
 
 #if __has_feature(memory_sanitizer) || defined(__SANITIZE_MEMORY__)
 void RawImageData::checkMemIsInitialized() {
@@ -188,11 +185,10 @@ void RawImageData::checkMemIsInitialized() {
     checkRowIsInitialized(j);
 }
 #else
-void __attribute__((const)) RawImageData::checkMemIsInitialized() {
-  // if we are building without MSAN, then there is no way to check whether
-  // the image data was fully initialized. however, i think it is better to
-  // have such an empty function rather than making this whole function not
-  // exist in MSAN-less builds
+void RawImageData::checkMemIsInitialized() {
+  // While we could use the same version for non-MSAN build, even though it
+  // does not do anything, i don't think it will be fully optimized away,
+  // the getDataUncropped() call may still be there. To be re-evaluated.
 }
 #endif
 

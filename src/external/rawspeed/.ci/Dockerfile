@@ -36,8 +36,8 @@ RUN echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/80forceyes
 # Fix broken packages
 RUN echo 'APT::Get::Fix-Missing "true";' > /etc/apt/apt.conf.d/80fixmissin
 
-ENV GCC_VER=7
-ENV LLVM_VER=5.0
+ENV GCC_VER=8
+ENV LLVM_VER=6.0
 
 # pls keep sorted :)
 RUN rm -rf /var/lib/apt/lists/* && apt-get update && \
@@ -50,7 +50,7 @@ RUN rm -rf /var/lib/apt/lists/* && apt-get update && \
 
 # sonarqube support.
 
-ENV SONAR_SCANNER_CLI_VERSION=3.0.3.778-linux \
+ENV SONAR_SCANNER_CLI_VERSION=3.1.0.1141-linux \
     SONARQUBE_HOME=/opt/sonarqube
 
 RUN set -x \

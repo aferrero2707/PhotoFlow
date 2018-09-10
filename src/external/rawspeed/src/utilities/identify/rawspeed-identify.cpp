@@ -19,15 +19,21 @@
 
 #include "RawSpeed-API.h" // for RawImage, RawImageData, iPoint2D, ImageMet...
 
+#include <array>      // for array
 #include <cstddef>    // for size_t
 #include <cstdint>    // for uint16_t
-#include <cstdio>     // for fprintf, stdout, stderr, printf
-#include <memory>     // for unique_ptr
-#include <string>     // for string, operator+
+#include <cstdio>     // for fprintf, stdout, stderr
+#include <memory>     // for unique_ptr, make_unique
+#include <string>     // for string, operator+, basic_string
 #include <sys/stat.h> // for stat
+#include <vector>     // for vector
 
 #ifdef _WIN32
-#include <windows.h>
+#ifndef NOMINMAX
+#define NOMINMAX // do not want the min()/max() macros!
+#endif
+
+#include <Windows.h>
 #endif
 
 #ifdef _OPENMP
@@ -37,7 +43,7 @@
 // define this function, it is only declared in rawspeed:
 #ifdef _OPENMP
 extern "C" int rawspeed_get_number_of_processor_cores() {
-  return omp_get_num_procs();
+  return omp_get_max_threads();
 }
 #else
 extern "C" int __attribute__((const)) rawspeed_get_number_of_processor_cores() {

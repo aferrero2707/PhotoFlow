@@ -18,15 +18,15 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "RawSpeed-API.h"        // for RawDecoder, Buffer, FileReader
-#include <benchmark/benchmark.h> // for State, Benchmark, DoNotOptimize
+#include "RawSpeed-API.h"        // for RawDecoder, Buffer, FileReader, Raw...
+#include "common/ChecksumFile.h" // for ParseChecksumFile
+#include <benchmark/benchmark.h> // for Counter, State, DoNotOptimize, Init...
 #include <chrono>                // for duration, high_resolution_clock
 #include <ctime>                 // for clock, clock_t
-#include <map>                   // for map<>::mapped_type
 #include <memory>                // for unique_ptr
-#include <ratio>                 // for milli, ratio
-#include <string>                // for string, to_string
-// IWYU pragma: no_include <sys/time.h>
+#include <ratio>                 // for ratio
+#include <string>                // for string, to_string, operator!=
+#include <sys/time.h>            // for CLOCKS_PER_SEC
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -127,24 +127,24 @@ static inline void BM_RawSpeed(benchmark::State& state, const char* fileName,
     pixels = raw->getUncroppedDim().area();
   }
 
-  std::string label("FileSize,MB=");
-  label += std::to_string(double(map->getSize()) / double(1UL << 20UL));
-  label += "; MPix=";
-  label += std::to_string(double(pixels) / 1e+06);
-  state.SetLabel(label.c_str());
+  // These are total over all the `state.iterations()` iterations.
+  const double CPUTime = TT().count();
+  const double WallTime = WT().count();
 
-  const auto WallTime = WT();
-  const auto TotalTime = TT();
-  const auto ThreadingFactor = TotalTime.count() / WallTime.count();
-
+  // For each iteration:
   state.counters.insert({
-      {"Pixels/s", benchmark::Counter(pixels, benchmark::Counter::kIsRate)},
-      {"CPUTime,s", TotalTime.count()},
-      {"ThreadingFactor", ThreadingFactor},
+      {"CPUTime,s", CPUTime / state.iterations()},
+      {"WallTime,s", WallTime / state.iterations()},
+      {"CPUTime/WallTime", CPUTime / WallTime}, // 'Threading factor'
+      {"Pixels", pixels},
+      {"Pixels/CPUTime", (state.iterations() * pixels) / CPUTime},
+      {"Pixels/WallTime", (state.iterations() * pixels) / WallTime},
+      /* {"Raws", 1}, */
+      {"Raws/CPUTime", state.iterations() / CPUTime},
+      {"Raws/WallTime", state.iterations() / WallTime},
   });
-
-  state.SetItemsProcessed(state.iterations());
-  state.SetBytesProcessed(state.iterations() * map->getSize());
+  // Could also have counters wrt. the filesize,
+  // but i'm not sure they are interesting.
 }
 
 static void addBench(const char* fName, std::string tName, int threads) {
@@ -160,11 +160,11 @@ int main(int argc, char** argv) {
   benchmark::Initialize(&argc, argv);
 
   auto hasFlag = [argc, argv](std::string flag) {
-    bool found = false;
+    int found = 0;
     for (int i = 1; i < argc; ++i) {
       if (!argv[i] || argv[i] != flag)
         continue;
-      found = true;
+      found = i;
       argv[i] = nullptr;
     }
     return found;
@@ -173,23 +173,45 @@ int main(int argc, char** argv) {
   bool threading = hasFlag("-t");
 
 #ifdef _OPENMP
-  const auto threadsMax = omp_get_num_procs();
+  const auto threadsMax = omp_get_max_threads();
 #else
   const auto threadsMax = 1;
 #endif
 
   const auto threadsMin = threading ? 1 : threadsMax;
 
+  // Were we told to use the repo (i.e. filelist.sha1 in that directory)?
+  int useChecksumFile = hasFlag("-r");
+  std::vector<rawspeed::ChecksumFileEntry> ChecksumFileEntries;
+  if (useChecksumFile && useChecksumFile + 1 < argc) {
+    char*& checksumFileRepo = argv[useChecksumFile + 1];
+    if (checksumFileRepo)
+      ChecksumFileEntries = rawspeed::ReadChecksumFile(checksumFileRepo);
+    checksumFileRepo = nullptr;
+  }
+
+  // If there are normal filenames, append them.
   for (int i = 1; i < argc; i++) {
     if (!argv[i])
       continue;
 
+    rawspeed::ChecksumFileEntry Entry;
     const char* fName = argv[i];
+    // These are supposed to be either absolute paths, or relative the run dir.
+    // We don't do any beautification.
+    Entry.FullFileName = fName;
+    Entry.RelFileName = fName;
+    ChecksumFileEntries.emplace_back(Entry);
+  }
+
+  // And finally, actually add the raws to be benchmarked.
+  for (const auto& Entry : ChecksumFileEntries) {
+    const char* fName = Entry.RelFileName.c_str();
     std::string tName(fName);
     tName += "/threads:";
 
     for (auto threads = threadsMin; threads <= threadsMax; threads++)
-      addBench(fName, tName, threads);
+      addBench(Entry.FullFileName.c_str(), tName, threads);
   }
 
   benchmark::RunSpecifiedBenchmarks();

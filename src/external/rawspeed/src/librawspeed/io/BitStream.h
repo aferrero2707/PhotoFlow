@@ -39,7 +39,7 @@ namespace rawspeed {
 
 struct BitStreamCacheBase
 {
-  uint64 cache = 0; // the acutal bits stored in the cache
+  uint64 cache = 0; // the actual bits stored in the cache
   unsigned int fillLevel = 0; // bits left in cache
   static constexpr unsigned Size = sizeof(cache)*8;
 
@@ -60,7 +60,7 @@ struct BitStreamCacheLeftInRightOut : BitStreamCacheBase
   }
 
   inline uint32 peek(uint32 count) const noexcept {
-    return cache & ((1 << count) - 1);
+    return cache & ((1U << count) - 1U);
   }
 
   inline void skip(uint32 count) noexcept {
@@ -78,12 +78,16 @@ struct BitStreamCacheRightInLeftOut : BitStreamCacheBase
   }
 
   inline uint32 peek(uint32 count) const noexcept {
-    return (cache >> (fillLevel - count)) & ((1 << count) - 1);
+    return (cache >> (fillLevel - count)) & ((1U << count) - 1U);
   }
 
   inline void skip(uint32 count) noexcept {
     fillLevel -= count;
   }
+};
+
+template <typename BIT_STREAM> struct BitStreamTraits final {
+  static constexpr bool canUseWithHuffmanTable = false;
 };
 
 template <typename Tag, typename Cache>
@@ -155,6 +159,8 @@ public:
   inline size_type getBufferPosition() const {
     return pos - (cache.fillLevel >> 3);
   }
+
+  inline size_type getFillLevel() const { return cache.fillLevel; }
 
   // rewinds to the beginning of the buffer.
   void resetBufferPosition() {

@@ -1,5 +1,5 @@
 ---
-Checks:          '*,-clang-analyzer-*,-clang-diagnostic-*,-cert-dcl50-cpp,-cert-env33-c,-cert-err58-cpp,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-special-member-functions,-google-default-arguments,-google-readability-todo,-google-runtime-int,-hicpp-member-init,-hicpp-special-member-functions,-llvm-header-guard,-llvm-include-order,-misc-unused-parameters,-readability-implicit-bool-cast,-readability-inconsistent-declaration-parameter-name,-android-*,-hicpp-braces-around-statements,-hicpp-function-size,-google-readability-braces-around-statements,-google-readability-function-size,-readability-implicit-bool-conversion,-hicpp-signed-bitwise,-hicpp-no-array-decay,-hicpp-vararg,-cppcoreguidelines-owning-memory,-fuchsia-*,-readability-simd-intrinsics'
+Checks:          '*,-clang-analyzer-*,-clang-diagnostic-*,-cert-dcl50-cpp,-cert-env33-c,-cert-err58-cpp,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-special-member-functions,-google-default-arguments,-google-readability-todo,-google-runtime-int,-hicpp-member-init,-hicpp-special-member-functions,-llvm-header-guard,-llvm-include-order,-misc-unused-parameters,-readability-implicit-bool-cast,-readability-inconsistent-declaration-parameter-name,-android-*,-hicpp-braces-around-statements,-hicpp-function-size,-google-readability-braces-around-statements,-google-readability-function-size,-readability-implicit-bool-conversion,-hicpp-signed-bitwise,-hicpp-no-array-decay,-hicpp-vararg,-hicpp-multiway-paths-covered,-cppcoreguidelines-owning-memory,-fuchsia-*,-portability-simd-intrinsics,-bugprone-narrowing-conversions,-cppcoreguidelines-narrowing-conversions,-readability-magic-numbers,-cppcoreguidelines-avoid-magic-numbers'
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: false
@@ -10,13 +10,15 @@ CheckOptions:
   - key:             readability-function-size.BranchThreshold
     value:           '26'
   - key:             readability-function-size.LineThreshold
-    value:           '160'
+    value:           '167'
   - key:             readability-function-size.StatementThreshold
-    value:           '135'
+    value:           '136'
   - key:             readability-function-size.ParameterThreshold
     value:           '7'
   - key:             readability-function-size.NestingThreshold
     value:           '6'
+  - key:             readability-function-size.VariableThreshold
+    value:           '30'
   - key:             readability-simplify-boolean-expr.ChainedConditionalAssignment
     value:           '1'
   - key:             readability-simplify-boolean-expr.ChainedConditionalReturn
@@ -31,6 +33,8 @@ CheckOptions:
     value:           'h,hh,hpp,hxx,'
   - key:             misc-definitions-in-headers.UseHeaderFileExtension
     value:           '1'
+  - key:             modernize-use-auto.MinTypeNameLength
+    value:           '0'
   - key:             readability-identifier-naming.NamespaceCase
     value:           lower_case
   - key:             google-runtime-references.WhiteListTypes

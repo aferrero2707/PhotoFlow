@@ -20,36 +20,45 @@
 
 #pragma once
 
-#include "common/Common.h"                      // for uint32
+#include "common/Common.h"                      // for uint32, ushort16
 #include "common/RawImage.h"                    // for RawImage
 #include "decompressors/AbstractDecompressor.h" // for AbstractDecompressor
+#include "io/BitPumpMSB.h"                      // for BitPumpMSB
 #include <vector>                               // for vector
 
 namespace rawspeed {
 
-class iPoint2D;
-
-class RawImage;
-
 class ByteStream;
-
-class HuffmanTable;
 
 class NikonDecompressor final : public AbstractDecompressor {
   RawImage mRaw;
   uint32 bitsPS;
 
-public:
-  NikonDecompressor(const RawImage& raw, uint32 bitsPS);
+  uint32 huffSelect = 0;
+  uint32 split = 0;
 
-  void decompress(ByteStream metadata, const ByteStream& data,
-                  bool uncorrectedRawValues);
+  int pUp1[2];
+  int pUp2[2];
+
+  std::vector<ushort16> curve;
+
+  uint32 random;
+
+public:
+  NikonDecompressor(const RawImage& raw, ByteStream metadata, uint32 bitsPS);
+
+  void decompress(const ByteStream& data, bool uncorrectedRawValues);
 
 private:
   static const uchar8 nikon_tree[][2][16];
   static std::vector<ushort16> createCurve(ByteStream* metadata, uint32 bitsPS,
                                            uint32 v0, uint32 v1, uint32* split);
-  static HuffmanTable createHuffmanTable(uint32 huffSelect);
+
+  template <typename Huffman>
+  void decompress(BitPumpMSB* bits, int start_y, int end_y);
+
+  template <typename Huffman>
+  static Huffman createHuffmanTable(uint32 huffSelect);
 };
 
 } // namespace rawspeed

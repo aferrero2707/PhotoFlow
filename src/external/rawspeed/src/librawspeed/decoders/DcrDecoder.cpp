@@ -20,14 +20,15 @@
 */
 
 #include "decoders/DcrDecoder.h"
-#include "common/NORangesSet.h"              // for NORangesSet
-#include "decoders/RawDecoderException.h"    // for RawDecoderException (ptr ...
+#include "common/NORangesSet.h"              // for set
+#include "decoders/RawDecoderException.h"    // for ThrowRDE
 #include "decompressors/KodakDecompressor.h" // for KodakDecompressor
 #include "io/ByteStream.h"                   // for ByteStream
-#include "tiff/TiffEntry.h"                  // for TiffEntry, TiffDataType::...
-#include "tiff/TiffIFD.h"                    // for TiffRootIFD, TiffIFD
-#include "tiff/TiffTag.h"                    // for TiffTag, TiffTag::COMPRES...
+#include "tiff/TiffEntry.h"                  // for TiffEntry, TIFF_SHORT
+#include "tiff/TiffIFD.h"                    // for TiffRootIFD, TiffID
+#include "tiff/TiffTag.h"                    // for COMPRESSION, KODAK_IFD
 #include <cassert>                           // for assert
+#include <memory>                            // for unique_ptr
 #include <string>                            // for operator==, string
 
 namespace rawspeed {
@@ -69,12 +70,13 @@ RawImage DcrDecoder::decodeRawInternal() {
                        ifdoffset->getU32());
 
   TiffEntry* linearization = kodakifd.getEntryRecursive(KODAK_LINEARIZATION);
-  if (!linearization || linearization->count != 1024 ||
+  if (!linearization ||
+      !(linearization->count == 1024 || linearization->count == 4096) ||
       linearization->type != TIFF_SHORT)
     ThrowRDE("Couldn't find the linearization table");
 
   assert(linearization != nullptr);
-  auto linTable = linearization->getU16Array(1024);
+  auto linTable = linearization->getU16Array(linearization->count);
 
   RawImageCurveGuard curveHandler(&mRaw, linTable, uncorrectedRawValues);
 
@@ -92,7 +94,17 @@ RawImage DcrDecoder::decodeRawInternal() {
     }
   }
 
-  KodakDecompressor k(mRaw, input, uncorrectedRawValues);
+  const int bps = [CurveSize = linearization->count]() -> int {
+    switch (CurveSize) {
+    case 1024:
+      return 10;
+    case 4096:
+      return 12;
+    }
+    __builtin_unreachable();
+  }();
+
+  KodakDecompressor k(mRaw, input, bps, uncorrectedRawValues);
   k.decompress();
 
   return mRaw;

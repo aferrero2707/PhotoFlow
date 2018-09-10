@@ -69,13 +69,13 @@ jobs:
     sudo: required
     services:
       - docker
-    env: CC=gcc-7 CXX=g++-7
+    env: CC=gcc-8 CXX=g++-8
   - os: linux
     dist: trusty
     sudo: required
     services:
       - docker
-    env: CC=gcc-7 CXX=g++-7 GCOV=gcov-7 FLAVOR=Coverage ECO="-DENABLE_SAMPLEBASED_TESTING=ON" EXTRA_OPTS="$DOCKER_RPUU"
+    env: CC=gcc-8 CXX=g++-8 GCOV=gcov-8 FLAVOR=Coverage ECO="-DRAWSPEED_ENABLE_SAMPLE_BASED_TESTING=ON" EXTRA_OPTS="$DOCKER_RPUU"
     cache:
       directories:
         - '$HOME/$RPUU_DST'
@@ -88,13 +88,13 @@ jobs:
     sudo: required
     services:
       - docker
-    env: CC=clang-5.0 CXX=clang++-5.0 TARGET=STATICANALYSIS
+    env: CC=clang-6.0 CXX=clang++-6.0 TARGET=STATICANALYSIS ECO="-DUSE_CLANG_TIDY=ON"
   - os: linux
     dist: trusty
     sudo: required
     services:
       - docker
-    env: CC=clang-5.0 CXX=clang++-5.0 ECO="-DWITH_PTHREADS=OFF"
+    env: CC=clang-6.0 CXX=clang++-6.0 ECO="-DWITH_PTHREADS=OFF"
   - os: linux
     dist: trusty
     sudo: required
@@ -105,7 +105,7 @@ jobs:
     sudo: required
     services:
       - docker
-    env: CC=gcc-7 CXX=g++-7 GCOV=gcov-7 TARGET=SONARQUBE FLAVOR=Coverage ECO="-DENABLE_SAMPLEBASED_TESTING=ON" EXTRA_OPTS="--tmpfs /root/.sonar --volume $HOME/.sonar/cache:/root/.sonar/cache $DOCKER_RPUU"
+    env: CC=gcc-8 CXX=g++-8 GCOV=gcov-8 TARGET=SONARQUBE FLAVOR=Coverage ECO="-DRAWSPEED_ENABLE_SAMPLE_BASED_TESTING=ON" EXTRA_OPTS="--tmpfs /root/.sonar --volume $HOME/.sonar/cache:/root/.sonar/cache $DOCKER_RPUU"
     git:
       depth: 9999999
     cache:
@@ -117,7 +117,7 @@ jobs:
     sudo: required
     services:
       - docker
-    env: CC=clang-5.0 CXX=clang++-5.0 TARGET=WWW
+    env: CC=clang-6.0 CXX=clang++-6.0 TARGET=WWW
 
 # linux clang Coverage build OOM's in gcov during final codecov report collection
 # OSX gcc Coverage build produces invalid .gcno files
@@ -146,7 +146,7 @@ script:
       export CMD="$SRC_DIR/.ci/ci-script.sh";
       if [[ "$TARGET" == "STATICANALYSIS" ]]; then
         export TARGET="build";
-        export CMD="scan-build-5.0 --use-cc=\"$CC\" --use-c++=\"$CXX\" --force-analyze-debug-code --status-bugs -disable-checker deadcode.DeadStores $CMD";
+        export CMD="scan-build-6.0 --use-cc=\"$CC\" --use-c++=\"$CXX\" --force-analyze-debug-code --status-bugs -disable-checker deadcode.DeadStores $CMD";
       fi;
       if [[ "$TARGET" == "SONARQUBE" ]]; then
         export TARGET="build";
@@ -156,7 +156,7 @@ script:
       docker run --read-only --tmpfs /tmp --volume $TRAVIS_BUILD_DIR:$SRC_DIR:ro --volume "$TRAVIS_BUILD_DIR/build":$BUILD_DIR --workdir $BUILD_DIR --tmpfs $INSTALL_PREFIX $EXTRA_TMPFS $EXTRA_OPTS --env CC --env CXX --env GCOV --env CFLAGS --env CXXFLAGS --env SRC_DIR --env BUILD_DIR --env INSTALL_PREFIX --env TARGET --env FLAVOR --env ECO darktable/rawspeed sh -c "$CMD";
 
       if [[ "$TARGET2" == "SONARQUBE" ]]; then
-        export CMD="sonar-scanner -X -Dproject.settings=\"$SRC_DIR/.ci/sonar-project.properties\" -Dsonar.login=\"$SONAR_TOKEN\" -Dsonar.branch=\"$TRAVIS_BRANCH\" -Dsonar.projectVersion=\"$TRAVIS_COMMIT\"";
+        export CMD="sonar-scanner -Dproject.settings=\"$SRC_DIR/.ci/sonar-project.properties\" -Dsonar.login=\"$SONAR_TOKEN\" -Dsonar.branch=\"$TRAVIS_BRANCH\" -Dsonar.projectVersion=\"$TRAVIS_COMMIT\"";
         docker run --read-only --tmpfs /tmp --volume $TRAVIS_BUILD_DIR:$SRC_DIR:ro --volume "$TRAVIS_BUILD_DIR/build":$BUILD_DIR --workdir $SRC_DIR --tmpfs $INSTALL_PREFIX $EXTRA_TMPFS $EXTRA_OPTS --env CC --env CXX --env GCOV --env CFLAGS --env CXXFLAGS --env SRC_DIR --env BUILD_DIR --env INSTALL_PREFIX --env TARGET --env FLAVOR --env ECO darktable/rawspeed sh -c "$CMD";
       fi;
 

@@ -20,23 +20,24 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "rawspeedconfig.h"
 #include "decompressors/KodakDecompressor.h"
-#include "common/RawImage.h"              // for RawImage
-#include "decoders/RawDecoderException.h" // for RawDecoderException (ptr o...
+#include "common/Point.h"                 // for iPoint2D
+#include "common/RawImage.h"              // for RawImage, RawImageData
+#include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "decompressors/HuffmanTable.h"   // for HuffmanTable
 #include "io/ByteStream.h"                // for ByteStream
 #include <algorithm>                      // for min
 #include <array>                          // for array
 #include <cassert>                        // for assert
+#include <utility>                        // for move
 
 namespace rawspeed {
 
 constexpr int KodakDecompressor::segment_size;
 
 KodakDecompressor::KodakDecompressor(const RawImage& img, ByteStream bs,
-                                     bool uncorrectedRawValues_)
-    : mRaw(img), input(std::move(bs)),
+                                     int bps_, bool uncorrectedRawValues_)
+    : mRaw(img), input(std::move(bs)), bps(bps_),
       uncorrectedRawValues(uncorrectedRawValues_) {
   if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
       mRaw->getBpp() != 2)
@@ -46,6 +47,9 @@ KodakDecompressor::KodakDecompressor(const RawImage& img, ByteStream bs,
       mRaw->dim.x > 4516 || mRaw->dim.y > 3012)
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", mRaw->dim.x,
              mRaw->dim.y);
+
+  if (bps != 10 && bps != 12)
+    ThrowRDE("Unexpected bits per sample: %i", bps);
 
   // Lower estimate: this decompressor requires *at least* half a byte
   // per output pixel
@@ -83,6 +87,7 @@ KodakDecompressor::decodeSegment(const uint32 bsize) {
   }
   for (uint32 i = 0; i < bsize; i++) {
     uint32 len = blen[i];
+    assert(len < 16);
 
     if (bits < len) {
       for (uint32 j = 0; j < 32; j += 8) {
@@ -95,9 +100,8 @@ KodakDecompressor::decodeSegment(const uint32 bsize) {
     uint32 diff = static_cast<uint32>(bitbuf) & (0xffff >> (16 - len));
     bitbuf >>= len;
     bits -= len;
-    diff = len != 0 ? HuffmanTable::signExtended(diff, len) : diff;
 
-    out[i] = diff;
+    out[i] = len != 0 ? HuffmanTable::signExtended(diff, len) : diff;
   }
 
   return out;
@@ -116,15 +120,15 @@ void KodakDecompressor::decompress() {
 
       const segment buf = decodeSegment(len);
 
-      std::array<uint32, 2> pred;
+      std::array<int, 2> pred;
       pred.fill(0);
 
       for (uint32 i = 0; i < len; i++) {
         pred[i & 1] += buf[i];
 
-        ushort16 value = pred[i & 1];
-        if (value > 1023)
-          ThrowRDE("Value out of bounds %d", value);
+        int value = pred[i & 1];
+        if (unsigned(value) >= (1U << bps))
+          ThrowRDE("Value out of bounds %d (bps = %i)", value, bps);
 
         if (uncorrectedRawValues)
           dest[x + i] = value;
@@ -134,6 +138,6 @@ void KodakDecompressor::decompress() {
       }
     }
   }
-};
+}
 
 } // namespace rawspeed

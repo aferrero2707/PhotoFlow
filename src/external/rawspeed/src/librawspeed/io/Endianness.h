@@ -24,6 +24,7 @@
 #include "common/Common.h" // for uint32, ushort16, uint64, int32, short16
 #include <cassert>         // for assert
 #include <cstring>         // for memcpy
+// IWYU pragma: no_include "io/EndiannessTest.h"
 
 namespace rawspeed {
 
@@ -102,7 +103,7 @@ template <typename T> inline T getByteSwapped(const void* data, bool bswap) {
 // memory location converted to the native byte order of the host.
 // 'BE' suffix: source byte order is known to be big endian
 // 'LE' suffix: source byte order is known to be little endian
-// Note: these functions should be avoided if higher level acess from
+// Note: these functions should be avoided if higher level access from
 // Buffer/DataBuffer classes is available.
 
 template <typename T> inline T getBE(const void* data) {
