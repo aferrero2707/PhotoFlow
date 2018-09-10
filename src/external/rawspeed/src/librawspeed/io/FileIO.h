@@ -24,7 +24,7 @@
 #endif
 
 #include "io/FileIOException.h" // for FileIOException (ptr only), ThrowFIE
-#include <Windows.h>
+#include <windows.h>
 #include <functional> // for bind
 #include <io.h>
 #include <tchar.h>
