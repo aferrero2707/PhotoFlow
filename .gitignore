@@ -11,3 +11,7 @@ build/gmon.out
 
 # hide VIPS' source tree
 libvips/
+
+# hide git history of librtprocess
+src/external/librtprocess/.git
+src/external/librtprocess/.gitignore

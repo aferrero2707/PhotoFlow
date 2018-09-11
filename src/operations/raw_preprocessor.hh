@@ -35,6 +35,8 @@
 #include "../base/processor.hh"
 #include "../base/rawmatrix.hh"
 
+#include "../external/librtprocess/src/librtprocess.h"
+
 #include "raw_image.hh"
 
 
@@ -237,7 +239,7 @@ namespace PF
               pout[x+1] = CLIP( pout[x+1] );
               pout[x+2] = CLIP( pout[x+2] );
             }
-            if(false && r->left==0 && r->top==0) std::cout<<"  p["<<x<<"]="<<p[x]<<"  pout["<<x<<"]="<<pout[x]<<std::endl;
+            if(true && r->left==0 && r->top==0) std::cout<<"  p["<<x<<"]="<<p[x]<<"  pout["<<x<<"]="<<pout[x]<<std::endl;
 #ifdef RT_EMU
             /* RawTherapee emulation */
             pout[x] *= 65535;
@@ -247,39 +249,38 @@ namespace PF
           }
         }
       } else {
-        PF::raw_pixel_t* p;
-        PF::raw_pixel_t* pout;
+        float* p;
+        float* pout;
         float rval;
+        int filters = rdpar->get_image_data()->idata.filters;
+        librtprocess::ColorFilterArray cfa(filters);
         for( y = 0; y < r->height; y++ ) {
-          p = (PF::raw_pixel_t*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
-          pout = (PF::raw_pixel_t*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
-          PF::RawMatrixRow rp( p );
-          PF::RawMatrixRow rpout( pout );
+          p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+          pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
           for( x=0; x < r->width; x++) {
             //std::cout<<"RawPreprocessor: x="<<x<<"  r->width="<<r->width
             //      <<"  size of pel="<<VIPS_IMAGE_SIZEOF_PEL(ireg[in_first]->im)
             //      <<","<<VIPS_IMAGE_SIZEOF_PEL(oreg->im)<<std::endl;
-            rpout.color(x) = rp.color(x);
             //rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
-            int c = rp.icolor(x);
-            rval = (rp[x]-black[c]) * 65535.f / (white[c]-black[c]);
+            int c = cfa[y & 1][x & 1];
+            rval = (p[x]-black[c]) /* * 65535.f*/ / (white[c]-black[c]);
             if( hlreco_mode == HLRECO_CLIP ) {
-              rpout[x] = CLIP( rval * mul[c] );
+              pout[x] = CLIP( rval * mul[c] );
             } else {
               //if( rval > 65500.f ) rpout[x] = 65535.f;
               //else
-                rpout[x] = rval * mul[c];
+                pout[x] = rval * mul[c];
             }
             if(false && r->left==0 && r->top==0 && y<4 && x<4)
-              std::cout<<"("<<y<<","<<x<<")  c="<<rp.color(x) //c
-              <<"  rp[x]="<<rp[x]
+              std::cout<<"("<<y<<","<<x<<")  c="<<c
+              <<"  p[x]="<<p[x]
                                <<"  mul[ c ]="<<mul[ c ]
                                                      <<"  black[ c ]="<<black[ c ]
                                                                            <<"  white[ c ]="<<white[ c ]
-              <<"  rpout[x]="<<rpout[x]/65535.f<<std::endl;
+              <<"  pout[x]="<<pout[x]/65535.f<<std::endl;
 #ifdef RT_EMU
             /* RawTherapee emulation */
-            rpout[x] *= 65535;
+            pout[x] *= 65535;
 #endif
           }
         }

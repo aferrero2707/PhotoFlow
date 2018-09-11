@@ -36,80 +36,23 @@
 
 #include "../base/operation.hh"
 #include "../rt/rtengine/rawimagesource.hh"
+#include "demosaic_common.hh"
 
 
 
 namespace PF
 {
 
-  class AmazeDemosaicPar: public OpParBase
+  class AmazeDemosaicPar: public DemosaicBasePar
   {
-    dcraw_data_t* image_data;
-
   public:
     AmazeDemosaicPar();
-    bool has_intensity() { return false; }
-    bool has_opacity() { return false; }
-    bool needs_input() { return true; }
-
-    dcraw_data_t* get_image_data() { return image_data; }
-
-    void set_image_hints( VipsImage* img )
-    {
-      if( !img ) return;
-      OpParBase::set_image_hints( img );
-      rgb_image( get_xsize(), get_ysize() );
-    }
-
-    /* Function to derive the output area from the input area
-     */
-    virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
-    {
-      rout->left = rin->left+16;
-      rout->top = rin->top+16;
-      rout->width = rin->width-32;
-      rout->height = rin->height-32;
-    }
-       
-    /* Function to derive the area to be read from input images,
-       based on the requested output area
-    */
-    virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
-    {
-      int border = 16;
-			// Output region aligned to the Bayer pattern
-			int raw_left = (rout->left/2)*2;
-			//if( raw_left < border ) raw_left = 0;
-
-			int raw_top = (rout->top/2)*2;
-      //if( raw_top < border ) raw_top = 0;
-
-      int raw_right = rout->left+rout->width-1;
-			//if( raw_right > (in->Xsize-border-1) ) raw_right = in->Xsize-1;
-
-			int raw_bottom = rout->top+rout->height-1;
-      //if( raw_bottom > (in->Ysize-border-1) ) raw_bottom = in->Ysize-1;
-
-			int raw_width = raw_right-raw_left+1;
-			int raw_height = raw_bottom-raw_top+1;
-
-      rin->left = raw_left-16;
-      rin->top = raw_top-16;
-      rin->width = raw_width+32;
-      rin->height = raw_height+32;
-
-      if( (rin->width%2) ) rin->width += 1;
-      if( (rin->height%2) ) rin->height += 1;
-    }
-      
-
-
-    VipsImage* build(std::vector<VipsImage*>& in, int first, 
-										 VipsImage* imap, VipsImage* omap, 
-										 unsigned int& level);
   };
 
   
+
+
+  void amaze_demosaic_PF(VipsRegion* in, VipsRegion* out, AmazeDemosaicPar* par);
 
 
   template < OP_TEMPLATE_DEF > 
@@ -134,12 +77,9 @@ namespace PF
 								VipsRegion* imap, VipsRegion* omap, 
 								VipsRegion* out, AmazeDemosaicPar* par) 
     {
-			rtengine::RawImageSource rawimg;
-      rawimg.set_image_data( par->get_image_data() );
-			rawimg.amaze_demosaic( in[0], out );
+      amaze_demosaic_PF(in[0], out, par);
     }
   };
-
 
   ProcessorBase* new_amaze_demosaic();
 }

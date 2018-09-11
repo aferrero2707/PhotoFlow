@@ -359,7 +359,7 @@ PF::RawImage::RawImage( const std::string _fname ):
   int height = image->Ysize;
   fast_demosaic = NULL;
   if( is_xtrans() ) fast_demosaic = PF::new_fast_demosaic_xtrans();
-  else fast_demosaic = PF::new_fast_demosaic();
+  else fast_demosaic = PF::new_amaze_demosaic();
   fast_demosaic->get_par()->set_image_hints( image );
   fast_demosaic->get_par()->set_format( VIPS_FORMAT_FLOAT );
   fast_demosaic->get_par()->set_demand_hint( VIPS_DEMAND_STYLE_FATSTRIP );
@@ -679,7 +679,7 @@ bool PF::RawImage::load_rawspeed()
   int row, col, col2;
   //size_t pxsize = sizeof(PF::RawPixel);
   //size_t pxsize = sizeof(float)+sizeof(guint8);
-  size_t pxsize = sizeof(float)*2;
+  size_t pxsize = sizeof(float);
   guint8* rawbuf = (guint8*)malloc( pxsize*iwidth*iheight );
   if( !rawbuf ) {
     std::cout<<"RawImage::load_rawspeed(): cannot allocate raw buffer, size: "<<pxsize*iwidth*iheight/(1024*1024)<<"MB"<<std::endl;
@@ -767,7 +767,6 @@ bool PF::RawImage::load_rawspeed()
 
       fptr = (float*)ptr;
       fptr[0] = val;
-      fptr[1] = color;
       ptr += pxsize;
 
       if(row<4 && col<4) {
@@ -827,6 +826,8 @@ bool PF::RawImage::load_rawspeed()
   //   <<"row="<<row<<"  sizeof(PF::raw_pixel_t)="<<sizeof(PF::raw_pixel_t)<<std::endl;
   //==================================================================
   // Load the RAW image data into a vips image
+  memset( pdata->color.ca_fitparams, 0, sizeof(fitparams) );
+  /*
 //#ifndef NDEBUG
   std::cout<<"RawImage: rawData.GetBuffer()="<<(void*)rawData.GetBuffer()<<std::endl;
   std::cout<<"Starting CA correction..."<<std::endl;
@@ -847,6 +848,7 @@ bool PF::RawImage::load_rawspeed()
     }
   }
 //#endif
+  */
   rawData.Reset();
 #ifndef NDEBUG
   std::cout<<"RawImage: rawData.Reset() called"<<std::endl;
@@ -857,8 +859,8 @@ bool PF::RawImage::load_rawspeed()
   std::cout<<"  buffer size: "<<sizeof(float)*iwidth*iheight<<" bytes"<<std::endl;
 #endif
   VipsImage* ti = vips_image_new_from_memory_copy(
-      rawbuf, sizeof(float)*2*iwidth*iheight,
-      iwidth, iheight, 2, VIPS_FORMAT_FLOAT );
+      rawbuf, sizeof(float)*iwidth*iheight,
+      iwidth, iheight, 1, VIPS_FORMAT_FLOAT );
 #ifndef NDEBUG
   std::cout<<"Deleting Raw buffer: "<<(void*)rawbuf<<std::endl;
 #endif
@@ -875,7 +877,7 @@ bool PF::RawImage::load_rawspeed()
   VipsInterpretation interpretation = VIPS_INTERPRETATION_MULTIBAND;
   //VipsBandFormat format = VIPS_FORMAT_UCHAR;
   VipsBandFormat format = VIPS_FORMAT_FLOAT;
-  int nbands = 2;
+  int nbands = 1;
   vips_copy( ti, &image,
       "format", format,
       "bands", nbands,
