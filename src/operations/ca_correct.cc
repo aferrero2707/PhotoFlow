@@ -31,18 +31,18 @@
 
 #include "ca_correct.hh"
 #include "../base/processor.hh"
+#include "../external/librtprocess/src/librtprocess.h"
 
 //#define RT_EMU 1
 
 
 PF::CACorrectPar::CACorrectPar():
-  OpParBase(),
+DemosaicBasePar(8, false),
   enable_ca( "enable_ca", this, false ),
   auto_ca( "auto_ca", this, true ),
   ca_red( "ca_red", this, 0 ),
   ca_blue( "ca_blue", this, 0 )
 {
-  set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
   set_type( "ca_correct" );
 }
 
@@ -61,172 +61,82 @@ VipsImage* PF::CACorrectPar::build(std::vector<VipsImage*>& in, int first,
     return in[0];
   }
 
-  size_t blobsz;
-  if( vips_image_get_blob( in[0], "raw_image_data",
-         (void**)&image_data,
-         &blobsz ) ) {
-    std::cout<<"RawOutputPar::build(): could not extract raw_image_data."<<std::endl;
-    return NULL;
+  VipsImage* img = DemosaicBasePar::build( in, first, NULL, NULL, level );
+  return img;
+}
+
+
+static bool setProgCancel_dummy(double)
+{
+  return true;
+}
+
+
+void PF::ca_correct_PF(VipsRegion* ir, VipsRegion* out, PF::CACorrectPar* par)
+{
+  int offsx = ir->valid.left;
+  int offsy = ir->valid.top;
+  int rw = ir->valid.width;
+  int rh = ir->valid.height;
+  int w = ir->im->Xsize;
+  int h = ir->im->Ysize;
+  float* p = (float*)VIPS_REGION_ADDR( ir, offsx, offsy );
+  int rowstride = VIPS_REGION_LSKIP(ir) / sizeof(float);
+
+  librtprocess::array2D<float> rawData( w, h, rw, rh, p, rowstride, offsx, offsy, ARRAY2D_BYREFERENCE );
+
+  if( true && offsx < 20 && offsy < 20 ) {
+    std::cout<<"ca_correct_PF: RAW image = "<<ir->im<<std::endl;
+    std::cout<<"ca_correct_PF: RAW size = "<<w<<" x "<<h<<std::endl;
+    std::cout<<"ca_correct_PF: input region = "<<rw<<" x "<<rh<<" + "<<offsx<<" + "<<offsy<<std::endl;
+    std::cout<<"ca_correct_PF: rowstride = "<<rowstride<<std::endl;
   }
-  if( blobsz != sizeof(dcraw_data_t) ) {
-    std::cout<<"RawOutputPar::build(): wrong raw_image_data size."<<std::endl;
-    return NULL;
+
+  offsx = out->valid.left;
+  offsy = out->valid.top;
+  rw = out->valid.width;
+  rh = out->valid.height;
+  w = out->im->Xsize;
+  h = out->im->Ysize;
+  p = (float*)VIPS_REGION_ADDR( out, offsx, offsy );
+  rowstride = VIPS_REGION_LSKIP(out) / sizeof(float);
+
+  librtprocess::array2D<float> rawDataOut( w, h, rw, rh, p, rowstride, offsx, offsy, ARRAY2D_BYREFERENCE );
+
+  if( true && offsx < 20 && offsy < 20 ) {
+    std::cout<<"ca_correct_PF: output image = "<<out->im<<std::endl;
+    std::cout<<"ca_correct_PF: output size = "<<w<<" x "<<h<<std::endl;
+    std::cout<<"ca_correct_PF: output region = "<<rw<<" x "<<rh<<" + "<<offsx<<" + "<<offsy<<std::endl;
+    std::cout<<"ca_correct_PF: rowstride = "<<rowstride<<std::endl;
   }
 
-#ifndef NDEBUG
-  std::cout<<"CACorrectPar::build(): filters="<<image_data->idata.filters<<std::endl;
-#endif
-
-  int border = 8;
-
-  //VipsImage **t = (VipsImage **)
-  //  vips_object_local_array( VIPS_OBJECT( in[0] ), 12 );
-  VipsImage* t[12];
-
-  //  TOP BAND
-  int i0 = 0;
-  // Extract an horizontal top band at (0,1) and with size (in[0]->Xsize,border)
-  if( vips_crop(in[0], &t[i0], 0, 1, in[0]->Xsize, border, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_crop(#1) failed"<<std::endl;
-    return NULL;
+  int filters = par->get_image_data()->idata.filters;
+  librtprocess::ColorFilterArray cfarray(filters);
+  CaFitParams fitParams;
+  for(int i = 0; i < 2; i++) {
+    for(int j = 0; j < 2; j++) {
+      for(int k = 0; k < 16; k++) {
+        fitParams[i][j][k] = par->get_image_data()->color.ca_fitparams[i][j][k];
+      }
+    }
   }
-  //PF_UNREF( in[0], "CACorrectPar::build(): in[0] unref #1" );
-  // Flip the band vertically
-  if( vips_flip(t[i0], &t[i0+1], VIPS_DIRECTION_VERTICAL, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_flip(#1) failed"<<std::endl;
-    return NULL;
+
+  for( int y = 0; y < rh; y++ ) {
+    for( int x = 0; x < rw; x++ ) {
+      rawDataOut[y+offsy][x+offsx] = rawData[y+offsy][x+offsx];
+    }
   }
-  PF_UNREF( t[i0], "CACorrectPar::build(): t[i0] unref #1" );
-  // Put the vertical band above the original image
-  if( vips_join(t[i0+1], in[0], &t[i0+2], VIPS_DIRECTION_VERTICAL, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_join(#1) failed"<<std::endl;
-    return NULL;
-  }
-  //PF_UNREF( in[0], "CACorrectPar::build(): in[0] unref #1-2" );
-  PF_UNREF( t[i0+1], "CACorrectPar::build(): t[i0+1] unref #1" );
+  //return;
 
+  std::function<bool(double)> setProgCancel = setProgCancel_dummy;
 
-  //  BOTTOM BAND
-  i0 += 3;
-  // Extract an horizontal bottom band at (0,in[0]->Ysize-border-2) and with size (in[0]->Xsize,border)
-  if( vips_crop(in[0], &t[i0], 0, in[0]->Ysize-border-2, in[0]->Xsize, border, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_crop(#2) failed"<<std::endl;
-    return NULL;
-  }
-  //PF_UNREF( in[0], "CACorrectPar::build(): in[0] unref #2" );
-  // Flip the band vertically
-  if( vips_flip(t[i0], &t[i0+1], VIPS_DIRECTION_VERTICAL, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_flip(#2) failed"<<std::endl;
-    return NULL;
-  }
-  PF_UNREF( t[i0], "CACorrectPar::build(): t[i0] unref #2" );
-  // Put the vertical band below the previously joined image
-  if( vips_join(t[i0-1], t[i0+1], &t[i0+2], VIPS_DIRECTION_VERTICAL, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_join(#2) failed"<<std::endl;
-    return NULL;
-  }
-  PF_UNREF( t[i0-1], "CACorrectPar::build(): t[i0-1] unref #2" );
-  PF_UNREF( t[i0+1], "CACorrectPar::build(): t[i0+1] unref #2" );
-
-
-  //  LEFT BAND
-  i0 += 3;
-  // Extract a vertical left band at (1,0) and with size (border,t[i0-1]->Ysize)
-  //PF_PRINT_REF( t[i0-1], "CACorrectPar::build(): t[i0-1] refcount before crop" );
-  if( vips_crop(t[i0-1], &t[i0], 1, 0, border, t[i0-1]->Ysize, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_crop(#3) failed"<<std::endl;
-    return NULL;
-  }
-  //PF_PRINT_REF( t[i0-1], "CACorrectPar::build(): t[i0-1] refcount after crop" );
-  //PF_UNREF( t[i0-1], "CACorrectPar::build(): t[i0-1] unref #3" );
-  // Flip the band horizontally
-  if( vips_flip(t[i0], &t[i0+1], VIPS_DIRECTION_HORIZONTAL, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_flip(#3) failed"<<std::endl;
-    return NULL;
-  }
-  PF_UNREF( t[i0], "CACorrectPar::build(): t[i0] unref #3" );
-  // Put the vertical band left of the previously joined image
-  if( vips_join(t[i0+1], t[i0-1], &t[i0+2], VIPS_DIRECTION_HORIZONTAL, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_join(#3) failed"<<std::endl;
-    return NULL;
-  }
-  PF_UNREF( t[i0-1], "CACorrectPar::build(): t[i0-1] unref #3-2" );
-  PF_UNREF( t[i0+1], "CACorrectPar::build(): t[i0+1] unref #3" );
-
-
-  //  RIGHT BAND
-  i0 += 3;
-  // Extract a vertical right band at (t[i0-1]->Xsize-2,0) and with size (border,t[i0-1]->Ysize)
-  if( vips_crop(t[i0-1], &t[i0], t[i0-1]->Xsize-border-2, 0, border, t[i0-1]->Ysize, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_crop(#4) failed"<<std::endl;
-    return NULL;
-  }
-  //PF_UNREF( t[i0-1], "CACorrectPar::build(): t[i0-1] unref #4" );
-  // Flip the band horizontally
-  if( vips_flip(t[i0], &t[i0+1], VIPS_DIRECTION_HORIZONTAL, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_flip(#4) failed"<<std::endl;
-    return NULL;
-  }
-  PF_UNREF( t[i0], "CACorrectPar::build(): t[i0] unref #4" );
-  // Put the vertical band right of the previously joined image
-  if( vips_join(t[i0-1], t[i0+1], &t[i0+2], VIPS_DIRECTION_HORIZONTAL, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_join(#4) failed"<<std::endl;
-    return NULL;
-  }
-  PF_UNREF( t[i0-1], "CACorrectPar::build(): t[i0-1] unref #4-2" );
-  PF_UNREF( t[i0+1], "CACorrectPar::build(): t[i0+1] unref #4" );
-
-  //std::cout<<"i0+2="<<i0+2<<std::endl;
-
-  // Copy to extended image
-  VipsImage* extended;
-  if( vips_copy(t[i0+2], &extended, NULL) ) {
-    std::cout<<"CACorrectPar::build(): vip_copy(#1) failed"<<std::endl;
-    return NULL;
-  }
-  //PF_UNREF( in[0], "CACorrectPar::build(): in[0] after vips_copy()" );
-  PF_UNREF( t[i0+2], "CACorrectPar::build(): t[i0+2] after vips_copy()" );
-
-  set_image_hints( extended );
-
-
-  std::vector<VipsImage*> in2; in2.push_back(extended);
-  VipsImage* img = OpParBase::build( in2, first, NULL, NULL, level );
-  PF_UNREF( extended, "CACorrectPar::build(): extended unref" );
-  if( !img ) return NULL;
-  //VipsImage* img = extended;
-
-  VipsImage* cropped = img;
-  /**/
-  int result;
-  result = vips_crop(img, &cropped, border, border, in[0]->Xsize, in[0]->Ysize, NULL);
-  PF_UNREF( img, "CACorrectPar::build(): img unref" )
-  if( result ) {
-    std::cout<<"CACorrectPar::build(): vip_crop() failed"<<std::endl;
-    return NULL;
-  }
-  /**/
-
-  /*
-  VipsImage* out;
-  int bands = 3;
-  VipsCoding coding = VIPS_CODING_NONE;
-  VipsInterpretation interpretation = VIPS_INTERPRETATION_RGB;
-  VipsBandFormat format = VIPS_FORMAT_FLOAT;
-  vips_copy( cropped, &out,
-	     "format", format,
-	     "bands", bands,
-	     "coding", coding,
-	     "interpretation", interpretation,
-	     NULL );
-  //sprintf(tifname,"/tmp/level_%d-2.tif",(int)levels.size());
-  //vips_image_write_to_file( out, tifname );
-  //g_object_unref( img );
-  PF_UNREF( cropped, "PF::CACorrectPar::build(): cropped unref" );
-
-  return out;
-  */
-
-  return cropped;
+  bool fitParamsIn = true;
+  float initGain = 1;
+  int border = 16;
+  float inputScale = 1;
+  float outputScale = 1;
+  librtprocess::CA_correct(offsx, offsy, rw, rh,
+      par->get_auto_ca(), par->get_ca_red(), par->get_ca_blue(), rawData, rawDataOut,
+      cfarray, setProgCancel, fitParams, fitParamsIn, inputScale, outputScale );
 }
 

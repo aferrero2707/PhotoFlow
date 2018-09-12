@@ -46,20 +46,23 @@ namespace PF
   {
     dcraw_data_t* image_data;
     int border, border2;
+    bool rgb_output;
 
   public:
-    DemosaicBasePar(int b);
+    DemosaicBasePar(int b, bool rgbout = true);
     bool has_intensity() { return false; }
     bool has_opacity() { return false; }
     bool needs_input() { return true; }
 
     dcraw_data_t* get_image_data() { return image_data; }
 
+    int get_border() { return border; }
+
     void set_image_hints( VipsImage* img )
     {
       if( !img ) return;
       OpParBase::set_image_hints( img );
-      rgb_image( get_xsize(), get_ysize() );
+      if(rgb_output) rgb_image( get_xsize(), get_ysize() );
     }
 
     /* Function to derive the output area from the input area

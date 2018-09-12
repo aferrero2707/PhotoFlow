@@ -33,8 +33,8 @@
 #include "../base/processor.hh"
 #include "../external/librtprocess/src/librtprocess.h"
 
-PF::DemosaicBasePar::DemosaicBasePar(int b):
-  OpParBase(), border(b)
+PF::DemosaicBasePar::DemosaicBasePar(int b, bool rgbout):
+  OpParBase(), border(b), rgb_output(rgbout)
 {
   border2 = border*2;
   set_demand_hint( VIPS_DEMAND_STYLE_SMALLTILE );
@@ -184,9 +184,9 @@ VipsImage* PF::DemosaicBasePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   VipsImage* out;
-  int bands = 3;
+  int bands = rgb_output ? 3 : 1;
   VipsCoding coding = VIPS_CODING_NONE;
-  VipsInterpretation interpretation = VIPS_INTERPRETATION_RGB;
+  VipsInterpretation interpretation = rgb_output ? VIPS_INTERPRETATION_RGB : VIPS_INTERPRETATION_B_W;
   VipsBandFormat format = VIPS_FORMAT_FLOAT;
   vips_copy( cropped, &out,
 	     "format", format,

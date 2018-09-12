@@ -116,7 +116,7 @@ public:
     // use as empty declaration, resize before use!
     // very useful as a member object
     array2D() :
-      x(0), y(0), offset_x(0), offset_y(0), owner(0), flags(0), ptr(nullptr), data(nullptr), lock(false)
+        x(0), y(0), offset_x(0), offset_y(0), owner(0), flags(0), ptr(nullptr), data(nullptr), lock(false)
     {
         //printf("got empty array2D init\n");
     }

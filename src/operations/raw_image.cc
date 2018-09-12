@@ -827,7 +827,7 @@ bool PF::RawImage::load_rawspeed()
   //==================================================================
   // Load the RAW image data into a vips image
   memset( pdata->color.ca_fitparams, 0, sizeof(fitparams) );
-  /*
+
 //#ifndef NDEBUG
   std::cout<<"RawImage: rawData.GetBuffer()="<<(void*)rawData.GetBuffer()<<std::endl;
   std::cout<<"Starting CA correction..."<<std::endl;
@@ -848,7 +848,7 @@ bool PF::RawImage::load_rawspeed()
     }
   }
 //#endif
-  */
+
   rawData.Reset();
 #ifndef NDEBUG
   std::cout<<"RawImage: rawData.Reset() called"<<std::endl;

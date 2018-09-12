@@ -36,28 +36,22 @@
 
 #include "../base/operation.hh"
 #include "../rt/rtengine/rawimagesource.hh"
+#include "demosaic_common.hh"
 
 
 
 namespace PF
 {
 
-  class CACorrectPar: public OpParBase
+  class CACorrectPar: public DemosaicBasePar
   {
     Property<bool> enable_ca;
     Property<bool> auto_ca;
 
     // Manual CA correction parameters
     Property<float> ca_red, ca_blue;
-
-    dcraw_data_t* image_data;
   public:
     CACorrectPar();
-    bool has_intensity() { return false; }
-    bool has_opacity() { return false; }
-    bool needs_input() { return true; }
-
-    dcraw_data_t* get_image_data() { return image_data; }
 
     void set_enable_ca(bool flag) { enable_ca.update(flag); }
     bool get_auto_ca() { return auto_ca.get(); }
@@ -65,55 +59,15 @@ namespace PF
     float get_ca_red() { return ca_red.get(); }
     float get_ca_blue() { return ca_blue.get(); }
 
-    /* Function to derive the output area from the input area
-     */
-    virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
-    {
-      rout->left = rin->left+8;
-      rout->top = rin->top+8;
-      rout->width = rin->width-16;
-      rout->height = rin->height-16;
-    }
-       
-    /* Function to derive the area to be read from input images,
-       based on the requested output area
-    */
-    virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
-    {
-      int border = 8;
-			// Output region aligned to the Bayer pattern
-			int raw_left = (rout->left/2)*2;
-			//if( raw_left < border ) raw_left = 0;
-
-			int raw_top = (rout->top/2)*2;
-      //if( raw_top < border ) raw_top = 0;
-
-      int raw_right = rout->left+rout->width-1;
-			//if( raw_right > (in->Xsize-border-1) ) raw_right = in->Xsize-1;
-
-			int raw_bottom = rout->top+rout->height-1;
-      //if( raw_bottom > (in->Ysize-border-1) ) raw_bottom = in->Ysize-1;
-
-			int raw_width = raw_right-raw_left+1;
-			int raw_height = raw_bottom-raw_top+1;
-
-      rin->left = raw_left-border;
-      rin->top = raw_top-border;
-      rin->width = raw_width+border*2;
-      rin->height = raw_height+border*2;
-
-      if( (rin->width%2) ) rin->width += 1;
-      if( (rin->height%2) ) rin->height += 1;
-    }
-      
-
-
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 										 VipsImage* imap, VipsImage* omap, 
 										 unsigned int& level);
   };
 
   
+
+
+  void ca_correct_PF(VipsRegion* ir, VipsRegion* out, PF::CACorrectPar* par);
 
 
   template < OP_TEMPLATE_DEF > 
@@ -138,9 +92,7 @@ namespace PF
 								VipsRegion* imap, VipsRegion* omap, 
 								VipsRegion* out, CACorrectPar* par)
     {
-			rtengine::RawImageSource rawimg;
-			rawimg.set_image_data( par->get_image_data() );
-			rawimg.ca_correct( in[0], out, par->get_auto_ca(), par->get_ca_red(), par->get_ca_blue() );
+      ca_correct_PF(in[0], out, par);
     }
   };
 
