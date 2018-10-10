@@ -39,6 +39,7 @@
 #include "imagearea.hh"
 #include "histogram.hh"
 #include "sampler.hh"
+#include "image_info.hh"
 #include "layerwidget.hh"
 #include "tablabelwidget.hh"
 #include "softproofdialog.hh"
@@ -101,10 +102,10 @@ class ImageEditor: public Gtk::HBox
   Gtk::EventBox imageArea_eventBox;
 
 
-  Gtk::Expander stat_expander;
-  Gtk::Notebook stat_notebook;
   Histogram* histogram;
   SamplerGroup* samplers;
+  ImageInfo* image_info;
+
 
   // Boxes for aligning the image area inside the scrolled window.
   // The image area gets inserted into an HBox which in turn

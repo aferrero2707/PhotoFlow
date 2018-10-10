@@ -131,7 +131,12 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
 
 class Layout2: public Gtk::HBox
 {
+  Gtk::Expander stat_expander;
+  Gtk::Notebook stat_notebook;
+
   Gtk::Widget* histogram_widget;
+  Gtk::Widget* samplers_widget;
+  Gtk::Widget* image_info_widget;
   Gtk::Widget* buttons_widget;
   Gtk::Widget* layers_widget;
   Gtk::Widget* controls_widget;
@@ -202,23 +207,31 @@ class Layout2: public Gtk::HBox
   }
 
 public:
-  Layout2(Gtk::Widget* h, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
-  histogram_widget(h), buttons_widget(b), layers_widget(l),
+  Layout2(Gtk::Widget* h, Gtk::Widget* s, Gtk::Widget* i, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
+  histogram_widget(h), samplers_widget(s), image_info_widget(i), buttons_widget(b), layers_widget(l),
   controls_widget(c), preview_widget(p), old_width(0)
   //paned(Gtk::ORIENTATION_VERTICAL)
   {
+    stat_expander.set_label( _("image info") );
+    stat_expander.set_expanded(true);
+    stat_expander.add(stat_notebook);
+    stat_notebook.append_page( *histogram_widget, _("histogram") );
+    stat_notebook.append_page( *samplers_widget, _("samplers") );
+
+    vbox.pack_start( stat_expander, Gtk::PACK_SHRINK );
     if( PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs()) {
       hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
       hbox.pack_start( *layers_widget, Gtk::PACK_EXPAND_WIDGET );
+      vbox.pack_start( *image_info_widget, Gtk::PACK_SHRINK );
     } else {
       paned.add1( *layers_widget );
       paned.add2( *controls_widget );
 
       hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
       hbox.pack_start( paned, Gtk::PACK_EXPAND_WIDGET );
+      stat_notebook.append_page( *image_info_widget, _("info") );
     }
 
-    vbox.pack_start( *histogram_widget, Gtk::PACK_SHRINK );
     vbox.pack_start( hbox, Gtk::PACK_EXPAND_WIDGET );
 
     //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
@@ -329,6 +342,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
   histogram = new PF::Histogram( image->get_pipeline(HISTOGRAM_PIPELINE_ID) );
   samplers = new PF::SamplerGroup( image->get_pipeline(0) );
+  image_info = new PF::ImageInfo( image->get_pipeline(0) );
 
 
   radioBox.pack_start( buttonShowMerged );
@@ -374,12 +388,6 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   imageBox.pack_start( imageArea_scrolledWindow_box );
   imageBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
 
-  stat_expander.set_label( _("image info") );
-  stat_expander.set_expanded(true);
-  stat_notebook.append_page( *histogram, _("histogram") );
-  stat_notebook.append_page( *samplers, _("samplers") );
-  stat_expander.add(stat_notebook);
-
   imageArea->set_samplers( samplers );
 
   //layersWidget_box.pack_start( stat_expander, Gtk::PACK_SHRINK );
@@ -394,7 +402,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //controls_group_vbox.pack_start( stat_expander, Gtk::PACK_SHRINK );
   //controls_group_vbox.pack_start( controls_group_scrolled_window, Gtk::PACK_EXPAND_WIDGET );
 
-  main_panel = new Layout2( &stat_expander, &(layersWidget.get_tool_buttons_box()),
+  main_panel = new Layout2( histogram, samplers, image_info, &(layersWidget.get_tool_buttons_box()),
       &layersWidget_box, &controls_group_scrolled_window, &imageBox );
 
   pack_start( *main_panel );
