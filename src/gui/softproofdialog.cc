@@ -233,7 +233,16 @@ void PF::SoftProofDialog::open()
 void PF::SoftProofDialog::on_show()
 {
   Gtk::Dialog::on_show();
-  on_profile_selector_changed();
+  //on_profile_selector_changed();
+  update_intent();
+  update_bpc();
+  update_adaptation();
+  update_sim_black_ink();
+  update_sim_paper_color();
+  update_clip_negative();
+  update_clip_overflow();
+  update_gamut_warning();
+  if( editor->get_image() ) editor->get_image()->update();
 }
 
 
@@ -269,18 +278,18 @@ void PF::SoftProofDialog::on_button_clicked(int id)
 }
 
 
-void PF::SoftProofDialog::on_profile_selector_changed()
+bool PF::SoftProofDialog::update_profile()
 {
   Gtk::TreeModel::iterator iter = profile_selector.get_active();
   if( iter ) {
     Gtk::TreeModel::Row row = *iter;
     if( row ) {
       PF::ImageArea* imageArea = editor->get_image_area();
-      if( !imageArea ) return;
+      if( !imageArea ) return false;
       PF::ProcessorBase* softproof_conv = imageArea->get_softproof_conversion();
-      if( !softproof_conv ) return;
+      if( !softproof_conv ) return false;
       PF::OpParBase* softproof_par = softproof_conv->get_par();
-      if( !softproof_par ) return;
+      if( !softproof_par ) return false;
       //Get the data for the selected row, using our knowledge of the tree
       //model:
       int id = row[profile_columns.col_id];
@@ -322,120 +331,166 @@ void PF::SoftProofDialog::on_profile_selector_changed()
       }
       }
     }
+    return true;
   }
-  if( editor->get_image() ) editor->get_image()->update();
+  return false;
 }
 
 
-void PF::SoftProofDialog::on_intent_selector_changed()
+void PF::SoftProofDialog::on_profile_selector_changed()
+{
+  PF::Image* image = editor->get_image();
+  if( !image ) return;
+  if( update_profile() ) image->update();
+}
+
+
+bool PF::SoftProofDialog::update_intent()
 {
   Gtk::TreeModel::iterator iter = intent_selector.get_active();
   if( iter ) {
     Gtk::TreeModel::Row row = *iter;
     if( row ) {
       PF::ImageArea* imageArea = editor->get_image_area();
-      if( !imageArea ) return;
+      if( !imageArea ) return false;
       PF::ProcessorBase* softproof_conv = imageArea->get_softproof_conversion();
-      if( !softproof_conv ) return;
+      if( !softproof_conv ) return false;
       PF::OpParBase* softproof_par = softproof_conv->get_par();
-      if( !softproof_par ) return;
+      if( !softproof_par ) return false;
 
       std::string prop_val = row[intent_columns.col_value];
       softproof_par->set_property_value( "rendering_intent", prop_val );
     }
+    return true;
   }
-  if( editor->get_image() ) editor->get_image()->update();
+  return false;
+}
+
+
+void PF::SoftProofDialog::on_intent_selector_changed()
+{
+  PF::Image* image = editor->get_image();
+  if( !image ) return;
+  if( update_intent() ) image->update();
+}
+
+
+bool PF::SoftProofDialog::update_bpc()
+{
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !imageArea ) return false;
+  imageArea->set_softproof_bpc( bpc_button.get_active() );
+  return true;
 }
 
 
 void PF::SoftProofDialog::on_bpc_toggled()
 {
   PF::Image* image = editor->get_image();
-  PF::ImageArea* imageArea = editor->get_image_area();
   if( !image ) return;
-  if( !imageArea ) return;
-  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
-  imageArea->set_softproof_bpc( bpc_button.get_active() );
-  image->update();
+  if( update_bpc() ) image->update();
+}
+
+
+bool PF::SoftProofDialog::update_adaptation()
+{
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !imageArea ) return false;
+  imageArea->set_softproof_adaptation_state( adaptation_slider.get_value() );
+  return true;
 }
 
 
 void PF::SoftProofDialog::on_adaptation_changed()
 {
   PF::Image* image = editor->get_image();
-  PF::ImageArea* imageArea = editor->get_image_area();
   if( !image ) return;
-  if( !imageArea ) return;
-  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
-  imageArea->set_softproof_adaptation_state( adaptation_slider.get_value() );
-  image->update();
+  if( update_adaptation() ) image->update();
+}
+
+
+bool PF::SoftProofDialog::update_sim_black_ink()
+{
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !imageArea ) return false;
+  imageArea->set_sim_black_ink( sim_black_ink_button.get_active() );
+  return true;
 }
 
 
 void PF::SoftProofDialog::on_sim_black_ink_toggled()
 {
   PF::Image* image = editor->get_image();
-  PF::ImageArea* imageArea = editor->get_image_area();
   if( !image ) return;
-  if( !imageArea ) return;
-  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
-  imageArea->set_sim_black_ink( sim_black_ink_button.get_active() );
-  image->update();
+  if( update_sim_black_ink() ) image->update();
+}
+
+
+bool PF::SoftProofDialog::update_sim_paper_color()
+{
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !imageArea ) return false;
+  imageArea->set_sim_paper_color( sim_paper_color_button.get_active() );
+  return true;
 }
 
 
 void PF::SoftProofDialog::on_sim_paper_color_toggled()
 {
   PF::Image* image = editor->get_image();
-  PF::ImageArea* imageArea = editor->get_image_area();
   if( !image ) return;
-  if( !imageArea ) return;
-  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
-  imageArea->set_sim_paper_color( sim_paper_color_button.get_active() );
-  image->update();
+  if( update_sim_paper_color() ) image->update();
+}
+
+
+bool PF::SoftProofDialog::update_clip_negative()
+{
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !imageArea ) return false;
+  imageArea->set_clip_negative( clip_negative_button.get_active() );
+  return true;
 }
 
 
 void PF::SoftProofDialog::on_clip_negative_toggled()
 {
   PF::Image* image = editor->get_image();
-  PF::ImageArea* imageArea = editor->get_image_area();
   if( !image ) return;
-  if( !imageArea ) return;
-  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
-  imageArea->set_clip_negative( clip_negative_button.get_active() );
-  image->update();
+  if( update_clip_negative() ) image->update();
+}
+
+
+bool PF::SoftProofDialog::update_clip_overflow()
+{
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !imageArea ) return false;
+  imageArea->set_clip_overflow( clip_overflow_button.get_active() );
+  return true;
 }
 
 
 void PF::SoftProofDialog::on_clip_overflow_toggled()
 {
   PF::Image* image = editor->get_image();
-  PF::ImageArea* imageArea = editor->get_image_area();
   if( !image ) return;
-  if( !imageArea ) return;
-  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
-  imageArea->set_clip_overflow( clip_overflow_button.get_active() );
-  image->update();
+  if( update_clip_overflow() ) image->update();
+}
+
+
+bool PF::SoftProofDialog::update_gamut_warning()
+{
+  PF::ImageArea* imageArea = editor->get_image_area();
+  if( !imageArea ) return false;
+  imageArea->set_gamut_warning( gamut_warning_button.get_active() );
+  return true;
 }
 
 
 void PF::SoftProofDialog::on_gamut_warning_toggled()
 {
   PF::Image* image = editor->get_image();
-  PF::ImageArea* imageArea = editor->get_image_area();
   if( !image ) return;
-  if( !imageArea ) return;
-  PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
-  if( !pipeline ) return;
-  imageArea->set_gamut_warning( gamut_warning_button.get_active() );
-  image->update();
+  if( update_gamut_warning() ) image->update();
 }
 
 

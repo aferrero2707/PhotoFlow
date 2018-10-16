@@ -106,6 +106,16 @@ namespace PF {
 
     bool on_delete_event( GdkEventAny *   any_event );
 
+    bool update_profile();
+    bool update_intent();
+    bool update_bpc();
+    bool update_adaptation();
+    bool update_sim_black_ink();
+    bool update_sim_paper_color();
+    bool update_clip_negative();
+    bool update_clip_overflow();
+    bool update_gamut_warning();
+
     void on_profile_selector_changed();
     void on_intent_selector_changed();
     void on_sim_black_ink_toggled();

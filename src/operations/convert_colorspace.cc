@@ -191,24 +191,24 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   if( pmode == PF::PROF_TYPE_FROM_SETTINGS ) {
     ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
     trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
-    std::cout<<"ConvertColorspacePar::build(): Getting output profile from settings..."<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): Getting output profile from settings..."<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
   } else if( pmode == PF::PROF_TYPE_FROM_DISK ) {
-    std::cout<<"ConvertColorspacePar::build(): Getting output profile from disk: "<<out_profile_name.get()<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): Getting output profile from disk: "<<out_profile_name.get()<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
   } else {//if( pmode == PF::PROF_MODE_CUSTOM ) {
     ptype = (profile_type_t)out_profile_type.get_enum_value().first;
     trc_type = (TRC_type)out_trc_type.get_enum_value().first;
-    std::cout<<"ConvertColorspacePar::build(): Getting built-in profile: "<<out_profile_type.get_enum_value().second.first<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): Getting built-in profile: "<<out_profile_type.get_enum_value().second.first<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
   }
 
   if( iccprof ) {
     out_profile = iccprof->get_profile();
   }
-  std::cout<<"ConvertColorspacePar::build(): out_mode_changed="<<out_mode_changed
-      <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
-  std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
+  //std::cout<<"ConvertColorspacePar::build(): out_mode_changed="<<out_mode_changed
+  //    <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
+  //std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
 
   bool matching = false;
   if( iccprof_in && iccprof && iccprof_in->equals_to(iccprof) ) {
@@ -217,7 +217,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 
   if( matching ) {
     PF_REF( in[first], "ConvertColorspacePar::build(): input image ref for equal input and output profiles" );
-    std::cout<<"ConvertColorspacePar::build(): matching input and output profiles, no transform needed"<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): matching input and output profiles, no transform needed"<<std::endl;
     return in[first];
   }
 
@@ -310,7 +310,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     tr_par->set_clip_negative(clip_negative.get());
     tr_par->set_clip_overflow(clip_overflow.get());
     out = tr_par->build( in2, 0, NULL, NULL, level );
-    std::cout<<"ConvertColorspacePar::build(): tr_par output: "<<out<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): tr_par output: "<<out<<std::endl;
 
     /*
   if( out_profile ) {
@@ -328,7 +328,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
      */
     if( iccprof ) PF::set_icc_profile( out, iccprof );
 
-    std::cout<<"ConvertColorspacePar::build(): gamut_warning="<<gamut_warning<<"  get_render_mode()="<<get_render_mode()<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): gamut_warning="<<gamut_warning<<"  get_render_mode()="<<get_render_mode()<<std::endl;
     if( gamut_warning && (get_render_mode() == PF_RENDER_PREVIEW) ) {
       PF::ICCProfile* aces_prof =
           PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_ACES, PF::PF_TRC_LINEAR );
@@ -339,7 +339,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
           !cmsIsCLUT(out_profile, intent.get_enum_value().first, LCMS_USED_AS_OUTPUT) ) {
         gw_prof = aces_prof;
       }
-      std::cout<<"ConvertColorspacePar::build(): gw_prof="<<(void*)gw_prof<<std::endl;
+      //std::cout<<"ConvertColorspacePar::build(): gw_prof="<<(void*)gw_prof<<std::endl;
       if( gw_prof && gw_prof->get_profile() ) {
         PF::ICCTransformPar* tr_in =
             dynamic_cast<PF::ICCTransformPar*>( gw_transform_in->get_par() );

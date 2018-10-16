@@ -1223,6 +1223,7 @@ void PF::ImageArea::update( VipsRect* area )
       cc_par->set_clip_negative( softproof_clip_negative_enabled );
       cc_par->set_clip_overflow( softproof_clip_overflow_enabled );
       cc_par->set_bpc(softproof_bpc_enabled);
+      std::cout<<"ImageArea::update(): cc_par->set_bpc("<<softproof_bpc_enabled<<")"<<std::endl;
     }
     softproof_conversion->get_par()->set_image_hints( wclipimg );
     softproof_conversion->get_par()->set_format( get_pipeline()->get_format() );
@@ -1242,15 +1243,17 @@ void PF::ImageArea::update( VipsRect* area )
   icc_par->set_intent( options.get_display_profile_intent() );
   icc_par->set_bpc( options.get_display_profile_bpc() );
   icc_par->set_adaptation_state( 1.0 );
-  //icc_par->set_bpc( true );
-  if( softproof_enabled && sim_paper_color_enabled ) {
-    icc_par->set_intent( INTENT_ABSOLUTE_COLORIMETRIC );
-    icc_par->set_bpc( false );
-    icc_par->set_adaptation_state( adaptation_state );
-  } else if( softproof_enabled && sim_black_ink_enabled ) {
-    icc_par->set_intent( INTENT_RELATIVE_COLORIMETRIC );
-    icc_par->set_bpc( false );
-    //icc_par->set_adaptation_state( adaptation_state );
+  if( softproof_enabled ) {
+    icc_par->set_bpc( true );
+    if( sim_paper_color_enabled ) {
+      icc_par->set_intent( INTENT_ABSOLUTE_COLORIMETRIC );
+      icc_par->set_bpc( false );
+      icc_par->set_adaptation_state( adaptation_state );
+    } else if( sim_black_ink_enabled ) {
+      icc_par->set_intent( INTENT_RELATIVE_COLORIMETRIC );
+      icc_par->set_bpc( false );
+      //icc_par->set_adaptation_state( adaptation_state );
+    }
   }
   convert2display->get_par()->set_image_hints( wclipimg );
   convert2display->get_par()->set_format( get_pipeline()->get_format() );
