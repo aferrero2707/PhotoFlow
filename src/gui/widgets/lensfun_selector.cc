@@ -370,7 +370,7 @@ void PF::LFCamSelector2::set_cam(Glib::ustring cam_make, Glib::ustring cam_model
   rtengine::LFCamera lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_make, cam_model);
   if( lfcamera ) {
     update_cam( lfcamera.getMake(), lfcamera.getModel() );
-      std::cout<<"LFCamSelector2::set_cam(): model \""<<maker_name + " " + model_name<<"\" selected"<<std::endl;
+      //std::cout<<"LFCamSelector2::set_cam(): model \""<<maker_name + " " + model_name<<"\" selected"<<std::endl;
       label.set_text( model_name );
       label.set_tooltip_text( maker_name + " " + model_name );
   } else {
@@ -499,7 +499,7 @@ void PF::LFLensSelector2::set_lens(Glib::ustring cam_make, Glib::ustring cam_mod
       } else {
         lpretty = lens_model;
       }
-      std::cout<<"LFLensSelector2::set_lens(): lens \""<<lens<<"\" selected"<<std::endl;
+      //std::cout<<"LFLensSelector2::set_lens(): lens \""<<lens<<"\" selected"<<std::endl;
       label.set_text( lpretty );
       label.set_tooltip_text( lens_model );
       update_lens( lpretty );
@@ -705,8 +705,8 @@ void PF::LFSelector::set_cam(Glib::ustring cam_make, Glib::ustring cam_model)
   rtengine::LFCamera lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_make, cam_model);
   if( lfcamera ) {
     update_cam( lfcamera.getMake(), lfcamera.getModel() );
-      std::cout<<"LFSelector::set_cam(): model \""
-          <<cam_maker_name + " " + cam_model_name<<"\" selected"<<std::endl;
+      //std::cout<<"LFSelector::set_cam(): model \""
+      //    <<cam_maker_name + " " + cam_model_name<<"\" selected"<<std::endl;
       cam_label.set_text( cam_model_name );
       cam_label.set_tooltip_text( cam_maker_name + " " + cam_model_name );
   } else {
@@ -736,7 +736,7 @@ void PF::LFSelector::set_lens(Glib::ustring lens)
       } else {
         lpretty = lens_model;
       }
-      std::cout<<"LFSelector::set_lens(): lens \""<<lpretty<<"\" (\""<<lens_model<<"\") selected"<<std::endl;
+      //std::cout<<"LFSelector::set_lens(): lens \""<<lpretty<<"\" (\""<<lens_model<<"\") selected"<<std::endl;
       lens_label.set_text( lpretty );
       lens_label.set_tooltip_text( lens_model );
       update_lens( lens_model );
