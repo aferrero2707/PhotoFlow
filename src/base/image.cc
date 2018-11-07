@@ -1031,7 +1031,7 @@ bool PF::Image::save_backup()
 void PF::Image::export_merged( std::string filename, image_export_opt_t* export_opt )
 {
   if( PF::PhotoFlow::Instance().is_batch() ) {
-    do_export_merged( filename );
+    do_export_merged( filename, export_opt );
   } else {
     ProcessRequestInfo request;
     request.image = this;
@@ -1043,6 +1043,7 @@ void PF::Image::export_merged( std::string filename, image_export_opt_t* export_
       request.data = malloc(sizeof(image_export_opt_t));
       memcpy(request.data, export_opt, sizeof(image_export_opt_t));
     }
+    std::cout<<"PF::Image::export_merged(): request.data="<<request.data<<std::endl;
 
 #ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): locking mutex..."<<std::endl;
@@ -1087,6 +1088,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       do_update();
     }
      */
+    std::cout<<"Image::do_export_merged(): ext="<<ext<<std::endl;
 
     std::string msg;
 
@@ -1144,6 +1146,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       case PF::SIZE_8K: width=7680; height=4320; break;
       case PF::SIZE_A4_300DPI: width=3508; height=2480; break;
       case PF::SIZE_A4P_300DPI: width=2480; height=3508; break;
+      case PF::SIZE_CUSTOM: width=export_opt->width; height=export_opt->height; break;
       default: break;
       }
       std::cout<<"  width="<<width<<"  height="<<height<<std::endl;
@@ -1165,6 +1168,8 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       op_par->set_image_hints( image );
       op_par->set_format( VIPS_FORMAT_FLOAT );
       op_par->set_usm_radius(export_opt->sharpen_radius);
+      op_par->propagate_settings();
+      op_par->compute_padding(image, 0, 0);
       VipsImage* out = op_par->build( in, 0, NULL, NULL, level );
       PF_UNREF( image, "Image::do_export_merged(): image unref" );
       image = out;
@@ -1175,6 +1180,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       std::cout<<"Image::do_export_merged(): profile_type="<<export_opt->profile_type<<"  trc="<<export_opt->trc_type<<std::endl;
       if( export_opt->profile_type == PF::PROF_TYPE_FROM_DISK ) {
         iccprof = PF::ICCStore::Instance().get_profile( export_opt->custom_profile_name );
+        std::cout<<"Image::do_export_merged(): iccprof="<<iccprof<<"    custom_profile_name="<<export_opt->custom_profile_name<<std::endl;
       } else if( export_opt->profile_type == PF::PROF_TYPE_EMBEDDED ) {
         // No ICC conversion in this case
         iccprof = NULL;
@@ -1225,14 +1231,16 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
         timer.start();
         gint Q = 75;
         gboolean no_subsample = true;
-        gint quant_table = 0;
+        gboolean overshoot_deringing = true;
+        gint quant_table = 4;
         if( export_opt ) {
           Q = export_opt->jpeg_quality;
-          no_subsample = export_opt->jpeg_chroma_subsampling;
+          no_subsample = (export_opt->jpeg_chroma_subsampling == false);
           quant_table = export_opt->jpeg_quant_table;
         }
+        std::cout<<"Image::do_export_merged(): Q="<<Q<<"  no_subsample="<<no_subsample<<std::endl;
         vips_jpegsave( outimg, filename.c_str(), "Q", Q, "no_subsample", no_subsample,
-            "quant_table", quant_table, NULL );
+            "quant_table", quant_table, "overshoot_deringing", overshoot_deringing, NULL );
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
         if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
@@ -1253,6 +1261,9 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       outimg = convert_format->get_par()->build( in, 0, NULL, NULL, level );
       */
       outimg = image;
+      std::cout<<"Image::do_export_merged(): export_opt="<<export_opt<<std::endl;
+      if( export_opt )
+        std::cout<<"Image::do_export_merged(): tiff_format="<<export_opt->tiff_format<<std::endl;
       if( export_opt && export_opt->tiff_format != EXPORT_FORMAT_TIFF_32f ) {
         int max = 255;
         if( export_opt->tiff_format == EXPORT_FORMAT_TIFF_16 ) max = 65535;
@@ -1281,9 +1292,10 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
         std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
 #endif
 
-        vips_tiffsave( outimg, filename.c_str(), "compression",
+        int compression = (export_opt->tiff_compress==1) ? VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE : VIPS_FOREIGN_TIFF_COMPRESSION_NONE;
+        vips_tiffsave( outimg, filename.c_str(), "compression", compression,
             //VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
-            VIPS_FOREIGN_TIFF_COMPRESSION_NONE,
+            //VIPS_FOREIGN_TIFF_COMPRESSION_NONE,
             //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
             "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
 #ifndef NDEBUG
