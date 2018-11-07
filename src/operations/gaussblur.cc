@@ -76,7 +76,7 @@ void PF::GaussBlurPar::compute_padding( VipsImage* full_res, unsigned int id, un
     set_padding( padding, id );
   } else {
     VipsImage* mask;
-    float accuracy = 0.2;
+    float accuracy = (radius2<1) ? 0.01 : 0.2;
     int result = vips_gaussmat( &mask, radius2, accuracy,
         "separable", TRUE,
         "integer", FALSE,
@@ -172,14 +172,14 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
     int size = (srcimg->Xsize > srcimg->Ysize) ? srcimg->Xsize : srcimg->Ysize;
   
     //float accuracy = 0.05;
-    float accuracy = 0.2;
+    float accuracy = (radius2<1) ? 0.01 : 0.2;
 		VipsPrecision precision = VIPS_PRECISION_FLOAT;
-		if( get_render_mode() == PF_RENDER_PREVIEW &&
-				(blur_mode.get_enum_value().first == PF_BLUR_FAST) ) {
-			accuracy = 0.2;
-			//if( radius2 > 2 )
-			//	precision = VIPS_PRECISION_APPROXIMATE;
-		}
+		//if( get_render_mode() == PF_RENDER_PREVIEW &&
+		//		(blur_mode.get_enum_value().first == PF_BLUR_FAST) ) {
+		//	accuracy = 0.2;
+		//	//if( radius2 > 2 )
+		//	//	precision = VIPS_PRECISION_APPROXIMATE;
+		//}
 
     /*
 		VipsImage* tmp;
@@ -207,9 +207,10 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
         return NULL;
       }
       */
-#ifndef NDEBUG
+//#ifndef NDEBUG
+      std::cout<<"GaussBlurPar::build(): radius2="<<radius2<<"  accuracy="<<accuracy<<std::endl;
       std::cout<<"GaussBlurPar::build(): convsep mask size="<<mask->Xsize<<" "<<mask->Ysize<<std::endl;
-#endif
+//#endif
       result = vips_convsep( srcimg, &tmp, mask,
 			     "precision", precision,
 			     NULL );
