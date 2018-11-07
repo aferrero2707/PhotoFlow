@@ -62,6 +62,8 @@ class ImageInfo : public PipelineSink, public Gtk::Frame
   VipsImage* display_image;
   VipsImage* outimg;
 
+  Gtk::VBox vbox;
+  Gtk::Label l1, l2, l3;
   Gtk::TextView textview;
 
 public:
@@ -71,7 +73,9 @@ public:
    */
   typedef struct {
     ImageInfo * info;
-    Glib::ustring* text;
+    Glib::ustring* text1;
+    Glib::ustring* text2;
+    Glib::ustring* text3;
   } Update;
 
   static gboolean queue_draw_cb (Update * update);
@@ -79,7 +83,7 @@ public:
   ImageInfo( Pipeline* v );
   virtual ~ImageInfo();
 
-  void set_text(const Glib::ustring& text);
+  void set_text(const Glib::ustring& text1, const Glib::ustring& text2, const Glib::ustring& text3);
 
   void update( VipsRect* area );
 };

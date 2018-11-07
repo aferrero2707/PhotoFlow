@@ -36,8 +36,10 @@ gboolean PF::ImageInfo::queue_draw_cb (PF::ImageInfo::Update * update)
 {
   //update->sampler->set_values(update->val, update->lch, update->type);
   //std::cout<<"update->histogram->queue_draw() called"<<std::endl;
-  update->info->set_text( *(update->text) );
-  delete(update->text);
+  update->info->set_text( *(update->text1), *(update->text2), *(update->text3) );
+  delete(update->text1);
+  delete(update->text2);
+  delete(update->text3);
   g_free (update);
   return FALSE;
 }
@@ -47,11 +49,17 @@ gboolean PF::ImageInfo::queue_draw_cb (PF::ImageInfo::Update * update)
 PF::ImageInfo::ImageInfo( Pipeline* v ):
       PipelineSink( v ), Gtk::Frame()
 {
+  /*
   add(textview);
   textview.property_pixels_above_lines().set_value(3);
   textview.property_pixels_below_lines().set_value(3);
   textview.property_left_margin().set_value(5);
-
+  textview.set_editable(false);
+  */
+  add(vbox);
+  vbox.pack_start( l1, Gtk::PACK_SHRINK, 0 );
+  vbox.pack_start( l2, Gtk::PACK_SHRINK, 0 );
+  vbox.pack_start( l3, Gtk::PACK_SHRINK, 0 );
   show_all();
 }
 
@@ -60,10 +68,14 @@ PF::ImageInfo::~ImageInfo ()
 }
 
 
-void PF::ImageInfo::set_text(const Glib::ustring& text)
+void PF::ImageInfo::set_text(const Glib::ustring& text1, const Glib::ustring& text2, const Glib::ustring& text3)
 {
   Glib::RefPtr< Gtk::TextBuffer >  buf = textview.get_buffer ();
-  buf->set_text( text );
+  buf->set_text( text1 );
+
+  l1.set_text(text1);
+  l2.set_text(text2);
+  l3.set_text(text3);
 }
 
 
@@ -89,19 +101,23 @@ void PF::ImageInfo::update( VipsRect* area )
   PF::exif_data_t* exif_data = PF::get_exif_data( image );
   if( !exif_data ) return;
 
-  std::ostringstream info_text;
-  info_text << exif_data->camera_makermodel << std::endl;
-  info_text << exif_data->exif_lens << " (at " << exif_data->exif_focal_length << "mm)" << std::endl;
-  info_text << "f/" << exif_data->exif_aperture << "  ";
+  std::ostringstream info_text1;
+  info_text1 << exif_data->camera_makermodel << std::endl;
+  std::ostringstream info_text2;
+  info_text2 << exif_data->exif_lens << " (at " << exif_data->exif_focal_length << "mm)" << std::endl;
+  std::ostringstream info_text3;
+  info_text3 << "f/" << exif_data->exif_aperture << "  ";
   if( exif_data->exif_exposure >= 1 )
-    info_text << exif_data->exif_exposure << "s  ";
+    info_text3 << exif_data->exif_exposure << "s  ";
   else
-    info_text << "1/" << 1.f / exif_data->exif_exposure << "s  ";
-  info_text << "ISO" << exif_data->exif_iso;
+    info_text3 << "1/" << 1.f / exif_data->exif_exposure << "s  ";
+  info_text3 << "ISO" << exif_data->exif_iso;
 
   Update * update = g_new (Update, 1);
   update->info = this;
-  update->text = new Glib::ustring(info_text.str());
+  update->text1 = new Glib::ustring(info_text1.str());
+  update->text2 = new Glib::ustring(info_text2.str());
+  update->text3 = new Glib::ustring(info_text3.str());
   gdk_threads_add_idle ((GSourceFunc) queue_draw_cb, update);
 }
 
