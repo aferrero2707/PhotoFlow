@@ -180,7 +180,7 @@ int main (int argc, char *argv[])
   for(int i = 0; i < argc; i++)
     std::cout<<"  argv["<<i<<"]: \""<<argv[i]<<"\""<<std::endl;
 
-  if( std::string(argv[1]) == "--batch" ) {
+  if( argc >= 2 && std::string(argv[1]) == "--batch" ) {
     argc--;
     argv++;
     return PF::PhotoFlow::Instance().run_batch(argc, argv);
