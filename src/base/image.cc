@@ -1138,6 +1138,8 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       case PF::SIZE_1280_1024: width=1280; height=1024; break;
       case PF::SIZE_1440_900: width=1440; height=900; break;
       case PF::SIZE_1600_1200: width=1600; height=1200; break;
+      case PF::SIZE_1920_1080: width=1920; height=1080; break;
+      case PF::SIZE_1920_1200: width=1920; height=1200; break;
       case PF::SIZE_2048_1400: width=2048; height=1400; break;
       case PF::SIZE_2048_2048: width=2048; height=2048; break;
       case PF::SIZE_2K: width=2048; height=1080; break;
@@ -1232,7 +1234,9 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
         gint Q = 75;
         gboolean no_subsample = true;
         gboolean overshoot_deringing = true;
-        gint quant_table = 4;
+        gboolean trellis_quant = true;
+        gboolean optimize_scans = true;
+        gint quant_table = 0;
         if( export_opt ) {
           Q = export_opt->jpeg_quality;
           no_subsample = (export_opt->jpeg_chroma_subsampling == false);
@@ -1240,7 +1244,8 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
         }
         std::cout<<"Image::do_export_merged(): Q="<<Q<<"  no_subsample="<<no_subsample<<std::endl;
         vips_jpegsave( outimg, filename.c_str(), "Q", Q, "no_subsample", no_subsample,
-            "quant_table", quant_table, "overshoot_deringing", overshoot_deringing, NULL );
+            "quant_table", quant_table, "overshoot_deringing", overshoot_deringing,
+            "trellis_quant", trellis_quant, "optimize_scans", optimize_scans, NULL );
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
         if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
