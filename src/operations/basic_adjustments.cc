@@ -164,6 +164,9 @@ VipsImage* PF::BasicAdjustmentsPar::build(std::vector<VipsImage*>& in, int first
         VipsImage* imap, VipsImage* omap,
         unsigned int& level)
 {
+  if( in.size() < 1 )
+    return NULL;
+
   for( int id = 0; id < 3; id++ ) {
     if( eq_vec[id]->is_modified() )
       update_curve( eq_vec[id], vec[id] );
@@ -220,8 +223,6 @@ VipsImage* PF::BasicAdjustmentsPar::build(std::vector<VipsImage*>& in, int first
   */
 
   std::vector<VipsImage*> in2;
-  if( in.size() < 1 )
-    return NULL;
 
   in2.push_back( in[0] );
   PF::HSLMaskPar* mask_par = dynamic_cast<PF::HSLMaskPar*>( mask->get_par() );
