@@ -41,6 +41,7 @@
 #include "operations/white_balance_config.hh"
 #include "operations/levels_config.hh"
 #include "operations/basic_adjustments_config.hh"
+#include "operations/color_correction_config.hh"
 #include "operations/hsl_mask_config.hh"
 #include "operations/imageread_config.hh"
 #include "operations/raw_loader_config.hh"
@@ -68,6 +69,7 @@
 #include "operations/threshold_config.hh"
 #include "operations/shadows_highlights_config.hh"
 #include "operations/defringe_config.hh"
+#include "operations/guided_filter_config.hh"
 #include "operations/split_details_config.hh"
 #include "operations/wavdec_config.hh"
 #include "operations/tone_mapping_config.hh"
@@ -1252,6 +1254,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::BasicAdjustmentsConfigGUI( current_layer );
 
+  } else if( op_type == "color_correction" ) {
+
+    dialog = new PF::ColorCorrectionConfigGUI( current_layer );
+
   } else if( op_type == "brightness_contrast" ) {
 
     dialog = new PF::BrightnessContrastConfigGUI( current_layer );
@@ -1323,6 +1329,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "defringe" ) {
 
     dialog = new PF::DefringeConfigGUI( current_layer );
+
+  } else if( op_type == "guided_filter" ) {
+
+    dialog = new PF::GuidedFilterConfigGUI( current_layer );
 
   } else if( op_type == "split_details" ) {
 

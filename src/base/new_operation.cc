@@ -122,6 +122,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
     processor = new_desaturate();
 
+  } else if( op_type == "guided_filter" ) {
+
+    //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
+    processor = new_guided_filter();
+
   } else if( op_type == "uniform" ) {
 
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
@@ -146,6 +151,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
     processor = new_basic_adjustments();
+
+  } else if( op_type == "color_correction" ) {
+
+    //processor = new PF::Processor<PF::BrightnessContrastPar,PF::BrightnessContrast>();
+    processor = new_color_correction();
 
   } else if( op_type == "brightness_contrast" ) {
 

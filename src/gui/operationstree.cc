@@ -285,8 +285,9 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Color profile conversion"), "convert_colorspace" );
   op_color.get_tree().add_op( _("Clip values"), "clip" );
   op_color.get_tree().add_op( _("White Balance"), "white_balance" );
-  op_color.get_tree().add_op( _("Levels"), "levels" );
+  //op_color.get_tree().add_op( _("Levels"), "levels" );
   op_color.get_tree().add_op( _("Basic Adjustments"), "basic_adjustments" );
+  op_color.get_tree().add_op( _("Color Correction"), "color_correction" );
   op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping" );
   op_color.get_tree().add_op( _("Dynamic range compressor"), "dynamic_range_compressor" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
@@ -312,6 +313,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Emulate film [various]"), "gmic_emulate_film_various" );
 
   op_detail.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
+  op_detail.get_tree().add_op( _("Guided filter"), "guided_filter" );
   op_detail.get_tree().add_op( _("Bilateral blur"), "blur_bilateral" );
   op_detail.get_tree().add_op( _("Local contrast"), "volume" );
   op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
