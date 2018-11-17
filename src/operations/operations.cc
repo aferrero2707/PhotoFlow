@@ -32,6 +32,7 @@
 #include "no_demosaic.hh"
 #include "amaze_demosaic.hh"
 #include "basic_adjustments.hh"
+#include "color_correction.hh"
 #include "blender.hh"
 #include "buffer.hh"
 #include "ca_correct.hh"
@@ -93,6 +94,9 @@ PF::ProcessorBase* PF::new_amaze_demosaic()
 
 PF::ProcessorBase* PF::new_basic_adjustments()
 { return new PF::Processor<PF::BasicAdjustmentsPar,PF::BasicAdjustments>(); }
+
+PF::ProcessorBase* PF::new_color_correction()
+{ return new PF::Processor<PF::ColorCorrectionPar,PF::ColorCorrection>(); }
 
 PF::ProcessorBase* PF::new_blender()
 { return( new PF::Processor<PF::BlenderPar,PF::BlenderProc>() ); }

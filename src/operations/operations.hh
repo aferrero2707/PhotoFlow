@@ -49,6 +49,7 @@ namespace PF
   ProcessorBase* new_white_balance();
   ProcessorBase* new_levels();
   ProcessorBase* new_basic_adjustments();
+  ProcessorBase* new_color_correction();
   ProcessorBase* new_hue_saturation();
   ProcessorBase* new_hsl_mask();
   ProcessorBase* new_clone();
@@ -80,6 +81,7 @@ namespace PF
   ProcessorBase* new_path_mask();
   ProcessorBase* new_shadows_highlights();
   ProcessorBase* new_defringe();
+  ProcessorBase* new_guided_filter();
   ProcessorBase* new_split_details();
   ProcessorBase* new_subtrimg();
   //ProcessorBase* new_vips_operation( std::string op_type );
