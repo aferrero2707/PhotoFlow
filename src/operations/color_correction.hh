@@ -40,9 +40,9 @@ namespace PF
 
   class ColorCorrectionPar: public OpParBase
   {
-    Property<float> r_offs, g_offs, b_offs;
-    Property<float> r_slope, g_slope, b_slope;
-    Property<float> r_pow, g_pow, b_pow;
+    Property<float> offs, r_offs, g_offs, b_offs;
+    Property<float> slope, r_slope, g_slope, b_slope;
+    Property<float> pow, r_pow, g_pow, b_pow;
     Property<float> saturation;
 
     ICCProfile* icc_data;
@@ -60,15 +60,15 @@ namespace PF
 
     ICCProfile* get_icc_data() { return icc_data; }
 
-    float get_r_offset() { return r_offs.get(); }
-    float get_g_offset() { return g_offs.get(); }
-    float get_b_offset() { return b_offs.get(); }
-    float get_r_slope() { return r_slope.get(); }
-    float get_g_slope() { return g_slope.get(); }
-    float get_b_slope() { return b_slope.get(); }
-    float get_r_power() { return r_pow.get(); }
-    float get_g_power() { return g_pow.get(); }
-    float get_b_power() { return b_pow.get(); }
+    float get_r_offset() { return (offs.get() + r_offs.get()); }
+    float get_g_offset() { return (offs.get() + g_offs.get()); }
+    float get_b_offset() { return (offs.get() + b_offs.get()); }
+    float get_r_slope() { return ((slope.get() + 1.0f) * (r_slope.get() + 1.0f)); }
+    float get_g_slope() { return ((slope.get() + 1.0f) * (g_slope.get() + 1.0f)); }
+    float get_b_slope() { return ((slope.get() + 1.0f) * (b_slope.get() + 1.0f)); }
+    float get_r_power() { return ((1.0f - pow.get()) * (1.0f - r_pow.get())); }
+    float get_g_power() { return ((1.0f - pow.get()) * (1.0f - g_pow.get())); }
+    float get_b_power() { return ((1.0f - pow.get()) * (1.0f - b_pow.get())); }
 
     float get_saturation() { return saturation.get(); }
 

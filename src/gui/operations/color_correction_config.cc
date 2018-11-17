@@ -37,37 +37,43 @@
 
 PF::ColorCorrectionConfigGUI::ColorCorrectionConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Color Correction" ),
-  r_frame(_("red channel")),
-  g_frame(_("green channel")),
-  b_frame(_("blue channel")),
-  r_offs_slider( this, "r_offs", _("offset"), 0, -100, 100, 0.5, 5, 100),
-  g_offs_slider( this, "g_offs", _("offset"), 0, -100, 100, 0.5, 5, 100),
-  b_offs_slider( this, "b_offs", _("offset"), 0, -100, 100, 0,5, 5, 100),
-  r_slope_slider( this, "r_slope", _("slope"), 0, 0, 10, 0.1, 0.5, 1),
-  g_slope_slider( this, "g_slope", _("slope"), 0, 0, 10, 0.1, 0.5, 1),
-  b_slope_slider( this, "b_slope", _("slope"), 0, 0, 10, 0.1, 0.5, 1),
-  r_pow_slider( this, "r_pow", _("power"), 0, 0.01, 10, 0.01, 0.05, 1),
-  g_pow_slider( this, "g_pow", _("power"), 0, 0.01, 10, 0.01, 0.05, 1),
-  b_pow_slider( this, "b_pow", _("power"), 0, 0.01, 10, 0.01, 0.05, 1),
+  offs_frame(_("offset")),
+  slope_frame(_("slope")),
+  pow_frame(_("power")),
+  offs_slider( this, "offs", _("offset"), 0, -1, 1, 0.01, 0.05, 1),
+  r_offs_slider( this, "r_offs", _("red"), 0, -1, 1, 0.01, 0.05, 1),
+  g_offs_slider( this, "g_offs", _("green"), 0, -1, 1, 0.01, 0.05, 1),
+  b_offs_slider( this, "b_offs", _("blue"), 0, -1, 1, 0.01, 0.05, 1),
+  slope_slider( this, "slope", _("slope"), 0, -1, 1, 0.01, 0.05, 1),
+  r_slope_slider( this, "r_slope", _("red"), 0, -1, 1, 0.01, 0.05, 1),
+  g_slope_slider( this, "g_slope", _("green"), 0, -1, 1, 0.01, 0.05, 1),
+  b_slope_slider( this, "b_slope", _("blue"), 0, -1, 1, 0.01, 0.05, 1),
+  pow_slider( this, "pow", _("power"), 0, -1, 1, 0.01, 0.05, 1),
+  r_pow_slider( this, "r_pow", _("red"), 0, -1, 1, 0.01, 0.05, 1),
+  g_pow_slider( this, "g_pow", _("green"), 0, -1, 1, 0.01, 0.05, 1),
+  b_pow_slider( this, "b_pow", _("blue"), 0, -1, 1, 0.01, 0.05, 1),
   saturation_slider( this, "saturation", _("saturation"), 0, 0, 2, 0.01, 0.1, 1)
 {
-  r_box.pack_start( r_slope_slider, Gtk::PACK_SHRINK );
-  r_box.pack_start( r_offs_slider, Gtk::PACK_SHRINK );
-  r_box.pack_start( r_pow_slider, Gtk::PACK_SHRINK );
-  r_frame.add(r_box);
-  controlsBox.pack_start( r_frame, Gtk::PACK_SHRINK );
+  slope_box.pack_start( slope_slider, Gtk::PACK_SHRINK );
+  slope_box.pack_start( r_slope_slider, Gtk::PACK_SHRINK );
+  slope_box.pack_start( g_slope_slider, Gtk::PACK_SHRINK );
+  slope_box.pack_start( b_slope_slider, Gtk::PACK_SHRINK );
+  slope_frame.add(slope_box);
+  controlsBox.pack_start( slope_frame, Gtk::PACK_SHRINK );
 
-  g_box.pack_start( g_slope_slider, Gtk::PACK_SHRINK );
-  g_box.pack_start( g_offs_slider, Gtk::PACK_SHRINK );
-  g_box.pack_start( g_pow_slider, Gtk::PACK_SHRINK );
-  g_frame.add(g_box);
-  controlsBox.pack_start( g_frame, Gtk::PACK_SHRINK );
+  offs_box.pack_start( offs_slider, Gtk::PACK_SHRINK );
+  offs_box.pack_start( r_offs_slider, Gtk::PACK_SHRINK );
+  offs_box.pack_start( g_offs_slider, Gtk::PACK_SHRINK );
+  offs_box.pack_start( b_offs_slider, Gtk::PACK_SHRINK );
+  offs_frame.add(offs_box);
+  controlsBox.pack_start( offs_frame, Gtk::PACK_SHRINK );
 
-  b_box.pack_start( b_slope_slider, Gtk::PACK_SHRINK );
-  b_box.pack_start( b_offs_slider, Gtk::PACK_SHRINK );
-  b_box.pack_start( b_pow_slider, Gtk::PACK_SHRINK );
-  b_frame.add(b_box);
-  controlsBox.pack_start( b_frame, Gtk::PACK_SHRINK );
+  pow_box.pack_start( pow_slider, Gtk::PACK_SHRINK );
+  pow_box.pack_start( r_pow_slider, Gtk::PACK_SHRINK );
+  pow_box.pack_start( g_pow_slider, Gtk::PACK_SHRINK );
+  pow_box.pack_start( b_pow_slider, Gtk::PACK_SHRINK );
+  pow_frame.add(pow_box);
+  controlsBox.pack_start( pow_frame, Gtk::PACK_SHRINK );
 
   controlsBox.pack_start( saturation_slider, Gtk::PACK_SHRINK );
 

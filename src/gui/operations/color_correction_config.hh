@@ -41,15 +41,18 @@ namespace PF {
 {
   Gtk::VBox controlsBox;
 
-  Gtk::Frame r_frame, g_frame, b_frame;
-  Gtk::VBox r_box, g_box, b_box;
+  Gtk::Frame offs_frame, slope_frame, pow_frame;
+  Gtk::VBox offs_box, slope_box, pow_box;
 
+  Slider offs_slider;
   Slider r_offs_slider;
   Slider g_offs_slider;
   Slider b_offs_slider;
+  Slider slope_slider;
   Slider r_slope_slider;
   Slider g_slope_slider;
   Slider b_slope_slider;
+  Slider pow_slider;
   Slider r_pow_slider;
   Slider g_pow_slider;
   Slider b_pow_slider;
