@@ -57,6 +57,7 @@ namespace PF {
   Slider g_pow_slider;
   Slider b_pow_slider;
   Slider saturation_slider;
+  CheckBox is_log;
 
 public:
   ColorCorrectionConfigGUI( Layer* l );

@@ -348,6 +348,39 @@ namespace PF
     clip_lc_blend( newred, newgreen, newblue, red, green, blue );
     //std::cout<<"red="<<red<<" new="<<newred<<"  green="<<green<<" new="<<newgreen<<"  blue="<<blue<<" new="<<newblue<<std::endl;
   }
+
+
+#ifndef M_LOG2E
+#define M_LOG2E 1.44269504088896340736 // log2(e)
+#endif
+#define HALF_MAX 65504.0f
+  extern const float POW_2_16, POW_2_15;
+
+  inline float log2f(const float& x){
+    return log(x) * M_LOG2E;
+  }
+
+  inline float lin_to_ACEScc( float in)
+  {
+    if (in <= 0)
+      return -0.3584474886; // =(log2( pow(2.,-16.))+9.72)/17.52
+    else if (in < POW_2_15)
+      return (log2f( POW_2_16 + in * 0.5) + 9.72) / 17.52;
+    else // (in >= pow(2.,-15))
+      return (log2f(in) + 9.72) / 17.52;
+  }
+
+  inline float ACEScc_to_lin( float in)
+  {
+    if (in < -0.3013698630) // (9.72-15)/17.52
+      return (powf( 2., in*17.52-9.72) - powf( 2.,-16.))*2.0;
+    else if ( in < (log2f(HALF_MAX)+9.72)/17.52 )
+      return powf( 2., in*17.52-9.72);
+    else // (in >= (log2(HALF_MAX)+9.72)/17.52)
+      return HALF_MAX;
+  }
+
+
 }
 
 #endif

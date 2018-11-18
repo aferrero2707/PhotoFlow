@@ -36,6 +36,10 @@ namespace PF
 {
 
 
+  const float POW_2_16=powf(2.,-16.);
+  const float POW_2_15=powf(2.,-15.);
+
+
   template<>
   void to_float<float>( const float& in, float& out )
   {

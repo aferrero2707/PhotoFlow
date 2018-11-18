@@ -45,7 +45,8 @@ PF::ColorCorrectionPar::ColorCorrectionPar():
   r_pow("r_pow",this,0),
   g_pow("g_pow",this,0),
   b_pow("b_pow",this,0),
-  saturation("saturation",this,1)
+  saturation("saturation",this,1),
+  is_log("log_encoding",this,true)
 {
   set_type("color_correction" );
 

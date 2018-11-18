@@ -44,6 +44,7 @@ namespace PF
     Property<float> slope, r_slope, g_slope, b_slope;
     Property<float> pow, r_pow, g_pow, b_pow;
     Property<float> saturation;
+    Property<bool> is_log;
 
     ICCProfile* icc_data;
 
@@ -71,6 +72,8 @@ namespace PF
     float get_b_power() { return ((1.0f - pow.get()) * (1.0f - b_pow.get())); }
 
     float get_saturation() { return saturation.get(); }
+
+    bool get_log_encoding() { return is_log.get(); }
 
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
@@ -134,6 +137,7 @@ namespace PF
       float g_pow = opar->get_g_power();
       float b_pow = opar->get_b_power();
       float saturation = opar->get_saturation();
+      bool is_log = opar->get_log_encoding();
 
       ICCProfile* profile = opar->get_icc_data();
 
@@ -144,9 +148,16 @@ namespace PF
         pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
         for( x = 0; x < line_size; x+=3 ) {
+
           RGB[0] = pin[x];
           RGB[1] = pin[x+1];
           RGB[2] = pin[x+2];
+
+          if( is_log ) {
+            RGB[0] = lin_to_ACEScc(RGB[0]);
+            RGB[1] = lin_to_ACEScc(RGB[1]);
+            RGB[2] = lin_to_ACEScc(RGB[2]);
+          }
 
           RGB[0] *= r_slope;
           RGB[1] *= g_slope;
@@ -156,9 +167,15 @@ namespace PF
           RGB[1] += g_offs;
           RGB[2] += b_offs;
 
-          pout[x] = powf(RGB[0], r_pow);
-          pout[x+1] = powf(RGB[1], g_pow);
-          pout[x+2] = powf(RGB[2], b_pow);
+          pout[x] = (RGB[0]<0) ? RGB[0] : powf(RGB[0], r_pow);
+          pout[x+1] = (RGB[1]<0) ? RGB[1] : powf(RGB[1], g_pow);
+          pout[x+2] = (RGB[2]<0) ? RGB[2] : powf(RGB[2], b_pow);
+
+          if( is_log ) {
+            pout[x] = ACEScc_to_lin(pout[x]);
+            pout[x+1] = ACEScc_to_lin(pout[x+1]);
+            pout[x+2] = ACEScc_to_lin(pout[x+2]);
+          }
 
           if(profile && saturation != 1) {
             L = profile->get_lightness(pout[x], pout[x+1], pout[x+2]);

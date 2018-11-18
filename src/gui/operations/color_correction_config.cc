@@ -52,8 +52,12 @@ PF::ColorCorrectionConfigGUI::ColorCorrectionConfigGUI( PF::Layer* layer ):
   r_pow_slider( this, "r_pow", _("red"), 0, -1, 1, 0.01, 0.05, 1),
   g_pow_slider( this, "g_pow", _("green"), 0, -1, 1, 0.01, 0.05, 1),
   b_pow_slider( this, "b_pow", _("blue"), 0, -1, 1, 0.01, 0.05, 1),
-  saturation_slider( this, "saturation", _("saturation"), 0, 0, 2, 0.01, 0.1, 1)
+  saturation_slider( this, "saturation", _("saturation"), 0, 0, 2, 0.01, 0.1, 1),
+  is_log( this, "log_encoding", _("log encoding"), false )
 {
+  controlsBox.pack_start( is_log, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( saturation_slider, Gtk::PACK_SHRINK );
+
   slope_box.pack_start( slope_slider, Gtk::PACK_SHRINK );
   slope_box.pack_start( r_slope_slider, Gtk::PACK_SHRINK );
   slope_box.pack_start( g_slope_slider, Gtk::PACK_SHRINK );
@@ -74,8 +78,6 @@ PF::ColorCorrectionConfigGUI::ColorCorrectionConfigGUI( PF::Layer* layer ):
   pow_box.pack_start( b_pow_slider, Gtk::PACK_SHRINK );
   pow_frame.add(pow_box);
   controlsBox.pack_start( pow_frame, Gtk::PACK_SHRINK );
-
-  controlsBox.pack_start( saturation_slider, Gtk::PACK_SHRINK );
 
   add_widget( controlsBox );
 }
