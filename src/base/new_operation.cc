@@ -112,6 +112,10 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
     processor = new_invert();
 
+  } else if( op_type == "noise_generator" ) {
+
+    processor = new_noise_generator();
+
   } else if( op_type == "threshold" ) {
 
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();

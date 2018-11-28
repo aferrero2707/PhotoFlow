@@ -287,6 +287,8 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("White Balance"), "white_balance" );
   //op_color.get_tree().add_op( _("Levels"), "levels" );
   op_color.get_tree().add_op( _("Basic Adjustments"), "basic_adjustments" );
+  op_color.get_tree().add_op( _("Threshold"), "threshold" );
+  op_color.get_tree().add_op( _("Noise"), "noise_generator" );
   op_color.get_tree().add_op( _("Color Correction"), "color_correction" );
   op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping" );
   op_color.get_tree().add_op( _("Dynamic range compressor"), "dynamic_range_compressor" );
@@ -295,7 +297,6 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Defringe"), "defringe" );
   op_color.get_tree().add_op( _("Invert"), "invert" );
   op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
-  op_color.get_tree().add_op( _("Threshold"), "threshold" );
   //op_color.get_tree().add_op( "Brightness/Contrast"), "brightness_contrast" );
   op_color.get_tree().add_op( _("Channel Mixer"), "channel_mixer" );
   op_color.get_tree().add_op( _("Uniform Fill"), "uniform");
@@ -401,6 +402,7 @@ void PF::OperationsTreeDialog::open()
 
 void PF::OperationsTreeDialog::on_button_clicked(int id)
 {
+  std::cout<<"OperationsTreeDialog::on_button_clicked: id="<<id<<std::endl;
   switch(id) {
   case 0:
     //hide_all();
@@ -444,6 +446,7 @@ void PF::OperationsTreeDialog::add_layer()
 
   PF::OperationsTree* op_tree = NULL;
 
+  std::cout<<"OperationsTreeDialog::add_layer(): page="<<page<<std::endl;
   switch( page ) {
   case 0:
     op_tree = &(op_load.get_tree());
@@ -475,7 +478,7 @@ void PF::OperationsTreeDialog::add_layer()
   default:
     return;
   }
-
+  std::cout<<"OperationsTreeDialog::add_layer(): op_tree="<<op_tree<<std::endl;
   if( !op_tree ) return;
 
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = op_tree->get_selection();
@@ -483,17 +486,20 @@ void PF::OperationsTreeDialog::add_layer()
   if( !iter ) return;
 
   PF::OperationsTreeColumns& columns = op_tree->get_columns();
-  //std::cout<<"Adding layer of type \""<<(*iter)[columns.col_name]<<"\""
-  //   <<" ("<<(*iter)[columns.col_nickname]<<")"<<std::endl;
 
+  std::cout<<"OperationsTreeDialog::add_layer(): image="<<image<<std::endl;
   if( !image ) return;
 
   PF::LayerManager& layer_manager = image->get_layer_manager();
   PF::Layer* layer = layer_manager.new_layer();
+  std::cout<<"OperationsTreeDialog::add_layer(): layer="<<layer<<std::endl;
   if( !layer ) return;
 
 
   std::string op_type = (*iter)[columns.col_nickname];
+  std::cout<<"Adding layer of type \""<<(*iter)[columns.col_name]<<"\""
+     <<" ("<<op_type<<")"<<std::endl;
+
   PF::ProcessorBase* processor = 
       PF::PhotoFlow::Instance().new_operation( op_type.c_str(), layer );
   if( !processor || !processor->get_par() ) return;

@@ -40,6 +40,7 @@
 #include "operations/clip_config.hh"
 #include "operations/white_balance_config.hh"
 #include "operations/levels_config.hh"
+#include "operations/noise_generator_config.hh"
 #include "operations/basic_adjustments_config.hh"
 #include "operations/color_correction_config.hh"
 #include "operations/hsl_mask_config.hh"
@@ -1229,6 +1230,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "threshold" ) {
 
     dialog = new PF::ThresholdConfigGUI( current_layer );
+
+  } else if( op_type == "noise_generator" ) {
+
+    dialog = new PF::NoiseGeneratorConfigGUI( current_layer );
 
   } else if( op_type == "desaturate" ) {
 
