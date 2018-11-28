@@ -540,11 +540,18 @@ bool PF::MainWindow::on_key_press_event(GdkEventKey* event)
 void
 PF::MainWindow::open_image( std::string filename )
 {
+//  try {
+  std::cout<<"MainWindow::open_image: filename=\""<<filename<<"\""<<std::endl;
+//} catch(Glib::ConvertError& e) {
+//  std::cout<<"MainWindow::open_image: "<<e.what()<<std::endl;
+//}
   char* fullpath = strdup( filename.c_str() );
-  PF::ImageEditor* editor = new PF::ImageEditor( fullpath );
+  PF::ImageEditor* editor = new PF::ImageEditor( filename );
   image_editors.push_back( editor );
 
-  char* fname = basename( fullpath );
+  //char* fname = basename( fullpath );
+  std::string fname = Glib::path_get_basename( filename );
+  std::cout<<"MainWindow::open_image: basename=\""<<fname<<"\""<<std::endl;
 
   HTabLabelWidget* tabwidget = 
       new HTabLabelWidget( std::string(fname),
@@ -918,7 +925,8 @@ void PF::MainWindow::on_button_open_clicked()
   dialog.add_filter(filter_tiff);
   dialog.add_filter(filter_all);
 
-  Glib::ustring last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
+  std::string last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
+  std::cout<<"MainWindow::on_button_open_clicked: last_dir=\""<<last_dir<<"\""<<std::endl;
   if( !last_dir.empty() ) dialog.set_current_folder( last_dir );
 
   //Show the dialog and wait for a user response:
@@ -928,17 +936,27 @@ void PF::MainWindow::on_button_open_clicked()
   switch(result) {
   case(Gtk::RESPONSE_OK): 
       {
-    std::cout << "Open clicked." << std::endl;
+    //std::cout << "Open clicked." << std::endl;
 
     //Notice that this is a std::string, not a Glib::ustring.
-    std::string filename = dialog.get_filename();
+    Glib::ustring ufilename = dialog.get_filename();
+    std::string filename = ufilename;
     last_dir = dialog.get_current_folder();
     PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
-    std::cout << "File selected: " <<  filename << std::endl;
+    std::cout<<"MainWindow::on_button_open_clicked: new last_dir=\""<<last_dir<<"\""<<std::endl;
+    try {
+      std::cout<<"MainWindow::on_button_open_clicked: ufilename=\""<<ufilename<<"\""<<std::endl;
+    } catch(Glib::ConvertError& e) {
+      std::cout<<"MainWindow::on_button_open_clicked: "<<e.what()<<std::endl;
+    }
+    std::cout<<"MainWindow::on_button_open_clicked: filename=\""<<filename<<"\""<<std::endl;
+    Glib::RefPtr<Gio::File> ftest = Gio::File::create_for_path(filename);
+    if( !ftest->query_exists() )
+      return;
     char* fullpath = realpath( filename.c_str(), NULL );
     if(!fullpath)
       return;
-    open_image( fullpath );
+    open_image( filename );
     free(fullpath);
     break;
       }
