@@ -60,6 +60,8 @@ namespace PF {
     ImageButton reset_button;
 
     double multiplier;
+    double (*fun_slider_to_prop)(double&);
+    double (*fun_prop_to_slider)(double&);
     
     void create_widgets( std::string l, double val,
         double min, double max,
@@ -88,6 +90,12 @@ namespace PF {
     void set_width( int w )
     {
       scale.set_size_request( w, -1 );
+    }
+
+    void set_conversion_functions(double (*f1)(double&), double (*f2)(double&))
+    {
+      fun_slider_to_prop = f1;
+      fun_prop_to_slider = f2;
     }
 
     void get_value();

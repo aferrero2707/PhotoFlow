@@ -37,14 +37,14 @@ PF::ColorCorrectionPar::ColorCorrectionPar():
   r_offs("r_offs",this,0),
   g_offs("g_offs",this,0),
   b_offs("b_offs",this,0),
-  slope("slope",this,0),
-  r_slope("r_slope",this,0),
-  g_slope("g_slope",this,0),
-  b_slope("b_slope",this,0),
-  pow("pow",this,0),
-  r_pow("r_pow",this,0),
-  g_pow("g_pow",this,0),
-  b_pow("b_pow",this,0),
+  slope("slope",this,1),
+  r_slope("r_slope",this,1),
+  g_slope("g_slope",this,1),
+  b_slope("b_slope",this,1),
+  pow("pow",this,1),
+  r_pow("r_pow",this,1),
+  g_pow("g_pow",this,1),
+  b_pow("b_pow",this,1),
   saturation("saturation",this,1),
   is_log("log_encoding",this,true)
 {
@@ -70,6 +70,8 @@ VipsImage* PF::ColorCorrectionPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
 
   icc_data = PF::get_icc_profile( in[0] );
+
+  std::cout<<"ColorCorrectionPar::build(): "<<get_r_slope()<<"  "<<get_r_offset()<<"  "<<get_r_power()<<std::endl;
 
   VipsImage* out = PF::OpParBase::build( in, 0, imap, omap, level );
   return out;

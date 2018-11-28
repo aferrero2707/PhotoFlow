@@ -34,6 +34,28 @@
 
 
 
+static double slope_conv(double& val)
+{
+  std::cout<<"slope_conv: val="<<val<<std::endl;
+  return( val + 1.f);
+}
+
+static double slope_conv_inv(double& val)
+{
+  return( val - 1.f);
+}
+
+static double pow_conv(double& val)
+{
+  return( 1.f - val);
+}
+
+static double pow_conv_inv(double& val)
+{
+  return( 1.f - val);
+}
+
+
 
 PF::ColorCorrectionConfigGUI::ColorCorrectionConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Color Correction" ),
@@ -55,6 +77,16 @@ PF::ColorCorrectionConfigGUI::ColorCorrectionConfigGUI( PF::Layer* layer ):
   saturation_slider( this, "saturation", _("saturation"), 0, 0, 2, 0.01, 0.1, 1),
   is_log( this, "log_encoding", _("log encoding"), false )
 {
+  slope_slider.set_conversion_functions( &slope_conv, &slope_conv_inv );
+  r_slope_slider.set_conversion_functions( &slope_conv, &slope_conv_inv );
+  g_slope_slider.set_conversion_functions( &slope_conv, &slope_conv_inv );
+  b_slope_slider.set_conversion_functions( &slope_conv, &slope_conv_inv );
+
+  pow_slider.set_conversion_functions( &pow_conv, &pow_conv_inv );
+  r_pow_slider.set_conversion_functions( &pow_conv, &pow_conv_inv );
+  g_pow_slider.set_conversion_functions( &pow_conv, &pow_conv_inv );
+  b_pow_slider.set_conversion_functions( &pow_conv, &pow_conv_inv );
+
   controlsBox.pack_start( is_log, Gtk::PACK_SHRINK );
   controlsBox.pack_start( saturation_slider, Gtk::PACK_SHRINK );
 

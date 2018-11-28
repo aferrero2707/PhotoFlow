@@ -64,12 +64,18 @@ namespace PF
     float get_r_offset() { return (offs.get() + r_offs.get()); }
     float get_g_offset() { return (offs.get() + g_offs.get()); }
     float get_b_offset() { return (offs.get() + b_offs.get()); }
-    float get_r_slope() { return ((slope.get() + 1.0f) * (r_slope.get() + 1.0f)); }
-    float get_g_slope() { return ((slope.get() + 1.0f) * (g_slope.get() + 1.0f)); }
-    float get_b_slope() { return ((slope.get() + 1.0f) * (b_slope.get() + 1.0f)); }
-    float get_r_power() { return ((1.0f - pow.get()) * (1.0f - r_pow.get())); }
-    float get_g_power() { return ((1.0f - pow.get()) * (1.0f - g_pow.get())); }
-    float get_b_power() { return ((1.0f - pow.get()) * (1.0f - b_pow.get())); }
+    //float get_r_slope() { return ((slope.get() + 1.0f) * (r_slope.get() + 1.0f)); }
+    //float get_g_slope() { return ((slope.get() + 1.0f) * (g_slope.get() + 1.0f)); }
+    //float get_b_slope() { return ((slope.get() + 1.0f) * (b_slope.get() + 1.0f)); }
+    //float get_r_power() { return ((1.0f - pow.get()) * (1.0f - r_pow.get())); }
+    //float get_g_power() { return ((1.0f - pow.get()) * (1.0f - g_pow.get())); }
+    //float get_b_power() { return ((1.0f - pow.get()) * (1.0f - b_pow.get())); }
+    float get_r_slope() { return ((slope.get()) * (r_slope.get())); }
+    float get_g_slope() { return ((slope.get()) * (g_slope.get())); }
+    float get_b_slope() { return ((slope.get()) * (b_slope.get())); }
+    float get_r_power() { return ((pow.get()) * (r_pow.get())); }
+    float get_g_power() { return ((pow.get()) * (g_pow.get())); }
+    float get_b_power() { return ((pow.get()) * (b_pow.get())); }
 
     float get_saturation() { return saturation.get(); }
 
