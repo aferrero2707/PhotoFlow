@@ -322,13 +322,13 @@ bool PF::LFCamSelector2::my_button_release_event( GdkEventButton* event )
 
 void PF::LFCamSelector2::fill_menu()
 {
-  std::cout << "LENSFUN, scanning cameras:" << std::endl;
+  //std::cout << "LENSFUN, scanning cameras:" << std::endl;
   std::map<Glib::ustring, std::set<Glib::ustring>> camnames;
   auto camlist = rtengine::LFDatabase::getInstance()->getCameras();
   for (auto &c : camlist) {
     camnames[c.getMake()].insert(c.getModel());
 
-    std::cout << "  found: " << c.getDisplayString().c_str() << std::endl;
+    //std::cout << "  found: " << c.getDisplayString().c_str() << std::endl;
   }
   for (auto &p : camnames) {
     Gtk::MenuItem* item = new Gtk::MenuItem(p.first);
@@ -514,7 +514,7 @@ void PF::LFLensSelector2::set_lens(Glib::ustring cam_make, Glib::ustring cam_mod
 
 void PF::LFLensSelector2::fill_menu()
 {
-    std::cout << "LENSFUN, scanning lenses:" << std::endl;
+  //std::cout << "LENSFUN, scanning lenses:" << std::endl;
   std::map<Glib::ustring, std::set<Glib::ustring>> lenses;
   auto lenslist = rtengine::LFDatabase::getInstance()->getLenses();
   for (auto &l : lenslist) {
@@ -522,7 +522,7 @@ void PF::LFLensSelector2::fill_menu()
     auto make = l.getMake();
     lenses[make].insert(name);
 
-      std::cout << "  found: " << l.getDisplayString().c_str() << std::endl;
+    //std::cout << "  found: " << l.getDisplayString().c_str() << std::endl;
   }
   for (auto &p : lenses) {
     Gtk::MenuItem* item = new Gtk::MenuItem(p.first);
@@ -754,13 +754,13 @@ void PF::LFSelector::set_lens(Glib::ustring lens)
 
 void PF::LFSelector::fill_cam_menu()
 {
-  std::cout << "LENSFUN, scanning cameras:" << std::endl;
+  //std::cout << "LENSFUN, scanning cameras:" << std::endl;
   std::map<Glib::ustring, std::set<Glib::ustring>> camnames;
   auto camlist = rtengine::LFDatabase::getInstance()->getCameras();
   for (auto &c : camlist) {
     camnames[c.getMake()].insert(c.getModel());
 
-    std::cout << "  found: " << c.getDisplayString().c_str() << std::endl;
+    //std::cout << "  found: " << c.getDisplayString().c_str() << std::endl;
   }
   for (auto &p : camnames) {
     Gtk::MenuItem* item = new Gtk::MenuItem(p.first);
@@ -795,7 +795,7 @@ void PF::LFSelector::fill_lens_menu()
 
   if( !lfcamera ) return;
 
-    std::cout << "LENSFUN, scanning lenses:" << std::endl;
+  //std::cout << "LENSFUN, scanning lenses:" << std::endl;
   std::map<Glib::ustring, std::set<Glib::ustring>> lenses;
   auto lenslist = rtengine::LFDatabase::getInstance()->getLenses();
   for (auto &l : lenslist) {
@@ -839,7 +839,7 @@ void PF::LFSelector::fill_lens_menu()
 
 void PF::LFSelector::fill_lens_menu_full()
 {
-    std::cout << "LENSFUN, scanning lenses:" << std::endl;
+  //std::cout << "LENSFUN, scanning lenses:" << std::endl;
   std::map<Glib::ustring, std::set<Glib::ustring>> lenses;
   auto lenslist = rtengine::LFDatabase::getInstance()->getLenses();
   for (auto &l : lenslist) {
@@ -943,13 +943,13 @@ PF::LFDbHelper::LFDbHelper()
 
 void PF::LFDbHelper::fillLensfunCameras()
 {
-    std::cout << "LENSFUN, scanning cameras:" << std::endl;
+  //std::cout << "LENSFUN, scanning cameras:" << std::endl;
   std::map<Glib::ustring, std::set<Glib::ustring>> camnames;
   auto camlist = rtengine::LFDatabase::getInstance()->getCameras();
   for (auto &c : camlist) {
     camnames[c.getMake()].insert(c.getModel());
 
-      std::cout << "  found: " << c.getDisplayString().c_str() << std::endl;
+    //std::cout << "  found: " << c.getDisplayString().c_str() << std::endl;
   }
   for (auto &p : camnames) {
     Gtk::TreeModel::Row row = *(lensfunCameraModel->append());
@@ -966,7 +966,7 @@ void PF::LFDbHelper::fillLensfunCameras()
 
 void PF::LFDbHelper::fillLensfunLenses()
 {
-    std::cout << "LENSFUN, scanning lenses:" << std::endl;
+  //std::cout << "LENSFUN, scanning lenses:" << std::endl;
   std::map<Glib::ustring, std::set<Glib::ustring>> lenses;
   auto lenslist = rtengine::LFDatabase::getInstance()->getLenses();
   for (auto &l : lenslist) {
@@ -974,7 +974,7 @@ void PF::LFDbHelper::fillLensfunLenses()
     auto make = l.getMake();
     lenses[make].insert(name);
 
-      std::cout << "  found: " << l.getDisplayString().c_str() << std::endl;
+    //std::cout << "  found: " << l.getDisplayString().c_str() << std::endl;
   }
   for (auto &p : lenses) {
     Gtk::TreeModel::Row row = *(lensfunLensModel->append());

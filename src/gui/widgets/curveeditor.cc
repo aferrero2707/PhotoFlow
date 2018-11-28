@@ -588,7 +588,7 @@ bool PF::CurveArea::on_expose_event(GdkEventExpose* event)
 
     draw_background( cr );
 
-    std::cout<<"CurveArea::on_draw(): is_linear="<<is_linear<<std::endl;
+    //std::cout<<"CurveArea::on_draw(): is_linear="<<is_linear<<std::endl;
     bool do_gamma = false;
     if( is_linear ) do_gamma = true;
 
