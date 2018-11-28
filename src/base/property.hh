@@ -159,10 +159,10 @@ namespace PF
   template<class T>
   std::ostream& operator <<( std::ostream& str, const std::vector<T>& vector )
   {
-    str<<vector.size()<<" ";
+    str<<vector.size();
     typename std::vector<T>::const_iterator i;
     for( i = vector.begin(); i != vector.end(); i++ ) {
-      str<<(*i);
+      str<<" "<<(*i);
     }
     return str;
   }
