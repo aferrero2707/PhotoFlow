@@ -696,6 +696,21 @@ PF::MainWindow::open_image( std::string filename )
 }
 
 
+static bool ustring_to_string(const Glib::ustring& us, std::string& s)
+{
+  std::ostringstream ostr;
+  try {
+    ostr << us;
+    s = ostr.str();
+  } catch(Glib::ConvertError& e) {
+    std::cout<<"ustring_to_string: falling back to direct conversion"<<std::endl;
+    s = us;
+  }
+  std::cout<<"ustring_to_string: s=\""<<s<<"\""<<std::endl;
+  return true;
+}
+
+
 void PF::MainWindow::on_button_open_clicked()
 {
   //return;
@@ -940,7 +955,8 @@ void PF::MainWindow::on_button_open_clicked()
 
     //Notice that this is a std::string, not a Glib::ustring.
     Glib::ustring ufilename = dialog.get_filename();
-    std::string filename = ufilename;
+    std::string filename; // = ufilename;
+    ustring_to_string( ufilename, filename );
     last_dir = dialog.get_current_folder();
     PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
     std::cout<<"MainWindow::on_button_open_clicked: new last_dir=\""<<last_dir<<"\""<<std::endl;
