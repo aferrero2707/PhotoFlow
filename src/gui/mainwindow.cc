@@ -967,13 +967,18 @@ void PF::MainWindow::on_button_open_clicked()
     }
     std::cout<<"MainWindow::on_button_open_clicked: filename=\""<<filename<<"\""<<std::endl;
     Glib::RefPtr<Gio::File> ftest = Gio::File::create_for_path(filename);
-    if( !ftest->query_exists() )
+    if( !ftest->query_exists() ) {
+      std::cout<<"MainWindow::on_button_open_clicked: file \""<<filename<<"\" not found"<<std::endl;
       return;
+    }
+    open_image( filename );
+    /*
     char* fullpath = realpath( filename.c_str(), NULL );
     if(!fullpath)
       return;
-    open_image( filename );
+    open_image( fullpath );
     free(fullpath);
+    */
     break;
       }
   case(Gtk::RESPONSE_CANCEL): 
