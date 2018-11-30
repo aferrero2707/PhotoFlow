@@ -698,6 +698,23 @@ PF::MainWindow::open_image( std::string filename )
 
 static bool ustring_to_string(const Glib::ustring& us, std::string& s)
 {
+#ifndef _WIN32
+  s = us;
+#else
+  std::string ls = Glib::locale_from_utf8(us);
+  // turn the locale ANSI encoded string into UTF-8 so that FileReader can
+  // turn it into UTF-16 later
+  int size = MultiByteToWideChar(CP_ACP, 0, &(ls[0]), -1, NULL, 0);
+  std::wstring ws;
+  ws.resize(size);
+  MultiByteToWideChar(CP_ACP, 0, &(ls[0]), -1, &(ws[0]), size);
+  size = WideCharToMultiByte(CP_UTF8, 0, &(ws[0]), -1, NULL, 0,
+                             NULL, NULL);
+  s.resize(size);
+  WideCharToMultiByte(CP_UTF8, 0, &(ws[0]), -1, &(s[0]), size,
+                      NULL, NULL);
+#endif
+  /*
   std::ostringstream ostr;
   try {
     ostr << us;
@@ -707,6 +724,7 @@ static bool ustring_to_string(const Glib::ustring& us, std::string& s)
     s = us;
   }
   std::cout<<"ustring_to_string: s=\""<<s<<"\""<<std::endl;
+  */
   return true;
 }
 
