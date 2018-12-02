@@ -36,6 +36,7 @@
 #include "../operations/blender.hh"
 #include "../operations/convertformat.hh"
 #include "../operations/clipping_warning.hh"
+#include "../operations/ocio_view.hh"
 
 #include "../gui/operation_config_gui.hh"
 //#include "../gui/operations/imageread_config.hh"
@@ -228,6 +229,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   mask_region = NULL;
   //convert2display = new PF::Processor<PF::Convert2sRGBPar,PF::Convert2sRGBProc>();
   softproof_conversion = new_convert_colorspace();
+  ocio_view = new_ocio_view();
   convert2display = new_icc_transform();
   uniform = new_uniform();
   if( uniform->get_par() ) {
@@ -1232,6 +1234,17 @@ void PF::ImageArea::update( VipsRect* area )
     PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref after softproof_conversion" );
     wclipimg = tmpimg;
   }
+
+  PF::OCIOViewPar* ocio_par = dynamic_cast<PF::OCIOViewPar*>( ocio_view->get_par() );
+  if(ocio_par) {
+
+  }
+  ocio_view->get_par()->set_image_hints( wclipimg );
+  ocio_view->get_par()->set_format( get_pipeline()->get_format() );
+  in.clear(); in.push_back( wclipimg );
+  VipsImage* ocioimg = ocio_view->get_par()->build(in, 0, NULL, NULL, level );
+  PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref" );
+  wclipimg = ocioimg;
 
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
   //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;

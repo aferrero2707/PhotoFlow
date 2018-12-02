@@ -147,6 +147,9 @@ link_directories(${PANGOFT2_LIBRARY_DIRS}  )
 include_directories(${VIPS_INCLUDE_DIRS})
 link_directories(${VIPS_LIBRARY_DIRS}  )
 
+include_directories(${OCIO_INCLUDE_DIRS})
+link_directories(${OCIO_LIBRARY_DIRS})
+
 if (APPLE)
 	include_directories(${MacIntegration_INCLUDE_DIRS})
 	link_directories(${MacIntegration_LIBRARY_DIRS}  )
@@ -492,6 +495,7 @@ target_link_libraries(photoflow ${LIBS}
   ${ZLIB_LIBRARIES}
   #${LIBRAW_LIBRARIES}  
   ${ORC_LIBRARIES}
+  ${OCIO_LIBRARIES}
   ${ADDITIONAL_LIBS}
   #gmon
   )

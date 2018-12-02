@@ -117,6 +117,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 
   bool softproof_enabled;
   PF::ProcessorBase* softproof_conversion;
+  PF::ProcessorBase* ocio_view;
   PF::ProcessorBase* convert2display;
   display_profile_t current_display_profile_type;
   Glib::ustring current_display_profile_name;
