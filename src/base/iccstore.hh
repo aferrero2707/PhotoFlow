@@ -46,7 +46,9 @@ enum TRC_type
   PF_TRC_STANDARD=0,
   PF_TRC_PERCEPTUAL=1,
   PF_TRC_LINEAR=2,
-  PF_TRC_sRGB=3
+  PF_TRC_sRGB=3,
+  PF_TRC_GAMMA_22=4,
+  PF_TRC_GAMMA_18=5
 };
 
 
@@ -301,14 +303,14 @@ public:
 
 class ICCStore
 {
-  ICCProfile* srgb_profiles[3];
-  ICCProfile* srgb_d50_profiles[3];
-  ICCProfile* rec2020_profiles[3];
-  ICCProfile* aces_profiles[3];
-  ICCProfile* acescg_profiles[3];
-  ICCProfile* adobe_profiles[3];
-  ICCProfile* prophoto_profiles[3];
-  ICCProfile* prophoto_d65_profiles[3];
+  ICCProfile* srgb_profiles[5];
+  ICCProfile* srgb_d50_profiles[5];
+  ICCProfile* rec2020_profiles[5];
+  ICCProfile* aces_profiles[5];
+  ICCProfile* acescg_profiles[5];
+  ICCProfile* adobe_profiles[5];
+  ICCProfile* prophoto_profiles[5];
+  ICCProfile* prophoto_d65_profiles[5];
   ICCProfile* system_monitor_profile;
   std::vector<ICCProfile*> profiles;
 
