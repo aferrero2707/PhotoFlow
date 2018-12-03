@@ -30,6 +30,7 @@
 //#include <vips/cimg_funcs.h>
 
 #include "../base/processor_imp.hh"
+#include "icc_transform.hh"
 #include "ocio_view.hh"
 
 PF::OCIOViewPar::OCIOViewPar():
@@ -42,15 +43,15 @@ PF::OCIOViewPar::OCIOViewPar():
 #ifdef __WIN32__
   std::string configfile = PF::PhotoFlow::Instance().get_data_dir() + "\\ocio-configs\\nuke-default\\config.ocio";
 #else
-  std::string configfile = PF::PhotoFlow::Instance().get_data_dir() + "/ocio-configs/nuke-default/config.ocio";
+  std::string configfile = PF::PhotoFlow::Instance().get_data_dir() + "/ocio-configs/filmic-blender-master/config.ocio";
 #endif
   config  = OCIO::Config::CreateFromFile(configfile.c_str());
   std::cout<<"OCIOViewPar: config="<<config<<std::endl;
 
   // Step 2: Lookup the display ColorSpace
-  device = config->getDefaultDisplay();
+  device = "sRGB Native 2.2"; //config->getDefaultDisplay();
   std::cout<<"OCIOViewPar: device="<<device<<std::endl;
-  transformName = config->getDefaultView(device);
+  transformName = "Filmic Log Encoding Base"; //config->getDefaultView(device);
   std::cout<<"OCIOViewPar: transformName="<<transformName<<std::endl;
   displayColorSpace = config->getDisplayColorSpaceName(device, transformName);
   std::cout<<"OCIOViewPar: displayColorSpace="<<displayColorSpace<<std::endl;
@@ -60,15 +61,27 @@ PF::OCIOViewPar::OCIOViewPar():
 
   transform = OCIO::DisplayTransform::Create();
   transform->setInputColorSpaceName( OCIO::ROLE_SCENE_LINEAR );
-  transform->setDisplay( displayColorSpace );
+  transform->setDisplay( device );
+  transform->setView( transformName );
 
-  processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, displayColorSpace);
+  lookName = "Medium High Contrast";
+  //lookName = config->getDisplayLooks(device, transformName); //"Very High Contrast";
+  std::cout<<"OCIOViewPar: lookName="<<lookName<<std::endl;
+  transform->setLooksOverrideEnabled(true);
+  transform->setLooksOverride(lookName);
+
+  //processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, displayColorSpace);
+  processor = config->getProcessor(transform);
   std::cout<<"OCIOViewPar: processor="<<processor<<std::endl;
   }
   catch(OCIO::Exception & exception)
   {
       std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
   }
+
+  convert2sRGB = new_icc_transform();
+  PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2sRGB->get_par() );
+  icc_par->set_out_profile( PF::ICCStore::Instance().get_srgb_profile(PF_TRC_LINEAR) );
 
   set_type( "ocio_view" );
 }
@@ -90,9 +103,18 @@ VipsImage* PF::OCIOViewPar::build(std::vector<VipsImage*>& in, int first,
 
   VipsImage* out = NULL;
 
-  out = OpParBase::build( in, first, imap, omap, level);
-  ICCProfile* sRGBprof = PF::ICCStore::Instance().get_srgb_profile(PF_TRC_STANDARD);
+  std::vector<VipsImage*> in2;
+  convert2sRGB->get_par()->set_image_hints( srcimg );
+  convert2sRGB->get_par()->set_format( get_format() );
+  in2.clear(); in2.push_back( srcimg );
+  VipsImage* srgbimg = convert2sRGB->get_par()->build(in2, 0, NULL, NULL, level );
 
+
+  in2.clear(); in2.push_back( srgbimg );
+  out = OpParBase::build( in2, 0, imap, omap, level);
+  PF_UNREF( srgbimg, "OCIOViewPar::build() srgbimg unref" );
+
+  ICCProfile* sRGBprof = PF::ICCStore::Instance().get_srgb_profile(PF_TRC_GAMMA_22);
   // tag the output image as standard sRGB
   if( out && sRGBprof )
     set_icc_profile( out, sRGBprof );

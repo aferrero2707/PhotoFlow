@@ -116,6 +116,7 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
   VipsRegion* mask_region;
 
   bool softproof_enabled;
+  bool ocio_enabled;
   PF::ProcessorBase* softproof_conversion;
   PF::ProcessorBase* ocio_view;
   PF::ProcessorBase* convert2display;
@@ -207,6 +208,9 @@ public:
   void enable_softproof() { softproof_enabled = true; }
   void disable_softproof() { softproof_enabled = false; }
   PF::ProcessorBase* get_softproof_conversion() { return softproof_conversion; }
+
+  void enable_ocio() { ocio_enabled = true; }
+  void disable_ocio() { ocio_enabled = false; }
 
 	float get_shrink_factor() { return shrink_factor; }
 	void set_shrink_factor( float val ) { shrink_factor = val; }

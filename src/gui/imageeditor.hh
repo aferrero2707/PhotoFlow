@@ -129,6 +129,7 @@ class ImageEditor: public Gtk::HBox
   Gtk::Frame soft_proof_frame;
   Gtk::VBox soft_proof_box;
   Gtk::CheckButton soft_proof_enable_button;
+  Gtk::CheckButton ocio_enable_button;
   SoftProofDialog* softproof_dialog;
 
   StatusIndicatorWidget status_indicator;
@@ -261,6 +262,12 @@ public:
   void soft_proof_disable()
   {
     soft_proof_enable_button.set_active(false);
+  }
+
+  void on_ocio_toggled();
+  void ocio_disable()
+  {
+    ocio_enable_button.set_active(false);
   }
 
   void zoom_in();

@@ -286,6 +286,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
         layersWidget( image, this ),
         aux_controls( NULL ),
         soft_proof_enable_button( _("soft proof.") ),
+        ocio_enable_button( ("OCIO") ),
         softproof_dialog( NULL ),
         img_zoom_in(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-zoom-in.png"),
         img_zoom_out(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-zoom-out.png"),
@@ -381,6 +382,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   soft_proof_box.pack_start( soft_proof_enable_button, Gtk::PACK_SHRINK );
   soft_proof_frame.add( soft_proof_box );
   controlsBox.pack_end( soft_proof_frame, Gtk::PACK_SHRINK );
+  controlsBox.pack_end( ocio_enable_button, Gtk::PACK_SHRINK );
 
   controlsBox.pack_end( status_indicator, Gtk::PACK_SHRINK );
 
@@ -416,6 +418,9 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //main_panel.pack_start( controls_group_vbox, Gtk::PACK_SHRINK );
   soft_proof_enable_button.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::ImageEditor::on_soft_proof_toggled) );
+
+  ocio_enable_button.signal_toggled().connect( sigc::mem_fun(*this,
+      &PF::ImageEditor::on_ocio_toggled) );
 
   button_highlights_warning.signal_toggled().connect( sigc::mem_fun(*this,
       &PF::ImageEditor::toggle_highlights_warning) );
@@ -1020,6 +1025,17 @@ void PF::ImageEditor::on_soft_proof_toggled()
     softproof_dialog->show();
   else
     softproof_dialog->hide();
+}
+
+
+void PF::ImageEditor::on_ocio_toggled()
+{
+  if( ocio_enable_button.get_active() )
+    get_image_area()->enable_ocio();
+  else
+    get_image_area()->disable_ocio();
+  std::cout<<"ImageEditor::on_ocio_toggled: upading image\n";
+  image->update();
 }
 
 

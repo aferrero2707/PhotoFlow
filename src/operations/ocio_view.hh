@@ -54,6 +54,9 @@ namespace PF
     const char * device;
     const char * transformName;
     const char * displayColorSpace;
+    const char * lookName;
+
+    ProcessorBase* convert2sRGB;
 
     OCIO::DisplayTransformRcPtr transform;
     OCIO::ConstProcessorRcPtr processor;
@@ -122,6 +125,7 @@ namespace PF
       for(y = 0; y < rh; y++) {
         float* p = (float*)VIPS_REGION_ADDR( oreg, offsx, offsy+y );
         memcpy(p, buf+rowstride*y, orowstride*es);
+        //memset(p, 0, orowstride*es);
       }
       delete[] buf;
     }

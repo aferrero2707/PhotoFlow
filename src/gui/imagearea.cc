@@ -202,6 +202,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   pending_pixels( 0 ),
   draw_requested( false ),
   softproof_enabled( false ),
+  ocio_enabled( false ),
   current_display_profile_type( PF_DISPLAY_PROF_MAX ),
   current_display_profile( NULL ),
   highlights_warning_enabled( false ),
@@ -1235,16 +1236,18 @@ void PF::ImageArea::update( VipsRect* area )
     wclipimg = tmpimg;
   }
 
-  PF::OCIOViewPar* ocio_par = dynamic_cast<PF::OCIOViewPar*>( ocio_view->get_par() );
-  if(ocio_par) {
+  if(ocio_enabled) {
+    PF::OCIOViewPar* ocio_par = dynamic_cast<PF::OCIOViewPar*>( ocio_view->get_par() );
+    if(ocio_par) {
 
+    }
+    ocio_view->get_par()->set_image_hints( wclipimg );
+    ocio_view->get_par()->set_format( get_pipeline()->get_format() );
+    in.clear(); in.push_back( wclipimg );
+    VipsImage* ocioimg = ocio_view->get_par()->build(in, 0, NULL, NULL, level );
+    PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref" );
+    wclipimg = ocioimg;
   }
-  ocio_view->get_par()->set_image_hints( wclipimg );
-  ocio_view->get_par()->set_format( get_pipeline()->get_format() );
-  in.clear(); in.push_back( wclipimg );
-  VipsImage* ocioimg = ocio_view->get_par()->build(in, 0, NULL, NULL, level );
-  PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref" );
-  wclipimg = ocioimg;
 
   PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2display->get_par() );
   //std::cout<<"ImageArea::update(): icc_par="<<icc_par<<std::endl;
