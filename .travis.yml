@@ -67,6 +67,12 @@ matrix:
             #JPEG=/usr/local/opt/mozjpeg
           before_script:
             - rm -rf osx
+            - cd $TRAVIS_BUILD_DIR
+            - mkdir -p build
+            - cd build
+            - git clone https://github.com/imageworks/OpenColorIO.git
+#
+            - cd $TRAVIS_BUILD_DIR
             - git clone https://github.com/aferrero2707/pf-build-osx.git osx
             - sudo mv /usr/local/bin /usr/local/bin_
             - sudo mv /usr/local/lib /usr/local/lib_
@@ -76,7 +82,6 @@ matrix:
             - cd $TRAVIS_BUILD_DIR
             - mkdir -p build
             - cd build
-            - git clone https://github.com/imageworks/OpenColorIO.git
             - cd OpenColorIO
             - mkdir -p build
             - cd build
