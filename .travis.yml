@@ -83,6 +83,7 @@ matrix:
             - mkdir -p build
             - cd build
             - cd OpenColorIO
+            - sed -i -e 's|HOMEPAGE_URL|#HOMEPAGE_URL|g' CMakeLists.txt
             - mkdir -p build
             - cd build
             - which cmake
