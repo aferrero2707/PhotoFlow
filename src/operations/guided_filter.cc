@@ -233,7 +233,6 @@ void PF::GuidedFilterPar::compute_padding( VipsImage* full_res, unsigned int id,
   for( unsigned int l = 1; l <= level; l++ )
     radius2 /= 2;
 
-  radius_real = radius2;
   int padding = radius2 * 2 + 1;
 
   set_padding( padding, id );
@@ -246,6 +245,12 @@ VipsImage* PF::GuidedFilterPar::build(std::vector<VipsImage*>& in, int first,
 {
   icc_data = NULL;
   if(in.size()>0 && in[0]) icc_data = PF::get_icc_profile( in[0] );
+
+  double radius2 = radius.get();
+  for( unsigned int l = 1; l <= level; l++ )
+    radius2 /= 2;
+
+  radius_real = radius2;
 
   VipsImage* out = PF::PaddedOpPar::build( in, first, imap, omap, level );
   std::cout<<"GuidedFilterPar::build: out="<<out<<std::endl;
