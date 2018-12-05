@@ -247,16 +247,26 @@ int main (int argc, char *argv[])
     return 1;
   }
 
+  if(argc>1) std::cout<<"argv[1]"<<argv[1]<<")\n";
+#ifndef _WIN32
   std::cout<<"locale dir: "<<PF::PhotoFlow::Instance().get_locale_dir()<<std::endl;
   bindtextdomain("photoflow",PF::PhotoFlow::Instance().get_locale_dir().c_str());
   bind_textdomain_codeset("photoflow", "UTF-8");
   setlocale(LC_ALL,"");
   textdomain("photoflow");
+#else
+  gtk_disable_setlocale();
+#endif
+  if(argc>1) std::cout<<"argv[1]"<<argv[1]<<")\n";
 
   vips__leak = 1;
 
 //return 0;
+#ifdef _WIN32
+  Gtk::Main* app = new Gtk::Main(argc, argv, true);
+#else
   Gtk::Main* app = new Gtk::Main(argc, argv);
+#endif
 
   struct stat buffer;   
   //#ifndef WIN32
@@ -293,6 +303,8 @@ int main (int argc, char *argv[])
   }}
 #endif
   //#endif
+
+  if(argc>1) std::cout<<"argv[1]"<<argv[1]<<")\n";
 
   PF::MainWindow* mainWindow = NULL;
   PF::PluginWindow* pluginwin = NULL;
@@ -341,6 +353,7 @@ int main (int argc, char *argv[])
 #endif
 
   std::cout<<"PhotoFlow: is_plugin="<<is_plugin<<std::endl;
+  if(argc>1) std::cout<<"argv[1]"<<argv[1]<<")\n";
 
   if( is_plugin ) {
     fullpath = realpath( argv[1], NULL );
@@ -376,11 +389,16 @@ int main (int argc, char *argv[])
     //Shows the window and returns when it is closed.
     mainWindow->show_all();
     if( argc > 1 ) {
-      fullpath = PF::resolve_filename( argv[argc-1] );
+      /*fullpath = PF::resolve_filename( argv[argc-1] );
       if(!fullpath)
         return 1;
       mainWindow->open_image( fullpath );
-      free(fullpath);
+      free(fullpath);*/
+      std::cout<<"argv[1]"<<argv[1]<<")\n";
+      std::cout<<"argv[argc-1]"<<argv[argc-1]<<")\n";
+      std::string filename = argv[argc-1];
+      std::cout<<"mainWindow->open_image("<<filename<<")\n";
+      mainWindow->open_image( argv[argc-1] );
     } else {
       mainWindow->on_button_open_clicked();
     }

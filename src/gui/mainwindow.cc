@@ -36,6 +36,10 @@
 #if defined(__APPLE__)
 #include <gtkosxapplication.h>
 #endif
+#if defined(_WIN32)
+  #include<windows.h>
+#endif
+
 
 #include "../base/file_util.hh"
 #include "../base/fileutils.hh"
@@ -696,39 +700,6 @@ PF::MainWindow::open_image( std::string filename )
 }
 
 
-static bool ustring_to_string(const Glib::ustring& us, std::string& s)
-{
-#ifndef _WIN32
-  s = us;
-#else
-  std::string ls = Glib::locale_from_utf8(us);
-  // turn the locale ANSI encoded string into UTF-8 so that FileReader can
-  // turn it into UTF-16 later
-  int size = MultiByteToWideChar(CP_ACP, 0, &(ls[0]), -1, NULL, 0);
-  std::wstring ws;
-  ws.resize(size);
-  MultiByteToWideChar(CP_ACP, 0, &(ls[0]), -1, &(ws[0]), size);
-  size = WideCharToMultiByte(CP_UTF8, 0, &(ws[0]), -1, NULL, 0,
-                             NULL, NULL);
-  s.resize(size);
-  WideCharToMultiByte(CP_UTF8, 0, &(ws[0]), -1, &(s[0]), size,
-                      NULL, NULL);
-#endif
-  /*
-  std::ostringstream ostr;
-  try {
-    ostr << us;
-    s = ostr.str();
-  } catch(Glib::ConvertError& e) {
-    std::cout<<"ustring_to_string: falling back to direct conversion"<<std::endl;
-    s = us;
-  }
-  std::cout<<"ustring_to_string: s=\""<<s<<"\""<<std::endl;
-  */
-  return true;
-}
-
-
 void PF::MainWindow::on_button_open_clicked()
 {
   //return;
@@ -955,8 +926,10 @@ void PF::MainWindow::on_button_open_clicked()
   filter_all->set_name( _("All files") );
   filter_all->add_pattern("*.*");
 #endif
+#ifndef WIN32
   dialog.add_filter(filter_tiff);
   dialog.add_filter(filter_all);
+#endif
 
   std::string last_dir = PF::PhotoFlow::Instance().get_options().get_last_visited_image_folder();
   std::cout<<"MainWindow::on_button_open_clicked: last_dir=\""<<last_dir<<"\""<<std::endl;
@@ -973,8 +946,8 @@ void PF::MainWindow::on_button_open_clicked()
 
     //Notice that this is a std::string, not a Glib::ustring.
     Glib::ustring ufilename = dialog.get_filename();
-    std::string filename; // = ufilename;
-    ustring_to_string( ufilename, filename );
+    std::string filename = ufilename;
+
     last_dir = dialog.get_current_folder();
     PF::PhotoFlow::Instance().get_options().set_last_visited_image_folder( last_dir );
     std::cout<<"MainWindow::on_button_open_clicked: new last_dir=\""<<last_dir<<"\""<<std::endl;
@@ -984,6 +957,14 @@ void PF::MainWindow::on_button_open_clicked()
       std::cout<<"MainWindow::on_button_open_clicked: "<<e.what()<<std::endl;
     }
     std::cout<<"MainWindow::on_button_open_clicked: filename=\""<<filename<<"\""<<std::endl;
+#ifdef _WIN32
+    gchar* winfname = g_win32_locale_filename_from_utf8(filename.c_str());
+    std::cout<<"MainWindow::on_button_open_clicked: winfname=\""<<winfname<<"\""<<std::endl;
+    if( winfname ) open_image( winfname );
+    else open_image( filename );
+#else
+    open_image( filename );
+#endif
     /*
     Glib::RefPtr<Gio::File> ftest = Gio::File::create_for_path(filename);
     if( !ftest->query_exists() ) {
@@ -991,7 +972,6 @@ void PF::MainWindow::on_button_open_clicked()
       return;
     }
     */
-    open_image( filename );
     /*
     char* fullpath = realpath( filename.c_str(), NULL );
     if(!fullpath)

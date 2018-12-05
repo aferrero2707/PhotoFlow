@@ -198,7 +198,7 @@ dcraw_data_t* get_raw_data( VipsImage* image );
     void print_exif();
   };
 
-	extern std::map<Glib::ustring, PF::RawImage*> raw_images;
+	extern std::map<std::string, PF::RawImage*> raw_images;
 
 }
 

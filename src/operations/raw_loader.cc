@@ -53,7 +53,7 @@ PF::RawLoaderPar::~RawLoaderPar()
     raw_image->unref();
 		std::cout<<"RawLoaderPar::~RawLoaderPar(): raw_image->get_nref()="<<raw_image->get_nref()<<std::endl;
     if( raw_image->get_nref() == 0 ) {
-      std::map<Glib::ustring, RawImage*>::iterator i = 
+      std::map<std::string, RawImage*>::iterator i =
 				raw_images.find( file_name.get() );
       if( i != raw_images.end() ) 
 				raw_images.erase( i );
@@ -76,7 +76,8 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
 
   RawImage* new_raw_image = NULL;
 
-  std::map<Glib::ustring, RawImage*>::iterator i = 
+  std::cout<<"RawLoaderPar::build(): searching \""<<file_name.get()<<"\"\n";
+  std::map<std::string, RawImage*>::iterator i =
     raw_images.find( file_name.get() );
   if( i == raw_images.end() ) {
     std::cout<<"RawLoaderPar::build(): creating new RawImage for file "<<file_name.get()<<std::endl;
@@ -94,7 +95,7 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
   if( raw_image ) {
     raw_image->unref();
     if( raw_image->get_nref() == 0 ) {
-      std::map<Glib::ustring, RawImage*>::iterator i =
+      std::map<std::string, RawImage*>::iterator i =
         raw_images.find( file_name.get() );
       if( i != raw_images.end() )
         raw_images.erase( i );

@@ -31,6 +31,9 @@
 #include <stdint.h>
 #include <memory>
 #include <array>
+#include <stdio.h>
+#include <math.h>
+#include <float.h>
 
 typedef uint32_t uint32;
 
@@ -240,24 +243,24 @@ PF::RawImage::RawImage( const std::string _fname ):
           for(int i = 0; i < 9; i++) d65_color_matrix[i] = cm2_pos->toFloat(i);
           has_embedded = true;
         }
-#ifndef NDEBUG
+//#ifndef NDEBUG
         printf("d65_color_matrix[0]: %.4f\n", d65_color_matrix[0]);
-        printf("isnan(d65_color_matrix[0])has_embedded: %d\n", (int)has_embedded);
-        printf("isfinite(d65_color_matrix[0]): %d\n", isfinite(d65_color_matrix[0]));
-#endif
+        printf("has_embedded: %d\n", (int)has_embedded);
+        printf("isfinite(d65_color_matrix[0]): %d\n", std::isfinite(d65_color_matrix[0]));
+//#endif
         if( has_embedded ) {
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[0][i] = d65_color_matrix[i];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[1][i] = d65_color_matrix[i+3];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[3][i] = d65_color_matrix[i+3];
           for(int i = 0; i < 3; i++) pdata->color.cam_xyz[2][i] = d65_color_matrix[i+6];
-#ifndef NDEBUG
+//#ifndef NDEBUG
           printf("pdata->color.cam_xyz (embedded):\n");
           for(int k = 0; k < 3; k++)
           {
             //printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
             printf("    %.4f %.4f %.4f\n",pdata->color.cam_xyz[k][0],pdata->color.cam_xyz[k][1],pdata->color.cam_xyz[k][2]);
           }
-#endif
+//#endif
         }
 
         Exiv2::ExifData::const_iterator orient_pos = exifData.findKey(Exiv2::ExifKey("Exif.Image.Orientation"));
@@ -395,6 +398,7 @@ PF::RawImage::RawImage( const std::string _fname ):
   }
 
   pyramid.init( demo_image );
+  std::cout<<"RawImage::RawImage() finished\n";
   return;
 
   /*
@@ -449,6 +453,42 @@ PF::RawImage::RawImage( const std::string _fname ):
 }
 
 
+static bool convert_locale(const std::string& us, std::string& s)
+{
+#ifndef _WIN32
+  s = us;
+#else
+  std::string ls = us;//Glib::locale_from_utf8(us);
+  std::cout<<"ustring_to_string: ls: \""<<ls<<"\"\n";
+  // turn the locale ANSI encoded string into UTF-8 so that FileReader can
+  // turn it into UTF-16 later
+  int size = MultiByteToWideChar(CP_ACP, 0, &(ls[0]), -1, NULL, 0);
+  std::wstring ws;
+  ws.resize(size);
+  MultiByteToWideChar(CP_ACP, 0, &(ls[0]), -1, &(ws[0]), size);
+  std::wcout<<"ustring_to_string: ws: \""<<ws<<"\"\n";
+  size = WideCharToMultiByte(CP_UTF8, 0, &(ws[0]), -1, NULL, 0,
+                             NULL, NULL);
+  s.resize(size);
+  WideCharToMultiByte(CP_UTF8, 0, &(ws[0]), -1, &(s[0]), size,
+                      NULL, NULL);
+  std::cout<<"ustring_to_string: s: \""<<s<<"\"\n";
+#endif
+  /*
+  std::ostringstream ostr;
+  try {
+    ostr << us;
+    s = ostr.str();
+  } catch(Glib::ConvertError& e) {
+    std::cout<<"ustring_to_string: falling back to direct conversion"<<std::endl;
+    s = us;
+  }
+  std::cout<<"ustring_to_string: s=\""<<s<<"\""<<std::endl;
+  */
+  return true;
+}
+
+
 bool PF::RawImage::load_rawspeed()
 {
 #ifdef __WIN32__
@@ -474,10 +514,17 @@ bool PF::RawImage::load_rawspeed()
   //		dcraw_data.color.cam_xyz[i][j] = get_cam_xyz(i,j);
   pdata = &dcraw_data;
 
+  std::cout<<"RawImage::load_rawspeed: file_name_real: \""<<file_name_real<<"\"\n";
+/*
   char filen[PATH_MAX] = { 0 };
   snprintf(filen, sizeof(filen), "%s", file_name_real.c_str());
   std::cout<<"RawImage::load_rawspeed(): input file: "<<filen<<std::endl;
   rawspeed::FileReader f(filen);
+*/
+  std::string filen;
+  convert_locale(file_name_real, filen);
+  std::cout<<"RawImage::load_rawspeed: filen: \""<<filen<<"\"\n";
+  rawspeed::FileReader f(&(filen[0]));
 
   //#ifdef __APPLE__
   //  std::auto_ptr<rawspeed::RawDecoder> d;
@@ -639,10 +686,10 @@ bool PF::RawImage::load_rawspeed()
         pdata->color.cblack[i] = pdata->color.black;
       }
     }
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"RawSpeed camera WB multipliers: "<<pdata->color.cam_mul[0]<<" "<<pdata->color.cam_mul[1]<<" "<<pdata->color.cam_mul[2]<<" "<<pdata->color.cam_mul[3]<<std::endl;
     std::cout<<"RawSpeed black="<<pdata->color.black<<"  white="<<pdata->color.maximum<<std::endl;
-#endif
+//#endif
   }
 
   catch(const std::exception &exc)
@@ -804,19 +851,19 @@ bool PF::RawImage::load_rawspeed()
   //float cam_xyz[12];
   float cam_xyz[4][3];
   pdata->color.cam_xyz[0][0] = NAN;
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"Getting default camera matrix for makermodel=\""<<exif_data.camera_makermodel<<"\""<<std::endl;
-#endif
+//#endif
   dt_dcraw_adobe_coeff(exif_data.camera_makermodel, (float(*)[12])pdata->color.cam_xyz);
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   printf("pdata->color.cam_xyz:\n");
   for(int k = 0; k < 3; k++)
   {
     //printf("    %.4f %.4f %.4f\n",xyz_to_cam[k][0],xyz_to_cam[k][1],xyz_to_cam[k][2]);
     printf("    %.4f %.4f %.4f\n",pdata->color.cam_xyz[k][0],pdata->color.cam_xyz[k][1],pdata->color.cam_xyz[k][2]);
   }
-#endif
+//#endif
 
   /* free auto pointers on spot */
   d.reset();
@@ -848,9 +895,9 @@ bool PF::RawImage::load_rawspeed()
   }
 //#endif
   rawData.Reset();
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RawImage: rawData.Reset() called"<<std::endl;
-#endif
+//#endif
 
 
 #ifndef NDEBUG
@@ -894,9 +941,9 @@ bool PF::RawImage::load_rawspeed()
       std::cout<<"RawImage: getting rawspeed camera in DNG mode"<<std::endl;
       cam = meta->getCamera(exif_data.exif_maker, exif_data.exif_model, "dng");
     }
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"RawImage: calling rawspeed_lookup_makermodel()"<<std::endl;
-#endif
+//#endif
     // We need to use the exif values, so let's get rawspeed to munge them
     rawspeed_lookup_makermodel(cam, exif_data.exif_maker, exif_data.exif_model,
         exif_data.camera_maker, sizeof(exif_data.camera_maker),
@@ -904,9 +951,9 @@ bool PF::RawImage::load_rawspeed()
         exif_data.camera_alias, sizeof(exif_data.camera_alias));
   }
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"RawImage::load_rawspeed() finished"<<std::endl;
-#endif
+//#endif
   return true;
 }
 
@@ -2797,6 +2844,6 @@ for (; cc < ccmax; cc++, col++) {
 
 
 
-std::map<Glib::ustring, PF::RawImage*> PF::raw_images;
+std::map<std::string, PF::RawImage*> PF::raw_images;
 
 
