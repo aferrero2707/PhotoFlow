@@ -68,6 +68,7 @@ PF::PropertyBase(name, par)
   add_enum_value(PF_BLEND_HARD_LIGHT,"PF_BLEND_HARD_LIGHT",_("Hard light"));
   add_enum_value(PF_BLEND_VIVID_LIGHT,"PF_BLEND_VIVID_LIGHT",_("Vivid light"));
   add_enum_value(PF_BLEND_MULTIPLY,"PF_BLEND_MULTIPLY",_("Multiply"));
+  add_enum_value(PF_BLEND_DIVIDE,"PF_BLEND_DIVIDE",_("Divide"));
   add_enum_value(PF_BLEND_SCREEN,"PF_BLEND_SCREEN",_("Screen"));
   add_enum_value(PF_BLEND_LIGHTEN,"PF_BLEND_LIGHTEN",_("Lighten"));
   add_enum_value(PF_BLEND_DARKEN,"PF_BLEND_DARKEN",_("Darken"));

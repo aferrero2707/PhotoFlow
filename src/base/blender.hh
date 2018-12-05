@@ -76,6 +76,7 @@ namespace PF
     BlendGrainExtract<T,colorspace,CHMIN,CHMAX,has_omap> blend_grain_extract;
     BlendGrainMerge<T,colorspace,CHMIN,CHMAX,has_omap> blend_grain_merge;
     BlendMultiply<T,colorspace,CHMIN,CHMAX,has_omap> blend_multiply;
+    BlendDivide<T,colorspace,CHMIN,CHMAX,has_omap> blend_divide;
     BlendScreen<T,colorspace,CHMIN,CHMAX,has_omap> blend_screen;
     BlendLighten<T,colorspace,CHMIN,CHMAX,has_omap> blend_lighten;
     BlendDarken<T,colorspace,CHMIN,CHMAX,has_omap> blend_darken;
@@ -176,6 +177,9 @@ namespace PF
           break;
         case PF_BLEND_MULTIPLY:
           BLEND_LOOP(blend_multiply);
+          break;
+        case PF_BLEND_DIVIDE:
+          BLEND_LOOP(blend_divide);
           break;
         case PF_BLEND_SCREEN:
           BLEND_LOOP(blend_screen);
