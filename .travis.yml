@@ -71,7 +71,7 @@ matrix:
             - sudo mv /usr/local/bin /usr/local/bin_
             - sudo mv /usr/local/lib /usr/local/lib_
             - sudo mv /usr/local/opt /usr/local/opt_
-            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 5
+            - $TRAVIS_BUILD_DIR/osx/dep-install.sh 6
             #- export PATH="/usr/local/opt/ccache/libexec:$PATH"
             - cd $TRAVIS_BUILD_DIR
             - mkdir -p build
