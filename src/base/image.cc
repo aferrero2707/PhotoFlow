@@ -1152,7 +1152,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       default: break;
       }
       std::cout<<"  width="<<width<<"  height="<<height<<std::endl;
-      if( width>0 && height>0 ) {
+      if( width>0 || height>0 ) {
         op_par->set_scale_width_pixels(width);
         op_par->set_scale_height_pixels(height);
         VipsImage* out = op_par->build( in, 0, NULL, NULL, level );

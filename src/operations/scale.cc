@@ -400,12 +400,15 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
   }
 
   if( scale_mode.get_enum_value().first == PF::SCALE_MODE_FIT ) {
-    if( /*level!=0 ||*/ scale_width==0 || scale_height==0 ||
-        scale_width==1 || scale_height==1 ) {
+    if( /*level!=0 ||*/ (scale_width==1 && scale_height==1) ||
+        (scale_width==0 && scale_height==0) ) {
       //PF_REF( srcimg, "ScalePar::build(): srcimg ref (editing mode)" );
       return srcimg;
     }
-    float scale = MIN( scale_width, scale_height );
+    float scale = 0;
+    if( scale_width == 0 ) scale = scale_height;
+    else if( scale_height == 0 ) scale = scale_width;
+    else scale = MIN( scale_width, scale_height );
     scale_mult = scale;
 
     /*
