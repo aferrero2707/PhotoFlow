@@ -31,6 +31,7 @@
 #define EXPORT_DIALOG__HH
 
 #include <gtkmm.h>
+#include "widgets/pfwidget.hh"
 
 
 namespace PF {
@@ -38,7 +39,7 @@ namespace PF {
   class ImageEditor;
 
 
-  class TextSelector: public Gtk::HBox
+  class TextSelector_: public Gtk::HBox
   {
     //Tree model columns:
     class ModelColumns : public Gtk::TreeModel::ColumnRecord
@@ -57,7 +58,7 @@ namespace PF {
     Glib::RefPtr<Gtk::ListStore> model;
 
     public:
-    TextSelector(Glib::ustring label);
+    TextSelector_(Glib::ustring label);
     void add_entry(Glib::ustring text, int id);
 
     void set_active(int id);
@@ -73,7 +74,7 @@ namespace PF {
     Gtk::HBox file_hbox;
     Gtk::Button file_button;
     Gtk::Entry file_entry;
-    TextSelector export_format_selector;
+    IntSelector export_format_selector;
 
     Gtk::HSeparator top_separator;
     Gtk::HSeparator format_type_separator;
@@ -93,19 +94,19 @@ namespace PF {
     Gtk::HBox jpeg_chroma_subsampling_hbox;
     Gtk::Label jpeg_chroma_subsampling_label;
     Gtk::CheckButton jpeg_chroma_subsampling_check;
-    TextSelector jpeg_quant_table_selector;
+    IntSelector jpeg_quant_table_selector;
 
     Gtk::VBox tiff_options_vbox;
     Gtk::Label tiff_options_label;
-    TextSelector tiff_format_selector;
+    IntSelector tiff_format_selector;
     Gtk::HBox tiff_compressed_hbox;
     Gtk::Label tiff_compressed_label;
     Gtk::CheckButton tiff_compressed_check;
 
     Gtk::VBox resize_vbox;
     Gtk::Label resize_label;
-    TextSelector size_selector;
-    TextSelector units_selector;
+    IntSelector size_selector;
+    IntSelector units_selector;
 
     Gtk::HBox scale_pixels_box;
 #ifdef GTKMM_2
@@ -130,9 +131,9 @@ namespace PF {
 
 
     Gtk::VBox icc_vbox;
-    TextSelector icc_profile;
-    TextSelector icc_trc;
-    TextSelector icc_intent;
+    IntSelector icc_profile;
+    IntSelector icc_trc;
+    IntSelector icc_intent;
     Gtk::HBox icc_bpc_hbox;
     Gtk::Label icc_bpc_label;
     Gtk::CheckButton icc_bpc_check;

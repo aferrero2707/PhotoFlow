@@ -53,7 +53,7 @@ PF::OCIOViewPar::OCIOViewPar():
   std::cout<<"OCIOViewPar: device="<<device<<std::endl;
   transformName = "Filmic Log Encoding Base"; //config->getDefaultView(device);
   std::cout<<"OCIOViewPar: transformName="<<transformName<<std::endl;
-  displayColorSpace = config->getDisplayColorSpaceName(device, transformName);
+  displayColorSpace = config->getDisplayColorSpaceName(device.c_str(), transformName.c_str());
   std::cout<<"OCIOViewPar: displayColorSpace="<<displayColorSpace<<std::endl;
 
   // Step 3: Create a DisplayTransform, and set the input and display ColorSpaces
@@ -61,14 +61,14 @@ PF::OCIOViewPar::OCIOViewPar():
 
   transform = OCIO::DisplayTransform::Create();
   transform->setInputColorSpaceName( OCIO::ROLE_SCENE_LINEAR );
-  transform->setDisplay( device );
-  transform->setView( transformName );
+  transform->setDisplay( device.c_str() );
+  transform->setView( transformName.c_str() );
 
   lookName = "Medium High Contrast";
   //lookName = config->getDisplayLooks(device, transformName); //"Very High Contrast";
   std::cout<<"OCIOViewPar: lookName="<<lookName<<std::endl;
   transform->setLooksOverrideEnabled(true);
-  transform->setLooksOverride(lookName);
+  transform->setLooksOverride(lookName.c_str());
 
   //processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, displayColorSpace);
   processor = config->getProcessor(transform);
@@ -100,6 +100,56 @@ VipsImage* PF::OCIOViewPar::build(std::vector<VipsImage*>& in, int first,
     return NULL;
   }
 
+
+  std::cout<<"OCIOViewPar: config: "<<PF::PhotoFlow::Instance().get_options().get_ocio_config()<<std::endl;
+  std::string configfile;
+  if( PF::PhotoFlow::Instance().get_options().get_ocio_config() == "none") {
+    PF_REF(srcimg, "OCIO config = none");
+    return srcimg;
+  }
+
+  if( PF::PhotoFlow::Instance().get_options().get_ocio_config() == "filmic") {
+#ifdef __WIN32__
+  configfile = PF::PhotoFlow::Instance().get_data_dir() + "\\ocio-configs\\nuke-default\\config.ocio";
+#else
+  configfile = PF::PhotoFlow::Instance().get_data_dir() + "/ocio-configs/filmic-blender-master/config.ocio";
+#endif
+  }
+
+  try {
+  config  = OCIO::Config::CreateFromFile(configfile.c_str());
+  std::cout<<"OCIOViewPar: config="<<config<<std::endl;
+
+  // Step 2: Lookup the display ColorSpace
+  device = PF::PhotoFlow::Instance().get_options().get_ocio_display();
+  std::cout<<"OCIOViewPar: device="<<device<<std::endl;
+  transformName = PF::PhotoFlow::Instance().get_options().get_ocio_view();
+  std::cout<<"OCIOViewPar: transformName="<<transformName<<std::endl;
+  displayColorSpace = config->getDisplayColorSpaceName(device.c_str(), transformName.c_str());
+  std::cout<<"OCIOViewPar: displayColorSpace="<<displayColorSpace<<std::endl;
+
+  // Step 3: Create a DisplayTransform, and set the input and display ColorSpaces
+  // (This example assumes the input is scene linear. Adapt as needed.)
+
+  transform = OCIO::DisplayTransform::Create();
+  transform->setInputColorSpaceName( OCIO::ROLE_SCENE_LINEAR );
+  transform->setDisplay( device.c_str() );
+  transform->setView( transformName.c_str() );
+
+  lookName = PF::PhotoFlow::Instance().get_options().get_ocio_look();
+  //lookName = config->getDisplayLooks(device, transformName); //"Very High Contrast";
+  std::cout<<"OCIOViewPar: lookName="<<lookName<<std::endl;
+  transform->setLooksOverrideEnabled(true);
+  transform->setLooksOverride(lookName.c_str());
+
+  //processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, displayColorSpace);
+  processor = config->getProcessor(transform);
+  std::cout<<"OCIOViewPar: processor="<<processor<<std::endl;
+  }
+  catch(OCIO::Exception & exception)
+  {
+      std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+  }
 
   VipsImage* out = NULL;
 

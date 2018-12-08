@@ -32,6 +32,10 @@
 
 #include <version.hh>
 
+#include <OpenColorIO/OpenColorIO.h>
+namespace OCIO = OCIO_NAMESPACE;
+
+
 #include "settingsdialog.hh"
 
 
@@ -42,6 +46,11 @@ PF::SettingsDialog::SettingsDialog():
       cm_working_profile_frame( _("Working RGB Colorspace") ),
       cm_display_profile_frame( _("Display Profile") ),
       cm_display_profile_bpc_selector( _("black point compensation") ),
+      cm_ocio_config_frame( _("display view configuration") ),
+      cm_ocio_config_selector( _("configuration") ),
+      cm_ocio_display_selector( _("display") ),
+      cm_ocio_view_selector( _("view") ),
+      cm_ocio_look_selector( _("look") ),
       apply_default_preset_label(_("apply default processing profile")),
       save_sidecar_files_label(_("save sidecar files")),
       ui_frame(_("User interface options")),
@@ -204,6 +213,33 @@ PF::SettingsDialog::SettingsDialog():
   color_box.pack_start( cm_working_profile_frame, Gtk::PACK_SHRINK,10 );
   color_box.pack_start( cm_display_profile_frame, Gtk::PACK_SHRINK,0 );
 
+#ifdef __WIN32__
+  std::string configfile = PF::PhotoFlow::Instance().get_data_dir() + "\\ocio-configs\\nuke-default\\config.ocio";
+#else
+  std::string configfile = PF::PhotoFlow::Instance().get_data_dir() + "/ocio-configs/filmic-blender-master/config.ocio";
+#endif
+  cm_ocio_config_selector.add_entry("none", "");
+  cm_ocio_config_selector.add_entry("filmic", configfile);
+  cm_ocio_config_selector.set_active("filmic");
+  cm_ocio_config_box.pack_start( cm_ocio_config_selector, Gtk::PACK_SHRINK,0 );
+  cm_ocio_config_box.pack_start( cm_ocio_display_selector, Gtk::PACK_SHRINK,0 );
+  cm_ocio_config_box.pack_start( cm_ocio_view_selector, Gtk::PACK_SHRINK,0 );
+  cm_ocio_config_box.pack_start( cm_ocio_look_selector, Gtk::PACK_SHRINK,0 );
+  cm_ocio_config_frame.add( cm_ocio_config_box );
+  color_box.pack_start( cm_ocio_config_frame, Gtk::PACK_SHRINK,0 );
+
+  ocio_config_processing = false;
+  on_ocio_config_changed();
+
+  cm_ocio_config_selector.get_cbox().signal_changed().connect(
+      sigc::mem_fun(*this, &PF::SettingsDialog::on_ocio_config_changed) );
+  cm_ocio_display_selector.get_cbox().signal_changed().connect(
+      sigc::mem_fun(*this, &PF::SettingsDialog::on_ocio_config_changed) );
+  cm_ocio_view_selector.get_cbox().signal_changed().connect(
+      sigc::mem_fun(*this, &PF::SettingsDialog::on_ocio_config_changed) );
+  cm_ocio_look_selector.get_cbox().signal_changed().connect(
+      sigc::mem_fun(*this, &PF::SettingsDialog::on_ocio_config_changed) );
+
   apply_default_preset_hbox.pack_start( apply_default_preset_check, Gtk::PACK_SHRINK );
   apply_default_preset_hbox.pack_start( apply_default_preset_label, Gtk::PACK_SHRINK );
   apply_default_preset_label.set_tooltip_text(_("Apply default processing preset to RAW files"));
@@ -326,6 +362,14 @@ void PF::SettingsDialog::load_settings()
   else
     cm_display_profile_bpc_selector.set_active( false );
 
+
+  cm_ocio_config_selector.set_active_text( PF::PhotoFlow::Instance().get_options().get_ocio_config() );
+  cm_ocio_display_selector.set_active( PF::PhotoFlow::Instance().get_options().get_ocio_display() );
+  cm_ocio_view_selector.set_active( PF::PhotoFlow::Instance().get_options().get_ocio_view() );
+  cm_ocio_look_selector.set_active( PF::PhotoFlow::Instance().get_options().get_ocio_look() );
+
+
+
   std::cout<<"PF::PhotoFlow::Instance().get_options().get_apply_default_preset(): "<<PF::PhotoFlow::Instance().get_options().get_apply_default_preset()<<std::endl;
   apply_default_preset_check.set_active( PF::PhotoFlow::Instance().get_options().get_apply_default_preset() != 0 );
 
@@ -401,7 +445,30 @@ void PF::SettingsDialog::save_settings()
   }
   PF::PhotoFlow::Instance().get_options().set_display_profile_bpc( cm_display_profile_bpc_selector.get_active() );
 
+
+
+  if( PF::PhotoFlow::Instance().get_options().get_ocio_config() !=
+      cm_ocio_config_selector.get_active_text() ) cm_dpy_modified = true;
+  if( PF::PhotoFlow::Instance().get_options().get_ocio_display() !=
+      cm_ocio_display_selector.get_active() ) cm_dpy_modified = true;
+  if( PF::PhotoFlow::Instance().get_options().get_ocio_view() !=
+      cm_ocio_view_selector.get_active() ) cm_dpy_modified = true;
+  if( PF::PhotoFlow::Instance().get_options().get_ocio_look() !=
+      cm_ocio_look_selector.get_active() ) cm_dpy_modified = true;
+  std::cout<<"save settings: OCIO config: "<<cm_ocio_config_selector.get_active_text()<<std::endl;
+  PF::PhotoFlow::Instance().get_options().set_ocio_config( cm_ocio_config_selector.get_active_text() );
+  PF::PhotoFlow::Instance().get_options().set_ocio_display( cm_ocio_display_selector.get_active() );
+  PF::PhotoFlow::Instance().get_options().set_ocio_view( cm_ocio_view_selector.get_active() );
+  PF::PhotoFlow::Instance().get_options().set_ocio_look( cm_ocio_look_selector.get_active() );
+
+
+  std::cout<<"save settings: cm_dpy_modified: "<<cm_dpy_modified<<std::endl;
   if( cm_dpy_modified ) signal_cm_modified.emit();
+
+
+
+
+
 
   if( apply_default_preset_check.get_active() )
     PF::PhotoFlow::Instance().get_options().set_apply_default_preset( 1 );
@@ -506,4 +573,116 @@ void PF::SettingsDialog::on_floating_tool_dialogs_check_toggled()
 {
   if( ui_floating_tool_dialogs_check.get_active() ) ui_multiple_tool_dialogs_hbox.show();
   else ui_multiple_tool_dialogs_hbox.hide();
+}
+
+
+void PF::SettingsDialog::on_ocio_config_changed()
+{
+  if( ocio_config_processing ) return;
+  ocio_config_processing = true;
+  bool config_changed = false, display_changed = false, view_changed = false, look_changed = false;
+  std::string configfile = cm_ocio_config_selector.get_active();
+  if( configfile.empty() ) {
+    cm_ocio_display_selector.hide();
+    cm_ocio_view_selector.hide();
+    cm_ocio_look_selector.hide();
+    cm_ocio_display = "";
+    cm_ocio_view = "";
+    cm_ocio_look = "";
+    cm_ocio_config = configfile;
+    ocio_config_processing = false;
+    return;
+  }
+
+  OCIO::ConstConfigRcPtr config  = OCIO::Config::CreateFromFile(configfile.c_str());
+  if( !config ) {
+    std::cout<<"on_ocio_config_changed: empty config\n";
+    cm_ocio_display_selector.hide();
+    cm_ocio_view_selector.hide();
+    cm_ocio_look_selector.hide();
+    cm_ocio_display = "";
+    cm_ocio_view = "";
+    cm_ocio_look = "";
+    cm_ocio_config = configfile;
+    ocio_config_processing = false;
+    return;
+  }
+
+  std::cout<<"on_ocio_config_changed: cm_ocio_config: \""<<cm_ocio_config
+      <<"\"  configfile: \""<<configfile<<"\"\n";
+  if( cm_ocio_config != configfile ) {
+    config_changed = true;
+    display_changed = true;
+    view_changed = true;
+    look_changed = true;
+  }
+  cm_ocio_config = configfile;
+  if( cm_ocio_display != cm_ocio_display_selector.get_active() ) {
+    display_changed = true;
+    view_changed = true;
+  }
+  if( cm_ocio_view != cm_ocio_view_selector.get_active() ) {
+    view_changed = true;
+  }
+  if( cm_ocio_look != cm_ocio_look_selector.get_active() ) {
+    look_changed = true;
+  }
+  cm_ocio_display = cm_ocio_display_selector.get_active();
+  cm_ocio_view = cm_ocio_view_selector.get_active();
+  cm_ocio_look = cm_ocio_look_selector.get_active();
+
+  if( config_changed ) {
+    // if the config has changed, we have to re-initialize the list of displays
+    std::cout<<"on_ocio_config_changed: resetting displays\n";
+    cm_ocio_display_selector.reset();
+    int ndisplays = config->getNumDisplays();
+    if( ndisplays > 0 ) cm_ocio_display_selector.show();
+    else cm_ocio_display_selector.hide();
+    for( int di = 0; di < ndisplays; di++) {
+      std::string display = config->getDisplay(di);
+      Glib::ustring udisplay = display;
+      cm_ocio_display_selector.add_entry(udisplay, display);
+    }
+    cm_ocio_display_selector.set_active_id(0);
+    cm_ocio_display = cm_ocio_display_selector.get_active();
+  }
+
+  if( config_changed || display_changed ) {
+    // if the config or the display has changed, we have to re-initialize the list of views
+    std::cout<<"on_ocio_config_changed: resetting views\n";
+    cm_ocio_view_selector.reset();
+    int nviews = config->getNumViews(cm_ocio_display.c_str());
+    if( nviews > 0 ) cm_ocio_view_selector.show();
+    else cm_ocio_view_selector.hide();
+    for( int vi = 0; vi < nviews; vi++) {
+      std::string view = config->getView(cm_ocio_display.c_str(), vi);
+      Glib::ustring uview = view;
+      cm_ocio_view_selector.add_entry(uview, view);
+    }
+    cm_ocio_view_selector.set_active_id(0);
+    cm_ocio_view = cm_ocio_view_selector.get_active();
+  }
+
+  const std::string csname = config->getDisplayColorSpaceName(cm_ocio_display.c_str(), cm_ocio_view.c_str());
+  std::cout<<"on_ocio_config_changed: csname: "<<csname<<std::endl;
+  if( config_changed || display_changed || view_changed ) {
+    // if the config has changed, we have to re-initialize the list of looks
+    std::cout<<"on_ocio_config_changed: resetting looks\n";
+    cm_ocio_look_selector.reset();
+    int nlooks = config->getNumLooks();
+    if( nlooks > 0 ) cm_ocio_look_selector.show();
+    else cm_ocio_look_selector.hide();
+    for( int li = 0; li < nlooks; li++) {
+      std::string look = config->getLookNameByIndex(li);
+      Glib::ustring ulook = look;
+      OpenColorIO::ConstLookRcPtr l = config->getLook(look.c_str());
+      const std::string csname2 = l->getProcessSpace();
+      std::cout<<"on_ocio_config_changed: csname2: "<<csname2<<std::endl;
+      if(csname == csname2)
+        cm_ocio_look_selector.add_entry(ulook, look);
+    }
+    cm_ocio_look_selector.set_active_id(0);
+    cm_ocio_look = cm_ocio_look_selector.get_active();
+  }
+  ocio_config_processing = false;
 }

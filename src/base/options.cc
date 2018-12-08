@@ -47,6 +47,11 @@ PF::Options::Options()
   ui_layers_list_placement = PF::PF_LAYERS_LIST_PLACEMENT_RIGHT;
   ui_floating_tool_dialogs = false;
   ui_multiple_tool_dialogs = true;
+
+  ocio_config = "filmic";
+  ocio_display = "sRGB Native 2.2";
+  ocio_view = "Filmic Log Encoding Base";
+  ocio_look = "Base Contrast";
 }
 
 void PF::Options::set_working_profile_type(int t)

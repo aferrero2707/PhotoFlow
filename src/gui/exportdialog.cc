@@ -38,7 +38,7 @@
 
 
 
-PF::TextSelector::TextSelector(Glib::ustring l): label(l)
+PF::TextSelector_::TextSelector_(Glib::ustring l): label(l)
 {
   model = Gtk::ListStore::create(columns);
   cbox.set_model( model );
@@ -48,7 +48,7 @@ PF::TextSelector::TextSelector(Glib::ustring l): label(l)
 }
 
 
-void PF::TextSelector::add_entry(Glib::ustring text, int id)
+void PF::TextSelector_::add_entry(Glib::ustring text, int id)
 {
   Gtk::TreeModel::iterator ri;
   ri = model->append();
@@ -58,7 +58,7 @@ void PF::TextSelector::add_entry(Glib::ustring text, int id)
 }
 
 
-void PF::TextSelector::set_active(int id)
+void PF::TextSelector_::set_active(int id)
 {
   Glib::RefPtr<Gtk::TreeModel> model = cbox.get_model();
   Gtk::TreeModel::Children rows = model->children();
@@ -72,7 +72,7 @@ void PF::TextSelector::set_active(int id)
 }
 
 
-int PF::TextSelector::get_active_id()
+int PF::TextSelector_::get_active_id()
 {
   Gtk::TreeModel::iterator iter = cbox.get_active();
   if( iter ) {
@@ -85,7 +85,7 @@ int PF::TextSelector::get_active_id()
 }
 
 
-Glib::ustring PF::TextSelector::get_active_text()
+Glib::ustring PF::TextSelector_::get_active_text()
 {
   Glib::ustring result;
   Gtk::TreeModel::iterator iter = cbox.get_active();
@@ -348,7 +348,7 @@ void PF::ExportDialog::on_show()
   }
 
   std::string image_filename;
-  int id = export_format_selector.get_active_id();
+  int id = export_format_selector.get_active();
   switch( id ) {
   case PF::EXPORT_FORMAT_JPEG: {
     image_filename = PF::replaceFileExtension(tmp_filename, "jpg");
@@ -388,7 +388,7 @@ bool PF::ExportDialog::on_delete_event( GdkEventAny* any_event )
 
 void PF::ExportDialog::on_format_changed()
 {
-  int id = export_format_selector.get_active_id();
+  int id = export_format_selector.get_active();
   switch( id ) {
   case PF::EXPORT_FORMAT_JPEG: {
     jpeg_options_vbox.show_all();
@@ -417,7 +417,7 @@ void PF::ExportDialog::on_format_changed()
 
 void PF::ExportDialog::on_colorspace_changed()
 {
-  int id = icc_profile.get_active_id();
+  int id = icc_profile.get_active();
   switch( id ) {
   case PF::PROF_TYPE_EMBEDDED: {
     icc_trc.hide();
@@ -444,16 +444,16 @@ void PF::ExportDialog::on_button_clicked(int id)
       image_export_opt_t options;
       options.jpeg_quality = jpeg_quality_scale.get_value();
       options.jpeg_chroma_subsampling = jpeg_chroma_subsampling_check.get_active();
-      options.jpeg_quant_table = jpeg_quant_table_selector.get_active_id();
-      options.tiff_format = export_format_selector.get_active_id();
+      options.jpeg_quant_table = jpeg_quant_table_selector.get_active();
+      options.tiff_format = export_format_selector.get_active();
       options.tiff_compress = tiff_compressed_check.get_active();
-      options.size = (PF::export_size_t)size_selector.get_active_id();
+      options.size = (PF::export_size_t)size_selector.get_active();
       options.sharpen_enabled = resize_sharpening_check.get_active();
       options.sharpen_radius = resize_sh_radius_scale.get_value();
       options.sharpen_amount = 100;
-      options.profile_type = (profile_type_t)icc_profile.get_active_id();
-      options.trc_type = (TRC_type)icc_trc.get_active_id();
-      options.intent = (cmsUInt32Number)icc_intent.get_active_id();
+      options.profile_type = (profile_type_t)icc_profile.get_active();
+      options.trc_type = (TRC_type)icc_trc.get_active();
+      options.intent = (cmsUInt32Number)icc_intent.get_active();
       options.bpc = icc_bpc_check.get_active();
       editor->get_image()->export_merged( file_entry.get_text(), &options );
       editor->set_last_exported_file( file_entry.get_text() );

@@ -29,16 +29,16 @@ roles:
   matte_paint: Filmic Log Encoding
 
 displays:
-  Apple DCI-P3 Native 2.2:
-    - !<View> {name: sRGB OETF, colorspace: AppleP3 sRGB OETF}
-    - !<View> {name: Non-Colour Data, colorspace: Non-Colour Data}
-    - !<View> {name: Linear Raw, colorspace: Linear}
-    - !<View> {name: Filmic Log Encoding Base, colorspace: AppleP3 Filmic Log Encoding}
   sRGB Native 2.2:
+    - !<View> {name: Filmic Log Encoding Base, colorspace: Filmic Log Encoding}
     - !<View> {name: sRGB OETF, colorspace: sRGB OETF}
     - !<View> {name: Non-Colour Data, colorspace: Non-Colour Data}
     - !<View> {name: Linear Raw, colorspace: Linear}
-    - !<View> {name: Filmic Log Encoding Base, colorspace: Filmic Log Encoding}
+  Apple DCI-P3 Native 2.2:
+    - !<View> {name: Filmic Log Encoding Base, colorspace: AppleP3 Filmic Log Encoding}
+    - !<View> {name: sRGB OETF, colorspace: AppleP3 sRGB OETF}
+    - !<View> {name: Non-Colour Data, colorspace: Non-Colour Data}
+    - !<View> {name: Linear Raw, colorspace: Linear}
 # VRay users should uncomment the Filmic views below as VRay doesn't permit Looks
 #    - !<View> {name: Filmic Very High Contrast, colorspace: Filmic Log Encoding, look: +Very High Contrast}
 #    - !<View> {name: Filmic High Contrast, colorspace: Filmic Log Encoding, look: +High Contrast}
@@ -186,14 +186,9 @@ colorspaces:
 
 looks:
   - !<Look>
-    name: Greyscale
+    name: Base Contrast
     process_space: Filmic Log Encoding
-    transform: !<MatrixTransform> {matrix: [0.2126729, 0.7151521, 0.0721750, 0, 0.2126729, 0.7151521, 0.0721750, 0, 0.2126729, 0.7151521, 0.0721750, 0, 0, 0, 0, 1]}
-
-  - !<Look>
-    name: False Colour
-    process_space: Filmic Log Encoding
-    transform: !<FileTransform> {src: Filmic_False_Colour.spi3d, interpolation: best}
+    transform: !<FileTransform> {src: Filmic_to_0-70_1-03.spi1d, interpolation: linear}
 
   - !<Look>
     name: Very High Contrast
@@ -211,11 +206,6 @@ looks:
     transform: !<FileTransform> {src: Filmic_to_0-85_1-011.spi1d, interpolation: best}
 
   - !<Look>
-    name: Base Contrast
-    process_space: Filmic Log Encoding
-    transform: !<FileTransform> {src: Filmic_to_0-70_1-03.spi1d, interpolation: linear}
-
-  - !<Look>
     name: Medium Low Contrast
     process_space: Filmic Log Encoding
     transform: !<FileTransform> {src: Filmic_to_0-60_1-04.spi1d, interpolation: linear}
@@ -229,3 +219,15 @@ looks:
     name: Very Low Contrast
     process_space: Filmic Log Encoding
     transform: !<FileTransform> {src: Filmic_to_0-35_1-30.spi1d, interpolation: linear}
+
+  - !<Look>
+    name: Greyscale
+    process_space: Filmic Log Encoding
+    transform: !<MatrixTransform> {matrix: [0.2126729, 0.7151521, 0.0721750, 0, 0.2126729, 0.7151521, 0.0721750, 0, 0.2126729, 0.7151521, 0.0721750, 0, 0, 0, 0, 1]}
+
+  - !<Look>
+    name: False Colour
+    process_space: Filmic Log Encoding
+    transform: !<FileTransform> {src: Filmic_False_Colour.spi3d, interpolation: best}
+
+    

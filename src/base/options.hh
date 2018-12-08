@@ -64,6 +64,11 @@ enum layers_list_placement_t
     int display_profile_intent;
     bool display_profile_bpc;
 
+    std::string ocio_config;
+    std::string ocio_display;
+    std::string ocio_view;
+    std::string ocio_look;
+
     Glib::ustring last_visited_image_folder;
     Glib::ustring last_visited_preset_folder;
     Glib::ustring last_visited_icc_folder;
@@ -113,6 +118,15 @@ enum layers_list_placement_t
       display_profile_bpc = n;
     }
     bool get_display_profile_bpc() { return display_profile_bpc; }
+
+    void set_ocio_config(std::string val) { ocio_config = val; }
+    std::string get_ocio_config() { return ocio_config; }
+    void set_ocio_display(std::string val) { ocio_display = val; }
+    std::string get_ocio_display() { return ocio_display; }
+    void set_ocio_view(std::string val) { ocio_view = val; }
+    std::string get_ocio_view() { return ocio_view; }
+    void set_ocio_look(std::string val) { ocio_look = val; }
+    std::string get_ocio_look() { return ocio_look; }
 
     // last visited folders
     void set_last_visited_image_folder( std::string f ) { last_visited_image_folder = f; }

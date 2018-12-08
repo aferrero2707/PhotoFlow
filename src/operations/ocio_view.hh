@@ -51,10 +51,10 @@ namespace PF
   {
     OCIO::ConstConfigRcPtr config;
 
-    const char * device;
-    const char * transformName;
-    const char * displayColorSpace;
-    const char * lookName;
+    std::string device;
+    std::string transformName;
+    std::string displayColorSpace;
+    std::string lookName;
 
     ProcessorBase* convert2sRGB;
 

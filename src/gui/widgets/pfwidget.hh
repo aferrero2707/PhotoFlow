@@ -74,6 +74,117 @@ namespace PF {
  };
 
 
+
+
+  template <typename T>
+  class SelectorWidget: public Gtk::HBox
+  {
+    //Tree model columns:
+    class ModelColumns : public Gtk::TreeModel::ColumnRecord
+    {
+    public:
+      Gtk::TreeModelColumn<T> col_value;
+      Gtk::TreeModelColumn<Glib::ustring> col_text;
+
+      ModelColumns()
+      { add(col_value); add(col_text); }
+    };
+    ModelColumns columns;
+    Glib::RefPtr<Gtk::ListStore> model;
+    Gtk::Label label;
+    Gtk::ComboBox cbox;
+
+    public:
+    SelectorWidget(Glib::ustring l): label(l)
+    {
+      model = Gtk::ListStore::create(columns);
+      cbox.set_model( model );
+      cbox.pack_start(columns.col_text);
+      pack_start( label, Gtk::PACK_SHRINK, 2 );
+      pack_start( cbox, Gtk::PACK_SHRINK, 2 );
+    }
+
+    Gtk::ComboBox& get_cbox() {return cbox;}
+
+    void reset()
+    {
+      model = Gtk::ListStore::create(columns);
+      cbox.set_model( model );
+    }
+
+    void add_entry(Glib::ustring t, T v)
+    {
+      Gtk::TreeModel::iterator ri = model->append();
+      Gtk::TreeModel::Row row = *(ri);
+      row[columns.col_value] = v;
+      row[columns.col_text] = t;
+    }
+
+    void set_active(T value)
+    {
+      Glib::RefPtr<Gtk::TreeModel> model = cbox.get_model();
+      Gtk::TreeModel::Children rows = model->children();
+      for(unsigned int i = 0; i < rows.size(); i++) {
+        Gtk::TreeModel::Row row = rows[i];
+        T lvalue = row[columns.col_value];
+        if( lvalue == value ) {
+          cbox.set_active(i);
+          break;
+        }
+      }
+    }
+
+    void set_active_text(Glib::ustring value)
+    {
+      Glib::RefPtr<Gtk::TreeModel> model = cbox.get_model();
+      Gtk::TreeModel::Children rows = model->children();
+      for(unsigned int i = 0; i < rows.size(); i++) {
+        Gtk::TreeModel::Row row = rows[i];
+        Glib::ustring lvalue = row[columns.col_text];
+        if( lvalue == value ) {
+          cbox.set_active(i);
+          break;
+        }
+      }
+    }
+
+    void set_active_id(unsigned int id)
+    {
+      Glib::RefPtr<Gtk::TreeModel> model = cbox.get_model();
+      Gtk::TreeModel::Children rows = model->children();
+      if(id < rows.size()) cbox.set_active(id);
+    }
+
+    T get_active()
+    {
+      Gtk::TreeModel::iterator iter = cbox.get_active();
+      if( iter ) {
+        Gtk::TreeModel::Row row = *iter;
+        if( row ) {
+          return( row[columns.col_value] );
+        }
+      }
+      return T();
+    }
+
+    Glib::ustring get_active_text()
+    {
+      Glib::ustring result;
+      Gtk::TreeModel::iterator iter = cbox.get_active();
+      if( iter ) {
+        Gtk::TreeModel::Row row = *iter;
+        if( row ) {
+          result = row[columns.col_text];
+        }
+      }
+      return(result);
+    }
+
+  };
+
+
+  typedef SelectorWidget<std::string> TextSelector;
+  typedef SelectorWidget<int> IntSelector;
 }
 
 #endif

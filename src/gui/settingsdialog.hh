@@ -35,6 +35,7 @@
 #include <gtkmm.h>
 
 #include "../base/photoflow.hh"
+#include "widgets/pfwidget.hh"
 
 
 namespace PF {
@@ -89,6 +90,18 @@ class SettingsDialog : public Gtk::Dialog
   Gtk::Frame cm_working_profile_frame, cm_display_profile_frame;
   Gtk::VBox cm_working_profile_frame_box, cm_display_profile_frame_box;
 
+  Gtk::Frame cm_ocio_config_frame;
+  Gtk::VBox cm_ocio_config_box;
+  TextSelector cm_ocio_config_selector;
+  std::string cm_ocio_config;
+  TextSelector cm_ocio_display_selector;
+  std::string cm_ocio_display;
+  TextSelector cm_ocio_view_selector;
+  std::string cm_ocio_view;
+  TextSelector cm_ocio_look_selector;
+  std::string cm_ocio_look;
+  bool ocio_config_processing;
+
   Gtk::HBox apply_default_preset_hbox;
   Gtk::Label apply_default_preset_label;
   Gtk::CheckButton apply_default_preset_check;
@@ -134,6 +147,7 @@ public:
 
   void on_button_clicked(int id);
   void on_button_display_profile_open_clicked();
+  void on_ocio_config_changed();
   void on_use_system_theme_check_toggled();
   void on_floating_tool_dialogs_check_toggled();
 };

@@ -383,6 +383,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   soft_proof_frame.add( soft_proof_box );
   controlsBox.pack_end( soft_proof_frame, Gtk::PACK_SHRINK );
   controlsBox.pack_end( ocio_enable_button, Gtk::PACK_SHRINK );
+  ocio_enable_button.set_active( true );
 
   controlsBox.pack_end( status_indicator, Gtk::PACK_SHRINK );
 

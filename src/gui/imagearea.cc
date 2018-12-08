@@ -202,7 +202,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   pending_pixels( 0 ),
   draw_requested( false ),
   softproof_enabled( false ),
-  ocio_enabled( false ),
+  ocio_enabled( true ),
   current_display_profile_type( PF_DISPLAY_PROF_MAX ),
   current_display_profile( NULL ),
   highlights_warning_enabled( false ),
