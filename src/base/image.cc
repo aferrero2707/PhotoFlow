@@ -1128,7 +1128,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       op_par->set_format( VIPS_FORMAT_FLOAT );
       op_par->set_scale_mode(PF::SCALE_MODE_FIT);
       op_par->set_scale_unit(PF::SCALE_UNIT_PX);
-      op_par->set_scale_interp(PF::SCALE_INTERP_LANCZOS3);
+      op_par->set_scale_interp(export_opt->interpolator);
       int width = 0, height = 0;
       switch(export_opt->size) {
       case PF::SIZE_400_300: width=400; height=300; break;

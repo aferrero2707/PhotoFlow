@@ -81,6 +81,7 @@ struct image_export_opt_t
   bool tiff_compress;
   export_size_t size;
   int width, height;
+  scale_interpolation_t interpolator;
   bool sharpen_enabled;
   float sharpen_radius;
   float sharpen_amount;

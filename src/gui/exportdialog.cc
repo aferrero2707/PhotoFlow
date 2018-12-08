@@ -448,6 +448,9 @@ void PF::ExportDialog::on_button_clicked(int id)
       options.tiff_format = export_format_selector.get_active_id();
       options.tiff_compress = tiff_compressed_check.get_active();
       options.size = (PF::export_size_t)size_selector.get_active_id();
+      options.width = 0;
+      options.height = 0;
+      options.interpolator = PF::SCALE_INTERP_LANCZOS3;
       options.sharpen_enabled = resize_sharpening_check.get_active();
       options.sharpen_radius = resize_sh_radius_scale.get_value();
       options.sharpen_amount = 100;

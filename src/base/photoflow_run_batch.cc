@@ -165,6 +165,14 @@ static void decode_export_options(char* arg, PF::image_export_opt_t& export_opt)
       std::cout<<"height: "<<val<<std::endl;
       export_opt.size = PF::SIZE_CUSTOM;
       export_opt.height = val;
+    } else if( !strncmp(arg2,"interpolator=",strlen("interpolator=")) ) {
+      std::string str( arg+optidx+strlen("interpolator=") );
+      std::cout<<"interpolator: "<<str<<std::endl;
+      if( str == "nearest") export_opt.interpolator = PF::SCALE_INTERP_NEAREST;
+      if( str == "bilinear") export_opt.interpolator = PF::SCALE_INTERP_BILINEAR;
+      if( str == "bicubic") export_opt.interpolator = PF::SCALE_INTERP_BICUBIC;
+      if( str == "lanczos2") export_opt.interpolator = PF::SCALE_INTERP_LANCZOS2;
+      if( str == "lanczos3") export_opt.interpolator = PF::SCALE_INTERP_LANCZOS3;
     } else if( !strncmp(arg2,"sharpen_enabled=",strlen("sharpen_enabled=")) ) {
       std::istringstream str( arg+optidx+strlen("sharpen_enabled=") );
       int val;
@@ -219,7 +227,7 @@ static void decode_export_options(char* arg, PF::image_export_opt_t& export_opt)
 
 static void print_help()
 {
-  std::cout<<"Usage: photoflow --batch [--config=config_file.pfi] --export-opt=[export options] in_file out_file"<<std::endl;
+  std::cout<<"Usage: photoflow --batch [--config=config_file.pfp] --export-opt=[export options] in_file out_file"<<std::endl;
   std::cout<<"Export options (comma-separated list):"<<std::endl
       <<"  jpeg_quality=[0..100] (default: 80)"<<std::endl
       <<"  jpeg_chroma_subsampling=0/1 (default: 0)"<<std::endl
@@ -228,6 +236,9 @@ static void print_help()
       <<"  tiff_compress=0/1 (default: 0)"<<std::endl
       <<"  width=X (width of the exported image in pixels)"<<std::endl
       <<"  height=X (height of the exported image in pixels)"<<std::endl
+      <<"  interpolator=X (kernel used to interpolate the scaled output)"<<std::endl
+      <<"    allowed values are:"<<std::endl
+      <<"      nearest, bilinear, bicubic, lanczos2, lanczos3 (default: lanczos3)"<<std::endl
       <<"  sharpen_enabled=0/1 (default: 0) enable/disable post-resize sharpening step"<<std::endl
       <<"  sharpen_radius=X (radius for the post-resize sharpening step)"<<std::endl
       <<"  profile_type=X (default: sRGB) ICC profile for the exported image"<<std::endl
@@ -250,7 +261,7 @@ static void print_help()
       <<"    Perceptual and saturation intents might be available when using LUT profiles from disk."<<std::endl
       <<"  bpc=0/1 (default: 1) enable/disable black point compensation in the output ICC conversion"<<std::endl
       <<"Example:"<<std::endl
-      <<"  --export-opt=tiff_depth=16,tiff_compress=1,width=800,height=600,sharpen_enabled=1,sharpen_radius=0.5,profile_type=Rec2020,trc_type=linear"<<std::endl;
+      <<"  --export-opt=tiff_depth=16,tiff_compress=1,width=800,height=600,interpolator=bicubic,sharpen_enabled=1,sharpen_radius=0.5,profile_type=Rec2020,trc_type=linear"<<std::endl;
 }
 
 
@@ -369,6 +380,7 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
     export_opt.size = PF::SIZE_ORIGINAL;
     export_opt.width = 0;
     export_opt.height = 0;
+    export_opt.interpolator = PF::SCALE_INTERP_LANCZOS3;
     export_opt.sharpen_enabled = false;
     export_opt.sharpen_radius = 1;
     export_opt.sharpen_amount = 100;
