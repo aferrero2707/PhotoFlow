@@ -235,8 +235,12 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   } else if( op_type == "subtrimg" ) {
     processor = new_subtrimg();
+
   } else if( op_type == "tone_mapping" ) {
     processor = new_tone_mapping();
+
+  } else if( op_type == "local_contrast" ) {
+    processor = new_local_contrast();
 
   } else if( op_type == "volume" ) {
     processor = new_volume();

@@ -77,6 +77,7 @@ namespace PF
   ProcessorBase* new_clone_stamp();
   ProcessorBase* new_lensfun();
   ProcessorBase* new_tone_mapping();
+  ProcessorBase* new_local_contrast();
   ProcessorBase* new_volume();
   ProcessorBase* new_noise_generator();
   ProcessorBase* new_path_mask();

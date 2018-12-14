@@ -252,8 +252,9 @@ VipsImage* PF::GuidedFilterPar::build(std::vector<VipsImage*>& in, int first,
 
   radius_real = radius2;
 
+  std::cout<<"GuidedFilterPar::build: radius="<<radius_real<<"  threshold="<<threshold.get()<<std::endl;
   VipsImage* out = PF::PaddedOpPar::build( in, first, imap, omap, level );
-  std::cout<<"GuidedFilterPar::build: out="<<out<<std::endl;
+  //std::cout<<"GuidedFilterPar::build: out="<<out<<std::endl;
   return out;
 }
 

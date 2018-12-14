@@ -76,7 +76,7 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
 
   RawImage* new_raw_image = NULL;
 
-  std::cout<<"RawLoaderPar::build(): searching \""<<file_name.get()<<"\"\n";
+  //std::cout<<"RawLoaderPar::build(): searching \""<<file_name.get()<<"\"\n";
   std::map<std::string, RawImage*>::iterator i =
     raw_images.find( file_name.get() );
   if( i == raw_images.end() ) {

@@ -316,7 +316,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
   op_detail.get_tree().add_op( _("Guided filter"), "guided_filter" );
   op_detail.get_tree().add_op( _("Bilateral blur"), "blur_bilateral" );
-  op_detail.get_tree().add_op( _("Local contrast"), "volume" );
+  op_detail.get_tree().add_op( _("Local contrast"), "local_contrast" );
   op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
   op_detail.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
   op_detail.get_tree().add_op( _("Split Details"), "split_details" );
