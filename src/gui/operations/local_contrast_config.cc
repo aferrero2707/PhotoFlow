@@ -48,12 +48,12 @@ PF::LocalContrastConfigGUI::LocalContrastConfigGUI( PF::Layer* layer ):
 
   controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK, 10 );
   controlsBox.pack_start( guidedControlsBox, Gtk::PACK_SHRINK, 10 );
-  controlsBox.pack_start( separator, Gtk::PACK_SHRINK, 10 );
+  //controlsBox.pack_start( separator, Gtk::PACK_SHRINK, 10 );
 
   //controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK );
   equalizerCheckboxBox.pack_start( enable_equalizer_box, Gtk::PACK_SHRINK );
   equalizerCheckboxBox.pack_start( equalizerCheckboxPadding, Gtk::PACK_EXPAND_WIDGET );
-  controlsBox.pack_start( equalizerCheckboxBox, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( equalizerCheckboxBox, Gtk::PACK_SHRINK );
 
   equalizerBox.pack_start( blacks_amount_slider, Gtk::PACK_SHRINK, 2 );
   equalizerBox.pack_start( shadows_amount_slider, Gtk::PACK_SHRINK, 2 );
@@ -62,7 +62,7 @@ PF::LocalContrastConfigGUI::LocalContrastConfigGUI( PF::Layer* layer ):
   equalizerBox.pack_start( whites_amount_slider, Gtk::PACK_SHRINK, 2 );
   equalizerBox.pack_start( equalizerPadding, Gtk::PACK_EXPAND_WIDGET );
 
-  controlsBox.pack_start( equalizerBox, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( equalizerBox, Gtk::PACK_SHRINK );
 
   globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
   add_widget( globalBox );
