@@ -1028,9 +1028,16 @@ void PF::ImageEditor::zoom_out()
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   int level = pipeline->get_level();
+  float shrink = imageArea->get_shrink_factor();
+  if( shrink > 1 ) {
+    pipeline->set_level( level );
+    imageArea->set_shrink_factor( ((shrink*2)/2) / 2 );
+    image->update();
+  } else {
   pipeline->set_level( level + 1 );
   imageArea->set_shrink_factor( 1 );
   image->update();
+  }
 
   fit_image = false;
 
@@ -1047,9 +1054,19 @@ void PF::ImageEditor::zoom_in()
   PF::Pipeline* pipeline = image->get_pipeline( PREVIEW_PIPELINE_ID );
   if( !pipeline ) return;
   int level = pipeline->get_level();
-  if( level > 0 ) {
+  float shrink = imageArea->get_shrink_factor();
+  if( level == 0 && shrink >= 8 ) return;
+  if( shrink < 1 ) {
+    pipeline->set_level( level );
+    imageArea->set_shrink_factor( 1 );
+    image->update();
+  } else if( level > 0  ) {
     pipeline->set_level( level - 1 );
     imageArea->set_shrink_factor( 1 );
+    image->update();
+  } else {
+    pipeline->set_level( level );
+    imageArea->set_shrink_factor( shrink * 2 );
     image->update();
   }
 
@@ -1124,13 +1141,13 @@ bool PF::ImageEditor::zoom_fit()
 #endif
   }
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"ImageEditor::zoom_fit(): image area size="
       <<area_hsize<<","<<area_vsize
       <<"  image size="<<image_size_updater->get_image_width()
       <<","<<image_size_updater->get_image_height()
       <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
-#endif
+//#endif
 
   if( (imageArea->get_shrink_factor() != shrink_min) ||
       (pipeline->get_level() != target_level) ) {
@@ -1238,9 +1255,9 @@ void PF::ImageEditor::set_selected_layer( int id )
 {
   int old_id = selected_layer_id;
   selected_layer_id = id;
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"ImageEditor::set_selected_layer("<<id<<"): old_id="<<old_id<<"  selected_layer_id="<<selected_layer_id<<std::endl;
-#endif
+//#endif
   if( old_id != selected_layer_id ) {
     imageArea->set_selected_layer( id );
   }

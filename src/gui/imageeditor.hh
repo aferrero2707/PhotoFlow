@@ -184,6 +184,7 @@ public:
   int get_displayed_layer() { return (displayed_layer) ? displayed_layer->get_id() : -1; }
   void set_displayed_layer( int id );
   void set_selected_layer( int id );
+  int get_selected_layer() { selected_layer_id; }
 
   void set_display_mask( bool val );
 

@@ -289,6 +289,37 @@ void PF::ImageArea::dispose()
 
 
 
+void PF::ImageArea::set_selected_layer( int id ) {
+  int old_id = selected_layer;
+  selected_layer = id;
+#ifdef DEBUG_DISPLAY
+  std::cout<<"ImageArea::set_selected_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
+#endif
+  if( /*!display_merged &&*/ (old_id != selected_layer) ) {
+    //update( NULL );
+    if( get_pipeline() && get_pipeline()->get_image() ) {
+      PF::Layer* old_layer = get_pipeline()->get_image()->get_layer_manager().get_layer(old_id);
+      if( old_layer && old_layer->get_processor() && old_layer->get_processor()->get_par() &&
+          old_layer->get_processor()->get_par()->is_editing() ) {
+        PF::OperationConfigGUI* gui =
+            dynamic_cast<PF::OperationConfigGUI*>( old_layer->get_processor()->get_par()->get_config_ui() );
+        if( gui ) gui->disable_editing();
+      } else {
+        PF::Layer* new_layer = get_pipeline()->get_image()->get_layer_manager().get_layer(selected_layer);
+        if( new_layer && new_layer->get_processor() &&
+            new_layer->get_processor()->get_par() &&
+            new_layer->get_processor()->get_par()->is_editing() ) {
+          //#ifdef DEBUG_DISPLAY
+          std::cout<<"ImageArea::set_selected_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
+          //#endif
+          get_pipeline()->get_image()->update();
+        }
+      }
+    }
+  }
+}
+
+
 // Submit the given area to the image processor
 void PF::ImageArea::submit_area( const VipsRect& area )
 {
@@ -1363,11 +1394,11 @@ void PF::ImageArea::update( VipsRect* area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): vips_sink_screen() called"<<std::endl;
 #endif
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"Image size: "<<outimg->Xsize<<","
 					 <<outimg->Ysize<<std::endl;
   std::cout<<"Shrink factor: "<<shrink_factor<<std::endl;
-#endif
+//#endif
 
 	if( shrink_factor != 1 ) {
 		VipsImage* outimg2;
@@ -1382,16 +1413,23 @@ void PF::ImageArea::update( VipsRect* area )
 //      std::cout<<std::endl<<std::endl<<"VIPS_REDUCE FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
 //      return;
 //    }
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
 		std::cout<<"ImageArea::update(): before vips_resize()"<<std::endl;
-#endif
+//#endif
+		if( shrink_factor > 1 ) {
+		  if( vips_resize( outimg, &outimg2, shrink_factor, "kernel", VIPS_KERNEL_NEAREST, NULL) ) {
+		        std::cout<<std::endl<<std::endl<<"vips_resize() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
+		        return;
+		      }
+		} else {
 		if( vips_resize( outimg, &outimg2, shrink_factor, NULL) ) {
       std::cout<<std::endl<<std::endl<<"vips_resize() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
       return;
     }
-#ifdef DEBUG_DISPLAY
-    std::cout<<"ImageArea::update(): before vips_resize(), outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
-#endif
+		}
+//#ifdef DEBUG_DISPLAY
+    std::cout<<"ImageArea::update(): after vips_resize(), outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
+//#endif
     PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
     outimg = outimg2;
 	}

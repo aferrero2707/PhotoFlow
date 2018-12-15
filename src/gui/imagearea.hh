@@ -278,22 +278,7 @@ public:
   }
   int get_displayed_layer() { return displayed_layer; }
 
-  void set_selected_layer( int id ) {
-    int old_id = selected_layer;
-    selected_layer = id;
-#ifdef DEBUG_DISPLAY
-    std::cout<<"ImageArea::set_selected_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
-#endif
-    if( !display_merged && (old_id != selected_layer) ) {
-      //update( NULL );
-      if( get_pipeline() && get_pipeline()->get_image() ) {
-#ifdef DEBUG_DISPLAY
-        std::cout<<"ImageArea::set_selected_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
-#endif
-        get_pipeline()->get_image()->update();
-      }
-    }
-  }
+  void set_selected_layer( int id );
   int get_selected_layer() { return selected_layer; }
 
   void set_display_merged( bool val )

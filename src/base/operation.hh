@@ -287,7 +287,8 @@ public:
   bool is_map() { return map_flag; }
   void set_map_flag( bool flag ) { map_flag = flag; }
 
-  bool is_editing() { return editing_flag; }
+  virtual bool is_editing_locked() { return false; }
+  bool is_editing() { return( editing_flag || is_editing_locked() ); }
   void set_editing_flag( bool flag ) { editing_flag = flag; }
 
   bool get_mask_enabled() { return mask_enabled.get(); }
