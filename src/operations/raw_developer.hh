@@ -112,6 +112,8 @@ namespace PF
     bool needs_input() { return true; }
     bool needs_caching() { return caching_enabled; }
 
+    bool is_editing_locked();
+
     void set_caching( bool flag ) { caching_enabled = flag; }
 
     dcraw_data_t* get_image_data() {return image_data; }

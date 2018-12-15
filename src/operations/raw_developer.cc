@@ -113,6 +113,15 @@ PF::RawDeveloperPar::RawDeveloperPar():
 }
 
 
+bool PF::RawDeveloperPar::is_editing_locked()
+{
+  PF::wb_mode_t wbmode = get_wb_mode();
+  if( (wbmode == WB_SPOT) || (wbmode == WB_COLOR_SPOT) || (wbmode == WB_AREA_SPOT) )
+    return true;
+  return false;
+}
+
+
 
 PF::wb_mode_t PF::RawDeveloperPar::get_wb_mode()
 {
