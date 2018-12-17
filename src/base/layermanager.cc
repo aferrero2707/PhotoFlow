@@ -1157,7 +1157,16 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
     VipsImage* omap = NULL;
     if( l->sublayers.empty() ) {
       std::vector<VipsImage*> in;
-      if( par->needs_input() && !previous ) {
+#ifndef NDEBUG
+      std::cout<<"Layer \""<<l->get_name()<<"\""
+          <<"  par->needs_input()="<<par->needs_input()
+          <<"  previous="<<previous
+          <<"  get_previous_layer_is_input="<<par->get_previous_layer_is_input()
+          <<"  l->extra_inputs.size()="<<l->extra_inputs.size()
+          <<std::endl;
+#endif
+      if( par->needs_input() && !previous &&
+          (par->get_previous_layer_is_input() || l->extra_inputs.empty())) {
         // Here we have a problem: the operation we are trying to insert in the chain requires
         // a primary input image, but there is no previous image available... we give up
         std::cout<<"LayerManager::rebuild_chain(): missing input data for layer \""<<l->get_name()<<"\""<<std::endl;
