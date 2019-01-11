@@ -771,9 +771,9 @@ void PF::LayerWidget::on_selection_changed()
   //int page = notebook.get_current_page();
   int page = active_view;
   if( page < 0 ) return;
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_chaged() called, page="<<page<<std::endl;
-//#endif
+#endif
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
       layer_views[page]->get_tree().get_selection();
   /*
@@ -784,9 +784,9 @@ void PF::LayerWidget::on_selection_changed()
           }
    */
   int layer_id = get_selected_layer_id();
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"LayerWidget::on_selection_changed(): selected layer id="<<layer_id<<std::endl;
-//#endif
+#endif
 
   std::vector<Gtk::TreeModel::Path> selected_rows = refTreeSelection->get_selected_rows();
 #ifndef NDEBUG
@@ -799,9 +799,9 @@ void PF::LayerWidget::on_selection_changed()
 #endif
     controls_group.remove_all_controls();
     aux_controls_group.clear();
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_selection_changed(): emitting signal_edited_layer_changed(-1)"<<std::endl;
-//#endif
+#endif
     signal_edited_layer_changed.emit( -1 );
     return;
   }
@@ -812,10 +812,10 @@ void PF::LayerWidget::on_selection_changed()
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"Selected row "<<l->get_name()<<std::endl;
     std::cout<<"LayerWidget::on_selection_changed(): emitting signal_edited_layer_changed("<<layer_id<<")"<<std::endl;
-//#endif
+#endif
     signal_edited_layer_changed.emit( layer_id );
     if( PF::PhotoFlow::Instance().is_single_win_mode() ) {
       PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
@@ -877,9 +877,9 @@ void PF::LayerWidget::on_selection_changed()
     signal_edited_layer_changed.emit( -1 );
   }
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_selection_changed(): calling editor->set_selected_layer("<<selected_layer_id<<")"<<std::endl;
-//#endif
+#endif
   editor->set_selected_layer( selected_layer_id );
 
   return;
