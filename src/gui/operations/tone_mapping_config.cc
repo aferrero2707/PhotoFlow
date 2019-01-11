@@ -66,6 +66,14 @@ void PF::ToneMappingCurveArea::set_params(PF::ToneMappingPar* tmpar)
        tmpar->get_filmic_W() != W ||
        tmpar->get_AL_Lmax() != AL_Lmax ||
        tmpar->get_AL_b() != AL_b ||
+       tmpar->get_AL_Tsize() != AL_Tsize_par ||
+       tmpar->get_AL_Tlength() != AL_Tlength_par ||
+       tmpar->get_AL_Tstrength() != AL_Tstrength_par ||
+       tmpar->get_LP_slope() != LP_slope ||
+       tmpar->get_LP_compression() != LP_compr ||
+       tmpar->get_LP_lin_max() != LP_linmax ||
+       tmpar->get_LP_knee_strength() != LP_Kstrength ||
+       tmpar->get_LP_shoulder_smoothness() != LP_Ssmooth ||
        filmic2_changed) ? true : false;
 
   method = tmpar->get_method();
@@ -107,6 +115,38 @@ void PF::ToneMappingCurveArea::set_params(PF::ToneMappingPar* tmpar)
 
   AL_Lmax = tmpar->get_AL_Lmax();
   AL_b = tmpar->get_AL_b();
+  float Lmax = pow(10.0, AL_Lmax);
+  float AL_scale = 1; //pow(AL_b-0.85+1, 5);
+  float Ldmax = 100;
+  float Lwmax = Lmax/AL_scale;
+  float LLwmax = log10(Lwmax+1);
+  float AL_A = 0.01 * Ldmax / LLwmax;
+
+  AL_Tsize_par = tmpar->get_AL_Tsize();
+  AL_Tlength_par = tmpar->get_AL_Tlength();
+  AL_Tstrength_par = tmpar->get_AL_Tstrength();
+  AL_Tsize = pow(AL_Tsize_par,2.5);
+  float AL_Tslope = (Lwmax*AL_A)/(log(2)*2);
+  AL_Tlength = AL_Tlength_par*AL_Tsize/AL_Tslope + 1.0e-15;
+  float AL_iTlength = 1/AL_Tlength;
+  AL_Texp = AL_Tslope / (AL_Tsize*AL_iTlength);
+  //AL_Tshift = AL_Tsize/AL_Tslope + 1.0e-15;
+
+  AL_Trange = AL_Tstrength_par*AL_Tsize;
+  AL_Tshift = pow( (1.f-AL_Tstrength_par), 1.f/AL_Texp ) * AL_Tlength;
+  AL_Tmax = AL_Tlength - AL_Tshift;
+  AL_Tvshift = (1.f-AL_Tstrength_par) * AL_Tsize;
+
+  float LP_midgray = pow(0.5,2.45);
+  LP_slope = tmpar->get_LP_slope();
+  LP_compr = tmpar->get_LP_compression();
+  LP_linmax = tmpar->get_LP_lin_max();
+  LP_Kstrength = tmpar->get_LP_knee_strength();
+  LP_Kmax = ((1.f-LP_slope)*LP_midgray)/(LP_slope/(sqrt(2.0f)*LP_Kstrength)-LP_slope);
+  LP_Ssmooth = tmpar->get_LP_shoulder_smoothness();
+  std::cout<<"ToneMappingCurveArea::set_params: LP_Ssmooth="<<LP_Ssmooth<<"  LP_compr="<<LP_compr<<std::endl;
+  //std::cout<<"ToneMappingCurveArea::set_params: AL_Tsize="<<AL_Tsize<<"  AL_Tlength="<<AL_Tlength
+  //    <<"  AL_Tshift="<<AL_Tshift<<"  AL_Tmax="<<AL_Tmax<<"  AL_Tvshift="<<AL_Tvshift<<std::endl;
 
   if( redraw ) queue_draw();
 }
@@ -147,24 +187,64 @@ float PF::ToneMappingCurveArea::get_curve_value( float val )
     val = powf( val, f2exponent );
     result = filmic2_curve.Eval(val*filmic2_scale);
     result = powf( result, 1.f/f2exponent );
-    std::cout<<"ToneMappingCurveArea::get_curve_value: f2exponent="<<f2exponent<<" val="<<val<<" result="<<result<<std::endl;
+    //std::cout<<"ToneMappingCurveArea::get_curve_value: f2exponent="<<f2exponent<<" val="<<val<<" result="<<result<<std::endl;
     break;
   }
   case TONE_MAPPING_ADAPTIVE_LOG: {
     float Lmax = pow(10.0, AL_Lmax);
-    float AL_scale = pow(AL_b-0.85+1, 5);
+    float AL_scale = 1; //pow(AL_b-0.85+1, 5);
     float Ldmax = 100;
     float b = AL_b;
     float Lwmax = Lmax/AL_scale;
     float LLwmax = log10(Lwmax+1);
-    float E = log(b)/log(0.5);
-    float Lw = val*100/AL_scale;
-    float LLw1p = log1p(Lw);
-    float Rw = Lw/Lwmax;
-    float D = log( (pow(Rw,E))*8 + 2 );
-    float A = 0.01 * Ldmax / LLwmax;
-    float B = LLw1p / D;
-    result = A*B;//A * B;
+    float AL_A = 0.01 * Ldmax / LLwmax;
+    float E = log(AL_b)/log(0.5);
+    float AL_iTlength = 1.0f/AL_Tlength;
+
+
+    //std::cout<<"ToneMappingCurveArea::get_curve_value: AL_Tsize="<<AL_Tsize
+    //    <<"  AL_Tshift="<<AL_Tshift
+    //    <<"  AL_Tlength="<<AL_Tlength
+    //<<"  AL_iTlength="<<AL_iTlength<<std::endl;
+    if( val > AL_Tmax ) {
+      float Lw = (AL_Tlength+1-AL_Tshift)*(val-AL_Tlength+AL_Tshift)*Lwmax;
+      float LLw1p = log1p(Lw);
+      float Rw = Lw/Lwmax;
+      float D = log( (pow(Rw,E))*8 + 2 );
+      float B = LLw1p / D;
+      result = AL_Trange + (1.0f-AL_Trange)*AL_A*B;
+    } else {
+      float Lw = (val+AL_Tshift)*AL_iTlength;
+      result = AL_Tsize * pow(Lw,AL_Texp) - AL_Tvshift;
+      //std::cout<<"ToneMappingCurveArea::get_curve_value: val="<<val<<"  Lw="<<Lw<<"  out="<<result<<std::endl;
+    }
+    break;
+  }
+  case TONE_MAPPING_LIN_POW: {
+    float LP_midgray = pow(0.5,2.45);
+    float LP_Ylinmax = ( LP_linmax - LP_midgray ) * LP_slope + LP_midgray;
+    float LP_Srange = 1.0f - LP_Ylinmax;
+    float LP_Sslope = LP_Srange * LP_slope;
+    float LP_Kymax = (LP_Kmax-LP_midgray)*LP_slope + LP_midgray;
+    float LP_Kexp = LP_Kmax * LP_slope / LP_Kymax;
+    float LP_compr2 = LP_compr*2.5f;
+
+    if( val > LP_linmax ) {
+      //float Lw = (LP_linmax - val) / LP_Srange;
+      //result = LP_Srange * (1.0f - exp(Lw*LP_slope*LP_compr)) / LP_compr + LP_Ylinmax;
+      float X = (val - LP_linmax) * LP_slope;
+      //result = log(X*LP_compr+1) / LP_compr + LP_Ylinmax;
+      float Y1 = log(X*LP_compr2+1) / LP_compr2 + LP_Ylinmax;
+      float Y2 = ( 1.0f - log(X*LP_compr+1) / (X*LP_compr) ) * 2.0f / LP_compr + LP_Ylinmax;
+      result = LP_Ssmooth * Y1 + (1.0f - LP_Ssmooth) * Y2;
+    } else if( val < LP_Kmax ) {
+      //float X = val / LP_Kmax - 1.0f;
+      //result = LP_slope*LP_Kmax*( (sqrt(2.0f)*X/sqrt(1.0f+X*X) + 1.0f) / sqrt(2.0f) );
+      float X = val / LP_Kmax;
+      result = LP_Kymax * pow(X,LP_Kexp);
+    } else {
+      result = (val - LP_midgray) * LP_slope + LP_midgray;
+    }
     break;
   }
   default:
@@ -234,11 +314,11 @@ bool PF::ToneMappingCurveArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->set_source_rgb( 0.9, 0.9, 0.9 );
   std::vector< std::pair< std::pair<float,int>, float > > vec;
   //std::cout<<"PF::CurveArea::on_expose_event(): width="<<width<<"  height="<<height<<std::endl;
-  int xmax = 2, ymax = 2;
+  float xmax = 1.5, ymax = 1, exponent = 1; //2.5;
   for( int i = 0; i < width; i++ ) {
     float fi = i;
     fi /= (width-1);
-    float fil = labprof->perceptual2linear(fi*xmax);
+    float fil = pow(fi*xmax, exponent); //labprof->perceptual2linear(fi*xmax);
     int index = 0;
     if( method == TONE_MAPPING_FILMIC2 ) {
       float normX = fil * filmic2_curve.m_invW;
@@ -246,8 +326,16 @@ bool PF::ToneMappingCurveArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       //std::cout<<"x="<<fil<<"  normX="<<normX
       //    <<"  m_x0="<<filmic2_curve.m_x0<<"  m_x1="<<filmic2_curve.m_x1<<"  index="<<index<<std::endl;
     }
+    if( method == TONE_MAPPING_ADAPTIVE_LOG ) {
+      index = (fil <= AL_Tmax) ? 1 : 2;
+      //std::cout<<"x="<<fil<<"  fi*xmax="<<fi*xmax<<"  fil="<<fil<<"  index="<<index<<std::endl;
+    }
+    if( method == TONE_MAPPING_LIN_POW ) {
+      index = (fil < LP_Kmax) ? 1 : ((fil < LP_linmax) ? 2 : 3);
+    }
+
     float yl = get_curve_value( fil*exposure );
-    float y = labprof->linear2perceptual(yl);
+    float y = pow(yl, 1.0f/exponent); //labprof->linear2perceptual(yl);
     //std::cout<<"  fi="<<fi<<"  fil="<<fil<<"  yl="<<yl<<"  y="<<y<<std::endl;
     vec.push_back( std::make_pair( std::make_pair(fi,index), y/ymax ) );
   }
@@ -322,6 +410,7 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
           exposureSlider( this, "exposure", _("exposure"), 0, -10, 10, 0.1, 1 ),
           modeSelector( this, "method", "method: ", 0 ),
           gamma_slider( this, "gamma", _("gamma adjustment"), 1, 1, 5, 0.2, 1, 1 ),
+          gamma_preserve_midgray_checkbox( this, "gamma_preserve_midgray", _("preserve mid gray"), false ),
           filmic_A_slider( this, "filmic_A", _("shoulder strength"), 0.5, 0, 1, 0.02, 0.1, 1 ),
           filmic_B_slider( this, "filmic_B", _("linear strength"), 0.5, 0, 1, 0.02, 0.1, 1 ),
           filmic_C_slider( this, "filmic_C", _("linear angle"), 0.5, 0, 1, 0.02, 0.1, 1 ),
@@ -338,8 +427,19 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
           filmic2_SA_slider( this, "filmic2_SA", _("shoulder angle"), 0.5, 0, 1, 0.02, 0.1, 1 ),
           AL_Lmax_slider( this, "AL_Lmax", _("L max"), 2, 0, 10, 0.1, 1, 1 ),
           AL_b_slider( this, "AL_b", _("contrast"), 0.85, 0, 1, 0.01, 0.1, 1 ),
-          lumi_blend_frac_slider( this, "lumi_blend_frac", _("preserve colors"), 1, 0, 1, 0.02, 0.1, 1 )
+          AL_Tsize( this, "AL_Tsize", _("toe size"), 0, 0, 100, 0.5, 5, 100 ),
+          AL_Tlength( this, "AL_Tlength", _("toe length"), 0, 0, 100, 0.5, 5, 1 ),
+          AL_Tstrength( this, "AL_Tstrength", _("toe strength"), 0, 0, 100, 1, 5, 100 ),
+          LP_compression( this, "LP_compression", _("compression"), 0, 0, 100, 0.5, 2, 10 ),
+          LP_slope( this, "LP_slope", _("slope"), 0, 1, 2, 0.05, 0.2, 1 ),
+          LP_lin_max( this, "LP_lin_max", _("linear range"), 0, 10, 100, 1, 5, 100 ),
+          LP_knee_strength( this, "LP_knee_strength", _("knee strength"), 0, 1, 2, 0.05, 0.2, 1 ),
+          LP_shoulder_smoothness( this, "LP_shoulder_smoothness", _("shoulder smoothness"), 0, 0, 100, 1, 5, 100 ),
+          gamut_compression_slider( this, "gamut_compression", _("gamut compression"), 1, 0, 1, 0.02, 0.1, 1 ),
+          gamut_compression_exponent_slider( this, "gamut_compression_exponent", _("gamut comp exp"), 1, 1, 10, 0.2, 1, 1 ),
+          lumi_blend_frac_slider( this, "lumi_blend_frac", _("color matching"), 1, 0, 100, 1, 5, 100 )
 {
+  gammaControlsBox.pack_start( gamma_preserve_midgray_checkbox, Gtk::PACK_SHRINK );
   gammaControlsBox.pack_start( gamma_slider, Gtk::PACK_SHRINK );
 
   filmicControlsBox.pack_start( filmic_A_slider, Gtk::PACK_SHRINK );
@@ -360,6 +460,15 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
 
   ALControlsBox.pack_start( AL_Lmax_slider, Gtk::PACK_SHRINK );
   ALControlsBox.pack_start( AL_b_slider, Gtk::PACK_SHRINK );
+  ALControlsBox.pack_start( AL_Tsize, Gtk::PACK_SHRINK );
+  ALControlsBox.pack_start( AL_Tlength, Gtk::PACK_SHRINK );
+  ALControlsBox.pack_start( AL_Tstrength, Gtk::PACK_SHRINK );
+
+  LPControlsBox.pack_start( LP_slope, Gtk::PACK_SHRINK );
+  LPControlsBox.pack_start( LP_lin_max, Gtk::PACK_SHRINK );
+  LPControlsBox.pack_start( LP_compression, Gtk::PACK_SHRINK );
+  LPControlsBox.pack_start( LP_shoulder_smoothness, Gtk::PACK_SHRINK );
+  LPControlsBox.pack_start( LP_knee_strength, Gtk::PACK_SHRINK );
 
   controlsBox.pack_start( curve_area_box, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
@@ -370,6 +479,8 @@ PF::ToneMappingConfigGUI::ToneMappingConfigGUI( PF::Layer* layer ):
   curve_area_box.pack_start( curve_area, Gtk::PACK_SHRINK, 10 );
 
   controlsBox.pack_start( lumi_blend_frac_slider, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( gamut_compression_slider, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( gamut_compression_exponent_slider, Gtk::PACK_SHRINK );
 
 
   globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
@@ -409,11 +520,15 @@ void PF::ToneMappingConfigGUI::do_update()
     } else if( prop->get_enum_value().first == PF::TONE_MAPPING_ADAPTIVE_LOG ) {
       if( ALControlsBox.get_parent() != &controlsBox2 )
         need_update = true;
+    } else if( prop->get_enum_value().first == PF::TONE_MAPPING_LIN_POW ) {
+      if( LPControlsBox.get_parent() != &controlsBox2 )
+        need_update = true;
     } else {
       if( (gammaControlsBox.get_parent() == &controlsBox2) ||
           (filmicControlsBox.get_parent() == &controlsBox2) ||
           (filmic2ControlsBox.get_parent() == &controlsBox2) ||
-          (ALControlsBox.get_parent() == &controlsBox2) )
+          (ALControlsBox.get_parent() == &controlsBox2) ||
+          (LPControlsBox.get_parent() == &controlsBox2) )
         need_update = true;
     }
 
@@ -426,6 +541,8 @@ void PF::ToneMappingConfigGUI::do_update()
         controlsBox2.remove( filmic2ControlsBox );
       if( ALControlsBox.get_parent() == &controlsBox2 )
         controlsBox2.remove( ALControlsBox );
+      if( LPControlsBox.get_parent() == &controlsBox2 )
+        controlsBox2.remove( LPControlsBox );
 
       switch( prop->get_enum_value().first ) {
       case PF::TONE_MAPPING_EXP_GAMMA:
@@ -443,6 +560,10 @@ void PF::ToneMappingConfigGUI::do_update()
       case PF::TONE_MAPPING_ADAPTIVE_LOG:
         controlsBox2.pack_start( ALControlsBox, Gtk::PACK_SHRINK );
         ALControlsBox.show();
+        break;
+      case PF::TONE_MAPPING_LIN_POW:
+        controlsBox2.pack_start( LPControlsBox, Gtk::PACK_SHRINK );
+        LPControlsBox.show();
         break;
       }
     }
