@@ -584,6 +584,7 @@ public:
 #include "blend_grain_extract.hh"
 #include "blend_grain_merge.hh"
 #include "blend_multiply.hh"
+#include "blend_divide.hh"
 #include "blend_screen.hh"
 #include "blend_lighten.hh"
 #include "blend_darken.hh"
