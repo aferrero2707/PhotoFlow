@@ -49,7 +49,7 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   MCurveEditor( this, "M_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
   YCurveEditor( this, "Y_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
   KCurveEditor( this, "K_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
-  outputModeSlider( this, "color_blend", _("Output mode"), 0, 0, 1, 0.05, 0.2, 1)
+  outputModeSlider( this, "color_blend", _("hue matching"), 0, 0, 1, 0.05, 0.2, 1)
 {
 
   //rgbCurveSelector.init(); 
