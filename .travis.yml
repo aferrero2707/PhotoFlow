@@ -22,7 +22,13 @@ matrix:
             #- bash appimage/package-appimage.sh
             - ls out/*
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh "continuous" out/*;
+            #- bash  ./upload_rotate.sh "continuous" out/*;
+            - 'if [ x"${TRAVIS_BRANCH}" = "xstable" ]; then
+                bash  ./upload_rotate.sh "continuous" out/* > /dev/null;
+              fi'
+            - 'if [ x"${TRAVIS_BRANCH}" = "xocio" ]; then
+                bash  ./upload_rotate.sh "unstable" out/* > /dev/null;
+              fi'
         - os: linux
           dist: trusty
           compiler: g++
