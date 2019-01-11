@@ -49,7 +49,7 @@ PF::OCIOViewPar::OCIOViewPar():
   std::cout<<"OCIOViewPar: config="<<config<<std::endl;
 
   // Step 2: Lookup the display ColorSpace
-  device = "sRGB Native 2.2"; //config->getDefaultDisplay();
+  device = "sRGB"; //config->getDefaultDisplay();
   std::cout<<"OCIOViewPar: device="<<device<<std::endl;
   transformName = "Filmic Log Encoding Base"; //config->getDefaultView(device);
   std::cout<<"OCIOViewPar: transformName="<<transformName<<std::endl;
@@ -64,7 +64,10 @@ PF::OCIOViewPar::OCIOViewPar():
   transform->setDisplay( device.c_str() );
   transform->setView( transformName.c_str() );
 
-  lookName = "Medium High Contrast";
+  //lookName = "Very High Contrast";
+  lookName = "Very Low Contrast";
+  //lookName = "Medium High Contrast";
+  //lookName = "Base Contrast";
   //lookName = config->getDisplayLooks(device, transformName); //"Very High Contrast";
   std::cout<<"OCIOViewPar: lookName="<<lookName<<std::endl;
   transform->setLooksOverrideEnabled(true);
@@ -73,6 +76,22 @@ PF::OCIOViewPar::OCIOViewPar():
   //processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, displayColorSpace);
   processor = config->getProcessor(transform);
   std::cout<<"OCIOViewPar: processor="<<processor<<std::endl;
+
+  float* buf = new float[100*3];
+  float delta = 11.0f/100.0f;
+  float Y = -10;
+  const double inv_log_base = 1.0 / log(10.0);
+  for(int i = 0; i < 100; i++) {
+    buf[i*3] = buf[i*3+1] = buf[i*3+2] = pow(10,Y);
+    Y += delta;
+  }
+  OCIO::PackedImageDesc img(buf, 100, 1, 3);
+  get_processor()->apply(img);
+  Y = -10;
+  for(int i = 0; i < 100; i++) {
+    std::cout<<Y<<" "<<pow(10,Y)<<" "<<pow(buf[i*3],2.2)<<std::endl;
+    Y += delta;
+  }
   }
   catch(OCIO::Exception & exception)
   {
@@ -84,6 +103,8 @@ PF::OCIOViewPar::OCIOViewPar():
   icc_par->set_out_profile( PF::ICCStore::Instance().get_srgb_profile(PF_TRC_LINEAR) );
 
   set_type( "ocio_view" );
+
+  set_default_name( _("OCIO view") );
 }
 
 

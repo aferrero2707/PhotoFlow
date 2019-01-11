@@ -633,6 +633,9 @@ void PF::OperationConfigGUI::enable_editing()
 
   editor->set_edited_layer( get_layer()->get_id() );
 */
+
+  if( get_editing_flag() ) return;
+
   //std::cout<<"OperationConfigGUI::enable_editing(\""<<get_layer()->get_name()<<"\"): par->set_editing_flag( true )"<<std::endl;
   par->set_editing_flag( true );
 
@@ -654,6 +657,8 @@ void PF::OperationConfigGUI::disable_editing()
 
   frame_edit.set_active( false );
   frame_edit2.set_active( false );
+
+  if( !get_editing_flag() ) return;
 
   std::cout<<"OperationConfigGUI::disable_editing(): setting editing flag to false"<<std::endl;
   par->set_editing_flag( false );
@@ -1346,6 +1351,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "tone_mapping" ) {
 
     dialog = new PF::ToneMappingConfigGUI( current_layer );
+
+  } else if( op_type == "ocio_view" ) {
+
+    dialog = new PF::OperationConfigGUI( current_layer, "OCIO View" );
 
   }
 

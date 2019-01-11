@@ -237,6 +237,8 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     processor = new_subtrimg();
   } else if( op_type == "tone_mapping" ) {
     processor = new_tone_mapping();
+  } else if( op_type == "ocio_view" ) {
+    processor = new_ocio_view();
 
   } else if( op_type == "volume" ) {
     processor = new_volume();

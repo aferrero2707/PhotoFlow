@@ -49,7 +49,7 @@ PF::Options::Options()
   ui_multiple_tool_dialogs = true;
 
   ocio_config = "filmic";
-  ocio_display = "sRGB Native 2.2";
+  ocio_display = "sRGB";
   ocio_view = "Filmic Log Encoding Base";
   ocio_look = "Base Contrast";
 }
