@@ -33,12 +33,64 @@
 //const int PF::GamutMapNYPoints = 1000;
 
 
+#define Float_t float
+#define Double_t float
+
+
+
+float PF::HD_filmic(float x, float *par)
+{
+  Float_t HD_fog = 0.0;
+  Float_t HD_max = 4.0;
+  Float_t HD_lin_slope = par[0];
+  Float_t HD_lin_pivot = par[1];
+  Float_t HD_lin_Dmin = par[2];
+  Float_t HD_lin_Dmax = par[3];
+
+  Float_t HD_lin_min = -1.0f * (HD_lin_Dmax - HD_lin_pivot) / (HD_max * HD_lin_slope);
+  Float_t HD_lin_max = -1.0f * (HD_lin_Dmin - HD_lin_pivot) / (HD_max * HD_lin_slope);
+
+  //std::cout<<HD_lin_min<<" "<<HD_lin_max<<"\n";
+
+  Float_t LogH = x; //0.1f * val / HD_midgray;
+  Double_t result;
+
+  if( LogH > HD_lin_max ) {
+    Float_t A = (HD_lin_Dmin - HD_fog) * 2.0f + 1e-2;
+    Float_t k = -4.0f * HD_lin_slope * HD_max / A;
+    //std::cout<<A<<" "<<k<<"\n";
+    result = HD_lin_Dmin - (A * 1.0f/(1 + exp(k*(LogH-HD_lin_max))) - A/2);
+  } else if( LogH < HD_lin_min ) {
+    Float_t A = (HD_max - HD_lin_Dmax) * 2.0f;
+    Float_t k = -4.0f * HD_lin_slope * HD_max / A;
+    result = HD_lin_Dmax - (A * 1.0f/(1 + exp(k*(LogH-HD_lin_min))) - A/2);
+  } else {
+    result = -1.0f * LogH * HD_lin_slope * HD_max + HD_lin_pivot;
+  }
+
+  return result;
+}
+
+
+float PF::HD_filmic2(float x, float *par)
+{
+  float HD_midgray = 0.1814;//pow(0.5,2.45);
+
+  float LogH = log10( x / HD_midgray );
+  float D = PF::HD_filmic( LogH, par );
+  float result = pow(10,-D);
+  //std::cout<<"filmic2: "<<x<<" "<<LogH<<" "<<D<<" "<<result<<"\n\n";
+  return result;
+}
+
+
+
 PF::ToneMappingPar::ToneMappingPar():
   OpParBase(),
   method("method",this,PF::TONE_MAPPING_LIN_POW,"TONE_MAPPING_LIN_POW","linear + log"),
   exposure("exposure",this,1),
   gamma("gamma",this,2.2),
-  gamma_preserve_midgray("gamma_preserve_midgray",this,false),
+  gamma_pivot("gamma_pivot",this,1),
   filmic_A("filmic_A",this,0.22),
   filmic_B("filmic_B",this,0.30),
   filmic_C("filmic_C",this,0.10),
@@ -63,12 +115,16 @@ PF::ToneMappingPar::ToneMappingPar():
   LP_lin_max("LP_lin_max",this,0.5),
   LP_knee_strength("LP_knee_strength",this,1.2),
   LP_shoulder_smoothness("LP_shoulder_smoothness",this,0),
+  HD_slope("HD_slope",this,1.1),
+  HD_toe_range("HD_toe_range",this,0.00001),
+  HD_shoulder_range("HD_shoulder_range",this,0.2),
   gamut_compression("gamut_compression",this,0),
   gamut_compression_exponent("gamut_compression_exponent",this,1),
   lumi_blend_frac("lumi_blend_frac",this,0),
   icc_data( NULL )
 {
   method.add_enum_value(PF::TONE_MAPPING_LIN_POW,"TONE_MAPPING_LIN_POW","linear + log");
+  method.add_enum_value(PF::TONE_MAPPING_HD,"TONE_MAPPING_HD","reversible film");
   method.add_enum_value(PF::TONE_MAPPING_FILMIC2,"TONE_MAPPING_FILMIC2","filmic new");
   method.add_enum_value(PF::TONE_MAPPING_FILMIC,"TONE_MAPPING_FILMIC","filmic");
   method.add_enum_value(PF::TONE_MAPPING_EXP_GAMMA,"TONE_MAPPING_EXP_GAMMA","gamma");

@@ -47,14 +47,21 @@ namespace PF
 
 enum tone_mapping_method_t
 {
+  TONE_MAPPING_LIN_POW,
+  TONE_MAPPING_HD,
   TONE_MAPPING_FILMIC2,
   TONE_MAPPING_FILMIC,
   TONE_MAPPING_EXP_GAMMA,
   TONE_MAPPING_REINHARD,
   TONE_MAPPING_HEJL,
-  TONE_MAPPING_ADAPTIVE_LOG,
-  TONE_MAPPING_LIN_POW
+  TONE_MAPPING_ADAPTIVE_LOG
 };
+
+
+float HD_filmic(float x, float *par);
+float HD_filmic2(float x, float *par);
+
+
 
 
 class ToneMappingPar: public OpParBase
@@ -62,7 +69,7 @@ class ToneMappingPar: public OpParBase
   PropertyBase method;
   Property<float> exposure;
   Property<float> gamma;
-  Property<bool> gamma_preserve_midgray;
+  Property<float> gamma_pivot;
 
   Property<float> filmic_A;
   Property<float> filmic_B;
@@ -84,6 +91,8 @@ class ToneMappingPar: public OpParBase
 
   Property<float> LP_compression, LP_slope, LP_lin_max, LP_knee_strength, LP_shoulder_smoothness;
 
+  Property<float> HD_slope, HD_toe_range, HD_shoulder_range;
+
   Property<float> gamut_compression, gamut_compression_exponent, lumi_blend_frac;
 
   ICCProfile* icc_data;
@@ -99,6 +108,7 @@ public:
   tone_mapping_method_t get_method() { return (tone_mapping_method_t)method.get_enum_value().first; }
   float get_exposure() { return exposure.get(); }
   float get_gamma() { return gamma.get(); }
+  float get_gamma_pivot() { return gamma_pivot.get(); }
   float get_exponent() { return exponent; }
 
   float get_filmic_A() { return filmic_A.get(); }
@@ -129,6 +139,10 @@ public:
   float get_LP_lin_max() { return LP_lin_max.get(); }
   float get_LP_knee_strength() { return LP_knee_strength.get(); }
   float get_LP_shoulder_smoothness() { return LP_shoulder_smoothness.get(); }
+
+  float get_HD_slope() { return HD_slope.get(); }
+  float get_HD_toe_range() { return HD_toe_range.get(); }
+  float get_HD_shoulder_range() { return HD_shoulder_range.get();}
 
   float get_gamut_compression() { return gamut_compression.get(); }
   float get_gamut_compression_exponent() { return gamut_compression_exponent.get(); }
@@ -240,6 +254,16 @@ public:
     }
 
 
+    float HD_fog = 0.;
+    float HD_max = 4;
+    float HD_lin_slope = opar->get_HD_slope() / HD_max;
+    float HD_lin_pivot = log10(1.0f/pow(0.5,2.45));
+    float HD_lin_Dmin = opar->get_HD_shoulder_range() * HD_max;
+    float HD_lin_Dmax = HD_max * (1.0f - opar->get_HD_toe_range());
+    float HD_par[4] = { HD_lin_slope, HD_lin_pivot, HD_lin_Dmin, HD_lin_Dmax };
+    //std::cout<<"HD_filmic2(0.1813)="<<HD_filmic2(0.1813, HD_par)<<std::endl;
+
+
 
     // Filmic #2 parameters
     FilmicToneCurve::CurveParamsUser filmic2_user;
@@ -261,6 +285,8 @@ public:
     ICCTransform rgb2lab, lab2rgb;
     rgb2lab.init(prof, labprof, VIPS_FORMAT_FLOAT);
     lab2rgb.init(labprof, prof, VIPS_FORMAT_FLOAT);
+
+    float gamma_pivot = prof->perceptual2linear( opar->get_gamma_pivot() );
 
     for( y = 0; y < height; y++ ) {
       pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
@@ -293,8 +319,8 @@ public:
         case TONE_MAPPING_EXP_GAMMA:
           if( gamma2 != 1 ) {
             for( k=0; k < 4; k++) {
-              if(RGB[k] < 0) RGB[k] = powf( RGB[k]*minus, gamma2 )*minus;
-              else RGB[k] = powf( RGB[k], gamma2 );
+              if(RGB[k] < 0) RGB[k] = powf( RGB[k]*minus/gamma_pivot, gamma2 )*minus*gamma_pivot;
+              else RGB[k] = powf( RGB[k]/gamma_pivot, gamma2 ) * gamma_pivot;
               //clip( exposure*RGB[k], RGB[k] );
             }
           }
@@ -368,6 +394,8 @@ public:
           float LP_Kymax = (LP_Kmax-LP_midgray)*LP_slope + LP_midgray;
           float LP_Kexp = LP_Kmax * LP_slope / LP_Kymax;
 
+          //RGB[3] = LP_midgray;
+
           for( k=0; k < 4; k++) {
             if( RGB[k] > LP_linmax ) {
               // shoulder
@@ -387,6 +415,13 @@ public:
               // linear part
               RGB[k] = (RGB[k] - LP_midgray) * LP_slope + LP_midgray;
             }
+          }
+          //std::cout<<"LIN_POW: "<<LP_midgray<<" -> "<<RGB[3]<<std::endl;
+          break;
+        }
+        case TONE_MAPPING_HD: {
+          for( k=0; k < 4; k++) {
+            RGB[k] = HD_filmic2(RGB[k], HD_par);
           }
           break;
         }

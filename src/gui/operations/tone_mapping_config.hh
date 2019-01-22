@@ -47,13 +47,15 @@ class ToneMappingCurveArea: public Gtk::DrawingArea
   float exposure;
 
   tone_mapping_method_t method;
-  float gamma, exponent;
+  float gamma, gamma_pivot, exponent;
   float A, B, C, D, E, F, W;
   float f2midgraylock, f2gamma, f2exponent, TS, TL, SS, SL, SA;
   float AL_Lmax, AL_b, AL_Tsize_par, AL_Tlength_par, AL_Tstrength_par,
   AL_Tsize, AL_Tlength, AL_Texp,
   AL_Trange, AL_Tshift, AL_Tmax, AL_Tvshift;
   float LP_slope, LP_linmax, LP_compr, LP_Kstrength, LP_Kmax, LP_Ssmooth;
+  float HD_lin_slope, HD_lin_pivot, HD_SR, HD_TR, HD_lin_Dmin, HD_lin_Dmax;
+
   FilmicToneCurve::FullCurve filmic2_curve;
 
 #ifdef GTKMM_2
@@ -95,7 +97,7 @@ public:
 
     Gtk::VBox gammaControlsBox;
     Slider gamma_slider;
-    CheckBox gamma_preserve_midgray_checkbox;
+    Slider gamma_pivot_slider;
 
     Gtk::VBox filmicControlsBox;
     Slider filmic_A_slider;
@@ -126,6 +128,10 @@ public:
     Slider LP_lin_max;
     Slider LP_knee_strength;
     Slider LP_shoulder_smoothness;
+
+    Gtk::VBox HDControlsBox;
+    Slider HD_slope;
+    Slider HD_shoulder_range;
 
     Slider gamut_compression_slider;
     Slider gamut_compression_exponent_slider;
