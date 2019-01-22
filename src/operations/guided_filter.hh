@@ -44,6 +44,7 @@ class GuidedFilterPar: public PaddedOpPar
   Property<float> threshold;
 
   ICCProfile* icc_data;
+  bool convert_to_perceptual;
 public:
   GuidedFilterPar();
 
@@ -51,8 +52,12 @@ public:
 
   bool has_intensity() { return false; }
   bool needs_caching();
+  void set_convert_to_perceptual(bool val) { convert_to_perceptual = val; }
+  bool get_convert_to_perceptual() { return convert_to_perceptual; }
 
+  void set_radius(float r) { radius.set(r); }
   float get_radius() { return radius_real; }
+  void set_threshold(float t) { threshold.set(t); }
   float get_threshold() { return threshold.get(); }
 
   void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
@@ -140,13 +145,20 @@ public:
       for( x = 0; x < rw; x++ ) {
         //std::cout<<"  y="<<y<<"  x="<<x<<"  row="<<row<<"  rr="<<rr<<"  gr="<<gr<<"  br="<<br<<std::endl;
         //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
-        *rr = row[0];
-        *gr = row[1];
-        *br = row[2];
-        if(true && profile && profile->is_linear()) {
-          *rrg = powf( *rr, 1./2.4 );
-          *grg = powf( *gr, 1./2.4 );
-          *brg = powf( *br, 1./2.4 );
+        if( opar->get_convert_to_perceptual() &&
+            profile && profile->is_linear() ) {
+          *rr = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+          *gr = (row[1]>0) ? powf( row[1], 1./2.4 ) : row[1];
+          *br = (row[2]>0) ? powf( row[2], 1./2.4 ) : row[2];
+        } else {
+          *rr = row[0];
+          *gr = row[1];
+          *br = row[2];
+        }
+        if(false && profile && profile->is_linear()) {
+          *rrg = (*rr>0) ? powf( *rr, 1./2.4 ) : *rr;
+          *grg = (*gr>0) ? powf( *gr, 1./2.4 ) : *gr;
+          *brg = (*br>0) ? powf( *br, 1./2.4 ) : *br;
         } else {
           *rrg = *rr;
           *grg = *gr;
@@ -167,9 +179,11 @@ public:
     int subsampling = 1;
 
     //std::cout<<"GuidedFilterProc::render: processing RGB channels"<<std::endl;
-
+    //std::cout<<"                          processing R:"<<std::endl;
     guidedFilter(rguide, rin, rout, r, epsilon, subsampling);
+    //std::cout<<"                          processing G:"<<std::endl;
     guidedFilter(gguide, gin, gout, r, epsilon, subsampling);
+    //std::cout<<"                          processing B:"<<std::endl;
     guidedFilter(bguide, bin, bout, r, epsilon, subsampling);
 
     //return;
@@ -195,12 +209,16 @@ public:
       //float* br = bin[y+dy];
       rr += dx; gr += dx; br += dx; irow += dx*3;
       for( x = 0; x < rw; x++ ) {
-        row[0] =
-            *rr;
-        row[1] =
-            *gr;
-        row[2] =
-            *br;
+        if( opar->get_convert_to_perceptual() &&
+            profile && profile->is_linear() ) {
+          row[0] = (*rr>0) ? powf( *rr, 2.4 ) : *rr;
+          row[1] = (*gr>0) ? powf( *gr, 2.4 ) : *gr;
+          row[2] = (*br>0) ? powf( *br, 2.4 ) : *br;
+        } else {
+          row[0] = *rr;
+          row[1] = *gr;
+          row[2] = *br;
+        }
         //row[0] = irow[0];
         //row[1] = irow[1];
         //row[2] = irow[2];

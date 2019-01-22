@@ -88,21 +88,27 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
                   switch (op) {
                   case MUL:
                       r = aa * bb;
+                      //std::cout<<"r = aa * bb: "<<r<<" = "<<aa<<" * "<<bb<<std::endl;
                       break;
                   case DIVEPSILON:
                       r = aa / (bb + epsilon);
+                      //std::cout<<"r = aa / (bb + epsilon): "<<r<<" = "<<aa<<" / "<<bb+epsilon<<std::endl;
                       break;
                   case ADD:
                       r = aa + bb;
+                      //std::cout<<"r = aa + bb: "<<r<<" = "<<aa<<" + "<<bb<<std::endl;
                       break;
                   case SUB:
                       r = aa - bb;
+                      //std::cout<<"r = aa - bb: "<<r<<" = "<<aa<<" - "<<bb<<std::endl;
                       break;
                   case ADDMUL:
                       r = aa * bb + c[y][x];
+                      //std::cout<<"r = aa * bb + c[y][x]: "<<r<<" = "<<aa<<" * "<<bb<<" + "<<c[y][x]<<std::endl;
                       break;
                   case SUBMUL:
                       r = c[y][x] - (aa * bb);
+                      //std::cout<<"r = c[y][x] - (aa * bb): "<<r<<" = "<<c[y][x]<<" - "<<aa<<" * "<<bb<<std::endl;
                       break;
                   default:
                       assert(false);
@@ -110,6 +116,7 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
                       break;
                   }
                   res[y][x] = r;
+                  //if( op==ADDMUL && r<-100 ) getchar();
               }
           }
       };
@@ -140,11 +147,14 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
   const int w = W / subsampling;
   const int h = H / subsampling;
 
-  array2D<float> I1(w, h);
-  array2D<float> p1(w, h);
+  //array2D<float> I1(w, h);
+  //array2D<float> p1(w, h);
 
-  f_subsample(I1, I);
-  f_subsample(p1, p);
+  //f_subsample(I1, I);
+  //f_subsample(p1, p);
+
+  array2D<float> I1(I);
+  array2D<float> p1(p);
 
   DEBUG_DUMP(I);
   DEBUG_DUMP(p);
@@ -165,27 +175,33 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
   apply(MUL, corrIp, I1, p1);
   f_mean(corrIp, corrIp, r1);
   DEBUG_DUMP(corrIp);
+  //printf("After apply(MUL, corrIp, I1, p1)\n"); //getchar();
 
   array2D<float> &corrI = I1;
   apply(MUL, corrI, I1, I1);
   f_mean(corrI, corrI, r1);
   DEBUG_DUMP(corrI);
+  //printf("After apply(MUL, corrI, I1, I1)\n"); //getchar();
 
   array2D<float> &varI = corrI;
   apply(SUBMUL, varI, meanI, meanI, corrI);
   DEBUG_DUMP(varI);
+  //printf("After apply(SUBMUL, varI, meanI, meanI, corrI)\n"); //getchar();
 
   array2D<float> &covIp = corrIp;
   apply(SUBMUL, covIp, meanI, meanp, corrIp);
   DEBUG_DUMP(covIp);
+  //printf("After apply(SUBMUL, covIp, meanI, meanp, corrIp)\n"); //getchar();
 
   array2D<float> &a = varI;
   apply(DIVEPSILON, a, covIp, varI);
   DEBUG_DUMP(a);
+  //printf("After apply(DIVEPSILON, a, covIp, varI)\n"); //getchar();
 
   array2D<float> &b = covIp;
   apply(SUBMUL, b, a, meanI, meanp);
   DEBUG_DUMP(b);
+  //printf("After apply(SUBMUL, b, a, meanI, meanp)\n"); //getchar();
 
   array2D<float> &meana = a;
   f_mean(meana, a, r1);
@@ -195,12 +211,14 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
   f_mean(meanb, b, r1);
   DEBUG_DUMP(meanb);
 
-  array2D<float> meanA(W, H);
-  f_upsample(meanA, meana);
+  //array2D<float> meanA(W, H);
+  //f_upsample(meanA, meana);
+  array2D<float>& meanA = meana;
   DEBUG_DUMP(meanA);
 
-  array2D<float> meanB(W, H);
-  f_upsample(meanB, meanb);
+  //array2D<float> meanB(W, H);
+  //f_upsample(meanB, meanb);
+  array2D<float>& meanB = meanb;
   DEBUG_DUMP(meanB);
 
   apply(ADDMUL, q, meanA, I, meanB);
@@ -211,7 +229,8 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
 PF::GuidedFilterPar::GuidedFilterPar():
 PaddedOpPar(),
 radius("radius",this,10.0),
-threshold("threshold",this,0.075)
+threshold("threshold",this,0.075),
+convert_to_perceptual(true)
 {
   set_type("guided_filter" );
 
