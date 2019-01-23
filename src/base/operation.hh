@@ -110,11 +110,11 @@ class PixelMatrix
   T* data;
   T** rows;
   T** ptr;
-  int w, h;
+  int w, h, co, ro;
 public:
   PixelMatrix(): data(NULL), w(0), h(0), ptr(NULL), rows(NULL) {}
   PixelMatrix(T* buf, int width, int height, int rowstride, int roffs, int coffs):
-    data(NULL), w(width), h(height)
+    data(NULL), w(width), h(height), ro(roffs), co(coffs)
   {
     ptr = new T*[h];
     rows = ptr - roffs;
@@ -124,7 +124,8 @@ public:
     }
     //std::cout<<"Initialized pixel matrix from buf="<<buf<<"  "<<w<<"x"<<h<<"+"<<coffs<<","<<roffs<<std::endl;
   }
-  PixelMatrix(int width, int height, int roffs=0, int coffs=0): data(NULL), w(width), h(height), ptr(NULL), rows(NULL)
+  PixelMatrix(int width, int height, int roffs=0, int coffs=0):
+    data(NULL), w(width), h(height), ro(roffs), co(coffs), ptr(NULL), rows(NULL)
   {
     data = new T[w*h];
     int rowstride = w;
@@ -133,6 +134,25 @@ public:
     rows = ptr - roffs;
     for(int i = 0; i < height; i++) {
       ptr[i] = buf - coffs;
+      buf += rowstride;
+    }
+    //std::cout<<"Initialized pixel matrix "<<w<<"x"<<h<<"+"<<coffs<<","<<roffs<<std::endl;
+  }
+  PixelMatrix(const PixelMatrix& m):
+    data(NULL), w(0), h(0)
+  {
+    w = m.width();
+    h = m.height();
+    ro = m.roffs();
+    co = m.coffs();
+    data = new T[w*h];
+    int rowstride = w;
+    T* buf = data;
+    ptr = new T*[h];
+    rows = ptr - ro;
+    for(int i = 0; i < h; i++) {
+      ptr[i] = buf - co;
+      memcpy(buf, m[i] + co, sizeof(T)*w);
       buf += rowstride;
     }
     //std::cout<<"Initialized pixel matrix "<<w<<"x"<<h<<"+"<<coffs<<","<<roffs<<std::endl;
@@ -148,6 +168,8 @@ public:
   T* operator[](int id) const { return rows[id]; }
   int width() const { return w; }
   int height() const { return h; }
+  int roffs() const { return ro; }
+  int coffs() const { return co; }
 };
 
 
@@ -183,6 +205,7 @@ class OpParBase: public sigc::trackable
   std::string type;
 
   ProcessorBase* processor;
+  ProcessorBase* to_map;
 
   OperationConfigUI* config_ui;
 
@@ -293,6 +316,8 @@ public:
 
   bool get_mask_enabled() { return mask_enabled.get(); }
   void set_mask_enabled( bool val ) { mask_enabled.update(val); }
+
+  virtual bool convert_inputs_on_load() { return true; }
 
   bool is_modified() { return modified_flag; }
   void set_modified() { modified_flag = true; }
