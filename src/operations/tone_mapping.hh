@@ -397,6 +397,7 @@ public:
           //RGB[3] = LP_midgray;
 
           for( k=0; k < 4; k++) {
+            //std::cout<<"lin+log: RGB["<<k<<"] in:  "<<RGB[k]<<std::endl;
             if( RGB[k] > LP_linmax ) {
               // shoulder
               //float Lw = (LP_linmax - RGB[k]) / LP_Srange;
@@ -410,11 +411,12 @@ public:
               //float X = RGB[k] / LP_Kmax - 1.0f;
               //RGB[k] = LP_slope*LP_Kmax*( (sqrt(2.0f)*X/sqrt(1.0f+X*X) + 1.0f) / sqrt(2.0f) );
               float X = RGB[k] / LP_Kmax;
-              RGB[k] = LP_Kymax * pow(X,LP_Kexp);
+              RGB[k] = (X>=0) ? LP_Kymax * pow(X,LP_Kexp) : -LP_Kymax * pow(-X,LP_Kexp);
             } else {
               // linear part
               RGB[k] = (RGB[k] - LP_midgray) * LP_slope + LP_midgray;
             }
+            //std::cout<<"lin+log: RGB["<<k<<"] out: "<<RGB[k]<<std::endl;
           }
           //std::cout<<"LIN_POW: "<<LP_midgray<<" -> "<<RGB[3]<<std::endl;
           break;

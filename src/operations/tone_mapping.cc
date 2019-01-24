@@ -75,8 +75,8 @@ float PF::HD_filmic(float x, float *par)
 float PF::HD_filmic2(float x, float *par)
 {
   float HD_midgray = 0.1814;//pow(0.5,2.45);
-
-  float LogH = log10( x / HD_midgray );
+  float X = x / HD_midgray;
+  float LogH = (X<1.0e-15) ? -15 : log10( x / HD_midgray );
   float D = PF::HD_filmic( LogH, par );
   float result = pow(10,-D);
   //std::cout<<"filmic2: "<<x<<" "<<LogH<<" "<<D<<" "<<result<<"\n\n";
