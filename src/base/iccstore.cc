@@ -115,6 +115,49 @@ static cmsCIExyY e_5454_robertson= {0.333608970, 0.348572909, 1.0};
  */
 static cmsCIExyY d60_aces= {0.32168, 0.33767, 1.0};
 
+/* Darktable code starts here
+ */
+
+#define generate_mat3inv_body(c_type, A, B)                                                                  \
+    static int mat3inv_##c_type(c_type dst[3][3], const c_type src[3][3])                                           \
+    {                                                                                                          \
+  \
+  const c_type det = A(1, 1) * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3))                                     \
+  - A(2, 1) * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3))                                   \
+  + A(3, 1) * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                  \
+  \
+  const c_type epsilon = 1e-7f;                                                                            \
+  if(fabs(det) < epsilon) return 1;                                                                        \
+  \
+  const c_type invDet = 1.0 / det;                                                                         \
+  \
+  B(1, 1) = invDet * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3));                                              \
+  B(1, 2) = -invDet * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3));                                             \
+  B(1, 3) = invDet * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                              \
+  \
+  B(2, 1) = -invDet * (A(3, 3) * A(2, 1) - A(3, 1) * A(2, 3));                                             \
+  B(2, 2) = invDet * (A(3, 3) * A(1, 1) - A(3, 1) * A(1, 3));                                              \
+  B(2, 3) = -invDet * (A(2, 3) * A(1, 1) - A(2, 1) * A(1, 3));                                             \
+  \
+  B(3, 1) = invDet * (A(3, 2) * A(2, 1) - A(3, 1) * A(2, 2));                                              \
+  B(3, 2) = -invDet * (A(3, 2) * A(1, 1) - A(3, 1) * A(1, 2));                                             \
+  B(3, 3) = invDet * (A(2, 2) * A(1, 1) - A(2, 1) * A(1, 2));                                              \
+  return 0;                                                                                                \
+    }
+
+#define A(y, x) src[y-1][x-1]
+#define B(y, x) dst[y-1][x-1]
+/** inverts the given 3x3 matrix */
+generate_mat3inv_body(float, A, B)
+
+static int mat3inv(float dst[3][3], const float src[3][3])
+{
+  return mat3inv_float(dst, src);
+}
+/* Darktable code ends here
+ */
+
+
 
 
 PF::ICCProfile::ICCProfile()
@@ -126,6 +169,7 @@ PF::ICCProfile::ICCProfile()
   perceptual_trc = NULL;
   perceptual_trc_inv = NULL;
   parametric_trc = false;
+  gamut_boundary[0][0] = -1;
 }
 
 
@@ -209,6 +253,48 @@ void PF::ICCProfile::init_colorants()
   Y_B = colorants[7];
 
   has_colorants = true;
+
+  //float rgb2xyz[3][3];
+  double* pc = colorants;
+  for(int i=0;i<3;i++){
+    for(int j=0;j<3;j++){
+      rgb2xyz[j][i] = static_cast<float>( *pc );
+      pc += 1;
+    }
+  }
+  std::cout<<"RGB -> XYZ:"<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz[0][i]<<" ";
+  std::cout<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz[1][i]<<" ";
+  std::cout<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz[2][i]<<" ";
+  std::cout<<std::endl;
+
+
+  float D50_to_D65[3][3] = {
+      {0.955576656, -0.023039343, 0.063163668},
+      {-0.028289547, 1.009941621, 0.021007661},
+      {0.012298179, -0.020483004, 1.329909891}
+  };
+  // multiply rgb2xyz * D50_to_D65 to obtain the rgb2xyz100_D65 matrix
+  for(int i=0;i<3;i++){
+    for(int j=0;j<3;j++){
+      rgb2xyz100_D65[i][j]=0;
+      for(int k=0;k<3;k++){
+        rgb2xyz100_D65[i][j]=rgb2xyz100_D65[i][j]+(D50_to_D65[i][k] * rgb2xyz[k][j]);
+      }
+    }
+  }
+  mat3inv( xyz1002rgb_D65, rgb2xyz100_D65 );
+  std::cout<<"RGB -> XYZ_D65:"<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz100_D65[0][i]<<" ";
+  std::cout<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz100_D65[1][i]<<" ";
+  std::cout<<std::endl;
+  for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz100_D65[2][i]<<" ";
+  std::cout<<std::endl;
+
+
 
   cmsCIEXYZ *chad            = (cmsCIEXYZ*)cmsReadTag(profile, cmsSigChromaticAdaptationTag);
 #ifndef NDEBUG
@@ -425,6 +511,167 @@ void PF::ICCProfile::get_lightness( float* RGBv, float* Lv, size_t size )
 }
 
 
+
+void PF::ICCProfile::to_Jzazbz( const float& R, const float& G, const float& B, float& Jz, float& az, float& bz )
+{
+  jabz::xyz100 xyz = {0, 0, 0};
+  xyz.x = (rgb2xyz100_D65[0][0]*R + rgb2xyz100_D65[0][1]*G + rgb2xyz100_D65[0][2]*B) * 100;
+  xyz.y = (rgb2xyz100_D65[1][0]*R + rgb2xyz100_D65[1][1]*G + rgb2xyz100_D65[1][2]*B) * 100;
+  xyz.z = (rgb2xyz100_D65[2][0]*R + rgb2xyz100_D65[2][1]*G + rgb2xyz100_D65[2][2]*B) * 100;
+  //std::cout<<"to_Jzazbz: xyz="<<xyz.x<<" "<<xyz.y<<" "<<xyz.z<<" "<<std::endl;
+
+  jabz::jzazbz jab = jabz::jab_rgb::forth(xyz);
+  Jz = jab.jz;
+  az = jab.az;
+  bz = jab.bz;
+}
+
+
+
+void PF::ICCProfile::from_Jzazbz( const float& Jz, const float& az, const float& bz, float& R, float& G, float& B )
+{
+  jabz::jzazbz jab = {Jz, az, bz};
+  jabz::xyz100 xyz = jabz::jab_rgb::back(jab);
+  //std::cout<<"from_Jzazbz: Jz="<<Jz<<" az="<<az<<"  bz="<<bz<<"    X="<<xyz.x<<" Y="<<xyz.y<<" Z="<<xyz.z<<std::endl;
+
+  R = (xyz1002rgb_D65[0][0]*xyz.x + xyz1002rgb_D65[0][1]*xyz.y + xyz1002rgb_D65[0][2]*xyz.z) / 100;
+  G = (xyz1002rgb_D65[1][0]*xyz.x + xyz1002rgb_D65[1][1]*xyz.y + xyz1002rgb_D65[1][2]*xyz.z) / 100;
+  B = (xyz1002rgb_D65[2][0]*xyz.x + xyz1002rgb_D65[2][1]*xyz.y + xyz1002rgb_D65[2][2]*xyz.z) / 100;
+}
+
+
+void PF::ICCProfile::init_gamut_mapping()
+{
+  if( gamut_boundary[0][0] >= 0 ) return;
+
+  float Jab[3], JCH[3], RGB[3] = {0.5, 0.2, 0.1};
+
+  jabz::xyz100 xyz = {0.20654008*100, 0.12197225*0+100, 0.05136952*100};
+  jabz::jzazbz jab = jabz::jab_rgb::forth(xyz);
+  std::cout<<"init_gamut_mapping: xyz="<<xyz.x<<" "<<xyz.y<<" "<<xyz.z<<" "<<std::endl;
+  std::cout<<"init_gamut_mapping: Jab="<<jab.jz<<" "<<jab.az<<" "<<jab.bz<<" "<<std::endl;
+  xyz = jabz::jab_rgb::back(jab);
+  std::cout<<"init_gamut_mapping: xyz="<<xyz.x<<" "<<xyz.y<<" "<<xyz.z<<" "<<std::endl;
+  std::cout<<"init_gamut_mapping: Jab="<<jab.jz<<" "<<jab.az<<" "<<jab.bz<<" "<<std::endl;
+  //getchar(); return;
+
+
+  std::cout<<"init_gamut_mapping: RGB="<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<" "<<std::endl;
+  to_Jzazbz( RGB[0], RGB[1], RGB[2], Jab[0], Jab[1], Jab[2] );
+  std::cout<<"init_gamut_mapping: Jab="<<Jab[0]<<" "<<Jab[1]<<" "<<Jab[2]<<" "<<std::endl;
+  std::cout<<"init_gamut_mapping: JCh="<<JCH[0]<<" "<<JCH[1]<<" "<<JCH[2]<<" "<<std::endl;
+  //getchar(); return;
+
+  // re-compute the gamut boundaries
+  int NJsteps = PF_GAMUT_MAP_NJZ;
+  float Jdelta = 1.0f / (NJsteps);
+  float J = Jdelta;
+  for(int h = 0; h < 360; h++) {
+    gamut_boundary[0][h] = gamut_boundary[NJsteps][h] = 0;
+  }
+  float delta = 1.0e-5;
+  for(int j = 1; j < NJsteps; j++) {
+    J = (Jdelta*j);
+    Jab[0] = J; Jab[1] = Jab[2] = 0;
+    from_Jzazbz( Jab[0], Jab[1], Jab[2], RGB[0], RGB[1], RGB[2] );
+    if( RGB[0] >= (1.0f-delta) && RGB[1] >= (1.0f-delta) && RGB[2] >= (1.0f-delta) ) {
+      for(int h = 0; h < 360; h++) {
+        gamut_boundary[j][h] = 0;
+      }
+      continue;
+    }
+
+    for(int h = 0; h < 360; h++) {
+      float C = 0.1, Cmin = 0, Cmax = 0;
+      bool found = false;
+      gamut_boundary[j][h] = 0;
+      int iter = 0;
+      while( !found ) {
+        JCH[0] = J; JCH[1] = C; JCH[2] = h*M_PI/180.f;
+        PF::LCH2Lab(JCH, Jab, 1);
+        from_Jzazbz( Jab[0], Jab[1], Jab[2], RGB[0], RGB[1], RGB[2] );
+        //std::cout<<"Gamut: JCh="<<JCH[0]<<" "<<JCH[1]<<" "<<JCH[2]<<" "<<std::endl;
+        //std::cout<<"Gamut: Jab="<<Jab[0]<<" "<<Jab[1]<<" "<<Jab[2]<<" "<<std::endl;
+        //std::cout<<"Gamut: RGB="<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<" "<<std::endl;
+        if( RGB[0] < (1.0f-delta) && RGB[1] < (1.0f-delta) && RGB[2] < (1.0f-delta) &&
+            RGB[0] > delta && RGB[1] > delta && RGB[2] > delta ) {
+          // we are still within gamut, increase C
+          //std::cout<<"Gamut: incresing C: "<<C<<" -> ";
+          if( C > Cmax ) C *= 2;
+          else {Cmin = C; C = (Cmax+Cmin)/2;}
+          //std::cout<<C<<std::endl;
+        } else if( RGB[0] > (1.0f+delta) || RGB[1] > (1.0f+delta) || RGB[2] > (1.0f+delta) ||
+            RGB[0] < -delta || RGB[1] < -delta || RGB[2] < -delta ) {
+          // at least one of the components is too much out-of-gamut, decrease C
+          //std::cout<<"Gamut: decreasing C: "<<C<<" -> ";
+          Cmax = C; C = (Cmax+Cmin)/2;
+          //std::cout<<C<<std::endl;
+        } else
+          found = true;
+
+        if(found) {
+          gamut_boundary[j][h] = C;
+        }
+        iter++;
+        if(iter == 100) {break;}
+        //break;
+      }
+      std::cout<<"iter="<<iter<<"  J="<<J<<"  h="<<h<<"  C="<<C<<"  (min="<<Cmin<<" max="<<Cmax<<")  RGB="<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<std::endl;
+      //break;
+    }
+    //std::cout<<"Y="<<Y<<" done."<<std::endl;
+    //break;
+  }
+  //getchar();
+}
+
+
+void PF::ICCProfile::gamut_mapping( float& R, float& G, float& B )
+{
+  float Jab[3], JCH[3], RGB[3];
+  float Jz, az, bz, C, H;
+  // convert to Jzazbz in polar coordinates
+  to_Jzazbz(R, G, B, Jab[0], Jab[1], Jab[2]);
+  PF::Lab2LCH(Jab, JCH, 1);
+  //std::cout<<"gamut_mapping: RGB="<<R<<" "<<G<<" "<<B<<"  J="<<JCH[0]<<"  C="<<JCH[1]<<"  h="<<JCH[2]<<std::endl;
+
+  if( !chroma_compression(JCH[0], JCH[1], JCH[2]) ) return;
+
+  // re-calculate the RGB values
+  PF::LCH2Lab(JCH, Jab, 1);
+  from_Jzazbz( Jab[0], Jab[1], Jab[2], R, G, B );
+}
+
+
+bool PF::ICCProfile::chroma_compression( float& J, float& C, float& H )
+{
+  if( J >= 1 ) {
+    C = 0;
+    return true;
+  }
+
+  if( J <= 0 ) {
+    C = 0;
+    return true;
+  }
+
+  // get the index in the gamut mapping LUT
+  int j = static_cast<int>(J*PF_GAMUT_MAP_NJZ);
+  int h = static_cast<int>(H*180.0f/M_PI);
+
+  // compress all chroma values above max/2
+  float C0 = gamut_boundary[j][h] * 0.95f;
+  float C1 = gamut_boundary[j][h] - C0;
+  //if( C>gamut_boundary[j][h]) std::cout<<"chroma_compression: j="<<j<<"  h="<<h<<"  C0="<<C0<<std::endl;
+  if( C < C0 ) return false;
+  float Cout = ( C < C0 ) ? C : C0 + C1*( 1.0f - exp((C0-C)/C1) );
+  C = Cout;
+  return true;
+}
+
+
+
+
 bool PF::ICCProfile::equals_to( PF::ICCProfile* prof)
 {
   if( !prof ) return false;
@@ -475,47 +722,6 @@ cmsFloat32Number PF::perceptual2linear( ICCProfileData* data, cmsFloat32Number v
   return cmsEvalToneCurveFloat( data->perceptual_trc, val );
 }
 */
-
-
-/* Darktable code starts here
- */
-
-#define generate_mat3inv_body(c_type, A, B)                                                                  \
-    static int mat3inv_##c_type(c_type dst[3][3], const c_type src[3][3])                                           \
-    {                                                                                                          \
-  \
-  const c_type det = A(1, 1) * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3))                                     \
-  - A(2, 1) * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3))                                   \
-  + A(3, 1) * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                  \
-  \
-  const c_type epsilon = 1e-7f;                                                                            \
-  if(fabs(det) < epsilon) return 1;                                                                        \
-  \
-  const c_type invDet = 1.0 / det;                                                                         \
-  \
-  B(1, 1) = invDet * (A(3, 3) * A(2, 2) - A(3, 2) * A(2, 3));                                              \
-  B(1, 2) = -invDet * (A(3, 3) * A(1, 2) - A(3, 2) * A(1, 3));                                             \
-  B(1, 3) = invDet * (A(2, 3) * A(1, 2) - A(2, 2) * A(1, 3));                                              \
-  \
-  B(2, 1) = -invDet * (A(3, 3) * A(2, 1) - A(3, 1) * A(2, 3));                                             \
-  B(2, 2) = invDet * (A(3, 3) * A(1, 1) - A(3, 1) * A(1, 3));                                              \
-  B(2, 3) = -invDet * (A(2, 3) * A(1, 1) - A(2, 1) * A(1, 3));                                             \
-  \
-  B(3, 1) = invDet * (A(3, 2) * A(2, 1) - A(3, 1) * A(2, 2));                                              \
-  B(3, 2) = -invDet * (A(3, 2) * A(1, 1) - A(3, 1) * A(1, 2));                                             \
-  B(3, 3) = invDet * (A(2, 2) * A(1, 1) - A(2, 1) * A(1, 2));                                              \
-  return 0;                                                                                                \
-    }
-
-#define A(y, x) src[y-1][x-1]
-#define B(y, x) dst[y-1][x-1]
-/** inverts the given 3x3 matrix */
-generate_mat3inv_body(float, A, B)
-
-static int mat3inv(float dst[3][3], const float src[3][3])
-{
-  return mat3inv_float(dst, src);
-}
 
 
 void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat band_fmt,
@@ -774,12 +980,15 @@ void PF::iccprofile_unref( void* prof )
 
 PF::ICCStore::ICCStore()
 {
+  std::cout<<"Initializing sRGB profiles"<<std::endl;
   srgb_profiles[0] = new sRGBProfile( PF::PF_TRC_STANDARD );
   srgb_profiles[1] = new sRGBProfile( PF::PF_TRC_PERCEPTUAL );
   srgb_profiles[2] = new sRGBProfile( PF::PF_TRC_LINEAR );
   srgb_profiles[0]->ref(); profiles.push_back( srgb_profiles[0] );
   srgb_profiles[1]->ref(); profiles.push_back( srgb_profiles[1] );
   srgb_profiles[2]->ref(); profiles.push_back( srgb_profiles[2] );
+  std::cout<<"sRGB profiles initialization finished"<<std::endl
+      <<"====================================="<<std::endl;
 
   srgb_d50_profiles[0] = new sRGBProfileD50( PF::PF_TRC_STANDARD );
   srgb_d50_profiles[1] = new sRGBProfileD50( PF::PF_TRC_PERCEPTUAL );

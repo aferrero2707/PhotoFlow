@@ -36,6 +36,7 @@
 #include <glibmm.h>
 #include <vips/vips.h>
 
+#include "color.hh"
 #include "../rt/rtengine/LUT.h"
 
 namespace PF
@@ -97,6 +98,9 @@ struct ICCProfileData
 };
 
 
+#define PF_GAMUT_MAP_NJZ 500
+
+
 class ICCProfile
 {
   bool has_colorants;
@@ -116,11 +120,17 @@ class ICCProfile
   LUTf p2l_lut, l2p_lut;
 
   double colorants[9];
+  float rgb2xyz[3][3];
+  float rgb2xyz100_D65[3][3];
+  float xyz1002rgb_D65[3][3];
   float Y_R, Y_G, Y_B;
 
   void init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv );
 
   int refcount;
+
+  float gamut_boundary[PF_GAMUT_MAP_NJZ+1][360];
+
 
 public:
   ICCProfile();
@@ -166,7 +176,7 @@ public:
   //float* get_linear2perceptual_vec() { return perceptual_trc_inv_vec; }
   //float* get_perceptual2linear_vec() { return perceptual_trc_vec; }
 
-  float get_luminance( float R, float G, float B )
+  float get_luminance( const float& R, const float& G, const float& B )
   {
     return( (has_colorants) ? Y_R*R + Y_G*G + Y_B*B : 0.0f );
   }
@@ -174,6 +184,13 @@ public:
 
   float get_lightness( const float& R, const float& G, const float& B );
   void get_lightness( float* RGBv, float* Lv, size_t size );
+
+  void to_Jzazbz( const float& R, const float& G, const float& B, float& Jz, float& az, float& bz );
+  void from_Jzazbz( const float& Jz, const float& az, const float& bz, float& R, float& G, float& B );
+
+  void init_gamut_mapping();
+  void gamut_mapping( float& R, float& G, float& B );
+  bool chroma_compression( float& J, float& C, float& H );
 
   bool equals_to( PF::ICCProfile* prof);
 
