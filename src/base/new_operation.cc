@@ -239,6 +239,9 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
   } else if( op_type == "tone_mapping" ) {
     processor = new_tone_mapping();
 
+  } else if( op_type == "tone_mapping_v2" ) {
+    processor = new_tone_mapping_v2();
+
   } else if( op_type == "local_contrast" ) {
     processor = new_local_contrast();
 

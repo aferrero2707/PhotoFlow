@@ -83,6 +83,7 @@
 #include "subtr_image.hh"
 #include "threshold.hh"
 #include "tone_mapping.hh"
+#include "tone_mapping_v2.hh"
 #include "local_contrast.hh"
 #include "noise_generator.hh"
 #include "trcconv.hh"
@@ -267,6 +268,9 @@ PF::ProcessorBase* PF::new_threshold()
 
 PF::ProcessorBase* PF::new_tone_mapping()
 { return new PF::Processor<PF::ToneMappingPar,PF::ToneMapping>(); }
+
+PF::ProcessorBase* PF::new_tone_mapping_v2()
+{ return new PF::Processor<PF::ToneMappingParV2,PF::ToneMappingV2>(); }
 
 PF::ProcessorBase* PF::new_local_contrast()
 { return new PF::Processor<PF::LocalContrastPar,PF::LocalContrastProc>(); }
