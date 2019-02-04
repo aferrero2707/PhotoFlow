@@ -428,12 +428,12 @@ template <class T> constexpr T matmul3(double x, double y, double z, double m00,
   };
 }
 
-template <class T> constexpr T _f_(T x) {
+template <class T> /*constexpr*/ T _f_(T x) {
   T y = pow(x/10000, n);
   return pow((c1 + c2*y)/(1 + c3*y), p);
 };
 
-static constexpr jzazbz forth(const xyz100& xyz) {
+static /*constexpr*/ jzazbz forth(const xyz100& xyz) {
   /*xyz100 xyz = matmul3<xyz100>(rgb.r, rgb.g, rgb.b,
               100*0x1.a64c2f52ea72dp-2, 100*0x1.6e2eb1f1be0c8p-2, 100*0x1.71a9fdd4910cdp-3,
               100*0x1.b3679fbabb7e3p-3, 100*0x1.6e2eb13cc6544p-1, 100*0x1.27bb34179021ap-4,
@@ -468,7 +468,7 @@ static constexpr jzazbz forth(const xyz100& xyz) {
    };
 }
 
-template <class T> constexpr T _finv_(T x) {
+template <class T> /*constexpr*/ T _finv_(T x) {
   if (x < 0.) {
     return 0.;
   }
