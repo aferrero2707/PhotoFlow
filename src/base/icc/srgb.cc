@@ -139,6 +139,16 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
     break;
   }
+  case PF::PF_TRC_GAMMA_22: {
+    cmsToneCurve *curve = cmsBuildGamma (NULL, 2.20);
+    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    break;
+  }
+  case PF::PF_TRC_GAMMA_18: {
+    cmsToneCurve *curve = cmsBuildGamma (NULL, 1.80);
+    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    break;
+  }
   }
   cmsHPROFILE profile = cmsCreateRGBProfile ( &whitepoint, &primaries, tone_curve );
   cmsMLU *copyright = cmsMLUalloc(NULL, 1);

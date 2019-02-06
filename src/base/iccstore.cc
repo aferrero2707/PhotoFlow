@@ -984,9 +984,13 @@ PF::ICCStore::ICCStore()
   srgb_profiles[0] = new sRGBProfile( PF::PF_TRC_STANDARD );
   srgb_profiles[1] = new sRGBProfile( PF::PF_TRC_PERCEPTUAL );
   srgb_profiles[2] = new sRGBProfile( PF::PF_TRC_LINEAR );
+  srgb_profiles[3] = new sRGBProfile( PF::PF_TRC_GAMMA_22 );
+  srgb_profiles[4] = new sRGBProfile( PF::PF_TRC_GAMMA_18 );
   srgb_profiles[0]->ref(); profiles.push_back( srgb_profiles[0] );
   srgb_profiles[1]->ref(); profiles.push_back( srgb_profiles[1] );
   srgb_profiles[2]->ref(); profiles.push_back( srgb_profiles[2] );
+  srgb_profiles[3]->ref(); profiles.push_back( srgb_profiles[3] );
+  srgb_profiles[4]->ref(); profiles.push_back( srgb_profiles[4] );
   std::cout<<"sRGB profiles initialization finished"<<std::endl
       <<"====================================="<<std::endl;
 
