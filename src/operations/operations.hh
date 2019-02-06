@@ -79,6 +79,10 @@ namespace PF
   ProcessorBase* new_tone_mapping();
   ProcessorBase* new_tone_mapping_v2();
   ProcessorBase* new_local_contrast();
+#ifdef HAVE_OCIO
+  ProcessorBase* new_ocio_view();
+  ProcessorBase* new_ocio_aces();
+#endif
   ProcessorBase* new_volume();
   ProcessorBase* new_noise_generator();
   ProcessorBase* new_path_mask();

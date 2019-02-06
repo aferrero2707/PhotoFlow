@@ -5,3 +5,31 @@ add_subdirectory(pixmaps)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/photoflow.desktop DESTINATION ./share/applications)
 #install(FILES darktable.appdata.xml DESTINATION ./share/appdata)
 
+
+if (OpenColorIO_FOUND)
+    include(ExternalProject)
+
+    ExternalProject_Add(filmic-blender
+        PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
+        DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/filmic-blender-download"
+        SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/filmic-blender"
+        URL "https://github.com/sobotka/filmic-blender/archive/1.1.1.tar.gz"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND     ""
+        INSTALL_COMMAND     ""
+    )
+    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/filmic-blender" DESTINATION ./share/photoflow/ocio-configs)
+    
+    ExternalProject_Add(aces-ocio
+        PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
+        DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ocio-configs-download"
+        SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/ocio-configs"
+        GIT_REPOSITORY "https://github.com/imageworks/OpenColorIO-Configs.git"
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND     ""
+        INSTALL_COMMAND     ""
+    )
+    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ocio-configs/aces_1.0.3" DESTINATION ./share/photoflow/ocio-configs)
+endif (OpenColorIO_FOUND)

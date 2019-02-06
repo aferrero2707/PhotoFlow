@@ -53,6 +53,15 @@ IF(BUNDLED_LENSFUN_DB)
   set(COMPILE_FLAGS "${COMPILE_FLAGS} -DBUNDLED_LENSFUN_DB=1")
 ENDIF(BUNDLED_LENSFUN_DB)
 
+
+MESSAGE( STATUS "OpenColorIO_FOUND: " ${OpenColorIO_FOUND} )
+if (OpenColorIO_FOUND)
+    include_directories(${OpenColorIO_INCLUDE_DIRS})
+    link_directories(${OpenColorIO_LIBRARY_DIRS}  )
+    set(COMPILE_FLAGS "${COMPILE_FLAGS} -DHAVE_OCIO=1")  
+endif (OpenColorIO_FOUND)
+
+
 # Check for openmp
 find_package(OpenMP)
 if(OpenMP_C_FLAGS AND USE_OPENMP)
@@ -255,6 +264,10 @@ FILE(GLOB GMicSources vips/gmic/gmic/src/gmic.cpp)
 
 FILE(GLOB OpIncludes operations/*.hh operations/gmic/*.hh legacy/operations/*.hh operations/Filmic/Core/CoreHelpers.h operations/Filmic/FilmicCurve/FilmicToneCurve.h)
 FILE(GLOB OpSources operations/*.cc operations/gmic/*.cc legacy/operations/*.cc operations/Filmic/Core/CoreHelpers.cpp operations/Filmic/FilmicCurve/FilmicToneCurve.cpp)
+if (OpenColorIO_FOUND)
+	FILE(GLOB OcioIncludes operations/OCIO/*.hh)
+	FILE(GLOB OcioSources operations/OCIO/*.cc)
+endif (OpenColorIO_FOUND)
 
 #
 # the libraw part is a bit of a hack:
@@ -402,6 +415,8 @@ add_library (pfbase STATIC
   ${RTSources}
   ${OpIncludes}
   ${OpSources}
+  ${OcioIncludes}
+  ${OcioSources}
   ${LibRawIncludes}
   ${LibRawSources}
 #  ${GMicIncludes}
@@ -460,6 +475,8 @@ IF(APPLE)
   set_target_properties(photoflow PROPERTIES LINK_FLAGS " -framework ApplicationServices ")
 ENDIF(APPLE)
 
+MESSAGE( STATUS "ADDITIONAL_LIBS: " ${ADDITIONAL_LIBS} )
+
 target_link_libraries(photoflow ${LIBS} 
   pfgui
   pfbase 
@@ -468,6 +485,7 @@ target_link_libraries(photoflow ${LIBS}
   ${STATIC_LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
+  ${OpenColorIO_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${EXPAT_LIBRARIES}
   ${Pugixml_LIBRARIES}

@@ -1355,13 +1355,18 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
     dialog = new PF::ToneMappingConfigGUI( current_layer );
 
   } else if( op_type == "tone_mapping_v2" ) {
-
     dialog = new PF::ToneMappingConfigGUI_V2( current_layer );
 
   } else if( op_type == "local_contrast" ) {
-
     dialog = new PF::LocalContrastConfigGUI( current_layer );
 
+#ifdef HAVE_OCIO
+  } else if( op_type == "ocio_view" ) {
+    dialog = new PF::OperationConfigGUI( current_layer, "OCIO - Filmic" );
+
+  } else if( op_type == "ocio_aces" ) {
+    dialog = new PF::OperationConfigGUI( current_layer, "OCIO - ACES" );
+#endif
   }
 
   if( !dialog ) {

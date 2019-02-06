@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.8.9)
 
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)
+endif()
+
 project(photoflow CXX C)
 
 # options controlling the build process
@@ -135,6 +139,15 @@ pkg_check_modules(VIPS REQUIRED vips>=8.5.1)
 #pkg_check_modules(VIPSCC REQUIRED vipsCC)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
+
+find_package (OpenColorIO)
+MESSAGE( STATUS "OpenColorIO_LIBRARY_DIRS: " ${OpenColorIO_LIBRARY_DIRS} )
+MESSAGE( STATUS "OpenColorIO_LIBRARIES: " ${OpenColorIO_LIBRARIES} )
+MESSAGE( STATUS "OpenColorIO_LIBRARY: " ${OpenColorIO_LIBRARY} )
+MESSAGE( STATUS "OCIO_FOUND: " ${OCIO_FOUND} )
+MESSAGE( STATUS "OCIO_LIBRARY_DIRS: " ${OCIO_LIBRARY_DIRS} )
+MESSAGE( STATUS "OCIO_LIBRARIES: " ${OCIO_LIBRARIES} )
+MESSAGE( STATUS "OCIO_LIBRARY: " ${OCIO_LIBRARY} )
 
 if (APPLE)
     find_package (MacIntegration REQUIRED)

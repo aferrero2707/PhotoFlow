@@ -245,6 +245,13 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
   } else if( op_type == "local_contrast" ) {
     processor = new_local_contrast();
 
+#ifdef HAVE_OCIO
+  } else if( op_type == "ocio_view" ) {
+    processor = new_ocio_view();
+
+  } else if( op_type == "ocio_aces" ) {
+    processor = new_ocio_aces();
+#endif
   } else if( op_type == "volume" ) {
     processor = new_volume();
   }
