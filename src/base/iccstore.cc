@@ -904,8 +904,9 @@ struct ICCProfileContainer
 void PF::set_icc_profile( VipsImage* img, PF::ICCProfile* prof )
 {
   if( !prof ) {
-    void* buf = NULL;
-    vips_image_set_blob( img, VIPS_META_ICC_NAME, (VipsCallbackFn) g_free, buf, 0 );
+    if( vips_image_remove( img, "pf-icc-profile" ) == FALSE ) {
+      std::cout<<"set_icc_profile: failed to remove \"pf-icc-profile\" metadata"<<std::endl;
+    }
     return;
   }
 
