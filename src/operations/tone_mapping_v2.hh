@@ -65,7 +65,7 @@ class ToneMappingParV2: public OpParBase
 {
   PropertyBase method;
   Property<float> exposure;
-  Property<float> log_sh, log_hl;
+  Property<float> sh_compr, hl_compr;
   Property<float> log_pivot;
   Property<bool> hue_protection;
   Property<bool> gamut_compression;
@@ -109,8 +109,8 @@ public:
 
   tone_mapping_method2_t get_method() { return (tone_mapping_method2_t)method.get_enum_value().first; }
   float get_exposure() { return exposure.get(); }
-  float get_log_sh() { return( log_sh.get() ); }
-  float get_log_hl() { return( log_hl.get() ); }
+  float get_sh_compr() { return( sh_compr.get() ); }
+  float get_hl_compr() { return( hl_compr.get() ); }
   float get_log_pivot() { return log_pivot.get(); }
   float get_exponent() { return exponent; }
   bool get_gamut_compression() { return gamut_compression.get(); }
@@ -205,8 +205,8 @@ public:
 
     float exposure = opar->get_exposure();
     //float gamma = opar->get_exponent();
-    float log_sh = opar->get_log_sh();
-    float log_hl = opar->get_log_hl();
+    float sh_compr = opar->get_sh_compr();
+    float hl_compr = opar->get_hl_compr();
     float filmic2_gamma = opar->get_filmic2_exponent();
     float filmic2_igamma = 1.f/filmic2_gamma;
     float lumi_blend_frac = opar->get_lumi_blend_frac();
@@ -302,8 +302,10 @@ public:
     lab2rgb.init(labprof, prof, VIPS_FORMAT_FLOAT);
 
     float log_pivot = prof->perceptual2linear( opar->get_log_pivot() );
-    float log_scale_sh = log(log_pivot*log_sh+1);
-    float log_scale_hl = log(log_pivot*log_hl+1);
+    float log_scale_sh = log(log_pivot*sh_compr+1);
+    float log_scale_hl = log(log_pivot*hl_compr+1);
+    float log_scale_sh2 = pow( log_pivot, 1.0f / ((sh_compr+hl_compr)/2+1) );
+    float log_scale_hl2 = pow( log_pivot, 1.0f / (hl_compr+1) );
 
     //std::cout<<"gamma = "<<gamma<<std::endl;
     //std::cout<<"log(0.2*gamma+1) / gamma_scale = "<<log(0.2*gamma+1) / gamma_scale<<std::endl;
@@ -343,14 +345,22 @@ public:
           }
         }*/
 
-        if( log_sh > 0 || log_hl > 0 ) {
+        if( sh_compr > 0 || hl_compr > 0 ) {
           for( k=0; k < 4; k++) {
-            if( log_hl > 0 && RGB[k] > log_pivot ) {
-              RGB[k] = log(RGB[k]*log_hl+1) * log_pivot / log_scale_hl;
-            } else if( log_sh > 0 && RGB[k] <= log_pivot ) {
-              if(RGB[k] < 0) RGB[k] = log(RGB[k]*minus*log_sh+1) * minus * log_pivot / log_scale_sh;
-              else RGB[k] = log(RGB[k]*log_sh+1) * log_pivot / log_scale_sh;
+            if( hl_compr > 0 && RGB[k] > log_pivot ) {
+              RGB[k] = log(RGB[k]*hl_compr+1) * log_pivot / log_scale_hl;
+            } else if( sh_compr > 0 && RGB[k] <= log_pivot ) {
+              if(RGB[k] < 0) RGB[k] = log(RGB[k]*minus*sh_compr+1) * minus * log_pivot / log_scale_sh;
+              else RGB[k] = log(RGB[k]*sh_compr+1) * log_pivot / log_scale_sh;
             }
+
+              float d_compr = hl_compr - sh_compr;
+              float nRGB = RGB[k]/log_pivot;
+              float ex = (nRGB > 1) ? nRGB - 1 : log(nRGB + 1.0e-15);
+              float ex2 = atan(ex);
+              float exponent = ex2 * d_compr / M_PI + sh_compr + d_compr/2;
+              float norm = (nRGB > 1) ? exp( (1-nRGB)*1 ) * (log_scale_sh2-log_scale_hl2)+log_scale_hl2 : log_scale_sh2;
+              RGB[k] = pow(RGB[k],1.0f/(exponent+1))*log_pivot/norm;
             //clip( exposure*RGB[k], RGB[k] );
           }
         }
@@ -365,7 +375,7 @@ public:
           float LE_compr2 = LE_compr*2.5f;
           float LE_Sslope = opar->get_LE_shoulder_slope();
           float LE_Sslope2 = opar->get_LE_shoulder_slope2();
-          float LE_Kstrength = opar->get_LE_knee_strength();
+          float LE_Kstrength = opar->get_LE_knee_strength() * ( (LE_slope-1)*1 + 1 );
           float LE_Kmax = ((1.f-LE_slope)*LE_midgray)/(LE_slope/(sqrt(2.0f)*LE_Kstrength)-LE_slope);
           float LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope + LE_midgray;
           float LE_Kexp = LE_Kmax * LE_slope / LE_Kymax;

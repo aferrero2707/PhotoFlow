@@ -98,8 +98,8 @@ public:
 
     Gtk::Frame log_frame;
     Gtk::VBox gammaControlsBox;
-    Slider log_sh_slider;
-    Slider log_hl_slider;
+    Slider sh_compr_slider;
+    Slider hl_compr_slider;
     Slider log_pivot_slider;
 
     CheckBox gamut_compression_checkbox;

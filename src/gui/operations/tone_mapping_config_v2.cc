@@ -158,7 +158,7 @@ void PF::ToneMappingCurveAreaV2::set_params(PF::ToneMappingParV2* tmpar)
   LE_slope = tmpar->get_LE_slope();
   LE_compr = tmpar->get_LE_compression();
   LE_linmax = pow(tmpar->get_LE_lin_max(),2.45);
-  LE_Kstrength = tmpar->get_LE_knee_strength();
+  LE_Kstrength = tmpar->get_LE_knee_strength() * ( (LE_slope-1)*1 + 1 );
   LE_Kmax = ((1.f-LE_slope)*LE_midgray)/(LE_slope/(sqrt(2.0f)*LE_Kstrength)-LE_slope);
   LE_Sslope = tmpar->get_LE_shoulder_slope();
   LE_Sslope2 = tmpar->get_LE_shoulder_slope2();
@@ -281,12 +281,13 @@ bool PF::ToneMappingCurveAreaV2::on_draw(const Cairo::RefPtr<Cairo::Context>& cr
   std::vector< std::pair< std::pair<float,int>, float > > vec;
   //std::cout<<"PF::CurveArea::on_expose_event(): width="<<width<<"  height="<<height<<std::endl;
   std::cout<<"PF::CurveArea::on_expose_event(): get_curve_value(1)="<<get_curve_value(1)<<std::endl;
-  float xmax = 2, ymax = 1, exponent = 1;//2.45;
+  float xmax = 2, ymax = 1, exponent = 2.45;
   for( int i = 0; i < width; i++ ) {
     float fi = i;
     fi /= (width-1);
     //float fil = labprof->perceptual2linear(fi*xmax);
-    float fil = fi*xmax; //pow(fi*xmax, exponent);
+    //float fil = fi*xmax; //
+    float fil = pow(fi*xmax, exponent);
     int index = 0;
     if( method == TONE_MAPPING_LIN_EXP ) {
       index = (fil < LE_Kmax) ? 1 : ((fil < LE_linmax) ? 2 : 3);
@@ -294,7 +295,8 @@ bool PF::ToneMappingCurveAreaV2::on_draw(const Cairo::RefPtr<Cairo::Context>& cr
 
     float yl = get_curve_value( fil );
     //float y = labprof->linear2perceptual(yl);
-    float y = yl; //pow(yl, 1.0f/exponent);
+    //float y = yl; //
+    float y = pow(yl, 1.0f/exponent);
     //std::cout<<"  fi="<<fi<<"  fil="<<fil<<"  yl="<<yl<<"  y="<<y<<std::endl;
     vec.push_back( std::make_pair( std::make_pair(fi,index), y/ymax ) );
   }
@@ -371,8 +373,8 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
           exposureSlider( this, "exposure", _("exposure"), 0, -10, 10, 0.1, 1 ),
           modeSelector( this, "method", "method: ", 0 ),
           log_frame( _("compression curve") ),
-          log_sh_slider( this, "log_sh", _("shadows"), 1, 0, 100, 0.2, 1, 1 ),
-          log_hl_slider( this, "log_hl", _("highlights"), 1, 0, 100, 0.2, 1, 1 ),
+          sh_compr_slider( this, "sh_compr", _("shadows"), 1, 0, 100, 0.2, 1, 100 ),
+          hl_compr_slider( this, "hl_compr", _("highlights"), 1, 0, 100, 0.2, 1, 100 ),
           log_pivot_slider( this, "log_pivot", _("pivot"), 1, 0.1, 1, 0.2, 1, 1 ),
           gamut_compression_checkbox( this, "gamut_compression", _("compress gamut"), true ),
           hue_protection_checkbox( this, "hue_protection", _("protect hues"), true ),
@@ -401,11 +403,11 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
           LP_knee_strength( this, "LP_knee_strength", _("knee strength"), 0, 1, 2, 0.05, 0.2, 1 ),
           LP_shoulder_smoothness( this, "LP_shoulder_smoothness", _("shoulder smoothness"), 0, 0, 100, 1, 5, 100 ),
           LE_frame( _("contrast curve") ),
-          LE_compression( this, "LE_compression", _("shoulder length"), 0, 0, 100, 1, 5, 100 ),
+          LE_compression( this, "LE_compression", _("clip point"), 0, 0, 100, 1, 5, 100 ),
           LE_slope( this, "LE_slope", _("slope"), 0, 1, 10, 0.05, 0.2, 1 ),
           LE_lin_max( this, "LE_lin_max", _("linear range"), 0, 10, 100, 1, 5, 100 ),
           LE_knee_strength( this, "LE_knee_strength", _("knee strength"), 0, 1, 2, 0.05, 0.2, 1 ),
-          LE_shoulder_slope( this, "LE_shoulder_slope", _("shoulder slope 1"), 0, 0, 100, 1, 5, 1 ),
+          LE_shoulder_slope( this, "LE_shoulder_slope", _("shoulder slope"), 0, 0, 100, 1, 5, 50 ),
           LE_shoulder_slope2( this, "LE_shoulder_slope2", _("shoulder slope 2"), 0, 0, 100, 1, 5, 100 ),
           HD_slope( this, "HD_slope", _("slope"), 0, 0.1, 2, 0.05, 0.2, 1 ),
           HD_shoulder_range( this, "HD_shoulder_range", _("highlights compression"), 0, 0, 100, 1, 5, 100 ),
@@ -447,9 +449,9 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
   LEControlsBox.pack_start( LE_slope, Gtk::PACK_SHRINK );
   LEControlsBox.pack_start( LE_lin_max, Gtk::PACK_SHRINK );
   LEControlsBox.pack_start( LE_compression, Gtk::PACK_SHRINK );
-  //LEControlsBox.pack_start( LE_shoulder_slope, Gtk::PACK_SHRINK );
+  LEControlsBox.pack_start( LE_shoulder_slope, Gtk::PACK_SHRINK );
   //LEControlsBox.pack_start( LE_shoulder_slope2, Gtk::PACK_SHRINK );
-  //LEControlsBox.pack_start( LE_knee_strength, Gtk::PACK_SHRINK );
+  LEControlsBox.pack_start( LE_knee_strength, Gtk::PACK_SHRINK );
   LE_frame.add(LEControlsBox);
 
   HDControlsBox.pack_start( HD_slope, Gtk::PACK_SHRINK );
@@ -458,8 +460,8 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
   controlsBox.pack_start( curve_area_box, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
 
-  gammaControlsBox.pack_start( log_sh_slider, Gtk::PACK_SHRINK );
-  gammaControlsBox.pack_start( log_hl_slider, Gtk::PACK_SHRINK );
+  gammaControlsBox.pack_start( sh_compr_slider, Gtk::PACK_SHRINK );
+  gammaControlsBox.pack_start( hl_compr_slider, Gtk::PACK_SHRINK );
   //gammaControlsBox.pack_start( log_pivot_slider, Gtk::PACK_SHRINK );
   log_frame.add(gammaControlsBox);
   controlsBox.pack_start( log_frame, Gtk::PACK_SHRINK, 2 );
