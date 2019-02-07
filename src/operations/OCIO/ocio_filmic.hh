@@ -47,7 +47,18 @@ namespace OCIO = OCIO_NAMESPACE;
 namespace PF 
 {
 
-  class OCIOViewPar: public OpParBase
+  enum FilmicLook_t
+  {
+    OCIO_FILMIC_VERY_LOW,
+    OCIO_FILMIC_LOW,
+    OCIO_FILMIC_MEDIUM_LOW,
+    OCIO_FILMIC_BASE,
+    OCIO_FILMIC_MEDIUM_HIGH,
+    OCIO_FILMIC_HIGH,
+    OCIO_FILMIC_VERY_HIGH
+  };
+
+  class OCIOFilmicPar: public OpParBase
   {
     OCIO::ConstConfigRcPtr config;
 
@@ -56,14 +67,15 @@ namespace PF
     std::string displayColorSpace;
     std::string lookName;
 
+    PropertyBase look_name;
     ProcessorBase* convert2sRGB;
 
     OCIO::DisplayTransformRcPtr transform;
     OCIO::ConstProcessorRcPtr processor;
 
   public:
-    OCIOViewPar();
-    ~OCIOViewPar() {
+    OCIOFilmicPar();
+    ~OCIOFilmicPar() {
     }
 
     bool has_intensity() { return false; }
@@ -79,7 +91,7 @@ namespace PF
   
 
   template < OP_TEMPLATE_DEF > 
-  class OCIOViewProc
+  class OCIOFilmicProc
   {
   public: 
     void render(VipsRegion** ireg, int n, int in_first,
@@ -89,7 +101,7 @@ namespace PF
       if( n != 1 ) return;
       if( ireg[0] == NULL ) return;
 
-      OCIOViewPar* opar = dynamic_cast<OCIOViewPar*>(par);
+      OCIOFilmicPar* opar = dynamic_cast<OCIOFilmicPar*>(par);
       if( !opar ) return;
 
       if( ireg[0]->im->Bands != 3 ) return;

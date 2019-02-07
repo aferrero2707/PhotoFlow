@@ -59,7 +59,7 @@ PF::OCIOACESPar::OCIOACESPar():
 
   set_type( "ocio_aces" );
 
-  set_default_name( _("OCIO - ACES") );
+  set_default_name( _("ACES (OCIO)") );
 }
 
 
@@ -91,8 +91,8 @@ VipsImage* PF::OCIOACESPar::build(std::vector<VipsImage*>& in, int first,
   // Step 2: Lookup the display ColorSpace
   displayName = "ACES"; //config->getDefaultDisplay();
   std::cout<<"OCIOACESPar: displayName="<<displayName<<std::endl;
-  viewName = "sRGB";
-  //viewName = view_name.get_enum_value().second.first;
+  //viewName = "sRGB";
+  viewName = view_name.get_enum_value().second.second;
   std::cout<<"OCIOACESPar: viewName="<<viewName<<std::endl;
   displayColorSpace = config->getDisplayColorSpaceName(displayName.c_str(), viewName.c_str());
   std::cout<<"OCIOACESPar: displayColorSpace="<<displayColorSpace<<std::endl;
@@ -110,6 +110,7 @@ VipsImage* PF::OCIOACESPar::build(std::vector<VipsImage*>& in, int first,
   processor = config->getProcessor(transform);
   std::cout<<"OCIOACESPar: processor="<<processor<<std::endl;
 
+  /*
   float* buf = new float[200*3];
   float delta = 12.0f/199.0f;
   float Y = -8;
@@ -125,6 +126,7 @@ VipsImage* PF::OCIOACESPar::build(std::vector<VipsImage*>& in, int first,
     std::cout<<Y<<" "<<pow(2,Y)<<" "<<pow(buf[i*3],2.2)<<std::endl;
     Y += delta;
   }
+  */
   }
   catch(OCIO::Exception & exception)
   {
@@ -145,10 +147,16 @@ VipsImage* PF::OCIOACESPar::build(std::vector<VipsImage*>& in, int first,
   out = OpParBase::build( in2, 0, imap, omap, level);
   PF_UNREF( srgbimg, "OCIOACESPar::build() srgbimg unref" );
 
-  ICCProfile* sRGBprof = PF::ICCStore::Instance().get_srgb_profile(PF_TRC_LINEAR);
-  // tag the output image as standard sRGB
-  if( true && out && sRGBprof )
-    set_icc_profile( out, sRGBprof );
+  if( viewName == "sRGB" ) {
+    // tag the output image as standard sRGB
+    ICCProfile* sRGBprof = PF::ICCStore::Instance().get_srgb_profile(PF_TRC_LINEAR);
+    if( out && sRGBprof )
+      PF::set_icc_profile( out, sRGBprof );
+  } else {
+    // otherwise, tag the image with a NULL profile so that pixels will be sent directly to display
+    // without further color management
+    PF::set_icc_profile( out, NULL );
+  }
 	return out;
 }
 

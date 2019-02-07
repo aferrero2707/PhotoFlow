@@ -76,6 +76,10 @@
 #include "operations/tone_mapping_config.hh"
 #include "operations/tone_mapping_config_v2.hh"
 #include "operations/local_contrast_config.hh"
+#ifdef HAVE_OCIO
+#include "operations/OCIO/ocio_filmic_config.hh"
+#include "operations/OCIO/ocio_aces_config.hh"
+#endif
 
 #include "operations/gmic/new_gmic_operation_config.hh"
 
@@ -1361,11 +1365,11 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
     dialog = new PF::LocalContrastConfigGUI( current_layer );
 
 #ifdef HAVE_OCIO
-  } else if( op_type == "ocio_view" ) {
-    dialog = new PF::OperationConfigGUI( current_layer, "OCIO - Filmic" );
+  } else if( op_type == "ocio_filmic" ) {
+    dialog = new PF::OCIOFilmicConfigGUI( current_layer );
 
   } else if( op_type == "ocio_aces" ) {
-    dialog = new PF::OperationConfigGUI( current_layer, "OCIO - ACES" );
+    dialog = new PF::OCIOACESConfigGUI( current_layer );
 #endif
   }
 
