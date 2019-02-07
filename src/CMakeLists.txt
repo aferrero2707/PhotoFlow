@@ -440,10 +440,16 @@ add_dependencies(pfbase ${LIB_DEPS})
 #FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc legacy/gui/operations/*.cc)
 FILE(GLOB GuiIncludes gui/*.hh gui/widgets/*.hh gui/operations/*.hh gui/operations/gmic/*.hh legacy/gui/operations/*.hh plugin/*.hh)
 FILE(GLOB GuiSources gui/*.cc gui/widgets/*.cc gui/operations/*.cc gui/operations/gmic/*.cc legacy/gui/operations/*.cc plugin/pluginwindow.cc)
+if (OpenColorIO_FOUND)
+	FILE(GLOB OcioGuiIncludes gui/operations/OCIO/*.hh)
+	FILE(GLOB OcioGuiSources gui/operations/OCIO/*.cc)
+endif (OpenColorIO_FOUND)
 
 add_library (pfgui STATIC
   ${GuiIncludes}
   ${GuiSources}
+  ${OcioGuiIncludes}
+  ${OcioGuiSources}
 )
 
 
@@ -459,6 +465,10 @@ ELSEIF(APPLE)
 ELSE(MINGW)
   list(APPEND ADDITIONAL_LIBS fftw3_threads pthread dl)
 ENDIF(MINGW)
+
+if (OpenColorIO_FOUND)
+  list(APPEND ADDITIONAL_LIBS "${OpenColorIO_LIBRARIES}")
+endif (OpenColorIO_FOUND)
 
 #list(APPEND ADDITIONAL_LIBS pugixml)
 
@@ -485,7 +495,6 @@ target_link_libraries(photoflow ${LIBS}
   ${STATIC_LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
-  ${OpenColorIO_LIBRARIES}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${EXPAT_LIBRARIES}
   ${Pugixml_LIBRARIES}

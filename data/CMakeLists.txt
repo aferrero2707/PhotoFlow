@@ -14,6 +14,7 @@ if (OpenColorIO_FOUND)
         DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/filmic-blender-download"
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/filmic-blender"
         URL "https://github.com/sobotka/filmic-blender/archive/1.1.1.tar.gz"
+        TIMEOUT 10
         CONFIGURE_COMMAND ""
         BUILD_COMMAND     ""
         INSTALL_COMMAND     ""
@@ -25,6 +26,7 @@ if (OpenColorIO_FOUND)
         DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ocio-configs-download"
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/ocio-configs"
         GIT_REPOSITORY "https://github.com/imageworks/OpenColorIO-Configs.git"
+        GIT_TAG 0bb079c08be410030669cbf5f19ff869b88af953
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
         CONFIGURE_COMMAND ""
