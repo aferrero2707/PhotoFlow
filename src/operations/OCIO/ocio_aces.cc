@@ -91,10 +91,11 @@ VipsImage* PF::OCIOACESPar::build(std::vector<VipsImage*>& in, int first,
   // Step 2: Lookup the display ColorSpace
   displayName = "ACES"; //config->getDefaultDisplay();
   std::cout<<"OCIOACESPar: displayName="<<displayName<<std::endl;
-  //viewName = "sRGB";
-  viewName = view_name.get_enum_value().second.second;
+  viewName = "sRGB";
+  //viewName = view_name.get_enum_value().second.second;
   std::cout<<"OCIOACESPar: viewName="<<viewName<<std::endl;
   displayColorSpace = config->getDisplayColorSpaceName(displayName.c_str(), viewName.c_str());
+  //displayColorSpace = "out_srgb";
   std::cout<<"OCIOACESPar: displayColorSpace="<<displayColorSpace<<std::endl;
 
   // Step 3: Create a DisplayTransform, and set the input and display ColorSpaces
@@ -106,8 +107,11 @@ VipsImage* PF::OCIOACESPar::build(std::vector<VipsImage*>& in, int first,
   transform->setDisplay( displayName.c_str() );
   transform->setView( viewName.c_str() );
 
-  //processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, displayColorSpace);
-  processor = config->getProcessor(transform);
+  displayName = "ACES";
+  viewName = view_name.get_enum_value().second.second;
+  displayColorSpace = config->getDisplayColorSpaceName(displayName.c_str(), viewName.c_str());
+  processor = config->getProcessor(OCIO::ROLE_DEFAULT, displayColorSpace.c_str());
+  //processor = config->getProcessor(transform);
   std::cout<<"OCIOACESPar: processor="<<processor<<std::endl;
 
   /*
@@ -149,10 +153,10 @@ VipsImage* PF::OCIOACESPar::build(std::vector<VipsImage*>& in, int first,
 
   if( viewName == "sRGB" ) {
     // tag the output image as standard sRGB
-    ICCProfile* sRGBprof = PF::ICCStore::Instance().get_srgb_profile(PF::PF_TRC_LINEAR);
+    ICCProfile* sRGBprof = PF::ICCStore::Instance().get_srgb_profile(PF::PF_TRC_STANDARD);
     if( out && sRGBprof )
       PF::set_icc_profile( out, sRGBprof );
-  } else if( viewName == "Rec.2020" ) {
+  } else if( viewName == "Rec.2020_" ) {
       // tag the output image as standard sRGB
       ICCProfile* prof = PF::ICCStore::Instance().get_profile(PF::PROF_TYPE_REC2020, PF::PF_TRC_LINEAR);
       if( out && prof )
