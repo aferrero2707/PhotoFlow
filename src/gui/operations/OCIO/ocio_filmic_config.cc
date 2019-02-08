@@ -27,7 +27,7 @@
 
  */
 
-#include "../../../operations/ocio/ocio_filmic.hh"
+#include "../../../operations/OCIO/ocio_filmic.hh"
 
 #include "ocio_filmic_config.hh"
 

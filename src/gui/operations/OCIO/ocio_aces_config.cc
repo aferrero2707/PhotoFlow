@@ -27,7 +27,7 @@
 
  */
 
-#include "../../../operations/ocio/ocio_aces.hh"
+#include "../../../operations/OCIO/ocio_aces.hh"
 
 #include "ocio_aces_config.hh"
 
