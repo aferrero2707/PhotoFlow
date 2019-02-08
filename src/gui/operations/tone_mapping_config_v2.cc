@@ -88,6 +88,9 @@ void PF::ToneMappingCurveAreaV2::set_params(PF::ToneMappingParV2* tmpar)
   //gamma_pivot = pow(tmpar->get_gamma_pivot(), 2.45);
   exponent = 1.f / gamma;
 
+  sh_compr = tmpar->get_sh_compr();
+  hl_compr = tmpar->get_hl_compr();
+
   A = tmpar->get_filmic_A();
   B = tmpar->get_filmic_B();
   C = tmpar->get_filmic_C();
@@ -162,7 +165,7 @@ void PF::ToneMappingCurveAreaV2::set_params(PF::ToneMappingParV2* tmpar)
   LE_Kmax = ((1.f-LE_slope)*LE_midgray)/(LE_slope/(sqrt(2.0f)*LE_Kstrength)-LE_slope);
   LE_Sslope = tmpar->get_LE_shoulder_slope();
   LE_Sslope2 = tmpar->get_LE_shoulder_slope2();
-  std::cout<<"ToneMappingCurveAreaV2::set_params: LE_Sslope="<<LE_Sslope<<"  LE_compr="<<LE_compr<<std::endl;
+  std::cout<<"ToneMappingCurveAreaV2::set_params: LE_linmax="<<LE_linmax<<"  LE_Sslope="<<LE_Sslope<<"  LE_compr="<<LE_compr<<std::endl;
   //std::cout<<"ToneMappingCurveAreaV2::set_params: AL_Tsize="<<AL_Tsize<<"  AL_Tlength="<<AL_Tlength
   //    <<"  AL_Tshift="<<AL_Tshift<<"  AL_Tmax="<<AL_Tmax<<"  AL_Tvshift="<<AL_Tvshift<<std::endl;
 
@@ -184,18 +187,35 @@ void PF::ToneMappingCurveAreaV2::set_params(PF::ToneMappingParV2* tmpar)
 float PF::ToneMappingCurveAreaV2::get_curve_value( float val )
 {
   float result = val;
+  float val0 = val;
+
+  float log_pivot = pow(0.5,2.45);
+  float d_compr = hl_compr - sh_compr;
+  float nRGB = val/log_pivot;
+  float ex = (nRGB > 1) ? nRGB - 1 : log(nRGB + 1.0e-15);
+  float ex2 = atan(ex);
+  float exponent = ex2 * d_compr / M_PI + sh_compr + d_compr/2;
+  //float norm = (nRGB > 1) ? exp( (1-nRGB)*1 ) * (log_scale_sh2-log_scale_hl2)+log_scale_hl2 : log_scale_sh2;
+  float norm2 = pow(log_pivot,1.0f/(exponent+1));
+  result = pow(val,1.0f/(exponent+1))*log_pivot/norm2;
+  //clip( exposure*RGB[k], RGB[k] );
+
+  float LE_linmax2 = SH_HL_mapping_pow( LE_linmax, sh_compr, hl_compr, log_pivot );
+
+  val = result;
+
   switch( method ) {
   case TONE_MAPPING_LIN_EXP: {
     float LE_midgray = pow(0.5,2.45);
-    float LE_Ylinmax = ( LE_linmax - LE_midgray ) * LE_slope + LE_midgray;
+    float LE_Ylinmax = ( LE_linmax2 - LE_midgray ) * LE_slope + LE_midgray;
     float LE_Srange = 1.0f - LE_Ylinmax;
     float LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope + LE_midgray;
     float LE_Kexp = LE_Kmax * LE_slope / LE_Kymax;
 
     //std::cout<<"lin+exp: RGB["<<k<<"] in:  "<<RGB[k]<<std::endl;
-    if( val > LE_linmax ) {
+    if( val > LE_linmax2 ) {
       // shoulder
-      float X = (val - LE_linmax) * LE_slope * LE_compr / LE_Srange;
+      float X = (val - LE_linmax2) * LE_slope * LE_compr / LE_Srange;
       float XD = pow(X,LE_Sslope2) * LE_Sslope /* LE_compr */ + 1;
       //result = 1.0f - LE_Srange * exp( -X / XD );
       result = (LE_Srange - LE_Srange * exp( -X / XD )) / LE_compr + LE_Ylinmax;
@@ -285,6 +305,7 @@ bool PF::ToneMappingCurveAreaV2::on_draw(const Cairo::RefPtr<Cairo::Context>& cr
   for( int i = 0; i < width; i++ ) {
     float fi = i;
     fi /= (width-1);
+    //fi *= xmax;
     //float fil = labprof->perceptual2linear(fi*xmax);
     //float fil = fi*xmax; //
     float fil = pow(fi*xmax, exponent);
@@ -373,8 +394,8 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
           exposureSlider( this, "exposure", _("exposure"), 0, -10, 10, 0.1, 1 ),
           modeSelector( this, "method", "method: ", 0 ),
           log_frame( _("compression curve") ),
-          sh_compr_slider( this, "sh_compr", _("shadows"), 1, 0, 100, 0.2, 1, 100 ),
-          hl_compr_slider( this, "hl_compr", _("highlights"), 1, 0, 100, 0.2, 1, 100 ),
+          sh_compr_slider( this, "sh_compr", _("shadows"), 1, 0, 100, 0.5, 5, 10 ),
+          hl_compr_slider( this, "hl_compr", _("highlights"), 1, 0, 100, 0.5, 5, 10 ),
           log_pivot_slider( this, "log_pivot", _("pivot"), 1, 0.1, 1, 0.2, 1, 1 ),
           gamut_compression_checkbox( this, "gamut_compression", _("compress gamut"), true ),
           hue_protection_checkbox( this, "hue_protection", _("protect hues"), true ),

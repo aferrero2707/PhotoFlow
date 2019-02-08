@@ -48,6 +48,7 @@ class ToneMappingCurveAreaV2: public Gtk::DrawingArea
 
   tone_mapping_method2_t method;
   float gamma, gamma_pivot, exponent;
+  float sh_compr, hl_compr;
   float A, B, C, D, E, F, W;
   float f2midgraylock, f2gamma, f2exponent, TS, TL, SS, SL, SA;
   float AL_Lmax, AL_b, AL_Tsize_par, AL_Tlength_par, AL_Tstrength_par,

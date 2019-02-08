@@ -60,6 +60,18 @@ enum tone_mapping_blend_t
 
 
 
+inline float SH_HL_mapping_pow( const float& in, const float& sh_compr, const float& hl_compr, const float& pivot )
+{
+  float d_compr = hl_compr - sh_compr;
+  float nRGB = in/pivot;
+  float ex = (nRGB > 1) ? nRGB - 1 : log(nRGB + 1.0e-15);
+  float ex2 = atan(ex);
+  float exponent = ex2 * d_compr / M_PI + sh_compr + d_compr/2;
+  //float norm = (nRGB > 1) ? exp( (1-nRGB)*1 ) * (log_scale_sh2-log_scale_hl2)+log_scale_hl2 : log_scale_sh2;
+  float norm2 = pow(pivot,1.0f/(exponent+1));
+  return pow(in,1.0f/(exponent+1)) * pivot / norm2;
+}
+
 
 class ToneMappingParV2: public OpParBase
 {
@@ -307,6 +319,7 @@ public:
     float log_scale_sh2 = pow( log_pivot, 1.0f / ((sh_compr+hl_compr)/2+1) );
     float log_scale_hl2 = pow( log_pivot, 1.0f / (hl_compr+1) );
 
+
     //std::cout<<"gamma = "<<gamma<<std::endl;
     //std::cout<<"log(0.2*gamma+1) / gamma_scale = "<<log(0.2*gamma+1) / gamma_scale<<std::endl;
     //std::cout<<"log(gamma+1) / gamma_scale = "<<log(gamma+1) / gamma_scale<<std::endl;
@@ -347,20 +360,24 @@ public:
 
         if( sh_compr > 0 || hl_compr > 0 ) {
           for( k=0; k < 4; k++) {
-            if( hl_compr > 0 && RGB[k] > log_pivot ) {
+            /*if( hl_compr > 0 && RGB[k] > log_pivot ) {
               RGB[k] = log(RGB[k]*hl_compr+1) * log_pivot / log_scale_hl;
             } else if( sh_compr > 0 && RGB[k] <= log_pivot ) {
               if(RGB[k] < 0) RGB[k] = log(RGB[k]*minus*sh_compr+1) * minus * log_pivot / log_scale_sh;
               else RGB[k] = log(RGB[k]*sh_compr+1) * log_pivot / log_scale_sh;
             }
-
-              float d_compr = hl_compr - sh_compr;
-              float nRGB = RGB[k]/log_pivot;
-              float ex = (nRGB > 1) ? nRGB - 1 : log(nRGB + 1.0e-15);
-              float ex2 = atan(ex);
-              float exponent = ex2 * d_compr / M_PI + sh_compr + d_compr/2;
-              float norm = (nRGB > 1) ? exp( (1-nRGB)*1 ) * (log_scale_sh2-log_scale_hl2)+log_scale_hl2 : log_scale_sh2;
-              RGB[k] = pow(RGB[k],1.0f/(exponent+1))*log_pivot/norm;
+            */
+            /*
+            float d_compr = hl_compr - sh_compr;
+            float nRGB = RGB[k]/log_pivot;
+            float ex = (nRGB > 1) ? nRGB - 1 : log(nRGB + 1.0e-15);
+            float ex2 = atan(ex);
+            float exponent = ex2 * d_compr / M_PI + sh_compr + d_compr/2;
+            //float norm = (nRGB > 1) ? exp( (1-nRGB)*1 ) * (log_scale_sh2-log_scale_hl2)+log_scale_hl2 : log_scale_sh2;
+            float norm2 = pow(log_pivot,1.0f/(exponent+1));
+            RGB[k] = pow(RGB[k],1.0f/(exponent+1))*log_pivot/norm2;
+            */
+            RGB[k] = SH_HL_mapping_pow( RGB[k], sh_compr, hl_compr, log_pivot );
             //clip( exposure*RGB[k], RGB[k] );
           }
         }
@@ -369,7 +386,8 @@ public:
         case TONE_MAPPING_LIN_EXP: {
           float LE_slope = opar->get_LE_slope();
           float LE_linmax = pow(opar->get_LE_lin_max(),2.45);
-          float LE_Ylinmax = ( LE_linmax - LE_midgray ) * LE_slope + LE_midgray;
+          float LE_linmax2 = SH_HL_mapping_pow( LE_linmax, sh_compr, hl_compr, log_pivot );
+          float LE_Ylinmax = ( LE_linmax2 - LE_midgray ) * LE_slope + LE_midgray;
           float LE_Srange = 1.0f - LE_Ylinmax;
           float LE_compr = opar->get_LE_compression();
           float LE_compr2 = LE_compr*2.5f;
@@ -384,9 +402,9 @@ public:
 
           for( k=0; k < 4; k++) {
             //std::cout<<"lin+exp: RGB["<<k<<"] in:  "<<RGB[k]<<std::endl;
-            if( RGB[k] > LE_linmax ) {
+            if( RGB[k] > LE_linmax2 ) {
               // shoulder
-              float X = (RGB[k] - LE_linmax) * LE_slope * LE_compr / LE_Srange;
+              float X = (RGB[k] - LE_linmax2) * LE_slope * LE_compr / LE_Srange;
               float XD = pow(X,LE_Sslope2) * LE_Sslope /*LE_compr*/ + 1;
               //RGB[k] = 1.0f - LE_Srange * exp( -X / XD );
               RGB[k] = (LE_Srange - LE_Srange * exp( -X / XD )) / LE_compr + LE_Ylinmax;
