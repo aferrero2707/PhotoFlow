@@ -146,9 +146,10 @@ void PF::ToneMappingCurveArea::set_params(PF::ToneMappingPar* tmpar)
   float LP_midgray = pow(0.5,2.45);
   LP_slope = tmpar->get_LP_slope();
   LP_compr = tmpar->get_LP_compression();
-  LP_linmax = tmpar->get_LP_lin_max();
   LP_Kstrength = tmpar->get_LP_knee_strength();
   LP_Kmax = ((1.f-LP_slope)*LP_midgray)/(LP_slope/(sqrt(2.0f)*LP_Kstrength)-LP_slope);
+  LP_linmax = tmpar->get_LP_lin_max();
+  if( LP_linmax < LP_Kmax ) LP_linmax = LP_Kmax + 1.0e-5;
   LP_Ssmooth = tmpar->get_LP_shoulder_smoothness();
   std::cout<<"ToneMappingCurveArea::set_params: LP_Ssmooth="<<LP_Ssmooth<<"  LP_compr="<<LP_compr<<std::endl;
   //std::cout<<"ToneMappingCurveArea::set_params: AL_Tsize="<<AL_Tsize<<"  AL_Tlength="<<AL_Tlength
