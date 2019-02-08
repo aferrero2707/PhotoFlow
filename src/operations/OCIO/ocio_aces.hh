@@ -75,7 +75,7 @@ enum ACESview_t
     std::string displayColorSpace;
 
     PropertyBase view_name;
-    ProcessorBase* convert2sRGB;
+    ProcessorBase* convert2ACES;
 
     OCIO::DisplayTransformRcPtr transform;
     OCIO::ConstProcessorRcPtr processor;

@@ -53,8 +53,8 @@ PF::OCIOACESPar::OCIOACESPar():
   view_name.add_enum_value(PF::ACES_VIEW_RAW,"ACES_VIEW_RAW","Raw");
   view_name.add_enum_value(PF::ACES_VIEW_LOG,"ACES_VIEW_LOG","Log");
 
-  convert2sRGB = new_icc_transform();
-  PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2sRGB->get_par() );
+  convert2ACES = new_icc_transform();
+  PF::ICCTransformPar* icc_par = dynamic_cast<PF::ICCTransformPar*>( convert2ACES->get_par() );
   icc_par->set_out_profile( PF::ICCStore::Instance().get_profile(PF::PROF_TYPE_ACES,PF::PF_TRC_LINEAR) );
 
   set_type( "ocio_aces" );
@@ -137,10 +137,10 @@ VipsImage* PF::OCIOACESPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = NULL;
 
   std::vector<VipsImage*> in2;
-  convert2sRGB->get_par()->set_image_hints( srcimg );
-  convert2sRGB->get_par()->set_format( get_format() );
+  convert2ACES->get_par()->set_image_hints( srcimg );
+  convert2ACES->get_par()->set_format( get_format() );
   in2.clear(); in2.push_back( srcimg );
-  VipsImage* srgbimg = convert2sRGB->get_par()->build(in2, 0, NULL, NULL, level );
+  VipsImage* srgbimg = convert2ACES->get_par()->build(in2, 0, NULL, NULL, level );
 
 
   in2.clear(); in2.push_back( srgbimg );
@@ -149,9 +149,14 @@ VipsImage* PF::OCIOACESPar::build(std::vector<VipsImage*>& in, int first,
 
   if( viewName == "sRGB" ) {
     // tag the output image as standard sRGB
-    ICCProfile* sRGBprof = PF::ICCStore::Instance().get_srgb_profile(PF_TRC_LINEAR);
+    ICCProfile* sRGBprof = PF::ICCStore::Instance().get_srgb_profile(PF::PF_TRC_LINEAR);
     if( out && sRGBprof )
       PF::set_icc_profile( out, sRGBprof );
+  } else if( viewName == "Rec.2020" ) {
+      // tag the output image as standard sRGB
+      ICCProfile* prof = PF::ICCStore::Instance().get_profile(PF::PROF_TYPE_REC2020, PF::PF_TRC_LINEAR);
+      if( out && prof )
+        PF::set_icc_profile( out, prof );
   } else {
     // otherwise, tag the image with a NULL profile so that pixels will be sent directly to display
     // without further color management
