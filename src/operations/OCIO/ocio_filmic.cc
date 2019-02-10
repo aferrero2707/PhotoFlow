@@ -132,7 +132,7 @@ VipsImage* PF::OCIOFilmicPar::build(std::vector<VipsImage*>& in, int first,
 
 
 #ifdef __WIN32__
-  std::string configfile = PF::PhotoFlow::Instance().get_data_dir() + "\\ocio-configs\\nuke-default\\config.ocio";
+  std::string configfile = PF::PhotoFlow::Instance().get_data_dir() + "\\ocio-configs\\filmic-blender\\config.ocio";
 #else
   std::string configfile = PF::PhotoFlow::Instance().get_data_dir() + "/ocio-configs/filmic-blender/config.ocio";
 #endif
