@@ -454,12 +454,12 @@ add_library (pfgui STATIC
 
 
 IF(MINGW)
-  IF(HAVE_REGEX_H)
-    list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
-  ELSE(HAVE_REGEX_H)
-    list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
-  ENDIF(MHAVE_REGEX_HINGW)
-  #list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
+  #IF(HAVE_REGEX_H)
+  #  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
+  #ELSE(HAVE_REGEX_H)
+  #  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi tre_regex psapi)
+  #ENDIF(MHAVE_REGEX_HINGW)
+  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
 ELSEIF(APPLE)
   list(APPEND ADDITIONAL_LIBS)
 ELSE(MINGW)
