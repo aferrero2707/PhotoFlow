@@ -33,5 +33,7 @@ if (OpenColorIO_FOUND)
         BUILD_COMMAND     ""
         INSTALL_COMMAND     ""
     )
-    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ocio-configs/aces_1.0.3" DESTINATION ./share/photoflow/ocio-configs)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ocio-configs/aces_1.0.3/config.ocio" DESTINATION ./share/photoflow/ocio-configs/aces_1.0.3)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ocio-configs/aces_1.0.3/README.md" DESTINATION ./share/photoflow/ocio-configs/aces_1.0.3)
+    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ocio-configs/aces_1.0.3/luts" DESTINATION ./share/photoflow/ocio-configs/aces_1.0.3)
 endif (OpenColorIO_FOUND)
