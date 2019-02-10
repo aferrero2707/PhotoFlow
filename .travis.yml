@@ -33,7 +33,8 @@ matrix:
             #- cd non_existent_dir
             - pwd
             - rm -rf windows && git clone https://github.com/aferrero2707/pf-build-win.git windows
-            - sudo docker run -it -e "TRAVIS_BUILD_DIR=/sources" -e "TRAVIS_BRANCH=${TRAVIS_BRANCH}" -e "TRAVIS_COMMIT=${TRAVIS_COMMIT}" -v $(pwd):/sources photoflow/docker-buildenv-mingw bash -c /sources/windows/package-w64.sh
+            #- sudo docker run -it -e "TRAVIS_BUILD_DIR=/sources" -e "TRAVIS_BRANCH=${TRAVIS_BRANCH}" -e "TRAVIS_COMMIT=${TRAVIS_COMMIT}" -v $(pwd):/sources photoflow/docker-buildenv-mingw bash -c /sources/windows/package-w64.sh
+            - sudo docker run -it -e "TRAVIS_BUILD_DIR=/sources" -e "TRAVIS_BRANCH=${TRAVIS_BRANCH}" -e "TRAVIS_COMMIT=${TRAVIS_COMMIT}" -v $(pwd):/sources photoflow/docker-buildenv-mingw-manjaro bash -c /sources/windows/package-msys2.sh
             - # check if zip file was successfully created
             - # abort job with failure if not
             - ls photoflow-w64*.zip
