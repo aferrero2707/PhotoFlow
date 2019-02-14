@@ -138,6 +138,7 @@ class Image: public sigc::trackable
 
   GMutex* remove_layer_mutex;
   GCond* remove_layer_done;
+  PF::Condition remove_layer_cond;
 
   //ProcessorBase* convert2srgb;
   ProcessorBase* convert_format;
@@ -230,6 +231,9 @@ public:
   void sample_done_signal() { /*g_cond_signal( sample_done );*/ sample_cond.signal(); }
   void destroy_done_signal() { /*g_cond_signal( sample_done );*/ destroy_cond.signal(); }
   void remove_layer_done_signal() { g_cond_signal( remove_layer_done ); }
+  void remove_layer_reset() { /*g_cond_signal( rebuild_done );*/ remove_layer_cond.lock(); remove_layer_cond.reset(); }
+  void remove_layer_signal() { /*g_cond_signal( rebuild_done );*/ remove_layer_cond.signal(); }
+  void remove_layer_wait(bool unlock=true) { /*g_cond_signal( rebuild_done );*/ remove_layer_cond.wait(unlock); }
 
   void set_pipeline_level( PF::Pipeline* pipeline, int level );
 

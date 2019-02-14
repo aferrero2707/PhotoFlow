@@ -183,6 +183,7 @@ void PF::Layer::remove_input(int32_t lid)
 {
   bool done = true;
   do {
+    done = true;
     for( unsigned int i = 0; i < extra_inputs.size(); i++) {
       if( extra_inputs[i].first.first == lid ) {
         extra_inputs.erase( extra_inputs.begin()+i );

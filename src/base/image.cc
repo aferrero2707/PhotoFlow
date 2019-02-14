@@ -766,6 +766,10 @@ void PF::Image::do_destroy()
 
 void PF::Image::remove_layer( PF::Layer* layer )
 {
+  bool sync = false;
+  if( force_synced_update )
+    sync = true;
+
   if( PF::PhotoFlow::Instance().is_batch() ) {
     do_remove_layer( layer );
   } else {
@@ -773,10 +777,25 @@ void PF::Image::remove_layer( PF::Layer* layer )
     request.image = this;
     request.layer = layer;
     request.request = PF::IMAGE_REMOVE_LAYER;
-    //g_mutex_lock( remove_layer_mutex );
+
+    if( sync ) remove_layer_reset(); //rebuild_cond.lock(); //g_mutex_lock( rebuild_mutex );
+#ifndef NDEBUG
+    std::cout<<"PF::Image::remove_layer(): submitting rebuild request..."<<std::endl;
+#endif
     PF::ImageProcessor::Instance().submit_request( request );
-    //g_cond_wait( remove_layer_done, remove_layer_mutex );
-    //g_mutex_unlock( remove_layer_mutex );
+#ifndef NDEBUG
+    std::cout<<"PF::Image::remove_layer(): request submitted."<<std::endl;
+#endif
+
+    if( sync ) {
+#ifndef NDEBUG
+      std::cout<<"PF::Image::remove_layer(): waiting for rebuild_done...."<<std::endl;
+#endif
+      remove_layer_wait( true );
+#ifndef NDEBUG
+      std::cout<<"PF::Image::remove_layer(): ... rebuild_done received."<<std::endl;
+#endif
+    }
   }
 }
 
@@ -800,6 +819,7 @@ void PF::Image::do_remove_layer( PF::Layer* layer )
 
   // The rebuild condition will be cleared and signaled when updating the image
   //rebuild_done_signal();
+  remove_layer_signal();
 }
 
 

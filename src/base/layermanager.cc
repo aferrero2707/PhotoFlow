@@ -33,6 +33,8 @@
 #include "image.hh"
 
 
+//#undef NDEBUG
+
 PF::LayerManager::LayerManager( PF::Image* img ): image( img )
 {
 }
@@ -97,21 +99,33 @@ void PF::LayerManager::expand_layer( PF::Layer* layer, std::list<PF::Layer*>& li
 {
   if( !layer ) return;
   // Sublayers
+#ifndef NDEBUG
+  std::cout<<"LayerManager::expand_layer: collecting sub-layers of \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
+#endif
   for( std::list<PF::Layer*>::iterator li = layer->get_sublayers().begin();
       li != layer->get_sublayers().end(); li++ ) {
     expand_layer( *li, list);
   }
   // Intensity map layers
+#ifndef NDEBUG
+  std::cout<<"LayerManager::expand_layer: collecting IMAP layers of \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
+#endif
   for( std::list<PF::Layer*>::iterator li = layer->get_imap_layers().begin();
       li != layer->get_imap_layers().end(); li++ ) {
     expand_layer( *li, list);
   }
   // Opacity map layers
+#ifndef NDEBUG
+  std::cout<<"LayerManager::expand_layer: collecting OMAP layers of \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
+#endif
   for( std::list<PF::Layer*>::iterator li = layer->get_omap_layers().begin();
       li != layer->get_omap_layers().end(); li++ ) {
     expand_layer( *li, list);
   }
   // the layer itself
+#ifndef NDEBUG
+  std::cout<<"LayerManager::expand_layer: adding layer \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
+#endif
   list.push_back( layer );
 }
 
@@ -128,7 +142,12 @@ void PF::LayerManager::get_input_layers( Layer* layer, std::list<PF::Layer*>& co
 #ifndef NDEBUG
     std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
 #endif
-    if( l->get_id() == layer->get_id() ) break;
+    if( l->get_id() == layer->get_id() ) {
+#ifndef NDEBUG
+    std::cout<<"    reached initial layer, stopping."<<std::endl;
+#endif
+      break;
+    }
     // Add layer and all its children to the inputs list
     expand_layer( l, inputs );  
 #ifndef NDEBUG
@@ -194,12 +213,19 @@ void PF::LayerManager::get_child_layers( Layer* layer, std::list<PF::Layer*>& co
   children.insert( children.end(), tmplist.begin(), tmplist.end() );
 
   PF::Layer* container_layer = get_container_layer( layer );
+#ifndef NDEBUG
+  std::cout<<"get_child_layers: contaner_layer: \""
+      <<(container_layer ? container_layer->get_name() : "NULL")<<"\""<<std::endl;
+#endif
   if( !container_layer ) return;
 
   // Add the container layer to the list of children
   children.push_back( container_layer );
 
   std::list<PF::Layer*>* clist = get_list( container_layer );
+#ifndef NDEBUG
+  std::cout<<"get_child_layers: clist="<<clist<<std::endl;
+#endif
   if( !clist ) return;
 
   // Add all the children of the container layer to the children list
