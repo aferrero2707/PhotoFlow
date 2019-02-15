@@ -59,8 +59,30 @@ enum tone_mapping_blend_t
 };
 
 
+struct LE_params_t
+{
+  float LE_gain;
+  float LE_Ymidgray;
+  float LE_slope;
+  float LE_slope2;
+  float LE_linmax;
+  float LE_linmax2;
+  float LE_Ylinmax;
+  float LE_Srange;
+  float LE_compr;
+  float LE_Sslope;
+  float LE_Kstrength;
+  float LE_Kmax;
+  float LE_Kymax;
+  float LE_Kexp;
+};
 
-inline float SH_HL_mapping_pow( const float& in, const float& sh_compr, const float& hl_compr, const float& pivot )
+
+//void init_LE_params(LE_params_t& par, )
+
+
+
+inline float SH_HL_mapping_pow( const float& in, const float& sh_compr, const float& hl_compr, const float& pivot, bool verbose=false )
 {
   float d_compr = hl_compr - sh_compr;
   float nRGB = in/pivot;
@@ -71,6 +93,26 @@ inline float SH_HL_mapping_pow( const float& in, const float& sh_compr, const fl
   float norm2 = pow(pivot,1.0f/(exponent+1));
   return pow(in,1.0f/(exponent+1)) * pivot / norm2;
 }
+
+
+inline float SH_HL_mapping_log( const float& in, const float& sh_compr, const float& hl_compr, const float& pivot, bool verbose=false )
+{
+  //if(sh_compr < 1) return in;
+  //if(in>1.5) return in;
+  float d_compr = hl_compr - sh_compr;
+  float nRGB = in/pivot;
+  float ex = d_compr * atan((nRGB-1)*4) / M_PI + (hl_compr + sh_compr)/2;
+  float base = ex + 1.0e-10;// * ex;
+  //float base = 1.0f - ex/(ex+1) + 1.0e-15;
+  //float norm = (nRGB > 1) ? exp( (1-nRGB)*1 ) * (log_scale_sh2-log_scale_hl2)+log_scale_hl2 : log_scale_sh2;
+  float norm = log(pivot*base+1);
+  float result = log(in*base+1)*pivot/norm;
+  if(verbose)
+    std::cout<<"in="<<in<<" pivot="<<pivot<<" nRGB="<<nRGB<<" (nRGB-1)*2="<<(nRGB-1)*2<<" ex="<<ex<<" base="<<base<<" norm="<<norm<<" result="<<result<<std::endl;
+  return result;
+}
+
+float SH_HL_mapping( const float& in, const float& sh_compr, const float& hl_compr, const float& pivot, bool verbose=false );
 
 
 class ToneMappingParV2: public OpParBase
@@ -102,12 +144,15 @@ class ToneMappingParV2: public OpParBase
 
   Property<float> LP_compression, LP_slope, LP_lin_max, LP_knee_strength, LP_shoulder_smoothness;
 
-  Property<float> LE_compression, LE_slope, LE_lin_max, LE_knee_strength, LE_shoulder_slope, LE_shoulder_slope2;
+  Property<float> LE_gain, LE_compression, LE_slope, LE_lin_max, LE_knee_strength, LE_shoulder_slope, LE_shoulder_slope2;
 
   Property<float> HD_slope, HD_toe_range, HD_shoulder_range;
 
   Property<float> gamut_compression_amount, gamut_compression_exponent;
   Property<float> lumi_blend_frac;
+
+  Property<float> local_contrast_amount, local_contrast_radius, local_contrast_threshold;
+  ProcessorBase* guided_blur;
 
   ICCProfile* icc_data;
 
@@ -157,6 +202,7 @@ public:
   float get_LP_knee_strength() { return LP_knee_strength.get(); }
   float get_LP_shoulder_smoothness() { return LP_shoulder_smoothness.get(); }
 
+  float get_LE_gain() { return LE_gain.get(); }
   float get_LE_compression() { return LE_compression.get()+1.0e-5; }
   float get_LE_slope() { return LE_slope.get()+1.0e-10; }
   float get_LE_lin_max() { return LE_lin_max.get(); }
@@ -172,11 +218,16 @@ public:
   float get_gamut_compression_exponent() { return gamut_compression_exponent.get(); }
   float get_lumi_blend_frac() { return lumi_blend_frac.get(); }
 
+  float get_local_contrast_amount() { return local_contrast_amount.get(); }
+
   ICCProfile* get_icc_data() { return icc_data; }
 
   bool has_intensity() { return false; }
   bool has_opacity() { return true; }
   bool needs_input() { return true; }
+
+  void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
+  void propagate_settings();
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,
                    VipsImage* imap, VipsImage* omap, unsigned int& level);
@@ -225,9 +276,12 @@ public:
     ICCProfile* prof = opar->get_icc_data();
 
     float* pin;
+    float* psmooth;
     float* pout;
     float RGB[4];
     float RGBin[4];
+    float dRGB[4];
+    float rRGB[4];
     float Lab[3];
     int x, y, k;
 
@@ -319,19 +373,33 @@ public:
     float log_scale_sh2 = pow( log_pivot, 1.0f / ((sh_compr+hl_compr)/2+1) );
     float log_scale_hl2 = pow( log_pivot, 1.0f / (hl_compr+1) );
 
+    float lc = opar->get_local_contrast_amount();
 
     //std::cout<<"gamma = "<<gamma<<std::endl;
     //std::cout<<"log(0.2*gamma+1) / gamma_scale = "<<log(0.2*gamma+1) / gamma_scale<<std::endl;
     //std::cout<<"log(gamma+1) / gamma_scale = "<<log(gamma+1) / gamma_scale<<std::endl;
 
     for( y = 0; y < height; y++ ) {
-      pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+      psmooth = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+      pin = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
       pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
       for( x = 0; x < line_size; x+=3 ) {
-        RGBin[0] = pin[x];
-        RGBin[1] = pin[x+1];
-        RGBin[2] = pin[x+2];
+
+        //pout[x] = psmooth[x];
+        //pout[x+1] = psmooth[x+1];
+        //pout[x+2] = psmooth[x+2];
+        //continue;
+
+        RGBin[0] = psmooth[x]*lc   + pin[x]*(1.0f-lc);
+        dRGB[0] = (RGBin[0] > -1.0e-16 && RGBin[0] < 1.0e-16) ? 0 : pin[x] / RGBin[0];
+
+
+        RGBin[1] = psmooth[x+1]*lc + pin[x+1]*(1.0f-lc);
+        dRGB[1] = (RGBin[1] > -1.0e-16 && RGBin[1] < 1.0e-16) ? 0 : pin[x+1] / RGBin[1];
+
+        RGBin[2] = psmooth[x+2]*lc + pin[x+2]*(1.0f-lc);
+        dRGB[2] = (RGBin[2] > -1.0e-16 && RGBin[2] < 1.0e-16) ? 0 : pin[x+2] / RGBin[2];
         /*
         if( exposure != 0 ) {
           for( k=0; k < 3; k++) {
@@ -345,6 +413,7 @@ public:
         std::cout<<"pin: "<<pin[x]<<" "<<pin[x+1]<<" "<<pin[x+2]<<" "<<std::endl;
         std::cout<<"Lab: "<<Lab[0]<<" "<<Lab[1]<<" "<<Lab[2]<<" "<<std::endl;
         std::cout<<"RGB: "<<RGBin[0]<<" "<<RGBin[1]<<" "<<RGBin[2]<<" "<<std::endl;
+        std::cout<<"dRGB: "<<dRGB[0]<<" "<<dRGB[1]<<" "<<dRGB[2]<<" "<<std::endl;
         std::cout<<std::endl;
         */
         for( k=0; k < 4; k++)
@@ -377,17 +446,26 @@ public:
             float norm2 = pow(log_pivot,1.0f/(exponent+1));
             RGB[k] = pow(RGB[k],1.0f/(exponent+1))*log_pivot/norm2;
             */
-            RGB[k] = SH_HL_mapping_pow( RGB[k], sh_compr, hl_compr, log_pivot );
+            //RGB[k] = SH_HL_mapping_pow( RGB[k], sh_compr, hl_compr, log_pivot );
+            float val = SH_HL_mapping( RGB[k], sh_compr, hl_compr, log_pivot );
+            rRGB[k] = (RGB[k] > -1.0e-15 && RGB[k] < 1.0e-15) ? 1 : val / RGB[k];
+            RGB[k] = val;
             //clip( exposure*RGB[k], RGB[k] );
           }
+        } else {
+          rRGB[0] = rRGB[1] = rRGB[2] = rRGB[3] = 1;
         }
 
         switch( method ) {
         case TONE_MAPPING_LIN_EXP: {
+          float LE_gain = opar->get_LE_gain();
+          float LE_Ymidgray = LE_midgray * LE_gain;
           float LE_slope = opar->get_LE_slope();
+          float LE_slope2 = LE_slope * LE_gain;
           float LE_linmax = pow(opar->get_LE_lin_max(),2.45);
-          float LE_linmax2 = SH_HL_mapping_pow( LE_linmax, sh_compr, hl_compr, log_pivot );
-          float LE_Ylinmax = ( LE_linmax2 - LE_midgray ) * LE_slope + LE_midgray;
+          float LE_linmax2 = SH_HL_mapping( LE_linmax, sh_compr, hl_compr, log_pivot );
+          //float LE_linmax2 = LE_linmax; //SH_HL_mapping_log( LE_linmax, sh_compr, hl_compr, log_pivot, 0.1 );
+          float LE_Ylinmax = ( LE_linmax2 - LE_midgray ) * LE_slope2 + LE_Ymidgray;
           float LE_Srange = 1.0f - LE_Ylinmax;
           float LE_compr = opar->get_LE_compression();
           float LE_compr2 = LE_compr*2.5f;
@@ -404,18 +482,21 @@ public:
             //std::cout<<"lin+exp: RGB["<<k<<"] in:  "<<RGB[k]<<std::endl;
             if( RGB[k] > LE_linmax2 ) {
               // shoulder
-              float X = (RGB[k] - LE_linmax2) * LE_slope * LE_compr / LE_Srange;
-              float XD = pow(X,LE_Sslope2) * LE_Sslope /*LE_compr*/ + 1;
-              //RGB[k] = 1.0f - LE_Srange * exp( -X / XD );
-              RGB[k] = (LE_Srange - LE_Srange * exp( -X / XD )) / LE_compr + LE_Ylinmax;
+              float X = (RGB[k] - LE_linmax2) * LE_slope2 * LE_compr / LE_Srange;
+              //float XD = pow(X,LE_Sslope2) * LE_Sslope /*LE_compr*/ + 1;
+              ////RGB[k] = 1.0f - LE_Srange * exp( -X / XD );
+              //RGB[k] = (LE_Srange - LE_Srange * exp( -X / XD )) / LE_compr + LE_Ylinmax;
+
+              RGB[k] = (LE_Srange - LE_Srange * exp( -log(X*(LE_Sslope+1.0e-10)+1)/(LE_Sslope+1.0e-10) )) / LE_compr + LE_Ylinmax;
             } else if( RGB[k] < LE_Kmax ) {
               // knee
               float X = RGB[k] / LE_Kmax;
               RGB[k] = (X>=0) ? LE_Kymax * pow(X,LE_Kexp) : -LE_Kymax * pow(-X,LE_Kexp);
             } else {
               // linear part
-              RGB[k] = (RGB[k] - LE_midgray) * LE_slope + LE_midgray;
+              RGB[k] = (RGB[k] - LE_midgray) * LE_slope2 + LE_Ymidgray;
             }
+            //RGB[k] *= rRGB[k];
             //std::cout<<"lin+log: RGB["<<k<<"] out: "<<RGB[k]<<std::endl;
           }
           //std::cout<<"LIN_POW: "<<LE_midgray<<" -> "<<RGB[3]<<std::endl;
@@ -425,9 +506,6 @@ public:
           break;
         }
 
-        pout[x] = RGB[0];
-        pout[x+1] = RGB[1];
-        pout[x+2] = RGB[2];
         if( prof && opar->get_hue_protection() ) {
           float Jab_in[3], JCH_in[3];
           float Jab[3], JCH[3];
@@ -446,10 +524,13 @@ public:
           PF::LCH2Lab(JCH, Jab, 1);
           prof->from_Jzazbz( Jab[0], Jab[1], Jab[2], RGB[0], RGB[1], RGB[2] );
 
-          pout[x] = RGB[0];
-          pout[x+1] = RGB[1];
-          pout[x+2] = RGB[2];
+          //pout[x] = RGB[0];
+          //pout[x+1] = RGB[1];
+          //pout[x+2] = RGB[2];
         }
+        pout[x] = RGB[0] * dRGB[0];
+        pout[x+1] = RGB[1] * dRGB[1];
+        pout[x+2] = RGB[2] * dRGB[2];
       }
     }
   }

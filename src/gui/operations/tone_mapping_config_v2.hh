@@ -55,7 +55,7 @@ class ToneMappingCurveAreaV2: public Gtk::DrawingArea
   AL_Tsize, AL_Tlength, AL_Texp,
   AL_Trange, AL_Tshift, AL_Tmax, AL_Tvshift;
   float LP_slope, LP_linmax, LP_compr, LP_Kstrength, LP_Kmax, LP_Ssmooth;
-  float LE_slope, LE_linmax, LE_compr, LE_Kstrength, LE_Kmax, LE_Sslope, LE_Sslope2;
+  float LE_gain, LE_slope, LE_linmax, LE_compr, LE_Kstrength, LE_Kmax, LE_Sslope, LE_Sslope2;
   float HD_lin_slope, HD_lin_pivot, HD_SR, HD_TR, HD_lin_Dmin, HD_lin_Dmax;
 
   FilmicToneCurve::FullCurve filmic2_curve;
@@ -138,6 +138,7 @@ public:
 
     Gtk::Frame LE_frame;
     Gtk::VBox LEControlsBox;
+    Slider LE_gain;
     Slider LE_compression;
     Slider LE_slope;
     Slider LE_lin_max;
@@ -149,9 +150,18 @@ public:
     Slider HD_slope;
     Slider HD_shoulder_range;
 
+    Gtk::Frame shadows_frame, midtones_frame, highlights_frame, curve_frame;
+    Gtk::VBox shadows_box, midtones_box, highlights_box, curve_box;
+
     Slider gamut_compression_slider;
     Slider gamut_compression_exponent_slider;
     Slider lumi_blend_frac_slider;
+
+    Gtk::Frame local_contrast_frame;
+    Gtk::VBox local_contrast_box;
+    Slider local_contrast_slider;
+    Slider local_contrast_radius_slider;
+    Slider local_contrast_threshold_slider;
 
   public:
     ToneMappingConfigGUI_V2( Layer* l );
