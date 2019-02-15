@@ -97,7 +97,7 @@ inline float SH_HL_mapping_pow( const float& in, const float& sh_compr, const fl
 
 inline float SH_HL_mapping_log( const float& in, const float& sh_compr, const float& hl_compr, const float& pivot, bool verbose=false )
 {
-  //if(sh_compr < 1) return in;
+  if( sh_compr == 0 && hl_compr == 0 ) return in;
   //if(in>1.5) return in;
   float d_compr = hl_compr - sh_compr;
   float nRGB = in/pivot;
@@ -108,7 +108,7 @@ inline float SH_HL_mapping_log( const float& in, const float& sh_compr, const fl
   float norm = log(pivot*base+1);
   float result = log(in*base+1)*pivot/norm;
   if(verbose)
-    std::cout<<"in="<<in<<" pivot="<<pivot<<" nRGB="<<nRGB<<" (nRGB-1)*2="<<(nRGB-1)*2<<" ex="<<ex<<" base="<<base<<" norm="<<norm<<" result="<<result<<std::endl;
+    std::cout<<"in="<<in<<" pivot="<<pivot<<" nRGB="<<nRGB<<" (nRGB-1)*4="<<(nRGB-1)*4<<" ex="<<ex<<" base="<<base<<" norm="<<norm<<" result="<<result<<std::endl;
   return result;
 }
 
