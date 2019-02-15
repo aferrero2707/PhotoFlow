@@ -202,7 +202,11 @@ float PF::ToneMappingCurveAreaV2::get_curve_value( float val )
   result = pow(val,1.0f/(exponent+1))*log_pivot/norm2;
   */
   //result = SH_HL_mapping_pow( val, sh_compr, hl_compr, log_pivot );
-  result = SH_HL_mapping( val, sh_compr, hl_compr, log_pivot );
+  if( sh_compr > 0 || hl_compr > 0 ) {
+    result = SH_HL_mapping( val, sh_compr, hl_compr, log_pivot );
+  } else {
+    result = val;
+  }
   float delta = (val > -1.0e-15 && val < 1.0e-15) ? 1 : result / val;
   //clip( exposure*RGB[k], RGB[k] );
 
