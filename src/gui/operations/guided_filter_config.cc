@@ -33,7 +33,7 @@
 PF::GuidedFilterConfigGUI::GuidedFilterConfigGUI( PF::Layer* layer ):
 OperationConfigGUI( layer, "Guided filter" ),
 radius_slider( this, "radius", _("radius"), 4.0, 1, 100.0, 5, 1, 1),
-threshold_slider( this, "threshold", _("threshold"), 20, 0.5, 100.0, 5, 1, 1000)
+threshold_slider( this, "threshold", _("threshold"), 20, 0.5, 100.0, 0.5, 1, 1000)
 {
   controlsBox.pack_start( radius_slider, Gtk::PACK_SHRINK );
   controlsBox.pack_start( threshold_slider, Gtk::PACK_SHRINK );
