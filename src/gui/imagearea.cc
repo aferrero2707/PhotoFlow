@@ -1221,6 +1221,10 @@ void PF::ImageArea::update( VipsRect* area )
     }
     case PF_DISPLAY_PROF_CUSTOM:
       current_display_profile = PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() );
+      if( !current_display_profile ) {
+        std::cout<<"ImageArea::update(): custom display profile not found, reverting to sRGB"<<std::endl;
+        current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_STANDARD );
+      }
       icc_display_profile = current_display_profile->get_profile();
       //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
       //    <<" -> "<<current_display_profile<<std::endl;
@@ -1289,7 +1293,9 @@ void PF::ImageArea::update( VipsRect* area )
   convert2display->get_par()->set_image_hints( wclipimg );
   convert2display->get_par()->set_format( get_pipeline()->get_format() );
   in.clear(); in.push_back( wclipimg );
+  std::cout<<"ImageArea::update(): before convert2display"<<std::endl;
   VipsImage* srgbimg = convert2display->get_par()->build(in, 0, NULL, NULL, level );
+  std::cout<<"ImageArea::update(): after convert2display"<<std::endl;
   PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref" );
   // "image" is managed by photoflow, therefore it is not necessary to unref it
   // after the call to convert2display: the additional reference is owned by

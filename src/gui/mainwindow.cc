@@ -333,6 +333,15 @@ void PF::MainWindow::on_map()
   }
   */
 #endif
+  PF::Options& options = PF::PhotoFlow::Instance().get_options();
+  if( options.get_display_profile_type() == PF::PF_DISPLAY_PROF_CUSTOM &&
+      !PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() ) ) {
+    Gtk::MessageDialog dialog(_("Custom display profile not found.\nPlease check the application settings.\nReverting to sRGB"),
+        false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK, true);
+    dialog.set_transient_for(*this);
+    //Show the dialog and wait for a user response:
+    int result = dialog.run();
+  }
 }
 
 
@@ -1160,6 +1169,15 @@ void PF::MainWindow::on_button_settings_clicked()
       &MainWindow::update_all_images) );
 
   dialog.run();
+  PF::Options& options = PF::PhotoFlow::Instance().get_options();
+  if( options.get_display_profile_type() == PF::PF_DISPLAY_PROF_CUSTOM &&
+      !PF::ICCStore::Instance().get_profile( options.get_custom_display_profile_name() ) ) {
+    Gtk::MessageDialog dialog(_("Custom display profile not found.\nPlease check the application settings.\nReverting to sRGB"),
+        false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK, true);
+    dialog.set_transient_for(*this);
+    //Show the dialog and wait for a user response:
+    int result = dialog.run();
+  }
 }
 
 
