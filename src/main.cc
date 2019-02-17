@@ -268,6 +268,8 @@ int main (int argc, char *argv[])
   Gtk::Main* app = new Gtk::Main(argc, argv);
 #endif
 
+  g_setenv("LC_NUMERIC", "C", TRUE);
+
   struct stat buffer;   
   //#ifndef WIN32
 #ifdef GTKMM_2
