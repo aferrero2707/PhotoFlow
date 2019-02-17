@@ -521,7 +521,7 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
   //LEControlsBox.pack_start( LE_shoulder_slope, Gtk::PACK_SHRINK );
   //LEControlsBox.pack_start( LE_shoulder_slope2, Gtk::PACK_SHRINK );
   //LEControlsBox.pack_start( LE_knee_strength, Gtk::PACK_SHRINK );
-  LE_frame.add(LEControlsBox);
+  //LE_frame.add(LEControlsBox);
 
   HDControlsBox.pack_start( HD_slope, Gtk::PACK_SHRINK );
   HDControlsBox.pack_start( HD_shoulder_range, Gtk::PACK_SHRINK );
@@ -583,6 +583,9 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
 
 void PF::ToneMappingConfigGUI_V2::do_update()
 {
+  OperationConfigGUI::do_update();
+  return;
+
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
