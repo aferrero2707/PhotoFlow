@@ -129,13 +129,108 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
 
 
 
+
+class SamplersDialog: public Gtk::Dialog
+{
+  PF::ImageEditor* editor;
+  Gtk::Widget* samplers;
+  bool visible;
+  int x, y;
+public:
+  SamplersDialog( PF::ImageEditor* editor );
+  void set_samplers(Gtk::Widget* samplers);
+  bool is_visible() { return visible; }
+  void on_hide();
+  bool on_delete_event( GdkEventAny* any_event );
+  void open();
+  void close();
+};
+
+
+
+SamplersDialog::SamplersDialog( PF::ImageEditor* e ):
+    Gtk::Dialog(), editor(e), samplers(NULL), x(-1), y(-1)
+{
+  set_deletable ( false );
+  //set_resizable( false );
+  set_gravity( Gdk::GRAVITY_STATIC );
+}
+
+
+void SamplersDialog::set_samplers(Gtk::Widget* s)
+{
+  samplers = s;
+  if( s ) {
+#ifdef GTKMM_3
+    get_content_area()->pack_start( *s, Gtk::PACK_SHRINK );
+#else
+    get_vbox()->pack_start( *s, Gtk::PACK_SHRINK );
+#endif
+  }
+}
+
+
+void SamplersDialog::on_hide()
+{
+  std::cout<<"SamplersDialog::on_hide() called."<<std::endl;
+  get_position(x,y);
+  //visible = false;
+  Gtk::Dialog::on_hide();
+}
+
+
+bool SamplersDialog::on_delete_event( GdkEventAny* any_event )
+{
+  std::cout<<"SamplersDialog::on_delete_event() called."<<std::endl;
+  //if(editor) editor->get_layer_widget().controls_dialog_close(gui);
+  close();
+  return true;
+}
+
+
+void SamplersDialog::open()
+{
+  //std::cout<<"SamplersDialog::open(): x="<<x<<"  y="<<y<<std::endl;
+  if(x>=0 && y>=0) move(x,y);
+  show_all_children();
+  show();
+  visible=true;
+}
+
+void SamplersDialog::close()
+{
+  std::cout<<"SamplersDialog::close() called."<<std::endl;
+  if(samplers) {
+#ifdef GTKMM_3
+    get_content_area()->remove( *samplers );
+#else
+    get_vbox()->remove( *samplers );
+#endif
+  }
+  hide();
+  visible=false;
+}
+
+
+
+
+
+
+
+
 class Layout2: public Gtk::HBox
 {
+  PF::ImageEditor* editor;
   Gtk::Expander stat_expander;
   Gtk::Notebook stat_notebook;
 
   Gtk::Widget* histogram_widget;
   Gtk::Widget* samplers_widget;
+  Gtk::Label samplers_label;
+  Gtk::EventBox samplers_label_evbox;
+  Gtk::VBox samplers_vbox;
+  Gtk::ScrolledWindow samplers_scrollwin;
+  SamplersDialog samplers_dialog;
   Gtk::Widget* image_info_widget;
   Gtk::Widget* buttons_widget;
   Gtk::Widget* layers_widget;
@@ -206,9 +301,41 @@ class Layout2: public Gtk::HBox
     PF::PhotoFlow::Instance().get_options().set_layerlist_widget_width( allocation.get_width() );
   }
 
+  bool on_samplers_label_button_press_event(GdkEventButton*event)
+  {
+    std::cout<<"on_samplers_label_button_press_event: type="<<event->type<<"  button="<<event->button<<std::endl;
+    if( event->type == Gdk::DOUBLE_BUTTON_PRESS && event->button == 1) {
+      std::cout<<"on_samplers_label_button_press_event: double-click detected"<<std::endl;
+      samplers_vbox.remove(*samplers_widget);
+      stat_notebook.remove_page(samplers_scrollwin);
+      samplers_dialog.set_samplers(samplers_widget);
+
+      Gtk::Container* toplevel = get_toplevel();
+      Gtk::Window* toplevelwin = NULL;
+    #ifdef GTKMM_2
+      if( toplevel && toplevel->is_toplevel() )
+    #endif
+    #ifdef GTKMM_3
+        if( toplevel && toplevel->get_is_toplevel() )
+    #endif
+          toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
+      if(toplevelwin) samplers_dialog.set_transient_for(*toplevelwin);
+      samplers_dialog.open();
+    }
+    return false;
+  }
+
+  void on_samplers_dialog_hide()
+  {
+    std::cout<<"on_samplers_dialog_hide called"<<std::endl;
+    samplers_vbox.pack_start(*samplers_widget, Gtk::PACK_SHRINK);
+    samplers_scrollwin.show_all_children();
+    stat_notebook.append_page( samplers_scrollwin, samplers_label_evbox );
+  }
+
 public:
-  Layout2(Gtk::Widget* h, Gtk::Widget* s, Gtk::Widget* i, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
-  histogram_widget(h), samplers_widget(s), image_info_widget(i), buttons_widget(b), layers_widget(l),
+  Layout2(PF::ImageEditor* e, Gtk::Widget* h, Gtk::Widget* s, Gtk::Widget* i, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
+  editor(e), histogram_widget(h), samplers_widget(s), samplers_dialog(editor), samplers_label(_("samplers")), image_info_widget(i), buttons_widget(b), layers_widget(l),
   controls_widget(c), preview_widget(p), old_width(0)
   //paned(Gtk::ORIENTATION_VERTICAL)
   {
@@ -216,10 +343,21 @@ public:
     stat_expander.set_expanded(true);
     stat_expander.add(stat_notebook);
     stat_notebook.append_page( *histogram_widget, _("histogram") );
-    stat_notebook.append_page( *samplers_widget, _("samplers") );
+    samplers_label_evbox.add_label( _("samplers") );
+    //samplers_label_evbox.add(samplers_label);
+    samplers_vbox.pack_start(*samplers_widget, Gtk::PACK_SHRINK);
+    samplers_scrollwin.add(samplers_vbox);
+    stat_notebook.append_page( samplers_scrollwin, samplers_label_evbox );
+    samplers_label_evbox.add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK);
+    samplers_label_evbox.signal_button_press_event().connect( sigc::mem_fun(*this,
+        &Layout2::on_samplers_label_button_press_event) );
+
+    samplers_dialog.signal_hide().connect( sigc::mem_fun(*this,
+        &Layout2::on_samplers_dialog_hide) );
 
     vbox.pack_start( stat_expander, Gtk::PACK_SHRINK );
     if( PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs()) {
+      //samplers_widget->set_size_request(0,150);
       hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
       hbox.pack_start( *layers_widget, Gtk::PACK_EXPAND_WIDGET );
       vbox.pack_start( *image_info_widget, Gtk::PACK_SHRINK );
@@ -402,7 +540,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //controls_group_vbox.pack_start( stat_expander, Gtk::PACK_SHRINK );
   //controls_group_vbox.pack_start( controls_group_scrolled_window, Gtk::PACK_EXPAND_WIDGET );
 
-  main_panel = new Layout2( histogram, samplers, image_info, &(layersWidget.get_tool_buttons_box()),
+  main_panel = new Layout2( this, histogram, samplers, image_info, &(layersWidget.get_tool_buttons_box()),
       &layersWidget_box, &controls_group_scrolled_window, &imageBox );
 
   pack_start( *main_panel );

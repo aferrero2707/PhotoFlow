@@ -157,7 +157,7 @@ public:
 };
 
 
-class SamplerGroup: public Gtk::ScrolledWindow
+class SamplerGroup: public Gtk::Frame//ScrolledWindow
 {
   Gtk::HBox row1, row2, row3, row4;
   Gtk::VBox box;

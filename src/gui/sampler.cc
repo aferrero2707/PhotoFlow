@@ -481,8 +481,10 @@ void PF::Sampler::update( VipsRect* area )
     lch[2] = std::atan2(lab[2],lab[1])*180.f/M_PI;
     if(lch[2] < 0) lch[2] += 360;
     for( int c = 0; c < image->Bands; c++ ) tot[c] *= 100;
+    std::cout<<"Sampler: RGB="<<tot[0]<<" "<<tot[1]<<" "<<tot[2]<<" "<<std::endl;
+    std::cout<<"Sampler: Lab="<<lab[0]<<" "<<lab[1]<<" "<<lab[2]<<" "<<std::endl;
+    std::cout<<"Sampler: LCh="<<lch[0]<<" "<<lch[1]<<" "<<lch[2]<<" "<<std::endl;
   }
-
   Update * update = g_new (Update, 1);
   update->sampler = this;
   update->type = vips_image_get_interpretation(image);
@@ -603,14 +605,19 @@ PF::SamplerGroup::SamplerGroup( Pipeline* v ):
   //row2.pack_start(s6,Gtk::PACK_SHRINK,10);
   //row2.pack_start(s7,Gtk::PACK_SHRINK,10);
   //row2.pack_start(s8,Gtk::PACK_SHRINK,10);
+
+  //box.pack_start(label,Gtk::PACK_SHRINK,0);
+
   box.pack_start(row1,Gtk::PACK_SHRINK,0);
   box.pack_start(row2,Gtk::PACK_SHRINK,0);
   box.pack_start(row3,Gtk::PACK_SHRINK,0);
   box.pack_start(row4,Gtk::PACK_SHRINK,0);
 
   add(box);
-  set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
-  set_shadow_type( Gtk::SHADOW_NONE );
+  //set_policy( Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS );
+  //set_shadow_type( Gtk::SHADOW_NONE );
+
+  //pack_start(label,Gtk::PACK_SHRINK,0);
 
   //pack_start(s1,Gtk::PACK_SHRINK,5);
   //pack_start(s2,Gtk::PACK_SHRINK,5);
