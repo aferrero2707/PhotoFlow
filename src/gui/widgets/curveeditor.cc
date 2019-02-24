@@ -477,6 +477,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 
 bool PF::CurveEditor::on_key_press_or_release_event(GdkEventKey* event)
 {
+  bool result = false;
   if( (curve_area->get_selected_point()>=0) && event->type == GDK_KEY_PRESS &&
       (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)) == 0 ) {
 
@@ -488,18 +489,22 @@ bool PF::CurveEditor::on_key_press_or_release_event(GdkEventKey* event)
     if( event->keyval == GDK_KEY_Up ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       pt.second += delta;
+      result = true;
     }
     if( event->keyval == GDK_KEY_Down ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       pt.second -= delta;
+      result = true;
     }
     if( event->keyval == GDK_KEY_Left ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       pt.first -= delta;
+      result = true;
     }
     if( event->keyval == GDK_KEY_Right ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       pt.first += delta;
+      result = true;
     }
 
     float px = pt.first, py = pt.second;
@@ -520,7 +525,7 @@ bool PF::CurveEditor::on_key_press_or_release_event(GdkEventKey* event)
       get_prop()->modified();
     }
   }
-  return true;
+  return result;
 }
 
 
