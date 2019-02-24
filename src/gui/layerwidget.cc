@@ -1293,18 +1293,42 @@ void PF::LayerWidget::controls_dialog_hide()
 
 void PF::LayerWidget::controls_dialog_delete(PF::Layer* l)
 {
+#ifndef NDEBUG
+    std::cout<<"LayerWidget::controls_dialog_delete: deleting controls of layer \""<<l->get_name()<<"\""<<std::endl;
+#endif
   // look for an existing dialog for the selected tool
   PF::OperationConfigUI* ui = l->get_processor()->get_par()->get_config_ui();
   PF::OperationConfigGUI* gui = dynamic_cast<PF::OperationConfigGUI*>( ui );
   std::map<PF::OperationConfigGUI*,PF::ControlsDialog*>::iterator i =
       controls_dialogs.find(gui);
-  if( i == controls_dialogs.end() ) return;
-  i->second->get_position(controls_dialog_x,controls_dialog_y);
-  i->second->hide();
-  i->second->set_controls(NULL);
-  delete i->second;
-  controls_dialogs.erase(gui);
+  if( i != controls_dialogs.end() ) {
+    i->second->get_position(controls_dialog_x,controls_dialog_y);
+    i->second->hide();
+    i->second->set_controls(NULL);
+    delete i->second;
+    controls_dialogs.erase(gui);
+  }
+
+  controls_dialog_delete( l->get_omap_layers() );
+  controls_dialog_delete( l->get_imap_layers() );
+  controls_dialog_delete( l->get_sublayers() );
 }
+
+
+
+
+
+void PF::LayerWidget::controls_dialog_delete( std::list<Layer*>& layers )
+{
+#ifndef NDEBUG
+  std::cout<<"LayerWidget::controls_dialog_delete( std::list<Layer*>& layers ): layers.size()="<<layers.size()<<std::endl;
+#endif
+  for( std::list<Layer*>::iterator li = layers.begin(); li != layers.end(); li++ ) {
+    if( !(*li) ) continue;
+    controls_dialog_delete( *li );
+  }
+}
+
 
 
 void PF::LayerWidget::on_button_add()
@@ -2027,12 +2051,19 @@ void PF::LayerWidget::remove_layers()
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*iter)[columns.col_layer];
 
-    //std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
+#ifndef NDEBUG
+    std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
+#endif
     unset_sticky_and_editing( l );
-    //std::cout<<"Calling detach_controls(\""<<l->get_name()<<"\")"<<std::endl;
+#ifndef NDEBUG
+    std::cout<<"Calling detach_controls(\""<<l->get_name()<<"\")"<<std::endl;
+#endif
     detach_controls( l );
     //std::cout<<"Calling close_map_tabs(\""<<l->get_name()<<"\")"<<std::endl;
     //close_map_tabs( l );
+#ifndef NDEBUG
+    std::cout<<"Calling controls_dialog_delete(\""<<l->get_name()<<"\")"<<std::endl;
+#endif
     controls_dialog_delete(l);
 
 #ifndef NDEBUG
@@ -2075,6 +2106,8 @@ void PF::LayerWidget::remove_layers()
 void PF::LayerWidget::switch_to_layers_view()
 {
   aux_controls_group.show();
+  layers_view.set_tree_modified();
+  layers_view.update_model();
   layers_view.show();
   mask_view_box.hide();
   active_view = 0;

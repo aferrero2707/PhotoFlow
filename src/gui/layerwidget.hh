@@ -217,6 +217,7 @@ public:
   void controls_dialog_show();
   void controls_dialog_hide();
   void controls_dialog_delete(PF::Layer* l);
+  void controls_dialog_delete( std::list<PF::Layer*>& layers );
 
   //bool on_button_event( GdkEventButton* button );
 
