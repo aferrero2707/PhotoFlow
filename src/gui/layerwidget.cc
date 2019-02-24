@@ -316,10 +316,21 @@ void PF::AuxControlsGroup::set_control(PF::Layer* layer, PF::OperationConfigGUI*
 
 
 
-PF::ControlsDialog::ControlsDialog( ImageEditor* e ): Gtk::Dialog(), editor(e), gui(NULL), x(-1), y(-1)
+PF::ControlsDialog::ControlsDialog( ImageEditor* e ):
+    Gtk::Dialog(), editor(e), gui(NULL), close_button(_("Close")), x(-1), y(-1)
 {
+  close_button_box.pack_end( close_button, Gtk::PACK_SHRINK, 5 );
+#ifdef GTKMM_3
+  get_content_area()->pack_end( close_button_box, Gtk::PACK_SHRINK );
+#else
+  get_vbox()->pack_end( close_button_box, Gtk::PACK_SHRINK );
+#endif
+
   show_all_children();
   set_deletable ( false );
+
+  close_button.signal_clicked().connect( sigc::mem_fun(*this,
+      &PF::ControlsDialog::close) );
 
   add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
 }
@@ -400,7 +411,7 @@ void PF::ControlsDialog::update()
 
 void PF::ControlsDialog::on_hide()
 {
-  //std::cout<<"ControlsDialog::on_hide() called."<<std::endl;
+  std::cout<<"ControlsDialog::on_hide() called."<<std::endl;
   get_position(x,y);
   //visible = false;
   Gtk::Dialog::on_hide();

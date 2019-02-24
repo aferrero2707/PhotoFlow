@@ -84,6 +84,8 @@ class ControlsDialog: public Gtk::Dialog
 {
   ImageEditor* editor;
   PF::OperationConfigGUI* gui;
+  Gtk::HBox close_button_box;
+  Gtk::Button close_button;
   bool visible;
   int x, y;
 public:
