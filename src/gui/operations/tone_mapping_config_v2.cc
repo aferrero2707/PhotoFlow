@@ -219,7 +219,8 @@ float PF::ToneMappingCurveAreaV2::get_curve_value( float val )
   std::cout<<"SH_HL_mapping_log("<<100<<"): "<<SH_HL_mapping_log(100, 100, hl_compr, log_pivot, 0.1 )<<std::endl;
   */
 
-  float LE_linmax2 = SH_HL_mapping( LE_linmax, sh_compr, hl_compr, log_pivot );
+  float LE_linmax2 = LE_linmax;
+  if( sh_compr > 0 || hl_compr > 0 ) SH_HL_mapping( LE_linmax, sh_compr, hl_compr, log_pivot, true );
   //float LE_linmax2 = LE_linmax; //SH_HL_mapping_log( LE_linmax, sh_compr, hl_compr, log_pivot, 0.1 );
 
   val = result;
@@ -233,6 +234,8 @@ float PF::ToneMappingCurveAreaV2::get_curve_value( float val )
     float LE_Srange = 1.0f - LE_Ylinmax;
     float LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope + LE_midgray;
     float LE_Kexp = LE_Kmax * LE_slope / LE_Kymax;
+
+    //std::cout<<"get_curve_value: LE_Kmax="<<LE_Kmax<<"  LE_linmax2="<<LE_linmax2<<std::endl;
 
     //std::cout<<"lin+exp: RGB["<<k<<"] in:  "<<RGB[k]<<std::endl;
     if( val > LE_linmax2 ) {
@@ -583,9 +586,6 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
 
 void PF::ToneMappingConfigGUI_V2::do_update()
 {
-  OperationConfigGUI::do_update();
-  return;
-
   if( get_layer() && get_layer()->get_image() && 
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
@@ -601,6 +601,9 @@ void PF::ToneMappingConfigGUI_V2::do_update()
     bool need_update = false;
 
     curve_area.set_params( tmpar );
+
+    OperationConfigGUI::do_update();
+    return;
 
     if( prop->get_enum_value().first == PF::TONE_MAPPING_LIN_EXP ) {
       if( LEControlsBox.get_parent() != &controlsBox2 )
