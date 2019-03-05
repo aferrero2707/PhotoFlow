@@ -112,6 +112,8 @@ namespace PF {
     //OperationsTree op_color;
     OperationsTreeWidget op_color;
 
+    OperationsTreeWidget op_ocio;
+
     //Gtk::ScrolledWindow op_detail_box;
     //OperationsTree op_detail;
     OperationsTreeWidget op_detail;

@@ -77,6 +77,7 @@
 #include "operations/tone_mapping_config_v2.hh"
 #include "operations/local_contrast_config.hh"
 #ifdef HAVE_OCIO
+#include "operations/OCIO/ocio_config_config.hh"
 #include "operations/OCIO/ocio_filmic_config.hh"
 #include "operations/OCIO/ocio_aces_config.hh"
 #endif
@@ -1178,6 +1179,8 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   PF::OperationConfigGUI* dialog = NULL;
 
+  //std::cout<<"PF::new_operation_with_gui: creating operation of type \""<<op_type<<"\""<<std::endl;
+
   if( op_type == "imageread" ) {
 
     dialog = new PF::ImageReadConfigGUI( current_layer );
@@ -1370,6 +1373,9 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   } else if( op_type == "ocio_aces" ) {
     dialog = new PF::OCIOACESConfigGUI( current_layer );
+
+  } else if( op_type == "ocio_transform" ) {
+    dialog = new PF::OCIOConfigConfigGUI( current_layer );
 #endif
   }
 

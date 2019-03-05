@@ -240,6 +240,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   //op_load_box.add( op_load );
   notebook.append_page( op_load, "load" );
+  op_load.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
 
   //notebook.append_page( op_raw, "raw" );
 
@@ -248,12 +249,23 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   //op_color_box.add( op_color );
   notebook.append_page( op_color, "color" );
+  op_color.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+
+#ifdef HAVE_OCIO
+  notebook.append_page( op_ocio, "OCIO" );
+  op_ocio.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
+  op_ocio.get_tree().add_op( _("OCIO Transform"), "ocio_transform" );
+  op_ocio.get_tree().add_op( _("OCIO - Filmic"), "ocio_filmic" );
+  op_ocio.get_tree().add_op( _("OCIO - ACES"), "ocio_aces" );
+#endif
 
   //op_detail_box.add( op_detail );
   notebook.append_page( op_detail, "detail" );
+  op_detail.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
 
   //op_geom_box.add( op_geom );
   notebook.append_page( op_geom, "geom" );
+  op_geom.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
 
   //op_geom_box.add( op_geom );
   notebook.append_page( op_mask, "mask" );
@@ -265,14 +277,10 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
 
   //op_misc_box.add( op_misc );
   notebook.append_page( op_misc, "misc" );
+  op_misc.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
 
-  op_load.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
   //op_raw.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
   //op_conv.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
-  op_color.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
-  op_detail.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
-  op_geom.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
-  op_misc.get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::OperationsTreeDialog::on_row_activated) );
 
 
   op_load.get_tree().add_op( _("Open image"), "imageread" );
@@ -293,10 +301,6 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Tone mapping old"), "tone_mapping" );
   op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping_v2" );
   op_color.get_tree().add_op( _("Dynamic range compressor"), "dynamic_range_compressor" );
-#ifdef HAVE_OCIO
-  op_color.get_tree().add_op( _("OCIO - Filmic"), "ocio_filmic" );
-  op_color.get_tree().add_op( _("OCIO - ACES"), "ocio_aces" );
-#endif
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights" );
   op_color.get_tree().add_op( _("Defringe"), "defringe" );
@@ -452,6 +456,15 @@ void PF::OperationsTreeDialog::add_layer()
   PF::OperationsTree* op_tree = NULL;
 
   std::cout<<"OperationsTreeDialog::add_layer(): page="<<page<<std::endl;
+
+  Gtk::Widget* w = notebook.get_nth_page(page);
+  PF::OperationsTreeWidget* tw = dynamic_cast<PF::OperationsTreeWidget*>(w);
+  std::cout<<"OperationsTreeDialog::add_layer(): w="<<w<<"  tw="<<tw<<std::endl;
+
+  if( tw ) {
+    op_tree = &(tw->get_tree());
+  }
+  /*
   switch( page ) {
   case 0:
     op_tree = &(op_load.get_tree());
@@ -462,6 +475,9 @@ void PF::OperationsTreeDialog::add_layer()
     //case 2:
     //  op_tree = &(op_conv.get_tree());
     //  break;
+  case 1:
+    op_tree = &(op_color.get_tree());
+    break;
   case 1:
     op_tree = &(op_color.get_tree());
     break;
@@ -483,6 +499,7 @@ void PF::OperationsTreeDialog::add_layer()
   default:
     return;
   }
+  */
   std::cout<<"OperationsTreeDialog::add_layer(): op_tree="<<op_tree<<std::endl;
   if( !op_tree ) return;
 

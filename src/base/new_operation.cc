@@ -37,6 +37,8 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 {
   PF::ProcessorBase* processor = NULL;
 
+  //std::cout<<"PF::new_operation: creating operation of type \""<<op_type<<"\""<<std::endl;
+
   if( op_type == "imageread" ) { 
 
     //processor = new PF::Processor<PF::ImageReaderPar,PF::ImageReader>();
@@ -251,6 +253,9 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   } else if( op_type == "ocio_aces" ) {
     processor = new_ocio_aces();
+
+  } else if( op_type == "ocio_transform" ) {
+    processor = new_ocio_config();
 #endif
   } else if( op_type == "volume" ) {
     processor = new_volume();
