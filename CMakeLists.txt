@@ -8,6 +8,7 @@ project(photoflow CXX C)
 
 # options controlling the build process
 option(BUNDLED_EXIV2 "Use bundled Exiv2 library" OFF)
+option(OCIO_ENABLED "Enable the integration of OpenColorIO" OFF)
 IF(MINGW)
   option(BUNDLED_LENSFUN "Use bundled LensFun library" ON)
   option(USE_NLS "Build Native Language Support (using gettext)" ON)
@@ -140,6 +141,7 @@ pkg_check_modules(VIPS REQUIRED vips>=8.5.1)
 MESSAGE( STATUS "VIPS_INCLUDE_DIRS:         " ${VIPS_INCLUDE_DIRS} )
 MESSAGE( STATUS "VIPS_LIBRARY_DIRS:         " ${VIPS_LIBRARY_DIRS} )
 
+if (OCIO_ENABLED)
 find_package (OpenColorIO)
 MESSAGE( STATUS "OpenColorIO_LIBRARY_DIRS: " ${OpenColorIO_LIBRARY_DIRS} )
 MESSAGE( STATUS "OpenColorIO_LIBRARIES: " ${OpenColorIO_LIBRARIES} )
@@ -148,6 +150,7 @@ MESSAGE( STATUS "OCIO_FOUND: " ${OCIO_FOUND} )
 MESSAGE( STATUS "OCIO_LIBRARY_DIRS: " ${OCIO_LIBRARY_DIRS} )
 MESSAGE( STATUS "OCIO_LIBRARIES: " ${OCIO_LIBRARIES} )
 MESSAGE( STATUS "OCIO_LIBRARY: " ${OCIO_LIBRARY} )
+endif(OCIO_ENABLED)
 
 if (APPLE)
     find_package (MacIntegration REQUIRED)

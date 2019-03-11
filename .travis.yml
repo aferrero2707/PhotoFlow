@@ -77,7 +77,7 @@ matrix:
             - cd $TRAVIS_BUILD_DIR
             - mkdir -p build
             - cd build
-            - cmake -DBUNDLED_LENSFUN=OFF -DBUNDLED_LENSFUN_DB=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$HOME/homebrew ..
+            - cmake -DOCIO_ENABLED=ON -DBUNDLED_LENSFUN=OFF -DBUNDLED_LENSFUN_DB=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$HOME/homebrew ..
             #- cmake -DBUNDLED_LENSFUN=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local ..
             - make -j 3
             - make install
