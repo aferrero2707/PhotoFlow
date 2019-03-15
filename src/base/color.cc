@@ -73,21 +73,25 @@ void PF::Lab_pf2lcms(float* pin, float* pout)
 
 void PF::Lab2LCH(float* lab, float* lch, int n)
 {
+  float C, H;
   for( int i = 0; i < n; i++ ) {
     lch[0] = lab[0];
-    lch[1] = std::sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
-    lch[2] = std::atan2(lab[2],lab[1]);
-    if(lch[2] < 0) lch[2] += M_PI * 2;
+    C = std::sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
+    H = std::atan2(lab[2],lab[1]);
+    if(H < 0) H += M_PI * 2;
+    lch[1] = C; lch[2] = H;
     lab += 3; lch += 3;
   }
 }
 
 void PF::LCH2Lab(float* lch, float* lab, int n)
 {
+  float a, b;
   for( int i = 0; i < n; i++ ) {
     lab[0] = lch[0];
-    lab[1] = lch[1] * std::cos(lch[2]);
-    lab[2] = lch[1] * std::sin(lch[2]);
+    a = lch[1] * std::cos(lch[2]);
+    b = lch[1] * std::sin(lch[2]);
+    lab[1] = a; lab[2] = b;
     lab += 3; lch += 3;
   }
 }
