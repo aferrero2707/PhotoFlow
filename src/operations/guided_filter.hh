@@ -88,6 +88,207 @@ void guidedFilter(const PixelMatrix<float> &guide, const PixelMatrix<float> &src
 template < OP_TEMPLATE_DEF_TYPE_SPEC >
 class GuidedFilterProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
 {
+  ICCProfile* profile;
+  GuidedFilterPar* opar;
+
+  void fill_L_matrices(int rw, int rh, PixelMatrix<float>& rgbin,
+      PixelMatrix<float>& Lin, PixelMatrix<float>& Lguide)
+  {
+    int x, y, z;
+
+    for(y = 0; y < rh; y++) {
+      float* row = rgbin[y];
+      float* L = Lin[y];
+      float* Lg = Lguide[y];
+      for( x = 0; x < rw; x++ ) {
+        //std::cout<<"  y="<<y<<"  x="<<x<<"  row="<<row<<"  rr="<<rr<<"  gr="<<gr<<"  br="<<br<<std::endl;
+        //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
+        if( opar->get_convert_to_perceptual() &&
+            profile && profile->is_linear() ) {
+          *L = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+        } else {
+          *L = row[0];
+        }
+        *Lg = *L;
+
+        row += 1;
+        L += 1;
+        Lg += 1;
+      }
+    }
+  }
+
+  void fill_RGB_matrices(int rw, int rh, PixelMatrix<float>& rgbin,
+      PixelMatrix<float>& rin, PixelMatrix<float>& gin, PixelMatrix<float>& bin,
+      PixelMatrix<float>& rguide, PixelMatrix<float>& gguide, PixelMatrix<float>& bguide)
+  {
+    int x, y, z;
+
+    for(y = 0; y < rh; y++) {
+      float* row = rgbin[y];
+      float* rr = rin[y];
+      float* gr = gin[y];
+      float* br = bin[y];
+      float* rrg = rguide[y];
+      float* grg = gguide[y];
+      float* brg = bguide[y];
+      for( x = 0; x < rw; x++ ) {
+        //std::cout<<"  y="<<y<<"  x="<<x<<"  row="<<row<<"  rr="<<rr<<"  gr="<<gr<<"  br="<<br<<std::endl;
+        //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
+        if( opar->get_convert_to_perceptual() &&
+            profile && profile->is_linear() ) {
+          *rr = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+          *gr = (row[1]>0) ? powf( row[1], 1./2.4 ) : row[1];
+          *br = (row[2]>0) ? powf( row[2], 1./2.4 ) : row[2];
+        } else {
+          *rr = row[0];
+          *gr = row[1];
+          *br = row[2];
+        }
+        *rrg = *rr;
+        *grg = *gr;
+        *brg = *br;
+
+        row += 3;
+        rr += 1;
+        gr += 1;
+        br += 1;
+        rrg += 1;
+        grg += 1;
+        brg += 1;
+      }
+    }
+  }
+
+  void fill_RGBL_matrices(int rw, int rh, PixelMatrix<float>& rgbin,
+      PixelMatrix<float>& rin, PixelMatrix<float>& gin, PixelMatrix<float>& bin, PixelMatrix<float>& Lin,
+      PixelMatrix<float>& rguide, PixelMatrix<float>& gguide, PixelMatrix<float>& bguide, PixelMatrix<float>& Lguide)
+  {
+    int x, y, z;
+
+    for(y = 0; y < rh; y++) {
+      float* row = rgbin[y];
+      float* rr = rin[y];
+      float* gr = gin[y];
+      float* br = bin[y];
+      float* Lr = Lin[y];
+      float* rrg = rguide[y];
+      float* grg = gguide[y];
+      float* brg = bguide[y];
+      float* Lrg = Lguide[y];
+      for( x = 0; x < rw; x++ ) {
+        //std::cout<<"  y="<<y<<"  x="<<x<<"  row="<<row<<"  rr="<<rr<<"  gr="<<gr<<"  br="<<br<<std::endl;
+        //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
+        if( opar->get_convert_to_perceptual() &&
+            profile && profile->is_linear() ) {
+          *rr = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+          *gr = (row[1]>0) ? powf( row[1], 1./2.4 ) : row[1];
+          *br = (row[2]>0) ? powf( row[2], 1./2.4 ) : row[2];
+          *Lr = (row[3]>0) ? powf( row[3], 1./2.4 ) : row[3];
+        } else {
+          *rr = row[0];
+          *gr = row[1];
+          *br = row[2];
+          *Lr = row[3];
+        }
+        *rrg = *rr;
+        *grg = *gr;
+        *brg = *br;
+        *Lrg = *Lr;
+
+        row += 4;
+        rr += 1; gr += 1; br += 1; Lr += 1;
+        rrg += 1; grg += 1; brg += 1; Lrg += 1;
+      }
+    }
+  }
+
+  void fill_RGB_out(int rw, int rh, int dx, int dy, PixelMatrix<float>& rgbout,
+      PixelMatrix<float>& rout, PixelMatrix<float>& gout, PixelMatrix<float>& bout)
+  {
+    int x, y, z;
+
+   for(y = 0; y < rh; y++) {
+      float* rr = rout[y+dy];
+      float* gr = gout[y+dy];
+      float* br = bout[y+dy];
+      float* row = rgbout[y];
+      rr += dx; gr += dx; br += dx;
+      for( x = 0; x < rw; x++ ) {
+        if( opar->get_convert_to_perceptual() &&
+            profile && profile->is_linear() ) {
+          row[0] = (*rr>0) ? powf( *rr, 2.4 ) : *rr;
+          row[1] = (*gr>0) ? powf( *gr, 2.4 ) : *gr;
+          row[2] = (*br>0) ? powf( *br, 2.4 ) : *br;
+        } else {
+          row[0] = *rr;
+          row[1] = *gr;
+          row[2] = *br;
+        }
+        row += 3;
+        rr += 1;
+        gr += 1;
+        br += 1;
+      }
+    }
+  }
+
+  void fill_RGBL_out(int rw, int rh, int dx, int dy, PixelMatrix<float>& rgbout,
+      PixelMatrix<float>& rout, PixelMatrix<float>& gout, PixelMatrix<float>& bout, PixelMatrix<float>& Lout)
+  {
+    int x, y, z;
+
+   for(y = 0; y < rh; y++) {
+      float* rr = rout[y+dy];
+      float* gr = gout[y+dy];
+      float* br = bout[y+dy];
+      float* Lr = Lout[y+dy];
+      float* row = rgbout[y];
+      rr += dx; gr += dx; br += dx; Lr += dx;
+      for( x = 0; x < rw; x++ ) {
+        if( opar->get_convert_to_perceptual() &&
+            profile && profile->is_linear() ) {
+          row[0] = (*rr>0) ? powf( *rr, 2.4 ) : *rr;
+          row[1] = (*gr>0) ? powf( *gr, 2.4 ) : *gr;
+          row[2] = (*br>0) ? powf( *br, 2.4 ) : *br;
+          row[3] = (*Lr>0) ? powf( *Lr, 2.4 ) : *Lr;
+        } else {
+          row[0] = *rr;
+          row[1] = *gr;
+          row[2] = *br;
+          row[3] = *Lr;
+        }
+        row += 4;
+        rr += 1;
+        gr += 1;
+        br += 1;
+        Lr += 1;
+      }
+    }
+  }
+
+  void fill_L_out(int rw, int rh, int dx, int dy,
+      PixelMatrix<float>& rgbout, PixelMatrix<float>& Lout)
+  {
+    int x, y, z;
+
+   for(y = 0; y < rh; y++) {
+      float* L = Lout[y+dy];
+      float* row = rgbout[y];
+      L += dx;
+      for( x = 0; x < rw; x++ ) {
+        if( opar->get_convert_to_perceptual() &&
+            profile && profile->is_linear() ) {
+          row[0] = (*L>0) ? powf( *L, 2.4 ) : *L;
+        } else {
+          row[0] = *L;
+        }
+        row += 1;
+        L += 1;
+      }
+    }
+  }
+
 public:
   void render(VipsRegion** ireg, int n, int in_first,
       VipsRegion* imap, VipsRegion* omap,
@@ -98,7 +299,7 @@ public:
     if( n != 1 ) return;
     if( ireg[0] == NULL ) return;
 
-    GuidedFilterPar* opar = dynamic_cast<GuidedFilterPar*>(par);
+    opar = dynamic_cast<GuidedFilterPar*>(par);
     if( !opar ) return;
 
     int es = VIPS_IMAGE_SIZEOF_ELEMENT( ireg[0]->im );
@@ -106,8 +307,14 @@ public:
     const int ops = VIPS_IMAGE_SIZEOF_PEL( oreg->im );
 
     //const int order = 1; // 0,1,2
-    const float radius = opar->get_radius();
-    const float thresfold = opar->get_threshold();
+    //const float radius = opar->get_radius();
+    //const float thresfold = opar->get_threshold();
+
+    int r = opar->get_radius();
+    float epsilon = opar->get_threshold();
+    int subsampling = 1;
+
+    profile = opar->get_icc_data();
 
     int offsx = ireg[0]->valid.left;
     int offsy = ireg[0]->valid.top;
@@ -118,20 +325,123 @@ public:
     offsx = 0;
     offsy = 0;
     PixelMatrix<float> rgbin(p, rw, rh, rowstride, offsy, offsx);
-    PixelMatrix<float> rin(rw, rh, offsy, offsx);
-    PixelMatrix<float> gin(rw, rh, offsy, offsx);
-    PixelMatrix<float> bin(rw, rh, offsy, offsx);
-    PixelMatrix<float> rguide(rw, rh, offsy, offsx);
-    PixelMatrix<float> gguide(rw, rh, offsy, offsx);
-    PixelMatrix<float> bguide(rw, rh, offsy, offsx);
-    PixelMatrix<float> rout(rw, rh, offsy, offsx);
-    PixelMatrix<float> gout(rw, rh, offsy, offsx);
-    PixelMatrix<float> bout(rw, rh, offsy, offsx);
 
-    ICCProfile* profile = opar->get_icc_data();
+    //std::cout<<"GuidedFilterProc::render: Bands="<<ireg[0]->im->Bands<<std::endl;
 
-    //std::cout<<"GuidedFilterProc::render: splitting RGB channels"<<std::endl;
+    if( ireg[0]->im->Bands == 1 ) {
+      PixelMatrix<float> Lin(rw, rh, offsy, offsx);
+      PixelMatrix<float> Lguide(rw, rh, offsy, offsx);
+      PixelMatrix<float> Lout(rw, rh, offsy, offsx);
 
+      //std::cout<<"GuidedFilterProc::render: splitting RGB channels"<<std::endl;
+
+      fill_L_matrices( rw, rh, rgbin, Lin, Lguide );
+
+      //std::cout<<"GuidedFilterProc::render: processing RGB channels"<<std::endl;
+      //std::cout<<"                          processing R:"<<std::endl;
+      guidedFilter(Lguide, Lin, Lout, r, epsilon, subsampling);
+
+      int dx = oreg->valid.left - ireg[0]->valid.left;
+      int dy = oreg->valid.top - ireg[0]->valid.top;
+      offsx = oreg->valid.left;
+      offsy = oreg->valid.top;
+      rw = oreg->valid.width;
+      rh = oreg->valid.height;
+      p = (float*)VIPS_REGION_ADDR( oreg, offsx, offsy );
+      rowstride = VIPS_REGION_LSKIP(oreg) / sizeof(float);
+      PF::PixelMatrix<float> rgbout(p, rw, rh, rowstride, 0, 0);
+
+      //std::cout<<"GuidedFilterProc::render: r="<<r<<"  epsilon="<<epsilon<<"  subsampling="<<subsampling
+      //    <<"  dx="<<dx<<"  dy="<<dy<<"  rw="<<rw<<"  rh="<<rh<<std::endl;
+
+      fill_L_out(rw, rh, dx, dy, rgbout, Lout);
+    }
+
+    if( ireg[0]->im->Bands == 3 ) {
+      PixelMatrix<float> rin(rw, rh, offsy, offsx);
+      PixelMatrix<float> gin(rw, rh, offsy, offsx);
+      PixelMatrix<float> bin(rw, rh, offsy, offsx);
+      PixelMatrix<float> rguide(rw, rh, offsy, offsx);
+      PixelMatrix<float> gguide(rw, rh, offsy, offsx);
+      PixelMatrix<float> bguide(rw, rh, offsy, offsx);
+      PixelMatrix<float> rout(rw, rh, offsy, offsx);
+      PixelMatrix<float> gout(rw, rh, offsy, offsx);
+      PixelMatrix<float> bout(rw, rh, offsy, offsx);
+
+      //std::cout<<"GuidedFilterProc::render: splitting RGB channels"<<std::endl;
+
+      fill_RGB_matrices( rw, rh, rgbin, rin, gin, bin, rguide, gguide, bguide );
+
+      //std::cout<<"GuidedFilterProc::render: processing RGB channels"<<std::endl;
+      //std::cout<<"                          processing R:"<<std::endl;
+      guidedFilter(rguide, rin, rout, r, epsilon, subsampling);
+      //std::cout<<"                          processing G:"<<std::endl;
+      guidedFilter(gguide, gin, gout, r, epsilon, subsampling);
+      //std::cout<<"                          processing B:"<<std::endl;
+      guidedFilter(bguide, bin, bout, r, epsilon, subsampling);
+
+      int dx = oreg->valid.left - ireg[0]->valid.left;
+      int dy = oreg->valid.top - ireg[0]->valid.top;
+      offsx = oreg->valid.left;
+      offsy = oreg->valid.top;
+      rw = oreg->valid.width;
+      rh = oreg->valid.height;
+      p = (float*)VIPS_REGION_ADDR( oreg, offsx, offsy );
+      rowstride = VIPS_REGION_LSKIP(oreg) / sizeof(float);
+      PF::PixelMatrix<float> rgbout(p, rw, rh, rowstride, 0, 0);
+
+      //std::cout<<"GuidedFilterProc::render: r="<<r<<"  epsilon="<<epsilon<<"  subsampling="<<subsampling
+      //    <<"  dx="<<dx<<"  dy="<<dy<<"  rw="<<rw<<"  rh="<<rh<<std::endl;
+
+      fill_RGB_out(rw, rh, dx, dy, rgbout, rout, gout, bout);
+    }
+
+
+    if( ireg[0]->im->Bands == 4 ) {
+      PixelMatrix<float> rin(rw, rh, offsy, offsx);
+      PixelMatrix<float> gin(rw, rh, offsy, offsx);
+      PixelMatrix<float> bin(rw, rh, offsy, offsx);
+      PixelMatrix<float> Lin(rw, rh, offsy, offsx);
+      PixelMatrix<float> rguide(rw, rh, offsy, offsx);
+      PixelMatrix<float> gguide(rw, rh, offsy, offsx);
+      PixelMatrix<float> bguide(rw, rh, offsy, offsx);
+      PixelMatrix<float> Lguide(rw, rh, offsy, offsx);
+      PixelMatrix<float> rout(rw, rh, offsy, offsx);
+      PixelMatrix<float> gout(rw, rh, offsy, offsx);
+      PixelMatrix<float> bout(rw, rh, offsy, offsx);
+      PixelMatrix<float> Lout(rw, rh, offsy, offsx);
+
+      //std::cout<<"GuidedFilterProc::render: splitting RGB channels"<<std::endl;
+
+      fill_RGBL_matrices( rw, rh, rgbin, rin, gin, bin, Lin, rguide, gguide, bguide, Lguide );
+
+      //std::cout<<"GuidedFilterProc::render: processing RGB channels"<<std::endl;
+      //std::cout<<"                          processing R:"<<std::endl;
+      guidedFilter(rguide, rin, rout, r, epsilon, subsampling);
+      //std::cout<<"                          processing G:"<<std::endl;
+      guidedFilter(gguide, gin, gout, r, epsilon, subsampling);
+      //std::cout<<"                          processing B:"<<std::endl;
+      guidedFilter(bguide, bin, bout, r, epsilon, subsampling);
+      //std::cout<<"                          processing L:"<<std::endl;
+      guidedFilter(Lguide, Lin, Lout, r, epsilon, subsampling);
+
+      int dx = oreg->valid.left - ireg[0]->valid.left;
+      int dy = oreg->valid.top - ireg[0]->valid.top;
+      offsx = oreg->valid.left;
+      offsy = oreg->valid.top;
+      rw = oreg->valid.width;
+      rh = oreg->valid.height;
+      p = (float*)VIPS_REGION_ADDR( oreg, offsx, offsy );
+      rowstride = VIPS_REGION_LSKIP(oreg) / sizeof(float);
+      PF::PixelMatrix<float> rgbout(p, rw, rh, rowstride, 0, 0);
+
+      //std::cout<<"GuidedFilterProc::render: r="<<r<<"  epsilon="<<epsilon<<"  subsampling="<<subsampling
+      //    <<"  dx="<<dx<<"  dy="<<dy<<"  rw="<<rw<<"  rh="<<rh<<std::endl;
+
+      fill_RGBL_out(rw, rh, dx, dy, rgbout, rout, gout, bout, Lout);
+    }
+
+    /*
     int x, y, z;
 
     for(y = 0; y < rh; y++) {
@@ -174,18 +484,6 @@ public:
       }
     }
 
-    int r = opar->get_radius();
-    float epsilon = opar->get_threshold();
-    int subsampling = 1;
-
-    //std::cout<<"GuidedFilterProc::render: processing RGB channels"<<std::endl;
-    //std::cout<<"                          processing R:"<<std::endl;
-    guidedFilter(rguide, rin, rout, r, epsilon, subsampling);
-    //std::cout<<"                          processing G:"<<std::endl;
-    guidedFilter(gguide, gin, gout, r, epsilon, subsampling);
-    //std::cout<<"                          processing B:"<<std::endl;
-    guidedFilter(bguide, bin, bout, r, epsilon, subsampling);
-
     //return;
 
     int dx = oreg->valid.left - ireg[0]->valid.left;
@@ -197,6 +495,10 @@ public:
     p = (float*)VIPS_REGION_ADDR( oreg, offsx, offsy );
     rowstride = VIPS_REGION_LSKIP(oreg) / sizeof(float);
     PF::PixelMatrix<float> rgbout(p, rw, rh, rowstride, 0, 0);
+
+    if( ireg[0]->im.Bands == 3 ) {
+    fill_RGB_out(rw, rh, dx, dy, rout, gout, bout, rgbout);
+    }
 
     for(y = 0; y < rh; y++) {
       float* irow = rgbin[y+dy];
@@ -229,6 +531,7 @@ public:
         br += 1;
       }
     }
+    */
   }
 };
 

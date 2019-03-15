@@ -154,7 +154,9 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
   //f_subsample(p1, p);
 
   array2D<float> I1(I);
+  //printf("After I1(I): I1=%f  I=%f\n", I1[0][0], I[0][0]); //getchar();
   array2D<float> p1(p);
+  //printf("After p1(p): p1=%f  p=%f\n", p1[0][0], p[0][0]); //getchar();
 
   DEBUG_DUMP(I);
   DEBUG_DUMP(p);
@@ -166,27 +168,32 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
   array2D<float> meanI(w, h);
   f_mean(meanI, I1, r1);
   DEBUG_DUMP(meanI);
+  //printf("After f_mean(meanI, I1, r1): meanI=%f  I1=%f  r1=%f\n", meanI[0][0], I1[0][0], r1); //getchar();
 
   array2D<float> meanp(w, h);
   f_mean(meanp, p1, r1);
   DEBUG_DUMP(meanp);
+  //printf("After f_mean(meanp, p1, r1): p1=%f  r1=%f\n", p1[0][0], r1); //getchar();
 
-  array2D<float> &corrIp = p1;
+  //array2D<float> &corrIp = p1;
+  array2D<float> corrIp(p1);
   apply(MUL, corrIp, I1, p1);
+  //printf("After apply(MUL, corrIp, I1, p1): corrIp=%f I1=%f p1=%f\n", corrIp[0][0], I1[0][0], p1[0][0]); //getchar();
   f_mean(corrIp, corrIp, r1);
+  //printf("After f_mean(corrIp, corrIp, r1): corrIp=%f  r1=%f\n", corrIp[0][0], r1); //getchar();
   DEBUG_DUMP(corrIp);
-  //printf("After apply(MUL, corrIp, I1, p1)\n"); //getchar();
 
   array2D<float> &corrI = I1;
   apply(MUL, corrI, I1, I1);
   f_mean(corrI, corrI, r1);
   DEBUG_DUMP(corrI);
-  //printf("After apply(MUL, corrI, I1, I1)\n"); //getchar();
+  //printf("After apply(MUL, corrI, I1, I1): corrI=%f  I1=%f\n", corrI[0][0], I1[0][0]); //getchar();
 
   array2D<float> &varI = corrI;
   apply(SUBMUL, varI, meanI, meanI, corrI);
   DEBUG_DUMP(varI);
-  //printf("After apply(SUBMUL, varI, meanI, meanI, corrI)\n"); //getchar();
+  //printf("After apply(SUBMUL, varI, meanI, meanI, corrI): varI=%f  meanI=%f  corrI=%f\n",
+  //    varI[0][0], meanI[0][0], corrI[0][0]); //getchar();
 
   array2D<float> &covIp = corrIp;
   apply(SUBMUL, covIp, meanI, meanp, corrIp);
@@ -196,12 +203,14 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
   array2D<float> &a = varI;
   apply(DIVEPSILON, a, covIp, varI);
   DEBUG_DUMP(a);
-  //printf("After apply(DIVEPSILON, a, covIp, varI)\n"); //getchar();
+  //printf("After apply(DIVEPSILON, a, covIp, varI): a=%f  covIp=%f  varI=%f\n",
+  //    a[0][0], covIp[0][0], varI[0][0]); //getchar();
 
   array2D<float> &b = covIp;
   apply(SUBMUL, b, a, meanI, meanp);
   DEBUG_DUMP(b);
-  //printf("After apply(SUBMUL, b, a, meanI, meanp)\n"); //getchar();
+  //printf("After apply(SUBMUL, b, a, meanI, meanp): b=%f  a=%f  meanI=%f  meanp=%f\n",
+  //    b[0][0], a[0][0], meanI[0][0], meanp[0][0]); //getchar();
 
   array2D<float> &meana = a;
   f_mean(meana, a, r1);
@@ -223,6 +232,8 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
 
   apply(ADDMUL, q, meanA, I, meanB);
   DEBUG_DUMP(q);
+  //printf("After apply(ADDMUL, q, meanA, I, meanB): q=%f  meanA=%f  I=%f  meanB=%f\n\n",
+  //    q[0][0], meanA[0][0], I[0][0], meanB[0][0]); //getchar();
 }
 
 
