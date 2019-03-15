@@ -102,6 +102,7 @@ struct ICCProfileData
 
 #define PF_GAMUT_MAP_NJZ 500
 
+class ICCTransform;
 
 class ICCProfile
 {
@@ -131,7 +132,11 @@ class ICCProfile
 
   int refcount;
 
-  float gamut_boundary[PF_GAMUT_MAP_NJZ+1][360];
+  ICCTransform* to_lab;
+  ICCTransform* from_lab;
+
+  float** gamut_boundary;
+  float** gamut_boundary_out;
 
 
 public:
@@ -147,6 +152,7 @@ public:
 
   void init_colorants();
   void init_trc();
+  void init_Lab_conversions( ICCProfile* plab );
 
   bool is_rgb();
   bool is_grayscale();
@@ -191,8 +197,10 @@ public:
   void from_Jzazbz( const float& Jz, const float& az, const float& bz, float& R, float& G, float& B );
 
   void init_gamut_mapping();
-  void gamut_mapping( float& R, float& G, float& B );
-  bool chroma_compression( float& J, float& C, float& H );
+  void set_destination_gamut(ICCProfile* pout);
+  float** get_gamut_boundary() { return gamut_boundary; }
+  void gamut_mapping( float& R, float& G, float& B, float** gamut_boundary_out );
+  bool chroma_compression( float& J, float& C, float& H, float** gamut_boundary_out );
 
   bool equals_to( PF::ICCProfile* prof);
 

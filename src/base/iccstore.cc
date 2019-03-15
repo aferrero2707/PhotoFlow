@@ -169,7 +169,10 @@ PF::ICCProfile::ICCProfile()
   perceptual_trc = NULL;
   perceptual_trc_inv = NULL;
   parametric_trc = false;
-  gamut_boundary[0][0] = -1;
+  gamut_boundary = NULL;
+  gamut_boundary_out = NULL;
+  to_lab = NULL;
+  from_lab = NULL;
 }
 
 
@@ -402,6 +405,15 @@ void PF::ICCProfile::init_trc( cmsToneCurve* trc, cmsToneCurve* trc_inv )
 }
 
 
+void PF::ICCProfile::init_Lab_conversions( PF::ICCProfile* plab )
+{
+  to_lab = new PF::ICCTransform;
+  from_lab = new PF::ICCTransform;
+  to_lab->init(this, plab, VIPS_FORMAT_FLOAT, INTENT_RELATIVE_COLORIMETRIC, false, 0);
+  from_lab->init(plab, this, VIPS_FORMAT_FLOAT, INTENT_RELATIVE_COLORIMETRIC, false, 0);
+}
+
+
 bool PF::ICCProfile::is_matrix()
 {
   if( !has_colorants ) return false;
@@ -514,10 +526,19 @@ void PF::ICCProfile::get_lightness( float* RGBv, float* Lv, size_t size )
 
 void PF::ICCProfile::to_Jzazbz( const float& R, const float& G, const float& B, float& Jz, float& az, float& bz )
 {
+  float LAB[3];
+  float RGB[3] = {R, G, B};
+  to_lab->apply(RGB, LAB, 1);
+  Jz = LAB[0]/100; az = LAB[1]; bz = LAB[2];
+  return;
+
+  float r = R; //(R >= 0) ? R : 0;
+  float g = G; //(G >= 0) ? G : 0;
+  float b = B; //(B >= 0) ? B : 0;
   jabz::xyz100 xyz = {0, 0, 0};
-  xyz.x = (rgb2xyz100_D65[0][0]*R + rgb2xyz100_D65[0][1]*G + rgb2xyz100_D65[0][2]*B) * 100;
-  xyz.y = (rgb2xyz100_D65[1][0]*R + rgb2xyz100_D65[1][1]*G + rgb2xyz100_D65[1][2]*B) * 100;
-  xyz.z = (rgb2xyz100_D65[2][0]*R + rgb2xyz100_D65[2][1]*G + rgb2xyz100_D65[2][2]*B) * 100;
+  xyz.x = (rgb2xyz100_D65[0][0]*r + rgb2xyz100_D65[0][1]*g + rgb2xyz100_D65[0][2]*b) * 100;
+  xyz.y = (rgb2xyz100_D65[1][0]*r + rgb2xyz100_D65[1][1]*g + rgb2xyz100_D65[1][2]*b) * 100;
+  xyz.z = (rgb2xyz100_D65[2][0]*r + rgb2xyz100_D65[2][1]*g + rgb2xyz100_D65[2][2]*b) * 100;
   //std::cout<<"to_Jzazbz: xyz="<<xyz.x<<" "<<xyz.y<<" "<<xyz.z<<" "<<std::endl;
 
   jabz::jzazbz jab = jabz::jab_rgb::forth(xyz);
@@ -530,6 +551,12 @@ void PF::ICCProfile::to_Jzazbz( const float& R, const float& G, const float& B, 
 
 void PF::ICCProfile::from_Jzazbz( const float& Jz, const float& az, const float& bz, float& R, float& G, float& B )
 {
+  float LAB[3] = {Jz*100, az, bz};
+  float RGB[3];
+  from_lab->apply(LAB, RGB, 1);
+  R = RGB[0]; G = RGB[1]; B = RGB[2];
+  return;
+
   jabz::jzazbz jab = {Jz, az, bz};
   jabz::xyz100 xyz = jabz::jab_rgb::back(jab);
   //std::cout<<"from_Jzazbz: Jz="<<Jz<<" az="<<az<<"  bz="<<bz<<"    X="<<xyz.x<<" Y="<<xyz.y<<" Z="<<xyz.z<<std::endl;
@@ -542,7 +569,12 @@ void PF::ICCProfile::from_Jzazbz( const float& Jz, const float& az, const float&
 
 void PF::ICCProfile::init_gamut_mapping()
 {
-  if( gamut_boundary[0][0] >= 0 ) return;
+  if( gamut_boundary != NULL ) return;
+
+  gamut_boundary = new float*[PF_GAMUT_MAP_NJZ+1];
+  for(int j = 0; j < PF_GAMUT_MAP_NJZ+1; j++) {
+    gamut_boundary[j] = new float[360];
+  }
 
   float Jab[3], JCH[3], RGB[3] = {0.5, 0.2, 0.1};
 
@@ -626,16 +658,25 @@ void PF::ICCProfile::init_gamut_mapping()
 }
 
 
-void PF::ICCProfile::gamut_mapping( float& R, float& G, float& B )
+void PF::ICCProfile::set_destination_gamut(ICCProfile* pout)
+{
+  gamut_boundary_out = pout->get_gamut_boundary();
+}
+
+
+
+void PF::ICCProfile::gamut_mapping( float& R, float& G, float& B, float** gamut_boundary_out )
 {
   float Jab[3], JCH[3], RGB[3];
   float Jz, az, bz, C, H;
   // convert to Jzazbz in polar coordinates
+  //std::cout<<std::endl<<"gamut_mapping: RGB="<<R<<" "<<G<<" "<<B<<std::endl;
   to_Jzazbz(R, G, B, Jab[0], Jab[1], Jab[2]);
   PF::Lab2LCH(Jab, JCH, 1);
-  //std::cout<<"gamut_mapping: RGB="<<R<<" "<<G<<" "<<B<<"  J="<<JCH[0]<<"  C="<<JCH[1]<<"  h="<<JCH[2]<<std::endl;
+  //std::cout<<"  J="<<Jab[0]<<"  a="<<Jab[1]<<"  b="<<Jab[2]
+  //    <<"  J="<<JCH[0]<<"  C="<<JCH[1]<<"  h="<<JCH[2]<<std::endl;
 
-  if( !chroma_compression(JCH[0], JCH[1], JCH[2]) ) return;
+  if( !chroma_compression(JCH[0], JCH[1], JCH[2], gamut_boundary_out) ) return;
 
   // re-calculate the RGB values
   PF::LCH2Lab(JCH, Jab, 1);
@@ -643,8 +684,15 @@ void PF::ICCProfile::gamut_mapping( float& R, float& G, float& B )
 }
 
 
-bool PF::ICCProfile::chroma_compression( float& J, float& C, float& H )
+bool PF::ICCProfile::chroma_compression( float& J, float& C, float& H, float** gamut_boundary_out )
 {
+  //if( std::isnan(J) ) {
+  //  J = 0;
+  //  C = 0;
+  //  return true;
+  //  getchar();
+  //}
+
   if( J >= 1 ) {
     C = 0;
     return true;
@@ -658,10 +706,12 @@ bool PF::ICCProfile::chroma_compression( float& J, float& C, float& H )
   // get the index in the gamut mapping LUT
   int j = static_cast<int>(J*PF_GAMUT_MAP_NJZ);
   int h = static_cast<int>(H*180.0f/M_PI);
+  //std::cout<<"chroma_compression: J="<<J<<"  j="<<j<<"  h="<<h<<std::endl;
 
   // compress all chroma values above max/2
-  float C0 = gamut_boundary[j][h] * 0.95f;
-  float C1 = gamut_boundary[j][h] - C0;
+  float Cmax = gamut_boundary_out[j][h];
+  float C0 = Cmax * 0.99f;
+  float C1 = Cmax - C0;
   //if( C>gamut_boundary[j][h]) std::cout<<"chroma_compression: j="<<j<<"  h="<<h<<"  C0="<<C0<<std::endl;
   if( C < C0 ) return false;
   float Cout = ( C < C0 ) ? C : C0 + C1*( 1.0f - exp((C0-C)/C1) );
@@ -981,6 +1031,9 @@ void PF::iccprofile_unref( void* prof )
 
 PF::ICCStore::ICCStore()
 {
+  Lab_profile = new LabProfile( PF::PF_TRC_PERCEPTUAL );
+  Lab_profile->ref(); profiles.push_back( Lab_profile );
+
   std::cout<<"Initializing sRGB profiles"<<std::endl;
   srgb_profiles[0] = new sRGBProfile( PF::PF_TRC_STANDARD );
   srgb_profiles[1] = new sRGBProfile( PF::PF_TRC_PERCEPTUAL );
@@ -1030,14 +1083,19 @@ PF::ICCStore::ICCStore()
   prophoto_profiles[0] = new ProPhotoProfile( PF::PF_TRC_STANDARD );
   prophoto_profiles[1] = new ProPhotoProfile( PF::PF_TRC_PERCEPTUAL );
   prophoto_profiles[2] = new ProPhotoProfile( PF::PF_TRC_LINEAR );
-
-  Lab_profile = new LabProfile( PF::PF_TRC_PERCEPTUAL );
-  Lab_profile->ref(); profiles.push_back( Lab_profile );
+  prophoto_profiles[0]->ref(); profiles.push_back( prophoto_profiles[0] );
+  prophoto_profiles[1]->ref(); profiles.push_back( prophoto_profiles[1] );
+  prophoto_profiles[2]->ref(); profiles.push_back( prophoto_profiles[2] );
 
   XYZ_profile = new XYZProfile( PF::PF_TRC_LINEAR );
   XYZ_profile->ref(); profiles.push_back( XYZ_profile );
 
   system_monitor_profile = NULL;
+
+  for(unsigned int pi = 0; pi < profiles.size(); pi++) {
+    if( profiles[pi]->is_lab() ) continue;
+    profiles[pi]->init_Lab_conversions(Lab_profile);
+  }
 
   /*
   std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/Rec2020-elle-V4-g10.icc";
