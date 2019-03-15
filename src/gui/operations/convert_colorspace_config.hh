@@ -59,6 +59,9 @@ namespace PF {
     Gtk::HBox clip_negative_box;
     Gtk::HBox clip_overflow_box;
 
+    CheckBox gamut_mapping_checkbox;
+    Gtk::HBox gamut_mapping_box;
+
     CheckBox bpcButton;
     Gtk::HBox bpcButtonBox;
 
@@ -75,6 +78,7 @@ namespace PF {
     Gtk::Button outProfOpenButton;
 
     Gtk::CheckButton gamutWarningButton;
+    Gtk::Label gamutWarningLabel;
     Gtk::HBox gamutWarningButtonBox;
 
     

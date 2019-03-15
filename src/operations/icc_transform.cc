@@ -40,8 +40,10 @@ PF::ICCTransformPar::ICCTransformPar():
   input_cs_type( cmsSigRgbData ),
   output_cs_type( cmsSigRgbData ),
   clip_negative(false),
-  clip_overflow(false)
+  clip_overflow(false),
+  gamut_mapping(false)
 {
+  do_Lab = true; do_LCh = do_LSh = false;
   set_type("icc_transform" );
 
   set_default_name( _("ICC transform") );
@@ -83,6 +85,10 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
     std::cout<<"ICCTransformPar::build(): matching input and output profiles, no transform needed"<<std::endl;
     return in[first];
   }
+
+  if( gamut_mapping )
+    out_profile->init_gamut_mapping();
+
 
   //std::cout<<"ICCTransformPar::build(): image="<<in[0]<<" data="<<data<<" data_length="<<data_length<<std::endl;
 

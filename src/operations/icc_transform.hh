@@ -53,11 +53,12 @@ namespace PF
     bool bpc;
     float adaptation_state;
     PF::ICCTransform transform;
+    bool do_LCh, do_LSh, do_Lab;
 
     cmsColorSpaceSignature input_cs_type;
     cmsColorSpaceSignature output_cs_type;
 
-    bool clip_negative, clip_overflow;
+    bool clip_negative, clip_overflow, gamut_mapping;
 
   public:
 
@@ -66,13 +67,24 @@ namespace PF
     cmsUInt32Number get_intent() { return intent; }
     void set_intent( cmsUInt32Number i ) { intent = i; }
 
+    void set_Lab_format() { do_Lab = true; do_LCh = do_LSh = false; }
+    void set_LCh_format() { do_LCh = true; do_Lab = do_LSh = false; }
+    void set_LSh_format() { do_LSh = true; do_Lab = do_LCh = false; }
+
+    bool get_Lab_format() { return do_Lab; }
+    bool get_LCh_format() { return do_LCh; }
+    bool get_LSh_format() { return do_LSh; }
+
     bool get_bpc() { return bpc; }
     void set_bpc( bool flag ) { bpc = flag; }
     void set_adaptation_state( float s ) { adaptation_state = s; }
 
     PF::ICCTransform& get_transform() { return transform; }
 
+    ICCProfile* get_in_profile() { return in_profile; }
     void set_out_profile( ICCProfile* p ) { out_profile = p; }
+    ICCProfile* get_out_profile() { return out_profile; }
+
     void set_image_hints( VipsImage* img )
     {
       if( !img ) return;
@@ -98,6 +110,9 @@ namespace PF
     bool get_clip_overflow() { return clip_overflow; }
     void set_clip_negative( bool flag ) { clip_negative = flag; }
     void set_clip_overflow( bool flag ) { clip_overflow = flag; }
+
+    bool get_gamut_mapping() { return gamut_mapping; }
+    void set_gamut_mapping( bool flag ) { gamut_mapping = flag; }
 
     //cmsHPROFILE create_profile_from_matrix (const double matrix[3][3], bool gamma, Glib::ustring name);
 
@@ -168,7 +183,8 @@ namespace PF
 
       float* line = NULL;
       if( opar->get_input_cs_type() == cmsSigLabData ||
-          opar->get_input_cs_type() == cmsSigCmykData ) {
+          opar->get_input_cs_type() == cmsSigCmykData ||
+          opar->get_gamut_mapping() ) {
         line = new float[line_size_max];
       }
 
@@ -208,17 +224,40 @@ namespace PF
               std::cout<<"ICCTransform::render(CMYK in): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
             }
           } else {
-            //cmsDoTransform( opar->get_transform(), p, pout, width );
-            opar->get_transform().apply(p,pout,width);
+            if( opar->get_in_profile() && opar->get_in_profile()->is_rgb() &&
+                opar->get_out_profile() && opar->get_out_profile()->is_rgb() &&
+                opar->get_gamut_mapping() ) {
+              ICCProfile* inprof = opar->get_in_profile();
+              ICCProfile* outprof = opar->get_out_profile();
+              float** gbound = outprof->get_gamut_boundary();
+              for( x = 0; x < line_size_out; x+= 3 ) {
+                line[x] = p[x]; line[x+1] = p[x+1]; line[x+2] = p[x+2];
+                inprof->gamut_mapping(line[x], line[x+1], line[x+2], gbound);
+              }
+              opar->get_transform().apply(line,pout,width);
+            } else {
+              //cmsDoTransform( opar->get_transform(), p, pout, width );
+              opar->get_transform().apply(p,pout,width);
+            }
             if( false && r->left==0 && r->top==0 && y==0 ) {
               std::cout<<"ICCTransform::render(): pout="<<pout[0]<<" "<<pout[1]<<" "<<pout[2]<<std::endl;
             }
           }
           if( opar->get_output_cs_type() == cmsSigLabData ) {
             for( x = 0; x < line_size_out; x+= 3 ) {
-              pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
-              pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0f) / 256.0f);
-              pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0f) / 256.0f);
+
+              if( opar->get_LCh_format() || opar->get_LSh_format() ) {
+                PF::Lab2LCH( &(pout[x]), &(pout[x]), 1 );
+                if( opar->get_LSh_format() ) {
+                  if( pout[x] > 1.0e-10 || pout[x] < -1.0e-10 ) pout[x+1] /= std::fabs(pout[x]);
+                  else pout[x+1] = 0;
+                }
+                pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+              } else {
+                pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+                pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0f) / 256.0f);
+                pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 128.0f) / 256.0f);
+              }
 
               //if( r->left==0 && r->top==0 && x==0 && y==0 ) {
               //  std::cout<<"Convert2LabProc::render(): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
@@ -241,6 +280,9 @@ namespace PF
         } else {
           memcpy( pout, p, sizeof(float)*line_size_in );
         }
+        //std::cout<<"opar->get_out_profile(): "<<opar->get_out_profile()
+        //    <<"  opar->get_out_profile()->is_rgb(): "<<opar->get_out_profile()->is_rgb()
+        //    <<"  opar->get_gamut_mapping(): "<<opar->get_gamut_mapping()<<std::endl;
         if( opar->get_clip_negative() || opar->get_clip_overflow() ) {
           for( x = 0; x < line_size_out; x+= 1 ) {
             if( opar->get_clip_negative() ) pout[x] = MAX( pout[x], 0.f );
@@ -249,7 +291,7 @@ namespace PF
         }
       }
 
-      if( opar->get_input_cs_type() == cmsSigLabData && line ) {
+      if( line ) {
         delete( line );
       }
     }

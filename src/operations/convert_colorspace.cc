@@ -69,15 +69,18 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
           assign("assign", this, false),
           clip_negative("clip_negative",this,true),
           clip_overflow("clip_overflow",this,true),
+          gamut_mapping("gamut_mapping",this,false),
           out_profile_data( NULL ),
           transform( NULL ),
           gw_transform_in( NULL ),
           gw_transform_out( NULL ),
           softproof( false ),
           gamut_warning( false ),
+          iccprof(NULL),
           input_cs_type( cmsSigRgbData ),
           output_cs_type( cmsSigRgbData )
 {
+  do_Lab = true; do_LCh = do_LSh = false;
   //convert2lab = PF::new_convert2lab();
 
   //out_profile_mode.add_enum_value(PF::PROF_TYPE_NONE,"NONE","NONE");
@@ -165,7 +168,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     char tstr[1024];
     cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
 #ifndef NDEBUG
-    std::cout<<"convert2lab: Embedded profile found: "<<tstr<<std::endl;
+    std::cout<<"ConvertColorspacePar::build(): Embedded profile found: "<<tstr<<std::endl;
 #endif
 
     if( in_profile_name != tstr ) {
@@ -186,7 +189,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   profile_mode_t pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
   profile_type_t ptype = (profile_type_t)out_profile_type.get_enum_value().first;
   TRC_type trc_type = (TRC_type)out_trc_type.get_enum_value().first;
-  PF::ICCProfile* iccprof = NULL;
+  //PF::ICCProfile* iccprof = NULL;
 
   if( pmode == PF::PROF_TYPE_FROM_SETTINGS ) {
     ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
@@ -199,7 +202,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   } else {//if( pmode == PF::PROF_MODE_CUSTOM ) {
     ptype = (profile_type_t)out_profile_type.get_enum_value().first;
     trc_type = (TRC_type)out_trc_type.get_enum_value().first;
-    //std::cout<<"ConvertColorspacePar::build(): Getting built-in profile: "<<out_profile_type.get_enum_value().second.first<<std::endl;
+    std::cout<<"ConvertColorspacePar::build(): Getting built-in profile: "<<out_profile_type.get_enum_value().second.first<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
   }
 
@@ -225,7 +228,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 
   if( matching ) {
     PF_REF( in[first], "ConvertColorspacePar::build(): input image ref for equal input and output profiles" );
-    //std::cout<<"ConvertColorspacePar::build(): matching input and output profiles, no transform needed"<<std::endl;
+    std::cout<<"ConvertColorspacePar::build(): matching input and output profiles, no transform needed"<<std::endl;
     return in[first];
   }
 
@@ -316,6 +319,11 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     tr_par->set_adaptation_state( adaptation_state.get() );
     tr_par->set_clip_negative(clip_negative.get());
     tr_par->set_clip_overflow(clip_overflow.get());
+    tr_par->set_gamut_mapping(gamut_mapping.get());
+    if( get_Lab_format() ) tr_par->set_Lab_format();
+    if( get_LCh_format() ) tr_par->set_LCh_format();
+    if( get_LSh_format() ) tr_par->set_LSh_format();
+    std::cout<<"ConvertColorspacePar::build(): tr_par->get_LSh_format()="<<tr_par->get_LSh_format()<<std::endl;
     out = tr_par->build( in2, 0, NULL, NULL, level );
     //std::cout<<"ConvertColorspacePar::build(): tr_par output: "<<out<<std::endl;
 

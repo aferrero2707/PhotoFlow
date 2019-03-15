@@ -41,9 +41,10 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   intentSelector( this, "rendering_intent", _("intent: "), 1 ),
   clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
   clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
+  gamut_mapping_checkbox( this, "gamut_mapping", _("gamut mapping"), false ),
   bpcButton( this, "bpc", _("black point compensation"), false ),
   adaptationStateSlider( this, "adaptation_state", _("adapt. state"), 0, 0, 1, 0.01, 0.05, 1 ),
-  gamutWarningButton( _("gamut warning") ),
+  gamutWarningLabel( _("gamut warning") ),
   assignButton( this, "assign", _("assign profile"), false ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
@@ -58,31 +59,35 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   outputControlsBox.pack_start( outTRCTypeSelectorBox, Gtk::PACK_SHRINK );
 
   outProfLabel.set_text( _("working profile name:") );
-  outProfVBox.pack_start( outProfLabel );
-  outProfVBox.pack_start( outProfFileEntry );
+  outProfVBox.pack_start( outProfLabel, Gtk::PACK_SHRINK, 2 );
+  outProfVBox.pack_start( outProfFileEntry, Gtk::PACK_SHRINK, 2 );
   outProfHBox.pack_start( outProfVBox );
   outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( outProfHBox );
+  outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK, 2 );
 
   intentSelectorBox.pack_start( intentSelector, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( intentSelectorBox, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( intentSelectorBox, Gtk::PACK_SHRINK, 2 );
 
-  clip_negative_box.pack_start( clip_negative_checkbox, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( clip_negative_box, Gtk::PACK_SHRINK );
-  clip_overflow_box.pack_start( clip_overflow_checkbox, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( clip_overflow_box, Gtk::PACK_SHRINK );
+  gamut_mapping_box.pack_end( gamut_mapping_checkbox, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( gamut_mapping_box, Gtk::PACK_SHRINK, 2 );
 
-  bpcButtonBox.pack_start( bpcButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( bpcButtonBox, Gtk::PACK_SHRINK );
+  clip_negative_box.pack_end( clip_negative_checkbox, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( clip_negative_box, Gtk::PACK_SHRINK, 2 );
+  clip_overflow_box.pack_end( clip_overflow_checkbox, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( clip_overflow_box, Gtk::PACK_SHRINK, 2 );
+
+  bpcButtonBox.pack_end( bpcButton, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( bpcButtonBox, Gtk::PACK_SHRINK, 2 );
 
   adaptationStateBox.pack_end( adaptationStateSlider, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( adaptationStateBox, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( adaptationStateBox, Gtk::PACK_SHRINK, 2 );
 
-  assignButtonBox.pack_start( assignButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( assignButtonBox, Gtk::PACK_SHRINK );
+  assignButtonBox.pack_end( assignButton, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( assignButtonBox, Gtk::PACK_SHRINK, 2 );
 
-  gamutWarningButtonBox.pack_start( gamutWarningButton, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( gamutWarningButtonBox, Gtk::PACK_SHRINK );
+  gamutWarningButtonBox.pack_end( gamutWarningButton, Gtk::PACK_SHRINK );
+  gamutWarningButtonBox.pack_end( gamutWarningLabel, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( gamutWarningButtonBox, Gtk::PACK_SHRINK, 2 );
 
   add_widget( outputControlsBox );
 

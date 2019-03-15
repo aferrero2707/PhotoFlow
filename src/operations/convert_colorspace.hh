@@ -167,7 +167,7 @@ class ConvertColorspacePar: public OpParBase
   Property<float> adaptation_state;
   Property<bool> assign;
 
-  Property<bool> clip_negative, clip_overflow;
+  Property<bool> clip_negative, clip_overflow, gamut_mapping;
 
   void* out_profile_data;
   int out_profile_data_length;
@@ -182,7 +182,9 @@ class ConvertColorspacePar: public OpParBase
 
   bool softproof;
   bool gamut_warning;
+  bool do_LCh, do_LSh, do_Lab;
 
+  PF::ICCProfile* iccprof;
   cmsColorSpaceSignature input_cs_type;
   cmsColorSpaceSignature output_cs_type;
 
@@ -202,6 +204,7 @@ public:
     out_profile_data_length = length;
   }
   std::string get_out_profile_name() { return out_profile_name.get(); }
+  PF::ICCProfile* get_out_profile() { return iccprof; }
 
   int get_intent() { return intent.get_enum_value().first; }
 
@@ -209,6 +212,17 @@ public:
   bool get_clip_overflow() { return clip_overflow.get(); }
   void set_clip_negative( bool flag ) { clip_negative.update(flag); }
   void set_clip_overflow( bool flag ) { clip_overflow.update(flag); }
+
+  bool get_gamut_mapping() { return gamut_mapping.get(); }
+  void set_gamut_mapping( bool flag ) { gamut_mapping.update(flag); }
+
+  void set_Lab_format() { do_Lab = true; do_LCh = do_LSh = false; }
+  void set_LCh_format() { do_LCh = true; do_Lab = do_LSh = false; }
+  void set_LSh_format() { do_LSh = true; do_Lab = do_LCh = false; }
+
+  bool get_Lab_format() { return do_Lab; }
+  bool get_LCh_format() { return do_LCh; }
+  bool get_LSh_format() { return do_LSh; }
 
   void set_bpc( bool flag ) { bpc.update( flag ); }
 
@@ -375,6 +389,13 @@ public:
               pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 127.5) / 255.0);
               pout[x+2] = (cmsFloat32Number) ((pout[x+2] + 127.5) / 255.0);
 
+              if( opar->get_LCh_format() || opar->get_LSh_format() )
+                PF::Lab2LCH( &(pout[x]), &(pout[x]), 1 );
+              if( opar->get_LSh_format() ) {
+                if( pout[x] > 1.0e-10 || pout[x] < -1.0e-10 ) pout[x+1] /= std::fabs(pout[x]);
+                else pout[x+1] = 0;
+              }
+
               if( false && r->left==0 && r->top==0 && x==0 && y==0 ) {
                 std::cout<<"ConvertColorspace::render(Lab out): pout="<<pout[x]<<" "<<pout[x+1]<<" "<<pout[x+2]<<std::endl;
               }
@@ -398,6 +419,9 @@ public:
       } else {
         memcpy( pout, p, sizeof(float)*line_size_in );
       }
+      //std::cout<<"opar->get_out_profile(): "<<opar->get_out_profile()
+      //    <<"  opar->get_out_profile()->is_rgb(): "<<opar->get_out_profile()->is_rgb()
+      //    <<"  opar->get_gamut_mapping(): "<<opar->get_gamut_mapping()<<std::endl;
       if( opar->get_clip_negative() || opar->get_clip_overflow() ) {
         for( x = 0; x < line_size_out; x+= 1 ) {
           if( opar->get_clip_negative() ) pout[x] = MAX( pout[x], 0.f );
