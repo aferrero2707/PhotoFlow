@@ -40,6 +40,7 @@
 
 float PF::SH_HL_mapping( const float& in, const float& sh_compr, const float& hl_compr, const float& pivot, bool verbose )
 {
+  if(verbose) std::cout<<"SH_HL_mapping: verbose="<<verbose<<std::endl;
   return PF::SH_HL_mapping_log(in, sh_compr, hl_compr, pivot, verbose);
 }
 
@@ -93,6 +94,8 @@ PF::ToneMappingParV2::ToneMappingParV2():
   gamut_compression_amount("gamut_compression_amount",this,0),
   gamut_compression_exponent("gamut_compression_exponent",this,1),
   lumi_blend_frac("lumi_blend_frac",this,100),
+  saturation_scaling("saturation_scaling",this,0.0),
+  hl_desaturation("hl_desaturation",this,0.45),
   local_contrast_amount("local_contrast_amount",this,0.0),
   local_contrast_radius("local_contrast_radius",this,10),
   local_contrast_threshold("local_contrast_threshold",this,0.075),
@@ -150,6 +153,7 @@ VipsImage* PF::ToneMappingParV2::build(std::vector<VipsImage*>& in, int first,
   filmic2_exponent = (filmic2_gamma.get() >= 0) ? 1.f/(filmic2_gamma.get()+1) : (1.f-filmic2_gamma.get());
 
   ICCProfile* new_icc_data = PF::get_icc_profile( in[0] );
+  std::cout<<"ToneMappingParV2::build: new_icc_data="<<new_icc_data<<"  gamut_compression="<<gamut_compression.get()<<std::endl;
   if( new_icc_data && gamut_compression.get() ) new_icc_data->init_gamut_mapping();
 
   icc_data = new_icc_data;
@@ -173,6 +177,7 @@ VipsImage* PF::ToneMappingParV2::build(std::vector<VipsImage*>& in, int first,
   in2.clear();
   in2.push_back(smoothed);
   in2.push_back(in[0]);
+  rgb_image(in[0]->Xsize, in[0]->Ysize);
   VipsImage* out = OpParBase::build( in2, 0, NULL, NULL, level );
   PF_UNREF(smoothed, "ToneMappingParV2::build(): smoothed unref");
 

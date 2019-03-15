@@ -151,6 +151,8 @@ class ToneMappingParV2: public OpParBase
   Property<float> gamut_compression_amount, gamut_compression_exponent;
   Property<float> lumi_blend_frac;
 
+  Property<float> saturation_scaling, hl_desaturation;
+
   Property<float> local_contrast_amount, local_contrast_radius, local_contrast_threshold;
   ProcessorBase* guided_blur;
 
@@ -172,6 +174,8 @@ public:
   float get_exponent() { return exponent; }
   bool get_gamut_compression() { return gamut_compression.get(); }
   bool get_hue_protection() { return hue_protection.get(); }
+  float get_saturation_scaling() { return saturation_scaling.get(); }
+  float get_hl_desaturation() { return hl_desaturation.get(); }
 
   float get_filmic_A() { return filmic_A.get(); }
   float get_filmic_B() { return filmic_B.get(); }
@@ -203,11 +207,11 @@ public:
   float get_LP_shoulder_smoothness() { return LP_shoulder_smoothness.get(); }
 
   float get_LE_gain() { return LE_gain.get(); }
-  float get_LE_compression() { return LE_compression.get()+1.0e-5; }
-  float get_LE_slope() { return LE_slope.get()+1.0e-10; }
+  float get_LE_compression() { return LE_compression.get()+0.0e-5; }
+  float get_LE_slope() { return LE_slope.get()+1.0e-5; }
   float get_LE_lin_max() { return LE_lin_max.get(); }
   float get_LE_knee_strength() { return LE_knee_strength.get(); }
-  float get_LE_shoulder_slope() { return LE_shoulder_slope.get(); }
+  float get_LE_shoulder_slope() { return LE_shoulder_slope.get()+1.0e-5; }
   float get_LE_shoulder_slope2() { return LE_shoulder_slope2.get(); }
 
   float get_HD_slope() { return HD_slope.get(); }
@@ -321,7 +325,32 @@ public:
     float AL_Tvshift = (1.f-opar->get_AL_Tstrength()) * AL_Tsize;
 
     float LP_midgray = pow(0.5,2.45);
+
+
+    float log_pivot = prof->perceptual2linear( opar->get_log_pivot() );
+    float log_scale_sh = log(log_pivot*sh_compr+1);
+    float log_scale_hl = log(log_pivot*hl_compr+1);
+    float log_scale_sh2 = pow( log_pivot, 1.0f / ((sh_compr+hl_compr)/2+1) );
+    float log_scale_hl2 = pow( log_pivot, 1.0f / (hl_compr+1) );
+
     float LE_midgray = LP_midgray;
+    float LE_gain = opar->get_LE_gain();
+    float LE_Ymidgray = LE_midgray * LE_gain;
+    float LE_slope = opar->get_LE_slope();
+    float LE_slope2 = LE_slope * LE_gain;
+    float LE_linmax = pow(opar->get_LE_lin_max(),2.45);
+    float LE_linmax2 = SH_HL_mapping( LE_linmax, sh_compr, hl_compr, log_pivot );
+    //float LE_linmax2 = LE_linmax; //SH_HL_mapping_log( LE_linmax, sh_compr, hl_compr, log_pivot, 0.1 );
+    float LE_Ylinmax = ( LE_linmax2 - LE_midgray ) * LE_slope2 + LE_Ymidgray;
+    float LE_Srange = 1.0f - LE_Ylinmax;
+    float LE_compr = opar->get_LE_compression();
+    float LE_compr2 = LE_compr*2.5f;
+    float LE_Sslope = opar->get_LE_shoulder_slope();
+    float LE_Sslope2 = opar->get_LE_shoulder_slope2();
+    float LE_Kstrength = opar->get_LE_knee_strength() * ( (LE_slope-1)*1 + 1 );
+    float LE_Kmax = ((1.f-LE_slope)*LE_midgray)/(LE_slope/(sqrt(2.0f)*LE_Kstrength)-LE_slope);
+    float LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope + LE_midgray;
+    float LE_Kexp = LE_Kmax * LE_slope / LE_Kymax;
 
     if(false) {
       float Lw = (AL_Tlength+1)*(1.0f-AL_Tlength)*Lwmax;
@@ -367,12 +396,6 @@ public:
     rgb2lab.init(prof, labprof, VIPS_FORMAT_FLOAT);
     lab2rgb.init(labprof, prof, VIPS_FORMAT_FLOAT);
 
-    float log_pivot = prof->perceptual2linear( opar->get_log_pivot() );
-    float log_scale_sh = log(log_pivot*sh_compr+1);
-    float log_scale_hl = log(log_pivot*hl_compr+1);
-    float log_scale_sh2 = pow( log_pivot, 1.0f / ((sh_compr+hl_compr)/2+1) );
-    float log_scale_hl2 = pow( log_pivot, 1.0f / (hl_compr+1) );
-
     float lc = opar->get_local_contrast_amount();
 
     //std::cout<<"gamma = "<<gamma<<std::endl;
@@ -391,23 +414,16 @@ public:
         //pout[x+2] = psmooth[x+2];
         //continue;
 
-        RGBin[0] = psmooth[x]*lc   + pin[x]*(1.0f-lc);
-        dRGB[0] = (RGBin[0] > -1.0e-16 && RGBin[0] < 1.0e-16) ? 0 : pin[x] / RGBin[0];
+        RGBin[0] = psmooth[x]*lc   + pin[x]*(1.0f-lc); if( RGBin[0] < 0 ) RGBin[0] = 0;
+        dRGB[0] = (/*RGBin[0] > -1.0e-16 &&*/ RGBin[0] < 1.0e-16) ? 1 : ((pin[x]<0) ? 0 : pin[x]) / RGBin[0];
 
 
-        RGBin[1] = psmooth[x+1]*lc + pin[x+1]*(1.0f-lc);
-        dRGB[1] = (RGBin[1] > -1.0e-16 && RGBin[1] < 1.0e-16) ? 0 : pin[x+1] / RGBin[1];
+        RGBin[1] = psmooth[x+1]*lc + pin[x+1]*(1.0f-lc); if( RGBin[1] < 0 ) RGBin[1] = 0;
+        dRGB[1] = (/*RGBin[1] > -1.0e-16 &&*/ RGBin[1] < 1.0e-16) ? 1 : ((pin[x+1]<0) ? 0 : pin[x+1]) / RGBin[1];
 
-        RGBin[2] = psmooth[x+2]*lc + pin[x+2]*(1.0f-lc);
-        dRGB[2] = (RGBin[2] > -1.0e-16 && RGBin[2] < 1.0e-16) ? 0 : pin[x+2] / RGBin[2];
-        /*
-        if( exposure != 0 ) {
-          for( k=0; k < 3; k++) {
-            RGBin[k] *= exposure;
-            //clip( exposure*RGB[k], RGB[k] );
-          }
-        }
-        */
+        RGBin[2] = psmooth[x+2]*lc + pin[x+2]*(1.0f-lc); if( RGBin[2] < 0 ) RGBin[2] = 0;
+        dRGB[2] = (/*RGBin[2] > -1.0e-16 &&*/ RGBin[2] < 1.0e-16) ? 1 : ((pin[x+2]<0) ? 0 : pin[x+2]) / RGBin[2];
+
         RGBin[3] = prof->get_lightness(RGBin[0],RGBin[1],RGBin[2]);
         /*
         std::cout<<"pin: "<<pin[x]<<" "<<pin[x+1]<<" "<<pin[x+2]<<" "<<std::endl;
@@ -456,30 +472,30 @@ public:
           rRGB[0] = rRGB[1] = rRGB[2] = rRGB[3] = 1;
         }
 
+
+        if(RGB[0] < 0) RGB[0] = 0;
+        if(RGB[1] < 0) RGB[1] = 0;
+        if(RGB[2] < 0) RGB[2] = 0;
+        float min = MIN3(RGB[0], RGB[1], RGB[2]);
+        float max = MAX3(RGB[0], RGB[1], RGB[2]);
+        int max_id = 0;
+        if( RGB[1] > RGB[max_id]) max_id = 1;
+        if( RGB[2] > RGB[max_id]) max_id = 2;
+        float S = (max > 1.0e-10) ? (max - min) / max : 0;
+        if( S < 0 ) S = 0; if( S > 1 ) S = 1;
+        S = powf(S,2.45);
+        float K = 1.0f - opar->get_saturation_scaling()*S;
+
+        float saturation = 1;
+
         switch( method ) {
         case TONE_MAPPING_LIN_EXP: {
-          float LE_gain = opar->get_LE_gain();
-          float LE_Ymidgray = LE_midgray * LE_gain;
-          float LE_slope = opar->get_LE_slope();
-          float LE_slope2 = LE_slope * LE_gain;
-          float LE_linmax = pow(opar->get_LE_lin_max(),2.45);
-          float LE_linmax2 = SH_HL_mapping( LE_linmax, sh_compr, hl_compr, log_pivot );
-          //float LE_linmax2 = LE_linmax; //SH_HL_mapping_log( LE_linmax, sh_compr, hl_compr, log_pivot, 0.1 );
-          float LE_Ylinmax = ( LE_linmax2 - LE_midgray ) * LE_slope2 + LE_Ymidgray;
-          float LE_Srange = 1.0f - LE_Ylinmax;
-          float LE_compr = opar->get_LE_compression();
-          float LE_compr2 = LE_compr*2.5f;
-          float LE_Sslope = opar->get_LE_shoulder_slope();
-          float LE_Sslope2 = opar->get_LE_shoulder_slope2();
-          float LE_Kstrength = opar->get_LE_knee_strength() * ( (LE_slope-1)*1 + 1 );
-          float LE_Kmax = ((1.f-LE_slope)*LE_midgray)/(LE_slope/(sqrt(2.0f)*LE_Kstrength)-LE_slope);
-          float LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope + LE_midgray;
-          float LE_Kexp = LE_Kmax * LE_slope / LE_Kymax;
-
           //RGB[3] = LE_midgray;
-
           for( k=0; k < 4; k++) {
             //std::cout<<"lin+exp: RGB["<<k<<"] in:  "<<RGB[k]<<std::endl;
+            RGB[k] *= K;
+            float lRGB = (RGB[k] - LE_midgray) * LE_slope2 + LE_Ymidgray;
+
             if( RGB[k] > LE_linmax2 ) {
               // shoulder
               float X = (RGB[k] - LE_linmax2) * LE_slope2 * LE_compr / LE_Srange;
@@ -487,15 +503,23 @@ public:
               ////RGB[k] = 1.0f - LE_Srange * exp( -X / XD );
               //RGB[k] = (LE_Srange - LE_Srange * exp( -X / XD )) / LE_compr + LE_Ylinmax;
 
-              RGB[k] = (LE_Srange - LE_Srange * exp( -log(X*(LE_Sslope+1.0e-10)+1)/(LE_Sslope+1.0e-10) )) / LE_compr + LE_Ylinmax;
+              float result = (LE_Srange - LE_Srange * exp( -log(X*(LE_Sslope)+1)/(LE_Sslope) )) / LE_compr + LE_Ylinmax;
+              //if( RGB[k]>1) std::cout<<"RGB[k]="<<RGB[k]<<"  X="<<X<<"  result="<<result<<std::endl;
+              RGB[k] = result;
+
+              if( k == max_id ) {
+                // reduced saturation proportionally to the compression factor
+                //saturation = powf(RGB[k] / lRGB, opar->get_hl_desaturation());
+              }
             } else if( RGB[k] < LE_Kmax ) {
               // knee
               float X = RGB[k] / LE_Kmax;
               RGB[k] = (X>=0) ? LE_Kymax * pow(X,LE_Kexp) : -LE_Kymax * pow(-X,LE_Kexp);
             } else {
               // linear part
-              RGB[k] = (RGB[k] - LE_midgray) * LE_slope2 + LE_Ymidgray;
+              RGB[k] = lRGB; //(RGB[k] - LE_midgray) * LE_slope2 + LE_Ymidgray;
             }
+            //RGB[k] *= K;
             //RGB[k] *= rRGB[k];
             //std::cout<<"lin+log: RGB["<<k<<"] out: "<<RGB[k]<<std::endl;
           }
@@ -506,6 +530,12 @@ public:
           break;
         }
 
+        if( saturation != 1 ) {
+          for( k=0; k < 3; k++) {
+            RGB[k] = RGB[3] + saturation * (RGB[k] - RGB[3]);
+          }
+        }
+
         if( prof && opar->get_hue_protection() ) {
           float Jab_in[3], JCH_in[3];
           float Jab[3], JCH[3];
@@ -514,15 +544,31 @@ public:
           prof->to_Jzazbz(RGBin[0], RGBin[1], RGBin[2], Jab_in[0], Jab_in[1], Jab_in[2]);
           PF::Lab2LCH(Jab_in, JCH_in, 1);
 
+          //std::cout<<"RGBin:  "<<RGBin[0]<<" "<<RGBin[1]<<" "<<RGBin[2]<<" "<<std::endl;
+          //std::cout<<"Jabin:  "<<Jab_in[0]<<" "<<Jab_in[1]<<" "<<Jab_in[2]<<" "<<std::endl;
+          //std::cout<<"JCHin:  "<<JCH_in[0]<<" "<<JCH_in[1]<<" "<<JCH_in[2]<<" "<<std::endl;
+
+          float max_before = MAX3(RGB[0], RGB[1], RGB[2]);
           prof->to_Jzazbz(RGB[0], RGB[1], RGB[2], Jab[0], Jab[1], Jab[2]);
           PF::Lab2LCH(Jab, JCH, 1);
 
           JCH[2] = JCH_in[2];
-          if( opar->get_gamut_compression() )
-            prof->chroma_compression(JCH[0], JCH[1], JCH[2]);
+          //if( opar->get_gamut_compression() )
+          //  prof->chroma_compression(JCH[0], JCH[1], JCH[2]);
 
+          //std::cout<<"JCHout: "<<JCH[0]<<" "<<JCH[1]<<" "<<JCH[2]<<" "<<std::endl;
           PF::LCH2Lab(JCH, Jab, 1);
+          //std::cout<<"Jabout: "<<Jab[0]<<" "<<Jab[1]<<" "<<Jab[2]<<" "<<std::endl;
           prof->from_Jzazbz( Jab[0], Jab[1], Jab[2], RGB[0], RGB[1], RGB[2] );
+          //std::cout<<"RGBout: "<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<" "<<std::endl;
+          float max_after = MAX3(RGB[0], RGB[1], RGB[2]);
+
+          if(max_after > 1.0e-10) {
+            float R = max_before / max_after;
+            RGB[0] *= R;
+            RGB[1] *= R;
+            RGB[2] *= R;
+          }
 
           //pout[x] = RGB[0];
           //pout[x+1] = RGB[1];
@@ -531,6 +577,8 @@ public:
         pout[x] = RGB[0] * dRGB[0];
         pout[x+1] = RGB[1] * dRGB[1];
         pout[x+2] = RGB[2] * dRGB[2];
+        //std::cout<<"dRGB: "<<dRGB[0]<<" "<<dRGB[1]<<" "<<dRGB[2]<<" "<<std::endl;
+        //std::cout<<"pout: "<<pout[x+0]<<" "<<pout[x+1]<<" "<<pout[x+2]<<" "<<std::endl;
       }
     }
   }

@@ -156,6 +156,8 @@ public:
     Slider gamut_compression_slider;
     Slider gamut_compression_exponent_slider;
     Slider lumi_blend_frac_slider;
+    Slider saturation_scaling_slider;
+    Slider hl_desaturation_slider;
 
     Gtk::Frame local_contrast_frame;
     Gtk::VBox local_contrast_box;

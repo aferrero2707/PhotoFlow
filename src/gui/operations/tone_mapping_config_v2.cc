@@ -481,7 +481,9 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
           shadows_frame( _("range compression") ),
           midtones_frame( _("tone curve") ),
           highlights_frame( _("tone curve") ),
-          local_contrast_frame( _("local comtrast") ),
+          saturation_scaling_slider( this, "saturation_scaling", _("sat scaling"), 1, 0, 100, 0.5, 5, 100 ),
+          hl_desaturation_slider( this, "hl_desaturation", _("hl desaturation"), 1, 0, 100, 0.5, 5, 100 ),
+          local_contrast_frame( _("local contrast") ),
           local_contrast_slider( this, "local_contrast_amount", _("amount"), 1, 0, 100, 0.5, 5, 100 ),
           local_contrast_radius_slider( this, "local_contrast_radius", _("radius"), 1, 0, 100, 0.5, 5, 1 ),
           local_contrast_threshold_slider( this, "local_contrast_threshold", _("threshold"), 1, 0.5, 100, 0.5, 5, 1000 )
@@ -571,7 +573,9 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
   curve_area_box.pack_start( curve_area, Gtk::PACK_SHRINK, 10 );
 
   //controlsBox.pack_start( lumi_blend_frac_slider, Gtk::PACK_SHRINK );
-  controlsBox.pack_start( hue_protection_checkbox, Gtk::PACK_SHRINK );
+  /controlsBox.pack_start( saturation_scaling_slider, Gtk::PACK_SHRINK, 2 );
+  //controlsBox.pack_start( hl_desaturation_slider, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( hue_protection_checkbox, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( gamut_compression_checkbox, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( gamut_compression_slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( gamut_compression_exponent_slider, Gtk::PACK_SHRINK );
