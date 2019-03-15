@@ -2548,11 +2548,13 @@ void PF::LayerWidget::on_switch_page(_GtkNotebookPage* page, guint page_num)
 
 bool PF::LayerWidget::on_key_press_event(GdkEventKey* event)
 {
+#ifndef NDEBUG
   std::cout<<"LayerWidget: event->type="<<event->type<<"  event->state="<<(event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK))<<std::endl;
   std::cout<<"  GDK_KEY_PRESS="<<GDK_KEY_PRESS<<std::endl;
   std::cout<<"  GDK_SHIFT_MASK="<<GDK_SHIFT_MASK<<std::endl;
   std::cout<<"  GDK_CONTROL_MASK="<<GDK_CONTROL_MASK<<std::endl;
   std::cout<<"  GDK_MOD2_MASK="<<GDK_MOD2_MASK<<std::endl;
+#endif
   if( event->type == GDK_KEY_PRESS &&
       (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK)) == (GDK_MOD2_MASK+GDK_SHIFT_MASK) ) {
     if( event->keyval == 'N' ) {
