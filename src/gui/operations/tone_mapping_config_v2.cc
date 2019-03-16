@@ -573,7 +573,7 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
   curve_area_box.pack_start( curve_area, Gtk::PACK_SHRINK, 10 );
 
   //controlsBox.pack_start( lumi_blend_frac_slider, Gtk::PACK_SHRINK );
-  /controlsBox.pack_start( saturation_scaling_slider, Gtk::PACK_SHRINK, 2 );
+  //controlsBox.pack_start( saturation_scaling_slider, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( hl_desaturation_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( hue_protection_checkbox, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( gamut_compression_checkbox, Gtk::PACK_SHRINK );
