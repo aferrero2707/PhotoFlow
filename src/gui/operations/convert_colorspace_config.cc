@@ -41,7 +41,8 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   intentSelector( this, "rendering_intent", _("intent: "), 1 ),
   clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
   clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
-  gamut_mapping_checkbox( this, "gamut_mapping", _("gamut mapping"), false ),
+  gamut_mapping_frame(_("gamut mapping")),
+  gamut_mapping_checkbox( this, "gamut_mapping", _("enable"), false ),
   saturation_intent_slider( this, "saturation_intent", _("saturation"), 1, 0, 100, 0.5, 5, 100 ),
   bpcButton( this, "bpc", _("black point compensation"), false ),
   adaptationStateSlider( this, "adaptation_state", _("adapt. state"), 0, 0, 1, 0.01, 0.05, 1 ),
@@ -69,10 +70,13 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   intentSelectorBox.pack_start( intentSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( intentSelectorBox, Gtk::PACK_SHRINK, 2 );
 
+
   gamut_mapping_box.pack_end( gamut_mapping_checkbox, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( gamut_mapping_box, Gtk::PACK_SHRINK, 2 );
+  gamut_mapping_vbox.pack_start( gamut_mapping_box, Gtk::PACK_SHRINK, 2 );
   saturation_intent_box.pack_end( saturation_intent_slider, Gtk::PACK_SHRINK );
-  outputControlsBox.pack_start( saturation_intent_box, Gtk::PACK_SHRINK, 2 );
+  gamut_mapping_vbox.pack_start( saturation_intent_box, Gtk::PACK_SHRINK, 2 );
+  gamut_mapping_frame.add( gamut_mapping_vbox );
+  outputControlsBox.pack_start( gamut_mapping_frame, Gtk::PACK_SHRINK, 4 );
 
   clip_negative_box.pack_end( clip_negative_checkbox, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( clip_negative_box, Gtk::PACK_SHRINK, 2 );

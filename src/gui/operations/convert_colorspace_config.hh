@@ -59,9 +59,10 @@ namespace PF {
     Gtk::HBox clip_negative_box;
     Gtk::HBox clip_overflow_box;
 
+    Gtk::Frame gamut_mapping_frame;
+    Gtk::VBox gamut_mapping_vbox;
     CheckBox gamut_mapping_checkbox;
     Gtk::HBox gamut_mapping_box;
-
     Slider saturation_intent_slider;
     Gtk::HBox saturation_intent_box;
 
