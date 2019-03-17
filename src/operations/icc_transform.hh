@@ -59,6 +59,7 @@ namespace PF
     cmsColorSpaceSignature output_cs_type;
 
     bool clip_negative, clip_overflow, gamut_mapping;
+    float saturation_intent;
 
   public:
 
@@ -113,6 +114,8 @@ namespace PF
 
     bool get_gamut_mapping() { return gamut_mapping; }
     void set_gamut_mapping( bool flag ) { gamut_mapping = flag; }
+    float get_saturation_intent() { return saturation_intent; }
+    void set_saturation_intent( float s ) { saturation_intent = s; }
 
     //cmsHPROFILE create_profile_from_matrix (const double matrix[3][3], bool gamma, Glib::ustring name);
 
@@ -230,9 +233,10 @@ namespace PF
               ICCProfile* inprof = opar->get_in_profile();
               ICCProfile* outprof = opar->get_out_profile();
               float** gbound = outprof->get_gamut_boundary();
+              float* gLid = outprof->get_gamut_Lid_Cmax();
               for( x = 0; x < line_size_out; x+= 3 ) {
                 line[x] = p[x]; line[x+1] = p[x+1]; line[x+2] = p[x+2];
-                inprof->gamut_mapping(line[x], line[x+1], line[x+2], gbound);
+                inprof->gamut_mapping(line[x], line[x+1], line[x+2], gbound, gLid, opar->get_saturation_intent());
               }
               opar->get_transform().apply(line,pout,width);
             } else {

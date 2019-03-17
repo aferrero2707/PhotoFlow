@@ -41,7 +41,8 @@ PF::ICCTransformPar::ICCTransformPar():
   output_cs_type( cmsSigRgbData ),
   clip_negative(false),
   clip_overflow(false),
-  gamut_mapping(false)
+  gamut_mapping(false),
+  saturation_intent(0)
 {
   do_Lab = true; do_LCh = do_LSh = false;
   set_type("icc_transform" );

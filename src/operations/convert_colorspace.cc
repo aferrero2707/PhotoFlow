@@ -70,6 +70,7 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
           clip_negative("clip_negative",this,true),
           clip_overflow("clip_overflow",this,true),
           gamut_mapping("gamut_mapping",this,false),
+          saturation_intent("saturation_intent", this, 0),
           out_profile_data( NULL ),
           transform( NULL ),
           gw_transform_in( NULL ),
@@ -320,6 +321,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     tr_par->set_clip_negative(clip_negative.get());
     tr_par->set_clip_overflow(clip_overflow.get());
     tr_par->set_gamut_mapping(gamut_mapping.get());
+    tr_par->set_saturation_intent(saturation_intent.get());
     if( get_Lab_format() ) tr_par->set_Lab_format();
     if( get_LCh_format() ) tr_par->set_LCh_format();
     if( get_LSh_format() ) tr_par->set_LSh_format();

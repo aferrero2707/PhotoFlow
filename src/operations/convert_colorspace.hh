@@ -168,6 +168,7 @@ class ConvertColorspacePar: public OpParBase
   Property<bool> assign;
 
   Property<bool> clip_negative, clip_overflow, gamut_mapping;
+  Property<float> saturation_intent;
 
   void* out_profile_data;
   int out_profile_data_length;

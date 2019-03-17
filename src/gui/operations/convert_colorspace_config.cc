@@ -42,6 +42,7 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
   clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
   gamut_mapping_checkbox( this, "gamut_mapping", _("gamut mapping"), false ),
+  saturation_intent_slider( this, "saturation_intent", _("saturation"), 1, 0, 100, 0.5, 5, 100 ),
   bpcButton( this, "bpc", _("black point compensation"), false ),
   adaptationStateSlider( this, "adaptation_state", _("adapt. state"), 0, 0, 1, 0.01, 0.05, 1 ),
   gamutWarningLabel( _("gamut warning") ),
@@ -70,6 +71,8 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
 
   gamut_mapping_box.pack_end( gamut_mapping_checkbox, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( gamut_mapping_box, Gtk::PACK_SHRINK, 2 );
+  saturation_intent_box.pack_end( saturation_intent_slider, Gtk::PACK_SHRINK );
+  outputControlsBox.pack_start( saturation_intent_box, Gtk::PACK_SHRINK, 2 );
 
   clip_negative_box.pack_end( clip_negative_checkbox, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( clip_negative_box, Gtk::PACK_SHRINK, 2 );

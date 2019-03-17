@@ -137,6 +137,7 @@ class ICCProfile
 
   float** gamut_boundary;
   float** gamut_boundary_out;
+  float* gamut_Lid_Cmax;
 
 
 public:
@@ -199,8 +200,9 @@ public:
   void init_gamut_mapping();
   void set_destination_gamut(ICCProfile* pout);
   float** get_gamut_boundary() { return gamut_boundary; }
-  void gamut_mapping( float& R, float& G, float& B, float** gamut_boundary_out );
-  bool chroma_compression( float& J, float& C, float& H, float** gamut_boundary_out );
+  float* get_gamut_Lid_Cmax() { return gamut_Lid_Cmax; }
+  void gamut_mapping( float& R, float& G, float& B, float** gamut_boundary_out, float* gamut_Lid_Cmax_out, float saturation );
+  bool chroma_compression( float& J, float& C, float& H, float** gamut_boundary_out, float* gamut_Lid_Cmax_out, float saturation );
 
   bool equals_to( PF::ICCProfile* prof);
 

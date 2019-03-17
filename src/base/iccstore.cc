@@ -575,6 +575,7 @@ void PF::ICCProfile::init_gamut_mapping()
   for(int j = 0; j < PF_GAMUT_MAP_NJZ+1; j++) {
     gamut_boundary[j] = new float[360];
   }
+  gamut_Lid_Cmax = new float[360];
 
   float Jab[3], JCH[3], RGB[3] = {0.5, 0.2, 0.1};
 
@@ -594,6 +595,8 @@ void PF::ICCProfile::init_gamut_mapping()
   std::cout<<"init_gamut_mapping: JCh="<<JCH[0]<<" "<<JCH[1]<<" "<<JCH[2]<<" "<<std::endl;
   //getchar(); return;
 
+  float vCmax[360] = { 0 };
+  float vLidmax[360] = { 0 };
   // re-compute the gamut boundaries
   int NJsteps = PF_GAMUT_MAP_NJZ;
   float Jdelta = 1.0f / (NJsteps);
@@ -643,6 +646,10 @@ void PF::ICCProfile::init_gamut_mapping()
 
         if(found) {
           gamut_boundary[j][h] = C;
+          if( C > vCmax[h] ) {
+            vCmax[h] = C;
+            vLidmax[h] = j;
+          }
         }
         iter++;
         if(iter == 100) {break;}
@@ -653,6 +660,10 @@ void PF::ICCProfile::init_gamut_mapping()
     }
     //std::cout<<"Y="<<Y<<" done."<<std::endl;
     //break;
+  }
+
+  for(int h = 0; h < 360; h++) {
+    gamut_Lid_Cmax[h] = vLidmax[h];
   }
   //getchar();
 }
@@ -665,7 +676,7 @@ void PF::ICCProfile::set_destination_gamut(ICCProfile* pout)
 
 
 
-void PF::ICCProfile::gamut_mapping( float& R, float& G, float& B, float** gamut_boundary_out )
+void PF::ICCProfile::gamut_mapping( float& R, float& G, float& B, float** gamut_boundary_out, float* gamut_Lid_Cmax_out, float saturation )
 {
   float Jab[3], JCH[3], RGB[3];
   float Jz, az, bz, C, H;
@@ -676,7 +687,7 @@ void PF::ICCProfile::gamut_mapping( float& R, float& G, float& B, float** gamut_
   //std::cout<<"  J="<<Jab[0]<<"  a="<<Jab[1]<<"  b="<<Jab[2]
   //    <<"  J="<<JCH[0]<<"  C="<<JCH[1]<<"  h="<<JCH[2]<<std::endl;
 
-  if( !chroma_compression(JCH[0], JCH[1], JCH[2], gamut_boundary_out) ) return;
+  if( !chroma_compression(JCH[0], JCH[1], JCH[2], gamut_boundary_out, gamut_Lid_Cmax_out, saturation) ) return;
 
   // re-calculate the RGB values
   PF::LCH2Lab(JCH, Jab, 1);
@@ -684,8 +695,9 @@ void PF::ICCProfile::gamut_mapping( float& R, float& G, float& B, float** gamut_
 }
 
 
-bool PF::ICCProfile::chroma_compression( float& J, float& C, float& H, float** gamut_boundary_out )
+bool PF::ICCProfile::chroma_compression( float& J, float& C, float& H, float** gamut_boundary_out, float* gamut_Lid_Cmax_out, float saturation )
 {
+  //saturation = 0.5;
   //if( std::isnan(J) ) {
   //  J = 0;
   //  C = 0;
@@ -693,10 +705,10 @@ bool PF::ICCProfile::chroma_compression( float& J, float& C, float& H, float** g
   //  getchar();
   //}
 
-  if( J >= 1 ) {
-    C = 0;
-    return true;
-  }
+  //if( J >= 1 ) {
+  //  C = 0;
+  //  return true;
+  //}
 
   if( J <= 0 ) {
     C = 0;
@@ -704,16 +716,42 @@ bool PF::ICCProfile::chroma_compression( float& J, float& C, float& H, float** g
   }
 
   // get the index in the gamut mapping LUT
-  int j = static_cast<int>(J*PF_GAMUT_MAP_NJZ);
+  int j = static_cast<int>(J*PF_GAMUT_MAP_NJZ); if( j >= PF_GAMUT_MAP_NJZ ) j = PF_GAMUT_MAP_NJZ-1;
   int h = static_cast<int>(H*180.0f/M_PI);
   //std::cout<<"chroma_compression: J="<<J<<"  j="<<j<<"  h="<<h<<std::endl;
 
-  // compress all chroma values above max/2
-  float Cmax = gamut_boundary_out[j][h];
-  float C0 = Cmax * 0.99f;
+
+  float Cmax2 = gamut_boundary_out[j][h];
+  int j2 = j;
+  if( saturation > 0 && j >= gamut_Lid_Cmax_out[h] ) {
+    // preserve saturation via luminance scaling
+    for(/*j2 = PF_GAMUT_MAP_NJZ-1*/; j2 >= 0; j2--) {
+      if( j2 < gamut_Lid_Cmax_out[h] ) break;
+      if( gamut_boundary_out[j2][h] > Cmax2 ) {
+        Cmax2 = gamut_boundary_out[j2][h];
+      }
+      if( Cmax2 > C ) break;
+    }
+    float J2 = ((float)j2)/PF_GAMUT_MAP_NJZ;
+    //std::cout<<"sat="<<saturation<<"  Jin="<<J<<"  J2="<<J2<<"  J="<<J-saturation * (J - J2)
+    //    <<"  j2="<<static_cast<int>(J*PF_GAMUT_MAP_NJZ)<<std::endl;
+    J -= saturation * (J - J2);
+    j2 = static_cast<int>(J*PF_GAMUT_MAP_NJZ);
+  }
+
+  if( J >= 1 ) {
+    C = 0;
+    return true;
+  }
+
+
+  // compress all chroma values above 90% of Cmax
+  float Cmax = gamut_boundary_out[j2][h];
+  float C0 = Cmax * 0.9f;
   float C1 = Cmax - C0;
   //if( C>gamut_boundary[j][h]) std::cout<<"chroma_compression: j="<<j<<"  h="<<h<<"  C0="<<C0<<std::endl;
   if( C < C0 ) return false;
+
   float Cout = ( C < C0 ) ? C : C0 + C1*( 1.0f - exp((C0-C)/C1) );
   C = Cout;
   return true;

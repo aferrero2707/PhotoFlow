@@ -62,6 +62,9 @@ namespace PF {
     CheckBox gamut_mapping_checkbox;
     Gtk::HBox gamut_mapping_box;
 
+    Slider saturation_intent_slider;
+    Gtk::HBox saturation_intent_box;
+
     CheckBox bpcButton;
     Gtk::HBox bpcButtonBox;
 
