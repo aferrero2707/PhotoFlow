@@ -93,6 +93,8 @@ PF::ClonePar::ClonePar():
   source_channel.add_enum_value(PF::CLONE_CHANNEL_L,"L","L");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_a,"a","a");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_b,"b","b");
+  source_channel.add_enum_value(PF::CLONE_CHANNEL_LCh_C,"LCh_C","C (LCh)");
+  source_channel.add_enum_value(PF::CLONE_CHANNEL_LCh_S,"LCh_S","S (LCh)");
 
   source_channel.set_enum_value(PF::CLONE_CHANNEL_SOURCE);
 
@@ -127,6 +129,16 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
     csin = PF::convert_colorspace( srcimg->Type );
 
   if( csin != PF::PF_COLORSPACE_LAB ) {
+    PF::ConvertColorspacePar* cpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+    if( cpar ) {
+      if( ch == PF::CLONE_CHANNEL_LCh_C )
+        cpar->set_LCh_format();
+      else if( ch == PF::CLONE_CHANNEL_LCh_S )
+        cpar->set_LSh_format();
+      else
+        cpar->set_Lab_format();
+    }
+    std::cout<<"ClonePar::Lab2grayscale(): ch="<<ch<<"  cpar->get_LSh_format()="<<cpar->get_LSh_format()<<std::endl;
     convert2lab->get_par()->set_image_hints( srcimg );
     convert2lab->get_par()->set_format( get_format() );
     convert2lab->get_par()->lab_image( get_xsize(), get_ysize() );
@@ -158,6 +170,8 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
                             1.0, 1.0);
     break;
   case PF::CLONE_CHANNEL_a:
+  case PF::CLONE_CHANNEL_LCh_C:
+  case PF::CLONE_CHANNEL_LCh_S:
     if( vips_extract_band( srcimg, &out, 1, NULL ) )
       return NULL;
     //g_object_unref( srcimg );
@@ -598,6 +612,8 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
           ch==PF::CLONE_CHANNEL_L ||
           ch==PF::CLONE_CHANNEL_a ||
           ch==PF::CLONE_CHANNEL_b ||
+          ch==PF::CLONE_CHANNEL_LCh_C ||
+          ch==PF::CLONE_CHANNEL_LCh_S ||
           (ch==PF::CLONE_CHANNEL_SOURCE && csin == PF::PF_COLORSPACE_LAB) ) {
         unsigned int level2 = level;
         out = Lab2grayscale( srcimg, ch, level2 );
