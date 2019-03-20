@@ -300,7 +300,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Color Correction"), "color_correction" );
   op_color.get_tree().add_op( _("Tone mapping old"), "tone_mapping" );
   op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping_v2" );
-  op_color.get_tree().add_op( _("Dynamic range compressor"), "dynamic_range_compressor" );
+  op_color.get_tree().add_op( _("Dynamic range compressor"), "dynamic_range_compressor_v2" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights" );
   op_color.get_tree().add_op( _("Defringe"), "defringe" );

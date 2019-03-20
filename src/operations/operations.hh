@@ -73,6 +73,7 @@ namespace PF
   ProcessorBase* new_desaturate_luminance();
   ProcessorBase* new_desaturate_average();
   ProcessorBase* new_dynamic_range_compressor();
+  ProcessorBase* new_dynamic_range_compressor_v2();
   ProcessorBase* new_draw();
   ProcessorBase* new_clone_stamp();
   ProcessorBase* new_lensfun();

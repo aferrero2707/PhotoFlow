@@ -61,6 +61,7 @@
 #include "operations/denoise_config.hh"
 #include "operations/desaturate_config.hh"
 #include "operations/dynamic_range_compressor_config.hh"
+#include "operations/dynamic_range_compressor_config_v2.hh"
 #include "operations/sharpen_config.hh"
 #include "operations/draw_config.hh"
 #include "operations/clone_stamp_config.hh"
@@ -1324,6 +1325,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "dynamic_range_compressor" ) {
 
     dialog = new PF::DynamicRangeCompressorConfigGUI( current_layer );
+
+  } else if( op_type == "dynamic_range_compressor_v2" ) {
+
+    dialog = new PF::DynamicRangeCompressorConfigV2GUI( current_layer );
 
   } else if( op_type == "draw" ) {
 
