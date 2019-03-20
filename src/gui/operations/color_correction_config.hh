@@ -43,6 +43,8 @@ namespace PF {
 
   Gtk::Frame offs_frame, slope_frame, pow_frame;
   Gtk::VBox offs_box, slope_box, pow_box;
+  Gtk::Button load_button, save_button;
+  Gtk::HBox button_hbox;
 
   Slider offs_slider;
   Slider r_offs_slider;
@@ -63,6 +65,11 @@ public:
   ColorCorrectionConfigGUI( Layer* l );
 
   bool has_preview() { return false; }
+
+  void on_button_load();
+  void on_button_save();
+  void load_preset(std::string filename);
+  void save_preset(std::string filename);
 };
 
 }

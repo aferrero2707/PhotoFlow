@@ -61,6 +61,7 @@ namespace PF
 
     ICCProfile* get_icc_data() { return icc_data; }
 
+    void set_offset(float r, float g, float b) {offs.set(0); r_offs.set(r); g_offs.set(g); b_offs.set(b);}
     float get_r_offset() { return (offs.get() + r_offs.get()); }
     float get_g_offset() { return (offs.get() + g_offs.get()); }
     float get_b_offset() { return (offs.get() + b_offs.get()); }
@@ -70,13 +71,16 @@ namespace PF
     //float get_r_power() { return ((1.0f - pow.get()) * (1.0f - r_pow.get())); }
     //float get_g_power() { return ((1.0f - pow.get()) * (1.0f - g_pow.get())); }
     //float get_b_power() { return ((1.0f - pow.get()) * (1.0f - b_pow.get())); }
+    void set_slope(float r, float g, float b) {slope.set(1); r_slope.set(r); g_slope.set(g); b_slope.set(b);}
     float get_r_slope() { return ((slope.get()) * (r_slope.get())); }
     float get_g_slope() { return ((slope.get()) * (g_slope.get())); }
     float get_b_slope() { return ((slope.get()) * (b_slope.get())); }
+    void set_power(float r, float g, float b) {pow.set(1); r_pow.set(r); g_pow.set(g); b_pow.set(b);}
     float get_r_power() { return ((pow.get()) * (r_pow.get())); }
     float get_g_power() { return ((pow.get()) * (g_pow.get())); }
     float get_b_power() { return ((pow.get()) * (b_pow.get())); }
 
+    void set_saturation(float s) { saturation.set(s); }
     float get_saturation() { return saturation.get(); }
 
     bool get_log_encoding() { return is_log.get(); }

@@ -101,7 +101,7 @@ void append_layer( PF::Layer* layer, PF::Layer* previous, std::list<PF::Layer*>&
 
 /* The handler functions. */
 
-void start_element (GMarkupParseContext *context,
+static void start_element (GMarkupParseContext *context,
                     const gchar         *element_name,
                     const gchar        **attribute_names,
                     const gchar        **attribute_values,
@@ -352,7 +352,7 @@ void start_element (GMarkupParseContext *context,
   }
 }
 
-void text(GMarkupParseContext *context,
+static void text(GMarkupParseContext *context,
           const gchar         *text,
           gsize                text_len,
           gpointer             user_data,
@@ -365,7 +365,7 @@ void text(GMarkupParseContext *context,
   
 }
 
-void end_element (GMarkupParseContext *context,
+static void end_element (GMarkupParseContext *context,
                   const gchar         *element_name,
                   gpointer             user_data,
                   GError             **error)
