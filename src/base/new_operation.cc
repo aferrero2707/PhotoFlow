@@ -213,6 +213,10 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
    processor = new_dynamic_range_compressor();
 
+ } else if( op_type == "dynamic_range_compressor_v2" ) {
+
+   processor = new_dynamic_range_compressor_v2();
+
   } else if( op_type == "draw" ) {
 
     //processor = new PF::Processor<PF::Convert2LabPar,PF::Convert2LabProc>();
