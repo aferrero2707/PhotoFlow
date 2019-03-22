@@ -46,41 +46,52 @@ float PF::SH_HL_mapping( const float& in, const float& sh_compr, const float& hl
 
 
 
+void PF::TM_lin_exp_params_t::init( float gain, float slope, float lin_max, float knee_strength,
+    float compression, float shoulder_slope)
+{
+   LE_midgray = pow(0.5,2.45);
+   LE_gain = gain;
+   LE_Ymidgray = LE_midgray * LE_gain;
+   LE_slope = slope;
+   LE_slope2 = LE_slope * LE_gain;
+   LE_linmax = pow(lin_max,2.45);
+  //float LE_linmax2 = SH_HL_mapping( LE_linmax, sh_compr, hl_compr, log_pivot );
+   LE_linmax2 = LE_linmax;
+   LE_Ylinmax = ( LE_linmax2 - LE_midgray ) * LE_slope2 + LE_Ymidgray;
+   LE_Srange = 1.0f - LE_Ylinmax;
+   LE_compr = compression;
+   LE_compr2 = LE_compr*2.5f;
+   LE_Sslope = shoulder_slope;
+   LE_Kstrength = knee_strength * ( (LE_slope-1)*1 + 1 );
+   LE_Kmax = ((1.f-LE_slope)*LE_midgray)/(LE_slope/(sqrt(2.0f)*LE_Kstrength)-LE_slope);
+   LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope + LE_midgray;
+   LE_Kexp = LE_Kmax * LE_slope / LE_Kymax;
+}
+
+
+void PF::TM_lin_exp(const PF::TM_lin_exp_params_t& par, const float& val, float& result)
+{
+  if( val > par.LE_linmax2 ) {
+    // shoulder
+    float X = (val - par.LE_linmax2) * par.LE_slope2 * par.LE_compr / par.LE_Srange;
+
+    result = (par.LE_Srange - par.LE_Srange * exp( -log(X*(par.LE_Sslope)+1)/(par.LE_Sslope) )) / par.LE_compr + par.LE_Ylinmax;
+    //if( RGB[k]>1) std::cout<<"RGB[k]="<<RGB[k]<<"  X="<<X<<"  result="<<result<<std::endl;
+  } else if( val < par.LE_Kmax ) {
+    // knee
+    float X = val / par.LE_Kmax;
+    result = (X>=0) ? par.LE_Kymax * pow(X,par.LE_Kexp) : -par.LE_Kymax * pow(-X,par.LE_Kexp);
+  } else {
+    // linear part
+    result = (val - par.LE_midgray) * par.LE_slope2 + par.LE_Ymidgray;
+  }
+}
+
 
 
 PF::ToneMappingParV2::ToneMappingParV2():
   OpParBase(),
-  method("method",this,PF::TONE_MAPPING_LIN_EXP,"TONE_MAPPING_LIN_EXP","linear + exp"),
-  exposure("exposure",this,1),
-  sh_compr("sh_compr",this,0.0),
-  hl_compr("hl_compr",this,0.0),
-  log_pivot("log_pivot",this,0.5),
-  gamut_compression("gamut_compression",this,false),
   hue_protection("hue_protection",this,false),
-  filmic_A("filmic_A",this,0.22),
-  filmic_B("filmic_B",this,0.30),
-  filmic_C("filmic_C",this,0.10),
-  filmic_D("filmic_D",this,0.20),
-  filmic_E("filmic_E",this,0.01),
-  filmic_F("filmic_F",this,0.30),
-  filmic_W("filmic_W",this,11.2),
-  filmic2_preserve_midgray("filmic2_preserve_midgray",this,false),
-  filmic2_gamma("filmic2_gamma",this,0),
-  filmic2_TS("filmic2_TS",this,0.5),
-  filmic2_TL("filmic2_TL",this,0.5),
-  filmic2_SS("filmic2_SS",this,2.0),
-  filmic2_SL("filmic2_SL",this,0.5),
-  filmic2_SA("filmic2_SA",this,1.0),
-  AL_Lmax("AL_Lmax",this,2),
-  AL_b("AL_b",this,0.85),
-  AL_Tsize("AL_Tsize",this,0.5),
-  AL_Tlength("AL_Tlength",this,10),
-  AL_Tstrength("AL_Tstrength",this,0.5),
-  LP_compression("LP_compression",this,2.7),
-  LP_slope("LP_slope",this,1.09),
-  LP_lin_max("LP_lin_max",this,0.5),
-  LP_knee_strength("LP_knee_strength",this,1.2),
-  LP_shoulder_smoothness("LP_shoulder_smoothness",this,0),
   LE_gain("LE_gain",this,1),
   LE_compression("LE_compression",this,0.95),
   LE_slope("LE_slope",this,1.06),
@@ -88,21 +99,15 @@ PF::ToneMappingParV2::ToneMappingParV2():
   LE_knee_strength("LE_knee_strength",this,1.2),
   LE_shoulder_slope("LE_shoulder_slope",this,1.2),
   LE_shoulder_slope2("LE_shoulder_slope2",this,0.5),
-  HD_slope("HD_slope",this,1.1),
-  HD_toe_range("HD_toe_range",this,0.00001),
-  HD_shoulder_range("HD_shoulder_range",this,0.2),
-  gamut_compression_amount("gamut_compression_amount",this,0),
-  gamut_compression_exponent("gamut_compression_exponent",this,1),
+  LE_shoulder_max("LE_shoulder_max",this,10),
   lumi_blend_frac("lumi_blend_frac",this,100),
   saturation_scaling("saturation_scaling",this,0.0),
-  hl_desaturation("hl_desaturation",this,0.45),
+  hl_desaturation("hl_desaturation",this,0.0),
   local_contrast_amount("local_contrast_amount",this,0.0),
-  local_contrast_radius("local_contrast_radius",this,10),
+  local_contrast_radius("local_contrast_radius",this,0.5),
   local_contrast_threshold("local_contrast_threshold",this,0.075),
   icc_data( NULL )
 {
-  method.add_enum_value(PF::TONE_MAPPING_LIN_EXP,"TONE_MAPPING_LIN_EXP","linear + exp.");
-
   guided_blur = new_guided_filter();
 
   set_type("tone_mapping_v2" );
@@ -116,8 +121,6 @@ void PF::ToneMappingParV2::propagate_settings()
 {
   PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided_blur->get_par() );
   if( guidedpar ) {
-    guidedpar->set_radius(local_contrast_radius.get());
-    guidedpar->set_threshold(local_contrast_threshold.get());
     guidedpar->propagate_settings();
   }
 }
@@ -128,8 +131,9 @@ void PF::ToneMappingParV2::compute_padding( VipsImage* full_res, unsigned int id
 {
   PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided_blur->get_par() );
   if( guidedpar ) {
-    float ss = 10; //0.01 * guided_radius.get() * MIN(full_res->Xsize, full_res->Ysize);
-    guidedpar->set_radius(local_contrast_radius.get());
+    float ss = 0.01 * local_contrast_radius.get() * MIN(full_res->Xsize, full_res->Ysize);
+    guidedpar->set_radius(ss);
+    //guidedpar->set_radius(local_contrast_radius.get());
     guidedpar->set_threshold(local_contrast_threshold.get());
     guidedpar->propagate_settings();
     guidedpar->compute_padding(full_res, id, level);
@@ -142,6 +146,38 @@ void PF::ToneMappingParV2::compute_padding( VipsImage* full_res, unsigned int id
 }
 
 
+void PF::ToneMappingParV2::pre_build( rendermode_t mode )
+{
+  float delta = 0;
+  bool found = false;
+  float compression = (LE_compression.get() == 0) ? 0.5 : LE_compression.get();
+  float compression_min = 0, compression_max = 1;
+  int iter = 0;
+  TM_lin_exp_params_t par;
+  float max = LE_shoulder_max.get(), maxout;
+  while( !found ) {
+    par.init(LE_gain.get(), LE_slope.get(), LE_lin_max.get(), LE_knee_strength.get(),
+      compression, LE_shoulder_slope.get());
+    TM_lin_exp( par, max, maxout );
+    float delta = maxout - 1.0f;
+    std::cout<<iter<<"  compression="<<compression<<"  maxout="<<maxout<<std::endl;
+    if( delta > -1.0e-10 && delta < 1.0e-10 ) {
+      found = true;
+      break;
+    }
+    if( iter > 1000 ) break;
+    if( delta > 0 ) { compression_min = compression; compression = (compression_max+compression_min) / 2; }
+    else { compression_max = compression; compression = (compression_max+compression_min) / 2; }
+    iter++;
+  }
+
+  //if( found ) {
+    LE_compression.set(compression);
+    std::cout<<"ToneMappingParV2::build: max="<<max<<"  maxout="<<maxout<<std::endl;
+  //}
+}
+
+
 
 VipsImage* PF::ToneMappingParV2::build(std::vector<VipsImage*>& in, int first,
     VipsImage* imap, VipsImage* omap,
@@ -149,12 +185,11 @@ VipsImage* PF::ToneMappingParV2::build(std::vector<VipsImage*>& in, int first,
 {
   if( in.size()<1 || in[0]==NULL ) return NULL;
 
-  exponent = 1.f;// /gamma.get();
-  filmic2_exponent = (filmic2_gamma.get() >= 0) ? 1.f/(filmic2_gamma.get()+1) : (1.f-filmic2_gamma.get());
-
   ICCProfile* new_icc_data = PF::get_icc_profile( in[0] );
-  std::cout<<"ToneMappingParV2::build: new_icc_data="<<new_icc_data<<"  gamut_compression="<<gamut_compression.get()<<std::endl;
-  if( new_icc_data && gamut_compression.get() ) new_icc_data->init_gamut_mapping();
+  std::cout<<"ToneMappingParV2::build: new_icc_data="<<new_icc_data<<std::endl;
+
+  LE_params.init(LE_gain.get(), LE_slope.get(), LE_lin_max.get(), LE_knee_strength.get(),
+      LE_compression.get(), LE_shoulder_slope.get());
 
   icc_data = new_icc_data;
 
