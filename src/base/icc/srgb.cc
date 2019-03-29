@@ -117,7 +117,8 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
   cmsCIExyY whitepoint = d65_srgb_adobe_specs;
   cmsToneCurve* tone_curve[3];
   switch( type ) {
-  case PF::PF_TRC_STANDARD: {
+  case PF::PF_TRC_STANDARD:
+  case PF::PF_TRC_sRGB: {
     /* sRGB TRC */
     cmsFloat64Number srgb_parameters[5] =
     { 2.4, 1.0 / 1.055,  0.055 / 1.055, 1.0 / 12.92, 0.04045 };

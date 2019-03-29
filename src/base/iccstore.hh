@@ -330,14 +330,14 @@ public:
 
 class ICCStore
 {
-  ICCProfile* srgb_profiles[5];
-  ICCProfile* srgb_d50_profiles[5];
-  ICCProfile* rec2020_profiles[5];
-  ICCProfile* aces_profiles[5];
-  ICCProfile* acescg_profiles[5];
-  ICCProfile* adobe_profiles[5];
-  ICCProfile* prophoto_profiles[5];
-  ICCProfile* prophoto_d65_profiles[5];
+  ICCProfile* srgb_profiles[6];
+  ICCProfile* srgb_d50_profiles[6];
+  ICCProfile* rec2020_profiles[6];
+  ICCProfile* aces_profiles[6];
+  ICCProfile* acescg_profiles[6];
+  ICCProfile* adobe_profiles[6];
+  ICCProfile* prophoto_profiles[6];
+  ICCProfile* prophoto_d65_profiles[6];
   ICCProfile* system_monitor_profile;
   std::vector<ICCProfile*> profiles;
 

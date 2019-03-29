@@ -73,9 +73,9 @@ PF::OCIOFilmicPar::OCIOFilmicPar():
   transform->setDisplay( device.c_str() );
   transform->setView( transformName.c_str() );
 
-  //lookName = "Very High Contrast";
-  //lookName = "Very Low Contrast";
-  lookName = "Medium High Contrast";
+  lookName = "Very High Contrast";
+  //lookName = "High Contrast";
+  //lookName = "Medium High Contrast";
   //lookName = "Base Contrast";
   //lookName = config->getDisplayLooks(device, transformName); //"Very High Contrast";
   std::cout<<"OCIOFilmicPar: lookName="<<lookName<<std::endl;
@@ -86,18 +86,19 @@ PF::OCIOFilmicPar::OCIOFilmicPar():
   processor = config->getProcessor(transform);
   std::cout<<"OCIOFilmicPar: processor="<<processor<<std::endl;
 
-  float* buf = new float[400*3];
-  float delta = 12.0f/199.0f;
-  float Y = -8;
+  float* buf = new float[500*3];
+  float delta = 20.0f/499.0f;
+  float Ymin = -14;
+  float Y = Ymin;
   const double inv_log_base = 1.0 / log(2.0);
-  for(int i = 0; i < 400; i++) {
+  for(int i = 0; i < 500; i++) {
     buf[i*3] = buf[i*3+1] = buf[i*3+2] = pow(2,Y);
     Y += delta;
   }
-  OCIO::PackedImageDesc img(buf, 400, 1, 3);
+  OCIO::PackedImageDesc img(buf, 500, 1, 3);
   get_processor()->apply(img);
-  Y = -8;
-  for(int i = 0; i < 400; i++) {
+  Y = Ymin;
+  for(int i = 0; i < 500; i++) {
     std::cout<<Y<<" "<<pow(2,Y)<<" "<<pow(buf[i*3],2.2)<<std::endl;
     Y += delta;
   }
