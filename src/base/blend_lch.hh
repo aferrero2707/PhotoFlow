@@ -66,22 +66,18 @@ class BlendLCH<T, PF_COLORSPACE_RGB, CHMIN, CHMAX, false>:
   float brgb[3];
   float trgb[3];
   float orgb[3];
-  ICCProfile* data;
   ICCTransform* img2lab;
   ICCTransform* lab2img;
   int tgtch;
 public:
   void set_channel(int ch) {tgtch = ch;}
-  void set_icc_data( ICCProfile* d, VipsBandFormat fmt ) {
-    data = d;
-  }
   void set_img2lab_transform(ICCTransform* t) { img2lab = t; }
   void set_lab2img_transform(ICCTransform* t) { lab2img = t; }
 
   void blend(const float& opacity, T* bottom, T* top, T* out, const int& x, int& /*xomap*/)
   {
-    //std::cout<<"BlendLCH: data="<<data<<std::endl;
-    if( !data ) {
+    //std::cout<<"BlendLCH: img2lab="<<img2lab<<std::endl;
+    if( !img2lab || ! lab2img) {
       pos = x;
       for( ch=CHMIN; ch<=CHMAX; ch++, pos++ ) {
         out[pos] = top[pos];
@@ -89,7 +85,7 @@ public:
       return;
     }
 
-    //std::cout<<"BlendLCH: data->trc_type="<<data->trc_type<<std::endl;
+    //std::cout<<"BlendLCH: tgtch="<<tgtch<<std::endl;
 
     // RGB values of the bottom layer
     brgb[0] = (float(bottom[x]) + FormatInfo<T>::MIN)/FormatInfo<T>::RANGE;
