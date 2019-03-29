@@ -42,19 +42,8 @@ void PF::ToneMappingCurveAreaV2::set_params(PF::ToneMappingParV2* tmpar)
   bool redraw = true;
   //    (true || tmpar->get_LE_gain() != LE_gain ) ? true : false;
 
-
-  float LE_midgray = pow(0.5,2.45);
-  LE_gain = tmpar->get_LE_gain();
-  LE_slope = tmpar->get_LE_slope();
-  LE_compr = tmpar->get_LE_compression();
-  LE_linmax = pow(tmpar->get_LE_lin_max(),2.45);
-  LE_Kstrength = tmpar->get_LE_knee_strength() * ( (LE_slope-1)*1 + 1 );
-  LE_Kmax = ((1.f-LE_slope)*LE_midgray)/(LE_slope/(sqrt(2.0f)*LE_Kstrength)-LE_slope);
-  LE_Sslope = tmpar->get_LE_shoulder_slope();
-  LE_Sslope2 = tmpar->get_LE_shoulder_slope2();
-  std::cout<<"ToneMappingCurveAreaV2::set_params: LE_linmax="<<LE_linmax<<"  LE_Sslope="<<LE_Sslope<<"  LE_compr="<<LE_compr<<std::endl;
-  //std::cout<<"ToneMappingCurveAreaV2::set_params: AL_Tsize="<<AL_Tsize<<"  AL_Tlength="<<AL_Tlength
-  //    <<"  AL_Tshift="<<AL_Tshift<<"  AL_Tmax="<<AL_Tmax<<"  AL_Tvshift="<<AL_Tvshift<<std::endl;
+  LE_params.init(tmpar->get_LE_gain(), tmpar->get_LE_slope(), tmpar->get_LE_lin_max(),
+      tmpar->get_LE_knee_strength(), tmpar->get_LE_compression(), tmpar->get_LE_shoulder_slope());
 
   //if( redraw )
     queue_draw();
@@ -65,43 +54,8 @@ void PF::ToneMappingCurveAreaV2::set_params(PF::ToneMappingParV2* tmpar)
 float PF::ToneMappingCurveAreaV2::get_curve_value( float val )
 {
   float result = val;
-  float val0 = val;
 
-  float LE_linmax2 = LE_linmax;
-  val = result;
-
-  float LE_slope2 = LE_slope * LE_gain;
-  float LE_midgray = pow(0.5,2.45);
-  float LE_Ymidgray = LE_midgray * LE_gain;
-  float LE_Ylinmax = ( LE_linmax2 - LE_midgray ) * LE_slope2 + LE_Ymidgray;
-  float LE_Srange = 1.0f - LE_Ylinmax;
-  float LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope + LE_midgray;
-  float LE_Kexp = LE_Kmax * LE_slope / LE_Kymax;
-
-  //std::cout<<"get_curve_value: LE_Kmax="<<LE_Kmax<<"  LE_linmax2="<<LE_linmax2<<std::endl;
-
-  //std::cout<<"lin+exp: RGB["<<k<<"] in:  "<<RGB[k]<<std::endl;
-  if( val > LE_linmax2 ) {
-    // shoulder
-    float X = (val - LE_linmax2) * LE_slope2 * LE_compr / LE_Srange;
-    //float XD = pow(X,LE_Sslope2) * LE_Sslope /* LE_compr */ + 1;
-    //result = 1.0f - LE_Srange * exp( -X / XD );
-    //result = (LE_Srange - LE_Srange * exp( -X / XD )) / LE_compr + LE_Ylinmax;
-
-    result = (LE_Srange - LE_Srange * exp( -log(X*(LE_Sslope+1.0e-10)+1)/(LE_Sslope+1.0e-10) )) / LE_compr + LE_Ylinmax;
-  } else if( val < LE_Kmax ) {
-    // knee
-    float X = val / LE_Kmax;
-    result = (X>=0) ? LE_Kymax * pow(X,LE_Kexp) : -LE_Kymax * pow(-X,LE_Kexp);
-    result *= LE_gain;
-    //std::cout<<"val="<<val<<"  result="<<result<<std::endl;
-  } else {
-    // linear part
-    result = (val - LE_midgray) * LE_slope2 + LE_Ymidgray;
-  }
-  //result *= delta;
-  //std::cout<<"lin+log: RGB["<<k<<"] out: "<<value<<std::endl;
-  //std::cout<<"LIN_POW: "<<LE_midgray<<" -> "<<RGB[3]<<std::endl;
+  TM_lin_exp(LE_params, val, result);
 
   return result;
 }
@@ -178,7 +132,7 @@ bool PF::ToneMappingCurveAreaV2::on_draw(const Cairo::RefPtr<Cairo::Context>& cr
     //float fil = fi*xmax; //
     float fil = pow(fi*xmax, exponent);
     int index = 0;
-    index = (fil < LE_Kmax) ? 1 : ((fil < LE_linmax) ? 2 : 3);
+    index = (fil < LE_params.LE_Kmax) ? 1 : ((fil < LE_params.LE_linmax) ? 2 : 3);
 
     float yl = get_curve_value( fil );
     //float y = labprof->linear2perceptual(yl);
@@ -282,7 +236,7 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
           hue_protection_checkbox( this, "hue_protection", _("protect hues"), true ),
           LE_frame( _("contrast curve") ),
           preset_selector( this, "preset", _("preset: "), 0 ),
-          LE_gain( this, "LE_gain", _("mid tones"), 0, 0, 2, 0.05, 0.2, 1 ),
+          LE_gain( this, "LE_gain", _("mid-tones shift"), 0, 0, 2, 0.05, 0.2, 1 ),
           LE_compression( this, "LE_compression", _("clip point"), 0, 0, 100, 1, 5, 100 ),
           LE_slope( this, "LE_slope", _("slope"), 0, 1, 10, 0.05, 0.2, 1 ),
           LE_lin_max( this, "LE_lin_max", _("linear range"), 0, 10, 100, 1, 5, 100 ),

@@ -66,6 +66,8 @@ enum tone_mapping_preset_t
   TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST = 1,
   TONE_MAPPING_PRESET_HIGH_CONTRAST = 2,
   TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST = 3,
+  TONE_MAPPING_PRESET_LINEAR = 8,
+  TONE_MAPPING_PRESET_S_CURVE = 9,
   TONE_MAPPING_PRESET_LAST = 10
 };
 
@@ -194,11 +196,11 @@ public:
   float get_hl_desaturation() { return hl_desaturation.get(); }
 
   float get_LE_gain() { return LE_gain.get(); }
-  float get_LE_compression() { return LE_compression.get()+0.0e-5; }
-  float get_LE_slope() { return LE_slope.get()+1.0e-5; }
+  float get_LE_compression() { return LE_compression.get(); }
+  float get_LE_slope() { return LE_slope.get(); }
   float get_LE_lin_max() { return LE_lin_max.get(); }
   float get_LE_knee_strength() { return LE_knee_strength.get(); }
-  float get_LE_shoulder_slope() { return LE_shoulder_slope.get()+1.0e-5; }
+  float get_LE_shoulder_slope() { return LE_shoulder_slope.get(); }
   float get_LE_shoulder_slope2() { return LE_shoulder_slope2.get(); }
 
   float get_lumi_blend_frac() { return lumi_blend_frac.get(); }

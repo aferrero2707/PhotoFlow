@@ -44,7 +44,7 @@ class ToneMappingCurveAreaV2: public Gtk::DrawingArea
 
   bool is_linear;
 
-  float LE_gain, LE_slope, LE_linmax, LE_compr, LE_Kstrength, LE_Kmax, LE_Sslope, LE_Sslope2;
+  TM_lin_exp_params_t LE_params;
 
 #ifdef GTKMM_2
   bool on_expose_event(GdkEventExpose* event);
