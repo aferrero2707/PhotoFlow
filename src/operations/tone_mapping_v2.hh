@@ -59,6 +59,17 @@ enum tone_mapping_blend_t
 };
 
 
+enum tone_mapping_preset_t
+{
+  TONE_MAPPING_PRESET_CUSTOM = -1,
+  TONE_MAPPING_PRESET_BASE_CONTRAST = 0,
+  TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST = 1,
+  TONE_MAPPING_PRESET_HIGH_CONTRAST = 2,
+  TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST = 3,
+  TONE_MAPPING_PRESET_LAST = 10
+};
+
+
 struct LE_params_t
 {
   float LE_gain;
@@ -146,10 +157,17 @@ void TM_lin_exp(const PF::TM_lin_exp_params_t& par, const float& val, float& res
 
 class ToneMappingParV2: public OpParBase
 {
+  PropertyBase preset;
   Property<bool> hue_protection;
 
   Property<float> LE_gain, LE_compression, LE_slope, LE_lin_max, LE_knee_strength, LE_shoulder_slope, LE_shoulder_slope2, LE_shoulder_max;
   TM_lin_exp_params_t LE_params;
+  float LE_gain_presets[10];
+  float LE_slope_presets[10];
+  float LE_lin_max_presets[10];
+  float LE_knee_strength_presets[10];
+  float LE_shoulder_slope_presets[10];
+  float LE_shoulder_max_presets[10];
 
   Property<float> lumi_blend_frac;
 
@@ -165,6 +183,11 @@ public:
   float gamut_boundary[GamutMapNYPoints+1][360];
 
   ToneMappingParV2();
+
+  tone_mapping_preset_t get_preset() { return (tone_mapping_preset_t)preset.get_enum_value().first; }
+  void set_preset( tone_mapping_preset_t p ) {
+    preset.set_enum_value( p );
+  }
 
   bool get_hue_protection() { return hue_protection.get(); }
   float get_saturation_scaling() { return saturation_scaling.get(); }
@@ -324,6 +347,7 @@ public:
         //if( S < 0 ) S = 0; if( S > 1 ) S = 1;
         //S = powf(S,2.45);
         //float K = 1.0f - opar->get_saturation_scaling()*S;
+        float K = 0;
 
         float saturation = 1;
 
@@ -332,10 +356,11 @@ public:
           //RGB[k] *= K;
           float out; TM_lin_exp(LE_params, RGB[k], out);
 
-          if( k == max_id && HL_desat > 0 && RGB[k] > LE_params.LE_linmax2 ) {
+          if( k == max_id && /*HL_desat > 0 &&*/ RGB[k] > LE_params.LE_linmax2 ) {
             // reduced saturation proportionally to the compression factor
             float lRGB = (RGB[k] - LE_params.LE_midgray) * LE_params.LE_slope2 + LE_params.LE_Ymidgray;
-            saturation = powf(out / lRGB, HL_desat);
+            K = 1.0f; // - out/lRGB;
+            //saturation = powf(out/lRGB, HL_desat);
             //std::cout<<"k="<<k<<"  RGBin="<<RGBin[k]<<"  RGB="<<RGB[k]<<"  lRGB="<<lRGB<<"  saturation="<<saturation<<std::endl;
           }
 /*
@@ -371,10 +396,20 @@ public:
           //std::cout<<"RGBin="<<RGBin[k]<<"  old="<<RGB[k]<<"  new="<<out<<"  diff="<<out-RGB[k]<<std::endl;
           RGB[k] = out;
         }
+
         //std::cout<<"LIN_POW: "<<LE_midgray<<" -> "<<RGB[3]<<std::endl;
         if( saturation != 1 ) {
           for( k=0; k < 3; k++) {
             RGB[k] = RGB[max_id] + saturation * (RGB[k] - RGB[max_id]);
+          }
+        }
+
+        if( lumi_blend_frac > 0 && K > 0) {
+          float lumi_blend_frac2 = K * lumi_blend_frac;
+          float Rmax = (RGBin[max_id]>1.0e-10) ? RGB[max_id] / RGBin[max_id] : 0;
+          for( k=0; k < 3; k++) {
+            float RGBout = RGBin[k] * Rmax;
+            RGB[k] = lumi_blend_frac2 * RGBout + (1.0f - lumi_blend_frac2) * RGB[k];
           }
         }
 

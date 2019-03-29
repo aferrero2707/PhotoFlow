@@ -51,6 +51,7 @@ void PF::TM_lin_exp_params_t::init( float gain, float slope, float lin_max, floa
 {
    LE_midgray = pow(0.5,2.45);
    LE_gain = gain;
+   //std::cout<<"TM_lin_exp_params_t::init: gain="<<LE_gain<<std::endl;
    LE_Ymidgray = LE_midgray * LE_gain;
    LE_slope = slope;
    LE_slope2 = LE_slope * LE_gain;
@@ -62,10 +63,10 @@ void PF::TM_lin_exp_params_t::init( float gain, float slope, float lin_max, floa
    LE_compr = compression;
    LE_compr2 = LE_compr*2.5f;
    LE_Sslope = shoulder_slope;
-   LE_Kstrength = knee_strength * ( (LE_slope-1)*1 + 1 );
-   LE_Kmax = ((1.f-LE_slope)*LE_midgray)/(LE_slope/(sqrt(2.0f)*LE_Kstrength)-LE_slope);
-   LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope + LE_midgray;
-   LE_Kexp = LE_Kmax * LE_slope / LE_Kymax;
+   LE_Kstrength = knee_strength * ( (LE_slope2-1)*1 + 1 );
+   LE_Kmax = ((1.f-LE_slope2)*LE_midgray)/(LE_slope2/(sqrt(2.0f)*LE_Kstrength)-LE_slope2);
+   LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope2 + LE_Ymidgray;
+   LE_Kexp = LE_Kmax * LE_slope2 / LE_Kymax;
 }
 
 
@@ -91,6 +92,7 @@ void PF::TM_lin_exp(const PF::TM_lin_exp_params_t& par, const float& val, float&
 
 PF::ToneMappingParV2::ToneMappingParV2():
   OpParBase(),
+  preset("preset",this,PF::TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST,"TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST","Medium High Contrast"),
   hue_protection("hue_protection",this,false),
   LE_gain("LE_gain",this,1),
   LE_compression("LE_compression",this,0.95),
@@ -100,7 +102,7 @@ PF::ToneMappingParV2::ToneMappingParV2():
   LE_shoulder_slope("LE_shoulder_slope",this,1.2),
   LE_shoulder_slope2("LE_shoulder_slope2",this,0.5),
   LE_shoulder_max("LE_shoulder_max",this,10),
-  lumi_blend_frac("lumi_blend_frac",this,100),
+  lumi_blend_frac("lumi_blend_frac",this,0),
   saturation_scaling("saturation_scaling",this,0.0),
   hl_desaturation("hl_desaturation",this,0.0),
   local_contrast_amount("local_contrast_amount",this,0.0),
@@ -108,6 +110,41 @@ PF::ToneMappingParV2::ToneMappingParV2():
   local_contrast_threshold("local_contrast_threshold",this,0.075),
   icc_data( NULL )
 {
+  preset.add_enum_value(PF::TONE_MAPPING_PRESET_CUSTOM,"TONE_MAPPING_PRESET_CUSTOM","Custom");
+  preset.add_enum_value(PF::TONE_MAPPING_PRESET_BASE_CONTRAST,"TONE_MAPPING_PRESET_BASE_CONTRAST","Base Contrast");
+  preset.add_enum_value(PF::TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST,"TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST","Medium High Contrast");
+  preset.add_enum_value(PF::TONE_MAPPING_PRESET_HIGH_CONTRAST,"TONE_MAPPING_PRESET_HIGH_CONTRAST","High Contrast");
+  preset.add_enum_value(PF::TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST,"TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST","Very High Contrast");
+
+  LE_gain_presets[PF::TONE_MAPPING_PRESET_BASE_CONTRAST] = 1.40275;
+  LE_slope_presets[PF::TONE_MAPPING_PRESET_BASE_CONTRAST] = 1.07402;
+  LE_lin_max_presets[PF::TONE_MAPPING_PRESET_BASE_CONTRAST] = 0.286394;
+  LE_knee_strength_presets[PF::TONE_MAPPING_PRESET_BASE_CONTRAST] = 9.84638;
+  LE_shoulder_slope_presets[PF::TONE_MAPPING_PRESET_BASE_CONTRAST] = 1.14896;
+  LE_shoulder_max_presets[PF::TONE_MAPPING_PRESET_BASE_CONTRAST] = 14.58;
+
+  LE_gain_presets[PF::TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST] = 1.23412;
+  LE_slope_presets[PF::TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST] = 1.10505;
+  LE_lin_max_presets[PF::TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST] = 0.447559;
+  LE_knee_strength_presets[PF::TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST] = 9.50194;
+  LE_shoulder_slope_presets[PF::TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST] = 0.936285;
+  LE_shoulder_max_presets[PF::TONE_MAPPING_PRESET_MEDIUM_HIGH_CONTRAST] = 15.45;
+
+  LE_gain_presets[PF::TONE_MAPPING_PRESET_HIGH_CONTRAST] = 1.20607;
+  LE_slope_presets[PF::TONE_MAPPING_PRESET_HIGH_CONTRAST] = 1.17455;
+  LE_lin_max_presets[PF::TONE_MAPPING_PRESET_HIGH_CONTRAST] = 0.5061;
+  LE_knee_strength_presets[PF::TONE_MAPPING_PRESET_HIGH_CONTRAST] = 6.72992;
+  LE_shoulder_slope_presets[PF::TONE_MAPPING_PRESET_HIGH_CONTRAST] = 0.737952;
+  LE_shoulder_max_presets[PF::TONE_MAPPING_PRESET_HIGH_CONTRAST] = 15.05;
+
+  LE_gain_presets[PF::TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST] = 1.20033;
+  LE_slope_presets[PF::TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST] = 1.30987;
+  LE_lin_max_presets[PF::TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST] = 0.546617;
+  LE_knee_strength_presets[PF::TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST] = 2.30421;
+  LE_shoulder_slope_presets[PF::TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST] = 0.694874;
+  LE_shoulder_max_presets[PF::TONE_MAPPING_PRESET_VERY_HIGH_CONTRAST] = 21;
+
+
   guided_blur = new_guided_filter();
 
   set_type("tone_mapping_v2" );
@@ -148,6 +185,15 @@ void PF::ToneMappingParV2::compute_padding( VipsImage* full_res, unsigned int id
 
 void PF::ToneMappingParV2::pre_build( rendermode_t mode )
 {
+  if( preset.get_enum_value().first != PF::TONE_MAPPING_PRESET_CUSTOM ) {
+    LE_gain.set( LE_gain_presets[preset.get_enum_value().first] );
+    LE_slope.set( LE_slope_presets[preset.get_enum_value().first] );
+    LE_lin_max.set( LE_lin_max_presets[preset.get_enum_value().first] );
+    LE_knee_strength.set( LE_knee_strength_presets[preset.get_enum_value().first] );
+    LE_shoulder_slope.set( LE_shoulder_slope_presets[preset.get_enum_value().first] );
+    LE_shoulder_max.set( LE_shoulder_max_presets[preset.get_enum_value().first] );
+  }
+
   float delta = 0;
   bool found = false;
   float compression = (LE_compression.get() == 0) ? 0.5 : LE_compression.get();

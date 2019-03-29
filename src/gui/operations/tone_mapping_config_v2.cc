@@ -256,23 +256,23 @@ void PF::ToneMappingCurveAreaV2::draw_background(const Cairo::RefPtr<Cairo::Cont
 
 double LE_gain_slider_to_prop(double& val)
 {
-  return pow(10,val);
+  return pow(2,val);
 }
 
 double LE_gain_prop_to_slider(double& val)
 {
-  return log10(val);
+  return log(val)/log(2);
 }
 
 
 double LE_max_slider_to_prop(double& val)
 {
-  return pow(10,val/10);
+  return pow(2,val);
 }
 
 double LE_max_prop_to_slider(double& val)
 {
-  return log10(val)*10;
+  return log(val)/log(2);
 }
 
 
@@ -281,15 +281,16 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
           OperationConfigGUI( layer, "Tone Mapping" ),
           hue_protection_checkbox( this, "hue_protection", _("protect hues"), true ),
           LE_frame( _("contrast curve") ),
-          LE_gain( this, "LE_gain", _("mid tones"), 0, -1, 1, 0.05, 0.2, 1 ),
+          preset_selector( this, "preset", _("preset: "), 0 ),
+          LE_gain( this, "LE_gain", _("mid tones"), 0, 0, 2, 0.05, 0.2, 1 ),
           LE_compression( this, "LE_compression", _("clip point"), 0, 0, 100, 1, 5, 100 ),
           LE_slope( this, "LE_slope", _("slope"), 0, 1, 10, 0.05, 0.2, 1 ),
           LE_lin_max( this, "LE_lin_max", _("linear range"), 0, 10, 100, 1, 5, 100 ),
-          LE_knee_strength( this, "LE_knee_strength", _("knee strength"), 0, 1, 2, 0.05, 0.2, 1 ),
-          LE_shoulder_slope( this, "LE_shoulder_slope", _("shoulder slope"), 0, 1, 100, 1, 5, 10 ),
+          LE_knee_strength( this, "LE_knee_strength", _("knee strength"), 0, 1, 100, 0.05, 0.2, 1 ),
+          LE_shoulder_slope( this, "LE_shoulder_slope", _("shoulder slope"), 0, 0, 100, 1, 5, 10 ),
           LE_shoulder_slope2( this, "LE_shoulder_slope2", _("shoulder slope 2"), 0, 0, 100, 1, 5, 100 ),
-          LE_shoulder_max( this, "LE_shoulder_max", _("white level"), 0, 0, 100, 0.5, 5, 1 ),
-          lumi_blend_frac_slider( this, "lumi_blend_frac", _("hue matching"), 1, 0, 100, 1, 5, 100 ),
+          LE_shoulder_max( this, "LE_shoulder_max", _("white level (EV)"), 0, 0, 100, 0.5, 5, 1 ),
+          lumi_blend_frac_slider( this, "lumi_blend_frac", _("HL saturation"), 1, 0, 100, 1, 5, 100 ),
           tc_frame( _("tone curve") ),
           saturation_scaling_slider( this, "saturation_scaling", _("sat scaling"), 1, 0, 100, 0.5, 5, 100 ),
           hl_desaturation_slider( this, "hl_desaturation", _("hl desaturation"), 1, 0, 100, 0.5, 5, 100 ),
@@ -300,16 +301,18 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
 {
   controlsBox.pack_start( curve_area_box, Gtk::PACK_SHRINK, 2 );
 
-  LE_gain.set_conversion_functions(LE_gain_slider_to_prop, LE_gain_prop_to_slider);
+  //LE_gain.set_conversion_functions(LE_gain_slider_to_prop, LE_gain_prop_to_slider);
   //shadows_box.pack_start( LE_gain, Gtk::PACK_SHRINK );
 
+  tc_box.pack_start( preset_selector, Gtk::PACK_SHRINK );
+  tc_box.pack_start( LE_gain, Gtk::PACK_SHRINK );
   tc_box.pack_start( LE_slope, Gtk::PACK_SHRINK );
-  //tc_box.pack_start( LE_knee_strength, Gtk::PACK_SHRINK );
   //tc_box.pack_start( LE_compression, Gtk::PACK_SHRINK );
   tc_box.pack_start( LE_lin_max, Gtk::PACK_SHRINK );
   LE_shoulder_max.set_conversion_functions(LE_max_slider_to_prop, LE_max_prop_to_slider);
   tc_box.pack_start( LE_shoulder_max, Gtk::PACK_SHRINK );
   tc_box.pack_start( LE_shoulder_slope, Gtk::PACK_SHRINK );
+  tc_box.pack_start( LE_knee_strength, Gtk::PACK_SHRINK );
   tc_frame.add( tc_box );
   controlsBox.pack_start( tc_frame, Gtk::PACK_SHRINK, 2 );
 
@@ -324,14 +327,43 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
 
   curve_area_box.pack_start( curve_area, Gtk::PACK_SHRINK, 10 );
 
-  //controlsBox.pack_start( lumi_blend_frac_slider, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( lumi_blend_frac_slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( saturation_scaling_slider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( hl_desaturation_slider, Gtk::PACK_SHRINK, 2 );
+  //controlsBox.pack_start( hl_desaturation_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( hue_protection_checkbox, Gtk::PACK_SHRINK, 2 );
 
 
   globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
   add_widget( globalBox );
+
+
+  LE_gain.value_changed.connect(sigc::mem_fun(*this,&PF::ToneMappingConfigGUI_V2::switch_to_custom));
+  LE_slope.value_changed.connect(sigc::mem_fun(*this,&PF::ToneMappingConfigGUI_V2::switch_to_custom));
+  LE_lin_max.value_changed.connect(sigc::mem_fun(*this,&PF::ToneMappingConfigGUI_V2::switch_to_custom));
+  LE_shoulder_max.value_changed.connect(sigc::mem_fun(*this,&PF::ToneMappingConfigGUI_V2::switch_to_custom));
+  LE_shoulder_slope.value_changed.connect(sigc::mem_fun(*this,&PF::ToneMappingConfigGUI_V2::switch_to_custom));
+  LE_knee_strength.value_changed.connect(sigc::mem_fun(*this,&PF::ToneMappingConfigGUI_V2::switch_to_custom));
+}
+
+
+
+void PF::ToneMappingConfigGUI_V2::switch_to_custom()
+{
+  if( get_layer() && get_layer()->get_image() &&
+      get_layer()->get_processor() &&
+      get_layer()->get_processor()->get_par() ) {
+
+    PF::OpParBase* par = get_layer()->get_processor()->get_par();
+    PF::ToneMappingParV2* tmpar = dynamic_cast<PF::ToneMappingParV2*>(par);
+    if( !tmpar ) return;
+
+    //std::cout<<"PF::ToneMappingConfigGUI_V2::do_update() called."<<std::endl;
+
+    if( tmpar->get_preset() != PF::TONE_MAPPING_PRESET_CUSTOM ) {
+      tmpar->set_preset(PF::TONE_MAPPING_PRESET_CUSTOM);
+      preset_selector.init();
+    }
+  }
 }
 
 
@@ -348,6 +380,15 @@ void PF::ToneMappingConfigGUI_V2::do_update()
     if( !tmpar ) return;
 
     //std::cout<<"PF::ToneMappingConfigGUI_V2::do_update() called."<<std::endl;
+
+    if( tmpar->get_preset() != PF::TONE_MAPPING_PRESET_CUSTOM ) {
+      LE_gain.init();
+      LE_slope.init();
+      LE_lin_max.init();
+      LE_knee_strength.init();
+      LE_shoulder_slope.init();
+      LE_shoulder_max.init();
+    }
 
     LE_compression.init();
     curve_area.set_params( tmpar );

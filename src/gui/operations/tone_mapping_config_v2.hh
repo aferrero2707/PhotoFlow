@@ -85,6 +85,7 @@ public:
 
     Gtk::Frame LE_frame;
     Gtk::VBox LEControlsBox;
+    Selector preset_selector;
     Slider LE_gain;
     Slider LE_compression;
     Slider LE_slope;
@@ -110,6 +111,8 @@ public:
   public:
     ToneMappingConfigGUI_V2( Layer* l );
     
+    void switch_to_custom();
+
     bool has_preview() { return true; }
 
     void do_update();
