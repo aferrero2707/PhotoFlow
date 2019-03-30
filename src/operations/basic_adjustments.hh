@@ -227,155 +227,67 @@ namespace PF
             float h_eq = 1;
             to_float( pmask[x], h_eq );
 
-            float black_level2 = black_level;
-            float white_level2 = white_level;
-            float brightness2 = brightness;
-            float exposure2 = exposure;
-            float gamma2 = gamma;
-            /*
-            if( h_eq < 1 ) {
-              black_level2 *= h_eq;
-              white_level2 *= h_eq;
-              brightness2 *= h_eq;
-              exposure2 *= h_eq;
-              float dgamma = (gamma2-1) * h_eq;
-              gamma2 = dgamma + 1.f;
-            }
-            */
-            if( (black_level2 != 0) || (white_level2 != 0) ) {
-              float delta = (white_level2 + 1.f - black_level2);
+            if( (black_level != 0) || (white_level != 0) ) {
+              float delta = (white_level + 1.f - black_level);
               if( fabs(delta) < 0.0001f ) {
                 if( delta > 0 ) delta = 0.0001f;
                 else delta = -0.0001f;
               }
               for( k=0; k < 3; k++) {
-                RGB[k] = (RGB[k] - black_level2) / delta;
-                //clip( exposure*RGB[k], RGB[k] );
+                RGB[k] = (RGB[k] - black_level) / delta;
               }
             }
 
-            if( brightness2 != 0 ) {
+            if( brightness != 0 ) {
               for( k=0; k < 3; k++) {
-                RGB[k] += brightness2*FormatInfo<float>::RANGE;
-                //clip( (contrast2+1.0f)*tempval+brightness2*FormatInfo<float>::RANGE+FormatInfo<float>::HALF, RGB[k] );
+                RGB[k] += brightness*FormatInfo<float>::RANGE;
               }
             }
 
-            if( exposure2 != 1 ) {
+            if( exposure != 1 ) {
               for( k=0; k < 3; k++) {
-                RGB[k] *= exposure2;
-                //clip( exposure*RGB[k], RGB[k] );
+                RGB[k] *= exposure;
               }
             }
 
-            if( gamma2 != 1 ) {
+            if( gamma != 1 ) {
               for( k=0; k < 3; k++) {
-                //RGB[k] = pin[x+k]; //powf( RGB[k], gamma );
-                if(RGB[k] < 0) RGB[k] = powf( RGB[k]*minus, gamma2 )*minus;
-                else RGB[k] = powf( RGB[k], gamma2 );
-                //clip( exposure*RGB[k], RGB[k] );
+                if(RGB[k] < 0) RGB[k] = powf( RGB[k]*minus, gamma )*minus;
+                else RGB[k] = powf( RGB[k], gamma );
               }
             }
 
             //std::cout<<"h_in="<<h_in<<"  h_eq="<<h_eq<<" ("<<h_eq1<<" "<<h_eq2<<" "<<h_eq3<<")"<<std::endl;
 
-            float hue2 = hue;
-            float saturation2 = saturation;
-            float contrast2 = contrast;
-
-            //if( back_level2 >= 1.f ) black_level2 = 0.9999f;
-            //if( white_level2 <= -1.f ) white_level2 = -0.9999f;
-            /*
-            if( h_eq < 1 ) {
-              hue2 *= h_eq;
-              saturation2 *= h_eq;
-              contrast2 *= h_eq;
-            }
-            */
-            /*
-          if( opar->get_brightness_eq() != 0 ) {
-            //float c_eq1 = opar->vec[6][hid];
-            //float c_eq2 = opar->vec[7][sid];
-            //float c_eq3 = opar->vec[8][lid];
-            //float c_eq = MIN3( c_eq1, c_eq2, c_eq3 );
-            float b_eq = h_eq;
-            brightness2 += opar->get_brightness_eq()*b_eq;
-          }
-          if( opar->get_contrast_eq() != 0 ) {
-            //float c_eq1 = opar->vec[6][hid];
-            //float c_eq2 = opar->vec[7][sid];
-            //float c_eq3 = opar->vec[8][lid];
-            //float c_eq = MIN3( c_eq1, c_eq2, c_eq3 );
-            float c_eq = h_eq;
-            contrast2 += opar->get_contrast_eq()*c_eq;
-          }
-             */
-
-            if( contrast2 != 0 ) {
+            if( contrast != 0 ) {
               for( k=0; k < 3; k++) {
                 tempval = (typename FormatInfo<float>::SIGNED)RGB[k] - midpoint;
-                RGB[k] = (contrast2+1.0f)*tempval + midpoint;
-                //clip( (contrast2+1.0f)*tempval+brightness2*FormatInfo<float>::RANGE+FormatInfo<float>::HALF, RGB[k] );
+                RGB[k] = (contrast+1.0f)*tempval + midpoint;
               }
             }
 
-            if( hue2 != 0 || saturation2 != 0 ) {
+            if( hue != 0 || saturation != 0 ) {
               rgb2hsv( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
               //rgb2hsl( RGB[0], RGB[1], RGB[2], h_in, s_in, l_in );
-              //std::cout<<"in RGB: "<<RGB[0]<<" "<<RGB[1]<<" "<<RGB[2]<<"  HSL: "<<h_in<<" "<<s_in<<" "<<l_in<<std::endl;
-            }
-            /*
-            unsigned short int hid = static_cast<unsigned short int>( h_in*65535/360 );
-            unsigned short int sid = static_cast<unsigned short int>( s_in*65535 );
-            unsigned short int lid = static_cast<unsigned short int>( l_in*65535 );
-            float h_eq1 = opar->eq_enabled[0] ? opar->vec[0][hid] : 1;
-            float h_eq2 = opar->eq_enabled[1] ? opar->vec[1][sid] : 1;
-            float h_eq3 = opar->eq_enabled[2] ? opar->vec[2][lid] : 1;
-            float h_eq = MIN3( h_eq1, h_eq2, h_eq3 );
-             */
 
-            /*
-          //h = h_in + hue + opar->get_hue_eq()*h_eq;
-          if( opar->get_hue_eq() ) {
-            hue2 += opar->get_hue_eq()*h_eq;
-          }
-             */
-            if( hue2 != 0 ) {
-              h = h_in + hue2;
-              if( h > 360 ) h -= 360;
-              else if( h < 0 ) h+= 360;
-            } else {
               h = h_in;
-            }
-
-            /*
-          if( opar->get_saturation_eq() ) {
-            //float s_eq1 = opar->vec[3][hid];
-            //float s_eq2 = opar->vec[4][sid];
-            //float s_eq3 = opar->vec[5][lid];
-            //float s_eq = MIN3( s_eq1, s_eq2, s_eq3 );
-            float s_eq = h_eq;
-            saturation2 += opar->get_saturation_eq()*s_eq;
-          }
-             */
-            if( saturation2 != 0 ) {
-              s = s_in*(1.0f+saturation2);
-              if( s < 0 ) s = 0;
-              else if( s > 1 ) s = 1;
-            } else {
               s = s_in;
-            }
+              l = l_in;
 
-            l = l_in;
+              if( hue != 0 ) {
+                h = h_in + hue;
+                if( h > 360 ) h -= 360;
+                else if( h < 0 ) h += 360;
+              }
 
-            //h = h_in;
-            //s = s_in;
+              if( saturation != 0 ) {
+                s = s_in * (1.0f + saturation);
+                if( s < 0 ) s = 0;
+                else if( s > 1 ) s = 1;
+              }
 
-            //hsv2rgb2( h, s, v, R, G, B );
-            if( (h != h_in) || (s != s_in) ) {
               hsv2rgb( h, s, l, RGB[0], RGB[1], RGB[2] );
               //hsl2rgb( h, s, l, RGB[0], RGB[1], RGB[2] );
-              //std::cout<<"out RGB: "<<R<<" "<<G<<" "<<B<<"  HSV: "<<h<<" "<<s<<" "<<v<<std::endl;
             }
 
             pout[x] = h_eq*RGB[0] + (1.0f-h_eq)*pin[x];
