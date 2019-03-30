@@ -138,6 +138,7 @@ namespace PF
                 VipsRegion* imap, VipsRegion* omap, 
                 VipsRegion* oreg, OpParBase* par)
     {
+      std::cout<<"BasicAdjustments::render: unrecognized colorspace "<<CS<<std::endl;
     }
   };
 
