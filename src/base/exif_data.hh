@@ -42,11 +42,12 @@
 #include <external/exiv2/include/exiv2/image.hpp>
 #include <external/exiv2/include/exiv2/exif.hpp>
 #else
-#include <exiv2/easyaccess.hpp>
-#include <exiv2/xmp.hpp>
-#include <exiv2/error.hpp>
-#include <exiv2/image.hpp>
-#include <exiv2/exif.hpp>
+//#include <exiv2/easyaccess.hpp>
+//#include <exiv2/xmp.hpp>
+//#include <exiv2/error.hpp>
+//#include <exiv2/image.hpp>
+//#include <exiv2/exif.hpp>
+#include <exiv2/exiv2.hpp>
 #endif
 
 
