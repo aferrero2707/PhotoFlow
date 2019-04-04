@@ -97,9 +97,3 @@ Once VIPS is set up and running, follow these steps to download and compile Phot
 3. If all goes well, you can now open an image file with PhotoFlow:
 
         $ ./Release/bin/photoflow image_file_name
-        
-
-# Current status
-
-PhotoFlow is in a early development stage. The present version allows to open an image file and apply basic editing filters via non-destructive adjustment layers. The individual layers can be activated and de-activated using the radio buttons on the right of the image. Moreover, the layers structure can be saved to disk and re-opened again via the command line.
-Loading and processing of RAW images (demosaicing, white balance, exposure adjustment, etc.) is now available, at least at a basic level.
