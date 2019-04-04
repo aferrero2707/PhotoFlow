@@ -6,7 +6,7 @@ The aim of the project is to provide a fully non-destructive photo retouching pr
 Here is the general feature (whish)list:
 
 - Fully non-destructive, layer-based photo editing workflow with realtime preview of the final image
-- Support for 8-bits and 16-bits integer as well as 32-bits and 64-bits floating point precision, selectable at runtime and on a per-image basis
+- Image processing in 32-bit floating point format
 - Allows to load and edit images of arbitrary size, thanks to the underlying rendering engine based on the VIPS library
 - Fully color managed workflow: user-defined input, work and output profiles, soft-proofing, etc...
 - Support for layer grouping and layer masks
