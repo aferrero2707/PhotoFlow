@@ -14,6 +14,10 @@ Here is the general feature (whish)list:
 
 You can follow the development of photoflow and learn about its usage in the dedicated blog: http://photoflowblog.blogspot.fr/
 
+# Development builds
+
+Daily snapshots of the development branch are available from the [continuous release](https://github.com/aferrero2707/PhotoFlow/releases/tag/continuous) web page. Linux packages are provided in [AppImage](https://appimage.org/) format, while OSX and Windows 64-bit packages are provided in the form of portable bundles.
+
 # Windows and OSX installers
 
 Up-to-date Windows and OSX installers are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page.
