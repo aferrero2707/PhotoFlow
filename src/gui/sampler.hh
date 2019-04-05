@@ -120,9 +120,9 @@ public:
     if( !display_merged && (old_id != active_layer) ) {
       //update( NULL );
 			if( get_pipeline() && get_pipeline()->get_image() ) {
-        std::cout<<"Sampler::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
-        get_pipeline()->set_output_layer_id( old_id );
-				get_pipeline()->get_image()->update();
+        //std::cout<<"Sampler::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
+        get_pipeline()->set_output_layer_id( active_layer );
+				//get_pipeline()->get_image()->update();
 			}
 		}
   }
@@ -138,8 +138,8 @@ public:
     if( display_merged != old_val ) {
       //update( NULL );
 			if( get_pipeline() && get_pipeline()->get_image() ) {
-			  std::cout<<"Sampler::set_displayed_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
-				get_pipeline()->get_image()->update();
+			  //std::cout<<"Sampler::set_displayed_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
+				//get_pipeline()->get_image()->update();
 			}
 		}
   }

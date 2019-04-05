@@ -1380,10 +1380,18 @@ void PF::ImageEditor::set_displayed_layer( int id )
       image_size_updater->set_displayed_layer( id );
       imageArea->set_displayed_layer( id );
       imageArea->set_display_merged( false );
+      for(int si = 0; si < samplers->get_sampler_num(); si++) {
+        samplers->get_sampler(si).set_displayed_layer( id );
+        samplers->get_sampler(si).set_display_merged( false );
+      }
     } else {
       image_size_updater->set_displayed_layer( -1 );
       imageArea->set_display_merged( true );
       imageArea->set_displayed_layer( -1 );
+      for(int si = 0; si < samplers->get_sampler_num(); si++) {
+        samplers->get_sampler(si).set_displayed_layer( -1 );
+        samplers->get_sampler(si).set_display_merged( true );
+      }
     }
   }
 }
@@ -1404,6 +1412,32 @@ void PF::ImageEditor::set_selected_layer( int id )
 
 void PF::ImageEditor::set_display_mask( bool val )
 {
+  if( val && (selected_layer_id>=0) ) {
+    PF::Layer* l = image->get_layer_manager().get_layer( selected_layer_id );
+    if( l ) {
+      std::list<PF::Layer*> mask_layers = l->get_omap_layers();
+      PF::Layer* first_visible = NULL;
+      for( std::list<PF::Layer*>::reverse_iterator li = mask_layers.rbegin();
+          li != mask_layers.rend(); li++ ) {
+        if( (*li) == NULL || !(*li)->is_visible() ) continue;
+        first_visible = *li;
+        break;
+      }
+      if( first_visible ) {
+        PF::Layer* ml = first_visible;
+        for(int si = 0; si < samplers->get_sampler_num(); si++) {
+          samplers->get_sampler(si).set_displayed_layer( ml->get_id() );
+          samplers->get_sampler(si).set_display_merged( false );
+        }
+      }
+    }
+  } else {
+    for(int si = 0; si < samplers->get_sampler_num(); si++) {
+      samplers->get_sampler(si).set_displayed_layer( -1 );
+      samplers->get_sampler(si).set_display_merged( true );
+    }
+  }
+
   imageArea->set_display_mask( val );
 }
 

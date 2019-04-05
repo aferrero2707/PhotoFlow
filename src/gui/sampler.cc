@@ -31,6 +31,8 @@
 
 //#define OPTIMIZE_SCROLLING
 
+#define DEBUG 1
+
 
 static int pxm_[8][16][16] = {
 {// 1
@@ -246,6 +248,8 @@ void PF::Sampler::set_values(float val[4], float lch[3], VipsInterpretation type
   char tstr[500];
   char ch[4] = {'x','x','x','x'};
   switch(type) {
+  case VIPS_INTERPRETATION_B_W:
+    ch[0] = 'L'; break;
   case VIPS_INTERPRETATION_RGB:
   case VIPS_INTERPRETATION_sRGB:
   case VIPS_INTERPRETATION_MULTIBAND:
@@ -253,24 +257,50 @@ void PF::Sampler::set_values(float val[4], float lch[3], VipsInterpretation type
   case VIPS_INTERPRETATION_LAB:
     ch[0] = 'L'; ch[1] = 'a'; ch[2] = 'b'; break;
   case VIPS_INTERPRETATION_CMYK:
-    ch[0] = 'C'; ch[1] = 'M'; ch[2] = 'Y'; ch[2] = 'K'; break;
+    ch[0] = 'C'; ch[1] = 'M'; ch[2] = 'Y'; ch[3] = 'K'; break;
   default: ch[0] = 'X'; ch[1] = 'X'; ch[2] = 'X'; ch[2] = 'X'; break;
   }
-  snprintf(tstr,499,"%c=%7.2f%%  L=%7.2f",ch[0], val[0], lch[0]);
-  label_value1.set_text(tstr);
-  snprintf(tstr,499,"%c=%7.2f%%  C=%7.2f",ch[1], val[1], lch[1]);
-  label_value2.set_text(tstr);
-  snprintf(tstr,499,"%c=%7.2f%%  H=%7.2f",ch[2], val[2], lch[2]);
-  label_value3.set_text(tstr);
-  snprintf(tstr,499,"%0.3f",val[3]);
-  label_value4.set_text(tstr);
 
-  snprintf(tstr,499,"L=%0.2f",lch[0]);
-  LCH_label_value1.set_text(tstr);
-  snprintf(tstr,499,"C=%0.2f",lch[1]);
-  LCH_label_value2.set_text(tstr);
-  snprintf(tstr,499,"H=%0.2f",lch[2]);
-  LCH_label_value3.set_text(tstr);
+  if( ch[0] != 'x' ) {
+    if( type == VIPS_INTERPRETATION_B_W )
+      snprintf(tstr,499,"%c=%7.2f",ch[0], val[0]);
+    else
+      snprintf(tstr,499,"%c=%7.2f (%.2f)  L=%7.2f",ch[0], val[0], val[0]*255, lch[0]);
+    label_value1.set_text(tstr);
+  }
+  if( ch[1] != 'x' ) {
+    snprintf(tstr,499,"%c=%7.2f (%.2f)  C=%7.2f",ch[1], val[1], val[1]*255, lch[1]);
+    label_value2.set_text(tstr);
+    label_value2.show();
+  } else {
+    label_value2.set_text("");
+    label_value2.hide();
+  }
+  if( ch[2] != 'x' ) {
+    snprintf(tstr,499,"%c=%7.2f (%.2f)  H=%7.2f",ch[2], val[2], val[2]*255, lch[2]);
+    label_value3.set_text(tstr);
+    label_value3.show();
+  } else {
+    label_value3.set_text("");
+    label_value3.hide();
+  }
+  if( ch[3] != 'x' ) {
+    snprintf(tstr,499,"%c=%7.2f (%.2f)",ch[3], val[3], val[3]*255);
+    label_value4.set_text(tstr);
+    label_value4.show();
+  } else {
+    label_value4.set_text("");
+    label_value4.hide();
+  }
+
+  if( type != VIPS_INTERPRETATION_B_W ) {
+    snprintf(tstr,499,"L=%0.2f",lch[0]);
+    LCH_label_value1.set_text(tstr);
+    snprintf(tstr,499,"C=%0.2f",lch[1]);
+    LCH_label_value2.set_text(tstr);
+    snprintf(tstr,499,"H=%0.2f",lch[2]);
+    LCH_label_value3.set_text(tstr);
+  }
 }
 
 
@@ -371,17 +401,17 @@ void PF::Sampler::update( VipsRect* area )
 
   VipsImage* image = NULL;
   bool do_merged = display_merged;
-  //std::cout<<"Sampler::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
+  std::cout<<"Sampler::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
   if( !do_merged ) {
     if( active_layer < 0 ) do_merged = true;
     else {
       PF::PipelineNode* node = get_pipeline()->get_node( active_layer );
       if( !node ) do_merged = true;
-      //std::cout<<"Sampler::update(): node="<<node<<std::endl;
-      if( node->processor &&
-          node->processor->get_par() &&
-          node->processor->get_par()->is_map() )
-        do_merged = true;
+      std::cout<<"Sampler::update(): node="<<node<<std::endl;
+      //if( node->processor &&
+      //    node->processor->get_par() &&
+      //    node->processor->get_par()->is_map() )
+      //  do_merged = true;
       if( get_pipeline()->get_image() ) {
         PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( active_layer );
         if( !temp_layer ) do_merged = true;
@@ -455,6 +485,7 @@ void PF::Sampler::update( VipsRect* area )
     for( int x = 0; x < tile_area.width; x++ ) {
       for( int c = 0; c < image->Bands; c++ ) {
         tot[c] += p[c];
+        std::cout<<"Sampler: y="<<y<<" x="<<x<<"  p["<<c<<"]="<<p[c]<<std::endl;
       }
       p += image->Bands;
     }
@@ -480,7 +511,7 @@ void PF::Sampler::update( VipsRect* area )
     lch[1] = std::sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
     lch[2] = std::atan2(lab[2],lab[1])*180.f/M_PI;
     if(lch[2] < 0) lch[2] += 360;
-    for( int c = 0; c < image->Bands; c++ ) tot[c] *= 100;
+    //for( int c = 0; c < image->Bands; c++ ) tot[c] *= 100;
     std::cout<<"Sampler: RGB="<<tot[0]<<" "<<tot[1]<<" "<<tot[2]<<" "<<std::endl;
     std::cout<<"Sampler: Lab="<<lab[0]<<" "<<lab[1]<<" "<<lab[2]<<" "<<std::endl;
     std::cout<<"Sampler: LCh="<<lch[0]<<" "<<lch[1]<<" "<<lch[2]<<" "<<std::endl;
