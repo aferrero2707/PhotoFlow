@@ -50,7 +50,7 @@ PF::DynamicRangeCompressorConfigV2GUI::DynamicRangeCompressorConfigV2GUI( PF::La
   bilateralSigmasSlider( this, "bilateral_sigma_s", "sigma s", 25, 0, 100, 1, 5, 10),
   bilateralSigmarSlider( this, "bilateral_sigma_r", "sigma r", 20, 0, 100, 1, 5, 10),
   guidedRadiusSlider( this, "guided_radius", "coarseness", 25, 0, 100, 0.5, 5, 10),
-  guidedThresholdSlider( this, "guided_threshold", "edge threshold", 20, 0.5, 100.0, 0.5, 5, 1000000),
+  guidedThresholdSlider( this, "guided_threshold", "edge threshold", 20, 0.5, 10000.0, 0.5, 5, 1000000),
   lumiBlendSlider( this, "lumi_blend", "luminance blend", 100, 0, 100.0, 5, 10, 100)
 {
 
