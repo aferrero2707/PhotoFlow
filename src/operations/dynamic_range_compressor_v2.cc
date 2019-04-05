@@ -409,7 +409,7 @@ VipsImage* PF::DynamicRangeCompressorV2Par::build_old(std::vector<VipsImage*>& i
   profile = PF::get_icc_profile( in[0] );
   if( !profile ) {printf("DynamicRangeCompressorV2Par::build(): profile==NULL\n"); return NULL;}
 
-  if( (get_render_mode() == PF_RENDER_PREVIEW) && is_editing() )
+  if( (get_render_mode() == PF_RENDER_PREVIEW) /*&& is_editing()*/ )
     show_residual_ = show_residual.get();
   else
     show_residual_ = false;
