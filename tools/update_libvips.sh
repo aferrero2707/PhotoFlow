@@ -27,10 +27,10 @@ export OLD_PWD=$(pwd)
 echo Updating VIPS...
 if [ -e ${libvips_dir} ]; then
     cd ${libvips_dir}
-    git checkout v8.7.4
+    git checkout v8.5.9
     #git pull
 else
-	git clone -b v8.7.4 --depth 1 https://github.com/libvips/libvips.git ${libvips_dir}
+	git clone -b v8.5.9 --depth 1 https://github.com/libvips/libvips.git ${libvips_dir}
     #git clone https://github.com/jcupitt/libvips.git ${libvips_dir}
 fi
 
