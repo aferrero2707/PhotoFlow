@@ -241,7 +241,7 @@ PF::GuidedFilterPar::GuidedFilterPar():
 PaddedOpPar(),
 radius("radius",this,10.0),
 threshold("threshold",this,0.075),
-convert_to_perceptual(true)
+convert_to_perceptual("convert_to_perceptual",this,true)
 {
   set_type("guided_filter" );
 

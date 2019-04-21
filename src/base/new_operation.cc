@@ -37,7 +37,7 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 {
   PF::ProcessorBase* processor = NULL;
 
-  //std::cout<<"PF::new_operation: creating operation of type \""<<op_type<<"\""<<std::endl;
+  std::cout<<"PF::new_operation: creating operation of type \""<<op_type<<"\""<<std::endl;
 
   if( op_type == "imageread" ) { 
 
@@ -132,6 +132,11 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
     //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
     processor = new_guided_filter();
+
+  } else if( op_type == "median_filter" ) {
+
+    //processor = new PF::Processor<PF::InvertPar,PF::Invert>();
+    processor = new_median_filter();
 
   } else if( op_type == "uniform" ) {
 
@@ -232,6 +237,10 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   } else if( op_type == "shadows_highlights" ) {
     processor = new_shadows_highlights();
+
+  } else if( op_type == "shadows_highlights_v2" ) {
+    processor = new_shadows_highlights_v2();
+    std::cout<<"new_shadows_highlights_v2: "<<processor<<std::endl;
 
   } else if( op_type == "defringe" ) {
     processor = new_defringe();

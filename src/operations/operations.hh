@@ -89,8 +89,10 @@ namespace PF
   ProcessorBase* new_noise_generator();
   ProcessorBase* new_path_mask();
   ProcessorBase* new_shadows_highlights();
+  ProcessorBase* new_shadows_highlights_v2();
   ProcessorBase* new_defringe();
   ProcessorBase* new_guided_filter();
+  ProcessorBase* new_median_filter();
   ProcessorBase* new_split_details();
   ProcessorBase* new_subtrimg();
   //ProcessorBase* new_vips_operation( std::string op_type );

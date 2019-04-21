@@ -302,7 +302,8 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping_v2" );
   op_color.get_tree().add_op( _("Dynamic range compressor"), "dynamic_range_compressor_v2" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
-  op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights" );
+  op_color.get_tree().add_op( _("Shadows/Highlights old"), "shadows_highlights" );
+  op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights_v2" );
   op_color.get_tree().add_op( _("Defringe"), "defringe" );
   op_color.get_tree().add_op( _("Invert"), "invert" );
   op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
@@ -325,6 +326,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.get_tree().add_op( _("Gaussian blur"), "gaussblur" );
   op_detail.get_tree().add_op( _("Guided filter"), "guided_filter" );
   op_detail.get_tree().add_op( _("Bilateral blur"), "blur_bilateral" );
+  op_detail.get_tree().add_op( _("Median filter"), "median_filter" );
   op_detail.get_tree().add_op( _("Local contrast"), "local_contrast" );
   op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
   op_detail.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );

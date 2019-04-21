@@ -44,7 +44,7 @@ class GuidedFilterPar: public PaddedOpPar
   Property<float> threshold;
 
   ICCProfile* icc_data;
-  bool convert_to_perceptual;
+  Property<bool> convert_to_perceptual;
 public:
   GuidedFilterPar();
 
@@ -52,8 +52,8 @@ public:
 
   bool has_intensity() { return false; }
   bool needs_caching();
-  void set_convert_to_perceptual(bool val) { convert_to_perceptual = val; }
-  bool get_convert_to_perceptual() { return convert_to_perceptual; }
+  void set_convert_to_perceptual(bool val) { convert_to_perceptual.set(val); }
+  bool get_convert_to_perceptual() { return convert_to_perceptual.get(); }
 
   void set_radius(float r) { radius.set(r); }
   float get_radius() { return radius_real; }
@@ -105,7 +105,8 @@ class GuidedFilterProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
         //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
         if( opar->get_convert_to_perceptual() &&
             profile && profile->is_linear() ) {
-          *L = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+          //*L = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+          *L = (row[0]>1.0e-16) ? log10( row[0] ) : -16;
         } else {
           *L = row[0];
         }
@@ -137,9 +138,12 @@ class GuidedFilterProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
         //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
         if( opar->get_convert_to_perceptual() &&
             profile && profile->is_linear() ) {
-          *rr = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
-          *gr = (row[1]>0) ? powf( row[1], 1./2.4 ) : row[1];
-          *br = (row[2]>0) ? powf( row[2], 1./2.4 ) : row[2];
+          //*rr = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+          //*gr = (row[1]>0) ? powf( row[1], 1./2.4 ) : row[1];
+          //*br = (row[2]>0) ? powf( row[2], 1./2.4 ) : row[2];
+          *rr = (row[0]>1.0e-16) ? log10( row[0] ) : -16;
+          *gr = (row[1]>1.0e-16) ? log10( row[1] ) : -16;
+          *br = (row[2]>1.0e-16) ? log10( row[2] ) : -16;
         } else {
           *rr = row[0];
           *gr = row[1];
@@ -179,12 +183,15 @@ class GuidedFilterProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
       for( x = 0; x < rw; x++ ) {
         //std::cout<<"  y="<<y<<"  x="<<x<<"  row="<<row<<"  rr="<<rr<<"  gr="<<gr<<"  br="<<br<<std::endl;
         //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
-        if( opar->get_convert_to_perceptual() &&
-            profile && profile->is_linear() ) {
-          *rr = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
-          *gr = (row[1]>0) ? powf( row[1], 1./2.4 ) : row[1];
-          *br = (row[2]>0) ? powf( row[2], 1./2.4 ) : row[2];
-          *Lr = (row[3]>0) ? powf( row[3], 1./2.4 ) : row[3];
+        if( opar->get_convert_to_perceptual() && profile && profile->is_linear() ) {
+          //*rr = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+          //*gr = (row[1]>0) ? powf( row[1], 1./2.4 ) : row[1];
+          //*br = (row[2]>0) ? powf( row[2], 1./2.4 ) : row[2];
+          //*Lr = (row[3]>0) ? powf( row[3], 1./2.4 ) : row[3];
+          *rr = (row[0]>1.0e-16) ? log10( row[0] ) : -16;
+          *gr = (row[1]>1.0e-16) ? log10( row[1] ) : -16;
+          *br = (row[2]>1.0e-16) ? log10( row[2] ) : -16;
+          *Lr = (row[3]>1.0e-16) ? log10( row[3] ) : -16;
         } else {
           *rr = row[0];
           *gr = row[1];
@@ -217,9 +224,12 @@ class GuidedFilterProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
       for( x = 0; x < rw; x++ ) {
         if( opar->get_convert_to_perceptual() &&
             profile && profile->is_linear() ) {
-          row[0] = (*rr>0) ? powf( *rr, 2.4 ) : *rr;
-          row[1] = (*gr>0) ? powf( *gr, 2.4 ) : *gr;
-          row[2] = (*br>0) ? powf( *br, 2.4 ) : *br;
+          //row[0] = (*rr>0) ? powf( *rr, 2.4 ) : *rr;
+          //row[1] = (*gr>0) ? powf( *gr, 2.4 ) : *gr;
+          //row[2] = (*br>0) ? powf( *br, 2.4 ) : *br;
+          row[0] = pow( 10, *rr );
+          row[1] = pow( 10, *gr );
+          row[2] = pow( 10, *br );
         } else {
           row[0] = *rr;
           row[1] = *gr;
@@ -248,10 +258,14 @@ class GuidedFilterProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
       for( x = 0; x < rw; x++ ) {
         if( opar->get_convert_to_perceptual() &&
             profile && profile->is_linear() ) {
-          row[0] = (*rr>0) ? powf( *rr, 2.4 ) : *rr;
-          row[1] = (*gr>0) ? powf( *gr, 2.4 ) : *gr;
-          row[2] = (*br>0) ? powf( *br, 2.4 ) : *br;
-          row[3] = (*Lr>0) ? powf( *Lr, 2.4 ) : *Lr;
+          //row[0] = (*rr>0) ? powf( *rr, 2.4 ) : *rr;
+          //row[1] = (*gr>0) ? powf( *gr, 2.4 ) : *gr;
+          //row[2] = (*br>0) ? powf( *br, 2.4 ) : *br;
+          //row[3] = (*Lr>0) ? powf( *Lr, 2.4 ) : *Lr;
+          row[0] = pow( 10, *rr );
+          row[1] = pow( 10, *gr );
+          row[2] = pow( 10, *br );
+          row[3] = pow( 10, *Lr );
         } else {
           row[0] = *rr;
           row[1] = *gr;
@@ -279,7 +293,8 @@ class GuidedFilterProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
       for( x = 0; x < rw; x++ ) {
         if( opar->get_convert_to_perceptual() &&
             profile && profile->is_linear() ) {
-          row[0] = (*L>0) ? powf( *L, 2.4 ) : *L;
+          //row[0] = (*L>0) ? powf( *L, 2.4 ) : *L;
+          row[0] = pow( 10, *L );
         } else {
           row[0] = *L;
         }
@@ -315,6 +330,7 @@ public:
     int subsampling = 1;
 
     profile = opar->get_icc_data();
+    if( opar->get_convert_to_perceptual() && profile && profile->is_linear() ) epsilon *= 10;
 
     int offsx = ireg[0]->valid.left;
     int offsy = ireg[0]->valid.top;

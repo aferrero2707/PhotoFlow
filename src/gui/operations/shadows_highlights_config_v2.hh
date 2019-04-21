@@ -27,27 +27,41 @@
 
  */
 
-#ifndef GUIDED_FILTER_CONFIG_DIALOG_HH
-#define GUIDED_FILTER_CONFIG_DIALOG_HH
+#ifndef SHADOWS_HIGHLIGHTS_CONFIG_DIALOG_V2_HH
+#define SHADOWS_HIGHLIGHTS_CONFIG_DIALOG_V2_HH
 
 #include <gtkmm.h>
 
 #include "../operation_config_gui.hh"
-//#include "../../operations/guided_filter.hh"
 
 
 namespace PF {
 
-  class GuidedFilterConfigGUI: public OperationConfigGUI
+  class ShadowsHighlightsConfigV2GUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
-    Slider threshold_slider, radius_slider;
-    CheckBox perceptual_cbox;
+    Gtk::VBox controlsBox2;
+    Gtk::HBox equalizerBox;
+    Gtk::HBox globalBox;
+
+    Slider amount_slider;
+    Slider strength_s_slider, strength_h_slider;
+    Slider median_smooth_gain_slider, median_smooth_exponent_slider;
+    CheckBox fast_approx_box;
+    CheckBox do_median_box;
+    CheckBox do_median_smoothing_box;
+    CheckBox do_guided_box;
+    CheckBox show_residual_box;
+
+    Gtk::VBox guidedControlsBox;
+    Slider guidedRadiusSlider, guidedThresholdSlider;
 
   public:
-    GuidedFilterConfigGUI( Layer* l );
+    ShadowsHighlightsConfigV2GUI( Layer* l );
     
     bool has_preview() { return true; }
+
+    void do_update();
   };
 
 }

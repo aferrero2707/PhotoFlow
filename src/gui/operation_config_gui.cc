@@ -70,6 +70,7 @@
 #include "operations/volume_config.hh"
 #include "operations/threshold_config.hh"
 #include "operations/shadows_highlights_config.hh"
+#include "operations/shadows_highlights_config_v2.hh"
 #include "operations/defringe_config.hh"
 #include "operations/guided_filter_config.hh"
 #include "operations/split_details_config.hh"
@@ -1175,12 +1176,12 @@ void PF::OperationConfigGUI::layer2screen( gdouble& x, gdouble& y, gdouble& w, g
 PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* current_layer )
 {
   if( !current_layer ) return NULL;
+  std::cout<<"PF::new_operation_with_gui: creating operation of type \""<<op_type<<"\""<<std::endl;
+
   PF::ProcessorBase* processor = PF::new_operation( op_type, current_layer );
   if( !processor ) return NULL;
 
   PF::OperationConfigGUI* dialog = NULL;
-
-  //std::cout<<"PF::new_operation_with_gui: creating operation of type \""<<op_type<<"\""<<std::endl;
 
   if( op_type == "imageread" ) {
 
@@ -1350,11 +1351,19 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
     dialog = new PF::ShadowsHighlightsConfigGUI( current_layer );
 
+  } else if( op_type == "shadows_highlights_v2" ) {
+
+    dialog = new PF::ShadowsHighlightsConfigV2GUI( current_layer );
+
   } else if( op_type == "defringe" ) {
 
     dialog = new PF::DefringeConfigGUI( current_layer );
 
   } else if( op_type == "guided_filter" ) {
+
+    dialog = new PF::GuidedFilterConfigGUI( current_layer );
+
+  } else if( op_type == "median_filter" ) {
 
     dialog = new PF::GuidedFilterConfigGUI( current_layer );
 
