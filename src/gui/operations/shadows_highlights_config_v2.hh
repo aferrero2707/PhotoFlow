@@ -46,6 +46,7 @@ namespace PF {
 
     Slider amount_slider;
     Slider strength_s_slider, strength_h_slider;
+    Slider anchor_slider;
     Slider median_smooth_gain_slider, median_smooth_exponent_slider;
     CheckBox fast_approx_box;
     CheckBox do_median_box;

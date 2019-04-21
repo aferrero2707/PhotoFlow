@@ -33,6 +33,7 @@
 
 #include "../base/processor_imp.hh"
 #include "guided_filter.hh"
+#include "sharpen.hh"
 #include "shadows_highlights_v2.hh"
 
 
@@ -44,13 +45,16 @@
 class LogLumiPar: public PF::OpParBase
 {
   PF::ICCProfile* profile;
+  float anchor;
 public:
   LogLumiPar():
-    PF::OpParBase(), profile(NULL) {
+    PF::OpParBase(), profile(NULL), anchor(0.5) {
 
   }
 
   PF::ICCProfile* get_profile() { return profile; }
+  float get_anchor() { return anchor; }
+  void set_anchor(float a) { anchor = a; }
 
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,
@@ -105,7 +109,7 @@ public:
     PF::ICCProfile* profile = opar->get_profile();
     if( !profile ) return;
 
-    const float bias = 1.0f/profile->perceptual2linear(0.5);
+    const float bias = 1.0f/profile->perceptual2linear(opar->get_anchor());
 
     float L, pL;
     float* pin;
@@ -257,6 +261,7 @@ PF::ShadowsHighlightsV2Par::ShadowsHighlightsV2Par():
 OpParBase(),
 shadows("shadows",this,pow(10, 0.2)),
 highlights("highlights",this,pow(10, 0.2)),
+anchor("anchor",this,0.5),
 radius("sh_radius",this,100),
 threshold("sh_threshold",this,0.2),
 show_residual("show_residual", this, false),
@@ -274,6 +279,8 @@ in_profile( NULL )
     radius_scale[gi] = rs;
     rs *= 4;
   }
+
+  usm = new_sharpen();
 
   set_type("shadows_highlights_v2" );
 
@@ -333,7 +340,15 @@ void PF::ShadowsHighlightsV2Par::compute_padding( VipsImage* full_res, unsigned 
     guidedpar->compute_padding(full_res, id, level);
     tot_padding += guidedpar->get_padding(id);
   }
-
+/*
+  PF::SharpenPar* usmpar = dynamic_cast<PF::SharpenPar*>( usm->get_par() );
+  if( usmpar ) {
+    usmpar->set_usm_radius(4);
+    usmpar->propagate_settings();
+    usmpar->compute_padding(full_res, id, level);
+    tot_padding += usmpar->get_padding(id);
+  }
+*/
   set_padding( tot_padding, id );
 }
 
@@ -361,6 +376,7 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
   std::cout<<"DynamicRangeCompressorV2Par::build(): logpar="<<logpar<<std::endl;
   VipsImage* logimg = NULL;
   if(logpar) {
+    logpar->set_anchor( anchor.get() );
     logpar->set_image_hints( in[0] );
     logpar->set_format( get_format() );
     in2.clear(); in2.push_back( in[0] );
@@ -423,6 +439,25 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     PF_UNREF(timg, "DynamicRangeCompressorV2Par::build(): timg unref");
     timg = smoothed;
   }
+
+/*
+  timg = smoothed;
+  PF::SharpenPar* usmpar = dynamic_cast<PF::SharpenPar*>( usm->get_par() );
+  if( usmpar ) {
+    in2.clear();
+    in2.push_back( timg );
+    usmpar->set_image_hints( timg );
+    usmpar->set_format( get_format() );
+    usmpar->set_usm_radius(4);
+    usmpar->propagate_settings();
+    smoothed = usmpar->build( in2, first, NULL, NULL, level );
+    if( !smoothed ) {
+      std::cout<<"DynamicRangeCompressorV2Par::build(): NULL local contrast enhanced image"<<std::endl;
+      return NULL;
+    }
+    PF_UNREF(timg, "DynamicRangeCompressorV2Par::build(): timg unref");
+  }
+*/
 
 
   if( !smoothed ) {

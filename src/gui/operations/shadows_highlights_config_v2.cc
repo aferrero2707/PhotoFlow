@@ -48,6 +48,7 @@ PF::ShadowsHighlightsConfigV2GUI::ShadowsHighlightsConfigV2GUI( PF::Layer* layer
   amount_slider( this, "amount", "amount", 100, 0, 100, 2, 10, 100),
   strength_s_slider( this, "shadows", "shadows", 0, -100, 100, 0.5, 5, 100),
   strength_h_slider( this, "highlights", "highlights", 0, -100, 100, 0.5, 5, 100),
+  anchor_slider( this, "anchor", "anchor", 0, 0, 100, 0.5, 5, 100),
   median_smooth_gain_slider( this, "median_smooth_gain", "smooth gain", 0, 0, 10, 0.5, 5, 1),
   median_smooth_exponent_slider( this, "median_smooth_exponent", "smooth exponent", 0, 0, 10, 0.5, 5, 1),
   show_residual_box( this, "show_residual", "show residual", false),
@@ -63,6 +64,7 @@ PF::ShadowsHighlightsConfigV2GUI::ShadowsHighlightsConfigV2GUI( PF::Layer* layer
 
   controlsBox.pack_start( strength_s_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( strength_h_slider, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( anchor_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( guidedRadiusSlider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( guidedThresholdSlider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( median_smooth_gain_slider, Gtk::PACK_SHRINK, 2 );

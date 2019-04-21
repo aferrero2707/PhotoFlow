@@ -47,7 +47,7 @@ namespace PF
 
 class ShadowsHighlightsV2Par: public OpParBase
 {
-  Property<float> shadows, highlights;
+  Property<float> shadows, highlights, anchor;
   Property<float> radius, threshold;
 
   Property<bool> show_residual;
@@ -55,6 +55,7 @@ class ShadowsHighlightsV2Par: public OpParBase
 
   ProcessorBase* loglumi;
   ProcessorBase* guided[10];
+  ProcessorBase* usm;
 
   PF::ICCProfile* in_profile;
   float radius_scale[10];
@@ -71,6 +72,7 @@ public:
 
   float get_shadows() { return shadows.get(); }
   float get_highlights() { return highlights.get(); }
+  float get_anchor() { return anchor.get(); }
   bool get_show_residual() { return show_residual_; }
 
   void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
@@ -128,7 +130,7 @@ public:
     float R, out;
     int x, x0, y, pos;
     //float threshold = opar->get_threshold()*FormatInfo<T>::RANGE;
-    float bias = profile->perceptual2linear(0.5);
+    float bias = profile->perceptual2linear( opar->get_anchor() );
 
     const float SH_LOG_SCALE_RANGE = SH_LOG_SCALE_MAX - SH_LOG_SCALE_MIN;
 
