@@ -49,6 +49,7 @@
 #include "layertree.hh"
 #include "settingsdialog.hh"
 #include "mainwindow.hh"
+#include "../version.hh"
 
 #include "../base/print_display_profile.hh"
 
@@ -109,7 +110,7 @@ buttonDelLayer(),
 buttonLoadPreset(),
 buttonSavePreset()
 {
-  set_title("Photo Flow");
+  set_title(PF::version_string);
   // Sets the border width of the window.
   set_border_width(0);
   //set_default_size(120,80);

@@ -10,6 +10,8 @@ bindir="$6"
 echo "Updating PhotoFlow version info"
 echo "bindir: $bindir"
 update=0
+hash2=$(echo "$hash" | head -c 5)
+date2=$(echo "$date" | tr " " "\n" | head -n 1)
 
 if [ x"$release" = "x1" ]; then
 
@@ -22,9 +24,10 @@ if [ x"$release" = "x1" ]; then
 else
 
 	echo "#include <version.hh>" > "$bindir/version.cc.temp"
-	echo -n "char* PF::version_string = \"\nPhotoFlow development version\n\n" >> "$bindir/version.cc.temp"
+	echo -n "const char* PF::version_string_long = \"\nPhotoFlow development version\n\n" >> "$bindir/version.cc.temp"
 	echo -n "Git branch: $branch\n\nGit commit date: $date\n\n" >> "$bindir/version.cc.temp"
 	echo "Git commit hash: $hash\n\";" >> "$bindir/version.cc.temp"
+	echo -n "const char* PF::version_string = \"PhotoFlow $branch-$hash2 ($date2)\";" >> "$bindir/version.cc.temp"
 	
 fi
 
