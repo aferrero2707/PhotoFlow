@@ -315,7 +315,7 @@ PF::DynamicRangeCompressorV2Par::DynamicRangeCompressorV2Par():
   local_contrast("local_contrast", this, 0),
   lumi_blend("lumi_blend", this, 0),
   show_residual("show_residual", this, false),
-  caching(false)
+  caching(true)
 {
   loglumi = new PF::Processor<LogLumiPar,LogLumiProc>();
   to_log = new PF::Processor<LogPar,LogProc>();
@@ -640,7 +640,7 @@ VipsImage* PF::DynamicRangeCompressorV2Par::build_new(std::vector<VipsImage*>& i
 VipsImage* PF::DynamicRangeCompressorV2Par::build(std::vector<VipsImage*>& in, int first,
              VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
-  build_old( in, first, imap, omap, level );
+  return build_old( in, first, imap, omap, level );
 }
 
 
