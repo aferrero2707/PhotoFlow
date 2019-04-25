@@ -133,14 +133,14 @@ void PF::Slider::create_widgets( std::string l, double val,
       //pack_end( hbox, Gtk::PACK_SHRINK );
       hbox.pack_start( label_align, Gtk::PACK_SHRINK );
       hbox2.pack_start( scale_align, Gtk::PACK_SHRINK );
-      hbox2.pack_start( numentry_align, Gtk::PACK_SHRINK );
-      hbox2.pack_start( reset_align, Gtk::PACK_SHRINK );
+      hbox.pack_end( reset_align, Gtk::PACK_SHRINK );
+      hbox.pack_end( numentry_align, Gtk::PACK_SHRINK );
       vbox.pack_start( hbox, Gtk::PACK_SHRINK );
       vbox.pack_start( hbox2, Gtk::PACK_SHRINK );
       align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
       align.set_padding(4,4,4,4);
       align.add( vbox );
-      pack_end( align, Gtk::PACK_SHRINK );
+      pack_end( align, Gtk::PACK_EXPAND_WIDGET );
     }
   } else {
     //hbox.pack_start( label, Gtk::PACK_SHRINK );
