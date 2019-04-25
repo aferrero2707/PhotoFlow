@@ -42,6 +42,8 @@ class GuidedFilterPar: public PaddedOpPar
   Property<float> radius;
   float radius_real;
   Property<float> threshold;
+  Property<int> subsampling;
+  int subsampling_real;
 
   ICCProfile* icc_data;
   Property<bool> convert_to_perceptual;
@@ -59,6 +61,9 @@ public:
   float get_radius() { return radius_real; }
   void set_threshold(float t) { threshold.set(t); }
   float get_threshold() { return threshold.get(); }
+
+  void set_subsampling(int s) { subsampling.set(s); }
+  int get_subsampling() { return subsampling_real; }
 
   void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
 
@@ -327,23 +332,37 @@ public:
 
     int r = opar->get_radius();
     float epsilon = opar->get_threshold();
-    int subsampling = 1;
+    int subsampling = opar->get_subsampling();
 
     profile = opar->get_icc_data();
     if( opar->get_convert_to_perceptual() && profile && profile->is_linear() ) epsilon *= 10;
 
-    int offsx = ireg[0]->valid.left;
-    int offsy = ireg[0]->valid.top;
-    int rw = ireg[0]->valid.width;
-    int rh = ireg[0]->valid.height;
-    float* p = (float*)VIPS_REGION_ADDR( ireg[0], offsx, offsy );
+    int offsx = 0;
+    int offsy = 0;
+    int shiftx = (ireg[0]->valid.left/subsampling+1) * subsampling - ireg[0]->valid.left;
+    int shifty = (ireg[0]->valid.top/subsampling+1) * subsampling - ireg[0]->valid.top;
+    int rw = ireg[0]->valid.width - shiftx - subsampling;
+    rw = (rw/subsampling+1) * subsampling;
+    int rh = ireg[0]->valid.height - shifty - subsampling;
+    rh = (rh/subsampling+1) * subsampling;
+    int ileft = ireg[0]->valid.left + shiftx;
+    int itop = ireg[0]->valid.top + shifty;
+    float* p = (float*)VIPS_REGION_ADDR( ireg[0], ileft, itop );
     int rowstride = VIPS_REGION_LSKIP(ireg[0]) / sizeof(float);
-    offsx = 0;
-    offsy = 0;
     PixelMatrix<float> rgbin(p, rw, rh, rowstride, offsy, offsx);
 
-    //std::cout<<"GuidedFilterProc::render: Bands="<<ireg[0]->im->Bands<<std::endl;
-
+    /*
+    std::cout<<"GuidedFilterProc::render: Bands="<<ireg[0]->im->Bands<<std::endl;
+    std::cout<<"GuidedFilterProc::render: radius="<<r<<"  subsampling="<<subsampling<<std::endl;
+    std::cout<<"GuidedFilterProc::render: ireg.left="<<ireg[0]->valid.left
+        <<"  shiftx="<<shiftx<<std::endl;
+    std::cout<<"GuidedFilterProc::render: ireg.top="<<ireg[0]->valid.top
+        <<"  shifty="<<shifty<<std::endl;
+    std::cout<<"GuidedFilterProc::render: ireg.width="<<ireg[0]->valid.width
+        <<"  rw="<<rw<<std::endl;
+    std::cout<<"GuidedFilterProc::render: ireg.height="<<ireg[0]->valid.height
+        <<"  rh="<<rh<<std::endl;
+    */
     if( ireg[0]->im->Bands == 1 ) {
       PixelMatrix<float> Lin(rw, rh, offsy, offsx);
       PixelMatrix<float> Lguide(rw, rh, offsy, offsx);
@@ -357,8 +376,8 @@ public:
       //std::cout<<"                          processing R:"<<std::endl;
       guidedFilter(Lguide, Lin, Lout, r, epsilon, subsampling);
 
-      int dx = oreg->valid.left - ireg[0]->valid.left;
-      int dy = oreg->valid.top - ireg[0]->valid.top;
+      int dx = oreg->valid.left - ireg[0]->valid.left - shiftx;
+      int dy = oreg->valid.top - ireg[0]->valid.top - shifty;
       offsx = oreg->valid.left;
       offsy = oreg->valid.top;
       rw = oreg->valid.width;
@@ -368,6 +387,7 @@ public:
       PF::PixelMatrix<float> rgbout(p, rw, rh, rowstride, 0, 0);
 
       //std::cout<<"GuidedFilterProc::render: r="<<r<<"  epsilon="<<epsilon<<"  subsampling="<<subsampling
+      //    <<"  left="<<oreg->valid.left<<"  top="<<oreg->valid.top
       //    <<"  dx="<<dx<<"  dy="<<dy<<"  rw="<<rw<<"  rh="<<rh<<std::endl;
 
       fill_L_out(rw, rh, dx, dy, rgbout, Lout);
@@ -396,8 +416,8 @@ public:
       //std::cout<<"                          processing B:"<<std::endl;
       guidedFilter(bguide, bin, bout, r, epsilon, subsampling);
 
-      int dx = oreg->valid.left - ireg[0]->valid.left;
-      int dy = oreg->valid.top - ireg[0]->valid.top;
+      int dx = oreg->valid.left - ireg[0]->valid.left - shiftx;
+      int dy = oreg->valid.top - ireg[0]->valid.top - shifty;
       offsx = oreg->valid.left;
       offsy = oreg->valid.top;
       rw = oreg->valid.width;

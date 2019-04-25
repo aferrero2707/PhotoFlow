@@ -32,12 +32,14 @@
 
 PF::GuidedFilterConfigGUI::GuidedFilterConfigGUI( PF::Layer* layer ):
 OperationConfigGUI( layer, "Guided filter" ),
-radius_slider( this, "radius", _("radius"), 4.0, 1, 100.0, 5, 1, 1),
+radius_slider( this, "radius", _("radius"), 4.0, 1, 500.0, 0.5, 1, 1),
 threshold_slider( this, "threshold", _("threshold"), 20, 0.5, 1000.0, 0.5, 1, 1000),
+subsampling_slider( this, "subsampling", _("subsampling"), 20, 1, 64.0, 1, 4, 1),
 perceptual_cbox(this, "convert_to_perceptual", "log scale", true)
 {
   controlsBox.pack_start( radius_slider, Gtk::PACK_SHRINK );
   controlsBox.pack_start( threshold_slider, Gtk::PACK_SHRINK );
+  controlsBox.pack_start( subsampling_slider, Gtk::PACK_SHRINK );
   controlsBox.pack_start( perceptual_cbox, Gtk::PACK_SHRINK );
 
   add_widget( controlsBox );

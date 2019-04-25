@@ -162,6 +162,52 @@ public:
     if(data) delete[] data;
     if(ptr) delete[] ptr;
   }
+
+  PixelMatrix& operator =(const PixelMatrix& m)
+  {
+    if(data) delete[] data;
+    if(ptr) delete[] ptr;
+
+    w = m.width();
+    h = m.height();
+    ro = m.roffs();
+    co = m.coffs();
+    data = new T[w*h];
+    int rowstride = w;
+    T* buf = data;
+    ptr = new T*[h];
+    rows = ptr - ro;
+    for(int i = 0; i < h; i++) {
+      ptr[i] = buf - co;
+      memcpy(buf, m[i] + co, sizeof(T)*w);
+      buf += rowstride;
+    }
+
+    return(*this);
+    //std::cout<<"Initialized pixel matrix "<<w<<"x"<<h<<"+"<<coffs<<","<<roffs<<std::endl;
+  }
+
+  void resize(int width, int height, int roffs=0, int coffs=0)
+  {
+    if(data) delete[] data;
+    if(ptr) delete[] ptr;
+
+    w = width;
+    h = height;
+    ro = roffs;
+    co = coffs;
+    data = new T[w*h];
+    int rowstride = w;
+    T* buf = data;
+    ptr = new T*[h];
+    rows = ptr - roffs;
+    for(int i = 0; i < height; i++) {
+      ptr[i] = buf - coffs;
+      buf += rowstride;
+    }
+    //std::cout<<"Initialized pixel matrix "<<w<<"x"<<h<<"+"<<coffs<<","<<roffs<<std::endl;
+  }
+
   // use as pointer to T**
   operator T**() { return rows; }
   T** get_rows() { return rows; }

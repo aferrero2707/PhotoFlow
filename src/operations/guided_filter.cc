@@ -58,6 +58,133 @@
 
 using namespace rtengine;
 
+
+//#define GF_DEBUG
+
+
+namespace {
+
+
+template<class T> void gf_boxblur(PF::PixelMatrix<T> &_src, PF::PixelMatrix<float>& dst, int radius, int border=0)
+{
+  const int W = _src.width();
+  const int H = _src.height();
+  const int boxsz = radius*2 + 1;
+  const float scale = boxsz*boxsz;
+
+  PF::PixelMatrix<T>* ppm = &_src;
+  PF::PixelMatrix<T> tbuf;
+  if( _src.get_rows() == dst.get_rows() ) {
+    tbuf = _src;
+    ppm = &tbuf;
+  }
+  PF::PixelMatrix<T>& src = *ppm;
+
+#ifdef GF_DEBUG
+  std::cout<<"W="<<W<<"  H="<<H<<std::endl;
+#endif
+
+  // create and initialize column sum vector
+#ifdef GF_DEBUG
+  std::cout<<"Column vectors initialization"<<std::endl;
+#endif
+  T* csum = new T[W];
+  for(int c = border; c < W-border; c++) {
+    csum[c] = 0;
+    for(int r = border; r < (boxsz+border-1); r++) {
+      csum[c] += src[r][c];
+#ifdef GF_DEBUG
+      std::cout<<"  src["<<r<<"]["<<c<<"]="<<src[r][c]<<"  csum["<<c<<"]="<<csum[c]<<std::endl;
+#endif
+    }
+  }
+
+  // loop on rows, leaving a band of size radius above and below
+  for(int r = radius+border; r < (H-radius-border); r++) {
+
+#ifdef GF_DEBUG
+    std::cout<<"Processing row="<<r<<std::endl;
+#endif
+    // add the leftmost boxsz-1 values of row r+radius
+    for(int c = border, rr=r+radius; c < (boxsz+border-1); c++) {
+      csum[c] += src[rr][c];
+#ifdef GF_DEBUG
+      std::cout<<"  src["<<rr<<"]["<<c<<"]="<<src[rr][c]<<"  csum["<<c<<"]="<<csum[c]<<std::endl;
+#endif
+    }
+
+    // initialize the box sum
+    T sum = 0;
+    for(int c = border; c < (boxsz+border-1); c++) {
+      sum += csum[c];
+#ifdef GF_DEBUG
+      std::cout<<"  csum["<<c<<"]="<<csum[c]<<"  sum="<<sum<<std::endl;
+#endif
+    }
+
+    // loop on columns, leaving a band of size radius at left and right
+    for(int c = radius+border; c < (W-radius-border); c++) {
+
+#ifdef GF_DEBUG
+      std::cout<<"Processing column="<<c<<std::endl;
+#endif
+      // update the column sum at c+radius
+      csum[c+radius] += src[r+radius][c+radius];
+#ifdef GF_DEBUG
+      std::cout<<"  src["<<r+radius<<"]["<<c+radius<<"]="<<src[r+radius][c+radius]<<"  csum["<<c+radius<<"]="<<csum[c+radius]<<std::endl;
+#endif
+      // add the column at c+radius
+      sum += csum[c+radius];
+#ifdef GF_DEBUG
+      std::cout<<"  csum["<<c+radius<<"]="<<csum[c+radius]<<"  sum="<<sum<<std::endl;
+#endif
+
+      // update the destination value
+      dst[r][c] = sum / scale;
+#ifdef GF_DEBUG
+      std::cout<<"dst["<<r<<"]["<<c<<"] = "<<sum<<" / "<<scale<<std::endl;
+#endif
+
+      // remove the column at c-radius from the sum
+      sum -= csum[c-radius];
+
+      // remove the value at (r-radius, c-radius) from the column a c-radius
+      csum[c-radius] -= src[r-radius][c-radius];
+    }
+
+    // loop on columns finished.
+    // remove the values at r-radius from the csums from W-boxsz+1 to W-1
+    for(int c = (W-border-boxsz+1); c < W-border; c++) {
+      csum[c] -= src[r-radius][c];
+    }
+  }
+
+  delete[] csum;
+}
+
+
+int calculate_subsampling(int w, int h, int r)
+{
+    if (r == 1) {
+        return 1;
+    }
+
+    //if (max(w, h) <= 600) {
+    //    return 1;
+    //}
+
+    for (int s = 5; s > 0; --s) {
+        if (r % s == 0) {
+            return s;
+        }
+    }
+
+    return LIM(r / 2, 2, 4);
+}
+
+} // namespace
+
+
 void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix<float> &src,
     PF::PixelMatrix<float> &dst, int r, float epsilon, int subsampling)
 {
@@ -65,23 +192,25 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
   const int W = src.width();
   const int H = src.height();
 
-  //if (subsampling <= 0) {
-  //    subsampling = calculate_subsampling(W, H, r);
-  //}
+  //subsampling = 1;
+  if (subsampling <= 0) {
+      subsampling = calculate_subsampling(W, H, r);
+      //std::cout<<"guidedFilter: W="<<W<<"  H="<<H<<"  r="<<r<<"  subsampling="<<subsampling<<std::endl;
+  }
 
   enum Op { MUL, DIVEPSILON, ADD, SUB, ADDMUL, SUBMUL };
 
   const auto apply =
-      [=](Op op, array2D<float> &res, const array2D<float> &a, const array2D<float> &b, const array2D<float> &c=array2D<float>()) -> void
+      [=](Op op, int border, array2D<float> &res, const array2D<float> &a, const array2D<float> &b, const array2D<float> &c=array2D<float>()) -> void
       {
-          const int w = res.width();
-          const int h = res.height();
+          const int w = res.width()-border;
+          const int h = res.height()-border;
 
 #ifdef _OPENMP
           #pragma omp parallel for if (multithread)
 #endif
-          for (int y = 0; y < h; ++y) {
-              for (int x = 0; x < w; ++x) {
+          for (int y = border; y < h; ++y) {
+              for (int x = border; x < w; ++x) {
                   float r;
                   float aa = a[y][x];
                   float bb = b[y][x];
@@ -127,13 +256,19 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
   array2D<float> &q = dst;
 
   AlignedBuffer<float> blur_buf(I.width() * I.height());
-  const auto f_mean =
-      [&](array2D<float> &d, array2D<float> &s, int rad) -> void
+  const auto f_mean1 =
+      [&](array2D<float> &d, array2D<float> &s, int rad, int border=0) -> void
       {
           rad = LIM(rad, 0, (min(s.width(), s.height()) - 1) / 2 - 1);
           float **src = s;
           float **dst = d;
           boxblur<float, float>(src, dst, blur_buf.data, rad, rad, s.width(), s.height());
+      };
+
+  const auto f_mean2 =
+      [&](array2D<float> &d, array2D<float> &s, int rad, int border=0) -> void
+      {
+          gf_boxblur(s, d, rad, border);
       };
 
   const auto f_subsample =
@@ -142,20 +277,37 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
           rescaleBilinear(s, d, multithread);
       };
 
+  const auto f_mean = f_mean2;
+
   const auto f_upsample = f_subsample;
+
+  //return;
 
   const int w = W / subsampling;
   const int h = H / subsampling;
 
-  //array2D<float> I1(w, h);
-  //array2D<float> p1(w, h);
+  array2D<float> I1; //(w, h);
+  array2D<float> p1; //(w, h);
 
-  //f_subsample(I1, I);
-  //f_subsample(p1, p);
+  if(subsampling > 1) {
+    I1.resize(w, h);
+    p1.resize(w, h);
 
-  array2D<float> I1(I);
+    f_subsample(I1, I);
+    f_subsample(p1, p);
+
+    //f_upsample(q, p1);
+    //std::cout<<"p.width()="<<p.width()<<"  "<<"p1.width()="<<p1.width()<<"  "<<"q.width()="<<q.width()<<"  "<<std::endl;
+    //return;
+  } else {
+    I1 = I;
+    p1 = p;
+  }
+  //return;
+
+  //array2D<float> I1(I);
   //printf("After I1(I): I1=%f  I=%f\n", I1[0][0], I[0][0]); //getchar();
-  array2D<float> p1(p);
+  //array2D<float> p1(p);
   //printf("After p1(p): p1=%f  p=%f\n", p1[0][0], p[0][0]); //getchar();
 
   DEBUG_DUMP(I);
@@ -164,74 +316,86 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
   DEBUG_DUMP(p1);
 
   float r1 = float(r) / subsampling;
+  int border = 0;
 
   array2D<float> meanI(w, h);
-  f_mean(meanI, I1, r1);
+  f_mean(meanI, I1, r1, 0);
   DEBUG_DUMP(meanI);
   //printf("After f_mean(meanI, I1, r1): meanI=%f  I1=%f  r1=%f\n", meanI[0][0], I1[0][0], r1); //getchar();
 
   array2D<float> meanp(w, h);
-  f_mean(meanp, p1, r1);
+  f_mean(meanp, p1, r1, 0);
   DEBUG_DUMP(meanp);
   //printf("After f_mean(meanp, p1, r1): p1=%f  r1=%f\n", p1[0][0], r1); //getchar();
+  //q = meanp;
+  //return;
 
   //array2D<float> &corrIp = p1;
   array2D<float> corrIp(p1);
-  apply(MUL, corrIp, I1, p1);
+  apply(MUL, 0, corrIp, I1, p1);
   //printf("After apply(MUL, corrIp, I1, p1): corrIp=%f I1=%f p1=%f\n", corrIp[0][0], I1[0][0], p1[0][0]); //getchar();
-  f_mean(corrIp, corrIp, r1);
+  f_mean(corrIp, corrIp, r1, 0);
   //printf("After f_mean(corrIp, corrIp, r1): corrIp=%f  r1=%f\n", corrIp[0][0], r1); //getchar();
   DEBUG_DUMP(corrIp);
 
   array2D<float> &corrI = I1;
-  apply(MUL, corrI, I1, I1);
-  f_mean(corrI, corrI, r1);
+  apply(MUL, 0, corrI, I1, I1);
+  f_mean(corrI, corrI, r1, 0);
   DEBUG_DUMP(corrI);
   //printf("After apply(MUL, corrI, I1, I1): corrI=%f  I1=%f\n", corrI[0][0], I1[0][0]); //getchar();
 
   array2D<float> &varI = corrI;
-  apply(SUBMUL, varI, meanI, meanI, corrI);
+  apply(SUBMUL, r1, varI, meanI, meanI, corrI);
   DEBUG_DUMP(varI);
   //printf("After apply(SUBMUL, varI, meanI, meanI, corrI): varI=%f  meanI=%f  corrI=%f\n",
   //    varI[0][0], meanI[0][0], corrI[0][0]); //getchar();
 
   array2D<float> &covIp = corrIp;
-  apply(SUBMUL, covIp, meanI, meanp, corrIp);
+  apply(SUBMUL, r1, covIp, meanI, meanp, corrIp);
   DEBUG_DUMP(covIp);
   //printf("After apply(SUBMUL, covIp, meanI, meanp, corrIp)\n"); //getchar();
 
   array2D<float> &a = varI;
-  apply(DIVEPSILON, a, covIp, varI);
+  apply(DIVEPSILON, r1, a, covIp, varI);
   DEBUG_DUMP(a);
   //printf("After apply(DIVEPSILON, a, covIp, varI): a=%f  covIp=%f  varI=%f\n",
   //    a[0][0], covIp[0][0], varI[0][0]); //getchar();
 
   array2D<float> &b = covIp;
-  apply(SUBMUL, b, a, meanI, meanp);
+  apply(SUBMUL, r1, b, a, meanI, meanp);
   DEBUG_DUMP(b);
   //printf("After apply(SUBMUL, b, a, meanI, meanp): b=%f  a=%f  meanI=%f  meanp=%f\n",
   //    b[0][0], a[0][0], meanI[0][0], meanp[0][0]); //getchar();
 
   array2D<float> &meana = a;
-  f_mean(meana, a, r1);
+  f_mean(meana, a, r1, r1);
   DEBUG_DUMP(meana);
 
   array2D<float> &meanb = b;
-  f_mean(meanb, b, r1);
+  f_mean(meanb, b, r1, r1);
   DEBUG_DUMP(meanb);
 
-  //array2D<float> meanA(W, H);
-  //f_upsample(meanA, meana);
-  array2D<float>& meanA = meana;
-  DEBUG_DUMP(meanA);
+  if( subsampling > 1 ) {
+    array2D<float> meanA(W, H);
+    f_upsample(meanA, meana);
+    DEBUG_DUMP(meanA);
 
-  //array2D<float> meanB(W, H);
-  //f_upsample(meanB, meanb);
-  array2D<float>& meanB = meanb;
-  DEBUG_DUMP(meanB);
+    array2D<float> meanB(W, H);
+    f_upsample(meanB, meanb);
+    DEBUG_DUMP(meanB);
 
-  apply(ADDMUL, q, meanA, I, meanB);
-  DEBUG_DUMP(q);
+    apply(ADDMUL, r*2, q, meanA, I, meanB);
+    DEBUG_DUMP(q);
+  } else {
+    array2D<float>& meanA = meana;
+    DEBUG_DUMP(meanA);
+
+    array2D<float>& meanB = meanb;
+    DEBUG_DUMP(meanB);
+
+    apply(ADDMUL, r*2, q, meanA, I, meanB);
+    DEBUG_DUMP(q);
+  }
   //printf("After apply(ADDMUL, q, meanA, I, meanB): q=%f  meanA=%f  I=%f  meanB=%f\n\n",
   //    q[0][0], meanA[0][0], I[0][0], meanB[0][0]); //getchar();
 }
@@ -241,6 +405,7 @@ PF::GuidedFilterPar::GuidedFilterPar():
 PaddedOpPar(),
 radius("radius",this,10.0),
 threshold("threshold",this,0.075),
+subsampling("subsampling",this,1),
 convert_to_perceptual("convert_to_perceptual",this,true)
 {
   set_type("guided_filter" );
@@ -260,10 +425,18 @@ bool PF::GuidedFilterPar::needs_caching()
 void PF::GuidedFilterPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
 {
   double radius2 = radius.get();
-  for( unsigned int l = 1; l <= level; l++ )
+  double subsampling2 = subsampling.get();
+  for( unsigned int l = 1; l <= level; l++ ) {
     radius2 /= 2;
+    subsampling2 /= 2;
+  }
+  subsampling_real = (subsampling2 < 1) ? 1 : static_cast<int>(floor(subsampling2));
 
-  int padding = radius2 * 2 + 1;
+  int padding = radius2 * 2 + subsampling_real;
+
+  //std::cout<<"GuidedFilterPar::compute_padding: level="<<level
+  //    <<"  subsampling="<<subsampling.get()<<"  subsampling_real="<<subsampling_real
+  //    <<"  radius="<<radius.get()<<"  radius2="<<radius2<<"  padding="<<padding<<std::endl;
 
   set_padding( padding, id );
 }
@@ -277,10 +450,17 @@ VipsImage* PF::GuidedFilterPar::build(std::vector<VipsImage*>& in, int first,
   if(in.size()>0 && in[0]) icc_data = PF::get_icc_profile( in[0] );
 
   double radius2 = radius.get();
-  for( unsigned int l = 1; l <= level; l++ )
+  double subsampling2 = subsampling.get();
+  for( unsigned int l = 1; l <= level; l++ ) {
     radius2 /= 2;
+    subsampling2 /= 2;
+  }
 
   radius_real = radius2;
+  subsampling_real = (subsampling2 < 1) ? 1 : static_cast<int>(floor(subsampling2));
+
+  int padding = radius_real * 2 + subsampling_real;
+  set_padding( padding, 0 );
 
   std::cout<<"GuidedFilterPar::build: radius="<<radius_real<<"  threshold="<<threshold.get()<<std::endl;
   VipsImage* out = PF::PaddedOpPar::build( in, first, imap, omap, level );

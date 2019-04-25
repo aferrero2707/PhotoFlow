@@ -41,7 +41,7 @@ namespace PF {
   class GuidedFilterConfigGUI: public OperationConfigGUI
   {
     Gtk::VBox controlsBox;
-    Slider threshold_slider, radius_slider;
+    Slider threshold_slider, radius_slider, subsampling_slider;
     CheckBox perceptual_cbox;
 
   public:
