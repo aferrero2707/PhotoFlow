@@ -140,6 +140,7 @@ public:
     //float amount = 1.0f / opar->get_amount();
     float sh_scale = 1.0f / opar->get_shadows();
     float hl_scale = 1.0f / opar->get_highlights();
+    float scale_delta = hl_scale - sh_scale;
     float sh_range = opar->get_shadows_range();
     float hl_range = opar->get_highlights_range();
 
@@ -165,9 +166,14 @@ public:
           out = l2 * (1.0f - sh_slope);
           //out = l2 * sh_scale;
         } else {
-          float hl_slope = (1.0f - hl_scale) / (1.0f + l2*l2/hl_range);
-          out = l2 * (1.0f - hl_slope);
+          //float hl_slope = (1.0f - hl_scale) / (1.0f + l2*l2/hl_range);
+          //out = l2 * (1.0f - hl_slope);
           //out = l2 * hl_scale;
+          //float hl_slope = (1.0f - 1.0f/(l2*hl_range+1)) * scale_delta + sh_scale;
+          float M_PI2 = M_PI/2;
+          float hl_frac = (l2<hl_range) ? sin(l2*M_PI2/hl_range) : 1;
+          float hl_slope = hl_frac * scale_delta + sh_scale;
+          out = l2 * hl_slope;
         }
         //out = (l2 > 0) ? l2 * hl_scale : l2 * sh_scale;
         l2 = xexp10( l2 );
