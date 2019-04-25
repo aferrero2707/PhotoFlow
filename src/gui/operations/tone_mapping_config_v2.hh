@@ -99,6 +99,7 @@ public:
     Gtk::VBox tc_box, curve_box;
 
     Slider saturation_scaling_slider;
+    Slider sh_desaturation_slider;
     Slider hl_desaturation_slider;
     Slider lumi_blend_frac_slider;
 

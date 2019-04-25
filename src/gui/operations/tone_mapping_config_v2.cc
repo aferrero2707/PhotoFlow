@@ -244,9 +244,10 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
           LE_shoulder_slope( this, "LE_shoulder_slope", _("shoulder slope"), 0, 0, 100, 1, 5, 10 ),
           LE_shoulder_slope2( this, "LE_shoulder_slope2", _("shoulder slope 2"), 0, 0, 100, 1, 5, 100 ),
           LE_shoulder_max( this, "LE_shoulder_max", _("white level (EV)"), 0, 0, 100, 0.5, 5, 1 ),
-          lumi_blend_frac_slider( this, "lumi_blend_frac", _("HL saturation"), 1, 0, 100, 1, 5, 100 ),
+          lumi_blend_frac_slider( this, "lumi_blend_frac", _("lumi blend"), 1, 0, 100, 1, 5, 100 ),
           tc_frame( _("tone curve") ),
           saturation_scaling_slider( this, "saturation_scaling", _("sat scaling"), 1, 0, 100, 0.5, 5, 100 ),
+          sh_desaturation_slider( this, "sh_desaturation", _("sh desaturation"), 1, 0, 100, 0.5, 5, 100 ),
           hl_desaturation_slider( this, "hl_desaturation", _("hl desaturation"), 1, 0, 100, 0.5, 5, 100 ),
           local_contrast_frame( _("local contrast") ),
           local_contrast_slider( this, "local_contrast_amount", _("amount"), 1, 0, 100, 0.5, 5, 100 ),
@@ -281,9 +282,10 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
 
   curve_area_box.pack_start( curve_area, Gtk::PACK_SHRINK, 10 );
 
-  controlsBox.pack_start( lumi_blend_frac_slider, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( lumi_blend_frac_slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( saturation_scaling_slider, Gtk::PACK_SHRINK, 2 );
-  //controlsBox.pack_start( hl_desaturation_slider, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( sh_desaturation_slider, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( hl_desaturation_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( hue_protection_checkbox, Gtk::PACK_SHRINK, 2 );
 
 

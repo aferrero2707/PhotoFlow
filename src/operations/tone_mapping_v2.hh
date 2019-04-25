@@ -173,7 +173,7 @@ class ToneMappingParV2: public OpParBase
 
   Property<float> lumi_blend_frac;
 
-  Property<float> saturation_scaling, hl_desaturation;
+  Property<float> saturation_scaling, sh_desaturation, hl_desaturation;
 
   Property<float> local_contrast_amount, local_contrast_radius, local_contrast_threshold;
   ProcessorBase* guided_blur;
@@ -193,6 +193,7 @@ public:
 
   bool get_hue_protection() { return hue_protection.get(); }
   float get_saturation_scaling() { return saturation_scaling.get(); }
+  float get_sh_desaturation() { return sh_desaturation.get(); }
   float get_hl_desaturation() { return hl_desaturation.get(); }
 
   float get_LE_gain() { return LE_gain.get(); }
@@ -252,7 +253,7 @@ public:
     //int width = r->width;
     int height = r->height;
 
-    float lumi_blend_frac = opar->get_lumi_blend_frac();
+    float lumi_blend_frac[2]; // = opar->get_lumi_blend_frac();
     ICCProfile* prof = opar->get_icc_data();
 
     float* pin;
@@ -291,7 +292,11 @@ public:
     float LE_Kymax = (LE_Kmax-LE_midgray)*LE_slope + LE_midgray;
     float LE_Kexp = LE_Kmax * LE_slope / LE_Kymax;
 */
+    float SH_desat = opar->get_sh_desaturation();
     float HL_desat = opar->get_hl_desaturation();
+
+    lumi_blend_frac[0] = SH_desat;
+    lumi_blend_frac[1] = 1.0f - HL_desat;
 
     ICCProfile* labprof = ICCStore::Instance().get_Lab_profile();
     ICCTransform rgb2lab, lab2rgb;
@@ -349,7 +354,7 @@ public:
         //if( S < 0 ) S = 0; if( S > 1 ) S = 1;
         //S = powf(S,2.45);
         //float K = 1.0f - opar->get_saturation_scaling()*S;
-        float K = 0;
+        int K = 0;
 
         float saturation = 1;
 
@@ -361,7 +366,7 @@ public:
           if( k == max_id && /*HL_desat > 0 &&*/ RGB[k] > LE_params.LE_linmax2 ) {
             // reduced saturation proportionally to the compression factor
             float lRGB = (RGB[k] - LE_params.LE_midgray) * LE_params.LE_slope2 + LE_params.LE_Ymidgray;
-            K = 1.0f; // - out/lRGB;
+            K = 1; // - out/lRGB;
             //saturation = powf(out/lRGB, HL_desat);
             //std::cout<<"k="<<k<<"  RGBin="<<RGBin[k]<<"  RGB="<<RGB[k]<<"  lRGB="<<lRGB<<"  saturation="<<saturation<<std::endl;
           }
@@ -406,8 +411,8 @@ public:
           }
         }
 
-        if( lumi_blend_frac > 0 && K > 0) {
-          float lumi_blend_frac2 = K * lumi_blend_frac;
+        if( lumi_blend_frac[K] > 0) {
+          float lumi_blend_frac2 = lumi_blend_frac[K];
           float Rmax = (RGBin[max_id]>1.0e-10) ? RGB[max_id] / RGBin[max_id] : 0;
           for( k=0; k < 3; k++) {
             float RGBout = RGBin[k] * Rmax;
