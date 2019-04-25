@@ -291,27 +291,21 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_conv.get_tree().add_op( "Lab conversion"), "convert2lab" );
 
   op_color.get_tree().add_op( _("Color profile conversion"), "convert_colorspace" );
-  op_color.get_tree().add_op( _("Clip values"), "clip" );
   op_color.get_tree().add_op( _("White Balance"), "white_balance" );
   //op_color.get_tree().add_op( _("Levels"), "levels" );
   op_color.get_tree().add_op( _("Basic Adjustments"), "basic_adjustments" );
-  op_color.get_tree().add_op( _("Threshold"), "threshold" );
-  op_color.get_tree().add_op( _("Noise"), "noise_generator" );
-  op_color.get_tree().add_op( _("Color Correction"), "color_correction" );
-  op_color.get_tree().add_op( _("Tone mapping old"), "tone_mapping" );
-  op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping_v2" );
-  op_color.get_tree().add_op( _("Dynamic range compressor"), "dynamic_range_compressor_v2" );
+  op_color.get_tree().add_op( _("Color Adjustments"), "color_correction" );
+  op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
   op_color.get_tree().add_op( _("Shadows/Highlights old"), "shadows_highlights" );
   op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights_v2" );
-  op_color.get_tree().add_op( _("Defringe"), "defringe" );
-  op_color.get_tree().add_op( _("Invert"), "invert" );
-  op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
-  //op_color.get_tree().add_op( "Brightness/Contrast"), "brightness_contrast" );
+  op_color.get_tree().add_op( _("Dynamic range compressor"), "dynamic_range_compressor_v2" );
+  //op_color.get_tree().add_op( _("Tone mapping old"), "tone_mapping" );
+  op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping_v2" );
   op_color.get_tree().add_op( _("Channel Mixer"), "channel_mixer" );
-  op_color.get_tree().add_op( _("Uniform Fill"), "uniform");
-  op_color.get_tree().add_op( _("Gradient"), "gradient");
-  op_color.get_tree().add_op( _("H/S/L Mask"), "hsl_mask" );
+  //op_color.get_tree().add_op( "Brightness/Contrast"), "brightness_contrast" );
+  op_color.get_tree().add_op( _("Noise"), "noise_generator" );
+  op_color.get_tree().add_op( _("Clip values"), "clip" );
   op_color.get_tree().add_op( _("Apply LUT"), "gmic_emulate_film_user_defined" );
   op_color.get_tree().add_op( _("Emulate film [color slide]"), "gmic_emulate_film_colorslide" );
   op_color.get_tree().add_op( _("Emulate film [B&W]"), "gmic_emulate_film_bw" );
@@ -331,6 +325,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_detail.get_tree().add_op( _("Sharpen"), "sharpen" );
   op_detail.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
   op_detail.get_tree().add_op( _("Split Details"), "split_details" );
+  op_detail.get_tree().add_op( _("Defringe"), "defringe" );
   //op_detail.get_tree().add_op( _("Multi-level decomposition"), "gmic_split_details" );
   op_detail.get_tree().add_op( _("Noise reduction"), "denoise" );
 
@@ -364,14 +359,14 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   //op_gmic.get_tree().add_op( _("Smooth [total variation]"), "gmic_smooth_total_variation" );
   //op_gmic.get_tree().add_op( _("Smooth [wavelets]"), "gmic_smooth_wavelets_haar" );
   //op_gmic.get_tree().add_op( _("Smooth [guided]"), "gmic_smooth_guided" );
-  op_gmic.get_tree().add_op( _("Tone mapping"), "gmic_tone_mapping" );
+  //op_gmic.get_tree().add_op( _("Tone mapping"), "gmic_tone_mapping" );
   op_gmic.get_tree().add_op( _("Transfer colors [advanced]"), "gmic_transfer_colors" );
 #endif
 
 
   op_mask.get_tree().add_op( _("Uniform Fill"), "uniform");
   op_mask.get_tree().add_op( _("Invert"), "invert" );
-  op_color.get_tree().add_op( _("Threshold"), "threshold" );
+  op_mask.get_tree().add_op( _("Threshold"), "threshold" );
   op_mask.get_tree().add_op( _("Curves"), "curves" );
   op_mask.get_tree().add_op( _("Gradient"), "gradient");
   op_mask.get_tree().add_op( _("Path"), "path_mask");
