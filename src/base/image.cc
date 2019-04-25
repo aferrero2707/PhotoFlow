@@ -1115,10 +1115,10 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
     VipsImage* image = pipeline->get_output();
     VipsImage* outimg = NULL;
 
-    /*
-    int th = 1;
-    int tw = image->Xsize;
-    int nt = 3;//(image->Xsize/tw + 1);
+    /**/
+    int th = 128;
+    int tw = 128; //image->Xsize;
+    int nt = (image->Xsize/tw + 1);
     VipsAccess acc = VIPS_ACCESS_RANDOM;
     int threaded = 1, persistent = 0;
     VipsImage* cached;
@@ -1131,8 +1131,8 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       std::cout<<"Image::do_export_merged(): vips_tilecache() failed."<<std::endl;
       PF_REF( image, "Image::do_export_merged(): image ref" );
     }
-    */
-    PF_REF( image, "Image::do_export_merged(): image ref" );
+    /**/
+    //PF_REF( image, "Image::do_export_merged(): image ref" );
 
     bool saved = false;
 
@@ -1341,7 +1341,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       try {
         PF::exiv2_data_t* exiv2_buf;
         size_t exiv2_buf_length;
-        if( vips_image_get_blob( outimg, "exiv2-data",
+        if( vips_image_get_blob( outimg, PF_META_EXIV2_NAME,
             (void**)(&exiv2_buf), &exiv2_buf_length ) )
           exiv2_buf = NULL;
         if( exiv2_buf && (exiv2_buf_length==sizeof(PF::exiv2_data_t)) && exiv2_buf->image.get() != NULL ) {
