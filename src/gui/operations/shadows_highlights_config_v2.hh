@@ -43,6 +43,9 @@ namespace PF {
     Gtk::VBox controlsBox2;
     Gtk::HBox equalizerBox;
     Gtk::HBox globalBox;
+    Gtk::Alignment padding1, padding2, padding3;
+    Gtk::Frame shadows_frame, highlights_frame, blur_frame;
+    Gtk::VBox shadows_box, highlights_box, blur_box;
 
     Slider amount_slider;
     Slider strength_s_slider, range_s_slider, strength_h_slider, range_h_slider;

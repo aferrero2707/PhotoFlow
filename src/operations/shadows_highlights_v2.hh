@@ -137,9 +137,9 @@ public:
 
     const float SH_LOG_SCALE_RANGE = SH_LOG_SCALE_MAX - SH_LOG_SCALE_MIN;
 
-    float amount = 1.0f / opar->get_amount();
-    float sh_scale = amount; //1.0f / opar->get_shadows();
-    float hl_scale = amount; //1.0f / opar->get_highlights();
+    //float amount = 1.0f / opar->get_amount();
+    float sh_scale = 1.0f / opar->get_shadows();
+    float hl_scale = 1.0f / opar->get_highlights();
     float sh_range = opar->get_shadows_range();
     float hl_range = opar->get_highlights_range();
 

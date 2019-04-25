@@ -45,6 +45,9 @@ static double sh_prop_to_slider(double& val)
 
 PF::ShadowsHighlightsConfigV2GUI::ShadowsHighlightsConfigV2GUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "shadows/highlights" ),
+  shadows_frame(_("shadows")),
+  highlights_frame(_("highlights")),
+  blur_frame(_("mask blur")),
   amount_slider( this, "amount", "amount", 100, 0, 100, 0.5, 5, 100),
   strength_s_slider( this, "shadows", "shadows", 0, -100, 100, 0.5, 5, 100),
   range_s_slider( this, "shadows_range", "sh. tonal width", 0, 0, 100, 0.5, 5, 10),
@@ -66,20 +69,30 @@ PF::ShadowsHighlightsConfigV2GUI::ShadowsHighlightsConfigV2GUI( PF::Layer* layer
   strength_h_slider.set_conversion_functions(sh_slider_to_prop, sh_prop_to_slider);
 
   controlsBox.pack_start( anchor_slider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK, 2 );
-  //controlsBox.pack_start( strength_s_slider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( range_s_slider, Gtk::PACK_SHRINK, 2 );
-  //controlsBox.pack_start( strength_h_slider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( range_h_slider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( guidedRadiusSlider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( guidedThresholdSlider, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( padding1, Gtk::PACK_SHRINK, 2 );
+  //controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK, 2 );
+  shadows_box.pack_start( strength_s_slider, Gtk::PACK_SHRINK, 2 );
+  shadows_box.pack_start( range_s_slider, Gtk::PACK_SHRINK, 2 );
+  shadows_frame.add(shadows_box);
+  highlights_box.pack_start( strength_h_slider, Gtk::PACK_SHRINK, 2 );
+  highlights_box.pack_start( range_h_slider, Gtk::PACK_SHRINK, 2 );
+  highlights_frame.add(highlights_box);
+  controlsBox.pack_start( padding2, Gtk::PACK_SHRINK, 2 );
+  blur_box.pack_start( guidedRadiusSlider, Gtk::PACK_SHRINK, 2 );
+  blur_box.pack_start( guidedThresholdSlider, Gtk::PACK_SHRINK, 2 );
+  blur_frame.add(blur_box);
+
+  controlsBox.pack_start( shadows_frame, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( highlights_frame, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( blur_frame, Gtk::PACK_SHRINK, 2 );
+
   //controlsBox.pack_start( median_smooth_gain_slider, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( median_smooth_exponent_slider, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( do_median_box, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( do_median_smoothing_box, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( do_guided_box, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( fast_approx_box, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( show_residual_box, Gtk::PACK_SHRINK, 2 );
+  //controlsBox.pack_start( show_residual_box, Gtk::PACK_SHRINK, 2 );
 
   globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
   add_widget( globalBox );

@@ -259,11 +259,11 @@ public:
 
 PF::ShadowsHighlightsV2Par::ShadowsHighlightsV2Par():
 OpParBase(),
-amount("amount",this,pow(10, 0.2)),
-shadows("shadows",this,pow(10, 0.2)),
-shadows_range("shadows_range",this,10),
-highlights("highlights",this,pow(10, 0.2)),
-highlights_range("highlights_range",this,10),
+amount("amount",this,pow(10, 0.5)),
+shadows("shadows",this,pow(10, 0.5)),
+shadows_range("shadows_range",this,5),
+highlights("highlights",this,pow(10, 0.5)),
+highlights_range("highlights_range",this,5),
 anchor("anchor",this,0.5),
 radius("sh_radius",this,100),
 threshold("sh_threshold",this,0.2),
