@@ -47,7 +47,7 @@ namespace PF
 
 class ShadowsHighlightsV2Par: public OpParBase
 {
-  Property<float> shadows, highlights, anchor;
+  Property<float> amount, shadows, highlights, anchor, shadows_range, highlights_range;
   Property<float> radius, threshold;
 
   Property<bool> show_residual;
@@ -70,8 +70,11 @@ public:
 
   PF::ICCProfile* get_profile() { return in_profile; }
 
+  float get_amount() { return amount.get(); }
   float get_shadows() { return shadows.get(); }
+  float get_shadows_range() { return shadows_range.get(); }
   float get_highlights() { return highlights.get(); }
+  float get_highlights_range() { return highlights_range.get(); }
   float get_anchor() { return anchor.get(); }
   bool get_show_residual() { return show_residual_; }
 
@@ -134,8 +137,11 @@ public:
 
     const float SH_LOG_SCALE_RANGE = SH_LOG_SCALE_MAX - SH_LOG_SCALE_MIN;
 
-    float sh_scale = 1.0f / opar->get_shadows();
-    float hl_scale = 1.0f / opar->get_highlights();
+    float amount = 1.0f / opar->get_amount();
+    float sh_scale = amount; //1.0f / opar->get_shadows();
+    float hl_scale = amount; //1.0f / opar->get_highlights();
+    float sh_range = opar->get_shadows_range();
+    float hl_range = opar->get_highlights_range();
 
     //std::cout<<"sh_scale="<<sh_scale<<"  hl_scale="<<hl_scale<<std::endl;
 
@@ -154,7 +160,16 @@ public:
         //l2 = ( l2*SH_LOG_SCALE_RANGE ) + SH_LOG_SCALE_MIN;
         //l2 = xexp10( l2 );
         //out = (l2 > 1) ? pow(l2, hl_scale) : pow(l2, sh_scale);
-        out = (l2 > 0) ? l2 * hl_scale : l2 * sh_scale;
+        if( l2 < 0 ) {
+          float sh_slope = (1.0f - sh_scale) / (1.0f + l2*l2/sh_range);
+          out = l2 * (1.0f - sh_slope);
+          //out = l2 * sh_scale;
+        } else {
+          float hl_slope = (1.0f - hl_scale) / (1.0f + l2*l2/hl_range);
+          out = l2 * (1.0f - hl_slope);
+          //out = l2 * hl_scale;
+        }
+        //out = (l2 > 0) ? l2 * hl_scale : l2 * sh_scale;
         l2 = xexp10( l2 );
         out = xexp10( out );
         R = out / l2;

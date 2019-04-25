@@ -45,7 +45,7 @@ namespace PF {
     Gtk::HBox globalBox;
 
     Slider amount_slider;
-    Slider strength_s_slider, strength_h_slider;
+    Slider strength_s_slider, range_s_slider, strength_h_slider, range_h_slider;
     Slider anchor_slider;
     Slider median_smooth_gain_slider, median_smooth_exponent_slider;
     CheckBox fast_approx_box;

@@ -259,8 +259,11 @@ public:
 
 PF::ShadowsHighlightsV2Par::ShadowsHighlightsV2Par():
 OpParBase(),
+amount("amount",this,pow(10, 0.2)),
 shadows("shadows",this,pow(10, 0.2)),
+shadows_range("shadows_range",this,10),
 highlights("highlights",this,pow(10, 0.2)),
+highlights_range("highlights_range",this,10),
 anchor("anchor",this,0.5),
 radius("sh_radius",this,100),
 threshold("sh_threshold",this,0.2),
@@ -294,17 +297,6 @@ bool PF::ShadowsHighlightsV2Par::needs_caching()
 }
 
 
-
-void PF::ShadowsHighlightsV2Par::propagate_settings()
-{
-  for(int gi = 0; gi < 10; gi++) {
-    PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
-    if( !guidedpar ) break;
-    guidedpar->propagate_settings();
-  }
-}
-
-
 static void fill_rv(int* rv, float radius, int level)
 {
   int gi = 0;
@@ -323,6 +315,17 @@ static void fill_rv(int* rv, float radius, int level)
 }
 
 
+
+void PF::ShadowsHighlightsV2Par::propagate_settings()
+{
+  for(int gi = 0; gi < 10; gi++) {
+    PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
+    if( !guidedpar ) break;
+    guidedpar->propagate_settings();
+  }
+}
+
+
 void PF::ShadowsHighlightsV2Par::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
 {
   int rv[10] = { 0 };
@@ -336,6 +339,12 @@ void PF::ShadowsHighlightsV2Par::compute_padding( VipsImage* full_res, unsigned 
     if(rv[gi] == 0) break;
     guidedpar->set_radius( rv[gi] );
     guidedpar->set_threshold( threshold.get() / threshold_scale[gi] );
+    int subsampling = 1;
+    while( subsampling <= 16 ) {
+      if( (subsampling*8) >= rv[gi] ) break;
+      subsampling *= 2;
+    }
+    guidedpar->set_subsampling(subsampling);
     guidedpar->propagate_settings();
     guidedpar->compute_padding(full_res, id, level);
     tot_padding += guidedpar->get_padding(id);
@@ -392,22 +401,6 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
 
 
 
-  int ts = 128;
-  int nt = (logimg->Xsize/ts) * 5 + 1;
-  //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
-  VipsAccess acc = VIPS_ACCESS_RANDOM;
-  int threaded = 1, persistent = 0;
-  VipsImage* cached;
-  if( phf_tilecache(logimg, &cached,
-      "tile_width", ts,
-      "tile_height", ts,
-      "max_tiles", nt,
-      "access", acc, "threaded", threaded,
-      "persistent", persistent, NULL) ) {
-    std::cout<<"DynamicRangeCompressorV2Par::build(): vips_tilecache() failed."<<std::endl;
-    return NULL;
-  }
-  PF_UNREF( logimg, "DynamicRangeCompressorV2Par::build(): cropped unref" );
 
   //std::cout<<"DynamicRangeCompressorV2Par::build(): ts="<<ts<<std::endl;
 
@@ -415,22 +408,51 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
   int rv[10] = { 0 };
   fill_rv(rv, radius.get(), level);
 
-  VipsImage* timg = cached;
-  VipsImage* smoothed = cached;
+  VipsImage* timg = logimg;
+  VipsImage* smoothed = logimg;
   std::cout<<"ShadowsHighlightsV2Par::build(): radius="<<radius.get()<<std::endl;
   for(int gi = 0; gi < 10; gi++) {
     PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
     if( !guidedpar ) break;
     if( rv[gi] == 0 ) break;
-    in2.clear();
-    in2.push_back( timg );
     guidedpar->set_image_hints( timg );
     guidedpar->set_format( get_format() );
-    std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="<<rv[gi]<<std::endl;
+    //std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="<<rv[gi]<<std::endl;
     guidedpar->set_radius( rv[gi] );
     guidedpar->set_threshold(threshold.get() / threshold_scale[gi]);
+    int subsampling = 1;
+    while( subsampling <= 16 ) {
+      if( (subsampling*8) >= rv[gi] ) break;
+      subsampling *= 2;
+    }
+    guidedpar->set_subsampling(subsampling);
     guidedpar->set_convert_to_perceptual( false );
     guidedpar->propagate_settings();
+    guidedpar->compute_padding(timg, 0, level);
+
+    std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="<<rv[gi]<<"  padding="<<guidedpar->get_padding(0)<<std::endl;
+    if( guidedpar->get_padding(0) > 64 ) {
+      int ts = 128;
+      int tr = guidedpar->get_padding(0) / ts + 1;
+      int nt = (timg->Xsize/ts) * tr + 1;
+      VipsAccess acc = VIPS_ACCESS_RANDOM;
+      int threaded = 1, persistent = 0;
+      VipsImage* cached = NULL;
+      if( phf_tilecache(timg, &cached,
+          "tile_width", ts,
+          "tile_height", ts,
+          "max_tiles", nt,
+          "access", acc, "threaded", threaded,
+          "persistent", persistent, NULL) ) {
+        std::cout<<"DynamicRangeCompressorV2Par::build(): vips_tilecache() failed."<<std::endl;
+        return NULL;
+      }
+      PF_UNREF( timg, "DynamicRangeCompressorV2Par::build(): cropped unref" );
+      timg = cached;
+    }
+
+    in2.clear();
+    in2.push_back( timg );
     smoothed = guidedpar->build( in2, first, NULL, NULL, level );
     if( !smoothed ) {
       std::cout<<"DynamicRangeCompressorV2Par::build(): NULL local contrast enhanced image"<<std::endl;
