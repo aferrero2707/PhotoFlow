@@ -107,12 +107,16 @@ public:
     ExposureSlider exposureSlider;
     Slider saturationLevelSlider;
     Slider blackLevelSlider;
+    Slider blackLevelRSlider;
+    Slider blackLevelG1Slider;
+    Slider blackLevelG2Slider;
+    Slider blackLevelBSlider;
     Selector hlrecoModeSelector;
     Gtk::Label black_level_label;
     Gtk::Label white_level_label;
     Gtk::Alignment black_level_label_align;
     Gtk::Alignment white_level_label_align;
-    Gtk::HSeparator separator;
+    Gtk::HSeparator exp_separator, demo_separator;
 
     CheckBox hotp_enable_checkbox;
     Slider hotp_strength_slider;

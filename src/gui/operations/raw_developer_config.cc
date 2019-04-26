@@ -328,6 +328,159 @@ bool PF::WBSelector::check_value( int id, const std::string& name, const std::st
 
 
 
+
+static double black_level_prop_to_slider(double& val, PF::OperationConfigGUI* dialog, void* user_data)
+{
+  if( !dialog ) return val;
+  if( !dialog->get_layer() ) return val;
+  if( !dialog->get_layer()->get_image() ) return val;
+  if( !user_data ) return val;
+
+  dcraw_data_t* raw_data = NULL;
+  float result = val;
+
+  PF::Image* image = dialog->get_layer()->get_image();
+  PF::Pipeline* pipeline = image->get_pipeline(0);
+  PF::PipelineNode* node = NULL;
+  PF::PipelineNode* inode = NULL;
+  PF::ProcessorBase* processor = NULL;
+  std::string maker, model;
+  if( pipeline ) node = pipeline->get_node( dialog->get_layer()->get_id() );
+  if( node ) inode = pipeline->get_node( node->input_id );
+  if( inode && inode->image) {
+    size_t blobsz;
+    if( vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data,&blobsz ) ||
+        blobsz != sizeof(dcraw_data_t) ) {
+      raw_data = NULL;
+    }
+
+    if(!raw_data) return val;
+
+    int* pc = (int*)user_data;
+    int c = *pc;
+    if(c<0 || c>3) return val;
+    float black_level = raw_data->color.cblack[c];
+    float white_level = raw_data->color.maximum;
+
+    result = roundf(val * black_level);
+  }
+
+  return result;
+}
+
+
+static double black_level_slider_to_prop(double& val, PF::OperationConfigGUI* dialog, void* user_data)
+{
+  float result = 1;
+  if( !dialog ) return result;
+  if( !dialog->get_layer() ) return result;
+  if( !dialog->get_layer()->get_image() ) return result;
+  if( !user_data ) return result;
+
+  dcraw_data_t* raw_data = NULL;
+
+  PF::Image* image = dialog->get_layer()->get_image();
+  PF::Pipeline* pipeline = image->get_pipeline(0);
+  PF::PipelineNode* node = NULL;
+  PF::PipelineNode* inode = NULL;
+  PF::ProcessorBase* processor = NULL;
+  std::string maker, model;
+  if( pipeline ) node = pipeline->get_node( dialog->get_layer()->get_id() );
+  if( node ) inode = pipeline->get_node( node->input_id );
+  if( inode && inode->image) {
+    size_t blobsz;
+    if( vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data,&blobsz ) ||
+        blobsz != sizeof(dcraw_data_t) ) {
+      raw_data = NULL;
+    }
+
+    if(!raw_data) return result;
+
+    int* pc = (int*)user_data;
+    int c = *pc;
+    if(c<0 || c>3) return result;
+    float black_level = raw_data->color.cblack[c];
+    float white_level = raw_data->color.maximum;
+
+    result = val / black_level;
+  }
+
+  return result;
+}
+
+
+static double white_level_prop_to_slider(double& val, PF::OperationConfigGUI* dialog, void*)
+{
+  if( !dialog ) return val;
+  if( !dialog->get_layer() ) return val;
+  if( !dialog->get_layer()->get_image() ) return val;
+
+  dcraw_data_t* raw_data = NULL;
+  float result = val;
+
+  PF::Image* image = dialog->get_layer()->get_image();
+  PF::Pipeline* pipeline = image->get_pipeline(0);
+  PF::PipelineNode* node = NULL;
+  PF::PipelineNode* inode = NULL;
+  PF::ProcessorBase* processor = NULL;
+  std::string maker, model;
+  if( pipeline ) node = pipeline->get_node( dialog->get_layer()->get_id() );
+  if( node ) inode = pipeline->get_node( node->input_id );
+  if( inode && inode->image) {
+    size_t blobsz;
+    if( vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data,&blobsz ) ||
+        blobsz != sizeof(dcraw_data_t) ) {
+      raw_data = NULL;
+    }
+
+    if(!raw_data) return val;
+
+    float white_level = raw_data->color.maximum;
+
+    result = roundf(val * white_level);
+  }
+
+  return result;
+}
+
+
+static double white_level_slider_to_prop(double& val, PF::OperationConfigGUI* dialog, void*)
+{
+  float result = 1;
+  if( !dialog ) return result;
+  if( !dialog->get_layer() ) return result;
+  if( !dialog->get_layer()->get_image() ) return result;
+
+  dcraw_data_t* raw_data = NULL;
+
+  PF::Image* image = dialog->get_layer()->get_image();
+  PF::Pipeline* pipeline = image->get_pipeline(0);
+  PF::PipelineNode* node = NULL;
+  PF::PipelineNode* inode = NULL;
+  PF::ProcessorBase* processor = NULL;
+  std::string maker, model;
+  if( pipeline ) node = pipeline->get_node( dialog->get_layer()->get_id() );
+  if( node ) inode = pipeline->get_node( node->input_id );
+  if( inode && inode->image) {
+    size_t blobsz;
+    if( vips_image_get_blob( inode->image, "raw_image_data",(void**)&raw_data,&blobsz ) ||
+        blobsz != sizeof(dcraw_data_t) ) {
+      raw_data = NULL;
+    }
+
+    if(!raw_data) return result;
+
+    float white_level = raw_data->color.maximum;
+
+    result = val / white_level;
+  }
+
+  return result;
+}
+
+
+
+
 PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
         OperationConfigGUI( layer, "Raw Developer" ),
         wbModeSelector( this, "wb_mode", "WB mode: ", 0 ),
@@ -364,11 +517,15 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
         lf_enable_vignetting_button( this, "lf_enable_vignetting", _("vignetting"), false ),
         lf_enable_all_button( this, "lf_enable_all", _("all corrections"), false ),
         lens_frame( _("lens corrections") ),
-        demoMethodSelector( this, "demo_method", _("method: "), PF::PF_DEMO_AMAZE ),
+        demoMethodSelector( this, "demo_method", _("demosaicing method: "), PF::PF_DEMO_AMAZE ),
         fcsSlider( this, "fcs_steps", "FCC steps", 1, 0, 4, 1, 1, 1 ),
-        exposureSlider( this, "exposure", "Exp. comp.", 0, -10, 10, 0.05, 0.5 ),
-        saturationLevelSlider( this, "saturation_level_correction", _("white level %"), 100, 0, 200, 0.5, 5, 100 ),
+        exposureSlider( this, "exposure", "Exposure ", 0, -10, 10, 0.05, 0.5 ),
+        saturationLevelSlider( this, "saturation_level_correction", _("white level"), 100, 0, 65535, 1, 5, 1, 250, 3 ),
         blackLevelSlider( this, "black_level_correction", _("black level %"), 100, 0, 200, 0.5, 5, 100 ),
+        blackLevelRSlider( this, "black_level_correction_r", _("black level [R]"), 100, 0, 10000, 1, 5, 1, 250, 3 ),
+        blackLevelG1Slider( this, "black_level_correction_g1", _("black level [G1]"), 100, 0, 10000, 1, 5, 1, 250, 3 ),
+        blackLevelG2Slider( this, "black_level_correction_g2", _("black level [G2]"), 100, 0, 10000, 1, 5, 1, 250, 3 ),
+        blackLevelBSlider( this, "black_level_correction_b", _("black level [B]"), 100, 0, 10000, 1, 5, 1, 250, 3 ),
         hlrecoModeSelector( this, "hlreco_mode", _("highlights reco: "), PF::HLRECO_CLIP ),
         profileModeSelector( this, "profile_mode", _("input: "), 0 ),
         camProfOpenButton(Gtk::Stock::OPEN),
@@ -429,18 +586,40 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   }
   wbControlsBox.pack_start( wbSliderBox, Gtk::PACK_SHRINK );
 
+  wbControlsBox.pack_start( exp_separator, Gtk::PACK_SHRINK, 5 );
+  wbControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
+  wbControlsBox.pack_start( hlrecoModeSelector, Gtk::PACK_SHRINK, 2 );
+
+  wbControlsBox.pack_start( demo_separator, Gtk::PACK_SHRINK, 5 );
+  wbControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
+  wbControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
+
+
   black_level_label_align.set( 0, 0.5, 0, 0 );
   white_level_label_align.set( 0, 0.5, 0, 0 );
   black_level_label_align.add( black_level_label );
   white_level_label_align.add( white_level_label );
 
-  exposureControlsBox.pack_start( black_level_label_align, Gtk::PACK_SHRINK, 2 );
-  exposureControlsBox.pack_start( white_level_label_align, Gtk::PACK_SHRINK, 2 );
-  exposureControlsBox.pack_start( separator, Gtk::PACK_SHRINK, 2 );
-  exposureControlsBox.pack_start( blackLevelSlider, Gtk::PACK_SHRINK, 2 );
-  exposureControlsBox.pack_start( saturationLevelSlider, Gtk::PACK_SHRINK, 2 );
-  exposureControlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK, 2 );
-  exposureControlsBox.pack_start( hlrecoModeSelector, Gtk::PACK_SHRINK, 2 );
+
+  int* pc = new int; *pc = 0;
+  blackLevelRSlider.set_conversion_functions(black_level_slider_to_prop, black_level_prop_to_slider, pc);
+  pc = new int; *pc = 1;
+  blackLevelG1Slider.set_conversion_functions(black_level_slider_to_prop, black_level_prop_to_slider, pc);
+  pc = new int; *pc = 3;
+  blackLevelG2Slider.set_conversion_functions(black_level_slider_to_prop, black_level_prop_to_slider, pc);
+  pc = new int; *pc = 2;
+  blackLevelBSlider.set_conversion_functions(black_level_slider_to_prop, black_level_prop_to_slider, pc);
+
+  saturationLevelSlider.set_conversion_functions(white_level_slider_to_prop, white_level_prop_to_slider);
+
+  //exposureControlsBox.pack_start( black_level_label_align, Gtk::PACK_SHRINK, 2 );
+  //exposureControlsBox.pack_start( white_level_label_align, Gtk::PACK_SHRINK, 2 );
+  //exposureControlsBox.pack_start( blackLevelSlider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( blackLevelRSlider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( blackLevelG1Slider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( blackLevelG2Slider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( blackLevelBSlider, Gtk::PACK_SHRINK, 2 );
+  exposureControlsBox.pack_start( saturationLevelSlider, Gtk::PACK_SHRINK, 10 );
 
   lensControlsBox.pack_start( hotp_frame, Gtk::PACK_SHRINK, 10 );
   lensControlsBox.pack_start( lens_frame, Gtk::PACK_SHRINK, 10 );
@@ -486,9 +665,6 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   lf_box.pack_start( ca_box, Gtk::PACK_SHRINK );
   ca_box.pack_start( ca_red_slider, Gtk::PACK_SHRINK );
   ca_box.pack_start( ca_blue_slider, Gtk::PACK_SHRINK );
-
-  demoControlsBox.pack_start( demoMethodSelector, Gtk::PACK_SHRINK );
-  demoControlsBox.pack_start( fcsSlider, Gtk::PACK_SHRINK );
 
   //===================
   // Input camera profile
@@ -547,11 +723,11 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outputControlsBox.pack_start( clip_overflow_checkbox, Gtk::PACK_SHRINK );
 
 
-  notebook.append_page( wbControlsBox, "WB" );
-  notebook.append_page( exposureControlsBox, "Exp" );
-  notebook.append_page( lensControlsBox, "Corr" );
-  notebook.append_page( demoControlsBox, "Demo" );
-  notebook.append_page( outputControlsBox, "Color" );
+  notebook.append_page( wbControlsBox, "Input" );
+  notebook.append_page( lensControlsBox, "Corrections" );
+  //notebook.append_page( demoControlsBox, "Demo" );
+  notebook.append_page( outputControlsBox, "Output" );
+  notebook.append_page( exposureControlsBox, "Advanced" );
 
   add_widget( notebook );
 

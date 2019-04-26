@@ -67,7 +67,11 @@ PF::RawPreprocessorPar::RawPreprocessorPar():
   wb_target_b("wb_target_b",this,12), 
   wb_areas("wb_areas",this),
   saturation_level_correction( "saturation_level_correction", this, 1),
-  black_level_correction( "black_level_correction", this, 1)
+  black_level_correction( "black_level_correction", this, 1),
+  black_level_correction_r( "black_level_correction_r", this, 1),
+  black_level_correction_g1( "black_level_correction_g1", this, 1),
+  black_level_correction_g2( "black_level_correction_g2", this, 1),
+  black_level_correction_b( "black_level_correction_b", this, 1)
 {
   wb_mode.add_enum_value(PF::WB_CAMERA,"CAMERA","CAMERA");
   wb_mode.add_enum_value(PF::WB_SPOT,"SPOT","Spot");

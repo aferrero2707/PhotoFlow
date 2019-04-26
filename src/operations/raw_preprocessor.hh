@@ -73,6 +73,10 @@ namespace PF
 
     Property<float> saturation_level_correction;
     Property<float> black_level_correction;
+    Property<float> black_level_correction_r;
+    Property<float> black_level_correction_g1;
+    Property<float> black_level_correction_g2;
+    Property<float> black_level_correction_b;
 
     float wb_red_current, wb_green_current, wb_blue_current;
 
@@ -122,7 +126,10 @@ namespace PF
     std::vector< std::vector<int> >& get_wb_areas() { return wb_areas.get(); }
 
     float get_saturation_level_correction() { return saturation_level_correction.get(); }
-    float get_black_level_correction() { return black_level_correction.get(); }
+    float get_black_level_correction_r() { return black_level_correction_r.get(); }
+    float get_black_level_correction_g1() { return black_level_correction_g1.get(); }
+    float get_black_level_correction_g2() { return black_level_correction_g2.get(); }
+    float get_black_level_correction_b() { return black_level_correction_b.get(); }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 										 VipsImage* imap, VipsImage* omap, unsigned int& level);
@@ -199,7 +206,12 @@ namespace PF
       //std::cout<<"range="<<range<<"  min_mul="<<min_mul<<"  max_mul="<<max_mul<<std::endl;
 
       float white_corr = rdpar->get_saturation_level_correction();
-      float black_corr = rdpar->get_black_level_correction();
+      float black_corr[4] = {
+          rdpar->get_black_level_correction_r(),
+          rdpar->get_black_level_correction_g1(),
+          rdpar->get_black_level_correction_b(),
+          rdpar->get_black_level_correction_g2()
+      };
 
       //if(r->top==0 && r->left==0) std::cout<<"white_corr="<<white_corr<<std::endl;
 
@@ -207,7 +219,7 @@ namespace PF
       for(int i = 0; i < 4; i++) {
         mul[i] = mul[i] / range;
         //black[i] = rdpar->get_black_level_correction() / (image_data->color.maximum - image_data->color.black);
-        black[i] = image_data->color.cblack[i] * black_corr;
+        black[i] = image_data->color.cblack[i] * black_corr[i];
         white[i] = image_data->color.maximum * white_corr;
         //if( nbands != 3 ) black[i] *= 65535;
         //std::cout<<"black="<<rdpar->get_black_level_correction()<<" * 65535 * "
