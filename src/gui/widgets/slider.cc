@@ -207,10 +207,16 @@ PF::Slider::Slider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, st
   spinButton(adjustment),
 #endif
   reset_button(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-restore.png",PF::PhotoFlow::Instance().get_icons_dir()+"/libre-restore-pressed.png"),
-  multiplier(mult), fun_slider_to_prop(NULL), fun_prop_to_slider(NULL)
+  multiplier(mult), fun_slider_to_prop(NULL), fun_prop_to_slider(NULL), user_data(NULL)
 {
   create_widgets( l, val, min, max, sincr, pincr, size, layout );
   value_changed.connect( sigc::mem_fun(*this, &PF::Slider::update_gui) );
+}
+
+
+PF::Slider::~Slider()
+{
+  if(user_data) delete user_data;
 }
 
 
@@ -220,7 +226,7 @@ void PF::Slider::get_value()
   if( !get_prop() ) return;
   double val;
   get_prop()->get(val);
-  if(fun_prop_to_slider) val = (*fun_prop_to_slider)(val);
+  if(fun_prop_to_slider) val = (*fun_prop_to_slider)(val, get_dialog(), user_data);
 #ifdef GTKMM_2
   adjustment.set_value( val*multiplier );
 #endif
@@ -242,7 +248,7 @@ void PF::Slider::set_value()
 #ifdef GTKMM_3
   double val = adjustment->get_value()/multiplier;
 #endif
-  if(fun_slider_to_prop) val = (*fun_slider_to_prop)(val);
+  if(fun_slider_to_prop) val = (*fun_slider_to_prop)(val, get_dialog(), user_data);
   get_prop()->update(val);
   //std::cout<<"PF::Slider::set_value(): property=\""<<get_prop_name()<<"\"(0x"<<get_prop()<<")  val="<<val<<std::endl;
 }

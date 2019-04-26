@@ -30,16 +30,30 @@
 #include "shadows_highlights_config_v2.hh"
 
 
-static double sh_slider_to_prop(double& val)
+static double sh_slider_to_prop(double& val, PF::OperationConfigGUI*, void*)
 {
   //return log(val)/log(10);
   return pow(10,val);
 }
 
-static double sh_prop_to_slider(double& val)
+static double sh_prop_to_slider(double& val, PF::OperationConfigGUI*, void*)
 {
   //return pow(10,val);
   float result = log(val)/log(10);
+  return(roundf(result*100)/100);
+}
+
+
+static double hl_slider_to_prop(double& val, PF::OperationConfigGUI*, void*)
+{
+  //return log(val)/log(10);
+  return pow(10,-1.0f*val);
+}
+
+static double hl_prop_to_slider(double& val, PF::OperationConfigGUI*, void*)
+{
+  //return pow(10,val);
+  float result = -1.0f*log(val)/log(10);
   return(roundf(result*100)/100);
 }
 
@@ -51,7 +65,7 @@ PF::ShadowsHighlightsConfigV2GUI::ShadowsHighlightsConfigV2GUI( PF::Layer* layer
   blur_frame(_("mask blur")),
   amount_slider( this, "amount", "amount", 100, 0, 100, 0.5, 5, 100),
   strength_s_slider( this, "shadows", "shadows", 0, -100, 100, 1, 5, 100),
-  range_s_slider( this, "shadows_range", "sh. tonal width", 0, 0, 100, 0.5, 5, 10),
+  range_s_slider( this, "shadows_range", "blacks", 0, 0, 100, 0.5, 5, 10),
   strength_h_slider( this, "highlights", "highlights", 0, -100, 100, 1, 5, 100),
   range_h_slider( this, "highlights_range", "hl. tonal width", 0, 0, 100, 0.5, 5, 100),
   anchor_slider( this, "anchor", "anchor", 0, 0, 100, 0.5, 5, 100),
@@ -67,13 +81,13 @@ PF::ShadowsHighlightsConfigV2GUI::ShadowsHighlightsConfigV2GUI( PF::Layer* layer
 {
   amount_slider.set_conversion_functions(sh_slider_to_prop, sh_prop_to_slider);
   strength_s_slider.set_conversion_functions(sh_slider_to_prop, sh_prop_to_slider);
-  strength_h_slider.set_conversion_functions(sh_slider_to_prop, sh_prop_to_slider);
+  strength_h_slider.set_conversion_functions(hl_slider_to_prop, hl_prop_to_slider);
 
   controlsBox.pack_start( anchor_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( padding1, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( range_s_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( strength_s_slider, Gtk::PACK_SHRINK, 2 );
-  //controlsBox.pack_start( range_s_slider, Gtk::PACK_SHRINK, 2 );
   //shadows_frame.add(shadows_box);
   controlsBox.pack_start( strength_h_slider, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( range_h_slider, Gtk::PACK_SHRINK, 2 );

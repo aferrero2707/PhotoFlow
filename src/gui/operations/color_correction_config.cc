@@ -34,26 +34,26 @@
 
 
 
-static double slope_conv(double& val)
+static double slope_conv(double& val, PF::OperationConfigGUI*, void*)
 {
   //std::cout<<"slope_conv: val="<<val<<std::endl;
   //return( val + 1.f);
   return( val );
 }
 
-static double slope_conv_inv(double& val)
+static double slope_conv_inv(double& val, PF::OperationConfigGUI*, void*)
 {
   //return( val - 1.f);
   return( val );
 }
 
-static double pow_conv(double& val)
+static double pow_conv(double& val, PF::OperationConfigGUI*, void*)
 {
   //return( 1.f - val);
   return( val);
 }
 
-static double pow_conv_inv(double& val)
+static double pow_conv_inv(double& val, PF::OperationConfigGUI*, void*)
 {
   //return( 1.f - val);
   return( val);

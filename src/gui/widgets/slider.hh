@@ -60,8 +60,9 @@ namespace PF {
     ImageButton reset_button;
 
     double multiplier;
-    double (*fun_slider_to_prop)(double&);
-    double (*fun_prop_to_slider)(double&);
+    double (*fun_slider_to_prop)(double&, OperationConfigGUI*, void*);
+    double (*fun_prop_to_slider)(double&, OperationConfigGUI*, void*);
+    void* user_data;
     
     void create_widgets( std::string l, double val,
         double min, double max,
@@ -73,7 +74,7 @@ namespace PF {
     Slider(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l,
 	   double val, double min, double max, double sincr, double pincr, double mult, int size=120, int layout=2);
 
-    ~Slider() {}
+    ~Slider();
 
 #ifdef GTKMM_2
     Gtk::Adjustment* get_adjustment() { return( &adjustment ); }
@@ -92,10 +93,12 @@ namespace PF {
       scale.set_size_request( w, -1 );
     }
 
-    void set_conversion_functions(double (*f1)(double&), double (*f2)(double&))
+    void set_conversion_functions(double (*f1)(double&, OperationConfigGUI*, void*),
+        double (*f2)(double&, OperationConfigGUI*, void*), void* ud=NULL)
     {
       fun_slider_to_prop = f1;
       fun_prop_to_slider = f2;
+      user_data = ud;
     }
 
     void get_value();

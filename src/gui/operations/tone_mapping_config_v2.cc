@@ -208,23 +208,23 @@ void PF::ToneMappingCurveAreaV2::draw_background(const Cairo::RefPtr<Cairo::Cont
 }
 
 
-double LE_gain_slider_to_prop(double& val)
+double LE_gain_slider_to_prop(double& val, PF::OperationConfigGUI*, void*)
 {
   return pow(2,val);
 }
 
-double LE_gain_prop_to_slider(double& val)
+double LE_gain_prop_to_slider(double& val, PF::OperationConfigGUI*, void*)
 {
   return log(val)/log(2);
 }
 
 
-double LE_max_slider_to_prop(double& val)
+double LE_max_slider_to_prop(double& val, PF::OperationConfigGUI*, void*)
 {
   return pow(2,val);
 }
 
-double LE_max_prop_to_slider(double& val)
+double LE_max_prop_to_slider(double& val, PF::OperationConfigGUI*, void*)
 {
   return log(val)/log(2);
 }

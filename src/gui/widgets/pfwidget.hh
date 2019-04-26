@@ -48,6 +48,7 @@ namespace PF {
   public:
     PFWidget(OperationConfigGUI* d, std::string n);
     PFWidget(OperationConfigGUI* d, ProcessorBase* p, std::string n);
+    virtual ~PFWidget() {}
 
     sigc::signal<void> value_changed;
 
