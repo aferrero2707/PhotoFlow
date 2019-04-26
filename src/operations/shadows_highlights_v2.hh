@@ -170,8 +170,10 @@ public:
           //out = l2 * (1.0f - hl_slope);
           //out = l2 * hl_scale;
           //float hl_slope = (1.0f - 1.0f/(l2*hl_range+1)) * scale_delta + sh_scale;
-          float M_PI2 = M_PI/2;
-          float hl_frac = (l2<hl_range) ? sin(l2*M_PI2/hl_range) : 1;
+          //float M_PI2 = M_PI/2;
+          //float hl_frac = (l2<hl_range) ? sin(l2*M_PI2/hl_range) : 1;
+          float l22 = 1.0f - (l2/hl_range);
+          float hl_frac = (l2<hl_range) ? (1.0f - l22*l22) : 1;
           float hl_slope = hl_frac * scale_delta + sh_scale;
           out = l2 * hl_slope;
         }

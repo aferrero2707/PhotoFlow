@@ -261,11 +261,11 @@ PF::ShadowsHighlightsV2Par::ShadowsHighlightsV2Par():
 OpParBase(),
 amount("amount",this,pow(10, 0.5)),
 shadows("shadows",this,pow(10, 0.5)),
-shadows_range("shadows_range",this,2.5),
+shadows_range("shadows_range",this,5.0),
 highlights("highlights",this,pow(10, 0.5)),
 highlights_range("highlights_range",this,0.5),
 anchor("anchor",this,0.5),
-radius("sh_radius",this,100),
+radius("sh_radius",this,128),
 threshold("sh_threshold",this,0.2),
 show_residual("show_residual", this, false),
 in_profile( NULL )
