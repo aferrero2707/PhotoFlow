@@ -32,6 +32,7 @@
 #include "file_util.hh"
 #include "operation.hh"
 #include "layer.hh"
+#include "../operations/image_to_map.hh"
 //#include "../vips/vips_layer.h"
 
 int
@@ -99,6 +100,8 @@ PF::OpParBase::OpParBase():
   cmyk_target_channel.add_enum_value(1,"M","M");
   cmyk_target_channel.add_enum_value(2,"Y","Y");
   cmyk_target_channel.add_enum_value(3,"K","K");
+
+  to_map = NULL; //new_image_to_map();
 
   //PF::PropertyBase* prop;
   //prop = new PF::Property<float>("intensity",&intensity);
@@ -348,6 +351,28 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
     for(unsigned int i = 1; i < in.size(); i++) {
       in_temp.push_back(in[i]);
     }
+  }
+
+  if( false && convert_inputs_on_load() && is_map() && interpretation == VIPS_INTERPRETATION_B_W ) {
+    std::vector<VipsImage*> in_temp2;
+    std::vector<VipsImage*>* in_ptr = in_temp.empty() ? &in : &in_temp;
+    for(unsigned int i = 0; i < in_ptr->size(); i++) {
+      VipsImage* img = (*in_ptr)[i];
+      if( img == NULL || img->Type == interpretation ) {
+        in_temp2.push_back(img);
+      } else {
+        if( interpretation == VIPS_INTERPRETATION_B_W ) {
+          std::vector<VipsImage*> in2; in2.push_back(img);
+          PF::OpParBase* to_map_op = to_map->get_par();
+          to_map_op->set_format(get_format());
+          to_map_op->set_image_hints(img);
+          to_map_op->grayscale_image( img->Xsize, img->Ysize );
+          VipsImage* bwimg = to_map_op->build(in2, 0, NULL, NULL, level);
+          in_temp2.push_back(bwimg);
+        }
+      }
+    }
+    in_temp = in_temp2;
   }
 
   std::vector<VipsImage*> result;
