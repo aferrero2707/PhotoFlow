@@ -56,6 +56,7 @@ class PaddedOpPar: public OpParBase
     rin->top = rout->top-pad;
     rin->width = rout->width+pad*2;
     rin->height = rout->height+pad*2;
+    //std::cout<<"PaddedOpPar::transform_inv: pad="<<pad<<std::endl;
   }
 
 
