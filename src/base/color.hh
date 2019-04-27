@@ -431,6 +431,15 @@ template <class T> constexpr T matmul3(double x, double y, double z, double m00,
 template <class T> /*constexpr*/ T _f_(T x) {
   T y = pow(x/10000, n);
   return pow((c1 + c2*y)/(1 + c3*y), p);
+  /*
+  T y = (x >= 0) ? pow(x/10000, n) : -pow(-x/10000, n);
+  T y2 = (c1 + c2*y)/(1 + c3*y);
+  float y3 = y2;
+  if( y2 > 1 ) y3 = 1; if( y2 < -1 ) y3 = -1;
+  T z = (y3 >= 0) ? pow(y3, p) : -pow(-y3, p);
+  std::cout<<"_f_("<<x<<"): y="<<y<<"  y2="<<y2<<"  y3="<<y3<<"  z="<<z<<std::endl;
+  return z;
+  */
 };
 
 static /*constexpr*/ jzazbz forth(const xyz100& xyz) {
@@ -445,6 +454,8 @@ static /*constexpr*/ jzazbz forth(const xyz100& xyz) {
        xyz.z,
    };
 
+   //std::cout<<"jabz::jab_rgb::forth: xyz= "<<xyz.x<<","<<xyz.y<<","<<xyz.z<<std::endl;
+   //std::cout<<"jabz::jab_rgb::forth: xyz_="<<xyz_.x_<<","<<xyz_.y_<<","<<xyz_.z_<<std::endl;
    lms1 lms = matmul3<lms1>(xyz_.x_, xyz_.y_, xyz_.z_,
        0.41478972, 0.579999, 0.0146480,
        -0.2015100, 1.120649, 0.0531008,
@@ -460,6 +471,10 @@ static /*constexpr*/ jzazbz forth(const xyz100& xyz) {
        0.5, 0.5, 0,
        3.524000, -4.066708, 0.542708,
        0.199076, 1.096799, -1.295875);
+
+   //std::cout<<"jabz::jab_rgb::forth: lms="<<lms.l<<","<<lms.m<<","<<lms.s
+   //    <<"  lms_="<<lms_.l<<","<<lms_.m<<","<<lms_.s
+   //    <<"  iab.iz="<<iab.iz<<"  d0="<<d0<<std::endl;
 
    return {
      ((1 + d)*iab.iz)/(1 + d*iab.iz) - d0,
