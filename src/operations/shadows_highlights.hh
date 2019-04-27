@@ -56,7 +56,7 @@ namespace PF
 enum shahi_method_t
 {
   SHAHI_GAUSSIAN,
-  SHAHI_BILATERAL,
+  SHAHI_GUIDED,
 };
 
 
@@ -70,9 +70,10 @@ inline float sign(float x)
 class ShadowsHighlightsPar: public OpParBase
 {
   PropertyBase method;
-  Property<float> shadows, highlights, wp_adjustment, radius, compress, sh_color_adjustment, hi_color_adjustment;
+  Property<float> shadows, highlights, wp_adjustment, radius, threshold, compress, sh_color_adjustment, hi_color_adjustment;
 
   ProcessorBase* gauss;
+  ProcessorBase* guided;
   ProcessorBase* convert2lab;
   ProcessorBase* convert2input;
 
@@ -167,8 +168,11 @@ public:
     //float threshold = opar->get_threshold()*FormatInfo<T>::RANGE;
 
     for( y = 0; y < height; y++ ) {
+      // original image
       pin1 = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
+      // blurred image
       pin2 = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+      // output image
       pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
       for( x = 0; x < line_size; x+=3 ) {

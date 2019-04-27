@@ -34,6 +34,7 @@
 #include "convert_colorspace.hh"
 #include "icc_transform.hh"
 #include "gaussblur.hh"
+#include "guided_filter.hh"
 #include "shadows_highlights.hh"
 
 
@@ -44,14 +45,16 @@ shadows("shadows",this,50),
 highlights("highlights",this,-50),
 wp_adjustment("wp_adjustment",this,0),
 radius("radius",this,100),
+threshold("threshold",this,0.075),
 compress("compress",this,50),
 sh_color_adjustment("sh_color_adjustment",this,100),
 hi_color_adjustment("hi_color_adjustment",this,50),
 in_profile( NULL )
 {
-  //method.add_enum_value(PF::SHAHI_BILATERAL,"SHAHI_BILATERAL","bilateral");
+  method.add_enum_value(PF::SHAHI_GUIDED,"SHAHI_GUIDED","guided");
 
   gauss = new_gaussblur();
+  guided = new_guided_filter();
   convert2lab = PF::new_convert_colorspace();
   PF::ConvertColorspacePar* csconvpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
   if(csconvpar) {
@@ -80,6 +83,14 @@ void PF::ShadowsHighlightsPar::propagate_settings()
     gausspar->set_radius( radius.get() );
     gausspar->propagate_settings();
   }
+
+  PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided->get_par() );
+  if( guidedpar ) {
+    //float ss = 0.01 * guided_radius.get() * MIN(full_res->Xsize, full_res->Ysize);
+    //guidedpar->set_radius(ss);
+    //guidedpar->set_threshold(guided_threshold.get());
+    guidedpar->propagate_settings();
+  }
 }
 
 
@@ -90,10 +101,23 @@ void PF::ShadowsHighlightsPar::compute_padding( VipsImage* full_res, unsigned in
   case PF::SHAHI_GAUSSIAN: {
     GaussBlurPar* gausspar = dynamic_cast<GaussBlurPar*>( gauss->get_par() );
     if( gausspar ) {
+      gausspar->set_radius( radius.get() );
+      gausspar->propagate_settings();
       gausspar->compute_padding(full_res, id, level);
       set_padding( gausspar->get_padding(id), id );
     }
     break;
+  }
+  case PF::SHAHI_GUIDED: {
+    PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided->get_par() );
+    if( guidedpar ) {
+      guidedpar->set_radius( radius.get() );
+      //guidedpar->set_threshold(threshold.get());
+      guidedpar->propagate_settings();
+      guidedpar->compute_padding(full_res, id, level);
+      set_padding( guidedpar->get_padding(id), id );
+    }
+
   }
   default: break;
   }
@@ -136,6 +160,19 @@ VipsImage* PF::ShadowsHighlightsPar::build(std::vector<VipsImage*>& in, int firs
       gausspar->set_format( get_format() );
       in2.clear(); in2.push_back( labimg );
       blurred = gausspar->build( in2, 0, NULL, NULL, level );
+      PF_UNREF( labimg, "ShadowsHighlightsPar::build(): extended unref after convert2lab" );
+    }
+    break;
+  }
+  case PF::SHAHI_GUIDED: {
+    PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided->get_par() );
+    if( guidedpar ) {
+      guidedpar->set_radius( radius.get() );
+      //guidedpar->set_threshold(threshold.get());
+      guidedpar->set_image_hints( labimg );
+      guidedpar->set_format( get_format() );
+      in2.clear(); in2.push_back( labimg );
+      blurred = guidedpar->build( in2, 0, NULL, NULL, level );
       PF_UNREF( labimg, "ShadowsHighlightsPar::build(): extended unref after convert2lab" );
     }
     break;
