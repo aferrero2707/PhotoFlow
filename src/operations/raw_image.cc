@@ -285,8 +285,10 @@ PF::RawImage::RawImage( const std::string _fname ):
         // Erase thumbnail data
         Exiv2::ExifThumb exifThumb(exifData);
         std::string thumbExt = exifThumb.extension();
+        std::cout<<"RawImage: removing thumbnail ("<<thumbExt<<")"<<std::endl;
         if(!thumbExt.empty()) {
           exifThumb.erase();
+          std::cout<<"RawImage: thumbnail removed"<<std::endl;
         }
 
       }
@@ -310,7 +312,7 @@ PF::RawImage::RawImage( const std::string _fname ):
       sizeof(int)*65535*3 );
 
 
-  vips_image_set_blob( image, "exiv2-data",
+  vips_image_set_blob( image, PF_META_EXIV2_NAME,
       (VipsCallbackFn) exiv2_free, exiv2_buf, sizeof(PF::exiv2_data_t) );
 
 
