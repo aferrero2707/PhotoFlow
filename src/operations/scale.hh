@@ -81,7 +81,7 @@ public:
 
   /* Function to derive the output area from the input area
    */
-  virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
+  virtual void transform(const VipsRect* rin, VipsRect* rout, int /*id*/)
   {
     int in_w2 = in_width/2;
     int in_h2 = in_height/2;
@@ -100,7 +100,7 @@ public:
   /* Function to derive the area to be read from input images,
        based on the requested output area
    */
-  virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
+  virtual void transform_inv(const VipsRect* rout, VipsRect* rin, int /*id*/)
   {
     float minus = -1.0;
     int in_w2 = in_width/2;

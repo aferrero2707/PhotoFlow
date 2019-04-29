@@ -64,7 +64,7 @@ public:
 
   /* Function to derive the output area from the input area
    */
-  virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
+  virtual void transform(const VipsRect* rin, VipsRect* rout, int /*id*/)
   {
     //std::cout<<"BlurBilateralPlat: scale_x="<<scale_x<<"  scale_y="<<scale_y<<std::endl;
     rout->left = rin->left*scale_x;
@@ -76,7 +76,7 @@ public:
   /* Function to derive the area to be read from input images,
        based on the requested output area
    */
-  virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
+  virtual void transform_inv(const VipsRect* rout, VipsRect* rin, int /*id*/)
   {
     /*
     float dx, dy, _l, _t;
@@ -168,7 +168,7 @@ public:
     BlurBilateralSplatPar* opar = dynamic_cast<BlurBilateralSplatPar*>(par);
     if( !opar ) return;
 
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int width = r->width;
     int height = r->height;
     int y;

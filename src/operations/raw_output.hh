@@ -416,7 +416,7 @@ enum exposure_mode_t {
       RawOutputPar* opar = dynamic_cast<RawOutputPar*>(par);
       if( !opar ) return;
       float exposure = opar->get_exposure();
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
       int width = r->width;
       int height = r->height;

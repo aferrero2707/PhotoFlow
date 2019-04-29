@@ -139,9 +139,9 @@ public:
       return;
     }
 
-    Rect *r = &oreg->valid;
-    Rect *ir0 = &ireg[0]->valid;
-    Rect *ir1 = &ireg[1]->valid;
+    VipsRect *r = &oreg->valid;
+    VipsRect *ir0 = &ireg[0]->valid;
+    VipsRect *ir1 = &ireg[1]->valid;
     
 //    const int width = r->width;
 //    const int height = r->height;

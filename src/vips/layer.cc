@@ -48,7 +48,8 @@
 #include <iostream>
 
 
-#include <vips/dispatch.h>
+#include <vips/vips.h>
+//#include <vips/dispatch.h>
 
 #include "../base/processor.hh"
 #include "../base/layer.hh"
@@ -298,7 +299,7 @@ vips_layer_build( VipsObject *object )
     nimg++;
   }
 
-  layer->in_all = (VipsImage**)im_malloc( layer->out, sizeof(VipsImage*)*(nimg+1) );
+  layer->in_all = (VipsImage**)vips_malloc( ((VipsObject *)(layer->out)), sizeof(VipsImage*)*(nimg+1) );
   if( !layer->in_all ) return( -1 );
 
   //std::cout<<"vips_layer_build:  type="<<layer->processor->get_par()->get_type()<<std::endl;

@@ -945,7 +945,7 @@ tile_copy( Tile *tile, VipsRegion *to )
 }
 
 static void *
-image_start( IMAGE *out, void *a, void *b )
+image_start( VipsImage *out, void *a, void *b )
 {
 	Render *render = (Render *) a;
 

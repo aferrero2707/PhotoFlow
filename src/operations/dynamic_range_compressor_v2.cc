@@ -106,7 +106,7 @@ public:
     static const double inv_log_base = 1.0 / log(10.0);
     LogPar* opar = dynamic_cast<LogPar*>(par);
     if( !opar ) return;
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int width = r->width;
     int height = r->height;
@@ -239,7 +239,7 @@ public:
     static const double inv_log_base = 1.0 / log(10.0);
     LogLumiPar* opar = dynamic_cast<LogLumiPar*>(par);
     if( !opar ) return;
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int width = r->width;
     int height = r->height;

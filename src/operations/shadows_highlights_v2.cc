@@ -32,6 +32,7 @@
 #include <fcntl.h>
 
 #include "../base/processor_imp.hh"
+#include "median_filter.hh"
 #include "guided_filter.hh"
 #include "sharpen.hh"
 #include "shadows_highlights_v2.hh"
@@ -102,7 +103,7 @@ public:
     static const double inv_log_base = 1.0 / log(10.0);
     LogLumiPar* opar = dynamic_cast<LogLumiPar*>(par);
     if( !opar ) return;
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int width = r->width;
     int height = r->height;
@@ -192,7 +193,7 @@ public:
     static const double inv_log_base = 1.0 / log(10.0);
     MedianSmoothingPar* opar = dynamic_cast<MedianSmoothingPar*>(par);
     if( !opar ) return;
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int width = r->width;
     int height = r->height;
@@ -271,6 +272,7 @@ show_residual("show_residual", this, false),
 in_profile( NULL )
 {
   loglumi = new PF::Processor<LogLumiPar,LogLumiProc>();
+  median = NULL; //new_median_filter();
   int ts = 1;
   for(int gi = 0; gi < 10; gi++) {
     guided[gi] = new_guided_filter();
@@ -328,10 +330,21 @@ void PF::ShadowsHighlightsV2Par::propagate_settings()
 
 void PF::ShadowsHighlightsV2Par::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
 {
+  int tot_padding = 0;
   int rv[10] = { 0 };
   fill_rv(rv, radius.get(), level);
 
-  int tot_padding = 0;
+  PF::MedianFilterPar* medianpar = median ? dynamic_cast<PF::MedianFilterPar*>( median->get_par() ) : NULL;
+  if(medianpar) {
+    medianpar->set_radius(3);
+    medianpar->set_threshold(1.0e6);
+    medianpar->set_convert_to_perceptual(false);
+    medianpar->set_fast_approx(false);
+    medianpar->propagate_settings();
+    medianpar->compute_padding(full_res, id, level);
+    tot_padding += medianpar->get_padding(id);
+  }
+
   for(int gi = 0; gi < 10; gi++) {
     PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
     if( !guidedpar ) break;
@@ -411,6 +424,29 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
   VipsImage* timg = logimg;
   VipsImage* smoothed = logimg;
   std::cout<<"ShadowsHighlightsV2Par::build(): radius="<<radius.get()<<std::endl;
+
+
+  PF::MedianFilterPar* medianpar = median ? dynamic_cast<PF::MedianFilterPar*>( median->get_par() ) : NULL;
+  if(medianpar) {
+    medianpar->set_image_hints( timg );
+    medianpar->set_format( get_format() );
+    medianpar->set_radius(3);
+    medianpar->set_threshold(1.0e6);
+    medianpar->set_convert_to_perceptual(false);
+    medianpar->set_fast_approx(false);
+
+    in2.clear();
+    in2.push_back( timg );
+    smoothed = medianpar->build( in2, first, NULL, NULL, level );
+    if( !smoothed ) {
+      std::cout<<"DynamicRangeCompressorV2Par::build(): NULL local contrast enhanced image"<<std::endl;
+      return NULL;
+    }
+    PF_UNREF(timg, "DynamicRangeCompressorV2Par::build(): timg unref");
+    timg = smoothed;
+  }
+
+
   for(int gi = 0; gi < 10; gi++) {
     PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
     if( !guidedpar ) break;

@@ -113,7 +113,7 @@ namespace PF
 
     void pre_build( rendermode_t mode );
 
-    std::string save_image( VipsImage* image, VipsBandFmt format );
+    std::string save_image( VipsImage* image, VipsBandFormat format );
 
     std::vector<VipsImage*> get_output( unsigned int& level );
   };

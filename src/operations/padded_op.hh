@@ -37,7 +37,7 @@ class PaddedOpPar: public OpParBase
 {
   /* Function to derive the output area from the input area
    */
-  virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
+  virtual void transform(const VipsRect* rin, VipsRect* rout, int /*id*/)
   {
     int pad = get_padding(0);
     rout->left = rin->left+pad;
@@ -49,7 +49,7 @@ class PaddedOpPar: public OpParBase
   /* Function to derive the area to be read from input images,
      based on the requested output area
   */
-  virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
+  virtual void transform_inv(const VipsRect* rout, VipsRect* rin, int /*id*/)
   {
     int pad = get_padding(0);
     rin->left = rout->left-pad;

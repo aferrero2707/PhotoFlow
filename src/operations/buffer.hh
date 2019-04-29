@@ -65,7 +65,7 @@ namespace PF
         VipsRegion* imap, VipsRegion* omap,
         VipsRegion* oreg, OpParBase* par)
     {
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int width = r->width;
       int height = r->height;
       int line_size = sizeof(T) * width * oreg->im->Bands; //layer->in_all[0]->Bands;

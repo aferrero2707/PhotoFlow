@@ -123,7 +123,7 @@ public:
 
   /* Function to derive the output area from the input area
    */
-  virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
+  virtual void transform(const VipsRect* rin, VipsRect* rout, int /*id*/)
   {
     int pad = get_padding();
     rout->left = rin->left+pad;
@@ -135,7 +135,7 @@ public:
   /* Function to derive the area to be read from input images,
      based on the requested output area
   */
-  virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
+  virtual void transform_inv(const VipsRect* rout, VipsRect* rin, int /*id*/)
   {
     int pad = get_padding();
     rin->left = rout->left-pad;
@@ -207,8 +207,8 @@ public:
       return;
     }
 
-    Rect *r = &oreg->valid;
-    Rect *ir = &ireg[0]->valid;
+    VipsRect *r = &oreg->valid;
+    VipsRect *ir = &ireg[0]->valid;
     
     wd_width = ir->width;
     wd_height = ir->height;

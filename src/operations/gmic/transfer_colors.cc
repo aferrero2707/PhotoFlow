@@ -72,8 +72,8 @@ std::vector<VipsImage*> PF::GmicTransferColorsPar::build_many(std::vector<VipsIm
   PF::RasterImage* raster_image = get_raster_image(0);
   //if( !raster_image || (raster_image->get_file_name () != get_cache_file_name()) ) {
   if( !raster_image ) {
-    std::string tempfile1 = save_image( srcimg, IM_BANDFMT_FLOAT );
-    std::string tempfile2 = save_image( refimg, IM_BANDFMT_FLOAT );
+    std::string tempfile1 = save_image( srcimg, VIPS_FORMAT_FLOAT );
+    std::string tempfile2 = save_image( refimg, VIPS_FORMAT_FLOAT );
 
     std::string command = "-verbose + ";
     command = command + "-input " + tempfile1 + " -mul 255 ";

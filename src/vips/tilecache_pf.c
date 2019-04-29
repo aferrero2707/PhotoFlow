@@ -935,7 +935,7 @@ vips_tile_cache_gen( VipsRegion *or,
   //        g_thread_self(), cache->tile_width, cache->tile_height, iter,
   //        (int)(tstop-time), (int)waiting_tot, npasted, nprocessed);
   if( 0 && locked_tot > 200 ) {
-    printf("vips_tile_cache_gen: thread=%p, iter=%d, total time spend in locked state: %d, pasted=%d, processed=%d",
+    printf("vips_tile_cache_gen: thread=%p, iter=%d, total time spend in locked state: %ld, pasted=%d, processed=%d",
         g_thread_self(), iter, locked_tot, npasted, nprocessed);
     printf("   ********************");
     printf("\n");

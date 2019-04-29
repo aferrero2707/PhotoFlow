@@ -77,7 +77,7 @@ VipsImage* PF::GmicToneMappingPar::build(std::vector<VipsImage*>& in, int first,
   PF::RasterImage* raster_image = get_raster_image(0);
   //if( !raster_image || (raster_image->get_file_name () != get_cache_file_name()) ) {
   if( !raster_image ) {
-    std::string tempfile = save_image( srcimg, IM_BANDFMT_FLOAT );
+    std::string tempfile = save_image( srcimg, VIPS_FORMAT_FLOAT );
 
     std::string command = "-verbose + ";
     command = command + "-input " + tempfile + " -n 0,255 -gimp_map_tones ";

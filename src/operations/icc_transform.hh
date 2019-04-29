@@ -135,7 +135,7 @@ namespace PF
     {
       ICCTransformPar* opar = dynamic_cast<ICCTransformPar*>(par);
       if( !opar ) return;
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
       int width = r->width;
       int height = r->height;
@@ -172,7 +172,7 @@ namespace PF
     {
       ICCTransformPar* opar = dynamic_cast<ICCTransformPar*>(par);
       if( !opar ) return;
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int line_size_in = ireg[in_first]->valid.width * ireg[in_first]->im->Bands; //layer->in_all[0]->Bands;
       int line_size_out = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
       int line_size_max = (line_size_in > line_size_out) ? line_size_in : line_size_out;
@@ -314,7 +314,7 @@ namespace PF
     {
       ICCTransformPar* opar = dynamic_cast<ICCTransformPar*>(par);
       if( !opar ) return;
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
       int width = r->width;
       int height = r->height;

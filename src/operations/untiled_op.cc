@@ -146,7 +146,7 @@ std::string PF::UntiledOperationPar::get_cache_file_name( unsigned int n )
 }
 
 
-std::string PF::UntiledOperationPar::save_image( VipsImage* image, VipsBandFmt format )
+std::string PF::UntiledOperationPar::save_image( VipsImage* image, VipsBandFormat format )
 {
   char fname[500];
   sprintf( fname,"%spfraw-XXXXXX.tif", PF::PhotoFlow::Instance().get_cache_dir().c_str() );

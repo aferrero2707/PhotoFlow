@@ -86,7 +86,7 @@ namespace PF
 
     /* Function to derive the output area from the input area
      */
-    virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
+    virtual void transform(const VipsRect* rin, VipsRect* rout, int /*id*/)
     {
       int border = 2;
       rout->left = rin->left+border;
@@ -98,7 +98,7 @@ namespace PF
     /* Function to derive the area to be read from input images,
        based on the requested output area
     */
-    virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
+    virtual void transform_inv(const VipsRect* rout, VipsRect* rin, int /*id*/)
     {
       int border = 2;
       
@@ -148,8 +148,8 @@ namespace PF
 
       const float threshold = rdpar->get_hotp_threshold();
       const float multiplier = rdpar->get_hotp_strength() / 2.0f;
-      Rect *r = &oreg->valid;
-      Rect *ir = &ireg[in_first]->valid;
+      VipsRect *r = &oreg->valid;
+      VipsRect *ir = &ireg[in_first]->valid;
       int nbands = ireg[in_first]->im->Bands;
       const int owidth = r->width;
       const int oheight = r->height;

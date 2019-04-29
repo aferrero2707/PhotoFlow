@@ -117,7 +117,7 @@ namespace PF
     void blend(VipsRegion* bottom, VipsRegion* top, VipsRegion* oreg, VipsRegion* omap) 
     {
       if( !bottom || !top ) return;
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
       int x, y, xomap, y0, dx=CHMAX-CHMIN+1, ch;
       int width = r->width;

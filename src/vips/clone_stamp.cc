@@ -48,7 +48,8 @@
 #include <iostream>
 
 
-#include <vips/dispatch.h>
+#include <vips/vips.h>
+//#include <vips/dispatch.h>
 
 #include "../base/array2d.hh"
 #include "../base/processor.hh"

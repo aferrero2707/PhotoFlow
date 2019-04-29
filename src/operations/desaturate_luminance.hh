@@ -74,7 +74,7 @@ namespace PF
       ICCProfile* profile = par->get_profile();
       if( !profile ) return;
 
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
       int x, y, y0;
       int width = r->width;
@@ -124,7 +124,7 @@ namespace PF
         VipsRegion* imap, VipsRegion* omap,
         VipsRegion* oreg, DesaturateLuminancePar* par)
     {
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
       int x, y, y0;
       int width = r->width;

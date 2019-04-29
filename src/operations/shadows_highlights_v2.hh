@@ -54,6 +54,7 @@ class ShadowsHighlightsV2Par: public OpParBase
   bool show_residual_;
 
   ProcessorBase* loglumi;
+  ProcessorBase* median;
   ProcessorBase* guided[10];
   ProcessorBase* usm;
 
@@ -120,7 +121,7 @@ public:
     PF::ICCProfile* profile = opar->get_profile();
     if( !profile ) return;
 
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands;
     //int width = r->width;
     int height = r->height;

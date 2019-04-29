@@ -86,7 +86,7 @@ public:
     PF::GamutWarningPar* opar = dynamic_cast<PF::GamutWarningPar*>( par );
     if( opar == NULL ) return;
 
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size  = r->width * 3;
     int line_size2 = r->width * oreg->im->Bands;
     int height = r->height;
@@ -283,7 +283,7 @@ public:
   {
     ConvertColorspacePar* opar = dynamic_cast<ConvertColorspacePar*>(par);
     if( !opar ) return;
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int width = r->width;
     int height = r->height;
@@ -319,7 +319,7 @@ public:
   {
     ConvertColorspacePar* opar = dynamic_cast<ConvertColorspacePar*>(par);
     if( !opar ) return;
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size_in = ireg[in_first]->valid.width * ireg[in_first]->im->Bands; //layer->in_all[0]->Bands;
     int line_size_out = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int line_size_max = (line_size_in > line_size_out) ? line_size_in : line_size_out;
@@ -449,7 +449,7 @@ public:
   {
     ConvertColorspacePar* opar = dynamic_cast<ConvertColorspacePar*>(par);
     if( !opar ) return;
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int width = r->width;
     int height = r->height;

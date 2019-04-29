@@ -57,7 +57,8 @@
 #include <iostream>
 
 
-#include <vips/dispatch.h>
+#include <vips/vips.h>
+//#include <vips/dispatch.h>
 
 /*
 #warning "Now including lensfun.hh"

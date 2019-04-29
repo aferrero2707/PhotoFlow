@@ -199,7 +199,7 @@
       if( ireg[0] == NULL ) return;
       if( ireg[1] == NULL ) return;
 
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int line_size = r->width * oreg->im->Bands;
       int height = r->height;
 

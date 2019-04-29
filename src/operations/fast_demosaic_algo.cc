@@ -49,7 +49,7 @@ void PF::fast_demosaic(VipsRegion** ir, int n, int in_first,
 {
   PF_LUTf& invGrad = par->get_inv_grad();
 
-  Rect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
   int width = r->width;
   int height = r->height;
 

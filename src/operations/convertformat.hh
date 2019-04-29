@@ -59,7 +59,7 @@ namespace PF
     template<typename Tin, typename Tout>
     void convert(VipsRegion* ir, VipsRegion* oreg)
     {
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int width = r->width;
       int height = r->height;
       int line_size = width * oreg->im->Bands; //layer->in_all[0]->Bands; 
@@ -98,7 +98,7 @@ namespace PF
   {
     //std::cout<<"ConvertFormatProc::render(): input format="<<ir[in_first]->im->BandFmt<<std::endl;
 
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int width = r->width;
     int height = r->height;
     int line_size = width * oreg->im->Bands; //layer->in_all[0]->Bands; 

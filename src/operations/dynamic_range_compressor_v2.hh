@@ -157,7 +157,7 @@ namespace PF
       const float lcm = 1.0f-lc;
       //std::cout<<"DynamicRangeCompressorV2Proc::render(): lc="<<lc<<"  lcm="<<lcm<<std::endl;
 
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int width = r->width;
       int line_size = r->width * oreg->im->Bands;
       //int width = r->width;
@@ -264,7 +264,7 @@ namespace PF
       const float lc = opar->get_local_contrast() + 1;
       const float lcm = 1.0f-lc;
 
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int width = r->width;
       int line_size = r->width * oreg->im->Bands;
       //int width = r->width;

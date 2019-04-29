@@ -181,7 +181,7 @@ namespace PF
       }
 
       dcraw_data_t* image_data = rdpar->get_image_data();
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int nbands = ireg[in_first]->im->Bands;
 
       int x, y;

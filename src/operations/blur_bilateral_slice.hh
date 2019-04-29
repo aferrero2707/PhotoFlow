@@ -65,7 +65,7 @@ public:
 
   /* Function to derive the output area from the input area
    */
-  virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
+  virtual void transform(const VipsRect* rin, VipsRect* rout, int /*id*/)
   {
     rout->left = rin->left*scale_x;
     rout->top = rin->top*scale_y;
@@ -76,7 +76,7 @@ public:
   /* Function to derive the area to be read from input images,
        based on the requested output area
    */
-  virtual void transform_inv(const Rect* rout, Rect* rin, int id)
+  virtual void transform_inv(const VipsRect* rout, VipsRect* rin, int id)
   {
     if( id == 0 ) {
     float _w = roundf(rout->width  / ss);
@@ -149,7 +149,7 @@ public:
     BlurBilateralSlicePar* opar = dynamic_cast<BlurBilateralSlicePar*>(par);
     if( !opar ) return;
 
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int width = r->width;
     int height = r->height;
     int x, y;

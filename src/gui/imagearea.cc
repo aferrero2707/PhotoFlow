@@ -1479,7 +1479,7 @@ void PF::ImageArea::update( VipsRect* area )
   }
 	*/
 
-  display_image = im_open( "display_image", "p" );
+  display_image = vips_image_new(); //im_open( "display_image", "p" );
 
   region = vips_region_new (display_image);
 

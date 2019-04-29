@@ -48,7 +48,8 @@
 #include <iostream>
 
 
-#include <vips/dispatch.h>
+#include <vips/vips.h>
+//#include <vips/dispatch.h>
 
 #include "../base/processor.hh"
 #include "../operations/perspective.hh"

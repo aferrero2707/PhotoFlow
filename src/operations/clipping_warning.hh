@@ -65,7 +65,7 @@ public:
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, OpParBase* par)
   {
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int height = r->height;
 
@@ -90,7 +90,7 @@ public:
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, OpParBase* par)
   {
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int width = r->width;
     int height = r->height;

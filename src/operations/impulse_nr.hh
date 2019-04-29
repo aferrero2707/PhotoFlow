@@ -79,7 +79,7 @@ public:
 
   /* Function to derive the output area from the input area
    */
-  virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
+  virtual void transform(const VipsRect* rin, VipsRect* rout, int /*id*/)
   {
     int pad = get_padding();
     rout->left = rin->left+pad;
@@ -91,7 +91,7 @@ public:
   /* Function to derive the area to be read from input images,
      based on the requested output area
   */
-  virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
+  virtual void transform_inv(const VipsRect* rout, VipsRect* rin, int /*id*/)
   {
     int pad = get_padding();
     rin->left = rout->left-pad;
@@ -158,8 +158,8 @@ void ImpulseNR_RTAlgo(VipsRegion** ireg, int n, int in_first,
   }
 
   int padding = opar->get_padding();
-  Rect *r = &oreg->valid;
-  //Rect *ir = &ireg[0]->valid;
+  VipsRect *r = &oreg->valid;
+  //VipsRect *ir = &ireg[0]->valid;
   VipsRect ir = {r->left-padding, r->top-padding, r->width+2*padding, r->height+2*padding};
   int iwidth = ir.width;
   int iheight = ir.height;

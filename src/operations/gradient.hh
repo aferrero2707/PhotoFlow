@@ -124,7 +124,7 @@ render(VipsRegion** ir, int n, int in_first,
     {
   //BLENDER blender( par->get_blend_mode(), par->get_opacity() );
 
-  Rect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
   int bands = oreg->im->Bands;
   int line_size = r->width * bands; //layer->in_all[0]->Bands;
 

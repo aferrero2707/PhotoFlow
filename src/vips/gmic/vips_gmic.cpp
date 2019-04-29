@@ -32,7 +32,7 @@
 
 
 #include <vips/vips.h>
-#include <vips/dispatch.h>
+//#include <vips/dispatch.h>
 
 #include <limits.h>
 

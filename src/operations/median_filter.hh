@@ -112,7 +112,7 @@ public:
     int ips = VIPS_IMAGE_SIZEOF_PEL( ireg[0]->im );
     const int ops = VIPS_IMAGE_SIZEOF_PEL( oreg->im );
 
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands;
     //int width = r->width;
     int height = r->height;
@@ -142,7 +142,8 @@ public:
     float* pin2;
     float* pout;
 
-    int x, y, ri, ci, radius = opar->get_radius(), boxsz = opar->get_radius()*2 + 1;
+    int x, y, ri, ci, radius = opar->get_radius();
+    int boxsz = radius*2 + 1;
     int rowstride = rw*ireg[0]->im->Bands;
 
     if( opar->get_fast_approx() ) {
@@ -181,8 +182,8 @@ public:
 
     float** pin = new float*[boxsz];
 
-    std::cout<<"offsx="<<offsx<<"  offsy="<<offsy<<"  rw="<<rw<<"  rh="<<rh<<"  radius="<<radius<<"  boxsz="<<boxsz<<std::endl;
-    std::cout<<"r->left="<<r->left<<"  r->top="<<r->top<<"  r->width="<<r->width<<"  r->height="<<r->height<<std::endl;
+    //std::cout<<"offsx="<<offsx<<"  offsy="<<offsy<<"  rw="<<rw<<"  rh="<<rh<<"  radius="<<radius<<"  boxsz="<<boxsz<<std::endl;
+    //std::cout<<"r->left="<<r->left<<"  r->top="<<r->top<<"  r->width="<<r->width<<"  r->height="<<r->height<<std::endl;
 
     std::vector<float> buf( boxsz*boxsz );
 

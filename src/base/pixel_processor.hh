@@ -95,7 +95,7 @@ namespace PF
       float intensity = par->get_intensity();
       float blend = par->get_color_blend();
       float nblend = -1.0f * blend;
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
       int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
 

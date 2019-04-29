@@ -70,7 +70,7 @@ namespace PF
     {
       MaxRGBPar* opar = dynamic_cast<MaxRGBPar*>(par);
       if( !opar ) return;
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int line_size = r->width * oreg->im->Bands;
       //int width = r->width;
       int height = r->height;
@@ -107,7 +107,7 @@ namespace PF
       if(ireg[0]->im->Bands != 3) return;
       MaxRGBPar* opar = dynamic_cast<MaxRGBPar*>(par);
       if( !opar ) return;
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int line_size = r->width * oreg->im->Bands;
       //int width = r->width;
       int height = r->height;

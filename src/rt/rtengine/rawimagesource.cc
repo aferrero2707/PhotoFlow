@@ -43,7 +43,7 @@ void rtengine::RawImageSource::ca_correct(VipsRegion* ir, VipsRegion* oreg, bool
   int border = 8;
   int border2 = border*2;
 
-  Rect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
   int raw_left = (r->left/2)*2;
   int raw_top = (r->top/2)*2;
   int raw_right = r->left+r->width-1;
@@ -122,7 +122,7 @@ void rtengine::RawImageSource::ca_correct(VipsRegion* ir, VipsRegion* oreg, bool
 void rtengine::RawImageSource::no_demosaic(VipsRegion* ir, VipsRegion* oreg)
 {
   int x, xx, y;
-  Rect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
   // Initialization of pixel matrices
   for( y = 0; y < r->height; y++ ) {
     PF::raw_pixel_t* ptr = ir ? (PF::raw_pixel_t*)VIPS_REGION_ADDR( ir, r->left, y+r->top ) : NULL;
@@ -145,7 +145,7 @@ void rtengine::RawImageSource::amaze_demosaic(VipsRegion* ir, VipsRegion* oreg)
   int x, y;
   int border = 16;
 
-  Rect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
   int raw_left = (r->left/2)*2;
   int raw_top = (r->top/2)*2;
   int raw_right = r->left+r->width-1;
@@ -220,7 +220,7 @@ void rtengine::RawImageSource::rcd_demosaic(VipsRegion* ir, VipsRegion* oreg)
   int x, y;
   int border = 8;
 
-  Rect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
   int raw_left = (r->left/2)*2;
   int raw_top = (r->top/2)*2;
   int raw_right = r->left+r->width-1;
@@ -295,7 +295,7 @@ void rtengine::RawImageSource::lmmse_demosaic(VipsRegion* ir, VipsRegion* oreg)
   int x, y;
   int padding = 10;
 
-  Rect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
   int raw_left = (r->left/2)*2;
   int raw_top = (r->top/2)*2;
   int raw_right = r->left+r->width-1;
@@ -369,7 +369,7 @@ void rtengine::RawImageSource::igv_demosaic(VipsRegion* ir, VipsRegion* oreg)
 {
 	int x, y;
 
-  Rect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
 
 	// Portion of the image to be processed (a 16 pixels border is excluded)
   VipsRect r_img = {7, 7, ir->im->Xsize-14, ir->im->Ysize-14};
@@ -418,7 +418,7 @@ void rtengine::RawImageSource::xtrans_demosaic(VipsRegion* ir, VipsRegion* oreg)
   int x, y;
   int border = 12;
 
-  Rect *r = &oreg->valid;
+  VipsRect *r = &oreg->valid;
   int raw_left = (r->left/2)*2;
   int raw_top = (r->top/2)*2;
   int raw_right = r->left+r->width-1;

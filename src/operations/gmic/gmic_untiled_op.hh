@@ -66,7 +66,7 @@ namespace PF
       UntiledOperationPar::set_metadata( in, out );
       vips_image_init_fields( out,
           in->Xsize, in->Ysize, in->Bands,
-          IM_BANDFMT_FLOAT,
+          VIPS_FORMAT_FLOAT,
           in->Coding, in->Type, in->Xres, in->Yres
           );
     }

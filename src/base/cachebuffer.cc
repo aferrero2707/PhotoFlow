@@ -105,7 +105,7 @@ void PF::CacheBuffer::step()
   bool result = false;
 
 #if VIPS_THREADED_REGION_PREPARE == 1
-  int nthreads = im_concurrency_get();
+  int nthreads = vips_concurrency_get();
 #else
   int nthreads = 1;
 #endif

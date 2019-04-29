@@ -57,7 +57,7 @@ namespace PF
 
     /* Function to derive the output area from the input area
      */
-    virtual void transform(const Rect* rin, Rect* rout, int /*id*/)
+    virtual void transform(const VipsRect* rin, VipsRect* rout, int /*id*/)
     {
 			int pad = get_padding();
       rout->left = rin->left+pad;
@@ -69,7 +69,7 @@ namespace PF
     /* Function to derive the area to be read from input images,
        based on the requested output area
     */
-    virtual void transform_inv(const Rect* rout, Rect* rin, int /*id*/)
+    virtual void transform_inv(const VipsRect* rout, VipsRect* rin, int /*id*/)
     {
 			int pad = get_padding();
       rin->left = rout->left-pad;
@@ -114,8 +114,8 @@ namespace PF
     {
 			GaussBlurSiiPar* gpar = dynamic_cast<GaussBlurSiiPar*>(par);
 			if( !gpar ) return;
-			Rect *ir = &(ireg[0]->valid);
-			Rect *r = &oreg->valid;
+			VipsRect *ir = &(ireg[0]->valid);
+			VipsRect *r = &oreg->valid;
 			//int sz = oreg->im->Bands;//IM_REGION_N_ELEMENTS( oreg );
 			//int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
       //const int NCH = PF::ColorspaceInfo<CS>::NCH;

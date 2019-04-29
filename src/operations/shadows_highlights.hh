@@ -154,7 +154,7 @@ public:
     const float halfmax = lmax / 2.0;
     const float doublemax = lmax * 2.0;
 
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands;
     //int width = r->width;
     int height = r->height;

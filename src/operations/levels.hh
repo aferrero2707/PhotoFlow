@@ -100,7 +100,7 @@ public:
   {
     LevelsPar* opar = dynamic_cast<LevelsPar*>(par);
     if( !opar ) return;
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands;
     //int width = r->width;
     int height = r->height;
@@ -186,7 +186,7 @@ public:
   {
     LevelsPar* opar = dynamic_cast<LevelsPar*>(par);
     if( !opar ) return;
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands;
     //int width = r->width;
     int height = r->height;

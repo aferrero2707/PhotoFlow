@@ -74,7 +74,7 @@ namespace PF
     {
       ThresholdPar* opar = dynamic_cast<ThresholdPar*>(par);
       if( !opar ) return;
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
       int width = r->width;
       int height = r->height;
@@ -121,7 +121,7 @@ namespace PF
     {
       ThresholdPar* opar = dynamic_cast<ThresholdPar*>(par);
       if( !opar ) return;
-      Rect *r = &oreg->valid;
+      VipsRect *r = &oreg->valid;
       int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
       int width = r->width;
       int height = r->height;

@@ -107,7 +107,7 @@ public:
     //std::cout<<"RGB2MaskProc::render() called, ch="<<ch<<"  profile="<<profile<<std::endl;
     if( !profile ) return;
 
-    Rect *r = &oreg->valid;
+    VipsRect *r = &oreg->valid;
     //int x, y, xomap, y0, dx1=CHMIN, dx2=PF::ColorspaceInfo<colorspace>::NCH-CHMIN, ch, CHMAXplus1=CHMAX+1;
     int x, y, y0;
     int width = r->width;
