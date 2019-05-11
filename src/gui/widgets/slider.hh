@@ -70,9 +70,9 @@ namespace PF {
 
   public:
     Slider(OperationConfigGUI* dialog, std::string pname, std::string l,
-	   double val, double min, double max, double sincr, double pincr, double mult, int size=120, int layout=2);
+	   double val, double min, double max, double sincr, double pincr, double mult, int size=250, int layout=3);
     Slider(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l,
-	   double val, double min, double max, double sincr, double pincr, double mult, int size=120, int layout=2);
+	   double val, double min, double max, double sincr, double pincr, double mult, int size=250, int layout=3);
 
     ~Slider();
 

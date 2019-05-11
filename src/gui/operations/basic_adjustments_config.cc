@@ -84,17 +84,17 @@ public:
 
 PF::BasicAdjustmentsConfigGUI::BasicAdjustmentsConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Base Adjustments" ),
-  black_level_slider( this, "black_level", _("black"), 0, -100, 100, 5, 10, 100),
+  black_level_slider( this, "black_level", _("Black level"), 0, -100, 100, 5, 10, 100, 250, 3),
   white_level_slider( this, "white_level", _("white"), 0, -100, 1600, 5, 10, 100),
-  brightnessSlider( this, "brightness", _("brightness"), 0, -100, 100, 5, 10, 100),
+  brightnessSlider( this, "brightness", _("Brightness"), 0, -100, 100, 5, 10, 100, 250, 3),
   //exposureSlider( this, "exposure", _("exposure"), 0, -10, 10, 0.1, 1, 1 ),
-  exposureSlider( this, "exposure", "Exp. comp.", 0, -10, 10, 0.05, 0.5 ),
-  gamma_slider( this, "gamma", _("gamma"), 0, -1, 1, 0.01, 0.1, 1 ),
-  contrastSlider( this, "contrast", _("Contrast"), 0, -100, 100, 5, 10, 100),
+  exposureSlider( this, "exposure", "Exposure", 0, -10, 10, 0.05, 0.5 ),
+  gamma_slider( this, "gamma", _("Gamma"), 0, -1, 1, 0.01, 0.1, 1, 250, 3 ),
+  contrastSlider( this, "contrast", _("Contrast"), 0, -100, 100, 5, 10, 100, 250, 3),
   contrast2Slider( this, "contrast_eq", "Contrast(curve)", 0, -100, 100, 5, 10, 100),
-  saturationSlider( this, "saturation", _("Saturation"), 0, -100, 100, 5, 10, 100),
+  saturationSlider( this, "saturation", _("Saturation"), 0, -100, 100, 5, 10, 100, 250, 3),
   saturation2Slider( this, "saturation_eq", "Saturation (curve)", 0, -100, 100, 5, 10, 100),
-  hueSlider( this, "hue", _("Hue"), 0, -180, 180, 0.1, 10, 1),
+  hueSlider( this, "hue", _("Hue"), 0, -180, 180, 0.1, 10, 1, 250, 3),
   hue2Slider( this, "hue_eq", "Hue (curve)", 0, -180, 180, 0.1, 10, 1),
   mask_enable( this, "show_mask", _("show mask"), false ),
   hueHeq( this, "hue_H_equalizer", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
@@ -113,6 +113,7 @@ PF::BasicAdjustmentsConfigGUI::BasicAdjustmentsConfigGUI( PF::Layer* layer ):
   featherRadiusSlider( this, "feather_radius", _("radius "), 1, 0, 1000000, 1, 5, 1),
   mask_invert( this, "invert_mask", _("invert mask"), false )
 {
+  controlsBox.set_spacing( 5 );
   controlsBox.pack_start( black_level_slider, Gtk::PACK_SHRINK );
   controlsBox.pack_start( exposureSlider, Gtk::PACK_SHRINK );
   controlsBox.pack_start( brightnessSlider, Gtk::PACK_SHRINK );

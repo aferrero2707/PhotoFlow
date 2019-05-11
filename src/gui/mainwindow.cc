@@ -121,7 +121,7 @@ buttonSavePreset()
   //make_menus();
 
   //mainBox.pack_start(topButtonBox, Gtk::PACK_SHRINK);
-  mainBox.pack_start(top_box, Gtk::PACK_SHRINK);
+  //mainBox.pack_start(top_box, Gtk::PACK_SHRINK);
   mainBox.pack_start(editorBox);
 
   //top_box.pack_start( editing_frame, Gtk::PACK_SHRINK );
@@ -287,6 +287,12 @@ PF::MainWindow::~MainWindow()
   PF::ImageProcessor::Instance().submit_request( request );	
   */
   //delete pf_image;
+}
+
+
+void PF::MainWindow::set_image_name(Glib::ustring name)
+{
+  set_title(name + " - " + PF::version_string);
 }
 
 
@@ -579,6 +585,10 @@ PF::MainWindow::open_image( std::string filename )
   //std::cout<<"MainWindow::open_image(): editor shown"<<std::endl;
   //editor->open();
   viewerNotebook.set_current_page( -1 );
+
+  if( viewerNotebook.get_n_pages() > 1 ) viewerNotebook.set_show_tabs(true);
+  else viewerNotebook.set_show_tabs(false);
+
   //std::cout<<"MainWindow::open_image(): current notebook page selected"<<std::endl;
   if( editor->get_image() && editor->get_image()->is_modified() )
     // To properly update the tab label
@@ -1277,6 +1287,15 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   viewerNotebook.remove_page( page );
   widget->hide();
 
+  if( top_box.get_parent() == &(editor->get_file_buttons_box()) ) {
+    editor->get_file_buttons_box().remove(top_box);
+  }
+  editor->get_file_buttons_box().pack_start(top_box, Gtk::PACK_SHRINK);
+
+
+  if( viewerNotebook.get_n_pages() > 1 ) viewerNotebook.set_show_tabs(true);
+  else viewerNotebook.set_show_tabs(false);
+
   if(immediate) {
     std::cout<<"MainWindow::remove_tab(): preparing for deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
     delete( widget );
@@ -1316,7 +1335,14 @@ void PF::MainWindow::on_my_switch_page(
     if( editor && editor->get_image() ) {
       PF::PhotoFlow::Instance().set_active_image( editor->get_image() );
       editor->enter();
-      //std::cout<<"MainWindow: image #"<<page_num<<" activated"<<std::endl;
+      std::cout<<"MainWindow: image #"<<page_num<<" activated"<<std::endl;
+      std::cout<<"  Buttons box parent: "<<top_box.get_parent()<<std::endl;
+      if( top_box.get_parent() ) {
+        Gtk::Container* box = (Gtk::Container*)top_box.get_parent();
+        box->remove(top_box);
+      }
+      editor->get_file_buttons_box().pack_start(top_box, Gtk::PACK_SHRINK);
+      top_box.show_all();
     }
   }
 }

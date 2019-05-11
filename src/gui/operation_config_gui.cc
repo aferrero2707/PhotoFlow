@@ -102,14 +102,14 @@ static gboolean config_update_cb (PF::OperationConfigGUI * config)
 PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring& title, bool chsel ):
   PF::OperationConfigUI(layer),
   editor( NULL ),
-  blendSelector( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH, 55 ),
-  blendSelector2( this, layer->get_blender(), "blend_mode", "", PF_BLEND_PASSTHROUGH, 55 ),
-  blendSelectorMask( this, layer->get_blender(), "mask_blend_mode", "", PF_BLEND_NORMAL, 55 ),
-  blendSelectorMask2( this, layer->get_blender(), "mask_blend_mode", "", PF_BLEND_NORMAL, 55 ),
+  blendSelector( this, layer->get_blender(), "blend_mode", _("mode: "), PF_BLEND_PASSTHROUGH, 55 ),
+  blendSelector2( this, layer->get_blender(), "blend_mode", _("mode: "), PF_BLEND_PASSTHROUGH, 55 ),
+  blendSelectorMask( this, layer->get_blender(), "mask_blend_mode", _("mode: "), PF_BLEND_NORMAL, 55 ),
+  blendSelectorMask2( this, layer->get_blender(), "mask_blend_mode", _("mode: "), PF_BLEND_NORMAL, 55 ),
   intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   intensitySlider2( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
-  opacitySlider( this, layer->get_blender(), "opacity", "", 100, 0, 100, 1, 10, 100, 100),
-  opacitySlider2( this, layer->get_blender(), "opacity", "", 100, 0, 100, 1, 10, 100),
+  opacitySlider( this, layer->get_blender(), "opacity", _("opacity: "), 100, 0, 100, 1, 10, 100, 100, 4),
+  opacitySlider2( this, layer->get_blender(), "opacity", _("opacity: "), 100, 0, 100, 1, 10, 100, 4),
   imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
   omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
   test_padding_enable_box( this, "enable_padding", _("enable padding"), false),
@@ -247,14 +247,14 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
     //opacitySlider.set_width( 200 );
     opacity_box.pack_end( opacitySlider, Gtk::PACK_SHRINK, 0 );
     opacity_box.pack_end( blendSelectorMask, Gtk::PACK_SHRINK, 0 );
-    opacity_box.pack_end( blendSelector, Gtk::PACK_SHRINK, 0 );
+    opacity_box.pack_start( blendSelector, Gtk::PACK_SHRINK, 0 );
     frame_top_box_2.pack_start( opacity_box, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( blendSelector, Gtk::PACK_SHRINK );
 
     aux_opacity_box.pack_end( opacitySlider2, Gtk::PACK_EXPAND_WIDGET, 0 );
     aux_opacity_box.pack_end( blendSelectorMask2, Gtk::PACK_SHRINK, 0 );
-    aux_opacity_box.pack_end( blendSelector2, Gtk::PACK_SHRINK, 0 );
+    aux_opacity_box.pack_start( blendSelector2, Gtk::PACK_SHRINK, 0 );
     aux_controls_hbox_2.pack_start( aux_opacity_box, Gtk::PACK_EXPAND_WIDGET );
   }
   controls_box.pack_start( frame_top_box_2, Gtk::PACK_SHRINK, 0 );
