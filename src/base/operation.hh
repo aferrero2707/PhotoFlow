@@ -511,6 +511,10 @@ public:
   OperationConfigUI* get_config_ui() { return config_ui; }
   void set_config_ui( OperationConfigUI* ui ) { config_ui = ui; }
 
+  void set_image_dimensions(int w, int h)
+  {
+    xsize = w; ysize = h;
+  }
   int get_xsize() { return xsize; }
   int get_ysize() { return ysize; }
   int get_nbands() { return bands; }
