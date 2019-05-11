@@ -259,7 +259,7 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
   //LE_gain.set_conversion_functions(LE_gain_slider_to_prop, LE_gain_prop_to_slider);
   //shadows_box.pack_start( LE_gain, Gtk::PACK_SHRINK );
 
-  tc_box.pack_start( preset_selector, Gtk::PACK_SHRINK );
+  tc_box.pack_start( preset_selector, Gtk::PACK_SHRINK, 4 );
   tc_box.pack_start( LE_gain, Gtk::PACK_SHRINK );
   tc_box.pack_start( LE_slope, Gtk::PACK_SHRINK );
   //tc_box.pack_start( LE_compression, Gtk::PACK_SHRINK );
@@ -268,14 +268,14 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
   tc_box.pack_start( LE_shoulder_max, Gtk::PACK_SHRINK );
   tc_box.pack_start( LE_shoulder_slope, Gtk::PACK_SHRINK );
   tc_box.pack_start( LE_knee_strength, Gtk::PACK_SHRINK );
-  tc_frame.add( tc_box );
-  controlsBox.pack_start( tc_frame, Gtk::PACK_SHRINK, 2 );
+  //tc_frame.add( tc_box );
+  controlsBox.pack_start( tc_box, Gtk::PACK_SHRINK, 2 );
 
   local_contrast_box.pack_start( local_contrast_slider, Gtk::PACK_SHRINK );
   local_contrast_box.pack_start( local_contrast_radius_slider, Gtk::PACK_SHRINK );
   local_contrast_box.pack_start( local_contrast_threshold_slider, Gtk::PACK_SHRINK );
   local_contrast_frame.add(local_contrast_box);
-  controlsBox.pack_start( local_contrast_frame, Gtk::PACK_SHRINK, 2 );
+  //controlsBox.pack_start( local_contrast_frame, Gtk::PACK_SHRINK, 2 );
 
   controlsBox.pack_start( controlsBox2, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( separator, Gtk::PACK_SHRINK, 2 );

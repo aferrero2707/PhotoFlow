@@ -83,6 +83,8 @@ public:
 };
 
 
+class MainWindow;
+
 
 class ImageEditor: public Gtk::HBox
 {
@@ -125,6 +127,7 @@ class ImageEditor: public Gtk::HBox
   Gtk::Widget* aux_controls;
   Gtk::VBox aux_controlsBox;
   Gtk::HBox controlsBox;
+  Gtk::VBox controlsBox2;
 
   Gtk::Frame soft_proof_frame;
   Gtk::VBox soft_proof_box;
@@ -140,8 +143,11 @@ class ImageEditor: public Gtk::HBox
   Gtk::RadioButton buttonShowMerged, buttonShowActive;
   Gtk::VBox controls_group_vbox;
   Gtk::ScrolledWindow controls_group_scrolled_window;
+  Gtk::HBox image_controls_box, image_controls_box2;
 
   HTabLabelWidget* tab_label_widget;
+
+  Gtk::HBox file_buttons_box;
 
   Glib::ustring last_exported_file;
 
@@ -174,6 +180,8 @@ public:
   void update_controls();
   void set_aux_controls( Gtk::Widget* aux );
   Gtk::Widget* get_aux_controls() { return aux_controls; }
+
+  Gtk::HBox& get_file_buttons_box() { return file_buttons_box; }
 
   int get_edited_layer() {
     //std::cout<<"ImageEditor::get_edited_layer(): edited_layer="<<edited_layer;

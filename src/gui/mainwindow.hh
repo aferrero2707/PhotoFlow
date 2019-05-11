@@ -27,8 +27,8 @@
 
  */
 
-#ifndef GTKMM_EXAMPLE_HELLOWORLD_H
-#define GTKMM_EXAMPLE_HELLOWORLD_H
+#ifndef PF_MAIN_WINDOW_H
+#define PF_MAIN_WINDOW_H
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
 
@@ -112,6 +112,8 @@ public:
   void open_image(std::string filename);
 
   void update_all_images();
+
+  void set_image_name(Glib::ustring name);
 
   void remove_tab( Gtk::Widget* widget, bool immediate );
   void remove_all_tabs();

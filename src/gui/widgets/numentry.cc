@@ -39,7 +39,8 @@ button_step_down(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-chevron-down-
 digits(1), inhibited(false)
 {
   pack_start( entry, Gtk::PACK_SHRINK );
-  //entry.set_size_request(50,50);
+  entry.set_alignment(Gtk::ALIGN_END);
+  //entry.set_size_request(-1,20);
   //pack_start( button_box, Gtk::PACK_SHRINK );
 
   //button_step_up.add( step_up );
@@ -64,7 +65,7 @@ digits(1), inhibited(false)
   entry.signal_key_release_event().connect( sigc::mem_fun(*this,&PF::NumEntry::on_key_press_or_release_event), false );
   entry.add_events( Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK | Gdk::FOCUS_CHANGE_MASK );
   entry.set_width_chars(5);
-  entry.set_has_frame( false );
+  //entry.set_has_frame( false );
 
   button_step_up.signal_clicked.connect(sigc::mem_fun(*this,
         &PF::NumEntry::step_up) );

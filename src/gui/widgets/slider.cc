@@ -131,16 +131,23 @@ void PF::Slider::create_widgets( std::string l, double val,
       //hbox.pack_start( numentry, Gtk::PACK_SHRINK, 0 );
       //hbox.pack_start( vbox2, Gtk::PACK_SHRINK );
       //pack_end( hbox, Gtk::PACK_SHRINK );
-      hbox.pack_start( label_align, Gtk::PACK_SHRINK );
+      hbox.pack_start( label_align, Gtk::PACK_SHRINK, 4 );
       hbox2.pack_start( scale_align, Gtk::PACK_SHRINK );
       hbox.pack_end( reset_align, Gtk::PACK_SHRINK );
       hbox.pack_end( numentry_align, Gtk::PACK_SHRINK );
       vbox.pack_start( hbox, Gtk::PACK_SHRINK );
       vbox.pack_start( hbox2, Gtk::PACK_SHRINK );
       align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
-      align.set_padding(4,4,4,4);
+      align.set_padding(0,0,10,10);
       align.add( vbox );
       pack_end( align, Gtk::PACK_EXPAND_WIDGET );
+
+    } else if(layout == 4 ) {
+      hbox.pack_start( label, Gtk::PACK_SHRINK, 5 );
+      hbox.pack_start( numentry, Gtk::PACK_SHRINK, 0 );
+      vbox2.pack_start( reset_button, Gtk::PACK_EXPAND_WIDGET );
+      hbox.pack_start( vbox2, Gtk::PACK_SHRINK );
+      pack_end( hbox, Gtk::PACK_SHRINK );
     }
   } else {
     //hbox.pack_start( label, Gtk::PACK_SHRINK );

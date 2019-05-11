@@ -50,6 +50,7 @@
 #include "../base/imageprocessor.hh"
 #include "../base/pf_file_loader.hh"
 #include "../operations/blender.hh"
+#include "mainwindow.hh"
 #include "imageeditor.hh"
 
 
@@ -232,6 +233,7 @@ class Layout2: public Gtk::HBox
   Gtk::ScrolledWindow samplers_scrollwin;
   SamplersDialog samplers_dialog;
   Gtk::Widget* image_info_widget;
+  Gtk::Widget* control_buttons_widget;
   Gtk::Widget* buttons_widget;
   Gtk::Widget* layers_widget;
   Gtk::Widget* controls_widget;
@@ -334,14 +336,14 @@ class Layout2: public Gtk::HBox
   }
 
 public:
-  Layout2(PF::ImageEditor* e, Gtk::Widget* h, Gtk::Widget* s, Gtk::Widget* i, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
-  editor(e), histogram_widget(h), samplers_widget(s), samplers_dialog(editor), samplers_label(_("samplers")), image_info_widget(i), buttons_widget(b), layers_widget(l),
+  Layout2(PF::ImageEditor* e, Gtk::Widget* h, Gtk::Widget* s, Gtk::Widget* i, Gtk::Widget* cb, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
+  editor(e), histogram_widget(h), samplers_widget(s), samplers_dialog(editor), samplers_label(_("samplers")), image_info_widget(i), control_buttons_widget(cb), buttons_widget(b), layers_widget(l),
   controls_widget(c), preview_widget(p), old_width(0)
   //paned(Gtk::ORIENTATION_VERTICAL)
   {
     stat_expander.set_label( _("image info") );
     stat_expander.set_expanded(true);
-    stat_expander.add(stat_notebook);
+    //stat_expander.add(stat_notebook);
     stat_notebook.append_page( *histogram_widget, _("histogram") );
     samplers_label_evbox.add_label( _("samplers") );
     //samplers_label_evbox.add(samplers_label);
@@ -355,7 +357,8 @@ public:
     samplers_dialog.signal_hide().connect( sigc::mem_fun(*this,
         &Layout2::on_samplers_dialog_hide) );
 
-    vbox.pack_start( stat_expander, Gtk::PACK_SHRINK );
+    vbox.pack_start( *control_buttons_widget, Gtk::PACK_SHRINK );
+    vbox.pack_start( stat_notebook, Gtk::PACK_SHRINK );
     if( PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs()) {
       //samplers_widget->set_size_request(0,150);
       hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
@@ -409,6 +412,8 @@ public:
     //signal_map().
     //    connect( sigc::mem_fun(*this, &Layout2::on_paned_realized) );
   }
+
+  Gtk::VBox& get_left_vbox() { return vbox; }
 };
 
 
@@ -489,42 +494,50 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   Gtk::RadioButton::Group group = buttonShowMerged.get_group();
   buttonShowActive.set_group(group);
 
-  button_highlights_warning.set_image( img_highlights_warning );
-  button_highlights_warning.set_tooltip_text( _("Toggle highlights clipping warning on/off") );
-  button_highlights_warning.set_size_request(35,26);
-  controlsBox.pack_end( button_highlights_warning, Gtk::PACK_SHRINK );
-  button_shadows_warning.set_image( img_shadows_warning );
-  button_shadows_warning.set_tooltip_text( _("Toggle shadows clipping warning on/off") );
-  button_shadows_warning.set_size_request(35,26);
-  controlsBox.pack_end( button_shadows_warning, Gtk::PACK_SHRINK );
 
-  controlsBox.set_spacing(2);
-  controlsBox.set_border_width(2);
-  buttonZoom100.set_tooltip_text( _("Zoom to 100%") );
-  buttonZoom100.set_size_request(26,0);
-  controlsBox.pack_end( buttonZoom100, Gtk::PACK_SHRINK );
-  buttonZoomFit.set_image( img_zoom_fit );
-  buttonZoomFit.set_tooltip_text( _("Fit image to preview area") );
-  buttonZoomFit.set_size_request(26,0);
-  controlsBox.pack_end( buttonZoomFit, Gtk::PACK_SHRINK );
-  buttonZoomOut.set_image( img_zoom_out );
-  buttonZoomOut.set_tooltip_text( _("Zoom out") );
-  buttonZoomOut.set_size_request(26,0);
-  controlsBox.pack_end( buttonZoomOut, Gtk::PACK_SHRINK );
+  image_controls_box.set_spacing(4);
+  image_controls_box.set_border_width(4);
   buttonZoomIn.set_image( img_zoom_in );
   buttonZoomIn.set_tooltip_text( _("Zoom in") );
-  buttonZoomIn.set_size_request(26,0);
-  controlsBox.pack_end( buttonZoomIn, Gtk::PACK_SHRINK );
+  buttonZoomIn.set_size_request(40,-1);
+  image_controls_box.pack_start( buttonZoomIn, Gtk::PACK_SHRINK );
+  buttonZoomOut.set_image( img_zoom_out );
+  buttonZoomOut.set_tooltip_text( _("Zoom out") );
+  buttonZoomOut.set_size_request(40,-1);
+  image_controls_box.pack_start( buttonZoomOut, Gtk::PACK_SHRINK );
+  buttonZoomFit.set_image( img_zoom_fit );
+  buttonZoomFit.set_tooltip_text( _("Fit image to preview area") );
+  buttonZoomFit.set_size_request(40,-1);
+  image_controls_box.pack_start( buttonZoomFit, Gtk::PACK_SHRINK );
+  buttonZoom100.set_tooltip_text( _("Zoom to 100%") );
+  buttonZoom100.set_size_request(40,-1);
+  image_controls_box.pack_start( buttonZoom100, Gtk::PACK_SHRINK );
 
-  soft_proof_box.pack_start( soft_proof_enable_button, Gtk::PACK_SHRINK );
-  soft_proof_frame.add( soft_proof_box );
-  controlsBox.pack_end( soft_proof_frame, Gtk::PACK_SHRINK );
 
-  controlsBox.pack_end( status_indicator, Gtk::PACK_SHRINK );
+  button_highlights_warning.set_image( img_highlights_warning );
+  button_highlights_warning.set_tooltip_text( _("Toggle highlights clipping warning on/off") );
+  button_highlights_warning.set_size_request(40,-1);
+  image_controls_box.pack_start( button_highlights_warning, Gtk::PACK_SHRINK );
+  button_shadows_warning.set_image( img_shadows_warning );
+  button_shadows_warning.set_tooltip_text( _("Toggle shadows clipping warning on/off") );
+  button_shadows_warning.set_size_request(40);
+  image_controls_box.pack_start( button_shadows_warning, Gtk::PACK_SHRINK );
+
+
+  image_controls_box2.set_spacing(10);
+  image_controls_box2.set_border_width(4);
+  image_controls_box2.pack_end( status_indicator, Gtk::PACK_SHRINK );
+  soft_proof_box.pack_end( soft_proof_enable_button, Gtk::PACK_SHRINK );
+  //soft_proof_frame.add( soft_proof_box );
+  image_controls_box2.pack_start( soft_proof_box, Gtk::PACK_SHRINK );
+
+  controlsBox2.pack_start( file_buttons_box, Gtk::PACK_SHRINK );
+  controlsBox2.pack_start( image_controls_box, Gtk::PACK_SHRINK );
+  controlsBox2.pack_start( image_controls_box2, Gtk::PACK_SHRINK );
 
   //imageBox.pack_start( imageArea_eventBox );
-  imageBox.pack_start( imageArea_scrolledWindow_box );
   imageBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
+  imageBox.pack_start( imageArea_scrolledWindow_box );
 
   imageArea->set_samplers( samplers );
 
@@ -540,8 +553,11 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //controls_group_vbox.pack_start( stat_expander, Gtk::PACK_SHRINK );
   //controls_group_vbox.pack_start( controls_group_scrolled_window, Gtk::PACK_EXPAND_WIDGET );
 
-  main_panel = new Layout2( this, histogram, samplers, image_info, &(layersWidget.get_tool_buttons_box()),
+  Layout2* layout2 = new Layout2( this, histogram, samplers, image_info, &controlsBox2,
+      &(layersWidget.get_tool_buttons_box()),
       &layersWidget_box, &controls_group_scrolled_window, &imageBox );
+  main_panel = layout2;
+  //layout2->get_left_vbox().pack_start( controlsBox2, Gtk::PACK_SHRINK );
 
   pack_start( *main_panel );
   //main_panel.pack1( imageBox );

@@ -32,7 +32,7 @@
 
 PF::ExposureSlider::ExposureSlider( OperationConfigGUI* dialog, std::string pname, std::string l, 
 				    double val, double min, double max, double sincr, double pincr):
-  PF::Slider( dialog, pname, l, val, min, max, sincr, pincr, 1, 120, 2 )
+  PF::Slider( dialog, pname, l, val, min, max, sincr, pincr, 1, 250, 3 )
 {
 }
 
