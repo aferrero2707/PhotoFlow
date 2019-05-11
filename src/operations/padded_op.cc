@@ -54,35 +54,55 @@ VipsImage* PF::PaddedOpPar::build(std::vector<VipsImage*>& in, int first,
   std::vector<VipsImage*> in2;
 
   int padding = get_padding(0);
+  int pmax = padding;
+  int pmax_id = 0;
 
   //std::cout<<"padding: "<<padding<<std::endl;
   //std::cout<<"srcimg->Xsize: "<<srcimg->Xsize<<std::endl;
 
-  // Extend the image by two pixels to account for the pixel averaging window
-  // of the impulse noise reduction algorithm
-  VipsImage* extended;
-  VipsExtend extend = VIPS_EXTEND_COPY;
-  if( vips_embed(srcimg, &extended, padding, padding,
-      srcimg->Xsize+padding*2, srcimg->Ysize+padding*2,
-      "extend", extend, NULL) ) {
-    std::cout<<"PaddedOpPar::build(): vips_embed() failed."<<std::endl;
-    PF_REF( in[0], "PaddedOpPar::build(): vips_embed() failed." );
-    return NULL;
+  for(int i = 0; i < in.size(); i++) {
+    if( in[i] == NULL ) continue;
+    // Extend the image by two pixels to account for the pixel averaging window
+    // of the impulse noise reduction algorithm
+    VipsImage* extended = in[i];
+    int padding2 = get_padding(i);
+    if(padding2 > pmax) {
+      pmax = padding2; pmax_id = i;
+    }
+    if( padding2 > 0 ) {
+    VipsExtend extend = VIPS_EXTEND_COPY;
+    if( vips_embed(in[i], &extended, padding2, padding2,
+        srcimg->Xsize+padding2*2, srcimg->Ysize+padding2*2,
+        "extend", extend, NULL) ) {
+      std::cout<<"PaddedOpPar::build(): vips_embed() failed."<<std::endl;
+      PF_REF( in[0], "PaddedOpPar::build(): vips_embed() failed." );
+      return in[0];
+    }
+    } else {
+      PF_REF( in[0], "PaddedOpPar::build(): padding==0." );
+    }
+    //std::cout<<"extended->Xsize: "<<extended->Xsize<<std::endl;
+    in2.push_back( extended );
   }
-  //std::cout<<"extended->Xsize: "<<extended->Xsize<<std::endl;
 
-  set_image_hints( extended );
-  set_format( get_format() );
-  in2.clear();
-  in2.push_back( extended );
+  //set_image_hints( in2[0] );
+  //set_format( get_format() );
+  set_image_dimensions(in2[pmax_id]->Xsize, in2[pmax_id]->Ysize);
   VipsImage* padded = PF::OpParBase::build( in2, 0, imap, omap, level );
-  PF_UNREF( extended, "PaddedOpPar::build(): extended unref after op" );
+  for(int i = 0; i < in2.size(); i++) {
+    PF_UNREF( in2[i], "PaddedOpPar::build(): in2[i] unref after op" );
+  }
 
 //  std::cout<<"defr->Xsize: "<<defr->Xsize<<std::endl;
 
   // Final cropping to remove the padding pixels
-  VipsImage* cropped;
-  if( vips_crop(padded, &cropped, padding, padding,
+  VipsImage* cropped = padded;
+  if( pmax > 0 ) {
+    std::cout<<"PaddedOpPar::build(): pmax="<<pmax
+        <<"  padded_size="<<padded->Xsize<<","<<padded->Ysize
+        <<"  srcimg_size="<<srcimg->Xsize<<","<<srcimg->Ysize
+        <<std::endl;
+  if( vips_crop(padded, &cropped, pmax, pmax,
       srcimg->Xsize, srcimg->Ysize, NULL) ) {
     std::cout<<"PaddedOpPar::build(): vips_crop() failed."<<std::endl;
     PF_UNREF( padded, "PaddedOpPar::build(): padded unref" );
@@ -90,6 +110,7 @@ VipsImage* PF::PaddedOpPar::build(std::vector<VipsImage*>& in, int first,
     return in[0];
   }
   PF_UNREF( padded, "PaddedOpPar::build(): padded unref" );
+  }
 
   //std::cout<<"cropped->Xsize: "<<cropped->Xsize<<std::endl;
 
