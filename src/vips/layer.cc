@@ -244,13 +244,14 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   }
    */
   /**/
-#ifndef NDEBUG
+//#ifndef NDEBUG
+  if(verbose)
   std::cout<<"vips_layer_gen(): "<<std::endl
       <<"  bands = "<<oreg->im->Bands<<std::endl
       <<"  fmt = "<<oreg->im->BandFmt<<std::endl
       <<"  colorspace = "<<oreg->im->Type<<std::endl
       <<"  imap = "<<layer->imap<<"  omap = "<<layer->omap<<std::endl;
-#endif
+//#endif
   /**/
 
   // Get pointers to imap and omap regions
@@ -266,13 +267,15 @@ vips_layer_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
   }
 
   //pf_process(pflayer->processor,r,&s,pflayer);
-#ifndef NDEBUG
+//#ifndef NDEBUG
+  if(verbose)
   std::cout<<"Calling processor function..."<<std::endl;
-#endif
+//#endif
   layer->processor->process(ir, ninput, layer->in_first, rimap, romap, oreg);
-#ifndef NDEBUG
+//#ifndef NDEBUG
+  if(verbose)
   std::cout<<"...done"<<std::endl;
-#endif
+//#endif
   return( 0 );
 }
 
@@ -344,6 +347,7 @@ vips_layer_build( VipsObject *object )
 #ifndef NDEBUG
   std::cout<<"vips_layer_build(): output format = "<<par->get_format()<<std::endl;
   std::cout<<"vips_layer_build(): output colorspace = "<<PF::convert_colorspace( par->get_interpretation() )<<std::endl;
+  std::cout<<"vips_layer_build(): number of channels = "<<par->get_nbands()<<std::endl;
 #endif
   vips_image_init_fields( layer->out,
       par->get_xsize(), par->get_ysize(),

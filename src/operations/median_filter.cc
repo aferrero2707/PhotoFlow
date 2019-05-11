@@ -85,7 +85,8 @@ VipsImage* PF::MedianFilterPar::build(std::vector<VipsImage*>& in, int first,
   int padding = radius_real;
   set_padding( padding, 0 );
 
-  std::cout<<"MedianFilterPar::build: radius="<<radius_real<<"  threshold="<<threshold.get()<<std::endl;
+  std::cout<<"MedianFilterPar::build: level="<<level<<"  radius="<<radius.get()
+      <<"  radius_scaled="<<radius_real<<"  threshold="<<threshold.get()<<std::endl;
   VipsImage* out = PF::PaddedOpPar::build( in, first, imap, omap, level );
   //std::cout<<"MedianFilterPar::build: out="<<out<<std::endl;
   return out;
