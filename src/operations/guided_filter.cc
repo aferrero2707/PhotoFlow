@@ -401,6 +401,197 @@ void PF::guidedFilter(const PF::PixelMatrix<float> &guide, const PF::PixelMatrix
 }
 
 
+void PF::guidedFilter(const PF::PixelMatrix<float> &src,
+    PF::PixelMatrix<float> &dst, int r, float epsilon, int subsampling)
+{
+  bool multithread = false;
+  const int W = src.width();
+  const int H = src.height();
+
+  //subsampling = 1;
+  if (subsampling <= 0) {
+      subsampling = calculate_subsampling(W, H, r);
+      //std::cout<<"guidedFilter: W="<<W<<"  H="<<H<<"  r="<<r<<"  subsampling="<<subsampling<<std::endl;
+  }
+
+  enum Op { MUL, DIVEPSILON, ADD, SUB, ADDMUL, SUBMUL };
+
+  const auto apply =
+      [=](Op op, int border, array2D<float> &res, const array2D<float> &a, const array2D<float> &b, const array2D<float> &c=array2D<float>()) -> void
+      {
+          const int w = res.width()-border;
+          const int h = res.height()-border;
+
+#ifdef _OPENMP
+          #pragma omp parallel for if (multithread)
+#endif
+          for (int y = border; y < h; ++y) {
+              for (int x = border; x < w; ++x) {
+                  float r;
+                  float aa = a[y][x];
+                  float bb = b[y][x];
+                  switch (op) {
+                  case MUL:
+                      r = aa * bb;
+                      //std::cout<<"r = aa * bb: "<<r<<" = "<<aa<<" * "<<bb<<std::endl;
+                      break;
+                  case DIVEPSILON:
+                      r = aa / (bb + epsilon);
+                      //std::cout<<"r = aa / (bb + epsilon): "<<r<<" = "<<aa<<" / "<<bb+epsilon<<std::endl;
+                      break;
+                  case ADD:
+                      r = aa + bb;
+                      //std::cout<<"r = aa + bb: "<<r<<" = "<<aa<<" + "<<bb<<std::endl;
+                      break;
+                  case SUB:
+                      r = aa - bb;
+                      //std::cout<<"r = aa - bb: "<<r<<" = "<<aa<<" - "<<bb<<std::endl;
+                      break;
+                  case ADDMUL:
+                      r = aa * bb + c[y][x];
+                      //std::cout<<"r = aa * bb + c[y][x]: "<<r<<" = "<<aa<<" * "<<bb<<" + "<<c[y][x]<<std::endl;
+                      break;
+                  case SUBMUL:
+                      r = c[y][x] - (aa * bb);
+                      //std::cout<<"r = c[y][x] - (aa * bb): "<<r<<" = "<<c[y][x]<<" - "<<aa<<" * "<<bb<<std::endl;
+                      break;
+                  default:
+                      assert(false);
+                      r = 0;
+                      break;
+                  }
+                  res[y][x] = r;
+                  //if( op==ADDMUL && r<-100 ) getchar();
+              }
+          }
+      };
+
+  // use the terminology of the paper (Algorithm 2)
+  const array2D<float> &p = src;
+  array2D<float> &q = dst;
+
+  AlignedBuffer<float> blur_buf(p.width() * p.height());
+  const auto f_mean1 =
+      [&](array2D<float> &d, array2D<float> &s, int rad, int border=0) -> void
+      {
+          rad = LIM(rad, 0, (min(s.width(), s.height()) - 1) / 2 - 1);
+          float **src = s;
+          float **dst = d;
+          boxblur<float, float>(src, dst, blur_buf.data, rad, rad, s.width(), s.height());
+      };
+
+  const auto f_mean2 =
+      [&](array2D<float> &d, array2D<float> &s, int rad, int border=0) -> void
+      {
+          gf_boxblur(s, d, rad, border);
+      };
+
+  const auto f_subsample =
+      [=](array2D<float> &d, const array2D<float> &s) -> void
+      {
+          rescaleBilinear(s, d, multithread);
+      };
+
+  const auto f_mean = f_mean2;
+
+  const auto f_upsample = f_subsample;
+
+  //return;
+
+  const int w = W / subsampling;
+  const int h = H / subsampling;
+
+  array2D<float> p1; //(w, h);
+
+  if(subsampling > 1) {
+    p1.resize(w, h);
+
+    f_subsample(p1, p);
+
+    //f_upsample(q, p1);
+    //std::cout<<"p.width()="<<p.width()<<"  "<<"p1.width()="<<p1.width()<<"  "<<"q.width()="<<q.width()<<"  "<<std::endl;
+    //return;
+  } else {
+    p1 = p;
+  }
+  //return;
+
+  //array2D<float> I1(I);
+  //printf("After I1(I): I1=%f  I=%f\n", I1[0][0], I[0][0]); //getchar();
+  //array2D<float> p1(p);
+  //printf("After p1(p): p1=%f  p=%f\n", p1[0][0], p[0][0]); //getchar();
+
+  DEBUG_DUMP(p);
+  DEBUG_DUMP(p1);
+
+  float r1 = float(r) / subsampling;
+  int border = 0;
+
+  array2D<float> meanp(w, h);
+  f_mean(meanp, p1, r1, 0);
+  DEBUG_DUMP(meanp);
+  //printf("After f_mean(meanp, p1, r1): p1=%f  r1=%f\n", p1[0][0], r1); //getchar();
+  //q = meanp;
+  //return;
+
+  array2D<float> &corrI = p1;
+  apply(MUL, 0, corrI, p1, p1);
+  f_mean(corrI, corrI, r1, 0);
+  DEBUG_DUMP(corrI);
+  //printf("After apply(MUL, corrI, I1, I1): corrI=%f  I1=%f\n", corrI[0][0], I1[0][0]); //getchar();
+
+  array2D<float> &varI = corrI;
+  apply(SUBMUL, r1, varI, meanp, meanp, corrI);
+  DEBUG_DUMP(varI);
+  //printf("After apply(SUBMUL, varI, meanI, meanI, corrI): varI=%f  meanI=%f  corrI=%f\n",
+  //    varI[0][0], meanI[0][0], corrI[0][0]); //getchar();
+
+  array2D<float> &a = varI;
+  apply(DIVEPSILON, r1, a, varI, varI);
+  DEBUG_DUMP(a);
+  //printf("After apply(DIVEPSILON, a, covIp, varI): a=%f  covIp=%f  varI=%f\n",
+  //    a[0][0], covIp[0][0], varI[0][0]); //getchar();
+
+  array2D<float> &b = meanp;
+  apply(SUBMUL, r1, b, a, meanp, meanp);
+  DEBUG_DUMP(b);
+  //printf("After apply(SUBMUL, b, a, meanI, meanp): b=%f  a=%f  meanI=%f  meanp=%f\n",
+  //    b[0][0], a[0][0], meanI[0][0], meanp[0][0]); //getchar();
+
+  array2D<float> &meana = a;
+  f_mean(meana, a, r1, r1);
+  DEBUG_DUMP(meana);
+
+  array2D<float> &meanb = b;
+  f_mean(meanb, b, r1, r1);
+  DEBUG_DUMP(meanb);
+
+  if( subsampling > 1 ) {
+    array2D<float> meanA(W, H);
+    f_upsample(meanA, meana);
+    DEBUG_DUMP(meanA);
+
+    array2D<float> meanB(W, H);
+    f_upsample(meanB, meanb);
+    DEBUG_DUMP(meanB);
+
+    apply(ADDMUL, r*2, q, meanA, p, meanB);
+    DEBUG_DUMP(q);
+  } else {
+    array2D<float>& meanA = meana;
+    DEBUG_DUMP(meanA);
+
+    array2D<float>& meanB = meanb;
+    DEBUG_DUMP(meanB);
+
+    apply(ADDMUL, r*2, q, meanA, p, meanB);
+    DEBUG_DUMP(q);
+  }
+  //printf("After apply(ADDMUL, q, meanA, I, meanB): q=%f  meanA=%f  I=%f  meanB=%f\n\n",
+  //    q[0][0], meanA[0][0], I[0][0], meanB[0][0]); //getchar();
+}
+
+
 PF::GuidedFilterPar::GuidedFilterPar():
 PaddedOpPar(),
 radius("radius",this,10.0),
@@ -462,7 +653,8 @@ VipsImage* PF::GuidedFilterPar::build(std::vector<VipsImage*>& in, int first,
   int padding = radius_real * 2 + subsampling_real;
   set_padding( padding, 0 );
 
-  std::cout<<"GuidedFilterPar::build: radius="<<radius_real<<"  threshold="<<threshold.get()<<std::endl;
+  std::cout<<"GuidedFilterPar::build: radius="<<radius_real<<"  threshold="<<threshold.get()
+      <<"  in.size()="<<in.size()<<std::endl;
   VipsImage* out = PF::PaddedOpPar::build( in, first, imap, omap, level );
   //std::cout<<"GuidedFilterPar::build: out="<<out<<std::endl;
   return out;

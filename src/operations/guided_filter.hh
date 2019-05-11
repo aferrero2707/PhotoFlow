@@ -90,21 +90,55 @@ void guidedFilter(const PixelMatrix<float> &guide, const PixelMatrix<float> &src
     PixelMatrix<float> &dst, int r, float epsilon, int subsampling);
 
 
+void guidedFilter(const PixelMatrix<float> &src, PixelMatrix<float> &dst,
+    int r, float epsilon, int subsampling);
+
+
 template < OP_TEMPLATE_DEF_TYPE_SPEC >
 class GuidedFilterProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
 {
   ICCProfile* profile;
   GuidedFilterPar* opar;
 
-  void fill_L_matrices(int rw, int rh, PixelMatrix<float>& rgbin,
+  void fill_L_matrices(int rw, int rh, PixelMatrix<float>& rgbin, PixelMatrix<float>& guidein,
       PixelMatrix<float>& Lin, PixelMatrix<float>& Lguide)
   {
     int x, y, z;
 
     for(y = 0; y < rh; y++) {
       float* row = rgbin[y];
+      float* rowg = guidein[y];
       float* L = Lin[y];
       float* Lg = Lguide[y];
+      for( x = 0; x < rw; x++ ) {
+        //std::cout<<"  y="<<y<<"  x="<<x<<"  row="<<row<<"  rr="<<rr<<"  gr="<<gr<<"  br="<<br<<std::endl;
+        //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
+        if( opar->get_convert_to_perceptual() &&
+            profile && profile->is_linear() ) {
+          //*L = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+          *L = (row[0]>1.0e-16) ? log10( row[0] ) : -16;
+          *Lg = (rowg[0]>1.0e-16) ? log10( rowg[0] ) : -16;
+        } else {
+          *L = row[0];
+          *Lg = rowg[0];
+        }
+        //*Lg = *L;
+
+        row += 1;
+        rowg += 1;
+        L += 1;
+        Lg += 1;
+      }
+    }
+  }
+
+  void fill_L_matrices(int rw, int rh, PixelMatrix<float>& rgbin, PixelMatrix<float>& Lin)
+  {
+    int x, y, z;
+
+    for(y = 0; y < rh; y++) {
+      float* row = rgbin[y];
+      float* L = Lin[y];
       for( x = 0; x < rw; x++ ) {
         //std::cout<<"  y="<<y<<"  x="<<x<<"  row="<<row<<"  rr="<<rr<<"  gr="<<gr<<"  br="<<br<<std::endl;
         //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
@@ -115,11 +149,10 @@ class GuidedFilterProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
         } else {
           *L = row[0];
         }
-        *Lg = *L;
+        //*Lg = *L;
 
         row += 1;
         L += 1;
-        Lg += 1;
       }
     }
   }
@@ -314,9 +347,7 @@ public:
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, OpParBase* par)
   {
-    //std::cout<<"GuidedFilterProc::render: this="<<this<<"  in_first="<<in_first<<std::endl;
-
-    if( n != 1 ) return;
+    if( n < 1 ) return;
     if( ireg[0] == NULL ) return;
 
     opar = dynamic_cast<GuidedFilterPar*>(par);
@@ -337,6 +368,8 @@ public:
     profile = opar->get_icc_data();
     if( opar->get_convert_to_perceptual() && profile && profile->is_linear() ) epsilon *= 10;
 
+    //std::cout<<"GuidedFilterProc::render: n="<<n<<"  radius="<<r<<"  epsilon="<<epsilon<<std::endl;
+
     int offsx = 0;
     int offsy = 0;
     int shiftx = (ireg[0]->valid.left/subsampling+1) * subsampling - ireg[0]->valid.left;
@@ -348,8 +381,10 @@ public:
     int ileft = ireg[0]->valid.left + shiftx;
     int itop = ireg[0]->valid.top + shifty;
     float* p = (float*)VIPS_REGION_ADDR( ireg[0], ileft, itop );
+    float* pguide = (n==2 && ireg[1]) ? (float*)VIPS_REGION_ADDR( ireg[1], ileft, itop ) : p;
     int rowstride = VIPS_REGION_LSKIP(ireg[0]) / sizeof(float);
     PixelMatrix<float> rgbin(p, rw, rh, rowstride, offsy, offsx);
+    PixelMatrix<float> guidein(pguide, rw, rh, rowstride, offsy, offsx);
 
     /*
     std::cout<<"GuidedFilterProc::render: Bands="<<ireg[0]->im->Bands<<std::endl;
@@ -370,11 +405,13 @@ public:
 
       //std::cout<<"GuidedFilterProc::render: splitting RGB channels"<<std::endl;
 
-      fill_L_matrices( rw, rh, rgbin, Lin, Lguide );
+      //fill_L_matrices( rw, rh, rgbin, guidein, Lin, Lguide );
+      fill_L_matrices( rw, rh, rgbin, Lin );
 
       //std::cout<<"GuidedFilterProc::render: processing RGB channels"<<std::endl;
       //std::cout<<"                          processing R:"<<std::endl;
-      guidedFilter(Lguide, Lin, Lout, r, epsilon, subsampling);
+      //guidedFilter(Lguide, Lin, Lout, r, epsilon, subsampling);
+      guidedFilter(Lin, Lout, r, epsilon, subsampling);
 
       int dx = oreg->valid.left - ireg[0]->valid.left - shiftx;
       int dy = oreg->valid.top - ireg[0]->valid.top - shifty;
