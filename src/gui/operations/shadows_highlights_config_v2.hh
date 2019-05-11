@@ -49,6 +49,8 @@ namespace PF {
 
     Slider amount_slider;
     Slider strength_s_slider, range_s_slider, strength_h_slider, range_h_slider;
+    Slider constrast_slider;
+    Slider constrast_threshold_slider;
     Slider anchor_slider;
     Slider median_smooth_gain_slider, median_smooth_exponent_slider;
     CheckBox fast_approx_box;
@@ -56,6 +58,7 @@ namespace PF {
     CheckBox do_median_smoothing_box;
     CheckBox do_guided_box;
     CheckBox show_residual_box;
+    CheckBox single_scale_blur_box;
 
     Gtk::VBox guidedControlsBox;
     Slider guidedRadiusSlider, guidedThresholdSlider;

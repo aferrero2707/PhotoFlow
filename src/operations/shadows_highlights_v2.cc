@@ -124,7 +124,7 @@ public:
       for( x = 0; x < width; x++, pin+=3, pout++ ) {
         L = profile->get_lightness(pin[0], pin[1], pin[2]);
         L *= bias;
-        pL = (L>1.0e-16) ? xlog10( L ) : -16;
+        pL = (L>1.0e-16) ? xlog10( L ) : -1;
 
         pout[0] = pL;
       }
@@ -136,24 +136,21 @@ public:
 
 
 
-class MedianSmoothingPar: public PF::OpParBase
+class MedianSmoothingPar: public PF::PaddedOpPar
 {
   bool enabled;
-  float threshold, gain, exponent;
+  int window, window_real;
 public:
   MedianSmoothingPar():
-    PF::OpParBase() {
-
+    PF::PaddedOpPar() {
+    set_type("MIN_MAX");
+    window = 1;
   }
 
   void set_enabled(bool e) { enabled = e; }
   bool get_enabled() { return enabled; }
-  void set_threshold(float t) { threshold = t; }
-  float get_threshold() { return threshold; }
-  void set_gain(float g) { gain = g; }
-  float get_gain() { return gain; }
-  void set_exponent(float e) { exponent = e; }
-  float get_exponent() { return exponent; }
+  void set_window(int w) { window = w; }
+  int get_window() { return window_real; }
 
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,
@@ -163,8 +160,22 @@ public:
     if( in.empty() ) {printf("LogLumiPar::build(): in.empty()\n"); return NULL;}
     VipsImage* image = in[0];
     if( !image ) {printf("LogLumiPar::build(): image==NULL\n"); return NULL;}
-    grayscale_image( get_xsize(), get_ysize() );
-    VipsImage* out = PF::OpParBase::build( in, first, NULL, NULL, level );
+    multiband_image( get_xsize(), get_ysize(), 3 );
+
+    window_real = window;
+    for( unsigned int l = 1; l <= level; l++ ) {
+      window_real /= 2;
+    }
+    if(window_real < 1) window_real = 1;
+    set_padding(window_real, 1);
+    //if( window_real < 1 ) {
+    //  PF_REF(image, "");
+    //  return image;
+    //}
+
+    VipsImage* out = PF::PaddedOpPar::build( in, first, NULL, NULL, level );
+    //rgb_image( get_xsize(), get_ysize() );
+    //multiband_image( get_xsize(), get_ysize(), 2 );
     return out;
   }
 };
@@ -178,79 +189,90 @@ public:
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, PF::OpParBase* par)
   {
+    std::cout<<"MedianSmoothingProc::render: unsupported colorspace: "<<CS<<std::endl;
   }
 };
 
 
 template < class BLENDER, int CHMIN, int CHMAX, bool has_imap, bool has_omap, bool PREVIEW >
-class MedianSmoothingProc< float, BLENDER, PF::PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
+class MedianSmoothingProc< float, BLENDER, PF::PF_COLORSPACE_MULTIBAND, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, PF::OpParBase* par)
   {
-    static const double inv_log_base = 1.0 / log(10.0);
-    MedianSmoothingPar* opar = dynamic_cast<MedianSmoothingPar*>(par);
-    if( !opar ) return;
     VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
     int width = r->width;
     int height = r->height;
+/*
+    std::cout<<"MedianSmoothingProc::render: ireg[0].left="<<ireg[0]->valid.left
+        <<"  ireg.top="<<ireg[0]->valid.top
+        <<"  ireg.width="<<ireg[0]->valid.width
+        <<"  ireg.height="<<ireg[0]->valid.height<<std::endl;
+    std::cout<<"MedianSmoothingProc::render: ireg[1].left="<<ireg[1]->valid.left
+        <<"  ireg.top="<<ireg[1]->valid.top
+        <<"  ireg.width="<<ireg[1]->valid.width
+        <<"  ireg.height="<<ireg[1]->valid.height<<std::endl;
+    std::cout<<"MedianSmoothingProc::render: oreg.left="<<oreg->valid.left
+        <<"  oreg.top="<<oreg->valid.top
+        <<"  oreg.width="<<oreg->valid.width
+        <<"  oreg.height="<<oreg->valid.height<<std::endl;
+    std::cout<<"MedianSmoothingProc::render: oreg->im->Bands="<<oreg->im->Bands<<std::endl;
+*/
+    MedianSmoothingPar* opar = dynamic_cast<MedianSmoothingPar*>(par);
+    if( !opar ) return;
+
+    int border = opar->get_window();
+    int winsz = border*2 + 1;
+    int winsz2 = winsz * winsz;
 
     const float SH_LOG_SCALE_RANGE = SH_LOG_SCALE_MAX - SH_LOG_SCALE_MIN;
     //const float bias = profile->perceptual2linear(0.5);
-
-    float* pin1;
-    float* pin2;
+    float** pin = new float*[winsz];
+    float* psmooth;
     float* pout;
-    int x, y;
+    int x, x0, y, xw, yw, deltax, deltay, deltamax;
 
     for( y = 0; y < height; y++ ) {
-      // input image
-      //float* pin0_y2m = (float*)VIPS_REGION_ADDR( ireg[2], r->left-2, r->top + y - 2 );
-      //float* pin0 = (float*)VIPS_REGION_ADDR( ireg[2], r->left, r->top + y );
-      //float* pin0_y2p = (float*)VIPS_REGION_ADDR( ireg[2], r->left-2, r->top + y + 2 );
-      // log-lumi image
-      pin1 = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
-      // blurred log-lumi image
-      pin2 = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+      for(int yw = 0; yw < winsz; yw++)
+        pin[yw] = (float*)VIPS_REGION_ADDR( ireg[1], r->left-border, r->top + y + yw - border );
       // output image
+      psmooth = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
       pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
-      for( x = 0; x < width; x++, pin1++, pin2++, pout++ ) {
-        float l2 = pin2[0];
-        if( opar->get_enabled() ) {
-          //l2 = ( l2*SH_LOG_SCALE_RANGE ) + SH_LOG_SCALE_MIN;
-          //l2 = xexp10( l2 );
-          //l2 *= bias;
-          //l2 = floorf(l2 * 255) / 255.0f;
-          float l1 = pin1[0];
-          //l1 = ( l1*SH_LOG_SCALE_RANGE ) + SH_LOG_SCALE_MIN;
-          //l1 = xexp10( l1 );
-          //l1 *= bias;
-          float diff = l1 - l2;
-          //std::cout<<"l1="<<l1<<"  l2="<<l2<<"  diff="<<diff<<std::endl;
-          float diff_gain = opar->get_gain();// / opar->get_threshold();
-          diff *= diff_gain;
-          if( std::fabs(diff) < 1.0f ) {
-            float exp_max = opar->get_exponent();
-            float exponent = (exp_max - 1) * (1.0f - std::fabs(diff)) + 1.0f;
-            if(diff >= 0) {
-              diff = pow(diff, exponent);
-            } else {
-              diff = -1.0f * pow(-1.0f * diff, exponent);
-            }
+      for( x = 0, x0 = 0; x < width; x++, psmooth++, pout+=3 ) {
+        float min = psmooth[0]; //1.0e10;
+        float max = psmooth[0]; //-1.0e10;
+        float vartot = 0;
+        for(int yw = 0, deltay = -border; yw < winsz; yw++, deltay++) {
+          deltamax = abs(deltay);
+          for(int xw = 0, deltax = -border; xw < winsz; xw++, deltax++) {
+          //for(int xw = border; xw < border+1; xw++) {
+            if(abs(deltax) > deltamax) deltamax = abs(deltax);
+            //std::cout<<"  yw="<<yw<<"  xw="<<xw<<"  pin="<<pin
+            //    <<"  pin[yw]="<<pin[yw]<<"  deltay="<<deltay<<"  deltax="<<deltax<<"  deltamax="<<deltamax<<std::endl;
+            float val = pin[yw][xw];
+            vartot += (val - psmooth[0]) * (val - psmooth[0]);
+            float vdelta = (val - psmooth[0]) * (border-deltamax) / border;
+            val = vdelta + psmooth[0];
+            if( val < min ) min = val;
+            if( val > max ) max = val;
           }
-          diff /= diff_gain;
-          l2 += diff;
-          //std::cout<<"diff(2)="<<diff<<"  l2(2)="<<l2<<std::endl;
         }
+        vartot /= winsz2;
 
-        l2 = ( l2*SH_LOG_SCALE_RANGE ) + SH_LOG_SCALE_MIN;
-        pout[0] = xexp10(l2);
+        //std::cout<<"  y="<<y<<"  x="<<x<<"  min="<<min<<"  max="<<max<<"  delta="<<max-min<<"  vartot="<<vartot<<std::endl;
+        pout[0] = min;
+        pout[1] = max;
+        pout[2] = vartot;
+
+        for(int yw = 0; yw < winsz; yw++)
+          pin[yw] += 1;
       }
     }
+    delete[] pin;
   }
 };
 
@@ -265,13 +287,18 @@ shadows("shadows",this,pow(10, 0.5)),
 shadows_range("shadows_range",this,5.0),
 highlights("highlights",this,pow(10, 0.5)),
 highlights_range("highlights_range",this,0.5),
+contrast("constrast",this,3),
+contrast_threshold("constrast_threshold",this,1),
 anchor("anchor",this,0.5),
 radius("sh_radius",this,128),
 threshold("sh_threshold",this,0.2),
 show_residual("show_residual", this, false),
+single_scale_blur("single_scale_blur", this, false),
+median_radius(5),
 in_profile( NULL )
 {
   loglumi = new PF::Processor<LogLumiPar,LogLumiProc>();
+  minmax = new PF::Processor<MedianSmoothingPar,MedianSmoothingProc>();
   median = NULL; //new_median_filter();
   int ts = 1;
   for(int gi = 0; gi < 10; gi++) {
@@ -279,13 +306,8 @@ in_profile( NULL )
     threshold_scale[gi] = ts;
     ts *= 2;
   }
-  int rs = 1;
-  for(int gi = 9; gi >= 0; gi--) {
-    radius_scale[gi] = rs;
-    rs *= 4;
-  }
 
-  usm = new_sharpen();
+  usm = NULL; //new_sharpen();
 
   set_type("shadows_highlights_v2" );
 
@@ -299,21 +321,35 @@ bool PF::ShadowsHighlightsV2Par::needs_caching()
 }
 
 
-static void fill_rv(int* rv, float radius, int level)
+static void fill_rv(int* rv, float* tv, float radius, int level)
 {
   int gi = 0;
   for(gi = 0; gi < 10; gi++) rv[gi] = 0;
 
   int r = 1;
+  float ts = 1;
   for( unsigned int l = 1; l <= level; l++ )
     r *= 2;
 
-  for(gi = 0; gi < 9; gi++) {
+  /*
+  for(gi = 0; gi < 1; gi++) {
     rv[gi] = r;
+    tv[gi] = ts;
+  }
+  r *= 4;
+  ts *= 1.5;
+  */
+  for(gi = 0; gi < 9; gi++) {
+    if( r >= radius ) break;
+    rv[gi] = r;
+    tv[gi] = ts;
+    ts *= 1.5;
     if( (r*4) > radius ) break;
     r *= 4;
+    //break;
   }
   rv[gi] = radius;
+  tv[gi] = ts;
 }
 
 
@@ -332,11 +368,14 @@ void PF::ShadowsHighlightsV2Par::compute_padding( VipsImage* full_res, unsigned 
 {
   int tot_padding = 0;
   int rv[10] = { 0 };
-  fill_rv(rv, radius.get(), level);
+  float tv[10] = { 0 };
+  rv[0] = radius.get(); tv[0] = 1;
+  if( single_scale_blur.get() == false )
+    fill_rv(rv, tv, radius.get(), level);
 
   PF::MedianFilterPar* medianpar = median ? dynamic_cast<PF::MedianFilterPar*>( median->get_par() ) : NULL;
   if(medianpar) {
-    medianpar->set_radius(3);
+    medianpar->set_radius(median_radius);
     medianpar->set_threshold(1.0e6);
     medianpar->set_convert_to_perceptual(false);
     medianpar->set_fast_approx(false);
@@ -386,16 +425,18 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
 
   std::vector<VipsImage*> in2;
 
-  if( (get_render_mode() == PF_RENDER_PREVIEW) /*&& is_editing()*/ )
+  //if( (get_render_mode() == PF_RENDER_PREVIEW) /*&& is_editing()*/ )
     show_residual_ = show_residual.get();
-  else
-    show_residual_ = false;
+  //else
+  //  show_residual_ = false;
 
   in_profile = PF::get_icc_profile( in[0] );
 
+  std::cout<<"ShadowsHighlightsV2Par::build(): level="<<level<<std::endl;
+
 
   LogLumiPar* logpar = dynamic_cast<LogLumiPar*>( loglumi->get_par() );
-  std::cout<<"DynamicRangeCompressorV2Par::build(): logpar="<<logpar<<std::endl;
+  std::cout<<"ShadowsHighlightsV2Par::build(): logpar="<<logpar<<std::endl;
   VipsImage* logimg = NULL;
   if(logpar) {
     logpar->set_anchor( anchor.get() );
@@ -405,21 +446,24 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     logimg = logpar->build( in2, 0, NULL, NULL, level );
   } else {
     logimg = in[0];
-    PF_REF(logimg, "DynamicRangeCompressorV2Par::build: in[0] ref");
+    PF_REF(logimg, "ShadowsHighlightsV2Par::build: in[0] ref");
   }
 
-  std::cout<<"DynamicRangeCompressorV2Par::build(): logimg="<<logimg<<std::endl;
+  std::cout<<"ShadowsHighlightsV2Par::build(): logimg="<<logimg<<std::endl;
 
   if( !logimg ) return NULL;
 
 
 
 
-  //std::cout<<"DynamicRangeCompressorV2Par::build(): ts="<<ts<<std::endl;
+  //std::cout<<"ShadowsHighlightsV2Par::build(): ts="<<ts<<std::endl;
 
 
   int rv[10] = { 0 };
-  fill_rv(rv, radius.get(), level);
+  float tv[10] = { 0 };
+  rv[0] = radius.get(); tv[0] = 1;
+  if( single_scale_blur.get() == false )
+    fill_rv(rv, tv, radius.get(), level);
 
   VipsImage* timg = logimg;
   VipsImage* smoothed = logimg;
@@ -427,10 +471,11 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
 
 
   PF::MedianFilterPar* medianpar = median ? dynamic_cast<PF::MedianFilterPar*>( median->get_par() ) : NULL;
+  //std::cout<<"ShadowsHighlightsV2Par::build(): medianpar="<<medianpar<<"  guide_smoothing="<<guide_smoothing.get()<<std::endl;
   if(medianpar) {
     medianpar->set_image_hints( timg );
     medianpar->set_format( get_format() );
-    medianpar->set_radius(3);
+    medianpar->set_radius(median_radius);
     medianpar->set_threshold(1.0e6);
     medianpar->set_convert_to_perceptual(false);
     medianpar->set_fast_approx(false);
@@ -439,11 +484,11 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     in2.push_back( timg );
     smoothed = medianpar->build( in2, first, NULL, NULL, level );
     if( !smoothed ) {
-      std::cout<<"DynamicRangeCompressorV2Par::build(): NULL local contrast enhanced image"<<std::endl;
+      std::cout<<"ShadowsHighlightsV2Par::build(): NULL local contrast enhanced image"<<std::endl;
       return NULL;
     }
-    PF_UNREF(timg, "DynamicRangeCompressorV2Par::build(): timg unref");
-    timg = smoothed;
+    PF_UNREF(timg, "ShadowsHighlightsV2Par::build(): timg unref");
+    //timg = smoothed;
   }
 
 
@@ -455,7 +500,7 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     guidedpar->set_format( get_format() );
     //std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="<<rv[gi]<<std::endl;
     guidedpar->set_radius( rv[gi] );
-    guidedpar->set_threshold(threshold.get() / threshold_scale[gi]);
+    guidedpar->set_threshold(threshold.get() / tv[gi]);
     int subsampling = 1;
     while( subsampling <= 16 ) {
       if( (subsampling*8) >= rv[gi] ) break;
@@ -466,7 +511,9 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     guidedpar->propagate_settings();
     guidedpar->compute_padding(timg, 0, level);
 
-    std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="<<rv[gi]<<"  padding="<<guidedpar->get_padding(0)<<std::endl;
+    std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="
+        <<rv[gi]<<"  padding="<<guidedpar->get_padding(0)
+        <<"  logimg="<<logimg<<"  smoothed="<<smoothed<<std::endl;
     if( guidedpar->get_padding(0) > 64 ) {
       int ts = 128;
       int tr = guidedpar->get_padding(0) / ts + 1;
@@ -480,23 +527,51 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
           "max_tiles", nt,
           "access", acc, "threaded", threaded,
           "persistent", persistent, NULL) ) {
-        std::cout<<"DynamicRangeCompressorV2Par::build(): vips_tilecache() failed."<<std::endl;
+        std::cout<<"ShadowsHighlightsV2Par::build(): vips_tilecache() failed."<<std::endl;
         return NULL;
       }
-      PF_UNREF( timg, "DynamicRangeCompressorV2Par::build(): cropped unref" );
+      PF_UNREF( timg, "ShadowsHighlightsV2Par::build(): cropped unref" );
       timg = cached;
     }
 
     in2.clear();
     in2.push_back( timg );
+    if( gi==0 && smoothed != logimg ) {
+      std::cout<<"ShadowsHighlightsV2Par::build(): adding smoothed guide image"<<std::endl;
+      in2.push_back( smoothed );
+    }
     smoothed = guidedpar->build( in2, first, NULL, NULL, level );
     if( !smoothed ) {
-      std::cout<<"DynamicRangeCompressorV2Par::build(): NULL local contrast enhanced image"<<std::endl;
+      std::cout<<"ShadowsHighlightsV2Par::build(): NULL local contrast enhanced image"<<std::endl;
       return NULL;
     }
-    PF_UNREF(timg, "DynamicRangeCompressorV2Par::build(): timg unref");
+    PF_UNREF(timg, "ShadowsHighlightsV2Par::build(): timg unref");
     timg = smoothed;
   }
+
+
+
+  VipsImage* minmaximg = NULL;
+  MedianSmoothingPar* minmaxpar = dynamic_cast<MedianSmoothingPar*>( minmax->get_par() );
+  //std::cout<<"ShadowsHighlightsV2Par::build(): medianpar="<<medianpar<<"  guide_smoothing="<<guide_smoothing.get()<<std::endl;
+  if(minmaxpar) {
+    minmaxpar->set_image_hints( logimg );
+    minmaxpar->set_format( get_format() );
+    //minmaxpar->set_window(0);
+
+    in2.clear();
+    in2.push_back( smoothed );
+    in2.push_back( logimg );
+    minmaximg = minmaxpar->build( in2, first, NULL, NULL, level );
+    std::cout<<"ShadowsHighlightsV2Par::build(): minmaximg="<<minmaximg<<std::endl;
+    if( !minmaximg ) {
+      std::cout<<"ShadowsHighlightsV2Par::build(): NULL minmax image"<<std::endl;
+      return NULL;
+    }
+    PF_UNREF(logimg, "ShadowsHighlightsV2Par::build(): logimg unref");
+    //timg = smoothed;
+  }
+
 
 /*
   timg = smoothed;
@@ -510,10 +585,10 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     usmpar->propagate_settings();
     smoothed = usmpar->build( in2, first, NULL, NULL, level );
     if( !smoothed ) {
-      std::cout<<"DynamicRangeCompressorV2Par::build(): NULL local contrast enhanced image"<<std::endl;
+      std::cout<<"ShadowsHighlightsV2Par::build(): NULL local contrast enhanced image"<<std::endl;
       return NULL;
     }
-    PF_UNREF(timg, "DynamicRangeCompressorV2Par::build(): timg unref");
+    PF_UNREF(timg, "ShadowsHighlightsV2Par::build(): timg unref");
   }
 */
 
@@ -527,7 +602,8 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
 
   in2.clear();
   in2.push_back(smoothed);
-  //in2.push_back(cached);
+  //in2.push_back(minmaximg);
+  in2.push_back(logimg);
   in2.push_back(in[0]);
   VipsImage* shahi = OpParBase::build( in2, 0, imap, omap, level );
   PF_UNREF( smoothed, "ShadowsHighlightsV2Par::build() smoothed unref" );
