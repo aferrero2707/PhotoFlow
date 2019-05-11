@@ -260,6 +260,9 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
   } else if( op_type == "local_contrast" ) {
     processor = new_local_contrast();
 
+  } else if( op_type == "clahe" ) {
+    processor = new_clahe();
+
 #ifdef HAVE_OCIO
   } else if( op_type == "ocio_filmic" ) {
     processor = new_ocio_view();

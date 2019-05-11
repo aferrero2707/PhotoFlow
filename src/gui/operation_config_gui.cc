@@ -1381,6 +1381,9 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "local_contrast" ) {
     dialog = new PF::LocalContrastConfigGUI( current_layer );
 
+  } else if( op_type == "clahe" ) {
+    dialog = new PF::OperationConfigGUI( current_layer, "CLAHE" );
+
 #ifdef HAVE_OCIO
   } else if( op_type == "ocio_filmic" ) {
     dialog = new PF::OCIOFilmicConfigGUI( current_layer );
