@@ -32,14 +32,14 @@
 
 PF::LocalContrastConfigGUI::LocalContrastConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Local Contrast" ),
-  amount_slider( this, "amount", "amount", 100, 0, 200, 2, 10, 100),
+  amount_slider( this, "amount", "amount", 100, 0, 1000, 2, 10, 100),
   enable_equalizer_box( this, "enable_equalizer", "enable equalizer", true),
   blacks_amount_slider( this, "blacks_amount", "blacks", 100, 0, 100, 5, 10, 100),
   shadows_amount_slider( this, "shadows_amount", "shadows", 100, 0, 100, 5, 10, 100),
   midtones_amount_slider( this, "midtones_amount", "midtones", 100, 0, 100, 5, 10, 100),
   highlights_amount_slider( this, "highlights_amount", "highlights", 100, 0, 100, 5, 10, 100),
   whites_amount_slider( this, "whites_amount", "whites", 100, 0, 100, 5, 10, 100),
-  guidedRadiusSlider( this, "radius", "radius", 1, 0, 100, 0.05, 0.1, 1),
+  guidedRadiusSlider( this, "radius", "radius", 1, 0, 1000, 0.05, 0.1, 1),
   guidedThresholdSlider( this, "threshold", "threshold", 20, 0.5, 100.0, 5, 1, 1000)
 {
 

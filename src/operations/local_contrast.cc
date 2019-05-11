@@ -114,10 +114,12 @@ VipsImage* PF::LocalContrastPar::build(std::vector<VipsImage*>& in, int first,
   tone_curve.unlock();
 
   VipsImage* smoothed = NULL;
-  PF::OpParBase* guidedpar = guided->get_par();
+  //PF::OpParBase* guidedpar = guided->get_par();
+  PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided->get_par() );
   if( guidedpar ) {
     guidedpar->set_image_hints( in[0] );
     guidedpar->set_format( get_format() );
+    guidedpar->set_convert_to_perceptual(true);
     smoothed = guidedpar->build( in, first, imap, omap, level );
   }
 
