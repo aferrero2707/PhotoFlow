@@ -194,7 +194,7 @@ gboolean PF::Sampler::queue_draw_cb (PF::Sampler::Update * update)
 PF::Sampler::Sampler( Pipeline* v, Glib::ustring title, int i ):
       PipelineSink( v ), Gtk::Frame(title),
       display_merged( true ),
-      sampler_x(10), sampler_y(10), sampler_size(3),
+      sampler_x(10), sampler_y(10), sampler_size(1),
       active_layer( -1 ), enabled( false ), grabbed( true ), id(i)
 {
   //set_size_request( 290, 100 );
