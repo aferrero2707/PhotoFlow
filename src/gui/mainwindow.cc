@@ -155,11 +155,12 @@ buttonSavePreset()
 
   top_box.set_spacing(4);
   top_box.set_border_width(4);
-  top_box.pack_start(buttonOpen, Gtk::PACK_SHRINK, 0);
-  top_box.pack_start(buttonSave, Gtk::PACK_SHRINK, 0);
-  top_box.pack_start(buttonSaveAs, Gtk::PACK_SHRINK, 0);
-  top_box.pack_start(buttonExport, Gtk::PACK_SHRINK, 0);
-  top_box.pack_start(buttonSettings, Gtk::PACK_SHRINK, 0);
+  top_box.set_size_request(250,-1);
+  top_box.pack_start(buttonOpen, Gtk::PACK_EXPAND_WIDGET, 0);
+  top_box.pack_start(buttonSave, Gtk::PACK_EXPAND_WIDGET, 0);
+  top_box.pack_start(buttonSaveAs, Gtk::PACK_EXPAND_WIDGET, 0);
+  top_box.pack_start(buttonExport, Gtk::PACK_EXPAND_WIDGET, 0);
+  top_box.pack_start(buttonSettings, Gtk::PACK_EXPAND_WIDGET, 0);
 
   topButtonBox2.pack_start(buttonNewLayer, Gtk::PACK_SHRINK);
   topButtonBox2.pack_start(buttonNewGroup, Gtk::PACK_SHRINK);
@@ -171,7 +172,7 @@ buttonSavePreset()
   buttonSavePreset.set_tooltip_text( _("Open existing file") );
   topButtonBox2.pack_start(buttonSavePreset, Gtk::PACK_SHRINK);
 
-  top_box.pack_start(buttonExit, Gtk::PACK_SHRINK); //buttonExit.set_size_request(70,-1);
+  top_box.pack_start(buttonExit, Gtk::PACK_EXPAND_WIDGET); //buttonExit.set_size_request(70,-1);
   //topButtonBox.set_border_width(5);
   //topButtonBox.set_layout(Gtk::BUTTONBOX_START);
 
@@ -1290,7 +1291,7 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   if( top_box.get_parent() == &(editor->get_file_buttons_box()) ) {
     editor->get_file_buttons_box().remove(top_box);
   }
-  editor->get_file_buttons_box().pack_start(top_box, Gtk::PACK_SHRINK);
+  editor->get_file_buttons_box().pack_start(top_box, Gtk::PACK_EXPAND_WIDGET);
 
 
   if( viewerNotebook.get_n_pages() > 1 ) viewerNotebook.set_show_tabs(true);
@@ -1341,7 +1342,7 @@ void PF::MainWindow::on_my_switch_page(
         Gtk::Container* box = (Gtk::Container*)top_box.get_parent();
         box->remove(top_box);
       }
-      editor->get_file_buttons_box().pack_start(top_box, Gtk::PACK_SHRINK);
+      editor->get_file_buttons_box().pack_start(top_box, Gtk::PACK_EXPAND_WIDGET);
       top_box.show_all();
     }
   }

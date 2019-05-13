@@ -380,8 +380,8 @@ public:
     //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
     if( true || PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement() ==
         PF::PF_LAYERS_LIST_PLACEMENT_LEFT) {
-      main_paned.add1( vbox );
-      main_paned.add2( *preview_widget );
+      main_paned.pack1( vbox, true, false );
+      main_paned.pack2( *preview_widget, true, true );
       main_paned.set_position( PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width() );
       position_set = true;
     } else {
@@ -497,31 +497,32 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
   image_controls_box.set_spacing(4);
   image_controls_box.set_border_width(4);
+  image_controls_box.set_size_request(250,-1);
   buttonZoomIn.set_image( img_zoom_in );
   buttonZoomIn.set_tooltip_text( _("Zoom in") );
   buttonZoomIn.set_size_request(40,-1);
-  image_controls_box.pack_start( buttonZoomIn, Gtk::PACK_SHRINK );
+  image_controls_box.pack_start( buttonZoomIn, Gtk::PACK_EXPAND_WIDGET );
   buttonZoomOut.set_image( img_zoom_out );
   buttonZoomOut.set_tooltip_text( _("Zoom out") );
   buttonZoomOut.set_size_request(40,-1);
-  image_controls_box.pack_start( buttonZoomOut, Gtk::PACK_SHRINK );
+  image_controls_box.pack_start( buttonZoomOut, Gtk::PACK_EXPAND_WIDGET );
   buttonZoomFit.set_image( img_zoom_fit );
   buttonZoomFit.set_tooltip_text( _("Fit image to preview area") );
   buttonZoomFit.set_size_request(40,-1);
-  image_controls_box.pack_start( buttonZoomFit, Gtk::PACK_SHRINK );
+  image_controls_box.pack_start( buttonZoomFit, Gtk::PACK_EXPAND_WIDGET );
   buttonZoom100.set_tooltip_text( _("Zoom to 100%") );
   buttonZoom100.set_size_request(40,-1);
-  image_controls_box.pack_start( buttonZoom100, Gtk::PACK_SHRINK );
+  image_controls_box.pack_start( buttonZoom100, Gtk::PACK_EXPAND_WIDGET );
 
 
   button_highlights_warning.set_image( img_highlights_warning );
   button_highlights_warning.set_tooltip_text( _("Toggle highlights clipping warning on/off") );
   button_highlights_warning.set_size_request(40,-1);
-  image_controls_box.pack_start( button_highlights_warning, Gtk::PACK_SHRINK );
+  image_controls_box.pack_start( button_highlights_warning, Gtk::PACK_EXPAND_WIDGET );
   button_shadows_warning.set_image( img_shadows_warning );
   button_shadows_warning.set_tooltip_text( _("Toggle shadows clipping warning on/off") );
   button_shadows_warning.set_size_request(40);
-  image_controls_box.pack_start( button_shadows_warning, Gtk::PACK_SHRINK );
+  image_controls_box.pack_start( button_shadows_warning, Gtk::PACK_EXPAND_WIDGET );
 
 
   image_controls_box2.set_spacing(10);
