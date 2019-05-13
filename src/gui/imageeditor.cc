@@ -367,7 +367,7 @@ public:
       paned.add1( *layers_widget );
       paned.add2( *controls_widget );
 
-      //hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
+      hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
       hbox.pack_start( paned, Gtk::PACK_EXPAND_WIDGET );
       stat_notebook.append_page( *image_info_widget, _("info") );
     }

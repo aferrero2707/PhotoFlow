@@ -545,10 +545,10 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
 
 
   //LayerTree* view = new LayerTree( editor );
-  if( floating_tool_dialogs )
+  if( floating_tool_dialogs ) {
     vbox.pack_start( aux_controls_group, Gtk::PACK_SHRINK );
-
-  hbox.pack_start( tool_buttons_box, Gtk::PACK_SHRINK );
+    hbox.pack_start( tool_buttons_box, Gtk::PACK_SHRINK );
+  }
   hbox.pack_start( layers_view, Gtk::PACK_EXPAND_WIDGET );
   vbox.pack_start( hbox, Gtk::PACK_EXPAND_WIDGET );
 
