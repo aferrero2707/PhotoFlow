@@ -63,6 +63,7 @@ class ImageInfo : public PipelineSink, public Gtk::Frame
   VipsImage* outimg;
 
   Gtk::VBox vbox;
+  Gtk::Alignment a1, a2, a3;
   Gtk::Label l1, l2, l3;
   Gtk::TextView textview;
 

@@ -57,9 +57,14 @@ PF::ImageInfo::ImageInfo( Pipeline* v ):
   textview.set_editable(false);
   */
   add(vbox);
-  vbox.pack_start( l1, Gtk::PACK_SHRINK, 0 );
-  vbox.pack_start( l2, Gtk::PACK_SHRINK, 0 );
-  vbox.pack_start( l3, Gtk::PACK_SHRINK, 0 );
+  a1.set(Gtk::ALIGN_START, Gtk::ALIGN_CENTER, 0.0, 1.0); a1.add(l1);
+  a2.set(Gtk::ALIGN_START, Gtk::ALIGN_CENTER, 0.0, 1.0); a2.add(l2);
+  a3.set(Gtk::ALIGN_START, Gtk::ALIGN_CENTER, 0.0, 1.0); a3.add(l3);
+  vbox.set_spacing(0);
+  vbox.set_border_width(10);
+  vbox.pack_start( a1, Gtk::PACK_SHRINK, 0 );
+  vbox.pack_start( a2, Gtk::PACK_SHRINK, 0 );
+  vbox.pack_start( a3, Gtk::PACK_SHRINK, 0 );
   show_all();
 }
 
