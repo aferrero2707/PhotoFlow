@@ -128,7 +128,7 @@ PF::Histogram::Histogram( Pipeline* v ):
 {
   hist = new unsigned long int[65536*3];
   //std::cout<<"Histogram::Histogram(): hist="<<hist<<std::endl;
-  set_size_request( 200, 100 );
+  set_size_request( 200, 150 );
   signal_queue_draw.connect(sigc::mem_fun(*this, &Histogram::queue_draw));
 
 }

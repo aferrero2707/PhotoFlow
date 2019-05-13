@@ -357,21 +357,23 @@ public:
     samplers_dialog.signal_hide().connect( sigc::mem_fun(*this,
         &Layout2::on_samplers_dialog_hide) );
 
-    vbox.pack_start( *control_buttons_widget, Gtk::PACK_SHRINK );
-    vbox.pack_start( stat_notebook, Gtk::PACK_SHRINK );
     if( PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs()) {
       //samplers_widget->set_size_request(0,150);
-      hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
+      //hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
       hbox.pack_start( *layers_widget, Gtk::PACK_EXPAND_WIDGET );
-      vbox.pack_start( *image_info_widget, Gtk::PACK_SHRINK );
+      //vbox.pack_start( *image_info_widget, Gtk::PACK_SHRINK );
+      stat_notebook.append_page( *image_info_widget, _("info") );
     } else {
       paned.add1( *layers_widget );
       paned.add2( *controls_widget );
 
-      hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
+      //hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
       hbox.pack_start( paned, Gtk::PACK_EXPAND_WIDGET );
       stat_notebook.append_page( *image_info_widget, _("info") );
     }
+    vbox.pack_start( *control_buttons_widget, Gtk::PACK_SHRINK );
+    vbox.pack_start( stat_notebook, Gtk::PACK_SHRINK );
+    stat_notebook.set_current_page(1);
 
     vbox.pack_start( hbox, Gtk::PACK_EXPAND_WIDGET );
 
