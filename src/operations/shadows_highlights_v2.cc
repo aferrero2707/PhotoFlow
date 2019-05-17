@@ -124,7 +124,7 @@ public:
       for( x = 0; x < width; x++, pin+=3, pout++ ) {
         L = profile->get_lightness(pin[0], pin[1], pin[2]);
         L *= bias;
-        pL = (L>1.0e-16) ? xlog10( L ) : -1;
+        pL = (L>1.0e-16) ? xlog10( L ) : -16;
 
         pout[0] = pL;
       }
