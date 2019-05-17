@@ -559,7 +559,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   mask_view_top_box.pack_end( mask_view_show_button, Gtk::PACK_SHRINK, 4 );
   mask_view_box.pack_start( mask_view_top_box, Gtk::PACK_SHRINK, 4 );
   mask_view_box.pack_start( mask_view, Gtk::PACK_EXPAND_WIDGET );
-  vbox.pack_start( mask_view_box, Gtk::PACK_EXPAND_WIDGET );
+  hbox.pack_start( mask_view_box, Gtk::PACK_EXPAND_WIDGET );
 
   //view->signal_updated.connect(sigc::mem_fun(this, &LayerWidget::modified) );
   //frame->add( *view );
@@ -960,9 +960,9 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
-//#ifndef NDEBUG
+#ifndef NDEBUG
     std::cout<<"LayerWidget::on_row_activated: activated row "<<l->get_name()<<std::endl;
-//#endif
+#endif
     if( column == layer_views[page]->get_tree().get_column(LAYER_COL_NUM) && floating_tool_dialogs ) {
       // close all dialogs
       if( l && l->get_processor() && l->get_processor()->get_par() &&
