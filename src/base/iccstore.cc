@@ -191,9 +191,9 @@ void PF::ICCProfile::set_profile( cmsHPROFILE p )
 
   char tstr[1024];
   cmsGetProfileInfoASCII(profile, cmsInfoDescription, "en", "US", tstr, 1024);
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"ICCProfile::set_profile(): data="<<profile_data<<" size="<<profile_size<<"  name="<<tstr<<std::endl;
-#endif
+//#endif
 
   init_colorants();
   init_trc();
@@ -340,14 +340,15 @@ void PF::ICCProfile::init_trc()
   cmsToneCurve *red_trc   = (cmsToneCurve*)cmsReadTag(profile, cmsSigRedTRCTag);
   //cmsToneCurve *green_trc = (cmsToneCurve*)cmsReadTag(profile, cmsSigGreenTRCTag);
   //cmsToneCurve *blue_trc  = (cmsToneCurve*)cmsReadTag(profile, cmsSigBlueTRCTag);
+  std::cout<<"ICCProfile::init_trc(): red_trc="<<red_trc<<std::endl;
 
-  if( !red_trc ) return;
+  //if( !red_trc ) return;
 
-  cmsBool is_linear = cmsIsToneCurveLinear(red_trc);
-  cmsInt32Number tcpt = cmsGetToneCurveParametricType(red_trc);
+  cmsBool is_linear = red_trc ? cmsIsToneCurveLinear(red_trc) : true;
+  cmsInt32Number tcpt = red_trc ? cmsGetToneCurveParametricType(red_trc) : 1;
   parametric_trc = (tcpt>0) ? true : false;
 
-  //std::cout<<"ICCProfile::init_trc(): is_linear="<<is_linear<<"  is_parametric="<<is_parametric()<<std::endl;
+  std::cout<<"ICCProfile::init_trc(): is_linear="<<is_linear<<"  is_parametric="<<is_parametric()<<std::endl;
 
   if( is_linear ) {
     /* LAB "L" (perceptually uniform) TRC */
@@ -469,6 +470,10 @@ cmsHPROFILE PF::ICCProfile::get_profile()
 cmsFloat32Number PF::ICCProfile::linear2perceptual( cmsFloat32Number val )
 {
   //return cmsEvalToneCurveFloat( perceptual_trc_inv, val );
+  //if( l2p_lut.getSize()==0 ) {
+    //std::cout<<"ICCProfile::linear2perceptual(): WARNING: empty LUT"<<std::endl;
+    //return 0; //cmsEvalToneCurveFloat( perceptual_trc_inv, val );
+  //}
   cmsFloat32Number r = (val>1) ? cmsEvalToneCurveFloat( perceptual_trc_inv, val ) :
       ( (val<0) ? cmsEvalToneCurveFloat( perceptual_trc_inv, val ) : l2p_lut[val*255] );
   return r;
@@ -477,6 +482,10 @@ cmsFloat32Number PF::ICCProfile::linear2perceptual( cmsFloat32Number val )
 cmsFloat32Number PF::ICCProfile::perceptual2linear( cmsFloat32Number val )
 {
   //return cmsEvalToneCurveFloat( perceptual_trc, val );
+  //if( p2l_lut.getSize()==0 ) {
+    //std::cout<<"ICCProfile::perceptual2linear(): WARNING: empty LUT"<<std::endl;
+    //return 0; //cmsEvalToneCurveFloat( perceptual_trc, val );
+  //}
   cmsFloat32Number r = (val>1) ? cmsEvalToneCurveFloat( perceptual_trc, val ) :
       ( (val<0) ? cmsEvalToneCurveFloat( perceptual_trc, val ) : p2l_lut[val*255] );
   return r;
@@ -1036,11 +1045,11 @@ PF::ICCProfile* PF::get_icc_profile( VipsImage* img )
   size_t data_size;
   if( vips_image_get_blob( img, "pf-icc-profile",
           (void**)(&pc), &data_size ) ) {
-    std::cout<<"get_icc_profile_data(): cannot find ICC profile data"<<std::endl;
+    //std::cout<<"get_icc_profile_data(): cannot find ICC profile data"<<std::endl;
     return( NULL );
   }
   if( data_size != sizeof(ICCProfileContainer) ) {
-    std::cout<<"get_icc_profile(): wrong size of ICC profile data"<<std::endl;
+    //std::cout<<"get_icc_profile(): wrong size of ICC profile data"<<std::endl;
     return( NULL );
   }
   if( !pc ) return NULL;
