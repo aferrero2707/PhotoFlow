@@ -173,6 +173,8 @@ namespace PF
           float l = ( plog[0]*(6*2+1) ) - 6;
           float s = ( psmooth[0]*(6*2+1) ) - 6;
           //float s = (0.1*(plog[0]+psmooth[0])) - 6;
+          if( false && r->left<100 && r->top<100 && y==0 && x<4)
+            std::cout<<"DynamicRangeCompressorProc::render(): l="<<l<<"  s="<<s<<std::endl;
 
           diff = l - s;
           float gamma1 = (s>0) ? gamma_h : gamma_s;

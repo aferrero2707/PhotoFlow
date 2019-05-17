@@ -44,11 +44,11 @@
 
 
 
-class LogLumiPar: public PF::OpParBase
+class LogLumiPar_DRC: public PF::OpParBase
 {
   PF::ICCProfile* profile;
 public:
-  LogLumiPar():
+  LogLumiPar_DRC():
     PF::OpParBase(), profile(NULL) {
 
   }
@@ -79,19 +79,20 @@ public:
 
 
 template < OP_TEMPLATE_DEF >
-class LogLumiProc
+class LogLumiProc_DRC
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
       VipsRegion* imap, VipsRegion* omap,
       VipsRegion* oreg, PF::OpParBase* par)
   {
+    std::cout<<"LogLumiProc_DRC::render(): unsupported CS="<<CS<<std::endl;
   }
 };
 
 
 template < class BLENDER, int CHMIN, int CHMAX, bool has_imap, bool has_omap, bool PREVIEW >
-class LogLumiProc< float, BLENDER, PF::PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
+class LogLumiProc_DRC< float, BLENDER, PF::PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -99,7 +100,7 @@ public:
       VipsRegion* oreg, PF::OpParBase* par)
   {
     static const double inv_log_base = 1.0 / log(10.0);
-    LogLumiPar* opar = dynamic_cast<LogLumiPar*>(par);
+    LogLumiPar_DRC* opar = dynamic_cast<LogLumiPar_DRC*>(par);
     if( !opar ) return;
     VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
@@ -119,8 +120,8 @@ public:
 
     //for(x=0;x<1000000;x++) for(y=0;y<10;y++) R += rand();
 
-    if( false && r->left<10000 && r->top<10000 ) {
-      std::cout<<"LogLumiProc::render(): ireg="<<ireg[0]->valid.width<<"x"<<ireg[0]->valid.height
+    if( false && r->left<100 && r->top<100 && y==0 && x<4 ) {
+      std::cout<<"LogLumiProc_DRC::render(): ireg="<<ireg[0]->valid.width<<"x"<<ireg[0]->valid.height
           <<"+"<<ireg[0]->valid.left<<","<<ireg[0]->valid.top<<std::endl;
       //std::cout<<"                                 oreg="<<r->width<<"x"<<r->height<<"+"<<r->left<<","<<r->top<<std::endl;
     }
@@ -143,7 +144,7 @@ public:
         if( std::isnan(pL) ) { std::cout<<"pL isnan, L="<<L<<std::endl; pL = -6; }
         //pL = L;
 
-        if(false && x<8 && y==0 && r->left==0 && r->top==0)
+        if(false && x<8 && y==0 && r->left<100 && r->top<100)
           std::cout<<"L="<<L<<"  pL="<<pL<<std::endl;
         //pout[0] = pout[1] = pout[2] = pL;
         //pout[0] = L;
@@ -175,7 +176,7 @@ PF::DynamicRangeCompressorPar::DynamicRangeCompressorPar():
   show_residual("show_residual", this, false),
   caching(false)
 {
-  loglumi = new PF::Processor<LogLumiPar,LogLumiProc>();
+  loglumi = new PF::Processor<LogLumiPar_DRC,LogLumiProc_DRC>();
   //bilateral = new_gmic_blur_bilateral();
   bilateral = new_blur_bilateral();
   //bilateral = new_blur_bilateral_slow();
@@ -289,7 +290,7 @@ VipsImage* PF::DynamicRangeCompressorPar::build(std::vector<VipsImage*>& in, int
   if(iss < 1) iss = 1;
 
   std::vector<VipsImage*> in2;
-  LogLumiPar* logpar = dynamic_cast<LogLumiPar*>( loglumi->get_par() );
+  LogLumiPar_DRC* logpar = dynamic_cast<LogLumiPar_DRC*>( loglumi->get_par() );
   VipsImage* logimg = NULL;
   if(logpar) {
     logpar->set_image_hints( in[0] );
