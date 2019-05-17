@@ -349,7 +349,6 @@ public:
     //samplers_label_evbox.add(samplers_label);
     samplers_vbox.pack_start(*samplers_widget, Gtk::PACK_SHRINK);
     samplers_scrollwin.add(samplers_vbox);
-    stat_notebook.append_page( samplers_scrollwin, samplers_label_evbox );
     samplers_label_evbox.add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK);
     samplers_label_evbox.signal_button_press_event().connect( sigc::mem_fun(*this,
         &Layout2::on_samplers_label_button_press_event) );
@@ -371,6 +370,7 @@ public:
       hbox.pack_start( paned, Gtk::PACK_EXPAND_WIDGET );
       stat_notebook.append_page( *image_info_widget, _("info") );
     }
+    stat_notebook.append_page( samplers_scrollwin, samplers_label_evbox );
     vbox.pack_start( *control_buttons_widget, Gtk::PACK_SHRINK );
     vbox.pack_start( stat_notebook, Gtk::PACK_SHRINK );
     stat_notebook.set_current_page(1);
@@ -382,8 +382,10 @@ public:
     //pack_start( *preview_widget, Gtk::PACK_EXPAND_WIDGET );
     if( true || PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement() ==
         PF::PF_LAYERS_LIST_PLACEMENT_LEFT) {
-      main_paned.pack1( vbox, true, false );
-      main_paned.pack2( *preview_widget, true, true );
+      main_paned.add1( vbox );
+      main_paned.add2( *preview_widget );
+      //main_paned.pack1( vbox, true, false );
+      //main_paned.pack2( *preview_widget, true, true );
       main_paned.set_position( PF::PhotoFlow::Instance().get_options().get_layerlist_widget_width() );
       position_set = true;
     } else {
