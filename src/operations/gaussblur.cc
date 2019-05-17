@@ -63,7 +63,7 @@ void PF::GaussBlurPar::compute_padding( VipsImage* full_res, unsigned int id, un
   for( unsigned int l = 1; l <= level; l++ )
     radius2 /= 2;
 
-  std::cout<<"GaussBlurPar::compute_padding(): radius="<<radius.get()<<" level="<<level<<" radius2="<<radius2<<std::endl;
+  //std::cout<<"GaussBlurPar::compute_padding(): radius="<<radius.get()<<" level="<<level<<" radius2="<<radius2<<std::endl;
 
   bool do_fast_blur = false;
   if( radius2 > 5 ) do_fast_blur = true;
@@ -207,10 +207,10 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
         return NULL;
       }
       */
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"GaussBlurPar::build(): radius2="<<radius2<<"  accuracy="<<accuracy<<std::endl;
       std::cout<<"GaussBlurPar::build(): convsep mask size="<<mask->Xsize<<" "<<mask->Ysize<<std::endl;
-//#endif
+#endif
       result = vips_convsep( srcimg, &tmp, mask,
 			     "precision", precision,
 			     NULL );

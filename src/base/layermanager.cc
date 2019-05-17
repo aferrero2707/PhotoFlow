@@ -909,8 +909,10 @@ void PF::LayerManager::update_op_caching( PF::Pipeline* pipeline, std::list<Laye
     // currently only the wavelet decomposition tool does it
     if( padding > 0 && lprev && ppar ) {
       ppar->set_output_padding( padding, 0 );
+#ifndef NDEBUG
       std::cout<<"      ppar->get_output_padding(0)="<<ppar->get_output_padding(0)
           <<"  ppar->get_output_caching()="<<ppar->get_output_caching()<<std::endl;
+#endif
     }
 
     if( !(l->get_sublayers().empty()) ) {

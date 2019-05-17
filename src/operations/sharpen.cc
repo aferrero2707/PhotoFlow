@@ -97,7 +97,7 @@ bool PF::SharpenPar::needs_caching()
 
 void PF::SharpenPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
 {
-  std::cout<<"SharpenPar::compute_padding(): method.get_enum_value().first="<<method.get_enum_value().first<<std::endl;
+  //std::cout<<"SharpenPar::compute_padding(): method.get_enum_value().first="<<method.get_enum_value().first<<std::endl;
   switch( method.get_enum_value().first ) {
   case PF::SHARPEN_USM:
     g_assert(usm->get_par() != NULL);
@@ -126,7 +126,7 @@ void PF::SharpenPar::propagate_settings()
 {
   UnsharpMaskPar* usmpar = dynamic_cast<UnsharpMaskPar*>( usm->get_par() );
   if( usmpar ) {
-    std::cout<<"SharpenPar::propagate_settings(): usm_radius="<<usm_radius.get()<<std::endl;
+    //std::cout<<"SharpenPar::propagate_settings(): usm_radius="<<usm_radius.get()<<std::endl;
     usmpar->set_radius( usm_radius.get() );
     usmpar->propagate_settings();
   }

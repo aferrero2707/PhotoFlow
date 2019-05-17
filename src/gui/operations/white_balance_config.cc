@@ -509,7 +509,7 @@ void PF::WhiteBalanceConfigGUI::do_update()
         unsigned int idl;
         ExifData *ed;
 
-        /* Either parse from the embedded EXIF, or if there's none, make
+        *//* Either parse from the embedded EXIF, or if there's none, make
          * some fresh EXIF we can write the resolution to.
          *//*
         if( vips_image_get_typeof( write->in, VIPS_META_EXIF_NAME ) ) {

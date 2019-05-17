@@ -1293,9 +1293,13 @@ void PF::ImageArea::update( VipsRect* area )
   convert2display->get_par()->set_image_hints( wclipimg );
   convert2display->get_par()->set_format( get_pipeline()->get_format() );
   in.clear(); in.push_back( wclipimg );
+#ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::update(): before convert2display"<<std::endl;
+#endif
   VipsImage* srgbimg = convert2display->get_par()->build(in, 0, NULL, NULL, level );
+#ifdef DEBUG_DISPLAY
   std::cout<<"ImageArea::update(): after convert2display"<<std::endl;
+#endif
   PF_UNREF( wclipimg, "ImageArea::update() wclipimg unref" );
   // "image" is managed by photoflow, therefore it is not necessary to unref it
   // after the call to convert2display: the additional reference is owned by
@@ -1304,7 +1308,7 @@ void PF::ImageArea::update( VipsRect* area )
   // as the additional reference will be removed when calling 
   // g_object_unref(srgbimg) later on
 
-#ifndef NDEBUG
+#ifdef DEBUG_DISPLAY
   PF_PRINT_REF( srgbimg, "ImageArea::update(): srgbimg after convert2display: " );
   std::cout<<"ImageArea::update(): image="<<image<<"   ref_count="<<G_OBJECT( image )->ref_count<<std::endl;
 #endif
@@ -1400,11 +1404,11 @@ void PF::ImageArea::update( VipsRect* area )
 #ifdef DEBUG_DISPLAY
   std::cout<<"PF::ImageArea::update(): vips_sink_screen() called"<<std::endl;
 #endif
-//#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
   std::cout<<"Image size: "<<outimg->Xsize<<","
 					 <<outimg->Ysize<<std::endl;
   std::cout<<"Shrink factor: "<<shrink_factor<<std::endl;
-//#endif
+#endif
 
 	if( shrink_factor != 1 ) {
 		VipsImage* outimg2;
@@ -1419,9 +1423,9 @@ void PF::ImageArea::update( VipsRect* area )
 //      std::cout<<std::endl<<std::endl<<"VIPS_REDUCE FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
 //      return;
 //    }
-//#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
 		std::cout<<"ImageArea::update(): before vips_resize()"<<std::endl;
-//#endif
+#endif
 		if( shrink_factor > 1 ) {
 		  if( vips_resize( outimg, &outimg2, shrink_factor, "kernel", VIPS_KERNEL_NEAREST, NULL) ) {
 		        std::cout<<std::endl<<std::endl<<"vips_resize() FAILED!!!!!!!"<<std::endl<<std::endl<<std::endl;
@@ -1433,9 +1437,9 @@ void PF::ImageArea::update( VipsRect* area )
       return;
     }
 		}
-//#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
     std::cout<<"ImageArea::update(): after vips_resize(), outimg: "<<outimg<<"  outimg2: "<<outimg2<<std::endl;
-//#endif
+#endif
     PF_UNREF( outimg, "ImageArea::update() outimg unref after shrink" );
     outimg = outimg2;
 	}

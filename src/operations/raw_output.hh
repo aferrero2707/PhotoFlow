@@ -585,7 +585,7 @@ enum exposure_mode_t {
             for( int xi = 0; xi < line_size; xi++ ) {
               line2[xi] = CLIPRAW(line[xi]);
             }
-            if( r->top==0 && r-> left==0 && y<4 ) {
+            if( false && r->top==0 && r-> left==0 && y<4 ) {
               std::cout<<"opar->get_apply_hue_sat_map()="<<opar->get_apply_hue_sat_map()
                       <<" opar->get_delta_base().empty()="<<opar->get_delta_base().empty()
                       <<" opar->get_apply_look_table()="<<opar->get_apply_look_table()
@@ -598,7 +598,7 @@ enum exposure_mode_t {
                 newg = pro_photo[1][0] * line2[xi] + pro_photo[1][1] * line2[xi+1] + pro_photo[1][2] * line2[xi+2];
                 newb = pro_photo[2][0] * line2[xi] + pro_photo[2][1] * line2[xi+1] + pro_photo[2][2] * line2[xi+2];
                 // If point is in negative area, just the matrix, but not the LUT. This is checked inside Color::rgb2hsvdcp
-                if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                if( false && r->top==0 && r-> left==0 && y<4 && xi<12 )
                   std::cout<<"newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
                 if( opar->get_apply_baseline_exposure_offset() ) {
                   newr *= opar->get_dcp_exp_scale();
@@ -606,13 +606,13 @@ enum exposure_mode_t {
                   newb *= opar->get_dcp_exp_scale();
                 }
                 if(rtengine::Color::rgb2hsvdcp(newr*65535.f, newg*65535.f, newb*65535.f, h , s, v)) {
-                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                  if( false && r->top==0 && r-> left==0 && y<4 && xi<12 )
                     std::cout<<"  h="<<h<<" s="<<s<<" v="<<v<<std::endl;
                   if( opar->get_apply_hue_sat_map() )
                     hsdApply(opar->get_delta_info(), opar->get_delta_base(), h, s, v);
                   if( opar->get_apply_look_table() )
                     hsdApply(opar->get_look_info(), opar->get_look_table(), h, s, v);
-                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                  if( false && r->top==0 && r-> left==0 && y<4 && xi<12 )
                     std::cout<<"    h="<<h<<" s="<<s<<" v="<<v<<std::endl;
                   // RT range correction
                   if (h < 0.0f) {
@@ -621,23 +621,23 @@ enum exposure_mode_t {
                     h -= 6.0f;
                   }
                   rtengine::Color::hsv2rgbdcp(h, s, v, newr, newg, newb);
-                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                  if( false && r->top==0 && r-> left==0 && y<4 && xi<12 )
                     std::cout<<"    newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
                   if( opar->get_use_tone_curve() )
                     opar->apply_dcp_tone_curve(newr, newg, newb);
-                  if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                  if( false && r->top==0 && r-> left==0 && y<4 && xi<12 )
                     std::cout<<"      newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
                 }
                 line2[xi] = newr/65535.f;
                 line2[xi+1] = newg/65535.f;
                 line2[xi+2] = newb/65535.f;
-                if( r->top==0 && r-> left==0 && y<4 && xi<12 )
+                if( false && r->top==0 && r-> left==0 && y<4 && xi<12 )
                   std::cout<<"line2[xi]="<<line2[xi]<<" line2[xi+1]="<<line2[xi+1]<<" line2[xi+2]="<<line2[xi+2]<<std::endl;
               }
             }
             memcpy( pout, line2, sizeof(float)*line_size );
             //cmsDoTransform( opar->get_transform(), line2, pout, width );
-            if( r->top==0 && r-> left==0 && y<4 )
+            if( false && r->top==0 && r-> left==0 && y<4 )
               std::cout<<"cmsDoTransform(): in="<<line2[0]<<","<<line2[1]<<","<<line2[2]<<" -> out="
               <<pout[0]<<","<<pout[1]<<","<<pout[2]<<std::endl;
           //} else {

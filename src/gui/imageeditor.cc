@@ -1422,9 +1422,9 @@ void PF::ImageEditor::set_selected_layer( int id )
 {
   int old_id = selected_layer_id;
   selected_layer_id = id;
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"ImageEditor::set_selected_layer("<<id<<"): old_id="<<old_id<<"  selected_layer_id="<<selected_layer_id<<std::endl;
-//#endif
+#endif
   if( old_id != selected_layer_id ) {
     imageArea->set_selected_layer( id );
   }

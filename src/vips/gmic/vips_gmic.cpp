@@ -360,7 +360,7 @@ vips_gmic_gen_template( VipsRegion *oreg,
 			gmic_image<float> &img = images._data[i];
 			img.assign( need.width, need.height, 
 				1, seq->ir[i]->im->Bands );
-			std::cout<<"img.assign("<<need.width<<", "<<need.height<<" ,1, "<<seq->ir[i]->im->Bands<<")"<<std::endl;
+			//std::cout<<"img.assign("<<need.width<<", "<<need.height<<" ,1, "<<seq->ir[i]->im->Bands<<")"<<std::endl;
 			vips_to_gmic<T>( seq->ir[0], &need, &img );
 		}
 		//std::cout<<"Running G'MIC command: \""<<vipsgmic->command<<"\"  seq="<<seq<<"  gmic_instance="<<seq->gmic_instance<<std::endl;
