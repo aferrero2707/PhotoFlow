@@ -45,12 +45,12 @@
 
 
 
-class LogPar: public PF::OpParBase
+class LogPar_DRCV2: public PF::OpParBase
 {
   float anchor;
   PF::ICCProfile* profile;
 public:
-  LogPar():
+  LogPar_DRCV2():
     PF::OpParBase(), profile(NULL) {
 
   }
@@ -84,7 +84,7 @@ public:
 
 
 template < OP_TEMPLATE_DEF >
-class LogProc
+class LogProc_DRCV2
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -96,7 +96,7 @@ public:
 
 
 template < class BLENDER, int CHMIN, int CHMAX, bool has_imap, bool has_omap, bool PREVIEW >
-class LogProc< float, BLENDER, PF::PF_COLORSPACE_MULTIBAND, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
+class LogProc_DRCV2< float, BLENDER, PF::PF_COLORSPACE_MULTIBAND, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -104,7 +104,7 @@ public:
       VipsRegion* oreg, PF::OpParBase* par)
   {
     static const double inv_log_base = 1.0 / log(10.0);
-    LogPar* opar = dynamic_cast<LogPar*>(par);
+    LogPar_DRCV2* opar = dynamic_cast<LogPar_DRCV2*>(par);
     if( !opar ) return;
     VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
@@ -182,11 +182,11 @@ public:
 
 
 
-class LogLumiPar: public PF::OpParBase
+class LogLumiPar_DRCV2: public PF::OpParBase
 {
   PF::ICCProfile* profile;
 public:
-  LogLumiPar():
+  LogLumiPar_DRCV2():
     PF::OpParBase(), profile(NULL) {
 
   }
@@ -198,13 +198,13 @@ public:
       VipsImage* imap, VipsImage* omap,
       unsigned int& level)
   {
-    if( in.empty() ) {printf("LogLumiPar::build(): in.empty()\n"); return NULL;}
+    if( in.empty() ) {printf("LogLumiPar_DRCV2::build(): in.empty()\n"); return NULL;}
 
     VipsImage* image = in[0];
-    if( !image ) {printf("LogLumiPar::build(): image==NULL\n"); return NULL;}
+    if( !image ) {printf("LogLumiPar_DRCV2::build(): image==NULL\n"); return NULL;}
 
     profile = PF::get_icc_profile( image );
-    if( !profile ) {printf("LogLumiPar::build(): profile==NULL\n"); return NULL;}
+    if( !profile ) {printf("LogLumiPar_DRCV2::build(): profile==NULL\n"); return NULL;}
 
     grayscale_image( get_xsize(), get_ysize() );
 
@@ -217,7 +217,7 @@ public:
 
 
 template < OP_TEMPLATE_DEF >
-class LogLumiProc
+class LogLumiProc_DRCV2
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -229,7 +229,7 @@ public:
 
 
 template < class BLENDER, int CHMIN, int CHMAX, bool has_imap, bool has_omap, bool PREVIEW >
-class LogLumiProc< float, BLENDER, PF::PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
+class LogLumiProc_DRCV2< float, BLENDER, PF::PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -237,7 +237,7 @@ public:
       VipsRegion* oreg, PF::OpParBase* par)
   {
     static const double inv_log_base = 1.0 / log(10.0);
-    LogLumiPar* opar = dynamic_cast<LogLumiPar*>(par);
+    LogLumiPar_DRCV2* opar = dynamic_cast<LogLumiPar_DRCV2*>(par);
     if( !opar ) return;
     VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
@@ -258,7 +258,7 @@ public:
     //for(x=0;x<1000000;x++) for(y=0;y<10;y++) R += rand();
 
     if( false && r->left<10000 && r->top<10000 ) {
-      std::cout<<"LogLumiProc::render(): ireg="<<ireg[0]->valid.width<<"x"<<ireg[0]->valid.height
+      std::cout<<"LogLumiProc_DRCV2::render(): ireg="<<ireg[0]->valid.width<<"x"<<ireg[0]->valid.height
           <<"+"<<ireg[0]->valid.left<<","<<ireg[0]->valid.top<<std::endl;
       //std::cout<<"                                 oreg="<<r->width<<"x"<<r->height<<"+"<<r->left<<","<<r->top<<std::endl;
     }
@@ -317,8 +317,8 @@ PF::DynamicRangeCompressorV2Par::DynamicRangeCompressorV2Par():
   show_residual("show_residual", this, false),
   caching(true)
 {
-  loglumi = new PF::Processor<LogLumiPar,LogLumiProc>();
-  to_log = new PF::Processor<LogPar,LogProc>();
+  loglumi = new PF::Processor<LogLumiPar_DRCV2,LogLumiProc_DRCV2>();
+  to_log = new PF::Processor<LogPar_DRCV2,LogProc_DRCV2>();
   //bilateral = new_gmic_blur_bilateral();
   bilateral = new_blur_bilateral();
   //bilateral = new_blur_bilateral_slow();
@@ -459,7 +459,7 @@ VipsImage* PF::DynamicRangeCompressorV2Par::build_old(std::vector<VipsImage*>& i
 
 
   std::vector<VipsImage*> in2;
-  LogLumiPar* logpar = dynamic_cast<LogLumiPar*>( loglumi->get_par() );
+  LogLumiPar_DRCV2* logpar = dynamic_cast<LogLumiPar_DRCV2*>( loglumi->get_par() );
   std::cout<<"DynamicRangeCompressorV2Par::build(): logpar="<<logpar<<std::endl;
   VipsImage* logimg = NULL;
   if(logpar) {
@@ -561,7 +561,7 @@ VipsImage* PF::DynamicRangeCompressorV2Par::build_new(std::vector<VipsImage*>& i
 
 
   std::vector<VipsImage*> in2;
-  LogPar* logpar = dynamic_cast<LogPar*>( to_log->get_par() );
+  LogPar_DRCV2* logpar = dynamic_cast<LogPar_DRCV2*>( to_log->get_par() );
   VipsImage* logimg = NULL;
   if(logpar) {
     logpar->set_image_hints( in[0] );
