@@ -78,6 +78,7 @@
 #include "operations/tone_mapping_config.hh"
 #include "operations/tone_mapping_config_v2.hh"
 #include "operations/local_contrast_config.hh"
+#include "operations/local_contrast_config_v2.hh"
 #ifdef HAVE_OCIO
 #include "operations/OCIO/ocio_config_config.hh"
 #include "operations/OCIO/ocio_filmic_config.hh"
@@ -109,7 +110,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   intensitySlider2( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   opacitySlider( this, layer->get_blender(), "opacity", _("opacity: "), 100, 0, 100, 1, 10, 100, 100, 4),
-  opacitySlider2( this, layer->get_blender(), "opacity", _("opacity: "), 100, 0, 100, 1, 10, 100, 4),
+  opacitySlider2( this, layer->get_blender(), "opacity", _("opacity: "), 100, 0, 100, 1, 10, 100, 100, 4),
   imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
   omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
   test_padding_enable_box( this, "enable_padding", _("enable padding"), false),
@@ -1380,6 +1381,9 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   } else if( op_type == "local_contrast" ) {
     dialog = new PF::LocalContrastConfigGUI( current_layer );
+
+  } else if( op_type == "local_contrast_v2" ) {
+    dialog = new PF::LocalContrastV2ConfigGUI( current_layer );
 
   } else if( op_type == "clahe" ) {
     dialog = new PF::OperationConfigGUI( current_layer, "CLAHE" );

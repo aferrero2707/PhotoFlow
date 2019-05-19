@@ -85,6 +85,7 @@
 #include "tone_mapping.hh"
 #include "tone_mapping_v2.hh"
 #include "local_contrast.hh"
+//#include "local_contrast_v2.hh"
 #include "noise_generator.hh"
 #include "trcconv.hh"
 
@@ -274,6 +275,9 @@ PF::ProcessorBase* PF::new_tone_mapping_v2()
 
 PF::ProcessorBase* PF::new_local_contrast()
 { return new PF::Processor<PF::LocalContrastPar,PF::LocalContrastProc>(); }
+
+//PF::ProcessorBase* PF::new_local_contrast_v2()
+//{ return new PF::Processor<PF::LocalContrastV2Par,PF::LocalContrastV2Proc>(); }
 
 PF::ProcessorBase* PF::new_noise_generator()
 { return new PF::Processor<PF::NoiseGeneratorPar,PF::NoiseGeneratorProc>(); }
