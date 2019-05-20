@@ -3,7 +3,7 @@ PhotoFlow [![Build Status](https://travis-ci.org/aferrero2707/PhotoFlow.svg?bran
 
 The aim of the project is to provide a fully non-destructive photo retouching program with a complete workflow including RAW image development.
 
-Here is the general feature (whish)list:
+Here is the general feature (wish)list:
 
 - Fully non-destructive, layer-based photo editing workflow with realtime preview of the final image
 - Support for 8-bits and 16-bits integer as well as 32-bits and 64-bits floating point precision, selectable at runtime and on a per-image basis
