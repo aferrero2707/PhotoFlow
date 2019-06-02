@@ -296,8 +296,8 @@ export_format(PF::EXPORT_FORMAT_JPEG)
 
   get_vbox()->pack_start( middle_hbox, Gtk::PACK_SHRINK, 15 );
 
-  add_button( _("OK"), 1 );
   add_button( _("Cancel"), 0 );
+  add_button( _("OK"), 1 );
 
   export_format_selector.get_cbox().signal_changed().connect( sigc::mem_fun(*this,
       &ExportDialog::on_format_changed) );

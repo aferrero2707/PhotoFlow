@@ -135,6 +135,8 @@ class SamplersDialog: public Gtk::Dialog
 {
   PF::ImageEditor* editor;
   Gtk::Widget* samplers;
+  Gtk::Button close_button;
+  Gtk::HBox close_button_box;
   bool visible;
   int x, y;
 public:
@@ -150,11 +152,20 @@ public:
 
 
 SamplersDialog::SamplersDialog( PF::ImageEditor* e ):
-    Gtk::Dialog(), editor(e), samplers(NULL), x(-1), y(-1)
+    Gtk::Dialog(), editor(e), samplers(NULL), close_button(_("Close")), x(-1), y(-1)
 {
+  close_button_box.pack_end( close_button, Gtk::PACK_SHRINK, 5 );
+#ifdef GTKMM_3
+  get_content_area()->pack_end( close_button_box, Gtk::PACK_SHRINK, 5 );
+#else
+  get_vbox()->pack_end( close_button_box, Gtk::PACK_SHRINK, 5 );
+#endif
   set_deletable ( false );
   //set_resizable( false );
   set_gravity( Gdk::GRAVITY_STATIC );
+
+  close_button.signal_clicked().connect( sigc::mem_fun(*this,
+      &SamplersDialog::close) );
 }
 
 

@@ -53,8 +53,8 @@ PF::SettingsDialog::SettingsDialog():
 {
   set_default_size(600,400);
 
-  add_button( _("OK"), 1 );
   add_button( _("Cancel"), 0 );
+  add_button( _("OK"), 1 );
 
   signal_response().connect( sigc::mem_fun(*this,
       &SettingsDialog::on_button_clicked) );
