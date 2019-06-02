@@ -55,10 +55,7 @@ class ShadowsHighlightsV2Par: public OpParBase
   bool show_residual_;
 
   ProcessorBase* loglumi;
-  ProcessorBase* minmax;
-  ProcessorBase* median;
   ProcessorBase* guided[10];
-  ProcessorBase* usm;
 
   PF::ICCProfile* in_profile;
   float threshold_scale[10];

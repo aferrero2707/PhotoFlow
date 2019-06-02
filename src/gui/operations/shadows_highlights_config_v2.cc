@@ -86,13 +86,13 @@ PF::ShadowsHighlightsConfigV2GUI::ShadowsHighlightsConfigV2GUI( PF::Layer* layer
   strength_s_slider.set_conversion_functions(sh_slider_to_prop, sh_prop_to_slider);
   strength_h_slider.set_conversion_functions(hl_slider_to_prop, hl_prop_to_slider);
 
+  controlsBox.pack_start( strength_s_slider, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( strength_h_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( anchor_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( padding1, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( range_s_slider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( strength_s_slider, Gtk::PACK_SHRINK, 2 );
   //shadows_frame.add(shadows_box);
-  controlsBox.pack_start( strength_h_slider, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( range_h_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( constrast_slider, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( constrast_threshold_slider, Gtk::PACK_SHRINK, 2 );
