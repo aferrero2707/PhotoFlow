@@ -264,7 +264,13 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
 
   in_profile = PF::get_icc_profile( in[0] );
 
-  std::cout<<"ShadowsHighlightsV2Par::build(): level="<<level<<std::endl;
+  std::cout<<"ShadowsHighlightsV2Par::build(): level="<<level
+      <<"  amount="<<amount.get()<<"  shadows="<<shadows.get()<<"  shadows_range="<<shadows_range.get()
+      <<"  highlights="<<highlights.get()<<"  highlights_range="<<highlights_range.get()
+      <<"  contrast="<<contrast.get()<<"  contrast_threshold="<<contrast_threshold.get()
+      <<"  anchor="<<anchor.get()<<"  radius="<<radius.get()<<"  threshold="<<threshold.get()
+      <<"  show_residual="<<show_residual.get()<<"  single_scale_blur="<<single_scale_blur.get()
+      <<std::endl;
 
 
   LogLumiPar* logpar = dynamic_cast<LogLumiPar*>( loglumi->get_par() );

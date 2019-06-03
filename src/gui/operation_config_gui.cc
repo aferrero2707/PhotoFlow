@@ -71,6 +71,7 @@
 #include "operations/threshold_config.hh"
 #include "operations/shadows_highlights_config.hh"
 #include "operations/shadows_highlights_config_v2.hh"
+#include "operations/relight_config.hh"
 #include "operations/defringe_config.hh"
 #include "operations/guided_filter_config.hh"
 #include "operations/split_details_config.hh"
@@ -1355,6 +1356,10 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
   } else if( op_type == "shadows_highlights_v2" ) {
 
     dialog = new PF::ShadowsHighlightsConfigV2GUI( current_layer );
+
+  } else if( op_type == "relight" ) {
+
+    dialog = new PF::RelightConfigGUI( current_layer );
 
   } else if( op_type == "defringe" ) {
 

@@ -240,7 +240,51 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   } else if( op_type == "shadows_highlights_v2" ) {
     processor = new_shadows_highlights_v2();
-    std::cout<<"new_shadows_highlights_v2: "<<processor<<std::endl;
+
+  } else if( op_type == "relight" ) {
+    processor = new_shadows_highlights_v2();
+    PF::OpParBase* par = processor ? processor->get_par() : NULL;
+    if( par ) {
+      PF::PropertyBase* prop;
+      par->set_type("relight");
+      par->set_default_name( _("relight") );
+
+      prop = par->get_property("shadows");
+      if(prop) {
+        prop->update(1.f);
+        prop->store_default();
+      }
+
+      prop = par->get_property("shadows_range");
+      if(prop) {
+        prop->update(5.0f);
+        prop->store_default();
+      }
+
+      prop = par->get_property("highlights");
+      if(prop) {
+        prop->update(1.0f);
+        prop->store_default();
+      }
+
+      prop = par->get_property("anchor");
+      if(prop) {
+        prop->update(0.75f);
+        prop->store_default();
+      }
+
+      prop = par->get_property("sh_radius");
+      if(prop) {
+        prop->update( static_cast<int>(128) );
+        prop->store_default();
+      }
+
+      prop = par->get_property("sh_threshold");
+      if(prop) {
+        prop->update( 0.1f );
+        prop->store_default();
+      }
+    }
 
   } else if( op_type == "defringe" ) {
     processor = new_defringe();
