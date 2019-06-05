@@ -103,12 +103,8 @@ PF::ToneMappingParV2::ToneMappingParV2():
   LE_shoulder_slope2("LE_shoulder_slope2",this,0.5),
   LE_shoulder_max("LE_shoulder_max",this,10),
   lumi_blend_frac("lumi_blend_frac",this,0),
-  saturation_scaling("saturation_scaling",this,0.0),
   sh_desaturation("sh_desaturation",this,0.5),
   hl_desaturation("hl_desaturation",this,1.0),
-  local_contrast_amount("local_contrast_amount",this,0.0),
-  local_contrast_radius("local_contrast_radius",this,0.5),
-  local_contrast_threshold("local_contrast_threshold",this,0.075),
   icc_data( NULL )
 {
   preset.add_enum_value(PF::TONE_MAPPING_PRESET_CUSTOM,"TONE_MAPPING_PRESET_CUSTOM","Custom");
@@ -162,41 +158,9 @@ PF::ToneMappingParV2::ToneMappingParV2():
   LE_shoulder_max_presets[PF::TONE_MAPPING_PRESET_S_CURVE] = 1;
 
 
-  guided_blur = new_guided_filter();
-
   set_type("tone_mapping_v2" );
 
   set_default_name( _("tone mapping") );
-}
-
-
-
-void PF::ToneMappingParV2::propagate_settings()
-{
-  PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided_blur->get_par() );
-  if( guidedpar ) {
-    guidedpar->propagate_settings();
-  }
-}
-
-
-
-void PF::ToneMappingParV2::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
-{
-  PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided_blur->get_par() );
-  if( guidedpar ) {
-    float ss = 0.01 * local_contrast_radius.get() * MIN(full_res->Xsize, full_res->Ysize);
-    guidedpar->set_radius(ss);
-    //guidedpar->set_radius(local_contrast_radius.get());
-    guidedpar->set_threshold(local_contrast_threshold.get());
-    guidedpar->propagate_settings();
-    guidedpar->compute_padding(full_res, id, level);
-    set_padding( guidedpar->get_padding(id), id );
-    //if(true)
-    //  std::cout<<"ToneMappingParV2()::compute_padding(): guided_r="<<guided_radius.get()
-    //  <<"  image size="<<MIN(full_res->Xsize, full_res->Ysize)
-    //  <<"  ss="<<ss<<"  level="<<level<<"  padding="<<get_padding(id)<<std::endl;
-  }
 }
 
 
@@ -218,12 +182,22 @@ void PF::ToneMappingParV2::pre_build( rendermode_t mode )
   int iter = 0;
   TM_lin_exp_params_t par;
   float max = LE_shoulder_max.get(), maxout;
+  std::cout<<"ToneMappingParV2::pre_build: gain="<<LE_gain.get()
+          <<"  slope="<<LE_slope.get()
+          <<"  LE_lin_max="<<LE_lin_max.get()
+          <<"  LE_knee_strength="<<LE_knee_strength.get()
+          <<"  LE_compression="<<LE_compression.get()
+          <<"  LE_shoulder_slope="<<LE_shoulder_slope.get()
+          <<"  lumi_blend_frac="<<lumi_blend_frac.get()
+          <<"  sh_desaturation="<<sh_desaturation.get()
+          <<"  hl_desaturation="<<hl_desaturation.get()
+      <<std::endl;
   while( !found ) {
     par.init(LE_gain.get(), LE_slope.get(), LE_lin_max.get(), LE_knee_strength.get(),
       compression, LE_shoulder_slope.get());
     TM_lin_exp( par, max, maxout );
     float delta = maxout - 1.0f;
-    std::cout<<iter<<"  compression="<<compression<<"  maxout="<<maxout<<std::endl;
+    std::cout<<iter<<"  compression="<<compression<<"  maxout="<<maxout<<"  delta="<<delta<<std::endl;
     if( delta > -1.0e-10 && delta < 1.0e-10 ) {
       found = true;
       break;
@@ -236,7 +210,7 @@ void PF::ToneMappingParV2::pre_build( rendermode_t mode )
 
   //if( found ) {
     LE_compression.set(compression);
-    std::cout<<"ToneMappingParV2::build: max="<<max<<"  maxout="<<maxout<<std::endl;
+    std::cout<<"ToneMappingParV2::pre_build: max="<<max<<"  maxout="<<maxout<<"  compression="<<compression<<std::endl;
   //}
 }
 
@@ -251,33 +225,26 @@ VipsImage* PF::ToneMappingParV2::build(std::vector<VipsImage*>& in, int first,
   ICCProfile* new_icc_data = PF::get_icc_profile( in[0] );
   std::cout<<"ToneMappingParV2::build: new_icc_data="<<new_icc_data<<std::endl;
 
+  std::cout<<"ToneMappingParV2::build: gain="<<LE_gain.get()
+          <<"  slope="<<LE_slope.get()
+          <<"  LE_lin_max="<<LE_lin_max.get()
+          <<"  LE_knee_strength="<<LE_knee_strength.get()
+          <<"  LE_compression="<<LE_compression.get()
+          <<"  LE_shoulder_slope="<<LE_shoulder_slope.get()
+          <<"  lumi_blend_frac="<<lumi_blend_frac.get()
+          <<"  sh_desaturation="<<sh_desaturation.get()
+          <<"  hl_desaturation="<<hl_desaturation.get()
+      <<std::endl;
   LE_params.init(LE_gain.get(), LE_slope.get(), LE_lin_max.get(), LE_knee_strength.get(),
       LE_compression.get(), LE_shoulder_slope.get());
 
   icc_data = new_icc_data;
 
-  PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided_blur->get_par() );
-
   std::vector<VipsImage*> in2;
   in2.clear();
   in2.push_back(in[0]);
-  VipsImage* smoothed = NULL;
-  guidedpar->set_convert_to_perceptual(true);
-  guidedpar->set_image_hints( in2[0] );
-  guidedpar->set_format( get_format() );
-  smoothed = guidedpar->build( in2, 0, NULL, NULL, level );
-  if( !smoothed ) {
-    std::cout<<"ToneMappingParV2::build(): NULL local contrast enhanced image"<<std::endl;
-    return NULL;
-  }
-  //PF_UNREF(cached, "ToneMappingParV2::build(): cached unref");
-
-  in2.clear();
-  in2.push_back(smoothed);
-  in2.push_back(in[0]);
   rgb_image(in[0]->Xsize, in[0]->Ysize);
   VipsImage* out = OpParBase::build( in2, 0, NULL, NULL, level );
-  PF_UNREF(smoothed, "ToneMappingParV2::build(): smoothed unref");
 
   return out;
 }

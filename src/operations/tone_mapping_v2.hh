@@ -173,10 +173,7 @@ class ToneMappingParV2: public OpParBase
 
   Property<float> lumi_blend_frac;
 
-  Property<float> saturation_scaling, sh_desaturation, hl_desaturation;
-
-  Property<float> local_contrast_amount, local_contrast_radius, local_contrast_threshold;
-  ProcessorBase* guided_blur;
+  Property<float> sh_desaturation, hl_desaturation;
 
   ICCProfile* icc_data;
 
@@ -192,7 +189,6 @@ public:
   }
 
   bool get_hue_protection() { return hue_protection.get(); }
-  float get_saturation_scaling() { return saturation_scaling.get(); }
   float get_sh_desaturation() { return sh_desaturation.get(); }
   float get_hl_desaturation() { return hl_desaturation.get(); }
 
@@ -206,16 +202,11 @@ public:
 
   float get_lumi_blend_frac() { return lumi_blend_frac.get(); }
 
-  float get_local_contrast_amount() { return local_contrast_amount.get(); }
-
   ICCProfile* get_icc_data() { return icc_data; }
 
   bool has_intensity() { return false; }
   bool has_opacity() { return true; }
   bool needs_input() { return true; }
-
-  void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
-  void propagate_settings();
 
   void pre_build( rendermode_t mode );
 
@@ -257,14 +248,13 @@ public:
     ICCProfile* prof = opar->get_icc_data();
 
     float* pin;
-    float* psmooth;
     float* pout;
     float RGB[4];
     float RGBin[4];
     float dRGB[4];
     float rRGB[4];
     float Lab[3];
-    int x, y, k;
+    int x, x0, y, k;
 
     const float minus = -1.f;
 
@@ -303,42 +293,39 @@ public:
     rgb2lab.init(prof, labprof, VIPS_FORMAT_FLOAT);
     lab2rgb.init(labprof, prof, VIPS_FORMAT_FLOAT);
 
-    float lc = opar->get_local_contrast_amount();
-
     //std::cout<<"gamma = "<<gamma<<std::endl;
     //std::cout<<"log(0.2*gamma+1) / gamma_scale = "<<log(0.2*gamma+1) / gamma_scale<<std::endl;
     //std::cout<<"log(gamma+1) / gamma_scale = "<<log(gamma+1) / gamma_scale<<std::endl;
 
     for( y = 0; y < height; y++ ) {
-      psmooth = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
-      pin = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
+      pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
       pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
-      for( x = 0; x < line_size; x+=3 ) {
+      for( x = 0, x0 = 0; x < line_size; x+=3, x0++ ) {
 
         //pout[x] = psmooth[x];
         //pout[x+1] = psmooth[x+1];
         //pout[x+2] = psmooth[x+2];
         //continue;
 
-        RGBin[0] = psmooth[x]*lc   + pin[x]*(1.0f-lc); if( RGBin[0] < 0 ) RGBin[0] = 0;
+        RGBin[0] = pin[x]; if( RGBin[0] < 0 ) RGBin[0] = 0;
         dRGB[0] = (/*RGBin[0] > -1.0e-16 &&*/ RGBin[0] < 1.0e-16) ? 1 : ((pin[x]<0) ? 0 : pin[x]) / RGBin[0];
 
 
-        RGBin[1] = psmooth[x+1]*lc + pin[x+1]*(1.0f-lc); if( RGBin[1] < 0 ) RGBin[1] = 0;
+        RGBin[1] = pin[x+1]; if( RGBin[1] < 0 ) RGBin[1] = 0;
         dRGB[1] = (/*RGBin[1] > -1.0e-16 &&*/ RGBin[1] < 1.0e-16) ? 1 : ((pin[x+1]<0) ? 0 : pin[x+1]) / RGBin[1];
 
-        RGBin[2] = psmooth[x+2]*lc + pin[x+2]*(1.0f-lc); if( RGBin[2] < 0 ) RGBin[2] = 0;
+        RGBin[2] = pin[x+2]; if( RGBin[2] < 0 ) RGBin[2] = 0;
         dRGB[2] = (/*RGBin[2] > -1.0e-16 &&*/ RGBin[2] < 1.0e-16) ? 1 : ((pin[x+2]<0) ? 0 : pin[x+2]) / RGBin[2];
 
         RGBin[3] = prof->get_lightness(RGBin[0],RGBin[1],RGBin[2]);
-        /*
-        std::cout<<"pin: "<<pin[x]<<" "<<pin[x+1]<<" "<<pin[x+2]<<" "<<std::endl;
-        std::cout<<"Lab: "<<Lab[0]<<" "<<Lab[1]<<" "<<Lab[2]<<" "<<std::endl;
-        std::cout<<"RGB: "<<RGBin[0]<<" "<<RGBin[1]<<" "<<RGBin[2]<<" "<<std::endl;
-        std::cout<<"dRGB: "<<dRGB[0]<<" "<<dRGB[1]<<" "<<dRGB[2]<<" "<<std::endl;
-        std::cout<<std::endl;
-        */
+        /**/
+        //std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"pin: "<<pin[x]<<" "<<pin[x+1]<<" "<<pin[x+2]<<" "<<std::endl;
+        //std::cout<<"Lab: "<<Lab[0]<<" "<<Lab[1]<<" "<<Lab[2]<<" "<<std::endl;
+        //std::cout<<"RGB: "<<RGBin[0]<<" "<<RGBin[1]<<" "<<RGBin[2]<<" "<<std::endl;
+        //std::cout<<"dRGB: "<<dRGB[0]<<" "<<dRGB[1]<<" "<<dRGB[2]<<" "<<std::endl;
+        //std::cout<<std::endl;
+        /**/
         for( k=0; k < 3; k++)
           RGB[k] = RGBin[k];
 
