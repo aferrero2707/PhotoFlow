@@ -681,8 +681,8 @@ void PF::LayerManager::init_pipeline( PF::Pipeline* pipeline, std::list<Layer*>&
 
     if( !l ) continue;
 
-    //std::cout<<"LayerManager::init_pipeline(): adding layer \""
-    //    <<l->get_name()<<"\""<<std::endl;
+    std::cout<<"LayerManager::init_pipeline(): adding layer \""
+        <<l->get_name()<<"\""<<std::endl;
     // Detect "pathological" conditions
     g_assert( l->get_processor() != NULL );
     g_assert( l->get_processor()->get_par() != NULL );
@@ -703,6 +703,11 @@ void PF::LayerManager::init_pipeline( PF::Pipeline* pipeline, std::list<Layer*>&
     PF::OpParBase* pipelinepar = node->processor->get_par();
     PF::OpParBase* blender = l->get_blender()->get_par();
     PF::OpParBase* pipelineblender = node->blender->get_par();
+
+    // Run pre-build phase
+    std::cout<<"LayerManager::init_pipeline(): calling pre_build() for layer \""
+        <<l->get_name()<<"\""<<std::endl;
+    par->pre_build( pipeline->get_render_mode() );
 
     // We import the parameters from the "master" operation associated to the layer,
     // and which is directly connected with the GUI controls
@@ -1096,7 +1101,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
     //if( node->blended ) vips_image_invalidate_all( node->blended );
 
     // Run pre-build phase
-    par->pre_build( pipeline->get_render_mode() );
+    //par->pre_build( pipeline->get_render_mode() );
 
     PF::PropertyBase* p_rgb_target_ch =  blender->get_property( "rgb_target_channel" );
     if( p_rgb_target_ch )
