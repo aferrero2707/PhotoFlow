@@ -210,6 +210,8 @@ public:
         pout[x+1] = pin0[x+1] * R;
         pout[x+2] = pin0[x+2] * R;
 
+        //std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  pin0: "<<pin0[x]<<"  pin1: "<<pin1[x]<<"  pin2: "<<pin2[x]<<"  delta: "<<delta<<"  scale: "<<scale<<"  lwhite: "<<lwhite<<"  delta2: "<<delta2<<"  R="<<R<<"  pout="<<pout[x]<<std::endl;
+
         if( opar->get_show_residual() ) pout[x] = pout[x+1] = pout[x+2] = l2 * bias;
 
         /*

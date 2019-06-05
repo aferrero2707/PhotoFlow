@@ -43,12 +43,12 @@
 #define GUIDED_THRESHOLD_SCALE 0.1f
 
 
-class LogLumiPar: public PF::OpParBase
+class ShaHiLogLumiPar: public PF::OpParBase
 {
   PF::ICCProfile* profile;
   float anchor;
 public:
-  LogLumiPar():
+  ShaHiLogLumiPar():
     PF::OpParBase(), profile(NULL), anchor(0.5) {
 
   }
@@ -62,13 +62,13 @@ public:
       VipsImage* imap, VipsImage* omap,
       unsigned int& level)
   {
-    if( in.empty() ) {printf("LogLumiPar::build(): in.empty()\n"); return NULL;}
+    if( in.empty() ) {printf("ShaHiLogLumiPar::build(): in.empty()\n"); return NULL;}
 
     VipsImage* image = in[0];
-    if( !image ) {printf("LogLumiPar::build(): image==NULL\n"); return NULL;}
+    if( !image ) {printf("ShaHiLogLumiPar::build(): image==NULL\n"); return NULL;}
 
     profile = PF::get_icc_profile( image );
-    if( !profile ) {printf("LogLumiPar::build(): profile==NULL\n"); return NULL;}
+    if( !profile ) {printf("ShaHiLogLumiPar::build(): profile==NULL\n"); return NULL;}
 
     grayscale_image( get_xsize(), get_ysize() );
 
@@ -81,7 +81,7 @@ public:
 
 
 template < OP_TEMPLATE_DEF >
-class LogLumiProc
+class ShaHiLogLumiProc
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -93,7 +93,7 @@ public:
 
 
 template < class BLENDER, int CHMIN, int CHMAX, bool has_imap, bool has_omap, bool PREVIEW >
-class LogLumiProc< float, BLENDER, PF::PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
+class ShaHiLogLumiProc< float, BLENDER, PF::PF_COLORSPACE_GRAYSCALE, CHMIN, CHMAX, has_imap, has_omap, PREVIEW >
 {
 public:
   void render(VipsRegion** ireg, int n, int in_first,
@@ -101,7 +101,7 @@ public:
       VipsRegion* oreg, PF::OpParBase* par)
   {
     static const double inv_log_base = 1.0 / log(10.0);
-    LogLumiPar* opar = dynamic_cast<LogLumiPar*>(par);
+    ShaHiLogLumiPar* opar = dynamic_cast<ShaHiLogLumiPar*>(par);
     if( !opar ) return;
     VipsRect *r = &oreg->valid;
     int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
@@ -127,6 +127,7 @@ public:
         pL = (L>1.0e-16) ? xlog10( L ) : -16;
 
         pout[0] = pL;
+        //std::cout<<"ShaHiLogLumi: [x,y]="<<x+r->left<<","<<y+r->top<<"  pin: "<<pin[0]<<"  L: "<<L<<"  bias: "<<bias<<"  pout="<<pout[0]<<std::endl;
       }
     }
   }
@@ -152,7 +153,7 @@ single_scale_blur("single_scale_blur", this, false),
 median_radius(5),
 in_profile( NULL )
 {
-  loglumi = new PF::Processor<LogLumiPar,LogLumiProc>();
+  loglumi = new PF::Processor<ShaHiLogLumiPar,ShaHiLogLumiProc>();
   int ts = 1;
   for(int gi = 0; gi < 10; gi++) {
     guided[gi] = new_guided_filter();
@@ -273,7 +274,7 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
       <<std::endl;
 
 
-  LogLumiPar* logpar = dynamic_cast<LogLumiPar*>( loglumi->get_par() );
+  ShaHiLogLumiPar* logpar = dynamic_cast<ShaHiLogLumiPar*>( loglumi->get_par() );
   std::cout<<"ShadowsHighlightsV2Par::build(): logpar="<<logpar<<std::endl;
   VipsImage* logimg = NULL;
   if(logpar) {
