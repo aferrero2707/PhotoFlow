@@ -44,6 +44,7 @@ namespace PF {
 
     Slider strength_s_slider;
     Slider anchor_slider;
+    Slider contrast_slider;
 
   public:
     RelightConfigGUI( Layer* l );

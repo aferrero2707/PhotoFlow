@@ -242,6 +242,8 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
     processor = new_shadows_highlights_v2();
 
   } else if( op_type == "relight" ) {
+    processor = new_relight();
+    /*
     processor = new_shadows_highlights_v2();
     PF::OpParBase* par = processor ? processor->get_par() : NULL;
     if( par ) {
@@ -285,7 +287,7 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
         prop->store_default();
       }
     }
-
+     */
   } else if( op_type == "defringe" ) {
     processor = new_defringe();
 

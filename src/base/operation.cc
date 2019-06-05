@@ -225,6 +225,7 @@ bool PF::OpParBase::import_settings( OpParBase* pin )
       std::cout<<"OpParBase::import_settings(): failed to import values for property \""<<(*pj)->get_name()<<"\""<<std::endl;
       return false;
     }
+    //std::cout<<"OpParBase::import_settings(): property \""<<(*pj)->get_name()<<"\" se to "<<(*pj)->get_str()<<std::endl;
   }
 
   std::list<PropertyBase*>& mpropin = pin->get_mapped_properties();

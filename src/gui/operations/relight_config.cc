@@ -46,13 +46,15 @@ static double sh_prop_to_slider(double& val, PF::OperationConfigGUI*, void*)
 
 PF::RelightConfigGUI::RelightConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "shadows/highlights" ),
-  strength_s_slider( this, "shadows", _("strength"), 0, 0, 100, 1, 5, 100),
-  anchor_slider( this, "anchor", _("range"), 0, 0, 100, 0.5, 5, 100)
+  strength_s_slider( this, "strength", _("strength"), 0, 0, 100, 1, 5, 100),
+  anchor_slider( this, "range", _("range"), 0, 0, 100, 0.5, 5, 100),
+  contrast_slider( this, "contrast", _("contrast"), 0, 0, 100, 0.5, 5, 100)
 {
   strength_s_slider.set_conversion_functions(sh_slider_to_prop, sh_prop_to_slider);
 
   controlsBox.pack_start( strength_s_slider, Gtk::PACK_SHRINK, 2 );
   controlsBox.pack_start( anchor_slider, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( contrast_slider, Gtk::PACK_SHRINK, 2 );
 
   globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
   add_widget( globalBox );

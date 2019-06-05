@@ -340,6 +340,15 @@ public:
   void save_properties(std::list<std::string>& plist);
   void restore_properties(const std::list<std::string>& plist);
 
+  template<typename T> bool set_property(std::string pname, const T& newval)
+  {
+    PF::PropertyBase* prop = get_property(pname);
+    if( !prop ) return false;
+    prop->update( newval );
+    return true;
+  }
+
+
   virtual bool import_settings( OpParBase* pin );
   // update properties of sub-operations
   virtual void propagate_settings() {}

@@ -92,6 +92,7 @@ namespace PF
   ProcessorBase* new_path_mask();
   ProcessorBase* new_shadows_highlights();
   ProcessorBase* new_shadows_highlights_v2();
+  ProcessorBase* new_relight();
   ProcessorBase* new_defringe();
   ProcessorBase* new_guided_filter();
   ProcessorBase* new_median_filter();
