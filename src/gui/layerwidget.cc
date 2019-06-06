@@ -501,7 +501,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   draw_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/draw.png", "draw", image, this),
   clone_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/clone.png", "clone_stamp", image, this),
   scale_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/scale.png", "scale", image, this),
-  perspective_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/perspective.png", "perspective", image, this)
+  perspective_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/perspective.png", "perspective", image, this),
+relight_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/flash.png", "relight", image, this)
 {
   floating_tool_dialogs = PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs();
 
@@ -532,6 +533,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //tool_buttons_box.pack_start( levels_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( relight_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( uniform_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( gradient_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( desaturate_button, Gtk::PACK_SHRINK, 2 );

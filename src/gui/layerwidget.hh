@@ -142,6 +142,7 @@ class LayerWidget : public Gtk::VBox
   ToolButton add_button, group_button, trash_button, insert_image_button, curves_button;
   ToolButton uniform_button, gradient_button, path_mask_button, desaturate_button, crop_button;
   ToolButton basic_edits_button, levels_button, draw_button, clone_button, perspective_button, scale_button;
+  ToolButton relight_button;
 
   std::vector<Gtk::ScrolledWindow*> layer_frames;
   std::vector<LayerTree*> layer_views;
