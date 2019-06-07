@@ -19,10 +19,13 @@
    style="enable-background:new 0 0 959.63 959.631;"
    xml:space="preserve"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="camera-flash-2-svgrepo-com.svg"><metadata
+   sodipodi:docname="camera-flash-2-svgrepo-com.svg"
+   inkscape:export-filename="/Users/aferrero/Projects/Photoflow/Git/Stable/PhotoFlow/icons-inverted/tools/flash.png"
+   inkscape:export-xdpi="1.5"
+   inkscape:export-ydpi="1.5"><metadata
      id="metadata8891"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
      id="defs8889" /><sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -37,8 +40,8 @@
      id="namedview8887"
      showgrid="false"
      inkscape:zoom="0.24592787"
-     inkscape:cx="-534.71012"
-     inkscape:cy="479.81549"
+     inkscape:cx="-1201.5738"
+     inkscape:cy="479.8155"
      inkscape:window-x="0"
      inkscape:window-y="1"
      inkscape:window-maximized="1"
